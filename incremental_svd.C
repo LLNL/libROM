@@ -196,7 +196,7 @@ incremental_svd::buildIncrementalSVD(
       int p_row_start, p_row_end;
       MatGetOwnershipRange(P, &p_row_start, &p_row_end);
 
-      addNewIncrement(j, sigma, p_row_start, p_row_end);
+      addNewIncrement(j, A, sigma, p_row_start, p_row_end);
    }
 
    // Clean up.
@@ -508,6 +508,7 @@ incremental_svd::addRedundantIncrement(
 void
 incremental_svd::addNewIncrement(
    Vec j,
+   Mat A,
    Mat sigma,
    int d_U_row_start,
    int d_U_row_end)
@@ -562,7 +563,7 @@ incremental_svd::addNewIncrement(
    MatAssemblyBegin(newL, MAT_FINAL_ASSEMBLY);
    MatAssemblyEnd(newL, MAT_FINAL_ASSEMBLY);
    MatDestroy(&d_L);
-   MatConvert(newL, MATSAME, MAT_INITIAL_MATRIX, &d_L);
+   MatMatMult(newL, A, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &d_L);
    MatDestroy(&newL);
 
    // d_S = sigma.

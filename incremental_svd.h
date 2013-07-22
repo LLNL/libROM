@@ -97,6 +97,7 @@ class incremental_svd
       void
       addNewIncrement(
          Vec j,
+         Mat A,
          Mat sigma,
          int d_U_row_start,
          int d_U_row_end);
