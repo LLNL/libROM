@@ -54,7 +54,24 @@ class incremental_svd_time_stepper
          double* rhs_in,
          double time);
 
+      // Returns the model parameters.
+      Mat
+      getModel()
+      {
+         return d_isvd->getModel();
+      }
+
    private:
+      // Unimplemented default constructor.
+      incremental_svd_time_stepper();
+
+      // Unimplemented copy constructor.
+      incremental_svd_time_stepper(const incremental_svd_time_stepper& other);
+
+      // Unimplemented assignment operator.
+      incremental_svd_time_stepper&
+      operator = (const incremental_svd_time_stepper& rhs);
+
       // Maximum number time steps between increments.
       int d_max_time_steps_between_increments;
 

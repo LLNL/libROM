@@ -1,4 +1,5 @@
 #include "incremental_svd.h"
+#include "SLEPcManager.h"
 #include "slepc.h"
 #include <cmath>
 #include <assert.h>
@@ -17,11 +18,10 @@ incremental_svd::incremental_svd(
    d_skip_redundant(skip_redundant),
    d_U(0),
    d_L(0),
-   d_S(0),
-   d_norm_j(-1)
+   d_S(0)
 {
-   // Just initialize SLEPc.
-   SlepcInitialize(argc, argv, PETSC_NULL, PETSC_NULL);
+   // Register a new SLEPc instance and get the rank of this process.
+   SLEPcManager::getManager()->registerSLEPcInstance(argc, argv);
    MPI_Comm_rank(PETSC_COMM_WORLD, &d_rank);
 }
 
@@ -37,7 +37,7 @@ incremental_svd::~incremental_svd()
    if (d_S) {
       MatDestroy(&d_S);
    }
-   SlepcFinalize();
+   SLEPcManager::getManager()->unRegisterSLEPcInstance();
 }
 
 void
@@ -57,7 +57,6 @@ incremental_svd::increment(
    VecSetValues(u, d_dim, vec_locs, u_in, INSERT_VALUES);
    VecAssemblyBegin(u);
    VecAssemblyEnd(u);
-   VecView(u, PETSC_VIEWER_STDOUT_WORLD);
    delete [] vec_locs;
 
    // If this is the first SVD then build it.  Otherwise add this increment to
@@ -69,9 +68,11 @@ incremental_svd::increment(
       buildIncrementalSVD(u);
    }
 
+#ifdef DEBUG
    MatView(d_S, PETSC_VIEWER_STDOUT_WORLD);
    MatView(d_L, PETSC_VIEWER_STDOUT_WORLD);
    MatView(d_U, PETSC_VIEWER_STDOUT_WORLD);
+#endif
 
    // Clean up.
    VecDestroy(&u);
@@ -112,7 +113,7 @@ incremental_svd::buildInitialSVD(
    // Build d_U.
    MatCreate(PETSC_COMM_WORLD, &d_U);
    MatSetSizes(d_U, d_dim, PETSC_DECIDE, PETSC_DETERMINE, 1);
-   MatSetType(d_U, MATDENSE);
+//   MatSetType(d_U, MATDENSE);
    MatSetUp(d_U);
    int vec_start, vec_end;
    VecGetOwnershipRange(u, &vec_start, &vec_end);
@@ -136,7 +137,8 @@ incremental_svd::buildIncrementalSVD(
    // Compute j, P and the norm of J.
    Vec j;
    Mat P;
-   compute_J_P_normJ(u, j, P);
+   double norm_j;
+   compute_J_P_normJ(u, j, P, norm_j);
 
    // l = P' * u
    Vec l;
@@ -151,24 +153,24 @@ incremental_svd::buildIncrementalSVD(
 
    double eps_squared = d_epsilon*d_epsilon;
    bool is_new_increment = ((cm > eps_squared) &&
-      ((d_norm_j*d_norm_j)/(eps_squared+cm)) > eps_squared);
+      ((norm_j*norm_j)/(eps_squared+cm)) > eps_squared);
 
    // If this increment is not new and we are skipping redundant increments
    // then clean up and return.
-   if (!is_new_increment && d_skip_redundant) {
-      VecDestroy(&j);
-      VecDestroy(&l);
-      return;
+   if (!is_new_increment) {
+      if (d_skip_redundant) {
+         VecDestroy(&j);
+         VecDestroy(&l);
+         return;
+      }
+      else {
+         norm_j = 0.0;
+      }
    }
 
    // On process 0, create Q.
    Mat Q;
-   if (is_new_increment) {
-      constructQ(Q, l, d_norm_j);
-   }
-   else {
-      constructQ(Q, l, 0);
-   }
+   constructQ(Q, l, norm_j);
 
    // Done with l.
    VecDestroy(&l);
@@ -211,7 +213,8 @@ void
 incremental_svd::compute_J_P_normJ(
    Vec u,
    Vec& j,
-   Mat& P)
+   Mat& P,
+   double& norm_j)
 {
    // j = u
    VecCreate(PETSC_COMM_WORLD, &j);
@@ -223,13 +226,14 @@ incremental_svd::compute_J_P_normJ(
    MatMatMult(d_U, d_L, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &P);
 
    // Use modified Gram-Schmidt orthogonalization to modify j.
-   orthogonalizeJAndComputeNorm(j, P);
+   orthogonalizeJAndComputeNorm(j, P, norm_j);
 }
 
 void
 incremental_svd::orthogonalizeJAndComputeNorm(
    Vec j,
-   Mat P)
+   Mat P,
+   double& norm_j)
 {
    // Get the rows of P owned by this process.
    int p_row_start, p_row_end;
@@ -253,15 +257,15 @@ incremental_svd::orthogonalizeJAndComputeNorm(
    }
    VecDestroy(&Pvec);
 
-   // d_norm_j = sqrt(j.j)
-   VecDot(j, j, &d_norm_j);
-   d_norm_j = sqrt(d_norm_j);
+   // norm_j = sqrt(j.j)
+   VecDot(j, j, &norm_j);
+   norm_j = sqrt(norm_j);
 
-   // Divide each value of j by d_norm_j.
+   // Divide each value of j by norm_j.
    for (int row = p_row_start; row < p_row_end; ++row) {
       double jval;
       VecGetValues(j, 1, &row, &jval);
-      jval /= d_norm_j;
+      jval /= norm_j;
       VecSetValue(j, row, jval, INSERT_VALUES);
    }
 }
@@ -376,7 +380,7 @@ incremental_svd::svd(
    MatCreate(PETSC_COMM_WORLD, &U);
    MatSetSizes(U, PETSC_DECIDE, PETSC_DECIDE,
                d_num_increments+1, d_num_increments+1);
-   MatSetType(U, MATDENSE);
+//   MatSetType(U, MATDENSE);
    MatSetUp(U);
 
    // Construct S.
@@ -517,7 +521,7 @@ incremental_svd::addNewIncrement(
    Mat newU;
    MatCreate(PETSC_COMM_WORLD, &newU);
    MatSetSizes(newU, d_dim, PETSC_DECIDE, PETSC_DETERMINE, d_num_increments+1);
-   MatSetType(newU, MATDENSE);
+//   MatSetType(newU, MATDENSE);
    MatSetUp(newU);
    int* cols = new int [d_num_increments+1];
    for (int i = 0; i < d_num_increments+1; ++i) {
@@ -582,16 +586,13 @@ double
 incremental_svd::computeNormJ(
    Vec u)
 {
-   // If the norm of j has not been computed then do.  Otherwise just return
-   // the cached value.
-   if (d_norm_j == -1) {
-      Vec j;
-      Mat P;
-      compute_J_P_normJ(u, j, P);
-      VecDestroy(&j);
-      MatDestroy(&P);
-   }
-   return d_norm_j;
+   Vec j;
+   Mat P;
+   double norm_j;
+   compute_J_P_normJ(u, j, P, norm_j);
+   VecDestroy(&j);
+   MatDestroy(&P);
+   return norm_j;
 }
 
 }

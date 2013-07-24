@@ -11,6 +11,7 @@ incremental_svd_time_stepper::incremental_svd_time_stepper(
    bool skip_redundant,
    int max_time_steps_between_increments) :
    d_max_time_steps_between_increments(max_time_steps_between_increments),
+   d_next_increment_time(0.0),
    d_isvd(new incremental_svd(argc,
                               argv,
                               dim,
@@ -47,7 +48,6 @@ incremental_svd_time_stepper::computeNextIncrementTime(
    VecSetValues(u, dim, vec_locs, u_in, INSERT_VALUES);
    VecAssemblyBegin(u);
    VecAssemblyEnd(u);
-   VecView(u, PETSC_VIEWER_STDOUT_WORLD);
 
    Vec rhs;
    VecCreate(PETSC_COMM_WORLD, &rhs);
@@ -56,7 +56,6 @@ incremental_svd_time_stepper::computeNextIncrementTime(
    VecSetValues(rhs, dim, vec_locs, rhs_in, INSERT_VALUES);
    VecAssemblyBegin(rhs);
    VecAssemblyEnd(rhs);
-   VecView(rhs, PETSC_VIEWER_STDOUT_WORLD);
    delete [] vec_locs;
 
    // Get the norm of J from the incremental svd algorithm.
@@ -83,7 +82,8 @@ incremental_svd_time_stepper::computeNextIncrementTime(
    VecDestroy(&rhs);
 
    // Return next increment time.
-   return time + dtcheck;
+   d_next_increment_time = time + dtcheck;
+   return d_next_increment_time;
 }
 
 }

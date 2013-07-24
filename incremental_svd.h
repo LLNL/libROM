@@ -39,8 +39,27 @@ class incremental_svd
          return d_dim;
       }
 
+      // Returns the model parameters, d_U*d_L.
+      Mat
+      getModel()
+      {
+         Mat result;
+         MatMatMult(d_U, d_L, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &result);
+         return result;
+      }
+
    private:
       friend class incremental_svd_time_stepper;
+
+      // Unimplemented default constructor.
+      incremental_svd();
+
+      // Unimplemented copy constructor.
+      incremental_svd(const incremental_svd& other);
+
+      // Unimplemented assignment operator.
+      incremental_svd&
+      operator = (const incremental_svd& rhs);
 
       // Constructs the first svd.
       void
@@ -57,7 +76,8 @@ class incremental_svd
       compute_J_P_normJ(
          Vec u,
          Vec& j,
-         Mat& P);
+         Mat& P,
+         double& norm_j);
 
       // Helper function which computes the norm of j given u.
       double
@@ -69,7 +89,8 @@ class incremental_svd
       void
       orthogonalizeJAndComputeNorm(
          Vec j,
-         Mat P);
+         Mat P,
+         double& norm_j);
 
       // Construct the Q matrix which will be passed to svd.
       void
@@ -117,9 +138,6 @@ class incremental_svd
       Mat d_U;
       Mat d_L;
       Mat d_S;
-
-      // The norm of j as computed by orthogonalizeJAndComputeNorm.
-      double d_norm_j;
 
       // Rank of process this object lives on.
       int d_rank;

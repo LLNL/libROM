@@ -9,6 +9,7 @@ namespace CAROM {
 class incremental_svd_rom
 {
    public:
+      // Constructor.
       incremental_svd_rom(
          int* argc,
          char*** argv,
@@ -17,8 +18,10 @@ class incremental_svd_rom
          bool skip_redundant,
          int max_time_steps_between_snapshots);
 
+      // Destructor.
       ~incremental_svd_rom();
 
+      // Returns true if it is time for the next svd snapshot.
       bool
       isNextSnapshot(
          double time)
@@ -26,6 +29,7 @@ class incremental_svd_rom
          return d_isvdts->isNextIncrement(time);
       }
 
+      // Add a snapshot to the incremental svd.
       void
       takeSnapshot(
          double* u_in)
@@ -33,6 +37,7 @@ class incremental_svd_rom
          d_isvdts->increment(u_in);
       }
 
+      // Computes next time an svd snapshot is needed.
       double
       computeNextSnapshotTime(
          double* u_in,
@@ -42,7 +47,25 @@ class incremental_svd_rom
          return d_isvdts->computeNextIncrementTime(u_in, rhs_in, time);
       }
 
+      // Returns the model parameters.
+      Mat
+      getModel()
+      {
+         return d_isvdts->getModel();
+      }
+
    private:
+      // Unimplemented default constructor.
+      incremental_svd_rom();
+
+      // Unimplemented copy constructor.
+      incremental_svd_rom(const incremental_svd_rom& other);
+
+      // Unimplemented assignment operator.
+      incremental_svd_rom&
+      operator = (const incremental_svd_rom& rhs);
+
+      // The underlying time step control object.
       boost::shared_ptr<incremental_svd_time_stepper> d_isvdts;
 };
 
