@@ -102,7 +102,6 @@ incremental_svd::buildInitialSVD(
    // Build d_L.
    MatCreate(PETSC_COMM_WORLD, &d_L);
    MatSetSizes(d_L, PETSC_DECIDE, PETSC_DECIDE, 1, 1);
-//   MatSetType(d_L, MATDENSE);
    MatSetUp(d_L);
    if (d_rank == 0) {
       MatSetValues(d_L, 1, &zero, 1, &zero, &one, INSERT_VALUES);
@@ -113,7 +112,6 @@ incremental_svd::buildInitialSVD(
    // Build d_U.
    MatCreate(PETSC_COMM_WORLD, &d_U);
    MatSetSizes(d_U, d_dim, PETSC_DECIDE, PETSC_DETERMINE, 1);
-//   MatSetType(d_U, MATDENSE);
    MatSetUp(d_U);
    int vec_start, vec_end;
    VecGetOwnershipRange(u, &vec_start, &vec_end);
@@ -380,7 +378,6 @@ incremental_svd::svd(
    MatCreate(PETSC_COMM_WORLD, &U);
    MatSetSizes(U, PETSC_DECIDE, PETSC_DECIDE,
                d_num_increments+1, d_num_increments+1);
-//   MatSetType(U, MATDENSE);
    MatSetUp(U);
 
    // Construct S.
@@ -474,7 +471,6 @@ incremental_svd::addRedundantIncrement(
    MatCreate(PETSC_COMM_WORLD, &Amod);
    MatSetSizes(Amod, PETSC_DECIDE, PETSC_DECIDE,
                d_num_increments, d_num_increments);
-//   MatSetType(Amod, MATDENSE);
    MatSetUp(Amod);
    int* cols = new int [d_num_increments];
    for (int i = 0; i < d_num_increments; ++i) {
@@ -521,7 +517,6 @@ incremental_svd::addNewIncrement(
    Mat newU;
    MatCreate(PETSC_COMM_WORLD, &newU);
    MatSetSizes(newU, d_dim, PETSC_DECIDE, PETSC_DETERMINE, d_num_increments+1);
-//   MatSetType(newU, MATDENSE);
    MatSetUp(newU);
    int* cols = new int [d_num_increments+1];
    for (int i = 0; i < d_num_increments+1; ++i) {
@@ -546,7 +541,6 @@ incremental_svd::addNewIncrement(
    MatCreate(PETSC_COMM_WORLD, &newL);
    MatSetSizes(newL, PETSC_DECIDE, PETSC_DECIDE,
                d_num_increments+1, d_num_increments+1);
-//   MatSetType(newL, MATDENSE);
    MatSetUp(newL);
    int d_L_row_start, d_L_row_end;
    MatGetOwnershipRange(d_L, &d_L_row_start, &d_L_row_end);

@@ -16,7 +16,7 @@ class SLEPcManager
       getManager()
       {
          if (!s_manager_instance) {
-         s_manager_instance = new SLEPcManager;
+            s_manager_instance = new SLEPcManager;
          }
          return s_manager_instance;
       }

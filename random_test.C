@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
    MatDestroy(&test);
 #endif
    for (int i = 0; i < num_snapshots; ++i) {
-     delete [] M[i];
+      delete [] M[i];
    }
    delete [] M;
    return 0;
