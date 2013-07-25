@@ -136,7 +136,7 @@ static_svd::svd(
       sigma[i] = 0.0;
       sigma_rows[i] = i;
    }
-   for (int col = 0; col < num_states; ++col) {;
+   for (int col = 0; col < num_states; ++col) {
       if (num_u_rows > 0) {
          if (num_v_rows > 0) {
             SVDGetSingularTriplet(svd, col, &sigma[col], u, v);
