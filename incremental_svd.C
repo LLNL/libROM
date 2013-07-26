@@ -20,9 +20,11 @@ incremental_svd::incremental_svd(
    d_L(0),
    d_S(0)
 {
-   // Register a new SLEPc instance and get the rank of this process.
+   // Register a new SLEPc instance, get the rank of this process, and get the
+   // number of processors.
    SLEPcManager::getManager()->registerSLEPcInstance(argc, argv);
    MPI_Comm_rank(PETSC_COMM_WORLD, &d_rank);
+   MPI_Comm_size(PETSC_COMM_WORLD, &d_size);
 }
 
 incremental_svd::~incremental_svd()
@@ -253,6 +255,8 @@ incremental_svd::orthogonalizeJAndComputeNorm(
          VecSetValue(j, row, new_jval, INSERT_VALUES);
       }
    }
+
+   // Done with Pvec.
    VecDestroy(&Pvec);
 
    // norm_j = sqrt(j.j)
@@ -274,14 +278,15 @@ incremental_svd::constructQ(
    Vec l,
    double norm_j)
 {
-   // Get the rows of d_S owned by this process.
-   int d_S_row_start, d_S_row_end;
-   MatGetOwnershipRange(d_S, &d_S_row_start, &d_S_row_end);
+   // Get the rows of d_S owned by each process.
+   const int* ranges;
+   MatGetOwnershipRanges(d_S, &ranges);
 
-   // Create an array holding the global ids of all rows in both d_S and Q.
-   int* cols = new int [d_num_increments+1];
+   // Create an array holding the global ids of all rows and columns in both
+   // d_S and Q.
+   int* row_cols = new int [d_num_increments+1];
    for (int i = 0; i < d_num_increments+1; ++i) {
-      cols[i] = i;
+      row_cols[i] = i;
    }
 
    // Process 0 is the only process which actually constructs Q.  Q is a small
@@ -298,73 +303,71 @@ incremental_svd::constructQ(
                   d_num_increments+1, d_num_increments+1);
       MatSetType(Q, MATDENSE);
       MatSetUp(Q);
-
-      // Add to Q the information held by procesor 0.
-      double* qvals = new double [d_num_increments+1];
-      for (int row = d_S_row_start; row < d_S_row_end; ++row) {
-         MatGetValues(d_S, 1, &row, d_num_increments, cols, qvals);
-         VecGetValues(l, 1, &row, &qvals[d_num_increments]);
-         MatSetValues(Q, 1, &row, d_num_increments+1, cols,
-                      qvals, INSERT_VALUES);
-      }
-      for (int i = 0; i < d_num_increments; ++i) {
-         qvals[i] = 0.0;
-      }
-      qvals[d_num_increments] = norm_j;
-      MatSetValues(Q, 1, &d_num_increments, d_num_increments+1, cols,
-                   qvals, INSERT_VALUES);
-      delete [] qvals;
-
-      // Get the parts of Q owned by other processors and insert them in Q.
-      int size;
-      MPI_Comm_size(PETSC_COMM_WORLD, &size);
-      const int* ranges;
-      MatGetOwnershipRanges(d_S, &ranges);
-      MPI_Status status;
-      for (int i = 1; i < size; ++i) {
-         int num_rows_owned = ranges[i+1] - ranges[i];
-         if (num_rows_owned > 0) {
-            int num_qvals = (d_num_increments+1) * num_rows_owned;
-            qvals = new double [num_qvals];
-            int* rows_owned = new int [num_rows_owned];
-            for (int row = 0; row < num_rows_owned; ++row) {
-               rows_owned[row] = ranges[i] + row;
-            }
-            MPI_Recv(qvals, num_qvals, MPI_DOUBLE, i, 0,
-                     PETSC_COMM_WORLD, &status);
-            MatSetValues(Q, num_rows_owned, rows_owned,
-                         d_num_increments+1, cols, qvals, INSERT_VALUES);
-            delete [] qvals;
-            delete [] rows_owned;
-         }
-      }
    }
-   else {
-      // Get the parts of Q owned by processors other than 0 and send them to
-      // processor 0 for insertion into Q.
-      int num_rows_owned = d_S_row_end - d_S_row_start;
-      if (num_rows_owned > 0) {
-         int num_qvals = (d_num_increments+1) * num_rows_owned;
-         double *qvals = new double [num_qvals];
-         int offset = 0;
-         for (int row = d_S_row_start; row < d_S_row_end; ++row) {
-            MatGetValues(d_S, 1, &row, d_num_increments, cols,
-                         &qvals[offset*(d_num_increments+1)]);
-            VecGetValues(l, 1, &row,
-                         &qvals[((offset+1)*d_num_increments)+offset]);
-            ++offset;
-         }
-         MPI_Send(qvals, num_qvals, MPI_DOUBLE, 0, 0, PETSC_COMM_WORLD);
-         delete [] qvals;
-      }
-   }
-   delete [] cols;
 
-   // Process 0 assembles Q.
+   // Processor 0 allocates storage for all the values of Q.
+   double* all_qvals = 0;
    if (d_rank == 0) {
+      all_qvals = new double [(d_num_increments+1)*(d_num_increments+1)];
+   }
+
+   // Each processor allocates and fills an array for it's contribution to Q.
+   int my_num_rows_owned = ranges[d_rank+1] - ranges[d_rank];
+   int num_my_qvals = (d_num_increments+1)*my_num_rows_owned;
+   double* my_qvals = 0;
+   if (num_my_qvals > 0) {
+      my_qvals = new double [num_my_qvals];
+   }
+   int offset = 0;
+   for (int row = ranges[d_rank]; row < ranges[d_rank+1]; ++row) {
+      MatGetValues(d_S, 1, &row, d_num_increments, row_cols,
+                   &my_qvals[offset]);
+      VecGetValues(l, 1, &row, &my_qvals[offset+d_num_increments]);
+      offset += d_num_increments + 1;
+   }
+
+   // Process 0 need to know how much data it will receive from each process
+   // and the displacement in all_qvals for the data from each process.
+   int* recv_cts = 0;
+   int* displ = 0;
+   if (d_rank == 0) {
+      recv_cts = new int[d_size];
+      displ = new int[d_size];
+      offset = 0;
+      for (int i = 0; i < d_size; ++i) {
+         recv_cts[i] = (ranges[i+1] - ranges[i]) * (d_num_increments+1);
+         displ[i] = offset;
+         offset += recv_cts[i];
+      }
+   }
+
+   // Each process sends to process 0 its contribution to Q.
+   MPI_Gatherv(my_qvals, num_my_qvals, MPI_DOUBLE, all_qvals,
+               recv_cts, displ, MPI_DOUBLE, 0, PETSC_COMM_WORLD);
+
+   // Process 0 sets the values of Q and assembles the matrix.
+   if (d_rank == 0) {
+      offset = d_num_increments*(d_num_increments+1);
+      for (int i = 0; i < d_num_increments; ++i) {
+         all_qvals[offset+i] = 0.0;
+      }
+      all_qvals[offset+d_num_increments] = norm_j;
+      MatSetValues(Q, d_num_increments+1, row_cols, d_num_increments+1,
+                   row_cols, all_qvals, INSERT_VALUES);
       MatAssemblyBegin(Q, MAT_FINAL_ASSEMBLY);
       MatAssemblyEnd(Q, MAT_FINAL_ASSEMBLY);
    }
+
+   // Clean up.
+   if (d_rank == 0) {
+      delete [] all_qvals;
+      delete [] recv_cts;
+      delete [] displ;
+   }
+   if (my_qvals) {
+      delete [] my_qvals;
+   }
+   delete [] row_cols;
 }
 
 void
@@ -437,6 +440,8 @@ incremental_svd::svd(
                       vvec, INSERT_VALUES);
          sigma[col] = 0.0;
       }
+
+      // Clean up.
       delete [] rows;
       delete [] uvec;
       delete [] vvec;
@@ -584,6 +589,8 @@ incremental_svd::computeNormJ(
    Mat P;
    double norm_j;
    compute_J_P_normJ(u, j, P, norm_j);
+
+   // Clean up and return the norm of j.
    VecDestroy(&j);
    MatDestroy(&P);
    return norm_j;

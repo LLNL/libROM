@@ -141,6 +141,9 @@ class incremental_svd
 
       // Rank of process this object lives on.
       int d_rank;
+
+      // Total number of processors.
+      int d_size;
 };
 
 }
