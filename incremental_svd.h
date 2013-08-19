@@ -39,7 +39,7 @@ class incremental_svd
          return d_dim;
       }
 
-      // Returns the model parameters, d_U*d_L.
+      // Returns the model parameters, d_U*d_L as a PETSc Mat.
       Mat
       getModel()
       {

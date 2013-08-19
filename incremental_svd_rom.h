@@ -47,7 +47,7 @@ class incremental_svd_rom
          return d_isvdts->computeNextIncrementTime(u_in, rhs_in, time);
       }
 
-      // Returns the model parameters.
+      // Returns the model parameters as a PETSc Mat.
       Mat
       getModel()
       {
