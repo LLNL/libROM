@@ -41,3 +41,6 @@ smoke_test: lib smoke_test.o
 	$(LD) $(LDFLAGS) -o smoke_test smoke_test.o $(LIBS)
 
 .C.o :; $(CXX) $(CXXFLAGS) $(INCS) -c $*.C
+
+clean:
+	rm -f *.o $(LIBROM) random_test smoke_test

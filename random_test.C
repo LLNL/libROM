@@ -52,31 +52,41 @@ int main(int argc, char* argv[])
          }
       }
    }
+   double start_inc = MPI_Wtime();
    for (int i = 0; i < num_snapshots; ++i) {
       if (inc_rom.isNextSnapshot(0.0)) {
          inc_rom.takeSnapshot(M[i]);
          double next_snapshot_time =
             inc_rom.computeNextSnapshotTime(M[i], M[i], 0.0);
       }
+   }
+   Mat inc_model = inc_rom.getModel();
+   double stop_inc = MPI_Wtime();
+   double incremental_run_time = stop_inc - start_inc;
+   printf("incremental run time = %g\n", incremental_run_time);
+   double start_static = MPI_Wtime();
+   for (int i = 0; i < num_snapshots; ++i) {
       if (static_rom.isNextSnapshot(0.0)) {
          static_rom.takeSnapshot(M[i]);
          double next_snapshot_time =
             static_rom.computeNextSnapshotTime(M[i], M[i], 0.0);
       }
    }
-#ifdef DEBUG
    Mat static_model = static_rom.getModel();
-   Mat inc_model = inc_rom.getModel();
+   double stop_static = MPI_Wtime();
+   double static_run_time = stop_static - start_static;
+   printf("static run time = %g\n", static_run_time);
+#ifdef DEBUG
    Mat test;
    Mat static_model_t;
    MatTranspose(static_model, MAT_INITIAL_MATRIX, &static_model_t);
    MatMatMult(static_model_t, inc_model, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &test);
    MatView(test, PETSC_VIEWER_STDOUT_WORLD);
    MatDestroy(&static_model_t);
-   MatDestroy(&static_model);
-   MatDestroy(&inc_model);
    MatDestroy(&test);
 #endif
+   MatDestroy(&static_model);
+   MatDestroy(&inc_model);
    for (int i = 0; i < num_snapshots; ++i) {
       delete [] M[i];
    }
