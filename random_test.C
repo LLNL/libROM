@@ -2,6 +2,8 @@
 #include "static_svd_rom.h"
 #include "stdio.h"
 
+// #define DEBUG
+
 int main(int argc, char* argv[])
 {
    if (argc != 4) {

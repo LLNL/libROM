@@ -4,6 +4,8 @@
 #include <cmath>
 #include <assert.h>
 
+// #define DEBUG
+
 namespace CAROM {
 
 incremental_svd::incremental_svd(

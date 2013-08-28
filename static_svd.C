@@ -3,6 +3,8 @@
 #include "slepc.h"
 #include <assert.h>
 
+// #define DEBUG
+
 namespace CAROM {
 
 static_svd::static_svd(
