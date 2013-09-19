@@ -36,15 +36,15 @@ incremental_svd_time_stepper::computeNextIncrementTime(
    int dim = d_isvd->getDim();
 
    // Convert representation free C arrays of doubles into a PETSc vectors.
-   Vec u;
-   VecCreate(PETSC_COMM_WORLD, &u);
-   VecSetSizes(u, dim, PETSC_DECIDE);
-   VecSetType(u, VECMPI);
    int offset = rank*dim;
    int* vec_locs = new int [dim];
    for (int i = 0; i < dim; ++i) {
       vec_locs[i] = offset + i;
    }
+   Vec u;
+   VecCreate(PETSC_COMM_WORLD, &u);
+   VecSetSizes(u, dim, PETSC_DECIDE);
+   VecSetType(u, VECMPI);
    VecSetValues(u, dim, vec_locs, u_in, INSERT_VALUES);
    VecAssemblyBegin(u);
    VecAssemblyEnd(u);
@@ -61,15 +61,13 @@ incremental_svd_time_stepper::computeNextIncrementTime(
    // Get the norm of J from the incremental svd algorithm.
    double norm_j = d_isvd->computeNormJ(u);
 
-   // Compute norm_u = sqrt(u.u).
+   // Compute the norm of u.
    double norm_u;
-   VecDot(u, u, &norm_u);
-   norm_u = sqrt(norm_u);
+   VecNorm(u, NORM_2, &norm_u);
 
-   // Compute the norm_rhs = sqrt(rhs.rhs).
+   // Compute the norm of rhs.
    double norm_rhs;
-   VecDot(rhs, rhs, &norm_rhs);
-   norm_rhs = sqrt(norm_rhs);
+   VecNorm(rhs, NORM_2, &norm_rhs);
 
    // Compute delta t to next increment time.
    double epsilon = d_isvd->getEpsilon();
