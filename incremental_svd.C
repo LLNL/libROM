@@ -95,8 +95,7 @@ incremental_svd::buildInitialSVD(
    MatSetType(d_S, MATDENSE);
    MatSetUp(d_S);
    PetscScalar norm_u;
-   VecDot(u, u, &norm_u);
-   norm_u = sqrt(norm_u);
+   VecNorm(u, NORM_2, &norm_u);
    if (d_rank == 0) {
       MatSetValues(d_S, 1, &zero, 1, &zero, &norm_u, INSERT_VALUES);
    }
@@ -240,38 +239,34 @@ incremental_svd::orthogonalizeJAndComputeNorm(
    // Get the rows of P owned by this process.
    int p_row_start, p_row_end;
    MatGetOwnershipRange(P, &p_row_start, &p_row_end);
+   int num_rows = p_row_end - p_row_start;
+   int* rows = new int [num_rows];
+   for (int i = 0; i < num_rows; ++i) {
+      rows[i] = i + p_row_start;
+   }
+   double* pvec_vals = new double [num_rows];
 
    Vec Pvec;
    VecCreate(PETSC_COMM_WORLD, &Pvec);
    VecSetSizes(Pvec, d_dim, PETSC_DECIDE);
    VecSetType(Pvec, VECMPI);
    for (int col = 0; col < d_num_increments; ++col) {
-      double factor = 0.0;
-      MatGetColumnVector(P, Pvec, col);
+      double factor;
+      MatGetValues(P, num_rows, rows, 1, &col, pvec_vals);
+      VecSetValues(Pvec, num_rows, rows, pvec_vals, INSERT_VALUES);
       VecDot(Pvec, j, &factor);
-      for (int row = p_row_start; row < p_row_end; ++row) {
-         double pval, jval;
-         VecGetValues(Pvec, 1, &row, &pval);
-         VecGetValues(j, 1, &row, &jval);
-         double new_jval = jval - factor * pval;
-         VecSetValue(j, row, new_jval, INSERT_VALUES);
-      }
+      VecAXPY(j, -factor, Pvec);
    }
+   VecAssemblyBegin(j);
+   VecAssemblyEnd(j);
+   delete [] rows;
+   delete [] pvec_vals;
 
    // Done with Pvec.
    VecDestroy(&Pvec);
 
-   // norm_j = sqrt(j.j)
-   VecDot(j, j, &norm_j);
-   norm_j = sqrt(norm_j);
-
-   // Divide each value of j by norm_j.
-   for (int row = p_row_start; row < p_row_end; ++row) {
-      double jval;
-      VecGetValues(j, 1, &row, &jval);
-      jval /= norm_j;
-      VecSetValue(j, row, jval, INSERT_VALUES);
-   }
+   // Normalize j.
+   VecNormalize(j, &norm_j);
 }
 
 void
@@ -524,18 +519,26 @@ incremental_svd::addNewIncrement(
    Mat newU;
    MatCreate(PETSC_COMM_WORLD, &newU);
    MatSetSizes(newU, d_dim, PETSC_DECIDE, PETSC_DETERMINE, d_num_increments+1);
+   MatSetType(newU, MATDENSE);
    MatSetUp(newU);
    int* cols = new int [d_num_increments+1];
    for (int i = 0; i < d_num_increments+1; ++i) {
       cols[i] = i;
    }
-   double* vals = new double [d_num_increments+1];
-   for (int row = d_U_row_start; row < d_U_row_end; ++row) {
-      MatGetValues(d_U, 1, &row, d_num_increments, cols, vals);
-      VecGetValues(j, 1, &row, &vals[d_num_increments]);
-      MatSetValues(newU, 1, &row, d_num_increments+1, cols,
-                   vals, INSERT_VALUES);
+   int num_d_U_rows = d_U_row_end - d_U_row_start;
+   int* rows = new int [num_d_U_rows];
+   for (int i = 0; i < num_d_U_rows; ++i) {
+      rows[i] = i+d_U_row_start;
    }
+   double* vals = new double [num_d_U_rows*d_num_increments];
+   MatGetValues(d_U, num_d_U_rows, rows, d_num_increments, cols, vals);
+   MatSetValues(newU, num_d_U_rows, rows, d_num_increments, cols,
+                vals, INSERT_VALUES);
+   VecGetValues(j, num_d_U_rows, rows, vals);
+   MatSetValues(newU, num_d_U_rows, rows, 1, &cols[d_num_increments],
+                vals, INSERT_VALUES);
+   delete [] rows;
+   delete [] vals;
    MatAssemblyBegin(newU, MAT_FINAL_ASSEMBLY);
    MatAssemblyEnd(newU, MAT_FINAL_ASSEMBLY);
    MatDestroy(&d_U);
@@ -550,6 +553,7 @@ incremental_svd::addNewIncrement(
                d_num_increments+1, d_num_increments+1);
    MatSetUp(newL);
    int d_L_row_start, d_L_row_end;
+   vals = new double [d_num_increments+1];
    MatGetOwnershipRange(d_L, &d_L_row_start, &d_L_row_end);
    for (int row = d_L_row_start; row < d_L_row_end; ++row) {
       MatGetValues(d_L, 1, &row, d_num_increments, cols, vals);
@@ -565,6 +569,7 @@ incremental_svd::addNewIncrement(
       MatSetValues(newL, 1, &d_num_increments, d_num_increments+1, cols,
                    vals, INSERT_VALUES);
    }
+   delete [] vals;
    MatAssemblyBegin(newL, MAT_FINAL_ASSEMBLY);
    MatAssemblyEnd(newL, MAT_FINAL_ASSEMBLY);
    MatDestroy(&d_L);
@@ -580,7 +585,6 @@ incremental_svd::addNewIncrement(
 
    // Clean up.
    delete [] cols;
-   delete [] vals;
 }
 
 double

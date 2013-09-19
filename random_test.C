@@ -63,7 +63,17 @@ int main(int argc, char* argv[])
    Mat inc_model = inc_rom.getModel();
    double stop_inc = MPI_Wtime();
    double incremental_run_time = stop_inc - start_inc;
-   printf("incremental run time = %g\n", incremental_run_time);
+   double global_incremental_run_time;
+   if (size == 1) {
+      global_incremental_run_time = incremental_run_time;
+   }
+   else {
+      MPI_Reduce(&incremental_run_time, &global_incremental_run_time, 1,
+                 MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
+   }
+   if (rank == 0) {
+      printf("incremental run time = %g\n", global_incremental_run_time/size);
+   }
    double start_static = MPI_Wtime();
    for (int i = 0; i < num_snapshots; ++i) {
       if (static_rom.isNextSnapshot(0.0)) {
@@ -75,7 +85,17 @@ int main(int argc, char* argv[])
    Mat static_model = static_rom.getModel();
    double stop_static = MPI_Wtime();
    double static_run_time = stop_static - start_static;
-   printf("static run time = %g\n", static_run_time);
+   double global_static_run_time;
+   if (size == 1) {
+      global_static_run_time = static_run_time;
+   }
+   else {
+      MPI_Reduce(&static_run_time, &global_static_run_time, 1,
+                 MPI_DOUBLE, MPI_SUM, 0, PETSC_COMM_WORLD);
+   }
+   if (rank == 0) {
+      printf("static run time = %g\n", global_static_run_time/size);
+   }
 #ifdef DEBUG
    Mat test;
    Mat static_model_t;

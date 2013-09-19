@@ -43,7 +43,6 @@ class static_svd
          MatCreate(PETSC_COMM_WORLD, &result);
          MatSetSizes(result, d_dim, PETSC_DECIDE,
                      PETSC_DETERMINE, static_cast<int>(d_state.size()));
-         MatSetType(result, MATDENSE);
          MatSetUp(result);
          MatCopy(d_U, result, SAME_NONZERO_PATTERN);
          return result;
