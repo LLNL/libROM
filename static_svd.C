@@ -170,6 +170,7 @@ static_svd::svd(
       delete [] v_rows;
       delete [] vvec;
    }
+   delete [] sigma_rows;
    delete [] sigma;
    SVDDestroy(&svd);
    VecDestroy(&u);
