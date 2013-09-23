@@ -44,7 +44,7 @@ class incremental_svd
       getModel()
       {
          Mat result;
-         MatMatMult(d_U, d_L, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &result);
+         d_U_Times_d_L(result);
          return result;
       }
 
@@ -122,6 +122,15 @@ class incremental_svd
          Mat sigma,
          int d_U_row_start,
          int d_U_row_end);
+
+      // Compute d_U*d_L by gathering all of d_L onto each processor and
+      // performing that processors part of the computation locally.  In
+      // general, d_L is small and distributed by PETSc over processors in a
+      // manner that makes this computation scale poorly when done with
+      // MatMatMult.
+      void
+      d_U_Times_d_L(
+         Mat& P);
 
       // Dimension of the system.
       int d_dim;

@@ -224,7 +224,7 @@ incremental_svd::compute_J_P_normJ(
    VecCopy(u, j);
 
    // P = d_U * d_L
-   MatMatMult(d_U, d_L, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &P);
+   d_U_Times_d_L(P);
 
    // Use modified Gram-Schmidt orthogonalization to modify j.
    orthogonalizeJAndComputeNorm(j, P, norm_j);
@@ -600,6 +600,98 @@ incremental_svd::computeNormJ(
    VecDestroy(&j);
    MatDestroy(&P);
    return norm_j;
+}
+
+void
+incremental_svd::d_U_Times_d_L(
+   Mat& P)
+{
+   // Get the part of d_L that this processor owns.
+   const int* ranges;
+   MatGetOwnershipRanges(d_L, &ranges);
+   int my_num_L_rows = ranges[d_rank+1] - ranges[d_rank];
+   int my_num_vals = my_num_L_rows*d_num_increments;
+   double* my_vals = 0;
+   int* cols = new int [d_num_increments];
+   for (int i = 0; i < d_num_increments; ++i) {
+      cols[i] = i;
+   }
+   if (my_num_L_rows) {
+      int* my_L_rows = new int [my_num_L_rows];
+      for (int i = 0; i < my_num_L_rows; ++i) {
+         my_L_rows[i] = i + ranges[d_rank];
+      }
+      my_vals = new double [my_num_vals];
+      MatGetValues(d_L, my_num_L_rows, my_L_rows,
+                   d_num_increments, cols, my_vals);
+      delete [] my_L_rows;
+   }
+
+   // Send this processors part of d_L to all other processors so that all
+   // processors own a complete version of d_L.
+   int* recvcts = new int [d_size];
+   int* offsets = new int [d_size];
+   offsets[0] = 0;
+   for (int i = 0; i < d_size; ++i) {
+      recvcts[i] = d_num_increments*(ranges[i+1]-ranges[i]);
+      if (i > 0) {
+         offsets[i] = offsets[i-1] + recvcts[i-1];
+      }
+   }
+   double* L = new double [d_num_increments*d_num_increments];
+   MPI_Allgatherv(my_vals, my_num_vals, MPI_DOUBLE,
+                  L, recvcts, offsets, MPI_DOUBLE, PETSC_COMM_WORLD);
+   delete [] recvcts;
+   delete [] offsets;
+   if (my_vals) {
+      delete [] my_vals;
+   }
+
+   // Get the part of d_U that this processor owns.
+   int d_U_row_start, d_U_row_end;
+   MatGetOwnershipRange(d_U, &d_U_row_start, &d_U_row_end);
+   int num_d_U_rows = d_U_row_end - d_U_row_start;
+   int* rows = new int [num_d_U_rows];
+   for (int i = 0; i < num_d_U_rows; ++i) {
+      rows[i] = i + d_U_row_start;
+   }
+   double* U = new double [d_dim*d_num_increments];
+   MatGetValues(d_U, d_dim, rows, d_num_increments, cols, U);
+
+   // Create the result.
+   MatCreate(PETSC_COMM_WORLD, &P);
+   MatSetSizes(P, d_dim, PETSC_DECIDE, PETSC_DETERMINE, d_num_increments);
+   MatSetType(P, MATDENSE);
+   MatSetUp(P);
+
+   // Construct the product.
+   double* P_vals = new double [d_dim * d_num_increments];
+   for (int L_col = 0; L_col < d_num_increments; ++L_col) {
+      int U_idx = 0;
+      int P_idx = L_col;
+      for (int U_row = 0; U_row < d_dim; ++U_row) {
+         int L_idx = L_col;
+         P_vals[P_idx] = 0.0;
+         for (int entry = 0; entry < d_num_increments; ++entry) {
+            P_vals[P_idx] += U[U_idx]*L[L_idx];
+            ++U_idx;
+            L_idx += d_num_increments;
+         }
+         P_idx += d_num_increments;
+      }
+   }
+
+   // Put the product into the result.
+   MatSetValues(P, d_dim, rows, d_num_increments, cols, P_vals, INSERT_VALUES);
+   MatAssemblyBegin(P, MAT_FINAL_ASSEMBLY);
+   MatAssemblyEnd(P, MAT_FINAL_ASSEMBLY);
+
+   // Clean up.
+   delete [] rows;
+   delete [] cols;
+   delete [] U;
+   delete [] L;
+   delete [] P_vals;
 }
 
 }
