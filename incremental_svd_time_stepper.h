@@ -54,8 +54,8 @@ class incremental_svd_time_stepper
          double* rhs_in,
          double time);
 
-      // Returns the model parameters as a PETSc Mat.
-      Mat
+      // Returns the model parameters as a C array.
+      double*
       getModel()
       {
          return d_isvd->getModel();

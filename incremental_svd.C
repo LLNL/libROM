@@ -20,7 +20,9 @@ incremental_svd::incremental_svd(
    d_skip_redundant(skip_redundant),
    d_U(0),
    d_L(0),
-   d_S(0)
+   d_S(0),
+   d_norm_j(0.0),
+   d_time(0.0)
 {
    // Register a new SLEPc instance, get the rank of this process, and get the
    // number of processors.
@@ -31,15 +33,16 @@ incremental_svd::incremental_svd(
 
 incremental_svd::~incremental_svd()
 {
+   printf("svd time = %g\n", d_time);
    // Destroy PETSc data members and finalize SLEPc.
    if (d_U) {
-      MatDestroy(&d_U);
+      delete [] d_U;
    }
    if (d_L) {
-      MatDestroy(&d_L);
+      delete [] d_L;
    }
    if (d_S) {
-      MatDestroy(&d_S);
+      delete [] d_S;
    }
    SLEPcManager::getManager()->unRegisterSLEPcInstance();
 }
@@ -48,84 +51,86 @@ void
 incremental_svd::increment(
    double* u_in)
 {
-   // Convert representation free C array of doubles into a PETSc vector.
-   Vec u;
-   VecCreate(PETSC_COMM_WORLD, &u);
-   VecSetSizes(u, d_dim, PETSC_DECIDE);
-   VecSetType(u, VECMPI);
-   int offset = d_rank*d_dim;
-   int* vec_locs = new int [d_dim];
-   for (int i = 0; i < d_dim; ++i) {
-      vec_locs[i] = offset + i;
-   }
-   VecSetValues(u, d_dim, vec_locs, u_in, INSERT_VALUES);
-   VecAssemblyBegin(u);
-   VecAssemblyEnd(u);
-   delete [] vec_locs;
-
    // If this is the first SVD then build it.  Otherwise add this increment to
    // the system.
    if (d_num_increments == 0) {
-      buildInitialSVD(u);
+      buildInitialSVD(u_in);
    }
    else {
-      buildIncrementalSVD(u);
+      buildIncrementalSVD(u_in);
    }
 
 #ifdef DEBUG
-   MatView(d_S, PETSC_VIEWER_STDOUT_WORLD);
-   MatView(d_L, PETSC_VIEWER_STDOUT_WORLD);
-   MatView(d_U, PETSC_VIEWER_STDOUT_WORLD);
+   if (d_rank == 0) {
+      int idx = 0;
+      for (int row = 0; row < d_num_increments; ++row) {
+         for (int col = 0; col < d_num_increments; ++col) {
+            printf("%g  ", d_S[idx++]);
+         }
+         printf("\n");
+      }
+      printf("\n");
+      idx = 0;
+      for (int row = 0; row < d_num_increments; ++row) {
+         for (int col = 0; col < d_num_increments; ++col) {
+            printf("%g  ", d_L[idx++]);
+         }
+         printf("\n");
+      }
+      printf("\n");
+   }
+   Mat U;
+   MatCreate(PETSC_COMM_WORLD, &U);
+   MatSetSizes(U, d_dim, PETSC_DECIDE, PETSC_DETERMINE, d_num_increments);
+   MatSetType(U, MATDENSE);
+   MatSetUp(U);
+   int U_row_start;
+   MatGetOwnershipRange(U, &U_row_start, PETSC_NULL);
+   int* rows = new int [d_dim];
+   for (int i = 0; i < d_dim; ++i) {
+      rows[i] = i + U_row_start;
+   }
+   int* cols = new int [d_num_increments];
+   for (int i = 0; i < d_num_increments; ++i) {
+      cols[i] = i;
+   }
+   MatSetValues(U, d_dim, rows, d_num_increments, cols, d_U, INSERT_VALUES);
+   MatAssemblyBegin(U, MAT_FINAL_ASSEMBLY);
+   MatAssemblyEnd(U, MAT_FINAL_ASSEMBLY);
+   MatView(U, PETSC_VIEWER_STDOUT_WORLD);
+   MatDestroy(&U);
+   if (d_rank == 0) {
+      printf("============================================================\n");
+   }
 #endif
-
-   // Clean up.
-   VecDestroy(&u);
 }
 
 void
 incremental_svd::buildInitialSVD(
-   Vec u)
+   double* u)
 {
-   double one = 1.0;
    int zero = 0;
 
    // Build d_S.
-   MatCreate(PETSC_COMM_WORLD, &d_S);
-   MatSetSizes(d_S, PETSC_DECIDE, PETSC_DECIDE, 1, 1);
-   MatSetType(d_S, MATDENSE);
-   MatSetUp(d_S);
-   PetscScalar norm_u;
-   VecNorm(u, NORM_2, &norm_u);
-   if (d_rank == 0) {
-      MatSetValues(d_S, 1, &zero, 1, &zero, &norm_u, INSERT_VALUES);
+   d_S = new double [1];
+   double norm_u = 0.0;
+   double tmp = 0.0;
+   for (int i = 0; i < d_dim; ++i) {
+      tmp += u[i]*u[i];
    }
-   MatAssemblyBegin(d_S, MAT_FINAL_ASSEMBLY);
-   MatAssemblyEnd(d_S, MAT_FINAL_ASSEMBLY);
+   MPI_Allreduce(&tmp, &norm_u, 1, MPI_DOUBLE, MPI_SUM, PETSC_COMM_WORLD);
+   norm_u = sqrt(norm_u);
+   d_S[0] = norm_u;
 
    // Build d_L.
-   MatCreate(PETSC_COMM_WORLD, &d_L);
-   MatSetSizes(d_L, PETSC_DECIDE, PETSC_DECIDE, 1, 1);
-   MatSetUp(d_L);
-   if (d_rank == 0) {
-      MatSetValues(d_L, 1, &zero, 1, &zero, &one, INSERT_VALUES);
-   }
-   MatAssemblyBegin(d_L, MAT_FINAL_ASSEMBLY);
-   MatAssemblyEnd(d_L, MAT_FINAL_ASSEMBLY);
+   d_L = new double [1];
+   d_L[0] = 1.0;
 
    // Build d_U.
-   MatCreate(PETSC_COMM_WORLD, &d_U);
-   MatSetSizes(d_U, d_dim, PETSC_DECIDE, PETSC_DETERMINE, 1);
-   MatSetUp(d_U);
-   int vec_start, vec_end;
-   VecGetOwnershipRange(u, &vec_start, &vec_end);
-   for (int row = vec_start; row < vec_end; ++row) {
-     double u_val;
-     VecGetValues(u, 1, &row, &u_val);
-     u_val = u_val/norm_u;
-     MatSetValues(d_U, 1, &row, 1, &zero, &u_val, INSERT_VALUES);
+   d_U = new double [d_dim];
+   for (int i = 0; i < d_dim; ++i) {
+      d_U[i] = u[i]/norm_u;
    }
-   MatAssemblyBegin(d_U, MAT_FINAL_ASSEMBLY);
-   MatAssemblyEnd(d_U, MAT_FINAL_ASSEMBLY);
 
    // We now have another increment.
    ++d_num_increments;
@@ -133,57 +138,60 @@ incremental_svd::buildInitialSVD(
 
 void
 incremental_svd::buildIncrementalSVD(
-   Vec u)
+   double* u)
 {
-   // Compute j, P and the norm of J.
-   Vec j;
-   Mat P;
-   double norm_j;
-   compute_J_P_normJ(u, j, P, norm_j);
+   // Compute j, P and the norm of j.
+   double* j;
+   double* P;
+   compute_J_P_normJ(u, j, P);
 
    // l = P' * u
-   Vec l;
-   VecCreate(PETSC_COMM_WORLD, &l);
-   VecSetSizes(l, PETSC_DECIDE, d_num_increments);
-   VecSetType(l, VECMPI);
-   MatMultTranspose(P, u, l);
+   double* l;
+   Pt_Times_u(P, u, l);
 
    // Compute cm = u.u and see if this increment is new.
-   double cm;
-   VecDot(u, u, &cm);
+   double cm = 0.0;
+   double tmp = 0.0;
+   for (int i = 0; i < d_dim; ++i) {
+      tmp += u[i]*u[i];
+   }
+   MPI_Allreduce(&tmp, &cm, 1, MPI_DOUBLE, MPI_SUM, PETSC_COMM_WORLD);
 
    double eps_squared = d_epsilon*d_epsilon;
    bool is_new_increment = ((cm > eps_squared) &&
-      ((norm_j*norm_j)/(eps_squared+cm)) > eps_squared);
+      ((d_norm_j*d_norm_j)/(eps_squared+cm)) > eps_squared);
 
    // If this increment is not new and we are skipping redundant increments
    // then clean up and return.
+   double norm_j_for_constructQ = d_norm_j;
    if (!is_new_increment) {
       if (d_skip_redundant) {
-         VecDestroy(&j);
-         VecDestroy(&l);
+         delete [] j;
+         delete [] l;
          return;
       }
       else {
-         norm_j = 0.0;
+         norm_j_for_constructQ = 0.0;
       }
    }
 
-   // On process 0, create Q.
-   Mat Q;
-   constructQ(Q, l, norm_j);
+   // Create Q.
+   double* Q;
+   constructQ(Q, l, norm_j_for_constructQ);
 
    // Done with l.
-   VecDestroy(&l);
+   delete [] l;
 
    // Now get the singular value decomposition of Q.
-   Mat A, sigma, B;
+   double* A;
+   double* sigma;
+   double* B;
+   double foo = MPI_Wtime();
    svd(Q, A, sigma, B);
+   d_time += MPI_Wtime() - foo;
 
-   // Done with Q so destroy it on process 0 where is was created.
-   if (d_rank == 0) {
-      MatDestroy(&Q);
-   }
+   // Done with Q.
+   delete [] Q;
 
    // At this point we either have a new or a redundant increment and we are
    // not skipping redundant increments.
@@ -191,507 +199,328 @@ incremental_svd::buildIncrementalSVD(
       // This increment is not new and we are not skipping redundant
       // increments.
       addRedundantIncrement(A, sigma);
+      delete [] sigma;
    }
    else if (is_new_increment) {
       // This increment is new.
-
-      // Get the rows of P owned by this process.
-      int p_row_start, p_row_end;
-      MatGetOwnershipRange(P, &p_row_start, &p_row_end);
-
-      addNewIncrement(j, A, sigma, p_row_start, p_row_end);
+      addNewIncrement(j, A, sigma);
    }
 
    // Clean up.
-   MatDestroy(&P);
-   VecDestroy(&j);
-   MatDestroy(&A);
-   MatDestroy(&sigma);
-   MatDestroy(&B);
+   delete [] P;
+   delete [] j;
+   delete [] A;
+   delete [] B;
 }
 
 void
 incremental_svd::compute_J_P_normJ(
-   Vec u,
-   Vec& j,
-   Mat& P,
-   double& norm_j)
+   double* u,
+   double*& j,
+   double*& P)
 {
    // j = u
-   VecCreate(PETSC_COMM_WORLD, &j);
-   VecSetSizes(j, d_dim, PETSC_DECIDE);
-   VecSetType(j, VECMPI);
-   VecCopy(u, j);
+   j = new double [d_dim];
+   memcpy(j, u, d_dim*sizeof(double));
 
    // P = d_U * d_L
    d_U_Times_d_L(P);
 
    // Use modified Gram-Schmidt orthogonalization to modify j.
-   orthogonalizeJAndComputeNorm(j, P, norm_j);
+   orthogonalizeJAndComputeNorm(j, P);
 }
 
 void
 incremental_svd::orthogonalizeJAndComputeNorm(
-   Vec j,
-   Mat P,
-   double& norm_j)
+   double* j,
+   double* P)
 {
-   // Get the rows of P owned by this process.
-   int p_row_start, p_row_end;
-   MatGetOwnershipRange(P, &p_row_start, &p_row_end);
-   int num_rows = p_row_end - p_row_start;
-   int* rows = new int [num_rows];
-   for (int i = 0; i < num_rows; ++i) {
-      rows[i] = i + p_row_start;
-   }
-   double* pvec_vals = new double [num_rows];
-
-   Vec Pvec;
-   VecCreate(PETSC_COMM_WORLD, &Pvec);
-   VecSetSizes(Pvec, d_dim, PETSC_DECIDE);
-   VecSetType(Pvec, VECMPI);
+   double tmp;
    for (int col = 0; col < d_num_increments; ++col) {
-      double factor;
-      MatGetValues(P, num_rows, rows, 1, &col, pvec_vals);
-      VecSetValues(Pvec, num_rows, rows, pvec_vals, INSERT_VALUES);
-      VecDot(Pvec, j, &factor);
-      VecAXPY(j, -factor, Pvec);
+      double factor = 0.0;
+      tmp = 0.0;
+      int Pidx = col;
+      for (int i = 0; i < d_dim; ++i) {
+         tmp += P[Pidx]*j[i];
+         Pidx += d_num_increments;
+      }
+      MPI_Allreduce(&tmp, &factor, 1, MPI_DOUBLE, MPI_SUM, PETSC_COMM_WORLD);
+      
+      Pidx = col;
+      for (int i = 0; i < d_dim; ++i) {
+         j[i] -= factor*P[Pidx];
+         Pidx += d_num_increments;
+      }
    }
-   VecAssemblyBegin(j);
-   VecAssemblyEnd(j);
-   delete [] rows;
-   delete [] pvec_vals;
-
-   // Done with Pvec.
-   VecDestroy(&Pvec);
 
    // Normalize j.
-   VecNormalize(j, &norm_j);
+   tmp = 0.0;
+   for (int i = 0; i < d_dim; ++i) {
+      tmp += j[i]*j[i];
+   }
+   MPI_Allreduce(&tmp, &d_norm_j, 1, MPI_DOUBLE, MPI_SUM, PETSC_COMM_WORLD);
+   d_norm_j = sqrt(d_norm_j);
+   for (int i = 0; i < d_dim; ++i) {
+      j[i] /= d_norm_j;
+   }
 }
 
 void
 incremental_svd::constructQ(
-   Mat& Q,
-   Vec l,
+   double*& Q,
+   double* l,
    double norm_j)
 {
-   // Get the rows of d_S owned by each process.
-   const int* ranges;
-   MatGetOwnershipRanges(d_S, &ranges);
+   // Create Q.
+   Q = new double [(d_num_increments+1)*(d_num_increments+1)];
 
-   // Create an array holding the global ids of all rows and columns in both
-   // d_S and Q.
-   int* row_cols = new int [d_num_increments+1];
-   for (int i = 0; i < d_num_increments+1; ++i) {
-      row_cols[i] = i;
-   }
-
-   // Process 0 is the only process which actually constructs Q.  Q is a small
-   // matrix and we only want to get the singular value decomposition of it.
-   // Given its size, this can easily and likely more efficiently done on one
-   // processor.
-   // However, other processors may hold data needed to construct Q so they all
-   // must participate in the constuction sending the portions of Q that they
-   // hold to processor 0.
-   if (d_rank == 0) {
-      // Create Q.
-      MatCreate(PETSC_COMM_SELF, &Q);
-      MatSetSizes(Q, PETSC_DECIDE, PETSC_DECIDE,
-                  d_num_increments+1, d_num_increments+1);
-      MatSetType(Q, MATDENSE);
-      MatSetUp(Q);
-   }
-
-   // Processor 0 allocates storage for all the values of Q.
-   double* all_qvals = 0;
-   if (d_rank == 0) {
-      all_qvals = new double [(d_num_increments+1)*(d_num_increments+1)];
-   }
-
-   // Each processor allocates and fills an array for it's contribution to Q.
-   int my_num_rows_owned = ranges[d_rank+1] - ranges[d_rank];
-   int num_my_qvals = (d_num_increments+1)*my_num_rows_owned;
-   double* my_qvals = 0;
-   if (num_my_qvals > 0) {
-      my_qvals = new double [num_my_qvals];
-   }
-   int offset = 0;
-   for (int row = ranges[d_rank]; row < ranges[d_rank+1]; ++row) {
-      MatGetValues(d_S, 1, &row, d_num_increments, row_cols,
-                   &my_qvals[offset]);
-      VecGetValues(l, 1, &row, &my_qvals[offset+d_num_increments]);
-      offset += d_num_increments + 1;
-   }
-
-   // Process 0 need to know how much data it will receive from each process
-   // and the displacement in all_qvals for the data from each process.
-   int* recv_cts = 0;
-   int* displ = 0;
-   if (d_rank == 0) {
-      recv_cts = new int[d_size];
-      displ = new int[d_size];
-      offset = 0;
-      for (int i = 0; i < d_size; ++i) {
-         recv_cts[i] = (ranges[i+1] - ranges[i]) * (d_num_increments+1);
-         displ[i] = offset;
-         offset += recv_cts[i];
+   // Fill Q.
+   int q_idx = 0;
+   int s_idx = 0;
+   for (int row = 0; row < d_num_increments; ++row) {
+      for (int col = 0; col < d_num_increments; ++col) {
+         Q[q_idx++] = d_S[s_idx++];
       }
+      Q[q_idx++] = l[row];
    }
-
-   // Each process sends to process 0 its contribution to Q.
-   MPI_Gatherv(my_qvals, num_my_qvals, MPI_DOUBLE, all_qvals,
-               recv_cts, displ, MPI_DOUBLE, 0, PETSC_COMM_WORLD);
-
-   // Process 0 sets the values of Q and assembles the matrix.
-   if (d_rank == 0) {
-      offset = d_num_increments*(d_num_increments+1);
-      for (int i = 0; i < d_num_increments; ++i) {
-         all_qvals[offset+i] = 0.0;
-      }
-      all_qvals[offset+d_num_increments] = norm_j;
-      MatSetValues(Q, d_num_increments+1, row_cols, d_num_increments+1,
-                   row_cols, all_qvals, INSERT_VALUES);
-      MatAssemblyBegin(Q, MAT_FINAL_ASSEMBLY);
-      MatAssemblyEnd(Q, MAT_FINAL_ASSEMBLY);
+   for (int col = 0; col < d_num_increments; ++col) {
+      Q[q_idx++] = 0.0;
    }
-
-   // Clean up.
-   if (d_rank == 0) {
-      delete [] all_qvals;
-      delete [] recv_cts;
-      delete [] displ;
-   }
-   if (my_qvals) {
-      delete [] my_qvals;
-   }
-   delete [] row_cols;
+   Q[q_idx] = norm_j;
 }
 
 void
 incremental_svd::svd(
-   Mat A,
-   Mat& U,
-   Mat& S,
-   Mat& V)
+   double* A,
+   double*& U,
+   double*& S,
+   double*& V)
 {
-   // Construct U.
-   MatCreate(PETSC_COMM_WORLD, &U);
-   MatSetSizes(U, PETSC_DECIDE, PETSC_DECIDE,
-               d_num_increments+1, d_num_increments+1);
-   MatSetUp(U);
-
-   // Construct S.
-   MatCreate(PETSC_COMM_WORLD, &S);
-   MatSetSizes(S, PETSC_DECIDE, PETSC_DECIDE,
-               d_num_increments+1, d_num_increments+1);
-   MatSetType(S, MATDENSE);
-   MatSetUp(S);
-
-   // Construct V.
-   MatCreate(PETSC_COMM_WORLD, &V);
-   MatSetSizes(V, PETSC_DECIDE, PETSC_DECIDE,
-               d_num_increments+1, d_num_increments+1);
-   MatSetType(V, MATDENSE);
-   MatSetUp(V);
-
-   // Q is small and owned only by processor 0 so it is the only process that
-   // needs to perform the singular value decomposition.  It will insert the
-   // necessary values into U, S, and V.
-   if (d_rank == 0) {
-      // Solve for the singular value decomposition.
-      SVD svd;
-      SVDCreate(PETSC_COMM_SELF, &svd);
-      SVDSetOperator(svd, A);
-      SVDSetType(svd, SVDLAPACK);
-      SVDSolve(svd);
-      int num_sing_vals;
-      SVDGetConverged(svd, &num_sing_vals);
-      assert(num_sing_vals == d_num_increments+1);
-
-      // The SLEPc SVD solver does not explicitly export U, S, and V so we
-      // need to query the solver for their values and construct them ourself.
-      // Note that the solver holds the transpose of V so we need be careful
-      // when constructing it.
-      Vec u, v;
-      MatGetVecs(A, &v, &u);
-
-      int* rows = new int[d_num_increments+1];
-      for (int i = 0; i < d_num_increments+1; ++i) {
-         rows[i] = i;
-      }
-      double* uvec = new double [d_num_increments+1];
-      double* vvec = new double [d_num_increments+1];
-      double* sigma = new double[d_num_increments+1];
-      for (int i = 0; i < d_num_increments+1; ++i) {
-         sigma[i] = 0.0;
-      }
-      for (int col = 0; col < d_num_increments+1; ++col) {;
-         SVDGetSingularTriplet(svd, col, &sigma[col], u, v);
-         VecGetValues(u, d_num_increments+1, rows, uvec);
-         VecGetValues(v, d_num_increments+1, rows, vvec);
-         MatSetValues(U, d_num_increments+1, rows, 1, &col,
-                      uvec, INSERT_VALUES);
-         MatSetValues(S, d_num_increments+1, rows, 1, &col,
-                      sigma, INSERT_VALUES);
-         MatSetValues(V, d_num_increments+1, rows, 1, &col,
-                      vvec, INSERT_VALUES);
-         sigma[col] = 0.0;
-      }
-
-      // Clean up.
-      delete [] rows;
-      delete [] uvec;
-      delete [] vvec;
-      delete [] sigma;
-      SVDDestroy(&svd);
-      VecDestroy(&u);
-      VecDestroy(&v);
+   // Construct U, S, and V.
+   int mat_size = (d_num_increments+1)*(d_num_increments+1);
+   U = new double [mat_size];
+   S = new double [mat_size];
+   V = new double [mat_size];
+   for (int i = 0; i < mat_size; ++i) {
+      S[i] = 0.0;
    }
 
-   // Assemble U, S, and V.
-   MatAssemblyBegin(U, MAT_FINAL_ASSEMBLY);
-   MatAssemblyEnd(U, MAT_FINAL_ASSEMBLY);
-   MatAssemblyBegin(S, MAT_FINAL_ASSEMBLY);
-   MatAssemblyEnd(S, MAT_FINAL_ASSEMBLY);
-   MatAssemblyBegin(V, MAT_FINAL_ASSEMBLY);
-   MatAssemblyEnd(V, MAT_FINAL_ASSEMBLY);
+   // Construct the matrix on which the svd will be performed.
+   int* row_cols = new int [d_num_increments+1];
+   for (int i = 0; i < d_num_increments+1; ++i) {
+      row_cols[i] = i;
+   }
+   Mat Q;
+   MatCreate(PETSC_COMM_SELF, &Q);
+   MatSetSizes(Q, d_num_increments+1, d_num_increments+1,
+               d_num_increments+1, d_num_increments+1);
+   MatSetType(Q, MATSEQDENSE);
+   MatSetUp(Q);
+   MatSetValues(Q, d_num_increments+1, row_cols, d_num_increments+1, row_cols,
+                A, INSERT_VALUES);
+   MatAssemblyBegin(Q, MAT_FINAL_ASSEMBLY);
+   MatAssemblyEnd(Q, MAT_FINAL_ASSEMBLY);
 
-   // We want to return the transpose of V, not V.
-   MatTranspose(V, MAT_REUSE_MATRIX, &V);
+   SVD svd;
+   SVDCreate(PETSC_COMM_SELF, &svd);
+   SVDSetOperator(svd, Q);
+   SVDSetType(svd, SVDLAPACK);
+   SVDSolve(svd);
+   int num_sing_vals;
+   SVDGetConverged(svd, &num_sing_vals);
+   assert(num_sing_vals == d_num_increments+1);
+
+   // The SLEPc SVD solver does not explicitly export U, S, and V so we need
+   // to query the solver for their values and construct them ourself.  Note
+   // that the solver holds the transpose of V so we need be careful when
+   // constructing it.
+   Vec u, v;
+   MatGetVecs(Q, &v, &u);
+   double* uvec = new double [d_num_increments+1];
+   double* vvec = new double [d_num_increments+1];
+   double sigma;
+   int sigma_idx = 0;
+   int v_idx = 0;
+   for (int col = 0; col < d_num_increments+1; ++col) {;
+      int u_idx = col;
+      SVDGetSingularTriplet(svd, col, &sigma, u, v);
+      VecGetValues(u, d_num_increments+1, row_cols, uvec);
+      VecGetValues(v, d_num_increments+1, row_cols, vvec);
+      for (int row = 0; row < d_num_increments+1; ++row) {
+         U[u_idx] = uvec[row];
+         u_idx += d_num_increments + 1;
+         V[v_idx++] = vvec[row];
+      }
+      S[sigma_idx] = sigma;
+      sigma_idx += d_num_increments + 2;
+   }
+
+   // Clean up.
+   MatDestroy(&Q);
+   delete [] row_cols;
+   SVDDestroy(&svd);
+   VecDestroy(&u);
+   VecDestroy(&v);
+   delete [] uvec;
+   delete [] vvec;
 }
 
 void
 incremental_svd::addRedundantIncrement(
-   Mat A,
-   Mat sigma)
+   double* A,
+   double* sigma)
 {
    // Chop a row and a column off of A to form Amod.  Also form d_S by chopping
    // a row and a column off of sigma.
-   int A_row_start, A_row_end;
-   MatGetOwnershipRange(A, &A_row_start, &A_row_end);
-   Mat Amod;
-   MatCreate(PETSC_COMM_WORLD, &Amod);
-   MatSetSizes(Amod, PETSC_DECIDE, PETSC_DECIDE,
-               d_num_increments, d_num_increments);
-   MatSetUp(Amod);
-   int* cols = new int [d_num_increments];
-   for (int i = 0; i < d_num_increments; ++i) {
-      cols[i] = i;
-   }
-   double* vals = new double [d_num_increments];
-   for (int row = A_row_start; row < A_row_end; ++row) {
-      if (row != d_num_increments) {
-         MatGetValues(A, 1, &row, d_num_increments, cols, vals);
-         MatSetValues(Amod, 1, &row, d_num_increments, cols,
-                      vals, INSERT_VALUES);
-         MatGetValues(sigma, 1, &row, d_num_increments, cols, vals);
-         MatSetValues(d_S, 1, &row, d_num_increments, cols,
-                      vals, INSERT_VALUES);
+   double* Amod = new double [d_num_increments*d_num_increments];
+   int lhs_idx = 0;
+   int rhs_idx = 0;
+   for (int row = 0; row < d_num_increments; ++row){
+      for (int col = 0; col < d_num_increments; ++col) {
+         Amod[lhs_idx] = A[rhs_idx];
+         d_S[lhs_idx] = sigma[rhs_idx];
+         ++lhs_idx;
+         ++rhs_idx;
       }
+      ++rhs_idx;
    }
-   MatAssemblyBegin(Amod, MAT_FINAL_ASSEMBLY);
-   MatAssemblyEnd(Amod, MAT_FINAL_ASSEMBLY);
-   MatAssemblyBegin(d_S, MAT_FINAL_ASSEMBLY);
-   MatAssemblyEnd(d_S, MAT_FINAL_ASSEMBLY);
 
    // Multiply d_L and Amod and put result into d_L.
-   Mat L_times_Amod;
-   MatMatMult(d_L, Amod, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &L_times_Amod);
-   MatDestroy(&d_L);
-   MatConvert(L_times_Amod, MATSAME, MAT_INITIAL_MATRIX, &d_L);
+   double* L_times_Amod;
+   MatTimesMat(d_L, Amod, d_num_increments, L_times_Amod);
+   delete [] d_L;
+   d_L = L_times_Amod;
 
    // Clean up.
-   MatDestroy(&Amod);
-   MatDestroy(&L_times_Amod);
-   delete [] cols;
-   delete [] vals;
+   delete [] Amod;
 }
 
 void
 incremental_svd::addNewIncrement(
-   Vec j,
-   Mat A,
-   Mat sigma,
-   int d_U_row_start,
-   int d_U_row_end)
+   double* j,
+   double* A,
+   double* sigma)
 {
-   // Add j as a a new column of d_U.
-   Mat newU;
-   MatCreate(PETSC_COMM_WORLD, &newU);
-   MatSetSizes(newU, d_dim, PETSC_DECIDE, PETSC_DETERMINE, d_num_increments+1);
-   MatSetType(newU, MATDENSE);
-   MatSetUp(newU);
-   int* cols = new int [d_num_increments+1];
-   for (int i = 0; i < d_num_increments+1; ++i) {
-      cols[i] = i;
+   // Add j as a new column of d_U.
+   double* newU = new double [d_dim*(d_num_increments+1)];
+   int lhs_idx = 0;
+   int rhs_idx = 0;
+   for (int row = 0; row < d_dim; ++row) {
+      for (int col = 0; col < d_num_increments; ++col) {
+         newU[lhs_idx++] = d_U[rhs_idx++];
+      }
+      newU[lhs_idx++] = j[row];
    }
-   int num_d_U_rows = d_U_row_end - d_U_row_start;
-   int* rows = new int [num_d_U_rows];
-   for (int i = 0; i < num_d_U_rows; ++i) {
-      rows[i] = i+d_U_row_start;
-   }
-   double* vals = new double [num_d_U_rows*d_num_increments];
-   MatGetValues(d_U, num_d_U_rows, rows, d_num_increments, cols, vals);
-   MatSetValues(newU, num_d_U_rows, rows, d_num_increments, cols,
-                vals, INSERT_VALUES);
-   VecGetValues(j, num_d_U_rows, rows, vals);
-   MatSetValues(newU, num_d_U_rows, rows, 1, &cols[d_num_increments],
-                vals, INSERT_VALUES);
-   delete [] rows;
-   delete [] vals;
-   MatAssemblyBegin(newU, MAT_FINAL_ASSEMBLY);
-   MatAssemblyEnd(newU, MAT_FINAL_ASSEMBLY);
-   MatDestroy(&d_U);
-   MatConvert(newU, MATSAME, MAT_INITIAL_MATRIX, &d_U);
-   MatDestroy(&newU);
+   delete [] d_U;
+   d_U = newU;
 
    // Add another row and column to d_L.  Only the last value in the new
    // row/column is non-zero and it is 1.
-   Mat newL;
-   MatCreate(PETSC_COMM_WORLD, &newL);
-   MatSetSizes(newL, PETSC_DECIDE, PETSC_DECIDE,
-               d_num_increments+1, d_num_increments+1);
-   MatSetUp(newL);
-   int d_L_row_start, d_L_row_end;
-   vals = new double [d_num_increments+1];
-   MatGetOwnershipRange(d_L, &d_L_row_start, &d_L_row_end);
-   for (int row = d_L_row_start; row < d_L_row_end; ++row) {
-      MatGetValues(d_L, 1, &row, d_num_increments, cols, vals);
-      vals[d_num_increments] = 0.0;
-      MatSetValues(newL, 1, &row, d_num_increments+1, cols,
-                   vals, INSERT_VALUES);
-   }
-   if (d_rank == 0) {
-      for (int i = 0; i < d_num_increments; ++i) {
-         vals[i] = 0.0;
+   double* newL = new double [(d_num_increments+1)*(d_num_increments+1)];
+   lhs_idx = 0;
+   rhs_idx = 0;
+   for (int row = 0; row < d_num_increments; ++row) {
+      for (int col = 0; col < d_num_increments; ++col) {
+         newL[lhs_idx++] = d_L[rhs_idx++];
       }
-      vals[d_num_increments] = 1.0;
-      MatSetValues(newL, 1, &d_num_increments, d_num_increments+1, cols,
-                   vals, INSERT_VALUES);
+      newL[lhs_idx++] = 0.0;
    }
-   delete [] vals;
-   MatAssemblyBegin(newL, MAT_FINAL_ASSEMBLY);
-   MatAssemblyEnd(newL, MAT_FINAL_ASSEMBLY);
-   MatDestroy(&d_L);
-   MatMatMult(newL, A, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &d_L);
-   MatDestroy(&newL);
+   for (int col = 0; col < d_num_increments; ++col) {
+      newL[lhs_idx++] = 0.0;
+   }
+   newL[lhs_idx] = 1.0;
+   delete [] d_L;
+   MatTimesMat(newL, A, d_num_increments+1, d_L);
+   delete [] newL;
 
    // d_S = sigma.
-   MatDestroy(&d_S);
-   MatConvert(sigma, MATSAME, MAT_INITIAL_MATRIX, &d_S);
+   delete [] d_S;
+   d_S = sigma;
 
    // We now have another increment.
    ++d_num_increments;
-
-   // Clean up.
-   delete [] cols;
-}
-
-double
-incremental_svd::computeNormJ(
-   Vec u)
-{
-   Vec j;
-   Mat P;
-   double norm_j;
-   compute_J_P_normJ(u, j, P, norm_j);
-
-   // Clean up and return the norm of j.
-   VecDestroy(&j);
-   MatDestroy(&P);
-   return norm_j;
 }
 
 void
 incremental_svd::d_U_Times_d_L(
-   Mat& P)
+   double*& P) const
 {
-   // Get the part of d_L that this processor owns.
-   const int* ranges;
-   MatGetOwnershipRanges(d_L, &ranges);
-   int my_num_L_rows = ranges[d_rank+1] - ranges[d_rank];
-   int my_num_vals = my_num_L_rows*d_num_increments;
-   double* my_vals = 0;
-   int* cols = new int [d_num_increments];
-   for (int i = 0; i < d_num_increments; ++i) {
-      cols[i] = i;
-   }
-   if (my_num_L_rows) {
-      int* my_L_rows = new int [my_num_L_rows];
-      for (int i = 0; i < my_num_L_rows; ++i) {
-         my_L_rows[i] = i + ranges[d_rank];
-      }
-      my_vals = new double [my_num_vals];
-      MatGetValues(d_L, my_num_L_rows, my_L_rows,
-                   d_num_increments, cols, my_vals);
-      delete [] my_L_rows;
-   }
-
-   // Send this processors part of d_L to all other processors so that all
-   // processors own a complete version of d_L.
-   int* recvcts = new int [d_size];
-   int* offsets = new int [d_size];
-   offsets[0] = 0;
-   for (int i = 0; i < d_size; ++i) {
-      recvcts[i] = d_num_increments*(ranges[i+1]-ranges[i]);
-      if (i > 0) {
-         offsets[i] = offsets[i-1] + recvcts[i-1];
-      }
-   }
-   double* L = new double [d_num_increments*d_num_increments];
-   MPI_Allgatherv(my_vals, my_num_vals, MPI_DOUBLE,
-                  L, recvcts, offsets, MPI_DOUBLE, PETSC_COMM_WORLD);
-   delete [] recvcts;
-   delete [] offsets;
-   if (my_vals) {
-      delete [] my_vals;
-   }
-
-   // Get the part of d_U that this processor owns.
-   int d_U_row_start, d_U_row_end;
-   MatGetOwnershipRange(d_U, &d_U_row_start, &d_U_row_end);
-   int num_d_U_rows = d_U_row_end - d_U_row_start;
-   int* rows = new int [num_d_U_rows];
-   for (int i = 0; i < num_d_U_rows; ++i) {
-      rows[i] = i + d_U_row_start;
-   }
-   double* U = new double [d_dim*d_num_increments];
-   MatGetValues(d_U, d_dim, rows, d_num_increments, cols, U);
-
    // Create the result.
-   MatCreate(PETSC_COMM_WORLD, &P);
-   MatSetSizes(P, d_dim, PETSC_DECIDE, PETSC_DETERMINE, d_num_increments);
-   MatSetType(P, MATDENSE);
-   MatSetUp(P);
+   P = new double [d_dim * d_num_increments];
 
    // Construct the product.
-   double* P_vals = new double [d_dim * d_num_increments];
    for (int L_col = 0; L_col < d_num_increments; ++L_col) {
       int U_idx = 0;
       int P_idx = L_col;
       for (int U_row = 0; U_row < d_dim; ++U_row) {
          int L_idx = L_col;
-         P_vals[P_idx] = 0.0;
+         P[P_idx] = 0.0;
          for (int entry = 0; entry < d_num_increments; ++entry) {
-            P_vals[P_idx] += U[U_idx]*L[L_idx];
+            P[P_idx] += d_U[U_idx]*d_L[L_idx];
             ++U_idx;
             L_idx += d_num_increments;
          }
          P_idx += d_num_increments;
       }
    }
+}
 
-   // Put the product into the result.
-   MatSetValues(P, d_dim, rows, d_num_increments, cols, P_vals, INSERT_VALUES);
-   MatAssemblyBegin(P, MAT_FINAL_ASSEMBLY);
-   MatAssemblyEnd(P, MAT_FINAL_ASSEMBLY);
+void
+incremental_svd::Pt_Times_u(
+   double* P,
+   double* u,
+   double*& l)
+{
+   // Create this processor's contribution to the result.
+   double* tmp = new double [d_num_increments];
+   int l_idx = 0;
+   for (int P_col = 0; P_col < d_num_increments; ++P_col) {
+      int P_idx = P_col;
+      int u_idx = 0;
+      tmp[l_idx] = 0.0;
+      for (int entry = 0; entry < d_dim; ++entry) {
+         tmp[l_idx] += P[P_idx]*u[u_idx];
+         P_idx += d_num_increments;
+         ++u_idx;
+      }
+      ++l_idx;
+   }
+
+   // Create the final result.
+   l = new double [d_num_increments];
+
+   // Sum all processors' contributions into the final result.
+   MPI_Allreduce(tmp, l, d_num_increments, MPI_DOUBLE,
+                 MPI_SUM, PETSC_COMM_WORLD);
 
    // Clean up.
-   delete [] rows;
-   delete [] cols;
-   delete [] U;
-   delete [] L;
-   delete [] P_vals;
+   delete [] tmp;
+}
+
+void
+incremental_svd::MatTimesMat(
+   const double* A,
+   const double* B,
+   int size,
+   double*& result)
+{
+   // Construct result.
+   result = new double [size*size];
+
+   for (int B_col = 0; B_col < size; ++B_col) {
+      int A_idx = 0;
+      int result_idx = B_col;
+      for (int A_row = 0; A_row < size; ++A_row) {
+         int B_idx = B_col;
+         result[result_idx] = 0.0;
+         for (int entry = 0; entry < size; ++entry) {
+            result[result_idx] += A[A_idx]*B[B_idx];
+            ++A_idx;
+            B_idx += size;
+         }
+         result_idx += size;
+      }
+   }
 }
 
 }

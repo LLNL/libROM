@@ -13,8 +13,11 @@ int main(int argc, char* argv[])
    int dim = atoi(argv[1]);
    int num_snapshots = atoi(argv[2]);
    int num_lin_dep_snapshots = atoi(argv[3]);
+   int num_lin_indep_snapshots = num_snapshots - num_lin_dep_snapshots;
    CAROM::incremental_svd_rom inc_rom(&argc, &argv, dim, 1.0e-12, false, 1);
+#ifdef DEBUG
    CAROM::static_svd_rom static_rom(&argc, &argv, dim);
+#endif
    int size;
    MPI_Comm_size(PETSC_COMM_WORLD, &size);
    int rank;
@@ -44,7 +47,7 @@ int main(int argc, char* argv[])
       for (int j = 0; j < dim; ++j) {
          M[col][j] = 0;
       }
-      for (int j = 0; j < num_snapshots - num_lin_dep_snapshots; ++j) {
+      for (int j = 0; j < num_lin_indep_snapshots; ++j) {
          double random = rand();
          random = random/RAND_MAX;
          for (int k = 0; k < dim; ++k) {
@@ -60,7 +63,7 @@ int main(int argc, char* argv[])
             inc_rom.computeNextSnapshotTime(M[i], M[i], 0.0);
       }
    }
-   Mat inc_model = inc_rom.getModel();
+   double* inc_model = inc_rom.getModel();
    double stop_inc = MPI_Wtime();
    double incremental_run_time = stop_inc - start_inc;
    double global_incremental_run_time;
@@ -74,6 +77,7 @@ int main(int argc, char* argv[])
    if (rank == 0) {
       printf("incremental run time = %g\n", global_incremental_run_time/size);
    }
+#ifdef DEBUG
    double start_static = MPI_Wtime();
    for (int i = 0; i < num_snapshots; ++i) {
       if (static_rom.isNextSnapshot(0.0)) {
@@ -96,17 +100,38 @@ int main(int argc, char* argv[])
    if (rank == 0) {
       printf("static run time = %g\n", global_static_run_time/size);
    }
-#ifdef DEBUG
    Mat test;
    Mat static_model_t;
    MatTranspose(static_model, MAT_INITIAL_MATRIX, &static_model_t);
-   MatMatMult(static_model_t, inc_model, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &test);
+   Mat inc_model_mat;
+   MatCreate(PETSC_COMM_WORLD, &inc_model_mat);
+   MatSetSizes(inc_model_mat, dim, PETSC_DECIDE,
+               PETSC_DETERMINE, num_lin_indep_snapshots);
+   MatSetType(inc_model_mat, MATDENSE);
+   MatSetUp(inc_model_mat);
+   int* rows = new int [dim];
+   for (int i = 0; i < dim; ++i) {
+      rows[i] = i + (dim*rank);
+   }
+   int* cols = new int [num_lin_indep_snapshots];
+   for (int i = 0; i < num_lin_indep_snapshots; ++i) {
+      cols[i] = i;
+   }
+   MatSetValues(inc_model_mat, dim, rows, num_lin_indep_snapshots, cols,
+                inc_model, INSERT_VALUES);
+   delete [] rows;
+   delete [] cols;
+   MatAssemblyBegin(inc_model_mat, MAT_FINAL_ASSEMBLY);
+   MatAssemblyEnd(inc_model_mat, MAT_FINAL_ASSEMBLY);
+   MatMatMult(static_model_t, inc_model_mat,
+              MAT_INITIAL_MATRIX, PETSC_DEFAULT, &test);
    MatView(test, PETSC_VIEWER_STDOUT_WORLD);
+   MatDestroy(&inc_model_mat);
    MatDestroy(&static_model_t);
    MatDestroy(&test);
-#endif
    MatDestroy(&static_model);
-   MatDestroy(&inc_model);
+#endif
+   delete [] inc_model;
    for (int i = 0; i < num_snapshots; ++i) {
       delete [] M[i];
    }
