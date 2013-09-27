@@ -21,8 +21,7 @@ incremental_svd::incremental_svd(
    d_U(0),
    d_L(0),
    d_S(0),
-   d_norm_j(0.0),
-   d_time(0.0)
+   d_norm_j(0.0)
 {
    // Register a new SLEPc instance, get the rank of this process, and get the
    // number of processors.
@@ -33,7 +32,6 @@ incremental_svd::incremental_svd(
 
 incremental_svd::~incremental_svd()
 {
-   printf("svd time = %g\n", d_time);
    // Destroy PETSc data members and finalize SLEPc.
    if (d_U) {
       delete [] d_U;
@@ -186,9 +184,7 @@ incremental_svd::buildIncrementalSVD(
    double* A;
    double* sigma;
    double* B;
-   double foo = MPI_Wtime();
    svd(Q, A, sigma, B);
-   d_time += MPI_Wtime() - foo;
 
    // Done with Q.
    delete [] Q;

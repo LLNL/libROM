@@ -163,7 +163,6 @@ class incremental_svd
 
       // Value of norm of j cached by increment.
       double d_norm_j;
-      double d_time;
 };
 
 }
