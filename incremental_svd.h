@@ -1,5 +1,4 @@
 #include "petscmat.h"
-#include "petscvec.h"
 
 namespace CAROM {
 

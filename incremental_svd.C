@@ -1,8 +1,13 @@
 #include "incremental_svd.h"
 #include "SLEPcManager.h"
-#include "slepc.h"
 #include <cmath>
 #include <assert.h>
+
+extern "C" {
+void dgesdd_(char*, int*, int*, double*, int*,
+             double*, double*, int*, double*, int*,
+             double*, int*, int*, int*);
+}
 
 // #define DEBUG
 
@@ -270,17 +275,21 @@ incremental_svd::constructQ(
    // Create Q.
    Q = new double [(d_num_increments+1)*(d_num_increments+1)];
 
-   // Fill Q.
+   // Fill Q in column major order.
    int q_idx = 0;
    int s_idx = 0;
    for (int row = 0; row < d_num_increments; ++row) {
+      q_idx = row;
       for (int col = 0; col < d_num_increments; ++col) {
-         Q[q_idx++] = d_S[s_idx++];
+         Q[q_idx] = d_S[s_idx++];
+         q_idx += d_num_increments+1;
       }
-      Q[q_idx++] = l[row];
+      Q[q_idx] = l[row];
    }
+   q_idx = d_num_increments;
    for (int col = 0; col < d_num_increments; ++col) {
-      Q[q_idx++] = 0.0;
+      Q[q_idx] = 0.0;
+      q_idx += d_num_increments+1;
    }
    Q[q_idx] = norm_j;
 }
@@ -301,64 +310,41 @@ incremental_svd::svd(
       S[i] = 0.0;
    }
 
-   // Construct the matrix on which the svd will be performed.
-   int* row_cols = new int [d_num_increments+1];
+   // Use lapack's dgesdd_ Fortran function to perform the svd.  As this is
+   // Fortran A and all the computed matrices are in column major order.
+   double* sigma = new double [d_num_increments+1];
+   char jobz = 'A';
+   int m = d_num_increments+1;
+   int n = d_num_increments+1;
+   int lda = d_num_increments+1;
+   int ldu = d_num_increments+1;
+   int ldv = d_num_increments+1;
+   int lwork = m*(4*m + 7);
+   double* work = new double [lwork];
+   int iwork[8*m];
+   int info;
+   dgesdd_(&jobz, &m, &n, A, &lda,
+           sigma, U, &ldu, V, &ldv,
+           work, &lwork, iwork, &info);
+   delete [] work;
+
+   // Place sigma into S.
    for (int i = 0; i < d_num_increments+1; ++i) {
-      row_cols[i] = i;
+      S[i*(d_num_increments+1)+i] = sigma[i];
    }
-   Mat Q;
-   MatCreate(PETSC_COMM_SELF, &Q);
-   MatSetSizes(Q, d_num_increments+1, d_num_increments+1,
-               d_num_increments+1, d_num_increments+1);
-   MatSetType(Q, MATSEQDENSE);
-   MatSetUp(Q);
-   MatSetValues(Q, d_num_increments+1, row_cols, d_num_increments+1, row_cols,
-                A, INSERT_VALUES);
-   MatAssemblyBegin(Q, MAT_FINAL_ASSEMBLY);
-   MatAssemblyEnd(Q, MAT_FINAL_ASSEMBLY);
+   delete [] sigma;
 
-   SVD svd;
-   SVDCreate(PETSC_COMM_SELF, &svd);
-   SVDSetOperator(svd, Q);
-   SVDSetType(svd, SVDLAPACK);
-   SVDSolve(svd);
-   int num_sing_vals;
-   SVDGetConverged(svd, &num_sing_vals);
-   assert(num_sing_vals == d_num_increments+1);
-
-   // The SLEPc SVD solver does not explicitly export U, S, and V so we need
-   // to query the solver for their values and construct them ourself.  Note
-   // that the solver holds the transpose of V so we need be careful when
-   // constructing it.
-   Vec u, v;
-   MatGetVecs(Q, &v, &u);
-   double* uvec = new double [d_num_increments+1];
-   double* vvec = new double [d_num_increments+1];
-   double sigma;
-   int sigma_idx = 0;
-   int v_idx = 0;
-   for (int col = 0; col < d_num_increments+1; ++col) {;
-      int u_idx = col;
-      SVDGetSingularTriplet(svd, col, &sigma, u, v);
-      VecGetValues(u, d_num_increments+1, row_cols, uvec);
-      VecGetValues(v, d_num_increments+1, row_cols, vvec);
-      for (int row = 0; row < d_num_increments+1; ++row) {
-         U[u_idx] = uvec[row];
-         u_idx += d_num_increments + 1;
-         V[v_idx++] = vvec[row];
+   // U and V are in column major order.  Convert them to row major order.
+   for (int row = 0; row < d_num_increments+1; ++row) {
+      for (int col = row+1; col < d_num_increments+1; ++col) {
+         double tmp = U[row*(d_num_increments+1)+col];
+         U[row*(d_num_increments+1)+col] = U[col*(d_num_increments+1)+row];
+         U[col*(d_num_increments+1)+row] = tmp;
+         tmp = V[row*(d_num_increments+1)+col];
+         V[row*(d_num_increments+1)+col] = V[col*(d_num_increments+1)+row];
+         V[col*(d_num_increments+1)+row] = tmp;
       }
-      S[sigma_idx] = sigma;
-      sigma_idx += d_num_increments + 2;
    }
-
-   // Clean up.
-   MatDestroy(&Q);
-   delete [] row_cols;
-   SVDDestroy(&svd);
-   VecDestroy(&u);
-   VecDestroy(&v);
-   delete [] uvec;
-   delete [] vvec;
 }
 
 void
