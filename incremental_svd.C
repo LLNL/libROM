@@ -65,6 +65,7 @@ incremental_svd::increment(
 
 #ifdef DEBUG
    if (d_rank == 0) {
+      // Print d_S.
       int idx = 0;
       for (int row = 0; row < d_num_increments; ++row) {
          for (int col = 0; col < d_num_increments; ++col) {
@@ -73,6 +74,8 @@ incremental_svd::increment(
          printf("\n");
       }
       printf("\n");
+
+      // Print d_L.
       idx = 0;
       for (int row = 0; row < d_num_increments; ++row) {
          for (int col = 0; col < d_num_increments; ++col) {
@@ -81,29 +84,38 @@ incremental_svd::increment(
          printf("\n");
       }
       printf("\n");
-   }
-   Mat U;
-   MatCreate(PETSC_COMM_WORLD, &U);
-   MatSetSizes(U, d_dim, PETSC_DECIDE, PETSC_DETERMINE, d_num_increments);
-   MatSetType(U, MATDENSE);
-   MatSetUp(U);
-   int U_row_start;
-   MatGetOwnershipRange(U, &U_row_start, PETSC_NULL);
-   int* rows = new int [d_dim];
-   for (int i = 0; i < d_dim; ++i) {
-      rows[i] = i + U_row_start;
-   }
-   int* cols = new int [d_num_increments];
-   for (int i = 0; i < d_num_increments; ++i) {
-      cols[i] = i;
-   }
-   MatSetValues(U, d_dim, rows, d_num_increments, cols, d_U, INSERT_VALUES);
-   MatAssemblyBegin(U, MAT_FINAL_ASSEMBLY);
-   MatAssemblyEnd(U, MAT_FINAL_ASSEMBLY);
-   MatView(U, PETSC_VIEWER_STDOUT_WORLD);
-   MatDestroy(&U);
-   if (d_rank == 0) {
+
+      // Print process 0's part of d_U.
+      idx = 0;
+      for (int row = 0; row < d_dim; ++row) {
+         for (int col = 0; col < d_num_increments; ++col) {
+            printf("%.16e ", d_U[idx++]);
+         }
+         printf("\n");
+      }
+
+      // Gather other processor's parts of d_U and print them.
+      double* U = new double [d_dim*d_num_increments];
+      for (int proc = 1; proc < d_size; ++proc) {
+         MPI_Status status;
+         MPI_Recv(U, d_dim*d_num_increments, MPI_DOUBLE, proc,
+                  666, PETSC_COMM_WORLD, &status);
+         idx = 0;
+         for (int row = 0; row < d_dim; ++row) {
+            for (int col = 0; col < d_num_increments; ++col) {
+               printf("%.16e ", U[idx++]);
+            }
+            printf("\n");
+         }
+      }
       printf("============================================================\n");
+      delete [] U;
+   }
+   else {
+      // Send this processor's part of d_U to process 0.
+      MPI_Request request;
+      MPI_Isend(d_U, d_dim*d_num_increments, MPI_DOUBLE,
+                0, 666, PETSC_COMM_WORLD, &request);
    }
 #endif
 }
