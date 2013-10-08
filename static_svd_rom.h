@@ -11,8 +11,6 @@ class static_svd_rom
    public:
       // Constructor.
       static_svd_rom(
-         int* argc,
-         char*** argv,
          int dim);
 
       // Destructor.
@@ -45,7 +43,7 @@ class static_svd_rom
       }
 
       // Returns the model parameters.
-      Mat
+      double*
       getModel()
       {
          return d_svdts->getModel();

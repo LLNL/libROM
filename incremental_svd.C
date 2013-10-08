@@ -1,7 +1,8 @@
 #include "incremental_svd.h"
-#include "SLEPcManager.h"
 #include <cmath>
-#include <assert.h>
+#include <string.h>
+#include <stdio.h>
+#include <mpi.h>
 
 extern "C" {
 void dgesdd_(char*, int*, int*, double*, int*,
@@ -14,8 +15,6 @@ void dgesdd_(char*, int*, int*, double*, int*,
 namespace CAROM {
 
 incremental_svd::incremental_svd(
-   int* argc,
-   char*** argv,
    int dim,
    double epsilon,
    bool skip_redundant) :
@@ -28,16 +27,22 @@ incremental_svd::incremental_svd(
    d_S(0),
    d_norm_j(0.0)
 {
-   // Register a new SLEPc instance, get the rank of this process, and get the
-   // number of processors.
-   SLEPcManager::getManager()->registerSLEPcInstance(argc, argv);
-   MPI_Comm_rank(PETSC_COMM_WORLD, &d_rank);
-   MPI_Comm_size(PETSC_COMM_WORLD, &d_size);
+   // Get the rank of this process, and get the number of processors.
+   int mpi_init;
+   MPI_Initialized(&mpi_init);
+   if (mpi_init) {
+      MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
+      MPI_Comm_size(MPI_COMM_WORLD, &d_size);
+   }
+   else {
+      d_rank = 1;
+      d_size = 1;
+   }
 }
 
 incremental_svd::~incremental_svd()
 {
-   // Destroy PETSc data members and finalize SLEPc.
+   // Delete data members.
    if (d_U) {
       delete [] d_U;
    }
@@ -47,7 +52,6 @@ incremental_svd::~incremental_svd()
    if (d_S) {
       delete [] d_S;
    }
-   SLEPcManager::getManager()->unRegisterSLEPcInstance();
 }
 
 void
@@ -99,7 +103,7 @@ incremental_svd::increment(
       for (int proc = 1; proc < d_size; ++proc) {
          MPI_Status status;
          MPI_Recv(U, d_dim*d_num_increments, MPI_DOUBLE, proc,
-                  666, PETSC_COMM_WORLD, &status);
+                  666, MPI_COMM_WORLD, &status);
          idx = 0;
          for (int row = 0; row < d_dim; ++row) {
             for (int col = 0; col < d_num_increments; ++col) {
@@ -115,7 +119,7 @@ incremental_svd::increment(
       // Send this processor's part of d_U to process 0.
       MPI_Request request;
       MPI_Isend(d_U, d_dim*d_num_increments, MPI_DOUBLE,
-                0, 666, PETSC_COMM_WORLD, &request);
+                0, 666, MPI_COMM_WORLD, &request);
    }
 #endif
 }
@@ -133,7 +137,12 @@ incremental_svd::buildInitialSVD(
    for (int i = 0; i < d_dim; ++i) {
       tmp += u[i]*u[i];
    }
-   MPI_Allreduce(&tmp, &norm_u, 1, MPI_DOUBLE, MPI_SUM, PETSC_COMM_WORLD);
+   if (d_size > 1) {
+      MPI_Allreduce(&tmp, &norm_u, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+   }
+   else {
+      norm_u = tmp;
+   }
    norm_u = sqrt(norm_u);
    d_S[0] = norm_u;
 
@@ -170,7 +179,12 @@ incremental_svd::buildIncrementalSVD(
    for (int i = 0; i < d_dim; ++i) {
       tmp += u[i]*u[i];
    }
-   MPI_Allreduce(&tmp, &cm, 1, MPI_DOUBLE, MPI_SUM, PETSC_COMM_WORLD);
+   if (d_size > 1) {
+      MPI_Allreduce(&tmp, &cm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+   }
+   else {
+      cm = tmp;
+   }
 
    double eps_squared = d_epsilon*d_epsilon;
    bool is_new_increment = ((cm > eps_squared) &&
@@ -257,7 +271,12 @@ incremental_svd::orthogonalizeJAndComputeNorm(
          tmp += P[Pidx]*j[i];
          Pidx += d_num_increments;
       }
-      MPI_Allreduce(&tmp, &factor, 1, MPI_DOUBLE, MPI_SUM, PETSC_COMM_WORLD);
+      if (d_size > 1) {
+         MPI_Allreduce(&tmp, &factor, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+      }
+      else {
+         factor = tmp;
+      }
       
       Pidx = col;
       for (int i = 0; i < d_dim; ++i) {
@@ -271,7 +290,12 @@ incremental_svd::orthogonalizeJAndComputeNorm(
    for (int i = 0; i < d_dim; ++i) {
       tmp += j[i]*j[i];
    }
-   MPI_Allreduce(&tmp, &d_norm_j, 1, MPI_DOUBLE, MPI_SUM, PETSC_COMM_WORLD);
+   if (d_size > 1) {
+      MPI_Allreduce(&tmp, &d_norm_j, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+   }
+   else {
+      d_norm_j = tmp;
+   }
    d_norm_j = sqrt(d_norm_j);
    for (int i = 0; i < d_dim; ++i) {
       j[i] /= d_norm_j;
@@ -439,10 +463,11 @@ void
 incremental_svd::d_U_Times_d_L(
    double*& P) const
 {
-   // Create the result.
+   // Create this processor's portion of the result.
    P = new double [d_dim * d_num_increments];
 
-   // Construct the product.
+   // Construct this processor's portion of the product which is an entirely
+   // local calculation.
    for (int L_col = 0; L_col < d_num_increments; ++L_col) {
       int U_idx = 0;
       int P_idx = L_col;
@@ -481,14 +506,17 @@ incremental_svd::Pt_Times_u(
    }
 
    // Create the final result.
-   l = new double [d_num_increments];
 
    // Sum all processors' contributions into the final result.
-   MPI_Allreduce(tmp, l, d_num_increments, MPI_DOUBLE,
-                 MPI_SUM, PETSC_COMM_WORLD);
-
-   // Clean up.
-   delete [] tmp;
+   if (d_size > 1) {
+      l = new double [d_num_increments];
+      MPI_Allreduce(tmp, l, d_num_increments, MPI_DOUBLE,
+                    MPI_SUM, MPI_COMM_WORLD);
+      delete [] tmp;
+   }
+   else {
+      l = tmp;
+   }
 }
 
 void

@@ -1,5 +1,3 @@
-#include "petscmat.h"
-#include "petscvec.h"
 #include <vector>
 
 namespace CAROM {
@@ -7,13 +5,13 @@ namespace CAROM {
 // A class which embodies the static SVD algorithm.  The API is intentionally
 // small.  One may collect the states, compute the SVD, and get the dimension
 // of the system.
+// This implementation is not scalable and is intended primarily as a sanity
+// check of the incremental svd algorithm.
 class static_svd
 {
    public:
       // Constructor.
       static_svd(
-         int* argc,
-         char*** argv,
          int dim);
 
       // Destructor.
@@ -34,18 +32,12 @@ class static_svd
          return d_dim;
       }
 
-      // Returns the model parameters, a copy of d_U.
-      Mat
+      // Returns the model parameters, d_U.
+      double*
       getModel()
       {
          computeSVD();
-         Mat result;
-         MatCreate(PETSC_COMM_WORLD, &result);
-         MatSetSizes(result, d_dim, PETSC_DECIDE,
-                     PETSC_DETERMINE, static_cast<int>(d_state.size()));
-         MatSetUp(result);
-         MatCopy(d_U, result, SAME_NONZERO_PATTERN);
-         return result;
+         return d_U;
       }
 
    private:
@@ -67,7 +59,7 @@ class static_svd
       // decomposition.
       void
       svd(
-         Mat A);
+         double* A);
 
       // Dimension of the system.
       int d_dim;
@@ -75,12 +67,20 @@ class static_svd
       // Current state of the system.
       std::vector<double*> d_state;
 
-      Mat d_U;
-      Mat d_S;
-      Mat d_V;
+      // The globalized matrix U.  U is large and each process owns all of U.
+      double* d_U;
+
+      // The globalized matrix S.  S is small and each process owns all of S.
+      double* d_S;
+
+      // The globalized matrix L.  L is small and each process owns all of L.
+      double* d_V;
 
       // Rank of process this object lives on.
       int d_rank;
+
+      // Total number of processors.
+      int d_size;
 };
 
 }

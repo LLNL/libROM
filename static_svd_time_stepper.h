@@ -11,8 +11,6 @@ class static_svd_time_stepper
    public:
       // Constructor.
       static_svd_time_stepper(
-         int* argc,
-         char*** argv,
          int dim);
 
       // Destructor.
@@ -44,7 +42,7 @@ class static_svd_time_stepper
       }
 
       // Returns the model parameters.
-      Mat
+      double*
       getModel()
       {
          return d_svd->getModel();

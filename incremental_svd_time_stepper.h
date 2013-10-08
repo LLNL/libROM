@@ -14,8 +14,6 @@ class incremental_svd_time_stepper
    public:
       // Constructor.
       incremental_svd_time_stepper(
-         int* argc,
-         char*** argv,
          int dim,
          double epsilon,
          bool skip_redundant,

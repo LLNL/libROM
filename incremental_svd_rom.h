@@ -11,8 +11,6 @@ class incremental_svd_rom
    public:
       // Constructor.
       incremental_svd_rom(
-         int* argc,
-         char*** argv,
          int dim,
          double epsilon,
          bool skip_redundant,

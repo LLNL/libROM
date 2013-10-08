@@ -1,20 +1,17 @@
 #include "incremental_svd_time_stepper.h"
 #include <cmath>
+#include <mpi.h>
 
 namespace CAROM {
 
 incremental_svd_time_stepper::incremental_svd_time_stepper(
-   int* argc,
-   char*** argv,
    int dim,
    double epsilon,
    bool skip_redundant,
    int max_time_steps_between_increments) :
    d_max_time_steps_between_increments(max_time_steps_between_increments),
    d_next_increment_time(0.0),
-   d_isvd(new incremental_svd(argc,
-                              argv,
-                              dim,
+   d_isvd(new incremental_svd(dim,
                               epsilon,
                               skip_redundant))
 {
@@ -30,9 +27,8 @@ incremental_svd_time_stepper::computeNextIncrementTime(
    double* rhs_in,
    double time)
 {
-   int rank;
-   MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
-
+   int mpi_init;
+   MPI_Initialized(&mpi_init);
    int dim = d_isvd->getDim();
 
    // Get the norm of J from the incremental svd algorithm.
@@ -44,7 +40,13 @@ incremental_svd_time_stepper::computeNextIncrementTime(
    for (int i = 0; i < dim; ++i) {
       tmp += u_in[i]*u_in[i];
    }
-   MPI_Allreduce(&tmp, &norm_u, 1, MPI_DOUBLE, MPI_SUM, PETSC_COMM_WORLD);
+
+   if (mpi_init) {
+      MPI_Allreduce(&tmp, &norm_u, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+   }
+   else {
+      norm_u = tmp;
+   }
    norm_u = sqrt(norm_u);
 
    // Compute the norm of rhs.
@@ -53,7 +55,12 @@ incremental_svd_time_stepper::computeNextIncrementTime(
    for (int i = 0; i < dim; ++i) {
       tmp += rhs_in[i]*rhs_in[i];
    }
-   MPI_Allreduce(&tmp, &norm_rhs, 1, MPI_DOUBLE, MPI_SUM, PETSC_COMM_WORLD);
+   if (mpi_init) {
+      MPI_Allreduce(&tmp, &norm_rhs, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+   }
+   else {
+      norm_rhs = tmp;
+   }
    norm_rhs = sqrt(norm_rhs);
 
    // Compute delta t to next increment time.

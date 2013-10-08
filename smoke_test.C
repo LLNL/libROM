@@ -1,5 +1,6 @@
 #include "incremental_svd_rom.h"
-#include "stdio.h"
+#include <mpi.h>
+#include <stdio.h>
 
 int main(int argc, char* argv[])
 {
@@ -8,11 +9,12 @@ int main(int argc, char* argv[])
       return 1;
    }
    int dim = atoi(argv[1]);
-   CAROM::incremental_svd_rom inc_rom(&argc, &argv, dim, 1.0e-2, false, 1);
+   MPI_Init(&argc, &argv);
+   CAROM::incremental_svd_rom inc_rom(dim, 1.0e-2, false, 1);
    int size;
-   MPI_Comm_size(PETSC_COMM_WORLD, &size);
+   MPI_Comm_size(MPI_COMM_WORLD, &size);
    int rank;
-   MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
+   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
    if (dim*size != 6) {
       printf("Illegal dim/number of tasks, guess again.\n");
       return 1;
@@ -33,5 +35,6 @@ int main(int argc, char* argv[])
                                                            &vals1[dim*rank],
                                                            0.11);
    }
+   MPI_Finalize();
    return 0;
 }

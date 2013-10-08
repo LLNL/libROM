@@ -1,5 +1,3 @@
-#include "petscmat.h"
-
 namespace CAROM {
 
 // A class which embodies the incremental SVD algorithm.  The API is
@@ -10,8 +8,6 @@ class incremental_svd
    public:
       // Constructor.
       incremental_svd(
-         int* argc,
-         char*** argv,
          int dim,
          double epsilon,
          bool skip_redundant);
@@ -117,12 +113,14 @@ class incremental_svd
          double* A,
          double* sigma);
 
-      // Compute P = d_U*d_L.
+      // Compute P = d_U*d_L distributed across all processors.  This operation
+      // requires interprocess communication.
       void
       d_U_Times_d_L(
          double*& P) const;
 
-      // Compute l = P'*u.
+      // Compute l = P'*u.  The product, l, is not distributed but P and u are
+      // so this operation requires interprocess communication.
       void
       Pt_Times_u(
          double* P,
@@ -130,7 +128,8 @@ class incremental_svd
          double*& l);
 
       // Compute the product of 2 square matrices each of which has size rows
-      // and columns.
+      // and columns and is not distributed.  The product, result, is also not
+      // distributed.  This operation requires no interprocess communication.
       void
       MatTimesMat(
          const double* A,
@@ -150,8 +149,15 @@ class incremental_svd
       // If true, skip redundant increments.
       bool d_skip_redundant;
 
+      // The matrix U distributed across all processors.
       double* d_U;
+
+      // The matrix L.  L is not distributed and the entire matrix exists on
+      // each processor.
       double* d_L;
+
+      // The matrix S.  S is not distributed and the entire matrix exists on
+      // each processor.
       double* d_S;
 
       // Rank of process this object lives on.
