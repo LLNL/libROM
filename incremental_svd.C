@@ -14,6 +14,8 @@ void dgesdd_(char*, int*, int*, double*, int*,
 
 namespace CAROM {
 
+const int incremental_svd::COMMUNICATE_U = 666;
+
 incremental_svd::incremental_svd(
    int dim,
    double epsilon,
@@ -103,7 +105,7 @@ incremental_svd::increment(
       for (int proc = 1; proc < d_size; ++proc) {
          MPI_Status status;
          MPI_Recv(U, d_dim*d_num_increments, MPI_DOUBLE, proc,
-                  666, MPI_COMM_WORLD, &status);
+                  COMMUNICATE_U, MPI_COMM_WORLD, &status);
          idx = 0;
          for (int row = 0; row < d_dim; ++row) {
             for (int col = 0; col < d_num_increments; ++col) {
@@ -118,8 +120,8 @@ incremental_svd::increment(
    else {
       // Send this processor's part of d_U to process 0.
       MPI_Request request;
-      MPI_Isend(d_U, d_dim*d_num_increments, MPI_DOUBLE,
-                0, 666, MPI_COMM_WORLD, &request);
+      MPI_Isend(d_U, d_dim*d_num_increments, MPI_DOUBLE, 0,
+                COMMUNICATE_U, MPI_COMM_WORLD, &request);
    }
 #endif
 }

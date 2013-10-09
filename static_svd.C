@@ -12,6 +12,8 @@ void dgesdd_(char*, int*, int*, double*, int*,
 
 namespace CAROM {
 
+const int static_svd::COMMUNICATE_A = 999;
+
 static_svd::static_svd(
    int dim) :
    d_dim(dim),
@@ -72,8 +74,8 @@ static_svd::computeSVD()
          double* Aproc = new double [d_dim*num_cols];
          for (int proc = 1; proc < d_size; ++proc) {
             MPI_Status status;
-            MPI_Recv(Aproc, d_dim*num_cols, MPI_DOUBLE,
-                     proc, 999, MPI_COMM_WORLD, &status);
+            MPI_Recv(Aproc, d_dim*num_cols, MPI_DOUBLE, proc,
+                     COMMUNICATE_A, MPI_COMM_WORLD, &status);
             int Aproc_idx = 0;
             for (int col = 0; col < num_cols; ++col) {
                int Aidx = col*d_dim*d_size + d_dim*proc;
@@ -112,8 +114,8 @@ static_svd::computeSVD()
 
       // Send the contribution to the global state of A to process 0.
       MPI_Request request;
-      MPI_Isend(myA, d_dim*num_cols, MPI_DOUBLE,
-                0, 999, MPI_COMM_WORLD, &request);
+      MPI_Isend(myA, d_dim*num_cols, MPI_DOUBLE, 0,
+                COMMUNICATE_A, MPI_COMM_WORLD, &request);
 
       // Allocate d_U, d_S, and d_V.
       d_U = new double [d_dim*d_size*num_cols];

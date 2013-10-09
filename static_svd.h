@@ -81,6 +81,9 @@ class static_svd
 
       // Total number of processors.
       int d_size;
+
+      // MPI message tag.
+      static const int COMMUNICATE_A;
 };
 
 }

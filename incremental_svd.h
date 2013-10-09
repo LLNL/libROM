@@ -168,6 +168,9 @@ class incremental_svd
 
       // Value of norm of j cached by increment.
       double d_norm_j;
+
+      // MPI message tag.
+      static const int COMMUNICATE_U;
 };
 
 }
