@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
    double next_snapshot_time;
    double vals0[6] = {1.0, 6.0, 3.0, 8.0, 17.0, 9.0};
    if (inc_rom.isNextSnapshot(0.0)) {
-     inc_rom.takeSnapshot(&vals0[dim*rank], 0.0);
+      inc_rom.takeSnapshot(&vals0[dim*rank], 0.0);
       next_snapshot_time = inc_rom.computeNextSnapshotTime(&vals0[dim*rank],
                                                            &vals0[dim*rank],
                                                            0.0);
