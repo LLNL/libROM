@@ -1,3 +1,5 @@
+#include "matrix_utils.h"
+
 namespace CAROM {
 
 // A class which embodies the incremental SVD algorithm.  The API is
@@ -34,13 +36,20 @@ class incremental_svd
          return d_dim;
       }
 
+      // Returns the number of processors being run on.
+      int
+      getSize() const
+      {
+         return d_size;
+      }
+
       // Returns the model parameters, d_U*d_L as a C array.
       double*
       getModel() const
       {
-         double* result;
-         d_U_Times_d_L(result);
-         return result;
+         return DistributedMatLocalMatMult(d_U, d_dim, d_num_increments,
+                                           d_L, d_num_increments,
+                                           d_num_increments);
       }
 
       double
@@ -112,30 +121,6 @@ class incremental_svd
          double* j,
          double* A,
          double* sigma);
-
-      // Compute P = d_U*d_L distributed across all processors.  This operation
-      // requires interprocess communication.
-      void
-      d_U_Times_d_L(
-         double*& P) const;
-
-      // Compute l = P'*u.  The product, l, is not distributed but P and u are
-      // so this operation requires interprocess communication.
-      void
-      Pt_Times_u(
-         double* P,
-         double* u,
-         double*& l);
-
-      // Compute the product of 2 square matrices each of which has size rows
-      // and columns and is not distributed.  The product, result, is also not
-      // distributed.  This operation requires no interprocess communication.
-      void
-      MatTimesMat(
-         const double* A,
-         const double* B,
-         int size,
-         double*& result);
 
       // Dimension of the system.
       int d_dim;

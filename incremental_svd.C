@@ -1,4 +1,5 @@
 #include "incremental_svd.h"
+#include "vector_utils.h"
 #include <cmath>
 #include <string.h>
 #include <stdio.h>
@@ -134,18 +135,7 @@ incremental_svd::buildInitialSVD(
 
    // Build d_S.
    d_S = new double [1];
-   double norm_u = 0.0;
-   double tmp = 0.0;
-   for (int i = 0; i < d_dim; ++i) {
-      tmp += u[i]*u[i];
-   }
-   if (d_size > 1) {
-      MPI_Allreduce(&tmp, &norm_u, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-   }
-   else {
-      norm_u = tmp;
-   }
-   norm_u = sqrt(norm_u);
+   double norm_u = norm(u, d_dim, d_size);
    d_S[0] = norm_u;
 
    // Build d_L.
@@ -172,22 +162,12 @@ incremental_svd::buildIncrementalSVD(
    compute_J_P_normJ(u, j, P);
 
    // l = P' * u
-   double* l;
-   Pt_Times_u(P, u, l);
+   double* l =
+      DistributedMatTransposeDistributedMatMult(P, d_dim, d_num_increments,
+                                                u, d_dim, 1, d_size);
 
-   // Compute cm = u.u and see if this increment is new.
-   double cm = 0.0;
-   double tmp = 0.0;
-   for (int i = 0; i < d_dim; ++i) {
-      tmp += u[i]*u[i];
-   }
-   if (d_size > 1) {
-      MPI_Allreduce(&tmp, &cm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-   }
-   else {
-      cm = tmp;
-   }
-
+   // Compute cm = u.u and use it to see if this increment is new.
+   double cm = inner_product(u, u, d_dim, d_size);
    double eps_squared = d_epsilon*d_epsilon;
    bool is_new_increment = ((cm > eps_squared) &&
       ((d_norm_j*d_norm_j)/(eps_squared+cm)) > eps_squared);
@@ -253,7 +233,8 @@ incremental_svd::compute_J_P_normJ(
    memcpy(j, u, d_dim*sizeof(double));
 
    // P = d_U * d_L
-   d_U_Times_d_L(P);
+   P = DistributedMatLocalMatMult(d_U, d_dim, d_num_increments,
+                                  d_L, d_num_increments, d_num_increments);
 
    // Use modified Gram-Schmidt orthogonalization to modify j.
    orthogonalizeJAndComputeNorm(j, P);
@@ -288,20 +269,7 @@ incremental_svd::orthogonalizeJAndComputeNorm(
    }
 
    // Normalize j.
-   tmp = 0.0;
-   for (int i = 0; i < d_dim; ++i) {
-      tmp += j[i]*j[i];
-   }
-   if (d_size > 1) {
-      MPI_Allreduce(&tmp, &d_norm_j, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-   }
-   else {
-      d_norm_j = tmp;
-   }
-   d_norm_j = sqrt(d_norm_j);
-   for (int i = 0; i < d_dim; ++i) {
-      j[i] /= d_norm_j;
-   }
+   d_norm_j = normalize(j, d_dim, d_size);
 }
 
 void
@@ -406,8 +374,9 @@ incremental_svd::addRedundantIncrement(
    }
 
    // Multiply d_L and Amod and put result into d_L.
-   double* L_times_Amod;
-   MatTimesMat(d_L, Amod, d_num_increments, L_times_Amod);
+   double* L_times_Amod =
+      LocalMatLocalMatMult(d_L, d_num_increments, d_num_increments,
+                           Amod, d_num_increments, d_num_increments);
    delete [] d_L;
    d_L = L_times_Amod;
 
@@ -450,7 +419,8 @@ incremental_svd::addNewIncrement(
    }
    newL[lhs_idx] = 1.0;
    delete [] d_L;
-   MatTimesMat(newL, A, d_num_increments+1, d_L);
+   d_L = LocalMatLocalMatMult(newL, d_num_increments+1, d_num_increments+1,
+                              A, d_num_increments+1, d_num_increments+1);
    delete [] newL;
 
    // d_S = sigma.
@@ -459,92 +429,6 @@ incremental_svd::addNewIncrement(
 
    // We now have another increment.
    ++d_num_increments;
-}
-
-void
-incremental_svd::d_U_Times_d_L(
-   double*& P) const
-{
-   // Create this processor's portion of the result.
-   P = new double [d_dim * d_num_increments];
-
-   // Construct this processor's portion of the product which is an entirely
-   // local calculation.
-   for (int L_col = 0; L_col < d_num_increments; ++L_col) {
-      int U_idx = 0;
-      int P_idx = L_col;
-      for (int U_row = 0; U_row < d_dim; ++U_row) {
-         int L_idx = L_col;
-         P[P_idx] = 0.0;
-         for (int entry = 0; entry < d_num_increments; ++entry) {
-            P[P_idx] += d_U[U_idx]*d_L[L_idx];
-            ++U_idx;
-            L_idx += d_num_increments;
-         }
-         P_idx += d_num_increments;
-      }
-   }
-}
-
-void
-incremental_svd::Pt_Times_u(
-   double* P,
-   double* u,
-   double*& l)
-{
-   // Create this processor's contribution to the result.
-   double* tmp = new double [d_num_increments];
-   int l_idx = 0;
-   for (int P_col = 0; P_col < d_num_increments; ++P_col) {
-      int P_idx = P_col;
-      int u_idx = 0;
-      tmp[l_idx] = 0.0;
-      for (int entry = 0; entry < d_dim; ++entry) {
-         tmp[l_idx] += P[P_idx]*u[u_idx];
-         P_idx += d_num_increments;
-         ++u_idx;
-      }
-      ++l_idx;
-   }
-
-   // Create the final result.
-
-   // Sum all processors' contributions into the final result.
-   if (d_size > 1) {
-      l = new double [d_num_increments];
-      MPI_Allreduce(tmp, l, d_num_increments, MPI_DOUBLE,
-                    MPI_SUM, MPI_COMM_WORLD);
-      delete [] tmp;
-   }
-   else {
-      l = tmp;
-   }
-}
-
-void
-incremental_svd::MatTimesMat(
-   const double* A,
-   const double* B,
-   int size,
-   double*& result)
-{
-   // Construct result.
-   result = new double [size*size];
-
-   for (int B_col = 0; B_col < size; ++B_col) {
-      int A_idx = 0;
-      int result_idx = B_col;
-      for (int A_row = 0; A_row < size; ++A_row) {
-         int B_idx = B_col;
-         result[result_idx] = 0.0;
-         for (int entry = 0; entry < size; ++entry) {
-            result[result_idx] += A[A_idx]*B[B_idx];
-            ++A_idx;
-            B_idx += size;
-         }
-         result_idx += size;
-      }
-   }
 }
 
 }

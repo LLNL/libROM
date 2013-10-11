@@ -102,32 +102,28 @@ int main(int argc, char* argv[])
    if (rank == 0) {
       printf("static run time = %g\n", global_static_run_time/size);
    }
-   for (int S_col = 0; S_col < num_snapshots; ++S_col) {
-      for (int I_col = 0; I_col < num_lin_indep_snapshots; ++I_col) {
-         double test = 0.0;
-         int S_idx = S_col + num_snapshots*dim*rank;
-         int I_idx = I_col;
-         for (int entry = 0; entry < dim; ++entry) {
-            test += static_model[S_idx]*inc_model[I_idx];
-            S_idx += num_snapshots;
-            I_idx += num_lin_indep_snapshots;
+
+   // Compute the product of the tranpose of the static model and the
+   // incremental model.  This should be a unitary matrix.
+   double* test =
+      LocalMatTransposeDistributedMatMult(static_model,
+                                          dim,
+                                          num_snapshots,
+                                          inc_model,
+                                          dim,
+                                          num_lin_indep_snapshots,
+                                          size,
+                                          rank);
+   if (rank == 0) {
+      int idx = 0;
+      for (int row = 0; row < num_snapshots; ++row) {
+         for (int col = 0; col < num_lin_indep_snapshots; ++col) {
+            printf("%.16e ", test[idx++]);
          }
-         double global_test;
-         if (size == 1) {
-            global_test = test;
-         }
-         else {
-            MPI_Reduce(&test, &global_test, 1, MPI_DOUBLE,
-                       MPI_SUM, 0, MPI_COMM_WORLD);
-         }
-         if (rank == 0) {
-            printf("%.16e ", global_test);
-         }
-      }
-      if (rank == 0) {
          printf("\n");
       }
    }
+   delete [] test;
 #endif
    delete [] inc_model;
    for (int i = 0; i < num_snapshots; ++i) {

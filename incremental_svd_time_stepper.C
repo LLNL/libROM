@@ -1,4 +1,5 @@
 #include "incremental_svd_time_stepper.h"
+#include "vector_utils.h"
 #include <cmath>
 #include <mpi.h>
 
@@ -27,41 +28,17 @@ incremental_svd_time_stepper::computeNextIncrementTime(
    double* rhs_in,
    double time)
 {
-   int mpi_init;
-   MPI_Initialized(&mpi_init);
    int dim = d_isvd->getDim();
+   int num_procs = d_isvd->getSize();
 
    // Get the norm of J from the incremental svd algorithm.
    double norm_j = d_isvd->getNormJ();
 
-   // Compute the norm of u.
-   double norm_u = 0;
-   double tmp = 0;
-   for (int i = 0; i < dim; ++i) {
-      tmp += u_in[i]*u_in[i];
-   }
+   // Compute the norm of u_in.
+   double norm_u = norm(u_in, dim, num_procs);
 
-   if (mpi_init) {
-      MPI_Allreduce(&tmp, &norm_u, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-   }
-   else {
-      norm_u = tmp;
-   }
-   norm_u = sqrt(norm_u);
-
-   // Compute the norm of rhs.
-   double norm_rhs = 0.0;
-   tmp = 0.0;
-   for (int i = 0; i < dim; ++i) {
-      tmp += rhs_in[i]*rhs_in[i];
-   }
-   if (mpi_init) {
-      MPI_Allreduce(&tmp, &norm_rhs, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-   }
-   else {
-      norm_rhs = tmp;
-   }
-   norm_rhs = sqrt(norm_rhs);
+   // Compute the norm of rhs_in.
+   double norm_rhs = norm(rhs_in, dim, num_procs);
 
    // Compute delta t to next increment time.
    double epsilon = d_isvd->getEpsilon();
