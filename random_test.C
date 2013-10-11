@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
    int num_lin_dep_snapshots = atoi(argv[3]);
    int num_lin_indep_snapshots = num_snapshots - num_lin_dep_snapshots;
    MPI_Init(&argc, &argv);
-   CAROM::incremental_svd_rom inc_rom(dim, 1.0e-12, false, 1);
+   CAROM::incremental_svd_rom inc_rom(dim, 1.0e-12, false, 10, 1);
 #ifdef DEBUG
    CAROM::static_svd_rom static_rom(dim);
 #endif
@@ -59,13 +59,13 @@ int main(int argc, char* argv[])
    }
    double start_inc = MPI_Wtime();
    for (int i = 0; i < num_snapshots; ++i) {
-      if (inc_rom.isNextSnapshot(0.0)) {
-         inc_rom.takeSnapshot(M[i]);
+      if (inc_rom.isNextSnapshot(0.01*i)) {
+         inc_rom.takeSnapshot(M[i], 0.01*i);
          double next_snapshot_time =
-            inc_rom.computeNextSnapshotTime(M[i], M[i], 0.0);
+            inc_rom.computeNextSnapshotTime(M[i], M[i], 0.01*i);
       }
    }
-   double* inc_model = inc_rom.getModel();
+   double* inc_model = inc_rom.getModel(0.0);
    double stop_inc = MPI_Wtime();
    double incremental_run_time = stop_inc - start_inc;
    double global_incremental_run_time;
@@ -82,13 +82,13 @@ int main(int argc, char* argv[])
 #ifdef DEBUG
    double start_static = MPI_Wtime();
    for (int i = 0; i < num_snapshots; ++i) {
-      if (static_rom.isNextSnapshot(0.0)) {
-         static_rom.takeSnapshot(M[i]);
+      if (static_rom.isNextSnapshot(0.01*i)) {
+         static_rom.takeSnapshot(M[i], 0.01*i);
          double next_snapshot_time =
-            static_rom.computeNextSnapshotTime(M[i], M[i], 0.0);
+            static_rom.computeNextSnapshotTime(M[i], M[i], 0.01*i);
       }
    }
-   double* static_model = static_rom.getModel();
+   double* static_model = static_rom.getModel(0.0);
    double stop_static = MPI_Wtime();
    double static_run_time = stop_static - start_static;
    double global_static_run_time;

@@ -1,4 +1,5 @@
 #include "matrix_utils.h"
+#include <vector>
 
 namespace CAROM {
 
@@ -12,15 +13,17 @@ class incremental_svd
       incremental_svd(
          int dim,
          double epsilon,
-         bool skip_redundant);
+         bool skip_redundant,
+         int increments_per_time_interval);
 
       // Destructor.
       ~incremental_svd();
 
-      // Increment the SVD with the new state, u_in.
+      // Increment the SVD with the new state, u_in, at the given time.
       void
       increment(
-         double* u_in);
+         double* u_in,
+         double time);
 
       // Returns the tolerance used to determine if an increment is new.
       double
@@ -43,14 +46,11 @@ class incremental_svd
          return d_size;
       }
 
-      // Returns the model parameters, d_U*d_L as a C array.
+      // Returns the model parameters for the given time, d_U*d_L, as a C
+      // array.
       double*
-      getModel() const
-      {
-         return DistributedMatLocalMatMult(d_U, d_dim, d_num_increments,
-                                           d_L, d_num_increments,
-                                           d_num_increments);
-      }
+      getModel(
+         double time) const;
 
       double
       getNormJ() const
@@ -72,7 +72,8 @@ class incremental_svd
       // Constructs the first svd.
       void
       buildInitialSVD(
-         double* u);
+         double* u,
+         double time);
 
       // Increments the svd given the state vector u.
       void
@@ -134,16 +135,25 @@ class incremental_svd
       // If true, skip redundant increments.
       bool d_skip_redundant;
 
+      // The number of increments to be collected for each time interval.
+      int d_increments_per_time_interval;
+
       // The matrix U distributed across all processors.
-      double* d_U;
+      std::vector<double*> d_U;
 
       // The matrix L.  L is not distributed and the entire matrix exists on
       // each processor.
-      double* d_L;
+      std::vector<double*> d_L;
 
       // The matrix S.  S is not distributed and the entire matrix exists on
       // each processor.
-      double* d_S;
+      std::vector<double*> d_S;
+
+      // The number of time intervals gathered.
+      int d_num_time_intervals;
+
+      // The simulation time at which each time interval starts.
+      std::vector<double> d_time_interval_start_times;
 
       // Rank of process this object lives on.
       int d_rank;

@@ -17,6 +17,7 @@ class incremental_svd_time_stepper
          int dim,
          double epsilon,
          bool skip_redundant,
+         int increments_per_time_interval,
          int max_time_steps_between_increments);
 
       // Destructor.
@@ -38,11 +39,13 @@ class incremental_svd_time_stepper
          return result;
       }
 
-      // Increment the incremental svd.
+      // Increment the incremental svd at the given time.
       void
-      increment(double* u_in)
+      increment(
+         double* u_in,
+         double time)
       {
-         d_isvd->increment(u_in);
+         d_isvd->increment(u_in, time);
       }
 
       // Computes next time an svd increment is needed.
@@ -52,11 +55,12 @@ class incremental_svd_time_stepper
          double* rhs_in,
          double time);
 
-      // Returns the model parameters as a C array.
+      // Returns the model parameters at the given time as a C array.
       double*
-      getModel()
+      getModel(
+         double time)
       {
-         return d_isvd->getModel();
+         return d_isvd->getModel(time);
       }
 
    private:

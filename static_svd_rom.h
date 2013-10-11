@@ -27,7 +27,8 @@ class static_svd_rom
       // Add a snapshot to the static svd.
       void
       takeSnapshot(
-         double* u_in)
+         double* u_in,
+         double time)
       {
          d_svdts->collectState(u_in);
       }
@@ -44,7 +45,8 @@ class static_svd_rom
 
       // Returns the model parameters.
       double*
-      getModel()
+      getModel(
+         double time)
       {
          return d_svdts->getModel();
       }

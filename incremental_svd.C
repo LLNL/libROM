@@ -1,5 +1,6 @@
 #include "incremental_svd.h"
 #include "vector_utils.h"
+#include <assert.h>
 #include <cmath>
 #include <string.h>
 #include <stdio.h>
@@ -20,14 +21,18 @@ const int incremental_svd::COMMUNICATE_U = 666;
 incremental_svd::incremental_svd(
    int dim,
    double epsilon,
-   bool skip_redundant) :
+   bool skip_redundant,
+   int increments_per_time_interval) :
    d_dim(dim),
    d_num_increments(0),
    d_epsilon(epsilon),
    d_skip_redundant(skip_redundant),
+   d_increments_per_time_interval(increments_per_time_interval),
    d_U(0),
    d_L(0),
    d_S(0),
+   d_num_time_intervals(0),
+   d_time_interval_start_times(0),
    d_norm_j(0.0)
 {
    // Get the rank of this process, and get the number of processors.
@@ -46,25 +51,29 @@ incremental_svd::incremental_svd(
 incremental_svd::~incremental_svd()
 {
    // Delete data members.
-   if (d_U) {
-      delete [] d_U;
-   }
-   if (d_L) {
-      delete [] d_L;
-   }
-   if (d_S) {
-      delete [] d_S;
+   for (int i = 0; i < d_num_time_intervals; ++i) {
+      if (d_U[i]) {
+         delete [] d_U[i];
+      }
+      if (d_L[i]) {
+         delete [] d_L[i];
+      }
+      if (d_S[i]) {
+         delete [] d_S[i];
+      }
    }
 }
 
 void
 incremental_svd::increment(
-   double* u_in)
+   double* u_in,
+   double time)
 {
    // If this is the first SVD then build it.  Otherwise add this increment to
    // the system.
-   if (d_num_increments == 0) {
-      buildInitialSVD(u_in);
+   if (d_num_increments == 0 ||
+       d_num_increments >= d_increments_per_time_interval) {
+     buildInitialSVD(u_in, time);
    }
    else {
       buildIncrementalSVD(u_in);
@@ -72,84 +81,117 @@ incremental_svd::increment(
 
 #ifdef DEBUG
    if (d_rank == 0) {
-      // Print d_S.
-      int idx = 0;
-      for (int row = 0; row < d_num_increments; ++row) {
-         for (int col = 0; col < d_num_increments; ++col) {
-            printf("%g  ", d_S[idx++]);
-         }
-         printf("\n");
-      }
-      printf("\n");
-
-      // Print d_L.
-      idx = 0;
-      for (int row = 0; row < d_num_increments; ++row) {
-         for (int col = 0; col < d_num_increments; ++col) {
-            printf("%g  ", d_L[idx++]);
-         }
-         printf("\n");
-      }
-      printf("\n");
-
-      // Print process 0's part of d_U.
-      idx = 0;
-      for (int row = 0; row < d_dim; ++row) {
-         for (int col = 0; col < d_num_increments; ++col) {
-            printf("%.16e ", d_U[idx++]);
-         }
-         printf("\n");
-      }
-
-      // Gather other processor's parts of d_U and print them.
       double* U = new double [d_dim*d_num_increments];
-      for (int proc = 1; proc < d_size; ++proc) {
-         MPI_Status status;
-         MPI_Recv(U, d_dim*d_num_increments, MPI_DOUBLE, proc,
-                  COMMUNICATE_U, MPI_COMM_WORLD, &status);
-         idx = 0;
-         for (int row = 0; row < d_dim; ++row) {
+      for (int i = 0; i < d_num_time_intervals; ++i) {
+         // Print d_S[i].
+         const double* this_d_S = d_S[i];
+         int idx = 0;
+         for (int row = 0; row < d_num_increments; ++row) {
             for (int col = 0; col < d_num_increments; ++col) {
-               printf("%.16e ", U[idx++]);
+               printf("%g  ", this_d_S[idx++]);
             }
             printf("\n");
          }
+         printf("\n");
+
+         // Print d_L[i].
+         const double* this_d_L = d_L[i];
+         idx = 0;
+         for (int row = 0; row < d_num_increments; ++row) {
+            for (int col = 0; col < d_num_increments; ++col) {
+               printf("%g  ", this_d_L[idx++]);
+            }
+            printf("\n");
+         }
+         printf("\n");
+
+         // Print process 0's part of d_U[i].
+         const double* this_d_U = d_U[i];
+         idx = 0;
+         for (int row = 0; row < d_dim; ++row) {
+            for (int col = 0; col < d_num_increments; ++col) {
+               printf("%.16e ", this_d_U[idx++]);
+            }
+            printf("\n");
+         }
+
+         // Gather other processor's parts of d_U[i] and print them.
+         for (int proc = 1; proc < d_size; ++proc) {
+            MPI_Status status;
+            MPI_Recv(U, d_dim*d_num_increments, MPI_DOUBLE, proc,
+                     COMMUNICATE_U, MPI_COMM_WORLD, &status);
+            idx = 0;
+            for (int row = 0; row < d_dim; ++row) {
+               for (int col = 0; col < d_num_increments; ++col) {
+                  printf("%.16e ", U[idx++]);
+               }
+               printf("\n");
+            }
+         }
+         printf("============================================================\n");
       }
-      printf("============================================================\n");
       delete [] U;
    }
    else {
-      // Send this processor's part of d_U to process 0.
-      MPI_Request request;
-      MPI_Isend(d_U, d_dim*d_num_increments, MPI_DOUBLE, 0,
-                COMMUNICATE_U, MPI_COMM_WORLD, &request);
+      // DOES THIS WORK??????????????????????????????????????
+      // Send this processor's part of d_U[i] to process 0.
+      for (int i = 0; i < d_num_time_intervals; ++i) {
+         MPI_Request request;
+         MPI_Isend(d_U[i], d_dim*d_num_increments, MPI_DOUBLE, 0,
+                   COMMUNICATE_U, MPI_COMM_WORLD, &request);
+      }
    }
 #endif
 }
 
+double*
+incremental_svd::getModel(
+   double time) const
+{
+   assert(0 < d_num_time_intervals);
+   int i;
+   for (i = 0; i < d_num_time_intervals-1; ++i) {
+      if (d_time_interval_start_times[i] <= time &&
+          d_time_interval_start_times[i+1] < time) {
+         break;
+      }
+   }
+   return DistributedMatLocalMatMult(d_U[i], d_dim, d_num_increments,
+                                     d_L[i], d_num_increments,
+                                     d_num_increments);
+}
+
 void
 incremental_svd::buildInitialSVD(
-   double* u)
+   double* u,
+   double time)
 {
-   int zero = 0;
+   // We have a new time interval.
+   ++d_num_time_intervals;
+   d_time_interval_start_times.resize(d_num_time_intervals);
+   d_time_interval_start_times[d_num_time_intervals-1] = time;
+   d_U.resize(d_num_time_intervals);
+   d_L.resize(d_num_time_intervals);
+   d_S.resize(d_num_time_intervals);
 
-   // Build d_S.
-   d_S = new double [1];
+   // Build d_S[d_num_time_intervals-1].
+   d_S[d_num_time_intervals-1] = new double [1];
    double norm_u = norm(u, d_dim, d_size);
-   d_S[0] = norm_u;
+   d_S[d_num_time_intervals-1][0] = norm_u;
 
-   // Build d_L.
-   d_L = new double [1];
-   d_L[0] = 1.0;
+   // Build d_L[d_num_time_intervals-1].
+   d_L[d_num_time_intervals-1] = new double [1];
+   d_L[d_num_time_intervals-1][0] = 1.0;
 
-   // Build d_U.
-   d_U = new double [d_dim];
+   // Build d_U[d_num_time_intervals-1].
+   d_U[d_num_time_intervals-1] = new double [d_dim];
+   double* this_d_U = d_U[d_num_time_intervals-1];
    for (int i = 0; i < d_dim; ++i) {
-      d_U[i] = u[i]/norm_u;
+      this_d_U[i] = u[i]/norm_u;
    }
 
-   // We now have another increment.
-   ++d_num_increments;
+   // We now have the first increment for the new time interval.
+   d_num_increments = 1;
 }
 
 void
@@ -232,9 +274,13 @@ incremental_svd::compute_J_P_normJ(
    j = new double [d_dim];
    memcpy(j, u, d_dim*sizeof(double));
 
-   // P = d_U * d_L
-   P = DistributedMatLocalMatMult(d_U, d_dim, d_num_increments,
-                                  d_L, d_num_increments, d_num_increments);
+   // P = d_U[d_num_time_intervals-1] * d_L[d_num_time_intervals-1]
+   P = DistributedMatLocalMatMult(d_U[d_num_time_intervals-1],
+                                  d_dim,
+                                  d_num_increments,
+                                  d_L[d_num_time_intervals-1],
+                                  d_num_increments,
+                                  d_num_increments);
 
    // Use modified Gram-Schmidt orthogonalization to modify j.
    orthogonalizeJAndComputeNorm(j, P);
@@ -284,10 +330,11 @@ incremental_svd::constructQ(
    // Fill Q in column major order.
    int q_idx = 0;
    int s_idx = 0;
+   const double* this_d_S = d_S[d_num_time_intervals-1];
    for (int row = 0; row < d_num_increments; ++row) {
       q_idx = row;
       for (int col = 0; col < d_num_increments; ++col) {
-         Q[q_idx] = d_S[s_idx++];
+         Q[q_idx] = this_d_S[s_idx++];
          q_idx += d_num_increments+1;
       }
       Q[q_idx] = l[row];
@@ -358,27 +405,33 @@ incremental_svd::addRedundantIncrement(
    double* A,
    double* sigma)
 {
-   // Chop a row and a column off of A to form Amod.  Also form d_S by chopping
-   // a row and a column off of sigma.
+   // Chop a row and a column off of A to form Amod.  Also form
+   // d_S[d_num_time_intervals-1] by chopping a row and a column off of sigma.
    double* Amod = new double [d_num_increments*d_num_increments];
    int lhs_idx = 0;
    int rhs_idx = 0;
+   double* this_d_S = d_S[d_num_time_intervals-1];
    for (int row = 0; row < d_num_increments; ++row){
       for (int col = 0; col < d_num_increments; ++col) {
          Amod[lhs_idx] = A[rhs_idx];
-         d_S[lhs_idx] = sigma[rhs_idx];
+         this_d_S[lhs_idx] = sigma[rhs_idx];
          ++lhs_idx;
          ++rhs_idx;
       }
       ++rhs_idx;
    }
 
-   // Multiply d_L and Amod and put result into d_L.
+   // Multiply d_L[d_num_time_intervals-1] and Amod and put result into
+   // d_L[d_num_time_intervals-1].
    double* L_times_Amod =
-      LocalMatLocalMatMult(d_L, d_num_increments, d_num_increments,
-                           Amod, d_num_increments, d_num_increments);
-   delete [] d_L;
-   d_L = L_times_Amod;
+      LocalMatLocalMatMult(d_L[d_num_time_intervals-1],
+                           d_num_increments,
+                           d_num_increments,
+                           Amod,
+                           d_num_increments,
+                           d_num_increments);
+   delete [] d_L[d_num_time_intervals-1];
+   d_L[d_num_time_intervals-1] = L_times_Amod;
 
    // Clean up.
    delete [] Amod;
@@ -390,27 +443,29 @@ incremental_svd::addNewIncrement(
    double* A,
    double* sigma)
 {
-   // Add j as a new column of d_U.
+   // Add j as a new column of d_U[d_num_time_intervals-1].
+   const double* this_d_U = d_U[d_num_time_intervals-1];
    double* newU = new double [d_dim*(d_num_increments+1)];
    int lhs_idx = 0;
    int rhs_idx = 0;
    for (int row = 0; row < d_dim; ++row) {
       for (int col = 0; col < d_num_increments; ++col) {
-         newU[lhs_idx++] = d_U[rhs_idx++];
+         newU[lhs_idx++] = this_d_U[rhs_idx++];
       }
       newU[lhs_idx++] = j[row];
    }
-   delete [] d_U;
-   d_U = newU;
+   delete [] d_U[d_num_time_intervals-1];
+   d_U[d_num_time_intervals-1] = newU;
 
-   // Add another row and column to d_L.  Only the last value in the new
-   // row/column is non-zero and it is 1.
+   // Add another row and column to d_L[d_num_time_intervals-1].  Only the last
+   // value in the new row/column is non-zero and it is 1.
    double* newL = new double [(d_num_increments+1)*(d_num_increments+1)];
    lhs_idx = 0;
    rhs_idx = 0;
+   const double* this_d_L = d_L[d_num_time_intervals-1];
    for (int row = 0; row < d_num_increments; ++row) {
       for (int col = 0; col < d_num_increments; ++col) {
-         newL[lhs_idx++] = d_L[rhs_idx++];
+         newL[lhs_idx++] = this_d_L[rhs_idx++];
       }
       newL[lhs_idx++] = 0.0;
    }
@@ -418,14 +473,15 @@ incremental_svd::addNewIncrement(
       newL[lhs_idx++] = 0.0;
    }
    newL[lhs_idx] = 1.0;
-   delete [] d_L;
-   d_L = LocalMatLocalMatMult(newL, d_num_increments+1, d_num_increments+1,
-                              A, d_num_increments+1, d_num_increments+1);
+   delete [] d_L[d_num_time_intervals-1];
+   d_L[d_num_time_intervals-1] =
+      LocalMatLocalMatMult(newL, d_num_increments+1, d_num_increments+1,
+                           A, d_num_increments+1, d_num_increments+1);
    delete [] newL;
 
-   // d_S = sigma.
-   delete [] d_S;
-   d_S = sigma;
+   // d_S[d_num_time_intervals-1] = sigma.
+   delete [] d_S[d_num_time_intervals-1];
+   d_S[d_num_time_intervals-1] = sigma;
 
    // We now have another increment.
    ++d_num_increments;

@@ -14,6 +14,7 @@ class incremental_svd_rom
          int dim,
          double epsilon,
          bool skip_redundant,
+         int rom_size,
          int max_time_steps_between_snapshots);
 
       // Destructor.
@@ -27,12 +28,13 @@ class incremental_svd_rom
          return d_isvdts->isNextIncrement(time);
       }
 
-      // Add a snapshot to the incremental svd.
+      // Add a snapshot to the incremental svd at the given time.
       void
       takeSnapshot(
-         double* u_in)
+         double* u_in,
+         double time)
       {
-         d_isvdts->increment(u_in);
+         d_isvdts->increment(u_in, time);
       }
 
       // Computes next time an svd snapshot is needed.
@@ -45,11 +47,12 @@ class incremental_svd_rom
          return d_isvdts->computeNextIncrementTime(u_in, rhs_in, time);
       }
 
-      // Returns the model parameters as a C array.
+      // Returns the model parameters at the given time as a C array.
       double*
-      getModel()
+      getModel(
+         double time)
       {
-         return d_isvdts->getModel();
+         return d_isvdts->getModel(time);
       }
 
    private:

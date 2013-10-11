@@ -9,12 +9,14 @@ incremental_svd_time_stepper::incremental_svd_time_stepper(
    int dim,
    double epsilon,
    bool skip_redundant,
+   int increments_per_time_interval,
    int max_time_steps_between_increments) :
    d_max_time_steps_between_increments(max_time_steps_between_increments),
    d_next_increment_time(0.0),
    d_isvd(new incremental_svd(dim,
                               epsilon,
-                              skip_redundant))
+                              skip_redundant,
+                              increments_per_time_interval))
 {
 }
 
