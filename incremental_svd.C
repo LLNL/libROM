@@ -254,6 +254,8 @@ incremental_svd::buildIncrementalSVD(
    }
    else if (is_new_increment) {
       // This increment is new.
+      // addNewIncrement will assign sigma to d_S[d_num_time_intervals-1]
+      // hence it should not be deleted upon return.
       addNewIncrement(j, A, sigma);
    }
 
