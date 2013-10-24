@@ -31,6 +31,7 @@ incremental_svd::incremental_svd(
    d_U(0),
    d_L(0),
    d_S(0),
+   d_model(0),
    d_num_time_intervals(0),
    d_time_interval_start_times(0),
    d_norm_j(0.0)
@@ -60,6 +61,9 @@ incremental_svd::~incremental_svd()
       }
       if (d_S[i]) {
          delete [] d_S[i];
+      }
+      if (d_model[i]) {
+         delete [] d_model[i];
       }
    }
 }
@@ -156,9 +160,15 @@ incremental_svd::getModel(
          break;
       }
    }
-   return DistributedMatLocalMatMult(d_U[i], d_dim, d_num_increments,
-                                     d_L[i], d_num_increments,
-                                     d_num_increments);
+   if (i == d_num_time_intervals-1) {
+      return DistributedMatLocalMatMult(d_U[i], d_dim, d_num_increments,
+                                        d_L[i], d_num_increments,
+                                        d_num_increments);
+   }
+   else {
+      assert(d_model[i] != 0);
+      return d_model[i];
+   }
 }
 
 void
@@ -173,6 +183,7 @@ incremental_svd::buildInitialSVD(
    d_U.resize(d_num_time_intervals);
    d_L.resize(d_num_time_intervals);
    d_S.resize(d_num_time_intervals);
+   d_model.resize(d_num_time_intervals);
 
    // Build d_S[d_num_time_intervals-1].
    d_S[d_num_time_intervals-1] = new double [1];
@@ -188,6 +199,28 @@ incremental_svd::buildInitialSVD(
    double* this_d_U = d_U[d_num_time_intervals-1];
    for (int i = 0; i < d_dim; ++i) {
       this_d_U[i] = u[i]/norm_u;
+   }
+
+   // If this is not the first time interval then compute the model parameters
+   // for the previous time interval and delete the now unnecessary storage for
+   // d_U, d_L, and d_S for the previous time interval.
+   if (d_num_time_intervals > 1) {
+      if (d_model[d_num_time_intervals-2] != 0) {
+         delete [] d_model[d_num_time_intervals-2];
+      }
+      d_model[d_num_time_intervals-2] =
+         DistributedMatLocalMatMult(d_U[d_num_time_intervals-2],
+                                    d_dim,
+                                    d_num_increments,
+                                    d_L[d_num_time_intervals-2],
+                                    d_num_increments,
+                                    d_num_increments);
+      delete [] d_U[d_num_time_intervals-2];
+      d_U[d_num_time_intervals-2] = 0;
+      delete [] d_L[d_num_time_intervals-2];
+      d_L[d_num_time_intervals-2] = 0;
+      delete [] d_S[d_num_time_intervals-2];
+      d_S[d_num_time_intervals-2] = 0;
    }
 
    // We now have the first increment for the new time interval.

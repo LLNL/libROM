@@ -138,16 +138,23 @@ class incremental_svd
       // The number of increments to be collected for each time interval.
       int d_increments_per_time_interval;
 
-      // The matrix U distributed across all processors.
+      // For each time interval, the matrix U distributed across all
+      // processors.  Each d_U is the part of the distributed matrix local to
+      // the processor owning this object.
       std::vector<double*> d_U;
 
-      // The matrix L.  L is not distributed and the entire matrix exists on
-      // each processor.
+      // For each time interval, the matrix L.  L is not distributed and the
+      // entire matrix exists on each processor.
       std::vector<double*> d_L;
 
-      // The matrix S.  S is not distributed and the entire matrix exists on
-      // each processor.
+      // For each time interval, the matrix S.  S is not distributed and the
+      // entire matrix exists on each processor.
       std::vector<double*> d_S;
+
+      // For each time interval, the model parameters distributed across all
+      // processors.  Each d_model is the part of the distributed model
+      // parameters local to the processor owning this object.
+      std::vector<double*> d_model;
 
       // The number of time intervals gathered.
       int d_num_time_intervals;
