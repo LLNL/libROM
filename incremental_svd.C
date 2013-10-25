@@ -150,7 +150,7 @@ incremental_svd::increment(
 
 double*
 incremental_svd::getModel(
-   double time) const
+   double time)
 {
    assert(0 < d_num_time_intervals);
    int i;
@@ -160,15 +160,24 @@ incremental_svd::getModel(
          break;
       }
    }
+
+   // If this model is for the last time interval then it may not be up to
+   // date so recompute it.
    if (i == d_num_time_intervals-1) {
-      return DistributedMatLocalMatMult(d_U[i], d_dim, d_num_increments,
-                                        d_L[i], d_num_increments,
-                                        d_num_increments);
+      if (d_model[i] != 0) {
+         delete [] d_model[i];
+      }
+      d_model[i] = DistributedMatLocalMatMult(d_U[i],
+                                              d_dim,
+                                              d_num_increments,
+                                              d_L[i],
+                                              d_num_increments,
+                                              d_num_increments);
    }
    else {
       assert(d_model[i] != 0);
-      return d_model[i];
    }
+   return d_model[i];
 }
 
 void
@@ -200,6 +209,9 @@ incremental_svd::buildInitialSVD(
    for (int i = 0; i < d_dim; ++i) {
       this_d_U[i] = u[i]/norm_u;
    }
+
+   // Set the model for this time interval to 0.
+   d_model[d_num_time_intervals-1] = 0;
 
    // If this is not the first time interval then compute the model parameters
    // for the previous time interval and delete the now unnecessary storage for

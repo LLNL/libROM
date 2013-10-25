@@ -125,7 +125,6 @@ int main(int argc, char* argv[])
    }
    delete [] test;
 #endif
-   delete [] inc_model;
    for (int i = 0; i < num_snapshots; ++i) {
       delete [] M[i];
    }

@@ -50,7 +50,7 @@ class incremental_svd
       // array.
       double*
       getModel(
-         double time) const;
+         double time);
 
       double
       getNormJ() const
