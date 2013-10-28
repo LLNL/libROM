@@ -1,3 +1,7 @@
+#ifndef included_static_svd_h
+#define included_static_svd_h
+
+#include "matrix.h"
 #include <vector>
 
 namespace CAROM {
@@ -33,7 +37,7 @@ class static_svd
       }
 
       // Returns the model parameters, d_U.
-      double*
+      Matrix*
       getModel()
       {
          computeSVD();
@@ -68,13 +72,13 @@ class static_svd
       std::vector<double*> d_state;
 
       // The globalized matrix U.  U is large and each process owns all of U.
-      double* d_U;
+      Matrix* d_U;
 
       // The globalized matrix S.  S is small and each process owns all of S.
-      double* d_S;
+      Matrix* d_S;
 
       // The globalized matrix L.  L is small and each process owns all of L.
-      double* d_V;
+      Matrix* d_V;
 
       // Rank of process this object lives on.
       int d_rank;
@@ -87,3 +91,5 @@ class static_svd
 };
 
 }
+
+#endif

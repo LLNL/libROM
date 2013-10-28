@@ -1,3 +1,6 @@
+#ifndef included_static_svd_rom_h
+#define included_static_svd_rom_h
+
 #include "static_svd_time_stepper.h"
 
 namespace CAROM {
@@ -44,7 +47,7 @@ class static_svd_rom
       }
 
       // Returns the model parameters.
-      double*
+      Matrix*
       getModel(
          double time)
       {
@@ -66,3 +69,5 @@ class static_svd_rom
 };
 
 }
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef included_static_svd_time_stepper_h
+#define included_static_svd_time_stepper_h
+
 #include "static_svd.h"
 #include <boost/shared_ptr.hpp>
 
@@ -42,7 +45,7 @@ class static_svd_time_stepper
       }
 
       // Returns the model parameters.
-      double*
+      Matrix*
       getModel()
       {
          return d_svd->getModel();
@@ -64,3 +67,5 @@ class static_svd_time_stepper
 };
 
 }
+
+#endif

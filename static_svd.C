@@ -8,8 +8,6 @@ void dgesdd_(char*, int*, int*, double*, int*,
              double*, int*, int*, int*);
 }
 
-// #define DEBUG
-
 namespace CAROM {
 
 const int static_svd::COMMUNICATE_A = 999;
@@ -30,7 +28,7 @@ static_svd::static_svd(
       MPI_Comm_size(MPI_COMM_WORLD, &d_size);
    }
    else {
-      d_rank = 1;
+      d_rank = 0;
       d_size = 1;
    }
 }
@@ -39,13 +37,13 @@ static_svd::~static_svd()
 {
    // Delete data members.
    if (d_U) {
-      delete [] d_U;
+      delete d_U;
    }
    if (d_S) {
-      delete [] d_S;
+      delete d_S;
    }
    if (d_V) {
-      delete [] d_V;
+      delete d_V;
    }
 }
 
@@ -92,9 +90,12 @@ static_svd::computeSVD()
 
       // Broadcast the results.
       if (d_size > 1) {
-         MPI_Bcast(d_U, d_dim*d_size*num_cols, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-         MPI_Bcast(d_S, num_cols*num_cols, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-         MPI_Bcast(d_V, num_cols*num_cols, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+         MPI_Bcast(d_U->d_mat, d_dim*d_size*num_cols,
+                   MPI_DOUBLE, 0, MPI_COMM_WORLD);
+         MPI_Bcast(d_S->d_mat, num_cols*num_cols,
+                   MPI_DOUBLE, 0, MPI_COMM_WORLD);
+         MPI_Bcast(d_V->d_mat, num_cols*num_cols,
+                    MPI_DOUBLE, 0, MPI_COMM_WORLD);
       }
 
       // Clean up.
@@ -118,32 +119,31 @@ static_svd::computeSVD()
                 COMMUNICATE_A, MPI_COMM_WORLD, &request);
 
       // Allocate d_U, d_S, and d_V.
-      d_U = new double [d_dim*d_size*num_cols];
-      d_S = new double [num_cols*num_cols];
-      d_V = new double [num_cols*num_cols];
+      d_U = new Matrix(d_dim*d_size, num_cols, false, d_rank, d_size);
+      d_S = new Matrix(num_cols, num_cols, false, d_rank, d_size);
+      d_V = new Matrix(num_cols, num_cols, false, d_rank, d_size);
 
       // Get the results from process 0.
-      MPI_Bcast(d_U, d_dim*d_size*num_cols, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-      MPI_Bcast(d_S, num_cols*num_cols, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-      MPI_Bcast(d_V, num_cols*num_cols, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+      MPI_Bcast(d_U->d_mat, d_dim*d_size*num_cols,
+                MPI_DOUBLE, 0, MPI_COMM_WORLD);
+      MPI_Bcast(d_S->d_mat, num_cols*num_cols, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+      MPI_Bcast(d_V->d_mat, num_cols*num_cols, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
       // Clean up.
       delete [] myA;
    }
 #ifdef DEBUG
    if (d_rank == 0) {
-      int idx = 0;
       for (int row = 0; row < d_dim*d_size; ++row) {
          for (int col = 0; col < num_cols; ++col) {
-            printf("%.16e ", d_U[idx++]);
+            printf("%.16e ", d_U->item(row, col));
          }
          printf("\n");
       }
       printf("\n");
-      idx = 0;
       for (int row = 0; row < num_cols; ++row) {
          for (int col = 0; col < num_cols; ++col) {
-            printf("%.16e ", d_S[idx++]);
+            printf("%.16e ", d_S->item(row, col));
          }
          printf("\n");
       }
@@ -158,16 +158,18 @@ static_svd::svd(
    int num_states = static_cast<int>(d_state.size());
 
    // Construct d_U.
-   d_U = new double [d_dim*d_size*num_states];
+   d_U = new Matrix(d_dim*d_size, num_states, false, d_rank, d_size);
 
    // Construct d_S.
-   d_S = new double [num_states*num_states];
-   for (int i = 0; i < num_states*num_states; ++i) {
-      d_S[i] = 0.0;
+   d_S = new Matrix(num_states, num_states, false, d_rank, d_size);
+   for (int row = 0; row < num_states; ++row) {
+      for (int col = 0; col < num_states; ++col) {
+         d_S->item(row, col) = 0.0;
+      }
    }
 
    // Construct d_V.
-   d_V = new double [num_states*num_states];
+   d_V = new Matrix(num_states, num_states, false, d_rank, d_size);
 
    // Use lapack's dgesdd_ Fortran function to perform the svd.  As this is
    // Fortran A and all the computed matrices are in column major order.
@@ -184,14 +186,14 @@ static_svd::svd(
    int* iwork = new int [8*n];
    int info;
    dgesdd_(&jobz, &m, &n, A, &lda,
-           sigma, U, &ldu, d_V, &ldv,
+           sigma, U, &ldu, d_V->d_mat, &ldv,
            work, &lwork, iwork, &info);
    delete [] work;
    delete [] iwork;
 
    // Place sigma into d_S.
    for (int i = 0; i < num_states; ++i) {
-      d_S[i*(num_states+1)] = sigma[i];
+      d_S->item(i, i) = sigma[i];
    }
    delete [] sigma;
 
@@ -199,10 +201,8 @@ static_svd::svd(
    // order so convert is to row major order as this is done.
    int uidx = 0;
    for (int row = 0; row < n; ++row) {
-      int d_uidx = row;
       for (int col = 0; col < m; ++col) {
-         d_U[d_uidx] = U[uidx++];
-         d_uidx += n;
+         d_U->item(col, row) = U[uidx++];
       }
    }
    delete [] U;
@@ -210,9 +210,9 @@ static_svd::svd(
    // d_V is in column major order.  Convert it to row major order.
    for (int row = 0; row < num_states; ++row) {
       for (int col = row+1; col < num_states; ++col) {
-         double tmp = d_V[row*num_states+col];
-         d_V[row*num_states+col] = d_V[col*num_states+row];
-         d_V[col*num_states+row] = tmp;
+         double tmp = d_V->item(row, col);
+         d_V->item(row, col) = d_V->item(col, row);
+         d_V->item(col, row) = tmp;
       }
    }
 }

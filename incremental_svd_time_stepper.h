@@ -1,3 +1,6 @@
+#ifndef included_incremental_svd_time_stepper_h
+#define included_incremental_svd_time_stepper_h
+
 #include "incremental_svd.h"
 #include <boost/shared_ptr.hpp>
 
@@ -55,8 +58,8 @@ class incremental_svd_time_stepper
          double* rhs_in,
          double time);
 
-      // Returns the model parameters at the given time as a C array.
-      double*
+      // Returns the model parameters at the given time as a Matrix.
+      Matrix*
       getModel(
          double time)
       {
@@ -88,3 +91,5 @@ class incremental_svd_time_stepper
 };
 
 }
+
+#endif

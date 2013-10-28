@@ -1,7 +1,4 @@
 #include "incremental_svd.h"
-#include "vector_utils.h"
-#include <assert.h>
-#include <cmath>
 #include <string.h>
 #include <stdio.h>
 #include <mpi.h>
@@ -11,8 +8,6 @@ void dgesdd_(char*, int*, int*, double*, int*,
              double*, double*, int*, double*, int*,
              double*, int*, int*, int*);
 }
-
-// #define DEBUG
 
 namespace CAROM {
 
@@ -44,7 +39,7 @@ incremental_svd::incremental_svd(
       MPI_Comm_size(MPI_COMM_WORLD, &d_size);
    }
    else {
-      d_rank = 1;
+      d_rank = 0;
       d_size = 1;
    }
 }
@@ -54,16 +49,16 @@ incremental_svd::~incremental_svd()
    // Delete data members.
    for (int i = 0; i < d_num_time_intervals; ++i) {
       if (d_U[i]) {
-         delete [] d_U[i];
+         delete d_U[i];
       }
       if (d_L[i]) {
-         delete [] d_L[i];
+         delete d_L[i];
       }
       if (d_S[i]) {
-         delete [] d_S[i];
+         delete d_S[i];
       }
       if (d_model[i]) {
-         delete [] d_model[i];
+         delete d_model[i];
       }
    }
 }
@@ -88,33 +83,30 @@ incremental_svd::increment(
       double* U = new double [d_dim*d_num_increments];
       for (int i = 0; i < d_num_time_intervals; ++i) {
          // Print d_S[i].
-         const double* this_d_S = d_S[i];
-         int idx = 0;
+         const Matrix* this_d_S = d_S[i];
          for (int row = 0; row < d_num_increments; ++row) {
             for (int col = 0; col < d_num_increments; ++col) {
-               printf("%g  ", this_d_S[idx++]);
+               printf("%g  ", this_d_S->item(row, col));
             }
             printf("\n");
          }
          printf("\n");
 
          // Print d_L[i].
-         const double* this_d_L = d_L[i];
-         idx = 0;
+         const Matrix* this_d_L = d_L[i];
          for (int row = 0; row < d_num_increments; ++row) {
             for (int col = 0; col < d_num_increments; ++col) {
-               printf("%g  ", this_d_L[idx++]);
+               printf("%g  ", this_d_L->item(row, col));
             }
             printf("\n");
          }
          printf("\n");
 
          // Print process 0's part of d_U[i].
-         const double* this_d_U = d_U[i];
-         idx = 0;
+         const Matrix* this_d_U = d_U[i];
          for (int row = 0; row < d_dim; ++row) {
             for (int col = 0; col < d_num_increments; ++col) {
-               printf("%.16e ", this_d_U[idx++]);
+               printf("%.16e ", this_d_U->item(row, col));
             }
             printf("\n");
          }
@@ -124,7 +116,7 @@ incremental_svd::increment(
             MPI_Status status;
             MPI_Recv(U, d_dim*d_num_increments, MPI_DOUBLE, proc,
                      COMMUNICATE_U, MPI_COMM_WORLD, &status);
-            idx = 0;
+            int idx = 0;
             for (int row = 0; row < d_dim; ++row) {
                for (int col = 0; col < d_num_increments; ++col) {
                   printf("%.16e ", U[idx++]);
@@ -141,18 +133,20 @@ incremental_svd::increment(
       // Send this processor's part of d_U[i] to process 0.
       for (int i = 0; i < d_num_time_intervals; ++i) {
          MPI_Request request;
-         MPI_Isend(d_U[i], d_dim*d_num_increments, MPI_DOUBLE, 0,
+         MPI_Isend(d_U[i]->d_mat, d_dim*d_num_increments, MPI_DOUBLE, 0,
                    COMMUNICATE_U, MPI_COMM_WORLD, &request);
       }
    }
 #endif
 }
 
-double*
+Matrix*
 incremental_svd::getModel(
    double time)
 {
+#ifdef DEBUG
    assert(0 < d_num_time_intervals);
+#endif
    int i;
    for (i = 0; i < d_num_time_intervals-1; ++i) {
       if (d_time_interval_start_times[i] <= time &&
@@ -165,18 +159,15 @@ incremental_svd::getModel(
    // date so recompute it.
    if (i == d_num_time_intervals-1) {
       if (d_model[i] != 0) {
-         delete [] d_model[i];
+         delete d_model[i];
       }
-      d_model[i] = DistributedMatLocalMatMult(d_U[i],
-                                              d_dim,
-                                              d_num_increments,
-                                              d_L[i],
-                                              d_num_increments,
-                                              d_num_increments);
+      d_model[i] = d_U[i]->Mult(*d_L[i]);
    }
+#ifdef DEBUG
    else {
       assert(d_model[i] != 0);
    }
+#endif
    return d_model[i];
 }
 
@@ -194,20 +185,21 @@ incremental_svd::buildInitialSVD(
    d_S.resize(d_num_time_intervals);
    d_model.resize(d_num_time_intervals);
 
-   // Build d_S[d_num_time_intervals-1].
-   d_S[d_num_time_intervals-1] = new double [1];
-   double norm_u = norm(u, d_dim, d_size);
-   d_S[d_num_time_intervals-1][0] = norm_u;
+   // Build d_S for this new time interval.
+   d_S[d_num_time_intervals-1] = new Matrix(1, 1, false, d_rank, d_size);
+   Vector u_vec(u, d_dim, true, d_rank, d_size);
+   double norm_u = u_vec.norm();
+   d_S[d_num_time_intervals-1]->item(0, 0) = norm_u;
 
-   // Build d_L[d_num_time_intervals-1].
-   d_L[d_num_time_intervals-1] = new double [1];
-   d_L[d_num_time_intervals-1][0] = 1.0;
+   // Build d_L for this new time interval.
+   d_L[d_num_time_intervals-1] = new Matrix(1, 1, false, d_rank, d_size);
+   d_L[d_num_time_intervals-1]->item(0, 0) = 1.0;
 
-   // Build d_U[d_num_time_intervals-1].
-   d_U[d_num_time_intervals-1] = new double [d_dim];
-   double* this_d_U = d_U[d_num_time_intervals-1];
+   // Build d_U for this new time interval.
+   d_U[d_num_time_intervals-1] = new Matrix(d_dim, 1, true, d_rank, d_size);
+   Matrix* this_d_U = d_U[d_num_time_intervals-1];
    for (int i = 0; i < d_dim; ++i) {
-      this_d_U[i] = u[i]/norm_u;
+      this_d_U->item(i, 0) = u[i]/norm_u;
    }
 
    // Set the model for this time interval to 0.
@@ -218,20 +210,15 @@ incremental_svd::buildInitialSVD(
    // d_U, d_L, and d_S for the previous time interval.
    if (d_num_time_intervals > 1) {
       if (d_model[d_num_time_intervals-2] != 0) {
-         delete [] d_model[d_num_time_intervals-2];
+         delete d_model[d_num_time_intervals-2];
       }
       d_model[d_num_time_intervals-2] =
-         DistributedMatLocalMatMult(d_U[d_num_time_intervals-2],
-                                    d_dim,
-                                    d_num_increments,
-                                    d_L[d_num_time_intervals-2],
-                                    d_num_increments,
-                                    d_num_increments);
-      delete [] d_U[d_num_time_intervals-2];
+         d_U[d_num_time_intervals-2]->Mult(*d_L[d_num_time_intervals-2]);
+      delete d_U[d_num_time_intervals-2];
       d_U[d_num_time_intervals-2] = 0;
-      delete [] d_L[d_num_time_intervals-2];
+      delete d_L[d_num_time_intervals-2];
       d_L[d_num_time_intervals-2] = 0;
-      delete [] d_S[d_num_time_intervals-2];
+      delete d_S[d_num_time_intervals-2];
       d_S[d_num_time_intervals-2] = 0;
    }
 
@@ -244,17 +231,13 @@ incremental_svd::buildIncrementalSVD(
    double* u)
 {
    // Compute j, P and the norm of j.
-   double* j;
-   double* P;
+   Vector* j;
+   Matrix* P;
    compute_J_P_normJ(u, j, P);
 
-   // l = P' * u
-   double* l =
-      DistributedMatTransposeDistributedMatMult(P, d_dim, d_num_increments,
-                                                u, d_dim, 1, d_size);
-
    // Compute cm = u.u and use it to see if this increment is new.
-   double cm = inner_product(u, u, d_dim, d_size);
+   Vector u_vec(u, d_dim, true, d_rank, d_size);
+   double cm = u_vec.dot(u_vec);
    double eps_squared = d_epsilon*d_epsilon;
    bool is_new_increment = ((cm > eps_squared) &&
       ((d_norm_j*d_norm_j)/(eps_squared+cm)) > eps_squared);
@@ -264,8 +247,8 @@ incremental_svd::buildIncrementalSVD(
    double norm_j_for_constructQ = d_norm_j;
    if (!is_new_increment) {
       if (d_skip_redundant) {
-         delete [] j;
-         delete [] l;
+         delete j;
+         delete P;
          return;
       }
       else {
@@ -273,17 +256,23 @@ incremental_svd::buildIncrementalSVD(
       }
    }
 
+   // l = P' * u
+   Vector* l = P->TransposeMult(u_vec);
+
+   // Done with P.
+   delete P;
+
    // Create Q.
    double* Q;
    constructQ(Q, l, norm_j_for_constructQ);
 
    // Done with l.
-   delete [] l;
+   delete l;
 
    // Now get the singular value decomposition of Q.
-   double* A;
-   double* sigma;
-   double* B;
+   Matrix* A;
+   Matrix* sigma;
+   Matrix* B;
    svd(Q, A, sigma, B);
 
    // Done with Q.
@@ -295,7 +284,7 @@ incremental_svd::buildIncrementalSVD(
       // This increment is not new and we are not skipping redundant
       // increments.
       addRedundantIncrement(A, sigma);
-      delete [] sigma;
+      delete sigma;
    }
    else if (is_new_increment) {
       // This increment is new.
@@ -305,29 +294,25 @@ incremental_svd::buildIncrementalSVD(
    }
 
    // Clean up.
-   delete [] P;
-   delete [] j;
-   delete [] A;
-   delete [] B;
+   delete j;
+   delete A;
+   delete B;
 }
 
 void
 incremental_svd::compute_J_P_normJ(
    double* u,
-   double*& j,
-   double*& P)
+   Vector*& j,
+   Matrix*& P)
 {
    // j = u
-   j = new double [d_dim];
-   memcpy(j, u, d_dim*sizeof(double));
+   j = new Vector(d_dim, true, d_rank, d_size);
+   for (int i = 0; i < d_dim; ++i) {
+      j->item(i) = u[i];
+   }
 
    // P = d_U[d_num_time_intervals-1] * d_L[d_num_time_intervals-1]
-   P = DistributedMatLocalMatMult(d_U[d_num_time_intervals-1],
-                                  d_dim,
-                                  d_num_increments,
-                                  d_L[d_num_time_intervals-1],
-                                  d_num_increments,
-                                  d_num_increments);
+   P = d_U[d_num_time_intervals-1]->Mult(*d_L[d_num_time_intervals-1]);
 
    // Use modified Gram-Schmidt orthogonalization to modify j.
    orthogonalizeJAndComputeNorm(j, P);
@@ -335,17 +320,15 @@ incremental_svd::compute_J_P_normJ(
 
 void
 incremental_svd::orthogonalizeJAndComputeNorm(
-   double* j,
-   double* P)
+   Vector* j,
+   Matrix* P)
 {
    double tmp;
    for (int col = 0; col < d_num_increments; ++col) {
       double factor = 0.0;
       tmp = 0.0;
-      int Pidx = col;
       for (int i = 0; i < d_dim; ++i) {
-         tmp += P[Pidx]*j[i];
-         Pidx += d_num_increments;
+         tmp += P->item(i, col)*j->item(i);
       }
       if (d_size > 1) {
          MPI_Allreduce(&tmp, &factor, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -353,22 +336,20 @@ incremental_svd::orthogonalizeJAndComputeNorm(
       else {
          factor = tmp;
       }
-      
-      Pidx = col;
+
       for (int i = 0; i < d_dim; ++i) {
-         j[i] -= factor*P[Pidx];
-         Pidx += d_num_increments;
+         j->item(i) -= factor*P->item(i, col);
       }
    }
 
    // Normalize j.
-   d_norm_j = normalize(j, d_dim, d_size);
+   d_norm_j = j->normalize();
 }
 
 void
 incremental_svd::constructQ(
    double*& Q,
-   double* l,
+   Vector* l,
    double norm_j)
 {
    // Create Q.
@@ -376,15 +357,14 @@ incremental_svd::constructQ(
 
    // Fill Q in column major order.
    int q_idx = 0;
-   int s_idx = 0;
-   const double* this_d_S = d_S[d_num_time_intervals-1];
+   const Matrix* this_d_S = d_S[d_num_time_intervals-1];
    for (int row = 0; row < d_num_increments; ++row) {
       q_idx = row;
       for (int col = 0; col < d_num_increments; ++col) {
-         Q[q_idx] = this_d_S[s_idx++];
+         Q[q_idx] = this_d_S->item(row, col);
          q_idx += d_num_increments+1;
       }
-      Q[q_idx] = l[row];
+      Q[q_idx] = l->item(row);
    }
    q_idx = d_num_increments;
    for (int col = 0; col < d_num_increments; ++col) {
@@ -397,17 +377,31 @@ incremental_svd::constructQ(
 void
 incremental_svd::svd(
    double* A,
-   double*& U,
-   double*& S,
-   double*& V)
+   Matrix*& U,
+   Matrix*& S,
+   Matrix*& V)
 {
    // Construct U, S, and V.
    int mat_size = (d_num_increments+1)*(d_num_increments+1);
-   U = new double [mat_size];
-   S = new double [mat_size];
-   V = new double [mat_size];
-   for (int i = 0; i < mat_size; ++i) {
-      S[i] = 0.0;
+   U = new Matrix(d_num_increments+1,
+                  d_num_increments+1,
+                  false,
+                  d_rank,
+                  d_size);
+   S = new Matrix(d_num_increments+1,
+                  d_num_increments+1,
+                  false,
+                  d_rank,
+                  d_size);
+   V = new Matrix(d_num_increments+1,
+                  d_num_increments+1,
+                  false,
+                  d_rank,
+                  d_size);
+   for (int row = 0; row < d_num_increments+1; ++row) {
+      for (int col = 0; col < d_num_increments+1; ++col) {
+         S->item(row, col) = 0.0;
+      }
    }
 
    // Use lapack's dgesdd_ Fortran function to perform the svd.  As this is
@@ -424,110 +418,94 @@ incremental_svd::svd(
    int iwork[8*m];
    int info;
    dgesdd_(&jobz, &m, &n, A, &lda,
-           sigma, U, &ldu, V, &ldv,
+           sigma, U->d_mat, &ldu, V->d_mat, &ldv,
            work, &lwork, iwork, &info);
    delete [] work;
 
    // Place sigma into S.
    for (int i = 0; i < d_num_increments+1; ++i) {
-      S[i*(d_num_increments+1)+i] = sigma[i];
+      S->item(i, i) = sigma[i];
    }
    delete [] sigma;
 
    // U and V are in column major order.  Convert them to row major order.
    for (int row = 0; row < d_num_increments+1; ++row) {
       for (int col = row+1; col < d_num_increments+1; ++col) {
-         double tmp = U[row*(d_num_increments+1)+col];
-         U[row*(d_num_increments+1)+col] = U[col*(d_num_increments+1)+row];
-         U[col*(d_num_increments+1)+row] = tmp;
-         tmp = V[row*(d_num_increments+1)+col];
-         V[row*(d_num_increments+1)+col] = V[col*(d_num_increments+1)+row];
-         V[col*(d_num_increments+1)+row] = tmp;
+         double tmp = U->item(row, col);
+         U->item(row, col) = U->item(col, row);
+         U->item(col, row) = tmp;
+         tmp = V->item(row, col);
+         V->item(row, col) = V->item(col, row);
+         V->item(col, row) = tmp;
       }
    }
 }
 
 void
 incremental_svd::addRedundantIncrement(
-   double* A,
-   double* sigma)
+   Matrix* A,
+   Matrix* sigma)
 {
    // Chop a row and a column off of A to form Amod.  Also form
    // d_S[d_num_time_intervals-1] by chopping a row and a column off of sigma.
-   double* Amod = new double [d_num_increments*d_num_increments];
-   int lhs_idx = 0;
-   int rhs_idx = 0;
-   double* this_d_S = d_S[d_num_time_intervals-1];
+   Matrix Amod(d_num_increments, d_num_increments, false, d_rank, d_size);
+   Matrix* this_d_S = d_S[d_num_time_intervals-1];
    for (int row = 0; row < d_num_increments; ++row){
       for (int col = 0; col < d_num_increments; ++col) {
-         Amod[lhs_idx] = A[rhs_idx];
-         this_d_S[lhs_idx] = sigma[rhs_idx];
-         ++lhs_idx;
-         ++rhs_idx;
+         Amod.item(row, col) = A->item(row, col);
+         this_d_S->item(row, col) = sigma->item(row, col);
       }
-      ++rhs_idx;
    }
 
    // Multiply d_L[d_num_time_intervals-1] and Amod and put result into
    // d_L[d_num_time_intervals-1].
-   double* L_times_Amod =
-      LocalMatLocalMatMult(d_L[d_num_time_intervals-1],
-                           d_num_increments,
-                           d_num_increments,
-                           Amod,
-                           d_num_increments,
-                           d_num_increments);
-   delete [] d_L[d_num_time_intervals-1];
+   Matrix* L_times_Amod = d_L[d_num_time_intervals-1]->Mult(Amod);
+   delete d_L[d_num_time_intervals-1];
    d_L[d_num_time_intervals-1] = L_times_Amod;
-
-   // Clean up.
-   delete [] Amod;
 }
 
 void
 incremental_svd::addNewIncrement(
-   double* j,
-   double* A,
-   double* sigma)
+   Vector* j,
+   Matrix* A,
+   Matrix* sigma)
 {
    // Add j as a new column of d_U[d_num_time_intervals-1].
-   const double* this_d_U = d_U[d_num_time_intervals-1];
-   double* newU = new double [d_dim*(d_num_increments+1)];
+   const Matrix* this_d_U = d_U[d_num_time_intervals-1];
+   Matrix* newU = new Matrix(d_dim, d_num_increments+1, true, d_rank, d_size);
    int lhs_idx = 0;
    int rhs_idx = 0;
    for (int row = 0; row < d_dim; ++row) {
       for (int col = 0; col < d_num_increments; ++col) {
-         newU[lhs_idx++] = this_d_U[rhs_idx++];
+         newU->item(row, col) = this_d_U->item(row, col);
       }
-      newU[lhs_idx++] = j[row];
+      newU->item(row, d_num_increments) = j->item(row);
    }
-   delete [] d_U[d_num_time_intervals-1];
+   delete d_U[d_num_time_intervals-1];
    d_U[d_num_time_intervals-1] = newU;
 
-   // Add another row and column to d_L[d_num_time_intervals-1].  Only the last
-   // value in the new row/column is non-zero and it is 1.
-   double* newL = new double [(d_num_increments+1)*(d_num_increments+1)];
-   lhs_idx = 0;
-   rhs_idx = 0;
-   const double* this_d_L = d_L[d_num_time_intervals-1];
+   // Form a temporary matrix, tmp, by add another row and column to
+   // d_L[d_num_time_intervals-1].  Only the last value in the new row/column
+   // is non-zero and it is 1.
+   Matrix tmp(d_num_increments+1, d_num_increments+1, false, d_rank, d_size);
+   const Matrix* this_d_L = d_L[d_num_time_intervals-1];
    for (int row = 0; row < d_num_increments; ++row) {
       for (int col = 0; col < d_num_increments; ++col) {
-         newL[lhs_idx++] = this_d_L[rhs_idx++];
+         tmp.item(row, col) = this_d_L->item(row, col);
       }
-      newL[lhs_idx++] = 0.0;
+      tmp.item(row, d_num_increments) = 0.0;
    }
    for (int col = 0; col < d_num_increments; ++col) {
-      newL[lhs_idx++] = 0.0;
+      tmp.item(d_num_increments, col) = 0.0;
    }
-   newL[lhs_idx] = 1.0;
-   delete [] d_L[d_num_time_intervals-1];
-   d_L[d_num_time_intervals-1] =
-      LocalMatLocalMatMult(newL, d_num_increments+1, d_num_increments+1,
-                           A, d_num_increments+1, d_num_increments+1);
-   delete [] newL;
+   tmp.item(d_num_increments, d_num_increments) = 1.0;
+
+   // d_L[d_num_time_intervals-1] = tmp*A
+   delete d_L[d_num_time_intervals-1];
+   d_L[d_num_time_intervals-1] = tmp.Mult(*A);
 
    // d_S[d_num_time_intervals-1] = sigma.
-   delete [] d_S[d_num_time_intervals-1];
+   delete d_S[d_num_time_intervals-1];
    d_S[d_num_time_intervals-1] = sigma;
 
    // We now have another increment.

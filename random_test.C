@@ -3,8 +3,6 @@
 #include <stdio.h>
 #include <mpi.h>
 
-// #define DEBUG
-
 int main(int argc, char* argv[])
 {
    if (argc != 4) {
@@ -65,7 +63,7 @@ int main(int argc, char* argv[])
             inc_rom.computeNextSnapshotTime(M[i], M[i], 0.01*i);
       }
    }
-   double* inc_model = inc_rom.getModel(0.0);
+   CAROM::Matrix* inc_model = inc_rom.getModel(0.0);
    double stop_inc = MPI_Wtime();
    double incremental_run_time = stop_inc - start_inc;
    double global_incremental_run_time;
@@ -88,7 +86,7 @@ int main(int argc, char* argv[])
             static_rom.computeNextSnapshotTime(M[i], M[i], 0.01*i);
       }
    }
-   double* static_model = static_rom.getModel(0.0);
+   CAROM::Matrix* static_model = static_rom.getModel(0.0);
    double stop_static = MPI_Wtime();
    double static_run_time = stop_static - start_static;
    double global_static_run_time;
@@ -105,25 +103,16 @@ int main(int argc, char* argv[])
 
    // Compute the product of the tranpose of the static model and the
    // incremental model.  This should be a unitary matrix.
-   double* test =
-      LocalMatTransposeDistributedMatMult(static_model,
-                                          dim,
-                                          num_snapshots,
-                                          inc_model,
-                                          dim,
-                                          num_lin_indep_snapshots,
-                                          size,
-                                          rank);
+   CAROM::Matrix* test = static_model->TransposeMult(*inc_model);
    if (rank == 0) {
-      int idx = 0;
       for (int row = 0; row < num_snapshots; ++row) {
          for (int col = 0; col < num_lin_indep_snapshots; ++col) {
-            printf("%.16e ", test[idx++]);
+            printf("%.16e ", test->item(row, col));
          }
          printf("\n");
       }
    }
-   delete [] test;
+   delete test;
 #endif
    for (int i = 0; i < num_snapshots; ++i) {
       delete [] M[i];

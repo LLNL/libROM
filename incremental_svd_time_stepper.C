@@ -1,6 +1,4 @@
 #include "incremental_svd_time_stepper.h"
-#include "vector_utils.h"
-#include <cmath>
 #include <mpi.h>
 
 namespace CAROM {
@@ -31,16 +29,19 @@ incremental_svd_time_stepper::computeNextIncrementTime(
    double time)
 {
    int dim = d_isvd->getDim();
+   int rank = d_isvd->getRank();
    int num_procs = d_isvd->getSize();
 
    // Get the norm of J from the incremental svd algorithm.
    double norm_j = d_isvd->getNormJ();
 
    // Compute the norm of u_in.
-   double norm_u = norm(u_in, dim, num_procs);
+   Vector u_vec(u_in, dim, true, rank, num_procs);
+   double norm_u = u_vec.norm();
 
    // Compute the norm of rhs_in.
-   double norm_rhs = norm(rhs_in, dim, num_procs);
+   Vector rhs_vec(rhs_in, dim, true, rank, num_procs);
+   double norm_rhs = rhs_vec.norm();
 
    // Compute delta t to next increment time.
    double epsilon = d_isvd->getEpsilon();

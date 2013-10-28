@@ -1,3 +1,6 @@
+#ifndef included_incremental_svd_rom_h
+#define included_incremental_svd_rom_h
+
 #include "incremental_svd_time_stepper.h"
 
 namespace CAROM {
@@ -47,8 +50,8 @@ class incremental_svd_rom
          return d_isvdts->computeNextIncrementTime(u_in, rhs_in, time);
       }
 
-      // Returns the model parameters at the given time as a C array.
-      double*
+      // Returns the model parameters at the given time as a Matrix.
+      Matrix*
       getModel(
          double time)
       {
@@ -71,3 +74,5 @@ class incremental_svd_rom
 };
 
 }
+
+#endif

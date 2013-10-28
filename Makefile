@@ -9,8 +9,8 @@ LIBROM = libROM.a
 
 LIBS = $(LIBROM) -llapack
 
-OBJS = matrix_utils.o \
-       vector_utils.o \
+OBJS = matrix.o \
+       vector.o \
        incremental_svd.o \
        incremental_svd_rom.o \
        incremental_svd_time_stepper.o \

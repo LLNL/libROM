@@ -1,4 +1,8 @@
-#include "matrix_utils.h"
+#ifndef included_incremental_svd_h
+#define included_incremental_svd_h
+
+#include "matrix.h"
+#include "vector.h"
 #include <vector>
 
 namespace CAROM {
@@ -39,6 +43,13 @@ class incremental_svd
          return d_dim;
       }
 
+      // Returns the rank of the processor being run on.
+      int
+      getRank() const
+      {
+         return d_rank;
+      }
+
       // Returns the number of processors being run on.
       int
       getSize() const
@@ -46,9 +57,8 @@ class incremental_svd
          return d_size;
       }
 
-      // Returns the model parameters for the given time, d_U*d_L, as a C
-      // array.
-      double*
+      // Returns the model parameters for the given time, d_U*d_L, as a Matrix.
+      Matrix*
       getModel(
          double time);
 
@@ -84,21 +94,21 @@ class incremental_svd
       void
       compute_J_P_normJ(
          double* u,
-         double*& j,
-         double*& P);
+         Vector*& j,
+         Matrix*& P);
 
       // Use modified Gram-Schmidt orthogonalization to modify j then compute
       // its norm.
       void
       orthogonalizeJAndComputeNorm(
-         double* j,
-         double* P);
+         Vector* j,
+         Matrix* P);
 
       // Construct the Q matrix which will be passed to svd.
       void
       constructQ(
          double*& Q,
-         double* l,
+         Vector* l,
          double norm_j);
 
       // Given a matrix, A, returns the 3 components of the singular value
@@ -106,22 +116,22 @@ class incremental_svd
       void
       svd(
          double* A,
-         double*& U,
-         double*& S,
-         double*& V);
+         Matrix*& U,
+         Matrix*& S,
+         Matrix*& V);
 
       // Add a redundant increment to the svd.
       void
       addRedundantIncrement(
-         double* A,
-         double* sigma);
+         Matrix* A,
+         Matrix* sigma);
 
       // Add a new, unique increment to the svd.
       void
       addNewIncrement(
-         double* j,
-         double* A,
-         double* sigma);
+         Vector* j,
+         Matrix* A,
+         Matrix* sigma);
 
       // Dimension of the system.
       int d_dim;
@@ -141,20 +151,20 @@ class incremental_svd
       // For each time interval, the matrix U distributed across all
       // processors.  Each d_U is the part of the distributed matrix local to
       // the processor owning this object.
-      std::vector<double*> d_U;
+      std::vector<Matrix*> d_U;
 
       // For each time interval, the matrix L.  L is not distributed and the
       // entire matrix exists on each processor.
-      std::vector<double*> d_L;
+      std::vector<Matrix*> d_L;
 
       // For each time interval, the matrix S.  S is not distributed and the
       // entire matrix exists on each processor.
-      std::vector<double*> d_S;
+      std::vector<Matrix*> d_S;
 
       // For each time interval, the model parameters distributed across all
       // processors.  Each d_model is the part of the distributed model
       // parameters local to the processor owning this object.
-      std::vector<double*> d_model;
+      std::vector<Matrix*> d_model;
 
       // The number of time intervals gathered.
       int d_num_time_intervals;
@@ -176,3 +186,5 @@ class incremental_svd
 };
 
 }
+
+#endif
