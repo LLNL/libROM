@@ -133,7 +133,7 @@ incremental_svd::increment(
       // Send this processor's part of d_U[i] to process 0.
       for (int i = 0; i < d_num_time_intervals; ++i) {
          MPI_Request request;
-         MPI_Isend(d_U[i]->d_mat, d_dim*d_num_increments, MPI_DOUBLE, 0,
+         MPI_Isend(&d_U[i]->item(0, 0), d_dim*d_num_increments, MPI_DOUBLE, 0,
                    COMMUNICATE_U, MPI_COMM_WORLD, &request);
       }
    }
@@ -418,7 +418,7 @@ incremental_svd::svd(
    int iwork[8*m];
    int info;
    dgesdd_(&jobz, &m, &n, A, &lda,
-           sigma, U->d_mat, &ldu, V->d_mat, &ldv,
+           sigma, &U->item(0, 0), &ldu, &V->item(0, 0), &ldv,
            work, &lwork, iwork, &info);
    delete [] work;
 

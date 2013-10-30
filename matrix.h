@@ -32,6 +32,27 @@ class Matrix
       // Destructor.
       ~Matrix();
 
+      // Returns true if matrix is distributed.
+      bool
+      distributed() const
+      {
+         return d_distributed;
+      }
+
+      // Returns the number of rows in the matrix.
+      int
+      numRows() const
+      {
+         return d_num_rows;
+      }
+
+      // Returns the number of columns in the matrix.
+      int
+      numColumns() const
+      {
+         return d_num_cols;
+      }
+
       // Multiplies this matrix with other and returns the product.  Supports
       // multiplication of two undistributed matrices returning an
       // undistributed matrix, and multiplication of a distributed matrix with
@@ -76,9 +97,6 @@ class Matrix
       }
 
    private:
-      friend class incremental_svd;
-      friend class static_svd;
-
       // Default constructor is not implemented.
       Matrix();
 
@@ -102,7 +120,7 @@ class Matrix
 
       // If true, the matrix's rows are distributed over all processors.  Each
       // processor holds the same number of rows.
-      int d_distributed;
+      bool d_distributed;
 
       // The MPI rank of the process owning this object.
       int d_rank;

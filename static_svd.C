@@ -90,12 +90,12 @@ static_svd::computeSVD()
 
       // Broadcast the results.
       if (d_size > 1) {
-         MPI_Bcast(d_U->d_mat, d_dim*d_size*num_cols,
+         MPI_Bcast(&d_U->item(0, 0), d_dim*d_size*num_cols,
                    MPI_DOUBLE, 0, MPI_COMM_WORLD);
-         MPI_Bcast(d_S->d_mat, num_cols*num_cols,
+         MPI_Bcast(&d_S->item(0, 0), num_cols*num_cols,
                    MPI_DOUBLE, 0, MPI_COMM_WORLD);
-         MPI_Bcast(d_V->d_mat, num_cols*num_cols,
-                    MPI_DOUBLE, 0, MPI_COMM_WORLD);
+         MPI_Bcast(&d_V->item(0, 0), num_cols*num_cols,
+                   MPI_DOUBLE, 0, MPI_COMM_WORLD);
       }
 
       // Clean up.
@@ -124,10 +124,12 @@ static_svd::computeSVD()
       d_V = new Matrix(num_cols, num_cols, false, d_rank, d_size);
 
       // Get the results from process 0.
-      MPI_Bcast(d_U->d_mat, d_dim*d_size*num_cols,
+      MPI_Bcast(&d_U->item(0, 0), d_dim*d_size*num_cols,
                 MPI_DOUBLE, 0, MPI_COMM_WORLD);
-      MPI_Bcast(d_S->d_mat, num_cols*num_cols, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-      MPI_Bcast(d_V->d_mat, num_cols*num_cols, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+      MPI_Bcast(&d_S->item(0, 0), num_cols*num_cols,
+                MPI_DOUBLE, 0, MPI_COMM_WORLD);
+      MPI_Bcast(&d_V->item(0, 0), num_cols*num_cols,
+                MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
       // Clean up.
       delete [] myA;
@@ -186,7 +188,7 @@ static_svd::svd(
    int* iwork = new int [8*n];
    int info;
    dgesdd_(&jobz, &m, &n, A, &lda,
-           sigma, U, &ldu, d_V->d_mat, &ldv,
+           sigma, U, &ldu, &d_V->item(0, 0), &ldv,
            work, &lwork, iwork, &info);
    delete [] work;
    delete [] iwork;

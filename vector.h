@@ -32,6 +32,20 @@ class Vector
       // Destructor.
       ~Vector();
 
+      // Returns true if vector is distributed.
+      bool
+      distributed() const
+      {
+         return d_distributed;
+      }
+
+      // Returns the dimension of the vector.
+      int
+      dim() const
+      {
+         return d_dim;
+      }
+
       // Dot product.
       double
       dot(const Vector& other) const;
@@ -65,8 +79,6 @@ class Vector
       }
       
    private:
-      friend class Matrix;
-
       // Default constructor is not implemented.
       Vector();
 
@@ -87,7 +99,7 @@ class Vector
 
       // If true, the vector's dimensions are distributed over all processors.
       // Each processor holds the same number of dimensions.
-      int d_distributed;
+      bool d_distributed;
 
       // The MPI rank of the process owning this object.
       int d_rank;

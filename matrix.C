@@ -177,8 +177,8 @@ Vector*
 Matrix::TransposeMult(const Vector& other) const
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
-   assert(d_distributed && other.d_distributed);
-   assert(d_num_rows == other.d_dim);
+   assert(d_distributed && other.distributed());
+   assert(d_num_rows == other.dim());
 #endif
    Vector* local_result = new Vector(d_num_cols, false, d_rank, d_num_procs);
    int result_dim = 0;
@@ -195,7 +195,7 @@ Matrix::TransposeMult(const Vector& other) const
    Vector* result;
    if (d_num_procs > 1) {
       result = new Vector(d_num_cols, false, d_rank, d_num_procs);
-      MPI_Allreduce(local_result->d_vec, result->d_vec, d_num_cols,
+      MPI_Allreduce(&local_result->item(0), &result->item(0), d_num_cols,
                     MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
       delete local_result;
    }
