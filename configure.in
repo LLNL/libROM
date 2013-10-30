@@ -1,0 +1,261 @@
+AC_INIT(COPYRIGHT)
+AC_CONFIG_HEADER(CAROM_config.h:config/CAROM_config.h.in)
+dnl
+dnl Autoheader stuff
+AH_TOP([
+
+#ifndef INCLUDED_CAROM_CONFIG_H
+#define INCLUDED_CAROM_CONFIG_H
+
+#define CAROM_VERSION_MAJOR 0
+#define CAROM_VERSION_MINOR 1
+#define CAROM_VERSION_PATCHLEVEL 0
+])
+
+AH_BOTTOM([
+
+#endif
+])
+
+AC_ARG_ENABLE([check_assertions],
+   [AS_HELP_STRING([--enable-check-assertions],
+      [build with assertion checking on (default is disabled; is enabled for when debugging is enabled)])],
+   [user_specified_check_assertions="yes"],
+   [enable_check_assertions="no"]
+   )
+AC_ARG_ENABLE([output_debug_info],
+   [AS_HELP_STRING([--enable-output-debug-info],
+      [output debugging info from incremental and static roms])],
+   ,
+   [enable_output_debug_info="no"]
+   )
+AC_ARG_WITH([CXX],
+   [AS_HELP_STRING([--with-CXX=ARG],[manually set C++ compiler to ARG])]
+   )
+AC_ARG_WITH([AR],
+   [AS_HELP_STRING([--with-AR=ARG],[manually set AR to ARG])]
+   )
+
+dnl
+dnl Initialize common macros to empty strings
+dnl
+
+CXX_FLAGS="$CXXFLAGS"
+LD_FLAGS="$LDFLAGS"
+
+INC_PATH=
+LIB_PATH=
+LIB_NAME=
+
+dnl
+dnl Guess the machine architecture and set the variable ARCH
+dnl
+
+CASC_GUESS_ARCH
+CASC_AC_LOG_VAR(ARCH)
+
+dnl
+dnl Set up the C++ compiler.  
+dnl
+
+if test -n "$with_CXX"; then
+   CXX=$with_CXX
+else
+   case "$host_os" in
+     linux*) CCC=" g++ ";;
+     solaris*) CCC=" g++ ";;
+     osf*) CCC=" g++ ";;
+     *) CCC=
+   esac
+fi
+CASC_AC_LOG_VAR(with_CXX CXX CCC, before running compiler search)
+AC_PROG_CXX($CCC)
+CASC_AC_LOG_VAR(with_CXX CXX CCC, after running compiler search)
+
+dnl
+dnl A way to manually add flags to the loader (ld) command.
+dnl
+AC_ARG_WITH([extra-ld-flags],
+[AS_HELP_STRING([--with-extra-ld-flags=STRING],
+   [Specify additional flags for the loader.])],
+,with_extra_ld_flags='no')
+case "$with_extra_ld_flags" in
+  no)
+    : No op
+  ;;
+  yes)
+    : No op
+  ;;
+  *)
+    LD_FLAGS="$LD_FLAGS $with_extra_ld_flags"
+  ;;
+esac
+
+
+dnl
+dnl Find ar for archiving
+dnl
+
+AC_CHECK_PROGS(AR, $with_AR ar,)
+if test -z "$AR"; then
+   AC_MSG_ERROR([ar archiver not found - specify with --with-AR=ARG])
+fi
+
+dnl
+dnl Determine what compilers are being used.
+dnl
+
+CASC_INFO_CC_CXX_ID
+# Warn user about unsupported compilers:
+case $CXX_ID in
+gnu|xlc|intel) ;;
+*)
+  AC_MSG_WARN([
+You are using a C++ compiler unsupported by CAROM
+You are on your own!
+])
+  ;;
+esac
+
+dnl
+dnl Check various C++ compiler features.
+dnl
+
+case $CXX_ID in
+   gnu)
+      CXX_FLAGS="-Wall -Wextra -Wconversion $CXX_FLAGS"
+      case $ARCH in
+         IRIX64)
+            CXX_FLAGS="-mabi=64 $CXX_FLAGS"
+            ;;
+         solaris)
+            ;;
+         CYGWIN)
+            CXX_FLAGS="$CXX_FLAGS"
+            ;;
+      esac
+      ;;
+   xlc)
+      CXX_FLAGS="-qrtti -g $CXX_FLAGS"
+      ;;
+   intel)
+      # Ignore some Intel warnings that seem harmless and very hard to get rid of       
+      CXX_FLAGS="$CXX_FLAGS -Wall -w1 -wd981 -wd383 -wd1418 -wd522"
+      ;;
+    *)
+      ;;
+esac
+
+AC_ARG_ENABLE([opt],
+   [AS_HELP_STRING([--enable-opt=STRING],
+      [Set compiler optimization switches.])],
+[case "$enable_opt" in
+   no) opt_switches= ;;
+   yes)
+      case $CXX_ID in
+         gnu)   opt_switches="-O2" ;;
+         intel) opt_switches="-O3" ;;
+         xlc)   opt_switches="-O3" ;;
+         *)     opt_switches="-O" ;;
+      esac ;;
+   *) opt_switches="$enable_opt" ;;
+esac],
+opt_switches=)
+
+if test -n "$opt_switches" ; then
+   CXX_FLAGS="$opt_switches $CXX_FLAGS"
+fi
+
+AC_ARG_ENABLE([debug],
+[AS_HELP_STRING([--enable-debug=STRING],[Set compiler debug switches.])],
+[case "$enable_debug" in
+   no) debug_switches= ;;
+   yes)
+      case $CXX_ID in
+         *)   debug_switches="-g" ;;
+      esac ;;
+   *) debug_switches="$enable_debug" ;;
+esac
+],
+debug_switches=-g)
+
+case "$enable_debug" in
+   no) ;;
+   *)
+   # Enable assertion checking and disable inlining when debugging is enabled
+   # if user does not override.
+   if test "$user_specified_check_assertions" != "yes"; then
+      enable_check_assertions="yes"
+   fi
+esac
+
+dnl
+dnl Check if compiling with assertions on
+dnl
+if test "$enable_check_assertions" = "yes"; then
+   AC_DEFINE([DEBUG_CHECK_ASSERTIONS],[1],[Enable assertion checking])
+fi
+
+if test -n "$debug_switches" ; then
+   CXX_FLAGS="$debug_switches $CXX_FLAGS"
+fi
+
+CASC_AC_LOG_VAR(debug_switches opt_switches)
+
+dnl
+dnl Check if compiling with debugging info on
+dnl
+if test "$enable_output_debug_info" = "yes"; then
+   AC_DEFINE([DEBUG_ROMS],[1],[Enable debugging info from the roms])
+fi
+
+dnl
+dnl Set variables for lapack support
+dnl
+CASC_SUPPORT_LAPACK
+if test "${lapack_PREFIX+set}" = set ||
+   test "${lapack_INCLUDES+set}" = set ||
+   test "${lapack_LIBS+set}" = set ; then
+  SPLIT_LIBS_STRING(lapack_LIBS,lapack_LIB_PATH,lapack_LIB_NAME)
+  LIB_PATH="$lapack_LIB_PATH $LIB_PATH"
+  LIB_NAME="$lapack_LIB_NAME $LIB_NAME"
+  INC_PATH="$lapack_INCLUDES $INC_PATH"
+else
+  AC_MSG_ERROR([LAPACK is required.])
+fi
+CASC_AC_LOG_VAR(lapack_LIB_PATH lapack_LIB_NAME LIB_PATH LIB_NAME)
+
+dnl
+dnl Determine the proper MPI include and lib paths.
+dnl
+if test "${with_mpi-include+set}" = set || test "${with_mpi-lib-dirs+set}" = set || test "${with_mpi_libs+set}" = set; then
+   CASC_FIND_MPI
+
+   if test -n "$MPIINCLUDE" -o -n "$MPILIBS" -o -n "$MPILIBDIRS"; then
+     INC_PATH="$MPIINCLUDE $INC_PATH"
+     LIB_NAME="$MPILIBS $LIB_NAME"
+     LIB_PATH="$MPILIBDIRS $LIB_PATH"
+     CASC_AC_LOG_VAR(MPIINCLUDE MPILIBS MPILIBDIRS, After successfully finding MPI using casc_find_mpi)
+   fi
+fi
+
+
+dnl
+dnl Support rpath syntax by adding it to the LIB_PATH variable.
+dnl
+CASC_AC_LOG_VAR(LIB_PATH, before adding rpath syntax)
+CASC_LIBS_ADD_RPATH(LIB_PATH,LIB_PATH,1)
+CASC_AC_LOG_VAR(LIB_PATH, after adding rpath syntax)
+
+AC_SUBST(AR)
+
+AC_SUBST(CXX)
+AC_SUBST(CXX_FLAGS)
+
+AC_SUBST(LD_FLAGS)
+
+AC_SUBST(INC_PATH)
+AC_SUBST(LIB_PATH)
+AC_SUBST(LIB_NAME)
+
+AC_OUTPUT([Makefile],[],[])

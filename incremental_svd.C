@@ -78,7 +78,7 @@ incremental_svd::increment(
       buildIncrementalSVD(u_in);
    }
 
-#ifdef DEBUG
+#ifdef DEBUG_ROMS
    if (d_rank == 0) {
       double* U = new double [d_dim*d_num_increments];
       for (int i = 0; i < d_num_time_intervals; ++i) {
@@ -144,7 +144,7 @@ Matrix*
 incremental_svd::getModel(
    double time)
 {
-#ifdef DEBUG
+#ifdef DEBUG_CHECK_ASSERTIONS
    assert(0 < d_num_time_intervals);
 #endif
    int i;
@@ -163,7 +163,7 @@ incremental_svd::getModel(
       }
       d_model[i] = d_U[i]->Mult(*d_L[i]);
    }
-#ifdef DEBUG
+#ifdef DEBUG_CHECK_ASSERTIONS
    else {
       assert(d_model[i] != 0);
    }

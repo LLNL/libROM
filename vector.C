@@ -15,7 +15,7 @@ Vector::Vector(
    d_num_procs(num_procs),
    d_manages_storage(true)
 {
-#ifdef DEBUG
+#ifdef DEBUG_CHECK_ASSERTIONS
    assert(dim > 0);
    assert(rank < num_procs);
 #endif
@@ -34,7 +34,7 @@ Vector::Vector(
    d_num_procs(num_procs),
    d_manages_storage(false)
 {
-#ifdef DEBUG
+#ifdef DEBUG_CHECK_ASSERTIONS
    assert(dim > 0);
    assert(rank < num_procs);
 #endif
@@ -51,7 +51,7 @@ Vector::~Vector()
 double
 Vector::dot(const Vector& other) const
 {
-#ifdef DEBUG
+#ifdef DEBUG_CHECK_ASSERTIONS
    assert(d_dim == other.d_dim);
 #endif
    double ip;

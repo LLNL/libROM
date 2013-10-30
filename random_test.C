@@ -15,7 +15,7 @@ int main(int argc, char* argv[])
    int num_lin_indep_snapshots = num_snapshots - num_lin_dep_snapshots;
    MPI_Init(&argc, &argv);
    CAROM::incremental_svd_rom inc_rom(dim, 1.0e-12, false, 10, 1);
-#ifdef DEBUG
+#ifdef DEBUG_ROMS
    CAROM::static_svd_rom static_rom(dim);
 #endif
    int size;
@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
    if (rank == 0) {
       printf("incremental run time = %g\n", global_incremental_run_time/size);
    }
-#ifdef DEBUG
+#ifdef DEBUG_ROMS
    double start_static = MPI_Wtime();
    for (int i = 0; i < num_snapshots; ++i) {
       if (static_rom.isNextSnapshot(0.01*i)) {

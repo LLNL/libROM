@@ -132,7 +132,7 @@ static_svd::computeSVD()
       // Clean up.
       delete [] myA;
    }
-#ifdef DEBUG
+#ifdef DEBUG_ROMS
    if (d_rank == 0) {
       for (int row = 0; row < d_dim*d_size; ++row) {
          for (int col = 0; col < num_cols; ++col) {

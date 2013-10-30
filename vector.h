@@ -1,7 +1,7 @@
 #ifndef included_vector_h
 #define included_vector_h
 
-// #define DEBUG
+#include "CAROM_config.h"
 
 #include <assert.h>
 
@@ -48,7 +48,7 @@ class Vector
       const double&
       item(const int i) const
       {
-#ifdef DEBUG
+#ifdef DEBUG_CHECK_ASSERTIONS
          assert((0 <= i) && (i < d_dim));
 #endif
          return d_vec[i];
@@ -58,7 +58,7 @@ class Vector
       double&
       item(const int i)
       {
-#ifdef DEBUG
+#ifdef DEBUG_CHECK_ASSERTIONS
          assert((0 <= i) && (i < d_dim));
 #endif
          return d_vec[i];

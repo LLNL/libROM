@@ -57,7 +57,7 @@ class Matrix
       const double&
       item(const int row, const int col) const
       {
-#ifdef DEBUG
+#ifdef DEBUG_CHECK_ASSERTIONS
          assert((0 <= row) && (row < d_num_rows));
          assert((0 <= col) && (col < d_num_cols));
 #endif
@@ -68,7 +68,7 @@ class Matrix
       double&
       item(const int row, const int col)
       {
-#ifdef DEBUG
+#ifdef DEBUG_CHECK_ASSERTIONS
          assert((0 <= row) && (row < d_num_rows));
          assert((0 <= col) && (col < d_num_cols));
 #endif

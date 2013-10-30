@@ -1,13 +1,13 @@
 .SUFFIXES: .o .C
 
-CXX = mpiicpc
-CXXFLAGS = -g -Wall
-LD = mpiicpc
-LDFLAGS = -g
-
 LIBROM = libROM.a
 
-LIBS = $(LIBROM) -llapack
+CXX		= @CXX@
+CXXFLAGS	= @CXX_FLAGS@
+CPPFLAGS	= @CPPFLAGS@ @INC_PATH@
+LDFLAGS		= @LD_FLAGS@ @LIB_PATH@
+LDLIBS		= $(LIBROM) @LIB_NAME@
+AR		= @AR@
 
 OBJS = matrix.o \
        vector.o \
@@ -26,12 +26,13 @@ lib: $(OBJS)
 	ar ru $(LIBROM) $(OBJS)
 
 random_test: lib random_test.o
-	$(LD) $(LDFLAGS) -o random_test random_test.o $(LIBS)
+	$(CXX) $(LDFLAGS) -o random_test random_test.o $(LDLIBS)
 
 smoke_test: lib smoke_test.o
-	$(LD) $(LDFLAGS) -o smoke_test smoke_test.o $(LIBS)
+	$(CXX) $(LDFLAGS) -o smoke_test smoke_test.o $(LDLIBS)
 
-.C.o :; $(CXX) $(CXXFLAGS) -c $*.C
+.C.o :
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $*.C
 
 clean:
 	rm -f *.o $(LIBROM) random_test smoke_test

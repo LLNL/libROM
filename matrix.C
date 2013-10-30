@@ -16,7 +16,7 @@ Matrix::Matrix(
    d_num_procs(num_procs),
    d_manages_storage(true)
 {
-#ifdef DEBUG
+#ifdef DEBUG_CHECK_ASSERTIONS
    assert(num_rows > 0);
    assert(num_cols > 0);
    assert(rank < num_procs);
@@ -38,7 +38,7 @@ Matrix::Matrix(
    d_num_procs(num_procs),
    d_manages_storage(false)
 {
-#ifdef DEBUG
+#ifdef DEBUG_CHECK_ASSERTIONS
    assert(num_rows > 0);
    assert(num_cols > 0);
    assert(rank < num_procs);
@@ -57,7 +57,7 @@ Matrix*
 Matrix::Mult(
    const Matrix& other) const
 {
-#ifdef DEBUG
+#ifdef DEBUG_CHECK_ASSERTIONS
    assert(!other.d_distributed);
    assert(d_num_cols == other.d_num_rows);
 #endif
@@ -82,7 +82,7 @@ Matrix*
 Matrix::TransposeMult(
    const Matrix& other) const
 {
-#ifdef DEBUG
+#ifdef DEBUG_CHECK_ASSERTIONS
    assert((d_distributed == other.d_distributed) ||
           (!d_distributed && other.d_distributed));
    assert((!d_distributed && other.d_distributed) ||
@@ -176,7 +176,7 @@ Matrix::TransposeMult(
 Vector*
 Matrix::TransposeMult(const Vector& other) const
 {
-#ifdef DEBUG
+#ifdef DEBUG_CHECK_ASSERTIONS
    assert(d_distributed && other.d_distributed);
    assert(d_num_rows == other.d_dim);
 #endif
