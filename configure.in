@@ -239,6 +239,38 @@ if test "${with_mpi-include+set}" = set || test "${with_mpi-lib-dirs+set}" = set
    fi
 fi
 
+dnl
+dnl Support linking with Z lib if HDF requires it
+dnl
+CHECK_ZLIB()
+SPLIT_LIBS_STRING(zlib_LIBS,zlib_LIB_PATH,zlib_LIB_NAME)
+LIB_PATH="$zlib_LIB_PATH $LIB_PATH"
+LIB_NAME="$zlib_LIB_NAME $LIB_NAME"
+INC_PATH="$zlib_INCLUDES $INC_PATH"
+
+dnl
+dnl Support linking with SZ lib if HDF requires it
+dnl
+CHECK_SZLIB()
+SPLIT_LIBS_STRING(szlib_LIBS,szlib_LIB_PATH,szlib_LIB_NAME)
+LIB_PATH="$szlib_LIB_PATH $LIB_PATH"
+LIB_NAME="$szlib_LIB_NAME $LIB_NAME"
+INC_PATH="$szlib_INCLUDES $INC_PATH"
+
+dnl
+dnl Set variables for hdf5 support
+dnl
+CASC_SUPPORT_HDF5
+if test "${hdf5_PREFIX+set}" = set; then
+  SPLIT_LIBS_STRING(hdf5_LIBS,hdf5_LIB_PATH,hdf5_LIB_NAME)
+  LIB_PATH="$hdf5_LIB_PATH $LIB_PATH"
+  LIB_NAME="$hdf5_LIB_NAME $LIB_NAME"
+  INC_PATH="$hdf5_INCLUDES $INC_PATH"
+else
+  AC_MSG_ERROR([HDF5 not found - you must specify a valid location via --with-hdf5=PATH.])
+fi
+CASC_AC_LOG_VAR(
+[hdf5_INCLUDES INC_PATH hdf5_LIB_PATH hdf5_LIB_NAME LIB_PATH LIB_NAME])
 
 dnl
 dnl Support rpath syntax by adding it to the LIB_PATH variable.

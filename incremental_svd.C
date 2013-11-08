@@ -144,9 +144,7 @@ Matrix*
 incremental_svd::getModel(
    double time)
 {
-#ifdef DEBUG_CHECK_ASSERTIONS
-   assert(0 < d_num_time_intervals);
-#endif
+   CAROM_ASSERT(0 < d_num_time_intervals);
    int i;
    for (i = 0; i < d_num_time_intervals-1; ++i) {
       if (d_time_interval_start_times[i] <= time &&
@@ -163,12 +161,63 @@ incremental_svd::getModel(
       }
       d_model[i] = d_U[i]->Mult(*d_L[i]);
    }
-#ifdef DEBUG_CHECK_ASSERTIONS
    else {
-      assert(d_model[i] != 0);
+      CAROM_ASSERT(d_model[i] != 0);
    }
-#endif
    return d_model[i];
+}
+
+void
+incremental_svd::writeModel(
+   const std::string& base_file_name)
+{
+   CAROM_ASSERT(!base_file_name.empty());
+
+   char tmp[10];
+   sprintf(tmp, ".%06d", d_rank);
+   std::string full_file_name = base_file_name + tmp;
+   database.create(full_file_name);
+   database.putInteger("num_time_intervals", d_num_time_intervals);
+   for (int i = 0; i < d_num_time_intervals; ++i) {
+      const Matrix* model = getModel(d_time_interval_start_times[i]);
+      database.putDouble("time", d_time_interval_start_times[i]);
+      int num_rows = model->numRows();
+      database.putInteger("num_rows", num_rows);
+      int num_cols = model->numColumns();
+      database.putInteger("num_cols", num_cols);
+      database.putDoubleArray("model", &model->item(0, 0), num_rows*num_cols);
+   }
+   database.close();
+}
+
+void
+incremental_svd::readModel(
+   const std::string& base_file_name)
+{
+   CAROM_ASSERT(!base_file_name.empty());
+
+   char tmp[10];
+   sprintf(tmp, ".%06d", d_rank);
+   std::string full_file_name = base_file_name + tmp;
+   database.open(full_file_name);
+   database.getInteger("num_time_intervals", d_num_time_intervals);
+   d_time_interval_start_times.resize(d_num_time_intervals);
+   d_U.resize(d_num_time_intervals, 0);
+   d_L.resize(d_num_time_intervals, 0);
+   d_S.resize(d_num_time_intervals, 0);
+   d_model.resize(d_num_time_intervals, 0);
+   for (int i = 0; i < d_num_time_intervals; ++i) {
+      database.getDouble("time", d_time_interval_start_times[i]);
+      int num_rows;
+      database.getInteger("num_rows", num_rows);
+      int num_cols;
+      database.getInteger("num_cols", num_cols);
+      d_model[i] = new Matrix(num_rows, num_cols, true, d_rank, d_size);
+      database.getDoubleArray("model",
+                              &d_model[i]->item(0, 0),
+                              num_rows*num_cols);
+   }
+   database.close();
 }
 
 void

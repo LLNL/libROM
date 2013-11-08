@@ -58,6 +58,22 @@ class incremental_svd_rom
          return d_isvdts->getModel(time);
       }
 
+      // Writes the model to a file with the given base name.
+      void
+      writeModel(
+         const std::string& base_file_name)
+      {
+         d_isvdts->writeModel(base_file_name);
+      }
+
+      // Reads the model from a file with the given base name.
+      void
+      readModel(
+         const std::string& base_file_name)
+      {
+         d_isvdts->readModel(base_file_name);
+      }
+
    private:
       // Unimplemented default constructor.
       incremental_svd_rom();

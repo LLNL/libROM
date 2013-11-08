@@ -78,10 +78,8 @@ class Matrix
       const double&
       item(const int row, const int col) const
       {
-#ifdef DEBUG_CHECK_ASSERTIONS
-         assert((0 <= row) && (row < d_num_rows));
-         assert((0 <= col) && (col < d_num_cols));
-#endif
+         CAROM_ASSERT((0 <= row) && (row < d_num_rows));
+         CAROM_ASSERT((0 <= col) && (col < d_num_cols));
          return d_mat[row*d_num_cols+col];
       }
 
@@ -89,10 +87,8 @@ class Matrix
       double&
       item(const int row, const int col)
       {
-#ifdef DEBUG_CHECK_ASSERTIONS
-         assert((0 <= row) && (row < d_num_rows));
-         assert((0 <= col) && (col < d_num_cols));
-#endif
+         CAROM_ASSERT((0 <= row) && (row < d_num_rows));
+         CAROM_ASSERT((0 <= col) && (col < d_num_cols));
          return d_mat[row*d_num_cols+col];
       }
 

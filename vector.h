@@ -1,9 +1,7 @@
 #ifndef included_vector_h
 #define included_vector_h
 
-#include "CAROM_config.h"
-
-#include <assert.h>
+#include "Utilities.h"
 
 namespace CAROM {
 
@@ -62,9 +60,7 @@ class Vector
       const double&
       item(const int i) const
       {
-#ifdef DEBUG_CHECK_ASSERTIONS
-         assert((0 <= i) && (i < d_dim));
-#endif
+         CAROM_ASSERT((0 <= i) && (i < d_dim));
          return d_vec[i];
       }
 
@@ -72,9 +68,7 @@ class Vector
       double&
       item(const int i)
       {
-#ifdef DEBUG_CHECK_ASSERTIONS
-         assert((0 <= i) && (i < d_dim));
-#endif
+         CAROM_ASSERT((0 <= i) && (i < d_dim));
          return d_vec[i];
       }
       

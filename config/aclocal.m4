@@ -236,6 +236,97 @@ CASC_AC_LOG(environment $2 not defined)
 
 
 
+dnl Define a macro for supporting HDF5
+
+AC_DEFUN([CASC_SUPPORT_HDF5],[
+
+# Begin CASC_SUPPORT_HDF5
+# Defines hdf5_PREFIX hdf5_INCLUDES and hdf5_LIBS if with-hdf5 is specified.
+AC_ARG_WITH(hdf5,
+[ --with-hdf5[=PATH]  Use HDF5 and optionally specify where HDF5 is installed.],
+, with_hdf5=no)
+
+case "$with_hdf5" in
+  no)
+    AC_MSG_NOTICE([configuring without HDF5 support])
+    : Do nothing
+  ;;
+  yes)
+    # HDF5 install path was not specified.
+    # Look in a couple of standard locations to probe if 
+    # HDF5 header files are there.
+    AC_MSG_CHECKING([for HDF5 installation])
+    for dir in /usr /usr/local; do
+      if test -f ${dir}/include/hdf5.h; then
+        hdf5_PREFIX=${dir}
+        break
+      fi
+    done
+    AC_MSG_RESULT([$hdf5_PREFIX])
+  ;;
+  *)
+    # HDF5 install path was specified.
+    AC_MSG_CHECKING([for HDF5 installation])
+
+    if test -f ${with_hdf5}/include/hdf5.h; then
+        hdf5_PREFIX=$with_hdf5
+        hdf5_INCLUDES="-I${hdf5_PREFIX}/include"
+        hdf5_LIBS="-L${hdf5_PREFIX}/lib -lhdf5"
+        AC_MSG_RESULT([$hdf5_PREFIX])
+    else
+        AC_MSG_RESULT([$hdf5_PREFIX])
+        AC_MSG_ERROR([HDF5 not found in $with_hdf5])
+    fi
+  ;;
+esac
+
+
+
+# Test compiling an HDF application
+
+# NOTE that AC_SEARCH_LIBS didn't work completely so
+# use a more complicated example program to see
+# if that will catch when HDF is not working.
+if test "${hdf5_PREFIX+set}" = set; then
+
+   AC_REQUIRE([AC_PROG_CXX])
+   AC_MSG_CHECKING(whether HDF5 link works)
+   AC_LANG_PUSH(C++)
+   CASC_PUSH_COMPILER_STATE
+   LIBS="${LIBS} ${hdf5_LIBS} $zlib_LIBS $szlib_LIBS -lm "
+   CXXFLAGS="${CXXFLAGS} ${hdf5_INCLUDES}"
+   AC_LINK_IFELSE([
+      #include "hdf5.h"
+      #define FILE "file.h5"
+
+      int main() {
+
+         hid_t       file_id;   /* file identifier */
+         herr_t      status;
+
+         /* Create a new file using default properties. */
+         file_id = H5Fcreate(FILE, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+         /* Terminate access to the file. */
+         status = H5Fclose(file_id); 
+     }
+      ], 
+      casc_hdf5_compile=yes,
+      casc_hdf5_compile=no)
+   CASC_POP_COMPILER_STATE
+   AC_LANG_POP
+   AC_MSG_RESULT($casc_hdf5_compile)
+
+   if test "$casc_hdf5_compile" = no; then
+      AC_MSG_ERROR([HDF5 compile/link test failed])
+   fi
+fi
+
+# END CASC_SUPPORT_HDF5
+
+])dnl End definition of CASC_SUPPORT_HDF5
+
+
 
 
 dnl *********************************************************************
@@ -1933,6 +2024,238 @@ AC_DEFUN([CASC_FIND_MPI_ALPHA],
 ])dnl
 
 
+
+# ===========================================================================
+#
+# SYNOPSIS
+#
+#   CHECK_SZLIB()
+#
+# DESCRIPTION
+#
+#   This macro searches for an installed szlib library. If nothing was
+#   specified when calling configure, it searches first in /usr/local and
+#   then in /usr. If the --with-szlib=DIR is specified, it will try to find
+#   it in DIR/include/szlib.h and DIR/lib/libsz.a. If --without-szlib is
+#   specified, the library is not searched at all.
+#
+#   If either the header file (szlib.h) or the library (libsz) is not found,
+#   the configuration exits on error, asking for a valid szlib installation
+#   directory or --without-szlib.
+#
+#   The macro defines the symbol HAVE_LIBSZ if the library is found. You
+#   should use autoheader to include a definition for this symbol in a
+#   config.h file. Sample usage in a C/C++ source is as follows:
+#
+#     #ifdef HAVE_LIBSZ
+#     #include <szlib.h>
+#     #endif /* HAVE_LIBSZ */
+#
+
+AC_DEFUN([CHECK_SZLIB],
+#
+# DEFINES :
+#	        szlib_PREFIX
+#		szlib_INCLUDES
+#		szlib_LIBS
+#
+[AC_MSG_CHECKING(if szlib is wanted)
+AC_ARG_WITH(szlib,
+[  --with-szlib=DIR root directory path of szlib installation [DIR defaults to
+                    /usr/local or /usr if not found in /usr/local]
+  --without-szlib to disable szlib usage completely [the default]],
+[if test "$withval" != no ; then
+  AC_MSG_RESULT(yes)
+  if test "$withval" == yes ;
+  then
+     SZLIB_HOME=/usr/local
+  else
+     SZLIB_HOME="$withval"
+  fi
+  if test ! -d "$SZLIB_HOME"
+  then
+    AC_MSG_WARN([Sorry, $SZLIB_HOME does not exist, checking usual places])
+    SZLIB_HOME=/usr/local
+    if test ! -f "${SZLIB_HOME}/include/szlib.h"
+    then
+       SZLIB_HOME=/usr
+    fi
+  fi
+else
+  AC_MSG_RESULT(no)
+fi])
+
+#
+# Locate szlib, if wanted
+#
+if test -n "${SZLIB_HOME}"
+then
+        SZLIB_OLD_LDFLAGS=$LDFLAGS
+        SZLIB_OLD_CPPFLAGS=$LDFLAGS
+        LDFLAGS="$LDFLAGS -L${SZLIB_HOME}/lib"
+        CPPFLAGS="$CPPFLAGS -I${SZLIB_HOME}/include"
+        AC_LANG_SAVE
+        AC_LANG_C
+        AC_CHECK_LIB(z, inflateEnd, [szlib_cv_libsz=yes], [szlib_cv_libsz=no])
+        AC_CHECK_HEADER(szlib.h, [szlib_cv_szlib_h=yes], [szlib_cv_szlib_h=no])
+        AC_LANG_RESTORE
+        if test "$szlib_cv_libsz" = "yes" -a "$szlib_cv_szlib_h" = "yes"
+        then
+	        szlib_PREFIX="${SZLIB_HOME}"
+		szlib_INCLUDES="-I${SZLIB_HOME}/include"
+		szlib_LIBS="-L${SZLIB_HOME}/lib -lsz"
+                #
+                # If both library and header were found, use them
+                #
+                AC_CHECK_LIB(z, inflateEnd)
+                AC_MSG_CHECKING(szlib in ${SZLIB_HOME})
+                AC_MSG_RESULT(ok)
+        else
+                #
+                # If either header or library was not found, revert and bomb
+                #
+                AC_MSG_CHECKING(szlib in ${SZLIB_HOME})
+                LDFLAGS="$SZLIB_OLD_LDFLAGS"
+                CPPFLAGS="$SZLIB_OLD_CPPFLAGS"
+                AC_MSG_RESULT(failed)
+                AC_MSG_ERROR(either specify a valid szlib installation with --with-szlib=DIR or disable szlib usage with --without-szlib)
+        fi
+fi
+
+])
+
+# ===========================================================================
+#           http://www.nongnu.org/autoconf-archive/check_zlib.html
+# ===========================================================================
+#
+# SYNOPSIS
+#
+#   CHECK_ZLIB()
+#
+# DESCRIPTION
+#
+#   This macro searches for an installed zlib library. If nothing was
+#   specified when calling configure, it searches first in /usr/local and
+#   then in /usr. If the --with-zlib=DIR is specified, it will try to find
+#   it in DIR/include/zlib.h and DIR/lib/libz.a. If --without-zlib is
+#   specified, the library is not searched at all.
+#
+#   If either the header file (zlib.h) or the library (libz) is not found,
+#   the configuration exits on error, asking for a valid zlib installation
+#   directory or --without-zlib.
+#
+#   The macro defines the symbol HAVE_LIBZ if the library is found. You
+#   should use autoheader to include a definition for this symbol in a
+#   config.h file. Sample usage in a C/C++ source is as follows:
+#
+#     #ifdef HAVE_LIBZ
+#     #include <zlib.h>
+#     #endif /* HAVE_LIBZ */
+#
+# LICENSE
+#
+#   Copyright (c) 2008 Loic Dachary <loic@senga.org>
+#
+#   This program is free software; you can redistribute it and/or modify it
+#   under the terms of the GNU General Public License as published by the
+#   Free Software Foundation; either version 2 of the License, or (at your
+#   option) any later version.
+#
+#   This program is distributed in the hope that it will be useful, but
+#   WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+#   Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License along
+#   with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+#   As a special exception, the respective Autoconf Macro's copyright owner
+#   gives unlimited permission to copy, distribute and modify the configure
+#   scripts that are the output of Autoconf when processing the Macro. You
+#   need not follow the terms of the GNU General Public License when using
+#   or distributing such scripts, even though portions of the text of the
+#   Macro appear in them. The GNU General Public License (GPL) does govern
+#   all other use of the material that constitutes the Autoconf Macro.
+#
+#   This special exception to the GPL applies to versions of the Autoconf
+#   Macro released by the Autoconf Archive. When you make and distribute a
+#   modified version of the Autoconf Macro, you may extend this special
+#   exception to the GPL to apply to your modified version as well.
+
+AC_DEFUN([CHECK_ZLIB],
+#
+# DEFINES :
+#	        zlib_PREFIX
+#		zlib_INCLUDES
+#		zlib_LIBS
+#
+[AC_MSG_CHECKING(if zlib is wanted)
+AC_ARG_WITH(zlib,
+[  --with-zlib=DIR root directory path of zlib installation [DIR defaults to
+                    /usr/local or /usr if not found in /usr/local]
+  --without-zlib to disable zlib usage completely [the default]],
+[if test "$withval" != no ; then
+  AC_MSG_RESULT(yes)
+  if test "$withval" == yes ;
+  then
+     ZLIB_HOME=/usr/local
+  else
+     ZLIB_HOME="$withval"
+  fi
+  if test ! -d "$ZLIB_HOME"
+  then
+    AC_MSG_WARN([Sorry, $ZLIB_HOME does not exist, checking usual places])
+    ZLIB_HOME=/usr/local
+    if test ! -f "${ZLIB_HOME}/include/zlib.h"
+    then
+       ZLIB_HOME=/usr
+    fi
+  fi
+else
+  AC_MSG_RESULT(no)
+fi],
+  [AC_MSG_RESULT(no)]
+)
+
+
+#
+# Locate zlib, if wanted
+#
+if test -n "${ZLIB_HOME}"
+then
+        ZLIB_OLD_LDFLAGS=$LDFLAGS
+        ZLIB_OLD_CPPFLAGS=$LDFLAGS
+        LDFLAGS="$LDFLAGS -L${ZLIB_HOME}/lib"
+        CPPFLAGS="$CPPFLAGS -I${ZLIB_HOME}/include"
+        AC_LANG_SAVE
+        AC_LANG_C
+        AC_CHECK_LIB(z, inflateEnd, [zlib_cv_libz=yes], [zlib_cv_libz=no])
+        AC_CHECK_HEADER(zlib.h, [zlib_cv_zlib_h=yes], [zlib_cv_zlib_h=no])
+        AC_LANG_RESTORE
+        if test "$zlib_cv_libz" = "yes" -a "$zlib_cv_zlib_h" = "yes"
+        then
+	        zlib_PREFIX="${ZLIB_HOME}"
+		zlib_INCLUDES="-I${ZLIB_HOME}/include"
+		zlib_LIBS="-L${ZLIB_HOME}/lib -lz"
+                #
+                # If both library and header were found, use them
+                #
+                AC_CHECK_LIB(z, inflateEnd)
+                AC_MSG_CHECKING(zlib in ${ZLIB_HOME})
+                AC_MSG_RESULT(ok)
+        else
+                #
+                # If either header or library was not found, revert and bomb
+                #
+                AC_MSG_CHECKING(zlib in ${ZLIB_HOME})
+                LDFLAGS="$ZLIB_OLD_LDFLAGS"
+                CPPFLAGS="$ZLIB_OLD_CPPFLAGS"
+                AC_MSG_RESULT(failed)
+                AC_MSG_ERROR(either specify a valid zlib installation with --with-zlib=DIR or disable zlib usage with --without-zlib)
+        fi
+fi
+
+])
 
 dnl $Id$
 

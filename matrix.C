@@ -16,11 +16,9 @@ Matrix::Matrix(
    d_num_procs(num_procs),
    d_manages_storage(true)
 {
-#ifdef DEBUG_CHECK_ASSERTIONS
-   assert(num_rows > 0);
-   assert(num_cols > 0);
-   assert(rank < num_procs);
-#endif
+   CAROM_ASSERT(num_rows > 0);
+   CAROM_ASSERT(num_cols > 0);
+   CAROM_ASSERT(rank < num_procs);
    d_mat = new double [num_cols*num_rows];
 }
 
@@ -38,11 +36,9 @@ Matrix::Matrix(
    d_num_procs(num_procs),
    d_manages_storage(false)
 {
-#ifdef DEBUG_CHECK_ASSERTIONS
-   assert(num_rows > 0);
-   assert(num_cols > 0);
-   assert(rank < num_procs);
-#endif
+   CAROM_ASSERT(num_rows > 0);
+   CAROM_ASSERT(num_cols > 0);
+   CAROM_ASSERT(rank < num_procs);
    d_mat = mat;
 }
 
@@ -57,10 +53,8 @@ Matrix*
 Matrix::Mult(
    const Matrix& other) const
 {
-#ifdef DEBUG_CHECK_ASSERTIONS
-   assert(!other.d_distributed);
-   assert(d_num_cols == other.d_num_rows);
-#endif
+   CAROM_ASSERT(!other.d_distributed);
+   CAROM_ASSERT(d_num_cols == other.d_num_rows);
    Matrix* result = new Matrix(d_num_rows,
                                other.d_num_cols,
                                d_distributed,
@@ -82,12 +76,10 @@ Matrix*
 Matrix::TransposeMult(
    const Matrix& other) const
 {
-#ifdef DEBUG_CHECK_ASSERTIONS
-   assert((d_distributed == other.d_distributed) ||
-          (!d_distributed && other.d_distributed));
-   assert((!d_distributed && other.d_distributed) ||
-          (d_num_rows == other.d_num_rows));
-#endif
+   CAROM_ASSERT((d_distributed == other.d_distributed) ||
+                (!d_distributed && other.d_distributed));
+   CAROM_ASSERT((!d_distributed && other.d_distributed) ||
+                (d_num_rows == other.d_num_rows));
    if (!d_distributed && !other.d_distributed) {
       Matrix* result = new Matrix(d_num_cols,
                                   other.d_num_cols,
@@ -176,10 +168,8 @@ Matrix::TransposeMult(
 Vector*
 Matrix::TransposeMult(const Vector& other) const
 {
-#ifdef DEBUG_CHECK_ASSERTIONS
-   assert(d_distributed && other.distributed());
-   assert(d_num_rows == other.dim());
-#endif
+   CAROM_ASSERT(d_distributed && other.distributed());
+   CAROM_ASSERT(d_num_rows == other.dim());
    Vector* local_result = new Vector(d_num_cols, false, d_rank, d_num_procs);
    int result_dim = 0;
    for (int this_col = 0; this_col < d_num_cols; ++this_col) {

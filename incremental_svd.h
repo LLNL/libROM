@@ -1,6 +1,7 @@
 #ifndef included_incremental_svd_h
 #define included_incremental_svd_h
 
+#include "HDFDatabase.h"
 #include "matrix.h"
 #include "vector.h"
 #include <vector>
@@ -62,11 +63,22 @@ class incremental_svd
       getModel(
          double time);
 
+      // Returns the value of the norm of J cached by increment.
       double
       getNormJ() const
       {
          return d_norm_j;
       }
+
+      // Writes the model to a file with the given base name.
+      void
+      writeModel(
+         const std::string& base_file_name);
+
+      // Reads the model from a file with the given base name.
+      void
+      readModel(
+         const std::string& base_file_name);
 
    private:
       // Unimplemented default constructor.
@@ -180,6 +192,9 @@ class incremental_svd
 
       // Value of norm of j cached by increment.
       double d_norm_j;
+
+      // Database to read/write model parameters from/to.
+      HDFDatabase database;
 
       // MPI message tag.
       static const int COMMUNICATE_U;

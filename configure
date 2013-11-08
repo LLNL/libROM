@@ -718,6 +718,9 @@ with_mpi_libs
 with_mpi_lib_dirs
 with_mpi_flags
 with_MPICC
+with_zlib
+with_szlib
+with_hdf5
 enable_rpath
 '
       ac_precious_vars='build_alias
@@ -1397,6 +1400,13 @@ Optional Packages:
   --with-mpi-flags=FLAGS  FLAGS is space-separated list of whatever flags other
                           than -l and -L are needed to link with mpi libraries
   --with-MPICC=ARG        ARG is mpicc or similar MPI C compiling tool
+  --with-zlib=DIR root directory path of zlib installation DIR defaults to
+                    /usr/local or /usr if not found in /usr/local
+  --without-zlib to disable zlib usage completely the default
+  --with-szlib=DIR root directory path of szlib installation DIR defaults to
+                    /usr/local or /usr if not found in /usr/local
+  --without-szlib to disable szlib usage completely the default
+ --with-hdf5=PATH  Use HDF5 and optionally specify where HDF5 is installed.
 
 Some influential environment variables:
   CXX         C++ compiler command
@@ -1949,7 +1959,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:1952:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:1962:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -1975,7 +1985,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:1978:" "before running compiler search: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:1988:" "before running compiler search: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -2611,7 +2621,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:2614:" "after running compiler search: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:2624:" "after running compiler search: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -3753,8 +3763,8 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
-  echo "configure:3756:" CC is $CC >&5
-  echo "configure:3757:" CPP is $CPP >&5
+  echo "configure:3766:" CC is $CC >&5
+  echo "configure:3767:" CPP is $CPP >&5
 
   CC_ID=unknown
   CC_VERSION=unknown
@@ -3763,7 +3773,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
   # Check if it is a Sun compiler.
   if test $CC_ID = unknown; then
-    echo "configure:3766:" checking if $CC is sunpro >&5
+    echo "configure:3776:" checking if $CC is sunpro >&5
     cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -3788,7 +3798,7 @@ rm -f conftest*
 
   # Check if it is a Intel compiler.
   if test $CC_ID = unknown; then
-    echo "configure:3791:" checking if $CC is intel >&5
+    echo "configure:3801:" checking if $CC is intel >&5
     cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -3816,7 +3826,7 @@ rm -f conftest*
 
   # Check if it is a GNU compiler.
   if test $CC_ID = unknown; then
-    echo "configure:3819:" checking if $CC is gnu >&5
+    echo "configure:3829:" checking if $CC is gnu >&5
     cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -3841,7 +3851,7 @@ rm -f conftest*
 
   # Check if it is a DEC compiler.
   if test $CC_ID = unknown; then
-    echo "configure:3844:" checking if $CC is dec >&5
+    echo "configure:3854:" checking if $CC is dec >&5
     cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -3866,7 +3876,7 @@ rm -f conftest*
 
   # Check if it is a KAI compiler.
   if test $CC_ID = unknown; then
-    echo "configure:3869:" checking if $CC is kai >&5
+    echo "configure:3879:" checking if $CC is kai >&5
     cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -3891,7 +3901,7 @@ rm -f conftest*
 
   # Check if it is a SGI compiler.
   if test $CC_ID = unknown; then
-    echo "configure:3894:" checking if $CC is sgi >&5
+    echo "configure:3904:" checking if $CC is sgi >&5
     cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -3916,17 +3926,17 @@ rm -f conftest*
 
   # Check if it is a IBM compiler.
   if test $CC_ID = unknown; then
-    echo "configure:3919:" checking if $CC is xlc >&5
+    echo "configure:3929:" checking if $CC is xlc >&5
     if echo "$host_os" | grep "aix" >/dev/null ; then
       # The wretched IBM shell does not eval correctly,
       # so we have to help it with a pre-eval eval statement.
       ac_cpp=`eval "echo $ac_cpp"`
       save_ac_cpp=$ac_cpp
-      echo "configure:3925:" ac_cpp is temporarily set to $ac_cpp >&5
+      echo "configure:3935:" ac_cpp is temporarily set to $ac_cpp >&5
     else
       save_ac_cpp=
     fi
-    echo "configure:3929:" ac_cpp is $ac_cpp >&5
+    echo "configure:3939:" ac_cpp is $ac_cpp >&5
     cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -3950,7 +3960,7 @@ fi
 rm -f conftest*
 
     test "$save_ac_cpp" && ac_cpp=$save_ac_cpp
-    echo "configure:3953:" ac_cpp is restored to $ac_cpp >&5
+    echo "configure:3963:" ac_cpp is restored to $ac_cpp >&5
   fi
 
 
@@ -3970,7 +3980,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:3973:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:3983:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -4222,8 +4232,8 @@ ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
-  echo "configure:4225:" CXXP is $CXX >&5
-  echo "configure:4226:" CXXCPP is $CXXCPP >&5
+  echo "configure:4235:" CXXP is $CXX >&5
+  echo "configure:4236:" CXXCPP is $CXXCPP >&5
 
   CXX_ID=unknown
   CXX_VERSION=unknown
@@ -4232,7 +4242,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
   # Check if it is a Sun compiler.
   if test $CXX_ID = unknown; then
-    echo "configure:4235:" checking if $CXX is sunpro >&5
+    echo "configure:4245:" checking if $CXX is sunpro >&5
     cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -4257,7 +4267,7 @@ rm -f conftest*
 
   # Check if it is a Intel compiler.
   if test $CXX_ID = unknown; then
-    echo "configure:4260:" checking if $CXX is intel >&5
+    echo "configure:4270:" checking if $CXX is intel >&5
     cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -4285,7 +4295,7 @@ rm -f conftest*
 
   # Check if it is a GNU compiler.
   if test $CXX_ID = unknown; then
-    echo "configure:4288:" checking if $CXX is gnu >&5
+    echo "configure:4298:" checking if $CXX is gnu >&5
     cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -4313,7 +4323,7 @@ rm -f conftest*
 
   # Check if it is a DEC compiler.
   if test $CXX_ID = unknown; then
-    echo "configure:4316:" checking if $CXX is dec >&5
+    echo "configure:4326:" checking if $CXX is dec >&5
     cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -4338,7 +4348,7 @@ rm -f conftest*
 
   # Check if it is a KAI compiler.
   if test $CXX_ID = unknown; then
-    echo "configure:4341:" checking if $CXX is kai >&5
+    echo "configure:4351:" checking if $CXX is kai >&5
     cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -4363,7 +4373,7 @@ rm -f conftest*
 
   # Check if it is a SGI compiler.
   if test $CXX_ID = unknown; then
-    echo "configure:4366:" checking if $CXX is sgi >&5
+    echo "configure:4376:" checking if $CXX is sgi >&5
     cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -4388,7 +4398,7 @@ rm -f conftest*
 
   # Check if it is a IBM compiler.
   if test $CXX_ID = unknown; then
-    echo "configure:4391:" checking if $CXX is xlc >&5
+    echo "configure:4401:" checking if $CXX is xlc >&5
     cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -4430,7 +4440,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:4433:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:4443:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -4552,7 +4562,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:4555:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:4565:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -4673,7 +4683,7 @@ case "$with_lapack_includes" in
 $as_echo "$as_me: error: If you specify --with-lapack-includes, you must give it the path as in --with-lapack-includes=/installation/path" >&2;}
    { (exit 1); exit 1; }; }
 fi
-echo "configure:4676:" environment lapack_INCLUDES not defined >&5
+echo "configure:4686:" environment lapack_INCLUDES not defined >&5
 
 
     fi
@@ -4744,7 +4754,7 @@ case "$with_lapack_libs" in
 $as_echo "$as_me: error: If you specify --with-lapack-libs, you must give it the path as in --with-lapack-libs=/installation/path" >&2;}
    { (exit 1); exit 1; }; }
 fi
-echo "configure:4747:" environment lapack_LIBS not defined >&5
+echo "configure:4757:" environment lapack_LIBS not defined >&5
 
 
     fi
@@ -4887,7 +4897,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:4890:" "After finding lapack flag: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:4900:" "After finding lapack flag: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -4905,7 +4915,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:4908:" "Found lapack library flag: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:4918:" "Found lapack library flag: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -4923,7 +4933,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:4926:" "Did not find lapack library flag: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:4936:" "Did not find lapack library flag: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -4941,7 +4951,7 @@ fi
     unset extra_libs
     unset save_LIBS
   else
-    echo "configure:4944:" Not looking for lapack because lapack_LIBS is already set >&5
+    echo "configure:4954:" Not looking for lapack because lapack_LIBS is already set >&5
   fi
 fi
 
@@ -4956,7 +4966,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:4959:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:4969:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -4994,7 +5004,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:4997:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:5007:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -6833,12 +6843,971 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:6836:" "After successfully finding MPI using casc_find_mpi: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:6846:" "After successfully finding MPI using casc_find_mpi: $log_vars_index is $log_vars_value" >&5;
 done
 
 
    fi
 fi
+
+#
+# DEFINES :
+#	        zlib_PREFIX
+#		zlib_INCLUDES
+#		zlib_LIBS
+#
+{ $as_echo "$as_me:$LINENO: checking if zlib is wanted" >&5
+$as_echo_n "checking if zlib is wanted... " >&6; }
+
+# Check whether --with-zlib was given.
+if test "${with_zlib+set}" = set; then
+  withval=$with_zlib; if test "$withval" != no ; then
+  { $as_echo "$as_me:$LINENO: result: yes" >&5
+$as_echo "yes" >&6; }
+  if test "$withval" == yes ;
+  then
+     ZLIB_HOME=/usr/local
+  else
+     ZLIB_HOME="$withval"
+  fi
+  if test ! -d "$ZLIB_HOME"
+  then
+    { $as_echo "$as_me:$LINENO: WARNING: Sorry, $ZLIB_HOME does not exist, checking usual places" >&5
+$as_echo "$as_me: WARNING: Sorry, $ZLIB_HOME does not exist, checking usual places" >&2;}
+    ZLIB_HOME=/usr/local
+    if test ! -f "${ZLIB_HOME}/include/zlib.h"
+    then
+       ZLIB_HOME=/usr
+    fi
+  fi
+else
+  { $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
+fi
+else
+  { $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
+
+fi
+
+
+
+#
+# Locate zlib, if wanted
+#
+if test -n "${ZLIB_HOME}"
+then
+        ZLIB_OLD_LDFLAGS=$LDFLAGS
+        ZLIB_OLD_CPPFLAGS=$LDFLAGS
+        LDFLAGS="$LDFLAGS -L${ZLIB_HOME}/lib"
+        CPPFLAGS="$CPPFLAGS -I${ZLIB_HOME}/include"
+
+        ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+        { $as_echo "$as_me:$LINENO: checking for inflateEnd in -lz" >&5
+$as_echo_n "checking for inflateEnd in -lz... " >&6; }
+if test "${ac_cv_lib_z_inflateEnd+set}" = set; then
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lz  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char inflateEnd ();
+int
+main ()
+{
+return inflateEnd ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval ac_try_echo="\"\$as_me:$LINENO: $ac_try_echo\""
+$as_echo "$ac_try_echo") >&5
+  (eval "$ac_link") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  $as_echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_c_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext && {
+	 test "$cross_compiling" = yes ||
+	 $as_test_x conftest$ac_exeext
+       }; then
+  ac_cv_lib_z_inflateEnd=yes
+else
+  $as_echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_lib_z_inflateEnd=no
+fi
+
+rm -rf conftest.dSYM
+rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:$LINENO: result: $ac_cv_lib_z_inflateEnd" >&5
+$as_echo "$ac_cv_lib_z_inflateEnd" >&6; }
+if test "x$ac_cv_lib_z_inflateEnd" = x""yes; then
+  zlib_cv_libz=yes
+else
+  zlib_cv_libz=no
+fi
+
+        if test "${ac_cv_header_zlib_h+set}" = set; then
+  { $as_echo "$as_me:$LINENO: checking for zlib.h" >&5
+$as_echo_n "checking for zlib.h... " >&6; }
+if test "${ac_cv_header_zlib_h+set}" = set; then
+  $as_echo_n "(cached) " >&6
+fi
+{ $as_echo "$as_me:$LINENO: result: $ac_cv_header_zlib_h" >&5
+$as_echo "$ac_cv_header_zlib_h" >&6; }
+else
+  # Is the header compilable?
+{ $as_echo "$as_me:$LINENO: checking zlib.h usability" >&5
+$as_echo_n "checking zlib.h usability... " >&6; }
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+$ac_includes_default
+#include <zlib.h>
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval ac_try_echo="\"\$as_me:$LINENO: $ac_try_echo\""
+$as_echo "$ac_try_echo") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  $as_echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_c_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest.$ac_objext; then
+  ac_header_compiler=yes
+else
+  $as_echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_header_compiler=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+{ $as_echo "$as_me:$LINENO: result: $ac_header_compiler" >&5
+$as_echo "$ac_header_compiler" >&6; }
+
+# Is the header present?
+{ $as_echo "$as_me:$LINENO: checking zlib.h presence" >&5
+$as_echo_n "checking zlib.h presence... " >&6; }
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <zlib.h>
+_ACEOF
+if { (ac_try="$ac_cpp conftest.$ac_ext"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval ac_try_echo="\"\$as_me:$LINENO: $ac_try_echo\""
+$as_echo "$ac_try_echo") >&5
+  (eval "$ac_cpp conftest.$ac_ext") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  $as_echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } >/dev/null && {
+	 test -z "$ac_c_preproc_warn_flag$ac_c_werror_flag" ||
+	 test ! -s conftest.err
+       }; then
+  ac_header_preproc=yes
+else
+  $as_echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+  ac_header_preproc=no
+fi
+
+rm -f conftest.err conftest.$ac_ext
+{ $as_echo "$as_me:$LINENO: result: $ac_header_preproc" >&5
+$as_echo "$ac_header_preproc" >&6; }
+
+# So?  What about this header?
+case $ac_header_compiler:$ac_header_preproc:$ac_c_preproc_warn_flag in
+  yes:no: )
+    { $as_echo "$as_me:$LINENO: WARNING: zlib.h: accepted by the compiler, rejected by the preprocessor!" >&5
+$as_echo "$as_me: WARNING: zlib.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
+    { $as_echo "$as_me:$LINENO: WARNING: zlib.h: proceeding with the compiler's result" >&5
+$as_echo "$as_me: WARNING: zlib.h: proceeding with the compiler's result" >&2;}
+    ac_header_preproc=yes
+    ;;
+  no:yes:* )
+    { $as_echo "$as_me:$LINENO: WARNING: zlib.h: present but cannot be compiled" >&5
+$as_echo "$as_me: WARNING: zlib.h: present but cannot be compiled" >&2;}
+    { $as_echo "$as_me:$LINENO: WARNING: zlib.h:     check for missing prerequisite headers?" >&5
+$as_echo "$as_me: WARNING: zlib.h:     check for missing prerequisite headers?" >&2;}
+    { $as_echo "$as_me:$LINENO: WARNING: zlib.h: see the Autoconf documentation" >&5
+$as_echo "$as_me: WARNING: zlib.h: see the Autoconf documentation" >&2;}
+    { $as_echo "$as_me:$LINENO: WARNING: zlib.h:     section \"Present But Cannot Be Compiled\"" >&5
+$as_echo "$as_me: WARNING: zlib.h:     section \"Present But Cannot Be Compiled\"" >&2;}
+    { $as_echo "$as_me:$LINENO: WARNING: zlib.h: proceeding with the preprocessor's result" >&5
+$as_echo "$as_me: WARNING: zlib.h: proceeding with the preprocessor's result" >&2;}
+    { $as_echo "$as_me:$LINENO: WARNING: zlib.h: in the future, the compiler will take precedence" >&5
+$as_echo "$as_me: WARNING: zlib.h: in the future, the compiler will take precedence" >&2;}
+
+    ;;
+esac
+{ $as_echo "$as_me:$LINENO: checking for zlib.h" >&5
+$as_echo_n "checking for zlib.h... " >&6; }
+if test "${ac_cv_header_zlib_h+set}" = set; then
+  $as_echo_n "(cached) " >&6
+else
+  ac_cv_header_zlib_h=$ac_header_preproc
+fi
+{ $as_echo "$as_me:$LINENO: result: $ac_cv_header_zlib_h" >&5
+$as_echo "$ac_cv_header_zlib_h" >&6; }
+
+fi
+if test "x$ac_cv_header_zlib_h" = x""yes; then
+  zlib_cv_zlib_h=yes
+else
+  zlib_cv_zlib_h=no
+fi
+
+
+        ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+        if test "$zlib_cv_libz" = "yes" -a "$zlib_cv_zlib_h" = "yes"
+        then
+	        zlib_PREFIX="${ZLIB_HOME}"
+		zlib_INCLUDES="-I${ZLIB_HOME}/include"
+		zlib_LIBS="-L${ZLIB_HOME}/lib -lz"
+                #
+                # If both library and header were found, use them
+                #
+
+{ $as_echo "$as_me:$LINENO: checking for inflateEnd in -lz" >&5
+$as_echo_n "checking for inflateEnd in -lz... " >&6; }
+if test "${ac_cv_lib_z_inflateEnd+set}" = set; then
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lz  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char inflateEnd ();
+int
+main ()
+{
+return inflateEnd ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval ac_try_echo="\"\$as_me:$LINENO: $ac_try_echo\""
+$as_echo "$ac_try_echo") >&5
+  (eval "$ac_link") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  $as_echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_c_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext && {
+	 test "$cross_compiling" = yes ||
+	 $as_test_x conftest$ac_exeext
+       }; then
+  ac_cv_lib_z_inflateEnd=yes
+else
+  $as_echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_lib_z_inflateEnd=no
+fi
+
+rm -rf conftest.dSYM
+rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:$LINENO: result: $ac_cv_lib_z_inflateEnd" >&5
+$as_echo "$ac_cv_lib_z_inflateEnd" >&6; }
+if test "x$ac_cv_lib_z_inflateEnd" = x""yes; then
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBZ 1
+_ACEOF
+
+  LIBS="-lz $LIBS"
+
+fi
+
+                { $as_echo "$as_me:$LINENO: checking zlib in ${ZLIB_HOME}" >&5
+$as_echo_n "checking zlib in ${ZLIB_HOME}... " >&6; }
+                { $as_echo "$as_me:$LINENO: result: ok" >&5
+$as_echo "ok" >&6; }
+        else
+                #
+                # If either header or library was not found, revert and bomb
+                #
+                { $as_echo "$as_me:$LINENO: checking zlib in ${ZLIB_HOME}" >&5
+$as_echo_n "checking zlib in ${ZLIB_HOME}... " >&6; }
+                LDFLAGS="$ZLIB_OLD_LDFLAGS"
+                CPPFLAGS="$ZLIB_OLD_CPPFLAGS"
+                { $as_echo "$as_me:$LINENO: result: failed" >&5
+$as_echo "failed" >&6; }
+                { { $as_echo "$as_me:$LINENO: error: either specify a valid zlib installation with --with-zlib=DIR or disable zlib usage with --without-zlib" >&5
+$as_echo "$as_me: error: either specify a valid zlib installation with --with-zlib=DIR or disable zlib usage with --without-zlib" >&2;}
+   { (exit 1); exit 1; }; }
+        fi
+fi
+
+
+
+# Split zlib_LIBS into the LIB_PATH part (zlib_LIB_PATH) and the LIB_NAME part (zlib_LIB_NAME)
+if test -n "${zlib_LIBS}"; then
+  for i in ${zlib_LIBS}; do
+    case "$i" in
+    -L*) zlib_LIB_PATH="${zlib_LIB_PATH} $i" ;;
+    *) zlib_LIB_NAME="${zlib_LIB_NAME} $i" ;;
+    esac
+  done
+fi
+
+LIB_PATH="$zlib_LIB_PATH $LIB_PATH"
+LIB_NAME="$zlib_LIB_NAME $LIB_NAME"
+INC_PATH="$zlib_INCLUDES $INC_PATH"
+
+#
+# DEFINES :
+#	        szlib_PREFIX
+#		szlib_INCLUDES
+#		szlib_LIBS
+#
+{ $as_echo "$as_me:$LINENO: checking if szlib is wanted" >&5
+$as_echo_n "checking if szlib is wanted... " >&6; }
+
+# Check whether --with-szlib was given.
+if test "${with_szlib+set}" = set; then
+  withval=$with_szlib; if test "$withval" != no ; then
+  { $as_echo "$as_me:$LINENO: result: yes" >&5
+$as_echo "yes" >&6; }
+  if test "$withval" == yes ;
+  then
+     SZLIB_HOME=/usr/local
+  else
+     SZLIB_HOME="$withval"
+  fi
+  if test ! -d "$SZLIB_HOME"
+  then
+    { $as_echo "$as_me:$LINENO: WARNING: Sorry, $SZLIB_HOME does not exist, checking usual places" >&5
+$as_echo "$as_me: WARNING: Sorry, $SZLIB_HOME does not exist, checking usual places" >&2;}
+    SZLIB_HOME=/usr/local
+    if test ! -f "${SZLIB_HOME}/include/szlib.h"
+    then
+       SZLIB_HOME=/usr
+    fi
+  fi
+else
+  { $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
+fi
+fi
+
+
+#
+# Locate szlib, if wanted
+#
+if test -n "${SZLIB_HOME}"
+then
+        SZLIB_OLD_LDFLAGS=$LDFLAGS
+        SZLIB_OLD_CPPFLAGS=$LDFLAGS
+        LDFLAGS="$LDFLAGS -L${SZLIB_HOME}/lib"
+        CPPFLAGS="$CPPFLAGS -I${SZLIB_HOME}/include"
+
+        ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+        { $as_echo "$as_me:$LINENO: checking for inflateEnd in -lz" >&5
+$as_echo_n "checking for inflateEnd in -lz... " >&6; }
+if test "${ac_cv_lib_z_inflateEnd+set}" = set; then
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lz  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char inflateEnd ();
+int
+main ()
+{
+return inflateEnd ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval ac_try_echo="\"\$as_me:$LINENO: $ac_try_echo\""
+$as_echo "$ac_try_echo") >&5
+  (eval "$ac_link") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  $as_echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_c_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext && {
+	 test "$cross_compiling" = yes ||
+	 $as_test_x conftest$ac_exeext
+       }; then
+  ac_cv_lib_z_inflateEnd=yes
+else
+  $as_echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_lib_z_inflateEnd=no
+fi
+
+rm -rf conftest.dSYM
+rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:$LINENO: result: $ac_cv_lib_z_inflateEnd" >&5
+$as_echo "$ac_cv_lib_z_inflateEnd" >&6; }
+if test "x$ac_cv_lib_z_inflateEnd" = x""yes; then
+  szlib_cv_libsz=yes
+else
+  szlib_cv_libsz=no
+fi
+
+        if test "${ac_cv_header_szlib_h+set}" = set; then
+  { $as_echo "$as_me:$LINENO: checking for szlib.h" >&5
+$as_echo_n "checking for szlib.h... " >&6; }
+if test "${ac_cv_header_szlib_h+set}" = set; then
+  $as_echo_n "(cached) " >&6
+fi
+{ $as_echo "$as_me:$LINENO: result: $ac_cv_header_szlib_h" >&5
+$as_echo "$ac_cv_header_szlib_h" >&6; }
+else
+  # Is the header compilable?
+{ $as_echo "$as_me:$LINENO: checking szlib.h usability" >&5
+$as_echo_n "checking szlib.h usability... " >&6; }
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+$ac_includes_default
+#include <szlib.h>
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval ac_try_echo="\"\$as_me:$LINENO: $ac_try_echo\""
+$as_echo "$ac_try_echo") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  $as_echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_c_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest.$ac_objext; then
+  ac_header_compiler=yes
+else
+  $as_echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_header_compiler=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+{ $as_echo "$as_me:$LINENO: result: $ac_header_compiler" >&5
+$as_echo "$ac_header_compiler" >&6; }
+
+# Is the header present?
+{ $as_echo "$as_me:$LINENO: checking szlib.h presence" >&5
+$as_echo_n "checking szlib.h presence... " >&6; }
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <szlib.h>
+_ACEOF
+if { (ac_try="$ac_cpp conftest.$ac_ext"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval ac_try_echo="\"\$as_me:$LINENO: $ac_try_echo\""
+$as_echo "$ac_try_echo") >&5
+  (eval "$ac_cpp conftest.$ac_ext") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  $as_echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } >/dev/null && {
+	 test -z "$ac_c_preproc_warn_flag$ac_c_werror_flag" ||
+	 test ! -s conftest.err
+       }; then
+  ac_header_preproc=yes
+else
+  $as_echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+  ac_header_preproc=no
+fi
+
+rm -f conftest.err conftest.$ac_ext
+{ $as_echo "$as_me:$LINENO: result: $ac_header_preproc" >&5
+$as_echo "$ac_header_preproc" >&6; }
+
+# So?  What about this header?
+case $ac_header_compiler:$ac_header_preproc:$ac_c_preproc_warn_flag in
+  yes:no: )
+    { $as_echo "$as_me:$LINENO: WARNING: szlib.h: accepted by the compiler, rejected by the preprocessor!" >&5
+$as_echo "$as_me: WARNING: szlib.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
+    { $as_echo "$as_me:$LINENO: WARNING: szlib.h: proceeding with the compiler's result" >&5
+$as_echo "$as_me: WARNING: szlib.h: proceeding with the compiler's result" >&2;}
+    ac_header_preproc=yes
+    ;;
+  no:yes:* )
+    { $as_echo "$as_me:$LINENO: WARNING: szlib.h: present but cannot be compiled" >&5
+$as_echo "$as_me: WARNING: szlib.h: present but cannot be compiled" >&2;}
+    { $as_echo "$as_me:$LINENO: WARNING: szlib.h:     check for missing prerequisite headers?" >&5
+$as_echo "$as_me: WARNING: szlib.h:     check for missing prerequisite headers?" >&2;}
+    { $as_echo "$as_me:$LINENO: WARNING: szlib.h: see the Autoconf documentation" >&5
+$as_echo "$as_me: WARNING: szlib.h: see the Autoconf documentation" >&2;}
+    { $as_echo "$as_me:$LINENO: WARNING: szlib.h:     section \"Present But Cannot Be Compiled\"" >&5
+$as_echo "$as_me: WARNING: szlib.h:     section \"Present But Cannot Be Compiled\"" >&2;}
+    { $as_echo "$as_me:$LINENO: WARNING: szlib.h: proceeding with the preprocessor's result" >&5
+$as_echo "$as_me: WARNING: szlib.h: proceeding with the preprocessor's result" >&2;}
+    { $as_echo "$as_me:$LINENO: WARNING: szlib.h: in the future, the compiler will take precedence" >&5
+$as_echo "$as_me: WARNING: szlib.h: in the future, the compiler will take precedence" >&2;}
+
+    ;;
+esac
+{ $as_echo "$as_me:$LINENO: checking for szlib.h" >&5
+$as_echo_n "checking for szlib.h... " >&6; }
+if test "${ac_cv_header_szlib_h+set}" = set; then
+  $as_echo_n "(cached) " >&6
+else
+  ac_cv_header_szlib_h=$ac_header_preproc
+fi
+{ $as_echo "$as_me:$LINENO: result: $ac_cv_header_szlib_h" >&5
+$as_echo "$ac_cv_header_szlib_h" >&6; }
+
+fi
+if test "x$ac_cv_header_szlib_h" = x""yes; then
+  szlib_cv_szlib_h=yes
+else
+  szlib_cv_szlib_h=no
+fi
+
+
+        ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+        if test "$szlib_cv_libsz" = "yes" -a "$szlib_cv_szlib_h" = "yes"
+        then
+	        szlib_PREFIX="${SZLIB_HOME}"
+		szlib_INCLUDES="-I${SZLIB_HOME}/include"
+		szlib_LIBS="-L${SZLIB_HOME}/lib -lsz"
+                #
+                # If both library and header were found, use them
+                #
+
+{ $as_echo "$as_me:$LINENO: checking for inflateEnd in -lz" >&5
+$as_echo_n "checking for inflateEnd in -lz... " >&6; }
+if test "${ac_cv_lib_z_inflateEnd+set}" = set; then
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lz  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char inflateEnd ();
+int
+main ()
+{
+return inflateEnd ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval ac_try_echo="\"\$as_me:$LINENO: $ac_try_echo\""
+$as_echo "$ac_try_echo") >&5
+  (eval "$ac_link") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  $as_echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_c_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext && {
+	 test "$cross_compiling" = yes ||
+	 $as_test_x conftest$ac_exeext
+       }; then
+  ac_cv_lib_z_inflateEnd=yes
+else
+  $as_echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_lib_z_inflateEnd=no
+fi
+
+rm -rf conftest.dSYM
+rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:$LINENO: result: $ac_cv_lib_z_inflateEnd" >&5
+$as_echo "$ac_cv_lib_z_inflateEnd" >&6; }
+if test "x$ac_cv_lib_z_inflateEnd" = x""yes; then
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBZ 1
+_ACEOF
+
+  LIBS="-lz $LIBS"
+
+fi
+
+                { $as_echo "$as_me:$LINENO: checking szlib in ${SZLIB_HOME}" >&5
+$as_echo_n "checking szlib in ${SZLIB_HOME}... " >&6; }
+                { $as_echo "$as_me:$LINENO: result: ok" >&5
+$as_echo "ok" >&6; }
+        else
+                #
+                # If either header or library was not found, revert and bomb
+                #
+                { $as_echo "$as_me:$LINENO: checking szlib in ${SZLIB_HOME}" >&5
+$as_echo_n "checking szlib in ${SZLIB_HOME}... " >&6; }
+                LDFLAGS="$SZLIB_OLD_LDFLAGS"
+                CPPFLAGS="$SZLIB_OLD_CPPFLAGS"
+                { $as_echo "$as_me:$LINENO: result: failed" >&5
+$as_echo "failed" >&6; }
+                { { $as_echo "$as_me:$LINENO: error: either specify a valid szlib installation with --with-szlib=DIR or disable szlib usage with --without-szlib" >&5
+$as_echo "$as_me: error: either specify a valid szlib installation with --with-szlib=DIR or disable szlib usage with --without-szlib" >&2;}
+   { (exit 1); exit 1; }; }
+        fi
+fi
+
+
+
+# Split szlib_LIBS into the LIB_PATH part (szlib_LIB_PATH) and the LIB_NAME part (szlib_LIB_NAME)
+if test -n "${szlib_LIBS}"; then
+  for i in ${szlib_LIBS}; do
+    case "$i" in
+    -L*) szlib_LIB_PATH="${szlib_LIB_PATH} $i" ;;
+    *) szlib_LIB_NAME="${szlib_LIB_NAME} $i" ;;
+    esac
+  done
+fi
+
+LIB_PATH="$szlib_LIB_PATH $LIB_PATH"
+LIB_NAME="$szlib_LIB_NAME $LIB_NAME"
+INC_PATH="$szlib_INCLUDES $INC_PATH"
+
+
+
+# Begin CASC_SUPPORT_HDF5
+# Defines hdf5_PREFIX hdf5_INCLUDES and hdf5_LIBS if with-hdf5 is specified.
+
+# Check whether --with-hdf5 was given.
+if test "${with_hdf5+set}" = set; then
+  withval=$with_hdf5;
+else
+  with_hdf5=no
+fi
+
+
+case "$with_hdf5" in
+  no)
+    { $as_echo "$as_me:$LINENO: configuring without HDF5 support" >&5
+$as_echo "$as_me: configuring without HDF5 support" >&6;}
+    : Do nothing
+  ;;
+  yes)
+    # HDF5 install path was not specified.
+    # Look in a couple of standard locations to probe if
+    # HDF5 header files are there.
+    { $as_echo "$as_me:$LINENO: checking for HDF5 installation" >&5
+$as_echo_n "checking for HDF5 installation... " >&6; }
+    for dir in /usr /usr/local; do
+      if test -f ${dir}/include/hdf5.h; then
+        hdf5_PREFIX=${dir}
+        break
+      fi
+    done
+    { $as_echo "$as_me:$LINENO: result: $hdf5_PREFIX" >&5
+$as_echo "$hdf5_PREFIX" >&6; }
+  ;;
+  *)
+    # HDF5 install path was specified.
+    { $as_echo "$as_me:$LINENO: checking for HDF5 installation" >&5
+$as_echo_n "checking for HDF5 installation... " >&6; }
+
+    if test -f ${with_hdf5}/include/hdf5.h; then
+        hdf5_PREFIX=$with_hdf5
+        hdf5_INCLUDES="-I${hdf5_PREFIX}/include"
+        hdf5_LIBS="-L${hdf5_PREFIX}/lib -lhdf5"
+        { $as_echo "$as_me:$LINENO: result: $hdf5_PREFIX" >&5
+$as_echo "$hdf5_PREFIX" >&6; }
+    else
+        { $as_echo "$as_me:$LINENO: result: $hdf5_PREFIX" >&5
+$as_echo "$hdf5_PREFIX" >&6; }
+        { { $as_echo "$as_me:$LINENO: error: HDF5 not found in $with_hdf5" >&5
+$as_echo "$as_me: error: HDF5 not found in $with_hdf5" >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+  ;;
+esac
+
+
+
+# Test compiling an HDF application
+
+# NOTE that AC_SEARCH_LIBS didn't work completely so
+# use a more complicated example program to see
+# if that will catch when HDF is not working.
+if test "${hdf5_PREFIX+set}" = set; then
+
+
+   { $as_echo "$as_me:$LINENO: checking whether HDF5 link works" >&5
+$as_echo_n "checking whether HDF5 link works... " >&6; }
+   ac_ext=cpp
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+
+   casc_save_LIBS=$LIBS
+   casc_save_CXXFLAGS=$CXXFLAGS
+
+   LIBS="${LIBS} ${hdf5_LIBS} $zlib_LIBS $szlib_LIBS -lm "
+   CXXFLAGS="${CXXFLAGS} ${hdf5_INCLUDES}"
+   cat >conftest.$ac_ext <<_ACEOF
+
+      #include "hdf5.h"
+      #define FILE "file.h5"
+
+      int main() {
+
+         hid_t       file_id;   /* file identifier */
+         herr_t      status;
+
+         /* Create a new file using default properties. */
+         file_id = H5Fcreate(FILE, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+         /* Terminate access to the file. */
+         status = H5Fclose(file_id);
+     }
+
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval ac_try_echo="\"\$as_me:$LINENO: $ac_try_echo\""
+$as_echo "$ac_try_echo") >&5
+  (eval "$ac_link") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  $as_echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_cxx_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext && {
+	 test "$cross_compiling" = yes ||
+	 $as_test_x conftest$ac_exeext
+       }; then
+  casc_hdf5_compile=yes
+else
+  $as_echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	casc_hdf5_compile=no
+fi
+
+rm -rf conftest.dSYM
+rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
+      conftest$ac_exeext conftest.$ac_ext
+
+   LIBS=$casc_save_LIBS
+   unset casc_save_LIBS
+   CXXFLAGS=$casc_save_CXXFLAGS
+   unset casc_save_CXXFLAGS
+
+   ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+   { $as_echo "$as_me:$LINENO: result: $casc_hdf5_compile" >&5
+$as_echo "$casc_hdf5_compile" >&6; }
+
+   if test "$casc_hdf5_compile" = no; then
+      { { $as_echo "$as_me:$LINENO: error: HDF5 compile/link test failed" >&5
+$as_echo "$as_me: error: HDF5 compile/link test failed" >&2;}
+   { (exit 1); exit 1; }; }
+   fi
+fi
+
+# END CASC_SUPPORT_HDF5
+
+
+if test "${hdf5_PREFIX+set}" = set; then
+
+# Split hdf5_LIBS into the LIB_PATH part (hdf5_LIB_PATH) and the LIB_NAME part (hdf5_LIB_NAME)
+if test -n "${hdf5_LIBS}"; then
+  for i in ${hdf5_LIBS}; do
+    case "$i" in
+    -L*) hdf5_LIB_PATH="${hdf5_LIB_PATH} $i" ;;
+    *) hdf5_LIB_NAME="${hdf5_LIB_NAME} $i" ;;
+    esac
+  done
+fi
+
+  LIB_PATH="$hdf5_LIB_PATH $LIB_PATH"
+  LIB_NAME="$hdf5_LIB_NAME $LIB_NAME"
+  INC_PATH="$hdf5_INCLUDES $INC_PATH"
+else
+  { { $as_echo "$as_me:$LINENO: error: HDF5 not found - you must specify a valid location via --with-hdf5=PATH." >&5
+$as_echo "$as_me: error: HDF5 not found - you must specify a valid location via --with-hdf5=PATH." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+
+log_vars="hdf5_INCLUDES INC_PATH hdf5_LIB_PATH hdf5_LIB_NAME LIB_PATH LIB_NAME"
+for log_vars_index in $log_vars ; do
+  eval "test \"\${${log_vars_index}+set}\" = set"
+  if test $? = 0; then
+    log_vars_value="'`eval echo \\${$log_vars_index}`'";
+  else
+    log_vars_value="unset";
+  fi
+  echo "configure:7808:" "$log_vars_index is $log_vars_value" >&5;
+done
+
 
 
 
@@ -6851,7 +7820,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:6854:" "before adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:7823:" "before adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -7318,7 +8287,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:7321:" "forming rpaths: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:8290:" "forming rpaths: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -7384,7 +8353,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:7387:" "after adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:8356:" "after adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
 done
 
 

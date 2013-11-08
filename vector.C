@@ -15,10 +15,8 @@ Vector::Vector(
    d_num_procs(num_procs),
    d_manages_storage(true)
 {
-#ifdef DEBUG_CHECK_ASSERTIONS
-   assert(dim > 0);
-   assert(rank < num_procs);
-#endif
+   CAROM_ASSERT(dim > 0);
+   CAROM_ASSERT(rank < num_procs);
    d_vec = new double [dim];
 }
 
@@ -34,10 +32,8 @@ Vector::Vector(
    d_num_procs(num_procs),
    d_manages_storage(false)
 {
-#ifdef DEBUG_CHECK_ASSERTIONS
-   assert(dim > 0);
-   assert(rank < num_procs);
-#endif
+   CAROM_ASSERT(dim > 0);
+   CAROM_ASSERT(rank < num_procs);
    d_vec = vec;
 }
 
@@ -51,9 +47,7 @@ Vector::~Vector()
 double
 Vector::dot(const Vector& other) const
 {
-#ifdef DEBUG_CHECK_ASSERTIONS
-   assert(d_dim == other.d_dim);
-#endif
+   CAROM_ASSERT(d_dim == other.d_dim);
    double ip;
    double local_ip = 0.0;
    for (int i = 0; i < d_dim; ++i) {
