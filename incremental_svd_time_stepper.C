@@ -1,5 +1,6 @@
 #include "incremental_svd_time_stepper.h"
-#include <mpi.h>
+
+#include "mpi.h"
 
 namespace CAROM {
 

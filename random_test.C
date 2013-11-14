@@ -1,7 +1,9 @@
 #include "incremental_svd_rom.h"
 #include "static_svd_rom.h"
+
+#include "mpi.h"
+
 #include <stdio.h>
-#include <mpi.h>
 
 int main(int argc, char* argv[])
 {

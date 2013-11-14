@@ -1,6 +1,8 @@
 #include "vector.h"
+
+#include "mpi.h"
+
 #include <cmath>
-#include <mpi.h>
 
 namespace CAROM {
 

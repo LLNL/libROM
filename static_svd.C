@@ -1,6 +1,8 @@
 #include "static_svd.h"
+
+#include "mpi.h"
+
 #include <stdio.h>
-#include <mpi.h>
 
 extern "C" {
 void dgesdd_(char*, int*, int*, double*, int*,
