@@ -38,6 +38,11 @@ struct Utilities
       const std::string& message,
       const std::string& filename,
       int line);
+
+   // Convert a processor ID to a string.
+   static std::string
+   processorToString(
+      int processorID);
 };
 
 }
