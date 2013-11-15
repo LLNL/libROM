@@ -8,6 +8,15 @@
 
 namespace CAROM {
 
+/*!
+ * A null use of a variable, use to avoid GNU compiler
+ * warnings about unused variables.
+ */
+#define NULL_USE(variable)                               \
+   do {                                                  \
+      if (0) { char* temp = (char *)&variable; temp++; } \
+   } while (0)
+
 #ifdef DEBUG_CHECK_ASSERTIONS
 
 #define CAROM_ASSERT(EXP)                                       \
@@ -27,7 +36,7 @@ namespace CAROM {
 
 #endif
 
-/* Eventually this should be a singleton class. */
+/* Holder of basic, static, utility routines. */
 struct Utilities
 {
    // Cleanly end the program when something horrible happend and print a

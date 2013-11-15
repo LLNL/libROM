@@ -433,7 +433,6 @@ incremental_svd::svd(
    Matrix*& V)
 {
    // Construct U, S, and V.
-   int mat_size = (d_num_increments+1)*(d_num_increments+1);
    U = new Matrix(d_num_increments+1,
                   d_num_increments+1,
                   false,
@@ -524,8 +523,6 @@ incremental_svd::addNewIncrement(
    // Add j as a new column of d_U[d_num_time_intervals-1].
    const Matrix* this_d_U = d_U[d_num_time_intervals-1];
    Matrix* newU = new Matrix(d_dim, d_num_increments+1, true, d_rank, d_size);
-   int lhs_idx = 0;
-   int rhs_idx = 0;
    for (int row = 0; row < d_dim; ++row) {
       for (int col = 0; col < d_num_increments; ++col) {
          newU->item(row, col) = this_d_U->item(row, col);

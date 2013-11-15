@@ -33,6 +33,7 @@ class static_svd_rom
          double* u_in,
          double time)
       {
+         NULL_USE(time);
          d_svdts->collectState(u_in);
       }
 
@@ -51,6 +52,7 @@ class static_svd_rom
       getModel(
          double time)
       {
+         NULL_USE(time);
          return d_svdts->getModel();
       }
 

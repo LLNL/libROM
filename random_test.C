@@ -61,11 +61,13 @@ int main(int argc, char* argv[])
    for (int i = 0; i < num_snapshots; ++i) {
       if (inc_rom.isNextSnapshot(0.01*i)) {
          inc_rom.takeSnapshot(M[i], 0.01*i);
-         double next_snapshot_time =
-            inc_rom.computeNextSnapshotTime(M[i], M[i], 0.01*i);
+         inc_rom.computeNextSnapshotTime(M[i], M[i], 0.01*i);
       }
    }
    CAROM::Matrix* inc_model = inc_rom.getModel(0.0);
+#ifndef DEBUG_ROMS
+   NULL_USE(inc_model);
+#endif
    double stop_inc = MPI_Wtime();
    double incremental_run_time = stop_inc - start_inc;
    double global_incremental_run_time;
@@ -84,8 +86,7 @@ int main(int argc, char* argv[])
    for (int i = 0; i < num_snapshots; ++i) {
       if (static_rom.isNextSnapshot(0.01*i)) {
          static_rom.takeSnapshot(M[i], 0.01*i);
-         double next_snapshot_time =
-            static_rom.computeNextSnapshotTime(M[i], M[i], 0.01*i);
+         static_rom.computeNextSnapshotTime(M[i], M[i], 0.01*i);
       }
    }
    CAROM::Matrix* static_model = static_rom.getModel(0.0);
