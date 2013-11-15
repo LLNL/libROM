@@ -14,14 +14,12 @@ Utilities::abort(
    const std::string& filename,
    int line)
 {
-   static ParallelBuffer perr_buffer;
-   std::ostringstream os;
-   os << "Program abort called in file ``" << filename
-      << "'' at line " << line << std::endl;
-   perr_buffer.outputString(os.str());
-   os.str("");
-   os << "ERROR MESSAGE: " << std::endl << message.c_str() << std::endl;
-   perr_buffer.outputString(os.str());
+   ParallelBuffer perr_buffer;
+   std::ostream perr(&perr_buffer);
+   perr << "Program abort called in file ``" << filename
+        << "'' at line " << line << std::endl;
+   perr << "ERROR MESSAGE: " << std::endl << message.c_str() << std::endl;
+   perr << std::flush;
 
    int size;
    MPI_Comm_size(MPI_COMM_WORLD, &size);
