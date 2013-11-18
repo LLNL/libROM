@@ -142,7 +142,7 @@ incremental_svd::increment(
 #endif
 }
 
-Matrix*
+const Matrix*
 incremental_svd::getModel(
    double time)
 {
@@ -352,7 +352,7 @@ incremental_svd::buildIncrementalSVD(
 
 void
 incremental_svd::compute_J_P_normJ(
-   double* u,
+   const double* u,
    Vector*& j,
    Matrix*& P)
 {
@@ -372,7 +372,7 @@ incremental_svd::compute_J_P_normJ(
 void
 incremental_svd::orthogonalizeJAndComputeNorm(
    Vector* j,
-   Matrix* P)
+   const Matrix* P)
 {
    double tmp;
    for (int col = 0; col < d_num_increments; ++col) {
@@ -400,7 +400,7 @@ incremental_svd::orthogonalizeJAndComputeNorm(
 void
 incremental_svd::constructQ(
    double*& Q,
-   Vector* l,
+   const Vector* l,
    double norm_j)
 {
    // Create Q.
@@ -493,8 +493,8 @@ incremental_svd::svd(
 
 void
 incremental_svd::addRedundantIncrement(
-   Matrix* A,
-   Matrix* sigma)
+   const Matrix* A,
+   const Matrix* sigma)
 {
    // Chop a row and a column off of A to form Amod.  Also form
    // d_S[d_num_time_intervals-1] by chopping a row and a column off of sigma.
@@ -516,8 +516,8 @@ incremental_svd::addRedundantIncrement(
 
 void
 incremental_svd::addNewIncrement(
-   Vector* j,
-   Matrix* A,
+   const Vector* j,
+   const Matrix* A,
    Matrix* sigma)
 {
    // Add j as a new column of d_U[d_num_time_intervals-1].

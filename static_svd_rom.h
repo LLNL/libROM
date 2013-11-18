@@ -48,7 +48,7 @@ class static_svd_rom
       }
 
       // Returns the model parameters.
-      Matrix*
+      const Matrix*
       getModel(
          double time)
       {
@@ -61,11 +61,13 @@ class static_svd_rom
       static_svd_rom();
 
       // Unimplemented copy constructor.
-      static_svd_rom(const static_svd_rom& other);
+      static_svd_rom(
+         const static_svd_rom& other);
 
       // Unimplemented assignment operator.
       static_svd_rom&
-      operator = (const static_svd_rom& rhs);
+      operator = (
+         const static_svd_rom& rhs);
 
       boost::shared_ptr<static_svd_time_stepper> d_svdts;
 };

@@ -58,7 +58,8 @@ class Vector
 
       // Const vector member access.
       const double&
-      item(const int i) const
+      item(
+         int i) const
       {
          CAROM_ASSERT((0 <= i) && (i < d_dim));
          return d_vec[i];
@@ -66,7 +67,8 @@ class Vector
 
       // Non-const vector member access.
       double&
-      item(const int i)
+      item(
+         int i)
       {
          CAROM_ASSERT((0 <= i) && (i < d_dim));
          return d_vec[i];

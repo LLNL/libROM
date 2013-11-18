@@ -59,7 +59,7 @@ class incremental_svd
       }
 
       // Returns the model parameters for the given time, d_U*d_L, as a Matrix.
-      Matrix*
+      const Matrix*
       getModel(
          double time);
 
@@ -85,11 +85,13 @@ class incremental_svd
       incremental_svd();
 
       // Unimplemented copy constructor.
-      incremental_svd(const incremental_svd& other);
+      incremental_svd(
+         const incremental_svd& other);
 
       // Unimplemented assignment operator.
       incremental_svd&
-      operator = (const incremental_svd& rhs);
+      operator = (
+         const incremental_svd& rhs);
 
       // Constructs the first svd.
       void
@@ -105,7 +107,7 @@ class incremental_svd
       // Compute J, P, and the norm of J given u.
       void
       compute_J_P_normJ(
-         double* u,
+         const double* u,
          Vector*& j,
          Matrix*& P);
 
@@ -114,13 +116,13 @@ class incremental_svd
       void
       orthogonalizeJAndComputeNorm(
          Vector* j,
-         Matrix* P);
+         const Matrix* P);
 
       // Construct the Q matrix which will be passed to svd.
       void
       constructQ(
          double*& Q,
-         Vector* l,
+         const Vector* l,
          double norm_j);
 
       // Given a matrix, A, returns the 3 components of the singular value
@@ -135,14 +137,14 @@ class incremental_svd
       // Add a redundant increment to the svd.
       void
       addRedundantIncrement(
-         Matrix* A,
-         Matrix* sigma);
+         const Matrix* A,
+         const Matrix* sigma);
 
       // Add a new, unique increment to the svd.
       void
       addNewIncrement(
-         Vector* j,
-         Matrix* A,
+         const Vector* j,
+         const Matrix* A,
          Matrix* sigma);
 
       // Dimension of the system.

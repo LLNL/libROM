@@ -167,7 +167,8 @@ Matrix::TransposeMult(
 }
 
 Vector*
-Matrix::TransposeMult(const Vector& other) const
+Matrix::TransposeMult(
+   const Vector& other) const
 {
    CAROM_ASSERT(d_distributed && other.distributed());
    CAROM_ASSERT(d_num_rows == other.dim());

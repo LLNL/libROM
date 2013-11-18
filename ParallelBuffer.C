@@ -57,7 +57,7 @@ ParallelBuffer::~ParallelBuffer()
 void
 ParallelBuffer::outputString(
    const std::string& text,
-   const int length)
+   int length)
 {
    if (length > 0) {
 
@@ -183,7 +183,7 @@ ParallelBuffer::overflow(
 void
 ParallelBuffer::copyToBuffer(
    const std::string& text,
-   const int length)
+   int length)
 {
    /*
     * First check whether we need to increase the size of the buffer

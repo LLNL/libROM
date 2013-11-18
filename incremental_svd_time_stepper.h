@@ -59,7 +59,7 @@ class incremental_svd_time_stepper
          double time);
 
       // Returns the model parameters at the given time as a Matrix.
-      Matrix*
+      const Matrix*
       getModel(
          double time)
       {
@@ -87,11 +87,13 @@ class incremental_svd_time_stepper
       incremental_svd_time_stepper();
 
       // Unimplemented copy constructor.
-      incremental_svd_time_stepper(const incremental_svd_time_stepper& other);
+      incremental_svd_time_stepper(
+         const incremental_svd_time_stepper& other);
 
       // Unimplemented assignment operator.
       incremental_svd_time_stepper&
-      operator = (const incremental_svd_time_stepper& rhs);
+      operator = (
+         const incremental_svd_time_stepper& rhs);
 
       // Maximum number time steps between increments.
       int d_max_time_steps_between_increments;

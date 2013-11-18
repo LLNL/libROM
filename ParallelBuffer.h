@@ -48,7 +48,7 @@ class ParallelBuffer:public std::streambuf
       void
       outputString(
          const std::string& text,
-         const int length);
+         int length);
 
       /**
        * Synchronize the parallel buffer (called from streambuf).
@@ -92,7 +92,7 @@ class ParallelBuffer:public std::streambuf
       void
       copyToBuffer(
          const std::string& text,
-         const int length);
+         int length);
       void
       outputBuffer();           // output internal buffer data to streams
 

@@ -47,7 +47,8 @@ Vector::~Vector()
 }
 
 double
-Vector::dot(const Vector& other) const
+Vector::dot(
+   const Vector& other) const
 {
    CAROM_ASSERT(d_dim == other.d_dim);
    double ip;

@@ -13,7 +13,7 @@ class HDFDatabase
 {
    public:
       // Default constructor.
-      explicit HDFDatabase();
+      HDFDatabase();
 
       // Destructor.
       ~HDFDatabase();
@@ -33,7 +33,7 @@ class HDFDatabase
       void
       putInteger(
          const std::string& key,
-         const int& data)
+         int data)
       {
          putIntegerArray(key, &data, 1);
       }
@@ -49,7 +49,7 @@ class HDFDatabase
       void
       putDouble(
          const std::string& key,
-         const double& data)
+         double data)
       {
          putDoubleArray(key, &data, 1);
       }
@@ -100,7 +100,8 @@ class HDFDatabase
 
       // Unimplemented assignment operator.
       HDFDatabase&
-      operator = (const HDFDatabase& rhs);
+      operator = (
+         const HDFDatabase& rhs);
 
       bool
       isInteger(

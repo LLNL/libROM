@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
          inc_rom.computeNextSnapshotTime(M[i], M[i], 0.01*i);
       }
    }
-   CAROM::Matrix* inc_model = inc_rom.getModel(0.0);
+   const CAROM::Matrix* inc_model = inc_rom.getModel(0.0);
 #ifndef DEBUG_ROMS
    NULL_USE(inc_model);
 #endif
@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
          static_rom.computeNextSnapshotTime(M[i], M[i], 0.01*i);
       }
    }
-   CAROM::Matrix* static_model = static_rom.getModel(0.0);
+   const CAROM::Matrix* static_model = static_rom.getModel(0.0);
    double stop_static = MPI_Wtime();
    double static_run_time = stop_static - start_static;
    double global_static_run_time;

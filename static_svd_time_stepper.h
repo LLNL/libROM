@@ -30,7 +30,8 @@ class static_svd_time_stepper
 
       // Collect the new state, u_in.
       void
-      collectState(double* u_in)
+      collectState(
+         double* u_in)
       {
          d_svd->collectState(u_in);
       }
@@ -48,7 +49,7 @@ class static_svd_time_stepper
       }
 
       // Returns the model parameters.
-      Matrix*
+      const Matrix*
       getModel()
       {
          return d_svd->getModel();
@@ -59,11 +60,13 @@ class static_svd_time_stepper
       static_svd_time_stepper();
 
       // Unimplemented copy constructor.
-      static_svd_time_stepper(const static_svd_time_stepper& other);
+      static_svd_time_stepper(
+         const static_svd_time_stepper& other);
 
       // Unimplemented assignment operator.
       static_svd_time_stepper&
-      operator = (const static_svd_time_stepper& rhs);
+      operator = (
+         const static_svd_time_stepper& rhs);
 
       // The fundamental static SVD algorithm.
       boost::shared_ptr<static_svd> d_svd;

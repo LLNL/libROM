@@ -31,13 +31,13 @@ class static_svd
 
       // Returns the dimension of the system.
       int
-      getDim()
+      getDim() const
       {
          return d_dim;
       }
 
       // Returns the model parameters, d_U.
-      Matrix*
+      const Matrix*
       getModel()
       {
          computeSVD();
@@ -49,11 +49,13 @@ class static_svd
       static_svd();
 
       // Unimplemented copy constructor.
-      static_svd(const static_svd& other);
+      static_svd(
+         const static_svd& other);
 
       // Unimplemented assignment operator.
       static_svd&
-      operator = (const static_svd& rhs);
+      operator = (
+         const static_svd& rhs);
 
       // Compute the SVD.
       void

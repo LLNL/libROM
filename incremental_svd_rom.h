@@ -51,7 +51,7 @@ class incremental_svd_rom
       }
 
       // Returns the model parameters at the given time as a Matrix.
-      Matrix*
+      const Matrix*
       getModel(
          double time)
       {
@@ -79,11 +79,13 @@ class incremental_svd_rom
       incremental_svd_rom();
 
       // Unimplemented copy constructor.
-      incremental_svd_rom(const incremental_svd_rom& other);
+      incremental_svd_rom(
+         const incremental_svd_rom& other);
 
       // Unimplemented assignment operator.
       incremental_svd_rom&
-      operator = (const incremental_svd_rom& rhs);
+      operator = (
+         const incremental_svd_rom& rhs);
 
       // The underlying time step control object.
       boost::shared_ptr<incremental_svd_time_stepper> d_isvdts;

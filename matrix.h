@@ -58,7 +58,8 @@ class Matrix
       // undistributed matrix, and multiplication of a distributed matrix with
       // an undistributed matrix returning a distributed matrix.
       Matrix*
-      Mult(const Matrix& other) const;
+      Mult(
+         const Matrix& other) const;
 
       // Multiplies the transpose of this matrix with other and returns the
       // product.  Supports multiplication of two undistributed matrices
@@ -66,17 +67,21 @@ class Matrix
       // an undistributed matrix, and an undistributed matrix with a
       // distributed matrix returning an undistributed matrix.
       Matrix*
-      TransposeMult(const Matrix& other) const;
+      TransposeMult(
+         const Matrix& other) const;
 
       // Multiplies the transpose of this matrix with other and returns the
       // product.  Supports multiplication of a distributed matrix and a
       // distributed vector returning an undistributed vector.
       Vector*
-      TransposeMult(const Vector& other) const;
+      TransposeMult(
+         const Vector& other) const;
 
       // Const matrix member access.
       const double&
-      item(const int row, const int col) const
+      item(
+         int row,
+         int col) const
       {
          CAROM_ASSERT((0 <= row) && (row < d_num_rows));
          CAROM_ASSERT((0 <= col) && (col < d_num_cols));
@@ -85,7 +90,9 @@ class Matrix
 
       // Non-const matrix member access.
       double&
-      item(const int row, const int col)
+      item(
+         int row,
+         int col)
       {
          CAROM_ASSERT((0 <= row) && (row < d_num_rows));
          CAROM_ASSERT((0 <= col) && (col < d_num_cols));
