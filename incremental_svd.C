@@ -74,7 +74,7 @@ incremental_svd::increment(
    // the system.
    if (d_num_increments == 0 ||
        d_num_increments >= d_increments_per_time_interval) {
-     buildInitialSVD(u_in, time);
+      buildInitialSVD(u_in, time);
    }
    else {
       buildIncrementalSVD(u_in);
@@ -83,61 +83,59 @@ incremental_svd::increment(
 #ifdef DEBUG_ROMS
    if (d_rank == 0) {
       double* U = new double [d_dim*d_num_increments];
-      for (int i = 0; i < d_num_time_intervals; ++i) {
-         // Print d_S[i].
-         const Matrix* this_d_S = d_S[i];
-         for (int row = 0; row < d_num_increments; ++row) {
-            for (int col = 0; col < d_num_increments; ++col) {
-               printf("%g  ", this_d_S->item(row, col));
-            }
-            printf("\n");
+      // Print d_S[d_num_time_intervals - 1].
+      const Matrix* this_d_S = d_S[d_num_time_intervals - 1];
+      for (int row = 0; row < d_num_increments; ++row) {
+         for (int col = 0; col < d_num_increments; ++col) {
+            printf("%.16e  ", this_d_S->item(row, col));
          }
          printf("\n");
+      }
+      printf("\n");
 
-         // Print d_L[i].
-         const Matrix* this_d_L = d_L[i];
-         for (int row = 0; row < d_num_increments; ++row) {
-            for (int col = 0; col < d_num_increments; ++col) {
-               printf("%g  ", this_d_L->item(row, col));
-            }
-            printf("\n");
+      // Print d_L[d_num_time_intervals - 1].
+      const Matrix* this_d_L = d_L[d_num_time_intervals - 1];
+      for (int row = 0; row < d_num_increments; ++row) {
+         for (int col = 0; col < d_num_increments; ++col) {
+            printf("%.16e  ", this_d_L->item(row, col));
          }
          printf("\n");
+      }
+      printf("\n");
 
-         // Print process 0's part of d_U[i].
-         const Matrix* this_d_U = d_U[i];
+      // Print process 0's part of d_U[d_num_time_intervals - 1].
+      const Matrix* this_d_U = d_U[d_num_time_intervals - 1];
+      for (int row = 0; row < d_dim; ++row) {
+         for (int col = 0; col < d_num_increments; ++col) {
+            printf("%.16e ", this_d_U->item(row, col));
+         }
+         printf("\n");
+      }
+
+      // Gather other processor's parts of d_U[d_num_time_intervals - 1] and
+      // print them.
+      for (int proc = 1; proc < d_size; ++proc) {
+         MPI_Status status;
+         MPI_Recv(U, d_dim*d_num_increments, MPI_DOUBLE, proc,
+                  COMMUNICATE_U, MPI_COMM_WORLD, &status);
+         int idx = 0;
          for (int row = 0; row < d_dim; ++row) {
             for (int col = 0; col < d_num_increments; ++col) {
-               printf("%.16e ", this_d_U->item(row, col));
+               printf("%.16e ", U[idx++]);
             }
             printf("\n");
          }
-
-         // Gather other processor's parts of d_U[i] and print them.
-         for (int proc = 1; proc < d_size; ++proc) {
-            MPI_Status status;
-            MPI_Recv(U, d_dim*d_num_increments, MPI_DOUBLE, proc,
-                     COMMUNICATE_U, MPI_COMM_WORLD, &status);
-            int idx = 0;
-            for (int row = 0; row < d_dim; ++row) {
-               for (int col = 0; col < d_num_increments; ++col) {
-                  printf("%.16e ", U[idx++]);
-               }
-               printf("\n");
-            }
-         }
-         printf("============================================================\n");
       }
+      printf("============================================================\n");
       delete [] U;
    }
    else {
       // DOES THIS WORK??????????????????????????????????????
-      // Send this processor's part of d_U[i] to process 0.
-      for (int i = 0; i < d_num_time_intervals; ++i) {
-         MPI_Request request;
-         MPI_Isend(&d_U[i]->item(0, 0), d_dim*d_num_increments, MPI_DOUBLE, 0,
-                   COMMUNICATE_U, MPI_COMM_WORLD, &request);
-      }
+      // Send this processor's part of d_U[d_num_time_intervals - 1] to process 0.
+      MPI_Request request;
+      MPI_Isend(&d_U[d_num_time_intervals - 1]->item(0, 0),
+                d_dim*d_num_increments, MPI_DOUBLE, 0, COMMUNICATE_U,
+                MPI_COMM_WORLD, &request);
    }
 #endif
 }
@@ -470,6 +468,7 @@ incremental_svd::svd(
    dgesdd_(&jobz, &m, &n, A, &lda,
            sigma, &U->item(0, 0), &ldu, &V->item(0, 0), &ldv,
            work, &lwork, iwork, &info);
+   CAROM_ASSERT(info == 0);
    delete [] work;
 
    // Place sigma into S.
