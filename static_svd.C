@@ -47,6 +47,9 @@ static_svd::~static_svd()
    if (d_V) {
       delete d_V;
    }
+   for (int i = 0; i < static_cast<int>(d_state.size()); ++i) {
+      delete [] d_state[i];
+   }
 }
 
 void
@@ -192,6 +195,7 @@ static_svd::svd(
    dgesdd_(&jobz, &m, &n, A, &lda,
            sigma, U, &ldu, &d_V->item(0, 0), &ldv,
            work, &lwork, iwork, &info);
+   CAROM_ASSERT(info == 0);
    delete [] work;
    delete [] iwork;
 

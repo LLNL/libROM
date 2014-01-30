@@ -3,6 +3,7 @@
 
 #include "matrix.h"
 #include <vector>
+#include <string.h>
 
 namespace CAROM {
 
@@ -26,7 +27,9 @@ class static_svd
       collectState(
          double* u_in)
       {
-         d_state.push_back(u_in);
+         double* state = new double [d_dim];
+         memcpy(state, u_in, d_dim*sizeof(double));
+         d_state.push_back(state);
       }
 
       // Returns the dimension of the system.
