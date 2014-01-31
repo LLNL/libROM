@@ -18,10 +18,9 @@ class Vector
          int rank,
          int num_procs);
 
-      // Constructor in which vector is given storage managed by some other
-      // entity.
+      // Constructor in which vector is given its values.
       Vector(
-         double* vec,
+         const double* vec,
          int dim,
          bool distributed,
          int rank,
@@ -102,9 +101,6 @@ class Vector
 
       // The number of MPI processes.
       int d_num_procs;
-
-      // True if the object manages its storage.
-      bool d_manages_storage;
 };
 
 }

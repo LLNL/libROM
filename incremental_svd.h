@@ -27,7 +27,7 @@ class incremental_svd
       // Increment the SVD with the new state, u_in, at the given time.
       void
       increment(
-         double* u_in,
+         const double* u_in,
          double time);
 
       // Returns the tolerance used to determine if an increment is new.
@@ -96,13 +96,13 @@ class incremental_svd
       // Constructs the first svd.
       void
       buildInitialSVD(
-         double* u,
+         const double* u,
          double time);
 
       // Increments the svd given the state vector u.
       void
       buildIncrementalSVD(
-         double* u);
+         const double* u);
 
       // Compute J, P, and the norm of J given u.
       void

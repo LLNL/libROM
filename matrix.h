@@ -19,16 +19,6 @@ class Matrix
          int rank,
          int num_procs);
 
-      // Constructor in which matrix is given storage managed by some other
-      // entity.
-      Matrix(
-         double* mat,
-         int num_rows,
-         int num_cols,
-         bool distributed,
-         int rank,
-         int num_procs);
-
       // Destructor.
       ~Matrix();
 
@@ -130,9 +120,6 @@ class Matrix
 
       // The number of MPI processes.
       int d_num_procs;
-
-      // True if the object manages its storage.
-      bool d_manages_storage;
 };
 
 }

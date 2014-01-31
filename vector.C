@@ -3,6 +3,7 @@
 #include "mpi.h"
 
 #include <cmath>
+#include <string.h>
 
 namespace CAROM {
 
@@ -14,8 +15,7 @@ Vector::Vector(
    d_dim(dim),
    d_distributed(distributed),
    d_rank(rank),
-   d_num_procs(num_procs),
-   d_manages_storage(true)
+   d_num_procs(num_procs)
 {
    CAROM_ASSERT(dim > 0);
    CAROM_ASSERT(rank < num_procs);
@@ -23,7 +23,7 @@ Vector::Vector(
 }
 
 Vector::Vector(
-   double* vec,
+   const double* vec,
    int dim,
    bool distributed,
    int rank,
@@ -31,19 +31,17 @@ Vector::Vector(
    d_dim(dim),
    d_distributed(distributed),
    d_rank(rank),
-   d_num_procs(num_procs),
-   d_manages_storage(false)
+   d_num_procs(num_procs)
 {
    CAROM_ASSERT(dim > 0);
    CAROM_ASSERT(rank < num_procs);
-   d_vec = vec;
+   d_vec = new double [dim];
+   memcpy(d_vec, vec, dim*sizeof(double));
 }
 
 Vector::~Vector()
 {
-   if (d_manages_storage) {
-      delete [] d_vec;
-   }
+   delete [] d_vec;
 }
 
 double

@@ -67,7 +67,7 @@ incremental_svd::~incremental_svd()
 
 void
 incremental_svd::increment(
-   double* u_in,
+   const double* u_in,
    double time)
 {
    // If this is the first SVD then build it.  Otherwise add this increment to
@@ -222,7 +222,7 @@ incremental_svd::readModel(
 
 void
 incremental_svd::buildInitialSVD(
-   double* u,
+   const double* u,
    double time)
 {
    // We have a new time interval.
@@ -277,7 +277,7 @@ incremental_svd::buildInitialSVD(
 
 void
 incremental_svd::buildIncrementalSVD(
-   double* u)
+   const double* u)
 {
    // Compute j, P and the norm of j.
    Vector* j;
@@ -355,10 +355,7 @@ incremental_svd::compute_J_P_normJ(
    Matrix*& P)
 {
    // j = u
-   j = new Vector(d_dim, true, d_rank, d_size);
-   for (int i = 0; i < d_dim; ++i) {
-      j->item(i) = u[i];
-   }
+   j = new Vector(u, d_dim, true, d_rank, d_size);
 
    // P = d_U[d_num_time_intervals-1] * d_L[d_num_time_intervals-1]
    P = d_U[d_num_time_intervals-1]->Mult(*d_L[d_num_time_intervals-1]);

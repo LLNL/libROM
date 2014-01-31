@@ -14,8 +14,7 @@ Matrix::Matrix(
    d_num_cols(num_cols),
    d_distributed(distributed),
    d_rank(rank),
-   d_num_procs(num_procs),
-   d_manages_storage(true)
+   d_num_procs(num_procs)
 {
    CAROM_ASSERT(num_rows > 0);
    CAROM_ASSERT(num_cols > 0);
@@ -23,31 +22,9 @@ Matrix::Matrix(
    d_mat = new double [num_cols*num_rows];
 }
 
-Matrix::Matrix(
-   double* mat,
-   int num_rows,
-   int num_cols,
-   bool distributed,
-   int rank,
-   int num_procs) :
-   d_num_rows(num_rows),
-   d_num_cols(num_cols),
-   d_distributed(distributed),
-   d_rank(rank),
-   d_num_procs(num_procs),
-   d_manages_storage(false)
-{
-   CAROM_ASSERT(num_rows > 0);
-   CAROM_ASSERT(num_cols > 0);
-   CAROM_ASSERT(rank < num_procs);
-   d_mat = mat;
-}
-
 Matrix::~Matrix()
 {
-   if (d_manages_storage) {
-      delete [] d_mat;
-   }
+   delete [] d_mat;
 }
 
 Matrix*
