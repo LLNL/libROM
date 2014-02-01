@@ -165,15 +165,15 @@ class incremental_svd
       // For each time interval, the matrix U distributed across all
       // processors.  Each d_U is the part of the distributed matrix local to
       // the processor owning this object.
-      std::vector<Matrix*> d_U;
+      Matrix* d_U;
 
       // For each time interval, the matrix L.  L is not distributed and the
       // entire matrix exists on each processor.
-      std::vector<Matrix*> d_L;
+      Matrix* d_L;
 
       // For each time interval, the matrix S.  S is not distributed and the
       // entire matrix exists on each processor.
-      std::vector<Matrix*> d_S;
+      Matrix* d_S;
 
       // For each time interval, the model parameters distributed across all
       // processors.  Each d_model is the part of the distributed model
