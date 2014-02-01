@@ -65,9 +65,6 @@ int main(int argc, char* argv[])
       }
    }
    const CAROM::Matrix* inc_model = inc_rom.getModel(0.0);
-#ifndef DEBUG_ROMS
-   NULL_USE(inc_model);
-#endif
    double stop_inc = MPI_Wtime();
    double incremental_run_time = stop_inc - start_inc;
    double global_incremental_run_time;
@@ -81,7 +78,9 @@ int main(int argc, char* argv[])
    if (rank == 0) {
       printf("incremental run time = %g\n", global_incremental_run_time/size);
    }
-#ifdef DEBUG_ROMS
+#ifndef DEBUG_ROMS
+   NULL_USE(inc_model);
+#else
    double start_static = MPI_Wtime();
    for (int i = 0; i < num_snapshots; ++i) {
       if (static_rom.isNextSnapshot(0.01*i)) {
