@@ -54,7 +54,7 @@ Vector::dot(
    for (int i = 0; i < d_dim; ++i) {
       local_ip += d_vec[i]*other.d_vec[i];
    }
-   if (d_num_procs > 1) {
+   if (d_num_procs > 1 && d_distributed) {
       MPI_Allreduce(&local_ip, &ip, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
    }
    else {
