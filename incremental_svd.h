@@ -58,7 +58,7 @@ class incremental_svd
          return d_size;
       }
 
-      // Returns the model parameters for the given time, d_U*d_L, as a Matrix.
+      // Returns the model parameters for the given time, d_U, as a Matrix.
       const Matrix*
       getModel(
          double time);
@@ -79,6 +79,12 @@ class incremental_svd
       void
       readModel(
          const std::string& base_file_name);
+
+      double
+      checkOrthogonality();
+
+      void
+      reOrthogonalize();
 
    private:
       // Unimplemented default constructor.
@@ -104,26 +110,12 @@ class incremental_svd
       buildIncrementalSVD(
          const double* u);
 
-      // Compute J, P, and the norm of J given u.
-      void
-      compute_J_P_normJ(
-         const double* u,
-         Vector*& j,
-         Matrix*& P);
-
-      // Use modified Gram-Schmidt orthogonalization to modify j then compute
-      // its norm.
-      void
-      orthogonalizeJAndComputeNorm(
-         Vector* j,
-         const Matrix* P);
-
       // Construct the Q matrix which will be passed to svd.
       void
       constructQ(
          double*& Q,
          const Vector* l,
-         double norm_j);
+         double k);
 
       // Given a matrix, A, returns the 3 components of the singular value
       // decomposition.
@@ -131,8 +123,7 @@ class incremental_svd
       svd(
          double* A,
          Matrix*& U,
-         Matrix*& S,
-         Matrix*& V);
+         Matrix*& S);
 
       // Add a redundant increment to the svd.
       void
@@ -162,17 +153,12 @@ class incremental_svd
       // The number of increments to be collected for each time interval.
       int d_increments_per_time_interval;
 
-      // For each time interval, the matrix U distributed across all
-      // processors.  Each d_U is the part of the distributed matrix local to
-      // the processor owning this object.
+      // The matrix U distributed across all processors.  Each processor's d_U
+      // is the part of the distributed matrix local to that processor.
       Matrix* d_U;
 
-      // For each time interval, the matrix L.  L is not distributed and the
-      // entire matrix exists on each processor.
-      Matrix* d_L;
-
-      // For each time interval, the matrix S.  S is not distributed and the
-      // entire matrix exists on each processor.
+      // The matrix S.  S is not distributed and the entire matrix exists on
+      // each processor.
       Matrix* d_S;
 
       // For each time interval, the model parameters distributed across all
