@@ -149,18 +149,7 @@ incremental_svd::getModel(
          break;
       }
    }
-
-   // If this model is for the last time interval then it may not be up to
-   // date so recompute it.
-   if (i == d_num_time_intervals-1) {
-      if (d_model[i] != 0) {
-         delete d_model[i];
-      }
-      d_model[i] = d_U->Mult(*d_Up);
-   }
-   else {
-      CAROM_ASSERT(d_model[i] != 0);
-   }
+   CAROM_ASSERT(d_model[i] != 0);
    return d_model[i];
 }
 
@@ -270,17 +259,9 @@ incremental_svd::buildInitialSVD(
    d_time_interval_start_times[d_num_time_intervals-1] = time;
    d_model.resize(d_num_time_intervals);
 
-   // Set the model for this time interval to 0.
-   d_model[d_num_time_intervals-1] = 0;
-
-   // If this is not the first time interval then compute the model parameters
-   // for the previous time interval and delete the now unnecessary storage for
-   // d_U, d_Up, and d_S for the previous time interval.
+   // If this is not the first time interval then delete d_U, d_Up, and d_S
+   // from the previous time interval.
    if (d_num_time_intervals > 1) {
-      if (d_model[d_num_time_intervals-2] != 0) {
-         delete d_model[d_num_time_intervals-2];
-      }
-      d_model[d_num_time_intervals-2] = d_U->Mult(*d_Up);
       delete d_U;
       delete d_Up;
       delete d_S;
@@ -302,6 +283,9 @@ incremental_svd::buildInitialSVD(
       d_U->item(i, 0) = u[i]/norm_u;
    }
 
+   // Set the model for this time interval.
+   d_model[d_num_time_intervals-1] = new Matrix(*d_U);
+
    // We now have the first increment for the new time interval.
    d_num_increments = 1;
 }
@@ -310,13 +294,13 @@ void
 incremental_svd::buildIncrementalSVD(
    const double* u)
 {
-   // l = d_U' * u
+   // l = (U*Up)' * u
    Vector u_vec(u, d_dim, true, d_rank, d_size);
-   Vector* l = d_U->TransposeMult(u_vec);
+   Vector* l = d_model[d_num_time_intervals-1]->TransposeMult(u_vec);
 
-   // Compute k = u.u - 2*l.l + (U*l).(U*l)
-   Vector* tmp = d_U->Mult(*l);
-   double k = u_vec.dot(u_vec) - 2*(l->dot(*l)) + (tmp->dot(*tmp));
+   // Compute k = u.u - 2*l.l + ((U*Up)*l).((U*Up)*l)
+   Vector* UUpl = d_model[d_num_time_intervals-1]->Mult(*l);
+   double k = u_vec.dot(u_vec) - 2*(l->dot(*l)) + (UUpl->dot(*UUpl));
    if (k <= 0) {
       k = 0;
    }
@@ -370,7 +354,7 @@ incremental_svd::buildIncrementalSVD(
       // Compute j.
       Vector* j = new Vector(d_dim, true, d_rank, d_size);
       for (int i = 0; i < d_dim; ++i) {
-         j->item(i) = (u_vec.item(i) - tmp->item(i)) / k;
+         j->item(i) = (u_vec.item(i) - UUpl->item(i)) / k;
       }
 
       // addNewIncrement will assign sigma to d_S hence it should not be
@@ -379,8 +363,12 @@ incremental_svd::buildIncrementalSVD(
       delete j;
    }
 
+   // Compute the model parameters.
+   delete d_model[d_num_time_intervals - 1];
+   d_model[d_num_time_intervals - 1] = d_U->Mult(*d_Up);
+
    // Clean up.
-   delete tmp;
+   delete UUpl;
    delete l;
    delete A;
 }
@@ -503,7 +491,7 @@ incremental_svd::addNewIncrement(
    const Matrix* A,
    Matrix* sigma)
 {
-   // Add j as a new column of d_U.  Then multiply by A to form a new d_U.
+   // Add j as a new column of d_U.
    Matrix* newU = new Matrix(d_dim, d_num_increments+1, true, d_rank, d_size);
    for (int row = 0; row < d_dim; ++row) {
       for (int col = 0; col < d_num_increments; ++col) {
