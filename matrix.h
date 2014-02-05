@@ -19,6 +19,10 @@ class Matrix
          int rank,
          int num_procs);
 
+      // Copy constructor.
+      Matrix(
+         const Matrix& other);
+
       // Destructor.
       ~Matrix();
 
@@ -50,6 +54,13 @@ class Matrix
       Matrix*
       Mult(
          const Matrix& other) const;
+
+      // Multiplies this matrix with other and returns the product.  Supports
+      // multiplication of a distributed matrix and an undistributed vector
+      // vector returning a distributed vector.
+      Vector*
+      Mult(
+         const Vector& other) const;
 
       // Multiplies the transpose of this matrix with other and returns the
       // product.  Supports multiplication of two undistributed matrices
@@ -92,10 +103,6 @@ class Matrix
    private:
       // Default constructor is not implemented.
       Matrix();
-
-      // Copy constructor is not implemented.
-      Matrix(
-         const Matrix& other);
 
       // Assignment operator is not implemented.
       Matrix&

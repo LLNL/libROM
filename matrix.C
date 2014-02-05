@@ -1,6 +1,7 @@
 #include "matrix.h"
 
 #include "mpi.h"
+#include <string.h>
 
 namespace CAROM {
 
@@ -20,6 +21,19 @@ Matrix::Matrix(
    CAROM_ASSERT(num_cols > 0);
    CAROM_ASSERT(rank < num_procs);
    d_mat = new double [num_cols*num_rows];
+}
+
+Matrix::Matrix(
+   const Matrix& other) :
+   d_num_rows(other.d_num_rows),
+   d_num_cols(other.d_num_cols),
+   d_distributed(other.d_distributed),
+   d_rank(other.d_rank),
+   d_num_procs(other.d_num_procs)
+{
+   int num_entries = d_num_cols*d_num_rows;
+   d_mat = new double [num_entries];
+   memcpy(d_mat, other.d_mat, num_entries*sizeof(double));
 }
 
 Matrix::~Matrix()
@@ -45,6 +59,22 @@ Matrix::Mult(
             result->item(this_row, other_col) +=
                item(this_row, entry)*other.item(entry, other_col);
          }
+      }
+   }
+   return result;
+}
+
+Vector*
+Matrix::Mult(
+   const Vector& other) const
+{
+   CAROM_ASSERT(d_distributed && !other.distributed());
+   CAROM_ASSERT(d_num_cols == other.dim());
+   Vector* result = new Vector(d_num_rows, true, d_rank, d_num_procs);
+   for (int this_row = 0; this_row < d_num_rows; ++this_row) {
+      result->item(this_row) = 0.0;
+      for (int entry = 0; entry < d_num_cols; ++entry) {
+         result->item(this_row) += item(this_row, entry)*other.item(entry);
       }
    }
    return result;
