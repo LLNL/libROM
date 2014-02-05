@@ -82,6 +82,18 @@ class incremental_svd_time_stepper
          d_isvd->readModel(base_file_name);
       }
 
+      double
+      checkOrthogonality()
+      {
+         return d_isvd->checkOrthogonality();
+      }
+
+      void
+      reOrthogonalize()
+      {
+         d_isvd->reOrthogonalize();
+      }
+
    private:
       // Unimplemented default constructor.
       incremental_svd_time_stepper();
