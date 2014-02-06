@@ -16,7 +16,13 @@ int main(int argc, char* argv[])
    int num_lin_dep_snapshots = atoi(argv[3]);
    int num_lin_indep_snapshots = num_snapshots - num_lin_dep_snapshots;
    MPI_Init(&argc, &argv);
-   CAROM::incremental_svd_rom inc_rom(dim, 1.0e-6, false, num_snapshots, 1);
+   CAROM::incremental_svd_rom inc_rom(dim,
+                                      1.0e-6,
+                                      false,
+                                      num_snapshots,
+                                      1.0e-2,
+                                      0.001,
+                                      true);
 #ifdef DEBUG_ROMS
    CAROM::static_svd_rom static_rom(dim);
 #endif

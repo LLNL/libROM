@@ -1,4 +1,4 @@
-#include "incremental_svd.h"
+#include "incremental_svd_fast_update.h"
 
 #include "mpi.h"
 
@@ -7,48 +7,20 @@
 #include <string.h>
 #include <stdio.h>
 
-extern "C" {
-void dgesdd_(char*, int*, int*, double*, int*,
-             double*, double*, int*, double*, int*,
-             double*, int*, int*, int*);
-}
-
 namespace CAROM {
 
-const int incremental_svd::COMMUNICATE_U = 666;
-
-incremental_svd::incremental_svd(
+incremental_svd_fast_update::incremental_svd_fast_update(
    int dim,
    double epsilon,
    bool skip_redundant,
    int increments_per_time_interval) :
-   d_dim(dim),
-   d_num_increments(0),
-   d_epsilon(epsilon),
-   d_skip_redundant(skip_redundant),
-   d_increments_per_time_interval(increments_per_time_interval),
+   incremental_svd(dim, epsilon, skip_redundant, increments_per_time_interval),
    d_U(0),
-   d_Up(0),
-   d_S(0),
-   d_model(0),
-   d_num_time_intervals(0),
-   d_time_interval_start_times(0),
-   d_norm_j(0.0)
+   d_Up(0)
 {
-   // Get the rank of this process, and get the number of processors.
-   int mpi_init;
-   MPI_Initialized(&mpi_init);
-   if (mpi_init) {
-      MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
-      MPI_Comm_size(MPI_COMM_WORLD, &d_size);
-   }
-   else {
-      d_rank = 0;
-      d_size = 1;
-   }
 }
 
-incremental_svd::~incremental_svd()
+incremental_svd_fast_update::~incremental_svd_fast_update()
 {
    // Delete data members.
    if (d_U) {
@@ -57,18 +29,10 @@ incremental_svd::~incremental_svd()
    if (d_Up) {
       delete d_Up;
    }
-   if (d_S) {
-      delete d_S;
-   }
-   for (int i = 0; i < d_num_time_intervals; ++i) {
-      if (d_model[i]) {
-         delete d_model[i];
-      }
-   }
 }
 
 void
-incremental_svd::increment(
+incremental_svd_fast_update::increment(
    const double* u_in,
    double time)
 {
@@ -83,8 +47,8 @@ incremental_svd::increment(
    }
 
 #ifdef DEBUG_ROMS
+   const Matrix* model = getModel(time);
    if (d_rank == 0) {
-      double* U = new double [d_dim*d_num_increments];
       // Print d_S.
       for (int row = 0; row < d_num_increments; ++row) {
          for (int col = 0; col < d_num_increments; ++col) {
@@ -94,43 +58,35 @@ incremental_svd::increment(
       }
       printf("\n");
 
-      // Print d_Up.
-      for (int row = 0; row < d_num_increments; ++row) {
-         for (int col = 0; col < d_num_increments; ++col) {
-            printf("%.16e  ", d_Up->item(row, col));
-         }
-         printf("\n");
-      }
-      printf("\n");
-
-      // Print process 0's part of d_U.
+      // Print process 0's part of the model.
       for (int row = 0; row < d_dim; ++row) {
          for (int col = 0; col < d_num_increments; ++col) {
-            printf("%.16e ", d_U->item(row, col));
+            printf("%.16e ", model->item(row, col));
          }
          printf("\n");
       }
 
-      // Gather other processor's parts of d_U and print them.
+      // Gather other processor's parts of the model and print them.
+      double* m = new double[d_dim*d_num_increments];
       for (int proc = 1; proc < d_size; ++proc) {
          MPI_Status status;
-         MPI_Recv(U, d_dim*d_num_increments, MPI_DOUBLE, proc,
+         MPI_Recv(m, d_dim*d_num_increments, MPI_DOUBLE, proc,
                   COMMUNICATE_U, MPI_COMM_WORLD, &status);
          int idx = 0;
          for (int row = 0; row < d_dim; ++row) {
             for (int col = 0; col < d_num_increments; ++col) {
-               printf("%.16e ", U[idx++]);
+               printf("%.16e ", m[idx++]);
             }
             printf("\n");
          }
       }
       printf("============================================================\n");
-      delete [] U;
+      delete [] m;
    }
    else {
-      // Send this processor's part of d_U to process 0.
+      // Send this processor's part of the model to process 0.
       MPI_Request request;
-      MPI_Isend(&d_U->item(0, 0),
+      MPI_Isend(const_cast<double*>(&model->item(0, 0)),
                 d_dim*d_num_increments, MPI_DOUBLE, 0, COMMUNICATE_U,
                 MPI_COMM_WORLD, &request);
    }
@@ -138,7 +94,7 @@ incremental_svd::increment(
 }
 
 const Matrix*
-incremental_svd::getModel(
+incremental_svd_fast_update::getModel(
    double time)
 {
    CAROM_ASSERT(0 < d_num_time_intervals);
@@ -153,78 +109,28 @@ incremental_svd::getModel(
    return d_model[i];
 }
 
-void
-incremental_svd::writeModel(
-   const std::string& base_file_name)
-{
-   CAROM_ASSERT(!base_file_name.empty());
-
-   char tmp[10];
-   sprintf(tmp, ".%06d", d_rank);
-   std::string full_file_name = base_file_name + tmp;
-   database.create(full_file_name);
-   database.putInteger("num_time_intervals", d_num_time_intervals);
-   for (int i = 0; i < d_num_time_intervals; ++i) {
-      const Matrix* model = getModel(d_time_interval_start_times[i]);
-      database.putDouble("time", d_time_interval_start_times[i]);
-      int num_rows = model->numRows();
-      database.putInteger("num_rows", num_rows);
-      int num_cols = model->numColumns();
-      database.putInteger("num_cols", num_cols);
-      database.putDoubleArray("model", &model->item(0, 0), num_rows*num_cols);
-   }
-   database.close();
-}
-
-void
-incremental_svd::readModel(
-   const std::string& base_file_name)
-{
-   CAROM_ASSERT(!base_file_name.empty());
-
-   char tmp[10];
-   sprintf(tmp, ".%06d", d_rank);
-   std::string full_file_name = base_file_name + tmp;
-   database.open(full_file_name);
-   database.getInteger("num_time_intervals", d_num_time_intervals);
-   d_time_interval_start_times.resize(d_num_time_intervals);
-   d_model.resize(d_num_time_intervals, 0);
-   for (int i = 0; i < d_num_time_intervals; ++i) {
-      database.getDouble("time", d_time_interval_start_times[i]);
-      int num_rows;
-      database.getInteger("num_rows", num_rows);
-      int num_cols;
-      database.getInteger("num_cols", num_cols);
-      d_model[i] = new Matrix(num_rows, num_cols, true, d_rank, d_size);
-      database.getDoubleArray("model",
-                              &d_model[i]->item(0, 0),
-                              num_rows*num_cols);
-   }
-   database.close();
-}
-
 double
-incremental_svd::checkOrthogonality()
+incremental_svd_fast_update::checkOrthogonality()
 {
    double result = 0.0;
    if (d_num_increments > 1) {
       int last_col = d_num_increments-1;
-      for (int i = 0; i < d_dim; ++i) {
-         result += d_U->item(i, 0)*d_U->item(i, last_col);
+      for (int i = 0; i < d_num_increments; ++i) {
+         result += d_Up->item(i, 0)*d_Up->item(i, last_col);
       }
    }
    return result;
 }
 
 void
-incremental_svd::reOrthogonalize()
+incremental_svd_fast_update::reOrthogonalize()
 {
    for (int work = 1; work < d_num_increments; ++work) {
       for (int col = 0; col < work; ++col) {
          double factor = 0.0;
          double tmp = 0.0;
-         for (int i = 0; i < d_dim; ++i) {
-            tmp += d_U->item(i, col)*d_U->item(i, work);
+         for (int i = 0; i < d_num_increments; ++i) {
+            tmp += d_Up->item(i, col)*d_Up->item(i, work);
          }
          if (d_size > 1) {
             MPI_Allreduce(&tmp, &factor, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -233,23 +139,23 @@ incremental_svd::reOrthogonalize()
             factor = tmp;
          }
 
-         for (int i = 0; i < d_dim; ++i) {
-            d_U->item(i, work) -= factor*d_U->item(i, col);
+         for (int i = 0; i < d_num_increments; ++i) {
+            d_Up->item(i, work) -= factor*d_Up->item(i, col);
          }
       }
-      double norm = 0;
-      for (int i = 0; i < d_dim; ++i) {
-         norm += d_U->item(i, work)*d_U->item(i, work);
+      double norm = 0.0;
+      for (int i = 0; i < d_num_increments; ++i) {
+         norm += d_Up->item(i, work)*d_Up->item(i, work);
       }
       norm = sqrt(norm);
-      for (int i = 0; i < d_dim; ++i) {
-         d_U->item(i, work) /= norm;
+      for (int i = 0; i < d_num_increments; ++i) {
+         d_Up->item(i, work) /= norm;
       }
    }
 }
 
 void
-incremental_svd::buildInitialSVD(
+incremental_svd_fast_update::buildInitialSVD(
    const double* u,
    double time)
 {
@@ -291,16 +197,15 @@ incremental_svd::buildInitialSVD(
 }
 
 void
-incremental_svd::buildIncrementalSVD(
+incremental_svd_fast_update::buildIncrementalSVD(
    const double* u)
 {
-   // l = (U*Up)' * u
+   // l = model' * u
    Vector u_vec(u, d_dim, true, d_rank, d_size);
    Vector* l = d_model[d_num_time_intervals-1]->TransposeMult(u_vec);
 
-   // Compute k = u.u - 2*l.l + ((U*Up)*l).((U*Up)*l)
-   Vector* UUpl = d_model[d_num_time_intervals-1]->Mult(*l);
-   double k = u_vec.dot(u_vec) - 2*(l->dot(*l)) + (UUpl->dot(*UUpl));
+   // Compute k = u.u - l.l
+   double k = u_vec.dot(u_vec) - l->dot(*l);
    if (k <= 0) {
       k = 0;
    }
@@ -351,16 +256,31 @@ incremental_svd::buildIncrementalSVD(
    else if (is_new_increment) {
       // This increment is new.
 
-      // Compute j.
-      Vector* j = new Vector(d_dim, true, d_rank, d_size);
+      // Compute j
+      Vector* modell = d_model[d_num_time_intervals-1]->Mult(*l);
+      Vector* j = u_vec.subtract(modell);
+      delete modell;
       for (int i = 0; i < d_dim; ++i) {
-         j->item(i) = (u_vec.item(i) - UUpl->item(i)) / k;
+         j->item(i) /= k;
       }
 
       // addNewIncrement will assign sigma to d_S hence it should not be
       // deleted upon return.
       addNewIncrement(j, A, sigma);
       delete j;
+
+      // Reorthogonalize if necessary.
+      int max_U_dim;
+      if (d_dim*d_size > d_num_increments) {
+         max_U_dim = d_dim*d_size;
+      }
+      else {
+         max_U_dim = d_num_increments;
+      }
+      if (checkOrthogonality() >
+          std::numeric_limits<double>::epsilon()*max_U_dim) {
+         reOrthogonalize();
+      }
    }
 
    // Compute the model parameters.
@@ -368,104 +288,12 @@ incremental_svd::buildIncrementalSVD(
    d_model[d_num_time_intervals - 1] = d_U->Mult(*d_Up);
 
    // Clean up.
-   delete UUpl;
    delete l;
    delete A;
 }
 
 void
-incremental_svd::constructQ(
-   double*& Q,
-   const Vector* l,
-   double k)
-{
-   // Create Q.
-   Q = new double [(d_num_increments+1)*(d_num_increments+1)];
-
-   // Fill Q in column major order.
-   int q_idx = 0;
-   for (int row = 0; row < d_num_increments; ++row) {
-      q_idx = row;
-      for (int col = 0; col < d_num_increments; ++col) {
-         Q[q_idx] = d_S->item(row, col);
-         q_idx += d_num_increments+1;
-      }
-      Q[q_idx] = l->item(row);
-   }
-   q_idx = d_num_increments;
-   for (int col = 0; col < d_num_increments; ++col) {
-      Q[q_idx] = 0.0;
-      q_idx += d_num_increments+1;
-   }
-   Q[q_idx] = k;
-}
-
-void
-incremental_svd::svd(
-   double* A,
-   Matrix*& U,
-   Matrix*& S)
-{
-   // Construct U, S, and V.
-   U = new Matrix(d_num_increments+1,
-                  d_num_increments+1,
-                  false,
-                  d_rank,
-                  d_size);
-   S = new Matrix(d_num_increments+1,
-                  d_num_increments+1,
-                  false,
-                  d_rank,
-                  d_size);
-   Matrix* V = new Matrix(d_num_increments+1,
-                          d_num_increments+1,
-                          false,
-                          d_rank,
-                          d_size);
-   for (int row = 0; row < d_num_increments+1; ++row) {
-      for (int col = 0; col < d_num_increments+1; ++col) {
-         S->item(row, col) = 0.0;
-      }
-   }
-
-   // Use lapack's dgesdd_ Fortran function to perform the svd.  As this is
-   // Fortran A and all the computed matrices are in column major order.
-   double* sigma = new double [d_num_increments+1];
-   char jobz = 'A';
-   int m = d_num_increments+1;
-   int n = d_num_increments+1;
-   int lda = d_num_increments+1;
-   int ldu = d_num_increments+1;
-   int ldv = d_num_increments+1;
-   int lwork = m*(4*m + 7);
-   double* work = new double [lwork];
-   int iwork[8*m];
-   int info;
-   dgesdd_(&jobz, &m, &n, A, &lda,
-           sigma, &U->item(0, 0), &ldu, &V->item(0, 0), &ldv,
-           work, &lwork, iwork, &info);
-   CAROM_ASSERT(info == 0);
-   delete [] work;
-
-   // Place sigma into S.
-   for (int i = 0; i < d_num_increments+1; ++i) {
-      S->item(i, i) = sigma[i];
-   }
-   delete [] sigma;
-
-   // U is column major order so convert it to row major order.
-   for (int row = 0; row < d_num_increments+1; ++row) {
-      for (int col = row+1; col < d_num_increments+1; ++col) {
-         double tmp = U->item(row, col);
-         U->item(row, col) = U->item(col, row);
-         U->item(col, row) = tmp;
-      }
-   }
-   delete V;
-}
-
-void
-incremental_svd::addRedundantIncrement(
+incremental_svd_fast_update::addRedundantIncrement(
    const Matrix* A,
    const Matrix* sigma)
 {
@@ -486,7 +314,7 @@ incremental_svd::addRedundantIncrement(
 }
 
 void
-incremental_svd::addNewIncrement(
+incremental_svd_fast_update::addNewIncrement(
    const Vector* j,
    const Matrix* A,
    Matrix* sigma)

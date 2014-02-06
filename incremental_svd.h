@@ -8,7 +8,7 @@
 
 namespace CAROM {
 
-// A class which embodies the incremental SVD algorithm.  The API is
+// An abstract class which embodies the incremental SVD algorithm.  The API is
 // intentionally small.  One may increment the SVD, get the tolerance used
 // to determine if an increment is new, and get the dimension of the system.
 class incremental_svd
@@ -22,13 +22,14 @@ class incremental_svd
          int increments_per_time_interval);
 
       // Destructor.
-      ~incremental_svd();
+      virtual ~incremental_svd();
 
       // Increment the SVD with the new state, u_in, at the given time.
+      virtual
       void
       increment(
          const double* u_in,
-         double time);
+         double time) = 0;
 
       // Returns the tolerance used to determine if an increment is new.
       double
@@ -59,9 +60,10 @@ class incremental_svd
       }
 
       // Returns the model parameters for the given time, d_U, as a Matrix.
+      virtual
       const Matrix*
       getModel(
-         double time);
+         double time) = 0;
 
       // Returns the value of the norm of J cached by increment.
       double
@@ -80,36 +82,17 @@ class incremental_svd
       readModel(
          const std::string& base_file_name);
 
+      // Returns the orthogonality of the system.
+      virtual
       double
-      checkOrthogonality();
+      checkOrthogonality() = 0;
 
+      // Reorthogonalizes the system.
+      virtual
       void
-      reOrthogonalize();
+      reOrthogonalize() = 0;
 
-   private:
-      // Unimplemented default constructor.
-      incremental_svd();
-
-      // Unimplemented copy constructor.
-      incremental_svd(
-         const incremental_svd& other);
-
-      // Unimplemented assignment operator.
-      incremental_svd&
-      operator = (
-         const incremental_svd& rhs);
-
-      // Constructs the first svd.
-      void
-      buildInitialSVD(
-         const double* u,
-         double time);
-
-      // Increments the svd given the state vector u.
-      void
-      buildIncrementalSVD(
-         const double* u);
-
+   protected:
       // Construct the Q matrix which will be passed to svd.
       void
       constructQ(
@@ -125,18 +108,7 @@ class incremental_svd
          Matrix*& U,
          Matrix*& S);
 
-      // Add a redundant increment to the svd.
-      void
-      addRedundantIncrement(
-         const Matrix* A,
-         const Matrix* sigma);
-
-      // Add a new, unique increment to the svd.
-      void
-      addNewIncrement(
-         const Vector* j,
-         const Matrix* A,
-         Matrix* sigma);
+   protected:
 
       // Dimension of the system.
       int d_dim;
@@ -152,10 +124,6 @@ class incremental_svd
 
       // The number of increments to be collected for each time interval.
       int d_increments_per_time_interval;
-
-      // The matrix U distributed across all processors.  Each processor's d_U
-      // is the part of the distributed matrix local to that processor.
-      Matrix* d_U;
 
       // The matrix S.  S is not distributed and the entire matrix exists on
       // each processor.
@@ -182,10 +150,23 @@ class incremental_svd
       double d_norm_j;
 
       // Database to read/write model parameters from/to.
-      HDFDatabase database;
+      HDFDatabase d_database;
 
       // MPI message tag.
       static const int COMMUNICATE_U;
+
+   private:
+      // Unimplemented default constructor.
+      incremental_svd();
+
+      // Unimplemented copy constructor.
+      incremental_svd(
+         const incremental_svd& other);
+
+      // Unimplemented assignment operator.
+      incremental_svd&
+      operator = (
+         const incremental_svd& rhs);
 };
 
 }

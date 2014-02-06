@@ -12,7 +12,13 @@ int main(int argc, char* argv[])
    }
    int dim = atoi(argv[1]);
    MPI_Init(&argc, &argv);
-   CAROM::incremental_svd_rom inc_rom(dim, 1.0e-2, false, 2, 1);
+   CAROM::incremental_svd_rom inc_rom(dim,
+                                      1.0e-2,
+                                      false,
+                                      2,
+                                      1.0e-2,
+                                      0.11,
+                                      true);
    int size;
    MPI_Comm_size(MPI_COMM_WORLD, &size);
    int rank;

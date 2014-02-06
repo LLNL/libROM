@@ -43,8 +43,8 @@ incremental_svd_naive::increment(
    }
 
 #ifdef DEBUG_ROMS
+   const Matrix* model = getModel(time);
    if (d_rank == 0) {
-      double* U = new double [d_dim*d_num_increments];
       // Print d_S.
       for (int row = 0; row < d_num_increments; ++row) {
          for (int col = 0; col < d_num_increments; ++col) {
@@ -54,34 +54,35 @@ incremental_svd_naive::increment(
       }
       printf("\n");
 
-      // Print process 0's part of d_U.
+      // Print process 0's part of the model.
       for (int row = 0; row < d_dim; ++row) {
          for (int col = 0; col < d_num_increments; ++col) {
-            printf("%.16e ", d_U->item(row, col));
+            printf("%.16e ", model->item(row, col));
          }
          printf("\n");
       }
 
-      // Gather other processor's parts of d_U and print them.
+      // Gather other processor's parts of the model and print them.
+      double* m = new double[d_dim*d_num_increments];
       for (int proc = 1; proc < d_size; ++proc) {
          MPI_Status status;
-         MPI_Recv(U, d_dim*d_num_increments, MPI_DOUBLE, proc,
+         MPI_Recv(m, d_dim*d_num_increments, MPI_DOUBLE, proc,
                   COMMUNICATE_U, MPI_COMM_WORLD, &status);
          int idx = 0;
          for (int row = 0; row < d_dim; ++row) {
             for (int col = 0; col < d_num_increments; ++col) {
-               printf("%.16e ", U[idx++]);
+               printf("%.16e ", m[idx++]);
             }
             printf("\n");
          }
       }
       printf("============================================================\n");
-      delete [] U;
+      delete [] m;
    }
    else {
-      // Send this processor's part of d_U to process 0.
+      // Send this processor's part of the model to process 0.
       MPI_Request request;
-      MPI_Isend(&d_U->item(0, 0),
+      MPI_Isend(const_cast<double*>(&model->item(0, 0)),
                 d_dim*d_num_increments, MPI_DOUBLE, 0, COMMUNICATE_U,
                 MPI_COMM_WORLD, &request);
    }
@@ -149,7 +150,7 @@ incremental_svd_naive::reOrthogonalize()
             d_U->item(i, work) -= factor*d_U->item(i, col);
          }
       }
-      double norm = 0;
+      double norm = 0.0;
       for (int i = 0; i < d_dim; ++i) {
          norm += d_U->item(i, work)*d_U->item(i, work);
       }
@@ -206,13 +207,12 @@ void
 incremental_svd_naive::buildIncrementalSVD(
    const double* u)
 {
-   // l = d_U' * u
+   // l = model' * u
    Vector u_vec(u, d_dim, true, d_rank, d_size);
    Vector* l = d_U->TransposeMult(u_vec);
 
-   // Compute k = u.u - 2*l.l + (U*l).(U*l)
-   Vector* tmp = d_U->Mult(*l);
-   double k = u_vec.dot(u_vec) - 2*(l->dot(*l)) + (tmp->dot(*tmp));
+   // Compute k = u.u - l.l
+   double k = u_vec.dot(u_vec) - l->dot(*l);
    if (k <= 0) {
       k = 0;
    }
@@ -263,20 +263,34 @@ incremental_svd_naive::buildIncrementalSVD(
    else if (is_new_increment) {
       // This increment is new.
 
-      // Compute j.
-      Vector* j = new Vector(d_dim, true, d_rank, d_size);
+      // Compute j
+      Vector* modell = d_U->Mult(*l);
+      Vector* j = u_vec.subtract(modell);
+      delete modell;
       for (int i = 0; i < d_dim; ++i) {
-         j->item(i) = (u_vec.item(i) - tmp->item(i)) / k;
+         j->item(i) /= k;
       }
 
       // addNewIncrement will assign sigma to d_S hence it should not be
       // deleted upon return.
       addNewIncrement(j, A, sigma);
       delete j;
+
+      // Reorthogonalize if necessary.
+      int max_U_dim;
+      if (d_dim*d_size > d_num_increments) {
+         max_U_dim = d_dim*d_size;
+      }
+      else {
+         max_U_dim = d_num_increments;
+      }
+      if (checkOrthogonality() >
+          std::numeric_limits<double>::epsilon()*max_U_dim) {
+         reOrthogonalize();
+      }
    }
 
    // Clean up.
-   delete tmp;
    delete l;
    delete A;
 }

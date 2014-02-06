@@ -1,6 +1,10 @@
 #include "incremental_svd_time_stepper.h"
+#include "incremental_svd_naive.h"
+#include "incremental_svd_fast_update.h"
 
 #include "mpi.h"
+
+#include <cmath>
 
 namespace CAROM {
 
@@ -9,14 +13,27 @@ incremental_svd_time_stepper::incremental_svd_time_stepper(
    double epsilon,
    bool skip_redundant,
    int increments_per_time_interval,
-   int max_time_steps_between_increments) :
-   d_max_time_steps_between_increments(max_time_steps_between_increments),
-   d_next_increment_time(0.0),
-   d_isvd(new incremental_svd(dim,
-                              epsilon,
-                              skip_redundant,
-                              increments_per_time_interval))
+   double tolerance,
+   double max_time_between_increments,
+   bool fast_update) :
+   d_tol(tolerance),
+   d_max_time_between_increments(max_time_between_increments),
+   d_next_increment_time(0.0)
 {
+   if (fast_update) {
+      d_isvd.reset(
+         new incremental_svd_fast_update(dim,
+                                         epsilon,
+                                         skip_redundant,
+                                         increments_per_time_interval));
+   }
+   else {
+      d_isvd.reset(
+         new incremental_svd_naive(dim,
+                                   epsilon,
+                                   skip_redundant,
+                                   increments_per_time_interval));
+   }
 }
 
 incremental_svd_time_stepper::~incremental_svd_time_stepper()
@@ -29,29 +46,53 @@ incremental_svd_time_stepper::computeNextIncrementTime(
    double* rhs_in,
    double time)
 {
+   // Get some preliminary info.
    int dim = d_isvd->getDim();
    int rank = d_isvd->getRank();
-   int num_procs = d_isvd->getSize();
+   int size = d_isvd->getSize();
+   double eps = d_isvd->getEpsilon();
 
-   // Get the norm of J from the incremental svd algorithm.
-   double norm_j = d_isvd->getNormJ();
+   // Get the current model parameters.
+   const Matrix* model = getModel(time);
 
-   // Compute the norm of u_in.
-   Vector u_vec(u_in, dim, true, rank, num_procs);
-   double norm_u = u_vec.norm();
+   // Compute a bunch of stuff we need.
+   Vector u_vec(u_in, dim, true, rank, size);
+   Vector* l = model->TransposeMult(u_vec);
+   double cm = u_vec.dot(u_vec);
+   double k = cm - (l->dot(*l));
+   if (k <= 0) {
+      k = 0;
+   }
+   else {
+      k = sqrt(k);
+   }
 
-   // Compute the norm of rhs_in.
-   Vector rhs_vec(rhs_in, dim, true, rank, num_procs);
-   double norm_rhs = rhs_vec.norm();
+   // Compute j
+   Vector* modell = model->Mult(*l);
+   Vector* j = u_vec.subtract(modell);
+   delete modell;
+   for (int i = 0; i < dim; ++i) {
+      j->item(i) /= k;
+   }
+   delete l;
 
-   // Compute delta t to next increment time.
-   double epsilon = d_isvd->getEpsilon();
-   double eps0 = norm_j/(epsilon+norm_u);
-   double deps = (1.0 + eps0)*norm_rhs/(1.0e-10 + norm_u);
-   double dtcheck = (epsilon - eps0)/(deps + 1e-10);
+   Vector rhs_vec(rhs_in, dim, true, rank, size);
+   double rhs_norm = rhs_vec.norm();
+   double u_norm = sqrt(cm);
+
+   double eps0 = k/(eps+u_norm);
+   double deps = (1.0+eps0)*rhs_norm/(1.0e-10+u_norm);
+   double dt = (eps-eps0)/(deps+1.0e-10);
+
+   if (dt > d_max_time_between_increments) {
+      dt = d_max_time_between_increments;
+   }
+   else if (dt < 0) {
+      dt = 0.0;
+   }
 
    // Return next increment time.
-   d_next_increment_time = time + dtcheck;
+   d_next_increment_time = time + dt;
    return d_next_increment_time;
 }
 

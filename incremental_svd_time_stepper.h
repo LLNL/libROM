@@ -21,7 +21,9 @@ class incremental_svd_time_stepper
          double epsilon,
          bool skip_redundant,
          int increments_per_time_interval,
-         int max_time_steps_between_increments);
+         double tolerance,
+         double max_time_between_increments,
+         bool fast_update);
 
       // Destructor.
       ~incremental_svd_time_stepper();
@@ -31,15 +33,7 @@ class incremental_svd_time_stepper
       isNextIncrement(
          double time)
       {
-         bool result = (time >= d_next_increment_time) ||
-            (d_time_steps_since_last_increment >= d_max_time_steps_between_increments);
-         if (result) {
-            d_time_steps_since_last_increment = 1;
-         }
-         else {
-            ++d_time_steps_since_last_increment;
-         }
-         return result;
+         return time >= d_next_increment_time;
       }
 
       // Increment the incremental svd at the given time.
@@ -107,11 +101,12 @@ class incremental_svd_time_stepper
       operator = (
          const incremental_svd_time_stepper& rhs);
 
-      // Maximum number time steps between increments.
-      int d_max_time_steps_between_increments;
+      // Tolerance for norm of error in the solution of the reduced model due
+      // to orthogonal projection.
+      double d_tol;
 
-      // Number of time steps since last increment.
-      int d_time_steps_since_last_increment;
+      // Maximum time between increments.
+      double d_max_time_between_increments;
 
       // Next time at which an increment should be taken.
       double d_next_increment_time;
