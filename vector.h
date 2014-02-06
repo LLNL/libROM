@@ -55,6 +55,14 @@ class Vector
       double
       normalize();
 
+      // Adds other and this and returns the result.
+      Vector*
+      add(const Vector* other) const;
+
+      // Subtracts other and this and returns the result.
+      Vector*
+      subtract(const Vector* other) const;
+
       // Const vector member access.
       const double&
       item(

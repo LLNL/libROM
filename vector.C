@@ -81,4 +81,30 @@ Vector::normalize()
    return Norm;
 }
 
+Vector*
+Vector::add(const Vector* other) const
+{
+   CAROM_ASSERT(d_distributed == other->d_distributed);
+   CAROM_ASSERT(d_dim == other->d_dim);
+
+   Vector* result = new Vector(d_dim, d_distributed, d_rank, d_num_procs);
+   for (int i = 0; i < d_dim; ++i) {
+      result->d_vec[i] = d_vec[i] + other->d_vec[i];
+   }
+   return result;
+}
+
+Vector*
+Vector::subtract(const Vector* other) const
+{
+   CAROM_ASSERT(d_distributed == other->d_distributed);
+   CAROM_ASSERT(d_dim == other->d_dim);
+
+   Vector* result = new Vector(d_dim, d_distributed, d_rank, d_num_procs);
+   for (int i = 0; i < d_dim; ++i) {
+      result->d_vec[i] = d_vec[i] - other->d_vec[i];
+   }
+   return result;
+}
+
 }
