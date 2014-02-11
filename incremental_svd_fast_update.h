@@ -31,14 +31,6 @@ class incremental_svd_fast_update : public incremental_svd
       getModel(
          double time);
 
-      // Returns the orthogonality of the system.
-      double
-      checkOrthogonality();
-
-      // Reorthogonalizes the system.
-      void
-      reOrthogonalize();
-
    private:
       // Unimplemented default constructor.
       incremental_svd_fast_update();
@@ -75,6 +67,22 @@ class incremental_svd_fast_update : public incremental_svd
          const Vector* j,
          const Matrix* A,
          Matrix* sigma);
+
+      // Returns the orthogonality of d_U.
+      double
+      checkUOrthogonality();
+
+      // Returns the orthogonality of d_Up.
+      double
+      checkUpOrthogonality();
+
+      // Reorthogonalizes d_U.
+      void
+      reOrthogonalizeU();
+
+      // Reorthogonalizes d_Up.
+      void
+      reOrthogonalizeUp();
 
       // The matrix U distributed across all processors.  Each processor's d_U
       // is the part of the distributed matrix local to that processor.

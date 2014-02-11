@@ -76,18 +76,6 @@ class incremental_svd_rom
          d_isvdts->readModel(base_file_name);
       }
 
-      double
-      checkOrthogonality()
-      {
-         return d_isvdts->checkOrthogonality();
-      }
-
-      void
-      reOrthogonalize()
-      {
-         d_isvdts->reOrthogonalize();
-      }
-
    private:
       // Unimplemented default constructor.
       incremental_svd_rom();

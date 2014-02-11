@@ -109,51 +109,6 @@ incremental_svd_fast_update::getModel(
    return d_model[i];
 }
 
-double
-incremental_svd_fast_update::checkOrthogonality()
-{
-   double result = 0.0;
-   if (d_num_increments > 1) {
-      int last_col = d_num_increments-1;
-      for (int i = 0; i < d_num_increments; ++i) {
-         result += d_Up->item(i, 0)*d_Up->item(i, last_col);
-      }
-   }
-   return result;
-}
-
-void
-incremental_svd_fast_update::reOrthogonalize()
-{
-   for (int work = 1; work < d_num_increments; ++work) {
-      for (int col = 0; col < work; ++col) {
-         double factor = 0.0;
-         double tmp = 0.0;
-         for (int i = 0; i < d_num_increments; ++i) {
-            tmp += d_Up->item(i, col)*d_Up->item(i, work);
-         }
-         if (d_size > 1) {
-            MPI_Allreduce(&tmp, &factor, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-         }
-         else {
-            factor = tmp;
-         }
-
-         for (int i = 0; i < d_num_increments; ++i) {
-            d_Up->item(i, work) -= factor*d_Up->item(i, col);
-         }
-      }
-      double norm = 0.0;
-      for (int i = 0; i < d_num_increments; ++i) {
-         norm += d_Up->item(i, work)*d_Up->item(i, work);
-      }
-      norm = sqrt(norm);
-      for (int i = 0; i < d_num_increments; ++i) {
-         d_Up->item(i, work) /= norm;
-      }
-   }
-}
-
 void
 incremental_svd_fast_update::buildInitialSVD(
    const double* u,
@@ -251,6 +206,13 @@ incremental_svd_fast_update::buildIncrementalSVD(
       // This increment is not new and we are not skipping redundant
       // increments.
       addRedundantIncrement(A, sigma);
+
+      // Reorthogonalize if necessary.
+      if (fabs(checkUpOrthogonality()) >
+          std::numeric_limits<double>::epsilon()*d_num_increments) {
+         reOrthogonalizeUp();
+      }
+
       delete sigma;
    }
    else if (is_new_increment) {
@@ -277,9 +239,13 @@ incremental_svd_fast_update::buildIncrementalSVD(
       else {
          max_U_dim = d_num_increments;
       }
-      if (checkOrthogonality() >
+      if (fabs(checkUOrthogonality()) >
           std::numeric_limits<double>::epsilon()*max_U_dim) {
-         reOrthogonalize();
+         reOrthogonalizeU();
+      }
+      if (fabs(checkUpOrthogonality()) >
+          std::numeric_limits<double>::epsilon()*d_num_increments) {
+         reOrthogonalizeUp();
       }
    }
 
@@ -354,6 +320,96 @@ incremental_svd_fast_update::addNewIncrement(
 
    // We now have another increment.
    ++d_num_increments;
+}
+
+double
+incremental_svd_fast_update::checkUOrthogonality()
+{
+   double result = 0.0;
+   if (d_num_increments > 1) {
+      int last_col = d_num_increments-1;
+      for (int i = 0; i < d_dim; ++i) {
+         result += d_U->item(i, 0)*d_U->item(i, last_col);
+      }
+   }
+   return result;
+}
+
+double
+incremental_svd_fast_update::checkUpOrthogonality()
+{
+   double result = 0.0;
+   if (d_num_increments > 1) {
+      int last_col = d_num_increments-1;
+      for (int i = 0; i < d_num_increments; ++i) {
+         result += d_Up->item(i, 0)*d_Up->item(i, last_col);
+      }
+   }
+   return result;
+}
+
+void
+incremental_svd_fast_update::reOrthogonalizeU()
+{
+   for (int work = 1; work < d_num_increments; ++work) {
+      for (int col = 0; col < work; ++col) {
+         double factor = 0.0;
+         double tmp = 0.0;
+         for (int i = 0; i < d_dim; ++i) {
+            tmp += d_U->item(i, col)*d_U->item(i, work);
+         }
+         if (d_size > 1) {
+            MPI_Allreduce(&tmp, &factor, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+         }
+         else {
+            factor = tmp;
+         }
+
+         for (int i = 0; i < d_dim; ++i) {
+            d_U->item(i, work) -= factor*d_U->item(i, col);
+         }
+      }
+      double norm = 0.0;
+      for (int i = 0; i < d_dim; ++i) {
+         norm += d_U->item(i, work)*d_U->item(i, work);
+      }
+      norm = sqrt(norm);
+      for (int i = 0; i < d_dim; ++i) {
+         d_U->item(i, work) /= norm;
+      }
+   }
+}
+
+void
+incremental_svd_fast_update::reOrthogonalizeUp()
+{
+   for (int work = 1; work < d_num_increments; ++work) {
+      for (int col = 0; col < work; ++col) {
+         double factor = 0.0;
+         double tmp = 0.0;
+         for (int i = 0; i < d_num_increments; ++i) {
+            tmp += d_Up->item(i, col)*d_Up->item(i, work);
+         }
+         if (d_size > 1) {
+            MPI_Allreduce(&tmp, &factor, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+         }
+         else {
+            factor = tmp;
+         }
+
+         for (int i = 0; i < d_num_increments; ++i) {
+            d_Up->item(i, work) -= factor*d_Up->item(i, col);
+         }
+      }
+      double norm = 0.0;
+      for (int i = 0; i < d_num_increments; ++i) {
+         norm += d_Up->item(i, work)*d_Up->item(i, work);
+      }
+      norm = sqrt(norm);
+      for (int i = 0; i < d_num_increments; ++i) {
+         d_Up->item(i, work) /= norm;
+      }
+   }
 }
 
 }

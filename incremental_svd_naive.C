@@ -116,51 +116,6 @@ incremental_svd_naive::getModel(
    return d_model[i];
 }
 
-double
-incremental_svd_naive::checkOrthogonality()
-{
-   double result = 0.0;
-   if (d_num_increments > 1) {
-      int last_col = d_num_increments-1;
-      for (int i = 0; i < d_dim; ++i) {
-         result += d_U->item(i, 0)*d_U->item(i, last_col);
-      }
-   }
-   return result;
-}
-
-void
-incremental_svd_naive::reOrthogonalize()
-{
-   for (int work = 1; work < d_num_increments; ++work) {
-      for (int col = 0; col < work; ++col) {
-         double factor = 0.0;
-         double tmp = 0.0;
-         for (int i = 0; i < d_dim; ++i) {
-            tmp += d_U->item(i, col)*d_U->item(i, work);
-         }
-         if (d_size > 1) {
-            MPI_Allreduce(&tmp, &factor, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-         }
-         else {
-            factor = tmp;
-         }
-
-         for (int i = 0; i < d_dim; ++i) {
-            d_U->item(i, work) -= factor*d_U->item(i, col);
-         }
-      }
-      double norm = 0.0;
-      for (int i = 0; i < d_dim; ++i) {
-         norm += d_U->item(i, work)*d_U->item(i, work);
-      }
-      norm = sqrt(norm);
-      for (int i = 0; i < d_dim; ++i) {
-         d_U->item(i, work) /= norm;
-      }
-   }
-}
-
 void
 incremental_svd_naive::buildInitialSVD(
    const double* u,
@@ -339,6 +294,51 @@ incremental_svd_naive::addNewIncrement(
 
    // We now have another increment.
    ++d_num_increments;
+}
+
+double
+incremental_svd_naive::checkOrthogonality()
+{
+   double result = 0.0;
+   if (d_num_increments > 1) {
+      int last_col = d_num_increments-1;
+      for (int i = 0; i < d_dim; ++i) {
+         result += d_U->item(i, 0)*d_U->item(i, last_col);
+      }
+   }
+   return result;
+}
+
+void
+incremental_svd_naive::reOrthogonalize()
+{
+   for (int work = 1; work < d_num_increments; ++work) {
+      for (int col = 0; col < work; ++col) {
+         double factor = 0.0;
+         double tmp = 0.0;
+         for (int i = 0; i < d_dim; ++i) {
+            tmp += d_U->item(i, col)*d_U->item(i, work);
+         }
+         if (d_size > 1) {
+            MPI_Allreduce(&tmp, &factor, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+         }
+         else {
+            factor = tmp;
+         }
+
+         for (int i = 0; i < d_dim; ++i) {
+            d_U->item(i, work) -= factor*d_U->item(i, col);
+         }
+      }
+      double norm = 0.0;
+      for (int i = 0; i < d_dim; ++i) {
+         norm += d_U->item(i, work)*d_U->item(i, work);
+      }
+      norm = sqrt(norm);
+      for (int i = 0; i < d_dim; ++i) {
+         d_U->item(i, work) /= norm;
+      }
+   }
 }
 
 }

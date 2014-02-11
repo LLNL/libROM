@@ -30,14 +30,6 @@ class incremental_svd_naive : public incremental_svd
       getModel(
          double time);
 
-      // Returns the orthogonality of the system.
-      double
-      checkOrthogonality();
-
-      // Reorthogonalizes the system.
-      void
-      reOrthogonalize();
-
    private:
       // Unimplemented default constructor.
       incremental_svd_naive();
@@ -74,6 +66,14 @@ class incremental_svd_naive : public incremental_svd
          const Vector* j,
          const Matrix* A,
          Matrix* sigma);
+
+      // Returns the orthogonality of d_U.
+      double
+      checkOrthogonality();
+
+      // Reorthogonalizes d_U.
+      void
+      reOrthogonalize();
 
       // The matrix U distributed across all processors.  Each processor's d_U
       // is the part of the distributed matrix local to that processor.

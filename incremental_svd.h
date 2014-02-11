@@ -82,16 +82,6 @@ class incremental_svd
       readModel(
          const std::string& base_file_name);
 
-      // Returns the orthogonality of the system.
-      virtual
-      double
-      checkOrthogonality() = 0;
-
-      // Reorthogonalizes the system.
-      virtual
-      void
-      reOrthogonalize() = 0;
-
    protected:
       // Construct the Q matrix which will be passed to svd.
       void
