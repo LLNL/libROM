@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
          inc_rom.computeNextSnapshotTime(M[i], M[i], 0.01*i);
       }
    }
-   const CAROM::Matrix* inc_model = inc_rom.getModel(0.0);
+   const CAROM::Matrix* inc_basis = inc_rom.getBasis(0.0);
    double stop_inc = MPI_Wtime();
    double incremental_run_time = stop_inc - start_inc;
    double global_incremental_run_time;
@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
       printf("incremental run time = %g\n", global_incremental_run_time/size);
    }
 #ifndef DEBUG_ROMS
-   NULL_USE(inc_model);
+   NULL_USE(inc_basis);
 #else
    double start_static = MPI_Wtime();
    for (int i = 0; i < num_snapshots; ++i) {
@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
          static_rom.computeNextSnapshotTime(M[i], M[i], 0.01*i);
       }
    }
-   const CAROM::Matrix* static_model = static_rom.getModel(0.0);
+   const CAROM::Matrix* static_basis = static_rom.getBasis(0.0);
    double stop_static = MPI_Wtime();
    double static_run_time = stop_static - start_static;
    double global_static_run_time;
@@ -109,9 +109,9 @@ int main(int argc, char* argv[])
       printf("static run time = %g\n", global_static_run_time/size);
    }
 
-   // Compute the product of the tranpose of the static model and the
-   // incremental model.  This should be a unitary matrix.
-   CAROM::Matrix* test = static_model->TransposeMult(*inc_model);
+   // Compute the product of the tranpose of the static basis and the
+   // incremental basis.  This should be a unitary matrix.
+   CAROM::Matrix* test = static_basis->TransposeMult(*inc_basis);
    if (rank == 0) {
       for (int row = 0; row < num_snapshots; ++row) {
          for (int col = 0; col < num_lin_indep_snapshots; ++col) {

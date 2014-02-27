@@ -47,7 +47,7 @@ incremental_svd_fast_update::increment(
    }
 
 #ifdef DEBUG_ROMS
-   const Matrix* model = getModel(time);
+   const Matrix* basis = getBasis(time);
    if (d_rank == 0) {
       // Print d_S.
       for (int row = 0; row < d_num_increments; ++row) {
@@ -58,15 +58,15 @@ incremental_svd_fast_update::increment(
       }
       printf("\n");
 
-      // Print process 0's part of the model.
+      // Print process 0's part of the basis.
       for (int row = 0; row < d_dim; ++row) {
          for (int col = 0; col < d_num_increments; ++col) {
-            printf("%.16e ", model->item(row, col));
+            printf("%.16e ", basis->item(row, col));
          }
          printf("\n");
       }
 
-      // Gather other processor's parts of the model and print them.
+      // Gather other processor's parts of the basis and print them.
       double* m = new double[d_dim*d_num_increments];
       for (int proc = 1; proc < d_size; ++proc) {
          MPI_Status status;
@@ -84,9 +84,9 @@ incremental_svd_fast_update::increment(
       delete [] m;
    }
    else {
-      // Send this processor's part of the model to process 0.
+      // Send this processor's part of the basis to process 0.
       MPI_Request request;
-      MPI_Isend(const_cast<double*>(&model->item(0, 0)),
+      MPI_Isend(const_cast<double*>(&basis->item(0, 0)),
                 d_dim*d_num_increments, MPI_DOUBLE, 0, COMMUNICATE_U,
                 MPI_COMM_WORLD, &request);
    }
@@ -94,7 +94,7 @@ incremental_svd_fast_update::increment(
 }
 
 const Matrix*
-incremental_svd_fast_update::getModel(
+incremental_svd_fast_update::getBasis(
    double time)
 {
    CAROM_ASSERT(0 < d_num_time_intervals);
@@ -105,8 +105,8 @@ incremental_svd_fast_update::getModel(
          break;
       }
    }
-   CAROM_ASSERT(d_model[i] != 0);
-   return d_model[i];
+   CAROM_ASSERT(d_basis[i] != 0);
+   return d_basis[i];
 }
 
 void
@@ -118,7 +118,7 @@ incremental_svd_fast_update::buildInitialSVD(
    ++d_num_time_intervals;
    d_time_interval_start_times.resize(d_num_time_intervals);
    d_time_interval_start_times[d_num_time_intervals-1] = time;
-   d_model.resize(d_num_time_intervals);
+   d_basis.resize(d_num_time_intervals);
 
    // If this is not the first time interval then delete d_U, d_Up, and d_S
    // from the previous time interval.
@@ -144,8 +144,8 @@ incremental_svd_fast_update::buildInitialSVD(
       d_U->item(i, 0) = u[i]/norm_u;
    }
 
-   // Set the model for this time interval.
-   d_model[d_num_time_intervals-1] = new Matrix(*d_U);
+   // Set the basis for this time interval.
+   d_basis[d_num_time_intervals-1] = new Matrix(*d_U);
 
    // We now have the first increment for the new time interval.
    d_num_increments = 1;
@@ -155,9 +155,9 @@ void
 incremental_svd_fast_update::buildIncrementalSVD(
    const double* u)
 {
-   // l = model' * u
+   // l = basis' * u
    Vector u_vec(u, d_dim, true, d_rank, d_size);
-   Vector* l = d_model[d_num_time_intervals-1]->TransposeMult(u_vec);
+   Vector* l = d_basis[d_num_time_intervals-1]->TransposeMult(u_vec);
 
    // Compute k = u.u - l.l
    double k = u_vec.dot(u_vec) - l->dot(*l);
@@ -219,9 +219,9 @@ incremental_svd_fast_update::buildIncrementalSVD(
       // This increment is new.
 
       // Compute j
-      Vector* modell = d_model[d_num_time_intervals-1]->Mult(*l);
-      Vector* j = u_vec.subtract(modell);
-      delete modell;
+      Vector* basisl = d_basis[d_num_time_intervals-1]->Mult(*l);
+      Vector* j = u_vec.subtract(basisl);
+      delete basisl;
       for (int i = 0; i < d_dim; ++i) {
          j->item(i) /= k;
       }
@@ -249,9 +249,9 @@ incremental_svd_fast_update::buildIncrementalSVD(
       }
    }
 
-   // Compute the model parameters.
-   delete d_model[d_num_time_intervals - 1];
-   d_model[d_num_time_intervals - 1] = d_U->Mult(*d_Up);
+   // Compute the basis vectors.
+   delete d_basis[d_num_time_intervals - 1];
+   d_basis[d_num_time_intervals - 1] = d_U->Mult(*d_Up);
 
    // Clean up.
    delete l;
@@ -328,8 +328,15 @@ incremental_svd_fast_update::checkUOrthogonality()
    double result = 0.0;
    if (d_num_increments > 1) {
       int last_col = d_num_increments-1;
+      double tmp = 0.0;
       for (int i = 0; i < d_dim; ++i) {
-         result += d_U->item(i, 0)*d_U->item(i, last_col);
+         tmp += d_U->item(i, 0) * d_U->item(i, last_col);
+      }
+      if (d_size > 1) {
+         MPI_Allreduce(&tmp, &result, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+      }
+      else {
+         result = tmp;
       }
    }
    return result;

@@ -25,9 +25,9 @@ class incremental_svd_naive : public incremental_svd
          const double* u_in,
          double time);
 
-      // Returns the model parameters for the given time, d_U, as a Matrix.
+      // Returns the basis vectors for the given time, d_U, as a Matrix.
       const Matrix*
-      getModel(
+      getBasis(
          double time);
 
    private:

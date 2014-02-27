@@ -52,28 +52,28 @@ class incremental_svd_time_stepper
          double* rhs_in,
          double time);
 
-      // Returns the model parameters at the given time as a Matrix.
+      // Returns the basis vectors at the given time as a Matrix.
       const Matrix*
-      getModel(
+      getBasis(
          double time)
       {
-         return d_isvd->getModel(time);
+         return d_isvd->getBasis(time);
       }
 
-      // Writes the model to a file with the given base name.
+      // Writes the basis vectors to a file with the given base name.
       void
-      writeModel(
+      writeBasis(
          const std::string& base_file_name)
       {
-         d_isvd->writeModel(base_file_name);
+         d_isvd->writeBasis(base_file_name);
       }
 
-      // Reads the model from a file with the given base name.
+      // Reads the basis vectors from a file with the given base name.
       void
-      readModel(
+      readBasis(
          const std::string& base_file_name)
       {
-         d_isvd->readModel(base_file_name);
+         d_isvd->readBasis(base_file_name);
       }
 
    private:

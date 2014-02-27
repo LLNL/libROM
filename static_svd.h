@@ -39,9 +39,9 @@ class static_svd
          return d_dim;
       }
 
-      // Returns the model parameters, d_U.
+      // Returns the basis vectors, d_U.
       const Matrix*
-      getModel()
+      getBasis()
       {
          computeSVD();
          return d_U;

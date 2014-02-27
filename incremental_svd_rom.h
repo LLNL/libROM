@@ -5,7 +5,7 @@
 
 namespace CAROM {
 
-// A class which implements a Reduced Order Model base on the incremental svd
+// A class which implements a Reduced Order Model based on the incremental svd
 // algorithm.  At the present time it pretty much just recasts the API of
 // the incremental_svd_time_stepper in terms of snapshots.  In the future this
 // class will likely need to do much more.
@@ -52,28 +52,28 @@ class incremental_svd_rom
          return d_isvdts->computeNextIncrementTime(u_in, rhs_in, time);
       }
 
-      // Returns the model parameters at the given time as a Matrix.
+      // Returns the basis vectors at the given time as a Matrix.
       const Matrix*
-      getModel(
+      getBasis(
          double time)
       {
-         return d_isvdts->getModel(time);
+         return d_isvdts->getBasis(time);
       }
 
-      // Writes the model to a file with the given base name.
+      // Writes the basis vectors to a file with the given base name.
       void
-      writeModel(
+      writeBasis(
          const std::string& base_file_name)
       {
-         d_isvdts->writeModel(base_file_name);
+         d_isvdts->writeBasis(base_file_name);
       }
 
-      // Reads the model from a file with the given base name.
+      // Reads the basis vectors from a file with the given base name.
       void
-      readModel(
+      readBasis(
          const std::string& base_file_name)
       {
-         d_isvdts->readModel(base_file_name);
+         d_isvdts->readBasis(base_file_name);
       }
 
    private:

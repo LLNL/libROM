@@ -59,10 +59,10 @@ class incremental_svd
          return d_size;
       }
 
-      // Returns the model parameters for the given time, d_U, as a Matrix.
+      // Returns the basis vectors for the given time, d_U, as a Matrix.
       virtual
       const Matrix*
-      getModel(
+      getBasis(
          double time) = 0;
 
       // Returns the value of the norm of J cached by increment.
@@ -72,14 +72,14 @@ class incremental_svd
          return d_norm_j;
       }
 
-      // Writes the model to a file with the given base name.
+      // Writes the basis vectors to a file with the given base name.
       void
-      writeModel(
+      writeBasis(
          const std::string& base_file_name);
 
-      // Reads the model from a file with the given base name.
+      // Reads the basis vectors from a file with the given base name.
       void
-      readModel(
+      readBasis(
          const std::string& base_file_name);
 
    protected:
@@ -119,10 +119,10 @@ class incremental_svd
       // each processor.
       Matrix* d_S;
 
-      // For each time interval, the model parameters distributed across all
-      // processors.  Each d_model is the part of the distributed model
-      // parameters local to the processor owning this object.
-      std::vector<Matrix*> d_model;
+      // For each time interval, the basis vectors distributed across all
+      // processors.  Each d_basis is the part of the distributed basis vectors
+      // local to the processor owning this object.
+      std::vector<Matrix*> d_basis;
 
       // The number of time intervals gathered.
       int d_num_time_intervals;
@@ -139,7 +139,7 @@ class incremental_svd
       // Value of norm of j cached by increment.
       double d_norm_j;
 
-      // Database to read/write model parameters from/to.
+      // Database to read/write basis vectors from/to.
       HDFDatabase d_database;
 
       // MPI message tag.

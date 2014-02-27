@@ -52,12 +52,12 @@ incremental_svd_time_stepper::computeNextIncrementTime(
    int size = d_isvd->getSize();
    double eps = d_isvd->getEpsilon();
 
-   // Get the current model parameters.
-   const Matrix* model = getModel(time);
+   // Get the current basis vectors.
+   const Matrix* basis = getBasis(time);
 
    // Compute a bunch of stuff we need.
    Vector u_vec(u_in, dim, true, rank, size);
-   Vector* l = model->TransposeMult(u_vec);
+   Vector* l = basis->TransposeMult(u_vec);
    double cm = u_vec.dot(u_vec);
    double k = cm - (l->dot(*l));
    if (k <= 0) {
@@ -68,9 +68,9 @@ incremental_svd_time_stepper::computeNextIncrementTime(
    }
 
    // Compute j
-   Vector* modell = model->Mult(*l);
-   Vector* j = u_vec.subtract(modell);
-   delete modell;
+   Vector* basisl = basis->Mult(*l);
+   Vector* j = u_vec.subtract(basisl);
+   delete basisl;
    for (int i = 0; i < dim; ++i) {
       j->item(i) /= k;
    }

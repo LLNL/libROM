@@ -48,11 +48,11 @@ class static_svd_time_stepper
          return time;
       }
 
-      // Returns the model parameters.
+      // Returns the basis vectors.
       const Matrix*
-      getModel()
+      getBasis()
       {
-         return d_svd->getModel();
+         return d_svd->getBasis();
       }
 
    private:

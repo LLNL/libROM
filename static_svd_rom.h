@@ -5,7 +5,7 @@
 
 namespace CAROM {
 
-// A class which implements a Reduced Order Model base on the static svd
+// A class which implements a Reduced Order Model based on the static svd
 // algorithm.  At the present time it pretty much just recasts the API of
 // the static_svd_time_stepper in terms of snapshots.  In the future this
 // class will likely need to do much more.
@@ -47,13 +47,13 @@ class static_svd_rom
          return d_svdts->computeNextStateCollectionTime(u_in, rhs_in, time);
       }
 
-      // Returns the model parameters.
+      // Returns the basis vectors.
       const Matrix*
-      getModel(
+      getBasis(
          double time)
       {
          NULL_USE(time);
-         return d_svdts->getModel();
+         return d_svdts->getBasis();
       }
 
    private:

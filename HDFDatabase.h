@@ -8,7 +8,7 @@ namespace CAROM {
 
 /* A class that provides basic ability to write to and read from an HDF file.
  * It's capabilities are limited to what the incremental SVD algorithm needs
- * to read and write its model data. */
+ * to read and write its basis vectors. */
 class HDFDatabase
 {
    public:

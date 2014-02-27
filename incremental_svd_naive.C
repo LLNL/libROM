@@ -43,7 +43,7 @@ incremental_svd_naive::increment(
    }
 
 #ifdef DEBUG_ROMS
-   const Matrix* model = getModel(time);
+   const Matrix* basis = getBasis(time);
    if (d_rank == 0) {
       // Print d_S.
       for (int row = 0; row < d_num_increments; ++row) {
@@ -54,15 +54,15 @@ incremental_svd_naive::increment(
       }
       printf("\n");
 
-      // Print process 0's part of the model.
+      // Print process 0's part of the basis.
       for (int row = 0; row < d_dim; ++row) {
          for (int col = 0; col < d_num_increments; ++col) {
-            printf("%.16e ", model->item(row, col));
+            printf("%.16e ", basis->item(row, col));
          }
          printf("\n");
       }
 
-      // Gather other processor's parts of the model and print them.
+      // Gather other processor's parts of the basis and print them.
       double* m = new double[d_dim*d_num_increments];
       for (int proc = 1; proc < d_size; ++proc) {
          MPI_Status status;
@@ -80,9 +80,9 @@ incremental_svd_naive::increment(
       delete [] m;
    }
    else {
-      // Send this processor's part of the model to process 0.
+      // Send this processor's part of the basis to process 0.
       MPI_Request request;
-      MPI_Isend(const_cast<double*>(&model->item(0, 0)),
+      MPI_Isend(const_cast<double*>(&basis->item(0, 0)),
                 d_dim*d_num_increments, MPI_DOUBLE, 0, COMMUNICATE_U,
                 MPI_COMM_WORLD, &request);
    }
@@ -90,7 +90,7 @@ incremental_svd_naive::increment(
 }
 
 const Matrix*
-incremental_svd_naive::getModel(
+incremental_svd_naive::getBasis(
    double time)
 {
    CAROM_ASSERT(0 < d_num_time_intervals);
@@ -102,18 +102,18 @@ incremental_svd_naive::getModel(
       }
    }
 
-   // If this model is for the last time interval then it may not be up to
+   // If this basis is for the last time interval then it may not be up to
    // date so recompute it.
    if (i == d_num_time_intervals-1) {
-      if (d_model[i] != 0) {
-         delete d_model[i];
+      if (d_basis[i] != 0) {
+         delete d_basis[i];
       }
-      d_model[i] = new Matrix(*d_U);
+      d_basis[i] = new Matrix(*d_U);
    }
    else {
-      CAROM_ASSERT(d_model[i] != 0);
+      CAROM_ASSERT(d_basis[i] != 0);
    }
-   return d_model[i];
+   return d_basis[i];
 }
 
 void
@@ -125,19 +125,19 @@ incremental_svd_naive::buildInitialSVD(
    ++d_num_time_intervals;
    d_time_interval_start_times.resize(d_num_time_intervals);
    d_time_interval_start_times[d_num_time_intervals-1] = time;
-   d_model.resize(d_num_time_intervals);
+   d_basis.resize(d_num_time_intervals);
 
-   // Set the model for this time interval to 0.
-   d_model[d_num_time_intervals-1] = 0;
+   // Set the basis for this time interval to 0.
+   d_basis[d_num_time_intervals-1] = 0;
 
-   // If this is not the first time interval then compute the model parameters
-   // for the previous time interval and delete the now unnecessary storage for
-   // d_U and d_S for the previous time interval.
+   // If this is not the first time interval then compute the basis vectors for
+   // the previous time interval and delete the now unnecessary storage for d_U
+   // and d_S for the previous time interval.
    if (d_num_time_intervals > 1) {
-      if (d_model[d_num_time_intervals-2] != 0) {
-         delete d_model[d_num_time_intervals-2];
+      if (d_basis[d_num_time_intervals-2] != 0) {
+         delete d_basis[d_num_time_intervals-2];
       }
-      d_model[d_num_time_intervals-2] = new Matrix(*d_U);
+      d_basis[d_num_time_intervals-2] = new Matrix(*d_U);
       delete d_U;
       delete d_S;
    }
@@ -162,7 +162,7 @@ void
 incremental_svd_naive::buildIncrementalSVD(
    const double* u)
 {
-   // l = model' * u
+   // l = basis' * u
    Vector u_vec(u, d_dim, true, d_rank, d_size);
    Vector* l = d_U->TransposeMult(u_vec);
 
@@ -219,9 +219,9 @@ incremental_svd_naive::buildIncrementalSVD(
       // This increment is new.
 
       // Compute j
-      Vector* modell = d_U->Mult(*l);
-      Vector* j = u_vec.subtract(modell);
-      delete modell;
+      Vector* basisl = d_U->Mult(*l);
+      Vector* j = u_vec.subtract(basisl);
+      delete basisl;
       for (int i = 0; i < d_dim; ++i) {
          j->item(i) /= k;
       }
@@ -302,8 +302,15 @@ incremental_svd_naive::checkOrthogonality()
    double result = 0.0;
    if (d_num_increments > 1) {
       int last_col = d_num_increments-1;
+      double tmp = 0;
       for (int i = 0; i < d_dim; ++i) {
-         result += d_U->item(i, 0)*d_U->item(i, last_col);
+         tmp += d_U->item(i, 0)*d_U->item(i, last_col);
+      }
+      if (d_size > 1) {
+         MPI_Allreduce(&tmp, &result, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+      }
+      else {
+         result = tmp;
       }
    }
    return result;
