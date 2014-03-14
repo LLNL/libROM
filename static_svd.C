@@ -121,7 +121,7 @@ static_svd::getBasis(
 
    // If this basis is for the last time interval then it may not be up to date
    // so recompute it.
-   if (i == d_num_time_intervals-1) {
+   if (i == d_num_time_intervals-1 && !d_state.empty()) {
       if (d_basis[i] != 0) {
          delete d_basis[i];
       }
