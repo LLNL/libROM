@@ -15,12 +15,18 @@ namespace CAROM {
 const int static_svd::COMMUNICATE_A = 999;
 
 static_svd::static_svd(
-   int dim) :
+   int dim,
+   int increments_per_time_interval) :
    d_dim(dim),
+   d_num_increments(0),
+   d_increments_per_time_interval(increments_per_time_interval),
    d_state(0),
    d_U(0),
    d_S(0),
-   d_V(0)
+   d_V(0),
+   d_basis(0),
+   d_num_time_intervals(0),
+   d_time_interval_start_times(0)
 {
    // Get the rank of this process, and get the number of processors.
    int mpi_init;
@@ -48,8 +54,136 @@ static_svd::~static_svd()
       delete d_V;
    }
    for (int i = 0; i < static_cast<int>(d_state.size()); ++i) {
-      delete [] d_state[i];
+      if (d_state[i]) {
+         delete [] d_state[i];
+      }
    }
+   for (int i = 0; i < static_cast<int>(d_basis.size()); ++i) {
+      if (d_basis[i]) {
+         delete d_basis[i];
+      }
+   }
+}
+
+void
+static_svd::collectState(
+   double* u_in,
+   double time)
+{
+   if (d_num_increments == 0 ||
+       d_num_increments >= d_increments_per_time_interval) {
+
+      // We have a new time interval.
+      d_num_increments = 0;
+      ++d_num_time_intervals;
+      d_time_interval_start_times.resize(d_num_time_intervals);
+      d_time_interval_start_times[d_num_time_intervals-1] = time;
+      d_basis.resize(d_num_time_intervals);
+      d_basis[d_num_time_intervals-1] = 0;
+
+      // If this is not the first time interval then construct the the basis
+      // for the previous time interval and delete d_U, d_S, d_V and the
+      // contents of d_state.
+      if (d_num_time_intervals > 1) {
+         computeSVD();
+         for (int i = 0; i < static_cast<int>(d_state.size()); ++i) {
+            if (d_state[i]) {
+               delete [] d_state[i];
+            }
+         }
+         d_state.resize(0);
+         delete d_U;
+         d_U = 0;
+         delete d_S;
+         d_S = 0;
+         delete d_V;
+         d_V = 0;
+      }
+   }
+   double* state = new double [d_dim];
+   memcpy(state, u_in, d_dim*sizeof(double));
+   d_state.push_back(state);
+   ++d_num_increments;
+}
+
+const Matrix*
+static_svd::getBasis(
+   double time)
+{
+   CAROM_ASSERT(0 < d_num_time_intervals);
+   int i;
+   for (i = 0; i < d_num_time_intervals-1; ++i) {
+      if (d_time_interval_start_times[i] <= time &&
+          d_time_interval_start_times[i+1] < time) {
+         break;
+      }
+   }
+
+   // If this basis is for the last time interval then it may not be up to date
+   // so recompute it.
+   if (i == d_num_time_intervals-1) {
+      if (d_basis[i] != 0) {
+         delete d_basis[i];
+      }
+      computeSVD();
+   }
+   else {
+      CAROM_ASSERT(d_basis[i] != 0);
+   }
+   return d_basis[i];
+}
+
+void
+static_svd::writeBasis(
+   const std::string& base_file_name)
+{
+   CAROM_ASSERT(!base_file_name.empty());
+
+   char tmp[10];
+   sprintf(tmp, ".%06d", d_rank);
+   std::string full_file_name = base_file_name + tmp;
+   d_database.create(full_file_name);
+   d_database.putInteger("num_time_intervals", d_num_time_intervals);
+   for (int i = 0; i < d_num_time_intervals; ++i) {
+      const Matrix* basis = getBasis(d_time_interval_start_times[i]);
+      d_database.putDouble("time", d_time_interval_start_times[i]);
+      int num_rows = basis->numRows();
+      d_database.putInteger("num_rows", num_rows);
+      int num_cols = basis->numColumns();
+      d_database.putInteger("num_cols", num_cols);
+      d_database.putDoubleArray(
+         "basis",
+         &basis->item(0, 0),
+         num_rows*num_cols);
+   }
+   d_database.close();
+}
+
+void
+static_svd::readBasis(
+   const std::string& base_file_name)
+{
+   CAROM_ASSERT(!base_file_name.empty());
+
+   char tmp[10];
+   sprintf(tmp, ".%06d", d_rank);
+   std::string full_file_name = base_file_name + tmp;
+   d_database.open(full_file_name);
+   d_database.getInteger("num_time_intervals", d_num_time_intervals);
+   d_time_interval_start_times.resize(d_num_time_intervals);
+   d_basis.resize(d_num_time_intervals, 0);
+   for (int i = 0; i < d_num_time_intervals; ++i) {
+      d_database.getDouble("time", d_time_interval_start_times[i]);
+      int num_rows;
+      d_database.getInteger("num_rows", num_rows);
+      int num_cols;
+      d_database.getInteger("num_cols", num_cols);
+      d_basis[i] = new Matrix(num_rows, num_cols, false, d_rank, d_size);
+      d_database.getDoubleArray("basis",
+                                &d_basis[i]->item(0, 0),
+                                num_rows*num_cols);
+   }
+   d_database.close();
 }
 
 void
@@ -139,6 +273,7 @@ static_svd::computeSVD()
       // Clean up.
       delete [] myA;
    }
+   d_basis[d_num_time_intervals-1] = new Matrix(*d_U);
 #ifdef DEBUG_ROMS
    if (d_rank == 0) {
       for (int row = 0; row < d_dim*d_size; ++row) {

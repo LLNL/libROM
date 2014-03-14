@@ -3,8 +3,9 @@
 namespace CAROM {
 
 static_svd_time_stepper::static_svd_time_stepper(
-   int dim) :
-   d_svd(new static_svd(dim))
+   int dim,
+   int increments_per_time_interval) :
+   d_svd(new static_svd(dim, increments_per_time_interval))
 {
 }
 

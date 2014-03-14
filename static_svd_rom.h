@@ -14,7 +14,8 @@ class static_svd_rom
    public:
       // Constructor.
       static_svd_rom(
-         int dim);
+         int dim,
+         int increments_per_time_interval);
 
       // Destructor.
       ~static_svd_rom();
@@ -33,8 +34,7 @@ class static_svd_rom
          double* u_in,
          double time)
       {
-         NULL_USE(time);
-         d_svdts->collectState(u_in);
+         d_svdts->collectState(u_in, time);
       }
 
       // Computes next time an svd snapshot is needed.
@@ -52,8 +52,23 @@ class static_svd_rom
       getBasis(
          double time)
       {
-         NULL_USE(time);
-         return d_svdts->getBasis();
+         return d_svdts->getBasis(time);
+      }
+
+      // Writes the basis vectors to a file with the given base name.
+      void
+      writeBasis(
+         const std::string& base_file_name)
+      {
+         d_svdts->writeBasis(base_file_name);
+      }
+
+      // Reads the basis vectors from a file with the given base name.
+      void
+      readBasis(
+         const std::string& base_file_name)
+      {
+         d_svdts->readBasis(base_file_name);
       }
 
    private:

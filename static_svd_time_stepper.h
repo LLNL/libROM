@@ -14,7 +14,8 @@ class static_svd_time_stepper
    public:
       // Constructor.
       static_svd_time_stepper(
-         int dim);
+         int dim,
+         int increments_per_time_interval);
 
       // Destructor.
       ~static_svd_time_stepper();
@@ -31,9 +32,10 @@ class static_svd_time_stepper
       // Collect the new state, u_in.
       void
       collectState(
-         double* u_in)
+         double* u_in,
+         double time)
       {
-         d_svd->collectState(u_in);
+         d_svd->collectState(u_in, time);
       }
 
       // Computes next time a state collection is needed.
@@ -50,9 +52,26 @@ class static_svd_time_stepper
 
       // Returns the basis vectors.
       const Matrix*
-      getBasis()
+      getBasis(
+         double time)
       {
-         return d_svd->getBasis();
+         return d_svd->getBasis(time);
+      }
+
+      // Writes the basis vectors to a file with the given base name.
+      void
+      writeBasis(
+         const std::string& base_file_name)
+      {
+         d_svd->writeBasis(base_file_name);
+      }
+
+      // Reads the basis vectors from a file with the given base name.
+      void
+      readBasis(
+         const std::string& base_file_name)
+      {
+         d_svd->readBasis(base_file_name);
       }
 
    private:

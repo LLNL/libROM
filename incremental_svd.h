@@ -3,7 +3,6 @@
 
 #include "HDFDatabase.h"
 #include "matrix.h"
-#include "vector.h"
 #include <vector>
 
 namespace CAROM {

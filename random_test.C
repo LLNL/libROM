@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
                                       0.001,
                                       true);
 #ifdef DEBUG_ROMS
-   CAROM::static_svd_rom static_rom(dim);
+   CAROM::static_svd_rom static_rom(dim, num_snapshots);
 #endif
    int size;
    MPI_Comm_size(MPI_COMM_WORLD, &size);

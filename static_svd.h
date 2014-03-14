@@ -1,6 +1,7 @@
 #ifndef included_static_svd_h
 #define included_static_svd_h
 
+#include "HDFDatabase.h"
 #include "matrix.h"
 #include <vector>
 #include <string.h>
@@ -17,7 +18,8 @@ class static_svd
    public:
       // Constructor.
       static_svd(
-         int dim);
+         int dim,
+         int increments_per_time_interval);
 
       // Destructor.
       ~static_svd();
@@ -25,12 +27,8 @@ class static_svd
       // Collect the new state, u_in.
       void
       collectState(
-         double* u_in)
-      {
-         double* state = new double [d_dim];
-         memcpy(state, u_in, d_dim*sizeof(double));
-         d_state.push_back(state);
-      }
+         double* u_in,
+         double time);
 
       // Returns the dimension of the system.
       int
@@ -41,11 +39,18 @@ class static_svd
 
       // Returns the basis vectors, d_U.
       const Matrix*
-      getBasis()
-      {
-         computeSVD();
-         return d_U;
-      }
+      getBasis(
+         double time);
+
+      // Writes the basis vectors to a file with the given base name.
+      void
+      writeBasis(
+         const std::string& base_file_name);
+
+      // Reads the basis vectors from a file with the given base name.
+      void
+      readBasis(
+         const std::string& base_file_name);
 
    private:
       // Unimplemented default constructor.
@@ -73,6 +78,12 @@ class static_svd
       // Dimension of the system.
       int d_dim;
 
+      // Number of increments stored.
+      int d_num_increments;
+
+      // The number of increments to be collected for each time interval.
+      int d_increments_per_time_interval;
+
       // Current state of the system.
       std::vector<double*> d_state;
 
@@ -85,11 +96,24 @@ class static_svd
       // The globalized matrix L.  L is small and each process owns all of L.
       Matrix* d_V;
 
+      // For each time interval, the globalized basis vectors.  The basis is
+      // large and each process owns all of the basis.
+      std::vector<Matrix*> d_basis;
+
+      // The number of time intervals gathered.
+      int d_num_time_intervals;
+
+      // The simulation time at which each time interval starts.
+      std::vector<double> d_time_interval_start_times;
+
       // Rank of process this object lives on.
       int d_rank;
 
       // Total number of processors.
       int d_size;
+
+      // Database to read/write basis vectors from/to.
+      HDFDatabase d_database;
 
       // MPI message tag.
       static const int COMMUNICATE_A;
