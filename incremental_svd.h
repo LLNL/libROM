@@ -64,17 +64,30 @@ class incremental_svd
       getBasis(
          double time) = 0;
 
+      // Returns the number of time intervals on which different sets of basis
+      // vectors are defined.
+      int
+      getNumBasisTimeIntervals() const
+      {
+         return d_num_time_intervals;
+      }
+
+      // Returns the start time for the requested time interval.
+      double
+      getBasisIntervalStartTime(
+         int which_interval) const
+      {
+         CAROM_ASSERT(0 <= which_interval);
+         CAROM_ASSERT(which_interval < d_num_time_intervals);
+         return d_time_interval_start_times[which_interval];
+      }
+
       // Returns the value of the norm of J cached by increment.
       double
       getNormJ() const
       {
          return d_norm_j;
       }
-
-      // Writes the basis vectors to a file with the given base name.
-      void
-      writeBasis(
-         const std::string& base_file_name);
 
    protected:
       // Construct the Q matrix which will be passed to svd.

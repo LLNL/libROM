@@ -1,15 +1,14 @@
 #ifndef included_incremental_svd_rom_h
 #define included_incremental_svd_rom_h
 
+#include "svd_rom.h"
 #include "incremental_svd_time_stepper.h"
 
 namespace CAROM {
 
 // A class which implements a Reduced Order Model based on the incremental svd
-// algorithm.  At the present time it pretty much just recasts the API of
-// the incremental_svd_time_stepper in terms of snapshots.  In the future this
-// class will likely need to do much more.
-class incremental_svd_rom
+// algorithm.
+  class incremental_svd_rom : public svd_rom
 {
    public:
       // Constructor.
@@ -23,50 +22,47 @@ class incremental_svd_rom
          bool fast_update);
 
       // Destructor.
+      virtual
       ~incremental_svd_rom();
 
       // Returns true if it is time for the next svd snapshot.
+      virtual
       bool
       isNextSnapshot(
-         double time)
-      {
-         return d_isvdts->isNextIncrement(time);
-      }
+         double time);
 
       // Add a snapshot to the incremental svd at the given time.
+      virtual
       void
       takeSnapshot(
          double* u_in,
-         double time)
-      {
-         d_isvdts->increment(u_in, time);
-      }
+         double time);
 
       // Computes next time an svd snapshot is needed.
+      virtual
       double
       computeNextSnapshotTime(
          double* u_in,
          double* rhs_in,
-         double time)
-      {
-         return d_isvdts->computeNextIncrementTime(u_in, rhs_in, time);
-      }
+         double time);
 
       // Returns the basis vectors at the given time as a Matrix.
+      virtual
       const Matrix*
       getBasis(
-         double time)
-      {
-         return d_isvdts->getBasis(time);
-      }
+         double time);
 
-      // Writes the basis vectors to a file with the given base name.
-      void
-      writeBasis(
-         const std::string& base_file_name)
-      {
-         d_isvdts->writeBasis(base_file_name);
-      }
+      // Returns the number of time intervals on which different sets of basis
+      // vectors are defined.
+      virtual
+      int
+      getNumBasisTimeIntervals() const;
+
+      // Returns the start time for the requested time interval.
+      virtual
+      double
+      getBasisIntervalStartTime(
+         int which_interval) const;
 
    private:
       // Unimplemented default constructor.

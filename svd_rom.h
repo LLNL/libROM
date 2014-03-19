@@ -1,37 +1,34 @@
-#ifndef included_static_svd_rom_h
-#define included_static_svd_rom_h
-
-#include "svd_rom.h"
-#include "static_svd_time_stepper.h"
+#ifndef svd_rom_h
+#define svd_rom_h
 
 namespace CAROM {
 
-// A class which implements a Reduced Order Model based on the static svd
+class Matrix;
+
+// An abstract base class defining the interface to the incremental svd
 // algorithm.
-class static_svd_rom : public svd_rom
+class svd_rom
 {
    public:
       // Constructor.
-      static_svd_rom(
-         int dim,
-         int increments_per_time_interval);
+      svd_rom();
 
       // Destructor.
       virtual
-      ~static_svd_rom();
+      ~svd_rom();
 
       // Returns true if it is time for the next svd snapshot.
       virtual
       bool
       isNextSnapshot(
-         double time);
+         double time) = 0;
 
-      // Add a snapshot to the static svd.
+      // Add a snapshot to the incremental svd at the given time.
       virtual
       void
       takeSnapshot(
          double* u_in,
-         double time);
+         double time) = 0;
 
       // Computes next time an svd snapshot is needed.
       virtual
@@ -39,40 +36,35 @@ class static_svd_rom : public svd_rom
       computeNextSnapshotTime(
          double* u_in,
          double* rhs_in,
-         double time);
+         double time) = 0;
 
-      // Returns the basis vectors.
+      // Returns the basis vectors at the given time as a Matrix.
       virtual
       const Matrix*
       getBasis(
-         double time);
+         double time) = 0;
 
       // Returns the number of time intervals on which different sets of basis
       // vectors are defined.
       virtual
       int
-      getNumBasisTimeIntervals() const;
+      getNumBasisTimeIntervals() const = 0;
 
       // Returns the start time for the requested time interval.
       virtual
       double
       getBasisIntervalStartTime(
-         int which_interval) const;
+         int which_interval) const = 0;
 
    private:
-      // Unimplemented default constructor.
-      static_svd_rom();
-
       // Unimplemented copy constructor.
-      static_svd_rom(
-         const static_svd_rom& other);
+      svd_rom(
+         const svd_rom& other);
 
       // Unimplemented assignment operator.
-      static_svd_rom&
+      svd_rom&
       operator = (
-         const static_svd_rom& rhs);
-
-      boost::shared_ptr<static_svd_time_stepper> d_svdts;
+         const svd_rom& rhs);
 };
 
 }

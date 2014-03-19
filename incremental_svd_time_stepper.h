@@ -60,12 +60,22 @@ class incremental_svd_time_stepper
          return d_isvd->getBasis(time);
       }
 
-      // Writes the basis vectors to a file with the given base name.
-      void
-      writeBasis(
-         const std::string& base_file_name)
+      // Returns the number of time intervals on which different sets of basis
+      // vectors are defined.
+      virtual
+      int
+      getNumBasisTimeIntervals() const
       {
-         d_isvd->writeBasis(base_file_name);
+         return d_isvd->getNumBasisTimeIntervals();
+      }
+
+      // Returns the start time for the requested time interval.
+      virtual
+      double
+      getBasisIntervalStartTime(
+         int which_interval) const
+      {
+         return d_isvd->getBasisIntervalStartTime(which_interval);
       }
 
    private:

@@ -134,32 +134,6 @@ static_svd::getBasis(
 }
 
 void
-static_svd::writeBasis(
-   const std::string& base_file_name)
-{
-   CAROM_ASSERT(!base_file_name.empty());
-
-   char tmp[10];
-   sprintf(tmp, ".%06d", d_rank);
-   std::string full_file_name = base_file_name + tmp;
-   d_database.create(full_file_name);
-   d_database.putInteger("num_time_intervals", d_num_time_intervals);
-   for (int i = 0; i < d_num_time_intervals; ++i) {
-      const Matrix* basis = getBasis(d_time_interval_start_times[i]);
-      d_database.putDouble("time", d_time_interval_start_times[i]);
-      int num_rows = basis->numRows();
-      d_database.putInteger("num_rows", num_rows);
-      int num_cols = basis->numColumns();
-      d_database.putInteger("num_cols", num_cols);
-      d_database.putDoubleArray(
-         "basis",
-         &basis->item(0, 0),
-         num_rows*num_cols);
-   }
-   d_database.close();
-}
-
-void
 static_svd::computeSVD()
 {
    // Do this computation on process 0 and broadcast results to the other

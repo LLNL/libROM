@@ -58,12 +58,20 @@ class static_svd_time_stepper
          return d_svd->getBasis(time);
       }
 
-      // Writes the basis vectors to a file with the given base name.
-      void
-      writeBasis(
-         const std::string& base_file_name)
+      // Returns the number of time intervals on which different sets of basis
+      // vectors are defined.
+      int
+      getNumBasisTimeIntervals() const
       {
-         d_svd->writeBasis(base_file_name);
+         return d_svd->getNumBasisTimeIntervals();
+      }
+
+      // Returns the start time for the requested time interval.
+      double
+      getBasisIntervalStartTime(
+         int which_interval) const
+      {
+         return d_svd->getBasisIntervalStartTime(which_interval);
       }
 
    private:
