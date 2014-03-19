@@ -47,11 +47,6 @@ class static_svd
       writeBasis(
          const std::string& base_file_name);
 
-      // Reads the basis vectors from a file with the given base name.
-      void
-      readBasis(
-         const std::string& base_file_name);
-
    private:
       // Unimplemented default constructor.
       static_svd();

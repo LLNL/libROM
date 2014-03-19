@@ -63,14 +63,6 @@ class static_svd_rom
          d_svdts->writeBasis(base_file_name);
       }
 
-      // Reads the basis vectors from a file with the given base name.
-      void
-      readBasis(
-         const std::string& base_file_name)
-      {
-         d_svdts->readBasis(base_file_name);
-      }
-
    private:
       // Unimplemented default constructor.
       static_svd_rom();

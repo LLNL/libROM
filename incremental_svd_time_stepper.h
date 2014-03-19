@@ -68,14 +68,6 @@ class incremental_svd_time_stepper
          d_isvd->writeBasis(base_file_name);
       }
 
-      // Reads the basis vectors from a file with the given base name.
-      void
-      readBasis(
-         const std::string& base_file_name)
-      {
-         d_isvd->readBasis(base_file_name);
-      }
-
    private:
       // Unimplemented default constructor.
       incremental_svd_time_stepper();

@@ -11,6 +11,7 @@ AR		= @AR@
 
 OBJS = matrix.o \
        vector.o \
+       basis_reader.o \
        incremental_svd.o \
        incremental_svd_fast_update.o \
        incremental_svd_naive.o \
