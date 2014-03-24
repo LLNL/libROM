@@ -1,92 +1,68 @@
 #ifndef included_HDFDatabase_h
 #define included_HDFDatabase_h
 
+#include "Database.h"
 #include "hdf5.h"
 #include <string>
 
 namespace CAROM {
 
 /* A class that provides basic ability to write to and read from an HDF file.
- * It's capabilities are limited to what the incremental SVD algorithm needs
- * to read and write its basis vectors. */
-class HDFDatabase
+ * It's capabilities are limited to what the SVD algorithm needs to read and
+ * write its basis vectors. */
+class HDFDatabase : public Database
 {
    public:
       // Default constructor.
       HDFDatabase();
 
       // Destructor.
+      virtual
       ~HDFDatabase();
 
+      // Creates a new database file with the supplied name.
+      virtual
       bool
       create(
          const std::string& file_name);
 
+      // Opens the existing database file with the supplied name.
+      virtual
       bool
       open(
          const std::string& file_name);
 
+      // Closes the database file with the supplied name.
+      virtual
       bool
       close();
 
-      // Writes an integer to the file.
-      void
-      putInteger(
-         const std::string& key,
-         int data)
-      {
-         putIntegerArray(key, &data, 1);
-      }
-
       // Writes an array of integers to the file.
+      virtual
       void
       putIntegerArray(
          const std::string& key,
          const int* const data,
          int nelements);
 
-      // Writes a double to the file.
-      void
-      putDouble(
-         const std::string& key,
-         double data)
-      {
-         putDoubleArray(key, &data, 1);
-      }
-
       // Writes an array of doubles to the file.
+      virtual
       void
       putDoubleArray(
          const std::string& key,
          const double* const data,
          int nelements);
 
-      // Reads an integer from the file.
-      void
-      getInteger(
-         const std::string& key,
-         int& data)
-      {
-         getIntegerArray(key, &data, 1);
-      }
-
       // Reads an array of integers from the file.
+      virtual
       void
       getIntegerArray(
          const std::string& key,
          int* data,
          int nelements);
 
-      // Reads a double from the file.
-      void
-      getDouble(
-         const std::string& key,
-         double& data)
-      {
-         getDoubleArray(key, &data, 1);
-      }
-
       // Reads an array of doubles from the file.
+      virtual
       void
       getDoubleArray(
          const std::string& key,
@@ -103,19 +79,25 @@ class HDFDatabase
       operator = (
          const HDFDatabase& rhs);
 
+      // Returns true if the specified key represents an integer entry.  If the
+      // key does not exist or if the string is empty then false is returned.
       bool
       isInteger(
          const std::string& key);
 
+      // Returns true if the specified key represents a double entry.  If the
+      // key does not exist or if the string is empty then false is returned.
       bool
       isDouble(
          const std::string& key);
 
+      // Write attribute to the specified dataset.
       void
       writeAttribute(
          int type_key,
          hid_t dataset_id);
 
+      // Read attribute from the specified dataset.
       int
       readAttribute(
          hid_t dataset_id);

@@ -22,6 +22,7 @@ OBJS = matrix.o \
        static_svd.o \
        static_svd_rom.o \
        static_svd_time_stepper.o \
+       Database.o \
        HDFDatabase.o \
        Utilities.o \
        ParallelBuffer.o

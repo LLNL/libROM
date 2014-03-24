@@ -6,7 +6,8 @@
 namespace CAROM {
 
 BasisReader::BasisReader(
-   const std::string& base_file_name)
+   const std::string& base_file_name,
+   Database::formats db_format)
 {
    CAROM_ASSERT(!base_file_name.empty());
 
@@ -25,23 +26,27 @@ BasisReader::BasisReader(
    char tmp[10];
    sprintf(tmp, ".%06d", rank);
    std::string full_file_name = base_file_name + tmp;
-   HDFDatabase database;
-   database.open(full_file_name);
-   database.getInteger("num_time_intervals", d_num_time_intervals);
+   Database* database;
+   if (db_format == Database::HDF5) {
+      database = new HDFDatabase();
+   }
+   database->open(full_file_name);
+   database->getInteger("num_time_intervals", d_num_time_intervals);
    d_time_interval_start_times.resize(d_num_time_intervals);
    d_basis_vectors.resize(d_num_time_intervals, 0);
    for (int i = 0; i < d_num_time_intervals; ++i) {
-      database.getDouble("time", d_time_interval_start_times[i]);
+      database->getDouble("time", d_time_interval_start_times[i]);
       int num_rows;
-      database.getInteger("num_rows", num_rows);
+      database->getInteger("num_rows", num_rows);
       int num_cols;
-      database.getInteger("num_cols", num_cols);
+      database->getInteger("num_cols", num_cols);
       d_basis_vectors[i] = new Matrix(num_rows, num_cols, false, rank, size);
-      database.getDoubleArray("basis",
-                              &d_basis_vectors[i]->item(0, 0),
-                              num_rows*num_cols);
+      database->getDoubleArray("basis",
+                               &d_basis_vectors[i]->item(0, 0),
+                               num_rows*num_cols);
    }
-   database.close();
+   database->close();
+   delete database;
 }
 
 BasisReader::~BasisReader()

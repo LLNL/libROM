@@ -1,6 +1,7 @@
 #ifndef basis_reader_h
 #define basis_reader_h
 
+#include "Database.h"
 #include <string>
 #include <vector>
 
@@ -12,7 +13,8 @@ class BasisReader {
    public:
       // Constructor.
       BasisReader(
-         const std::string& base_file_name);
+         const std::string& base_file_name,
+         Database::formats db_format = Database::HDF5);
 
       // Destructor.
       ~BasisReader();

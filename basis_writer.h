@@ -1,6 +1,7 @@
 #ifndef basis_writer_h
 #define basis_writer_h
 
+#include "Database.h"
 #include <string>
 
 namespace CAROM {
@@ -17,7 +18,8 @@ class BasisWriter {
       void
       writeBasis(
          const std::string& base_file_name,
-         svd_rom& rom);
+         svd_rom& rom,
+         Database::formats db_format = Database::HDF5);
 
    private:
       // Unimplemented default constructor.
