@@ -17,6 +17,18 @@ namespace CAROM {
       if (0) { char* temp = (char *)&variable; temp++; } \
    } while (0)
 
+/*!
+ * Throw an error assertion from within any C++ source code.  The
+ * macro argument may be any standard ostream expression.  The file and
+ * line number of the abort are also printed.
+ */
+#define CAROM_ERROR(X)                                       \
+   do {                                                      \
+      std::ostringstream os;                                 \
+      os << X << std::ends;                                  \
+      CAROM::Utilities::abort(os.str(), __FILE__, __LINE__); \
+   } while (0)
+
 #ifdef DEBUG_CHECK_ASSERTIONS
 
 #define CAROM_ASSERT(EXP)                                       \
