@@ -1,6 +1,7 @@
 #ifndef basis_reader_h
 #define basis_reader_h
 
+#include "Utilities.h"
 #include "Database.h"
 #include <string>
 #include <vector>
@@ -18,6 +19,28 @@ class BasisReader {
 
       // Destructor.
       ~BasisReader();
+
+      // Returns true if the basis vectors at time t are different from the
+      // last requested basis vectors.
+      bool
+      isNewBasis(
+         double time)
+      {
+         CAROM_ASSERT(0 < d_num_time_intervals);
+         CAROM_ASSERT(0 <= time);
+         bool result = false;
+         if (d_last_basis_idx == -1) {
+            result = true;
+         }
+         else if ((time < d_time_interval_start_times[d_last_basis_idx])) {
+            result = true;
+         }
+         else if ((d_last_basis_idx != d_num_time_intervals -1) &&
+                  (d_time_interval_start_times[d_last_basis_idx+1] >= time)) {
+            result = true;
+         }
+         return result;
+      }
 
       // Basis accessor.
       const Matrix*
@@ -46,6 +69,9 @@ class BasisReader {
 
       // The basis vectors for each time interval.
       std::vector<Matrix*> d_basis_vectors;
+
+      // The last time at which basis vectors were requested.
+      int d_last_basis_idx;
 };
 
 }

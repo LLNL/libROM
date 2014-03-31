@@ -7,7 +7,8 @@ namespace CAROM {
 
 BasisReader::BasisReader(
    const std::string& base_file_name,
-   Database::formats db_format)
+   Database::formats db_format) :
+   d_last_basis_idx(-1)
 {
    CAROM_ASSERT(!base_file_name.empty());
 
@@ -61,6 +62,7 @@ BasisReader::getBasis(
    double time)
 {
    CAROM_ASSERT(0 < d_num_time_intervals);
+   CAROM_ASSERT(0 <= time);
    int i;
    for (i = 0; i < d_num_time_intervals-1; ++i) {
       if (d_time_interval_start_times[i] <= time &&
@@ -68,6 +70,7 @@ BasisReader::getBasis(
          break;
       }
    }
+   d_last_basis_idx = i;
    return d_basis_vectors[i];
 }
 
