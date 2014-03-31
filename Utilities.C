@@ -21,10 +21,17 @@ Utilities::abort(
    perr << "ERROR MESSAGE: " << std::endl << message.c_str() << std::endl;
    perr << std::flush;
 
-   int size;
-   MPI_Comm_size(MPI_COMM_WORLD, &size);
-   if (size > 1) {
-      MPI_Abort(MPI_COMM_WORLD, -1);
+   int mpi_init;
+   MPI_Initialized(&mpi_init);
+   if (mpi_init) {
+      int size;
+      MPI_Comm_size(MPI_COMM_WORLD, &size);
+      if (size > 1) {
+         MPI_Abort(MPI_COMM_WORLD, -1);
+      }
+      else {
+         exit(-1);
+      }
    }
    else {
       exit(-1);
