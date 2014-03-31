@@ -21,7 +21,8 @@ class incremental_svd
          int increments_per_time_interval);
 
       // Destructor.
-      virtual ~incremental_svd();
+      virtual
+      ~incremental_svd();
 
       // Increment the SVD with the new state, u_in, at the given time.
       virtual
