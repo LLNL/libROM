@@ -62,7 +62,6 @@ class incremental_svd_time_stepper
 
       // Returns the number of time intervals on which different sets of basis
       // vectors are defined.
-      virtual
       int
       getNumBasisTimeIntervals() const
       {
@@ -70,7 +69,6 @@ class incremental_svd_time_stepper
       }
 
       // Returns the start time for the requested time interval.
-      virtual
       double
       getBasisIntervalStartTime(
          int which_interval) const
