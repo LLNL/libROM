@@ -26,7 +26,8 @@ static_svd::static_svd(
    d_V(0),
    d_basis(0),
    d_num_time_intervals(0),
-   d_time_interval_start_times(0)
+   d_time_interval_start_times(0),
+   d_this_interval_basis_current(false)
 {
    // Get the rank of this process, and get the number of processors.
    int mpi_init;
@@ -104,6 +105,7 @@ static_svd::collectState(
    memcpy(state, u_in, d_dim*sizeof(double));
    d_state.push_back(state);
    ++d_num_increments;
+   d_this_interval_basis_current = false;
 }
 
 const Matrix*
@@ -121,7 +123,7 @@ static_svd::getBasis(
 
    // If this basis is for the last time interval then it may not be up to date
    // so recompute it.
-   if (i == d_num_time_intervals-1 && !d_state.empty()) {
+   if (!d_this_interval_basis_current) {
       if (d_basis[i] != 0) {
          delete d_basis[i];
       }
@@ -130,6 +132,7 @@ static_svd::getBasis(
    else {
       CAROM_ASSERT(d_basis[i] != 0);
    }
+   CAROM_ASSERT(d_this_interval_basis_current);
    return d_basis[i];
 }
 
@@ -221,6 +224,7 @@ static_svd::computeSVD()
       delete [] myA;
    }
    d_basis[d_num_time_intervals-1] = new Matrix(*d_U);
+   d_this_interval_basis_current = true;
 #ifdef DEBUG_ROMS
    if (d_rank == 0) {
       for (int row = 0; row < d_dim*d_size; ++row) {

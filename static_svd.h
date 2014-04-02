@@ -120,6 +120,10 @@ class static_svd
       // Total number of processors.
       int d_size;
 
+      // Flag to indicate if the basis vectors for the current time interval
+      // are up to date.
+      bool d_this_interval_basis_current;
+
       // Database to read/write basis vectors from/to.
       HDFDatabase d_database;
 
