@@ -25,7 +25,7 @@ BasisWriter::writeBasis(
    else {
       rank = 0;
    }
-   char tmp[10];
+   char tmp[100];
    sprintf(tmp, ".%06d", rank);
    std::string full_file_name = base_file_name + tmp;
    Database* database;
@@ -37,16 +37,17 @@ BasisWriter::writeBasis(
    database->putInteger("num_time_intervals", num_time_intervals);
    for (int i = 0; i < num_time_intervals; ++i) {
       double time_interval_start_time = rom.getBasisIntervalStartTime(i);
-      database->putDouble("time", time_interval_start_time);
+      sprintf(tmp, "time_%06d", i);
+      database->putDouble(tmp, time_interval_start_time);
       const Matrix* basis = rom.getBasis(time_interval_start_time);
       int num_rows = basis->numRows();
-      database->putInteger("num_rows", num_rows);
+      sprintf(tmp, "num_rows_%06d", i);
+      database->putInteger(tmp, num_rows);
       int num_cols = basis->numColumns();
-      database->putInteger("num_cols", num_cols);
-      database->putDoubleArray(
-         "basis",
-         &basis->item(0, 0),
-         num_rows*num_cols);
+      sprintf(tmp, "num_cols_%06d", i);
+      database->putInteger(tmp, num_cols);
+      sprintf(tmp, "basis_%06d", i);
+      database->putDoubleArray(tmp, &basis->item(0, 0), num_rows*num_cols);
    }
    database->close();
    delete database;

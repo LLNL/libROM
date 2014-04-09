@@ -9,6 +9,7 @@
 namespace CAROM {
 
 class Matrix;
+class Database;
 
 class BasisReader {
    public:
@@ -67,11 +68,20 @@ class BasisReader {
       // The start time of each time interval.
       std::vector<double> d_time_interval_start_times;
 
-      // The basis vectors for each time interval.
-      std::vector<Matrix*> d_basis_vectors;
+      // The currently requested basis vectors.
+      Matrix* d_basis_vectors;
+
+      // The database being read from.
+      Database* d_database;
 
       // The last time at which basis vectors were requested.
       int d_last_basis_idx;
+
+      // The rank of the process this object belongs to.
+      int d_rank;
+
+      // The number of processors.
+      int d_size;
 };
 
 }
