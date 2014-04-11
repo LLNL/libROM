@@ -14,7 +14,9 @@ class static_svd_rom : public svd_rom
       // Constructor.
       static_svd_rom(
          int dim,
-         int increments_per_time_interval);
+         int increments_per_time_interval,
+         const std::string& basis_file_name,
+         Database::formats file_format = Database::HDF5);
 
       // Destructor.
       virtual
@@ -41,11 +43,10 @@ class static_svd_rom : public svd_rom
          double* rhs_in,
          double time);
 
-      // Returns the basis vectors.
+      // Returns the basis vectors for the current time interval as a Matrix.
       virtual
       const Matrix*
-      getBasis(
-         double time);
+      getBasis();
 
       // Returns the number of time intervals on which different sets of basis
       // vectors are defined.

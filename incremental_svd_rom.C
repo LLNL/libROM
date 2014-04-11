@@ -9,8 +9,10 @@ incremental_svd_rom::incremental_svd_rom(
    int rom_size,
    double tolerance,
    double max_time_between_snapshots,
-   bool fast_update) :
-   svd_rom(),
+   bool fast_update,
+   const std::string& basis_file_name,
+   Database::formats file_format) :
+   svd_rom(basis_file_name, file_format),
    d_isvdts(new incremental_svd_time_stepper(dim,
                                              epsilon,
                                              skip_redundant,
@@ -37,6 +39,10 @@ incremental_svd_rom::takeSnapshot(
    double* u_in,
    double time)
 {
+   if (d_basis_writer &&
+       d_isvdts->isNewTimeInterval() && getNumBasisTimeIntervals() > 0) {
+      d_basis_writer->writeBasis();
+   }
    d_isvdts->increment(u_in, time);
 }
 
@@ -50,10 +56,9 @@ incremental_svd_rom::computeNextSnapshotTime(
 }
 
 const Matrix*
-incremental_svd_rom::getBasis(
-   double time)
+incremental_svd_rom::getBasis()
 {
-   return d_isvdts->getBasis(time);
+   return d_isvdts->getBasis();
 }
 
 int

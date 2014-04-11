@@ -25,10 +25,10 @@ class incremental_svd_fast_update : public incremental_svd
          const double* u_in,
          double time);
 
-      // Returns the basis vectors for the given time, d_U*d_Up, as a Matrix.
+      // Returns the basis vectors for the current time interval, d_U*d_Up, as
+      // a Matrix.
       const Matrix*
-      getBasis(
-         double time);
+      getBasis();
 
    private:
       // Unimplemented default constructor.

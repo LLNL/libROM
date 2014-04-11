@@ -52,12 +52,11 @@ class incremental_svd_time_stepper
          double* rhs_in,
          double time);
 
-      // Returns the basis vectors at the given time as a Matrix.
+      // Returns the basis vectors for the current time interval as a Matrix.
       const Matrix*
-      getBasis(
-         double time)
+      getBasis()
       {
-         return d_isvd->getBasis(time);
+         return d_isvd->getBasis();
       }
 
       // Returns the number of time intervals on which different sets of basis
@@ -74,6 +73,13 @@ class incremental_svd_time_stepper
          int which_interval) const
       {
          return d_isvd->getBasisIntervalStartTime(which_interval);
+      }
+
+      // Returns true if the next state will result in a new time interval.
+      bool
+      isNewTimeInterval() const
+      {
+         return d_isvd->isNewTimeInterval();
       }
 
    private:

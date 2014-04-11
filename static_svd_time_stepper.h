@@ -50,12 +50,11 @@ class static_svd_time_stepper
          return time;
       }
 
-      // Returns the basis vectors.
+      // Returns the basis vectors for the current time interval as a Matrix.
       const Matrix*
-      getBasis(
-         double time)
+      getBasis()
       {
-         return d_svd->getBasis(time);
+         return d_svd->getBasis();
       }
 
       // Returns the number of time intervals on which different sets of basis
@@ -72,6 +71,13 @@ class static_svd_time_stepper
          int which_interval) const
       {
          return d_svd->getBasisIntervalStartTime(which_interval);
+      }
+
+      // Returns true if the next state will result in a new time interval.
+      bool
+      isNewTimeInterval() const
+      {
+         return d_svd->isNewTimeInterval();
       }
 
    private:

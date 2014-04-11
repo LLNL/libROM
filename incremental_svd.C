@@ -2,8 +2,6 @@
 
 #include "mpi.h"
 
-#include <string.h>
-
 extern "C" {
 void dgesdd_(char*, int*, int*, double*, int*,
              double*, double*, int*, double*, int*,
@@ -49,10 +47,8 @@ incremental_svd::~incremental_svd()
    if (d_S) {
       delete d_S;
    }
-   for (int i = 0; i < d_num_time_intervals; ++i) {
-      if (d_basis[i]) {
-         delete d_basis[i];
-      }
+   if (d_basis) {
+      delete d_basis;
    }
 }
 

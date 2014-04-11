@@ -22,9 +22,10 @@ int main(int argc, char* argv[])
                                       num_snapshots,
                                       1.0e-2,
                                       0.001,
-                                      true);
+                                      true,
+                                      "");
 #ifdef DEBUG_ROMS
-   CAROM::static_svd_rom static_rom(dim, num_snapshots);
+   CAROM::static_svd_rom static_rom(dim, num_snapshots, "");
 #endif
    int size;
    MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -70,7 +71,8 @@ int main(int argc, char* argv[])
          inc_rom.computeNextSnapshotTime(M[i], M[i], 0.01*i);
       }
    }
-   const CAROM::Matrix* inc_basis = inc_rom.getBasis(0.0);
+   inc_rom.endSnapshots();
+   const CAROM::Matrix* inc_basis = inc_rom.getBasis();
    double stop_inc = MPI_Wtime();
    double incremental_run_time = stop_inc - start_inc;
    double global_incremental_run_time;
@@ -94,7 +96,8 @@ int main(int argc, char* argv[])
          static_rom.computeNextSnapshotTime(M[i], M[i], 0.01*i);
       }
    }
-   const CAROM::Matrix* static_basis = static_rom.getBasis(0.0);
+   static_rom.endSnapshots();
+   const CAROM::Matrix* static_basis = static_rom.getBasis();
    double stop_static = MPI_Wtime();
    double static_run_time = stop_static - start_static;
    double global_static_run_time;

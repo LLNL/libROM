@@ -19,7 +19,9 @@ namespace CAROM {
          int rom_size,
          double tolerance,
          double max_time_between_snapshots,
-         bool fast_update);
+         bool fast_update,
+         const std::string& basis_file_name,
+         Database::formats file_format = Database::HDF5);
 
       // Destructor.
       virtual
@@ -46,11 +48,10 @@ namespace CAROM {
          double* rhs_in,
          double time);
 
-      // Returns the basis vectors at the given time as a Matrix.
+      // Returns the basis vectors for the current time interval as a Matrix.
       virtual
       const Matrix*
-      getBasis(
-         double time);
+      getBasis();
 
       // Returns the number of time intervals on which different sets of basis
       // vectors are defined.

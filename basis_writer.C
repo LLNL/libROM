@@ -8,11 +8,12 @@
 
 namespace CAROM {
 
-void
-BasisWriter::writeBasis(
+BasisWriter::BasisWriter(
+   svd_rom* rom,
    const std::string& base_file_name,
-   svd_rom& rom,
-   Database::formats db_format)
+   Database::formats db_format) :
+   d_rom(rom),
+   d_num_intervals_written(0)
 {
    CAROM_ASSERT(!base_file_name.empty());
 
@@ -28,29 +29,37 @@ BasisWriter::writeBasis(
    char tmp[100];
    sprintf(tmp, ".%06d", rank);
    std::string full_file_name = base_file_name + tmp;
-   Database* database;
    if (db_format == Database::HDF5) {
-      database = new HDFDatabase();
+      d_database = new HDFDatabase();
    }
-   database->create(full_file_name);
-   int num_time_intervals = rom.getNumBasisTimeIntervals();
-   database->putInteger("num_time_intervals", num_time_intervals);
-   for (int i = 0; i < num_time_intervals; ++i) {
-      double time_interval_start_time = rom.getBasisIntervalStartTime(i);
-      sprintf(tmp, "time_%06d", i);
-      database->putDouble(tmp, time_interval_start_time);
-      const Matrix* basis = rom.getBasis(time_interval_start_time);
-      int num_rows = basis->numRows();
-      sprintf(tmp, "num_rows_%06d", i);
-      database->putInteger(tmp, num_rows);
-      int num_cols = basis->numColumns();
-      sprintf(tmp, "num_cols_%06d", i);
-      database->putInteger(tmp, num_cols);
-      sprintf(tmp, "basis_%06d", i);
-      database->putDoubleArray(tmp, &basis->item(0, 0), num_rows*num_cols);
-   }
-   database->close();
-   delete database;
+   d_database->create(full_file_name);
+}
+
+BasisWriter::~BasisWriter()
+{
+   d_database->putInteger("num_time_intervals", d_num_intervals_written);
+   d_database->close();
+   delete d_database;
+}
+
+void
+BasisWriter::writeBasis()
+{
+   char tmp[100];
+   double time_interval_start_time =
+      d_rom->getBasisIntervalStartTime(d_num_intervals_written);
+   sprintf(tmp, "time_%06d", d_num_intervals_written);
+   d_database->putDouble(tmp, time_interval_start_time);
+   const Matrix* basis = d_rom->getBasis();
+   int num_rows = basis->numRows();
+   sprintf(tmp, "num_rows_%06d", d_num_intervals_written);
+   d_database->putInteger(tmp, num_rows);
+   int num_cols = basis->numColumns();
+   sprintf(tmp, "num_cols_%06d", d_num_intervals_written);
+   d_database->putInteger(tmp, num_cols);
+   sprintf(tmp, "basis_%06d", d_num_intervals_written);
+   d_database->putDoubleArray(tmp, &basis->item(0, 0), num_rows*num_cols);
+   ++d_num_intervals_written;
 }
 
 }

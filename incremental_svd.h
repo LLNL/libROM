@@ -1,7 +1,6 @@
 #ifndef included_incremental_svd_h
 #define included_incremental_svd_h
 
-#include "HDFDatabase.h"
 #include "matrix.h"
 #include <vector>
 
@@ -59,11 +58,11 @@ class incremental_svd
          return d_size;
       }
 
-      // Returns the basis vectors for the given time, d_U, as a Matrix.
+      // Returns the basis vectors for the current time interval, d_U, as a
+      // Matrix.
       virtual
       const Matrix*
-      getBasis(
-         double time) = 0;
+      getBasis() = 0;
 
       // Returns the number of time intervals on which different sets of basis
       // vectors are defined.
@@ -90,6 +89,14 @@ class incremental_svd
          return d_norm_j;
       }
 
+      // Returns true if the next state will result in a new time interval.
+      bool
+      isNewTimeInterval() const
+      {
+         return (d_num_increments == 0) ||
+                (d_num_increments >= d_increments_per_time_interval);
+      }
+
    protected:
       // Construct the Q matrix which will be passed to svd.
       void
@@ -105,8 +112,6 @@ class incremental_svd
          double* A,
          Matrix*& U,
          Matrix*& S);
-
-   protected:
 
       // Dimension of the system.
       int d_dim;
@@ -127,10 +132,10 @@ class incremental_svd
       // each processor.
       Matrix* d_S;
 
-      // For each time interval, the basis vectors distributed across all
-      // processors.  Each d_basis is the part of the distributed basis vectors
-      // local to the processor owning this object.
-      std::vector<Matrix*> d_basis;
+      // The basis vectors for the current time interval distributed across all
+      // processors.  d_basis is the part of the distributed basis vector local
+      // to the processor owning this object.
+      Matrix* d_basis;
 
       // The number of time intervals gathered.
       int d_num_time_intervals;
@@ -146,9 +151,6 @@ class incremental_svd
 
       // Value of norm of j cached by increment.
       double d_norm_j;
-
-      // Database to read/write basis vectors from/to.
-      HDFDatabase d_database;
 
       // MPI message tag.
       static const int COMMUNICATE_U;

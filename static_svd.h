@@ -1,10 +1,8 @@
 #ifndef included_static_svd_h
 #define included_static_svd_h
 
-#include "HDFDatabase.h"
 #include "matrix.h"
 #include <vector>
-#include <string.h>
 
 namespace CAROM {
 
@@ -37,10 +35,9 @@ class static_svd
          return d_dim;
       }
 
-      // Returns the basis vectors, d_U.
+      // Returns the basis vectors for the current time interval, d_U.
       const Matrix*
-      getBasis(
-         double time);
+      getBasis();
 
       // Returns the number of time intervals on which different sets of basis
       // vectors are defined.
@@ -58,6 +55,14 @@ class static_svd
          CAROM_ASSERT(0 <= which_interval);
          CAROM_ASSERT(which_interval < d_num_time_intervals);
          return d_time_interval_start_times[which_interval];
+      }
+
+      // Returns true if the next state will result in a new time interval.
+      bool
+      isNewTimeInterval() const
+      {
+         return (d_num_increments == 0) ||
+                (d_num_increments >= d_increments_per_time_interval);
       }
 
    private:
@@ -104,9 +109,9 @@ class static_svd
       // The globalized matrix L.  L is small and each process owns all of L.
       Matrix* d_V;
 
-      // For each time interval, the globalized basis vectors.  The basis is
-      // large and each process owns all of the basis.
-      std::vector<Matrix*> d_basis;
+      // The globalized basis vectors for the current time interval.  The basis
+      // vectors are large and each process owns all of the basis vectors.
+      Matrix* d_basis;
 
       // The number of time intervals gathered.
       int d_num_time_intervals;
@@ -123,9 +128,6 @@ class static_svd
       // Flag to indicate if the basis vectors for the current time interval
       // are up to date.
       bool d_this_interval_basis_current;
-
-      // Database to read/write basis vectors from/to.
-      HDFDatabase d_database;
 
       // MPI message tag.
       static const int COMMUNICATE_A;

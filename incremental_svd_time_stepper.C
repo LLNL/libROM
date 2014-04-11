@@ -2,8 +2,6 @@
 #include "incremental_svd_naive.h"
 #include "incremental_svd_fast_update.h"
 
-#include "mpi.h"
-
 #include <cmath>
 
 namespace CAROM {
@@ -53,7 +51,7 @@ incremental_svd_time_stepper::computeNextIncrementTime(
    double eps = d_isvd->getEpsilon();
 
    // Get the current basis vectors.
-   const Matrix* basis = getBasis(time);
+   const Matrix* basis = getBasis();
 
    // Compute a bunch of stuff we need.
    Vector u_vec(u_in, dim, true, rank, size);
@@ -75,6 +73,7 @@ incremental_svd_time_stepper::computeNextIncrementTime(
       j->item(i) /= k;
    }
    delete l;
+   delete j;
 
    Vector rhs_vec(rhs_in, dim, true, rank, size);
    double rhs_norm = rhs_vec.norm();

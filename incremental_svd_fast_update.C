@@ -4,7 +4,6 @@
 
 #include <cmath>
 #include <limits>
-#include <string.h>
 #include <stdio.h>
 
 namespace CAROM {
@@ -38,8 +37,7 @@ incremental_svd_fast_update::increment(
 {
    // If this is the first SVD then build it.  Otherwise add this increment to
    // the system.
-   if (d_num_increments == 0 ||
-       d_num_increments >= d_increments_per_time_interval) {
+   if (isNewTimeInterval()) {
       buildInitialSVD(u_in, time);
    }
    else {
@@ -47,7 +45,7 @@ incremental_svd_fast_update::increment(
    }
 
 #ifdef DEBUG_ROMS
-   const Matrix* basis = getBasis(time);
+   const Matrix* basis = getBasis();
    if (d_rank == 0) {
       // Print d_S.
       for (int row = 0; row < d_num_increments; ++row) {
@@ -94,19 +92,10 @@ incremental_svd_fast_update::increment(
 }
 
 const Matrix*
-incremental_svd_fast_update::getBasis(
-   double time)
+incremental_svd_fast_update::getBasis()
 {
-   CAROM_ASSERT(0 < d_num_time_intervals);
-   int i;
-   for (i = 0; i < d_num_time_intervals-1; ++i) {
-      if (d_time_interval_start_times[i] <= time &&
-          d_time_interval_start_times[i+1] < time) {
-         break;
-      }
-   }
-   CAROM_ASSERT(d_basis[i] != 0);
-   return d_basis[i];
+   CAROM_ASSERT(d_basis != 0);
+   return d_basis;
 }
 
 void
@@ -115,18 +104,18 @@ incremental_svd_fast_update::buildInitialSVD(
    double time)
 {
    // We have a new time interval.
-   ++d_num_time_intervals;
-   d_time_interval_start_times.resize(d_num_time_intervals);
-   d_time_interval_start_times[d_num_time_intervals-1] = time;
-   d_basis.resize(d_num_time_intervals);
 
-   // If this is not the first time interval then delete d_U, d_Up, and d_S
-   // from the previous time interval.
-   if (d_num_time_intervals > 1) {
+   // If this is not the first time interval then delete d_basis, d_U, d_Up,
+   // and d_S of the just completed time interval.
+   if (d_num_time_intervals > 0) {
+      delete d_basis;
       delete d_U;
       delete d_Up;
       delete d_S;
    }
+   ++d_num_time_intervals;
+   d_time_interval_start_times.resize(d_num_time_intervals);
+   d_time_interval_start_times[d_num_time_intervals-1] = time;
 
    // Build d_S for this new time interval.
    d_S = new Matrix(1, 1, false, d_rank, d_size);
@@ -145,7 +134,7 @@ incremental_svd_fast_update::buildInitialSVD(
    }
 
    // Set the basis for this time interval.
-   d_basis[d_num_time_intervals-1] = new Matrix(*d_U);
+   d_basis = new Matrix(*d_U);
 
    // We now have the first increment for the new time interval.
    d_num_increments = 1;
@@ -157,7 +146,7 @@ incremental_svd_fast_update::buildIncrementalSVD(
 {
    // l = basis' * u
    Vector u_vec(u, d_dim, true, d_rank, d_size);
-   Vector* l = d_basis[d_num_time_intervals-1]->TransposeMult(u_vec);
+   Vector* l = d_basis->TransposeMult(u_vec);
 
    // Compute k = u.u - l.l
    double k = u_vec.dot(u_vec) - l->dot(*l);
@@ -219,7 +208,7 @@ incremental_svd_fast_update::buildIncrementalSVD(
       // This increment is new.
 
       // Compute j
-      Vector* basisl = d_basis[d_num_time_intervals-1]->Mult(*l);
+      Vector* basisl = d_basis->Mult(*l);
       Vector* j = u_vec.subtract(basisl);
       delete basisl;
       for (int i = 0; i < d_dim; ++i) {
@@ -250,8 +239,8 @@ incremental_svd_fast_update::buildIncrementalSVD(
    }
 
    // Compute the basis vectors.
-   delete d_basis[d_num_time_intervals - 1];
-   d_basis[d_num_time_intervals - 1] = d_U->Mult(*d_Up);
+   delete d_basis;
+   d_basis = d_U->Mult(*d_Up);
 
    // Clean up.
    delete l;

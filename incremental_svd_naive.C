@@ -4,7 +4,6 @@
 
 #include <cmath>
 #include <limits>
-#include <string.h>
 #include <stdio.h>
 
 namespace CAROM {
@@ -34,8 +33,7 @@ incremental_svd_naive::increment(
 {
    // If this is the first SVD then build it.  Otherwise add this increment to
    // the system.
-   if (d_num_increments == 0 ||
-       d_num_increments >= d_increments_per_time_interval) {
+   if (isNewTimeInterval()) {
       buildInitialSVD(u_in, time);
    }
    else {
@@ -43,7 +41,7 @@ incremental_svd_naive::increment(
    }
 
 #ifdef DEBUG_ROMS
-   const Matrix* basis = getBasis(time);
+   const Matrix* basis = getBasis();
    if (d_rank == 0) {
       // Print d_S.
       for (int row = 0; row < d_num_increments; ++row) {
@@ -90,30 +88,11 @@ incremental_svd_naive::increment(
 }
 
 const Matrix*
-incremental_svd_naive::getBasis(
-   double time)
+incremental_svd_naive::getBasis()
 {
-   CAROM_ASSERT(0 < d_num_time_intervals);
-   int i;
-   for (i = 0; i < d_num_time_intervals-1; ++i) {
-      if (d_time_interval_start_times[i] <= time &&
-          d_time_interval_start_times[i+1] < time) {
-         break;
-      }
-   }
-
-   // If this basis is for the last time interval then it may not be up to
-   // date so recompute it.
-   if (i == d_num_time_intervals-1 && d_U) {
-      if (d_basis[i] != 0) {
-         delete d_basis[i];
-      }
-      d_basis[i] = new Matrix(*d_U);
-   }
-   else {
-      CAROM_ASSERT(d_basis[i] != 0);
-   }
-   return d_basis[i];
+   CAROM_ASSERT(d_U);
+   d_basis = new Matrix(*d_U);
+   return d_basis;
 }
 
 void
@@ -122,25 +101,21 @@ incremental_svd_naive::buildInitialSVD(
    double time)
 {
    // We have a new time interval.
-   ++d_num_time_intervals;
-   d_time_interval_start_times.resize(d_num_time_intervals);
-   d_time_interval_start_times[d_num_time_intervals-1] = time;
-   d_basis.resize(d_num_time_intervals);
 
-   // Set the basis for this time interval to 0.
-   d_basis[d_num_time_intervals-1] = 0;
-
-   // If this is not the first time interval then compute the basis vectors for
-   // the previous time interval and delete the now unnecessary storage for d_U
-   // and d_S for the previous time interval.
-   if (d_num_time_intervals > 1) {
-      if (d_basis[d_num_time_intervals-2] != 0) {
-         delete d_basis[d_num_time_intervals-2];
+   // If this is not the first time interval then write the basis vectors for
+   // the just completed interval.  Delete d_basis and d_S of the just
+   // completed time interval.
+   if (d_num_time_intervals > 0) {
+      if (d_basis) {
+         delete d_basis;
+         d_basis = 0;
       }
-      d_basis[d_num_time_intervals-2] = new Matrix(*d_U);
       delete d_U;
       delete d_S;
    }
+   ++d_num_time_intervals;
+   d_time_interval_start_times.resize(d_num_time_intervals);
+   d_time_interval_start_times[d_num_time_intervals-1] = time;
 
    // Build d_S for this new time interval.
    d_S = new Matrix(1, 1, false, d_rank, d_size);

@@ -18,7 +18,8 @@ int main(int argc, char* argv[])
                                       2,
                                       1.0e-2,
                                       0.11,
-                                      true);
+                                      true,
+                                      "");
    int size;
    MPI_Comm_size(MPI_COMM_WORLD, &size);
    int rank;

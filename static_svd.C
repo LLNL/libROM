@@ -3,6 +3,7 @@
 #include "mpi.h"
 
 #include <stdio.h>
+#include <string.h>
 
 extern "C" {
 void dgesdd_(char*, int*, int*, double*, int*,
@@ -59,10 +60,8 @@ static_svd::~static_svd()
          delete [] d_state[i];
       }
    }
-   for (int i = 0; i < static_cast<int>(d_basis.size()); ++i) {
-      if (d_basis[i]) {
-         delete d_basis[i];
-      }
+   if (d_basis) {
+      delete d_basis;
    }
 }
 
@@ -71,22 +70,14 @@ static_svd::collectState(
    double* u_in,
    double time)
 {
-   if (d_num_increments == 0 ||
-       d_num_increments >= d_increments_per_time_interval) {
+   if (isNewTimeInterval()) {
 
       // We have a new time interval.
-      d_num_increments = 0;
-      ++d_num_time_intervals;
-      d_time_interval_start_times.resize(d_num_time_intervals);
-      d_time_interval_start_times[d_num_time_intervals-1] = time;
-      d_basis.resize(d_num_time_intervals);
-      d_basis[d_num_time_intervals-1] = 0;
-
-      // If this is not the first time interval then construct the the basis
-      // for the previous time interval and delete d_U, d_S, d_V and the
-      // contents of d_state.
-      if (d_num_time_intervals > 1) {
-         computeSVD();
+      if (d_num_time_intervals > 0) {
+         if (d_basis) {
+            delete d_basis;
+            d_basis = 0;
+         }
          for (int i = 0; i < static_cast<int>(d_state.size()); ++i) {
             if (d_state[i]) {
                delete [] d_state[i];
@@ -100,6 +91,11 @@ static_svd::collectState(
          delete d_V;
          d_V = 0;
       }
+      d_num_increments = 0;
+      ++d_num_time_intervals;
+      d_time_interval_start_times.resize(d_num_time_intervals);
+      d_time_interval_start_times[d_num_time_intervals-1] = time;
+      d_basis = 0;
    }
    double* state = new double [d_dim];
    memcpy(state, u_in, d_dim*sizeof(double));
@@ -109,31 +105,21 @@ static_svd::collectState(
 }
 
 const Matrix*
-static_svd::getBasis(
-   double time)
+static_svd::getBasis()
 {
-   CAROM_ASSERT(0 < d_num_time_intervals);
-   int i;
-   for (i = 0; i < d_num_time_intervals-1; ++i) {
-      if (d_time_interval_start_times[i] <= time &&
-          d_time_interval_start_times[i+1] < time) {
-         break;
-      }
-   }
-
    // If this basis is for the last time interval then it may not be up to date
    // so recompute it.
    if (!d_this_interval_basis_current) {
-      if (d_basis[i] != 0) {
-         delete d_basis[i];
+      if (d_basis != 0) {
+         delete d_basis;
       }
       computeSVD();
    }
    else {
-      CAROM_ASSERT(d_basis[i] != 0);
+      CAROM_ASSERT(d_basis != 0);
    }
    CAROM_ASSERT(d_this_interval_basis_current);
-   return d_basis[i];
+   return d_basis;
 }
 
 void
@@ -223,7 +209,7 @@ static_svd::computeSVD()
       // Clean up.
       delete [] myA;
    }
-   d_basis[d_num_time_intervals-1] = new Matrix(*d_U);
+   d_basis = new Matrix(*d_U);
    d_this_interval_basis_current = true;
 #ifdef DEBUG_ROMS
    if (d_rank == 0) {

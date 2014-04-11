@@ -4,8 +4,10 @@ namespace CAROM {
 
 static_svd_rom::static_svd_rom(
    int dim,
-   int increments_per_time_interval) :
-   svd_rom(),
+   int increments_per_time_interval,
+   const std::string& basis_file_name,
+   Database::formats file_format) :
+   svd_rom(basis_file_name, file_format),
    d_svdts(new static_svd_time_stepper(dim, increments_per_time_interval))
 {
 }
@@ -26,6 +28,10 @@ static_svd_rom::takeSnapshot(
    double* u_in,
    double time)
 {
+   if (d_basis_writer &&
+       d_svdts->isNewTimeInterval() && getNumBasisTimeIntervals() > 0) {
+      d_basis_writer->writeBasis();
+   }
    d_svdts->collectState(u_in, time);
 }
 
@@ -39,10 +45,9 @@ static_svd_rom::computeNextSnapshotTime(
 }
 
 const Matrix*
-static_svd_rom::getBasis(
-   double time)
+static_svd_rom::getBasis()
 {
-   return d_svdts->getBasis(time);
+   return d_svdts->getBasis();
 }
 
 int

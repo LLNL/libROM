@@ -25,10 +25,10 @@ class incremental_svd_naive : public incremental_svd
          const double* u_in,
          double time);
 
-      // Returns the basis vectors for the given time, d_U, as a Matrix.
+      // Returns the basis vectors for the current time interval, d_U, as a
+      // Matrix.
       const Matrix*
-      getBasis(
-         double time);
+      getBasis();
 
    private:
       // Unimplemented default constructor.
