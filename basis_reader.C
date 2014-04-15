@@ -56,7 +56,7 @@ BasisReader::getBasis(
    int i;
    for (i = 0; i < d_num_time_intervals-1; ++i) {
       if (d_time_interval_start_times[i] <= time &&
-          d_time_interval_start_times[i+1] < time) {
+          time < d_time_interval_start_times[i+1]) {
          break;
       }
    }

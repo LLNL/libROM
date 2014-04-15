@@ -36,8 +36,8 @@ class BasisReader {
          else if ((time < d_time_interval_start_times[d_last_basis_idx])) {
             result = true;
          }
-         else if ((d_last_basis_idx != d_num_time_intervals -1) &&
-                  (d_time_interval_start_times[d_last_basis_idx+1] >= time)) {
+         else if ((d_last_basis_idx != d_num_time_intervals-1) &&
+                  (d_time_interval_start_times[d_last_basis_idx+1] <= time)) {
             result = true;
          }
          return result;
