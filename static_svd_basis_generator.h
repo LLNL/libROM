@@ -1,31 +1,26 @@
-#ifndef included_incremental_svd_rom_h
-#define included_incremental_svd_rom_h
+#ifndef included_static_svd_basis_generator_h
+#define included_static_svd_basis_generator_h
 
-#include "svd_rom.h"
-#include "incremental_svd_time_stepper.h"
+#include "svd_basis_generator.h"
+#include "static_svd_time_stepper.h"
 
 namespace CAROM {
 
-// A class which implements a Reduced Order Model based on the incremental svd
+// A class which implements a Reduced Order Model based on the static svd
 // algorithm.
-  class incremental_svd_rom : public svd_rom
+class static_svd_basis_generator : public svd_basis_generator
 {
    public:
       // Constructor.
-      incremental_svd_rom(
+      static_svd_basis_generator(
          int dim,
-         double epsilon,
-         bool skip_redundant,
-         int rom_size,
-         double tolerance,
-         double max_time_between_snapshots,
-         bool fast_update,
+         int increments_per_time_interval,
          const std::string& basis_file_name,
          Database::formats file_format = Database::HDF5);
 
       // Destructor.
       virtual
-      ~incremental_svd_rom();
+      ~static_svd_basis_generator();
 
       // Returns true if it is time for the next svd snapshot.
       virtual
@@ -33,7 +28,7 @@ namespace CAROM {
       isNextSnapshot(
          double time);
 
-      // Add a snapshot to the incremental svd at the given time.
+      // Add a snapshot to the static svd.
       virtual
       void
       takeSnapshot(
@@ -67,19 +62,18 @@ namespace CAROM {
 
    private:
       // Unimplemented default constructor.
-      incremental_svd_rom();
+      static_svd_basis_generator();
 
       // Unimplemented copy constructor.
-      incremental_svd_rom(
-         const incremental_svd_rom& other);
+      static_svd_basis_generator(
+         const static_svd_basis_generator& other);
 
       // Unimplemented assignment operator.
-      incremental_svd_rom&
+      static_svd_basis_generator&
       operator = (
-         const incremental_svd_rom& rhs);
+         const static_svd_basis_generator& rhs);
 
-      // The underlying time step control object.
-      boost::shared_ptr<incremental_svd_time_stepper> d_isvdts;
+      boost::shared_ptr<static_svd_time_stepper> d_svdts;
 };
 
 }

@@ -1,41 +1,41 @@
-#include "incremental_svd_rom.h"
+#include "incremental_svd_basis_generator.h"
 
 namespace CAROM {
 
-incremental_svd_rom::incremental_svd_rom(
+incremental_svd_basis_generator::incremental_svd_basis_generator(
    int dim,
    double epsilon,
    bool skip_redundant,
-   int rom_size,
+   int basis_size,
    double tolerance,
    double max_time_between_snapshots,
    bool fast_update,
    const std::string& basis_file_name,
    Database::formats file_format) :
-   svd_rom(basis_file_name, file_format),
+   svd_basis_generator(basis_file_name, file_format),
    d_isvdts(new incremental_svd_time_stepper(dim,
                                              epsilon,
                                              skip_redundant,
-                                             rom_size,
+                                             basis_size,
                                              tolerance,
                                              max_time_between_snapshots,
                                              fast_update))
 {
 }
 
-incremental_svd_rom::~incremental_svd_rom()
+incremental_svd_basis_generator::~incremental_svd_basis_generator()
 {
 }
 
 bool
-incremental_svd_rom::isNextSnapshot(
+incremental_svd_basis_generator::isNextSnapshot(
    double time)
 {
    return d_isvdts->isNextIncrement(time);
 }
 
 void
-incremental_svd_rom::takeSnapshot(
+incremental_svd_basis_generator::takeSnapshot(
    double* u_in,
    double time)
 {
@@ -47,7 +47,7 @@ incremental_svd_rom::takeSnapshot(
 }
 
 double
-incremental_svd_rom::computeNextSnapshotTime(
+incremental_svd_basis_generator::computeNextSnapshotTime(
    double* u_in,
    double* rhs_in,
    double time)
@@ -56,19 +56,19 @@ incremental_svd_rom::computeNextSnapshotTime(
 }
 
 const Matrix*
-incremental_svd_rom::getBasis()
+incremental_svd_basis_generator::getBasis()
 {
    return d_isvdts->getBasis();
 }
 
 int
-incremental_svd_rom::getNumBasisTimeIntervals() const
+incremental_svd_basis_generator::getNumBasisTimeIntervals() const
 {
    return d_isvdts->getNumBasisTimeIntervals();
 }
 
 double
-incremental_svd_rom::getBasisIntervalStartTime(
+incremental_svd_basis_generator::getBasisIntervalStartTime(
    int which_interval) const
 {
    return d_isvdts->getBasisIntervalStartTime(which_interval);

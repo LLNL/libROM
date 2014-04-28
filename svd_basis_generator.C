@@ -1,9 +1,9 @@
-#include "svd_rom.h"
+#include "svd_basis_generator.h"
 #include "basis_writer.h"
 
 namespace CAROM {
 
-svd_rom::svd_rom(
+svd_basis_generator::svd_basis_generator(
    const std::string& basis_file_name,
    Database::formats file_format) :
    d_basis_writer(0)
@@ -13,7 +13,7 @@ svd_rom::svd_rom(
    }
 }
 
-svd_rom::~svd_rom()
+svd_basis_generator::~svd_basis_generator()
 {
    if (d_basis_writer) {
       delete d_basis_writer;

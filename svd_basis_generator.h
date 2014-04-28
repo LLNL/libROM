@@ -1,5 +1,5 @@
-#ifndef svd_rom_h
-#define svd_rom_h
+#ifndef svd_basis_generator_h
+#define svd_basis_generator_h
 
 #include "basis_writer.h"
 
@@ -12,17 +12,17 @@ class Matrix;
 
 // An abstract base class defining the interface to the incremental svd
 // algorithm.
-class svd_rom
+class svd_basis_generator
 {
    public:
       // Constructor.
-      svd_rom(
+      svd_basis_generator(
          const std::string& basis_file_name,
          Database::formats file_format = Database::HDF5);
 
       // Destructor.
       virtual
-      ~svd_rom();
+      ~svd_basis_generator();
 
       // Returns true if it is time for the next svd snapshot.
       virtual
@@ -77,13 +77,13 @@ class svd_rom
 
    private:
       // Unimplemented copy constructor.
-      svd_rom(
-         const svd_rom& other);
+      svd_basis_generator(
+         const svd_basis_generator& other);
 
       // Unimplemented assignment operator.
-      svd_rom&
+      svd_basis_generator&
       operator = (
-         const svd_rom& rhs);
+         const svd_basis_generator& rhs);
 };
 
 }

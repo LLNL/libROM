@@ -6,20 +6,21 @@
 
 namespace CAROM {
 
-class svd_rom;
+class svd_basis_generator;
 
 class BasisWriter {
    public:
       // Constructor.
       BasisWriter(
-         svd_rom* rom,
+         svd_basis_generator* basis_generator,
          const std::string& base_file_name,
          Database::formats db_format = Database::HDF5);
 
       // Destructor.
       ~BasisWriter();
 
-      // Write basis vectors for supplied svd_rom to file with specified name.
+      // Write basis vectors for supplied svd_basis_generator to file with
+      // specified name.
       void
       writeBasis();
 
@@ -36,8 +37,8 @@ class BasisWriter {
       operator = (
          const BasisWriter& rhs);
 
-      // ROM whose basis vectors are being written.
-      svd_rom* d_rom;
+      // Basis generator whose basis vectors are being written.
+      svd_basis_generator* d_basis_generator;
 
       // Database to which basis vectors are being written.
       Database* d_database;

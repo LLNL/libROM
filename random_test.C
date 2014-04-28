@@ -1,5 +1,5 @@
-#include "incremental_svd_rom.h"
-#include "static_svd_rom.h"
+#include "incremental_svd_basis_generator.h"
+#include "static_svd_basis_generator.h"
 
 #include "mpi.h"
 
@@ -16,16 +16,18 @@ int main(int argc, char* argv[])
    int num_lin_dep_snapshots = atoi(argv[3]);
    int num_lin_indep_snapshots = num_snapshots - num_lin_dep_snapshots;
    MPI_Init(&argc, &argv);
-   CAROM::incremental_svd_rom inc_rom(dim,
-                                      1.0e-6,
-                                      false,
-                                      num_snapshots,
-                                      1.0e-2,
-                                      0.001,
-                                      true,
-                                      "");
+   CAROM::incremental_svd_basis_generator inc_basis_generator(dim,
+      1.0e-6,
+      false,
+      num_snapshots,
+      1.0e-2,
+      0.001,
+      true,
+      "");
 #ifdef DEBUG_ROMS
-   CAROM::static_svd_rom static_rom(dim, num_snapshots, "");
+   CAROM::static_svd_basis_generator static_basis_generator(dim,
+      num_snapshots,
+      "");
 #endif
    int size;
    MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -66,13 +68,13 @@ int main(int argc, char* argv[])
    }
    double start_inc = MPI_Wtime();
    for (int i = 0; i < num_snapshots; ++i) {
-      if (inc_rom.isNextSnapshot(0.01*i)) {
-         inc_rom.takeSnapshot(M[i], 0.01*i);
-         inc_rom.computeNextSnapshotTime(M[i], M[i], 0.01*i);
+      if (inc_basis_generator.isNextSnapshot(0.01*i)) {
+         inc_basis_generator.takeSnapshot(M[i], 0.01*i);
+         inc_basis_generator.computeNextSnapshotTime(M[i], M[i], 0.01*i);
       }
    }
-   inc_rom.endSnapshots();
-   const CAROM::Matrix* inc_basis = inc_rom.getBasis();
+   inc_basis_generator.endSnapshots();
+   const CAROM::Matrix* inc_basis = inc_basis_generator.getBasis();
    double stop_inc = MPI_Wtime();
    double incremental_run_time = stop_inc - start_inc;
    double global_incremental_run_time;
@@ -91,13 +93,13 @@ int main(int argc, char* argv[])
 #else
    double start_static = MPI_Wtime();
    for (int i = 0; i < num_snapshots; ++i) {
-      if (static_rom.isNextSnapshot(0.01*i)) {
-         static_rom.takeSnapshot(M[i], 0.01*i);
-         static_rom.computeNextSnapshotTime(M[i], M[i], 0.01*i);
+      if (static_basis_generator.isNextSnapshot(0.01*i)) {
+         static_basis_generator.takeSnapshot(M[i], 0.01*i);
+         static_basis_generator.computeNextSnapshotTime(M[i], M[i], 0.01*i);
       }
    }
-   static_rom.endSnapshots();
-   const CAROM::Matrix* static_basis = static_rom.getBasis();
+   static_basis_generator.endSnapshots();
+   const CAROM::Matrix* static_basis = static_basis_generator.getBasis();
    double stop_static = MPI_Wtime();
    double static_run_time = stop_static - start_static;
    double global_static_run_time;

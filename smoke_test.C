@@ -1,4 +1,4 @@
-#include "incremental_svd_rom.h"
+#include "incremental_svd_basis_generator.h"
 
 #include "mpi.h"
 
@@ -12,14 +12,14 @@ int main(int argc, char* argv[])
    }
    int dim = atoi(argv[1]);
    MPI_Init(&argc, &argv);
-   CAROM::incremental_svd_rom inc_rom(dim,
-                                      1.0e-2,
-                                      false,
-                                      2,
-                                      1.0e-2,
-                                      0.11,
-                                      true,
-                                      "");
+   CAROM::incremental_svd_basis_generator inc_basis_generator(dim,
+      1.0e-2,
+      false,
+      2,
+      1.0e-2,
+      0.11,
+      true,
+      "");
    int size;
    MPI_Comm_size(MPI_COMM_WORLD, &size);
    int rank;
@@ -30,19 +30,21 @@ int main(int argc, char* argv[])
    }
    double next_snapshot_time;
    double vals0[6] = {1.0, 6.0, 3.0, 8.0, 17.0, 9.0};
-   if (inc_rom.isNextSnapshot(0.0)) {
-      inc_rom.takeSnapshot(&vals0[dim*rank], 0.0);
-      next_snapshot_time = inc_rom.computeNextSnapshotTime(&vals0[dim*rank],
-                                                           &vals0[dim*rank],
-                                                           0.0);
+   if (inc_basis_generator.isNextSnapshot(0.0)) {
+      inc_basis_generator.takeSnapshot(&vals0[dim*rank], 0.0);
+      next_snapshot_time =
+         inc_basis_generator.computeNextSnapshotTime(&vals0[dim*rank],
+            &vals0[dim*rank],
+            0.0);
    }
    double vals1[6] = {2.0, 7.0, 4.0, 9.0, 18.0, 10.0};
 //   double vals1[6] = {1.0, 6.0, 3.0, 8.0, 17.0, 9.0};
-   if (inc_rom.isNextSnapshot(0.11)) {
-      inc_rom.takeSnapshot(&vals1[dim*rank], 0.11);
-      next_snapshot_time = inc_rom.computeNextSnapshotTime(&vals1[dim*rank],
-                                                           &vals1[dim*rank],
-                                                           0.11);
+   if (inc_basis_generator.isNextSnapshot(0.11)) {
+      inc_basis_generator.takeSnapshot(&vals1[dim*rank], 0.11);
+      next_snapshot_time =
+         inc_basis_generator.computeNextSnapshotTime(&vals1[dim*rank],
+            &vals1[dim*rank],
+            0.11);
    }
    MPI_Finalize();
    return 0;

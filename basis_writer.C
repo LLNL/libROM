@@ -1,7 +1,7 @@
 #include "basis_writer.h"
 #include "HDFDatabase.h"
 #include "matrix.h"
-#include "svd_rom.h"
+#include "svd_basis_generator.h"
 #include "Utilities.h"
 
 #include "mpi.h"
@@ -9,10 +9,10 @@
 namespace CAROM {
 
 BasisWriter::BasisWriter(
-   svd_rom* rom,
+   svd_basis_generator* basis_generator,
    const std::string& base_file_name,
    Database::formats db_format) :
-   d_rom(rom),
+   d_basis_generator(basis_generator),
    d_num_intervals_written(0)
 {
    CAROM_ASSERT(!base_file_name.empty());
@@ -47,10 +47,10 @@ BasisWriter::writeBasis()
 {
    char tmp[100];
    double time_interval_start_time =
-      d_rom->getBasisIntervalStartTime(d_num_intervals_written);
+      d_basis_generator->getBasisIntervalStartTime(d_num_intervals_written);
    sprintf(tmp, "time_%06d", d_num_intervals_written);
    d_database->putDouble(tmp, time_interval_start_time);
-   const Matrix* basis = d_rom->getBasis();
+   const Matrix* basis = d_basis_generator->getBasis();
    int num_rows = basis->numRows();
    sprintf(tmp, "num_rows_%06d", d_num_intervals_written);
    d_database->putInteger(tmp, num_rows);
