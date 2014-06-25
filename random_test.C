@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
       printf("incremental run time = %g\n", global_incremental_run_time/size);
    }
 #ifndef DEBUG_ROMS
-   NULL_USE(inc_basis);
+   CAROM_NULL_USE(inc_basis);
 #else
    double start_static = MPI_Wtime();
    for (int i = 0; i < num_snapshots; ++i) {

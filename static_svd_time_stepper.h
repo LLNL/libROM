@@ -25,7 +25,7 @@ class static_svd_time_stepper
       isNextStateCollection(
          double time)
       {
-         NULL_USE(time);
+         CAROM_NULL_USE(time);
          return true;
       }
 
@@ -45,8 +45,8 @@ class static_svd_time_stepper
          double* rhs_in,
          double time)
       {
-         NULL_USE(u_in);
-         NULL_USE(rhs_in);
+         CAROM_NULL_USE(u_in);
+         CAROM_NULL_USE(rhs_in);
          return time;
       }
 

@@ -12,7 +12,7 @@ namespace CAROM {
  * A null use of a variable, use to avoid GNU compiler
  * warnings about unused variables.
  */
-#define NULL_USE(variable)                               \
+#define CAROM_NULL_USE(variable)                               \
    do {                                                  \
       if (0) { char* temp = (char *)&variable; temp++; } \
    } while (0)
