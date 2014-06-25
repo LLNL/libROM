@@ -71,7 +71,7 @@ BasisReader::getBasis(
    if (d_basis_vectors) {
       delete d_basis_vectors;
    }
-   d_basis_vectors = new Matrix(num_rows, num_cols, false, d_rank, d_size);
+   d_basis_vectors = new Matrix(num_rows, num_cols, true, d_rank, d_size);
    sprintf(tmp, "basis_%06d", i);
    d_database->getDoubleArray(tmp,
                               &d_basis_vectors->item(0, 0),
