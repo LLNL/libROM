@@ -53,41 +53,51 @@ incremental_svd_time_stepper::computeNextIncrementTime(
    // Get the current basis vectors.
    const Matrix* basis = getBasis();
 
-   // Compute a bunch of stuff we need.
+   // Compute the projection of the current state into the reduced order space.
    Vector u_vec(u_in, dim, true, rank, size);
    Vector* l = basis->TransposeMult(u_vec);
+
+   // Compute the difference in the norms of the current state and its
+   // projection into the reduced order space.
    double cm = u_vec.dot(u_vec);
-   double k = cm - (l->dot(*l));
-   if (k <= 0) {
-      k = 0;
+   double proj_error_norm = cm - (l->dot(*l));
+   if (proj_error_norm <= 0) {
+      proj_error_norm = 0.0;
    }
    else {
-      k = sqrt(k);
-   }
-
-   // Compute j
-   Vector* basisl = basis->Mult(*l);
-   Vector* j = u_vec.subtract(basisl);
-   delete basisl;
-   for (int i = 0; i < dim; ++i) {
-      j->item(i) /= k;
+      proj_error_norm = sqrt(proj_error_norm);
    }
    delete l;
-   delete j;
 
+   // Compute the projection of the rhs into the reduced order space.
    Vector rhs_vec(rhs_in, dim, true, rank, size);
-   double rhs_norm = rhs_vec.norm();
-   double u_norm = sqrt(cm);
+   l = basis->TransposeMult(rhs_vec);
 
-   double eps0 = k/(eps+u_norm);
-   double deps = (1.0+eps0)*rhs_norm/(1.0e-10+u_norm);
-   double dt = (eps-eps0)/(deps+1.0e-10);
-
-   if (dt > d_max_time_between_increments) {
-      dt = d_max_time_between_increments;
+   // Compute the difference in the norms of the rhs and its projection into
+   // the reduced order space.
+   cm = rhs_vec.dot(rhs_vec);
+   double proj_error_deriv_norm = cm - (l->dot(*l));
+   if (proj_error_deriv_norm <= 0) {
+      proj_error_deriv_norm = 0.0;
    }
-   else if (dt < 0) {
-      dt = 0.0;
+   else {
+      proj_error_deriv_norm = sqrt(proj_error_deriv_norm);
+   }
+   delete l;
+
+   // Compute dt from these tow norms.
+   double dt;
+   if (proj_error_norm > 0) {
+      dt = (d_tol - proj_error_norm) / proj_error_deriv_norm;
+      if (dt > d_max_time_between_increments) {
+         dt = d_max_time_between_increments;
+      }
+      else if (dt < 0) {
+         dt = 0.0;
+      }
+   }
+   else {
+      dt = d_max_time_between_increments;
    }
 
    // Return next increment time.
