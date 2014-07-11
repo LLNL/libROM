@@ -295,9 +295,10 @@ void
 incremental_svd_naive::reOrthogonalize()
 {
    for (int work = 1; work < d_num_increments; ++work) {
+      double tmp;
       for (int col = 0; col < work; ++col) {
          double factor = 0.0;
-         double tmp = 0.0;
+         tmp = 0.0;
          for (int i = 0; i < d_dim; ++i) {
             tmp += d_U->item(i, col)*d_U->item(i, work);
          }
@@ -313,8 +314,15 @@ incremental_svd_naive::reOrthogonalize()
          }
       }
       double norm = 0.0;
+      tmp = 0.0;
       for (int i = 0; i < d_dim; ++i) {
-         norm += d_U->item(i, work)*d_U->item(i, work);
+         tmp += d_U->item(i, work)*d_U->item(i, work);
+      }
+      if (d_size > 1) {
+         MPI_Allreduce(&tmp, &norm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+      }
+      else {
+         norm = tmp;
       }
       norm = sqrt(norm);
       for (int i = 0; i < d_dim; ++i) {
