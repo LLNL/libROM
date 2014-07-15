@@ -85,7 +85,7 @@ incremental_svd_time_stepper::computeNextIncrementTime(
    }
    delete l;
 
-   // Compute dt from these tow norms.
+   // Compute dt from these two norms.
    double dt;
    if (proj_error_norm > 0) {
       dt = (d_tol - proj_error_norm) / proj_error_deriv_norm;
