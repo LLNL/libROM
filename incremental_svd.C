@@ -28,6 +28,8 @@ incremental_svd::incremental_svd(
    d_time_interval_start_times(0),
    d_norm_j(0.0)
 {
+   CAROM_ASSERT(epsilon > 0);
+
    // Get the rank of this process, and get the number of processors.
    int mpi_init;
    MPI_Initialized(&mpi_init);
