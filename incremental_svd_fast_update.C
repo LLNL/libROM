@@ -148,8 +148,11 @@ incremental_svd_fast_update::buildIncrementalSVD(
    Vector u_vec(u, d_dim, true, d_rank, d_size);
    Vector* l = d_basis->TransposeMult(u_vec);
 
-   // Compute k = u.u - l.l
-   double k = u_vec.dot(u_vec) - l->dot(*l);
+   // basisl = basis * l
+   Vector* basisl = d_basis->Mult(*l);
+
+   // Compute k = sqrt(u.u - 2.0*l.l + basisl.basisl) which is ||u - basisl||.
+   double k = u_vec.dot(u_vec) - 2.0*l->dot(*l) + basisl->dot(*basisl);
    if (k <= 0) {
       k = 0;
    }
@@ -208,9 +211,7 @@ incremental_svd_fast_update::buildIncrementalSVD(
       // This increment is new.
 
       // Compute j
-      Vector* basisl = d_basis->Mult(*l);
       Vector* j = u_vec.subtract(basisl);
-      delete basisl;
       for (int i = 0; i < d_dim; ++i) {
          j->item(i) /= k;
       }
@@ -237,6 +238,7 @@ incremental_svd_fast_update::buildIncrementalSVD(
          reOrthogonalizeUp();
       }
    }
+   delete basisl;
 
    // Compute the basis vectors.
    delete d_basis;
