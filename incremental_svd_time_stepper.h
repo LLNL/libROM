@@ -18,10 +18,10 @@ class incremental_svd_time_stepper
       // Constructor.
       incremental_svd_time_stepper(
          int dim,
-         double epsilon,
+         double redundancy_tol,
          bool skip_redundant,
          int increments_per_time_interval,
-         double tolerance,
+         double sampling_tol,
          double max_time_between_increments,
          bool fast_update);
 

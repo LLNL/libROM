@@ -8,27 +8,29 @@ namespace CAROM {
 
 incremental_svd_time_stepper::incremental_svd_time_stepper(
    int dim,
-   double epsilon,
+   double redundancy_tol,
    bool skip_redundant,
    int increments_per_time_interval,
-   double tolerance,
+   double sampling_tol,
    double max_time_between_increments,
    bool fast_update) :
-   d_tol(tolerance),
+   d_tol(sampling_tol),
    d_max_time_between_increments(max_time_between_increments),
    d_next_increment_time(0.0)
 {
+   CAROM_ASSERT(sampling_tol > 0.0);
+
    if (fast_update) {
       d_isvd.reset(
          new incremental_svd_fast_update(dim,
-                                         epsilon,
+                                         redundancy_tol,
                                          skip_redundant,
                                          increments_per_time_interval));
    }
    else {
       d_isvd.reset(
          new incremental_svd_naive(dim,
-                                   epsilon,
+                                   redundancy_tol,
                                    skip_redundant,
                                    increments_per_time_interval));
    }
@@ -48,7 +50,6 @@ incremental_svd_time_stepper::computeNextIncrementTime(
    int dim = d_isvd->getDim();
    int rank = d_isvd->getRank();
    int size = d_isvd->getSize();
-   double eps = d_isvd->getEpsilon();
 
    // Get the current basis vectors.
    const Matrix* basis = getBasis();

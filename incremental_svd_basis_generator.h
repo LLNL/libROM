@@ -14,10 +14,10 @@ namespace CAROM {
       // Constructor.
       incremental_svd_basis_generator(
          int dim,
-         double epsilon,
+         double redundancy_tol,
          bool skip_redundant,
          int basis_size,
-         double tolerance,
+         double sampling_tol,
          double max_time_between_snapshots,
          bool fast_update,
          const std::string& basis_file_name,

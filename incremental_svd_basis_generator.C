@@ -4,20 +4,20 @@ namespace CAROM {
 
 incremental_svd_basis_generator::incremental_svd_basis_generator(
    int dim,
-   double epsilon,
+   double redundancy_tol,
    bool skip_redundant,
    int basis_size,
-   double tolerance,
+   double sampling_tol,
    double max_time_between_snapshots,
    bool fast_update,
    const std::string& basis_file_name,
    Database::formats file_format) :
    svd_basis_generator(basis_file_name, file_format),
    d_isvdts(new incremental_svd_time_stepper(dim,
-                                             epsilon,
+                                             redundancy_tol,
                                              skip_redundant,
                                              basis_size,
-                                             tolerance,
+                                             sampling_tol,
                                              max_time_between_snapshots,
                                              fast_update))
 {

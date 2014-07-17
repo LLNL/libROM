@@ -10,10 +10,13 @@ namespace CAROM {
 
 incremental_svd_fast_update::incremental_svd_fast_update(
    int dim,
-   double epsilon,
+   double redundancy_tol,
    bool skip_redundant,
    int increments_per_time_interval) :
-   incremental_svd(dim, epsilon, skip_redundant, increments_per_time_interval),
+   incremental_svd(dim,
+      redundancy_tol,
+      skip_redundant,
+      increments_per_time_interval),
    d_U(0),
    d_Up(0)
 {

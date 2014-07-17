@@ -28,13 +28,6 @@ class static_svd
          double* u_in,
          double time);
 
-      // Returns the dimension of the system.
-      int
-      getDim() const
-      {
-         return d_dim;
-      }
-
       // Returns the basis vectors for the current time interval, d_U.
       const Matrix*
       getBasis();

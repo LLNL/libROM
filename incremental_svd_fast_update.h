@@ -12,7 +12,7 @@ class incremental_svd_fast_update : public incremental_svd
       // Constructor.
       incremental_svd_fast_update(
          int dim,
-         double epsilon,
+         double redundancy_tol,
          bool skip_redundant,
          int increments_per_time_interval);
 

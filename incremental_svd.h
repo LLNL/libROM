@@ -15,7 +15,7 @@ class incremental_svd
       // Constructor.
       incremental_svd(
          int dim,
-         double epsilon,
+         double redundancy_tol,
          bool skip_redundant,
          int increments_per_time_interval);
 
@@ -29,13 +29,6 @@ class incremental_svd
       increment(
          const double* u_in,
          double time) = 0;
-
-      // Returns the tolerance used to determine if an increment is new.
-      double
-      getEpsilon() const
-      {
-         return d_epsilon;
-      }
 
       // Returns the dimension of the system.
       int
@@ -80,13 +73,6 @@ class incremental_svd
          CAROM_ASSERT(0 <= which_interval);
          CAROM_ASSERT(which_interval < d_num_time_intervals);
          return d_time_interval_start_times[which_interval];
-      }
-
-      // Returns the value of the norm of J cached by increment.
-      double
-      getNormJ() const
-      {
-         return d_norm_j;
       }
 
       // Returns true if the next state will result in a new time interval.
@@ -148,9 +134,6 @@ class incremental_svd
 
       // Total number of processors.
       int d_size;
-
-      // Value of norm of j cached by increment.
-      double d_norm_j;
 
       // MPI message tag.
       static const int COMMUNICATE_U;

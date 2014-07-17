@@ -14,21 +14,20 @@ const int incremental_svd::COMMUNICATE_U = 666;
 
 incremental_svd::incremental_svd(
    int dim,
-   double epsilon,
+   double redundancy_tol,
    bool skip_redundant,
    int increments_per_time_interval) :
    d_dim(dim),
    d_num_increments(0),
-   d_epsilon(epsilon),
+   d_epsilon(redundancy_tol),
    d_skip_redundant(skip_redundant),
    d_increments_per_time_interval(increments_per_time_interval),
    d_S(0),
    d_basis(0),
    d_num_time_intervals(0),
-   d_time_interval_start_times(0),
-   d_norm_j(0.0)
+   d_time_interval_start_times(0)
 {
-   CAROM_ASSERT(epsilon > 0);
+   CAROM_ASSERT(redundancy_tol > 0.0);
 
    // Get the rank of this process, and get the number of processors.
    int mpi_init;

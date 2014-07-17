@@ -12,7 +12,7 @@ class incremental_svd_naive : public incremental_svd
       // Constructor.
       incremental_svd_naive(
          int dim,
-         double epsilon,
+         double redundancy_tol,
          bool skip_redundant,
          int increments_per_time_interval);
 
