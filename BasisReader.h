@@ -1,5 +1,5 @@
-#ifndef basis_reader_h
-#define basis_reader_h
+#ifndef included_BasisReader_h
+#define included_BasisReader_h
 
 #include "Utilities.h"
 #include "Database.h"

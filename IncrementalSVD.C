@@ -1,4 +1,4 @@
-#include "incremental_svd.h"
+#include "IncrementalSVD.h"
 
 #include "mpi.h"
 
@@ -10,9 +10,9 @@ void dgesdd_(char*, int*, int*, double*, int*,
 
 namespace CAROM {
 
-const int incremental_svd::COMMUNICATE_U = 666;
+const int IncrementalSVD::COMMUNICATE_U = 666;
 
-incremental_svd::incremental_svd(
+IncrementalSVD::IncrementalSVD(
    int dim,
    double redundancy_tol,
    bool skip_redundant,
@@ -42,7 +42,7 @@ incremental_svd::incremental_svd(
    }
 }
 
-incremental_svd::~incremental_svd()
+IncrementalSVD::~IncrementalSVD()
 {
    // Delete data members.
    if (d_S) {
@@ -54,7 +54,7 @@ incremental_svd::~incremental_svd()
 }
 
 void
-incremental_svd::constructQ(
+IncrementalSVD::constructQ(
    double*& Q,
    const Vector* l,
    double k)
@@ -81,7 +81,7 @@ incremental_svd::constructQ(
 }
 
 void
-incremental_svd::svd(
+IncrementalSVD::svd(
    double* A,
    Matrix*& U,
    Matrix*& S)

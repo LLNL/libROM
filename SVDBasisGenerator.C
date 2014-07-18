@@ -1,9 +1,9 @@
-#include "svd_basis_generator.h"
-#include "basis_writer.h"
+#include "SVDBasisGenerator.h"
+#include "BasisWriter.h"
 
 namespace CAROM {
 
-svd_basis_generator::svd_basis_generator(
+SVDBasisGenerator::SVDBasisGenerator(
    const std::string& basis_file_name,
    Database::formats file_format) :
    d_basis_writer(0)
@@ -13,7 +13,7 @@ svd_basis_generator::svd_basis_generator(
    }
 }
 
-svd_basis_generator::~svd_basis_generator()
+SVDBasisGenerator::~SVDBasisGenerator()
 {
    if (d_basis_writer) {
       delete d_basis_writer;

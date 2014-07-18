@@ -9,19 +9,19 @@ LDFLAGS		= @LD_FLAGS@ @LIB_PATH@
 LDLIBS		= $(LIBROM) @LIB_NAME@
 AR		= @AR@
 
-OBJS = matrix.o \
-       vector.o \
-       basis_reader.o \
-       basis_writer.o \
-       svd_basis_generator.o \
-       incremental_svd.o \
-       incremental_svd_fast_update.o \
-       incremental_svd_naive.o \
-       incremental_svd_basis_generator.o \
-       incremental_svd_time_stepper.o \
-       static_svd.o \
-       static_svd_basis_generator.o \
-       static_svd_time_stepper.o \
+OBJS = Matrix.o \
+       Vector.o \
+       BasisReader.o \
+       BasisWriter.o \
+       SVDBasisGenerator.o \
+       IncrementalSVD.o \
+       IncrementalSVDFastUpdate.o \
+       IncrementalSVDNaive.o \
+       IncrementalSVDBasisGenerator.o \
+       IncrementalSVDTimeStepper.o \
+       StaticSVD.o \
+       StaticSVDBasisGenerator.o \
+       StaticSVDTimeStepper.o \
        Database.o \
        HDFDatabase.o \
        Utilities.o \

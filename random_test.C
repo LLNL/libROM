@@ -1,5 +1,5 @@
-#include "incremental_svd_basis_generator.h"
-#include "static_svd_basis_generator.h"
+#include "IncrementalSVDBasisGenerator.h"
+#include "StaticSVDBasisGenerator.h"
 
 #include "mpi.h"
 
@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
    int num_lin_dep_snapshots = atoi(argv[3]);
    int num_lin_indep_snapshots = num_snapshots - num_lin_dep_snapshots;
    MPI_Init(&argc, &argv);
-   CAROM::incremental_svd_basis_generator inc_basis_generator(dim,
+   CAROM::IncrementalSVDBasisGenerator inc_basis_generator(dim,
       1.0e-6,
       false,
       num_snapshots,
@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
       true,
       "");
 #ifdef DEBUG_ROMS
-   CAROM::static_svd_basis_generator static_basis_generator(dim,
+   CAROM::StaticSVDBasisGenerator static_basis_generator(dim,
       num_snapshots,
       "");
 #endif

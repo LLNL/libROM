@@ -1,7 +1,7 @@
-#ifndef included_matrix_h
-#define included_matrix_h
+#ifndef included_Matrix_h
+#define included_Matrix_h
 
-#include "vector.h"
+#include "Vector.h"
 
 namespace CAROM {
 

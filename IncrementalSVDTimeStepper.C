@@ -1,12 +1,12 @@
-#include "incremental_svd_time_stepper.h"
-#include "incremental_svd_naive.h"
-#include "incremental_svd_fast_update.h"
+#include "IncrementalSVDTimeStepper.h"
+#include "IncrementalSVDNaive.h"
+#include "IncrementalSVDFastUpdate.h"
 
 #include <cmath>
 
 namespace CAROM {
 
-incremental_svd_time_stepper::incremental_svd_time_stepper(
+IncrementalSVDTimeStepper::IncrementalSVDTimeStepper(
    int dim,
    double redundancy_tol,
    bool skip_redundant,
@@ -22,26 +22,26 @@ incremental_svd_time_stepper::incremental_svd_time_stepper(
 
    if (fast_update) {
       d_isvd.reset(
-         new incremental_svd_fast_update(dim,
-                                         redundancy_tol,
-                                         skip_redundant,
-                                         increments_per_time_interval));
+         new IncrementalSVDFastUpdate(dim,
+                                      redundancy_tol,
+                                      skip_redundant,
+                                      increments_per_time_interval));
    }
    else {
       d_isvd.reset(
-         new incremental_svd_naive(dim,
-                                   redundancy_tol,
-                                   skip_redundant,
-                                   increments_per_time_interval));
+         new IncrementalSVDNaive(dim,
+                                 redundancy_tol,
+                                 skip_redundant,
+                                 increments_per_time_interval));
    }
 }
 
-incremental_svd_time_stepper::~incremental_svd_time_stepper()
+IncrementalSVDTimeStepper::~IncrementalSVDTimeStepper()
 {
 }
 
 double
-incremental_svd_time_stepper::computeNextIncrementTime(
+IncrementalSVDTimeStepper::computeNextIncrementTime(
    double* u_in,
    double* rhs_in,
    double time)

@@ -1,7 +1,7 @@
-#ifndef included_static_svd_time_stepper_h
-#define included_static_svd_time_stepper_h
+#ifndef included_StaticSVDTimeStepper_h
+#define included_StaticSVDTimeStepper_h
 
-#include "static_svd.h"
+#include "StaticSVD.h"
 #include <boost/shared_ptr.hpp>
 
 namespace CAROM {
@@ -9,16 +9,16 @@ namespace CAROM {
 // The class knows, given a static svd implementation, the time at which
 // the next state collection is needed.  It also knows given a time whether
 // it is time for the next state collection.
-class static_svd_time_stepper
+class StaticSVDTimeStepper
 {
    public:
       // Constructor.
-      static_svd_time_stepper(
+      StaticSVDTimeStepper(
          int dim,
          int increments_per_time_interval);
 
       // Destructor.
-      ~static_svd_time_stepper();
+      ~StaticSVDTimeStepper();
 
       // Returns true if it is time for the next state collection.
       bool
@@ -82,19 +82,19 @@ class static_svd_time_stepper
 
    private:
       // Unimplemented default constructor.
-      static_svd_time_stepper();
+      StaticSVDTimeStepper();
 
       // Unimplemented copy constructor.
-      static_svd_time_stepper(
-         const static_svd_time_stepper& other);
+      StaticSVDTimeStepper(
+         const StaticSVDTimeStepper& other);
 
       // Unimplemented assignment operator.
-      static_svd_time_stepper&
+      StaticSVDTimeStepper&
       operator = (
-         const static_svd_time_stepper& rhs);
+         const StaticSVDTimeStepper& rhs);
 
       // The fundamental static SVD algorithm.
-      boost::shared_ptr<static_svd> d_svd;
+      boost::shared_ptr<StaticSVD> d_svd;
 };
 
 }

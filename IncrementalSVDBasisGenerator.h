@@ -1,26 +1,31 @@
-#ifndef included_static_svd_basis_generator_h
-#define included_static_svd_basis_generator_h
+#ifndef included_IncrementalSVDBasisGenerator_h
+#define included_IncrementalSVDBasisGenerator_h
 
-#include "svd_basis_generator.h"
-#include "static_svd_time_stepper.h"
+#include "SVDBasisGenerator.h"
+#include "IncrementalSVDTimeStepper.h"
 
 namespace CAROM {
 
-// A class which implements a Reduced Order Model based on the static svd
+// A class which implements a Reduced Order Model based on the incremental svd
 // algorithm.
-class static_svd_basis_generator : public svd_basis_generator
+  class IncrementalSVDBasisGenerator : public SVDBasisGenerator
 {
    public:
       // Constructor.
-      static_svd_basis_generator(
+      IncrementalSVDBasisGenerator(
          int dim,
-         int increments_per_time_interval,
+         double redundancy_tol,
+         bool skip_redundant,
+         int basis_size,
+         double sampling_tol,
+         double max_time_between_snapshots,
+         bool fast_update,
          const std::string& basis_file_name,
          Database::formats file_format = Database::HDF5);
 
       // Destructor.
       virtual
-      ~static_svd_basis_generator();
+      ~IncrementalSVDBasisGenerator();
 
       // Returns true if it is time for the next svd snapshot.
       virtual
@@ -28,7 +33,7 @@ class static_svd_basis_generator : public svd_basis_generator
       isNextSnapshot(
          double time);
 
-      // Add a snapshot to the static svd.
+      // Add a snapshot to the incremental svd at the given time.
       virtual
       void
       takeSnapshot(
@@ -62,18 +67,19 @@ class static_svd_basis_generator : public svd_basis_generator
 
    private:
       // Unimplemented default constructor.
-      static_svd_basis_generator();
+      IncrementalSVDBasisGenerator();
 
       // Unimplemented copy constructor.
-      static_svd_basis_generator(
-         const static_svd_basis_generator& other);
+      IncrementalSVDBasisGenerator(
+         const IncrementalSVDBasisGenerator& other);
 
       // Unimplemented assignment operator.
-      static_svd_basis_generator&
+      IncrementalSVDBasisGenerator&
       operator = (
-         const static_svd_basis_generator& rhs);
+         const IncrementalSVDBasisGenerator& rhs);
 
-      boost::shared_ptr<static_svd_time_stepper> d_svdts;
+      // The underlying time step control object.
+      boost::shared_ptr<IncrementalSVDTimeStepper> d_isvdts;
 };
 
 }

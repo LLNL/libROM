@@ -1,30 +1,30 @@
-#include "static_svd_basis_generator.h"
+#include "StaticSVDBasisGenerator.h"
 
 namespace CAROM {
 
-static_svd_basis_generator::static_svd_basis_generator(
+StaticSVDBasisGenerator::StaticSVDBasisGenerator(
    int dim,
    int increments_per_time_interval,
    const std::string& basis_file_name,
    Database::formats file_format) :
-   svd_basis_generator(basis_file_name, file_format),
-   d_svdts(new static_svd_time_stepper(dim, increments_per_time_interval))
+   SVDBasisGenerator(basis_file_name, file_format),
+   d_svdts(new StaticSVDTimeStepper(dim, increments_per_time_interval))
 {
 }
 
-static_svd_basis_generator::~static_svd_basis_generator()
+StaticSVDBasisGenerator::~StaticSVDBasisGenerator()
 {
 }
 
 bool
-static_svd_basis_generator::isNextSnapshot(
+StaticSVDBasisGenerator::isNextSnapshot(
    double time)
 {
    return d_svdts->isNextStateCollection(time);
 }
 
 void
-static_svd_basis_generator::takeSnapshot(
+StaticSVDBasisGenerator::takeSnapshot(
    double* u_in,
    double time)
 {
@@ -36,7 +36,7 @@ static_svd_basis_generator::takeSnapshot(
 }
 
 double
-static_svd_basis_generator::computeNextSnapshotTime(
+StaticSVDBasisGenerator::computeNextSnapshotTime(
    double* u_in,
    double* rhs_in,
    double time)
@@ -45,19 +45,19 @@ static_svd_basis_generator::computeNextSnapshotTime(
 }
 
 const Matrix*
-static_svd_basis_generator::getBasis()
+StaticSVDBasisGenerator::getBasis()
 {
    return d_svdts->getBasis();
 }
 
 int
-static_svd_basis_generator::getNumBasisTimeIntervals() const
+StaticSVDBasisGenerator::getNumBasisTimeIntervals() const
 {
    return d_svdts->getNumBasisTimeIntervals();
 }
 
 double
-static_svd_basis_generator::getBasisIntervalStartTime(
+StaticSVDBasisGenerator::getBasisIntervalStartTime(
    int which_interval) const
 {
    return d_svdts->getBasisIntervalStartTime(which_interval);

@@ -1,23 +1,23 @@
-#ifndef included_incremental_svd_naive_h
-#define included_incremental_svd_naive_h
+#ifndef included_IncrementalSVDFastUpdate_h
+#define included_IncrementalSVDFastUpdate_h
 
-#include "incremental_svd.h"
+#include "IncrementalSVD.h"
 
 namespace CAROM {
 
-// A class which embodies the naive incremental SVD algorithm.
-class incremental_svd_naive : public incremental_svd
+// A class which embodies the fast update incremental SVD algorithm.
+class IncrementalSVDFastUpdate : public IncrementalSVD
 {
    public:
       // Constructor.
-      incremental_svd_naive(
+      IncrementalSVDFastUpdate(
          int dim,
          double redundancy_tol,
          bool skip_redundant,
          int increments_per_time_interval);
 
       // Destructor.
-      ~incremental_svd_naive();
+      ~IncrementalSVDFastUpdate();
 
       // Increment the SVD with the new state, u_in, at the given time.
       void
@@ -25,23 +25,23 @@ class incremental_svd_naive : public incremental_svd
          const double* u_in,
          double time);
 
-      // Returns the basis vectors for the current time interval, d_U, as a
-      // Matrix.
+      // Returns the basis vectors for the current time interval, d_U*d_Up, as
+      // a Matrix.
       const Matrix*
       getBasis();
 
    private:
       // Unimplemented default constructor.
-      incremental_svd_naive();
+      IncrementalSVDFastUpdate();
 
       // Unimplemented copy constructor.
-      incremental_svd_naive(
-         const incremental_svd_naive& other);
+      IncrementalSVDFastUpdate(
+         const IncrementalSVDFastUpdate& other);
 
       // Unimplemented assignment operator.
-      incremental_svd_naive&
+      IncrementalSVDFastUpdate&
       operator = (
-         const incremental_svd_naive& rhs);
+         const IncrementalSVDFastUpdate& rhs);
 
       // Constructs the first svd.
       void
@@ -69,15 +69,27 @@ class incremental_svd_naive : public incremental_svd
 
       // Returns the orthogonality of d_U.
       double
-      checkOrthogonality();
+      checkUOrthogonality();
+
+      // Returns the orthogonality of d_Up.
+      double
+      checkUpOrthogonality();
 
       // Reorthogonalizes d_U.
       void
-      reOrthogonalize();
+      reOrthogonalizeU();
+
+      // Reorthogonalizes d_Up.
+      void
+      reOrthogonalizeUp();
 
       // The matrix U distributed across all processors.  Each processor's d_U
       // is the part of the distributed matrix local to that processor.
       Matrix* d_U;
+
+      // The matrix U'.  U' is not distributed and the entire matrix exists on
+      // each processor.
+      Matrix* d_Up;
 };
 
 }

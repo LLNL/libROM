@@ -1,4 +1,4 @@
-#include "static_svd.h"
+#include "StaticSVD.h"
 
 #include "mpi.h"
 
@@ -13,9 +13,9 @@ void dgesdd_(char*, int*, int*, double*, int*,
 
 namespace CAROM {
 
-const int static_svd::COMMUNICATE_A = 999;
+const int StaticSVD::COMMUNICATE_A = 999;
 
-static_svd::static_svd(
+StaticSVD::StaticSVD(
    int dim,
    int increments_per_time_interval) :
    d_dim(dim),
@@ -43,7 +43,7 @@ static_svd::static_svd(
    }
 }
 
-static_svd::~static_svd()
+StaticSVD::~StaticSVD()
 {
    // Delete data members.
    if (d_U) {
@@ -66,7 +66,7 @@ static_svd::~static_svd()
 }
 
 void
-static_svd::collectState(
+StaticSVD::collectState(
    double* u_in,
    double time)
 {
@@ -105,7 +105,7 @@ static_svd::collectState(
 }
 
 const Matrix*
-static_svd::getBasis()
+StaticSVD::getBasis()
 {
    // If this basis is for the last time interval then it may not be up to date
    // so recompute it.
@@ -123,7 +123,7 @@ static_svd::getBasis()
 }
 
 void
-static_svd::computeSVD()
+StaticSVD::computeSVD()
 {
    // Do this computation on process 0 and broadcast results to the other
    // processes.
@@ -231,7 +231,7 @@ static_svd::computeSVD()
 }
 
 void
-static_svd::svd(
+StaticSVD::svd(
    double* A)
 {
    int num_states = static_cast<int>(d_state.size());

@@ -1,5 +1,5 @@
-#ifndef included_vector_h
-#define included_vector_h
+#ifndef included_Vector_h
+#define included_Vector_h
 
 #include "Utilities.h"
 

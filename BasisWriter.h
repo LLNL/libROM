@@ -1,25 +1,25 @@
-#ifndef basis_writer_h
-#define basis_writer_h
+#ifndef included_BasisWriter_h
+#define included_BasisWriter_h
 
 #include "Database.h"
 #include <string>
 
 namespace CAROM {
 
-class svd_basis_generator;
+class SVDBasisGenerator;
 
 class BasisWriter {
    public:
       // Constructor.
       BasisWriter(
-         svd_basis_generator* basis_generator,
+         SVDBasisGenerator* basis_generator,
          const std::string& base_file_name,
          Database::formats db_format = Database::HDF5);
 
       // Destructor.
       ~BasisWriter();
 
-      // Write basis vectors for supplied svd_basis_generator to file with
+      // Write basis vectors for supplied SVDBasisGenerator to file with
       // specified name.
       void
       writeBasis();
@@ -38,7 +38,7 @@ class BasisWriter {
          const BasisWriter& rhs);
 
       // Basis generator whose basis vectors are being written.
-      svd_basis_generator* d_basis_generator;
+      SVDBasisGenerator* d_basis_generator;
 
       // Database to which basis vectors are being written.
       Database* d_database;

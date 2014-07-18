@@ -1,4 +1,4 @@
-#include "incremental_svd_fast_update.h"
+#include "IncrementalSVDNaive.h"
 
 #include "mpi.h"
 
@@ -8,33 +8,29 @@
 
 namespace CAROM {
 
-incremental_svd_fast_update::incremental_svd_fast_update(
+IncrementalSVDNaive::IncrementalSVDNaive(
    int dim,
    double redundancy_tol,
    bool skip_redundant,
    int increments_per_time_interval) :
-   incremental_svd(dim,
+   IncrementalSVD(dim,
       redundancy_tol,
       skip_redundant,
       increments_per_time_interval),
-   d_U(0),
-   d_Up(0)
+   d_U(0)
 {
 }
 
-incremental_svd_fast_update::~incremental_svd_fast_update()
+IncrementalSVDNaive::~IncrementalSVDNaive()
 {
    // Delete data members.
    if (d_U) {
       delete d_U;
    }
-   if (d_Up) {
-      delete d_Up;
-   }
 }
 
 void
-incremental_svd_fast_update::increment(
+IncrementalSVDNaive::increment(
    const double* u_in,
    double time)
 {
@@ -95,25 +91,29 @@ incremental_svd_fast_update::increment(
 }
 
 const Matrix*
-incremental_svd_fast_update::getBasis()
+IncrementalSVDNaive::getBasis()
 {
-   CAROM_ASSERT(d_basis != 0);
+   CAROM_ASSERT(d_U);
+   d_basis = new Matrix(*d_U);
    return d_basis;
 }
 
 void
-incremental_svd_fast_update::buildInitialSVD(
+IncrementalSVDNaive::buildInitialSVD(
    const double* u,
    double time)
 {
    // We have a new time interval.
 
-   // If this is not the first time interval then delete d_basis, d_U, d_Up,
-   // and d_S of the just completed time interval.
+   // If this is not the first time interval then write the basis vectors for
+   // the just completed interval.  Delete d_basis and d_S of the just
+   // completed time interval.
    if (d_num_time_intervals > 0) {
-      delete d_basis;
+      if (d_basis) {
+         delete d_basis;
+         d_basis = 0;
+      }
       delete d_U;
-      delete d_Up;
       delete d_S;
    }
    ++d_num_time_intervals;
@@ -126,33 +126,26 @@ incremental_svd_fast_update::buildInitialSVD(
    double norm_u = u_vec.norm();
    d_S->item(0, 0) = norm_u;
 
-   // Build d_Up for this new time interval.
-   d_Up = new Matrix(1, 1, false, d_rank, d_size);
-   d_Up->item(0, 0) = 1.0;
-
    // Build d_U for this new time interval.
    d_U = new Matrix(d_dim, 1, true, d_rank, d_size);
    for (int i = 0; i < d_dim; ++i) {
       d_U->item(i, 0) = u[i]/norm_u;
    }
 
-   // Set the basis for this time interval.
-   d_basis = new Matrix(*d_U);
-
    // We now have the first increment for the new time interval.
    d_num_increments = 1;
 }
 
 void
-incremental_svd_fast_update::buildIncrementalSVD(
+IncrementalSVDNaive::buildIncrementalSVD(
    const double* u)
 {
    // l = basis' * u
    Vector u_vec(u, d_dim, true, d_rank, d_size);
-   Vector* l = d_basis->TransposeMult(u_vec);
+   Vector* l = d_U->TransposeMult(u_vec);
 
    // basisl = basis * l
-   Vector* basisl = d_basis->Mult(*l);
+   Vector* basisl = d_U->Mult(*l);
 
    // Compute k = sqrt(u.u - 2.0*l.l + basisl.basisl) which is ||u - basisl||.
    double k = u_vec.dot(u_vec) - 2.0*l->dot(*l) + basisl->dot(*basisl);
@@ -201,13 +194,6 @@ incremental_svd_fast_update::buildIncrementalSVD(
       // This increment is not new and we are not skipping redundant
       // increments.
       addRedundantIncrement(A, sigma);
-
-      // Reorthogonalize if necessary.
-      if (fabs(checkUpOrthogonality()) >
-          std::numeric_limits<double>::epsilon()*d_num_increments) {
-         reOrthogonalizeUp();
-      }
-
       delete sigma;
    }
    else if (is_new_increment) {
@@ -232,20 +218,12 @@ incremental_svd_fast_update::buildIncrementalSVD(
       else {
          max_U_dim = d_num_increments;
       }
-      if (fabs(checkUOrthogonality()) >
+      if (checkOrthogonality() >
           std::numeric_limits<double>::epsilon()*max_U_dim) {
-         reOrthogonalizeU();
-      }
-      if (fabs(checkUpOrthogonality()) >
-          std::numeric_limits<double>::epsilon()*d_num_increments) {
-         reOrthogonalizeUp();
+         reOrthogonalize();
       }
    }
    delete basisl;
-
-   // Compute the basis vectors.
-   delete d_basis;
-   d_basis = d_U->Mult(*d_Up);
 
    // Clean up.
    delete l;
@@ -253,7 +231,7 @@ incremental_svd_fast_update::buildIncrementalSVD(
 }
 
 void
-incremental_svd_fast_update::addRedundantIncrement(
+IncrementalSVDNaive::addRedundantIncrement(
    const Matrix* A,
    const Matrix* sigma)
 {
@@ -267,46 +245,28 @@ incremental_svd_fast_update::addRedundantIncrement(
       }
    }
 
-   // Multiply d_Up and Amod and put result into d_Up.
-   Matrix* Up_times_Amod = d_Up->Mult(Amod);
-   delete d_Up;
-   d_Up = Up_times_Amod;
+   // Multiply d_U and Amod and put result into d_U.
+   Matrix* U_times_Amod = d_U->Mult(Amod);
+   delete d_U;
+   d_U = U_times_Amod;
 }
 
 void
-incremental_svd_fast_update::addNewIncrement(
+IncrementalSVDNaive::addNewIncrement(
    const Vector* j,
    const Matrix* A,
    Matrix* sigma)
 {
-   // Add j as a new column of d_U.
-   Matrix* newU = new Matrix(d_dim, d_num_increments+1, true, d_rank, d_size);
+   // Add j as a new column of d_U.  Then multiply by A to form a new d_U.
+   Matrix tmp(d_dim, d_num_increments+1, true, d_rank, d_size);
    for (int row = 0; row < d_dim; ++row) {
       for (int col = 0; col < d_num_increments; ++col) {
-         newU->item(row, col) = d_U->item(row, col);
+         tmp.item(row, col) = d_U->item(row, col);
       }
-      newU->item(row, d_num_increments) = j->item(row);
+      tmp.item(row, d_num_increments) = j->item(row);
    }
    delete d_U;
-   d_U = newU;
-
-   // Form a temporary matrix, tmp, by add another row and column to
-   // d_Up.  Only the last value in the new row/column is non-zero and it is 1.
-   Matrix tmp(d_num_increments+1, d_num_increments+1, false, d_rank, d_size);
-   for (int row = 0; row < d_num_increments; ++row) {
-      for (int col = 0; col < d_num_increments; ++col) {
-         tmp.item(row, col) = d_Up->item(row, col);
-      }
-      tmp.item(row, d_num_increments) = 0.0;
-   }
-   for (int col = 0; col < d_num_increments; ++col) {
-     tmp.item(d_num_increments, col) = 0.0;
-   }
-   tmp.item(d_num_increments, d_num_increments) = 1.0;
-
-   // d_Up = tmp*A
-   delete d_Up;
-   d_Up = tmp.Mult(*A);
+   d_U = tmp.Mult(*A);
 
    // d_S = sigma.
    delete d_S;
@@ -317,14 +277,14 @@ incremental_svd_fast_update::addNewIncrement(
 }
 
 double
-incremental_svd_fast_update::checkUOrthogonality()
+IncrementalSVDNaive::checkOrthogonality()
 {
    double result = 0.0;
    if (d_num_increments > 1) {
       int last_col = d_num_increments-1;
-      double tmp = 0.0;
+      double tmp = 0;
       for (int i = 0; i < d_dim; ++i) {
-         tmp += d_U->item(i, 0) * d_U->item(i, last_col);
+         tmp += d_U->item(i, 0)*d_U->item(i, last_col);
       }
       if (d_size > 1) {
          MPI_Allreduce(&tmp, &result, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -336,21 +296,8 @@ incremental_svd_fast_update::checkUOrthogonality()
    return result;
 }
 
-double
-incremental_svd_fast_update::checkUpOrthogonality()
-{
-   double result = 0.0;
-   if (d_num_increments > 1) {
-      int last_col = d_num_increments-1;
-      for (int i = 0; i < d_num_increments; ++i) {
-         result += d_Up->item(i, 0)*d_Up->item(i, last_col);
-      }
-   }
-   return result;
-}
-
 void
-incremental_svd_fast_update::reOrthogonalizeU()
+IncrementalSVDNaive::reOrthogonalize()
 {
    for (int work = 1; work < d_num_increments; ++work) {
       double tmp;
@@ -385,46 +332,6 @@ incremental_svd_fast_update::reOrthogonalizeU()
       norm = sqrt(norm);
       for (int i = 0; i < d_dim; ++i) {
          d_U->item(i, work) /= norm;
-      }
-   }
-}
-
-void
-incremental_svd_fast_update::reOrthogonalizeUp()
-{
-   for (int work = 1; work < d_num_increments; ++work) {
-      double tmp;
-      for (int col = 0; col < work; ++col) {
-         double factor = 0.0;
-         tmp = 0.0;
-         for (int i = 0; i < d_num_increments; ++i) {
-            tmp += d_Up->item(i, col)*d_Up->item(i, work);
-         }
-         if (d_size > 1) {
-            MPI_Allreduce(&tmp, &factor, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-         }
-         else {
-            factor = tmp;
-         }
-
-         for (int i = 0; i < d_num_increments; ++i) {
-            d_Up->item(i, work) -= factor*d_Up->item(i, col);
-         }
-      }
-      double norm = 0.0;
-      tmp = 0.0;
-      for (int i = 0; i < d_num_increments; ++i) {
-         tmp += d_Up->item(i, work)*d_Up->item(i, work);
-      }
-      if (d_size > 1) {
-         MPI_Allreduce(&tmp, &norm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-      }
-      else {
-         norm = tmp;
-      }
-      norm = sqrt(norm);
-      for (int i = 0; i < d_num_increments; ++i) {
-         d_Up->item(i, work) /= norm;
       }
    }
 }

@@ -1,4 +1,4 @@
-#include "incremental_svd_basis_generator.h"
+#include "IncrementalSVDBasisGenerator.h"
 
 #include "mpi.h"
 
@@ -12,7 +12,7 @@ int main(int argc, char* argv[])
    }
    int dim = atoi(argv[1]);
    MPI_Init(&argc, &argv);
-   CAROM::incremental_svd_basis_generator inc_basis_generator(dim,
+   CAROM::IncrementalSVDBasisGenerator inc_basis_generator(dim,
       1.0e-2,
       false,
       2,

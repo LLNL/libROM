@@ -1,7 +1,7 @@
-#include "basis_writer.h"
+#include "BasisWriter.h"
 #include "HDFDatabase.h"
-#include "matrix.h"
-#include "svd_basis_generator.h"
+#include "Matrix.h"
+#include "SVDBasisGenerator.h"
 #include "Utilities.h"
 
 #include "mpi.h"
@@ -9,7 +9,7 @@
 namespace CAROM {
 
 BasisWriter::BasisWriter(
-   svd_basis_generator* basis_generator,
+   SVDBasisGenerator* basis_generator,
    const std::string& base_file_name,
    Database::formats db_format) :
    d_basis_generator(basis_generator),

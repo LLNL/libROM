@@ -1,4 +1,4 @@
-#include "vector.h"
+#include "Vector.h"
 
 #include "mpi.h"
 

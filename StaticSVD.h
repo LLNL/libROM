@@ -1,7 +1,7 @@
-#ifndef included_static_svd_h
-#define included_static_svd_h
+#ifndef included_StaticSVD_h
+#define included_StaticSVD_h
 
-#include "matrix.h"
+#include "Matrix.h"
 #include <vector>
 
 namespace CAROM {
@@ -11,16 +11,16 @@ namespace CAROM {
 // of the system.
 // This implementation is not scalable and is intended primarily as a sanity
 // check of the incremental svd algorithm.
-class static_svd
+class StaticSVD
 {
    public:
       // Constructor.
-      static_svd(
+      StaticSVD(
          int dim,
          int increments_per_time_interval);
 
       // Destructor.
-      ~static_svd();
+      ~StaticSVD();
 
       // Collect the new state, u_in.
       void
@@ -60,16 +60,16 @@ class static_svd
 
    private:
       // Unimplemented default constructor.
-      static_svd();
+      StaticSVD();
 
       // Unimplemented copy constructor.
-      static_svd(
-         const static_svd& other);
+      StaticSVD(
+         const StaticSVD& other);
 
       // Unimplemented assignment operator.
-      static_svd&
+      StaticSVD&
       operator = (
-         const static_svd& rhs);
+         const StaticSVD& rhs);
 
       // Compute the SVD.
       void

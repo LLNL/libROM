@@ -1,7 +1,7 @@
-#ifndef included_incremental_svd_time_stepper_h
-#define included_incremental_svd_time_stepper_h
+#ifndef included_IncrementalSVDTimeStepper_h
+#define included_IncrementalSVDTimeStepper_h
 
-#include "incremental_svd.h"
+#include "IncrementalSVD.h"
 #include <boost/shared_ptr.hpp>
 
 namespace CAROM {
@@ -12,11 +12,11 @@ namespace CAROM {
 // determining if it is time for the next svd increment:
 // 1) the current time compared to the time the next increment must happen
 // 2) the number of time steps since the last increment
-class incremental_svd_time_stepper
+class IncrementalSVDTimeStepper
 {
    public:
       // Constructor.
-      incremental_svd_time_stepper(
+      IncrementalSVDTimeStepper(
          int dim,
          double redundancy_tol,
          bool skip_redundant,
@@ -26,7 +26,7 @@ class incremental_svd_time_stepper
          bool fast_update);
 
       // Destructor.
-      ~incremental_svd_time_stepper();
+      ~IncrementalSVDTimeStepper();
 
       // Returns true if it is time for the next svd increment.
       bool
@@ -84,16 +84,16 @@ class incremental_svd_time_stepper
 
    private:
       // Unimplemented default constructor.
-      incremental_svd_time_stepper();
+      IncrementalSVDTimeStepper();
 
       // Unimplemented copy constructor.
-      incremental_svd_time_stepper(
-         const incremental_svd_time_stepper& other);
+      IncrementalSVDTimeStepper(
+         const IncrementalSVDTimeStepper& other);
 
       // Unimplemented assignment operator.
-      incremental_svd_time_stepper&
+      IncrementalSVDTimeStepper&
       operator = (
-         const incremental_svd_time_stepper& rhs);
+         const IncrementalSVDTimeStepper& rhs);
 
       // Tolerance for norm of error in the solution of the reduced model due
       // to orthogonal projection.
@@ -106,7 +106,7 @@ class incremental_svd_time_stepper
       double d_next_increment_time;
 
       // The fundamental incremental SVD algorithm.
-      boost::shared_ptr<incremental_svd> d_isvd;
+      boost::shared_ptr<IncrementalSVD> d_isvd;
 };
 
 }

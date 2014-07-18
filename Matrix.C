@@ -1,4 +1,4 @@
-#include "matrix.h"
+#include "Matrix.h"
 
 #include "mpi.h"
 #include <string.h>

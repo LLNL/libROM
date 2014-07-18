@@ -1,50 +1,39 @@
-#ifndef svd_basis_generator_h
-#define svd_basis_generator_h
+#ifndef included_StaticSVDBasisGenerator_h
+#define included_StaticSVDBasisGenerator_h
 
-#include "basis_writer.h"
-
-#include <string.h>
+#include "SVDBasisGenerator.h"
+#include "StaticSVDTimeStepper.h"
 
 namespace CAROM {
 
-class BasisWriter;
-class Matrix;
-
-// An abstract base class defining the interface to the incremental svd
+// A class which implements a Reduced Order Model based on the static svd
 // algorithm.
-class svd_basis_generator
+class StaticSVDBasisGenerator : public SVDBasisGenerator
 {
    public:
       // Constructor.
-      svd_basis_generator(
+      StaticSVDBasisGenerator(
+         int dim,
+         int increments_per_time_interval,
          const std::string& basis_file_name,
          Database::formats file_format = Database::HDF5);
 
       // Destructor.
       virtual
-      ~svd_basis_generator();
+      ~StaticSVDBasisGenerator();
 
       // Returns true if it is time for the next svd snapshot.
       virtual
       bool
       isNextSnapshot(
-         double time) = 0;
+         double time);
 
-      // Add a snapshot to the incremental svd at the given time.
+      // Add a snapshot to the static svd.
       virtual
       void
       takeSnapshot(
          double* u_in,
-         double time) = 0;
-
-      // Signal that the final snapshot has been taken.
-      void
-      endSnapshots()
-      {
-         if (d_basis_writer) {
-            d_basis_writer->writeBasis();
-         }
-      }
+         double time);
 
       // Computes next time an svd snapshot is needed.
       virtual
@@ -52,38 +41,39 @@ class svd_basis_generator
       computeNextSnapshotTime(
          double* u_in,
          double* rhs_in,
-         double time) = 0;
+         double time);
 
       // Returns the basis vectors for the current time interval as a Matrix.
       virtual
       const Matrix*
-      getBasis() = 0;
+      getBasis();
 
       // Returns the number of time intervals on which different sets of basis
       // vectors are defined.
       virtual
       int
-      getNumBasisTimeIntervals() const = 0;
+      getNumBasisTimeIntervals() const;
 
       // Returns the start time for the requested time interval.
       virtual
       double
       getBasisIntervalStartTime(
-         int which_interval) const = 0;
-
-   protected:
-      // Writer of basis vectors.
-      BasisWriter* d_basis_writer;
+         int which_interval) const;
 
    private:
+      // Unimplemented default constructor.
+      StaticSVDBasisGenerator();
+
       // Unimplemented copy constructor.
-      svd_basis_generator(
-         const svd_basis_generator& other);
+      StaticSVDBasisGenerator(
+         const StaticSVDBasisGenerator& other);
 
       // Unimplemented assignment operator.
-      svd_basis_generator&
+      StaticSVDBasisGenerator&
       operator = (
-         const svd_basis_generator& rhs);
+         const StaticSVDBasisGenerator& rhs);
+
+      boost::shared_ptr<StaticSVDTimeStepper> d_svdts;
 };
 
 }

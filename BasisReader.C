@@ -1,6 +1,6 @@
-#include "basis_reader.h"
+#include "BasisReader.h"
 #include "HDFDatabase.h"
-#include "matrix.h"
+#include "Matrix.h"
 #include "mpi.h"
 
 namespace CAROM {

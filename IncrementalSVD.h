@@ -1,7 +1,7 @@
-#ifndef included_incremental_svd_h
-#define included_incremental_svd_h
+#ifndef included_IncrementalSVD_h
+#define included_IncrementalSVD_h
 
-#include "matrix.h"
+#include "Matrix.h"
 #include <vector>
 
 namespace CAROM {
@@ -9,11 +9,11 @@ namespace CAROM {
 // An abstract class which embodies the incremental SVD algorithm.  The API is
 // intentionally small.  One may increment the SVD, get the tolerance used
 // to determine if an increment is new, and get the dimension of the system.
-class incremental_svd
+class IncrementalSVD
 {
    public:
       // Constructor.
-      incremental_svd(
+      IncrementalSVD(
          int dim,
          double redundancy_tol,
          bool skip_redundant,
@@ -21,7 +21,7 @@ class incremental_svd
 
       // Destructor.
       virtual
-      ~incremental_svd();
+      ~IncrementalSVD();
 
       // Increment the SVD with the new state, u_in, at the given time.
       virtual
@@ -140,16 +140,16 @@ class incremental_svd
 
    private:
       // Unimplemented default constructor.
-      incremental_svd();
+      IncrementalSVD();
 
       // Unimplemented copy constructor.
-      incremental_svd(
-         const incremental_svd& other);
+      IncrementalSVD(
+         const IncrementalSVD& other);
 
       // Unimplemented assignment operator.
-      incremental_svd&
+      IncrementalSVD&
       operator = (
-         const incremental_svd& rhs);
+         const IncrementalSVD& rhs);
 };
 
 }
