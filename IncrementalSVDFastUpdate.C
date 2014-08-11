@@ -152,10 +152,10 @@ IncrementalSVDFastUpdate::buildIncrementalSVD(
    Vector* l = d_basis->TransposeMult(u_vec);
 
    // basisl = basis * l
-   Vector* basisl = d_basis->Mult(*l);
+   Vector* basisl = d_basis->Mult(l);
 
    // Compute k = sqrt(u.u - 2.0*l.l + basisl.basisl) which is ||u - basisl||.
-   double k = u_vec.dot(u_vec) - 2.0*l->dot(*l) + basisl->dot(*basisl);
+   double k = u_vec.dot(u_vec) - 2.0*l->dot(l) + basisl->dot(basisl);
    if (k <= 0) {
       k = 0;
    }
@@ -245,7 +245,7 @@ IncrementalSVDFastUpdate::buildIncrementalSVD(
 
    // Compute the basis vectors.
    delete d_basis;
-   d_basis = d_U->Mult(*d_Up);
+   d_basis = d_U->Mult(d_Up);
 
    // Clean up.
    delete l;
@@ -306,7 +306,7 @@ IncrementalSVDFastUpdate::addNewIncrement(
 
    // d_Up = tmp*A
    delete d_Up;
-   d_Up = tmp.Mult(*A);
+   d_Up = tmp.Mult(A);
 
    // d_S = sigma.
    delete d_S;

@@ -47,6 +47,13 @@ class Vector
       double
       dot(const Vector& other) const;
 
+      // Dot product.
+      double
+      dot(const Vector* const other) const
+      {
+         return dot(*other);
+      }
+
       // Takes the norm of this.
       double
       norm() const;
@@ -57,11 +64,25 @@ class Vector
 
       // Adds other and this and returns the result.
       Vector*
-      add(const Vector* other) const;
+      add(const Vector& other) const;
+
+      // Adds other and this and returns the result.
+      Vector*
+      add(const Vector* const other) const
+      {
+         return add(*other);
+      }
 
       // Subtracts other and this and returns the result.
       Vector*
-      subtract(const Vector* other) const;
+      subtract(const Vector& other) const;
+
+      // Subtracts other and this and returns the result.
+      Vector*
+      subtract(const Vector* const other) const
+      {
+         return subtract(*other);
+      }
 
       // Const vector member access.
       const double&

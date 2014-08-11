@@ -56,11 +56,32 @@ class Matrix
          const Matrix& other) const;
 
       // Multiplies this matrix with other and returns the product.  Supports
+      // multiplication of two undistributed matrices returning an
+      // undistributed matrix, and multiplication of a distributed matrix with
+      // an undistributed matrix returning a distributed matrix.
+      Matrix*
+      Mult(
+         const Matrix* const other) const
+      {
+         return Mult(*other);
+      }
+
+      // Multiplies this matrix with other and returns the product.  Supports
       // multiplication of a distributed matrix and an undistributed vector
       // vector returning a distributed vector.
       Vector*
       Mult(
          const Vector& other) const;
+
+      // Multiplies this matrix with other and returns the product.  Supports
+      // multiplication of a distributed matrix and an undistributed vector
+      // vector returning a distributed vector.
+      Vector*
+      Mult(
+         const Vector* const other) const
+      {
+         return Mult(*other);
+      }
 
       // Multiplies the transpose of this matrix with other and returns the
       // product.  Supports multiplication of two undistributed matrices
@@ -72,11 +93,33 @@ class Matrix
          const Matrix& other) const;
 
       // Multiplies the transpose of this matrix with other and returns the
+      // product.  Supports multiplication of two undistributed matrices
+      // returning an undistributed matrix, two distributed matrices returning
+      // an undistributed matrix, and an undistributed matrix with a
+      // distributed matrix returning an undistributed matrix.
+      Matrix*
+      TransposeMult(
+         const Matrix* const other) const
+      {
+         return TransposeMult(*other);
+      }
+
+      // Multiplies the transpose of this matrix with other and returns the
       // product.  Supports multiplication of a distributed matrix and a
       // distributed vector returning an undistributed vector.
       Vector*
       TransposeMult(
          const Vector& other) const;
+
+      // Multiplies the transpose of this matrix with other and returns the
+      // product.  Supports multiplication of a distributed matrix and a
+      // distributed vector returning an undistributed vector.
+      Vector*
+      TransposeMult(
+         const Vector* const other) const
+      {
+         return TransposeMult(*other);
+      }
 
       // Const matrix member access.
       const double&

@@ -116,7 +116,7 @@ int main(int argc, char* argv[])
 
    // Compute the product of the tranpose of the static basis and the
    // incremental basis.  This should be a unitary matrix.
-   CAROM::Matrix* test = static_basis->TransposeMult(*inc_basis);
+   CAROM::Matrix* test = static_basis->TransposeMult(inc_basis);
    if (rank == 0) {
       for (int row = 0; row < num_snapshots; ++row) {
          for (int col = 0; col < num_lin_indep_snapshots; ++col) {

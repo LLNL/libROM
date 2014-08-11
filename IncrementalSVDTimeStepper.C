@@ -61,7 +61,7 @@ IncrementalSVDTimeStepper::computeNextIncrementTime(
    // Compute the difference in the norms of the current state and its
    // projection into the reduced order space.
    double cm = u_vec.dot(u_vec);
-   double proj_error_norm = cm - (l->dot(*l));
+   double proj_error_norm = cm - (l->dot(l));
    if (proj_error_norm <= 0) {
       proj_error_norm = 0.0;
    }
@@ -77,7 +77,7 @@ IncrementalSVDTimeStepper::computeNextIncrementTime(
    // Compute the difference in the norms of the rhs and its projection into
    // the reduced order space.
    cm = rhs_vec.dot(rhs_vec);
-   double proj_error_deriv_norm = cm - (l->dot(*l));
+   double proj_error_deriv_norm = cm - (l->dot(l));
    if (proj_error_deriv_norm <= 0) {
       proj_error_deriv_norm = 0.0;
    }

@@ -145,10 +145,10 @@ IncrementalSVDNaive::buildIncrementalSVD(
    Vector* l = d_U->TransposeMult(u_vec);
 
    // basisl = basis * l
-   Vector* basisl = d_U->Mult(*l);
+   Vector* basisl = d_U->Mult(l);
 
    // Compute k = sqrt(u.u - 2.0*l.l + basisl.basisl) which is ||u - basisl||.
-   double k = u_vec.dot(u_vec) - 2.0*l->dot(*l) + basisl->dot(*basisl);
+   double k = u_vec.dot(u_vec) - 2.0*l->dot(l) + basisl->dot(basisl);
    if (k <= 0) {
       k = 0;
    }
@@ -266,7 +266,7 @@ IncrementalSVDNaive::addNewIncrement(
       tmp.item(row, d_num_increments) = j->item(row);
    }
    delete d_U;
-   d_U = tmp.Mult(*A);
+   d_U = tmp.Mult(A);
 
    // d_S = sigma.
    delete d_S;
