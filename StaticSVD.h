@@ -1,3 +1,13 @@
+/******************************************************************************
+ *
+ * This file is part of the CAROM distribution.  For full copyright
+ * information, see COPYRIGHT.
+ *
+ * Copyright:   (c) 2013-2014 Lawrence Livermore National Security, LLC
+ * Description: A class implementing the static SVD algorithm.
+ *
+ *****************************************************************************/
+
 #ifndef included_StaticSVD_h
 #define included_StaticSVD_h
 

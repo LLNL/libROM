@@ -1,3 +1,15 @@
+/******************************************************************************
+ *
+ * This file is part of the CAROM distribution.  For full copyright
+ * information, see COPYRIGHT.
+ *
+ * Copyright:   (c) 2013-2014 Lawrence Livermore National Security, LLC
+ * Description: The class that determines the next time at which a sample
+ *              should be taken for basis generation using the static SVD
+ *              approach.
+ *
+ *****************************************************************************/
+
 #include "StaticSVDTimeStepper.h"
 
 namespace CAROM {

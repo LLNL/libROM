@@ -1,3 +1,15 @@
+/******************************************************************************
+ *
+ * This file is part of the CAROM distribution.  For full copyright
+ * information, see COPYRIGHT.
+ *
+ * Copyright:   (c) 2013-2014 Lawrence Livermore National Security, LLC
+ * Description: The concrete implementation of the incremental SVD algorithm
+ *              that is equivalent to but computationally more expensive than
+ *              the "fast update" method.
+ *
+ *****************************************************************************/
+
 #ifndef included_IncrementalSVDNaive_h
 #define included_IncrementalSVDNaive_h
 

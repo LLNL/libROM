@@ -1,3 +1,15 @@
+/******************************************************************************
+ *
+ * This file is part of the CAROM distribution.  For full copyright
+ * information, see COPYRIGHT.
+ *
+ * Copyright:   (c) 2013-2014 Lawrence Livermore National Security, LLC
+ * Description: The concrete wrapper class for a specific incremental SVD
+ *              algorithm and time stepper.  Implements interface of
+ *              SVDBasisGenerator.
+ *
+ *****************************************************************************/
+
 #ifndef included_IncrementalSVDBasisGenerator_h
 #define included_IncrementalSVDBasisGenerator_h
 
@@ -8,7 +20,7 @@ namespace CAROM {
 
 // A class which implements a Reduced Order Model based on the incremental svd
 // algorithm.
-  class IncrementalSVDBasisGenerator : public SVDBasisGenerator
+class IncrementalSVDBasisGenerator : public SVDBasisGenerator
 {
    public:
       // Constructor.

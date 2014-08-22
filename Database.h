@@ -1,3 +1,13 @@
+/******************************************************************************
+ *
+ * This file is part of the CAROM distribution.  For full copyright
+ * information, see COPYRIGHT.
+ *
+ * Copyright:   (c) 2013-2014 Lawrence Livermore National Security, LLC
+ * Description: The abstract database class defines interface for databases.
+ *
+ *****************************************************************************/
+
 #ifndef included_Database_h
 #define included_Database_h
 

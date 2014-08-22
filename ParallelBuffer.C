@@ -1,3 +1,15 @@
+/******************************************************************************
+ *
+ * This file is part of the CAROM distribution.  For full copyright
+ * information, see COPYRIGHT.
+ *
+ * Copyright:   (c) 2013-2014 Lawrence Livermore National Security, LLC
+ * Description: A simple I/O stream class that intercepts output from an
+ *              ostream and redirects the output as necessary for parallel
+ *              I/O.
+ *
+ *****************************************************************************/
+
 #include "ParallelBuffer.h"
 #include "Utilities.h"
 

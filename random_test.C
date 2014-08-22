@@ -1,3 +1,17 @@
+/******************************************************************************
+ *
+ * This file is part of the CAROM distribution.  For full copyright
+ * information, see COPYRIGHT.
+ *
+ * Copyright:   (c) 2013-2014 Lawrence Livermore National Security, LLC
+ * Description: A test of both the static and incremental fast update
+ *              algorithms and time steppers.  Random numbers are generated as
+ *              the state vectors in such a way that the global state vector is
+ *              the same for all processor decompositions when
+ *              dim * number of processors is constant.
+ *
+ *****************************************************************************/
+
 #include "IncrementalSVDBasisGenerator.h"
 #include "StaticSVDBasisGenerator.h"
 

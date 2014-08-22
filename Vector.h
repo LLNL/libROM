@@ -1,3 +1,15 @@
+/******************************************************************************
+ *
+ * This file is part of the CAROM distribution.  For full copyright
+ * information, see COPYRIGHT.
+ *
+ * Copyright:   (c) 2013-2014 Lawrence Livermore National Security, LLC
+ * Description: A simple, parallel Vector class with the utility needed to
+ *              support the basis generation methods of this library.  A
+ *              distributed Vector has its rows distributed across processors.
+ *
+ *****************************************************************************/
+
 #ifndef included_Vector_h
 #define included_Vector_h
 

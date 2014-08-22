@@ -1,3 +1,13 @@
+/******************************************************************************
+ *
+ * This file is part of the CAROM distribution.  For full copyright
+ * information, see COPYRIGHT.
+ *
+ * Copyright:   (c) 2013-2014 Lawrence Livermore National Security, LLC
+ * Description: The concrete database implementation using HDF5.
+ *
+ *****************************************************************************/
+
 #include "HDFDatabase.h"
 #include "Utilities.h"
 

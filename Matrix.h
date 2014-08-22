@@ -1,3 +1,15 @@
+/******************************************************************************
+ *
+ * This file is part of the CAROM distribution.  For full copyright
+ * information, see COPYRIGHT.
+ *
+ * Copyright:   (c) 2013-2014 Lawrence Livermore National Security, LLC
+ * Description: A simple, parallel Matrix class with the utility needed to
+ *              support the basis generation methods of this library.  A
+ *              distributed Matrix has its rows distributed across processors.
+ *
+ *****************************************************************************/
+
 #ifndef included_Matrix_h
 #define included_Matrix_h
 

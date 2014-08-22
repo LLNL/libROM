@@ -1,3 +1,14 @@
+/******************************************************************************
+ *
+ * This file is part of the CAROM distribution.  For full copyright
+ * information, see COPYRIGHT.
+ *
+ * Copyright:   (c) 2013-2014 Lawrence Livermore National Security, LLC
+ * Description: The concrete implementation of the incremental SVD algorithm
+ *              using Matthew Brand's "fast update" method.
+ *
+ *****************************************************************************/
+
 #include "IncrementalSVDFastUpdate.h"
 
 #include "mpi.h"

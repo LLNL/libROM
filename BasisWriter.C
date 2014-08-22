@@ -1,3 +1,13 @@
+/******************************************************************************
+ *
+ * This file is part of the CAROM distribution.  For full copyright
+ * information, see COPYRIGHT.
+ *
+ * Copyright:   (c) 2013-2014 Lawrence Livermore National Security, LLC
+ * Description: A class that writes basis vectors to a file.
+ *
+ *****************************************************************************/
+
 #include "BasisWriter.h"
 #include "HDFDatabase.h"
 #include "Matrix.h"
