@@ -45,3 +45,5 @@ smoke_test: lib smoke_test.o
 
 clean:
 	rm -f *.o $(LIBROM) random_test smoke_test
+
+include Makefile.depend
