@@ -10,7 +10,7 @@ bindir=`cd $BIN && pwd`
 PERL=${PERL:-perl}
 COMP="$PERL $BIN/cmp.pl"
 
-DIRS=`find . -type d -print | grep -v '\(OLD|NEW|BAK|SAVE|to_be_implemented\|noprefix\|CVS\|\.svn\|\.git\|\.hg\|deprecated\|BriggsStuff\)'`
+DIRS=`find . -type d -print | grep -v '\(OLD\|NEW\|BAK\|SAVE\|to_be_implemented\|noprefix\|BASELINES\|config\|scripts\|CVS\|\.svn\|\.git\|\.hg\)'`
 for DIR in $DIRS ; do
 
    #
