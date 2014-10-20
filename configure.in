@@ -1,3 +1,11 @@
+dnl
+dnl This file is part of the CAROM distribution.  For full copyright
+dnl information, see COPYRIGHT.
+dnl
+dnl Copyright:   (c) 2013-2014 Lawrence Livermore National Security, LLC
+dnl Description: autoconf configuration file
+dnl
+
 AC_INIT(COPYRIGHT)
 AC_CONFIG_HEADER(CAROM_config.h:config/CAROM_config.h.in)
 dnl
