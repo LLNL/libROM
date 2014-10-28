@@ -60,20 +60,18 @@ IncrementalSVDTimeStepper::computeNextIncrementTime(
 {
    // Get some preliminary info.
    int dim = d_isvd->getDim();
-   int rank = d_isvd->getRank();
-   int size = d_isvd->getSize();
 
    // Get the current basis vectors.
    const Matrix* basis = getBasis();
 
    // Compute the projection of the current state into the reduced order space.
-   Vector u_vec(u_in, dim, true, rank, size);
-   Vector* l = basis->TransposeMult(u_vec);
+   Vector u_vec(u_in, dim, true);
+   Vector* l = basis->transposeMult(u_vec);
 
    // Compute the difference in the norms of the current state and its
    // projection into the reduced order space.
-   double cm = u_vec.dot(u_vec);
-   double proj_error_norm = cm - (l->dot(l));
+   double cm = u_vec.inner_product(u_vec);
+   double proj_error_norm = cm - (l->inner_product(l));
    if (proj_error_norm <= 0) {
       proj_error_norm = 0.0;
    }
@@ -83,13 +81,13 @@ IncrementalSVDTimeStepper::computeNextIncrementTime(
    delete l;
 
    // Compute the projection of the rhs into the reduced order space.
-   Vector rhs_vec(rhs_in, dim, true, rank, size);
-   l = basis->TransposeMult(rhs_vec);
+   Vector rhs_vec(rhs_in, dim, true);
+   l = basis->transposeMult(rhs_vec);
 
    // Compute the difference in the norms of the rhs and its projection into
    // the reduced order space.
-   cm = rhs_vec.dot(rhs_vec);
-   double proj_error_deriv_norm = cm - (l->dot(l));
+   cm = rhs_vec.inner_product(rhs_vec);
+   double proj_error_deriv_norm = cm - (l->inner_product(l));
    if (proj_error_deriv_norm <= 0) {
       proj_error_deriv_norm = 0.0;
    }

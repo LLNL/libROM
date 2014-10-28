@@ -204,9 +204,9 @@ StaticSVD::computeSVD()
                 COMMUNICATE_A, MPI_COMM_WORLD, &request);
 
       // Allocate d_U, d_S, and d_V.
-      d_U = new Matrix(d_dim*d_size, num_cols, false, d_rank, d_size);
-      d_S = new Matrix(num_cols, num_cols, false, d_rank, d_size);
-      d_V = new Matrix(num_cols, num_cols, false, d_rank, d_size);
+      d_U = new Matrix(d_dim*d_size, num_cols, false);
+      d_S = new Matrix(num_cols, num_cols, false);
+      d_V = new Matrix(num_cols, num_cols, false);
 
       // Get the results from process 0.
       MPI_Bcast(&d_U->item(0, 0), d_dim*d_size*num_cols,
@@ -247,10 +247,10 @@ StaticSVD::svd(
    int num_states = static_cast<int>(d_state.size());
 
    // Construct d_U.
-   d_U = new Matrix(d_dim*d_size, num_states, false, d_rank, d_size);
+   d_U = new Matrix(d_dim*d_size, num_states, false);
 
    // Construct d_S.
-   d_S = new Matrix(num_states, num_states, false, d_rank, d_size);
+   d_S = new Matrix(num_states, num_states, false);
    for (int row = 0; row < num_states; ++row) {
       for (int col = 0; col < num_states; ++col) {
          d_S->item(row, col) = 0.0;
@@ -258,7 +258,7 @@ StaticSVD::svd(
    }
 
    // Construct d_V.
-   d_V = new Matrix(num_states, num_states, false, d_rank, d_size);
+   d_V = new Matrix(num_states, num_states, false);
 
    // Use lapack's dgesdd_ Fortran function to perform the svd.  As this is
    // Fortran A and all the computed matrices are in column major order.

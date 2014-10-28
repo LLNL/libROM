@@ -44,11 +44,15 @@ IncrementalSVD::IncrementalSVD(
    int mpi_init;
    MPI_Initialized(&mpi_init);
    if (mpi_init) {
+#ifdef DEBUG_ROMS
       MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
+#endif
       MPI_Comm_size(MPI_COMM_WORLD, &d_size);
    }
    else {
+#ifdef DEBUG_ROMS
       d_rank = 0;
+#endif
       d_size = 1;
    }
 }
@@ -98,21 +102,9 @@ IncrementalSVD::svd(
    Matrix*& S)
 {
    // Construct U, S, and V.
-   U = new Matrix(d_num_increments+1,
-                  d_num_increments+1,
-                  false,
-                  d_rank,
-                  d_size);
-   S = new Matrix(d_num_increments+1,
-                  d_num_increments+1,
-                  false,
-                  d_rank,
-                  d_size);
-   Matrix* V = new Matrix(d_num_increments+1,
-                          d_num_increments+1,
-                          false,
-                          d_rank,
-                          d_size);
+   U = new Matrix(d_num_increments+1, d_num_increments+1, false);
+   S = new Matrix(d_num_increments+1, d_num_increments+1, false);
+   Matrix* V = new Matrix(d_num_increments+1, d_num_increments+1, false);
    for (int row = 0; row < d_num_increments+1; ++row) {
       for (int col = 0; col < d_num_increments+1; ++col) {
          S->item(row, col) = 0.0;

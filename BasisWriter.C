@@ -25,11 +25,12 @@ BasisWriter::BasisWriter(
    d_basis_generator(basis_generator),
    d_num_intervals_written(0)
 {
+   CAROM_ASSERT(basis_generator != 0);
    CAROM_ASSERT(!base_file_name.empty());
 
-   int rank;
    int mpi_init;
    MPI_Initialized(&mpi_init);
+   int rank;
    if (mpi_init) {
       MPI_Comm_rank(MPI_COMM_WORLD, &rank);
    }

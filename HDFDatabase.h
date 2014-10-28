@@ -17,37 +17,69 @@
 
 namespace CAROM {
 
-/* A class that provides basic ability to write to and read from an HDF file.
- * It's capabilities are limited to what the SVD algorithm needs to read and
- * write its basis vectors. */
+/**
+ * HDFDatabase implements the interface of Database for HDF5 database files.
+ */
 class HDFDatabase : public Database
 {
    public:
-      // Default constructor.
+      /**
+       * @brief Default constructor.
+       */
       HDFDatabase();
 
-      // Destructor.
+      /**
+       * @brief Destructor.
+       */
       virtual
       ~HDFDatabase();
 
-      // Creates a new database file with the supplied name.
+      /**
+       * @brief Creates a new HDF5 database file with the supplied name.
+       *
+       * @param[in] file_name Name of HDF5 database file to create.
+       *
+       * @return true if file create was successful.
+       */
       virtual
       bool
       create(
          const std::string& file_name);
 
-      // Opens the existing database file with the supplied name.
+      /**
+       * @brief Opens an existing HDF5 database file with the supplied name.
+       *
+       * @param[in] file_name Name of existing HDF5 database file to open.
+       *
+       * @return true if file open was successful.
+       */
       virtual
       bool
       open(
          const std::string& file_name);
 
-      // Closes the database file with the supplied name.
+      /**
+       * @brief Closes the currently open HDF5 database file.
+       *
+       * @return true if the file close was successful.
+       */
       virtual
       bool
       close();
 
-      // Writes an array of integers to the file.
+      /**
+       * @brief Writes an array of integers associated with the supplied key to
+       * the currently open HDF5 database file.
+       *
+       * @pre !key.empty()
+       * @pre data != 0
+       * @pre nelements > 0
+       *
+       * @param[in] key The key associated with the array of values to be
+       *                written.
+       * @param[in] The array of integer values to be written.
+       * @param[in] The number of integers in the array.
+       */
       virtual
       void
       putIntegerArray(
@@ -55,7 +87,19 @@ class HDFDatabase : public Database
          const int* const data,
          int nelements);
 
-      // Writes an array of doubles to the file.
+      /**
+       * @brief Writes an array of doubles associated with the supplied key to
+       * the currently open HDF5 database file.
+       *
+       * @pre !key.empty()
+       * @pre data != 0
+       * @pre nelements > 0
+       *
+       * @param[in] key The key associated with the array of values to be
+       *                written.
+       * @param[in] The array of double values to be written.
+       * @param[in] The number of doubles in the array.
+       */
       virtual
       void
       putDoubleArray(
@@ -63,7 +107,18 @@ class HDFDatabase : public Database
          const double* const data,
          int nelements);
 
-      // Reads an array of integers from the file.
+      /**
+       * @brief Reads an array of integers associated with the supplied key
+       * from the currently open HDF5 database file.
+       *
+       * @pre !key.empty()
+       * @pre data != 0 || nelements == 0
+       *
+       * @param[in] key The key associated with the array of values to be
+       *                read.
+       * @param[out] The allocated array of integer values to be read.
+       * @param[in] The number of integers in the array.
+       */
       virtual
       void
       getIntegerArray(
@@ -71,7 +126,18 @@ class HDFDatabase : public Database
          int* data,
          int nelements);
 
-      // Reads an array of doubles from the file.
+      /**
+       * @brief Reads an array of doubles associated with the supplied key
+       * from the currently open HDF5 database file.
+       *
+       * @pre !key.empty()
+       * @pre data != 0 || nelements == 0
+       *
+       * @param[in] key The key associated with the array of values to be
+       *                read.
+       * @param[out] The allocated array of double values to be read.
+       * @param[in] The number of doubles in the array.
+       */
       virtual
       void
       getDoubleArray(
@@ -80,45 +146,82 @@ class HDFDatabase : public Database
          int nelements);
 
    private:
-      // Unimplemented copy constructor.
+      /**
+       * @brief Unimplemented copy constructor.
+       */
       HDFDatabase(
          const HDFDatabase& other);
 
-      // Unimplemented assignment operator.
+      /**
+       * @brief Unimplemented assignment operator.
+       */
       HDFDatabase&
       operator = (
          const HDFDatabase& rhs);
 
-      // Returns true if the specified key represents an integer entry.  If the
-      // key does not exist or if the string is empty then false is returned.
+      /**
+       * @brief Returns true if the specified key represents an integer entry.
+       *
+       * If the key does not exist or if the string is empty then false is
+       * returned.
+       *
+       * @param[in] key The key associated with the data we are interested in.
+       *
+       * @return true if the data associated with key is an integer array.
+       */
       bool
       isInteger(
          const std::string& key);
 
-      // Returns true if the specified key represents a double entry.  If the
-      // key does not exist or if the string is empty then false is returned.
+      /**
+       * @brief Returns true if the specified key represents a double entry.
+       *
+       * If the key does not exist or if the string is empty then false is
+       * returned.
+       *
+       * @param[in] key The key associated with the data we are interested in.
+       *
+       * @return true if the data associated with key is a double array.
+       */
       bool
       isDouble(
          const std::string& key);
 
-      // Write attribute to the specified dataset.
+      /**
+       * @brief Write an attribute to the specified dataset.
+       *
+       * @param[in] type_key The attribute to be written.
+       * @param[in] dataset_id ID of the dataset key will be written to.
+       */
       void
       writeAttribute(
          int type_key,
          hid_t dataset_id);
 
-      // Read attribute from the specified dataset.
+      /**
+       * @brief Read an attribute from the specified dataset.
+       *
+       * @param[in] dataset_id ID of the dataset key will be written to.
+       *
+       * @return The attribute.
+       */
       int
       readAttribute(
          hid_t dataset_id);
 
-      /* Whether database is mounted to a file. */
+      /**
+       * @brief True if the HDF5 database is mounted to a file.
+       */
       bool d_is_file;
 
-      /* ID of file attached to database or -1 if not mounted to a file. */
+      /**
+       * @brief ID of file attached to database or -1 if not mounted to a file.
+       */
       hid_t d_file_id;
 
-      /* ID of group attached to database. */
+      /**
+       * @brief ID of the group attached to the database.
+       * */
       hid_t d_group_id;
 
       static const int KEY_DOUBLE_ARRAY;

@@ -21,29 +21,36 @@
 namespace CAROM {
 
 /**
- * Class ParallelBuffer is a simple I/O stream utility that
- * intercepts output from an ostream and redirects the output as necessary
- * for parallel I/O.  This class defines a stream buffer class for an
- * ostream class.
+ * Class ParallelBuffer is a simple I/O stream utility that intercepts output
+ * from an ostream and redirects the output as necessary for parallel I/O.
+ * This class defines a stream buffer class for an ostream class.
  */
 class ParallelBuffer : public std::streambuf
 {
    public:
       /**
-       * Create a parallel buffer class.  The object will require further
-       * initialization to set up the I/O streams and prefix string.
+       * @brief Default constructor.
+       *
+       * The object will require further initialization to set up the I/O
+       * streams and prefix string.
        */
       ParallelBuffer();
 
       /**
-       * The destructor simply deallocates any internal data
-       * buffers.  It does not modify the output streams.
+       * @brief Destructor.
+       *
+       * Simply deallocates any internal data buffers.  It does not modify the
+       * output streams.
        */
       ~ParallelBuffer();
 
       /**
-       * Write a text string to the output stream.  Note that the string is
-       * not actually written until an end-of-line is detected.
+       * @brief Write a text string to the output stream.
+       *
+       * Note that the string is not actually written until an end-of-line is
+       * detected.
+       *
+       * @param[in] text The string to be written.
        */
       void
       outputString(
@@ -53,9 +60,13 @@ class ParallelBuffer : public std::streambuf
       }
 
       /**
-       * Write a text string of the specified length to the output file.  Note
-       * that the string is not actually written until an end-of-line is
+       * @brief Write a text string of the specified length to the output file.
+       *
+       * Note that the string is not actually written until an end-of-line is
        * detected.
+       *
+       * @param[in] text The string to be written.
+       * @param[in] length The length of the string.
        */
       void
       outputString(
@@ -63,15 +74,22 @@ class ParallelBuffer : public std::streambuf
          int length);
 
       /**
-       * Synchronize the parallel buffer (called from streambuf).
+       * @brief Synchronize the parallel buffer (called from streambuf).
+       *
+       * @return 0
        */
       int
       sync();
 
 #if !defined(__INTEL_COMPILER) && (defined(__GNUG__))
       /**
-       * Write the specified number of characters into the output stream
+       * @brief Write the specified number of characters into the output stream
        * (called from streambuf).
+       *
+       * @param[in] text The string to write.
+       * @param[in] n The number of characters of the string to write.
+       *
+       * @return n
        */
       std::streamsize
       xsputn(
@@ -80,8 +98,12 @@ class ParallelBuffer : public std::streambuf
 #endif
 
       /**
-       * Write an overflow character into the parallel buffer (called from
-       * streambuf).
+       * @brief Write an overflow character into the parallel buffer (called
+       * from streambuf).
+       *
+       * @param[in] ch The character to write.
+       *
+       * @return 0
        */
       int
       overflow(
@@ -89,9 +111,13 @@ class ParallelBuffer : public std::streambuf
 
 #ifdef _MSC_VER
       /**
-       * Read an overflow character from the parallel buffer (called from
-       * streambuf).  This is not implemented.  It is needed by the
-       * MSVC++ stream implementation.
+       * @brief Read an overflow character from the parallel buffer (called
+       * from streambuf).
+       *
+       * This is not implemented.  It is needed by the MSVC++ stream
+       * implementation.
+       *
+       * @return EOF
        */
       int
       underflow()
@@ -101,18 +127,50 @@ class ParallelBuffer : public std::streambuf
 #endif
 
    private:
+      /**
+       * @brief Copy data from the text string into the internal output buffer.
+       *
+       * If the internal buffer is not large enough to hold all of the string
+       * data, then allocate a new internal buffer.
+       *
+       * @param[in] text String to copy to the internal output buffer.
+       * @param[in] length Length of string to copy.
+       */
       void
       copyToBuffer(
          const std::string& text,
          int length);
-      void
-      outputBuffer();           // output internal buffer data to streams
 
-      std::string d_prefix;     // string prefix to prepend output strings
-      std::ostream* d_ostream;  // output stream for buffer
-      char* d_buffer;           // internal buffer to store accumulated string
-      int d_buffer_size;        // size of the internal output buffer
-      int d_buffer_ptr;         // number of charcters in the output buffer
+      /**
+       * @brief Output internal buffer data to streams/
+       */
+      void
+      outputBuffer();
+
+      /**
+       * @brief Prefix to prepend to output strings.
+       */
+      std::string d_prefix;
+
+      /**
+       * @brief Output stream for buffer.
+       */
+      std::ostream* d_ostream;
+
+      /**
+       * @brief Internal buffer to store accumulated string.
+       */
+      char* d_buffer;
+
+      /**
+       * @brief Size of the internal output buffer.
+       */
+      int d_buffer_size;
+
+      /**
+       * @brief Number of charcters in the output buffer.
+       */
+      int d_buffer_ptr;
 
       static const int DEFAULT_BUFFER_SIZE;
 };

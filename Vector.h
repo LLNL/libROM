@@ -17,86 +17,227 @@
 
 namespace CAROM {
 
-// A simple vector class in which the dimensions may be distributed evenly
-// across multiple processes.  Supports only the basic inner product and norm
-// related operations that we need in the CAROM project.
+/**
+ * A simple vector class in which the dimensions may be distributed across
+ * multiple processes.  This class supports only the basic operations that are
+ * needed by the SVD library.
+ */
 class Vector
 {
    public:
-      // Constructor in which vector manages storage.
+      /**
+       * @brief Constructor creating a Vector with uninitialized values.
+       *
+       * @pre dim > 0
+       *
+       * @param[in] dim When undistributed, the total dimension of the Vector.
+       *                When distributed, the part of the total dimension of
+       *                the Vector on this processor.
+       * @param[in] distributed If true the dimensions of the Vector are spread
+       *                        over all processors.
+       */
       Vector(
          int dim,
-         bool distributed,
-         int rank,
-         int num_procs);
+         bool distributed);
 
-      // Constructor in which vector is given its values.
+      /**
+       * @brief Constructor in which the Vector is given its initial values.
+       *
+       * @pre vec != 0
+       * @pre dim > 0
+       *
+       * @param[in] vec The initial values of the Vector.
+       * @param[in] dim When undistributed, the total dimension of the Vector.
+       *                When distributed, the part of the total dimension of
+       *                the Vector on this processor.
+       * @param[in] distributed If true the dimensions of the Vector are spread
+       *                        over all processors.
+       */
       Vector(
          const double* vec,
          int dim,
-         bool distributed,
-         int rank,
-         int num_procs);
+         bool distributed);
 
-      // Destructor.
+      /**
+       * @brief Copy constructor.
+       *
+       * @param[in] other The Vector to copy.
+       */
+      Vector(
+         const Vector& other);
+
+      /**
+       * @brief Destructor.
+       */
       ~Vector();
 
-      // Returns true if vector is distributed.
+      /**
+       * @brief Assignment operator.
+       *
+       * @param[in] rhs The Vector to assign to this.
+       *
+       * @return This after rhs has been assigned to it.
+       */
+      Vector&
+      operator = (
+         const Vector& rhs);
+
+      /**
+       * @brief Returns true if the Vector is distributed.
+       *
+       * @return True if the Vector is distributed.
+       */
       bool
       distributed() const
       {
          return d_distributed;
       }
 
-      // Returns the dimension of the vector.
+      /**
+       * @brief Returns the dimension of the Vector on this processor.
+       *
+       * @return The part of the Vector's dimension on this processor.
+       */
       int
       dim() const
       {
          return d_dim;
       }
 
-      // Dot product.
+      /**
+       * @brief Inner product, reference form.
+       *
+       * For distributed Vectors this is a parallel operation.
+       *
+       * @pre d_dim == other.d_dim
+       * @pre d_distributed == other.d_distributed
+       *
+       * @param[in] other The Vector to form the inner product with this.
+       *
+       * @return The inner product of this and other.
+       */
       double
-      dot(const Vector& other) const;
+      inner_product(
+         const Vector& other) const;
 
-      // Dot product.
+      /**
+       * @brief Inner product, pointer version.
+       *
+       * For distributed Vectors this is a parallel operation.
+       *
+       * @pre other != 0
+       * @pre d_dim == other->d_dim
+       * @pre d_distributed == other.d_distributed
+       *
+       * @param[in] other The Vector to form the inner product with this.
+       *
+       * @return The inner product of this and other.
+       */
       double
-      dot(const Vector* const other) const
+      inner_product(
+         const Vector* const other) const
       {
-         return dot(*other);
+         CAROM_ASSERT(other != 0);
+         return inner_product(*other);
       }
 
-      // Takes the norm of this.
+      /**
+       * @brief Form the norm of this.
+       *
+       * For a distributed Vector this is a parallel operation.
+       *
+       * @return The norm of this.
+       */
       double
       norm() const;
 
-      // Normalizes the vector and returns its norm.
+      /**
+       * @brief Normalizes the Vector and returns its norm.
+       *
+       * For a distributed Vector this is a parallel operation.
+       *
+       * @return The norm of this.
+       */
       double
       normalize();
 
-      // Adds other and this and returns the result.
+      /**
+       * @brief Adds other and this and returns the result, reference version.
+       *
+       * @pre d_distributed == other.d_distributed
+       * @pre d_dim == other.d_dim
+       *
+       * @param[in] other The other summand.
+       *
+       * @return this + other
+       */
       Vector*
-      add(const Vector& other) const;
+      plus(
+         const Vector& other) const;
 
-      // Adds other and this and returns the result.
+      /**
+       * @brief Adds other and this and returns the result, pointer version.
+       *
+       * @pre other != 0
+       * @pre d_distributed == other->d_distributed
+       * @pre d_dim == other->d_dim
+       *
+       * @param[in] other The other summand.
+       *
+       * @return this + other
+       */
       Vector*
-      add(const Vector* const other) const
+      plus(
+         const Vector* const other) const
       {
-         return add(*other);
+         CAROM_ASSERT(other != 0);
+         return plus(*other);
       }
 
-      // Subtracts other and this and returns the result.
+      /**
+       * @brief Subtracts other and this and returns the result, reference
+       * version.
+       *
+       * @pre d_distributed == other.d_distributed
+       * @pre d_dim == other.d_dim
+       *
+       * @param[in] other The other subtrahand.
+       *
+       * @return this - other
+       */
       Vector*
-      subtract(const Vector& other) const;
+      minus(
+         const Vector& other) const;
 
-      // Subtracts other and this and returns the result.
+      /**
+       * @brief Subtracts other and this and returns the result, pointer
+       * version.
+       *
+       * @pre other != 0
+       * @pre d_distributed == other->d_distributed
+       * @pre d_dim == other->d_dim
+       *
+       * @param[in] other The other subtrahand.
+       *
+       * @return this - other
+       */
       Vector*
-      subtract(const Vector* const other) const
+      minus(
+         const Vector* const other) const
       {
-         return subtract(*other);
+         CAROM_ASSERT(other != 0);
+         return minus(*other);
       }
 
-      // Const vector member access.
+      /**
+       * @brief Const Vector member access.
+       *
+       * @pre (0 <= i) && (i < d_dim)
+       *
+       * @param[in] i The component of the Vector on this processor requested.
+       *
+       * @return The requested component of the Vector on this processor.
+       */
       const double&
       item(
          int i) const
@@ -105,7 +246,17 @@ class Vector
          return d_vec[i];
       }
 
-      // Non-const vector member access.
+      /**
+       * @brief Non-const Vector member access.
+       *
+       * Allows constructs of the form vec[i] = val;
+       *
+       * @pre (0 <= i) && (i < d_dim)
+       *
+       * @param[in] i The component of the Vector on this processor requested.
+       *
+       * @return The requested component of the Vector on this processor.
+       */
       double&
       item(
          int i)
@@ -115,33 +266,28 @@ class Vector
       }
       
    private:
-      // Default constructor is not implemented.
+      /**
+       * @brief Default constructor is not implemented.
+       */
       Vector();
 
-      // Copy constructor is not implemented.
-      Vector(
-         const Vector& other);
-
-      // Assignment operator is not implemented.
-      Vector&
-      operator = (
-         const Vector& rhs);
-
-      // The storage for the vector.
+      /**
+       * @brief The storage for the Vector's values on this processor.
+       */
       double* d_vec;
 
-      // The dimension of the vector.
+      /**
+       * @brief The part of the Vector's dimension on this processor.
+       */
       int d_dim;
 
-      // If true, the vector's dimensions are distributed over all processors.
-      // Each processor holds the same number of dimensions.
+      /**
+       * @brief If true, the Vector's dimensions are distributed over all
+       * processors.
+       *
+       * Each processor does not need to hold the same number of dimensions.
+       */
       bool d_distributed;
-
-      // The MPI rank of the process owning this object.
-      int d_rank;
-
-      // The number of MPI processes.
-      int d_num_procs;
 };
 
 }

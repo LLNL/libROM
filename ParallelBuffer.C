@@ -33,8 +33,15 @@ const int ParallelBuffer::DEFAULT_BUFFER_SIZE = 128;
  */
 ParallelBuffer::ParallelBuffer()
 {
+   int mpi_init;
+   MPI_Initialized(&mpi_init);
    int rank;
-   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+   if (mpi_init) {
+      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+   }
+   else {
+      rank = 0;
+   }
    d_prefix = "P=" + Utilities::processorToString(rank) + ":";
    d_ostream = &std::cerr;
    d_buffer = 0;

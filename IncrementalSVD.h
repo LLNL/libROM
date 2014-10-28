@@ -48,20 +48,6 @@ class IncrementalSVD
          return d_dim;
       }
 
-      // Returns the rank of the processor being run on.
-      int
-      getRank() const
-      {
-         return d_rank;
-      }
-
-      // Returns the number of processors being run on.
-      int
-      getSize() const
-      {
-         return d_size;
-      }
-
       // Returns the basis vectors for the current time interval, d_U, as a
       // Matrix.
       virtual
@@ -140,8 +126,10 @@ class IncrementalSVD
       // The simulation time at which each time interval starts.
       std::vector<double> d_time_interval_start_times;
 
+#ifdef DEBUG_ROMS
       // Rank of process this object lives on.
       int d_rank;
+#endif
 
       // Total number of processors.
       int d_size;

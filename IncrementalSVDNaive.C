@@ -133,13 +133,13 @@ IncrementalSVDNaive::buildInitialSVD(
    d_time_interval_start_times[d_num_time_intervals-1] = time;
 
    // Build d_S for this new time interval.
-   d_S = new Matrix(1, 1, false, d_rank, d_size);
-   Vector u_vec(u, d_dim, true, d_rank, d_size);
+   d_S = new Matrix(1, 1, false);
+   Vector u_vec(u, d_dim, true);
    double norm_u = u_vec.norm();
    d_S->item(0, 0) = norm_u;
 
    // Build d_U for this new time interval.
-   d_U = new Matrix(d_dim, 1, true, d_rank, d_size);
+   d_U = new Matrix(d_dim, 1, true);
    for (int i = 0; i < d_dim; ++i) {
       d_U->item(i, 0) = u[i]/norm_u;
    }
@@ -153,14 +153,15 @@ IncrementalSVDNaive::buildIncrementalSVD(
    const double* u)
 {
    // l = basis' * u
-   Vector u_vec(u, d_dim, true, d_rank, d_size);
-   Vector* l = d_U->TransposeMult(u_vec);
+   Vector u_vec(u, d_dim, true);
+   Vector* l = d_U->transposeMult(u_vec);
 
    // basisl = basis * l
-   Vector* basisl = d_U->Mult(l);
+   Vector* basisl = d_U->mult(l);
 
    // Compute k = sqrt(u.u - 2.0*l.l + basisl.basisl) which is ||u - basisl||.
-   double k = u_vec.dot(u_vec) - 2.0*l->dot(l) + basisl->dot(basisl);
+   double k = u_vec.inner_product(u_vec) - 2.0*l->inner_product(l) +
+      basisl->inner_product(basisl);
    if (k <= 0) {
       k = 0;
    }
@@ -212,7 +213,7 @@ IncrementalSVDNaive::buildIncrementalSVD(
       // This increment is new.
 
       // Compute j
-      Vector* j = u_vec.subtract(basisl);
+      Vector* j = u_vec.minus(basisl);
       for (int i = 0; i < d_dim; ++i) {
          j->item(i) /= k;
       }
@@ -249,7 +250,7 @@ IncrementalSVDNaive::addRedundantIncrement(
 {
    // Chop a row and a column off of A to form Amod.  Also form
    // d_S by chopping a row and a column off of sigma.
-   Matrix Amod(d_num_increments, d_num_increments, false, d_rank, d_size);
+   Matrix Amod(d_num_increments, d_num_increments, false);
    for (int row = 0; row < d_num_increments; ++row){
       for (int col = 0; col < d_num_increments; ++col) {
          Amod.item(row, col) = A->item(row, col);
@@ -258,7 +259,7 @@ IncrementalSVDNaive::addRedundantIncrement(
    }
 
    // Multiply d_U and Amod and put result into d_U.
-   Matrix* U_times_Amod = d_U->Mult(Amod);
+   Matrix* U_times_Amod = d_U->mult(Amod);
    delete d_U;
    d_U = U_times_Amod;
 }
@@ -270,7 +271,7 @@ IncrementalSVDNaive::addNewIncrement(
    Matrix* sigma)
 {
    // Add j as a new column of d_U.  Then multiply by A to form a new d_U.
-   Matrix tmp(d_dim, d_num_increments+1, true, d_rank, d_size);
+   Matrix tmp(d_dim, d_num_increments+1, true);
    for (int row = 0; row < d_dim; ++row) {
       for (int col = 0; col < d_num_increments; ++col) {
          tmp.item(row, col) = d_U->item(row, col);
@@ -278,7 +279,7 @@ IncrementalSVDNaive::addNewIncrement(
       tmp.item(row, d_num_increments) = j->item(row);
    }
    delete d_U;
-   d_U = tmp.Mult(A);
+   d_U = tmp.mult(A);
 
    // d_S = sigma.
    delete d_S;

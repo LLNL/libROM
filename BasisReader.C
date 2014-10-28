@@ -25,16 +25,15 @@ BasisReader::BasisReader(
 
    int mpi_init;
    MPI_Initialized(&mpi_init);
+   int rank;
    if (mpi_init) {
-      MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
-      MPI_Comm_size(MPI_COMM_WORLD, &d_size);
+      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
    }
    else {
-      d_rank = 0;
-      d_size = 1;
+      rank = 0;
    }
    char tmp[100];
-   sprintf(tmp, ".%06d", d_rank);
+   sprintf(tmp, ".%06d", rank);
    std::string full_file_name = base_file_name + tmp;
    if (db_format == Database::HDF5) {
       d_database = new HDFDatabase();
@@ -81,7 +80,7 @@ BasisReader::getBasis(
    if (d_basis_vectors) {
       delete d_basis_vectors;
    }
-   d_basis_vectors = new Matrix(num_rows, num_cols, true, d_rank, d_size);
+   d_basis_vectors = new Matrix(num_rows, num_cols, true);
    sprintf(tmp, "basis_%06d", i);
    d_database->getDoubleArray(tmp,
                               &d_basis_vectors->item(0, 0),

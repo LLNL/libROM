@@ -21,34 +21,34 @@ namespace CAROM {
 
 Vector::Vector(
    int dim,
-   bool distributed,
-   int rank,
-   int num_procs) :
+   bool distributed) :
    d_dim(dim),
-   d_distributed(distributed),
-   d_rank(rank),
-   d_num_procs(num_procs)
+   d_distributed(distributed)
 {
    CAROM_ASSERT(dim > 0);
-   CAROM_ASSERT(rank < num_procs);
    d_vec = new double [dim];
 }
 
 Vector::Vector(
    const double* vec,
    int dim,
-   bool distributed,
-   int rank,
-   int num_procs) :
+   bool distributed) :
    d_dim(dim),
-   d_distributed(distributed),
-   d_rank(rank),
-   d_num_procs(num_procs)
+   d_distributed(distributed)
 {
+   CAROM_ASSERT(vec != 0);
    CAROM_ASSERT(dim > 0);
-   CAROM_ASSERT(rank < num_procs);
    d_vec = new double [dim];
    memcpy(d_vec, vec, dim*sizeof(double));
+}
+
+Vector::Vector(
+   const Vector& other) :
+   d_dim(other.d_dim),
+   d_distributed(other.d_distributed)
+{
+   d_vec = new double [d_dim];
+   memcpy(d_vec, other.d_vec, d_dim*sizeof(double));
 }
 
 Vector::~Vector()
@@ -56,17 +56,41 @@ Vector::~Vector()
    delete [] d_vec;
 }
 
+Vector&
+Vector::operator = (
+   const Vector& rhs)
+{
+   d_distributed = rhs.d_distributed;
+   if (d_dim != rhs.d_dim) {
+      d_dim = rhs.d_dim;
+      delete [] d_vec;
+      d_vec = new double[d_dim];
+   }
+   memcpy(d_vec, rhs.d_vec, d_dim*sizeof(double));
+   return *this;
+}
+
 double
-Vector::dot(
+Vector::inner_product(
    const Vector& other) const
 {
    CAROM_ASSERT(d_dim == other.d_dim);
+   CAROM_ASSERT(d_distributed == other.d_distributed);
    double ip;
    double local_ip = 0.0;
    for (int i = 0; i < d_dim; ++i) {
       local_ip += d_vec[i]*other.d_vec[i];
    }
-   if (d_num_procs > 1 && d_distributed) {
+   int mpi_init;
+   MPI_Initialized(&mpi_init);
+   int num_procs;
+   if (mpi_init) {
+      MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
+   }
+   else {
+      num_procs = 1;
+   }
+   if (num_procs > 1 && d_distributed) {
       MPI_Allreduce(&local_ip, &ip, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
    }
    else {
@@ -78,7 +102,7 @@ Vector::dot(
 double
 Vector::norm() const
 {
-   double ip = dot(this);
+   double ip = inner_product(this);
    double norm = sqrt(ip);
    return norm;
 }
@@ -94,12 +118,13 @@ Vector::normalize()
 }
 
 Vector*
-Vector::add(const Vector& other) const
+Vector::plus(
+   const Vector& other) const
 {
    CAROM_ASSERT(d_distributed == other.d_distributed);
    CAROM_ASSERT(d_dim == other.d_dim);
 
-   Vector* result = new Vector(d_dim, d_distributed, d_rank, d_num_procs);
+   Vector* result = new Vector(d_dim, d_distributed);
    for (int i = 0; i < d_dim; ++i) {
       result->d_vec[i] = d_vec[i] + other.d_vec[i];
    }
@@ -107,12 +132,13 @@ Vector::add(const Vector& other) const
 }
 
 Vector*
-Vector::subtract(const Vector& other) const
+Vector::minus(
+   const Vector& other) const
 {
    CAROM_ASSERT(d_distributed == other.d_distributed);
    CAROM_ASSERT(d_dim == other.d_dim);
 
-   Vector* result = new Vector(d_dim, d_distributed, d_rank, d_num_procs);
+   Vector* result = new Vector(d_dim, d_distributed);
    for (int i = 0; i < d_dim; ++i) {
       result->d_vec[i] = d_vec[i] - other.d_vec[i];
    }

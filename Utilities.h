@@ -18,18 +18,19 @@
 
 namespace CAROM {
 
-/*!
- * A null use of a variable, use to avoid GNU compiler
- * warnings about unused variables.
+/**
+ * @brief A null use of a variable, use to avoid GNU compiler warnings about
+ * unused variables.
  */
 #define CAROM_NULL_USE(variable)                         \
    do {                                                  \
       if (0) { char* temp = (char *)&variable; temp++; } \
    } while (0)
 
-/*!
- * Throw an error assertion from within any C++ source code.  The
- * macro argument may be any standard ostream expression.  The file and
+/**
+ * @brief Throw an error assertion from within any C++ source code.
+ *
+ * The macro argument may be any standard ostream expression.  The file and
  * line number of the abort are also printed.
  */
 #define CAROM_ERROR(X)                                       \
@@ -39,6 +40,13 @@ namespace CAROM {
       CAROM::Utilities::abort(os.str(), __FILE__, __LINE__); \
    } while (0)
 
+/**
+ * @brief Throw an error assertion from within any C++ source code if the given
+ * expression is not true.
+ *
+ * This is a parallel-friendly version of assert.  The file and line number of
+ * the abort are also printed.
+ */
 #ifdef DEBUG_CHECK_ASSERTIONS
 
 #define CAROM_ASSERT(EXP)                                       \
@@ -58,19 +66,39 @@ namespace CAROM {
 
 #endif
 
-/* Holder of basic, static, utility routines. */
+/**
+ * Utilities contains basic, static, utility routines for error reporting,
+ * string manipulations, etc.
+ */
 struct Utilities
 {
-   // Cleanly end the program when something horrible happend and print a
-   // message about what took place.  Take into account whether MPI is or isn't
-   // running to decide how to die.
+   /**
+    * @brief Cleanly ends the program when something horrible happend and
+    * prints a message about what took place.
+    *
+    * Takes into account whether MPI is or isn't running to decide how to die.
+    *
+    * @param[in] message Message to print about the cause of the abort.
+    * @param[in] filename Name of the file where the abort was called.
+    * @param[in] line Line number in the file where the abort was called.
+    */
    static void
    abort(
       const std::string& message,
       const std::string& filename,
       int line);
 
-   // Convert a processor ID to a string.
+   /**
+    * @brief Converts a processor ID to a string.
+    *
+    * Use this to ensure same width is used when converting a processor ID to
+    * a string representation.
+    *
+    * @param[in] ID of the processor
+    *
+    * @return The string representation of processor ID of fixed width
+    * prepended with 0s.
+    */
    static std::string
    processorToString(
       int processorID);

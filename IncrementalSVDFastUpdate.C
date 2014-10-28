@@ -132,17 +132,17 @@ IncrementalSVDFastUpdate::buildInitialSVD(
    d_time_interval_start_times[d_num_time_intervals-1] = time;
 
    // Build d_S for this new time interval.
-   d_S = new Matrix(1, 1, false, d_rank, d_size);
-   Vector u_vec(u, d_dim, true, d_rank, d_size);
+   d_S = new Matrix(1, 1, false);
+   Vector u_vec(u, d_dim, true);
    double norm_u = u_vec.norm();
    d_S->item(0, 0) = norm_u;
 
    // Build d_Up for this new time interval.
-   d_Up = new Matrix(1, 1, false, d_rank, d_size);
+   d_Up = new Matrix(1, 1, false);
    d_Up->item(0, 0) = 1.0;
 
    // Build d_U for this new time interval.
-   d_U = new Matrix(d_dim, 1, true, d_rank, d_size);
+   d_U = new Matrix(d_dim, 1, true);
    for (int i = 0; i < d_dim; ++i) {
       d_U->item(i, 0) = u[i]/norm_u;
    }
@@ -159,14 +159,15 @@ IncrementalSVDFastUpdate::buildIncrementalSVD(
    const double* u)
 {
    // l = basis' * u
-   Vector u_vec(u, d_dim, true, d_rank, d_size);
-   Vector* l = d_basis->TransposeMult(u_vec);
+   Vector u_vec(u, d_dim, true);
+   Vector* l = d_basis->transposeMult(u_vec);
 
    // basisl = basis * l
-   Vector* basisl = d_basis->Mult(l);
+   Vector* basisl = d_basis->mult(l);
 
    // Compute k = sqrt(u.u - 2.0*l.l + basisl.basisl) which is ||u - basisl||.
-   double k = u_vec.dot(u_vec) - 2.0*l->dot(l) + basisl->dot(basisl);
+   double k = u_vec.inner_product(u_vec) - 2.0*l->inner_product(l) +
+      basisl->inner_product(basisl);
    if (k <= 0) {
       k = 0;
    }
@@ -225,7 +226,7 @@ IncrementalSVDFastUpdate::buildIncrementalSVD(
       // This increment is new.
 
       // Compute j
-      Vector* j = u_vec.subtract(basisl);
+      Vector* j = u_vec.minus(basisl);
       for (int i = 0; i < d_dim; ++i) {
          j->item(i) /= k;
       }
@@ -256,7 +257,7 @@ IncrementalSVDFastUpdate::buildIncrementalSVD(
 
    // Compute the basis vectors.
    delete d_basis;
-   d_basis = d_U->Mult(d_Up);
+   d_basis = d_U->mult(d_Up);
 
    // Clean up.
    delete l;
@@ -270,7 +271,7 @@ IncrementalSVDFastUpdate::addRedundantIncrement(
 {
    // Chop a row and a column off of A to form Amod.  Also form
    // d_S by chopping a row and a column off of sigma.
-   Matrix Amod(d_num_increments, d_num_increments, false, d_rank, d_size);
+   Matrix Amod(d_num_increments, d_num_increments, false);
    for (int row = 0; row < d_num_increments; ++row){
       for (int col = 0; col < d_num_increments; ++col) {
          Amod.item(row, col) = A->item(row, col);
@@ -279,7 +280,7 @@ IncrementalSVDFastUpdate::addRedundantIncrement(
    }
 
    // Multiply d_Up and Amod and put result into d_Up.
-   Matrix* Up_times_Amod = d_Up->Mult(Amod);
+   Matrix* Up_times_Amod = d_Up->mult(Amod);
    delete d_Up;
    d_Up = Up_times_Amod;
 }
@@ -291,7 +292,7 @@ IncrementalSVDFastUpdate::addNewIncrement(
    Matrix* sigma)
 {
    // Add j as a new column of d_U.
-   Matrix* newU = new Matrix(d_dim, d_num_increments+1, true, d_rank, d_size);
+   Matrix* newU = new Matrix(d_dim, d_num_increments+1, true);
    for (int row = 0; row < d_dim; ++row) {
       for (int col = 0; col < d_num_increments; ++col) {
          newU->item(row, col) = d_U->item(row, col);
@@ -303,7 +304,7 @@ IncrementalSVDFastUpdate::addNewIncrement(
 
    // Form a temporary matrix, tmp, by add another row and column to
    // d_Up.  Only the last value in the new row/column is non-zero and it is 1.
-   Matrix tmp(d_num_increments+1, d_num_increments+1, false, d_rank, d_size);
+   Matrix tmp(d_num_increments+1, d_num_increments+1, false);
    for (int row = 0; row < d_num_increments; ++row) {
       for (int col = 0; col < d_num_increments; ++col) {
          tmp.item(row, col) = d_Up->item(row, col);
@@ -317,7 +318,7 @@ IncrementalSVDFastUpdate::addNewIncrement(
 
    // d_Up = tmp*A
    delete d_Up;
-   d_Up = tmp.Mult(A);
+   d_Up = tmp.mult(A);
 
    // d_S = sigma.
    delete d_S;
