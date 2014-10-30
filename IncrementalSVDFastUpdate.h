@@ -16,90 +16,180 @@
 
 namespace CAROM {
 
-// A class which embodies the fast update incremental SVD algorithm.
+/**
+ * IncrementalSVDFastUpdate implements Brand's fast update incremental SVD
+ * algorithm by implementing the pure virtual methods of the IncrementalSVD
+ * base class.
+ */
 class IncrementalSVDFastUpdate : public IncrementalSVD
 {
    public:
-      // Constructor.
+      /**
+       * @brief Constructor.
+       *
+       * @pre dim > 0
+       * @pre redundancy_tol > 0.0
+       * @pre increments_per_time_interval > 0
+       *
+       * @param[in] dim The dimension of the system on this processor.
+       * @param[in] redundancy_tol Tolerance to determine if a sample is
+       *                           redundant or not.
+       * @param[in] skip_redundant If true skip redundant increments.
+       * @param[in] increments_per_time_interval The number of increments to be
+       *                                         collected for each time
+       *                                         interval.
+       */
       IncrementalSVDFastUpdate(
          int dim,
          double redundancy_tol,
          bool skip_redundant,
          int increments_per_time_interval);
 
-      // Destructor.
+      /**
+       * @brief Destructor.
+       */
       ~IncrementalSVDFastUpdate();
 
-      // Increment the SVD with the new state, u_in, at the given time.
+      /**
+       * @brief Increment the SVD with the new state, u_in, at the given time.
+       *
+       * @pre u_in != 0
+       * @pre time >= 0.0
+       *
+       * @param[in] u_in The state at the specified time.
+       * @param[in] time The simulation time for the state.
+       */
       void
       increment(
          const double* u_in,
          double time);
 
-      // Returns the basis vectors for the current time interval, d_U*d_Up, as
-      // a Matrix.
+      /**
+       * @brief Returns the basis vectors for the current time interval as a
+       * Matrix.
+       *
+       * @pre d_basis != 0
+       *
+       * @return The basis vectors for the current time interval.
+       */
       const Matrix*
       getBasis();
 
    private:
-      // Unimplemented default constructor.
+      /**
+       * @brief Unimplemented default constructor.
+       */
       IncrementalSVDFastUpdate();
 
-      // Unimplemented copy constructor.
+      /**
+       * @brief Unimplemented copy constructor.
+       */
       IncrementalSVDFastUpdate(
          const IncrementalSVDFastUpdate& other);
 
-      // Unimplemented assignment operator.
+      /**
+       * @brief Unimplemented assignment operator.
+       */
       IncrementalSVDFastUpdate&
       operator = (
          const IncrementalSVDFastUpdate& rhs);
 
-      // Constructs the first svd.
+      /**
+       * @brief Constructs the first svd.
+       *
+       * @pre u != 0
+       * @pre time >= 0.0
+       *
+       * @param[in] u The first state.
+       * @param[in] time The simulation time for the first state.
+       */
       void
       buildInitialSVD(
          const double* u,
          double time);
 
-      // Increments the svd given the state vector u.
+      /**
+       * @brief Increments the svd given the state vector u.
+       *
+       * @pre u != 0
+       *
+       * @param[in] u The new state.
+       */
       void
       buildIncrementalSVD(
          const double* u);
 
-      // Add a redundant increment to the svd.
+      /**
+       * @brief Add a redundant increment to the svd.
+       *
+       * @pre A != 0
+       * @pre sigma != 0
+       *
+       * @param[in] A The left singular vectors.
+       * @param[in] sigma The singular values.
+       */
       void
       addRedundantIncrement(
          const Matrix* A,
          const Matrix* sigma);
 
-      // Add a new, unique increment to the svd.
+      /**
+       * @brief Add a new, unique increment to the svd.
+       *
+       * @pre j != 0
+       * @pre A != 0
+       * @pre sigma != 0
+       *
+       * @param[in] j The new column of d_U.
+       * @param[in] A The left singular vectors.
+       * @param[in] sigma The singular values.
+       */
       void
       addNewIncrement(
          const Vector* j,
          const Matrix* A,
          Matrix* sigma);
 
-      // Returns the orthogonality of d_U.
+      /**
+       * @brief Computes and returns the orthogonality of d_U.
+       *
+       * @return The orthogonality of d_U.
+       */
       double
       checkUOrthogonality();
 
-      // Returns the orthogonality of d_Up.
+      /**
+       * @brief Computes and returns the orthogonality of d_Up.
+       *
+       * @return The orthogonality of d_U.
+       */
       double
       checkUpOrthogonality();
 
-      // Reorthogonalizes d_U.
+      /**
+       * @brief Reorthogonalizes m.
+       *
+       * @pre m != 0
+       *
+       * @param[in/out] The matrix to reorthogonalize.
+       */
       void
-      reOrthogonalizeU();
+      reOrthogonalize(
+         Matrix* m);
 
-      // Reorthogonalizes d_Up.
-      void
-      reOrthogonalizeUp();
-
-      // The matrix U distributed across all processors.  Each processor's d_U
-      // is the part of the distributed matrix local to that processor.
+      /**
+       * @brief The matrix U distributed across all processors.
+       *
+       * Each processor's d_U is the part of the distributed matrix local to
+       * that processor.
+       */
       Matrix* d_U;
 
-      // The matrix U'.  U' is not distributed and the entire matrix exists on
-      // each processor.
+      /**
+       * @brief The matrix U'.
+       *
+       * U' is not distributed and the entire matrix exists on each processor.
+       */
       Matrix* d_Up;
 };
 

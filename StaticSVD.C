@@ -27,30 +27,20 @@ const int StaticSVD::COMMUNICATE_A = 999;
 
 StaticSVD::StaticSVD(
    int dim,
-   int increments_per_time_interval) :
+   int states_per_time_interval) :
    d_dim(dim),
-   d_num_increments(0),
-   d_increments_per_time_interval(increments_per_time_interval),
+   d_num_states(0),
+   d_states_per_time_interval(states_per_time_interval),
    d_state(0),
    d_U(0),
    d_S(0),
    d_V(0),
    d_basis(0),
-   d_num_time_intervals(0),
    d_time_interval_start_times(0),
    d_this_interval_basis_current(false)
 {
-   // Get the rank of this process, and get the number of processors.
-   int mpi_init;
-   MPI_Initialized(&mpi_init);
-   if (mpi_init) {
-      MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
-      MPI_Comm_size(MPI_COMM_WORLD, &d_size);
-   }
-   else {
-      d_rank = 0;
-      d_size = 1;
-   }
+   CAROM_ASSERT(dim > 0);
+   CAROM_ASSERT(states_per_time_interval > 0);
 }
 
 StaticSVD::~StaticSVD()
@@ -80,10 +70,14 @@ StaticSVD::collectState(
    double* u_in,
    double time)
 {
+   CAROM_ASSERT(u_in != 0);
+   CAROM_ASSERT(time >= 0.0);
    if (isNewTimeInterval()) {
 
       // We have a new time interval.
-      if (d_num_time_intervals > 0) {
+      int num_time_intervals =
+         static_cast<int>(d_time_interval_start_times.size());
+      if (num_time_intervals > 0) {
          if (d_basis) {
             delete d_basis;
             d_basis = 0;
@@ -101,16 +95,15 @@ StaticSVD::collectState(
          delete d_V;
          d_V = 0;
       }
-      d_num_increments = 0;
-      ++d_num_time_intervals;
-      d_time_interval_start_times.resize(d_num_time_intervals);
-      d_time_interval_start_times[d_num_time_intervals-1] = time;
+      d_num_states = 0;
+      d_time_interval_start_times.resize(num_time_intervals+1);
+      d_time_interval_start_times[num_time_intervals] = time;
       d_basis = 0;
    }
    double* state = new double [d_dim];
    memcpy(state, u_in, d_dim*sizeof(double));
    d_state.push_back(state);
-   ++d_num_increments;
+   ++d_num_states;
    d_this_interval_basis_current = false;
 }
 
@@ -135,12 +128,40 @@ StaticSVD::getBasis()
 void
 StaticSVD::computeSVD()
 {
+   // First get the rank of this process, and get the number of processors.
+   int mpi_init;
+   MPI_Initialized(&mpi_init);
+   int rank;
+   int size;
+   if (mpi_init) {
+      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+      MPI_Comm_size(MPI_COMM_WORLD, &size);
+   }
+   else {
+      rank = 0;
+      size = 1;
+   }
+
+   // Now get the dimensions fom each process and the total dimension.
+   int* dims = new int [size];
+   if (mpi_init) {
+      MPI_Allgather(&d_dim, 1, MPI_INT, dims, 1, MPI_INT, MPI_COMM_WORLD);
+   }
+   else {
+      dims[0] = d_dim;
+   }
+
+   int total_dim = 0;
+   for (int i = 0; i < size; ++i) {
+      total_dim += dims[i];
+   }
+
    // Do this computation on process 0 and broadcast results to the other
    // processes.
    int num_cols = static_cast<int>(d_state.size());
-   if (d_rank == 0) {
+   if (rank == 0) {
       // Construct storage for the global state of A.
-      double* A = new double [d_dim*d_size*num_cols];
+      double* A = new double [total_dim*num_cols];
 
       // Put this processor's contribution to A into it in column major order.
       int idx = 0;
@@ -149,81 +170,113 @@ StaticSVD::computeSVD()
          for (int row = 0; row < d_dim; ++row) {
             A[idx+row] = col_vals[row];
          }
-         idx += d_dim*d_size;
+         idx += total_dim;
       }
 
       // Get the contributions to the global state from the other processes.
-      if (d_size > 1) {
-         double* Aproc = new double [d_dim*num_cols];
-         for (int proc = 1; proc < d_size; ++proc) {
+      if (size > 1) {
+         int offset = dims[0];
+         for (int proc = 1; proc < size; ++proc) {
+            int this_proc_dim = dims[proc];
+            double* Aproc = new double [this_proc_dim*num_cols];
             MPI_Status status;
-            MPI_Recv(Aproc, d_dim*num_cols, MPI_DOUBLE, proc,
-                     COMMUNICATE_A, MPI_COMM_WORLD, &status);
+            MPI_Recv(Aproc,
+               this_proc_dim*num_cols,
+               MPI_DOUBLE,
+               proc,
+               COMMUNICATE_A,
+               MPI_COMM_WORLD,
+               &status);
             int Aproc_idx = 0;
+            int Aidx = offset;
             for (int col = 0; col < num_cols; ++col) {
-               int Aidx = col*d_dim*d_size + d_dim*proc;
-               for (int row = 0; row < d_dim; ++row) {
-                  A[Aidx++] = Aproc[Aproc_idx++];
+               for (int row = 0; row < this_proc_dim; ++row) {
+                  A[Aidx+row] = Aproc[Aproc_idx++];
                }
+               Aidx += total_dim;
             }
+            delete [] Aproc;
+            offset += this_proc_dim;
          }
-         delete [] Aproc;
       }
 
       // Perform the svd.
-      svd(A);
+      svd(A, total_dim);
 
       // Broadcast the results.
-      if (d_size > 1) {
-         MPI_Bcast(&d_U->item(0, 0), d_dim*d_size*num_cols,
-                   MPI_DOUBLE, 0, MPI_COMM_WORLD);
-         MPI_Bcast(&d_S->item(0, 0), num_cols*num_cols,
-                   MPI_DOUBLE, 0, MPI_COMM_WORLD);
-         MPI_Bcast(&d_V->item(0, 0), num_cols*num_cols,
-                   MPI_DOUBLE, 0, MPI_COMM_WORLD);
+      if (size > 1) {
+         MPI_Bcast(&d_U->item(0, 0),
+            total_dim*num_cols,
+            MPI_DOUBLE,
+            0,
+            MPI_COMM_WORLD);
+         MPI_Bcast(&d_S->item(0, 0),
+            num_cols*num_cols,
+            MPI_DOUBLE,
+            0,
+            MPI_COMM_WORLD);
+         MPI_Bcast(&d_V->item(0, 0),
+            num_cols*num_cols,
+            MPI_DOUBLE,
+            0,
+            MPI_COMM_WORLD);
       }
 
       // Clean up.
       delete [] A;
    }
    else {
-      // Put this processor's contribution to the global state of A into myA
-      // in column major order.
-      double* myA = new double [d_dim*num_cols];
+      // Put this processor's contribution to the global state of A into A in
+      // column major order.
+      double* A = new double [d_dim*num_cols];
       int idx = 0;
       for (int col = 0; col < num_cols; ++col) {
          double* col_vals = d_state[col];
          for (int row = 0; row < d_dim; ++row) {
-            myA[idx++] = col_vals[row];
+            A[idx++] = col_vals[row];
          }
       }
 
       // Send the contribution to the global state of A to process 0.
       MPI_Request request;
-      MPI_Isend(myA, d_dim*num_cols, MPI_DOUBLE, 0,
-                COMMUNICATE_A, MPI_COMM_WORLD, &request);
+      MPI_Isend(A,
+         d_dim*num_cols,
+         MPI_DOUBLE,
+         0,
+         COMMUNICATE_A,
+         MPI_COMM_WORLD,
+         &request);
 
       // Allocate d_U, d_S, and d_V.
-      d_U = new Matrix(d_dim*d_size, num_cols, false);
+      d_U = new Matrix(total_dim, num_cols, false);
       d_S = new Matrix(num_cols, num_cols, false);
       d_V = new Matrix(num_cols, num_cols, false);
 
       // Get the results from process 0.
-      MPI_Bcast(&d_U->item(0, 0), d_dim*d_size*num_cols,
-                MPI_DOUBLE, 0, MPI_COMM_WORLD);
-      MPI_Bcast(&d_S->item(0, 0), num_cols*num_cols,
-                MPI_DOUBLE, 0, MPI_COMM_WORLD);
-      MPI_Bcast(&d_V->item(0, 0), num_cols*num_cols,
-                MPI_DOUBLE, 0, MPI_COMM_WORLD);
+      MPI_Bcast(&d_U->item(0, 0),
+         total_dim*num_cols,
+         MPI_DOUBLE,
+         0,
+         MPI_COMM_WORLD);
+      MPI_Bcast(&d_S->item(0, 0),
+         num_cols*num_cols,
+         MPI_DOUBLE,
+         0,
+         MPI_COMM_WORLD);
+      MPI_Bcast(&d_V->item(0, 0),
+         num_cols*num_cols,
+         MPI_DOUBLE,
+         0,
+         MPI_COMM_WORLD);
 
       // Clean up.
-      delete [] myA;
+      delete [] A;
    }
    d_basis = new Matrix(*d_U);
    d_this_interval_basis_current = true;
 #ifdef DEBUG_ROMS
-   if (d_rank == 0) {
-      for (int row = 0; row < d_dim*d_size; ++row) {
+   if (rank == 0) {
+      for (int row = 0; row < total_dim; ++row) {
          for (int col = 0; col < num_cols; ++col) {
             printf("%.16e ", d_U->item(row, col));
          }
@@ -238,16 +291,21 @@ StaticSVD::computeSVD()
       }
    }
 #endif
+   delete [] dims;
 }
 
 void
 StaticSVD::svd(
-   double* A)
+   double* A,
+   int total_dim)
 {
+   CAROM_ASSERT(A != 0);
+   CAROM_ASSERT(total_dim > 0);
+
    int num_states = static_cast<int>(d_state.size());
 
    // Construct d_U.
-   d_U = new Matrix(d_dim*d_size, num_states, false);
+   d_U = new Matrix(total_dim, num_states, false);
 
    // Construct d_S.
    d_S = new Matrix(num_states, num_states, false);
@@ -263,7 +321,7 @@ StaticSVD::svd(
    // Use lapack's dgesdd_ Fortran function to perform the svd.  As this is
    // Fortran A and all the computed matrices are in column major order.
    char jobz = 'A';
-   int m = d_dim*d_size;
+   int m = total_dim;
    int n = num_states;
    int lda = m;
    double* sigma = new double [num_states];
@@ -274,9 +332,20 @@ StaticSVD::svd(
    double* work = new double [lwork];
    int* iwork = new int [8*n];
    int info;
-   dgesdd_(&jobz, &m, &n, A, &lda,
-           sigma, U, &ldu, &d_V->item(0, 0), &ldv,
-           work, &lwork, iwork, &info);
+   dgesdd_(&jobz,
+      &m,
+      &n,
+      A,
+      &lda,
+      sigma,
+      U,
+      &ldu,
+      &d_V->item(0, 0),
+      &ldv,
+      work,
+      &lwork,
+      iwork,
+      &info);
    CAROM_ASSERT(info == 0);
    delete [] work;
    delete [] iwork;

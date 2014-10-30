@@ -21,74 +21,152 @@ namespace CAROM {
 class IncrementalSVDNaive : public IncrementalSVD
 {
    public:
-      // Constructor.
+      /**
+       * @brief Constructor.
+       *
+       * @pre dim > 0
+       * @pre redundancy_tol > 0.0
+       * @pre increments_per_time_interval > 0
+       *
+       * @param[in] dim The dimension of the system on this processor.
+       * @param[in] redundancy_tol Tolerance to determine if a sample is
+       *                           redundant or not.
+       * @param[in] skip_redundant If true skip redundant increments.
+       * @param[in] increments_per_time_interval The number of increments to be
+       *                                         collected for each time
+       *                                         interval.
+       */
       IncrementalSVDNaive(
          int dim,
          double redundancy_tol,
          bool skip_redundant,
          int increments_per_time_interval);
 
-      // Destructor.
+      /**
+       * @brief Destructor.
+       */
       ~IncrementalSVDNaive();
 
-      // Increment the SVD with the new state, u_in, at the given time.
+      /**
+       * @brief Increment the SVD with the new state, u_in, at the given time..
+       *
+       * @pre u_in != 0
+       * @pre time >= 0.0
+       *
+       * @param[in] u_in The state at the specified time.
+       * @param[in] time The simulation time for the state.
+       */
       void
       increment(
          const double* u_in,
          double time);
 
-      // Returns the basis vectors for the current time interval, d_U, as a
-      // Matrix.
+      /**
+       * @brief Returns the basis vectors for the current time interval as a
+       * Matrix.
+       *
+       * @pre d_U != 0
+       *
+       * @return The basis vectors for the current time interval.
+       */
       const Matrix*
       getBasis();
 
    private:
-      // Unimplemented default constructor.
+      /**
+       * @brief Unimplemented default constructor.
+       */
       IncrementalSVDNaive();
 
-      // Unimplemented copy constructor.
+      /**
+       * @brief Unimplemented copy constructor.
+       */
       IncrementalSVDNaive(
          const IncrementalSVDNaive& other);
 
-      // Unimplemented assignment operator.
+      /**
+       * @brief Unimplemented assignment operator.
+       */
       IncrementalSVDNaive&
       operator = (
          const IncrementalSVDNaive& rhs);
 
-      // Constructs the first svd.
+      /**
+       * @brief Constructs the first svd.
+       *
+       * @pre u != 0
+       * @pre time >= 0.0
+       *
+       * @param[in] u The first state.
+       * @param[in] time The simulation time for the first state.
+       */
       void
       buildInitialSVD(
          const double* u,
          double time);
 
-      // Increments the svd given the state vector u.
+      /**
+       * @brief Increments the svd given the state vector u.
+       *
+       * @pre u != 0
+       *
+       * @param[in] u The new state.
+       */
       void
       buildIncrementalSVD(
          const double* u);
 
-      // Add a redundant increment to the svd.
+      /**
+       * Add a redundant increment to the svd.
+       *
+       * @pre A != 0
+       * @pre sigma != 0
+       *
+       * @param[in] A The left singular vectors.
+       * @param[in] sigma The singular values.
+       */
       void
       addRedundantIncrement(
          const Matrix* A,
          const Matrix* sigma);
 
-      // Add a new, unique increment to the svd.
+      /**
+       * @brief Add a new, unique increment to the svd.
+       *
+       * @pre j != 0
+       * @pre A != 0
+       * @pre sigma != 0
+       *
+       * @param[in] j The new column of d_U.
+       * @param[in] A The left singular vectors.
+       * @param[in] sigma The singular values.
+       */
       void
       addNewIncrement(
          const Vector* j,
          const Matrix* A,
          Matrix* sigma);
 
-      // Returns the orthogonality of d_U.
+      /**
+       * @brief Computes and returns the orthogonality of d_U.
+       *
+       * @return The orthogonality of d_U.
+       */
       double
       checkOrthogonality();
 
-      // Reorthogonalizes d_U.
+      /**
+       * @brief Reorthogonalizes d_U.
+       */
       void
       reOrthogonalize();
 
-      // The matrix U distributed across all processors.  Each processor's d_U
-      // is the part of the distributed matrix local to that processor.
+      /**
+       * @brief The matrix U distributed across all processors.
+       *
+       * Each processor's d_U is the part of the distributed matrix local to
+       * that processor.
+       */
       Matrix* d_U;
 };
 

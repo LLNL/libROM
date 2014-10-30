@@ -46,6 +46,9 @@ IncrementalSVDNaive::increment(
    const double* u_in,
    double time)
 {
+   CAROM_ASSERT(u_in != 0);
+   CAROM_ASSERT(time >= 0.0);
+
    // If this is the first SVD then build it.  Otherwise add this increment to
    // the system.
    if (isNewTimeInterval()) {
@@ -56,8 +59,17 @@ IncrementalSVDNaive::increment(
    }
 
 #ifdef DEBUG_ROMS
+   int mpi_init;
+   MPI_Initialized(&mpi_init);
+   int rank;
+   if (mpi_init) {
+      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+   }
+   else {
+      rank = 0;
+   }
    const Matrix* basis = getBasis();
-   if (d_rank == 0) {
+   if (rank == 0) {
       // Print d_S.
       for (int row = 0; row < d_num_increments; ++row) {
          for (int col = 0; col < d_num_increments; ++col) {
@@ -76,28 +88,37 @@ IncrementalSVDNaive::increment(
       }
 
       // Gather other processor's parts of the basis and print them.
-      double* m = new double[d_dim*d_num_increments];
       for (int proc = 1; proc < d_size; ++proc) {
+         double* m = new double[d_proc_dims[proc]*d_num_increments];
          MPI_Status status;
-         MPI_Recv(m, d_dim*d_num_increments, MPI_DOUBLE, proc,
-                  COMMUNICATE_U, MPI_COMM_WORLD, &status);
+         MPI_Recv(m,
+            d_proc_dims[proc]*d_num_increments,
+            MPI_DOUBLE,
+            proc,
+            COMMUNICATE_U,
+            MPI_COMM_WORLD,
+            &status);
          int idx = 0;
-         for (int row = 0; row < d_dim; ++row) {
+         for (int row = 0; row < d_proc_dims[proc]; ++row) {
             for (int col = 0; col < d_num_increments; ++col) {
                printf("%.16e ", m[idx++]);
             }
             printf("\n");
          }
+         delete [] m;
       }
       printf("============================================================\n");
-      delete [] m;
    }
    else {
       // Send this processor's part of the basis to process 0.
       MPI_Request request;
       MPI_Isend(const_cast<double*>(&basis->item(0, 0)),
-                d_dim*d_num_increments, MPI_DOUBLE, 0, COMMUNICATE_U,
-                MPI_COMM_WORLD, &request);
+         d_dim*d_num_increments,
+         MPI_DOUBLE,
+         0,
+         COMMUNICATE_U,
+         MPI_COMM_WORLD,
+         &request);
    }
 #endif
 }
@@ -115,12 +136,17 @@ IncrementalSVDNaive::buildInitialSVD(
    const double* u,
    double time)
 {
+   CAROM_ASSERT(u != 0);
+   CAROM_ASSERT(time >= 0.0);
+
    // We have a new time interval.
 
    // If this is not the first time interval then write the basis vectors for
    // the just completed interval.  Delete d_basis and d_S of the just
    // completed time interval.
-   if (d_num_time_intervals > 0) {
+   int num_time_intervals =
+      static_cast<int>(d_time_interval_start_times.size());
+   if (num_time_intervals > 0) {
       if (d_basis) {
          delete d_basis;
          d_basis = 0;
@@ -128,9 +154,8 @@ IncrementalSVDNaive::buildInitialSVD(
       delete d_U;
       delete d_S;
    }
-   ++d_num_time_intervals;
-   d_time_interval_start_times.resize(d_num_time_intervals);
-   d_time_interval_start_times[d_num_time_intervals-1] = time;
+   d_time_interval_start_times.resize(num_time_intervals+1);
+   d_time_interval_start_times[num_time_intervals] = time;
 
    // Build d_S for this new time interval.
    d_S = new Matrix(1, 1, false);
@@ -152,6 +177,8 @@ void
 IncrementalSVDNaive::buildIncrementalSVD(
    const double* u)
 {
+   CAROM_ASSERT(u != 0);
+
    // l = basis' * u
    Vector u_vec(u, d_dim, true);
    Vector* l = d_U->transposeMult(u_vec);
@@ -177,11 +204,11 @@ IncrementalSVDNaive::buildIncrementalSVD(
    else {
       default_tol = d_num_increments*std::numeric_limits<double>::epsilon()*d_S->item(0, 0);
    }
-   if (d_epsilon < default_tol) {
-      d_epsilon = default_tol;
+   if (d_redundancy_tol < default_tol) {
+      d_redundancy_tol = default_tol;
    }
    bool is_new_increment;
-   if (k < d_epsilon) {
+   if (k < d_redundancy_tol) {
       k = 0;
       is_new_increment = false;
    }
@@ -224,9 +251,9 @@ IncrementalSVDNaive::buildIncrementalSVD(
       delete j;
 
       // Reorthogonalize if necessary.
-      int max_U_dim;
-      if (d_dim*d_size > d_num_increments) {
-         max_U_dim = d_dim*d_size;
+      long int max_U_dim;
+      if (d_total_dim > d_num_increments) {
+         max_U_dim = d_total_dim;
       }
       else {
          max_U_dim = d_num_increments;
@@ -248,6 +275,9 @@ IncrementalSVDNaive::addRedundantIncrement(
    const Matrix* A,
    const Matrix* sigma)
 {
+   CAROM_ASSERT(A != 0);
+   CAROM_ASSERT(sigma != 0);
+
    // Chop a row and a column off of A to form Amod.  Also form
    // d_S by chopping a row and a column off of sigma.
    Matrix Amod(d_num_increments, d_num_increments, false);
@@ -321,7 +351,12 @@ IncrementalSVDNaive::reOrthogonalize()
             tmp += d_U->item(i, col)*d_U->item(i, work);
          }
          if (d_size > 1) {
-            MPI_Allreduce(&tmp, &factor, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            MPI_Allreduce(&tmp,
+               &factor,
+               1,
+               MPI_DOUBLE,
+               MPI_SUM,
+               MPI_COMM_WORLD);
          }
          else {
             factor = tmp;

@@ -30,30 +30,43 @@ IncrementalSVD::IncrementalSVD(
    int increments_per_time_interval) :
    d_dim(dim),
    d_num_increments(0),
-   d_epsilon(redundancy_tol),
+   d_redundancy_tol(redundancy_tol),
    d_skip_redundant(skip_redundant),
    d_increments_per_time_interval(increments_per_time_interval),
    d_S(0),
    d_basis(0),
-   d_num_time_intervals(0),
-   d_time_interval_start_times(0)
+   d_time_interval_start_times(0),
+   d_total_dim(0)
 {
+   CAROM_ASSERT(dim > 0);
    CAROM_ASSERT(redundancy_tol > 0.0);
+   CAROM_ASSERT(increments_per_time_interval > 0);
 
-   // Get the rank of this process, and get the number of processors.
+   // Get the number of processors, the dimensions for each process, and the
+   // total dimension.
    int mpi_init;
    MPI_Initialized(&mpi_init);
    if (mpi_init) {
-#ifdef DEBUG_ROMS
-      MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
-#endif
       MPI_Comm_size(MPI_COMM_WORLD, &d_size);
    }
    else {
-#ifdef DEBUG_ROMS
-      d_rank = 0;
-#endif
       d_size = 1;
+   }
+   d_proc_dims.reserve(d_size);
+   if (mpi_init) {
+      MPI_Allgather(&d_dim,
+         1,
+         MPI_INT,
+         &d_proc_dims[0],
+         1,
+         MPI_INT,
+         MPI_COMM_WORLD);
+   }
+   else {
+      d_proc_dims[0] = d_dim;
+   }
+   for (int i = 0; i < d_size; ++i) {
+      d_total_dim += d_proc_dims[0];
    }
 }
 
@@ -74,6 +87,9 @@ IncrementalSVD::constructQ(
    const Vector* l,
    double k)
 {
+   CAROM_ASSERT(l != 0);
+   CAROM_ASSERT(l->dim() == d_num_increments);
+
    // Create Q.
    Q = new double [(d_num_increments+1)*(d_num_increments+1)];
 
@@ -101,6 +117,8 @@ IncrementalSVD::svd(
    Matrix*& U,
    Matrix*& S)
 {
+   CAROM_ASSERT(A != 0);
+
    // Construct U, S, and V.
    U = new Matrix(d_num_increments+1, d_num_increments+1, false);
    S = new Matrix(d_num_increments+1, d_num_increments+1, false);
@@ -124,9 +142,20 @@ IncrementalSVD::svd(
    double* work = new double [lwork];
    int iwork[8*m];
    int info;
-   dgesdd_(&jobz, &m, &n, A, &lda,
-           sigma, &U->item(0, 0), &ldu, &V->item(0, 0), &ldv,
-           work, &lwork, iwork, &info);
+   dgesdd_(&jobz,
+      &m,
+      &n,
+      A,
+      &lda,
+      sigma,
+      &U->item(0, 0),
+      &ldu,
+      &V->item(0, 0),
+      &ldv,
+      work,
+      &lwork,
+      iwork,
+      &info);
    CAROM_ASSERT(info == 0);
    delete [] work;
 

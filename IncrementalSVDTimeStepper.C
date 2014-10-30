@@ -35,16 +35,16 @@ IncrementalSVDTimeStepper::IncrementalSVDTimeStepper(
    if (fast_update) {
       d_isvd.reset(
          new IncrementalSVDFastUpdate(dim,
-                                      redundancy_tol,
-                                      skip_redundant,
-                                      increments_per_time_interval));
+            redundancy_tol,
+            skip_redundant,
+            increments_per_time_interval));
    }
    else {
       d_isvd.reset(
          new IncrementalSVDNaive(dim,
-                                 redundancy_tol,
-                                 skip_redundant,
-                                 increments_per_time_interval));
+            redundancy_tol,
+            skip_redundant,
+            increments_per_time_interval));
    }
 }
 
