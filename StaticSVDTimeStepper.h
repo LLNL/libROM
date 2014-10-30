@@ -18,21 +18,44 @@
 
 namespace CAROM {
 
-// The class knows, given a static svd implementation, the time at which
-// the next state collection is needed.  It also knows given a time whether
-// it is time for the next state collection.
+/**
+ * Class StaticSVDTimeStepper knows, given a static svd implementation, the
+ * time at which the next state collection is needed.  It also knows given a
+ * time whether it is time for the next state collection.  All states are
+ * sampled in the static SVD implementation so it is always time for a new
+ * state collection.
+ */
 class StaticSVDTimeStepper
 {
    public:
-      // Constructor.
+      /**
+       * @brief Constructor.
+       *
+       * @pre dim > 0
+       * @pre increments_per_time_interval > 0
+       *
+       * @param[in] dim The dimension of the system on this processor.
+       * @param[in] increments_per_time_interval The maximum number of samples
+       *                                         in each time interval.
+       */
       StaticSVDTimeStepper(
          int dim,
          int increments_per_time_interval);
 
-      // Destructor.
+      /**
+       * @brief Destructor.
+       */
       ~StaticSVDTimeStepper();
 
-      // Returns true if it is time for the next state collection.
+      /**
+       * @brief Returns true if it is time for the next state collection.
+       *
+       * As the static algorithm samples everything this always returns true.
+       *
+       * @param[in] time Time of interest--unused.
+       *
+       * @return true
+       */
       bool
       isNextStateCollection(
          double time)
@@ -41,7 +64,15 @@ class StaticSVDTimeStepper
          return true;
       }
 
-      // Collect the new state, u_in.
+      /**
+       * @brief Collect the new state, u_in.
+       *
+       * @pre u_in != 0
+       * @pre time >= 0.0
+       *
+       * @param[in] u_in The state at the specified time.
+       * @param[in] time The simulation time for the state.
+       */
       void
       collectState(
          double* u_in,
@@ -50,7 +81,16 @@ class StaticSVDTimeStepper
          d_svd->collectState(u_in, time);
       }
 
-      // Computes next time a state collection is needed.
+      /**
+       * @brief Computes next time a state collection is needed.
+       *
+       * @param[in] u_in The state at the specified time--unused.
+       * @param[in] rhs_in The right hand side at the specified time--unused.
+       * @param[in] time The simulation time for the state.
+       *
+       * @return The current simulation time as the static algorithm samples at
+       * each time step.
+       */
       double
       computeNextStateCollectionTime(
          double* u_in,
@@ -62,30 +102,56 @@ class StaticSVDTimeStepper
          return time;
       }
 
-      // Returns the basis vectors for the current time interval as a Matrix.
+      /**
+       * @brief Returns the basis vectors for the current time interval as a
+       * Matrix.
+       *
+       * @return The basis vectors for the current time interval.
+       */
       const Matrix*
       getBasis()
       {
          return d_svd->getBasis();
       }
 
-      // Returns the number of time intervals on which different sets of basis
-      // vectors are defined.
+      /**
+       * @brief Returns the number of time intervals on which different sets of
+       * basis vectors are defined.
+       *
+       * @return The number of time intervals on which there are basis vectors.
+       */
       int
       getNumBasisTimeIntervals() const
       {
          return d_svd->getNumBasisTimeIntervals();
       }
 
-      // Returns the start time for the requested time interval.
+      /**
+       * @brief Returns the start time for the requested time interval.
+       *
+       * @pre 0 <= which_interval
+       * @pre which_interval < getNumBasisTimeIntervals()
+       *
+       * @param[in] which_interval Time interval whose start time is needed.
+       *
+       * @return The start time for the requested time interval.
+       */
       double
       getBasisIntervalStartTime(
          int which_interval) const
       {
+         CAROM_ASSERT(0 <= which_interval);
+         CAROM_ASSERT(which_interval < getNumBasisTimeIntervals());
          return d_svd->getBasisIntervalStartTime(which_interval);
       }
 
-      // Returns true if the next state will result in a new time interval.
+      /**
+       * @brief Returns true if the next state will result in a new time
+       * interval.
+       *
+       * @return True if the next state results in the creation of a new time
+       *         interval.
+       */
       bool
       isNewTimeInterval() const
       {
@@ -93,19 +159,27 @@ class StaticSVDTimeStepper
       }
 
    private:
-      // Unimplemented default constructor.
+      /**
+       * @brief Unimplemented default constructor.
+       */
       StaticSVDTimeStepper();
 
-      // Unimplemented copy constructor.
+      /**
+       * @brief Unimplemented copy constructor.
+       */
       StaticSVDTimeStepper(
          const StaticSVDTimeStepper& other);
 
-      // Unimplemented assignment operator.
+      /**
+       * @brief Unimplemented assignment operator.
+       */
       StaticSVDTimeStepper&
       operator = (
          const StaticSVDTimeStepper& rhs);
 
-      // The fundamental static SVD algorithm.
+      /**
+       * @brief Pointer to the fundamental static SVD algorithm object.
+       */
       boost::shared_ptr<StaticSVD> d_svd;
 };
 

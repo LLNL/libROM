@@ -19,6 +19,8 @@ StaticSVDTimeStepper::StaticSVDTimeStepper(
    int increments_per_time_interval) :
    d_svd(new StaticSVD(dim, increments_per_time_interval))
 {
+   CAROM_ASSERT(dim > 0);
+   CAROM_ASSERT(increments_per_time_interval > 0);
 }
 
 StaticSVDTimeStepper::~StaticSVDTimeStepper()

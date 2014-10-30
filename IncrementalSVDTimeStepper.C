@@ -30,7 +30,11 @@ IncrementalSVDTimeStepper::IncrementalSVDTimeStepper(
    d_max_time_between_increments(max_time_between_increments),
    d_next_increment_time(0.0)
 {
+   CAROM_ASSERT(dim > 0);
+   CAROM_ASSERT(redundancy_tol > 0.0);
+   CAROM_ASSERT(increments_per_time_interval > 0);
    CAROM_ASSERT(sampling_tol > 0.0);
+   CAROM_ASSERT(max_time_between_increments > 0.0);
 
    if (fast_update) {
       d_isvd.reset(
@@ -58,6 +62,10 @@ IncrementalSVDTimeStepper::computeNextIncrementTime(
    double* rhs_in,
    double time)
 {
+   CAROM_ASSERT(u_in != 0);
+   CAROM_ASSERT(rhs_in != 0);
+   CAROM_ASSERT(time >= 0.0);
+
    // Get some preliminary info.
    int dim = d_isvd->getDim();
 

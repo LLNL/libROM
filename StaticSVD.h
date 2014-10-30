@@ -88,7 +88,7 @@ class StaticSVD
        * @brief Returns the start time for the requested time interval.
        *
        * @pre 0 <= which_interval
-       * @pre which_interval < static_cast<int>(d_time_interval_start_times.size())
+       * @pre which_interval < getNumBasisTimeIntervals()
        *
        * @param[in] which_interval The time interval of interest.
        *
@@ -99,7 +99,7 @@ class StaticSVD
          int which_interval) const
       {
          CAROM_ASSERT(0 <= which_interval);
-         CAROM_ASSERT(which_interval < static_cast<int>(d_time_interval_start_times.size()));
+         CAROM_ASSERT(which_interval < getNumBasisTimeIntervals());
          return d_time_interval_start_times[which_interval];
       }
 
