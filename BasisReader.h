@@ -55,7 +55,7 @@ class BasisReader {
        * @brief Returns true if the basis vectors at requested time are
        * different from the last requested basis vectors.
        *
-       * @pre 0 < d_num_time_intervals
+       * @pre 0 < d_time_interval_start_times.size()
        * @pre 0 <= time
        *
        * @param[in] time Time at which we are interested in the basis vectors.
@@ -67,7 +67,7 @@ class BasisReader {
       isNewBasis(
          double time)
       {
-         CAROM_ASSERT(0 < d_num_time_intervals);
+         CAROM_ASSERT(0 < d_time_interval_start_times.size());
          CAROM_ASSERT(0 <= time);
          bool result = false;
          if (d_last_basis_idx == -1) {
@@ -76,7 +76,7 @@ class BasisReader {
          else if ((time < d_time_interval_start_times[d_last_basis_idx])) {
             result = true;
          }
-         else if ((d_last_basis_idx != d_num_time_intervals-1) &&
+         else if ((d_last_basis_idx != static_cast<int>(d_time_interval_start_times.size())-1) &&
                   (d_time_interval_start_times[d_last_basis_idx+1] <= time)) {
             result = true;
          }
@@ -87,7 +87,7 @@ class BasisReader {
        *
        * @brief Returns the basis vectors for the requested time.
        *
-       * @pre 0 < d_num_time_intervals
+       * @pre 0 < d_time_interval_start_times.size()
        * @pre 0 <= time
        *
        * @param[in] time Time for which we want the basis vectors.
@@ -116,12 +116,6 @@ class BasisReader {
       BasisReader&
       operator = (
          const BasisReader& rhs);
-
-      /**
-       * @brief The number of time intervals on which basis vectors have been
-       * constructed.
-       */
-      int d_num_time_intervals;
 
       /**
        * @brief The start time of each time interval.

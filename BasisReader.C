@@ -39,9 +39,10 @@ BasisReader::BasisReader(
       d_database = new HDFDatabase();
    }
    d_database->open(full_file_name);
-   d_database->getInteger("num_time_intervals", d_num_time_intervals);
-   d_time_interval_start_times.resize(d_num_time_intervals);
-   for (int i = 0; i < d_num_time_intervals; ++i) {
+   int num_time_intervals;
+   d_database->getInteger("num_time_intervals", num_time_intervals);
+   d_time_interval_start_times.resize(num_time_intervals);
+   for (int i = 0; i < num_time_intervals; ++i) {
       sprintf(tmp, "time_%06d", i);
       d_database->getDouble(tmp, d_time_interval_start_times[i]);
    }
@@ -60,10 +61,12 @@ const Matrix*
 BasisReader::getBasis(
    double time)
 {
-   CAROM_ASSERT(0 < d_num_time_intervals);
+   CAROM_ASSERT(0 < d_time_interval_start_times.size());
    CAROM_ASSERT(0 <= time);
+   int num_time_intervals =
+      static_cast<int>(d_time_interval_start_times.size());
    int i;
-   for (i = 0; i < d_num_time_intervals-1; ++i) {
+   for (i = 0; i < num_time_intervals-1; ++i) {
       if (d_time_interval_start_times[i] <= time &&
           time < d_time_interval_start_times[i+1]) {
          break;
