@@ -66,7 +66,7 @@ IncrementalSVD::IncrementalSVD(
       d_proc_dims[0] = d_dim;
    }
    for (int i = 0; i < d_size; ++i) {
-      d_total_dim += d_proc_dims[0];
+      d_total_dim += d_proc_dims[i];
    }
 }
 
