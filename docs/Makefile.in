@@ -1,0 +1,17 @@
+#########################################################################
+##
+## This file is part of the CAROM distribution.  For full copyright
+## information, see COPYRIGHT.
+##
+## Copyright:   (c) 2013-2014 Lawrence Livermore National Security, LLC
+## Description: Makefile for the CAROM documentation.
+##
+#########################################################################
+
+dox: Doxyfile
+	@mkdir -p @dox_output_dir@.
+	@DOXYGEN_BIN@ Doxyfile
+	@echo "# $@ was updated at `date` using this Doxyfile:" > $@
+	cat Doxyfile >> $@
+	cp @dox_output_dir@rom.tag @dox_output_dir@rom-dox/html/rom.tag
+	@echo "Created documentation in @dox_output_dir@"

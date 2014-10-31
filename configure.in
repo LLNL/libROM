@@ -287,6 +287,76 @@ CASC_AC_LOG_VAR(LIB_PATH, before adding rpath syntax)
 CASC_LIBS_ADD_RPATH(LIB_PATH,LIB_PATH,1)
 CASC_AC_LOG_VAR(LIB_PATH, after adding rpath syntax)
 
+dnl
+dnl Set DOXYGEN_BIN to the doxygen binary.
+dnl
+
+CASC_PATH_PROG(DOXYGEN_BIN,doxygen)
+CASC_AC_LOG_VAR(DOXYGEN_BIN)
+
+dnl
+dnl Set DOT_PATH to the directory of the dot binary, for use with doxygen.
+dnl
+
+AC_ARG_WITH([dot-dir],
+[AS_HELP_STRING([--with-dot-dir=DIR],
+   [Specify bin directory where dot binaries live.])],,
+unset with_dot_dir)
+if   test "${with_dot_dir}" = yes || test ! "${with_dot_dir+set}" = set; then
+  # Find dot path, and use if found
+  DOT_PATH=`which dot >& /dev/null`
+  if test -z "${DOT_PATH}"; then
+    unset DOT_PATH
+    HAVE_DOT=NO
+  else
+    [DOT_PATH=`echo $DOT_PATH | sed 's!/[^/]\{1,\}$!!']`
+    HAVE_DOT=YES
+  fi
+elif test "${with_dot_dir}" = no; then
+  # Disable dot.
+  unset DOT_PATH
+  HAVE_DOT=NO
+else
+  # Make sure valid path is specified.  Enable dot.
+  if test ! -d ${with_dot_dir}; then
+     AC_MSG_WARN([
+Invalid path given for dot executable: ${with_dot_dir}.
+Path does not exist.
+You can expect doxygen documentation generation to not work properly.
+]);
+  fi
+  DOT_PATH=${with_dot_dir}
+  HAVE_DOT=YES
+fi
+CASC_AC_LOG_VAR(with_dot_dir HAVE_DOT DOT_PATH)
+AC_SUBST(HAVE_DOT)
+AC_SUBST(DOT_PATH)
+
+dnl
+dnl Set the directory for doxygen documentation.
+dnl
+AC_ARG_WITH([dox-output-dir],
+[AS_HELP_STRING([--with-dox-output-dir=DIR],
+   [Specify full where Doxygen documentation is generated.  Default is the docs
+   directory in the compile tree.])])
+if test -n "$with_dox_output_dir"; then
+  if echo "$with_dox_output_dir" | grep -v '^/' ; then
+    AC_MSG_ERROR(You must give a full path with --with-dox-output-dir=DIR)
+  fi
+  dox_output_dir="$with_dox_output_dir"
+  # Make sure dox_output_dir ends with / so because the doxygen
+  # configuration files simply append a subdirectory name.
+  [dox_output_dir="`echo $dox_output_dir | sed 's:\([^/]\)$:\1/:'`"]
+fi
+AC_SUBST(dox_output_dir)
+
+dnl
+dnl Set ROM_PERL to the perl binary for use in doxygen.
+dnl
+
+CASC_PATH_PROG(ROM_PERL,perl)
+CASC_AC_LOG_VAR(ROM_PERL)
+
 AC_SUBST(AR)
 
 AC_SUBST(CXX)
@@ -298,4 +368,4 @@ AC_SUBST(INC_PATH)
 AC_SUBST(LIB_PATH)
 AC_SUBST(LIB_NAME)
 
-AC_OUTPUT([Makefile],[],[])
+AC_OUTPUT([Makefile docs/Makefile docs/Doxyfile],[],[])

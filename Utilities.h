@@ -94,7 +94,7 @@ struct Utilities
     * Use this to ensure same width is used when converting a processor ID to
     * a string representation.
     *
-    * @param[in] ID of the processor
+    * @param[in] processorID of the processor
     *
     * @return The string representation of processor ID of fixed width
     * prepended with 0s.

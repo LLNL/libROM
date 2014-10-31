@@ -260,7 +260,7 @@ class Matrix
        * @pre d_distributed && other.distributed()
        * @pre d_num_rows == other.dim();
        *
-       * @param[in] The Vector to multiply with this.
+       * @param[in] other The Vector to multiply with this.
        *
        * @return The product Vector.
        */
@@ -279,7 +279,7 @@ class Matrix
        * @pre d_distributed && other.distributed()
        * @pre d_num_rows == other.dim();
        *
-       * @param[in] The Vector to multiply with this.
+       * @param[in] other The Vector to multiply with this.
        *
        * @return The product Vector.
        */

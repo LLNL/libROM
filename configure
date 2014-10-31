@@ -642,6 +642,11 @@ LIB_PATH
 INC_PATH
 LD_FLAGS
 CXX_FLAGS
+ROM_PERL
+dox_output_dir
+DOT_PATH
+HAVE_DOT
+DOXYGEN_BIN
 MPIFLAGS
 MPILIBS
 MPILIBDIRS
@@ -722,6 +727,10 @@ with_zlib
 with_szlib
 with_hdf5
 enable_rpath
+with_doxygen
+with_dot_dir
+with_dox_output_dir
+with_perl
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1407,6 +1416,15 @@ Optional Packages:
                     /usr/local or /usr if not found in /usr/local
   --without-szlib to disable szlib usage completely the default
  --with-hdf5=PATH  Use HDF5 and optionally specify where HDF5 is installed.
+  --with-doxygen=PATH	Specify path to doxygen program
+			(equivalent to setting DOXYGEN_BIN in environment)
+  --with-dot-dir=DIR      Specify bin directory where dot binaries live.
+  --with-dox-output-dir=DIR
+                          Specify full where Doxygen documentation is
+                          generated. Default is the docs directory in the
+                          compile tree.
+  --with-perl=PATH	Specify path to perl program
+			(equivalent to setting ROM_PERL in environment)
 
 Some influential environment variables:
   CXX         C++ compiler command
@@ -1959,7 +1977,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:1962:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:1980:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -1985,7 +2003,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:1988:" "before running compiler search: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:2006:" "before running compiler search: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -2621,7 +2639,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:2624:" "after running compiler search: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:2642:" "after running compiler search: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -3763,8 +3781,8 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
-  echo "configure:3766:" CC is $CC >&5
-  echo "configure:3767:" CPP is $CPP >&5
+  echo "configure:3784:" CC is $CC >&5
+  echo "configure:3785:" CPP is $CPP >&5
 
   CC_ID=unknown
   CC_VERSION=unknown
@@ -3773,7 +3791,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
   # Check if it is a Sun compiler.
   if test $CC_ID = unknown; then
-    echo "configure:3776:" checking if $CC is sunpro >&5
+    echo "configure:3794:" checking if $CC is sunpro >&5
     cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -3798,7 +3816,7 @@ rm -f conftest*
 
   # Check if it is a Intel compiler.
   if test $CC_ID = unknown; then
-    echo "configure:3801:" checking if $CC is intel >&5
+    echo "configure:3819:" checking if $CC is intel >&5
     cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -3826,7 +3844,7 @@ rm -f conftest*
 
   # Check if it is a GNU compiler.
   if test $CC_ID = unknown; then
-    echo "configure:3829:" checking if $CC is gnu >&5
+    echo "configure:3847:" checking if $CC is gnu >&5
     cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -3851,7 +3869,7 @@ rm -f conftest*
 
   # Check if it is a DEC compiler.
   if test $CC_ID = unknown; then
-    echo "configure:3854:" checking if $CC is dec >&5
+    echo "configure:3872:" checking if $CC is dec >&5
     cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -3876,7 +3894,7 @@ rm -f conftest*
 
   # Check if it is a KAI compiler.
   if test $CC_ID = unknown; then
-    echo "configure:3879:" checking if $CC is kai >&5
+    echo "configure:3897:" checking if $CC is kai >&5
     cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -3901,7 +3919,7 @@ rm -f conftest*
 
   # Check if it is a SGI compiler.
   if test $CC_ID = unknown; then
-    echo "configure:3904:" checking if $CC is sgi >&5
+    echo "configure:3922:" checking if $CC is sgi >&5
     cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -3926,17 +3944,17 @@ rm -f conftest*
 
   # Check if it is a IBM compiler.
   if test $CC_ID = unknown; then
-    echo "configure:3929:" checking if $CC is xlc >&5
+    echo "configure:3947:" checking if $CC is xlc >&5
     if echo "$host_os" | grep "aix" >/dev/null ; then
       # The wretched IBM shell does not eval correctly,
       # so we have to help it with a pre-eval eval statement.
       ac_cpp=`eval "echo $ac_cpp"`
       save_ac_cpp=$ac_cpp
-      echo "configure:3935:" ac_cpp is temporarily set to $ac_cpp >&5
+      echo "configure:3953:" ac_cpp is temporarily set to $ac_cpp >&5
     else
       save_ac_cpp=
     fi
-    echo "configure:3939:" ac_cpp is $ac_cpp >&5
+    echo "configure:3957:" ac_cpp is $ac_cpp >&5
     cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -3960,7 +3978,7 @@ fi
 rm -f conftest*
 
     test "$save_ac_cpp" && ac_cpp=$save_ac_cpp
-    echo "configure:3963:" ac_cpp is restored to $ac_cpp >&5
+    echo "configure:3981:" ac_cpp is restored to $ac_cpp >&5
   fi
 
 
@@ -3980,7 +3998,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:3983:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:4001:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -4232,8 +4250,8 @@ ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
-  echo "configure:4235:" CXXP is $CXX >&5
-  echo "configure:4236:" CXXCPP is $CXXCPP >&5
+  echo "configure:4253:" CXXP is $CXX >&5
+  echo "configure:4254:" CXXCPP is $CXXCPP >&5
 
   CXX_ID=unknown
   CXX_VERSION=unknown
@@ -4242,7 +4260,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
   # Check if it is a Sun compiler.
   if test $CXX_ID = unknown; then
-    echo "configure:4245:" checking if $CXX is sunpro >&5
+    echo "configure:4263:" checking if $CXX is sunpro >&5
     cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -4267,7 +4285,7 @@ rm -f conftest*
 
   # Check if it is a Intel compiler.
   if test $CXX_ID = unknown; then
-    echo "configure:4270:" checking if $CXX is intel >&5
+    echo "configure:4288:" checking if $CXX is intel >&5
     cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -4295,7 +4313,7 @@ rm -f conftest*
 
   # Check if it is a GNU compiler.
   if test $CXX_ID = unknown; then
-    echo "configure:4298:" checking if $CXX is gnu >&5
+    echo "configure:4316:" checking if $CXX is gnu >&5
     cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -4323,7 +4341,7 @@ rm -f conftest*
 
   # Check if it is a DEC compiler.
   if test $CXX_ID = unknown; then
-    echo "configure:4326:" checking if $CXX is dec >&5
+    echo "configure:4344:" checking if $CXX is dec >&5
     cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -4348,7 +4366,7 @@ rm -f conftest*
 
   # Check if it is a KAI compiler.
   if test $CXX_ID = unknown; then
-    echo "configure:4351:" checking if $CXX is kai >&5
+    echo "configure:4369:" checking if $CXX is kai >&5
     cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -4373,7 +4391,7 @@ rm -f conftest*
 
   # Check if it is a SGI compiler.
   if test $CXX_ID = unknown; then
-    echo "configure:4376:" checking if $CXX is sgi >&5
+    echo "configure:4394:" checking if $CXX is sgi >&5
     cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -4398,7 +4416,7 @@ rm -f conftest*
 
   # Check if it is a IBM compiler.
   if test $CXX_ID = unknown; then
-    echo "configure:4401:" checking if $CXX is xlc >&5
+    echo "configure:4419:" checking if $CXX is xlc >&5
     cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -4440,7 +4458,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:4443:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:4461:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -4562,7 +4580,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:4565:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:4583:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -4683,7 +4701,7 @@ case "$with_lapack_includes" in
 $as_echo "$as_me: error: If you specify --with-lapack-includes, you must give it the path as in --with-lapack-includes=/installation/path" >&2;}
    { (exit 1); exit 1; }; }
 fi
-echo "configure:4686:" environment lapack_INCLUDES not defined >&5
+echo "configure:4704:" environment lapack_INCLUDES not defined >&5
 
 
     fi
@@ -4754,7 +4772,7 @@ case "$with_lapack_libs" in
 $as_echo "$as_me: error: If you specify --with-lapack-libs, you must give it the path as in --with-lapack-libs=/installation/path" >&2;}
    { (exit 1); exit 1; }; }
 fi
-echo "configure:4757:" environment lapack_LIBS not defined >&5
+echo "configure:4775:" environment lapack_LIBS not defined >&5
 
 
     fi
@@ -4897,7 +4915,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:4900:" "After finding lapack flag: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:4918:" "After finding lapack flag: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -4915,7 +4933,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:4918:" "Found lapack library flag: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:4936:" "Found lapack library flag: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -4933,7 +4951,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:4936:" "Did not find lapack library flag: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:4954:" "Did not find lapack library flag: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -4951,7 +4969,7 @@ fi
     unset extra_libs
     unset save_LIBS
   else
-    echo "configure:4954:" Not looking for lapack because lapack_LIBS is already set >&5
+    echo "configure:4972:" Not looking for lapack because lapack_LIBS is already set >&5
   fi
 fi
 
@@ -4966,7 +4984,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:4969:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:4987:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -5004,7 +5022,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:5007:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:5025:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -6843,7 +6861,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:6846:" "After successfully finding MPI using casc_find_mpi: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:6864:" "After successfully finding MPI using casc_find_mpi: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -7805,7 +7823,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:7808:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:7826:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -7820,7 +7838,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:7823:" "before adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:7841:" "before adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -8287,7 +8305,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:8290:" "forming rpaths: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:8308:" "forming rpaths: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -8353,7 +8371,337 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:8356:" "after adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:8374:" "after adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
+done
+
+
+
+
+
+
+# Start macro CASC_ARG_WITH_ENV_WRAPPER with args doxygen and DOXYGEN_BIN
+{ $as_echo "$as_me:$LINENO: checking for doxygen" >&5
+$as_echo_n "checking for doxygen... " >&6; }
+if test "${_cv_prog_doxygen+set}" = set; then
+  $as_echo_n "(cached) " >&6
+else
+
+
+# Check whether --with-doxygen was given.
+if test "${with_doxygen+set}" = set; then
+  withval=$with_doxygen;
+fi
+
+# Set DOXYGEN_BIN, using environment setting if available
+#   and if command line is ambiguous.
+case "$with_doxygen" in
+  no)
+    # User explictly turned off doxygen.
+    # Ignore value of DOXYGEN_BIN, even if set in the environment.
+    unset DOXYGEN_BIN
+    ;;
+  yes|'')
+    # Flag unissued or ambiguously issued using --with-doxygen.
+    # Because the user did not explicitly turn if off,
+    # try to set DOXYGEN_BIN.
+    # If environment variable DOXYGEN_BIN is available, use it.
+    # If not, try the user-supplied commands to set it.
+    if test -n "${DOXYGEN_BIN}" ;  then
+      : Nothing to do here actually, because DOXYGEN_BIN is already in the environment.
+    else
+      # Just set the variable to blank and check later.
+DOXYGEN_BIN=
+
+    fi
+    ;;
+  *)
+    # User issued a specific string using --with-doxygen=non-null-string.
+    # so that is used to set DOXYGEN_BIN.
+    DOXYGEN_BIN=$with_doxygen
+    ;;
+esac
+if test "${DOXYGEN_BIN+set}" = set ; then
+  # This block executes the quality check commands, if any, for DOXYGEN_BIN.
+  # if DOXYGEN_BIN is an absolute path, make sure it is executable.
+  if echo "${DOXYGEN_BIN}" | grep '^/' > /dev/null && test ! -x "${DOXYGEN_BIN}"; then
+    { $as_echo "$as_me:$LINENO: WARNING: doxygen program ${DOXYGEN_BIN} is not executable." >&5
+$as_echo "$as_me: WARNING: doxygen program ${DOXYGEN_BIN} is not executable." >&2;}
+  fi
+
+fi
+# Cache the value if it was found.
+if test "${DOXYGEN_BIN+set}" = set ; then
+  _cv_prog_doxygen=${DOXYGEN_BIN}
+fi
+
+fi
+{ $as_echo "$as_me:$LINENO: result: $_cv_prog_doxygen" >&5
+$as_echo "$_cv_prog_doxygen" >&6; }
+# Set DOXYGEN_BIN from cache.
+# DOXYGEN_BIN is not yet set if we grabbed it from cache.
+if test "${_cv_prog_doxygen+set}" = set ; then
+  DOXYGEN_BIN=$_cv_prog_doxygen
+else
+  unset DOXYGEN_BIN
+fi
+# End macro CASC_ARG_WITH_ENV_WRAPPER with args DOXYGEN_BIN and doxygen
+if test "${DOXYGEN_BIN+set}" = set; then
+  # Extract the first word of "doxygen", so it can be a program name with args.
+set dummy doxygen; ac_word=$2
+{ $as_echo "$as_me:$LINENO: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if test "${ac_cv_path_DOXYGEN_BIN+set}" = set; then
+  $as_echo_n "(cached) " >&6
+else
+  case $DOXYGEN_BIN in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_DOXYGEN_BIN="$DOXYGEN_BIN" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_path_DOXYGEN_BIN="$as_dir/$ac_word$ac_exec_ext"
+    $as_echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+  ;;
+esac
+fi
+DOXYGEN_BIN=$ac_cv_path_DOXYGEN_BIN
+if test -n "$DOXYGEN_BIN"; then
+  { $as_echo "$as_me:$LINENO: result: $DOXYGEN_BIN" >&5
+$as_echo "$DOXYGEN_BIN" >&6; }
+else
+  { $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+fi
+
+
+
+log_vars="DOXYGEN_BIN"
+for log_vars_index in $log_vars ; do
+  eval "test \"\${${log_vars_index}+set}\" = set"
+  if test $? = 0; then
+    log_vars_value="'`eval echo \\${$log_vars_index}`'";
+  else
+    log_vars_value="unset";
+  fi
+  echo "configure:8501:" "$log_vars_index is $log_vars_value" >&5;
+done
+
+
+
+
+
+# Check whether --with-dot-dir was given.
+if test "${with_dot_dir+set}" = set; then
+  withval=$with_dot_dir;
+else
+  unset with_dot_dir
+fi
+
+if   test "${with_dot_dir}" = yes || test ! "${with_dot_dir+set}" = set; then
+  # Find dot path, and use if found
+  DOT_PATH=`which dot >& /dev/null`
+  if test -z "${DOT_PATH}"; then
+    unset DOT_PATH
+    HAVE_DOT=NO
+  else
+    DOT_PATH=`echo $DOT_PATH | sed 's!/[^/]\{1,\}$!!'`
+    HAVE_DOT=YES
+  fi
+elif test "${with_dot_dir}" = no; then
+  # Disable dot.
+  unset DOT_PATH
+  HAVE_DOT=NO
+else
+  # Make sure valid path is specified.  Enable dot.
+  if test ! -d ${with_dot_dir}; then
+     { $as_echo "$as_me:$LINENO: WARNING:
+Invalid path given for dot executable: ${with_dot_dir}.
+Path does not exist.
+You can expect doxygen documentation generation to not work properly.
+" >&5
+$as_echo "$as_me: WARNING:
+Invalid path given for dot executable: ${with_dot_dir}.
+Path does not exist.
+You can expect doxygen documentation generation to not work properly.
+" >&2;};
+  fi
+  DOT_PATH=${with_dot_dir}
+  HAVE_DOT=YES
+fi
+
+
+log_vars="with_dot_dir HAVE_DOT DOT_PATH"
+for log_vars_index in $log_vars ; do
+  eval "test \"\${${log_vars_index}+set}\" = set"
+  if test $? = 0; then
+    log_vars_value="'`eval echo \\${$log_vars_index}`'";
+  else
+    log_vars_value="unset";
+  fi
+  echo "configure:8556:" "$log_vars_index is $log_vars_value" >&5;
+done
+
+
+
+
+
+
+# Check whether --with-dox-output-dir was given.
+if test "${with_dox_output_dir+set}" = set; then
+  withval=$with_dox_output_dir;
+fi
+
+if test -n "$with_dox_output_dir"; then
+  if echo "$with_dox_output_dir" | grep -v '^/' ; then
+    { { $as_echo "$as_me:$LINENO: error: You must give a full path with --with-dox-output-dir=DIR" >&5
+$as_echo "$as_me: error: You must give a full path with --with-dox-output-dir=DIR" >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+  dox_output_dir="$with_dox_output_dir"
+  # Make sure dox_output_dir ends with / so because the doxygen
+  # configuration files simply append a subdirectory name.
+  dox_output_dir="`echo $dox_output_dir | sed 's:\([^/]\)$:\1/:'`"
+fi
+
+
+
+
+
+# Start macro CASC_ARG_WITH_ENV_WRAPPER with args perl and ROM_PERL
+{ $as_echo "$as_me:$LINENO: checking for perl" >&5
+$as_echo_n "checking for perl... " >&6; }
+if test "${_cv_prog_perl+set}" = set; then
+  $as_echo_n "(cached) " >&6
+else
+
+
+# Check whether --with-perl was given.
+if test "${with_perl+set}" = set; then
+  withval=$with_perl;
+fi
+
+# Set ROM_PERL, using environment setting if available
+#   and if command line is ambiguous.
+case "$with_perl" in
+  no)
+    # User explictly turned off perl.
+    # Ignore value of ROM_PERL, even if set in the environment.
+    unset ROM_PERL
+    ;;
+  yes|'')
+    # Flag unissued or ambiguously issued using --with-perl.
+    # Because the user did not explicitly turn if off,
+    # try to set ROM_PERL.
+    # If environment variable ROM_PERL is available, use it.
+    # If not, try the user-supplied commands to set it.
+    if test -n "${ROM_PERL}" ;  then
+      : Nothing to do here actually, because ROM_PERL is already in the environment.
+    else
+      # Just set the variable to blank and check later.
+ROM_PERL=
+
+    fi
+    ;;
+  *)
+    # User issued a specific string using --with-perl=non-null-string.
+    # so that is used to set ROM_PERL.
+    ROM_PERL=$with_perl
+    ;;
+esac
+if test "${ROM_PERL+set}" = set ; then
+  # This block executes the quality check commands, if any, for ROM_PERL.
+  # if ROM_PERL is an absolute path, make sure it is executable.
+  if echo "${ROM_PERL}" | grep '^/' > /dev/null && test ! -x "${ROM_PERL}"; then
+    { $as_echo "$as_me:$LINENO: WARNING: perl program ${ROM_PERL} is not executable." >&5
+$as_echo "$as_me: WARNING: perl program ${ROM_PERL} is not executable." >&2;}
+  fi
+
+fi
+# Cache the value if it was found.
+if test "${ROM_PERL+set}" = set ; then
+  _cv_prog_perl=${ROM_PERL}
+fi
+
+fi
+{ $as_echo "$as_me:$LINENO: result: $_cv_prog_perl" >&5
+$as_echo "$_cv_prog_perl" >&6; }
+# Set ROM_PERL from cache.
+# ROM_PERL is not yet set if we grabbed it from cache.
+if test "${_cv_prog_perl+set}" = set ; then
+  ROM_PERL=$_cv_prog_perl
+else
+  unset ROM_PERL
+fi
+# End macro CASC_ARG_WITH_ENV_WRAPPER with args ROM_PERL and perl
+if test "${ROM_PERL+set}" = set; then
+  # Extract the first word of "perl", so it can be a program name with args.
+set dummy perl; ac_word=$2
+{ $as_echo "$as_me:$LINENO: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if test "${ac_cv_path_ROM_PERL+set}" = set; then
+  $as_echo_n "(cached) " >&6
+else
+  case $ROM_PERL in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_ROM_PERL="$ROM_PERL" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_path_ROM_PERL="$as_dir/$ac_word$ac_exec_ext"
+    $as_echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+  ;;
+esac
+fi
+ROM_PERL=$ac_cv_path_ROM_PERL
+if test -n "$ROM_PERL"; then
+  { $as_echo "$as_me:$LINENO: result: $ROM_PERL" >&5
+$as_echo "$ROM_PERL" >&6; }
+else
+  { $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+fi
+
+
+
+log_vars="ROM_PERL"
+for log_vars_index in $log_vars ; do
+  eval "test \"\${${log_vars_index}+set}\" = set"
+  if test $? = 0; then
+    log_vars_value="'`eval echo \\${$log_vars_index}`'";
+  else
+    log_vars_value="unset";
+  fi
+  echo "configure:8704:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -8369,7 +8717,7 @@ done
 
 
 
-ac_config_files="$ac_config_files Makefile"
+ac_config_files="$ac_config_files Makefile docs/Makefile docs/Doxyfile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -8966,6 +9314,8 @@ do
   case $ac_config_target in
     "CAROM_config.h") CONFIG_HEADERS="$CONFIG_HEADERS CAROM_config.h:config/CAROM_config.h.in" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
+    "docs/Makefile") CONFIG_FILES="$CONFIG_FILES docs/Makefile" ;;
+    "docs/Doxyfile") CONFIG_FILES="$CONFIG_FILES docs/Doxyfile" ;;
 
   *) { { $as_echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 $as_echo "$as_me: error: invalid argument: $ac_config_target" >&2;}

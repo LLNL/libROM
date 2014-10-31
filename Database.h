@@ -87,8 +87,8 @@ class Database
        *
        * @param[in] key The key associated with the array of values to be
        *                written.
-       * @param[in] The array of integer values to be written.
-       * @param[in] The number of integers in the array.
+       * @param[in] data The array of integer values to be written.
+       * @param[in] nelements The number of integers in the array.
        */
       virtual
       void
@@ -118,8 +118,8 @@ class Database
        *
        * @param[in] key The key associated with the array of values to be
        *                written.
-       * @param[in] The array of double values to be written.
-       * @param[in] The number of doubles in the array.
+       * @param[in] data The array of double values to be written.
+       * @param[in] nelements The number of doubles in the array.
        */
       virtual
       void
@@ -149,8 +149,8 @@ class Database
        *
        * @param[in] key The key associated with the array of values to be
        *                read.
-       * @param[out] The allocated array of integer values to be read.
-       * @param[in] The number of integers in the array.
+       * @param[out] data The allocated array of integer values to be read.
+       * @param[in] nelements The number of integers in the array.
        */
       virtual
       void
@@ -180,8 +180,8 @@ class Database
        *
        * @param[in] key The key associated with the array of values to be
        *                read.
-       * @param[out] The allocated array of double values to be read.
-       * @param[in] The number of doubles in the array.
+       * @param[out] data The allocated array of double values to be read.
+       * @param[in] nelements The number of doubles in the array.
        */
       virtual
       void

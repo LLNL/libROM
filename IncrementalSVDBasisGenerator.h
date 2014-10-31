@@ -75,7 +75,7 @@ class IncrementalSVDBasisGenerator : public SVDBasisGenerator
        *
        * @pre time >= 0
        *
-       * @parm[in] time Time of interest.
+       * @param[in] time Time of interest.
        *
        * @return True if it is time for the next snapshot to be taken.
        */

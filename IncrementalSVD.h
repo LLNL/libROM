@@ -142,7 +142,7 @@ class IncrementalSVD
        * @pre l != 0
        * @pre l.dim() == d_num_increments
        *
-       * @parsm[out] Q The matrix to be constructed. [d_S,l; 0,k]
+       * @param[out] Q The matrix to be constructed. [d_S,l; 0,k]
        * @param[in] l The last column of Q.
        * @param[in] k The lower right element of Q.
        */
