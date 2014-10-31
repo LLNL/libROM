@@ -39,10 +39,13 @@ OBJS = Matrix.o \
 
 default: lib
 
-all: lib random_test smoke_test
+all: lib uneven_dist random_test smoke_test
 
 lib: $(OBJS)
 	ar ru $(LIBROM) $(OBJS)
+
+uneven_dist: lib uneven_dist.o
+	$(CXX) $(LDFLAGS) -o uneven_dist uneven_dist.o $(LDLIBS)
 
 random_test: lib random_test.o
 	$(CXX) $(LDFLAGS) -o random_test random_test.o $(LDLIBS)
@@ -54,7 +57,7 @@ smoke_test: lib smoke_test.o
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $*.C
 
 clean:
-	rm -f *.o $(LIBROM) random_test smoke_test
+	rm -f *.o $(LIBROM) uneven_dist random_test smoke_test
 
 dox:
 	(cd docs && $(MAKE) $@)
