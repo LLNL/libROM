@@ -68,8 +68,6 @@ class IncrementalSVDFastUpdate : public IncrementalSVD
        * @brief Returns the basis vectors for the current time interval as a
        * Matrix.
        *
-       * @pre d_basis != 0
-       *
        * @return The basis vectors for the current time interval.
        */
       const Matrix*

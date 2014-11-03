@@ -88,7 +88,7 @@ IncrementalSVD::constructQ(
    double k)
 {
    CAROM_ASSERT(l != 0);
-   CAROM_ASSERT(l->dim() == d_num_increments);
+   CAROM_ASSERT(l->dim() == numIncrements());
 
    // Create Q.
    Q = new double [(d_num_increments+1)*(d_num_increments+1)];

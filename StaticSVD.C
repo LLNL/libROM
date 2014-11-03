@@ -112,7 +112,7 @@ StaticSVD::getBasis()
 {
    // If this basis is for the last time interval then it may not be up to date
    // so recompute it.
-   if (!d_this_interval_basis_current) {
+   if (!thisIntervalBasisCurrent()) {
       if (d_basis != 0) {
          delete d_basis;
       }
@@ -121,7 +121,7 @@ StaticSVD::getBasis()
    else {
       CAROM_ASSERT(d_basis != 0);
    }
-   CAROM_ASSERT(d_this_interval_basis_current);
+   CAROM_ASSERT(thisIntervalBasisCurrent());
    return d_basis;
 }
 

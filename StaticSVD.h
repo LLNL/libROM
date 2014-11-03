@@ -63,9 +63,7 @@ class StaticSVD
       /**
        * @brief Returns the basis vectors for the current time interval.
        *
-       * @pre !d_this_interval_basis_current || d_basis != 0
-       *
-       * @post d_this_interval_basis_current
+       * @post thisIntervalBasisCurrent()
        *
        * @return The basis vectors for the current time interval.
        */
@@ -160,6 +158,18 @@ class StaticSVD
       svd(
          double* A,
          int total_dim);
+
+      /**
+       * @brief Tells if the basis vectors for this time interval are up to
+       * date.
+       *
+       * @return True if the basis vectors for this time interval are up to
+       * date.
+       */
+      bool
+      thisIntervalBasisCurrent() {
+         return d_this_interval_basis_current;
+      }
 
       /**
        * @brief Dimension of the system.

@@ -74,8 +74,8 @@ double
 Vector::inner_product(
    const Vector& other) const
 {
-   CAROM_ASSERT(d_dim == other.d_dim);
-   CAROM_ASSERT(d_distributed == other.d_distributed);
+   CAROM_ASSERT(dim() == other.dim());
+   CAROM_ASSERT(distributed() == other.distributed());
    double ip;
    double local_ip = 0.0;
    for (int i = 0; i < d_dim; ++i) {
@@ -121,8 +121,8 @@ Vector*
 Vector::plus(
    const Vector& other) const
 {
-   CAROM_ASSERT(d_distributed == other.d_distributed);
-   CAROM_ASSERT(d_dim == other.d_dim);
+   CAROM_ASSERT(distributed() == other.distributed());
+   CAROM_ASSERT(dim() == other.dim());
 
    Vector* result = new Vector(d_dim, d_distributed);
    for (int i = 0; i < d_dim; ++i) {
@@ -135,8 +135,8 @@ Vector*
 Vector::minus(
    const Vector& other) const
 {
-   CAROM_ASSERT(d_distributed == other.d_distributed);
-   CAROM_ASSERT(d_dim == other.d_dim);
+   CAROM_ASSERT(distributed() == other.distributed());
+   CAROM_ASSERT(dim() == other.dim());
 
    Vector* result = new Vector(d_dim, d_distributed);
    for (int i = 0; i < d_dim; ++i) {

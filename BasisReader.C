@@ -61,10 +61,9 @@ const Matrix*
 BasisReader::getBasis(
    double time)
 {
-   CAROM_ASSERT(0 < d_time_interval_start_times.size());
+   CAROM_ASSERT(0 < numTimeIntervals());
    CAROM_ASSERT(0 <= time);
-   int num_time_intervals =
-      static_cast<int>(d_time_interval_start_times.size());
+   int num_time_intervals = numTimeIntervals();
    int i;
    for (i = 0; i < num_time_intervals-1; ++i) {
       if (d_time_interval_start_times[i] <= time &&

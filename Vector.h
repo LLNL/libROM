@@ -109,8 +109,8 @@ class Vector
        *
        * For distributed Vectors this is a parallel operation.
        *
-       * @pre d_dim == other.d_dim
-       * @pre d_distributed == other.d_distributed
+       * @pre dim() == other.dim()
+       * @pre distributed() == other.distributed()
        *
        * @param[in] other The Vector to form the inner product with this.
        *
@@ -126,8 +126,8 @@ class Vector
        * For distributed Vectors this is a parallel operation.
        *
        * @pre other != 0
-       * @pre d_dim == other->d_dim
-       * @pre d_distributed == other.d_distributed
+       * @pre dim() == other->dim()
+       * @pre distributed() == other->distributed()
        *
        * @param[in] other The Vector to form the inner product with this.
        *
@@ -138,6 +138,8 @@ class Vector
          const Vector* const other) const
       {
          CAROM_ASSERT(other != 0);
+         CAROM_ASSERT(dim() == other->dim());
+         CAROM_ASSERT(distributed() == other->distributed());
          return inner_product(*other);
       }
 
@@ -164,8 +166,8 @@ class Vector
       /**
        * @brief Adds other and this and returns the result, reference version.
        *
-       * @pre d_distributed == other.d_distributed
-       * @pre d_dim == other.d_dim
+       * @pre distributed() == other.distributed()
+       * @pre dim() == other.dim()
        *
        * @param[in] other The other summand.
        *
@@ -179,8 +181,8 @@ class Vector
        * @brief Adds other and this and returns the result, pointer version.
        *
        * @pre other != 0
-       * @pre d_distributed == other->d_distributed
-       * @pre d_dim == other->d_dim
+       * @pre distributed() == other->distributed()
+       * @pre dim() == other->dim()
        *
        * @param[in] other The other summand.
        *
@@ -191,6 +193,8 @@ class Vector
          const Vector* const other) const
       {
          CAROM_ASSERT(other != 0);
+         CAROM_ASSERT(distributed() == other->distributed());
+         CAROM_ASSERT(dim() == other->dim());
          return plus(*other);
       }
 
@@ -198,8 +202,8 @@ class Vector
        * @brief Subtracts other and this and returns the result, reference
        * version.
        *
-       * @pre d_distributed == other.d_distributed
-       * @pre d_dim == other.d_dim
+       * @pre distributed() == other.distributed()
+       * @pre dim() == other.dim()
        *
        * @param[in] other The other subtrahand.
        *
@@ -214,8 +218,8 @@ class Vector
        * version.
        *
        * @pre other != 0
-       * @pre d_distributed == other->d_distributed
-       * @pre d_dim == other->d_dim
+       * @pre distributed() == other->distributed()
+       * @pre dim() == other->dim()
        *
        * @param[in] other The other subtrahand.
        *
@@ -226,13 +230,15 @@ class Vector
          const Vector* const other) const
       {
          CAROM_ASSERT(other != 0);
+         CAROM_ASSERT(distributed() == other->distributed());
+         CAROM_ASSERT(dim() == other->dim());
          return minus(*other);
       }
 
       /**
        * @brief Const Vector member access.
        *
-       * @pre (0 <= i) && (i < d_dim)
+       * @pre (0 <= i) && (i < dim())
        *
        * @param[in] i The component of the Vector on this processor requested.
        *
@@ -242,7 +248,7 @@ class Vector
       item(
          int i) const
       {
-         CAROM_ASSERT((0 <= i) && (i < d_dim));
+         CAROM_ASSERT((0 <= i) && (i < dim()));
          return d_vec[i];
       }
 
@@ -251,7 +257,7 @@ class Vector
        *
        * Allows constructs of the form vec[i] = val;
        *
-       * @pre (0 <= i) && (i < d_dim)
+       * @pre (0 <= i) && (i < dim())
        *
        * @param[in] i The component of the Vector on this processor requested.
        *
@@ -261,7 +267,7 @@ class Vector
       item(
          int i)
       {
-         CAROM_ASSERT((0 <= i) && (i < d_dim));
+         CAROM_ASSERT((0 <= i) && (i < dim()));
          return d_vec[i];
       }
       

@@ -140,7 +140,7 @@ class IncrementalSVD
        * @brief Construct the matrix Q whose svd is needed.
        *
        * @pre l != 0
-       * @pre l.dim() == d_num_increments
+       * @pre l.dim() == numIncrements()
        *
        * @param[out] Q The matrix to be constructed. [d_S,l; 0,k]
        * @param[in] l The last column of Q.
@@ -169,6 +169,17 @@ class IncrementalSVD
          double* A,
          Matrix*& U,
          Matrix*& S);
+
+      /**
+       * @brief The number of increments stored.
+       *
+       * @return The number of increments stored.
+       */
+      int
+      numIncrements()
+      {
+         return d_num_increments;
+      }
 
       /**
        * @brief Dimension of the system on this processor.

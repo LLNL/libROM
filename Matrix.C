@@ -83,8 +83,8 @@ Matrix*
 Matrix::mult(
    const Matrix& other) const
 {
-   CAROM_ASSERT(!other.d_distributed);
-   CAROM_ASSERT(d_num_cols == other.d_num_rows);
+   CAROM_ASSERT(!other.distributed());
+   CAROM_ASSERT(numColumns() == other.numRows());
    Matrix* result = new Matrix(d_num_rows,
                                other.d_num_cols,
                                d_distributed);
@@ -104,8 +104,8 @@ Vector*
 Matrix::mult(
    const Vector& other) const
 {
-   CAROM_ASSERT(d_distributed && !other.distributed());
-   CAROM_ASSERT(d_num_cols == other.dim());
+   CAROM_ASSERT(distributed() && !other.distributed());
+   CAROM_ASSERT(numColumns() == other.dim());
    Vector* result = new Vector(d_num_rows, true);
    for (int this_row = 0; this_row < d_num_rows; ++this_row) {
       result->item(this_row) = 0.0;
@@ -120,8 +120,8 @@ Matrix*
 Matrix::transposeMult(
    const Matrix& other) const
 {
-   CAROM_ASSERT(d_distributed == other.d_distributed);
-   CAROM_ASSERT(d_num_rows == other.d_num_rows);
+   CAROM_ASSERT(distributed() == other.distributed());
+   CAROM_ASSERT(numRows() == other.numRows());
    if (!d_distributed) {
       Matrix* result = new Matrix(d_num_cols,
                                   other.d_num_cols,
@@ -180,8 +180,8 @@ Vector*
 Matrix::transposeMult(
    const Vector& other) const
 {
-   CAROM_ASSERT(d_distributed && other.distributed());
-   CAROM_ASSERT(d_num_rows == other.dim());
+   CAROM_ASSERT(distributed() && other.distributed());
+   CAROM_ASSERT(numRows() == other.dim());
    Vector* local_result = new Vector(d_num_cols, false);
    int result_dim = 0;
    for (int this_col = 0; this_col < d_num_cols; ++this_col) {

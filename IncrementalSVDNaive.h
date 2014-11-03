@@ -65,8 +65,6 @@ class IncrementalSVDNaive : public IncrementalSVD
        * @brief Returns the basis vectors for the current time interval as a
        * Matrix.
        *
-       * @pre d_U != 0
-       *
        * @return The basis vectors for the current time interval.
        */
       const Matrix*

@@ -131,8 +131,8 @@ class Matrix
        * undistributed Matrix, and multiplication of a distributed Matrix with
        * an undistributed Matrix returning a distributed Matrix.
        *
-       * @pre !other.d_distributed
-       * @pre d_num_cols == other.d_num_rows
+       * @pre !other.distributed()
+       * @pre numColumns() == other.numRows()
        *
        * @param[in] other The Matrix to multiply with this.
        *
@@ -151,8 +151,8 @@ class Matrix
        * an undistributed Matrix returning a distributed Matrix.
        *
        * @pre other != 0
-       * @pre !other.d_distributed
-       * @pre d_num_cols == other.d_num_rows
+       * @pre !other->distributed()
+       * @pre numColumns() == other->numRows()
        *
        * @param[in] other The Matrix to multiply with this.
        *
@@ -163,6 +163,8 @@ class Matrix
          const Matrix* const other) const
       {
          CAROM_ASSERT(other != 0);
+         CAROM_ASSERT(!other->distributed());
+         CAROM_ASSERT(numColumns() == other->numRows());
          return mult(*other);
       }
 
@@ -173,8 +175,8 @@ class Matrix
        * Supports multiplication of a distributed Matrix and an undistributed
        * Vector returning a distributed Vector.
        *
-       * @pre d_distributed && !other.distributed()
-       * @pre d_num_cols == other.dim()
+       * @pre distributed() && !other.distributed()
+       * @pre numColumns() == other.dim()
        *
        * @param[in] other The Vector to multiply with this.
        *
@@ -192,8 +194,8 @@ class Matrix
        * Vector returning a distributed Vector.
        *
        * @pre other != 0
-       * @pre d_distributed && !other.distributed()
-       * @pre d_num_cols == other.dim()
+       * @pre distributed() && !other->distributed()
+       * @pre numColumns() == other->dim()
        *
        * @param[in] other The Vector to multiply with this.
        *
@@ -204,6 +206,8 @@ class Matrix
          const Vector* const other) const
       {
          CAROM_ASSERT(other != 0);
+         CAROM_ASSERT(distributed() && !other->distributed());
+         CAROM_ASSERT(numColumns() == other->dim());
          return mult(*other);
       }
 
@@ -215,8 +219,8 @@ class Matrix
        * undistributed Matrix or two distributed matrices returning an
        * undistributed Matrix.
        *
-       * @pre d_distributed == other.d_distributed
-       * @pre d_num_rows == other.d_num_rows
+       * @pre distributed() == other.distributed()
+       * @pre numRows() == other.numRows()
        *
        * @param[in] other The Matrix to multiply with this.
        *
@@ -235,8 +239,8 @@ class Matrix
        * undistributed Matrix.
        *
        * @pre other != 0
-       * @pre d_distributed == other.d_distributed
-       * @pre d_num_rows == other.d_num_rows
+       * @pre distributed() == other->distributed()
+       * @pre numRows() == other->numRows()
        *
        * @param[in] other The Matrix to multiply with this.
        *
@@ -247,6 +251,8 @@ class Matrix
          const Matrix* const other) const
       {
          CAROM_ASSERT(other != 0);
+         CAROM_ASSERT(distributed() == other->distributed());
+         CAROM_ASSERT(numRows() == other->numRows());
          return transposeMult(*other);
       }
 
@@ -257,8 +263,8 @@ class Matrix
        * Supports multiplication of a distributed Matrix and a distributed
        * Vector returning an undistributed Vector.
        *
-       * @pre d_distributed && other.distributed()
-       * @pre d_num_rows == other.dim();
+       * @pre distributed() && other.distributed()
+       * @pre numRows() == other.dim();
        *
        * @param[in] other The Vector to multiply with this.
        *
@@ -276,8 +282,8 @@ class Matrix
        * Vector returning an undistributed Vector.
        *
        * @pre other != 0
-       * @pre d_distributed && other.distributed()
-       * @pre d_num_rows == other.dim();
+       * @pre distributed() && other->distributed()
+       * @pre numRows() == other->dim();
        *
        * @param[in] other The Vector to multiply with this.
        *
@@ -288,14 +294,16 @@ class Matrix
          const Vector* const other) const
       {
          CAROM_ASSERT(other != 0);
+         CAROM_ASSERT(distributed() && other->distributed());
+         CAROM_ASSERT(numRows() == other->dim());
          return transposeMult(*other);
       }
 
       /**
        * @brief Const Matrix member access.
        *
-       * @pre (0 <= row) && (row < d_num_rows)
-       * @pre (0 <= col) && (col < d_num_cols)
+       * @pre (0 <= row) && (row < numRows())
+       * @pre (0 <= col) && (col < numColumns())
        *
        * @param[in] row The row of the Matrix value on this processor
        *                requested.
@@ -306,8 +314,8 @@ class Matrix
          int row,
          int col) const
       {
-         CAROM_ASSERT((0 <= row) && (row < d_num_rows));
-         CAROM_ASSERT((0 <= col) && (col < d_num_cols));
+         CAROM_ASSERT((0 <= row) && (row < numRows()));
+         CAROM_ASSERT((0 <= col) && (col < numColumns()));
          return d_mat[row*d_num_cols+col];
       }
 
@@ -316,8 +324,8 @@ class Matrix
        *
        * Allows constructs of the form mat[i, j] = val;
        *
-       * @pre (0 <= row) && (row < d_num_rows)
-       * @pre (0 <= col) && (col < d_num_cols)
+       * @pre (0 <= row) && (row < numRows())
+       * @pre (0 <= col) && (col < numColumns())
        *
        * @param[in] row The row of the Matrix value on this processor
        *                requested.
@@ -328,8 +336,8 @@ class Matrix
          int row,
          int col)
       {
-         CAROM_ASSERT((0 <= row) && (row < d_num_rows));
-         CAROM_ASSERT((0 <= col) && (col < d_num_cols));
+         CAROM_ASSERT((0 <= row) && (row < numRows()));
+         CAROM_ASSERT((0 <= col) && (col < numColumns()));
          return d_mat[row*d_num_cols+col];
       }
 
