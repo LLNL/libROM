@@ -72,13 +72,16 @@ IncrementalSVDTimeStepper::computeNextIncrementTime(
    // Get the current basis vectors.
    const Matrix* basis = getBasis();
 
-   // Compute the projection of the current state into the reduced order space.
+   // Compute the square of the norm of the projection of the normalized
+   // current state into the reduced order space.
    Vector u_vec(u_in, dim, true);
+   u_vec.normalize();
    Vector* l = basis->transposeMult(u_vec);
 
-   // Compute the difference in the norms of the current state and its
-   // projection into the reduced order space.
+   // Compute the square of the norm of the normalized current state.
    double cm = u_vec.inner_product(u_vec);
+
+   // Compute the norm of the out of plane component.
    double proj_error_norm = cm - (l->inner_product(l));
    if (proj_error_norm <= 0) {
       proj_error_norm = 0.0;
@@ -88,13 +91,16 @@ IncrementalSVDTimeStepper::computeNextIncrementTime(
    }
    delete l;
 
-   // Compute the projection of the rhs into the reduced order space.
+   // Compute the square of the norm of the projection of the normalized rhs
+   // into the reduced order space.
    Vector rhs_vec(rhs_in, dim, true);
+   rhs_vec.normalize();
    l = basis->transposeMult(rhs_vec);
 
-   // Compute the difference in the norms of the rhs and its projection into
-   // the reduced order space.
+   // Compute the square of the norm of the normalized rhs.
    cm = rhs_vec.inner_product(rhs_vec);
+
+   // Compute the norm of the out of plane component.
    double proj_error_deriv_norm = cm - (l->inner_product(l));
    if (proj_error_deriv_norm <= 0) {
       proj_error_deriv_norm = 0.0;
@@ -106,7 +112,7 @@ IncrementalSVDTimeStepper::computeNextIncrementTime(
 
    // Compute dt from these two norms.
    double dt;
-   if (proj_error_norm > 0) {
+   if (proj_error_deriv_norm > 0) {
       dt = (d_tol - proj_error_norm) / proj_error_deriv_norm;
       if (dt > d_max_time_between_increments) {
          dt = d_max_time_between_increments;
