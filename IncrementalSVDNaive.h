@@ -17,7 +17,9 @@
 
 namespace CAROM {
 
-// A class which embodies the naive incremental SVD algorithm.
+/**
+ * A class which embodies the naive incremental SVD algorithm.
+ */
 class IncrementalSVDNaive : public IncrementalSVD
 {
    public:
