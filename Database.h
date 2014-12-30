@@ -15,7 +15,8 @@
 
 namespace CAROM {
 
-/** Class Database is an abstract base class that provides basic ability to
+/**
+ * Class Database is an abstract base class that provides basic ability to
  * write to and read from a file.  It's capabilities are limited to what the
  * SVD algorithm needs to read and write its basis vectors.
  */
