@@ -1415,7 +1415,7 @@ Optional Packages:
   --with-szlib=DIR root directory path of szlib installation DIR defaults to
                     /usr/local or /usr if not found in /usr/local
   --without-szlib to disable szlib usage completely the default
- --with-hdf5=PATH  Use HDF5 and optionally specify where HDF5 is installed.
+  --with-hdf5=PATH  Use HDF5 and optionally specify where HDF5 is installed.
   --with-doxygen=PATH	Specify path to doxygen program
 			(equivalent to setting DOXYGEN_BIN in environment)
   --with-dot-dir=DIR      Specify bin directory where dot binaries live.

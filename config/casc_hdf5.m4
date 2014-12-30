@@ -5,7 +5,7 @@ AC_DEFUN([CASC_SUPPORT_HDF5],[
 # Begin CASC_SUPPORT_HDF5
 # Defines hdf5_PREFIX hdf5_INCLUDES and hdf5_LIBS if with-hdf5 is specified.
 AC_ARG_WITH(hdf5,
-[ --with-hdf5[=PATH]  Use HDF5 and optionally specify where HDF5 is installed.],
+[  --with-hdf5[=PATH]  Use HDF5 and optionally specify where HDF5 is installed.],
 , with_hdf5=no)
 
 case "$with_hdf5" in
