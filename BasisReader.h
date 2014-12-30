@@ -25,7 +25,7 @@ class Database;
  * Class BasisReader reads the basis vectors from a file written by class
  * BasisWriter.
  *
- * @see BasisReader
+ * @see BasisWriter
  */
 class BasisReader {
    public:
