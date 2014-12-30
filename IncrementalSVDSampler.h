@@ -10,8 +10,8 @@
  *
  *****************************************************************************/
 
-#ifndef included_IncrementalSVDTimeStepper_h
-#define included_IncrementalSVDTimeStepper_h
+#ifndef included_IncrementalSVDSampler_h
+#define included_IncrementalSVDSampler_h
 
 #include "IncrementalSVD.h"
 #include <boost/shared_ptr.hpp>
@@ -19,15 +19,14 @@
 namespace CAROM {
 
 /**
- * Class IncrementalSVDTimeStepper knows, given an incremental svd
- * implementation, the time at which the next increment to the incremental svd
- * is needed.  It also knows given a time whether it is time for the next svd
- * increment.  There are two factors determining if it is time for the next
- * svd increment:
- * 1) the current time compared to the time the next increment must happen
- * 2) the number of time steps since the last increment
+ * Class IncrementalSVDSampler knows, given an incremental svd implementation,
+ * the time at which the next sample is needed.  It also knows given a time
+ * whether it is time for the next sample.  There are two factors determining
+ * if it is time for the next sample:
+ * 1) the current time compared to the time the next sample must happen
+ * 2) the number of time steps since the last sample
  */
-class IncrementalSVDTimeStepper
+class IncrementalSVDSampler
 {
    public:
       /**
@@ -35,49 +34,49 @@ class IncrementalSVDTimeStepper
        *
        * @pre dim > 0
        * @pre redundancy_tol > 0.0
-       * @pre increments_per_time_interval > 0
+       * @pre samples_per_time_interval > 0
        * @pre sampling_tol > 0.0
-       * @pre max_time_between_increments > 0.0
+       * @pre max_time_between_samples > 0.0
        *
        * @param[in] dim The dimension of the system on this processor.
        * @param[in] redundancy_tol Tolerance to determine if a sample is
        *                           redundant or not.
        * @param[in] skip_redundant If true skip redundant samples.
-       * @param[in] increments_per_time_interval The maximum number of samples
-       *                                         in each time interval.
+       * @param[in] samples_per_time_interval The maximum number of samples in
+       *                                      each time interval.
        * @param[in] sampling_tol Time step control tolerance.  Limits error in
        *                         projection of solution into reduced order
        *                         space.
-       * @param[in] max_time_between_increments Hard upper bound on time step.
+       * @param[in] max_time_between_samples Hard upper bound on time step.
        * @param[in] fast_update If true use the fast update incremental svd
        *                        algorithm.
        */
-      IncrementalSVDTimeStepper(
+      IncrementalSVDSampler(
          int dim,
          double redundancy_tol,
          bool skip_redundant,
-         int increments_per_time_interval,
+         int samples_per_time_interval,
          double sampling_tol,
-         double max_time_between_increments,
+         double max_time_between_samples,
          bool fast_update);
 
       /**
        * @brief Destructor.
        */
-      ~IncrementalSVDTimeStepper();
+      ~IncrementalSVDSampler();
 
       /**
-       * @brief Returns true if it is time for the next svd increment.
+       * @brief Returns true if it is time for the next sample.
        *
        * @param[in] time Time of interest.
        *
-       * @return True if it is time for the next snapshot to be taken.
+       * @return True if it is time for the next sample to be taken.
        */
       bool
       isNextIncrement(
          double time)
       {
-         return time >= d_next_increment_time;
+         return time >= d_next_sample_time;
       }
 
       /**
@@ -99,7 +98,7 @@ class IncrementalSVDTimeStepper
       }
 
       /**
-       * @brief Computes next time an svd increment is needed.
+       * @brief Computes next time a sample is needed.
        *
        * @pre u_in != 0
        * @pre rhs_in != 0
@@ -110,7 +109,7 @@ class IncrementalSVDTimeStepper
        * @param[in] time The simulation time for the state.
        */
       double
-      computeNextIncrementTime(
+      computeNextSampleTime(
          double* u_in,
          double* rhs_in,
          double time);
@@ -172,20 +171,20 @@ class IncrementalSVDTimeStepper
       /**
        * @brief Unimplemented default constructor.
        */
-      IncrementalSVDTimeStepper();
+      IncrementalSVDSampler();
 
       /**
        * @brief Unimplemented copy constructor.
        */
-      IncrementalSVDTimeStepper(
-         const IncrementalSVDTimeStepper& other);
+      IncrementalSVDSampler(
+         const IncrementalSVDSampler& other);
 
       /**
        * @brief Unimplemented assignment operator.
        */
-      IncrementalSVDTimeStepper&
+      IncrementalSVDSampler&
       operator = (
-         const IncrementalSVDTimeStepper& rhs);
+         const IncrementalSVDSampler& rhs);
 
       /**
        * @brief Time step control tolerance.
@@ -195,14 +194,14 @@ class IncrementalSVDTimeStepper
       double d_tol;
 
       /**
-       * @brief Maximum time between increments.
+       * @brief Maximum time between samples.
        */
-      double d_max_time_between_increments;
+      double d_max_time_between_samples;
 
       /**
-       * @brief Next time at which an increment should be taken.
+       * @brief Next time at which a sample should be taken.
        */
-      double d_next_increment_time;
+      double d_next_sample_time;
 
       /**
        * @brief Pointer to the fundamental incremental SVD algorithm object.

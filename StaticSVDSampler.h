@@ -10,8 +10,8 @@
  *
  *****************************************************************************/
 
-#ifndef included_StaticSVDTimeStepper_h
-#define included_StaticSVDTimeStepper_h
+#ifndef included_StaticSVDSampler_h
+#define included_StaticSVDSampler_h
 
 #include "StaticSVD.h"
 #include <boost/shared_ptr.hpp>
@@ -19,33 +19,33 @@
 namespace CAROM {
 
 /**
- * Class StaticSVDTimeStepper knows, given a static svd implementation, the
+ * Class StaticSVDSampler knows, given a static svd implementation, the
  * time at which the next state collection is needed.  It also knows given a
  * time whether it is time for the next state collection.  All states are
  * sampled in the static SVD implementation so it is always time for a new
  * state collection.
  */
-class StaticSVDTimeStepper
+class StaticSVDSampler
 {
    public:
       /**
        * @brief Constructor.
        *
        * @pre dim > 0
-       * @pre increments_per_time_interval > 0
+       * @pre samples_per_time_interval > 0
        *
        * @param[in] dim The dimension of the system on this processor.
-       * @param[in] increments_per_time_interval The maximum number of samples
-       *                                         in each time interval.
+       * @param[in] samples_per_time_interval The maximum number of samples
+       *                                      in each time interval.
        */
-      StaticSVDTimeStepper(
+      StaticSVDSampler(
          int dim,
-         int increments_per_time_interval);
+         int samples_per_time_interval);
 
       /**
        * @brief Destructor.
        */
-      ~StaticSVDTimeStepper();
+      ~StaticSVDSampler();
 
       /**
        * @brief Returns true if it is time for the next state collection.
@@ -162,20 +162,20 @@ class StaticSVDTimeStepper
       /**
        * @brief Unimplemented default constructor.
        */
-      StaticSVDTimeStepper();
+      StaticSVDSampler();
 
       /**
        * @brief Unimplemented copy constructor.
        */
-      StaticSVDTimeStepper(
-         const StaticSVDTimeStepper& other);
+      StaticSVDSampler(
+         const StaticSVDSampler& other);
 
       /**
        * @brief Unimplemented assignment operator.
        */
-      StaticSVDTimeStepper&
+      StaticSVDSampler&
       operator = (
-         const StaticSVDTimeStepper& rhs);
+         const StaticSVDSampler& rhs);
 
       /**
        * @brief Pointer to the fundamental static SVD algorithm object.

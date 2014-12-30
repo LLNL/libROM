@@ -19,7 +19,7 @@ StaticSVDBasisGenerator::StaticSVDBasisGenerator(
    const std::string& basis_file_name,
    Database::formats file_format) :
    SVDBasisGenerator(basis_file_name, file_format),
-   d_svdts(new StaticSVDTimeStepper(dim, increments_per_time_interval))
+   d_svdsampler(new StaticSVDSampler(dim, increments_per_time_interval))
 {
    CAROM_ASSERT(dim > 0);
    CAROM_ASSERT(increments_per_time_interval > 0);
@@ -34,7 +34,7 @@ StaticSVDBasisGenerator::isNextSnapshot(
    double time)
 {
    CAROM_ASSERT(time >= 0.0);
-   return d_svdts->isNextStateCollection(time);
+   return d_svdsampler->isNextStateCollection(time);
 }
 
 void
@@ -46,10 +46,10 @@ StaticSVDBasisGenerator::takeSnapshot(
    CAROM_ASSERT(time >= 0);
 
    if (d_basis_writer &&
-       d_svdts->isNewTimeInterval() && getNumBasisTimeIntervals() > 0) {
+       d_svdsampler->isNewTimeInterval() && getNumBasisTimeIntervals() > 0) {
       d_basis_writer->writeBasis();
    }
-   d_svdts->collectState(u_in, time);
+   d_svdsampler->collectState(u_in, time);
 }
 
 double
@@ -62,19 +62,19 @@ StaticSVDBasisGenerator::computeNextSnapshotTime(
    CAROM_ASSERT(rhs_in != 0);
    CAROM_ASSERT(time >= 0);
 
-   return d_svdts->computeNextStateCollectionTime(u_in, rhs_in, time);
+   return d_svdsampler->computeNextStateCollectionTime(u_in, rhs_in, time);
 }
 
 const Matrix*
 StaticSVDBasisGenerator::getBasis()
 {
-   return d_svdts->getBasis();
+   return d_svdsampler->getBasis();
 }
 
 int
 StaticSVDBasisGenerator::getNumBasisTimeIntervals() const
 {
-   return d_svdts->getNumBasisTimeIntervals();
+   return d_svdsampler->getNumBasisTimeIntervals();
 }
 
 double
@@ -83,7 +83,7 @@ StaticSVDBasisGenerator::getBasisIntervalStartTime(
 {
    CAROM_ASSERT(0 <= which_interval);
    CAROM_ASSERT(which_interval < getNumBasisTimeIntervals());
-   return d_svdts->getBasisIntervalStartTime(which_interval);
+   return d_svdsampler->getBasisIntervalStartTime(which_interval);
 }
 
 }

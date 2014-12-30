@@ -14,7 +14,7 @@
 #define included_IncrementalSVDBasisGenerator_h
 
 #include "SVDBasisGenerator.h"
-#include "IncrementalSVDTimeStepper.h"
+#include "IncrementalSVDSampler.h"
 
 namespace CAROM {
 
@@ -174,7 +174,7 @@ class IncrementalSVDBasisGenerator : public SVDBasisGenerator
       /**
        * @brief Pointer to the underlying time step control object.
        */
-      boost::shared_ptr<IncrementalSVDTimeStepper> d_isvdts;
+      boost::shared_ptr<IncrementalSVDSampler> d_isvdsampler;
 };
 
 }

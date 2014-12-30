@@ -25,13 +25,13 @@ IncrementalSVDBasisGenerator::IncrementalSVDBasisGenerator(
    const std::string& basis_file_name,
    Database::formats file_format) :
    SVDBasisGenerator(basis_file_name, file_format),
-   d_isvdts(new IncrementalSVDTimeStepper(dim,
-                                          redundancy_tol,
-                                          skip_redundant,
-                                          increments_per_time_interval,
-                                          sampling_tol,
-                                          max_time_between_snapshots,
-                                          fast_update))
+   d_isvdsampler(new IncrementalSVDSampler(dim,
+                                           redundancy_tol,
+                                           skip_redundant,
+                                           increments_per_time_interval,
+                                           sampling_tol,
+                                           max_time_between_snapshots,
+                                           fast_update))
 {
    CAROM_ASSERT(dim > 0);
    CAROM_ASSERT(redundancy_tol > 0.0);
@@ -49,7 +49,7 @@ IncrementalSVDBasisGenerator::isNextSnapshot(
    double time)
 {
    CAROM_ASSERT(time >= 0);
-   return d_isvdts->isNextIncrement(time);
+   return d_isvdsampler->isNextIncrement(time);
 }
 
 void
@@ -61,10 +61,10 @@ IncrementalSVDBasisGenerator::takeSnapshot(
    CAROM_ASSERT(time >= 0);
 
    if (d_basis_writer &&
-       d_isvdts->isNewTimeInterval() && getNumBasisTimeIntervals() > 0) {
+       d_isvdsampler->isNewTimeInterval() && getNumBasisTimeIntervals() > 0) {
       d_basis_writer->writeBasis();
    }
-   d_isvdts->increment(u_in, time);
+   d_isvdsampler->increment(u_in, time);
 }
 
 double
@@ -77,19 +77,19 @@ IncrementalSVDBasisGenerator::computeNextSnapshotTime(
    CAROM_ASSERT(rhs_in != 0);
    CAROM_ASSERT(time >= 0);
 
-   return d_isvdts->computeNextIncrementTime(u_in, rhs_in, time);
+   return d_isvdsampler->computeNextSampleTime(u_in, rhs_in, time);
 }
 
 const Matrix*
 IncrementalSVDBasisGenerator::getBasis()
 {
-   return d_isvdts->getBasis();
+   return d_isvdsampler->getBasis();
 }
 
 int
 IncrementalSVDBasisGenerator::getNumBasisTimeIntervals() const
 {
-   return d_isvdts->getNumBasisTimeIntervals();
+   return d_isvdsampler->getNumBasisTimeIntervals();
 }
 
 double
@@ -98,7 +98,7 @@ IncrementalSVDBasisGenerator::getBasisIntervalStartTime(
 {
    CAROM_ASSERT(0 <= which_interval);
    CAROM_ASSERT(which_interval < getNumBasisTimeIntervals());
-   return d_isvdts->getBasisIntervalStartTime(which_interval);
+   return d_isvdsampler->getBasisIntervalStartTime(which_interval);
 }
 
 }

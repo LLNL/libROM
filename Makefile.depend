@@ -59,8 +59,8 @@ FILE_5=IncrementalSVDBasisGenerator.o
 DEPENDS_5:=\
 	BasisWriter.h CAROM_config.h Database.h IncrementalSVD.h	\
 	IncrementalSVDBasisGenerator.C IncrementalSVDBasisGenerator.h	\
-	IncrementalSVDTimeStepper.h Matrix.h SVDBasisGenerator.h	\
-	Utilities.h Vector.h
+	IncrementalSVDSampler.h Matrix.h SVDBasisGenerator.h Utilities.h\
+	Vector.h
 
 DEPENDS_5 +=\
 	
@@ -90,11 +90,11 @@ DEPENDS_7 +=\
 
 ${FILE_7}: ${DEPENDS_7}
 
-FILE_8=IncrementalSVDTimeStepper.o
+FILE_8=IncrementalSVDSampler.o
 DEPENDS_8:=\
 	CAROM_config.h IncrementalSVD.h IncrementalSVDFastUpdate.h	\
-	IncrementalSVDNaive.h IncrementalSVDTimeStepper.C		\
-	IncrementalSVDTimeStepper.h Matrix.h Utilities.h Vector.h
+	IncrementalSVDNaive.h IncrementalSVDSampler.C			\
+	IncrementalSVDSampler.h Matrix.h Utilities.h Vector.h
 
 DEPENDS_8 +=\
 	
@@ -147,7 +147,7 @@ FILE_13=StaticSVDBasisGenerator.o
 DEPENDS_13:=\
 	BasisWriter.h CAROM_config.h Database.h Matrix.h		\
 	SVDBasisGenerator.h StaticSVD.h StaticSVDBasisGenerator.C	\
-	StaticSVDBasisGenerator.h StaticSVDTimeStepper.h Utilities.h	\
+	StaticSVDBasisGenerator.h StaticSVDSampler.h Utilities.h	\
 	Vector.h
 
 DEPENDS_13 +=\
@@ -156,10 +156,10 @@ DEPENDS_13 +=\
 
 ${FILE_13}: ${DEPENDS_13}
 
-FILE_14=StaticSVDTimeStepper.o
+FILE_14=StaticSVDSampler.o
 DEPENDS_14:=\
-	CAROM_config.h Matrix.h StaticSVD.h StaticSVDTimeStepper.C	\
-	StaticSVDTimeStepper.h Utilities.h Vector.h
+	CAROM_config.h Matrix.h StaticSVD.h StaticSVDSampler.C		\
+	StaticSVDSampler.h Utilities.h Vector.h
 
 DEPENDS_14 +=\
 	
@@ -190,10 +190,9 @@ ${FILE_16}: ${DEPENDS_16}
 FILE_17=random_test.o
 DEPENDS_17:=\
 	BasisWriter.h CAROM_config.h Database.h IncrementalSVD.h	\
-	IncrementalSVDBasisGenerator.h IncrementalSVDTimeStepper.h	\
-	Matrix.h SVDBasisGenerator.h StaticSVD.h			\
-	StaticSVDBasisGenerator.h StaticSVDTimeStepper.h Utilities.h	\
-	Vector.h random_test.C
+	IncrementalSVDBasisGenerator.h IncrementalSVDSampler.h Matrix.h	\
+	SVDBasisGenerator.h StaticSVD.h StaticSVDBasisGenerator.h	\
+	StaticSVDSampler.h Utilities.h Vector.h random_test.C
 
 DEPENDS_17 +=\
 	
@@ -204,12 +203,24 @@ ${FILE_17}: ${DEPENDS_17}
 FILE_18=smoke_test.o
 DEPENDS_18:=\
 	BasisWriter.h CAROM_config.h Database.h IncrementalSVD.h	\
-	IncrementalSVDBasisGenerator.h IncrementalSVDTimeStepper.h	\
-	Matrix.h SVDBasisGenerator.h Utilities.h Vector.h smoke_test.C
+	IncrementalSVDBasisGenerator.h IncrementalSVDSampler.h Matrix.h	\
+	SVDBasisGenerator.h Utilities.h Vector.h smoke_test.C
 
 DEPENDS_18 +=\
 	
 
 
 ${FILE_18}: ${DEPENDS_18}
+
+FILE_19=uneven_dist.o
+DEPENDS_19:=\
+	BasisWriter.h CAROM_config.h Database.h IncrementalSVD.h	\
+	IncrementalSVDBasisGenerator.h IncrementalSVDSampler.h Matrix.h	\
+	SVDBasisGenerator.h Utilities.h Vector.h uneven_dist.C
+
+DEPENDS_19 +=\
+	
+
+
+${FILE_19}: ${DEPENDS_19}
 

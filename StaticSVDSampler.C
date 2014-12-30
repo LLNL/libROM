@@ -10,20 +10,20 @@
  *
  *****************************************************************************/
 
-#include "StaticSVDTimeStepper.h"
+#include "StaticSVDSampler.h"
 
 namespace CAROM {
 
-StaticSVDTimeStepper::StaticSVDTimeStepper(
+StaticSVDSampler::StaticSVDSampler(
    int dim,
-   int increments_per_time_interval) :
-   d_svd(new StaticSVD(dim, increments_per_time_interval))
+   int samples_per_time_interval) :
+   d_svd(new StaticSVD(dim, samples_per_time_interval))
 {
    CAROM_ASSERT(dim > 0);
-   CAROM_ASSERT(increments_per_time_interval > 0);
+   CAROM_ASSERT(samples_per_time_interval > 0);
 }
 
-StaticSVDTimeStepper::~StaticSVDTimeStepper()
+StaticSVDSampler::~StaticSVDSampler()
 {
 }
 

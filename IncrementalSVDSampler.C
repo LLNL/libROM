@@ -10,7 +10,7 @@
  *
  *****************************************************************************/
 
-#include "IncrementalSVDTimeStepper.h"
+#include "IncrementalSVDSampler.h"
 #include "IncrementalSVDNaive.h"
 #include "IncrementalSVDFastUpdate.h"
 
@@ -18,46 +18,46 @@
 
 namespace CAROM {
 
-IncrementalSVDTimeStepper::IncrementalSVDTimeStepper(
+IncrementalSVDSampler::IncrementalSVDSampler(
    int dim,
    double redundancy_tol,
    bool skip_redundant,
-   int increments_per_time_interval,
+   int samples_per_time_interval,
    double sampling_tol,
-   double max_time_between_increments,
+   double max_time_between_samples,
    bool fast_update) :
    d_tol(sampling_tol),
-   d_max_time_between_increments(max_time_between_increments),
-   d_next_increment_time(0.0)
+   d_max_time_between_samples(max_time_between_samples),
+   d_next_sample_time(0.0)
 {
    CAROM_ASSERT(dim > 0);
    CAROM_ASSERT(redundancy_tol > 0.0);
-   CAROM_ASSERT(increments_per_time_interval > 0);
+   CAROM_ASSERT(samples_per_time_interval > 0);
    CAROM_ASSERT(sampling_tol > 0.0);
-   CAROM_ASSERT(max_time_between_increments > 0.0);
+   CAROM_ASSERT(max_time_between_samples > 0.0);
 
    if (fast_update) {
       d_isvd.reset(
          new IncrementalSVDFastUpdate(dim,
             redundancy_tol,
             skip_redundant,
-            increments_per_time_interval));
+            samples_per_time_interval));
    }
    else {
       d_isvd.reset(
          new IncrementalSVDNaive(dim,
             redundancy_tol,
             skip_redundant,
-            increments_per_time_interval));
+            samples_per_time_interval));
    }
 }
 
-IncrementalSVDTimeStepper::~IncrementalSVDTimeStepper()
+IncrementalSVDSampler::~IncrementalSVDSampler()
 {
 }
 
 double
-IncrementalSVDTimeStepper::computeNextIncrementTime(
+IncrementalSVDSampler::computeNextSampleTime(
    double* u_in,
    double* rhs_in,
    double time)
@@ -114,20 +114,20 @@ IncrementalSVDTimeStepper::computeNextIncrementTime(
    double dt;
    if (proj_error_deriv_norm > 0) {
       dt = (d_tol - proj_error_norm) / proj_error_deriv_norm;
-      if (dt > d_max_time_between_increments) {
-         dt = d_max_time_between_increments;
+      if (dt > d_max_time_between_samples) {
+         dt = d_max_time_between_samples;
       }
       else if (dt < 0) {
          dt = 0.0;
       }
    }
    else {
-      dt = d_max_time_between_increments;
+      dt = d_max_time_between_samples;
    }
 
-   // Return next increment time.
-   d_next_increment_time = time + dt;
-   return d_next_increment_time;
+   // Return next sample time.
+   d_next_sample_time = time + dt;
+   return d_next_sample_time;
 }
 
 }

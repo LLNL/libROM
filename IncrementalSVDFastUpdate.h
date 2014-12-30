@@ -32,7 +32,7 @@ class IncrementalSVDFastUpdate : public IncrementalSVD
        * @pre increments_per_time_interval > 0
        *
        * @param[in] dim The dimension of the system on this processor.
-       * @param[in] redundancy_tol Tolerance to determine if a sample is
+       * @param[in] redundancy_tol Tolerance to determine if an increment is
        *                           redundant or not.
        * @param[in] skip_redundant If true skip redundant increments.
        * @param[in] increments_per_time_interval The number of increments to be

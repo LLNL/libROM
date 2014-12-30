@@ -28,10 +28,10 @@ OBJS = Matrix.o \
        IncrementalSVDFastUpdate.o \
        IncrementalSVDNaive.o \
        IncrementalSVDBasisGenerator.o \
-       IncrementalSVDTimeStepper.o \
+       IncrementalSVDSampler.o \
        StaticSVD.o \
        StaticSVDBasisGenerator.o \
-       StaticSVDTimeStepper.o \
+       StaticSVDSampler.o \
        Database.o \
        HDFDatabase.o \
        Utilities.o \

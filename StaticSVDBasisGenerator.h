@@ -13,7 +13,7 @@
 #define included_StaticSVDBasisGenerator_h
 
 #include "SVDBasisGenerator.h"
-#include "StaticSVDTimeStepper.h"
+#include "StaticSVDSampler.h"
 
 namespace CAROM {
 
@@ -156,7 +156,7 @@ class StaticSVDBasisGenerator : public SVDBasisGenerator
       /**
        * @brief Pointer to the time step control object.
        */
-      boost::shared_ptr<StaticSVDTimeStepper> d_svdts;
+      boost::shared_ptr<StaticSVDSampler> d_svdsampler;
 };
 
 }
