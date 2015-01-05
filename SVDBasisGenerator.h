@@ -5,7 +5,7 @@
  *
  * Copyright:   (c) 2013-2014 Lawrence Livermore National Security, LLC
  * Description: The abstract wrapper class for an abstract SVD algorithm and
- *              time stepper.  This class provides interfaces to each so that
+ *              sampler.  This class provides interfaces to each so that
  *              an application only needs to instantiate one concrete
  *              implementation of this class to control all aspects of basis
  *              vector generation.
@@ -27,7 +27,7 @@ class Matrix;
 /**
  * Class SVDBasisGenerator is an abstract base class defining the interface for
  * the generation of basis vectors via the svd method.  This class wraps the
- * abstract SVD algorithm and time stepping and provides interfaces to each so
+ * abstract SVD algorithm and sampler and provides interfaces to each so
  * that an application only needs to instantiate one concrete implementation of
  * this class to control all aspects of basis vector generation.
  */

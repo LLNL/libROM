@@ -5,7 +5,7 @@
  *
  * Copyright:   (c) 2013-2014 Lawrence Livermore National Security, LLC
  * Description: The concrete wrapper class for a specific incremental SVD
- *              algorithm and time stepper.  Implements interface of
+ *              algorithm and sampler.  Implements interface of
  *              SVDBasisGenerator.
  *
  *****************************************************************************/
@@ -18,9 +18,9 @@ IncrementalSVDBasisGenerator::IncrementalSVDBasisGenerator(
    int dim,
    double redundancy_tol,
    bool skip_redundant,
-   int increments_per_time_interval,
+   int samples_per_time_interval,
    double sampling_tol,
-   double max_time_between_snapshots,
+   double max_time_between_samples,
    bool fast_update,
    const std::string& basis_file_name,
    Database::formats file_format) :
@@ -28,16 +28,16 @@ IncrementalSVDBasisGenerator::IncrementalSVDBasisGenerator(
    d_isvdsampler(new IncrementalSVDSampler(dim,
                                            redundancy_tol,
                                            skip_redundant,
-                                           increments_per_time_interval,
+                                           samples_per_time_interval,
                                            sampling_tol,
-                                           max_time_between_snapshots,
+                                           max_time_between_samples,
                                            fast_update))
 {
    CAROM_ASSERT(dim > 0);
    CAROM_ASSERT(redundancy_tol > 0.0);
-   CAROM_ASSERT(increments_per_time_interval > 0);
+   CAROM_ASSERT(samples_per_time_interval > 0);
    CAROM_ASSERT(sampling_tol > 0.0);
-   CAROM_ASSERT(max_time_between_snapshots > 0.0);
+   CAROM_ASSERT(max_time_between_samples > 0.0);
 }
 
 IncrementalSVDBasisGenerator::~IncrementalSVDBasisGenerator()

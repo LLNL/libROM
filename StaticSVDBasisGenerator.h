@@ -154,7 +154,7 @@ class StaticSVDBasisGenerator : public SVDBasisGenerator
          const StaticSVDBasisGenerator& rhs);
 
       /**
-       * @brief Pointer to the time step control object.
+       * @brief Pointer to the sampling control object.
        */
       boost::shared_ptr<StaticSVDSampler> d_svdsampler;
 };

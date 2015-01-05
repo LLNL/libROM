@@ -5,7 +5,7 @@
  *
  * Copyright:   (c) 2013-2014 Lawrence Livermore National Security, LLC
  * Description: The concrete wrapper class for a specific incremental SVD
- *              algorithm and time stepper.  Implements interface of
+ *              algorithm and sampler.  Implements interface of
  *              SVDBasisGenerator.
  *
  *****************************************************************************/
@@ -31,7 +31,7 @@ class IncrementalSVDBasisGenerator : public SVDBasisGenerator
        *
        * @pre dim > 0
        * @pre redundancy_tol > 0.0
-       * @pre increments_per_time_interval > 0
+       * @pre samples_per_time_interval > 0
        * @pre sampling_tol > 0.0
        * @pre max_time_between_snapshots > 0.0
        *
@@ -39,12 +39,12 @@ class IncrementalSVDBasisGenerator : public SVDBasisGenerator
        * @param[in] redundancy_tol Tolerance to determine if a sample is
        *                           redundant or not.
        * @param[in] skip_redundant If true skip redundant samples.
-       * @param[in] increments_per_time_interval The maximum number of samples
-       *                                         in each time interval.
-       * @param[in] sampling_tol Time step control tolerance.  Limits error in
+       * @param[in] samples_per_time_interval The maximum number of samples in
+       *                                      each time interval.
+       * @param[in] sampling_tol Sampling control tolerance.  Limits error in
        *                         projection of solution into reduced order
        *                         space.
-       * @param[in] max_time_between_snapshots Hard upper bound on time step.
+       * @param[in] max_time_between_samples Hard upper bound on sampl.
        * @param[in] fast_update If true use the fast update algorithm.
        * @param[in] basis_file_name The base part of the name of the file
        *                            containing the basis vectors.  Each process
@@ -57,9 +57,9 @@ class IncrementalSVDBasisGenerator : public SVDBasisGenerator
          int dim,
          double redundancy_tol,
          bool skip_redundant,
-         int increments_per_time_interval,
+         int samples_per_time_interval,
          double sampling_tol,
-         double max_time_between_snapshots,
+         double max_time_between_samples,
          bool fast_update,
          const std::string& basis_file_name,
          Database::formats file_format = Database::HDF5);
@@ -172,7 +172,7 @@ class IncrementalSVDBasisGenerator : public SVDBasisGenerator
          const IncrementalSVDBasisGenerator& rhs);
 
       /**
-       * @brief Pointer to the underlying time step control object.
+       * @brief Pointer to the underlying sampling control object.
        */
       boost::shared_ptr<IncrementalSVDSampler> d_isvdsampler;
 };

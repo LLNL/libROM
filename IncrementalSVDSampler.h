@@ -44,10 +44,11 @@ class IncrementalSVDSampler
        * @param[in] skip_redundant If true skip redundant samples.
        * @param[in] samples_per_time_interval The maximum number of samples in
        *                                      each time interval.
-       * @param[in] sampling_tol Time step control tolerance.  Limits error in
+       * @param[in] sampling_tol Sampling control tolerance.  Limits error in
        *                         projection of solution into reduced order
        *                         space.
-       * @param[in] max_time_between_samples Hard upper bound on time step.
+       * @param[in] max_time_between_samples Hard upper bound on time between
+       *                                     samples.
        * @param[in] fast_update If true use the fast update incremental svd
        *                        algorithm.
        */
@@ -187,7 +188,7 @@ class IncrementalSVDSampler
          const IncrementalSVDSampler& rhs);
 
       /**
-       * @brief Time step control tolerance.
+       * @brief Sampling control tolerance.
        *
        * Limits error in projection of solution into the reduced order space.
        */

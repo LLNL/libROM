@@ -5,7 +5,7 @@
  *
  * Copyright:   (c) 2013-2014 Lawrence Livermore National Security, LLC
  * Description: Simple test of the incremental fast update algorithm and
- *              incremental time stepper.
+ *              incremental sampler.
  *
  *****************************************************************************/
 
