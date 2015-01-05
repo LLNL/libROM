@@ -82,11 +82,9 @@ int main(int argc, char* argv[])
       0.001,
       true,
       "");
-#ifdef DEBUG_ROMS
    CAROM::StaticSVDBasisGenerator static_basis_generator(dim,
       num_snapshots,
       "");
-#endif
    int size;
    MPI_Comm_size(MPI_COMM_WORLD, &size);
    int rank;
@@ -124,7 +122,6 @@ int main(int argc, char* argv[])
          }
       }
    }
-   double start_inc = MPI_Wtime();
    for (int i = 0; i < num_snapshots; ++i) {
       if (inc_basis_generator.isNextSnapshot(0.01*i)) {
          inc_basis_generator.takeSnapshot(M[i], 0.01*i);
@@ -133,23 +130,6 @@ int main(int argc, char* argv[])
    }
    inc_basis_generator.endSnapshots();
    const CAROM::Matrix* inc_basis = inc_basis_generator.getBasis();
-   double stop_inc = MPI_Wtime();
-   double incremental_run_time = stop_inc - start_inc;
-   double global_incremental_run_time;
-   if (size == 1) {
-      global_incremental_run_time = incremental_run_time;
-   }
-   else {
-      MPI_Reduce(&incremental_run_time, &global_incremental_run_time, 1,
-                 MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-   }
-   if (rank == 0) {
-      printf("incremental run time = %g\n", global_incremental_run_time/size);
-   }
-#ifndef DEBUG_ROMS
-   CAROM_NULL_USE(inc_basis);
-#else
-   double start_static = MPI_Wtime();
    for (int i = 0; i < num_snapshots; ++i) {
       if (static_basis_generator.isNextSnapshot(0.01*i)) {
          static_basis_generator.takeSnapshot(M[i], 0.01*i);
@@ -158,19 +138,6 @@ int main(int argc, char* argv[])
    }
    static_basis_generator.endSnapshots();
    const CAROM::Matrix* static_basis = static_basis_generator.getBasis();
-   double stop_static = MPI_Wtime();
-   double static_run_time = stop_static - start_static;
-   double global_static_run_time;
-   if (size == 1) {
-      global_static_run_time = static_run_time;
-   }
-   else {
-      MPI_Reduce(&static_run_time, &global_static_run_time, 1,
-                 MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-   }
-   if (rank == 0) {
-      printf("static run time = %g\n", global_static_run_time/size);
-   }
 
    // Compute the product of the tranpose of the static basis and the
    // incremental basis.  This should be a unitary matrix.
@@ -184,7 +151,6 @@ int main(int argc, char* argv[])
       }
    }
    delete test;
-#endif
    for (int i = 0; i < num_snapshots; ++i) {
       delete [] M[i];
    }
