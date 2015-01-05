@@ -49,7 +49,6 @@ int main(int argc, char* argv[])
             0.0);
    }
    double vals1[6] = {2.0, 7.0, 4.0, 9.0, 18.0, 10.0};
-//   double vals1[6] = {1.0, 6.0, 3.0, 8.0, 17.0, 9.0};
    if (inc_basis_generator.isNextSnapshot(0.11)) {
       inc_basis_generator.takeSnapshot(&vals1[dim*rank], 0.11);
       next_snapshot_time =
