@@ -4,8 +4,8 @@
  * information, see COPYRIGHT.
  *
  * Copyright:   (c) 2013-2014 Lawrence Livermore National Security, LLC
- * Description: The concrete wrapper class for static SVD algorithm and time
- *              stepper.  Implements interface of SVDBasisGenerator.
+ * Description: The concrete wrapper class for static SVD algorithm and
+ *              sampler.  Implements interface of SVDBasisGenerator.
  *
  *****************************************************************************/
 
