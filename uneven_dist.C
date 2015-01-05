@@ -4,8 +4,8 @@
  * information, see COPYRIGHT.
  *
  * Copyright:   (c) 2013-2014 Lawrence Livermore National Security, LLC
- * Description: A test of both the incremental fast update algorithm and time
- *              stepper in which the complete system in unevenly distributed
+ * Description: A test of both the incremental fast update algorithm and
+ *              sampler in which the complete system in unevenly distributed
  *              across the processors.  To get output that verifies that
  *              this test works correctly configure with
  *              --enable-output-debug-info.
