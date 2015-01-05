@@ -37,12 +37,15 @@ class IncrementalSVDNaive : public IncrementalSVD
        * @param[in] increments_per_time_interval The number of increments to be
        *                                         collected for each time
        *                                         interval.
+       * @param[in] debug_rom If true results of algorithm will be printed to
+       *                      facilitate debugging.
        */
       IncrementalSVDNaive(
          int dim,
          double redundancy_tol,
          bool skip_redundant,
-         int increments_per_time_interval);
+         int increments_per_time_interval,
+         bool debug_rom = false);
 
       /**
        * @brief Destructor.

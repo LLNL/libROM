@@ -24,11 +24,13 @@ IncrementalSVDNaive::IncrementalSVDNaive(
    int dim,
    double redundancy_tol,
    bool skip_redundant,
-   int increments_per_time_interval) :
+   int increments_per_time_interval,
+   bool debug_rom) :
    IncrementalSVD(dim,
       redundancy_tol,
       skip_redundant,
-      increments_per_time_interval),
+      increments_per_time_interval,
+      debug_rom),
    d_U(0)
 {
 }
@@ -58,69 +60,69 @@ IncrementalSVDNaive::increment(
       buildIncrementalSVD(u_in);
    }
 
-#ifdef DEBUG_ROMS
-   int mpi_init;
-   MPI_Initialized(&mpi_init);
-   int rank;
-   if (mpi_init) {
-      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-   }
-   else {
-      rank = 0;
-   }
-   const Matrix* basis = getBasis();
-   if (rank == 0) {
-      // Print d_S.
-      for (int row = 0; row < d_num_increments; ++row) {
-         for (int col = 0; col < d_num_increments; ++col) {
-            printf("%.16e  ", d_S->item(row, col));
-         }
-         printf("\n");
+   if (d_debug_rom) {
+      int mpi_init;
+      MPI_Initialized(&mpi_init);
+      int rank;
+      if (mpi_init) {
+         MPI_Comm_rank(MPI_COMM_WORLD, &rank);
       }
-      printf("\n");
-
-      // Print process 0's part of the basis.
-      for (int row = 0; row < d_dim; ++row) {
-         for (int col = 0; col < d_num_increments; ++col) {
-            printf("%.16e ", basis->item(row, col));
-         }
-         printf("\n");
+      else {
+         rank = 0;
       }
-
-      // Gather other processor's parts of the basis and print them.
-      for (int proc = 1; proc < d_size; ++proc) {
-         double* m = new double[d_proc_dims[proc]*d_num_increments];
-         MPI_Status status;
-         MPI_Recv(m,
-            d_proc_dims[proc]*d_num_increments,
-            MPI_DOUBLE,
-            proc,
-            COMMUNICATE_U,
-            MPI_COMM_WORLD,
-            &status);
-         int idx = 0;
-         for (int row = 0; row < d_proc_dims[proc]; ++row) {
+      const Matrix* basis = getBasis();
+      if (rank == 0) {
+         // Print d_S.
+         for (int row = 0; row < d_num_increments; ++row) {
             for (int col = 0; col < d_num_increments; ++col) {
-               printf("%.16e ", m[idx++]);
+               printf("%.16e  ", d_S->item(row, col));
             }
             printf("\n");
          }
-         delete [] m;
+         printf("\n");
+
+         // Print process 0's part of the basis.
+         for (int row = 0; row < d_dim; ++row) {
+            for (int col = 0; col < d_num_increments; ++col) {
+               printf("%.16e ", basis->item(row, col));
+            }
+            printf("\n");
+         }
+
+         // Gather other processor's parts of the basis and print them.
+         for (int proc = 1; proc < d_size; ++proc) {
+            double* m = new double[d_proc_dims[proc]*d_num_increments];
+            MPI_Status status;
+            MPI_Recv(m,
+               d_proc_dims[proc]*d_num_increments,
+               MPI_DOUBLE,
+               proc,
+               COMMUNICATE_U,
+               MPI_COMM_WORLD,
+               &status);
+            int idx = 0;
+            for (int row = 0; row < d_proc_dims[proc]; ++row) {
+               for (int col = 0; col < d_num_increments; ++col) {
+                  printf("%.16e ", m[idx++]);
+               }
+               printf("\n");
+            }
+            delete [] m;
+         }
+         printf("============================================================\n");
       }
-      printf("============================================================\n");
+      else {
+         // Send this processor's part of the basis to process 0.
+         MPI_Request request;
+         MPI_Isend(const_cast<double*>(&basis->item(0, 0)),
+            d_dim*d_num_increments,
+            MPI_DOUBLE,
+            0,
+            COMMUNICATE_U,
+            MPI_COMM_WORLD,
+            &request);
+      }
    }
-   else {
-      // Send this processor's part of the basis to process 0.
-      MPI_Request request;
-      MPI_Isend(const_cast<double*>(&basis->item(0, 0)),
-         d_dim*d_num_increments,
-         MPI_DOUBLE,
-         0,
-         COMMUNICATE_U,
-         MPI_COMM_WORLD,
-         &request);
-   }
-#endif
 }
 
 const Matrix*

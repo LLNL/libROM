@@ -13,9 +13,6 @@
 /* Enable assertion checking */
 #undef DEBUG_CHECK_ASSERTIONS
 
-/* Enable debugging info from the roms */
-#undef DEBUG_ROMS
-
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 

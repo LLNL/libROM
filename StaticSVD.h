@@ -36,10 +36,13 @@ class StaticSVD
        *                processor.
        * @param[in] states_per_time_interval The maximium number of states
        *                                     collected in a time interval.
+       * @param[in] debug_rom If true results of svd will be printed to
+       *                      facilitate debugging.
        */
       StaticSVD(
          int dim,
-         int states_per_time_interval);
+         int states_per_time_interval,
+         bool debug_rom = false);
 
       /**
        * Destructor.
@@ -231,6 +234,12 @@ class StaticSVD
        * interval are up to date.
        */
       bool d_this_interval_basis_current;
+
+      /**
+       * @brief Flag to indicate if results of algorithm should be printed for
+       * debugging purposes.
+       */
+      bool d_debug_rom;
 
       /**
        * @brief MPI message tag.

@@ -27,7 +27,8 @@ const int StaticSVD::COMMUNICATE_A = 999;
 
 StaticSVD::StaticSVD(
    int dim,
-   int states_per_time_interval) :
+   int states_per_time_interval,
+   bool debug_rom) :
    d_dim(dim),
    d_num_states(0),
    d_states_per_time_interval(states_per_time_interval),
@@ -37,7 +38,8 @@ StaticSVD::StaticSVD(
    d_V(0),
    d_basis(0),
    d_time_interval_start_times(0),
-   d_this_interval_basis_current(false)
+   d_this_interval_basis_current(false),
+   d_debug_rom(debug_rom)
 {
    CAROM_ASSERT(dim > 0);
    CAROM_ASSERT(states_per_time_interval > 0);
@@ -274,8 +276,7 @@ StaticSVD::computeSVD()
    }
    d_basis = new Matrix(*d_U);
    d_this_interval_basis_current = true;
-#ifdef DEBUG_ROMS
-   if (rank == 0) {
+   if (d_debug_rom && rank == 0) {
       for (int row = 0; row < total_dim; ++row) {
          for (int col = 0; col < num_cols; ++col) {
             printf("%.16e ", d_U->item(row, col));
@@ -290,7 +291,6 @@ StaticSVD::computeSVD()
          printf("\n");
       }
    }
-#endif
    delete [] dims;
 }
 

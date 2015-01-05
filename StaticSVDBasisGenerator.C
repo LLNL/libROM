@@ -17,9 +17,12 @@ StaticSVDBasisGenerator::StaticSVDBasisGenerator(
    int dim,
    int increments_per_time_interval,
    const std::string& basis_file_name,
+   bool debug_rom,
    Database::formats file_format) :
    SVDBasisGenerator(basis_file_name, file_format),
-   d_svdsampler(new StaticSVDSampler(dim, increments_per_time_interval))
+   d_svdsampler(new StaticSVDSampler(dim,
+                                     increments_per_time_interval,
+                                     debug_rom))
 {
    CAROM_ASSERT(dim > 0);
    CAROM_ASSERT(increments_per_time_interval > 0);

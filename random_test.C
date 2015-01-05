@@ -63,17 +63,61 @@ transposeMult(
    return result;
 }
 
-int main(int argc, char* argv[])
+int
+main(
+   int argc,
+   char* argv[])
 {
-   if (argc != 4) {
-      printf("Usage:  random_test dim num_snapshots num_lin_dep_snapshots\n");
+   // Initialize MPI and get the number of processors and this processor's
+   // rank.
+   MPI_Init(&argc, &argv);
+   int size;
+   MPI_Comm_size(MPI_COMM_WORLD, &size);
+   int rank;
+   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+   // Given the number of processors and the rank of this processor set the
+   // dimension of the problem.
+   int dim;
+   if (size == 1) {
+      dim = 100;
+   }
+   else if (size == 2) {
+      dim = 50;
+   }
+   else if (size == 4) {
+      dim = 25;
+   }
+   else if (size == 5) {
+      dim = 20;
+   }
+   else if (size == 10) {
+      dim = 10;
+   }
+   else if (size == 20) {
+      dim = 5;
+   }
+   else if (size == 25) {
+      dim = 4;
+   }
+   else if (size == 50) {
+      dim = 2;
+   }
+   else if (size == 100) {
+      dim = 1;
+   }
+   else {
+      printf("Illegal number of procs\n");
+      printf("Allowed number of proces is 1, 2, 4, 5, 10, 20, 25, 50, 100.\n");
       return 1;
    }
-   int dim = atoi(argv[1]);
-   int num_snapshots = atoi(argv[2]);
-   int num_lin_dep_snapshots = atoi(argv[3]);
+
+   int num_snapshots = 10;
+   int num_lin_dep_snapshots = 2;
    int num_lin_indep_snapshots = num_snapshots - num_lin_dep_snapshots;
-   MPI_Init(&argc, &argv);
+
+   // Construct the incremental basis generator to use the fast update
+   // incremental algorithm and the incremental sampler.
    CAROM::IncrementalSVDBasisGenerator inc_basis_generator(dim,
       1.0e-6,
       false,
@@ -81,23 +125,33 @@ int main(int argc, char* argv[])
       1.0e-2,
       0.001,
       true,
-      "");
+      "",
+      true);
+
+   // Construct the static basis generator for the static algorithm and the
+   // static sampler.
    CAROM::StaticSVDBasisGenerator static_basis_generator(dim,
       num_snapshots,
-      "");
-   int size;
-   MPI_Comm_size(MPI_COMM_WORLD, &size);
-   int rank;
-   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+      "",
+      true);
+
+   // Initialize random number generator.
    srand(1);
-   for (int i = 0; i < dim*num_snapshots*rank; ++i) {
-      double random = rand();
-      random = random/RAND_MAX;
-   }
+
+   // Allocate an array for each sample.
    double** M = new double* [num_snapshots];
    for (int i = 0; i < num_snapshots; ++i) {
       M[i] = new double [dim];
    }
+
+   // Call the random number generator enough times so that this processor
+   // generates it's part of the global sample.
+   for (int i = 0; i < dim*num_snapshots*rank; ++i) {
+      double random = rand();
+      random = random/RAND_MAX;
+   }
+
+   // Fill in the samples.
    for (int i = 0; i < dim; ++i) {
       for (int j = 0; j < num_snapshots; ++j) {
          double random = rand();
@@ -105,10 +159,19 @@ int main(int argc, char* argv[])
          M[j][i] = random;
       }
    }
+
+   // Now call the random number generator enough times so that each processor
+   // has called it the same number of times after this is done.
    for (int i = 0; i < dim*num_snapshots*(size-rank-1); ++i) {
       double random = rand();
       random = random/RAND_MAX;
    }
+
+   // Now overwrite the linearly depdendent samples with linear combinations of
+   // the linearly independent samples.  The coefficients are other random
+   // numbers.  Since each processor has called the random number generator the
+   // same number of times when we get here, the random coefficients will be
+   // the same on each processor which is what is needed.
    for (int i = 0; i < num_lin_dep_snapshots; ++i) {
       int col = num_snapshots - i - 1;
       for (int j = 0; j < dim; ++j) {
@@ -122,24 +185,26 @@ int main(int argc, char* argv[])
          }
       }
    }
+
+   // Take the samples.
    for (int i = 0; i < num_snapshots; ++i) {
       if (inc_basis_generator.isNextSnapshot(0.01*i)) {
          inc_basis_generator.takeSnapshot(M[i], 0.01*i);
          inc_basis_generator.computeNextSnapshotTime(M[i], M[i], 0.01*i);
       }
-   }
-   inc_basis_generator.endSnapshots();
-   const CAROM::Matrix* inc_basis = inc_basis_generator.getBasis();
-   for (int i = 0; i < num_snapshots; ++i) {
       if (static_basis_generator.isNextSnapshot(0.01*i)) {
          static_basis_generator.takeSnapshot(M[i], 0.01*i);
          static_basis_generator.computeNextSnapshotTime(M[i], M[i], 0.01*i);
       }
    }
+   inc_basis_generator.endSnapshots();
    static_basis_generator.endSnapshots();
+
+   // Get the basis vectors from the 2 different algorithms.
+   const CAROM::Matrix* inc_basis = inc_basis_generator.getBasis();
    const CAROM::Matrix* static_basis = static_basis_generator.getBasis();
 
-   // Compute the product of the tranpose of the static basis and the
+   // Compute the product of the transpose of the static basis and the
    // incremental basis.  This should be a unitary matrix.
    CAROM::Matrix* test = transposeMult(static_basis, inc_basis);
    if (rank == 0) {
@@ -150,11 +215,15 @@ int main(int argc, char* argv[])
          printf("\n");
       }
    }
+
+   // Clean up.
    delete test;
    for (int i = 0; i < num_snapshots; ++i) {
       delete [] M[i];
    }
    delete [] M;
+
+   // Finalize MPI and return.
    MPI_Finalize();
    return 0;
 }

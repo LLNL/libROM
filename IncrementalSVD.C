@@ -27,7 +27,8 @@ IncrementalSVD::IncrementalSVD(
    int dim,
    double redundancy_tol,
    bool skip_redundant,
-   int increments_per_time_interval) :
+   int increments_per_time_interval,
+   bool debug_rom) :
    d_dim(dim),
    d_num_increments(0),
    d_redundancy_tol(redundancy_tol),
@@ -36,7 +37,8 @@ IncrementalSVD::IncrementalSVD(
    d_S(0),
    d_basis(0),
    d_time_interval_start_times(0),
-   d_total_dim(0)
+   d_total_dim(0),
+   d_debug_rom(debug_rom)
 {
    CAROM_ASSERT(dim > 0);
    CAROM_ASSERT(redundancy_tol > 0.0);

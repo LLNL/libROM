@@ -15,14 +15,41 @@
 
 #include <stdio.h>
 
-int main(int argc, char* argv[])
+int
+main(
+  int argc,
+  char* argv[])
 {
-   if (argc != 2) {
-      printf("Usage: smoke_test dim\n");
+   // Initialize MPI and get the number of processors and this processor's
+   // rank.
+   MPI_Init(&argc, &argv);
+   int size;
+   MPI_Comm_size(MPI_COMM_WORLD, &size);
+   int rank;
+   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+   // Given the number of processors and the rank of this processor set the
+   // dimension of the problem.
+   int dim;
+   if (size == 1) {
+      dim = 6;
+   }
+   else if (size == 2) {
+      dim = 3;
+   }
+   else if (size == 3) {
+      dim = 2;
+   }
+   else if (size == 6) {
+      dim = 1;
+   }
+   else {
+      printf("Too many procs\n");
       return 1;
    }
-   int dim = atoi(argv[1]);
-   MPI_Init(&argc, &argv);
+
+   // Construct the incremental basis generator to use the fast update
+   // incremental algorithm and the incremental sampler.
    CAROM::IncrementalSVDBasisGenerator inc_basis_generator(dim,
       1.0e-2,
       false,
@@ -30,17 +57,18 @@ int main(int argc, char* argv[])
       1.0e-2,
       0.11,
       true,
-      "");
-   int size;
-   MPI_Comm_size(MPI_COMM_WORLD, &size);
-   int rank;
-   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-   if (dim*size != 6) {
-      printf("Illegal dim/number of tasks, guess again.\n");
-      return 1;
-   }
-   double next_snapshot_time;
+      "",
+      true);
+
+   // Define the values for the first sample.
    double vals0[6] = {1.0, 6.0, 3.0, 8.0, 17.0, 9.0};
+
+   // Define the values for the second sample.
+   double vals1[6] = {2.0, 7.0, 4.0, 9.0, 18.0, 10.0};
+
+   double next_snapshot_time;
+
+   // Take the first sample.
    if (inc_basis_generator.isNextSnapshot(0.0)) {
       inc_basis_generator.takeSnapshot(&vals0[dim*rank], 0.0);
       next_snapshot_time =
@@ -48,7 +76,8 @@ int main(int argc, char* argv[])
             &vals0[dim*rank],
             0.0);
    }
-   double vals1[6] = {2.0, 7.0, 4.0, 9.0, 18.0, 10.0};
+
+   // Take the second sample.
    if (inc_basis_generator.isNextSnapshot(0.11)) {
       inc_basis_generator.takeSnapshot(&vals1[dim*rank], 0.11);
       next_snapshot_time =
@@ -56,6 +85,8 @@ int main(int argc, char* argv[])
             &vals1[dim*rank],
             0.11);
    }
+
+   // Finalize MPI and return.
    MPI_Finalize();
    return 0;
 }

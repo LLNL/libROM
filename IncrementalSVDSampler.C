@@ -25,7 +25,8 @@ IncrementalSVDSampler::IncrementalSVDSampler(
    int samples_per_time_interval,
    double sampling_tol,
    double max_time_between_samples,
-   bool fast_update) :
+   bool fast_update,
+   bool debug_rom) :
    d_tol(sampling_tol),
    d_max_time_between_samples(max_time_between_samples),
    d_next_sample_time(0.0)
@@ -41,14 +42,16 @@ IncrementalSVDSampler::IncrementalSVDSampler(
          new IncrementalSVDFastUpdate(dim,
             redundancy_tol,
             skip_redundant,
-            samples_per_time_interval));
+            samples_per_time_interval,
+            debug_rom));
    }
    else {
       d_isvd.reset(
          new IncrementalSVDNaive(dim,
             redundancy_tol,
             skip_redundant,
-            samples_per_time_interval));
+            samples_per_time_interval,
+            debug_rom));
    }
 }
 

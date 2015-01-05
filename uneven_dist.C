@@ -6,9 +6,7 @@
  * Copyright:   (c) 2013-2014 Lawrence Livermore National Security, LLC
  * Description: A test of both the incremental fast update algorithm and
  *              sampler in which the complete system in unevenly distributed
- *              across the processors.  To get output that verifies that
- *              this test works correctly configure with
- *              --enable-output-debug-info.
+ *              across the processors.
  *
  *****************************************************************************/
 
@@ -18,11 +16,13 @@
 
 #include <stdio.h>
 
-int main(
+int
+main(
    int argc,
    char* argv[])
 {
-   // Initializ MPI and get the number of processors and this processor's rank.
+   // Initialize MPI and get the number of processors and this processor's
+   // rank.
    MPI_Init(&argc, &argv);
    int size;
    MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -107,11 +107,13 @@ int main(
       offset = rank;
    }
    else {
-      printf("Too many procs\n");
+      printf("Too many processors.  Only run on up to 6 processors.\n");
       return 1;
    }
 
-   // Construct the basis generator given the dimension just computed.
+   // Construct the incremental basis generator given the dimension just
+   // computed to use the fast update incremental algorithm and the incremental
+   // sampler.
    CAROM::IncrementalSVDBasisGenerator inc_basis_generator(dim,
       1.0e-2,
       false,
@@ -119,11 +121,18 @@ int main(
       1.0e-2,
       0.11,
       true,
-      "");
+      "",
+      true);
 
-   // Now take 2 snapshots.
-   double next_snapshot_time;
+   // Define the values for the first sample.
    double vals0[6] = {1.0, 6.0, 3.0, 8.0, 17.0, 9.0};
+
+   // Define the values for the second sample.
+   double vals1[6] = {2.0, 7.0, 4.0, 9.0, 18.0, 10.0};
+
+   double next_snapshot_time;
+
+   // Take the first sample.
    if (inc_basis_generator.isNextSnapshot(0.0)) {
       inc_basis_generator.takeSnapshot(&vals0[offset], 0.0);
       next_snapshot_time =
@@ -131,7 +140,8 @@ int main(
             &vals0[offset],
             0.0);
    }
-   double vals1[6] = {2.0, 7.0, 4.0, 9.0, 18.0, 10.0};
+
+   // Take the second sample.
    if (inc_basis_generator.isNextSnapshot(0.11)) {
       inc_basis_generator.takeSnapshot(&vals1[offset], 0.11);
       next_snapshot_time =
@@ -140,7 +150,7 @@ int main(
             0.11);
    }
 
-   // We're done.
+   // Finalize MPI and return.
    MPI_Finalize();
    return 0;
 }

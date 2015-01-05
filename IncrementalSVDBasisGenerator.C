@@ -23,6 +23,7 @@ IncrementalSVDBasisGenerator::IncrementalSVDBasisGenerator(
    double max_time_between_samples,
    bool fast_update,
    const std::string& basis_file_name,
+   bool debug_rom,
    Database::formats file_format) :
    SVDBasisGenerator(basis_file_name, file_format),
    d_isvdsampler(new IncrementalSVDSampler(dim,
@@ -31,7 +32,8 @@ IncrementalSVDBasisGenerator::IncrementalSVDBasisGenerator(
                                            samples_per_time_interval,
                                            sampling_tol,
                                            max_time_between_samples,
-                                           fast_update))
+                                           fast_update,
+                                           debug_rom))
 {
    CAROM_ASSERT(dim > 0);
    CAROM_ASSERT(redundancy_tol > 0.0);
