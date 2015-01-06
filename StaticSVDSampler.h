@@ -20,10 +20,9 @@ namespace CAROM {
 
 /**
  * Class StaticSVDSampler knows, given a static svd implementation, the
- * time at which the next state collection is needed.  It also knows given a
- * time whether it is time for the next state collection.  All states are
- * sampled in the static SVD implementation so it is always time for a new
- * state collection.
+ * time at which the next sample is needed.  It also knows given a time whether
+ * it is time for the next sample.  All state vectors are sampled in the
+ * static SVD implementation so it is always time for a new sample.
  */
 class StaticSVDSampler
 {
@@ -37,8 +36,8 @@ class StaticSVDSampler
        * @param[in] dim The dimension of the system on this processor.
        * @param[in] samples_per_time_interval The maximum number of samples
        *                                      in each time interval.
-       * @param[in] debug_rom If true results of incremental svd algorithm
-       *                      will be printed to facilitate debugging.
+       * @param[in] debug_rom If true results of static svd algorithm will be
+       *                      printed to facilitate debugging.
        */
       StaticSVDSampler(
          int dim,
@@ -51,7 +50,7 @@ class StaticSVDSampler
       ~StaticSVDSampler();
 
       /**
-       * @brief Returns true if it is time for the next state collection.
+       * @brief Returns true if it is time for the next sample.
        *
        * As the static algorithm samples everything this always returns true.
        *
@@ -60,7 +59,7 @@ class StaticSVDSampler
        * @return true
        */
       bool
-      isNextStateCollection(
+      isNextSample(
          double time)
       {
          CAROM_NULL_USE(time);
@@ -68,7 +67,7 @@ class StaticSVDSampler
       }
 
       /**
-       * @brief Collect the new state, u_in.
+       * @brief Sample the new state, u_in.
        *
        * @pre u_in != 0
        * @pre time >= 0.0
@@ -77,15 +76,15 @@ class StaticSVDSampler
        * @param[in] time The simulation time for the state.
        */
       void
-      collectState(
+      takeSample(
          double* u_in,
          double time)
       {
-         d_svd->collectState(u_in, time);
+         d_svd->takeSample(u_in, time);
       }
 
       /**
-       * @brief Computes next time a state collection is needed.
+       * @brief Computes next time a state sample is needed.
        *
        * @param[in] u_in The state at the specified time--unused.
        * @param[in] rhs_in The right hand side at the specified time--unused.
@@ -95,7 +94,7 @@ class StaticSVDSampler
        * each time step.
        */
       double
-      computeNextStateCollectionTime(
+      computeNextSampleTime(
          double* u_in,
          double* rhs_in,
          double time)

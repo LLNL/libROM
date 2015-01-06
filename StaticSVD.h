@@ -18,7 +18,7 @@ namespace CAROM {
 
 /**
  * StaticSVD embodies the static SVD algorithm.  The API is intentionally
- * small.  One may collect the states, compute the SVD, and get the dimension
+ * small.  One may collect the samples, compute the SVD, and get the dimension
  * of the system.
  * This algorithm is not scalable and is intended primarily as a sanity check
  * of the incremental svd algorithm.
@@ -30,18 +30,18 @@ class StaticSVD
        * @brief Constructor.
        *
        * @pre dim > 0
-       * @pre states_per_time_interval > 0
+       * @pre sample_per_time_interval > 0
        *
        * @param[in] dim The dimension of the system distributed to this
        *                processor.
-       * @param[in] states_per_time_interval The maximium number of states
+       * @param[in] sample_per_time_interval The maximium number of samples
        *                                     collected in a time interval.
        * @param[in] debug_rom If true results of svd will be printed to
        *                      facilitate debugging.
        */
       StaticSVD(
          int dim,
-         int states_per_time_interval,
+         int samples_per_time_interval,
          bool debug_rom = false);
 
       /**
@@ -50,16 +50,16 @@ class StaticSVD
       ~StaticSVD();
 
       /**
-       * @brief Collect the new state, u_in at supplied time.
+       * @brief Collect the new sample, u_in at supplied time.
        *
        * @pre u_in != 0
        * @pre time >= 0.0
        *
-       * @param[in] u_in The new state.
-       * @param[in] time The simulation time of the new state.
+       * @param[in] u_in The new sample.
+       * @param[in] time The simulation time of the new sample.
        */
       void
-      collectState(
+      takeSample(
          double* u_in,
          double time);
 
@@ -105,17 +105,17 @@ class StaticSVD
       }
 
       /**
-       * @brief Returns true if the next state will result in a new time
+       * @brief Returns true if the next sample will result in a new time
        * interval.
        *
-       * @return True if the next state results in the creation of a new time
+       * @return True if the next sample results in the creation of a new time
        *         interval.
        */
       bool
       isNewTimeInterval() const
       {
-         return (d_num_states == 0) ||
-                (d_num_states >= d_states_per_time_interval);
+         return (d_num_samples == 0) ||
+                (d_num_samples >= d_samples_per_time_interval);
       }
 
    private:
@@ -138,8 +138,8 @@ class StaticSVD
          const StaticSVD& rhs);
 
       /**
-       * @brief Gathers states from all other processors to form complete
-       * state of system and computes the SVD.
+       * @brief Gathers samples from all other processors to form complete
+       * sample of system and computes the SVD.
        */
       void
       computeSVD();
@@ -180,20 +180,20 @@ class StaticSVD
       int d_dim;
 
       /**
-       * @brief Number of states stored for the current time interval.
+       * @brief Number of samples stored for the current time interval.
        */
-      int d_num_states;
+      int d_num_samples;
 
       /**
-       * @brief The maximum number of states to be collected for a time
+       * @brief The maximum number of samples to be collected for a time
        * interval.
        */
-      int d_states_per_time_interval;
+      int d_samples_per_time_interval;
 
       /**
-       * @brief Current state of the system.
+       * @brief Current samples of the system.
        */
-      std::vector<double*> d_state;
+      std::vector<double*> d_samples;
 
       /**
        * @brief The globalized matrix U.

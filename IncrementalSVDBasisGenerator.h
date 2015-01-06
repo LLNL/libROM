@@ -33,7 +33,7 @@ class IncrementalSVDBasisGenerator : public SVDBasisGenerator
        * @pre redundancy_tol > 0.0
        * @pre samples_per_time_interval > 0
        * @pre sampling_tol > 0.0
-       * @pre max_time_between_snapshots > 0.0
+       * @pre max_time_between_samples > 0.0
        *
        * @param[in] dim The dimension of the system on this processor.
        * @param[in] redundancy_tol Tolerance to determine if a sample is
@@ -74,21 +74,21 @@ class IncrementalSVDBasisGenerator : public SVDBasisGenerator
       ~IncrementalSVDBasisGenerator();
 
       /**
-       * @brief Returns true if it is time for the next svd snapshot.
+       * @brief Returns true if it is time for the next svd sample.
        *
        * @pre time >= 0
        *
        * @param[in] time Time of interest.
        *
-       * @return True if it is time for the next snapshot to be taken.
+       * @return True if it is time for the next sample to be taken.
        */
       virtual
       bool
-      isNextSnapshot(
+      isNextSample(
          double time);
 
       /**
-       * @brief Add a snapshot to the incremental svd at the given time.
+       * @brief Sample the new state, u_in, at the given time.
        *
        * @pre u_in != 0
        * @pre time >= 0.0
@@ -98,12 +98,12 @@ class IncrementalSVDBasisGenerator : public SVDBasisGenerator
        */
       virtual
       void
-      takeSnapshot(
+      takeSample(
          double* u_in,
          double time);
 
       /**
-       * @brief Computes next time an svd snapshot is needed.
+       * @brief Computes next time an svd sample is needed.
        *
        * @pre u_in != 0
        * @pre rhs_in != 0
@@ -115,7 +115,7 @@ class IncrementalSVDBasisGenerator : public SVDBasisGenerator
        */
       virtual
       double
-      computeNextSnapshotTime(
+      computeNextSampleTime(
          double* u_in,
          double* rhs_in,
          double time);

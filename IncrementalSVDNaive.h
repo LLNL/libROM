@@ -28,15 +28,14 @@ class IncrementalSVDNaive : public IncrementalSVD
        *
        * @pre dim > 0
        * @pre redundancy_tol > 0.0
-       * @pre increments_per_time_interval > 0
+       * @pre samples_per_time_interval > 0
        *
        * @param[in] dim The dimension of the system on this processor.
-       * @param[in] redundancy_tol Tolerance to determine if an increment is
+       * @param[in] redundancy_tol Tolerance to determine if a sample is
        *                           redundant or not.
-       * @param[in] skip_redundant If true skip redundant increments.
-       * @param[in] increments_per_time_interval The number of increments to be
-       *                                         collected for each time
-       *                                         interval.
+       * @param[in] skip_redundant If true skip redundant samples.
+       * @param[in] samples_per_time_interval The number of samples to be
+       *                                      collected for each time interval.
        * @param[in] debug_rom If true results of algorithm will be printed to
        *                      facilitate debugging.
        */
@@ -44,7 +43,7 @@ class IncrementalSVDNaive : public IncrementalSVD
          int dim,
          double redundancy_tol,
          bool skip_redundant,
-         int increments_per_time_interval,
+         int samples_per_time_interval,
          bool debug_rom = false);
 
       /**
@@ -53,7 +52,7 @@ class IncrementalSVDNaive : public IncrementalSVD
       ~IncrementalSVDNaive();
 
       /**
-       * @brief Increment the SVD with the new state, u_in, at the given time..
+       * @brief Sample the new state, u_in, at the given time..
        *
        * @pre u_in != 0
        * @pre time >= 0.0
@@ -62,7 +61,7 @@ class IncrementalSVDNaive : public IncrementalSVD
        * @param[in] time The simulation time for the state.
        */
       void
-      increment(
+      takeSample(
          const double* u_in,
          double time);
 
@@ -109,7 +108,7 @@ class IncrementalSVDNaive : public IncrementalSVD
          double time);
 
       /**
-       * @brief Increments the svd given the state vector u.
+       * @brief Adds the new sampled state vector, u, to the system.
        *
        * @pre u != 0
        *
@@ -120,7 +119,7 @@ class IncrementalSVDNaive : public IncrementalSVD
          const double* u);
 
       /**
-       * Add a redundant increment to the svd.
+       * Add a redundant sample to the svd.
        *
        * @pre A != 0
        * @pre sigma != 0
@@ -129,12 +128,12 @@ class IncrementalSVDNaive : public IncrementalSVD
        * @param[in] sigma The singular values.
        */
       void
-      addRedundantIncrement(
+      addRedundantSample(
          const Matrix* A,
          const Matrix* sigma);
 
       /**
-       * @brief Add a new, unique increment to the svd.
+       * @brief Add a new, unique sample to the svd.
        *
        * @pre j != 0
        * @pre A != 0
@@ -145,7 +144,7 @@ class IncrementalSVDNaive : public IncrementalSVD
        * @param[in] sigma The singular values.
        */
       void
-      addNewIncrement(
+      addNewSample(
          const Vector* j,
          const Matrix* A,
          Matrix* sigma);

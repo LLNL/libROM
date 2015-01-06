@@ -112,16 +112,16 @@ main(
       return 1;
    }
 
-   int num_snapshots = 10;
-   int num_lin_dep_snapshots = 2;
-   int num_lin_indep_snapshots = num_snapshots - num_lin_dep_snapshots;
+   int num_samples = 10;
+   int num_lin_dep_samples = 2;
+   int num_lin_indep_samples = num_samples - num_lin_dep_samples;
 
    // Construct the incremental basis generator to use the fast update
    // incremental algorithm and the incremental sampler.
    CAROM::IncrementalSVDBasisGenerator inc_basis_generator(dim,
       1.0e-6,
       false,
-      num_snapshots,
+      num_samples,
       1.0e-2,
       0.001,
       true,
@@ -131,7 +131,7 @@ main(
    // Construct the static basis generator for the static algorithm and the
    // static sampler.
    CAROM::StaticSVDBasisGenerator static_basis_generator(dim,
-      num_snapshots,
+      num_samples,
       "",
       true);
 
@@ -139,21 +139,21 @@ main(
    srand(1);
 
    // Allocate an array for each sample.
-   double** M = new double* [num_snapshots];
-   for (int i = 0; i < num_snapshots; ++i) {
+   double** M = new double* [num_samples];
+   for (int i = 0; i < num_samples; ++i) {
       M[i] = new double [dim];
    }
 
    // Call the random number generator enough times so that this processor
    // generates it's part of the global sample.
-   for (int i = 0; i < dim*num_snapshots*rank; ++i) {
+   for (int i = 0; i < dim*num_samples*rank; ++i) {
       double random = rand();
       random = random/RAND_MAX;
    }
 
    // Fill in the samples.
    for (int i = 0; i < dim; ++i) {
-      for (int j = 0; j < num_snapshots; ++j) {
+      for (int j = 0; j < num_samples; ++j) {
          double random = rand();
          random = random/RAND_MAX;
          M[j][i] = random;
@@ -162,7 +162,7 @@ main(
 
    // Now call the random number generator enough times so that each processor
    // has called it the same number of times after this is done.
-   for (int i = 0; i < dim*num_snapshots*(size-rank-1); ++i) {
+   for (int i = 0; i < dim*num_samples*(size-rank-1); ++i) {
       double random = rand();
       random = random/RAND_MAX;
    }
@@ -172,12 +172,12 @@ main(
    // numbers.  Since each processor has called the random number generator the
    // same number of times when we get here, the random coefficients will be
    // the same on each processor which is what is needed.
-   for (int i = 0; i < num_lin_dep_snapshots; ++i) {
-      int col = num_snapshots - i - 1;
+   for (int i = 0; i < num_lin_dep_samples; ++i) {
+      int col = num_samples - i - 1;
       for (int j = 0; j < dim; ++j) {
          M[col][j] = 0;
       }
-      for (int j = 0; j < num_lin_indep_snapshots; ++j) {
+      for (int j = 0; j < num_lin_indep_samples; ++j) {
          double random = rand();
          random = random/RAND_MAX;
          for (int k = 0; k < dim; ++k) {
@@ -187,18 +187,18 @@ main(
    }
 
    // Take the samples.
-   for (int i = 0; i < num_snapshots; ++i) {
-      if (inc_basis_generator.isNextSnapshot(0.01*i)) {
-         inc_basis_generator.takeSnapshot(M[i], 0.01*i);
-         inc_basis_generator.computeNextSnapshotTime(M[i], M[i], 0.01*i);
+   for (int i = 0; i < num_samples; ++i) {
+      if (inc_basis_generator.isNextSample(0.01*i)) {
+         inc_basis_generator.takeSample(M[i], 0.01*i);
+         inc_basis_generator.computeNextSampleTime(M[i], M[i], 0.01*i);
       }
-      if (static_basis_generator.isNextSnapshot(0.01*i)) {
-         static_basis_generator.takeSnapshot(M[i], 0.01*i);
-         static_basis_generator.computeNextSnapshotTime(M[i], M[i], 0.01*i);
+      if (static_basis_generator.isNextSample(0.01*i)) {
+         static_basis_generator.takeSample(M[i], 0.01*i);
+         static_basis_generator.computeNextSampleTime(M[i], M[i], 0.01*i);
       }
    }
-   inc_basis_generator.endSnapshots();
-   static_basis_generator.endSnapshots();
+   inc_basis_generator.endSamples();
+   static_basis_generator.endSamples();
 
    // Get the basis vectors from the 2 different algorithms.
    const CAROM::Matrix* inc_basis = inc_basis_generator.getBasis();
@@ -208,8 +208,8 @@ main(
    // incremental basis.  This should be a unitary matrix.
    CAROM::Matrix* test = transposeMult(static_basis, inc_basis);
    if (rank == 0) {
-      for (int row = 0; row < num_snapshots; ++row) {
-         for (int col = 0; col < num_lin_indep_snapshots; ++col) {
+      for (int row = 0; row < num_samples; ++row) {
+         for (int col = 0; col < num_lin_indep_samples; ++col) {
             printf("%.16e ", test->item(row, col));
          }
          printf("\n");
@@ -218,7 +218,7 @@ main(
 
    // Clean up.
    delete test;
-   for (int i = 0; i < num_snapshots; ++i) {
+   for (int i = 0; i < num_samples; ++i) {
       delete [] M[i];
    }
    delete [] M;

@@ -28,11 +28,11 @@ class StaticSVDBasisGenerator : public SVDBasisGenerator
        * @brief Constructor.
        *
        * @pre dim > 0
-       * @pre increments_per_time_interval > 0
+       * @pre samples_per_time_interval > 0
        *
        * @param[in] dim The dimension of the system on this processor.
-       * @param[in] increments_per_time_interval The maximum number of samples
-       *                                         in each time interval.
+       * @param[in] samples_per_time_interval The maximum number of samples in
+       *                                      each time interval.
        * @param[in] basis_file_name The base part of the name of the file
        *                            containing the basis vectors.  Each process
        *                            will append its process ID to this base
@@ -44,7 +44,7 @@ class StaticSVDBasisGenerator : public SVDBasisGenerator
        */
       StaticSVDBasisGenerator(
          int dim,
-         int increments_per_time_interval,
+         int samples_per_time_interval,
          const std::string& basis_file_name,
          bool debug_rom = false,
          Database::formats file_format = Database::HDF5);
@@ -56,21 +56,21 @@ class StaticSVDBasisGenerator : public SVDBasisGenerator
       ~StaticSVDBasisGenerator();
 
       /**
-       * @brief Returns true if it is time for the next svd snapshot.
+       * @brief Returns true if it is time for the next svd sample.
        *
        * @pre time >= 0
        *
        * @param[in] time Time of interest.
        *
-       * @return True if it is time for the next snapshot to be taken.
+       * @return True if it is time for the next sample to be taken.
        */
       virtual
       bool
-      isNextSnapshot(
+      isNextSample(
          double time);
 
       /**
-       * @brief Add a snapshot to the static svd at the given time.
+       * @brief Add a sample to the static svd at the given time.
        *
        * @pre u_in != 0
        * @pre time >= 0.0
@@ -80,12 +80,12 @@ class StaticSVDBasisGenerator : public SVDBasisGenerator
        */
       virtual
       void
-      takeSnapshot(
+      takeSample(
          double* u_in,
          double time);
 
       /**
-       * @brief Computes next time an svd snapshot is needed.
+       * @brief Computes next time an svd sample is needed.
        *
        * @pre u_in != 0
        * @pre rhs_in != 0
@@ -97,7 +97,7 @@ class StaticSVDBasisGenerator : public SVDBasisGenerator
        */
       virtual
       double
-      computeNextSnapshotTime(
+      computeNextSampleTime(
          double* u_in,
          double* rhs_in,
          double time);

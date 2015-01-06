@@ -15,17 +15,17 @@ namespace CAROM {
 
 StaticSVDBasisGenerator::StaticSVDBasisGenerator(
    int dim,
-   int increments_per_time_interval,
+   int samples_per_time_interval,
    const std::string& basis_file_name,
    bool debug_rom,
    Database::formats file_format) :
    SVDBasisGenerator(basis_file_name, file_format),
    d_svdsampler(new StaticSVDSampler(dim,
-                                     increments_per_time_interval,
+                                     samples_per_time_interval,
                                      debug_rom))
 {
    CAROM_ASSERT(dim > 0);
-   CAROM_ASSERT(increments_per_time_interval > 0);
+   CAROM_ASSERT(samples_per_time_interval > 0);
 }
 
 StaticSVDBasisGenerator::~StaticSVDBasisGenerator()
@@ -33,15 +33,15 @@ StaticSVDBasisGenerator::~StaticSVDBasisGenerator()
 }
 
 bool
-StaticSVDBasisGenerator::isNextSnapshot(
+StaticSVDBasisGenerator::isNextSample(
    double time)
 {
    CAROM_ASSERT(time >= 0.0);
-   return d_svdsampler->isNextStateCollection(time);
+   return d_svdsampler->isNextSample(time);
 }
 
 void
-StaticSVDBasisGenerator::takeSnapshot(
+StaticSVDBasisGenerator::takeSample(
    double* u_in,
    double time)
 {
@@ -52,11 +52,11 @@ StaticSVDBasisGenerator::takeSnapshot(
        d_svdsampler->isNewTimeInterval() && getNumBasisTimeIntervals() > 0) {
       d_basis_writer->writeBasis();
    }
-   d_svdsampler->collectState(u_in, time);
+   d_svdsampler->takeSample(u_in, time);
 }
 
 double
-StaticSVDBasisGenerator::computeNextSnapshotTime(
+StaticSVDBasisGenerator::computeNextSampleTime(
    double* u_in,
    double* rhs_in,
    double time)
@@ -65,7 +65,7 @@ StaticSVDBasisGenerator::computeNextSnapshotTime(
    CAROM_ASSERT(rhs_in != 0);
    CAROM_ASSERT(time >= 0);
 
-   return d_svdsampler->computeNextStateCollectionTime(u_in, rhs_in, time);
+   return d_svdsampler->computeNextSampleTime(u_in, rhs_in, time);
 }
 
 const Matrix*

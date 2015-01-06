@@ -27,13 +27,13 @@ IncrementalSVD::IncrementalSVD(
    int dim,
    double redundancy_tol,
    bool skip_redundant,
-   int increments_per_time_interval,
+   int samples_per_time_interval,
    bool debug_rom) :
    d_dim(dim),
-   d_num_increments(0),
+   d_num_samples(0),
    d_redundancy_tol(redundancy_tol),
    d_skip_redundant(skip_redundant),
-   d_increments_per_time_interval(increments_per_time_interval),
+   d_samples_per_time_interval(samples_per_time_interval),
    d_S(0),
    d_basis(0),
    d_time_interval_start_times(0),
@@ -42,7 +42,7 @@ IncrementalSVD::IncrementalSVD(
 {
    CAROM_ASSERT(dim > 0);
    CAROM_ASSERT(redundancy_tol > 0.0);
-   CAROM_ASSERT(increments_per_time_interval > 0);
+   CAROM_ASSERT(samples_per_time_interval > 0);
 
    // Get the number of processors, the dimensions for each process, and the
    // total dimension.
@@ -90,25 +90,25 @@ IncrementalSVD::constructQ(
    double k)
 {
    CAROM_ASSERT(l != 0);
-   CAROM_ASSERT(l->dim() == numIncrements());
+   CAROM_ASSERT(l->dim() == numSamples());
 
    // Create Q.
-   Q = new double [(d_num_increments+1)*(d_num_increments+1)];
+   Q = new double [(d_num_samples+1)*(d_num_samples+1)];
 
    // Fill Q in column major order.
    int q_idx = 0;
-   for (int row = 0; row < d_num_increments; ++row) {
+   for (int row = 0; row < d_num_samples; ++row) {
       q_idx = row;
-      for (int col = 0; col < d_num_increments; ++col) {
+      for (int col = 0; col < d_num_samples; ++col) {
          Q[q_idx] = d_S->item(row, col);
-         q_idx += d_num_increments+1;
+         q_idx += d_num_samples+1;
       }
       Q[q_idx] = l->item(row);
    }
-   q_idx = d_num_increments;
-   for (int col = 0; col < d_num_increments; ++col) {
+   q_idx = d_num_samples;
+   for (int col = 0; col < d_num_samples; ++col) {
       Q[q_idx] = 0.0;
-      q_idx += d_num_increments+1;
+      q_idx += d_num_samples+1;
    }
    Q[q_idx] = k;
 }
@@ -122,24 +122,24 @@ IncrementalSVD::svd(
    CAROM_ASSERT(A != 0);
 
    // Construct U, S, and V.
-   U = new Matrix(d_num_increments+1, d_num_increments+1, false);
-   S = new Matrix(d_num_increments+1, d_num_increments+1, false);
-   Matrix* V = new Matrix(d_num_increments+1, d_num_increments+1, false);
-   for (int row = 0; row < d_num_increments+1; ++row) {
-      for (int col = 0; col < d_num_increments+1; ++col) {
+   U = new Matrix(d_num_samples+1, d_num_samples+1, false);
+   S = new Matrix(d_num_samples+1, d_num_samples+1, false);
+   Matrix* V = new Matrix(d_num_samples+1, d_num_samples+1, false);
+   for (int row = 0; row < d_num_samples+1; ++row) {
+      for (int col = 0; col < d_num_samples+1; ++col) {
          S->item(row, col) = 0.0;
       }
    }
 
    // Use lapack's dgesdd_ Fortran function to perform the svd.  As this is
    // Fortran A and all the computed matrices are in column major order.
-   double* sigma = new double [d_num_increments+1];
+   double* sigma = new double [d_num_samples+1];
    char jobz = 'A';
-   int m = d_num_increments+1;
-   int n = d_num_increments+1;
-   int lda = d_num_increments+1;
-   int ldu = d_num_increments+1;
-   int ldv = d_num_increments+1;
+   int m = d_num_samples+1;
+   int n = d_num_samples+1;
+   int lda = d_num_samples+1;
+   int ldu = d_num_samples+1;
+   int ldv = d_num_samples+1;
    int lwork = m*(4*m + 7);
    double* work = new double [lwork];
    int iwork[8*m];
@@ -162,14 +162,14 @@ IncrementalSVD::svd(
    delete [] work;
 
    // Place sigma into S.
-   for (int i = 0; i < d_num_increments+1; ++i) {
+   for (int i = 0; i < d_num_samples+1; ++i) {
       S->item(i, i) = sigma[i];
    }
    delete [] sigma;
 
    // U is column major order so convert it to row major order.
-   for (int row = 0; row < d_num_increments+1; ++row) {
-      for (int col = row+1; col < d_num_increments+1; ++col) {
+   for (int row = 0; row < d_num_samples+1; ++row) {
+      for (int col = row+1; col < d_num_samples+1; ++col) {
          double tmp = U->item(row, col);
          U->item(row, col) = U->item(col, row);
          U->item(col, row) = tmp;

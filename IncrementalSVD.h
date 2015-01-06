@@ -19,8 +19,8 @@ namespace CAROM {
 
 /**
  * IncrementalSVD is an abstract class defining the API of the incremental SVD
- * algorithm.  The API is intentionally small.  One may increment the SVD, get
- * the dimension of the system, get the basis vectors, get the number of time
+ * algorithm.  The API is intentionally small.  One may take a sample, get the
+ * dimension of the system, get the basis vectors, get the number of time
  * intervals and their start times, and determine if the current time interval
  * is full.
  */
@@ -32,15 +32,14 @@ class IncrementalSVD
        *
        * @pre dim > 0
        * @pre redundancy_tol > 0.0
-       * @pre increments_per_time_interval > 0
+       * @pre samples_per_time_interval > 0
        *
        * @param[in] dim The dimension of the system on this processor.
        * @param[in] redundancy_tol Tolerance to determine if a sample is
        *                           redundant or not.
-       * @param[in] skip_redundant If true skip redundant increments.
-       * @param[in] increments_per_time_interval The number of increments to be
-       *                                         collected for each time
-       *                                         interval.
+       * @param[in] skip_redundant If true skip redundant samples.
+       * @param[in] samples_per_time_interval The number of samples to be
+       *                                      collected for each time interval.
        * @param[in] debug_rom If true results of algorithm will be printed to
        *                      facilitate debugging.
        */
@@ -48,7 +47,7 @@ class IncrementalSVD
          int dim,
          double redundancy_tol,
          bool skip_redundant,
-         int increments_per_time_interval,
+         int samples_per_time_interval,
          bool debug_rom = false);
 
       /**
@@ -58,7 +57,7 @@ class IncrementalSVD
       ~IncrementalSVD();
 
       /**
-       * @brief Increment the SVD with the new state, u_in, at the given time.
+       * @brief Sample the new state, u_in, at the given time.
        *
        * @pre u_in != 0
        * @pre time >= 0.0
@@ -68,7 +67,7 @@ class IncrementalSVD
        */
       virtual
       void
-      increment(
+      takeSample(
          const double* u_in,
          double time) = 0;
 
@@ -134,8 +133,8 @@ class IncrementalSVD
       bool
       isNewTimeInterval() const
       {
-         return (d_num_increments == 0) ||
-                (d_num_increments >= d_increments_per_time_interval);
+         return (d_num_samples == 0) ||
+                (d_num_samples >= d_samples_per_time_interval);
       }
 
    protected:
@@ -143,7 +142,7 @@ class IncrementalSVD
        * @brief Construct the matrix Q whose svd is needed.
        *
        * @pre l != 0
-       * @pre l.dim() == numIncrements()
+       * @pre l.dim() == numSamples()
        *
        * @param[out] Q The matrix to be constructed. [d_S,l; 0,k]
        * @param[in] l The last column of Q.
@@ -174,14 +173,14 @@ class IncrementalSVD
          Matrix*& S);
 
       /**
-       * @brief The number of increments stored.
+       * @brief The number of samples stored.
        *
-       * @return The number of increments stored.
+       * @return The number of samples stored.
        */
       int
-      numIncrements()
+      numSamples()
       {
-         return d_num_increments;
+         return d_num_samples;
       }
 
       /**
@@ -190,9 +189,9 @@ class IncrementalSVD
       int d_dim;
 
       /**
-       * @brief Number of increments stored.
+       * @brief Number of samples stored.
        */
-      int d_num_increments;
+      int d_num_samples;
 
       /**
        * @brief Tolerance to determine if a sample is redundant or not.
@@ -200,15 +199,14 @@ class IncrementalSVD
       double d_redundancy_tol;
 
       /**
-       * @brief If true, skip redundant increments.
+       * @brief If true, skip redundant samples.
        */
       bool d_skip_redundant;
 
       /**
-       * @brief The number of increments to be collected for each time
-       * interval.
+       * @brief The number of samples to be collected for each time interval.
        */
-      int d_increments_per_time_interval;
+      int d_samples_per_time_interval;
 
       /**
        * @brief The matrix S.

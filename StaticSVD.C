@@ -27,12 +27,12 @@ const int StaticSVD::COMMUNICATE_A = 999;
 
 StaticSVD::StaticSVD(
    int dim,
-   int states_per_time_interval,
+   int samples_per_time_interval,
    bool debug_rom) :
    d_dim(dim),
-   d_num_states(0),
-   d_states_per_time_interval(states_per_time_interval),
-   d_state(0),
+   d_num_samples(0),
+   d_samples_per_time_interval(samples_per_time_interval),
+   d_samples(0),
    d_U(0),
    d_S(0),
    d_V(0),
@@ -42,7 +42,7 @@ StaticSVD::StaticSVD(
    d_debug_rom(debug_rom)
 {
    CAROM_ASSERT(dim > 0);
-   CAROM_ASSERT(states_per_time_interval > 0);
+   CAROM_ASSERT(samples_per_time_interval > 0);
 }
 
 StaticSVD::~StaticSVD()
@@ -57,9 +57,9 @@ StaticSVD::~StaticSVD()
    if (d_V) {
       delete d_V;
    }
-   for (int i = 0; i < static_cast<int>(d_state.size()); ++i) {
-      if (d_state[i]) {
-         delete [] d_state[i];
+   for (int i = 0; i < static_cast<int>(d_samples.size()); ++i) {
+      if (d_samples[i]) {
+         delete [] d_samples[i];
       }
    }
    if (d_basis) {
@@ -68,7 +68,7 @@ StaticSVD::~StaticSVD()
 }
 
 void
-StaticSVD::collectState(
+StaticSVD::takeSample(
    double* u_in,
    double time)
 {
@@ -84,12 +84,12 @@ StaticSVD::collectState(
             delete d_basis;
             d_basis = 0;
          }
-         for (int i = 0; i < static_cast<int>(d_state.size()); ++i) {
-            if (d_state[i]) {
-               delete [] d_state[i];
+         for (int i = 0; i < static_cast<int>(d_samples.size()); ++i) {
+            if (d_samples[i]) {
+               delete [] d_samples[i];
             }
          }
-         d_state.resize(0);
+         d_samples.resize(0);
          delete d_U;
          d_U = 0;
          delete d_S;
@@ -97,15 +97,15 @@ StaticSVD::collectState(
          delete d_V;
          d_V = 0;
       }
-      d_num_states = 0;
+      d_num_samples = 0;
       d_time_interval_start_times.resize(num_time_intervals+1);
       d_time_interval_start_times[num_time_intervals] = time;
       d_basis = 0;
    }
-   double* state = new double [d_dim];
-   memcpy(state, u_in, d_dim*sizeof(double));
-   d_state.push_back(state);
-   ++d_num_states;
+   double* sample = new double [d_dim];
+   memcpy(sample, u_in, d_dim*sizeof(double));
+   d_samples.push_back(sample);
+   ++d_num_samples;
    d_this_interval_basis_current = false;
 }
 
@@ -160,22 +160,22 @@ StaticSVD::computeSVD()
 
    // Do this computation on process 0 and broadcast results to the other
    // processes.
-   int num_cols = static_cast<int>(d_state.size());
+   int num_cols = static_cast<int>(d_samples.size());
    if (rank == 0) {
-      // Construct storage for the global state of A.
+      // Construct storage for the globalized A.
       double* A = new double [total_dim*num_cols];
 
       // Put this processor's contribution to A into it in column major order.
       int idx = 0;
       for (int col = 0; col < num_cols; ++col) {
-         double* col_vals = d_state[col];
+         double* col_vals = d_samples[col];
          for (int row = 0; row < d_dim; ++row) {
             A[idx+row] = col_vals[row];
          }
          idx += total_dim;
       }
 
-      // Get the contributions to the global state from the other processes.
+      // Get the contributions to the globalized A from the other processes.
       if (size > 1) {
          int offset = dims[0];
          for (int proc = 1; proc < size; ++proc) {
@@ -228,18 +228,18 @@ StaticSVD::computeSVD()
       delete [] A;
    }
    else {
-      // Put this processor's contribution to the global state of A into A in
+      // Put this processor's contribution to the globalized of A into A in
       // column major order.
       double* A = new double [d_dim*num_cols];
       int idx = 0;
       for (int col = 0; col < num_cols; ++col) {
-         double* col_vals = d_state[col];
+         double* col_vals = d_samples[col];
          for (int row = 0; row < d_dim; ++row) {
             A[idx++] = col_vals[row];
          }
       }
 
-      // Send the contribution to the global state of A to process 0.
+      // Send the contribution to the globalized A to process 0.
       MPI_Request request;
       MPI_Isend(A,
          d_dim*num_cols,
@@ -302,32 +302,32 @@ StaticSVD::svd(
    CAROM_ASSERT(A != 0);
    CAROM_ASSERT(total_dim > 0);
 
-   int num_states = static_cast<int>(d_state.size());
+   int num_samples = static_cast<int>(d_samples.size());
 
    // Construct d_U.
-   d_U = new Matrix(total_dim, num_states, false);
+   d_U = new Matrix(total_dim, num_samples, false);
 
    // Construct d_S.
-   d_S = new Matrix(num_states, num_states, false);
-   for (int row = 0; row < num_states; ++row) {
-      for (int col = 0; col < num_states; ++col) {
+   d_S = new Matrix(num_samples, num_samples, false);
+   for (int row = 0; row < num_samples; ++row) {
+      for (int col = 0; col < num_samples; ++col) {
          d_S->item(row, col) = 0.0;
       }
    }
 
    // Construct d_V.
-   d_V = new Matrix(num_states, num_states, false);
+   d_V = new Matrix(num_samples, num_samples, false);
 
    // Use lapack's dgesdd_ Fortran function to perform the svd.  As this is
    // Fortran A and all the computed matrices are in column major order.
    char jobz = 'A';
    int m = total_dim;
-   int n = num_states;
+   int n = num_samples;
    int lda = m;
-   double* sigma = new double [num_states];
+   double* sigma = new double [num_samples];
    double* U = new double[m*m];
    int ldu = m;
-   int ldv = num_states;
+   int ldv = num_samples;
    int lwork = n*(4*n + 6)+m;
    double* work = new double [lwork];
    int* iwork = new int [8*n];
@@ -351,7 +351,7 @@ StaticSVD::svd(
    delete [] iwork;
 
    // Place sigma into d_S.
-   for (int i = 0; i < num_states; ++i) {
+   for (int i = 0; i < num_samples; ++i) {
       d_S->item(i, i) = sigma[i];
    }
    delete [] sigma;
@@ -367,8 +367,8 @@ StaticSVD::svd(
    delete [] U;
 
    // d_V is in column major order.  Convert it to row major order.
-   for (int row = 0; row < num_states; ++row) {
-      for (int col = row+1; col < num_states; ++col) {
+   for (int row = 0; row < num_samples; ++row) {
+      for (int col = row+1; col < num_samples; ++col) {
          double tmp = d_V->item(row, col);
          d_V->item(row, col) = d_V->item(col, row);
          d_V->item(col, row) = tmp;

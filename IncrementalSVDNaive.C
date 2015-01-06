@@ -24,12 +24,12 @@ IncrementalSVDNaive::IncrementalSVDNaive(
    int dim,
    double redundancy_tol,
    bool skip_redundant,
-   int increments_per_time_interval,
+   int samples_per_time_interval,
    bool debug_rom) :
    IncrementalSVD(dim,
       redundancy_tol,
       skip_redundant,
-      increments_per_time_interval,
+      samples_per_time_interval,
       debug_rom),
    d_U(0)
 {
@@ -44,15 +44,15 @@ IncrementalSVDNaive::~IncrementalSVDNaive()
 }
 
 void
-IncrementalSVDNaive::increment(
+IncrementalSVDNaive::takeSample(
    const double* u_in,
    double time)
 {
    CAROM_ASSERT(u_in != 0);
    CAROM_ASSERT(time >= 0.0);
 
-   // If this is the first SVD then build it.  Otherwise add this increment to
-   // the system.
+   // If this is the first SVD then build it.  Otherwise add this sample to the
+   // system.
    if (isNewTimeInterval()) {
       buildInitialSVD(u_in, time);
    }
@@ -73,8 +73,8 @@ IncrementalSVDNaive::increment(
       const Matrix* basis = getBasis();
       if (rank == 0) {
          // Print d_S.
-         for (int row = 0; row < d_num_increments; ++row) {
-            for (int col = 0; col < d_num_increments; ++col) {
+         for (int row = 0; row < d_num_samples; ++row) {
+            for (int col = 0; col < d_num_samples; ++col) {
                printf("%.16e  ", d_S->item(row, col));
             }
             printf("\n");
@@ -83,7 +83,7 @@ IncrementalSVDNaive::increment(
 
          // Print process 0's part of the basis.
          for (int row = 0; row < d_dim; ++row) {
-            for (int col = 0; col < d_num_increments; ++col) {
+            for (int col = 0; col < d_num_samples; ++col) {
                printf("%.16e ", basis->item(row, col));
             }
             printf("\n");
@@ -91,10 +91,10 @@ IncrementalSVDNaive::increment(
 
          // Gather other processor's parts of the basis and print them.
          for (int proc = 1; proc < d_size; ++proc) {
-            double* m = new double[d_proc_dims[proc]*d_num_increments];
+            double* m = new double[d_proc_dims[proc]*d_num_samples];
             MPI_Status status;
             MPI_Recv(m,
-               d_proc_dims[proc]*d_num_increments,
+               d_proc_dims[proc]*d_num_samples,
                MPI_DOUBLE,
                proc,
                COMMUNICATE_U,
@@ -102,7 +102,7 @@ IncrementalSVDNaive::increment(
                &status);
             int idx = 0;
             for (int row = 0; row < d_proc_dims[proc]; ++row) {
-               for (int col = 0; col < d_num_increments; ++col) {
+               for (int col = 0; col < d_num_samples; ++col) {
                   printf("%.16e ", m[idx++]);
                }
                printf("\n");
@@ -115,7 +115,7 @@ IncrementalSVDNaive::increment(
          // Send this processor's part of the basis to process 0.
          MPI_Request request;
          MPI_Isend(const_cast<double*>(&basis->item(0, 0)),
-            d_dim*d_num_increments,
+            d_dim*d_num_samples,
             MPI_DOUBLE,
             0,
             COMMUNICATE_U,
@@ -171,8 +171,8 @@ IncrementalSVDNaive::buildInitialSVD(
       d_U->item(i, 0) = u[i]/norm_u;
    }
 
-   // We now have the first increment for the new time interval.
-   d_num_increments = 1;
+   // We now have the first sample for the new time interval.
+   d_num_samples = 1;
 }
 
 void
@@ -198,24 +198,24 @@ IncrementalSVDNaive::buildIncrementalSVD(
       k = sqrt(k);
    }
 
-   // Use k to see if this increment is new.
+   // Use k to see if this sample is new.
    double default_tol;
-   if (d_num_increments == 1) {
+   if (d_num_samples == 1) {
       default_tol = std::numeric_limits<double>::epsilon();
    }
    else {
-      default_tol = d_num_increments*std::numeric_limits<double>::epsilon()*d_S->item(0, 0);
+      default_tol = d_num_samples*std::numeric_limits<double>::epsilon()*d_S->item(0, 0);
    }
    if (d_redundancy_tol < default_tol) {
       d_redundancy_tol = default_tol;
    }
-   bool is_new_increment;
+   bool is_new_sample;
    if (k < d_redundancy_tol) {
       k = 0;
-      is_new_increment = false;
+      is_new_sample = false;
    }
    else {
-      is_new_increment = true;
+      is_new_sample = true;
    }
 
    // Create Q.
@@ -230,16 +230,15 @@ IncrementalSVDNaive::buildIncrementalSVD(
    // Done with Q.
    delete [] Q;
 
-   // At this point we either have a new or a redundant increment and we are
-   // not skipping redundant increments.
-   if (!is_new_increment && !d_skip_redundant) {
-      // This increment is not new and we are not skipping redundant
-      // increments.
-      addRedundantIncrement(A, sigma);
+   // We need to add the sample if it is new or if it is redundant and we are
+   // not skipping redundant samples.
+   if (!is_new_sample && !d_skip_redundant) {
+      // This sample is redundant and we are not skipping redundant samples.
+      addRedundantSample(A, sigma);
       delete sigma;
    }
-   else if (is_new_increment) {
-      // This increment is new.
+   else if (is_new_sample) {
+      // This sample is new.
 
       // Compute j
       Vector* j = u_vec.minus(basisl);
@@ -247,18 +246,18 @@ IncrementalSVDNaive::buildIncrementalSVD(
          j->item(i) /= k;
       }
 
-      // addNewIncrement will assign sigma to d_S hence it should not be
-      // deleted upon return.
-      addNewIncrement(j, A, sigma);
+      // addNewSample will assign sigma to d_S hence it should not be deleted
+      // upon return.
+      addNewSample(j, A, sigma);
       delete j;
 
       // Reorthogonalize if necessary.
       long int max_U_dim;
-      if (d_total_dim > d_num_increments) {
+      if (d_total_dim > d_num_samples) {
          max_U_dim = d_total_dim;
       }
       else {
-         max_U_dim = d_num_increments;
+         max_U_dim = d_num_samples;
       }
       if (checkOrthogonality() >
           std::numeric_limits<double>::epsilon()*max_U_dim) {
@@ -273,7 +272,7 @@ IncrementalSVDNaive::buildIncrementalSVD(
 }
 
 void
-IncrementalSVDNaive::addRedundantIncrement(
+IncrementalSVDNaive::addRedundantSample(
    const Matrix* A,
    const Matrix* sigma)
 {
@@ -282,9 +281,9 @@ IncrementalSVDNaive::addRedundantIncrement(
 
    // Chop a row and a column off of A to form Amod.  Also form
    // d_S by chopping a row and a column off of sigma.
-   Matrix Amod(d_num_increments, d_num_increments, false);
-   for (int row = 0; row < d_num_increments; ++row){
-      for (int col = 0; col < d_num_increments; ++col) {
+   Matrix Amod(d_num_samples, d_num_samples, false);
+   for (int row = 0; row < d_num_samples; ++row){
+      for (int col = 0; col < d_num_samples; ++col) {
          Amod.item(row, col) = A->item(row, col);
          d_S->item(row, col) = sigma->item(row, col);
       }
@@ -297,18 +296,18 @@ IncrementalSVDNaive::addRedundantIncrement(
 }
 
 void
-IncrementalSVDNaive::addNewIncrement(
+IncrementalSVDNaive::addNewSample(
    const Vector* j,
    const Matrix* A,
    Matrix* sigma)
 {
    // Add j as a new column of d_U.  Then multiply by A to form a new d_U.
-   Matrix tmp(d_dim, d_num_increments+1, true);
+   Matrix tmp(d_dim, d_num_samples+1, true);
    for (int row = 0; row < d_dim; ++row) {
-      for (int col = 0; col < d_num_increments; ++col) {
+      for (int col = 0; col < d_num_samples; ++col) {
          tmp.item(row, col) = d_U->item(row, col);
       }
-      tmp.item(row, d_num_increments) = j->item(row);
+      tmp.item(row, d_num_samples) = j->item(row);
    }
    delete d_U;
    d_U = tmp.mult(A);
@@ -317,16 +316,16 @@ IncrementalSVDNaive::addNewIncrement(
    delete d_S;
    d_S = sigma;
 
-   // We now have another increment.
-   ++d_num_increments;
+   // We now have another sample.
+   ++d_num_samples;
 }
 
 double
 IncrementalSVDNaive::checkOrthogonality()
 {
    double result = 0.0;
-   if (d_num_increments > 1) {
-      int last_col = d_num_increments-1;
+   if (d_num_samples > 1) {
+      int last_col = d_num_samples-1;
       double tmp = 0;
       for (int i = 0; i < d_dim; ++i) {
          tmp += d_U->item(i, 0)*d_U->item(i, last_col);
@@ -344,7 +343,7 @@ IncrementalSVDNaive::checkOrthogonality()
 void
 IncrementalSVDNaive::reOrthogonalize()
 {
-   for (int work = 1; work < d_num_increments; ++work) {
+   for (int work = 1; work < d_num_samples; ++work) {
       double tmp;
       for (int col = 0; col < work; ++col) {
          double factor = 0.0;

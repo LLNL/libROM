@@ -47,15 +47,15 @@ IncrementalSVDBasisGenerator::~IncrementalSVDBasisGenerator()
 }
 
 bool
-IncrementalSVDBasisGenerator::isNextSnapshot(
+IncrementalSVDBasisGenerator::isNextSample(
    double time)
 {
    CAROM_ASSERT(time >= 0);
-   return d_isvdsampler->isNextIncrement(time);
+   return d_isvdsampler->isNextSample(time);
 }
 
 void
-IncrementalSVDBasisGenerator::takeSnapshot(
+IncrementalSVDBasisGenerator::takeSample(
    double* u_in,
    double time)
 {
@@ -66,11 +66,11 @@ IncrementalSVDBasisGenerator::takeSnapshot(
        d_isvdsampler->isNewTimeInterval() && getNumBasisTimeIntervals() > 0) {
       d_basis_writer->writeBasis();
    }
-   d_isvdsampler->increment(u_in, time);
+   d_isvdsampler->takeSample(u_in, time);
 }
 
 double
-IncrementalSVDBasisGenerator::computeNextSnapshotTime(
+IncrementalSVDBasisGenerator::computeNextSampleTime(
    double* u_in,
    double* rhs_in,
    double time)

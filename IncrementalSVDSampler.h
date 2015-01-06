@@ -77,15 +77,14 @@ class IncrementalSVDSampler
        * @return True if it is time for the next sample to be taken.
        */
       bool
-      isNextIncrement(
+      isNextSample(
          double time)
       {
          return time >= d_next_sample_time;
       }
 
       /**
-       * @brief Increment the incremental svd at the given time with the
-       * supplied state.
+       * @brief Sample the new state, u_in, at the given time.
        *
        * @pre u_in != 0
        * @pre time >= 0.0
@@ -94,11 +93,11 @@ class IncrementalSVDSampler
        * @param[in] time The simulation time for the state.
        */
       void
-      increment(
+      takeSample(
          double* u_in,
          double time)
       {
-         d_isvd->increment(u_in, time);
+         d_isvd->takeSample(u_in, time);
       }
 
       /**
