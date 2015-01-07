@@ -33,15 +33,15 @@ class SVD
        *
        * @param[in] dim The dimension of the system distributed to this
        *                processor.
-       * @param[in] sample_per_time_interval The maximium number of samples
-       *                                     collected in a time interval.
-       * @param[in] debug_rom If true results of svd will be printed to
-       *                      facilitate debugging.
+       * @param[in] samples_per_time_interval The maximium number of samples
+       *                                      collected in a time interval.
+       * @param[in] debug_algorithm If true results of the algorithm will be
+       *                            printed to facilitate debugging.
        */
       SVD(
          int dim,
          int samples_per_time_interval,
-         bool debug_rom = false);
+         bool debug_algorithm = false);
 
       /**
        * Destructor.
@@ -162,7 +162,7 @@ class SVD
        * @brief Flag to indicate if results of algorithm should be printed for
        * debugging purposes.
        */
-      bool d_debug_rom;
+      bool d_debug_algorithm;
 
    private:
       /**

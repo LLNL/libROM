@@ -36,15 +36,15 @@ class IncrementalSVDNaive : public IncrementalSVD
        * @param[in] skip_redundant If true skip redundant samples.
        * @param[in] samples_per_time_interval The number of samples to be
        *                                      collected for each time interval.
-       * @param[in] debug_rom If true results of algorithm will be printed to
-       *                      facilitate debugging.
+       * @param[in] debug_algorithm If true results of the algorithm will be
+       *                            printed to facilitate debugging.
        */
       IncrementalSVDNaive(
          int dim,
          double redundancy_tol,
          bool skip_redundant,
          int samples_per_time_interval,
-         bool debug_rom = false);
+         bool debug_algorithm = false);
 
       /**
        * @brief Destructor.

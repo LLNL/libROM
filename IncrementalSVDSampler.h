@@ -52,8 +52,8 @@ class IncrementalSVDSampler : public SVDSampler
        *                                     samples.
        * @param[in] fast_update If true use the fast update incremental svd
        *                        algorithm.
-       * @param[in] debug_rom If true results of incremental svd algorithm
-       *                      will be printed to facilitate debugging.
+       * @param[in] debug_algorithm If true results of incremental svd algorithm
+       *                            will be printed to facilitate debugging.
        */
       IncrementalSVDSampler(
          int dim,
@@ -63,7 +63,7 @@ class IncrementalSVDSampler : public SVDSampler
          double sampling_tol,
          double max_time_between_samples,
          bool fast_update,
-         bool debug_rom = false);
+         bool debug_algorithm = false);
 
       /**
        * @brief Destructor.

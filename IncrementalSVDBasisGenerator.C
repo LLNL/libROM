@@ -24,7 +24,7 @@ IncrementalSVDBasisGenerator::IncrementalSVDBasisGenerator(
    double max_time_between_samples,
    bool fast_update,
    const std::string& basis_file_name,
-   bool debug_rom,
+   bool debug_algorithm,
    Database::formats file_format) :
    SVDBasisGenerator(basis_file_name, file_format)
 {
@@ -40,7 +40,7 @@ IncrementalSVDBasisGenerator::IncrementalSVDBasisGenerator(
                                                sampling_tol,
                                                max_time_between_samples,
                                                fast_update,
-                                               debug_rom));
+                                               debug_algorithm));
 }
 
 IncrementalSVDBasisGenerator::~IncrementalSVDBasisGenerator()

@@ -32,15 +32,15 @@ class StaticSVD : public SVD
        *
        * @param[in] dim The dimension of the system distributed to this
        *                processor.
-       * @param[in] sample_per_time_interval The maximium number of samples
-       *                                     collected in a time interval.
-       * @param[in] debug_rom If true results of svd will be printed to
-       *                      facilitate debugging.
+       * @param[in] samples_per_time_interval The maximium number of samples
+       *                                      collected in a time interval.
+       * @param[in] debug_algorithm If true results of the algorithm will be
+       *                            printed to facilitate debugging.
        */
       StaticSVD(
          int dim,
          int samples_per_time_interval,
-         bool debug_rom = false);
+         bool debug_algorithm = false);
 
       /**
        * Destructor.

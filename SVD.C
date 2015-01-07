@@ -16,13 +16,13 @@ namespace CAROM {
 SVD::SVD(
    int dim,
    int samples_per_time_interval,
-   bool debug_rom) :
+   bool debug_algorithm) :
    d_dim(dim),
    d_num_samples(0),
    d_samples_per_time_interval(samples_per_time_interval),
    d_basis(0),
    d_time_interval_start_times(0),
-   d_debug_rom(debug_rom)
+   d_debug_algorithm(debug_algorithm)
 {
    CAROM_ASSERT(dim > 0);
    CAROM_ASSERT(samples_per_time_interval > 0);

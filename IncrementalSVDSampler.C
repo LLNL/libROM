@@ -26,7 +26,7 @@ IncrementalSVDSampler::IncrementalSVDSampler(
    double sampling_tol,
    double max_time_between_samples,
    bool fast_update,
-   bool debug_rom) :
+   bool debug_algorithm) :
    d_tol(sampling_tol),
    d_max_time_between_samples(max_time_between_samples),
    d_next_sample_time(0.0)
@@ -43,7 +43,7 @@ IncrementalSVDSampler::IncrementalSVDSampler(
             redundancy_tol,
             skip_redundant,
             samples_per_time_interval,
-            debug_rom));
+            debug_algorithm));
    }
    else {
       d_svd.reset(
@@ -51,7 +51,7 @@ IncrementalSVDSampler::IncrementalSVDSampler(
             redundancy_tol,
             skip_redundant,
             samples_per_time_interval,
-            debug_rom));
+            debug_algorithm));
    }
 }
 

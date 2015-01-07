@@ -49,8 +49,8 @@ class IncrementalSVDBasisGenerator : public SVDBasisGenerator
        *                            containing the basis vectors.  Each process
        *                            will append its process ID to this base
        *                            name.
-       * @param[in] debug_rom If true results of incremental svd algorithm
-       *                      will be printed to facilitate debugging.
+       * @param[in] debug_algorithm If true results of incremental svd algorithm
+       *                            will be printed to facilitate debugging.
        * @param[in] file_format The format of the file containing the basis
        *                        vectors.
        */
@@ -63,7 +63,7 @@ class IncrementalSVDBasisGenerator : public SVDBasisGenerator
          double max_time_between_samples,
          bool fast_update,
          const std::string& basis_file_name,
-         bool debug_rom = false,
+         bool debug_algorithm = false,
          Database::formats file_format = Database::HDF5);
 
       /**

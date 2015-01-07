@@ -24,12 +24,12 @@ IncrementalSVDNaive::IncrementalSVDNaive(
    double redundancy_tol,
    bool skip_redundant,
    int samples_per_time_interval,
-   bool debug_rom) :
+   bool debug_algorithm) :
    IncrementalSVD(dim,
       redundancy_tol,
       skip_redundant,
       samples_per_time_interval,
-      debug_rom),
+      debug_algorithm),
    d_U(0)
 {
 }

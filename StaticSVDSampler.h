@@ -37,13 +37,13 @@ class StaticSVDSampler : public SVDSampler
        * @param[in] dim The dimension of the system on this processor.
        * @param[in] samples_per_time_interval The maximum number of samples
        *                                      in each time interval.
-       * @param[in] debug_rom If true results of static svd algorithm will be
-       *                      printed to facilitate debugging.
+       * @param[in] debug_algorithm If true results of static svd algorithm will
+       *                            be printed to facilitate debugging.
        */
       StaticSVDSampler(
          int dim,
          int samples_per_time_interval,
-         bool debug_rom = false);
+         bool debug_algorithm = false);
 
       /**
        * @brief Destructor.

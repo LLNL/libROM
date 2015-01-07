@@ -32,8 +32,8 @@ IncrementalSVD::IncrementalSVD(
    double redundancy_tol,
    bool skip_redundant,
    int samples_per_time_interval,
-   bool debug_rom) :
-   SVD(dim, samples_per_time_interval, debug_rom),
+   bool debug_algorithm) :
+   SVD(dim, samples_per_time_interval, debug_algorithm),
    d_redundancy_tol(redundancy_tol),
    d_skip_redundant(skip_redundant),
    d_S(0),
@@ -94,7 +94,7 @@ IncrementalSVD::takeSample(
       buildIncrementalSVD(u_in);
    }
 
-   if (d_debug_rom) {
+   if (d_debug_algorithm) {
       int mpi_init;
       MPI_Initialized(&mpi_init);
       int rank;

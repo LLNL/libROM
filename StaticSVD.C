@@ -28,8 +28,8 @@ const int StaticSVD::COMMUNICATE_A = 999;
 StaticSVD::StaticSVD(
    int dim,
    int samples_per_time_interval,
-   bool debug_rom) :
-   SVD(dim, samples_per_time_interval, debug_rom),
+   bool debug_algorithm) :
+   SVD(dim, samples_per_time_interval, debug_algorithm),
    d_samples(0),
    d_U(0),
    d_S(0),
@@ -266,7 +266,7 @@ StaticSVD::computeSVD()
    }
    d_basis = new Matrix(*d_U);
    d_this_interval_basis_current = true;
-   if (d_debug_rom && rank == 0) {
+   if (d_debug_algorithm && rank == 0) {
       for (int row = 0; row < total_dim; ++row) {
          for (int col = 0; col < num_cols; ++col) {
             printf("%.16e ", d_U->item(row, col));
