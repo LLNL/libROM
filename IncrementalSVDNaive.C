@@ -16,7 +16,6 @@
 
 #include <cmath>
 #include <limits>
-#include <stdio.h>
 
 namespace CAROM {
 
@@ -40,88 +39,6 @@ IncrementalSVDNaive::~IncrementalSVDNaive()
    // Delete data members.
    if (d_U) {
       delete d_U;
-   }
-}
-
-void
-IncrementalSVDNaive::takeSample(
-   const double* u_in,
-   double time)
-{
-   CAROM_ASSERT(u_in != 0);
-   CAROM_ASSERT(time >= 0.0);
-
-   // If this is the first SVD then build it.  Otherwise add this sample to the
-   // system.
-   if (isNewTimeInterval()) {
-      buildInitialSVD(u_in, time);
-   }
-   else {
-      buildIncrementalSVD(u_in);
-   }
-
-   if (d_debug_rom) {
-      int mpi_init;
-      MPI_Initialized(&mpi_init);
-      int rank;
-      if (mpi_init) {
-         MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-      }
-      else {
-         rank = 0;
-      }
-      const Matrix* basis = getBasis();
-      if (rank == 0) {
-         // Print d_S.
-         for (int row = 0; row < d_num_samples; ++row) {
-            for (int col = 0; col < d_num_samples; ++col) {
-               printf("%.16e  ", d_S->item(row, col));
-            }
-            printf("\n");
-         }
-         printf("\n");
-
-         // Print process 0's part of the basis.
-         for (int row = 0; row < d_dim; ++row) {
-            for (int col = 0; col < d_num_samples; ++col) {
-               printf("%.16e ", basis->item(row, col));
-            }
-            printf("\n");
-         }
-
-         // Gather other processor's parts of the basis and print them.
-         for (int proc = 1; proc < d_size; ++proc) {
-            double* m = new double[d_proc_dims[proc]*d_num_samples];
-            MPI_Status status;
-            MPI_Recv(m,
-               d_proc_dims[proc]*d_num_samples,
-               MPI_DOUBLE,
-               proc,
-               COMMUNICATE_U,
-               MPI_COMM_WORLD,
-               &status);
-            int idx = 0;
-            for (int row = 0; row < d_proc_dims[proc]; ++row) {
-               for (int col = 0; col < d_num_samples; ++col) {
-                  printf("%.16e ", m[idx++]);
-               }
-               printf("\n");
-            }
-            delete [] m;
-         }
-         printf("============================================================\n");
-      }
-      else {
-         // Send this processor's part of the basis to process 0.
-         MPI_Request request;
-         MPI_Isend(const_cast<double*>(&basis->item(0, 0)),
-            d_dim*d_num_samples,
-            MPI_DOUBLE,
-            0,
-            COMMUNICATE_U,
-            MPI_COMM_WORLD,
-            &request);
-      }
    }
 }
 
@@ -261,7 +178,7 @@ IncrementalSVDNaive::buildIncrementalSVD(
       }
       if (checkOrthogonality() >
           std::numeric_limits<double>::epsilon()*max_U_dim) {
-         reOrthogonalize();
+         reOrthogonalize(d_U);
       }
    }
    delete basisl;
@@ -338,51 +255,6 @@ IncrementalSVDNaive::checkOrthogonality()
       }
    }
    return result;
-}
-
-void
-IncrementalSVDNaive::reOrthogonalize()
-{
-   for (int work = 1; work < d_num_samples; ++work) {
-      double tmp;
-      for (int col = 0; col < work; ++col) {
-         double factor = 0.0;
-         tmp = 0.0;
-         for (int i = 0; i < d_dim; ++i) {
-            tmp += d_U->item(i, col)*d_U->item(i, work);
-         }
-         if (d_size > 1) {
-            MPI_Allreduce(&tmp,
-               &factor,
-               1,
-               MPI_DOUBLE,
-               MPI_SUM,
-               MPI_COMM_WORLD);
-         }
-         else {
-            factor = tmp;
-         }
-
-         for (int i = 0; i < d_dim; ++i) {
-            d_U->item(i, work) -= factor*d_U->item(i, col);
-         }
-      }
-      double norm = 0.0;
-      tmp = 0.0;
-      for (int i = 0; i < d_dim; ++i) {
-         tmp += d_U->item(i, work)*d_U->item(i, work);
-      }
-      if (d_size > 1) {
-         MPI_Allreduce(&tmp, &norm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-      }
-      else {
-         norm = tmp;
-      }
-      norm = sqrt(norm);
-      for (int i = 0; i < d_dim; ++i) {
-         d_U->item(i, work) /= norm;
-      }
-   }
 }
 
 }

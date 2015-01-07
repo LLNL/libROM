@@ -4,26 +4,24 @@
  * information, see COPYRIGHT.
  *
  * Copyright:   (c) 2013-2014 Lawrence Livermore National Security, LLC
- * Description: A class implementing the static SVD algorithm.
+ * Description: A class implementing interface of SVD for the static SVD
+ *              algorithm.
  *
  *****************************************************************************/
 
 #ifndef included_StaticSVD_h
 #define included_StaticSVD_h
 
-#include "Matrix.h"
-#include <vector>
+#include "SVD.h"
 
 namespace CAROM {
 
 /**
- * StaticSVD embodies the static SVD algorithm.  The API is intentionally
- * small.  One may collect the samples, compute the SVD, and get the dimension
- * of the system.
- * This algorithm is not scalable and is intended primarily as a sanity check
- * of the incremental svd algorithm.
+ * StaticSVD implements the interface of class SVD for the static SVD
+ * algorithm.  This algorithm is not scalable and is intended primarily as a
+ * sanity check of the incremental svd algorithm.
  */
-class StaticSVD
+class StaticSVD : public SVD
 {
    public:
       /**
@@ -58,9 +56,10 @@ class StaticSVD
        * @param[in] u_in The new sample.
        * @param[in] time The simulation time of the new sample.
        */
+      virtual
       void
       takeSample(
-         double* u_in,
+         const double* u_in,
          double time);
 
       /**
@@ -70,53 +69,9 @@ class StaticSVD
        *
        * @return The basis vectors for the current time interval.
        */
+      virtual
       const Matrix*
       getBasis();
-
-      /**
-       * @brief Returns the number of time intervals on which different sets
-       * of basis vectors are defined.
-       *
-       * @return The number of time intervals on which there are basis vectors.
-       */
-      int
-      getNumBasisTimeIntervals() const
-      {
-         return static_cast<int>(d_time_interval_start_times.size());
-      }
-
-      /**
-       * @brief Returns the start time for the requested time interval.
-       *
-       * @pre 0 <= which_interval
-       * @pre which_interval < getNumBasisTimeIntervals()
-       *
-       * @param[in] which_interval The time interval of interest.
-       *
-       * @return The start time for the requested time interval.
-       */
-      double
-      getBasisIntervalStartTime(
-         int which_interval) const
-      {
-         CAROM_ASSERT(0 <= which_interval);
-         CAROM_ASSERT(which_interval < getNumBasisTimeIntervals());
-         return d_time_interval_start_times[which_interval];
-      }
-
-      /**
-       * @brief Returns true if the next sample will result in a new time
-       * interval.
-       *
-       * @return True if the next sample results in the creation of a new time
-       *         interval.
-       */
-      bool
-      isNewTimeInterval() const
-      {
-         return (d_num_samples == 0) ||
-                (d_num_samples >= d_samples_per_time_interval);
-      }
 
    private:
       /**
@@ -170,25 +125,10 @@ class StaticSVD
        * date.
        */
       bool
-      thisIntervalBasisCurrent() {
+      thisIntervalBasisCurrent()
+      {
          return d_this_interval_basis_current;
       }
-
-      /**
-       * @brief Dimension of the system.
-       */
-      int d_dim;
-
-      /**
-       * @brief Number of samples stored for the current time interval.
-       */
-      int d_num_samples;
-
-      /**
-       * @brief The maximum number of samples to be collected for a time
-       * interval.
-       */
-      int d_samples_per_time_interval;
 
       /**
        * @brief Current samples of the system.
@@ -217,29 +157,10 @@ class StaticSVD
       Matrix* d_V;
 
       /**
-       * @brief The globalized basis vectors for the current time interval.
-       *
-       * The basis vectors are large and each process owns all of the basis
-       * vectors.
-       */
-      Matrix* d_basis;
-
-      /**
-       * @brief The simulation time at which each time interval starts.
-       */
-      std::vector<double> d_time_interval_start_times;
-
-      /**
        * @brief Flag to indicate if the basis vectors for the current time
        * interval are up to date.
        */
       bool d_this_interval_basis_current;
-
-      /**
-       * @brief Flag to indicate if results of algorithm should be printed for
-       * debugging purposes.
-       */
-      bool d_debug_rom;
 
       /**
        * @brief MPI message tag.

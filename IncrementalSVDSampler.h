@@ -13,6 +13,7 @@
 #ifndef included_IncrementalSVDSampler_h
 #define included_IncrementalSVDSampler_h
 
+#include "SVDSampler.h"
 #include "IncrementalSVD.h"
 #include <boost/shared_ptr.hpp>
 
@@ -26,7 +27,7 @@ namespace CAROM {
  * 1) the current time compared to the time the next sample must happen
  * 2) the number of time steps since the last sample
  */
-class IncrementalSVDSampler
+class IncrementalSVDSampler : public SVDSampler
 {
    public:
       /**
@@ -76,29 +77,10 @@ class IncrementalSVDSampler
        *
        * @return True if it is time for the next sample to be taken.
        */
+      virtual
       bool
       isNextSample(
-         double time)
-      {
-         return time >= d_next_sample_time;
-      }
-
-      /**
-       * @brief Sample the new state, u_in, at the given time.
-       *
-       * @pre u_in != 0
-       * @pre time >= 0.0
-       *
-       * @param[in] u_in The state at the specified time.
-       * @param[in] time The simulation time for the state.
-       */
-      void
-      takeSample(
-         double* u_in,
-         double time)
-      {
-         d_isvd->takeSample(u_in, time);
-      }
+         double time);
 
       /**
        * @brief Computes next time a sample is needed.
@@ -111,64 +93,12 @@ class IncrementalSVDSampler
        * @param[in] rhs_in The right hand side at the specified time.
        * @param[in] time The simulation time for the state.
        */
+      virtual
       double
       computeNextSampleTime(
          double* u_in,
          double* rhs_in,
          double time);
-
-      /**
-       * @brief Returns the basis vectors for the current time interval as a
-       * Matrix.
-       *
-       * @return The basis vectors for the current time interval.
-       */
-      const Matrix*
-      getBasis()
-      {
-         return d_isvd->getBasis();
-      }
-
-      /**
-       * @brief Returns the number of time intervals on which different sets of
-       * basis vectors are defined.       *
-       * @return The number of time intervals on which there are basis vectors.
-       */
-      int
-      getNumBasisTimeIntervals() const
-      {
-         return d_isvd->getNumBasisTimeIntervals();
-      }
-
-      /**
-       * @brief Returns the start time for the requested time interval.
-       *
-       * @pre 0 <= which_interval
-       * @pre which_interval < getNumBasisTimeIntervals()
-       *
-       * @param[in] which_interval Time interval whose start time is needed.
-       *
-       * @return The start time for the requested time interval.
-       */
-      double
-      getBasisIntervalStartTime(
-         int which_interval) const
-      {
-         return d_isvd->getBasisIntervalStartTime(which_interval);
-      }
-
-      /**
-       * @brief Returns true if the next state will result in a new time
-       * interval.
-       *
-       * @return True if all samples have been taken for the current time
-       * interval.
-       */
-      bool
-      isNewTimeInterval() const
-      {
-         return d_isvd->isNewTimeInterval();
-      }
 
    private:
       /**
@@ -205,11 +135,6 @@ class IncrementalSVDSampler
        * @brief Next time at which a sample should be taken.
        */
       double d_next_sample_time;
-
-      /**
-       * @brief Pointer to the fundamental incremental SVD algorithm object.
-       */
-      boost::shared_ptr<IncrementalSVD> d_isvd;
 };
 
 }

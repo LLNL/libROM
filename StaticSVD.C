@@ -29,20 +29,13 @@ StaticSVD::StaticSVD(
    int dim,
    int samples_per_time_interval,
    bool debug_rom) :
-   d_dim(dim),
-   d_num_samples(0),
-   d_samples_per_time_interval(samples_per_time_interval),
+   SVD(dim, samples_per_time_interval, debug_rom),
    d_samples(0),
    d_U(0),
    d_S(0),
    d_V(0),
-   d_basis(0),
-   d_time_interval_start_times(0),
-   d_this_interval_basis_current(false),
-   d_debug_rom(debug_rom)
+   d_this_interval_basis_current(false)
 {
-   CAROM_ASSERT(dim > 0);
-   CAROM_ASSERT(samples_per_time_interval > 0);
 }
 
 StaticSVD::~StaticSVD()
@@ -62,14 +55,11 @@ StaticSVD::~StaticSVD()
          delete [] d_samples[i];
       }
    }
-   if (d_basis) {
-      delete d_basis;
-   }
 }
 
 void
 StaticSVD::takeSample(
-   double* u_in,
+   const double* u_in,
    double time)
 {
    CAROM_ASSERT(u_in != 0);

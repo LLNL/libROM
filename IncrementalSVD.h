@@ -12,19 +12,15 @@
 #ifndef included_IncrementalSVD_h
 #define included_IncrementalSVD_h
 
-#include "Matrix.h"
-#include <vector>
+#include "SVD.h"
 
 namespace CAROM {
 
 /**
- * IncrementalSVD is an abstract class defining the API of the incremental SVD
- * algorithm.  The API is intentionally small.  One may take a sample, get the
- * dimension of the system, get the basis vectors, get the number of time
- * intervals and their start times, and determine if the current time interval
- * is full.
+ * IncrementalSVD is an abstract class defining the internal API of the
+ * incremental SVD algorithm.
  */
-class IncrementalSVD
+  class IncrementalSVD : public SVD
 {
    public:
       /**
@@ -57,7 +53,7 @@ class IncrementalSVD
       ~IncrementalSVD();
 
       /**
-       * @brief Sample the new state, u_in, at the given time.
+       * @brief Sample new state, u_in, at the given time.
        *
        * @pre u_in != 0
        * @pre time >= 0.0
@@ -69,75 +65,36 @@ class IncrementalSVD
       void
       takeSample(
          const double* u_in,
+         double time);
+
+   protected:
+      /**
+       * @brief Constructs the first svd.
+       *
+       * @pre u != 0
+       * @pre time >= 0.0
+       *
+       * @param[in] u The first state.
+       * @param[in] time The simulation time for the first state.
+       */
+      virtual
+      void
+      buildInitialSVD(
+         const double* u,
          double time) = 0;
 
       /**
-       * @brief Returns the dimension of the system on this processor.
+       * @brief Adds the new sampled the state vector, u, to the system.
        *
-       * @return The dimension of the system on this processor.
-       */
-      int
-      getDim() const
-      {
-         return d_dim;
-      }
-
-      /**
-       * @brief Returns the basis vectors for the current time interval as a
-       * Matrix.
+       * @pre u != 0
        *
-       * @return The basis vectors for the current time interval.
+       * @param[in] u The new state.
        */
       virtual
-      const Matrix*
-      getBasis() = 0;
+      void
+      buildIncrementalSVD(
+         const double* u) = 0;
 
-      /**
-       * @brief Returns the number of time intervals on which different sets
-       * of basis vectors are defined.
-       *
-       * @return The number of time intervals for which basis vectors exist.
-       */
-      int
-      getNumBasisTimeIntervals() const
-      {
-         return static_cast<int>(d_time_interval_start_times.size());
-      }
-
-      /**
-       * @brief Returns the start time for the requested time interval.
-       *
-       * @pre 0 <= which_interval
-       * @pre which_interval < getNumBasisTimeIntervals()
-       *
-       * @param[in] which_interval Time interval whose start time is needed.
-       *
-       * @return The start time of the requested time interval.
-       */
-      double
-      getBasisIntervalStartTime(
-         int which_interval) const
-      {
-         CAROM_ASSERT(0 <= which_interval);
-         CAROM_ASSERT(which_interval < getNumBasisTimeIntervals());
-         return d_time_interval_start_times[which_interval];
-      }
-
-      /**
-       * @brief Returns true if the next state will result in a new time
-       * interval.
-       *
-       * @return True if all samples have been taken for the current time
-       * interval.
-       */
-      bool
-      isNewTimeInterval() const
-      {
-         return (d_num_samples == 0) ||
-                (d_num_samples >= d_samples_per_time_interval);
-      }
-
-   protected:
       /**
        * @brief Construct the matrix Q whose svd is needed.
        *
@@ -184,14 +141,15 @@ class IncrementalSVD
       }
 
       /**
-       * @brief Dimension of the system on this processor.
+       * @brief Reorthogonalizes m.
+       *
+       * @pre m != 0
+       *
+       * @param[in/out] The matrix to reorthogonalize.
        */
-      int d_dim;
-
-      /**
-       * @brief Number of samples stored.
-       */
-      int d_num_samples;
+      void
+      reOrthogonalize(
+         Matrix* m);
 
       /**
        * @brief Tolerance to determine if a sample is redundant or not.
@@ -204,30 +162,11 @@ class IncrementalSVD
       bool d_skip_redundant;
 
       /**
-       * @brief The number of samples to be collected for each time interval.
-       */
-      int d_samples_per_time_interval;
-
-      /**
        * @brief The matrix S.
        *
        * S is not distributed and the entire matrix exists on each processor.
        */
       Matrix* d_S;
-
-      /**
-       * @brief The basis vectors for the current time interval distributed
-       * across all processors.
-       *
-       * d_basis is the part of the distributed basis vector local to the
-       * processor owning this object.
-       */
-      Matrix* d_basis;
-
-      /**
-       * @brief The simulation time at which each time interval starts.
-       */
-      std::vector<double> d_time_interval_start_times;
 
       /**
        * @brief Total number of processors.
@@ -243,12 +182,6 @@ class IncrementalSVD
        * @brief The total dimension of the system.
        */
       long int d_total_dim;
-
-      /**
-       * @brief Flag to indicate if results of algorithm should be printed for
-       * debugging purposes.
-       */
-      bool d_debug_rom;
 
       /**
        * @brief MPI message tag.

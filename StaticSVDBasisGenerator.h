@@ -13,7 +13,6 @@
 #define included_StaticSVDBasisGenerator_h
 
 #include "SVDBasisGenerator.h"
-#include "StaticSVDSampler.h"
 
 namespace CAROM {
 
@@ -55,88 +54,6 @@ class StaticSVDBasisGenerator : public SVDBasisGenerator
       virtual
       ~StaticSVDBasisGenerator();
 
-      /**
-       * @brief Returns true if it is time for the next svd sample.
-       *
-       * @pre time >= 0
-       *
-       * @param[in] time Time of interest.
-       *
-       * @return True if it is time for the next sample to be taken.
-       */
-      virtual
-      bool
-      isNextSample(
-         double time);
-
-      /**
-       * @brief Add a sample to the static svd at the given time.
-       *
-       * @pre u_in != 0
-       * @pre time >= 0.0
-       *
-       * @param[in] u_in The state at the specified time.
-       * @param[in] time The simulation time for the state.
-       */
-      virtual
-      void
-      takeSample(
-         double* u_in,
-         double time);
-
-      /**
-       * @brief Computes next time an svd sample is needed.
-       *
-       * @pre u_in != 0
-       * @pre rhs_in != 0
-       * @pre time >= 0.0
-       *
-       * @param[in] u_in The state at the specified time.
-       * @param[in] rhs_in The right hand side at the specified time.
-       * @param[in] time The simulation time for the state.
-       */
-      virtual
-      double
-      computeNextSampleTime(
-         double* u_in,
-         double* rhs_in,
-         double time);
-
-      /**
-       * @brief Returns the basis vectors for the current time interval as a
-       * Matrix.
-       *
-       * @return The basis vectors for the current time interval.
-       */
-      virtual
-      const Matrix*
-      getBasis();
-
-      /**
-       * @brief Returns the number of time intervals on which different sets of
-       * basis vectors are defined.
-       *
-       * @return The number of time intervals on which there are basis vectors.
-       */
-      virtual
-      int
-      getNumBasisTimeIntervals() const;
-
-      /**
-       * @brief Returns the start time for the requested time interval.
-       *
-       * @pre 0 <= which_interval
-       * @pre which_interval < getNumBasisTimeIntervals()
-       *
-       * @param[in] which_interval Time interval whose start time is needed.
-       *
-       * @return The start time for the requested time interval.
-       */
-      virtual
-      double
-      getBasisIntervalStartTime(
-         int which_interval) const;
-
    private:
       /**
        * @brief Unimplemented default constructor.
@@ -155,11 +72,6 @@ class StaticSVDBasisGenerator : public SVDBasisGenerator
       StaticSVDBasisGenerator&
       operator = (
          const StaticSVDBasisGenerator& rhs);
-
-      /**
-       * @brief Pointer to the sampling control object.
-       */
-      boost::shared_ptr<StaticSVDSampler> d_svdsampler;
 };
 
 }

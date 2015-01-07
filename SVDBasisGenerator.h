@@ -16,6 +16,7 @@
 #define included_SVDBasisGenerator_h
 
 #include "BasisWriter.h"
+#include "SVDSampler.h"
 
 #include <string.h>
 
@@ -63,10 +64,13 @@ class SVDBasisGenerator
        *
        * @return True if it is time for the next sample to be taken.
        */
-      virtual
       bool
       isNextSample(
-         double time) = 0;
+         double time)
+      {
+         CAROM_ASSERT(time >= 0.0);
+         return d_svdsampler->isNextSample(time);
+      }
 
       /**
        * @brief Sample the new state, u_in, at the given time.
@@ -77,11 +81,21 @@ class SVDBasisGenerator
        * @param[in] u_in The state at the specified time.
        * @param[in] time The simulation time for the state.
        */
-      virtual
       void
       takeSample(
-         double* u_in,
-         double time) = 0;
+         const double* u_in,
+         double time)
+      {
+         CAROM_ASSERT(u_in != 0);
+         CAROM_ASSERT(time >= 0);
+
+         if (d_basis_writer &&
+             d_svdsampler->isNewTimeInterval() &&
+             getNumBasisTimeIntervals() > 0) {
+            d_basis_writer->writeBasis();
+         }
+         d_svdsampler->takeSample(u_in, time);
+      }
 
       /**
        * @brief Signal that the final sample has been taken.
@@ -105,12 +119,18 @@ class SVDBasisGenerator
        * @param[in] rhs_in The right hand side at the specified time.
        * @param[in] time The simulation time for the state.
        */
-      virtual
       double
       computeNextSampleTime(
          double* u_in,
          double* rhs_in,
-         double time) = 0;
+         double time)
+      {
+         CAROM_ASSERT(u_in != 0);
+         CAROM_ASSERT(rhs_in != 0);
+         CAROM_ASSERT(time >= 0);
+
+         return d_svdsampler->computeNextSampleTime(u_in, rhs_in, time);
+      }
 
       /**
        * @brief Returns the basis vectors for the current time interval as a
@@ -118,9 +138,11 @@ class SVDBasisGenerator
        *
        * @return The basis vectors for the current time interval.
        */
-      virtual
       const Matrix*
-      getBasis() = 0;
+      getBasis()
+      {
+         return d_svdsampler->getBasis();
+      }
 
       /**
        * @brief Returns the number of time intervals on which different sets of
@@ -128,9 +150,11 @@ class SVDBasisGenerator
        *
        * @return The number of time intervals on which there are basis vectors.
        */
-      virtual
       int
-      getNumBasisTimeIntervals() const = 0;
+      getNumBasisTimeIntervals() const
+      {
+         return d_svdsampler->getNumBasisTimeIntervals();
+      }
 
       /**
        * @brief Returns the start time for the requested time interval.
@@ -142,16 +166,25 @@ class SVDBasisGenerator
        *
        * @return The start time for the requested time interval.
        */
-      virtual
       double
       getBasisIntervalStartTime(
-         int which_interval) const = 0;
+         int which_interval) const
+      {
+         CAROM_ASSERT(0 <= which_interval);
+         CAROM_ASSERT(which_interval < getNumBasisTimeIntervals());
+         return d_svdsampler->getBasisIntervalStartTime(which_interval);
+      }
 
    protected:
       /**
        * @brief Writer of basis vectors.
        */
       BasisWriter* d_basis_writer;
+
+      /**
+       * @brief Pointer to the underlying sampling control object.
+       */
+      boost::shared_ptr<SVDSampler> d_svdsampler;
 
    private:
       /**

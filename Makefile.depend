@@ -15,7 +15,8 @@ ${FILE_0}: ${DEPENDS_0}
 FILE_1=BasisWriter.o
 DEPENDS_1:=\
 	BasisWriter.C BasisWriter.h CAROM_config.h Database.h		\
-	HDFDatabase.h Matrix.h SVDBasisGenerator.h Utilities.h Vector.h
+	HDFDatabase.h Matrix.h SVD.h SVDBasisGenerator.h SVDSampler.h	\
+	Utilities.h Vector.h
 
 DEPENDS_1 +=\
 	
@@ -46,7 +47,7 @@ ${FILE_3}: ${DEPENDS_3}
 
 FILE_4=IncrementalSVD.o
 DEPENDS_4:=\
-	CAROM_config.h IncrementalSVD.C IncrementalSVD.h Matrix.h	\
+	CAROM_config.h IncrementalSVD.C IncrementalSVD.h Matrix.h SVD.h	\
 	Utilities.h Vector.h
 
 DEPENDS_4 +=\
@@ -59,8 +60,8 @@ FILE_5=IncrementalSVDBasisGenerator.o
 DEPENDS_5:=\
 	BasisWriter.h CAROM_config.h Database.h IncrementalSVD.h	\
 	IncrementalSVDBasisGenerator.C IncrementalSVDBasisGenerator.h	\
-	IncrementalSVDSampler.h Matrix.h SVDBasisGenerator.h Utilities.h\
-	Vector.h
+	IncrementalSVDSampler.h Matrix.h SVD.h SVDBasisGenerator.h	\
+	SVDSampler.h Utilities.h Vector.h
 
 DEPENDS_5 +=\
 	
@@ -71,7 +72,7 @@ ${FILE_5}: ${DEPENDS_5}
 FILE_6=IncrementalSVDFastUpdate.o
 DEPENDS_6:=\
 	CAROM_config.h IncrementalSVD.h IncrementalSVDFastUpdate.C	\
-	IncrementalSVDFastUpdate.h Matrix.h Utilities.h Vector.h
+	IncrementalSVDFastUpdate.h Matrix.h SVD.h Utilities.h Vector.h
 
 DEPENDS_6 +=\
 	
@@ -82,7 +83,7 @@ ${FILE_6}: ${DEPENDS_6}
 FILE_7=IncrementalSVDNaive.o
 DEPENDS_7:=\
 	CAROM_config.h IncrementalSVD.h IncrementalSVDNaive.C		\
-	IncrementalSVDNaive.h Matrix.h Utilities.h Vector.h
+	IncrementalSVDNaive.h Matrix.h SVD.h Utilities.h Vector.h
 
 DEPENDS_7 +=\
 	
@@ -94,7 +95,8 @@ FILE_8=IncrementalSVDSampler.o
 DEPENDS_8:=\
 	CAROM_config.h IncrementalSVD.h IncrementalSVDFastUpdate.h	\
 	IncrementalSVDNaive.h IncrementalSVDSampler.C			\
-	IncrementalSVDSampler.h Matrix.h Utilities.h Vector.h
+	IncrementalSVDSampler.h Matrix.h SVD.h SVDSampler.h Utilities.h	\
+	Vector.h
 
 DEPENDS_8 +=\
 	
@@ -122,9 +124,9 @@ DEPENDS_10 +=\
 
 ${FILE_10}: ${DEPENDS_10}
 
-FILE_11=SVDBasisGenerator.o
+FILE_11=SVD.o
 DEPENDS_11:=\
-	BasisWriter.h Database.h SVDBasisGenerator.C SVDBasisGenerator.h
+	CAROM_config.h Matrix.h SVD.C SVD.h Utilities.h Vector.h
 
 DEPENDS_11 +=\
 	
@@ -132,9 +134,10 @@ DEPENDS_11 +=\
 
 ${FILE_11}: ${DEPENDS_11}
 
-FILE_12=StaticSVD.o
+FILE_12=SVDBasisGenerator.o
 DEPENDS_12:=\
-	CAROM_config.h Matrix.h StaticSVD.C StaticSVD.h Utilities.h	\
+	BasisWriter.h CAROM_config.h Database.h Matrix.h SVD.h		\
+	SVDBasisGenerator.C SVDBasisGenerator.h SVDSampler.h Utilities.h\
 	Vector.h
 
 DEPENDS_12 +=\
@@ -143,12 +146,10 @@ DEPENDS_12 +=\
 
 ${FILE_12}: ${DEPENDS_12}
 
-FILE_13=StaticSVDBasisGenerator.o
+FILE_13=SVDSampler.o
 DEPENDS_13:=\
-	BasisWriter.h CAROM_config.h Database.h Matrix.h		\
-	SVDBasisGenerator.h StaticSVD.h StaticSVDBasisGenerator.C	\
-	StaticSVDBasisGenerator.h StaticSVDSampler.h Utilities.h	\
-	Vector.h
+	CAROM_config.h Matrix.h SVD.h SVDSampler.C SVDSampler.h		\
+	Utilities.h Vector.h
 
 DEPENDS_13 +=\
 	
@@ -156,10 +157,10 @@ DEPENDS_13 +=\
 
 ${FILE_13}: ${DEPENDS_13}
 
-FILE_14=StaticSVDSampler.o
+FILE_14=StaticSVD.o
 DEPENDS_14:=\
-	CAROM_config.h Matrix.h StaticSVD.h StaticSVDSampler.C		\
-	StaticSVDSampler.h Utilities.h Vector.h
+	CAROM_config.h Matrix.h SVD.h StaticSVD.C StaticSVD.h		\
+	Utilities.h Vector.h
 
 DEPENDS_14 +=\
 	
@@ -167,9 +168,12 @@ DEPENDS_14 +=\
 
 ${FILE_14}: ${DEPENDS_14}
 
-FILE_15=Utilities.o
+FILE_15=StaticSVDBasisGenerator.o
 DEPENDS_15:=\
-	CAROM_config.h ParallelBuffer.h Utilities.C Utilities.h
+	BasisWriter.h CAROM_config.h Database.h Matrix.h SVD.h		\
+	SVDBasisGenerator.h SVDSampler.h StaticSVD.h			\
+	StaticSVDBasisGenerator.C StaticSVDBasisGenerator.h		\
+	StaticSVDSampler.h Utilities.h Vector.h
 
 DEPENDS_15 +=\
 	
@@ -177,9 +181,10 @@ DEPENDS_15 +=\
 
 ${FILE_15}: ${DEPENDS_15}
 
-FILE_16=Vector.o
+FILE_16=StaticSVDSampler.o
 DEPENDS_16:=\
-	CAROM_config.h Utilities.h Vector.C Vector.h
+	CAROM_config.h Matrix.h SVD.h SVDSampler.h StaticSVD.h		\
+	StaticSVDSampler.C StaticSVDSampler.h Utilities.h Vector.h
 
 DEPENDS_16 +=\
 	
@@ -187,12 +192,9 @@ DEPENDS_16 +=\
 
 ${FILE_16}: ${DEPENDS_16}
 
-FILE_17=random_test.o
+FILE_17=Utilities.o
 DEPENDS_17:=\
-	BasisWriter.h CAROM_config.h Database.h IncrementalSVD.h	\
-	IncrementalSVDBasisGenerator.h IncrementalSVDSampler.h Matrix.h	\
-	SVDBasisGenerator.h StaticSVD.h StaticSVDBasisGenerator.h	\
-	StaticSVDSampler.h Utilities.h Vector.h random_test.C
+	CAROM_config.h ParallelBuffer.h Utilities.C Utilities.h
 
 DEPENDS_17 +=\
 	
@@ -200,11 +202,9 @@ DEPENDS_17 +=\
 
 ${FILE_17}: ${DEPENDS_17}
 
-FILE_18=smoke_test.o
+FILE_18=Vector.o
 DEPENDS_18:=\
-	BasisWriter.h CAROM_config.h Database.h IncrementalSVD.h	\
-	IncrementalSVDBasisGenerator.h IncrementalSVDSampler.h Matrix.h	\
-	SVDBasisGenerator.h Utilities.h Vector.h smoke_test.C
+	CAROM_config.h Utilities.h Vector.C Vector.h
 
 DEPENDS_18 +=\
 	
@@ -212,15 +212,42 @@ DEPENDS_18 +=\
 
 ${FILE_18}: ${DEPENDS_18}
 
-FILE_19=uneven_dist.o
+FILE_19=random_test.o
 DEPENDS_19:=\
-	BasisWriter.h CAROM_config.h Database.h IncrementalSVD.h	\
-	IncrementalSVDBasisGenerator.h IncrementalSVDSampler.h Matrix.h	\
-	SVDBasisGenerator.h Utilities.h Vector.h uneven_dist.C
+	BasisWriter.h CAROM_config.h Database.h				\
+	IncrementalSVDBasisGenerator.h Matrix.h SVD.h			\
+	SVDBasisGenerator.h SVDSampler.h StaticSVDBasisGenerator.h	\
+	Utilities.h Vector.h random_test.C
 
 DEPENDS_19 +=\
 	
 
 
 ${FILE_19}: ${DEPENDS_19}
+
+FILE_20=smoke_test.o
+DEPENDS_20:=\
+	BasisWriter.h CAROM_config.h Database.h				\
+	IncrementalSVDBasisGenerator.h Matrix.h SVD.h			\
+	SVDBasisGenerator.h SVDSampler.h Utilities.h Vector.h		\
+	smoke_test.C
+
+DEPENDS_20 +=\
+	
+
+
+${FILE_20}: ${DEPENDS_20}
+
+FILE_21=uneven_dist.o
+DEPENDS_21:=\
+	BasisWriter.h CAROM_config.h Database.h				\
+	IncrementalSVDBasisGenerator.h Matrix.h SVD.h			\
+	SVDBasisGenerator.h SVDSampler.h Utilities.h Vector.h		\
+	uneven_dist.C
+
+DEPENDS_21 +=\
+	
+
+
+${FILE_21}: ${DEPENDS_21}
 

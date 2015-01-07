@@ -38,7 +38,7 @@ IncrementalSVDSampler::IncrementalSVDSampler(
    CAROM_ASSERT(max_time_between_samples > 0.0);
 
    if (fast_update) {
-      d_isvd.reset(
+      d_svd.reset(
          new IncrementalSVDFastUpdate(dim,
             redundancy_tol,
             skip_redundant,
@@ -46,7 +46,7 @@ IncrementalSVDSampler::IncrementalSVDSampler(
             debug_rom));
    }
    else {
-      d_isvd.reset(
+      d_svd.reset(
          new IncrementalSVDNaive(dim,
             redundancy_tol,
             skip_redundant,
@@ -57,6 +57,13 @@ IncrementalSVDSampler::IncrementalSVDSampler(
 
 IncrementalSVDSampler::~IncrementalSVDSampler()
 {
+}
+
+bool
+IncrementalSVDSampler::isNextSample(
+   double time)
+{
+   return time >= d_next_sample_time;
 }
 
 double
@@ -70,7 +77,7 @@ IncrementalSVDSampler::computeNextSampleTime(
    CAROM_ASSERT(time >= 0.0);
 
    // Get some preliminary info.
-   int dim = d_isvd->getDim();
+   int dim = d_svd->getDim();
 
    // Get the current basis vectors.
    const Matrix* basis = getBasis();

@@ -52,20 +52,6 @@ class IncrementalSVDNaive : public IncrementalSVD
       ~IncrementalSVDNaive();
 
       /**
-       * @brief Sample the new state, u_in, at the given time..
-       *
-       * @pre u_in != 0
-       * @pre time >= 0.0
-       *
-       * @param[in] u_in The state at the specified time.
-       * @param[in] time The simulation time for the state.
-       */
-      void
-      takeSample(
-         const double* u_in,
-         double time);
-
-      /**
        * @brief Returns the basis vectors for the current time interval as a
        * Matrix.
        *
@@ -102,6 +88,7 @@ class IncrementalSVDNaive : public IncrementalSVD
        * @param[in] u The first state.
        * @param[in] time The simulation time for the first state.
        */
+      virtual
       void
       buildInitialSVD(
          const double* u,
@@ -114,6 +101,7 @@ class IncrementalSVDNaive : public IncrementalSVD
        *
        * @param[in] u The new state.
        */
+      virtual
       void
       buildIncrementalSVD(
          const double* u);
@@ -156,12 +144,6 @@ class IncrementalSVDNaive : public IncrementalSVD
        */
       double
       checkOrthogonality();
-
-      /**
-       * @brief Reorthogonalizes d_U.
-       */
-      void
-      reOrthogonalize();
 
       /**
        * @brief The matrix U distributed across all processors.

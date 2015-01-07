@@ -11,6 +11,7 @@
  *****************************************************************************/
 
 #include "IncrementalSVDBasisGenerator.h"
+#include "IncrementalSVDSampler.h"
 
 namespace CAROM {
 
@@ -25,82 +26,25 @@ IncrementalSVDBasisGenerator::IncrementalSVDBasisGenerator(
    const std::string& basis_file_name,
    bool debug_rom,
    Database::formats file_format) :
-   SVDBasisGenerator(basis_file_name, file_format),
-   d_isvdsampler(new IncrementalSVDSampler(dim,
-                                           redundancy_tol,
-                                           skip_redundant,
-                                           samples_per_time_interval,
-                                           sampling_tol,
-                                           max_time_between_samples,
-                                           fast_update,
-                                           debug_rom))
+   SVDBasisGenerator(basis_file_name, file_format)
 {
    CAROM_ASSERT(dim > 0);
    CAROM_ASSERT(redundancy_tol > 0.0);
    CAROM_ASSERT(samples_per_time_interval > 0);
    CAROM_ASSERT(sampling_tol > 0.0);
    CAROM_ASSERT(max_time_between_samples > 0.0);
+   d_svdsampler.reset(new IncrementalSVDSampler(dim,
+                                               redundancy_tol,
+                                               skip_redundant,
+                                               samples_per_time_interval,
+                                               sampling_tol,
+                                               max_time_between_samples,
+                                               fast_update,
+                                               debug_rom));
 }
 
 IncrementalSVDBasisGenerator::~IncrementalSVDBasisGenerator()
 {
-}
-
-bool
-IncrementalSVDBasisGenerator::isNextSample(
-   double time)
-{
-   CAROM_ASSERT(time >= 0);
-   return d_isvdsampler->isNextSample(time);
-}
-
-void
-IncrementalSVDBasisGenerator::takeSample(
-   double* u_in,
-   double time)
-{
-   CAROM_ASSERT(u_in != 0);
-   CAROM_ASSERT(time >= 0);
-
-   if (d_basis_writer &&
-       d_isvdsampler->isNewTimeInterval() && getNumBasisTimeIntervals() > 0) {
-      d_basis_writer->writeBasis();
-   }
-   d_isvdsampler->takeSample(u_in, time);
-}
-
-double
-IncrementalSVDBasisGenerator::computeNextSampleTime(
-   double* u_in,
-   double* rhs_in,
-   double time)
-{
-   CAROM_ASSERT(u_in != 0);
-   CAROM_ASSERT(rhs_in != 0);
-   CAROM_ASSERT(time >= 0);
-
-   return d_isvdsampler->computeNextSampleTime(u_in, rhs_in, time);
-}
-
-const Matrix*
-IncrementalSVDBasisGenerator::getBasis()
-{
-   return d_isvdsampler->getBasis();
-}
-
-int
-IncrementalSVDBasisGenerator::getNumBasisTimeIntervals() const
-{
-   return d_isvdsampler->getNumBasisTimeIntervals();
-}
-
-double
-IncrementalSVDBasisGenerator::getBasisIntervalStartTime(
-   int which_interval) const
-{
-   CAROM_ASSERT(0 <= which_interval);
-   CAROM_ASSERT(which_interval < getNumBasisTimeIntervals());
-   return d_isvdsampler->getBasisIntervalStartTime(which_interval);
 }
 
 }

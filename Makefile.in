@@ -24,6 +24,8 @@ OBJS = Matrix.o \
        BasisReader.o \
        BasisWriter.o \
        SVDBasisGenerator.o \
+       SVDSampler.o \
+       SVD.o \
        IncrementalSVD.o \
        IncrementalSVDFastUpdate.o \
        IncrementalSVDNaive.o \
