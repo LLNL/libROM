@@ -51,15 +51,6 @@ class IncrementalSVDNaive : public IncrementalSVD
        */
       ~IncrementalSVDNaive();
 
-      /**
-       * @brief Returns the basis vectors for the current time interval as a
-       * Matrix.
-       *
-       * @return The basis vectors for the current time interval.
-       */
-      const Matrix*
-      getBasis();
-
    private:
       /**
        * @brief Unimplemented default constructor.
@@ -95,16 +86,11 @@ class IncrementalSVDNaive : public IncrementalSVD
          double time);
 
       /**
-       * @brief Adds the new sampled state vector, u, to the system.
-       *
-       * @pre u != 0
-       *
-       * @param[in] u The new state.
+       * @brief Computes the current basis vectors.
        */
       virtual
       void
-      buildIncrementalSVD(
-         const double* u);
+      computeBasis();
 
       /**
        * Add a redundant sample to the svd.
@@ -136,14 +122,6 @@ class IncrementalSVDNaive : public IncrementalSVD
          const Vector* j,
          const Matrix* A,
          Matrix* sigma);
-
-      /**
-       * @brief Computes and returns the orthogonality of d_U.
-       *
-       * @return The orthogonality of d_U.
-       */
-      double
-      checkOrthogonality();
 
       /**
        * @brief The matrix U distributed across all processors.

@@ -52,16 +52,6 @@ class IncrementalSVDFastUpdate : public IncrementalSVD
        */
       ~IncrementalSVDFastUpdate();
 
-      /**
-       * @brief Returns the basis vectors for the current time interval as a
-       * Matrix.
-       *
-       * @return The basis vectors for the current time interval.
-       */
-      virtual
-      const Matrix*
-      getBasis();
-
    private:
       /**
        * @brief Unimplemented default constructor.
@@ -97,16 +87,11 @@ class IncrementalSVDFastUpdate : public IncrementalSVD
          double time);
 
       /**
-       * @brief Adds the new sampled the state vector, u, to the system.
-       *
-       * @pre u != 0
-       *
-       * @param[in] u The new state.
+       * @brief Computes the current basis vectors.
        */
       virtual
       void
-      buildIncrementalSVD(
-         const double* u);
+      computeBasis();
 
       /**
        * @brief Add a redundant sample to the svd.
@@ -138,22 +123,6 @@ class IncrementalSVDFastUpdate : public IncrementalSVD
          const Vector* j,
          const Matrix* A,
          Matrix* sigma);
-
-      /**
-       * @brief Computes and returns the orthogonality of d_U.
-       *
-       * @return The orthogonality of d_U.
-       */
-      double
-      checkUOrthogonality();
-
-      /**
-       * @brief Computes and returns the orthogonality of d_Up.
-       *
-       * @return The orthogonality of d_U.
-       */
-      double
-      checkUpOrthogonality();
 
       /**
        * @brief The matrix U distributed across all processors.

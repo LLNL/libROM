@@ -45,13 +45,6 @@ IncrementalSVDFastUpdate::~IncrementalSVDFastUpdate()
    }
 }
 
-const Matrix*
-IncrementalSVDFastUpdate::getBasis()
-{
-   CAROM_ASSERT(d_basis != 0);
-   return d_basis;
-}
-
 void
 IncrementalSVDFastUpdate::buildInitialSVD(
    const double* u,
@@ -91,122 +84,17 @@ IncrementalSVDFastUpdate::buildInitialSVD(
       d_U->item(i, 0) = u[i]/norm_u;
    }
 
-   // Set the basis for this time interval.
-   d_basis = new Matrix(*d_U);
+   // Compute the basis vectors for this time interval.
+   computeBasis();
 
    // We now have the first sample for the new time interval.
    d_num_samples = 1;
 }
 
 void
-IncrementalSVDFastUpdate::buildIncrementalSVD(
-   const double* u)
+IncrementalSVDFastUpdate::computeBasis()
 {
-   CAROM_ASSERT(u != 0);
-
-   // l = basis' * u
-   Vector u_vec(u, d_dim, true);
-   Vector* l = d_basis->transposeMult(u_vec);
-
-   // basisl = basis * l
-   Vector* basisl = d_basis->mult(l);
-
-   // Compute k = sqrt(u.u - 2.0*l.l + basisl.basisl) which is ||u - basisl||.
-   double k = u_vec.inner_product(u_vec) - 2.0*l->inner_product(l) +
-      basisl->inner_product(basisl);
-   if (k <= 0) {
-      k = 0;
-   }
-   else {
-      k = sqrt(k);
-   }
-
-   // Use k to see if this sample is new.
-   double default_tol;
-   if (d_num_samples == 1) {
-      default_tol = std::numeric_limits<double>::epsilon();
-   }
-   else {
-      default_tol = d_num_samples*std::numeric_limits<double>::epsilon()*d_S->item(0, 0);
-   }
-   if (d_redundancy_tol < default_tol) {
-      d_redundancy_tol = default_tol;
-   }
-   bool is_new_sample;
-   if (k < d_redundancy_tol) {
-      k = 0;
-      is_new_sample = false;
-   }
-   else {
-      is_new_sample = true;
-   }
-
-   // Create Q.
-   double* Q;
-   constructQ(Q, l, k);
-
-   // Now get the singular value decomposition of Q.
-   Matrix* A;
-   Matrix* sigma;
-   svd(Q, A, sigma);
-
-   // Done with Q.
-   delete [] Q;
-
-   // We need to add the sample if it is new or if it is redundant and we are
-   // not skipping redundant samples.
-   if (!is_new_sample && !d_skip_redundant) {
-      // This sample is redundant and we are not skipping redundant samples.
-      addRedundantSample(A, sigma);
-
-      // Reorthogonalize if necessary.
-      if (fabs(checkUpOrthogonality()) >
-          std::numeric_limits<double>::epsilon()*d_num_samples) {
-         reOrthogonalize(d_Up);
-      }
-
-      delete sigma;
-   }
-   else if (is_new_sample) {
-      // This sample is new.
-
-      // Compute j
-      Vector* j = u_vec.minus(basisl);
-      for (int i = 0; i < d_dim; ++i) {
-         j->item(i) /= k;
-      }
-
-      // addNewSample will assign sigma to d_S hence it should not be deleted
-      // upon return.
-      addNewSample(j, A, sigma);
-      delete j;
-
-      // Reorthogonalize if necessary.
-      long int max_U_dim;
-      if (d_total_dim > d_num_samples) {
-         max_U_dim = d_total_dim;
-      }
-      else {
-         max_U_dim = d_num_samples;
-      }
-      if (fabs(checkUOrthogonality()) >
-          std::numeric_limits<double>::epsilon()*max_U_dim) {
-         reOrthogonalize(d_U);
-      }
-      if (fabs(checkUpOrthogonality()) >
-          std::numeric_limits<double>::epsilon()*d_num_samples) {
-         reOrthogonalize(d_Up);
-      }
-   }
-   delete basisl;
-
-   // Compute the basis vectors.
-   delete d_basis;
    d_basis = d_U->mult(d_Up);
-
-   // Clean up.
-   delete l;
-   delete A;
 }
 
 void
@@ -231,6 +119,12 @@ IncrementalSVDFastUpdate::addRedundantSample(
    Matrix* Up_times_Amod = d_Up->mult(Amod);
    delete d_Up;
    d_Up = Up_times_Amod;
+
+   // Reorthogonalize if necessary.
+   if (fabs(checkOrthogonality(d_Up)) >
+       std::numeric_limits<double>::epsilon()*d_num_samples) {
+      reOrthogonalize(d_Up);
+   }
 }
 
 void
@@ -278,39 +172,23 @@ IncrementalSVDFastUpdate::addNewSample(
 
    // We now have another sample.
    ++d_num_samples;
-}
 
-double
-IncrementalSVDFastUpdate::checkUOrthogonality()
-{
-   double result = 0.0;
-   if (d_num_samples > 1) {
-      int last_col = d_num_samples-1;
-      double tmp = 0.0;
-      for (int i = 0; i < d_dim; ++i) {
-         tmp += d_U->item(i, 0) * d_U->item(i, last_col);
-      }
-      if (d_size > 1) {
-         MPI_Allreduce(&tmp, &result, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-      }
-      else {
-         result = tmp;
-      }
+   // Reorthogonalize if necessary.
+   long int max_U_dim;
+   if (d_total_dim > d_num_samples) {
+      max_U_dim = d_total_dim;
    }
-   return result;
-}
-
-double
-IncrementalSVDFastUpdate::checkUpOrthogonality()
-{
-   double result = 0.0;
-   if (d_num_samples > 1) {
-      int last_col = d_num_samples-1;
-      for (int i = 0; i < d_num_samples; ++i) {
-         result += d_Up->item(i, 0)*d_Up->item(i, last_col);
-      }
+   else {
+      max_U_dim = d_num_samples;
    }
-   return result;
+   if (fabs(checkOrthogonality(d_U)) >
+       std::numeric_limits<double>::epsilon()*max_U_dim) {
+      reOrthogonalize(d_U);
+   }
+   if (fabs(checkOrthogonality(d_Up)) >
+       std::numeric_limits<double>::epsilon()*d_num_samples) {
+      reOrthogonalize(d_Up);
+   }
 }
 
 }

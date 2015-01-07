@@ -14,6 +14,7 @@
 #include "mpi.h"
 
 #include <cmath>
+#include <limits>
 #include <stdio.h>
 
 extern "C" {
@@ -158,6 +159,100 @@ IncrementalSVD::takeSample(
    }
 }
 
+const Matrix*
+IncrementalSVD::getBasis()
+{
+   CAROM_ASSERT(d_basis != 0);
+   return d_basis;
+}
+
+void
+IncrementalSVD::buildIncrementalSVD(
+   const double* u)
+{
+   CAROM_ASSERT(u != 0);
+
+   // l = basis' * u
+   Vector u_vec(u, d_dim, true);
+   Vector* l = d_basis->transposeMult(u_vec);
+
+   // basisl = basis * l
+   Vector* basisl = d_basis->mult(l);
+
+   // Compute k = sqrt(u.u - 2.0*l.l + basisl.basisl) which is ||u - basisl||.
+   double k = u_vec.inner_product(u_vec) - 2.0*l->inner_product(l) +
+      basisl->inner_product(basisl);
+   if (k <= 0) {
+      k = 0;
+   }
+   else {
+      k = sqrt(k);
+   }
+
+   // Use k to see if this sample is new.
+   double default_tol;
+   if (d_num_samples == 1) {
+      default_tol = std::numeric_limits<double>::epsilon();
+   }
+   else {
+      default_tol = d_num_samples*std::numeric_limits<double>::epsilon()*d_S->item(0, 0);
+   }
+   if (d_redundancy_tol < default_tol) {
+      d_redundancy_tol = default_tol;
+   }
+   bool is_new_sample;
+   if (k < d_redundancy_tol) {
+      k = 0;
+      is_new_sample = false;
+   }
+   else {
+      is_new_sample = true;
+   }
+
+   // Create Q.
+   double* Q;
+   constructQ(Q, l, k);
+
+   // Now get the singular value decomposition of Q.
+   Matrix* A;
+   Matrix* sigma;
+   svd(Q, A, sigma);
+
+   // Done with Q.
+   delete [] Q;
+
+   // We need to add the sample if it is new or if it is redundant and we are
+   // not skipping redundant samples.
+   if (!is_new_sample && !d_skip_redundant) {
+      // This sample is redundant and we are not skipping redundant samples.
+      addRedundantSample(A, sigma);
+      delete sigma;
+   }
+   else if (is_new_sample) {
+      // This sample is new.
+
+      // Compute j
+      Vector* j = u_vec.minus(basisl);
+      for (int i = 0; i < d_dim; ++i) {
+         j->item(i) /= k;
+      }
+
+      // addNewSample will assign sigma to d_S hence it should not be deleted
+      // upon return.
+      addNewSample(j, A, sigma);
+      delete j;
+   }
+   delete basisl;
+
+   // Compute the basis vectors.
+   delete d_basis;
+   computeBasis();
+
+   // Clean up.
+   delete l;
+   delete A;
+}
+
 void
 IncrementalSVD::constructQ(
    double*& Q,
@@ -251,6 +346,30 @@ IncrementalSVD::svd(
       }
    }
    delete V;
+}
+
+double
+IncrementalSVD::checkOrthogonality(
+   const Matrix* m)
+{
+   CAROM_ASSERT(m != 0);
+
+   double result = 0.0;
+   if (d_num_samples > 1) {
+      int last_col = d_num_samples-1;
+      double tmp = 0.0;
+      int num_rows = m->numRows();
+      for (int i = 0; i < num_rows; ++i) {
+         tmp += m->item(i, 0) * m->item(i, last_col);
+      }
+      if (m->distributed() && d_size > 1) {
+         MPI_Allreduce(&tmp, &result, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+      }
+      else {
+         result = tmp;
+      }
+   }
+   return result;
 }
 
 void

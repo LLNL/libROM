@@ -67,6 +67,15 @@ namespace CAROM {
          const double* u_in,
          double time);
 
+      /**
+       * @brief Returns the basis vectors for the current time interval.
+       *
+       * @return The basis vectors for the current time interval.
+       */
+      virtual
+      const Matrix*
+      getBasis();
+
    protected:
       /**
        * @brief Constructs the first svd.
@@ -93,7 +102,14 @@ namespace CAROM {
       virtual
       void
       buildIncrementalSVD(
-         const double* u) = 0;
+         const double* u);
+
+      /**
+       * @brief Computes the current basis vectors.
+       */
+      virtual
+      void
+      computeBasis() = 0;
 
       /**
        * @brief Construct the matrix Q whose svd is needed.
@@ -130,6 +146,39 @@ namespace CAROM {
          Matrix*& S);
 
       /**
+       * Add a redundant sample to the svd.
+       *
+       * @pre A != 0
+       * @pre sigma != 0
+       *
+       * @param[in] A The left singular vectors.
+       * @param[in] sigma The singular values.
+       */
+      virtual
+      void
+      addRedundantSample(
+         const Matrix* A,
+         const Matrix* sigma) = 0;
+
+      /**
+       * @brief Add a new, unique sample to the svd.
+       *
+       * @pre j != 0
+       * @pre A != 0
+       * @pre sigma != 0
+       *
+       * @param[in] j The new column of d_U.
+       * @param[in] A The left singular vectors.
+       * @param[in] sigma The singular values.
+       */
+      virtual
+      void
+      addNewSample(
+         const Vector* j,
+         const Matrix* A,
+         Matrix* sigma) = 0;
+
+      /**
        * @brief The number of samples stored.
        *
        * @return The number of samples stored.
@@ -139,6 +188,19 @@ namespace CAROM {
       {
          return d_num_samples;
       }
+
+      /**
+       * @brief Computes and returns the orthogonality of m.
+       *
+       * @pre m != 0
+       *
+       * @param[in] m The matrix to check.
+       *
+       * @return The orthogonality of m.
+       */
+      double
+      checkOrthogonality(
+        const Matrix* m);
 
       /**
        * @brief Reorthogonalizes m.
