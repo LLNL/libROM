@@ -267,19 +267,20 @@ StaticSVD::computeSVD()
    d_basis = new Matrix(*d_U);
    d_this_interval_basis_current = true;
    if (d_debug_algorithm && rank == 0) {
-      for (int row = 0; row < total_dim; ++row) {
-         for (int col = 0; col < num_cols; ++col) {
-            printf("%.16e ", d_U->item(row, col));
-         }
-         printf("\n");
-      }
-      printf("\n");
       for (int row = 0; row < num_cols; ++row) {
          for (int col = 0; col < num_cols; ++col) {
             printf("%.16e ", d_S->item(row, col));
          }
          printf("\n");
       }
+      printf("\n");
+      for (int row = 0; row < total_dim; ++row) {
+         for (int col = 0; col < num_cols; ++col) {
+            printf("%.16e ", d_U->item(row, col));
+         }
+         printf("\n");
+      }
+      printf("============================================================\n");
    }
    delete [] dims;
 }
