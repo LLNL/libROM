@@ -31,11 +31,13 @@ IncrementalSVD::IncrementalSVD(
    int dim,
    double redundancy_tol,
    bool skip_redundant,
+   double sampling_tol,
    int samples_per_time_interval,
    bool debug_algorithm) :
    SVD(dim, samples_per_time_interval, debug_algorithm),
    d_redundancy_tol(redundancy_tol),
    d_skip_redundant(skip_redundant),
+   d_sampling_tol(sampling_tol),
    d_S(0),
    d_total_dim(0)
 {
@@ -180,6 +182,8 @@ IncrementalSVD::buildIncrementalSVD(
    Vector* basisl = d_basis->mult(l);
 
    // Compute k = sqrt(u.u - 2.0*l.l + basisl.basisl) which is ||u - basisl||.
+   // This is the error in the projection of u into the reduced order space
+   // and subsequent lifting back to the full order space.
    double k = u_vec.inner_product(u_vec) - 2.0*l->inner_product(l) +
       basisl->inner_product(basisl);
    if (k <= 0) {
@@ -189,17 +193,14 @@ IncrementalSVD::buildIncrementalSVD(
       k = sqrt(k);
    }
 
+   // Use k to see if a sample is needed at this time.
+   if (k < d_sampling_tol) {
+      delete l;
+      delete basisl;
+      return;
+   }
+
    // Use k to see if this sample is new.
-   double default_tol;
-   if (d_num_samples == 1) {
-      default_tol = std::numeric_limits<double>::epsilon();
-   }
-   else {
-      default_tol = d_num_samples*std::numeric_limits<double>::epsilon()*d_S->item(0, 0);
-   }
-   if (d_redundancy_tol < default_tol) {
-      d_redundancy_tol = default_tol;
-   }
    bool is_new_sample;
    if (k < d_redundancy_tol) {
       k = 0;
@@ -212,6 +213,7 @@ IncrementalSVD::buildIncrementalSVD(
    // Create Q.
    double* Q;
    constructQ(Q, l, k);
+   delete l;
 
    // Now get the singular value decomposition of Q.
    Matrix* A;
@@ -243,14 +245,11 @@ IncrementalSVD::buildIncrementalSVD(
       delete j;
    }
    delete basisl;
+   delete A;
 
    // Compute the basis vectors.
    delete d_basis;
    computeBasis();
-
-   // Clean up.
-   delete l;
-   delete A;
 }
 
 void

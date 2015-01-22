@@ -22,11 +22,13 @@ IncrementalSVDFastUpdate::IncrementalSVDFastUpdate(
    int dim,
    double redundancy_tol,
    bool skip_redundant,
+   double sampling_tol,
    int samples_per_time_interval,
    bool debug_algorithm) :
    IncrementalSVD(dim,
       redundancy_tol,
       skip_redundant,
+      sampling_tol,
       samples_per_time_interval,
       debug_algorithm),
    d_U(0),

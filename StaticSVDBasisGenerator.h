@@ -36,7 +36,7 @@ class StaticSVDBasisGenerator : public SVDBasisGenerator
        *                            containing the basis vectors.  Each process
        *                            will append its process ID to this base
        *                            name.
-       * @param[in] debug_algorithm If true results of incremental svd algorithm
+       * @param[in] debug_algorithm If true results of static svd algorithm
        *                            will be printed to facilitate debugging.
        * @param[in] file_format The format of the file containing the basis
        *                        vectors.

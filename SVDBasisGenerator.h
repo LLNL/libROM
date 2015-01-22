@@ -46,7 +46,7 @@ class SVDBasisGenerator
        *                        vectors.
        */
       SVDBasisGenerator(
-         const std::string& basis_file_name,
+         const std::string& basis_file_name = "",
          Database::formats file_format = Database::HDF5);
 
       /**
@@ -84,15 +84,18 @@ class SVDBasisGenerator
       void
       takeSample(
          const double* u_in,
-         double time)
+         double time,
+         double dt)
       {
          CAROM_ASSERT(u_in != 0);
          CAROM_ASSERT(time >= 0);
 
-         if (d_basis_writer &&
-             d_svdsampler->isNewTimeInterval() &&
-             getNumBasisTimeIntervals() > 0) {
-            d_basis_writer->writeBasis();
+         if (getNumBasisTimeIntervals() > 0 &&
+             d_svdsampler->isNewTimeInterval()) {
+            d_svdsampler->resetDt(dt);
+            if (d_basis_writer) {
+               d_basis_writer->writeBasis();
+            }
          }
          d_svdsampler->takeSample(u_in, time);
       }

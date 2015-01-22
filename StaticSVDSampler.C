@@ -47,4 +47,11 @@ StaticSVDSampler::computeNextSampleTime(
    return time;
 }
 
+void
+StaticSVDSampler::resetDt(
+   double new_dt)
+{
+   CAROM_NULL_USE(new_dt);
+}
+
 }

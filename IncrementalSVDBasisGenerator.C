@@ -19,28 +19,39 @@ IncrementalSVDBasisGenerator::IncrementalSVDBasisGenerator(
    int dim,
    double redundancy_tol,
    bool skip_redundant,
+   bool fast_update,
+   double initial_dt,
    int samples_per_time_interval,
    double sampling_tol,
    double max_time_between_samples,
-   bool fast_update,
    const std::string& basis_file_name,
-   bool debug_algorithm,
-   Database::formats file_format) :
+   Database::formats file_format,
+   double min_sampling_time_step_scale,
+   double sampling_time_step_scale,
+   double max_sampling_time_step_scale,
+   bool debug_algorithm) :
    SVDBasisGenerator(basis_file_name, file_format)
 {
    CAROM_ASSERT(dim > 0);
    CAROM_ASSERT(redundancy_tol > 0.0);
+   CAROM_ASSERT(initial_dt > 0.0);
    CAROM_ASSERT(samples_per_time_interval > 0);
    CAROM_ASSERT(sampling_tol > 0.0);
    CAROM_ASSERT(max_time_between_samples > 0.0);
+   CAROM_ASSERT(min_sampling_time_step_scale < max_sampling_time_step_scale);
+
    d_svdsampler.reset(new IncrementalSVDSampler(dim,
-                                               redundancy_tol,
-                                               skip_redundant,
-                                               samples_per_time_interval,
-                                               sampling_tol,
-                                               max_time_between_samples,
-                                               fast_update,
-                                               debug_algorithm));
+                                                redundancy_tol,
+                                                skip_redundant,
+                                                fast_update,
+                                                initial_dt,
+                                                samples_per_time_interval,
+                                                sampling_tol,
+                                                max_time_between_samples,
+                                                min_sampling_time_step_scale,
+                                                sampling_time_step_scale,
+                                                max_sampling_time_step_scale,
+                                                debug_algorithm));
 }
 
 IncrementalSVDBasisGenerator::~IncrementalSVDBasisGenerator()

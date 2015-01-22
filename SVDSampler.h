@@ -136,6 +136,16 @@ class SVDSampler
          return d_svd->isNewTimeInterval();
       }
 
+      /**
+       * @brief Resets sample time step.
+       *
+       * @param[in] new_dt New value of sample time step.
+       */
+      virtual
+      void
+      resetDt(
+         double new_dt) = 0;
+
    protected:
       /**
        * @brief Pointer to the abstract SVD algorithm object.

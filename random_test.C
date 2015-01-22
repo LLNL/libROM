@@ -121,11 +121,16 @@ main(
    CAROM::IncrementalSVDBasisGenerator inc_basis_generator(dim,
       1.0e-6,
       false,
+      true,
+      1.0e-6,
       num_samples,
       1.0e-2,
       0.001,
-      true,
       "",
+      CAROM::Database::HDF5,
+      0.1,
+      0.8,
+      5.0,
       true);
 
    // Construct the static basis generator for the static algorithm and the
@@ -189,11 +194,12 @@ main(
    // Take the samples.
    for (int i = 0; i < num_samples; ++i) {
       if (inc_basis_generator.isNextSample(0.01*i)) {
-         inc_basis_generator.takeSample(M[i], 0.01*i);
+         inc_basis_generator.takeSample(M[i], 0.01*i, 0.01);
          inc_basis_generator.computeNextSampleTime(M[i], M[i], 0.01*i);
       }
-      if (static_basis_generator.isNextSample(0.01*i)) {
-         static_basis_generator.takeSample(M[i], 0.01*i);
+      if (i < num_lin_indep_samples &&
+          static_basis_generator.isNextSample(0.01*i)) {
+         static_basis_generator.takeSample(M[i], 0.01*i, 0.01);
          static_basis_generator.computeNextSampleTime(M[i], M[i], 0.01*i);
       }
    }
@@ -208,8 +214,8 @@ main(
    // incremental basis.  This should be a unitary matrix.
    CAROM::Matrix* test = transposeMult(static_basis, inc_basis);
    if (rank == 0) {
-      for (int row = 0; row < num_samples; ++row) {
-         for (int col = 0; col < num_lin_indep_samples; ++col) {
+      for (int row = 0; row < test->numRows(); ++row) {
+         for (int col = 0; col < test->numColumns(); ++col) {
             printf("%.16e ", test->item(row, col));
          }
          printf("\n");
