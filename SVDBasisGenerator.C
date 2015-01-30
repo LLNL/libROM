@@ -3,7 +3,7 @@
  * This file is part of the CAROM distribution.  For full copyright
  * information, see COPYRIGHT.
  *
- * Copyright:   (c) 2013-2014 Lawrence Livermore National Security, LLC
+ * Copyright:   (c) 2013-2015 Lawrence Livermore National Security, LLC
  * Description: The abstract wrapper class for an abstract SVD algorithm and
  *              sampler.  This class provides interfaces to each so that an
  *              application only needs to instantiate one concrete

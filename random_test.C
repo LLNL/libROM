@@ -3,7 +3,7 @@
  * This file is part of the CAROM distribution.  For full copyright
  * information, see COPYRIGHT.
  *
- * Copyright:   (c) 2013-2014 Lawrence Livermore National Security, LLC
+ * Copyright:   (c) 2013-2015 Lawrence Livermore National Security, LLC
  * Description: A test of both the static and incremental fast update
  *              algorithms and samplers.  Random numbers are generated as the
  *              state vectors in such a way that the global state vector is the
