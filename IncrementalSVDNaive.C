@@ -114,6 +114,19 @@ IncrementalSVDNaive::addRedundantSample(
    Matrix* U_times_Amod = d_U->mult(Amod);
    delete d_U;
    d_U = U_times_Amod;
+
+   // Reorthogonalize if necessary.
+   long int max_U_dim;
+   if (d_num_samples > d_total_dim) {
+      max_U_dim = d_total_dim;
+   }
+   else {
+      max_U_dim = d_num_samples;
+   }
+   if (fabs(checkOrthogonality(d_U)) >
+       std::numeric_limits<double>::epsilon()*max_U_dim) {
+      reOrthogonalize(d_U);
+   }
 }
 
 void
@@ -142,7 +155,7 @@ IncrementalSVDNaive::addNewSample(
 
    // Reorthogonalize if necessary.
    long int max_U_dim;
-   if (d_total_dim > d_num_samples) {
+   if (d_num_samples > d_total_dim) {
       max_U_dim = d_total_dim;
    }
    else {

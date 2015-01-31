@@ -177,7 +177,7 @@ IncrementalSVDFastUpdate::addNewSample(
 
    // Reorthogonalize if necessary.
    long int max_U_dim;
-   if (d_total_dim > d_num_samples) {
+   if (d_num_samples > d_total_dim) {
       max_U_dim = d_total_dim;
    }
    else {
