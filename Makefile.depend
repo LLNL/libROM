@@ -80,10 +80,12 @@ DEPENDS_6 +=\
 
 ${FILE_6}: ${DEPENDS_6}
 
-FILE_7=IncrementalSVDNaive.o
+FILE_7=IncrementalSVDSampler.o
 DEPENDS_7:=\
-	CAROM_config.h IncrementalSVD.h IncrementalSVDNaive.C		\
-	IncrementalSVDNaive.h Matrix.h SVD.h Utilities.h Vector.h
+	CAROM_config.h IncrementalSVD.h IncrementalSVDFastUpdate.h	\
+	IncrementalSVDSampler.C IncrementalSVDSampler.h			\
+	IncrementalSVDStandard.h Matrix.h SVD.h SVDSampler.h Utilities.h\
+	Vector.h
 
 DEPENDS_7 +=\
 	
@@ -91,12 +93,10 @@ DEPENDS_7 +=\
 
 ${FILE_7}: ${DEPENDS_7}
 
-FILE_8=IncrementalSVDSampler.o
+FILE_8=IncrementalSVDStandard.o
 DEPENDS_8:=\
-	CAROM_config.h IncrementalSVD.h IncrementalSVDFastUpdate.h	\
-	IncrementalSVDNaive.h IncrementalSVDSampler.C			\
-	IncrementalSVDSampler.h Matrix.h SVD.h SVDSampler.h Utilities.h	\
-	Vector.h
+	CAROM_config.h IncrementalSVD.h IncrementalSVDStandard.C	\
+	IncrementalSVDStandard.h Matrix.h SVD.h Utilities.h Vector.h
 
 DEPENDS_8 +=\
 	

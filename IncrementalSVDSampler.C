@@ -11,7 +11,7 @@
  *****************************************************************************/
 
 #include "IncrementalSVDSampler.h"
-#include "IncrementalSVDNaive.h"
+#include "IncrementalSVDStandard.h"
 #include "IncrementalSVDFastUpdate.h"
 
 #include "mpi.h"
@@ -63,7 +63,7 @@ IncrementalSVDSampler::IncrementalSVDSampler(
    }
    else {
       d_svd.reset(
-         new IncrementalSVDNaive(dim,
+         new IncrementalSVDStandard(dim,
             redundancy_tol,
             skip_redundant,
             sampling_tol,

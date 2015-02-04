@@ -10,7 +10,7 @@
  *
  *****************************************************************************/
 
-#include "IncrementalSVDNaive.h"
+#include "IncrementalSVDStandard.h"
 
 #include "mpi.h"
 
@@ -19,7 +19,7 @@
 
 namespace CAROM {
 
-IncrementalSVDNaive::IncrementalSVDNaive(
+IncrementalSVDStandard::IncrementalSVDStandard(
    int dim,
    double redundancy_tol,
    bool skip_redundant,
@@ -36,7 +36,7 @@ IncrementalSVDNaive::IncrementalSVDNaive(
 {
 }
 
-IncrementalSVDNaive::~IncrementalSVDNaive()
+IncrementalSVDStandard::~IncrementalSVDStandard()
 {
    // Delete data members.
    if (d_U) {
@@ -45,7 +45,7 @@ IncrementalSVDNaive::~IncrementalSVDNaive()
 }
 
 void
-IncrementalSVDNaive::buildInitialSVD(
+IncrementalSVDStandard::buildInitialSVD(
    const double* u,
    double time)
 {
@@ -87,13 +87,13 @@ IncrementalSVDNaive::buildInitialSVD(
 }
 
 void
-IncrementalSVDNaive::computeBasis()
+IncrementalSVDStandard::computeBasis()
 {
    d_basis = new Matrix(*d_U);
 }
 
 void
-IncrementalSVDNaive::addRedundantSample(
+IncrementalSVDStandard::addRedundantSample(
    const Matrix* A,
    const Matrix* sigma)
 {
@@ -130,7 +130,7 @@ IncrementalSVDNaive::addRedundantSample(
 }
 
 void
-IncrementalSVDNaive::addNewSample(
+IncrementalSVDStandard::addNewSample(
    const Vector* j,
    const Matrix* A,
    Matrix* sigma)

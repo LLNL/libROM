@@ -28,7 +28,7 @@ OBJS = Matrix.o \
        SVD.o \
        IncrementalSVD.o \
        IncrementalSVDFastUpdate.o \
-       IncrementalSVDNaive.o \
+       IncrementalSVDStandard.o \
        IncrementalSVDBasisGenerator.o \
        IncrementalSVDSampler.o \
        StaticSVD.o \

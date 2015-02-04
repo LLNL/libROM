@@ -20,7 +20,8 @@ namespace CAROM {
 /**
  * Class IncrementalSVDBasisGenerator implements the interface of base class
  * SVDBasisGenerator for the incremental svd algorithm.  Either the fast update
- * or the naive incremental algorithm may be specified through the constructor.
+ * or the standard incremental algorithm may be specified through the
+ * constructor.
  */
 class IncrementalSVDBasisGenerator : public SVDBasisGenerator
 {

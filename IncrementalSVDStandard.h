@@ -10,17 +10,17 @@
  *
  *****************************************************************************/
 
-#ifndef included_IncrementalSVDNaive_h
-#define included_IncrementalSVDNaive_h
+#ifndef included_IncrementalSVDStandard_h
+#define included_IncrementalSVDStandard_h
 
 #include "IncrementalSVD.h"
 
 namespace CAROM {
 
 /**
- * A class which embodies the naive incremental SVD algorithm.
+ * A class which embodies the standard incremental SVD algorithm.
  */
-class IncrementalSVDNaive : public IncrementalSVD
+class IncrementalSVDStandard : public IncrementalSVD
 {
    public:
       /**
@@ -43,7 +43,7 @@ class IncrementalSVDNaive : public IncrementalSVD
        * @param[in] debug_algorithm If true results of the algorithm will be
        *                            printed to facilitate debugging.
        */
-      IncrementalSVDNaive(
+      IncrementalSVDStandard(
          int dim,
          double redundancy_tol,
          bool skip_redundant,
@@ -54,26 +54,26 @@ class IncrementalSVDNaive : public IncrementalSVD
       /**
        * @brief Destructor.
        */
-      ~IncrementalSVDNaive();
+      ~IncrementalSVDStandard();
 
    private:
       /**
        * @brief Unimplemented default constructor.
        */
-      IncrementalSVDNaive();
+      IncrementalSVDStandard();
 
       /**
        * @brief Unimplemented copy constructor.
        */
-      IncrementalSVDNaive(
-         const IncrementalSVDNaive& other);
+      IncrementalSVDStandard(
+         const IncrementalSVDStandard& other);
 
       /**
        * @brief Unimplemented assignment operator.
        */
-      IncrementalSVDNaive&
+      IncrementalSVDStandard&
       operator = (
-         const IncrementalSVDNaive& rhs);
+         const IncrementalSVDStandard& rhs);
 
       /**
        * @brief Constructs the first svd.
