@@ -80,6 +80,7 @@ class SVDBasisGenerator
        *
        * @param[in] u_in The state at the specified time.
        * @param[in] time The simulation time for the state.
+       * @param[in] dt The current simulation dt.
        */
       void
       takeSample(
