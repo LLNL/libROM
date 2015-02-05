@@ -65,9 +65,11 @@ namespace CAROM {
        *
        * @param[in] u_in The state at the specified time.
        * @param[in] time The simulation time for the state.
+       *
+       * @return True if the sampling was successful.
        */
       virtual
-      void
+      bool
       takeSample(
          const double* u_in,
          double time);
@@ -103,9 +105,11 @@ namespace CAROM {
        * @pre u != 0
        *
        * @param[in] u The new state.
+       *
+       * @return True if building the incremental svd was successful.
        */
       virtual
-      void
+      bool
       buildIncrementalSVD(
          const double* u);
 
@@ -143,8 +147,10 @@ namespace CAROM {
        * @param[in] A The matrix whose svd is needed.
        * @param[out] U The left singular vectors of A.
        * @param[out] S The singular values of A.
+       *
+       * @return True if the svd succeeded.
        */
-      void
+      bool
       svd(
          double* A,
          Matrix*& U,

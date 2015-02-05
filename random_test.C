@@ -192,38 +192,47 @@ main(
    }
 
    // Take the samples.
+   bool status = true;
    for (int i = 0; i < num_samples; ++i) {
       if (inc_basis_generator.isNextSample(0.01*i)) {
-         inc_basis_generator.takeSample(M[i], 0.01*i, 0.01);
+         status = inc_basis_generator.takeSample(M[i], 0.01*i, 0.01);
+         if (!status) {
+            break;
+         }
          inc_basis_generator.computeNextSampleTime(M[i], M[i], 0.01*i);
       }
       if (i < num_lin_indep_samples &&
           static_basis_generator.isNextSample(0.01*i)) {
-         static_basis_generator.takeSample(M[i], 0.01*i, 0.01);
+         status = static_basis_generator.takeSample(M[i], 0.01*i, 0.01);
+         if (!status) {
+            break;
+         }
          static_basis_generator.computeNextSampleTime(M[i], M[i], 0.01*i);
       }
    }
-   inc_basis_generator.endSamples();
-   static_basis_generator.endSamples();
+   if (status) {
+      inc_basis_generator.endSamples();
+      static_basis_generator.endSamples();
 
-   // Get the basis vectors from the 2 different algorithms.
-   const CAROM::Matrix* inc_basis = inc_basis_generator.getBasis();
-   const CAROM::Matrix* static_basis = static_basis_generator.getBasis();
+      // Get the basis vectors from the 2 different algorithms.
+      const CAROM::Matrix* inc_basis = inc_basis_generator.getBasis();
+      const CAROM::Matrix* static_basis = static_basis_generator.getBasis();
 
-   // Compute the product of the transpose of the static basis and the
-   // incremental basis.  This should be a unitary matrix.
-   CAROM::Matrix* test = transposeMult(static_basis, inc_basis);
-   if (rank == 0) {
-      for (int row = 0; row < test->numRows(); ++row) {
-         for (int col = 0; col < test->numColumns(); ++col) {
-            printf("%.16e ", test->item(row, col));
+      // Compute the product of the transpose of the static basis and the
+      // incremental basis.  This should be a unitary matrix.
+      CAROM::Matrix* test = transposeMult(static_basis, inc_basis);
+      if (rank == 0) {
+         for (int row = 0; row < test->numRows(); ++row) {
+            for (int col = 0; col < test->numColumns(); ++col) {
+               printf("%.16e ", test->item(row, col));
+            }
+            printf("\n");
          }
-         printf("\n");
       }
+      delete test;
    }
 
    // Clean up.
-   delete test;
    for (int i = 0; i < num_samples; ++i) {
       delete [] M[i];
    }
@@ -231,5 +240,5 @@ main(
 
    // Finalize MPI and return.
    MPI_Finalize();
-   return 0;
+   return !status;
 }

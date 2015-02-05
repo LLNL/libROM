@@ -137,25 +137,31 @@ main(
 
    double next_sample_time;
 
+   bool status;
+
    // Take the first sample.
    if (inc_basis_generator.isNextSample(0.0)) {
-      inc_basis_generator.takeSample(&vals0[offset], 0.0, 0.11);
-      next_sample_time =
-         inc_basis_generator.computeNextSampleTime(&vals0[offset],
-            &vals0[offset],
-            0.0);
+      status = inc_basis_generator.takeSample(&vals0[offset], 0.0, 0.11);
+      if (status) {
+         next_sample_time =
+            inc_basis_generator.computeNextSampleTime(&vals0[offset],
+               &vals0[offset],
+               0.0);
+      }
    }
 
    // Take the second sample.
-   if (inc_basis_generator.isNextSample(0.11)) {
-      inc_basis_generator.takeSample(&vals1[offset], 0.11, 0.11);
-      next_sample_time =
-         inc_basis_generator.computeNextSampleTime(&vals1[offset],
-            &vals1[offset],
-            0.11);
+   if (status && inc_basis_generator.isNextSample(0.11)) {
+      status = inc_basis_generator.takeSample(&vals1[offset], 0.11, 0.11);
+      if (status) {
+         next_sample_time =
+            inc_basis_generator.computeNextSampleTime(&vals1[offset],
+               &vals1[offset],
+               0.11);
+      }
    }
 
    // Finalize MPI and return.
    MPI_Finalize();
-   return 0;
+   return !status;
 }

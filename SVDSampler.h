@@ -55,13 +55,15 @@ class SVDSampler
        *
        * @param[in] u_in The state at the specified time.
        * @param[in] time The simulation time for the state.
+       *
+       * @return True if the sampling was successful.
        */
-      void
+      bool
       takeSample(
          const double* u_in,
          double time)
       {
-         d_svd->takeSample(u_in, time);
+         return d_svd->takeSample(u_in, time);
       }
 
       /**

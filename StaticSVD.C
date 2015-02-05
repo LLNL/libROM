@@ -57,7 +57,7 @@ StaticSVD::~StaticSVD()
    }
 }
 
-void
+bool
 StaticSVD::takeSample(
    const double* u_in,
    double time)
@@ -97,6 +97,7 @@ StaticSVD::takeSample(
    d_samples.push_back(sample);
    ++d_num_samples;
    d_this_interval_basis_current = false;
+   return true;
 }
 
 const Matrix*

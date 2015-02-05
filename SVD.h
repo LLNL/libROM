@@ -56,9 +56,11 @@ class SVD
        *
        * @param[in] u_in The new sample.
        * @param[in] time The simulation time of the new sample.
+       *
+       * @return True if the sampling was successful.
        */
       virtual
-      void
+      bool
       takeSample(
          const double* u_in,
          double time) = 0;

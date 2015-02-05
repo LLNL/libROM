@@ -81,8 +81,10 @@ class SVDBasisGenerator
        * @param[in] u_in The state at the specified time.
        * @param[in] time The simulation time for the state.
        * @param[in] dt The current simulation dt.
+       *
+       * @return True if the sampling was successful.
        */
-      void
+      bool
       takeSample(
          const double* u_in,
          double time,
@@ -98,7 +100,7 @@ class SVDBasisGenerator
                d_basis_writer->writeBasis();
             }
          }
-         d_svdsampler->takeSample(u_in, time);
+         return d_svdsampler->takeSample(u_in, time);
       }
 
       /**

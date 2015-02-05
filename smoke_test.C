@@ -73,25 +73,31 @@ main(
 
    double next_sample_time;
 
+   bool status;
+
    // Take the first sample.
    if (inc_basis_generator.isNextSample(0.0)) {
-      inc_basis_generator.takeSample(&vals0[dim*rank], 0.0, 0.11);
-      next_sample_time =
-         inc_basis_generator.computeNextSampleTime(&vals0[dim*rank],
-            &vals0[dim*rank],
-            0.0);
+      status = inc_basis_generator.takeSample(&vals0[dim*rank], 0.0, 0.11);
+      if (status) {
+         next_sample_time =
+            inc_basis_generator.computeNextSampleTime(&vals0[dim*rank],
+               &vals0[dim*rank],
+               0.0);
+      }
    }
 
    // Take the second sample.
-   if (inc_basis_generator.isNextSample(0.11)) {
-      inc_basis_generator.takeSample(&vals1[dim*rank], 0.11, 0.11);
-      next_sample_time =
-         inc_basis_generator.computeNextSampleTime(&vals1[dim*rank],
-            &vals1[dim*rank],
-            0.11);
+   if (status && inc_basis_generator.isNextSample(0.11)) {
+      status = inc_basis_generator.takeSample(&vals1[dim*rank], 0.11, 0.11);
+      if (status) {
+         next_sample_time =
+            inc_basis_generator.computeNextSampleTime(&vals1[dim*rank],
+               &vals1[dim*rank],
+               0.11);
+      }
    }
 
    // Finalize MPI and return.
    MPI_Finalize();
-   return 0;
+   return !status;
 }

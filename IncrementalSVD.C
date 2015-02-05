@@ -79,7 +79,7 @@ IncrementalSVD::~IncrementalSVD()
    }
 }
 
-void
+bool
 IncrementalSVD::takeSample(
    const double* u_in,
    double time)
@@ -89,11 +89,12 @@ IncrementalSVD::takeSample(
 
    // If this is the first SVD then build it.  Otherwise add this sample to the
    // system.
+   bool result = true;
    if (isNewTimeInterval()) {
       buildInitialSVD(u_in, time);
    }
    else {
-      buildIncrementalSVD(u_in);
+      result = buildIncrementalSVD(u_in);
    }
 
    if (d_debug_algorithm) {
@@ -159,6 +160,7 @@ IncrementalSVD::takeSample(
             &request);
       }
    }
+   return result;
 }
 
 const Matrix*
@@ -168,7 +170,7 @@ IncrementalSVD::getBasis()
    return d_basis;
 }
 
-void
+bool
 IncrementalSVD::buildIncrementalSVD(
    const double* u)
 {
@@ -197,7 +199,7 @@ IncrementalSVD::buildIncrementalSVD(
    if (k < d_sampling_tol) {
       delete l;
       delete basisl;
-      return;
+      return true;
    }
 
    // Use k to see if this sample is new.
@@ -218,38 +220,49 @@ IncrementalSVD::buildIncrementalSVD(
    // Now get the singular value decomposition of Q.
    Matrix* A;
    Matrix* sigma;
-   svd(Q, A, sigma);
+   bool result = svd(Q, A, sigma);
 
    // Done with Q.
    delete [] Q;
 
-   // We need to add the sample if it is new or if it is redundant and we are
-   // not skipping redundant samples.
-   if (!is_new_sample && !d_skip_redundant) {
-      // This sample is redundant and we are not skipping redundant samples.
-      addRedundantSample(A, sigma);
+   // If the svd was successful then add the sample.  Otherwise clean up and
+   // return.
+   if (result) {
+
+      // We need to add the sample if it is new or if it is redundant and we
+      // are not skipping redundant samples.
+      if (!is_new_sample && !d_skip_redundant) {
+         // This sample is redundant and we are not skipping redundant samples.
+         addRedundantSample(A, sigma);
+         delete sigma;
+      }
+      else if (is_new_sample) {
+         // This sample is new.
+
+         // Compute j
+         Vector* j = u_vec.minus(basisl);
+         for (int i = 0; i < d_dim; ++i) {
+            j->item(i) /= k;
+         }
+
+         // addNewSample will assign sigma to d_S hence it should not be
+         // deleted upon return.
+         addNewSample(j, A, sigma);
+         delete j;
+      }
+      delete basisl;
+      delete A;
+
+      // Compute the basis vectors.
+      delete d_basis;
+      computeBasis();
+   }
+   else {
+      delete basisl;
+      delete A;
       delete sigma;
    }
-   else if (is_new_sample) {
-      // This sample is new.
-
-      // Compute j
-      Vector* j = u_vec.minus(basisl);
-      for (int i = 0; i < d_dim; ++i) {
-         j->item(i) /= k;
-      }
-
-      // addNewSample will assign sigma to d_S hence it should not be deleted
-      // upon return.
-      addNewSample(j, A, sigma);
-      delete j;
-   }
-   delete basisl;
-   delete A;
-
-   // Compute the basis vectors.
-   delete d_basis;
-   computeBasis();
+   return result;
 }
 
 void
@@ -282,7 +295,7 @@ IncrementalSVD::constructQ(
    Q[q_idx] = k;
 }
 
-void
+bool
 IncrementalSVD::svd(
    double* A,
    Matrix*& U,
@@ -327,24 +340,31 @@ IncrementalSVD::svd(
       &lwork,
       iwork,
       &info);
-   CAROM_ASSERT(info == 0);
    delete [] work;
 
-   // Place sigma into S.
-   for (int i = 0; i < d_num_samples+1; ++i) {
-      S->item(i, i) = sigma[i];
-   }
-   delete [] sigma;
-
-   // U is column major order so convert it to row major order.
-   for (int row = 0; row < d_num_samples+1; ++row) {
-      for (int col = row+1; col < d_num_samples+1; ++col) {
-         double tmp = U->item(row, col);
-         U->item(row, col) = U->item(col, row);
-         U->item(col, row) = tmp;
+   // If the svd succeeded, fill U and S.  Otherwise clean up and return.
+   if (info == 0) {
+      // Place sigma into S.
+      for (int i = 0; i < d_num_samples+1; ++i) {
+         S->item(i, i) = sigma[i];
       }
+      delete [] sigma;
+
+      // U is column major order so convert it to row major order.
+      for (int row = 0; row < d_num_samples+1; ++row) {
+         for (int col = row+1; col < d_num_samples+1; ++col) {
+            double tmp = U->item(row, col);
+            U->item(row, col) = U->item(col, row);
+            U->item(col, row) = tmp;
+         }
+      }
+      delete V;
    }
-   delete V;
+   else {
+      delete V;
+      delete [] sigma;
+   }
+   return info == 0;
 }
 
 double
