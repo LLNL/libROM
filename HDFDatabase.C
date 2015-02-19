@@ -31,10 +31,10 @@ HDFDatabase::~HDFDatabase()
 
    if (d_group_id != -1) {
       herr_t errf = H5Gclose(d_group_id);
+      CAROM_ASSERT(errf >= 0);
 #ifndef DEBUG_CHECK_ASSERTIONS
       CAROM_NULL_USE(errf);
 #endif
-      CAROM_ASSERT(errf >= 0);
    }
 }
 
@@ -142,6 +142,9 @@ HDFDatabase::putIntegerArray(
 
    errf = H5Dclose(dataset);
    CAROM_ASSERT(errf >= 0);
+#ifndef DEBUG_CHECK_ASSERTIONS
+   CAROM_NULL_USE(errf);
+#endif
 }
 
 void
@@ -191,6 +194,9 @@ HDFDatabase::putDoubleArray(
 
    errf = H5Dclose(dataset);
    CAROM_ASSERT(errf >= 0);
+#ifndef DEBUG_CHECK_ASSERTIONS
+   CAROM_NULL_USE(errf);
+#endif
 }
 
 void
@@ -233,6 +239,9 @@ HDFDatabase::getIntegerArray(
 
    errf = H5Dclose(dset);
    CAROM_ASSERT(errf >= 0);
+#ifndef DEBUG_CHECK_ASSERTIONS
+   CAROM_NULL_USE(errf);
+#endif
 }
 
 void
@@ -275,6 +284,9 @@ HDFDatabase::getDoubleArray(
 
    errf = H5Dclose(dset);
    CAROM_ASSERT(errf >= 0);
+#ifndef DEBUG_CHECK_ASSERTIONS
+   CAROM_NULL_USE(errf);
+#endif
 }
 
 bool
@@ -295,10 +307,10 @@ HDFDatabase::isInteger(
             is_int = true;
          }
          herr_t errf = H5Dclose(this_set);
+         CAROM_ASSERT(errf >= 0);
 #ifndef DEBUG_CHECK_ASSERTIONS
          CAROM_NULL_USE(errf);
 #endif
-         CAROM_ASSERT(errf >= 0);
       }
    }
 
@@ -323,10 +335,10 @@ HDFDatabase::isDouble(
             is_double = true;
          }
          herr_t errf = H5Dclose(this_set);
+         CAROM_ASSERT(errf >= 0);
 #ifndef DEBUG_CHECK_ASSERTIONS
          CAROM_NULL_USE(errf);
 #endif
-         CAROM_ASSERT(errf >= 0);
       }
    }
 
@@ -365,6 +377,9 @@ HDFDatabase::writeAttribute(
 
    errf = H5Sclose(attr_id);
    CAROM_ASSERT(errf >= 0);
+#ifndef DEBUG_CHECK_ASSERTIONS
+   CAROM_NULL_USE(errf);
+#endif
 }
 
 int
@@ -380,6 +395,9 @@ HDFDatabase::readAttribute(
 
    errf = H5Aclose(attr);
    CAROM_ASSERT(errf >= 0);
+#ifndef DEBUG_CHECK_ASSERTIONS
+   CAROM_NULL_USE(errf);
+#endif
 
    return type_key;
 }
