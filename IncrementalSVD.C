@@ -31,13 +31,11 @@ IncrementalSVD::IncrementalSVD(
    int dim,
    double redundancy_tol,
    bool skip_redundant,
-   double sampling_tol,
    int samples_per_time_interval,
    bool debug_algorithm) :
    SVD(dim, samples_per_time_interval, debug_algorithm),
    d_redundancy_tol(redundancy_tol),
    d_skip_redundant(skip_redundant),
-   d_sampling_tol(sampling_tol),
    d_S(0),
    d_total_dim(0)
 {
@@ -193,13 +191,6 @@ IncrementalSVD::buildIncrementalSVD(
    }
    else {
       k = sqrt(k);
-   }
-
-   // Use k to see if a sample is needed at this time.
-   if (k < d_sampling_tol) {
-      delete l;
-      delete basisl;
-      return true;
    }
 
    // Use k to see if this sample is new.

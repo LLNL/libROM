@@ -29,16 +29,12 @@ class IncrementalSVDFastUpdate : public IncrementalSVD
        *
        * @pre dim > 0
        * @pre redundancy_tol > 0.0
-       * @pre sampling_tol > 0.0
        * @pre samples_per_time_interval > 0
        *
        * @param[in] dim The dimension of the system on this processor.
        * @param[in] redundancy_tol Tolerance to determine if a sample is
        *                           redundant or not.
        * @param[in] skip_redundant If true skip redundant samples.
-       * @param[in] sampling_tol Sampling control tolerance.  Limits error in
-       *                         projection of sample into reduced order space
-       *                         followed by a lift back to full order space.
        * @param[in] samples_per_time_interval The number of samples to be
        *                                      collected for each time interval.
        * @param[in] debug_algorithm If true results of the algorithm will be
@@ -48,7 +44,6 @@ class IncrementalSVDFastUpdate : public IncrementalSVD
          int dim,
          double redundancy_tol,
          bool skip_redundant,
-         double sampling_tol,
          int samples_per_time_interval,
          bool debug_algorithm = false);
 

@@ -57,7 +57,6 @@ IncrementalSVDSampler::IncrementalSVDSampler(
          new IncrementalSVDFastUpdate(dim,
             redundancy_tol,
             skip_redundant,
-            sampling_tol,
             samples_per_time_interval,
             debug_algorithm));
    }
@@ -66,7 +65,6 @@ IncrementalSVDSampler::IncrementalSVDSampler(
          new IncrementalSVDStandard(dim,
             redundancy_tol,
             skip_redundant,
-            sampling_tol,
             samples_per_time_interval,
             debug_algorithm));
    }
