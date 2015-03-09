@@ -29,17 +29,17 @@ const int IncrementalSVD::COMMUNICATE_U = 666;
 
 IncrementalSVD::IncrementalSVD(
    int dim,
-   double redundancy_tol,
-   bool skip_redundant,
+   double linearity_tol,
+   bool skip_linearly_dependent,
    int samples_per_time_interval,
    bool debug_algorithm) :
    SVD(dim, samples_per_time_interval, debug_algorithm),
-   d_redundancy_tol(redundancy_tol),
-   d_skip_redundant(skip_redundant),
+   d_linearity_tol(linearity_tol),
+   d_skip_linearly_dependent(skip_linearly_dependent),
    d_S(0),
    d_total_dim(0)
 {
-   CAROM_ASSERT(redundancy_tol > 0.0);
+   CAROM_ASSERT(linearity_tol > 0.0);
 
    // Get the number of processors, the dimensions for each process, and the
    // total dimension.
@@ -194,13 +194,13 @@ IncrementalSVD::buildIncrementalSVD(
    }
 
    // Use k to see if this sample is new.
-   bool is_new_sample;
-   if (k < d_redundancy_tol) {
+   bool linearly_dependent_sample;
+   if (k < d_linearity_tol) {
       k = 0;
-      is_new_sample = false;
+      linearly_dependent_sample = true;
    }
    else {
-      is_new_sample = true;
+      linearly_dependent_sample = false;
    }
 
    // Create Q.
@@ -220,15 +220,16 @@ IncrementalSVD::buildIncrementalSVD(
    // return.
    if (result) {
 
-      // We need to add the sample if it is new or if it is redundant and we
-      // are not skipping redundant samples.
-      if (!is_new_sample && !d_skip_redundant) {
-         // This sample is redundant and we are not skipping redundant samples.
-         addRedundantSample(A, sigma);
+      // We need to add the sample if it is not linearly dependent or if it is
+      // linearly dependent and we are not skipping linearly dependent samples.
+      if (linearly_dependent_sample && !d_skip_linearly_dependent) {
+         // This sample is linearly dependent and we are not skipping linearly
+         // dependent samples.
+         addLinearlyDependentSample(A, sigma);
          delete sigma;
       }
-      else if (is_new_sample) {
-         // This sample is new.
+      else if (!linearly_dependent_sample) {
+         // This sample is not linearly dependent.
 
          // Compute j
          Vector* j = u_vec.minus(basisl);

@@ -34,7 +34,7 @@ class IncrementalSVDSampler : public SVDSampler
        * @brief Constructor.
        *
        * @pre dim > 0
-       * @pre redundancy_tol > 0.0
+       * @pre linearity_tol > 0.0
        * @pre initial_dt > 0.0
        * @pre samples_per_time_interval > 0
        * @pre sampling_tol > 0.0
@@ -42,9 +42,10 @@ class IncrementalSVDSampler : public SVDSampler
        * @pre min_sampling_time_step_scale < max_sampling_time_step_scale
        *
        * @param[in] dim The dimension of the system on this processor.
-       * @param[in] redundancy_tol Tolerance to determine if a sample is
-       *                           redundant or not.
-       * @param[in] skip_redundant If true skip redundant samples.
+       * @param[in] linearity_tol Tolerance to determine whether or not a
+       *                          sample is linearly dependent.
+       * @param[in] skip_linearly_dependent If true skip linearly dependent
+       *                                    samples.
        * @param[in] fast_update If true use the fast update incremental svd
        *                        algorithm.
        * @param[in] initial_dt Initial simulation time step.
@@ -67,8 +68,8 @@ class IncrementalSVDSampler : public SVDSampler
        */
       IncrementalSVDSampler(
          int dim,
-         double redundancy_tol,
-         bool skip_redundant,
+         double linearity_tol,
+         bool skip_linearly_dependent,
          bool fast_update,
          double initial_dt,
          int samples_per_time_interval,

@@ -17,8 +17,8 @@ namespace CAROM {
 
 IncrementalSVDBasisGenerator::IncrementalSVDBasisGenerator(
    int dim,
-   double redundancy_tol,
-   bool skip_redundant,
+   double linearity_tol,
+   bool skip_linearly_dependent,
    bool fast_update,
    double initial_dt,
    int samples_per_time_interval,
@@ -33,7 +33,7 @@ IncrementalSVDBasisGenerator::IncrementalSVDBasisGenerator(
    SVDBasisGenerator(basis_file_name, file_format)
 {
    CAROM_ASSERT(dim > 0);
-   CAROM_ASSERT(redundancy_tol > 0.0);
+   CAROM_ASSERT(linearity_tol > 0.0);
    CAROM_ASSERT(initial_dt > 0.0);
    CAROM_ASSERT(samples_per_time_interval > 0);
    CAROM_ASSERT(sampling_tol > 0.0);
@@ -41,8 +41,8 @@ IncrementalSVDBasisGenerator::IncrementalSVDBasisGenerator(
    CAROM_ASSERT(min_sampling_time_step_scale < max_sampling_time_step_scale);
 
    d_svdsampler.reset(new IncrementalSVDSampler(dim,
-                                                redundancy_tol,
-                                                skip_redundant,
+                                                linearity_tol,
+                                                skip_linearly_dependent,
                                                 fast_update,
                                                 initial_dt,
                                                 samples_per_time_interval,

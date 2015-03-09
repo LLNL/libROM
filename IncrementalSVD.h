@@ -27,13 +27,14 @@ namespace CAROM {
        * @brief Constructor.
        *
        * @pre dim > 0
-       * @pre redundancy_tol > 0.0
+       * @pre linearity_tol > 0.0
        * @pre samples_per_time_interval > 0
        *
        * @param[in] dim The dimension of the system on this processor.
-       * @param[in] redundancy_tol Tolerance to determine if a sample is
-       *                           redundant or not.
-       * @param[in] skip_redundant If true skip redundant samples.
+       * @param[in] linearity_tol Tolerance to determine whether or not a
+       *                          sample is linearly dependent.
+       * @param[in] skip_linearly_dependent If true skip linearly dependent
+       *                                    samples.
        * @param[in] samples_per_time_interval The number of samples to be
        *                                      collected for each time interval.
        * @param[in] debug_algorithm If true results of algorithm will be
@@ -41,8 +42,8 @@ namespace CAROM {
        */
       IncrementalSVD(
          int dim,
-         double redundancy_tol,
-         bool skip_redundant,
+         double linearity_tol,
+         bool skip_linearly_dependent,
          int samples_per_time_interval,
          bool debug_algorithm = false);
 
@@ -152,7 +153,7 @@ namespace CAROM {
          Matrix*& S);
 
       /**
-       * Add a redundant sample to the svd.
+       * Add a linearly dependent sample to the svd.
        *
        * @pre A != 0
        * @pre sigma != 0
@@ -162,7 +163,7 @@ namespace CAROM {
        */
       virtual
       void
-      addRedundantSample(
+      addLinearlyDependentSample(
          const Matrix* A,
          const Matrix* sigma) = 0;
 
@@ -220,14 +221,15 @@ namespace CAROM {
          Matrix* m);
 
       /**
-       * @brief Tolerance to determine if a sample is redundant or not.
+       * @brief Tolerance to determine whether or not a sample is linearly
+       * dependent.
        */
-      double d_redundancy_tol;
+      double d_linearity_tol;
 
       /**
-       * @brief If true, skip redundant samples.
+       * @brief If true, skip linearly dependent samples.
        */
-      bool d_skip_redundant;
+      bool d_skip_linearly_dependent;
 
       /**
        * @brief The matrix S.

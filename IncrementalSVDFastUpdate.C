@@ -20,13 +20,13 @@ namespace CAROM {
 
 IncrementalSVDFastUpdate::IncrementalSVDFastUpdate(
    int dim,
-   double redundancy_tol,
-   bool skip_redundant,
+   double linearity_tol,
+   bool skip_linearly_dependent,
    int samples_per_time_interval,
    bool debug_algorithm) :
    IncrementalSVD(dim,
-      redundancy_tol,
-      skip_redundant,
+      linearity_tol,
+      skip_linearly_dependent,
       samples_per_time_interval,
       debug_algorithm),
    d_U(0),
@@ -98,7 +98,7 @@ IncrementalSVDFastUpdate::computeBasis()
 }
 
 void
-IncrementalSVDFastUpdate::addRedundantSample(
+IncrementalSVDFastUpdate::addLinearlyDependentSample(
    const Matrix* A,
    const Matrix* sigma)
 {

@@ -22,8 +22,8 @@ namespace CAROM {
 
 IncrementalSVDSampler::IncrementalSVDSampler(
    int dim,
-   double redundancy_tol,
-   bool skip_redundant,
+   double linearity_tol,
+   bool skip_linearly_dependent,
    bool fast_update,
    double initial_dt,
    int samples_per_time_interval,
@@ -42,7 +42,7 @@ IncrementalSVDSampler::IncrementalSVDSampler(
    d_next_sample_time(0.0)
 {
    CAROM_ASSERT(dim > 0);
-   CAROM_ASSERT(redundancy_tol > 0.0);
+   CAROM_ASSERT(linearity_tol > 0.0);
    CAROM_ASSERT(initial_dt > 0.0);
    CAROM_ASSERT(samples_per_time_interval > 0);
    CAROM_ASSERT(sampling_tol > 0.0);
@@ -55,16 +55,16 @@ IncrementalSVDSampler::IncrementalSVDSampler(
    if (fast_update) {
       d_svd.reset(
          new IncrementalSVDFastUpdate(dim,
-            redundancy_tol,
-            skip_redundant,
+            linearity_tol,
+            skip_linearly_dependent,
             samples_per_time_interval,
             debug_algorithm));
    }
    else {
       d_svd.reset(
          new IncrementalSVDStandard(dim,
-            redundancy_tol,
-            skip_redundant,
+            linearity_tol,
+            skip_linearly_dependent,
             samples_per_time_interval,
             debug_algorithm));
    }

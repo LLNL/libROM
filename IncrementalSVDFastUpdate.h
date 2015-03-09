@@ -28,13 +28,14 @@ class IncrementalSVDFastUpdate : public IncrementalSVD
        * @brief Constructor.
        *
        * @pre dim > 0
-       * @pre redundancy_tol > 0.0
+       * @pre linearity_tol > 0.0
        * @pre samples_per_time_interval > 0
        *
        * @param[in] dim The dimension of the system on this processor.
-       * @param[in] redundancy_tol Tolerance to determine if a sample is
-       *                           redundant or not.
-       * @param[in] skip_redundant If true skip redundant samples.
+       * @param[in] linearity_tol Tolerance to determine whether or not a
+       *                          sample is linearly dependent.
+       * @param[in] skip_linearly_dependent If true skip linearly dependent
+       *                                    samples.
        * @param[in] samples_per_time_interval The number of samples to be
        *                                      collected for each time interval.
        * @param[in] debug_algorithm If true results of the algorithm will be
@@ -42,8 +43,8 @@ class IncrementalSVDFastUpdate : public IncrementalSVD
        */
       IncrementalSVDFastUpdate(
          int dim,
-         double redundancy_tol,
-         bool skip_redundant,
+         double linearity_tol,
+         bool skip_linearly_dependent,
          int samples_per_time_interval,
          bool debug_algorithm = false);
 
@@ -94,7 +95,7 @@ class IncrementalSVDFastUpdate : public IncrementalSVD
       computeBasis();
 
       /**
-       * @brief Add a redundant sample to the svd.
+       * @brief Add a linearly dependent sample to the svd.
        *
        * @pre A != 0
        * @pre sigma != 0
@@ -103,7 +104,7 @@ class IncrementalSVDFastUpdate : public IncrementalSVD
        * @param[in] sigma The singular values.
        */
       void
-      addRedundantSample(
+      addLinearlyDependentSample(
          const Matrix* A,
          const Matrix* sigma);
 
