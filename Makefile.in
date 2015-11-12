@@ -47,16 +47,16 @@ lib: $(OBJS)
 	ar ru $(LIBROM) $(OBJS)
 
 uneven_dist: lib uneven_dist.o
-	$(CXX) $(LDFLAGS) -o uneven_dist uneven_dist.o $(LDLIBS)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o uneven_dist uneven_dist.o $(LDLIBS)
 
 random_test: lib random_test.o
-	$(CXX) $(LDFLAGS) -o random_test random_test.o $(LDLIBS)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o random_test random_test.o $(LDLIBS)
 
 weak_scaling: lib weak_scaling.o
-	$(CXX) $(LDFLAGS) -o weak_scaling weak_scaling.o $(LDLIBS)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o weak_scaling weak_scaling.o $(LDLIBS)
 
 smoke_test: lib smoke_test.o
-	$(CXX) $(LDFLAGS) -o smoke_test smoke_test.o $(LDLIBS)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o smoke_test smoke_test.o $(LDLIBS)
 
 .C.o :
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $*.C
