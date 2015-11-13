@@ -93,6 +93,12 @@ class SVDBasisGenerator
          CAROM_ASSERT(u_in != 0);
          CAROM_ASSERT(time >= 0);
 
+         // Check that u_in is not non-zero.
+         Vector u_vec(u_in, d_svdsampler->getDim(), true);
+         if (u_vec.norm() == 0.0) {
+            return false;
+         }
+
          if (getNumBasisTimeIntervals() > 0 &&
              d_svdsampler->isNewTimeInterval()) {
             d_svdsampler->resetDt(dt);

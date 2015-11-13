@@ -85,6 +85,12 @@ IncrementalSVD::takeSample(
    CAROM_ASSERT(u_in != 0);
    CAROM_ASSERT(time >= 0.0);
 
+   // Check that u_in is not non-zero.
+   Vector u_vec(u_in, d_dim, true);
+   if (u_vec.norm() == 0.0) {
+      return false;
+   }
+
    // If this is the first SVD then build it.  Otherwise add this sample to the
    // system.
    bool result = true;

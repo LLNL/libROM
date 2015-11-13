@@ -91,8 +91,14 @@ IncrementalSVDSampler::computeNextSampleTime(
    CAROM_ASSERT(rhs_in != 0);
    CAROM_ASSERT(time >= 0.0);
 
-   // Get some preliminary info.
+   // Check that u_in is not non-zero.
    int dim = d_svd->getDim();
+   Vector u_vec(u_in, dim, true);
+   if (u_vec.norm() == 0.0) {
+      return d_next_sample_time;
+   }
+
+   // Get some preliminary info.
    int mpi_init;
    int num_procs;
    MPI_Initialized(&mpi_init);
@@ -107,7 +113,6 @@ IncrementalSVDSampler::computeNextSampleTime(
    const Matrix* basis = getBasis();
 
    // Compute l = basis' * u
-   Vector u_vec(u_in, dim, true);
    Vector* l = basis->transposeMult(u_vec);
 
    // basisl = basis * l

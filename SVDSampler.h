@@ -148,6 +148,17 @@ class SVDSampler
       resetDt(
          double new_dt) = 0;
 
+      /**
+       * @brief Returns the dimension of the system on this processor.
+       *
+       * @return The dimension of the system on this processor.
+       */
+      int
+      getDim()
+      {
+         return d_svd->getDim();
+      }
+
    protected:
       /**
        * @brief Pointer to the abstract SVD algorithm object.
