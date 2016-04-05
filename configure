@@ -598,7 +598,7 @@ PACKAGE_VERSION=
 PACKAGE_STRING=
 PACKAGE_BUGREPORT=
 
-ac_unique_file="COPYRIGHT"
+ac_unique_file="README_BSD_NOTICE"
 # Factoring default headers for most tests.
 ac_includes_default="\
 #include <stdio.h>

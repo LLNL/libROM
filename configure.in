@@ -1,12 +1,45 @@
 dnl
-dnl This file is part of the CAROM distribution.  For full copyright
-dnl information, see COPYRIGHT.
+dnl Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+dnl Produced at the Lawrence Livermore National Laboratory
+dnl Written by William Arrighi wjarrighi@llnl.gov
+dnl CODE-686965
+dnl All rights reserved.
 dnl
-dnl Copyright:   (c) 2013-2015 Lawrence Livermore National Security, LLC
-dnl Description: autoconf configuration file
+dnl This file is part of libROM.
+dnl For details, see https://computation.llnl.gov/librom
+dnl Please also read README_BSD_NOTICE.
+dnl
+dnl Redistribution and use in source and binary forms, with or without
+dnl modifications, are permitted provided that the following conditions are
+dnl met:
+dnl
+dnl    o Redistributions of source code must retain the above copyright notice,
+dnl      this list of conditions and the disclaimer below.
+dnl    o Redistribution in binary form must reproduce the above copyright
+dnl      notice, this list of conditions and the disclaimer (as noted below) in
+dnl      the documentation and/or other materials provided with the
+dnl      distribution.
+dnl    o Neither the name of the LLNS/LLNL nor the names of its contributors
+dnl      may be used to endorse or promote products derived from this software
+dnl      without specific prior written permission.
+dnl
+dnl THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+dnl AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+dnl IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+dnl ARE DISCLAIMED.  IN NO EVENT SHALL LAWRENCE LIVERMORE NATIONAL SECURITY,
+dnl LLC, THE U.S. DEPARTMENT OF ENERGY OR CONTRIBUTORS BE LIABLE FOR ANY
+dnl DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+dnl (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+dnl SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+dnl CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+dnl LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+dnl OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OR
+dnl SUCH DAMAGE.
 dnl
 
-AC_INIT(COPYRIGHT)
+dnl Description: autoconf configuration file
+
+AC_INIT(README_BSD_NOTICE)
 AC_CONFIG_HEADER(CAROM_config.h:config/CAROM_config.h.in)
 dnl
 dnl Autoheader stuff
