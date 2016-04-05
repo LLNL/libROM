@@ -251,3 +251,16 @@ DEPENDS_21 +=\
 
 ${FILE_21}: ${DEPENDS_21}
 
+FILE_22=weak_scaling.o
+DEPENDS_22:=\
+	BasisWriter.h CAROM_config.h Database.h				\
+	IncrementalSVDBasisGenerator.h Matrix.h SVD.h			\
+	SVDBasisGenerator.h SVDSampler.h StaticSVDBasisGenerator.h	\
+	Utilities.h Vector.h weak_scaling.C
+
+DEPENDS_22 +=\
+	
+
+
+${FILE_22}: ${DEPENDS_22}
+
