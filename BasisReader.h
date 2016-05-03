@@ -104,12 +104,16 @@ class BasisReader {
          if (d_last_basis_idx == -1) {
             result = true;
          }
-         else if (time < d_time_interval_start_times[d_last_basis_idx]) {
-            result = true;
-         }
-         else if ((d_last_basis_idx != numTimeIntervals()-1) &&
-                  (d_time_interval_start_times[d_last_basis_idx+1] <= time)) {
-            result = true;
+         else {
+            int num_time_intervals = numTimeIntervals();
+            int i;
+            for (i = 0; i < num_time_intervals-1; ++i) {
+               if (d_time_interval_start_times[i] <= time &&
+                   time < d_time_interval_start_times[i+1]) {
+                  break;
+               }
+            }
+            result = i != d_last_basis_idx;
          }
          return result;
       }
