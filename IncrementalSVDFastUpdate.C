@@ -207,10 +207,10 @@ IncrementalSVDFastUpdate::addNewSample(
    // Reorthogonalize if necessary.
    long int max_U_dim;
    if (d_num_samples > d_total_dim) {
-      max_U_dim = d_total_dim;
+      max_U_dim = d_num_samples;
    }
    else {
-      max_U_dim = d_num_samples;
+      max_U_dim = d_total_dim;
    }
    if (fabs(checkOrthogonality(d_U)) >
        std::numeric_limits<double>::epsilon()*static_cast<double>(max_U_dim)) {
