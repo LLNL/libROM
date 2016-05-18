@@ -58,6 +58,14 @@ Matrix::Matrix(
 {
    CAROM_ASSERT(num_rows > 0);
    CAROM_ASSERT(num_cols > 0);
+   int mpi_init;
+   MPI_Initialized(&mpi_init);
+   if (mpi_init) {
+      MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+   }
+   else {
+      d_num_procs = 1;
+   }
    d_mat = new double [num_cols*num_rows];
 }
 
@@ -73,6 +81,14 @@ Matrix::Matrix(
    CAROM_ASSERT(mat != 0);
    CAROM_ASSERT(num_rows > 0);
    CAROM_ASSERT(num_cols > 0);
+   int mpi_init;
+   MPI_Initialized(&mpi_init);
+   if (mpi_init) {
+      MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+   }
+   else {
+      d_num_procs = 1;
+   }
    int num_entries = d_num_cols*d_num_rows;
    d_mat = new double [num_entries];
    memcpy(d_mat, mat, num_entries*sizeof(double));
@@ -84,6 +100,14 @@ Matrix::Matrix(
    d_num_cols(other.d_num_cols),
    d_distributed(other.d_distributed)
 {
+   int mpi_init;
+   MPI_Initialized(&mpi_init);
+   if (mpi_init) {
+      MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+   }
+   else {
+      d_num_procs = 1;
+   }
    int num_entries = d_num_cols*d_num_rows;
    d_mat = new double [num_entries];
    memcpy(d_mat, other.d_mat, num_entries*sizeof(double));
@@ -121,11 +145,11 @@ Matrix::mult(
                                d_distributed);
    for (int this_row = 0; this_row < d_num_rows; ++this_row) {
       for (int other_col = 0; other_col < other.d_num_cols; ++other_col) {
-         result->item(this_row, other_col) = 0.0;
+         double result_val = 0.0;
          for (int entry = 0; entry < d_num_cols; ++entry) {
-            result->item(this_row, other_col) +=
-               item(this_row, entry)*other.item(entry, other_col);
+            result_val += item(this_row, entry)*other.item(entry, other_col);
          }
+         result->item(this_row, other_col) = result_val;
       }
    }
    return result;
@@ -139,10 +163,11 @@ Matrix::mult(
    CAROM_ASSERT(numColumns() == other.dim());
    Vector* result = new Vector(d_num_rows, true);
    for (int this_row = 0; this_row < d_num_rows; ++this_row) {
-      result->item(this_row) = 0.0;
+      double result_val = 0.0;
       for (int entry = 0; entry < d_num_cols; ++entry) {
-         result->item(this_row) += item(this_row, entry)*other.item(entry);
+         result_val += item(this_row, entry)*other.item(entry);
       }
+      result->item(this_row) = result_val;
    }
    return result;
 }
@@ -153,58 +178,26 @@ Matrix::transposeMult(
 {
    CAROM_ASSERT(distributed() == other.distributed());
    CAROM_ASSERT(numRows() == other.numRows());
-   if (!d_distributed) {
-      Matrix* result = new Matrix(d_num_cols,
-                                  other.d_num_cols,
-                                  false);
-      for (int this_col = 0; this_col < d_num_cols; ++this_col) {
-         for (int other_col = 0; other_col < other.d_num_cols; ++other_col) {
-            result->item(this_col, other_col) = 0.0;
-            for (int entry = 0; entry < d_num_rows; ++entry) {
-               result->item(this_col, other_col) +=
-                  item(entry, this_col)*other.item(entry, other_col);
-            }
+   Matrix* result = new Matrix(d_num_cols, other.d_num_cols, false);
+   for (int this_col = 0; this_col < d_num_cols; ++this_col) {
+      for (int other_col = 0; other_col < other.d_num_cols; ++other_col) {
+         double result_val = 0.0;
+         for (int entry = 0; entry < d_num_rows; ++entry) {
+            result_val += item(entry, this_col)*other.item(entry, other_col);
          }
+         result->item(this_col, other_col) = result_val;
       }
-      return result;
    }
-   else {
+   if (d_distributed && d_num_procs > 1) {
       int new_mat_size = d_num_cols*other.d_num_cols;
-      Matrix* local_result = new Matrix(d_num_cols,
-                                        other.d_num_cols,
-                                        false);
-      for (int this_col = 0; this_col < d_num_cols; ++this_col) {
-         for (int other_col = 0; other_col < other.d_num_cols; ++other_col) {
-            local_result->item(this_col, other_col) = 0.0;
-            for (int entry = 0; entry < d_num_rows; ++entry) {
-               local_result->item(this_col, other_col) +=
-                  item(entry, this_col)*other.item(entry, other_col);
-            }
-         }
-      }
-      Matrix* result;
-      int mpi_init;
-      MPI_Initialized(&mpi_init);
-      int num_procs;
-      if (mpi_init) {
-         MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
-      }
-      else {
-         num_procs = 1;
-      }
-      if (num_procs > 1) {
-         result = new Matrix(d_num_cols,
-                             other.d_num_cols,
-                             false);
-         MPI_Allreduce(local_result->d_mat, result->d_mat, new_mat_size,
-                       MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-         delete local_result;
-      }
-      else {
-         result = local_result;
-      }
-      return result;
+      MPI_Allreduce(MPI_IN_PLACE,
+         &result->d_mat,
+         new_mat_size,
+         MPI_DOUBLE,
+         MPI_SUM,
+         MPI_COMM_WORLD);
    }
+   return result;
 }
 
 Vector*
@@ -213,36 +206,21 @@ Matrix::transposeMult(
 {
    CAROM_ASSERT(distributed() && other.distributed());
    CAROM_ASSERT(numRows() == other.dim());
-   Vector* local_result = new Vector(d_num_cols, false);
-   int result_dim = 0;
+   Vector* result = new Vector(d_num_cols, false);
    for (int this_col = 0; this_col < d_num_cols; ++this_col) {
-      int other_dim = 0;
-      local_result->item(result_dim) = 0.0;
+      double result_val = 0.0;
       for (int entry = 0; entry < d_num_rows; ++entry) {
-         local_result->item(result_dim) +=
-            item(entry, this_col)*other.item(other_dim);
-         ++other_dim;
+         result_val += item(entry, this_col)*other.item(entry);
       }
-      ++result_dim;
+      result->item(this_col) = result_val;
    }
-   Vector* result;
-   int mpi_init;
-   MPI_Initialized(&mpi_init);
-   int num_procs;
-   if (mpi_init) {
-      MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
-   }
-   else {
-      num_procs = 1;
-   }
-   if (num_procs > 1) {
-      result = new Vector(d_num_cols, false);
-      MPI_Allreduce(&local_result->item(0), &result->item(0), d_num_cols,
-                    MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-      delete local_result;
-   }
-   else {
-      result = local_result;
+   if (d_distributed && d_num_procs > 1) {
+      MPI_Allreduce(MPI_IN_PLACE,
+         &result->item(0),
+         d_num_cols,
+         MPI_DOUBLE,
+         MPI_SUM,
+         MPI_COMM_WORLD);
    }
    return result;
 }

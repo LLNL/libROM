@@ -402,6 +402,11 @@ class Matrix
        * Each processor does not need to hold the same number of rows.
        */
       bool d_distributed;
+
+      /**
+       * @brief The number of processors being run on.
+       */
+      int d_num_procs;
 };
 
 }
