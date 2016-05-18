@@ -179,23 +179,26 @@ IncrementalSVDFastUpdate::addNewSample(
    delete d_U;
    d_U = newU;
 
-   // Form a temporary matrix, tmp, by add another row and column to
-   // d_Up.  Only the last value in the new row/column is non-zero and it is 1.
-   Matrix tmp(d_num_samples+1, d_num_samples+1, false);
+   // The new d_Up is the product of the current d_Up extended by another row
+   // and column and A.  The only new value in the extended version of d_Up
+   // that is non-zero is the new lower right value and it is 1.  We will
+   // construct this product without explicitly forming the extended version of
+   // d_Up.
+   Matrix* new_d_Up = new Matrix(d_num_samples+1, d_num_samples+1, false);
    for (int row = 0; row < d_num_samples; ++row) {
-      for (int col = 0; col < d_num_samples; ++col) {
-         tmp.item(row, col) = d_Up->item(row, col);
+      for (int col = 0; col < d_num_samples+1; ++col) {
+         double new_d_Up_entry = 0.0;
+         for (int entry = 0; entry < d_num_samples; ++entry) {
+            new_d_Up_entry += d_Up->item(row, entry)*A->item(entry, col);
+         }
+         new_d_Up->item(row, col) = new_d_Up_entry;
       }
-      tmp.item(row, d_num_samples) = 0.0;
    }
-   for (int col = 0; col < d_num_samples; ++col) {
-     tmp.item(d_num_samples, col) = 0.0;
+   for (int col = 0; col < d_num_samples+1; ++col) {
+      new_d_Up->item(d_num_samples, col) = A->item(d_num_samples, col);
    }
-   tmp.item(d_num_samples, d_num_samples) = 1.0;
-
-   // d_Up = tmp*A
    delete d_Up;
-   d_Up = tmp.mult(A);
+   d_Up = new_d_Up;
 
    // d_S = sigma.
    delete d_S;
