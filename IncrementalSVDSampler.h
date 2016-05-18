@@ -211,6 +211,11 @@ class IncrementalSVDSampler : public SVDSampler
        * @brief Next time at which a sample should be taken.
        */
       double d_next_sample_time;
+
+      /**
+       * @brief The number of processors being run on.
+       */
+      int d_num_procs;
 };
 
 }

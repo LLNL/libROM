@@ -99,6 +99,16 @@ IncrementalSVDSampler::IncrementalSVDSampler(
             samples_per_time_interval,
             debug_algorithm));
    }
+
+   // Get the number of processors.
+   int mpi_init;
+   MPI_Initialized(&mpi_init);
+   if (mpi_init) {
+     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+   }
+   else {
+      d_num_procs = 1;
+   }
 }
 
 IncrementalSVDSampler::~IncrementalSVDSampler()
@@ -127,17 +137,6 @@ IncrementalSVDSampler::computeNextSampleTime(
    Vector u_vec(u_in, dim, true);
    if (u_vec.norm() == 0.0) {
       return d_next_sample_time;
-   }
-
-   // Get some preliminary info.
-   int mpi_init;
-   int num_procs;
-   MPI_Initialized(&mpi_init);
-   if (mpi_init) {
-     MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
-   }
-   else {
-      num_procs = 1;
    }
 
    // Get the current basis vectors.
@@ -177,7 +176,7 @@ IncrementalSVDSampler::computeNextSampleTime(
          local_norm = val;
       }
    }
-   if (num_procs == 1) {
+   if (d_num_procs == 1) {
       global_norm = local_norm;
    }
    else {
