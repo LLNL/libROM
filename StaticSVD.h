@@ -196,6 +196,16 @@ class StaticSVD : public SVD
       bool d_this_interval_basis_current;
 
       /**
+       * @brief The rank of the process this object belongs to.
+       */
+      int d_rank;
+
+      /**
+       * @brief The number of processors being run on.
+       */
+      int d_num_procs;
+
+      /**
        * @brief MPI message tag.
        */
       static const int COMMUNICATE_A;

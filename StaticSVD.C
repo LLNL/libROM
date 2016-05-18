@@ -68,6 +68,18 @@ StaticSVD::StaticSVD(
    d_V(0),
    d_this_interval_basis_current(false)
 {
+   // Get the rank of this process, and the number of processors.
+   int mpi_init;
+   MPI_Initialized(&mpi_init);
+   if (mpi_init) {
+      MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
+      MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+   }
+   else {
+      d_rank = 0;
+      d_num_procs = 1;
+   }
+
 }
 
 StaticSVD::~StaticSVD()
@@ -160,23 +172,9 @@ StaticSVD::getBasis()
 void
 StaticSVD::computeSVD()
 {
-   // First get the rank of this process, and get the number of processors.
-   int mpi_init;
-   MPI_Initialized(&mpi_init);
-   int rank;
-   int size;
-   if (mpi_init) {
-      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-      MPI_Comm_size(MPI_COMM_WORLD, &size);
-   }
-   else {
-      rank = 0;
-      size = 1;
-   }
-
-   // Now get the dimensions fom each process and the total dimension.
-   int* dims = new int [size];
-   if (mpi_init) {
+   // Get the dimensions from each process and the total dimension.
+   int* dims = new int [d_num_procs];
+   if (d_num_procs > 1) {
       MPI_Allgather(&d_dim, 1, MPI_INT, dims, 1, MPI_INT, MPI_COMM_WORLD);
    }
    else {
@@ -184,14 +182,14 @@ StaticSVD::computeSVD()
    }
 
    int total_dim = 0;
-   for (int i = 0; i < size; ++i) {
+   for (int i = 0; i < d_num_procs; ++i) {
       total_dim += dims[i];
    }
 
    // Do this computation on process 0 and broadcast results to the other
    // processes.
    int num_cols = static_cast<int>(d_samples.size());
-   if (rank == 0) {
+   if (d_rank == 0) {
       // Construct storage for the globalized A.
       double* A = new double [total_dim*num_cols];
 
@@ -206,9 +204,9 @@ StaticSVD::computeSVD()
       }
 
       // Get the contributions to the globalized A from the other processes.
-      if (size > 1) {
+      if (d_num_procs > 1) {
          int offset = dims[0];
-         for (int proc = 1; proc < size; ++proc) {
+         for (int proc = 1; proc < d_num_procs; ++proc) {
             int this_proc_dim = dims[proc];
             double* Aproc = new double [this_proc_dim*num_cols];
             MPI_Status status;
@@ -236,7 +234,7 @@ StaticSVD::computeSVD()
       svd(A, total_dim);
 
       // Broadcast the results.
-      if (size > 1) {
+      if (d_num_procs > 1) {
          MPI_Bcast(&d_U->item(0, 0),
             total_dim*num_cols,
             MPI_DOUBLE,
@@ -306,7 +304,7 @@ StaticSVD::computeSVD()
    }
    d_basis = new Matrix(*d_U);
    d_this_interval_basis_current = true;
-   if (d_debug_algorithm && rank == 0) {
+   if (d_debug_algorithm && d_rank == 0) {
       for (int row = 0; row < num_cols; ++row) {
          for (int col = 0; col < num_cols; ++col) {
             printf("%.16e ", d_S->item(row, col));
