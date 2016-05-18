@@ -57,6 +57,14 @@ Vector::Vector(
    d_distributed(distributed)
 {
    CAROM_ASSERT(dim > 0);
+   int mpi_init;
+   MPI_Initialized(&mpi_init);
+   if (mpi_init) {
+      MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+   }
+   else {
+      d_num_procs = 1;
+   }
    d_vec = new double [dim];
 }
 
@@ -69,6 +77,14 @@ Vector::Vector(
 {
    CAROM_ASSERT(vec != 0);
    CAROM_ASSERT(dim > 0);
+   int mpi_init;
+   MPI_Initialized(&mpi_init);
+   if (mpi_init) {
+      MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+   }
+   else {
+      d_num_procs = 1;
+   }
    d_vec = new double [dim];
    memcpy(d_vec, vec, dim*sizeof(double));
 }
@@ -78,6 +94,14 @@ Vector::Vector(
    d_dim(other.d_dim),
    d_distributed(other.d_distributed)
 {
+   int mpi_init;
+   MPI_Initialized(&mpi_init);
+   if (mpi_init) {
+      MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+   }
+   else {
+      d_num_procs = 1;
+   }
    d_vec = new double [d_dim];
    memcpy(d_vec, other.d_vec, d_dim*sizeof(double));
 }
@@ -112,16 +136,7 @@ Vector::inner_product(
    for (int i = 0; i < d_dim; ++i) {
       local_ip += d_vec[i]*other.d_vec[i];
    }
-   int mpi_init;
-   MPI_Initialized(&mpi_init);
-   int num_procs;
-   if (mpi_init) {
-      MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
-   }
-   else {
-      num_procs = 1;
-   }
-   if (num_procs > 1 && d_distributed) {
+   if (d_num_procs > 1 && d_distributed) {
       MPI_Allreduce(&local_ip, &ip, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
    }
    else {

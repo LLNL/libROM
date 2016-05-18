@@ -325,6 +325,11 @@ class Vector
        * Each processor does not need to hold the same number of dimensions.
        */
       bool d_distributed;
+
+      /**
+       * @brief The number of processors being run on.
+       */
+      int d_num_procs;
 };
 
 }
