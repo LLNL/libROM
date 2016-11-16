@@ -176,6 +176,8 @@ IncrementalSVDSampler::computeNextSampleTime(
          local_norm = val;
       }
    }
+   delete eta;
+   delete eta_dot;
    if (d_num_procs == 1) {
       global_norm = local_norm;
    }
