@@ -106,6 +106,17 @@ class StaticSVD : public SVD
       const Matrix*
       getBasis();
 
+      /**
+       * @brief Returns the singular values for the current time interval.
+       *
+       * @post thisIntervalBasisCurrent()
+       *
+       * @return The singular values for the current time interval.
+       */
+      virtual
+      const Matrix*
+      getSingularValues();
+
    private:
       /**
        * @brief Unimplemented default constructor.

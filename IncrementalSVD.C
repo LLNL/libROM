@@ -205,6 +205,13 @@ IncrementalSVD::getBasis()
    return d_basis;
 }
 
+const Matrix*
+IncrementalSVD::getSingularValues()
+{
+   CAROM_ASSERT(d_S != 0);
+   return d_S;
+}
+
 bool
 IncrementalSVD::buildIncrementalSVD(
    const double* u)

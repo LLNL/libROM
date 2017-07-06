@@ -160,6 +160,15 @@ StaticSVD::getBasis()
       if (d_basis != 0) {
          delete d_basis;
       }
+      if (d_U != 0) {
+         delete d_U;
+      }
+      if (d_S != 0) {
+         delete d_S;
+      }
+      if (d_V != 0) {
+         delete d_V;
+      }
       computeSVD();
    }
    else {
@@ -167,6 +176,33 @@ StaticSVD::getBasis()
    }
    CAROM_ASSERT(thisIntervalBasisCurrent());
    return d_basis;
+}
+
+const Matrix*
+StaticSVD::getSingularValues()
+{
+   // If these singular values are for the last time interval then they may not
+   // be up to date so recompute them.
+   if (!thisIntervalBasisCurrent()) {
+      if (d_basis != 0) {
+         delete d_basis;
+      }
+      if (d_U != 0) {
+         delete d_U;
+      }
+      if (d_S != 0) {
+         delete d_S;
+      }
+      if (d_V != 0) {
+         delete d_V;
+      }
+      computeSVD();
+   }
+   else {
+      CAROM_ASSERT(d_S != 0);
+   }
+   CAROM_ASSERT(thisIntervalBasisCurrent());
+   return d_S;
 }
 
 void

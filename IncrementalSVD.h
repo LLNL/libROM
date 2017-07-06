@@ -110,6 +110,15 @@ namespace CAROM {
       const Matrix*
       getBasis();
 
+      /**
+       * @brief Returns the singular values for the current time interval.
+       *
+       * @return The singular values for the current time interval.
+       */
+      virtual
+      const Matrix*
+      getSingularValues();
+
    protected:
       /**
        * @brief Constructs the first svd.

@@ -188,6 +188,18 @@ class SVDBasisGenerator
       }
 
       /**
+       * @brief Returns the singular values for the current time interval as a
+       * Matrix.
+       *
+       * @return The singular values for the current time interval.
+       */
+      const Matrix*
+      getSingularValues()
+      {
+         return d_svdsampler->getSingularValues();
+      }
+
+      /**
        * @brief Returns the number of time intervals on which different sets of
        * basis vectors are defined.
        *

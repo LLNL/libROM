@@ -117,6 +117,15 @@ class SVD
       getBasis() = 0;
 
       /**
+       * @brief Returns the singular values for the current time interval.
+       *
+       * @return The singular values for the current time interval.
+       */
+      virtual
+      const Matrix*
+      getSingularValues() = 0;
+
+      /**
        * @brief Returns the number of time intervals on which different sets
        * of basis vectors are defined.
        *
