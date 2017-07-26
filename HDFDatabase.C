@@ -74,14 +74,12 @@ HDFDatabase::create(
    const std::string& file_name)
 {
    CAROM_ASSERT(!file_name.empty());
-
-   bool result = false;
    hid_t file_id = H5Fcreate(file_name.c_str(),
                              H5F_ACC_TRUNC,
                              H5P_DEFAULT,
                              H5P_DEFAULT);
-   CAROM_ASSERT(file_id >= 0);
-   result = true;
+   bool result = file_id >= 0;
+   CAROM_ASSERT(result);
    d_is_file = true;
    d_file_id = file_id;
    d_group_id = file_id;
@@ -94,13 +92,11 @@ HDFDatabase::open(
    const std::string& file_name)
 {
    CAROM_ASSERT(!file_name.empty());
-
-   bool result = false;
    hid_t file_id = H5Fopen(file_name.c_str(),
                            H5F_ACC_RDONLY,
                            H5P_DEFAULT);
-   CAROM_ASSERT(file_id >= 0);
-   result = true;
+   bool result = file_id >= 0;
+   CAROM_ASSERT(result);
    d_is_file = true;
    d_file_id = file_id;
    d_group_id = file_id;
