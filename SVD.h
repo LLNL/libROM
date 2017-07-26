@@ -196,6 +196,22 @@ class SVD
       Matrix* d_basis;
 
       /**
+       * @brief The matrix U which is large.
+       *
+       * Depending on the SVD algorithm, d_U may be  distributed across all
+       * processors or each processor may own all of U.
+       */
+      Matrix* d_U;
+
+      /**
+       * @brief The matrix S which is small.
+       *
+       * For all SVD algorithms, S is not distributed and the entire matrix
+       * exists on each processor.
+       */
+      Matrix* d_S;
+
+      /**
        * @brief The simulation time at which each time interval starts.
        */
       std::vector<double> d_time_interval_start_times;

@@ -63,8 +63,6 @@ StaticSVD::StaticSVD(
    bool debug_algorithm) :
    SVD(dim, samples_per_time_interval, debug_algorithm),
    d_samples(0),
-   d_U(0),
-   d_S(0),
    d_V(0),
    d_this_interval_basis_current(false)
 {
@@ -85,12 +83,6 @@ StaticSVD::StaticSVD(
 StaticSVD::~StaticSVD()
 {
    // Delete data members.
-   if (d_U) {
-      delete d_U;
-   }
-   if (d_S) {
-      delete d_S;
-   }
    if (d_V) {
       delete d_V;
    }

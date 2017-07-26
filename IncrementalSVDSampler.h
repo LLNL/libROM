@@ -87,6 +87,13 @@ class IncrementalSVDSampler : public SVDSampler
        *                         followed by a lift back to full order space.
        * @param[in] max_time_between_samples Upper bound on time between
        *                                     samples.
+       * @param[in] save_state If true the state of the SVD will be written to
+       *                       disk when the object is deleted.  If there are
+       *                       multiple time intervals then the state will not
+       *                       be saved as restoring such a state makes no
+       *                       sense.
+       * @param[in] restore_state If true the state of the SVD will be restored
+       *                          when the object is created.
        * @param[in] min_sampling_time_step_scale Minimum overall scale factor
        *                                         to apply to time step.
        * @param[in] sampling_time_step_scale Scale factor to apply to sampling
@@ -106,6 +113,8 @@ class IncrementalSVDSampler : public SVDSampler
          int samples_per_time_interval,
          double sampling_tol,
          double max_time_between_samples,
+         bool save_state = false,
+         bool restore_state = false,
          double min_sampling_time_step_scale = 0.1,
          double sampling_time_step_scale = 0.8,
          double max_sampling_time_step_scale = 5.0,

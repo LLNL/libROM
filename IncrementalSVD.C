@@ -41,6 +41,7 @@
 //              interface.
 
 #include "IncrementalSVD.h"
+#include "HDFDatabase.h"
 
 #include "mpi.h"
 
@@ -63,12 +64,15 @@ IncrementalSVD::IncrementalSVD(
    double linearity_tol,
    bool skip_linearly_dependent,
    int samples_per_time_interval,
+   bool save_state,
+   bool restore_state,
    bool debug_algorithm) :
    SVD(dim, samples_per_time_interval, debug_algorithm),
    d_linearity_tol(linearity_tol),
    d_skip_linearly_dependent(skip_linearly_dependent),
-   d_S(0),
-   d_total_dim(0)
+   d_total_dim(0),
+   d_save_state(save_state),
+   d_state_database(0)
 {
    CAROM_ASSERT(linearity_tol > 0.0);
 
@@ -78,9 +82,11 @@ IncrementalSVD::IncrementalSVD(
    MPI_Initialized(&mpi_init);
    if (mpi_init) {
       MPI_Comm_size(MPI_COMM_WORLD, &d_size);
+      MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
    }
    else {
       d_size = 1;
+      d_rank = 0;
    }
    d_proc_dims.reserve(d_size);
    if (mpi_init) {
@@ -98,13 +104,80 @@ IncrementalSVD::IncrementalSVD(
    for (int i = 0; i < d_size; ++i) {
       d_total_dim += d_proc_dims[i];
    }
+
+   // If the state of the SVD is to be restored then create the database and
+   // restore the necessary data from the database now.
+   if (restore_state) {
+      // Create state database file.
+      char file_name[100];
+      sprintf(file_name, "state.%06d", d_rank);
+      d_state_database = new HDFDatabase();
+      bool is_good = d_state_database->open(file_name);
+      if (is_good) {
+         // Read time interval start time.
+         double time;
+         d_state_database->putDouble("time", time);
+         d_time_interval_start_times.resize(1);
+         d_time_interval_start_times[0] = time;
+
+         // Read d_U.
+         int num_rows;
+         d_state_database->getInteger("U_num_rows", num_rows);
+         int num_cols;
+         d_state_database->getInteger("U_num_cols", num_cols);
+         d_U = new Matrix(num_rows, num_cols, true);
+         d_state_database->getDoubleArray("U",
+                                          &d_U->item(0, 0),
+                                          num_rows*num_cols);
+
+         // Read d_S.
+         d_state_database->getInteger("S_num_rows", num_rows);
+         d_state_database->getInteger("S_num_cols", num_cols);
+         d_S = new Matrix(num_rows, num_cols, false);
+         d_state_database->getDoubleArray("S",
+                                          &d_S->item(0, 0),
+                                          num_rows*num_cols);
+
+         // Set d_num_samples.
+         d_num_samples = num_cols;
+      }
+      else {
+         delete d_state_database;
+         d_state_database = 0;
+      }
+   }
 }
 
 IncrementalSVD::~IncrementalSVD()
 {
-   // Delete data members.
-   if (d_S) {
-      delete d_S;
+   // If the state of the SVD is to be saved, then save d_S and d_U now.  The
+   // derived class has already created the database.
+   //
+   // If there are multiple time intervals then saving and restoring the state
+   // does not make sense as there is not one, all encompassing, basis.
+   if (d_save_state && d_time_interval_start_times.size() == 1) {
+      // Save the time interval start time.
+      d_state_database->putDouble("time", d_time_interval_start_times[0]);
+
+      // Save d_U.
+      int num_rows = d_U->numRows();
+      d_state_database->putInteger("U_num_rows", num_rows);
+      int num_cols = d_U->numColumns();
+      d_state_database->putInteger("U_num_cols", num_cols);
+      d_state_database->putDoubleArray("U", &d_U->item(0, 0), num_rows*num_cols);
+
+      // Save d_S.
+      num_rows = d_S->numRows();
+      d_state_database->putInteger("S_num_rows", num_rows);
+      num_cols = d_S->numColumns();
+      d_state_database->putInteger("S_num_cols", num_cols);
+      d_state_database->putDoubleArray("S",
+                                       &d_S->item(0, 0),
+                                       num_rows*num_cols);
+
+      // Close state database file and delete database object.
+      d_state_database->close();
+      delete d_state_database;
    }
 }
 
@@ -133,17 +206,8 @@ IncrementalSVD::takeSample(
    }
 
    if (d_debug_algorithm) {
-      int mpi_init;
-      MPI_Initialized(&mpi_init);
-      int rank;
-      if (mpi_init) {
-         MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-      }
-      else {
-         rank = 0;
-      }
       const Matrix* basis = getBasis();
-      if (rank == 0) {
+      if (d_rank == 0) {
          // Print d_S.
          for (int row = 0; row < d_num_samples; ++row) {
             for (int col = 0; col < d_num_samples; ++col) {

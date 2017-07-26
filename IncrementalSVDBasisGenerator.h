@@ -86,6 +86,13 @@ class IncrementalSVDBasisGenerator : public SVDBasisGenerator
        *                            containing the basis vectors.  Each process
        *                            will append its process ID to this base
        *                            name.
+       * @param[in] save_state If true the state of the SVD will be written to
+       *                       disk when the object is deleted.  If there are
+       *                       multiple time intervals then the state will not
+       *                       be saved as restoring such a state makes no
+       *                       sense.
+       * @param[in] restore_state If true the state of the SVD will be restored
+       *                          when the object is created.
        * @param[in] file_format The format of the file containing the basis
        *                        vectors.
        * @param[in] min_sampling_time_step_scale Minimum overall scale factor
@@ -108,6 +115,8 @@ class IncrementalSVDBasisGenerator : public SVDBasisGenerator
          double sampling_tol,
          double max_time_between_samples,
          const std::string& basis_file_name = "",
+         bool save_state = false,
+         bool restore_state = false,
          Database::formats file_format = Database::HDF5,
          double min_sampling_time_step_scale = 0.1,
          double sampling_time_step_scale = 0.8,

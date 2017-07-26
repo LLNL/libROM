@@ -180,20 +180,6 @@ class StaticSVD : public SVD
       std::vector<double*> d_samples;
 
       /**
-       * @brief The globalized matrix U.
-       *
-       * U is large and each process owns all of U.
-       */
-      Matrix* d_U;
-
-      /**
-       * @brief The globalized matrix S.
-       *
-       * S is small and each process owns all of S.
-       */
-      Matrix* d_S;
-
-      /**
        * @brief The globalized matrix L.
        *
        * L is small and each process owns all of L.

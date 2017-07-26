@@ -41,6 +41,7 @@
 //              using Matthew Brand's "fast update" method.
 
 #include "IncrementalSVDFastUpdate.h"
+#include "HDFDatabase.h"
 
 #include "mpi.h"
 
@@ -54,23 +55,69 @@ IncrementalSVDFastUpdate::IncrementalSVDFastUpdate(
    double linearity_tol,
    bool skip_linearly_dependent,
    int samples_per_time_interval,
+   bool save_state,
+   bool restore_state,
    bool debug_algorithm) :
    IncrementalSVD(dim,
       linearity_tol,
       skip_linearly_dependent,
       samples_per_time_interval,
+      save_state,
+      restore_state,
       debug_algorithm),
-   d_U(0),
    d_Up(0)
 {
+   // If the state of the SVD is to be restored, do it now.  The base class,
+   // IncrementalSVD, has already opened the database and restored the state
+   // common to all incremental algorithms.  This particular class must also
+   // read the state of d_Up and then compute the basis.  If the database could
+   // not be found then we can not restore the state.
+   if (restore_state && d_state_database) {
+      // Read d_Up.
+      int num_rows;
+      d_state_database->getInteger("Up_num_rows", num_rows);
+      int num_cols;
+      d_state_database->getInteger("Up_num_cols", num_cols);
+      d_Up = new Matrix(num_rows, num_cols, true);
+      d_state_database->getDoubleArray("Up",
+                                       &d_Up->item(0, 0),
+                                       num_rows*num_cols);
+
+      // Close and delete the database.
+      d_state_database->close();
+      delete d_state_database;
+
+      // Compute the basis.
+      computeBasis();
+   }
 }
 
 IncrementalSVDFastUpdate::~IncrementalSVDFastUpdate()
 {
-   // Delete data members.
-   if (d_U) {
-      delete d_U;
+   // If the state of the SVD is to be saved, then create the database now.
+   // The IncrementalSVD base class destructor will save d_S and d_U.  This
+   // derived class must save its specific state data, d_Up.
+   //
+   // If there are multiple time intervals then saving and restoring the state
+   // does not make sense as there is not one, all encompassing, basis.
+   if (d_save_state && d_time_interval_start_times.size() == 1) {
+      // Create state database file.
+      char file_name[100];
+      sprintf(file_name, "state.%06d", d_rank);
+      d_state_database = new HDFDatabase();
+      d_state_database->create(file_name);
+
+      // Save d_Up.
+      int num_rows = d_Up->numRows();
+      d_state_database->putInteger("Up_num_rows", num_rows);
+      int num_cols = d_Up->numColumns();
+      d_state_database->putInteger("Up_num_cols", num_cols);
+      d_state_database->putDoubleArray("Up",
+                                       &d_Up->item(0, 0),
+                                       num_rows*num_cols);
    }
+
+   // Delete data members.
    if (d_Up) {
       delete d_Up;
    }

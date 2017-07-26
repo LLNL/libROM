@@ -42,6 +42,7 @@
 //              the "fast update" method.
 
 #include "IncrementalSVDStandard.h"
+#include "HDFDatabase.h"
 
 #include "mpi.h"
 
@@ -55,21 +56,46 @@ IncrementalSVDStandard::IncrementalSVDStandard(
    double linearity_tol,
    bool skip_linearly_dependent,
    int samples_per_time_interval,
+   bool save_state,
+   bool restore_state,
    bool debug_algorithm) :
    IncrementalSVD(dim,
       linearity_tol,
       skip_linearly_dependent,
       samples_per_time_interval,
-      debug_algorithm),
-   d_U(0)
+      save_state,
+      restore_state,
+      debug_algorithm)
 {
+   // If the state of the SVD is to be restored, do it now.  The base class,
+   // IncrementalSVD, has already opened the database and restored the state
+   // common to all incremental algorithms.  This particular class has no other
+   // state to read and only needs to compute the basis.  If the database could
+   // not be found then we can not restore the state.
+   if (restore_state && d_state_database) {
+      // Close and delete the database.
+      d_state_database->close();
+      delete d_state_database;
+
+      // Compute the basis.
+      computeBasis();
+   }
 }
 
 IncrementalSVDStandard::~IncrementalSVDStandard()
 {
-   // Delete data members.
-   if (d_U) {
-      delete d_U;
+   // If the state of the SVD is to be saved, then create the database now.
+   // The IncrementalSVD base class destructor will save d_S and d_U.  This
+   // derived class has no specific state to save.
+   //
+   // If there are multiple time intervals then saving and restoring the state
+   // does not make sense as there is not one, all encompassing, basis.
+   if (d_save_state && d_time_interval_start_times.size() == 1) {
+      // Create state database file.
+      char file_name[100];
+      sprintf(file_name, "state.%06d", d_rank);
+      d_state_database = new HDFDatabase();
+      d_state_database->create(file_name);
    }
 }
 

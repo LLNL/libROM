@@ -68,6 +68,13 @@ class IncrementalSVDStandard : public IncrementalSVD
        *                                    samples.
        * @param[in] samples_per_time_interval The number of samples to be
        *                                      collected for each time interval.
+       * @param[in] save_state If true the state of the SVD will be written to
+       *                       disk when the object is deleted.  If there are
+       *                       multiple time intervals then the state will not
+       *                       be saved as restoring such a state makes no
+       *                       sense.
+       * @param[in] restore_state If true the state of the SVD will be restored
+       *                          when the object is created.
        * @param[in] debug_algorithm If true results of the algorithm will be
        *                            printed to facilitate debugging.
        */
@@ -76,6 +83,8 @@ class IncrementalSVDStandard : public IncrementalSVD
          double linearity_tol,
          bool skip_linearly_dependent,
          int samples_per_time_interval,
+         bool save_state = false,
+         bool restore_state = false,
          bool debug_algorithm = false);
 
       /**
@@ -154,14 +163,6 @@ class IncrementalSVDStandard : public IncrementalSVD
          const Vector* j,
          const Matrix* A,
          Matrix* sigma);
-
-      /**
-       * @brief The matrix U distributed across all processors.
-       *
-       * Each processor's d_U is the part of the distributed matrix local to
-       * that processor.
-       */
-      Matrix* d_U;
 };
 
 }

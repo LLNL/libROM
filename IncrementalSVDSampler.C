@@ -60,6 +60,8 @@ IncrementalSVDSampler::IncrementalSVDSampler(
    int samples_per_time_interval,
    double sampling_tol,
    double max_time_between_samples,
+   bool save_state,
+   bool restore_state,
    double min_sampling_time_step_scale,
    double sampling_time_step_scale,
    double max_sampling_time_step_scale,
@@ -89,6 +91,8 @@ IncrementalSVDSampler::IncrementalSVDSampler(
             linearity_tol,
             skip_linearly_dependent,
             samples_per_time_interval,
+            save_state,
+            restore_state,
             debug_algorithm));
    }
    else {
@@ -97,6 +101,8 @@ IncrementalSVDSampler::IncrementalSVDSampler(
             linearity_tol,
             skip_linearly_dependent,
             samples_per_time_interval,
+            save_state,
+            restore_state,
             debug_algorithm));
    }
 

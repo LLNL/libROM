@@ -44,6 +44,7 @@
 #define included_IncrementalSVD_h
 
 #include "SVD.h"
+#include "Database.h"
 
 namespace CAROM {
 
@@ -68,6 +69,13 @@ namespace CAROM {
        *                                    samples.
        * @param[in] samples_per_time_interval The number of samples to be
        *                                      collected for each time interval.
+       * @param[in] save_state If true the state of the SVD will be written to
+       *                       disk when the object is deleted.  If there are
+       *                       multiple time intervals then the state will not
+       *                       be saved as restoring such a state makes no
+       *                       sense.
+       * @param[in] restore_state If true the state of the SVD will be restored
+       *                          when the object is created.
        * @param[in] debug_algorithm If true results of algorithm will be
        *                            printed to facilitate debugging.
        */
@@ -76,6 +84,8 @@ namespace CAROM {
          double linearity_tol,
          bool skip_linearly_dependent,
          int samples_per_time_interval,
+         bool save_state = false,
+         bool restore_state = false,
          bool debug_algorithm = false);
 
       /**
@@ -272,16 +282,14 @@ namespace CAROM {
       bool d_skip_linearly_dependent;
 
       /**
-       * @brief The matrix S.
-       *
-       * S is not distributed and the entire matrix exists on each processor.
-       */
-      Matrix* d_S;
-
-      /**
        * @brief Total number of processors.
        */
       int d_size;
+
+      /**
+       * @brief The rank of the processor owning this object.
+       */
+      int d_rank;
 
       /**
        * @brief Dimension of the system on each processor.
@@ -292,6 +300,21 @@ namespace CAROM {
        * @brief The total dimension of the system.
        */
       long int d_total_dim;
+
+      /**
+       * @brief If true the state of the SVD will be written to disk when the
+       * object is deleted.
+       *
+       * If there are multiple time intervals then the state will not be saved
+       * as restoring such a state makes no sense.
+       */
+      bool d_save_state;
+
+      /**
+       * @brief Pointer to the database that will hold saved state data if the
+       * state is to be saved.
+       */
+      Database* d_state_database;
 
       /**
        * @brief MPI message tag.
