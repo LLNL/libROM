@@ -105,10 +105,10 @@ IncrementalSVD::IncrementalSVD(
       d_total_dim += d_proc_dims[i];
    }
 
-   // If the state of the SVD is to be restored then create the database and
+   // If the state of the SVD is to be restored then open the database and
    // restore the necessary data from the database now.
    if (restore_state) {
-      // Create state database file.
+      // Open state database file.
       char file_name[100];
       sprintf(file_name, "state.%06d", d_rank);
       d_state_database = new HDFDatabase();
@@ -116,7 +116,7 @@ IncrementalSVD::IncrementalSVD(
       if (is_good) {
          // Read time interval start time.
          double time;
-         d_state_database->putDouble("time", time);
+         d_state_database->getDouble("time", time);
          d_time_interval_start_times.resize(1);
          d_time_interval_start_times[0] = time;
 
