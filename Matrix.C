@@ -191,7 +191,7 @@ Matrix::transposeMult(
    if (d_distributed && d_num_procs > 1) {
       int new_mat_size = d_num_cols*other.d_num_cols;
       MPI_Allreduce(MPI_IN_PLACE,
-         &result->d_mat,
+         &result->item(0, 0),
          new_mat_size,
          MPI_DOUBLE,
          MPI_SUM,
