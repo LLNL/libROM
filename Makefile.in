@@ -68,7 +68,8 @@ OBJS = Matrix.o \
        Database.o \
        HDFDatabase.o \
        Utilities.o \
-       ParallelBuffer.o
+       ParallelBuffer.o \
+       DEIM.o
 
 default: lib
 
