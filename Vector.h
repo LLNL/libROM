@@ -114,6 +114,27 @@ class Vector
          const Vector& rhs);
 
       /**
+       * @brief Sets the length of the vector and reallocates storage if
+       * needed.
+       *
+       * @param[in] num_rows New number of rows
+       * @param[in] num_cols New number of cols
+       */
+      void
+      setSize(
+         int dim)
+      {
+         if (dim > d_alloc_size) {
+            if (d_vec) {
+               delete [] d_vec;
+            }
+            d_vec = new double [dim];
+            d_alloc_size = dim;
+         }
+         d_dim = dim;
+      }
+
+      /**
        * @brief Returns true if the Vector is distributed.
        *
        * @return True if the Vector is distributed.
@@ -166,11 +187,9 @@ class Vector
        */
       double
       inner_product(
-         const Vector* const other) const
+         const Vector* other) const
       {
          CAROM_ASSERT(other != 0);
-         CAROM_ASSERT(dim() == other->dim());
-         CAROM_ASSERT(distributed() == other->distributed());
          return inner_product(*other);
       }
 
@@ -206,7 +225,12 @@ class Vector
        */
       Vector*
       plus(
-         const Vector& other) const;
+         const Vector& other) const
+      {
+         Vector* result = 0;
+         plus(other, result);
+         return result;
+      }
 
       /**
        * @brief Adds other and this and returns the result, pointer version.
@@ -221,13 +245,26 @@ class Vector
        */
       Vector*
       plus(
-         const Vector* const other) const
+         const Vector* other) const
       {
          CAROM_ASSERT(other != 0);
-         CAROM_ASSERT(distributed() == other->distributed());
-         CAROM_ASSERT(dim() == other->dim());
          return plus(*other);
       }
+
+      /**
+       * @brief Adds other and this and fills result with the answer.
+       *
+       * @pre result == 0 || result->distributed() == distributed()
+       * @pre distributed() == other.distributed()
+       * @pre dim() == other.dim()
+       *
+       * @param[in] other The other summand.
+       * @param[out] result this + other
+       */
+      void
+      plus(
+         const Vector& other,
+         Vector*& result) const;
 
       /**
        * @brief Subtracts other and this and returns the result, reference
@@ -242,7 +279,12 @@ class Vector
        */
       Vector*
       minus(
-         const Vector& other) const;
+         const Vector& other) const
+      {
+         Vector* result = 0;
+         minus(other, result);
+         return result;
+      }
 
       /**
        * @brief Subtracts other and this and returns the result, pointer
@@ -258,13 +300,26 @@ class Vector
        */
       Vector*
       minus(
-         const Vector* const other) const
+         const Vector* other) const
       {
          CAROM_ASSERT(other != 0);
-         CAROM_ASSERT(distributed() == other->distributed());
-         CAROM_ASSERT(dim() == other->dim());
          return minus(*other);
       }
+
+      /**
+       * @brief Subtracts other and this and fills result with the answer.
+       *
+       * @pre result == 0 || result->distributed() == distributed()
+       * @pre distributed() == other.distributed()
+       * @pre dim() == other.dim()
+       *
+       * @param[in] other The other subtrahend.
+       * @param[out] result this - other
+       */
+      void
+      minus(
+         const Vector& other,
+         Vector*& result) const;
 
       /**
        * @brief Const Vector member access.
@@ -317,6 +372,13 @@ class Vector
        * @brief The part of the Vector's dimension on this processor.
        */
       int d_dim;
+
+      /**
+       * @brief The currently allocated size.
+       *
+       * d_dim <= d_alloc_size
+       */
+      int d_alloc_size;
 
       /**
        * @brief If true, the Vector's dimensions are distributed over all
