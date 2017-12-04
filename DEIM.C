@@ -110,14 +110,9 @@ DEIM(const CAROM::Matrix* f_basis,
    int num_basis_vectors = f_basis->numColumns();
    int basis_size = f_basis->numRows();
 
-   // Space for the small matrix inverted by the algorithm.
-   double* M = new double [num_basis_vectors*num_basis_vectors];
-
-   // The pivot array needed for the inversion of M.
-   int* ipiv = new int [num_basis_vectors];
-
-   // Scratch space needed for the inversion of M.
-   double* work = new double [num_basis_vectors*num_basis_vectors];
+   // The small matrix inverted by the algorithm.  We'll allocate the largest
+   // matrix we'll need and set its size at each step in the algorithm.
+   Matrix* M = new Matrix(num_basis_vectors, num_basis_vectors, false);
 
    // Scratch space used throughout the algorithm.
    double* c = new double [num_basis_vectors];
@@ -161,31 +156,25 @@ DEIM(const CAROM::Matrix* f_basis,
    for (int i = 1; i < num_basis_vectors; ++i) {
       // If we currently know about S sampled rows of the basis of the RHS then
       // M contains the first S columns of those S sampled rows.
+      M->setSize(i, i);
       for (int row = 0; row < i; ++row) {
          idx = row;
-         int midx = row;
          for (int col = 0; col < i; ++col) {
-            M[midx] = f_basis_sampled[idx];
+            M->item(row, col) = f_basis_sampled[idx];
             idx += num_basis_vectors;
-            midx += i;
          }
       }
 
       // Invert M.
-      int lwork = i*i;
-      int info;
-      dgetrf_(&i, &i, M, &i, ipiv, &info);
-      dgetri_(&i, M, &i, ipiv, work, &lwork, &info);
+      M->inverse();
 
       // Now compute c, the inverse of M times the next column of the sampled
       // rows of the basis of the RHS.
       for (int minv_row = 0; minv_row < i; ++minv_row) {
          double tmp = 0.0;
          idx = i*num_basis_vectors;
-         int midx = minv_row;
          for (int minv_col = 0; minv_col < i; ++minv_col) {
-            tmp += M[midx]*f_basis_sampled[idx++];
-            midx += i;
+            tmp += M->item(minv_row, minv_col)*f_basis_sampled[idx++];
          }
          c[minv_row] = tmp;
       }
@@ -236,9 +225,7 @@ DEIM(const CAROM::Matrix* f_basis,
    MPI_Op_free(&RowInfoOp);
 
    delete [] c;
-   delete [] work;
-   delete [] ipiv;
-   delete [] M;
+   delete M;
 }
 
 }
