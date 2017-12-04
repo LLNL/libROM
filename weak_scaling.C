@@ -50,50 +50,6 @@
 
 #include <stdio.h>
 
-CAROM::Matrix*
-transposeMult(
-   const CAROM::Matrix* umat,
-   const CAROM::Matrix* dmat)
-{
-   int rank;
-   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-   int umat_num_cols = umat->numColumns();
-   int dmat_num_cols = dmat->numColumns();
-   int dmat_num_rows = dmat->numRows();
-   int new_mat_size = umat_num_cols*dmat_num_cols;
-   CAROM::Matrix* local_result = new CAROM::Matrix(umat_num_cols,
-      dmat_num_cols,
-      false);
-   for (int umat_col = 0; umat_col < umat_num_cols; ++umat_col) {
-      for (int dmat_col = 0; dmat_col < dmat_num_cols; ++dmat_col) {
-         int umat_row = dmat_num_rows*rank;
-         local_result->item(umat_col, dmat_col) = 0.0;
-         for (int entry = 0; entry < dmat_num_rows; ++entry) {
-            local_result->item(umat_col, dmat_col) +=
-               umat->item(umat_row, umat_col)*dmat->item(entry, dmat_col);
-            ++umat_row;
-         }
-      }
-   }
-   CAROM::Matrix* result;
-   int num_procs;
-   MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
-   if (num_procs > 1) {
-      result = new CAROM::Matrix(umat_num_cols, dmat_num_cols, false);
-      MPI_Allreduce(&local_result->item(0, 0),
-         &result->item(0, 0),
-         new_mat_size,
-         MPI_DOUBLE,
-         MPI_SUM,
-         MPI_COMM_WORLD);
-      delete local_result;
-   }
-   else {
-      result = local_result;
-   }
-   return result;
-}
-
 int
 main(
    int argc,
