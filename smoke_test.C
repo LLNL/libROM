@@ -75,7 +75,10 @@ main(
       dim = 1;
    }
    else {
-      printf("Too many procs\n");
+      if (rank == 0) {
+         printf("Illegal number of procs.\n");
+         printf("Allowed number of procs is 1, 2, 3, or 6.\n");
+      }
       return 1;
    }
 

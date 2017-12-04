@@ -138,7 +138,10 @@ main(
       offset = rank;
    }
    else {
-      printf("Too many processors.  Only run on up to 6 processors.\n");
+      if (rank == 0) {
+         printf("Illegal number of procs.\n");
+         printf("Allowed number of procs is 1, 2, 3, 4, 5, or 6.\n");
+      }
       return 1;
    }
 
