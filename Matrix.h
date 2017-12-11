@@ -320,6 +320,29 @@ class Matrix
          Vector*& result) const;
 
       /**
+       * @brief Computes a += this*b*c.
+       *
+       * Supports accumulation of the multiplication of an undistributed
+       * Matrix and Vector into an undistributed Vector, and accumulation of
+       * the multiplication of a distributed Matrix and an undistributed
+       * Vector into a distributed Vector.
+       *
+       * @pre a.distributed() == distributed()
+       * @pre !b->distributed()
+       * @pre numColumns() == b.dim()
+       * @pre numRows() = a.dim()
+       *
+       * @param[in/out] a The Vector to accumulate this*b into.
+       * @param[in] b The Vector multiplied by this.
+       * @param[in] c Scalar multiplication factor.
+       */
+      void
+      multPlus(
+         Vector& a,
+         const Vector& b,
+         double c) const;
+
+      /**
        * @brief Multiplies the transpose of this Matrix with other and returns
        * the product, reference version.
        *

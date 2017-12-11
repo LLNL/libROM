@@ -194,6 +194,26 @@ Matrix::mult(
 }
 
 void
+Matrix::multPlus(
+   Vector& a,
+   const Vector& b,
+   double c) const
+{
+   CAROM_ASSERT(a.distributed() == distributed());
+   CAROM_ASSERT(!b->distributed());
+   CAROM_ASSERT(numColumns() == b.dim());
+   CAROM_ASSERT(numRows() = a.dim());
+
+   for (int this_row = 0; this_row < d_num_rows; ++this_row) {
+      double tmp = 0.0;
+      for (int this_col = 0; this_col < d_num_cols; ++this_col) {
+         tmp += item(this_row, this_col)*b.item(this_col);
+      }
+      a.item(this_row) += tmp*c;
+   }
+}
+
+void
 Matrix::transposeMult(
    const Matrix& other,
    Matrix*& result) const
