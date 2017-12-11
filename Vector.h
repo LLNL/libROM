@@ -117,8 +117,9 @@ class Vector
        * @brief Sets the length of the vector and reallocates storage if
        * needed.
        *
-       * @param[in] num_rows New number of rows
-       * @param[in] num_cols New number of cols
+       * @param[in] dim When undistributed, the total dimension of the Vector.
+       *                When distributed, the part of the total dimension of
+       *                the Vector on this processor.
        */
       void
       setSize(
@@ -345,7 +346,7 @@ class Vector
        * @pre result == 0 || result->distributed() == distributed()
        *
        * @param[in] factor Factor to multiply by.
-       * @param[out] factor*this
+       * @param[out] result factor*this
        */
       void
       mult(

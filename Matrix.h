@@ -332,7 +332,7 @@ class Matrix
        * @pre numColumns() == b.dim()
        * @pre numRows() = a.dim()
        *
-       * @param[in/out] a The Vector to accumulate this*b into.
+       * @param[in,out] a The Vector to accumulate this*b into.
        * @param[in] b The Vector multiplied by this.
        * @param[in] c Scalar multiplication factor.
        */
