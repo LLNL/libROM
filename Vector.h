@@ -322,6 +322,37 @@ class Vector
          Vector*& result) const;
 
       /**
+       * @brief Multiplies this by the supplied constant and returns the
+       * result.
+       *
+       * @param[in] factor Factor to multiply by.
+       *
+       * @return factor*this
+       */
+      Vector*
+      mult(
+         double factor) const
+      {
+         Vector* result = 0;
+         mult(factor, result);
+         return result;
+      }
+
+      /**
+       * @brief Multiplies this by the supplied constant and fills result with
+       * the answer.
+       *
+       * @pre result == 0 || result->distributed() == distributed()
+       *
+       * @param[in] factor Factor to multiply by.
+       * @param[out] factor*this
+       */
+      void
+      mult(
+         double factor,
+         Vector*& result) const;
+
+      /**
        * @brief Const Vector member access.
        *
        * @pre (0 <= i) && (i < dim())

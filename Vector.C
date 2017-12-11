@@ -209,4 +209,24 @@ Vector::minus(
    }
 }
 
+void
+Vector::mult(
+   double factor,
+   Vector*& result) const
+{
+   CAROM_ASSERT(result == 0 || result->distributed() == distributed());
+
+   // If the result has not been allocated then do so.  Otherwise size it
+   // correctly.
+   if (result == 0) {
+      result = new Vector(d_dim, d_distributed);
+   }
+   else {
+      result->setSize(d_dim);
+   }
+   for (int i = 0; i < d_dim; ++i) {
+      result->d_vec[i] = factor*d_vec[i];
+   }
+}
+
 }
