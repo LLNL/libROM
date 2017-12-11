@@ -48,10 +48,10 @@ namespace CAROM {
 class Matrix;
 
 void
-DEIM(const CAROM::Matrix* f_basis,
+DEIM(const Matrix* f_basis,
      int* f_sampled_row,
      int* f_sampled_row_owner,
-     double* f_basis_sampled,
+     Matrix* f_basis_sampled_inv,
      int myid);
 
 }

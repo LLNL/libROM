@@ -44,16 +44,6 @@
 #include "mpi.h"
 #include <cmath>
 
-extern "C" {
-// LU decomposition of a general matrix.
-void
-dgetrf_(int*, int*, double*, int*, int*, int*);
-
-// Generate inverse of a matrix given its LU decomposition.
-void
-dgetri_(int*, double*, int*, int*, double*, int*, int*);
-}
-
 namespace CAROM {
 
 // Struct to hold the local maximum absolute value of a basis vector, the row
@@ -81,12 +71,15 @@ RowInfoMax(RowInfo* a, RowInfo* b, int* len, MPI_Datatype* type)
 }
 
 void
-DEIM(const CAROM::Matrix* f_basis,
+DEIM(const Matrix* f_basis,
      int* f_sampled_row,
      int* f_sampled_row_owner,
-     double* f_basis_sampled,
+     Matrix* f_basis_sampled_inv,
      int myid)
 {
+   // This algorithm build f_basis_sampled_inv with the sampled basis of the
+   // RHS.  Only at the end of the algorithm is the inverse computed.
+
    // Create an MPI_Datatype for the RowInfo struct.
    MPI_Datatype MaxRowType, oldtypes[2];
    int blockcounts[2];
@@ -112,7 +105,7 @@ DEIM(const CAROM::Matrix* f_basis,
 
    // The small matrix inverted by the algorithm.  We'll allocate the largest
    // matrix we'll need and set its size at each step in the algorithm.
-   Matrix* M = new Matrix(num_basis_vectors, num_basis_vectors, false);
+   Matrix M(num_basis_vectors, num_basis_vectors, false);
 
    // Scratch space used throughout the algorithm.
    double* c = new double [num_basis_vectors];
@@ -145,10 +138,10 @@ DEIM(const CAROM::Matrix* f_basis,
       MPI_Bcast(c, num_basis_vectors, MPI_DOUBLE,
                 f_sampled_row_owner[0], MPI_COMM_WORLD);
    }
-   int idx = 0;
+   // Now add the first sampled row of the basis of the RHS to
+   // f_basis_sampled_inv.
    for (int j = 0; j < num_basis_vectors; ++j) {
-      f_basis_sampled[idx] = c[j];
-      idx += num_basis_vectors;
+      f_basis_sampled_inv->item(0, j) = c[j];
    }
 
    // Now repeat the process for the other sampled rows of the basis of the
@@ -156,25 +149,23 @@ DEIM(const CAROM::Matrix* f_basis,
    for (int i = 1; i < num_basis_vectors; ++i) {
       // If we currently know about S sampled rows of the basis of the RHS then
       // M contains the first S columns of those S sampled rows.
-      M->setSize(i, i);
+      M.setSize(i, i);
       for (int row = 0; row < i; ++row) {
-         idx = row;
          for (int col = 0; col < i; ++col) {
-            M->item(row, col) = f_basis_sampled[idx];
-            idx += num_basis_vectors;
+            M.item(row, col) = f_basis_sampled_inv->item(row, col);
          }
       }
 
       // Invert M.
-      M->inverse();
+      M.inverse();
 
       // Now compute c, the inverse of M times the next column of the sampled
       // rows of the basis of the RHS.
       for (int minv_row = 0; minv_row < i; ++minv_row) {
          double tmp = 0.0;
-         idx = i*num_basis_vectors;
          for (int minv_col = 0; minv_col < i; ++minv_col) {
-            tmp += M->item(minv_row, minv_col)*f_basis_sampled[idx++];
+            tmp += M.item(minv_row, minv_col)*
+                   f_basis_sampled_inv->item(minv_col, i);
          }
          c[minv_row] = tmp;
       }
@@ -213,19 +204,20 @@ DEIM(const CAROM::Matrix* f_basis,
          MPI_Bcast(c, num_basis_vectors, MPI_DOUBLE,
                    f_sampled_row_owner[i], MPI_COMM_WORLD);
       }
-      idx = i;
+      // Now add the ith sampled row of the basis of the RHS to
+      // f_basis_sampled_inv.
       for (int j = 0; j < num_basis_vectors; ++j) {
-         f_basis_sampled[idx] = c[j];
-         idx += num_basis_vectors;
+         f_basis_sampled_inv->item(i, j) = c[j];
       }
    }
+   // Now invert the sampled rows of the basis of the RHS.
+   f_basis_sampled_inv->inverse();
 
    // Free the MPI_Datatype and MPI_Op.
    MPI_Type_free(&MaxRowType);
    MPI_Op_free(&RowInfoOp);
 
    delete [] c;
-   delete M;
 }
 
 }
