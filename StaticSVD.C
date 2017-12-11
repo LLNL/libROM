@@ -66,6 +66,9 @@ StaticSVD::StaticSVD(
    d_V(0),
    d_this_interval_basis_current(false)
 {
+   CAROM_ASSERT(dim > 0);
+   CAROM_ASSERT(samples_per_time_interval > 0);
+
    // Get the rank of this process, and the number of processors.
    int mpi_init;
    MPI_Initialized(&mpi_init);

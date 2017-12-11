@@ -67,6 +67,10 @@ IncrementalSVDStandard::IncrementalSVDStandard(
       restore_state,
       debug_algorithm)
 {
+   CAROM_ASSERT(dim > 0);
+   CAROM_ASSERT(linearity_tol > 0.0);
+   CAROM_ASSERT(samples_per_time_interval > 0);
+
    // If the state of the SVD is to be restored, do it now.  The base class,
    // IncrementalSVD, has already opened the database and restored the state
    // common to all incremental algorithms.  This particular class has no other

@@ -74,16 +74,13 @@ IncrementalSVDSampler::IncrementalSVDSampler(
    d_dt(initial_dt),
    d_next_sample_time(0.0)
 {
-   CAROM_ASSERT(dim > 0);
-   CAROM_ASSERT(linearity_tol > 0.0);
    CAROM_ASSERT(initial_dt > 0.0);
-   CAROM_ASSERT(samples_per_time_interval > 0);
    CAROM_ASSERT(sampling_tol > 0.0);
    CAROM_ASSERT(max_time_between_samples > 0.0);
-   CAROM_ASSERT(min_sampling_time_step_scale > 0.0);
-   CAROM_ASSERT(sampling_time_step_scale > 0.0);
-   CAROM_ASSERT(max_sampling_time_step_scale > 0.0);
-   CAROM_ASSERT(min_sampling_time_step_scale < max_sampling_time_step_scale);
+   CAROM_ASSERT(min_sampling_time_step_scale >= 0.0);
+   CAROM_ASSERT(sampling_time_step_scale >= 0.0);
+   CAROM_ASSERT(max_sampling_time_step_scale >= 0.0);
+   CAROM_ASSERT(min_sampling_time_step_scale <= max_sampling_time_step_scale);
 
    if (fast_update) {
       d_svd.reset(

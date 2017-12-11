@@ -67,20 +67,6 @@ class SVDBasisGenerator
 {
    public:
       /**
-       * @brief Constructor.
-       *
-       * @param[in] basis_file_name The base part of the name of the file
-       *                            containing the basis vectors.  Each process
-       *                            will append its process ID to this base
-       *                            name.
-       * @param[in] file_format The format of the file containing the basis
-       *                        vectors.
-       */
-      SVDBasisGenerator(
-         const std::string& basis_file_name = "",
-         Database::formats file_format = Database::HDF5);
-
-      /**
        * @brief Destructor.
        */
       virtual
@@ -231,6 +217,25 @@ class SVDBasisGenerator
       }
 
    protected:
+      /**
+       * @brief Constructor.
+       *
+       * Although all member functions are implemented by delegation to either
+       * d_basis_writer or d_svdsampler, this class is still abstract.  In this
+       * context it is not yet known which SVDSampler to instantiate.  Hence an
+       * instance of this class may not be constructed.
+       *
+       * @param[in] basis_file_name The base part of the name of the file
+       *                            containing the basis vectors.  Each process
+       *                            will append its process ID to this base
+       *                            name.
+       * @param[in] file_format The format of the file containing the basis
+       *                        vectors.
+       */
+      SVDBasisGenerator(
+         const std::string& basis_file_name = "",
+         Database::formats file_format = Database::HDF5);
+
       /**
        * @brief Writer of basis vectors.
        */

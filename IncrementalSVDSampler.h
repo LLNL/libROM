@@ -70,7 +70,10 @@ class IncrementalSVDSampler : public SVDSampler
        * @pre samples_per_time_interval > 0
        * @pre sampling_tol > 0.0
        * @pre max_time_between_samples > 0.0
-       * @pre min_sampling_time_step_scale < max_sampling_time_step_scale
+       * @pre min_sampling_time_step_scale >= 0.0
+       * @pre sampling_time_step_scale >= 0.0
+       * @pre max_sampling_time_step_scale >= 0.0
+       * @pre min_sampling_time_step_scale <= max_sampling_time_step_scale
        *
        * @param[in] dim The dimension of the system on this processor.
        * @param[in] linearity_tol Tolerance to determine whether or not a

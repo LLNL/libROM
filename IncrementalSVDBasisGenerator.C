@@ -65,14 +65,6 @@ IncrementalSVDBasisGenerator::IncrementalSVDBasisGenerator(
    bool debug_algorithm) :
    SVDBasisGenerator(basis_file_name, file_format)
 {
-   CAROM_ASSERT(dim > 0);
-   CAROM_ASSERT(linearity_tol > 0.0);
-   CAROM_ASSERT(initial_dt > 0.0);
-   CAROM_ASSERT(samples_per_time_interval > 0);
-   CAROM_ASSERT(sampling_tol > 0.0);
-   CAROM_ASSERT(max_time_between_samples > 0.0);
-   CAROM_ASSERT(min_sampling_time_step_scale < max_sampling_time_step_scale);
-
    d_svdsampler.reset(new IncrementalSVDSampler(dim,
                                                 linearity_tol,
                                                 skip_linearly_dependent,

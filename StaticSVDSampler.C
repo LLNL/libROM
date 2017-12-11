@@ -50,8 +50,6 @@ StaticSVDSampler::StaticSVDSampler(
    int samples_per_time_interval,
    bool debug_algorithm)
 {
-   CAROM_ASSERT(dim > 0);
-   CAROM_ASSERT(samples_per_time_interval > 0);
    d_svd.reset(new StaticSVD(dim, samples_per_time_interval, debug_algorithm));
 }
 

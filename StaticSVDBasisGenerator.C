@@ -53,8 +53,6 @@ StaticSVDBasisGenerator::StaticSVDBasisGenerator(
    Database::formats file_format) :
    SVDBasisGenerator(basis_file_name, file_format)
 {
-   CAROM_ASSERT(dim > 0);
-   CAROM_ASSERT(samples_per_time_interval > 0);
    d_svdsampler.reset(new StaticSVDSampler(dim,
                                            samples_per_time_interval,
                                            debug_algorithm));
