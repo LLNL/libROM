@@ -51,7 +51,7 @@ void
 DEIM(const Matrix* f_basis,
      int* f_sampled_row,
      int* f_sampled_row_owner,
-     Matrix* f_basis_sampled_inv,
+     Matrix& f_basis_sampled_inv,
      int myid);
 
 }

@@ -74,7 +74,7 @@ void
 DEIM(const Matrix* f_basis,
      int* f_sampled_row,
      int* f_sampled_row_owner,
-     Matrix* f_basis_sampled_inv,
+     Matrix& f_basis_sampled_inv,
      int myid)
 {
    // This algorithm build f_basis_sampled_inv with the sampled basis of the
@@ -141,7 +141,7 @@ DEIM(const Matrix* f_basis,
    // Now add the first sampled row of the basis of the RHS to
    // f_basis_sampled_inv.
    for (int j = 0; j < num_basis_vectors; ++j) {
-      f_basis_sampled_inv->item(0, j) = c[j];
+      f_basis_sampled_inv.item(0, j) = c[j];
    }
 
    // Now repeat the process for the other sampled rows of the basis of the
@@ -152,7 +152,7 @@ DEIM(const Matrix* f_basis,
       M.setSize(i, i);
       for (int row = 0; row < i; ++row) {
          for (int col = 0; col < i; ++col) {
-            M.item(row, col) = f_basis_sampled_inv->item(row, col);
+            M.item(row, col) = f_basis_sampled_inv.item(row, col);
          }
       }
 
@@ -165,7 +165,7 @@ DEIM(const Matrix* f_basis,
          double tmp = 0.0;
          for (int minv_col = 0; minv_col < i; ++minv_col) {
             tmp += M.item(minv_row, minv_col)*
-                   f_basis_sampled_inv->item(minv_col, i);
+                   f_basis_sampled_inv.item(minv_col, i);
          }
          c[minv_row] = tmp;
       }
@@ -207,11 +207,11 @@ DEIM(const Matrix* f_basis,
       // Now add the ith sampled row of the basis of the RHS to
       // f_basis_sampled_inv.
       for (int j = 0; j < num_basis_vectors; ++j) {
-         f_basis_sampled_inv->item(i, j) = c[j];
+         f_basis_sampled_inv.item(i, j) = c[j];
       }
    }
    // Now invert the sampled rows of the basis of the RHS.
-   f_basis_sampled_inv->inverse();
+   f_basis_sampled_inv.inverse();
 
    // Free the MPI_Datatype and MPI_Op.
    MPI_Type_free(&MaxRowType);
