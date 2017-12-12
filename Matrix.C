@@ -200,9 +200,9 @@ Matrix::multPlus(
    double c) const
 {
    CAROM_ASSERT(a.distributed() == distributed());
-   CAROM_ASSERT(!b->distributed());
+   CAROM_ASSERT(!b.distributed());
    CAROM_ASSERT(numColumns() == b.dim());
-   CAROM_ASSERT(numRows() = a.dim());
+   CAROM_ASSERT(numRows() == a.dim());
 
    for (int this_row = 0; this_row < d_num_rows; ++this_row) {
       double tmp = 0.0;
@@ -218,7 +218,7 @@ Matrix::transposeMult(
    const Matrix& other,
    Matrix*& result) const
 {
-   CAROM_ASSERT(result == 0 || !result->distributed())
+   CAROM_ASSERT(result == 0 || !result->distributed());
    CAROM_ASSERT(distributed() == other.distributed());
    CAROM_ASSERT(numRows() == other.numRows());
 
@@ -291,9 +291,9 @@ Matrix::inverse(
    CAROM_ASSERT(result == 0 ||
                 (!result->distributed() &&
                  result->numRows() == numRows() &&
-                 result->numCols() == numCols()));
+                 result->numColumns() == numColumns()));
    CAROM_ASSERT(!distributed());
-   CAROM_ASSERT(numRows() == numCols());
+   CAROM_ASSERT(numRows() == numColumns());
 
    // If the result has not been allocated then do so.  Otherwise size it
    // correctly.
@@ -336,7 +336,7 @@ void
 Matrix::inverse()
 {
    CAROM_ASSERT(!distributed());
-   CAROM_ASSERT(numRows() == numCols());
+   CAROM_ASSERT(numRows() == numColumns());
 
    // Call lapack routines to do the inversion.
    // Set up some stuff the lapack routines need.

@@ -481,7 +481,7 @@ class Matrix
        * @brief Computes and returns the inverse of this.
        *
        * @pre !distributed()
-       * @pre numRows() == numCols()
+       * @pre numRows() == numColumns()
        *
        * @return The inverse of this.
        */
@@ -498,9 +498,9 @@ class Matrix
        *
        * @pre result == 0 || (!result->distributed() &&
        *                      result->numRows() == numRows() &&
-       *                      result->numCols() == numCols())
+       *                      result->numColumns() == numColumns())
        * @pre !distributed()
-       * @pre numRows() == numCols()
+       * @pre numRows() == numColumns()
        *
        * @param[out] result The inverse of this.
        */
@@ -512,7 +512,7 @@ class Matrix
        * @brief Computes the inverse of this and stores result in this.
        *
        * @pre !distributed()
-       * @pre numRows() == numCols()
+       * @pre numRows() == numColumns()
        */
       void
       inverse();
