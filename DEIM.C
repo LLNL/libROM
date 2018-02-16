@@ -72,13 +72,15 @@ RowInfoMax(RowInfo* a, RowInfo* b, int* len, MPI_Datatype* type)
 
 void
 DEIM(const Matrix* f_basis,
+     int num_f_basis_vectors_used,
      int* f_sampled_row,
      int* f_sampled_row_owner,
-     Matrix& f_basis_sampled_inv,
+     Matrix& f_basis_sampled,
      int myid)
 {
-   // This algorithm build f_basis_sampled_inv with the sampled basis of the
-   // RHS.  Only at the end of the algorithm is the inverse computed.
+   // This algorithm determines the rows of f that should be sampled, the
+   // processor that owns each sampled row, and fills f_basis_sampled with the
+   // sampled rows of the basis of the RHS.
 
    // Create an MPI_Datatype for the RowInfo struct.
    MPI_Datatype MaxRowType, oldtypes[2];
@@ -100,7 +102,7 @@ DEIM(const Matrix* f_basis,
    MPI_Op_create((MPI_User_function*)RowInfoMax, true, &RowInfoOp);
 
    // Get the number of basis vectors and the size of each basis vector.
-   int num_basis_vectors = f_basis->numColumns();
+   int num_basis_vectors = std::min(num_f_basis_vectors_used, f_basis->numColumns());
    int basis_size = f_basis->numRows();
 
    // The small matrix inverted by the algorithm.  We'll allocate the largest
@@ -138,10 +140,9 @@ DEIM(const Matrix* f_basis,
       MPI_Bcast(c, num_basis_vectors, MPI_DOUBLE,
                 f_sampled_row_owner[0], MPI_COMM_WORLD);
    }
-   // Now add the first sampled row of the basis of the RHS to
-   // f_basis_sampled_inv.
+   // Now add the first sampled row of the basis of the RHS to f_basis_sampled.
    for (int j = 0; j < num_basis_vectors; ++j) {
-      f_basis_sampled_inv.item(0, j) = c[j];
+      f_basis_sampled.item(0, j) = c[j];
    }
 
    // Now repeat the process for the other sampled rows of the basis of the
@@ -152,7 +153,7 @@ DEIM(const Matrix* f_basis,
       M.setSize(i, i);
       for (int row = 0; row < i; ++row) {
          for (int col = 0; col < i; ++col) {
-            M.item(row, col) = f_basis_sampled_inv.item(row, col);
+            M.item(row, col) = f_basis_sampled.item(row, col);
          }
       }
 
@@ -165,7 +166,7 @@ DEIM(const Matrix* f_basis,
          double tmp = 0.0;
          for (int minv_col = 0; minv_col < i; ++minv_col) {
             tmp += M.item(minv_row, minv_col)*
-                   f_basis_sampled_inv.item(minv_col, i);
+                   f_basis_sampled.item(minv_col, i);
          }
          c[minv_row] = tmp;
       }
@@ -205,13 +206,11 @@ DEIM(const Matrix* f_basis,
                    f_sampled_row_owner[i], MPI_COMM_WORLD);
       }
       // Now add the ith sampled row of the basis of the RHS to
-      // f_basis_sampled_inv.
+      // f_basis_sampled.
       for (int j = 0; j < num_basis_vectors; ++j) {
-         f_basis_sampled_inv.item(i, j) = c[j];
+         f_basis_sampled.item(i, j) = c[j];
       }
    }
-   // Now invert the sampled rows of the basis of the RHS.
-   f_basis_sampled_inv.inverse();
 
    // Free the MPI_Datatype and MPI_Op.
    MPI_Type_free(&MaxRowType);
