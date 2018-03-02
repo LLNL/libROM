@@ -436,6 +436,12 @@ Matrix::qrcp_pivots_transpose(int* row_pivot,
 					pivots_requested);
   }
 
+  if(distributed() && balanced()) {
+    return qrcp_pivots_transpose_distributed(row_pivot,
+					     row_pivot_owner,
+					     pivots_requested);
+  }
+
   // Throw error if distributed, but not balanced, until more is known
   // about use cases
   CAROM_ASSERT(false);
@@ -527,4 +533,20 @@ Matrix::qrcp_pivots_transpose_serial(int* row_pivot,
    delete [] pivot;
 }
 
+void
+Matrix::qrcp_pivots_transpose_distributed(int* row_pivot,
+					  int* row_pivot_owner,
+					  int  pivots_requested)
+const
+{
+  // Shim to design interface; not implemented yet
+
+  // Check if distributed; otherwise, use serial implementation
+  CAROM_ASSERT(distributed());
+
+  // Add assert(false) to throw runtime error if user attempts to
+  // use this method
+  CAROM_ASSERT(false);
 }
+
+} // end namespace CAROM
