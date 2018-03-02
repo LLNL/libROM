@@ -64,10 +64,6 @@ QDEIM(const Matrix* f_basis,
   // processor that owns each sampled row, and fills f_basis_sampled with the
   // sampled rows of the basis of the RHS.
 
-  // For now, implement QDEIM in serial, then make a parallel
-  // implementation.
-  CAROM_ASSERT(!f_basis->distributed());
-
   // Compute the number of basis vectors used; this number can't
   // exceed the number of columns of the matrix.
   int num_basis_vectors_used = std::min(num_f_basis_vectors_used,
