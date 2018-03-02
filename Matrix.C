@@ -556,6 +556,25 @@ Matrix::qrcp_pivots_transpose_distributed_elemental
 (int* row_pivot, int* row_pivot_owner, int pivots_requested)
 const
 {
+  // Check if distributed; otherwise, use serial implementation
+  CAROM_ASSERT(distributed());
+
+  // Check if balanced
+  if (balanced()) {
+    qrcp_pivots_transpose_distributed_elemental_balanced
+      (row_pivot, row_pivot_owner, pivots_requested);
+  }
+
+  // Add assert(false) to throw runtime error if user attempts to
+  // use this method
+  CAROM_ASSERT(false);
+}
+
+void
+Matrix::qrcp_pivots_transpose_distributed_elemental_balanced
+(int* row_pivot, int* row_pivot_owner, int pivots_requested)
+const
+{
   // Compute pivots redundantly across all processes using the QRCP
   // from the distributed dense linear algebra library Elemental.
 
@@ -580,21 +599,18 @@ const
   // Check if distributed and balanced
   CAROM_ASSERT(distributed() && balanced());
 
-  // Compute local row ownership extents of the matrix based on assumptions.
-  // These ownership extents will be used to build the matrix on each process.
-  // NOTE: MPI_Scan assumes master rank is zero; for a different master rank,
-  // it's best to construct a new comm with permuted ranks.
-  const MPI_Comm comm   = MPI_COMM_WORLD;
-  const int master_rank = 0;
+  // Compute total number of rows to set global sizes of matrix
+  const MPI_Comm comm    = MPI_COMM_WORLD;
+  const int master_rank  = 0;
 
   int num_total_rows     = d_num_rows;
   const int reduce_count = 1;
-  MPI_Allreduce(MPI_IN_PLACE,
-		&num_total_rows,
-		reduce_count,
-		MPI_INT,
-		MPI_SUM,
-		comm);
+  CAROM_ASSERT(MPI_Allreduce(MPI_IN_PLACE,
+			     &num_total_rows,
+			     reduce_count,
+			     MPI_INT,
+			     MPI_SUM,
+			     comm) == MPI_SUCCESS);
 
   // Number of pivots requested can't exceed the total number of rows
   // of the matrix
@@ -630,6 +646,12 @@ const
   // Build the copy of the matrix element by element, mapping
   // local indices to global indices. The Elemental::DistMatrix indices
   // are the transpose of the Matrix indices
+
+  // If the matrix is balanced, then the matrix rows should conform to
+  // the row distribution of the Elemental process grid, and
+  // additional communication (beyond possibly in local to global
+  // index mapping queries) is not needed to assign elements in the
+  // proper places
   for (int row = 0; row < d_num_rows; row++) {
     El::Int el_loc_col = static_cast<El::Int>(row);
     El::Int el_global_col = scratch.GlobalCol(el_loc_col);
@@ -639,6 +661,7 @@ const
       scratch.Set(el_global_row, el_global_col, this->item(row, col));
     }
   }
+
   // After transferring the data over to Elemental's native data
   // types, we compute the QRCP.
   El::QR(scratch, householder_scalars, diagonal, perm); // add ctrl if needed
