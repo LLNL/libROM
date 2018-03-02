@@ -610,11 +610,11 @@ class Matrix
 				   int  pivots_requested) const;
 
       /**
-       * @brief Compute the leading numColumns() column pivots from a
-       * QR decomposition with column pivots (QRCP) of the transpose
-       * of this Matrix, if it is distributed and balanced.
+       * @brief Compute the leading column pivots from a QR
+       * decomposition with column pivots (QRCP) of the transpose of
+       * this Matrix, if it is distributed and balanced.
        *
-       * @pre distributed() && balanced()
+       * @pre distributed()
        *
        * @param[out] row_pivot Array of leading column pivots
        * from QRCP of transpose of this Matrix, has length pivots_requested
@@ -629,9 +629,9 @@ class Matrix
 					int  pivots_requested) const;
 
       /**
-       * @brief Compute the leading numColumns() column pivots from a
-       * QR decomposition with column pivots (QRCP) of the transpose
-       * of this Matrix, if it is distributed and balanced. Prototype
+       * @brief Compute the leading column pivots from a QR
+       * decomposition with column pivots (QRCP) of the transpose of
+       * this Matrix, if it is distributed and balanced. Prototype
        * using Elemental (requires C++11).
        *
        * @pre distributed() && balanced()
