@@ -591,6 +591,19 @@ class Matrix
       Matrix();
 
       /**
+       * @brief Compute the leading numColumns() column pivots from a
+       * QR decomposition with column pivots (QRCP) of the transpose
+       * of this Matrix, if it is not distributed.
+       *
+       * @pre !distributed()
+       *
+       * @param[out] pivots The leading numColumns() column pivots
+       * from QRCP
+       */
+      void
+      qrcp_pivots_transpose_serial(std::vector<int>& leading_pivots) const;
+
+      /**
        * @brief The storage for the Matrix's values on this processor.
        */
       double* d_mat;

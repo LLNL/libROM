@@ -430,8 +430,15 @@ Matrix::qrcp_pivots_transpose(int* row_pivot,
 			      int* row_pivot_owner,
 			      int  pivots_requested) const
 {
-
   // For now, implement serial version
+  CAROM_ASSERT(!distributed());
+  qrcp_pivots_transpose_serial(leading_pivots);
+}
+
+void
+Matrix::qrcp_pivots_transpose_serial(std::vector<int>& leading_pivots) const
+{
+  // This method assumes this matrix is serial
   CAROM_ASSERT(!distributed());
 
   // Number of pivots requested can't exceed the number of rows of the
