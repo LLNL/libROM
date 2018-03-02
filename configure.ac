@@ -39,6 +39,8 @@ dnl
 
 dnl Description: autoconf configuration file
 
+
+
 AC_INIT(README_BSD_NOTICE)
 AC_CONFIG_HEADER(CAROM_config.h:config/CAROM_config.h.in)
 dnl
@@ -106,6 +108,12 @@ fi
 CASC_AC_LOG_VAR(with_CXX CXX CCC, before running compiler search)
 AC_PROG_CXX($CCC)
 CASC_AC_LOG_VAR(with_CXX CXX CCC, after running compiler search)
+
+dnl
+dnl Check for C++11 support (required for Elemental)
+dnl
+
+AX_CXX_COMPILE_STDCXX_11([], [mandatory])
 
 dnl
 dnl A way to manually add flags to the loader (ld) command.
@@ -299,6 +307,57 @@ else
 fi
 CASC_AC_LOG_VAR(
 [hdf5_INCLUDES INC_PATH hdf5_LIB_PATH hdf5_LIB_NAME LIB_PATH LIB_NAME])
+
+# Defines el_PREFIX el_INCLUDES and el_LIBS if with-elemental is specified.
+AC_ARG_WITH(elemental,
+[  --with-elemental[=PATH]  Use Elemental and optionally specify where Elemental is installed.],
+, with_elemental=no)
+
+case "$with_elemental" in
+  no)
+    AC_MSG_NOTICE([configuring without Elemental support])
+    : Do nothing
+  ;;
+  yes)
+    # Elemental install path was not specified.
+    # Look in a couple of standard locations to probe if
+    # Elemental header files are there.
+    AC_MSG_CHECKING([for HDF5 installation])
+    for dir in /usr /usr/local; do
+      if test -f ${dir}/include/El.hpp; then
+        elemental_PREFIX=${dir}
+        break
+      fi
+    done
+    AC_MSG_RESULT([$el_PREFIX])
+  ;;
+  *)
+    # Elemental install path was specified.
+    AC_MSG_CHECKING([for Elemental installation])
+
+    if test -f ${with_elemental}/include/El.hpp; then
+        elemental_PREFIX=$with_elemental
+        elemental_INCLUDES="-I${elemental_PREFIX}/include"
+        elemental_LIBS="-L${elemental_PREFIX}/lib -lEl"
+        AC_MSG_RESULT([$elemental_PREFIX])
+    else
+        AC_MSG_RESULT([$elemental_PREFIX])
+        AC_MSG_ERROR([Elemental not found in $with_elemental])
+    fi
+  ;;
+esac
+
+if test "${elemental_PREFIX+set}" = set; then
+  SPLIT_LIBS_STRING(elemental_LIBS,elemental_LIB_PATH,elemental_LIB_NAME)
+  LIB_PATH="$elemental_LIB_PATH $LIB_PATH"
+  LIB_NAME="$elemental_LIB_NAME $LIB_NAME"
+  INC_PATH="$elemental_INCLUDES $INC_PATH"
+else
+  AC_MSG_ERROR([Elemental not found - you must specify a valid location via --with-elemental=PATH.])
+fi
+CASC_AC_LOG_VAR(
+[elemental_INCLUDES INC_PATH elemental_LIB_PATH elemental_LIB_NAME LIB_PATH LIB_NAME])
+
 
 dnl
 dnl Detect Google Test Framework support
