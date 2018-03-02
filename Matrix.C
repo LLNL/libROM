@@ -546,9 +546,11 @@ const
   // Check if distributed; otherwise, use serial implementation
   CAROM_ASSERT(distributed());
 
-  // Add assert(false) to throw runtime error if user attempts to
-  // use this method
-  CAROM_ASSERT(false);
+  // Elemental implementation
+  return qrcp_pivots_transpose_distributed_elemental
+    (row_pivot, row_pivot_owner, pivots_requested);
+
+  // TODO(oxberry1): ScaLAPACK implementation?
 }
 
 void
