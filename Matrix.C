@@ -430,13 +430,21 @@ Matrix::qrcp_pivots_transpose(int* row_pivot,
 			      int* row_pivot_owner,
 			      int  pivots_requested) const
 {
-  // For now, implement serial version
-  CAROM_ASSERT(!distributed());
-  qrcp_pivots_transpose_serial(leading_pivots);
+  if(!distributed()) {
+    return qrcp_pivots_transpose_serial(row_pivot,
+					row_pivot_owner,
+					pivots_requested);
+  }
+
+  // Throw error if distributed, but not balanced, until more is known
+  // about use cases
+  CAROM_ASSERT(false);
 }
 
 void
-Matrix::qrcp_pivots_transpose_serial(std::vector<int>& leading_pivots) const
+Matrix::qrcp_pivots_transpose_serial(int* row_pivot,
+				     int* row_pivot_owner,
+				     int  pivots_requested) const
 {
   // This method assumes this matrix is serial
   CAROM_ASSERT(!distributed());
