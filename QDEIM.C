@@ -85,9 +85,10 @@ QDEIM(const Matrix* f_basis,
   indices.resize(num_f_basis_vectors_used);
 
   // With the known interpolation (sample) indices, copy over the
-  // rows of the sampled basis
+  // rows of the sampled basis; assume master rank is zero
   for (int i = 0; i < indices.size(); i++) {
     f_sampled_row[i] = indices[i];
+    f_sampled_row_owner[i] = myid;
     for (int j = 0; j < indices.size(); j++) {
       f_basis_sampled.item(i, j) = f_basis->item(f_sampled_row[i], j);
     }
