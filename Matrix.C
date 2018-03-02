@@ -143,6 +143,59 @@ Matrix::operator = (
    return *this;
 }
 
+bool
+Matrix::balanced() const
+{
+  // TODO(oxberry1@llnl.gov): Relax the assumption in libROM that
+  // objects use MPI_COMM_WORLD, and that rank 0 is the master rank of
+  // an object.
+  const int master_rank = 0;
+  const MPI_Comm comm = MPI_COMM_WORLD;
+
+  // A Matrix is "balanced" (load-balanced for distributed dense matrix
+  // computations) if:
+  //
+  // (1) the number of rows owned by each process in any pair of
+  // processes on the communicator differs by at most one
+  //
+  // (2) process j has no fewer rows than k if j is less than k (j and
+  // k are both integers corresponding to process ranks)
+
+  // Serial matrices are balanced by definition; one process owns all
+  // rows
+  if (!distributed()) return true;
+
+  // Otherwise, get the total number of rows of the matrix.
+  int num_total_rows = d_num_rows;
+  const int reduce_count = 1;
+  CAROM_ASSERT(MPI_Allreduce(MPI_IN_PLACE,
+			     &num_total_rows,
+			     reduce_count,
+			     MPI_INT,
+			     MPI_SUM,
+			     comm) == MPI_SUCCESS);
+
+  const int first_rank_with_fewer = num_total_rows % d_num_procs;
+  int my_rank;
+  CAROM_ASSERT(MPI_Comm_rank(comm, &my_rank) == MPI_SUCCESS);
+
+  const int  min_rows_per_rank = num_total_rows / d_num_procs;
+  const bool has_extra_row     = my_rank < first_rank_with_fewer;
+  const int  max_rows_on_rank  = min_rows_per_rank + has_extra_row;
+  const bool has_enough_rows   = (d_num_rows >= min_rows_per_rank);
+  const bool has_too_many_rows = (d_num_rows > max_rows_on_rank);
+
+  int result = (has_enough_rows && !has_too_many_rows);
+  CAROM_ASSERT(MPI_Allreduce(MPI_IN_PLACE,
+			     &result,
+			     reduce_count,
+			     MPI_INT,
+			     MPI_LAND,
+			     comm) == MPI_SUCCESS);
+
+  return result;
+}
+
 void
 Matrix::mult(
    const Matrix& other,

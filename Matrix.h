@@ -155,6 +155,12 @@ class Matrix
       }
 
       /**
+       * @brief Returns true if rows of matrix are load-balanced.
+       *
+       */
+      bool balanced() const;
+
+      /**
        * @brief Returns the number of rows of the Matrix on this processor.
        *
        * @return The number of rows of the Matrix on this processor.
