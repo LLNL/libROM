@@ -45,7 +45,6 @@
 
 #include "mpi.h"
 #include <string.h>
-#include <vector>
 
 extern "C" {
 // LU decomposition of a general matrix.
@@ -374,11 +373,23 @@ Matrix::inverse()
 }
 
 void
-Matrix::qrcp_pivots_transpose(std::vector<int>& leading_pivots) const
+Matrix::qrcp_pivots_transpose(int* row_pivot,
+			      int* row_pivot_owner,
+			      int  pivots_requested) const
 {
 
   // For now, implement serial version
   CAROM_ASSERT(!distributed());
+
+  // Number of pivots requested can't exceed the number of rows of the
+  // matrix
+  CAROM_ASSERT(pivots_requested <= numRows());
+  CAROM_ASSERT(pivots_requested > 0);
+
+  // Make sure arrays are allocated before entry; this method does not
+  // own the input pointers
+  CAROM_ASSERT(row_pivot != NULL);
+  CAROM_ASSERT(row_pivot_owner != NULL);
 
   // Get dimensions of transpose of matrix
   int num_rows_of_transpose = numColumns();
@@ -395,15 +406,12 @@ Matrix::qrcp_pivots_transpose(std::vector<int>& leading_pivots) const
   // dimension is the number of rows of the basis matrix. It's
   // possible to get better performance by computing the optimal block
   // size and then using that value to size the work array; see the
-  // LAPACK source code and documentation for details. Use
-  // std::vectors here to avoid having to free later. There are a
-  // bunch of implicit casts from int to size_t that will throw
-  // warnings.
+  // LAPACK source code and documentation for details.
   int lwork = 20 * num_cols_of_transpose + 1;
-  std::vector<double> work(lwork);
-  std::vector<double> tau(std::min(num_rows_of_transpose,
-				   num_cols_of_transpose));
-  leading_pivots.resize(num_cols_of_transpose);
+  double* work = new double[lwork];
+  double* tau  = new double[std::min(num_rows_of_transpose,
+				     num_cols_of_transpose)];
+  int* pivot = new int[num_cols_of_transpose];
   int info;
 
    // Compute the QR decomposition with column pivots of the transpose
@@ -415,18 +423,30 @@ Matrix::qrcp_pivots_transpose(std::vector<int>& leading_pivots) const
 	   &num_cols_of_transpose,
 	   scratch.d_mat,
 	   &num_rows_of_transpose,
-	   &leading_pivots[0],
-	   &tau[0],
-	   &work[0],
+	   pivot,
+	   tau,
+	   work,
 	   &lwork,
 	   &info);
 
    // Fail if error in LAPACK routine.
    CAROM_ASSERT(info != 0);
 
-   // std::vector<T>.resize preserves its leading elements; this
-   // function only needs to return the first numColumns() elements.
-   leading_pivots.resize(numColumns());
+   // Assume communicator is MPI_COMM_WORLD and get rank of this
+   // process
+   int my_rank;
+   const MPI_Comm my_comm = MPI_COMM_WORLD;
+   CAROM_ASSERT(MPI_Comm_rank(my_comm, &my_rank) == MPI_SUCCESS);
+
+   for (int i = 0; i < pivots_requested; i++) {
+     row_pivot[i]       = pivot[i];
+     row_pivot_owner[i] = my_rank;
+   }
+
+   // Free arrays
+   delete [] work;
+   delete [] tau;
+   delete [] pivot;
 }
 
 }

@@ -43,7 +43,6 @@
 #include "Matrix.h"
 #include "mpi.h"
 #include <cmath>
-#include <vector>
 
 namespace CAROM {
 
@@ -69,27 +68,22 @@ QDEIM(const Matrix* f_basis,
   // implementation.
   CAROM_ASSERT(!f_basis->distributed());
 
+  // Compute the number of basis vectors used; this number can't
+  // exceed the number of columns of the matrix.
+  int num_basis_vectors_used = std::min(num_f_basis_vectors_used,
+					f_basis->numColumns());
+
   // QDEIM computes selection/interpolation indices by taking a
   // column-pivoted QR-decomposition of the transpose of its input
   // matrix.
-  std::vector<int> indices;
-  f_basis->qrcp_pivots_transpose(indices);
-
-  // Compute the number of basis vectors used; this number can't
-  // exceed the number of columns of the matrix.
-  num_f_basis_vectors_used = std::min(num_f_basis_vectors_used,
-				      f_basis->numColumns());
-
-  // Keep only the leading indices corresponding to the number of
-  // basis vectors used
-  indices.resize(num_f_basis_vectors_used);
+  f_basis->qrcp_pivots_transpose(f_sampled_row,
+				 f_sampled_row_owner,
+				 num_basis_vectors_used);
 
   // With the known interpolation (sample) indices, copy over the
-  // rows of the sampled basis; assume master rank is zero
-  for (int i = 0; i < indices.size(); i++) {
-    f_sampled_row[i] = indices[i];
-    f_sampled_row_owner[i] = myid;
-    for (int j = 0; j < indices.size(); j++) {
+  // rows of the sampled basis
+  for (int i = 0; i < num_basis_vectors_used; i++) {
+    for (int j = 0; j < num_basis_vectors_used; j++) {
       f_basis_sampled.item(i, j) = f_basis->item(f_sampled_row[i], j);
     }
   }

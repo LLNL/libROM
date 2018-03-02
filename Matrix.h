@@ -524,11 +524,17 @@ class Matrix
        *
        * @pre !distributed()
        *
-       * @param[out] pivots The leading numColumns() column pivots
-       * from QRCP
+       * @param[out] row_pivot Array of leading column pivots
+       * from QRCP of transpose of this Matrix, has length pivots_requested
+       * @param[out] row_pivot_owner Array of process rank that owns
+       * each pivot on the communicator owned by this Matrix.
+       * @param[in]  number of pivots requested, must be less than or equal
+       * to the number of rows of this Matrix.
        */
       void
-      qrcp_pivots_transpose(std::vector<int>& leading_pivots) const;
+      qrcp_pivots_transpose(int* row_pivot,
+			    int* row_pivot_owner,
+			    int  pivots_requested) const;
 
       /**
        * @brief Const Matrix member access.
