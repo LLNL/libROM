@@ -437,16 +437,11 @@ Matrix::qrcp_pivots_transpose(int* row_pivot,
 					row_pivot_owner,
 					pivots_requested);
   }
-
-  if(distributed() && balanced()) {
+  else{
     return qrcp_pivots_transpose_distributed(row_pivot,
 					     row_pivot_owner,
 					     pivots_requested);
   }
-
-  // Throw error if distributed, but not balanced, until more is known
-  // about use cases
-  CAROM_ASSERT(false);
 }
 
 void
