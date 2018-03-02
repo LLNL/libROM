@@ -75,6 +75,15 @@ QDEIM(const Matrix* f_basis,
   std::vector<int> indices;
   f_basis->qrcp_pivots_transpose(indices);
 
+  // Compute the number of basis vectors used; this number can't
+  // exceed the number of columns of the matrix.
+  num_f_basis_vectors_used = std::min(num_f_basis_vectors_used,
+				      f_basis->numColumns());
+
+  // Keep only the leading indices corresponding to the number of
+  // basis vectors used
+  indices.resize(num_f_basis_vectors_used);
+
   // With the known interpolation (sample) indices, copy over the
   // rows of the sampled basis
   for (int i = 0; i < indices.size(); i++) {
