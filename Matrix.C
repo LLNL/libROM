@@ -596,6 +596,11 @@ const
   // Check if distributed and balanced
   CAROM_ASSERT(distributed() && balanced());
 
+  // Make sure arrays are allocated before entry; this method does not
+  // own the input pointers
+  CAROM_ASSERT(row_pivot != NULL);
+  CAROM_ASSERT(row_pivot_owner != NULL);
+
   // Compute total number of rows to set global sizes of matrix
   const MPI_Comm comm    = MPI_COMM_WORLD;
   const int master_rank  = 0;
@@ -710,6 +715,11 @@ const
 
   // Check if distributed and unbalanced
   CAROM_ASSERT(distributed() && !balanced());
+
+  // Make sure arrays are allocated before entry; this method does not
+  // own the input pointers
+  CAROM_ASSERT(row_pivot != NULL);
+  CAROM_ASSERT(row_pivot_owner != NULL);
 
   // Compute total number of rows to set global sizes of matrix
   const MPI_Comm comm    = MPI_COMM_WORLD;
