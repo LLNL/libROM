@@ -45,6 +45,7 @@
 
 #include "mpi.h"
 #include <string.h>
+#include <vector>
 
 extern "C" {
 // LU decomposition of a general matrix.
@@ -54,6 +55,10 @@ dgetrf_(int*, int*, double*, int*, int*, int*);
 // Generate inverse of a matrix given its LU decomposition.
 void
 dgetri_(int*, double*, int*, int*, double*, int*, int*);
+
+// BLAS-3 version of QR decomposition with column pivoting
+void
+dgeqp3_(int*, int*, double*, int*, int*, double*, double*, int*, int*);
 }
 
 namespace CAROM {
@@ -366,6 +371,62 @@ Matrix::inverse()
          item(col, row) = tmp;
       }
    }
+}
+
+void
+Matrix::qrcp_pivots_transpose(std::vector<int>& leading_pivots) const
+{
+
+  // For now, implement serial version
+  CAROM_ASSERT(!distributed());
+
+  // Get dimensions of transpose of matrix
+  int num_rows_of_transpose = numColumns();
+  int num_cols_of_transpose = numRows();
+
+  // LAPACK routines tend to overwrite their inputs, but we'd like to
+  // keep the basis matrix and use it in later computations, so copy
+  // the basis matrix here.
+  Matrix scratch(*this);
+
+  // Allocate work arrays; work array for QR must be at least 1 plus 3
+  // times the number of columns of its matrix input. This algorithm
+  // applies QR to transposed basis matrix, so the applicable
+  // dimension is the number of rows of the basis matrix. It's
+  // possible to get better performance by computing the optimal block
+  // size and then using that value to size the work array; see the
+  // LAPACK source code and documentation for details. Use
+  // std::vectors here to avoid having to free later. There are a
+  // bunch of implicit casts from int to size_t that will throw
+  // warnings.
+  int lwork = 20 * num_cols_of_transpose + 1;
+  std::vector<double> work(lwork);
+  std::vector<double> tau(std::min(num_rows_of_transpose,
+				   num_cols_of_transpose));
+  leading_pivots.resize(num_cols_of_transpose);
+  int info;
+
+   // Compute the QR decomposition with column pivots of the transpose
+   // of this matrix by abusing the fact that the C++ memory model is
+   // row-major format, which is the transpose of the Fortran memory
+   // model (which is column-major). Passing the row-major data
+   // looks like an in-place transposition to Fortran.
+   dgeqp3_(&num_rows_of_transpose,
+	   &num_cols_of_transpose,
+	   scratch.d_mat,
+	   &num_rows_of_transpose,
+	   &leading_pivots[0],
+	   &tau[0],
+	   &work[0],
+	   &lwork,
+	   &info);
+
+   // Fail if error in LAPACK routine.
+   CAROM_ASSERT(info != 0);
+
+   // std::vector<T>.resize preserves its leading elements; this
+   // function only needs to return the first numColumns() elements.
+   leading_pivots.resize(numColumns());
 }
 
 }
