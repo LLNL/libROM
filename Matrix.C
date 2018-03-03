@@ -648,11 +648,27 @@ const
   // local indices to global indices. The Elemental::DistMatrix indices
   // are the transpose of the Matrix indices
 
-  // If the matrix is balanced, then the matrix rows should conform to
-  // the row distribution of the Elemental process grid, and
-  // additional communication (beyond possibly in local to global
-  // index mapping queries) is not needed to assign elements in the
-  // proper places
+  //  Elemental assigns elements of a matrix in a block-cyclic fashion
+  // based on the size (specifically, the height and width) of the
+  // El::Grid object; see
+  // http://libelemental.org/documentation/dev/core/dist_matrix/Element/MC_MR.html
+  // for details on the default element distribution, which is what
+  // this code uses.
+  //
+  // If the matrix is balanced, then the matrix rows (i.e., columns of
+  // the scratch, transpose matrix) should conform to the row
+  // distribution of the Elemental process grid, and additional
+  // communication (beyond possibly in local to global index mapping
+  // queries) is not needed to assign elements in the proper places
+  // because the matrix is already load-balanced. Furthermore, all of
+  // the elements of a row of this matrix (column of scratch,
+  // transpose matrix) are on a single process. Since the matrix rows
+  // (columns of scratch) don't have to be redistributed, we can use
+  // Elemental's native (global <--> local) indexing to construct a
+  // map between local indices on a given process and global indices
+  // of the distributed matrix, and Elemental will also give us the
+  // correct process rank owning any given column of the scratch
+  // matrix.
   for (int row = 0; row < d_num_rows; row++) {
     El::Int el_loc_col = static_cast<El::Int>(row);
     El::Int el_global_col = scratch.GlobalCol(el_loc_col);
@@ -704,7 +720,6 @@ const
   // get a version up and running:
   //
   // (1) Process 0 is the master rank of the object
-  //
   //
   // (2) This Matrix is distributed over the MPI_COMM_WORLD
   //     communicator
@@ -764,10 +779,12 @@ const
   El::DistPermutation perm(grid);
   El::QRCtrl<double> ctrl;
 
-  // Build the copy of the matrix element by element, mapping
-  // local indices to global indices. The Elemental::DistMatrix indices
-  // are the transpose of the Matrix indices
-
+  // Build the copy of the matrix element by element, mapping local
+  // indices to global indices. The Elemental::DistMatrix indices are
+  // the transpose of the Matrix indices. The El::Grid object should
+  // be constructed so that each column of the scratch matrix is owned
+  // by a single process.
+  //
   // If the matrix is unbalanced, matrix elements need to be
   // redistributed among processes; then, for the purposes of
   // computing the QR decomposition only, we redistribute matrix
