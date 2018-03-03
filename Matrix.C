@@ -702,7 +702,6 @@ const
 
   // Then, we transfer the pivots into the pivot array
   // stored redundantly on each process.
-  size_t perm_length = static_cast<size_t>(perm.Height());
   for (size_t i = 0; i < pivots_requested; i++) {
     El::Int el_i = static_cast<El::Int>(i);
     El::Int el_perm_i = perm.Image(el_i);
@@ -864,7 +863,6 @@ const
 
   // Then, we transfer the pivots into the pivot array
   // stored redundantly on each process.
-  size_t perm_length = static_cast<size_t>(perm.Height());
   for (size_t i = 0; i < pivots_requested; i++) {
     El::Int el_i = static_cast<El::Int>(i);
     El::Int el_perm_i = perm.Image(el_i);
