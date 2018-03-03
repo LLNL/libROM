@@ -840,6 +840,9 @@ const
     // map computed above
     row_pivot[i] = global_row_index - row_offset[rank];
   }
+
+  // Free arrays
+  delete [] row_offset;
 }
 
 
