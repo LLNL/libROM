@@ -54,6 +54,10 @@ dgetrf_(int*, int*, double*, int*, int*, int*);
 // Generate inverse of a matrix given its LU decomposition.
 void
 dgetri_(int*, double*, int*, int*, double*, int*, int*);
+
+// BLAS-3 version of QR decomposition with column pivoting
+void
+dgeqp3_(int*, int*, double*, int*, int*, double*, double*, int*, int*);
 }
 
 namespace CAROM {
@@ -366,6 +370,83 @@ Matrix::inverse()
          item(col, row) = tmp;
       }
    }
+}
+
+void
+Matrix::qrcp_pivots_transpose(int* row_pivot,
+			      int* row_pivot_owner,
+			      int  pivots_requested) const
+{
+
+  // For now, implement serial version
+  CAROM_ASSERT(!distributed());
+
+  // Number of pivots requested can't exceed the number of rows of the
+  // matrix
+  CAROM_ASSERT(pivots_requested <= numRows());
+  CAROM_ASSERT(pivots_requested > 0);
+
+  // Make sure arrays are allocated before entry; this method does not
+  // own the input pointers
+  CAROM_ASSERT(row_pivot != NULL);
+  CAROM_ASSERT(row_pivot_owner != NULL);
+
+  // Get dimensions of transpose of matrix
+  int num_rows_of_transpose = numColumns();
+  int num_cols_of_transpose = numRows();
+
+  // LAPACK routines tend to overwrite their inputs, but we'd like to
+  // keep the basis matrix and use it in later computations, so copy
+  // the basis matrix here.
+  Matrix scratch(*this);
+
+  // Allocate work arrays; work array for QR must be at least 1 plus 3
+  // times the number of columns of its matrix input. This algorithm
+  // applies QR to transposed basis matrix, so the applicable
+  // dimension is the number of rows of the basis matrix. It's
+  // possible to get better performance by computing the optimal block
+  // size and then using that value to size the work array; see the
+  // LAPACK source code and documentation for details.
+  int lwork = 20 * num_cols_of_transpose + 1;
+  double* work = new double[lwork];
+  double* tau  = new double[std::min(num_rows_of_transpose,
+				     num_cols_of_transpose)];
+  int* pivot = new int[num_cols_of_transpose];
+  int info;
+
+   // Compute the QR decomposition with column pivots of the transpose
+   // of this matrix by abusing the fact that the C++ memory model is
+   // row-major format, which is the transpose of the Fortran memory
+   // model (which is column-major). Passing the row-major data
+   // looks like an in-place transposition to Fortran.
+   dgeqp3_(&num_rows_of_transpose,
+	   &num_cols_of_transpose,
+	   scratch.d_mat,
+	   &num_rows_of_transpose,
+	   pivot,
+	   tau,
+	   work,
+	   &lwork,
+	   &info);
+
+   // Fail if error in LAPACK routine.
+   CAROM_ASSERT(info != 0);
+
+   // Assume communicator is MPI_COMM_WORLD and get rank of this
+   // process
+   int my_rank;
+   const MPI_Comm my_comm = MPI_COMM_WORLD;
+   CAROM_ASSERT(MPI_Comm_rank(my_comm, &my_rank) == MPI_SUCCESS);
+
+   for (int i = 0; i < pivots_requested; i++) {
+     row_pivot[i]       = pivot[i];
+     row_pivot_owner[i] = my_rank;
+   }
+
+   // Free arrays
+   delete [] work;
+   delete [] tau;
+   delete [] pivot;
 }
 
 }

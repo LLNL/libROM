@@ -272,7 +272,7 @@ class Matrix
          mult(other, result);
          return result;
       }
-       
+
 
       /**
        * @brief Multiplies this Matrix with other and returns the product,
@@ -516,6 +516,25 @@ class Matrix
        */
       void
       inverse();
+
+      /**
+       * @brief Compute the leading numColumns() column pivots from a
+       * QR decomposition with column pivots (QRCP) of the transpose
+       * of this.
+       *
+       * @pre !distributed()
+       *
+       * @param[out] row_pivot Array of leading column pivots
+       * from QRCP of transpose of this Matrix, has length pivots_requested
+       * @param[out] row_pivot_owner Array of process rank that owns
+       * each pivot on the communicator owned by this Matrix.
+       * @param[in]  number of pivots requested, must be less than or equal
+       * to the number of rows of this Matrix.
+       */
+      void
+      qrcp_pivots_transpose(int* row_pivot,
+			    int* row_pivot_owner,
+			    int  pivots_requested) const;
 
       /**
        * @brief Const Matrix member access.
