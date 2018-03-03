@@ -638,6 +638,23 @@ const
   El::Int root   = static_cast<El::Int>(master_rank);
   El::DistMatrix<double> scratch(height, width, grid, root);
 
+  // Columns of the matrix should be distributed round-robin; each
+  // element of a column should be on the same process. The
+  // distribution should satisfy two invariants:
+  //
+  // (1) Each "global row" should have the same rank in its column
+  // communicator
+  //
+  // (2) For the scratch matrix global column index j, the process (on
+  // the row communicator) that owns j should be process rank (j %
+  // d_num_procs).
+  //
+  CAROM_ASSERT(scratch.RowOwner(0) == scratch.RowOwner(1));
+  int my_rank;
+  CAROM_ASSERT(MPI_Comm_rank(comm, &my_rank) == MPI_SUCCESS);
+  El::Int rank_as_row = static_cast<El::Int>(my_rank);
+  CAROM_ASSERT(scratch.ColOwner(rank_as_row) == rank_as_row);
+
   // Set up work matrices
   El::DistMatrix<double> householder_scalars(grid);
   El::DistMatrix<double> diagonal(grid);
@@ -773,6 +790,23 @@ const
   El::Int root   = static_cast<El::Int>(master_rank);
   El::DistMatrix<double> scratch(height, width, grid, root);
 
+  // Columns of the matrix should be distributed round-robin; each
+  // element of a column should be on the same process. The
+  // distribution should satisfy two invariants:
+  //
+  // (1) Each "global row" should have the same rank in its column
+  // communicator
+  //
+  // (2) For the scratch matrix global column index j, the process (on
+  // the row communicator) that owns j should be process rank (j %
+  // d_num_procs).
+  //
+  CAROM_ASSERT(scratch.RowOwner(0) == scratch.RowOwner(1));
+  int my_rank;
+  CAROM_ASSERT(MPI_Comm_rank(comm, &my_rank) == MPI_SUCCESS);
+  El::Int rank_as_row = static_cast<El::Int>(my_rank);
+  CAROM_ASSERT(scratch.ColOwner(rank_as_row) == rank_as_row);
+
   // Set up work matrices
   El::DistMatrix<double> householder_scalars(grid);
   El::DistMatrix<double> diagonal(grid);
@@ -797,8 +831,6 @@ const
   int *row_offset = new int[d_num_procs + 1];
   row_offset[d_num_procs + 1] = num_total_rows;
 
-  int my_rank;
-  CAROM_ASSERT(MPI_Comm_rank(comm, &my_rank) == MPI_SUCCESS);
   row_offset[my_rank] = d_num_rows;
   const int send_recv_count = 1;
   CAROM_ASSERT(MPI_Allgather(MPI_IN_PLACE,
