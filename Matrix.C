@@ -45,7 +45,6 @@
 
 #include "mpi.h"
 #include <string.h>
-#include <vector>
 #include <El.hpp>
 
 extern "C" {
