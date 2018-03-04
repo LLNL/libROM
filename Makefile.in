@@ -98,7 +98,8 @@ tests/gtest_runner: tests/gtest_runner.o libROM.a
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -o $@ -c $*.C
 
 clean:
-	rm -f *.o $(LIBROM) uneven_dist random_test weak_scaling smoke_test
+	-rm -f *.o $(LIBROM) uneven_dist random_test weak_scaling smoke_test
+	-rm -f tests/*.o tests/gtest_runner
 
 dox:
 	(cd docs && $(MAKE) $@)
