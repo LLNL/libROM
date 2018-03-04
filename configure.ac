@@ -308,7 +308,8 @@ fi
 CASC_AC_LOG_VAR(
 [hdf5_INCLUDES INC_PATH hdf5_LIB_PATH hdf5_LIB_NAME LIB_PATH LIB_NAME])
 
-# Defines el_PREFIX el_INCLUDES and el_LIBS if with-elemental is specified.
+# Defines elemental_PREFIX elemental_INCLUDES and elemental_LIBS if
+# with-elemental is specified.
 AC_ARG_WITH(elemental,
 [  --with-elemental[=PATH]  Use Elemental and optionally specify where Elemental is installed.],
 , with_elemental=no)
@@ -322,7 +323,7 @@ case "$with_elemental" in
     # Elemental install path was not specified.
     # Look in a couple of standard locations to probe if
     # Elemental header files are there.
-    AC_MSG_CHECKING([for HDF5 installation])
+    AC_MSG_CHECKING([for Elemental installation])
     for dir in /usr /usr/local; do
       if test -f ${dir}/include/El.hpp; then
         elemental_PREFIX=${dir}
