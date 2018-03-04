@@ -91,7 +91,7 @@ weak_scaling: lib weak_scaling.o
 smoke_test: lib smoke_test.o
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o smoke_test smoke_test.o $(LDLIBS)
 
-tests/gtest_runner: tests/gtest_runner.o
+tests/gtest_runner: tests/gtest_runner.o libROM.a
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ tests/gtest_runner.o $(LDLIBS)
 
 .C.o :
