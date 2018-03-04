@@ -74,7 +74,7 @@ OBJS = Matrix.o \
 
 default: lib
 
-all: lib uneven_dist random_test weak_scaling smoke_test gtest_runner
+all: lib uneven_dist random_test weak_scaling smoke_test tests/gtest_runner
 
 lib: $(OBJS)
 	ar ru $(LIBROM) $(OBJS)
@@ -91,11 +91,11 @@ weak_scaling: lib weak_scaling.o
 smoke_test: lib smoke_test.o
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o smoke_test smoke_test.o $(LDLIBS)
 
-gtest_runner: gtest_runner.o
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ gtest_runner.o $(LDLIBS)
+tests/gtest_runner: tests/gtest_runner.o
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ tests/gtest_runner.o $(LDLIBS)
 
 .C.o :
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $*.C
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -o $@ -c $*.C
 
 clean:
 	rm -f *.o $(LIBROM) uneven_dist random_test weak_scaling smoke_test
