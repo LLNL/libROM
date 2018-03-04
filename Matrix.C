@@ -430,7 +430,7 @@ Matrix::qrcp_pivots_transpose(int* row_pivot,
 	   &info);
 
    // Fail if error in LAPACK routine.
-   CAROM_ASSERT(info != 0);
+   CAROM_ASSERT(info == 0);
 
    // Assume communicator is MPI_COMM_WORLD and get rank of this
    // process
