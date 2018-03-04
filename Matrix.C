@@ -434,9 +434,14 @@ Matrix::qrcp_pivots_transpose(int* row_pivot,
 
    // Assume communicator is MPI_COMM_WORLD and get rank of this
    // process
-   int my_rank;
-   const MPI_Comm my_comm = MPI_COMM_WORLD;
-   CAROM_ASSERT(MPI_Comm_rank(my_comm, &my_rank) == MPI_SUCCESS);
+   int is_mpi_initialized, is_mpi_finalized;
+   CAROM_ASSERT(MPI_Initialized(&is_mpi_initialized) == MPI_SUCCESS);
+   CAROM_ASSERT(MPI_Finalized(&is_mpi_finalized) == MPI_SUCCESS);
+   int my_rank = 0;
+   if(is_mpi_initialized && !is_mpi_finalized) {
+     const MPI_Comm my_comm = MPI_COMM_WORLD;
+     CAROM_ASSERT(MPI_Comm_rank(my_comm, &my_rank) == MPI_SUCCESS);
+   }
 
    for (int i = 0; i < pivots_requested; i++) {
      row_pivot[i]       = pivot[i];
