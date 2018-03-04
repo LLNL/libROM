@@ -90,7 +90,7 @@ CASC_GUESS_ARCH
 CASC_AC_LOG_VAR(ARCH)
 
 dnl
-dnl Set up the C++ compiler.  
+dnl Set up the C++ compiler.
 dnl
 
 if test -n "$with_CXX"; then
@@ -174,7 +174,7 @@ case $CXX_ID in
       CXX_FLAGS="-qrtti -g $CXX_FLAGS"
       ;;
    intel)
-      # Ignore some Intel warnings that seem harmless and very hard to get rid of       
+      # Ignore some Intel warnings that seem harmless and very hard to get rid of
       CXX_FLAGS="$CXX_FLAGS -Wall -w1 -wd981 -wd383 -wd1418 -wd522"
       ;;
     *)
@@ -299,6 +299,59 @@ else
 fi
 CASC_AC_LOG_VAR(
 [hdf5_INCLUDES INC_PATH hdf5_LIB_PATH hdf5_LIB_NAME LIB_PATH LIB_NAME])
+
+dnl
+dnl Detect Google Test Framework support
+dnl
+
+AC_ARG_WITH(gtest,
+[  --with-gtest[=PATH]  Use Google Test Framework and optionally specify where Google Test is installed.],
+, with_gtest=no)
+
+case "$with_gtest" in
+  no)
+    AC_MSG_NOTICE([configuring without Google Test Framework support])
+    : Do nothing
+  ;;
+  yes)
+    # Google Test Framework install path was not specified.
+    # Look in a couple of standard locations to probe if
+    # Google Test Framework header files are there.
+    AC_MSG_CHECKING([for Google Test Framework installation])
+    for dir in /usr /usr/local; do
+      if test -f ${dir}/include/gtest/gtest.h; then
+        gtest_PREFIX=${dir}
+        break
+      fi
+    done
+    AC_MSG_RESULT([$gtest_PREFIX])
+  ;;
+  *)
+    # Google Test Framework install path was specified.
+    AC_MSG_CHECKING([for Google Test Framework installation])
+
+    if test -f ${with_gtest}/include/gtest/gtest.h; then
+        gtest_PREFIX=$with_gtest
+        gtest_INCLUDES="-I${gtest_PREFIX}/include"
+        gtest_LIBS="-L${gtest_PREFIX}/lib -lgtest"
+        AC_MSG_RESULT([$gtest_PREFIX])
+    else
+        AC_MSG_RESULT([$gtest_PREFIX])
+        AC_MSG_ERROR([Google Test Framework not found in $with_gtest])
+    fi
+  ;;
+esac
+
+if test "${gtest_PREFIX+set}" = set; then
+  SPLIT_LIBS_STRING(gtest_LIBS,gtest_LIB_PATH,gtest_LIB_NAME)
+  LIB_PATH="$gtest_LIB_PATH $LIB_PATH"
+  LIB_NAME="$gtest_LIB_NAME $LIB_NAME"
+  INC_PATH="$gtest_INCLUDES $INC_PATH"
+else
+  AC_MSG_ERROR([Google Test Framework not found - you must specify a valid location via --with-gtest=PATH.])
+fi
+CASC_AC_LOG_VAR(
+[gtest_INCLUDES INC_PATH gtest_LIB_PATH gtest_LIB_NAME LIB_PATH LIB_NAME])
 
 dnl
 dnl Support rpath syntax by adding it to the LIB_PATH variable.
