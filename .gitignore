@@ -22,3 +22,4 @@ uneven_dist
 random_test
 weak_scaling
 smoke_test
+gtest_runner
