@@ -443,8 +443,11 @@ Matrix::qrcp_pivots_transpose(int* row_pivot,
      CAROM_ASSERT(MPI_Comm_rank(my_comm, &my_rank) == MPI_SUCCESS);
    }
 
-   // Copy over pivots, subtracting one for Fortran indexing, which
-   // starts at zero, instead of one
+   // Copy over pivots and subtract one to convert them from a
+   // Fortran-based indexing convention (first element of 1-D array by
+   // default corresponds to index of 1, though this convention can be
+   // overridden) to a C-based indexing convention (first element of
+   // 1-D array corresponds to index of 0).
    for (int i = 0; i < pivots_requested; i++) {
      row_pivot[i]       = pivot[i] - 1;
      row_pivot_owner[i] = my_rank;
