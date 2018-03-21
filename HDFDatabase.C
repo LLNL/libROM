@@ -132,7 +132,7 @@ HDFDatabase::putIntegerArray(
    CAROM_ASSERT(data != 0);
    CAROM_ASSERT(nelements > 0);
 
-   hsize_t dim[] = { nelements };
+   hsize_t dim[] = { static_cast<hsize_t>(nelements) };
    hid_t space = H5Screate_simple(1, dim, 0);
    CAROM_ASSERT(space >= 0);
 
@@ -184,7 +184,7 @@ HDFDatabase::putDoubleArray(
    CAROM_ASSERT(data != 0);
    CAROM_ASSERT(nelements > 0);
 
-   hsize_t dim[] = { nelements };
+   hsize_t dim[] = { static_cast<hsize_t>(nelements) };
    hid_t space = H5Screate_simple(1, dim, 0);
    CAROM_ASSERT(space >= 0);
 

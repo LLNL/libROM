@@ -45,6 +45,7 @@
 
 #include "mpi.h"
 #include <string.h>
+#include <El.hpp>
 
 extern "C" {
 // LU decomposition of a general matrix.
@@ -141,6 +142,59 @@ Matrix::operator = (
    setSize(rhs.d_num_rows, rhs.d_num_cols);
    memcpy(d_mat, rhs.d_mat, d_num_rows*d_num_cols*sizeof(double));
    return *this;
+}
+
+bool
+Matrix::balanced() const
+{
+  // TODO(oxberry1@llnl.gov): Relax the assumption in libROM that
+  // objects use MPI_COMM_WORLD, and that rank 0 is the master rank of
+  // an object.
+  const int master_rank = 0;
+  const MPI_Comm comm = MPI_COMM_WORLD;
+
+  // A Matrix is "balanced" (load-balanced for distributed dense matrix
+  // computations) if:
+  //
+  // (1) the number of rows owned by each process in any pair of
+  // processes on the communicator differs by at most one
+  //
+  // (2) process j has no fewer rows than k if j is less than k (j and
+  // k are both integers corresponding to process ranks)
+
+  // Serial matrices are balanced by definition; one process owns all
+  // rows
+  if (!distributed()) return true;
+
+  // Otherwise, get the total number of rows of the matrix.
+  int num_total_rows = d_num_rows;
+  const int reduce_count = 1;
+  CAROM_ASSERT(MPI_Allreduce(MPI_IN_PLACE,
+			     &num_total_rows,
+			     reduce_count,
+			     MPI_INT,
+			     MPI_SUM,
+			     comm) == MPI_SUCCESS);
+
+  const int first_rank_with_fewer = num_total_rows % d_num_procs;
+  int my_rank;
+  CAROM_ASSERT(MPI_Comm_rank(comm, &my_rank) == MPI_SUCCESS);
+
+  const int  min_rows_per_rank = num_total_rows / d_num_procs;
+  const bool has_extra_row     = my_rank < first_rank_with_fewer;
+  const int  max_rows_on_rank  = min_rows_per_rank + has_extra_row;
+  const bool has_enough_rows   = (d_num_rows >= min_rows_per_rank);
+  const bool has_too_many_rows = (d_num_rows > max_rows_on_rank);
+
+  int result = (has_enough_rows && !has_too_many_rows);
+  CAROM_ASSERT(MPI_Allreduce(MPI_IN_PLACE,
+			     &result,
+			     reduce_count,
+			     MPI_INT,
+			     MPI_LAND,
+			     comm) == MPI_SUCCESS);
+
+  return result;
 }
 
 void
@@ -377,8 +431,24 @@ Matrix::qrcp_pivots_transpose(int* row_pivot,
 			      int* row_pivot_owner,
 			      int  pivots_requested) const
 {
+  if(!distributed()) {
+    return qrcp_pivots_transpose_serial(row_pivot,
+					row_pivot_owner,
+					pivots_requested);
+  }
+  else{
+    return qrcp_pivots_transpose_distributed(row_pivot,
+					     row_pivot_owner,
+					     pivots_requested);
+  }
+}
 
-  // For now, implement serial version
+void
+Matrix::qrcp_pivots_transpose_serial(int* row_pivot,
+				     int* row_pivot_owner,
+				     int  pivots_requested) const
+{
+  // This method assumes this matrix is serial
   CAROM_ASSERT(!distributed());
 
   // Number of pivots requested can't exceed the number of rows of the
@@ -459,4 +529,368 @@ Matrix::qrcp_pivots_transpose(int* row_pivot,
    delete [] pivot;
 }
 
+void
+Matrix::qrcp_pivots_transpose_distributed(int* row_pivot,
+					  int* row_pivot_owner,
+					  int  pivots_requested)
+const
+{
+  // Shim to design interface; not implemented yet
+
+  // Check if distributed; otherwise, use serial implementation
+  CAROM_ASSERT(distributed());
+
+  // Elemental implementation
+  return qrcp_pivots_transpose_distributed_elemental
+    (row_pivot, row_pivot_owner, pivots_requested);
+
+  // TODO(oxberry1): ScaLAPACK implementation?
 }
+
+void
+Matrix::qrcp_pivots_transpose_distributed_elemental
+(int* row_pivot, int* row_pivot_owner, int pivots_requested)
+const
+{
+  // Check if distributed; otherwise, use serial implementation
+  CAROM_ASSERT(distributed());
+
+  // Check if balanced
+  if (balanced()) {
+    qrcp_pivots_transpose_distributed_elemental_balanced
+      (row_pivot, row_pivot_owner, pivots_requested);
+  }
+  else {
+    qrcp_pivots_transpose_distributed_elemental_unbalanced
+      (row_pivot, row_pivot_owner, pivots_requested);
+  }
+}
+
+void
+Matrix::qrcp_pivots_transpose_distributed_elemental_balanced
+(int* row_pivot, int* row_pivot_owner, int pivots_requested)
+const
+{
+  // Compute pivots redundantly across all processes using the QRCP
+  // from the distributed dense linear algebra library Elemental.
+
+  // The following assumptions are made in this implementation just to
+  // get a version up and running:
+  //
+  // (1) this->balanced() == true; // The matrix is balanced
+  //
+  // (2) Process 0 is the master rank of the object
+  //
+  // (3) Matrix rows are distributed block-cyclically over all processes
+  //     starting on process zero with row 0, in increasing order of row
+  //     index (all elements of a given row are still stored on the same
+  //     process)
+  //
+  // (4) This Matrix is distributed over the MPI_COMM_WORLD
+  //     communicator
+  //
+  // Some of these assumptions can be relaxed if the Matrix object
+  // stores more information.
+
+  // Check if distributed and balanced
+  CAROM_ASSERT(distributed() && balanced());
+
+  // Make sure arrays are allocated before entry; this method does not
+  // own the input pointers
+  CAROM_ASSERT(row_pivot != NULL);
+  CAROM_ASSERT(row_pivot_owner != NULL);
+
+  // Compute total number of rows to set global sizes of matrix
+  const MPI_Comm comm    = MPI_COMM_WORLD;
+  const int master_rank  = 0;
+
+  int num_total_rows     = d_num_rows;
+  const int reduce_count = 1;
+  CAROM_ASSERT(MPI_Allreduce(MPI_IN_PLACE,
+			     &num_total_rows,
+			     reduce_count,
+			     MPI_INT,
+			     MPI_SUM,
+			     comm) == MPI_SUCCESS);
+
+  // Number of pivots requested can't exceed the total number of rows
+  // of the matrix
+  CAROM_ASSERT(pivots_requested <= num_total_rows);
+  CAROM_ASSERT(pivots_requested > 0);
+
+  // To compute a column-pivoted QRCP using Elemental, we need to
+  // first get the data into datatypes Elemental can operate on.
+
+  // Construct a process grid on the communicator that is 1
+  // by (# processes), in column-major order; each process in the grid
+  // will own its own rows of the matrix
+  const El::Grid grid(comm, 1);
+
+  // The row communicator in the grid should have the same number
+  // of processes as the comm owned by the Matrix
+  CAROM_ASSERT(El::mpi::Size(grid.RowComm()) == d_num_procs);
+
+  // Instantiate the transposed matrix; Elemental calls the number of
+  // rows the "height" of the matrix, and the number of columns the
+  // "width" of the matrix
+  El::Int height = static_cast<El::Int>(numColumns());
+  El::Int width  = static_cast<El::Int>(numRows());
+  El::Int root   = static_cast<El::Int>(master_rank);
+  El::DistMatrix<double> scratch(height, width, grid, root);
+
+  // Columns of the matrix should be distributed round-robin; each
+  // element of a column should be on the same process. The
+  // distribution should satisfy two invariants:
+  //
+  // (1) Each "global row" should have the same rank in its column
+  // communicator
+  //
+  // (2) For the scratch matrix global column index j, the process (on
+  // the row communicator) that owns j should be process rank (j %
+  // d_num_procs).
+  //
+  CAROM_ASSERT(scratch.RowOwner(0) == scratch.RowOwner(1));
+  int my_rank;
+  CAROM_ASSERT(MPI_Comm_rank(comm, &my_rank) == MPI_SUCCESS);
+  El::Int rank_as_row = static_cast<El::Int>(my_rank);
+  CAROM_ASSERT(scratch.ColOwner(rank_as_row) == rank_as_row);
+
+  // Set up work matrices
+  El::DistMatrix<double> householder_scalars(grid);
+  El::DistMatrix<double> diagonal(grid);
+  El::DistPermutation perm(grid);
+  El::QRCtrl<double> ctrl;
+
+  // Build the copy of the matrix element by element, mapping
+  // local indices to global indices. The Elemental::DistMatrix indices
+  // are the transpose of the Matrix indices
+
+  //  Elemental assigns elements of a matrix in a block-cyclic fashion
+  // based on the size (specifically, the height and width) of the
+  // El::Grid object; see
+  // http://libelemental.org/documentation/dev/core/dist_matrix/Element/MC_MR.html
+  // for details on the default element distribution, which is what
+  // this code uses.
+  //
+  // If the matrix is balanced, then the matrix rows (i.e., columns of
+  // the scratch, transpose matrix) should conform to the row
+  // distribution of the Elemental process grid, and additional
+  // communication (beyond possibly in local to global index mapping
+  // queries) is not needed to assign elements in the proper places
+  // because the matrix is already load-balanced. Furthermore, all of
+  // the elements of a row of this matrix (column of scratch,
+  // transpose matrix) are on a single process. Since the matrix rows
+  // (columns of scratch) don't have to be redistributed, we can use
+  // Elemental's native (global <--> local) indexing to construct a
+  // map between local indices on a given process and global indices
+  // of the distributed matrix, and Elemental will also give us the
+  // correct process rank owning any given column of the scratch
+  // matrix.
+  for (int row = 0; row < d_num_rows; row++) {
+    El::Int el_loc_col = static_cast<El::Int>(row);
+    El::Int el_global_col = scratch.GlobalCol(el_loc_col);
+    for (int col = 0; col < d_num_cols; col++) {
+      El::Int el_loc_row = static_cast<El::Int>(col);
+      El::Int el_global_row = scratch.GlobalRow(el_loc_row);
+      scratch.Set(el_global_row, el_global_col, this->item(row, col));
+    }
+  }
+
+  // After transferring the data over to Elemental's native data
+  // types, we compute the QRCP.
+  El::QR(scratch, householder_scalars, diagonal, perm); // add ctrl if needed
+
+  // Then, we transfer the pivots into the pivot array
+  // stored redundantly on each process.
+  for (size_t i = 0; i < pivots_requested; i++) {
+    El::Int el_i = static_cast<El::Int>(i);
+    El::Int el_perm_i = perm.Image(el_i);
+
+    // The permutation is computed in terms of global indices, so
+    // we need to compute the local column pivot of the transpose;
+    // this will be a row pivot
+    El::Int el_loc_i = scratch.LocalCol(el_perm_i);
+    int loc_i = static_cast<int>(el_loc_i);
+    row_pivot[i] = loc_i;
+
+    // The global index of the permutation can also be used to figure
+    // out which process owns that pivot row, because this process is
+    // also the process that owns that global column of the scratch
+    // matrix
+    El::Int el_owner = scratch.ColOwner(el_perm_i);
+    int owner = static_cast<int>(el_owner);
+    row_pivot_owner[i] = owner;
+  }
+
+}
+
+void
+Matrix::qrcp_pivots_transpose_distributed_elemental_unbalanced
+(int* row_pivot, int* row_pivot_owner, int pivots_requested)
+const
+{
+  // Compute pivots redundantly across all processes using the QRCP
+  // from the distributed dense linear algebra library Elemental.
+
+  // The following assumptions are made in this implementation just to
+  // get a version up and running:
+  //
+  // (1) Process 0 is the master rank of the object
+  //
+  // (2) This Matrix is distributed over the MPI_COMM_WORLD
+  //     communicator
+  //
+  // Some of these assumptions can be relaxed if the Matrix object
+  // stores more information.
+
+  // Check if distributed and unbalanced
+  CAROM_ASSERT(distributed() && !balanced());
+
+  // Make sure arrays are allocated before entry; this method does not
+  // own the input pointers
+  CAROM_ASSERT(row_pivot != NULL);
+  CAROM_ASSERT(row_pivot_owner != NULL);
+
+  // Compute total number of rows to set global sizes of matrix
+  const MPI_Comm comm    = MPI_COMM_WORLD;
+  const int master_rank  = 0;
+
+  int num_total_rows     = d_num_rows;
+  const int reduce_count = 1;
+  CAROM_ASSERT(MPI_Allreduce(MPI_IN_PLACE,
+			     &num_total_rows,
+			     reduce_count,
+			     MPI_INT,
+			     MPI_SUM,
+			     comm) == MPI_SUCCESS);
+
+  // Number of pivots requested can't exceed the total number of rows
+  // of the matrix
+  CAROM_ASSERT(pivots_requested <= num_total_rows);
+  CAROM_ASSERT(pivots_requested > 0);
+
+  // To compute a column-pivoted QRCP using Elemental, we need to
+  // first get the data into datatypes Elemental can operate on.
+
+  // Construct a process grid on the communicator that is 1
+  // by (# processes), in column-major order; each process in the grid
+  // will own its own rows of the matrix
+  const El::Grid grid(comm, 1);
+
+  // The row communicator in the grid should have the same number
+  // of processes as the comm owned by the Matrix
+  CAROM_ASSERT(El::mpi::Size(grid.RowComm()) == d_num_procs);
+
+  // Instantiate the transposed matrix; Elemental calls the number of
+  // rows the "height" of the matrix, and the number of columns the
+  // "width" of the matrix
+  El::Int height = static_cast<El::Int>(numColumns());
+  El::Int width  = static_cast<El::Int>(numRows());
+  El::Int root   = static_cast<El::Int>(master_rank);
+  El::DistMatrix<double> scratch(height, width, grid, root);
+
+  // Columns of the matrix should be distributed round-robin; each
+  // element of a column should be on the same process. The
+  // distribution should satisfy two invariants:
+  //
+  // (1) Each "global row" should have the same rank in its column
+  // communicator
+  //
+  // (2) For the scratch matrix global column index j, the process (on
+  // the row communicator) that owns j should be process rank (j %
+  // d_num_procs).
+  //
+  CAROM_ASSERT(scratch.RowOwner(0) == scratch.RowOwner(1));
+  int my_rank;
+  CAROM_ASSERT(MPI_Comm_rank(comm, &my_rank) == MPI_SUCCESS);
+  El::Int rank_as_row = static_cast<El::Int>(my_rank);
+  CAROM_ASSERT(scratch.ColOwner(rank_as_row) == rank_as_row);
+
+  // Set up work matrices
+  El::DistMatrix<double> householder_scalars(grid);
+  El::DistMatrix<double> diagonal(grid);
+  El::DistPermutation perm(grid);
+  El::QRCtrl<double> ctrl;
+
+  // Build the copy of the matrix element by element, mapping local
+  // indices to global indices. The Elemental::DistMatrix indices are
+  // the transpose of the Matrix indices. The El::Grid object should
+  // be constructed so that each column of the scratch matrix is owned
+  // by a single process.
+  //
+  // If the matrix is unbalanced, matrix elements need to be
+  // redistributed among processes; then, for the purposes of
+  // computing the QR decomposition only, we redistribute matrix
+  // elements in the scratch matrix. First, we compute global to
+  // (process rank, local) index map. The mapping chosen is not
+  // terribly performant -- it may do more data movement than
+  // necessary when assigning matrix elements -- but is easy to
+  // implement.
+
+  int *row_offset = new int[d_num_procs + 1];
+  row_offset[d_num_procs + 1] = num_total_rows;
+
+  row_offset[my_rank] = d_num_rows;
+  const int send_recv_count = 1;
+  CAROM_ASSERT(MPI_Allgather(MPI_IN_PLACE,
+			     send_recv_count,
+			     MPI_INT,
+			     row_offset,
+			     send_recv_count,
+			     MPI_INT,
+			     comm) == MPI_SUCCESS);
+
+  for (size_t i = d_num_procs - 1; i >= 0; i--) {
+    row_offset[i] = row_offset[i + 1] - row_offset[i];
+  }
+  CAROM_ASSERT(row_offset[0] == 0);
+
+  // Use the computed (local <--> global) index map to assign elements
+  // to the scratch matrix
+  for (int row = row_offset[my_rank]; row < row_offset[my_rank + 1]; row++) {
+    El::Int el_loc_col = static_cast<El::Int>(row - row_offset[my_rank]);
+    El::Int el_global_col = scratch.GlobalCol(el_loc_col);
+    for (int col = 0; col < d_num_cols; col++) {
+      El::Int el_loc_row = static_cast<El::Int>(col);
+      El::Int el_global_row = scratch.GlobalRow(el_loc_row);
+      scratch.Set(el_global_row, el_global_col, this->item(row, col));
+    }
+  }
+
+  // After transferring the data over to Elemental's native data
+  // types, we compute the QRCP.
+  El::QR(scratch, householder_scalars, diagonal, perm); // add ctrl if needed
+
+  // Then, we transfer the pivots into the pivot array
+  // stored redundantly on each process.
+  for (size_t i = 0; i < pivots_requested; i++) {
+    El::Int el_i = static_cast<El::Int>(i);
+    El::Int el_perm_i = perm.Image(el_i);
+
+    // The permutation is computed in terms of global row indices of
+    // the Matrix, so we need to compute the rank that owns the column
+    // of scratch (remember: scratch is the transpose of this Matrix)
+    // corresponding to this global index
+    int global_row_index = static_cast<int>(el_perm_i);
+    int rank;
+    for (rank = 0; rank < d_num_procs; rank++) {
+      bool is_at_or_above_lower_bound = (global_row_index >= row_offset[rank]);
+      bool is_below_upper_bound = (global_row_index < row_offset[rank + 1]);
+      if (is_at_or_above_lower_bound && is_below_upper_bound) {
+	row_pivot_owner[i] = rank;
+	break;
+      }
+    }
+
+    // The local row index is then the global row index minus the
+    // row_offset computed above in the simple (local <--> global) index
+    // map computed above
+    row_pivot[i] = global_row_index - row_offset[rank];
+  }
+
+  // Free arrays
+  delete [] row_offset;
+}
+
+
+} // end namespace CAROM
