@@ -103,7 +103,7 @@ class SVDBasisGenerator
        */
       bool
       takeSample(
-         const double* u_in,
+         double* u_in,
          double time,
          double dt)
       {
@@ -233,7 +233,7 @@ class SVDBasisGenerator
        *                        vectors.
        */
       SVDBasisGenerator(
-         const std::string& basis_file_name = "",
+         const std::string& basis_file_name,
          Database::formats file_format = Database::HDF5);
 
       /**

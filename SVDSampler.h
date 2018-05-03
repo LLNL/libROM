@@ -91,7 +91,7 @@ class SVDSampler
        */
       bool
       takeSample(
-         const double* u_in,
+         double* u_in,
          double time)
       {
          return d_svd->takeSample(u_in, time);

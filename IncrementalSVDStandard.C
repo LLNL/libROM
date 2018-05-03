@@ -56,6 +56,7 @@ IncrementalSVDStandard::IncrementalSVDStandard(
    double linearity_tol,
    bool skip_linearly_dependent,
    int samples_per_time_interval,
+   const std::string& basis_file_name,
    bool save_state,
    bool restore_state,
    bool debug_algorithm) :
@@ -63,6 +64,7 @@ IncrementalSVDStandard::IncrementalSVDStandard(
       linearity_tol,
       skip_linearly_dependent,
       samples_per_time_interval,
+      basis_file_name,
       save_state,
       restore_state,
       debug_algorithm)
@@ -96,16 +98,14 @@ IncrementalSVDStandard::~IncrementalSVDStandard()
    // does not make sense as there is not one, all encompassing, basis.
    if (d_save_state && d_time_interval_start_times.size() == 1) {
       // Create state database file.
-      char file_name[100];
-      sprintf(file_name, "state.%06d", d_rank);
       d_state_database = new HDFDatabase();
-      d_state_database->create(file_name);
+      d_state_database->create(d_state_file_name);
    }
 }
 
 void
 IncrementalSVDStandard::buildInitialSVD(
-   const double* u,
+   double* u,
    double time)
 {
    CAROM_ASSERT(u != 0);

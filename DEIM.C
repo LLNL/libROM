@@ -43,6 +43,11 @@
 #include "Matrix.h"
 #include "mpi.h"
 #include <cmath>
+#include <vector>
+#include <map>
+#include <set>
+
+using namespace std;
 
 namespace CAROM {
 
@@ -74,13 +79,14 @@ void
 DEIM(const Matrix* f_basis,
      int num_f_basis_vectors_used,
      int* f_sampled_row,
-     int* f_sampled_row_owner,
-     Matrix& f_basis_sampled,
-     int myid)
+     int* f_sampled_rows_per_proc,
+     Matrix& f_basis_sampled_inv,
+     int myid,
+     int num_procs)
 {
    // This algorithm determines the rows of f that should be sampled, the
-   // processor that owns each sampled row, and fills f_basis_sampled with the
-   // sampled rows of the basis of the RHS.
+   // processor that owns each sampled row, and fills f_basis_sampled_inv with
+   // the inverse of the sampled rows of the basis of the RHS.
 
    // Create an MPI_Datatype for the RowInfo struct.
    MPI_Datatype MaxRowType, oldtypes[2];
@@ -102,7 +108,8 @@ DEIM(const Matrix* f_basis,
    MPI_Op_create((MPI_User_function*)RowInfoMax, true, &RowInfoOp);
 
    // Get the number of basis vectors and the size of each basis vector.
-   int num_basis_vectors = std::min(num_f_basis_vectors_used, f_basis->numColumns());
+   int num_basis_vectors =
+      std::min(num_f_basis_vectors_used, f_basis->numColumns());
    int basis_size = f_basis->numRows();
 
    // The small matrix inverted by the algorithm.  We'll allocate the largest
@@ -111,6 +118,13 @@ DEIM(const Matrix* f_basis,
 
    // Scratch space used throughout the algorithm.
    double* c = new double [num_basis_vectors];
+
+   vector<set<int> > proc_sampled_f_row(num_procs);
+   vector<map<int, int> > proc_f_row_to_tmp_fs_row(num_procs);
+   int num_f_basis_cols = f_basis_sampled_inv.numColumns();
+   Matrix tmp_fs(f_basis_sampled_inv.numRows(),
+                 num_f_basis_cols,
+                 f_basis_sampled_inv.distributed());
 
    // Figure out the 1st sampled row of the RHS.
    RowInfo f_bv_max_local, f_bv_max_global;
@@ -125,25 +139,21 @@ DEIM(const Matrix* f_basis,
    }
    MPI_Allreduce(&f_bv_max_local, &f_bv_max_global, 1,
                  MaxRowType, RowInfoOp, MPI_COMM_WORLD);
-   f_sampled_row[0] = f_bv_max_global.row;
-   f_sampled_row_owner[0] = f_bv_max_global.proc;
 
    // Now get the first sampled row of the basis of the RHS.
-   if (f_sampled_row_owner[0] == myid) {
+   if (f_bv_max_global.proc == myid) {
       for (int j = 0; j < num_basis_vectors; ++j) {
-         c[j] = f_basis->item(f_sampled_row[0], j);
+         c[j] = f_basis->item(f_bv_max_global.row, j);
       }
-      MPI_Bcast(c, num_basis_vectors, MPI_DOUBLE,
-                f_sampled_row_owner[0], MPI_COMM_WORLD);
    }
-   else {
-      MPI_Bcast(c, num_basis_vectors, MPI_DOUBLE,
-                f_sampled_row_owner[0], MPI_COMM_WORLD);
-   }
-   // Now add the first sampled row of the basis of the RHS to f_basis_sampled.
+   MPI_Bcast(c, num_basis_vectors, MPI_DOUBLE,
+             f_bv_max_global.proc, MPI_COMM_WORLD);
+   // Now add the first sampled row of the basis of the RHS to tmp_fs.
    for (int j = 0; j < num_basis_vectors; ++j) {
-      f_basis_sampled.item(0, j) = c[j];
+      tmp_fs.item(0, j) = c[j];
    }
+   proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
+   proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] = 0;
 
    // Now repeat the process for the other sampled rows of the basis of the
    // RHS.
@@ -153,7 +163,7 @@ DEIM(const Matrix* f_basis,
       M.setSize(i, i);
       for (int row = 0; row < i; ++row) {
          for (int col = 0; col < i; ++col) {
-            M.item(row, col) = f_basis_sampled.item(row, col);
+            M.item(row, col) = tmp_fs.item(row, col);
          }
       }
 
@@ -165,8 +175,7 @@ DEIM(const Matrix* f_basis,
       for (int minv_row = 0; minv_row < i; ++minv_row) {
          double tmp = 0.0;
          for (int minv_col = 0; minv_col < i; ++minv_col) {
-            tmp += M.item(minv_row, minv_col)*
-                   f_basis_sampled.item(minv_col, i);
+            tmp += M.item(minv_row, minv_col)*tmp_fs.item(minv_col, i);
          }
          c[minv_row] = tmp;
       }
@@ -190,27 +199,45 @@ DEIM(const Matrix* f_basis,
       }
       MPI_Allreduce(&f_bv_max_local, &f_bv_max_global, 1,
                     MaxRowType, RowInfoOp, MPI_COMM_WORLD);
-      f_sampled_row[i] = f_bv_max_global.row;
-      f_sampled_row_owner[i] = f_bv_max_global.proc;
 
       // Now get the next sampled row of the basis of f.
-      if (f_sampled_row_owner[i] == myid) {
+      if (f_bv_max_global.proc == myid) {
          for (int j = 0; j < num_basis_vectors; ++j) {
-            c[j] = f_basis->item(f_sampled_row[i], j);
+            c[j] = f_basis->item(f_bv_max_global.row, j);
          }
-         MPI_Bcast(c, num_basis_vectors, MPI_DOUBLE,
-                   f_sampled_row_owner[i], MPI_COMM_WORLD);
       }
-      else {
-         MPI_Bcast(c, num_basis_vectors, MPI_DOUBLE,
-                   f_sampled_row_owner[i], MPI_COMM_WORLD);
-      }
-      // Now add the ith sampled row of the basis of the RHS to
-      // f_basis_sampled.
+      MPI_Bcast(c, num_basis_vectors, MPI_DOUBLE,
+                f_bv_max_global.proc, MPI_COMM_WORLD);
+      // Now add the ith sampled row of the basis of the RHS to tmp_fs.
       for (int j = 0; j < num_basis_vectors; ++j) {
-         f_basis_sampled.item(i, j) = c[j];
+         tmp_fs.item(i, j) = c[j];
+      }
+      proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
+      proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] = i;
+   }
+
+   // Fill f_sampled_row, and f_sampled_rows_per_proc.  Unscramble tmp_fs into
+   // f_basis_sampled_inv.
+   int idx = 0;
+   for (int i = 0; i < num_procs; ++i) {
+      set<int>& this_proc_sampled_f_row = proc_sampled_f_row[i];
+      map<int, int>& this_proc_f_row_to_tmp_fs_row =
+         proc_f_row_to_tmp_fs_row[i];
+      f_sampled_rows_per_proc[i] = this_proc_sampled_f_row.size();
+      for (set<int>::iterator j = this_proc_sampled_f_row.begin();
+           j != this_proc_sampled_f_row.end(); ++j) {
+         int this_f_row = *j;
+         f_sampled_row[idx] = this_f_row;
+         int tmp_fs_row = this_proc_f_row_to_tmp_fs_row[this_f_row];
+         for (int col = 0; col < num_f_basis_cols; ++col) {
+            f_basis_sampled_inv.item(idx, col) = tmp_fs.item(tmp_fs_row, col);
+         }
+         ++idx;
       }
    }
+
+   // Now invert f_basis_sampled_inv.
+   f_basis_sampled_inv.inverse();
 
    // Free the MPI_Datatype and MPI_Op.
    MPI_Type_free(&MaxRowType);

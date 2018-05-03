@@ -88,12 +88,16 @@ class Matrix
        * @param[in] num_cols The total number of columns of the Matrix.
        * @param[in] distributed If true the rows of the Matrix are spread over
        *                        all processors.
+       * @param[in] copy_data If true the matrix allocates is own storage and
+       *                      copies the contents of mat into its own storage.
+       *                      Otherwise it uses mat as its storage.
        */
       Matrix(
-         const double* mat,
+         double* mat,
          int num_rows,
          int num_cols,
-         bool distributed);
+         bool distributed,
+         bool copy_data = true);
 
       /**
        * @brief Copy constructor.
@@ -133,6 +137,9 @@ class Matrix
       {
          int new_size = num_rows*num_cols;
          if (new_size > d_alloc_size) {
+            if (!d_owns_data) {
+               CAROM_ERROR("Can not reallocate externally owned storage.");
+            }
             if (d_mat) {
                delete [] d_mat;
             }
@@ -232,7 +239,6 @@ class Matrix
          return mult(*other);
       }
 
-
       /**
        * @brief Multiplies this Matrix with other and fills result with the
        * answer.
@@ -240,12 +246,12 @@ class Matrix
        * Supports multiplication of two undistributed matrices resulting in an
        * undistributed Matrix, and multiplication of a distributed Matrix with
        * an undistributed Matrix resulting in a distributed Matrix.  If result
-       * has not been allocated it will be, otherwise it will be size
+       * has not been allocated it will be, otherwise it will be sized
        * accordingly.
        *
        * @pre result == 0 || result->distributed() == distributed()
-       * @pre !other->distributed()
-       * @pre numColumns() == other->numRows()
+       * @pre !other.distributed()
+       * @pre numColumns() == other.numRows()
        *
        * @param[in] other The Matrix to multiply with this.
        * @param[out] result The product Matrix.
@@ -254,6 +260,27 @@ class Matrix
       mult(
          const Matrix& other,
          Matrix*& result) const;
+
+      /**
+       * @brief Multiplies this Matrix with other and fills result with the
+       * answer.
+       *
+       * Supports multiplication of two undistributed matrices resulting in an
+       * undistributed Matrix, and multiplication of a distributed Matrix with
+       * an undistributed Matrix resulting in a distributed Matrix.  Result
+       * will be sized accordingly.
+       *
+       * @pre result.distributed() == distributed()
+       * @pre !other.distributed()
+       * @pre numColumns() == other.numRows()
+       *
+       * @param[in] other The Matrix to multiply with this.
+       * @param[out] result The product Matrix.
+       */
+      void
+      mult(
+         const Matrix& other,
+         Matrix& result) const;
 
       /**
        * @brief Multiplies this Matrix with other and returns the product,
@@ -278,7 +305,6 @@ class Matrix
          mult(other, result);
          return result;
       }
-
 
       /**
        * @brief Multiplies this Matrix with other and returns the product,
@@ -311,11 +337,12 @@ class Matrix
        * Supports multiplication of an undistributed Matrix and Vector
        * resulting in an undistributed Vector, and multiplication of a
        * distributed Matrix and an undistributed Vector resulting in a
-       * distributed Vector.
+       * distributed Vector.  If result has not been allocated it will be,
+       * otherwise it will be sized accordingly.
        *
        * @pre result == 0 || result->distributed() == distributed()
-       * @pre !other->distributed()
-       * @pre numColumns() == other->dim()
+       * @pre !other.distributed()
+       * @pre numColumns() == other.dim()
        *
        * @param[in] other The Vector to multiply with this.
        * @param[out] result The product Vector.
@@ -324,6 +351,27 @@ class Matrix
       mult(
          const Vector& other,
          Vector*& result) const;
+
+      /**
+       * @brief Multiplies this Matrix with other and fills result with the
+       * answer.
+       *
+       * Supports multiplication of an undistributed Matrix and Vector
+       * resulting in an undistributed Vector, and multiplication of a
+       * distributed Matrix and an undistributed Vector resulting in a
+       * distributed Vector.  Result will be sized accordingly.
+       *
+       * @pre result.distributed() == distributed()
+       * @pre !other.distributed()
+       * @pre numColumns() == other.dim()
+       *
+       * @param[in] other The Vector to multiply with this.
+       * @param[out] result The product Vector.
+       */
+      void
+      mult(
+         const Vector& other,
+         Vector& result) const;
 
       /**
        * @brief Computes a += this*b*c.
@@ -401,7 +449,9 @@ class Matrix
        * result with the answer.
        *
        * Supports multiplication of two undistributed matrices or two
-       * distributed matrices resulting in an undistributed Matrix.
+       * distributed matrices resulting in an undistributed Matrix.  If result
+       * has not been allocated it will be, otherwise it will be sized
+       * accordingly.
        *
        * @pre result == 0 || !result->distributed()
        * @pre distributed() == other.distributed()
@@ -414,6 +464,26 @@ class Matrix
       transposeMult(
          const Matrix& other,
          Matrix*& result) const;
+
+      /**
+       * @brief Multiplies the transpose of this Matrix with other and fills
+       * result with the answer.
+       *
+       * Supports multiplication of two undistributed matrices or two
+       * distributed matrices resulting in an undistributed Matrix.  Result
+       * will be sized accordingly.
+       *
+       * @pre !result.distributed()
+       * @pre distributed() == other.distributed()
+       * @pre numRows() == other.numRows()
+       *
+       * @param[in] other The Matrix to multiply with this.
+       * @param[out] result The product Matrix.
+       */
+      void
+      transposeMult(
+         const Matrix& other,
+         Matrix& result) const;
 
       /**
        * @brief Multiplies the transpose of this Matrix with other and returns
@@ -469,11 +539,12 @@ class Matrix
        *
        * Supports multiplication of an undistributed Matrix and an
        * undistributed Vector or a distributed Matrix and a distributed Vector
-       * resulting in an undistributed Vector.
+       * resulting in an undistributed Vector.  If result has not been allocated
+       * it will be, otherwise it will be sized accordingly.
        *
        * @pre result == 0 || !result->distributed()
-       * @pre distributed() == other->distributed()
-       * @pre numRows() == other->dim();
+       * @pre distributed() == other.distributed()
+       * @pre numRows() == other.dim();
        *
        * @param[in] other The Vector to multiply with this.
        * @param[out] result The product Vector.
@@ -482,6 +553,27 @@ class Matrix
       transposeMult(
          const Vector& other,
          Vector*& result) const;
+
+      /**
+       * @brief Multiplies the transpose of this Matrix with other and fills
+       * result with the answer.
+       *
+       * Supports multiplication of an undistributed Matrix and an
+       * undistributed Vector or a distributed Matrix and a distributed Vector
+       * resulting in an undistributed Vector.  Result will be sized
+       * accordingly.
+       *
+       * @pre !result.distributed()
+       * @pre distributed() == other.distributed()
+       * @pre numRows() == other.dim();
+       *
+       * @param[in] other The Vector to multiply with this.
+       * @param[out] result The product Vector.
+       */
+      void
+      transposeMult(
+         const Vector& other,
+         Vector& result) const;
 
       /**
        * @brief Computes and returns the inverse of this.
@@ -502,6 +594,9 @@ class Matrix
       /**
        * @brief Computes and returns the inverse of this.
        *
+       * If result has not been allocated it will be, otherwise it will be
+       * sized accordingly.
+       *
        * @pre result == 0 || (!result->distributed() &&
        *                      result->numRows() == numRows() &&
        *                      result->numColumns() == numColumns())
@@ -513,6 +608,22 @@ class Matrix
       void
       inverse(
          Matrix*& result) const;
+
+      /**
+       * @brief Computes and returns the inverse of this.
+       *
+       * Result will be sized accordingly.
+       *
+       * @pre !result.distributed() && result.numRows() == numRows() &&
+       *      result.numColumns() == numColumns()
+       * @pre !distributed()
+       * @pre numRows() == numColumns()
+       *
+       * @param[out] result The inverse of this.
+       */
+      void
+      inverse(
+         Matrix& result) const;
 
       /**
        * @brief Computes the inverse of this and stores result in this.
@@ -582,6 +693,38 @@ class Matrix
          CAROM_ASSERT((0 <= row) && (row < numRows()));
          CAROM_ASSERT((0 <= col) && (col < numColumns()));
          return d_mat[row*d_num_cols+col];
+      }
+
+      /**
+       * @brief Const Matrix member access.
+       *
+       * @pre (0 <= row) && (row < numRows())
+       * @pre (0 <= col) && (col < numColumns())
+       *
+       * @param[in] row The row of the Matrix value on this processor
+       *                requested.
+       * @param[in] col The column of the Matrix value requested.
+       */
+      const double& operator() (int row, int col) const
+      {
+         return item(row, col);
+      }
+
+      /**
+       * @brief Non-const Matrix member access.
+       *
+       * Allows constructs of the form mat[i, j] = val;
+       *
+       * @pre (0 <= row) && (row < numRows())
+       * @pre (0 <= col) && (col < numColumns())
+       *
+       * @param[in] row The row of the Matrix value on this processor
+       *                requested.
+       * @param[in] col The column of the Matrix value requested.
+       */
+      double& operator() (int row, int col)
+      {
+         return item(row, col);
       }
 
    private:
@@ -723,6 +866,14 @@ class Matrix
        * @brief The number of processors being run on.
        */
       int d_num_procs;
+
+      /**
+       * @brief If true, this object owns its underlying data, d_mat, and
+       * is responsible for its deletion.
+       *
+       * If d_owns_data is false, then the object may not reallocate d_mat.
+       */
+      bool d_owns_data;
 };
 
 }

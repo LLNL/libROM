@@ -60,6 +60,7 @@ IncrementalSVDSampler::IncrementalSVDSampler(
    int samples_per_time_interval,
    double sampling_tol,
    double max_time_between_samples,
+   const std::string& basis_file_name,
    bool save_state,
    bool restore_state,
    double min_sampling_time_step_scale,
@@ -88,6 +89,7 @@ IncrementalSVDSampler::IncrementalSVDSampler(
             linearity_tol,
             skip_linearly_dependent,
             samples_per_time_interval,
+            basis_file_name,
             save_state,
             restore_state,
             debug_algorithm));
@@ -98,6 +100,7 @@ IncrementalSVDSampler::IncrementalSVDSampler(
             linearity_tol,
             skip_linearly_dependent,
             samples_per_time_interval,
+            basis_file_name,
             save_state,
             restore_state,
             debug_algorithm));

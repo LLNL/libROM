@@ -90,6 +90,10 @@ class IncrementalSVDSampler : public SVDSampler
        *                         followed by a lift back to full order space.
        * @param[in] max_time_between_samples Upper bound on time between
        *                                     samples.
+       * @param[in] basis_file_name The base part of the name of the file
+       *                            containing the basis vectors.  Each process
+       *                            will append its process ID to this base
+       *                            name.
        * @param[in] save_state If true the state of the SVD will be written to
        *                       disk when the object is deleted.  If there are
        *                       multiple time intervals then the state will not
@@ -116,6 +120,7 @@ class IncrementalSVDSampler : public SVDSampler
          int samples_per_time_interval,
          double sampling_tol,
          double max_time_between_samples,
+         const std::string& basis_file_name = "",
          bool save_state = false,
          bool restore_state = false,
          double min_sampling_time_step_scale = 0.1,

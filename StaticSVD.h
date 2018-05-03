@@ -92,7 +92,7 @@ class StaticSVD : public SVD
       virtual
       bool
       takeSample(
-         const double* u_in,
+         double* u_in,
          double time);
 
       /**

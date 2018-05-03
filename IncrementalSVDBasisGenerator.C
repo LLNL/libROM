@@ -73,6 +73,7 @@ IncrementalSVDBasisGenerator::IncrementalSVDBasisGenerator(
                                                 samples_per_time_interval,
                                                 sampling_tol,
                                                 max_time_between_samples,
+                                                basis_file_name,
                                                 save_state,
                                                 restore_state,
                                                 min_sampling_time_step_scale,

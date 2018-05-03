@@ -55,7 +55,8 @@ Vector::Vector(
    bool distributed) :
    d_vec(0),
    d_alloc_size(0),
-   d_distributed(distributed)
+   d_distributed(distributed),
+   d_owns_data(true)
 {
    CAROM_ASSERT(dim > 0);
    setSize(dim);
@@ -70,16 +71,26 @@ Vector::Vector(
 }
 
 Vector::Vector(
-   const double* vec,
+   double* vec,
    int dim,
-   bool distributed) :
+   bool distributed,
+   bool copy_data) :
    d_vec(0),
    d_alloc_size(0),
-   d_distributed(distributed)
+   d_distributed(distributed),
+   d_owns_data(copy_data)
 {
    CAROM_ASSERT(vec != 0);
    CAROM_ASSERT(dim > 0);
-   setSize(dim);
+   if (copy_data) {
+      setSize(dim);
+      memcpy(d_vec, vec, d_alloc_size*sizeof(double));
+   }
+   else {
+      d_vec = vec;
+      d_alloc_size = dim;
+      d_dim = dim;
+   }
    int mpi_init;
    MPI_Initialized(&mpi_init);
    if (mpi_init) {
@@ -88,14 +99,14 @@ Vector::Vector(
    else {
       d_num_procs = 1;
    }
-   memcpy(d_vec, vec, d_alloc_size*sizeof(double));
 }
 
 Vector::Vector(
    const Vector& other) :
    d_vec(0),
    d_alloc_size(0),
-   d_distributed(other.d_distributed)
+   d_distributed(other.d_distributed),
+   d_owns_data(true)
 {
    setSize(other.d_dim);
    int mpi_init;
@@ -111,7 +122,7 @@ Vector::Vector(
 
 Vector::~Vector()
 {
-   if (d_vec) {
+   if (d_owns_data && d_vec) {
       delete [] d_vec;
    }
 }
@@ -182,8 +193,86 @@ Vector::plus(
    else {
       result->setSize(d_dim);
    }
+
+   // Do the addition.
    for (int i = 0; i < d_dim; ++i) {
       result->d_vec[i] = d_vec[i] + other.d_vec[i];
+   }
+}
+
+void
+Vector::plus(
+   const Vector& other,
+   Vector& result) const
+{
+   CAROM_ASSERT(result.distributed() == distributed());
+   CAROM_ASSERT(distributed() == other.distributed());
+   CAROM_ASSERT(dim() == other.dim());
+
+   // Size result correctly.
+   result.setSize(d_dim);
+
+   // Do the addition.
+   for (int i = 0; i < d_dim; ++i) {
+      result.d_vec[i] = d_vec[i] + other.d_vec[i];
+   }
+}
+
+void
+Vector::plusAx(
+   double factor,
+   const Vector& other,
+   Vector*& result) const
+{
+   CAROM_ASSERT(result == 0 || result->distributed() == distributed());
+   CAROM_ASSERT(distributed() == other.distributed());
+   CAROM_ASSERT(dim() == other.dim());
+
+   // If the result has not been allocated then do so.  Otherwise size it
+   // correctly.
+   if (result == 0) {
+      result = new Vector(d_dim, d_distributed);
+   }
+   else {
+      result->setSize(d_dim);
+   }
+
+   // Do the addition.
+   for (int i = 0; i < d_dim; ++i) {
+      result->d_vec[i] = d_vec[i] + factor*other.d_vec[i];
+   }
+}
+
+void
+Vector::plusAx(
+   double factor,
+   const Vector& other,
+   Vector& result) const
+{
+   CAROM_ASSERT(result.distributed() == distributed());
+   CAROM_ASSERT(distributed() == other.distributed());
+   CAROM_ASSERT(dim() == other.dim());
+
+   // Size result correctly.
+   result.setSize(d_dim);
+
+   // Do the addition.
+   for (int i = 0; i < d_dim; ++i) {
+      result.d_vec[i] = d_vec[i] + factor*other.d_vec[i];
+   }
+}
+
+void
+Vector::plusEqAx(
+   double factor,
+   const Vector& other)
+{
+   CAROM_ASSERT(distributed() == other.distributed());
+   CAROM_ASSERT(dim() == other.dim());
+
+   // Do the addition.
+   for (int i = 0; i < d_dim; ++i) {
+      d_vec[i] += factor*other.d_vec[i];
    }
 }
 
@@ -204,8 +293,28 @@ Vector::minus(
    else {
       result->setSize(d_dim);
    }
+
+   // Do the subtraction.
    for (int i = 0; i < d_dim; ++i) {
       result->d_vec[i] = d_vec[i] - other.d_vec[i];
+   }
+}
+
+void
+Vector::minus(
+   const Vector& other,
+   Vector& result) const
+{
+   CAROM_ASSERT(result.distributed() == distributed());
+   CAROM_ASSERT(distributed() == other.distributed());
+   CAROM_ASSERT(dim() == other.dim());
+
+   // Size result correctly.
+   result.setSize(d_dim);
+
+   // Do the subtraction.
+   for (int i = 0; i < d_dim; ++i) {
+      result.d_vec[i] = d_vec[i] - other.d_vec[i];
    }
 }
 
@@ -224,8 +333,26 @@ Vector::mult(
    else {
       result->setSize(d_dim);
    }
+
+   // Do the multiplication.
    for (int i = 0; i < d_dim; ++i) {
       result->d_vec[i] = factor*d_vec[i];
+   }
+}
+
+void
+Vector::mult(
+   double factor,
+   Vector& result) const
+{
+   CAROM_ASSERT(result.distributed() == distributed());
+
+   // Size result correctly.
+   result.setSize(d_dim);
+
+   // Do the multiplication.
+   for (int i = 0; i < d_dim; ++i) {
+      result.d_vec[i] = factor*d_vec[i];
    }
 }
 

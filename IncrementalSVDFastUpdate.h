@@ -69,6 +69,10 @@ class IncrementalSVDFastUpdate : public IncrementalSVD
        *                                    samples.
        * @param[in] samples_per_time_interval The number of samples to be
        *                                      collected for each time interval.
+       * @param[in] basis_file_name The base part of the name of the file
+       *                            containing the basis vectors.  Each process
+       *                            will append its process ID to this base
+       *                            name.
        * @param[in] save_state If true the state of the SVD will be written to
        *                       disk when the object is deleted.  If there are
        *                       multiple time intervals then the state will not
@@ -84,6 +88,7 @@ class IncrementalSVDFastUpdate : public IncrementalSVD
          double linearity_tol,
          bool skip_linearly_dependent,
          int samples_per_time_interval,
+         const std::string& basis_file_name,
          bool save_state = false,
          bool restore_state = false,
          bool debug_algorithm = false);
@@ -124,7 +129,7 @@ class IncrementalSVDFastUpdate : public IncrementalSVD
       virtual
       void
       buildInitialSVD(
-         const double* u,
+         double* u,
          double time);
 
       /**

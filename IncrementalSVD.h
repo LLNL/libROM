@@ -69,6 +69,10 @@ namespace CAROM {
        *                                    samples.
        * @param[in] samples_per_time_interval The number of samples to be
        *                                      collected for each time interval.
+       * @param[in] basis_file_name The base part of the name of the file
+       *                            containing the basis vectors.  Each process
+       *                            will append its process ID to this base
+       *                            name.
        * @param[in] save_state If true the state of the SVD will be written to
        *                       disk when the object is deleted.  If there are
        *                       multiple time intervals then the state will not
@@ -84,6 +88,7 @@ namespace CAROM {
          double linearity_tol,
          bool skip_linearly_dependent,
          int samples_per_time_interval,
+         const std::string& basis_file_name,
          bool save_state = false,
          bool restore_state = false,
          bool debug_algorithm = false);
@@ -108,7 +113,7 @@ namespace CAROM {
       virtual
       bool
       takeSample(
-         const double* u_in,
+         double* u_in,
          double time);
 
       /**
@@ -142,7 +147,7 @@ namespace CAROM {
       virtual
       void
       buildInitialSVD(
-         const double* u,
+         double* u,
          double time) = 0;
 
       /**
@@ -157,7 +162,7 @@ namespace CAROM {
       virtual
       bool
       buildIncrementalSVD(
-         const double* u);
+         double* u);
 
       /**
        * @brief Computes the current basis vectors.
@@ -315,6 +320,11 @@ namespace CAROM {
        * state is to be saved.
        */
       Database* d_state_database;
+
+      /**
+       * @brief Name of file to which state is save to or restored from.
+       */
+      std::string d_state_file_name;
 
       /**
        * @brief MPI message tag.

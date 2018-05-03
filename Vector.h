@@ -83,11 +83,15 @@ class Vector
        *                the Vector on this processor.
        * @param[in] distributed If true the dimensions of the Vector are spread
        *                        over all processors.
+       * @param[in] copy_data If true the vector allocates is own storage and
+       *                      copies the contents of vec into its own storage.
+       *                      Otherwise it uses vec as its storage.
        */
       Vector(
-         const double* vec,
+         double* vec,
          int dim,
-         bool distributed);
+         bool distributed,
+         bool copy_data = true);
 
       /**
        * @brief Copy constructor.
@@ -126,6 +130,9 @@ class Vector
          int dim)
       {
          if (dim > d_alloc_size) {
+            if (!d_owns_data) {
+               CAROM_ERROR("Can not reallocate externally owned storage.");
+            }
             if (d_vec) {
                delete [] d_vec;
             }
@@ -255,6 +262,9 @@ class Vector
       /**
        * @brief Adds other and this and fills result with the answer.
        *
+       * Result will be allocated if unallocated or resized appropriately if
+       * already allocated.
+       *
        * @pre result == 0 || result->distributed() == distributed()
        * @pre distributed() == other.distributed()
        * @pre dim() == other.dim()
@@ -266,6 +276,136 @@ class Vector
       plus(
          const Vector& other,
          Vector*& result) const;
+
+      /**
+       * @brief Adds other and this and fills result with the answer.
+       *
+       * Result will be resized appropriately.
+       *
+       * @pre result.distributed() == distributed()
+       * @pre distributed() == other.distributed()
+       * @pre dim() == other.dim()
+       *
+       * @param[in] other The other summand.
+       * @param[out] result this + other
+       */
+      void
+      plus(
+         const Vector& other,
+         Vector& result) const;
+
+      /**
+       * @brief Adds factor*other and this and returns the result, reference
+       * version.
+       *
+       * @pre distributed() == other.distributed()
+       * @pre dim() == other.dim()
+       *
+       * @param[in] factor Multiplicative factor applied to other.
+       * @param[in] other The other summand.
+       *
+       * @return this + factor*other
+       */
+      Vector*
+      plusAx(
+         double factor,
+         const Vector& other)
+      {
+         Vector* result = 0;
+         plusAx(factor, other, result);
+         return result;
+      }
+
+      /**
+       * @brief Adds factor*other and this and returns the result, pointer
+       * version.
+       *
+       * @pre distributed() == other->distributed()
+       * @pre dim() == other->dim()
+       *
+       * @param[in] factor Multiplicative factor applied to other.
+       * @param[in] other The other summand.
+       *
+       * @return this + factor*other
+       */
+      Vector*
+      plusAx(
+         double factor,
+         const Vector* other)
+      {
+         CAROM_ASSERT(other != 0);
+         return plusAx(factor, *other);
+      }
+
+      /**
+       * @brief Adds factor*other and this and fills result with the answer.
+       *
+       * Result will be allocated if unallocated or resized appropriately if
+       * already allocated.
+       *
+       * @pre result == 0 || result->distributed() == distributed()
+       * @pre distributed() == other.distributed()
+       * @pre dim() == other.dim()
+       *
+       * @param[in] other The other summand.
+       * @param[out] result this + factor*other
+       */
+      void
+      plusAx(
+         double factor,
+         const Vector& other,
+         Vector*& result) const;
+
+      /**
+       * @brief Adds factor*other and this and fills result with the answer.
+       *
+       * Result will be resized appropriately.
+       *
+       * @pre result.distributed() == distributed()
+       * @pre distributed() == other.distributed()
+       * @pre dim() == other.dim()
+       *
+       * @param[in] other The other summand.
+       * @param[out] result this + factor*other
+       */
+      void
+      plusAx(
+         double factor,
+         const Vector& other,
+         Vector& result) const;
+
+      /**
+       * @brief Adds factor*other to this, reference version.
+       *
+       * @pre distributed() == other.distributed()
+       * @pre dim() == other.dim()
+       *
+       * @param[in] factor Multiplicative factor applied to other.
+       * @param[in] other The other summand.
+       */
+      void
+      plusEqAx(
+         double factor,
+         const Vector& other);
+
+      /**
+       * @brief Adds factor*other to this, pointer version.
+       *
+       * @pre other != 0
+       * @pre distributed() == other->distributed()
+       * @pre dim() == other->dim()
+       *
+       * @param[in] factor Multiplicative factor applied to other.
+       * @param[in] other The other summand.
+       */
+      void
+      plusEqAx(
+         double factor,
+         const Vector* other)
+      {
+         CAROM_ASSERT(other != 0);
+         plusEqAx(factor, *other);
+      }
 
       /**
        * @brief Subtracts other and this and returns the result, reference
@@ -310,6 +450,9 @@ class Vector
       /**
        * @brief Subtracts other and this and fills result with the answer.
        *
+       * Result will be allocated if unallocated or resized appropriately if
+       * already allocated.
+       *
        * @pre result == 0 || result->distributed() == distributed()
        * @pre distributed() == other.distributed()
        * @pre dim() == other.dim()
@@ -321,6 +464,23 @@ class Vector
       minus(
          const Vector& other,
          Vector*& result) const;
+
+      /**
+       * @brief Subtracts other and this and fills result with the answer.
+       *
+       * Result will be resized appropriately.
+       *
+       * @pre result.distributed() == distributed()
+       * @pre distributed() == other.distributed()
+       * @pre dim() == other.dim()
+       *
+       * @param[in] other The other subtrahend.
+       * @param[out] result this - other
+       */
+      void
+      minus(
+         const Vector& other,
+         Vector& result) const;
 
       /**
        * @brief Multiplies this by the supplied constant and returns the
@@ -352,6 +512,20 @@ class Vector
       mult(
          double factor,
          Vector*& result) const;
+
+      /**
+       * @brief Multiplies this by the supplied constant and fills result with
+       * the answer.
+       *
+       * @pre result.distributed() == distributed()
+       *
+       * @param[in] factor Factor to multiply by.
+       * @param[out] result factor*this
+       */
+      void
+      mult(
+         double factor,
+         Vector& result) const;
 
       /**
        * @brief Const Vector member access.
@@ -387,6 +561,36 @@ class Vector
       {
          CAROM_ASSERT((0 <= i) && (i < dim()));
          return d_vec[i];
+      }
+
+      /**
+       * @brief Const Vector member access.
+       *
+       * @pre (0 <= i) && (i < dim())
+       *
+       * @param[in] i The component of the Vector on this processor requested.
+       *
+       * @return The requested component of the Vector on this processor.
+       */
+      const double& operator() (int i) const
+      {
+         return item(i);
+      }
+
+      /**
+       * @brief Non-const Vector member access.
+       *
+       * Allows constructs of the form vec[i] = val;
+       *
+       * @pre (0 <= i) && (i < dim())
+       *
+       * @param[in] i The component of the Vector on this processor requested.
+       *
+       * @return The requested component of the Vector on this processor.
+       */
+      double& operator() (int i)
+      {
+         return item(i);
       }
       
    private:
@@ -424,6 +628,14 @@ class Vector
        * @brief The number of processors being run on.
        */
       int d_num_procs;
+
+      /**
+       * @brief If true, this object owns its underlying data, d_vec, and
+       * is responsible for its deletion.
+       *
+       * If d_owns_data is false, then the object may not reallocate d_vec.
+       */
+      bool d_owns_data;
 };
 
 }

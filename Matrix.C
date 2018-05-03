@@ -69,7 +69,8 @@ Matrix::Matrix(
    bool distributed) :
    d_mat(0),
    d_alloc_size(0),
-   d_distributed(distributed)
+   d_distributed(distributed),
+   d_owns_data(true)
 {
    CAROM_ASSERT(num_rows > 0);
    CAROM_ASSERT(num_cols > 0);
@@ -85,18 +86,29 @@ Matrix::Matrix(
 }
 
 Matrix::Matrix(
-   const double* mat,
+   double* mat,
    int num_rows,
    int num_cols,
-   bool distributed) :
+   bool distributed,
+   bool copy_data) :
    d_mat(0),
    d_alloc_size(0),
-   d_distributed(distributed)
+   d_distributed(distributed),
+   d_owns_data(copy_data)
 {
    CAROM_ASSERT(mat != 0);
    CAROM_ASSERT(num_rows > 0);
    CAROM_ASSERT(num_cols > 0);
-   setSize(num_rows, num_cols);
+   if (copy_data) {
+      setSize(num_rows, num_cols);
+      memcpy(d_mat, mat, d_alloc_size*sizeof(double));
+   }
+   else {
+      d_mat = mat;
+      d_alloc_size = num_rows*num_cols;
+      d_num_cols = num_cols;
+      d_num_rows = num_rows;
+   }
    int mpi_init;
    MPI_Initialized(&mpi_init);
    if (mpi_init) {
@@ -105,14 +117,14 @@ Matrix::Matrix(
    else {
       d_num_procs = 1;
    }
-   memcpy(d_mat, mat, d_alloc_size*sizeof(double));
 }
 
 Matrix::Matrix(
    const Matrix& other) :
    d_mat(0),
    d_alloc_size(0),
-   d_distributed(other.d_distributed)
+   d_distributed(other.d_distributed),
+   d_owns_data(true)
 {
    setSize(other.d_num_rows, other.d_num_cols);
    int mpi_init;
@@ -128,7 +140,7 @@ Matrix::Matrix(
 
 Matrix::~Matrix()
 {
-   if (d_mat) {
+   if (d_owns_data && d_mat) {
       delete [] d_mat;
    }
 }
@@ -214,6 +226,8 @@ Matrix::mult(
    else {
       result->setSize(d_num_rows, other.d_num_cols);
    }
+
+   // Do the multiplication.
    for (int this_row = 0; this_row < d_num_rows; ++this_row) {
       for (int other_col = 0; other_col < other.d_num_cols; ++other_col) {
          double result_val = 0.0;
@@ -221,6 +235,30 @@ Matrix::mult(
             result_val += item(this_row, entry)*other.item(entry, other_col);
          }
          result->item(this_row, other_col) = result_val;
+      }
+   }
+}
+
+void
+Matrix::mult(
+   const Matrix& other,
+   Matrix& result) const
+{
+   CAROM_ASSERT(result.distributed() == distributed());
+   CAROM_ASSERT(!other.distributed());
+   CAROM_ASSERT(numColumns() == other.numRows());
+
+   // Size result correctly.
+   result.setSize(d_num_rows, other.d_num_cols);
+
+   // Do the multiplication.
+   for (int this_row = 0; this_row < d_num_rows; ++this_row) {
+      for (int other_col = 0; other_col < other.d_num_cols; ++other_col) {
+         double result_val = 0.0;
+         for (int entry = 0; entry < d_num_cols; ++entry) {
+            result_val += item(this_row, entry)*other.item(entry, other_col);
+         }
+         result.item(this_row, other_col) = result_val;
       }
    }
 }
@@ -242,12 +280,36 @@ Matrix::mult(
    else {
       result->setSize(d_num_rows);
    }
+
+   // Do the multiplication.
    for (int this_row = 0; this_row < d_num_rows; ++this_row) {
       double result_val = 0.0;
       for (int entry = 0; entry < d_num_cols; ++entry) {
          result_val += item(this_row, entry)*other.item(entry);
       }
       result->item(this_row) = result_val;
+   }
+}
+
+void
+Matrix::mult(
+   const Vector& other,
+   Vector& result) const
+{
+   CAROM_ASSERT(result.distributed() == distributed());
+   CAROM_ASSERT(!other.distributed());
+   CAROM_ASSERT(numColumns() == other.dim());
+
+   // Size result correctly.
+   result.setSize(d_num_rows);
+
+   // Do the multiplication.
+   for (int this_row = 0; this_row < d_num_rows; ++this_row) {
+      double result_val = 0.0;
+      for (int entry = 0; entry < d_num_cols; ++entry) {
+         result_val += item(this_row, entry)*other.item(entry);
+      }
+      result.item(this_row) = result_val;
    }
 }
 
@@ -288,6 +350,8 @@ Matrix::transposeMult(
    else {
       result->setSize(d_num_cols, other.d_num_cols);
    }
+
+   // Do the multiplication.
    for (int this_col = 0; this_col < d_num_cols; ++this_col) {
       for (int other_col = 0; other_col < other.d_num_cols; ++other_col) {
          double result_val = 0.0;
@@ -301,6 +365,39 @@ Matrix::transposeMult(
       int new_mat_size = d_num_cols*other.d_num_cols;
       MPI_Allreduce(MPI_IN_PLACE,
          &result->item(0, 0),
+         new_mat_size,
+         MPI_DOUBLE,
+         MPI_SUM,
+         MPI_COMM_WORLD);
+   }
+}
+
+void
+Matrix::transposeMult(
+   const Matrix& other,
+   Matrix& result) const
+{
+   CAROM_ASSERT(!result.distributed());
+   CAROM_ASSERT(distributed() == other.distributed());
+   CAROM_ASSERT(numRows() == other.numRows());
+
+   // Size result correctly.
+   result.setSize(d_num_cols, other.d_num_cols);
+
+   // Do the multiplication.
+   for (int this_col = 0; this_col < d_num_cols; ++this_col) {
+      for (int other_col = 0; other_col < other.d_num_cols; ++other_col) {
+         double result_val = 0.0;
+         for (int entry = 0; entry < d_num_rows; ++entry) {
+            result_val += item(entry, this_col)*other.item(entry, other_col);
+         }
+         result.item(this_col, other_col) = result_val;
+      }
+   }
+   if (d_distributed && d_num_procs > 1) {
+      int new_mat_size = d_num_cols*other.d_num_cols;
+      MPI_Allreduce(MPI_IN_PLACE,
+         &result.item(0, 0),
          new_mat_size,
          MPI_DOUBLE,
          MPI_SUM,
@@ -325,6 +422,8 @@ Matrix::transposeMult(
    else {
       result->setSize(d_num_cols);
    }
+
+   // Do the multiplication.
    for (int this_col = 0; this_col < d_num_cols; ++this_col) {
       double result_val = 0.0;
       for (int entry = 0; entry < d_num_rows; ++entry) {
@@ -335,6 +434,37 @@ Matrix::transposeMult(
    if (d_distributed && d_num_procs > 1) {
       MPI_Allreduce(MPI_IN_PLACE,
          &result->item(0),
+         d_num_cols,
+         MPI_DOUBLE,
+         MPI_SUM,
+         MPI_COMM_WORLD);
+   }
+}
+
+void
+Matrix::transposeMult(
+   const Vector& other,
+   Vector& result) const
+{
+   CAROM_ASSERT(!result.distributed());
+   CAROM_ASSERT(distributed() == other.distributed());
+   CAROM_ASSERT(numRows() == other.dim());
+
+   // If the result has not been allocated then do so.  Otherwise size it
+   // correctly.
+   result.setSize(d_num_cols);
+
+   // Do the multiplication.
+   for (int this_col = 0; this_col < d_num_cols; ++this_col) {
+      double result_val = 0.0;
+      for (int entry = 0; entry < d_num_rows; ++entry) {
+         result_val += item(entry, this_col)*other.item(entry);
+      }
+      result.item(this_col) = result_val;
+   }
+   if (d_distributed && d_num_procs > 1) {
+      MPI_Allreduce(MPI_IN_PLACE,
+         &result.item(0),
          d_num_cols,
          MPI_DOUBLE,
          MPI_SUM,
@@ -386,6 +516,46 @@ Matrix::inverse(
          double tmp = result->item(row, col);
          result->item(row, col) = result->item(col, row);
          result->item(col, row) = tmp;
+      }
+   }
+}
+
+void
+Matrix::inverse(
+   Matrix& result) const
+{
+   CAROM_ASSERT(!result.distributed() && result.numRows() == numRows() &&
+                result.numColumns() == numColumns());
+   CAROM_ASSERT(!distributed());
+   CAROM_ASSERT(numRows() == numColumns());
+
+   // Size result correctly.
+   result.setSize(d_num_rows, d_num_cols);
+
+   // Call lapack routines to do the inversion.
+   // Set up some stuff the lapack routines need.
+   int info;
+   int mtx_size = d_num_rows;
+   int lwork = mtx_size*mtx_size;
+   int* ipiv = new int [mtx_size];
+   double* work = new double [lwork];
+   // To use lapack we need a column major representation of this which is
+   // essentially the transform of this.  Use result for this representation.
+   for (int row = 0; row < mtx_size; ++row) {
+      for (int col = 0; col < mtx_size; ++col) {
+         result.item(col, row) = item(row, col);
+      }
+   }
+   // Now call lapack to do the inversion.
+   dgetrf_(&mtx_size, &mtx_size, result.d_mat, &mtx_size, ipiv, &info);
+   dgetri_(&mtx_size, result.d_mat, &mtx_size, ipiv, work, &lwork, &info);
+   // Result now has the inverse in a column major representation.  Put it
+   // into row major order.
+   for (int row = 0; row < mtx_size; ++row) {
+      for (int col = row+1; col < mtx_size; ++col) {
+         double tmp = result.item(row, col);
+         result.item(row, col) = result.item(col, row);
+         result.item(col, row) = tmp;
       }
    }
 }

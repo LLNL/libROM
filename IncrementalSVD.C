@@ -46,8 +46,10 @@
 #include "mpi.h"
 
 #include <cmath>
+#include <iomanip>
 #include <limits>
 #include <stdio.h>
+#include <sstream>
 
 extern "C" {
 void dgesdd_(char*, int*, int*, double*, int*,
@@ -64,6 +66,7 @@ IncrementalSVD::IncrementalSVD(
    double linearity_tol,
    bool skip_linearly_dependent,
    int samples_per_time_interval,
+   const std::string& basis_file_name,
    bool save_state,
    bool restore_state,
    bool debug_algorithm) :
@@ -107,12 +110,16 @@ IncrementalSVD::IncrementalSVD(
 
    // If the state of the SVD is to be restored then open the database and
    // restore the necessary data from the database now.
+   if (save_state || restore_state) {
+      std::ostringstream tmp;
+      tmp << basis_file_name << ".state." <<
+             std::setw(6) << std::setfill('0') << d_rank;
+      d_state_file_name = tmp.str();
+   }
    if (restore_state) {
       // Open state database file.
-      char file_name[100];
-      sprintf(file_name, "state.%06d", d_rank);
       d_state_database = new HDFDatabase();
-      bool is_good = d_state_database->open(file_name);
+      bool is_good = d_state_database->open(d_state_file_name);
       if (is_good) {
          // Read time interval start time.
          double time;
@@ -183,7 +190,7 @@ IncrementalSVD::~IncrementalSVD()
 
 bool
 IncrementalSVD::takeSample(
-   const double* u_in,
+   double* u_in,
    double time)
 {
    CAROM_ASSERT(u_in != 0);
@@ -278,7 +285,7 @@ IncrementalSVD::getSingularValues()
 
 bool
 IncrementalSVD::buildIncrementalSVD(
-   const double* u)
+   double* u)
 {
    CAROM_ASSERT(u != 0);
 

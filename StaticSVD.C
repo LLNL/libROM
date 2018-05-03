@@ -98,7 +98,7 @@ StaticSVD::~StaticSVD()
 
 bool
 StaticSVD::takeSample(
-   const double* u_in,
+   double* u_in,
    double time)
 {
    CAROM_ASSERT(u_in != 0);
