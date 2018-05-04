@@ -7301,7 +7301,8 @@ done
 
 
 
-# Defines el_PREFIX el_INCLUDES and el_LIBS if with-elemental is specified.
+# Defines elemental_PREFIX elemental_INCLUDES and elemental_LIBS if
+# with-elemental is specified.
 
 # Check whether --with-elemental was given.
 if test "${with_elemental+set}" = set; then :
@@ -7321,8 +7322,8 @@ $as_echo "$as_me: configuring without Elemental support" >&6;}
     # Elemental install path was not specified.
     # Look in a couple of standard locations to probe if
     # Elemental header files are there.
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for HDF5 installation" >&5
-$as_echo_n "checking for HDF5 installation... " >&6; }
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for Elemental installation" >&5
+$as_echo_n "checking for Elemental installation... " >&6; }
     for dir in /usr /usr/local; do
       if test -f ${dir}/include/El.hpp; then
         elemental_PREFIX=${dir}
@@ -7340,7 +7341,7 @@ $as_echo_n "checking for Elemental installation... " >&6; }
     if test -f ${with_elemental}/include/El.hpp; then
         elemental_PREFIX=$with_elemental
         elemental_INCLUDES="-I${elemental_PREFIX}/include"
-        elemental_LIBS="-L${elemental_PREFIX}/lib -lEl"
+        elemental_LIBS="-L${elemental_PREFIX}/lib64 -lEl"
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: $elemental_PREFIX" >&5
 $as_echo "$elemental_PREFIX" >&6; }
     else
@@ -7379,7 +7380,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:7382:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:7383:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -7463,7 +7464,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:7466:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:7467:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -7478,7 +7479,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:7481:" "before adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:7482:" "before adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -7800,7 +7801,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:7803:" "forming rpaths: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:7804:" "forming rpaths: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -7866,7 +7867,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:7869:" "after adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:7870:" "after adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -7993,7 +7994,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:7996:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:7997:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -8048,7 +8049,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:8051:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:8052:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -8194,7 +8195,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:8197:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:8198:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 

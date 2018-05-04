@@ -339,7 +339,7 @@ case "$with_elemental" in
     if test -f ${with_elemental}/include/El.hpp; then
         elemental_PREFIX=$with_elemental
         elemental_INCLUDES="-I${elemental_PREFIX}/include"
-        elemental_LIBS="-L${elemental_PREFIX}/lib -lEl"
+        elemental_LIBS="-L${elemental_PREFIX}/lib64 -lEl"
         AC_MSG_RESULT([$elemental_PREFIX])
     else
         AC_MSG_RESULT([$elemental_PREFIX])
