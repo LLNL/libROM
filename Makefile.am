@@ -69,3 +69,6 @@ smoke_test_LDADD = librom.a
 
 tests_gtest_runner_SOURCES = tests/gtest_runner.C
 tests_gtest_runner_LDADD = -lgtest -lpthread librom.a
+
+dox:
+	(cd docs && $(MAKE) $@)
