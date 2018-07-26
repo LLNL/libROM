@@ -327,10 +327,18 @@ case "$with_elemental" in
     for dir in /usr /usr/local; do
       if test -f ${dir}/include/El.hpp; then
         elemental_PREFIX=${dir}
+	elemental_INCLUDES="-I${elemental_PREFIX}/include"
+	if test -e ${dir}/lib/libEl.dylib -o -e ${dir}/lib/libEl.so -o -e ${dir}/lib/libEl.a; then
+           elemental_LIBS="-L${elemental_PREFIX}/lib -lEl"
+	elif test -e ${dir}/lib64/libEl.dylib -o -e ${dir}/lib64/libEl.so -o -e ${dir}/lib64/libEl.a; then
+	   elemental_LIBS="-L${elemental_PREFIX}/lib64 -lEl"
+	else
+	   AC_MSG_ERROR([Elemental's libEl not found in $elemental_PREFIX])
+	fi
         break
       fi
     done
-    AC_MSG_RESULT([$el_PREFIX])
+    AC_MSG_RESULT([$elemental_PREFIX])
   ;;
   *)
     # Elemental install path was specified.
@@ -339,7 +347,13 @@ case "$with_elemental" in
     if test -f ${with_elemental}/include/El.hpp; then
         elemental_PREFIX=$with_elemental
         elemental_INCLUDES="-I${elemental_PREFIX}/include"
-        elemental_LIBS="-L${elemental_PREFIX}/lib64 -lEl"
+	if test -e ${with_elemental}/lib/libEl.dylib -o -e ${with_elemental}/lib/libEl.so -o -e ${with_elemental}/lib/libEl.a; then
+           elemental_LIBS="-L${elemental_PREFIX}/lib -lEl"
+	elif test -e ${with_elemental}/lib64/libEl.dylib -o -e ${with_elemental}/lib64/libEl.so -o -e ${with_elemental}/lib64/libEl.a; then
+	   elemental_LIBS="-L${elemental_PREFIX}/lib64 -lEl"
+	else
+	   AC_MSG_ERROR([Elemental's libEl not found in $elemental_PREFIX])
+	fi
         AC_MSG_RESULT([$elemental_PREFIX])
     else
         AC_MSG_RESULT([$elemental_PREFIX])
@@ -353,8 +367,9 @@ if test "${elemental_PREFIX+set}" = set; then
   LIB_PATH="$elemental_LIB_PATH $LIB_PATH"
   LIB_NAME="$elemental_LIB_NAME $LIB_NAME"
   INC_PATH="$elemental_INCLUDES $INC_PATH"
+  CXX_FLAGS="$CXX_FLAGS -DCAROM_HAS_ELEMENTAL"
 else
-  AC_MSG_ERROR([Elemental not found - you must specify a valid location via --with-elemental=PATH.])
+  AC_MSG_NOTICE([Elemental not found - disabling distributed QR decomposition code])
 fi
 CASC_AC_LOG_VAR(
 [elemental_INCLUDES INC_PATH elemental_LIB_PATH elemental_LIB_NAME LIB_PATH LIB_NAME])
