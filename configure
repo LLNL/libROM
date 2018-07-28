@@ -7327,11 +7327,19 @@ $as_echo_n "checking for Elemental installation... " >&6; }
     for dir in /usr /usr/local; do
       if test -f ${dir}/include/El.hpp; then
         elemental_PREFIX=${dir}
+	elemental_INCLUDES="-I${elemental_PREFIX}/include"
+	if test -e ${dir}/lib/libEl.dylib -o -e ${dir}/lib/libEl.so -o -e ${dir}/lib/libEl.a; then
+           elemental_LIBS="-L${elemental_PREFIX}/lib -lEl"
+	elif test -e ${dir}/lib64/libEl.dylib -o -e ${dir}/lib64/libEl.so -o -e ${dir}/lib64/libEl.a; then
+	   elemental_LIBS="-L${elemental_PREFIX}/lib64 -lEl"
+	else
+	   as_fn_error $? "Elemental's libEl not found in $elemental_PREFIX" "$LINENO" 5
+	fi
         break
       fi
     done
-    { $as_echo "$as_me:${as_lineno-$LINENO}: result: $el_PREFIX" >&5
-$as_echo "$el_PREFIX" >&6; }
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: $elemental_PREFIX" >&5
+$as_echo "$elemental_PREFIX" >&6; }
   ;;
   *)
     # Elemental install path was specified.
@@ -7341,7 +7349,13 @@ $as_echo_n "checking for Elemental installation... " >&6; }
     if test -f ${with_elemental}/include/El.hpp; then
         elemental_PREFIX=$with_elemental
         elemental_INCLUDES="-I${elemental_PREFIX}/include"
-        elemental_LIBS="-L${elemental_PREFIX}/lib64 -lEl"
+	if test -e ${with_elemental}/lib/libEl.dylib -o -e ${with_elemental}/lib/libEl.so -o -e ${with_elemental}/lib/libEl.a; then
+           elemental_LIBS="-L${elemental_PREFIX}/lib -lEl"
+	elif test -e ${with_elemental}/lib64/libEl.dylib -o -e ${with_elemental}/lib64/libEl.so -o -e ${with_elemental}/lib64/libEl.a; then
+	   elemental_LIBS="-L${elemental_PREFIX}/lib64 -lEl"
+	else
+	   as_fn_error $? "Elemental's libEl not found in $elemental_PREFIX" "$LINENO" 5
+	fi
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: $elemental_PREFIX" >&5
 $as_echo "$elemental_PREFIX" >&6; }
     else
@@ -7367,8 +7381,10 @@ fi
   LIB_PATH="$elemental_LIB_PATH $LIB_PATH"
   LIB_NAME="$elemental_LIB_NAME $LIB_NAME"
   INC_PATH="$elemental_INCLUDES $INC_PATH"
+  CXX_FLAGS="$CXX_FLAGS -DCAROM_HAS_ELEMENTAL"
 else
-  as_fn_error $? "Elemental not found - you must specify a valid location via --with-elemental=PATH." "$LINENO" 5
+  { $as_echo "$as_me:${as_lineno-$LINENO}: Elemental not found - disabling distributed QR decomposition code" >&5
+$as_echo "$as_me: Elemental not found - disabling distributed QR decomposition code" >&6;}
 fi
 
 
@@ -7380,7 +7396,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:7383:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:7399:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -7464,7 +7480,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:7467:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:7483:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -7479,7 +7495,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:7482:" "before adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:7498:" "before adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -7801,7 +7817,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:7804:" "forming rpaths: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:7820:" "forming rpaths: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -7867,7 +7883,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:7870:" "after adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:7886:" "after adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -7994,7 +8010,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:7997:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:8013:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -8049,7 +8065,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:8052:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:8068:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -8195,7 +8211,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:8198:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:8214:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
