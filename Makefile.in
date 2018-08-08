@@ -72,6 +72,8 @@ OBJS = Matrix.o \
        DEIM.o \
        QDEIM.o
 
+HEADERS = $(OBJS:%.o=%.h)
+
 default: lib
 
 all: lib uneven_dist random_test weak_scaling smoke_test tests/gtest_runner
@@ -103,5 +105,13 @@ clean:
 
 dox:
 	(cd docs && $(MAKE) $@)
+
+# Normally, headers are installed using 644 octal permissions, but
+# "world"/"other" access is prohibited on the LC
+install: lib
+	mkdir -p @prefix@/include
+	install -C -m 640 $(HEADERS) @prefix@/include
+	mkdir -p @prefix@/lib
+	install -C -m 750 $(LIBROM) @prefix@/lib
 
 include Makefile.depend
