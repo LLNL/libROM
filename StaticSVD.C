@@ -47,8 +47,11 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Use Autotools-detected Fortran name-mangling scheme */
+#define dgesdd FC_FUNC(dgesdd, DGESDD)
+
 extern "C" {
-void dgesdd_(char*, int*, int*, double*, int*,
+void dgesdd(char*, int*, int*, double*, int*,
              double*, double*, int*, double*, int*,
              double*, int*, int*, int*);
 }
@@ -378,7 +381,7 @@ StaticSVD::svd(
    // Construct d_V.
    d_V = new Matrix(num_samples, num_samples, false);
 
-   // Use lapack's dgesdd_ Fortran function to perform the svd.  As this is
+   // Use lapack's dgesdd Fortran function to perform the svd.  As this is
    // Fortran A and all the computed matrices are in column major order.
    char jobz = 'A';
    int m = total_dim;
@@ -392,20 +395,20 @@ StaticSVD::svd(
    double* work = new double [lwork];
    int* iwork = new int [8*n];
    int info;
-   dgesdd_(&jobz,
-      &m,
-      &n,
-      A,
-      &lda,
-      sigma,
-      U,
-      &ldu,
-      &d_V->item(0, 0),
-      &ldv,
-      work,
-      &lwork,
-      iwork,
-      &info);
+   dgesdd(&jobz,
+	  &m,
+	  &n,
+	  A,
+	  &lda,
+	  sigma,
+	  U,
+	  &ldu,
+	  &d_V->item(0, 0),
+	  &ldv,
+	  work,
+	  &lwork,
+	  iwork,
+	  &info);
    CAROM_ASSERT(info == 0);
    delete [] work;
    delete [] iwork;

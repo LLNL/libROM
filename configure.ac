@@ -116,6 +116,32 @@ dnl
 AX_CXX_COMPILE_STDCXX_11([], [mandatory])
 
 dnl
+dnl Check for Fortran compiler (required to detect Fortran name-mangling
+dnl convention); prefer a Fortran 90 compiler for LAPACK & BLAS.
+dnl
+
+if test -n "$with_FC"; then
+   FC=$with_FC
+else
+   case "$host_os" in
+     linux*) FCC=" gfortran ";;
+     solaris*) FCC=" gfortran ";;
+     osf*) FCC=" gfortran ";;
+     *) FCC=
+   esac
+fi
+CASC_AC_LOG_VAR(with_FC FC FCC, before running compiler search)
+AC_PROG_FC($FCC)
+CASC_AC_LOG_VAR(with_FC FC FCC, after running compiler search)
+
+dnl
+dnl Generate macro wrappers for Fortran functions to make the Fortran
+dnl name-mangling convention portable.
+dnl
+
+AC_FC_WRAPPERS
+
+dnl
 dnl A way to manually add flags to the loader (ld) command.
 dnl
 AC_ARG_WITH([extra-ld-flags],
