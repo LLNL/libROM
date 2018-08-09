@@ -7441,7 +7441,7 @@ $as_echo_n "checking for Google Test Framework installation... " >&6; }
     if test -f ${with_gtest}/include/gtest/gtest.h; then
         gtest_PREFIX=$with_gtest
         gtest_INCLUDES="-I${gtest_PREFIX}/include"
-        gtest_LIBS="-L${gtest_PREFIX}/lib -lgtest"
+        gtest_LIBS="-L${gtest_PREFIX}/lib -lgtest -lpthread"
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: $gtest_PREFIX" >&5
 $as_echo "$gtest_PREFIX" >&6; }
     else

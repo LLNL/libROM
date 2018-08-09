@@ -408,7 +408,7 @@ case "$with_gtest" in
     if test -f ${with_gtest}/include/gtest/gtest.h; then
         gtest_PREFIX=$with_gtest
         gtest_INCLUDES="-I${gtest_PREFIX}/include"
-        gtest_LIBS="-L${gtest_PREFIX}/lib -lgtest"
+        gtest_LIBS="-L${gtest_PREFIX}/lib -lgtest -lpthread"
         AC_MSG_RESULT([$gtest_PREFIX])
     else
         AC_MSG_RESULT([$gtest_PREFIX])
