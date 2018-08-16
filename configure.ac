@@ -448,8 +448,9 @@ if test "${gtest_PREFIX+set}" = set; then
   LIB_PATH="$gtest_LIB_PATH $LIB_PATH"
   LIB_NAME="$gtest_LIB_NAME $LIB_NAME"
   INC_PATH="$gtest_INCLUDES $INC_PATH"
+  CXX_FLAGS="$CXX_FLAGS -DCAROM_HAS_ELEMENTAL"
 else
-  AC_MSG_ERROR([Google Test Framework not found - you must specify a valid location via --with-gtest=PATH.])
+  AC_MSG_NOTICE([Google Test Framework not found - disabling unit tests.])
 fi
 CASC_AC_LOG_VAR(
 [gtest_INCLUDES INC_PATH gtest_LIB_PATH gtest_LIB_NAME LIB_PATH LIB_NAME])

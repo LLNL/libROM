@@ -8683,8 +8683,10 @@ fi
   LIB_PATH="$gtest_LIB_PATH $LIB_PATH"
   LIB_NAME="$gtest_LIB_NAME $LIB_NAME"
   INC_PATH="$gtest_INCLUDES $INC_PATH"
+  CXX_FLAGS="$CXX_FLAGS -DCAROM_HAS_ELEMENTAL"
 else
-  as_fn_error $? "Google Test Framework not found - you must specify a valid location via --with-gtest=PATH." "$LINENO" 5
+  { $as_echo "$as_me:${as_lineno-$LINENO}: Google Test Framework not found - disabling unit tests." >&5
+$as_echo "$as_me: Google Test Framework not found - disabling unit tests." >&6;}
 fi
 
 
@@ -8696,7 +8698,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:8699:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:8701:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -8711,7 +8713,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:8714:" "before adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:8716:" "before adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -9073,7 +9075,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:9076:" "forming rpaths: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:9078:" "forming rpaths: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -9139,7 +9141,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:9142:" "after adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:9144:" "after adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -9266,7 +9268,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:9269:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:9271:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -9321,7 +9323,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:9324:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:9326:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -9467,7 +9469,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:9470:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:9472:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 

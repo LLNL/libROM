@@ -40,6 +40,9 @@
 // Description: This source file is a test runner that uses the Google Test
 // Framework to run unit tests.
 
+#include <iostream>
+
+#ifdef CAROM_HAS_GTEST
 #include<gtest/gtest.h>
 #include <mpi.h>
 #include "../Matrix.h"
@@ -134,7 +137,16 @@ TEST(GoogleTestFramework, GoogleTestFrameworkFound) {
   SUCCEED();
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
+#else // #ifndef CAROM_HAS_GTEST
+int main()
+{
+  std::cout << "libROM was compiled without Google Test support, so unit "
+	    << "tests have been disabled. To enable unit tests, compile "
+	    << "libROM with Google Test support." << std::endl;
+}
+#endif // #endif CAROM_HAS_GTEST
