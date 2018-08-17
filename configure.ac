@@ -359,7 +359,8 @@ CASC_AC_LOG_VAR(
 # with-elemental is specified.
 AC_ARG_WITH(elemental,
 [  --with-elemental[=PATH]  Use Elemental and optionally specify where Elemental is installed.],
-, with_elemental=no)
+[],
+[with_elemental=no])
 
 case "$with_elemental" in
   no)
@@ -409,18 +410,21 @@ case "$with_elemental" in
   ;;
 esac
 
-if test "${elemental_PREFIX+set}" = set; then
-  SPLIT_LIBS_STRING(elemental_LIBS,elemental_LIB_PATH,elemental_LIB_NAME)
-  LIB_PATH="$elemental_LIB_PATH $LIB_PATH"
-  LIB_NAME="$elemental_LIB_NAME $LIB_NAME"
-  INC_PATH="$elemental_INCLUDES $INC_PATH"
-  CXX_FLAGS="$CXX_FLAGS -DCAROM_HAS_ELEMENTAL"
-else
-  AC_MSG_NOTICE([Elemental not found - disabling distributed QR decomposition code])
-fi
-CASC_AC_LOG_VAR(
-[elemental_INCLUDES INC_PATH elemental_LIB_PATH elemental_LIB_NAME LIB_PATH LIB_NAME])
+AC_MSG_NOTICE(["with_elemental = ${with_elemental}"])
 
+if test "x${with_elemental}" != xno; then
+    if test "${elemental_PREFIX+set}" = set; then
+        SPLIT_LIBS_STRING(elemental_LIBS,elemental_LIB_PATH,elemental_LIB_NAME)
+        LIB_PATH="$elemental_LIB_PATH $LIB_PATH"
+        LIB_NAME="$elemental_LIB_NAME $LIB_NAME"
+        INC_PATH="$elemental_INCLUDES $INC_PATH"
+        CXX_FLAGS="$CXX_FLAGS -DCAROM_HAS_ELEMENTAL"
+    else
+        AC_MSG_NOTICE([Elemental not found - disabling distributed QR decomposition code])
+    fi
+    CASC_AC_LOG_VAR(
+    [elemental_INCLUDES INC_PATH elemental_LIB_PATH elemental_LIB_NAME LIB_PATH LIB_NAME])
+fi
 
 dnl
 dnl Detect Google Test Framework support
@@ -464,18 +468,19 @@ case "$with_gtest" in
   ;;
 esac
 
-if test "${gtest_PREFIX+set}" = set; then
-  SPLIT_LIBS_STRING(gtest_LIBS,gtest_LIB_PATH,gtest_LIB_NAME)
-  LIB_PATH="$gtest_LIB_PATH $LIB_PATH"
-  LIB_NAME="$gtest_LIB_NAME $LIB_NAME"
-  INC_PATH="$gtest_INCLUDES $INC_PATH"
-  CXX_FLAGS="$CXX_FLAGS -DCAROM_HAS_ELEMENTAL"
-else
-  AC_MSG_NOTICE([Google Test Framework not found - disabling unit tests.])
+if test "x${with_gtest}" != xno; then 
+    if test "${gtest_PREFIX+set}" = set; then
+        SPLIT_LIBS_STRING(gtest_LIBS,gtest_LIB_PATH,gtest_LIB_NAME)
+        LIB_PATH="$gtest_LIB_PATH $LIB_PATH"
+        LIB_NAME="$gtest_LIB_NAME $LIB_NAME"
+        INC_PATH="$gtest_INCLUDES $INC_PATH"
+        CXX_FLAGS="$CXX_FLAGS -DCAROM_HAS_GTEST"
+    else
+        AC_MSG_NOTICE([Google Test Framework not found - disabling unit tests.])
+    fi
+    CASC_AC_LOG_VAR(
+    [gtest_INCLUDES INC_PATH gtest_LIB_PATH gtest_LIB_NAME LIB_PATH LIB_NAME])
 fi
-CASC_AC_LOG_VAR(
-[gtest_INCLUDES INC_PATH gtest_LIB_PATH gtest_LIB_NAME LIB_PATH LIB_NAME])
-
 dnl
 dnl Support rpath syntax by adding it to the LIB_PATH variable.
 dnl

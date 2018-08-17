@@ -8603,7 +8603,11 @@ $as_echo "$elemental_PREFIX" >&6; }
   ;;
 esac
 
-if test "${elemental_PREFIX+set}" = set; then
+{ $as_echo "$as_me:${as_lineno-$LINENO}: \"with_elemental = ${with_elemental}\"" >&5
+$as_echo "$as_me: \"with_elemental = ${with_elemental}\"" >&6;}
+
+if test "x${with_elemental}" != xno; then
+    if test "${elemental_PREFIX+set}" = set; then
 
 # Split elemental_LIBS into the LIB_PATH part (elemental_LIB_PATH) and the LIB_NAME part (elemental_LIB_NAME)
 if test -n "${elemental_LIBS}"; then
@@ -8615,14 +8619,14 @@ if test -n "${elemental_LIBS}"; then
   done
 fi
 
-  LIB_PATH="$elemental_LIB_PATH $LIB_PATH"
-  LIB_NAME="$elemental_LIB_NAME $LIB_NAME"
-  INC_PATH="$elemental_INCLUDES $INC_PATH"
-  CXX_FLAGS="$CXX_FLAGS -DCAROM_HAS_ELEMENTAL"
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: Elemental not found - disabling distributed QR decomposition code" >&5
+        LIB_PATH="$elemental_LIB_PATH $LIB_PATH"
+        LIB_NAME="$elemental_LIB_NAME $LIB_NAME"
+        INC_PATH="$elemental_INCLUDES $INC_PATH"
+        CXX_FLAGS="$CXX_FLAGS -DCAROM_HAS_ELEMENTAL"
+    else
+        { $as_echo "$as_me:${as_lineno-$LINENO}: Elemental not found - disabling distributed QR decomposition code" >&5
 $as_echo "$as_me: Elemental not found - disabling distributed QR decomposition code" >&6;}
-fi
+    fi
 
 
 log_vars="elemental_INCLUDES INC_PATH elemental_LIB_PATH elemental_LIB_NAME LIB_PATH LIB_NAME"
@@ -8633,11 +8637,11 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:8636:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:8640:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
-
+fi
 
 
 
@@ -8689,7 +8693,8 @@ $as_echo "$gtest_PREFIX" >&6; }
   ;;
 esac
 
-if test "${gtest_PREFIX+set}" = set; then
+if test "x${with_gtest}" != xno; then
+    if test "${gtest_PREFIX+set}" = set; then
 
 # Split gtest_LIBS into the LIB_PATH part (gtest_LIB_PATH) and the LIB_NAME part (gtest_LIB_NAME)
 if test -n "${gtest_LIBS}"; then
@@ -8701,14 +8706,14 @@ if test -n "${gtest_LIBS}"; then
   done
 fi
 
-  LIB_PATH="$gtest_LIB_PATH $LIB_PATH"
-  LIB_NAME="$gtest_LIB_NAME $LIB_NAME"
-  INC_PATH="$gtest_INCLUDES $INC_PATH"
-  CXX_FLAGS="$CXX_FLAGS -DCAROM_HAS_ELEMENTAL"
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: Google Test Framework not found - disabling unit tests." >&5
+        LIB_PATH="$gtest_LIB_PATH $LIB_PATH"
+        LIB_NAME="$gtest_LIB_NAME $LIB_NAME"
+        INC_PATH="$gtest_INCLUDES $INC_PATH"
+        CXX_FLAGS="$CXX_FLAGS -DCAROM_HAS_GTEST"
+    else
+        { $as_echo "$as_me:${as_lineno-$LINENO}: Google Test Framework not found - disabling unit tests." >&5
 $as_echo "$as_me: Google Test Framework not found - disabling unit tests." >&6;}
-fi
+    fi
 
 
 log_vars="gtest_INCLUDES INC_PATH gtest_LIB_PATH gtest_LIB_NAME LIB_PATH LIB_NAME"
@@ -8719,11 +8724,11 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:8722:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:8727:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
-
+fi
 
 
 log_vars="LIB_PATH"
@@ -8734,7 +8739,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:8737:" "before adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:8742:" "before adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -9096,7 +9101,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:9099:" "forming rpaths: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:9104:" "forming rpaths: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -9162,7 +9167,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:9165:" "after adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:9170:" "after adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -9289,7 +9294,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:9292:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:9297:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -9344,7 +9349,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:9347:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:9352:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -9490,7 +9495,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:9493:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:9498:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
