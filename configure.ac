@@ -118,6 +118,7 @@ dnl
 
 AX_CXX_COMPILE_STDCXX_11([], [mandatory])
 
+
 dnl
 dnl Check for Fortran compiler (required to detect Fortran name-mangling
 dnl convention); prefer a Fortran 90 compiler for LAPACK & BLAS.
@@ -147,13 +148,25 @@ dnl but flang is not. However, flang is free, and the xl, PGI, and
 dnl Intel compilers generally require a license, so we put flang after
 dnl the compilers that require a license, and before gfortran, which
 dnl is very common.
+
 AC_PROG_FC([$FCC xlflang xlf90 pg90 ifort flang gfortran])
 CASC_AC_LOG_VAR(with_FC FC FCC, after running compiler search)
 
 dnl Determine Fortran libraries for linking; on some systems, these
-dnl are needed for linking LAPACK, which is Fortran-based.
-AC_FC_LIBRARY_LDFLAGS
-SPLIT_LIBS_STRING(FCLIBS,fc_LIB_PATH,fc_LIB_NAME)
+dnl are needed for linking LAPACK, which is Fortran-based. This logic
+dnl doesn't work on the CORAL EA systems, which use a beta xl compiler
+
+case "$FC" in
+    *xlf) ;;
+    *xlf90) ;;
+    *xlf-gpu) ;;
+    *) dnl This branch should include xlflang, for which Fortran linkage
+       dnl detection works.
+        AC_FC_LIBRARY_LDFLAGS
+        SPLIT_LIBS_STRING(FCLIBS,fc_LIB_PATH,fc_LIB_NAME)
+    ;;
+esac
+
 
 dnl
 dnl Generate macro wrappers for Fortran functions to make the Fortran
