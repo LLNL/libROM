@@ -9,13 +9,21 @@
 export PKG_ROOT=/usr/gapps/bdiv/blueos_3_ppc64le_ib/clang-6-openmpi
 export SPECTRUM_PATH=/usr/tce/packages/spectrum-mpi
 export SPECTRUM_CLANG6=${SPECTRUM_PATH}/spectrum-mpi-rolling-release-clang-6.0.0
-export COMPILER_ROOT=${SPECTRUM_CLANG6}/bin
-export LAPACK_LDFLAGS="-L${PKG_ROOT}/lapack/3.5.0/lib -llapack -lblas"
+#export COMPILER_ROOT=${SPECTRUM_CLANG6}/bin
+export COMPILER_ROOT=/usr/tcetmp/bin
+
+# Either of these pairs of BLAS/LAPACK libraries will work
+
+#export LAPACK_ROOT=${PKG_ROOT}/lapack/3.5.0
+#export BLAS_ROOT=${PKG_ROOT}/lapack/3.5.0
+export LAPACK_ROOT=/usr/tcetmp/packages/lapack/lapack-3.6.0-xlf-15.1.5
+export BLAS_ROOT=/usr/tcetmp/packages/blas/blas-3.6.0-xlf-15.1.5
+export LAPACK_LDFLAGS="-L${LAPACK_ROOT}/lib -llapack -L${BLAS_ROOT}/lib -lblas"
 
 ./configure \
-    --with-CXX=${COMPILER_ROOT}/mpicxx \
-    --with-FC="/usr/tcetmp/bin/xlflang" \
-    --with-lapack=${PKG_ROOT}/lapack/3.5.0 \
+    --with-CXX=${COMPILER_ROOT}/mpiclang++ \
+    --with-FC=${COMPILER_ROOT}/xlflang \
+    --with-lapack=${LAPACK_ROOT} \
     --with-lapack-libs="${LAPACK_LDFLAGS}" \
     --with-hdf5=${PKG_ROOT}/hdf5/1.8.10p1 \
     --with-zlib=${PKG_ROOT}/zlib/1.2.3/lib \
@@ -24,6 +32,4 @@ export LAPACK_LDFLAGS="-L${PKG_ROOT}/lapack/3.5.0/lib -llapack -lblas"
     --enable-opt=yes \
     --enable-debug=no \
     "$@"
-
-# FC="/usr/tcetmp/bin/xlflang" ./configure --with-CXX="/usr/tce/packages/spectrum-mpi/spectrum-mpi-rolling-release-clang-6.0.0/bin/mpicxx" --with-lapack-libs="-L/usr/gapps/bdiv/blueos_3_ppc64le_ib/clang-6-openmpi/lapack/3.5.0/lib -llapack -lblas -L/usr/tce/packages/clang/xlflang-coral-2017.06.27/ibm/xlf/lib -lxl" --with-hdf5=/usr/gapps/bdiv/blueos_3_ppc64le_ib/clang-6-openmpi/hdf5/1.8.10p1 --with-zlib=/usr/gapps/bdiv/blueos_3_ppc64le_ib/clang-6-openmpi/zlib/1.2.3/lib --with-gtest=/usr/gapps/bdiv/blueos_3_ppc64le_ib/clang-6-openmpi/gtest/1.8.0 --with-elemental=no --enable-opt=yes --enable-debug=no --with-extra-ld-flags="-L/usr/tce/packages/clang/xlflang-coral-2017.06.27/ibm/xlf/lib -lxlf90_r -lxlfmath -lm -lxlmbif -lxlopt -lxl"  "$@"
 
