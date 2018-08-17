@@ -292,6 +292,12 @@ fi
 
 CASC_AC_LOG_VAR(debug_switches opt_switches)
 
+dnl Add linkage to Fortran libraries, which is required because
+dnl LAPACK is written in Fortran, and it is being linked by a
+dnl C++ compiler, which does not include Fortran libraries by default
+LIB_PATH="$fc_LIB_PATH $LIB_PATH"
+LIB_NAME="$fc_LIB_NAME $LIB_PATH"
+
 dnl
 dnl Set variables for lapack support
 dnl
@@ -300,8 +306,8 @@ if test "${lapack_PREFIX+set}" = set ||
    test "${lapack_INCLUDES+set}" = set ||
    test "${lapack_LIBS+set}" = set ; then
   SPLIT_LIBS_STRING(lapack_LIBS,lapack_LIB_PATH,lapack_LIB_NAME)
-  LIB_PATH="$lapack_LIB_PATH $fc_LIB_PATH $LIB_PATH"
-  LIB_NAME="$lapack_LIB_NAME $fc_LIB_NAME $LIB_NAME"
+  LIB_PATH="$lapack_LIB_PATH $LIB_PATH"
+  LIB_NAME="$lapack_LIB_NAME $LIB_NAME"
   INC_PATH="$lapack_INCLUDES $INC_PATH"
 else
   AC_MSG_ERROR([LAPACK is required.])

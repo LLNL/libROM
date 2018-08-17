@@ -6566,6 +6566,9 @@ done
 
 
 
+LIB_PATH="$fc_LIB_PATH $LIB_PATH"
+LIB_NAME="$fc_LIB_NAME $LIB_PATH"
+
 
 # Begin macro CASC_SUPPORT_LAPACK
 
@@ -6672,7 +6675,7 @@ case "$with_lapack_includes" in
       if test "${with_lapack_includes}" = yes ; then
   as_fn_error $? "If you specify --with-lapack-includes, you must give it the path as in --with-lapack-includes=/installation/path" "$LINENO" 5
 fi
-echo "configure:6675:" environment lapack_INCLUDES not defined >&5
+echo "configure:6678:" environment lapack_INCLUDES not defined >&5
 
 
     fi
@@ -6741,7 +6744,7 @@ case "$with_lapack_libs" in
       if test "${with_lapack_libs}" = yes ; then
   as_fn_error $? "If you specify --with-lapack-libs, you must give it the path as in --with-lapack-libs=/installation/path" "$LINENO" 5
 fi
-echo "configure:6744:" environment lapack_LIBS not defined >&5
+echo "configure:6747:" environment lapack_LIBS not defined >&5
 
 
     fi
@@ -6861,7 +6864,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:6864:" "After finding lapack flag: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:6867:" "After finding lapack flag: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -6879,7 +6882,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:6882:" "Found lapack library flag: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:6885:" "Found lapack library flag: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -6897,7 +6900,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:6900:" "Did not find lapack library flag: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:6903:" "Did not find lapack library flag: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -6915,7 +6918,7 @@ fi
     unset extra_libs
     unset save_LIBS
   else
-    echo "configure:6918:" Not looking for lapack because lapack_LIBS is already set >&5
+    echo "configure:6921:" Not looking for lapack because lapack_LIBS is already set >&5
   fi
 fi
 
@@ -6930,7 +6933,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:6933:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:6936:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -6950,8 +6953,8 @@ if test -n "${lapack_LIBS}"; then
   done
 fi
 
-  LIB_PATH="$lapack_LIB_PATH $fc_LIB_PATH $LIB_PATH"
-  LIB_NAME="$lapack_LIB_NAME $fc_LIB_NAME $LIB_NAME"
+  LIB_PATH="$lapack_LIB_PATH $LIB_PATH"
+  LIB_NAME="$lapack_LIB_NAME $LIB_NAME"
   INC_PATH="$lapack_INCLUDES $INC_PATH"
 else
   as_fn_error $? "LAPACK is required." "$LINENO" 5
@@ -6966,7 +6969,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:6969:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:6972:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -7943,7 +7946,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:7946:" "After successfully finding MPI using casc_find_mpi: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:7949:" "After successfully finding MPI using casc_find_mpi: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -8533,7 +8536,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:8536:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:8539:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -8634,7 +8637,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:8637:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:8640:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -8721,7 +8724,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:8724:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:8727:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -8736,7 +8739,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:8739:" "before adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:8742:" "before adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -9098,7 +9101,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:9101:" "forming rpaths: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:9104:" "forming rpaths: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -9164,7 +9167,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:9167:" "after adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:9170:" "after adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -9291,7 +9294,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:9294:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:9297:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -9346,7 +9349,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:9349:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:9352:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -9492,7 +9495,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:9495:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:9498:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
