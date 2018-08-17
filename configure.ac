@@ -69,6 +69,9 @@ AC_ARG_ENABLE([check_assertions],
 AC_ARG_WITH([CXX],
    [AS_HELP_STRING([--with-CXX=ARG],[manually set C++ compiler to ARG])]
    )
+AC_ARG_WITH([FC],
+   [AS_HELP_STRING([--with-FC=ARG],[manually set Fortran compiler to ARG])]
+   )
 AC_ARG_WITH([AR],
    [AS_HELP_STRING([--with-AR=ARG],[manually set AR to ARG])]
    )
@@ -131,8 +134,26 @@ else
    esac
 fi
 CASC_AC_LOG_VAR(with_FC FC FCC, before running compiler search)
-AC_PROG_FC($FCC)
+dnl The intention behind this search order for Fortran compilers is to
+dnl put the user-specified compiler (if available) first. If the OS is
+dnl detected properly, then common OSes will put gfortran first. If
+dnl the OS is exotic, then the OS detection above will set FCC to the
+dnl empty string, in which case, the search order proceeds from
+dnl (probably) rarer compilers to more common compilers.  Fewer
+dnl systems have IBM's xl compilers than PGI. If a system has a PGI
+dnl compiler, it usually also has a Intel compiler, but the reverse
+dnl isn't necessarily true. Intel compilers are still pretty common,
+dnl but flang is not. However, flang is free, and the xl, PGI, and
+dnl Intel compilers generally require a license, so we put flang after
+dnl the compilers that require a license, and before gfortran, which
+dnl is very common.
+AC_PROG_FC([$FCC xlflang xlf90 pg90 ifort flang gfortran])
 CASC_AC_LOG_VAR(with_FC FC FCC, after running compiler search)
+
+dnl Determine Fortran libraries for linking; on some systems, these
+dnl are needed for linking LAPACK, which is Fortran-based.
+AC_FC_LIBRARY_LDFLAGS
+SPLIT_LIBS_STRING(FCLIBS,fc_LIB_PATH,fc_LIB_NAME)
 
 dnl
 dnl Generate macro wrappers for Fortran functions to make the Fortran
@@ -279,8 +300,8 @@ if test "${lapack_PREFIX+set}" = set ||
    test "${lapack_INCLUDES+set}" = set ||
    test "${lapack_LIBS+set}" = set ; then
   SPLIT_LIBS_STRING(lapack_LIBS,lapack_LIB_PATH,lapack_LIB_NAME)
-  LIB_PATH="$lapack_LIB_PATH $LIB_PATH"
-  LIB_NAME="$lapack_LIB_NAME $LIB_NAME"
+  LIB_PATH="$lapack_LIB_PATH $fc_LIB_PATH $LIB_PATH"
+  LIB_NAME="$lapack_LIB_NAME $fc_LIB_NAME $LIB_NAME"
   INC_PATH="$lapack_INCLUDES $INC_PATH"
 else
   AC_MSG_ERROR([LAPACK is required.])
