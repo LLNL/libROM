@@ -410,8 +410,6 @@ case "$with_elemental" in
   ;;
 esac
 
-AC_MSG_NOTICE(["with_elemental = ${with_elemental}"])
-
 if test "x${with_elemental}" != xno; then
     if test "${elemental_PREFIX+set}" = set; then
         SPLIT_LIBS_STRING(elemental_LIBS,elemental_LIB_PATH,elemental_LIB_NAME)

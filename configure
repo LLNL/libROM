@@ -8603,9 +8603,6 @@ $as_echo "$elemental_PREFIX" >&6; }
   ;;
 esac
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: \"with_elemental = ${with_elemental}\"" >&5
-$as_echo "$as_me: \"with_elemental = ${with_elemental}\"" >&6;}
-
 if test "x${with_elemental}" != xno; then
     if test "${elemental_PREFIX+set}" = set; then
 
@@ -8637,7 +8634,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:8640:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:8637:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -8724,7 +8721,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:8727:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:8724:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -8739,7 +8736,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:8742:" "before adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:8739:" "before adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -9101,7 +9098,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:9104:" "forming rpaths: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:9101:" "forming rpaths: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -9167,7 +9164,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:9170:" "after adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:9167:" "after adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -9294,7 +9291,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:9297:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:9294:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -9349,7 +9346,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:9352:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:9349:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -9495,7 +9492,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:9498:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:9495:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
