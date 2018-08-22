@@ -8991,12 +8991,15 @@ if test "${rpath_beginning+set}" = set	\
   # Loop through the flags in LIB_PATH, looking for the -L flag,
   # and append RPATH flag to each one found, if the the
   # path specified by the flag includes shared libraries.
+  # Test for both Linux (*.so) and Darwin (*.dylib) shared library
+  # suffixes.
   for i in ${LIB_PATH}; do
     new_LIB_PATH="${new_LIB_PATH} ${i}"
     tmp_addl_string=`echo $i | sed 's/^-L//'`
     test "$tmp_addl_string" = "$i" && continue	# does not contain -L.
     test -d "$tmp_addl_string" || continue;	# directory nonexistent.
     test "`echo $tmp_addl_string/*.so`" = "$tmp_addl_string/*.so" \
+    && test "`echo $tmp_addl_string/*.dylib`" = "$tmp_addl_string/*.dylib" \
       && continue;	# does not contain shared libraries.
     echo "${new_LIB_PATH}"	\
       | grep ".*${rpath_beginning}[ 	]*${tmp_addl_string}"	\
@@ -9021,7 +9024,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:9024:" "after adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:9027:" "after adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -9148,7 +9151,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:9151:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:9154:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -9203,7 +9206,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:9206:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:9209:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -9349,7 +9352,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:9352:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:9355:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
