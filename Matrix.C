@@ -45,7 +45,10 @@
 
 #include "mpi.h"
 #include <string.h>
+
+#ifdef CAROM_HAS_ELEMENTAL
 #include <El.hpp>
+#endif
 
 extern "C" {
 // LU decomposition of a general matrix.
@@ -607,9 +610,13 @@ Matrix::qrcp_pivots_transpose(int* row_pivot,
 					pivots_requested);
   }
   else{
+#ifdef CAROM_HAS_ELEMENTAL
     return qrcp_pivots_transpose_distributed(row_pivot,
 					     row_pivot_owner,
 					     pivots_requested);
+#else
+    CAROM_ASSERT(false);
+#endif
   }
 }
 
@@ -705,6 +712,7 @@ Matrix::qrcp_pivots_transpose_distributed(int* row_pivot,
 					  int  pivots_requested)
 const
 {
+#ifdef CAROM_HAS_ELEMENTAL
   // Shim to design interface; not implemented yet
 
   // Check if distributed; otherwise, use serial implementation
@@ -715,6 +723,9 @@ const
     (row_pivot, row_pivot_owner, pivots_requested);
 
   // TODO(oxberry1): ScaLAPACK implementation?
+#else
+  CAROM_ASSERT(false);
+#endif
 }
 
 void
@@ -722,6 +733,7 @@ Matrix::qrcp_pivots_transpose_distributed_elemental
 (int* row_pivot, int* row_pivot_owner, int pivots_requested)
 const
 {
+#ifdef CAROM_HAS_ELEMENTAL
   // Check if distributed; otherwise, use serial implementation
   CAROM_ASSERT(distributed());
 
@@ -734,6 +746,9 @@ const
     qrcp_pivots_transpose_distributed_elemental_unbalanced
       (row_pivot, row_pivot_owner, pivots_requested);
   }
+#else
+  CAROM_ASSERT(false);
+#endif
 }
 
 void
@@ -741,6 +756,7 @@ Matrix::qrcp_pivots_transpose_distributed_elemental_balanced
 (int* row_pivot, int* row_pivot_owner, int pivots_requested)
 const
 {
+#ifdef CAROM_HAS_ELEMENTAL
   // Compute pivots redundantly across all processes using the QRCP
   // from the distributed dense linear algebra library Elemental.
 
@@ -891,7 +907,9 @@ const
     int owner = static_cast<int>(el_owner);
     row_pivot_owner[i] = owner;
   }
-
+#else
+  CAROM_ASSERT(false);
+#endif
 }
 
 void
@@ -899,6 +917,7 @@ Matrix::qrcp_pivots_transpose_distributed_elemental_unbalanced
 (int* row_pivot, int* row_pivot_owner, int pivots_requested)
 const
 {
+#ifdef CAROM_HAS_ELEMENTAL
   // Compute pivots redundantly across all processes using the QRCP
   // from the distributed dense linear algebra library Elemental.
 
@@ -1060,6 +1079,9 @@ const
 
   // Free arrays
   delete [] row_offset;
+#else
+  CAROM_ASSERT(false);
+#endif
 }
 
 
