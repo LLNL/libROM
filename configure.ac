@@ -40,8 +40,11 @@ dnl
 dnl Description: autoconf configuration file
 
 
+AC_INIT(libROM, 0.1)
 
-AC_INIT(README_BSD_NOTICE)
+# Initialize Automake
+AM_INIT_AUTOMAKE([1.11 foreign subdir-objects])
+
 AC_CONFIG_HEADER(CAROM_config.h:config/CAROM_config.h.in)
 dnl
 dnl Autoheader stuff
@@ -68,6 +71,9 @@ AC_ARG_ENABLE([check_assertions],
    )
 AC_ARG_WITH([CXX],
    [AS_HELP_STRING([--with-CXX=ARG],[manually set C++ compiler to ARG])]
+   )
+AC_ARG_WITH([FC],
+   [AS_HELP_STRING([--with-FC=ARG],[manually set Fortran compiler to ARG])]
    )
 AC_ARG_WITH([AR],
    [AS_HELP_STRING([--with-AR=ARG],[manually set AR to ARG])]
@@ -115,6 +121,63 @@ dnl
 
 AX_CXX_COMPILE_STDCXX_11([], [mandatory])
 
+
+dnl
+dnl Check for Fortran compiler (required to detect Fortran name-mangling
+dnl convention); prefer a Fortran 90 compiler for LAPACK & BLAS.
+dnl
+
+if test -n "$with_FC"; then
+   FC=$with_FC
+else
+   case "$host_os" in
+     linux*) FCC=" gfortran ";;
+     solaris*) FCC=" gfortran ";;
+     osf*) FCC=" gfortran ";;
+     *) FCC=
+   esac
+fi
+CASC_AC_LOG_VAR(with_FC FC FCC, before running compiler search)
+dnl The intention behind this search order for Fortran compilers is to
+dnl put the user-specified compiler (if available) first. If the OS is
+dnl detected properly, then common OSes will put gfortran first. If
+dnl the OS is exotic, then the OS detection above will set FCC to the
+dnl empty string, in which case, the search order proceeds from
+dnl (probably) rarer compilers to more common compilers.  Fewer
+dnl systems have IBM's xl compilers than PGI. If a system has a PGI
+dnl compiler, it usually also has a Intel compiler, but the reverse
+dnl isn't necessarily true. Intel compilers are still pretty common,
+dnl but flang is not. However, flang is free, and the xl, PGI, and
+dnl Intel compilers generally require a license, so we put flang after
+dnl the compilers that require a license, and before gfortran, which
+dnl is very common.
+
+AC_PROG_FC([$FCC xlflang xlf90 pg90 ifort flang gfortran])
+CASC_AC_LOG_VAR(with_FC FC FCC, after running compiler search)
+
+dnl Determine Fortran libraries for linking; on some systems, these
+dnl are needed for linking LAPACK, which is Fortran-based. This logic
+dnl doesn't work on the CORAL EA systems, which use a beta xl compiler
+
+case "$FC" in
+    *xlf) ;;
+    *xlf90) ;;
+    *xlf-gpu) ;;
+    *) dnl This branch should include xlflang, for which Fortran linkage
+       dnl detection works.
+        AC_FC_LIBRARY_LDFLAGS
+        SPLIT_LIBS_STRING(FCLIBS,fc_LIB_PATH,fc_LIB_NAME)
+    ;;
+esac
+
+
+dnl
+dnl Generate macro wrappers for Fortran functions to make the Fortran
+dnl name-mangling convention portable.
+dnl
+
+AC_FC_WRAPPERS
+
 dnl
 dnl A way to manually add flags to the loader (ld) command.
 dnl
@@ -134,6 +197,10 @@ case "$with_extra_ld_flags" in
   ;;
 esac
 
+dnl
+dnl Find ranlib
+dnl
+AC_PROG_RANLIB
 
 dnl
 dnl Find ar for archiving
@@ -245,6 +312,12 @@ fi
 
 CASC_AC_LOG_VAR(debug_switches opt_switches)
 
+dnl Add linkage to Fortran libraries, which is required because
+dnl LAPACK is written in Fortran, and it is being linked by a
+dnl C++ compiler, which does not include Fortran libraries by default
+LIB_PATH="$fc_LIB_PATH $LIB_PATH"
+LIB_NAME="$fc_LIB_NAME $LIB_PATH"
+
 dnl
 dnl Set variables for lapack support
 dnl
@@ -312,7 +385,8 @@ CASC_AC_LOG_VAR(
 # with-elemental is specified.
 AC_ARG_WITH(elemental,
 [  --with-elemental[=PATH]  Use Elemental and optionally specify where Elemental is installed.],
-, with_elemental=no)
+[],
+[with_elemental=no])
 
 case "$with_elemental" in
   no)
@@ -362,18 +436,19 @@ case "$with_elemental" in
   ;;
 esac
 
-if test "${elemental_PREFIX+set}" = set; then
-  SPLIT_LIBS_STRING(elemental_LIBS,elemental_LIB_PATH,elemental_LIB_NAME)
-  LIB_PATH="$elemental_LIB_PATH $LIB_PATH"
-  LIB_NAME="$elemental_LIB_NAME $LIB_NAME"
-  INC_PATH="$elemental_INCLUDES $INC_PATH"
-  CXX_FLAGS="$CXX_FLAGS -DCAROM_HAS_ELEMENTAL"
-else
-  AC_MSG_NOTICE([Elemental not found - disabling distributed QR decomposition code])
+if test "x${with_elemental}" != xno; then
+    if test "${elemental_PREFIX+set}" = set; then
+        SPLIT_LIBS_STRING(elemental_LIBS,elemental_LIB_PATH,elemental_LIB_NAME)
+        LIB_PATH="$elemental_LIB_PATH $LIB_PATH"
+        LIB_NAME="$elemental_LIB_NAME $LIB_NAME"
+        INC_PATH="$elemental_INCLUDES $INC_PATH"
+        CXX_FLAGS="$CXX_FLAGS -DCAROM_HAS_ELEMENTAL"
+    else
+        AC_MSG_NOTICE([Elemental not found - disabling distributed QR decomposition code])
+    fi
+    CASC_AC_LOG_VAR(
+    [elemental_INCLUDES INC_PATH elemental_LIB_PATH elemental_LIB_NAME LIB_PATH LIB_NAME])
 fi
-CASC_AC_LOG_VAR(
-[elemental_INCLUDES INC_PATH elemental_LIB_PATH elemental_LIB_NAME LIB_PATH LIB_NAME])
-
 
 dnl
 dnl Detect Google Test Framework support
@@ -408,7 +483,7 @@ case "$with_gtest" in
     if test -f ${with_gtest}/include/gtest/gtest.h; then
         gtest_PREFIX=$with_gtest
         gtest_INCLUDES="-I${gtest_PREFIX}/include"
-        gtest_LIBS="-L${gtest_PREFIX}/lib -lgtest"
+        gtest_LIBS="-L${gtest_PREFIX}/lib -lgtest -lpthread"
         AC_MSG_RESULT([$gtest_PREFIX])
     else
         AC_MSG_RESULT([$gtest_PREFIX])
@@ -417,17 +492,19 @@ case "$with_gtest" in
   ;;
 esac
 
-if test "${gtest_PREFIX+set}" = set; then
-  SPLIT_LIBS_STRING(gtest_LIBS,gtest_LIB_PATH,gtest_LIB_NAME)
-  LIB_PATH="$gtest_LIB_PATH $LIB_PATH"
-  LIB_NAME="$gtest_LIB_NAME $LIB_NAME"
-  INC_PATH="$gtest_INCLUDES $INC_PATH"
-else
-  AC_MSG_ERROR([Google Test Framework not found - you must specify a valid location via --with-gtest=PATH.])
+if test "x${with_gtest}" != xno; then 
+    if test "${gtest_PREFIX+set}" = set; then
+        SPLIT_LIBS_STRING(gtest_LIBS,gtest_LIB_PATH,gtest_LIB_NAME)
+        LIB_PATH="$gtest_LIB_PATH $LIB_PATH"
+        LIB_NAME="$gtest_LIB_NAME $LIB_NAME"
+        INC_PATH="$gtest_INCLUDES $INC_PATH"
+        CXX_FLAGS="$CXX_FLAGS -DCAROM_HAS_GTEST"
+    else
+        AC_MSG_NOTICE([Google Test Framework not found - disabling unit tests.])
+    fi
+    CASC_AC_LOG_VAR(
+    [gtest_INCLUDES INC_PATH gtest_LIB_PATH gtest_LIB_NAME LIB_PATH LIB_NAME])
 fi
-CASC_AC_LOG_VAR(
-[gtest_INCLUDES INC_PATH gtest_LIB_PATH gtest_LIB_NAME LIB_PATH LIB_NAME])
-
 dnl
 dnl Support rpath syntax by adding it to the LIB_PATH variable.
 dnl
@@ -516,4 +593,10 @@ AC_SUBST(INC_PATH)
 AC_SUBST(LIB_PATH)
 AC_SUBST(LIB_NAME)
 
-AC_OUTPUT([Makefile docs/Makefile docs/Doxyfile],[],[])
+
+AC_CONFIG_FILES([
+   Makefile
+   docs/Makefile
+   docs/Doxyfile
+])
+AC_OUTPUT

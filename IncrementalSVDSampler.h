@@ -46,7 +46,6 @@
 
 #include "SVDSampler.h"
 #include "IncrementalSVD.h"
-#include <boost/shared_ptr.hpp>
 
 namespace CAROM {
 

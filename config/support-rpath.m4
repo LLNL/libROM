@@ -140,12 +140,15 @@ if test "${rpath_beginning+set}" = set	\
   # Loop through the flags in $1, looking for the -L flag,
   # and append RPATH flag to each one found, if the the
   # path specified by the flag includes shared libraries.
+  # Test for both Linux (*.so) and Darwin (*.dylib) shared library
+  # suffixes.
   for i in ${$1}; do
     new_$2="${new_$2} ${i}"
     tmp_addl_string=`echo $i | sed 's/^-L//'`
     test "$tmp_addl_string" = "$i" && continue	# does not contain -L.
     test -d "$tmp_addl_string" || continue;	# directory nonexistent.
     test "`echo $tmp_addl_string/*.so`" = "$tmp_addl_string/*.so" \
+    && test "`echo $tmp_addl_string/*.dylib`" = "$tmp_addl_string/*.dylib" \
       && continue;	# does not contain shared libraries.
     echo "${new_$2}"	\
       | grep ".*${rpath_beginning}[[ 	]]*${tmp_addl_string}"	\
@@ -183,9 +186,9 @@ define(possible_rpaths,dnl
     # parameter was accepted by the compiler.
     SEARCH=`echo "ignoring unknown option '${LIBS}'" | sed -e "s/---/-f-/"`
     if ( grep "$SEARCH" config.log ) >/dev/null 2>&1
-    then 
+    then
 	:
-    else 
+    else
         if test "${$1+set}" = set; then break; fi
     fi
   done
