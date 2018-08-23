@@ -40,8 +40,11 @@ dnl
 dnl Description: autoconf configuration file
 
 
+AC_INIT(libROM, 0.1)
 
-AC_INIT(README_BSD_NOTICE)
+# Initialize Automake
+AM_INIT_AUTOMAKE([1.11 foreign subdir-objects])
+
 AC_CONFIG_HEADER(CAROM_config.h:config/CAROM_config.h.in)
 dnl
 dnl Autoheader stuff
@@ -134,6 +137,10 @@ case "$with_extra_ld_flags" in
   ;;
 esac
 
+dnl
+dnl Find ranlib
+dnl
+AC_PROG_RANLIB
 
 dnl
 dnl Find ar for archiving
@@ -516,4 +523,10 @@ AC_SUBST(INC_PATH)
 AC_SUBST(LIB_PATH)
 AC_SUBST(LIB_NAME)
 
-AC_OUTPUT([Makefile docs/Makefile docs/Doxyfile],[],[])
+
+AC_CONFIG_FILES([
+   Makefile
+   docs/Makefile
+   docs/Doxyfile
+])
+AC_OUTPUT
