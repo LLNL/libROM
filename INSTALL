@@ -1,0 +1,121 @@
+# Installing libROM
+
+1) Configure libROM by running:
+
+```console
+./configure --with-CXX=$PATH_TO_MPICXX --with-lapack=$LAPACK_INSTALL_PREFIX \
+--with-lapack-libs=$LAPACK_LINK_FLAGS_WITH_LITTLE_L_ONLY \
+--with-hdf5=$HDF5_INSTALL_PREFIX \
+--with-perl=$PERL_INSTALL_PREFIX \
+--with-elemental=$ELEMENTAL_INSTALL_PREFIX \
+--with-gtest=$GOOGLETEST_INSTALL_PREFIX \
+--prefix=$INSTALL_PREFIX
+```
+
+Some additional notes (mostly geared towards less experienced
+developers):
+
+* Boost is also currently a required dependency, but now that libROM
+  requires C++11, usage of Boost smart pointers will be phased out in
+  favor of C++11 standard library smart pointers. If libROM fails to
+  build, you may need to add include flags for Boost via the
+  `CPPFLAGS` variable.
+
+* For the inexperienced: `./configure --help` gives an exhaustive
+  listing of flags.
+
+* This part is obvious to experienced developers, but for new grad
+  students using this software: everything with a dollar sign in front
+  of it is a shell variable, and should be replaced with an
+  appropriate string. "Prefixes" are where software is installed; if
+  the library has a path that looks like `/usr/local/lib/liblapack.a`,
+  the install prefix is `/usr/local/`, and if an executable has a
+  prefix `/usr/tce/packages/python2.7/python`, the prefix is
+  `/usr/tce/packages/python2.7/`.
+
+* As usual for GNU Autotools build toolchains, if the `--prefix` flag
+  is omitted, libROM will install at the `/usr/local` prefix. Usually,
+  this prefix isn't writeable unless you have elevated privileges on
+  your machine. (Again, obvious for experienced devs, possibly not
+  obvious for grad students/postdocs.)
+
+* If any of the libraries above (e.g., LAPACK, HDF5, ...) are shared
+  libraries, you should add the `--enable-rpath=$RPATH_FLAG` flag to
+  avoid overlinking, where `$RPATH_FLAG` is the appropriate RPATH flag
+  for your compiler. Consult your compiler documentation for the
+  proper flag. On many compilers (GCC, Clang),
+  `--enable-rpath=-Wl,-rpath,` will work -- the commas must be typed
+  as written.
+
+* It's frequently worth double-checking the output of the `configure`
+  command by opening `config.log`. (If you're an experienced developer,
+  you probably already know to do so.)
+
+* If you decide to use `--with-MPICC`, you must also use
+  `--with-mpi-include` and `--with-mpi-libs`; the first flag is used
+  to detect the `mpicxx` install prefix, but the compiler wrappers
+  aren't used directly, and the actual include and link flags are
+  required.
+
+* I believe zlib and szlib are optional; these are compression
+  libraries that may be helpful with large data sets.
+
+* `--with-lapack-libs` is needed if the linking command for the
+  desired LAPACK library is *NOT* `-llapack`. For instance, the
+  linking command for OpenBLAS is `-lopenblas`.
+
+* `$LAPACK_LINK_FLAGS_WITH_LITTLE_L_ONLY` means the part of the link
+  line for LAPACK that *excludes*
+  `-L${LAPACK_INSTALL_PREFIX}/lib`. For instance, with OpenBLAS, the
+  right configure flags is `--with-lapack-libs=-lopenblas` because the
+  link line is `-L${OPENBLAS_INSTALL_PREFIX}/lib -lopenblas`, and we
+  omit the `-L` part.
+
+2) Build libROM by running:
+
+```console
+make
+```
+
+This command builds libROM plus some tests in the current build
+directory, and you should see object files and `librom.a` in the build
+directory after this command completes.
+
+3) Install libROM by running:
+
+```console
+make install
+```
+
+This command uses the `install` command to copy to the install prefix
+all files needed to use libROM, including setting the proper
+permissions.
+
+The entire process is frequently abbreviated as:
+
+```console
+./configure $CONFIGURE_FLAGS && make && make install
+```
+
+Do so at your own risk.
+
+# Some defaults on the TOSS3 Livermore Computing (LC) machines
+
+```console
+./configure \
+--with-CXX=/usr/tce/packages/mvapich2/mvapich2-2.2-intel-18.0.1/bin/mpicxx \
+--with-lapack-libs=-lopenblas \
+--with-lapack-includes=-I/collab/usr/gapps/librom/toss3 \
+--with-hdf5=/usr/tce/packages/hdf5/hdf5-serial-1.8.18-intel-18.0.1 \
+--with-lapack=/collab/usr/gapps/librom/toss3 \
+--with-gtest=/collab/usr/gapps/librom/toss3 \
+--with-elemental=/collab/usr/gapps/librom/toss3 --prefix=$LIBROM_ROOT \
+--enable-rpath=-Wl,-rpath,
+```
+
+# Installing via Spack
+
+There is a Spack package for libROM; however, the version it installs
+is the latest public release. See the [spack
+documentation](http://spack.readthedocs.io/en/latest/index.html) for
+details on how to use Spack.
