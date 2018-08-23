@@ -51,8 +51,11 @@
 #include <stdio.h>
 #include <sstream>
 
+/* Use Autotools-detected Fortran name-mangling scheme */
+#define dgesdd FC_FUNC(dgesdd, DGESDD)
+
 extern "C" {
-void dgesdd_(char*, int*, int*, double*, int*,
+void dgesdd(char*, int*, int*, double*, int*,
              double*, double*, int*, double*, int*,
              double*, int*, int*, int*);
 }
@@ -420,7 +423,7 @@ IncrementalSVD::svd(
       }
    }
 
-   // Use lapack's dgesdd_ Fortran function to perform the svd.  As this is
+   // Use lapack's dgesdd Fortran function to perform the svd.  As this is
    // Fortran A and all the computed matrices are in column major order.
    double* sigma = new double [d_num_samples+1];
    char jobz = 'A';
@@ -433,20 +436,20 @@ IncrementalSVD::svd(
    double* work = new double [lwork];
    int iwork[8*m];
    int info;
-   dgesdd_(&jobz,
-      &m,
-      &n,
-      A,
-      &lda,
-      sigma,
-      &U->item(0, 0),
-      &ldu,
-      &V->item(0, 0),
-      &ldv,
-      work,
-      &lwork,
-      iwork,
-      &info);
+   dgesdd(&jobz,
+	  &m,
+	  &n,
+	  A,
+	  &lda,
+	  sigma,
+	  &U->item(0, 0),
+	  &ldu,
+	  &V->item(0, 0),
+	  &ldv,
+	  work,
+	  &lwork,
+	  iwork,
+	  &info);
    delete [] work;
 
    // If the svd succeeded, fill U and S.  Otherwise clean up and return.

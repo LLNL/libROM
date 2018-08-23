@@ -49,6 +49,13 @@
 #include "BasisWriter.h"
 #include "SVDSampler.h"
 
+/* Use C++11 built-in shared pointers if available; else fallback to Boost. */
+#if __cplusplus >= 201103L
+#include <memory>
+#else
+#include <boost/shared_ptr.hpp>
+#endif
+
 #include <string.h>
 
 namespace CAROM {
@@ -244,7 +251,11 @@ class SVDBasisGenerator
       /**
        * @brief Pointer to the underlying sampling control object.
        */
+#if __cplusplus >= 201103L
+      std::shared_ptr<SVDSampler> d_svdsampler;
+#else
       boost::shared_ptr<SVDSampler> d_svdsampler;
+#endif
 
    private:
       /**

@@ -88,6 +88,8 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
+build_triplet = @build@
+host_triplet = @host@
 noinst_PROGRAMS = uneven_dist$(EXEEXT) random_test$(EXEEXT) \
 	weak_scaling$(EXEEXT) smoke_test$(EXEEXT) \
 	tests/gtest_runner$(EXEEXT)
@@ -263,8 +265,8 @@ AM_RECURSIVE_TARGETS = cscope
 am__DIST_COMMON = $(srcdir)/Makefile.in \
 	$(top_srcdir)/config/CAROM_config.h.in \
 	$(top_srcdir)/docs/Doxyfile.in $(top_srcdir)/docs/Makefile.in \
-	AUTHORS ChangeLog INSTALL NEWS README TODO compile depcomp \
-	install-sh missing
+	AUTHORS ChangeLog INSTALL NEWS README TODO compile \
+	config.guess config.sub depcomp install-sh missing
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -311,6 +313,9 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
+FC = @FC@
+FCFLAGS = @FCFLAGS@
+FCLIBS = @FCLIBS@
 GREP = @GREP@
 HAVE_CXX11 = @HAVE_CXX11@
 HAVE_DOT = @HAVE_DOT@
@@ -355,13 +360,18 @@ abs_top_builddir = @abs_top_builddir@
 abs_top_srcdir = @abs_top_srcdir@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
+ac_ct_FC = @ac_ct_FC@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
 am__tar = @am__tar@
 am__untar = @am__untar@
 bindir = @bindir@
+build = @build@
 build_alias = @build_alias@
+build_cpu = @build_cpu@
+build_os = @build_os@
+build_vendor = @build_vendor@
 builddir = @builddir@
 datadir = @datadir@
 datarootdir = @datarootdir@
@@ -369,7 +379,11 @@ docdir = @docdir@
 dox_output_dir = @dox_output_dir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
+host = @host@
 host_alias = @host_alias@
+host_cpu = @host_cpu@
+host_os = @host_os@
+host_vendor = @host_vendor@
 htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@

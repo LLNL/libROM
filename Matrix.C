@@ -50,18 +50,23 @@
 #include <El.hpp>
 #endif
 
+/* Use Autotools-detected Fortran name-mangling scheme */
+#define dgetrf FC_FUNC(dgetrf, DGETRF)
+#define dgetri FC_FUNC(dgetri, DGETRI)
+#define dgeqp3 FC_FUNC(dgeqp3, DGEQP3)
+
 extern "C" {
 // LU decomposition of a general matrix.
 void
-dgetrf_(int*, int*, double*, int*, int*, int*);
+dgetrf(int*, int*, double*, int*, int*, int*);
 
 // Generate inverse of a matrix given its LU decomposition.
 void
-dgetri_(int*, double*, int*, int*, double*, int*, int*);
+dgetri(int*, double*, int*, int*, double*, int*, int*);
 
 // BLAS-3 version of QR decomposition with column pivoting
 void
-dgeqp3_(int*, int*, double*, int*, int*, double*, double*, int*, int*);
+dgeqp3(int*, int*, double*, int*, int*, double*, double*, int*, int*);
 }
 
 namespace CAROM {
@@ -510,8 +515,8 @@ Matrix::inverse(
       }
    }
    // Now call lapack to do the inversion.
-   dgetrf_(&mtx_size, &mtx_size, result->d_mat, &mtx_size, ipiv, &info);
-   dgetri_(&mtx_size, result->d_mat, &mtx_size, ipiv, work, &lwork, &info);
+   dgetrf(&mtx_size, &mtx_size, result->d_mat, &mtx_size, ipiv, &info);
+   dgetri(&mtx_size, result->d_mat, &mtx_size, ipiv, work, &lwork, &info);
    // Result now has the inverse in a column major representation.  Put it
    // into row major order.
    for (int row = 0; row < mtx_size; ++row) {
@@ -550,8 +555,8 @@ Matrix::inverse(
       }
    }
    // Now call lapack to do the inversion.
-   dgetrf_(&mtx_size, &mtx_size, result.d_mat, &mtx_size, ipiv, &info);
-   dgetri_(&mtx_size, result.d_mat, &mtx_size, ipiv, work, &lwork, &info);
+   dgetrf(&mtx_size, &mtx_size, result.d_mat, &mtx_size, ipiv, &info);
+   dgetri(&mtx_size, result.d_mat, &mtx_size, ipiv, work, &lwork, &info);
    // Result now has the inverse in a column major representation.  Put it
    // into row major order.
    for (int row = 0; row < mtx_size; ++row) {
@@ -586,8 +591,8 @@ Matrix::inverse()
       }
    }
    // Now call lapack to do the inversion.
-   dgetrf_(&mtx_size, &mtx_size, d_mat, &mtx_size, ipiv, &info);
-   dgetri_(&mtx_size, d_mat, &mtx_size, ipiv, work, &lwork, &info);
+   dgetrf(&mtx_size, &mtx_size, d_mat, &mtx_size, ipiv, &info);
+   dgetri(&mtx_size, d_mat, &mtx_size, ipiv, work, &lwork, &info);
    // This now has its inverse in a column major representation.  Put it into
    // row major representation.
    for (int row = 0; row < mtx_size; ++row) {
@@ -666,15 +671,15 @@ Matrix::qrcp_pivots_transpose_serial(int* row_pivot,
    // row-major format, which is the transpose of the Fortran memory
    // model (which is column-major). Passing the row-major data
    // looks like an in-place transposition to Fortran.
-   dgeqp3_(&num_rows_of_transpose,
-	   &num_cols_of_transpose,
-	   scratch.d_mat,
-	   &num_rows_of_transpose,
-	   pivot,
-	   tau,
-	   work,
-	   &lwork,
-	   &info);
+   dgeqp3(&num_rows_of_transpose,
+	  &num_cols_of_transpose,
+	  scratch.d_mat,
+	  &num_rows_of_transpose,
+	  pivot,
+	  tau,
+	  work,
+	  &lwork,
+	  &info);
 
    // Fail if error in LAPACK routine.
    CAROM_ASSERT(info == 0);

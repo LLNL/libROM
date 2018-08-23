@@ -45,7 +45,13 @@
 #define included_SVDSampler_h
 
 #include "SVD.h"
+
+/* Use C++11 built-in shared pointers if available; else fallback to Boost. */
+#if __cplusplus >= 201103L
+#include <memory>
+#else
 #include <boost/shared_ptr.hpp>
+#endif
 
 namespace CAROM {
 
@@ -206,7 +212,12 @@ class SVDSampler
       /**
        * @brief Pointer to the abstract SVD algorithm object.
        */
+
+#if __cplusplus >= 201103L
+      std::shared_ptr<SVD> d_svd;
+#else
       boost::shared_ptr<SVD> d_svd;
+#endif
 
    private:
       /**
