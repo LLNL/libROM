@@ -83,8 +83,6 @@ dnl
 dnl Initialize common macros to empty strings
 dnl
 
-LD_FLAGS="$LDFLAGS"
-
 INC_PATH=
 LIB_PATH=
 LIB_NAME=
@@ -192,7 +190,7 @@ case "$with_extra_ld_flags" in
     : No op
   ;;
   *)
-    LD_FLAGS="$LD_FLAGS $with_extra_ld_flags"
+    LDFLAGS="$LDFLAGS $with_extra_ld_flags"
   ;;
 esac
 
@@ -586,7 +584,7 @@ AC_SUBST(AR)
 AC_SUBST(CXX)
 AC_SUBST(CXXFLAGS)
 
-AC_SUBST(LD_FLAGS)
+AC_SUBST(LDFLAGS)
 
 AC_SUBST(INC_PATH)
 AC_SUBST(LIB_PATH)
