@@ -120,6 +120,80 @@ TEST(MatrixSerialTest, Test_setSize)
   EXPECT_EQ(one_by_one.numColumns(), 2);
 }
 
+
+/** Test methods that require assigning data to the matrix
+ *
+ *  * const double& operator() (int, int) const
+ *
+ *  * double& operator() (int, int)
+ *
+ *  * const double& item(int, int) const
+ *
+ *  * double& item(int, int)
+ *
+ *  * Matrix(double*, int, int, bool, bool)
+ *
+ *  * Matrix(const Matrix& other)
+ *
+ *  * Matrix& operator= (const Matrix&)
+ *
+ *  * Matrix* mult(const Matrix&) const
+ *
+ *  * Matrix* mult(const Matrix*) const
+ *
+ *  * void mult(const Matrix&, Matrix*&) const
+ *
+ *  * void mult(const Matrix&, Matrix&) const
+ *
+ *  * Matrix* transposeMult(const Matrix&) const
+ *
+ *  * Matrix* transposeMult(const Matrix*) const
+ *
+ *  * void transposeMult(const Matrix&, Matrix*&) const
+ *
+ *  * void transposeMult(const Matrix&, Matrix&) const
+ *
+ *  * Matrix* inverse() const
+ *
+ *  * void inverse(Matrix*&) const
+ *
+ *  * void inverse(Matrix&) const
+ *
+ *  * void inverse()
+ *
+ *  * void qrcp_pivots_transpose(int*, int*, int) const
+ */
+
+TEST(MatrixSerialTest, Test_5arg_constructor_const_function_call)
+{
+  /**
+   *  Build matrix [-2.0   1.0]
+   *               [ 1.0  -2.0]
+   *
+   */
+  double symmetric[4] = {-2.0, 1.0, 1.0, -2.0};
+  const CAROM::Matrix symmetric_matrix(symmetric, 2, 2, false, true);
+
+  EXPECT_DOUBLE_EQ(symmetric_matrix(0, 0), -2.0);
+  EXPECT_DOUBLE_EQ(symmetric_matrix(0, 1),  1.0);
+  EXPECT_DOUBLE_EQ(symmetric_matrix(1, 0),  1.0);
+  EXPECT_DOUBLE_EQ(symmetric_matrix(1, 1), -2.0);
+
+  /**
+   *  Build matrix [ 1.0   0.0]
+   *               [ 1.0   1.0]
+   *
+   */
+  double asymmetric[4] = {1.0, 1.0, 0.0, 1.0};
+  const CAROM::Matrix asymmetric_matrix(asymmetric, 2, 2, false, true);
+
+  EXPECT_DOUBLE_EQ(asymmetric_matrix(0, 0), 1.0);
+  EXPECT_DOUBLE_EQ(asymmetric_matrix(0, 1), 1.0);
+  EXPECT_DOUBLE_EQ(asymmetric_matrix(1, 0), 0.0);
+  EXPECT_DOUBLE_EQ(asymmetric_matrix(1, 1), 1.0);
+}
+
+
 /* Use second difference matrix as one fake Matrix for testing */
 class SecondDifferenceMatrix : public CAROM::Matrix
 {
@@ -183,49 +257,6 @@ class SecondDifferenceMatrix : public CAROM::Matrix
     {
     }
 };
-
-/** Test methods that require assigning data to the matrix
- *
- *  * const double& operator() (int, int) const
- *
- *  * double& operator() (int, int)
- *
- *  * const double& item(int, int) const
- *
- *  * double& item(int, int)
- *
- *  * Matrix(double*, int, int, bool, bool)
- *
- *  * Matrix(const Matrix& other)
- *
- *  * Matrix& operator= (const Matrix&)
- *
- *  * Matrix* mult(const Matrix&) const
- *
- *  * Matrix* mult(const Matrix*) const
- *
- *  * void mult(const Matrix&, Matrix*&) const
- *
- *  * void mult(const Matrix&, Matrix&) const
- *
- *  * Matrix* transposeMult(const Matrix&) const
- *
- *  * Matrix* transposeMult(const Matrix*) const
- *
- *  * void transposeMult(const Matrix&, Matrix*&) const
- *
- *  * void transposeMult(const Matrix&, Matrix&) const
- *
- *  * Matrix* inverse() const
- *
- *  * void inverse(Matrix*&) const
- *
- *  * void inverse(Matrix&) const
- *
- *  * void inverse()
- *
- *  * void qrcp_pivots_transpose(int*, int*, int) const
- */
 
 // Test fixture for testing
 TEST(MatrixSerialTest, Test_qrcp_pivots_transpose)
