@@ -120,6 +120,49 @@ TEST(MatrixSerialTest, Test_setSize)
   EXPECT_EQ(one_by_one.numColumns(), 2);
 }
 
+/** Test methods that require assigning data to the matrix
+ *
+ *  * const double& operator() (int, int) const
+ *
+ *  * double& operator() (int, int)
+ *
+ *  * const double& item(int, int) const
+ *
+ *  * double& item(int, int)
+ *
+ *  * Matrix(double*, int, int, bool, bool)
+ *
+ *  * Matrix(const Matrix& other)
+ *
+ *  * Matrix& operator= (const Matrix&)
+ *
+ *  * Matrix* mult(const Matrix&) const
+ *
+ *  * Matrix* mult(const Matrix*) const
+ *
+ *  * void mult(const Matrix&, Matrix*&) const
+ *
+ *  * void mult(const Matrix&, Matrix&) const
+ *
+ *  * Matrix* transposeMult(const Matrix&) const
+ *
+ *  * Matrix* transposeMult(const Matrix*) const
+ *
+ *  * void transposeMult(const Matrix&, Matrix*&) const
+ *
+ *  * void transposeMult(const Matrix&, Matrix&) const
+ *
+ *  * Matrix* inverse() const
+ *
+ *  * void inverse(Matrix*&) const
+ *
+ *  * void inverse(Matrix&) const
+ *
+ *  * void inverse()
+ *
+ *  * void qrcp_pivots_transpose(int*, int*, int) const
+ */
+
 // Test fixture for testing
 TEST(MatrixSerialQRCPTest, SecondDifferenceMatrix) {
   // Allocate space for second_difference matrix
