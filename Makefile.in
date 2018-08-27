@@ -92,7 +92,7 @@ build_triplet = @build@
 host_triplet = @host@
 noinst_PROGRAMS = uneven_dist$(EXEEXT) random_test$(EXEEXT) \
 	weak_scaling$(EXEEXT) smoke_test$(EXEEXT) \
-	tests/gtest_runner$(EXEEXT)
+	tests/test_Matrix$(EXEEXT)
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config/arg-with-environment.m4 \
@@ -175,9 +175,9 @@ am_smoke_test_OBJECTS = smoke_test.$(OBJEXT)
 smoke_test_OBJECTS = $(am_smoke_test_OBJECTS)
 smoke_test_DEPENDENCIES = librom.a
 am__dirstamp = $(am__leading_dot)dirstamp
-am_tests_gtest_runner_OBJECTS = tests/gtest_runner.$(OBJEXT)
-tests_gtest_runner_OBJECTS = $(am_tests_gtest_runner_OBJECTS)
-tests_gtest_runner_DEPENDENCIES = librom.a
+am_tests_test_Matrix_OBJECTS = tests/test_Matrix.$(OBJEXT)
+tests_test_Matrix_OBJECTS = $(am_tests_test_Matrix_OBJECTS)
+tests_test_Matrix_DEPENDENCIES = librom.a
 am_uneven_dist_OBJECTS = uneven_dist.$(OBJEXT)
 uneven_dist_OBJECTS = $(am_uneven_dist_OBJECTS)
 uneven_dist_DEPENDENCIES = librom.a
@@ -214,7 +214,7 @@ am__depfiles_remade = ./$(DEPDIR)/BasisReader.Po \
 	./$(DEPDIR)/StaticSVDSampler.Po ./$(DEPDIR)/Utilities.Po \
 	./$(DEPDIR)/Vector.Po ./$(DEPDIR)/random_test.Po \
 	./$(DEPDIR)/smoke_test.Po ./$(DEPDIR)/uneven_dist.Po \
-	./$(DEPDIR)/weak_scaling.Po tests/$(DEPDIR)/gtest_runner.Po
+	./$(DEPDIR)/weak_scaling.Po tests/$(DEPDIR)/test_Matrix.Po
 am__mv = mv -f
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -230,10 +230,10 @@ am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
 SOURCES = $(librom_a_SOURCES) $(random_test_SOURCES) \
-	$(smoke_test_SOURCES) $(tests_gtest_runner_SOURCES) \
+	$(smoke_test_SOURCES) $(tests_test_Matrix_SOURCES) \
 	$(uneven_dist_SOURCES) $(weak_scaling_SOURCES)
 DIST_SOURCES = $(librom_a_SOURCES) $(random_test_SOURCES) \
-	$(smoke_test_SOURCES) $(tests_gtest_runner_SOURCES) \
+	$(smoke_test_SOURCES) $(tests_test_Matrix_SOURCES) \
 	$(uneven_dist_SOURCES) $(weak_scaling_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
@@ -432,8 +432,8 @@ weak_scaling_SOURCES = weak_scaling.C
 weak_scaling_LDADD = librom.a
 smoke_test_SOURCES = smoke_test.C
 smoke_test_LDADD = librom.a
-tests_gtest_runner_SOURCES = tests/gtest_runner.C
-tests_gtest_runner_LDADD = -lgtest -lpthread librom.a
+tests_test_Matrix_SOURCES = tests/test_Matrix.C
+tests_test_Matrix_LDADD = -lgtest -lpthread librom.a
 all: CAROM_config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -544,12 +544,12 @@ tests/$(am__dirstamp):
 tests/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) tests/$(DEPDIR)
 	@: > tests/$(DEPDIR)/$(am__dirstamp)
-tests/gtest_runner.$(OBJEXT): tests/$(am__dirstamp) \
+tests/test_Matrix.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 
-tests/gtest_runner$(EXEEXT): $(tests_gtest_runner_OBJECTS) $(tests_gtest_runner_DEPENDENCIES) $(EXTRA_tests_gtest_runner_DEPENDENCIES) tests/$(am__dirstamp)
-	@rm -f tests/gtest_runner$(EXEEXT)
-	$(AM_V_CXXLD)$(CXXLINK) $(tests_gtest_runner_OBJECTS) $(tests_gtest_runner_LDADD) $(LIBS)
+tests/test_Matrix$(EXEEXT): $(tests_test_Matrix_OBJECTS) $(tests_test_Matrix_DEPENDENCIES) $(EXTRA_tests_test_Matrix_DEPENDENCIES) tests/$(am__dirstamp)
+	@rm -f tests/test_Matrix$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(tests_test_Matrix_OBJECTS) $(tests_test_Matrix_LDADD) $(LIBS)
 
 uneven_dist$(EXEEXT): $(uneven_dist_OBJECTS) $(uneven_dist_DEPENDENCIES) $(EXTRA_uneven_dist_DEPENDENCIES) 
 	@rm -f uneven_dist$(EXEEXT)
@@ -591,7 +591,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smoke_test.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/uneven_dist.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/weak_scaling.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/gtest_runner.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_Matrix.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -932,7 +932,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/smoke_test.Po
 	-rm -f ./$(DEPDIR)/uneven_dist.Po
 	-rm -f ./$(DEPDIR)/weak_scaling.Po
-	-rm -f tests/$(DEPDIR)/gtest_runner.Po
+	-rm -f tests/$(DEPDIR)/test_Matrix.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-hdr distclean-tags
@@ -1005,7 +1005,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/smoke_test.Po
 	-rm -f ./$(DEPDIR)/uneven_dist.Po
 	-rm -f ./$(DEPDIR)/weak_scaling.Po
-	-rm -f tests/$(DEPDIR)/gtest_runner.Po
+	-rm -f tests/$(DEPDIR)/test_Matrix.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
