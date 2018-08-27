@@ -228,7 +228,8 @@ class SecondDifferenceMatrix : public CAROM::Matrix
  */
 
 // Test fixture for testing
-TEST(MatrixSerialQRCPTest, SecondDifferenceMatrix) {
+TEST(MatrixSerialTest, Test_qrcp_pivots_transpose)
+{
   // Allocate space for second_difference matrix
   const int size = 4;
   SecondDifferenceMatrix second_difference(size);
