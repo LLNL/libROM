@@ -342,6 +342,34 @@ TEST(MatrixSerialTest, Test_assignment_operator)
   EXPECT_DOUBLE_EQ(asymmetric_matrix2.item(1, 1), 1.0);
 }
 
+TEST(MatrixSerialTest, Test_pMatrix_mult_reference)
+{
+  /**
+   *  Build matrix [ 1.0   0.0]
+   *               [ 1.0   1.0]
+   *
+   */
+  double asymmetric[4] = {1.0, 1.0, 0.0, 1.0};
+  const CAROM::Matrix asymmetric_matrix(asymmetric, 2, 2, false, true);
+  CAROM::Matrix asymmetric_matrix2(asymmetric, 2, 2, false, true);
+  CAROM::Matrix *result = NULL;
+
+  /**
+   *  [ 1.0   0.0]  *  [ 1.0   0.0]  =  [1.0   0.0]
+   *  [ 1.0   1.0]     [ 1.0   1.0]     [2.0   1.0]
+   *
+   */
+  result = asymmetric_matrix.mult(asymmetric_matrix2);
+  EXPECT_EQ(result->numRows(), 2);
+  EXPECT_EQ(result->numColumns(), 2);
+  EXPECT_DOUBLE_EQ(result->item(0, 0), 1.0);
+  EXPECT_DOUBLE_EQ(result->item(0, 1), 2.0);
+  EXPECT_DOUBLE_EQ(result->item(1, 0), 0.0);
+  EXPECT_DOUBLE_EQ(result->item(1, 1), 1.0);
+
+  delete result;
+}
+
 TEST(MatrixSerialTest, Test_void_inverse_reference)
 {
  /**
@@ -369,10 +397,16 @@ TEST(MatrixSerialTest, Test_void_inverse_pointer_reference)
    */
   double asymmetric[4] = {1.0, 1.0, 0.0, 1.0};
   CAROM::Matrix asymmetric_matrix(asymmetric, 2, 2, false, true);
+
+  /**
+   *  [ 1.0   0.0] ^ (-1)   =   [ 1.0   0.0]
+   *  [ 1.0   1.0]              [-1.0   1.0]
+   *
+   */
   CAROM::Matrix *asymmetric_matrix_inverse = NULL;
   asymmetric_matrix_inverse = new CAROM::Matrix(2, 2, false);
-
   asymmetric_matrix.inverse(asymmetric_matrix_inverse);
+
   EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse->item(0, 0),  1.0);
   EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse->item(0, 1), -1.0);
   EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse->item(1, 0),  0.0);
@@ -390,6 +424,12 @@ TEST(MatrixSerialTest, Test_void_inverse_in_place)
    */
   double asymmetric[4] = {1.0, 1.0, 0.0, 1.0};
   CAROM::Matrix asymmetric_matrix(asymmetric, 2, 2, false, true);
+
+  /**
+   *  [ 1.0   0.0] ^ (-1)   =   [ 1.0   0.0]
+   *  [ 1.0   1.0]              [-1.0   1.0]
+   *
+   */
   asymmetric_matrix.inverse();
 
   EXPECT_DOUBLE_EQ(asymmetric_matrix.item(0, 0),  1.0);
@@ -407,6 +447,12 @@ TEST(MatrixSerialTest, Test_pMatrix_inverse)
    */
   double asymmetric[4] = {1.0, 1.0, 0.0, 1.0};
   const CAROM::Matrix asymmetric_matrix(asymmetric, 2, 2, false, true);
+
+  /**
+   *  [ 1.0   0.0] ^ (-1)   =   [ 1.0   0.0]
+   *  [ 1.0   1.0]              [-1.0   1.0]
+   *
+   */
   CAROM::Matrix* asymmetric_matrix_inverse = NULL;
   asymmetric_matrix_inverse = asymmetric_matrix.inverse();
 
