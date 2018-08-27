@@ -280,6 +280,22 @@ TEST(MatrixSerialTest, Test_5arg_constructor_nonconst_item)
   EXPECT_DOUBLE_EQ(asymmetric_matrix.item(1, 1), 1.0);
 }
 
+TEST(MatrixSerialTest, Test_copy_constructor)
+{
+  /**
+   *  Build matrix [ 1.0   0.0]
+   *               [ 1.0   1.0]
+   *
+   */
+  double asymmetric[4] = {1.0, 1.0, 0.0, 1.0};
+  CAROM::Matrix asymmetric_matrix(asymmetric, 2, 2, false, true);
+  CAROM::Matrix asymmetric_matrix2(asymmetric_matrix);
+
+  EXPECT_DOUBLE_EQ(asymmetric_matrix2.item(0, 0), 1.0);
+  EXPECT_DOUBLE_EQ(asymmetric_matrix2.item(0, 1), 1.0);
+  EXPECT_DOUBLE_EQ(asymmetric_matrix2.item(1, 0), 0.0);
+  EXPECT_DOUBLE_EQ(asymmetric_matrix2.item(1, 1), 1.0);
+}
 
 /* Use second difference matrix as one fake Matrix for testing */
 class SecondDifferenceMatrix : public CAROM::Matrix
