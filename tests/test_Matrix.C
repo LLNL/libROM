@@ -47,6 +47,79 @@
 #include <mpi.h>
 #include "../Matrix.h"
 
+/**
+ * Simple smoke test to make sure Google Test is properly linked
+ */
+TEST(GoogleTestFramework, GoogleTestFrameworkFound) {
+  SUCCEED();
+}
+
+/**
+ *  Test methods that do not require assigning data to the matrix. These
+ *  methods are:
+ *
+ *  * Matrix(int, int, bool)
+ *
+ *  * bool distributed() const
+ *
+ *  * bool balanced() const
+ *
+ *  * int numRows() const
+ *
+ *  * int numCols() const
+ *
+ *  * void setSize(int, int)
+ *
+ */
+TEST(MatrixSerialTest, Test_distributed)
+{
+  CAROM::Matrix f(2, 2, false);
+  EXPECT_FALSE(f.distributed());
+
+  CAROM::Matrix t(2, 2, true);
+  EXPECT_TRUE(t.distributed());
+}
+
+TEST(MatrixSerialTest, Test_balanced)
+{
+  CAROM::Matrix two_by_two(2, 2, false);
+  EXPECT_TRUE(two_by_two.balanced());
+}
+
+TEST(MatrixSerialTest, Test_numRows)
+{
+  CAROM::Matrix two_by_two(2, 2, false);
+  CAROM::Matrix two_by_three(2, 3, false);
+  CAROM::Matrix three_by_two(3, 2, false);
+
+  EXPECT_EQ(two_by_two.numRows()  , 2);
+  EXPECT_EQ(two_by_three.numRows(), 2);
+  EXPECT_EQ(three_by_two.numRows(), 3);
+}
+
+TEST(MatrixSerialTest, Test_numColumns)
+{
+  CAROM::Matrix two_by_two(2, 2, false);
+  CAROM::Matrix two_by_three(2, 3, false);
+  CAROM::Matrix three_by_two(3, 2, false);
+
+  EXPECT_EQ(two_by_two.numColumns()  , 2);
+  EXPECT_EQ(two_by_three.numColumns(), 3);
+  EXPECT_EQ(three_by_two.numColumns(), 2);
+}
+
+TEST(MatrixSerialTest, Test_setSize)
+{
+  CAROM::Matrix one_by_one(1, 1, false);
+
+  EXPECT_EQ(one_by_one.numRows(), 1);
+  EXPECT_EQ(one_by_one.numColumns(), 1);
+
+  one_by_one.setSize(2, 2);
+  EXPECT_EQ(one_by_one.numRows(), 2);
+  EXPECT_EQ(one_by_one.numColumns(), 2);
+}
+
 // Test fixture for testing
 TEST(MatrixSerialQRCPTest, SecondDifferenceMatrix) {
   // Allocate space for second_difference matrix
@@ -130,11 +203,6 @@ TEST(MatrixSerialQRCPTest, SecondDifferenceMatrix) {
   // Free allocated arrays
   delete [] row_pivot;
   delete [] row_pivot_owner;
-}
-
-// Simple smoke test to make sure runner is properly linked
-TEST(GoogleTestFramework, GoogleTestFrameworkFound) {
-  SUCCEED();
 }
 
 int main(int argc, char* argv[])
