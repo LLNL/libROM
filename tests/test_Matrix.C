@@ -231,49 +231,7 @@ class SecondDifferenceMatrix : public CAROM::Matrix
 TEST(MatrixSerialQRCPTest, SecondDifferenceMatrix) {
   // Allocate space for second_difference matrix
   const int size = 4;
-  const bool is_distributed = false;
-  CAROM::Matrix second_difference(size, size, is_distributed);
-
-  /* A "second difference" matrix is a tridiagonal matrix that looks like:
-
-     [ 2 -1         ]
-     [-1  2 -1      ]
-     [   .. .. ..   ]
-     [      -1  2 -1]
-     [         -1  2]
-
-     which looks like the stencil from second-order central
-     differencing (or the stiffness matrix for finite elements on a
-     subspace of H1 with linear basis functions) for Poisson's
-     equation, modulo boundary conditions (that would be applied to
-     the first and last rows).
-   */
-
-  // The code below won't work if the size is less than 2.
-  assert(size >= 2);
-
-  // Zero out the entire matrix
-  for (int i = 0; i < size; i++) {
-    for (int j = 0; j < size; j++) {
-      second_difference.item(i, j) = 0;
-    }
-  }
-
-  // Build first row of second difference matrix
-  second_difference.item(0, 0) =  2;
-  second_difference.item(0, 1) = -1;
-
-  // Build second through penultimate rows of
-  // second difference matrix
-  for (int row = 1; row < size - 1; row++) {
-    second_difference.item(row, row - 1) = -1;
-    second_difference.item(row, row    ) =  2;
-    second_difference.item(row, row + 1) = -1;
-  }
-
-  // Build last row of second difference matrix
-  second_difference.item(size - 1, size - 2) = -1;
-  second_difference.item(size - 1, size - 1) =  2;
+  SecondDifferenceMatrix second_difference(size);
 
   // Allocate memory for QRCP arguments
   int* row_pivot                 =       new int[size];
