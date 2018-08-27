@@ -120,6 +120,70 @@ TEST(MatrixSerialTest, Test_setSize)
   EXPECT_EQ(one_by_one.numColumns(), 2);
 }
 
+/* Use second difference matrix as one fake Matrix for testing */
+class SecondDifferenceMatrix : public CAROM::Matrix
+{
+ public:
+
+  /**
+   *  @brief Constructor.
+   *
+   */
+  SecondDifferenceMatrix
+    (int size)
+    : Matrix(size, size, false)
+    {
+      /** A "second difference" matrix is a tridiagonal matrix that looks like:
+       *
+       *  [ 2 -1         ]
+       *  [-1  2 -1      ]
+       *  [   .. .. ..   ]
+       *  [      -1  2 -1]
+       *  [         -1  2]
+       *
+       *  which looks like the stencil from second-order central
+       *  differencing (or the stiffness matrix for finite elements on a
+       *  subspace of H1 with linear basis functions) for Poisson's
+       *  equation, modulo boundary conditions (that would be applied to
+       *  the first and last rows).
+       */
+
+      /** For degenerate case where size == 1, matrix should be one
+	  entry: [2]
+       */
+      item(0, 0) = 2;
+      if (size == 1) { return; }
+
+      /** Otherwise, build rest of the first row. */
+      item(0, 1) = -1;
+
+      /** Build middle rows of second difference matrix. If size <= 2, this
+       *  loop is not executed.
+       */
+      for (int row = 1; row < size - 1; row++)
+      {
+	item(row, row - 1) = -1;
+	item(row, row    ) =  2;
+	item(row, row + 1) = -1;
+      }
+
+      /** Build last row of second difference matrix. If size == 1, these
+       *  statements are not executed.
+       */
+      item(size - 1, size - 2) = -1;
+      item(size - 1, size - 1) =  2;
+      return;
+    }
+
+  /**
+   * @brief Destructor.
+   */
+  ~SecondDifferenceMatrix
+    ()
+    {
+    }
+};
+
 /** Test methods that require assigning data to the matrix
  *
  *  * const double& operator() (int, int) const
