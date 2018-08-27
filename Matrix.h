@@ -654,7 +654,9 @@ class Matrix
 			    int  pivots_requested) const;
 
       /**
-       * @brief Const Matrix member access.
+       * @brief Const Matrix member access. Matrix data is stored in
+       * column-major format for compatibility with LAPACK Fortran
+       * routines.
        *
        * @pre (0 <= row) && (row < numRows())
        * @pre (0 <= col) && (col < numColumns())
@@ -674,7 +676,9 @@ class Matrix
       }
 
       /**
-       * @brief Non-const Matrix member access.
+       * @brief Non-const Matrix member access. Matrix data is stored
+       * in column-major format for compatibility with LAPACK Fortran
+       * routines.
        *
        * Allows constructs of the form mat[i, j] = val;
        *
