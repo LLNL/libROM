@@ -415,13 +415,41 @@ TEST(MatrixSerialTest, Test_void_mult_output_reference)
    *  [ 1.0   1.0]     [ 1.0   1.0]     [2.0   1.0]
    *
    */
-  asymmetric_matrix.mult(asymmetric_matrix, result);
+  asymmetric_matrix.mult(asymmetric_matrix2, result);
   EXPECT_EQ(result.numRows(), 2);
   EXPECT_EQ(result.numColumns(), 2);
   EXPECT_DOUBLE_EQ(result.item(0, 0), 1.0);
   EXPECT_DOUBLE_EQ(result.item(0, 1), 2.0);
   EXPECT_DOUBLE_EQ(result.item(1, 0), 0.0);
   EXPECT_DOUBLE_EQ(result.item(1, 1), 1.0);
+}
+
+TEST(MatrixSerialTest, Test_void_mult_output_pointer)
+{
+  /**
+   *  Build matrix [ 1.0   0.0]
+   *               [ 1.0   1.0]
+   *
+   */
+  double asymmetric[4] = {1.0, 1.0, 0.0, 1.0};
+  const CAROM::Matrix asymmetric_matrix(asymmetric, 2, 2, false, true);
+  CAROM::Matrix asymmetric_matrix2(asymmetric, 2, 2, false, true);
+  CAROM::Matrix *result = new CAROM::Matrix(2, 2, false);
+
+  /**
+   *  [ 1.0   0.0]  *  [ 1.0   0.0]  =  [1.0   0.0]
+   *  [ 1.0   1.0]     [ 1.0   1.0]     [2.0   1.0]
+   *
+   */
+  asymmetric_matrix.mult(asymmetric_matrix2, result);
+  EXPECT_EQ(result->numRows(), 2);
+  EXPECT_EQ(result->numColumns(), 2);
+  EXPECT_DOUBLE_EQ(result->item(0, 0), 1.0);
+  EXPECT_DOUBLE_EQ(result->item(0, 1), 2.0);
+  EXPECT_DOUBLE_EQ(result->item(1, 0), 0.0);
+  EXPECT_DOUBLE_EQ(result->item(1, 1), 1.0);
+
+  delete result;
 }
 
 TEST(MatrixSerialTest, Test_void_inverse_reference)
