@@ -58,6 +58,9 @@ TEST(GoogleTestFramework, GoogleTestFrameworkFound) {
  *  Test methods that do not require assigning data to the matrix. These
  *  methods are:
  *
+ *  TODO(oxberry1@llnl.gov): Do more exhaustive testing to test all branches
+ *  of each method. For now, simple tests are better than nothing.
+ *
  *  * Matrix(int, int, bool)
  *
  *  * bool distributed() const
@@ -122,6 +125,9 @@ TEST(MatrixSerialTest, Test_setSize)
 
 
 /** Test methods that require assigning data to the matrix
+ *
+ *  TODO(oxberry1@llnl.gov): Do more exhaustive testing to test all branches
+ *  of each method. For now, simple tests are better than nothing.
  *
  *  * const double& operator() (int, int) const
  *
@@ -334,6 +340,45 @@ TEST(MatrixSerialTest, Test_assignment_operator)
   EXPECT_DOUBLE_EQ(asymmetric_matrix2.item(0, 1), 1.0);
   EXPECT_DOUBLE_EQ(asymmetric_matrix2.item(1, 0), 0.0);
   EXPECT_DOUBLE_EQ(asymmetric_matrix2.item(1, 1), 1.0);
+}
+
+TEST(MatrixSerialTest, Test_void_inverse_reference)
+{
+ /**
+   *  Build matrix [ 1.0   0.0]
+   *               [ 1.0   1.0]
+   *
+   */
+  double asymmetric[4] = {1.0, 1.0, 0.0, 1.0};
+  CAROM::Matrix asymmetric_matrix(asymmetric, 2, 2, false, true);
+  CAROM::Matrix asymmetric_matrix_inverse(2, 2, false);
+
+  asymmetric_matrix.inverse(asymmetric_matrix_inverse);
+  EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse.item(0, 0),  1.0);
+  EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse.item(0, 1), -1.0);
+  EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse.item(1, 0),  0.0);
+  EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse.item(1, 1),  1.0);
+}
+
+TEST(MatrixSerialTest, Test_void_inverse_pointer_reference)
+{
+ /**
+   *  Build matrix [ 1.0   0.0]
+   *               [ 1.0   1.0]
+   *
+   */
+  double asymmetric[4] = {1.0, 1.0, 0.0, 1.0};
+  CAROM::Matrix asymmetric_matrix(asymmetric, 2, 2, false, true);
+  CAROM::Matrix *asymmetric_matrix_inverse = NULL;
+  asymmetric_matrix_inverse = new CAROM::Matrix(2, 2, false);
+
+  asymmetric_matrix.inverse(asymmetric_matrix_inverse);
+  EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse->item(0, 0),  1.0);
+  EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse->item(0, 1), -1.0);
+  EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse->item(1, 0),  0.0);
+  EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse->item(1, 1),  1.0);
+
+  delete asymmetric_matrix_inverse;
 }
 
 TEST(MatrixSerialTest, Test_inverse_in_place)
