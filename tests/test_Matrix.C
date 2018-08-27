@@ -222,6 +222,65 @@ TEST(MatrixSerialTest, Test_5arg_constructor_nonconst_function_call)
   EXPECT_DOUBLE_EQ(asymmetric_matrix(1, 1), 1.0);
 }
 
+TEST(MatrixSerialTest, Test_5arg_constructor_const_item)
+{
+  /**
+   *  Build matrix [-2.0   1.0]
+   *               [ 1.0  -2.0]
+   *
+   */
+  double symmetric[4] = {-2.0, 1.0, 1.0, -2.0};
+  const CAROM::Matrix symmetric_matrix(symmetric, 2, 2, false, true);
+
+  EXPECT_DOUBLE_EQ(symmetric_matrix.item(0, 0), -2.0);
+  EXPECT_DOUBLE_EQ(symmetric_matrix.item(0, 1),  1.0);
+  EXPECT_DOUBLE_EQ(symmetric_matrix.item(1, 0),  1.0);
+  EXPECT_DOUBLE_EQ(symmetric_matrix.item(1, 1), -2.0);
+
+  /**
+   *  Build matrix [ 1.0   0.0]
+   *               [ 1.0   1.0]
+   *
+   */
+  double asymmetric[4] = {1.0, 1.0, 0.0, 1.0};
+  const CAROM::Matrix asymmetric_matrix(asymmetric, 2, 2, false, true);
+
+  EXPECT_DOUBLE_EQ(asymmetric_matrix.item(0, 0), 1.0);
+  EXPECT_DOUBLE_EQ(asymmetric_matrix.item(0, 1), 1.0);
+  EXPECT_DOUBLE_EQ(asymmetric_matrix.item(1, 0), 0.0);
+  EXPECT_DOUBLE_EQ(asymmetric_matrix.item(1, 1), 1.0);
+}
+
+TEST(MatrixSerialTest, Test_5arg_constructor_nonconst_item)
+{
+  /**
+   *  Build matrix [-2.0   1.0]
+   *               [ 1.0  -2.0]
+   *
+   */
+  double symmetric[4] = {-2.0, 1.0, 1.0, -2.0};
+  CAROM::Matrix symmetric_matrix(symmetric, 2, 2, false, true);
+
+  EXPECT_DOUBLE_EQ(symmetric_matrix.item(0, 0), -2.0);
+  EXPECT_DOUBLE_EQ(symmetric_matrix.item(0, 1),  1.0);
+  EXPECT_DOUBLE_EQ(symmetric_matrix.item(1, 0),  1.0);
+  EXPECT_DOUBLE_EQ(symmetric_matrix.item(1, 1), -2.0);
+
+  /**
+   *  Build matrix [ 1.0   0.0]
+   *               [ 1.0   1.0]
+   *
+   */
+  double asymmetric[4] = {1.0, 1.0, 0.0, 1.0};
+  CAROM::Matrix asymmetric_matrix(asymmetric, 2, 2, false, true);
+
+  EXPECT_DOUBLE_EQ(asymmetric_matrix.item(0, 0), 1.0);
+  EXPECT_DOUBLE_EQ(asymmetric_matrix.item(0, 1), 1.0);
+  EXPECT_DOUBLE_EQ(asymmetric_matrix.item(1, 0), 0.0);
+  EXPECT_DOUBLE_EQ(asymmetric_matrix.item(1, 1), 1.0);
+}
+
+
 /* Use second difference matrix as one fake Matrix for testing */
 class SecondDifferenceMatrix : public CAROM::Matrix
 {
