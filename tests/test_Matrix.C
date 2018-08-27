@@ -248,6 +248,29 @@ TEST(MatrixSerialQRCPTest, SecondDifferenceMatrix) {
   delete [] row_pivot_owner;
 }
 
+/**
+ * Test methods that take CAROM::Vector objects as input and/or output
+ *
+ * * Vector* mult(const Vector&)
+ *
+ * * Vector* mult(const Vector*)
+ *
+ * * void mult(const Vector&, Vector*&)
+ *
+ * * void mult(const Vector&, Vector&) const
+ *
+ * * void multPlus(Vector&, const Vector&, double) const
+ *
+ * * Vector* transposeMult(const Vector&) const
+ *
+ * * Vector* transposeMult(const Vector*) const
+ *
+ * * void transposeMult(const Vector&, Vector*&) const
+ *
+ * * void transposeMult(const Vector&, Vector&) const
+ *
+ */
+
 int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
