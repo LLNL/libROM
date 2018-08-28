@@ -655,8 +655,7 @@ class Matrix
 
       /**
        * @brief Const Matrix member access. Matrix data is stored in
-       * column-major format for compatibility with LAPACK Fortran
-       * routines.
+       * row-major format.
        *
        * @pre (0 <= row) && (row < numRows())
        * @pre (0 <= col) && (col < numColumns())
@@ -677,8 +676,7 @@ class Matrix
 
       /**
        * @brief Non-const Matrix member access. Matrix data is stored
-       * in column-major format for compatibility with LAPACK Fortran
-       * routines.
+       * in row-major format.
        *
        * Allows constructs of the form mat[i, j] = val;
        *
