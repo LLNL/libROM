@@ -645,6 +645,74 @@ TEST(MatrixSerialTest, Test_void_transpose_mult_reference)
   EXPECT_DOUBLE_EQ(result.item(1, 1), 1.0);
 }
 
+TEST(MatrixSerialTest, Test_void_transpose_mult_pointer)
+{
+  /**
+   *  Build matrix [ 1.0   0.0]
+   *               [ 1.0   1.0]
+   *
+   */
+  double asymmetric[4] = {1.0, 0.0, 1.0, 1.0};
+  const CAROM::Matrix asymmetric_matrix(asymmetric, 2, 2, false, true);
+
+  /**
+   *  Build identity matrix  [ 1.0   0.0]
+   *                         [ 0.0   1.0]
+   *
+   */
+  double identity[4] = {1.0, 0.0, 0.0, 1.0};
+  const CAROM::Matrix identity_matrix(identity, 2, 2, false, true);
+  EXPECT_DOUBLE_EQ(identity_matrix.item(0, 0), 1.0);
+  EXPECT_DOUBLE_EQ(identity_matrix.item(0, 1), 0.0);
+  EXPECT_DOUBLE_EQ(identity_matrix.item(1, 0), 0.0);
+  EXPECT_DOUBLE_EQ(identity_matrix.item(1, 1), 1.0);
+
+  /**
+   *  [ 1.0   0.0]^T  *  [ 1.0   0.0]    =  [1.0   1.0]
+   *  [ 1.0   1.0]       [ 0.0   1.0]       [0.0   1.0]
+   *
+   */
+  CAROM::Matrix *result = NULL;
+  asymmetric_matrix.transposeMult(identity_matrix, result);
+  EXPECT_EQ(result->numRows(), 2);
+  EXPECT_EQ(result->numColumns(), 2);
+  EXPECT_DOUBLE_EQ(result->item(0, 0), 1.0);
+  EXPECT_DOUBLE_EQ(result->item(0, 1), 1.0);
+  EXPECT_DOUBLE_EQ(result->item(1, 0), 0.0);
+  EXPECT_DOUBLE_EQ(result->item(1, 1), 1.0);
+  delete result;
+  result = NULL;
+
+  /**
+   *  [ 1.0   0.0]^T  *  [ 1.0   0.0]    =  [1.0   0.0]
+   *  [ 0.0   1.0]       [ 1.0   1.0]       [1.0   1.0]
+   *
+   */
+  identity_matrix.transposeMult(asymmetric_matrix, result);
+  EXPECT_EQ(result->numRows(), 2);
+  EXPECT_EQ(result->numColumns(), 2);
+  EXPECT_DOUBLE_EQ(result->item(0, 0), 1.0);
+  EXPECT_DOUBLE_EQ(result->item(0, 1), 0.0);
+  EXPECT_DOUBLE_EQ(result->item(1, 0), 1.0);
+  EXPECT_DOUBLE_EQ(result->item(1, 1), 1.0);
+  delete result;
+  result = NULL;
+
+  /**
+   *  [ 1.0   0.0]^T  *  [ 1.0   0.0]    =  [2.0   1.0]
+   *  [ 1.0   1.0]       [ 1.0   1.0]       [1.0   1.0]
+   *
+   */
+  asymmetric_matrix.transposeMult(asymmetric_matrix, result);
+  EXPECT_EQ(result->numRows(), 2);
+  EXPECT_EQ(result->numColumns(), 2);
+  EXPECT_DOUBLE_EQ(result->item(0, 0), 2.0);
+  EXPECT_DOUBLE_EQ(result->item(0, 1), 1.0);
+  EXPECT_DOUBLE_EQ(result->item(1, 0), 1.0);
+  EXPECT_DOUBLE_EQ(result->item(1, 1), 1.0);
+  delete result;
+}
+
 TEST(MatrixSerialTest, Test_void_inverse_reference)
 {
  /**
