@@ -452,6 +452,76 @@ TEST(MatrixSerialTest, Test_void_mult_output_pointer)
   delete result;
 }
 
+TEST(MatrixSerialTest, Test_pMatrix_transpose_mult_output_reference)
+{
+  /**
+   *  Build matrix [ 1.0   0.0]
+   *               [ 1.0   1.0]
+   *
+   */
+  double asymmetric[4] = {1.0, 0.0, 1.0, 1.0};
+  const CAROM::Matrix asymmetric_matrix(asymmetric, 2, 2, false, true);
+  CAROM::Matrix asymmetric_matrix2(asymmetric, 2, 2, false, true);
+
+  /**
+   *  Build identity matrix  [ 1.0   0.0]
+   *                         [ 0.0   1.0]
+   *
+   */
+  double identity[4] = {1.0, 0.0, 0.0, 1.0};
+  const CAROM::Matrix identity_matrix(identity, 2, 2, false, true);
+  EXPECT_DOUBLE_EQ(identity_matrix.item(0, 0), 1.0);
+  EXPECT_DOUBLE_EQ(identity_matrix.item(0, 1), 0.0);
+  EXPECT_DOUBLE_EQ(identity_matrix.item(1, 0), 0.0);
+  EXPECT_DOUBLE_EQ(identity_matrix.item(1, 1), 1.0);
+
+  /**
+   *  [ 1.0   0.0]^T  *  [ 1.0   0.0]    =  [1.0   1.0]
+   *  [ 1.0   1.0]       [ 0.0   1.0]       [0.0   1.0]
+   *
+   */
+  CAROM::Matrix *result = NULL;
+  result = asymmetric_matrix.transposeMult(identity_matrix);
+  EXPECT_EQ(result->numRows(), 2);
+  EXPECT_EQ(result->numColumns(), 2);
+  EXPECT_DOUBLE_EQ(result->item(0, 0), 1.0);
+  EXPECT_DOUBLE_EQ(result->item(0, 1), 1.0);
+  EXPECT_DOUBLE_EQ(result->item(1, 0), 0.0);
+  EXPECT_DOUBLE_EQ(result->item(1, 1), 1.0);
+  delete result;
+  result = NULL;
+
+  /**
+   *  [ 1.0   0.0]^T  *  [ 1.0   0.0]    =  [1.0   0.0]
+   *  [ 0.0   1.0]       [ 1.0   1.0]       [1.0   1.0]
+   *
+   */
+  result = identity_matrix.transposeMult(asymmetric_matrix);
+  EXPECT_EQ(result->numRows(), 2);
+  EXPECT_EQ(result->numColumns(), 2);
+  EXPECT_DOUBLE_EQ(result->item(0, 0), 1.0);
+  EXPECT_DOUBLE_EQ(result->item(0, 1), 0.0);
+  EXPECT_DOUBLE_EQ(result->item(1, 0), 1.0);
+  EXPECT_DOUBLE_EQ(result->item(1, 1), 1.0);
+  delete result;
+  result = NULL;
+
+  /**
+   *  [ 1.0   0.0]^T  *  [ 1.0   0.0]    =  [2.0   1.0]
+   *  [ 1.0   1.0]       [ 1.0   1.0]       [1.0   1.0]
+   *
+   */
+  //  result = asymmetric_matrix.transposeMult(asymmetric_matrix2);
+  result = asymmetric_matrix.transposeMult(asymmetric_matrix);
+  EXPECT_EQ(result->numRows(), 2);
+  EXPECT_EQ(result->numColumns(), 2);
+  EXPECT_DOUBLE_EQ(result->item(0, 0), 2.0);
+  EXPECT_DOUBLE_EQ(result->item(0, 1), 1.0);
+  EXPECT_DOUBLE_EQ(result->item(1, 0), 1.0);
+  EXPECT_DOUBLE_EQ(result->item(1, 1), 1.0);
+  delete result;
+}
+
 TEST(MatrixSerialTest, Test_void_inverse_reference)
 {
  /**
