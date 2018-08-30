@@ -83,6 +83,14 @@ TEST(VectorSerialTest, Test_dim)
   EXPECT_EQ(v.dim(), 2);
 }
 
+TEST(VectorSerialTest, Test_setSize)
+{
+  CAROM::Vector v(2, false);
+  EXPECT_EQ(v.dim(), 2);
+  v.setSize(3);
+  EXPECT_EQ(v.dim(), 3);
+}
+
 /** Test methods that require assigning data to the Vector
  *
  *  TODO(oxberry1@llnl.gov): Do more exhaustive testing to test all branches
