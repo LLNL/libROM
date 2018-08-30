@@ -474,6 +474,61 @@ TEST(VectorSerialTest, Test_plus_const_pointer)
   delete v; delete w; delete x; delete y;
 }
 
+/* TODO(oxberry1@llnl.gov): Test cases where pointer already allocated */
+TEST(VectorSerialTest, Test_plus_const_reference_pointer)
+{
+  CAROM::Vector v(2, false); v(0) =  1; v(1) =  1;
+  CAROM::Vector w(2, false); w(0) = -1; w(1) =  1;
+  CAROM::Vector x(2, false); x(0) =  3; x(1) =  4;
+  CAROM::Vector y(2, false); y(0) =  5; y(1) = 12;
+
+  /*
+    NOTE(oxberry1@llnl.gov): if assignment omitted, pointer has
+    indeterminate value that is probably non-NULL, so
+    CAROM::Vector::plus tries to assign to that memory, resulting in a
+    segfault.
+  */
+  CAROM::Vector *result = NULL;
+
+  /* ( 1,  1) + ( 1,  1) = ( 2,  2) */
+  v.plus(v, result);
+  EXPECT_FALSE(result->distributed());
+  EXPECT_EQ(result->dim(), 2);
+  EXPECT_DOUBLE_EQ((*result)(0),  2);
+  EXPECT_DOUBLE_EQ((*result)(1),  2);
+  delete result;
+  result = NULL;
+
+  /* ( 1,  1) + (-1,  1) = ( 0,  2) */
+  v.plus(w, result);
+  EXPECT_FALSE(result->distributed());
+  EXPECT_EQ(result->dim(), 2);
+  EXPECT_DOUBLE_EQ((*result)(0),  0);
+  EXPECT_DOUBLE_EQ((*result)(1),  2);
+  delete result;
+  result = NULL;
+
+  /* ( 1,  1) + ( 3,  4) = ( 4,  5) */
+  v.plus(x, result);
+  EXPECT_FALSE(result->distributed());
+  EXPECT_EQ(result->dim(), 2);
+  EXPECT_DOUBLE_EQ((*result)(0),  4);
+  EXPECT_DOUBLE_EQ((*result)(1),  5);
+  delete result;
+  result = NULL;
+
+  /* ( 1,  1) + ( 5, 12) = ( 6, 13) */
+  v.plus(y, result);
+  EXPECT_FALSE(result->distributed());
+  EXPECT_EQ(result->dim(), 2);
+  EXPECT_DOUBLE_EQ((*result)(0),  6);
+  EXPECT_DOUBLE_EQ((*result)(1), 13);
+  delete result;
+  result = NULL;
+}
+
+
+
 int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
