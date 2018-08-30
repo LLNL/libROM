@@ -266,6 +266,61 @@ TEST(VectorSerialTest, Test_normalize)
   EXPECT_DOUBLE_EQ(v.norm(), 1);
 }
 
+TEST(VectorSerialTest, Test_inner_product_const_ref)
+{
+  CAROM::Vector v(2, false); v(0) =  1; v(1) =  1;
+  CAROM::Vector w(2, false); w(0) = -1; w(1) =  1;
+  CAROM::Vector x(2, false); x(0) =  3; x(1) =  4;
+  CAROM::Vector y(2, false); y(0) =  5; y(1) = 12;
+
+  /* [ 1,  1]^{T} [ 1,  1] =   2 */
+  EXPECT_DOUBLE_EQ(v.inner_product(v),   2);
+
+  /* [ 1,  1]^{T} [-1,  1] =   0 */
+  EXPECT_DOUBLE_EQ(v.inner_product(w),   0);
+
+  /* [ 1,  1]^{T} [ 3,  4] =   7 */
+  EXPECT_DOUBLE_EQ(v.inner_product(x),   7);
+
+  /* [ 1,  1]^{T} [ 5, 12] =  17 */
+  EXPECT_DOUBLE_EQ(v.inner_product(y),  17);
+
+  /* [-1,  1]^{T} [ 1,  1] =   0 */
+  EXPECT_DOUBLE_EQ(w.inner_product(v),   0);
+
+  /* [-1,  1]^{T} [-1,  1] =   2 */
+  EXPECT_DOUBLE_EQ(w.inner_product(w),   2);
+
+  /* [-1,  1]^{T} [ 3,  4] =   1 */
+  EXPECT_DOUBLE_EQ(w.inner_product(x),   1);
+
+  /* [-1,  1]^{T} [ 5, 12] =   7 */
+  EXPECT_DOUBLE_EQ(w.inner_product(y),   7);
+
+  /* [ 3,  4]^{T} [ 1,  1] =   7 */
+  EXPECT_DOUBLE_EQ(x.inner_product(v),   7);
+
+  /* [ 3,  4]^{T} [-1,  1] =   1 */
+  EXPECT_DOUBLE_EQ(x.inner_product(w),   1);
+
+  /* [ 3,  4]^{T} [ 3,  4] =  25 */
+  EXPECT_DOUBLE_EQ(x.inner_product(x),  25);
+
+  /* [ 3,  4]^{T} [ 5, 12] =  63 */
+  EXPECT_DOUBLE_EQ(x.inner_product(y),  63);
+
+  /* [ 5, 12]^{T} [ 1,  1] =  17 */
+  EXPECT_DOUBLE_EQ(y.inner_product(v),  17);
+
+  /* [ 5, 12]^{T} [-1,  1] =   7 */
+  EXPECT_DOUBLE_EQ(y.inner_product(w),   7);
+
+  /* [ 5, 12]^{T} [ 3,  4] =  63 */
+  EXPECT_DOUBLE_EQ(y.inner_product(x),  63);
+
+  /* [ 5, 12]^{T} [ 5, 12] = 169 */
+  EXPECT_DOUBLE_EQ(y.inner_product(y), 169);
+}
 
 int main(int argc, char* argv[])
 {
