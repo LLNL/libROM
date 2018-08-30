@@ -426,6 +426,54 @@ TEST(VectorSerialTest, Test_plus_const_ref)
   result = NULL;
 }
 
+TEST(VectorSerialTest, Test_plus_const_pointer)
+{
+  CAROM::Vector *v = new CAROM::Vector(2, false); (*v)(0) =  1; (*v)(1) =  1;
+  CAROM::Vector *w = new CAROM::Vector(2, false); (*w)(0) = -1; (*w)(1) =  1;
+  CAROM::Vector *x = new CAROM::Vector(2, false); (*x)(0) =  3; (*x)(1) =  4;
+  CAROM::Vector *y = new CAROM::Vector(2, false); (*y)(0) =  5; (*y)(1) = 12;
+
+  CAROM::Vector *result;
+
+  /* ( 1,  1) + ( 1,  1) = ( 2,  2) */
+  result = v->plus(v);
+  EXPECT_FALSE(result->distributed());
+  EXPECT_EQ(result->dim(), 2);
+  EXPECT_DOUBLE_EQ((*result)(0),  2);
+  EXPECT_DOUBLE_EQ((*result)(1),  2);
+  delete result;
+  result = NULL;
+
+  /* ( 1,  1) + (-1,  1) = ( 0,  2) */
+  result = v->plus(w);
+  EXPECT_FALSE(result->distributed());
+  EXPECT_EQ(result->dim(), 2);
+  EXPECT_DOUBLE_EQ((*result)(0),  0);
+  EXPECT_DOUBLE_EQ((*result)(1),  2);
+  delete result;
+  result = NULL;
+
+  /* ( 1,  1) + ( 3,  4) = ( 4,  5) */
+  result = v->plus(x);
+  EXPECT_FALSE(result->distributed());
+  EXPECT_EQ(result->dim(), 2);
+  EXPECT_DOUBLE_EQ((*result)(0),  4);
+  EXPECT_DOUBLE_EQ((*result)(1),  5);
+  delete result;
+  result = NULL;
+
+  /* ( 1,  1) + ( 5, 12) = ( 6, 13) */
+  result = v->plus(y);
+  EXPECT_FALSE(result->distributed());
+  EXPECT_EQ(result->dim(), 2);
+  EXPECT_DOUBLE_EQ((*result)(0),  6);
+  EXPECT_DOUBLE_EQ((*result)(1), 13);
+  delete result;
+  result = NULL;
+
+  delete v; delete w; delete x; delete y;
+}
+
 int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
