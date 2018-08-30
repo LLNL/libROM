@@ -231,7 +231,7 @@ TEST(VectorSerialTest, Test_assignment_operator)
  *  * void mult(double, Vector&) const
  */
 
-TEST(VectorSerialTest, TestNorm)
+TEST(VectorSerialTest, Test_norm)
 {
   CAROM::Vector v(2, false);
 
@@ -253,6 +253,19 @@ TEST(VectorSerialTest, TestNorm)
 
   /** TODO(oxberry1@llnl.gov): Add more thorough tests **/
 }
+
+TEST(VectorSerialTest, Test_normalize)
+{
+  CAROM::Vector v(2, false);
+
+  /* (3, 4) normalized is (.6, .8) */
+  v(0) = 3; v(1) = 4;
+  EXPECT_DOUBLE_EQ(v.normalize(), 5);
+  EXPECT_DOUBLE_EQ(v(0), 0.6);
+  EXPECT_DOUBLE_EQ(v(1), 0.8);
+  EXPECT_DOUBLE_EQ(v.norm(), 1);
+}
+
 
 int main(int argc, char* argv[])
 {
