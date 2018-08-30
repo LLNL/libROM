@@ -58,7 +58,7 @@ TEST(GoogleTestFramework, GoogleTestFrameworkFound) {
  *  TODO(oxberry1@llnl.gov): Do more exhaustive testing to test all branches
  *  of each method. For now, simple tests are better than nothing.
  *
- *  * Vector(int, int, bool)
+ *  * Vector(int, bool)
  *
  *  * bool distributed() const
  *
@@ -68,6 +68,14 @@ TEST(GoogleTestFramework, GoogleTestFrameworkFound) {
  *
  */
 
+TEST(VectorSerialTest, Test_distributed)
+{
+  CAROM::Vector v(2, false);
+  EXPECT_FALSE(v.distributed());
+
+  CAROM::Vector w(2, true);
+  EXPECT_TRUE(w.distributed());
+}
 
 /** Test methods that require assigning data to the Vector
  *
