@@ -132,6 +132,15 @@ TEST(VectorSerialTest, Test_nonconst_call_operator)
   EXPECT_EQ(v(1), 2);
 }
 
+TEST(VectorSerialTest, Test_const_item)
+{
+  double v_data[2] = {1, 2};
+  const CAROM::Vector v(v_data, 2, false, true);
+
+  EXPECT_EQ(v.item(0), 1);
+  EXPECT_EQ(v.item(1), 2);
+}
+
 
 /** Test methods that operate on Vector objects
  *
