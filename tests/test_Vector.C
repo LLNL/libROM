@@ -118,8 +118,8 @@ TEST(VectorSerialTest, Test_const_call_operator)
   double v_data[2] = {1, 2};
   const CAROM::Vector v(v_data, 2, false, true);
 
-  EXPECT_EQ(v(0), 1);
-  EXPECT_EQ(v(1), 2);
+  EXPECT_DOUBLE_EQ(v(0), 1);
+  EXPECT_DOUBLE_EQ(v(1), 2);
 }
 
 TEST(VectorSerialTest, Test_nonconst_call_operator)
@@ -128,8 +128,8 @@ TEST(VectorSerialTest, Test_nonconst_call_operator)
   v(0) = 1;
   v(1) = 2;
 
-  EXPECT_EQ(v(0), 1);
-  EXPECT_EQ(v(1), 2);
+  EXPECT_DOUBLE_EQ(v(0), 1);
+  EXPECT_DOUBLE_EQ(v(1), 2);
 }
 
 TEST(VectorSerialTest, Test_const_item)
@@ -137,8 +137,8 @@ TEST(VectorSerialTest, Test_const_item)
   double v_data[2] = {1, 2};
   const CAROM::Vector v(v_data, 2, false, true);
 
-  EXPECT_EQ(v.item(0), 1);
-  EXPECT_EQ(v.item(1), 2);
+  EXPECT_DOUBLE_EQ(v.item(0), 1);
+  EXPECT_DOUBLE_EQ(v.item(1), 2);
 }
 
 TEST(VectorSerialTest, Test_nonconst_item)
@@ -147,8 +147,20 @@ TEST(VectorSerialTest, Test_nonconst_item)
   v.item(0) = 1;
   v.item(1) = 2;
 
-  EXPECT_EQ(v.item(0), 1);
-  EXPECT_EQ(v.item(1), 2);
+  EXPECT_DOUBLE_EQ(v.item(0), 1);
+  EXPECT_DOUBLE_EQ(v.item(1), 2);
+}
+
+TEST(VectorSerialTest, Test_copy_constructor)
+{
+  double v_data[2] = {1, 2};
+  const CAROM::Vector v(v_data, 2, false, true);
+  CAROM::Vector w(v);
+
+  EXPECT_FALSE(w.distributed());
+  EXPECT_EQ(w.dim(), 2);
+  EXPECT_DOUBLE_EQ(w(0), 1);
+  EXPECT_DOUBLE_EQ(w(1), 2);
 }
 
 
