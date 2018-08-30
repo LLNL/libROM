@@ -175,6 +175,18 @@ TEST(VectorSerialTest, Test_copy_assignment_operator)
   EXPECT_DOUBLE_EQ(w(1), 2);
 }
 
+TEST(VectorSerialTest, Test_assignment_operator)
+{
+  double v_data[2] = {1, 2};
+  const CAROM::Vector v(v_data, 2, false, true);
+  CAROM::Vector w(2, false);
+  w = v;
+
+  EXPECT_FALSE(w.distributed());
+  EXPECT_EQ(w.dim(), 2);
+  EXPECT_DOUBLE_EQ(w(0), 1);
+  EXPECT_DOUBLE_EQ(w(1), 2);
+}
 
 /** Test methods that operate on Vector objects
  *
