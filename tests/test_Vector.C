@@ -77,6 +77,12 @@ TEST(VectorSerialTest, Test_distributed)
   EXPECT_TRUE(w.distributed());
 }
 
+TEST(VectorSerialTest, Test_dim)
+{
+  CAROM::Vector v(2, false);
+  EXPECT_EQ(v.dim(), 2);
+}
+
 /** Test methods that require assigning data to the Vector
  *
  *  TODO(oxberry1@llnl.gov): Do more exhaustive testing to test all branches
