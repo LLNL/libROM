@@ -113,6 +113,15 @@ TEST(VectorSerialTest, Test_setSize)
  *  * Vector& operator=(const Vector&) for assignment
  */
 
+TEST(VectorSerialTest, Test_const_call_operator)
+{
+  double v_data[2] = {1, 2};
+  const CAROM::Vector v(v_data, 2, false, true);
+
+  EXPECT_EQ(v(0), 1);
+  EXPECT_EQ(v(1), 2);
+}
+
 /** Test methods that operate on Vector objects
  *
  *  * double norm() const
