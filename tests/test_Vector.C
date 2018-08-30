@@ -43,6 +43,8 @@
 #include<gtest/gtest.h>
 #include <mpi.h>
 #include "../Vector.h"
+#define _USE_MATH_DEFINES
+#include <cmath>
 
 /**
  * Simple smoke test to make sure Google Test is properly linked
@@ -228,6 +230,29 @@ TEST(VectorSerialTest, Test_assignment_operator)
  *
  *  * void mult(double, Vector&) const
  */
+
+TEST(VectorSerialTest, TestNorm)
+{
+  CAROM::Vector v(2, false);
+
+  /* 2-norm of (1, 1) = sqrt(2) */
+  v(0) = 1; v(1) = 1;
+  EXPECT_DOUBLE_EQ(v.norm(), M_SQRT2);
+
+  /* 2-norm of (-1, 1) = sqrt(2) */
+  v(0) = -1; v(1) = 1;
+  EXPECT_DOUBLE_EQ(v.norm(), M_SQRT2);
+
+  /* 2-norm of (3, 4) = 5 */
+  v(0) = 3; v(1) = 4;
+  EXPECT_DOUBLE_EQ(v.norm(), 5);
+
+  /* 2-norm of (5, 12) = 13 */
+  v(0) = 5; v(1) = 12;
+  EXPECT_DOUBLE_EQ(v.norm(), 13);
+
+  /** TODO(oxberry1@llnl.gov): Add more thorough tests **/
+}
 
 int main(int argc, char* argv[])
 {
