@@ -1001,6 +1001,35 @@ TEST(MatrixSerialTest, Test_mult_Vector_pointer)
   delete w; delete v;
 }
 
+TEST(MatrixSerialTest, Test_mult_Vector_Vector_reference)
+{
+ /**
+   *  Build matrix [ 1.0   0.0]
+   *               [ 1.0   1.0]
+   *
+   */
+  double asymmetric[4] = {1.0, 0.0, 1.0, 1.0};
+  CAROM::Matrix asymmetric_matrix(asymmetric, 2, 2, false, true);
+
+  /**
+   *  Build vector [ 2.0]
+   *               [ 4.0]
+   */
+  double v_data[2] = {2.0, 4.0};
+  CAROM::Vector v(v_data, 2, false, true);
+
+ /**
+   *  [ 1.0   0.0] [ 2.0] = [ 2.0]
+   *  [ 1.0   1.0] [ 4.0]   [ 6.0]
+   *
+   */
+  CAROM::Vector w(2, false);
+  asymmetric_matrix.mult(v, w);
+  EXPECT_FALSE(w.distributed());
+  EXPECT_EQ(w.dim(), 2);
+  EXPECT_DOUBLE_EQ(w(0), 2.0);
+  EXPECT_DOUBLE_EQ(w(1), 6.0);
+}
 
 int main(int argc, char* argv[])
 {
