@@ -772,6 +772,94 @@ TEST(VectorSerialTest, Test_plusAx_const_reference_reference)
   EXPECT_DOUBLE_EQ(result(1), 13);
 }
 
+/*
+   TODO(oxberry1@llnl.gov): Test with double argument set to
+   something other than 1.
+*/
+TEST(VectorSerialTest, Test_plusEqAx_const_reference)
+{
+  CAROM::Vector v(2, false); v(0) =  1; v(1) =  1;
+  CAROM::Vector w(2, false); w(0) = -1; w(1) =  1;
+  CAROM::Vector x(2, false); x(0) =  3; x(1) =  4;
+  CAROM::Vector y(2, false); y(0) =  5; y(1) = 12;
+
+  /* ( 1,  1) + ( 1,  1) = ( 2,  2) */
+  v.plusEqAx(1.0, v);
+  EXPECT_FALSE(v.distributed());
+  EXPECT_EQ(v.dim(), 2);
+  EXPECT_DOUBLE_EQ(v(0),  2);
+  EXPECT_DOUBLE_EQ(v(1),  2);
+
+  /* ( 1,  1) + (-1,  1) = ( 0,  2) */
+  v(0) =  1; v(1) =  1;
+  v.plusEqAx(1.0, w);
+  EXPECT_FALSE(v.distributed());
+  EXPECT_EQ(v.dim(), 2);
+  EXPECT_DOUBLE_EQ(v(0),  0);
+  EXPECT_DOUBLE_EQ(v(1),  2);
+
+  /* ( 1,  1) + ( 3,  4) = ( 4,  5) */
+  v(0) =  1; v(1) =  1;
+  v.plusEqAx(1.0, x);
+  EXPECT_FALSE(v.distributed());
+  EXPECT_EQ(v.dim(), 2);
+  EXPECT_DOUBLE_EQ(v(0),  4);
+  EXPECT_DOUBLE_EQ(v(1),  5);
+
+  /* ( 1,  1) + ( 5, 12) = ( 6, 13) */
+  v(0) =  1; v(1) =  1;
+  v.plusEqAx(1.0, y);
+  EXPECT_FALSE(v.distributed());
+  EXPECT_EQ(v.dim(), 2);
+  EXPECT_DOUBLE_EQ(v(0),  6);
+  EXPECT_DOUBLE_EQ(v(1), 13);
+}
+
+/*
+   TODO(oxberry1@llnl.gov): Test with double argument set to
+   something other than 1.
+*/
+TEST(VectorSerialTest, Test_plusEqAx_const_pointer)
+{
+  CAROM::Vector *v = new CAROM::Vector(2, false); (*v)(0) =  1; (*v)(1) =  1;
+  CAROM::Vector *w = new CAROM::Vector(2, false); (*w)(0) = -1; (*w)(1) =  1;
+  CAROM::Vector *x = new CAROM::Vector(2, false); (*x)(0) =  3; (*x)(1) =  4;
+  CAROM::Vector *y = new CAROM::Vector(2, false); (*y)(0) =  5; (*y)(1) = 12;
+
+  /* ( 1,  1) + ( 1,  1) = ( 2,  2) */
+  v->plusEqAx(1.0, v);
+  EXPECT_FALSE(v->distributed());
+  EXPECT_EQ(v->dim(), 2);
+  EXPECT_DOUBLE_EQ((*v)(0),  2);
+  EXPECT_DOUBLE_EQ((*v)(1),  2);
+
+  /* ( 1,  1) + (-1,  1) = ( 0,  2) */
+  (*v)(0) =  1; (*v)(1) =  1;
+  v->plusEqAx(1.0, w);
+  EXPECT_FALSE(v->distributed());
+  EXPECT_EQ(v->dim(), 2);
+  EXPECT_DOUBLE_EQ((*v)(0),  0);
+  EXPECT_DOUBLE_EQ((*v)(1),  2);
+
+  /* ( 1,  1) + ( 3,  4) = ( 4,  5) */
+  (*v)(0) =  1; (*v)(1) =  1;
+  v->plusEqAx(1.0, x);
+  EXPECT_FALSE(v->distributed());
+  EXPECT_EQ(v->dim(), 2);
+  EXPECT_DOUBLE_EQ((*v)(0),  4);
+  EXPECT_DOUBLE_EQ((*v)(1),  5);
+
+  /* ( 1,  1) + ( 5, 12) = ( 6, 13) */
+  (*v)(0) =  1; (*v)(1) =  1;
+  v->plusEqAx(1.0, y);
+  EXPECT_FALSE(v->distributed());
+  EXPECT_EQ(v->dim(), 2);
+  EXPECT_DOUBLE_EQ((*v)(0),  6);
+  EXPECT_DOUBLE_EQ((*v)(1), 13);
+
+  delete v; delete w; delete x; delete y;
+}
+
 TEST(VectorSerialTest, Test_minus_const_reference)
 {
   CAROM::Vector v(2, false); v(0) =  1; v(1) =  1;
