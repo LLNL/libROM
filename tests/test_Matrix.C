@@ -1062,6 +1062,41 @@ TEST(MatrixSerialTest, Test_mult_Vector_Vector_reference)
   EXPECT_DOUBLE_EQ(w(1), 6.0);
 }
 
+TEST(MatrixSerialTest, Test_multPlus)
+{
+ /**
+   *  Build matrix [ 1.0   0.0]
+   *               [ 1.0   1.0]
+   *
+   */
+  double asymmetric[4] = {1.0, 0.0, 1.0, 1.0};
+  CAROM::Matrix asymmetric_matrix(asymmetric, 2, 2, false, true);
+
+  /**
+   *  Build vector [ 2.0]
+   *               [ 4.0]
+   */
+  double v_data[2] = {2.0, 4.0};
+  CAROM::Vector v(v_data, 2, false, true);
+
+  /**
+   *  Build vector [ 0.5]
+   *               [ 1.0]
+   */
+  double w_data[2] = {0.5, 1.0};
+  CAROM::Vector w(w_data, 2, false, true);
+
+   /**
+   *  2 * [ 1.0   0.0] [ 0.5] + [ 2.0] = [ 3.0]
+   *      [ 1.0   1.0] [ 1.0]   [ 4.0]   [ 7.0]
+   *
+   */
+  asymmetric_matrix.multPlus(v, w, 2.0);
+  EXPECT_DOUBLE_EQ(v(0), 3.0);
+  EXPECT_DOUBLE_EQ(v(1), 7.0);
+}
+
+
 TEST(MatrixSerialTest, Test_transposeMult_Vector_reference)
 {
  /**
