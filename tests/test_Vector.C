@@ -756,6 +756,48 @@ TEST(VectorSerialTest, Test_minus_const_reference_reference)
   EXPECT_DOUBLE_EQ(result(1),-11);
 }
 
+TEST(VectorSerialTest, Test_mult_double)
+{
+  CAROM::Vector v(2, false); v(0) =  1; v(1) =  1;
+  CAROM::Vector w(2, false); w(0) = -1; w(1) =  1;
+  CAROM::Vector x(2, false); x(0) =  3; x(1) =  4;
+  CAROM::Vector y(2, false); y(0) =  5; y(1) = 12;
+
+  CAROM::Vector *result;
+
+  result = v.mult(2);
+  EXPECT_FALSE(result->distributed());
+  EXPECT_EQ(result->dim(), 2);
+  EXPECT_DOUBLE_EQ((*result)(0),   2);
+  EXPECT_DOUBLE_EQ((*result)(1),   2);
+  delete result;
+  result = NULL;
+
+  result = w.mult(-5);
+  EXPECT_FALSE(result->distributed());
+  EXPECT_EQ(result->dim(), 2);
+  EXPECT_DOUBLE_EQ((*result)(0),   5);
+  EXPECT_DOUBLE_EQ((*result)(1),  -5);
+  delete result;
+  result = NULL;
+
+  result = x.mult(3);
+  EXPECT_FALSE(result->distributed());
+  EXPECT_EQ(result->dim(), 2);
+  EXPECT_DOUBLE_EQ((*result)(0),   9);
+  EXPECT_DOUBLE_EQ((*result)(1),  12);
+  delete result;
+  result = NULL;
+
+  result = y.mult(0.5);
+  EXPECT_FALSE(result->distributed());
+  EXPECT_EQ(result->dim(), 2);
+  EXPECT_DOUBLE_EQ((*result)(0), 2.5);
+  EXPECT_DOUBLE_EQ((*result)(1),   6);
+  delete result;
+  result = NULL;
+}
+
 int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
