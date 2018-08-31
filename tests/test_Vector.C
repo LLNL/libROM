@@ -380,7 +380,7 @@ TEST(VectorSerialTest, Test_inner_product_const_pointer)
   delete v; delete w; delete x; delete y;
 }
 
-TEST(VectorSerialTest, Test_plus_const_ref)
+TEST(VectorSerialTest, Test_plus_const_reference)
 {
   CAROM::Vector v(2, false); v(0) =  1; v(1) =  1;
   CAROM::Vector w(2, false); w(0) = -1; w(1) =  1;
@@ -527,6 +527,46 @@ TEST(VectorSerialTest, Test_plus_const_reference_pointer)
   result = NULL;
 }
 
+/*
+  TODO(oxberry1@llnl.gov): Test cases where output vector must be resized.
+*/
+TEST(VectorSerialTest, Test_plus_const_reference_reference)
+{
+  CAROM::Vector v(2, false); v(0) =  1; v(1) =  1;
+  CAROM::Vector w(2, false); w(0) = -1; w(1) =  1;
+  CAROM::Vector x(2, false); x(0) =  3; x(1) =  4;
+  CAROM::Vector y(2, false); y(0) =  5; y(1) = 12;
+
+  CAROM::Vector result(2, false);
+
+  /* ( 1,  1) + ( 1,  1) = ( 2,  2) */
+  v.plus(v, result);
+  EXPECT_FALSE(result.distributed());
+  EXPECT_EQ(result.dim(), 2);
+  EXPECT_DOUBLE_EQ(result(0),  2);
+  EXPECT_DOUBLE_EQ(result(1),  2);
+
+  /* ( 1,  1) + (-1,  1) = ( 0,  2) */
+  v.plus(w, result);
+  EXPECT_FALSE(result.distributed());
+  EXPECT_EQ(result.dim(), 2);
+  EXPECT_DOUBLE_EQ(result(0),  0);
+  EXPECT_DOUBLE_EQ(result(1),  2);
+
+  /* ( 1,  1) + ( 3,  4) = ( 4,  5) */
+  v.plus(x, result);
+  EXPECT_FALSE(result.distributed());
+  EXPECT_EQ(result.dim(), 2);
+  EXPECT_DOUBLE_EQ(result(0),  4);
+  EXPECT_DOUBLE_EQ(result(1),  5);
+
+  /* ( 1,  1) + ( 5, 12) = ( 6, 13) */
+  v.plus(y, result);
+  EXPECT_FALSE(result.distributed());
+  EXPECT_EQ(result.dim(), 2);
+  EXPECT_DOUBLE_EQ(result(0),  6);
+  EXPECT_DOUBLE_EQ(result(1), 13);
+}
 
 
 int main(int argc, char* argv[])
