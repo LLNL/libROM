@@ -720,14 +720,14 @@ TEST(MatrixSerialTest, Test_void_inverse_reference)
    *               [ 1.0   1.0]
    *
    */
-  double asymmetric[4] = {1.0, 1.0, 0.0, 1.0};
+  double asymmetric[4] = {1.0, 0.0, 1.0, 1.0};
   CAROM::Matrix asymmetric_matrix(asymmetric, 2, 2, false, true);
   CAROM::Matrix asymmetric_matrix_inverse(2, 2, false);
 
   asymmetric_matrix.inverse(asymmetric_matrix_inverse);
   EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse.item(0, 0),  1.0);
-  EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse.item(0, 1), -1.0);
-  EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse.item(1, 0),  0.0);
+  EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse.item(0, 1),  0.0);
+  EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse.item(1, 0), -1.0);
   EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse.item(1, 1),  1.0);
 }
 
@@ -738,7 +738,7 @@ TEST(MatrixSerialTest, Test_void_inverse_pointer_reference)
    *               [ 1.0   1.0]
    *
    */
-  double asymmetric[4] = {1.0, 1.0, 0.0, 1.0};
+  double asymmetric[4] = {1.0, 0.0, 1.0, 1.0};
   CAROM::Matrix asymmetric_matrix(asymmetric, 2, 2, false, true);
 
   /**
@@ -751,8 +751,8 @@ TEST(MatrixSerialTest, Test_void_inverse_pointer_reference)
   asymmetric_matrix.inverse(asymmetric_matrix_inverse);
 
   EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse->item(0, 0),  1.0);
-  EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse->item(0, 1), -1.0);
-  EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse->item(1, 0),  0.0);
+  EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse->item(0, 1),  0.0);
+  EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse->item(1, 0), -1.0);
   EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse->item(1, 1),  1.0);
 
   delete asymmetric_matrix_inverse;
@@ -765,7 +765,7 @@ TEST(MatrixSerialTest, Test_void_inverse_in_place)
    *               [ 1.0   1.0]
    *
    */
-  double asymmetric[4] = {1.0, 1.0, 0.0, 1.0};
+  double asymmetric[4] = {1.0, 0.0, 1.0, 1.0};
   CAROM::Matrix asymmetric_matrix(asymmetric, 2, 2, false, true);
 
   /**
@@ -776,8 +776,8 @@ TEST(MatrixSerialTest, Test_void_inverse_in_place)
   asymmetric_matrix.inverse();
 
   EXPECT_DOUBLE_EQ(asymmetric_matrix.item(0, 0),  1.0);
-  EXPECT_DOUBLE_EQ(asymmetric_matrix.item(0, 1), -1.0);
-  EXPECT_DOUBLE_EQ(asymmetric_matrix.item(1, 0),  0.0);
+  EXPECT_DOUBLE_EQ(asymmetric_matrix.item(0, 1),  0.0);
+  EXPECT_DOUBLE_EQ(asymmetric_matrix.item(1, 0), -1.0);
   EXPECT_DOUBLE_EQ(asymmetric_matrix.item(1, 1),  1.0);
 }
 
@@ -788,7 +788,7 @@ TEST(MatrixSerialTest, Test_pMatrix_inverse)
    *               [ 1.0   1.0]
    *
    */
-  double asymmetric[4] = {1.0, 1.0, 0.0, 1.0};
+  double asymmetric[4] = {1.0, 0.0, 1.0, 1.0};
   const CAROM::Matrix asymmetric_matrix(asymmetric, 2, 2, false, true);
 
   /**
@@ -802,8 +802,8 @@ TEST(MatrixSerialTest, Test_pMatrix_inverse)
   EXPECT_EQ(asymmetric_matrix_inverse->numRows(), 2);
   EXPECT_EQ(asymmetric_matrix_inverse->numColumns(), 2);
   EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse->item(0, 0),  1.0);
-  EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse->item(0, 1), -1.0);
-  EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse->item(1, 0),  0.0);
+  EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse->item(0, 1),  0.0);
+  EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse->item(1, 0), -1.0);
   EXPECT_DOUBLE_EQ(asymmetric_matrix_inverse->item(1, 1),  1.0);
 
   delete asymmetric_matrix_inverse;
