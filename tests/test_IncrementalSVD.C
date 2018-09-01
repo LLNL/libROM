@@ -129,6 +129,26 @@ public:
 
 };
 
+TEST(IncrementalSVDSerialTest, Test_getBasis)
+{
+  FakeIncrementalSVD svd(3,
+			 1e-1,
+			 false,
+			 4,
+			 "irrelevant.txt");
+
+  const CAROM::Matrix *B = svd.getBasis();
+  for (int i = 0; i < svd.getDim(); i++)
+  {
+    for (int j = 0; j < i; j++)
+    {
+      EXPECT_DOUBLE_EQ(B->item(i, j), 0);
+      EXPECT_DOUBLE_EQ(B->item(j, i), 0);
+    }
+    EXPECT_DOUBLE_EQ(B->item(i, i), 1);
+  }
+}
+
 int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
