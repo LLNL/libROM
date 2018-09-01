@@ -171,6 +171,30 @@ TEST(SVDSerialTest, Test_isNewTimeInterval)
   EXPECT_FALSE(svd.isNewTimeInterval());
 }
 
+TEST(SVDSerialTest, Test_getNumBasisTimeIntervals)
+{
+  FakeSVD svd(5, 2);
+
+  /* Number of time intervals starts at zero. */
+  EXPECT_EQ(svd.getNumBasisTimeIntervals(), 0);
+
+  /* Creates new time interval; number of intervals = 1 */
+  svd.takeSample(NULL, 0);
+  EXPECT_EQ(svd.getNumBasisTimeIntervals(), 1);
+  svd.takeSample(NULL, 0.5);
+  EXPECT_EQ(svd.getNumBasisTimeIntervals(), 1);
+
+  /* Creates new time interval; number of intervals = 2 */
+  svd.takeSample(NULL, 1);
+  EXPECT_EQ(svd.getNumBasisTimeIntervals(), 2);
+  svd.takeSample(NULL, 1.5);
+  EXPECT_EQ(svd.getNumBasisTimeIntervals(), 2);
+
+  /* Creates new time interval; number of intervals = 3 */
+  svd.takeSample(NULL, 2);
+  EXPECT_EQ(svd.getNumBasisTimeIntervals(), 3);
+}
+
 int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
