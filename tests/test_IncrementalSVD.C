@@ -52,6 +52,83 @@ TEST(GoogleTestFramework, GoogleTestFrameworkFound) {
   SUCCEED();
 }
 
+/**
+ *  Fake/mock version of an IncrementalSVD. The only public methods
+ *  to test are:
+ *
+ * * getBasis()
+ *
+ * * getSingularValues()
+ *
+ */
+class FakeIncrementalSVD : public CAROM::IncrementalSVD
+{
+public:
+
+  FakeIncrementalSVD
+  (int dim,
+   double linearity_tol,
+   bool skip_linearly_dependent,
+   int samples_per_time_interval,
+   const std::string& basis_file_name)
+    : CAROM::IncrementalSVD(dim,
+			    linearity_tol,
+			    skip_linearly_dependent,
+			    samples_per_time_interval,
+			    basis_file_name,
+			    false,
+			    false,
+			    false)
+  {
+    /* Construct a fake d_U, d_S, d_basis */
+    d_basis = new CAROM::Matrix(dim, dim, false);
+    d_S = new CAROM::Matrix(dim, dim, false);
+
+    /* Use the identity matrix as a fake basis and fake singular values */
+    for (int i = 0; i < dim; i++)
+    {
+      for (int j = 0; j < i; j++)
+      {
+	d_basis->item(i, j) = d_S->item(i, j) = 0;
+	d_basis->item(j, i) = d_S->item(j, i) = 0;
+      }
+      d_basis->item(i, i) = d_S->item(i, i) = 1;
+    }
+  }
+
+  ~FakeIncrementalSVD()
+  {
+  }
+
+  void buildInitialSVD
+  (__attribute__((unused)) double* u,
+   __attribute__((unused)) double time)
+  {
+    /* Do nothing */
+  }
+
+  void computeBasis()
+  {
+    /* Do nothing */
+  }
+
+  void addLinearlyDependentSample
+  (__attribute__((unused)) const CAROM::Matrix *A,
+   __attribute__((unused)) const CAROM::Matrix *sigma)
+  {
+    /* Do nothing */
+  }
+
+  void addNewSample
+  (__attribute__((unused)) const CAROM::Vector *j,
+   __attribute__((unused)) const CAROM::Matrix *A,
+   __attribute__((unused)) CAROM::Matrix *sigma)
+  {
+    /* Do nothing */
+  }
+
+};
+
 int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
