@@ -143,6 +143,34 @@ TEST(SVDSerialTest, Test_getDim)
   EXPECT_EQ(svd.getDim(), 5);
 }
 
+TEST(SVDSerialTest, Test_isNewTimeInterval)
+{
+  FakeSVD svd(5, 2);
+
+  /* 0 samples, so taking a sample will create a new time interval */
+  EXPECT_TRUE(svd.isNewTimeInterval());
+
+  /* 1 sample; limit is 2, taking a sample won't create a new time interval */
+  svd.takeSample(NULL, 0);
+  EXPECT_FALSE(svd.isNewTimeInterval());
+
+  /* 2 samples; limit is 2, taking a sample will create a new time interval */
+  svd.takeSample(NULL, 0.5);
+  EXPECT_TRUE(svd.isNewTimeInterval());
+
+  /* 1 sample; limit is 2, taking a sample won't create a new time interval */
+  svd.takeSample(NULL, 1);
+  EXPECT_FALSE(svd.isNewTimeInterval());
+
+  /* 2 samples; limit is 2, taking a sample will create a new time interval */
+  svd.takeSample(NULL, 1.5);
+  EXPECT_TRUE(svd.isNewTimeInterval());
+
+  /* 1 sample; limit is 2, taking a sample won't create a new time interval */
+  svd.takeSample(NULL, 2);
+  EXPECT_FALSE(svd.isNewTimeInterval());
+}
+
 int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
