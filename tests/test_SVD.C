@@ -52,6 +52,91 @@ TEST(GoogleTestFramework, GoogleTestFrameworkFound) {
   SUCCEED();
 }
 
+/**
+ *  Fake SVD to test parts of the SVD abstract base class. (For those
+ *  unfamiliar, "fake" or "mock" is a term of art in unit testing
+ *  referring to an implementation that simulates the behavior of
+ *  real objects.)
+ */
+class FakeSVD : public CAROM::SVD
+{
+public:
+
+  FakeSVD(int dim,
+	  int samples_per_time_interval)
+    : SVD(dim, samples_per_time_interval, false)
+  {
+  }
+
+  ~FakeSVD()
+  {
+  }
+
+  /**
+   * Stub implementations of methods not really testable from the
+   * abstract base class, because there is no meaningful data we could
+   * return without implementing an actual singular value decomposition.
+   *
+   */
+  virtual const CAROM::Matrix* getBasis() { return NULL; }
+  virtual const CAROM::Matrix* getSingularValues() { return NULL; }
+
+  /**
+   *  The only testable methods from the SVD abstract base class are
+   *  those with concrete implementations, namely:
+   *
+   *  int getDim() const;
+   *
+   *  int getNumBasisTimeIntervals() const;
+   *
+   *  double getBasisIntervalStartTime(int) const;
+   *
+   *  bool isNewTimeInterval() const;
+   */
+
+  /**
+   * This method needs to do a few things:
+   *
+   * 1) If there are no sample time intervals stored, create one and
+   *    record its start time. Set the number of samples in the current
+   *    time interval to zero.
+   *
+   * 2) If adding another sample to the current sample time interval
+   *    would exceed the number of samples per time interval set in
+   *    the constructor, create a new time interval and record its
+   *    start time. Set the number of samples in the current time interval
+   *    to zero.
+   *
+   * 3) Increment the number of samples in the current sample time
+   *    interval.
+   *
+   * Implementing this behavior suffices for testing the abstract base class.
+   *
+   */
+  bool takeSample(__attribute__((unused)) double* u_in, double time)
+  {
+    /**
+       If a new time interval is needed, add one and reset the number
+       of samples counter to zero.
+    */
+    if (isNewTimeInterval())
+    {
+      d_time_interval_start_times.push_back(time);
+      d_num_samples = 0;
+    }
+
+    /* Increment the number of samples in the current time interval */
+    d_num_samples++;
+
+    /**
+	This method should almost always succeed because it does not
+	do anything likely to fail, so it should return true.
+    */
+    return true;
+  }
+
+};
+
 int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
