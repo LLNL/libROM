@@ -93,7 +93,7 @@ host_triplet = @host@
 noinst_PROGRAMS = uneven_dist$(EXEEXT) random_test$(EXEEXT) \
 	weak_scaling$(EXEEXT) smoke_test$(EXEEXT) \
 	tests/test_Matrix$(EXEEXT) tests/test_Vector$(EXEEXT) \
-	tests/test_SVD$(EXEEXT)
+	tests/test_SVD$(EXEEXT) tests/test_IncrementalSVD$(EXEEXT)
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config/arg-with-environment.m4 \
@@ -176,6 +176,11 @@ am_smoke_test_OBJECTS = smoke_test.$(OBJEXT)
 smoke_test_OBJECTS = $(am_smoke_test_OBJECTS)
 smoke_test_DEPENDENCIES = librom.a
 am__dirstamp = $(am__leading_dot)dirstamp
+am_tests_test_IncrementalSVD_OBJECTS =  \
+	tests/test_IncrementalSVD.$(OBJEXT)
+tests_test_IncrementalSVD_OBJECTS =  \
+	$(am_tests_test_IncrementalSVD_OBJECTS)
+tests_test_IncrementalSVD_DEPENDENCIES = librom.a
 am_tests_test_Matrix_OBJECTS = tests/test_Matrix.$(OBJEXT)
 tests_test_Matrix_OBJECTS = $(am_tests_test_Matrix_OBJECTS)
 tests_test_Matrix_DEPENDENCIES = librom.a
@@ -221,8 +226,10 @@ am__depfiles_remade = ./$(DEPDIR)/BasisReader.Po \
 	./$(DEPDIR)/StaticSVDSampler.Po ./$(DEPDIR)/Utilities.Po \
 	./$(DEPDIR)/Vector.Po ./$(DEPDIR)/random_test.Po \
 	./$(DEPDIR)/smoke_test.Po ./$(DEPDIR)/uneven_dist.Po \
-	./$(DEPDIR)/weak_scaling.Po tests/$(DEPDIR)/test_Matrix.Po \
-	tests/$(DEPDIR)/test_SVD.Po tests/$(DEPDIR)/test_Vector.Po
+	./$(DEPDIR)/weak_scaling.Po \
+	tests/$(DEPDIR)/test_IncrementalSVD.Po \
+	tests/$(DEPDIR)/test_Matrix.Po tests/$(DEPDIR)/test_SVD.Po \
+	tests/$(DEPDIR)/test_Vector.Po
 am__mv = mv -f
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -238,13 +245,15 @@ am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
 SOURCES = $(librom_a_SOURCES) $(random_test_SOURCES) \
-	$(smoke_test_SOURCES) $(tests_test_Matrix_SOURCES) \
-	$(tests_test_SVD_SOURCES) $(tests_test_Vector_SOURCES) \
-	$(uneven_dist_SOURCES) $(weak_scaling_SOURCES)
+	$(smoke_test_SOURCES) $(tests_test_IncrementalSVD_SOURCES) \
+	$(tests_test_Matrix_SOURCES) $(tests_test_SVD_SOURCES) \
+	$(tests_test_Vector_SOURCES) $(uneven_dist_SOURCES) \
+	$(weak_scaling_SOURCES)
 DIST_SOURCES = $(librom_a_SOURCES) $(random_test_SOURCES) \
-	$(smoke_test_SOURCES) $(tests_test_Matrix_SOURCES) \
-	$(tests_test_SVD_SOURCES) $(tests_test_Vector_SOURCES) \
-	$(uneven_dist_SOURCES) $(weak_scaling_SOURCES)
+	$(smoke_test_SOURCES) $(tests_test_IncrementalSVD_SOURCES) \
+	$(tests_test_Matrix_SOURCES) $(tests_test_SVD_SOURCES) \
+	$(tests_test_Vector_SOURCES) $(uneven_dist_SOURCES) \
+	$(weak_scaling_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -446,6 +455,8 @@ tests_test_Vector_SOURCES = tests/test_Vector.C
 tests_test_Vector_LDADD = -lgtest -lpthread librom.a
 tests_test_SVD_SOURCES = tests/test_SVD.C
 tests_test_SVD_LDADD = -lgtest -lpthread librom.a
+tests_test_IncrementalSVD_SOURCES = tests/test_IncrementalSVD.C
+tests_test_IncrementalSVD_LDADD = -lgtest -lpthread librom.a
 all: CAROM_config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -556,6 +567,12 @@ tests/$(am__dirstamp):
 tests/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) tests/$(DEPDIR)
 	@: > tests/$(DEPDIR)/$(am__dirstamp)
+tests/test_IncrementalSVD.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+
+tests/test_IncrementalSVD$(EXEEXT): $(tests_test_IncrementalSVD_OBJECTS) $(tests_test_IncrementalSVD_DEPENDENCIES) $(EXTRA_tests_test_IncrementalSVD_DEPENDENCIES) tests/$(am__dirstamp)
+	@rm -f tests/test_IncrementalSVD$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(tests_test_IncrementalSVD_OBJECTS) $(tests_test_IncrementalSVD_LDADD) $(LIBS)
 tests/test_Matrix.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 
@@ -615,6 +632,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smoke_test.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/uneven_dist.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/weak_scaling.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_IncrementalSVD.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_Matrix.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_SVD.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_Vector.Po@am__quote@ # am--include-marker
@@ -958,6 +976,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/smoke_test.Po
 	-rm -f ./$(DEPDIR)/uneven_dist.Po
 	-rm -f ./$(DEPDIR)/weak_scaling.Po
+	-rm -f tests/$(DEPDIR)/test_IncrementalSVD.Po
 	-rm -f tests/$(DEPDIR)/test_Matrix.Po
 	-rm -f tests/$(DEPDIR)/test_SVD.Po
 	-rm -f tests/$(DEPDIR)/test_Vector.Po
@@ -1033,6 +1052,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/smoke_test.Po
 	-rm -f ./$(DEPDIR)/uneven_dist.Po
 	-rm -f ./$(DEPDIR)/weak_scaling.Po
+	-rm -f tests/$(DEPDIR)/test_IncrementalSVD.Po
 	-rm -f tests/$(DEPDIR)/test_Matrix.Po
 	-rm -f tests/$(DEPDIR)/test_SVD.Po
 	-rm -f tests/$(DEPDIR)/test_Vector.Po
