@@ -195,6 +195,33 @@ TEST(SVDSerialTest, Test_getNumBasisTimeIntervals)
   EXPECT_EQ(svd.getNumBasisTimeIntervals(), 3);
 }
 
+TEST(SVDSerialTest, Test_getBasisIntervalStartTime)
+{
+  FakeSVD svd(5, 2);
+
+  /* 1st time interval starts at time 0 */
+  svd.takeSample(NULL, 0);
+  EXPECT_DOUBLE_EQ(svd.getBasisIntervalStartTime(0), 0);
+
+  svd.takeSample(NULL, 0.5);
+  EXPECT_DOUBLE_EQ(svd.getBasisIntervalStartTime(0), 0);
+
+  /* 2nd time interval starts at time 1 */
+  svd.takeSample(NULL, 1);
+  EXPECT_DOUBLE_EQ(svd.getBasisIntervalStartTime(0), 0);
+  EXPECT_DOUBLE_EQ(svd.getBasisIntervalStartTime(1), 1);
+
+  svd.takeSample(NULL, 1.5);
+  EXPECT_DOUBLE_EQ(svd.getBasisIntervalStartTime(0), 0);
+  EXPECT_DOUBLE_EQ(svd.getBasisIntervalStartTime(1), 1);
+
+  /* 3rd time interval starts at time 2 */
+  svd.takeSample(NULL, 2);
+  EXPECT_DOUBLE_EQ(svd.getBasisIntervalStartTime(0), 0);
+  EXPECT_DOUBLE_EQ(svd.getBasisIntervalStartTime(1), 1);
+  EXPECT_DOUBLE_EQ(svd.getBasisIntervalStartTime(2), 2);
+}
+
 int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
