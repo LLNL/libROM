@@ -137,6 +137,12 @@ public:
 
 };
 
+TEST(SVDSerialTest, Test_getDim)
+{
+  FakeSVD svd(5, 2);
+  EXPECT_EQ(svd.getDim(), 5);
+}
+
 int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
