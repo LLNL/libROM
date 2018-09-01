@@ -55,6 +55,7 @@ noinst_PROGRAMS += weak_scaling
 noinst_PROGRAMS += smoke_test
 noinst_PROGRAMS += tests/test_Matrix
 noinst_PROGRAMS += tests/test_Vector
+noinst_PROGRAMS += tests/test_SVD
 
 uneven_dist_SOURCES = uneven_dist.C
 uneven_dist_LDADD = librom.a
@@ -73,6 +74,9 @@ tests_test_Matrix_LDADD = -lgtest -lpthread librom.a
 
 tests_test_Vector_SOURCES = tests/test_Vector.C
 tests_test_Vector_LDADD = -lgtest -lpthread librom.a
+
+tests_test_SVD_SOURCES = tests/test_SVD.C
+tests_test_SVD_LDADD = -lgtest -lpthread librom.a
 
 dox:
 	(cd docs && $(MAKE) $@)
