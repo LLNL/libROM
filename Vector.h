@@ -118,6 +118,25 @@ class Vector
          const Vector& rhs);
 
       /**
+       * @brief Addition operator.
+       *
+       * @param[in] rhs The Vector to add to this.
+       *
+       * @return This after rhs has been added to it.
+       */
+      Vector&
+      operator += (
+         const Vector& rhs);
+
+      /**
+       * @brief zero out all the elements 
+       *
+       * @param[in] no parameters in. 
+       */
+      void
+      zero();
+
+      /**
        * @brief Sets the length of the vector and reallocates storage if
        * needed.
        *

@@ -118,6 +118,10 @@ class BasisReader {
          return result;
       }
 
+      void readBasis(
+             const std::string& base_file_name,
+             Database::formats db_format = Database::HDF5);
+
       /**
        *
        * @brief Returns the basis vectors for the requested time.
@@ -131,6 +135,10 @@ class BasisReader {
        */
       const Matrix*
       getBasis(
+         double time);
+
+      Matrix
+      getSpaceTimeBasis(
          double time);
 
    private:

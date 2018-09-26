@@ -164,6 +164,27 @@ Matrix::operator = (
    return *this;
 }
 
+Matrix&
+Matrix::operator += (
+   const Matrix& rhs)
+{
+   CAROM_ASSERT(rhs.d_num_rows == d_num_rows);
+   CAROM_ASSERT(rhs.d_num_cols == d_num_cols);
+   for(int i=0; i<d_num_rows*d_num_cols; ++i) d_mat[i] += rhs.d_mat[i];
+   return *this;
+}
+
+Matrix&
+Matrix::operator -= (
+   const Matrix& rhs)
+{
+   CAROM_ASSERT(rhs.d_num_rows == d_num_rows);
+   CAROM_ASSERT(rhs.d_num_cols == d_num_cols);
+   for(int i=0; i<d_num_rows*d_num_cols; ++i) d_mat[i] -= rhs.d_mat[i];
+   return *this;
+}
+
+
 bool
 Matrix::balanced() const
 {
@@ -215,6 +236,14 @@ Matrix::balanced() const
 			     comm) == MPI_SUCCESS);
 
   return result;
+}
+
+void
+Matrix::zero()
+{
+   for(int i=0; i<d_num_rows*d_num_cols; ++i) {
+     d_mat[i] = 0.0;
+   }
 }
 
 void

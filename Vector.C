@@ -138,6 +138,21 @@ Vector::operator = (
    return *this;
 }
 
+Vector&
+Vector::operator += (
+   const Vector& rhs)
+{
+   CAROM_ASSERT(d_dim == rhs.d_dim);
+   for(int i=0; i<d_dim; ++i) d_vec[i] += rhs.d_vec[i];
+   return *this;
+}
+
+void
+Vector::zero()
+{
+   for(int i=0; i<d_dim; ++i) d_vec[i] = 0.0;
+}
+
 double
 Vector::inner_product(
    const Vector& other) const

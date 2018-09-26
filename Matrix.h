@@ -124,6 +124,38 @@ class Matrix
          const Matrix& rhs);
 
       /**
+       * @brief Addition operator.
+       *
+       * @param[in] rhs The Matrix to add to this.
+       *
+       * @return This after rhs has been added to it.
+       */
+      Matrix&
+      operator += (
+         const Matrix& rhs);
+
+      /**
+       * @brief Subtraction operator.
+       *
+       * @param[in] rhs The Matrix to subtract to this.
+       *
+       * @return This after rhs has been subtracted to it.
+       */
+      Matrix&
+      operator -= (
+         const Matrix& rhs);
+
+      /**
+       * @brief zero function.
+       *
+       * @param[in] no parameter in 
+       *
+       * @return zero out all the elements 
+       */
+      void
+      zero();
+
+      /**
        * @brief Sets the number of rows and columns of the matrix and
        * reallocates storage if needed.
        *
