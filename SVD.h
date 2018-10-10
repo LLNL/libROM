@@ -87,6 +87,7 @@ class SVD
        *
        * @param[in] u_in The new sample.
        * @param[in] time The simulation time of the new sample.
+       * @param[in] add_without_increase If true, the addLinearlyDependent is invoked. 
        *
        * @return True if the sampling was successful.
        */
@@ -94,7 +95,8 @@ class SVD
       bool
       takeSample(
          double* u_in,
-         double time) = 0;
+         double time,
+         bool add_without_increase) = 0;
 
       /**
        * @brief Returns the dimension of the system on this processor.
@@ -115,6 +117,15 @@ class SVD
       virtual
       const Matrix*
       getBasis() = 0;
+
+      /**
+       * @brief Returns the temporal basis vectors for the current time interval.
+       *
+       * @return The temporal basis vectors for the current time interval.
+       */
+      virtual
+      const Matrix*
+      getTBasis() = 0;
 
       /**
        * @brief Returns the singular values for the current time interval.
@@ -182,6 +193,11 @@ class SVD
       int d_num_samples;
 
       /**
+       * @brief Number of rows in right singular matrix.
+       */
+      int d_num_rows_of_W;
+
+      /**
        * @brief The maximum number of samples to be collected for a time
        * interval.
        */
@@ -196,12 +212,28 @@ class SVD
       Matrix* d_basis;
 
       /**
+       * @brief The globalized right basis vectors for the current time interval.
+       *
+       * Depending on the SVD algorithm, it may be  distributed across all
+       * processors or each processor may own all of U.
+       */
+      Matrix* d_basis_right;
+
+      /**
        * @brief The matrix U which is large.
        *
        * Depending on the SVD algorithm, d_U may be  distributed across all
        * processors or each processor may own all of U.
        */
       Matrix* d_U;
+
+      /**
+       * @brief The matrix U which is large.
+       *
+       * Depending on the SVD algorithm, d_W may be  distributed across all
+       * processors or each processor may own all of U.
+       */
+      Matrix* d_W;
 
       /**
        * @brief The matrix S which is small.

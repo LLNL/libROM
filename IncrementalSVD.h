@@ -87,10 +87,12 @@ namespace CAROM {
          int dim,
          double linearity_tol,
          bool skip_linearly_dependent,
+         int max_basis_dimension,
          int samples_per_time_interval,
          const std::string& basis_file_name,
          bool save_state = false,
          bool restore_state = false,
+         bool updateRightSV = false,
          bool debug_algorithm = false);
 
       /**
@@ -107,6 +109,7 @@ namespace CAROM {
        *
        * @param[in] u_in The state at the specified time.
        * @param[in] time The simulation time for the state.
+       * @param[in] add_without_increase If true, addLinearlyDependent is invoked.  
        *
        * @return True if the sampling was successful.
        */
@@ -114,7 +117,8 @@ namespace CAROM {
       bool
       takeSample(
          double* u_in,
-         double time);
+         double time,
+         bool add_without_increase = false);
 
       /**
        * @brief Returns the basis vectors for the current time interval.
@@ -124,6 +128,15 @@ namespace CAROM {
       virtual
       const Matrix*
       getBasis();
+
+      /**
+       * @brief Returns the temporal basis vectors for the current time interval.
+       *
+       * @return The temporal basis vectors for the current time interval.
+       */
+      virtual
+      const Matrix*
+      getTBasis();
 
       /**
        * @brief Returns the singular values for the current time interval.
@@ -162,7 +175,7 @@ namespace CAROM {
       virtual
       bool
       buildIncrementalSVD(
-         double* u);
+         double* u, bool add_without_increase = false);
 
       /**
        * @brief Computes the current basis vectors.
@@ -198,6 +211,7 @@ namespace CAROM {
        * @param[in] A The matrix whose svd is needed.
        * @param[out] U The left singular vectors of A.
        * @param[out] S The singular values of A.
+       * @param[out] V The right singular vectors of A.
        *
        * @return True if the svd succeeded.
        */
@@ -205,7 +219,8 @@ namespace CAROM {
       svd(
          double* A,
          Matrix*& U,
-         Matrix*& S);
+         Matrix*& S,
+         Matrix*& V);
 
       /**
        * Add a linearly dependent sample to the svd.
@@ -214,12 +229,14 @@ namespace CAROM {
        * @pre sigma != 0
        *
        * @param[in] A The left singular vectors.
+       * @param[in] W The right singular vectors.
        * @param[in] sigma The singular values.
        */
       virtual
       void
       addLinearlyDependentSample(
          const Matrix* A,
+         const Matrix* W,
          const Matrix* sigma) = 0;
 
       /**
@@ -238,6 +255,7 @@ namespace CAROM {
       addNewSample(
          const Vector* j,
          const Matrix* A,
+         const Matrix* W,
          Matrix* sigma) = 0;
 
       /**
@@ -287,6 +305,11 @@ namespace CAROM {
       bool d_skip_linearly_dependent;
 
       /**
+       * @brief the maximum basis dimension
+       */
+      int d_max_basis_dimension;
+
+      /**
        * @brief Total number of processors.
        */
       int d_size;
@@ -314,6 +337,11 @@ namespace CAROM {
        * as restoring such a state makes no sense.
        */
       bool d_save_state;
+
+      /**
+       * @brief If true the right singular vectors will be updated 
+       */
+      bool d_updateRightSV;
 
       /**
        * @brief Pointer to the database that will hold saved state data if the

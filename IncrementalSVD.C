@@ -68,16 +68,20 @@ IncrementalSVD::IncrementalSVD(
    int dim,
    double linearity_tol,
    bool skip_linearly_dependent,
+   int max_basis_dimension,
    int samples_per_time_interval,
    const std::string& basis_file_name,
    bool save_state,
    bool restore_state,
+   bool updateRightSV,
    bool debug_algorithm) :
    SVD(dim, samples_per_time_interval, debug_algorithm),
    d_linearity_tol(linearity_tol),
    d_skip_linearly_dependent(skip_linearly_dependent),
+   d_max_basis_dimension(max_basis_dimension),
    d_total_dim(0),
    d_save_state(save_state),
+   d_updateRightSV(updateRightSV),
    d_state_database(0)
 {
    CAROM_ASSERT(linearity_tol > 0.0);
@@ -140,6 +144,16 @@ IncrementalSVD::IncrementalSVD(
                                           &d_U->item(0, 0),
                                           num_rows*num_cols);
 
+         if (d_updateRightSV) {
+           // Read d_W.
+           d_state_database->getInteger("W_num_rows", num_rows);
+           d_state_database->getInteger("W_num_cols", num_cols);
+           d_W = new Matrix(num_rows, num_cols, true);
+           d_state_database->getDoubleArray("W",
+                                            &d_W->item(0, 0),
+                                            num_rows*num_cols);
+         }
+
          // Read d_S.
          d_state_database->getInteger("S_num_rows", num_rows);
          d_state_database->getInteger("S_num_cols", num_cols);
@@ -185,6 +199,17 @@ IncrementalSVD::~IncrementalSVD()
                                        &d_S->item(0, 0),
                                        num_rows*num_cols);
 
+      if (d_updateRightSV) {
+        // Save d_W.
+        num_rows = d_W->numRows();
+        d_state_database->putInteger("W_num_rows", num_rows);
+        num_cols = d_W->numColumns();
+        d_state_database->putInteger("W_num_cols", num_cols);
+        d_state_database->putDoubleArray("W",
+                                         &d_W->item(0, 0),
+                                         num_rows*num_cols);
+      }
+
       // Close state database file and delete database object.
       d_state_database->close();
       delete d_state_database;
@@ -194,10 +219,12 @@ IncrementalSVD::~IncrementalSVD()
 bool
 IncrementalSVD::takeSample(
    double* u_in,
-   double time)
+   double time,
+   bool add_without_increase)
 {
    CAROM_ASSERT(u_in != 0);
    CAROM_ASSERT(time >= 0.0);
+
 
    // Check that u_in is not non-zero.
    Vector u_vec(u_in, d_dim, true);
@@ -212,7 +239,7 @@ IncrementalSVD::takeSample(
       buildInitialSVD(u_in, time);
    }
    else {
-      result = buildIncrementalSVD(u_in);
+      result = buildIncrementalSVD(u_in,add_without_increase);
    }
 
    if (d_debug_algorithm) {
@@ -280,6 +307,13 @@ IncrementalSVD::getBasis()
 }
 
 const Matrix*
+IncrementalSVD::getTBasis()
+{
+   CAROM_ASSERT(d_basis != 0);
+   return d_basis_right;
+}
+
+const Matrix*
 IncrementalSVD::getSingularValues()
 {
    CAROM_ASSERT(d_S != 0);
@@ -288,7 +322,7 @@ IncrementalSVD::getSingularValues()
 
 bool
 IncrementalSVD::buildIncrementalSVD(
-   double* u)
+   double* u, bool add_without_increase)
 {
    CAROM_ASSERT(u != 0);
 
@@ -313,7 +347,10 @@ IncrementalSVD::buildIncrementalSVD(
 
    // Use k to see if this sample is new.
    bool linearly_dependent_sample;
-   if (k < d_linearity_tol) {
+   if ( k < d_linearity_tol ) {
+      k = 0;
+      linearly_dependent_sample = true;
+   } else if ( d_num_samples >= d_max_basis_dimension || add_without_increase ) {
       k = 0;
       linearly_dependent_sample = true;
    }
@@ -328,8 +365,9 @@ IncrementalSVD::buildIncrementalSVD(
 
    // Now get the singular value decomposition of Q.
    Matrix* A;
+   Matrix* W;
    Matrix* sigma;
-   bool result = svd(Q, A, sigma);
+   bool result = svd(Q, A, sigma, W);
 
    // Done with Q.
    delete [] Q;
@@ -340,10 +378,10 @@ IncrementalSVD::buildIncrementalSVD(
 
       // We need to add the sample if it is not linearly dependent or if it is
       // linearly dependent and we are not skipping linearly dependent samples.
-      if (linearly_dependent_sample && !d_skip_linearly_dependent) {
+      if ((linearly_dependent_sample && !d_skip_linearly_dependent) ) {
          // This sample is linearly dependent and we are not skipping linearly
          // dependent samples.
-         addLinearlyDependentSample(A, sigma);
+         addLinearlyDependentSample(A, W, sigma);
          delete sigma;
       }
       else if (!linearly_dependent_sample) {
@@ -357,19 +395,21 @@ IncrementalSVD::buildIncrementalSVD(
 
          // addNewSample will assign sigma to d_S hence it should not be
          // deleted upon return.
-         addNewSample(j, A, sigma);
+         addNewSample(j, A, W, sigma);
          delete j;
       }
       delete basisl;
       delete A;
+      delete W;
 
       // Compute the basis vectors.
-      delete d_basis;
-      computeBasis();
+      delete d_basis;  
+      computeBasis();  
    }
    else {
       delete basisl;
       delete A;
+      delete W;
       delete sigma;
    }
    return result;
@@ -409,14 +449,15 @@ bool
 IncrementalSVD::svd(
    double* A,
    Matrix*& U,
-   Matrix*& S)
+   Matrix*& S,
+   Matrix*& V)
 {
    CAROM_ASSERT(A != 0);
 
    // Construct U, S, and V.
    U = new Matrix(d_num_samples+1, d_num_samples+1, false);
    S = new Matrix(d_num_samples+1, d_num_samples+1, false);
-   Matrix* V = new Matrix(d_num_samples+1, d_num_samples+1, false);
+   V = new Matrix(d_num_samples+1, d_num_samples+1, false);
    for (int row = 0; row < d_num_samples+1; ++row) {
       for (int col = 0; col < d_num_samples+1; ++col) {
          S->item(row, col) = 0.0;
@@ -468,10 +509,18 @@ IncrementalSVD::svd(
             U->item(col, row) = tmp;
          }
       }
-      delete V;
+/*      if(d_updateRightSV) {
+        // V is column major order so convert it to row major order.
+        for (int row = 0; row < d_num_samples+1; ++row) {
+           for (int col = row+1; col < d_num_samples+1; ++col) {
+              double tmp = V->item(row, col);
+              V->item(row, col) = V->item(col, row);
+              V->item(col, row) = tmp;
+           }
+        }
+      }*/
    }
    else {
-      delete V;
       delete [] sigma;
    }
    return info == 0;

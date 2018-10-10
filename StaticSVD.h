@@ -86,6 +86,7 @@ class StaticSVD : public SVD
        *
        * @param[in] u_in The new sample.
        * @param[in] time The simulation time of the new sample.
+       * @param[in] add_without_increase If true, then addLinearlyDependent will be invoked
        *
        * @return True if the sampling was successful.
        */
@@ -93,7 +94,8 @@ class StaticSVD : public SVD
       bool
       takeSample(
          double* u_in,
-         double time);
+         double time,
+         bool add_without_increase = false);
 
       /**
        * @brief Returns the basis vectors for the current time interval.
@@ -105,6 +107,17 @@ class StaticSVD : public SVD
       virtual
       const Matrix*
       getBasis();
+
+      /**
+       * @brief Returns the temporal basis vectors for the current time interval.
+       *
+       * @post thisIntervalBasisCurrent()
+       *
+       * @return The temporal basis vectors for the current time interval.
+       */
+      virtual
+      const Matrix*
+      getTBasis();
 
       /**
        * @brief Returns the singular values for the current time interval.

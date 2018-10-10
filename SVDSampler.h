@@ -98,9 +98,10 @@ class SVDSampler
       bool
       takeSample(
          double* u_in,
-         double time)
+         double time,
+         bool add_without_increase = false)
       {
-         return d_svd->takeSample(u_in, time);
+         return d_svd->takeSample(u_in, time, add_without_increase);
       }
 
       /**
@@ -129,6 +130,18 @@ class SVDSampler
       getBasis()
       {
          return d_svd->getBasis();
+      }
+
+      /**
+       * @brief Returns the temporal basis vectors for the current time interval as a
+       * Matrix.
+       *
+       * @return The temporal basis vectors for the current time interval.
+       */
+      const Matrix*
+      getTBasis()
+      {
+         return d_svd->getTBasis();
       }
 
       /**
@@ -208,16 +221,29 @@ class SVDSampler
          return d_svd->getDim();
       }
 
+      /**
+       * @brief if true, it updates right basis vectors 
+       */
+      bool
+      isUpdateRightSV() 
+      { 
+         return d_updateRightSV; 
+      }
+
    protected:
       /**
        * @brief Pointer to the abstract SVD algorithm object.
        */
-
 #if __cplusplus >= 201103L
       std::shared_ptr<SVD> d_svd;
 #else
       boost::shared_ptr<SVD> d_svd;
 #endif
+
+      /**
+       * @brief if true, isNextSample returns always true 
+       */
+      bool d_updateRightSV;
 
    private:
       /**

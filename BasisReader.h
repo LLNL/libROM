@@ -137,8 +137,12 @@ class BasisReader {
       getBasis(
          double time);
 
+      const Matrix*
+      getTemporalBasis(
+         double time);
+
       Matrix
-      getSpaceTimeBasis(
+      getMatlabBasis(
          double time);
 
    private:
@@ -180,6 +184,11 @@ class BasisReader {
        * @brief The currently requested basis vectors.
        */
       Matrix* d_basis_vectors;
+
+      /**
+       * @brief The currently requested temporal basis vectors.
+       */
+      Matrix* d_temporal_basis_vectors;
 
       /**
        * @brief The database being read from.

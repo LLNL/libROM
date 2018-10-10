@@ -50,6 +50,7 @@ BasisReader::BasisReader(
    const std::string& base_file_name,
    Database::formats db_format) :
    d_basis_vectors(0),
+   d_temporal_basis_vectors(0),
    d_last_basis_idx(-1)
 {
    CAROM_ASSERT(!base_file_name.empty());
@@ -83,6 +84,9 @@ BasisReader::~BasisReader()
 {
    if (d_basis_vectors) {
       delete d_basis_vectors;
+   }
+   if (d_temporal_basis_vectors) {
+      delete d_temporal_basis_vectors;
    }
    d_database->close();
    delete d_database;
@@ -140,24 +144,57 @@ BasisReader::getBasis(
    d_last_basis_idx = i;
    char tmp[100];
    int num_rows;
-   sprintf(tmp, "num_rows_%06d", i);
+   sprintf(tmp, "sbasis_num_rows_%06d", i);
    d_database->getInteger(tmp, num_rows);
    int num_cols;
-   sprintf(tmp, "num_cols_%06d", i);
+   sprintf(tmp, "sbasis_num_cols_%06d", i);
    d_database->getInteger(tmp, num_cols);
    if (d_basis_vectors) {
       delete d_basis_vectors;
    }
    d_basis_vectors = new Matrix(num_rows, num_cols, true);
-   sprintf(tmp, "basis_%06d", i);
+   sprintf(tmp, "sbasis_%06d", i);
    d_database->getDoubleArray(tmp,
                               &d_basis_vectors->item(0, 0),
                               num_rows*num_cols);
    return d_basis_vectors;
 }
 
+const Matrix*
+BasisReader::getTemporalBasis(
+   double time)
+{
+   CAROM_ASSERT(0 < numTimeIntervals());
+   CAROM_ASSERT(0 <= time);
+   int num_time_intervals = numTimeIntervals();
+   int i;
+   for (i = 0; i < num_time_intervals-1; ++i) {
+      if (d_time_interval_start_times[i] <= time &&
+          time < d_time_interval_start_times[i+1]) {
+         break;
+      }
+   }
+   d_last_basis_idx = i;
+   char tmp[100];
+   int num_rows;
+   sprintf(tmp, "tbasis_num_rows_%06d", i);
+   d_database->getInteger(tmp, num_rows);
+   int num_cols;
+   sprintf(tmp, "tbasis_num_cols_%06d", i);
+   d_database->getInteger(tmp, num_cols);
+   if (d_temporal_basis_vectors) {
+      delete d_temporal_basis_vectors;
+   }
+   d_temporal_basis_vectors = new Matrix(num_rows, num_cols, true);
+   sprintf(tmp, "tbasis_%06d", i);
+   d_database->getDoubleArray(tmp,
+                              &d_temporal_basis_vectors->item(0, 0),
+                              num_rows*num_cols);
+   return d_temporal_basis_vectors;
+}
+
 Matrix
-BasisReader::getSpaceTimeBasis(
+BasisReader::getMatlabBasis(
    double time)
 {
    CAROM_ASSERT(0 < numTimeIntervals());

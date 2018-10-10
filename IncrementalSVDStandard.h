@@ -86,10 +86,12 @@ class IncrementalSVDStandard : public IncrementalSVD
          int dim,
          double linearity_tol,
          bool skip_linearly_dependent,
+         int max_basis_dimension,
          int samples_per_time_interval,
          const std::string& basis_file_name,
          bool save_state = false,
          bool restore_state = false,
+         bool updateRightSV = false,
          bool debug_algorithm = false);
 
       /**
@@ -145,11 +147,13 @@ class IncrementalSVDStandard : public IncrementalSVD
        * @pre sigma != 0
        *
        * @param[in] A The left singular vectors.
+       * @param[in] W The right singular vectors.
        * @param[in] sigma The singular values.
        */
       void
       addLinearlyDependentSample(
          const Matrix* A,
+         const Matrix* W,
          const Matrix* sigma);
 
       /**
@@ -157,16 +161,19 @@ class IncrementalSVDStandard : public IncrementalSVD
        *
        * @pre j != 0
        * @pre A != 0
+       * @pre W != 0
        * @pre sigma != 0
        *
        * @param[in] j The new column of d_U.
        * @param[in] A The left singular vectors.
+       * @param[in] W The right singular vectors.
        * @param[in] sigma The singular values.
        */
       void
       addNewSample(
          const Vector* j,
          const Matrix* A,
+         const Matrix* W,
          Matrix* sigma);
 };
 

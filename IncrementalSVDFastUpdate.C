@@ -54,18 +54,22 @@ IncrementalSVDFastUpdate::IncrementalSVDFastUpdate(
    int dim,
    double linearity_tol,
    bool skip_linearly_dependent,
+   int max_basis_dimension,
    int samples_per_time_interval,
    const std::string& basis_file_name,
    bool save_state,
    bool restore_state,
+   bool updateRightSV,
    bool debug_algorithm) :
    IncrementalSVD(dim,
       linearity_tol,
       skip_linearly_dependent,
+      max_basis_dimension,
       samples_per_time_interval,
       basis_file_name,
       save_state,
       restore_state,
+      updateRightSV,
       debug_algorithm),
    d_Up(0)
 {
@@ -146,6 +150,7 @@ IncrementalSVDFastUpdate::buildInitialSVD(
       delete d_U;
       delete d_Up;
       delete d_S;
+      delete d_W;
    }
    d_time_interval_start_times.resize(num_time_intervals+1);
    d_time_interval_start_times[num_time_intervals] = time;
@@ -166,22 +171,35 @@ IncrementalSVDFastUpdate::buildInitialSVD(
       d_U->item(i, 0) = u[i]/norm_u;
    }
 
+   // Build d_W for this new time interval.
+   if (d_updateRightSV) {
+     d_W = new Matrix(1, 1, false);
+     d_W->item(0, 0) = 1.0;
+   }
+
    // Compute the basis vectors for this time interval.
    computeBasis();
 
    // We now have the first sample for the new time interval.
    d_num_samples = 1;
+   d_num_rows_of_W = 1;
 }
 
 void
 IncrementalSVDFastUpdate::computeBasis()
 {
    d_basis = d_U->mult(d_Up);
+   if (fabs(checkOrthogonality(d_basis)) >
+       std::numeric_limits<double>::epsilon()*static_cast<double>(d_num_samples)) {
+      reOrthogonalize(d_basis);
+   }
+   if(d_updateRightSV) d_basis_right = new Matrix(*d_W);
 }
 
 void
 IncrementalSVDFastUpdate::addLinearlyDependentSample(
    const Matrix* A,
+   const Matrix* W,
    const Matrix* sigma)
 {
    CAROM_ASSERT(A != 0);
@@ -202,17 +220,44 @@ IncrementalSVDFastUpdate::addLinearlyDependentSample(
    delete d_Up;
    d_Up = Up_times_Amod;
 
+   Matrix* new_d_W; 
+   if (d_updateRightSV) {
+     // The new d_W is the product of the current d_W extended by another row
+     // and column and W.  The only new value in the extended version of d_W
+     // that is non-zero is the new lower right value and it is 1.  We will
+     // construct this product without explicitly forming the extended version of
+     // d_W.
+     new_d_W = new Matrix(d_num_rows_of_W+1, d_num_samples, false);
+     for (int row = 0; row < d_num_rows_of_W; ++row) {
+        for (int col = 0; col < d_num_samples; ++col) {
+           double new_d_W_entry = 0.0;
+           for (int entry = 0; entry < d_num_samples; ++entry) {
+              new_d_W_entry += d_W->item(row, entry)*W->item(entry, col);
+           }
+           new_d_W->item(row, col) = new_d_W_entry;
+        }
+     }
+     for (int col = 0; col < d_num_samples; ++col) {
+        new_d_W->item(d_num_rows_of_W, col) = W->item(d_num_samples, col);
+     }
+     delete d_W;
+     d_W = new_d_W;
+     ++d_num_rows_of_W;
+   }
+/*
    // Reorthogonalize if necessary.
    if (fabs(checkOrthogonality(d_Up)) >
        std::numeric_limits<double>::epsilon()*d_num_samples) {
       reOrthogonalize(d_Up);
    }
+*/
 }
 
 void
 IncrementalSVDFastUpdate::addNewSample(
    const Vector* j,
    const Matrix* A,
+   const Matrix* W,
    Matrix* sigma)
 {
    CAROM_ASSERT(j != 0);
@@ -229,6 +274,30 @@ IncrementalSVDFastUpdate::addNewSample(
    }
    delete d_U;
    d_U = newU;
+
+   Matrix* new_d_W; 
+   if (d_updateRightSV) {
+     // The new d_W is the product of the current d_W extended by another row
+     // and column and W.  The only new value in the extended version of d_W
+     // that is non-zero is the new lower right value and it is 1.  We will
+     // construct this product without explicitly forming the extended version of
+     // d_W.
+     new_d_W = new Matrix(d_num_rows_of_W+1, d_num_samples+1, false);
+     for (int row = 0; row < d_num_rows_of_W; ++row) {
+        for (int col = 0; col < d_num_samples+1; ++col) {
+           double new_d_W_entry = 0.0;
+           for (int entry = 0; entry < d_num_samples; ++entry) {
+              new_d_W_entry += d_W->item(row, entry)*W->item(entry, col);
+           }
+           new_d_W->item(row, col) = new_d_W_entry;
+        }
+     }
+     for (int col = 0; col < d_num_samples+1; ++col) {
+        new_d_W->item(d_num_rows_of_W, col) = W->item(d_num_samples, col);
+     }
+     delete d_W;
+     d_W = new_d_W;
+   }
 
    // The new d_Up is the product of the current d_Up extended by another row
    // and column and A.  The only new value in the extended version of d_Up
@@ -257,6 +326,7 @@ IncrementalSVDFastUpdate::addNewSample(
 
    // We now have another sample.
    ++d_num_samples;
+   ++d_num_rows_of_W;
 
    // Reorthogonalize if necessary.
    long int max_U_dim;
@@ -266,6 +336,7 @@ IncrementalSVDFastUpdate::addNewSample(
    else {
       max_U_dim = d_total_dim;
    }
+/*
    if (fabs(checkOrthogonality(d_U)) >
        std::numeric_limits<double>::epsilon()*static_cast<double>(max_U_dim)) {
       reOrthogonalize(d_U);
@@ -274,6 +345,14 @@ IncrementalSVDFastUpdate::addNewSample(
        std::numeric_limits<double>::epsilon()*d_num_samples) {
       reOrthogonalize(d_Up);
    }
+*/
+   if (d_updateRightSV) {
+     if (fabs(checkOrthogonality(d_W)) >
+         std::numeric_limits<double>::epsilon()*d_num_samples) {
+        reOrthogonalize(d_W);
+     }
+   }
+
 }
 
 }

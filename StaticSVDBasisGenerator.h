@@ -85,6 +85,9 @@ class StaticSVDBasisGenerator : public SVDBasisGenerator
       virtual
       ~StaticSVDBasisGenerator();
 
+      bool 
+      updateRightSV() { return true; }
+
    private:
       /**
        * @brief Unimplemented default constructor.

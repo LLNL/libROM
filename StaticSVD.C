@@ -102,7 +102,8 @@ StaticSVD::~StaticSVD()
 bool
 StaticSVD::takeSample(
    double* u_in,
-   double time)
+   double time,
+   bool add_without_increase)
 {
    CAROM_ASSERT(u_in != 0);
    CAROM_ASSERT(time >= 0.0);
@@ -123,6 +124,10 @@ StaticSVD::takeSample(
             delete d_basis;
             d_basis = 0;
          }
+         if (d_basis_right) {
+            delete d_basis_right;
+            d_basis_right = 0;
+         }
          for (int i = 0; i < static_cast<int>(d_samples.size()); ++i) {
             if (d_samples[i]) {
                delete [] d_samples[i];
@@ -140,6 +145,7 @@ StaticSVD::takeSample(
       d_time_interval_start_times.resize(num_time_intervals+1);
       d_time_interval_start_times[num_time_intervals] = time;
       d_basis = 0;
+      d_basis_right = 0;
    }
    double* sample = new double [d_dim];
    memcpy(sample, u_in, d_dim*sizeof(double));
@@ -157,6 +163,9 @@ StaticSVD::getBasis()
    if (!thisIntervalBasisCurrent()) {
       if (d_basis != 0) {
          delete d_basis;
+      }
+      if (d_basis_right != 0) {
+         delete d_basis_right;
       }
       if (d_U != 0) {
          delete d_U;
@@ -177,6 +186,36 @@ StaticSVD::getBasis()
 }
 
 const Matrix*
+StaticSVD::getTBasis()
+{
+   // If this basis is for the last time interval then it may not be up to date
+   // so recompute it.
+   if (!thisIntervalBasisCurrent()) {
+      if (d_basis != 0) {
+         delete d_basis;
+      }
+      if (d_basis_right != 0) {
+         delete d_basis_right;
+      }
+      if (d_U != 0) {
+         delete d_U;
+      }
+      if (d_S != 0) {
+         delete d_S;
+      }
+      if (d_V != 0) {
+         delete d_V;
+      }
+      computeSVD();
+   }
+   else {
+      CAROM_ASSERT(d_basis_right != 0);
+   }
+   CAROM_ASSERT(thisIntervalBasisCurrent());
+   return d_basis_right;
+}
+
+const Matrix*
 StaticSVD::getSingularValues()
 {
    // If these singular values are for the last time interval then they may not
@@ -184,6 +223,9 @@ StaticSVD::getSingularValues()
    if (!thisIntervalBasisCurrent()) {
       if (d_basis != 0) {
          delete d_basis;
+      }
+      if (d_basis_right != 0) {
+         delete d_basis_right;
       }
       if (d_U != 0) {
          delete d_U;
@@ -337,11 +379,19 @@ StaticSVD::computeSVD()
       delete [] A;
    }
    d_basis = new Matrix(*d_U);
+   d_basis_right = new Matrix(*d_V);
    d_this_interval_basis_current = true;
    if (d_debug_algorithm && d_rank == 0) {
       for (int row = 0; row < num_cols; ++row) {
          for (int col = 0; col < num_cols; ++col) {
             printf("%.16e ", d_S->item(row, col));
+         }
+         printf("\n");
+      }
+      printf("\n");
+      for (int row = 0; row < num_cols; ++row) {
+         for (int col = 0; col < num_cols; ++col) {
+            printf("%.16e ", d_V->item(row, col));
          }
          printf("\n");
       }
@@ -430,13 +480,14 @@ StaticSVD::svd(
    delete [] U;
 
    // d_V is in column major order.  Convert it to row major order.
+   /*
    for (int row = 0; row < num_samples; ++row) {
       for (int col = row+1; col < num_samples; ++col) {
          double tmp = d_V->item(row, col);
          d_V->item(row, col) = d_V->item(col, row);
          d_V->item(col, row) = tmp;
       }
-   }
+   }*/
 }
 
 }
