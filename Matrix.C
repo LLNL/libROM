@@ -633,6 +633,49 @@ Matrix::inverse()
    }
 }
 
+void Matrix::pseudoinverse()
+{
+   CAROM_ASSERT(!distributed());
+   CAROM_ASSERT(numRows() >= numColumns());
+
+   if (numRows() == numColumns())
+     {
+       inverse();
+       // Transpose, since in the case numRows() > numColumns() we store the transpose of the pseudoinverse in this.
+       for (int row = 0; row < numRows(); ++row) {
+	 for (int col = row+1; col < numColumns(); ++col) {
+	   const double tmp = item(row, col);
+	   item(row, col) = item(col, row);
+	   item(col, row) = tmp;
+	 }
+       }
+     }
+   else
+     {
+       Matrix *AtA = this->transposeMult(this);
+
+       // Directly invert AtA, which is a bad idea if AtA is not small. 
+       AtA->inverse();
+
+       // Pseudoinverse is (AtA)^{-1}*this^T, but we store the transpose of the result in this, namely this*(AtA)^{-T}.
+       Vector row(numColumns(), false);
+       Vector res(numRows(), false);
+       for (int i=0; i<numRows(); ++i)
+	 { // Compute i-th row of this multiplied by (AtA)^{-T}, whose transpose is (AtA)^{-1} times i-th row transposed.
+	   for (int j=0; j<numColumns(); ++j)
+	     row.item(j) = this->item(i,j);
+	   
+	   AtA->mult(row, res);
+
+	   // Overwrite i-th row with transpose of result.
+	   for (int j=0; j<numColumns(); ++j)
+	     this->item(i,j) = res.item(j);
+	 }
+   
+       delete AtA;
+     }
+}
+
 void
 Matrix::qrcp_pivots_transpose(int* row_pivot,
 			      int* row_pivot_owner,

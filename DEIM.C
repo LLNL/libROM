@@ -47,33 +47,11 @@
 #include <map>
 #include <set>
 
+#include "DEIM.h"
+
 using namespace std;
 
 namespace CAROM {
-
-// Struct to hold the local maximum absolute value of a basis vector, the row
-// it is in, and the processor that owns it.  We will reduce this to find the
-// global row containing the maximum of a basis vector.
-typedef struct
-{
-   double row_val;
-   int row;
-   int proc;
-} RowInfo;
-
-// The function to use as an MPI_Op in the reduction to determine the row and
-// processor owning the row of the absolute maximum of a basis vector.
-void
-RowInfoMax(RowInfo* a, RowInfo* b, int* len, MPI_Datatype* type)
-{
-   for (int i = 0; i < *len; ++i) {
-      if (a[i].row_val > b[i].row_val) {
-         b[i].row_val = a[i].row_val;
-         b[i].row = a[i].row;
-         b[i].proc = a[i].proc;
-      }
-   }
-}
 
 void
 DEIM(const Matrix* f_basis,

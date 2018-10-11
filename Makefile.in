@@ -70,7 +70,8 @@ OBJS = Matrix.o \
        Utilities.o \
        ParallelBuffer.o \
        DEIM.o \
-       QDEIM.o
+       QDEIM.o \
+       GNAT.o
 
 HEADERS = $(OBJS:%.o=%.h)
 

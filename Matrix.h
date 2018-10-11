@@ -667,6 +667,14 @@ class Matrix
       inverse();
 
       /**
+       * @brief Computes the pseudoinverse of this and stores the tranpose of the result in this.
+       *
+       * @pre !distributed()
+       * @pre numRows() >= numColumns()
+       */
+      void pseudoinverse();
+      
+      /**
        * @brief Compute the leading numColumns() column pivots from a
        * QR decomposition with column pivots (QRCP) of the transpose
        * of this.
