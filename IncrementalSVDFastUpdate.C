@@ -189,10 +189,12 @@ void
 IncrementalSVDFastUpdate::computeBasis()
 {
    d_basis = d_U->mult(d_Up);
+/*
    if (fabs(checkOrthogonality(d_basis)) >
        std::numeric_limits<double>::epsilon()*static_cast<double>(d_num_samples)) {
       reOrthogonalize(d_basis);
    }
+*/
    if(d_updateRightSV) d_basis_right = new Matrix(*d_W);
 }
 
@@ -244,13 +246,13 @@ IncrementalSVDFastUpdate::addLinearlyDependentSample(
      d_W = new_d_W;
      ++d_num_rows_of_W;
    }
-/*
+
    // Reorthogonalize if necessary.
    if (fabs(checkOrthogonality(d_Up)) >
        std::numeric_limits<double>::epsilon()*d_num_samples) {
       reOrthogonalize(d_Up);
    }
-*/
+
 }
 
 void
@@ -336,7 +338,7 @@ IncrementalSVDFastUpdate::addNewSample(
    else {
       max_U_dim = d_total_dim;
    }
-/*
+
    if (fabs(checkOrthogonality(d_U)) >
        std::numeric_limits<double>::epsilon()*static_cast<double>(max_U_dim)) {
       reOrthogonalize(d_U);
@@ -345,7 +347,7 @@ IncrementalSVDFastUpdate::addNewSample(
        std::numeric_limits<double>::epsilon()*d_num_samples) {
       reOrthogonalize(d_Up);
    }
-*/
+
    if (d_updateRightSV) {
      if (fabs(checkOrthogonality(d_W)) >
          std::numeric_limits<double>::epsilon()*d_num_samples) {
