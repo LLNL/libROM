@@ -612,6 +612,25 @@ class Vector
          return item(i);
       }
       
+     /** 
+      * @brief print Vector into (a) file(s).
+      *
+      * @param[in] prefix The name of the prefix of the file name.
+      *
+      */
+     void print(const char * prefix)
+     {
+       int my_rank;
+       CAROM_ASSERT(MPI_Comm_rank(comm, &my_rank) == MPI_SUCCESS);
+
+       std::string filename_str = prefix + std::to_string(my_rank); 
+       const char * filename = filename_str.c_str();
+       FILE * pFile = fopen(filename,"w");
+       for (int k = 0; k < d_dim; ++k) { 
+         fprintf(pFile, " %25.20e\t", d_vec[k]);
+       }
+     }
+
    private:
       /**
        * @brief Default constructor is not implemented.
