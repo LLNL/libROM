@@ -641,14 +641,6 @@ void Matrix::pseudoinverse()
    if (numRows() == numColumns())
      {
        inverse();
-       // Transpose, since in the case numRows() > numColumns() we store the transpose of the pseudoinverse in this.
-       for (int row = 0; row < numRows(); ++row) {
-	 for (int col = row+1; col < numColumns(); ++col) {
-	   const double tmp = item(row, col);
-	   item(row, col) = item(col, row);
-	   item(col, row) = tmp;
-	 }
-       }
      }
    else
      {

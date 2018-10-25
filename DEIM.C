@@ -54,7 +54,19 @@ using namespace std;
 namespace CAROM {
 
 void
-DEIM(const Matrix* f_basis,
+RowInfoMax(RowInfo* a, RowInfo* b, int* len, MPI_Datatype* type)
+{
+   for (int i = 0; i < *len; ++i) {
+      if (a[i].row_val > b[i].row_val) {
+         b[i].row_val = a[i].row_val;
+         b[i].row = a[i].row;
+         b[i].proc = a[i].proc;
+      }
+   }
+}
+  
+void
+DEIMOLD(const Matrix* f_basis,
      int num_f_basis_vectors_used,
      int* f_sampled_row,
      int* f_sampled_rows_per_proc,

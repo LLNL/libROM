@@ -59,17 +59,7 @@ typedef struct
 
 // The function to use as an MPI_Op in the reduction to determine the row and
 // processor owning the row of the absolute maximum of a basis vector.
-void
-RowInfoMax(RowInfo* a, RowInfo* b, int* len, MPI_Datatype* type)
-{
-   for (int i = 0; i < *len; ++i) {
-      if (a[i].row_val > b[i].row_val) {
-         b[i].row_val = a[i].row_val;
-         b[i].row = a[i].row;
-         b[i].proc = a[i].proc;
-      }
-   }
-}
+void RowInfoMax(RowInfo* a, RowInfo* b, int* len, MPI_Datatype* type);
  
 /**
  * @brief
@@ -88,7 +78,7 @@ RowInfoMax(RowInfo* a, RowInfo* b, int* len, MPI_Datatype* type)
  * @param[int] num_procs The total number of processes.
  */
 void
-DEIM(const Matrix* f_basis,
+DEIMOLD(const Matrix* f_basis,
      int num_f_basis_vectors_used,
      int* f_sampled_row,
      int* f_sampled_rows_per_proc,
@@ -114,15 +104,14 @@ DEIM(const Matrix* f_basis,
  * @param[int] num_procs The total number of processes.
  */
 void
-GNAT(const Matrix* f_basis,
-     const int num_samples,
+DEIM(const Matrix* f_basis,
      const int num_f_basis_vectors_used,
      int* f_sampled_row,
      int* f_sampled_rows_per_proc,
      Matrix& f_basis_sampled_inv,
      const int myid,
-     const int num_procs);
-
+     const int num_procs,
+     const int num_samples_req = -1);
 }
 
 #endif
