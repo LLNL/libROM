@@ -174,7 +174,10 @@ void DEIM(const Matrix* f_basis,
     for (int minv_row = 0; minv_row < i; ++minv_row) {
       double tmp = 0.0;
       for (int minv_col = 0; minv_col < ns; ++minv_col) {
-	tmp += M.item(minv_col, minv_row)*tmp_fs.item(minv_col, i);  // Transposing M^+, which is stored as its transpose.
+	if (ns == i)
+	  tmp += M.item(minv_row, minv_col)*tmp_fs.item(minv_col, i);
+	else
+	  tmp += M.item(minv_col, minv_row)*tmp_fs.item(minv_col, i);  // Transposing M^+, which is stored as its transpose.
       }
       c[minv_row] = tmp;
     }
