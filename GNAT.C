@@ -217,10 +217,10 @@ void DEIM(const Matrix* f_basis,
 		  f_bv_max_global.proc, MPI_COMM_WORLD);
 	// Now add the ith sampled row of the basis of the RHS to tmp_fs.
 	for (int j = 0; j < num_basis_vectors; ++j) {
-	  tmp_fs.item(i, j) = c[j];
+	  tmp_fs.item(ns+k, j) = c[j];
 	}
 	proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
-	proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] = i;
+	proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] = ns+k;
       }
 
     ns += nsi;

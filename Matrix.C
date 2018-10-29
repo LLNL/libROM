@@ -651,7 +651,7 @@ void Matrix::pseudoinverse()
 
        // Pseudoinverse is (AtA)^{-1}*this^T, but we store the transpose of the result in this, namely this*(AtA)^{-T}.
        Vector row(numColumns(), false);
-       Vector res(numRows(), false);
+       Vector res(numColumns(), false);
        for (int i=0; i<numRows(); ++i)
 	 { // Compute i-th row of this multiplied by (AtA)^{-T}, whose transpose is (AtA)^{-1} times i-th row transposed.
 	   for (int j=0; j<numColumns(); ++j)
