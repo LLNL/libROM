@@ -779,6 +779,7 @@ class Matrix
          }
          fprintf(pFile, "\n");
        }
+       fclose(pFile);
      }
 
    private:

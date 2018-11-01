@@ -246,13 +246,11 @@ IncrementalSVDFastUpdate::addLinearlyDependentSample(
      d_W = new_d_W;
      ++d_num_rows_of_W;
    }
-
    // Reorthogonalize if necessary.
    if (fabs(checkOrthogonality(d_Up)) >
        std::numeric_limits<double>::epsilon()*d_num_samples) {
       reOrthogonalize(d_Up);
    }
-
 }
 
 void
@@ -347,7 +345,6 @@ IncrementalSVDFastUpdate::addNewSample(
        std::numeric_limits<double>::epsilon()*d_num_samples) {
       reOrthogonalize(d_Up);
    }
-
    if (d_updateRightSV) {
      if (fabs(checkOrthogonality(d_W)) >
          std::numeric_limits<double>::epsilon()*d_num_samples) {

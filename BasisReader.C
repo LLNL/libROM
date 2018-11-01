@@ -51,6 +51,7 @@ BasisReader::BasisReader(
    Database::formats db_format) :
    d_basis_vectors(0),
    d_temporal_basis_vectors(0),
+   d_singular_values(0),
    d_last_basis_idx(-1)
 {
    CAROM_ASSERT(!base_file_name.empty());
@@ -87,6 +88,9 @@ BasisReader::~BasisReader()
    }
    if (d_temporal_basis_vectors) {
       delete d_temporal_basis_vectors;
+   }
+   if (d_singular_values) {
+      delete d_singular_values;
    }
    d_database->close();
    delete d_database;
@@ -191,6 +195,36 @@ BasisReader::getTemporalBasis(
                               &d_temporal_basis_vectors->item(0, 0),
                               num_rows*num_cols);
    return d_temporal_basis_vectors;
+}
+
+const Matrix*
+BasisReader::getSingularValues(
+   double time)
+{
+   CAROM_ASSERT(0 < numTimeIntervals());
+   CAROM_ASSERT(0 <= time);
+   int num_time_intervals = numTimeIntervals();
+   int i;
+   for (i = 0; i < num_time_intervals-1; ++i) {
+      if (d_time_interval_start_times[i] <= time &&
+          time < d_time_interval_start_times[i+1]) {
+         break;
+      }
+   }
+   d_last_basis_idx = i;
+   char tmp[100];
+   int size;
+   sprintf(tmp, "sv_size_%06d", i);
+   d_database->getInteger(tmp, size);
+   if (d_singular_values) {
+      delete d_singular_values;
+   }
+   d_singular_values = new Matrix(size, size, true);
+   sprintf(tmp, "sv_%06d", i);
+   d_database->getDoubleArray(tmp,
+                              &d_singular_values->item(0, 0),
+                              size*size);
+   return d_singular_values;
 }
 
 Matrix

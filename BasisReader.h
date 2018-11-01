@@ -141,6 +141,10 @@ class BasisReader {
       getTemporalBasis(
          double time);
 
+      const Matrix*
+      getSingularValues(
+         double time);
+
       Matrix
       getMatlabBasis(
          double time);
@@ -189,6 +193,11 @@ class BasisReader {
        * @brief The currently requested temporal basis vectors.
        */
       Matrix* d_temporal_basis_vectors;
+
+      /**
+       * @brief The currently requested singular values.
+       */
+      Matrix* d_singular_values;
 
       /**
        * @brief The database being read from.
