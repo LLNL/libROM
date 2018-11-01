@@ -767,7 +767,7 @@ class Matrix
          return item(row, col);
       }
 
-      /** 
+     /** 
       * @brief print Matrix into (a) file(s).
       *
       * @param[in] prefix The name of the prefix of the file name.
@@ -789,7 +789,7 @@ class Matrix
        }
        fclose(pFile);
      }
-     
+
    private:
       /**
        * @brief Default constructor is not implemented.

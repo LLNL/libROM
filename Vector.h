@@ -612,7 +612,7 @@ class Vector
          return item(i);
       }
       
-      /** 
+     /** 
       * @brief print Vector into (a) file(s).
       *
       * @param[in] prefix The name of the prefix of the file name.
@@ -627,11 +627,11 @@ class Vector
        const char * filename = filename_str.c_str();
        FILE * pFile = fopen(filename,"w");
        for (int k = 0; k < d_dim; ++k) { 
-         fprintf(pFile, " %25.20e\t", d_vec[k]);
+         fprintf(pFile, " %25.20e\n", d_vec[k]);
        }
        fclose(pFile);
      }
-     
+
    private:
       /**
        * @brief Default constructor is not implemented.
