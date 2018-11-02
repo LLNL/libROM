@@ -837,6 +837,15 @@ class SecondDifferenceMatrix : public CAROM::Matrix
        *  the first and last rows).
        */
 
+      /* Zero out matrix */
+      for (int i = 0; i < size; i++)
+      {
+	for (int j = 0; j < size; j++)
+	{
+	  item(i, j) = 0;
+	}
+      }
+      
       /** For degenerate case where size == 1, matrix should be one
 	  entry: [2]
        */
@@ -873,25 +882,109 @@ class SecondDifferenceMatrix : public CAROM::Matrix
     }
 };
 
-// Test fixture for testing
+/* Use permuted identity matrix as one fake Matrix for testing */
+class PermutedIdentityMatrix : public CAROM::Matrix
+{
+public:
+  /**
+   * @brief Constructor
+   */
+  PermutedIdentityMatrix
+  (int size, int* permutation, bool is_inverse=false)
+    : Matrix(size, size, false)
+  {
+    /* Zero out matrix */
+    for (int i = 0; i < size; i++)
+    {
+      for (int j = 0; j < size; j++)
+      {
+	item(i, j) = 0;
+      }
+    }
+
+    if (!is_inverse)
+    {
+      /* Assign ones in the columns  */
+      for (int i = 0; i < size; i++)
+      {
+	item(i, permutation[i]) = 1;
+      }
+    }
+    else
+    {
+      /* Assign ones in the rows; an inverse permutation matrix  */
+      for (int i = 0; i < size; i++)
+      {
+	item(permutation[i], i) = 1;
+      }
+    }
+  }
+
+  /* TODO(oxberry1@llnl.gov): Replace with delegating c'tor once C++11 adopted*/
+  PermutedIdentityMatrix
+  (std::vector<int> permutation, bool is_inverse=false)
+    : Matrix(static_cast<int>(permutation.size()),
+	     static_cast<int>(permutation.size()),
+	     false)
+  {
+    int size = permutation.size();
+    
+    /* Zero out matrix */
+    for (int i = 0; i < size; i++)
+    {
+      for (int j = 0; j < size; j++)
+      {
+	item(i, j) = 0;
+      }
+    }
+
+    if (!is_inverse)
+    {
+      /* Assign ones in the columns  */
+      for (int i = 0; i < size; i++)
+      {
+	item(i, permutation.at(i)) = 1;
+      }
+    }
+    else
+    {
+      /* Assign ones in the rows; an inverse permutation matrix  */
+      for (int i = 0; i < size; i++)
+      {
+	item(permutation.at(i), i) = 1;
+      }
+    }
+  }
+  
+  ~PermutedIdentityMatrix
+  ()
+  {
+  }
+};
+
+// Test fixture for testing; this test mainly tests to make sure
+// that C-style indices (starting at zero) are returned, and in
+// the correct order; the identity matrix should be returned
+// in the same order.
 TEST(MatrixSerialTest, Test_qrcp_pivots_transpose)
 {
-  // Allocate space for second_difference matrix
+  // Allocate space for permuted_identity matrix
   const int size = 4;
-  SecondDifferenceMatrix second_difference(size);
-
+  int permutation[4] = {0, 1, 2, 3};
+  PermutedIdentityMatrix permuted_identity(size, permutation, false);
+  
   // Allocate memory for QRCP arguments
   int* row_pivot                 =       new int[size];
   int* row_pivot_owner           =       new int[size];
   const int row_pivots_requested =               size ;
 
   // Compute pivots
-  second_difference.qrcp_pivots_transpose(row_pivot,
+  permuted_identity.qrcp_pivots_transpose(row_pivot,
 					  row_pivot_owner,
 					  row_pivots_requested);
 
   // All row pivot owners should be on the current rank;
-  // all row pivots shouold be less than the size of the matrix
+  // all row pivots should be less than the size of the matrix
   int is_mpi_initialized, is_mpi_finalized;
   CAROM_ASSERT(MPI_Initialized(&is_mpi_initialized) == MPI_SUCCESS);
   CAROM_ASSERT(MPI_Finalized(&is_mpi_finalized) == MPI_SUCCESS);
@@ -906,12 +999,12 @@ TEST(MatrixSerialTest, Test_qrcp_pivots_transpose)
     EXPECT_TRUE(row_pivot[i] < size);
   }
 
-  // Row pivots should be known values
-  EXPECT_EQ(row_pivot[0], 1);
-  EXPECT_EQ(row_pivot[1], 3);
-  EXPECT_EQ(row_pivot[2], 0);
-  EXPECT_EQ(row_pivot[3], 2);
-
+  /* Test known row pivots */
+  EXPECT_EQ(row_pivot[0], permutation[0]);
+  EXPECT_EQ(row_pivot[1], permutation[1]);
+  EXPECT_EQ(row_pivot[2], permutation[2]);
+  EXPECT_EQ(row_pivot[3], permutation[3]);
+  
   // Free allocated arrays
   delete [] row_pivot;
   delete [] row_pivot_owner;
