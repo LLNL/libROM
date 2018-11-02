@@ -625,8 +625,6 @@ LIBOBJS
 LIB_NAME
 LIB_PATH
 INC_PATH
-LD_FLAGS
-CXX_FLAGS
 ROM_PERL
 dox_output_dir
 DOT_PATH
@@ -2967,9 +2965,6 @@ fi
 
 
 
-CXX_FLAGS="$CXXFLAGS"
-LD_FLAGS="$LDFLAGS"
-
 INC_PATH=
 LIB_PATH=
 LIB_NAME=
@@ -3028,7 +3023,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:3031:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:3026:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -3054,7 +3049,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:3057:" "before running compiler search: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:3052:" "before running compiler search: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -3766,7 +3761,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:3769:" "after running compiler search: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:3764:" "after running compiler search: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -4781,7 +4776,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:4784:" "before running compiler search: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:4779:" "before running compiler search: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -5007,7 +5002,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:5010:" "after running compiler search: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:5005:" "after running compiler search: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -6514,7 +6509,7 @@ case "$with_extra_ld_flags" in
     : No op
   ;;
   *)
-    LD_FLAGS="$LD_FLAGS $with_extra_ld_flags"
+    LDFLAGS="$LDFLAGS $with_extra_ld_flags"
   ;;
 esac
 
@@ -6938,8 +6933,8 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
-  echo "configure:6941:" CC is $CC >&5
-  echo "configure:6942:" CPP is $CPP >&5
+  echo "configure:6936:" CC is $CC >&5
+  echo "configure:6937:" CPP is $CPP >&5
 
   CC_ID=unknown
   CC_VERSION=unknown
@@ -6948,7 +6943,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
   # Check if it is a Sun compiler.
   if test $CC_ID = unknown; then
-    echo "configure:6951:" checking if $CC is sunpro >&5
+    echo "configure:6946:" checking if $CC is sunpro >&5
     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 __SUNPRO_C
@@ -6969,7 +6964,7 @@ rm -f conftest*
 
   # Check if it is a Intel compiler.
   if test $CC_ID = unknown; then
-    echo "configure:6972:" checking if $CC is intel >&5
+    echo "configure:6967:" checking if $CC is intel >&5
     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #ifdef __INTEL_COMPILER
@@ -6993,7 +6988,7 @@ rm -f conftest*
 
   # Check if it is a GNU compiler.
   if test $CC_ID = unknown; then
-    echo "configure:6996:" checking if $CC is gnu >&5
+    echo "configure:6991:" checking if $CC is gnu >&5
     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #ifdef __GNUC__
@@ -7014,7 +7009,7 @@ rm -f conftest*
 
   # Check if it is a DEC compiler.
   if test $CC_ID = unknown; then
-    echo "configure:7017:" checking if $CC is dec >&5
+    echo "configure:7012:" checking if $CC is dec >&5
     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 __DECC
@@ -7035,7 +7030,7 @@ rm -f conftest*
 
   # Check if it is a KAI compiler.
   if test $CC_ID = unknown; then
-    echo "configure:7038:" checking if $CC is kai >&5
+    echo "configure:7033:" checking if $CC is kai >&5
     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 __KCC
@@ -7056,7 +7051,7 @@ rm -f conftest*
 
   # Check if it is a SGI compiler.
   if test $CC_ID = unknown; then
-    echo "configure:7059:" checking if $CC is sgi >&5
+    echo "configure:7054:" checking if $CC is sgi >&5
     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 __sgi
@@ -7077,17 +7072,17 @@ rm -f conftest*
 
   # Check if it is a IBM compiler.
   if test $CC_ID = unknown; then
-    echo "configure:7080:" checking if $CC is xlc >&5
+    echo "configure:7075:" checking if $CC is xlc >&5
     if echo "$host_os" | grep "aix" >/dev/null ; then
       # The wretched IBM shell does not eval correctly,
       # so we have to help it with a pre-eval eval statement.
       ac_cpp=`eval "echo $ac_cpp"`
       save_ac_cpp=$ac_cpp
-      echo "configure:7086:" ac_cpp is temporarily set to $ac_cpp >&5
+      echo "configure:7081:" ac_cpp is temporarily set to $ac_cpp >&5
     else
       save_ac_cpp=
     fi
-    echo "configure:7090:" ac_cpp is $ac_cpp >&5
+    echo "configure:7085:" ac_cpp is $ac_cpp >&5
     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #ifdef __xlC__
@@ -7107,7 +7102,7 @@ fi
 rm -f conftest*
 
     test "$save_ac_cpp" && ac_cpp=$save_ac_cpp
-    echo "configure:7110:" ac_cpp is restored to $ac_cpp >&5
+    echo "configure:7105:" ac_cpp is restored to $ac_cpp >&5
   fi
 
 
@@ -7127,7 +7122,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:7130:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:7125:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -7279,8 +7274,8 @@ ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
-  echo "configure:7282:" CXXP is $CXX >&5
-  echo "configure:7283:" CXXCPP is $CXXCPP >&5
+  echo "configure:7277:" CXXP is $CXX >&5
+  echo "configure:7278:" CXXCPP is $CXXCPP >&5
 
   CXX_ID=unknown
   CXX_VERSION=unknown
@@ -7289,7 +7284,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
   # Check if it is a Sun compiler.
   if test $CXX_ID = unknown; then
-    echo "configure:7292:" checking if $CXX is sunpro >&5
+    echo "configure:7287:" checking if $CXX is sunpro >&5
     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 __SUNPRO_CC
@@ -7310,7 +7305,7 @@ rm -f conftest*
 
   # Check if it is a Intel compiler.
   if test $CXX_ID = unknown; then
-    echo "configure:7313:" checking if $CXX is intel >&5
+    echo "configure:7308:" checking if $CXX is intel >&5
     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #ifdef __INTEL_COMPILER
@@ -7334,7 +7329,7 @@ rm -f conftest*
 
   # Check if it is a GNU compiler.
   if test $CXX_ID = unknown; then
-    echo "configure:7337:" checking if $CXX is gnu >&5
+    echo "configure:7332:" checking if $CXX is gnu >&5
     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #ifdef __GNUC__
@@ -7358,7 +7353,7 @@ rm -f conftest*
 
   # Check if it is a DEC compiler.
   if test $CXX_ID = unknown; then
-    echo "configure:7361:" checking if $CXX is dec >&5
+    echo "configure:7356:" checking if $CXX is dec >&5
     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 __DECCXX
@@ -7379,7 +7374,7 @@ rm -f conftest*
 
   # Check if it is a KAI compiler.
   if test $CXX_ID = unknown; then
-    echo "configure:7382:" checking if $CXX is kai >&5
+    echo "configure:7377:" checking if $CXX is kai >&5
     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 __KCC
@@ -7400,7 +7395,7 @@ rm -f conftest*
 
   # Check if it is a SGI compiler.
   if test $CXX_ID = unknown; then
-    echo "configure:7403:" checking if $CXX is sgi >&5
+    echo "configure:7398:" checking if $CXX is sgi >&5
     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 __sgi
@@ -7421,7 +7416,7 @@ rm -f conftest*
 
   # Check if it is a IBM compiler.
   if test $CXX_ID = unknown; then
-    echo "configure:7424:" checking if $CXX is xlc >&5
+    echo "configure:7419:" checking if $CXX is xlc >&5
     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #ifdef __xlC__
@@ -7459,7 +7454,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:7462:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:7457:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -7488,24 +7483,24 @@ esac
 
 case $CXX_ID in
    gnu)
-      CXX_FLAGS="-Wall -Wextra -Wconversion $CXX_FLAGS"
+      CXXFLAGS="-Wall -Wextra -Wconversion $CXXFLAGS"
       case $ARCH in
          IRIX64)
-            CXX_FLAGS="-mabi=64 $CXX_FLAGS"
+            CXXFLAGS="-mabi=64 $CXXFLAGS"
             ;;
          solaris)
             ;;
          CYGWIN)
-            CXX_FLAGS="$CXX_FLAGS"
+            CXXFLAGS="$CXXFLAGS"
             ;;
       esac
       ;;
    xlc)
-      CXX_FLAGS="-qrtti -g $CXX_FLAGS"
+      CXXFLAGS="-qrtti -g $CXXFLAGS"
       ;;
    intel)
       # Ignore some Intel warnings that seem harmless and very hard to get rid of
-      CXX_FLAGS="$CXX_FLAGS -Wall -w1 -wd981 -wd383 -wd1418 -wd522"
+      CXXFLAGS="$CXXFLAGS -Wall -w1 -wd981 -wd383 -wd1418 -wd522"
       ;;
     *)
       ;;
@@ -7530,7 +7525,7 @@ fi
 
 
 if test -n "$opt_switches" ; then
-   CXX_FLAGS="$opt_switches $CXX_FLAGS"
+   CXXFLAGS="$opt_switches $CXXFLAGS"
 fi
 
 # Check whether --enable-debug was given.
@@ -7566,7 +7561,7 @@ $as_echo "#define DEBUG_CHECK_ASSERTIONS 1" >>confdefs.h
 fi
 
 if test -n "$debug_switches" ; then
-   CXX_FLAGS="$debug_switches $CXX_FLAGS"
+   CXXFLAGS="$debug_switches $CXXFLAGS"
 fi
 
 
@@ -7579,7 +7574,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:7582:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:7577:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -7693,7 +7688,7 @@ case "$with_lapack_includes" in
       if test "${with_lapack_includes}" = yes ; then
   as_fn_error $? "If you specify --with-lapack-includes, you must give it the path as in --with-lapack-includes=/installation/path" "$LINENO" 5
 fi
-echo "configure:7696:" environment lapack_INCLUDES not defined >&5
+echo "configure:7691:" environment lapack_INCLUDES not defined >&5
 
 
     fi
@@ -7762,7 +7757,7 @@ case "$with_lapack_libs" in
       if test "${with_lapack_libs}" = yes ; then
   as_fn_error $? "If you specify --with-lapack-libs, you must give it the path as in --with-lapack-libs=/installation/path" "$LINENO" 5
 fi
-echo "configure:7765:" environment lapack_LIBS not defined >&5
+echo "configure:7760:" environment lapack_LIBS not defined >&5
 
 
     fi
@@ -7882,7 +7877,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:7885:" "After finding lapack flag: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:7880:" "After finding lapack flag: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -7900,7 +7895,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:7903:" "Found lapack library flag: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:7898:" "Found lapack library flag: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -7918,7 +7913,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:7921:" "Did not find lapack library flag: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:7916:" "Did not find lapack library flag: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -7936,7 +7931,7 @@ fi
     unset extra_libs
     unset save_LIBS
   else
-    echo "configure:7939:" Not looking for lapack because lapack_LIBS is already set >&5
+    echo "configure:7934:" Not looking for lapack because lapack_LIBS is already set >&5
   fi
 fi
 
@@ -7951,7 +7946,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:7954:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:7949:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -7987,7 +7982,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:7990:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:7985:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -8964,7 +8959,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:8967:" "After successfully finding MPI using casc_find_mpi: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:8962:" "After successfully finding MPI using casc_find_mpi: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -9554,7 +9549,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:9557:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:9552:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -9640,7 +9635,7 @@ fi
         LIB_PATH="$elemental_LIB_PATH $LIB_PATH"
         LIB_NAME="$elemental_LIB_NAME $LIB_NAME"
         INC_PATH="$elemental_INCLUDES $INC_PATH"
-        CXX_FLAGS="$CXX_FLAGS -DCAROM_HAS_ELEMENTAL"
+        CXXFLAGS="$CXXFLAGS -DCAROM_HAS_ELEMENTAL"
     else
         { $as_echo "$as_me:${as_lineno-$LINENO}: Elemental not found - disabling distributed QR decomposition code" >&5
 $as_echo "$as_me: Elemental not found - disabling distributed QR decomposition code" >&6;}
@@ -9655,7 +9650,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:9658:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:9653:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -9727,7 +9722,7 @@ fi
         LIB_PATH="$gtest_LIB_PATH $LIB_PATH"
         LIB_NAME="$gtest_LIB_NAME $LIB_NAME"
         INC_PATH="$gtest_INCLUDES $INC_PATH"
-        CXX_FLAGS="$CXX_FLAGS -DCAROM_HAS_GTEST"
+        CXXFLAGS="$CXXFLAGS -DCAROM_HAS_GTEST"
     else
         { $as_echo "$as_me:${as_lineno-$LINENO}: Google Test Framework not found - disabling unit tests." >&5
 $as_echo "$as_me: Google Test Framework not found - disabling unit tests." >&6;}
@@ -9742,7 +9737,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:9745:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:9740:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -9757,7 +9752,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:9760:" "before adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:9755:" "before adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -10119,7 +10114,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:10122:" "forming rpaths: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:10117:" "forming rpaths: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -10188,7 +10183,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:10191:" "after adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
+  echo "configure:10186:" "after adding rpath syntax: $log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -10315,7 +10310,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:10318:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:10313:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -10370,7 +10365,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:10373:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:10368:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -10516,7 +10511,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:10519:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:10514:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 

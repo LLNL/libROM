@@ -53,7 +53,7 @@ noinst_PROGRAMS += uneven_dist
 noinst_PROGRAMS += random_test
 noinst_PROGRAMS += weak_scaling
 noinst_PROGRAMS += smoke_test
-noinst_PROGRAMS += tests/gtest_runner
+noinst_PROGRAMS += tests/test_Matrix
 
 uneven_dist_SOURCES = uneven_dist.C
 uneven_dist_LDADD = librom.a
@@ -67,8 +67,8 @@ weak_scaling_LDADD = librom.a
 smoke_test_SOURCES = smoke_test.C
 smoke_test_LDADD = librom.a
 
-tests_gtest_runner_SOURCES = tests/gtest_runner.C
-tests_gtest_runner_LDADD = -lgtest -lpthread librom.a
+tests_test_Matrix_SOURCES = tests/test_Matrix.C
+tests_test_Matrix_LDADD = -lgtest -lpthread librom.a
 
 dox:
 	(cd docs && $(MAKE) $@)
