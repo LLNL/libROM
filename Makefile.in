@@ -82,7 +82,7 @@ build_triplet = @build@
 host_triplet = @host@
 noinst_PROGRAMS = uneven_dist$(EXEEXT) random_test$(EXEEXT) \
 	weak_scaling$(EXEEXT) smoke_test$(EXEEXT) \
-	tests/test_Matrix$(EXEEXT)
+	tests/test_Matrix$(EXEEXT) tests/test_Vector$(EXEEXT)
 subdir = .
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) \
@@ -172,6 +172,9 @@ am__dirstamp = $(am__leading_dot)dirstamp
 am_tests_test_Matrix_OBJECTS = tests/test_Matrix.$(OBJEXT)
 tests_test_Matrix_OBJECTS = $(am_tests_test_Matrix_OBJECTS)
 tests_test_Matrix_DEPENDENCIES = librom.a
+am_tests_test_Vector_OBJECTS = tests/test_Vector.$(OBJEXT)
+tests_test_Vector_OBJECTS = $(am_tests_test_Vector_OBJECTS)
+tests_test_Vector_DEPENDENCIES = librom.a
 am_uneven_dist_OBJECTS = uneven_dist.$(OBJEXT)
 uneven_dist_OBJECTS = $(am_uneven_dist_OBJECTS)
 uneven_dist_DEPENDENCIES = librom.a
@@ -209,10 +212,12 @@ am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
 SOURCES = $(librom_a_SOURCES) $(random_test_SOURCES) \
 	$(smoke_test_SOURCES) $(tests_test_Matrix_SOURCES) \
-	$(uneven_dist_SOURCES) $(weak_scaling_SOURCES)
+	$(tests_test_Vector_SOURCES) $(uneven_dist_SOURCES) \
+	$(weak_scaling_SOURCES)
 DIST_SOURCES = $(librom_a_SOURCES) $(random_test_SOURCES) \
 	$(smoke_test_SOURCES) $(tests_test_Matrix_SOURCES) \
-	$(uneven_dist_SOURCES) $(weak_scaling_SOURCES)
+	$(tests_test_Vector_SOURCES) $(uneven_dist_SOURCES) \
+	$(weak_scaling_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -405,6 +410,8 @@ smoke_test_SOURCES = smoke_test.C
 smoke_test_LDADD = librom.a
 tests_test_Matrix_SOURCES = tests/test_Matrix.C
 tests_test_Matrix_LDADD = -lgtest -lpthread librom.a
+tests_test_Vector_SOURCES = tests/test_Vector.C
+tests_test_Vector_LDADD = -lgtest -lpthread librom.a
 all: CAROM_config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -522,6 +529,12 @@ tests/test_Matrix.$(OBJEXT): tests/$(am__dirstamp) \
 tests/test_Matrix$(EXEEXT): $(tests_test_Matrix_OBJECTS) $(tests_test_Matrix_DEPENDENCIES) $(EXTRA_tests_test_Matrix_DEPENDENCIES) tests/$(am__dirstamp)
 	@rm -f tests/test_Matrix$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(tests_test_Matrix_OBJECTS) $(tests_test_Matrix_LDADD) $(LIBS)
+tests/test_Vector.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+
+tests/test_Vector$(EXEEXT): $(tests_test_Vector_OBJECTS) $(tests_test_Vector_DEPENDENCIES) $(EXTRA_tests_test_Vector_DEPENDENCIES) tests/$(am__dirstamp)
+	@rm -f tests/test_Vector$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(tests_test_Vector_OBJECTS) $(tests_test_Vector_LDADD) $(LIBS)
 
 uneven_dist$(EXEEXT): $(uneven_dist_OBJECTS) $(uneven_dist_DEPENDENCIES) $(EXTRA_uneven_dist_DEPENDENCIES) 
 	@rm -f uneven_dist$(EXEEXT)
@@ -564,6 +577,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/uneven_dist.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/weak_scaling.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_Matrix.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_Vector.Po@am__quote@
 
 .C.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
