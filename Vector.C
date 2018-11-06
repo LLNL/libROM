@@ -42,6 +42,7 @@
 //              distributed Vector has its rows distributed across processors.
 
 #include "Vector.h"
+#include "HDFDatabase.h"
 
 #include "mpi.h"
 
@@ -49,6 +50,13 @@
 #include <string.h>
 
 namespace CAROM {
+
+Vector::Vector() :
+   d_vec(0),
+   d_alloc_size(0),
+   d_distributed(false),
+   d_owns_data(true)
+{}
 
 Vector::Vector(
    int dim,
@@ -369,6 +377,77 @@ Vector::mult(
    for (int i = 0; i < d_dim; ++i) {
       result.d_vec[i] = factor*d_vec[i];
    }
+}
+
+void
+Vector::write(const std::string& base_file_name)
+{
+   CAROM_ASSERT(!base_file_name.empty());    
+
+   int mpi_init;
+   MPI_Initialized(&mpi_init);
+   int rank;
+   if (mpi_init) {
+      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+   }
+   else {
+      rank = 0;
+   }
+
+   char tmp[100];
+   sprintf(tmp, ".%06d", rank);
+   std::string full_file_name = base_file_name + tmp;
+   HDFDatabase database;
+   database.create(full_file_name);
+
+   sprintf(tmp, "distributed");
+   database.putInteger(tmp, d_distributed);
+   sprintf(tmp, "dim");
+   database.putInteger(tmp, d_dim);
+   sprintf(tmp, "data");
+   database.putDoubleArray(tmp, d_vec, d_dim);
+   database.close();
+}
+
+void
+Vector::read(const std::string& base_file_name)
+{
+   CAROM_ASSERT(!base_file_name.empty());    
+
+   int mpi_init;
+   MPI_Initialized(&mpi_init);
+   int rank;
+   if (mpi_init) {
+      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+   }
+   else {
+      rank = 0;
+   }
+
+   char tmp[100];
+   sprintf(tmp, ".%06d", rank);
+   std::string full_file_name = base_file_name + tmp;
+   HDFDatabase database;
+   database.open(full_file_name);
+
+   sprintf(tmp, "distributed");
+   int distributed;
+   database.getInteger(tmp, distributed);
+   d_distributed = bool(distributed);
+   int dim;
+   sprintf(tmp, "dim");
+   database.getInteger(tmp, dim);
+   setSize(dim);
+   sprintf(tmp, "data");
+   database.getDoubleArray(tmp, d_vec, d_alloc_size);
+   d_owns_data = true;
+   if (mpi_init) {
+      MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+   }
+   else {
+      d_num_procs = 1;
+   }
+   database.close();
 }
 
 }

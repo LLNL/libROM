@@ -56,6 +56,8 @@ namespace CAROM {
 class Vector
 {
    public:
+     Vector();
+
       /**
        * @brief Constructor creating a Vector with uninitialized values.
        *
@@ -632,11 +634,14 @@ class Vector
        fclose(pFile);
      }
 
+     void write(const std::string& base_file_name);
+     void read(const std::string& base_file_name);
+
    private:
       /**
        * @brief Default constructor is not implemented.
        */
-      Vector();
+      // Vector();
 
       /**
        * @brief The storage for the Vector's values on this processor.

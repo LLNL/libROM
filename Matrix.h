@@ -56,6 +56,9 @@ namespace CAROM {
 class Matrix
 {
    public:
+      /** Empty Constructor */
+      Matrix();
+
       /** Constructor creating a Matrix with uninitialized values.
        *
        * @pre num_rows > 0
@@ -790,11 +793,14 @@ class Matrix
        fclose(pFile);
      }
 
+     void write(const std::string& base_file_name);
+     void read(const std::string& base_file_name);
+
    private:
       /**
        * @brief Default constructor is not implemented.
        */
-      Matrix();
+      // Matrix();
 
       /**
        * @brief Compute the leading numColumns() column pivots from a

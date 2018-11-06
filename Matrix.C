@@ -42,6 +42,7 @@
 //              distributed Matrix has its rows distributed across processors.
 
 #include "Matrix.h"
+#include "HDFDatabase.h"
 
 #include "mpi.h"
 #include <string.h>
@@ -70,6 +71,13 @@ dgeqp3(int*, int*, double*, int*, int*, double*, double*, int*, int*);
 }
 
 namespace CAROM {
+
+Matrix::Matrix() :
+   d_mat(0),
+   d_alloc_size(0),
+   d_distributed(false),
+   d_owns_data(true)
+{}
 
 Matrix::Matrix(
    int num_rows,
@@ -666,6 +674,82 @@ void Matrix::pseudoinverse()
    
        delete AtA;
      }
+}
+
+void
+Matrix::write(const std::string& base_file_name)
+{
+   CAROM_ASSERT(!base_file_name.empty());    
+
+   int mpi_init;
+   MPI_Initialized(&mpi_init);
+   int rank;
+   if (mpi_init) {
+      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+   }
+   else {
+      rank = 0;
+   }
+
+   char tmp[100];
+   sprintf(tmp, ".%06d", rank);
+   std::string full_file_name = base_file_name + tmp;
+   HDFDatabase database;
+   database.create(full_file_name);
+
+   sprintf(tmp, "distributed");
+   database.putInteger(tmp, d_distributed);
+   sprintf(tmp, "num_rows");
+   database.putInteger(tmp, d_num_rows);
+   sprintf(tmp, "num_cols");
+   database.putInteger(tmp, d_num_cols);
+   sprintf(tmp, "data");
+   database.putDoubleArray(tmp, d_mat, d_num_rows*d_num_cols);
+   database.close();
+}
+
+void
+Matrix::read(const std::string& base_file_name)
+{
+   CAROM_ASSERT(!base_file_name.empty());    
+
+   int mpi_init;
+   MPI_Initialized(&mpi_init);
+   int rank;
+   if (mpi_init) {
+      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+   }
+   else {
+      rank = 0;
+   }
+
+   char tmp[100];
+   sprintf(tmp, ".%06d", rank);
+   std::string full_file_name = base_file_name + tmp;
+   HDFDatabase database;
+   database.open(full_file_name);
+
+   sprintf(tmp, "distributed");
+   int distributed;
+   database.getInteger(tmp, distributed);
+   d_distributed = bool(distributed);
+   int num_rows;
+   sprintf(tmp, "num_rows");
+   database.getInteger(tmp, num_rows);
+   int num_cols;
+   sprintf(tmp, "num_cols");
+   database.getInteger(tmp, num_cols);
+   setSize(num_rows,num_cols);
+   sprintf(tmp, "data");
+   database.getDoubleArray(tmp, d_mat, d_alloc_size);
+   d_owns_data = true;
+   if (mpi_init) {
+      MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+   }
+   else {
+      d_num_procs = 1;
+   }
+   database.close();
 }
 
 void
