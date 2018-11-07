@@ -102,16 +102,20 @@ smoke_test_LDFLAGS =
 smoke_test_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
 
 tests_test_Matrix_SOURCES = tests/test_Matrix.C
-tests_test_Matrix_LDADD = -lgtest -lpthread librom.a
+tests_test_Matrix_LDFLAGS = 
+tests_test_Matrix_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
 
 tests_test_Vector_SOURCES = tests/test_Vector.C
-tests_test_Vector_LDADD = -lgtest -lpthread librom.a
+tests_test_Vector_LDFLAGS = 
+tests_test_Vector_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
 
 tests_test_SVD_SOURCES = tests/test_SVD.C
-tests_test_SVD_LDADD = -lgtest -lpthread librom.a
+tests_test_SVD_LDFLAGS = 
+tests_test_SVD_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
 
 tests_test_IncrementalSVD_SOURCES = tests/test_IncrementalSVD.C
-tests_test_IncrementalSVD_LDADD = -lgtest -lpthread librom.a
+tests_test_IncrementalSVD_LDFLAGS = 
+tests_test_IncrementalSVD_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
 
 dox:
 	(cd docs && $(MAKE) $@)

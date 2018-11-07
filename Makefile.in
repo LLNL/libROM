@@ -181,16 +181,28 @@ am_tests_test_IncrementalSVD_OBJECTS =  \
 	tests/test_IncrementalSVD.$(OBJEXT)
 tests_test_IncrementalSVD_OBJECTS =  \
 	$(am_tests_test_IncrementalSVD_OBJECTS)
-tests_test_IncrementalSVD_DEPENDENCIES = librom.a
+tests_test_IncrementalSVD_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+	librom.a $(am__DEPENDENCIES_1)
+tests_test_IncrementalSVD_LINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) \
+	$(tests_test_IncrementalSVD_LDFLAGS) $(LDFLAGS) -o $@
 am_tests_test_Matrix_OBJECTS = tests/test_Matrix.$(OBJEXT)
 tests_test_Matrix_OBJECTS = $(am_tests_test_Matrix_OBJECTS)
-tests_test_Matrix_DEPENDENCIES = librom.a
+tests_test_Matrix_DEPENDENCIES = $(am__DEPENDENCIES_1) librom.a \
+	$(am__DEPENDENCIES_1)
+tests_test_Matrix_LINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) \
+	$(tests_test_Matrix_LDFLAGS) $(LDFLAGS) -o $@
 am_tests_test_SVD_OBJECTS = tests/test_SVD.$(OBJEXT)
 tests_test_SVD_OBJECTS = $(am_tests_test_SVD_OBJECTS)
-tests_test_SVD_DEPENDENCIES = librom.a
+tests_test_SVD_DEPENDENCIES = $(am__DEPENDENCIES_1) librom.a \
+	$(am__DEPENDENCIES_1)
+tests_test_SVD_LINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) \
+	$(tests_test_SVD_LDFLAGS) $(LDFLAGS) -o $@
 am_tests_test_Vector_OBJECTS = tests/test_Vector.$(OBJEXT)
 tests_test_Vector_OBJECTS = $(am_tests_test_Vector_OBJECTS)
-tests_test_Vector_DEPENDENCIES = librom.a
+tests_test_Vector_DEPENDENCIES = $(am__DEPENDENCIES_1) librom.a \
+	$(am__DEPENDENCIES_1)
+tests_test_Vector_LINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) \
+	$(tests_test_Vector_LDFLAGS) $(LDFLAGS) -o $@
 am_uneven_dist_OBJECTS = uneven_dist.$(OBJEXT)
 uneven_dist_OBJECTS = $(am_uneven_dist_OBJECTS)
 uneven_dist_DEPENDENCIES = $(am__DEPENDENCIES_1) librom.a \
@@ -465,13 +477,17 @@ smoke_test_SOURCES = smoke_test.C
 smoke_test_LDFLAGS = 
 smoke_test_LDADD = $(LIB_PATH) librom.a $(LIB_NAME)
 tests_test_Matrix_SOURCES = tests/test_Matrix.C
-tests_test_Matrix_LDADD = -lgtest -lpthread librom.a
+tests_test_Matrix_LDFLAGS = 
+tests_test_Matrix_LDADD = $(LIB_PATH) librom.a $(LIB_NAME)
 tests_test_Vector_SOURCES = tests/test_Vector.C
-tests_test_Vector_LDADD = -lgtest -lpthread librom.a
+tests_test_Vector_LDFLAGS = 
+tests_test_Vector_LDADD = $(LIB_PATH) librom.a $(LIB_NAME)
 tests_test_SVD_SOURCES = tests/test_SVD.C
-tests_test_SVD_LDADD = -lgtest -lpthread librom.a
+tests_test_SVD_LDFLAGS = 
+tests_test_SVD_LDADD = $(LIB_PATH) librom.a $(LIB_NAME)
 tests_test_IncrementalSVD_SOURCES = tests/test_IncrementalSVD.C
-tests_test_IncrementalSVD_LDADD = -lgtest -lpthread librom.a
+tests_test_IncrementalSVD_LDFLAGS = 
+tests_test_IncrementalSVD_LDADD = $(LIB_PATH) librom.a $(LIB_NAME)
 all: CAROM_config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -588,25 +604,25 @@ tests/test_IncrementalSVD.$(OBJEXT): tests/$(am__dirstamp) \
 
 tests/test_IncrementalSVD$(EXEEXT): $(tests_test_IncrementalSVD_OBJECTS) $(tests_test_IncrementalSVD_DEPENDENCIES) $(EXTRA_tests_test_IncrementalSVD_DEPENDENCIES) tests/$(am__dirstamp)
 	@rm -f tests/test_IncrementalSVD$(EXEEXT)
-	$(AM_V_CXXLD)$(CXXLINK) $(tests_test_IncrementalSVD_OBJECTS) $(tests_test_IncrementalSVD_LDADD) $(LIBS)
+	$(AM_V_CXXLD)$(tests_test_IncrementalSVD_LINK) $(tests_test_IncrementalSVD_OBJECTS) $(tests_test_IncrementalSVD_LDADD) $(LIBS)
 tests/test_Matrix.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 
 tests/test_Matrix$(EXEEXT): $(tests_test_Matrix_OBJECTS) $(tests_test_Matrix_DEPENDENCIES) $(EXTRA_tests_test_Matrix_DEPENDENCIES) tests/$(am__dirstamp)
 	@rm -f tests/test_Matrix$(EXEEXT)
-	$(AM_V_CXXLD)$(CXXLINK) $(tests_test_Matrix_OBJECTS) $(tests_test_Matrix_LDADD) $(LIBS)
+	$(AM_V_CXXLD)$(tests_test_Matrix_LINK) $(tests_test_Matrix_OBJECTS) $(tests_test_Matrix_LDADD) $(LIBS)
 tests/test_SVD.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 
 tests/test_SVD$(EXEEXT): $(tests_test_SVD_OBJECTS) $(tests_test_SVD_DEPENDENCIES) $(EXTRA_tests_test_SVD_DEPENDENCIES) tests/$(am__dirstamp)
 	@rm -f tests/test_SVD$(EXEEXT)
-	$(AM_V_CXXLD)$(CXXLINK) $(tests_test_SVD_OBJECTS) $(tests_test_SVD_LDADD) $(LIBS)
+	$(AM_V_CXXLD)$(tests_test_SVD_LINK) $(tests_test_SVD_OBJECTS) $(tests_test_SVD_LDADD) $(LIBS)
 tests/test_Vector.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 
 tests/test_Vector$(EXEEXT): $(tests_test_Vector_OBJECTS) $(tests_test_Vector_DEPENDENCIES) $(EXTRA_tests_test_Vector_DEPENDENCIES) tests/$(am__dirstamp)
 	@rm -f tests/test_Vector$(EXEEXT)
-	$(AM_V_CXXLD)$(CXXLINK) $(tests_test_Vector_OBJECTS) $(tests_test_Vector_LDADD) $(LIBS)
+	$(AM_V_CXXLD)$(tests_test_Vector_LINK) $(tests_test_Vector_OBJECTS) $(tests_test_Vector_LDADD) $(LIBS)
 
 uneven_dist$(EXEEXT): $(uneven_dist_OBJECTS) $(uneven_dist_DEPENDENCIES) $(EXTRA_uneven_dist_DEPENDENCIES) 
 	@rm -f uneven_dist$(EXEEXT)
