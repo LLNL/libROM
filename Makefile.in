@@ -165,10 +165,17 @@ librom_a_OBJECTS = $(am_librom_a_OBJECTS)
 PROGRAMS = $(noinst_PROGRAMS)
 am_random_test_OBJECTS = random_test.$(OBJEXT)
 random_test_OBJECTS = $(am_random_test_OBJECTS)
-random_test_DEPENDENCIES = librom.a
+am__DEPENDENCIES_1 =
+random_test_DEPENDENCIES = $(am__DEPENDENCIES_1) librom.a \
+	$(am__DEPENDENCIES_1)
+random_test_LINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) \
+	$(random_test_LDFLAGS) $(LDFLAGS) -o $@
 am_smoke_test_OBJECTS = smoke_test.$(OBJEXT)
 smoke_test_OBJECTS = $(am_smoke_test_OBJECTS)
-smoke_test_DEPENDENCIES = librom.a
+smoke_test_DEPENDENCIES = $(am__DEPENDENCIES_1) librom.a \
+	$(am__DEPENDENCIES_1)
+smoke_test_LINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) \
+	$(smoke_test_LDFLAGS) $(LDFLAGS) -o $@
 am__dirstamp = $(am__leading_dot)dirstamp
 am_tests_test_IncrementalSVD_OBJECTS =  \
 	tests/test_IncrementalSVD.$(OBJEXT)
@@ -186,10 +193,16 @@ tests_test_Vector_OBJECTS = $(am_tests_test_Vector_OBJECTS)
 tests_test_Vector_DEPENDENCIES = librom.a
 am_uneven_dist_OBJECTS = uneven_dist.$(OBJEXT)
 uneven_dist_OBJECTS = $(am_uneven_dist_OBJECTS)
-uneven_dist_DEPENDENCIES = librom.a
+uneven_dist_DEPENDENCIES = $(am__DEPENDENCIES_1) librom.a \
+	$(am__DEPENDENCIES_1)
+uneven_dist_LINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) \
+	$(uneven_dist_LDFLAGS) $(LDFLAGS) -o $@
 am_weak_scaling_OBJECTS = weak_scaling.$(OBJEXT)
 weak_scaling_OBJECTS = $(am_weak_scaling_OBJECTS)
-weak_scaling_DEPENDENCIES = librom.a
+weak_scaling_DEPENDENCIES = $(am__DEPENDENCIES_1) librom.a \
+	$(am__DEPENDENCIES_1)
+weak_scaling_LINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) \
+	$(weak_scaling_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -411,14 +424,46 @@ include_HEADERS = BasisReader.h BasisWriter.h CAROM_config.h DEIM.h \
 	SVD.h SVDBasisGenerator.h SVDSampler.h StaticSVD.h \
 	StaticSVDBasisGenerator.h StaticSVDSampler.h Utilities.h \
 	Vector.h
+
+# Static library linking requires different flag ordering than
+# dynamic/shared library linking. Static library linking
+# tends to require that:
+#
+# 1) Libraries with symbols referenced in an object file must come
+#    *after* the object file in link commands.
+#
+# 2) If library B references symbols in library A, then library A must
+#    come *after* library B.
+#
+# 3) If libraries B and A reference each other, then flags for at
+#    least one of them may need to be repeated (e.g., "-lB -lA -lB").
+#
+# Automake uses exactly one of the following two variables to
+# determine linker flags that come before the executable and object
+# file in the linker line: AM_LDFLAGS *or* target_LDFLAGS; the latter
+# takes precedence. Flags in target_LDADD are appended to the linker
+# line. To accommodate rule (1), set target_LDFLAGS to the empty
+# string, which sets linker flags before the executable and object
+# file to the empty string, and move all flags to target_LDADD, which
+# puts them after the executable and object file.
+#
+# To accommodate rule (2), put librom after $(LIB_PATH) (which
+# contains all of the -L flags to modify the linker search path), but
+# before $(LIB_NAME) (which contains all of the -l flags that specify
+# which libraries to link).
+#
 uneven_dist_SOURCES = uneven_dist.C
-uneven_dist_LDADD = librom.a
+uneven_dist_LDFLAGS = 
+uneven_dist_LDADD = $(LIB_PATH) librom.a $(LIB_NAME)
 random_test_SOURCES = random_test.C
-random_test_LDADD = librom.a
+random_test_LDFLAGS = 
+random_test_LDADD = $(LIB_PATH) librom.a $(LIB_NAME)
 weak_scaling_SOURCES = weak_scaling.C
-weak_scaling_LDADD = librom.a
+weak_scaling_LDFLAGS = 
+weak_scaling_LDADD = $(LIB_PATH) librom.a $(LIB_NAME)
 smoke_test_SOURCES = smoke_test.C
-smoke_test_LDADD = librom.a
+smoke_test_LDFLAGS = 
+smoke_test_LDADD = $(LIB_PATH) librom.a $(LIB_NAME)
 tests_test_Matrix_SOURCES = tests/test_Matrix.C
 tests_test_Matrix_LDADD = -lgtest -lpthread librom.a
 tests_test_Vector_SOURCES = tests/test_Vector.C
@@ -527,11 +572,11 @@ clean-noinstPROGRAMS:
 
 random_test$(EXEEXT): $(random_test_OBJECTS) $(random_test_DEPENDENCIES) $(EXTRA_random_test_DEPENDENCIES) 
 	@rm -f random_test$(EXEEXT)
-	$(AM_V_CXXLD)$(CXXLINK) $(random_test_OBJECTS) $(random_test_LDADD) $(LIBS)
+	$(AM_V_CXXLD)$(random_test_LINK) $(random_test_OBJECTS) $(random_test_LDADD) $(LIBS)
 
 smoke_test$(EXEEXT): $(smoke_test_OBJECTS) $(smoke_test_DEPENDENCIES) $(EXTRA_smoke_test_DEPENDENCIES) 
 	@rm -f smoke_test$(EXEEXT)
-	$(AM_V_CXXLD)$(CXXLINK) $(smoke_test_OBJECTS) $(smoke_test_LDADD) $(LIBS)
+	$(AM_V_CXXLD)$(smoke_test_LINK) $(smoke_test_OBJECTS) $(smoke_test_LDADD) $(LIBS)
 tests/$(am__dirstamp):
 	@$(MKDIR_P) tests
 	@: > tests/$(am__dirstamp)
@@ -565,11 +610,11 @@ tests/test_Vector$(EXEEXT): $(tests_test_Vector_OBJECTS) $(tests_test_Vector_DEP
 
 uneven_dist$(EXEEXT): $(uneven_dist_OBJECTS) $(uneven_dist_DEPENDENCIES) $(EXTRA_uneven_dist_DEPENDENCIES) 
 	@rm -f uneven_dist$(EXEEXT)
-	$(AM_V_CXXLD)$(CXXLINK) $(uneven_dist_OBJECTS) $(uneven_dist_LDADD) $(LIBS)
+	$(AM_V_CXXLD)$(uneven_dist_LINK) $(uneven_dist_OBJECTS) $(uneven_dist_LDADD) $(LIBS)
 
 weak_scaling$(EXEEXT): $(weak_scaling_OBJECTS) $(weak_scaling_DEPENDENCIES) $(EXTRA_weak_scaling_DEPENDENCIES) 
 	@rm -f weak_scaling$(EXEEXT)
-	$(AM_V_CXXLD)$(CXXLINK) $(weak_scaling_OBJECTS) $(weak_scaling_LDADD) $(LIBS)
+	$(AM_V_CXXLD)$(weak_scaling_LINK) $(weak_scaling_OBJECTS) $(weak_scaling_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)

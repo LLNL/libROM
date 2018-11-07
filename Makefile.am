@@ -58,17 +58,48 @@ noinst_PROGRAMS += tests/test_Vector
 noinst_PROGRAMS += tests/test_SVD
 noinst_PROGRAMS += tests/test_IncrementalSVD
 
+# Static library linking requires different flag ordering than
+# dynamic/shared library linking. Static library linking
+# tends to require that:
+#
+# 1) Libraries with symbols referenced in an object file must come
+#    *after* the object file in link commands.
+#
+# 2) If library B references symbols in library A, then library A must
+#    come *after* library B.
+#
+# 3) If libraries B and A reference each other, then flags for at
+#    least one of them may need to be repeated (e.g., "-lB -lA -lB").
+#
+# Automake uses exactly one of the following two variables to
+# determine linker flags that come before the executable and object
+# file in the linker line: AM_LDFLAGS *or* target_LDFLAGS; the latter
+# takes precedence. Flags in target_LDADD are appended to the linker
+# line. To accommodate rule (1), set target_LDFLAGS to the empty
+# string, which sets linker flags before the executable and object
+# file to the empty string, and move all flags to target_LDADD, which
+# puts them after the executable and object file.
+#
+# To accommodate rule (2), put librom after $(LIB_PATH) (which
+# contains all of the -L flags to modify the linker search path), but
+# before $(LIB_NAME) (which contains all of the -l flags that specify
+# which libraries to link).
+#
 uneven_dist_SOURCES = uneven_dist.C
-uneven_dist_LDADD = librom.a
+uneven_dist_LDFLAGS = 
+uneven_dist_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
 
 random_test_SOURCES = random_test.C
-random_test_LDADD = librom.a
+random_test_LDFLAGS =
+random_test_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
 
 weak_scaling_SOURCES = weak_scaling.C
-weak_scaling_LDADD = librom.a
+weak_scaling_LDFLAGS =
+weak_scaling_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
 
 smoke_test_SOURCES = smoke_test.C
-smoke_test_LDADD = librom.a
+smoke_test_LDFLAGS = 
+smoke_test_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
 
 tests_test_Matrix_SOURCES = tests/test_Matrix.C
 tests_test_Matrix_LDADD = -lgtest -lpthread librom.a
