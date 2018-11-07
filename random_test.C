@@ -155,6 +155,7 @@ main(
       1.0e-6,
       false,
       true,
+      dim,
       1.0e-6,
       num_samples,
       1.0e-2,
