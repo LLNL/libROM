@@ -61,6 +61,8 @@ class IncrementalSVDBasisGenerator : public SVDBasisGenerator
        * @brief Constructor.
        *
        * @pre dim > 0
+       * @pre max_basis_dimension > 0
+       * @pre max_basis_dimension <= dim
        * @pre linearity_tol > 0.0
        * @pre initial_dt > 0.0
        * @pre samples_per_time_interval > 0
@@ -77,6 +79,7 @@ class IncrementalSVDBasisGenerator : public SVDBasisGenerator
        * @param[in] skip_linearly_dependent If true skip linearly dependent
        *                                    samples.
        * @param[in] fast_update If true use the fast update algorithm.
+       * @param[in] maximum basis dimension
        * @param[in] initial_dt Initial simulation time step.
        * @param[in] samples_per_time_interval The maximum number of samples in
        *                                      each time interval.
