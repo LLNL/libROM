@@ -73,6 +73,7 @@ main(
       1.0e-6,
       false,
       true,
+      num_samples,
       1.0e-2,
       num_samples,
       1.0e-20,
