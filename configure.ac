@@ -40,8 +40,11 @@ dnl
 dnl Description: autoconf configuration file
 
 
+AC_INIT(libROM, 0.1)
 
-AC_INIT(README_BSD_NOTICE)
+# Initialize Automake
+AM_INIT_AUTOMAKE([1.11 foreign subdir-objects])
+
 AC_CONFIG_HEADER(CAROM_config.h:config/CAROM_config.h.in)
 dnl
 dnl Autoheader stuff
@@ -79,9 +82,6 @@ AC_ARG_WITH([AR],
 dnl
 dnl Initialize common macros to empty strings
 dnl
-
-CXX_FLAGS="$CXXFLAGS"
-LD_FLAGS="$LDFLAGS"
 
 INC_PATH=
 LIB_PATH=
@@ -190,10 +190,14 @@ case "$with_extra_ld_flags" in
     : No op
   ;;
   *)
-    LD_FLAGS="$LD_FLAGS $with_extra_ld_flags"
+    LDFLAGS="$LDFLAGS $with_extra_ld_flags"
   ;;
 esac
 
+dnl
+dnl Find ranlib
+dnl
+AC_PROG_RANLIB
 
 dnl
 dnl Find ar for archiving
@@ -226,24 +230,24 @@ dnl
 
 case $CXX_ID in
    gnu)
-      CXX_FLAGS="-Wall -Wextra -Wconversion $CXX_FLAGS"
+      CXXFLAGS="-Wall -Wextra -Wconversion $CXXFLAGS"
       case $ARCH in
          IRIX64)
-            CXX_FLAGS="-mabi=64 $CXX_FLAGS"
+            CXXFLAGS="-mabi=64 $CXXFLAGS"
             ;;
          solaris)
             ;;
          CYGWIN)
-            CXX_FLAGS="$CXX_FLAGS"
+            CXXFLAGS="$CXXFLAGS"
             ;;
       esac
       ;;
    xlc)
-      CXX_FLAGS="-qrtti -g $CXX_FLAGS"
+      CXXFLAGS="-qrtti -g $CXXFLAGS"
       ;;
    intel)
       # Ignore some Intel warnings that seem harmless and very hard to get rid of
-      CXX_FLAGS="$CXX_FLAGS -Wall -w1 -wd981 -wd383 -wd1418 -wd522"
+      CXXFLAGS="$CXXFLAGS -Wall -w1 -wd981 -wd383 -wd1418 -wd522"
       ;;
     *)
       ;;
@@ -266,7 +270,7 @@ esac],
 opt_switches=)
 
 if test -n "$opt_switches" ; then
-   CXX_FLAGS="$opt_switches $CXX_FLAGS"
+   CXXFLAGS="$opt_switches $CXXFLAGS"
 fi
 
 AC_ARG_ENABLE([debug],
@@ -300,7 +304,7 @@ if test "$enable_check_assertions" = "yes"; then
 fi
 
 if test -n "$debug_switches" ; then
-   CXX_FLAGS="$debug_switches $CXX_FLAGS"
+   CXXFLAGS="$debug_switches $CXXFLAGS"
 fi
 
 CASC_AC_LOG_VAR(debug_switches opt_switches)
@@ -435,7 +439,7 @@ if test "x${with_elemental}" != xno; then
         LIB_PATH="$elemental_LIB_PATH $LIB_PATH"
         LIB_NAME="$elemental_LIB_NAME $LIB_NAME"
         INC_PATH="$elemental_INCLUDES $INC_PATH"
-        CXX_FLAGS="$CXX_FLAGS -DCAROM_HAS_ELEMENTAL"
+        CXXFLAGS="$CXXFLAGS -DCAROM_HAS_ELEMENTAL"
     else
         AC_MSG_NOTICE([Elemental not found - disabling distributed QR decomposition code])
     fi
@@ -485,13 +489,13 @@ case "$with_gtest" in
   ;;
 esac
 
-if test "x${with_gtest}" != xno; then 
+if test "x${with_gtest}" != xno; then
     if test "${gtest_PREFIX+set}" = set; then
         SPLIT_LIBS_STRING(gtest_LIBS,gtest_LIB_PATH,gtest_LIB_NAME)
         LIB_PATH="$gtest_LIB_PATH $LIB_PATH"
         LIB_NAME="$gtest_LIB_NAME $LIB_NAME"
         INC_PATH="$gtest_INCLUDES $INC_PATH"
-        CXX_FLAGS="$CXX_FLAGS -DCAROM_HAS_GTEST"
+        CXXFLAGS="$CXXFLAGS -DCAROM_HAS_GTEST"
     else
         AC_MSG_NOTICE([Google Test Framework not found - disabling unit tests.])
     fi
@@ -578,12 +582,18 @@ CASC_AC_LOG_VAR(ROM_PERL)
 AC_SUBST(AR)
 
 AC_SUBST(CXX)
-AC_SUBST(CXX_FLAGS)
+AC_SUBST(CXXFLAGS)
 
-AC_SUBST(LD_FLAGS)
+AC_SUBST(LDFLAGS)
 
 AC_SUBST(INC_PATH)
 AC_SUBST(LIB_PATH)
 AC_SUBST(LIB_NAME)
 
-AC_OUTPUT([Makefile docs/Makefile docs/Doxyfile],[],[])
+
+AC_CONFIG_FILES([
+   Makefile
+   docs/Makefile
+   docs/Doxyfile
+])
+AC_OUTPUT

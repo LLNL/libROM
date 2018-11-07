@@ -333,9 +333,10 @@ IncrementalSVD::buildIncrementalSVD(
    // basisl = basis * l
    Vector* basisl = d_basis->mult(l);
 
-   // Compute k = sqrt(u.u - 2.0*l.l + basisl.basisl) which is ||u - basisl||.
-   // This is the error in the projection of u into the reduced order space
-   // and subsequent lifting back to the full order space.
+   // Compute k = sqrt(u.u - 2.0*l.l + basisl.basisl) which is ||u -
+   // basisl||_{2}.  This is the error in the projection of u into the
+   // reduced order space and subsequent lifting back to the full
+   // order space.
    double k = u_vec.inner_product(u_vec) - 2.0*l->inner_product(l) +
       basisl->inner_product(basisl);
    if (k <= 0) {
@@ -346,7 +347,8 @@ IncrementalSVD::buildIncrementalSVD(
       k = sqrt(k);
    }
 
-   // Use k to see if this sample is new.
+   // Use k to see if the vector addressed by u is linearly dependent
+   // on the left singular vectors.
    bool linearly_dependent_sample;
    if ( k < d_linearity_tol ) {
       k = 0;
@@ -354,6 +356,15 @@ IncrementalSVD::buildIncrementalSVD(
    } else if ( d_num_samples >= d_max_basis_dimension || add_without_increase ) {
       k = 0;
       linearly_dependent_sample = true;
+   }
+   // Check to see if the "number of samples" (in IncrementalSVD and
+   // its subclasses, d_num_samples appears to be equal to the number
+   // of columns of the left singular vectors) is greater than or equal
+   // to the dimension of snapshot vectors. If so, then the vector
+   // addressed by the pointer u must be linearly dependent on the left
+   // singular vectors.
+   else if (d_num_samples >= d_total_dim) {
+     linearly_dependent_sample = true;
    }
    else {
       linearly_dependent_sample = false;
