@@ -4,7 +4,7 @@
 #SBATCH -J rebaseline-libROM
 #SBATCH -t 0:02:00
 #SBATCH -p pdebug
-#SBATCH -A cbronze
+#SBATCH -A modlred
 #SBATCH -o rebaseline-libROM.out
 
 # NOTE(oxberry1@llnl.gov): The execution time value is set

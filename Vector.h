@@ -615,26 +615,27 @@ class Vector
       }
       
      /** 
-      * @brief print Vector into (a) file(s).
+      * @brief print Vector into (a) ascii file(s).
       *
       * @param[in] prefix The name of the prefix of the file name.
       *
       */
-     void print(const char * prefix)
-     {
-       int my_rank;
-       CAROM_ASSERT(MPI_Comm_rank(MPI_COMM_WORLD, &my_rank) == MPI_SUCCESS);
+     void print(const char * prefix);
 
-       std::string filename_str = prefix + std::to_string(my_rank); 
-       const char * filename = filename_str.c_str();
-       FILE * pFile = fopen(filename,"w");
-       for (int k = 0; k < d_dim; ++k) { 
-         fprintf(pFile, " %25.20e\n", d_vec[k]);
-       }
-       fclose(pFile);
-     }
-
+     /** 
+      * @brief write Vector into (a) HDF file(s).
+      *
+      * @param[in] prefix The name of the prefix of the file name.
+      *
+      */
      void write(const std::string& base_file_name);
+
+     /** 
+      * @brief read Vector from (a) HDF file(s).
+      *
+      * @param[in] prefix The name of the prefix of the file name.
+      *
+      */
      void read(const std::string& base_file_name);
 
    private:
