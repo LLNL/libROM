@@ -773,29 +773,27 @@ class Matrix
       }
 
      /** 
-      * @brief print Matrix into (a) file(s).
+      * @brief print Matrix into (a) ascii file(s).
       *
       * @param[in] prefix The name of the prefix of the file name.
       *
       */
-     void print(const char * prefix) 
-     {
-       int my_rank;
-       CAROM_ASSERT(MPI_Comm_rank(MPI_COMM_WORLD, &my_rank) == MPI_SUCCESS);
+     void print(const char * prefix);
 
-       std::string filename_str = prefix + std::to_string(my_rank); 
-       const char * filename = filename_str.c_str();
-       FILE * pFile = fopen(filename,"w");
-       for (int row = 0; row < d_num_rows; ++row) { 
-         for (int col = 0; col < d_num_cols; ++col) { 
-           fprintf(pFile, " %25.20e\t", item(row,col));
-         }
-         fprintf(pFile, "\n");
-       }
-       fclose(pFile);
-     }
-
+     /** 
+      * @brief write Matrix into (a) HDF file(s).
+      *
+      * @param[in] prefix The name of the prefix of the file name.
+      *
+      */
      void write(const std::string& base_file_name);
+
+     /** 
+      * @brief read Matrix into (a) HDF file(s).
+      *
+      * @param[in] prefix The name of the prefix of the file name.
+      *
+      */
      void read(const std::string& base_file_name);
 
    private:

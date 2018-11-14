@@ -410,6 +410,21 @@ Vector::write(const std::string& base_file_name)
 }
 
 void
+Vector::print(const char * prefix)
+{
+   int my_rank;
+   CAROM_ASSERT(MPI_Comm_rank(MPI_COMM_WORLD, &my_rank) == MPI_SUCCESS);
+
+   std::string filename_str = prefix + std::to_string(my_rank); 
+   const char * filename = filename_str.c_str();
+   FILE * pFile = fopen(filename,"w");
+   for (int k = 0; k < d_dim; ++k) { 
+     fprintf(pFile, " %25.20e\n", d_vec[k]);
+   }
+   fclose(pFile);
+}
+
+void
 Vector::read(const std::string& base_file_name)
 {
    CAROM_ASSERT(!base_file_name.empty());    
