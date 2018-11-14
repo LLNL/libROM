@@ -156,7 +156,7 @@ StaticSVD::takeSample(
 }
 
 const Matrix*
-StaticSVD::getBasis()
+StaticSVD::getSpatialBasis()
 {
    // If this basis is for the last time interval then it may not be up to date
    // so recompute it.
@@ -186,7 +186,7 @@ StaticSVD::getBasis()
 }
 
 const Matrix*
-StaticSVD::getTBasis()
+StaticSVD::getTemporalBasis()
 {
    // If this basis is for the last time interval then it may not be up to date
    // so recompute it.

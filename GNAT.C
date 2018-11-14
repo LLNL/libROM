@@ -2,7 +2,7 @@
  *
  * Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
  * Produced at the Lawrence Livermore National Laboratory
- * Written by William Arrighi wjarrighi@llnl.gov
+ * Written by Dylan Matthew Copeland, copeland11@llnl.gov
  * CODE-686965
  * All rights reserved.
  *

@@ -93,7 +93,7 @@ BasisWriter::writeBasis()
    sprintf(tmp, "time_%06d", d_num_intervals_written);
    d_database->putDouble(tmp, time_interval_start_time);
 
-   const Matrix* basis = d_basis_generator->getBasis();
+   const Matrix* basis = d_basis_generator->getSpatialBasis();
    int num_rows = basis->numRows();
    sprintf(tmp, "sbasis_num_rows_%06d", d_num_intervals_written);
    d_database->putInteger(tmp, num_rows);
@@ -104,7 +104,7 @@ BasisWriter::writeBasis()
    d_database->putDoubleArray(tmp, &basis->item(0, 0), num_rows*num_cols);
 
    if(d_basis_generator->updateRightSV()) {
-     const Matrix* tbasis = d_basis_generator->getTBasis();
+     const Matrix* tbasis = d_basis_generator->getTemporalBasis();
      num_rows = tbasis->numRows();
      sprintf(tmp, "tbasis_num_rows_%06d", d_num_intervals_written);
      d_database->putInteger(tmp, num_rows);

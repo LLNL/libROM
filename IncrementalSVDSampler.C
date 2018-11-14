@@ -158,7 +158,7 @@ IncrementalSVDSampler::computeNextSampleTime(
    }
 
    // Get the current basis vectors.
-   const Matrix* basis = getBasis();
+   const Matrix* basis = getSpatialBasis();
 
    // Compute l = basis' * u
    Vector* l = basis->transposeMult(u_vec);

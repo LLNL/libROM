@@ -243,7 +243,7 @@ IncrementalSVD::takeSample(
    }
 
    if (d_debug_algorithm) {
-      const Matrix* basis = getBasis();
+      const Matrix* basis = getSpatialBasis();
       if (d_rank == 0) {
          // Print d_S.
          for (int row = 0; row < d_num_samples; ++row) {
@@ -300,14 +300,14 @@ IncrementalSVD::takeSample(
 }
 
 const Matrix*
-IncrementalSVD::getBasis()
+IncrementalSVD::getSpatialBasis()
 {
    CAROM_ASSERT(d_basis != 0);
    return d_basis;
 }
 
 const Matrix*
-IncrementalSVD::getTBasis()
+IncrementalSVD::getTemporalBasis()
 {
    CAROM_ASSERT(d_basis != 0);
    return d_basis_right;

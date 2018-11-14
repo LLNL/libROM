@@ -134,7 +134,7 @@ class BasisReader {
        * @return The basis vectors time the requested time.
        */
       const Matrix*
-      getBasis(
+      getSpatialBasis(
          double time);
 
       const Matrix*
@@ -187,7 +187,7 @@ class BasisReader {
       /**
        * @brief The currently requested basis vectors.
        */
-      Matrix* d_basis_vectors;
+      Matrix* d_spatial_basis_vectors;
 
       /**
        * @brief The currently requested temporal basis vectors.

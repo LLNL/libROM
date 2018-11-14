@@ -49,7 +49,7 @@ namespace CAROM {
 BasisReader::BasisReader(
    const std::string& base_file_name,
    Database::formats db_format) :
-   d_basis_vectors(0),
+   d_spatial_basis_vectors(0),
    d_temporal_basis_vectors(0),
    d_singular_values(0),
    d_last_basis_idx(-1)
@@ -83,8 +83,8 @@ BasisReader::BasisReader(
 
 BasisReader::~BasisReader()
 {
-   if (d_basis_vectors) {
-      delete d_basis_vectors;
+   if (d_spatial_basis_vectors) {
+      delete d_spatial_basis_vectors;
    }
    if (d_temporal_basis_vectors) {
       delete d_temporal_basis_vectors;
@@ -132,7 +132,7 @@ BasisReader::readBasis(
 }
 
 const Matrix*
-BasisReader::getBasis(
+BasisReader::getSpatialBasis(
    double time)
 {
    CAROM_ASSERT(0 < numTimeIntervals());
@@ -153,15 +153,15 @@ BasisReader::getBasis(
    int num_cols;
    sprintf(tmp, "sbasis_num_cols_%06d", i);
    d_database->getInteger(tmp, num_cols);
-   if (d_basis_vectors) {
-      delete d_basis_vectors;
+   if (d_spatial_basis_vectors) {
+      delete d_spatial_basis_vectors;
    }
-   d_basis_vectors = new Matrix(num_rows, num_cols, true);
+   d_spatial_basis_vectors = new Matrix(num_rows, num_cols, true);
    sprintf(tmp, "sbasis_%06d", i);
    d_database->getDoubleArray(tmp,
-                              &d_basis_vectors->item(0, 0),
+                              &d_spatial_basis_vectors->item(0, 0),
                               num_rows*num_cols);
-   return d_basis_vectors;
+   return d_spatial_basis_vectors;
 }
 
 const Matrix*
@@ -252,14 +252,14 @@ BasisReader::getMatlabBasis(
    sprintf(tmp, "num_cols_%06d", i);
    d_database->getDouble(tmp, foo);
    num_cols = static_cast<int>(foo);
-   if (d_basis_vectors) {
-      delete d_basis_vectors;
+   if (d_spatial_basis_vectors) {
+      delete d_spatial_basis_vectors;
    }
-   d_basis_vectors = new Matrix(num_rows, num_cols, true);
+   d_spatial_basis_vectors = new Matrix(num_rows, num_cols, true);
    sprintf(tmp, "basis_%06d", i);
    d_database->getDoubleArray(tmp,
-                              &d_basis_vectors->item(0, 0),
+                              &d_spatial_basis_vectors->item(0, 0),
                               num_rows*num_cols);
-   return *d_basis_vectors;
+   return *d_spatial_basis_vectors;
 }
 }

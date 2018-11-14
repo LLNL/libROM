@@ -116,7 +116,7 @@ class SVD
        */
       virtual
       const Matrix*
-      getBasis() = 0;
+      getSpatialBasis() = 0;
 
       /**
        * @brief Returns the temporal basis vectors for the current time interval.
@@ -125,7 +125,7 @@ class SVD
        */
       virtual
       const Matrix*
-      getTBasis() = 0;
+      getTemporalBasis() = 0;
 
       /**
        * @brief Returns the singular values for the current time interval.

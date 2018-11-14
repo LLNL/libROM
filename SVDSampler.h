@@ -127,9 +127,9 @@ class SVDSampler
        * @return The basis vectors for the current time interval.
        */
       const Matrix*
-      getBasis()
+      getSpatialBasis()
       {
-         return d_svd->getBasis();
+         return d_svd->getSpatialBasis();
       }
 
       /**
@@ -139,9 +139,9 @@ class SVDSampler
        * @return The temporal basis vectors for the current time interval.
        */
       const Matrix*
-      getTBasis()
+      getTemporalBasis()
       {
-         return d_svd->getTBasis();
+         return d_svd->getTemporalBasis();
       }
 
       /**

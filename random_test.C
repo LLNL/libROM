@@ -252,8 +252,8 @@ main(
       static_basis_generator.endSamples();
 
       // Get the basis vectors from the 2 different algorithms.
-      const CAROM::Matrix* inc_basis = inc_basis_generator.getBasis();
-      const CAROM::Matrix* static_basis = static_basis_generator.getBasis();
+      const CAROM::Matrix* inc_basis = inc_basis_generator.getSpatialBasis();
+      const CAROM::Matrix* static_basis = static_basis_generator.getSpatialBasis();
 
       // Compute the product of the transpose of the static basis and the
       // incremental basis.  This should be a unitary matrix.

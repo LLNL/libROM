@@ -127,7 +127,7 @@ namespace CAROM {
        */
       virtual
       const Matrix*
-      getBasis();
+      getSpatialBasis();
 
       /**
        * @brief Returns the temporal basis vectors for the current time interval.
@@ -136,7 +136,7 @@ namespace CAROM {
        */
       virtual
       const Matrix*
-      getTBasis();
+      getTemporalBasis();
 
       /**
        * @brief Returns the singular values for the current time interval.
