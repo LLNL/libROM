@@ -49,8 +49,6 @@
 
 #include "DEIM.h"
 
-using namespace std;
-
 namespace CAROM {
 
 void GNAT(const Matrix* f_basis,
@@ -104,8 +102,8 @@ void GNAT(const Matrix* f_basis,
   // Scratch space used throughout the algorithm.
   double* c = new double [num_basis_vectors];
 
-  vector<set<int> > proc_sampled_f_row(num_procs);
-  vector<map<int, int> > proc_f_row_to_tmp_fs_row(num_procs);
+  std::vector<std::set<int> > proc_sampled_f_row(num_procs);
+  std::vector<std::map<int, int> > proc_f_row_to_tmp_fs_row(num_procs);
   int num_f_basis_cols = f_basis_sampled_inv.numColumns();
   Matrix tmp_fs(f_basis_sampled_inv.numRows(),
 		num_f_basis_cols,
@@ -122,7 +120,7 @@ void GNAT(const Matrix* f_basis,
       f_bv_max_local.proc = myid;
       for (int i = 0; i < basis_size; ++i) {
 	// Check whether this row has already been sampled.
-	set<int>::const_iterator found = proc_sampled_f_row[myid].find(i);
+	std::set<int>::const_iterator found = proc_sampled_f_row[myid].find(i);
 	if (found == proc_sampled_f_row[myid].end()) // not found
 	  {
 	    double f_bv_val = fabs(f_basis->item(i, 0));
@@ -192,7 +190,7 @@ void GNAT(const Matrix* f_basis,
 	f_bv_max_local.proc = myid;
 	for (int F_row = 0; F_row < basis_size; ++F_row) {
 	  // Check whether this row has already been sampled.
-	  set<int>::const_iterator found = proc_sampled_f_row[myid].find(F_row);
+	  std::set<int>::const_iterator found = proc_sampled_f_row[myid].find(F_row);
 	  if (found == proc_sampled_f_row[myid].end()) // not found
 	    {
 	      double tmp = 0.0;
@@ -235,11 +233,11 @@ void GNAT(const Matrix* f_basis,
   // f_basis_sampled_inv.
   int idx = 0;
   for (int i = 0; i < num_procs; ++i) {
-    set<int>& this_proc_sampled_f_row = proc_sampled_f_row[i];
-    map<int, int>& this_proc_f_row_to_tmp_fs_row =
+    std::set<int>& this_proc_sampled_f_row = proc_sampled_f_row[i];
+    std::map<int, int>& this_proc_f_row_to_tmp_fs_row =
       proc_f_row_to_tmp_fs_row[i];
     f_sampled_rows_per_proc[i] = this_proc_sampled_f_row.size();
-    for (set<int>::iterator j = this_proc_sampled_f_row.begin();
+    for (std::set<int>::iterator j = this_proc_sampled_f_row.begin();
 	 j != this_proc_sampled_f_row.end(); ++j) {
       int this_f_row = *j;
       f_sampled_row[idx] = this_f_row;
