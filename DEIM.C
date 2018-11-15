@@ -66,7 +66,7 @@ RowInfoMax(RowInfo* a, RowInfo* b, int* len, MPI_Datatype* type)
 }
   
 void
-DEIMOLD(const Matrix* f_basis,
+DEIM(const Matrix* f_basis,
      int num_f_basis_vectors_used,
      int* f_sampled_row,
      int* f_sampled_rows_per_proc,

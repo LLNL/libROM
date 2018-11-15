@@ -53,7 +53,7 @@ using namespace std;
 
 namespace CAROM {
 
-void DEIM(const Matrix* f_basis,
+void GNAT(const Matrix* f_basis,
 	  const int num_f_basis_vectors_used,
 	  int* f_sampled_row,
 	  int* f_sampled_rows_per_proc,
