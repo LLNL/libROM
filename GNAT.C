@@ -94,7 +94,7 @@ void GNAT(const Matrix* f_basis,
   const int ns_mod_nr = num_samples % num_basis_vectors;
   int ns = 0;
    
-  CAROM_ASSERT(num_samples >= num_basis_vectors && num_samples <= basis_size);
+  CAROM_ASSERT(num_samples >= num_basis_vectors && num_samples <= basis_size && num_samples >= 0);
 
   // The small matrix inverted by the algorithm.  We'll allocate the largest
   // matrix we'll need and set its size at each step in the algorithm.
