@@ -52,7 +52,7 @@
 namespace CAROM {
 
 Vector::Vector() :
-   d_vec(0),
+   d_vec(NULL),
    d_alloc_size(0),
    d_distributed(false),
    d_owns_data(true)
@@ -61,7 +61,7 @@ Vector::Vector() :
 Vector::Vector(
    int dim,
    bool distributed) :
-   d_vec(0),
+   d_vec(NULL),
    d_alloc_size(0),
    d_distributed(distributed),
    d_owns_data(true)
@@ -83,7 +83,7 @@ Vector::Vector(
    int dim,
    bool distributed,
    bool copy_data) :
-   d_vec(0),
+   d_vec(NULL),
    d_alloc_size(0),
    d_distributed(distributed),
    d_owns_data(copy_data)
@@ -111,7 +111,7 @@ Vector::Vector(
 
 Vector::Vector(
    const Vector& other) :
-   d_vec(0),
+   d_vec(NULL),
    d_alloc_size(0),
    d_distributed(other.d_distributed),
    d_owns_data(true)
@@ -155,10 +155,11 @@ Vector::operator += (
    return *this;
 }
 
-void
-Vector::zero()
+Vector&
+Vector::operator = (const double& a)
 {
-   for(int i=0; i<d_dim; ++i) d_vec[i] = 0.0;
+   for(int i=0; i<d_dim; ++i) d_vec[i] = a;
+   return *this;
 }
 
 double

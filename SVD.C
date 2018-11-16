@@ -51,11 +51,11 @@ SVD::SVD(
    d_dim(dim),
    d_num_samples(0),
    d_samples_per_time_interval(samples_per_time_interval),
-   d_basis(0),
-   d_basis_right(0),
-   d_U(0),
-   d_W(0),
-   d_S(0),
+   d_basis(NULL),
+   d_basis_right(NULL),
+   d_U(NULL),
+   d_W(NULL),
+   d_S(NULL),
    d_time_interval_start_times(0),
    d_debug_algorithm(debug_algorithm)
 {
@@ -65,15 +65,9 @@ SVD::SVD(
 
 SVD::~SVD()
 {
-   if (d_basis) {
-      delete d_basis;
-   }
-   if (d_U) {
-      delete d_U;
-   }
-   if (d_S) {
-      delete d_S;
-   }
+   delete d_basis;
+   delete d_U;
+   delete d_S;
    delete d_basis_right;
    delete d_W;
 }

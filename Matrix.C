@@ -73,7 +73,7 @@ dgeqp3(int*, int*, double*, int*, int*, double*, double*, int*, int*);
 namespace CAROM {
 
 Matrix::Matrix() :
-   d_mat(0),
+   d_mat(NULL),
    d_alloc_size(0),
    d_distributed(false),
    d_owns_data(true)
@@ -246,12 +246,14 @@ Matrix::balanced() const
   return result;
 }
 
-void
-Matrix::zero()
+Matrix&
+Matrix::operator = (
+   const double a)
 {
    for(int i=0; i<d_num_rows*d_num_cols; ++i) {
-     d_mat[i] = 0.0;
+     d_mat[i] = a;
    }
+   return *this;
 }
 
 void

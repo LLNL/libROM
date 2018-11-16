@@ -237,11 +237,6 @@ HDFDatabase::getIntegerArray(
    CAROM_NULL_USE(nelements);
 #endif
 
-//   if (!isInteger(key)) {
-//      CAROM_ERROR("HDFDatabase::getIntegerArray() error in database\n"
-//         << "    Key = " << key << " is not an integer array." << std::endl);
-//   }
-
 #if (H5_VERS_MAJOR > 1) || ((H5_VERS_MAJOR == 1) && (H5_VERS_MINOR > 6))
    hid_t dset = H5Dopen(d_group_id, key.c_str(), H5P_DEFAULT);
 #else
@@ -281,11 +276,6 @@ HDFDatabase::getDoubleArray(
 #ifndef DEBUG_CHECK_ASSERTIONS
    CAROM_NULL_USE(nelements);
 #endif
-
-//   if (!isDouble(key)) {
-//      CAROM_ERROR("HDFDatabase::getDoubleArray() error in database\n"
-//         << "    Key = " << key << " is not a double array." << std::endl);
-//   }
 
 #if (H5_VERS_MAJOR > 1) || ((H5_VERS_MAJOR == 1) && (H5_VERS_MINOR > 6))
    hid_t dset = H5Dopen(d_group_id, key.c_str(), H5P_DEFAULT);

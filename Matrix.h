@@ -127,6 +127,17 @@ class Matrix
          const Matrix& rhs);
 
       /**
+       * @brief Assignment operator.
+       *
+       * @param[in] a constant value
+       *
+       * @return This after filling all the data with a constant value 
+       */
+      Matrix&
+      operator = (
+         const double a);
+
+      /**
        * @brief Addition operator.
        *
        * @param[in] rhs The Matrix to add to this.
@@ -147,16 +158,6 @@ class Matrix
       Matrix&
       operator -= (
          const Matrix& rhs);
-
-      /**
-       * @brief zero function.
-       *
-       * @param[in] no parameter in 
-       *
-       * @return zero out all the elements 
-       */
-      void
-      zero();
 
       /**
        * @brief Sets the number of rows and columns of the matrix and

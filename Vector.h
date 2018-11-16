@@ -131,12 +131,15 @@ class Vector
          const Vector& rhs);
 
       /**
-       * @brief zero out all the elements 
+       * @brief Equal operator.
        *
-       * @param[in] no parameters in. 
+       * @param[in] rhs The Vector to add to this.
+       *
+       * @return This after rhs has been added to it.
        */
-      void
-      zero();
+      Vector&
+      operator = (
+         const double& a);
 
       /**
        * @brief Sets the length of the vector and reallocates storage if

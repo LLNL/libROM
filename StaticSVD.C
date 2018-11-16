@@ -191,21 +191,11 @@ StaticSVD::getTemporalBasis()
    // If this basis is for the last time interval then it may not be up to date
    // so recompute it.
    if (!thisIntervalBasisCurrent()) {
-      if (d_basis != 0) {
-         delete d_basis;
-      }
-      if (d_basis_right != 0) {
-         delete d_basis_right;
-      }
-      if (d_U != 0) {
-         delete d_U;
-      }
-      if (d_S != 0) {
-         delete d_S;
-      }
-      if (d_V != 0) {
-         delete d_V;
-      }
+      delete d_basis;
+      delete d_basis_right;
+      delete d_U;
+      delete d_S;
+      delete d_V;
       computeSVD();
    }
    else {
@@ -221,21 +211,11 @@ StaticSVD::getSingularValues()
    // If these singular values are for the last time interval then they may not
    // be up to date so recompute them.
    if (!thisIntervalBasisCurrent()) {
-      if (d_basis != 0) {
-         delete d_basis;
-      }
-      if (d_basis_right != 0) {
-         delete d_basis_right;
-      }
-      if (d_U != 0) {
-         delete d_U;
-      }
-      if (d_S != 0) {
-         delete d_S;
-      }
-      if (d_V != 0) {
-         delete d_V;
-      }
+      delete d_basis;
+      delete d_basis_right;
+      delete d_U;
+      delete d_S;
+      delete d_V;
       computeSVD();
    }
    else {
@@ -479,15 +459,6 @@ StaticSVD::svd(
    }
    delete [] U;
 
-   // d_V is in column major order.  Convert it to row major order.
-   /*
-   for (int row = 0; row < num_samples; ++row) {
-      for (int col = row+1; col < num_samples; ++col) {
-         double tmp = d_V->item(row, col);
-         d_V->item(row, col) = d_V->item(col, row);
-         d_V->item(col, row) = tmp;
-      }
-   }*/
 }
 
 }

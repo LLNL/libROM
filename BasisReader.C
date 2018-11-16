@@ -49,7 +49,7 @@ namespace CAROM {
 BasisReader::BasisReader(
    const std::string& base_file_name,
    Database::formats db_format) :
-   d_spatial_basis_vectors(0),
+   d_spatial_basis_vectors(NULL),
    d_temporal_basis_vectors(0),
    d_singular_values(0),
    d_last_basis_idx(-1)
@@ -83,15 +83,9 @@ BasisReader::BasisReader(
 
 BasisReader::~BasisReader()
 {
-   if (d_spatial_basis_vectors) {
-      delete d_spatial_basis_vectors;
-   }
-   if (d_temporal_basis_vectors) {
-      delete d_temporal_basis_vectors;
-   }
-   if (d_singular_values) {
-      delete d_singular_values;
-   }
+   delete d_spatial_basis_vectors;
+   delete d_temporal_basis_vectors;
+   delete d_singular_values;
    d_database->close();
    delete d_database;
 }
@@ -148,16 +142,16 @@ BasisReader::getSpatialBasis(
    d_last_basis_idx = i;
    char tmp[100];
    int num_rows;
-   sprintf(tmp, "sbasis_num_rows_%06d", i);
+   sprintf(tmp, "spatial_basis_num_rows_%06d", i);
    d_database->getInteger(tmp, num_rows);
    int num_cols;
-   sprintf(tmp, "sbasis_num_cols_%06d", i);
+   sprintf(tmp, "spatial_basis_num_cols_%06d", i);
    d_database->getInteger(tmp, num_cols);
    if (d_spatial_basis_vectors) {
       delete d_spatial_basis_vectors;
    }
    d_spatial_basis_vectors = new Matrix(num_rows, num_cols, true);
-   sprintf(tmp, "sbasis_%06d", i);
+   sprintf(tmp, "spatial_basis_%06d", i);
    d_database->getDoubleArray(tmp,
                               &d_spatial_basis_vectors->item(0, 0),
                               num_rows*num_cols);
@@ -181,16 +175,16 @@ BasisReader::getTemporalBasis(
    d_last_basis_idx = i;
    char tmp[100];
    int num_rows;
-   sprintf(tmp, "tbasis_num_rows_%06d", i);
+   sprintf(tmp, "temporal_basis_num_rows_%06d", i);
    d_database->getInteger(tmp, num_rows);
    int num_cols;
-   sprintf(tmp, "tbasis_num_cols_%06d", i);
+   sprintf(tmp, "temporal_basis_num_cols_%06d", i);
    d_database->getInteger(tmp, num_cols);
    if (d_temporal_basis_vectors) {
       delete d_temporal_basis_vectors;
    }
    d_temporal_basis_vectors = new Matrix(num_rows, num_cols, true);
-   sprintf(tmp, "tbasis_%06d", i);
+   sprintf(tmp, "temporal_basis_%06d", i);
    d_database->getDoubleArray(tmp,
                               &d_temporal_basis_vectors->item(0, 0),
                               num_rows*num_cols);
@@ -214,13 +208,13 @@ BasisReader::getSingularValues(
    d_last_basis_idx = i;
    char tmp[100];
    int size;
-   sprintf(tmp, "sv_size_%06d", i);
+   sprintf(tmp, "singular_value_size_%06d", i);
    d_database->getInteger(tmp, size);
    if (d_singular_values) {
       delete d_singular_values;
    }
    d_singular_values = new Matrix(size, size, true);
-   sprintf(tmp, "sv_%06d", i);
+   sprintf(tmp, "singular_value_%06d", i);
    d_database->getDoubleArray(tmp,
                               &d_singular_values->item(0, 0),
                               size*size);
@@ -256,7 +250,7 @@ BasisReader::getMatlabBasis(
       delete d_spatial_basis_vectors;
    }
    d_spatial_basis_vectors = new Matrix(num_rows, num_cols, true);
-   sprintf(tmp, "basis_%06d", i);
+   sprintf(tmp, "matlab_spatial_basis_%06d", i);
    d_database->getDoubleArray(tmp,
                               &d_spatial_basis_vectors->item(0, 0),
                               num_rows*num_cols);
