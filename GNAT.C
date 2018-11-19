@@ -166,7 +166,7 @@ void GNAT(const Matrix* f_basis,
     }
 
     // Compute the pseudo-inverse of M, storing its transpose.
-    M.pseudoinverse();
+    M.transposePseudoinverse();
 
     // Now compute c, the inverse of M times the next column of the sampled
     // rows of the basis of the RHS.
@@ -253,7 +253,7 @@ void GNAT(const Matrix* f_basis,
   CAROM_ASSERT(num_samples == idx);
 
   // Now invert f_basis_sampled_inv, storing its transpose.
-  f_basis_sampled_inv.pseudoinverse();
+  f_basis_sampled_inv.transposePseudoinverse();
 
   // Free the MPI_Datatype and MPI_Op.
   MPI_Type_free(&MaxRowType);

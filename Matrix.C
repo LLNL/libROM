@@ -643,7 +643,7 @@ Matrix::inverse()
    }
 }
 
-void Matrix::pseudoinverse()
+void Matrix::transposePseudoinverse()
 {
    CAROM_ASSERT(!distributed());
    CAROM_ASSERT(numRows() >= numColumns());

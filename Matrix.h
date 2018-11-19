@@ -671,12 +671,12 @@ class Matrix
       inverse();
 
       /**
-       * @brief Computes the pseudoinverse of this and stores the tranpose of the result in this.
+       * @brief Computes the transposePseudoinverse of this.
        *
        * @pre !distributed()
        * @pre numRows() >= numColumns()
        */
-      void pseudoinverse();
+      void transposePseudoinverse();
       
       /**
        * @brief Compute the leading numColumns() column pivots from a
