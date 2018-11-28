@@ -419,6 +419,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+ACLOCAL_AMFLAGS = -I config
 AM_CPPFLAGS = -I. $(INC_PATH)
 AM_LDFLAGS = $(LIB_PATH) $(LIB_NAME)
 lib_LIBRARIES = librom.a
