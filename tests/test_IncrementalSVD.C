@@ -142,7 +142,7 @@ TEST(IncrementalSVDSerialTest, Test_getBasis)
 			 4,
 			 "irrelevant.txt");
 
-  const CAROM::Matrix *B = svd.getBasis();
+  const CAROM::Matrix *B = svd.getSpatialBasis();
   for (int i = 0; i < svd.getDim(); i++)
   {
     for (int j = 0; j < i; j++)

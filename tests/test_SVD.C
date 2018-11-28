@@ -78,8 +78,8 @@ public:
    * return without implementing an actual singular value decomposition.
    *
    */
-  virtual const CAROM::Matrix* getBasis() { return NULL; }
-  virtual const CAROM::Matrix* getTBasis() { return NULL; }
+  virtual const CAROM::Matrix* getSpatialBasis() { return NULL; }
+  virtual const CAROM::Matrix* getTemporalBasis() { return NULL; }
   virtual const CAROM::Matrix* getSingularValues() { return NULL; }
 
   /**
