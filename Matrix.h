@@ -131,7 +131,7 @@ class Matrix
        *
        * @param[in] a constant value
        *
-       * @return This after filling all the data with a constant value 
+       * @return This after filling all the data with a constant value
        */
       Matrix&
       operator = (
@@ -671,14 +671,6 @@ class Matrix
       inverse();
 
       /**
-       * @brief Computes the transposePseudoinverse of this.
-       *
-       * @pre !distributed()
-       * @pre numRows() >= numColumns()
-       */
-      void transposePseudoinverse();
-      
-      /**
        * @brief Compute the leading numColumns() column pivots from a
        * QR decomposition with column pivots (QRCP) of the transpose
        * of this.
@@ -773,7 +765,7 @@ class Matrix
          return item(row, col);
       }
 
-     /** 
+     /**
       * @brief print Matrix into (a) ascii file(s).
       *
       * @param[in] prefix The name of the prefix of the file name.
@@ -781,7 +773,7 @@ class Matrix
       */
      void print(const char * prefix);
 
-     /** 
+     /**
       * @brief write Matrix into (a) HDF file(s).
       *
       * @param[in] prefix The name of the prefix of the file name.
@@ -789,7 +781,7 @@ class Matrix
       */
      void write(const std::string& base_file_name);
 
-     /** 
+     /**
       * @brief read Matrix into (a) HDF file(s).
       *
       * @param[in] prefix The name of the prefix of the file name.
@@ -899,6 +891,24 @@ class Matrix
       qrcp_pivots_transpose_distributed_elemental_unbalanced
 	(int* row_pivot, int* row_pivot_owner, int pivots_requested) const;
 
+      /**
+       * @brief Computes the transposePseudoinverse of this.
+       *
+       * @pre !distributed()
+       * @pre numRows() >= numColumns()
+       *
+       * Assumes this is full column rank; may fail if this is not
+       * full column rank.
+       */
+      void transposePseudoinverse();
+      friend void GNAT(const Matrix*,
+		       const int,
+		       int*,
+		       int*,
+		       Matrix&,
+		       const int,
+		       const int,
+		       const int);
 
       /**
        * @brief The storage for the Matrix's values on this processor.
