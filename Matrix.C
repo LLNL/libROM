@@ -682,7 +682,8 @@ void
 Matrix::print(const char * prefix)
 {
    int my_rank;
-   CAROM_ASSERT(MPI_Comm_rank(MPI_COMM_WORLD, &my_rank) == MPI_SUCCESS);
+   const bool success = MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+   CAROM_ASSERT(success);
 
    std::string filename_str = prefix + std::to_string(my_rank); 
    const char * filename = filename_str.c_str();
