@@ -120,14 +120,10 @@ StaticSVD::takeSample(
       int num_time_intervals =
          static_cast<int>(d_time_interval_start_times.size());
       if (num_time_intervals > 0) {
-         if (d_basis) {
-            delete d_basis;
-            d_basis = 0;
-         }
-         if (d_basis_right) {
-            delete d_basis_right;
-            d_basis_right = 0;
-         }
+	 delete d_basis;
+	 d_basis = NULL;
+	 delete d_basis_right;
+	 d_basis_right = NULL;
          for (int i = 0; i < static_cast<int>(d_samples.size()); ++i) {
             if (d_samples[i]) {
                delete [] d_samples[i];
@@ -135,17 +131,17 @@ StaticSVD::takeSample(
          }
          d_samples.resize(0);
          delete d_U;
-         d_U = 0;
+         d_U = NULL;
          delete d_S;
-         d_S = 0;
+         d_S = NULL;
          delete d_V;
-         d_V = 0;
+         d_V = NULL;
       }
       d_num_samples = 0;
       d_time_interval_start_times.resize(num_time_intervals+1);
       d_time_interval_start_times[num_time_intervals] = time;
-      d_basis = 0;
-      d_basis_right = 0;
+      d_basis = NULL;
+      d_basis_right = NULL;
    }
    double* sample = new double [d_dim];
    memcpy(sample, u_in, d_dim*sizeof(double));
