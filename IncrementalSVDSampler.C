@@ -41,6 +41,7 @@
 //              should be taken for basis generation using an incremental SVD
 //              approach.
 
+#include "SVDSampler.h"
 #include "IncrementalSVDSampler.h"
 #include "IncrementalSVDStandard.h"
 #include "IncrementalSVDFastUpdate.h"
@@ -56,6 +57,7 @@ IncrementalSVDSampler::IncrementalSVDSampler(
    double linearity_tol,
    bool skip_linearly_dependent,
    bool fast_update,
+   int max_basis_dimension,
    double initial_dt,
    int samples_per_time_interval,
    double sampling_tol,
@@ -63,6 +65,7 @@ IncrementalSVDSampler::IncrementalSVDSampler(
    const std::string& basis_file_name,
    bool save_state,
    bool restore_state,
+   bool updateRightSV,
    double min_sampling_time_step_scale,
    double sampling_time_step_scale,
    double max_sampling_time_step_scale,
@@ -83,15 +86,19 @@ IncrementalSVDSampler::IncrementalSVDSampler(
    CAROM_ASSERT(max_sampling_time_step_scale >= 0.0);
    CAROM_ASSERT(min_sampling_time_step_scale <= max_sampling_time_step_scale);
 
+   d_updateRightSV = updateRightSV;
+
    if (fast_update) {
       d_svd.reset(
          new IncrementalSVDFastUpdate(dim,
             linearity_tol,
             skip_linearly_dependent,
+            max_basis_dimension,
             samples_per_time_interval,
             basis_file_name,
             save_state,
             restore_state,
+            updateRightSV,
             debug_algorithm));
    }
    else {
@@ -99,10 +106,12 @@ IncrementalSVDSampler::IncrementalSVDSampler(
          new IncrementalSVDStandard(dim,
             linearity_tol,
             skip_linearly_dependent,
+            max_basis_dimension,
             samples_per_time_interval,
             basis_file_name,
             save_state,
             restore_state,
+            updateRightSV,
             debug_algorithm));
    }
 
@@ -125,7 +134,10 @@ bool
 IncrementalSVDSampler::isNextSample(
    double time)
 {
-   return time >= d_next_sample_time;
+   if(d_updateRightSV)
+     return true;
+   else
+     return time >= d_next_sample_time;
 }
 
 double
@@ -146,7 +158,7 @@ IncrementalSVDSampler::computeNextSampleTime(
    }
 
    // Get the current basis vectors.
-   const Matrix* basis = getBasis();
+   const Matrix* basis = getSpatialBasis();
 
    // Compute l = basis' * u
    Vector* l = basis->transposeMult(u_vec);

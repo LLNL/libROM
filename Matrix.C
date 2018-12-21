@@ -42,6 +42,7 @@
 //              distributed Matrix has its rows distributed across processors.
 
 #include "Matrix.h"
+#include "HDFDatabase.h"
 
 #include "mpi.h"
 #include <string.h>
@@ -70,6 +71,13 @@ dgeqp3(int*, int*, double*, int*, int*, double*, double*, int*, int*);
 }
 
 namespace CAROM {
+
+Matrix::Matrix() :
+   d_mat(NULL),
+   d_alloc_size(0),
+   d_distributed(false),
+   d_owns_data(true)
+{}
 
 Matrix::Matrix(
    int num_rows,
@@ -164,6 +172,27 @@ Matrix::operator = (
    return *this;
 }
 
+Matrix&
+Matrix::operator += (
+   const Matrix& rhs)
+{
+   CAROM_ASSERT(rhs.d_num_rows == d_num_rows);
+   CAROM_ASSERT(rhs.d_num_cols == d_num_cols);
+   for(int i=0; i<d_num_rows*d_num_cols; ++i) d_mat[i] += rhs.d_mat[i];
+   return *this;
+}
+
+Matrix&
+Matrix::operator -= (
+   const Matrix& rhs)
+{
+   CAROM_ASSERT(rhs.d_num_rows == d_num_rows);
+   CAROM_ASSERT(rhs.d_num_cols == d_num_cols);
+   for(int i=0; i<d_num_rows*d_num_cols; ++i) d_mat[i] -= rhs.d_mat[i];
+   return *this;
+}
+
+
 bool
 Matrix::balanced() const
 {
@@ -215,6 +244,16 @@ Matrix::balanced() const
 			     comm) == MPI_SUCCESS);
 
   return result;
+}
+
+Matrix&
+Matrix::operator = (
+   const double a)
+{
+   for(int i=0; i<d_num_rows*d_num_cols; ++i) {
+     d_mat[i] = a;
+   }
+   return *this;
 }
 
 void
@@ -602,6 +641,136 @@ Matrix::inverse()
          item(col, row) = tmp;
       }
    }
+}
+
+void Matrix::transposePseudoinverse()
+{
+   CAROM_ASSERT(!distributed());
+   CAROM_ASSERT(numRows() >= numColumns());
+
+   if (numRows() == numColumns())
+     {
+       inverse();
+     }
+   else
+     {
+       Matrix *AtA = this->transposeMult(this);
+
+       // Directly invert AtA, which is a bad idea if AtA is not small. 
+       AtA->inverse();
+
+       // Pseudoinverse is (AtA)^{-1}*this^T, but we store the transpose of the result in this, namely this*(AtA)^{-T}.
+       Vector row(numColumns(), false);
+       Vector res(numColumns(), false);
+       for (int i=0; i<numRows(); ++i)
+	 { // Compute i-th row of this multiplied by (AtA)^{-T}, whose transpose is (AtA)^{-1} times i-th row transposed.
+	   for (int j=0; j<numColumns(); ++j)
+	     row.item(j) = this->item(i,j);
+	   
+	   AtA->mult(row, res);
+
+	   // Overwrite i-th row with transpose of result.
+	   for (int j=0; j<numColumns(); ++j)
+	     this->item(i,j) = res.item(j);
+	 }
+   
+       delete AtA;
+     }
+}
+
+void
+Matrix::print(const char * prefix)
+{
+   int my_rank;
+   const bool success = MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+   CAROM_ASSERT(success);
+
+   std::string filename_str = prefix + std::to_string(my_rank); 
+   const char * filename = filename_str.c_str();
+   FILE * pFile = fopen(filename,"w");
+   for (int row = 0; row < d_num_rows; ++row) { 
+     for (int col = 0; col < d_num_cols; ++col) { 
+       fprintf(pFile, " %25.20e\t", item(row,col));
+     }
+     fprintf(pFile, "\n");
+   }
+   fclose(pFile);
+}
+
+void
+Matrix::write(const std::string& base_file_name)
+{
+   CAROM_ASSERT(!base_file_name.empty());    
+
+   int mpi_init;
+   MPI_Initialized(&mpi_init);
+   int rank;
+   if (mpi_init) {
+      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+   }
+   else {
+      rank = 0;
+   }
+
+   char tmp[100];
+   sprintf(tmp, ".%06d", rank);
+   std::string full_file_name = base_file_name + tmp;
+   HDFDatabase database;
+   database.create(full_file_name);
+
+   sprintf(tmp, "distributed");
+   database.putInteger(tmp, d_distributed);
+   sprintf(tmp, "num_rows");
+   database.putInteger(tmp, d_num_rows);
+   sprintf(tmp, "num_cols");
+   database.putInteger(tmp, d_num_cols);
+   sprintf(tmp, "data");
+   database.putDoubleArray(tmp, d_mat, d_num_rows*d_num_cols);
+   database.close();
+}
+
+void
+Matrix::read(const std::string& base_file_name)
+{
+   CAROM_ASSERT(!base_file_name.empty());    
+
+   int mpi_init;
+   MPI_Initialized(&mpi_init);
+   int rank;
+   if (mpi_init) {
+      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+   }
+   else {
+      rank = 0;
+   }
+
+   char tmp[100];
+   sprintf(tmp, ".%06d", rank);
+   std::string full_file_name = base_file_name + tmp;
+   HDFDatabase database;
+   database.open(full_file_name);
+
+   sprintf(tmp, "distributed");
+   int distributed;
+   database.getInteger(tmp, distributed);
+   d_distributed = bool(distributed);
+   int num_rows;
+   sprintf(tmp, "num_rows");
+   database.getInteger(tmp, num_rows);
+   int num_cols;
+   sprintf(tmp, "num_cols");
+   database.getInteger(tmp, num_cols);
+   setSize(num_rows,num_cols);
+   sprintf(tmp, "data");
+   database.getDoubleArray(tmp, d_mat, d_alloc_size);
+   d_owns_data = true;
+   if (mpi_init) {
+      MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+   }
+   else {
+      d_num_procs = 1;
+   }
+   database.close();
 }
 
 void

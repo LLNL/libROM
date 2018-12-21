@@ -25,6 +25,7 @@ librom_a_SOURCES += Utilities.C
 librom_a_SOURCES += ParallelBuffer.C
 librom_a_SOURCES += DEIM.C
 librom_a_SOURCES += QDEIM.C
+librom_a_SOURCES += GNAT.C
 
 include_HEADERS =
 include_HEADERS += BasisReader.h

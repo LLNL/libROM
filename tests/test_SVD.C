@@ -78,7 +78,8 @@ public:
    * return without implementing an actual singular value decomposition.
    *
    */
-  virtual const CAROM::Matrix* getBasis() { return NULL; }
+  virtual const CAROM::Matrix* getSpatialBasis() { return NULL; }
+  virtual const CAROM::Matrix* getTemporalBasis() { return NULL; }
   virtual const CAROM::Matrix* getSingularValues() { return NULL; }
 
   /**
@@ -113,7 +114,10 @@ public:
    * Implementing this behavior suffices for testing the abstract base class.
    *
    */
-  bool takeSample(__attribute__((unused)) double* u_in, double time)
+  bool takeSample
+  (__attribute__((unused)) double* u_in,
+   double time,
+   __attribute__((unused)) bool add_without_increase)
   {
     /**
        If a new time interval is needed, add one and reset the number
@@ -151,23 +155,23 @@ TEST(SVDSerialTest, Test_isNewTimeInterval)
   EXPECT_TRUE(svd.isNewTimeInterval());
 
   /* 1 sample; limit is 2, taking a sample won't create a new time interval */
-  svd.takeSample(NULL, 0);
+  svd.takeSample(NULL, 0, true);
   EXPECT_FALSE(svd.isNewTimeInterval());
 
   /* 2 samples; limit is 2, taking a sample will create a new time interval */
-  svd.takeSample(NULL, 0.5);
+  svd.takeSample(NULL, 0.5, true);
   EXPECT_TRUE(svd.isNewTimeInterval());
 
   /* 1 sample; limit is 2, taking a sample won't create a new time interval */
-  svd.takeSample(NULL, 1);
+  svd.takeSample(NULL, 1, true);
   EXPECT_FALSE(svd.isNewTimeInterval());
 
   /* 2 samples; limit is 2, taking a sample will create a new time interval */
-  svd.takeSample(NULL, 1.5);
+  svd.takeSample(NULL, 1.5, true);
   EXPECT_TRUE(svd.isNewTimeInterval());
 
   /* 1 sample; limit is 2, taking a sample won't create a new time interval */
-  svd.takeSample(NULL, 2);
+  svd.takeSample(NULL, 2, true);
   EXPECT_FALSE(svd.isNewTimeInterval());
 }
 
@@ -179,19 +183,19 @@ TEST(SVDSerialTest, Test_getNumBasisTimeIntervals)
   EXPECT_EQ(svd.getNumBasisTimeIntervals(), 0);
 
   /* Creates new time interval; number of intervals = 1 */
-  svd.takeSample(NULL, 0);
+  svd.takeSample(NULL, 0, true);
   EXPECT_EQ(svd.getNumBasisTimeIntervals(), 1);
-  svd.takeSample(NULL, 0.5);
+  svd.takeSample(NULL, 0.5, true);
   EXPECT_EQ(svd.getNumBasisTimeIntervals(), 1);
 
   /* Creates new time interval; number of intervals = 2 */
-  svd.takeSample(NULL, 1);
+  svd.takeSample(NULL, 1, true);
   EXPECT_EQ(svd.getNumBasisTimeIntervals(), 2);
-  svd.takeSample(NULL, 1.5);
+  svd.takeSample(NULL, 1.5, true);
   EXPECT_EQ(svd.getNumBasisTimeIntervals(), 2);
 
   /* Creates new time interval; number of intervals = 3 */
-  svd.takeSample(NULL, 2);
+  svd.takeSample(NULL, 2, true);
   EXPECT_EQ(svd.getNumBasisTimeIntervals(), 3);
 }
 
@@ -200,23 +204,23 @@ TEST(SVDSerialTest, Test_getBasisIntervalStartTime)
   FakeSVD svd(5, 2);
 
   /* 1st time interval starts at time 0 */
-  svd.takeSample(NULL, 0);
+  svd.takeSample(NULL, 0, true);
   EXPECT_DOUBLE_EQ(svd.getBasisIntervalStartTime(0), 0);
 
-  svd.takeSample(NULL, 0.5);
+  svd.takeSample(NULL, 0.5, true);
   EXPECT_DOUBLE_EQ(svd.getBasisIntervalStartTime(0), 0);
 
   /* 2nd time interval starts at time 1 */
-  svd.takeSample(NULL, 1);
+  svd.takeSample(NULL, 1, true);
   EXPECT_DOUBLE_EQ(svd.getBasisIntervalStartTime(0), 0);
   EXPECT_DOUBLE_EQ(svd.getBasisIntervalStartTime(1), 1);
 
-  svd.takeSample(NULL, 1.5);
+  svd.takeSample(NULL, 1.5, true);
   EXPECT_DOUBLE_EQ(svd.getBasisIntervalStartTime(0), 0);
   EXPECT_DOUBLE_EQ(svd.getBasisIntervalStartTime(1), 1);
 
   /* 3rd time interval starts at time 2 */
-  svd.takeSample(NULL, 2);
+  svd.takeSample(NULL, 2, true);
   EXPECT_DOUBLE_EQ(svd.getBasisIntervalStartTime(0), 0);
   EXPECT_DOUBLE_EQ(svd.getBasisIntervalStartTime(1), 1);
   EXPECT_DOUBLE_EQ(svd.getBasisIntervalStartTime(2), 2);

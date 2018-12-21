@@ -160,7 +160,8 @@ am_librom_a_OBJECTS = Matrix.$(OBJEXT) Vector.$(OBJEXT) \
 	IncrementalSVDSampler.$(OBJEXT) StaticSVD.$(OBJEXT) \
 	StaticSVDBasisGenerator.$(OBJEXT) StaticSVDSampler.$(OBJEXT) \
 	Database.$(OBJEXT) HDFDatabase.$(OBJEXT) Utilities.$(OBJEXT) \
-	ParallelBuffer.$(OBJEXT) DEIM.$(OBJEXT) QDEIM.$(OBJEXT)
+	ParallelBuffer.$(OBJEXT) DEIM.$(OBJEXT) QDEIM.$(OBJEXT) \
+	GNAT.$(OBJEXT)
 librom_a_OBJECTS = $(am_librom_a_OBJECTS)
 PROGRAMS = $(noinst_PROGRAMS)
 am_random_test_OBJECTS = random_test.$(OBJEXT)
@@ -429,7 +430,7 @@ librom_a_SOURCES = Matrix.C Vector.C BasisReader.C BasisWriter.C \
 	IncrementalSVDBasisGenerator.C IncrementalSVDSampler.C \
 	StaticSVD.C StaticSVDBasisGenerator.C StaticSVDSampler.C \
 	Database.C HDFDatabase.C Utilities.C ParallelBuffer.C DEIM.C \
-	QDEIM.C
+	QDEIM.C GNAT.C
 include_HEADERS = BasisReader.h BasisWriter.h CAROM_config.h DEIM.h \
 	Database.h HDFDatabase.h IncrementalSVD.h \
 	IncrementalSVDBasisGenerator.h IncrementalSVDSampler.h \
@@ -644,6 +645,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/BasisWriter.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DEIM.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Database.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/GNAT.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HDFDatabase.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/IncrementalSVD.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/IncrementalSVDBasisGenerator.Po@am__quote@

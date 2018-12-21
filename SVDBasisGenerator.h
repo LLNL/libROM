@@ -95,6 +95,12 @@ class SVDBasisGenerator
          CAROM_ASSERT(time >= 0.0);
          return d_svdsampler->isNextSample(time);
       }
+     
+      /**
+       * @brief Returns true if it needs to update right basis vectors.
+       */
+      bool
+      updateRightSV() {return d_svdsampler->isUpdateRightSV(); };
 
       /**
        * @brief Sample the new state, u_in, at the given time.
@@ -112,10 +118,12 @@ class SVDBasisGenerator
       takeSample(
          double* u_in,
          double time,
-         double dt)
+         double dt,
+         bool add_without_increase = false)
       {
          CAROM_ASSERT(u_in != 0);
          CAROM_ASSERT(time >= 0);
+ 
 
          // Check that u_in is not non-zero.
          Vector u_vec(u_in, d_svdsampler->getDim(), true);
@@ -123,14 +131,20 @@ class SVDBasisGenerator
             return false;
          }
 
+
          if (getNumBasisTimeIntervals() > 0 &&
              d_svdsampler->isNewTimeInterval()) {
             d_svdsampler->resetDt(dt);
-            if (d_basis_writer) {
-               d_basis_writer->writeBasis();
-            }
+            // YC: commenting this out unless someone think this is necessary
+            //     we call writeBasis in "endSamples()" function below.
+            //     I think that one call is enough. 
+            //     I will remove completely if no one has other opinion.
+            //if (d_basis_writer) {
+            //   d_basis_writer->writeBasis();
+            //}
          }
-         return d_svdsampler->takeSample(u_in, time);
+
+         return d_svdsampler->takeSample(u_in, time, add_without_increase);
       }
 
       /**
@@ -175,9 +189,21 @@ class SVDBasisGenerator
        * @return The basis vectors for the current time interval.
        */
       const Matrix*
-      getBasis()
+      getSpatialBasis()
       {
-         return d_svdsampler->getBasis();
+         return d_svdsampler->getSpatialBasis();
+      }
+
+      /**
+       * @brief Returns the temporal basis vectors for the current time interval as a
+       * Matrix.
+       *
+       * @return The temporal basis vectors for the current time interval.
+       */
+      const Matrix*
+      getTemporalBasis()
+      {
+         return d_svdsampler->getTemporalBasis();
       }
 
       /**

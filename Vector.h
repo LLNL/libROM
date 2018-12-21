@@ -56,6 +56,8 @@ namespace CAROM {
 class Vector
 {
    public:
+     Vector();
+
       /**
        * @brief Constructor creating a Vector with uninitialized values.
        *
@@ -116,6 +118,28 @@ class Vector
       Vector&
       operator = (
          const Vector& rhs);
+
+      /**
+       * @brief Addition operator.
+       *
+       * @param[in] rhs The Vector to add to this.
+       *
+       * @return This after rhs has been added to it.
+       */
+      Vector&
+      operator += (
+         const Vector& rhs);
+
+      /**
+       * @brief Equal operator.
+       *
+       * @param[in] rhs The Vector to add to this.
+       *
+       * @return This after rhs has been added to it.
+       */
+      Vector&
+      operator = (
+         const double& a);
 
       /**
        * @brief Sets the length of the vector and reallocates storage if
@@ -593,11 +617,35 @@ class Vector
          return item(i);
       }
       
+     /** 
+      * @brief print Vector into (a) ascii file(s).
+      *
+      * @param[in] prefix The name of the prefix of the file name.
+      *
+      */
+     void print(const char * prefix);
+
+     /** 
+      * @brief write Vector into (a) HDF file(s).
+      *
+      * @param[in] prefix The name of the prefix of the file name.
+      *
+      */
+     void write(const std::string& base_file_name);
+
+     /** 
+      * @brief read Vector from (a) HDF file(s).
+      *
+      * @param[in] prefix The name of the prefix of the file name.
+      *
+      */
+     void read(const std::string& base_file_name);
+
    private:
       /**
        * @brief Default constructor is not implemented.
        */
-      Vector();
+      // Vector();
 
       /**
        * @brief The storage for the Vector's values on this processor.

@@ -69,11 +69,13 @@ public:
   (int dim,
    double linearity_tol,
    bool skip_linearly_dependent,
+   int max_basis_dimension,
    int samples_per_time_interval,
    const std::string& basis_file_name)
     : CAROM::IncrementalSVD(dim,
 			    linearity_tol,
 			    skip_linearly_dependent,
+			    max_basis_dimension,
 			    samples_per_time_interval,
 			    basis_file_name,
 			    false,
@@ -114,6 +116,7 @@ public:
 
   void addLinearlyDependentSample
   (__attribute__((unused)) const CAROM::Matrix *A,
+   __attribute__((unused)) const CAROM::Matrix *W,
    __attribute__((unused)) const CAROM::Matrix *sigma)
   {
     /* Do nothing */
@@ -122,6 +125,7 @@ public:
   void addNewSample
   (__attribute__((unused)) const CAROM::Vector *j,
    __attribute__((unused)) const CAROM::Matrix *A,
+   __attribute__((unused)) const CAROM::Matrix *W,
    __attribute__((unused)) CAROM::Matrix *sigma)
   {
     /* Do nothing */
@@ -134,10 +138,11 @@ TEST(IncrementalSVDSerialTest, Test_getBasis)
   FakeIncrementalSVD svd(3,
 			 1e-1,
 			 false,
+			 3,
 			 4,
 			 "irrelevant.txt");
 
-  const CAROM::Matrix *B = svd.getBasis();
+  const CAROM::Matrix *B = svd.getSpatialBasis();
   for (int i = 0; i < svd.getDim(); i++)
   {
     for (int j = 0; j < i; j++)
@@ -154,6 +159,7 @@ TEST(IncrementalSVDSerialTest, Test_getSingularValues)
   FakeIncrementalSVD svd(3,
 			 1e-1,
 			 false,
+			 3,
 			 4,
 			 "irrelevant.txt");
 

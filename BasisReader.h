@@ -118,6 +118,10 @@ class BasisReader {
          return result;
       }
 
+      void readBasis(
+             const std::string& base_file_name,
+             Database::formats db_format = Database::HDF5);
+
       /**
        *
        * @brief Returns the basis vectors for the requested time.
@@ -130,7 +134,19 @@ class BasisReader {
        * @return The basis vectors time the requested time.
        */
       const Matrix*
-      getBasis(
+      getSpatialBasis(
+         double time);
+
+      const Matrix*
+      getTemporalBasis(
+         double time);
+
+      const Matrix*
+      getSingularValues(
+         double time);
+
+      Matrix
+      getMatlabBasis(
          double time);
 
    private:
@@ -171,7 +187,17 @@ class BasisReader {
       /**
        * @brief The currently requested basis vectors.
        */
-      Matrix* d_basis_vectors;
+      Matrix* d_spatial_basis_vectors;
+
+      /**
+       * @brief The currently requested temporal basis vectors.
+       */
+      Matrix* d_temporal_basis_vectors;
+
+      /**
+       * @brief The currently requested singular values.
+       */
+      Matrix* d_singular_values;
 
       /**
        * @brief The database being read from.

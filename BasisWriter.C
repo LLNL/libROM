@@ -92,15 +92,37 @@ BasisWriter::writeBasis()
       d_basis_generator->getBasisIntervalStartTime(d_num_intervals_written);
    sprintf(tmp, "time_%06d", d_num_intervals_written);
    d_database->putDouble(tmp, time_interval_start_time);
-   const Matrix* basis = d_basis_generator->getBasis();
+
+   const Matrix* basis = d_basis_generator->getSpatialBasis();
    int num_rows = basis->numRows();
-   sprintf(tmp, "num_rows_%06d", d_num_intervals_written);
+   sprintf(tmp, "spatial_basis_num_rows_%06d", d_num_intervals_written);
    d_database->putInteger(tmp, num_rows);
    int num_cols = basis->numColumns();
-   sprintf(tmp, "num_cols_%06d", d_num_intervals_written);
+   sprintf(tmp, "spatial_basis_num_cols_%06d", d_num_intervals_written);
    d_database->putInteger(tmp, num_cols);
-   sprintf(tmp, "basis_%06d", d_num_intervals_written);
+   sprintf(tmp, "spatial_basis_%06d", d_num_intervals_written);
    d_database->putDoubleArray(tmp, &basis->item(0, 0), num_rows*num_cols);
+
+   if(d_basis_generator->updateRightSV()) {
+     const Matrix* tbasis = d_basis_generator->getTemporalBasis();
+     num_rows = tbasis->numRows();
+     sprintf(tmp, "temporal_basis_num_rows_%06d", d_num_intervals_written);
+     d_database->putInteger(tmp, num_rows);
+     num_cols = tbasis->numColumns();
+     sprintf(tmp, "temporal_basis_num_cols_%06d", d_num_intervals_written);
+     d_database->putInteger(tmp, num_cols);
+     sprintf(tmp, "temporal_basis_%06d", d_num_intervals_written);
+     d_database->putDoubleArray(tmp, &tbasis->item(0, 0), num_rows*num_cols);
+   }
+
+   const Matrix* sv = d_basis_generator->getSingularValues();
+   num_rows = sv->numRows(); 
+   num_cols = num_rows;
+   sprintf(tmp, "singular_value_size_%06d", d_num_intervals_written);
+   d_database->putInteger(tmp, num_rows);
+   sprintf(tmp, "singular_value_%06d", d_num_intervals_written);
+   d_database->putDoubleArray(tmp, &sv->item(0, 0), num_rows*num_cols);
+
    ++d_num_intervals_written;
 }
 

@@ -73,6 +73,7 @@ main(
       1.0e-6,
       false,
       true,
+      num_samples,
       1.0e-2,
       num_samples,
       1.0e-20,
@@ -145,7 +146,7 @@ main(
       printf("Wall time = %f\n", global_run_time);
    }
 
-   int foo = inc_basis_generator.getBasis()->numColumns();
+   int foo = inc_basis_generator.getSpatialBasis()->numColumns();
    if (rank == 0) {
       printf("Samples taken = %d\n", samples_taken);
       printf("Number of samples = %d\n", foo);
