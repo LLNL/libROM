@@ -361,6 +361,38 @@ Matrix::mult(
 }
 
 void
+Matrix::pointwise_mult(
+   int this_row,
+   const Vector& other,
+   Vector& result) const
+{
+   CAROM_ASSERT(!result.distributed())
+   CAROM_ASSERT(!distributed());
+   CAROM_ASSERT(!other.distributed());
+   CAROM_ASSERT(numColumns() == other.dim());
+ 
+   // Do the multiplication.
+   for (int entry = 0; entry < d_num_cols; ++entry) {
+     result.item(entry) = item(this_row, entry)*other.item(entry);
+   }
+}
+
+void
+Matrix::pointwise_mult(
+   int this_row,
+   Vector& other) const
+{
+   CAROM_ASSERT(!distributed());
+   CAROM_ASSERT(!other.distributed());
+   CAROM_ASSERT(numColumns() == other.dim());
+ 
+   // Do the multiplication.
+   for (int entry = 0; entry < d_num_cols; ++entry) {
+     other.item(entry) *= item(this_row, entry);
+   }
+}
+
+void
 Matrix::multPlus(
    Vector& a,
    const Vector& b,

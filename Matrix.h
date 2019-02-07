@@ -409,6 +409,50 @@ class Matrix
          const Vector& other,
          Vector& result) const;
 
+        /**
+        * @brief Multiplies a specified row of this Matrix with other 
+        * pointwise.
+        *
+        * Only supports multiplication of an undistributed Matrix and Vector
+        * resulting in an undistributed Vector.
+        * Result will be sized accordingly.
+        *
+        * @pre !result.distributed() 
+        * @pre !distributed()
+        * @pre !other.distributed()
+        * @pre numColumns() == other.dim()
+        *
+        * @param[in] other The Vector to multiply with this.
+        * @param[out] result The product Vector.
+        */
+      void
+      pointwise_mult(
+         int this_row,
+         const Vector& other,
+         Vector& result) const;
+
+        /**
+        * @brief Multiplies a specified row of this Matrix with other 
+        * pointwise. This modifies other.
+        *
+        * Only supports multiplication of an undistributed Matrix and Vector
+        * resulting in an undistributed Vector.
+        * Result will be sized accordingly.
+        *
+        * @pre !result.distributed() 
+        * @pre !distributed()
+        * @pre !other.distributed()
+        * @pre numColumns() == other.dim()
+        *
+        * @param[in] other The Vector to multiply with this.
+        * @param[out] other The product Vector.
+        */
+      void
+      pointwise_mult(
+         int this_row,
+         Vector& other) const;
+
+
       /**
        * @brief Computes a += this*b*c.
        *
