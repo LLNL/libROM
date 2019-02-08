@@ -366,7 +366,7 @@ Matrix::pointwise_mult(
    const Vector& other,
    Vector& result) const
 {
-   CAROM_ASSERT(!result.distributed())
+   CAROM_ASSERT(!result.distributed());
    CAROM_ASSERT(!distributed());
    CAROM_ASSERT(!other.distributed());
    CAROM_ASSERT(numColumns() == other.dim());
