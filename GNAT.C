@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+ * Copyright (c) 2013-2019, Lawrence Livermore National Security, LLC.
  * Produced at the Lawrence Livermore National Laboratory
  * Written by Dylan Matthew Copeland, copeland11@llnl.gov
  * CODE-686965
