@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
 
+###############################################################################
+#
+#  Copyright (c) 2013-2019, Lawrence Livermore National Security, LLC
+#  and other libROM project developers. See the top-level COPYRIGHT
+#  file for details.
+#
+#  SPDX-License-Identifier: (Apache-2.0 OR MIT)
+#
+###############################################################################
+
 export PKG_ROOT=/usr/gapps/bdiv/toss_3_x86_64_ib/clang-3.9-mvapich2-2.2
 export COMPILER_ROOT=/usr/tce/packages/mvapich2/mvapich2-2.2-clang-3.9.1/bin
 export LAPACK_LDFLAGS="-L${PKG_ROOT}/lapack/3.5.0/lib -llapack -lblas"

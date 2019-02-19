@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
 
+###############################################################################
+#
+#  Copyright (c) 2013-2019, Lawrence Livermore National Security, LLC
+#  and other libROM project developers. See the top-level COPYRIGHT
+#  file for details.
+#
+#  SPDX-License-Identifier: (Apache-2.0 OR MIT)
+#
+###############################################################################
+
 #NOTE: Spectrum MPI is IBM's prepackaged version of OpenMPI
 #NOTE: Extra LD flags are what is used by /usr/tcetmp/bin/xlflang -v
 #      when called on a Fortran 90 source file. ALCF recommends
@@ -39,4 +49,3 @@ export CC=${COMPILER_ROOT}/mpicc
     --enable-opt=yes \
     --enable-debug=no \
     "$@"
-
