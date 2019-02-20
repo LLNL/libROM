@@ -159,8 +159,15 @@ IncrementalSVDStandard::buildInitialSVD(
 void
 IncrementalSVDStandard::computeBasis()
 {
+   /* Invalidate existing cached basis and update cached basis */
+   delete d_basis;
    d_basis = new Matrix(*d_U);
-   if(d_updateRightSV) d_basis_right = new Matrix(*d_W);
+
+   if (d_updateRightSV)
+   {
+      delete d_basis_right;
+      d_basis_right = new Matrix(*d_W);
+   }
 }
 
 void
@@ -187,7 +194,7 @@ IncrementalSVDStandard::addLinearlyDependentSample(
    delete d_U;
    d_U = U_times_Amod;
 
-   // Chop a column off of W to form Wmod. 
+   // Chop a column off of W to form Wmod.
    Matrix* new_d_W;
    if (d_updateRightSV) {
      new_d_W = new Matrix(d_num_rows_of_W+1, d_num_samples, false);

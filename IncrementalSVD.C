@@ -415,8 +415,7 @@ IncrementalSVD::buildIncrementalSVD(
       delete W;
 
       // Compute the basis vectors.
-      delete d_basis;  
-      computeBasis();  
+      computeBasis();
    }
    else {
       delete basisl;

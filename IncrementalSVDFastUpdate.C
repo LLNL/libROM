@@ -195,7 +195,11 @@ IncrementalSVDFastUpdate::computeBasis()
       reOrthogonalize(d_basis);
    }
    */
-   if(d_updateRightSV) d_basis_right = new Matrix(*d_W);
+   if(d_updateRightSV)
+   {
+     delete d_basis_right;
+     d_basis_right = new Matrix(*d_W);
+   }
 }
 
 void
@@ -222,7 +226,7 @@ IncrementalSVDFastUpdate::addLinearlyDependentSample(
    delete d_Up;
    d_Up = Up_times_Amod;
 
-   Matrix* new_d_W; 
+   Matrix* new_d_W;
    if (d_updateRightSV) {
      // The new d_W is the product of the current d_W extended by another row
      // and column and W.  The only new value in the extended version of d_W
@@ -276,7 +280,7 @@ IncrementalSVDFastUpdate::addNewSample(
    delete d_U;
    d_U = newU;
 
-   Matrix* new_d_W; 
+   Matrix* new_d_W;
    if (d_updateRightSV) {
      // The new d_W is the product of the current d_W extended by another row
      // and column and W.  The only new value in the extended version of d_W
