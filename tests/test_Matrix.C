@@ -9,7 +9,7 @@
  *****************************************************************************/
 
 // Description: This source file is a test runner that uses the Google Test
-// Framework to run unit tests.
+// Framework to run unit tests on the CAROM::Matrix class.
 
 #include <iostream>
 

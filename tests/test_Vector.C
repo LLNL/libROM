@@ -8,6 +8,9 @@
  *
  *****************************************************************************/
 
+// Description: This source file is a test runner that uses the Google Test
+// Framework to run unit tests on the CAROM::Vector class.
+
 #include <iostream>
 
 #ifdef CAROM_HAS_GTEST
