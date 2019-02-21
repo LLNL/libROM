@@ -166,7 +166,11 @@ IncrementalSVDFastUpdate::computeBasis()
       reOrthogonalize(d_basis);
    }
    */
-   if(d_updateRightSV) d_basis_right = new Matrix(*d_W);
+   if(d_updateRightSV)
+   {
+     delete d_basis_right;
+     d_basis_right = new Matrix(*d_W);
+   }
 }
 
 void

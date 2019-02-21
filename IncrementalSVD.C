@@ -311,7 +311,7 @@ IncrementalSVD::buildIncrementalSVD(
    double k = u_vec.inner_product(u_vec) - 2.0*l->inner_product(l) +
       basisl->inner_product(basisl);
    if (k <= 0) {
-      printf("linearly dependent sample!\n");
+      if(d_rank == 0) printf("linearly dependent sample!\n");
       k = 0;
    }
    else {
@@ -386,7 +386,6 @@ IncrementalSVD::buildIncrementalSVD(
       delete W;
 
       // Compute the basis vectors.
-      delete d_basis;
       computeBasis();
    }
    else {

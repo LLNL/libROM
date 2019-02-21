@@ -89,8 +89,8 @@ DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) \
 	$(top_srcdir)/config/CAROM_config.h.in \
 	$(top_srcdir)/docs/Makefile.in $(top_srcdir)/docs/Doxyfile.in \
-	depcomp $(include_HEADERS) AUTHORS ChangeLog INSTALL NEWS \
-	README config.guess config.sub install-sh missing
+	depcomp $(include_HEADERS) AUTHORS ChangeLog INSTALL NEWS TODO \
+	compile config.guess config.sub install-sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config/arg-with-environment.m4 \
 	$(top_srcdir)/config/ax_cxx_compile_stdcxx.m4 \
@@ -420,6 +420,16 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+
+###############################################################################
+#
+#  Copyright (c) 2013-2019, Lawrence Livermore National Security, LLC
+#  and other libROM project developers. See the top-level COPYRIGHT
+#  file for details.
+#
+#  SPDX-License-Identifier: (Apache-2.0 OR MIT)
+#
+###############################################################################
 ACLOCAL_AMFLAGS = -I config
 AM_CPPFLAGS = -I. $(INC_PATH)
 AM_LDFLAGS = $(LIB_PATH) $(LIB_NAME)

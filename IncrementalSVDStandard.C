@@ -130,8 +130,15 @@ IncrementalSVDStandard::buildInitialSVD(
 void
 IncrementalSVDStandard::computeBasis()
 {
+   /* Invalidate existing cached basis and update cached basis */
+   delete d_basis;
    d_basis = new Matrix(*d_U);
-   if(d_updateRightSV) d_basis_right = new Matrix(*d_W);
+
+   if (d_updateRightSV)
+   {
+      delete d_basis_right;
+      d_basis_right = new Matrix(*d_W);
+   }
 }
 
 void
