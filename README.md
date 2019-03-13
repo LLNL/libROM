@@ -25,8 +25,9 @@ contributions by Bill Arrighi and Tanya Kostova-Vassilevska.
 
 Subsequent commits to libROM have been made by Geoffrey Oxberry,
 Robert W. Anderson, Youngsoo Choi, and Dylan Copeland. In particular,
-Bill Arrighi, Robert W. Anderson, Youngsoo Choi, and Dylan Copeland
-have contributed the DEIM feature to libROM.
+Bill Arrighi and Robert W. Anderson have contributed an implementation
+of DEIM to libROM, and Dylan Copeland has contributed an
+implementation of GNAT to libROM.
 
 # License
 
