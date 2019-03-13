@@ -1,3 +1,12 @@
+###############################################################################
+#
+#  Copyright (c) 2013-2019, Lawrence Livermore National Security, LLC
+#  and other libROM project developers. See the top-level COPYRIGHT
+#  file for details.
+#
+#  SPDX-License-Identifier: (Apache-2.0 OR MIT)
+#
+###############################################################################
 ACLOCAL_AMFLAGS = -I config
 AM_CPPFLAGS = -I. $(INC_PATH)
 AM_LDFLAGS = $(LIB_PATH) $(LIB_NAME)
@@ -88,7 +97,7 @@ noinst_PROGRAMS += tests/test_IncrementalSVD
 # which libraries to link).
 #
 uneven_dist_SOURCES = uneven_dist.C
-uneven_dist_LDFLAGS = 
+uneven_dist_LDFLAGS =
 uneven_dist_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
 
 random_test_SOURCES = random_test.C
@@ -100,23 +109,23 @@ weak_scaling_LDFLAGS =
 weak_scaling_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
 
 smoke_test_SOURCES = smoke_test.C
-smoke_test_LDFLAGS = 
+smoke_test_LDFLAGS =
 smoke_test_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
 
 tests_test_Matrix_SOURCES = tests/test_Matrix.C
-tests_test_Matrix_LDFLAGS = 
+tests_test_Matrix_LDFLAGS =
 tests_test_Matrix_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
 
 tests_test_Vector_SOURCES = tests/test_Vector.C
-tests_test_Vector_LDFLAGS = 
+tests_test_Vector_LDFLAGS =
 tests_test_Vector_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
 
 tests_test_SVD_SOURCES = tests/test_SVD.C
-tests_test_SVD_LDFLAGS = 
+tests_test_SVD_LDFLAGS =
 tests_test_SVD_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
 
 tests_test_IncrementalSVD_SOURCES = tests/test_IncrementalSVD.C
-tests_test_IncrementalSVD_LDFLAGS = 
+tests_test_IncrementalSVD_LDFLAGS =
 tests_test_IncrementalSVD_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
 
 dox:

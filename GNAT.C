@@ -1,39 +1,10 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
- * Produced at the Lawrence Livermore National Laboratory
- * Written by Dylan Matthew Copeland, copeland11@llnl.gov
- * CODE-686965
- * All rights reserved.
+ * Copyright (c) 2013-2019, Lawrence Livermore National Security, LLC
+ * and other libROM project developers. See the top-level COPYRIGHT
+ * file for details.
  *
- * This file is part of libROM.
- * For details, see https://computation.llnl.gov/librom
- * Please also read README_BSD_NOTICE.
- *
- * Redistribution and use in source and binary forms, with or without
- * modifications, are permitted provided that the following conditions are met:
- *
- *    o Redistributions of source code must retain the above copyright notice,
- *      this list of conditions and the disclaimer below.
- *    o Redistribution in binary form must reproduce the above copyright
- *      notice, this list of conditions and the disclaimer (as noted below) in
- *      the documentation and/or other materials provided with the
- *      distribution.
- *    o Neither the name of the LLNS/LLNL nor the names of its contributors may
- *      be used to endorse or promote products derived from this software
- *      without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL LAWRENCE LIVERMORE NATIONAL SECURITY,
- * LLC, THE U.S. DEPARTMENT OF ENERGY OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OR SUCH DAMAGE.
+ * SPDX-License-Identifier: (Apache-2.0 OR MIT)
  *
  *****************************************************************************/
 
@@ -90,10 +61,10 @@ void GNAT(const Matrix* f_basis,
   const int basis_size = f_basis->numRows();
 
   const int num_samples = num_samples_req > 0 ? num_samples_req : num_basis_vectors;
-  
+
   const int ns_mod_nr = num_samples % num_basis_vectors;
   int ns = 0;
-   
+
   CAROM_ASSERT(num_samples >= num_basis_vectors && num_samples <= basis_size && num_samples >= 0);
 
   // The small matrix inverted by the algorithm.  We'll allocate the largest
@@ -149,9 +120,9 @@ void GNAT(const Matrix* f_basis,
       proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
       proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] = k;
     }
-  
+
   ns += ns0;
-  
+
   // Now repeat the process for the other sampled rows of the basis of the RHS.
   for (int i = 1; i < num_basis_vectors; ++i) {
     const int nsi = i < ns_mod_nr ? (num_samples / num_basis_vectors) + 1 : num_samples / num_basis_vectors;
@@ -180,7 +151,7 @@ void GNAT(const Matrix* f_basis,
       }
       c[minv_row] = tmp;
     }
-      
+
     for (int k=0; k<nsi; ++k)
       {
 	// Now figure out the next sampled row of the basis of f.
@@ -199,7 +170,7 @@ void GNAT(const Matrix* f_basis,
 		tmp += f_basis->item(F_row, F_col)*c[F_col];
 	      }
 	      const double r_val = fabs(f_basis->item(F_row, i) - tmp);
-	    
+
 	      if (r_val > f_bv_max_local.row_val) {
 		f_bv_max_local.row_val = r_val;
 		f_bv_max_local.row = F_row;
@@ -229,7 +200,7 @@ void GNAT(const Matrix* f_basis,
   }
 
   CAROM_ASSERT(num_samples == ns);
-  
+
   // Fill f_sampled_row, and f_sampled_rows_per_proc.  Unscramble tmp_fs into
   // f_basis_sampled_inv.
   int idx = 0;
@@ -249,7 +220,7 @@ void GNAT(const Matrix* f_basis,
       ++idx;
     }
   }
-  
+
   CAROM_ASSERT(num_samples == idx);
 
   // Now invert f_basis_sampled_inv, storing its transpose.
