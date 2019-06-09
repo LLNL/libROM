@@ -96,9 +96,13 @@ noinst_PROGRAMS = uneven_dist$(EXEEXT) random_test$(EXEEXT) \
 	tests/test_SVD$(EXEEXT) tests/test_IncrementalSVD$(EXEEXT)
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/config/ax_cxx_compile_stdcxx.m4 \
+am__aclocal_m4_deps = $(top_srcdir)/config/arg-with-environment.m4 \
+	$(top_srcdir)/config/ax_cxx_compile_stdcxx.m4 \
 	$(top_srcdir)/config/ax_cxx_compile_stdcxx_11.m4 \
+	$(top_srcdir)/config/compiler-id.m4 \
+	$(top_srcdir)/config/configure-log.m4 \
 	$(top_srcdir)/config/split-libs-string.m4 \
+	$(top_srcdir)/config/support-rpath.m4 \
 	$(top_srcdir)/m4/ax_lib_hdf5.m4 $(top_srcdir)/m4/ax_mpi.m4 \
 	$(top_srcdir)/m4/ax_blas.m4 $(top_srcdir)/m4/ax_lapack.m4 \
 	$(top_srcdir)/configure.ac
@@ -316,11 +320,14 @@ CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
+CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
+DOT_PATH = @DOT_PATH@
+DOXYGEN_BIN = @DOXYGEN_BIN@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
@@ -336,6 +343,7 @@ GREP = @GREP@
 H5CC = @H5CC@
 H5FC = @H5FC@
 HAVE_CXX11 = @HAVE_CXX11@
+HAVE_DOT = @HAVE_DOT@
 HDF5_CC = @HDF5_CC@
 HDF5_CFLAGS = @HDF5_CFLAGS@
 HDF5_CPPFLAGS = @HDF5_CPPFLAGS@
@@ -373,6 +381,7 @@ PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 RANLIB = @RANLIB@
+ROM_PERL = @ROM_PERL@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -402,6 +411,7 @@ builddir = @builddir@
 datadir = @datadir@
 datarootdir = @datarootdir@
 docdir = @docdir@
+dox_output_dir = @dox_output_dir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@

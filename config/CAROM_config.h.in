@@ -10,6 +10,12 @@
 #define CAROM_VERSION_PATCHLEVEL 0
 
 
+/* Have Elemental library. */
+#undef CAROM_HAS_ELEMENTAL
+
+/* Enable assertion checking */
+#undef DEBUG_CHECK_ASSERTIONS
+
 /* Define to dummy `main' function (if any) required to link to the Fortran
    libraries. */
 #undef F77_DUMMY_MAIN

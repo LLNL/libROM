@@ -1210,6 +1210,10 @@ AC_SUBST([am__tar])
 AC_SUBST([am__untar])
 ]) # _AM_PROG_TAR
 
+m4_include([config/arg-with-environment.m4])
 m4_include([config/ax_cxx_compile_stdcxx.m4])
 m4_include([config/ax_cxx_compile_stdcxx_11.m4])
+m4_include([config/compiler-id.m4])
+m4_include([config/configure-log.m4])
 m4_include([config/split-libs-string.m4])
+m4_include([config/support-rpath.m4])
