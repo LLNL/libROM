@@ -121,7 +121,6 @@ if test "x$with_mpi" != "xno"; then
                          Consider using --with-mpi=<my-path-to-mpi>.]))
    CXX="$MPICXX"
    LIBS="$MPILIBS $LIBS"
-   AC_DEFINE(MPI,1,[Compiling with MPI settings.])
 fi
 dnl End mpi compiler wrappers section
 
@@ -132,13 +131,19 @@ m4_include([m4/ax_lapack.m4])
 AX_BLAS
 if test "$ax_blas_ok" = "no"; then
    AC_MSG_ERROR([Cannot find BLAS libraries])
+else
+   SPLIT_LIBS_STRING(BLAS_LIBS,path1,name1)
+   SPLIT_LIBS_STRING(LIBS,path2,name2)
+   SPLIT_LIBS_STRING(FLIBS,path3,name3)
+   LIB_PATH="$LIB_PATH $path1 $path2 $path3"
+   LIB_NAME="$LIB_NAME $name1 $name2 $name3"
 fi
 
 AX_LAPACK
 if test "$ax_lapack_ok" = "no"; then
    AC_MSG_ERROR([Cannot find LAPACK libraries])
 fi
-dnl End lapack section
+End lapack section
 
 
 dnl START
@@ -616,7 +621,6 @@ AC_SUBST(LDFLAGS)
 AC_SUBST(INC_PATH)
 AC_SUBST(LIB_PATH)
 AC_SUBST(LIB_NAME)
-
 
 AC_CONFIG_FILES([
    Makefile
