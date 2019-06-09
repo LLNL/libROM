@@ -102,11 +102,8 @@ if test "$with_hdf5" = "no"; then
 	AC_MSG_ERROR([Unable to find HDF5, we need serial HDF5.])
 else
 
-dnl Manually add rpaths for each linker search path
 LIBS="$LIBS $HDF5_LIBS"
-HDF5_RPATH=`echo $HDF5_LDFLAGS | sed 's/-L/-Wl,-rpath,/g'`
-
-LDFLAGS="$LDFLAGS $HDF5_LDFLAGS $HDF5_RPATH"
+LDFLAGS="$LDFLAGS $HDF5_LDFLAGS"
 CPPFLAGS="$CPPFLAGS $HDF5_CPPFLAGS"
 fi
 dnl End HDF5 section
@@ -145,7 +142,7 @@ AX_LAPACK
 if test "$ax_lapack_ok" = "no"; then
    AC_MSG_ERROR([Cannot find LAPACK libraries])
 fi
-End lapack section
+dnl End lapack section
 
 
 dnl START
@@ -465,67 +462,68 @@ else
     [elemental_INCLUDES INC_PATH elemental_LIB_PATH elemental_LIB_NAME LIB_PATH LIB_NAME])
 fi
 
-dnl dnl
-dnl dnl Detect Google Test Framework support
-dnl dnl
+dnl
+dnl Detect Google Test Framework support
+dnl
 
-dnl AC_ARG_WITH(gtest,
-dnl [  --with-gtest[=PATH]  Use Google Test Framework and optionally specify where Google Test is installed.],
-dnl , with_gtest=no)
+AC_ARG_WITH(gtest,
+[  --with-gtest[=PATH]  Use Google Test Framework and optionally specify where Google Test is installed.],
+, with_gtest=no)
 
-dnl case "$with_gtest" in
-dnl   no)
-dnl     AC_MSG_NOTICE([configuring without Google Test Framework support])
-dnl     : Do nothing
-dnl   ;;
-dnl   yes)
-dnl     # Google Test Framework install path was not specified.
-dnl     # Look in a couple of standard locations to probe if
-dnl     # Google Test Framework header files are there.
-dnl     AC_MSG_CHECKING([for Google Test Framework installation])
-dnl     for dir in /usr /usr/local; do
-dnl       if test -f ${dir}/include/gtest/gtest.h; then
-dnl         gtest_PREFIX=${dir}
-dnl         break
-dnl       fi
-dnl     done
-dnl     AC_MSG_RESULT([$gtest_PREFIX])
-dnl   ;;
-dnl   *)
-dnl     # Google Test Framework install path was specified.
-dnl     AC_MSG_CHECKING([for Google Test Framework installation])
+case "$with_gtest" in
+  no)
+    AC_MSG_NOTICE([configuring without Google Test Framework support])
+    : Do nothing
+  ;;
+  yes)
+    # Google Test Framework install path was not specified.
+    # Look in a couple of standard locations to probe if
+    # Google Test Framework header files are there.
+    AC_MSG_CHECKING([for Google Test Framework installation])
+    for dir in /usr /usr/local; do
+      if test -f ${dir}/include/gtest/gtest.h; then
+        gtest_PREFIX=${dir}
+        break
+      fi
+    done
+    AC_MSG_RESULT([$gtest_PREFIX])
+  ;;
+  *)
+    # Google Test Framework install path was specified.
+    AC_MSG_CHECKING([for Google Test Framework installation])
 
-dnl     if test -f ${with_gtest}/include/gtest/gtest.h; then
-dnl         gtest_PREFIX=$with_gtest
-dnl         gtest_INCLUDES="-I${gtest_PREFIX}/include"
-dnl         gtest_LIBS="-L${gtest_PREFIX}/lib -lgtest -lpthread"
-dnl         AC_MSG_RESULT([$gtest_PREFIX])
-dnl     else
-dnl         AC_MSG_RESULT([$gtest_PREFIX])
-dnl         AC_MSG_ERROR([Google Test Framework not found in $with_gtest])
-dnl     fi
-dnl   ;;
-dnl esac
+    if test -f ${with_gtest}/include/gtest/gtest.h; then
+        gtest_PREFIX=$with_gtest
+        gtest_INCLUDES="-I${gtest_PREFIX}/include"
+        gtest_LIBS="-L${gtest_PREFIX}/lib -lgtest -lpthread"
+        AC_MSG_RESULT([$gtest_PREFIX])
+    else
+        AC_MSG_RESULT([$gtest_PREFIX])
+        AC_MSG_ERROR([Google Test Framework not found in $with_gtest])
+    fi
+  ;;
+esac
 
-dnl if test "x${with_gtest}" != xno; then
-dnl     if test "${gtest_PREFIX+set}" = set; then
-dnl         SPLIT_LIBS_STRING(gtest_LIBS,gtest_LIB_PATH,gtest_LIB_NAME)
-dnl         LIB_PATH="$gtest_LIB_PATH $LIB_PATH"
-dnl         LIB_NAME="$gtest_LIB_NAME $LIB_NAME"
-dnl         INC_PATH="$gtest_INCLUDES $INC_PATH"
-dnl         CXXFLAGS="$CXXFLAGS -DCAROM_HAS_GTEST"
-dnl     else
-dnl         AC_MSG_NOTICE([Google Test Framework not found - disabling unit tests.])
-dnl     fi
-dnl     CASC_AC_LOG_VAR(
-dnl     [gtest_INCLUDES INC_PATH gtest_LIB_PATH gtest_LIB_NAME LIB_PATH LIB_NAME])
-dnl fi
+if test "x${with_gtest}" != xno; then
+    if test "${gtest_PREFIX+set}" = set; then
+        SPLIT_LIBS_STRING(gtest_LIBS,gtest_LIB_PATH,gtest_LIB_NAME)
+        LIB_PATH="$gtest_LIB_PATH $LIB_PATH"
+        LIB_NAME="$gtest_LIB_NAME $LIB_NAME"
+        INC_PATH="$gtest_INCLUDES $INC_PATH"
+        CXXFLAGS="$CXXFLAGS -DCAROM_HAS_GTEST"
+    else
+        AC_MSG_NOTICE([Google Test Framework not found - disabling unit tests.])
+    fi
+    CASC_AC_LOG_VAR(
+    [gtest_INCLUDES INC_PATH gtest_LIB_PATH gtest_LIB_NAME LIB_PATH LIB_NAME])
+fi
+
 dnl dnl
 dnl dnl Support rpath syntax by adding it to the LIB_PATH variable.
 dnl dnl
-dnl CASC_AC_LOG_VAR(LIB_PATH, before adding rpath syntax)
-dnl CASC_LIBS_ADD_RPATH(LIB_PATH,LIB_PATH,1)
-dnl CASC_AC_LOG_VAR(LIB_PATH, after adding rpath syntax)
+CASC_AC_LOG_VAR(LIB_PATH, before adding rpath syntax)
+CASC_LIBS_ADD_RPATH(LIB_PATH,LIB_PATH,1)
+CASC_AC_LOG_VAR(LIB_PATH, after adding rpath syntax)
 
 dnl dnl
 dnl dnl Set DOXYGEN_BIN to the doxygen binary.
