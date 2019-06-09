@@ -89,9 +89,9 @@ dnl
 
 AX_CXX_COMPILE_STDCXX_11([], [mandatory])
 
-dnl Now pick up the required dependencies
-dnl hdf5
-dnl mpi
+dnl
+dnl Check for the required dependencies: hdf5, mpi, lapack/blas
+dnl
 
 dnl Begin HDF5 section
 m4_include([m4/ax_lib_hdf5.m4])
@@ -123,7 +123,7 @@ if test "x$with_mpi" != "xno"; then
 fi
 dnl End mpi compiler wrappers section
 
-dnl Start lapack section
+dnl Start lapack/blas section
 m4_include([m4/ax_blas.m4])
 m4_include([m4/ax_lapack.m4])
 
@@ -142,145 +142,139 @@ AX_LAPACK
 if test "$ax_lapack_ok" = "no"; then
    AC_MSG_ERROR([Cannot find LAPACK libraries])
 fi
-dnl End lapack section
+dnl End lapack/blas section
 
+dnl
+dnl Check for optional dependencies: elemental, google-test
+dnl
 
-dnl START
+dnl Begin Elemental check
 
+# Defines elemental_PREFIX elemental_INCLUDES and elemental_LIBS if
+# with-elemental is specified.
+AC_ARG_WITH(elemental,
+[  --with-elemental[=PATH]  Use Elemental and optionally specify where Elemental is installed.],
+[],
+[with_elemental=no])
 
-dnl dnl
-dnl dnl Check for Fortran compiler (required to detect Fortran name-mangling
-dnl dnl convention); prefer a Fortran 90 compiler for LAPACK & BLAS.
-dnl dnl
+case "$with_elemental" in
+  no)
+    AC_MSG_NOTICE([configuring without Elemental support])
+    : Do nothing
+  ;;
+  yes)
+    # Elemental install path was not specified.
+    # Look in a couple of standard locations to probe if
+    # Elemental header files are there.
+    AC_MSG_CHECKING([for Elemental installation])
+    for dir in /usr /usr/local; do
+      if test -f ${dir}/include/El.hpp; then
+        elemental_PREFIX=${dir}
+	elemental_INCLUDES="-I${elemental_PREFIX}/include"
+	if test -e ${dir}/lib/libEl.dylib -o -e ${dir}/lib/libEl.so -o -e ${dir}/lib/libEl.a; then
+           elemental_LIBS="-L${elemental_PREFIX}/lib -lEl"
+	elif test -e ${dir}/lib64/libEl.dylib -o -e ${dir}/lib64/libEl.so -o -e ${dir}/lib64/libEl.a; then
+	   elemental_LIBS="-L${elemental_PREFIX}/lib64 -lEl"
+	else
+	   AC_MSG_ERROR([Elemental's libEl not found in $elemental_PREFIX])
+	fi
+        break
+      fi
+    done
+    AC_MSG_RESULT([$elemental_PREFIX])
+  ;;
+  *)
+    # Elemental install path was specified.
+    AC_MSG_CHECKING([for Elemental installation])
 
-dnl if test -n "$with_FC"; then
-dnl    FC=$with_FC
-dnl else
-dnl    case "$host_os" in
-dnl      linux*) FCC=" gfortran ";;
-dnl      solaris*) FCC=" gfortran ";;
-dnl      osf*) FCC=" gfortran ";;
-dnl      *) FCC=
-dnl    esac
-dnl fi
-dnl CASC_AC_LOG_VAR(with_FC FC FCC, before running compiler search)
-dnl dnl The intention behind this search order for Fortran compilers is to
-dnl dnl put the user-specified compiler (if available) first. If the OS is
-dnl dnl detected properly, then common OSes will put gfortran first. If
-dnl dnl the OS is exotic, then the OS detection above will set FCC to the
-dnl dnl empty string, in which case, the search order proceeds from
-dnl dnl (probably) rarer compilers to more common compilers.  Fewer
-dnl dnl systems have IBM's xl compilers than PGI. If a system has a PGI
-dnl dnl compiler, it usually also has a Intel compiler, but the reverse
-dnl dnl isn't necessarily true. Intel compilers are still pretty common,
-dnl dnl but flang is not. However, flang is free, and the xl, PGI, and
-dnl dnl Intel compilers generally require a license, so we put flang after
-dnl dnl the compilers that require a license, and before gfortran, which
-dnl dnl is very common.
+    if test -f ${with_elemental}/include/El.hpp; then
+        elemental_PREFIX=$with_elemental
+        elemental_INCLUDES="-I${elemental_PREFIX}/include"
+	if test -e ${with_elemental}/lib/libEl.dylib -o -e ${with_elemental}/lib/libEl.so -o -e ${with_elemental}/lib/libEl.a; then
+           elemental_LIBS="-L${elemental_PREFIX}/lib -lEl"
+	elif test -e ${with_elemental}/lib64/libEl.dylib -o -e ${with_elemental}/lib64/libEl.so -o -e ${with_elemental}/lib64/libEl.a; then
+	   elemental_LIBS="-L${elemental_PREFIX}/lib64 -lEl"
+	else
+	   AC_MSG_ERROR([Elemental's libEl not found in $elemental_PREFIX])
+	fi
+        AC_MSG_RESULT([$elemental_PREFIX])
+    else
+        AC_MSG_RESULT([$elemental_PREFIX])
+        AC_MSG_ERROR([Elemental not found in $with_elemental])
+    fi
+  ;;
+esac
 
-dnl AC_PROG_FC([$FCC xlflang xlf90 pg90 ifort flang gfortran])
-dnl CASC_AC_LOG_VAR(with_FC FC FCC, after running compiler search)
+if test "x${with_elemental}" != xno; then
+    if test "${elemental_PREFIX+set}" = set; then
+        SPLIT_LIBS_STRING(elemental_LIBS,elemental_LIB_PATH,elemental_LIB_NAME)
+        LIB_PATH="$elemental_LIB_PATH $LIB_PATH"
+        LIB_NAME="$elemental_LIB_NAME $LIB_NAME"
+        INC_PATH="$elemental_INCLUDES $INC_PATH"
+        AC_DEFINE(CAROM_HAS_ELEMENTAL,1,[Have Elemental library.])
+else
+        AC_MSG_NOTICE([Elemental not found - disabling distributed QR decomposition code])
+    fi
+    
+    CASC_AC_LOG_VAR(
+    [elemental_INCLUDES INC_PATH elemental_LIB_PATH elemental_LIB_NAME LIB_PATH LIB_NAME])
+fi
+dnl End Elemental check
 
-dnl dnl Determine Fortran libraries for linking; on some systems, these
-dnl dnl are needed for linking LAPACK, which is Fortran-based. This logic
-dnl dnl doesn't work on the CORAL EA systems, which use a beta xl compiler
+dnl Begin Google Test Framework support
+AC_ARG_WITH(gtest,
+[  --with-gtest[=PATH]  Use Google Test Framework and optionally specify where Google Test is installed.],
+, with_gtest=no)
 
-dnl case "$FC" in
-dnl     *xlf) ;;
-dnl     *xlf90) ;;
-dnl     *xlf-gpu) ;;
-dnl     *) dnl This branch should include xlflang, for which Fortran linkage
-dnl        dnl detection works.
-dnl         AC_FC_LIBRARY_LDFLAGS
-dnl         SPLIT_LIBS_STRING(FCLIBS,fc_LIB_PATH,fc_LIB_NAME)
-dnl     ;;
-dnl esac
+case "$with_gtest" in
+  no)
+    AC_MSG_NOTICE([configuring without Google Test Framework support])
+    : Do nothing
+  ;;
+  yes)
+    # Google Test Framework install path was not specified.
+    # Look in a couple of standard locations to probe if
+    # Google Test Framework header files are there.
+    AC_MSG_CHECKING([for Google Test Framework installation])
+    for dir in /usr /usr/local; do
+      if test -f ${dir}/include/gtest/gtest.h; then
+        gtest_PREFIX=${dir}
+        break
+      fi
+    done
+    AC_MSG_RESULT([$gtest_PREFIX])
+  ;;
+  *)
+    # Google Test Framework install path was specified.
+    AC_MSG_CHECKING([for Google Test Framework installation])
 
+    if test -f ${with_gtest}/include/gtest/gtest.h; then
+        gtest_PREFIX=$with_gtest
+        gtest_INCLUDES="-I${gtest_PREFIX}/include"
+        gtest_LIBS="-L${gtest_PREFIX}/lib -lgtest -lpthread"
+        AC_MSG_RESULT([$gtest_PREFIX])
+    else
+        AC_MSG_RESULT([$gtest_PREFIX])
+        AC_MSG_ERROR([Google Test Framework not found in $with_gtest])
+    fi
+  ;;
+esac
 
-dnl dnl
-dnl dnl Generate macro wrappers for Fortran functions to make the Fortran
-dnl dnl name-mangling convention portable.
-dnl dnl
+if test "x${with_gtest}" != xno; then
+    if test "${gtest_PREFIX+set}" = set; then
+        SPLIT_LIBS_STRING(gtest_LIBS,gtest_LIB_PATH,gtest_LIB_NAME)
+        LIB_PATH="$gtest_LIB_PATH $LIB_PATH"
+        LIB_NAME="$gtest_LIB_NAME $LIB_NAME"
+        INC_PATH="$gtest_INCLUDES $INC_PATH"
+        CXXFLAGS="$CXXFLAGS -DCAROM_HAS_GTEST"
+    else
+        AC_MSG_NOTICE([Google Test Framework not found - disabling unit tests.])
+    fi
+    CASC_AC_LOG_VAR(
+    [gtest_INCLUDES INC_PATH gtest_LIB_PATH gtest_LIB_NAME LIB_PATH LIB_NAME])
+fi
+dnl End Google Test Framework support
 
-dnl AC_FC_WRAPPERS
-
-dnl dnl
-dnl dnl A way to manually add flags to the loader (ld) command.
-dnl dnl
-dnl AC_ARG_WITH([extra-ld-flags],
-dnl [AS_HELP_STRING([--with-extra-ld-flags=STRING],
-dnl    [Specify additional flags for the loader.])],
-dnl ,with_extra_ld_flags='no')
-dnl case "$with_extra_ld_flags" in
-dnl   no)
-dnl     : No op
-dnl   ;;
-dnl   yes)
-dnl     : No op
-dnl   ;;
-dnl   *)
-dnl     LDFLAGS="$LDFLAGS $with_extra_ld_flags"
-dnl   ;;
-dnl esac
-
-dnl dnl
-dnl dnl Find ranlib
-dnl dnl
-dnl AC_PROG_RANLIB
-
-dnl dnl
-dnl dnl Find ar for archiving
-dnl dnl
-
-dnl AC_CHECK_PROGS(AR, $with_AR ar,)
-dnl if test -z "$AR"; then
-dnl    AC_MSG_ERROR([ar archiver not found - specify with --with-AR=ARG])
-dnl fi
-
-dnl dnl
-dnl dnl Determine what compilers are being used.
-dnl dnl
-
-dnl CASC_INFO_CC_CXX_ID
-dnl # Warn user about unsupported compilers:
-dnl case $CXX_ID in
-dnl gnu|xlc|intel) ;;
-dnl *)
-dnl   AC_MSG_WARN([
-dnl You are using a C++ compiler unsupported by CAROM
-dnl You are on your own!
-dnl ])
-dnl   ;;
-dnl esac
-
-dnl dnl
-dnl dnl Check various C++ compiler features.
-dnl dnl
-
-dnl case $CXX_ID in
-dnl    gnu)
-dnl       CXXFLAGS="-Wall -Wextra -Wconversion $CXXFLAGS"
-dnl       case $ARCH in
-dnl          IRIX64)
-dnl             CXXFLAGS="-mabi=64 $CXXFLAGS"
-dnl             ;;
-dnl          solaris)
-dnl             ;;
-dnl          CYGWIN)
-dnl             CXXFLAGS="$CXXFLAGS"
-dnl             ;;
-dnl       esac
-dnl       ;;
-dnl    xlc)
-dnl       CXXFLAGS="-qrtti -g $CXXFLAGS"
-dnl       ;;
-dnl    intel)
-dnl       # Ignore some Intel warnings that seem harmless and very hard to get rid of
-dnl       CXXFLAGS="$CXXFLAGS -Wall -w1 -wd981 -wd383 -wd1418 -wd522"
-dnl       ;;
-dnl     *)
-dnl       ;;
-dnl esac
 
 dnl AC_ARG_ENABLE([opt],
 dnl    [AS_HELP_STRING([--enable-opt=STRING],
@@ -391,132 +385,6 @@ dnl SPLIT_LIBS_STRING(szlib_LIBS,szlib_LIB_PATH,szlib_LIB_NAME)
 dnl LIB_PATH="$szlib_LIB_PATH $LIB_PATH"
 dnl LIB_NAME="$szlib_LIB_NAME $LIB_NAME"
 dnl INC_PATH="$szlib_INCLUDES $INC_PATH"
-
-# Defines elemental_PREFIX elemental_INCLUDES and elemental_LIBS if
-# with-elemental is specified.
-AC_ARG_WITH(elemental,
-[  --with-elemental[=PATH]  Use Elemental and optionally specify where Elemental is installed.],
-[],
-[with_elemental=no])
-
-case "$with_elemental" in
-  no)
-    AC_MSG_NOTICE([configuring without Elemental support])
-    : Do nothing
-  ;;
-  yes)
-    # Elemental install path was not specified.
-    # Look in a couple of standard locations to probe if
-    # Elemental header files are there.
-    AC_MSG_CHECKING([for Elemental installation])
-    for dir in /usr /usr/local; do
-      if test -f ${dir}/include/El.hpp; then
-        elemental_PREFIX=${dir}
-	elemental_INCLUDES="-I${elemental_PREFIX}/include"
-	if test -e ${dir}/lib/libEl.dylib -o -e ${dir}/lib/libEl.so -o -e ${dir}/lib/libEl.a; then
-           elemental_LIBS="-L${elemental_PREFIX}/lib -lEl"
-	elif test -e ${dir}/lib64/libEl.dylib -o -e ${dir}/lib64/libEl.so -o -e ${dir}/lib64/libEl.a; then
-	   elemental_LIBS="-L${elemental_PREFIX}/lib64 -lEl"
-	else
-	   AC_MSG_ERROR([Elemental's libEl not found in $elemental_PREFIX])
-	fi
-        break
-      fi
-    done
-    AC_MSG_RESULT([$elemental_PREFIX])
-  ;;
-  *)
-    # Elemental install path was specified.
-    AC_MSG_CHECKING([for Elemental installation])
-
-    if test -f ${with_elemental}/include/El.hpp; then
-        elemental_PREFIX=$with_elemental
-        elemental_INCLUDES="-I${elemental_PREFIX}/include"
-	if test -e ${with_elemental}/lib/libEl.dylib -o -e ${with_elemental}/lib/libEl.so -o -e ${with_elemental}/lib/libEl.a; then
-           elemental_LIBS="-L${elemental_PREFIX}/lib -lEl"
-	elif test -e ${with_elemental}/lib64/libEl.dylib -o -e ${with_elemental}/lib64/libEl.so -o -e ${with_elemental}/lib64/libEl.a; then
-	   elemental_LIBS="-L${elemental_PREFIX}/lib64 -lEl"
-	else
-	   AC_MSG_ERROR([Elemental's libEl not found in $elemental_PREFIX])
-	fi
-        AC_MSG_RESULT([$elemental_PREFIX])
-    else
-        AC_MSG_RESULT([$elemental_PREFIX])
-        AC_MSG_ERROR([Elemental not found in $with_elemental])
-    fi
-  ;;
-esac
-
-if test "x${with_elemental}" != xno; then
-    if test "${elemental_PREFIX+set}" = set; then
-        SPLIT_LIBS_STRING(elemental_LIBS,elemental_LIB_PATH,elemental_LIB_NAME)
-        LIB_PATH="$elemental_LIB_PATH $LIB_PATH"
-        LIB_NAME="$elemental_LIB_NAME $LIB_NAME"
-        INC_PATH="$elemental_INCLUDES $INC_PATH"
-        AC_DEFINE(CAROM_HAS_ELEMENTAL,1,[Have Elemental library.])
-else
-        AC_MSG_NOTICE([Elemental not found - disabling distributed QR decomposition code])
-    fi
-    
-    CASC_AC_LOG_VAR(
-    [elemental_INCLUDES INC_PATH elemental_LIB_PATH elemental_LIB_NAME LIB_PATH LIB_NAME])
-fi
-
-dnl
-dnl Detect Google Test Framework support
-dnl
-
-AC_ARG_WITH(gtest,
-[  --with-gtest[=PATH]  Use Google Test Framework and optionally specify where Google Test is installed.],
-, with_gtest=no)
-
-case "$with_gtest" in
-  no)
-    AC_MSG_NOTICE([configuring without Google Test Framework support])
-    : Do nothing
-  ;;
-  yes)
-    # Google Test Framework install path was not specified.
-    # Look in a couple of standard locations to probe if
-    # Google Test Framework header files are there.
-    AC_MSG_CHECKING([for Google Test Framework installation])
-    for dir in /usr /usr/local; do
-      if test -f ${dir}/include/gtest/gtest.h; then
-        gtest_PREFIX=${dir}
-        break
-      fi
-    done
-    AC_MSG_RESULT([$gtest_PREFIX])
-  ;;
-  *)
-    # Google Test Framework install path was specified.
-    AC_MSG_CHECKING([for Google Test Framework installation])
-
-    if test -f ${with_gtest}/include/gtest/gtest.h; then
-        gtest_PREFIX=$with_gtest
-        gtest_INCLUDES="-I${gtest_PREFIX}/include"
-        gtest_LIBS="-L${gtest_PREFIX}/lib -lgtest -lpthread"
-        AC_MSG_RESULT([$gtest_PREFIX])
-    else
-        AC_MSG_RESULT([$gtest_PREFIX])
-        AC_MSG_ERROR([Google Test Framework not found in $with_gtest])
-    fi
-  ;;
-esac
-
-if test "x${with_gtest}" != xno; then
-    if test "${gtest_PREFIX+set}" = set; then
-        SPLIT_LIBS_STRING(gtest_LIBS,gtest_LIB_PATH,gtest_LIB_NAME)
-        LIB_PATH="$gtest_LIB_PATH $LIB_PATH"
-        LIB_NAME="$gtest_LIB_NAME $LIB_NAME"
-        INC_PATH="$gtest_INCLUDES $INC_PATH"
-        CXXFLAGS="$CXXFLAGS -DCAROM_HAS_GTEST"
-    else
-        AC_MSG_NOTICE([Google Test Framework not found - disabling unit tests.])
-    fi
-    CASC_AC_LOG_VAR(
-    [gtest_INCLUDES INC_PATH gtest_LIB_PATH gtest_LIB_NAME LIB_PATH LIB_NAME])
-fi
 
 dnl dnl
 dnl dnl Support rpath syntax by adding it to the LIB_PATH variable.
