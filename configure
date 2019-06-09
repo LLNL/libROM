@@ -6629,9 +6629,6 @@ fi
 
    CXX="$MPICXX"
    LIBS="$MPILIBS $LIBS"
-
-$as_echo "#define MPI 1" >>confdefs.h
-
 fi
 
 # ===========================================================================
@@ -9031,6 +9028,42 @@ fi
 
 if test "$ax_blas_ok" = "no"; then
    as_fn_error $? "Cannot find BLAS libraries" "$LINENO" 5
+else
+
+# Split BLAS_LIBS into the LIB_PATH part (path1) and the LIB_NAME part (name1)
+if test -n "${BLAS_LIBS}"; then
+  for i in ${BLAS_LIBS}; do
+    case "$i" in
+    -L*) path1="${path1} $i" ;;
+    *) name1="${name1} $i" ;;
+    esac
+  done
+fi
+
+
+# Split LIBS into the LIB_PATH part (path2) and the LIB_NAME part (name2)
+if test -n "${LIBS}"; then
+  for i in ${LIBS}; do
+    case "$i" in
+    -L*) path2="${path2} $i" ;;
+    *) name2="${name2} $i" ;;
+    esac
+  done
+fi
+
+
+# Split FLIBS into the LIB_PATH part (path3) and the LIB_NAME part (name3)
+if test -n "${FLIBS}"; then
+  for i in ${FLIBS}; do
+    case "$i" in
+    -L*) path3="${path3} $i" ;;
+    *) name3="${name3} $i" ;;
+    esac
+  done
+fi
+
+   LIB_PATH="$LIB_PATH $path1 $path2 $path3"
+   LIB_NAME="$LIB_NAME $name1 $name2 $name3"
 fi
 
 
@@ -9209,7 +9242,7 @@ fi
 if test "$ax_lapack_ok" = "no"; then
    as_fn_error $? "Cannot find LAPACK libraries" "$LINENO" 5
 fi
-
+End lapack section
 
 
 

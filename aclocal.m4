@@ -1152,3 +1152,4 @@ AC_SUBST([am__untar])
 
 m4_include([config/ax_cxx_compile_stdcxx.m4])
 m4_include([config/ax_cxx_compile_stdcxx_11.m4])
+m4_include([config/split-libs-string.m4])

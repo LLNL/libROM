@@ -98,6 +98,7 @@ subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config/ax_cxx_compile_stdcxx.m4 \
 	$(top_srcdir)/config/ax_cxx_compile_stdcxx_11.m4 \
+	$(top_srcdir)/config/split-libs-string.m4 \
 	$(top_srcdir)/m4/ax_lib_hdf5.m4 $(top_srcdir)/m4/ax_mpi.m4 \
 	$(top_srcdir)/m4/ax_blas.m4 $(top_srcdir)/m4/ax_lapack.m4 \
 	$(top_srcdir)/configure.ac

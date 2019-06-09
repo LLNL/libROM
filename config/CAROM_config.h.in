@@ -59,9 +59,6 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
-/* Compiling with MPI settings. */
-#undef MPI
-
 /* Name of package */
 #undef PACKAGE
 
