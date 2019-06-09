@@ -395,89 +395,75 @@ dnl LIB_PATH="$szlib_LIB_PATH $LIB_PATH"
 dnl LIB_NAME="$szlib_LIB_NAME $LIB_NAME"
 dnl INC_PATH="$szlib_INCLUDES $INC_PATH"
 
-dnl dnl
-dnl dnl Set variables for hdf5 support
-dnl dnl
-dnl CASC_SUPPORT_HDF5
-dnl if test "${hdf5_PREFIX+set}" = set; then
-dnl   SPLIT_LIBS_STRING(hdf5_LIBS,hdf5_LIB_PATH,hdf5_LIB_NAME)
-dnl   LIB_PATH="$hdf5_LIB_PATH $LIB_PATH"
-dnl   LIB_NAME="$hdf5_LIB_NAME $LIB_NAME"
-dnl   INC_PATH="$hdf5_INCLUDES $INC_PATH"
-dnl else
-dnl   AC_MSG_ERROR([HDF5 not found - you must specify a valid location via --with-hdf5=PATH.])
-dnl fi
-dnl CASC_AC_LOG_VAR(
-dnl [hdf5_INCLUDES INC_PATH hdf5_LIB_PATH hdf5_LIB_NAME LIB_PATH LIB_NAME])
+# Defines elemental_PREFIX elemental_INCLUDES and elemental_LIBS if
+# with-elemental is specified.
+AC_ARG_WITH(elemental,
+[  --with-elemental[=PATH]  Use Elemental and optionally specify where Elemental is installed.],
+[],
+[with_elemental=no])
 
-dnl # Defines elemental_PREFIX elemental_INCLUDES and elemental_LIBS if
-dnl # with-elemental is specified.
-dnl AC_ARG_WITH(elemental,
-dnl [  --with-elemental[=PATH]  Use Elemental and optionally specify where Elemental is installed.],
-dnl [],
-dnl [with_elemental=no])
+case "$with_elemental" in
+  no)
+    AC_MSG_NOTICE([configuring without Elemental support])
+    : Do nothing
+  ;;
+  yes)
+    # Elemental install path was not specified.
+    # Look in a couple of standard locations to probe if
+    # Elemental header files are there.
+    AC_MSG_CHECKING([for Elemental installation])
+    for dir in /usr /usr/local; do
+      if test -f ${dir}/include/El.hpp; then
+        elemental_PREFIX=${dir}
+	elemental_INCLUDES="-I${elemental_PREFIX}/include"
+	if test -e ${dir}/lib/libEl.dylib -o -e ${dir}/lib/libEl.so -o -e ${dir}/lib/libEl.a; then
+           elemental_LIBS="-L${elemental_PREFIX}/lib -lEl"
+	elif test -e ${dir}/lib64/libEl.dylib -o -e ${dir}/lib64/libEl.so -o -e ${dir}/lib64/libEl.a; then
+	   elemental_LIBS="-L${elemental_PREFIX}/lib64 -lEl"
+	else
+	   AC_MSG_ERROR([Elemental's libEl not found in $elemental_PREFIX])
+	fi
+        break
+      fi
+    done
+    AC_MSG_RESULT([$elemental_PREFIX])
+  ;;
+  *)
+    # Elemental install path was specified.
+    AC_MSG_CHECKING([for Elemental installation])
 
-dnl case "$with_elemental" in
-dnl   no)
-dnl     AC_MSG_NOTICE([configuring without Elemental support])
-dnl     : Do nothing
-dnl   ;;
-dnl   yes)
-dnl     # Elemental install path was not specified.
-dnl     # Look in a couple of standard locations to probe if
-dnl     # Elemental header files are there.
-dnl     AC_MSG_CHECKING([for Elemental installation])
-dnl     for dir in /usr /usr/local; do
-dnl       if test -f ${dir}/include/El.hpp; then
-dnl         elemental_PREFIX=${dir}
-dnl 	elemental_INCLUDES="-I${elemental_PREFIX}/include"
-dnl 	if test -e ${dir}/lib/libEl.dylib -o -e ${dir}/lib/libEl.so -o -e ${dir}/lib/libEl.a; then
-dnl            elemental_LIBS="-L${elemental_PREFIX}/lib -lEl"
-dnl 	elif test -e ${dir}/lib64/libEl.dylib -o -e ${dir}/lib64/libEl.so -o -e ${dir}/lib64/libEl.a; then
-dnl 	   elemental_LIBS="-L${elemental_PREFIX}/lib64 -lEl"
-dnl 	else
-dnl 	   AC_MSG_ERROR([Elemental's libEl not found in $elemental_PREFIX])
-dnl 	fi
-dnl         break
-dnl       fi
-dnl     done
-dnl     AC_MSG_RESULT([$elemental_PREFIX])
-dnl   ;;
-dnl   *)
-dnl     # Elemental install path was specified.
-dnl     AC_MSG_CHECKING([for Elemental installation])
+    if test -f ${with_elemental}/include/El.hpp; then
+        elemental_PREFIX=$with_elemental
+        elemental_INCLUDES="-I${elemental_PREFIX}/include"
+	if test -e ${with_elemental}/lib/libEl.dylib -o -e ${with_elemental}/lib/libEl.so -o -e ${with_elemental}/lib/libEl.a; then
+           elemental_LIBS="-L${elemental_PREFIX}/lib -lEl"
+	elif test -e ${with_elemental}/lib64/libEl.dylib -o -e ${with_elemental}/lib64/libEl.so -o -e ${with_elemental}/lib64/libEl.a; then
+	   elemental_LIBS="-L${elemental_PREFIX}/lib64 -lEl"
+	else
+	   AC_MSG_ERROR([Elemental's libEl not found in $elemental_PREFIX])
+	fi
+        AC_MSG_RESULT([$elemental_PREFIX])
+    else
+        AC_MSG_RESULT([$elemental_PREFIX])
+        AC_MSG_ERROR([Elemental not found in $with_elemental])
+    fi
+  ;;
+esac
 
-dnl     if test -f ${with_elemental}/include/El.hpp; then
-dnl         elemental_PREFIX=$with_elemental
-dnl         elemental_INCLUDES="-I${elemental_PREFIX}/include"
-dnl 	if test -e ${with_elemental}/lib/libEl.dylib -o -e ${with_elemental}/lib/libEl.so -o -e ${with_elemental}/lib/libEl.a; then
-dnl            elemental_LIBS="-L${elemental_PREFIX}/lib -lEl"
-dnl 	elif test -e ${with_elemental}/lib64/libEl.dylib -o -e ${with_elemental}/lib64/libEl.so -o -e ${with_elemental}/lib64/libEl.a; then
-dnl 	   elemental_LIBS="-L${elemental_PREFIX}/lib64 -lEl"
-dnl 	else
-dnl 	   AC_MSG_ERROR([Elemental's libEl not found in $elemental_PREFIX])
-dnl 	fi
-dnl         AC_MSG_RESULT([$elemental_PREFIX])
-dnl     else
-dnl         AC_MSG_RESULT([$elemental_PREFIX])
-dnl         AC_MSG_ERROR([Elemental not found in $with_elemental])
-dnl     fi
-dnl   ;;
-dnl esac
-
-dnl if test "x${with_elemental}" != xno; then
-dnl     if test "${elemental_PREFIX+set}" = set; then
-dnl         SPLIT_LIBS_STRING(elemental_LIBS,elemental_LIB_PATH,elemental_LIB_NAME)
-dnl         LIB_PATH="$elemental_LIB_PATH $LIB_PATH"
-dnl         LIB_NAME="$elemental_LIB_NAME $LIB_NAME"
-dnl         INC_PATH="$elemental_INCLUDES $INC_PATH"
-dnl         CXXFLAGS="$CXXFLAGS -DCAROM_HAS_ELEMENTAL"
-dnl     else
-dnl         AC_MSG_NOTICE([Elemental not found - disabling distributed QR decomposition code])
-dnl     fi
-dnl     CASC_AC_LOG_VAR(
-dnl     [elemental_INCLUDES INC_PATH elemental_LIB_PATH elemental_LIB_NAME LIB_PATH LIB_NAME])
-dnl fi
+if test "x${with_elemental}" != xno; then
+    if test "${elemental_PREFIX+set}" = set; then
+        SPLIT_LIBS_STRING(elemental_LIBS,elemental_LIB_PATH,elemental_LIB_NAME)
+        LIB_PATH="$elemental_LIB_PATH $LIB_PATH"
+        LIB_NAME="$elemental_LIB_NAME $LIB_NAME"
+        INC_PATH="$elemental_INCLUDES $INC_PATH"
+        AC_DEFINE(CAROM_HAS_ELEMENTAL,1,[Have Elemental library.])
+else
+        AC_MSG_NOTICE([Elemental not found - disabling distributed QR decomposition code])
+    fi
+    
+    CASC_AC_LOG_VAR(
+    [elemental_INCLUDES INC_PATH elemental_LIB_PATH elemental_LIB_NAME LIB_PATH LIB_NAME])
+fi
 
 dnl dnl
 dnl dnl Detect Google Test Framework support
