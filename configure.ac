@@ -78,7 +78,6 @@ INC_PATH=
 LIB_PATH=
 LIB_NAME=
 
-AC_PROG_CXX
 AC_PROG_RANLIB
 AC_FC_WRAPPERS
 AM_PROG_AR
@@ -88,6 +87,8 @@ dnl Check for C++11 support (required for Elemental)
 dnl
 
 AX_CXX_COMPILE_STDCXX_11([], [mandatory])
+dnl Above macro sets cxxflags for some reason. Unset it.
+CXXFLAGS=
 
 dnl
 dnl Check for the required dependencies: hdf5, mpi, lapack/blas
@@ -276,65 +277,56 @@ fi
 dnl End Google Test Framework support
 
 
-dnl AC_ARG_ENABLE([opt],
-dnl    [AS_HELP_STRING([--enable-opt=STRING],
-dnl       [Set compiler optimization switches.])],
-dnl [case "$enable_opt" in
-dnl    no) opt_switches= ;;
-dnl    yes)
-dnl       case $CXX_ID in
-dnl          gnu)   opt_switches="-O2" ;;
-dnl          intel) opt_switches="-O3" ;;
-dnl          xlc)   opt_switches="-O3" ;;
-dnl          *)     opt_switches="-O" ;;
-dnl       esac ;;
-dnl    *) opt_switches="$enable_opt" ;;
-dnl esac],
-dnl opt_switches=)
+AC_ARG_ENABLE([opt],
+   [AS_HELP_STRING([--enable-opt=STRING],
+      [Set compiler optimization switches.])],
+[case "$enable_opt" in
+   no) opt_switches= ;;
+   yes) opt_switches="-O3";;
+   *) opt_switches="$enable_opt" ;;
+esac],
+opt_switches=)
 
-dnl if test -n "$opt_switches" ; then
-dnl    CXXFLAGS="$opt_switches $CXXFLAGS"
-dnl fi
+if test -n "$opt_switches" ; then
+   CXXFLAGS="$opt_switches $CXXFLAGS"
+fi
 
-dnl AC_ARG_ENABLE([debug],
-dnl [AS_HELP_STRING([--enable-debug=STRING],[Set compiler debug switches.])],
-dnl [case "$enable_debug" in
-dnl    no) debug_switches= ;;
-dnl    yes)
-dnl       case $CXX_ID in
-dnl          *)   debug_switches="-g" ;;
-dnl       esac ;;
-dnl    *) debug_switches="$enable_debug" ;;
-dnl esac
-dnl ],
-dnl debug_switches=-g)
+AC_ARG_ENABLE([debug],
+[AS_HELP_STRING([--enable-debug=STRING],[Set compiler debug switches.])],
+[case "$enable_debug" in
+   no) debug_switches= ;;
+   yes) debug_switches="-g" ;;
+   *) debug_switches="$enable_debug" ;;
+esac
+],
+debug_switches=)
 
-dnl case "$enable_debug" in
-dnl    no) ;;
-dnl    *)
-dnl    # Enable assertion checking and disable inlining when debugging is enabled
-dnl    # if user does not override.
-dnl    if test "$user_specified_check_assertions" != "yes"; then
-dnl       enable_check_assertions="yes"
-dnl    fi
-dnl esac
+case "$enable_debug" in
+   no) ;;
+   *)
+   # Enable assertion checking and disable inlining when debugging is enabled
+   # if user does not override.
+   if test "$user_specified_check_assertions" != "yes"; then
+      enable_check_assertions="yes"
+   fi
+esac
 
-dnl dnl
-dnl dnl Check if compiling with assertions on
-dnl dnl
-dnl if test "$enable_check_assertions" = "yes"; then
-dnl    AC_DEFINE([DEBUG_CHECK_ASSERTIONS],[1],[Enable assertion checking])
-dnl fi
+dnl
+dnl Check if compiling with assertions on
+dnl
+if test "$enable_check_assertions" = "yes"; then
+   AC_DEFINE([DEBUG_CHECK_ASSERTIONS],[1],[Enable assertion checking])
+fi
 
-dnl if test -n "$debug_switches" ; then
-dnl    CXXFLAGS="$debug_switches $CXXFLAGS"
-dnl fi
+if test -n "$debug_switches" ; then
+   CXXFLAGS="$debug_switches $CXXFLAGS"
+fi
 
-dnl CASC_AC_LOG_VAR(debug_switches opt_switches)
+CASC_AC_LOG_VAR(debug_switches opt_switches)
 
-dnl dnl
-dnl dnl Support rpath syntax by adding it to the LIB_PATH variable.
-dnl dnl
+dnl
+dnl Support rpath syntax by adding it to the LIB_PATH variable.
+dnl
 CASC_AC_LOG_VAR(LIB_PATH, before adding rpath syntax)
 CASC_LIBS_ADD_RPATH(LIB_PATH,LIB_PATH,1)
 CASC_AC_LOG_VAR(LIB_PATH, after adding rpath syntax)
