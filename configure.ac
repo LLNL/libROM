@@ -45,7 +45,11 @@ AC_INIT(libROM, 0.1)
 # Initialize Automake
 AM_INIT_AUTOMAKE([1.11 foreign subdir-objects])
 
-AC_CONFIG_HEADER(CAROM_config.h:config/CAROM_config.h.in)
+dnl Import some utility macros
+m4_include([m4/configure-log.m4])
+m4_include([m4/split-libs-string.m4])
+
+AC_CONFIG_HEADER(CAROM_config.h)
 dnl
 dnl Autoheader stuff
 AH_TOP([
@@ -81,6 +85,7 @@ LIB_PATH=
 LIB_NAME=
 
 dnl Check for some basic functionality
+AC_PROG_CXX
 AC_PROG_RANLIB
 AC_FC_WRAPPERS
 AM_PROG_AR
@@ -89,6 +94,9 @@ dnl
 dnl Check for C++11 support (required for Elemental)
 dnl
 
+m4_include([m4/ax_require_defined.m4])
+m4_include([m4/ax_cxx_compile_stdcxx.m4])
+m4_include([m4/ax_cxx_compile_stdcxx_11.m4])
 AX_CXX_COMPILE_STDCXX_11([], [mandatory])
 dnl Above macro sets cxxflags for some reason. Unset it.
 CXXFLAGS=
@@ -330,13 +338,18 @@ CASC_AC_LOG_VAR(debug_switches opt_switches)
 dnl
 dnl Support rpath syntax by adding it to the LIB_PATH variable.
 dnl
+m4_include([m4/compiler-id.m4])
+m4_include([m4/support-rpath.m4])
 CASC_AC_LOG_VAR(LIB_PATH, before adding rpath syntax)
 CASC_LIBS_ADD_RPATH(LIB_PATH,LIB_PATH,1)
 CASC_AC_LOG_VAR(LIB_PATH, after adding rpath syntax)
 
 dnl Begin Doxygen section
 
-CASC_PATH_PROG(DOXYGEN_BIN,doxygen)
+AC_CHECK_PROGS([DOXYGEN_BIN], [doxygen])
+if test -z "$DOXYGEN_BIN";
+   then AC_MSG_WARN([Doxygen not found - continuing without Doxygen support])
+fi
 CASC_AC_LOG_VAR(DOXYGEN_BIN)
 
 dnl
@@ -400,7 +413,10 @@ dnl
 dnl Set ROM_PERL to the perl binary for use in doxygen.
 dnl
 
-CASC_PATH_PROG(ROM_PERL,perl)
+AC_CHECK_PROGS([ROM_PERL], [perl])
+if test -z "$ROM_PERL";
+   then AC_MSG_WARN([perl not found - continuing without perl support])
+fi
 CASC_AC_LOG_VAR(ROM_PERL)
 
 dnl End doxygen section

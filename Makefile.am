@@ -7,7 +7,6 @@
 #  SPDX-License-Identifier: (Apache-2.0 OR MIT)
 #
 ###############################################################################
-ACLOCAL_AMFLAGS = -I config
 AM_CPPFLAGS = -I. $(INC_PATH)
 AM_LDFLAGS = $(LIB_PATH) $(LIB_NAME)
 
