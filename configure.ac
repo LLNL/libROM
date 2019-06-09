@@ -80,6 +80,8 @@ LIB_NAME=
 
 AC_PROG_CXX
 AC_PROG_RANLIB
+AC_FC_WRAPPERS
+AM_PROG_AR
 
 dnl
 dnl Check for C++11 support (required for Elemental)
