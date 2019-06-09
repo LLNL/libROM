@@ -332,60 +332,6 @@ dnl fi
 
 dnl CASC_AC_LOG_VAR(debug_switches opt_switches)
 
-dnl dnl Add linkage to Fortran libraries, which is required because
-dnl dnl LAPACK is written in Fortran, and it is being linked by a
-dnl dnl C++ compiler, which does not include Fortran libraries by default
-dnl LIB_PATH="$fc_LIB_PATH $LIB_PATH"
-dnl LIB_NAME="$fc_LIB_NAME $LIB_PATH"
-
-dnl dnl
-dnl dnl Set variables for lapack support
-dnl dnl
-dnl CASC_SUPPORT_LAPACK
-dnl if test "${lapack_PREFIX+set}" = set ||
-dnl    test "${lapack_INCLUDES+set}" = set ||
-dnl    test "${lapack_LIBS+set}" = set ; then
-dnl   SPLIT_LIBS_STRING(lapack_LIBS,lapack_LIB_PATH,lapack_LIB_NAME)
-dnl   LIB_PATH="$lapack_LIB_PATH $LIB_PATH"
-dnl   LIB_NAME="$lapack_LIB_NAME $LIB_NAME"
-dnl   INC_PATH="$lapack_INCLUDES $INC_PATH"
-dnl else
-dnl   AC_MSG_ERROR([LAPACK is required.])
-dnl fi
-dnl CASC_AC_LOG_VAR(lapack_LIB_PATH lapack_LIB_NAME LIB_PATH LIB_NAME)
-
-dnl dnl
-dnl dnl Determine the proper MPI include and lib paths.
-dnl dnl
-dnl if test "${with_mpi-include+set}" = set || test "${with_mpi-lib-dirs+set}" = set || test "${with_mpi_libs+set}" = set; then
-dnl    CASC_FIND_MPI
-
-dnl    if test -n "$MPIINCLUDE" -o -n "$MPILIBS" -o -n "$MPILIBDIRS"; then
-dnl      INC_PATH="$MPIINCLUDE $INC_PATH"
-dnl      LIB_NAME="$MPILIBS $LIB_NAME"
-dnl      LIB_PATH="$MPILIBDIRS $LIB_PATH"
-dnl      CASC_AC_LOG_VAR(MPIINCLUDE MPILIBS MPILIBDIRS, After successfully finding MPI using casc_find_mpi)
-dnl    fi
-dnl fi
-
-dnl dnl
-dnl dnl Support linking with Z lib if HDF requires it
-dnl dnl
-dnl CHECK_ZLIB()
-dnl SPLIT_LIBS_STRING(zlib_LIBS,zlib_LIB_PATH,zlib_LIB_NAME)
-dnl LIB_PATH="$zlib_LIB_PATH $LIB_PATH"
-dnl LIB_NAME="$zlib_LIB_NAME $LIB_NAME"
-dnl INC_PATH="$zlib_INCLUDES $INC_PATH"
-
-dnl dnl
-dnl dnl Support linking with SZ lib if HDF requires it
-dnl dnl
-dnl CHECK_SZLIB()
-dnl SPLIT_LIBS_STRING(szlib_LIBS,szlib_LIB_PATH,szlib_LIB_NAME)
-dnl LIB_PATH="$szlib_LIB_PATH $LIB_PATH"
-dnl LIB_NAME="$szlib_LIB_NAME $LIB_NAME"
-dnl INC_PATH="$szlib_INCLUDES $INC_PATH"
-
 dnl dnl
 dnl dnl Support rpath syntax by adding it to the LIB_PATH variable.
 dnl dnl
