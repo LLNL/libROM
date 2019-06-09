@@ -282,8 +282,8 @@ AM_RECURSIVE_TARGETS = cscope
 am__DIST_COMMON = $(srcdir)/Makefile.in \
 	$(top_srcdir)/config/CAROM_config.h.in \
 	$(top_srcdir)/docs/Doxyfile.in $(top_srcdir)/docs/Makefile.in \
-	AUTHORS ChangeLog INSTALL NEWS compile config.guess config.sub \
-	depcomp install-sh missing
+	AUTHORS ChangeLog INSTALL NEWS ar-lib compile config.guess \
+	config.sub depcomp install-sh missing
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -327,6 +327,9 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 F77 = @F77@
+FC = @FC@
+FCFLAGS = @FCFLAGS@
+FCLIBS = @FCLIBS@
 FFLAGS = @FFLAGS@
 FLIBS = @FLIBS@
 GREP = @GREP@
@@ -379,9 +382,11 @@ abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
 abs_top_srcdir = @abs_top_srcdir@
+ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
+ac_ct_FC = @ac_ct_FC@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
