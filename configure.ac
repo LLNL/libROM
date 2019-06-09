@@ -72,12 +72,15 @@ AC_ARG_ENABLE([check_assertions],
 
 dnl
 dnl Initialize common macros to empty strings
+dnl These will be built up with the flags from each package as they
+dnl are discovered.  Final values are used in Makefile.am.
 dnl
 
 INC_PATH=
 LIB_PATH=
 LIB_NAME=
 
+dnl Check for some basic functionality
 AC_PROG_RANLIB
 AC_FC_WRAPPERS
 AM_PROG_AR
@@ -331,77 +334,76 @@ CASC_AC_LOG_VAR(LIB_PATH, before adding rpath syntax)
 CASC_LIBS_ADD_RPATH(LIB_PATH,LIB_PATH,1)
 CASC_AC_LOG_VAR(LIB_PATH, after adding rpath syntax)
 
-dnl dnl
-dnl dnl Set DOXYGEN_BIN to the doxygen binary.
-dnl dnl
+dnl Begin Doxygen section
 
-dnl CASC_PATH_PROG(DOXYGEN_BIN,doxygen)
-dnl CASC_AC_LOG_VAR(DOXYGEN_BIN)
+CASC_PATH_PROG(DOXYGEN_BIN,doxygen)
+CASC_AC_LOG_VAR(DOXYGEN_BIN)
 
-dnl dnl
-dnl dnl Set DOT_PATH to the directory of the dot binary, for use with doxygen.
-dnl dnl
+dnl
+dnl Set DOT_PATH to the directory of the dot binary, for use with doxygen.
+dnl dot is a graph layout program, used for making class hierarchies.
+dnl
 
-dnl AC_ARG_WITH([dot-dir],
-dnl [AS_HELP_STRING([--with-dot-dir=DIR],
-dnl    [Specify bin directory where dot binaries live.])],,
-dnl unset with_dot_dir)
-dnl if   test "${with_dot_dir}" = yes || test ! "${with_dot_dir+set}" = set; then
-dnl   # Find dot path, and use if found
-dnl   DOT_PATH=`which dot >& /dev/null`
-dnl   if test -z "${DOT_PATH}"; then
-dnl     unset DOT_PATH
-dnl     HAVE_DOT=NO
-dnl   else
-dnl     [DOT_PATH=`echo $DOT_PATH | sed 's!/[^/]\{1,\}$!!']`
-dnl     HAVE_DOT=YES
-dnl   fi
-dnl elif test "${with_dot_dir}" = no; then
-dnl   # Disable dot.
-dnl   unset DOT_PATH
-dnl   HAVE_DOT=NO
-dnl else
-dnl   # Make sure valid path is specified.  Enable dot.
-dnl   if test ! -d ${with_dot_dir}; then
-dnl      AC_MSG_WARN([
-dnl Invalid path given for dot executable: ${with_dot_dir}.
-dnl Path does not exist.
-dnl You can expect doxygen documentation generation to not work properly.
-dnl ]);
-dnl   fi
-dnl   DOT_PATH=${with_dot_dir}
-dnl   HAVE_DOT=YES
-dnl fi
-dnl CASC_AC_LOG_VAR(with_dot_dir HAVE_DOT DOT_PATH)
-dnl AC_SUBST(HAVE_DOT)
-dnl AC_SUBST(DOT_PATH)
+AC_ARG_WITH([dot-dir],
+[AS_HELP_STRING([--with-dot-dir=DIR],
+   [Specify bin directory where dot binaries live.])],,
+unset with_dot_dir)
+if   test "${with_dot_dir}" = yes || test ! "${with_dot_dir+set}" = set; then
+  # Find dot path, and use if found
+  DOT_PATH=`which dot >& /dev/null`
+  if test -z "${DOT_PATH}"; then
+    unset DOT_PATH
+    HAVE_DOT=NO
+  else
+    [DOT_PATH=`echo $DOT_PATH | sed 's!/[^/]\{1,\}$!!']`
+    HAVE_DOT=YES
+  fi
+elif test "${with_dot_dir}" = no; then
+  # Disable dot.
+  unset DOT_PATH
+  HAVE_DOT=NO
+else
+  # Make sure valid path is specified.  Enable dot.
+  if test ! -d ${with_dot_dir}; then
+     AC_MSG_WARN([
+Invalid path given for dot executable: ${with_dot_dir}.
+Path does not exist.
+You can expect doxygen documentation generation to not work properly.
+]);
+  fi
+  DOT_PATH=${with_dot_dir}
+  HAVE_DOT=YES
+fi
+CASC_AC_LOG_VAR(with_dot_dir HAVE_DOT DOT_PATH)
+AC_SUBST(HAVE_DOT)
+AC_SUBST(DOT_PATH)
 
-dnl dnl
-dnl dnl Set the directory for doxygen documentation.
-dnl dnl
-dnl AC_ARG_WITH([dox-output-dir],
-dnl [AS_HELP_STRING([--with-dox-output-dir=DIR],
-dnl    [Specify full where Doxygen documentation is generated.  Default is the docs
-dnl    directory in the compile tree.])])
-dnl if test -n "$with_dox_output_dir"; then
-dnl   if echo "$with_dox_output_dir" | grep -v '^/' ; then
-dnl     AC_MSG_ERROR(You must give a full path with --with-dox-output-dir=DIR)
-dnl   fi
-dnl   dox_output_dir="$with_dox_output_dir"
-dnl   # Make sure dox_output_dir ends with / so because the doxygen
-dnl   # configuration files simply append a subdirectory name.
-dnl   [dox_output_dir="`echo $dox_output_dir | sed 's:\([^/]\)$:\1/:'`"]
-dnl fi
-dnl AC_SUBST(dox_output_dir)
+dnl
+dnl Set the directory for doxygen documentation.
+dnl
+AC_ARG_WITH([dox-output-dir],
+[AS_HELP_STRING([--with-dox-output-dir=DIR],
+   [Specify full where Doxygen documentation is generated.  Default is the docs
+   directory in the compile tree.])])
+if test -n "$with_dox_output_dir"; then
+  if echo "$with_dox_output_dir" | grep -v '^/' ; then
+    AC_MSG_ERROR(You must give a full path with --with-dox-output-dir=DIR)
+  fi
+  dox_output_dir="$with_dox_output_dir"
+  # Make sure dox_output_dir ends with / so because the doxygen
+  # configuration files simply append a subdirectory name.
+  [dox_output_dir="`echo $dox_output_dir | sed 's:\([^/]\)$:\1/:'`"]
+fi
+AC_SUBST(dox_output_dir)
 
-dnl dnl
-dnl dnl Set ROM_PERL to the perl binary for use in doxygen.
-dnl dnl
+dnl
+dnl Set ROM_PERL to the perl binary for use in doxygen.
+dnl
 
-dnl CASC_PATH_PROG(ROM_PERL,perl)
-dnl CASC_AC_LOG_VAR(ROM_PERL)
+CASC_PATH_PROG(ROM_PERL,perl)
+CASC_AC_LOG_VAR(ROM_PERL)
 
-dnl END
+dnl End doxygen section
 
 AC_SUBST(AR)
 
