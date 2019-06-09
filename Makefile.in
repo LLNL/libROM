@@ -96,16 +96,15 @@ noinst_PROGRAMS = uneven_dist$(EXEEXT) random_test$(EXEEXT) \
 	tests/test_SVD$(EXEEXT) tests/test_IncrementalSVD$(EXEEXT)
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/config/arg-with-environment.m4 \
-	$(top_srcdir)/config/ax_cxx_compile_stdcxx.m4 \
-	$(top_srcdir)/config/ax_cxx_compile_stdcxx_11.m4 \
-	$(top_srcdir)/config/compiler-id.m4 \
-	$(top_srcdir)/config/configure-log.m4 \
-	$(top_srcdir)/config/split-libs-string.m4 \
-	$(top_srcdir)/config/support-rpath.m4 \
+am__aclocal_m4_deps = $(top_srcdir)/m4/configure-log.m4 \
+	$(top_srcdir)/m4/split-libs-string.m4 \
+	$(top_srcdir)/m4/ax_require_defined.m4 \
+	$(top_srcdir)/m4/ax_cxx_compile_stdcxx.m4 \
+	$(top_srcdir)/m4/ax_cxx_compile_stdcxx_11.m4 \
 	$(top_srcdir)/m4/ax_lib_hdf5.m4 $(top_srcdir)/m4/ax_mpi.m4 \
 	$(top_srcdir)/m4/ax_blas.m4 $(top_srcdir)/m4/ax_lapack.m4 \
-	$(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/compiler-id.m4 \
+	$(top_srcdir)/m4/support-rpath.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(top_srcdir)/configure \
@@ -262,7 +261,8 @@ am__can_run_installinfo = \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
 HEADERS = $(include_HEADERS)
-am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
+am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) \
+	$(LISP)CAROM_config.h.in
 # Read a list of newline-separated strings from the standard input,
 # and print each of them once, without duplicates.  Input order is
 # *not* preserved.
@@ -283,8 +283,7 @@ ETAGS = etags
 CTAGS = ctags
 CSCOPE = cscope
 AM_RECURSIVE_TARGETS = cscope
-am__DIST_COMMON = $(srcdir)/Makefile.in \
-	$(top_srcdir)/config/CAROM_config.h.in \
+am__DIST_COMMON = $(srcdir)/CAROM_config.h.in $(srcdir)/Makefile.in \
 	$(top_srcdir)/docs/Doxyfile.in $(top_srcdir)/docs/Makefile.in \
 	AUTHORS ChangeLog INSTALL NEWS ar-lib compile config.guess \
 	config.sub depcomp install-sh missing
@@ -453,7 +452,6 @@ top_srcdir = @top_srcdir@
 #  SPDX-License-Identifier: (Apache-2.0 OR MIT)
 #
 ###############################################################################
-ACLOCAL_AMFLAGS = -I config
 AM_CPPFLAGS = -I. $(INC_PATH)
 AM_LDFLAGS = $(LIB_PATH) $(LIB_NAME)
 lib_LIBRARIES = librom.a
@@ -566,10 +564,10 @@ CAROM_config.h: stamp-h1
 	@test -f $@ || rm -f stamp-h1
 	@test -f $@ || $(MAKE) $(AM_MAKEFLAGS) stamp-h1
 
-stamp-h1: $(top_srcdir)/config/CAROM_config.h.in $(top_builddir)/config.status
+stamp-h1: $(srcdir)/CAROM_config.h.in $(top_builddir)/config.status
 	@rm -f stamp-h1
 	cd $(top_builddir) && $(SHELL) ./config.status CAROM_config.h
-$(top_srcdir)/config/CAROM_config.h.in:  $(am__configure_deps) 
+$(srcdir)/CAROM_config.h.in:  $(am__configure_deps) 
 	($(am__cd) $(top_srcdir) && $(AUTOHEADER))
 	rm -f stamp-h1
 	touch $@
