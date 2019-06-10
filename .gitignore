@@ -20,6 +20,10 @@ ltmain.sh
 ar-lib
 .deps
 .libs
+.dirstamp
+
+# Do not track emacs backup files
+*~
 
 # Do not track logfiles
 *.log
