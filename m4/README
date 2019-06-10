@@ -1,5 +1,4 @@
 m4 macros needed by automake system.
 
 ax_require_defined.m4: needed by ax_cxx_compile_stdcxx.m4
-compiler-id.m4: needed by support-rpath.m4
 
