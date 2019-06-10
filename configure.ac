@@ -46,8 +46,7 @@ AC_INIT(libROM, 0.1)
 AM_INIT_AUTOMAKE([1.11 foreign subdir-objects])
 
 dnl Import some utility macros
-m4_include([m4/configure-log.m4])
-m4_include([m4/split-libs-string.m4])
+AC_CONFIG_MACRO_DIRS([m4])
 
 AC_CONFIG_HEADER(CAROM_config.h)
 dnl
@@ -86,17 +85,16 @@ LIB_NAME=
 
 dnl Check for some basic functionality
 AC_PROG_CXX
-AC_PROG_RANLIB
 AC_FC_WRAPPERS
 AM_PROG_AR
+LT_INIT
+LT_LANG([C++])
+LT_LANG([Fortran 77])
 
 dnl
 dnl Check for C++11 support (required for Elemental)
 dnl
 
-m4_include([m4/ax_require_defined.m4])
-m4_include([m4/ax_cxx_compile_stdcxx.m4])
-m4_include([m4/ax_cxx_compile_stdcxx_11.m4])
 AX_CXX_COMPILE_STDCXX_11([], [mandatory])
 dnl Above macro sets cxxflags for some reason. Unset it.
 CXXFLAGS=
@@ -106,8 +104,6 @@ dnl Check for the required dependencies: hdf5, mpi, lapack/blas
 dnl
 
 dnl Begin HDF5 section
-m4_include([m4/ax_lib_hdf5.m4])
-
 AX_LIB_HDF5([serial])	 
 
 if test "$with_hdf5" = "no"; then
@@ -121,7 +117,6 @@ fi
 dnl End HDF5 section
 
 dnl Begin mpi compiler wrappers section
-m4_include([m4/ax_mpi.m4])
 AC_ARG_WITH(mpi, [  --with-mpi=<path>              prefix of MPI installation],
                  [  MPICXX="$withval/bin/mpic++"
                     CPPFLAGS="$CPPFLAGS -I $withval/include"
@@ -136,9 +131,6 @@ fi
 dnl End mpi compiler wrappers section
 
 dnl Start lapack/blas section
-m4_include([m4/ax_blas.m4])
-m4_include([m4/ax_lapack.m4])
-
 AX_BLAS
 if test "$ax_blas_ok" = "no"; then
    AC_MSG_ERROR([Cannot find BLAS libraries])
@@ -334,15 +326,6 @@ if test -n "$debug_switches" ; then
 fi
 
 CASC_AC_LOG_VAR(debug_switches opt_switches)
-
-dnl
-dnl Support rpath syntax by adding it to the LIB_PATH variable.
-dnl
-m4_include([m4/compiler-id.m4])
-m4_include([m4/support-rpath.m4])
-CASC_AC_LOG_VAR(LIB_PATH, before adding rpath syntax)
-CASC_LIBS_ADD_RPATH(LIB_PATH,LIB_PATH,1)
-CASC_AC_LOG_VAR(LIB_PATH, after adding rpath syntax)
 
 dnl Begin Doxygen section
 

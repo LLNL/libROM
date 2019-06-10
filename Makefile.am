@@ -7,33 +7,34 @@
 #  SPDX-License-Identifier: (Apache-2.0 OR MIT)
 #
 ###############################################################################
+ACLOCAL_AMFLAGS = -I m4
 AM_CPPFLAGS = -I. $(INC_PATH)
 AM_LDFLAGS = $(LIB_PATH) $(LIB_NAME)
 
-lib_LIBRARIES = librom.a
-librom_a_SOURCES =
-librom_a_SOURCES += Matrix.C
-librom_a_SOURCES += Vector.C
-librom_a_SOURCES += BasisReader.C
-librom_a_SOURCES += BasisWriter.C
-librom_a_SOURCES += SVDBasisGenerator.C
-librom_a_SOURCES += SVDSampler.C
-librom_a_SOURCES += SVD.C
-librom_a_SOURCES += IncrementalSVD.C
-librom_a_SOURCES += IncrementalSVDFastUpdate.C
-librom_a_SOURCES += IncrementalSVDStandard.C
-librom_a_SOURCES += IncrementalSVDBasisGenerator.C
-librom_a_SOURCES += IncrementalSVDSampler.C
-librom_a_SOURCES += StaticSVD.C
-librom_a_SOURCES += StaticSVDBasisGenerator.C
-librom_a_SOURCES += StaticSVDSampler.C
-librom_a_SOURCES += Database.C
-librom_a_SOURCES += HDFDatabase.C
-librom_a_SOURCES += Utilities.C
-librom_a_SOURCES += ParallelBuffer.C
-librom_a_SOURCES += DEIM.C
-librom_a_SOURCES += QDEIM.C
-librom_a_SOURCES += GNAT.C
+lib_LTLIBRARIES = librom.la
+librom_la_SOURCES =
+librom_la_SOURCES += Matrix.C
+librom_la_SOURCES += Vector.C
+librom_la_SOURCES += BasisReader.C
+librom_la_SOURCES += BasisWriter.C
+librom_la_SOURCES += SVDBasisGenerator.C
+librom_la_SOURCES += SVDSampler.C
+librom_la_SOURCES += SVD.C
+librom_la_SOURCES += IncrementalSVD.C
+librom_la_SOURCES += IncrementalSVDFastUpdate.C
+librom_la_SOURCES += IncrementalSVDStandard.C
+librom_la_SOURCES += IncrementalSVDBasisGenerator.C
+librom_la_SOURCES += IncrementalSVDSampler.C
+librom_la_SOURCES += StaticSVD.C
+librom_la_SOURCES += StaticSVDBasisGenerator.C
+librom_la_SOURCES += StaticSVDSampler.C
+librom_la_SOURCES += Database.C
+librom_la_SOURCES += HDFDatabase.C
+librom_la_SOURCES += Utilities.C
+librom_la_SOURCES += ParallelBuffer.C
+librom_la_SOURCES += DEIM.C
+librom_la_SOURCES += QDEIM.C
+librom_la_SOURCES += GNAT.C
 
 include_HEADERS =
 include_HEADERS += BasisReader.h
@@ -97,35 +98,35 @@ noinst_PROGRAMS += tests/test_IncrementalSVD
 #
 uneven_dist_SOURCES = uneven_dist.C
 uneven_dist_LDFLAGS =
-uneven_dist_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
+uneven_dist_LDADD   = $(LIB_PATH) librom.la $(LIB_NAME)
 
 random_test_SOURCES = random_test.C
 random_test_LDFLAGS =
-random_test_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
+random_test_LDADD   = $(LIB_PATH) librom.la $(LIB_NAME)
 
 weak_scaling_SOURCES = weak_scaling.C
 weak_scaling_LDFLAGS =
-weak_scaling_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
+weak_scaling_LDADD   = $(LIB_PATH) librom.la $(LIB_NAME)
 
 smoke_test_SOURCES = smoke_test.C
 smoke_test_LDFLAGS =
-smoke_test_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
+smoke_test_LDADD   = $(LIB_PATH) librom.la $(LIB_NAME)
 
 tests_test_Matrix_SOURCES = tests/test_Matrix.C
 tests_test_Matrix_LDFLAGS =
-tests_test_Matrix_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
+tests_test_Matrix_LDADD   = $(LIB_PATH) librom.la $(LIB_NAME)
 
 tests_test_Vector_SOURCES = tests/test_Vector.C
 tests_test_Vector_LDFLAGS =
-tests_test_Vector_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
+tests_test_Vector_LDADD   = $(LIB_PATH) librom.la $(LIB_NAME)
 
 tests_test_SVD_SOURCES = tests/test_SVD.C
 tests_test_SVD_LDFLAGS =
-tests_test_SVD_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
+tests_test_SVD_LDADD   = $(LIB_PATH) librom.la $(LIB_NAME)
 
 tests_test_IncrementalSVD_SOURCES = tests/test_IncrementalSVD.C
 tests_test_IncrementalSVD_LDFLAGS =
-tests_test_IncrementalSVD_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
+tests_test_IncrementalSVD_LDADD   = $(LIB_PATH) librom.la $(LIB_NAME)
 
 dox:
 	(cd docs && $(MAKE) $@)
