@@ -27648,7 +27648,9 @@ fi
         LIB_PATH="$gtest_LIB_PATH $LIB_PATH"
         LIB_NAME="$gtest_LIB_NAME $LIB_NAME"
         INC_PATH="$gtest_INCLUDES $INC_PATH"
-        CXXFLAGS="$CXXFLAGS -DCAROM_HAS_GTEST"
+
+$as_echo "#define CAROM_HAS_GTEST 1" >>confdefs.h
+
     else
         { $as_echo "$as_me:${as_lineno-$LINENO}: Google Test Framework not found - disabling unit tests." >&5
 $as_echo "$as_me: Google Test Framework not found - disabling unit tests." >&6;}
@@ -27663,7 +27665,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:27666:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:27668:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -27729,7 +27731,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:27732:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:27734:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -27791,7 +27793,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:27794:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:27796:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -27846,7 +27848,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:27849:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:27851:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
@@ -27927,7 +27929,7 @@ for log_vars_index in $log_vars ; do
   else
     log_vars_value="unset";
   fi
-  echo "configure:27930:" "$log_vars_index is $log_vars_value" >&5;
+  echo "configure:27932:" "$log_vars_index is $log_vars_value" >&5;
 done
 
 
