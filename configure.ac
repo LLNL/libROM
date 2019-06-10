@@ -125,7 +125,7 @@ m4_include([m4/ax_mpi.m4])
 AC_ARG_WITH(mpi, [  --with-mpi=<path>              prefix of MPI installation],
                  [  MPICXX="$withval/bin/mpic++"
                     CPPFLAGS="$CPPFLAGS -I $withval/include"
-                    LDFLAGS="$LDFLAGS -L $withval/lib"])
+                    LDFLAGS="$LDFLAGS -L$withval/lib"])
 
 if test "x$with_mpi" != "xno"; then
    AX_MPI([], AC_MSG_ERROR([Could not find required MPI library.
