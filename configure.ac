@@ -46,7 +46,7 @@ AC_INIT(libROM, 0.1)
 AM_INIT_AUTOMAKE([1.11 foreign subdir-objects])
 
 dnl Import some utility macros
-AC_CONFIG_MACRO_DIRS([m4])
+AC_CONFIG_MACRO_DIR([m4])
 
 AC_CONFIG_HEADER(CAROM_config.h)
 dnl
@@ -84,20 +84,75 @@ LIB_PATH=
 LIB_NAME=
 
 dnl Check for some basic functionality
-AC_PROG_CXX
-AC_FC_WRAPPERS
 AM_PROG_AR
+
+dnl libtool setup
 LT_INIT
 LT_LANG([C++])
 LT_LANG([Fortran 77])
 
 dnl
-dnl Check for C++11 support (required for Elemental)
+dnl Set up C++ compiler using --with-CXX, which will typically point to an mpi wrapper.
 dnl
 
-AX_CXX_COMPILE_STDCXX_11([], [mandatory])
+AC_ARG_WITH([CXX],
+   [AS_HELP_STRING([--with-CXX=ARG],[manually set C++ compiler to ARG])]
+   )
+
+dnl AC_PROG_CXX searches for CXX then CCC in that order.  So here we
+dnl use the supplied compiler, or if none supplied, the inherited CXX,
+dnl or if none supplied, a default g++.
+
+if test -n "$with_CXX"; then
+   CXX="$with_CXX"
+else
+   CCC="g++ "
+fi
+AC_PROG_CXX
+
+dnl
+dnl Check for C++11 support and add required flags (required for Elemental)
+dnl
+
+AX_CXX_COMPILE_STDCXX_11([noext], [mandatory])
 dnl Above macro sets cxxflags for some reason. Unset it.
-CXXFLAGS=
+
+dnl
+dnl Set up fortran compiler
+dnl
+
+AC_ARG_WITH([FC],
+   [AS_HELP_STRING([--with-FC=ARG],[manually set Fortran compiler to ARG])]
+   )
+
+if test -n "$with_FC"; then
+   FC=$with_FC
+else
+   case "$host_os" in
+     linux*) FCC=" gfortran ";;
+     solaris*) FCC=" gfortran ";;
+     osf*) FCC=" gfortran ";;
+     *) FCC=
+   esac
+fi
+CASC_AC_LOG_VAR(with_FC FC FCC, before running compiler search)
+dnl The intention behind this search order for Fortran compilers is to
+dnl put the user-specified compiler (if available) first. If the OS is
+dnl detected properly, then common OSes will put gfortran first. If
+dnl the OS is exotic, then the OS detection above will set FCC to the
+dnl empty string, in which case, the search order proceeds from
+dnl (probably) rarer compilers to more common compilers.  Fewer
+dnl systems have IBM's xl compilers than PGI. If a system has a PGI
+dnl compiler, it usually also has a Intel compiler, but the reverse
+dnl isn't necessarily true. Intel compilers are still pretty common,
+dnl but flang is not. However, flang is free, and the xl, PGI, and
+dnl Intel compilers generally require a license, so we put flang after
+dnl the compilers that require a license, and before gfortran, which
+dnl is very common.
+
+AC_PROG_FC([$FCC xlflang xlf90 pg90 ifort flang gfortran])
+AC_FC_WRAPPERS
+CASC_AC_LOG_VAR(with_FC FC FCC, after running compiler search)
 
 dnl
 dnl Check for the required dependencies: hdf5, mpi, lapack/blas
@@ -116,20 +171,6 @@ CPPFLAGS="$CPPFLAGS $HDF5_CPPFLAGS"
 fi
 dnl End HDF5 section
 
-dnl Begin mpi compiler wrappers section
-AC_ARG_WITH(mpi, [  --with-mpi=<path>              prefix of MPI installation],
-                 [  MPICXX="$withval/bin/mpic++"
-                    CPPFLAGS="$CPPFLAGS -I $withval/include"
-                    LDFLAGS="$LDFLAGS -L$withval/lib"])
-
-if test "x$with_mpi" != "xno"; then
-   AX_MPI([], AC_MSG_ERROR([Could not find required MPI library.
-                         Consider using --with-mpi=<my-path-to-mpi>.]))
-   CXX="$MPICXX"
-   LIBS="$MPILIBS $LIBS"
-fi
-dnl End mpi compiler wrappers section
-
 dnl Start lapack/blas section
 AX_BLAS
 if test "$ax_blas_ok" = "no"; then
@@ -145,6 +186,13 @@ fi
 AX_LAPACK
 if test "$ax_lapack_ok" = "no"; then
    AC_MSG_ERROR([Cannot find LAPACK libraries])
+else
+   SPLIT_LIBS_STRING(LAPACK_LIBS,path1,name1)
+   SPLIT_LIBS_STRING(BLAS_LIBS,path2,name2)
+   SPLIT_LIBS_STRING(LIBS,path3,name3)
+   SPLIT_LIBS_STRING(FLIBS,path4,name4)
+   LIB_PATH="$LIB_PATH $path1 $path2 $path3 $path4"
+   LIB_NAME="$LIB_NAME $name1 $name2 $name3 $name4"
 fi
 dnl End lapack/blas section
 
