@@ -59,6 +59,19 @@ See the INSTALL file for details; in brief, it uses the `configure`,
 check out the INSTALL file for some guidance on flags, or the output
 of `./configure --help`.
 
+An example configuration line that picks up packages installed at
+various paths might look like the following.  Note that depending on
+the package, the --with-<pkg>= directive expects slightly different
+things.  hdf5 wants a compiler wrapper; blas and lapack want lists of
+linker flags; elemental and gtest want an installation prefix.
+
+./configure --with-hdf5=<hdf5path>/bin/h5c++ \
+            --with-mpi=<openmpipath> \
+	    --with-blas='-L<blaspath> -lopenblas' \
+	    --with-lapack='-L<blaspatch> -lopenblas' \
+	    --with-elemental=<elpath> \
+	    --with-gtest=<gtestpath>
+
 # For developers who need to hack the build system
 
 If you want to add new source files and executables, the best way to
