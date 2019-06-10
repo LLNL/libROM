@@ -65,8 +65,8 @@ the package, the --with-<pkg>= directive expects slightly different
 things.  hdf5 wants a compiler wrapper; blas and lapack want lists of
 linker flags; elemental and gtest want an installation prefix.
 
-./configure --with-hdf5=<hdf5path>/bin/h5c++ \
-            --with-mpi=<openmpipath> \
+./configure --with-CXX=<mpipath>/bin/mpic++ \
+            --with-hdf5=<hdf5path>/bin/h5cc \
 	    --with-blas='-L<blaspath> -lopenblas' \
 	    --with-lapack='-L<blaspatch> -lopenblas' \
 	    --with-elemental=<elpath> \
