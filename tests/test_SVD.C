@@ -13,6 +13,8 @@
 
 #include <iostream>
 
+#include "../CAROM_config.h"
+
 #ifdef CAROM_HAS_GTEST
 #include<gtest/gtest.h>
 #include <mpi.h>
