@@ -4,7 +4,7 @@
 
 mvapich="mvapich2-2.3"
 intel="intel-18.0.1"
-hdf5=hdf5-serial-1.8.18
+hdf5="hdf5-serial-1.8.18"
 
 # derived vars below here
 
