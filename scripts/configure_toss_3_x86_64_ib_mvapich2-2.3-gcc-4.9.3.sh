@@ -2,7 +2,7 @@
 
 # choose versions
 
-mvapich="mvapich2-2.3"
+mvapich="mvapich2-2.2"
 gcc="gcc-4.9.3"
 hdf5="hdf5-serial-1.8.18"
 
