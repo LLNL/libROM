@@ -270,7 +270,7 @@ if test "x${with_gtest}" != xno; then
         LIB_PATH="$gtest_LIB_PATH $LIB_PATH"
         LIB_NAME="$gtest_LIB_NAME $LIB_NAME"
         INC_PATH="$gtest_INCLUDES $INC_PATH"
-        CXXFLAGS="$CXXFLAGS -DCAROM_HAS_GTEST"
+        AC_DEFINE(CAROM_HAS_GTEST,1,[Have google test library.])
     else
         AC_MSG_NOTICE([Google Test Framework not found - disabling unit tests.])
     fi

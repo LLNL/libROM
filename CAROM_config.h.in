@@ -13,6 +13,9 @@
 /* Have Elemental library. */
 #undef CAROM_HAS_ELEMENTAL
 
+/* Have google test library. */
+#undef CAROM_HAS_GTEST
+
 /* Enable assertion checking */
 #undef DEBUG_CHECK_ASSERTIONS
 
