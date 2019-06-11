@@ -6,7 +6,11 @@ cache:
   apt: true
   directories:
     - $HOME/.cache
-
+env:
+  global:
+    - SPACK_ROOT: $HOME/.cache/spack
+    - PATH: $PATH:$HOME/.cache/spack/bin
+    
 addons:
   apt:
     sources:
@@ -19,15 +23,49 @@ addons:
       - libopenmpi-dev
       - libhdf5-serial-dev
       - environment-modules
+
+install:
+  - if ! which spack >/dev/null; then
+      mkdir -p $SPACK_ROOT &&
+      git clone --depth 50 https://github.com/spack/spack.git $SPACK_ROOT &&
+      echo -e "config:""\n  build_jobs:"" 2" > $SPACK_ROOT/etc/spack/config.yaml;
+    fi
+  - travis_wait spack install googletest
+  - source /etc/profile &&
+    source $SPACK_ROOT/share/spack/setup-env.sh
+  - spack load googletest
+      
 jobs:
   include:
     - stage: autotools
-      script: ./autogen.sh
+      script:
+        - ./autogen.sh
     - stage: configure
-      script: ./configure --with-CXX=/usr/bin/mpic++ --with-hdf5=/usr/bin/h5cc --with-lapack='-lopenblas'
+      script:
+        - ./autogen.sh
+        - ./configure --with-CXX=/usr/bin/mpic++ --with-hdf5=/usr/bin/h5cc --with-lapack='-lopenblas' --with-gtest=$( spack find -p googletest | tail -1 | awk '{print $2}' )
     - stage: build
-      script: make -j
-      
+      script:
+        - ./autogen.sh
+        - ./configure --with-CXX=/usr/bin/mpic++ --with-hdf5=/usr/bin/h5cc --with-lapack='-lopenblas' --with-gtest=$( spack find -p googletest | tail -1 | awk '{print $2}' )
+    - stage: test
+      script:
+        - ./autogen.sh
+        - ./configure --with-CXX=/usr/bin/mpic++ --with-hdf5=/usr/bin/h5cc --with-lapack='-lopenblas' --with-gtest=$( spack find -p googletest | tail -1 | awk '{print $2}' )
+	- ./tests/test_Vector
+    -
+      script:
+        - ./autogen.sh
+        - ./configure --with-CXX=/usr/bin/mpic++ --with-hdf5=/usr/bin/h5cc --with-lapack='-lopenblas' --with-gtest=$( spack find -p googletest | tail -1 | awk '{print $2}' )
+	- ./tests/test_Matrix
+
 before_script:
   - export FC=gfortran-4.9
   - export F77=gfortran-4.9
+
+script:
+  - cd $TRAVIS_BUILD_DIR
+  - ./autogen.sh
+  - 
+  - make -j
+  
