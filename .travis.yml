@@ -37,8 +37,5 @@ before_install:
 
 script:
   - cd $TRAVIS_BUILD_DIR
-  - openmpi=$( spack find -p openmpi | tail -1 | awk '{print $2} )'
-  - hdf5=$( spack find -p hdf5 | tail -1 | awk '{print $2} )'
-  - lapack=$( spack find -p lapack | tail -1 | awk '{print $2} )'
   - ./autogen.sh
-  - ./configure --with-CXX=${openmpi}/bin/mpic++ --with-hdf5=${hdf5}/bin/h5cc --with-lapack="-L${lapack} -lopenblas'
+  - ./configure --with-CXX=/usr/bin/mpic++ --with-hdf5=/usr/bin/h5cc --with-lapack="-lopenblas'
