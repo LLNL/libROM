@@ -38,4 +38,4 @@ before_install:
 script:
   - cd $TRAVIS_BUILD_DIR
   - ./autogen.sh
-  - ./configure --with-CXX=/usr/bin/mpic++ --with-hdf5=/usr/bin/h5cc --with-lapack='-lopenblas'
+  - ./configure --with-CXX=/usr/bin/mpic++ --with-hdf5=/usr/bin/h5cc --with-lapack='-lopenblas' || cat config.log
