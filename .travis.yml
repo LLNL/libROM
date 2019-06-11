@@ -19,19 +19,15 @@ addons:
       - libopenmpi-dev
       - libhdf5-serial-dev
       - environment-modules
-
-env:
-  global:
-    - SPACK_ROOT: $HOME/.cache/spack
-    - PATH: $PATH:$HOME/.cache/spack/bin
-
-before_install:
+jobs:
+  include:
+    - stage: autotools
+      script: ./autogen.sh
+    - stage: configure
+      script: ./configure --with-CXX=/usr/bin/mpic++ --with-hdf5=/usr/bin/h5cc --with-lapack='-lopenblas'
+    - stage: build
+      script: make -j
+      
+before_script:
   - export FC=gfortran-4.9
   - export F77=gfortran-4.9
-
-script:
-  - cd $TRAVIS_BUILD_DIR
-  - ./autogen.sh
-  - ./configure --with-CXX=/usr/bin/mpic++ --with-hdf5=/usr/bin/h5cc --with-lapack='-lopenblas'
-  - make -j
-  
