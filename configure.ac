@@ -150,18 +150,9 @@ dnl Intel compilers generally require a license, so we put flang after
 dnl the compilers that require a license, and before gfortran, which
 dnl is very common.
 
-AC_MSG_NOTICE([Running FC search...])
 AC_PROG_FC([$FCC xlflang xlf90 pg90 ifort flang gfortran])
-AC_MSG_NOTICE([FC search done.])
 AC_FC_WRAPPERS
-AC_FC_LIBRARY_LDFLAGS
 CASC_AC_LOG_VAR(with_FC FC FCC, after running compiler search)
-
-AC_MSG_NOTICE([Running F77 search...])
-AC_PROG_F77([$FCC xlflang xlf90 pg90 ifort flang gfortran])
-AC_MSG_NOTICE([F77 search done.])
-AC_F77_WRAPPERS
-AC_F77_LIBRARY_LDFLAGS
 
 dnl
 dnl Check for the required dependencies: hdf5, mpi, lapack/blas
@@ -169,7 +160,6 @@ dnl
 
 dnl Begin HDF5 section
 AX_LIB_HDF5([serial])	 
-
 if test "$with_hdf5" = "no"; then
 	AC_MSG_ERROR([Unable to find HDF5, we need serial HDF5.])
 else
