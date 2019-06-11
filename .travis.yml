@@ -62,10 +62,4 @@ jobs:
 before_script:
   - export FC=gfortran-4.9
   - export F77=gfortran-4.9
-
-script:
-  - cd $TRAVIS_BUILD_DIR
-  - ./autogen.sh
-  - 
-  - make -j
   
