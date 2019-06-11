@@ -1,0 +1,48 @@
+language: cpp
+sudo: false
+dist: trusty
+
+cache:
+  apt: true
+  directories:
+    - $HOME/.cache
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-4.9
+      - environment-modules
+
+env:
+  global:
+    - SPACK_ROOT: $HOME/.cache/spack
+    - PATH: $PATH:$HOME/.cache/spack/bin
+
+before_install:
+  - export CXX=g++-4.9
+  - export CC=gcc-4.9
+  - export FC=gfortran-4.9
+  - export CXXFLAGS="-std=c++11"
+
+install:
+  - if ! which spack >/dev/null; then
+      mkdir -p $SPACK_ROOT &&
+      git clone --depth 50 https://github.com/spack/spack.git $SPACK_ROOT &&
+      echo -e "config:""\n  build_jobs:"" 2" > $SPACK_ROOT/etc/spack/config.yaml;
+    fi
+  - travis_wait spack install hdf5+cxx~mpi
+  - travis_wait spack install openmpi
+  - travis_wait spack install lapack
+  - spack clean -a
+  - source /etc/profile &&
+    source $SPACK_ROOT/share/spack/setup-env.sh
+
+script:
+  - cd $TRAVIS_BUILD_DIR
+  - openmpi=$( spack find -p openmpi | tail -1 | awk '{print $2}'
+  - hdf5=$( spack find -p hdf5 | tail -1 | awk '{print $2}'
+  - lapack=$( spack find -p lapack | tail -1 | awk '{print $2}'
+  - ./autogen.sh
+  - ./configure --with-CXX=${openmpi}/bin/mpic++ --with-hdf5=${hdf5}/bin/h5cc --with-lapack="-L${lapack} -lopenblas'
