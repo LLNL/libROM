@@ -33,8 +33,7 @@ before_install:
   - export CXXFLAGS="-std=c++11"
   - which g++
   - which gcc
-  - which gfortran
-  - which f77
+  - which gfortran-4.9
   - which h5cc
   - which h5fc
 
