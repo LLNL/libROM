@@ -26,16 +26,8 @@ env:
     - PATH: $PATH:$HOME/.cache/spack/bin
 
 before_install:
-  - export CXX=g++-4.9
-  - export CC=gcc-4.9
   - export FC=gfortran-4.9
   - export F77=gfortran-4.9
-  - export CXXFLAGS="-std=c++11"
-  - which g++
-  - which gcc
-  - which gfortran-4.9
-  - which h5cc
-  - which h5fc
 
 script:
   - cd $TRAVIS_BUILD_DIR
