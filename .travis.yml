@@ -1,3 +1,4 @@
+
 language: cpp
 sudo: false
 dist: trusty
@@ -25,7 +26,7 @@ addons:
       - environment-modules
 
 install:
-  - if ! which spack >/dev/null; then mkdir -p $SPACK_ROOT && git clone --depth 50 https://github.com/spack/spack.git $SPACK_ROOT && echo -e "config:""\n  build_jobs:"" 2" > $SPACK_ROOT/etc/spack/config.yaml; fi
+  - ./travis_ci/clone-spack-if-needed
   - spack install googletest
   - source /etc/profile &&
     source $SPACK_ROOT/share/spack/setup-env.sh
@@ -39,38 +40,38 @@ jobs:
     - stage: configure
       script:
         - ./autogen.sh
-        - ./configure --with-CXX=/usr/bin/mpic++ --with-hdf5=/usr/bin/h5cc --with-lapack='-lopenblas' --with-gtest=$( spack find -p googletest | tail -1 | awk '{print $2}' )
+        - ./travis_ci/configure-for-travis-vm
     - stage: build
       script:
         - ./autogen.sh
-        - ./configure --with-CXX=/usr/bin/mpic++ --with-hdf5=/usr/bin/h5cc --with-lapack='-lopenblas' --with-gtest=$( spack find -p googletest | tail -1 | awk '{print $2}' )
+        - ./travis_ci/configure-for-travis-vm
         - make -j
     - stage: test
       name: "Vector tests"
       script:
         - ./autogen.sh
-        - ./configure --with-CXX=/usr/bin/mpic++ --with-hdf5=/usr/bin/h5cc --with-lapack='-lopenblas' --with-gtest=$( spack find -p googletest | tail -1 | awk '{print $2}' )
+        - ./travis_ci/configure-for-travis-vm
         - make -j
         - ./tests/test_Vector
     -
       name: "Matrix tests"
       script:
         - ./autogen.sh
-        - ./configure --with-CXX=/usr/bin/mpic++ --with-hdf5=/usr/bin/h5cc --with-lapack='-lopenblas' --with-gtest=$( spack find -p googletest | tail -1 | awk '{print $2}' )
+        - ./travis_ci/configure-for-travis-vm
         - make -j
         - ./tests/test_Matrix
     -
       name: "SVD tests"
       script:
         - ./autogen.sh
-        - ./configure --with-CXX=/usr/bin/mpic++ --with-hdf5=/usr/bin/h5cc --with-lapack='-lopenblas' --with-gtest=$( spack find -p googletest | tail -1 | awk '{print $2}' )
+        - ./travis_ci/configure-for-travis-vm
         - make -j
         - ./tests/test_SVD
     -
       name: "iSVD tests"
       script:
         - ./autogen.sh
-        - ./configure --with-CXX=/usr/bin/mpic++ --with-hdf5=/usr/bin/h5cc --with-lapack='-lopenblas' --with-gtest=$( spack find -p googletest | tail -1 | awk '{print $2}' )
+        - ./travis_ci/configure-for-travis-vm
         - make -j
         - ./tests/test_IncrementalSVD
 

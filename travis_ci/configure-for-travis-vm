@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# This is a configure line for travis, which assumes that the
+# following Ubuntu trusty packages have been installed:
+# g++-4.9
+# gfortran-4.9
+# libblas-dev
+# liblapack-dev
+# libopenmpi-dev
+# libhdf5-serial-dev
+# environment-modules
+#
+# and also that googletest has been installed via spack.
+
+gtestdir=$( spack find -p googletest | tail -1 | awk '{print $2}' )
+
+./configure \
+	    --with-CXX=/usr/bin/mpic++ \
+	    --with-hdf5=/usr/bin/h5cc \
+	    --with-lapack='-lopenblas' \
+	    --with-gtest=${gtestdir}
+	    
