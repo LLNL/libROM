@@ -47,16 +47,32 @@ jobs:
       script:
         - ./autogen.sh
         - ./configure --with-CXX=/usr/bin/mpic++ --with-hdf5=/usr/bin/h5cc --with-lapack='-lopenblas' --with-gtest=$( spack find -p googletest | tail -1 | awk '{print $2}' )
+	- make -j
     - stage: test
       script:
         - ./autogen.sh
         - ./configure --with-CXX=/usr/bin/mpic++ --with-hdf5=/usr/bin/h5cc --with-lapack='-lopenblas' --with-gtest=$( spack find -p googletest | tail -1 | awk '{print $2}' )
+	- make -j
         - ./tests/test_Vector
     -
       script:
         - ./autogen.sh
         - ./configure --with-CXX=/usr/bin/mpic++ --with-hdf5=/usr/bin/h5cc --with-lapack='-lopenblas' --with-gtest=$( spack find -p googletest | tail -1 | awk '{print $2}' )
+	- make -j
         - ./tests/test_Matrix
+    -
+      script:
+        - ./autogen.sh
+        - ./configure --with-CXX=/usr/bin/mpic++ --with-hdf5=/usr/bin/h5cc --with-lapack='-lopenblas' --with-gtest=$( spack find -p googletest | tail -1 | awk '{print $2}' )
+	- make -j
+        - ./tests/test_SVD
+    -
+      script:
+        - ./autogen.sh
+        - ./configure --with-CXX=/usr/bin/mpic++ --with-hdf5=/usr/bin/h5cc --with-lapack='-lopenblas' --with-gtest=$( spack find -p googletest | tail -1 | awk '{print $2}' )
+	- make -j
+        - ./tests/test_IncrementalSVD
+
 
 before_script:
   - export FC=gfortran-4.9
