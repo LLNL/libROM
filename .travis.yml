@@ -46,24 +46,28 @@ jobs:
         - ./configure --with-CXX=/usr/bin/mpic++ --with-hdf5=/usr/bin/h5cc --with-lapack='-lopenblas' --with-gtest=$( spack find -p googletest | tail -1 | awk '{print $2}' )
         - make -j
     - stage: test
+      name: "Vector tests"
       script:
         - ./autogen.sh
         - ./configure --with-CXX=/usr/bin/mpic++ --with-hdf5=/usr/bin/h5cc --with-lapack='-lopenblas' --with-gtest=$( spack find -p googletest | tail -1 | awk '{print $2}' )
         - make -j
         - ./tests/test_Vector
     -
+      name: "Matrix tests"
       script:
         - ./autogen.sh
         - ./configure --with-CXX=/usr/bin/mpic++ --with-hdf5=/usr/bin/h5cc --with-lapack='-lopenblas' --with-gtest=$( spack find -p googletest | tail -1 | awk '{print $2}' )
         - make -j
         - ./tests/test_Matrix
     -
+      name: "SVD tests"
       script:
         - ./autogen.sh
         - ./configure --with-CXX=/usr/bin/mpic++ --with-hdf5=/usr/bin/h5cc --with-lapack='-lopenblas' --with-gtest=$( spack find -p googletest | tail -1 | awk '{print $2}' )
         - make -j
         - ./tests/test_SVD
     -
+      name: "iSVD tests"
       script:
         - ./autogen.sh
         - ./configure --with-CXX=/usr/bin/mpic++ --with-hdf5=/usr/bin/h5cc --with-lapack='-lopenblas' --with-gtest=$( spack find -p googletest | tail -1 | awk '{print $2}' )
