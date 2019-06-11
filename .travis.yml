@@ -14,6 +14,10 @@ addons:
     packages:
       - g++-4.9
       - gfortran-4.9
+      - libblas-dev
+      - liblapack-dev
+      - libopenmpi-dev
+      - libhdf5-serial-dev
       - environment-modules
 
 env:
@@ -29,19 +33,7 @@ before_install:
   - which g++-4.9
   - which gcc-4.9
   - which gfortran-4.9
-
-install:
-  - if ! which spack >/dev/null; then
-      mkdir -p $SPACK_ROOT &&
-      git clone --depth 50 https://github.com/spack/spack.git $SPACK_ROOT &&
-      echo -e "config:""\n  build_jobs:"" 2" > $SPACK_ROOT/etc/spack/config.yaml;
-    fi
-  - travis_wait spack install hdf5+cxx~mpi
-  - travis_wait spack install openmpi
-  - travis_wait spack install lapack
-  - spack clean -a
-  - source /etc/profile &&
-    source $SPACK_ROOT/share/spack/setup-env.sh
+  - which h5cc
 
 script:
   - cd $TRAVIS_BUILD_DIR
