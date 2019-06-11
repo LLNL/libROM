@@ -22,9 +22,6 @@ addons:
       - liblapack-dev
       - libopenmpi-dev
       - libhdf5-serial-dev
-      - pkg-config
-      - cmake
-      - libncurses5-dev
       - environment-modules
 
 install:
