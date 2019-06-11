@@ -152,7 +152,12 @@ dnl is very common.
 
 AC_PROG_FC([$FCC xlflang xlf90 pg90 ifort flang gfortran])
 AC_FC_WRAPPERS
+AC_FC_LIBRARY_LDFLAGS
 CASC_AC_LOG_VAR(with_FC FC FCC, after running compiler search)
+
+AC_PROG_F77([$FCC xlflang ifort flang gfortran])
+AC_F77_WRAPPERS
+AC_F77_LIBRARY_LDFLAGS
 
 dnl
 dnl Check for the required dependencies: hdf5, mpi, lapack/blas
