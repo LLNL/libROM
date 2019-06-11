@@ -24,7 +24,7 @@ addons:
       - libhdf5-serial-dev
       - pkg-config
       - cmake
-      - ncurses
+      - libncurses5-dev
       - environment-modules
 
 install:
