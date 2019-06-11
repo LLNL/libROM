@@ -25,6 +25,9 @@ before_install:
   - export CC=gcc-4.9
   - export FC=gfortran-4.9
   - export CXXFLAGS="-std=c++11"
+  - which g++-4.9
+  - which gcc-4.9
+  - which gfortran-4.9
 
 install:
   - if ! which spack >/dev/null; then
