@@ -1273,7 +1273,6 @@ Matrix outerProduct(const Vector &v, const Vector &w)
      * 2) w is distributed
      *
      */
-
     int result_num_rows = v.dim();
     int result_num_cols;
     bool is_distributed = v.distributed();

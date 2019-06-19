@@ -975,8 +975,10 @@ class Matrix
      * @brief Computes the outer product of two Vectors, v and w.
      *
      * @post The number of rows in the returned matrix equals the dimension of v
-     * @post The number of cols in the returned matrix equals the dimension of w
-     * @post If v or w is distributed, so is the returned matrix.
+     * @post The number of cols in the returned matrix equals the dimension of w,
+     *       if w is not distributed. If w is distributed, the number of columns
+     *       equals the total number of entries of w, summed over all processes.
+     * @post If v is distributed, so is the returned matrix.
      *
      * @param[in] v The first vector in the outer product
      * @param[in] w The second vector in the outer product
