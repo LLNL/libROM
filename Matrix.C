@@ -1262,5 +1262,14 @@ const
 #endif
 }
 
+Matrix outerProduct(const Vector &v, const Vector &w)
+{
+    int num_rows = v.dim();
+    int num_cols = w.dim();
+    bool is_distributed = (v.distributed() || w.distributed());
+    Matrix result(num_rows, num_cols, is_distributed);
+
+    return result;
+}
 
 } // end namespace CAROM

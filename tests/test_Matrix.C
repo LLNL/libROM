@@ -1284,6 +1284,25 @@ TEST(MatrixSerialTest, Test_transposeMult_Vector_Vector_reference)
   EXPECT_DOUBLE_EQ(w(1), 4.0);
 }
 
+TEST(MatrixOuterProduct, Test_outerProduct_serial)
+{
+  /**
+   *  Build vector [ 1.0 ] and vector [ 3.0 ]
+   *               [ 2.0 ]            [ 4.0 ]
+   *                                  [ 5.0 ]
+   */
+
+   double v_data[2] = { 1.0, 2.0 };
+   double w_data[3] = { 3.0, 4.0, 5.0 };
+
+   CAROM::Vector v(v_data, 2, false, true);
+   CAROM::Vector w(w_data, 3, false, true);
+
+   CAROM::Matrix outer_product_vw = CAROM::outerProduct(v, w);
+   EXPECT_EQ(outer_product_vw.numRows(), 2);
+   EXPECT_EQ(outer_product_vw.numColumns(), 3);
+}
+
 int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
