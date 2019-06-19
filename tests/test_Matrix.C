@@ -1301,6 +1301,24 @@ TEST(MatrixOuterProduct, Test_outerProduct_serial)
    CAROM::Matrix outer_product_vw = CAROM::outerProduct(v, w);
    EXPECT_EQ(outer_product_vw.numRows(), 2);
    EXPECT_EQ(outer_product_vw.numColumns(), 3);
+   EXPECT_FALSE(outer_product_vw.distributed());
+   EXPECT_DOUBLE_EQ(outer_product_vw(0, 0), 3.0);
+   EXPECT_DOUBLE_EQ(outer_product_vw(0, 1), 4.0);
+   EXPECT_DOUBLE_EQ(outer_product_vw(0, 2), 5.0);
+   EXPECT_DOUBLE_EQ(outer_product_vw(1, 0), 6.0);
+   EXPECT_DOUBLE_EQ(outer_product_vw(1, 1), 8.0);
+   EXPECT_DOUBLE_EQ(outer_product_vw(1, 2), 10.0);
+
+   CAROM::Matrix outer_product_wv = CAROM::outerProduct(w, v);
+   EXPECT_EQ(outer_product_wv.numRows(), 3);
+   EXPECT_EQ(outer_product_wv.numColumns(), 2);
+   EXPECT_FALSE(outer_product_wv.distributed());
+   EXPECT_DOUBLE_EQ(outer_product_wv(0, 0), 3.0);
+   EXPECT_DOUBLE_EQ(outer_product_wv(0, 1), 6.0);
+   EXPECT_DOUBLE_EQ(outer_product_wv(1, 0), 4.0);
+   EXPECT_DOUBLE_EQ(outer_product_wv(1, 1), 8.0);
+   EXPECT_DOUBLE_EQ(outer_product_wv(2, 0), 5.0);
+   EXPECT_DOUBLE_EQ(outer_product_wv(2, 1), 10.0);
 }
 
 int main(int argc, char* argv[])

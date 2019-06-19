@@ -17,6 +17,7 @@
 
 #include "mpi.h"
 #include <string.h>
+#include <vector>
 
 #ifdef CAROM_HAS_ELEMENTAL
 #include <El.hpp>
@@ -1264,10 +1265,101 @@ const
 
 Matrix outerProduct(const Vector &v, const Vector &w)
 {
-    int num_rows = v.dim();
-    int num_cols = w.dim();
-    bool is_distributed = (v.distributed() || w.distributed());
-    Matrix result(num_rows, num_cols, is_distributed);
+    /*
+     * There are two cases of concern:
+     *
+     * 1) w is not distributed
+     *
+     * 2) w is distributed
+     *
+     */
+
+    int result_num_rows = v.dim();
+    int result_num_cols;
+    bool is_distributed = v.distributed();
+    Vector gathered_w;
+
+    /*
+     * Gather all of the entries in w on each process into a Vector stored
+     * redundantly (i.e., not distributed) on each process. If the Vector w
+     * is not distributed, this step is trivial.
+     */
+    if (!w.distributed())
+    {
+        result_num_cols = w.dim();
+        gathered_w = w;
+    }
+    else // w.distributed() is true
+    {
+        // Get the number of columns on each processor and gather these
+        // counts into an array. Use std::vector as an array substitute
+        // because variable-length arrays aren't in the C++ standard,
+        // but the storage for std::vector containers must be contiguous
+        // as defined by the C++ standard.
+        int process_local_num_cols = w.dim();
+        MPI_Comm comm = MPI_COMM_WORLD;
+        MPI_Datatype num_cols_datatype = MPI_INT;
+        int num_procs;
+        MPI_Comm_size(comm, &num_procs);
+        std::vector<int> num_cols_on_proc(num_procs, 0);
+        int num_procs_send_count = 1;
+        int num_procs_recv_count = 1;
+        MPI_Allgather(&process_local_num_cols,
+                      num_procs_send_count,
+                      num_cols_datatype,
+                      num_cols_on_proc.data(),
+                      num_procs_recv_count,
+                      num_cols_datatype,
+                      comm);
+
+        // Compute the displacements for the entries in the gathered
+        // Vector, along with the total number of columns in the result.
+        std::vector<int> gathered_w_displacements(num_procs, 0);
+        result_num_cols = 0;
+        for (int i = 0; i < num_cols_on_proc.size(); i++)
+        {
+            gathered_w_displacements.at(i) = result_num_cols;
+            result_num_cols += num_cols_on_proc.at(i);
+        }
+
+        // Gather the data from each process onto each process -- this
+        // step is an Allgatherv (because difference processes may
+        // have different numbers of entries.
+        std::vector<double> w_data(process_local_num_cols);
+        for (int i = 0; i < w_data.size(); i++)
+        {
+            w_data.at(i) = w(i);
+        }
+
+        std::vector<double> gathered_w_data(result_num_cols);
+        MPI_Datatype entry_datatype = MPI_DOUBLE;
+        MPI_Allgatherv(w_data.data(),
+                       process_local_num_cols,
+                       entry_datatype,
+                       gathered_w_data.data(),
+                       num_cols_on_proc.data(),
+                       gathered_w_displacements.data(),
+                       entry_datatype,
+                       comm);
+
+        gathered_w.setSize(result_num_cols);
+        for (int i = 0; i < gathered_w_data.size(); i++)
+        {
+            gathered_w(i) = gathered_w_data.at(i);
+        }
+    }
+
+    /* Create the matrix */
+    Matrix result(result_num_rows, result_num_cols, is_distributed);
+
+    /* Compute the outer product using the gathered copy of w. */
+    for (int i = 0; i < result_num_rows; i++)
+    {
+        for (int j = 0; j < result_num_cols; j++)
+        {
+            result(i, j) = v(i) * gathered_w(j);
+        }
+    }
 
     return result;
 }
