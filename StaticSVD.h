@@ -15,6 +15,16 @@
 #define included_StaticSVD_h
 
 #include "SVD.h"
+#include "scalapack_wrapper.h"
+
+/* Use C++11 built-in shared pointers if available; else fallback to Boost. */
+#if __cplusplus >= 201103L
+#include <memory>
+using std::shared_ptr;
+#else
+#include <boost/shared_ptr.hpp>
+using boost::shared_ptr;
+#endif
 
 namespace CAROM {
 
@@ -128,24 +138,6 @@ class StaticSVD : public SVD
       computeSVD();
 
       /**
-       * @brief Preforms the actual SVD via lapack.
-       *
-       * Given a matrix, A, computes the 3 components of the singular value
-       * decomposition.
-       *
-       * @pre A != 0
-       * @pre total_dim > 0
-       *
-       * @param[in] A The globalized system whose SVD will be computed.
-       * @param[in] total_dim The total dimension of the system that has been
-       *                      distributed of multiple processors.
-       */
-      void
-      svd(
-         double* A,
-         int total_dim);
-
-      /**
        * @brief Tells if the basis vectors for this time interval are up to
        * date.
        *
@@ -161,14 +153,12 @@ class StaticSVD : public SVD
       /**
        * @brief Current samples of the system.
        */
-      std::vector<double*> d_samples;
+      shared_ptr<SLPK_Matrix> d_samples;
 
       /**
-       * @brief The globalized matrix L.
-       *
-       * L is small and each process owns all of L.
+       * @brief Factorization manager object used to compute the SVD
        */
-      Matrix* d_V;
+      shared_ptr<SVDManager> d_factorizer;
 
       /**
        * @brief Flag to indicate if the basis vectors for the current time
@@ -187,9 +177,37 @@ class StaticSVD : public SVD
       int d_num_procs;
 
       /**
+       * @brief The starting row (0-based) of the matrix that I own.
+       */
+      int d_istart;
+
+      /**
+       * @brief The total dimension of the system (row dimension)
+       */
+      int d_total_dim;
+
+      /**
+       * @brief The number of processor rows and processor columns in the grid.
+       */
+      int d_nprow;
+      int d_npcol;
+      int d_blocksize;
+
+      /**
+       * @brief Get the system's total row dimension and where my rows sit in
+       * the matrix.
+       */
+      void get_total_dim(int*, int*);
+
+      /**
        * @brief MPI message tag.
        */
       static const int COMMUNICATE_A;
+
+      void delete_samples();
+      void delete_factorizer();
+
+      void broadcast_sample(const double* u_in);
 };
 
 }
