@@ -411,7 +411,7 @@ recursive subroutine transpose_submatrix(dst, dsti, dstj, src, srci, srcj, m, &
     call get_ptr(dstdata, dst)
     call get_ptr(srcdata, src)
 
-    call pdgeadd('T', m, n, 1.0_REAL_KIND, srcdata, srci, srcj, src_desc, &
+    call pdgeadd('T', n, m, 1.0_REAL_KIND, srcdata, srci, srcj, src_desc, &
                & 0.0_REAL_KIND, dstdata, dsti, dstj, dst_desc)
 end subroutine
 
