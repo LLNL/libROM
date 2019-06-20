@@ -38,6 +38,11 @@ class StaticSVDBasisGenerator : public SVDBasisGenerator
        *                            containing the basis vectors.  Each process
        *                            will append its process ID to this base
        *                            name.
+       * @param[in] max_basis_dimension (typemax(int)) The maximum number of
+       *                                vectors returned in the basis.
+       * @param[in] sigma_tolerance (0) The minimum singular value allowed;
+       *                            basis vectors with an associated singular
+       *                            value less than this tolerance are dropped.
        * @param[in] debug_algorithm If true results of static svd algorithm
        *                            will be printed to facilitate debugging.
        * @param[in] file_format The format of the file containing the basis
@@ -47,6 +52,8 @@ class StaticSVDBasisGenerator : public SVDBasisGenerator
          int dim,
          int samples_per_time_interval,
          const std::string& basis_file_name,
+         int max_basis_dimension = std::numeric_limits<int>::max(),
+         double sigma_tolerance = 0,
          bool debug_algorithm = false,
          Database::formats file_format = Database::HDF5);
 

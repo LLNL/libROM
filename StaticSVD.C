@@ -20,18 +20,22 @@
 
 namespace CAROM {
 
-const int StaticSVD::COMMUNICATE_A = 999;
-
 StaticSVD::StaticSVD(
    int dim,
    int samples_per_time_interval,
+   int max_basis_dimension,
+   double sigma_tolerance,
    bool debug_algorithm) :
    SVD(dim, samples_per_time_interval, debug_algorithm),
    d_samples(new SLPK_Matrix), d_factorizer(new SVDManager),
-   d_this_interval_basis_current(false)
+   d_this_interval_basis_current(false),
+   d_max_basis_dimension(max_basis_dimension),
+   d_sigma_tol(sigma_tolerance)
 {
    CAROM_ASSERT(dim > 0);
    CAROM_ASSERT(samples_per_time_interval > 0);
+   CAROM_ASSERT(max_basis_dimension > 0);
+   CAROM_ASSERT(sigma_tolerance >= 0);
 
    // Get the rank of this process, and the number of processors.
    int mpi_init;
@@ -220,29 +224,42 @@ StaticSVD::computeSVD()
    d_factorizer->dov = 1;
    factorize(d_factorizer.get());
 
+   // Compute how many basis vectors we will actually return.
+   int sigma_cutoff = 0, hard_cutoff = d_num_samples;
+   if (d_sigma_tol == 0)
+      sigma_cutoff = std::numeric_limits<int>::max();
+   else for (int i = 0; i < d_num_samples; ++i)
+      if (d_factorizer->S[i] > d_sigma_tol)
+         sigma_cutoff += 1;
+      else
+         break;
+   if (d_max_basis_dimension < hard_cutoff)
+      hard_cutoff = d_max_basis_dimension;
+   int ncolumns = hard_cutoff < sigma_cutoff ? hard_cutoff : sigma_cutoff;
+   CAROM_ASSERT(ncolumns >= 0);
+
    // Allocate the appropriate matrices and gather their elements.
-   d_basis = new Matrix(d_dim, d_num_samples, true);
-   d_S = new Matrix(d_num_samples, d_num_samples, false);
+   d_basis = new Matrix(d_dim, ncolumns, true);
+   d_S = new Matrix(ncolumns, ncolumns, false);
    {
-      CAROM_ASSERT(d_num_samples >= 0);
-      unsigned nsamples = static_cast<unsigned>(d_num_samples);
-      memset(&d_S->item(0, 0), 0, nsamples*nsamples*sizeof(double));
+      CAROM_ASSERT(ncolumns >= 0);
+      unsigned nc = static_cast<unsigned>(ncolumns);
+      memset(&d_S->item(0, 0), 0, nc*nc*sizeof(double));
    }
-   d_basis_right = new Matrix(d_num_samples, d_num_samples, false);
+   
+   d_basis_right = new Matrix(ncolumns, d_num_samples, false);
    for (int rank = 0; rank < d_num_procs; ++rank) {
       // gather_transposed_block does the same as gather_block, but transposes
       // it; here, it is used to go from column-major to row-major order.
       gather_transposed_block(&d_basis->item(0, 0), d_factorizer->U,
                               d_istarts[static_cast<unsigned>(rank)]+1,
                               1, d_dims[static_cast<unsigned>(rank)],
-                              d_num_samples, rank);
-      MPI_Barrier(MPI_COMM_WORLD);
+                              ncolumns, rank);
       // V is computed in the transposed order so no reordering necessary.
       gather_block(&d_basis_right->item(0, 0), d_factorizer->V, 1, 1,
-                   d_num_samples, d_num_samples, rank);
-      MPI_Barrier(MPI_COMM_WORLD);
+                   ncolumns, d_num_samples, rank);
    }
-   for (int i = 0; i < d_num_samples; ++i)
+   for (int i = 0; i < ncolumns; ++i)
       d_S->item(i, i) = d_factorizer->S[static_cast<unsigned>(i)];
    d_this_interval_basis_current = true;
 }
