@@ -27,7 +27,7 @@ StaticSVD::StaticSVD(
    int samples_per_time_interval,
    bool debug_algorithm) :
    SVD(dim, samples_per_time_interval, debug_algorithm),
-   d_samples(), d_factorizer(),
+   d_samples(new SLPK_Matrix), d_factorizer(new SVDManager),
    d_this_interval_basis_current(false)
 {
    CAROM_ASSERT(dim > 0);
@@ -42,7 +42,7 @@ StaticSVD::StaticSVD(
    MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
    MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
    
-   get_total_dim(&d_total_dim, &d_istart);
+   get_global_info();
    /* TODO: Try doing this more intelligently and see if it makes a difference */
    d_nprow = d_num_procs;
    d_npcol = 1;
@@ -50,16 +50,9 @@ StaticSVD::StaticSVD(
    if (d_total_dim % d_nprow != 0)
       d_blocksize += 1;
 
-   d_samples.reset(new SLPK_Matrix);
-   initialize_matrix(d_samples.get(),
-                     d_total_dim,
-                     d_samples_per_time_interval,
-                     d_nprow,
-                     d_npcol,
-                     d_blocksize,
-                     d_blocksize);
-   d_factorizer.reset(new SVDManager);
-   svd_init(d_factorizer.get(), nullptr);
+   initialize_matrix(d_samples.get(), d_total_dim, d_samples_per_time_interval,
+                     d_nprow, d_npcol, d_blocksize, d_blocksize);
+   d_factorizer->A = nullptr;
 }
 
 StaticSVD::~StaticSVD()
@@ -78,9 +71,8 @@ void StaticSVD::delete_samples()
 
 void StaticSVD::delete_factorizer()
 {
-   if (d_factorizer) {
-      if (d_factorizer->S != nullptr)
-         free(d_factorizer->S);
+   if (d_factorizer->A != nullptr) {
+      free(d_factorizer->S);
       d_factorizer->S = nullptr;
       if (d_factorizer->U != nullptr)
          free_matrix_data(d_factorizer->U);
@@ -101,6 +93,7 @@ StaticSVD::takeSample(
 {
    CAROM_ASSERT(u_in != 0);
    CAROM_ASSERT(time >= 0.0);
+   CAROM_NULL_USE(add_without_increase);
 
    // Check the u_in is not non-zero.
    Vector u_vec(u_in, d_dim, true);
@@ -126,8 +119,10 @@ StaticSVD::takeSample(
          d_W = nullptr;
       }
       d_num_samples = 0;
-      d_time_interval_start_times.resize(num_time_intervals+1);
-      d_time_interval_start_times[num_time_intervals] = time;
+      d_time_interval_start_times.resize(
+                static_cast<unsigned>(num_time_intervals) + 1);
+      d_time_interval_start_times[static_cast<unsigned>(num_time_intervals)] =
+          time;
       d_basis = nullptr;
       d_basis_right = nullptr;
       // Set the N in the global matrix so BLACS won't complain.
@@ -220,6 +215,7 @@ StaticSVD::computeSVD()
 {
    // This block does the actual ScaLAPACK call to do the factorization.
    d_samples->n = d_num_samples;
+   delete_factorizer();
    svd_init(d_factorizer.get(), d_samples.get());
    d_factorizer->dov = 1;
    factorize(d_factorizer.get());
@@ -227,20 +223,27 @@ StaticSVD::computeSVD()
    // Allocate the appropriate matrices and gather their elements.
    d_basis = new Matrix(d_dim, d_num_samples, true);
    d_S = new Matrix(d_num_samples, d_num_samples, false);
-   memset(&d_S->item(0, 0), 0, d_num_samples*d_num_samples*sizeof(double));
+   {
+      CAROM_ASSERT(d_num_samples >= 0);
+      unsigned nsamples = static_cast<unsigned>(d_num_samples);
+      memset(&d_S->item(0, 0), 0, nsamples*nsamples*sizeof(double));
+   }
    d_basis_right = new Matrix(d_num_samples, d_num_samples, false);
    for (int rank = 0; rank < d_num_procs; ++rank) {
       // gather_transposed_block does the same as gather_block, but transposes
       // it; here, it is used to go from column-major to row-major order.
-      gather_transposed_block(&d_basis->item(0, 0), d_factorizer->U, d_istart+1,
-                              1, d_dim, d_num_samples, rank);
+      gather_transposed_block(&d_basis->item(0, 0), d_factorizer->U,
+                              d_istarts[static_cast<unsigned>(rank)]+1,
+                              1, d_dims[static_cast<unsigned>(rank)],
+                              d_num_samples, rank);
+      MPI_Barrier(MPI_COMM_WORLD);
       // V is computed in the transposed order so no reordering necessary.
       gather_block(&d_basis_right->item(0, 0), d_factorizer->V, 1, 1,
                    d_num_samples, d_num_samples, rank);
+      MPI_Barrier(MPI_COMM_WORLD);
    }
    for (int i = 0; i < d_num_samples; ++i)
-      d_S->item(i, i) = d_factorizer->S[i];
-   delete_factorizer();
+      d_S->item(i, i) = d_factorizer->S[static_cast<unsigned>(i)];
    d_this_interval_basis_current = true;
 }
 
@@ -248,33 +251,24 @@ void
 StaticSVD::broadcast_sample(const double* u_in)
 {
    for (int rank = 0; rank < d_num_procs; ++rank) {
-      scatter_block(d_samples.get(),
-                    d_istart+1,
-                    d_num_samples+1,
-                    u_in,
-                    d_dim,
-                    1,
-                    rank);
+      scatter_block(d_samples.get(), d_istarts[static_cast<unsigned>(rank)]+1,
+                    d_num_samples+1, u_in, d_dims[static_cast<unsigned>(rank)],
+                    1, rank);
    }
 }
 
 void
-StaticSVD::get_total_dim(int* total_dim, int* istart)
+StaticSVD::get_global_info()
 {
-   std::vector<int> dims;
-   dims.resize(d_num_procs);
-   if (d_num_procs > 1)
-      MPI_Allgather(&d_dim, 1, MPI_INT, dims.data(), 1, MPI_INT,
-                    MPI_COMM_WORLD);
-   else
-      dims[0] = d_dim;
+   d_dims.resize(static_cast<unsigned>(d_num_procs));
+   MPI_Allgather(&d_dim, 1, MPI_INT, d_dims.data(), 1, MPI_INT, MPI_COMM_WORLD);
+   d_total_dim = 0;
+   d_istarts = std::vector<int>(static_cast<unsigned>(d_num_procs), 0);
    
-   *total_dim = 0;
-   *istart = 0;
-   for (int i = 0; i < d_num_procs; ++i) {
-      *total_dim += dims[i];
-      if (i < d_rank)
-         *istart += dims[i];
+   for (unsigned i = 0; i < static_cast<unsigned>(d_num_procs); ++i) {
+      d_total_dim += d_dims[i];
+      if (i > 0)
+         d_istarts[i] = d_istarts[i-1] + d_dims[i-1];
    }
 }
 

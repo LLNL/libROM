@@ -338,7 +338,8 @@ subroutine maybe_descinit(desc, A)
         desc(1) = 1
         desc(2) = -1
     else
-        call descinit(desc, A%m, A%n, A%mb, A%nb, 0, 0, A%ctxt, A%mm, info)
+        call descinit(desc, A%m, A%n, A%mb, A%nb, 0, 0, A%ctxt, &
+                    & max(1, A%mm), info)
     endif
 end subroutine
 

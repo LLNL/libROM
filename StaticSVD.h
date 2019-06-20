@@ -26,6 +26,8 @@ using std::shared_ptr;
 using boost::shared_ptr;
 #endif
 
+#include <vector>
+
 namespace CAROM {
 
 /**
@@ -177,9 +179,17 @@ class StaticSVD : public SVD
       int d_num_procs;
 
       /**
-       * @brief The starting row (0-based) of the matrix that I own.
+       * @brief The starting row (0-based) of the matrix that each process owns.
+       * Stored to avoid an MPI operation to get this operation every time we
+       * scatter a sample.
        */
-      int d_istart;
+      std::vector<int> d_istarts;
+
+      /**
+       * @brief The number of rows that each process owns. Stored to avoid
+       * an MPI operation to get this operation every time we scatter a sample.
+       */
+      std::vector<int> d_dims;
 
       /**
        * @brief The total dimension of the system (row dimension)
@@ -191,13 +201,17 @@ class StaticSVD : public SVD
        */
       int d_nprow;
       int d_npcol;
+
+      /**
+       * @brief The block size used internally for computing the SVD.
+       */
       int d_blocksize;
 
       /**
        * @brief Get the system's total row dimension and where my rows sit in
        * the matrix.
        */
-      void get_total_dim(int*, int*);
+      void get_global_info();
 
       /**
        * @brief MPI message tag.
