@@ -41,20 +41,36 @@ class StaticSVD : public SVD
       /**
        * @brief Constructor.
        *
+       * If both max_basis_dimension and sigma_tolerance would result in
+       * truncating the basis, the dimension of the returned basis will be the
+       * *minimum* of the number of vectors that is computed from each.
+       * 
        * @pre dim > 0
        * @pre sample_per_time_interval > 0
        *
        * @param[in] dim The dimension of the system distributed to this
        *                processor.
-       * @param[in] samples_per_time_interval The maximium number of samples
+       * @param[in] samples_per_time_interval The maximum number of samples
        *                                      collected in a time interval.
-       * @param[in] debug_algorithm If true results of the algorithm will be
-       *                            printed to facilitate debugging.
+       * @param[in] max_basis_dimension The maximum dimension of the basis
+       *                                returned by getSpatialBasis or
+       *                                getTemporalBasis. Default: typemax(int).
+       * @param[in] sigma_tolerance This tolerance is based on the ratio of
+       *                            singular values to the largest singular
+       *                            value. If sigma[i] / sigma[0] < sigma_tolerance,
+       *                            the associated vector is dropped from the
+       *                            basis.
+       * @param[in] debug_algorithm (true) Specify whether or not to print
+       *                            information about the algorithm. No effect
+       *                            for this subclass.
        */
       StaticSVD(
          int dim,
          int samples_per_time_interval,
-         bool debug_algorithm = false);
+         int max_basis_dimension = std::numeric_limits<int>::max(),
+         double sigma_tolerance = 0,
+         bool debug_algorithm = false
+         );
 
       /**
        * Destructor.
@@ -214,9 +230,14 @@ class StaticSVD : public SVD
       void get_global_info();
 
       /**
-       * @brief MPI message tag.
+       * @brief The max number of basis vectors to return.
        */
-      static const int COMMUNICATE_A;
+      int d_max_basis_dimension;
+
+      /**
+       * @brief The tolerance for singular values below which to drop vectors
+       */
+      double d_sigma_tol;
 
       void delete_samples();
       void delete_factorizer();
