@@ -19,9 +19,11 @@ namespace CAROM {
 StaticSVDSampler::StaticSVDSampler(
    int dim,
    int samples_per_time_interval,
-   bool debug_algorithm)
+   bool debug_algorithm,
+   bool updateRightSV)
 {
    d_svd.reset(new StaticSVD(dim, samples_per_time_interval, debug_algorithm));
+   d_updateRightSV = updateRightSV;
 }
 
 StaticSVDSampler::~StaticSVDSampler()

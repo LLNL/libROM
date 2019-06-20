@@ -40,11 +40,13 @@ class StaticSVDSampler : public SVDSampler
        *                                      in each time interval.
        * @param[in] debug_algorithm If true results of static svd algorithm
        *                            will be printed to facilitate debugging.
+       * @param[in] updateRightSV If true write right singular vectors
        */
       StaticSVDSampler(
          int dim,
          int samples_per_time_interval,
-         bool debug_algorithm = false);
+         bool debug_algorithm = false,
+         bool updateRightSV = false);
 
       /**
        * @brief Destructor.
