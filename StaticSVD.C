@@ -262,6 +262,25 @@ StaticSVD::computeSVD()
    for (int i = 0; i < ncolumns; ++i)
       d_S->item(i, i) = d_factorizer->S[static_cast<unsigned>(i)];
    d_this_interval_basis_current = true;
+
+   if (d_debug_algorithm) {
+      if (d_rank == 0)
+         printf("Distribution of sampler's A and U:\n");
+      print_debug_info(d_samples.get());
+      MPI_Barrier(MPI_COMM_WORLD);
+
+      if (d_rank == 0)
+         printf("Distribution of sampler's V:\n");
+      print_debug_info(d_factorizer->V);
+      MPI_Barrier(MPI_COMM_WORLD);
+
+      if (d_rank == 0) {
+         printf("Computed singular values: ");
+         for (int i = 0; i < ncolumns; ++i)
+            printf("%8.4E  ", d_factorizer->S[i]);
+         printf("\n");
+      }
+   }
 }
 
 void
