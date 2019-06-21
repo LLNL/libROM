@@ -17,6 +17,7 @@
 #include "SVD.h"
 #include "scalapack_wrapper.h"
 
+#include <limits>
 #include <memory>
 #include <vector>
 

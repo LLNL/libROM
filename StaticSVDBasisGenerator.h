@@ -16,6 +16,8 @@
 
 #include "SVDBasisGenerator.h"
 
+#include <limits>
+
 namespace CAROM {
 
 /**
