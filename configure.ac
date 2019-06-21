@@ -346,6 +346,32 @@ if test "${with_mpi-include+set}" = set || test "${with_mpi-lib-dirs+set}" = set
 fi
 
 dnl
+dnl Add a path to search for 'mpi.mod' when building Fortran code.
+dnl
+AC_FC_MODULE_FLAG
+dnl
+dnl The prefix stored in FC_MODINC is the compiler flag to add a module search
+dnl directory
+dnl
+
+AC_ARG_WITH(mpi-mod-dir,
+      AS_HELP_STRING([--with-mpi-mod-dir=PATH], [Set an include path for the
+      Fortran compiler to find mpi.mod])
+)
+
+AS_IF([test "$with_mpi_mod_dir+set"=set], 
+   [
+      for dir in $MPILIBDIRS; do
+         with_mpi_mod_dir="$FC_MODINC${dir:2} $with_mpi_mod_dir"
+      done
+   ],
+   [
+      with_mpi_mod_dir="$FC_MODINC$with_mpi_mod_dir"
+   ])
+FCFLAGS="-O2 ${FC_MODINC}. $with_mpi_mod_dir"
+echo "FCFLAGS = $FCFLAGS"
+
+dnl
 dnl Support linking with Z lib if HDF requires it
 dnl
 CHECK_ZLIB()
@@ -377,6 +403,22 @@ else
 fi
 CASC_AC_LOG_VAR(
 [hdf5_INCLUDES INC_PATH hdf5_LIB_PATH hdf5_LIB_NAME LIB_PATH LIB_NAME])
+
+dnl
+dnl Set library variables to link with ScaLAPACK
+dnl
+AC_ARG_WITH(scalapack-lib-path,
+   AS_HELP_STRING([--with-scalapack-lib-path=PATH],
+       [Path to directories containing ScaLAPACK libraries, if needed]),
+   [LIB_PATH="$with_scalapack_lib_path $LIB_PATH"])
+
+AC_ARG_WITH(scalapack-libs,
+   AS_HELP_STRING([--with-scalapack-libs],
+       [String giving a list of libraries to link for ScaLAPACK support.
+        E.g.: "-lmkl_scalapack_lp64 -lmkl_blacs_intelmpi_lp64". Defaults
+        to "-lscalapack"]),
+   [LIB_NAME="$with_scalapack_libs $LIB_NAME"],
+   [LIB_NAME="-lscalapack $LIB_NAME"])
 
 # Defines elemental_PREFIX elemental_INCLUDES and elemental_LIBS if
 # with-elemental is specified.
