@@ -9170,15 +9170,15 @@ if test "${with_mpi_mod_dir+set}" = set; then :
 fi
 
 
-if test "$with_mpi_mod_dir+set"=set; then :
+if test "${with_mpi_mod_dir+set}" = set; then :
 
-      for dir in $MPILIBDIRS; do
-         with_mpi_mod_dir="$FC_MODINC${dir:2} $with_mpi_mod_dir"
-      done
+      with_mpi_mod_dir="${FC_MODINC}$with_mpi_mod_dir"
 
 else
 
-      with_mpi_mod_dir="$FC_MODINC$with_mpi_mod_dir"
+      for dir in $MPILIBDIRS; do
+         with_mpi_mod_dir="${FC_MODINC}${dir:2} $with_mpi_mod_dir"
+      done
 
 fi
 FCFLAGS="-O2 ${FC_MODINC}. $with_mpi_mod_dir"

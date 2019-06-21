@@ -359,14 +359,14 @@ AC_ARG_WITH(mpi-mod-dir,
       Fortran compiler to find mpi.mod])
 )
 
-AS_IF([test "$with_mpi_mod_dir+set"=set], 
+AS_IF([test "${with_mpi_mod_dir+set}" = set], 
+   [
+      with_mpi_mod_dir="${FC_MODINC}$with_mpi_mod_dir"
+   ], 
    [
       for dir in $MPILIBDIRS; do
-         with_mpi_mod_dir="$FC_MODINC${dir:2} $with_mpi_mod_dir"
+         with_mpi_mod_dir="${FC_MODINC}${dir:2} $with_mpi_mod_dir"
       done
-   ],
-   [
-      with_mpi_mod_dir="$FC_MODINC$with_mpi_mod_dir"
    ])
 FCFLAGS="-O2 ${FC_MODINC}. $with_mpi_mod_dir"
 echo "FCFLAGS = $FCFLAGS"
