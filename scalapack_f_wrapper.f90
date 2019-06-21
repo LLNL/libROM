@@ -400,10 +400,16 @@ recursive subroutine transpose_submatrix(dst, dsti, dstj, src, srci, srcj, m, &
     type(SLPK_Matrix) :: tmp
 
     if (dst%ctxt .ne. src%ctxt) then
-        call make_similar_matrix(tmp, n, m, src%ctxt, src%nb, src%mb)
-        call transpose_submatrix(tmp, 1, 1, src, srci, srcj, m, n)
-        call copy_matrix(dst, dsti, dstj, tmp, 1, 1, n, m)
+        call make_similar_matrix(tmp, m, n, dst%ctxt, src%mb, src%nb)
+        call copy_matrix(tmp, 1, 1, src, srci, srcj, m, n)
+        if (dst%ctxt .ne. -1) then
+            call transpose_submatrix(dst, dsti, dstj, tmp, 1, 1, m, n)
+        endif
         call free_matrix_data(tmp)
+        return
+    endif
+
+    if (src%ctxt .eq. -1) then
         return
     endif
 
