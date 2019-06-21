@@ -17,15 +17,7 @@
 #include "SVD.h"
 #include "scalapack_wrapper.h"
 
-/* Use C++11 built-in shared pointers if available; else fallback to Boost. */
-#if __cplusplus >= 201103L
 #include <memory>
-using std::shared_ptr;
-#else
-#include <boost/shared_ptr.hpp>
-using boost::shared_ptr;
-#endif
-
 #include <vector>
 
 namespace CAROM {
@@ -171,12 +163,12 @@ class StaticSVD : public SVD
       /**
        * @brief Current samples of the system.
        */
-      shared_ptr<SLPK_Matrix> d_samples;
+      std::unique_ptr<SLPK_Matrix> d_samples;
 
       /**
        * @brief Factorization manager object used to compute the SVD
        */
-      shared_ptr<SVDManager> d_factorizer;
+      std::unique_ptr<SVDManager> d_factorizer;
 
       /**
        * @brief Flag to indicate if the basis vectors for the current time
