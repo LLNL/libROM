@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <cstring> // for memcpy
 #include <random>
 
 #include "mpi.h"
