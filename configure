@@ -9775,7 +9775,7 @@ done
 
 # Check whether --with-scalapack-lib-path was given.
 if test "${with_scalapack_lib_path+set}" = set; then :
-  withval=$with_scalapack_lib_path; LIB_PATH="$with_scalapack_lib_path $LIB_PATH"
+  withval=$with_scalapack_lib_path; LIB_PATH="-L$with_scalapack_lib_path $LIB_PATH"
 fi
 
 

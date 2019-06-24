@@ -410,7 +410,7 @@ dnl
 AC_ARG_WITH(scalapack-lib-path,
    AS_HELP_STRING([--with-scalapack-lib-path=PATH],
        [Path to directories containing ScaLAPACK libraries, if needed]),
-   [LIB_PATH="$with_scalapack_lib_path $LIB_PATH"])
+   [LIB_PATH="-L$with_scalapack_lib_path $LIB_PATH"])
 
 AC_ARG_WITH(scalapack-libs,
    AS_HELP_STRING([--with-scalapack-libs],
