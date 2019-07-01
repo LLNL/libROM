@@ -40,8 +40,7 @@ StaticSVD::StaticSVD(
    // Get the rank of this process, and the number of processors.
    int mpi_init;
    MPI_Initialized(&mpi_init);
-   if (mpi_init == 0)
-      MPI_Init(nullptr, nullptr);
+   if (mpi_init == 0) { MPI_Init(nullptr, nullptr); }
    
    MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
    MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
@@ -51,8 +50,7 @@ StaticSVD::StaticSVD(
    d_nprow = d_num_procs;
    d_npcol = 1;
    d_blocksize = d_total_dim / d_nprow;
-   if (d_total_dim % d_nprow != 0)
-      d_blocksize += 1;
+   if (d_total_dim % d_nprow != 0) { d_blocksize += 1; }
 
    initialize_matrix(d_samples.get(), d_total_dim, d_samples_per_time_interval,
                      d_nprow, d_npcol, d_blocksize, d_blocksize);
@@ -78,12 +76,10 @@ void StaticSVD::delete_factorizer()
    if (d_factorizer->A != nullptr) {
       free(d_factorizer->S);
       d_factorizer->S = nullptr;
-      if (d_factorizer->U != nullptr)
-         free_matrix_data(d_factorizer->U);
+      if (d_factorizer->U != nullptr) { free_matrix_data(d_factorizer->U); }
       free(d_factorizer->U);
       d_factorizer->U = nullptr;
-      if (d_factorizer->V != nullptr)
-         free_matrix_data(d_factorizer->V);
+      if (d_factorizer->V != nullptr) { free_matrix_data(d_factorizer->V); }
       free(d_factorizer->V);
       d_factorizer->V = nullptr;
    }
@@ -226,15 +222,20 @@ StaticSVD::computeSVD()
 
    // Compute how many basis vectors we will actually return.
    int sigma_cutoff = 0, hard_cutoff = d_num_samples;
-   if (d_sigma_tol == 0)
+   if (d_sigma_tol == 0) { 
       sigma_cutoff = std::numeric_limits<int>::max();
-   else for (int i = 0; i < d_num_samples; ++i)
-      if (d_factorizer->S[i] / d_factorizer->S[0] > d_sigma_tol)
-         sigma_cutoff += 1;
-      else
-         break;
-   if (d_max_basis_dimension < hard_cutoff)
+   } else {
+      for (int i = 0; i < d_num_samples; ++i) {
+         if (d_factorizer->S[i] / d_factorizer->S[0] > d_sigma_tol) {
+            sigma_cutoff += 1;
+         } else {
+            break;
+         }
+      }
+   }
+   if (d_max_basis_dimension < hard_cutoff) {
       hard_cutoff = d_max_basis_dimension;
+   }
    int ncolumns = hard_cutoff < sigma_cutoff ? hard_cutoff : sigma_cutoff;
    CAROM_ASSERT(ncolumns >= 0);
 
@@ -264,13 +265,15 @@ StaticSVD::computeSVD()
    d_this_interval_basis_current = true;
 
    if (d_debug_algorithm) {
-      if (d_rank == 0)
+      if (d_rank == 0) {
          printf("Distribution of sampler's A and U:\n");
+      }
       print_debug_info(d_samples.get());
       MPI_Barrier(MPI_COMM_WORLD);
 
-      if (d_rank == 0)
+      if (d_rank == 0) {
          printf("Distribution of sampler's V:\n");
+      }
       print_debug_info(d_factorizer->V);
       MPI_Barrier(MPI_COMM_WORLD);
 
@@ -303,8 +306,9 @@ StaticSVD::get_global_info()
    
    for (unsigned i = 0; i < static_cast<unsigned>(d_num_procs); ++i) {
       d_total_dim += d_dims[i];
-      if (i > 0)
+      if (i > 0) {
          d_istarts[i] = d_istarts[i-1] + d_dims[i-1];
+      }
    }
 }
 
