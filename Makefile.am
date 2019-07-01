@@ -36,7 +36,7 @@ librom_a_SOURCES += DEIM.C
 librom_a_SOURCES += QDEIM.C
 librom_a_SOURCES += GNAT.C
 librom_a_SOURCES += scalapack_c_wrapper.c
-librom_a_SOURCES += scalapack_f_wrapper.f90
+librom_a_SOURCES += scalapack_f_wrapper.f03
 
 include_HEADERS =
 include_HEADERS += BasisReader.h

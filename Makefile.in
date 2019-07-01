@@ -505,7 +505,7 @@ librom_a_SOURCES = Matrix.C Vector.C BasisReader.C BasisWriter.C \
 	IncrementalSVDBasisGenerator.C IncrementalSVDSampler.C \
 	StaticSVD.C StaticSVDBasisGenerator.C StaticSVDSampler.C \
 	Database.C HDFDatabase.C Utilities.C ParallelBuffer.C DEIM.C \
-	QDEIM.C GNAT.C scalapack_c_wrapper.c scalapack_f_wrapper.f90
+	QDEIM.C GNAT.C scalapack_c_wrapper.c scalapack_f_wrapper.f03
 include_HEADERS = BasisReader.h BasisWriter.h CAROM_config.h DEIM.h \
 	Database.h HDFDatabase.h IncrementalSVD.h \
 	IncrementalSVDBasisGenerator.h IncrementalSVDSampler.h \
@@ -572,7 +572,7 @@ all: CAROM_config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
-.SUFFIXES: .C .c .f90 .o .obj
+.SUFFIXES: .C .c .f03 .o .obj
 am--refresh: Makefile
 	@:
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
@@ -795,10 +795,10 @@ am--depfiles: $(am__depfiles_remade)
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
-.f90.o:
+.f03.o:
 	$(AM_V_FC)$(FCCOMPILE) -c -o $@ $<
 
-.f90.obj:
+.f03.obj:
 	$(AM_V_FC)$(FCCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 install-includeHEADERS: $(include_HEADERS)
 	@$(NORMAL_INSTALL)
