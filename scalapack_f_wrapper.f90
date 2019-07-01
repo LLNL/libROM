@@ -27,6 +27,10 @@ module scalapack_wrapper
     ! processes.
     integer :: GLOBAL_CTXT = -1
 
+    ! This is used as a dummy target for pointers that don't need to point
+    ! at anything to avoid null pointer issues.
+    real(REAL_KIND), target :: dummy_target(1, 1)
+
     ! This interface block contains the declarations for all ScaLAPACK routines
     ! used. I have added intent specifications on the arguments as appropriate,
     ! since this doesn't change the calling convention and conveys extra
@@ -348,7 +352,7 @@ subroutine get_ptr(dst, A)
     real(REAL_KIND), pointer :: dst(:, :)
     type(SLPK_Matrix), intent(in) :: A
 
-    dst => null()
+    dst => dummy_target
     if (A%ctxt .ne. -1) then
         call c_f_pointer(A%mdata, dst, [A%mm, A%mn])
     endif
