@@ -1020,6 +1020,22 @@ class Matrix
      * @post diagonalMatrix.numRows() == v.dim()
      */
     Matrix IdentityMatrixFactory(const Vector &v);
+
+    /**
+     * @brief Factory function to make a Householder reflector matrix that
+     * reflects over a hyperplane with normal equal to the Vector argument.
+     *
+     * @param[in] v Vector definining the normal of the reflection hyperplane.
+     *
+     * @pre v.norm() != 0.0
+     *
+     * @return result The Householder vector described above, equal to
+     * (IdentityMatrix - 2 * outerProductMatrix(v, v) / v.inner_product(v)).
+     *
+     * @post result.numRows() == v.dim()
+     * @post result.distributed() == v.distributed()
+     */
+    Matrix MakeHouseholderMatrix(const Vector &v);
 }
 
 #endif
