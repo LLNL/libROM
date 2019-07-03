@@ -1436,4 +1436,10 @@ Matrix DiagonalMatrixFactory(const Vector &v)
     return diagonalMatrix;
 }
 
+Matrix IdentityMatrixFactory(const Vector &v)
+{
+    Vector temporary(v); temporary = 1.0;
+    return DiagonalMatrixFactory(temporary);
+}
+
 } // end namespace CAROM
