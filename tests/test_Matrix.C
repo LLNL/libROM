@@ -1321,6 +1321,33 @@ TEST(MatrixOuterProduct, Test_outerProduct_serial)
    EXPECT_DOUBLE_EQ(outer_product_wv(2, 1), 10.0);
 }
 
+TEST(DiagonalMatrixFactorySerialTest, Test_123vector)
+{
+    /** Set up a the vector [1, 2, 3]^{T} */
+    CAROM::Vector w(3, false);
+    w(0) = 1.0; w(1) = 2.0; w(2) = 3.0;
+
+    /**
+     *  \diag([1, 2, 3])^{T} = [ 1.0  0.0  0.0 ]
+     *                         [ 0.0  2.0  0.0 ]
+     *                         [ 0.0  0.0  3.0 ]
+     */
+    CAROM::Matrix diagonalMatrix = DiagonalMatrixFactory(w);
+    EXPECT_TRUE(diagonalMatrix.distributed() == w.distributed());
+    EXPECT_TRUE(diagonalMatrix.numRows() == w.dim());
+    EXPECT_TRUE(diagonalMatrix.numColumns() == w.dim());
+    EXPECT_TRUE(diagonalMatrix.numRows() == diagonalMatrix.numColumns());
+    EXPECT_DOUBLE_EQ(diagonalMatrix(0, 0), 1.0);
+    EXPECT_DOUBLE_EQ(diagonalMatrix(0, 1), 0.0);
+    EXPECT_DOUBLE_EQ(diagonalMatrix(0, 2), 0.0);
+    EXPECT_DOUBLE_EQ(diagonalMatrix(1, 0), 0.0);
+    EXPECT_DOUBLE_EQ(diagonalMatrix(1, 1), 2.0);
+    EXPECT_DOUBLE_EQ(diagonalMatrix(1, 2), 0.0);
+    EXPECT_DOUBLE_EQ(diagonalMatrix(2, 0), 0.0);
+    EXPECT_DOUBLE_EQ(diagonalMatrix(2, 1), 0.0);
+    EXPECT_DOUBLE_EQ(diagonalMatrix(2, 2), 3.0);
+}
+
 int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
