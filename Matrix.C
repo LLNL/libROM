@@ -1442,4 +1442,38 @@ Matrix IdentityMatrixFactory(const Vector &v)
     return DiagonalMatrixFactory(temporary);
 }
 
+Matrix MakeHouseholderMatrix(const Vector &v)
+{
+    /**
+     * TODO(oxberry1@llnl.gov, goxberry@gmail.com): Replace some of
+     * these operations with higher-level primitives.
+     */
+    CAROM_ASSERT(v.norm() != 0.0);
+    Matrix result = outerProduct(v, v);
+    const Matrix identityMatrix = IdentityMatrixFactory(v);
+    CAROM_ASSERT(result.numRows() == identityMatrix.numRows());
+    CAROM_ASSERT(result.numColumns() == identityMatrix.numColumns());
+    CAROM_ASSERT(result.distributed() == identityMatrix.distributed());
+
+    /**
+     * Scale the outer product matrix by -2.0 / (pow(v.norm(), 2)),
+     * and add an identity matrix. This operation is tricky if
+     * v.distributed() == true because constructing the identity
+     * matrix is tricky in this case, which is why identity matrix
+     * construction is delegated to its own function.
+     */
+    const double squared_norm_v = v.inner_product(v);
+    const double scale_factor = -2.0 / squared_norm_v;
+    for (int i = 0; i < result.numRows(); i++)
+    {
+        for (int j = 0; j < result.numColumns(); j++)
+        {
+            result(i, j) *= scale_factor;
+            result(i, j) += identityMatrix(i, j);
+        }
+    }
+
+    return result;
+}
+
 } // end namespace CAROM

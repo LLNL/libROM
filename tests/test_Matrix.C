@@ -1370,6 +1370,40 @@ TEST(IdentityMatrixFactorySerialTest, Test_3vector)
     EXPECT_DOUBLE_EQ(identityMatrix(2, 2), 1.0);
 }
 
+TEST(MakeHouseholderMatrixTest, Test_VectorOfThreeOnes)
+{
+    /** Set up the vector [1, 1, 1]^{T} */
+    CAROM::Vector w(3, false); w(0) = w(1) = w(2) = 1.0;
+
+    /**
+     * (IdentityMatrix - 2 * outerProduct(w, w) / (w.norm() * w.norm())) =
+     *
+     * Householder matrix =
+     *
+     * [ 1.0 / 3.0  -2.0 / 3.0  -2.0 / 3.0 ]
+     * [-2.0 / 3.0   1.0 / 3.0  -2.0 / 3.0 ]
+     * [-2.0 / 3.0  -2.0 / 3.0   1.0 / 3.0 ]
+     *
+     */
+    const double one_third = 1.0 / 3.0;
+    const double two_thirds = 2.0 / 3.0;
+    CAROM::Matrix householder = CAROM::MakeHouseholderMatrix(w);
+    EXPECT_FALSE(householder.distributed());
+    EXPECT_EQ(householder.numRows(), 3);
+    EXPECT_EQ(householder.numColumns(), 3);
+
+    EXPECT_DOUBLE_EQ(householder(0, 0), one_third);
+    EXPECT_DOUBLE_EQ(householder(1, 1), one_third);
+    EXPECT_DOUBLE_EQ(householder(2, 2), one_third);
+
+    EXPECT_DOUBLE_EQ(householder(0, 1), -two_thirds);
+    EXPECT_DOUBLE_EQ(householder(0, 2), -two_thirds);
+    EXPECT_DOUBLE_EQ(householder(1, 0), -two_thirds);
+    EXPECT_DOUBLE_EQ(householder(1, 2), -two_thirds);
+    EXPECT_DOUBLE_EQ(householder(2, 0), -two_thirds);
+    EXPECT_DOUBLE_EQ(householder(2, 1), -two_thirds);
+}
+
 int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
