@@ -1005,6 +1005,20 @@ class Matrix
      */
     Matrix DiagonalMatrixFactory(const Vector &v);
 
+    /**
+     * @brief Factory function to make an identity matrix with rows
+     * distributed in the same fashion as its Vector argument. This function
+     * is provided for convenience due to the ubiquity of identity matrices
+     * (and operators) in mathematics.
+     *
+     * @param[in] v Vector of elements that will be on the diagonal of the
+     *              output matrix.
+     * @param[out] diagonalMatrix The diagonal matrix created by this function.
+     *
+     * @post diagonalMatrix.distributed() == v.distributed()
+     * @post diagonalMatrix.numRows() == v.dim()
+     */
+    Matrix IdentityMatrixFactory(const Vector &v);
 
 }
 
