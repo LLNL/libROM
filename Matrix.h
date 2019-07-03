@@ -990,6 +990,22 @@ class Matrix
     // instead of passing by reference.
     Matrix outerProduct(const Vector &v, const Vector &w);
 
+    /**
+     * @brief Factory function to make a diagonal matrix with nonzero
+     * entries as in its Vector argument. The rows of this diagonal
+     * matrix are distributed in the same fashion as its Vector
+     * argument.
+     *
+     * @param[in] v Vector of elements that will be on the diagonal of the
+     *              output matrix.
+     * @param[out] diagonalMatrix The diagonal matrix created by this function.
+     *
+     * @post diagonalMatrix.distributed() == v.distributed()
+     * @post diagonalMatrix.numRows() == v.dim()
+     */
+    Matrix DiagonalMatrixFactory(const Vector &v);
+
+
 }
 
 #endif
