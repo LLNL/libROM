@@ -1036,6 +1036,33 @@ class Matrix
      * @post result.distributed() == v.distributed()
      */
     Matrix MakeHouseholderMatrix(const Vector &v);
+
+    /**
+     * @brief Factory function that computes the normal Vector
+     * required to yield a Householder matrix that reflects the input
+     * Vector to the desiredOutput Vector. Note that because Householder
+     * matrices are unitary, the input and desiredOutput Vector objects
+     * must have the same norm (and belong to the same inner product space,
+     * have the same dimension on each process, and so on).
+     *
+     * @param[in] input Vector to be reflected
+     * @param[in] desiredOutput Vector obtained when applying Householder matrix
+     *                          to input.
+     *
+     * @pre input.distributed() == desiredOutput.distributed()
+     * @pre input.dim() == desiredOutput.dim()
+     * @pre norm of (input - desiredOutput) > 0.0
+     * @pre input.norm() == desiredOutput.norm()
+     *
+     * @return result Vector containing normal of hyperplane
+     *
+     * @post result.norm() == 1.0
+     * @post result.dim() == input.dim() == desiredOutput.dim()
+     * @post result.distributed() == input.distributed()
+     * @post result.distributed() == desiredOutput.distributed()
+     */
+    Vector ComputeHouseholderNormal
+    (const Vector &input, const Vector &desiredOutput);
 }
 
 #endif
