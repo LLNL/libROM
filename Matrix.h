@@ -972,6 +972,7 @@ class Matrix
 };
 
     /**
+
      * @brief Computes the outer product of two Vectors, v and w.
      *
      * @post The number of rows in the returned matrix equals the dimension of v
@@ -989,6 +990,21 @@ class Matrix
     // supposed to be more idiomatic C++11; consider passing by value
     // instead of passing by reference.
     Matrix outerProduct(const Vector &v, const Vector &w);
+
+    /**
+     * @brief Factory function to make a diagonal matrix with nonzero
+     * entries as in its Vector argument. The rows of this diagonal
+     * matrix are distributed in the same fashion as its Vector
+     * argument.
+     *
+     * @param[in] v Vector of elements that will be on the diagonal of the
+     *              output matrix.
+     * @param[out] diagonalMatrix The diagonal matrix created by this function.
+     *
+     * @post diagonalMatrix.distributed() == v.distributed()
+     * @post diagonalMatrix.numRows() == v.dim()
+     */
+    Matrix DiagonalMatrixFactory(const Vector &v);
 
 }
 
