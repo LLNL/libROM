@@ -17,6 +17,8 @@
 #include<gtest/gtest.h>
 #include <mpi.h>
 #include "../Matrix.h"
+#define _USE_MATH_DEFINES
+#include <cmath>
 
 /**
  * Simple smoke test to make sure Google Test is properly linked
@@ -1402,6 +1404,58 @@ TEST(MakeHouseholderMatrixTest, Test_VectorOfThreeOnes)
     EXPECT_DOUBLE_EQ(householder(1, 2), -two_thirds);
     EXPECT_DOUBLE_EQ(householder(2, 0), -two_thirds);
     EXPECT_DOUBLE_EQ(householder(2, 1), -two_thirds);
+}
+
+TEST(ComputeHouseholderNormalSerialTest, Test_ThreeTwoTwo_To_OneZeroZero)
+{
+/**
+ * Set up the input vector [ -(sqrt(3)/2) - (3*sqrt(2) - 2*sqrt(3)) / 6,
+ *                            (3\sqrt(2) - 2\sqrt(3)) / 12,
+ *                            (3\sqrt(2) - 2\sqrt(3)) / 12]
+ * which has norm 1.
+ *
+ * Set up the desired output vector, which adds (1/sqrt(3)) to each
+ * component.
+ *
+ * The required normal vector should be (1/sqrt(3)) * [1, 1, 1]^{T}.
+ */
+    CAROM::Vector input(3, false), desiredOutput(3, false);
+    const double sqrt3 = std::sqrt(3);
+    const double one_over_sqrt3 = 1.0 / sqrt3;
+    const double twoRootThree = 2.0 * sqrt3;
+    const double sqrt2 = std::sqrt(2);
+    const double threeRootTwo = 3.0 * sqrt2;
+    const double two = 2.0;
+    const double six = 6.0;
+    const double twelve = 12.0;
+
+    input(0) = -sqrt3 / two - (threeRootTwo - twoRootThree) / six;
+    input(1) = (threeRootTwo - twoRootThree) / twelve;
+    input(2) = input(1);
+
+    desiredOutput(0) = input(0) + one_over_sqrt3;
+    desiredOutput(1) = input(1) + one_over_sqrt3;
+    desiredOutput(2) = input(2) + one_over_sqrt3;
+    desiredOutput.normalize();
+
+    const double tolerance = 1e-8;
+    EXPECT_NEAR(input.norm(), 1.0, tolerance);
+    EXPECT_NEAR(desiredOutput.norm(), 1.0, tolerance);
+
+    CAROM::Vector normal = ComputeHouseholderNormal(input, desiredOutput);
+    EXPECT_FALSE(normal.distributed());
+    EXPECT_EQ(normal.dim(), 3);
+    EXPECT_NEAR(normal(0), one_over_sqrt3, tolerance);
+    EXPECT_NEAR(normal(1), one_over_sqrt3, tolerance);
+    EXPECT_NEAR(normal(2), one_over_sqrt3, tolerance);
+    EXPECT_NEAR(normal.norm(), 1.0, tolerance);
+
+    CAROM::Vector output(input);
+    CAROM::Matrix householder = MakeHouseholderMatrix(normal);
+    householder.mult(input, output);
+    EXPECT_NEAR(output(0), desiredOutput(0), tolerance);
+    EXPECT_NEAR(output(1), desiredOutput(1), tolerance);
+    EXPECT_NEAR(output(2), desiredOutput(2), tolerance);
 }
 
 int main(int argc, char* argv[])

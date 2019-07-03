@@ -1476,4 +1476,21 @@ Matrix MakeHouseholderMatrix(const Vector &v)
     return result;
 }
 
+Vector ComputeHouseholderNormal
+(const Vector &input, const Vector &desiredOutput)
+{
+    CAROM_ASSERT(input.distributed() == desiredOutput.distributed());
+    CAROM_ASSERT(input.dim() == desiredOutput.dim());
+    CAROM_ASSERT(input.norm() == desiredOutput.norm());
+
+    Vector result(desiredOutput);
+    for (int i = 0; i < input.dim(); i++)
+    {
+        result(i) -= input(i);
+    }
+    CAROM_ASSERT(result.norm() > 0.0);
+    result.normalize();
+    return result;
+}
+
 } // end namespace CAROM
