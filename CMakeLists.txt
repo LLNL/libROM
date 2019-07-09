@@ -11,11 +11,11 @@ project(libROM
   HOMEPAGE_URL "https://github.com/LLNL/libROM"
   LANGUAGES C CXX)
 
-find_package(HDF5 1.8.0
-  REQUIRED)
-
-find_package(LAPACK 3.4.0
-  REQUIRED)
+# List minimum version requirements for dependencies where possible to make
+# packaging easier later.
+find_package(HDF5 1.8.0 REQUIRED)
+find_package(BLAS 3.4.0 REQUIRED)
+find_package(LAPACK 3.4.0 REQUIRED)
 
 # In FindMPI.cmake, "CXX" refers to "the MPI C API [being] usable from C++"
 find_package(MPI 1.2 REQUIRED)
