@@ -18,6 +18,15 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Use automatically detected Fortran name-mangling scheme */
+#define dgesdd CAROM_FC_GLOBAL(dgesdd, DGESDD)
+
+extern "C" {
+void dgesdd(char*, int*, int*, double*, int*,
+             double*, double*, int*, double*, int*,
+             double*, int*, int*, int*);
+}
+
 namespace CAROM {
 
 StaticSVD::StaticSVD(
@@ -41,10 +50,10 @@ StaticSVD::StaticSVD(
    int mpi_init;
    MPI_Initialized(&mpi_init);
    if (mpi_init == 0) { MPI_Init(nullptr, nullptr); }
-   
+
    MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
    MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
-   
+
    get_global_info();
    /* TODO: Try doing this more intelligently and see if it makes a difference */
    d_nprow = d_num_procs;
@@ -222,7 +231,7 @@ StaticSVD::computeSVD()
 
    // Compute how many basis vectors we will actually return.
    int sigma_cutoff = 0, hard_cutoff = d_num_samples;
-   if (d_sigma_tol == 0) { 
+   if (d_sigma_tol == 0) {
       sigma_cutoff = std::numeric_limits<int>::max();
    } else {
       for (int i = 0; i < d_num_samples; ++i) {
@@ -247,7 +256,7 @@ StaticSVD::computeSVD()
       unsigned nc = static_cast<unsigned>(ncolumns);
       memset(&d_S->item(0, 0), 0, nc*nc*sizeof(double));
    }
-   
+
    d_basis_right = new Matrix(ncolumns, d_num_samples, false);
    for (int rank = 0; rank < d_num_procs; ++rank) {
       // gather_transposed_block does the same as gather_block, but transposes
@@ -303,7 +312,7 @@ StaticSVD::get_global_info()
    MPI_Allgather(&d_dim, 1, MPI_INT, d_dims.data(), 1, MPI_INT, MPI_COMM_WORLD);
    d_total_dim = 0;
    d_istarts = std::vector<int>(static_cast<unsigned>(d_num_procs), 0);
-   
+
    for (unsigned i = 0; i < static_cast<unsigned>(d_num_procs); ++i) {
       d_total_dim += d_dims[i];
       if (i > 0) {
