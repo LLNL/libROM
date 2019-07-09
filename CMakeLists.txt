@@ -35,7 +35,7 @@ find_package(MPI 1.2 REQUIRED)
 
 find_package(ZLIB 1.2.3 REQUIRED)
 
-find_package(Doxygen 1.8.10)
+find_package(Doxygen 1.8.5)
 
 # find_package(Perl 5.16.3 REQUIRED)
 
