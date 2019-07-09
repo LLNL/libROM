@@ -26,7 +26,7 @@ find_package(ZLIB 1.2.3 REQUIRED)
 
 # find_package(Perl 5.16.3 REQUIRED)
 
-# find_package(GTest 1.6.0)
+find_package(GTest 1.6.0)
 
 add_library(libROM Matrix.C
   Vector.C
