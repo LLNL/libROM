@@ -22,8 +22,7 @@ find_package(MPI 1.2 REQUIRED)
 
 find_package(ZLIB 1.2.3 REQUIRED)
 
-# find_package(Doxygen 1.8.10
-#   REQUIRED COMPONENTS dot)
+find_package(Doxygen 1.8.10)
 
 # find_package(Perl 5.16.3 REQUIRED)
 
@@ -136,3 +135,30 @@ if(GTEST_FOUND)
   target_compile_features(test_IncrementalSVD PRIVATE cxx_std_11)
   target_compile_definitions(test_IncrementalSVD PRIVATE CAROM_HAS_GTEST)
 endif(GTEST_FOUND)
+
+# NOTE(goxberry@gmail.com, oxberry1@llnl.gov): This code snippet
+# builds the Doxygen documentation, but outputs said documentation to
+# ${CMAKE_CURRENT_SOURCE_DIR}/docs/rom-dox)...
+if(DOXYGEN_FOUND)
+  set(doxyfile_in ${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in)
+  set(doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+
+  configure_file(${doxyfile_in} ${doxyfile} @ONLY)
+
+  add_custom_target(
+    documentation ALL
+    COMMAND ${DOXYGEN_EXECUTABLE} ${doxyfile}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/docs
+    COMMENT "Generating API documentation with Doxygen"
+    VERBATIM
+    )
+  add_dependencies(documentation libROM)
+
+  add_custom_target(
+    doxygen_tagfile
+    COMMAND ${CMAKE_COMMAND} -E copy
+    ${CMAKE_CURRENT_SOURCE_DIR}/rom.tag
+    ${CMAKE_CURRENT_BINARY_DIR}/rom-dox/html/rom.tag)
+  add_dependencies(doxygen_tagfile documentation)
+
+endif(DOXYGEN_FOUND)
