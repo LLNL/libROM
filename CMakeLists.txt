@@ -111,4 +111,28 @@ if(GTEST_FOUND)
     ${MPI_C_INCLUDE_DIRS})
   target_compile_features(test_Vector PRIVATE cxx_std_11)
   target_compile_definitions(test_Vector PRIVATE CAROM_HAS_GTEST)
+
+  add_executable(test_Matrix tests/test_Matrix.C)
+  target_link_libraries(test_Matrix PRIVATE libROM MPI GTest::GTest)
+  target_include_directories(test_Matrix
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+    ${MPI_C_INCLUDE_DIRS})
+  target_compile_features(test_Matrix PRIVATE cxx_std_11)
+  target_compile_definitions(test_Matrix PRIVATE CAROM_HAS_GTEST)
+
+  add_executable(test_SVD tests/test_SVD.C)
+  target_link_libraries(test_SVD PRIVATE libROM MPI GTest::GTest)
+  target_include_directories(test_SVD
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+    ${MPI_C_INCLUDE_DIRS})
+  target_compile_features(test_SVD PRIVATE cxx_std_11)
+  target_compile_definitions(test_SVD PRIVATE CAROM_HAS_GTEST)
+
+  add_executable(test_IncrementalSVD tests/test_IncrementalSVD.C)
+  target_link_libraries(test_IncrementalSVD PRIVATE libROM MPI GTest::GTest)
+  target_include_directories(test_IncrementalSVD
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+    ${MPI_C_INCLUDE_DIRS})
+  target_compile_features(test_IncrementalSVD PRIVATE cxx_std_11)
+  target_compile_definitions(test_IncrementalSVD PRIVATE CAROM_HAS_GTEST)
 endif(GTEST_FOUND)
