@@ -1,3 +1,13 @@
+###############################################################################
+#
+#  Copyright (c) 2013-2019, Lawrence Livermore National Security, LLC
+#  and other libROM project developers. See the top-level COPYRIGHT
+#  file for details.
+#
+#  SPDX-License-Identifier: (Apache-2.0 OR MIT)
+#
+###############################################################################
+
 # Require CMake version 3.10 or later to expose modern features of
 # CMake for maintainability. With additional work, it is possible to
 # rewrite the build system generator for CMake 3.8+, 3.1+, 3.0+, or
