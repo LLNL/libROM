@@ -5,7 +5,7 @@
 # version is decreased.
 cmake_minimum_required(VERSION 3.8)
 
-project(librom
+project(libROM
   VERSION 0.0.1
   DESCRIPTION "Model reduction library emphasizing large-scale parallelism"
   HOMEPAGE_URL "https://github.com/LLNL/libROM"
@@ -60,7 +60,7 @@ foreach(module IN LISTS module_list)
   list(APPEND source_files ${module}.C)
 endforeach(module) # IN LISTS module_list
 
-add_library(libROM ${source_files})
+add_library(ROM ${source_files})
 
 # PUBLIC dependencies are transitive; these dependencies are used in
 # the API headers *and* in their implementations
@@ -71,11 +71,11 @@ add_library(libROM ${source_files})
 #
 # PRIVATE dependencies are used in the API implementation, but not in
 # the headers
-target_link_libraries(libROM
+target_link_libraries(ROM
   PUBLIC MPI HDF5 LAPACK
   PRIVATE ZLIB::ZLIB)
 
-target_include_directories(libROM PUBLIC
+target_include_directories(ROM PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${HDF5_C_INCLUDE_DIRS}
   ${MPI_C_INCLUDE_DIRS}
@@ -83,7 +83,7 @@ target_include_directories(libROM PUBLIC
 
 # Use the C++11 standard as an entire feature instead of
 # enumerating individual compiler features for simplicity
-target_compile_features(libROM PRIVATE cxx_std_11)
+target_compile_features(ROM PRIVATE cxx_std_11)
 
 set(regression_test_names
   smoke_test
@@ -93,7 +93,7 @@ set(regression_test_names
 
 foreach(name IN LISTS regression_test_names)
   add_executable(${name} ${name}.C)
-  target_link_libraries(${name} PRIVATE libROM MPI)
+  target_link_libraries(${name} PRIVATE ROM MPI)
   target_include_directories(${name}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
     ${MPI_C_INCLUDE_DIRS})
@@ -108,7 +108,7 @@ if(GTEST_FOUND)
     IncrementalSVD)
   foreach(stem IN LISTS unit_test_stems)
     add_executable(test_${stem} tests/test_${stem}.C)
-    target_link_libraries(test_${stem} PRIVATE libROM MPI GTest::GTest)
+    target_link_libraries(test_${stem} PRIVATE ROM MPI GTest::GTest)
     target_include_directories(test_${stem}
       PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
       ${MPI_C_INCLUDE_DIRS})
@@ -133,7 +133,7 @@ if(DOXYGEN_FOUND)
     COMMENT "Generating API documentation with Doxygen"
     VERBATIM
     )
-  add_dependencies(documentation libROM)
+  add_dependencies(documentation ROM)
 
   add_custom_target(
     doxygen_tagfile
