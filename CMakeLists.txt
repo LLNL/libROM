@@ -28,28 +28,39 @@ find_package(Doxygen 1.8.10)
 
 find_package(GTest 1.6.0)
 
-add_library(libROM Matrix.C
-  Vector.C
-  BasisReader.C
-  BasisWriter.C
-  SVDBasisGenerator.C
-  SVDSampler.C
-  SVD.C
-  IncrementalSVD.C
-  IncrementalSVDFastUpdate.C
-  IncrementalSVDStandard.C
-  IncrementalSVDBasisGenerator.C
-  IncrementalSVDSampler.C
-  StaticSVD.C
-  StaticSVDBasisGenerator.C
-  StaticSVDSampler.C
-  Database.C
-  HDFDatabase.C
-  Utilities.C
-  ParallelBuffer.C
-  DEIM.C
-  QDEIM.C
-  GNAT.C)
+# While it is tempting to use file globbing here, file globbing is
+# considered a "modern CMake anti-pattern" because "CMake is not a
+# build system -- it is a build system _generator_". Instead, use
+# some file name "stems" for generating file names. This construction
+# is useful when files may be moved to different directories.
+set(module_list Matrix
+  Vector
+  BasisReader
+  BasisWriter
+  SVDBasisGenerator
+  SVDSampler
+  SVD
+  IncrementalSVD
+  IncrementalSVDFastUpdate
+  IncrementalSVDStandard
+  IncrementalSVDBasisGenerator
+  IncrementalSVDSampler
+  StaticSVD
+  StaticSVDBasisGenerator
+  StaticSVDSampler
+  Database
+  HDFDatabase
+  Utilities
+  ParallelBuffer
+  DEIM
+  QDEIM
+  GNAT)
+set(source_files)
+foreach(module IN LISTS module_list)
+  list(APPEND source_files ${module}.C)
+endforeach(module) # IN LISTS module_list
+
+add_library(libROM ${source_files})
 
 # PUBLIC dependencies are transitive; these dependencies are used in
 # the API headers *and* in their implementations
@@ -74,66 +85,36 @@ target_include_directories(libROM PUBLIC
 # enumerating individual compiler features for simplicity
 target_compile_features(libROM PRIVATE cxx_std_11)
 
-add_executable(smoke_test smoke_test.C)
-target_link_libraries(smoke_test PRIVATE libROM MPI)
-target_include_directories(smoke_test
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-  ${MPI_C_INCLUDE_DIRS})
-target_compile_features(smoke_test PRIVATE cxx_std_11)
+set(regression_test_names
+  smoke_test
+  uneven_dist
+  weak_scaling
+  random_test)
 
-add_executable(uneven_dist uneven_dist.C)
-target_link_libraries(uneven_dist PRIVATE libROM MPI)
-target_include_directories(uneven_dist
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-  ${MPI_C_INCLUDE_DIRS})
-target_compile_features(uneven_dist PRIVATE cxx_std_11)
-
-add_executable(weak_scaling weak_scaling.C)
-target_link_libraries(weak_scaling PRIVATE libROM MPI)
-target_include_directories(weak_scaling
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-  ${MPI_C_INCLUDE_DIRS})
-target_compile_features(weak_scaling PRIVATE cxx_std_11)
-
-add_executable(random_test random_test.C)
-target_link_libraries(random_test PRIVATE libROM MPI)
-target_include_directories(random_test
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-  ${MPI_C_INCLUDE_DIRS})
-target_compile_features(random_test PRIVATE cxx_std_11)
+foreach(name IN LISTS regression_test_names)
+  add_executable(${name} ${name}.C)
+  target_link_libraries(${name} PRIVATE libROM MPI)
+  target_include_directories(${name}
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+    ${MPI_C_INCLUDE_DIRS})
+  target_compile_features(${name} PRIVATE cxx_std_11)
+endforeach(name) # IN LISTS regression_test_names
 
 if(GTEST_FOUND)
-  add_executable(test_Vector tests/test_Vector.C)
-  target_link_libraries(test_Vector PRIVATE libROM MPI GTest::GTest)
-  target_include_directories(test_Vector
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-    ${MPI_C_INCLUDE_DIRS})
-  target_compile_features(test_Vector PRIVATE cxx_std_11)
-  target_compile_definitions(test_Vector PRIVATE CAROM_HAS_GTEST)
-
-  add_executable(test_Matrix tests/test_Matrix.C)
-  target_link_libraries(test_Matrix PRIVATE libROM MPI GTest::GTest)
-  target_include_directories(test_Matrix
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-    ${MPI_C_INCLUDE_DIRS})
-  target_compile_features(test_Matrix PRIVATE cxx_std_11)
-  target_compile_definitions(test_Matrix PRIVATE CAROM_HAS_GTEST)
-
-  add_executable(test_SVD tests/test_SVD.C)
-  target_link_libraries(test_SVD PRIVATE libROM MPI GTest::GTest)
-  target_include_directories(test_SVD
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-    ${MPI_C_INCLUDE_DIRS})
-  target_compile_features(test_SVD PRIVATE cxx_std_11)
-  target_compile_definitions(test_SVD PRIVATE CAROM_HAS_GTEST)
-
-  add_executable(test_IncrementalSVD tests/test_IncrementalSVD.C)
-  target_link_libraries(test_IncrementalSVD PRIVATE libROM MPI GTest::GTest)
-  target_include_directories(test_IncrementalSVD
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-    ${MPI_C_INCLUDE_DIRS})
-  target_compile_features(test_IncrementalSVD PRIVATE cxx_std_11)
-  target_compile_definitions(test_IncrementalSVD PRIVATE CAROM_HAS_GTEST)
+  set(unit_test_stems
+    Vector
+    Matrix
+    SVD
+    IncrementalSVD)
+  foreach(stem IN LISTS unit_test_stems)
+    add_executable(test_${stem} tests/test_${stem}.C)
+    target_link_libraries(test_${stem} PRIVATE libROM MPI GTest::GTest)
+    target_include_directories(test_${stem}
+      PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+      ${MPI_C_INCLUDE_DIRS})
+    target_compile_features(test_${stem} PRIVATE cxx_std_11)
+    target_compile_definitions(test_${stem} PRIVATE CAROM_HAS_GTEST)
+  endforeach(stem) # IN LISTS unit_test_stems
 endif(GTEST_FOUND)
 
 # NOTE(goxberry@gmail.com, oxberry1@llnl.gov): This code snippet
