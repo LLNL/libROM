@@ -37,8 +37,6 @@ find_package(ZLIB 1.2.3 REQUIRED)
 
 find_package(Doxygen 1.8.5)
 
-# find_package(Perl 5.16.3 REQUIRED)
-
 find_package(GTest 1.6.0)
 
 include(FortranCInterface)
