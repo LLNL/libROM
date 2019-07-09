@@ -1,7 +1,8 @@
-# Require CMake version 3.8 or later to expose modern features of CMake for
-# maintainability. With additional work, it is possible to rewrite the build
-# system generator for CMake 3.1+, 3.0+, or 2.8+, with increasing amounts of
-# work as the minimum required version is decreased.
+# Require CMake version 3.10 or later to expose modern features of
+# CMake for maintainability. With additional work, it is possible to
+# rewrite the build system generator for CMake 3.8+, 3.1+, 3.0+, or
+# 2.8+, with increasing amounts of work as the minimum required
+# version is decreased.
 cmake_minimum_required(VERSION 3.8)
 
 project(librom
@@ -101,3 +102,13 @@ target_include_directories(random_test
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
   ${MPI_C_INCLUDE_DIRS})
 target_compile_features(random_test PRIVATE cxx_std_11)
+
+if(GTEST_FOUND)
+  add_executable(test_Vector tests/test_Vector.C)
+  target_link_libraries(test_Vector PRIVATE libROM MPI GTest::GTest)
+  target_include_directories(test_Vector
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+    ${MPI_C_INCLUDE_DIRS})
+  target_compile_features(test_Vector PRIVATE cxx_std_11)
+  target_compile_definitions(test_Vector PRIVATE CAROM_HAS_GTEST)
+endif(GTEST_FOUND)
