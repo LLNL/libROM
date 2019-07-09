@@ -74,13 +74,30 @@ target_include_directories(libROM PUBLIC
 # enumerating individual compiler features for simplicity
 target_compile_features(libROM PRIVATE cxx_std_11)
 
-# add_executable(uneven_dist uneven_dist.C)
-# add_executable(random_test random_test.C)
-# add_executable(weak_scaling weak_scaling.C)
-
 add_executable(smoke_test smoke_test.C)
 target_link_libraries(smoke_test PRIVATE libROM MPI)
 target_include_directories(smoke_test
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
   ${MPI_C_INCLUDE_DIRS})
 target_compile_features(smoke_test PRIVATE cxx_std_11)
+
+add_executable(uneven_dist uneven_dist.C)
+target_link_libraries(uneven_dist PRIVATE libROM MPI)
+target_include_directories(uneven_dist
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+  ${MPI_C_INCLUDE_DIRS})
+target_compile_features(uneven_dist PRIVATE cxx_std_11)
+
+add_executable(weak_scaling weak_scaling.C)
+target_link_libraries(weak_scaling PRIVATE libROM MPI)
+target_include_directories(weak_scaling
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+  ${MPI_C_INCLUDE_DIRS})
+target_compile_features(weak_scaling PRIVATE cxx_std_11)
+
+add_executable(random_test random_test.C)
+target_link_libraries(random_test PRIVATE libROM MPI)
+target_include_directories(random_test
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+  ${MPI_C_INCLUDE_DIRS})
+target_compile_features(random_test PRIVATE cxx_std_11)
