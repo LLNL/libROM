@@ -5,11 +5,14 @@
 # version is decreased.
 cmake_minimum_required(VERSION 3.10)
 
+# Even though this project is a pure C++ library, the C language must be enabled
+# for MPI and HDF5 dependency checking. The Fortran language must be enabled
+# for Fortran-C name mangling convention detection.
 project(libROM
   VERSION 0.0.1
   DESCRIPTION "Model reduction library emphasizing large-scale parallelism"
   HOMEPAGE_URL "https://github.com/LLNL/libROM"
-  LANGUAGES C CXX)
+  LANGUAGES C CXX Fortran)
 
 # List minimum version requirements for dependencies where possible to make
 # packaging easier later.
@@ -27,6 +30,70 @@ find_package(Doxygen 1.8.10)
 # find_package(Perl 5.16.3 REQUIRED)
 
 find_package(GTest 1.6.0)
+
+include(FortranCInterface)
+FortranCInterface_HEADER(${CMAKE_SOURCE_DIR}/FCMangle.h
+  MACRO_NAMESPACE "CAROM_FC_")
+
+## Set a bunch of variables to generate a configure header
+# Enable assertion checking if debug symbols generated
+if((CMAKE_BUILD_TYPE EQUAL "Debug") OR
+    (CMAKE_BUILD_TYPE EQUAL "RelWithDebInfo"))
+  set(DEBUG_CHECK_ASSERTIONS "1")
+endif((CMAKE_BUILD_TYPE EQUAL "Debug") OR
+    (CMAKE_BUILD_TYPE EQUAL "RelWithDebInfo"))
+
+set(CAROM_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
+set(CAROM_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
+set(CAROM_VERSION_PATCHLEVEL "${PROJECT_VERSION_PATCH}")
+set(PACKAGE ${CMAKE_PROJECT_NAME})
+set(PACKAGE_NAME ${CMAKE_PROJECT_NAME})
+set(PACKAGE_STRING "${CMAKE_PROJECT_NAME} ${CMAKE_PROJECT_VERSION}")
+set(PACKAGE_TARNAME ${CMAKE_PROJECT_NAME})
+set(PACKAGE_URL ${CMAKE_PROJECT_HOMEPAGE_URL})
+set(PACKAGE_VERSION ${CMAKE_PROJECT_VERSION})
+set(VERSION ${CMAKE_PROJECT_VERSION})
+
+include(CheckIncludeFiles)
+check_include_files(dlfcn.h HAVE_DLFCN_H)
+check_include_files(inttypes.h HAVE_INTTYPES_H)
+check_include_files(memory.h HAVE_MEMORY_H)
+check_include_files(stdint.h HAVE_STDINT_H)
+check_include_files(stdlib.h HAVE_STDLIB_H)
+check_include_files(strings.h HAVE_STRINGS_H)
+check_include_files(string.h HAVE_STRING_H)
+check_include_files(sys/stat.h HAVE_SYS_STAT_H)
+check_include_files(sys/types.h HAVE_SYS_TYPES_H)
+check_include_files(unistd.h HAVE_UNISTD_H)
+
+# Construct an expression consisting of the 24 ANSI C headers
+set(stdc_header_list "assert.h;complex.h;ctype.h;errno.h;fenv.h;float.h")
+set(stdc_header_list "${stdc_header_list};inttypes.h;iso646.h;limits.h")
+set(stdc_header_list "${stdc_header_list};locale.h;math.h;setjmp.h;signal.h")
+set(stdc_header_list "${stdc_header_list};stdarg.h;stdbool.h;stdint.h")
+set(stdc_header_list "${stdc_header_list};stddef.h;stdio.h;stdlib.h;string.h")
+set(stdc_header_list "${stdc_header_list};tgmath.h;time.h;wchar.h;wctype.h")
+check_include_files("${stdc_header_list}" STDC_HEADERS)
+
+# Define variables for use in generating a configure file
+if(GTEST_FOUND)
+  set(CAROM_HAS_GTEST 1)
+endif(GTEST_FOUND)
+
+if(BLAS_FOUND)
+  set(HAVE_BLAS 1)
+endif(BLAS_FOUND)
+
+if(LAPACK_FOUND)
+  set(HAVE_LAPACK 1)
+endif(LAPACK_FOUND)
+
+if(HDF5_FOUND)
+  set(HAVE_HDF5 1)
+endif(HDF5_FOUND)
+
+configure_file(${CMAKE_SOURCE_DIR}/CAROM_config.h.in
+  ${CMAKE_SOURCE_DIR}/CAROM_config.h @ONLY)
 
 # While it is tempting to use file globbing here, file globbing is
 # considered a "modern CMake anti-pattern" because "CMake is not a

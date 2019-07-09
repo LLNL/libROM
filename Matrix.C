@@ -23,22 +23,19 @@
 #endif
 
 /* Use Autotools-detected Fortran name-mangling scheme */
-#define dgetrf FC_FUNC(dgetrf, DGETRF)
-#define dgetri FC_FUNC(dgetri, DGETRI)
-#define dgeqp3 FC_FUNC(dgeqp3, DGEQP3)
+#define dgetrf CAROM_FC_GLOBAL(dgetrf, DGETRF)
+#define dgetri CAROM_FC_GLOBAL(dgetri, DGETRI)
+#define dgeqp3 CAROM_FC_GLOBAL(dgeqp3, DGEQP3)
 
 extern "C" {
 // LU decomposition of a general matrix.
-void
-dgetrf(int*, int*, double*, int*, int*, int*);
+void dgetrf(int*, int*, double*, int*, int*, int*);
 
 // Generate inverse of a matrix given its LU decomposition.
-void
-dgetri(int*, double*, int*, int*, double*, int*, int*);
+void dgetri(int*, double*, int*, int*, double*, int*, int*);
 
 // BLAS-3 version of QR decomposition with column pivoting
-void
-dgeqp3(int*, int*, double*, int*, int*, double*, double*, int*, int*);
+void dgeqp3(int*, int*, double*, int*, int*, double*, double*, int*, int*);
 }
 
 namespace CAROM {
