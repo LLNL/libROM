@@ -149,7 +149,8 @@ add_library(ROM ${source_files})
 # PRIVATE dependencies are used in the API implementation, but not in
 # the headers
 target_link_libraries(ROM
-  PUBLIC MPI HDF5 LAPACK
+  PUBLIC ${MPI_C_LINK_FLAGS} ${HDF5_LIBRARIES}
+  ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES}
   PRIVATE ZLIB::ZLIB)
 
 target_include_directories(ROM PUBLIC
@@ -170,7 +171,7 @@ set(regression_test_names
 
 foreach(name IN LISTS regression_test_names)
   add_executable(${name} ${name}.C)
-  target_link_libraries(${name} PRIVATE ROM MPI)
+  target_link_libraries(${name} PRIVATE ROM ${MPI_C_LINK_FLAGS})
   target_include_directories(${name}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
     ${MPI_C_INCLUDE_DIRS})
@@ -185,7 +186,7 @@ if(GTEST_FOUND)
     IncrementalSVD)
   foreach(stem IN LISTS unit_test_stems)
     add_executable(test_${stem} tests/test_${stem}.C)
-    target_link_libraries(test_${stem} PRIVATE ROM MPI GTest::GTest)
+    target_link_libraries(test_${stem} PRIVATE ROM ${MPI_C_LINK_FLAGS} GTest::GTest)
     target_include_directories(test_${stem}
       PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
       ${MPI_C_INCLUDE_DIRS})
