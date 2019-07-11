@@ -15,7 +15,7 @@
 #define included_StaticSVD_h
 
 #include "SVD.h"
-#include "ScalaMat.hpp"
+#include "ScalaWRAP/src/SVD.hpp"
 
 #include <limits>
 #include <memory>
@@ -64,12 +64,7 @@ class StaticSVD : public SVD
          double sigma_tolerance = 0,
          bool debug_algorithm = false
          );
-
-      /**
-       * Destructor.
-       */
-      ~StaticSVD();
-
+      
       /**
        * @brief Collect the new sample, u_in at supplied time.
        *
@@ -164,12 +159,12 @@ class StaticSVD : public SVD
       /**
        * @brief Current samples of the system.
        */
-      std::unique_ptr<SLPK_Matrix> d_samples;
+      std::unique_ptr<ScalaWRAP::ScalaMat> d_samples;
 
       /**
        * @brief Factorization manager object used to compute the SVD
        */
-      std::unique_ptr<SVDManager> d_factorizer;
+      std::unique_ptr<ScalaWRAP::SVDInfo> d_factorization;
 
       /**
        * @brief Flag to indicate if the basis vectors for the current time
@@ -204,18 +199,7 @@ class StaticSVD : public SVD
        * @brief The total dimension of the system (row dimension)
        */
       int d_total_dim;
-
-      /**
-       * @brief The number of processor rows and processor columns in the grid.
-       */
-      int d_nprow;
-      int d_npcol;
-
-      /**
-       * @brief The block size used internally for computing the SVD.
-       */
-      int d_blocksize;
-
+      
       /**
        * @brief Get the system's total row dimension and where my rows sit in
        * the matrix.
@@ -233,7 +217,7 @@ class StaticSVD : public SVD
       double d_sigma_tol;
 
       void delete_samples();
-      void delete_factorizer();
+      void delete_factorization();
 
       void broadcast_sample(const double* u_in);
 };

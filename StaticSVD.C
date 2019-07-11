@@ -12,11 +12,14 @@
 //              algorithm.
 
 #include "StaticSVD.h"
+#include "ScalaWRAP/src/LocalMatrix.hpp"
 
 #include "mpi.h"
 
 #include <stdio.h>
 #include <string.h>
+
+using namespace ScalaWRAP;
 
 namespace CAROM {
 
@@ -27,7 +30,7 @@ StaticSVD::StaticSVD(
    double sigma_tolerance,
    bool debug_algorithm) :
    SVD(dim, samples_per_time_interval, debug_algorithm),
-   d_samples(new SLPK_Matrix), d_factorizer(new SVDManager),
+   d_samples(nullptr), d_factorization(new SVDInfo()),
    d_this_interval_basis_current(false),
    d_max_basis_dimension(max_basis_dimension),
    d_sigma_tol(sigma_tolerance)
@@ -46,43 +49,21 @@ StaticSVD::StaticSVD(
    MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
    
    get_global_info();
-   /* TODO: Try doing this more intelligently and see if it makes a difference */
-   d_nprow = d_num_procs;
-   d_npcol = 1;
-   d_blocksize = d_total_dim / d_nprow;
-   if (d_total_dim % d_nprow != 0) { d_blocksize += 1; }
 
-   initialize_matrix(d_samples.get(), d_total_dim, d_samples_per_time_interval,
-                     d_nprow, d_npcol, d_blocksize, d_blocksize);
-   d_factorizer->A = nullptr;
-}
-
-StaticSVD::~StaticSVD()
-{
-   delete_samples();
-   delete_factorizer();
-}
-
-void StaticSVD::delete_samples()
-{
-   if (d_samples) {
-      free_matrix_data(d_samples.get());
-      release_context(d_samples.get());
-   }
-}
-
-void StaticSVD::delete_factorizer()
-{
-   if (d_factorizer->A != nullptr) {
-      free(d_factorizer->S);
-      d_factorizer->S = nullptr;
-      if (d_factorizer->U != nullptr) { free_matrix_data(d_factorizer->U); }
-      free(d_factorizer->U);
-      d_factorizer->U = nullptr;
-      if (d_factorizer->V != nullptr) { free_matrix_data(d_factorizer->V); }
-      free(d_factorizer->V);
-      d_factorizer->V = nullptr;
-   }
+   /****************************************************************************
+    * !!! IMPORTANT !!!
+    * The blocksize for the ScaLAPACK matrix set here MUST BE at least
+    * d_samples_per_time_interval! This is because we "trick" ScaLAPACK by
+    * simply changing the column dimension of the matrix that is stored, but
+    * if we do this and the block size is less than the number of columns the
+    * data distribution is incorrect.
+    ***************************************************************************/
+   int blocksize = d_total_dim / d_num_procs + (d_total_dim % d_num_procs != 0);
+   blocksize = std::max(blocksize, d_samples_per_time_interval);
+   d_samples = std::unique_ptr<ScalaMat>(
+           new ScalaMat(d_total_dim, d_samples_per_time_interval, blocksize, blocksize,
+                        Context::make_context(d_num_procs, 1))
+           );
 }
 
 bool
@@ -103,7 +84,6 @@ StaticSVD::takeSample(
 
    if (isNewTimeInterval()) {
       // We have a new time interval.
-      delete_factorizer();
       int num_time_intervals =
          static_cast<int>(d_time_interval_start_times.size());
       if (num_time_intervals > 0) {
@@ -125,8 +105,6 @@ StaticSVD::takeSample(
           time;
       d_basis = nullptr;
       d_basis_right = nullptr;
-      // Set the N in the global matrix so BLACS won't complain.
-      d_samples->n = d_samples_per_time_interval;
    }
 
    broadcast_sample(u_in);
@@ -214,11 +192,15 @@ void
 StaticSVD::computeSVD()
 {
    // This block does the actual ScaLAPACK call to do the factorization.
-   d_samples->n = d_num_samples;
-   delete_factorizer();
-   svd_init(d_factorizer.get(), d_samples.get());
-   d_factorizer->dov = 1;
-   factorize(d_factorizer.get());
+
+   // Construct the sample matrix reusing the same data, but marking the number
+   // of columns as only the number of samples that we actually collected. This
+   // is valid because we set the blocksize to at least the maximum number of
+   // samples.
+   ScalaMat Samp(d_samples->data(), d_samples->m(), d_num_samples,
+                 d_samples->mb(), d_samples->nb(), d_samples->context(),
+                 d_samples->rowsrc(), d_samples->colsrc());
+   *d_factorization = svd(Samp);
 
    // Compute how many basis vectors we will actually return.
    int sigma_cutoff = 0, hard_cutoff = d_num_samples;
@@ -226,7 +208,7 @@ StaticSVD::computeSVD()
       sigma_cutoff = std::numeric_limits<int>::max();
    } else {
       for (int i = 0; i < d_num_samples; ++i) {
-         if (d_factorizer->S[i] / d_factorizer->S[0] > d_sigma_tol) {
+         if (d_factorization->S[i] / d_factorization->S[0] > d_sigma_tol) {
             sigma_cutoff += 1;
          } else {
             break;
@@ -248,51 +230,38 @@ StaticSVD::computeSVD()
       memset(&d_S->item(0, 0), 0, nc*nc*sizeof(double));
    }
    
-   d_basis_right = new Matrix(ncolumns, d_num_samples, false);
+   d_basis_right = new Matrix(d_num_samples, ncolumns, false);
    for (int rank = 0; rank < d_num_procs; ++rank) {
-      // gather_transposed_block does the same as gather_block, but transposes
-      // it; here, it is used to go from column-major to row-major order.
-      gather_transposed_block(&d_basis->item(0, 0), d_factorizer->U,
-                              d_istarts[static_cast<unsigned>(rank)]+1,
-                              1, d_dims[static_cast<unsigned>(rank)],
-                              ncolumns, rank);
-      // V is computed in the transposed order so no reordering necessary.
-      gather_block(&d_basis_right->item(0, 0), d_factorizer->V, 1, 1,
-                   ncolumns, d_num_samples, rank);
+      int nrows = d_dims[static_cast<unsigned>(rank)];
+      int firstrow = d_istarts[static_cast<unsigned>(rank)] + 1;
+
+      LocalMatrix(&d_basis->item(0, 0), nrows, ncolumns, rank) =  
+         d_factorization->U->submatrix(rowrange(firstrow, firstrow+nrows-1),
+                                       colrange(1, ncolumns));
+
+      // Specifying that the matrix is stored in column major order results in
+      // no transposition being applied, which is what we want
+      LocalMatrix(&d_basis_right->item(0, 0), ncolumns, d_num_samples, rank,
+                  false, COL_MAJOR) =
+          d_factorization->Vt->submatrix(rowrange(1, ncolumns),
+                                         colrange(1, d_num_samples));
    }
    for (int i = 0; i < ncolumns; ++i)
-      d_S->item(i, i) = d_factorizer->S[static_cast<unsigned>(i)];
+      d_S->item(i, i) = d_factorization->S[static_cast<unsigned>(i)];
    d_this_interval_basis_current = true;
-
-   if (d_debug_algorithm) {
-      if (d_rank == 0) {
-         printf("Distribution of sampler's A and U:\n");
-      }
-      print_debug_info(d_samples.get());
-      MPI_Barrier(MPI_COMM_WORLD);
-
-      if (d_rank == 0) {
-         printf("Distribution of sampler's V:\n");
-      }
-      print_debug_info(d_factorizer->V);
-      MPI_Barrier(MPI_COMM_WORLD);
-
-      if (d_rank == 0) {
-         printf("Computed singular values: ");
-         for (int i = 0; i < ncolumns; ++i)
-            printf("%8.4E  ", d_factorizer->S[i]);
-         printf("\n");
-      }
-   }
 }
 
 void
 StaticSVD::broadcast_sample(const double* u_in)
 {
    for (int rank = 0; rank < d_num_procs; ++rank) {
-      scatter_block(d_samples.get(), d_istarts[static_cast<unsigned>(rank)]+1,
-                    d_num_samples+1, u_in, d_dims[static_cast<unsigned>(rank)],
-                    1, rank);
+      int firstrow = d_istarts[static_cast<unsigned>(rank)]+1;
+      int lastrow = firstrow + d_dims[static_cast<unsigned>(rank)] - 1;
+      int col = d_num_samples + 1;
+
+      d_samples->submatrix(rowrange(firstrow, lastrow), colrange(col, col)) =
+          LocalMatrix(const_cast<double*>(u_in), lastrow - firstrow + 1, 1, rank, 
+                      false, COL_MAJOR);
    }
 }
 
