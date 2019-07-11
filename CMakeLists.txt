@@ -149,7 +149,7 @@ add_library(ROM ${source_files} scalawrap)
 # PRIVATE dependencies are used in the API implementation, but not in
 # the headers
 target_link_libraries(ROM
-  PUBLIC ${MPI_C_LINK_FLAGS} ${HDF5_LIBRARIES}
+    PUBLIC ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} ${HDF5_LIBRARIES}
   ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES}
   PRIVATE ZLIB::ZLIB)
 
