@@ -1,0 +1,20 @@
+var searchData=
+[
+  ['scalawrap',['ScalaWRAP',['../index.html',1,'']]],
+  ['s',['S',['../struct_scala_w_r_a_p_1_1_s_v_d_info.html#a8a024ac31ebc0686aa6cec9cc96e5e76',1,'ScalaWRAP::SVDInfo']]],
+  ['scalamat',['ScalaMat',['../class_scala_w_r_a_p_1_1_scala_mat.html',1,'ScalaWRAP::ScalaMat'],['../class_scala_w_r_a_p_1_1_scala_mat_1_1_submatrix.html#a719af2b17cd5851d4c63078994185090',1,'ScalaWRAP::ScalaMat::Submatrix::ScalaMat()'],['../class_scala_w_r_a_p_1_1_scala_mat.html#ad569867e00ed5593c4bb7320a895bd70',1,'ScalaWRAP::ScalaMat::ScalaMat(int global_m, int global_n, int mb=default_blocksize, int nb=default_blocksize, std::shared_ptr&lt; const Context &gt; ctxt=Context::default_context(), int rowsrc=0, int colsrc=0)'],['../class_scala_w_r_a_p_1_1_scala_mat.html#a83df1e5ef1409b94f59e81663815f634',1,'ScalaWRAP::ScalaMat::ScalaMat(const ScalaMat &amp;other)=delete'],['../class_scala_w_r_a_p_1_1_scala_mat.html#a25cd94800d86061165cc4e1cb7dff265',1,'ScalaWRAP::ScalaMat::ScalaMat(ScalaMat &amp;&amp;other)'],['../class_scala_w_r_a_p_1_1_scala_mat.html#a7863fb3bb3cc3de3189023ce5552f8e6',1,'ScalaWRAP::ScalaMat::ScalaMat(LocalMatrix &amp;&amp;other, std::shared_ptr&lt; const Context &gt; ctxt=Context::default_context())']]],
+  ['scalamat_2ecpp',['ScalaMat.cpp',['../_scala_mat_8cpp.html',1,'']]],
+  ['scalamat_2ehpp',['ScalaMat.hpp',['../_scala_mat_8hpp.html',1,'']]],
+  ['scalamatexception',['ScalaMatException',['../struct_scala_w_r_a_p_1_1_scala_mat_exception.html',1,'ScalaWRAP::ScalaMatException'],['../struct_scala_w_r_a_p_1_1_scala_mat_exception.html#a708d6879414d8965a803fc1d45cc47aa',1,'ScalaWRAP::ScalaMatException::ScalaMatException()']]],
+  ['scalawrap',['ScalaWRAP',['../namespace_scala_w_r_a_p.html',1,'']]],
+  ['similar',['similar',['../class_scala_w_r_a_p_1_1_scala_mat_1_1_submatrix.html#a0f4a6d5b885bcc8daa87277dd916266a',1,'ScalaWRAP::ScalaMat::Submatrix::similar()'],['../class_scala_w_r_a_p_1_1_scala_mat.html#af436ddd82f46caf2742e4da7ce535a98',1,'ScalaWRAP::ScalaMat::similar()']]],
+  ['sl_5finit',['SL_INIT',['../_c__interface_8cpp.html#a9650db79d5d6edbf6768d5a7d9c6ece4',1,'SL_INIT():&#160;C_interface.cpp'],['../_c__interface_8cpp.html#a3eec61a2b344bc44fdb1c984cc5c9850',1,'SL_INIT(int *, const int *, const int *):&#160;C_interface.cpp']]],
+  ['sl_5finit_5fwrapper',['sl_init_wrapper',['../_c__interface_8cpp.html#a2a12cf6dc04cf4c43a415506aed2eb05',1,'sl_init_wrapper(int nprow, int npcol):&#160;C_interface.cpp'],['../_c__interface_8h.html#a2a12cf6dc04cf4c43a415506aed2eb05',1,'sl_init_wrapper(int nprow, int npcol):&#160;C_interface.cpp']]],
+  ['srcrank',['srcrank',['../class_scala_w_r_a_p_1_1_local_matrix.html#a3c74753a3a03bb4ce069a5b89f24c936',1,'ScalaWRAP::LocalMatrix']]],
+  ['submatrix',['Submatrix',['../class_scala_w_r_a_p_1_1_scala_mat_1_1_submatrix.html',1,'ScalaWRAP::ScalaMat::Submatrix'],['../class_scala_w_r_a_p_1_1_scala_mat.html#a9cff83f4e74af5e3b4c42b7c687b3197',1,'ScalaWRAP::ScalaMat::submatrix(RowRange ibounds, ColRange jbounds)'],['../class_scala_w_r_a_p_1_1_scala_mat.html#aac953d9cefa5076039573350fa54401a',1,'ScalaWRAP::ScalaMat::submatrix(RowRange ibounds, ColRange jbounds) const'],['../namespace_scala_w_r_a_p.html#a66732368390d71329c08b1387373a78d',1,'ScalaWRAP::Submatrix()']]],
+  ['svd',['svd',['../namespace_scala_w_r_a_p.html#ac95435525d64502e353b5bf416bcd1f2',1,'ScalaWRAP::svd(ScalaMat::Submatrix &amp;A, bool wantu=true, bool wantvt=true)'],['../namespace_scala_w_r_a_p.html#a8becf0ff85175a092ccb89a13b94a9b2',1,'ScalaWRAP::svd(ScalaMat &amp;A, bool wantu=true, bool wantvt=true)']]],
+  ['svd_2ecpp',['SVD.cpp',['../_s_v_d_8cpp.html',1,'']]],
+  ['svd_2ehpp',['SVD.hpp',['../_s_v_d_8hpp.html',1,'']]],
+  ['svdexception',['SVDException',['../struct_scala_w_r_a_p_1_1_s_v_d_exception.html',1,'ScalaWRAP::SVDException'],['../struct_scala_w_r_a_p_1_1_s_v_d_exception.html#a3a4d8ba5750bdc07e48e65442fbe90eb',1,'ScalaWRAP::SVDException::SVDException()']]],
+  ['svdinfo',['SVDInfo',['../struct_scala_w_r_a_p_1_1_s_v_d_info.html',1,'ScalaWRAP']]]
+];
