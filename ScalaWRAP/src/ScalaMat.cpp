@@ -59,6 +59,23 @@ ScalaMat::ScalaMat(int global_m, int global_n, int mb, int nb,
     m_data = new double[mm * mn];
 }
 
+ScalaMat::ScalaMat(double* data, int global_m, int global_n, int mb, int nb,
+                   std::shared_ptr<const Context> ctxt, int rowsrc,
+                   int colsrc) : m_globm(global_m), m_globn(global_n), m_mb(mb),
+                                 m_nb(nb), m_rowsrc(rowsrc), m_colsrc(colsrc),
+                                 m_ctxt(ctxt), m_data(data), m_own_data(false)
+{
+    int nprow, npcol, pi, pj;
+    std::tie(nprow, npcol, pi, pj) = ctxt->getinfo();
+    if (rowsrc >= nprow || colsrc >= npcol) {
+        std::cerr << "Error in expert constructor - given (rowsrc, colsrc) is "
+                  << '(' << rowsrc << ',' << colsrc << ")\n, but the process grid "
+                  << "is only " << nprow << " x " << npcol << '\n';
+        std::cerr << "(in " << __func__ << " at " << __FILE__ << ':' << __LINE__ << ")\n";
+        throw ScalaMatException("Specified rowsrc and colsrc outside process grid");
+    }
+}
+
 ScalaMat &ScalaMat::operator=(double x) noexcept
 {
     int nprow, npcol, pi, pj, mm, mn;

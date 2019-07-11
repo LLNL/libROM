@@ -171,7 +171,7 @@ set(regression_test_names
 
 foreach(name IN LISTS regression_test_names)
   add_executable(${name} ${name}.C)
-  target_link_libraries(${name} PRIVATE ROM ${MPI_C_LINK_FLAGS})
+  target_link_libraries(${name} PRIVATE ROM ${MPI_C_LINK_FLAGS} scalawrap)
   target_include_directories(${name}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
     ${MPI_C_INCLUDE_DIRS})

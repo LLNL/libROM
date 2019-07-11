@@ -110,6 +110,50 @@ public:
              int rowsrc = 0, int colsrc = 0);
 
     /*!
+     * @brief Constructor for expert use only.
+     * 
+     * This constructor is for use if you *really* need to know exactly where
+     * your data is allocated and deallocated, re-use other storage, etc. You
+     * are responsible for making sure that `data` is allocated with the
+     * appropriate amount of storage on each process; you can determine the
+     * dimensions using `ctxt->getinfo()` and `numroc`. If you think you need
+     * to use this constructor, you should probably make sure to read the
+     * ScaLAPACK user's guide.
+     * ([SLUG](http://www.netlib.org/scalapack/slug/node1.html)).
+     * 
+     * The constructed object does __not__ take ownership of the data array;
+     * you will be responsible for deallocating it.
+     * 
+     * @param[inout] data Pointer to memory allocated with at least the amount
+     * of storage required to hold a ScaLAPACK matrix distributed with the
+     * given parameters. This data is *not* copied and the constructed object
+     * does *not* take ownership - you are responsible for deallocating it
+     * later.
+     * 
+     * @param[in] global_m Row dimension of the distributed array.
+     * 
+     * @param[in] global_n Column dimension of the distributed array.
+     * 
+     * @param[in] mb The row blocking factor to be used in the distributed
+     * array.
+     * 
+     * @param[in] nb The column blocking factor to be used in the distributed
+     * array.
+     * 
+     * @param[in] ctxt Shared pointer to the context where this matrix lives.
+     * The constructor does a sanity check to make sure that `rowsrc` and
+     * `colsrc` are valid indices in the given context's process grid.
+     * 
+     * @param[in] rowsrc The 0-based row index of the process in the process
+     * grid that distribution starts from.
+     * 
+     * @param[in] colsrc The 0-based column index of the process in the process
+     * grid that distribution starts from.
+     */
+    ScalaMat(double* data, int global_m, int global_n, int mb, int nb,
+             std::shared_ptr<const Context> ctxt, int rowsrc, int colsrc);
+
+    /*!
      * @brief Copy construction is deleted to avoid surprises.
      * 
      * I didn't want to have either:
@@ -287,6 +331,8 @@ public:
 
     const double* data() const noexcept { return m_data; }
     double* data() noexcept { return m_data; }
+    double* release_data() noexcept { m_own_data = false; return m_data; }
+    bool own_data() const noexcept { return m_own_data; }
 
     ScalaMat& operator=(double x) noexcept;
 
