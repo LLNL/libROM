@@ -135,7 +135,9 @@ foreach(module IN LISTS module_list)
   list(APPEND source_files ${module}.C)
 endforeach(module) # IN LISTS module_list
 
-add_library(ROM ${source_files})
+add_subdirectory(ScalaWRAP)
+
+add_library(ROM ${source_files} scalawrap)
 
 # PUBLIC dependencies are transitive; these dependencies are used in
 # the API headers *and* in their implementations
@@ -155,7 +157,7 @@ target_include_directories(ROM PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${HDF5_C_INCLUDE_DIRS}
   ${MPI_C_INCLUDE_DIRS}
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ScalaWRAP/src)
 
 # Use the C++11 standard as an entire feature instead of
 # enumerating individual compiler features for simplicity
