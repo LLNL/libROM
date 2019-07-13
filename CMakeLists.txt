@@ -12,7 +12,9 @@
 # CMake for maintainability. With additional work, it is possible to
 # rewrite the build system generator for CMake 3.8+, 3.1+, 3.0+, or
 # 2.8+, with increasing amounts of work as the minimum required
-# version is decreased.
+# version is decreased. Notably, CMake's find modules export targets
+# (e.g., FindZLIB.cmake exports the ZLIB::ZLIB IMPORTED target) as of
+# version 3.1.
 cmake_minimum_required(VERSION 3.10)
 
 # Even though this project is a pure C++ library, the C language must be enabled
@@ -146,8 +148,13 @@ add_library(ROM ${source_files})
 #
 # PRIVATE dependencies are used in the API implementation, but not in
 # the headers
+#
+# Using both the MPI::MPI_C target and the two MPI_C "flag variables
+# (i.e., "MPI_C_LINK_FLAGS, MPI_C_LIBRARIES) is probably redundant,
+# but is done here to ease a potential rollback to CMake 2.8 or CMake
+# 3.0.
 target_link_libraries(ROM
-  PUBLIC ${MPI_C_LINK_FLAGS} ${HDF5_LIBRARIES}
+  PUBLIC ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${HDF5_LIBRARIES}
   ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES}
   PRIVATE ZLIB::ZLIB)
 
@@ -169,7 +176,9 @@ set(regression_test_names
 
 foreach(name IN LISTS regression_test_names)
   add_executable(${name} ${name}.C)
-  target_link_libraries(${name} PRIVATE ROM ${MPI_C_LINK_FLAGS})
+
+  target_link_libraries(${name}
+    PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C)
   target_include_directories(${name}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
     ${MPI_C_INCLUDE_DIRS})
@@ -184,7 +193,8 @@ if(GTEST_FOUND)
     IncrementalSVD)
   foreach(stem IN LISTS unit_test_stems)
     add_executable(test_${stem} tests/test_${stem}.C)
-    target_link_libraries(test_${stem} PRIVATE ROM ${MPI_C_LINK_FLAGS} GTest::GTest)
+    target_link_libraries(test_${stem} PRIVATE ROM
+      ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C GTest::GTest)
     target_include_directories(test_${stem}
       PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
       ${MPI_C_INCLUDE_DIRS})
