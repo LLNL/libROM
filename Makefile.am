@@ -35,6 +35,8 @@ librom_a_SOURCES += ParallelBuffer.C
 librom_a_SOURCES += DEIM.C
 librom_a_SOURCES += QDEIM.C
 librom_a_SOURCES += GNAT.C
+librom_a_SOURCES += scalapack_c_wrapper.c
+librom_a_SOURCES += scalapack_f_wrapper.f90
 
 include_HEADERS =
 include_HEADERS += BasisReader.h
@@ -58,6 +60,7 @@ include_HEADERS += StaticSVDBasisGenerator.h
 include_HEADERS += StaticSVDSampler.h
 include_HEADERS += Utilities.h
 include_HEADERS += Vector.h
+include_HEADERS += scalapack_wrapper.h
 
 noinst_PROGRAMS =
 noinst_PROGRAMS += uneven_dist
@@ -68,6 +71,7 @@ noinst_PROGRAMS += tests/test_Matrix
 noinst_PROGRAMS += tests/test_Vector
 noinst_PROGRAMS += tests/test_SVD
 noinst_PROGRAMS += tests/test_IncrementalSVD
+noinst_PROGRAMS += tests/test_StaticSVD
 
 # Static library linking requires different flag ordering than
 # dynamic/shared library linking. Static library linking
@@ -99,6 +103,10 @@ noinst_PROGRAMS += tests/test_IncrementalSVD
 uneven_dist_SOURCES = uneven_dist.C
 uneven_dist_LDFLAGS =
 uneven_dist_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
+
+tests_test_StaticSVD_SOURCES = tests/test_StaticSVD.C
+tests_test_StaticSVD_LDFLAGS =
+tests_test_StaticSVD_LDADD = $(LIB_PATH) librom.a $(LIB_NAME)
 
 random_test_SOURCES = random_test.C
 random_test_LDFLAGS =

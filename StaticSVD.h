@@ -15,6 +15,11 @@
 #define included_StaticSVD_h
 
 #include "SVD.h"
+#include "scalapack_wrapper.h"
+
+#include <limits>
+#include <memory>
+#include <vector>
 
 namespace CAROM {
 
@@ -29,20 +34,36 @@ class StaticSVD : public SVD
       /**
        * @brief Constructor.
        *
+       * If both max_basis_dimension and sigma_tolerance would result in
+       * truncating the basis, the dimension of the returned basis will be the
+       * *minimum* of the number of vectors that is computed from each.
+       * 
        * @pre dim > 0
        * @pre sample_per_time_interval > 0
        *
        * @param[in] dim The dimension of the system distributed to this
        *                processor.
-       * @param[in] samples_per_time_interval The maximium number of samples
+       * @param[in] samples_per_time_interval The maximum number of samples
        *                                      collected in a time interval.
-       * @param[in] debug_algorithm If true results of the algorithm will be
-       *                            printed to facilitate debugging.
+       * @param[in] max_basis_dimension The maximum dimension of the basis
+       *                                returned by getSpatialBasis or
+       *                                getTemporalBasis. Default: typemax(int).
+       * @param[in] sigma_tolerance This tolerance is based on the ratio of
+       *                            singular values to the largest singular
+       *                            value. If sigma[i] / sigma[0] < sigma_tolerance,
+       *                            the associated vector is dropped from the
+       *                            basis.
+       * @param[in] debug_algorithm (true) Specify whether or not to print
+       *                            information about the algorithm. No effect
+       *                            for this subclass.
        */
       StaticSVD(
          int dim,
          int samples_per_time_interval,
-         bool debug_algorithm = false);
+         int max_basis_dimension = std::numeric_limits<int>::max(),
+         double sigma_tolerance = 0,
+         bool debug_algorithm = false
+         );
 
       /**
        * Destructor.
@@ -128,24 +149,6 @@ class StaticSVD : public SVD
       computeSVD();
 
       /**
-       * @brief Preforms the actual SVD via lapack.
-       *
-       * Given a matrix, A, computes the 3 components of the singular value
-       * decomposition.
-       *
-       * @pre A != 0
-       * @pre total_dim > 0
-       *
-       * @param[in] A The globalized system whose SVD will be computed.
-       * @param[in] total_dim The total dimension of the system that has been
-       *                      distributed of multiple processors.
-       */
-      void
-      svd(
-         double* A,
-         int total_dim);
-
-      /**
        * @brief Tells if the basis vectors for this time interval are up to
        * date.
        *
@@ -161,14 +164,12 @@ class StaticSVD : public SVD
       /**
        * @brief Current samples of the system.
        */
-      std::vector<double*> d_samples;
+      std::unique_ptr<SLPK_Matrix> d_samples;
 
       /**
-       * @brief The globalized matrix L.
-       *
-       * L is small and each process owns all of L.
+       * @brief Factorization manager object used to compute the SVD
        */
-      Matrix* d_V;
+      std::unique_ptr<SVDManager> d_factorizer;
 
       /**
        * @brief Flag to indicate if the basis vectors for the current time
@@ -187,9 +188,54 @@ class StaticSVD : public SVD
       int d_num_procs;
 
       /**
-       * @brief MPI message tag.
+       * @brief The starting row (0-based) of the matrix that each process owns.
+       * Stored to avoid an MPI operation to get this operation every time we
+       * scatter a sample.
        */
-      static const int COMMUNICATE_A;
+      std::vector<int> d_istarts;
+
+      /**
+       * @brief The number of rows that each process owns. Stored to avoid
+       * an MPI operation to get this operation every time we scatter a sample.
+       */
+      std::vector<int> d_dims;
+
+      /**
+       * @brief The total dimension of the system (row dimension)
+       */
+      int d_total_dim;
+
+      /**
+       * @brief The number of processor rows and processor columns in the grid.
+       */
+      int d_nprow;
+      int d_npcol;
+
+      /**
+       * @brief The block size used internally for computing the SVD.
+       */
+      int d_blocksize;
+
+      /**
+       * @brief Get the system's total row dimension and where my rows sit in
+       * the matrix.
+       */
+      void get_global_info();
+
+      /**
+       * @brief The max number of basis vectors to return.
+       */
+      int d_max_basis_dimension;
+
+      /**
+       * @brief The tolerance for singular values below which to drop vectors
+       */
+      double d_sigma_tol;
+
+      void delete_samples();
+      void delete_factorizer();
+
+      void broadcast_sample(const double* u_in);
 };
 
 }
