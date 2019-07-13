@@ -23,6 +23,7 @@
 #endif
 
 /* Use Autotools-detected Fortran name-mangling scheme */
+#include "CAROM_config.h"
 #define dgetrf FC_FUNC(dgetrf, DGETRF)
 #define dgetri FC_FUNC(dgetri, DGETRI)
 #define dgeqp3 FC_FUNC(dgeqp3, DGEQP3)
