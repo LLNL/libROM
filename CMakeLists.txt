@@ -8,6 +8,16 @@
 #
 ###############################################################################
 
+# Debugging tip: If using the GNU Make generator (the default), build
+# with `make VERBOSE=1` to see flags being used by GNU Make. This
+# output helps in trying to diagnose configuration errors. The
+# equivalent for the Ninja generator is `ninja -v`. Also note that
+# because this project "uses Fortran" -- a Fortran compiler is
+# required to infer Fortran name-mangling conventions -- KitWare's
+# "ninja-fortran" is needed to run the resulting Ninja files. This
+# software can be installed, e.g., via Spack (`spack install
+# ninja-fortran`).
+
 # Require CMake version 3.10 or later to expose modern features of
 # CMake for maintainability. With additional work, it is possible to
 # rewrite the build system generator for CMake 3.8+, 3.1+, 3.0+, or
@@ -156,7 +166,7 @@ add_library(ROM ${source_files})
 target_link_libraries(ROM
   PUBLIC ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${HDF5_LIBRARIES}
   ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES}
-  PRIVATE ZLIB::ZLIB)
+  PRIVATE ${ZLIB_LIBRARIES} ZLIB::ZLIB)
 
 target_include_directories(ROM PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}
