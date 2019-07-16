@@ -16,6 +16,7 @@
 
 #include "SVDBasisGenerator.h"
 #include "BasisWriter.h"
+#include "BasisReader.h"
 
 namespace CAROM {
 
@@ -26,6 +27,7 @@ SVDBasisGenerator::SVDBasisGenerator(
 {
    if (!basis_file_name.empty()) {
       d_basis_writer = new BasisWriter(this, basis_file_name, file_format);
+      d_basis_reader = new BasisReader(this, basis_file_name, file_format);
    }
 }
 
@@ -34,6 +36,9 @@ SVDBasisGenerator::~SVDBasisGenerator()
    if (d_basis_writer) {
       delete d_basis_writer;
    }
+    if (d_basis_reader) {
+        delete d_basis_reader;
+    }
 }
 
 }
