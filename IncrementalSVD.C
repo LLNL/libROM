@@ -22,14 +22,7 @@
 #include <stdio.h>
 #include <sstream>
 
-/* Use Autotools-detected Fortran name-mangling scheme */
-#define dgesdd FC_FUNC(dgesdd, DGESDD)
-
-extern "C" {
-void dgesdd(char*, int*, int*, double*, int*,
-             double*, double*, int*, double*, int*,
-             double*, int*, int*, int*);
-}
+#include "lapacke.h"
 
 namespace CAROM {
 
@@ -450,31 +443,16 @@ IncrementalSVD::svd(
    // Use lapack's dgesdd Fortran function to perform the svd.  As this is
    // Fortran A and all the computed matrices are in column major order.
    double* sigma = new double [d_num_samples+1];
-   char jobz = 'A';
-   int m = d_num_samples+1;
-   int n = d_num_samples+1;
-   int lda = d_num_samples+1;
-   int ldu = d_num_samples+1;
-   int ldv = d_num_samples+1;
-   int lwork = m*(4*m + 7);
-   double* work = new double [lwork];
-   int iwork[8*m];
-   int info;
-   dgesdd(&jobz,
-	  &m,
-	  &n,
-	  A,
-	  &lda,
-	  sigma,
-	  &U->item(0, 0),
-	  &ldu,
-	  &V->item(0, 0),
-	  &ldv,
-	  work,
-	  &lwork,
-	  iwork,
-	  &info);
-   delete [] work;
+   const char jobz = 'A';
+   const int m = d_num_samples + 1;
+   const int n = d_num_samples + 1;
+   const int lda = d_num_samples + 1;
+   const int ldu = d_num_samples + 1;
+   const int ldv = d_num_samples + 1;
+   const int layout = LAPACK_COL_MAJOR;
+   const int info = LAPACKE_dgesdd(layout, jobz, m, n, A, lda, sigma,
+                                   &U->item(0, 0), ldu, &V->item(0, 0),
+                                   ldv);
 
    // If the svd succeeded, fill U and S.  Otherwise clean up and return.
    if (info == 0) {
@@ -506,7 +484,7 @@ IncrementalSVD::svd(
    else {
       delete [] sigma;
    }
-   return info == 0;
+   return (info == 0);
 }
 
 double
