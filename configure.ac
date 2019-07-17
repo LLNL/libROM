@@ -167,14 +167,6 @@ case "$FC" in
     ;;
 esac
 
-
-dnl
-dnl Generate macro wrappers for Fortran functions to make the Fortran
-dnl name-mangling convention portable.
-dnl
-
-AC_FC_WRAPPERS
-
 dnl
 dnl A way to manually add flags to the loader (ld) command.
 dnl
@@ -359,10 +351,10 @@ AC_ARG_WITH(mpi-mod-dir,
       Fortran compiler to find mpi.mod])
 )
 
-AS_IF([test "${with_mpi_mod_dir+set}" = set], 
+AS_IF([test "${with_mpi_mod_dir+set}" = set],
    [
       with_mpi_mod_dir="${FC_MODINC}$with_mpi_mod_dir"
-   ], 
+   ],
    [
       for dir in $MPILIBDIRS; do
          with_mpi_mod_dir="${FC_MODINC}${dir:2} $with_mpi_mod_dir"
