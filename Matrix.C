@@ -548,8 +548,8 @@ Matrix::inverse(
    int info;
    int mtx_size = d_num_rows;
    int lwork = mtx_size*mtx_size;
-   int* ipiv = new int [mtx_size];
-   double* work = new double [lwork];
+   std::unique_ptr<int[]> ipiv(new int [mtx_size]);
+   std::unique_ptr<double[]> work(new double [lwork]);
    // To use lapack we need a column major representation of this which is
    // essentially the transform of this.  Use result for this representation.
    for (int row = 0; row < mtx_size; ++row) {
@@ -558,8 +558,9 @@ Matrix::inverse(
       }
    }
    // Now call lapack to do the inversion.
-   dgetrf(&mtx_size, &mtx_size, result->d_mat, &mtx_size, ipiv, &info);
-   dgetri(&mtx_size, result->d_mat, &mtx_size, ipiv, work, &lwork, &info);
+   dgetrf(&mtx_size, &mtx_size, result->d_mat, &mtx_size, ipiv.get(), &info);
+   dgetri(&mtx_size, result->d_mat, &mtx_size, ipiv.get(), work.get(), &lwork,
+          &info);
    // Result now has the inverse in a column major representation.  Put it
    // into row major order.
    for (int row = 0; row < mtx_size; ++row) {
@@ -569,9 +570,6 @@ Matrix::inverse(
          result->item(col, row) = tmp;
       }
    }
-
-   delete [] work;
-   delete [] ipiv;
 }
 
 void
@@ -591,8 +589,9 @@ Matrix::inverse(
    int info;
    int mtx_size = d_num_rows;
    int lwork = mtx_size*mtx_size;
-   int* ipiv = new int [mtx_size];
-   double* work = new double [lwork];
+   // TODO(oxberry1@llnl.gov): Use "make_unique" when using C++14.
+   std::unique_ptr<int[]> ipiv(new int [mtx_size]);
+   std::unique_ptr<double[]> work(new double [lwork]);
    // To use lapack we need a column major representation of this which is
    // essentially the transform of this.  Use result for this representation.
    for (int row = 0; row < mtx_size; ++row) {
@@ -601,8 +600,9 @@ Matrix::inverse(
       }
    }
    // Now call lapack to do the inversion.
-   dgetrf(&mtx_size, &mtx_size, result.d_mat, &mtx_size, ipiv, &info);
-   dgetri(&mtx_size, result.d_mat, &mtx_size, ipiv, work, &lwork, &info);
+   dgetrf(&mtx_size, &mtx_size, result.d_mat, &mtx_size, ipiv.get(), &info);
+   dgetri(&mtx_size, result.d_mat, &mtx_size, ipiv.get(), work.get(), &lwork,
+          &info);
    // Result now has the inverse in a column major representation.  Put it
    // into row major order.
    for (int row = 0; row < mtx_size; ++row) {
@@ -612,9 +612,6 @@ Matrix::inverse(
          result.item(col, row) = tmp;
       }
    }
-
-   delete [] work;
-   delete [] ipiv;
 }
 
 void
@@ -628,8 +625,8 @@ Matrix::inverse()
    int info;
    int mtx_size = d_num_rows;
    int lwork = mtx_size*mtx_size;
-   int* ipiv = new int [mtx_size];
-   double* work = new double [lwork];
+   std::unique_ptr<int[]> ipiv(new int [mtx_size]);
+   std::unique_ptr<double[]> work(new double [lwork]);
    // To use lapack we need a column major representation of this which is
    // essentially the transform of this.
    for (int row = 0; row < mtx_size; ++row) {
@@ -640,8 +637,8 @@ Matrix::inverse()
       }
    }
    // Now call lapack to do the inversion.
-   dgetrf(&mtx_size, &mtx_size, d_mat, &mtx_size, ipiv, &info);
-   dgetri(&mtx_size, d_mat, &mtx_size, ipiv, work, &lwork, &info);
+   dgetrf(&mtx_size, &mtx_size, d_mat, &mtx_size, ipiv.get(), &info);
+   dgetri(&mtx_size, d_mat, &mtx_size, ipiv.get(), work.get(), &lwork, &info);
    // This now has its inverse in a column major representation.  Put it into
    // row major representation.
    for (int row = 0; row < mtx_size; ++row) {
@@ -651,9 +648,6 @@ Matrix::inverse()
          item(col, row) = tmp;
       }
    }
-
-   delete [] work;
-   delete [] ipiv;
 }
 
 void Matrix::transposePseudoinverse()
