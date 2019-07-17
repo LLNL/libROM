@@ -359,10 +359,10 @@ AC_ARG_WITH(mpi-mod-dir,
       Fortran compiler to find mpi.mod])
 )
 
-AS_IF([test "${with_mpi_mod_dir+set}" = set], 
+AS_IF([test "${with_mpi_mod_dir+set}" = set],
    [
       with_mpi_mod_dir="${FC_MODINC}$with_mpi_mod_dir"
-   ], 
+   ],
    [
       for dir in $MPILIBDIRS; do
          with_mpi_mod_dir="${FC_MODINC}${dir:2} $with_mpi_mod_dir"
@@ -613,13 +613,6 @@ if test -n "$with_dox_output_dir"; then
   [dox_output_dir="`echo $dox_output_dir | sed 's:\([^/]\)$:\1/:'`"]
 fi
 AC_SUBST(dox_output_dir)
-
-dnl
-dnl Set ROM_PERL to the perl binary for use in doxygen.
-dnl
-
-CASC_PATH_PROG(ROM_PERL,perl)
-CASC_AC_LOG_VAR(ROM_PERL)
 
 AC_SUBST(AR)
 
