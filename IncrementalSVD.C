@@ -442,7 +442,7 @@ IncrementalSVD::svd(
 
    // Use lapack's dgesdd Fortran function to perform the svd.  As this is
    // Fortran A and all the computed matrices are in column major order.
-   double* sigma = new double [d_num_samples+1];
+   std::unique_ptr<double[]> sigma(new double [d_num_samples + 1]);
    const char jobz = 'A';
    const int m = d_num_samples + 1;
    const int n = d_num_samples + 1;
@@ -450,7 +450,7 @@ IncrementalSVD::svd(
    const int ldu = d_num_samples + 1;
    const int ldv = d_num_samples + 1;
    const int layout = LAPACK_COL_MAJOR;
-   const int info = LAPACKE_dgesdd(layout, jobz, m, n, A, lda, sigma,
+   const int info = LAPACKE_dgesdd(layout, jobz, m, n, A, lda, sigma.get(),
                                    &U->item(0, 0), ldu, &V->item(0, 0),
                                    ldv);
 
@@ -460,7 +460,6 @@ IncrementalSVD::svd(
       for (int i = 0; i < d_num_samples+1; ++i) {
          S->item(i, i) = sigma[i];
       }
-      delete [] sigma;
 
       // U is column major order so convert it to row major order.
       for (int row = 0; row < d_num_samples+1; ++row) {
@@ -481,9 +480,7 @@ IncrementalSVD::svd(
         }
       }*/
    }
-   else {
-      delete [] sigma;
-   }
+
    return (info == 0);
 }
 
