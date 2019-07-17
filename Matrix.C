@@ -530,7 +530,7 @@ Matrix::inverse(
    // Set up some stuff the lapack routines need.
    int info;
    const int mtx_size = d_num_rows;
-   int* ipiv = new int [mtx_size];
+   std::unique_ptr<int[]> ipiv(new int [mtx_size]);
    // To use lapack we need a column major representation of this which is
    // essentially the transform of this.  Use result for this representation.
    for (int row = 0; row < mtx_size; ++row) {
@@ -541,8 +541,8 @@ Matrix::inverse(
    // Now call lapack to do the inversion.
    int layout = LAPACK_COL_MAJOR;
    info = LAPACKE_dgetrf(layout, mtx_size, mtx_size, result->d_mat, mtx_size,
-                         ipiv);
-   info = LAPACKE_dgetri(layout, mtx_size, result->d_mat, mtx_size, ipiv);
+                         ipiv.get());
+   info = LAPACKE_dgetri(layout, mtx_size, result->d_mat, mtx_size, ipiv.get());
    // Result now has the inverse in a column major representation.  Put it
    // into row major order.
    for (int row = 0; row < mtx_size; ++row) {
@@ -552,8 +552,6 @@ Matrix::inverse(
          result->item(col, row) = tmp;
       }
    }
-
-   delete [] ipiv;
 }
 
 void
@@ -572,7 +570,7 @@ Matrix::inverse(
    // Set up some stuff the lapack routines need.
    int info;
    const int mtx_size = d_num_rows;
-   int* ipiv = new int [mtx_size];
+   std::unique_ptr<int[]> ipiv(new int [mtx_size]);
    // To use lapack we need a column major representation of this which is
    // essentially the transform of this.  Use result for this representation.
    for (int row = 0; row < mtx_size; ++row) {
@@ -583,8 +581,8 @@ Matrix::inverse(
    // Now call lapack to do the inversion.
    const int layout = LAPACK_COL_MAJOR;
    info = LAPACKE_dgetrf(layout, mtx_size, mtx_size, result.d_mat, mtx_size,
-                         ipiv);
-   info = LAPACKE_dgetri(layout, mtx_size, result.d_mat, mtx_size, ipiv);
+                         ipiv.get());
+   info = LAPACKE_dgetri(layout, mtx_size, result.d_mat, mtx_size, ipiv.get());
    // Result now has the inverse in a column major representation.  Put it
    // into row major order.
    for (int row = 0; row < mtx_size; ++row) {
@@ -594,8 +592,6 @@ Matrix::inverse(
          result.item(col, row) = tmp;
       }
    }
-
-   delete [] ipiv;
 }
 
 void
@@ -608,7 +604,7 @@ Matrix::inverse()
    // Set up some stuff the lapack routines need.
    int info;
    const int mtx_size = d_num_rows;
-   int* ipiv = new int [mtx_size];
+   std::unique_ptr<int[]> ipiv(new int [mtx_size]);
    // To use lapack we need a column major representation of this which is
    // essentially the transform of this.
    for (int row = 0; row < mtx_size; ++row) {
@@ -620,8 +616,9 @@ Matrix::inverse()
    }
    // Now call lapack to do the inversion.
    const int layout = LAPACK_COL_MAJOR;
-   info = LAPACKE_dgetrf(layout, mtx_size, mtx_size, d_mat, mtx_size, ipiv);
-   info = LAPACKE_dgetri(layout, mtx_size, d_mat, mtx_size, ipiv);
+   info = LAPACKE_dgetrf(layout, mtx_size, mtx_size, d_mat, mtx_size,
+                         ipiv.get());
+   info = LAPACKE_dgetri(layout, mtx_size, d_mat, mtx_size, ipiv.get());
    // This now has its inverse in a column major representation.  Put it into
    // row major representation.
    for (int row = 0; row < mtx_size; ++row) {
@@ -631,8 +628,6 @@ Matrix::inverse()
          item(col, row) = tmp;
       }
    }
-
-   delete [] ipiv;
 }
 
 void Matrix::transposePseudoinverse()
@@ -820,9 +815,9 @@ Matrix::qrcp_pivots_transpose_serial(int* row_pivot,
   // possible to get better performance by computing the optimal block
   // size and then using that value to size the work array; see the
   // LAPACK source code and documentation for details.
-  double* tau  = new double[std::min(num_rows_of_transpose,
-				     num_cols_of_transpose)];
-  int* pivot = new int[num_cols_of_transpose];
+  std::unique_ptr<double[]> tau(new double[std::min(num_rows_of_transpose,
+                                                  num_cols_of_transpose)]);
+  std::unique_ptr<int[]> pivot(new int[num_cols_of_transpose]);
   int info;
 
    // Compute the QR decomposition with column pivots of the transpose
@@ -836,8 +831,8 @@ Matrix::qrcp_pivots_transpose_serial(int* row_pivot,
                         num_cols_of_transpose,
                         scratch.d_mat,
                         num_rows_of_transpose,
-                        pivot,
-                        tau);
+                        pivot.get(),
+                        tau.get());
 
    // Fail if error in LAPACK routine.
    CAROM_ASSERT(info == 0);
@@ -864,10 +859,6 @@ Matrix::qrcp_pivots_transpose_serial(int* row_pivot,
      row_pivot[i]       = pivot[i] - 1;
      row_pivot_owner[i] = my_rank;
    }
-
-   // Free arrays
-   delete [] tau;
-   delete [] pivot;
 }
 
 void
