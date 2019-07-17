@@ -22,25 +22,8 @@
 #include <El.hpp>
 #endif
 
-/* Use Autotools-detected Fortran name-mangling scheme */
 #include "CAROM_config.h"
-#define dgetrf FC_FUNC(dgetrf, DGETRF)
-#define dgetri FC_FUNC(dgetri, DGETRI)
-#define dgeqp3 FC_FUNC(dgeqp3, DGEQP3)
-
-extern "C" {
-// LU decomposition of a general matrix.
-void
-dgetrf(int*, int*, double*, int*, int*, int*);
-
-// Generate inverse of a matrix given its LU decomposition.
-void
-dgetri(int*, double*, int*, int*, double*, int*, int*);
-
-// BLAS-3 version of QR decomposition with column pivoting
-void
-dgeqp3(int*, int*, double*, int*, int*, double*, double*, int*, int*);
-}
+#include "lapacke.h"
 
 namespace CAROM {
 
@@ -546,10 +529,8 @@ Matrix::inverse(
    // Call lapack routines to do the inversion.
    // Set up some stuff the lapack routines need.
    int info;
-   int mtx_size = d_num_rows;
-   int lwork = mtx_size*mtx_size;
+   const int mtx_size = d_num_rows;
    int* ipiv = new int [mtx_size];
-   double* work = new double [lwork];
    // To use lapack we need a column major representation of this which is
    // essentially the transform of this.  Use result for this representation.
    for (int row = 0; row < mtx_size; ++row) {
@@ -558,8 +539,10 @@ Matrix::inverse(
       }
    }
    // Now call lapack to do the inversion.
-   dgetrf(&mtx_size, &mtx_size, result->d_mat, &mtx_size, ipiv, &info);
-   dgetri(&mtx_size, result->d_mat, &mtx_size, ipiv, work, &lwork, &info);
+   int layout = LAPACK_COL_MAJOR;
+   info = LAPACKE_dgetrf(layout, mtx_size, mtx_size, result->d_mat, mtx_size,
+                         ipiv);
+   info = LAPACKE_dgetri(layout, mtx_size, result->d_mat, mtx_size, ipiv);
    // Result now has the inverse in a column major representation.  Put it
    // into row major order.
    for (int row = 0; row < mtx_size; ++row) {
@@ -569,6 +552,8 @@ Matrix::inverse(
          result->item(col, row) = tmp;
       }
    }
+
+   delete [] ipiv;
 }
 
 void
@@ -586,10 +571,8 @@ Matrix::inverse(
    // Call lapack routines to do the inversion.
    // Set up some stuff the lapack routines need.
    int info;
-   int mtx_size = d_num_rows;
-   int lwork = mtx_size*mtx_size;
+   const int mtx_size = d_num_rows;
    int* ipiv = new int [mtx_size];
-   double* work = new double [lwork];
    // To use lapack we need a column major representation of this which is
    // essentially the transform of this.  Use result for this representation.
    for (int row = 0; row < mtx_size; ++row) {
@@ -598,8 +581,10 @@ Matrix::inverse(
       }
    }
    // Now call lapack to do the inversion.
-   dgetrf(&mtx_size, &mtx_size, result.d_mat, &mtx_size, ipiv, &info);
-   dgetri(&mtx_size, result.d_mat, &mtx_size, ipiv, work, &lwork, &info);
+   const int layout = LAPACK_COL_MAJOR;
+   info = LAPACKE_dgetrf(layout, mtx_size, mtx_size, result.d_mat, mtx_size,
+                         ipiv);
+   info = LAPACKE_dgetri(layout, mtx_size, result.d_mat, mtx_size, ipiv);
    // Result now has the inverse in a column major representation.  Put it
    // into row major order.
    for (int row = 0; row < mtx_size; ++row) {
@@ -609,6 +594,8 @@ Matrix::inverse(
          result.item(col, row) = tmp;
       }
    }
+
+   delete [] ipiv;
 }
 
 void
@@ -620,10 +607,8 @@ Matrix::inverse()
    // Call lapack routines to do the inversion.
    // Set up some stuff the lapack routines need.
    int info;
-   int mtx_size = d_num_rows;
-   int lwork = mtx_size*mtx_size;
+   const int mtx_size = d_num_rows;
    int* ipiv = new int [mtx_size];
-   double* work = new double [lwork];
    // To use lapack we need a column major representation of this which is
    // essentially the transform of this.
    for (int row = 0; row < mtx_size; ++row) {
@@ -634,8 +619,9 @@ Matrix::inverse()
       }
    }
    // Now call lapack to do the inversion.
-   dgetrf(&mtx_size, &mtx_size, d_mat, &mtx_size, ipiv, &info);
-   dgetri(&mtx_size, d_mat, &mtx_size, ipiv, work, &lwork, &info);
+   const int layout = LAPACK_COL_MAJOR;
+   info = LAPACKE_dgetrf(layout, mtx_size, mtx_size, d_mat, mtx_size, ipiv);
+   info = LAPACKE_dgetri(layout, mtx_size, d_mat, mtx_size, ipiv);
    // This now has its inverse in a column major representation.  Put it into
    // row major representation.
    for (int row = 0; row < mtx_size; ++row) {
@@ -645,6 +631,8 @@ Matrix::inverse()
          item(col, row) = tmp;
       }
    }
+
+   delete [] ipiv;
 }
 
 void Matrix::transposePseudoinverse()
@@ -817,8 +805,8 @@ Matrix::qrcp_pivots_transpose_serial(int* row_pivot,
   CAROM_ASSERT(row_pivot_owner != NULL);
 
   // Get dimensions of transpose of matrix
-  int num_rows_of_transpose = numColumns();
-  int num_cols_of_transpose = numRows();
+  const int num_rows_of_transpose = numColumns();
+  const int num_cols_of_transpose = numRows();
 
   // LAPACK routines tend to overwrite their inputs, but we'd like to
   // keep the basis matrix and use it in later computations, so copy
@@ -832,8 +820,6 @@ Matrix::qrcp_pivots_transpose_serial(int* row_pivot,
   // possible to get better performance by computing the optimal block
   // size and then using that value to size the work array; see the
   // LAPACK source code and documentation for details.
-  int lwork = 20 * num_cols_of_transpose + 1;
-  double* work = new double[lwork];
   double* tau  = new double[std::min(num_rows_of_transpose,
 				     num_cols_of_transpose)];
   int* pivot = new int[num_cols_of_transpose];
@@ -844,15 +830,14 @@ Matrix::qrcp_pivots_transpose_serial(int* row_pivot,
    // row-major format, which is the transpose of the Fortran memory
    // model (which is column-major). Passing the row-major data
    // looks like an in-place transposition to Fortran.
-   dgeqp3(&num_rows_of_transpose,
-	  &num_cols_of_transpose,
-	  scratch.d_mat,
-	  &num_rows_of_transpose,
-	  pivot,
-	  tau,
-	  work,
-	  &lwork,
-	  &info);
+  const int layout = LAPACK_COL_MAJOR;
+  info = LAPACKE_dgeqp3(layout,
+                        num_rows_of_transpose,
+                        num_cols_of_transpose,
+                        scratch.d_mat,
+                        num_rows_of_transpose,
+                        pivot,
+                        tau);
 
    // Fail if error in LAPACK routine.
    CAROM_ASSERT(info == 0);
@@ -872,14 +857,15 @@ Matrix::qrcp_pivots_transpose_serial(int* row_pivot,
    // Fortran-based indexing convention (first element of 1-D array by
    // default corresponds to index of 1, though this convention can be
    // overridden) to a C-based indexing convention (first element of
-   // 1-D array corresponds to index of 0).
+   // 1-D array corresponds to index of 0). Even though the C language
+   // interface to LAPACK (i.e., LAPACKE) is being used, the C
+   // language API returns the Fortran indexing conventions.
    for (int i = 0; i < pivots_requested; i++) {
      row_pivot[i]       = pivot[i] - 1;
      row_pivot_owner[i] = my_rank;
    }
 
    // Free arrays
-   delete [] work;
    delete [] tau;
    delete [] pivot;
 }
