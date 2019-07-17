@@ -605,29 +605,14 @@ Matrix::inverse()
    int info;
    const int mtx_size = d_num_rows;
    std::unique_ptr<int[]> ipiv(new int [mtx_size]);
-   // To use lapack we need a column major representation of this which is
-   // essentially the transform of this.
-   for (int row = 0; row < mtx_size; ++row) {
-      for (int col = row+1; col < mtx_size; ++col) {
-         double tmp = item(row, col);
-         item(row, col) = item(col, row);
-         item(col, row) = tmp;
-      }
-   }
-   // Now call lapack to do the inversion.
-   const int layout = LAPACK_COL_MAJOR;
+
+   // Now call lapack to do the inversion. Rather than transpose the
+   // row-major data into column-major form ourselves, delegate that
+   // task to LAPACKE.
+   const int layout = LAPACK_ROW_MAJOR;
    info = LAPACKE_dgetrf(layout, mtx_size, mtx_size, d_mat, mtx_size,
                          ipiv.get());
    info = LAPACKE_dgetri(layout, mtx_size, d_mat, mtx_size, ipiv.get());
-   // This now has its inverse in a column major representation.  Put it into
-   // row major representation.
-   for (int row = 0; row < mtx_size; ++row) {
-      for (int col = row+1; col < mtx_size; ++col) {
-         double tmp = item(row, col);
-         item(row, col) = item(col, row);
-         item(col, row) = tmp;
-      }
-   }
 }
 
 void Matrix::transposePseudoinverse()
