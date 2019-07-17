@@ -70,6 +70,7 @@ IncrementalSVD::IncrementalSVD(
       d_rank = 0;
    }
    d_proc_dims.reserve(d_size);
+   d_proc_dims.resize(d_size);
    if (mpi_init) {
       MPI_Allgather(&d_dim,
          1,
