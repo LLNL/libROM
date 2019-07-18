@@ -19,11 +19,8 @@
 #include <stdio.h>
 #include <string.h>
 
-<<<<<<< HEAD
-=======
 using namespace ScalaWRAP;
 
->>>>>>> 499eee2214896f640aea8bd6306c0355f2b2ae89
 namespace CAROM {
 
 StaticSVD::StaticSVD(
@@ -87,26 +84,6 @@ StaticSVD::takeSample(
 
    if (isNewTimeInterval()) {
       // We have a new time interval.
-}
-
-bool
-StaticSVD::takeSample(
-   double* u_in,
-   double time,
-   bool add_without_increase)
-{
-   CAROM_ASSERT(u_in != 0);
-   CAROM_ASSERT(time >= 0.0);
-   CAROM_NULL_USE(add_without_increase);
-
-   // Check the u_in is not non-zero.
-   Vector u_vec(u_in, d_dim, true);
-   if (u_vec.norm() == 0.0) {
-      return false;
-   }
-
-   if (isNewTimeInterval()) {
-      // We have a new time interval.
       delete_factorizer();
       int num_time_intervals =
          static_cast<int>(d_time_interval_start_times.size());
@@ -129,11 +106,8 @@ StaticSVD::takeSample(
           time;
       d_basis = nullptr;
       d_basis_right = nullptr;
-<<<<<<< HEAD
       // Set the N in the global matrix so BLACS won't complain.
       d_samples->n = d_samples_per_time_interval;
-=======
->>>>>>> 499eee2214896f640aea8bd6306c0355f2b2ae89
    }
 
    broadcast_sample(u_in);
@@ -257,17 +231,13 @@ StaticSVD::computeSVD()
       CAROM_ASSERT(ncolumns >= 0);
       unsigned nc = static_cast<unsigned>(ncolumns);
       memset(&d_S->item(0, 0), 0, nc*nc*sizeof(double));
-<<<<<<< HEAD
    }
    
-   d_basis_right = new Matrix(ncolumns, d_num_samples, false);
+   d_basis_right = new Matrix(d_num_samples, ncolumns, false);
    for (int rank = 0; rank < d_num_procs; ++rank) {
-      // gather_transposed_block does the same as gather_block, but transposes
-      // it; here, it is used to go from column-major to row-major order.
-      gather_transposed_block(&d_basis->item(0, 0), d_factorizer->U,
-                              d_istarts[static_cast<unsigned>(rank)]+1,
-                              1, d_dims[static_cast<unsigned>(rank)],
-                              ncolumns, rank);
+      int nrows = d_dims[static_cast<unsigned>(rank)];
+      int firstrow = d_istarts[static_cast<unsigned>(rank)] + 1;
+
       // V is computed in the transposed order so no reordering necessary.
       gather_block(&d_basis_right->item(0, 0), d_factorizer->V, 1, 1,
                    ncolumns, d_num_samples, rank);
@@ -296,7 +266,6 @@ StaticSVD::computeSVD()
          printf("\n");
       }
    }
-=======
    }
    
    d_basis_right = new Matrix(d_num_samples, ncolumns, false);
