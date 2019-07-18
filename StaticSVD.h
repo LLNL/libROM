@@ -15,7 +15,7 @@
 #define included_StaticSVD_h
 
 #include "SVD.h"
-#include "scalapack_wrapper.h"
+#include "ScalaWRAP/src/SVD.hpp"
 
 #include <limits>
 #include <memory>
@@ -164,12 +164,15 @@ class StaticSVD : public SVD
       /**
        * @brief Current samples of the system.
        */
-      std::unique_ptr<SLPK_Matrix> d_samples;
+      std::unique_ptr<ScalaWRAP::ScalaMat> d_samples;
 
       /**
        * @brief Factorization manager object used to compute the SVD
        */
-      std::unique_ptr<SVDManager> d_factorizer;
+      std::unique_ptr<ScalaWRAP::SVDInfo> d_factorization;
+
+      /**
+       * @brief Flag to indicate if the basis vectors for the current time
 
       /**
        * @brief Flag to indicate if the basis vectors for the current time
@@ -233,7 +236,7 @@ class StaticSVD : public SVD
       double d_sigma_tol;
 
       void delete_samples();
-      void delete_factorizer();
+      void delete_factorization();
 
       void broadcast_sample(const double* u_in);
 };
