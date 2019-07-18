@@ -238,67 +238,26 @@ StaticSVD::computeSVD()
       int nrows = d_dims[static_cast<unsigned>(rank)];
       int firstrow = d_istarts[static_cast<unsigned>(rank)] + 1;
 
-      // V is computed in the transposed order so no reordering necessary.
-      gather_block(&d_basis_right->item(0, 0), d_factorizer->V, 1, 1,
-                   ncolumns, d_num_samples, rank);
-   }
-   for (int i = 0; i < ncolumns; ++i)
-      d_S->item(i, i) = d_factorizer->S[static_cast<unsigned>(i)];
-   d_this_interval_basis_current = true;
-
-   if (d_debug_algorithm) {
-      if (d_rank == 0) {
-         printf("Distribution of sampler's A and U:\n");
-      }
-      print_debug_info(d_samples.get());
-      MPI_Barrier(MPI_COMM_WORLD);
-
-      if (d_rank == 0) {
-         printf("Distribution of sampler's V:\n");
-      }
-      print_debug_info(d_factorizer->V);
-      MPI_Barrier(MPI_COMM_WORLD);
-
-      if (d_rank == 0) {
-         printf("Computed singular values: ");
-         for (int i = 0; i < ncolumns; ++i)
-            printf("%8.4E  ", d_factorizer->S[i]);
-         printf("\n");
-      }
-   }
-   }
-   
-   d_basis_right = new Matrix(d_num_samples, ncolumns, false);
-   for (int rank = 0; rank < d_num_procs; ++rank) {
-      int nrows = d_dims[static_cast<unsigned>(rank)];
-      int firstrow = d_istarts[static_cast<unsigned>(rank)] + 1;
-
-      LocalMatrix(&d_basis->item(0, 0), nrows, ncolumns, rank) =  
-         d_factorization->U->submatrix(rowrange(firstrow, firstrow+nrows-1),
-                                       colrange(1, ncolumns));
-
-      // Specifying that the matrix is stored in column major order results in
-      // no transposition being applied, which is what we want
-      LocalMatrix(&d_basis_right->item(0, 0), ncolumns, d_num_samples, rank,
-                  false, COL_MAJOR) =
-          d_factorization->Vt->submatrix(rowrange(1, ncolumns),
-                                         colrange(1, d_num_samples));
+       LocalMatrix(&d_basis->item(0, 0), nrows, ncolumns, rank) =
+          d_factorization->U->submatrix(rowrange(firstrow, firstrow+nrows-1),
+                                     colrange(1, ncolumns));
+       
+       // Specifying that the matrix is stored in column major order results in
+       // no transposition being applied, which is what we want
+       LocalMatrix(&d_basis_right->item(0, 0), ncolumns, d_num_samples, rank,
+                   false, COL_MAJOR) =
+       d_factorization->Vt->submatrix(rowrange(1, ncolumns),
+                                      colrange(1, d_num_samples));
    }
    for (int i = 0; i < ncolumns; ++i)
       d_S->item(i, i) = d_factorization->S[static_cast<unsigned>(i)];
    d_this_interval_basis_current = true;
->>>>>>> 499eee2214896f640aea8bd6306c0355f2b2ae89
 }
 
 void
 StaticSVD::broadcast_sample(const double* u_in)
 {
    for (int rank = 0; rank < d_num_procs; ++rank) {
-<<<<<<< HEAD
-      scatter_block(d_samples.get(), d_istarts[static_cast<unsigned>(rank)]+1,
-                    d_num_samples+1, u_in, d_dims[static_cast<unsigned>(rank)],
-                    1, rank);
-=======
       int firstrow = d_istarts[static_cast<unsigned>(rank)]+1;
       int lastrow = firstrow + d_dims[static_cast<unsigned>(rank)] - 1;
       int col = d_num_samples + 1;
@@ -306,7 +265,6 @@ StaticSVD::broadcast_sample(const double* u_in)
       d_samples->submatrix(rowrange(firstrow, lastrow), colrange(col, col)) =
           LocalMatrix(const_cast<double*>(u_in), lastrow - firstrow + 1, 1, rank, 
                       false, COL_MAJOR);
->>>>>>> 499eee2214896f640aea8bd6306c0355f2b2ae89
    }
 }
 

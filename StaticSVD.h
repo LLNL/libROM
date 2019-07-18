@@ -209,17 +209,6 @@ class StaticSVD : public SVD
       int d_total_dim;
 
       /**
-       * @brief The number of processor rows and processor columns in the grid.
-       */
-      int d_nprow;
-      int d_npcol;
-
-      /**
-       * @brief The block size used internally for computing the SVD.
-       */
-      int d_blocksize;
-
-      /**
        * @brief Get the system's total row dimension and where my rows sit in
        * the matrix.
        */
