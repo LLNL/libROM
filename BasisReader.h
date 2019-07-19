@@ -174,6 +174,11 @@ class BasisReader {
        * @brief The database being read from.
        */
       Database* d_database;
+   
+      /**
+       * @brief Base file name stored for consistency between reading and writing.
+       */
+      const std::string& base_file_name;
 
       /**
        * @brief The last time at which basis vectors were requested.
