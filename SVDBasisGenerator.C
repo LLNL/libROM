@@ -34,6 +34,9 @@ SVDBasisGenerator::~SVDBasisGenerator()
    if (d_basis_writer) {
       delete d_basis_writer;
    }
+    if (d_basis_reader) {
+      delete d_basis_reader;
+    }
 }
 
 }

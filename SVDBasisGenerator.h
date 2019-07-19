@@ -18,6 +18,7 @@
 #define included_SVDBasisGenerator_h
 
 #include "BasisWriter.h"
+#include "BasisReader.h"
 #include "SVDSampler.h"
 
 /* Use C++11 built-in shared pointers if available; else fallback to Boost. */
@@ -32,6 +33,7 @@
 namespace CAROM {
 
 class BasisWriter;
+class BasisReader;
 class Matrix;
 
 /**
@@ -127,6 +129,15 @@ class SVDBasisGenerator
          if (d_basis_writer) {
             d_basis_writer->writeBasis();
          }
+      }
+      void
+      loadSamples(const std::string& base_file_name = NULL,
+                  Database::formats db_format = Database::HDF5)
+      {
+          if (d_basis_reader) {
+              d_basis_reader->readBasis(base_file_name, db_format);
+             
+          }
       }
 
       /**
