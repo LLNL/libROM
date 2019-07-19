@@ -131,7 +131,7 @@ class SVDBasisGenerator
          }
       }
       void
-      loadSamples(const std::string& base_file_name = NULL,
+      loadSamples(const std::string& base_file_name = "",
                   Database::formats db_format = Database::HDF5)
       {
           if (d_basis_reader) {
@@ -255,6 +255,12 @@ class SVDBasisGenerator
        * @brief Writer of basis vectors.
        */
       BasisWriter* d_basis_writer;
+
+      /**
+       * @brief Reader of basis vectors.
+       */
+      BasisReader* d_basis_reader;
+
 
       /**
        * @brief Pointer to the underlying sampling control object.

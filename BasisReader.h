@@ -90,7 +90,7 @@ class BasisReader {
       }
 
       void readBasis(
-             const std::string& base_file_name = NULL,
+             const std::string& base_file_name = "",
              Database::formats db_format = Database::HDF5);
 
       /**
@@ -178,7 +178,7 @@ class BasisReader {
       /**
        * @brief Base file name stored for consistency between reading and writing.
        */
-      const std::string& base_file_name;
+      std::string base_file_name_;
 
       /**
        * @brief The last time at which basis vectors were requested.
