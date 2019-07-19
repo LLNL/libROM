@@ -90,7 +90,7 @@ class BasisReader {
       }
 
       void readBasis(
-             const std::string& base_file_name,
+             const std::string& base_file_name = NULL,
              Database::formats db_format = Database::HDF5);
 
       /**

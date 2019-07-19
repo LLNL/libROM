@@ -23,7 +23,8 @@ BasisReader::BasisReader(
    d_spatial_basis_vectors(NULL),
    d_temporal_basis_vectors(0),
    d_singular_values(0),
-   d_last_basis_idx(-1)
+   d_last_basis_idx(-1),
+   base_file_name_(base_file_name)
 {
    CAROM_ASSERT(!base_file_name.empty());
 
@@ -59,6 +60,7 @@ BasisReader::~BasisReader()
    delete d_singular_values;
    d_database->close();
    delete d_database;
+   delete base_file_name_;
 }
 
 void
@@ -66,6 +68,7 @@ BasisReader::readBasis(
    const std::string& base_file_name,
    Database::formats db_format)
 {
+   if (base_file_name == NULL) base_file_name = base_file_name_;
    CAROM_ASSERT(!base_file_name.empty());
 
    int mpi_init;
