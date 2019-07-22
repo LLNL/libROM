@@ -168,9 +168,6 @@ class StaticSVD : public SVD
 
       /**
        * @brief Flag to indicate if the basis vectors for the current time
-
-      /**
-       * @brief Flag to indicate if the basis vectors for the current time
        * interval are up to date.
        */
       bool d_this_interval_basis_current;
