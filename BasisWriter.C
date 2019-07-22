@@ -39,6 +39,8 @@ BasisWriter::BasisWriter(
    else {
       rank = 0;
    }
+
+   // create and open basis database
    char tmp[100];
    sprintf(tmp, ".%06d", rank);
    std::string full_file_name = base_file_name + tmp;
@@ -46,22 +48,36 @@ BasisWriter::BasisWriter(
       d_database = new HDFDatabase();
    }
    d_database->create(full_file_name);
+   
+   // create and open state database
+   char tmp2[100];
+   sprintf(tmp2, ".state.%06d", rank);
+   std::string state_file_name = base_file_name + tmp2;
+   if (db_format == Database::HDF5) {
+      d_state_database = new HDF5Database();
+   }
+   d_state_database->create(state_file_name);
 }
 
 BasisWriter::~BasisWriter()
 {
    d_database->putInteger("num_time_intervals", d_num_intervals_written);
    d_database->close();
+   d_state_database->close();
    delete d_database;
+   delete d_state_database;
 }
 
 void
-BasisWriter::writeBasis()
+BasisWriter::writeBasis(const std::string& kind)
 {
+
    char tmp[100];
    double time_interval_start_time =
       d_basis_generator->getBasisIntervalStartTime(d_num_intervals_written);
    sprintf(tmp, "time_%06d", d_num_intervals_written);
+   
+   if (kind == "basis") {
    d_database->putDouble(tmp, time_interval_start_time);
 
    const Matrix* basis = d_basis_generator->getSpatialBasis();
@@ -95,6 +111,18 @@ BasisWriter::writeBasis()
    d_database->putDoubleArray(tmp, &sv->item(0, 0), num_rows*num_cols);
 
    ++d_num_intervals_written;
+   }
+   if (kind == "state") {
+   // TODO: Implement state writing (see incremental svd code)
+      
+
+   }
+   if (kind != "basis" || kind != "state") { 
+      std::cout << "Basis Writer needs to write a basis or state, please call BasisWriter::writeBasis correctly"
+      << std::endl;
+   }
+ 
+
 }
 
 }
