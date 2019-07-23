@@ -55,7 +55,6 @@ BasisWriter::BasisWriter(
 
 BasisWriter::~BasisWriter()
 {
-   std::cout << "Writing num time intervals to file" << std::endl;
    d_database->putInteger("num_time_intervals", d_num_intervals_written);
    d_database->close();
    delete d_database;
