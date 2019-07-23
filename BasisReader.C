@@ -39,7 +39,6 @@ BasisReader::BasisReader(
       rank = 0;
    }
 
-   // create initial database but don't read yet
    char tmp[100];
    sprintf(tmp, ".%06d", rank);
    full_file_name = base_file_name + tmp;
@@ -47,6 +46,18 @@ BasisReader::BasisReader(
       d_database = new HDFDatabase();
    }
 
+   std::cout << "Opening file: " << full_file_name << std::endl;
+   d_database->open(full_file_name);
+
+   int num_time_intervals;
+   double foo;
+   d_database->getDouble("num_time_intervals", foo);
+   num_time_intervals = static_cast<int>(foo);
+   d_time_interval_start_times.resize(num_time_intervals);
+   for (int i = 0; i < num_time_intervals; ++i) {
+      sprintf(tmp, "time_%06d", i);
+      d_database->getDouble(tmp, d_time_interval_start_times[i]);
+   }
 }
 
 BasisReader::~BasisReader()
