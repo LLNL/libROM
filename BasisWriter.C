@@ -25,7 +25,9 @@ BasisWriter::BasisWriter(
    const std::string& base_file_name,
    Database::formats db_format) :
    d_basis_generator(basis_generator),
-   d_num_intervals_written(0)
+   d_num_intervals_written(0),
+   full_file_name(""),
+   state_file_name("")
 {
    CAROM_ASSERT(basis_generator != 0);
    CAROM_ASSERT(!base_file_name.empty());
@@ -39,28 +41,20 @@ BasisWriter::BasisWriter(
    else {
       rank = 0;
    }
-
-   // create and open basis database
+   
    char tmp[100];
    sprintf(tmp, ".%06d", rank);
-   std::string full_file_name = base_file_name + tmp;
-   if (db_format == Database::HDF5) {
-      d_database = new HDFDatabase();
-   }
-   d_database->create(full_file_name);
-   
-   // create and open state database
+   full_file_name = base_file_name + tmp;
+
+
    char tmp2[100];
    sprintf(tmp2, ".state.%06d", rank);
-   std::string state_file_name = base_file_name + tmp2;
-   if (db_format == Database::HDF5) {
-      d_state_database = new HDF5Database();
-   }
-   d_state_database->create(state_file_name);
+   state_file_name = base_file_name + tmp2;
 }
 
 BasisWriter::~BasisWriter()
 {
+   std::cout << "Writing num time intervals to file" << std::endl;
    d_database->putInteger("num_time_intervals", d_num_intervals_written);
    d_database->close();
    d_state_database->close();
@@ -78,6 +72,14 @@ BasisWriter::writeBasis(const std::string& kind)
    sprintf(tmp, "time_%06d", d_num_intervals_written);
    
    if (kind == "basis") {
+   
+   // create and open basis database
+   if (true) {
+      d_database = new HDFDatabase();
+   }
+   std::cout << "Creating file: " << full_file_name << std::endl;
+   d_database->create(full_file_name);
+
    d_database->putDouble(tmp, time_interval_start_time);
 
    const Matrix* basis = d_basis_generator->getSpatialBasis();
@@ -115,9 +117,16 @@ BasisWriter::writeBasis(const std::string& kind)
    if (kind == "state") {
    // TODO: Implement state writing (see incremental svd code)
       
-
+      // create and open state database
+      if (true) {
+         d_state_database = new HDFDatabase();
+      }
+      std::cout << "Creating file: " << state_file_name << std::endl;
+      d_state_database->create(state_file_name);
    }
-   if (kind != "basis" || kind != "state") { 
+
+   
+   if (kind != "basis" &&  kind != "state") { 
       std::cout << "Basis Writer needs to write a basis or state, please call BasisWriter::writeBasis correctly"
       << std::endl;
    }
