@@ -27,7 +27,8 @@ BasisWriter::BasisWriter(
    d_basis_generator(basis_generator),
    d_num_intervals_written(0),
    full_file_name(""),
-   state_file_name("")
+   state_file_name(""),
+   db_format_(db_format)
 {
    CAROM_ASSERT(basis_generator != 0);
    CAROM_ASSERT(!base_file_name.empty());
@@ -57,9 +58,7 @@ BasisWriter::~BasisWriter()
    std::cout << "Writing num time intervals to file" << std::endl;
    d_database->putInteger("num_time_intervals", d_num_intervals_written);
    d_database->close();
-   d_state_database->close();
    delete d_database;
-   delete d_state_database;
 }
 
 void
@@ -74,7 +73,7 @@ BasisWriter::writeBasis(const std::string& kind)
    if (kind == "basis") {
    
    // create and open basis database
-   if (true) {
+   if (db_format_ == Database::HDF5) {
       d_database = new HDFDatabase();
    }
    std::cout << "Creating file: " << full_file_name << std::endl;
@@ -117,12 +116,6 @@ BasisWriter::writeBasis(const std::string& kind)
    if (kind == "state") {
    // TODO: Implement state writing (see incremental svd code)
       
-      // create and open state database
-      if (true) {
-         d_state_database = new HDFDatabase();
-      }
-      std::cout << "Creating file: " << state_file_name << std::endl;
-      d_state_database->create(state_file_name);
    }
 
    
