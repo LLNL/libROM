@@ -85,6 +85,17 @@ class BasisWriter {
       Database* d_database;
 
       /**
+       * @brief Database with which the state is written.
+       */
+      Database* d_state_database;
+      
+      /**
+       * @brief Names with which to create new files.
+       */
+      std::string full_file_name;
+      std::string state_file_name;
+
+      /**
        * @brief Number of time intervals for which basis vectors have been
        * written.
        */
