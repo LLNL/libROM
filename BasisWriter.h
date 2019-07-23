@@ -90,6 +90,11 @@ class BasisWriter {
       Database* d_state_database;
       
       /**
+       * @brief Database format, as specified by user or default value.
+       */
+      Database::formats db_format_;
+
+      /**
        * @brief Names with which to create new files.
        */
       std::string full_file_name;
