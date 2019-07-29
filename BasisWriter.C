@@ -95,6 +95,8 @@ BasisWriter::writeBasis()
    d_database->putDoubleArray(tmp, &sv->item(0, 0), num_rows*num_cols);
 
    ++d_num_intervals_written;
+   
+   
 }
 
 }
