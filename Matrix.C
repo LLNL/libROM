@@ -1363,4 +1363,83 @@ Matrix outerProduct(const Vector &v, const Vector &w)
     return result;
 }
 
+Matrix DiagonalMatrixFactory(const Vector &v)
+{
+    const int resultNumRows = v.dim();
+    int resultNumColumns, processRowStartIndex, processNumColumns;
+    const bool isDistributed = v.distributed();
+
+    /* If v isn't distributed, sizing the output matrix is trivial. */
+    if (false == isDistributed)
+    {
+        resultNumColumns = processNumColumns = resultNumRows;
+        processRowStartIndex = 0;
+    }
+    else /* true == isDistributed */
+    {
+        using sizeType = std::vector<int>::size_type;
+
+        /**
+         * Get the number of rows on each process; these process row
+         * counts must be summed to get the number of columns on each
+         * process.
+         */
+        const MPI_Comm comm = MPI_COMM_WORLD;
+        int numProcesses; MPI_Comm_size(comm, &numProcesses);
+        std::vector<int>
+            numRowsOnProcess(static_cast<sizeType>(numProcesses));
+        const int one = 1; const MPI_Datatype indexType = MPI_INT;
+        MPI_Allgather(&resultNumRows, one, indexType,
+                      numRowsOnProcess.data(), one, indexType, comm);
+
+        /**
+         * Compute the row starting index and total number of rows
+         * over all processes -- which is also the total number of
+         * columns. Also compute the starting row index on each
+         * process.
+         *
+         * Assume that Matrix rows are contiguous sets of row indices,
+         * e.g., if a four row matrix is partititioned over two
+         * processes, then process zero on the MPI_Comm owns rows 0
+         * and 1, and process one on the MPI_Comm owns rows 2 and 3.
+         */
+        std::vector<int> rowStartIndexOnProcess(numProcesses);
+        resultNumColumns = 0;
+        for (sizeType i = 0; i < rowStartIndexOnProcess.size(); i++)
+        {
+            rowStartIndexOnProcess.at(i) = resultNumColumns;
+            resultNumColumns += numRowsOnProcess.at(i);
+        }
+        int processNumber; MPI_Comm_rank(comm, &processNumber);
+        processRowStartIndex =
+            rowStartIndexOnProcess.at(static_cast<sizeType>(processNumber));
+    } /* end (true == isDistributed) */
+
+    /**
+     * Create the diagonal matrix and assign process local entries in v
+     * to process local entries in the diagonal matrix.
+     */
+    Matrix diagonalMatrix(resultNumRows, resultNumColumns, isDistributed);
+    for (int i = 0; i < resultNumRows; i++)
+    {
+        for (int j = 0; j < resultNumColumns; j++)
+        {
+            /**
+             * Off-diagonal matrix entries are zero; diagonal matrix entries
+             * come from the input Vector.
+             */
+            const double entry = (j == (i + processRowStartIndex)) ? v(i) : 0.0;
+            diagonalMatrix(i, j) = entry;
+        }
+    }
+
+    return diagonalMatrix;
+}
+
+Matrix IdentityMatrixFactory(const Vector &v)
+{
+    Vector temporary(v); temporary = 1.0;
+    return DiagonalMatrixFactory(temporary);
+}
+
 } // end namespace CAROM
