@@ -178,8 +178,13 @@ class BasisReader {
       /**
        * @brief Base file name stored for consistency between reading and writing.
        */
-      const std::string& base_file_name;
+      std::string base_file_name_;
 
+      /**
+       * @brief Full file name of database incuding rank.
+       */
+      std::string full_file_name;
+      
       /**
        * @brief The last time at which basis vectors were requested.
        */

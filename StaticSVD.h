@@ -66,11 +66,6 @@ class StaticSVD : public SVD
          );
 
       /**
-       * Destructor.
-       */
-      ~StaticSVD();
-
-      /**
        * @brief Collect the new sample, u_in at supplied time.
        *
        * @pre u_in != 0
@@ -170,9 +165,6 @@ class StaticSVD : public SVD
        * @brief Factorization manager object used to compute the SVD
        */
       std::unique_ptr<ScalaWRAP::SVDInfo> d_factorization;
-
-      /**
-       * @brief Flag to indicate if the basis vectors for the current time
 
       /**
        * @brief Flag to indicate if the basis vectors for the current time

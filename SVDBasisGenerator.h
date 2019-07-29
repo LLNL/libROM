@@ -130,14 +130,36 @@ class SVDBasisGenerator
             d_basis_writer->writeBasis();
          }
       }
+
+      /**
+       * @brief Load previously saved sample (basis or state).
+       */
       void
-      loadSamples(const std::string& base_file_name = NULL,
+      loadSamples(const std::string& base_file_name,
                   Database::formats db_format = Database::HDF5)
-      {
+      { 
+	  CAROM_ASSERT(!base_file_name.empty());
+
+	  d_basis_reader = new BasisReader(base_file_name, db_format);
+	  
           if (d_basis_reader) {
               d_basis_reader->readBasis(base_file_name, db_format);
-             
+	      double time = 0.0;
+	      const Matrix* basis = d_basis_reader->getSpatialBasis(time);
+	      int num_rows = basis->numRows();
+	      int num_cols = basis->numColumns();
+	      double* u_in = new double[num_rows*num_cols];
+	      for (int i = 0; i < num_rows; i++) {
+		 for (int j = 0; j < num_cols; j++) {
+		    u_in[i*num_cols+j] = basis->item(i,j);
+		 }
+	      }
+	      
+              d_svdsampler->takeSample(u_in, time, false);    
+	      
+	      delete d_basis_reader;
           }
+
       }
 
       /**
@@ -255,6 +277,12 @@ class SVDBasisGenerator
        * @brief Writer of basis vectors.
        */
       BasisWriter* d_basis_writer;
+
+      /**
+       * @brief Reader of basis vectors.
+       */
+      BasisReader* d_basis_reader;
+
 
       /**
        * @brief Pointer to the underlying sampling control object.
