@@ -125,8 +125,9 @@ StaticSVD::takeSample(
       d_basis = nullptr;
       d_basis_right = nullptr;
    }
-
+   std::cout << "Broadcasting sample..." << std::endl;
    broadcast_sample(u_in);
+   std::cout << "Broadcasted sample" << std::endl;
    ++d_num_samples;
    d_this_interval_basis_current = false;
    return true;
@@ -207,7 +208,7 @@ StaticSVD::getSingularValues()
    return d_S;
 }
    
-std::vector<double*>
+const Matrix*
 StaticSVD::getSnapshotMatrix()
 {
   // ScalaMat Samp(d_samples->data(), d_samples->m(), d_num_samples,
@@ -227,9 +228,10 @@ StaticSVD::getSnapshotMatrix()
   //       d_snapshots->item(j, i) = Samp->S[static_cast<unsigned>(i)];
   //    }
   // }
-   d_snapshots.push_back(d_samples->data());
-   d_snapshots.push_back(&d_dim);
-   d_snapshots.push_back(&d_num_samples);
+   d_snapshots = new Matrix(d_samples->data(), d_dim, d_num_samples, false);
+  // d_snapshots.push_back(d_samples->data());
+  // d_snapshots.push_back(&(static_cast<double>(d_dim)));
+  // d_snapshots.push_back(&(static_cast<double>(d_num_samples)));
    return d_snapshots;
 }
    

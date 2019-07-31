@@ -132,7 +132,7 @@ class SVDSampler
        *
        * @return The snapshot matrix for the current time interval.
        */
-      double*
+      const Matrix*
       getSnapshotMatrix()
       {
          return d_svd->getSnapshotMatrix();

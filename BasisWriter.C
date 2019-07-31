@@ -131,16 +131,15 @@ BasisWriter::writeBasis(const std::string& kind)
       
       d_snap_database->putDouble(tmp, time_interval_start_time);
       
-      std::vector<double*> snapshots = d_basis_generator->getSnapshotMatrix();
-      int num_rows = *snapshots[1]; // d_dim
+      const Matrix* snapshots = d_basis_generator->getSnapshotMatrix();
+      int num_rows = snapshots->numRows(); // d_dim
       sprintf(tmp, "snapshot_matrix_num_rows_%06d", d_num_intervals_written);
       d_snap_database->putInteger(tmp, num_rows);
-      int num_cols = *snapshots[2]; // d_num_
+      int num_cols = snapshots->numColumns(); // d_num_samples
       sprintf(tmp, "snapshot_matrix_num_cols_%06d", d_num_intervals_written);
       d_snap_database->putInteger(tmp, num_cols);
-      double* u_out = snapshots[0];
       sprintf(tmp, "snapshot_matrix_%06d", d_num_intervals_written);
-      d_snap_database->putDoubleArray(tmp, u_out, num_rows*num_cols);
+      d_snap_database->putDoubleArray(tmp, &snapshots->item(0,0), num_rows*num_cols);
       
       // TODO: make another variable to avoid confusion and possible errors
       ++d_num_intervals_written;
