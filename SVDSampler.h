@@ -133,7 +133,7 @@ class SVDSampler
        * @return The snapshot matrix for the current time interval.
        */
       double*
-      StaticSVD::getSnapshotMatrix()
+      getSnapshotMatrix()
       {
          return d_svd->getSnapshotMatrix();
       }
