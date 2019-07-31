@@ -27,6 +27,7 @@ SVD::SVD(
    d_U(NULL),
    d_W(NULL),
    d_S(NULL),
+   d_snapshots(NULL),
    d_time_interval_start_times(0),
    d_debug_algorithm(debug_algorithm)
 {
@@ -41,6 +42,7 @@ SVD::~SVD()
    delete d_S;
    delete d_basis_right;
    delete d_W;
+   delete d_snapshots;
 }
 
 }

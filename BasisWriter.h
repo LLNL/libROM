@@ -87,7 +87,7 @@ class BasisWriter {
       /**
        * @brief Database with which the state is written.
        */
-      Database* d_state_database;
+      Database* d_snap_database;
       
       /**
        * @brief Database format, as specified by user or default value.
@@ -98,7 +98,7 @@ class BasisWriter {
        * @brief Names with which to create new files.
        */
       std::string full_file_name;
-      std::string state_file_name;
+      std::string snap_file_name;
 
       /**
        * @brief Number of time intervals for which basis vectors have been
