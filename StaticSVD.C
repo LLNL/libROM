@@ -211,6 +211,11 @@ StaticSVD::getSnapshotMatrix()
    return d_samples->data();
 }
    
+int
+getNumBasisTimeIntervals() {
+   return d_num_samples;
+}
+   
 void
 StaticSVD::computeSVD()
 {
