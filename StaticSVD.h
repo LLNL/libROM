@@ -123,17 +123,8 @@ class StaticSVD : public SVD
        * @return The snapshot matrix for the current time interval.
        */
       virtual
-      double*
+      std::vector<double*>
       getSnapshotMatrix();
-   
-      /**
-       * @brief Returns the number of samples taken.
-       *
-       * @return The number of samples taken.
-       */
-      virtual
-      int
-      getNumBasisTimeIntervals();
    
    private:
       /**

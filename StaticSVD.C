@@ -207,7 +207,7 @@ StaticSVD::getSingularValues()
    return d_S;
 }
    
-double*
+std::vector<double*>
 StaticSVD::getSnapshotMatrix()
 {
   // ScalaMat Samp(d_samples->data(), d_samples->m(), d_num_samples,
@@ -227,12 +227,10 @@ StaticSVD::getSnapshotMatrix()
   //       d_snapshots->item(j, i) = Samp->S[static_cast<unsigned>(i)];
   //    }
   // }
-   return d_samples->data();
-}
-   
-int
-getNumBasisTimeIntervals() {
-   return d_num_samples;
+   d_snapshots.push_back(d_samples->data());
+   d_snapshots.push_back(&d_dim);
+   d_snapshots.push_back(&d_num_samples);
+   return d_snapshots;
 }
    
 void
