@@ -123,7 +123,7 @@ class StaticSVD : public SVD
        * @return The snapshot matrix for the current time interval.
        */
       virtual
-      std::vector<double*>
+      const Matrix*
       getSnapshotMatrix();
    
    private:

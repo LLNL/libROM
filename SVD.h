@@ -108,6 +108,16 @@ class SVD
       getSingularValues() = 0;
 
       /**
+       * @brief Returns the singular values for the current time interval.
+       *
+       * @return The singular values for the current time interval.
+       */
+      virtual
+      const Matrix*
+      getSnapshotMatrix() = 0;
+
+
+      /**
        * @brief Returns the number of time intervals on which different sets
        * of basis vectors are defined.
        *
@@ -222,7 +232,7 @@ class SVD
        * The snapshot vectors are large and each process owns all of the snapshot
        * vectors.
        */
-      std::vector<double*> d_snapshots;
+      Matrix* d_snapshots;
 
       /**
        * @brief The simulation time at which each time interval starts.
