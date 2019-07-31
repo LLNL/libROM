@@ -124,7 +124,16 @@ class StaticSVD : public SVD
        */
       virtual
       double*
-      getSnapshotMatrix()
+      getSnapshotMatrix();
+   
+      /**
+       * @brief Returns the number of samples taken.
+       *
+       * @return The number of samples taken.
+       */
+      virtual
+      int
+      getNumBasisTimeIntervals();
    
    private:
       /**
