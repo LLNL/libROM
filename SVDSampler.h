@@ -128,6 +128,17 @@ class SVDSampler
       }
 
       /**
+       * @brief Returns the snapshot matrix for the current time interval.
+       *
+       * @return The snapshot matrix for the current time interval.
+       */
+      double*
+      StaticSVD::getSnapshotMatrix()
+      {
+         return d_svd->getSnapshotMatrix();
+      }
+   
+      /**
        * @brief Returns the number of time intervals on which different sets of
        * basis vectors are defined.
        *

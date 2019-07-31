@@ -118,13 +118,13 @@ class StaticSVD : public SVD
       getSingularValues();
 
       /**
-       * @brief Returns the snapshot  matric for the current time interval.
+       * @brief Returns the snapshot matrix for the current time interval.
        *
        * @return The snapshot matrix for the current time interval.
        */
       virtual
       double*
-      StaticSVD::getSnapshotMatrix()
+      getSnapshotMatrix()
    
    private:
       /**

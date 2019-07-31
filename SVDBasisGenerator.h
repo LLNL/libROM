@@ -122,44 +122,66 @@ class SVDBasisGenerator
 
       /**
        * @brief Signal that the final sample has been taken.
+       *
+       * @param[in] kind "basis" or "snapshot" to write one or the other.
        */
       void
-      endSamples()
+      endSamples(const std::string& kind = "basis")
       {
          if (d_basis_writer) {
-            d_basis_writer->writeBasis();
+            d_basis_writer->writeBasis(kind);
          }
       }
 
+     /**
+      * @brief Write current snapshot matrix.
+      */
+      void
+      writeSnapshot()
+      {
+         if (d_basis_writer) {
+            d_basis_writer->writeBasis("snapshot");
+         }
+      }
+   
       /**
        * @brief Load previously saved sample (basis or state).
+       *
+       * @param[in] base_file_name The base part of the name of the files
+       *                           holding the basis / snapshot vectors.
+       * @param[in] db_format Format of the file to read.
        */
       void
       loadSamples(const std::string& base_file_name,
-                  Database::formats db_format = Database::HDF5)
+                  Database::formats db_format = Database::HDF5,
+                  const std::string& kind = "basis")
       { 
-	  CAROM_ASSERT(!base_file_name.empty());
-
-	  d_basis_reader = new BasisReader(base_file_name, db_format);
-	  
-          if (d_basis_reader) {
-              d_basis_reader->readBasis(base_file_name, db_format);
-	      double time = 0.0;
-	      const Matrix* basis = d_basis_reader->getSpatialBasis(time);
-	      int num_rows = basis->numRows();
-	      int num_cols = basis->numColumns();
-	      double* u_in = new double[num_rows*num_cols];
-	      for (int i = 0; i < num_rows; i++) {
-		 for (int j = 0; j < num_cols; j++) {
-		    u_in[i*num_cols+j] = basis->item(i,j);
-		 }
-	      }
+	      CAROM_ASSERT(!base_file_name.empty());
+   
+	      d_basis_reader = new BasisReader(base_file_name, db_format);
+	     
+         if (d_basis_reader) {
+            if (kind == "basis") {
+               d_basis_reader->readBasis(base_file_name, db_format);
+	            double time = 0.0;
+	            const Matrix* basis = d_basis_reader->getSpatialBasis(time);
+	            int num_rows = basis->numRows();
+	            int num_cols = basis->numColumns();
+	            double* u_in = new double[num_rows*num_cols];
+               for (int j = 0; j < num_cols; j++) {
+                  for (int i = 0; i < num_rows; i++) {
+		               u_in[i+j*num_rows] = basis->item(i,j);
+		            }
+                  d_svdsampler->takeSample(u_in+j*num_rows, time, false);
+	            }
+            }
+            if (kind == "snapshot") {
+               // TODO: implement snapshot reader
+               std::cout << "Snapshot not read, function not implemented" << std::endl;
+            }
 	      
-              d_svdsampler->takeSample(u_in, time, false);    
-	      
-	      delete d_basis_reader;
-          }
-
+	         delete d_basis_reader;
+         }
       }
 
       /**
@@ -222,6 +244,17 @@ class SVDBasisGenerator
          return d_svdsampler->getSingularValues();
       }
 
+      /**
+       * @brief Returns the snapshot matrix for the current time interval.
+       *
+       * @return The snapshot matrix for the current time interval.
+       */
+      double*
+      getSnapshotMatrix()
+      {
+         return d_svdsampler->getSnapshotMatrix();
+      }
+   
       /**
        * @brief Returns the number of time intervals on which different sets of
        * basis vectors are defined.
