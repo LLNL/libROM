@@ -187,7 +187,30 @@ StaticSVD::getSingularValues()
    CAROM_ASSERT(thisIntervalBasisCurrent());
    return d_S;
 }
-
+   
+double*
+StaticSVD::getSnapshotMatrix()
+{
+  // ScalaMat Samp(d_samples->data(), d_samples->m(), d_num_samples,
+  //               d_samples->mb(), d_samples->nb(), d_samples->context(),
+  //               d_samples->rowsrc(), d_samples->colsrc());
+  //
+  // d_snapshots = new Matrix(d_dim, d_num_samples, false);
+  // //for (int rank = 0; rank < d_num_procs; ++rank) {
+  // //   int nrows = d_dims[static_cast<unsigned>(rank)];
+  // //   int firstrow = d_istarts[static_cast<unsigned>(rank)] + 1;
+  // //
+  // //   LocalMatrix(&d_basis->item(0, 0), nrows, ncolumns, rank) =
+  // //   Samp->submatrix(rowrange(firstrow, firstrow+nrows-1),
+  // //                                 colrange(1, ncolumns));
+  // for (int i = 0; i < ncolumns; ++i) {
+  //    for (int j = 0; j < d_dim; ++j) {
+  //       d_snapshots->item(j, i) = Samp->S[static_cast<unsigned>(i)];
+  //    }
+  // }
+   return d_samples->data();
+}
+   
 void
 StaticSVD::computeSVD()
 {
