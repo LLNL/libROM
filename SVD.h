@@ -215,6 +215,14 @@ class SVD
        * exists on each processor.
        */
       Matrix* d_S;
+   
+      /**
+       * @brief The globalized snapshot vectors for the current time interval.
+       *
+       * The snapshot vectors are large and each process owns all of the snapshot
+       * vectors.
+       */
+      std::vector<double*> d_snapshots;
 
       /**
        * @brief The simulation time at which each time interval starts.
