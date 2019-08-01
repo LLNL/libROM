@@ -28,7 +28,9 @@ BasisWriter::BasisWriter(
    d_num_intervals_written(0),
    full_file_name(""),
    snap_file_name(""),
-   db_format_(db_format)
+   db_format_(db_format),
+   d_database(NULL),
+   d_snap_database(NULL)
 {
    CAROM_ASSERT(basis_generator != 0);
    CAROM_ASSERT(!base_file_name.empty());
@@ -140,7 +142,6 @@ BasisWriter::writeBasis(const std::string& kind)
       d_snap_database->putInteger(tmp, num_cols);
       sprintf(tmp, "snapshot_matrix_%06d", d_num_intervals_written);
       d_snap_database->putDoubleArray(tmp, &snapshots->item(0,0), num_rows*num_cols);
-      
       // TODO: make another variable to avoid confusion and possible errors
       ++d_num_intervals_written;
       
