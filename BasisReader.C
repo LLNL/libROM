@@ -207,6 +207,27 @@ BasisReader::getSingularValues(
    return d_singular_values;
 }
 
+const Matrix*
+BasisReader::getSnapshotMatrix()
+   {
+      char tmp[100];
+      int num_rows;
+      sprintf(tmp, "snapshot_matrix_num_rows_%06d", i);
+      d_database->getInteger(tmp, num_rows);
+      int num_cols;
+      sprintf(tmp, "snapshot_matrix_num_cols_%06d", i);
+      d_database->getInteger(tmp, num_cols);
+      if (d_snapshots) {
+         delete d_snapshots;
+      }
+      d_snapshots = new Matrix(num_rows, num_cols, false);
+      sprintf(tmp, "snapshot_matrix_%06d", i);
+      d_database->getDoubleArray(tmp,
+                                 &d_snapshots->item(0, 0),
+                                 num_rows*num_cols);
+      return d_snapshots;
+   }
+   
 Matrix
 BasisReader::getMatlabBasis(
    double time)
