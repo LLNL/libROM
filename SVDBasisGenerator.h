@@ -152,35 +152,36 @@ class SVDBasisGenerator
        */
       void
       loadSamples(const std::string& base_file_name,
-                  Database::formats db_format = Database::HDF5,
-                  const std::string& kind = "basis")
+                  const std::string& kind = "basis",
+                  Database::formats db_format = Database::HDF5)
       { 
 	      CAROM_ASSERT(!base_file_name.empty());
-   
+         CAROM_ASSERT(kind == "basis" || kind == "snapshot");
+         
+         if (d_basis_reader) delete d_basis_reader;
+         
 	      d_basis_reader = new BasisReader(base_file_name, db_format);
-	     
-         if (d_basis_reader) {
-            if (kind == "basis") {
-               d_basis_reader->readBasis(base_file_name, db_format);
-	            double time = 0.0;
-	            const Matrix* basis = d_basis_reader->getSpatialBasis(time);
-	            int num_rows = basis->numRows();
-	            int num_cols = basis->numColumns();
-	            double* u_in = new double[num_rows*num_cols];
-               for (int j = 0; j < num_cols; j++) {
-                  for (int i = 0; i < num_rows; i++) {
-		               u_in[i+j*num_rows] = basis->item(i,j);
-		            }
-                  d_svdsampler->takeSample(u_in+j*num_rows, time, false);
-	            }
-            }
-            if (kind == "snapshot") {
-               // TODO: implement snapshot reader
-               std::cout << "Snapshot not read, function not implemented" << std::endl;
-            }
-	      
-	         delete d_basis_reader;
+         d_basis_reader->readBasis(base_file_name, db_format);
+         double time = 0.0;
+         const Matrix* mat;
+         
+         if (kind == "basis") {
+            mat = d_basis_reader->getSpatialBasis(time);
          }
+         else if (kind == "snapshot") {
+            mat = d_basis_reader->getSnapshotMatrix(time);
+         }
+         
+         int num_rows = mat->numRows();
+         int num_cols = mat->numColumns();
+         double* u_in = new double[num_rows*num_cols];
+         for (int j = 0; j < num_cols; j++) {
+            for (int i = 0; i < num_rows; i++) {
+               u_in[i+j*num_rows] = mat->item(i,j);
+            }
+            d_svdsampler->takeSample(u_in+j*num_rows, time, false);
+         }
+         
       }
 
       /**

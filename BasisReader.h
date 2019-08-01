@@ -169,6 +169,11 @@ class BasisReader {
        * @brief The currently requested singular values.
        */
       Matrix* d_singular_values;
+   
+      /**
+       * @brief The currently requested snapshot matrix.
+       */
+      Matrix* d_snapshots;
 
       /**
        * @brief The database being read from.
