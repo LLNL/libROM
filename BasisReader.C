@@ -23,6 +23,7 @@ BasisReader::BasisReader(
    d_spatial_basis_vectors(NULL),
    d_temporal_basis_vectors(0),
    d_singular_values(0),
+   d_snapshots(0),
    d_last_basis_idx(-1),
    full_file_name(""),
    base_file_name_(base_file_name)
@@ -208,25 +209,37 @@ BasisReader::getSingularValues(
 }
 
 const Matrix*
-BasisReader::getSnapshotMatrix()
-   {
-      char tmp[100];
-      int num_rows;
-      sprintf(tmp, "snapshot_matrix_num_rows_%06d", i);
-      d_database->getInteger(tmp, num_rows);
-      int num_cols;
-      sprintf(tmp, "snapshot_matrix_num_cols_%06d", i);
-      d_database->getInteger(tmp, num_cols);
-      if (d_snapshots) {
-         delete d_snapshots;
+BasisReader::getSnapshotMatrix(
+   double time)
+{
+   CAROM_ASSERT(0 < numTimeIntervals());
+   CAROM_ASSERT(0 <= time);
+   int num_time_intervals = numTimeIntervals();
+   int i;
+   for (i = 0; i < num_time_intervals-1; ++i) {
+      if (d_time_interval_start_times[i] <= time &&
+          time < d_time_interval_start_times[i+1]) {
+         break;
       }
-      d_snapshots = new Matrix(num_rows, num_cols, false);
-      sprintf(tmp, "snapshot_matrix_%06d", i);
-      d_database->getDoubleArray(tmp,
-                                 &d_snapshots->item(0, 0),
-                                 num_rows*num_cols);
-      return d_snapshots;
    }
+   d_last_basis_idx = i;
+   char tmp[100];
+   int num_rows;
+   sprintf(tmp, "snapshot_matrix_num_rows_%06d", i);
+   d_database->getInteger(tmp, num_rows);
+   int num_cols;
+   sprintf(tmp, "snapshot_matrix_num_cols_%06d", i);
+   d_database->getInteger(tmp, num_cols);
+   if (d_snapshots) {
+      delete d_snapshots;
+   }
+   d_snapshots = new Matrix(num_rows, num_cols, false);
+   sprintf(tmp, "snapshot_matrix_%06d", i);
+   d_database->getDoubleArray(tmp,
+                              &d_snapshots->item(0, 0),
+                              num_rows*num_cols);
+   return d_snapshots;
+}
    
 Matrix
 BasisReader::getMatlabBasis(

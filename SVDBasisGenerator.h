@@ -160,8 +160,7 @@ class SVDBasisGenerator
          
          if (d_basis_reader) delete d_basis_reader;
          
-	      d_basis_reader = new BasisReader(base_file_name, db_format);
-         d_basis_reader->readBasis(base_file_name, db_format);
+	 d_basis_reader = new BasisReader(base_file_name, db_format);
          double time = 0.0;
          const Matrix* mat;
          
