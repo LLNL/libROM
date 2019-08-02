@@ -115,6 +115,10 @@ class BasisReader {
       const Matrix*
       getSingularValues(
          double time);
+ 
+      const Matrix*
+      getSnapshotMatrix(
+	 double time);
 
       Matrix
       getMatlabBasis(

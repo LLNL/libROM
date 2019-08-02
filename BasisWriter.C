@@ -143,9 +143,6 @@ BasisWriter::writeBasis(const std::string& kind)
       d_snap_database->putInteger(tmp, num_cols);
       sprintf(tmp, "snapshot_matrix_%06d", d_num_intervals_written);
       d_snap_database->putDoubleArray(tmp, &snapshots->item(0,0), num_rows*num_cols);
-      // TODO: make another variable to avoid confusion and possible errors
-      ++d_num_intervals_written;
-      
    }
 
    
