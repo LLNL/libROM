@@ -155,7 +155,7 @@ class SVDBasisGenerator
                   const std::string& kind = "basis",
                   Database::formats db_format = Database::HDF5)
       { 
-	      CAROM_ASSERT(!base_file_name.empty());
+	 CAROM_ASSERT(!base_file_name.empty());
          CAROM_ASSERT(kind == "basis" || kind == "snapshot");
          
          if (d_basis_reader) delete d_basis_reader;
@@ -180,7 +180,7 @@ class SVDBasisGenerator
             }
             d_svdsampler->takeSample(u_in+j*num_rows, time, false);
          }
-         
+         delete u_in;
       }
 
       /**
