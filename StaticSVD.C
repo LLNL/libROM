@@ -116,7 +116,9 @@ StaticSVD::takeSample(
          d_S = nullptr;
          delete d_W;
          d_W = nullptr;
-      }
+         delete d_snapshots;
+         d_snapshots = nullptr;  
+    }
       d_num_samples = 0;
       d_time_interval_start_times.resize(
                 static_cast<unsigned>(num_time_intervals) + 1);
@@ -125,10 +127,18 @@ StaticSVD::takeSample(
       d_basis = nullptr;
       d_basis_right = nullptr;
    }
-   std::cout << "Broadcasting sample..." << std::endl;
    broadcast_sample(u_in);
-   std::cout << "Broadcasted sample" << std::endl;
    ++d_num_samples;
+   
+   // Build snapshot matrix before SVD is computed
+   d_snapshots = new Matrix(d_dim, d_num_samples, false);
+   for (int rank = 0; rank < d_num_procs; ++rank) {
+      int nrows = d_dims[static_cast<unsigned>(rank)];
+      int firstrow = d_istarts[static_cast<unsigned>(rank)] + 1;
+      LocalMatrix(&d_snapshots->item(0,0), nrows, d_num_samples, rank) = 
+                  d_samples->submatrix(rowrange(firstrow, firstrow+nrows-1),
+                                       colrange(1, d_num_samples));
+   }
    d_this_interval_basis_current = false;
    return true;
 }
@@ -211,27 +221,7 @@ StaticSVD::getSingularValues()
 const Matrix*
 StaticSVD::getSnapshotMatrix()
 {
-  // ScalaMat Samp(d_samples->data(), d_samples->m(), d_num_samples,
-  //               d_samples->mb(), d_samples->nb(), d_samples->context(),
-  //               d_samples->rowsrc(), d_samples->colsrc());
-  //
-  // d_snapshots = new Matrix(d_dim, d_num_samples, false);
-  // //for (int rank = 0; rank < d_num_procs; ++rank) {
-  // //   int nrows = d_dims[static_cast<unsigned>(rank)];
-  // //   int firstrow = d_istarts[static_cast<unsigned>(rank)] + 1;
-  // //
-  // //   LocalMatrix(&d_basis->item(0, 0), nrows, ncolumns, rank) =
-  // //   Samp->submatrix(rowrange(firstrow, firstrow+nrows-1),
-  // //                                 colrange(1, ncolumns));
-  // for (int i = 0; i < ncolumns; ++i) {
-  //    for (int j = 0; j < d_dim; ++j) {
-  //       d_snapshots->item(j, i) = Samp->S[static_cast<unsigned>(i)];
-  //    }
-  // }
-   d_snapshots = new Matrix(d_samples->data(), d_dim, d_num_samples, false);
-  // d_snapshots.push_back(d_samples->data());
-  // d_snapshots.push_back(&(static_cast<double>(d_dim)));
-  // d_snapshots.push_back(&(static_cast<double>(d_num_samples)));
+   CAROM_ASSERT(d_snapshots != 0);
    return d_snapshots;
 }
    
