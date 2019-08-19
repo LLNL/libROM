@@ -11,11 +11,13 @@
 // Description: Simple test of the incremental fast update algorithm and
 //              incremental sampler.
 
-#include "IncrementalSVDBasisGenerator.h"
-
+#include "StaticSVDBasisGenerator.h"
+#include "ScalaMat.hpp"
 #include "mpi.h"
 
 #include <stdio.h>
+
+using namespace ScalaWRAP;
 
 int
 main(
@@ -52,84 +54,27 @@ main(
         }
         return 1;
     }
-    
-    // Construct the incremental basis generator to use the fast update
-    // incremental algorithm and the incremental sampler.
-    CAROM::IncrementalSVDBasisGenerator inc_basis_generator(dim,
-                                                            1.0e-2,
-                                                            false,
-                                                            true,
-                                                            2,
-                                                            1.0e-6,
-                                                            2,
-                                                            1.0e-2,
-                                                            0.11,
-                                                            "smoke_file",
-                                                            true,
-                                                            false,
-                                                            false,
-                                                            CAROM::Database::HDF5,
-                                                            0.1,
-                                                            0.8,
-                                                            5.0,
-                                                            true);
-    
-    // Define the values for the first sample.
-    double vals0[6] = {1.0, 6.0, 3.0, 8.0, 17.0, 9.0};
-    
-    // Define the values for the second sample.
-    double vals1[6] = {2.0, 7.0, 4.0, 9.0, 18.0, 10.0};
-    
+   
     bool status = false;
     
-    // Take the first sample.
-    if (inc_basis_generator.isNextSample(0.0)) {
-        status = inc_basis_generator.takeSample(&vals0[dim*rank], 0.0, 0.11);
-        if (status) {
-            inc_basis_generator.computeNextSampleTime(&vals0[dim*rank],
-                                                      &vals0[dim*rank],
-                                                      0.0);
-        }
-    }
-    
-    inc_basis_generator.endSamples();
-    
-    // ----------------------------------------
-    // FOM closes. build new basis generator
-    // ----------------------------------------
-    
-    CAROM::IncrementalSVDBasisGenerator inc_basis_generator2(dim,
-                                                             1.0e-2,
-                                                             false,
-                                                             true,
-                                                             2,
-                                                             1.0e-6,
-                                                             2,
-                                                             1.0e-2,
-                                                             0.11,
-                                                             "smoke_file",
-                                                             true,
-                                                             false,
-                                                             false,
-                                                             CAROM::Database::HDF5,
-                                                             0.1,
-                                                             0.8,
-                                                             5.0,
-                                                             true);
-    
-    inc_basis_generator2.loadSamples('smoke_file', CAROM::Database::HDF5);
-    
-    // Take the second sample.
-    if (status && inc_basis_generator2.isNextSample(0.11)) {
-        status = inc_basis_generator2.takeSample(&vals1[dim*rank], 0.11, 0.11);
-        if (status) {
-            inc_basis_generator.computeNextSampleTime(&vals1[dim*rank],
-                                                      &vals1[dim*rank],
-                                                      0.11);
-        }
-    }
-    
-    
+    // Create basis using 2 already computed bases
+    std::unique_ptr<CAROM::SVDBasisGenerator> static_basis_generator4;
+//20932
+    static_basis_generator4.reset(new CAROM::StaticSVDBasisGenerator(21932,
+        300,
+        "su2_total",
+        900));
+
+    std::cout << "Loading snapshots" << std::endl;
+    static_basis_generator4->loadSamples("su2_mach039_snapshot","snapshot");
+    //static_basis_generator4->loadSamples("su2_mach040_snapshot","snapshot");
+    static_basis_generator4->writeSnapshot();
+    std::cout << "Computing SVD" << std::endl;
+    int rom_dim = static_basis_generator4->getSpatialBasis()->numColumns();
+    std::cout << "U ROM Dimension: " << rom_dim << std::endl;
+    static_basis_generator4->endSamples();
+    static_basis_generator4 = nullptr;
+
     // Finalize MPI and return.
     MPI_Finalize();
     return !status;
