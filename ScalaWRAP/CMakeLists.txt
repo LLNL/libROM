@@ -40,9 +40,10 @@ FortranCInterface_HEADER(fc_interface.h MACRO_NAMESPACE "FC_")
 if (NOT MKLROOT)
     set(MKLROOT $ENV{MKLROOT})
 endif()
+message(STATUS "MKLROOT = ${MKLROOT}")
 
 if (NOT SCALAPACK_LIBNAMES)
-    if (LAPACK_LIBRARIES MATCHES ".*mkl.*64.*")
+    if (LAPACK_LIBRARIES MATCHES ".*mkl.*64.*" OR NOT ${MKLROOT} STREQUAL "")
         message(STATUS "Looking for MKL ScaLAPACK")
         find_library(SCALAPACK_LIBRARY NAMES mkl_scalapack_lp64)
         find_library(SCALAPACK_LIBRARY NAMES mkl_scalapack_lp64

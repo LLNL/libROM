@@ -29,6 +29,7 @@ project(libROM
 find_package(HDF5 1.8.0 REQUIRED)
 find_package(BLAS 3.4.0 REQUIRED)
 find_package(LAPACK 3.4.0 REQUIRED)
+message(STATUS "Lapack found: ${LAPACK_LIBS}")
 
 # In FindMPI.cmake, "CXX" refers to "the MPI C API [being] usable from C++"
 find_package(MPI 1.2 REQUIRED)
@@ -137,7 +138,7 @@ endforeach(module) # IN LISTS module_list
 
 add_subdirectory(ScalaWRAP)
 
-add_library(ROM ${source_files} scalawrap)
+add_library(ROM ${source_files})
 
 # PUBLIC dependencies are transitive; these dependencies are used in
 # the API headers *and* in their implementations
@@ -150,7 +151,7 @@ add_library(ROM ${source_files} scalawrap)
 # the headers
 target_link_libraries(ROM
     PUBLIC ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} ${HDF5_LIBRARIES}
-  ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES}
+  ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} scalawrap
   PRIVATE ZLIB::ZLIB)
 
 target_include_directories(ROM PUBLIC
@@ -167,7 +168,8 @@ set(regression_test_names
   smoke_test
   uneven_dist
   weak_scaling
-  random_test)
+  random_test
+  smoke_static)
 
 foreach(name IN LISTS regression_test_names)
   add_executable(${name} ${name}.C)
