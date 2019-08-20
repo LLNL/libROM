@@ -47,8 +47,8 @@ main(
         900));
 
     std::cout << "Loading snapshots" << std::endl;
-    static_basis_generator4->loadSamples("su2_mach039_snapshot","snapshot");
-    static_basis_generator4->loadSamples("su2_mach040_snapshot","snapshot");
+    static_basis_generator4->loadSamples("su2_files/su2_mach039_snapshot","snapshot");
+    static_basis_generator4->loadSamples("su2_files/su2_mach040_snapshot","snapshot");
     //static_basis_generator4->loadSamples("su2_mach039_basis","basis",10);
     //static_basis_generator4->loadSamples("su2_mach040_basis","basis",10);
     std::cout << "Writing snapshots" << std::endl;
