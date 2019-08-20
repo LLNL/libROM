@@ -17,6 +17,10 @@
 
 #include <stdio.h>
 
+<<<<<<< HEAD
+=======
+using namespace ScalaWRAP;
+>>>>>>> cc9a01a... final edits and multiply loaded basis vectors by singular value
 int
 main(
   int argc,
