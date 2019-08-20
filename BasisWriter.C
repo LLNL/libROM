@@ -73,6 +73,8 @@ void
 BasisWriter::writeBasis(const std::string& kind)
 {
 
+   CAROM_ASSERT(kind == "basis" || kind == "snapshot");
+
    char tmp[100];
    double time_interval_start_time =
       d_basis_generator->getBasisIntervalStartTime(d_num_intervals_written);
@@ -80,52 +82,51 @@ BasisWriter::writeBasis(const std::string& kind)
    
    if (kind == "basis") {
    
-   // create and open basis database
-   if (db_format_ == Database::HDF5) {
-      d_database = new HDFDatabase();
-   }
-   std::cout << "Creating file: " << full_file_name << std::endl;
-   d_database->create(full_file_name);
+      // create and open basis database
+      if (db_format_ == Database::HDF5) {
+         d_database = new HDFDatabase();
+      }
+      std::cout << "Creating file: " << full_file_name << std::endl;
+      d_database->create(full_file_name);
 
-   d_database->putDouble(tmp, time_interval_start_time);
+      d_database->putDouble(tmp, time_interval_start_time);
 
-   const Matrix* basis = d_basis_generator->getSpatialBasis();
-   int num_rows = basis->numRows();
-   sprintf(tmp, "spatial_basis_num_rows_%06d", d_num_intervals_written);
-   d_database->putInteger(tmp, num_rows);
-   int num_cols = basis->numColumns();
-   sprintf(tmp, "spatial_basis_num_cols_%06d", d_num_intervals_written);
-   d_database->putInteger(tmp, num_cols);
-   sprintf(tmp, "spatial_basis_%06d", d_num_intervals_written);
-   d_database->putDoubleArray(tmp, &basis->item(0, 0), num_rows*num_cols);
+      const Matrix* basis = d_basis_generator->getSpatialBasis();
+      int num_rows = basis->numRows();
+      sprintf(tmp, "spatial_basis_num_rows_%06d", d_num_intervals_written);
+      d_database->putInteger(tmp, num_rows);
+      int num_cols = basis->numColumns();
+      sprintf(tmp, "spatial_basis_num_cols_%06d", d_num_intervals_written);
+      d_database->putInteger(tmp, num_cols);
+      sprintf(tmp, "spatial_basis_%06d", d_num_intervals_written);
+      d_database->putDoubleArray(tmp, &basis->item(0, 0), num_rows*num_cols);
 
-   if(d_basis_generator->updateRightSV()) {
-     const Matrix* tbasis = d_basis_generator->getTemporalBasis();
-     num_rows = tbasis->numRows();
-     sprintf(tmp, "temporal_basis_num_rows_%06d", d_num_intervals_written);
-     d_database->putInteger(tmp, num_rows);
-     num_cols = tbasis->numColumns();
-     sprintf(tmp, "temporal_basis_num_cols_%06d", d_num_intervals_written);
-     d_database->putInteger(tmp, num_cols);
-     sprintf(tmp, "temporal_basis_%06d", d_num_intervals_written);
-     d_database->putDoubleArray(tmp, &tbasis->item(0, 0), num_rows*num_cols);
-   }
+      if(d_basis_generator->updateRightSV()) {
+        const Matrix* tbasis = d_basis_generator->getTemporalBasis();
+        num_rows = tbasis->numRows();
+        sprintf(tmp, "temporal_basis_num_rows_%06d", d_num_intervals_written);
+        d_database->putInteger(tmp, num_rows);
+        num_cols = tbasis->numColumns();
+        sprintf(tmp, "temporal_basis_num_cols_%06d", d_num_intervals_written);
+        d_database->putInteger(tmp, num_cols);
+        sprintf(tmp, "temporal_basis_%06d", d_num_intervals_written);
+        d_database->putDoubleArray(tmp, &tbasis->item(0, 0), num_rows*num_cols);
+      }
 
-   const Matrix* sv = d_basis_generator->getSingularValues();
-   num_rows = sv->numRows();
-   num_cols = num_rows;
-   sprintf(tmp, "singular_value_size_%06d", d_num_intervals_written);
-   d_database->putInteger(tmp, num_rows);
-   sprintf(tmp, "singular_value_%06d", d_num_intervals_written);
-   d_database->putDoubleArray(tmp, &sv->item(0, 0), num_rows*num_cols);
+      const Matrix* sv = d_basis_generator->getSingularValues();
+      num_rows = sv->numRows();
+      num_cols = num_rows;
+      sprintf(tmp, "singular_value_size_%06d", d_num_intervals_written);
+      d_database->putInteger(tmp, num_rows);
+      sprintf(tmp, "singular_value_%06d", d_num_intervals_written);
+      d_database->putDoubleArray(tmp, &sv->item(0, 0), num_rows*num_cols);
 
-   ++d_num_intervals_written;
+      ++d_num_intervals_written;
    
    }
 
-   if (kind == "snapshot" || kind == "state") {
-   // TODO: Implement state writing
-      // create and open basis database
+   if (kind == "snapshot") {
+      // create and open snapshot database
       if (db_format_ == Database::HDF5) {
          d_snap_database = new HDFDatabase();
       }
@@ -146,9 +147,6 @@ BasisWriter::writeBasis(const std::string& kind)
    }
 
    
-   if (kind != "basis" && kind != "snapshot") {
-      std::cout << "Basis Writer needs to write a basis or state, please call BasisWriter::writeBasis with the input 'basis' (default) or 'snapshot'"
-      << std::endl;
    }
  
 
