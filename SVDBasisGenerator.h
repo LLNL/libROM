@@ -148,11 +148,14 @@ class SVDBasisGenerator
        *
        * @param[in] base_file_name The base part of the name of the files
        *                           holding the basis / snapshot vectors.
+       * @param[in] kind Either basis or snapshot, the kind of data to load.
+       * @param[in] cut_off The max number of bases or snapshots to read.                          
        * @param[in] db_format Format of the file to read.
        */
       void
       loadSamples(const std::string& base_file_name,
                   const std::string& kind = "basis",
+                  int cut_off = 1e9,
                   Database::formats db_format = Database::HDF5)
       { 
 	 CAROM_ASSERT(!base_file_name.empty());
@@ -173,8 +176,11 @@ class SVDBasisGenerator
          
          int num_rows = mat->numRows();
          int num_cols = mat->numColumns();
-         double* u_in = new double[num_rows*num_cols];
-         for (int j = 0; j < num_cols; j++) {
+         int max_cols = num_cols;
+         if (cut_off < num_cols) max_cols = cut_off;
+
+         double* u_in = new double[num_rows*max_cols];
+         for (int j = 0; j < max_cols; j++) {
             for (int i = 0; i < num_rows; i++) {
                u_in[i+j*num_rows] = mat->item(i,j);
             }
