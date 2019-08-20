@@ -166,9 +166,11 @@ class SVDBasisGenerator
 	 d_basis_reader = new BasisReader(base_file_name, db_format);
          double time = 0.0;
          const Matrix* mat;
+         const Matrix* singular_vals;
          
          if (kind == "basis") {
             mat = d_basis_reader->getSpatialBasis(time);
+            singular_vals = d_basis_reader->getSingularValues(time);
          }
          else if (kind == "snapshot") {
             mat = d_basis_reader->getSnapshotMatrix(time);
@@ -182,7 +184,11 @@ class SVDBasisGenerator
          double* u_in = new double[num_rows*max_cols];
          for (int j = 0; j < max_cols; j++) {
             for (int i = 0; i < num_rows; i++) {
-               u_in[i+j*num_rows] = mat->item(i,j);
+               if (kind == "basis") { 
+                  u_in[i+j*num_rows] = mat->item(i,j) * singular_vals->item(j,j); }
+               else {
+                  u_in[i+j*num_rows] = mat->item(i,j); 
+               }
             }
             d_svdsampler->takeSample(u_in+j*num_rows, time, false);
          }
