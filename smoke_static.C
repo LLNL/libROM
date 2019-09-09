@@ -8,8 +8,8 @@
  *
  *****************************************************************************/
 
-// Description: Simple test of the incremental fast update algorithm and
-//              incremental sampler.
+// Description: Example/test of saving and loading snapshots or bases. Uses 
+//              static SVD.
 
 #include "StaticSVDBasisGenerator.h"
 #include "ScalaMat.hpp"
