@@ -169,7 +169,8 @@ set(regression_test_names
   uneven_dist
   weak_scaling
   random_test
-  smoke_static)
+  smoke_static
+  load_samples)
 
 foreach(name IN LISTS regression_test_names)
   add_executable(${name} ${name}.C)
