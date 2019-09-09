@@ -17,6 +17,7 @@
 
 #include "mpi.h"
 #include <string.h>
+#include <vector>
 
 #ifdef CAROM_HAS_ELEMENTAL
 #include <El.hpp>
@@ -1258,5 +1259,183 @@ const
 #endif
 }
 
+Matrix outerProduct(const Vector &v, const Vector &w)
+{
+    /*
+     * There are two cases of concern:
+     *
+     * 1) w is not distributed
+     *
+     * 2) w is distributed
+     *
+     */
+    int result_num_rows = v.dim();
+    int result_num_cols;
+    bool is_distributed = v.distributed();
+    Vector gathered_w;
+
+    /*
+     * Gather all of the entries in w on each process into a Vector stored
+     * redundantly (i.e., not distributed) on each process. If the Vector w
+     * is not distributed, this step is trivial.
+     */
+    if (!w.distributed())
+    {
+        result_num_cols = w.dim();
+        gathered_w = w;
+    }
+    else // w.distributed() is true
+    {
+        // Get the number of columns on each processor and gather these
+        // counts into an array. Use std::vector as an array substitute
+        // because variable-length arrays aren't in the C++ standard,
+        // but the storage for std::vector containers must be contiguous
+        // as defined by the C++ standard.
+        int process_local_num_cols = w.dim();
+        MPI_Comm comm = MPI_COMM_WORLD;
+        MPI_Datatype num_cols_datatype = MPI_INT;
+        int num_procs;
+        MPI_Comm_size(comm, &num_procs);
+        std::vector<int> num_cols_on_proc(num_procs, 0);
+        int num_procs_send_count = 1;
+        int num_procs_recv_count = 1;
+        MPI_Allgather(&process_local_num_cols,
+                      num_procs_send_count,
+                      num_cols_datatype,
+                      num_cols_on_proc.data(),
+                      num_procs_recv_count,
+                      num_cols_datatype,
+                      comm);
+
+        // Compute the displacements for the entries in the gathered
+        // Vector, along with the total number of columns in the result.
+        std::vector<int> gathered_w_displacements(num_procs, 0);
+        result_num_cols = 0;
+        for (int i = 0; i < num_cols_on_proc.size(); i++)
+        {
+            gathered_w_displacements.at(i) = result_num_cols;
+            result_num_cols += num_cols_on_proc.at(i);
+        }
+
+        // Gather the data from each process onto each process -- this
+        // step is an Allgatherv (because difference processes may
+        // have different numbers of entries.
+        std::vector<double> w_data(process_local_num_cols);
+        for (int i = 0; i < w_data.size(); i++)
+        {
+            w_data.at(i) = w(i);
+        }
+
+        std::vector<double> gathered_w_data(result_num_cols);
+        MPI_Datatype entry_datatype = MPI_DOUBLE;
+        MPI_Allgatherv(w_data.data(),
+                       process_local_num_cols,
+                       entry_datatype,
+                       gathered_w_data.data(),
+                       num_cols_on_proc.data(),
+                       gathered_w_displacements.data(),
+                       entry_datatype,
+                       comm);
+
+        gathered_w.setSize(result_num_cols);
+        for (int i = 0; i < gathered_w_data.size(); i++)
+        {
+            gathered_w(i) = gathered_w_data.at(i);
+        }
+    }
+
+    /* Create the matrix */
+    Matrix result(result_num_rows, result_num_cols, is_distributed);
+
+    /* Compute the outer product using the gathered copy of w. */
+    for (int i = 0; i < result_num_rows; i++)
+    {
+        for (int j = 0; j < result_num_cols; j++)
+        {
+            result(i, j) = v(i) * gathered_w(j);
+        }
+    }
+
+    return result;
+}
+
+Matrix DiagonalMatrixFactory(const Vector &v)
+{
+    const int resultNumRows = v.dim();
+    int resultNumColumns, processRowStartIndex, processNumColumns;
+    const bool isDistributed = v.distributed();
+
+    /* If v isn't distributed, sizing the output matrix is trivial. */
+    if (false == isDistributed)
+    {
+        resultNumColumns = processNumColumns = resultNumRows;
+        processRowStartIndex = 0;
+    }
+    else /* true == isDistributed */
+    {
+        using sizeType = std::vector<int>::size_type;
+
+        /**
+         * Get the number of rows on each process; these process row
+         * counts must be summed to get the number of columns on each
+         * process.
+         */
+        const MPI_Comm comm = MPI_COMM_WORLD;
+        int numProcesses; MPI_Comm_size(comm, &numProcesses);
+        std::vector<int>
+            numRowsOnProcess(static_cast<sizeType>(numProcesses));
+        const int one = 1; const MPI_Datatype indexType = MPI_INT;
+        MPI_Allgather(&resultNumRows, one, indexType,
+                      numRowsOnProcess.data(), one, indexType, comm);
+
+        /**
+         * Compute the row starting index and total number of rows
+         * over all processes -- which is also the total number of
+         * columns. Also compute the starting row index on each
+         * process.
+         *
+         * Assume that Matrix rows are contiguous sets of row indices,
+         * e.g., if a four row matrix is partititioned over two
+         * processes, then process zero on the MPI_Comm owns rows 0
+         * and 1, and process one on the MPI_Comm owns rows 2 and 3.
+         */
+        std::vector<int> rowStartIndexOnProcess(numProcesses);
+        resultNumColumns = 0;
+        for (sizeType i = 0; i < rowStartIndexOnProcess.size(); i++)
+        {
+            rowStartIndexOnProcess.at(i) = resultNumColumns;
+            resultNumColumns += numRowsOnProcess.at(i);
+        }
+        int processNumber; MPI_Comm_rank(comm, &processNumber);
+        processRowStartIndex =
+            rowStartIndexOnProcess.at(static_cast<sizeType>(processNumber));
+    } /* end (true == isDistributed) */
+
+    /**
+     * Create the diagonal matrix and assign process local entries in v
+     * to process local entries in the diagonal matrix.
+     */
+    Matrix diagonalMatrix(resultNumRows, resultNumColumns, isDistributed);
+    for (int i = 0; i < resultNumRows; i++)
+    {
+        for (int j = 0; j < resultNumColumns; j++)
+        {
+            /**
+             * Off-diagonal matrix entries are zero; diagonal matrix entries
+             * come from the input Vector.
+             */
+            const double entry = (j == (i + processRowStartIndex)) ? v(i) : 0.0;
+            diagonalMatrix(i, j) = entry;
+        }
+    }
+
+    return diagonalMatrix;
+}
+
+Matrix IdentityMatrixFactory(const Vector &v)
+{
+    Vector temporary(v); temporary = 1.0;
+    return DiagonalMatrixFactory(temporary);
+}
 
 } // end namespace CAROM

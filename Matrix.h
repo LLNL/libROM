@@ -971,6 +971,55 @@ class Matrix
       bool d_owns_data;
 };
 
+    /**
+     * @brief Computes the outer product of two Vectors, v and w.
+     *
+     * @post The number of rows in the returned matrix equals the dimension of v
+     * @post The number of cols in the returned matrix equals the dimension of w,
+     *       if w is not distributed. If w is distributed, the number of columns
+     *       equals the total number of entries of w, summed over all processes.
+     * @post If v is distributed, so is the returned matrix.
+     *
+     * @param[in] v The first vector in the outer product
+     * @param[in] w The second vector in the outer product
+     *
+     * @return The product of v and the transpose of w.
+     */
+    // NOTE(goxberry@gmail.com; oxberry1@llnl.gov): Passing by value is
+    // supposed to be more idiomatic C++11; consider passing by value
+    // instead of passing by reference.
+    Matrix outerProduct(const Vector &v, const Vector &w);
+
+    /**
+     * @brief Factory function to make a diagonal matrix with nonzero
+     * entries as in its Vector argument. The rows of this diagonal
+     * matrix are distributed in the same fashion as its Vector
+     * argument.
+     *
+     * @param[in] v Vector of elements that will be on the diagonal of the
+     *              output matrix.
+     * @param[out] diagonalMatrix The diagonal matrix created by this function.
+     *
+     * @post diagonalMatrix.distributed() == v.distributed()
+     * @post diagonalMatrix.numRows() == v.dim()
+     */
+    Matrix DiagonalMatrixFactory(const Vector &v);
+
+    /**
+     * @brief Factory function to make an identity matrix with rows
+     * distributed in the same fashion as its Vector argument. This function
+     * is provided for convenience due to the ubiquity of identity matrices
+     * (and operators) in mathematics.
+     *
+     * @param[in] v Vector of elements that will be on the diagonal of the
+     *              output matrix.
+     * @param[out] diagonalMatrix The diagonal matrix created by this function.
+     *
+     * @post diagonalMatrix.distributed() == v.distributed()
+     * @post diagonalMatrix.numRows() == v.dim()
+     */
+    Matrix IdentityMatrixFactory(const Vector &v);
+
 }
 
 #endif

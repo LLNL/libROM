@@ -104,9 +104,10 @@ class Vector
       /**
        * @brief Equal operator.
        *
-       * @param[in] rhs The Vector to add to this.
+       * @param[in] a The double precision number to which every
+       * Vector entry should be set.
        *
-       * @return This after rhs has been added to it.
+       * @return This with every element of the Vector set to a.
        */
       Vector&
       operator = (
