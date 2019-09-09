@@ -11,58 +11,98 @@
 // Description: Simple test of the incremental fast update algorithm and
 //              incremental sampler.
 
-#include "StaticSVDBasisGenerator.h"
-#include "ScalaMat.hpp"
+#include "IncrementalSVDBasisGenerator.h"
+
 #include "mpi.h"
 
 #include <stdio.h>
 
-using namespace ScalaWRAP;
 int
 main(
-     int argc,
-     char* argv[])
+  int argc,
+  char* argv[])
 {
-    // Initialize MPI and get the number of processors and this processor's
-    // rank.
-    MPI_Init(&argc, &argv);
-    int size;
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    
-   
-    bool status = false;
-    
-    int dim;
+   // Initialize MPI and get the number of processors and this processor's
+   // rank.
+   MPI_Init(&argc, &argv);
+   int size;
+   MPI_Comm_size(MPI_COMM_WORLD, &size);
+   int rank;
+   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (rank == 0) { dim = 2616*4;}
-    else { dim = 2617*4;}
+   // Given the number of processors and the rank of this processor set the
+   // dimension of the problem.
+   int dim;
+   if (size == 1) {
+      dim = 6;
+   }
+   else if (size == 2) {
+      dim = 3;
+   }
+   else if (size == 3) {
+      dim = 2;
+   }
+   else if (size == 6) {
+      dim = 1;
+   }
+   else {
+      if (rank == 0) {
+         printf("Illegal number of procs.\n");
+         printf("Allowed number of procs is 1, 2, 3, or 6.\n");
+      }
+      return 1;
+   }
 
-    // Create basis using 2 already computed bases
-    std::unique_ptr<CAROM::SVDBasisGenerator> static_basis_generator4;
-    static_basis_generator4.reset(new CAROM::StaticSVDBasisGenerator(dim,
-        300,
-        "su2_total",
-        900));
+   // Construct the incremental basis generator to use the fast update
+   // incremental algorithm and the incremental sampler.
+   CAROM::IncrementalSVDBasisGenerator inc_basis_generator(dim,
+      1.0e-2,
+      false,
+      true,
+      2,
+      1.0e-6,
+      2,
+      1.0e-2,
+      0.11,
+      "",
+      false,
+      false,
+      false,
+      CAROM::Database::HDF5,
+      0.1,
+      0.8,
+      5.0,
+      true);
 
-    std::cout << "Loading snapshots" << std::endl;
-    static_basis_generator4->loadSamples("su2_files/su2_mach039_snapshot","snapshot");
-    static_basis_generator4->loadSamples("su2_files/su2_mach040_snapshot","snapshot");
-    //static_basis_generator4->loadSamples("su2_mach039_basis","basis",10);
-    //static_basis_generator4->loadSamples("su2_mach040_basis","basis",10);
-    std::cout << "Writing snapshots" << std::endl;
-    static_basis_generator4->writeSnapshot();
+   // Define the values for the first sample.
+   double vals0[6] = {1.0, 6.0, 3.0, 8.0, 17.0, 9.0};
 
-    std::cout << "Computing SVD" << std::endl;
-    int rom_dim = static_basis_generator4->getSpatialBasis()->numColumns();
-    std::cout << "U ROM Dimension: " << rom_dim << std::endl;
-    static_basis_generator4->endSamples();
+   // Define the values for the second sample.
+   double vals1[6] = {2.0, 7.0, 4.0, 9.0, 18.0, 10.0};
 
-    static_basis_generator4 = nullptr;
+   bool status = false;
 
-    // Finalize MPI and return.
-    MPI_Finalize();
-    return !status;
+   // Take the first sample.
+   if (inc_basis_generator.isNextSample(0.0)) {
+      status = inc_basis_generator.takeSample(&vals0[dim*rank], 0.0, 0.11);
+      if (status) {
+         inc_basis_generator.computeNextSampleTime(&vals0[dim*rank],
+            &vals0[dim*rank],
+            0.0);
+      }
+   }
+
+   // Take the second sample.
+   if (status && inc_basis_generator.isNextSample(0.11)) {
+      status = inc_basis_generator.takeSample(&vals1[dim*rank], 0.11, 0.11);
+      if (status) {
+         inc_basis_generator.computeNextSampleTime(&vals1[dim*rank],
+            &vals1[dim*rank],
+            0.11);
+      }
+   }
+
+   // Finalize MPI and return.
+   MPI_Finalize();
+   return !status;
 }
-
