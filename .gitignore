@@ -22,4 +22,6 @@ uneven_dist
 random_test
 weak_scaling
 smoke_test
+load_samples
+smoke_static
 tests/gtest_runner
