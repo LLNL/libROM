@@ -135,9 +135,9 @@ StaticSVD::takeSample(
    for (int rank = 0; rank < d_num_procs; ++rank) {
       int nrows = d_dims[static_cast<unsigned>(rank)];
       int firstrow = d_istarts[static_cast<unsigned>(rank)] + 1;
-      LocalMatrix(&d_snapshots->item(0,0), nrows, d_num_samples, rank) = 
-                  d_samples->submatrix(rowrange(firstrow, firstrow+nrows-1),
-                                       colrange(1, d_num_samples));
+      gather_transposed_block(&d_snapshots->item(0, 0), d_samples.get(),
+                              firstrow, 1, nrows,
+                              d_num_samples, rank);
    }
    d_this_interval_basis_current = false;
    return true;

@@ -66,6 +66,11 @@ class StaticSVD : public SVD
          );
 
       /**
+       * Destructor.
+       */
+      ~StaticSVD();
+
+      /**
        * @brief Collect the new sample, u_in at supplied time.
        *
        * @pre u_in != 0

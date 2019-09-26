@@ -12,12 +12,10 @@
 //              incremental sampler.
 
 #include "StaticSVDBasisGenerator.h"
-#include "ScalaMat.hpp"
+#include "scalapack_wrapper.h"
 #include "mpi.h"
 
 #include <stdio.h>
-
-using namespace ScalaWRAP;
 
 int
 main(
