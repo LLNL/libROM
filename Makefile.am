@@ -122,6 +122,14 @@ smoke_test_SOURCES = smoke_test.C
 smoke_test_LDFLAGS =
 smoke_test_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
 
+smoke_static_SOURCES = smoke_static.C
+smoke_static_LDFLAGS =
+smoke_static_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
+
+load_samples_SOURCES = load_samples.C
+load_samples_LDFLAGS =
+load_samples_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
+
 tests_test_Matrix_SOURCES = tests/test_Matrix.C
 tests_test_Matrix_LDFLAGS =
 tests_test_Matrix_LDADD   = $(LIB_PATH) librom.a $(LIB_NAME)
