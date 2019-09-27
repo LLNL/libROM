@@ -181,18 +181,23 @@ class SVDBasisGenerator
          int max_cols = num_cols;
          if (cut_off < num_cols) max_cols = cut_off;
 
-         double* u_in = new double[num_rows*max_cols];
+         //double* u_in = new double[num_rows*max_cols];
          for (int j = 0; j < max_cols; j++) {
+            double* u_in = new double[num_rows];
             for (int i = 0; i < num_rows; i++) {
                if (kind == "basis") { 
-                  u_in[i+j*num_rows] = mat->item(i,j) * singular_vals->item(j,j); }
+                  //u_in[i+j*num_rows] = mat->item(i,j) * singular_vals->item(j,j); }
+                  u_in[i] = mat->item(i,j) * singular_vals->item(j,j); }
                else {
-                  u_in[i+j*num_rows] = mat->item(i,j); 
+                  //u_in[i+j*num_rows] = mat->item(i,j); 
+                  u_in[i] = mat->item(i,j); 
                }
             }
-            d_svdsampler->takeSample(u_in+j*num_rows, time, false);
+            //d_svdsampler->takeSample(u_in+j*num_rows, time, false);
+            d_svdsampler->takeSample(u_in, time, false);
+            delete[] u_in;
          }
-         delete u_in;
+         //delete u_in;
       }
 
       /**
