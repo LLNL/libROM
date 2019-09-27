@@ -131,14 +131,14 @@ StaticSVD::takeSample(
    ++d_num_samples;
    
    // Build snapshot matrix before SVD is computed
-   d_snapshots = new Matrix(d_dim, d_num_samples, false);
-   for (int rank = 0; rank < d_num_procs; ++rank) {
-      int nrows = d_dims[static_cast<unsigned>(rank)];
-      int firstrow = d_istarts[static_cast<unsigned>(rank)] + 1;
-      gather_transposed_block(&d_snapshots->item(0, 0), d_samples.get(),
-                              firstrow, 1, nrows,
-                              d_num_samples, rank);
-   }
+   //d_snapshots = new Matrix(d_dim, d_num_samples, false);
+   //for (int rank = 0; rank < d_num_procs; ++rank) {
+   //   int nrows = d_dims[static_cast<unsigned>(rank)];
+   //   int firstrow = d_istarts[static_cast<unsigned>(rank)] + 1;
+   //   gather_transposed_block(&d_snapshots->item(0, 0), d_samples.get(),
+   //                           firstrow, 1, nrows,
+   //                           d_num_samples, rank);
+  // }
    d_this_interval_basis_current = false;
    return true;
 }
@@ -221,6 +221,18 @@ StaticSVD::getSingularValues()
 const Matrix*
 StaticSVD::getSnapshotMatrix()
 {
+   
+   if (d_snapshots) delete d_snapshots;
+   d_snapshots = new Matrix(d_dim, d_num_samples, false);
+   
+   for (int rank = 0; rank < d_num_procs; ++rank) {
+      int nrows = d_dims[static_cast<unsigned>(rank)];
+      int firstrow = d_istarts[static_cast<unsigned>(rank)] + 1;
+      gather_transposed_block(&d_snapshots->item(0, 0), d_samples.get(),
+                              firstrow, 1, nrows,
+                              d_num_samples, rank);
+   }
+
    CAROM_ASSERT(d_snapshots != 0);
    return d_snapshots;
 }

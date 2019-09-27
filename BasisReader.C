@@ -68,6 +68,7 @@ BasisReader::~BasisReader()
    delete d_singular_values;
    d_database->close();
    delete d_database;
+   delete d_snapshots;
 }
 
 void
