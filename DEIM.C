@@ -52,16 +52,16 @@ DEIM(const Matrix* f_basis,
    // Create an MPI_Datatype for the RowInfo struct.
    MPI_Datatype MaxRowType, oldtypes[2];
    int blockcounts[2];
-   MPI_Aint offsets[2], extent;
+   MPI_Aint offsets[2], extent, lb;
    MPI_Status stat;
    offsets[0] = 0;
    oldtypes[0] = MPI_DOUBLE;
    blockcounts[0] = 1;
-   MPI_Type_extent(MPI_DOUBLE, &extent);
+   MPI_Type_get_extent(MPI_DOUBLE, &lb, &extent);
    offsets[1] = extent;
    oldtypes[1] = MPI_INT;
    blockcounts[1] = 2;
-   MPI_Type_struct(2, blockcounts, offsets, oldtypes, &MaxRowType);
+   MPI_Type_create_struct(2, blockcounts, offsets, oldtypes, &MaxRowType);
    MPI_Type_commit(&MaxRowType);
 
    // Create an MPI_Op for the RowInfoMax function.
