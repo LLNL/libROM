@@ -39,16 +39,36 @@ void GNAT(const Matrix* f_basis,
   // Create an MPI_Datatype for the RowInfo struct.
   MPI_Datatype MaxRowType, oldtypes[2];
   int blockcounts[2];
-  MPI_Aint offsets[2], extent;
+  MPI_Aint offsets[2], extent, lower_bound;
   MPI_Status stat;
   offsets[0] = 0;
   oldtypes[0] = MPI_DOUBLE;
   blockcounts[0] = 1;
-  MPI_Type_extent(MPI_DOUBLE, &extent);
+
+  /*
+      MPI_Type_extent is deprecated in MPI-2 and removed in
+      MPI-3. MPI_Type_extent has been replaced by MPI_Type_get_extent.
+  */
+#if (MPI_VERSION == 1)
+   MPI_Type_extent(MPI_DOUBLE, &extent);
+#else
+   MPI_Type_get_extent(MPI_DOUBLE, &lower_bound, &extent);
+#endif
+
   offsets[1] = extent;
   oldtypes[1] = MPI_INT;
   blockcounts[1] = 2;
-  MPI_Type_struct(2, blockcounts, offsets, oldtypes, &MaxRowType);
+
+/*
+  MPI_Type_struct is deprecated in MPI-2 and removed in
+  MPI-3. MPI_Type_struct has been replaced by MPI_Type_create_struct.
+ */
+#if (MPI_VERSION == 1)
+   MPI_Type_struct(2, blockcounts, offsets, oldtypes, &MaxRowType);
+#else
+   MPI_Type_create_struct(2, blockcounts, offsets, oldtypes, &MaxRowType);
+#endif
+
   MPI_Type_commit(&MaxRowType);
 
   // Create an MPI_Op for the RowInfoMax function.
