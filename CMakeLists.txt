@@ -36,6 +36,10 @@ project(libROM
   HOMEPAGE_URL "https://github.com/LLNL/libROM"
   LANGUAGES C CXX Fortran)
 
+set(libROM_CMAKE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+set(libROM_CMAKE_MODULE_PATH ${libROM_CMAKE_PATH}/modules)
+list(APPEND CMAKE_MODULE_PATH ${libROM_CMAKE_MODULE_PATH})
+
 # List minimum version requirements for dependencies where possible to make
 # packaging easier later.
 find_package(HDF5 1.8.0 REQUIRED)
@@ -46,6 +50,8 @@ find_package(LAPACK 3.4.0 REQUIRED)
 find_package(MPI 1.2 REQUIRED)
 
 find_package(ZLIB 1.2.3 REQUIRED)
+
+find_package(ScaLAPACK REQUIRED)
 
 find_package(Doxygen 1.8.5)
 
