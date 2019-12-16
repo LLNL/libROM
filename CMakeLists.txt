@@ -126,7 +126,8 @@ configure_file(${CMAKE_SOURCE_DIR}/CAROM_config.h.in
 # build system -- it is a build system _generator_". Instead, use
 # some file name "stems" for generating file names. This construction
 # is useful when files may be moved to different directories.
-set(module_list Matrix
+set(module_list
+  Matrix
   Vector
   BasisReader
   BasisWriter
@@ -153,6 +154,10 @@ foreach(module IN LISTS module_list)
   list(APPEND source_files ${module}.C)
 endforeach(module) # IN LISTS module_list
 
+list(APPEND source_files
+  scalapack_c_wrapper.c
+  scalapack_f_wrapper.f90)
+
 add_library(ROM ${source_files})
 
 # PUBLIC dependencies are transitive; these dependencies are used in
@@ -171,7 +176,7 @@ add_library(ROM ${source_files})
 # 3.0.
 target_link_libraries(ROM
   PUBLIC ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${HDF5_LIBRARIES}
-  ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES}
+  ${ScaLAPACK_LIBRARIES} ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES}
   PRIVATE ${ZLIB_LIBRARIES} ZLIB::ZLIB)
 
 target_include_directories(ROM PUBLIC
