@@ -14,6 +14,7 @@
 #include "StaticSVD.h"
 
 #include "mpi.h"
+#include "scalapack_wrapper.h"
 
 #include <stdio.h>
 #include <string.h>
