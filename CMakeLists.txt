@@ -18,14 +18,17 @@
 # software can be installed, e.g., via Spack (`spack install
 # ninja-fortran`).
 
-# Require CMake version 3.10 or later to expose modern features of
+# Require CMake version 3.12 or later to expose modern features of
 # CMake for maintainability. With additional work, it is possible to
-# rewrite the build system generator for CMake 3.8+, 3.1+, 3.0+, or
-# 2.8+, with increasing amounts of work as the minimum required
-# version is decreased. Notably, CMake's find modules export targets
-# (e.g., FindZLIB.cmake exports the ZLIB::ZLIB IMPORTED target) as of
-# version 3.1.
-cmake_minimum_required(VERSION 3.10)
+# rewrite the build system generator for CMake 3.10+, 3.8+, 3.1+,
+# 3.0+, or 2.8+, with increasing amounts of work as the minimum
+# required version is decreased. Notably, CMake's find modules export
+# targets (e.g., FindZLIB.cmake exports the ZLIB::ZLIB IMPORTED
+# target) as of version 3.1, and CMake supports using the
+# <PackageName>_ROOT variables to set the prefix search path for
+# find_package(<PackageName>) as of version 3.12.
+cmake_minimum_required(VERSION 3.12)
+cmake_policy(SET CMP0074 NEW) # Use <PackageName>_ROOT variables in find_package
 
 # Even though this project is a pure C++ library, the C language must be enabled
 # for MPI and HDF5 dependency checking. The Fortran language must be enabled
