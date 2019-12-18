@@ -54,8 +54,6 @@ find_package(MPI 1.2 REQUIRED)
 
 find_package(ZLIB 1.2.3 REQUIRED)
 
-find_package(ScaLAPACK REQUIRED)
-
 find_package(Doxygen 1.8.5)
 
 find_package(GTest 1.6.0)
@@ -163,6 +161,24 @@ list(APPEND source_files
 
 add_library(ROM ${source_files})
 
+# If MKL libraries not found, search for reference ScaLAPACK. If MKL
+# libraries found, search for MKL ScaLAPACK; if MKL ScaLAPACK not
+# found, search for reference ScaLAPACK. It seems that only
+if (BLAS_LIBRARIES MATCHES ".*mkl.*")
+  find_package(MKL COMPONENTS BLACS ScaLAPACK)
+  if (NOT MKL_ScaLAPACK_FOUND)
+    find_package(ScaLAPACK REQUIRED)
+    target_link_libraries(ROM PUBLIC ${ScaLAPACK_LIBRARIES})
+  else()
+    target_link_libraries(ROM PUBLIC ${MKL_ScaLAPACK_LIBRARY} ${MKL_BLACS_LIBRARY} ${MKL_LIBRARIES})
+    target_include_directories(ROM PUBLIC ${MKL_INCLUDE_DIRS})
+  endif()
+else() # BLAS or LAPACK isn't MKL
+  find_package(ScaLAPACK REQUIRED)
+  target_link_libraries(ROM PUBLIC ${ScaLAPACK_LIBRARIES})
+endif()
+
+
 # PUBLIC dependencies are transitive; these dependencies are used in
 # the API headers *and* in their implementations
 #
@@ -179,7 +195,7 @@ add_library(ROM ${source_files})
 # 3.0.
 target_link_libraries(ROM
   PUBLIC ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${HDF5_LIBRARIES}
-  ${ScaLAPACK_LIBRARIES} ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES}
+  ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES}
   PRIVATE ${ZLIB_LIBRARIES} ZLIB::ZLIB)
 
 target_include_directories(ROM PUBLIC
