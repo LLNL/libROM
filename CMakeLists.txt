@@ -43,21 +43,6 @@ set(libROM_CMAKE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 set(libROM_CMAKE_MODULE_PATH ${libROM_CMAKE_PATH}/modules)
 list(APPEND CMAKE_MODULE_PATH ${libROM_CMAKE_MODULE_PATH})
 
-# List minimum version requirements for dependencies where possible to make
-# packaging easier later.
-find_package(HDF5 1.8.0 REQUIRED)
-find_package(BLAS 3.4.0 REQUIRED)
-find_package(LAPACK 3.4.0 REQUIRED)
-
-# In FindMPI.cmake, "CXX" refers to "the MPI C API [being] usable from C++"
-find_package(MPI 1.2 REQUIRED)
-
-find_package(ZLIB 1.2.3 REQUIRED)
-
-find_package(Doxygen 1.8.5)
-
-find_package(GTest 1.6.0)
-
 include(FortranCInterface)
 FortranCInterface_HEADER(${CMAKE_SOURCE_DIR}/FCMangle.h
   MACRO_NAMESPACE "CAROM_FC_")
@@ -161,6 +146,13 @@ list(APPEND source_files
 
 add_library(ROM ${source_files})
 
+# List minimum version requirements for dependencies where possible to make
+# packaging easier later.
+find_package(HDF5 1.8.0 REQUIRED)
+
+find_package(BLAS 3.4.0 REQUIRED)
+find_package(LAPACK 3.4.0 REQUIRED)
+
 # If MKL libraries not found, search for reference ScaLAPACK. If MKL
 # libraries found, search for MKL ScaLAPACK; if MKL ScaLAPACK not
 # found, search for reference ScaLAPACK. It seems that only
@@ -178,6 +170,14 @@ else() # BLAS or LAPACK isn't MKL
   target_link_libraries(ROM PUBLIC ${ScaLAPACK_LIBRARIES})
 endif()
 
+# In FindMPI.cmake, "CXX" refers to "the MPI C API [being] usable from C++"
+find_package(MPI 1.2 REQUIRED)
+
+find_package(ZLIB 1.2.3 REQUIRED)
+
+find_package(Doxygen 1.8.5)
+
+find_package(GTest 1.6.0)
 
 # PUBLIC dependencies are transitive; these dependencies are used in
 # the API headers *and* in their implementations
