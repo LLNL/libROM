@@ -9,7 +9,9 @@
  *****************************************************************************/
 
 // Description: Simple test of loading precomputed basis or snapshots and 
-//              computing the static SVD on the loaded samples.
+//              computing the static SVD on the loaded samples. Please
+//              run in serial. Assumes this file is located in libROM/build.
+//              If not, please adjust file address of sample data below.
 
 #include "StaticSVDBasisGenerator.h"
 #include "scalapack_wrapper.h"
@@ -22,63 +24,41 @@ main(
      int argc,
      char* argv[])
 {
-    // Initialize MPI and get the number of processors and this processor's
-    // rank.
-    MPI_Init(&argc, &argv);
-    int size;
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    
-   
-    bool status = false;
-    
-    int dim;
+  std::string uploaded_data = "snapshot";
+  if (argc > 0) {
+    if (strcmp(argv[0],"b") || strcmp(argv[0],"basis")) std::string uploaded_data = "basis"; }
 
-    if (size == 2) {
-        if (rank == 0) { dim = 2616*4;}
-        else { dim = 2617*4;}
-    }
-    else if (size == 1) {
-        // The data being read below was obtained using 2 processors.
-        // It should be read using the same number of processors (2). 
-        // Reading with only 1 will neglect the info from processor 2.
-        // So this won't make physical sense, but it should run without failing. 
-        dim = 2616*4;
-    }
-    else {
-        if (rank == 0) {
-            printf("Illegal number of procs.\n");
-            printf("Allowed number of procs is 1 or 2");
-        }
-    }
-
-    // Create basis using 1 or 2 already computed bases
-    std::unique_ptr<CAROM::SVDBasisGenerator> static_basis_generator4;
-    static_basis_generator4.reset(new CAROM::StaticSVDBasisGenerator(dim,
-        300,
-        "su2_total",
-        600));
-
+  int dim = 6;
+  
+  // Create basis using 1 or 2 already computed bases
+  std::unique_ptr<CAROM::SVDBasisGenerator> static_basis_generator;
+  static_basis_generator.reset(new CAROM::StaticSVDBasisGenerator(dim,
+      2,
+      "samples_total",
+      2));
+  
+  if (uploaded_data == "snapshot") {
     std::cout << "Loading snapshots" << std::endl;
-    static_basis_generator4->loadSamples("su2_files/su2_mach039_snapshot","snapshot");
-    static_basis_generator4->loadSamples("su2_files/su2_mach040_snapshot","snapshot");
-    //static_basis_generator4->loadSamples("su2_files/su2_mach039_basis","basis",10);
-    //static_basis_generator4->loadSamples("su2_files/su2_mach040_basis","basis",10);
-    std::cout << "Writing snapshots" << std::endl;
-    static_basis_generator4->writeSnapshot();
+    static_basis_generator->loadSamples("../tests/load_samples_data/sample1_snapshot","snapshot");
+    static_basis_generator->loadSamples("../tests/load_samples_data/sample2_snapshot","snapshot");
+  }
+  else if (uploaded_data == "basis") {
+    std::cout << "Loading bases" << std::endl;
+    // Load bases. Last input is number of bases to include (allows for truncation)
+    static_basis_generator->loadSamples("../tests/load_samples_data/sample1_basis","basis",1);
+    static_basis_generator->loadSamples("../tests/load_samples_data/sample2_basis","basis",1);
+  }
 
-    // Can compute the SVD by calling getSpatialBasis() or endSamples()
-    // endSamples() will save the file "su2_total..."
-    std::cout << "Computing SVD" << std::endl;
-    int rom_dim = static_basis_generator4->getSpatialBasis()->numColumns();
-    std::cout << "U ROM Dimension: " << rom_dim << std::endl;
-    static_basis_generator4->endSamples();
-
-    static_basis_generator4 = nullptr;
-
-    // Finalize MPI and return.
-    MPI_Finalize();
-    return !status;
+  std::cout << "Saving data uploaded as a snapshot" << std::endl;
+  static_basis_generator->writeSnapshot();
+  
+  // Can compute the SVD by calling getSpatialBasis() or endSamples()
+  // endSamples() will save the basis file "samples_total..."
+  std::cout << "Computing SVD" << std::endl;
+  int rom_dim = static_basis_generator->getSpatialBasis()->numColumns();
+  std::cout << "U ROM Dimension: " << rom_dim << std::endl;
+  static_basis_generator->endSamples();
+  
+  static_basis_generator = nullptr;
 }
 
