@@ -21,11 +21,13 @@ StaticSVDSampler::StaticSVDSampler(
    int samples_per_time_interval,
    int max_basis_dimension,
    double sigma_tolerance,
-   bool debug_algorithm)
+   bool debug_algorithm,
+   bool updateRightSV)
 {
    d_svd.reset(new StaticSVD(dim, samples_per_time_interval,
                              max_basis_dimension, sigma_tolerance,
                              debug_algorithm));
+   d_updateRightSV = updateRightSV;
 }
 
 StaticSVDSampler::~StaticSVDSampler()

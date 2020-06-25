@@ -302,6 +302,11 @@ class SVDBasisGenerator
          return d_svdsampler->getBasisIntervalStartTime(which_interval);
       }
 
+      int getNumSamples() const
+      {
+	return d_svdsampler->getNumSamples();
+      }
+      
    protected:
       /**
        * @brief Constructor.

@@ -212,6 +212,11 @@ class SVDSampler
          return d_updateRightSV;
       }
 
+      int getNumSamples() const
+      {
+	return d_svd->getNumSamples();
+      }
+      
    protected:
       /**
        * @brief Pointer to the abstract SVD algorithm object.

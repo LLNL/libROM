@@ -144,7 +144,7 @@ list(APPEND source_files
   scalapack_c_wrapper.c
   scalapack_f_wrapper.f90)
 
-add_library(ROM ${source_files})
+add_library(ROM SHARED ${source_files})
 
 # List minimum version requirements for dependencies where possible to make
 # packaging easier later.
@@ -194,7 +194,7 @@ find_package(GTest 1.6.0)
 # but is done here to ease a potential rollback to CMake 2.8 or CMake
 # 3.0.
 target_link_libraries(ROM
-  PUBLIC ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${HDF5_LIBRARIES}
+  PUBLIC ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran ${HDF5_LIBRARIES}
   ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES}
   PRIVATE ${ZLIB_LIBRARIES} ZLIB::ZLIB)
 
@@ -218,7 +218,7 @@ foreach(name IN LISTS regression_test_names)
   add_executable(${name} ${name}.C)
 
   target_link_libraries(${name}
-    PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C)
+    PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
   target_include_directories(${name}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
     ${MPI_C_INCLUDE_DIRS})
@@ -234,7 +234,7 @@ if(GTEST_FOUND)
   foreach(stem IN LISTS unit_test_stems)
     add_executable(test_${stem} tests/test_${stem}.C)
     target_link_libraries(test_${stem} PRIVATE ROM
-      ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C GTest::GTest)
+      ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran GTest::GTest)
     target_include_directories(test_${stem}
       PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
       ${MPI_C_INCLUDE_DIRS})
