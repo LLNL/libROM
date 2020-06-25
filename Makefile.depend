@@ -274,30 +274,5 @@ DEPENDS_23 +=\
 	
 
 
-${FILE_22}: ${DEPENDS_22}
-
-FILE_23=smoke_static.o
-DEPENDS_23:=\
-	BasisWriter.h CAROM_config.h Database.h				\
-	IncrementalSVDBasisGenerator.h Matrix.h SVD.h			\
-	SVDBasisGenerator.h SVDSampler.h Utilities.h Vector.h		\
-	scalapack_wrapper.h smoke_static.C
-
-DEPENDS_23 +=\
-
-
-
 ${FILE_23}: ${DEPENDS_23}
 
-FILE_24=load_samples.o
-DEPENDS_24:=\
-	BasisWriter.h CAROM_config.h Database.h				\
-	IncrementalSVDBasisGenerator.h Matrix.h SVD.h			\
-	SVDBasisGenerator.h SVDSampler.h Utilities.h Vector.h		\
-	scalapack_wrapper.h load_samples.C
-
-DEPENDS_24 +=\
-
-
-
-${FILE_24}: ${DEPENDS_24}
