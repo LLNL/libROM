@@ -566,6 +566,9 @@ Matrix::inverse(
          result->item(col, row) = tmp;
       }
    }
+
+   delete [] ipiv;
+   delete [] work;
 }
 
 void
@@ -606,6 +609,9 @@ Matrix::inverse(
          result.item(col, row) = tmp;
       }
    }
+
+   delete [] ipiv;
+   delete [] work;
 }
 
 void
@@ -642,6 +648,9 @@ Matrix::inverse()
          item(col, row) = tmp;
       }
    }
+
+   delete [] ipiv;
+   delete [] work;
 }
 
 void Matrix::transposePseudoinverse()
