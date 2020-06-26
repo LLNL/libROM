@@ -164,6 +164,11 @@ class SVD
                 (d_num_samples >= d_samples_per_time_interval);
       }
 
+      int getNumSamples() const
+      {
+	return d_num_samples;
+      }
+
    protected:
       /**
        * @brief Dimension of the system.

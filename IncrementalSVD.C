@@ -23,7 +23,7 @@
 #include <sstream>
 
 /* Use Autotools-detected Fortran name-mangling scheme */
-#define dgesdd FC_FUNC(dgesdd, DGESDD)
+#define dgesdd CAROM_FC_GLOBAL(dgesdd, DGESDD)
 
 extern "C" {
 void dgesdd(char*, int*, int*, double*, int*,

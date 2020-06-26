@@ -249,7 +249,22 @@ main(
    }
    delete [] M;
 
-   // Finalize MPI and return.
+   // NOTE(goxberry@gmail.com, oxberry1@llnl.gov):
+   // StaticSVDBasisGenerator::~StaticSVDBasisGenerator calls the
+   // BLACS function blacs_gridexit, which includes some MPI calls. If
+   // the StaticSVDBasisGenerator destructor is not called by
+   // static_basis_generator directly before the main function
+   // returns, this destructor will be called automatically when the
+   // main function returns. This automatic call is problematic if
+   // MPI_Finalize is called in main prior to the return call in main
+   // because MPI functions will be called in the destructor after the
+   // MPI_Finalize call, which will cause MPI to abort locally the
+   // executable. This direct call of the StaticSVDBasisGenerator
+   // destructor is not idiomatic, but it is the least disruptive
+   // change to the code until a better solution can be found.
+   static_basis_generator.~StaticSVDBasisGenerator();
+
+// Finalize MPI and return.
    MPI_Finalize();
    return !status;
 }
