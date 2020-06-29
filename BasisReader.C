@@ -23,8 +23,8 @@ BasisReader::BasisReader(
    d_spatial_basis_vectors(NULL),
    d_temporal_basis_vectors(0),
    d_singular_values(0),
-   d_snapshots(0),
    d_last_basis_idx(-1),
+   d_snapshots(0),
    full_file_name(""),
    base_file_name_(base_file_name)
 {

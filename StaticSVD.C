@@ -113,6 +113,7 @@ StaticSVD::takeSample(
 
    if (isNewTimeInterval()) {
       // We have a new time interval.
+     delete_factorizer();
       int num_time_intervals = 
          static_cast<int>(d_time_interval_start_times.size());
       if (num_time_intervals > 0) {
@@ -136,6 +137,8 @@ StaticSVD::takeSample(
           time;
       d_basis = nullptr;
       d_basis_right = nullptr;
+      // Set the N in the global matrix so BLACS won't complain.
+      d_samples->n = d_samples_per_time_interval;
    }
    broadcast_sample(u_in);
    ++d_num_samples;
