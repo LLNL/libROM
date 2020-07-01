@@ -46,7 +46,7 @@ BasisWriter::BasisWriter(
    }
    
    char tmp[100];
-   sprintf(tmp, "_basis.%06d", rank);
+   sprintf(tmp, ".%06d", rank);
    full_file_name = base_file_name + tmp;
 
 
