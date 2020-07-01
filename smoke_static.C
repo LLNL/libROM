@@ -86,7 +86,7 @@ main(
 
    // Take the second sample.
    static_basis_generator2->takeSample(&vals1[dim*rank],0,0.1);
-   static_basis_generator2->writeSnapshot();
+   static_basis_generator2->writeSnapshot(); // "_snapshot" will be added to the base file name
    static_basis_generator2->endSamples();
 
    // Files are closed in destructor.
@@ -132,8 +132,8 @@ main(
       "static_smoke_final_frombasis",
       2));
 
-   static_basis_generator3->loadSamples("static_smoke1_basis","basis");
-   static_basis_generator3->loadSamples("static_smoke2_basis","basis");
+   static_basis_generator3->loadSamples("static_smoke1","basis");
+   static_basis_generator3->loadSamples("static_smoke2","basis");
    std::cout << "Loaded bases" << std::endl;
    static_basis_generator3->writeSnapshot();
    rom_dim = static_basis_generator3->getSpatialBasis()->numColumns();
