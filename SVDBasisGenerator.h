@@ -18,6 +18,7 @@
 #define included_SVDBasisGenerator_h
 
 #include "BasisWriter.h"
+#include "BasisReader.h"
 #include "SVDSampler.h"
 
 /* Use C++11 built-in shared pointers if available; else fallback to Boost. */
@@ -32,6 +33,7 @@
 namespace CAROM {
 
 class BasisWriter;
+class BasisReader;
 class Matrix;
 
 /**
@@ -95,7 +97,6 @@ class SVDBasisGenerator
          CAROM_ASSERT(u_in != 0);
          CAROM_ASSERT(time >= 0);
 
-
          // Check that u_in is not non-zero.
          Vector u_vec(u_in, d_svdsampler->getDim(), true);
          if (u_vec.norm() == 0.0) {
@@ -120,12 +121,77 @@ class SVDBasisGenerator
 
       /**
        * @brief Signal that the final sample has been taken.
+       *
+       * @param[in] kind "basis" or "snapshot" to write one or the other.
        */
       void
-      endSamples()
+      endSamples(const std::string& kind = "basis")
       {
          if (d_basis_writer) {
-            d_basis_writer->writeBasis();
+            d_basis_writer->writeBasis(kind);
+         }
+      }
+
+     /**
+      * @brief Write current snapshot matrix.
+      */
+      void
+      writeSnapshot()
+      {
+         if (d_basis_writer) {
+            d_basis_writer->writeBasis("snapshot");
+         }
+      }
+   
+      /**
+       * @brief Load previously saved sample (basis or state).
+       *
+       * @param[in] base_file_name The base part of the name of the files
+       *                           holding the basis / snapshot vectors.
+       * @param[in] kind Either basis or snapshot, the kind of data to load.
+       * @param[in] cut_off The max number of bases or snapshots to read.                          
+       * @param[in] db_format Format of the file to read.
+       */
+      void
+      loadSamples(const std::string& base_file_name,
+                  const std::string& kind = "basis",
+                  int cut_off = 1e9,
+                  Database::formats db_format = Database::HDF5)
+      { 
+         CAROM_ASSERT(!base_file_name.empty());
+         CAROM_ASSERT(kind == "basis" || kind == "snapshot");
+         
+         if (d_basis_reader) delete d_basis_reader;
+         
+	       d_basis_reader = new BasisReader(base_file_name, db_format);
+         double time = 0.0;
+         const Matrix* mat;
+         const Matrix* singular_vals;
+         
+         if (kind == "basis") {
+            mat = d_basis_reader->getSpatialBasis(time);
+            singular_vals = d_basis_reader->getSingularValues(time);
+         }
+         else if (kind == "snapshot") {
+            mat = d_basis_reader->getSnapshotMatrix(time);
+         }
+         
+         int num_rows = mat->numRows();
+         int num_cols = mat->numColumns();
+         int max_cols = num_cols;
+         if (cut_off < num_cols) max_cols = cut_off;
+
+         for (int j = 0; j < max_cols; j++) {
+            double* u_in = new double[num_rows];
+            for (int i = 0; i < num_rows; i++) {
+               if (kind == "basis") {
+                  u_in[i] = mat->item(i,j) * singular_vals->item(j,j); }
+               else {
+                  u_in[i] = mat->item(i,j); 
+               }
+            }
+            d_svdsampler->takeSample(u_in, time, false);
+            delete[] u_in;
          }
       }
 
@@ -190,6 +256,17 @@ class SVDBasisGenerator
       }
 
       /**
+       * @brief Returns the snapshot matrix for the current time interval.
+       *
+       * @return The snapshot matrix for the current time interval.
+       */
+      const Matrix*
+      getSnapshotMatrix()
+      {
+         return d_svdsampler->getSnapshotMatrix();
+      }
+   
+      /**
        * @brief Returns the number of time intervals on which different sets of
        * basis vectors are defined.
        *
@@ -249,6 +326,12 @@ class SVDBasisGenerator
        * @brief Writer of basis vectors.
        */
       BasisWriter* d_basis_writer;
+
+      /**
+       * @brief Reader of basis vectors.
+       */
+      BasisReader* d_basis_reader;
+
 
       /**
        * @brief Pointer to the underlying sampling control object.

@@ -122,6 +122,15 @@ class StaticSVD : public SVD
       const Matrix*
       getSingularValues();
 
+      /**
+       * @brief Returns the snapshot matrix for the current time interval.
+       *
+       * @return The snapshot matrix for the current time interval.
+       */
+      virtual
+      const Matrix*
+      getSnapshotMatrix();
+   
    private:
       /**
        * @brief Unimplemented default constructor.

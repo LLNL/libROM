@@ -113,21 +113,23 @@ StaticSVD::takeSample(
 
    if (isNewTimeInterval()) {
       // We have a new time interval.
-      delete_factorizer();
-      int num_time_intervals =
+     delete_factorizer();
+      int num_time_intervals = 
          static_cast<int>(d_time_interval_start_times.size());
       if (num_time_intervals > 0) {
-	      delete d_basis;
-	      d_basis = nullptr;
-	      delete d_basis_right;
-	      d_basis_right = nullptr;
+         delete d_basis;
+         d_basis = nullptr;
+         delete d_basis_right;
+         d_basis_right = nullptr;
          delete d_U;
          d_U = nullptr;
          delete d_S;
          d_S = nullptr;
          delete d_W;
          d_W = nullptr;
-      }
+         delete d_snapshots;
+         d_snapshots = nullptr;  
+    }
       d_num_samples = 0;
       d_time_interval_start_times.resize(
                 static_cast<unsigned>(num_time_intervals) + 1);
@@ -138,9 +140,18 @@ StaticSVD::takeSample(
       // Set the N in the global matrix so BLACS won't complain.
       d_samples->n = d_samples_per_time_interval;
    }
-
    broadcast_sample(u_in);
    ++d_num_samples;
+   
+   // Build snapshot matrix before SVD is computed
+   //d_snapshots = new Matrix(d_dim, d_num_samples, false);
+   //for (int rank = 0; rank < d_num_procs; ++rank) {
+   //   int nrows = d_dims[static_cast<unsigned>(rank)];
+   //   int firstrow = d_istarts[static_cast<unsigned>(rank)] + 1;
+   //   gather_transposed_block(&d_snapshots->item(0, 0), d_samples.get(),
+   //                           firstrow, 1, nrows,
+   //                           d_num_samples, rank);
+  // }
    d_this_interval_basis_current = false;
    return true;
 }
@@ -219,7 +230,26 @@ StaticSVD::getSingularValues()
    CAROM_ASSERT(thisIntervalBasisCurrent());
    return d_S;
 }
+   
+const Matrix*
+StaticSVD::getSnapshotMatrix()
+{
+   
+   if (d_snapshots) delete d_snapshots;
+   d_snapshots = new Matrix(d_dim, d_num_samples, false);
+   
+   for (int rank = 0; rank < d_num_procs; ++rank) {
+      int nrows = d_dims[static_cast<unsigned>(rank)];
+      int firstrow = d_istarts[static_cast<unsigned>(rank)] + 1;
+      gather_transposed_block(&d_snapshots->item(0, 0), d_samples.get(),
+                              firstrow, 1, nrows,
+                              d_num_samples, rank);
+   }
 
+   CAROM_ASSERT(d_snapshots != 0);
+   return d_snapshots;
+}
+   
 void
 StaticSVD::computeSVD()
 {

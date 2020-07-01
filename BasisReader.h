@@ -90,7 +90,7 @@ class BasisReader {
       }
 
       void readBasis(
-             const std::string& base_file_name,
+             const std::string& base_file_name = "",
              Database::formats db_format = Database::HDF5);
 
       /**
@@ -115,6 +115,10 @@ class BasisReader {
       const Matrix*
       getSingularValues(
          double time);
+ 
+      const Matrix*
+      getSnapshotMatrix(
+	 double time);
 
       Matrix
       getMatlabBasis(
@@ -169,12 +173,27 @@ class BasisReader {
        * @brief The currently requested singular values.
        */
       Matrix* d_singular_values;
+   
+      /**
+       * @brief The currently requested snapshot matrix.
+       */
+      Matrix* d_snapshots;
 
       /**
        * @brief The database being read from.
        */
       Database* d_database;
+   
+      /**
+       * @brief Base file name stored for consistency between reading and writing.
+       */
+      std::string base_file_name_;
 
+      /**
+       * @brief Full file name of database incuding rank.
+       */
+      std::string full_file_name;
+      
       /**
        * @brief The last time at which basis vectors were requested.
        */

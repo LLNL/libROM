@@ -291,6 +291,13 @@ IncrementalSVD::getSingularValues()
    return d_S;
 }
 
+const Matrix*
+IncrementalSVD::getSnapshotMatrix()
+{
+   std::cout << "Getting snapshot matrix for incremental SVD not implemented" << std::endl;
+   return d_snapshots;
+}
+
 bool
 IncrementalSVD::buildIncrementalSVD(
    double* u, bool add_without_increase)
