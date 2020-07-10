@@ -40,6 +40,7 @@ class StaticSVDBasisGenerator : public SVDBasisGenerator
        *                            containing the basis vectors.  Each process
        *                            will append its process ID to this base
        *                            name.
+       * @param[in] output_rightSV Whether to output the right SV or not.
        * @param[in] max_basis_dimension (typemax(int)) The maximum number of
        *                                vectors returned in the basis.
        * @param[in] sigma_tolerance This tolerance is based on the ratio of
@@ -56,6 +57,7 @@ class StaticSVDBasisGenerator : public SVDBasisGenerator
          int dim,
          int samples_per_time_interval,
          const std::string& basis_file_name,
+         bool output_rightSV = false,
          int max_basis_dimension = std::numeric_limits<int>::max(),
          double sigma_tolerance = 0,
          bool debug_algorithm = false,
