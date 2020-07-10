@@ -11,7 +11,7 @@ set(CMAKE_CXX_COMPILER /usr/tce/packages/mvapich2/mvapich2-2.3-intel-19.0.4/bin/
 set(CMAKE_Fortran_COMPILER /usr/tce/packages/mvapich2/mvapich2-2.3-intel-19.0.4/bin/mpif90)
 set(BLA_VENDOR Intel10_64lp)
 set(HDF5_ROOT /usr/tce/packages/hdf5/hdf5-serial-1.8.18-intel-19.0.4)
-string(APPEND CMAKE_CXX_FLAGS_INIT " -gxx-name=/usr/tce/packages/gcc/gcc-7.1.0/bin/g++")
+#string(APPEND CMAKE_CXX_FLAGS_INIT " -gxx-name=/usr/tce/packages/gcc/gcc-7.1.0/bin/g++")
 
 set(BLAS_ROOT /usr/tce/packages/mkl/mkl-2019.0/mkl)
 set(LAPACK_ROOT /usr/tce/packages/mkl/mkl-2019.0/mkl)
