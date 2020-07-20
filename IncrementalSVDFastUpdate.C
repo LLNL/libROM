@@ -24,6 +24,7 @@ namespace CAROM {
 IncrementalSVDFastUpdate::IncrementalSVDFastUpdate(
    int dim,
    double linearity_tol,
+   double singular_value_tol,
    bool skip_linearly_dependent,
    int max_basis_dimension,
    int samples_per_time_interval,
@@ -42,7 +43,8 @@ IncrementalSVDFastUpdate::IncrementalSVDFastUpdate(
       restore_state,
       updateRightSV,
       debug_algorithm),
-   d_Up(0)
+   d_Up(0),
+   d_singular_value_tol(singular_value_tol)
 {
    CAROM_ASSERT(dim > 0);
    CAROM_ASSERT(linearity_tol > 0.0);
@@ -148,12 +150,13 @@ IncrementalSVDFastUpdate::buildInitialSVD(
      d_W->item(0, 0) = 1.0;
    }
 
-   // Compute the basis vectors for this time interval.
-   computeBasis();
-
    // We now have the first sample for the new time interval.
    d_num_samples = 1;
    d_num_rows_of_W = 1;
+
+   // Compute the basis vectors for this time interval.
+   computeBasis();
+
 }
 
 void
@@ -171,6 +174,78 @@ IncrementalSVDFastUpdate::computeBasis()
      delete d_basis_right;
      d_basis_right = new Matrix(*d_W);
    }
+
+  if(d_rank == 0) {
+       std::cout << "d_num_samples = " << d_num_samples << "\n";
+       std::cout << "d_num_rows_of_W = " << d_num_rows_of_W << "\n";
+       std::cout << "d_singular_value_tol = " << d_singular_value_tol << "\n";
+       std::cout << "smallest SV = " << d_S->item(d_num_samples-1,d_num_samples-1) << "\n";
+       std::cout << "next smallest SV = " << d_S->item(d_num_samples-2,d_num_samples-2) << "\n";
+   }
+   // remove the smallest singular value if it is smaller than d_singular_value_tol
+   if ( (d_singular_value_tol != 0.0) && 
+        (d_S->item(d_num_samples-1,d_num_samples-1) < d_singular_value_tol) &&
+        (d_num_samples != 1) ) {
+
+       if (d_rank == 0) std::cout << "removing a small singular value!\n";
+
+       Matrix* d_basis_new = new Matrix(d_dim, d_num_samples-1, false);
+       for (int row = 0; row < d_dim; ++row) {
+          for (int col = 0; col < d_num_samples-1; ++col) {
+              d_basis_new->item(row, col) = d_basis->item(row,col);
+          }
+       }
+       delete d_basis;
+       d_basis = d_basis_new;
+
+       Matrix* d_basis_right_new = new Matrix(d_num_rows_of_W, d_num_samples-1, false);
+       for (int row = 0; row < d_num_rows_of_W; ++row) {
+          for (int col = 0; col < d_num_samples-1; ++col) {
+              d_basis_right_new->item(row, col) = d_basis_right->item(row,col);
+          }
+       }
+       delete d_basis_right;
+       d_basis_right = d_basis_right_new;
+/*
+       Matrix* truncated_d_Up = new Matrix(d_num_samples-1, d_num_samples-1, false);
+       for (int row = 0; row < d_num_samples-1; ++row) {
+          for (int col = 0; col < d_num_samples-1; ++col) {
+              truncated_d_Up->item(row, col) = d_Up->item(row,col);
+          }
+       }
+       delete d_Up;
+       d_Up = truncated_d_Up;
+   
+       Matrix* truncated_d_U = new Matrix(d_dim, d_num_samples-1, false);
+       for (int row = 0; row < d_dim; ++row) {
+          for (int col = 0; col < d_num_samples-1; ++col) {
+              truncated_d_U->item(row, col) = d_U->item(row,col);
+          }
+       }
+       delete d_U;
+       d_U = truncated_d_U;
+
+       Matrix* truncated_d_W = new Matrix(d_num_rows_of_W, d_num_samples-1, false);
+       for (int row = 0; row < d_num_rows_of_W; ++row) {
+          for (int col = 0; col < d_num_samples-1; ++col) {
+              truncated_d_W->item(row, col) = d_W->item(row,col);
+          }
+       }
+       delete d_W;
+       d_W = truncated_d_W;
+
+       Matrix* truncated_d_S = new Matrix(d_num_samples-1, d_num_samples-1, false);
+       for (int row = 0; row < d_num_samples-1; ++row) {
+           for (int col = 0; col < d_num_samples-1; ++col) {
+              truncated_d_S->item(row, col) = d_S->item(row,col);
+           }
+       }
+       delete d_S;
+       d_S = truncated_d_S;
+*/
+       --d_num_samples;
+   }
+
 }
 
 void
@@ -303,6 +378,7 @@ IncrementalSVDFastUpdate::addNewSample(
    // We now have another sample.
    ++d_num_samples;
    ++d_num_rows_of_W;
+
 
    // Reorthogonalize if necessary.
    long int max_U_dim;

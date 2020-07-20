@@ -57,6 +57,7 @@ main(
    // incremental algorithm and the incremental sampler.
    CAROM::IncrementalSVDBasisGenerator inc_basis_generator(dim,
       1.0e-2,
+      0.0,
       false,
       true,
       2,

@@ -26,6 +26,7 @@ namespace CAROM {
 IncrementalSVDSampler::IncrementalSVDSampler(
    int dim,
    double linearity_tol,
+   double singular_value_tol,
    bool skip_linearly_dependent,
    bool fast_update,
    int max_basis_dimension,
@@ -63,6 +64,7 @@ IncrementalSVDSampler::IncrementalSVDSampler(
       d_svd.reset(
          new IncrementalSVDFastUpdate(dim,
             linearity_tol,
+            singular_value_tol,
             skip_linearly_dependent,
             max_basis_dimension,
             samples_per_time_interval,

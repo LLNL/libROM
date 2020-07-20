@@ -57,6 +57,7 @@ class IncrementalSVDFastUpdate : public IncrementalSVD
       IncrementalSVDFastUpdate(
          int dim,
          double linearity_tol,
+         double singular_value_tol,
          bool skip_linearly_dependent,
          int max_basis_dimension,
          int samples_per_time_interval,
@@ -154,6 +155,14 @@ class IncrementalSVDFastUpdate : public IncrementalSVD
        * U' is not distributed and the entire matrix exists on each processor.
        */
       Matrix* d_Up;
+
+      /**
+       * @brief 
+       *
+       * singular_value_tol is a tolerance value used to remove small singular values
+       */
+      double d_singular_value_tol;
+
 };
 
 }

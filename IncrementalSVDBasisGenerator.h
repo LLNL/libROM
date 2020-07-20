@@ -85,6 +85,7 @@ class IncrementalSVDBasisGenerator : public SVDBasisGenerator
       IncrementalSVDBasisGenerator(
          int dim,
          double linearity_tol,
+         double singular_value_tol,
          bool skip_linearly_dependent,
          bool fast_update,
          int max_basis_dimension,

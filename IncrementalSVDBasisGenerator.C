@@ -20,6 +20,7 @@ namespace CAROM {
 IncrementalSVDBasisGenerator::IncrementalSVDBasisGenerator(
    int dim,
    double linearity_tol,
+   double singular_value_tol,
    bool skip_linearly_dependent,
    bool fast_update,
    int max_basis_dimension,
@@ -40,6 +41,7 @@ IncrementalSVDBasisGenerator::IncrementalSVDBasisGenerator(
 {
    d_svdsampler.reset(new IncrementalSVDSampler(dim,
                                                 linearity_tol,
+                                                singular_value_tol,
                                                 skip_linearly_dependent,
                                                 fast_update,
                                                 max_basis_dimension,
