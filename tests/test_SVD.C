@@ -54,6 +54,7 @@ public:
   virtual const CAROM::Matrix* getSpatialBasis() { return NULL; }
   virtual const CAROM::Matrix* getTemporalBasis() { return NULL; }
   virtual const CAROM::Matrix* getSingularValues() { return NULL; }
+  virtual const CAROM::Matrix* getSnapshotMatrix() { return NULL; }
 
   /**
    *  The only testable methods from the SVD abstract base class are

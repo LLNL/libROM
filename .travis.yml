@@ -1,0 +1,55 @@
+language: cpp
+os:
+    - linux
+    - osx
+dist: bionic
+osx_image: xcode12
+
+cache:
+  apt: true
+  homebrew: true
+  directories:
+    - $HOME/.cache
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - libmpich-dev
+      - libblas-dev
+      - liblapack-dev
+      - libscalapack-mpi-dev
+      - libhdf5-serial-dev
+  homebrew:
+    packages:
+      - open-mpi
+      - openblas
+      - lapack
+      - scalapack
+      - hdf5
+      - cmake
+    update: true
+
+install:
+
+  # Set the appropriate compiler for Linux
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then export CC=mpicc; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then export CXX=mpicxx; fi
+
+  # Create dependencies directory
+  - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
+  - mkdir ${DEPS_DIR} && cd ${DEPS_DIR}
+
+  # Install Googletest
+  - git clone https://github.com/google/googletest
+  - cd googletest && mkdir build && cd build
+  - cmake .. && make && sudo make install
+  - PATH=${DEPS_DIR}/googletest:${DEPS_DIR}/googletest/build:$PATH
+
+script:
+
+  # Build libROM with GoogleTest
+  - cd ${TRAVIS_BUILD_DIR}/build
+  - cmake ..
+  - make
