@@ -198,51 +198,17 @@ IncrementalSVDFastUpdate::computeBasis()
        delete d_basis;
        d_basis = d_basis_new;
 
-       Matrix* d_basis_right_new = new Matrix(d_num_rows_of_W, d_num_samples-1, false);
-       for (int row = 0; row < d_num_rows_of_W; ++row) {
-          for (int col = 0; col < d_num_samples-1; ++col) {
-              d_basis_right_new->item(row, col) = d_basis_right->item(row,col);
-          }
-       }
-       delete d_basis_right;
-       d_basis_right = d_basis_right_new;
-/*
-       Matrix* truncated_d_Up = new Matrix(d_num_samples-1, d_num_samples-1, false);
-       for (int row = 0; row < d_num_samples-1; ++row) {
-          for (int col = 0; col < d_num_samples-1; ++col) {
-              truncated_d_Up->item(row, col) = d_Up->item(row,col);
-          }
-       }
-       delete d_Up;
-       d_Up = truncated_d_Up;
-   
-       Matrix* truncated_d_U = new Matrix(d_dim, d_num_samples-1, false);
-       for (int row = 0; row < d_dim; ++row) {
-          for (int col = 0; col < d_num_samples-1; ++col) {
-              truncated_d_U->item(row, col) = d_U->item(row,col);
-          }
-       }
-       delete d_U;
-       d_U = truncated_d_U;
-
-       Matrix* truncated_d_W = new Matrix(d_num_rows_of_W, d_num_samples-1, false);
-       for (int row = 0; row < d_num_rows_of_W; ++row) {
-          for (int col = 0; col < d_num_samples-1; ++col) {
-              truncated_d_W->item(row, col) = d_W->item(row,col);
-          }
-       }
-       delete d_W;
-       d_W = truncated_d_W;
-
-       Matrix* truncated_d_S = new Matrix(d_num_samples-1, d_num_samples-1, false);
-       for (int row = 0; row < d_num_samples-1; ++row) {
-           for (int col = 0; col < d_num_samples-1; ++col) {
-              truncated_d_S->item(row, col) = d_S->item(row,col);
+       if (d_updateRightSV) 
+       {
+           Matrix* d_basis_right_new = new Matrix(d_num_rows_of_W, d_num_samples-1, false);
+           for (int row = 0; row < d_num_rows_of_W; ++row) {
+              for (int col = 0; col < d_num_samples-1; ++col) {
+                  d_basis_right_new->item(row, col) = d_basis_right->item(row,col);
+              }
            }
+           delete d_basis_right;
+           d_basis_right = d_basis_right_new;
        }
-       delete d_S;
-       d_S = truncated_d_S;
-*/
        --d_num_samples;
    }
 
