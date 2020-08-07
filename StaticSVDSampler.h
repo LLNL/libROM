@@ -38,6 +38,7 @@ class StaticSVDSampler : public SVDSampler
        * @param[in] dim The dimension of the system on this processor.
        * @param[in] samples_per_time_interval The maximum number of samples
        *                                      in each time interval.
+       * @param[in] max_time_intervals The maximium number of time intervals.
        * @param[in] max_basis_dimension (typemax(int)) The maximum number of
        *                                vectors returned in the basis.
        * @param[in] sigma_tolerance This tolerance is based on the ratio of
@@ -52,6 +53,7 @@ class StaticSVDSampler : public SVDSampler
       StaticSVDSampler(
          int dim,
          int samples_per_time_interval,
+         int max_time_intervals = -1,
          int max_basis_dimension = std::numeric_limits<int>::max(),
          double sigma_tolerance = 0,
          bool debug_algorithm = false,

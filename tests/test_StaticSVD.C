@@ -1,4 +1,4 @@
-#include "../StaticSVDSampler.h"
+f#include "../StaticSVDSampler.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
 
     // Construct an SVDSampler to send our matrix. I take V = I for simplicity,
     // so the matrix A that we factor is just the columns scaled by the sigmas.
-    CAROM::StaticSVDSampler sampler(12, 4, 4, 0, true);
+    CAROM::StaticSVDSampler sampler(12, 4, -1, 4, 0, true);
     for (unsigned j = 0; j < 4; ++j) {
         std::vector<double> similar(columns[j]);
         for (unsigned i = 0; i < 12; ++i)

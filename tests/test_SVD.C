@@ -37,7 +37,7 @@ public:
 
   FakeSVD(int dim,
 	  int samples_per_time_interval)
-    : SVD(dim, samples_per_time_interval, false)
+    : SVD(dim, samples_per_time_interval, -1, false)
   {
   }
 
@@ -99,7 +99,10 @@ public:
     */
     if (isNewTimeInterval())
     {
-      d_time_interval_start_times.push_back(time);
+      increaseTimeInterval();
+      int num_time_intervals =
+          static_cast<int>(d_time_interval_start_times.size());
+      d_time_interval_start_times[num_time_intervals] = time;
       d_num_samples = 0;
     }
 
