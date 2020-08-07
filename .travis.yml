@@ -43,14 +43,14 @@ install:
   # Install Googletest
   - git clone https://github.com/google/googletest
   - cd googletest && mkdir build && cd build
-  - cmake -DCMAKE_BUILD_TYPE=Debug .. && make && sudo make install
+  - cmake .. && make && sudo make install
   - PATH=${DEPS_DIR}/googletest:${DEPS_DIR}/googletest/build:$PATH
 
 build:
 
   # Build libROM with GoogleTest
   - cd ${TRAVIS_BUILD_DIR}/build
-  - cmake ..
+  - cmake -DCMAKE_BUILD_TYPE=Debug ..
   - make
 
 tests:
