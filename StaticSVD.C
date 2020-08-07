@@ -33,11 +33,13 @@ namespace CAROM {
 StaticSVD::StaticSVD(
    int dim,
    int samples_per_time_interval,
+   int max_time_intervals,
    int max_basis_dimension,
    double sigma_tolerance,
    bool debug_algorithm) :
-   SVD(dim, samples_per_time_interval, debug_algorithm),
-   d_samples(new SLPK_Matrix), d_factorizer(new SVDManager),
+   SVD(dim, samples_per_time_interval, max_time_intervals, debug_algorithm),
+   d_samples(new SLPK_Matrix),
+   d_factorizer(new SVDManager),
    d_this_interval_basis_current(false),
    d_max_basis_dimension(max_basis_dimension),
    d_sigma_tol(sigma_tolerance)
@@ -114,7 +116,7 @@ StaticSVD::takeSample(
    if (isNewTimeInterval()) {
       // We have a new time interval.
      delete_factorizer();
-      int num_time_intervals = 
+      int num_time_intervals =
          static_cast<int>(d_time_interval_start_times.size());
       if (num_time_intervals > 0) {
          delete d_basis;
@@ -128,11 +130,10 @@ StaticSVD::takeSample(
          delete d_W;
          d_W = nullptr;
          delete d_snapshots;
-         d_snapshots = nullptr;  
+         d_snapshots = nullptr;
     }
       d_num_samples = 0;
-      d_time_interval_start_times.resize(
-                static_cast<unsigned>(num_time_intervals) + 1);
+      increaseTimeInterval();
       d_time_interval_start_times[static_cast<unsigned>(num_time_intervals)] =
           time;
       d_basis = nullptr;
@@ -142,7 +143,7 @@ StaticSVD::takeSample(
    }
    broadcast_sample(u_in);
    ++d_num_samples;
-   
+
    // Build snapshot matrix before SVD is computed
    //d_snapshots = new Matrix(d_dim, d_num_samples, false);
    //for (int rank = 0; rank < d_num_procs; ++rank) {
@@ -230,14 +231,14 @@ StaticSVD::getSingularValues()
    CAROM_ASSERT(thisIntervalBasisCurrent());
    return d_S;
 }
-   
+
 const Matrix*
 StaticSVD::getSnapshotMatrix()
 {
-   
+
    if (d_snapshots) delete d_snapshots;
    d_snapshots = new Matrix(d_dim, d_num_samples, false);
-   
+
    for (int rank = 0; rank < d_num_procs; ++rank) {
       int nrows = d_dims[static_cast<unsigned>(rank)];
       int firstrow = d_istarts[static_cast<unsigned>(rank)] + 1;
@@ -249,7 +250,7 @@ StaticSVD::getSnapshotMatrix()
    CAROM_ASSERT(d_snapshots != 0);
    return d_snapshots;
 }
-   
+
 void
 StaticSVD::computeSVD()
 {

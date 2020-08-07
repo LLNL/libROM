@@ -19,6 +19,7 @@ namespace CAROM {
 StaticSVDBasisGenerator::StaticSVDBasisGenerator(
    int dim,
    int samples_per_time_interval,
+   int max_time_intervals,
    const std::string& basis_file_name,
    bool output_rightSV,
    int max_basis_dimension,
@@ -29,6 +30,7 @@ StaticSVDBasisGenerator::StaticSVDBasisGenerator(
 {
    d_svdsampler.reset(new StaticSVDSampler(dim,
                                            samples_per_time_interval,
+                                           max_time_intervals,
                                            max_basis_dimension,
                                            sigma_tolerance,
                                            debug_algorithm,
