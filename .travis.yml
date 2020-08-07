@@ -48,7 +48,7 @@ install:
 
   # Build libROM with GoogleTest
   - cd ${TRAVIS_BUILD_DIR}/build
-  - cmake -DCMAKE_BUILD_TYPE=Debug ..
+  - cmake ..
   - make
 
 script:
