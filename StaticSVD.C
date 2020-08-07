@@ -33,8 +33,8 @@ namespace CAROM {
 StaticSVD::StaticSVD(
    int dim,
    int samples_per_time_interval,
-   int max_basis_dimension,
    int max_time_intervals,
+   int max_basis_dimension,
    double sigma_tolerance,
    bool debug_algorithm) :
    SVD(dim, samples_per_time_interval, max_time_intervals, debug_algorithm),

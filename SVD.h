@@ -148,7 +148,7 @@ class SVD
          CAROM_ASSERT(0 <= which_interval);
          CAROM_ASSERT(which_interval < getNumBasisTimeIntervals());
 
-	 std::size_t i = static_cast<std::size_t>(which_interval);
+	       std::size_t i = static_cast<std::size_t>(which_interval);
          return d_time_interval_start_times[i];
       }
 
@@ -175,7 +175,7 @@ class SVD
       {
         int num_time_intervals =
             static_cast<int>(d_time_interval_start_times.size());
-        CAROM_ASSERT(d_max_time_intervals == -1 ||
+        CAROM_VERIFY(d_max_time_intervals == -1 ||
                      num_time_intervals < d_max_time_intervals);
         d_time_interval_start_times.resize(
             static_cast<unsigned>(num_time_intervals) + 1);
