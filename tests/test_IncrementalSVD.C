@@ -51,7 +51,7 @@ public:
 			    skip_linearly_dependent,
 			    max_basis_dimension,
 			    samples_per_time_interval,
-          max_time_intervals,
+                            max_time_intervals,
 			    basis_file_name,
 			    false,
 			    false,
@@ -115,7 +115,7 @@ TEST(IncrementalSVDSerialTest, Test_getBasis)
 			 false,
 			 3,
 			 4,
-       -1,
+                         -1,
 			 "irrelevant.txt");
 
   const CAROM::Matrix *B = svd.getSpatialBasis();
@@ -137,7 +137,7 @@ TEST(IncrementalSVDSerialTest, Test_getSingularValues)
 			 false,
 			 3,
 			 4,
-       -1, 
+                         -1, 
 			 "irrelevant.txt");
 
   const CAROM::Matrix *S = svd.getSingularValues();
