@@ -113,6 +113,15 @@ class Vector
       operator = (
          const double& a);
 
+       /**
+        * @brief Transform the vector using a supplied function.
+        *
+        * @param[in] f(const int size, double* vector) A function which takes
+        * in as input a size and a vector.
+        */
+       void
+       transform(void (*f) (const int size, double* vector));
+
       /**
        * @brief Sets the length of the vector and reallocates storage if
        * needed.

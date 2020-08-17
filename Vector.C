@@ -133,6 +133,11 @@ Vector::operator = (const double& a)
    return *this;
 }
 
+void
+Vector::transform(void (*f) (const int size, double* vector)) {
+      (*f)(d_dim, d_vec);
+}
+
 double
 Vector::inner_product(
    const Vector& other) const
