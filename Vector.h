@@ -132,7 +132,7 @@ class Vector
         * @return The newly transformed vector.
         */
        void
-       transform(Vector& result, void (*f) (const int size, double* vector));
+       transform(Vector& result, void (*f) (const int size, double* vector)) const;
 
        /**
         * @brief Transform a vector using a supplied function and store the
@@ -144,7 +144,40 @@ class Vector
         * @return The newly transformed vector.
         */
        void
-       transform(Vector*& result, void (*f) (const int size, double* vector));
+       transform(Vector*& result, void (*f) (const int size, double* vector)) const;
+
+       /**
+        * @brief Transform the vector using a supplied function.
+        *
+        * @param[in] f(const int size, double* vector) A function which takes
+        * in as input a size and a vector.
+        */
+       Vector&
+       transform(void (*f) (const int size, double* origVector, double* resultVector));
+
+       /**
+        * @brief Transform a vector using a supplied function and store the
+        * results in another vector.
+        *
+        * @param[in] f(const int size, double* vector) A function which takes
+        * in as input a size and a vector.
+        *
+        * @return The newly transformed vector.
+        */
+       void
+       transform(Vector& result, void (*f) (const int size, double* origVector, double* resultVector)) const;
+
+       /**
+        * @brief Transform a vector using a supplied function and store the
+        * results in another vector.
+        *
+        * @param[in] f(const int size, double* vector) A function which takes
+        * in as input a size and a vector.
+        *
+        * @return The newly transformed vector.
+        */
+       void
+       transform(Vector*& result, void (*f) (const int size, double* origVector, double* resultVector)) const;
 
       /**
        * @brief Sets the length of the vector and reallocates storage if
@@ -169,6 +202,15 @@ class Vector
             d_alloc_size = dim;
          }
          d_dim = dim;
+      }
+
+      /**
+       * @brief Set whether the vector is to be distributed.
+       */
+      void
+      setDistributed(bool distributed)
+      {
+         d_distributed = distributed;
       }
 
       /**

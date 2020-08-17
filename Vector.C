@@ -140,20 +140,57 @@ Vector::transform(void (*f) (const int size, double* vector)) {
 }
 
 void
-Vector::transform(Vector& result, void (*f) (const int size, double* vector)) {
-      result = *this;
+Vector::transform(Vector& result, void (*f) (const int size, double* vector)) const {
+      result.setSize(d_dim);
+      result.setDistributed(d_distributed);
       (*f)(d_dim, result.getVector());
 }
 
 void
-Vector::transform(Vector*& result, void (*f) (const int size, double* vector)) {
+Vector::transform(Vector*& result, void (*f) (const int size, double* vector)) const {
       // If the result has not been allocated then do so.  Otherwise size it
       // correctly.
       if (result == 0) {
-         result = new Vector(d_dim, d_distributed);
+          result = new Vector(d_dim, d_distributed);
       }
-      *result = *this;
+      else {
+          result->setSize(d_dim);
+          result->setDistributed(d_distributed);
+      }
       (*f)(d_dim, result->getVector());
+}
+
+Vector&
+Vector::transform(void (*f) (const int size, double* origVector, double* resultVector)) {
+      Vector* origVector = new Vector(*this);
+      (*f)(d_dim, origVector->getVector(), d_vec);
+      delete origVector;
+      return *this;
+}
+
+void
+Vector::transform(Vector& result, void (*f) (const int size, double* origVector, double* resultVector)) const {
+      Vector* origVector = new Vector(*this);
+      result.setSize(d_dim);
+      result.setDistributed(d_distributed);
+      (*f)(d_dim, origVector->getVector(), result.getVector());
+      delete origVector;
+}
+
+void
+Vector::transform(Vector*& result, void (*f) (const int size, double* origVector, double* resultVector)) const {
+      // If the result has not been allocated then do so.  Otherwise size it
+      // correctly.
+      Vector* origVector = new Vector(*this);
+      if (result == 0) {
+          result = new Vector(d_dim, d_distributed);
+      }
+      else {
+          result->setSize(d_dim);
+          result->setDistributed(d_distributed);
+      }
+      (*f)(d_dim, origVector->getVector(), result->getVector());
+      delete origVector;
 }
 
 double
