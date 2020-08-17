@@ -133,9 +133,27 @@ Vector::operator = (const double& a)
    return *this;
 }
 
-void
+Vector&
 Vector::transform(void (*f) (const int size, double* vector)) {
       (*f)(d_dim, d_vec);
+      return *this;
+}
+
+void
+Vector::transform(Vector& result, void (*f) (const int size, double* vector)) {
+      result = *this;
+      (*f)(d_dim, result.getVector());
+}
+
+void
+Vector::transform(Vector*& result, void (*f) (const int size, double* vector)) {
+      // If the result has not been allocated then do so.  Otherwise size it
+      // correctly.
+      if (result == 0) {
+         result = new Vector(d_dim, d_distributed);
+      }
+      *result = *this;
+      (*f)(d_dim, result->getVector());
 }
 
 double

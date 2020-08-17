@@ -119,8 +119,32 @@ class Vector
         * @param[in] f(const int size, double* vector) A function which takes
         * in as input a size and a vector.
         */
-       void
+       Vector&
        transform(void (*f) (const int size, double* vector));
+
+       /**
+        * @brief Transform a vector using a supplied function and store the
+        * results in another vector.
+        *
+        * @param[in] f(const int size, double* vector) A function which takes
+        * in as input a size and a vector.
+        *
+        * @return The newly transformed vector.
+        */
+       void
+       transform(Vector& result, void (*f) (const int size, double* vector));
+
+       /**
+        * @brief Transform a vector using a supplied function and store the
+        * results in another vector.
+        *
+        * @param[in] f(const int size, double* vector) A function which takes
+        * in as input a size and a vector.
+        *
+        * @return The newly transformed vector.
+        */
+       void
+       transform(Vector*& result, void (*f) (const int size, double* vector));
 
       /**
        * @brief Sets the length of the vector and reallocates storage if
@@ -167,6 +191,17 @@ class Vector
       dim() const
       {
          return d_dim;
+      }
+
+      /**
+       * @brief Returns the Vector on this processor.
+       *
+       * @return Returns the part of the Vector on this processor.
+       */
+      double*
+      getVector()
+      {
+         return d_vec;
       }
 
       /**
