@@ -220,15 +220,6 @@ class Vector
       }
 
       /**
-       * @brief Set whether the vector is to be distributed.
-       */
-      void
-      setDistributed(bool distributed)
-      {
-         d_distributed = distributed;
-      }
-
-      /**
        * @brief Returns true if the Vector is distributed.
        *
        * @return True if the Vector is distributed.
@@ -248,17 +239,6 @@ class Vector
       dim() const
       {
          return d_dim;
-      }
-
-      /**
-       * @brief Returns the Vector on this processor.
-       *
-       * @return Returns the part of the Vector on this processor.
-       */
-      double*
-      getVector()
-      {
-         return d_vec;
       }
 
       /**

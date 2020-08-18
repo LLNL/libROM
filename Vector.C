@@ -142,8 +142,8 @@ Vector::transform(std::function<void(const int size, double* vector)> transforme
 void
 Vector::transform(Vector& result, std::function<void(const int size, double* vector)> transformer) const {
       result.setSize(d_dim);
-      result.setDistributed(d_distributed);
-      transformer(d_dim, result.getVector());
+      result.d_distributed = d_distributed;
+      transformer(d_dim, result.d_vec);
 }
 
 void
@@ -155,15 +155,15 @@ Vector::transform(Vector*& result, std::function<void(const int size, double* ve
       }
       else {
           result->setSize(d_dim);
-          result->setDistributed(d_distributed);
+          result->d_distributed = d_distributed;
       }
-      transformer(d_dim, result->getVector());
+      transformer(d_dim, result->d_vec);
 }
 
 Vector&
 Vector::transform(std::function<void(const int size, double* origVector, double* resultVector)> transformer) {
       Vector* origVector = new Vector(*this);
-      transformer(d_dim, origVector->getVector(), d_vec);
+      transformer(d_dim, origVector->d_vec, d_vec);
       delete origVector;
       return *this;
 }
@@ -172,8 +172,8 @@ void
 Vector::transform(Vector& result, std::function<void(const int size, double* origVector, double* resultVector)> transformer) const {
       Vector* origVector = new Vector(*this);
       result.setSize(d_dim);
-      result.setDistributed(d_distributed);
-      transformer(d_dim, origVector->getVector(), result.getVector());
+      result.d_distributed = d_distributed;
+      transformer(d_dim, origVector->d_vec, result.d_vec);
       delete origVector;
 }
 
@@ -187,9 +187,9 @@ Vector::transform(Vector*& result, std::function<void(const int size, double* or
       }
       else {
           result->setSize(d_dim);
-          result->setDistributed(d_distributed);
+          result->d_distributed = d_distributed;
       }
-      transformer(d_dim, origVector->getVector(), result->getVector());
+      transformer(d_dim, origVector->d_vec, result->d_vec);
       delete origVector;
 }
 
