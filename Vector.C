@@ -134,20 +134,20 @@ Vector::operator = (const double& a)
 }
 
 Vector&
-Vector::transform(void (*f) (const int size, double* vector)) {
-      (*f)(d_dim, d_vec);
+Vector::transform(std::function<void(const int size, double* vector)> transformer) {
+      transformer(d_dim, d_vec);
       return *this;
 }
 
 void
-Vector::transform(Vector& result, void (*f) (const int size, double* vector)) const {
+Vector::transform(Vector& result, std::function<void(const int size, double* vector)> transformer) const {
       result.setSize(d_dim);
       result.setDistributed(d_distributed);
-      (*f)(d_dim, result.getVector());
+      transformer(d_dim, result.getVector());
 }
 
 void
-Vector::transform(Vector*& result, void (*f) (const int size, double* vector)) const {
+Vector::transform(Vector*& result, std::function<void(const int size, double* vector)> transformer) const {
       // If the result has not been allocated then do so.  Otherwise size it
       // correctly.
       if (result == 0) {
@@ -157,28 +157,28 @@ Vector::transform(Vector*& result, void (*f) (const int size, double* vector)) c
           result->setSize(d_dim);
           result->setDistributed(d_distributed);
       }
-      (*f)(d_dim, result->getVector());
+      transformer(d_dim, result->getVector());
 }
 
 Vector&
-Vector::transform(void (*f) (const int size, double* origVector, double* resultVector)) {
+Vector::transform(std::function<void(const int size, double* origVector, double* resultVector)> transformer) {
       Vector* origVector = new Vector(*this);
-      (*f)(d_dim, origVector->getVector(), d_vec);
+      transformer(d_dim, origVector->getVector(), d_vec);
       delete origVector;
       return *this;
 }
 
 void
-Vector::transform(Vector& result, void (*f) (const int size, double* origVector, double* resultVector)) const {
+Vector::transform(Vector& result, std::function<void(const int size, double* origVector, double* resultVector)> transformer) const {
       Vector* origVector = new Vector(*this);
       result.setSize(d_dim);
       result.setDistributed(d_distributed);
-      (*f)(d_dim, origVector->getVector(), result.getVector());
+      transformer(d_dim, origVector->getVector(), result.getVector());
       delete origVector;
 }
 
 void
-Vector::transform(Vector*& result, void (*f) (const int size, double* origVector, double* resultVector)) const {
+Vector::transform(Vector*& result, std::function<void(const int size, double* origVector, double* resultVector)> transformer) const {
       // If the result has not been allocated then do so.  Otherwise size it
       // correctly.
       Vector* origVector = new Vector(*this);
@@ -189,7 +189,7 @@ Vector::transform(Vector*& result, void (*f) (const int size, double* origVector
           result->setSize(d_dim);
           result->setDistributed(d_distributed);
       }
-      (*f)(d_dim, origVector->getVector(), result->getVector());
+      transformer(d_dim, origVector->getVector(), result->getVector());
       delete origVector;
 }
 
