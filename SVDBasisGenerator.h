@@ -107,13 +107,9 @@ class SVDBasisGenerator
          if (getNumBasisTimeIntervals() > 0 &&
              d_svdsampler->isNewTimeInterval()) {
             d_svdsampler->resetDt(dt);
-            // YC: commenting this out unless someone think this is necessary
-            //     we call writeBasis in "endSamples()" function below.
-            //     I think that one call is enough.
-            //     I will remove completely if no one has other opinion.
-            //if (d_basis_writer) {
-            //   d_basis_writer->writeBasis();
-            //}
+            if (d_basis_writer) {
+                d_basis_writer->writeBasis();
+            }
          }
 
          return d_svdsampler->takeSample(u_in, time, add_without_increase);
@@ -142,14 +138,14 @@ class SVDBasisGenerator
             d_basis_writer->writeBasis("snapshot");
          }
       }
-   
+
       /**
        * @brief Load previously saved sample (basis or state).
        *
        * @param[in] base_file_name The base part of the name of the files
        *                           holding the basis / snapshot vectors.
        * @param[in] kind Either basis or snapshot, the kind of data to load.
-       * @param[in] cut_off The max number of bases or snapshots to read.                          
+       * @param[in] cut_off The max number of bases or snapshots to read.
        * @param[in] db_format Format of the file to read.
        */
       void
@@ -157,17 +153,17 @@ class SVDBasisGenerator
                   const std::string& kind = "basis",
                   int cut_off = 1e9,
                   Database::formats db_format = Database::HDF5)
-      { 
+      {
          CAROM_ASSERT(!base_file_name.empty());
          CAROM_ASSERT(kind == "basis" || kind == "snapshot");
-         
+
          if (d_basis_reader) delete d_basis_reader;
-         
+
 	       d_basis_reader = new BasisReader(base_file_name, db_format);
          double time = 0.0;
          const Matrix* mat;
          const Matrix* singular_vals;
-         
+
          if (kind == "basis") {
             mat = d_basis_reader->getSpatialBasis(time);
             singular_vals = d_basis_reader->getSingularValues(time);
@@ -175,7 +171,7 @@ class SVDBasisGenerator
          else if (kind == "snapshot") {
             mat = d_basis_reader->getSnapshotMatrix(time);
          }
-         
+
          int num_rows = mat->numRows();
          int num_cols = mat->numColumns();
          int max_cols = num_cols;
@@ -187,7 +183,7 @@ class SVDBasisGenerator
                if (kind == "basis") {
                   u_in[i] = mat->item(i,j) * singular_vals->item(j,j); }
                else {
-                  u_in[i] = mat->item(i,j); 
+                  u_in[i] = mat->item(i,j);
                }
             }
             d_svdsampler->takeSample(u_in, time, false);
@@ -265,7 +261,7 @@ class SVDBasisGenerator
       {
          return d_svdsampler->getSnapshotMatrix();
       }
-   
+
       /**
        * @brief Returns the number of time intervals on which different sets of
        * basis vectors are defined.
@@ -301,7 +297,7 @@ class SVDBasisGenerator
       {
 	return d_svdsampler->getNumSamples();
       }
-      
+
    protected:
       /**
        * @brief Constructor.
