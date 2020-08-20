@@ -45,7 +45,7 @@ class StaticSVD : public SVD
        *                processor.
        * @param[in] samples_per_time_interval The maximum number of samples
        *                                      collected in a time interval.
-       * @param[in] max_time_intervals The maximium number of time intervals.
+       * @param[in] max_time_intervals The maximum number of time intervals.
        * @param[in] max_basis_dimension The maximum dimension of the basis
        *                                returned by getSpatialBasis or
        *                                getTemporalBasis. Default: typemax(int).

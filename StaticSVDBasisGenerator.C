@@ -22,11 +22,12 @@ StaticSVDBasisGenerator::StaticSVDBasisGenerator(
    int max_time_intervals,
    const std::string& basis_file_name,
    bool output_rightSV,
+   bool write_snapshots,
    int max_basis_dimension,
    double sigma_tolerance,
    bool debug_algorithm,
    Database::formats file_format) :
-   SVDBasisGenerator(basis_file_name, file_format)
+   SVDBasisGenerator(basis_file_name, file_format, write_snapshots)
 {
    d_svdsampler.reset(new StaticSVDSampler(dim,
                                            samples_per_time_interval,

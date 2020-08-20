@@ -108,8 +108,12 @@ class SVDBasisGenerator
              d_svdsampler->isNewTimeInterval()) {
             d_svdsampler->resetDt(dt);
             if (d_basis_writer) {
-                d_basis_writer->writeBasis("basis");
-                writeSnapshot();
+                if (d_write_snapshots) {
+                  writeSnapshot();
+                }
+                else {
+                  d_basis_writer->writeBasis("basis");
+                }
             }
          }
 
@@ -314,10 +318,13 @@ class SVDBasisGenerator
        *                            name.
        * @param[in] file_format The format of the file containing the basis
        *                        vectors.
+       * @param[in] write_snapshots Whether to automatically write snapshots matrices
+       *                        instead of basis matrices.
        */
       SVDBasisGenerator(
          const std::string& basis_file_name,
-         Database::formats file_format = Database::HDF5);
+         Database::formats file_format = Database::HDF5,
+         bool write_snapshots = false);
 
       /**
        * @brief Writer of basis vectors.
@@ -328,6 +335,11 @@ class SVDBasisGenerator
        * @brief Reader of basis vectors.
        */
       BasisReader* d_basis_reader;
+
+      /**
+       * @brief Whether to write snapshots instead of bases.
+       */
+      bool d_write_snapshots;
 
 
       /**

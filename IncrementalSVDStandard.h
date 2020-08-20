@@ -39,7 +39,7 @@ class IncrementalSVDStandard : public IncrementalSVD
        *                                    samples.
        * @param[in] samples_per_time_interval The number of samples to be
        *                                      collected for each time interval.
-       * @param[in] max_time_intervals The maximium number of time intervals.
+       * @param[in] max_time_intervals The maximum number of time intervals.
        * @param[in] basis_file_name The base part of the name of the file
        *                            containing the basis vectors.  Each process
        *                            will append its process ID to this base

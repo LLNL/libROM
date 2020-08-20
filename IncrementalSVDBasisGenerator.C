@@ -32,12 +32,13 @@ IncrementalSVDBasisGenerator::IncrementalSVDBasisGenerator(
    bool save_state,
    bool restore_state,
    bool updateRightSV,
+   bool write_snapshots,
    Database::formats file_format,
    double min_sampling_time_step_scale,
    double sampling_time_step_scale,
    double max_sampling_time_step_scale,
    bool debug_algorithm) :
-   SVDBasisGenerator(basis_file_name, file_format)
+   SVDBasisGenerator(basis_file_name, file_format, write_snapshots)
 {
    d_svdsampler.reset(new IncrementalSVDSampler(dim,
                                                 linearity_tol,

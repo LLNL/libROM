@@ -35,9 +35,9 @@ class SVD
        *
        * @param[in] dim The dimension of the system distributed to this
        *                processor.
-       * @param[in] samples_per_time_interval The maximium number of samples
+       * @param[in] samples_per_time_interval The maximum number of samples
        *                                      collected in a time interval.
-       * @param[in] max_time_intervals The maximium number of time intervals.
+       * @param[in] max_time_intervals The maximum number of time intervals.
        * @param[in] debug_algorithm If true results of the algorithm will be
        *                            printed to facilitate debugging.
        */

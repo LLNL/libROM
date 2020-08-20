@@ -60,7 +60,7 @@ class IncrementalSVDSampler : public SVDSampler
        *                         followed by a lift back to full order space.
        * @param[in] max_time_between_samples Upper bound on time between
        *                                     samples.
-       * @param[in] max_time_intervals The maximium number of time intervals.
+       * @param[in] max_time_intervals The maximum number of time intervals.
        * @param[in] basis_file_name The base part of the name of the file
        *                            containing the basis vectors.  Each process
        *                            will append its process ID to this base
