@@ -108,7 +108,8 @@ class SVDBasisGenerator
              d_svdsampler->isNewTimeInterval()) {
             d_svdsampler->resetDt(dt);
             if (d_basis_writer) {
-                d_basis_writer->writeBasis();
+                d_basis_writer->writeBasis("basis");
+                writeSnapshot();
             }
          }
 
