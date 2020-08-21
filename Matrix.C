@@ -842,7 +842,7 @@ Matrix::qrcp_pivots_transpose_serial(int* row_pivot,
   double* work = new double[lwork];
   double* tau  = new double[std::min(num_rows_of_transpose,
 				     num_cols_of_transpose)];
-  int* pivot = new int[num_cols_of_transpose] ();
+  int* pivot = new int[num_cols_of_transpose];
   int info;
 
    // Compute the QR decomposition with column pivots of the transpose

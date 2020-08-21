@@ -27,18 +27,16 @@ IncrementalSVDBasisGenerator::IncrementalSVDBasisGenerator(
    int samples_per_time_interval,
    double sampling_tol,
    double max_time_between_samples,
-   int max_time_intervals,
    const std::string& basis_file_name,
    bool save_state,
    bool restore_state,
    bool updateRightSV,
-   bool write_snapshots,
    Database::formats file_format,
    double min_sampling_time_step_scale,
    double sampling_time_step_scale,
    double max_sampling_time_step_scale,
    bool debug_algorithm) :
-   SVDBasisGenerator(basis_file_name, file_format, write_snapshots)
+   SVDBasisGenerator(basis_file_name, file_format)
 {
    d_svdsampler.reset(new IncrementalSVDSampler(dim,
                                                 linearity_tol,
@@ -49,7 +47,6 @@ IncrementalSVDBasisGenerator::IncrementalSVDBasisGenerator(
                                                 samples_per_time_interval,
                                                 sampling_tol,
                                                 max_time_between_samples,
-                                                max_time_intervals,
                                                 basis_file_name,
                                                 save_state,
                                                 restore_state,

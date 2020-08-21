@@ -36,8 +36,8 @@ class FakeSVD : public CAROM::SVD
 public:
 
   FakeSVD(int dim,
-	  int samples_per_time_interval, int num_time_intervals = -1)
-    : SVD(dim, samples_per_time_interval, num_time_intervals, false)
+	  int samples_per_time_interval)
+    : SVD(dim, samples_per_time_interval, false)
   {
   }
 
@@ -99,10 +99,7 @@ public:
     */
     if (isNewTimeInterval())
     {
-      int num_time_intervals =
-          static_cast<int>(d_time_interval_start_times.size());
-      increaseTimeInterval();
-      d_time_interval_start_times[num_time_intervals] = time;
+      d_time_interval_start_times.push_back(time);
       d_num_samples = 0;
     }
 
@@ -201,20 +198,6 @@ TEST(SVDSerialTest, Test_getBasisIntervalStartTime)
   EXPECT_DOUBLE_EQ(svd.getBasisIntervalStartTime(0), 0);
   EXPECT_DOUBLE_EQ(svd.getBasisIntervalStartTime(1), 1);
   EXPECT_DOUBLE_EQ(svd.getBasisIntervalStartTime(2), 2);
-}
-
-
-TEST(SVDSerialTest, Test_increaseTimeInterval)
-{
-  FakeSVD svd(5, 2, 2);
-
-  ASSERT_NO_THROW(svd.takeSample(NULL, 0, true));
-  ASSERT_NO_THROW(svd.takeSample(NULL, 0.5, true));
-  ASSERT_NO_THROW(svd.takeSample(NULL, 1, true));
-  ASSERT_NO_THROW(svd.takeSample(NULL, 1.5, true));
-
-  /* The maximum number of time intervals is surpassed */
-  EXPECT_DEATH(svd.takeSample(NULL, 2, true), ".*");
 }
 
 int main(int argc, char* argv[])

@@ -131,9 +131,7 @@ main(
       num_samples,
       1.0e-2,
       0.001,
-      -1,
       "",
-      false,
       false,
       false,
       false,
@@ -147,7 +145,6 @@ main(
    // static sampler.
    CAROM::StaticSVDBasisGenerator static_basis_generator(dim,
       num_samples,
-      -1,
       "",
       true);
 

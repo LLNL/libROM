@@ -35,16 +35,14 @@ class SVD
        *
        * @param[in] dim The dimension of the system distributed to this
        *                processor.
-       * @param[in] samples_per_time_interval The maximum number of samples
+       * @param[in] samples_per_time_interval The maximium number of samples
        *                                      collected in a time interval.
-       * @param[in] max_time_intervals The maximum number of time intervals.
        * @param[in] debug_algorithm If true results of the algorithm will be
        *                            printed to facilitate debugging.
        */
       SVD(
          int dim,
          int samples_per_time_interval,
-         int max_time_intervals = -1,
          bool debug_algorithm = false);
 
       /**
@@ -148,7 +146,7 @@ class SVD
          CAROM_ASSERT(0 <= which_interval);
          CAROM_ASSERT(which_interval < getNumBasisTimeIntervals());
 
-	       std::size_t i = static_cast<std::size_t>(which_interval);
+	 std::size_t i = static_cast<std::size_t>(which_interval);
          return d_time_interval_start_times[i];
       }
 
@@ -164,21 +162,6 @@ class SVD
       {
          return (d_num_samples == 0) ||
                 (d_num_samples >= d_samples_per_time_interval);
-      }
-
-      /**
-       * @brief Increase the number of time intervals by one
-       *
-       */
-      void
-      increaseTimeInterval()
-      {
-        int num_time_intervals =
-            static_cast<int>(d_time_interval_start_times.size());
-        CAROM_VERIFY(d_max_time_intervals == -1 ||
-                     num_time_intervals < d_max_time_intervals);
-        d_time_interval_start_times.resize(
-            static_cast<unsigned>(num_time_intervals) + 1);
       }
 
       int getNumSamples() const
@@ -206,12 +189,7 @@ class SVD
        * @brief The maximum number of samples to be collected for a time
        * interval.
        */
-      const int d_samples_per_time_interval;
-
-      /**
-       * @brief The maximum number of time intervals.
-       */
-      const int d_max_time_intervals;
+      int d_samples_per_time_interval;
 
       /**
        * @brief The globalized basis vectors for the current time interval.
@@ -252,7 +230,7 @@ class SVD
        * exists on each processor.
        */
       Matrix* d_S;
-
+   
       /**
        * @brief The globalized snapshot vectors for the current time interval.
        *
