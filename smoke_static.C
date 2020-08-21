@@ -68,8 +68,7 @@ main(
    static_basis_generator.reset(new CAROM::StaticSVDBasisGenerator(dim,
       2,
       -1,
-      "static_smoke1",
-      2));
+      "static_smoke1"));
 
    // Take the first sample.
    static_basis_generator->takeSample(&vals0[dim*rank],0,0.1);
@@ -83,8 +82,7 @@ main(
    static_basis_generator2.reset(new CAROM::StaticSVDBasisGenerator(dim,
       2,
       -1,
-      "static_smoke2",
-      2));
+      "static_smoke2"));
 
    // Take the second sample.
    static_basis_generator2->takeSample(&vals1[dim*rank],0,0.1);
@@ -101,8 +99,7 @@ main(
    static_basis_generator3.reset(new CAROM::StaticSVDBasisGenerator(dim,
       2,
       -1,
-      "static_smoke_final",
-      2));
+      "static_smoke_final"));
 
    static_basis_generator3->loadSamples("static_smoke1_snapshot","snapshot");
    static_basis_generator3->loadSamples("static_smoke2_snapshot","snapshot");
@@ -120,8 +117,7 @@ main(
    static_basis_generator4.reset(new CAROM::StaticSVDBasisGenerator(dim,
       2,
       -1,
-      "static_smoke_check",
-      2));
+      "static_smoke_check"));
 
    static_basis_generator4->takeSample(&vals0[dim*rank],0,0.1);
    static_basis_generator4->takeSample(&vals1[dim*rank],0,0.1);
@@ -134,8 +130,7 @@ main(
    static_basis_generator3.reset(new CAROM::StaticSVDBasisGenerator(dim,
       2,
       -1,
-      "static_smoke_final_frombasis",
-      2));
+      "static_smoke_final_frombasis"));
 
    static_basis_generator3->loadSamples("static_smoke1","basis");
    static_basis_generator3->loadSamples("static_smoke2","basis");
