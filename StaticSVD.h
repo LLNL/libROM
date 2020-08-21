@@ -37,7 +37,7 @@ class StaticSVD : public SVD
        * If both max_basis_dimension and sigma_tolerance would result in
        * truncating the basis, the dimension of the returned basis will be the
        * *minimum* of the number of vectors that is computed from each.
-       * 
+       *
        * @pre dim > 0
        * @pre sample_per_time_interval > 0
        *
@@ -45,6 +45,7 @@ class StaticSVD : public SVD
        *                processor.
        * @param[in] samples_per_time_interval The maximum number of samples
        *                                      collected in a time interval.
+       * @param[in] max_time_intervals The maximum number of time intervals.
        * @param[in] max_basis_dimension The maximum dimension of the basis
        *                                returned by getSpatialBasis or
        *                                getTemporalBasis. Default: typemax(int).
@@ -60,6 +61,7 @@ class StaticSVD : public SVD
       StaticSVD(
          int dim,
          int samples_per_time_interval,
+         int max_time_intervals = -1,
          int max_basis_dimension = std::numeric_limits<int>::max(),
          double sigma_tolerance = 0,
          bool debug_algorithm = false
@@ -130,7 +132,7 @@ class StaticSVD : public SVD
       virtual
       const Matrix*
       getSnapshotMatrix();
-   
+
    private:
       /**
        * @brief Unimplemented default constructor.

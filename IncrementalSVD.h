@@ -40,6 +40,7 @@ namespace CAROM {
        *                                    samples.
        * @param[in] samples_per_time_interval The number of samples to be
        *                                      collected for each time interval.
+       * @param[in] max_time_intervals The maximum number of time intervals.
        * @param[in] basis_file_name The base part of the name of the file
        *                            containing the basis vectors.  Each process
        *                            will append its process ID to this base
@@ -60,7 +61,8 @@ namespace CAROM {
          bool skip_linearly_dependent,
          int max_basis_dimension,
          int samples_per_time_interval,
-         const std::string& basis_file_name,
+         int max_time_intervals = -1,
+         const std::string& basis_file_name = "",
          bool save_state = false,
          bool restore_state = false,
          bool updateRightSV = false,
