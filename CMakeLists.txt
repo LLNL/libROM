@@ -49,11 +49,11 @@ FortranCInterface_HEADER(${CMAKE_SOURCE_DIR}/FCMangle.h
 
 ## Set a bunch of variables to generate a configure header
 # Enable assertion checking if debug symbols generated
-if((CMAKE_BUILD_TYPE EQUAL "Debug") OR
-    (CMAKE_BUILD_TYPE EQUAL "RelWithDebInfo"))
+if((CMAKE_BUILD_TYPE STREQUAL "Debug") OR
+    (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"))
   set(DEBUG_CHECK_ASSERTIONS "1")
-endif((CMAKE_BUILD_TYPE EQUAL "Debug") OR
-    (CMAKE_BUILD_TYPE EQUAL "RelWithDebInfo"))
+endif((CMAKE_BUILD_TYPE STREQUAL "Debug") OR
+    (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"))
 
 set(CAROM_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
 set(CAROM_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
@@ -232,6 +232,7 @@ if(GTEST_FOUND)
     Vector
     Matrix
     SVD
+    StaticSVD
     IncrementalSVD)
   foreach(stem IN LISTS unit_test_stems)
     add_executable(test_${stem} tests/test_${stem}.C)
