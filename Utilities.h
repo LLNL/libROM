@@ -42,22 +42,6 @@ namespace CAROM {
       CAROM::Utilities::abort(os.str(), __FILE__, __LINE__); \
    } while (0)
 
- /**
-  * @brief Throw an error assertion from within any C++ source code if the given
-  * expression is not true.
-  *
-  * This is a parallel-friendly version of assert.  The file and line number of
-  * the abort are also printed.
-  */
- #define CAROM_VERIFY(EXP)                                       \
-    do {                                                         \
-       if (!(EXP)) {                                             \
-          std::ostringstream os;                                 \
-          os << "Failed verify: " << # EXP << std::ends;      \
-          CAROM::Utilities::abort(os.str(), __FILE__, __LINE__); \
-       }                                                         \
-    } while (0)
-
 /**
  * @brief Throw an error assertion from within any C++ source code if the given
  * expression is not true.

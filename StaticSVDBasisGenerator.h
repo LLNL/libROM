@@ -36,14 +36,11 @@ class StaticSVDBasisGenerator : public SVDBasisGenerator
        * @param[in] dim The dimension of the system on this processor.
        * @param[in] samples_per_time_interval The maximum number of samples in
        *                                      each time interval.
-       * @param[in] max_time_intervals The maximum number of time intervals.
        * @param[in] basis_file_name The base part of the name of the file
        *                            containing the basis vectors.  Each process
        *                            will append its process ID to this base
        *                            name.
        * @param[in] output_rightSV Whether to output the right SV or not.
-       * @param[in] write_snapshots Whether to automatically write snapshots matrices
-       *                        instead of basis matrices.
        * @param[in] max_basis_dimension (typemax(int)) The maximum number of
        *                                vectors returned in the basis.
        * @param[in] sigma_tolerance This tolerance is based on the ratio of
@@ -59,10 +56,8 @@ class StaticSVDBasisGenerator : public SVDBasisGenerator
       StaticSVDBasisGenerator(
          int dim,
          int samples_per_time_interval,
-         int max_time_intervals = -1,
-         const std::string& basis_file_name  = "",
+         const std::string& basis_file_name,
          bool output_rightSV = false,
-         bool write_snapshots = false,
          int max_basis_dimension = std::numeric_limits<int>::max(),
          double sigma_tolerance = 0,
          bool debug_algorithm = false,

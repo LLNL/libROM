@@ -27,7 +27,6 @@ IncrementalSVDFastUpdate::IncrementalSVDFastUpdate(
    bool skip_linearly_dependent,
    int max_basis_dimension,
    int samples_per_time_interval,
-   int max_time_intervals,
    const std::string& basis_file_name,
    bool save_state,
    bool restore_state,
@@ -38,7 +37,6 @@ IncrementalSVDFastUpdate::IncrementalSVDFastUpdate(
       skip_linearly_dependent,
       max_basis_dimension,
       samples_per_time_interval,
-      max_time_intervals,
       basis_file_name,
       save_state,
       restore_state,
@@ -125,7 +123,7 @@ IncrementalSVDFastUpdate::buildInitialSVD(
       delete d_S;
       delete d_W;
    }
-   increaseTimeInterval();
+   d_time_interval_start_times.resize(num_time_intervals+1);
    d_time_interval_start_times[num_time_intervals] = time;
 
    // Build d_S for this new time interval.

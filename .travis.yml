@@ -46,13 +46,9 @@ install:
   - cmake .. && make && sudo make install
   - PATH=${DEPS_DIR}/googletest:${DEPS_DIR}/googletest/build:$PATH
 
+script:
+
   # Build libROM with GoogleTest
   - cd ${TRAVIS_BUILD_DIR}/build
   - cmake ..
   - make
-
-script:
-  - ./test_SVD
-  - ./test_Vector
-  - ./test_Matrix
-  - ./test_IncrementalSVD
