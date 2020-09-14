@@ -46,6 +46,8 @@ public:
           options,
 			    basis_file_name)
   {
+    dim = options.dim;
+    
     /* Construct a fake d_U, d_S, d_basis */
     d_basis = new CAROM::Matrix(dim, dim, false);
     d_S = new CAROM::Matrix(dim, dim, false);
