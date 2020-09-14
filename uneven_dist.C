@@ -127,7 +127,7 @@ main(
    inc_bg_options.initial_dt = 1.0e-6;
    inc_bg_options.samples_per_time_interval = 2;
    inc_bg_options.sampling_tol = 1.0e-2;
-   inc_bg_options.max_time_between_samples = 0.111;
+   inc_bg_options.max_time_between_samples = 0.11;
    inc_bg_options.debug_algorithm = true;
 
    CAROM::IncrementalSVDBasisGenerator inc_basis_generator(
