@@ -17,17 +17,12 @@
 namespace CAROM {
 
 StaticSVDBasisGenerator::StaticSVDBasisGenerator(
-   StaticSVDBasisGeneratorOptions options,
+   StaticSVDOptions options,
    const std::string& basis_file_name,
    Database::formats file_format) :
    SVDBasisGenerator(basis_file_name, file_format)
 {
-   d_svdsampler.reset(new StaticSVDSampler(options.dim,
-                                           options.samples_per_time_interval,
-                                           options.max_basis_dimension,
-                                           options.sigma_tolerance,
-                                           options.debug_algorithm,
-                                           options.output_rightSV));
+   d_svdsampler.reset(new StaticSVDSampler(options));
 }
 
 StaticSVDBasisGenerator::~StaticSVDBasisGenerator()

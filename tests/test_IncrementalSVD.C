@@ -39,21 +39,12 @@ class FakeIncrementalSVD : public CAROM::IncrementalSVD
 public:
 
   FakeIncrementalSVD
-  (int dim,
-   double linearity_tol,
-   bool skip_linearly_dependent,
-   int max_basis_dimension,
-   int samples_per_time_interval,
+  (
+   CAROM::IncrementalSVDOptions options,
    const std::string& basis_file_name)
-    : CAROM::IncrementalSVD(dim,
-			    linearity_tol,
-			    skip_linearly_dependent,
-			    max_basis_dimension,
-			    samples_per_time_interval,
-			    basis_file_name,
-			    false,
-			    false,
-			    false)
+    : CAROM::IncrementalSVD(
+          options,
+			    basis_file_name)
   {
     /* Construct a fake d_U, d_S, d_basis */
     d_basis = new CAROM::Matrix(dim, dim, false);
@@ -108,11 +99,14 @@ public:
 
 TEST(IncrementalSVDSerialTest, Test_getBasis)
 {
-  FakeIncrementalSVD svd(3,
-			 1e-1,
-			 false,
-			 3,
-			 4,
+  CAROM::IncrementalSVDOptions incremental_svd_options;
+  incremental_svd_options.dim = 3;
+  incremental_svd_options.linearity_tol = 1e-1;
+  incremental_svd_options.max_basis_dimension = 3;
+  incremental_svd_options.samples_per_time_interval = 4;
+
+  FakeIncrementalSVD svd(
+       incremental_svd_options,
 			 "irrelevant.txt");
 
   const CAROM::Matrix *B = svd.getSpatialBasis();
@@ -129,11 +123,14 @@ TEST(IncrementalSVDSerialTest, Test_getBasis)
 
 TEST(IncrementalSVDSerialTest, Test_getSingularValues)
 {
-  FakeIncrementalSVD svd(3,
-			 1e-1,
-			 false,
-			 3,
-			 4,
+  CAROM::IncrementalSVDOptions incremental_svd_options;
+  incremental_svd_options.dim = 3;
+  incremental_svd_options.linearity_tol = 1e-1;
+  incremental_svd_options.max_basis_dimension = 3;
+  incremental_svd_options.samples_per_time_interval = 4;
+
+  FakeIncrementalSVD svd(
+       incremental_svd_options,
 			 "irrelevant.txt");
 
   const CAROM::Matrix *S = svd.getSingularValues();

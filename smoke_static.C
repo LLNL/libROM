@@ -62,17 +62,17 @@ main(
    double vals1[6] = {2.0, 7.0, 4.0, 9.0, 18.0, 10.0};
 
    // Create first static basis generator for snapshot 1
-   CAROM::StaticSVDBasisGeneratorOptions static_bg_options;
-   static_bg_options.dim = dim;
-   static_bg_options.samples_per_time_interval = 2;
-   static_bg_options.max_basis_dimension = 2;
+   CAROM::StaticSVDOptions static_svd_options;
+   static_svd_options.dim = dim;
+   static_svd_options.samples_per_time_interval = 2;
+   static_svd_options.max_basis_dimension = 2;
 
    // Create an inner scope so destructors are called when out of scope
    if (true) {
 
    std::unique_ptr<CAROM::SVDBasisGenerator> static_basis_generator;
    static_basis_generator.reset(new CAROM::StaticSVDBasisGenerator(
-      static_bg_options,
+      static_svd_options,
       "static_smoke1"));
 
    // Take the first sample.
@@ -85,7 +85,7 @@ main(
    // FOM would then close and restart ... create 2nd basis generator
    std::unique_ptr<CAROM::SVDBasisGenerator> static_basis_generator2;
    static_basis_generator2.reset(new CAROM::StaticSVDBasisGenerator(
-      static_bg_options,
+      static_svd_options,
       "static_smoke2"));
 
    // Take the second sample.
@@ -101,7 +101,7 @@ main(
    // Create basis using 2 already computed snapshots
    std::unique_ptr<CAROM::SVDBasisGenerator> static_basis_generator3;
    static_basis_generator3.reset(new CAROM::StaticSVDBasisGenerator(
-      static_bg_options,
+      static_svd_options,
       "static_smoke_final"));
 
    static_basis_generator3->loadSamples("static_smoke1_snapshot","snapshot");
@@ -118,7 +118,7 @@ main(
    // Recreate basis using 1 basis generator as a check
    std::unique_ptr<CAROM::SVDBasisGenerator> static_basis_generator4;
    static_basis_generator4.reset(new CAROM::StaticSVDBasisGenerator(
-      static_bg_options,
+      static_svd_options,
       "static_smoke_check"));
 
    static_basis_generator4->takeSample(&vals0[dim*rank],0,0.1);
@@ -130,7 +130,7 @@ main(
 
    // Create basis using 2 already computed bases
    static_basis_generator3.reset(new CAROM::StaticSVDBasisGenerator(
-      static_bg_options,
+      static_svd_options,
       "static_smoke_final_frombasis"));
 
    static_basis_generator3->loadSamples("static_smoke1","basis");

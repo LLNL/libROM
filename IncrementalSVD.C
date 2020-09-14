@@ -36,26 +36,18 @@ namespace CAROM {
 const int IncrementalSVD::COMMUNICATE_U = 666;
 
 IncrementalSVD::IncrementalSVD(
-   int dim,
-   double linearity_tol,
-   bool skip_linearly_dependent,
-   int max_basis_dimension,
-   int samples_per_time_interval,
-   const std::string& basis_file_name,
-   bool save_state,
-   bool restore_state,
-   bool updateRightSV,
-   bool debug_algorithm) :
-   SVD(dim, samples_per_time_interval, debug_algorithm),
-   d_linearity_tol(linearity_tol),
-   d_skip_linearly_dependent(skip_linearly_dependent),
-   d_max_basis_dimension(max_basis_dimension),
+   IncrementalSVDOptions options,
+   const std::string& basis_file_name) :
+   SVD(options.dim, options.samples_per_time_interval, options.debug_algorithm),
+   d_linearity_tol(options.linearity_tol),
+   d_skip_linearly_dependent(options.skip_linearly_dependent),
+   d_max_basis_dimension(options.max_basis_dimension),
    d_total_dim(0),
-   d_save_state(save_state),
-   d_updateRightSV(updateRightSV),
+   d_save_state(options.save_state),
+   d_updateRightSV(options.updateRightSV),
    d_state_database(0)
 {
-   CAROM_ASSERT(linearity_tol > 0.0);
+   CAROM_ASSERT(options.linearity_tol > 0.0);
 
    // Get the number of processors, the dimensions for each process, and the
    // total dimension.
@@ -88,13 +80,13 @@ IncrementalSVD::IncrementalSVD(
 
    // If the state of the SVD is to be restored then open the database and
    // restore the necessary data from the database now.
-   if (save_state || restore_state) {
+   if (options.save_state || options.restore_state) {
       std::ostringstream tmp;
       tmp << basis_file_name << ".state." <<
              std::setw(6) << std::setfill('0') << d_rank;
       d_state_file_name = tmp.str();
    }
-   if (restore_state) {
+   if (options.restore_state) {
       // Open state database file.
       d_state_database = new HDFDatabase();
       bool is_good = d_state_database->open(d_state_file_name);

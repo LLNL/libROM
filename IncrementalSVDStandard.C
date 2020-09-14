@@ -23,37 +23,22 @@
 namespace CAROM {
 
 IncrementalSVDStandard::IncrementalSVDStandard(
-   int dim,
-   double linearity_tol,
-   bool skip_linearly_dependent,
-   int max_basis_dimension,
-   int samples_per_time_interval,
-   const std::string& basis_file_name,
-   bool save_state,
-   bool restore_state,
-   bool updateRightSV,
-   bool debug_algorithm) :
-   IncrementalSVD(dim,
-      linearity_tol,
-      skip_linearly_dependent,
-      max_basis_dimension,
-      samples_per_time_interval,
-      basis_file_name,
-      save_state,
-      restore_state,
-      updateRightSV,
-      debug_algorithm)
+   IncrementalSVDOptions options,
+   const std::string& basis_file_name) :
+   IncrementalSVD(
+      options,
+      basis_file_name)
 {
-   CAROM_ASSERT(dim > 0);
-   CAROM_ASSERT(linearity_tol > 0.0);
-   CAROM_ASSERT(samples_per_time_interval > 0);
+   CAROM_ASSERT(options.dim > 0);
+   CAROM_ASSERT(options.linearity_tol > 0.0);
+   CAROM_ASSERT(options.samples_per_time_interval > 0);
 
    // If the state of the SVD is to be restored, do it now.  The base class,
    // IncrementalSVD, has already opened the database and restored the state
    // common to all incremental algorithms.  This particular class has no other
    // state to read and only needs to compute the basis.  If the database could
    // not be found then we can not restore the state.
-   if (restore_state && d_state_database) {
+   if (options.restore_state && d_state_database) {
       // Close and delete the database.
       d_state_database->close();
       delete d_state_database;
