@@ -62,9 +62,7 @@ main(
    double vals1[6] = {2.0, 7.0, 4.0, 9.0, 18.0, 10.0};
 
    // Create first static basis generator for snapshot 1
-   CAROM::StaticSVDOptions static_svd_options;
-   static_svd_options.dim = dim;
-   static_svd_options.samples_per_time_interval = 2;
+   CAROM::StaticSVDOptions static_svd_options(dim, 2);
    static_svd_options.max_basis_dimension = 2;
 
    // Create an inner scope so destructors are called when out of scope

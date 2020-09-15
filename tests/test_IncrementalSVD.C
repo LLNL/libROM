@@ -101,11 +101,7 @@ public:
 
 TEST(IncrementalSVDSerialTest, Test_getBasis)
 {
-  CAROM::IncrementalSVDOptions incremental_svd_options;
-  incremental_svd_options.dim = 3;
-  incremental_svd_options.linearity_tol = 1e-1;
-  incremental_svd_options.max_basis_dimension = 3;
-  incremental_svd_options.samples_per_time_interval = 4;
+  CAROM::IncrementalSVDOptions incremental_svd_options(3, 1e-1, 3, -1, 4, -1.0, -1.0);
 
   FakeIncrementalSVD svd(
        incremental_svd_options,
@@ -125,11 +121,7 @@ TEST(IncrementalSVDSerialTest, Test_getBasis)
 
 TEST(IncrementalSVDSerialTest, Test_getSingularValues)
 {
-  CAROM::IncrementalSVDOptions incremental_svd_options;
-  incremental_svd_options.dim = 3;
-  incremental_svd_options.linearity_tol = 1e-1;
-  incremental_svd_options.max_basis_dimension = 3;
-  incremental_svd_options.samples_per_time_interval = 4;
+  CAROM::IncrementalSVDOptions incremental_svd_options(3, 1e-1, 3, -1, 4, -1.0, -1.0);
 
   FakeIncrementalSVD svd(
        incremental_svd_options,

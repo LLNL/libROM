@@ -55,15 +55,9 @@ main(
 
    // Construct the incremental basis generator to use the fast update
    // incremental algorithm and the incremental sampler.
-   CAROM::IncrementalSVDOptions incremental_svd_options;
-   incremental_svd_options.dim = dim;
-   incremental_svd_options.linearity_tol = 1.0e-2;
+   CAROM::IncrementalSVDOptions incremental_svd_options(dim, 1.0e-2, 2, 1.0e-6,
+   2, 1.0e-2, 0.11);
    incremental_svd_options.fast_update = true;
-   incremental_svd_options.max_basis_dimension = 2;
-   incremental_svd_options.initial_dt = 1.0e-6;
-   incremental_svd_options.samples_per_time_interval = 2;
-   incremental_svd_options.sampling_tol = 1.0e-2;
-   incremental_svd_options.max_time_between_samples = 0.11;
    incremental_svd_options.debug_algorithm = true;
 
 

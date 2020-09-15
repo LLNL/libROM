@@ -69,15 +69,28 @@ struct IncrementalSVDOptions
    *                            algorithm will be printed to facilitate
    *                            debugging.
    */
-   int dim = -1;
-   double linearity_tol = -1.0;
+
+   IncrementalSVDOptions() = delete;
+
+   IncrementalSVDOptions(int dim_, double linearity_tol_, int max_basis_dimension_, double initial_dt_, int samples_per_time_interval_, double sampling_tol_, double max_time_between_samples_) :
+   dim(dim_),
+   linearity_tol(linearity_tol_),
+   max_basis_dimension(max_basis_dimension_),
+   initial_dt(initial_dt_),
+   samples_per_time_interval(samples_per_time_interval_),
+   sampling_tol(sampling_tol_),
+   max_time_between_samples(max_time_between_samples_) {}
+
+
+   int dim;
+   double linearity_tol;
+   int max_basis_dimension;
+   double initial_dt;
+   int samples_per_time_interval;
+   double sampling_tol;
+   double max_time_between_samples;
    bool skip_linearly_dependent = false;
    bool fast_update = false;
-   int max_basis_dimension = -1;
-   double initial_dt = -1.0;
-   int samples_per_time_interval = -1;
-   double sampling_tol = -1.0;
-   double max_time_between_samples = -1.0;
    bool save_state = false;
    bool restore_state = false;
    bool updateRightSV = false;

@@ -46,8 +46,14 @@ namespace CAROM {
      *                            will be printed to facilitate debugging.
      */
 
-     int dim = -1;
-     int samples_per_time_interval = -1;
+     StaticSVDOptions() = delete;
+
+     StaticSVDOptions(int dim_, int samples_per_time_interval_) :
+     dim(dim_),
+     samples_per_time_interval(samples_per_time_interval_) {}
+
+     int dim;
+     int samples_per_time_interval;
      bool output_rightSV = false;
      int max_basis_dimension = std::numeric_limits<int>::max();
      double sigma_tolerance = 0;
