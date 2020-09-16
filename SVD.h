@@ -34,17 +34,16 @@ struct SVDOptions
    *                            will be printed to facilitate debugging.
    */
 
-   int dim;
-   int samples_per_time_interval;
-   bool debug_algorithm;
-
-protected:
    SVDOptions(int dim_,
      int samples_per_time_interval_,
      bool debug_algorithm_ = false
    ): dim(dim_),
    samples_per_time_interval(samples_per_time_interval_),
    debug_algorithm(debug_algorithm_) {};
+
+   int dim;
+   int samples_per_time_interval;
+   bool debug_algorithm;
 
 };
 
