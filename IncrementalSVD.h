@@ -81,7 +81,6 @@ struct IncrementalSVDOptions
    sampling_tol(sampling_tol_),
    max_time_between_samples(max_time_between_samples_) {}
 
-
    int dim;
    double linearity_tol;
    int max_basis_dimension;
