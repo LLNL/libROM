@@ -19,6 +19,35 @@
 
 namespace CAROM {
 
+struct SVDOptions
+{
+  /**
+   * @brief Constructor.
+   *
+   * @pre dim > 0
+   * @pre samples_per_time_interval > 0
+   *
+   * @param[in] dim The dimension of the system on this processor.
+   * @param[in] samples_per_time_interval The maximum number of samples in
+   *                                      each time interval.
+   * @param[in] debug_algorithm If true results of static svd algorithm
+   *                            will be printed to facilitate debugging.
+   */
+
+   int dim;
+   int samples_per_time_interval;
+   bool debug_algorithm;
+
+protected:
+   SVDOptions(int dim_,
+     int samples_per_time_interval_,
+     bool debug_algorithm_ = false
+   ): dim(dim_),
+   samples_per_time_interval(samples_per_time_interval_),
+   debug_algorithm(debug_algorithm_) {};
+
+};
+
 /**
  * Class SVD defines the interface to the generic SVD algorithm.  The API is
  * intentionally small.  One may collect the samples, compute the SVD, and get
@@ -41,9 +70,7 @@ class SVD
        *                            printed to facilitate debugging.
        */
       SVD(
-         int dim,
-         int samples_per_time_interval,
-         bool debug_algorithm = false);
+         SVDOptions options);
 
       /**
        * Destructor.
@@ -230,7 +257,7 @@ class SVD
        * exists on each processor.
        */
       Matrix* d_S;
-   
+
       /**
        * @brief The globalized snapshot vectors for the current time interval.
        *

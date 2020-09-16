@@ -33,11 +33,8 @@ main(
   // Create basis using 1 or 2 already computed bases
   std::unique_ptr<CAROM::SVDBasisGenerator> static_basis_generator;
 
-  CAROM::StaticSVDOptions static_svd_options(dim, 2);
-  static_svd_options.max_basis_dimension = 2;
-
   static_basis_generator.reset(new CAROM::StaticSVDBasisGenerator(
-      static_svd_options,
+      CAROM::StaticSVDOptions(dim, 2, false, 2),
       "samples_total"));
 
   if (uploaded_data == "snapshot") {

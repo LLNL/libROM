@@ -19,7 +19,7 @@
 
 namespace CAROM {
 
-struct IncrementalSVDOptions
+struct IncrementalSVDOptions : virtual public SVDOptions
 {
   /**
    * @brief Constructor.
@@ -72,31 +72,50 @@ struct IncrementalSVDOptions
 
    IncrementalSVDOptions() = delete;
 
-   IncrementalSVDOptions(int dim_, double linearity_tol_, int max_basis_dimension_, double initial_dt_, int samples_per_time_interval_, double sampling_tol_, double max_time_between_samples_) :
-   dim(dim_),
+   IncrementalSVDOptions(int dim_,
+     int samples_per_time_interval_,
+     double linearity_tol_,
+     int max_basis_dimension_,
+     double initial_dt_,
+     double sampling_tol_,
+     double max_time_between_samples_,
+     bool skip_linearly_dependent_ = false,
+     bool fast_update_ = false,
+     bool save_state_ = false,
+     bool restore_state_ = false,
+     bool updateRightSV_ = false,
+     double min_sampling_time_step_scale_ = 0.1,
+     double sampling_time_step_scale_ = 0.8,
+     double max_sampling_time_step_scale_ = 5.0,
+     bool debug_algorithm_ = false
+   ) : SVDOptions(dim_, samples_per_time_interval_, debug_algorithm_),
    linearity_tol(linearity_tol_),
    max_basis_dimension(max_basis_dimension_),
    initial_dt(initial_dt_),
-   samples_per_time_interval(samples_per_time_interval_),
    sampling_tol(sampling_tol_),
-   max_time_between_samples(max_time_between_samples_) {}
+   max_time_between_samples(max_time_between_samples_),
+   skip_linearly_dependent(skip_linearly_dependent_),
+   fast_update(fast_update_),
+   save_state(save_state_),
+   restore_state(restore_state_),
+   updateRightSV(updateRightSV_),
+   min_sampling_time_step_scale(min_sampling_time_step_scale_),
+   sampling_time_step_scale(sampling_time_step_scale_),
+   max_sampling_time_step_scale(max_sampling_time_step_scale_) {};
 
-   int dim;
    double linearity_tol;
    int max_basis_dimension;
    double initial_dt;
-   int samples_per_time_interval;
    double sampling_tol;
    double max_time_between_samples;
-   bool skip_linearly_dependent = false;
-   bool fast_update = false;
-   bool save_state = false;
-   bool restore_state = false;
-   bool updateRightSV = false;
-   double min_sampling_time_step_scale = 0.1;
-   double sampling_time_step_scale = 0.8;
-   double max_sampling_time_step_scale = 5.0;
-   bool debug_algorithm = false;
+   bool skip_linearly_dependent;
+   bool fast_update;
+   bool save_state;
+   bool restore_state;
+   bool updateRightSV;
+   double min_sampling_time_step_scale;
+   double sampling_time_step_scale;
+   double max_sampling_time_step_scale;
 };
 
 /**

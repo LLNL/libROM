@@ -23,7 +23,7 @@
 
 namespace CAROM {
 
-  struct StaticSVDOptions
+  struct StaticSVDOptions : virtual public SVDOptions
   {
     /**
      * @brief Constructor.
@@ -48,16 +48,20 @@ namespace CAROM {
 
      StaticSVDOptions() = delete;
 
-     StaticSVDOptions(int dim_, int samples_per_time_interval_) :
-     dim(dim_),
-     samples_per_time_interval(samples_per_time_interval_) {}
+     StaticSVDOptions(int dim_,
+       int samples_per_time_interval_,
+       bool output_rightSV_ = false,
+       int max_basis_dimension_ = std::numeric_limits<int>::max(),
+       double sigma_tolerance_ = 0,
+       bool debug_algorithm_ = false
+     ) : SVDOptions(dim_, samples_per_time_interval_, debug_algorithm_),
+     output_rightSV(output_rightSV_),
+     max_basis_dimension(max_basis_dimension_),
+     sigma_tolerance(sigma_tolerance_) {};
 
-     int dim;
-     int samples_per_time_interval;
-     bool output_rightSV = false;
-     int max_basis_dimension = std::numeric_limits<int>::max();
-     double sigma_tolerance = 0;
-     bool debug_algorithm = false;
+     bool output_rightSV;
+     int max_basis_dimension;
+     double sigma_tolerance;
   };
 
 /**

@@ -129,17 +129,15 @@ main(
    incremental_svd_options.debug_algorithm = true;
 
    CAROM::IncrementalSVDBasisGenerator inc_basis_generator(
-      incremental_svd_options
+      CAROM::IncrementalSVDOptions(dim, num_samples, 1.0e-6, dim, 1.0e-6, 1.0e-2,
+      0.001)
     );
 
    // Construct the static basis generator for the static algorithm and the
    // static sampler.
 
-   CAROM::StaticSVDOptions static_svd_options(dim, num_samples);
-   static_svd_options.output_rightSV = true;
-
    CAROM::StaticSVDBasisGenerator static_basis_generator(
-     static_svd_options
+     CAROM::StaticSVDOptions(dim, num_samples, true)
    );
 
    // Initialize random number generator.

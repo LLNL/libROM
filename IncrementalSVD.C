@@ -38,7 +38,7 @@ const int IncrementalSVD::COMMUNICATE_U = 666;
 IncrementalSVD::IncrementalSVD(
    IncrementalSVDOptions options,
    const std::string& basis_file_name) :
-   SVD(options.dim, options.samples_per_time_interval, options.debug_algorithm),
+   SVD(options),
    d_linearity_tol(options.linearity_tol),
    d_skip_linearly_dependent(options.skip_linearly_dependent),
    d_max_basis_dimension(options.max_basis_dimension),

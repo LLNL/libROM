@@ -32,7 +32,7 @@ namespace CAROM {
 
 StaticSVD::StaticSVD(
    StaticSVDOptions options) :
-   SVD(options.dim, options.samples_per_time_interval, options.debug_algorithm),
+   SVD(options),
    d_samples(new SLPK_Matrix), d_factorizer(new SVDManager),
    d_this_interval_basis_current(false),
    d_max_basis_dimension(options.max_basis_dimension),

@@ -38,14 +38,11 @@ main(
    int dim = 10000;
    int num_samples = 10;
 
-   CAROM::IncrementalSVDOptions incremental_svd_options(dim, 1.0e-6, num_samples,
-   1.0e-2, num_samples, 1.0e-20, 10.001);
-   incremental_svd_options.fast_update = true;
-
    // Construct the incremental basis generator to use the fast update
    // incremental algorithm and the incremental sampler.
    CAROM::IncrementalSVDBasisGenerator inc_basis_generator(
-     incremental_svd_options
+     CAROM::IncrementalSVDOptions(dim, num_samples,
+       1.0e-6, num_samples, 1.0e-2, 1.0e-20, 10.001, false, true)
    );
 
    // Initialize random number generator.
