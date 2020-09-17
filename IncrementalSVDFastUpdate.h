@@ -29,43 +29,16 @@ class IncrementalSVDFastUpdate : public IncrementalSVD
       /**
        * @brief Constructor.
        *
-       * @pre dim > 0
-       * @pre linearity_tol > 0.0
-       * @pre samples_per_time_interval > 0
-       *
-       * @param[in] dim The dimension of the system on this processor.
-       * @param[in] linearity_tol Tolerance to determine whether or not a
-       *                          sample is linearly dependent.
-       * @param[in] skip_linearly_dependent If true skip linearly dependent
-       *                                    samples.
-       * @param[in] samples_per_time_interval The number of samples to be
-       *                                      collected for each time interval.
+       * @param[in] options The struct containing the options for this basis
+       *                    generator.
        * @param[in] basis_file_name The base part of the name of the file
        *                            containing the basis vectors.  Each process
        *                            will append its process ID to this base
        *                            name.
-       * @param[in] save_state If true the state of the SVD will be written to
-       *                       disk when the object is deleted.  If there are
-       *                       multiple time intervals then the state will not
-       *                       be saved as restoring such a state makes no
-       *                       sense.
-       * @param[in] restore_state If true the state of the SVD will be restored
-       *                          when the object is created.
-       * @param[in] debug_algorithm If true results of the algorithm will be
-       *                            printed to facilitate debugging.
        */
       IncrementalSVDFastUpdate(
-         int dim,
-         double linearity_tol,
-         double singular_value_tol,
-         bool skip_linearly_dependent,
-         int max_basis_dimension,
-         int samples_per_time_interval,
-         const std::string& basis_file_name,
-         bool save_state = false,
-         bool restore_state = false,
-         bool updateRightSV = false,
-         bool debug_algorithm = false);
+         IncrementalSVDOptions options,
+         const std::string& basis_file_name);
 
       /**
        * @brief Destructor.
@@ -157,7 +130,7 @@ class IncrementalSVDFastUpdate : public IncrementalSVD
       Matrix* d_Up;
 
       /**
-       * @brief 
+       * @brief
        *
        * singular_value_tol is a tolerance value used to remove small singular values
        */

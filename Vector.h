@@ -16,6 +16,7 @@
 #define included_Vector_h
 
 #include "Utilities.h"
+#include <functional>
 
 namespace CAROM {
 
@@ -112,6 +113,86 @@ class Vector
       Vector&
       operator = (
          const double& a);
+
+       /**
+        * @brief Transform the vector using a supplied function.
+        *
+        * @param[in] f(const int size, double* vector) A transformer function which takes
+        * in as input a size and a vector.
+        *
+        * @return The newly transformed vector.
+        */
+       Vector&
+       transform(std::function<void(const int size, double* vector)> transformer);
+
+       /**
+        * @brief Transform a vector using a supplied function and store the
+        * results in another vector.
+        *
+        * @param[in] Vector& result A vector which will store the transformed
+        * result
+        *
+        * @param[in] f(const int size, double* vector) A transformer function
+        * which takes in as input a size and transforms the vector.
+        */
+       void
+       transform(Vector& result, std::function<void(const int size, double* vector)> transformer) const;
+
+       /**
+        * @brief Transform a vector using a supplied function and store the
+        * results in another vector.
+        *
+        * @param[in] Vector& result A vector which will store the transformed
+        * result
+        *
+        * @param[in] f(const int size, double* vector) A transformer function
+        * which takes in as input a size and transforms the vector.
+        */
+       void
+       transform(Vector*& result, std::function<void(const int size, double* vector)> transformer) const;
+
+       /**
+        * @brief Transform the vector using a supplied function.
+        *
+        * @param[in] Vector& result A vector which will store the transformed
+        * result
+        *
+        * @param[in] f(const int size, double* origVector, double* resultVector)
+        * A transformer function which takes in as input a size and transforms
+        * the origVector and stores the result in resultVector.
+        *
+        * @return The newly transformed vector.
+        */
+       Vector&
+       transform(std::function<void(const int size, double* origVector, double* resultVector)> transformer);
+
+       /**
+        * @brief Transform a vector using a supplied function and store the
+        * results in another vector.
+        *
+        * @param[in] Vector& result A vector which will store the transformed
+        * result
+        *
+        * @param[in] f(const int size, double* origVector, double* resultVector)
+        * A transformer function which takes in as input a size and transforms
+        * the origVector and stores the result in resultVector.
+        */
+       void
+       transform(Vector& result, std::function<void(const int size, double* origVector, double* resultVector)> transformer) const;
+
+       /**
+        * @brief Transform a vector using a supplied function and store the
+        * results in another vector.
+        *
+        * @param[in] Vector& result A vector which will store the transformed
+        * result
+        *
+        * @param[in] f(const int size, double* origVector, double* resultVector)
+        * A transformer function which takes in as input a size and transforms
+        * the origVector and stores the result in resultVector.
+        */
+       void
+       transform(Vector*& result, std::function<void(const int size, double* origVector, double* resultVector)> transformer) const;
 
       /**
        * @brief Sets the length of the vector and reallocates storage if

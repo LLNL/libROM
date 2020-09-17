@@ -18,45 +18,13 @@
 namespace CAROM {
 
 IncrementalSVDBasisGenerator::IncrementalSVDBasisGenerator(
-   int dim,
-   double linearity_tol,
-   double singular_value_tol,
-   bool skip_linearly_dependent,
-   bool fast_update,
-   int max_basis_dimension,
-   double initial_dt,
-   int samples_per_time_interval,
-   double sampling_tol,
-   double max_time_between_samples,
+   IncrementalSVDOptions options,
    const std::string& basis_file_name,
-   bool save_state,
-   bool restore_state,
-   bool updateRightSV,
-   Database::formats file_format,
-   double min_sampling_time_step_scale,
-   double sampling_time_step_scale,
-   double max_sampling_time_step_scale,
-   bool debug_algorithm) :
+   Database::formats file_format) :
    SVDBasisGenerator(basis_file_name, file_format)
 {
-   d_svdsampler.reset(new IncrementalSVDSampler(dim,
-                                                linearity_tol,
-                                                singular_value_tol,
-                                                skip_linearly_dependent,
-                                                fast_update,
-                                                max_basis_dimension,
-                                                initial_dt,
-                                                samples_per_time_interval,
-                                                sampling_tol,
-                                                max_time_between_samples,
-                                                basis_file_name,
-                                                save_state,
-                                                restore_state,
-                                                updateRightSV,
-                                                min_sampling_time_step_scale,
-                                                sampling_time_step_scale,
-                                                max_sampling_time_step_scale,
-                                                debug_algorithm));
+   d_svdsampler.reset(new IncrementalSVDSampler(options,
+                                                basis_file_name));
 }
 
 IncrementalSVDBasisGenerator::~IncrementalSVDBasisGenerator()

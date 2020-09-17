@@ -22,40 +22,24 @@
 namespace CAROM {
 
 IncrementalSVDFastUpdate::IncrementalSVDFastUpdate(
-   int dim,
-   double linearity_tol,
-   double singular_value_tol,
-   bool skip_linearly_dependent,
-   int max_basis_dimension,
-   int samples_per_time_interval,
-   const std::string& basis_file_name,
-   bool save_state,
-   bool restore_state,
-   bool updateRightSV,
-   bool debug_algorithm) :
-   IncrementalSVD(dim,
-      linearity_tol,
-      skip_linearly_dependent,
-      max_basis_dimension,
-      samples_per_time_interval,
-      basis_file_name,
-      save_state,
-      restore_state,
-      updateRightSV,
-      debug_algorithm),
+   IncrementalSVDOptions options,
+   const std::string& basis_file_name) :
+   IncrementalSVD(
+      options,
+      basis_file_name),
    d_Up(0),
-   d_singular_value_tol(singular_value_tol)
+   d_singular_value_tol(options.singular_value_tol)
 {
-   CAROM_ASSERT(dim > 0);
-   CAROM_ASSERT(linearity_tol > 0.0);
-   CAROM_ASSERT(samples_per_time_interval > 0);
+   CAROM_ASSERT(options.dim > 0);
+   CAROM_ASSERT(options.linearity_tol > 0.0);
+   CAROM_ASSERT(options.samples_per_time_interval > 0);
 
    // If the state of the SVD is to be restored, do it now.  The base class,
    // IncrementalSVD, has already opened the database and restored the state
    // common to all incremental algorithms.  This particular class must also
    // read the state of d_Up and then compute the basis.  If the database could
    // not be found then we can not restore the state.
-   if (restore_state && d_state_database) {
+   if (options.restore_state && d_state_database) {
       // Read d_Up.
       int num_rows;
       d_state_database->getInteger("Up_num_rows", num_rows);
@@ -183,7 +167,7 @@ IncrementalSVDFastUpdate::computeBasis()
        std::cout << "next smallest SV = " << d_S->item(d_num_samples-2,d_num_samples-2) << "\n";
    }
    // remove the smallest singular value if it is smaller than d_singular_value_tol
-   if ( (d_singular_value_tol != 0.0) && 
+   if ( (d_singular_value_tol != 0.0) &&
         (d_S->item(d_num_samples-1,d_num_samples-1) < d_singular_value_tol) &&
         (d_num_samples != 1) ) {
 
@@ -198,7 +182,7 @@ IncrementalSVDFastUpdate::computeBasis()
        delete d_basis;
        d_basis = d_basis_new;
 
-       if (d_updateRightSV) 
+       if (d_updateRightSV)
        {
            Matrix* d_basis_right_new = new Matrix(d_num_rows_of_W, d_num_samples-1, false);
            for (int row = 0; row < d_num_rows_of_W; ++row) {

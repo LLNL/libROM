@@ -7,8 +7,17 @@ For LLNL LC Machines:
 
 For MAC:
 
+Install your dependencies:
+1) xcode-select --install
+2) brew install open-mpi
+3) brew install openblas
+4) brew install lapack
+5) brew install scalapack
+6) brew install hdf5
+
+Build libROM:
 1) cd build
-2) cmake ../.
+2) cmake ..
 3) make
 
 # Installing via Spack

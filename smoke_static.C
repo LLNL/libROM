@@ -52,23 +52,26 @@ main(
       }
       return 1;
    }
-  
+
    bool status = false;
- 
+
    // Define the values for the first sample.
    double vals0[6] = {1.0, 6.0, 3.0, 8.0, 17.0, 9.0};
 
    // Define the values for the second sample.
    double vals1[6] = {2.0, 7.0, 4.0, 9.0, 18.0, 10.0};
 
+   // Create first static basis generator for snapshot 1
+   CAROM::StaticSVDOptions static_svd_options(dim, 2);
+   static_svd_options.max_basis_dimension = 2;
+
    // Create an inner scope so destructors are called when out of scope
    if (true) {
-   // Create first static basis generator for snapshot 1
+
    std::unique_ptr<CAROM::SVDBasisGenerator> static_basis_generator;
-   static_basis_generator.reset(new CAROM::StaticSVDBasisGenerator(dim,
-      2,
-      "static_smoke1",
-      2));
+   static_basis_generator.reset(new CAROM::StaticSVDBasisGenerator(
+      static_svd_options,
+      "static_smoke1"));
 
    // Take the first sample.
    static_basis_generator->takeSample(&vals0[dim*rank],0,0.1);
@@ -79,10 +82,9 @@ main(
 
    // FOM would then close and restart ... create 2nd basis generator
    std::unique_ptr<CAROM::SVDBasisGenerator> static_basis_generator2;
-   static_basis_generator2.reset(new CAROM::StaticSVDBasisGenerator(dim,
-      2,
-      "static_smoke2",
-      2));
+   static_basis_generator2.reset(new CAROM::StaticSVDBasisGenerator(
+      static_svd_options,
+      "static_smoke2"));
 
    // Take the second sample.
    static_basis_generator2->takeSample(&vals1[dim*rank],0,0.1);
@@ -96,10 +98,9 @@ main(
 
    // Create basis using 2 already computed snapshots
    std::unique_ptr<CAROM::SVDBasisGenerator> static_basis_generator3;
-   static_basis_generator3.reset(new CAROM::StaticSVDBasisGenerator(dim,
-      2,
-      "static_smoke_final",
-      2));
+   static_basis_generator3.reset(new CAROM::StaticSVDBasisGenerator(
+      static_svd_options,
+      "static_smoke_final"));
 
    static_basis_generator3->loadSamples("static_smoke1_snapshot","snapshot");
    static_basis_generator3->loadSamples("static_smoke2_snapshot","snapshot");
@@ -107,17 +108,16 @@ main(
    static_basis_generator3->writeSnapshot();
    int rom_dim = static_basis_generator3->getSpatialBasis()->numColumns();
    std::cout << "U ROM dimension = " << rom_dim << std::endl;
-   
+
    static_basis_generator3->endSamples();
    static_basis_generator3 = nullptr;
 
 
    // Recreate basis using 1 basis generator as a check
    std::unique_ptr<CAROM::SVDBasisGenerator> static_basis_generator4;
-   static_basis_generator4.reset(new CAROM::StaticSVDBasisGenerator(dim,
-      2,
-      "static_smoke_check",
-      2));
+   static_basis_generator4.reset(new CAROM::StaticSVDBasisGenerator(
+      static_svd_options,
+      "static_smoke_check"));
 
    static_basis_generator4->takeSample(&vals0[dim*rank],0,0.1);
    static_basis_generator4->takeSample(&vals1[dim*rank],0,0.1);
@@ -127,10 +127,9 @@ main(
 
 
    // Create basis using 2 already computed bases
-   static_basis_generator3.reset(new CAROM::StaticSVDBasisGenerator(dim,
-      2,
-      "static_smoke_final_frombasis",
-      2));
+   static_basis_generator3.reset(new CAROM::StaticSVDBasisGenerator(
+      static_svd_options,
+      "static_smoke_final_frombasis"));
 
    static_basis_generator3->loadSamples("static_smoke1","basis");
    static_basis_generator3->loadSamples("static_smoke2","basis");
@@ -138,7 +137,7 @@ main(
    static_basis_generator3->writeSnapshot();
    rom_dim = static_basis_generator3->getSpatialBasis()->numColumns();
    std::cout << "U ROM dimension = " << rom_dim << std::endl;
-   
+
    static_basis_generator3->endSamples();
    static_basis_generator3 = nullptr;
 

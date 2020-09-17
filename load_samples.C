@@ -8,7 +8,7 @@
  *
  *****************************************************************************/
 
-// Description: Simple test of loading precomputed basis or snapshots and 
+// Description: Simple test of loading precomputed basis or snapshots and
 //              computing the static SVD on the loaded samples. Please
 //              run in serial. Assumes this file is located in libROM/build.
 //              If not, please adjust file address of sample data below.
@@ -29,14 +29,14 @@ main(
     if (strcmp(argv[0],"b") || strcmp(argv[0],"basis")) std::string uploaded_data = "basis"; }
 
   int dim = 6;
-  
+
   // Create basis using 1 or 2 already computed bases
   std::unique_ptr<CAROM::SVDBasisGenerator> static_basis_generator;
-  static_basis_generator.reset(new CAROM::StaticSVDBasisGenerator(dim,
-      2,
-      "samples_total",
-      2));
-  
+
+  static_basis_generator.reset(new CAROM::StaticSVDBasisGenerator(
+      CAROM::StaticSVDOptions(dim, 2, false, 2),
+      "samples_total"));
+
   if (uploaded_data == "snapshot") {
     std::cout << "Loading snapshots" << std::endl;
     static_basis_generator->loadSamples("../tests/load_samples_data/sample1_snapshot","snapshot");
@@ -51,14 +51,13 @@ main(
 
   std::cout << "Saving data uploaded as a snapshot" << std::endl;
   static_basis_generator->writeSnapshot();
-  
+
   // Can compute the SVD by calling getSpatialBasis() or endSamples()
   // endSamples() will save the basis file "samples_total..."
   std::cout << "Computing SVD" << std::endl;
   int rom_dim = static_basis_generator->getSpatialBasis()->numColumns();
   std::cout << "U ROM Dimension: " << rom_dim << std::endl;
   static_basis_generator->endSamples();
-  
+
   static_basis_generator = nullptr;
 }
-
