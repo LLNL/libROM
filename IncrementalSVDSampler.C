@@ -24,66 +24,37 @@
 namespace CAROM {
 
 IncrementalSVDSampler::IncrementalSVDSampler(
-   int dim,
-   double linearity_tol,
-   bool skip_linearly_dependent,
-   bool fast_update,
-   int max_basis_dimension,
-   double initial_dt,
-   int samples_per_time_interval,
-   double sampling_tol,
-   double max_time_between_samples,
-   const std::string& basis_file_name,
-   bool save_state,
-   bool restore_state,
-   bool updateRightSV,
-   double min_sampling_time_step_scale,
-   double sampling_time_step_scale,
-   double max_sampling_time_step_scale,
-   bool debug_algorithm) :
-   d_tol(sampling_tol),
-   d_max_time_between_samples(max_time_between_samples),
-   d_min_sampling_time_step_scale(min_sampling_time_step_scale),
-   d_sampling_time_step_scale(sampling_time_step_scale),
-   d_max_sampling_time_step_scale(max_sampling_time_step_scale),
-   d_dt(initial_dt),
+   IncrementalSVDOptions options,
+   const std::string& basis_file_name) :
+   d_tol(options.sampling_tol),
+   d_max_time_between_samples(options.max_time_between_samples),
+   d_min_sampling_time_step_scale(options.min_sampling_time_step_scale),
+   d_sampling_time_step_scale(options.sampling_time_step_scale),
+   d_max_sampling_time_step_scale(options.max_sampling_time_step_scale),
+   d_dt(options.initial_dt),
    d_next_sample_time(0.0)
 {
-   CAROM_ASSERT(initial_dt > 0.0);
-   CAROM_ASSERT(sampling_tol > 0.0);
-   CAROM_ASSERT(max_time_between_samples > 0.0);
-   CAROM_ASSERT(min_sampling_time_step_scale >= 0.0);
-   CAROM_ASSERT(sampling_time_step_scale >= 0.0);
-   CAROM_ASSERT(max_sampling_time_step_scale >= 0.0);
-   CAROM_ASSERT(min_sampling_time_step_scale <= max_sampling_time_step_scale);
+   CAROM_ASSERT(options.initial_dt > 0.0);
+   CAROM_ASSERT(options.sampling_tol > 0.0);
+   CAROM_ASSERT(options.max_time_between_samples > 0.0);
+   CAROM_ASSERT(options.min_sampling_time_step_scale >= 0.0);
+   CAROM_ASSERT(options.sampling_time_step_scale >= 0.0);
+   CAROM_ASSERT(options.max_sampling_time_step_scale >= 0.0);
+   CAROM_ASSERT(options.min_sampling_time_step_scale <= options.max_sampling_time_step_scale);
 
-   d_updateRightSV = updateRightSV;
+   d_updateRightSV = options.updateRightSV;
 
-   if (fast_update) {
+   if (options.fast_update) {
       d_svd.reset(
-         new IncrementalSVDFastUpdate(dim,
-            linearity_tol,
-            skip_linearly_dependent,
-            max_basis_dimension,
-            samples_per_time_interval,
-            basis_file_name,
-            save_state,
-            restore_state,
-            updateRightSV,
-            debug_algorithm));
+         new IncrementalSVDFastUpdate(
+            options,
+            basis_file_name));
    }
    else {
       d_svd.reset(
-         new IncrementalSVDStandard(dim,
-            linearity_tol,
-            skip_linearly_dependent,
-            max_basis_dimension,
-            samples_per_time_interval,
-            basis_file_name,
-            save_state,
-            restore_state,
-            updateRightSV,
-            debug_algorithm));
+         new IncrementalSVDStandard(
+            options,
+            basis_file_name));
    }
 
    // Get the number of processors.
