@@ -37,7 +37,7 @@ struct FakeSVDOptions : virtual public CAROM::SVDOptions
 
   FakeSVDOptions(int dim_,
     int samples_per_time_interval_,
-    bool debug_algorithm_ = false
+    bool debug_algorithm_ = false,
     int max_time_intervals_ = -1,
     bool write_snapshots_ = false
   ): SVDOptions(dim_, samples_per_time_interval_, debug_algorithm_,
