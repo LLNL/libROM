@@ -32,11 +32,10 @@ main(
 
   // Create basis using 1 or 2 already computed bases
   std::unique_ptr<CAROM::SVDBasisGenerator> static_basis_generator;
-  static_basis_generator.reset(new CAROM::StaticSVDBasisGenerator(dim,
-      2,
-      -1,
-      "samples_total",
-      2));
+
+  static_basis_generator.reset(new CAROM::StaticSVDBasisGenerator(
+      CAROM::StaticSVDOptions(dim, 2, false, 2),
+      "samples_total"));
 
   if (uploaded_data == "snapshot") {
     std::cout << "Loading snapshots" << std::endl;

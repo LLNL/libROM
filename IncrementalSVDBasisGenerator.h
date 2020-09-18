@@ -16,6 +16,7 @@
 #define included_IncrementalSVDBasisGenerator_h
 
 #include "SVDBasisGenerator.h"
+#include "IncrementalSVD.h"
 
 namespace CAROM {
 
@@ -25,45 +26,20 @@ namespace CAROM {
  * or the standard incremental algorithm may be specified through the
  * constructor.
  */
+
 class IncrementalSVDBasisGenerator : public SVDBasisGenerator
 {
    public:
       /**
        * @brief Constructor.
        *
-       * @pre dim > 0
-       * @pre max_basis_dimension > 0
-       * @pre max_basis_dimension <= dim
-       * @pre linearity_tol > 0.0
-       * @pre initial_dt > 0.0
-       * @pre samples_per_time_interval > 0
-       * @pre sampling_tol > 0.0
-       * @pre max_time_between_samples > 0.0
-       * @pre min_sampling_time_step_scale >= 0.0
-       * @pre sampling_time_step_scale >= 0.0
-       * @pre max_sampling_time_step_scale >= 0.0
-       * @pre min_sampling_time_step_scale <= max_sampling_time_step_scale
-       *
-       * @param[in] dim The dimension of the system on this processor.
-       * @param[in] linearity_tol Tolerance to determine whether or not a
-       *                          sample is linearly dependent.
-       * @param[in] skip_linearly_dependent If true skip linearly dependent
-       *                                    samples.
-       * @param[in] fast_update If true use the fast update algorithm.
-       * @param[in] maximum basis dimension
-       * @param[in] initial_dt Initial simulation time step.
-       * @param[in] samples_per_time_interval The maximum number of samples in
-       *                                      each time interval.
-       * @param[in] sampling_tol Sampling control tolerance.  Limits error in
-       *                         projection of solution into reduced order
-       *                         space.
-       * @param[in] max_time_between_samples Upper bound on time between
-       *                                     samples.
-       * @param[in] max_time_intervals The maximum number of time intervals.
+       * @param[in] options The struct containing the options for this basis
+       *                    generator.
        * @param[in] basis_file_name The base part of the name of the file
        *                            containing the basis vectors.  Each process
        *                            will append its process ID to this base
        *                            name.
+<<<<<<< HEAD
        * @param[in] save_state If true the state of the SVD will be written to
        *                       disk when the object is deleted.  If there are
        *                       multiple time intervals then the state will not
@@ -74,39 +50,17 @@ class IncrementalSVDBasisGenerator : public SVDBasisGenerator
        * @param[in] update_rightSV Whether to update the right SV or not.
        * @param[in] write_snapshots Whether to automatically write snapshots matrices
        *                        instead of basis matrices.
+=======
+>>>>>>> origin/master
        * @param[in] file_format The format of the file containing the basis
        *                        vectors.
-       * @param[in] min_sampling_time_step_scale Minimum overall scale factor
-       *                                         to apply to time step.
-       * @param[in] sampling_time_step_scale Scale factor to apply to sampling
-       *                                     algorithm.
-       * @param[in] max_sampling_time_step_scale Maximum overall scale factor
-       *                                         to apply to time step.
-       * @param[in] debug_algorithm If true results of incremental svd
-       *                            algorithm will be printed to facilitate
-       *                            debugging.
+       * @param[in] write_snapshots Whether to automatically write snapshots matrices
+       *                        instead of basis matrices.
        */
       IncrementalSVDBasisGenerator(
-         int dim,
-         double linearity_tol,
-         bool skip_linearly_dependent,
-         bool fast_update,
-         int max_basis_dimension,
-         double initial_dt,
-         int samples_per_time_interval,
-         double sampling_tol,
-         double max_time_between_samples,
-         int max_time_intervals = -1,
+         IncrementalSVDOptions options,
          const std::string& basis_file_name = "",
-         bool save_state = false,
-         bool restore_state = false,
-         bool updateRightSV = false,
-         bool write_snapshots = false,
-         Database::formats file_format = Database::HDF5,
-         double min_sampling_time_step_scale = 0.1,
-         double sampling_time_step_scale = 0.8,
-         double max_sampling_time_step_scale = 5.0,
-         bool debug_algorithm = false);
+         Database::formats file_format = Database::HDF5);
 
       /**
        * @brief Destructor.

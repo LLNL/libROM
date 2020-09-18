@@ -122,34 +122,23 @@ main(
 
    // Construct the incremental basis generator to use the fast update
    // incremental algorithm and the incremental sampler.
-   CAROM::IncrementalSVDBasisGenerator inc_basis_generator(dim,
-      1.0e-6,
-      false,
-      true,
-      dim,
-      1.0e-6,
-      num_samples,
-      1.0e-2,
-      0.001,
-      -1,
-      "",
-      false,
-      false,
-      false,
-      false,
-      CAROM::Database::HDF5,
-      0.1,
-      0.8,
-      5.0,
-      true);
+
+   CAROM::IncrementalSVDOptions incremental_svd_options(dim, 1.0e-6,
+     dim, 1.0e-6, num_samples, 1.0e-2, 0.001);
+   incremental_svd_options.fast_update = true;
+   incremental_svd_options.debug_algorithm = true;
+
+   CAROM::IncrementalSVDBasisGenerator inc_basis_generator(
+      CAROM::IncrementalSVDOptions(dim, num_samples, 1.0e-6, dim, 1.0e-6, 1.0e-2,
+      0.001)
+    );
 
    // Construct the static basis generator for the static algorithm and the
    // static sampler.
-   CAROM::StaticSVDBasisGenerator static_basis_generator(dim,
-      num_samples,
-      -1,
-      "",
-      true);
+
+   CAROM::StaticSVDBasisGenerator static_basis_generator(
+     CAROM::StaticSVDOptions(dim, num_samples, true)
+   );
 
    // Initialize random number generator.
    srand(1);

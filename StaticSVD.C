@@ -31,23 +31,17 @@ void dgesdd(char*, int*, int*, double*, int*,
 namespace CAROM {
 
 StaticSVD::StaticSVD(
-   int dim,
-   int samples_per_time_interval,
-   int max_time_intervals,
-   int max_basis_dimension,
-   double sigma_tolerance,
-   bool debug_algorithm) :
-   SVD(dim, samples_per_time_interval, max_time_intervals, debug_algorithm),
-   d_samples(new SLPK_Matrix),
-   d_factorizer(new SVDManager),
+   StaticSVDOptions options) :
+   SVD(options),
+   d_samples(new SLPK_Matrix), d_factorizer(new SVDManager),
    d_this_interval_basis_current(false),
-   d_max_basis_dimension(max_basis_dimension),
-   d_sigma_tol(sigma_tolerance)
+   d_max_basis_dimension(options.max_basis_dimension),
+   d_sigma_tol(options.sigma_tolerance)
 {
-   CAROM_ASSERT(dim > 0);
-   CAROM_ASSERT(samples_per_time_interval > 0);
-   CAROM_ASSERT(max_basis_dimension > 0);
-   CAROM_ASSERT(sigma_tolerance >= 0);
+   CAROM_ASSERT(options.dim > 0);
+   CAROM_ASSERT(options.samples_per_time_interval > 0);
+   CAROM_ASSERT(options.max_basis_dimension > 0);
+   CAROM_ASSERT(options.sigma_tolerance >= 0);
 
    // Get the rank of this process, and the number of processors.
    int mpi_init;

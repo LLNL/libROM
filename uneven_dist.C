@@ -119,26 +119,14 @@ main(
    // Construct the incremental basis generator given the dimension just
    // computed to use the fast update incremental algorithm and the incremental
    // sampler.
-   CAROM::IncrementalSVDBasisGenerator inc_basis_generator(dim,
-      1.0e-2,
-      false,
-      true,
-      2,
-      1.0e-6,
-      2,
-      1.0e-2,
-      0.11,
-      -1,
-      "",
-      false,
-      false,
-      false,
-      false,
-      CAROM::Database::HDF5,
-      0.1,
-      0.8,
-      5.0,
-      true);
+   CAROM::IncrementalSVDOptions incremental_svd_options(dim, 2, 1.0e-2,
+     2, 1.0e-6, 1.0e-2, 0.11);
+   incremental_svd_options.fast_update = true;
+   incremental_svd_options.debug_algorithm = true;
+
+   CAROM::IncrementalSVDBasisGenerator inc_basis_generator(
+      incremental_svd_options
+   );
 
    // Define the values for the first sample.
    double vals0[6] = {1.0, 6.0, 3.0, 8.0, 17.0, 9.0};

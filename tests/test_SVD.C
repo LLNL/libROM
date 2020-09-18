@@ -31,13 +31,26 @@ TEST(GoogleTestFramework, GoogleTestFrameworkFound) {
  *  referring to an implementation that simulates the behavior of
  *  real objects.)
  */
+
+struct FakeSVDOptions : virtual public CAROM::SVDOptions
+{
+
+  FakeSVDOptions(int dim_,
+    int samples_per_time_interval_,
+    bool debug_algorithm_ = false
+    int max_time_intervals_ = -1,
+    bool write_snapshots_ = false
+  ): SVDOptions(dim_, samples_per_time_interval_, debug_algorithm_
+  max_time_intervals_, write_snapshots_) {};
+
+};
+
 class FakeSVD : public CAROM::SVD
 {
 public:
 
-  FakeSVD(int dim,
-	  int samples_per_time_interval, int num_time_intervals = -1)
-    : SVD(dim, samples_per_time_interval, num_time_intervals, false)
+  FakeSVD(FakeSVDOptions options)
+    : SVD(options)
   {
   }
 
@@ -120,13 +133,13 @@ public:
 
 TEST(SVDSerialTest, Test_getDim)
 {
-  FakeSVD svd(5, 2);
+  FakeSVD svd(FakeSVDOptions(5, 2));
   EXPECT_EQ(svd.getDim(), 5);
 }
 
 TEST(SVDSerialTest, Test_isNewTimeInterval)
 {
-  FakeSVD svd(5, 2);
+  FakeSVD svd(FakeSVDOptions(5, 2));
 
   /* 0 samples, so taking a sample will create a new time interval */
   EXPECT_TRUE(svd.isNewTimeInterval());
@@ -154,7 +167,7 @@ TEST(SVDSerialTest, Test_isNewTimeInterval)
 
 TEST(SVDSerialTest, Test_getNumBasisTimeIntervals)
 {
-  FakeSVD svd(5, 2);
+  FakeSVD svd(FakeSVDOptions(5, 2));
 
   /* Number of time intervals starts at zero. */
   EXPECT_EQ(svd.getNumBasisTimeIntervals(), 0);
@@ -178,7 +191,7 @@ TEST(SVDSerialTest, Test_getNumBasisTimeIntervals)
 
 TEST(SVDSerialTest, Test_getBasisIntervalStartTime)
 {
-  FakeSVD svd(5, 2);
+  FakeSVD svd(FakeSVDOptions(5, 2));
 
   /* 1st time interval starts at time 0 */
   svd.takeSample(NULL, 0, true);
@@ -206,7 +219,7 @@ TEST(SVDSerialTest, Test_getBasisIntervalStartTime)
 
 TEST(SVDSerialTest, Test_increaseTimeInterval)
 {
-  FakeSVD svd(5, 2, 2);
+  FakeSVD svd(FakeSVDOptions(5, 2, false, 2));
 
   ASSERT_NO_THROW(svd.takeSample(NULL, 0, true));
   ASSERT_NO_THROW(svd.takeSample(NULL, 0.5, true));
