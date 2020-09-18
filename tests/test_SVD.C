@@ -37,8 +37,11 @@ struct FakeSVDOptions : virtual public CAROM::SVDOptions
 
   FakeSVDOptions(int dim_,
     int samples_per_time_interval_,
-    bool debug_algorithm_ = false
-  ): SVDOptions(dim_, samples_per_time_interval_, debug_algorithm_) {};
+    bool debug_algorithm_ = false,
+    int max_time_intervals_ = -1,
+    bool write_snapshots_ = false
+  ): SVDOptions(dim_, samples_per_time_interval_, debug_algorithm_,
+  max_time_intervals_, write_snapshots_) {};
 
 };
 
@@ -109,7 +112,10 @@ public:
     */
     if (isNewTimeInterval())
     {
-      d_time_interval_start_times.push_back(time);
+      int num_time_intervals =
+          static_cast<int>(d_time_interval_start_times.size());
+      increaseTimeInterval();
+      d_time_interval_start_times[num_time_intervals] = time;
       d_num_samples = 0;
     }
 
@@ -208,6 +214,20 @@ TEST(SVDSerialTest, Test_getBasisIntervalStartTime)
   EXPECT_DOUBLE_EQ(svd.getBasisIntervalStartTime(0), 0);
   EXPECT_DOUBLE_EQ(svd.getBasisIntervalStartTime(1), 1);
   EXPECT_DOUBLE_EQ(svd.getBasisIntervalStartTime(2), 2);
+}
+
+
+TEST(SVDSerialTest, Test_increaseTimeInterval)
+{
+  FakeSVD svd(FakeSVDOptions(5, 2, false, 2));
+
+  ASSERT_NO_THROW(svd.takeSample(NULL, 0, true));
+  ASSERT_NO_THROW(svd.takeSample(NULL, 0.5, true));
+  ASSERT_NO_THROW(svd.takeSample(NULL, 1, true));
+  ASSERT_NO_THROW(svd.takeSample(NULL, 1.5, true));
+
+  /* The maximum number of time intervals is surpassed */
+  EXPECT_DEATH(svd.takeSample(NULL, 2, true), ".*");
 }
 
 int main(int argc, char* argv[])

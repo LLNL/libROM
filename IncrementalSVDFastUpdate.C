@@ -109,7 +109,7 @@ IncrementalSVDFastUpdate::buildInitialSVD(
       delete d_S;
       delete d_W;
    }
-   d_time_interval_start_times.resize(num_time_intervals+1);
+   increaseTimeInterval();
    d_time_interval_start_times[num_time_intervals] = time;
 
    // Build d_S for this new time interval.
