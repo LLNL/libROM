@@ -69,6 +69,8 @@ struct IncrementalSVDOptions : virtual public SVDOptions
    * @param[in] debug_algorithm If true results of incremental svd
    *                            algorithm will be printed to facilitate
    *                            debugging.
+   * @param[in] singular_value_tol Tolerance to determine whether or to include
+   *                               a singular value in the SVD.
    * @param[in] max_time_intervals The maximum number of time intervals.
    * @param[in] write_snapshots Whether to automatically write snapshots matrices
    *                        instead of basis matrices.
@@ -92,6 +94,7 @@ struct IncrementalSVDOptions : virtual public SVDOptions
      double sampling_time_step_scale_ = 0.8,
      double max_sampling_time_step_scale_ = 5.0,
      bool debug_algorithm_ = false,
+     double singular_value_tol_ = 0.0,
      int max_time_intervals_ = -1,
      bool write_snapshots_ = false
    ) : SVDOptions(dim_, samples_per_time_interval_, debug_algorithm_,
@@ -108,7 +111,8 @@ struct IncrementalSVDOptions : virtual public SVDOptions
    updateRightSV(updateRightSV_),
    min_sampling_time_step_scale(min_sampling_time_step_scale_),
    sampling_time_step_scale(sampling_time_step_scale_),
-   max_sampling_time_step_scale(max_sampling_time_step_scale_) {};
+   max_sampling_time_step_scale(max_sampling_time_step_scale_),
+   singular_value_tol(singular_value_tol_) {};
 
    double linearity_tol;
    int max_basis_dimension;
@@ -123,6 +127,7 @@ struct IncrementalSVDOptions : virtual public SVDOptions
    double min_sampling_time_step_scale;
    double sampling_time_step_scale;
    double max_sampling_time_step_scale;
+   double singular_value_tol;
 };
 
 /**

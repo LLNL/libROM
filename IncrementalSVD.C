@@ -321,6 +321,10 @@ IncrementalSVD::buildIncrementalSVD(
    // on the left singular vectors.
    bool linearly_dependent_sample;
    if ( k < d_linearity_tol ) {
+      if(d_rank == 0) {
+        std::cout << "linearly dependent sample! k = " << k << "\n";
+        std::cout << "d_linearity_tol = " << d_linearity_tol << "\n";
+      }
       k = 0;
       linearly_dependent_sample = true;
    } else if ( d_num_samples >= d_max_basis_dimension || add_without_increase ) {
@@ -363,6 +367,7 @@ IncrementalSVD::buildIncrementalSVD(
       if ((linearly_dependent_sample && !d_skip_linearly_dependent) ) {
          // This sample is linearly dependent and we are not skipping linearly
          // dependent samples.
+         if(d_rank == 0) std::cout << "adding linearly dependent sample!\n"; 
          addLinearlyDependentSample(A, W, sigma);
          delete sigma;
       }

@@ -128,6 +128,14 @@ class IncrementalSVDFastUpdate : public IncrementalSVD
        * U' is not distributed and the entire matrix exists on each processor.
        */
       Matrix* d_Up;
+
+      /**
+       * @brief
+       *
+       * singular_value_tol is a tolerance value used to remove small singular values
+       */
+      double d_singular_value_tol;
+
 };
 
 }

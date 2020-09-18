@@ -27,7 +27,8 @@ IncrementalSVDFastUpdate::IncrementalSVDFastUpdate(
    IncrementalSVD(
       options,
       basis_file_name),
-   d_Up(0)
+   d_Up(0),
+   d_singular_value_tol(options.singular_value_tol)
 {
    CAROM_ASSERT(options.dim > 0);
    CAROM_ASSERT(options.linearity_tol > 0.0);
@@ -133,12 +134,13 @@ IncrementalSVDFastUpdate::buildInitialSVD(
      d_W->item(0, 0) = 1.0;
    }
 
-   // Compute the basis vectors for this time interval.
-   computeBasis();
-
    // We now have the first sample for the new time interval.
    d_num_samples = 1;
    d_num_rows_of_W = 1;
+
+   // Compute the basis vectors for this time interval.
+   computeBasis();
+
 }
 
 void
@@ -156,6 +158,44 @@ IncrementalSVDFastUpdate::computeBasis()
      delete d_basis_right;
      d_basis_right = new Matrix(*d_W);
    }
+
+  if(d_rank == 0) {
+       std::cout << "d_num_samples = " << d_num_samples << "\n";
+       std::cout << "d_num_rows_of_W = " << d_num_rows_of_W << "\n";
+       std::cout << "d_singular_value_tol = " << d_singular_value_tol << "\n";
+       std::cout << "smallest SV = " << d_S->item(d_num_samples-1,d_num_samples-1) << "\n";
+       std::cout << "next smallest SV = " << d_S->item(d_num_samples-2,d_num_samples-2) << "\n";
+   }
+   // remove the smallest singular value if it is smaller than d_singular_value_tol
+   if ( (d_singular_value_tol != 0.0) &&
+        (d_S->item(d_num_samples-1,d_num_samples-1) < d_singular_value_tol) &&
+        (d_num_samples != 1) ) {
+
+       if (d_rank == 0) std::cout << "removing a small singular value!\n";
+
+       Matrix* d_basis_new = new Matrix(d_dim, d_num_samples-1, false);
+       for (int row = 0; row < d_dim; ++row) {
+          for (int col = 0; col < d_num_samples-1; ++col) {
+              d_basis_new->item(row, col) = d_basis->item(row,col);
+          }
+       }
+       delete d_basis;
+       d_basis = d_basis_new;
+
+       if (d_updateRightSV)
+       {
+           Matrix* d_basis_right_new = new Matrix(d_num_rows_of_W, d_num_samples-1, false);
+           for (int row = 0; row < d_num_rows_of_W; ++row) {
+              for (int col = 0; col < d_num_samples-1; ++col) {
+                  d_basis_right_new->item(row, col) = d_basis_right->item(row,col);
+              }
+           }
+           delete d_basis_right;
+           d_basis_right = d_basis_right_new;
+       }
+       --d_num_samples;
+   }
+
 }
 
 void
@@ -288,6 +328,7 @@ IncrementalSVDFastUpdate::addNewSample(
    // We now have another sample.
    ++d_num_samples;
    ++d_num_rows_of_W;
+
 
    // Reorthogonalize if necessary.
    long int max_U_dim;
