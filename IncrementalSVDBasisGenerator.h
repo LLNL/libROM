@@ -39,23 +39,8 @@ class IncrementalSVDBasisGenerator : public SVDBasisGenerator
        *                            containing the basis vectors.  Each process
        *                            will append its process ID to this base
        *                            name.
-<<<<<<< HEAD
-       * @param[in] save_state If true the state of the SVD will be written to
-       *                       disk when the object is deleted.  If there are
-       *                       multiple time intervals then the state will not
-       *                       be saved as restoring such a state makes no
-       *                       sense.
-       * @param[in] restore_state If true the state of the SVD will be restored
-       *                          when the object is created.
-       * @param[in] update_rightSV Whether to update the right SV or not.
-       * @param[in] write_snapshots Whether to automatically write snapshots matrices
-       *                        instead of basis matrices.
-=======
->>>>>>> origin/master
        * @param[in] file_format The format of the file containing the basis
        *                        vectors.
-       * @param[in] write_snapshots Whether to automatically write snapshots matrices
-       *                        instead of basis matrices.
        */
       IncrementalSVDBasisGenerator(
          IncrementalSVDOptions options,

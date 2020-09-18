@@ -69,6 +69,7 @@ struct IncrementalSVDOptions : virtual public SVDOptions
    * @param[in] debug_algorithm If true results of incremental svd
    *                            algorithm will be printed to facilitate
    *                            debugging.
+   * @param[in] max_time_intervals The maximum number of time intervals.
    * @param[in] write_snapshots Whether to automatically write snapshots matrices
    *                        instead of basis matrices.
    */
