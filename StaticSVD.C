@@ -127,8 +127,7 @@ StaticSVD::takeSample(
          d_snapshots = nullptr;
     }
       d_num_samples = 0;
-      d_time_interval_start_times.resize(
-                static_cast<unsigned>(num_time_intervals) + 1);
+      increaseTimeInterval();
       d_time_interval_start_times[static_cast<unsigned>(num_time_intervals)] =
           time;
       d_basis = nullptr;

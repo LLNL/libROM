@@ -44,6 +44,9 @@ namespace CAROM {
      *                            basis.
      * @param[in] debug_algorithm If true results of static svd algorithm
      *                            will be printed to facilitate debugging.
+     * @param[in] max_time_intervals The maximum number of time intervals.
+     * @param[in] write_snapshots Whether to automatically write snapshots matrices
+     *                        instead of basis matrices.
      */
 
      StaticSVDOptions() = delete;
@@ -53,8 +56,11 @@ namespace CAROM {
        bool output_rightSV_ = false,
        int max_basis_dimension_ = std::numeric_limits<int>::max(),
        double sigma_tolerance_ = 0,
-       bool debug_algorithm_ = false
-     ) : SVDOptions(dim_, samples_per_time_interval_, debug_algorithm_),
+       bool debug_algorithm_ = false,
+       int max_time_intervals_ = -1,
+       bool write_snapshots_ = false
+     ) : SVDOptions(dim_, samples_per_time_interval_, debug_algorithm_,
+     max_time_intervals_, write_snapshots_),
      output_rightSV(output_rightSV_),
      max_basis_dimension(max_basis_dimension_),
      sigma_tolerance(sigma_tolerance_) {};

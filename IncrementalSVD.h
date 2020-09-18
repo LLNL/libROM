@@ -59,6 +59,7 @@ struct IncrementalSVDOptions : virtual public SVDOptions
    *                       sense.
    * @param[in] restore_state If true the state of the SVD will be restored
    *                          when the object is created.
+   * @param[in] update_rightSV Whether to update the right SV or not.
    * @param[in] min_sampling_time_step_scale Minimum overall scale factor
    *                                         to apply to time step.
    * @param[in] sampling_time_step_scale Scale factor to apply to sampling
@@ -68,6 +69,9 @@ struct IncrementalSVDOptions : virtual public SVDOptions
    * @param[in] debug_algorithm If true results of incremental svd
    *                            algorithm will be printed to facilitate
    *                            debugging.
+   * @param[in] max_time_intervals The maximum number of time intervals.
+   * @param[in] write_snapshots Whether to automatically write snapshots matrices
+   *                        instead of basis matrices.
    */
 
    IncrementalSVDOptions() = delete;
@@ -87,8 +91,11 @@ struct IncrementalSVDOptions : virtual public SVDOptions
      double min_sampling_time_step_scale_ = 0.1,
      double sampling_time_step_scale_ = 0.8,
      double max_sampling_time_step_scale_ = 5.0,
-     bool debug_algorithm_ = false
-   ) : SVDOptions(dim_, samples_per_time_interval_, debug_algorithm_),
+     bool debug_algorithm_ = false,
+     int max_time_intervals_ = -1,
+     bool write_snapshots_ = false
+   ) : SVDOptions(dim_, samples_per_time_interval_, debug_algorithm_,
+     max_time_intervals, write_snapshots_),
    linearity_tol(linearity_tol_),
    max_basis_dimension(max_basis_dimension_),
    initial_dt(initial_dt_),
