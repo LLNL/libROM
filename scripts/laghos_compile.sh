@@ -25,14 +25,12 @@ if [ "$(uname)" == "Darwin" ]; then
   if [[ $? != 0 ]] ; then
       xcode-select --install
   fi
-  brew list open-mpi > /dev/null || install open-mpi
+  brew list open-mpi > /dev/null || brew install open-mpi
   brew list openblas > /dev/null || brew install openblas
   brew list lapack > /dev/null || brew install lapack
   brew list scalapack > /dev/null || brew install scalapack
   brew list hdf5 > /dev/null || brew install hdf5
-  cd build
-  rm -rf *
-  cmake ..
+  cmake ${REPO_PREFIX}
   make
 elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
   TOOLCHAIN_FILE=${REPO_PREFIX}/cmake/toolchains/ic19-toss_3_x86_64_ib-librom-dev.cmake

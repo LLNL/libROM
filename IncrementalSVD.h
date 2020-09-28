@@ -98,7 +98,7 @@ struct IncrementalSVDOptions : virtual public SVDOptions
      int max_time_intervals_ = -1,
      bool write_snapshots_ = false
    ) : SVDOptions(dim_, samples_per_time_interval_, debug_algorithm_,
-     max_time_intervals, write_snapshots_),
+     max_time_intervals_, write_snapshots_),
    linearity_tol(linearity_tol_),
    max_basis_dimension(max_basis_dimension_),
    initial_dt(initial_dt_),
