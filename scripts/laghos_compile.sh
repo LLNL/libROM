@@ -15,20 +15,21 @@ pushd ${REPO_PREFIX}/build
 rm -rf *
 
 if [ "$(uname)" == "Darwin" ]; then
-  which -s brew
+  which -s brew > /dev/null
   if [[ $? != 0 ]] ; then
       # Install Homebrew
       echo "Homebrew installation is required."
       exit 1
-  else
-      brew update
   fi
-  xcode-select --install
-  brew install open-mpi
-  brew install openblas
-  brew install lapack
-  brew install scalapack
-  brew install hdf5
+  xcode-select -p > /dev/null
+  if [[ $? != 0 ]] ; then
+      xcode-select --install
+  fi
+  brew list open-mpi > /dev/null || install open-mpi
+  brew list openblas > /dev/null || brew install openblas
+  brew list lapack > /dev/null || brew install lapack
+  brew list scalapack > /dev/null || brew install scalapack
+  brew list hdf5 > /dev/null || brew install hdf5
   cd build
   rm -rf *
   cmake ..
