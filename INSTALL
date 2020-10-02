@@ -1,24 +1,10 @@
 # Installing libROM
 
-For LLNL LC Machines:
+To copmile libROM for Laghos (Mac and LLNL LC Machines):
+1. ./scripts/laghos_compile.sh
 
-1) To compile libROM for Laghos: ./scripts/laghos_compile.sh
-2) To compile libROM for Ardra: ./scripts/ardra_compile.sh
-
-For MAC:
-
-Install your dependencies:
-1) xcode-select --install
-2) brew install open-mpi
-3) brew install openblas
-4) brew install lapack
-5) brew install scalapack
-6) brew install hdf5
-
-Build libROM:
-1) cd build
-2) cmake ..
-3) make
+To copmile libROM for Ardra (LLNL LC Machines only):
+1. ./scripts/ardra_compile.sh
 
 # Installing via Spack
 
