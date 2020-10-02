@@ -164,7 +164,9 @@ IncrementalSVDFastUpdate::computeBasis()
        std::cout << "d_num_rows_of_W = " << d_num_rows_of_W << "\n";
        std::cout << "d_singular_value_tol = " << d_singular_value_tol << "\n";
        std::cout << "smallest SV = " << d_S->item(d_num_samples-1,d_num_samples-1) << "\n";
-       std::cout << "next smallest SV = " << d_S->item(d_num_samples-2,d_num_samples-2) << "\n";
+       if (d_num_samples > 1) {
+            std::cout << "next smallest SV = " << d_S->item(d_num_samples-2,d_num_samples-2) << "\n";
+       }
    }
    // remove the smallest singular value if it is smaller than d_singular_value_tol
    if ( (d_singular_value_tol != 0.0) &&
