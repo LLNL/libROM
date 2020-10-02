@@ -129,6 +129,11 @@ module scalapack_wrapper
         integer(C_INT) :: dou, dov, done ! Integer to avoid logical interop
     end type SVDManager
 
+    type, bind(C) :: QRManager
+        type(C_PTR) :: A, ipiv, tau, work ! These are pointers to SLPK_Matrix in C.
+        integer(C_INT) :: ipivSize, tauSize, lwork
+    end type QRManager
+
     ! Declarations of functionality implemented in the associated C code.
     interface
         subroutine get_local_storage(A) bind(C)
@@ -523,6 +528,61 @@ subroutine factorize(mgr) bind(C)
     endif
     deallocate(work)
     mgr%done = 1
+end subroutine
+
+subroutine qrfactorize(mgr) bind(C)
+    use mpi
+    use ISO_FORTRAN_ENV, only: error_unit
+
+    interface
+        subroutine qrfactorize_prep(mgr) bind(C)
+            import QRManager
+            type(QRManager), intent(inout) :: mgr
+        end subroutine
+    end interface
+
+    type(SLPK_Matrix), pointer :: A
+    integer :: desca(9), descu(9), descv(9), lwork
+    integer :: mrank, ierr
+    type(QRManager) :: mgr
+
+    real(REAL_KIND) :: bestwork(1)
+    real(REAL_KIND), allocatable :: work(:)
+
+    call descinit(desca, A%m, A%n, A%mb, A%nb, 0, 0, A%ctxt, A%mm, ierr)
+
+    ! LOCc(N)
+    ! TODO: isn't this just A%mn after initialize_matrix?
+    mgr%ipivSize = numroc(A%n, A%nb, A%pj, 0, A%npcol)
+
+    ! TODO: compute tauSize correctly. I think this is an overestimate?
+    mgr%tauSize = mgr%ipivSize
+
+    !mgr%lwork = ipivSize + 
+    
+    lwork = -1
+
+    call qrfactorize_prep(mgr)
+
+    ! First call just sets work(1) to work size
+    call pdgeqpf(A%m, A%n, A%mdata, 1, 1, desca, mgr%ipiv, mgr%tau, &
+         & bestwork, lwork, ierr)
+
+    lwork = bestwork(1)
+    allocate(work(lwork))
+
+    ! Now work is allocated, and factorization is done
+    call pdgeqpf(A%m, A%n, A%mdata, 1, 1, desca, mgr%ipiv, mgr%tau, work, &
+         & lwork, ierr)
+
+    if (mrank .eq. 0) then
+        if (ierr .lt. 0) then
+            write(error_unit, *) "QR: error: argument ", -ierr, " had an illegal value"
+        elseif (ierr .gt. 0) then
+            write(error_unit, *) "QR: unknown error"
+        endif
+    endif
+    deallocate(work)
 end subroutine
 
 end module

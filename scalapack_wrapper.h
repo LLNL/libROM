@@ -69,7 +69,7 @@ struct SLPK_Matrix
     int pi, pj;
     int mb, nb;
 
-    // Parameters desribing the local storage layout
+    // Parameters describing the local storage layout
     int mm, mn;
     REAL_TYPE* mdata;
 };
@@ -277,6 +277,18 @@ void wrapper_finalize();
  */
 void print_debug_info(struct SLPK_Matrix* A);
 
+struct QRManager
+{
+    struct SLPK_Matrix* A;
+    int* ipiv;
+  int ipivSize, tauSize, lwork;
+  double *tau, *work;  // TODO: remove work?
+};
+
+void qr_init(struct QRManager* mgr, struct SLPK_Matrix* A);
+
+void qrfactorize(struct QRManager*);
+  
 #ifdef __cplusplus
 }
 #endif

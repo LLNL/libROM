@@ -23,6 +23,8 @@
 #include <El.hpp>
 #endif
 
+#include "scalapack_wrapper.h"
+
 /* Use automatically detected Fortran name-mangling scheme */
 #define dgetrf CAROM_FC_GLOBAL(dgetrf, DGETRF)
 #define dgetri CAROM_FC_GLOBAL(dgetri, DGETRI)
@@ -794,13 +796,13 @@ Matrix::qrcp_pivots_transpose(int* row_pivot,
 					pivots_requested);
   }
   else{
-#ifdef CAROM_HAS_ELEMENTAL
+    //#ifdef CAROM_HAS_ELEMENTAL
     return qrcp_pivots_transpose_distributed(row_pivot,
 					     row_pivot_owner,
 					     pivots_requested);
-#else
-    CAROM_ASSERT(false);
-#endif
+    //#else
+    //    CAROM_ASSERT(false);
+    //#endif
   }
 }
 
@@ -896,20 +898,125 @@ Matrix::qrcp_pivots_transpose_distributed(int* row_pivot,
 					  int  pivots_requested)
 const
 {
-#ifdef CAROM_HAS_ELEMENTAL
-  // Shim to design interface; not implemented yet
-
   // Check if distributed; otherwise, use serial implementation
   CAROM_ASSERT(distributed());
+  
+#ifdef CAROM_HAS_ELEMENTAL
+  // Shim to design interface; not implemented yet
 
   // Elemental implementation
   return qrcp_pivots_transpose_distributed_elemental
     (row_pivot, row_pivot_owner, pivots_requested);
-
-  // TODO(oxberry1): ScaLAPACK implementation?
 #else
-  CAROM_ASSERT(false);
+  qrcp_pivots_transpose_distributed_scalapack
+    (row_pivot, row_pivot_owner, pivots_requested);
 #endif
+}
+
+void
+Matrix::qrcp_pivots_transpose_distributed_scalapack
+(int* row_pivot, int* row_pivot_owner, int pivots_requested)
+const
+{
+  // Check if distributed; otherwise, use serial implementation
+  CAROM_ASSERT(distributed());
+
+  int num_total_rows     = d_num_rows;
+  const int reduce_count = 1;
+  CAROM_ASSERT(MPI_Allreduce(MPI_IN_PLACE,
+			     &num_total_rows,
+			     reduce_count,
+			     MPI_INT,
+			     MPI_SUM,
+			     comm) == MPI_SUCCESS);
+
+  int *row_offset = new int[d_num_procs + 1];
+  row_offset[d_num_procs + 1] = num_total_rows;
+
+  int my_rank;
+  const bool success = MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+  CAROM_ASSERT(success);
+  
+  row_offset[my_rank] = d_num_rows;
+
+  const int send_recv_count = 1;
+  CAROM_ASSERT(MPI_Allgather(MPI_IN_PLACE,
+			     send_recv_count,
+			     MPI_INT,
+			     row_offset,
+			     send_recv_count,
+			     MPI_INT,
+			     comm) == MPI_SUCCESS);
+
+  for (size_t i = d_num_procs - 1; i >= 0; i--) {
+    row_offset[i] = row_offset[i + 1] - row_offset[i];
+  }
+  CAROM_ASSERT(row_offset[0] == 0);
+  
+  SLPK_Matrix slpk;
+  int blocksize = row_offset[d_num_procs] / d_num_procs;
+  if (row_offset[d_num_procs] % d_num_procs != 0) blocksize += 1;
+  
+  initialize_matrix(&slpk, d_num_cols, row_offset[d_num_procs], 1, d_num_procs, 1, blocksize);  // transposed
+
+  CAROM_ASSERT(d_num_cols == pivots_requested); // Otherwise, should we just find the QR of the submatrix consisting of the first (pivots_requested) columns?
+  
+  for (int rank = 0; rank < d_num_procs; ++rank) {
+    // Take the row-major data in d_mat and put it in a transposed column-major array in slpk
+    scatter_block(&slpk, 1, row_offset[rank]+1,
+		  d_mat,
+		  d_num_cols, row_offset[rank+1] - row_offset[rank],
+		  rank);
+   }
+
+  QRManager QRmgr;
+  qr_init(&QRmgr, &slpk);  
+  qrfactorize(&QRmgr);
+
+  // Just gather the pivots to root and discard the factorization
+  CAROM_ASSERT(pivots_requested <= QRmgr.ipivSize);
+  CAROM_ASSERT(pivots_requested <= std::min(d_num_rows, d_num_cols));
+
+  const int scount = std::max(0, std::min(pivots_requested, row_offset[my_rank+1]) - row_offset[my_rank]);
+  int *mypivots = (scount > 0) ? new int[scount] : NULL;
+
+  for (int i=0; i<scount; ++i)
+    mypivots[i] = QRmgr.ipiv[i];
+  
+  MPI_Gather(mypivots, scount, MPI_INT, row_pivot, pivots_requested, MPI_INT, 0, MPI_COMM_WORLD);
+
+  delete [] mypivots;
+
+  if (my_rank == 0)
+    {
+      for (int i=0; i<pivots_requested; ++i)
+	{
+	  row_pivot_owner[i] = -1;
+	  for (int j=0; j<d_num_procs; ++j)
+	    {
+	      if (row_offset[j] <= row_pivot[i])
+		{
+		  row_pivot_owner[i] = j;
+		  break;
+		}
+	    }
+	  CAROM_ASSERT(row_pivot_owner[i] >= 0);
+	  CAROM_ASSERT(row_offset[row_pivot_owner[i]] <= i && i < row_offset[row_pivot_owner[i]+1]);
+	}
+    }
+  else
+    {
+      for (int i=0; i<scount; ++i)
+	row_pivot[i] = QRmgr.ipiv[i];  // TODO: is this used on non-root processes?
+    }
+  
+  free_matrix_data(&slpk);
+  release_context(&slpk);
+
+  free(QRmgr.ipiv);
+  free(QRmgr.tau);
+  
+  delete [] row_offset;
 }
 
 void

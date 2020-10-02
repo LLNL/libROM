@@ -804,6 +804,11 @@ class Matrix
       */
      void read(const std::string& base_file_name);
 
+     double *getData()
+     {
+       return d_mat;
+     }
+     
    private:
       /**
        * @brief Default constructor is not implemented.
@@ -845,6 +850,11 @@ class Matrix
        */
       void
       qrcp_pivots_transpose_distributed(int* row_pivot,
+					int* row_pivot_owner,
+					int  pivots_requested) const;
+
+      void
+      qrcp_pivots_transpose_distributed_scalapack(int* row_pivot,
 					int* row_pivot_owner,
 					int  pivots_requested) const;
 
