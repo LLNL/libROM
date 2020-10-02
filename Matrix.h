@@ -242,7 +242,7 @@ class Matrix
       mult(
          const Matrix* other) const
       {
-         CAROM_ASSERT(other != 0);
+         CAROM_VERIFY(other != 0);
          return mult(*other);
       }
 
@@ -333,7 +333,7 @@ class Matrix
       mult(
          const Vector* other) const
       {
-         CAROM_ASSERT(other != 0);
+         CAROM_VERIFY(other != 0);
          return mult(*other);
       }
 
@@ -491,7 +491,7 @@ class Matrix
       transposeMult(
          const Matrix* other) const
       {
-         CAROM_ASSERT(other != 0);
+         CAROM_VERIFY(other != 0);
          return transposeMult(*other);
       }
 
@@ -580,7 +580,7 @@ class Matrix
       transposeMult(
          const Vector* other) const
       {
-         CAROM_ASSERT(other != 0);
+         CAROM_VERIFY(other != 0);
          return transposeMult(*other);
       }
 
@@ -720,8 +720,8 @@ class Matrix
          int row,
          int col) const
       {
-         CAROM_ASSERT((0 <= row) && (row < numRows()));
-         CAROM_ASSERT((0 <= col) && (col < numColumns()));
+         CAROM_VERIFY((0 <= row) && (row < numRows()));
+         CAROM_VERIFY((0 <= col) && (col < numColumns()));
          return d_mat[row*d_num_cols+col];
       }
 
@@ -743,8 +743,8 @@ class Matrix
          int row,
          int col)
       {
-         CAROM_ASSERT((0 <= row) && (row < numRows()));
-         CAROM_ASSERT((0 <= col) && (col < numColumns()));
+         CAROM_VERIFY((0 <= row) && (row < numRows()));
+         CAROM_VERIFY((0 <= col) && (col < numColumns()));
          return d_mat[row*d_num_cols+col];
       }
 

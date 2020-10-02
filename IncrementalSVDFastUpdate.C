@@ -30,9 +30,9 @@ IncrementalSVDFastUpdate::IncrementalSVDFastUpdate(
    d_Up(0),
    d_singular_value_tol(options.singular_value_tol)
 {
-   CAROM_ASSERT(options.dim > 0);
-   CAROM_ASSERT(options.linearity_tol > 0.0);
-   CAROM_ASSERT(options.samples_per_time_interval > 0);
+   CAROM_VERIFY(options.dim > 0);
+   CAROM_VERIFY(options.linearity_tol > 0.0);
+   CAROM_VERIFY(options.samples_per_time_interval > 0);
 
    // If the state of the SVD is to be restored, do it now.  The base class,
    // IncrementalSVD, has already opened the database and restored the state
@@ -93,8 +93,8 @@ IncrementalSVDFastUpdate::buildInitialSVD(
    double* u,
    double time)
 {
-   CAROM_ASSERT(u != 0);
-   CAROM_ASSERT(time >= 0.0);
+   CAROM_VERIFY(u != 0);
+   CAROM_VERIFY(time >= 0.0);
 
    // We have a new time interval.
 
@@ -204,8 +204,8 @@ IncrementalSVDFastUpdate::addLinearlyDependentSample(
    const Matrix* W,
    const Matrix* sigma)
 {
-   CAROM_ASSERT(A != 0);
-   CAROM_ASSERT(sigma != 0);
+   CAROM_VERIFY(A != 0);
+   CAROM_VERIFY(sigma != 0);
 
    // Chop a row and a column off of A to form Amod.  Also form
    // d_S by chopping a row and a column off of sigma.
@@ -261,9 +261,9 @@ IncrementalSVDFastUpdate::addNewSample(
    const Matrix* W,
    Matrix* sigma)
 {
-   CAROM_ASSERT(j != 0);
-   CAROM_ASSERT(A != 0);
-   CAROM_ASSERT(sigma != 0);
+   CAROM_VERIFY(j != 0);
+   CAROM_VERIFY(A != 0);
+   CAROM_VERIFY(sigma != 0);
 
    // Add j as a new column of d_U.
    Matrix* newU = new Matrix(d_dim, d_num_samples+1, true);

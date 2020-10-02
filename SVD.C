@@ -30,9 +30,9 @@ SVD::SVD(
    d_time_interval_start_times(0),
    d_debug_algorithm(options.debug_algorithm)
 {
-   CAROM_ASSERT(options.dim > 0);
-   CAROM_ASSERT(options.max_time_intervals == -1 || options.max_time_intervals > 0);
-   CAROM_ASSERT(options.samples_per_time_interval > 0);
+   CAROM_VERIFY(options.dim > 0);
+   CAROM_VERIFY(options.max_time_intervals == -1 || options.max_time_intervals > 0);
+   CAROM_VERIFY(options.samples_per_time_interval > 0);
 }
 
 SVD::~SVD()

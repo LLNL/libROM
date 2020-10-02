@@ -274,7 +274,7 @@ class Vector
       inner_product(
          const Vector* other) const
       {
-         CAROM_ASSERT(other != 0);
+         CAROM_VERIFY(other != 0);
          return inner_product(*other);
       }
 
@@ -332,7 +332,7 @@ class Vector
       plus(
          const Vector* other) const
       {
-         CAROM_ASSERT(other != 0);
+         CAROM_VERIFY(other != 0);
          return plus(*other);
       }
 
@@ -410,7 +410,7 @@ class Vector
          double factor,
          const Vector* other)
       {
-         CAROM_ASSERT(other != 0);
+         CAROM_VERIFY(other != 0);
          return plusAx(factor, *other);
       }
 
@@ -480,7 +480,7 @@ class Vector
          double factor,
          const Vector* other)
       {
-         CAROM_ASSERT(other != 0);
+         CAROM_VERIFY(other != 0);
          plusEqAx(factor, *other);
       }
 
@@ -520,7 +520,7 @@ class Vector
       minus(
          const Vector* other) const
       {
-         CAROM_ASSERT(other != 0);
+         CAROM_VERIFY(other != 0);
          return minus(*other);
       }
 
@@ -617,7 +617,7 @@ class Vector
       item(
          int i) const
       {
-         CAROM_ASSERT((0 <= i) && (i < dim()));
+         CAROM_VERIFY((0 <= i) && (i < dim()));
          return d_vec[i];
       }
 
@@ -636,7 +636,7 @@ class Vector
       item(
          int i)
       {
-         CAROM_ASSERT((0 <= i) && (i < dim()));
+         CAROM_VERIFY((0 <= i) && (i < dim()));
          return d_vec[i];
       }
 

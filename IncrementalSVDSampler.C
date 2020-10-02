@@ -34,13 +34,13 @@ IncrementalSVDSampler::IncrementalSVDSampler(
    d_dt(options.initial_dt),
    d_next_sample_time(0.0)
 {
-   CAROM_ASSERT(options.initial_dt > 0.0);
-   CAROM_ASSERT(options.sampling_tol > 0.0);
-   CAROM_ASSERT(options.max_time_between_samples > 0.0);
-   CAROM_ASSERT(options.min_sampling_time_step_scale >= 0.0);
-   CAROM_ASSERT(options.sampling_time_step_scale >= 0.0);
-   CAROM_ASSERT(options.max_sampling_time_step_scale >= 0.0);
-   CAROM_ASSERT(options.min_sampling_time_step_scale <= options.max_sampling_time_step_scale);
+   CAROM_VERIFY(options.initial_dt > 0.0);
+   CAROM_VERIFY(options.sampling_tol > 0.0);
+   CAROM_VERIFY(options.max_time_between_samples > 0.0);
+   CAROM_VERIFY(options.min_sampling_time_step_scale >= 0.0);
+   CAROM_VERIFY(options.sampling_time_step_scale >= 0.0);
+   CAROM_VERIFY(options.max_sampling_time_step_scale >= 0.0);
+   CAROM_VERIFY(options.min_sampling_time_step_scale <= options.max_sampling_time_step_scale);
 
    d_updateRightSV = options.updateRightSV;
 
@@ -88,9 +88,9 @@ IncrementalSVDSampler::computeNextSampleTime(
    double* rhs_in,
    double time)
 {
-   CAROM_ASSERT(u_in != 0);
-   CAROM_ASSERT(rhs_in != 0);
-   CAROM_ASSERT(time >= 0.0);
+   CAROM_VERIFY(u_in != 0);
+   CAROM_VERIFY(rhs_in != 0);
+   CAROM_VERIFY(time >= 0.0);
 
    // Check that u_in is not non-zero.
    int dim = d_svd->getDim();
