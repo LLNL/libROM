@@ -685,6 +685,8 @@ class Matrix
       void
       inverse();
 
+      void transpose();
+      
       /**
        * @brief Compute the leading numColumns() column pivots from a
        * QR decomposition with column pivots (QRCP) of the transpose

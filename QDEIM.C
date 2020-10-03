@@ -27,18 +27,20 @@ void
 QDEIM(const Matrix* f_basis,
       int num_f_basis_vectors_used,
       int* f_sampled_row,
-      int* f_sampled_row_owner,
-      Matrix& f_basis_sampled,
+      int* f_sampled_rows_per_proc,
+      Matrix& f_basis_sampled_inv,
       const int myid)
 {
   // This algorithm determines the rows of f that should be sampled, the
-  // processor that owns each sampled row, and fills f_basis_sampled with the
+  // processor that owns each sampled row, and fills f_basis_sampled_inv with the
   // sampled rows of the basis of the RHS.
 
   // Compute the number of basis vectors used; this number can't
   // exceed the number of columns of the matrix.
   const int num_basis_vectors_used = std::min(num_f_basis_vectors_used,
 					      f_basis->numColumns());
+
+  int *f_sampled_row_owner = new int[num_basis_vectors_used];
 
   // QDEIM computes selection/interpolation indices by taking a
   // column-pivoted QR-decomposition of the transpose of its input
@@ -49,7 +51,7 @@ QDEIM(const Matrix* f_basis,
 
   if (f_basis->distributed())
     {
-      // Gather the sampled rows to root process in f_basis_sampled
+      // Gather the sampled rows to root process in f_basis_sampled_inv
 
       // On root, f_sampled_row* contains all global pivots.
       // On non-root processes, they contain the local pivots.
@@ -80,8 +82,11 @@ QDEIM(const Matrix* f_basis,
 	  CAROM_ASSERT(disp[num_procs-1] + n[num_procs-1] == num_basis_vectors_used);
 
 	  for (int r=0; r<num_procs; ++r)
-	    n[r] = 0;
-
+	    {
+	      f_sampled_rows_per_proc[r] = n[r];
+	      n[r] = 0;
+	    }
+	  
 	  for (int i=0; i<num_basis_vectors_used; ++i)
 	    {
 	      const int owner = f_sampled_row_owner[i];
@@ -90,6 +95,10 @@ QDEIM(const Matrix* f_basis,
 	    }
 	}
 
+      MPI_Bcast(f_sampled_rows_per_proc, num_procs, MPI_INT, 0, MPI_COMM_WORLD);
+      
+      // TODO: eliminate n and the following MPI_Scatter
+      
       int count = 0;
       MPI_Scatter(n, 1, MPI_INT, &count, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
@@ -129,13 +138,20 @@ QDEIM(const Matrix* f_basis,
 	    }
 	}
       
-      MPI_Gatherv(my_sampled_row_data, count*num_basis_vectors_used, MPI_DOUBLE, f_basis_sampled.getData(), n, disp, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+      MPI_Gatherv(my_sampled_row_data, count*num_basis_vectors_used, MPI_DOUBLE, f_basis_sampled_inv.getData(), n, disp, MPI_DOUBLE, 0, MPI_COMM_WORLD);
       
       delete [] n;
       delete [] disp;
       delete [] my_sampled_rows;
       delete [] all_sampled_rows;
       delete [] row_offset;
+
+      // Subtract row_offset to convert f_sampled_row from global to local indices
+      os = row_offset[rank];
+      for (int i=0; i<num_basis_vectors_used; ++i)
+	{
+	  f_sampled_row[i] -= os;
+	}
     }
   else
     {
@@ -143,11 +159,20 @@ QDEIM(const Matrix* f_basis,
       // rows of the sampled basis
       for (int i = 0; i < num_basis_vectors_used; i++) {
 	for (int j = 0; j < num_basis_vectors_used; j++) {
-	  f_basis_sampled.item(i, j) = f_basis->item(f_sampled_row[i], j);
+	  f_basis_sampled_inv.item(i, j) = f_basis->item(f_sampled_row[i], j);
 	}
       }
+
+      f_sampled_rows_per_proc[0] = num_basis_vectors_used;
     }
+
+  delete [] f_sampled_row_owner;
   
+  // Now invert f_basis_sampled_inv, storing its transpose.
+  //f_basis_sampled_inv.transposePseudoinverse();  // TODO?
+  
+  f_basis_sampled_inv.inverse();
+  f_basis_sampled_inv.transpose();
 } // end void QDEIM
 
 } // end namespace CAROM

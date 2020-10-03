@@ -616,6 +616,21 @@ Matrix::inverse(
    delete [] work;
 }
 
+void Matrix::transpose()
+{
+  CAROM_ASSERT(numRows() == numColumns());  // Avoid resizing
+  const int n = numRows();
+  for (int i=0; i<n; ++i)
+    {
+      for (int j=0; j<n; ++j)
+	{
+	  double t = d_mat[i*n+j];
+	  d_mat[i*n+j] = d_mat[j*n+i];
+	  d_mat[j*n+i] = t;
+	}
+    }
+}
+
 void
 Matrix::inverse()
 {
