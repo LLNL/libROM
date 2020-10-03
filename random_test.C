@@ -123,8 +123,8 @@ main(
    // Construct the incremental basis generator to use the fast update
    // incremental algorithm and the incremental sampler.
 
-   CAROM::IncrementalSVDOptions incremental_svd_options(dim, 1.0e-6,
-     dim, 1.0e-6, num_samples, 1.0e-2, 0.001);
+   CAROM::IncrementalSVDOptions incremental_svd_options(dim, num_samples, 
+      1.0e-6, dim, 1.0e-6, 1.0e-2, 0.001);
    incremental_svd_options.fast_update = true;
    incremental_svd_options.debug_algorithm = true;
 
