@@ -281,8 +281,8 @@ struct QRManager
 {
     struct SLPK_Matrix* A;
     int* ipiv;
-  int ipivSize, tauSize, lwork;
   double *tau, *work;  // TODO: remove work?
+  int ipivSize, tauSize, lwork;
 };
 
 void qr_init(struct QRManager* mgr, struct SLPK_Matrix* A);

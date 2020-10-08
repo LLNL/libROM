@@ -58,8 +58,7 @@ QDEIM(const Matrix* f_basis,
 
       int rank, num_procs;
       {
-	const bool success = MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-	CAROM_ASSERT(success);
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	CAROM_ASSERT(rank == myid);
 	MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
       }
@@ -114,7 +113,7 @@ QDEIM(const Matrix* f_basis,
 				 MPI_INT, MPI_COMM_WORLD) == MPI_SUCCESS);
 
       int os = 0;
-      for (int i=0; i<rank; ++i)
+      for (int i=0; i<num_procs; ++i)
 	{
 	  os += row_offset[i];
 	  row_offset[i] = os - row_offset[i];
@@ -140,18 +139,18 @@ QDEIM(const Matrix* f_basis,
       
       MPI_Gatherv(my_sampled_row_data, count*num_basis_vectors_used, MPI_DOUBLE, f_basis_sampled_inv.getData(), n, disp, MPI_DOUBLE, 0, MPI_COMM_WORLD);
       
-      delete [] n;
-      delete [] disp;
-      delete [] my_sampled_rows;
-      delete [] all_sampled_rows;
-      delete [] row_offset;
-
       // Subtract row_offset to convert f_sampled_row from global to local indices
       os = row_offset[rank];
       for (int i=0; i<num_basis_vectors_used; ++i)
 	{
 	  f_sampled_row[i] -= os;
 	}
+
+      delete [] n;
+      delete [] disp;
+      delete [] my_sampled_rows;
+      delete [] all_sampled_rows;
+      delete [] row_offset;
     }
   else
     {

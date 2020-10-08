@@ -541,39 +541,51 @@ subroutine qrfactorize(mgr) bind(C)
         end subroutine
     end interface
 
-    type(SLPK_Matrix), pointer :: A
-    integer :: desca(9), descu(9), descv(9), lwork
+    type(QRManager), intent(inout) :: mgr
     integer :: mrank, ierr
-    type(QRManager) :: mgr
 
-    real(REAL_KIND) :: bestwork(1)
+    type(SLPK_Matrix), pointer :: A
+    integer :: desca(9), lwork
+
     real(REAL_KIND), allocatable :: work(:)
+    real(REAL_KIND), allocatable :: tau(:)
+    real(REAL_KIND) :: bestwork(1)
 
+    real(REAL_KIND), pointer :: Adata(:, :)
+    !integer(C_INT), allocatable :: ipiv(:)
+    integer(C_INT), pointer :: ipiv(:)
+
+    call MPI_Comm_rank(MPI_COMM_WORLD, mrank, ierr)
+    call c_f_pointer(mgr%A, A)
     call descinit(desca, A%m, A%n, A%mb, A%nb, 0, 0, A%ctxt, A%mm, ierr)
+    call c_f_pointer(A%mdata, Adata, [A%mm, A%mn])
 
     ! LOCc(N)
     ! TODO: isn't this just A%mn after initialize_matrix?
     mgr%ipivSize = numroc(A%n, A%nb, A%pj, 0, A%npcol)
 
     ! TODO: compute tauSize correctly. I think this is an overestimate?
-    mgr%tauSize = mgr%ipivSize
+    ! mgr%tauSize = mgr%ipivSize
+    mgr%tauSize = numroc(min(A%m, A%n), A%nb, A%pj, 0, A%npcol)
 
-    !mgr%lwork = ipivSize + 
-    
     lwork = -1
 
     call qrfactorize_prep(mgr)
 
+    call c_f_pointer(mgr%ipiv, ipiv, [mgr%ipivSize])
+
+    !allocate(ipiv(mgr%ipivSize))
+    allocate(tau(mgr%tauSize))
+    
     ! First call just sets work(1) to work size
-    call pdgeqpf(A%m, A%n, A%mdata, 1, 1, desca, mgr%ipiv, mgr%tau, &
+    call pdgeqpf(A%m, A%n, Adata, 1, 1, desca, ipiv, tau, &
          & bestwork, lwork, ierr)
 
     lwork = bestwork(1)
     allocate(work(lwork))
 
-    ! Now work is allocated, and factorization is done
-    call pdgeqpf(A%m, A%n, A%mdata, 1, 1, desca, mgr%ipiv, mgr%tau, work, &
-         & lwork, ierr)
+    ! Now work is allocated, and factorization is done next
+    call pdgeqpf(A%m, A%n, Adata, 1, 1, desca, ipiv, tau, work, lwork, ierr)
 
     if (mrank .eq. 0) then
         if (ierr .lt. 0) then
@@ -583,6 +595,8 @@ subroutine qrfactorize(mgr) bind(C)
         endif
     endif
     deallocate(work)
+    !deallocate(ipiv)
+    deallocate(tau)
 end subroutine
 
 end module

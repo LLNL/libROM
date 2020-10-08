@@ -59,8 +59,8 @@ Matrix::Matrix(
    d_distributed(distributed),
    d_owns_data(true)
 {
-   CAROM_ASSERT(num_rows > 0);
-   CAROM_ASSERT(num_cols > 0);
+   CAROM_VERIFY(num_rows > 0);
+   CAROM_VERIFY(num_cols > 0);
    setSize(num_rows, num_cols);
    int mpi_init;
    MPI_Initialized(&mpi_init);
@@ -83,9 +83,9 @@ Matrix::Matrix(
    d_distributed(distributed),
    d_owns_data(copy_data)
 {
-   CAROM_ASSERT(mat != 0);
-   CAROM_ASSERT(num_rows > 0);
-   CAROM_ASSERT(num_cols > 0);
+   CAROM_VERIFY(mat != 0);
+   CAROM_VERIFY(num_rows > 0);
+   CAROM_VERIFY(num_cols > 0);
    if (copy_data) {
       setSize(num_rows, num_cols);
       memcpy(d_mat, mat, d_alloc_size*sizeof(double));
@@ -147,8 +147,8 @@ Matrix&
 Matrix::operator += (
    const Matrix& rhs)
 {
-   CAROM_ASSERT(rhs.d_num_rows == d_num_rows);
-   CAROM_ASSERT(rhs.d_num_cols == d_num_cols);
+   CAROM_VERIFY(rhs.d_num_rows == d_num_rows);
+   CAROM_VERIFY(rhs.d_num_cols == d_num_cols);
    for(int i=0; i<d_num_rows*d_num_cols; ++i) d_mat[i] += rhs.d_mat[i];
    return *this;
 }
@@ -157,8 +157,8 @@ Matrix&
 Matrix::operator -= (
    const Matrix& rhs)
 {
-   CAROM_ASSERT(rhs.d_num_rows == d_num_rows);
-   CAROM_ASSERT(rhs.d_num_cols == d_num_cols);
+   CAROM_VERIFY(rhs.d_num_rows == d_num_rows);
+   CAROM_VERIFY(rhs.d_num_cols == d_num_cols);
    for(int i=0; i<d_num_rows*d_num_cols; ++i) d_mat[i] -= rhs.d_mat[i];
    return *this;
 }
@@ -189,7 +189,7 @@ Matrix::balanced() const
   // Otherwise, get the total number of rows of the matrix.
   int num_total_rows = d_num_rows;
   const int reduce_count = 1;
-  CAROM_ASSERT(MPI_Allreduce(MPI_IN_PLACE,
+  CAROM_VERIFY(MPI_Allreduce(MPI_IN_PLACE,
 			     &num_total_rows,
 			     reduce_count,
 			     MPI_INT,
@@ -198,7 +198,7 @@ Matrix::balanced() const
 
   const int first_rank_with_fewer = num_total_rows % d_num_procs;
   int my_rank;
-  CAROM_ASSERT(MPI_Comm_rank(comm, &my_rank) == MPI_SUCCESS);
+  CAROM_VERIFY(MPI_Comm_rank(comm, &my_rank) == MPI_SUCCESS);
 
   const int  min_rows_per_rank = num_total_rows / d_num_procs;
   const bool has_extra_row     = my_rank < first_rank_with_fewer;
@@ -207,7 +207,7 @@ Matrix::balanced() const
   const bool has_too_many_rows = (d_num_rows > max_rows_on_rank);
 
   int result = (has_enough_rows && !has_too_many_rows);
-  CAROM_ASSERT(MPI_Allreduce(MPI_IN_PLACE,
+  CAROM_VERIFY(MPI_Allreduce(MPI_IN_PLACE,
 			     &result,
 			     reduce_count,
 			     MPI_INT,
@@ -232,9 +232,9 @@ Matrix::mult(
    const Matrix& other,
    Matrix*& result) const
 {
-   CAROM_ASSERT(result == 0 || result->distributed() == distributed());
-   CAROM_ASSERT(!other.distributed());
-   CAROM_ASSERT(numColumns() == other.numRows());
+   CAROM_VERIFY(result == 0 || result->distributed() == distributed());
+   CAROM_VERIFY(!other.distributed());
+   CAROM_VERIFY(numColumns() == other.numRows());
 
    // If the result has not been allocated then do so.  Otherwise size it
    // correctly.
@@ -262,9 +262,9 @@ Matrix::mult(
    const Matrix& other,
    Matrix& result) const
 {
-   CAROM_ASSERT(result.distributed() == distributed());
-   CAROM_ASSERT(!other.distributed());
-   CAROM_ASSERT(numColumns() == other.numRows());
+   CAROM_VERIFY(result.distributed() == distributed());
+   CAROM_VERIFY(!other.distributed());
+   CAROM_VERIFY(numColumns() == other.numRows());
 
    // Size result correctly.
    result.setSize(d_num_rows, other.d_num_cols);
@@ -286,9 +286,9 @@ Matrix::mult(
    const Vector& other,
    Vector*& result) const
 {
-   CAROM_ASSERT(result == 0 || result->distributed() == distributed());
-   CAROM_ASSERT(!other.distributed());
-   CAROM_ASSERT(numColumns() == other.dim());
+   CAROM_VERIFY(result == 0 || result->distributed() == distributed());
+   CAROM_VERIFY(!other.distributed());
+   CAROM_VERIFY(numColumns() == other.dim());
 
    // If the result has not been allocated then do so.  Otherwise size it
    // correctly.
@@ -314,9 +314,9 @@ Matrix::mult(
    const Vector& other,
    Vector& result) const
 {
-   CAROM_ASSERT(result.distributed() == distributed());
-   CAROM_ASSERT(!other.distributed());
-   CAROM_ASSERT(numColumns() == other.dim());
+   CAROM_VERIFY(result.distributed() == distributed());
+   CAROM_VERIFY(!other.distributed());
+   CAROM_VERIFY(numColumns() == other.dim());
 
    // Size result correctly.
    result.setSize(d_num_rows);
@@ -337,10 +337,10 @@ Matrix::pointwise_mult(
    const Vector& other,
    Vector& result) const
 {
-   CAROM_ASSERT(!result.distributed());
-   CAROM_ASSERT(!distributed());
-   CAROM_ASSERT(!other.distributed());
-   CAROM_ASSERT(numColumns() == other.dim());
+   CAROM_VERIFY(!result.distributed());
+   CAROM_VERIFY(!distributed());
+   CAROM_VERIFY(!other.distributed());
+   CAROM_VERIFY(numColumns() == other.dim());
 
    // Do the multiplication.
    for (int entry = 0; entry < d_num_cols; ++entry) {
@@ -353,9 +353,9 @@ Matrix::pointwise_mult(
    int this_row,
    Vector& other) const
 {
-   CAROM_ASSERT(!distributed());
-   CAROM_ASSERT(!other.distributed());
-   CAROM_ASSERT(numColumns() == other.dim());
+   CAROM_VERIFY(!distributed());
+   CAROM_VERIFY(!other.distributed());
+   CAROM_VERIFY(numColumns() == other.dim());
 
    // Do the multiplication.
    for (int entry = 0; entry < d_num_cols; ++entry) {
@@ -369,10 +369,10 @@ Matrix::multPlus(
    const Vector& b,
    double c) const
 {
-   CAROM_ASSERT(a.distributed() == distributed());
-   CAROM_ASSERT(!b.distributed());
-   CAROM_ASSERT(numColumns() == b.dim());
-   CAROM_ASSERT(numRows() == a.dim());
+   CAROM_VERIFY(a.distributed() == distributed());
+   CAROM_VERIFY(!b.distributed());
+   CAROM_VERIFY(numColumns() == b.dim());
+   CAROM_VERIFY(numRows() == a.dim());
 
    for (int this_row = 0; this_row < d_num_rows; ++this_row) {
       double tmp = 0.0;
@@ -388,9 +388,9 @@ Matrix::transposeMult(
    const Matrix& other,
    Matrix*& result) const
 {
-   CAROM_ASSERT(result == 0 || !result->distributed());
-   CAROM_ASSERT(distributed() == other.distributed());
-   CAROM_ASSERT(numRows() == other.numRows());
+   CAROM_VERIFY(result == 0 || !result->distributed());
+   CAROM_VERIFY(distributed() == other.distributed());
+   CAROM_VERIFY(numRows() == other.numRows());
 
    // If the result has not been allocated then do so.  Otherwise size it
    // correctly.
@@ -427,9 +427,9 @@ Matrix::transposeMult(
    const Matrix& other,
    Matrix& result) const
 {
-   CAROM_ASSERT(!result.distributed());
-   CAROM_ASSERT(distributed() == other.distributed());
-   CAROM_ASSERT(numRows() == other.numRows());
+   CAROM_VERIFY(!result.distributed());
+   CAROM_VERIFY(distributed() == other.distributed());
+   CAROM_VERIFY(numRows() == other.numRows());
 
    // Size result correctly.
    result.setSize(d_num_cols, other.d_num_cols);
@@ -460,9 +460,9 @@ Matrix::transposeMult(
    const Vector& other,
    Vector*& result) const
 {
-   CAROM_ASSERT(result == 0 || !result->distributed());
-   CAROM_ASSERT(distributed() == other.distributed());
-   CAROM_ASSERT(numRows() == other.dim());
+   CAROM_VERIFY(result == 0 || !result->distributed());
+   CAROM_VERIFY(distributed() == other.distributed());
+   CAROM_VERIFY(numRows() == other.dim());
 
    // If the result has not been allocated then do so.  Otherwise size it
    // correctly.
@@ -496,9 +496,9 @@ Matrix::transposeMult(
    const Vector& other,
    Vector& result) const
 {
-   CAROM_ASSERT(!result.distributed());
-   CAROM_ASSERT(distributed() == other.distributed());
-   CAROM_ASSERT(numRows() == other.dim());
+   CAROM_VERIFY(!result.distributed());
+   CAROM_VERIFY(distributed() == other.distributed());
+   CAROM_VERIFY(numRows() == other.dim());
 
    // If the result has not been allocated then do so.  Otherwise size it
    // correctly.
@@ -526,12 +526,12 @@ void
 Matrix::inverse(
    Matrix*& result) const
 {
-   CAROM_ASSERT(result == 0 ||
+   CAROM_VERIFY(result == 0 ||
                 (!result->distributed() &&
                  result->numRows() == numRows() &&
                  result->numColumns() == numColumns()));
-   CAROM_ASSERT(!distributed());
-   CAROM_ASSERT(numRows() == numColumns());
+   CAROM_VERIFY(!distributed());
+   CAROM_VERIFY(numRows() == numColumns());
 
    // If the result has not been allocated then do so.  Otherwise size it
    // correctly.
@@ -577,10 +577,10 @@ void
 Matrix::inverse(
    Matrix& result) const
 {
-   CAROM_ASSERT(!result.distributed() && result.numRows() == numRows() &&
+   CAROM_VERIFY(!result.distributed() && result.numRows() == numRows() &&
                 result.numColumns() == numColumns());
-   CAROM_ASSERT(!distributed());
-   CAROM_ASSERT(numRows() == numColumns());
+   CAROM_VERIFY(!distributed());
+   CAROM_VERIFY(numRows() == numColumns());
 
    // Size result correctly.
    result.setSize(d_num_rows, d_num_cols);
@@ -618,7 +618,7 @@ Matrix::inverse(
 
 void Matrix::transpose()
 {
-  CAROM_ASSERT(numRows() == numColumns());  // Avoid resizing
+  CAROM_VERIFY(numRows() == numColumns());  // Avoid resizing
   const int n = numRows();
   for (int i=0; i<n; ++i)
     {
@@ -634,8 +634,8 @@ void Matrix::transpose()
 void
 Matrix::inverse()
 {
-   CAROM_ASSERT(!distributed());
-   CAROM_ASSERT(numRows() == numColumns());
+   CAROM_VERIFY(!distributed());
+   CAROM_VERIFY(numRows() == numColumns());
 
    // Call lapack routines to do the inversion.
    // Set up some stuff the lapack routines need.
@@ -672,8 +672,8 @@ Matrix::inverse()
 
 void Matrix::transposePseudoinverse()
 {
-   CAROM_ASSERT(!distributed());
-   CAROM_ASSERT(numRows() >= numColumns());
+   CAROM_VERIFY(!distributed());
+   CAROM_VERIFY(numRows() >= numColumns());
 
    if (numRows() == numColumns())
      {
@@ -710,7 +710,7 @@ Matrix::print(const char * prefix)
 {
    int my_rank;
    const bool success = MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-   CAROM_ASSERT(success);
+   CAROM_VERIFY(success);
 
    std::string filename_str = prefix + std::to_string(my_rank);
    const char * filename = filename_str.c_str();
@@ -727,7 +727,7 @@ Matrix::print(const char * prefix)
 void
 Matrix::write(const std::string& base_file_name)
 {
-   CAROM_ASSERT(!base_file_name.empty());
+   CAROM_VERIFY(!base_file_name.empty());
 
    int mpi_init;
    MPI_Initialized(&mpi_init);
@@ -759,7 +759,7 @@ Matrix::write(const std::string& base_file_name)
 void
 Matrix::read(const std::string& base_file_name)
 {
-   CAROM_ASSERT(!base_file_name.empty());
+   CAROM_VERIFY(!base_file_name.empty());
 
    int mpi_init;
    MPI_Initialized(&mpi_init);
@@ -816,7 +816,7 @@ Matrix::qrcp_pivots_transpose(int* row_pivot,
 					     row_pivot_owner,
 					     pivots_requested);
     //#else
-    //    CAROM_ASSERT(false);
+    //    CAROM_VERIFY(false);
     //#endif
   }
 }
@@ -827,17 +827,17 @@ Matrix::qrcp_pivots_transpose_serial(int* row_pivot,
 				     int  pivots_requested) const
 {
   // This method assumes this matrix is serial
-  CAROM_ASSERT(!distributed());
+  CAROM_VERIFY(!distributed());
 
   // Number of pivots requested can't exceed the number of rows of the
   // matrix
-  CAROM_ASSERT(pivots_requested <= numRows());
-  CAROM_ASSERT(pivots_requested > 0);
+  CAROM_VERIFY(pivots_requested <= numRows());
+  CAROM_VERIFY(pivots_requested > 0);
 
   // Make sure arrays are allocated before entry; this method does not
   // own the input pointers
-  CAROM_ASSERT(row_pivot != NULL);
-  CAROM_ASSERT(row_pivot_owner != NULL);
+  CAROM_VERIFY(row_pivot != NULL);
+  CAROM_VERIFY(row_pivot_owner != NULL);
 
   // Get dimensions of transpose of matrix
   int num_rows_of_transpose = numColumns();
@@ -878,17 +878,17 @@ Matrix::qrcp_pivots_transpose_serial(int* row_pivot,
 	  &info);
 
    // Fail if error in LAPACK routine.
-   CAROM_ASSERT(info == 0);
+   CAROM_VERIFY(info == 0);
 
    // Assume communicator is MPI_COMM_WORLD and get rank of this
    // process
    int is_mpi_initialized, is_mpi_finalized;
-   CAROM_ASSERT(MPI_Initialized(&is_mpi_initialized) == MPI_SUCCESS);
-   CAROM_ASSERT(MPI_Finalized(&is_mpi_finalized) == MPI_SUCCESS);
+   CAROM_VERIFY(MPI_Initialized(&is_mpi_initialized) == MPI_SUCCESS);
+   CAROM_VERIFY(MPI_Finalized(&is_mpi_finalized) == MPI_SUCCESS);
    int my_rank = 0;
    if(is_mpi_initialized && !is_mpi_finalized) {
      const MPI_Comm my_comm = MPI_COMM_WORLD;
-     CAROM_ASSERT(MPI_Comm_rank(my_comm, &my_rank) == MPI_SUCCESS);
+     CAROM_VERIFY(MPI_Comm_rank(my_comm, &my_rank) == MPI_SUCCESS);
    }
 
    // Copy over pivots and subtract one to convert them from a
@@ -914,7 +914,7 @@ Matrix::qrcp_pivots_transpose_distributed(int* row_pivot,
 const
 {
   // Check if distributed; otherwise, use serial implementation
-  CAROM_ASSERT(distributed());
+  CAROM_VERIFY(distributed());
   
 #ifdef CAROM_HAS_ELEMENTAL
   // Shim to design interface; not implemented yet
@@ -934,39 +934,38 @@ Matrix::qrcp_pivots_transpose_distributed_scalapack
 const
 {
   // Check if distributed; otherwise, use serial implementation
-  CAROM_ASSERT(distributed());
+  CAROM_VERIFY(distributed());
 
-  int num_total_rows     = d_num_rows;
-  const int reduce_count = 1;
-  CAROM_ASSERT(MPI_Allreduce(MPI_IN_PLACE,
+  int num_total_rows = d_num_rows;
+  int reduce_count = 1;
+  CAROM_VERIFY(MPI_Allreduce(MPI_IN_PLACE,
 			     &num_total_rows,
 			     reduce_count,
 			     MPI_INT,
 			     MPI_SUM,
-			     comm) == MPI_SUCCESS);
+			     MPI_COMM_WORLD) == MPI_SUCCESS);
 
   int *row_offset = new int[d_num_procs + 1];
-  row_offset[d_num_procs + 1] = num_total_rows;
+  row_offset[d_num_procs] = num_total_rows;
 
   int my_rank;
-  const bool success = MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-  CAROM_ASSERT(success);
+  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
   
   row_offset[my_rank] = d_num_rows;
 
   const int send_recv_count = 1;
-  CAROM_ASSERT(MPI_Allgather(MPI_IN_PLACE,
+  CAROM_VERIFY(MPI_Allgather(MPI_IN_PLACE,
 			     send_recv_count,
 			     MPI_INT,
 			     row_offset,
 			     send_recv_count,
 			     MPI_INT,
-			     comm) == MPI_SUCCESS);
+			     MPI_COMM_WORLD) == MPI_SUCCESS);
 
-  for (size_t i = d_num_procs - 1; i >= 0; i--) {
+  for (int i = d_num_procs - 1; i >= 0; i--) {
     row_offset[i] = row_offset[i + 1] - row_offset[i];
   }
-  CAROM_ASSERT(row_offset[0] == 0);
+  CAROM_VERIFY(row_offset[0] == 0);
   
   SLPK_Matrix slpk;
   int blocksize = row_offset[d_num_procs] / d_num_procs;
@@ -974,7 +973,7 @@ const
   
   initialize_matrix(&slpk, d_num_cols, row_offset[d_num_procs], 1, d_num_procs, 1, blocksize);  // transposed
 
-  CAROM_ASSERT(d_num_cols == pivots_requested); // Otherwise, should we just find the QR of the submatrix consisting of the first (pivots_requested) columns?
+  CAROM_VERIFY(d_num_cols == pivots_requested); // Otherwise, should we just find the QR of the submatrix consisting of the first (pivots_requested) columns?
   
   for (int rank = 0; rank < d_num_procs; ++rank) {
     // Take the row-major data in d_mat and put it in a transposed column-major array in slpk
@@ -989,14 +988,14 @@ const
   qrfactorize(&QRmgr);
 
   // Just gather the pivots to root and discard the factorization
-  CAROM_ASSERT(pivots_requested <= QRmgr.ipivSize);
-  CAROM_ASSERT(pivots_requested <= std::min(d_num_rows, d_num_cols));
+  CAROM_VERIFY(pivots_requested <= QRmgr.ipivSize);
+  CAROM_VERIFY(pivots_requested <= std::min(d_num_rows, d_num_cols));
 
   const int scount = std::max(0, std::min(pivots_requested, row_offset[my_rank+1]) - row_offset[my_rank]);
   int *mypivots = (scount > 0) ? new int[scount] : NULL;
 
   for (int i=0; i<scount; ++i)
-    mypivots[i] = QRmgr.ipiv[i];
+    mypivots[i] = QRmgr.ipiv[i]-1;  // make it 0-based
   
   MPI_Gather(mypivots, scount, MPI_INT, row_pivot, pivots_requested, MPI_INT, 0, MPI_COMM_WORLD);
 
@@ -1015,14 +1014,14 @@ const
 		  break;
 		}
 	    }
-	  CAROM_ASSERT(row_pivot_owner[i] >= 0);
-	  CAROM_ASSERT(row_offset[row_pivot_owner[i]] <= i && i < row_offset[row_pivot_owner[i]+1]);
+	  CAROM_VERIFY(row_pivot_owner[i] >= 0);
+	  CAROM_VERIFY(row_offset[row_pivot_owner[i]] <= i && i < row_offset[row_pivot_owner[i]+1]);
 	}
     }
   else
     {
       for (int i=0; i<scount; ++i)
-	row_pivot[i] = QRmgr.ipiv[i];  // TODO: is this used on non-root processes?
+	row_pivot[i] = QRmgr.ipiv[i]-1;  // make it 0-based. TODO: is this used on non-root processes?
     }
   
   free_matrix_data(&slpk);
@@ -1041,7 +1040,7 @@ const
 {
 #ifdef CAROM_HAS_ELEMENTAL
   // Check if distributed; otherwise, use serial implementation
-  CAROM_ASSERT(distributed());
+  CAROM_VERIFY(distributed());
 
   // Check if balanced
   if (balanced()) {
@@ -1053,7 +1052,7 @@ const
       (row_pivot, row_pivot_owner, pivots_requested);
   }
 #else
-  CAROM_ASSERT(false);
+  CAROM_VERIFY(false);
 #endif
 }
 
@@ -1085,12 +1084,12 @@ const
   // stores more information.
 
   // Check if distributed and balanced
-  CAROM_ASSERT(distributed() && balanced());
+  CAROM_VERIFY(distributed() && balanced());
 
   // Make sure arrays are allocated before entry; this method does not
   // own the input pointers
-  CAROM_ASSERT(row_pivot != NULL);
-  CAROM_ASSERT(row_pivot_owner != NULL);
+  CAROM_VERIFY(row_pivot != NULL);
+  CAROM_VERIFY(row_pivot_owner != NULL);
 
   // Compute total number of rows to set global sizes of matrix
   const MPI_Comm comm    = MPI_COMM_WORLD;
@@ -1098,7 +1097,7 @@ const
 
   int num_total_rows     = d_num_rows;
   const int reduce_count = 1;
-  CAROM_ASSERT(MPI_Allreduce(MPI_IN_PLACE,
+  CAROM_VERIFY(MPI_Allreduce(MPI_IN_PLACE,
 			     &num_total_rows,
 			     reduce_count,
 			     MPI_INT,
@@ -1107,8 +1106,8 @@ const
 
   // Number of pivots requested can't exceed the total number of rows
   // of the matrix
-  CAROM_ASSERT(pivots_requested <= num_total_rows);
-  CAROM_ASSERT(pivots_requested > 0);
+  CAROM_VERIFY(pivots_requested <= num_total_rows);
+  CAROM_VERIFY(pivots_requested > 0);
 
   // To compute a column-pivoted QRCP using Elemental, we need to
   // first get the data into datatypes Elemental can operate on.
@@ -1120,7 +1119,7 @@ const
 
   // The row communicator in the grid should have the same number
   // of processes as the comm owned by the Matrix
-  CAROM_ASSERT(El::mpi::Size(grid.RowComm()) == d_num_procs);
+  CAROM_VERIFY(El::mpi::Size(grid.RowComm()) == d_num_procs);
 
   // Instantiate the transposed matrix; Elemental calls the number of
   // rows the "height" of the matrix, and the number of columns the
@@ -1141,11 +1140,11 @@ const
   // the row communicator) that owns j should be process rank (j %
   // d_num_procs).
   //
-  CAROM_ASSERT(scratch.RowOwner(0) == scratch.RowOwner(1));
+  CAROM_VERIFY(scratch.RowOwner(0) == scratch.RowOwner(1));
   int my_rank;
-  CAROM_ASSERT(MPI_Comm_rank(comm, &my_rank) == MPI_SUCCESS);
+  CAROM_VERIFY(MPI_Comm_rank(comm, &my_rank) == MPI_SUCCESS);
   El::Int rank_as_row = static_cast<El::Int>(my_rank);
-  CAROM_ASSERT(scratch.ColOwner(rank_as_row) == rank_as_row);
+  CAROM_VERIFY(scratch.ColOwner(rank_as_row) == rank_as_row);
 
   // Set up work matrices
   El::DistMatrix<double> householder_scalars(grid);
@@ -1214,7 +1213,7 @@ const
     row_pivot_owner[i] = owner;
   }
 #else
-  CAROM_ASSERT(false);
+  CAROM_VERIFY(false);
 #endif
 }
 
@@ -1239,12 +1238,12 @@ const
   // stores more information.
 
   // Check if distributed and unbalanced
-  CAROM_ASSERT(distributed() && !balanced());
+  CAROM_VERIFY(distributed() && !balanced());
 
   // Make sure arrays are allocated before entry; this method does not
   // own the input pointers
-  CAROM_ASSERT(row_pivot != NULL);
-  CAROM_ASSERT(row_pivot_owner != NULL);
+  CAROM_VERIFY(row_pivot != NULL);
+  CAROM_VERIFY(row_pivot_owner != NULL);
 
   // Compute total number of rows to set global sizes of matrix
   const MPI_Comm comm    = MPI_COMM_WORLD;
@@ -1252,7 +1251,7 @@ const
 
   int num_total_rows     = d_num_rows;
   const int reduce_count = 1;
-  CAROM_ASSERT(MPI_Allreduce(MPI_IN_PLACE,
+  CAROM_VERIFY(MPI_Allreduce(MPI_IN_PLACE,
 			     &num_total_rows,
 			     reduce_count,
 			     MPI_INT,
@@ -1261,8 +1260,8 @@ const
 
   // Number of pivots requested can't exceed the total number of rows
   // of the matrix
-  CAROM_ASSERT(pivots_requested <= num_total_rows);
-  CAROM_ASSERT(pivots_requested > 0);
+  CAROM_VERIFY(pivots_requested <= num_total_rows);
+  CAROM_VERIFY(pivots_requested > 0);
 
   // To compute a column-pivoted QRCP using Elemental, we need to
   // first get the data into datatypes Elemental can operate on.
@@ -1274,7 +1273,7 @@ const
 
   // The row communicator in the grid should have the same number
   // of processes as the comm owned by the Matrix
-  CAROM_ASSERT(El::mpi::Size(grid.RowComm()) == d_num_procs);
+  CAROM_VERIFY(El::mpi::Size(grid.RowComm()) == d_num_procs);
 
   // Instantiate the transposed matrix; Elemental calls the number of
   // rows the "height" of the matrix, and the number of columns the
@@ -1295,11 +1294,11 @@ const
   // the row communicator) that owns j should be process rank (j %
   // d_num_procs).
   //
-  CAROM_ASSERT(scratch.RowOwner(0) == scratch.RowOwner(1));
+  CAROM_VERIFY(scratch.RowOwner(0) == scratch.RowOwner(1));
   int my_rank;
-  CAROM_ASSERT(MPI_Comm_rank(comm, &my_rank) == MPI_SUCCESS);
+  CAROM_VERIFY(MPI_Comm_rank(comm, &my_rank) == MPI_SUCCESS);
   El::Int rank_as_row = static_cast<El::Int>(my_rank);
-  CAROM_ASSERT(scratch.ColOwner(rank_as_row) == rank_as_row);
+  CAROM_VERIFY(scratch.ColOwner(rank_as_row) == rank_as_row);
 
   // Set up work matrices
   El::DistMatrix<double> householder_scalars(grid);
@@ -1327,7 +1326,7 @@ const
 
   row_offset[my_rank] = d_num_rows;
   const int send_recv_count = 1;
-  CAROM_ASSERT(MPI_Allgather(MPI_IN_PLACE,
+  CAROM_VERIFY(MPI_Allgather(MPI_IN_PLACE,
 			     send_recv_count,
 			     MPI_INT,
 			     row_offset,
@@ -1335,10 +1334,10 @@ const
 			     MPI_INT,
 			     comm) == MPI_SUCCESS);
 
-  for (size_t i = d_num_procs - 1; i >= 0; i--) {
+  for (int i = d_num_procs - 1; i >= 0; i--) {
     row_offset[i] = row_offset[i + 1] - row_offset[i];
   }
-  CAROM_ASSERT(row_offset[0] == 0);
+  CAROM_VERIFY(row_offset[0] == 0);
 
   // Use the computed (local <--> global) index map to assign elements
   // to the scratch matrix
@@ -1386,7 +1385,7 @@ const
   // Free arrays
   delete [] row_offset;
 #else
-  CAROM_ASSERT(false);
+  CAROM_VERIFY(false);
 #endif
 }
 
