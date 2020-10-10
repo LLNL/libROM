@@ -973,7 +973,7 @@ const
   
   initialize_matrix(&slpk, d_num_cols, row_offset[d_num_procs], 1, d_num_procs, 1, blocksize);  // transposed
 
-  CAROM_VERIFY(d_num_cols == pivots_requested); // Otherwise, should we just find the QR of the submatrix consisting of the first (pivots_requested) columns?
+  CAROM_VERIFY(d_num_cols <= pivots_requested); // Otherwise, should we just find the QR of the submatrix consisting of the first (pivots_requested) columns?
   
   for (int rank = 0; rank < d_num_procs; ++rank) {
     // Take the row-major data in d_mat and put it in a transposed column-major array in slpk
@@ -989,11 +989,17 @@ const
 
   // Just gather the pivots to root and discard the factorization
   CAROM_VERIFY(pivots_requested <= QRmgr.ipivSize);
-  CAROM_VERIFY(pivots_requested <= std::min(d_num_rows, d_num_cols));
+  CAROM_VERIFY(pivots_requested <= std::max(d_num_rows, d_num_cols));
 
   const int scount = std::max(0, std::min(pivots_requested, row_offset[my_rank+1]) - row_offset[my_rank]);
   int *mypivots = (scount > 0) ? new int[scount] : NULL;
 
+  { // Sanity check
+    int sumcount = 0;
+    MPI_Reduce(&scount, &sumcount, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+    CAROM_VERIFY(sumcount == pivots_requested || my_rank > 0);
+  }
+  
   for (int i=0; i<scount; ++i)
     mypivots[i] = QRmgr.ipiv[i]-1;  // make it 0-based
   

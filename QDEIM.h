@@ -24,8 +24,9 @@ QDEIM(const Matrix* f_basis,
       int* f_sampled_row,
       int* f_sampled_row_owner,
       Matrix& f_basis_sampled,
-      int myid);
-
+      int myid,
+      const int num_procs,
+      const int num_samples_req);
 }
 
 #endif

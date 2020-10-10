@@ -937,6 +937,15 @@ class Matrix
 		       const int,
 		       const int);
 
+      friend void QDEIM(const Matrix*,
+			const int,
+			int*,
+			int*,
+			Matrix&,
+			const int,
+			const int,
+			const int);
+
       /**
        * @brief The storage for the Matrix's values on this processor.
        */
