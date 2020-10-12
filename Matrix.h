@@ -720,8 +720,8 @@ class Matrix
          int row,
          int col) const
       {
-         CAROM_VERIFY((0 <= row) && (row < numRows()));
-         CAROM_VERIFY((0 <= col) && (col < numColumns()));
+         CAROM_ASSERT((0 <= row) && (row < numRows()));
+         CAROM_ASSERT((0 <= col) && (col < numColumns()));
          return d_mat[row*d_num_cols+col];
       }
 
@@ -743,8 +743,8 @@ class Matrix
          int row,
          int col)
       {
-         CAROM_VERIFY((0 <= row) && (row < numRows()));
-         CAROM_VERIFY((0 <= col) && (col < numColumns()));
+         CAROM_ASSERT((0 <= row) && (row < numRows()));
+         CAROM_ASSERT((0 <= col) && (col < numColumns()));
          return d_mat[row*d_num_cols+col];
       }
 

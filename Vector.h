@@ -617,7 +617,7 @@ class Vector
       item(
          int i) const
       {
-         CAROM_VERIFY((0 <= i) && (i < dim()));
+         CAROM_ASSERT((0 <= i) && (i < dim()));
          return d_vec[i];
       }
 
@@ -636,7 +636,7 @@ class Vector
       item(
          int i)
       {
-         CAROM_VERIFY((0 <= i) && (i < dim()));
+         CAROM_ASSERT((0 <= i) && (i < dim()));
          return d_vec[i];
       }
 
