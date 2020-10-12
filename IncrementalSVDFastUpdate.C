@@ -175,7 +175,7 @@ IncrementalSVDFastUpdate::computeBasis()
 
        if (d_rank == 0) std::cout << "removing a small singular value!\n";
 
-       Matrix* d_basis_new = new Matrix(d_dim, d_num_samples-1, false);
+       Matrix* d_basis_new = new Matrix(d_dim, d_num_samples-1, d_basis->distributed());
        for (int row = 0; row < d_dim; ++row) {
           for (int col = 0; col < d_num_samples-1; ++col) {
               d_basis_new->item(row, col) = d_basis->item(row,col);
@@ -186,7 +186,7 @@ IncrementalSVDFastUpdate::computeBasis()
 
        if (d_updateRightSV)
        {
-           Matrix* d_basis_right_new = new Matrix(d_num_rows_of_W, d_num_samples-1, false);
+           Matrix* d_basis_right_new = new Matrix(d_num_rows_of_W, d_num_samples-1, d_basis_right->distributed());
            for (int row = 0; row < d_num_rows_of_W; ++row) {
               for (int col = 0; col < d_num_samples-1; ++col) {
                   d_basis_right_new->item(row, col) = d_basis_right->item(row,col);
