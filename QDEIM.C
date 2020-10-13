@@ -114,6 +114,8 @@ QDEIM(const Matrix* f_basis,
       
       for (int i=0; i<count; ++i)
 	{
+	  const int msr = my_sampled_rows[i];
+	  const bool mycond = my_sampled_rows[i] >= row_offset[myid] && my_sampled_rows[i] < row_offset[myid] + f_basis->numRows();
 	  CAROM_VERIFY(my_sampled_rows[i] >= row_offset[myid] && my_sampled_rows[i] < row_offset[myid] + f_basis->numRows());
 	  const int row = my_sampled_rows[i] - row_offset[myid];
 	  os = i*num_f_basis_vectors_used;
@@ -133,12 +135,45 @@ QDEIM(const Matrix* f_basis,
       MPI_Gatherv(my_sampled_row_data, count*num_f_basis_vectors_used, MPI_DOUBLE, f_basis_sampled_inv.getData(), n, disp, MPI_DOUBLE, 0, MPI_COMM_WORLD);
       
       // Subtract row_offset to convert f_sampled_row from global to local indices
+      // Also, reorder f_sampled_row by process
+      /*
       os = row_offset[myid];
       for (int i=0; i<num_f_basis_vectors_used; ++i)
 	{
 	  f_sampled_row[i] -= os;
 	}
+      */
+      
+      if (myid == 0)
+	{
+	  n[0] = 0;
+	  disp[0] = 0;
+	  for (int r=1; r<num_procs; ++r)
+	    {
+	      n[r] = 0;
+	      disp[r] = disp[r-1] + f_sampled_rows_per_proc[r-1];
+	    }
+	  
+	  for (int i=0; i<num_samples_req; ++i)
+	    {
+	      const int owner = f_sampled_row_owner[i];
+	      f_sampled_row[i] -= row_offset[owner];
 
+	      all_sampled_rows[disp[owner] + n[owner]] = f_sampled_row[i];
+	      n[owner]++;
+	    }
+
+	  for (int r=0; r<num_procs; ++r)
+	    {
+	      CAROM_VERIFY(n[r] == f_sampled_rows_per_proc[r]);
+	    }
+
+	  for (int i=0; i<num_samples_req; ++i)
+	    f_sampled_row[i] = all_sampled_rows[i];
+	}
+
+      MPI_Bcast(f_sampled_row, num_samples_req, MPI_INT, 0, MPI_COMM_WORLD);
+      
       delete [] n;
       delete [] disp;
       delete [] my_sampled_rows;
@@ -161,7 +196,8 @@ QDEIM(const Matrix* f_basis,
   delete [] f_sampled_row_owner;
   
   // Now invert f_basis_sampled_inv, storing its transpose.
-  f_basis_sampled_inv.transposePseudoinverse();
+  if (myid == 0)  // Matrix is valid only on root process
+    f_basis_sampled_inv.transposePseudoinverse();
 } // end void QDEIM
 
 } // end namespace CAROM

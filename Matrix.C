@@ -937,7 +937,7 @@ const
   CAROM_VERIFY(distributed());
 
   int num_total_rows = d_num_rows;
-  int reduce_count = 1;
+  int reduce_count = 1; // TODO: remove this?
   CAROM_VERIFY(MPI_Allreduce(MPI_IN_PLACE,
 			     &num_total_rows,
 			     reduce_count,
@@ -988,22 +988,38 @@ const
   qrfactorize(&QRmgr);
 
   // Just gather the pivots to root and discard the factorization
-  CAROM_VERIFY(pivots_requested <= QRmgr.ipivSize);
+  CAROM_VERIFY(0 < pivots_requested && pivots_requested <= QRmgr.ipivSize);
   CAROM_VERIFY(pivots_requested <= std::max(d_num_rows, d_num_cols));
 
   const int scount = std::max(0, std::min(pivots_requested, row_offset[my_rank+1]) - row_offset[my_rank]);
   int *mypivots = (scount > 0) ? new int[scount] : NULL;
 
+  /*
   { // Sanity check
     int sumcount = 0;
     MPI_Reduce(&scount, &sumcount, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
     CAROM_VERIFY(sumcount == pivots_requested || my_rank > 0);
   }
+  */
   
   for (int i=0; i<scount; ++i)
     mypivots[i] = QRmgr.ipiv[i]-1;  // make it 0-based
+
+  int *rcount = (my_rank == 0) ? new int[d_num_procs] : NULL;
+  int *rdisp = (my_rank == 0) ? new int[d_num_procs] : NULL;
+
+  MPI_Gather(&scount, 1, MPI_INT, rcount, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+  if (my_rank == 0)
+    {
+      rdisp[0] = 0;
+      for (int i = 1; i<d_num_procs; ++i)
+	rdisp[i] = rdisp[i-1] + rcount[i-1];
+
+      CAROM_VERIFY(rdisp[d_num_procs-1] + rcount[d_num_procs-1] == pivots_requested);
+    }
   
-  MPI_Gather(mypivots, scount, MPI_INT, row_pivot, pivots_requested, MPI_INT, 0, MPI_COMM_WORLD);
+  MPI_Gatherv(mypivots, scount, MPI_INT, row_pivot, rcount, rdisp, MPI_INT, 0, MPI_COMM_WORLD);
 
   delete [] mypivots;
 
@@ -1012,7 +1028,7 @@ const
       for (int i=0; i<pivots_requested; ++i)
 	{
 	  row_pivot_owner[i] = -1;
-	  for (int j=0; j<d_num_procs; ++j)
+	  for (int j=d_num_procs-1; j>=0; --j)
 	    {
 	      if (row_offset[j] <= row_pivot[i])
 		{
@@ -1021,7 +1037,8 @@ const
 		}
 	    }
 	  CAROM_VERIFY(row_pivot_owner[i] >= 0);
-	  CAROM_VERIFY(row_offset[row_pivot_owner[i]] <= i && i < row_offset[row_pivot_owner[i]+1]);
+	  CAROM_VERIFY(row_offset[row_pivot_owner[i]] <= row_pivot[i] && row_pivot[i] < row_offset[row_pivot_owner[i]+1]);
+	  //row_pivot[i] -= row_offset[row_pivot_owner[i]];  // Convert from global to local indices.
 	}
     }
   else
@@ -1036,6 +1053,8 @@ const
   free(QRmgr.ipiv);
   free(QRmgr.tau);
   
+  delete [] rcount;
+  delete [] rdisp;
   delete [] row_offset;
 }
 
