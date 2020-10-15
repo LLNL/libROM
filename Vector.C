@@ -198,7 +198,7 @@ Vector::inner_product(
    const Vector& other) const
 {
    CAROM_VERIFY(dim() == other.dim());
-   CAROM_VERIFY(distributed() == other.distributed());
+   CAROM_ASSERT(distributed() == other.distributed());
    double ip;
    double local_ip = 0.0;
    for (int i = 0; i < d_dim; ++i) {
@@ -236,8 +236,8 @@ Vector::plus(
    const Vector& other,
    Vector*& result) const
 {
-   CAROM_VERIFY(result == 0 || result->distributed() == distributed());
-   CAROM_VERIFY(distributed() == other.distributed());
+   CAROM_ASSERT(result == 0 || result->distributed() == distributed());
+   CAROM_ASSERT(distributed() == other.distributed());
    CAROM_VERIFY(dim() == other.dim());
 
    // If the result has not been allocated then do so.  Otherwise size it
@@ -260,8 +260,8 @@ Vector::plus(
    const Vector& other,
    Vector& result) const
 {
-   CAROM_VERIFY(result.distributed() == distributed());
-   CAROM_VERIFY(distributed() == other.distributed());
+   CAROM_ASSERT(result.distributed() == distributed());
+   CAROM_ASSERT(distributed() == other.distributed());
    CAROM_VERIFY(dim() == other.dim());
 
    // Size result correctly.
@@ -279,8 +279,8 @@ Vector::plusAx(
    const Vector& other,
    Vector*& result) const
 {
-   CAROM_VERIFY(result == 0 || result->distributed() == distributed());
-   CAROM_VERIFY(distributed() == other.distributed());
+   CAROM_ASSERT(result == 0 || result->distributed() == distributed());
+   CAROM_ASSERT(distributed() == other.distributed());
    CAROM_VERIFY(dim() == other.dim());
 
    // If the result has not been allocated then do so.  Otherwise size it
@@ -304,8 +304,8 @@ Vector::plusAx(
    const Vector& other,
    Vector& result) const
 {
-   CAROM_VERIFY(result.distributed() == distributed());
-   CAROM_VERIFY(distributed() == other.distributed());
+   CAROM_ASSERT(result.distributed() == distributed());
+   CAROM_ASSERT(distributed() == other.distributed());
    CAROM_VERIFY(dim() == other.dim());
 
    // Size result correctly.
@@ -322,7 +322,7 @@ Vector::plusEqAx(
    double factor,
    const Vector& other)
 {
-   CAROM_VERIFY(distributed() == other.distributed());
+   CAROM_ASSERT(distributed() == other.distributed());
    CAROM_VERIFY(dim() == other.dim());
 
    // Do the addition.
@@ -336,8 +336,8 @@ Vector::minus(
    const Vector& other,
    Vector*& result) const
 {
-   CAROM_VERIFY(result == 0 || result->distributed() == distributed());
-   CAROM_VERIFY(distributed() == other.distributed());
+   CAROM_ASSERT(result == 0 || result->distributed() == distributed());
+   CAROM_ASSERT(distributed() == other.distributed());
    CAROM_VERIFY(dim() == other.dim());
 
    // If the result has not been allocated then do so.  Otherwise size it
@@ -360,8 +360,8 @@ Vector::minus(
    const Vector& other,
    Vector& result) const
 {
-   CAROM_VERIFY(result.distributed() == distributed());
-   CAROM_VERIFY(distributed() == other.distributed());
+   CAROM_ASSERT(result.distributed() == distributed());
+   CAROM_ASSERT(distributed() == other.distributed());
    CAROM_VERIFY(dim() == other.dim());
 
    // Size result correctly.
@@ -378,7 +378,7 @@ Vector::mult(
    double factor,
    Vector*& result) const
 {
-   CAROM_VERIFY(result == 0 || result->distributed() == distributed());
+   CAROM_ASSERT(result == 0 || result->distributed() == distributed());
 
    // If the result has not been allocated then do so.  Otherwise size it
    // correctly.
@@ -400,7 +400,7 @@ Vector::mult(
    double factor,
    Vector& result) const
 {
-   CAROM_VERIFY(result.distributed() == distributed());
+   CAROM_ASSERT(result.distributed() == distributed());
 
    // Size result correctly.
    result.setSize(d_dim);

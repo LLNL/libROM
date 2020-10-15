@@ -230,8 +230,8 @@ Matrix::mult(
    const Matrix& other,
    Matrix*& result) const
 {
-   CAROM_VERIFY(result == 0 || result->distributed() == distributed());
-   CAROM_VERIFY(!other.distributed());
+   CAROM_ASSERT(result == 0 || result->distributed() == distributed());
+   CAROM_ASSERT(!other.distributed());
    CAROM_VERIFY(numColumns() == other.numRows());
 
    // If the result has not been allocated then do so.  Otherwise size it
@@ -260,8 +260,8 @@ Matrix::mult(
    const Matrix& other,
    Matrix& result) const
 {
-   CAROM_VERIFY(result.distributed() == distributed());
-   CAROM_VERIFY(!other.distributed());
+   CAROM_ASSERT(result.distributed() == distributed());
+   CAROM_ASSERT(!other.distributed());
    CAROM_VERIFY(numColumns() == other.numRows());
 
    // Size result correctly.
@@ -284,8 +284,8 @@ Matrix::mult(
    const Vector& other,
    Vector*& result) const
 {
-   CAROM_VERIFY(result == 0 || result->distributed() == distributed());
-   CAROM_VERIFY(!other.distributed());
+   CAROM_ASSERT(result == 0 || result->distributed() == distributed());
+   CAROM_ASSERT(!other.distributed());
    CAROM_VERIFY(numColumns() == other.dim());
 
    // If the result has not been allocated then do so.  Otherwise size it
@@ -312,8 +312,8 @@ Matrix::mult(
    const Vector& other,
    Vector& result) const
 {
-   CAROM_VERIFY(result.distributed() == distributed());
-   CAROM_VERIFY(!other.distributed());
+   CAROM_ASSERT(result.distributed() == distributed());
+   CAROM_ASSERT(!other.distributed());
    CAROM_VERIFY(numColumns() == other.dim());
 
    // Size result correctly.
@@ -335,9 +335,9 @@ Matrix::pointwise_mult(
    const Vector& other,
    Vector& result) const
 {
-   CAROM_VERIFY(!result.distributed());
-   CAROM_VERIFY(!distributed());
-   CAROM_VERIFY(!other.distributed());
+   CAROM_ASSERT(!result.distributed());
+   CAROM_ASSERT(!distributed());
+   CAROM_ASSERT(!other.distributed());
    CAROM_VERIFY(numColumns() == other.dim());
 
    // Do the multiplication.
@@ -351,8 +351,8 @@ Matrix::pointwise_mult(
    int this_row,
    Vector& other) const
 {
-   CAROM_VERIFY(!distributed());
-   CAROM_VERIFY(!other.distributed());
+   CAROM_ASSERT(!distributed());
+   CAROM_ASSERT(!other.distributed());
    CAROM_VERIFY(numColumns() == other.dim());
 
    // Do the multiplication.
@@ -367,8 +367,8 @@ Matrix::multPlus(
    const Vector& b,
    double c) const
 {
-   CAROM_VERIFY(a.distributed() == distributed());
-   CAROM_VERIFY(!b.distributed());
+   CAROM_ASSERT(a.distributed() == distributed());
+   CAROM_ASSERT(!b.distributed());
    CAROM_VERIFY(numColumns() == b.dim());
    CAROM_VERIFY(numRows() == a.dim());
 
@@ -386,8 +386,8 @@ Matrix::transposeMult(
    const Matrix& other,
    Matrix*& result) const
 {
-   CAROM_VERIFY(result == 0 || !result->distributed());
-   CAROM_VERIFY(distributed() == other.distributed());
+   CAROM_ASSERT(result == 0 || !result->distributed());
+   CAROM_ASSERT(distributed() == other.distributed());
    CAROM_VERIFY(numRows() == other.numRows());
 
    // If the result has not been allocated then do so.  Otherwise size it
@@ -425,8 +425,8 @@ Matrix::transposeMult(
    const Matrix& other,
    Matrix& result) const
 {
-   CAROM_VERIFY(!result.distributed());
-   CAROM_VERIFY(distributed() == other.distributed());
+   CAROM_ASSERT(!result.distributed());
+   CAROM_ASSERT(distributed() == other.distributed());
    CAROM_VERIFY(numRows() == other.numRows());
 
    // Size result correctly.
@@ -458,8 +458,8 @@ Matrix::transposeMult(
    const Vector& other,
    Vector*& result) const
 {
-   CAROM_VERIFY(result == 0 || !result->distributed());
-   CAROM_VERIFY(distributed() == other.distributed());
+   CAROM_ASSERT(result == 0 || !result->distributed());
+   CAROM_ASSERT(distributed() == other.distributed());
    CAROM_VERIFY(numRows() == other.dim());
 
    // If the result has not been allocated then do so.  Otherwise size it
@@ -494,8 +494,8 @@ Matrix::transposeMult(
    const Vector& other,
    Vector& result) const
 {
-   CAROM_VERIFY(!result.distributed());
-   CAROM_VERIFY(distributed() == other.distributed());
+   CAROM_ASSERT(!result.distributed());
+   CAROM_ASSERT(distributed() == other.distributed());
    CAROM_VERIFY(numRows() == other.dim());
 
    // If the result has not been allocated then do so.  Otherwise size it
@@ -524,11 +524,11 @@ void
 Matrix::inverse(
    Matrix*& result) const
 {
-   CAROM_VERIFY(result == 0 ||
+   CAROM_ASSERT(result == 0 ||
                 (!result->distributed() &&
                  result->numRows() == numRows() &&
                  result->numColumns() == numColumns()));
-   CAROM_VERIFY(!distributed());
+   CAROM_ASSERT(!distributed());
    CAROM_VERIFY(numRows() == numColumns());
 
    // If the result has not been allocated then do so.  Otherwise size it
@@ -575,9 +575,9 @@ void
 Matrix::inverse(
    Matrix& result) const
 {
-   CAROM_VERIFY(!result.distributed() && result.numRows() == numRows() &&
+   CAROM_ASSERT(!result.distributed() && result.numRows() == numRows() &&
                 result.numColumns() == numColumns());
-   CAROM_VERIFY(!distributed());
+   CAROM_ASSERT(!distributed());
    CAROM_VERIFY(numRows() == numColumns());
 
    // Size result correctly.
@@ -617,7 +617,7 @@ Matrix::inverse(
 void
 Matrix::inverse()
 {
-   CAROM_VERIFY(!distributed());
+   CAROM_ASSERT(!distributed());
    CAROM_VERIFY(numRows() == numColumns());
 
    // Call lapack routines to do the inversion.
@@ -655,7 +655,7 @@ Matrix::inverse()
 
 void Matrix::transposePseudoinverse()
 {
-   CAROM_VERIFY(!distributed());
+   CAROM_ASSERT(!distributed());
    CAROM_VERIFY(numRows() >= numColumns());
 
    if (numRows() == numColumns())
@@ -810,7 +810,7 @@ Matrix::qrcp_pivots_transpose_serial(int* row_pivot,
 				     int  pivots_requested) const
 {
   // This method assumes this matrix is serial
-  CAROM_VERIFY(!distributed());
+  CAROM_ASSERT(!distributed());
 
   // Number of pivots requested can't exceed the number of rows of the
   // matrix
@@ -900,7 +900,7 @@ const
   // Shim to design interface; not implemented yet
 
   // Check if distributed; otherwise, use serial implementation
-  CAROM_VERIFY(distributed());
+  CAROM_ASSERT(distributed());
 
   // Elemental implementation
   return qrcp_pivots_transpose_distributed_elemental
@@ -919,7 +919,7 @@ const
 {
 #ifdef CAROM_HAS_ELEMENTAL
   // Check if distributed; otherwise, use serial implementation
-  CAROM_VERIFY(distributed());
+  CAROM_ASSERT(distributed());
 
   // Check if balanced
   if (balanced()) {
@@ -963,7 +963,7 @@ const
   // stores more information.
 
   // Check if distributed and balanced
-  CAROM_VERIFY(distributed() && balanced());
+  CAROM_ASSERT(distributed() && balanced());
 
   // Make sure arrays are allocated before entry; this method does not
   // own the input pointers
@@ -1117,7 +1117,7 @@ const
   // stores more information.
 
   // Check if distributed and unbalanced
-  CAROM_VERIFY(distributed() && !balanced());
+  CAROM_ASSERT(distributed() && !balanced());
 
   // Make sure arrays are allocated before entry; this method does not
   // own the input pointers
