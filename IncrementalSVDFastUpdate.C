@@ -191,6 +191,8 @@ IncrementalSVDFastUpdate::computeBasis()
        }
        --d_num_samples;
    }
+
+   // Reorthogonalize if necessary.
    if (fabs(checkOrthogonality(d_basis)) >
        std::numeric_limits<double>::epsilon()*static_cast<double>(d_num_samples)) {
        reOrthogonalize(d_basis);
