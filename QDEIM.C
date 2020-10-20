@@ -52,11 +52,15 @@ QDEIM(const Matrix* f_basis,
 
   CAROM_VERIFY(num_f_basis_vectors_used == f_basis->numColumns());  // The QR implementation uses the entire matrix.
   CAROM_VERIFY(f_basis->numColumns() <= num_samples_req && num_samples_req <= f_basis->numRows());
+  CAROM_VERIFY(num_samples_req == f_basis_sampled_inv.numRows() && f_basis->numColumns() == f_basis_sampled_inv.numColumns());
 
   // QR will determine (numCol) pivots, which will define the first (numCol) samples.
   const int numCol = f_basis->numColumns();
   const int num_samples_req_QR = numCol;
   
+  std::vector<double> sampled_row_data;
+  if (myid == 0) sampled_row_data.resize(num_samples_req * numCol);
+
   int *f_sampled_row_owner = (myid == 0 && f_basis->distributed()) ? new int[num_samples_req] : NULL;
 
   // QDEIM computes selection/interpolation indices by taking a
@@ -106,6 +110,17 @@ QDEIM(const Matrix* f_basis,
 	  // Reorder f_sampled_row and f_sampled_row_owner to match the order of f_basis_sampled_inv
 	  for (int i=0; i<num_samples_req_QR; ++i)
 	    f_sampled_row[i] = all_sampled_rows[i];
+
+	  int os = 0;
+	  for (int r=0; r<num_procs; ++r)
+	    {
+	      for (int i=0; i<f_sampled_rows_per_proc[r]; ++i)
+		{
+		  f_sampled_row_owner[os + i] = r;
+		}
+
+	      os += f_sampled_rows_per_proc[r];
+	    }
 	}
 
       MPI_Bcast(f_sampled_rows_per_proc, num_procs, MPI_INT, 0, MPI_COMM_WORLD);
@@ -154,7 +169,7 @@ QDEIM(const Matrix* f_basis,
 	}
 
       // TODO: use numCols instead of num_f_basis_vectors_used
-      MPI_Gatherv(my_sampled_row_data, count*num_f_basis_vectors_used, MPI_DOUBLE, f_basis_sampled_inv.getData(), ns, disp, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+      MPI_Gatherv(my_sampled_row_data, count*num_f_basis_vectors_used, MPI_DOUBLE, sampled_row_data.data(), ns, disp, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
       // At this point, only the first (numCol) entries of f_sampled_row and rows of f_basis_sampled_inv are set by QR.
       // Now set the remaining (num_samples_req - numCol) samples by GappyPOD+E.
@@ -196,7 +211,8 @@ QDEIM(const Matrix* f_basis,
       std::vector<double> rg;
       if (myid == 0) rg.resize(nglobal);
 
-      std::vector<int> isort(nglobal);
+      std::vector<int> isort;
+      if (myid == 0) isort.resize(nglobal);
 
       int n = numCol;
       Matrix V(n, n, false);
@@ -219,7 +235,8 @@ QDEIM(const Matrix* f_basis,
 	      for (int i=0; i<m; ++i)
 		for (int j=0; j<n; ++j)
 		  {
-		    A[i + (j*m)] = f_basis_sampled_inv.item(i, j);
+		    //A[i + (j*m)] = f_basis_sampled_inv.item(i, j);
+		    A[i + (j*m)] = sampled_row_data[(i*numCol) + j];
 		    //Ut.item(j, i) = f_basis_sampled_inv.item(i, j);
 		  }
 
@@ -327,12 +344,15 @@ QDEIM(const Matrix* f_basis,
 
 	  const int tagSendRecv = 111;
 	  if (sample > -1)
-	    MPI_Send(f_basis->getData() + (sample * numCol), numCol, MPI_DOUBLE, 0, tagSendRecv, MPI_COMM_WORLD);
+	    {
+	      CAROM_VERIFY(sample >= row_offset[myid]);
+	      MPI_Send(f_basis->getData() + ((sample - row_offset[myid]) * numCol), numCol, MPI_DOUBLE, 0, tagSendRecv, MPI_COMM_WORLD);
+	    }
 
 	  if (myid == 0)
 	    {
 	      MPI_Status status;
-	      MPI_Recv(f_basis_sampled_inv.getData() + (s*numCol), numCol, MPI_DOUBLE, owner, tagSendRecv, MPI_COMM_WORLD, &status);
+	      MPI_Recv(sampled_row_data.data() + (s*numCol), numCol, MPI_DOUBLE, owner, tagSendRecv, MPI_COMM_WORLD, &status);
 	    }
 
 	  delete Ubt;
@@ -363,29 +383,49 @@ QDEIM(const Matrix* f_basis,
 	      const int owner = f_sampled_row_owner[i];
 	      f_sampled_row[i] -= row_offset[owner];
 
-	      all_sampled_rows[disp[owner] + ns[owner]] = f_sampled_row[i];
-
-	      // Swap rows i and (disp[owner] + ns[owner]) of f_basis_sampled_inv
-	      for (int j=0; j<numCol; ++j)
-		{
-		  const double t = f_basis_sampled_inv.item(i, j);
-		  f_basis_sampled_inv.item(i, j) = f_basis_sampled_inv.item(disp[owner] + ns[owner], j);
-		  f_basis_sampled_inv.item(disp[owner] + ns[owner], j) = t;
-		}
-
+	      all_sampled_rows[disp[owner] + ns[owner]] = i; //f_sampled_row[i];
 	      ns[owner]++;
 	    }
+
+	  std::vector<int> sortedRow(num_samples_req);
 
 	  for (int r=0; r<num_procs; ++r)
 	    {
 	      CAROM_VERIFY(ns[r] == f_sampled_rows_per_proc[r]);
+
+	      // Sort the local indices of f_sampled_row for process r.
+	      for (int i=0; i<ns[r]; ++i)
+		{
+		  isort[i] = i;
+		}
+
+	      std::sort(isort.begin(), isort.begin() + ns[r], [&](const int& a, const int& b) {
+		  //return (f_sampled_row[disp[r] + a] < f_sampled_row[disp[r] + b]); }
+		  return (f_sampled_row[all_sampled_rows[disp[r] + a]] < f_sampled_row[all_sampled_rows[disp[r] + b]]); }
+		);  // ascending order locally
+
+	      for (int i=0; i<ns[r]; ++i)
+		{
+		  const int ig = all_sampled_rows[disp[r] + isort[i]];
+		  const int s = (disp[r] + i);
+		  // Put row ig of sampled_row_data into row s of f_basis_sampled_inv
+		  // Put entry ig of f_sampled_row into entry s of sortedRow
+
+		  for (int j=0; j<numCol; ++j)
+		    {
+		      f_basis_sampled_inv.item(s, j) = sampled_row_data[(ig*numCol) + j];
+		    }
+
+		  sortedRow[s] = f_sampled_row[ig];
+		}
 	    }
 
 	  for (int i=0; i<num_samples_req; ++i)
-	    f_sampled_row[i] = all_sampled_rows[i];
+	    f_sampled_row[i] = sortedRow[i]; // all_sampled_rows[i];
 	}
 
       MPI_Bcast(f_sampled_row, num_samples_req, MPI_INT, 0, MPI_COMM_WORLD);
+      MPI_Bcast(f_sampled_rows_per_proc, num_procs, MPI_INT, 0, MPI_COMM_WORLD);
 
       delete [] A;
       delete [] row_offset;
