@@ -1044,7 +1044,7 @@ const
   else
     {
       for (int i=0; i<scount; ++i)
-	row_pivot[i] = QRmgr.ipiv[i]-1;  // make it 0-based. TODO: is this used on non-root processes?
+	row_pivot[i] = QRmgr.ipiv[i]-1;  // make it 0-based. TODO: is this used on non-root processes? Not in QDEIM!
     }
   
   free_matrix_data(&slpk);

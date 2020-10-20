@@ -806,7 +806,7 @@ class Matrix
       */
      void read(const std::string& base_file_name);
 
-     double *getData()
+     double *getData() const
      {
        return d_mat;
      }
