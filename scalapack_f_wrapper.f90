@@ -130,8 +130,8 @@ module scalapack_wrapper
     end type SVDManager
 
     type, bind(C) :: QRManager
-        type(C_PTR) :: A, ipiv, tau, work ! These are pointers to SLPK_Matrix in C.
-        integer(C_INT) :: ipivSize, tauSize, lwork
+        type(C_PTR) :: A, ipiv ! These are pointers to SLPK_Matrix in C.
+        integer(C_INT) :: ipivSize
     end type QRManager
 
     ! Declarations of functionality implemented in the associated C code.
@@ -545,14 +545,13 @@ subroutine qrfactorize(mgr) bind(C)
     integer :: mrank, ierr
 
     type(SLPK_Matrix), pointer :: A
-    integer :: desca(9), lwork
+    integer :: desca(9), lwork, tauSize
 
     real(REAL_KIND), allocatable :: work(:)
     real(REAL_KIND), allocatable :: tau(:)
     real(REAL_KIND) :: bestwork(1)
 
     real(REAL_KIND), pointer :: Adata(:, :)
-    !integer(C_INT), allocatable :: ipiv(:)
     integer(C_INT), pointer :: ipiv(:)
 
     call MPI_Comm_rank(MPI_COMM_WORLD, mrank, ierr)
@@ -560,24 +559,19 @@ subroutine qrfactorize(mgr) bind(C)
     call descinit(desca, A%m, A%n, A%mb, A%nb, 0, 0, A%ctxt, A%mm, ierr)
     call c_f_pointer(A%mdata, Adata, [A%mm, A%mn])
 
-    ! LOCc(N)
     ! TODO: isn't this just A%mn after initialize_matrix?
     mgr%ipivSize = numroc(A%n, A%nb, A%pj, 0, A%npcol)
 
-    ! TODO: compute tauSize correctly. I think this is an overestimate?
-    ! mgr%tauSize = mgr%ipivSize
-    mgr%tauSize = numroc(min(A%m, A%n), A%nb, A%pj, 0, A%npcol)
-
-    lwork = -1
+    tauSize = numroc(min(A%m, A%n), A%nb, A%pj, 0, A%npcol)
 
     call qrfactorize_prep(mgr)
 
     call c_f_pointer(mgr%ipiv, ipiv, [mgr%ipivSize])
 
-    !allocate(ipiv(mgr%ipivSize))
-    allocate(tau(mgr%tauSize))
+    allocate(tau(tauSize))
     
-    ! First call just sets work(1) to work size
+    ! First call just sets bestwork(1) to work size
+    lwork = -1
     call pdgeqpf(A%m, A%n, Adata, 1, 1, desca, ipiv, tau, &
          & bestwork, lwork, ierr)
 
@@ -595,7 +589,6 @@ subroutine qrfactorize(mgr) bind(C)
         endif
     endif
     deallocate(work)
-    !deallocate(ipiv)
     deallocate(tau)
 end subroutine
 

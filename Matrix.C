@@ -1037,7 +1037,6 @@ Matrix::qrcp_pivots_transpose_distributed_scalapack
   release_context(&slpk);
 
   free(QRmgr.ipiv);
-  free(QRmgr.tau);
   
   delete [] rcount;
   delete [] rdisp;
