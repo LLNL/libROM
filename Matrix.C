@@ -618,13 +618,13 @@ Matrix::inverse(
 
 void Matrix::transpose()
 {
-  CAROM_VERIFY(numRows() == numColumns());  // Avoid resizing
+  CAROM_VERIFY(!distributed() && numRows() == numColumns());  // Avoid resizing
   const int n = numRows();
   for (int i=0; i<n; ++i)
     {
       for (int j=0; j<n; ++j)
 	{
-	  double t = d_mat[i*n+j];
+	  const double t = d_mat[i*n+j];
 	  d_mat[i*n+j] = d_mat[j*n+i];
 	  d_mat[j*n+i] = t;
 	}
@@ -811,13 +811,9 @@ Matrix::qrcp_pivots_transpose(int* row_pivot,
 					pivots_requested);
   }
   else{
-    //#ifdef CAROM_HAS_ELEMENTAL
     return qrcp_pivots_transpose_distributed(row_pivot,
 					     row_pivot_owner,
 					     pivots_requested);
-    //#else
-    //    CAROM_VERIFY(false);
-    //#endif
   }
 }
 
@@ -930,17 +926,15 @@ const
 
 void
 Matrix::qrcp_pivots_transpose_distributed_scalapack
-(int* row_pivot, int* row_pivot_owner, int pivots_requested)
-const
+(int* row_pivot, int* row_pivot_owner, int pivots_requested) const
 {
   // Check if distributed; otherwise, use serial implementation
   CAROM_VERIFY(distributed());
 
   int num_total_rows = d_num_rows;
-  int reduce_count = 1; // TODO: remove this?
   CAROM_VERIFY(MPI_Allreduce(MPI_IN_PLACE,
 			     &num_total_rows,
-			     reduce_count,
+			     1,
 			     MPI_INT,
 			     MPI_SUM,
 			     MPI_COMM_WORLD) == MPI_SUCCESS);
@@ -953,12 +947,11 @@ const
   
   row_offset[my_rank] = d_num_rows;
 
-  const int send_recv_count = 1;
   CAROM_VERIFY(MPI_Allgather(MPI_IN_PLACE,
-			     send_recv_count,
+			     1,
 			     MPI_INT,
 			     row_offset,
-			     send_recv_count,
+			     1,
 			     MPI_INT,
 			     MPI_COMM_WORLD) == MPI_SUCCESS);
 
@@ -973,8 +966,8 @@ const
   
   initialize_matrix(&slpk, d_num_cols, row_offset[d_num_procs], 1, d_num_procs, 1, blocksize);  // transposed
 
-  CAROM_VERIFY(d_num_cols <= pivots_requested); // Otherwise, should we just find the QR of the submatrix consisting of the first (pivots_requested) columns?
-  
+  CAROM_VERIFY(d_num_cols <= pivots_requested); // Otherwise, take a submatrix for the QR (not implemented).
+
   for (int rank = 0; rank < d_num_procs; ++rank) {
     // Take the row-major data in d_mat and put it in a transposed column-major array in slpk
     scatter_block(&slpk, 1, row_offset[rank]+1,
@@ -994,16 +987,8 @@ const
   const int scount = std::max(0, std::min(pivots_requested, row_offset[my_rank+1]) - row_offset[my_rank]);
   int *mypivots = (scount > 0) ? new int[scount] : NULL;
 
-  /*
-  { // Sanity check
-    int sumcount = 0;
-    MPI_Reduce(&scount, &sumcount, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-    CAROM_VERIFY(sumcount == pivots_requested || my_rank > 0);
-  }
-  */
-  
   for (int i=0; i<scount; ++i)
-    mypivots[i] = QRmgr.ipiv[i]-1;  // make it 0-based
+    mypivots[i] = QRmgr.ipiv[i]-1;  // Make it 0-based
 
   int *rcount = (my_rank == 0) ? new int[d_num_procs] : NULL;
   int *rdisp = (my_rank == 0) ? new int[d_num_procs] : NULL;
@@ -1036,15 +1021,16 @@ const
 		  break;
 		}
 	    }
+
+	  // Note that row_pivot[i] is a global index.
 	  CAROM_VERIFY(row_pivot_owner[i] >= 0);
 	  CAROM_VERIFY(row_offset[row_pivot_owner[i]] <= row_pivot[i] && row_pivot[i] < row_offset[row_pivot_owner[i]+1]);
-	  //row_pivot[i] -= row_offset[row_pivot_owner[i]];  // Convert from global to local indices.
 	}
     }
   else
     {
       for (int i=0; i<scount; ++i)
-	row_pivot[i] = QRmgr.ipiv[i]-1;  // make it 0-based. TODO: is this used on non-root processes? Not in QDEIM!
+	row_pivot[i] = QRmgr.ipiv[i]-1;  // Make it 0-based
     }
   
   free_matrix_data(&slpk);

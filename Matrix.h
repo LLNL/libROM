@@ -685,8 +685,15 @@ class Matrix
       void
       inverse();
 
+      /**
+       * @brief Replaces this Matrix with its transpose (in place),
+       * in the serial square case only.
+       *
+       * @pre !distributed()
+       * @pre numRows() == numColumns()
+       */
       void transpose();
-      
+
       /**
        * @brief Compute the leading numColumns() column pivots from a
        * QR decomposition with column pivots (QRCP) of the transpose
