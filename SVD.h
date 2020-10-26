@@ -180,8 +180,8 @@ class SVD
       getBasisIntervalStartTime(
          int which_interval) const
       {
-         CAROM_ASSERT(0 <= which_interval);
-         CAROM_ASSERT(which_interval < getNumBasisTimeIntervals());
+         CAROM_VERIFY(0 <= which_interval);
+         CAROM_VERIFY(which_interval < getNumBasisTimeIntervals());
 
 	       std::size_t i = static_cast<std::size_t>(which_interval);
          return d_time_interval_start_times[i];

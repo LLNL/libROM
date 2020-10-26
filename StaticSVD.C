@@ -38,10 +38,10 @@ StaticSVD::StaticSVD(
    d_max_basis_dimension(options.max_basis_dimension),
    d_sigma_tol(options.sigma_tolerance)
 {
-   CAROM_ASSERT(options.dim > 0);
-   CAROM_ASSERT(options.samples_per_time_interval > 0);
-   CAROM_ASSERT(options.max_basis_dimension > 0);
-   CAROM_ASSERT(options.sigma_tolerance >= 0);
+   CAROM_VERIFY(options.dim > 0);
+   CAROM_VERIFY(options.samples_per_time_interval > 0);
+   CAROM_VERIFY(options.max_basis_dimension > 0);
+   CAROM_VERIFY(options.sigma_tolerance >= 0);
 
    // Get the rank of this process, and the number of processors.
    int mpi_init;
@@ -97,8 +97,8 @@ StaticSVD::takeSample(
    double time,
    bool add_without_increase)
 {
-   CAROM_ASSERT(u_in != 0);
-   CAROM_ASSERT(time >= 0.0);
+   CAROM_VERIFY(u_in != 0);
+   CAROM_VERIFY(time >= 0.0);
    CAROM_NULL_USE(add_without_increase);
 
    // Check the u_in is not non-zero.
@@ -272,13 +272,13 @@ StaticSVD::computeSVD()
       hard_cutoff = d_max_basis_dimension;
    }
    int ncolumns = hard_cutoff < sigma_cutoff ? hard_cutoff : sigma_cutoff;
-   CAROM_ASSERT(ncolumns >= 0);
+   CAROM_VERIFY(ncolumns >= 0);
 
    // Allocate the appropriate matrices and gather their elements.
    d_basis = new Matrix(d_dim, ncolumns, true);
    d_S = new Matrix(ncolumns, ncolumns, false);
    {
-      CAROM_ASSERT(ncolumns >= 0);
+      CAROM_VERIFY(ncolumns >= 0);
       unsigned nc = static_cast<unsigned>(ncolumns);
       memset(&d_S->item(0, 0), 0, nc*nc*sizeof(double));
    }

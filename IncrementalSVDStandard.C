@@ -29,9 +29,9 @@ IncrementalSVDStandard::IncrementalSVDStandard(
       options,
       basis_file_name)
 {
-   CAROM_ASSERT(options.dim > 0);
-   CAROM_ASSERT(options.linearity_tol > 0.0);
-   CAROM_ASSERT(options.samples_per_time_interval > 0);
+   CAROM_VERIFY(options.dim > 0);
+   CAROM_VERIFY(options.linearity_tol > 0.0);
+   CAROM_VERIFY(options.samples_per_time_interval > 0);
 
    // If the state of the SVD is to be restored, do it now.  The base class,
    // IncrementalSVD, has already opened the database and restored the state
@@ -68,8 +68,8 @@ IncrementalSVDStandard::buildInitialSVD(
    double* u,
    double time)
 {
-   CAROM_ASSERT(u != 0);
-   CAROM_ASSERT(time >= 0.0);
+   CAROM_VERIFY(u != 0);
+   CAROM_VERIFY(time >= 0.0);
 
    // We have a new time interval.
 
@@ -132,8 +132,8 @@ IncrementalSVDStandard::addLinearlyDependentSample(
    const Matrix* W,
    const Matrix* sigma)
 {
-   CAROM_ASSERT(A != 0);
-   CAROM_ASSERT(sigma != 0);
+   CAROM_VERIFY(A != 0);
+   CAROM_VERIFY(sigma != 0);
 
    // Chop a row and a column off of A to form Amod.  Also form
    // d_S by chopping a row and a column off of sigma.
