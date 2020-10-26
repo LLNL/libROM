@@ -30,9 +30,9 @@ IncrementalSVDFastUpdate::IncrementalSVDFastUpdate(
    d_Up(0),
    d_singular_value_tol(options.singular_value_tol)
 {
-   CAROM_ASSERT(options.dim > 0);
-   CAROM_ASSERT(options.linearity_tol > 0.0);
-   CAROM_ASSERT(options.samples_per_time_interval > 0);
+   CAROM_VERIFY(options.dim > 0);
+   CAROM_VERIFY(options.linearity_tol > 0.0);
+   CAROM_VERIFY(options.samples_per_time_interval > 0);
 
    // If the state of the SVD is to be restored, do it now.  The base class,
    // IncrementalSVD, has already opened the database and restored the state
@@ -93,8 +93,8 @@ IncrementalSVDFastUpdate::buildInitialSVD(
    double* u,
    double time)
 {
-   CAROM_ASSERT(u != 0);
-   CAROM_ASSERT(time >= 0.0);
+   CAROM_VERIFY(u != 0);
+   CAROM_VERIFY(time >= 0.0);
 
    // We have a new time interval.
 
@@ -147,12 +147,6 @@ void
 IncrementalSVDFastUpdate::computeBasis()
 {
    d_basis = d_U->mult(d_Up);
-   /*
-   if (fabs(checkOrthogonality(d_basis)) >
-       std::numeric_limits<double>::epsilon()*static_cast<double>(d_num_samples)) {
-      reOrthogonalize(d_basis);
-   }
-   */
    if(d_updateRightSV)
    {
      delete d_basis_right;
@@ -164,7 +158,9 @@ IncrementalSVDFastUpdate::computeBasis()
        std::cout << "d_num_rows_of_W = " << d_num_rows_of_W << "\n";
        std::cout << "d_singular_value_tol = " << d_singular_value_tol << "\n";
        std::cout << "smallest SV = " << d_S->item(d_num_samples-1,d_num_samples-1) << "\n";
-       std::cout << "next smallest SV = " << d_S->item(d_num_samples-2,d_num_samples-2) << "\n";
+       if (d_num_samples > 1) {
+            std::cout << "next smallest SV = " << d_S->item(d_num_samples-2,d_num_samples-2) << "\n";
+       }
    }
    // remove the smallest singular value if it is smaller than d_singular_value_tol
    if ( (d_singular_value_tol != 0.0) &&
@@ -173,7 +169,7 @@ IncrementalSVDFastUpdate::computeBasis()
 
        if (d_rank == 0) std::cout << "removing a small singular value!\n";
 
-       Matrix* d_basis_new = new Matrix(d_dim, d_num_samples-1, false);
+       Matrix* d_basis_new = new Matrix(d_dim, d_num_samples-1, d_basis->distributed());
        for (int row = 0; row < d_dim; ++row) {
           for (int col = 0; col < d_num_samples-1; ++col) {
               d_basis_new->item(row, col) = d_basis->item(row,col);
@@ -184,7 +180,7 @@ IncrementalSVDFastUpdate::computeBasis()
 
        if (d_updateRightSV)
        {
-           Matrix* d_basis_right_new = new Matrix(d_num_rows_of_W, d_num_samples-1, false);
+           Matrix* d_basis_right_new = new Matrix(d_num_rows_of_W, d_num_samples-1, d_basis_right->distributed());
            for (int row = 0; row < d_num_rows_of_W; ++row) {
               for (int col = 0; col < d_num_samples-1; ++col) {
                   d_basis_right_new->item(row, col) = d_basis_right->item(row,col);
@@ -196,6 +192,19 @@ IncrementalSVDFastUpdate::computeBasis()
        --d_num_samples;
    }
 
+   // Reorthogonalize if necessary.
+   if (fabs(checkOrthogonality(d_basis)) >
+       std::numeric_limits<double>::epsilon()*static_cast<double>(d_num_samples)) {
+       reOrthogonalize(d_basis);
+   }
+   if(d_updateRightSV)
+   {
+       if (fabs(checkOrthogonality(d_basis_right)) >
+           std::numeric_limits<double>::epsilon()*d_num_samples) {
+           reOrthogonalize(d_basis_right);
+       }
+   }
+
 }
 
 void
@@ -204,8 +213,8 @@ IncrementalSVDFastUpdate::addLinearlyDependentSample(
    const Matrix* W,
    const Matrix* sigma)
 {
-   CAROM_ASSERT(A != 0);
-   CAROM_ASSERT(sigma != 0);
+   CAROM_VERIFY(A != 0);
+   CAROM_VERIFY(sigma != 0);
 
    // Chop a row and a column off of A to form Amod.  Also form
    // d_S by chopping a row and a column off of sigma.
@@ -247,11 +256,6 @@ IncrementalSVDFastUpdate::addLinearlyDependentSample(
      ++d_num_rows_of_W;
    }
 
-   // Reorthogonalize if necessary.
-   if (fabs(checkOrthogonality(d_Up)) >
-       std::numeric_limits<double>::epsilon()*d_num_samples) {
-      reOrthogonalize(d_Up);
-   }
 }
 
 void
@@ -261,9 +265,9 @@ IncrementalSVDFastUpdate::addNewSample(
    const Matrix* W,
    Matrix* sigma)
 {
-   CAROM_ASSERT(j != 0);
-   CAROM_ASSERT(A != 0);
-   CAROM_ASSERT(sigma != 0);
+   CAROM_VERIFY(j != 0);
+   CAROM_VERIFY(A != 0);
+   CAROM_VERIFY(sigma != 0);
 
    // Add j as a new column of d_U.
    Matrix* newU = new Matrix(d_dim, d_num_samples+1, true);
@@ -337,22 +341,6 @@ IncrementalSVDFastUpdate::addNewSample(
    }
    else {
       max_U_dim = d_total_dim;
-   }
-
-   if (fabs(checkOrthogonality(d_U)) >
-       std::numeric_limits<double>::epsilon()*static_cast<double>(max_U_dim)) {
-      reOrthogonalize(d_U);
-   }
-   if (fabs(checkOrthogonality(d_Up)) >
-       std::numeric_limits<double>::epsilon()*d_num_samples) {
-      reOrthogonalize(d_Up);
-   }
-
-   if (d_updateRightSV) {
-     if (fabs(checkOrthogonality(d_W)) >
-         std::numeric_limits<double>::epsilon()*d_num_samples) {
-        reOrthogonalize(d_W);
-     }
    }
 
 }

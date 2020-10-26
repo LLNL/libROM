@@ -65,7 +65,7 @@ class SVDBasisGenerator
       isNextSample(
          double time)
       {
-         CAROM_ASSERT(time >= 0.0);
+         CAROM_VERIFY(time >= 0.0);
          return d_svdsampler->isNextSample(time);
       }
 
@@ -94,8 +94,8 @@ class SVDBasisGenerator
          double dt,
          bool add_without_increase = false)
       {
-         CAROM_ASSERT(u_in != 0);
-         CAROM_ASSERT(time >= 0);
+         CAROM_VERIFY(u_in != 0);
+         CAROM_VERIFY(time >= 0);
 
          // Check that u_in is not non-zero.
          Vector u_vec(u_in, d_svdsampler->getDim(), true);
@@ -160,7 +160,7 @@ class SVDBasisGenerator
                   Database::formats db_format = Database::HDF5)
       {
          CAROM_ASSERT(!base_file_name.empty());
-         CAROM_ASSERT(kind == "basis" || kind == "snapshot");
+         CAROM_VERIFY(kind == "basis" || kind == "snapshot");
 
          if (d_basis_reader) delete d_basis_reader;
 
@@ -213,9 +213,9 @@ class SVDBasisGenerator
          double* rhs_in,
          double time)
       {
-         CAROM_ASSERT(u_in != 0);
-         CAROM_ASSERT(rhs_in != 0);
-         CAROM_ASSERT(time >= 0);
+         CAROM_VERIFY(u_in != 0);
+         CAROM_VERIFY(rhs_in != 0);
+         CAROM_VERIFY(time >= 0);
 
          return d_svdsampler->computeNextSampleTime(u_in, rhs_in, time);
       }
@@ -293,8 +293,8 @@ class SVDBasisGenerator
       getBasisIntervalStartTime(
          int which_interval) const
       {
-         CAROM_ASSERT(0 <= which_interval);
-         CAROM_ASSERT(which_interval < getNumBasisTimeIntervals());
+         CAROM_VERIFY(0 <= which_interval);
+         CAROM_VERIFY(which_interval < getNumBasisTimeIntervals());
          return d_svdsampler->getBasisIntervalStartTime(which_interval);
       }
 

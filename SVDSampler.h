@@ -137,7 +137,7 @@ class SVDSampler
       {
          return d_svd->getSnapshotMatrix();
       }
-   
+
       /**
        * @brief Returns the number of time intervals on which different sets of
        * basis vectors are defined.
@@ -164,8 +164,8 @@ class SVDSampler
       getBasisIntervalStartTime(
          int which_interval) const
       {
-         CAROM_ASSERT(0 <= which_interval);
-         CAROM_ASSERT(which_interval < getNumBasisTimeIntervals());
+         CAROM_VERIFY(0 <= which_interval);
+         CAROM_VERIFY(which_interval < getNumBasisTimeIntervals());
          return d_svd->getBasisIntervalStartTime(which_interval);
       }
 
@@ -216,7 +216,7 @@ class SVDSampler
       {
 	return d_svd->getNumSamples();
       }
-      
+
    protected:
       /**
        * @brief Pointer to the abstract SVD algorithm object.

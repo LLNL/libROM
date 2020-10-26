@@ -47,7 +47,7 @@ IncrementalSVD::IncrementalSVD(
    d_updateRightSV(options.updateRightSV),
    d_state_database(0)
 {
-   CAROM_ASSERT(options.linearity_tol > 0.0);
+   CAROM_VERIFY(options.linearity_tol > 0.0);
 
    // Get the number of processors, the dimensions for each process, and the
    // total dimension.
@@ -186,8 +186,8 @@ IncrementalSVD::takeSample(
    double time,
    bool add_without_increase)
 {
-   CAROM_ASSERT(u_in != 0);
-   CAROM_ASSERT(time >= 0.0);
+   CAROM_VERIFY(u_in != 0);
+   CAROM_VERIFY(time >= 0.0);
 
 
    // Check that u_in is not non-zero.
@@ -295,7 +295,7 @@ bool
 IncrementalSVD::buildIncrementalSVD(
    double* u, bool add_without_increase)
 {
-   CAROM_ASSERT(u != 0);
+   CAROM_VERIFY(u != 0);
 
    // l = basis' * u
    Vector u_vec(u, d_dim, true);
@@ -368,7 +368,7 @@ IncrementalSVD::buildIncrementalSVD(
       if ((linearly_dependent_sample && !d_skip_linearly_dependent) ) {
          // This sample is linearly dependent and we are not skipping linearly
          // dependent samples.
-         if(d_rank == 0) std::cout << "adding linearly dependent sample!\n"; 
+         if(d_rank == 0) std::cout << "adding linearly dependent sample!\n";
          addLinearlyDependentSample(A, W, sigma);
          delete sigma;
       }
@@ -408,8 +408,8 @@ IncrementalSVD::constructQ(
    const Vector* l,
    double k)
 {
-   CAROM_ASSERT(l != 0);
-   CAROM_ASSERT(l->dim() == numSamples());
+   CAROM_VERIFY(l != 0);
+   CAROM_VERIFY(l->dim() == numSamples());
 
    // Create Q.
    Q = new double [(d_num_samples+1)*(d_num_samples+1)];
@@ -439,7 +439,7 @@ IncrementalSVD::svd(
    Matrix*& S,
    Matrix*& V)
 {
-   CAROM_ASSERT(A != 0);
+   CAROM_VERIFY(A != 0);
 
    // Construct U, S, and V.
    U = new Matrix(d_num_samples+1, d_num_samples+1, false);
@@ -541,7 +541,7 @@ void
 IncrementalSVD::reOrthogonalize(
    Matrix* m)
 {
-   CAROM_ASSERT(m != 0);
+   CAROM_VERIFY(m != 0);
 
    int num_rows = m->numRows();
    int num_cols = m->numColumns();

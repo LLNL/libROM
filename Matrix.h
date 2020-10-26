@@ -242,7 +242,7 @@ class Matrix
       mult(
          const Matrix* other) const
       {
-         CAROM_ASSERT(other != 0);
+         CAROM_VERIFY(other != 0);
          return mult(*other);
       }
 
@@ -333,7 +333,7 @@ class Matrix
       mult(
          const Vector* other) const
       {
-         CAROM_ASSERT(other != 0);
+         CAROM_VERIFY(other != 0);
          return mult(*other);
       }
 
@@ -491,7 +491,7 @@ class Matrix
       transposeMult(
          const Matrix* other) const
       {
-         CAROM_ASSERT(other != 0);
+         CAROM_VERIFY(other != 0);
          return transposeMult(*other);
       }
 
@@ -580,7 +580,7 @@ class Matrix
       transposeMult(
          const Vector* other) const
       {
-         CAROM_ASSERT(other != 0);
+         CAROM_VERIFY(other != 0);
          return transposeMult(*other);
       }
 
