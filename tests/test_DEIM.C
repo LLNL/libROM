@@ -18,6 +18,8 @@
 #include <mpi.h>
 #include "../DEIM.h"
 #include "../Matrix.h"
+#define _USE_MATH_DEFINES
+#include <cmath>
 
 /**
  * Simple smoke test to make sure Google Test is properly linked
