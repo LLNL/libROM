@@ -1,0 +1,21 @@
+m =  5
+n = 25
+A = randn(m, n)
+[Q, R] = qr(A)
+phi = []
+[rho, phi(end + 1)] = max(Q(:,1))
+U = Q(:,1)
+P = zeros(m,1)
+P(phi(end)) = 1
+Q_sampled = Q(phi(end),:)
+for l = 2:m
+    c = inv(transpose(P)*U)*transpose(P)*Q(:,l)
+    r = Q(:,l) - U*c
+    [rho, phi(end + 1)] = max(r)
+    U = [U Q(:,l)]
+    newPcol = zeros(m,1)
+    newPcol(phi(end)) = 1
+    P = [P newPcol]
+    Q_sampled = [Q_sampled;Q(phi(end),:)]
+end
+phi = transpose(phi)
