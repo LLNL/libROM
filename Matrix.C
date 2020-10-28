@@ -337,8 +337,9 @@ Matrix::pointwise_mult(
    const Vector& other,
    Vector& result) const
 {
-   CAROM_VERIFY(!result.distributed());
-   CAROM_VERIFY(!distributed());
+   // TODO: change the CAROM_ASSERTs to CAROM_VERIFYs or generalize and eliminate the checks.
+   CAROM_ASSERT(!result.distributed());
+   CAROM_ASSERT(!distributed());
    CAROM_VERIFY(!other.distributed());
    CAROM_VERIFY(numColumns() == other.dim());
 
