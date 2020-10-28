@@ -1,10 +1,11 @@
-function [inv_Q] = deim(Q)
-% Input: Q: n by m matrix with orthonormal columns
+function [inv_Q] = deim(Q, m_used)
+% Input:      Q: n by m matrix with orthonormal columns
+%        m_used: number of basis_vectors to use
 
     phi = [];
     [rho, phi(end + 1)] = max(abs(Q(:,1)));
     U = Q(:,1);
-    m = size(Q,2);
+    m = min(m_used, size(Q,2));
     n = size(Q,1);
     P = zeros(n,1);
     P(phi(end)) = 1;

@@ -9,7 +9,7 @@
  *****************************************************************************/
 
 // Description: This source file is a test runner that uses the Google Test
-// Framework to run unit tests on the CAROM::DEIM class.
+// Framework to run unit tests on the CAROM::GNAT class.
 
 #include <iostream>
 
@@ -28,10 +28,10 @@ TEST(GoogleTestFramework, GoogleTestFrameworkFound) {
   SUCCEED();
 }
 
-TEST(DEIMSerialTest, Test_DEIM)
+TEST(GNATSerialTest, Test_GNAT_deim)
 {
 
-  // Orthonormal input matrix to DEIM
+  // Orthonormal input matrix to GNAT
   double* orthonormal_mat = new double[50] {
     -0.1067,   -0.4723,   -0.4552,    0.1104,   -0.2337,
      0.1462,    0.6922,   -0.2716,    0.1663,    0.3569,
@@ -44,8 +44,8 @@ TEST(DEIMSerialTest, Test_DEIM)
      0.4387,   -0.0199,   -0.3338,   -0.1711,   -0.2220,
      0.0101,    0.1807,    0.4488,    0.3219,   -0.6359};
 
-   // Result of DEIM (f_basis_sampled_inv)
-   double* DEIM_true_ans = new double[25] {
+   // Result of GNAT (f_basis_sampled_inv)
+   double* GNAT_true_ans = new double[25] {
     -0.295811, -0.264874,  1.02179,  -1.05194,  -0.554046,
     -0.270643,  1.05349,    0.119162,  0.541832,  0.646459,
     -1.33334,  -0.874864,  -0.276067, -0.27327,   0.124747,
@@ -56,17 +56,17 @@ TEST(DEIMSerialTest, Test_DEIM)
    int num_rows = 10;
 
   CAROM::Matrix* u = new CAROM::Matrix(orthonormal_mat, num_rows, num_cols, false);
-  double* DEIM_res = NULL;
+  double* GNAT_res = NULL;
   int* f_sampled_row = new int[num_cols] {0};
   int* f_sampled_rows_per_proc = new int[num_cols] {0};
   CAROM::Matrix f_basis_sampled_inv = CAROM::Matrix(num_cols, num_cols, false);
-  CAROM::DEIM(u, num_cols, f_sampled_row, f_sampled_rows_per_proc, f_basis_sampled_inv, 0, 1);
+  CAROM::GNAT(u, num_cols, f_sampled_row, f_sampled_rows_per_proc, f_basis_sampled_inv, 0, 1);
 
-  // Compare the norm between the DEIM result and the true DEIM answer
+  // Compare the norm between the GNAT result and the true GNAT answer
   double l2_norm_diff = 0.0;
   for (int i = 0; i < num_cols; i++) {
     for (int j = 0; j < num_cols; j++) {
-      l2_norm_diff += pow(abs(DEIM_true_ans[i * num_cols + j] - f_basis_sampled_inv(i, j)), 2);
+      l2_norm_diff += pow(abs(GNAT_true_ans[i * num_cols + j] - f_basis_sampled_inv(i, j)), 2);
     }
   }
   l2_norm_diff = sqrt(l2_norm_diff);
@@ -75,10 +75,10 @@ TEST(DEIMSerialTest, Test_DEIM)
   EXPECT_TRUE(l2_norm_diff < 1e-5);
 }
 
-TEST(DEIMSerialTest, Test_DEIM_decreased_used_basis_vectors)
+TEST(GNATSerialTest, Test_GNAT)
 {
 
-  // Orthonormal input matrix to DEIM
+  // Orthonormal input matrix to GNAT
   double* orthonormal_mat = new double[50] {
     -0.1067,   -0.4723,   -0.4552,    0.1104,   -0.2337,
      0.1462,    0.6922,   -0.2716,    0.1663,    0.3569,
@@ -91,28 +91,28 @@ TEST(DEIMSerialTest, Test_DEIM_decreased_used_basis_vectors)
      0.4387,   -0.0199,   -0.3338,   -0.1711,   -0.2220,
      0.0101,    0.1807,    0.4488,    0.3219,   -0.6359};
 
-   // Result of DEIM (f_basis_sampled_inv)
-   double* DEIM_true_ans = new double[9] {
+   // Result of GNAT (f_basis_sampled_inv)
+   double* GNAT_true_ans = new double[9] {
     -0.331632, -0.690455,  2.07025,
     -0.541131,  1.17546,  -0.446068,
     -1.55764,  -1.05777,  -0.022448};
 
   int num_cols = 5;
   int num_rows = 10;
-  int num_basis_vectors_used = 3;
+  int num_samples = 9;
 
   CAROM::Matrix* u = new CAROM::Matrix(orthonormal_mat, num_rows, num_cols, false);
-  double* DEIM_res = NULL;
-  int* f_sampled_row = new int[num_basis_vectors_used] {0};
-  int* f_sampled_rows_per_proc = new int[num_basis_vectors_used] {0};
-  CAROM::Matrix f_basis_sampled_inv = CAROM::Matrix(num_basis_vectors_used, num_basis_vectors_used, false);
-  CAROM::DEIM(u, num_basis_vectors_used, f_sampled_row, f_sampled_rows_per_proc, f_basis_sampled_inv, 0, 1);
+  double* GNAT_res = NULL;
+  int* f_sampled_row = new int[num_samples] {0};
+  int* f_sampled_rows_per_proc = new int[num_samples] {0};
+  CAROM::Matrix f_basis_sampled_inv = CAROM::Matrix(num_samples, num_samples, false);
+  CAROM::GNAT(u, num_cols, f_sampled_row, f_sampled_rows_per_proc, f_basis_sampled_inv, 0, 1, num_samples);
 
-  // Compare the norm between the DEIM result and the true DEIM answer
+  // Compare the norm between the GNAT result and the true GNAT answer
   double l2_norm_diff = 0.0;
-  for (int i = 0; i < num_basis_vectors_used; i++) {
-    for (int j = 0; j < num_basis_vectors_used; j++) {
-      l2_norm_diff += pow(abs(DEIM_true_ans[i * num_basis_vectors_used + j] - f_basis_sampled_inv(i, j)), 2);
+  for (int i = 0; i < num_samples; i++) {
+    for (int j = 0; j < num_samples; j++) {
+      l2_norm_diff += pow(abs(GNAT_true_ans[i * num_samples + j] - f_basis_sampled_inv(i, j)), 2);
     }
   }
   l2_norm_diff = sqrt(l2_norm_diff);

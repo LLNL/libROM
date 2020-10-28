@@ -232,6 +232,7 @@ if(GTEST_FOUND)
     Vector
     Matrix
     DEIM
+    GNAT
     SVD
     StaticSVD
     IncrementalSVD)
