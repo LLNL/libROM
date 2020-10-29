@@ -94,6 +94,7 @@ void GNAT(const Matrix* f_basis,
 
   // Scratch space used throughout the algorithm.
   double* c = new double [num_basis_vectors];
+  double* sampled_row = new double [num_basis_vectors];
 
   std::vector<std::set<int> > proc_sampled_f_row(num_procs);
   std::vector<std::map<int, int> > proc_f_row_to_tmp_fs_row(num_procs);
@@ -129,14 +130,14 @@ void GNAT(const Matrix* f_basis,
       // Now get the first sampled row of the basis of the RHS.
       if (f_bv_max_global.proc == myid) {
 	for (int j = 0; j < num_basis_vectors; ++j) {
-	  c[j] = f_basis->item(f_bv_max_global.row, j);
+	  sampled_row[j] = f_basis->item(f_bv_max_global.row, j);
 	}
       }
-      MPI_Bcast(c, num_basis_vectors, MPI_DOUBLE,
+      MPI_Bcast(sampled_row, num_basis_vectors, MPI_DOUBLE,
 		f_bv_max_global.proc, MPI_COMM_WORLD);
       // Now add the first sampled row of the basis of the RHS to tmp_fs.
       for (int j = 0; j < num_basis_vectors; ++j) {
-	tmp_fs.item(k, j) = c[j];
+	tmp_fs.item(k, j) = sampled_row[j];
       }
       proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
       proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] = k;
@@ -204,14 +205,14 @@ void GNAT(const Matrix* f_basis,
 	// Now get the next sampled row of the basis of f.
 	if (f_bv_max_global.proc == myid) {
 	  for (int j = 0; j < num_basis_vectors; ++j) {
-	    c[j] = f_basis->item(f_bv_max_global.row, j);
+	    sampled_row[j] = f_basis->item(f_bv_max_global.row, j);
 	  }
 	}
-	MPI_Bcast(c, num_basis_vectors, MPI_DOUBLE,
+	MPI_Bcast(sampled_row, num_basis_vectors, MPI_DOUBLE,
 		  f_bv_max_global.proc, MPI_COMM_WORLD);
 	// Now add the ith sampled row of the basis of the RHS to tmp_fs.
 	for (int j = 0; j < num_basis_vectors; ++j) {
-	  tmp_fs.item(ns+k, j) = c[j];
+	  tmp_fs.item(ns+k, j) = sampled_row[j];
 	}
 	proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
 	proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] = ns+k;
@@ -252,6 +253,7 @@ void GNAT(const Matrix* f_basis,
   MPI_Op_free(&RowInfoOp);
 
   delete [] c;
+  delete [] sampled_row;
 }
 
 }
