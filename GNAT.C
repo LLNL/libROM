@@ -76,17 +76,17 @@ void GNAT(const Matrix* f_basis,
   MPI_Op_create((MPI_User_function*)RowInfoMax, true, &RowInfoOp);
 
   // Get the number of basis vectors and the size of each basis vector.
-	CAROM_VERIFY(0 < num_f_basis_vectors_used && num_f_basis_vectors_used <= f_basis->numColumns());
+  CAROM_VERIFY(0 < num_f_basis_vectors_used && num_f_basis_vectors_used <= f_basis->numColumns());
   const int num_basis_vectors =
     std::min(num_f_basis_vectors_used, f_basis->numColumns());
-  const int basis_size = f_basis->numRows();
-
   const int num_samples = num_samples_req > 0 ? num_samples_req : num_basis_vectors;
+  CAROM_VERIFY(num_basis_vectors <= num_samples && num_samples <= f_basis->numRows());
+  CAROM_VERIFY(num_samples == f_basis_sampled_inv.numRows() && num_basis_vectors == f_basis_sampled_inv.numColumns());
+  CAROM_VERIFY(!f_basis_sampled_inv.distributed());
+  const int basis_size = f_basis->numRows();
 
   const int ns_mod_nr = num_samples % num_basis_vectors;
   int ns = 0;
-
-  CAROM_VERIFY(num_samples >= num_basis_vectors && num_samples <= basis_size && num_samples > 0);
 
   // The small matrix inverted by the algorithm.  We'll allocate the largest
   // matrix we'll need and set its size at each step in the algorithm.

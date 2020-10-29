@@ -91,6 +91,8 @@ DEIM(const Matrix* f_basis,
    CAROM_VERIFY(0 < num_f_basis_vectors_used && num_f_basis_vectors_used <= f_basis->numColumns());
    int num_basis_vectors =
       std::min(num_f_basis_vectors_used, f_basis->numColumns());
+   CAROM_VERIFY(num_basis_vectors == f_basis_sampled_inv.numRows() && num_basis_vectors == f_basis_sampled_inv.numColumns());
+   CAROM_VERIFY(!f_basis_sampled_inv.distributed());
    int basis_size = f_basis->numRows();
 
    // The small matrix inverted by the algorithm.  We'll allocate the largest
