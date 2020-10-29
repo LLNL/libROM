@@ -3,7 +3,7 @@ function [inv_Q] = deim(Q, m_used)
 %        m_used: number of basis_vectors to use
 
     phi = [];
-    [rho, phi(end + 1)] = max(abs(Q(:,1)));
+    [~, phi(end + 1)] = max(abs(Q(:,1)));
     U = Q(:,1);
     m = min(m_used, size(Q,2));
     n = size(Q,1);
@@ -17,14 +17,14 @@ function [inv_Q] = deim(Q, m_used)
         RHS = transpose(P) * Q(:, l);
         c = inv_M * RHS;
         r = Q(:,l) - U*c;
-        [rho, phi(end + 1)] = max(abs(r));
+        [~, phi(end + 1)] = max(abs(r));
         U = [U Q(:,l)];
         newPcol = zeros(n,1);
         newPcol(phi(end)) = 1;
         P = [P newPcol];
         Q_sampled = [Q_sampled;Q(phi(end),:)];
     end
-    [phi, phi_sort_order] = sort(phi);
+    [~, phi_sort_order] = sort(phi);
     Q_sampled = Q_sampled(phi_sort_order,:);
     inv_Q = inv(Q_sampled);
 end
