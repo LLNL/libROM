@@ -88,6 +88,7 @@ DEIM(const Matrix* f_basis,
    MPI_Op_create((MPI_User_function*)RowInfoMax, true, &RowInfoOp);
 
    // Get the number of basis vectors and the size of each basis vector.
+   CAROM_VERIFY(0 < num_f_basis_vectors_used && num_f_basis_vectors_used <= f_basis->numColumns());
    int num_basis_vectors =
       std::min(num_f_basis_vectors_used, f_basis->numColumns());
    int basis_size = f_basis->numRows();
