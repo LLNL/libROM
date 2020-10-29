@@ -40,13 +40,13 @@ function [inv_Q] = gnat(Q, m_used, nsr)
         Q_sampled = [Q_sampled;Q(phi(end),:)];
     end
     for l = 2:m
-        M = transpose(P)*U
+        M = transpose(P)*U;
         inv_M = pinv(M);
         RHS = transpose(P) * Q(:, l);
         c = inv_M * RHS;
         r = Q(:,l) - U*c;
         U = [U Q(:,l)];
-        if l < ns_mod_nr
+        if l - 1 < ns_mod_nr
             nsi = idivide(int32(ns), int32(m), 'floor') + 1;
         else
             nsi = idivide(int32(ns), int32(m), 'floor');
