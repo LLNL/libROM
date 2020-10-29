@@ -75,7 +75,7 @@ TEST(GNATSerialTest, Test_GNAT_deim)
   EXPECT_TRUE(l2_norm_diff < 1e-5);
 }
 
-TEST(GNATSerialTest, Test_GNAT)
+TEST(GNATSerialTest, Test_GNAT_oversampling)
 {
 
   // Orthonormal input matrix to GNAT
@@ -92,10 +92,16 @@ TEST(GNATSerialTest, Test_GNAT)
      0.0101,    0.1807,    0.4488,    0.3219,   -0.6359};
 
    // Result of GNAT (f_basis_sampled_inv)
-   double* GNAT_true_ans = new double[9] {
-    -0.331632, -0.690455,  2.07025,
-    -0.541131,  1.17546,  -0.446068,
-    -1.55764,  -1.05777,  -0.022448};
+   double* GNAT_true_ans = new double[45] {
+    -0.111754, -0.472181, -0.454143,  0.110436,  -0.234925,
+     0.169535,  0.691715, -0.276502,  0.166065,   0.362544,
+     0.443111, -0.344589,  0.488125, -0.336035,   0.332789,
+     0.556025,  0.154167, -0.172054, -0.344493,  -0.294606,
+    -0.498551,  0.0149608,-0.191435, -0.576216,   0.00647047,
+    -0.247487,  0.328931,  0.293216, -0.459384,  -0.134887,
+    -0.036157,  0.120386, -0.0906109,-0.228902, -0.382862,
+     0.478391, -0.0208761,-0.342018, -0.171577,  -0.2125,
+    -0.0109879, 0.181169,  0.453212,  0.322187,   -0.640965 };
 
   int num_cols = 5;
   int num_rows = 10;
@@ -105,14 +111,14 @@ TEST(GNATSerialTest, Test_GNAT)
   double* GNAT_res = NULL;
   int* f_sampled_row = new int[num_samples] {0};
   int* f_sampled_rows_per_proc = new int[num_samples] {0};
-  CAROM::Matrix f_basis_sampled_inv = CAROM::Matrix(num_samples, num_samples, false);
+  CAROM::Matrix f_basis_sampled_inv = CAROM::Matrix(num_samples, num_cols, false);
   CAROM::GNAT(u, num_cols, f_sampled_row, f_sampled_rows_per_proc, f_basis_sampled_inv, 0, 1, num_samples);
 
   // Compare the norm between the GNAT result and the true GNAT answer
   double l2_norm_diff = 0.0;
   for (int i = 0; i < num_samples; i++) {
-    for (int j = 0; j < num_samples; j++) {
-      l2_norm_diff += pow(abs(GNAT_true_ans[i * num_samples + j] - f_basis_sampled_inv(i, j)), 2);
+    for (int j = 0; j < num_cols; j++) {
+      l2_norm_diff += pow(abs(GNAT_true_ans[i * num_cols + j] - f_basis_sampled_inv(i, j)), 2);
     }
   }
   l2_norm_diff = sqrt(l2_norm_diff);
