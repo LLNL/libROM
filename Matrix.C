@@ -742,9 +742,11 @@ Matrix::read(const std::string& base_file_name)
    int rank;
    if (mpi_init) {
       MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+      MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
    }
    else {
       rank = 0;
+      d_num_procs = 1;
    }
 
    char tmp[100];
@@ -767,12 +769,6 @@ Matrix::read(const std::string& base_file_name)
    sprintf(tmp, "data");
    database.getDoubleArray(tmp, d_mat, d_alloc_size);
    d_owns_data = true;
-   if (mpi_init) {
-      MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
-   }
-   else {
-      d_num_procs = 1;
-   }
    database.close();
 }
 
