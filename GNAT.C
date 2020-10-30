@@ -80,7 +80,7 @@ void GNAT(const Matrix* f_basis,
   const int num_basis_vectors =
     std::min(num_f_basis_vectors_used, f_basis->numColumns());
   const int num_samples = num_samples_req > 0 ? num_samples_req : num_basis_vectors;
-  CAROM_VERIFY(num_basis_vectors <= num_samples && num_samples <= f_basis->numRows());
+  CAROM_VERIFY(num_basis_vectors <= num_samples && num_samples <= f_basis->numDistributedRows());
   CAROM_VERIFY(num_samples == f_basis_sampled_inv.numRows() && num_basis_vectors == f_basis_sampled_inv.numColumns());
   CAROM_VERIFY(!f_basis_sampled_inv.distributed());
   const int basis_size = f_basis->numRows();

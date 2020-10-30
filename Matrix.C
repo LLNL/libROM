@@ -185,14 +185,7 @@ Matrix::balanced() const
   if (!distributed()) return true;
 
   // Otherwise, get the total number of rows of the matrix.
-  int num_total_rows = d_num_rows;
-  const int reduce_count = 1;
-  CAROM_VERIFY(MPI_Allreduce(MPI_IN_PLACE,
-			     &num_total_rows,
-			     reduce_count,
-			     MPI_INT,
-			     MPI_SUM,
-			     comm) == MPI_SUCCESS);
+  int num_total_rows = numDistributedRows();
 
   const int first_rank_with_fewer = num_total_rows % d_num_procs;
   int my_rank;
@@ -205,6 +198,7 @@ Matrix::balanced() const
   const bool has_too_many_rows = (d_num_rows > max_rows_on_rank);
 
   int result = (has_enough_rows && !has_too_many_rows);
+  const int reduce_count = 1;
   CAROM_VERIFY(MPI_Allreduce(MPI_IN_PLACE,
 			     &result,
 			     reduce_count,
@@ -223,6 +217,27 @@ Matrix::operator = (
      d_mat[i] = a;
    }
    return *this;
+}
+
+int
+Matrix::numDistributedRows() const
+{
+   const int master_rank = 0;
+   const MPI_Comm comm = MPI_COMM_WORLD;
+   if (!distributed()) {
+     return numRows();
+   }
+   else {
+     int num_total_rows = d_num_rows;
+     const int reduce_count = 1;
+     CAROM_VERIFY(MPI_Allreduce(MPI_IN_PLACE,
+             &num_total_rows,
+             reduce_count,
+             MPI_INT,
+             MPI_SUM,
+             comm) == MPI_SUCCESS);
+     return num_total_rows;
+   }
 }
 
 void

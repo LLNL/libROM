@@ -186,6 +186,14 @@ class Matrix
       }
 
       /**
+       * @brief Returns the number of rows of the Matrix across all processors.
+       *
+       * @return The number of rows of the Matrix across all processors.
+       */
+       int
+       numDistributedRows() const;
+
+      /**
        * @brief Returns the number of columns in the Matrix.
        *
        * This method will return the same value from each processor.
