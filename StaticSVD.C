@@ -59,7 +59,7 @@ StaticSVD::StaticSVD(
    if (d_total_dim % d_nprow != 0) { d_blocksize += 1; }
 
    initialize_matrix(d_samples.get(), d_total_dim, d_samples_per_time_interval,
-                     d_nprow, d_npcol, d_blocksize, d_blocksize);
+                     d_nprow, d_npcol, d_blocksize, d_blocksize);  // TODO: should nb = 1?
    d_factorizer->A = nullptr;
 }
 

@@ -686,6 +686,15 @@ class Matrix
       inverse();
 
       /**
+       * @brief Replaces this Matrix with its transpose (in place),
+       * in the serial square case only.
+       *
+       * @pre !distributed()
+       * @pre numRows() == numColumns()
+       */
+      void transpose();
+
+      /**
        * @brief Compute the leading numColumns() column pivots from a
        * QR decomposition with column pivots (QRCP) of the transpose
        * of this.
@@ -804,6 +813,11 @@ class Matrix
       */
      void read(const std::string& base_file_name);
 
+     double *getData() const
+     {
+       return d_mat;
+     }
+     
    private:
       /**
        * @brief Default constructor is not implemented.
@@ -845,6 +859,11 @@ class Matrix
        */
       void
       qrcp_pivots_transpose_distributed(int* row_pivot,
+					int* row_pivot_owner,
+					int  pivots_requested) const;
+
+      void
+      qrcp_pivots_transpose_distributed_scalapack(int* row_pivot,
 					int* row_pivot_owner,
 					int  pivots_requested) const;
 
@@ -924,6 +943,15 @@ class Matrix
 		       const int,
 		       const int,
 		       const int);
+
+      friend void QDEIM(const Matrix*,
+			const int,
+			int*,
+			int*,
+			Matrix&,
+			const int,
+			const int,
+			const int);
 
       /**
        * @brief The storage for the Matrix's values on this processor.

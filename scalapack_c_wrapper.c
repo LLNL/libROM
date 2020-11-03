@@ -34,6 +34,13 @@ void svd_init(struct SVDManager* mgr, struct SLPK_Matrix* A)
     mgr->done = 0;
 }
 
+void qr_init(struct QRManager* mgr, struct SLPK_Matrix* A)
+{
+    mgr->A = A;
+    mgr->ipiv = NULL;
+    mgr->ipivSize = 0;
+}
+
 void factorize_prep(struct SVDManager* mgr)
 {
     struct SLPK_Matrix* A = mgr->A;
@@ -53,6 +60,13 @@ void factorize_prep(struct SVDManager* mgr)
     
     if (mgr->S == NULL) {
         mgr->S = malloc(sizeof(REAL_TYPE) * SIZE);
+    }
+}
+
+void qrfactorize_prep(struct QRManager* mgr)
+{
+    if (mgr->ipiv == NULL && mgr->ipivSize > 0) {
+        mgr->ipiv = malloc(sizeof(int) * mgr->ipivSize);
     }
 }
 
