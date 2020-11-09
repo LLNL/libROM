@@ -58,9 +58,14 @@ TEST(QDEIMSerialTest, Test_QDEIM)
   CAROM::Matrix* u = new CAROM::Matrix(orthonormal_mat, num_rows, num_cols, true);
   double* QDEIM_res = NULL;
   int* f_sampled_row = new int[num_cols] {0};
+  int* f_sampled_row_true_ans = new int[num_cols] {1, 2, 4, 6, 9};
   int* f_sampled_rows_per_proc = new int[num_cols] {0};
   CAROM::Matrix f_basis_sampled_inv = CAROM::Matrix(num_cols, num_cols, false);
   CAROM::QDEIM(u, num_cols, f_sampled_row, f_sampled_rows_per_proc, f_basis_sampled_inv, 0, 1, num_cols);
+
+  for (int i = 0; i < num_cols; i++) {
+    EXPECT_EQ(f_sampled_row[i], f_sampled_row_true_ans[i]);
+  }
 
   // Compare the norm between the QDEIM result and the true QDEIM answer
   double l2_norm_diff = 0.0;
@@ -110,9 +115,14 @@ TEST(QDEIMSerialTest, Test_QDEIM_gpode_oversampling)
   CAROM::Matrix* u = new CAROM::Matrix(orthonormal_mat, num_rows, num_cols, true);
   double* QDEIM_res = NULL;
   int* f_sampled_row = new int[num_samples] {0};
+  int* f_sampled_row_true_ans = new int[num_samples] {0, 1, 2, 4, 5, 6, 8, 9};
   int* f_sampled_rows_per_proc = new int[num_samples] {0};
   CAROM::Matrix f_basis_sampled_inv = CAROM::Matrix(num_samples, num_cols, false);
   CAROM::QDEIM(u, num_cols, f_sampled_row, f_sampled_rows_per_proc, f_basis_sampled_inv, 0, 1, num_samples);
+
+  for (int i = 0; i < num_samples; i++) {
+    EXPECT_EQ(f_sampled_row[i], f_sampled_row_true_ans[i]);
+  }
 
   // Compare the norm between the QDEIM result and the true QDEIM answer
   double l2_norm_diff = 0.0;
