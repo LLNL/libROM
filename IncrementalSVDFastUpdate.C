@@ -22,7 +22,7 @@
 namespace CAROM {
 
 IncrementalSVDFastUpdate::IncrementalSVDFastUpdate(
-   IncrementalSVDOptions options,
+   Options options,
    const std::string& basis_file_name) :
    IncrementalSVD(
       options,
@@ -129,7 +129,7 @@ IncrementalSVDFastUpdate::buildInitialSVD(
    }
 
    // Build d_W for this new time interval.
-   if (d_updateRightSV) {
+   if (d_update_right_SV) {
      d_W = new Matrix(1, 1, false);
      d_W->item(0, 0) = 1.0;
    }
@@ -147,7 +147,7 @@ void
 IncrementalSVDFastUpdate::computeBasis()
 {
    d_basis = d_U->mult(d_Up);
-   if(d_updateRightSV)
+   if(d_update_right_SV)
    {
      delete d_basis_right;
      d_basis_right = new Matrix(*d_W);
@@ -178,7 +178,7 @@ IncrementalSVDFastUpdate::computeBasis()
        delete d_basis;
        d_basis = d_basis_new;
 
-       if (d_updateRightSV)
+       if (d_update_right_SV)
        {
            Matrix* d_basis_right_new = new Matrix(d_num_rows_of_W, d_num_samples-1, d_basis_right->distributed());
            for (int row = 0; row < d_num_rows_of_W; ++row) {
@@ -197,7 +197,7 @@ IncrementalSVDFastUpdate::computeBasis()
        std::numeric_limits<double>::epsilon()*static_cast<double>(d_num_samples)) {
        reOrthogonalize(d_basis);
    }
-   if(d_updateRightSV)
+   if(d_update_right_SV)
    {
        if (fabs(checkOrthogonality(d_basis_right)) >
            std::numeric_limits<double>::epsilon()*d_num_samples) {
@@ -232,7 +232,7 @@ IncrementalSVDFastUpdate::addLinearlyDependentSample(
    d_Up = Up_times_Amod;
 
    Matrix* new_d_W;
-   if (d_updateRightSV) {
+   if (d_update_right_SV) {
      // The new d_W is the product of the current d_W extended by another row
      // and column and W.  The only new value in the extended version of d_W
      // that is non-zero is the new lower right value and it is 1.  We will
@@ -281,7 +281,7 @@ IncrementalSVDFastUpdate::addNewSample(
    d_U = newU;
 
    Matrix* new_d_W;
-   if (d_updateRightSV) {
+   if (d_update_right_SV) {
      // The new d_W is the product of the current d_W extended by another row
      // and column and W.  The only new value in the extended version of d_W
      // that is non-zero is the new lower right value and it is 1.  We will

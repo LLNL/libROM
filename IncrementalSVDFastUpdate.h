@@ -37,7 +37,7 @@ class IncrementalSVDFastUpdate : public IncrementalSVD
        *                            name.
        */
       IncrementalSVDFastUpdate(
-         IncrementalSVDOptions options,
+         Options options,
          const std::string& basis_file_name);
 
       /**

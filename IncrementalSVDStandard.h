@@ -36,7 +36,7 @@ class IncrementalSVDStandard : public IncrementalSVD
        *                            name.
        */
       IncrementalSVDStandard(
-         IncrementalSVDOptions options,
+         Options options,
          const std::string& basis_file_name);
 
       /**

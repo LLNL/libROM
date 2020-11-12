@@ -16,7 +16,7 @@
 namespace CAROM {
 
 SVD::SVD(
-   SVDOptions options) :
+   Options options) :
    d_dim(options.dim),
    d_num_samples(0),
    d_samples_per_time_interval(options.samples_per_time_interval),

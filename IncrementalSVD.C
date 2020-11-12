@@ -36,7 +36,7 @@ namespace CAROM {
 const int IncrementalSVD::COMMUNICATE_U = 666;
 
 IncrementalSVD::IncrementalSVD(
-   IncrementalSVDOptions options,
+   Options options,
    const std::string& basis_file_name) :
    SVD(options),
    d_linearity_tol(options.linearity_tol),
@@ -44,7 +44,7 @@ IncrementalSVD::IncrementalSVD(
    d_max_basis_dimension(options.max_basis_dimension),
    d_total_dim(0),
    d_save_state(options.save_state),
-   d_updateRightSV(options.updateRightSV),
+   d_update_right_SV(options.update_right_SV),
    d_state_database(0)
 {
    CAROM_VERIFY(options.linearity_tol > 0.0);
@@ -108,7 +108,7 @@ IncrementalSVD::IncrementalSVD(
                                           &d_U->item(0, 0),
                                           num_rows*num_cols);
 
-         if (d_updateRightSV) {
+         if (d_update_right_SV) {
            // Read d_W.
            d_state_database->getInteger("W_num_rows", num_rows);
            d_state_database->getInteger("W_num_cols", num_cols);
@@ -163,7 +163,7 @@ IncrementalSVD::~IncrementalSVD()
                                        &d_S->item(0, 0),
                                        num_rows*num_cols);
 
-      if (d_updateRightSV) {
+      if (d_update_right_SV) {
         // Save d_W.
         num_rows = d_W->numRows();
         d_state_database->putInteger("W_num_rows", num_rows);
@@ -496,7 +496,7 @@ IncrementalSVD::svd(
             U->item(col, row) = tmp;
          }
       }
-/*      if(d_updateRightSV) {
+/*      if(d_update_right_SV) {
         // V is column major order so convert it to row major order.
         for (int row = 0; row < d_num_samples+1; ++row) {
            for (int col = row+1; col < d_num_samples+1; ++col) {

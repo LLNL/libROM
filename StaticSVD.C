@@ -31,7 +31,7 @@ void dgesdd(char*, int*, int*, double*, int*,
 namespace CAROM {
 
 StaticSVD::StaticSVD(
-   StaticSVDOptions options) :
+   Options options) :
    SVD(options),
    d_samples(new SLPK_Matrix), d_factorizer(new SVDManager),
    d_this_interval_basis_current(false),

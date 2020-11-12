@@ -15,6 +15,7 @@
 #define included_StaticSVD_h
 
 #include "SVD.h"
+#include "Options.h"
 #include "scalapack_wrapper.h"
 
 #include <limits>
@@ -22,53 +23,6 @@
 #include <vector>
 
 namespace CAROM {
-
-  struct StaticSVDOptions : virtual public SVDOptions
-  {
-    /**
-     * @brief Constructor.
-     *
-     * @pre dim > 0
-     * @pre samples_per_time_interval > 0
-     *
-     * @param[in] dim The dimension of the system on this processor.
-     * @param[in] samples_per_time_interval The maximum number of samples in
-     *                                      each time interval.
-     * @param[in] output_rightSV Whether to output the right SV or not.
-     * @param[in] max_basis_dimension (typemax(int)) The maximum number of
-     *                                vectors returned in the basis.
-     * @param[in] sigma_tolerance This tolerance is based on the ratio of
-     *                            singular values to the largest singular
-     *                            value. If sigma[i] / sigma[0] < sigma_tolerance,
-     *                            the associated vector is dropped from the
-     *                            basis.
-     * @param[in] debug_algorithm If true results of static svd algorithm
-     *                            will be printed to facilitate debugging.
-     * @param[in] max_time_intervals The maximum number of time intervals.
-     * @param[in] write_snapshots Whether to automatically write snapshots matrices
-     *                        instead of basis matrices.
-     */
-
-     StaticSVDOptions() = delete;
-
-     StaticSVDOptions(int dim_,
-       int samples_per_time_interval_,
-       bool output_rightSV_ = false,
-       int max_basis_dimension_ = std::numeric_limits<int>::max(),
-       double sigma_tolerance_ = 0,
-       bool debug_algorithm_ = false,
-       int max_time_intervals_ = -1,
-       bool write_snapshots_ = false
-     ) : SVDOptions(dim_, samples_per_time_interval_, debug_algorithm_,
-     max_time_intervals_, write_snapshots_),
-     output_rightSV(output_rightSV_),
-     max_basis_dimension(max_basis_dimension_),
-     sigma_tolerance(sigma_tolerance_) {};
-
-     bool output_rightSV;
-     int max_basis_dimension;
-     double sigma_tolerance;
-  };
 
 /**
  * StaticSVD implements the interface of class SVD for the static SVD
@@ -89,7 +43,7 @@ class StaticSVD : public SVD
        *                    generator.
        */
       StaticSVD(
-         StaticSVDOptions options
+         Options options
          );
 
       /**
