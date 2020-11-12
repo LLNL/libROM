@@ -11,7 +11,7 @@
 // Description: Simple test of the incremental fast update algorithm and
 //              incremental sampler.
 
-#include "IncrementalSVDBasisGenerator.h"
+#include "BasisGenerator.h"
 
 #include "mpi.h"
 
@@ -55,14 +55,12 @@ main(
 
    // Construct the incremental basis generator to use the fast update
    // incremental algorithm and the incremental sampler.
-   CAROM::IncrementalSVDOptions incremental_svd_options(dim, 2, 1.0e-2, 2, 1.0e-6,
-   1.0e-2, 0.11);
-   incremental_svd_options.fast_update = true;
-   incremental_svd_options.debug_algorithm = true;
+   CAROM::Options svd_options = CAROM::Options(dim, 2).setIncrementalSVD(1.0e-2, 2, 1.0e-6,
+   1.0e-2, 0.11, false, true).setDebugMode(true);
 
 
-   CAROM::IncrementalSVDBasisGenerator inc_basis_generator(
-     incremental_svd_options
+   CAROM::BasisGenerator inc_basis_generator(
+     svd_options, true
    );
 
    // Define the values for the first sample.

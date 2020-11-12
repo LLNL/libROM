@@ -14,8 +14,7 @@
 //              same for all processor decompositions when
 //              dim * number of processors is constant.
 
-#include "IncrementalSVDBasisGenerator.h"
-#include "StaticSVDBasisGenerator.h"
+#include "BasisGenerator.h"
 
 #include "mpi.h"
 
@@ -123,21 +122,16 @@ main(
    // Construct the incremental basis generator to use the fast update
    // incremental algorithm and the incremental sampler.
 
-   CAROM::IncrementalSVDOptions incremental_svd_options(dim, num_samples, 
-      1.0e-6, dim, 1.0e-6, 1.0e-2, 0.001);
-   incremental_svd_options.fast_update = true;
-   incremental_svd_options.debug_algorithm = true;
-
-   CAROM::IncrementalSVDBasisGenerator inc_basis_generator(
-      CAROM::IncrementalSVDOptions(dim, num_samples, 1.0e-6, dim, 1.0e-6, 1.0e-2,
-      0.001)
+   CAROM::BasisGenerator inc_basis_generator(
+      CAROM::Options(dim, num_samples).setIncrementalSVD(1.0e-6,
+        dim, 1.0e-6, 1.0e-2, 0.001, false, true).setDebugMode(true), false
     );
 
    // Construct the static basis generator for the static algorithm and the
    // static sampler.
 
-   CAROM::StaticSVDBasisGenerator static_basis_generator(
-     CAROM::StaticSVDOptions(dim, num_samples, true)
+   CAROM::BasisGenerator static_basis_generator(
+     CAROM::Options(dim, num_samples, -1, 0.0, true), false
    );
 
    // Initialize random number generator.
@@ -254,7 +248,7 @@ main(
    // executable. This direct call of the StaticSVDBasisGenerator
    // destructor is not idiomatic, but it is the least disruptive
    // change to the code until a better solution can be found.
-   static_basis_generator.~StaticSVDBasisGenerator();
+   static_basis_generator.~BasisGenerator();
 
 // Finalize MPI and return.
    MPI_Finalize();

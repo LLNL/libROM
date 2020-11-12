@@ -104,7 +104,7 @@ BasisGenerator::takeSample(
    double* u_in,
    double time,
    double dt,
-   bool add_without_increase = false)
+   bool add_without_increase)
 {
    CAROM_VERIFY(u_in != 0);
    CAROM_VERIFY(time >= 0);
@@ -133,9 +133,9 @@ BasisGenerator::takeSample(
 
 void
 BasisGenerator::loadSamples(const std::string& base_file_name,
-            const std::string& kind = "basis",
-            int cut_off = 1e9,
-            Database::formats db_format = Database::HDF5)
+            const std::string& kind,
+            int cut_off,
+            Database::formats db_format)
 {
    CAROM_ASSERT(!base_file_name.empty());
    CAROM_VERIFY(kind == "basis" || kind == "snapshot");

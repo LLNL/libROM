@@ -13,7 +13,7 @@
 //              run in serial. Assumes this file is located in libROM/build.
 //              If not, please adjust file address of sample data below.
 
-#include "StaticSVDBasisGenerator.h"
+#include "BasisGenerator.h"
 #include "scalapack_wrapper.h"
 #include "mpi.h"
 
@@ -31,10 +31,10 @@ main(
   int dim = 6;
 
   // Create basis using 1 or 2 already computed bases
-  std::unique_ptr<CAROM::SVDBasisGenerator> static_basis_generator;
+  std::unique_ptr<CAROM::BasisGenerator> static_basis_generator;
 
-  static_basis_generator.reset(new CAROM::StaticSVDBasisGenerator(
-      CAROM::StaticSVDOptions(dim, 2, false, 2),
+  static_basis_generator.reset(new CAROM::BasisGenerator(
+      CAROM::Options(dim, 2, 2), false,
       "samples_total"));
 
   if (uploaded_data == "snapshot") {

@@ -36,12 +36,12 @@ StaticSVD::StaticSVD(
    d_samples(new SLPK_Matrix), d_factorizer(new SVDManager),
    d_this_interval_basis_current(false),
    d_max_basis_dimension(options.max_basis_dimension),
-   d_sigma_tol(options.sigma_tolerance)
+   d_singular_value_tol(options.singular_value_tol)
 {
    CAROM_VERIFY(options.dim > 0);
    CAROM_VERIFY(options.samples_per_time_interval > 0);
    CAROM_VERIFY(options.max_basis_dimension > 0);
-   CAROM_VERIFY(options.sigma_tolerance >= 0);
+   CAROM_VERIFY(options.singular_value_tol >= 0);
 
    // Get the rank of this process, and the number of processors.
    int mpi_init;
@@ -257,11 +257,11 @@ StaticSVD::computeSVD()
 
    // Compute how many basis vectors we will actually return.
    int sigma_cutoff = 0, hard_cutoff = d_num_samples;
-   if (d_sigma_tol == 0) {
+   if (d_singular_value_tol == 0) {
       sigma_cutoff = std::numeric_limits<int>::max();
    } else {
       for (int i = 0; i < d_num_samples; ++i) {
-         if (d_factorizer->S[i] / d_factorizer->S[0] > d_sigma_tol) {
+         if (d_factorizer->S[i] / d_factorizer->S[0] > d_singular_value_tol) {
             sigma_cutoff += 1;
          } else {
             break;

@@ -220,7 +220,7 @@ class StaticSVD : public SVD
       /**
        * @brief The tolerance for singular values below which to drop vectors
        */
-      double d_sigma_tol;
+      double d_singular_value_tol;
 
       void delete_samples();
       void delete_factorizer();

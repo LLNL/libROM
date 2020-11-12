@@ -93,35 +93,38 @@ public:
 
    Options(int dim_,
      int samples_per_time_interval_,
-     int max_basis_dimension_ = std::numeric_limits<int>::max(),
+     int max_basis_dimension_ = 0,
+     double singular_value_tol_ = 0.0,
      bool update_right_SV_ = false,
-     double sigma_tolerance_ = 0.0,
      int max_time_intervals_ = -1,
-     bool debug_algorithm_ = false,
      bool write_snapshots_ = false
    ): dim(dim_),
    samples_per_time_interval(samples_per_time_interval_),
-   max_basis_dimension(max_basis_dimension_),
+   singular_value_tol(singular_value_tol_),
    update_right_SV(update_right_SV_),
-   sigma_tolerance(sigma_tolerance_),
    max_time_intervals(max_time_intervals_),
-   debug_algorithm(debug_algorithm_),
-   write_snapshots(write_snapshots_) {};
+   write_snapshots(write_snapshots_) {
+     if (max_basis_dimension_ > 0) {
+       max_basis_dimension = max_basis_dimension_;
+     }
+   };
 
-   void setIncrementalOptions(
+   Options setDebugMode(
+        bool debug_algorithm_
+      )
+   {
+      debug_algorithm = debug_algorithm_;
+      return *this;
+   }
+
+   Options setIncrementalSVD(
         double linearity_tol_,
         int max_basis_dimension_,
         double initial_dt_,
         double sampling_tol_,
         double max_time_between_samples_,
         bool skip_linearly_dependent_ = false,
-        bool fast_update_ = false,
-        bool save_state_ = false,
-        bool restore_state_ = false,
-        double min_sampling_time_step_scale_ = 0.1,
-        double sampling_time_step_scale_ = 0.8,
-        double max_sampling_time_step_scale_ = 5.0,
-        double singular_value_tol_ = 0.0
+        bool fast_update_ = false
       )
    {
       linearity_tol = linearity_tol_;
@@ -131,28 +134,45 @@ public:
       max_time_between_samples = max_time_between_samples_;
       skip_linearly_dependent = skip_linearly_dependent_;
       fast_update = fast_update_;
+      return *this;
+   }
+
+   Options setStateIO(
+        bool save_state_,
+        bool restore_state_
+      )
+   {
       save_state = save_state_;
       restore_state = restore_state_;
+      return *this;
+   }
+
+   Options setSamplingTimeStepScale(
+        double min_sampling_time_step_scale_,
+        double sampling_time_step_scale_,
+        double max_sampling_time_step_scale_
+      )
+   {
       min_sampling_time_step_scale = min_sampling_time_step_scale_;
       sampling_time_step_scale = sampling_time_step_scale_;
       max_sampling_time_step_scale = max_sampling_time_step_scale_;
-      singular_value_tol = singular_value_tol_;
+      return *this;
    }
 
    int dim = -1;
    int samples_per_time_interval = -1;
+   int max_basis_dimension = std::numeric_limits<int>::max();
+   double singular_value_tol = 0;
    bool update_right_SV = false;
    int max_time_intervals = -1;
-   bool debug_algorithm = false;
    bool write_snapshots = false;
-   int max_basis_dimension = -1;
+   bool debug_algorithm = false;
 
    // Incremental SVD
-   double sigma_tolerance = -1.0;
-   double linearity_tol = -1.0;
-   double initial_dt = -1.0;
-   double sampling_tol = -1.0;
-   double max_time_between_samples = -1.0;
+   double linearity_tol = -1;
+   double initial_dt = -1;
+   double sampling_tol = -1;
+   double max_time_between_samples = -1;
    bool skip_linearly_dependent = false;
    bool fast_update = false;
    bool save_state = false;
@@ -160,8 +180,6 @@ public:
    double min_sampling_time_step_scale = 0.1;
    double sampling_time_step_scale = 0.8;
    double max_sampling_time_step_scale = 5.0;
-   double singular_value_tol = 0.0;
-
 };
 
 }

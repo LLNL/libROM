@@ -116,7 +116,7 @@ class BasisGenerator
          double* u_in,
          double time,
          double dt,
-         bool add_without_increase);
+         bool add_without_increase = false);
 
       /**
        * @brief Signal that the final sample has been taken.
@@ -153,9 +153,9 @@ class BasisGenerator
        */
       void
       loadSamples(const std::string& base_file_name,
-                  const std::string& kind,
-                  int cut_off,
-                  Database::formats db_format);
+                  const std::string& kind  = "basis",
+                  int cut_off = 1e9,
+                  Database::formats db_format = Database::HDF5);
 
       /**
        * @brief Computes next time an svd sample is needed.
