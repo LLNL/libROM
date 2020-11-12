@@ -215,7 +215,7 @@ set(regression_test_names
   load_samples)
 
 foreach(name IN LISTS regression_test_names)
-  add_executable(${name} ${name}.C)
+  add_executable(${name} tests/${name}.C)
 
   target_link_libraries(${name}
     PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
