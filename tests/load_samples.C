@@ -13,8 +13,8 @@
 //              run in serial. Assumes this file is located in libROM/build.
 //              If not, please adjust file address of sample data below.
 
-#include "BasisGenerator.h"
-#include "scalapack_wrapper.h"
+#include "../BasisGenerator.h"
+#include "../scalapack_wrapper.h"
 #include "mpi.h"
 
 #include <stdio.h>

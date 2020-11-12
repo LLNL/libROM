@@ -12,7 +12,7 @@
 //              sampler in which the complete system in unevenly distributed
 //              across the processors.
 
-#include "BasisGenerator.h"
+#include "../BasisGenerator.h"
 
 #include "mpi.h"
 
