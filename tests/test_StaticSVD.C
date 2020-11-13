@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
         std::vector<double> similar(columns[j]);
         for (unsigned i = 0; i < 12; ++i)
             similar[i] *= sigmas[j];
-        sampler.takeSample(similar.data(), 0);
+        sampler.takeSample(similar.data(), 0, 0);
     }
 
     auto distU = sampler.getSpatialBasis();

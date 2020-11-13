@@ -29,7 +29,7 @@ IncrementalSVDFastUpdate::IncrementalSVDFastUpdate(
       basis_file_name),
    d_Up(0),
    d_singular_value_tol(options.singular_value_tol)
-
+{
    CAROM_VERIFY(options.singular_value_tol >= 0);
 
    // If the state of the SVD is to be restored, do it now.  The base class,
