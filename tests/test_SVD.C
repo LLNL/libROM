@@ -16,6 +16,7 @@
 #ifdef CAROM_HAS_GTEST
 #include<gtest/gtest.h>
 #include <mpi.h>
+#include "../Options.h"
 #include "../SVD.h"
 
 /**
@@ -169,7 +170,7 @@ TEST(SVDSerialTest, Test_isNewTimeInterval)
 
 TEST(SVDSerialTest, Test_getNumBasisTimeIntervals)
 {
-  FakeSVD svd(FakeOptions(5, 2, -1, 0.0, false, 2));
+  FakeSVD svd(FakeOptions(5, 2));
 
   /* Number of time intervals starts at zero. */
   EXPECT_EQ(svd.getNumBasisTimeIntervals(), 0);
@@ -221,7 +222,7 @@ TEST(SVDSerialTest, Test_getBasisIntervalStartTime)
 
 TEST(SVDSerialTest, Test_increaseTimeInterval)
 {
-  FakeSVD svd(FakeOptions(5, 2, false, 2));
+  FakeSVD svd(FakeOptions(5, 2, -1, 0.0, false, 2));
 
   ASSERT_NO_THROW(svd.takeSample(NULL, 0, true));
   ASSERT_NO_THROW(svd.takeSample(NULL, 0.5, true));
