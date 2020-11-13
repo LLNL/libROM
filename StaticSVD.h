@@ -33,20 +33,6 @@ class StaticSVD : public SVD
 {
    public:
       /**
-       * @brief Constructor.
-       *
-       * If both max_basis_dimension and sigma_tolerance would result in
-       * truncating the basis, the dimension of the returned basis will be the
-       * *minimum* of the number of vectors that is computed from each.
-       *
-       * @param[in] options The struct containing the options for this basis
-       *                    generator.
-       */
-      StaticSVD(
-         Options options
-         );
-
-      /**
        * Destructor.
        */
       ~StaticSVD();
@@ -113,6 +99,22 @@ class StaticSVD : public SVD
       getSnapshotMatrix();
 
    private:
+     friend class BasisGenerator;
+
+     /**
+      * @brief Constructor.
+      *
+      * If both max_basis_dimension and sigma_tolerance would result in
+      * truncating the basis, the dimension of the returned basis will be the
+      * *minimum* of the number of vectors that is computed from each.
+      *
+      * @param[in] options The struct containing the options for this basis
+      *                    generator.
+      */
+     StaticSVD(
+        Options options
+        );
+
       /**
        * @brief Unimplemented default constructor.
        */

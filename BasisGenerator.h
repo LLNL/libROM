@@ -20,9 +20,7 @@
 #include "BasisWriter.h"
 #include "BasisReader.h"
 #include "Options.h"
-#include "StaticSVD.h"
-#include "IncrementalSVDStandard.h"
-#include "IncrementalSVDFastUpdate.h"
+#include "SVD.h"
 
 #include "mpi.h"
 
@@ -284,6 +282,10 @@ class BasisGenerator
 #endif
 
    private:
+     /**
+      * @brief Unimplemented default constructor.
+      */
+     BasisGenerator();
       /**
        * @brief Unimplemented copy constructor.
        */
