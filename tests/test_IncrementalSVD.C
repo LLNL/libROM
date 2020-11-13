@@ -40,7 +40,7 @@ public:
 
   FakeIncrementalSVD
   (
-   CAROM::IncrementalSVDOptions options,
+   CAROM::Options options,
    const std::string& basis_file_name)
     : CAROM::IncrementalSVD(
           options,
@@ -101,7 +101,7 @@ public:
 
 TEST(IncrementalSVDSerialTest, Test_getBasis)
 {
-  CAROM::IncrementalSVDOptions incremental_svd_options(3, 4, 1e-1, 3, -1.0, -1.0, -1.0);
+  CAROM::Options incremental_svd_options = CAROM::Options(3, 4).setIncrementalSVD(1e-1, 3, -1.0, -1.0, -1.0);
 
   FakeIncrementalSVD svd(
        incremental_svd_options,
@@ -121,7 +121,7 @@ TEST(IncrementalSVDSerialTest, Test_getBasis)
 
 TEST(IncrementalSVDSerialTest, Test_getSingularValues)
 {
-  CAROM::IncrementalSVDOptions incremental_svd_options(3, 4, 1e-1, 3, -1.0, -1.0, -1.0);
+  CAROM::Options incremental_svd_options = CAROM::Options(3, 4).setIncrementalSVD(1e-1, 3, -1.0, -1.0, -1.0);
 
   FakeIncrementalSVD svd(
        incremental_svd_options,
