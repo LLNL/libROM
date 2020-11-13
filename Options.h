@@ -8,14 +8,17 @@
  *
  *****************************************************************************/
 
-// Description: An abstract class defining the interface to the generic Options
-//              algorithm.
+// Description: A class defining the parameters to the BasisGenerator class and
+// SVD algorithm.
 
 #ifndef included_Options_h
 #define included_Options_h
 
 namespace CAROM {
 
+/**
+ * A class defining the parameters to the BasisGenerator class and SVD algorithm.
+ */
 class Options
 {
   /**
@@ -24,13 +27,15 @@ class Options
    * @pre dim > 0
    * @pre samples_per_time_interval > 0
    * @pre max_basis_dimension > 0
-   * @pre max_basis_dimension <= dim
+   * @pre singular_value_tol >= 0
    *
    * @param[in] dim The dimension of the system on this processor.
    * @param[in] samples_per_time_interval The maximum number of samples in
    *                                      each time interval.
    * @param[in] maximum basis dimension (typemax(int)) The maximum number of
    *                                vectors returned in the basis.
+   * @param[in] singular_value_tol Tolerance to determine whether or to include
+   *                               a singular value in the SVD.
    * @param[in] update_rightSV Whether to update the right SV or not.
    * @param[in] max_time_intervals The maximum number of time intervals.
    * @param[in] debug_algorithm If true results of static Options algorithm
@@ -39,17 +44,16 @@ class Options
    *                        instead of basis matrices.
    *
    * Static SVD
-   * @pre sigma_tolerance >= 0
    *
-   * @param[in] sigma_tolerance This tolerance is based on the ratio of
-   *                            singular values to the largest singular
-   *                            value. If sigma[i] / sigma[0] < sigma_tolerance,
-   *                            the associated vector is dropped from the
-   *                            basis.
+   * If both max_basis_dimension and singular_value_tol would result in
+   * truncating the basis, the dimension of the returned basis will be the
+   * *minimum* of the number of vectors that is computed from each.
+   *
    *
    * Incremental SVD
    *
    * @pre linearity_tol > 0.0
+   * @pre max_basis_dimension <= dim
    * @pre initial_dt > 0.0
    * @pre sampling_tol > 0.0
    * @pre max_time_between_samples > 0.0
@@ -57,6 +61,7 @@ class Options
    * @pre sampling_time_step_scale >= 0.0
    * @pre max_sampling_time_step_scale >= 0.0
    * @pre min_sampling_time_step_scale <= max_sampling_time_step_scale
+   *
    * @param[in] linearity_tol Tolerance to determine whether or not a
    *                          sample is linearly dependent.
    * @param[in] skip_linearly_dependent If true skip linearly dependent
@@ -84,8 +89,6 @@ class Options
    * @param[in] debug_algorithm If true results of incremental svd
    *                            algorithm will be printed to facilitate
    *                            debugging.
-   * @param[in] singular_value_tol Tolerance to determine whether or to include
-   *                               a singular value in the SVD.
    */
 public:
 

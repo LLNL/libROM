@@ -30,8 +30,8 @@ namespace CAROM {
       /**
        * @brief Constructor.
        *
-       * @param[in] options The struct containing the options for this basis
-       *                    generator.
+       * @param[in] options The struct containing the options for this abstract
+       *                    SVD class.
        * @param[in] basis_file_name The base part of the name of the file
        *                            containing the basis vectors.  Each process
        *                            will append its process ID to this base

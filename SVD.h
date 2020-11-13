@@ -31,16 +31,8 @@ class SVD
       /**
        * @brief Constructor.
        *
-       * @pre dim > 0
-       * @pre sample_per_time_interval > 0
-       *
-       * @param[in] dim The dimension of the system distributed to this
-       *                processor.
-       * @param[in] samples_per_time_interval The maximum number of samples
-       *                                      collected in a time interval.
-       * @param[in] max_time_intervals The maximum number of time intervals.
-       * @param[in] debug_algorithm If true results of the algorithm will be
-       *                            printed to facilitate debugging.
+       * @param[in] options The struct containing the options for this abstract
+       * SVD class.
        */
       SVD(
          Options options);

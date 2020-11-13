@@ -104,12 +104,8 @@ class StaticSVD : public SVD
      /**
       * @brief Constructor.
       *
-      * If both max_basis_dimension and sigma_tolerance would result in
-      * truncating the basis, the dimension of the returned basis will be the
-      * *minimum* of the number of vectors that is computed from each.
-      *
-      * @param[in] options The struct containing the options for this basis
-      *                    generator.
+      * @param[in] options The struct containing the options for this SVD
+      *                    implementation.
       */
      StaticSVD(
         Options options

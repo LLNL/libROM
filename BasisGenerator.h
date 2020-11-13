@@ -8,10 +8,8 @@
  *
  *****************************************************************************/
 
-// Description: The abstract wrapper class for an abstract SVD algorithm and
-//              sampler.  This class provides interfaces to each so that an
-//              application only needs to instantiate one concrete
-//              implementation of this class to control all aspects of basis
+// Description: The wrapper class for an SVD algorithm and
+//              sampler.  This class provides controls all aspects of basis
 //              vector generation.
 
 #ifndef included_BasisGenerator_h
@@ -42,11 +40,10 @@ class BasisReader;
 class Matrix;
 
 /**
- * Class BasisGenerator is an abstract base class defining the interface for
+ * Class BasisGenerator is an class defining the interface for
  * the generation of basis vectors via the svd method.  This class wraps the
- * abstract SVD algorithm and sampler and provides interfaces to each so
- * that an application only needs to instantiate one concrete implementation of
- * this class to control all aspects of basis vector generation.
+ * SVD algorithm and sampler and controls all aspects
+ * of basis vector generation.
  */
 class BasisGenerator
 {
