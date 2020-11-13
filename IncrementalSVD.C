@@ -48,6 +48,7 @@ IncrementalSVD::IncrementalSVD(
    d_state_database(0)
 {
    CAROM_VERIFY(options.linearity_tol > 0.0);
+   CAROM_VERIFY(options.max_basis_dimension > 0);
 
    // Get the number of processors, the dimensions for each process, and the
    // total dimension.

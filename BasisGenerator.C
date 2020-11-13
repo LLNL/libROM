@@ -29,11 +29,14 @@ BasisGenerator::BasisGenerator(
    d_basis_reader(0),
    d_write_snapshots(options.write_snapshots)
 {
-    if (!basis_file_name.empty()) {
-       d_basis_writer = new BasisWriter(this, basis_file_name, file_format);
-    }
+    CAROM_VERIFY(options.dim > 0);
+    CAROM_VERIFY(options.samples_per_time_interval > 0);
+    CAROM_VERIFY(options.singular_value_tol >= 0);
+    CAROM_VERIFY(options.max_time_intervals == -1 || options.max_time_intervals > 0);
     if (incremental)
     {
+      CAROM_VERIFY(options.max_basis_dimension > 0);
+      CAROM_VERIFY(options.linearity_tol > 0.0);
       CAROM_VERIFY(options.initial_dt > 0.0);
       CAROM_VERIFY(options.sampling_tol > 0.0);
       CAROM_VERIFY(options.max_time_between_samples > 0.0);
@@ -41,7 +44,18 @@ BasisGenerator::BasisGenerator(
       CAROM_VERIFY(options.sampling_time_step_scale >= 0.0);
       CAROM_VERIFY(options.max_sampling_time_step_scale >= 0.0);
       CAROM_VERIFY(options.min_sampling_time_step_scale <= options.max_sampling_time_step_scale);
+    }
+    else
+    {
+      CAROM_VERIFY(options.max_basis_dimension == -1 || options.max_basis_dimension > 0);
+    }
 
+    if (!basis_file_name.empty()) {
+       d_basis_writer = new BasisWriter(this, basis_file_name, file_format);
+    }
+    d_update_right_SV = options.update_right_SV;
+    if (incremental)
+    {
       d_tol = options.sampling_tol;
       d_max_time_between_samples = options.max_time_between_samples;
       d_min_sampling_time_step_scale = options.min_sampling_time_step_scale;
@@ -49,7 +63,6 @@ BasisGenerator::BasisGenerator(
       d_max_sampling_time_step_scale = options.max_sampling_time_step_scale;
       d_dt = options.initial_dt;
       d_next_sample_time = 0.0;
-      d_update_right_SV = options.update_right_SV;
 
       if (options.fast_update) {
          d_svd.reset(
@@ -76,7 +89,6 @@ BasisGenerator::BasisGenerator(
    }
    else
    {
-     d_update_right_SV = options.update_right_SV;
      d_svd.reset(
         new StaticSVD(
            options));
@@ -115,7 +127,6 @@ BasisGenerator::takeSample(
       return false;
    }
 
-
    if (getNumBasisTimeIntervals() > 0 &&
        d_svd->isNewTimeInterval()) {
       resetDt(dt);
@@ -128,6 +139,7 @@ BasisGenerator::takeSample(
           }
       }
    }
+
    return d_svd->takeSample(u_in, time, add_without_increase);
 }
 

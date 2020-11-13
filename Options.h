@@ -14,8 +14,6 @@
 #ifndef included_Options_h
 #define included_Options_h
 
-#include <limits>
-
 namespace CAROM {
 
 class Options
@@ -93,7 +91,7 @@ public:
 
    Options(int dim_,
      int samples_per_time_interval_,
-     int max_basis_dimension_ = 0,
+     int max_basis_dimension_ = -1,
      double singular_value_tol_ = 0.0,
      bool update_right_SV_ = false,
      int max_time_intervals_ = -1,
@@ -161,7 +159,7 @@ public:
 
    int dim = -1;
    int samples_per_time_interval = -1;
-   int max_basis_dimension = std::numeric_limits<int>::max();
+   int max_basis_dimension = -1;
    double singular_value_tol = 0;
    bool update_right_SV = false;
    int max_time_intervals = -1;

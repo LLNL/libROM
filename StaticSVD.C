@@ -16,6 +16,8 @@
 #include "mpi.h"
 #include "scalapack_wrapper.h"
 
+#include <limits.h>
+
 #include <stdio.h>
 #include <string.h>
 
@@ -38,11 +40,6 @@ StaticSVD::StaticSVD(
    d_max_basis_dimension(options.max_basis_dimension),
    d_singular_value_tol(options.singular_value_tol)
 {
-   CAROM_VERIFY(options.dim > 0);
-   CAROM_VERIFY(options.samples_per_time_interval > 0);
-   CAROM_VERIFY(options.max_basis_dimension > 0);
-   CAROM_VERIFY(options.singular_value_tol >= 0);
-
    // Get the rank of this process, and the number of processors.
    int mpi_init;
    MPI_Initialized(&mpi_init);
@@ -268,7 +265,7 @@ StaticSVD::computeSVD()
          }
       }
    }
-   if (d_max_basis_dimension < hard_cutoff) {
+   if (d_max_basis_dimension != -1 && d_max_basis_dimension < hard_cutoff) {
       hard_cutoff = d_max_basis_dimension;
    }
    int ncolumns = hard_cutoff < sigma_cutoff ? hard_cutoff : sigma_cutoff;
