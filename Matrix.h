@@ -155,6 +155,9 @@ class Matrix
          }
          d_num_rows = num_rows;
          d_num_cols = num_cols;
+         if (d_distributed) {
+           calculateNumDistributedRows();
+         }
       }
 
       /**
@@ -184,6 +187,20 @@ class Matrix
       {
          return d_num_rows;
       }
+
+      /**
+       * @brief Returns the number of rows of the Matrix across all processors.
+       *
+       * @return The number of rows of the Matrix across all processors.
+       */
+       int
+       numDistributedRows() const
+       {
+          if (!d_distributed) {
+            return d_num_rows;
+          }
+          return d_num_distributed_rows;
+       }
 
       /**
        * @brief Returns the number of columns in the Matrix.
@@ -825,6 +842,14 @@ class Matrix
       // Matrix();
 
       /**
+       * @brief Compute number of rows across all processors
+       *
+       * @pre distributed()
+       */
+      void
+      calculateNumDistributedRows();
+
+      /**
        * @brief Compute the leading numColumns() column pivots from a
        * QR decomposition with column pivots (QRCP) of the transpose
        * of this.
@@ -962,6 +987,11 @@ class Matrix
        * @brief The rows in the Matrix that are on this processor.
        */
       int d_num_rows;
+
+      /**
+       * @brief The rows in the Matrix across all processors.
+       */
+      int d_num_distributed_rows;
 
       /**
        * @brief The number of columns in the Matrix.

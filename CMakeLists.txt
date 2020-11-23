@@ -231,6 +231,8 @@ if(GTEST_FOUND)
   set(unit_test_stems
     Vector
     Matrix
+    DEIM
+    GNAT
     SVD
     StaticSVD
     IncrementalSVD)
