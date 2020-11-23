@@ -59,4 +59,5 @@ script:
   - ./test_Matrix
   - ./test_DEIM
   - ./test_GNAT
+  - ./test_QDEIM
   - ./test_IncrementalSVD

@@ -55,7 +55,7 @@ QDEIM(const Matrix* f_basis,
   // sampled rows of the basis of the RHS.
 
   CAROM_VERIFY(num_f_basis_vectors_used == f_basis->numColumns());  // The QR implementation uses the entire matrix.
-  CAROM_VERIFY(f_basis->numColumns() <= num_samples_req && num_samples_req <= f_basis->numRows());
+  CAROM_VERIFY(f_basis->numColumns() <= num_samples_req && num_samples_req <= f_basis->numDistributedRows());
   CAROM_VERIFY(num_samples_req == f_basis_sampled_inv.numRows() && f_basis->numColumns() == f_basis_sampled_inv.numColumns());
   CAROM_VERIFY(!f_basis_sampled_inv.distributed());
 

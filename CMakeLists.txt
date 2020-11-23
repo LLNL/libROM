@@ -233,6 +233,7 @@ if(GTEST_FOUND)
     Matrix
     DEIM
     GNAT
+    QDEIM
     SVD
     StaticSVD
     IncrementalSVD)
