@@ -57,5 +57,7 @@ script:
   - ./test_SVD
   - ./test_Vector
   - ./test_Matrix
+  - ./test_DEIM
+  - ./test_GNAT
   - ./test_QDEIM
   - ./test_IncrementalSVD

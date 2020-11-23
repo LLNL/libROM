@@ -232,6 +232,9 @@ if(GTEST_FOUND)
     Vector
     Matrix
     QDEIM
+    DEIM
+    GNAT
+    QDEIM
     SVD
     StaticSVD
     IncrementalSVD)
