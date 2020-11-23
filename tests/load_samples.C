@@ -34,7 +34,7 @@ main(
   std::unique_ptr<CAROM::BasisGenerator> static_basis_generator;
 
   static_basis_generator.reset(new CAROM::BasisGenerator(
-      CAROM::Options(dim, 2, 2), false,
+      CAROM::Options(dim, 2).setMaxBasisDimension(2), false,
       "samples_total"));
 
   if (uploaded_data == "snapshot") {

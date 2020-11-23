@@ -40,8 +40,8 @@ main(
    // Construct the incremental basis generator to use the fast update
    // incremental algorithm and the incremental sampler.
    CAROM::BasisGenerator basis_generator(
-     CAROM::Options(dim, num_samples).setIncrementalSVD(
-       1.0e-6, num_samples, 1.0e-2, 1.0e-20, 10.001, false, true), true
+     CAROM::Options(dim, num_samples).setMaxBasisDimension(num_samples)
+     .setIncrementalSVD(1.0e-6, 1.0e-2, 1.0e-20, 10.001, true), true
    );
 
    // Initialize random number generator.

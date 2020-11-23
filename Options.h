@@ -32,16 +32,16 @@ class Options
    * @param[in] dim The dimension of the system on this processor.
    * @param[in] samples_per_time_interval The maximum number of samples in
    *                                      each time interval.
+   * @param[in] max_time_intervals The maximum number of time intervals.
+   * @param[in] update_rightSV Whether to update the right SV or not.
+   * @param[in] write_snapshots Whether to automatically write snapshots matrices
+   *                        instead of basis matrices.
    * @param[in] maximum basis dimension (typemax(int)) The maximum number of
    *                                vectors returned in the basis.
    * @param[in] singular_value_tol Tolerance to determine whether or to include
    *                               a singular value in the SVD.
-   * @param[in] update_rightSV Whether to update the right SV or not.
-   * @param[in] max_time_intervals The maximum number of time intervals.
    * @param[in] debug_algorithm If true results of static Options algorithm
    *                            will be printed to facilitate debugging.
-   * @param[in] write_snapshots Whether to automatically write snapshots matrices
-   *                        instead of basis matrices.
    *
    * Static SVD
    *
@@ -94,21 +94,30 @@ public:
 
    Options(int dim_,
      int samples_per_time_interval_,
-     int max_basis_dimension_ = -1,
-     double singular_value_tol_ = 0.0,
-     bool update_right_SV_ = false,
      int max_time_intervals_ = -1,
+     bool update_right_SV_ = false,
      bool write_snapshots_ = false
    ): dim(dim_),
    samples_per_time_interval(samples_per_time_interval_),
-   singular_value_tol(singular_value_tol_),
-   update_right_SV(update_right_SV_),
    max_time_intervals(max_time_intervals_),
-   write_snapshots(write_snapshots_) {
-     if (max_basis_dimension_ > 0) {
+   update_right_SV(update_right_SV_),
+   write_snapshots(write_snapshots_) {};
+
+   Options setMaxBasisDimension(
+      int max_basis_dimension_
+   )
+   {
        max_basis_dimension = max_basis_dimension_;
-     }
-   };
+       return *this;
+   }
+
+   Options setSingularValueTol(
+       int singular_value_tol_
+   )
+   {
+       singular_value_tol = singular_value_tol_;
+       return *this;
+   }
 
    Options setDebugMode(
         bool debug_algorithm_
@@ -120,21 +129,19 @@ public:
 
    Options setIncrementalSVD(
         double linearity_tol_,
-        int max_basis_dimension_,
         double initial_dt_,
         double sampling_tol_,
         double max_time_between_samples_,
-        bool skip_linearly_dependent_ = false,
-        bool fast_update_ = false
+        bool fast_update_ = false,
+        bool skip_linearly_dependent_ = false
       )
    {
       linearity_tol = linearity_tol_;
-      max_basis_dimension = max_basis_dimension_;
       initial_dt = initial_dt_;
       sampling_tol = sampling_tol_;
       max_time_between_samples = max_time_between_samples_;
-      skip_linearly_dependent = skip_linearly_dependent_;
       fast_update = fast_update_;
+      skip_linearly_dependent = skip_linearly_dependent_;
       return *this;
    }
 
@@ -162,11 +169,12 @@ public:
 
    int dim = -1;
    int samples_per_time_interval = -1;
+   int max_time_intervals = -1;
+   bool update_right_SV = false;
+   bool write_snapshots = false;
+
    int max_basis_dimension = -1;
    double singular_value_tol = 0;
-   bool update_right_SV = false;
-   int max_time_intervals = -1;
-   bool write_snapshots = false;
    bool debug_algorithm = false;
 
    // Incremental SVD
@@ -174,10 +182,12 @@ public:
    double initial_dt = -1;
    double sampling_tol = -1;
    double max_time_between_samples = -1;
-   bool skip_linearly_dependent = false;
    bool fast_update = false;
+   bool skip_linearly_dependent = false;
+
    bool save_state = false;
    bool restore_state= false;
+
    double min_sampling_time_step_scale = 0.1;
    double sampling_time_step_scale = 0.8;
    double max_sampling_time_step_scale = 5.0;

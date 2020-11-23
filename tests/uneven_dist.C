@@ -119,11 +119,11 @@ main(
    // Construct the incremental basis generator given the dimension just
    // computed to use the fast update incremental algorithm and the incremental
    // sampler.
-   CAROM::Options svd_options = CAROM::Options(dim, 2).setIncrementalSVD(1.0e-2,
-     2, 1.0e-6, 1.0e-2, 0.11, false, true).setDebugMode(true);
+   CAROM::Options svd_options = CAROM::Options(dim, 2).setMaxBasisDimension(2).
+   setIncrementalSVD(1.0e-2,1.0e-6, 1.0e-2, 0.11, true).setDebugMode(true);
 
    CAROM::BasisGenerator inc_basis_generator(
-      svd_options, false
+      svd_options, true
    );
 
    // Define the values for the first sample.

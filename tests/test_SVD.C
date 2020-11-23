@@ -33,26 +33,11 @@ TEST(GoogleTestFramework, GoogleTestFrameworkFound) {
  *  real objects.)
  */
 
-struct FakeOptions : virtual public CAROM::Options
-{
-
-  FakeOptions(int dim_,
-    int samples_per_time_interval_,
-    int max_basis_dimension_ = -1,
-    double singular_value_tol_ = 0.0,
-    bool update_right_SV_ = false,
-    int max_time_intervals_ = -1,
-    bool write_snapshots_ = false
-  ): Options(dim_, samples_per_time_interval_, max_basis_dimension_, singular_value_tol_,
-  update_right_SV_, max_time_intervals_, write_snapshots_) {};
-
-};
-
 class FakeSVD : public CAROM::SVD
 {
 public:
 
-  FakeSVD(FakeOptions options)
+  FakeSVD(CAROM::Options options)
     : SVD(options)
   {
   }
@@ -136,13 +121,13 @@ public:
 
 TEST(SVDSerialTest, Test_getDim)
 {
-  FakeSVD svd(FakeOptions(5, 2));
+  FakeSVD svd(CAROM::Options(5, 2));
   EXPECT_EQ(svd.getDim(), 5);
 }
 
 TEST(SVDSerialTest, Test_isNewTimeInterval)
 {
-  FakeSVD svd(FakeOptions(5, 2));
+  FakeSVD svd(CAROM::Options(5, 2));
 
   /* 0 samples, so taking a sample will create a new time interval */
   EXPECT_TRUE(svd.isNewTimeInterval());
@@ -170,7 +155,7 @@ TEST(SVDSerialTest, Test_isNewTimeInterval)
 
 TEST(SVDSerialTest, Test_getNumBasisTimeIntervals)
 {
-  FakeSVD svd(FakeOptions(5, 2));
+  FakeSVD svd(CAROM::Options(5, 2));
 
   /* Number of time intervals starts at zero. */
   EXPECT_EQ(svd.getNumBasisTimeIntervals(), 0);
@@ -194,7 +179,7 @@ TEST(SVDSerialTest, Test_getNumBasisTimeIntervals)
 
 TEST(SVDSerialTest, Test_getBasisIntervalStartTime)
 {
-  FakeSVD svd(FakeOptions(5, 2));
+  FakeSVD svd(CAROM::Options(5, 2));
 
   /* 1st time interval starts at time 0 */
   svd.takeSample(NULL, 0, true);
@@ -222,7 +207,7 @@ TEST(SVDSerialTest, Test_getBasisIntervalStartTime)
 
 TEST(SVDSerialTest, Test_increaseTimeInterval)
 {
-  FakeSVD svd(FakeOptions(5, 2, -1, 0.0, false, 2));
+  FakeSVD svd(CAROM::Options(5, 2, 2));
 
   ASSERT_NO_THROW(svd.takeSample(NULL, 0, true));
   ASSERT_NO_THROW(svd.takeSample(NULL, 0.5, true));

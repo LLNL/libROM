@@ -50,7 +50,8 @@ int main(int argc, char* argv[])
 
     // Construct an SVDSampler to send our matrix. I take V = I for simplicity,
     // so the matrix A that we factor is just the columns scaled by the sigmas.
-    CAROM::Options static_svd_options = CAROM::Options(12, 4, 4).setDebugMode(true);
+        CAROM::Options static_svd_options = CAROM::Options(12, 4).
+        setMaxBasisDimension(4).setDebugMode(true);
     CAROM::BasisGenerator sampler(static_svd_options, false);
 
     for (unsigned j = 0; j < 4; ++j) {
