@@ -76,16 +76,17 @@ void GNAT(const Matrix* f_basis,
   MPI_Op_create((MPI_User_function*)RowInfoMax, true, &RowInfoOp);
 
   // Get the number of basis vectors and the size of each basis vector.
+  CAROM_VERIFY(0 < num_f_basis_vectors_used && num_f_basis_vectors_used <= f_basis->numColumns());
   const int num_basis_vectors =
     std::min(num_f_basis_vectors_used, f_basis->numColumns());
-  const int basis_size = f_basis->numRows();
-
   const int num_samples = num_samples_req > 0 ? num_samples_req : num_basis_vectors;
+  CAROM_VERIFY(num_basis_vectors <= num_samples && num_samples <= f_basis->numDistributedRows());
+  CAROM_VERIFY(num_samples == f_basis_sampled_inv.numRows() && num_basis_vectors == f_basis_sampled_inv.numColumns());
+  CAROM_VERIFY(!f_basis_sampled_inv.distributed());
+  const int basis_size = f_basis->numRows();
 
   const int ns_mod_nr = num_samples % num_basis_vectors;
   int ns = 0;
-
-  CAROM_ASSERT(num_samples >= num_basis_vectors && num_samples <= basis_size && num_samples >= 0);
 
   // The small matrix inverted by the algorithm.  We'll allocate the largest
   // matrix we'll need and set its size at each step in the algorithm.
@@ -93,6 +94,7 @@ void GNAT(const Matrix* f_basis,
 
   // Scratch space used throughout the algorithm.
   double* c = new double [num_basis_vectors];
+  double* sampled_row = new double [num_basis_vectors];
 
   std::vector<std::set<int> > proc_sampled_f_row(num_procs);
   std::vector<std::map<int, int> > proc_f_row_to_tmp_fs_row(num_procs);
@@ -128,14 +130,14 @@ void GNAT(const Matrix* f_basis,
       // Now get the first sampled row of the basis of the RHS.
       if (f_bv_max_global.proc == myid) {
 	for (int j = 0; j < num_basis_vectors; ++j) {
-	  c[j] = f_basis->item(f_bv_max_global.row, j);
+	  sampled_row[j] = f_basis->item(f_bv_max_global.row, j);
 	}
       }
-      MPI_Bcast(c, num_basis_vectors, MPI_DOUBLE,
+      MPI_Bcast(sampled_row, num_basis_vectors, MPI_DOUBLE,
 		f_bv_max_global.proc, MPI_COMM_WORLD);
       // Now add the first sampled row of the basis of the RHS to tmp_fs.
       for (int j = 0; j < num_basis_vectors; ++j) {
-	tmp_fs.item(k, j) = c[j];
+	tmp_fs.item(k, j) = sampled_row[j];
       }
       proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
       proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] = k;
@@ -203,14 +205,14 @@ void GNAT(const Matrix* f_basis,
 	// Now get the next sampled row of the basis of f.
 	if (f_bv_max_global.proc == myid) {
 	  for (int j = 0; j < num_basis_vectors; ++j) {
-	    c[j] = f_basis->item(f_bv_max_global.row, j);
+	    sampled_row[j] = f_basis->item(f_bv_max_global.row, j);
 	  }
 	}
-	MPI_Bcast(c, num_basis_vectors, MPI_DOUBLE,
+	MPI_Bcast(sampled_row, num_basis_vectors, MPI_DOUBLE,
 		  f_bv_max_global.proc, MPI_COMM_WORLD);
 	// Now add the ith sampled row of the basis of the RHS to tmp_fs.
 	for (int j = 0; j < num_basis_vectors; ++j) {
-	  tmp_fs.item(ns+k, j) = c[j];
+	  tmp_fs.item(ns+k, j) = sampled_row[j];
 	}
 	proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
 	proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] = ns+k;
@@ -251,6 +253,7 @@ void GNAT(const Matrix* f_basis,
   MPI_Op_free(&RowInfoOp);
 
   delete [] c;
+  delete [] sampled_row;
 }
 
 }

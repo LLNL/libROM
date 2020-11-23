@@ -61,7 +61,6 @@ Matrix::Matrix(
 {
    CAROM_VERIFY(num_rows > 0);
    CAROM_VERIFY(num_cols > 0);
-   setSize(num_rows, num_cols);
    int mpi_init;
    MPI_Initialized(&mpi_init);
    if (mpi_init) {
@@ -70,6 +69,7 @@ Matrix::Matrix(
    else {
       d_num_procs = 1;
    }
+   setSize(num_rows, num_cols);
 }
 
 Matrix::Matrix(
@@ -86,6 +86,14 @@ Matrix::Matrix(
    CAROM_VERIFY(mat != 0);
    CAROM_VERIFY(num_rows > 0);
    CAROM_VERIFY(num_cols > 0);
+   int mpi_init;
+   MPI_Initialized(&mpi_init);
+   if (mpi_init) {
+      MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+   }
+   else {
+      d_num_procs = 1;
+   }
    if (copy_data) {
       setSize(num_rows, num_cols);
       memcpy(d_mat, mat, d_alloc_size*sizeof(double));
@@ -95,14 +103,9 @@ Matrix::Matrix(
       d_alloc_size = num_rows*num_cols;
       d_num_cols = num_cols;
       d_num_rows = num_rows;
-   }
-   int mpi_init;
-   MPI_Initialized(&mpi_init);
-   if (mpi_init) {
-      MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
-   }
-   else {
-      d_num_procs = 1;
+      if (d_distributed) {
+        calculateNumDistributedRows();
+      }
    }
 }
 
@@ -113,7 +116,6 @@ Matrix::Matrix(
    d_distributed(other.d_distributed),
    d_owns_data(true)
 {
-   setSize(other.d_num_rows, other.d_num_cols);
    int mpi_init;
    MPI_Initialized(&mpi_init);
    if (mpi_init) {
@@ -122,6 +124,7 @@ Matrix::Matrix(
    else {
       d_num_procs = 1;
    }
+   setSize(other.d_num_rows, other.d_num_cols);
    memcpy(d_mat, other.d_mat, d_alloc_size*sizeof(double));
 }
 
@@ -167,12 +170,6 @@ Matrix::operator -= (
 bool
 Matrix::balanced() const
 {
-  // TODO(oxberry1@llnl.gov): Relax the assumption in libROM that
-  // objects use MPI_COMM_WORLD, and that rank 0 is the master rank of
-  // an object.
-  const int master_rank = 0;
-  const MPI_Comm comm = MPI_COMM_WORLD;
-
   // A Matrix is "balanced" (load-balanced for distributed dense matrix
   // computations) if:
   //
@@ -186,15 +183,10 @@ Matrix::balanced() const
   // rows
   if (!distributed()) return true;
 
+  const MPI_Comm comm = MPI_COMM_WORLD;
+
   // Otherwise, get the total number of rows of the matrix.
-  int num_total_rows = d_num_rows;
-  const int reduce_count = 1;
-  CAROM_VERIFY(MPI_Allreduce(MPI_IN_PLACE,
-			     &num_total_rows,
-			     reduce_count,
-			     MPI_INT,
-			     MPI_SUM,
-			     comm) == MPI_SUCCESS);
+  int num_total_rows = numDistributedRows();
 
   const int first_rank_with_fewer = num_total_rows % d_num_procs;
   int my_rank;
@@ -207,6 +199,7 @@ Matrix::balanced() const
   const bool has_too_many_rows = (d_num_rows > max_rows_on_rank);
 
   int result = (has_enough_rows && !has_too_many_rows);
+  const int reduce_count = 1;
   CAROM_VERIFY(MPI_Allreduce(MPI_IN_PLACE,
 			     &result,
 			     reduce_count,
@@ -767,9 +760,11 @@ Matrix::read(const std::string& base_file_name)
    int rank;
    if (mpi_init) {
       MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+      MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
    }
    else {
       rank = 0;
+      d_num_procs = 1;
    }
 
    char tmp[100];
@@ -792,13 +787,24 @@ Matrix::read(const std::string& base_file_name)
    sprintf(tmp, "data");
    database.getDoubleArray(tmp, d_mat, d_alloc_size);
    d_owns_data = true;
-   if (mpi_init) {
-      MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
-   }
-   else {
-      d_num_procs = 1;
-   }
    database.close();
+}
+
+void
+Matrix::calculateNumDistributedRows() {
+  if (d_distributed && d_num_procs > 1) {
+    int num_total_rows = d_num_rows;
+    CAROM_VERIFY(MPI_Allreduce(MPI_IN_PLACE,
+            &num_total_rows,
+            1,
+            MPI_INT,
+            MPI_SUM,
+            MPI_COMM_WORLD) == MPI_SUCCESS);
+    d_num_distributed_rows = num_total_rows;
+  }
+  else {
+    d_num_distributed_rows = d_num_rows;
+  }
 }
 
 void
