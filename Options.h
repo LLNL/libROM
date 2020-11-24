@@ -98,6 +98,7 @@ public:
      bool update_right_SV_ = false,
      bool write_snapshots_ = false
    ): dim(dim_),
+   max_basis_dimension(dim_),
    samples_per_time_interval(samples_per_time_interval_),
    max_time_intervals(max_time_intervals_),
    update_right_SV(update_right_SV_),
@@ -112,7 +113,7 @@ public:
    }
 
    Options setSingularValueTol(
-       int singular_value_tol_
+       double singular_value_tol_
    )
    {
        singular_value_tol = singular_value_tol_;
