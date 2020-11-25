@@ -51,6 +51,7 @@ class SVD
        * @param[in] u_in The new sample.
        * @param[in] time The simulation time of the new sample.
        * @param[in] add_without_increase If true, the addLinearlyDependent is invoked.
+       *                                 This only applies to incremental SVD.
        *
        * @return True if the sampling was successful.
        */

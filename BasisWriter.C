@@ -146,7 +146,6 @@ BasisWriter::writeBasis(const std::string& kind)
       d_snap_database->putDoubleArray(tmp, &snapshots->item(0,0), num_rows*num_cols);
    }
 
-
 }
 
 }
