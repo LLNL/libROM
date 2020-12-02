@@ -16,6 +16,7 @@
 #define included_Matrix_h
 
 #include "Vector.h"
+#include <vector>
 
 namespace CAROM {
 
@@ -960,6 +961,8 @@ class Matrix
        * full column rank.
        */
       void transposePseudoinverse();
+      // TODO: this is too many friends
+      
       friend void GNAT(const Matrix*,
 		       const int,
 		       int*,
@@ -977,6 +980,41 @@ class Matrix
 			const int,
 			const int,
 			const int);
+
+      friend void SampleTemporalIndices(const Matrix*,
+					const Matrix*,
+					const int,
+					int*,
+					//Matrix&,
+					const int,
+					const int,
+					const int,
+					const bool);
+
+friend void SampleSpatialIndices(const Matrix*,
+			  const Matrix*,
+			  const int,
+			  const int,
+			  int*,
+			  int*,
+			  int*,
+				 Matrix&,
+				 const int,
+				 const int,
+				 const int);
+      
+friend void SpaceTimeSampling(const Matrix*,
+		       const Matrix*,
+			const int,
+			std::vector<int>&,
+			int*,
+			int*,
+			Matrix&,
+			const int,
+			const int,
+			const int,
+			const int,
+			const bool);
 
       /**
        * @brief The storage for the Matrix's values on this processor.

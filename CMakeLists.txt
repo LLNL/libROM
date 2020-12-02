@@ -134,7 +134,8 @@ set(module_list
   ParallelBuffer
   DEIM
   QDEIM
-  GNAT)
+  GNAT
+  STSampling)
 set(source_files)
 foreach(module IN LISTS module_list)
   list(APPEND source_files ${module}.C)
