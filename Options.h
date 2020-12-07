@@ -33,10 +33,10 @@ class Options
    * @param[in] samples_per_time_interval The maximum number of samples in
    *                                      each time interval.
    * @param[in] max_time_intervals The maximum number of time intervals.
-   * @param[in] update_rightSV Whether to update the right SV or not.
+   * @param[in] update_right_SV Whether to update the right SV or not.
    * @param[in] write_snapshots Whether to automatically write snapshots matrices
    *                        instead of basis matrices.
-   * @param[in] maximum basis dimension (typemax(int)) The maximum number of
+   * @param[in] max_basis_dimension (typemax(int)) The maximum number of
    *                                vectors returned in the basis.
    * @param[in] singular_value_tol Tolerance to determine whether to include
    *                               a singular value in the SVD.
@@ -53,7 +53,6 @@ class Options
    * Incremental SVD
    *
    * @pre linearity_tol > 0.0
-   * @pre max_basis_dimension <= dim
    * @pre initial_dt > 0.0
    * @pre sampling_tol > 0.0
    * @pre max_time_between_samples > 0.0
@@ -64,15 +63,15 @@ class Options
    *
    * @param[in] linearity_tol Tolerance to determine whether or not a
    *                          sample is linearly dependent.
-   * @param[in] skip_linearly_dependent If true skip linearly dependent
-   *                                    samples.
-   * @param[in] fast_update If true use the fast update algorithm.
    * @param[in] initial_dt Initial simulation time step.
    * @param[in] sampling_tol Sampling control tolerance.  Limits error in
    *                         projection of solution into reduced order
    *                         space.
    * @param[in] max_time_between_samples Upper bound on time between
    *                                     samples.
+   * @param[in] fast_update If true use the fast update algorithm.
+   * @param[in] skip_linearly_dependent If true skip linearly dependent
+   *                                    samples.
    * @param[in] save_state If true the state of the SVD will be written to
    *                       disk when the object is deleted.  If there are
    *                       multiple time intervals then the state will not
@@ -86,9 +85,6 @@ class Options
    *                                     algorithm.
    * @param[in] max_sampling_time_step_scale Maximum overall scale factor
    *                                         to apply to time step.
-   * @param[in] debug_algorithm If true results of incremental svd
-   *                            algorithm will be printed to facilitate
-   *                            debugging.
    */
 public:
 
