@@ -40,12 +40,18 @@ SpaceTimeSampling(const Matrix* s_basis,
 		  std::vector<int>& t_samples,
 		  int* f_sampled_row,
 		  int* f_sampled_rows_per_proc,
-		  Matrix& f_basis_sampled_inv,
+		  Matrix& s_basis_sampled,
 		  const int myid,
 		  const int num_procs,
 		  const int num_t_samples_req = -1,  // TODO: remove defaults?
 		  const int num_s_samples_req = -1,
 		  const bool excludeFinalTime = false);
+
+ void GetSampledSpaceTimeBasis(std::vector<int> const& t_samples,
+			       const Matrix* t_basis,
+			       Matrix const& s_basis_sampled,
+			       Matrix& f_basis_sampled_inv);
+
 }
 
 #endif

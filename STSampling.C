@@ -468,7 +468,7 @@ void SpaceTimeSampling(const Matrix* s_basis,
 		       std::vector<int>& t_samples,
 		       int* f_sampled_row,
 		       int* f_sampled_rows_per_proc,
-		       Matrix& f_basis_sampled_inv,
+		       Matrix& s_basis_sampled,
 		       const int myid,
 		       const int num_procs,
 		       const int num_t_samples_req,
@@ -489,32 +489,42 @@ void SpaceTimeSampling(const Matrix* s_basis,
 			  myid, num_procs, num_t_samples_req, excludeFinalTime);
 
     // Second, sample spatial indices.
-    Matrix s_basis_sampled(num_s_samples_req, num_f_basis_vectors_used, false);
+    //Matrix s_basis_sampled(num_s_samples_req, num_f_basis_vectors_used, false);
+    CAROM_VERIFY(s_basis_sampled.numRows() == num_s_samples_req && s_basis_sampled.numColumns() == num_f_basis_vectors_used);
 
-    std::vector<int> s_samples(num_s_samples_req);
-    std::vector<int> s_samples_per_proc(num_procs);
+    //std::vector<int> s_samples(num_s_samples_req);
+    //std::vector<int> s_samples_per_proc(num_procs);
     SampleSpatialIndices(s_basis, t_basis, num_f_basis_vectors_used, num_t_samples_req,
-			 t_samples.data(), s_samples.data(), s_samples_per_proc.data(),
+			 //t_samples.data(), s_samples.data(), s_samples_per_proc.data(),
+			 t_samples.data(), f_sampled_row, f_sampled_rows_per_proc,
 			 s_basis_sampled, myid, num_procs, num_s_samples_req);
+  }
 
-    // Set sampled space-time basis matrix and take its pseudo-inverse, in f_basis_sampled_inv.
+void GetSampledSpaceTimeBasis(std::vector<int> const& t_samples,
+			      const Matrix* t_basis,
+			      Matrix const& s_basis_sampled,
+			      Matrix& f_basis_sampled_inv)
+{
+  const int num_s_samples = s_basis_sampled.numRows();
+  const int num_t_samples = t_samples.size();
 
-    CAROM_VERIFY(f_basis_sampled_inv.numRows() == num_t_samples_req * num_s_samples_req);
-    CAROM_VERIFY(f_basis_sampled_inv.numColumns() == num_f_basis_vectors_used);
+  // Set sampled space-time basis matrix and take its pseudo-inverse, in f_basis_sampled_inv.
 
-      for (int si=0; si<num_s_samples_req; ++si)
-      {
-	for (int ti=0; ti<num_t_samples_req; ++ti)
-	  {
-	    const int row = ti + (si*num_t_samples_req);
-	    const int t = t_samples[ti];
-	    for (int j=0; j<num_f_basis_vectors_used; ++j)
-	      f_basis_sampled_inv.item(row, j) = s_basis_sampled.item(si, j) * t_basis->item(t, j);
-	  }
-      }
-      
-    // Compute the pseudo-inverse of f_basis_sampled_inv, storing its transpose.
-    f_basis_sampled_inv.transposePseudoinverse();
+  CAROM_VERIFY(f_basis_sampled_inv.numRows() == num_t_samples * num_s_samples);
+
+  for (int si=0; si<num_s_samples; ++si)
+    {
+      for (int ti=0; ti<num_t_samples; ++ti)
+	{
+	  const int row = ti + (si*num_t_samples);
+	  const int t = t_samples[ti];
+	  for (int j=0; j<f_basis_sampled_inv.numColumns(); ++j)
+	    f_basis_sampled_inv.item(row, j) = s_basis_sampled.item(si, j) * t_basis->item(t, j);
+	}
+    }
+
+  // Compute the pseudo-inverse of f_basis_sampled_inv, storing its transpose.
+  f_basis_sampled_inv.transposePseudoinverse();
 }
 
 }

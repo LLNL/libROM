@@ -1002,7 +1002,8 @@ friend void SampleSpatialIndices(const Matrix*,
 				 const int,
 				 const int,
 				 const int);
-      
+
+/*
 friend void SpaceTimeSampling(const Matrix*,
 		       const Matrix*,
 			const int,
@@ -1015,6 +1016,12 @@ friend void SpaceTimeSampling(const Matrix*,
 			const int,
 			const int,
 			const bool);
+*/
+
+ friend void GetSampledSpaceTimeBasis(std::vector<int> const& t_samples,
+				      const Matrix* t_basis,
+				      Matrix const& s_basis_sampled,
+				      Matrix& f_basis_sampled_inv);
 
       /**
        * @brief The storage for the Matrix's values on this processor.
