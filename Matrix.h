@@ -1123,6 +1123,11 @@ friend void SpaceTimeSampling(const Matrix*,
      */
     Matrix IdentityMatrixFactory(const Vector &v);
 
+    Matrix* SpaceTimeProduct(const CAROM::Matrix* As, const CAROM::Matrix* At,
+			     const CAROM::Matrix* Bs, const CAROM::Matrix* Bt,
+			     const std::vector<double> *tscale=NULL,
+			     const bool At0at0=false, const bool Bt0at0=false,
+			     const bool lagB=false, const bool skip0=false);
 }
 
 #endif

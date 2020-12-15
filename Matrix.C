@@ -1585,4 +1585,67 @@ Matrix IdentityMatrixFactory(const Vector &v)
     return DiagonalMatrixFactory(temporary);
 }
 
+// Compute the product A^T * B, where A is represented by the space-time
+// product of As and At, and likewise for B.
+Matrix* SpaceTimeProduct(const CAROM::Matrix* As, const CAROM::Matrix* At,
+			 const CAROM::Matrix* Bs, const CAROM::Matrix* Bt,
+			 const std::vector<double> *tscale,
+			 const bool At0at0, const bool Bt0at0, const bool lagB,
+			 const bool skip0)
+{
+  // TODO: implement reduction in parallel for the spatial matrices
+  CAROM_VERIFY(As->distributed() && Bs->distributed());
+
+  const int AtOS = At0at0 ? 1 : 0;
+  const int BtOS0 = Bt0at0 ? 1 : 0;
+  const int BtOS = BtOS0 + (lagB ? 1 : 0);
+
+  const int nrows = As->numColumns();
+  const int ncols = Bs->numColumns();
+
+  const int nspace = As->numRows();
+  const int ntime = At->numRows() + AtOS;
+
+  CAROM_VERIFY(nspace == Bs->numRows() && ntime == Bt->numRows() + BtOS0);
+
+  // For now, we assume one time vector for each space vector
+  CAROM_VERIFY(nrows == At->numColumns() && ncols == Bt->numColumns());
+
+  //const int k0 = (At0at0 || Bt0at0 || lagB) std::max(AtOS, BtOS) : 0;
+  const int k0AB = std::max(AtOS, BtOS);
+  const int k00 = skip0 ? 1 : 0;
+  const int k0 = std::max(k0AB, k00);
+
+  CAROM_VERIFY(tscale == NULL || (tscale->size() == ntime-1 && k0 > 0));
+
+  Matrix* p = new CAROM::Matrix(nrows, ncols, false);
+
+  for (int i=0; i<nrows; ++i)
+    {
+      for (int j=0; j<ncols; ++j)
+	{
+	  double pij = 0.0;
+
+	  for (int k=k0; k<ntime; ++k)
+	    {
+	      //const double At_k = (At0at0 && k == 0) ? 0.0 : At->item(k - AtOS,i);
+	      //const double Bt_k = (Bt0at0 && k == 0) ? 0.0 : Bt->item(k - BtOS,j);
+	      const double At_k = At->item(k - AtOS,i);
+	      const double Bt_k = Bt->item(k - BtOS,j);
+	      const double ts = (tscale == NULL) ? 1.0 : (*tscale)[k - 1];
+
+	      double spij = 0.0;  // sum over spatial entries
+	      for (int m=0; m<nspace; ++m)
+		spij += As->item(m,i) * Bs->item(m,j);
+
+	      pij += spij * ts * At_k * Bt_k;
+	    }
+
+	  p->item(i, j) = pij;
+	}
+    }
+
+  return p;
+}
+
 } // end namespace CAROM
