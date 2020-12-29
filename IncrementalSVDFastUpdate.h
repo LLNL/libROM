@@ -15,6 +15,7 @@
 #define included_IncrementalSVDFastUpdate_h
 
 #include "IncrementalSVD.h"
+#include "Options.h"
 
 namespace CAROM {
 
@@ -27,25 +28,27 @@ class IncrementalSVDFastUpdate : public IncrementalSVD
 {
    public:
       /**
-       * @brief Constructor.
-       *
-       * @param[in] options The struct containing the options for this basis
-       *                    generator.
-       * @param[in] basis_file_name The base part of the name of the file
-       *                            containing the basis vectors.  Each process
-       *                            will append its process ID to this base
-       *                            name.
-       */
-      IncrementalSVDFastUpdate(
-         IncrementalSVDOptions options,
-         const std::string& basis_file_name);
-
-      /**
        * @brief Destructor.
        */
       ~IncrementalSVDFastUpdate();
 
    private:
+     friend class BasisGenerator;
+
+     /**
+      * @brief Constructor.
+      *
+      * @param[in] options The struct containing the options for this SVD
+      *                    implementation.
+      * @param[in] basis_file_name The base part of the name of the file
+      *                            containing the basis vectors.  Each process
+      *                            will append its process ID to this base
+      *                            name.
+      */
+     IncrementalSVDFastUpdate(
+        Options options,
+        const std::string& basis_file_name);
+
       /**
        * @brief Unimplemented default constructor.
        */

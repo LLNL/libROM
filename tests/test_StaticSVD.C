@@ -1,4 +1,4 @@
-#include "../StaticSVDSampler.h"
+#include "../BasisGenerator.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -50,16 +50,15 @@ int main(int argc, char* argv[])
 
     // Construct an SVDSampler to send our matrix. I take V = I for simplicity,
     // so the matrix A that we factor is just the columns scaled by the sigmas.
-    CAROM::StaticSVDOptions static_svd_options(12, 4);
-    static_svd_options.max_basis_dimension = 4;
-    static_svd_options.debug_algorithm = true;
-    CAROM::StaticSVDSampler sampler(static_svd_options);
+        CAROM::Options static_svd_options = CAROM::Options(12, 4).
+        setMaxBasisDimension(4).setDebugMode(true);
+    CAROM::BasisGenerator sampler(static_svd_options, false);
 
     for (unsigned j = 0; j < 4; ++j) {
         std::vector<double> similar(columns[j]);
         for (unsigned i = 0; i < 12; ++i)
             similar[i] *= sigmas[j];
-        sampler.takeSample(similar.data(), 0);
+        sampler.takeSample(similar.data(), 0, 0);
     }
 
     auto distU = sampler.getSpatialBasis();

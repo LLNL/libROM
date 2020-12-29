@@ -18,10 +18,10 @@
 
 namespace CAROM {
 
-class SVDBasisGenerator;
+class BasisGenerator;
 
 /**
- * Class BasisWriter writes the basis vectors created by an SVDBasisGenerator.
+ * Class BasisWriter writes the basis vectors created by an BasisGenerator.
  */
 class BasisWriter {
    public:
@@ -40,7 +40,7 @@ class BasisWriter {
        *                      Database.
        */
       BasisWriter(
-         SVDBasisGenerator* basis_generator,
+         BasisGenerator* basis_generator,
          const std::string& base_file_name,
          Database::formats db_format = Database::HDF5);
 
@@ -77,7 +77,7 @@ class BasisWriter {
       /**
        * @brief Basis generator whose basis vectors are being written.
        */
-      SVDBasisGenerator* d_basis_generator;
+      BasisGenerator* d_basis_generator;
 
       /**
        * @brief Database to which basis vectors are being written.
@@ -88,7 +88,7 @@ class BasisWriter {
        * @brief Database with which the state is written.
        */
       Database* d_snap_database;
-      
+
       /**
        * @brief Database format, as specified by user or default value.
        */

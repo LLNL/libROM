@@ -23,16 +23,12 @@
 namespace CAROM {
 
 IncrementalSVDStandard::IncrementalSVDStandard(
-   IncrementalSVDOptions options,
+   Options options,
    const std::string& basis_file_name) :
    IncrementalSVD(
       options,
       basis_file_name)
 {
-   CAROM_VERIFY(options.dim > 0);
-   CAROM_VERIFY(options.linearity_tol > 0.0);
-   CAROM_VERIFY(options.samples_per_time_interval > 0);
-
    // If the state of the SVD is to be restored, do it now.  The base class,
    // IncrementalSVD, has already opened the database and restored the state
    // common to all incremental algorithms.  This particular class has no other
@@ -100,7 +96,7 @@ IncrementalSVDStandard::buildInitialSVD(
    }
 
    // Build d_W for this new time interval.
-   if (d_updateRightSV) {
+   if (d_update_right_SV) {
      d_W = new Matrix(1, 1, false);
      d_W->item(0, 0) = 1.0;
    }
@@ -119,7 +115,7 @@ IncrementalSVDStandard::computeBasis()
    delete d_basis;
    d_basis = new Matrix(*d_U);
 
-   if (d_updateRightSV)
+   if (d_update_right_SV)
    {
       delete d_basis_right;
       d_basis_right = new Matrix(*d_W);
@@ -152,7 +148,7 @@ IncrementalSVDStandard::addLinearlyDependentSample(
 
    // Chop a column off of W to form Wmod.
    Matrix* new_d_W;
-   if (d_updateRightSV) {
+   if (d_update_right_SV) {
      new_d_W = new Matrix(d_num_rows_of_W+1, d_num_samples, false);
      for (int row = 0; row < d_num_rows_of_W; ++row) {
         for (int col = 0; col < d_num_samples; ++col) {
@@ -204,7 +200,7 @@ IncrementalSVDStandard::addNewSample(
    d_U = tmp.mult(A);
 
    Matrix* new_d_W;
-   if (d_updateRightSV) {
+   if (d_update_right_SV) {
      new_d_W = new Matrix(d_num_rows_of_W+1, d_num_samples+1, false);
      for (int row = 0; row < d_num_rows_of_W; ++row) {
         for (int col = 0; col < d_num_samples+1; ++col) {
@@ -241,7 +237,7 @@ IncrementalSVDStandard::addNewSample(
        std::numeric_limits<double>::epsilon()*static_cast<double>(max_U_dim)) {
       reOrthogonalize(d_U);
    }
-   if (d_updateRightSV) {
+   if (d_update_right_SV) {
      if (fabs(checkOrthogonality(d_W)) >
          std::numeric_limits<double>::epsilon()*d_num_samples) {
         reOrthogonalize(d_W);

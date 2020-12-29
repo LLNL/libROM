@@ -13,7 +13,7 @@
 #include "BasisWriter.h"
 #include "HDFDatabase.h"
 #include "Matrix.h"
-#include "SVDBasisGenerator.h"
+#include "BasisGenerator.h"
 #include "Utilities.h"
 
 #include "mpi.h"
@@ -21,7 +21,7 @@
 namespace CAROM {
 
 BasisWriter::BasisWriter(
-   SVDBasisGenerator* basis_generator,
+   BasisGenerator* basis_generator,
    const std::string& base_file_name,
    Database::formats db_format) :
    d_basis_generator(basis_generator),
@@ -44,7 +44,7 @@ BasisWriter::BasisWriter(
    else {
       rank = 0;
    }
-   
+
    char tmp[100];
    sprintf(tmp, ".%06d", rank);
    full_file_name = base_file_name + tmp;
@@ -79,9 +79,9 @@ BasisWriter::writeBasis(const std::string& kind)
    double time_interval_start_time =
       d_basis_generator->getBasisIntervalStartTime(d_num_intervals_written);
    sprintf(tmp, "time_%06d", d_num_intervals_written);
-   
+
    if (kind == "basis") {
-   
+
       // create and open basis database
       if (db_format_ == Database::HDF5) {
          d_database = new HDFDatabase();
@@ -122,7 +122,7 @@ BasisWriter::writeBasis(const std::string& kind)
       d_database->putDoubleArray(tmp, &sv->item(0, 0), num_rows*num_cols);
 
       ++d_num_intervals_written;
-   
+
    }
 
    if (kind == "snapshot") {
@@ -132,9 +132,9 @@ BasisWriter::writeBasis(const std::string& kind)
       }
       std::cout << "Creating file: " << snap_file_name << std::endl;
       d_snap_database->create(snap_file_name);
-      
+
       d_snap_database->putDouble(tmp, time_interval_start_time);
-      
+
       const Matrix* snapshots = d_basis_generator->getSnapshotMatrix();
       int num_rows = snapshots->numRows(); // d_dim
       sprintf(tmp, "snapshot_matrix_num_rows_%06d", d_num_intervals_written);
@@ -145,7 +145,6 @@ BasisWriter::writeBasis(const std::string& kind)
       sprintf(tmp, "snapshot_matrix_%06d", d_num_intervals_written);
       d_snap_database->putDoubleArray(tmp, &snapshots->item(0,0), num_rows*num_cols);
    }
-   
 
 }
 

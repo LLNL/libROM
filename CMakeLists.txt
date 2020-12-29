@@ -115,19 +115,14 @@ configure_file(${CMAKE_SOURCE_DIR}/CAROM_config.h.in
 set(module_list
   Matrix
   Vector
+  BasisGenerator
   BasisReader
   BasisWriter
-  SVDBasisGenerator
-  SVDSampler
   SVD
   IncrementalSVD
   IncrementalSVDFastUpdate
   IncrementalSVDStandard
-  IncrementalSVDBasisGenerator
-  IncrementalSVDSampler
   StaticSVD
-  StaticSVDBasisGenerator
-  StaticSVDSampler
   Database
   HDFDatabase
   Utilities
@@ -139,6 +134,9 @@ set(source_files)
 foreach(module IN LISTS module_list)
   list(APPEND source_files ${module}.C)
 endforeach(module) # IN LISTS module_list
+
+list(APPEND source_files
+  Options)
 
 list(APPEND source_files
   scalapack_c_wrapper.c
@@ -217,7 +215,7 @@ set(regression_test_names
   load_samples)
 
 foreach(name IN LISTS regression_test_names)
-  add_executable(${name} ${name}.C)
+  add_executable(${name} tests/${name}.C)
 
   target_link_libraries(${name}
     PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)

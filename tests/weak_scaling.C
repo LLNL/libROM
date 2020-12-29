@@ -14,8 +14,7 @@
 //              same for all processor decompositions when
 //              dim * number of processors is constant.
 
-#include "IncrementalSVDBasisGenerator.h"
-#include "StaticSVDBasisGenerator.h"
+#include "../BasisGenerator.h"
 
 #include "mpi.h"
 
@@ -40,9 +39,9 @@ main(
 
    // Construct the incremental basis generator to use the fast update
    // incremental algorithm and the incremental sampler.
-   CAROM::IncrementalSVDBasisGenerator inc_basis_generator(
-     CAROM::IncrementalSVDOptions(dim, num_samples,
-       1.0e-6, num_samples, 1.0e-2, 1.0e-20, 10.001, false, true)
+   CAROM::BasisGenerator basis_generator(
+     CAROM::Options(dim, num_samples).setMaxBasisDimension(num_samples)
+     .setIncrementalSVD(1.0e-6, 1.0e-2, 1.0e-20, 10.001, true), true
    );
 
    // Initialize random number generator.
@@ -76,17 +75,17 @@ main(
    bool status = true;
    int samples_taken = 0;
    for (int i = 0; i < num_samples; ++i) {
-      if (inc_basis_generator.isNextSample(0.01*i)) {
-         status = inc_basis_generator.takeSample(M[i], 0.01*i, 0.01);
+      if (basis_generator.isNextSample(0.01*i)) {
+         status = basis_generator.takeSample(M[i], 0.01*i, 0.01);
          if (!status) {
             break;
          }
-         inc_basis_generator.computeNextSampleTime(M[i], M[i], 0.01*i);
+         basis_generator.computeNextSampleTime(M[i], M[i], 0.01*i);
          ++samples_taken;
       }
    }
    if (status) {
-      inc_basis_generator.endSamples();
+      basis_generator.endSamples();
    }
    else {
       if (rank == 0) {
@@ -112,7 +111,7 @@ main(
       printf("Wall time = %f\n", global_run_time);
    }
 
-   int foo = inc_basis_generator.getSpatialBasis()->numColumns();
+   int foo = basis_generator.getSpatialBasis()->numColumns();
    if (rank == 0) {
       printf("Samples taken = %d\n", samples_taken);
       printf("Number of samples = %d\n", foo);

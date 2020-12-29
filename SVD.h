@@ -15,47 +15,10 @@
 #define included_SVD_h
 
 #include "Matrix.h"
+#include "Options.h"
 #include <vector>
 
 namespace CAROM {
-
-struct SVDOptions
-{
-  /**
-   * @brief Constructor.
-   *
-   * @pre dim > 0
-   * @pre samples_per_time_interval > 0
-   *
-   * @param[in] dim The dimension of the system on this processor.
-   * @param[in] samples_per_time_interval The maximum number of samples in
-   *                                      each time interval.
-   * @param[in] debug_algorithm If true results of static svd algorithm
-   *                            will be printed to facilitate debugging.
-   * @param[in] max_time_intervals The maximum number of time intervals.
-   * @param[in] write_snapshots Whether to automatically write snapshots matrices
-   *                        instead of basis matrices.
-   */
-
-   int dim;
-   int samples_per_time_interval;
-   bool debug_algorithm;
-   int max_time_intervals;
-   bool write_snapshots;
-
-protected:
-   SVDOptions(int dim_,
-     int samples_per_time_interval_,
-     bool debug_algorithm_ = false,
-     int max_time_intervals_ = -1,
-     bool write_snapshots_ = false
-   ): dim(dim_),
-   samples_per_time_interval(samples_per_time_interval_),
-   debug_algorithm(debug_algorithm_),
-   max_time_intervals(max_time_intervals_),
-   write_snapshots(write_snapshots_) {};
-
-};
 
 /**
  * Class SVD defines the interface to the generic SVD algorithm.  The API is
@@ -68,19 +31,11 @@ class SVD
       /**
        * @brief Constructor.
        *
-       * @pre dim > 0
-       * @pre sample_per_time_interval > 0
-       *
-       * @param[in] dim The dimension of the system distributed to this
-       *                processor.
-       * @param[in] samples_per_time_interval The maximum number of samples
-       *                                      collected in a time interval.
-       * @param[in] max_time_intervals The maximum number of time intervals.
-       * @param[in] debug_algorithm If true results of the algorithm will be
-       *                            printed to facilitate debugging.
+       * @param[in] options The struct containing the options for this abstract
+       * SVD class.
        */
       SVD(
-         SVDOptions options);
+         Options options);
 
       /**
        * Destructor.
@@ -96,6 +51,7 @@ class SVD
        * @param[in] u_in The new sample.
        * @param[in] time The simulation time of the new sample.
        * @param[in] add_without_increase If true, the addLinearlyDependent is invoked.
+       *                                 This only applies to incremental SVD.
        *
        * @return True if the sampling was successful.
        */
