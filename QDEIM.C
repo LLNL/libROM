@@ -297,7 +297,7 @@ QDEIM(const Matrix* f_basis,
 		  std::set<int>::iterator it = globalSamples.find(isort[i]);
 		  if (it == globalSamples.end()) // not found
 		    {
-		      CAROM_VERIFY(i < s-1 && f_sampled_row[s] == -1);
+		      CAROM_VERIFY(i <= s && f_sampled_row[s] == -1);
 		      f_sampled_row[s] = isort[i];
 		      break;
 		    }
