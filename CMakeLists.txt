@@ -123,6 +123,7 @@ set(module_list
   IncrementalSVDFastUpdate
   IncrementalSVDStandard
   StaticSVD
+  RandomizedSVD
   Database
   HDFDatabase
   Utilities

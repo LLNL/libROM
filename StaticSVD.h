@@ -98,42 +98,23 @@ class StaticSVD : public SVD
       const Matrix*
       getSnapshotMatrix();
 
-   private:
-     friend class BasisGenerator;
-
-     /**
-      * @brief Constructor.
-      *
-      * @param[in] options The struct containing the options for this SVD
-      *                    implementation.
-      */
-     StaticSVD(
-        Options options
-        );
+   protected:
 
       /**
-       * @brief Unimplemented default constructor.
-       */
-      StaticSVD();
-
-      /**
-       * @brief Unimplemented copy constructor.
-       */
-      StaticSVD(
-         const StaticSVD& other);
-
-      /**
-       * @brief Unimplemented assignment operator.
-       */
-      StaticSVD&
-      operator = (
-         const StaticSVD& rhs);
+        * @brief Constructor.
+        *
+        * @param[in] options The struct containing the options for this SVD
+        *                    implementation.
+        */
+       StaticSVD(
+          Options options
+          );
 
       /**
        * @brief Gathers samples from all other processors to form complete
        * sample of system and computes the SVD.
        */
-      void
+      virtual void
       computeSVD();
 
       /**
@@ -224,6 +205,28 @@ class StaticSVD : public SVD
       void delete_factorizer();
 
       void broadcast_sample(const double* u_in);
+
+    private:
+
+       friend class BasisGenerator;
+
+       /**
+        * @brief Unimplemented default constructor.
+        */
+       StaticSVD();
+
+       /**
+        * @brief Unimplemented copy constructor.
+        */
+       StaticSVD(
+          const StaticSVD& other);
+
+       /**
+        * @brief Unimplemented assignment operator.
+        */
+       StaticSVD&
+       operator = (
+          const StaticSVD& rhs);
 };
 
 }

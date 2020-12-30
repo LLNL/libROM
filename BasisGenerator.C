@@ -16,6 +16,7 @@
 
 #include "BasisGenerator.h"
 #include "StaticSVD.h"
+#include "RandomizedSVD.h"
 #include "IncrementalSVDStandard.h"
 #include "IncrementalSVDFastUpdate.h"
 
@@ -87,9 +88,16 @@ BasisGenerator::BasisGenerator(
    }
    else
    {
-     d_svd.reset(
-        new StaticSVD(
-           options));
+     if (options.randomized) {
+       d_svd.reset(
+          new RandomizedSVD(
+             options));
+     }
+     else {
+       d_svd.reset(
+          new StaticSVD(
+             options));
+     }
    }
 }
 

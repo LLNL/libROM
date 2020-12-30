@@ -18,6 +18,7 @@
 #include "mpi.h"
 #include <string.h>
 #include <vector>
+#include <random>
 
 #ifdef CAROM_HAS_ELEMENTAL
 #include <El.hpp>
@@ -53,7 +54,8 @@ Matrix::Matrix() :
 Matrix::Matrix(
    int num_rows,
    int num_cols,
-   bool distributed) :
+   bool distributed,
+   bool randomized) :
    d_mat(0),
    d_alloc_size(0),
    d_distributed(distributed),
@@ -70,6 +72,15 @@ Matrix::Matrix(
       d_num_procs = 1;
    }
    setSize(num_rows, num_cols);
+   if (randomized) {
+     std::default_random_engine generator;
+     std::normal_distribution<double> normal_distribution(0.0, 1.0);
+     for (int i = 0; i < num_rows; i++) {
+       for (int j = 0; j < num_cols; j++) {
+         item(i ,j) = normal_distribution(generator);
+       }
+     }
+   }
 }
 
 Matrix::Matrix(
@@ -517,6 +528,31 @@ Matrix::transposeMult(
 }
 
 void
+Matrix::getColumn(int column,
+   Vector*& result) const
+{
+  if (result == 0) {
+    if (d_distributed) {
+      result = new Vector(d_num_rows, true);
+    }
+    else {
+      result = new Vector(d_num_rows, false);
+    }
+  }
+  getColumn(column, *result);
+}
+
+void
+Matrix::getColumn(int column,
+   Vector& result) const
+{
+  result.setSize(d_num_rows);
+  for (int i = 0; i < d_num_rows; i++) {
+    result.item(i) = item(i, column);
+  }
+}
+
+void
 Matrix::inverse(
    Matrix*& result) const
 {
@@ -704,7 +740,7 @@ Matrix::print(const char * prefix)
 {
    int my_rank;
    const bool success = MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-   CAROM_VERIFY(success);
+   CAROM_ASSERT(success);
 
    std::string filename_str = prefix + std::to_string(my_rank);
    const char * filename = filename_str.c_str();
@@ -918,7 +954,7 @@ const
 {
   // Check if distributed; otherwise, use serial implementation
   CAROM_VERIFY(distributed());
-  
+
 #ifdef CAROM_HAS_ELEMENTAL
   // Shim to design interface; not implemented yet
 
@@ -951,7 +987,7 @@ Matrix::qrcp_pivots_transpose_distributed_scalapack
 
   int my_rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-  
+
   row_offset[my_rank] = d_num_rows;
 
   CAROM_VERIFY(MPI_Allgather(MPI_IN_PLACE,
@@ -966,11 +1002,11 @@ Matrix::qrcp_pivots_transpose_distributed_scalapack
     row_offset[i] = row_offset[i + 1] - row_offset[i];
   }
   CAROM_VERIFY(row_offset[0] == 0);
-  
+
   SLPK_Matrix slpk;
   int blocksize = row_offset[d_num_procs] / d_num_procs;
   if (row_offset[d_num_procs] % d_num_procs != 0) blocksize += 1;
-  
+
   initialize_matrix(&slpk, d_num_cols, row_offset[d_num_procs], 1, d_num_procs, 1, blocksize);  // transposed
 
   CAROM_VERIFY(d_num_cols <= pivots_requested); // Otherwise, take a submatrix for the QR (not implemented).
@@ -984,7 +1020,7 @@ Matrix::qrcp_pivots_transpose_distributed_scalapack
    }
 
   QRManager QRmgr;
-  qr_init(&QRmgr, &slpk);  
+  qr_init(&QRmgr, &slpk);
   qrfactorize(&QRmgr);
 
   // Just gather the pivots to root and discard the factorization
@@ -1010,7 +1046,7 @@ Matrix::qrcp_pivots_transpose_distributed_scalapack
 
       CAROM_VERIFY(rdisp[d_num_procs-1] + rcount[d_num_procs-1] == pivots_requested);
     }
-  
+
   MPI_Gatherv(mypivots, scount, MPI_INT, row_pivot, rcount, rdisp, MPI_INT, 0, MPI_COMM_WORLD);
 
   delete [] mypivots;
@@ -1039,12 +1075,13 @@ Matrix::qrcp_pivots_transpose_distributed_scalapack
       for (int i=0; i<scount; ++i)
 	row_pivot[i] = QRmgr.ipiv[i]-1;  // Make it 0-based
     }
-  
+
   free_matrix_data(&slpk);
   release_context(&slpk);
 
+  free(QRmgr.tau);
   free(QRmgr.ipiv);
-  
+
   delete [] rcount;
   delete [] rdisp;
   delete [] row_offset;

@@ -42,11 +42,14 @@ class Matrix
        * @param[in] num_cols The total number of columns of the Matrix.
        * @param[in] distributed If true the rows of the Matrix are spread over
        *                        all processors.
+       * @param[in] randomized If true the matrix will be a standard normally
+                               distributed random matrix.
        */
       Matrix(
          int num_rows,
          int num_cols,
-         bool distributed);
+         bool distributed,
+         bool randomized = false);
 
       /** Constructor creating a Matrix with uninitialized values.
        *
@@ -703,6 +706,37 @@ class Matrix
       inverse();
 
       /**
+       * @brief Returns a column of the matrix.
+       *
+       * @return A column of the matrix.
+       */
+      Vector*
+      getColumn(int column) const
+      {
+         Vector* result = 0;
+         getColumn(column, result);
+         return result;
+      }
+
+      /**
+       * @brief Returns a column of the matrix.
+       *
+       * @return A column of the matrix.
+       */
+      void
+      getColumn(int column,
+         Vector*& result) const;
+
+         /**
+          * @brief Returns a column of the matrix.
+          *
+          * @return A column of the matrix.
+          */
+      void
+      getColumn(int column,
+         Vector& result) const;
+
+      /**
        * @brief Replaces this Matrix with its transpose (in place),
        * in the serial square case only.
        *
@@ -834,7 +868,7 @@ class Matrix
      {
        return d_mat;
      }
-     
+
    private:
       /**
        * @brief Default constructor is not implemented.
