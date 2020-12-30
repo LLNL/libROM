@@ -124,6 +124,7 @@ public:
       return *this;
    }
 
+<<<<<<< HEAD
    Options setRandomizedSVD(
       bool randomized_,
       int randomized_subspace_dim_ = -1
@@ -134,6 +135,8 @@ public:
        return *this;
    }
 
+=======
+>>>>>>> origin/master
    Options setIncrementalSVD(
         double linearity_tol_,
         double initial_dt_,
@@ -184,10 +187,13 @@ public:
    double singular_value_tol = 0;
    bool debug_algorithm = false;
 
+<<<<<<< HEAD
    // Randomized SVD
    bool randomized;
    int randomized_subspace_dim = -1;
 
+=======
+>>>>>>> origin/master
    // Incremental SVD
    double linearity_tol = -1;
    double initial_dt = -1;
