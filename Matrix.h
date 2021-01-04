@@ -706,9 +706,9 @@ class Matrix
       inverse();
 
       /**
-       * @brief Returns a column of the matrix.
+       * @brief Returns a column of the matrix (not owned by Matrix).
        *
-       * @return A column of the matrix.
+       * @return A column of the matrix (not owned by Matrix).
        */
       Vector*
       getColumn(int column) const
@@ -719,18 +719,18 @@ class Matrix
       }
 
       /**
-       * @brief Returns a column of the matrix.
+       * @brief Returns a column of the matrix (not owned by Matrix).
        *
-       * @return A column of the matrix.
+       * @return A column of the matrix (not owned by Matrix).
        */
       void
       getColumn(int column,
          Vector*& result) const;
 
          /**
-          * @brief Returns a column of the matrix.
+          * @brief Returns a column of the matrix (not owned by Matrix).
           *
-          * @return A column of the matrix.
+          * @return A column of the matrix (not owned by Matrix).
           */
       void
       getColumn(int column,

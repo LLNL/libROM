@@ -23,21 +23,13 @@
 #include <stdio.h>
 #include <string.h>
 
-/* Use automatically detected Fortran name-mangling scheme */
-#define dormlq CAROM_FC_GLOBAL(dormlq, DORMLQ)
-
-extern "C" {
-void dormlq(char*, char*, int*, int*, int*,
-    double*, int*, double*, double*, int*, double*, int*, int*);
-}
-
 namespace CAROM {
 
 RandomizedSVD::RandomizedSVD(
    Options options) :
    StaticSVD(options),
    d_subspace_dim(options.randomized_subspace_dim) {
-     srand(1);
+     srand(options.random_seed);
    }
 
 void
@@ -104,11 +96,7 @@ RandomizedSVD::computeSVD()
      // Get QR factorization of random projection
      int *row_offset = new int[d_num_procs + 1];
      row_offset[d_num_procs] = rand_proj->numDistributedRows();
-
-     int my_rank;
-     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-
-     row_offset[my_rank] = rand_proj->numRows();
+     row_offset[d_rank] = rand_proj->numRows();
 
      CAROM_VERIFY(MPI_Allgather(MPI_IN_PLACE,
               1,
@@ -160,7 +148,6 @@ RandomizedSVD::computeSVD()
         scatter_block(&svd_input, 1, row_offset[rank] + 1,
                   snapshot_matrix_transposed->getData(), row_offset[rank + 1] - row_offset[rank],
                   snapshot_matrix_transposed->numColumns(), rank);
-
      }
 
     // This computes the action of Q on the input to the SVD.
