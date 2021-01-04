@@ -619,13 +619,13 @@ subroutine qaction(mgr, A, S, T) bind(C)
 
     ! First call just sets bestwork(1) to work size
     lwork = -1
-    call pdormqr(achar(S), achar(T), Q%m, Q%n, mgr%tauSize, Qdata, 1, 1, descaq, tau, Adata, 1, 1, descaa, &
+    call pdormqr(achar(S), achar(T), A%m, A%n, mgr%tauSize, Qdata, 1, 1, descaq, tau, Adata, 1, 1, descaa, &
          & bestwork, lwork, ierr)
     lwork = bestwork(1)
     allocate(work(lwork))
 
     ! Now work is allocated, and action is computed next
-    call pdormqr(achar(S), achar(T), Q%m, Q%n, mgr%tauSize, Qdata, 1, 1, descaq, tau, Adata, 1, 1, descaa, &
+    call pdormqr(achar(S), achar(T), A%m, A%n, mgr%tauSize, Qdata, 1, 1, descaq, tau, Adata, 1, 1, descaa, &
         & work, lwork, ierr)
 
     if (mrank .eq. 0) then
