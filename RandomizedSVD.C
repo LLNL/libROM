@@ -222,11 +222,16 @@ RandomizedSVD::computeSVD()
     }
     d_this_interval_basis_current = true;
 
-    free_matrix_data(&svd_input);
     free_matrix_data(&slpk_rand_proj);
+    free_matrix_data(&svd_input);
+    free_matrix_data(&d_new_basis);
     free_matrix_data(QRmgr.A);
     free(QRmgr.tau);
     release_context(&slpk_rand_proj);
+    delete snapshot_matrix, snapshot_matrix_transposed;
+    delete rand_mat, rand_proj;
+    delete lq_A;
+    delete row_offset;
 
     if (d_debug_algorithm) {
        if (d_rank == 0) {
