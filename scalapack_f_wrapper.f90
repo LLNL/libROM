@@ -610,11 +610,9 @@ subroutine qaction(mgr, A, S, T) bind(C)
 
     call MPI_Comm_rank(MPI_COMM_WORLD, mrank, ierr)
     call descinit(descaa, A%m, A%n, A%mb, A%nb, 0, 0, A%ctxt, A%mm, ierr)
-    write(*,*) A%m, A%n, A%mb, A%nb, 0, 0, A%ctxt, A%mm, ierr
     call c_f_pointer(A%mdata, Adata, [A%mm, A%mn])
     call c_f_pointer(mgr%A, Q)
     call descinit(descaq, Q%m, Q%n, Q%mb, Q%nb, 0, 0, Q%ctxt, Q%mm, ierr)
-    write(*,*) Q%m, Q%n, Q%mb, Q%nb, 0, 0, Q%ctxt, Q%mm, ierr
     call c_f_pointer(Q%mdata, Qdata, [Q%mm, Q%mn])
 
     call c_f_pointer(mgr%tau, tau, [mgr%tauSize])
@@ -625,7 +623,6 @@ subroutine qaction(mgr, A, S, T) bind(C)
          & bestwork, lwork, ierr)
     lwork = bestwork(1)
     allocate(work(lwork))
-    write(*,*) lwork
 
     ! Now work is allocated, and action is computed next
     call pdormqr(achar(S), achar(T), Q%m, Q%n, mgr%tauSize, Qdata, 1, 1, descaq, tau, Adata, 1, 1, descaa, &
