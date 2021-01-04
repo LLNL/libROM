@@ -235,6 +235,7 @@ if(GTEST_FOUND)
     QDEIM
     SVD
     StaticSVD
+    RandomizedSVD
     IncrementalSVD)
   foreach(stem IN LISTS unit_test_stems)
     add_executable(test_${stem} tests/test_${stem}.C)

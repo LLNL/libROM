@@ -589,6 +589,58 @@ subroutine qrfactorize(mgr) bind(C)
     deallocate(work)
 end subroutine
 
+subroutine qaction(mgr, A, S, T) bind(C)
+    use mpi
+    use ISO_FORTRAN_ENV, only: error_unit
+
+    type(QRManager), intent(in) :: mgr
+    type(SLPK_Matrix), intent(inout) :: A
+    integer(C_INT), value :: S, T
+    type(SLPK_Matrix), pointer :: Q
+    integer :: mrank, ierr
+
+    integer :: descaa(9), descaq(9), lwork
+
+    real(REAL_KIND), allocatable :: work(:)
+    real(REAL_KIND) :: bestwork(1)
+
+    real(REAL_KIND), pointer :: Adata(:, :)
+    real(REAL_KIND), pointer :: Qdata(:, :)
+    real(REAL_KIND), pointer :: tau(:)
+
+    call MPI_Comm_rank(MPI_COMM_WORLD, mrank, ierr)
+    call descinit(descaa, A%m, A%n, A%mb, A%nb, 0, 0, A%ctxt, A%mm, ierr)
+    write(*,*) A%m, A%n, A%mb, A%nb, 0, 0, A%ctxt, A%mm, ierr
+    call c_f_pointer(A%mdata, Adata, [A%mm, A%mn])
+    call c_f_pointer(mgr%A, Q)
+    call descinit(descaq, Q%m, Q%n, Q%mb, Q%nb, 0, 0, Q%ctxt, Q%mm, ierr)
+    write(*,*) Q%m, Q%n, Q%mb, Q%nb, 0, 0, Q%ctxt, Q%mm, ierr
+    call c_f_pointer(Q%mdata, Qdata, [Q%mm, Q%mn])
+
+    call c_f_pointer(mgr%tau, tau, [mgr%tauSize])
+
+    ! First call just sets bestwork(1) to work size
+    lwork = -1
+    call pdormqr(achar(S), achar(T), Q%m, Q%n, mgr%tauSize, Qdata, 1, 1, descaq, tau, Adata, 1, 1, descaa, &
+         & bestwork, lwork, ierr)
+    lwork = bestwork(1)
+    allocate(work(lwork))
+    write(*,*) lwork
+
+    ! Now work is allocated, and action is computed next
+    call pdormqr(achar(S), achar(T), Q%m, Q%n, mgr%tauSize, Qdata, 1, 1, descaq, tau, Adata, 1, 1, descaa, &
+        & work, lwork, ierr)
+
+    if (mrank .eq. 0) then
+        if (ierr .lt. 0) then
+            write(error_unit, *) "QR: error: argument ", -ierr, " had an illegal value"
+        elseif (ierr .gt. 0) then
+            write(error_unit, *) "QR: unknown error"
+        endif
+    endif
+    deallocate(work)
+end subroutine
+
 subroutine lqfactorize(mgr) bind(C)
     use mpi
     use ISO_FORTRAN_ENV, only: error_unit

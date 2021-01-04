@@ -290,6 +290,8 @@ void qr_init(struct QRManager* mgr, struct SLPK_Matrix* A);
 
 void qrfactorize(struct QRManager*);
 
+void qaction(struct QRManager*, struct SLPK_Matrix* A, int S, int T);
+
 void lqfactorize(struct QRManager*);
 
 #ifdef __cplusplus
