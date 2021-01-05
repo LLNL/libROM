@@ -75,15 +75,15 @@ TEST(RandomizedSVDSerialTest, Test_RandomizedSVD)
   double* sv_vals = sv->getData();
 
   for (int i = 0; i < 15; i++) {
-    EXPECT_EQ(d_basis_vals[i], basis_true_ans[i]);
+    EXPECT_NEAR(d_basis_vals[i], basis_true_ans[i]);
   }
 
   for (int i = 0; i < 9; i++) {
-    EXPECT_EQ(d_basis_right_vals[i], basis_right_true_ans[i]);
+    EXPECT_NEAR(d_basis_right_vals[i], basis_right_true_ans[i]);
   }
 
   for (int i = 0; i < 9; i++) {
-    EXPECT_EQ(sv_vals[i], sv_true_ans[i]);
+    EXPECT_NEAR(sv_vals[i], sv_true_ans[i]);
   }
 }
 
@@ -138,15 +138,15 @@ TEST(RandomizedSVDSerialTest, Test_RandomizedSVDTransposed)
   double* sv_vals = sv->getData();
 
   for (int i = 0; i < 15; i++) {
-    EXPECT_EQ(d_basis_right_vals[i], basis_right_true_ans[i]);
+    EXPECT_NEAR(d_basis_right_vals[i], basis_right_true_ans[i]);
   }
 
   for (int i = 0; i < 9; i++) {
-    EXPECT_EQ(d_basis_vals[i], basis_true_ans[i]);
+    EXPECT_NEAR(d_basis_vals[i], basis_true_ans[i]);
   }
 
   for (int i = 0; i < 9; i++) {
-    EXPECT_EQ(sv_vals[i], sv_true_ans[i]);
+    EXPECT_NEAR(sv_vals[i], sv_true_ans[i]);
   }
 }
 
@@ -194,15 +194,15 @@ TEST(RandomizedSVDSerialTest, Test_RandomizedSVDSmallerSubspace)
   double* sv_vals = sv->getData();
 
   for (int i = 0; i < 10; i++) {
-    EXPECT_EQ(d_basis_vals[i], basis_true_ans[i]);
+    EXPECT_NEAR(d_basis_vals[i], basis_true_ans[i]);
   }
 
   for (int i = 0; i < 4; i++) {
-    EXPECT_EQ(d_basis_right_vals[i], basis_right_true_ans[i]);
+    EXPECT_NEAR(d_basis_right_vals[i], basis_right_true_ans[i]);
   }
 
   for (int i = 0; i < 4; i++) {
-    EXPECT_EQ(sv_vals[i], sv_true_ans[i]);
+    EXPECT_NEAR(sv_vals[i], sv_true_ans[i]);
   }
 }
 
@@ -255,15 +255,15 @@ TEST(RandomizedSVDSerialTest, Test_RandomizedSVDTransposedSmallerSubspace)
   double* sv_vals = sv->getData();
 
   for (int i = 0; i < 10; i++) {
-    EXPECT_EQ(d_basis_right_vals[i], basis_right_true_ans[i]);
+    EXPECT_NEAR(d_basis_right_vals[i], basis_right_true_ans[i]);
   }
 
   for (int i = 0; i < 4; i++) {
-    EXPECT_EQ(d_basis_vals[i], basis_true_ans[i]);
+    EXPECT_NEAR(d_basis_vals[i], basis_true_ans[i]);
   }
 
   for (int i = 0; i < 4; i++) {
-    EXPECT_EQ(sv_vals[i], sv_true_ans[i]);
+    EXPECT_NEAR(sv_vals[i], sv_true_ans[i]);
   }
 }
 
