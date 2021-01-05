@@ -61,3 +61,4 @@ script:
   - ./test_GNAT
   - ./test_QDEIM
   - ./test_IncrementalSVD
+  - ./test_RandomizedSVD
