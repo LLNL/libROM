@@ -31,6 +31,37 @@ TEST(GoogleTestFramework, GoogleTestFrameworkFound) {
 
 TEST(RandomizedSVDSerialTest, Test_RandomizedSVD)
 {
+  // Get the rank of this process, and the number of processors.
+  int mpi_init, d_rank, d_num_procs;
+  MPI_Initialized(&mpi_init);
+  if (mpi_init == 0) {
+    MPI_Init(nullptr, nullptr);
+  }
+
+  MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+
+  int num_total_rows = 5;
+  int d_num_rows = num_total_rows / d_num_procs;
+  if (num_total_rows % d_num_procs > d_rank) {
+    d_num_rows++;
+  }
+  int *row_offset = new int[d_num_procs + 1];
+  row_offset[d_num_procs] = num_total_rows;
+  row_offset[d_rank] = d_num_rows;
+
+  MPI_Allgather(MPI_IN_PLACE,
+			     1,
+			     MPI_INT,
+			     row_offset,
+			     1,
+			     MPI_INT,
+			     MPI_COMM_WORLD);
+
+  for (int i = d_num_procs - 1; i >= 0; i--) {
+    row_offset[i] = row_offset[i + 1] - row_offset[i];
+  }
+
   double* sample1 = new double[5] {0.5377, 1.8339, -2.2588, 0.8622, 0.3188};
   double* sample2 = new double[5] {-1.3077, -0.4336, 0.3426, 3.5784, 2.7694};
   double* sample3 = new double[5] {-1.3499, 3.0349, 0.7254, -0.0631, 0.7147};
@@ -52,18 +83,19 @@ TEST(RandomizedSVDSerialTest, Test_RandomizedSVD)
      0.00000000000000000000e+00,      3.66719976398777092186e+00,      0.00000000000000000000e+00,
      0.00000000000000000000e+00,      0.00000000000000000000e+00,      2.69114625366671766926e+00};
 
-  CAROM::Options randomized_svd_options = CAROM::Options(5, 3, 1);
+  CAROM::Options randomized_svd_options = CAROM::Options(d_num_rows, 3, 1);
+  randomized_svd_options.setMaxBasisDimension(num_total_rows);
   randomized_svd_options.setRandomizedSVD(true);
   CAROM::BasisGenerator sampler(randomized_svd_options, false);
-  sampler.takeSample(sample1, 0, 0);
-  sampler.takeSample(sample2, 0, 0);
-  sampler.takeSample(sample3, 0, 0);
+  sampler.takeSample(&sample1[row_offset[d_rank]], 0, 0);
+  sampler.takeSample(&sample2[row_offset[d_rank]], 0, 0);
+  sampler.takeSample(&sample3[row_offset[d_rank]], 0, 0);
 
   const CAROM::Matrix* d_basis = sampler.getSpatialBasis();
   const CAROM::Matrix* d_basis_right = sampler.getTemporalBasis();
   const CAROM::Matrix* sv = sampler.getSingularValues();
 
-  EXPECT_EQ(d_basis->numRows(), 5);
+  EXPECT_EQ(d_basis->numRows(), d_num_rows);
   EXPECT_EQ(d_basis->numColumns(), 3);
   EXPECT_EQ(d_basis_right->numRows(), 3);
   EXPECT_EQ(d_basis_right->numColumns(), 3);
@@ -74,8 +106,8 @@ TEST(RandomizedSVDSerialTest, Test_RandomizedSVD)
   double* d_basis_right_vals = d_basis_right->getData();
   double* sv_vals = sv->getData();
 
-  for (int i = 0; i < 15; i++) {
-    EXPECT_NEAR(d_basis_vals[i], basis_true_ans[i], 1e-7);
+  for (int i = 0; i < d_num_rows * 3; i++) {
+    EXPECT_NEAR(d_basis_vals[i], basis_true_ans[row_offset[d_rank] * 3 + i], 1e-7);
   }
 
   for (int i = 0; i < 9; i++) {
@@ -89,6 +121,37 @@ TEST(RandomizedSVDSerialTest, Test_RandomizedSVD)
 
 TEST(RandomizedSVDSerialTest, Test_RandomizedSVDTransposed)
 {
+
+  // Get the rank of this process, and the number of processors.
+  int mpi_init, d_rank, d_num_procs;
+  MPI_Initialized(&mpi_init);
+  if (mpi_init == 0) {
+    MPI_Init(nullptr, nullptr);
+  }
+
+  MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+
+  int num_total_rows = 3;
+  int d_num_rows = num_total_rows / d_num_procs;
+  if (num_total_rows % d_num_procs > d_rank) {
+    d_num_rows++;
+  }
+  int *row_offset = new int[d_num_procs + 1];
+  row_offset[d_num_procs] = num_total_rows;
+  row_offset[d_rank] = d_num_rows;
+
+  MPI_Allgather(MPI_IN_PLACE,
+           1,
+           MPI_INT,
+           row_offset,
+           1,
+           MPI_INT,
+           MPI_COMM_WORLD);
+
+  for (int i = d_num_procs - 1; i >= 0; i--) {
+    row_offset[i] = row_offset[i + 1] - row_offset[i];
+  }
 
   double* sample1 = new double[5] {0.5377, -1.3077, -1.3499};
   double* sample2 = new double[5] {1.8339, -0.4336, 3.0349};
@@ -113,20 +176,30 @@ TEST(RandomizedSVDSerialTest, Test_RandomizedSVDTransposed)
      0.00000000000000000000e+00,      3.66719976398777092186e+00,      0.00000000000000000000e+00,
      0.00000000000000000000e+00,      0.00000000000000000000e+00,      2.69114625366671766926e+00};
 
-  CAROM::Options randomized_svd_options = CAROM::Options(3, 5, 1);
+  CAROM::Options randomized_svd_options = CAROM::Options(d_num_rows, 5, 1);
+  randomized_svd_options.setMaxBasisDimension(num_total_rows);
   randomized_svd_options.setRandomizedSVD(true);
   CAROM::BasisGenerator sampler(randomized_svd_options, false);
-  sampler.takeSample(sample1, 0, 0);
-  sampler.takeSample(sample2, 0, 0);
-  sampler.takeSample(sample3, 0, 0);
-  sampler.takeSample(sample4, 0, 0);
-  sampler.takeSample(sample5, 0, 0);
+  sampler.takeSample(&sample1[row_offset[d_rank]], 0, 0);
+  sampler.takeSample(&sample2[row_offset[d_rank]], 0, 0);
+  sampler.takeSample(&sample3[row_offset[d_rank]], 0, 0);
+  sampler.takeSample(&sample4[row_offset[d_rank]], 0, 0);
+  sampler.takeSample(&sample5[row_offset[d_rank]], 0, 0);
 
   const CAROM::Matrix* d_basis = sampler.getSpatialBasis();
   const CAROM::Matrix* d_basis_right = sampler.getTemporalBasis();
   const CAROM::Matrix* sv = sampler.getSingularValues();
 
-  EXPECT_EQ(d_basis_right->numRows(), 5);
+  num_total_rows = 5;
+  d_num_rows = num_total_rows / d_num_procs;
+  if (num_total_rows % d_num_procs > d_rank) {
+    d_num_rows++;
+  }
+
+  row_offset[d_num_procs] = num_total_rows;
+  row_offset[d_rank] = d_num_rows;
+
+  EXPECT_EQ(d_basis_right->numRows(), d_num_rows);
   EXPECT_EQ(d_basis_right->numColumns(), 3);
   EXPECT_EQ(d_basis->numRows(), 3);
   EXPECT_EQ(d_basis->numColumns(), 3);
@@ -137,8 +210,20 @@ TEST(RandomizedSVDSerialTest, Test_RandomizedSVDTransposed)
   double* d_basis_right_vals = d_basis_right->getData();
   double* sv_vals = sv->getData();
 
-  for (int i = 0; i < 15; i++) {
-    EXPECT_NEAR(d_basis_right_vals[i], basis_right_true_ans[i], 1e-7);
+  MPI_Allgather(MPI_IN_PLACE,
+			     1,
+			     MPI_INT,
+			     row_offset,
+			     1,
+			     MPI_INT,
+			     MPI_COMM_WORLD);
+
+  for (int i = d_num_procs - 1; i >= 0; i--) {
+    row_offset[i] = row_offset[i + 1] - row_offset[i];
+  }
+
+  for (int i = 0; i < d_num_rows * 3; i++) {
+    EXPECT_NEAR(d_basis_right_vals[i], basis_right_true_ans[row_offset[d_rank] * 3 + i], 1e-7);
   }
 
   for (int i = 0; i < 9; i++) {
@@ -152,6 +237,38 @@ TEST(RandomizedSVDSerialTest, Test_RandomizedSVDTransposed)
 
 TEST(RandomizedSVDSerialTest, Test_RandomizedSVDSmallerSubspace)
 {
+
+  // Get the rank of this process, and the number of processors.
+  int mpi_init, d_rank, d_num_procs;
+  MPI_Initialized(&mpi_init);
+  if (mpi_init == 0) {
+    MPI_Init(nullptr, nullptr);
+  }
+
+  MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+
+  int num_total_rows = 5;
+  int d_num_rows = num_total_rows / d_num_procs;
+  if (num_total_rows % d_num_procs > d_rank) {
+    d_num_rows++;
+  }
+  int *row_offset = new int[d_num_procs + 1];
+  row_offset[d_num_procs] = num_total_rows;
+  row_offset[d_rank] = d_num_rows;
+
+  MPI_Allgather(MPI_IN_PLACE,
+			     1,
+			     MPI_INT,
+			     row_offset,
+			     1,
+			     MPI_INT,
+			     MPI_COMM_WORLD);
+
+  for (int i = d_num_procs - 1; i >= 0; i--) {
+    row_offset[i] = row_offset[i + 1] - row_offset[i];
+  }
+
   double* sample1 = new double[5] {0.5377, 1.8339, -2.2588, 0.8622, 0.3188};
   double* sample2 = new double[5] {-1.3077, -0.4336, 0.3426, 3.5784, 2.7694};
   double* sample3 = new double[5] {-1.3499, 3.0349, 0.7254, -0.0631, 0.7147};
@@ -171,18 +288,19 @@ TEST(RandomizedSVDSerialTest, Test_RandomizedSVDSmallerSubspace)
      4.84486375065219387892e+00,      0.00000000000000000000e+00,
      0.00000000000000000000e+00,      3.66719976398777225413e+00};
 
-  CAROM::Options randomized_svd_options = CAROM::Options(5, 3, 1);
+  CAROM::Options randomized_svd_options = CAROM::Options(d_num_rows, 3, 1);
+  randomized_svd_options.setMaxBasisDimension(num_total_rows);
   randomized_svd_options.setRandomizedSVD(true, 2);
   CAROM::BasisGenerator sampler(randomized_svd_options, false);
-  sampler.takeSample(sample1, 0, 0);
-  sampler.takeSample(sample2, 0, 0);
-  sampler.takeSample(sample3, 0, 0);
+  sampler.takeSample(&sample1[row_offset[d_rank]], 0, 0);
+  sampler.takeSample(&sample2[row_offset[d_rank]], 0, 0);
+  sampler.takeSample(&sample3[row_offset[d_rank]], 0, 0);
 
   const CAROM::Matrix* d_basis = sampler.getSpatialBasis();
   const CAROM::Matrix* d_basis_right = sampler.getTemporalBasis();
   const CAROM::Matrix* sv = sampler.getSingularValues();
 
-  EXPECT_EQ(d_basis->numRows(), 5);
+  EXPECT_EQ(d_basis->numRows(), d_num_rows);
   EXPECT_EQ(d_basis->numColumns(), 2);
   EXPECT_EQ(d_basis_right->numRows(), 2);
   EXPECT_EQ(d_basis_right->numColumns(), 2);
@@ -193,8 +311,8 @@ TEST(RandomizedSVDSerialTest, Test_RandomizedSVDSmallerSubspace)
   double* d_basis_right_vals = d_basis_right->getData();
   double* sv_vals = sv->getData();
 
-  for (int i = 0; i < 10; i++) {
-    EXPECT_NEAR(d_basis_vals[i], basis_true_ans[i], 1e-7);
+  for (int i = 0; i < d_num_rows * 2; i++) {
+    EXPECT_NEAR(d_basis_vals[i], basis_true_ans[row_offset[d_rank] * 2 + i], 1e-7);
   }
 
   for (int i = 0; i < 4; i++) {
@@ -208,6 +326,37 @@ TEST(RandomizedSVDSerialTest, Test_RandomizedSVDSmallerSubspace)
 
 TEST(RandomizedSVDSerialTest, Test_RandomizedSVDTransposedSmallerSubspace)
 {
+
+  // Get the rank of this process, and the number of processors.
+  int mpi_init, d_rank, d_num_procs;
+  MPI_Initialized(&mpi_init);
+  if (mpi_init == 0) {
+    MPI_Init(nullptr, nullptr);
+  }
+
+  MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+
+  int num_total_rows = 3;
+  int d_num_rows = num_total_rows / d_num_procs;
+  if (num_total_rows % d_num_procs > d_rank) {
+    d_num_rows++;
+  }
+  int *row_offset = new int[d_num_procs + 1];
+  row_offset[d_num_procs] = num_total_rows;
+  row_offset[d_rank] = d_num_rows;
+
+  MPI_Allgather(MPI_IN_PLACE,
+           1,
+           MPI_INT,
+           row_offset,
+           1,
+           MPI_INT,
+           MPI_COMM_WORLD);
+
+  for (int i = d_num_procs - 1; i >= 0; i--) {
+    row_offset[i] = row_offset[i + 1] - row_offset[i];
+  }
 
   double* sample1 = new double[5] {0.5377, -1.3077, -1.3499};
   double* sample2 = new double[5] {1.8339, -0.4336, 3.0349};
@@ -230,20 +379,30 @@ TEST(RandomizedSVDSerialTest, Test_RandomizedSVDTransposedSmallerSubspace)
      4.84486375065219387892e+00,      0.00000000000000000000e+00,
      0.00000000000000000000e+00,      3.66719976398777225413e+00};
 
-  CAROM::Options randomized_svd_options = CAROM::Options(3, 5, 1);
+  CAROM::Options randomized_svd_options = CAROM::Options(d_num_rows, 5, 1);
+  randomized_svd_options.setMaxBasisDimension(num_total_rows);
   randomized_svd_options.setRandomizedSVD(true, 2);
   CAROM::BasisGenerator sampler(randomized_svd_options, false);
-  sampler.takeSample(sample1, 0, 0);
-  sampler.takeSample(sample2, 0, 0);
-  sampler.takeSample(sample3, 0, 0);
-  sampler.takeSample(sample4, 0, 0);
-  sampler.takeSample(sample5, 0, 0);
+  sampler.takeSample(&sample1[row_offset[d_rank]], 0, 0);
+  sampler.takeSample(&sample2[row_offset[d_rank]], 0, 0);
+  sampler.takeSample(&sample3[row_offset[d_rank]], 0, 0);
+  sampler.takeSample(&sample4[row_offset[d_rank]], 0, 0);
+  sampler.takeSample(&sample5[row_offset[d_rank]], 0, 0);
 
   const CAROM::Matrix* d_basis = sampler.getSpatialBasis();
   const CAROM::Matrix* d_basis_right = sampler.getTemporalBasis();
   const CAROM::Matrix* sv = sampler.getSingularValues();
 
-  EXPECT_EQ(d_basis_right->numRows(), 5);
+  num_total_rows = 5;
+  d_num_rows = num_total_rows / d_num_procs;
+  if (num_total_rows % d_num_procs > d_rank) {
+    d_num_rows++;
+  }
+
+  row_offset[d_num_procs] = num_total_rows;
+  row_offset[d_rank] = d_num_rows;
+
+  EXPECT_EQ(d_basis_right->numRows(), d_num_rows);
   EXPECT_EQ(d_basis_right->numColumns(), 2);
   EXPECT_EQ(d_basis->numRows(), 2);
   EXPECT_EQ(d_basis->numColumns(), 2);
@@ -254,8 +413,20 @@ TEST(RandomizedSVDSerialTest, Test_RandomizedSVDTransposedSmallerSubspace)
   double* d_basis_right_vals = d_basis_right->getData();
   double* sv_vals = sv->getData();
 
-  for (int i = 0; i < 10; i++) {
-    EXPECT_NEAR(d_basis_right_vals[i], basis_right_true_ans[i], 1e-7);
+  MPI_Allgather(MPI_IN_PLACE,
+			     1,
+			     MPI_INT,
+			     row_offset,
+			     1,
+			     MPI_INT,
+			     MPI_COMM_WORLD);
+
+  for (int i = d_num_procs - 1; i >= 0; i--) {
+    row_offset[i] = row_offset[i + 1] - row_offset[i];
+  }
+
+  for (int i = 0; i < d_num_rows * 2; i++) {
+    EXPECT_NEAR(d_basis_right_vals[i], basis_right_true_ans[row_offset[d_rank] * 2 + i], 1e-7);
   }
 
   for (int i = 0; i < 4; i++) {
@@ -271,7 +442,9 @@ int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   MPI_Init(&argc, &argv);
-  return RUN_ALL_TESTS();
+  int result = RUN_ALL_TESTS();
+  MPI_Finalize();
+  return result;
 }
 #else // #ifndef CAROM_HAS_GTEST
 int main()
