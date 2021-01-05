@@ -132,7 +132,6 @@ RandomizedSVD::computeSVD()
      // Manipulate lq_A to get elementary household reflectors.
      Matrix* lq_A = new Matrix(QRmgr.A->mdata, d_subspace_dim,
         rand_proj->numRows(), false, false);
-
      for (int i = 0; i < lq_A->numRows(); i++) {
          for (int j = 0; j < i; j++) {
            lq_A->item(i, j) = 0;
@@ -143,9 +142,8 @@ RandomizedSVD::computeSVD()
      SLPK_Matrix svd_input;
      make_similar_matrix(&svd_input, snapshot_matrix_transposed->numDistributedRows(),
             snapshot_matrix_transposed->numColumns(), QRmgr.A->ctxt, d_blocksize, d_blocksize);
-
      for (int rank = 0; rank < d_num_procs; ++rank) {
-        scatter_block(&svd_input, 1, row_offset[rank] + 1,
+        scatter_block(&svd_input, row_offset[rank] + 1, 1,
                   snapshot_matrix_transposed->getData(), row_offset[rank + 1] - row_offset[rank],
                   snapshot_matrix_transposed->numColumns(), rank);
      }
@@ -195,7 +193,7 @@ RandomizedSVD::computeSVD()
     for (int rank = 0; rank < d_num_procs; ++rank) {
        copy_matrix(&d_new_basis, row_offset[rank] + 1, 1,
                  d_factorizer->U, row_offset[rank] + 1, 1,
-                 rand_proj->numRows(), ncolumns);
+                 row_offset[rank + 1] - row_offset[rank], ncolumns);
     }
 
     // This computes the action of Q on d_basis.
@@ -207,7 +205,7 @@ RandomizedSVD::computeSVD()
        // it; here, it is used to go from column-major to row-major order.
        gather_transposed_block(&d_basis->item(0, 0), &d_new_basis,
                                row_offset[rank] + 1,
-                               1, rand_proj->numRows(),
+                               1, row_offset[rank + 1] - row_offset[rank],
                                ncolumns, rank);
        // V is computed in the transposed order so no reordering necessary.
        gather_block(&d_basis_right->item(0, 0), d_factorizer->V, 1, 1,
