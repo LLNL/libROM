@@ -29,7 +29,7 @@ TEST(GoogleTestFramework, GoogleTestFrameworkFound) {
   SUCCEED();
 }
 
-TEST(RandomizedSVDSerialTest, Test_RandomizedSVD)
+TEST(RandomizedSVDTest, Test_RandomizedSVD)
 {
   // Get the rank of this process, and the number of processors.
   int mpi_init, d_rank, d_num_procs;
@@ -107,11 +107,12 @@ TEST(RandomizedSVDSerialTest, Test_RandomizedSVD)
   double* sv_vals = sv->getData();
 
   for (int i = 0; i < d_num_rows * 3; i++) {
-    EXPECT_NEAR(d_basis_vals[i], basis_true_ans[row_offset[d_rank] * 3 + i], 1e-7);
+
+    EXPECT_NEAR(abs(d_basis_vals[i]), abs(basis_true_ans[row_offset[d_rank] * 3 + i]), 1e-7);
   }
 
   for (int i = 0; i < 9; i++) {
-    EXPECT_NEAR(d_basis_right_vals[i], basis_right_true_ans[i], 1e-7);
+    EXPECT_NEAR(abs(d_basis_right_vals[i]), abs(basis_right_true_ans[i]), 1e-7);
   }
 
   for (int i = 0; i < 9; i++) {
@@ -119,7 +120,7 @@ TEST(RandomizedSVDSerialTest, Test_RandomizedSVD)
   }
 }
 
-TEST(RandomizedSVDSerialTest, Test_RandomizedSVDTransposed)
+TEST(RandomizedSVDTest, Test_RandomizedSVDTransposed)
 {
 
   // Get the rank of this process, and the number of processors.
@@ -223,11 +224,11 @@ TEST(RandomizedSVDSerialTest, Test_RandomizedSVDTransposed)
   }
 
   for (int i = 0; i < d_num_rows * 3; i++) {
-    EXPECT_NEAR(d_basis_right_vals[i], basis_right_true_ans[row_offset[d_rank] * 3 + i], 1e-7);
+    EXPECT_NEAR(abs(d_basis_right_vals[i]), abs(basis_right_true_ans[row_offset[d_rank] * 3 + i]), 1e-7);
   }
 
   for (int i = 0; i < 9; i++) {
-    EXPECT_NEAR(d_basis_vals[i], basis_true_ans[i], 1e-7);
+    EXPECT_NEAR(abs(d_basis_vals[i]), abs(basis_true_ans[i]), 1e-7);
   }
 
   for (int i = 0; i < 9; i++) {
@@ -235,7 +236,7 @@ TEST(RandomizedSVDSerialTest, Test_RandomizedSVDTransposed)
   }
 }
 
-TEST(RandomizedSVDSerialTest, Test_RandomizedSVDSmallerSubspace)
+TEST(RandomizedSVDTest, Test_RandomizedSVDSmallerSubspace)
 {
 
   // Get the rank of this process, and the number of processors.
@@ -312,11 +313,11 @@ TEST(RandomizedSVDSerialTest, Test_RandomizedSVDSmallerSubspace)
   double* sv_vals = sv->getData();
 
   for (int i = 0; i < d_num_rows * 2; i++) {
-    EXPECT_NEAR(d_basis_vals[i], basis_true_ans[row_offset[d_rank] * 2 + i], 1e-7);
+    EXPECT_NEAR(abs(d_basis_vals[i]), abs(basis_true_ans[row_offset[d_rank] * 2 + i]), 1e-7);
   }
 
   for (int i = 0; i < 4; i++) {
-    EXPECT_NEAR(d_basis_right_vals[i], basis_right_true_ans[i], 1e-7);
+    EXPECT_NEAR(abs(d_basis_right_vals[i]), abs(basis_right_true_ans[i]), 1e-7);
   }
 
   for (int i = 0; i < 4; i++) {
@@ -324,7 +325,7 @@ TEST(RandomizedSVDSerialTest, Test_RandomizedSVDSmallerSubspace)
   }
 }
 
-TEST(RandomizedSVDSerialTest, Test_RandomizedSVDTransposedSmallerSubspace)
+TEST(RandomizedSVDTest, Test_RandomizedSVDTransposedSmallerSubspace)
 {
 
   // Get the rank of this process, and the number of processors.
@@ -426,11 +427,11 @@ TEST(RandomizedSVDSerialTest, Test_RandomizedSVDTransposedSmallerSubspace)
   }
 
   for (int i = 0; i < d_num_rows * 2; i++) {
-    EXPECT_NEAR(d_basis_right_vals[i], basis_right_true_ans[row_offset[d_rank] * 2 + i], 1e-7);
+    EXPECT_NEAR(abs(d_basis_right_vals[i]), abs(basis_right_true_ans[row_offset[d_rank] * 2 + i]), 1e-7);
   }
 
   for (int i = 0; i < 4; i++) {
-    EXPECT_NEAR(d_basis_vals[i], basis_true_ans[i], 1e-7);
+    EXPECT_NEAR(abs(d_basis_vals[i]), abs(basis_true_ans[i]), 1e-7);
   }
 
   for (int i = 0; i < 4; i++) {
