@@ -111,13 +111,12 @@ RandomizedSVD::computeSVD()
 
      // Project snapshot matrix onto random subspace
      Matrix* rand_proj = snapshot_matrix->mult(rand_mat);
-     int rand_proj_total_rows = rand_proj->numDistributedRows();
      int rand_proj_rows = rand_proj->numRows();
      delete snapshot_matrix, rand_mat;
 
      // Get QR factorization of random projection
      int *row_offset = new int[d_num_procs + 1];
-     row_offset[d_num_procs] = rand_proj_total_rows;
+     row_offset[d_num_procs] = rand_proj->numDistributedRows();
      row_offset[d_rank] = rand_proj_rows;
 
      CAROM_VERIFY(MPI_Allgather(MPI_IN_PLACE,
@@ -139,12 +138,12 @@ RandomizedSVD::computeSVD()
      d_npcol = 1;
      int d_blocksize = row_offset[d_num_procs] / d_num_procs;
      if (row_offset[d_num_procs] % d_num_procs != 0) d_blocksize += 1;
-       initialize_matrix(&slpk_rand_proj, rand_proj->numDistributedRows(), rand_proj->numColumns(),
-         d_nprow, d_npcol, d_blocksize, d_blocksize);
+     initialize_matrix(&slpk_rand_proj, rand_proj->numDistributedRows(), rand_proj->numColumns(),
+       d_nprow, d_npcol, d_blocksize, d_blocksize);
      for (int rank = 0; rank < d_num_procs; ++rank) {
-        scatter_block(&slpk_rand_proj, row_offset[rank] + 1,
-                  1, rand_proj->getData(), row_offset[rank + 1] - row_offset[rank],
-                  rand_proj->numColumns(), rank);
+       scatter_block(&slpk_rand_proj, row_offset[rank] + 1, 1,
+         rand_proj->getData(), row_offset[rank + 1] - row_offset[rank],
+         rand_proj->numColumns(), rank);
      }
      delete rand_proj;
 
@@ -153,18 +152,15 @@ RandomizedSVD::computeSVD()
      qrfactorize(&QRmgr);
      free(QRmgr.ipiv);
 
-     // Manipulate lq_A to get elementary household reflectors.
-     Matrix* lq_A = new Matrix(QRmgr.A->mdata, d_subspace_dim,
-        rand_proj_rows, false, false);
-     for (int i = row_offset[d_rank]; i < lq_A->numRows(); i++) {
-         for (int j = 0; j < i - row_offset[d_rank] && j < lq_A->numColumns(); j++) {
-           lq_A->item(i, j) = 0;
+     // Manipulate QRmgr.A to get elementary household reflectors.
+     for (int i = row_offset[d_rank]; i < d_subspace_dim; i++) {
+         for (int j = 0; j < i - row_offset[d_rank] && j < rand_proj_rows; j++) {
+           QRmgr.A->mdata[i * QRmgr.A->mm + j] = 0;
          }
          if (i < row_offset[d_rank + 1]) {
-           lq_A->item(i, i - row_offset[d_rank]) = 1;
+           QRmgr.A->mdata[i * QRmgr.A->mm + i - row_offset[d_rank]] = 1;
          }
      }
-     delete lq_A;
 
      SLPK_Matrix svd_input;
      make_similar_matrix(&svd_input, snapshot_matrix_transposed->numDistributedRows(),

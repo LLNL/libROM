@@ -187,7 +187,7 @@ public:
    bool debug_algorithm = false;
 
    // Randomized SVD
-   bool randomized;
+   bool randomized = false;
    int randomized_subspace_dim = -1;
    int random_seed = 1;
 
