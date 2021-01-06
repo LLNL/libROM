@@ -62,4 +62,4 @@ script:
   - ./test_QDEIM
   - ./test_IncrementalSVD
   - ./test_RandomizedSVD
-  - mpirun -n 3 test_RandomizedSVD
+  - mpirun -n 3 --oversubscribe test_RandomizedSVD

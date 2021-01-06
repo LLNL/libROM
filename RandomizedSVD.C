@@ -64,7 +64,7 @@ RandomizedSVD::computeSVD()
                                  d_dims[static_cast<unsigned>(rank)], num_cols,
                                  rank);
        }
-      }
+     }
       else {
         int num_transposed_rows = num_cols / d_num_procs;
         if (num_cols % d_num_procs > d_rank) {
@@ -104,16 +104,21 @@ RandomizedSVD::computeSVD()
        delete [] snapshot_transpose_row_offset;
       }
 
+     int snapshot_matrix_distributed_rows = snapshot_matrix->numDistributedRows();
+
      // Create a random matrix of smaller dimension to project the snapshot matrix
      Matrix* rand_mat = new Matrix(snapshot_matrix->numColumns(), d_subspace_dim, false, true);
 
      // Project snapshot matrix onto random subspace
      Matrix* rand_proj = snapshot_matrix->mult(rand_mat);
+     int rand_proj_total_rows = rand_proj->numDistributedRows();
+     int rand_proj_rows = rand_proj->numRows();
+     delete snapshot_matrix, rand_mat;
 
      // Get QR factorization of random projection
      int *row_offset = new int[d_num_procs + 1];
-     row_offset[d_num_procs] = rand_proj->numDistributedRows();
-     row_offset[d_rank] = rand_proj->numRows();
+     row_offset[d_num_procs] = rand_proj_total_rows;
+     row_offset[d_rank] = rand_proj_rows;
 
      CAROM_VERIFY(MPI_Allgather(MPI_IN_PLACE,
               1,
@@ -141,14 +146,16 @@ RandomizedSVD::computeSVD()
                   1, rand_proj->getData(), row_offset[rank + 1] - row_offset[rank],
                   rand_proj->numColumns(), rank);
      }
+     delete rand_proj;
 
      QRManager QRmgr;
      qr_init(&QRmgr, &slpk_rand_proj);
      qrfactorize(&QRmgr);
+     free(QRmgr.ipiv);
 
      // Manipulate lq_A to get elementary household reflectors.
      Matrix* lq_A = new Matrix(QRmgr.A->mdata, d_subspace_dim,
-        rand_proj->numRows(), false, false);
+        rand_proj_rows, false, false);
      for (int i = row_offset[d_rank]; i < lq_A->numRows(); i++) {
          for (int j = 0; j < i - row_offset[d_rank] && j < lq_A->numColumns(); j++) {
            lq_A->item(i, j) = 0;
@@ -157,6 +164,7 @@ RandomizedSVD::computeSVD()
            lq_A->item(i, i - row_offset[d_rank]) = 1;
          }
      }
+     delete lq_A;
 
      SLPK_Matrix svd_input;
      make_similar_matrix(&svd_input, snapshot_matrix_transposed->numDistributedRows(),
@@ -166,6 +174,7 @@ RandomizedSVD::computeSVD()
                   snapshot_matrix_transposed->getData(), row_offset[rank + 1] - row_offset[rank],
                   snapshot_matrix_transposed->numColumns(), rank);
      }
+     delete snapshot_matrix_transposed;
 
     // This computes the action of Q on the input to the SVD.
     qaction(&QRmgr, &svd_input, 'L', 'N');
@@ -175,6 +184,7 @@ RandomizedSVD::computeSVD()
 
     d_factorizer->dov = 1;
     factorize(d_factorizer.get());
+    free_matrix_data(&svd_input);
 
     // Compute how many basis vectors we will actually return.
     int sigma_cutoff = 0, hard_cutoff = num_cols;
@@ -197,7 +207,7 @@ RandomizedSVD::computeSVD()
     ncolumns = std::min(ncolumns, d_subspace_dim);
 
     // Allocate the appropriate matrices and gather their elements.
-    d_basis = new Matrix(rand_proj->numRows(), ncolumns, true);
+    d_basis = new Matrix(rand_proj_rows, ncolumns, true);
     d_S = new Matrix(ncolumns, ncolumns, false);
     {
        CAROM_VERIFY(ncolumns >= 0);
@@ -207,7 +217,7 @@ RandomizedSVD::computeSVD()
     d_basis_right = new Matrix(ncolumns, d_subspace_dim, false);
 
     SLPK_Matrix d_new_basis;
-    make_similar_matrix(&d_new_basis, snapshot_matrix->numDistributedRows(),
+    make_similar_matrix(&d_new_basis, snapshot_matrix_distributed_rows,
            ncolumns, QRmgr.A->ctxt, d_blocksize, d_blocksize);
     for (int rank = 0; rank < d_num_procs; ++rank) {
        copy_matrix(&d_new_basis, row_offset[rank] + 1, 1,
@@ -217,6 +227,9 @@ RandomizedSVD::computeSVD()
 
     // This computes the action of Q on d_basis.
     qaction(&QRmgr, &d_new_basis, 'L', 'T');
+    free_matrix_data(QRmgr.A);
+    free_matrix_data(&slpk_rand_proj);
+    free(QRmgr.tau);
 
     // Since the input to the SVD was transposed, U and V are switched.
     for (int rank = 0; rank < d_num_procs; ++rank) {
@@ -240,16 +253,9 @@ RandomizedSVD::computeSVD()
     }
 
     d_this_interval_basis_current = true;
-    free_matrix_data(&slpk_rand_proj);
-    free_matrix_data(&svd_input);
     free_matrix_data(&d_new_basis);
-    free_matrix_data(QRmgr.A);
-    free(QRmgr.tau);
-    delete snapshot_matrix, snapshot_matrix_transposed;
-    delete lq_A;
-    delete rand_mat, rand_proj;
-    delete [] row_offset;
     release_context(&slpk_rand_proj);
+    delete [] row_offset;
 
     if (d_debug_algorithm) {
        if (d_rank == 0) {
