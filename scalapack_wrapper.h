@@ -292,6 +292,8 @@ void qrfactorize(struct QRManager*);
 
 void qaction(struct QRManager*, struct SLPK_Matrix* A, int S, int T);
 
+void qcompute(struct QRManager*);
+
 void lqfactorize(struct QRManager*);
 
 #ifdef __cplusplus

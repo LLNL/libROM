@@ -102,8 +102,8 @@ static void print_local(const struct SLPK_Matrix* A)
     int i, j;
     printf("Local data: (");
     // Remember it's column major.
-    for (i = 0; i < A->mm; ++i) {
-        for (j = 0; j < A->mn; ++j) {
+    for (i = 0; i < 5; ++i) {
+        for (j = 0; j < 10; ++j) {
             printf("%8.4f  ", A->mdata[j*A->mm + i]);
         }
         printf("\n             ");
@@ -133,6 +133,7 @@ static void show_info(void *ptr)
 void print_debug_info(struct SLPK_Matrix* A)
 {
     ordered_dowork(show_info, A);
+    print_local(A);
 }
 
 void scatter_block(struct SLPK_Matrix* dst, int dsti, int dstj,

@@ -45,21 +45,14 @@ RandomizedSVD::computeSVD()
      }
      // Get snapshot matrix in distributed format.
      // If there are less dimensions than samples, use the transpose instead.
-     Matrix* snapshot_matrix;
-     Matrix* snapshot_matrix_transposed;
+     Matrix* snapshot_matrix = new Matrix(*getSnapshotMatrix());
      if (num_rows > num_cols) {
        snapshot_matrix = new Matrix(d_dims[static_cast<unsigned>(d_rank)],
            num_cols, true);
-       snapshot_matrix_transposed = new Matrix(d_dims[static_cast<unsigned>(d_rank)],
-          num_cols, true);
        for (int rank = 0; rank < d_num_procs; ++rank) {
           // gather_transposed_block does the same as gather_block, but transposes
           // it; here, it is used to go from column-major to row-major order.
           gather_transposed_block(&snapshot_matrix->item(0, 0), d_samples.get(),
-                                 d_istarts[static_cast<unsigned>(rank)] + 1, 1,
-                                 d_dims[static_cast<unsigned>(rank)], num_cols,
-                                 rank);
-          gather_block(&snapshot_matrix_transposed->item(0, 0), d_samples.get(),
                                  d_istarts[static_cast<unsigned>(rank)] + 1, 1,
                                  d_dims[static_cast<unsigned>(rank)], num_cols,
                                  rank);
@@ -72,8 +65,6 @@ RandomizedSVD::computeSVD()
         }
 
        snapshot_matrix = new Matrix(num_transposed_rows,
-          num_rows, true);
-       snapshot_matrix_transposed = new Matrix(num_transposed_rows,
           num_rows, true);
 
        int *snapshot_transpose_row_offset = new int[d_num_procs + 1];
@@ -96,21 +87,19 @@ RandomizedSVD::computeSVD()
                                 1, snapshot_transpose_row_offset[rank] + 1,
                                 num_rows, snapshot_transpose_row_offset[rank + 1] - snapshot_transpose_row_offset[rank],
                                 rank);
-         gather_transposed_block(&snapshot_matrix_transposed->item(0, 0), d_samples.get(),
-                                1, snapshot_transpose_row_offset[rank] + 1,
-                                num_rows, snapshot_transpose_row_offset[rank + 1] - snapshot_transpose_row_offset[rank],
-                                rank);
        }
        delete [] snapshot_transpose_row_offset;
       }
 
-     int snapshot_matrix_distributed_rows = snapshot_matrix->numDistributedRows();
+     int snapshot_matrix_distributed_rows = std::max(num_rows, num_cols);
 
      // Create a random matrix of smaller dimension to project the snapshot matrix
      Matrix* rand_mat = new Matrix(snapshot_matrix->numColumns(), d_subspace_dim, false, true);
 
      // Project snapshot matrix onto random subspace
      Matrix* rand_proj = snapshot_matrix->mult(rand_mat);
+     const char* prefix = "rand";
+     rand_proj->print(prefix);
      int rand_proj_rows = rand_proj->numRows();
      delete snapshot_matrix, rand_mat;
 
@@ -138,19 +127,28 @@ RandomizedSVD::computeSVD()
      d_npcol = 1;
      int d_blocksize = row_offset[d_num_procs] / d_num_procs;
      if (row_offset[d_num_procs] % d_num_procs != 0) d_blocksize += 1;
-     initialize_matrix(&slpk_rand_proj, rand_proj->numDistributedRows(), rand_proj->numColumns(),
-       d_nprow, d_npcol, d_blocksize, d_blocksize);
+     // initialize_matrix(&slpk_rand_proj, rand_proj->numDistributedRows(), rand_proj->numColumns(),
+     //   d_nprow, d_npcol, d_blocksize, d_blocksize);
+     // for (int rank = 0; rank < d_num_procs; ++rank) {
+     //   scatter_block(&slpk_rand_proj, row_offset[rank] + 1, 1,
+     //     rand_proj->getData(), row_offset[rank + 1] - row_offset[rank],
+     //     rand_proj->numColumns(), rank);
+     // }
+     initialize_matrix(&slpk_rand_proj, rand_proj->numColumns(), rand_proj->numDistributedRows(),
+       d_npcol, d_nprow, d_blocksize, d_blocksize);
      for (int rank = 0; rank < d_num_procs; ++rank) {
-       scatter_block(&slpk_rand_proj, row_offset[rank] + 1, 1,
-         rand_proj->getData(), row_offset[rank + 1] - row_offset[rank],
-         rand_proj->numColumns(), rank);
+       scatter_block(&slpk_rand_proj, 1, row_offset[rank] + 1,
+         rand_proj->getData(), rand_proj->numColumns(),
+         row_offset[rank + 1] - row_offset[rank], rank);
      }
      delete rand_proj;
 
      QRManager QRmgr;
      qr_init(&QRmgr, &slpk_rand_proj);
+     print_debug_info(QRmgr.A);
      qrfactorize(&QRmgr);
      free(QRmgr.ipiv);
+     print_debug_info(QRmgr.A);
 
      // Manipulate QRmgr.A to get elementary household reflectors.
      for (int i = row_offset[d_rank]; i < d_subspace_dim; i++) {
@@ -162,18 +160,44 @@ RandomizedSVD::computeSVD()
          }
      }
 
-     SLPK_Matrix svd_input;
-     make_similar_matrix(&svd_input, snapshot_matrix_transposed->numDistributedRows(),
-            snapshot_matrix_transposed->numColumns(), QRmgr.A->ctxt, d_blocksize, d_blocksize);
-     for (int rank = 0; rank < d_num_procs; ++rank) {
-        scatter_block(&svd_input, row_offset[rank] + 1, 1,
-                  snapshot_matrix_transposed->getData(), row_offset[rank + 1] - row_offset[rank],
-                  snapshot_matrix_transposed->numColumns(), rank);
-     }
-     delete snapshot_matrix_transposed;
+     // Truncate Q
+     qcompute(&QRmgr);
 
-    // This computes the action of Q on the input to the SVD.
-    qaction(&QRmgr, &svd_input, 'L', 'N');
+     Matrix* Q = new Matrix(row_offset[d_rank + 1] - row_offset[d_rank], d_subspace_dim, true);
+     for (int rank = 0; rank < d_num_procs; ++rank) {
+        // gather_transposed_block does the same as gather_block, but transposes
+        // it; here, it is used to go from column-major to row-major order.
+        gather_transposed_block(&Q->item(0, 0), QRmgr.A,
+                               row_offset[rank] + 1, 1,
+                               row_offset[rank + 1] - row_offset[rank], d_subspace_dim,
+                               rank);
+     }
+
+     Matrix* Qaction = Q->transposeMult(snapshot_matrix);
+     print_debug_info(QRmgr.A);
+
+     SLPK_Matrix svd_input;
+     initialize_matrix(&svd_input, Qaction->numColumns(), Qaction->numDistributedRows(),
+       d_npcol, d_nprow, d_blocksize, d_blocksize);
+     if (d_rank == 0)
+        scatter_block(&svd_input, 1, 1,
+                  Qaction->getData(), Qaction->numDistributedRows(),
+                  Qaction->numColumns(), d_rank);
+     // make_similar_matrix(&svd_input, snapshot_matrix_transposed->numDistributedRows(),
+     //        snapshot_matrix_transposed->numColumns(), QRmgr.A->ctxt, d_blocksize, d_blocksize);
+     // for (int rank = 0; rank < d_num_procs; ++rank) {
+     //    scatter_block(&svd_input, row_offset[rank] + 1, 1,
+     //              snapshot_matrix_transposed->getData(), row_offset[rank + 1] - row_offset[rank],
+     //              snapshot_matrix_transposed->numColumns(), rank);
+     // }
+     // delete snapshot_matrix_transposed;
+
+    // print_debug_info(&svd_input);
+    //
+    // // This computes the action of Q on the input to the SVD.
+    // qaction(&QRmgr, &svd_input, 'L', 'N');
+    // svd_input.m = QRmgr.A->m;
+    // print_debug_info(&svd_input);
 
     // This block does the actual ScaLAPACK call to do the factorization.
     svd_init(d_factorizer.get(), &svd_input);
@@ -203,7 +227,7 @@ RandomizedSVD::computeSVD()
     ncolumns = std::min(ncolumns, d_subspace_dim);
 
     // Allocate the appropriate matrices and gather their elements.
-    d_basis = new Matrix(rand_proj_rows, ncolumns, true);
+    d_basis = new Matrix(rand_proj_rows, ncolumns, false);
     d_S = new Matrix(ncolumns, ncolumns, false);
     {
        CAROM_VERIFY(ncolumns >= 0);
@@ -212,26 +236,26 @@ RandomizedSVD::computeSVD()
     }
     d_basis_right = new Matrix(ncolumns, d_subspace_dim, false);
 
-    SLPK_Matrix d_new_basis;
-    make_similar_matrix(&d_new_basis, snapshot_matrix_distributed_rows,
-           ncolumns, QRmgr.A->ctxt, d_blocksize, d_blocksize);
-    for (int rank = 0; rank < d_num_procs; ++rank) {
-       copy_matrix(&d_new_basis, row_offset[rank] + 1, 1,
-                 d_factorizer->U, row_offset[rank] + 1, 1,
-                 row_offset[rank + 1] - row_offset[rank], ncolumns);
-    }
+    // SLPK_Matrix d_new_basis;
+    // make_similar_matrix(&d_new_basis, snapshot_matrix_distributed_rows,
+    //        ncolumns, QRmgr.A->ctxt, d_blocksize, d_blocksize);
+    // for (int rank = 0; rank < d_num_procs; ++rank) {
+    //    copy_matrix(&d_new_basis, row_offset[rank] + 1, 1,
+    //              d_factorizer->U, row_offset[rank] + 1, 1,
+    //              row_offset[rank + 1] - row_offset[rank], ncolumns);
+    // }
 
     // This computes the action of Q on d_basis.
-    qaction(&QRmgr, &d_new_basis, 'L', 'T');
-    free_matrix_data(QRmgr.A);
-    free_matrix_data(&slpk_rand_proj);
-    free(QRmgr.tau);
+    // qaction(&QRmgr, &d_new_basis, 'L', 'T');
+    // free_matrix_data(QRmgr.A);
+    // free_matrix_data(&slpk_rand_proj);
+    // free(QRmgr.tau);
 
     // Since the input to the SVD was transposed, U and V are switched.
     for (int rank = 0; rank < d_num_procs; ++rank) {
        // gather_transposed_block does the same as gather_block, but transposes
        // it; here, it is used to go from column-major to row-major order.
-       gather_transposed_block(&d_basis->item(0, 0), &d_new_basis,
+       gather_transposed_block(&d_basis->item(0, 0), d_factorizer->U,
                                row_offset[rank] + 1,
                                1, row_offset[rank + 1] - row_offset[rank],
                                ncolumns, rank);
@@ -242,6 +266,9 @@ RandomizedSVD::computeSVD()
 
     for (int i = 0; i < ncolumns; ++i)
        d_S->item(i, i) = d_factorizer->S[static_cast<unsigned>(i)];
+    Matrix* d_new_basis = Q->mult(d_basis);
+    delete d_basis;
+    d_basis = d_new_basis;
     if (num_rows <= num_cols) {
       Matrix* temp = d_basis;
       d_basis = d_basis_right;
@@ -249,8 +276,8 @@ RandomizedSVD::computeSVD()
     }
 
     d_this_interval_basis_current = true;
-    free_matrix_data(&d_new_basis);
-    release_context(&slpk_rand_proj);
+    // free_matrix_data(&d_new_basis);
+    // release_context(&slpk_rand_proj);
     delete [] row_offset;
 
     if (d_debug_algorithm) {
