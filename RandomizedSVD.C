@@ -98,16 +98,11 @@ RandomizedSVD::computeSVD()
      Matrix* rand_mat = new Matrix(snapshot_matrix->numColumns(), d_subspace_dim, false, true);
 
      // Project snapshot matrix onto random subspace
-     const char* prefix = "sm";
-     snapshot_matrix->print(prefix);
      Matrix* rand_proj = snapshot_matrix->mult(rand_mat);
-     prefix = "rand";
-     rand_proj->print(prefix);
      int rand_proj_rows = rand_proj->numRows();
      delete rand_mat;
-     std::cout << rand_proj->numDistributedRows() << " " << rand_proj->numColumns() << std::endl;
 
-     // Get QR factorization of random projection
+     // Get LQ factorization of random projection
      int *row_offset = new int[d_num_procs + 1];
      row_offset[d_num_procs] = rand_proj->numDistributedRows();
      row_offset[d_rank] = rand_proj_rows;
@@ -124,8 +119,6 @@ RandomizedSVD::computeSVD()
       }
 
      CAROM_VERIFY(row_offset[0] == 0);
-
-     std::cout << "A" << std::endl;
 
      SLPK_Matrix slpk_rand_proj;
 
@@ -144,35 +137,20 @@ RandomizedSVD::computeSVD()
 
      QRManager QRmgr;
      qr_init(&QRmgr, &slpk_rand_proj);
-     // print_debug_info(QRmgr.A);
-     std::cout << "lala" << std::endl;
      lqfactorize(&QRmgr);
-     free(QRmgr.ipiv);
-     // print_debug_sinfo(QRmgr.A);
-
-     std::cout << "B" << std::endl;
 
      // Manipulate QRmgr.A to get elementary household reflectors.
-     std::cout << d_rank << " " << d_subspace_dim << " " << row_offset[d_rank] << std::endl;
      for (int i = row_offset[d_rank]; i < d_subspace_dim; i++) {
-       std::cout << d_rank << " " << i << std::endl;
          for (int j = 0; j < i - row_offset[d_rank] && j < row_offset[d_rank +  1]; j++) {
-           std::cout << d_rank << " " << i << " " << j << std::endl;
            QRmgr.A->mdata[j * QRmgr.A->mm + i] = 0;
          }
          if (i < row_offset[d_rank + 1]) {
-           std::cout << d_rank << " " << i << " " << i - row_offset[d_rank] << std::endl;
            QRmgr.A->mdata[(i - row_offset[d_rank]) * QRmgr.A->mm + i] = 1;
          }
      }
-     print_debug_info(QRmgr.A);
-     std::cout << "C" << std::endl;
 
-     // Truncate Q
+     // Obtain Q
      qcompute(&QRmgr);
-     print_debug_info(QRmgr.A);
-
-     std::cout << "D" << std::endl;
 
      Matrix* Q = new Matrix(row_offset[d_rank + 1] - row_offset[d_rank], d_subspace_dim, true);
      for (int rank = 0; rank < d_num_procs; ++rank) {
@@ -181,40 +159,28 @@ RandomizedSVD::computeSVD()
                                d_subspace_dim, row_offset[rank + 1] - row_offset[rank],
                                rank);
      }
-     prefix = "Q";
-     Q->print(prefix);
+     free_matrix_data(QRmgr.A);
+     free(QRmgr.tau);
+     free(QRmgr.ipiv);
 
-
-     std::cout << "E" << std::endl;
-
-     std::cout << Q->numRows() << " " << Q->numColumns() << " " << snapshot_matrix->numRows() << " " << snapshot_matrix->numColumns() << std::endl;
-
-     Matrix* Qaction = Q->transposeMult(snapshot_matrix);
-
-     std::cout << Qaction->numDistributedRows() << " " << Qaction->numColumns() << std::endl;
-
-     prefix = "Qaction";
-     Qaction->print(prefix);
+     // Project d_samples onto Q
+     Matrix* svd_input_mat = Q->transposeMult(snapshot_matrix);
+     int svd_input_mat_distributed_rows = svd_input_mat->numDistributedRows();
 
      SLPK_Matrix svd_input;
-     initialize_matrix(&svd_input, Qaction->numColumns(), Qaction->numDistributedRows(),
+     initialize_matrix(&svd_input, svd_input_mat->numColumns(), svd_input_mat->numDistributedRows(),
        d_npcol, d_nprow, d_blocksize, d_blocksize);
-       std::cout << "F" << std::endl;
         scatter_block(&svd_input, 1, 1,
-                  Qaction->getData(),
-                  Qaction->numColumns(), Qaction->numDistributedRows(),0);
-        print_debug_info(&svd_input);
-        std::cout << "G" << std::endl;
-     delete snapshot_matrix;
+                  svd_input_mat->getData(),
+                  svd_input_mat->numColumns(), svd_input_mat->numDistributedRows(),0);
+    delete svd_input_mat, snapshot_matrix;
 
     // This block does the actual ScaLAPACK call to do the factorization.
     svd_init(d_factorizer.get(), &svd_input);
 
     d_factorizer->dov = 1;
+
     factorize(d_factorizer.get());
-    print_debug_info(d_factorizer->U);
-    // print_debug_info(d_factorizer->S);
-    print_debug_info(d_factorizer->V);
     free_matrix_data(&svd_input);
 
     // Compute how many basis vectors we will actually return.
@@ -237,10 +203,8 @@ RandomizedSVD::computeSVD()
     CAROM_VERIFY(ncolumns >= 0);
     ncolumns = std::min(ncolumns, d_subspace_dim);
 
-    std::cout << "H" << std::endl;
-
     // Allocate the appropriate matrices and gather their elements.
-    d_basis = new Matrix(Qaction->numDistributedRows(), ncolumns, false);
+    d_basis = new Matrix(svd_input_mat_distributed_rows, ncolumns, false);
     d_S = new Matrix(ncolumns, ncolumns, false);
     {
        CAROM_VERIFY(ncolumns >= 0);
@@ -249,24 +213,6 @@ RandomizedSVD::computeSVD()
     }
     d_basis_right = new Matrix(ncolumns, d_subspace_dim, false);
 
-
-
-    // SLPK_Matrix d_new_basis;
-    // make_similar_matrix(&d_new_basis, snapshot_matrix_distributed_rows,
-    //        ncolumns, QRmgr.A->ctxt, d_blocksize, d_blocksize);
-    // for (int rank = 0; rank < d_num_procs; ++rank) {
-    //    copy_matrix(&d_new_basis, row_offset[rank] + 1, 1,
-    //              d_factorizer->U, row_offset[rank] + 1, 1,
-    //              row_offset[rank + 1] - row_offset[rank], ncolumns);
-    // }
-
-    // This computes the action of Q on d_basis.
-    // qaction(&QRmgr, &d_new_basis, 'L', 'T');
-    // free_matrix_data(QRmgr.A);
-    // free_matrix_data(&slpk_rand_proj);
-    // free(QRmgr.tau);
-
-std::cout << "I" << std::endl;
     // Since the input to the SVD was transposed, U and V are switched.
     for (int rank = 0; rank < d_num_procs; ++rank) {
        // V is computed in the transposed order so no reordering necessary.
@@ -276,36 +222,28 @@ std::cout << "I" << std::endl;
        // it; here, it is used to go from column-major to row-major order.
        gather_transposed_block(&d_basis_right->item(0, 0), d_factorizer->U,
                                1,
-                               1, Qaction->numDistributedRows(),
+                               1, svd_input_mat_distributed_rows,
                                ncolumns, rank);
     }
 
-    std::cout << "J" << std::endl;
-
     for (int i = 0; i < ncolumns; ++i)
        d_S->item(i, i) = d_factorizer->S[static_cast<unsigned>(i)];
+
+    // Lift solution back to higher dimension
     Matrix* d_new_basis = Q->mult(d_basis);
     delete d_basis;
     d_basis = d_new_basis;
+
     if (num_rows <= num_cols) {
       Matrix* temp = d_basis;
       d_basis = d_basis_right;
       d_basis_right = temp;
     }
 
-    prefix = "d_basis";
-    d_basis->print(prefix);
-    prefix = "d_s";
-    d_S->print(prefix);
-    prefix = "d_basis_right";
-    d_basis_right->print(prefix);
-
-    std::cout << d_basis->numDistributedRows() << " " << d_basis->numColumns() << std::endl;
-
-
     d_this_interval_basis_current = true;
-    // free_matrix_data(&d_new_basis);
-    // release_context(&slpk_rand_proj);
+    delete Q;
+    release_context(&slpk_rand_proj);
+    release_context(&svd_input);
     delete [] row_offset;
 
     if (d_debug_algorithm) {

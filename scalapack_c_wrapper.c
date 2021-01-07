@@ -133,7 +133,6 @@ static void show_info(void *ptr)
 void print_debug_info(struct SLPK_Matrix* A)
 {
     ordered_dowork(show_info, A);
-    print_local(A);
 }
 
 void scatter_block(struct SLPK_Matrix* dst, int dsti, int dstj,

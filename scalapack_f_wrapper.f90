@@ -607,7 +607,6 @@ subroutine qaction(mgr, A, S, T) bind(C)
     real(REAL_KIND), pointer :: Adata(:, :)
     real(REAL_KIND), pointer :: Qdata(:, :)
     real(REAL_KIND), pointer :: tau(:)
-    write(*,*) "sdf"
 
     call MPI_Comm_rank(MPI_COMM_WORLD, mrank, ierr)
     call descinit(descaa, A%m, A%n, A%mb, A%nb, 0, 0, A%ctxt, A%mm, ierr)
@@ -617,7 +616,7 @@ subroutine qaction(mgr, A, S, T) bind(C)
     call c_f_pointer(Q%mdata, Qdata, [Q%mm, Q%mn])
 
     call c_f_pointer(mgr%tau, tau, [mgr%tauSize])
-    write(*,*) A%m, A%n, A%mb, A%nb, mgr%tauSize, Q%m, Q%n, Q%mb, Q%nb
+
     ! First call just sets bestwork(1) to work size
     lwork = -1
     call pdormqr(achar(S), achar(T), A%m, A%n, mgr%tauSize, Qdata, 1, 1, descaq, tau, Adata, 1, 1, descaa, &
@@ -664,9 +663,6 @@ subroutine qcompute(mgr) bind(C)
 
     ! First call just sets bestwork(1) to work size
     lwork = -1
-    write(*,*) "Hello"
-    write(*,*) A%m, A%n, A%mb, A%nb, 0, 0, A%ctxt, A%mm
-    write(*,*) mgr%tauSize, tau(1), tau(2), tau(3)
     call pdorglq(A%m, A%n, mgr%tauSize, Adata, 1, 1, desca, tau, &
          & bestwork, lwork, ierr)
     lwork = bestwork(1)
@@ -719,16 +715,12 @@ subroutine lqfactorize(mgr) bind(C)
 
     call c_f_pointer(mgr%tau, tau, [mgr%tauSize])
 
-    write(*,*) A%m, A%n, A%mb, A%nb, mgr%tauSize
-
     ! First call just sets bestwork(1) to work size
     lwork = -1
     call pdgelqf(A%m, A%n, Adata, 1, 1, desca, tau, &
          & bestwork, lwork, ierr)
     lwork = bestwork(1)
     allocate(work(lwork))
-
-    write(*,*) "hello"
 
     ! Now work is allocated, and factorization is done next
     call pdgelqf(A%m, A%n, Adata, 1, 1, desca, tau, work, lwork, ierr)
