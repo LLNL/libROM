@@ -165,6 +165,8 @@ RandomizedSVD::computeSVD()
      // Obtain Q
      qcompute(&QRmgr);
      Matrix* Q = new Matrix(QRmgr.A->mdata, row_offset[d_rank + 1] - row_offset[d_rank], d_subspace_dim, true, false);
+     free(QRmgr.tau);
+     free(QRmgr.ipiv);
 
      // Project d_samples onto Q
      Matrix* svd_input_mat = Q->transposeMult(snapshot_matrix);
@@ -245,6 +247,7 @@ RandomizedSVD::computeSVD()
 
     d_this_interval_basis_current = true;
     delete Q;
+    free_matrix_data(QRmgr.A);
     release_context(&slpk_rand_proj);
     release_context(&svd_input);
     delete [] row_offset;
