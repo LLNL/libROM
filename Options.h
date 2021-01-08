@@ -40,8 +40,9 @@ class Options
    *                                vectors returned in the basis.
    * @param[in] singular_value_tol Tolerance to determine whether to include
    *                               a singular value in the SVD.
-   * @param[in] debug_algorithm If true results of static Options algorithm
-   *                            will be printed to facilitate debugging.
+   * @param[in] debug_algorithm If true, results of static Options algorithm
+   *                            will be printed to facilitate debugging and
+   *                            any randomness will be turned off.
    *
    * Static SVD
    *

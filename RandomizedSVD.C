@@ -95,7 +95,15 @@ RandomizedSVD::computeSVD()
      int snapshot_matrix_distributed_rows = std::max(num_rows, num_cols);
 
      // Create a random matrix of smaller dimension to project the snapshot matrix
-     Matrix* rand_mat = new Matrix(snapshot_matrix->numColumns(), d_subspace_dim, false, true);
+     // If debug mode is turned on, just set rand_mat as a truncated snapshot_matrix
+     // so that the rand_mat is fixed on any machine.
+     Matrix* rand_mat;
+     if (d_debug_algorithm) {
+       rand_mat = new Matrix(snapshot_matrix->getData(), snapshot_matrix->numColumns(), d_subspace_dim, false, true);
+     }
+     else {
+       rand_mat = new Matrix(snapshot_matrix->numColumns(), d_subspace_dim, false, true);
+     }
 
      // Project snapshot matrix onto random subspace
      Matrix* rand_proj = snapshot_matrix->mult(rand_mat);

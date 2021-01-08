@@ -85,6 +85,7 @@ TEST(RandomizedSVDTest, Test_RandomizedSVD)
 
   CAROM::Options randomized_svd_options = CAROM::Options(d_num_rows, 3, 1);
   randomized_svd_options.setMaxBasisDimension(num_total_rows);
+  randomized_svd_options.setDebugMode(true);
   randomized_svd_options.setRandomizedSVD(true);
   CAROM::BasisGenerator sampler(randomized_svd_options, false);
   sampler.takeSample(&sample1[row_offset[d_rank]], 0, 0);
@@ -179,6 +180,7 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposed)
 
   CAROM::Options randomized_svd_options = CAROM::Options(d_num_rows, 5, 1);
   randomized_svd_options.setMaxBasisDimension(num_total_rows);
+  randomized_svd_options.setDebugMode(true);
   randomized_svd_options.setRandomizedSVD(true);
   CAROM::BasisGenerator sampler(randomized_svd_options, false);
   sampler.takeSample(&sample1[row_offset[d_rank]], 0, 0);
@@ -275,22 +277,23 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDSmallerSubspace)
   double* sample3 = new double[5] {-1.3499, 3.0349, 0.7254, -0.0631, 0.7147};
 
 double* basis_true_ans = new double[10] {
-  -4.99591584193008475534e-01,     6.51778761541902118548e-02,
-  2.09877440833558553956e-01,     -9.44387236416359465707e-01,
-  4.42218181555678324646e-01,     2.54957693946527619300e-01,
-  4.74983587332090395616e-01,     1.90265090987676882550e-01,
-  5.34034999320647907339e-01,     5.17722087883107362494e-02};
+  -3.66686936855722067641e-01,     -3.66854732104725300701e-01,
+  -1.03335953010555314791e-01,     8.34110828036275564479e-01,
+  2.73086819017167137247e-01,     3.22486279456235425123e-01,
+  6.69406991793326300311e-01,      -2.50470054687995880016e-01,
+  5.76350795759026368614e-01,      5.42594079591339900626e-02};
 
- double* basis_right_true_ans = new double[4] {
-  -6.91514935994602675251e-02,     -5.70803058397391538392e-01,
-  8.88823781405067681050e-01,      3.37160907363426964878e-01};
+  double* basis_right_true_ans = new double[4] {
+    -5.18839658032825834511e-02,     1.19929948552507714687e-01,
+    9.85719269437193235106e-01,      -1.53109727976926013326e-01};
 
  double* sv_true_ans = new double[4] {
-   4.37933241972805653575e+00,      0.00000000000000000000e+00,
-   0.00000000000000000000e+00,      3.66538419083660649278e+00};
+   4.67621414826046599700e+00,      0.00000000000000000000e+00,
+   0.00000000000000000000e+00,      3.37971184883141617661e+00};
 
   CAROM::Options randomized_svd_options = CAROM::Options(d_num_rows, 3, 1);
   randomized_svd_options.setMaxBasisDimension(num_total_rows);
+  randomized_svd_options.setDebugMode(true);
   randomized_svd_options.setRandomizedSVD(true, 2);
   CAROM::BasisGenerator sampler(randomized_svd_options, false);
   sampler.takeSample(&sample1[row_offset[d_rank]], 0, 0);
@@ -365,23 +368,24 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposedSmallerSubspace)
   double* sample4 = new double[5] {0.8622, 3.5784, -0.0631};
   double* sample5 = new double[5] {0.3188, 2.7694, 0.7147};
 
-double* basis_right_true_ans = new double[10] {
-  -4.99591584193008475534e-01,     6.51778761541902118548e-02,
-  2.09877440833558553956e-01,     -9.44387236416359465707e-01,
-  4.42218181555678324646e-01,     2.54957693946527619300e-01,
-  4.74983587332090395616e-01,     1.90265090987676882550e-01,
-  5.34034999320647907339e-01,     5.17722087883107362494e-02};
+  double* basis_right_true_ans = new double[10] {
+    -3.66686936855722067641e-01,     -3.66854732104725300701e-01,
+    -1.03335953010555314791e-01,     8.34110828036275564479e-01,
+    2.73086819017167137247e-01,     3.22486279456235425123e-01,
+    6.69406991793326300311e-01,      -2.50470054687995880016e-01,
+    5.76350795759026368614e-01,      5.42594079591339900626e-02};
 
- double* basis_true_ans = new double[4] {
-  -6.91514935994602675251e-02,     -5.70803058397391538392e-01,
-  8.88823781405067681050e-01,      3.37160907363426964878e-01};
+   double* basis_true_ans = new double[4] {
+      -5.18839658032825834511e-02,     1.19929948552507714687e-01,
+      9.85719269437193235106e-01,      -1.53109727976926013326e-01};
 
- double* sv_true_ans = new double[4] {
-   4.37933241972805653575e+00,      0.00000000000000000000e+00,
-   0.00000000000000000000e+00,      3.66538419083660649278e+00};
+   double* sv_true_ans = new double[4] {
+     4.67621414826046599700e+00,      0.00000000000000000000e+00,
+     0.00000000000000000000e+00,      3.37971184883141617661e+00};
 
   CAROM::Options randomized_svd_options = CAROM::Options(d_num_rows, 5, 1);
   randomized_svd_options.setMaxBasisDimension(num_total_rows);
+  randomized_svd_options.setDebugMode(true);
   randomized_svd_options.setRandomizedSVD(true, 2);
   CAROM::BasisGenerator sampler(randomized_svd_options, false);
   sampler.takeSample(&sample1[row_offset[d_rank]], 0, 0);
