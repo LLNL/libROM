@@ -95,11 +95,16 @@ RandomizedSVD::computeSVD()
      int snapshot_matrix_distributed_rows = std::max(num_rows, num_cols);
 
      // Create a random matrix of smaller dimension to project the snapshot matrix
-     // If debug mode is turned on, just set rand_mat as a truncated snapshot_matrix
-     // so that the rand_mat is fixed on any machine.
+     // If debug mode is turned on, just set rand_mat as a matrix of 1's
+    // for reproducibility
      Matrix* rand_mat;
      if (d_debug_algorithm) {
-       rand_mat = new Matrix(snapshot_matrix->getData(), snapshot_matrix->numColumns(), d_subspace_dim, false, true);
+       rand_mat = new Matrix(snapshot_matrix->numColumns(), d_subspace_dim, false);
+       for (int i = 0; i < snapshot_matrix->numColumns(); i++) {
+         for (int j = 0; j < d_subspace_dim; j++) {
+           rand_mat->item(i, j) = 1;
+         }
+       }
      }
      else {
        rand_mat = new Matrix(snapshot_matrix->numColumns(), d_subspace_dim, false, true);
@@ -135,7 +140,7 @@ RandomizedSVD::computeSVD()
      int d_blocksize = row_offset[d_num_procs] / d_num_procs;
      if (row_offset[d_num_procs] % d_num_procs != 0) d_blocksize += 1;
      initialize_matrix(&slpk_rand_proj, rand_proj->numColumns(), rand_proj->numDistributedRows(),
-       d_npcol, d_nprow, d_blocksize, d_blocksize);
+       d_npcol, d_nprow, rand_proj->numColumns(), d_blocksize);
      for (int rank = 0; rank < d_num_procs; ++rank) {
        scatter_block(&slpk_rand_proj, 1, row_offset[rank] + 1,
          rand_proj->getData(), rand_proj->numColumns(),
