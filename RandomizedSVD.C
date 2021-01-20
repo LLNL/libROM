@@ -164,7 +164,13 @@ RandomizedSVD::computeSVD()
 
      // Obtain Q
      qcompute(&QRmgr);
-     Matrix* Q = new Matrix(QRmgr.A->mdata, row_offset[d_rank + 1] - row_offset[d_rank], d_subspace_dim, true, false);
+     Matrix* Q = new Matrix(row_offset[d_rank + 1] - row_offset[d_rank], d_subspace_dim, true);
+     for (int rank = 0; rank < d_num_procs; ++rank) {
+        gather_block(&Q->item(0, 0), QRmgr.A,
+                               1, row_offset[rank] + 1,
+                               d_subspace_dim, row_offset[rank + 1] - row_offset[rank],
+                               rank);
+     }
      free(QRmgr.tau);
      free(QRmgr.ipiv);
 
