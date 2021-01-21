@@ -211,8 +211,8 @@ void SampleSpatialIndices(const Matrix* s_basis,
 			  const int num_samples_req)
 {
   // This algorithm determines the rows of f that should be sampled, the
-  // processor that owns each sampled row, and fills f_basis_sampled_inv with
-  // the inverse of the sampled rows of the basis of the RHS.
+  // processor that owns each sampled row, and fills f_basis_sampled with
+  // the sampled rows of the basis of the RHS.
 
   // Create an MPI_Datatype for the RowInfo struct.
   MPI_Datatype MaxRowType, oldtypes[2];
@@ -284,7 +284,7 @@ void SampleSpatialIndices(const Matrix* s_basis,
   int num_f_basis_cols = f_basis_sampled.numColumns(); // TODO: just use num_basis_vectors
   Matrix tmp_fs(f_basis_sampled.numRows(),
 		num_f_basis_cols,
-		f_basis_sampled.distributed());
+		f_basis_sampled.distributed()); // TODO: should this be distributed?
 
   // TODO: change these variable names
   RowInfo f_bv_max_local, f_bv_max_global;
@@ -308,6 +308,8 @@ void SampleSpatialIndices(const Matrix* s_basis,
 	  // where \phi_j is the j-th space-time basis vector (tensor product of columns j of s_basis and t_basis).
 
 	  // First, set M to Z [\phi_0, ..., \phi_{i-1}], where Z selects spatial indices in `samples` and the temporal indices in `t_samples`
+
+	  /* // Distributed version: should this be used?
 	  M.setSize(proc_sampled_f_row[myid].size() * num_t_samples, i);
 
 	  int si = 0;
@@ -325,16 +327,34 @@ void SampleSpatialIndices(const Matrix* s_basis,
 
 	      si++;
 	    }
+	  */
+
+	  // Set M to be the global sampled matrix and invert on each process.
+	  M.setSize(ns * num_t_samples, i);
+	  for (int k = 0; k < i; ++k)
+	    for (int j = 0; j < ns; ++j)
+	      {
+		for (int ti = 0; ti < num_t_samples; ++ti)
+		  {
+		    const int t = t_samples[ti];
+		    const int row = ti + (j*num_t_samples);
+
+		    M.item(row, k) = tmp_fs.item(j, k) * t_basis->item(t, k);
+		  }
+	      }
 
 	  // Compute the pseudo-inverse of M, storing its transpose.
 	  M.transposePseudoinverse();
 
-	  // TODO: in parallel, it seems this matrix should be distributed, and the pseudo-inverse needs to be computed in parallel.
-	  // In DEIM and GNAT, we gather the non-local spatial rows that have been sampled. This is so far just a serial implementation.
-	  
 	  // Multiply Z\phi_i by the transpose of M, which is (Z [\phi_0, ..., \phi_{i-1}])^+.
 	  // The result is a vector of length i, stored in MZphi.
 	  for (int j = 0; j < i; ++j) MZphi[j] = 0.0;
+
+	  /*
+	  // Distributed version: should this be used?
+
+	  // TODO: in parallel, it seems this matrix should be distributed, and the pseudo-inverse needs to be computed in parallel.
+	  // In DEIM and GNAT, we gather the non-local spatial rows that have been sampled. This is so far just a serial implementation.
 
 	  si = 0;
 	  for (auto s : proc_sampled_f_row[myid]) // loop over local spatial sample indices
@@ -354,6 +374,21 @@ void SampleSpatialIndices(const Matrix* s_basis,
 	    }
 
 	  CAROM_VERIFY(si * num_t_samples == M.numRows());
+	  */
+
+	  for (int j = 0; j < ns; ++j)
+	    {
+	      for (int ti = 0; ti < num_t_samples; ++ti)
+		{
+		  const int t = t_samples[ti];
+		  const int row = ti + (j*num_t_samples);
+
+		  const double phi_i_s_t = s_basis->item(j, i) * t_basis->item(t, i);  // \phi_i(s,t)
+
+		  for (int k = 0; k < i; ++k)
+		    MZphi[k] += M.item(row, k) * phi_i_s_t;
+		}
+	    }
 	  
 	  // Initialize error as space-time basis vector i
 	  for (int s=0; s<s_size; ++s)
