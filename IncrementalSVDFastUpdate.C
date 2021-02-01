@@ -111,10 +111,10 @@ IncrementalSVDFastUpdate::buildInitialSVD(
    d_time_interval_start_times[num_time_intervals] = time;
 
    // Build d_S for this new time interval.
-   d_S = new Matrix(1, 1, false);
+   d_S = new Vector(1, false);
    Vector u_vec(u, d_dim, true);
    double norm_u = u_vec.norm();
-   d_S->item(0, 0) = norm_u;
+   d_S->item(0) = norm_u;
 
    // Build d_Up for this new time interval.
    d_Up = new Matrix(1, 1, false);
@@ -155,14 +155,14 @@ IncrementalSVDFastUpdate::computeBasis()
        std::cout << "d_num_samples = " << d_num_samples << "\n";
        std::cout << "d_num_rows_of_W = " << d_num_rows_of_W << "\n";
        std::cout << "d_singular_value_tol = " << d_singular_value_tol << "\n";
-       std::cout << "smallest SV = " << d_S->item(d_num_samples-1,d_num_samples-1) << "\n";
+       std::cout << "smallest SV = " << d_S->item(d_num_samples-1) << "\n";
        if (d_num_samples > 1) {
-            std::cout << "next smallest SV = " << d_S->item(d_num_samples-2,d_num_samples-2) << "\n";
+            std::cout << "next smallest SV = " << d_S->item(d_num_samples-2) << "\n";
        }
    }
    // remove the smallest singular value if it is smaller than d_singular_value_tol
    if ( (d_singular_value_tol != 0.0) &&
-        (d_S->item(d_num_samples-1,d_num_samples-1) < d_singular_value_tol) &&
+        (d_S->item(d_num_samples-1) < d_singular_value_tol) &&
         (d_num_samples != 1) ) {
 
        if (d_rank == 0) std::cout << "removing a small singular value!\n";
@@ -220,7 +220,10 @@ IncrementalSVDFastUpdate::addLinearlyDependentSample(
    for (int row = 0; row < d_num_samples; ++row){
       for (int col = 0; col < d_num_samples; ++col) {
          Amod.item(row, col) = A->item(row, col);
-         d_S->item(row, col) = sigma->item(row, col);
+         if (row == col)
+         {
+          d_S->item(col) = sigma->item(row, col);
+         }
       }
    }
 
@@ -325,7 +328,11 @@ IncrementalSVDFastUpdate::addNewSample(
 
    // d_S = sigma.
    delete d_S;
-   d_S = sigma;
+   int num_dim = std::min(sigma->numRows(), sigma->numColumns());
+   d_S->setSize(num_dim, false);
+   for (int i = 0; i < num_dim; i++) {
+     d_S->item(i) = sigma->item(i,i);
+   }
 
    // We now have another sample.
    ++d_num_samples;

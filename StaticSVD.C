@@ -198,7 +198,7 @@ StaticSVD::getTemporalBasis()
    return d_basis_right;
 }
 
-const Matrix*
+const Vector*
 StaticSVD::getSingularValues()
 {
    // If these singular values are for the last time interval then they may not
@@ -273,11 +273,11 @@ StaticSVD::computeSVD()
 
    // Allocate the appropriate matrices and gather their elements.
    d_basis = new Matrix(d_dim, ncolumns, true);
-   d_S = new Matrix(ncolumns, ncolumns, false);
+   d_S = new Vector(ncolumns, false);
    {
       CAROM_VERIFY(ncolumns >= 0);
       unsigned nc = static_cast<unsigned>(ncolumns);
-      memset(&d_S->item(0, 0), 0, nc*nc*sizeof(double));
+      memset(&d_S->item(0), 0, nc*sizeof(double));
    }
 
    d_basis_right = new Matrix(ncolumns, d_num_samples, false);
@@ -293,7 +293,7 @@ StaticSVD::computeSVD()
                    ncolumns, d_num_samples, rank);
    }
    for (int i = 0; i < ncolumns; ++i)
-      d_S->item(i, i) = d_factorizer->S[static_cast<unsigned>(i)];
+      d_S->item(i) = d_factorizer->S[static_cast<unsigned>(i)];
    d_this_interval_basis_current = true;
 
    if (d_debug_algorithm) {
