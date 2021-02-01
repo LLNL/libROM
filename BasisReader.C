@@ -13,6 +13,7 @@
 #include "BasisReader.h"
 #include "HDFDatabase.h"
 #include "Matrix.h"
+#include "Vector.h"
 #include "mpi.h"
 
 namespace CAROM {
@@ -92,7 +93,7 @@ BasisReader::readBasis(
       delete d_database;
       d_database = new HDFDatabase();
    }
-   
+
    char tmp[100];
    sprintf(tmp, ".%06d", rank);
    if (base_file_name_ != base_file_name && !base_file_name.empty()) {
@@ -179,7 +180,7 @@ BasisReader::getTemporalBasis(
    return d_temporal_basis_vectors;
 }
 
-const Matrix*
+const Vector*
 BasisReader::getSingularValues(
    double time)
 {
@@ -201,11 +202,11 @@ BasisReader::getSingularValues(
    if (d_singular_values) {
       delete d_singular_values;
    }
-   d_singular_values = new Matrix(size, size, true);
+   d_singular_values = new Vector(size, false);
    sprintf(tmp, "singular_value_%06d", i);
    d_database->getDoubleArray(tmp,
-                              &d_singular_values->item(0, 0),
-                              size*size);
+                              &d_singular_values->item(0),
+                              size);
    return d_singular_values;
 }
 
@@ -241,7 +242,7 @@ BasisReader::getSnapshotMatrix(
                               num_rows*num_cols);
    return d_snapshots;
 }
-   
+
 Matrix
 BasisReader::getMatlabBasis(
    double time)
