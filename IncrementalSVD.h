@@ -90,7 +90,7 @@ namespace CAROM {
        * @return The singular values for the current time interval.
        */
       virtual
-      const Matrix*
+      const Vector*
       getSingularValues();
 
       /**
