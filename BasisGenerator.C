@@ -288,19 +288,6 @@ BasisGenerator::computeNextSampleTime(
   return time;
 }
 
-const Vector*
-BasisGenerator::getSingularValues()
-{
-
-  const Matrix* sv_mat = d_svd->getSingularValues();
-  int num_dim = std::min(sv_mat->numRows(), sv_mat->numColumns());
-  Vector* sv_vec = new Vector(num_dim, false);
-  for (int i = 0; i < num_dim; i++) {
-    sv_vec->item(i) = sv_mat->item(i,i);
-  }
-  return sv_vec;
-}
-
 void
 BasisGenerator::resetDt(
   double new_dt)
