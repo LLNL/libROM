@@ -21,6 +21,7 @@
 namespace CAROM {
 
 class Matrix;
+class Vector;
 class Database;
 
 /**
@@ -112,10 +113,10 @@ class BasisReader {
       getTemporalBasis(
          double time);
 
-      const Matrix*
+      const Vector*
       getSingularValues(
          double time);
- 
+
       const Matrix*
       getSnapshotMatrix(
 	 double time);
@@ -172,8 +173,8 @@ class BasisReader {
       /**
        * @brief The currently requested singular values.
        */
-      Matrix* d_singular_values;
-   
+      Vector* d_singular_values;
+
       /**
        * @brief The currently requested snapshot matrix.
        */
@@ -183,7 +184,7 @@ class BasisReader {
        * @brief The database being read from.
        */
       Database* d_database;
-   
+
       /**
        * @brief Base file name stored for consistency between reading and writing.
        */
@@ -193,7 +194,7 @@ class BasisReader {
        * @brief Full file name of database incuding rank.
        */
       std::string full_file_name;
-      
+
       /**
        * @brief The last time at which basis vectors were requested.
        */

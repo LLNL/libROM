@@ -195,15 +195,12 @@ class BasisGenerator
 
       /**
        * @brief Returns the singular values for the current time interval as a
-       * Matrix.
+       * Vector.
        *
        * @return The singular values for the current time interval.
        */
-      const Matrix*
-      getSingularValues()
-      {
-         return d_svd->getSingularValues();
-      }
+      const Vector*
+      getSingularValues();
 
       /**
        * @brief Returns the snapshot matrix for the current time interval.

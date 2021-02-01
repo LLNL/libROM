@@ -155,7 +155,7 @@ BasisGenerator::loadSamples(const std::string& base_file_name,
    d_basis_reader = new BasisReader(base_file_name, db_format);
    double time = 0.0;
    const Matrix* mat;
-   const Matrix* singular_vals;
+   const Vector* singular_vals;
 
    if (kind == "basis") {
       mat = d_basis_reader->getSpatialBasis(time);
@@ -174,7 +174,7 @@ BasisGenerator::loadSamples(const std::string& base_file_name,
       double* u_in = new double[num_rows];
       for (int i = 0; i < num_rows; i++) {
          if (kind == "basis") {
-            u_in[i] = mat->item(i,j) * singular_vals->item(j,j); }
+            u_in[i] = mat->item(i,j) * singular_vals->item(j); }
          else {
             u_in[i] = mat->item(i,j);
          }
@@ -278,6 +278,19 @@ BasisGenerator::computeNextSampleTime(
   }
 
   return time;
+}
+
+const Vector*
+BasisGenerator::getSingularValues()
+{
+
+  const Matrix* sv_mat = d_svd->getSingularValues();
+  int num_dim = std::min(sv_mat->numRows(), sv_mat->numColumns());
+  Vector* sv_vec = new Vector(num_dim, false);
+  for (int i = 0; i < num_dim; i++) {
+    sv_vec->item(i) = sv_mat->item(i,i);
+  }
+  return sv_vec;
 }
 
 void
