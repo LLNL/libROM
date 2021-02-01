@@ -418,7 +418,7 @@ IncrementalSVD::constructQ(
       for (int col = 0; col < d_num_samples; ++col) {
         if (row == col)
         {
-          Q[q_idx] = d_S->item(row, col);
+          Q[q_idx] = d_S->item(col);
         }
         else
         {

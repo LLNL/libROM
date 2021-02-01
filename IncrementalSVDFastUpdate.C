@@ -329,7 +329,7 @@ IncrementalSVDFastUpdate::addNewSample(
    // d_S = sigma.
    delete d_S;
    int num_dim = std::min(sigma->numRows(), sigma->numColumns());
-   d_S->setSize(num_dim, false);
+   d_S->setSize(num_dim);
    for (int i = 0; i < num_dim; i++) {
      d_S->item(i) = sigma->item(i,i);
    }
