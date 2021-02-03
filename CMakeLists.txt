@@ -1,6 +1,6 @@
 ###############################################################################
 #
-#  Copyright (c) 2013-2019, Lawrence Livermore National Security, LLC
+#  Copyright (c) 2013-2021, Lawrence Livermore National Security, LLC
 #  and other libROM project developers. See the top-level COPYRIGHT
 #  file for details.
 #
@@ -123,6 +123,7 @@ set(module_list
   IncrementalSVDFastUpdate
   IncrementalSVDStandard
   StaticSVD
+  RandomizedSVD
   Database
   HDFDatabase
   Utilities
@@ -234,6 +235,7 @@ if(GTEST_FOUND)
     QDEIM
     SVD
     StaticSVD
+    RandomizedSVD
     IncrementalSVD)
   foreach(stem IN LISTS unit_test_stems)
     add_executable(test_${stem} tests/test_${stem}.C)

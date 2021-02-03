@@ -1,6 +1,6 @@
 /*******************************************************************************
- * 
- * Copyright (c) 2013-2019, Lawrence Livermore National Security, LLC
+ *
+ * Copyright (c) 2013-2021, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT file for
  * details.
  *
@@ -76,7 +76,7 @@ struct SLPK_Matrix
 
 /**
  * @brief Initialize a brand new ScaLAPACK matrix.
- * 
+ *
  * `A` is filled with the data for a new ScaLAPACK matrix. Its local data arrays
  * are allocated internally and a new BLACS context is created. No checking is
  * performed to make sure that `A` is not already initialized. This routine
@@ -126,7 +126,7 @@ void release_context(struct SLPK_Matrix* A);
  * corresponding ScaLAPACK subroutine. `copy_matrix` must be called on every
  * process; if the process doesn't own a part of `dst` (`src`), make sure
  * that `dst->ctxt == -1` (`src->ctxt == -1`) to indicate this to the BLACS.
- * 
+ *
  * @param[in] src Source matrix, dimension at least (srci+m)x(srcj+n)
  * @param[in] srci Row offset of the submatrix to copy from src. One based!
  * @param[in] srcj Column offset of the submatrix to copy from src. One based!
@@ -143,7 +143,7 @@ void copy_matrix(struct SLPK_Matrix* dst, int dsti, int dstj,
 
 /**
  * @brief Scatter an array from rank `proc` to a distributed matrix.
- * 
+ *
  * This is a simple wrapper around `copy_matrix` to simplify code. It must be
  * called on all processes, since it calls `copy_matrix` internally. Performs
  * the operation `dst[dsti:dsti+m, dstj:dstj+n] = src` where `src` is
@@ -154,7 +154,7 @@ void scatter_block(struct SLPK_Matrix* dst, int dsti, int dstj,
 
 /**
  * @brief Gather a block from distributed matrix `src` to a block on rank `proc`
- * 
+ *
  * This is a simple wrapper around `copy_matrix` to simplify code. It must be
  * called on all processes, since it calls `copy_matrix` internally. Performs
  * the operation `dst = src[srci:srci+m, srcj:srcj+n]` where `dst` is
@@ -165,7 +165,7 @@ void gather_block(REAL_TYPE* dst, const struct SLPK_Matrix* src, int srci,
 
 /**
  * @brief Transpose a submatrix of `src` and store in a submatrix of `dst`.
- * 
+ *
  * If `dst->ctxt != src->ctxt`, this routine must make a copy of `src` to a
  * matrix in `dst`'s context, then transpose that matrix. This is a limitation
  * of ScaLAPACK. Since the routine *may* copy a matrix, it needs to be called
@@ -173,14 +173,14 @@ void gather_block(REAL_TYPE* dst, const struct SLPK_Matrix* src, int srci,
  * `dst[dsti:dsti+n, dstj:dstj+m] = src[srci:srci+m, srcj:srcj+n]'` using
  * Matlab notation. Indices are 1-based.
  */
-void transpose_submatrix(struct SLPK_Matrix* dst, int dsti, int dstj, 
+void transpose_submatrix(struct SLPK_Matrix* dst, int dsti, int dstj,
                          const struct SLPK_Matrix* src, int srci, int srcj,
                          int m, int n);
 
 /**
  * @brief Gather a block of distributed matrix `src` to a local array on rank
  * `proc`, and transpose it in between.
- * 
+ *
  * This is a simple wrapper around `transpose_submatrix` to simplify code. Like
  * that routine, it needs to be called on all ranks. Performs the operation
  * `dst = src[srci:srci+m, srcj:srcj+n]' where `dst` is interpreted as an
@@ -191,7 +191,7 @@ void gather_transposed_block(REAL_TYPE* dst, const struct SLPK_Matrix* src,
                              int srci, int srcj, int m, int n, int proc);
 /**
  * @brief Construct a matrix from data stored on a single process.
- * 
+ *
  * This function is provided as a convenience to use ScaLAPACK operations on
  * an array located on a single process. It needs to be called on all processes,
  * however. Used internally by the `copy` and `transpose` routines that take a
@@ -214,7 +214,7 @@ void create_local_matrix(struct SLPK_Matrix* A, double* x, int m, int n,
 /**
  * @brief Initialize dst with a new (uninitialized) m x n matrix, reusing the
  * indicated BLACS context.
- * 
+ *
  * `dst` is initialized as an m x n block cyclic matrix in the BLACS
  * context given. If the matrix from which `ctxt` was obtained is still around,
  * don't call `release_context` until you're done with all matrices!
@@ -233,7 +233,7 @@ void make_similar_matrix(struct SLPK_Matrix* dst, int m, int n, int ctxt,
 
 /**
  * @brief Structure managing the call to the ScaLAPACK SVD.
- * 
+ *
  * The SVDManager layout corresponds to the structure of a Fortran derived type;
  * don't rearrange it. The only matrix provided by the user is `A`; the others
  * will be allocated automatically. They will be reusable for multiple
@@ -241,7 +241,7 @@ void make_similar_matrix(struct SLPK_Matrix* dst, int m, int n, int ctxt,
  * destroyed. Use `svd_init` to initialize the structure the first time. By
  * default, `dov` is set to 0 so the right singular vectors are not computed;
  * set to 1 to compute V.
- * 
+ *
  * If reusing for a multiple factorization, you must set the `done` field to 0
  * to indicate that you really know what you're doing.
  */
@@ -280,14 +280,22 @@ void print_debug_info(struct SLPK_Matrix* A);
 struct QRManager
 {
     struct SLPK_Matrix* A;
+    double* tau;
     int* ipiv;
+    int tauSize;
     int ipivSize;
 };
 
 void qr_init(struct QRManager* mgr, struct SLPK_Matrix* A);
 
 void qrfactorize(struct QRManager*);
-  
+
+void qaction(struct QRManager*, struct SLPK_Matrix* A, int S, int T);
+
+void qcompute(struct QRManager*);
+
+void lqfactorize(struct QRManager*);
+
 #ifdef __cplusplus
 }
 #endif

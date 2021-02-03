@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2019, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2021, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -16,6 +16,7 @@
 
 #include "BasisGenerator.h"
 #include "StaticSVD.h"
+#include "RandomizedSVD.h"
 #include "IncrementalSVDStandard.h"
 #include "IncrementalSVDFastUpdate.h"
 
@@ -87,9 +88,16 @@ BasisGenerator::BasisGenerator(
    }
    else
    {
-     d_svd.reset(
-        new StaticSVD(
-           options));
+     if (options.randomized) {
+       d_svd.reset(
+          new RandomizedSVD(
+             options));
+     }
+     else {
+       d_svd.reset(
+          new StaticSVD(
+             options));
+     }
    }
 }
 

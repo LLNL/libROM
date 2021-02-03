@@ -1,6 +1,6 @@
 !*******************************************************************************
 !
-! Copyright (c) 2013-2019, Lawrence Livermore National Security, LLC
+! Copyright (c) 2013-2021, Lawrence Livermore National Security, LLC
 ! and other libROM project developers. See the top-level COPYRIGHT file for
 ! details.
 !
@@ -100,7 +100,7 @@ module scalapack_wrapper
             integer :: n, nb, iproc, isrcproc, nprocs
         end function
     end interface
-    
+
     ! An interoperable struct encapsulating a ScaLAPACK matrix - contains all of
     ! the information needed to use ScaLAPACK operations on the matrix.
     type, bind(C) :: SLPK_Matrix
@@ -130,8 +130,8 @@ module scalapack_wrapper
     end type SVDManager
 
     type, bind(C) :: QRManager
-        type(C_PTR) :: A, ipiv ! These are pointers to SLPK_Matrix in C.
-        integer(C_INT) :: ipivSize
+        type(C_PTR) :: A, tau, ipiv ! These are pointers to SLPK_Matrix in C.
+        integer(C_INT) :: tauSize, ipivSize
     end type QRManager
 
     ! Declarations of functionality implemented in the associated C code.
@@ -145,7 +145,7 @@ module scalapack_wrapper
             import SLPK_Matrix
             type(SLPK_Matrix), intent(inout) :: A
         end subroutine
-        
+
         subroutine svd_init(mgr, A) bind(C)
             import SVDManager, SLPK_Matrix
             type(SVDManager), intent(out) :: mgr
@@ -156,7 +156,7 @@ module scalapack_wrapper
 !*******************************************************************************
 ! End declarations; begin implementation.
 !*******************************************************************************
-    
+
 contains
 
 subroutine check_init()
@@ -291,7 +291,7 @@ subroutine wrapper_finalize() bind(C)
     if (GLOBAL_CTXT .ne. -1) then
         call blacs_gridexit(GLOBAL_CTXT)
     endif
-    
+
     call blacs_exit(1)
 end subroutine
 
@@ -304,7 +304,7 @@ end subroutine
 
 !*******************************************************************************
 ! Subroutine: release_context(A) bind(C)
-! 
+!
 ! Synopsis: Free the resources used by A's associated BLACS context.
 !
 ! Detail: *WARNING* Make sure the context associated with A is not still in use
@@ -433,7 +433,7 @@ end subroutine
 
 subroutine create_local_matrix(A, x, m, n, src) bind(C)
     use MPI, only: MPI_Comm_rank, MPI_COMM_WORLD
-     
+
     type(SLPK_Matrix), intent(out) :: A
     type(C_PTR), value :: x
     integer(C_INT), value :: m, n, src
@@ -515,7 +515,7 @@ subroutine factorize(mgr) bind(C)
     allocate(work(lwork))
     call pdgesvd(dou, dov, A%m, A%n, Adata, 1, 1, desca, Sdata, Udata, 1, 1, &
                & descu, Vdata, 1, 1, descv, work, lwork, ierr)
-    
+
     if (mrank .eq. 0) then
         if (ierr .lt. 0) then
             write(error_unit, *) "SVD: Warning: parameter ", -ierr, " had an illegal value"
@@ -548,10 +548,10 @@ subroutine qrfactorize(mgr) bind(C)
     integer :: desca(9), lwork, tauSize
 
     real(REAL_KIND), allocatable :: work(:)
-    real(REAL_KIND), allocatable :: tau(:)
     real(REAL_KIND) :: bestwork(1)
 
     real(REAL_KIND), pointer :: Adata(:, :)
+    real(REAL_KIND), pointer :: tau(:)
     integer(C_INT), pointer :: ipiv(:)
 
     call MPI_Comm_rank(MPI_COMM_WORLD, mrank, ierr)
@@ -561,15 +561,13 @@ subroutine qrfactorize(mgr) bind(C)
 
     ! TODO: isn't this just A%mn after initialize_matrix?
     mgr%ipivSize = numroc(A%n, A%nb, A%pj, 0, A%npcol)
-
-    tauSize = numroc(min(A%m, A%n), A%nb, A%pj, 0, A%npcol)
+    mgr%tauSize = numroc(min(A%m, A%n), A%nb, A%pj, 0, A%npcol)
 
     call qrfactorize_prep(mgr)
 
     call c_f_pointer(mgr%ipiv, ipiv, [mgr%ipivSize])
+    call c_f_pointer(mgr%tau, tau, [mgr%tauSize])
 
-    allocate(tau(tauSize))
-    
     ! First call just sets bestwork(1) to work size
     lwork = -1
     call pdgeqpf(A%m, A%n, Adata, 1, 1, desca, ipiv, tau, &
@@ -589,7 +587,151 @@ subroutine qrfactorize(mgr) bind(C)
         endif
     endif
     deallocate(work)
-    deallocate(tau)
+end subroutine
+
+subroutine qaction(mgr, A, S, T) bind(C)
+    use mpi
+    use ISO_FORTRAN_ENV, only: error_unit
+
+    type(QRManager), intent(in) :: mgr
+    type(SLPK_Matrix), intent(inout) :: A
+    integer(C_INT), value :: S, T
+    type(SLPK_Matrix), pointer :: Q
+    integer :: mrank, ierr
+
+    integer :: descaa(9), descaq(9), lwork
+
+    real(REAL_KIND), allocatable :: work(:)
+    real(REAL_KIND) :: bestwork(1)
+
+    real(REAL_KIND), pointer :: Adata(:, :)
+    real(REAL_KIND), pointer :: Qdata(:, :)
+    real(REAL_KIND), pointer :: tau(:)
+
+    call MPI_Comm_rank(MPI_COMM_WORLD, mrank, ierr)
+    call descinit(descaa, A%m, A%n, A%mb, A%nb, 0, 0, A%ctxt, A%mm, ierr)
+    call c_f_pointer(A%mdata, Adata, [A%mm, A%mn])
+    call c_f_pointer(mgr%A, Q)
+    call descinit(descaq, Q%m, Q%n, Q%mb, Q%nb, 0, 0, Q%ctxt, Q%mm, ierr)
+    call c_f_pointer(Q%mdata, Qdata, [Q%mm, Q%mn])
+
+    call c_f_pointer(mgr%tau, tau, [mgr%tauSize])
+
+    ! First call just sets bestwork(1) to work size
+    lwork = -1
+    call pdormqr(achar(S), achar(T), A%m, A%n, mgr%tauSize, Qdata, 1, 1, descaq, tau, Adata, 1, 1, descaa, &
+         & bestwork, lwork, ierr)
+    lwork = bestwork(1)
+    allocate(work(lwork))
+
+    ! Now work is allocated, and action is computed next
+    call pdormqr(achar(S), achar(T), A%m, A%n, mgr%tauSize, Qdata, 1, 1, descaq, tau, Adata, 1, 1, descaa, &
+        & work, lwork, ierr)
+
+    if (mrank .eq. 0) then
+        if (ierr .lt. 0) then
+            write(error_unit, *) "QR: error: argument ", -ierr, " had an illegal value"
+        elseif (ierr .gt. 0) then
+            write(error_unit, *) "QR: unknown error"
+        endif
+    endif
+    deallocate(work)
+end subroutine
+
+subroutine qcompute(mgr) bind(C)
+    use mpi
+    use ISO_FORTRAN_ENV, only: error_unit
+
+    type(QRManager), intent(inout) :: mgr
+    integer :: mrank, ierr
+
+    type(SLPK_Matrix), pointer :: A
+    integer :: desca(9), lwork
+
+    real(REAL_KIND), allocatable :: work(:)
+    real(REAL_KIND) :: bestwork(1)
+
+    real(REAL_KIND), pointer :: Adata(:, :)
+    real(REAL_KIND), pointer :: tau(:)
+
+    call MPI_Comm_rank(MPI_COMM_WORLD, mrank, ierr)
+    call c_f_pointer(mgr%A, A)
+    call descinit(desca, A%m, A%n, A%mb, A%nb, 0, 0, A%ctxt, A%mm, ierr)
+    call c_f_pointer(A%mdata, Adata, [A%mm, A%mn])
+
+    call c_f_pointer(mgr%tau, tau, [mgr%tauSize])
+
+    ! First call just sets bestwork(1) to work size
+    lwork = -1
+    call pdorglq(A%m, A%n, mgr%tauSize, Adata, 1, 1, desca, tau, &
+         & bestwork, lwork, ierr)
+    lwork = bestwork(1)
+    allocate(work(lwork))
+
+    ! Now work is allocated, and factorization is done next
+    call pdorglq(A%m, A%n, mgr%tauSize, Adata, 1, 1, desca, tau, work, lwork, ierr)
+    if (mrank .eq. 0) then
+        if (ierr .lt. 0) then
+            write(error_unit, *) "LQ: error: argument ", -ierr, " had an illegal value"
+        elseif (ierr .gt. 0) then
+            write(error_unit, *) "LQ: unknown error"
+        endif
+    endif
+    deallocate(work)
+end subroutine
+
+subroutine lqfactorize(mgr) bind(C)
+    use mpi
+    use ISO_FORTRAN_ENV, only: error_unit
+
+    interface
+        subroutine qrfactorize_prep(mgr) bind(C)
+            import QRManager
+            type(QRManager), intent(inout) :: mgr
+        end subroutine
+    end interface
+
+    type(QRManager), intent(inout) :: mgr
+    integer :: mrank, ierr
+
+    type(SLPK_Matrix), pointer :: A
+    integer :: desca(9), lwork
+
+    real(REAL_KIND), allocatable :: work(:)
+    real(REAL_KIND) :: bestwork(1)
+
+    real(REAL_KIND), pointer :: Adata(:, :)
+    real(REAL_KIND), pointer :: tau(:)
+
+    call MPI_Comm_rank(MPI_COMM_WORLD, mrank, ierr)
+    call c_f_pointer(mgr%A, A)
+    call descinit(desca, A%m, A%n, A%mb, A%nb, 0, 0, A%ctxt, A%mm, ierr)
+    call c_f_pointer(A%mdata, Adata, [A%mm, A%mn])
+
+    ! TODO: isn't this just A%mn after initialize_matrix?
+    mgr%tauSize = min(A%m, A%n)
+
+    call qrfactorize_prep(mgr)
+
+    call c_f_pointer(mgr%tau, tau, [mgr%tauSize])
+
+    ! First call just sets bestwork(1) to work size
+    lwork = -1
+    call pdgelqf(A%m, A%n, Adata, 1, 1, desca, tau, &
+         & bestwork, lwork, ierr)
+    lwork = bestwork(1)
+    allocate(work(lwork))
+
+    ! Now work is allocated, and factorization is done next
+    call pdgelqf(A%m, A%n, Adata, 1, 1, desca, tau, work, lwork, ierr)
+    if (mrank .eq. 0) then
+        if (ierr .lt. 0) then
+            write(error_unit, *) "LQ: error: argument ", -ierr, " had an illegal value"
+        elseif (ierr .gt. 0) then
+            write(error_unit, *) "LQ: unknown error"
+        endif
+    endif
+    deallocate(work)
 end subroutine
 
 end module
