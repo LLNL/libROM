@@ -102,7 +102,6 @@ TEST(RandomizedSVDTest, Test_RandomizedSVD)
 
   double* d_basis_vals = d_basis->getData();
   double* d_basis_right_vals = d_basis_right->getData();
-  double* sv_vals = sv->getData();
 
   for (int i = 0; i < d_num_rows * 3; i++) {
 
@@ -114,7 +113,7 @@ TEST(RandomizedSVDTest, Test_RandomizedSVD)
   }
 
   for (int i = 0; i < 3; i++) {
-    EXPECT_NEAR(sv_vals[i], sv_true_ans[i], 1e-7);
+    EXPECT_NEAR(sv->item(i), sv_true_ans[i], 1e-7);
   }
 }
 
@@ -205,7 +204,6 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposed)
 
   double* d_basis_vals = d_basis->getData();
   double* d_basis_right_vals = d_basis_right->getData();
-  double* sv_vals = sv->getData();
 
   MPI_Allgather(MPI_IN_PLACE,
 			     1,
@@ -228,7 +226,7 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposed)
   }
 
   for (int i = 0; i < 3; i++) {
-    EXPECT_NEAR(sv_vals[i], sv_true_ans[i], 1e-7);
+    EXPECT_NEAR(sv->item(i), sv_true_ans[i], 1e-7);
   }
 }
 
@@ -305,7 +303,6 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDSmallerSubspace)
 
   double* d_basis_vals = d_basis->getData();
   double* d_basis_right_vals = d_basis_right->getData();
-  double* sv_vals = sv->getData();
 
   for (int i = 0; i < d_num_rows * 2; i++) {
     EXPECT_NEAR(abs(d_basis_vals[i]), abs(basis_true_ans[row_offset[d_rank] * 2 + i]), 1e-7);
@@ -316,7 +313,7 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDSmallerSubspace)
   }
 
   for (int i = 0; i < 2; i++) {
-    EXPECT_NEAR(sv_vals[i], sv_true_ans[i], 1e-7);
+    EXPECT_NEAR(sv->item(i), sv_true_ans[i], 1e-7);
   }
 }
 
@@ -406,7 +403,6 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposedSmallerSubspace)
 
   double* d_basis_vals = d_basis->getData();
   double* d_basis_right_vals = d_basis_right->getData();
-  double* sv_vals = sv->getData();
 
   MPI_Allgather(MPI_IN_PLACE,
 			     1,
@@ -429,7 +425,7 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposedSmallerSubspace)
   }
 
   for (int i = 0; i < 2; i++) {
-    EXPECT_NEAR(sv_vals[i], sv_true_ans[i], 1e-7);
+    EXPECT_NEAR(sv->item(i), sv_true_ans[i], 1e-7);
   }
 }
 
