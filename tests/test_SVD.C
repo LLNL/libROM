@@ -54,7 +54,7 @@ public:
    */
   virtual const CAROM::Matrix* getSpatialBasis() { return NULL; }
   virtual const CAROM::Matrix* getTemporalBasis() { return NULL; }
-  virtual const CAROM::Matrix* getSingularValues() { return NULL; }
+  virtual const CAROM::Vector* getSingularValues() { return NULL; }
   virtual const CAROM::Matrix* getSnapshotMatrix() { return NULL; }
 
   /**

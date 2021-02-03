@@ -129,15 +129,10 @@ TEST(IncrementalSVDSerialTest, Test_getSingularValues)
        incremental_svd_options,
 			 "irrelevant.txt");
 
-  const CAROM::Matrix *S = svd.getSingularValues();
+  const CAROM::Vector *S = svd.getSingularValues();
   for (int i = 0; i < svd.getDim(); i++)
   {
-    for (int j = 0; j < i; j++)
-    {
-      EXPECT_DOUBLE_EQ(S->item(i, j), 0);
-      EXPECT_DOUBLE_EQ(S->item(j, i), 0);
-    }
-    EXPECT_DOUBLE_EQ(S->item(i, i), 1);
+    EXPECT_DOUBLE_EQ(S->item(i), 1);
   }
 }
 
