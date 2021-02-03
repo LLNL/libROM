@@ -50,17 +50,17 @@ public:
 
     /* Construct a fake d_U, d_S, d_basis */
     d_basis = new CAROM::Matrix(dim, dim, false);
-    d_S = new CAROM::Matrix(dim, dim, false);
+    d_S = new CAROM::Vector(dim, false);
 
     /* Use the identity matrix as a fake basis and fake singular values */
     for (int i = 0; i < dim; i++)
     {
       for (int j = 0; j < i; j++)
       {
-	d_basis->item(i, j) = d_S->item(i, j) = 0;
-	d_basis->item(j, i) = d_S->item(j, i) = 0;
+	d_basis->item(i, j) = 0;
+	d_basis->item(j, i) = 0;
       }
-      d_basis->item(i, i) = d_S->item(i, i) = 1;
+      d_basis->item(i, i) = d_S->item(i) = 1;
     }
   }
 
