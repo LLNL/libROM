@@ -152,6 +152,9 @@ find_package(HDF5 1.8.0 REQUIRED)
 find_package(BLAS 3.4.0 REQUIRED)
 find_package(LAPACK 3.4.0 REQUIRED)
 
+find_package(Torch REQUIRED)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+
 # If MKL libraries not found, search for reference ScaLAPACK. If MKL
 # libraries found, search for MKL ScaLAPACK; if MKL ScaLAPACK not
 # found, search for reference ScaLAPACK. It seems that only
@@ -194,8 +197,17 @@ find_package(GTest 1.6.0)
 # 3.0.
 target_link_libraries(ROM
   PUBLIC ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran ${HDF5_LIBRARIES}
-  ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES}
+  ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} "${TORCH_LIBRARIES}"
   PRIVATE ${ZLIB_LIBRARIES} ZLIB::ZLIB)
+
+if (MSVC)
+  file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
+  add_custom_command(TARGET ROM
+                     POST_BUILD
+                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                     ${TORCH_DLLS}
+                     $<TARGET_FILE_DIR:ROM>)
+endif (MSVC)
 
 target_include_directories(ROM PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}
@@ -236,7 +248,8 @@ if(GTEST_FOUND)
     SVD
     StaticSVD
     RandomizedSVD
-    IncrementalSVD)
+    IncrementalSVD
+    Torch)
   foreach(stem IN LISTS unit_test_stems)
     add_executable(test_${stem} tests/test_${stem}.C)
     target_link_libraries(test_${stem} PRIVATE ROM

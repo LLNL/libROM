@@ -37,6 +37,7 @@ elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
   cmake ${REPO_PREFIX} \
         -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} \
         -DCMAKE_BUILD_TYPE=Optimized \
+        -DCMAKE_PREFIX_PATH=/usr/workspace/huynh24/libROMML/libtorch ..
         "$@"
   make VERBOSE=1 -j8
 fi
