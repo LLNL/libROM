@@ -28,8 +28,8 @@ TEST(GoogleTestFramework, GoogleTestFrameworkFound) {
 TEST(TorchTest, Test_TorchBuild)
 {
   torch::Tensor tensor = torch::tensor({1, 3});
-  EXPECT_EQ(tensor[0], 1);
-  EXPECT_EQ(tensor[1], 3);
+  EXPECT_EQ(tensor[0].item<int>(), 1);
+  EXPECT_EQ(tensor[1].item<int>(), 3);
 }
 
 int main(int argc, char* argv[])

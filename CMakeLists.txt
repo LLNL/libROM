@@ -152,9 +152,6 @@ find_package(HDF5 1.8.0 REQUIRED)
 find_package(BLAS 3.4.0 REQUIRED)
 find_package(LAPACK 3.4.0 REQUIRED)
 
-find_package(Torch REQUIRED)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
-
 # If MKL libraries not found, search for reference ScaLAPACK. If MKL
 # libraries found, search for MKL ScaLAPACK; if MKL ScaLAPACK not
 # found, search for reference ScaLAPACK. It seems that only
@@ -170,6 +167,15 @@ if (BLAS_LIBRARIES MATCHES ".*mkl.*")
 else() # BLAS or LAPACK isn't MKL
   find_package(ScaLAPACK REQUIRED)
   target_link_libraries(ROM PUBLIC ${ScaLAPACK_LIBRARIES})
+endif()
+
+find_package(Torch PATHS ${CMAKE_SOURCE_DIR}/dependencies/libtorch)
+if(Torch_FOUND)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+  if(APPLE)
+    file(GLOB TORCH_DYLIBS "${CMAKE_SOURCE_DIR}/dependencies/libtorch/lib/libiomp5.dylib"
+                           "${CMAKE_SOURCE_DIR}/dependencies/libtorch/lib/libtensorpipe.dylib")
+  endif()
 endif()
 
 # In FindMPI.cmake, "CXX" refers to "the MPI C API [being] usable from C++"
@@ -197,17 +203,8 @@ find_package(GTest 1.6.0)
 # 3.0.
 target_link_libraries(ROM
   PUBLIC ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran ${HDF5_LIBRARIES}
-  ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} "${TORCH_LIBRARIES}"
+  ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} ${TORCH_LIBRARIES} ${TORCH_DYLIBS}
   PRIVATE ${ZLIB_LIBRARIES} ZLIB::ZLIB)
-
-if (MSVC)
-  file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
-  add_custom_command(TARGET ROM
-                     POST_BUILD
-                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                     ${TORCH_DLLS}
-                     $<TARGET_FILE_DIR:ROM>)
-endif (MSVC)
 
 target_include_directories(ROM PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}
@@ -215,9 +212,9 @@ target_include_directories(ROM PUBLIC
   ${MPI_C_INCLUDE_DIRS}
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-# Use the C++11 standard as an entire feature instead of
+# Use the C++14 standard as an entire feature instead of
 # enumerating individual compiler features for simplicity
-target_compile_features(ROM PRIVATE cxx_std_11)
+target_compile_features(ROM PRIVATE cxx_std_14)
 
 set(regression_test_names
   smoke_test
@@ -235,7 +232,7 @@ foreach(name IN LISTS regression_test_names)
   target_include_directories(${name}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
     ${MPI_C_INCLUDE_DIRS})
-  target_compile_features(${name} PRIVATE cxx_std_11)
+  target_compile_features(${name} PRIVATE cxx_std_14)
 endforeach(name) # IN LISTS regression_test_names
 
 if(GTEST_FOUND)
@@ -248,8 +245,10 @@ if(GTEST_FOUND)
     SVD
     StaticSVD
     RandomizedSVD
-    IncrementalSVD
-    Torch)
+    IncrementalSVD)
+  if(Torch_FOUND)
+    list(APPEND unit_test_stems Torch)
+  endif()
   foreach(stem IN LISTS unit_test_stems)
     add_executable(test_${stem} tests/test_${stem}.C)
     target_link_libraries(test_${stem} PRIVATE ROM
@@ -257,7 +256,7 @@ if(GTEST_FOUND)
     target_include_directories(test_${stem}
       PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
       ${MPI_C_INCLUDE_DIRS})
-    target_compile_features(test_${stem} PRIVATE cxx_std_11)
+    target_compile_features(test_${stem} PRIVATE cxx_std_14)
     target_compile_definitions(test_${stem} PRIVATE CAROM_HAS_GTEST)
   endforeach(stem) # IN LISTS unit_test_stems
 endif(GTEST_FOUND)
