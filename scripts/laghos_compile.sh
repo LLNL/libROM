@@ -54,8 +54,7 @@ elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
   fi
   cmake ${REPO_PREFIX} \
         -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} \
-        -DCMAKE_BUILD_TYPE=Optimized \
-        "$@"
+        -DCMAKE_BUILD_TYPE=Optimized
   make VERBOSE=1 -j8
 fi
 popd
