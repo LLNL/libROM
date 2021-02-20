@@ -124,6 +124,7 @@ set(module_list
   IncrementalSVDStandard
   StaticSVD
   RandomizedSVD
+  ParameterPointGreedySelector
   Database
   HDFDatabase
   Utilities
