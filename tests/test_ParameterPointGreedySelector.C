@@ -9,7 +9,7 @@
  *****************************************************************************/
 
 // Description: This source file is a test runner that uses the Google Test
-// Framework to run unit tests on the CAROM::QDEIM class.
+// Framework to run unit tests on the CAROM::GNAT class.
 
 #include <iostream>
 
@@ -27,18 +27,22 @@ TEST(GoogleTestFramework, GoogleTestFrameworkFound) {
   SUCCEED();
 }
 
-TEST(ParameterPointGreedySelectorSerialTest, Test_ParameterPointGreedySelector)
+TEST(ParameterPointGreedySelectorSerialTest, Test_ParameterPointGreedySelectorCentroid)
 {
 
-  std::vector<double> param_points = {0, 1, 2, 3, 4};
+    std::vector<double> paramPoints = {1.0, 2.0, 3.0, 20.0};
+    CAROM::ParameterPointGreedySelector caromGreedySelector(paramPoints, 1, 1, 2, 3, true, 1);
 
-  // for (int i = 0; i < num_cols; i++) {
-  //   EXPECT_EQ(f_sampled_row[i], f_sampled_row_true_ans[i]);
-  // }
+    int nextPointToSample = caromGreedySelector.computeNextSampleParameterPoint();
+    EXPECT_EQ(paramPoints[nextPointToSample], 3.0);
+}
 
+TEST(ParameterPointGreedySelectorSerialTest, Test_ParameterPointGreedySelector)
+{
+    std::vector<double> paramPoints = {1.0, 2.0, 3.0, 20.0};
+    CAROM::ParameterPointGreedySelector caromGreedySelector(paramPoints, 1, 1, 2, 3, true, 1);
 
-  // Allow for some error due to float rounding
-  // EXPECT_TRUE(l2_norm_diff < 1e-5);
+    EXPECT_EQ(paramPoints[nextPointToSample], 2.0);
 }
 
 int main(int argc, char* argv[])

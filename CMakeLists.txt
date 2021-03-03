@@ -237,7 +237,8 @@ if(GTEST_FOUND)
     SVD
     StaticSVD
     RandomizedSVD
-    IncrementalSVD)
+    IncrementalSVD
+    ParameterPointGreedySelector)
   foreach(stem IN LISTS unit_test_stems)
     add_executable(test_${stem} tests/test_${stem}.C)
     target_link_libraries(test_${stem} PRIVATE ROM

@@ -15,6 +15,7 @@
 #define included_ParameterPointGreedySelector_h
 
 #include "BasisGenerator.h"
+#include <unordered_set>
 #include <algorithm>
 
 namespace CAROM {
@@ -24,10 +25,10 @@ class Matrix;
 class Vector;
 
 /**
- * Class ParameterPointGreedySelector is an class defining the interface for
- * the generation of basis vectors via the svd method.  This class wraps the
- * SVD algorithm and sampler and controls all aspects
- * of basis vector generation.
+ * Class ParameterPointGreedySelector is an class defining the interface a
+ *       greedy algorithm that given a domain of parameter points, iteratively
+ *       returns the next best parameter point to sample in order to create
+ *       a ROM database efficiently.
  */
 class ParameterPointGreedySelector
 {
@@ -35,15 +36,15 @@ class ParameterPointGreedySelector
      /**
       * @brief Constructor.
       *
-      * @param[in] options The struct containing the options for this basis
-      *                    generator.
-      * @param[in] incremental Whether to conduct static or incremental SVD
-      * @param[in] basis_file_name The base part of the name of the file
-      *                            containing the basis vectors.  Each process
-      *                            will append its process ID to this base
-      *                            name.
-      * @param[in] file_format The format of the file containing the basis
-      *                        vectors.
+      * @param[in] parameter_points A vector of CAROM::Vectors containing
+                                    the different parameter points.
+      * @param[in] tolerance A tolerance value for which to end the algorithm.
+      * @param[in] saturation A saturation constant.
+      * @param[in] subset_size The size of the random subset.
+      * @param[in] convergence_subset_size The size of the convergence subset.
+      * @param[in] use_centroid Whether to use the centroid heuristic when
+                                determining the first parameter point to sample.
+      * @param[in] random_seed A random seed.
       */
      ParameterPointGreedySelector(
         std::vector<Vector> parameter_points,
@@ -51,7 +52,8 @@ class ParameterPointGreedySelector
         double saturation,
         int subset_size,
         int convergence_subset_size,
-        int random_seed);
+        bool use_centroid = true,
+        int random_seed = 1);
 
     ParameterPointGreedySelector(
         std::vector<double> parameter_points,
@@ -59,7 +61,8 @@ class ParameterPointGreedySelector
         double saturation,
         int subset_size,
         int convergence_subset_size,
-        int random_seed);
+        bool use_centroid = true,
+        int random_seed = 1);
 
       /**
        * @brief Destructor.
@@ -69,35 +72,59 @@ class ParameterPointGreedySelector
       /**
        * @brief Returns the next parameter point for which sampling is required.
        *
-       * @return The index of the next parameter point, or -1 if the greedy
-       *         procedure has terminated.
+       * @return The index of the point in the list of parameters, or -1 if a point
+       *         is not ready to be sampled.
        */
       int
       computeNextSampleParameterPoint();
 
       /**
-       * @brief Returns the nearest local ROM to the specified parameter point.
+       * @brief Compute point whose residual the greedy algorithm requires.
        *
-       * @return A pointer to the BasisGenerator containing the local ROM
+       * @param[in]
+       *
+       * @return The index of the point in the list of parameters, or -1 if a
+       *         residual is not currently required.
        */
-      const BasisGenerator*
-      getNearestLocalROM(double parameter_point);
+      int
+      computePointRequiringResidual();
 
       /**
-       * @brief Add rom to database.
+       * @brief Set the residual error of the specified parameter point.
        *
-       * @param[in] rom A pointer to the rom (not owned by ParameterPointGreedySelector).
-       *
+       * @return The index of the point in the list of parameters.
        */
       void
-      addROMToDatabase(BasisGenerator* rom);
+      setPointResidualError(double error, int rank, int num_procs);
+
+      /**
+       * @brief Returns the index to the nearest local ROM to the specified parameter point.
+       *
+       * @return The index of the point in the list of parameters.
+       */
+      int
+      obtainNearestROMIndex(int index);
 
   private:
+
+      void constructObject(
+          std::vector<Vector> parameter_points,
+          double tolerance,
+          double saturation,
+          int subset_size,
+          int convergence_subset_size,
+          bool use_centroid,
+          int random_seed);
 
       /**
        * @brief The parameter points to explore.
        */
       std::vector<Vector> d_parameter_points;
+
+      /**
+       * @brief The parameter points that were already sampled.
+       */
+      std::unordered_set<int> d_parameter_sampled_indices;
 
       /**
        * @brief The parameter point indices (used to generate the random subsets)
@@ -135,16 +162,43 @@ class ParameterPointGreedySelector
       int d_convergence_subset_size;
 
 
-    /**
-     * @brief The next point to add to the database.
-     */
-     int d_next_point;
+     /**
+      * @brief The next point to add to the database.
+      */
+      int d_next_point_to_sample;
+
+     /**
+      * @brief The next point to add to the database.
+      */
+      int d_next_point_requiring_residual;
+
+     /**
+      * @brief Whether the use the centroid heuristic for obtaining the first
+      *        parameter point.
+      */
+      bool d_use_centroid;
 
       /**
-       * @brief Whether the database is ready to accept a ROM for the current
-       *        iteration.
+       * @brief Whether the database has already computed a new paramter point
+       *        for the current iteration.
        */
-       bool d_iteration_completed;
+       bool d_iteration_started;
+
+       /**
+        * @brief Whether the database has already computed a new paramter point
+        *        for the current iteration.
+        */
+        bool d_point_requiring_residual_computed;
+
+       /**
+        * @brief Whether the database has already computed a new paramter point
+        *        for the current iteration.
+        */
+        bool d_subset_created;
+
+       int d_counter;
+
+       int d_subset_counter;
 
        /**
         * @brief Whether the greedy procedure has completed.
@@ -155,11 +209,6 @@ class ParameterPointGreedySelector
          * @brief Random engine used to generate subsets
          */
        std::default_random_engine rng;
-
-      /**
-       * @brief The ROM database.
-       */
-      std::vector<BasisGenerator*> d_rom_database;
 };
 
 }
