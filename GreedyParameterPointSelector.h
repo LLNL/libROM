@@ -128,6 +128,12 @@ class GreedyParameterPointSelector
       int
       getNearestROM(int index);
 
+      /**
+       * @brief Print the sampled parameter points to a file.
+       */
+      void
+      printSampledPoints(std::string const& path);
+
   private:
 
       void constructObject(

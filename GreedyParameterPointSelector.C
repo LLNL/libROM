@@ -16,6 +16,7 @@
 #include "mpi.h"
 #include <cmath>
 #include <limits.h>
+#include <fstream>
 
 namespace CAROM {
 
@@ -325,6 +326,17 @@ GreedyParameterPointSelector::getNearestROM(int index)
     return closest_point_index;
 }
 
+void
+GreedyParameterPointSelector::printSampledPoints(std::string const& path)
+{
+    std::ofstream out_path;
+    out_path.open(path);
+    for (auto itr = d_parameter_sampled_indices.begin(); itr != d_parameter_sampled_indices.end(); ++itr) {
+        out_path << *itr << std::endl;
+    }
+    out_path.close();
+}
+
 GreedyParameterPointSelector::~GreedyParameterPointSelector()
 {
 }
@@ -358,7 +370,7 @@ int getNearestPoint(std::vector<double> paramPoints, double point)
 
     for (int i = 0; i < paramPoints.size(); i++)
     {
-        double dist = abs(point - paramPoints[i]);
+        double dist = std::abs(point - paramPoints[i]);
         if (dist < closest_dist_to_points)
         {
             closest_dist_to_points = dist;
