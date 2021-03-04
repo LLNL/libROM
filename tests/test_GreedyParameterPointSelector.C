@@ -51,7 +51,6 @@ TEST(GreedyParameterPointSelectorSerialTest, Test_GreedyParameterPointSelectorCe
 
     wrongOrder = caromGreedySelector.getNextParameterPoint();
     EXPECT_EQ(wrongOrder, -1);
-    EXPECT_DEATH(caromGreedySelector.setPointResidual(100.0, d_rank, d_num_procs), ".*");
 
     // ERRORS: [INF, INF, 0, INF, INF]
 
@@ -63,7 +62,6 @@ TEST(GreedyParameterPointSelectorSerialTest, Test_GreedyParameterPointSelectorCe
     wrongOrder = caromGreedySelector.getNextPointRequiringResidual();
     EXPECT_EQ(wrongOrder, -1);
 
-    EXPECT_DEATH(caromGreedySelector.setPointResidual(-1.0, d_rank, d_num_procs), ".*");
     caromGreedySelector.setPointResidual(100.0, d_rank, d_num_procs);
 
     wrongOrder = caromGreedySelector.getNextParameterPoint();
@@ -164,8 +162,6 @@ TEST(GreedyParameterPointSelectorSerialTest, Test_GreedyParameterPointSelector)
     closestROMIndex = caromGreedySelector.getNearestROM(1);
     EXPECT_EQ(closestROMIndex, 0);
 
-    EXPECT_DEATH(caromGreedySelector.getNearestROM(-1), ".*");
-    EXPECT_DEATH(caromGreedySelector.getNearestROM(10), ".*");
 }
 
 int main(int argc, char* argv[])
