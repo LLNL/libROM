@@ -15,6 +15,7 @@
 #define included_ParameterPointGreedySelector_h
 
 #include "BasisGenerator.h"
+#include <random>
 #include <unordered_set>
 #include <algorithm>
 
@@ -53,7 +54,8 @@ class ParameterPointGreedySelector
         int subset_size,
         int convergence_subset_size,
         bool use_centroid = true,
-        int random_seed = 1);
+        int random_seed = 1,
+        bool debug_algorithm = false);
 
     ParameterPointGreedySelector(
         std::vector<double> parameter_points,
@@ -62,7 +64,8 @@ class ParameterPointGreedySelector
         int subset_size,
         int convergence_subset_size,
         bool use_centroid = true,
-        int random_seed = 1);
+        int random_seed = 1,
+        bool debug_algorithm = false);
 
       /**
        * @brief Destructor.
@@ -114,7 +117,8 @@ class ParameterPointGreedySelector
           int subset_size,
           int convergence_subset_size,
           bool use_centroid,
-          int random_seed);
+          int random_seed,
+          bool debug_algorithm);
 
       /**
        * @brief The parameter points to explore.
@@ -137,7 +141,7 @@ class ParameterPointGreedySelector
       std::vector<double> d_parameter_point_errors;
 
       /**
-       * @brief The current max error of the parameter points
+       * @brief The current max error of the parameter points of the current iteration
        */
       double d_max_error;
 
@@ -163,12 +167,12 @@ class ParameterPointGreedySelector
 
 
      /**
-      * @brief The next point to add to the database.
+      * @brief The next parameter point to sample.
       */
       int d_next_point_to_sample;
 
      /**
-      * @brief The next point to add to the database.
+      * @brief The next parameter point requiring a residual.
       */
       int d_next_point_requiring_residual;
 
@@ -179,25 +183,39 @@ class ParameterPointGreedySelector
       bool d_use_centroid;
 
       /**
-       * @brief Whether the database has already computed a new paramter point
+       * @brief Whether the database has already computed a new parameter point
        *        for the current iteration.
        */
        bool d_iteration_started;
 
        /**
         * @brief Whether the database has already computed a new paramter point
-        *        for the current iteration.
+        *        requiring a residual.
         */
         bool d_point_requiring_residual_computed;
 
        /**
-        * @brief Whether the database has already computed a new paramter point
-        *        for the current iteration.
+        * @brief Whether the database has already created a random subset
+        *        for this iteration.
         */
         bool d_subset_created;
 
+        /**
+         * @brief Turn off randomness for debugging purposes.
+         *
+         */
+        bool d_debug_algorithm;
+
+        /**
+         * @brief An internal counter.
+         *
+         */
        int d_counter;
 
+       /**
+        * @brief An internal subset counter.
+        *
+        */
        int d_subset_counter;
 
        /**

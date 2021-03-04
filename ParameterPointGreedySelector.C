@@ -15,7 +15,6 @@
 #include "Vector.h"
 #include "mpi.h"
 #include <cmath>
-#include <random>
 #include <limits.h>
 
 namespace CAROM {
@@ -27,11 +26,12 @@ ParameterPointGreedySelector::ParameterPointGreedySelector(
     int subset_size,
     int convergence_subset_size,
     bool use_centroid,
-    int random_seed)
+    int random_seed,
+    bool debug_algorithm)
 {
 
     constructObject(parameter_points, tolerance, saturation,
-        subset_size, convergence_subset_size, use_centroid, random_seed);
+        subset_size, convergence_subset_size, use_centroid, random_seed, debug_algorithm);
 }
 
 ParameterPointGreedySelector::ParameterPointGreedySelector(
@@ -41,7 +41,8 @@ ParameterPointGreedySelector::ParameterPointGreedySelector(
     int subset_size,
     int convergence_subset_size,
     bool use_centroid,
-    int random_seed)
+    int random_seed,
+    bool debug_algorithm)
 {
     //convert parameter_points from double to Vector
     CAROM_VERIFY(parameter_points.size() > 0);
@@ -54,7 +55,7 @@ ParameterPointGreedySelector::ParameterPointGreedySelector(
     }
 
     constructObject(parameter_points_vec, tolerance, saturation,
-        subset_size, convergence_subset_size, use_centroid, random_seed);
+        subset_size, convergence_subset_size, use_centroid, random_seed, debug_algorithm);
 }
 
 void
@@ -65,7 +66,8 @@ ParameterPointGreedySelector::constructObject(
     int subset_size,
     int convergence_subset_size,
     bool use_centroid,
-    int random_seed)
+    int random_seed,
+    bool debug_algorithm)
 {
     CAROM_VERIFY(parameter_points.size() > 0);
     CAROM_VERIFY(tolerance > 0.0);
@@ -89,6 +91,7 @@ ParameterPointGreedySelector::constructObject(
     d_procedure_completed = false;
     d_subset_counter = 0;
     d_counter = -1;
+    d_debug_algorithm = debug_algorithm;
 
     for (int i = 0; i < d_parameter_points.size() - 1; i++) {
         CAROM_VERIFY(d_parameter_points[i].dim() == d_parameter_points[i + 1].dim());
@@ -182,10 +185,6 @@ ParameterPointGreedySelector::computeNextSampleParameterPoint()
     CAROM_VERIFY(search == d_parameter_sampled_indices.end());
 
     d_parameter_sampled_indices.insert(curr_point_to_sample);
-    std::cout << "list" << std::endl;
-    for (auto itr = d_parameter_sampled_indices.begin(); itr != d_parameter_sampled_indices.end(); ++itr) {
-        std::cout << *itr << std::endl;
-    }
 
     return curr_point_to_sample;
 }
@@ -214,7 +213,10 @@ ParameterPointGreedySelector::computePointRequiringResidual()
     if(!d_subset_created)
     {
         // generate random shuffle
-        std::shuffle(d_parameter_point_random_indices.begin(), d_parameter_point_random_indices.end(), rng);
+        if (!d_debug_algorithm)
+        {
+          std::shuffle(d_parameter_point_random_indices.begin(), d_parameter_point_random_indices.end(), rng);
+        }
         d_subset_created = true;
     }
 
@@ -250,7 +252,7 @@ ParameterPointGreedySelector::setPointResidualError(double error, int rank, int 
     CAROM_VERIFY(error >= 0);
     CAROM_VERIFY(d_point_requiring_residual_computed);
 
-    int *proc_errors = new int[num_procs];
+    double *proc_errors = new double[num_procs];
     proc_errors[rank] = error;
     CAROM_VERIFY(MPI_Allgather(MPI_IN_PLACE,
             1,
@@ -269,9 +271,7 @@ ParameterPointGreedySelector::setPointResidualError(double error, int rank, int 
     d_parameter_point_errors[d_parameter_point_random_indices[d_counter]] = total_error;
     if (total_error > d_max_error)
     {
-        std::cout << "AERGAERG" << std::endl;
         d_max_error = total_error;
-        std::cout << d_counter << std::endl;
         d_next_point_to_sample = d_parameter_point_random_indices[d_counter];
     }
 
@@ -282,7 +282,10 @@ ParameterPointGreedySelector::setPointResidualError(double error, int rank, int 
         d_iteration_started = false;
         if (d_max_error < d_tol)
         {
-            std::shuffle(d_parameter_point_random_indices.begin(), d_parameter_point_random_indices.end(), rng);
+            if (!d_debug_algorithm)
+            {
+              std::shuffle(d_parameter_point_random_indices.begin(), d_parameter_point_random_indices.end(), rng);
+            }
 
             d_procedure_completed = true;
             for (int i = 0; i < d_convergence_subset_size; i++)
@@ -293,9 +296,6 @@ ParameterPointGreedySelector::setPointResidualError(double error, int rank, int 
                 }
             }
         }
-        for (int i = 0; i < d_parameter_points.size(); i++) {
-            std::cout << d_parameter_point_errors[i] << std::endl;
-        }
     }
 }
 
@@ -304,6 +304,8 @@ ParameterPointGreedySelector::setPointResidualError(double error, int rank, int 
 int
 ParameterPointGreedySelector::obtainNearestROMIndex(int index)
 {
+
+    CAROM_VERIFY(index >= 0 && index < d_parameter_points.size());
 
     double closest_dist_to_points = INT_MAX;
     int closest_point_index = -1;
