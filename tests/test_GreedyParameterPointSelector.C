@@ -120,11 +120,14 @@ TEST(GreedyParameterPointSelectorSerialTest, Test_GreedyParameterPointSelector)
     std::vector<double> paramPoints = {1.0, 2.0, 3.0, 99.0, 100.0, 101.0};
     CAROM::GreedyParameterPointSelector caromGreedySelector(paramPoints, 1, 1, 3, 4, false, 1, true);
 
+    int closestROMIndex = caromGreedySelector.getNearestROM(0);
+    EXPECT_EQ(closestROMIndex, -1);
+
     int nextPointToSample = caromGreedySelector.getNextParameterPoint();
     EXPECT_EQ(nextPointToSample, 2);
     EXPECT_EQ(paramPoints[nextPointToSample], 3.0);
 
-    int closestROMIndex = caromGreedySelector.getNearestROM(0);
+    closestROMIndex = caromGreedySelector.getNearestROM(0);
     EXPECT_EQ(closestROMIndex, 2);
 
     // ERRORS: [INF, INF, 0, INF, INF]
@@ -157,6 +160,9 @@ TEST(GreedyParameterPointSelectorSerialTest, Test_GreedyParameterPointSelector)
     caromGreedySelector.setPointResidual(25.0, d_rank, d_num_procs);
     nextPointToSample = caromGreedySelector.getNextParameterPoint();
     EXPECT_EQ(paramPoints[nextPointToSample], paramPoints[thirdPoint]);
+
+    closestROMIndex = caromGreedySelector.getNearestROM(1);
+    EXPECT_EQ(closestROMIndex, 0);
 
     closestROMIndex = caromGreedySelector.getNearestROM(4);
     EXPECT_EQ(closestROMIndex, 2);

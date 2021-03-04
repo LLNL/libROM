@@ -299,8 +299,6 @@ GreedyParameterPointSelector::setPointResidual(double error, int rank, int num_p
     }
 }
 
-// given index into parameter point set, return index of nearest
-// already sampled point
 int
 GreedyParameterPointSelector::getNearestROM(int index)
 {

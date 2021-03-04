@@ -34,7 +34,7 @@
 
 #include "BasisGenerator.h"
 #include <random>
-#include <unordered_set>
+#include <set>
 #include <algorithm>
 
 namespace CAROM {
@@ -148,7 +148,7 @@ class GreedyParameterPointSelector
       /**
        * @brief The parameter points that were already sampled.
        */
-      std::unordered_set<int> d_parameter_sampled_indices;
+      std::set<int> d_parameter_sampled_indices;
 
       /**
        * @brief The parameter point indices (used to generate the random subsets)
