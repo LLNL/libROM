@@ -9,7 +9,25 @@
  *****************************************************************************/
 
 // Description: This class greedily selects parameter points
-//              for the construction of a ROM database.
+//              for the construction of a ROM database. The implemented
+//              greedy algorithm is obtained from algorithm 2 of Choi et. al's
+//              paper "Gradient-based constrained optimization using a database
+//              of linear reduced-order models".
+//
+//              The greedy algorithm workflow is as follows:
+//              1. Construct the GreedyParameterPointSelector by giving it a
+//                 domain of parameter points.
+//              2. Request a parameter point to sample.
+//              3. Request a parameter point to compute an error residual for.
+//              4. Request the nearest ROM to the parameter point requiring a
+//                 residual.
+//              5. Give the computed residual to the GreedyParameterPointSelector.
+//              6. Repeat steps 4 and 5 until the GreedyParameterPointSelector
+//                 no longer requires more residuals to be computed.
+//              7. Repeat steps 2 to 6 until the GreedyParameterPointSelector
+//                 no longer requires more parameter points to be sampled.
+//              8. The ROM database is now complete, meeting the error tolerance
+//                 for all parameter points within the domain.
 
 #ifndef included_GreedyParameterPointSelector_h
 #define included_GreedyParameterPointSelector_h
@@ -46,6 +64,8 @@ class GreedyParameterPointSelector
       * @param[in] use_centroid Whether to use the centroid heuristic when
                                 determining the first parameter point to sample.
       * @param[in] random_seed A random seed.
+      * @param[in] debug_algorithm Whether to turn off all randomness for
+      *                            debugging purposes.
       */
      GreedyParameterPointSelector(
         std::vector<Vector> parameter_points,

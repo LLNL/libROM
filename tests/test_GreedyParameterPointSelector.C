@@ -151,15 +151,15 @@ TEST(GreedyParameterPointSelectorSerialTest, Test_GreedyParameterPointSelector)
     caromGreedySelector.setPointResidual(0.9, d_rank, d_num_procs);
     secondPoint = caromGreedySelector.getNextPointRequiringResidual();
     EXPECT_EQ(secondPoint, 3);
-    caromGreedySelector.setPointResidual(25.0, d_rank, d_num_procs);
+    caromGreedySelector.setPointResidual(0.9, d_rank, d_num_procs);
     thirdPoint = caromGreedySelector.getNextPointRequiringResidual();
     EXPECT_EQ(thirdPoint, 4);
-    caromGreedySelector.setPointResidual(0.9, d_rank, d_num_procs);
+    caromGreedySelector.setPointResidual(25.0, d_rank, d_num_procs);
     nextPointToSample = caromGreedySelector.getNextParameterPoint();
-    EXPECT_EQ(paramPoints[nextPointToSample], paramPoints[secondPoint]);
+    EXPECT_EQ(paramPoints[nextPointToSample], paramPoints[thirdPoint]);
 
-    closestROMIndex = caromGreedySelector.getNearestROM(1);
-    EXPECT_EQ(closestROMIndex, 0);
+    closestROMIndex = caromGreedySelector.getNearestROM(4);
+    EXPECT_EQ(closestROMIndex, 2);
 
 }
 
