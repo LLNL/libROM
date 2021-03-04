@@ -11,7 +11,7 @@
 // Description: This class greedily selects parameter points
 //              for the construction of a ROM database.
 
-#include "ParameterPointGreedySelector.h"
+#include "GreedyParameterPointSelector.h"
 #include "Vector.h"
 #include "mpi.h"
 #include <cmath>
@@ -19,7 +19,7 @@
 
 namespace CAROM {
 
-ParameterPointGreedySelector::ParameterPointGreedySelector(
+GreedyParameterPointSelector::GreedyParameterPointSelector(
     std::vector<Vector> parameter_points,
     double tolerance,
     double saturation,
@@ -34,7 +34,7 @@ ParameterPointGreedySelector::ParameterPointGreedySelector(
         subset_size, convergence_subset_size, use_centroid, random_seed, debug_algorithm);
 }
 
-ParameterPointGreedySelector::ParameterPointGreedySelector(
+GreedyParameterPointSelector::GreedyParameterPointSelector(
     std::vector<double> parameter_points,
     double tolerance,
     double saturation,
@@ -59,7 +59,7 @@ ParameterPointGreedySelector::ParameterPointGreedySelector(
 }
 
 void
-ParameterPointGreedySelector::constructObject(
+GreedyParameterPointSelector::constructObject(
     std::vector<Vector> parameter_points,
     double tolerance,
     double saturation,
@@ -105,7 +105,7 @@ ParameterPointGreedySelector::constructObject(
 }
 
 int
-ParameterPointGreedySelector::computeNextSampleParameterPoint()
+GreedyParameterPointSelector::getNextParameterPoint()
 {
 
     if (d_parameter_sampled_indices.size() == d_parameter_points.size())
@@ -190,7 +190,7 @@ ParameterPointGreedySelector::computeNextSampleParameterPoint()
 }
 
 int
-ParameterPointGreedySelector::computePointRequiringResidual()
+GreedyParameterPointSelector::getNextPointRequiringResidual()
 {
     if (d_parameter_sampled_indices.size() == d_parameter_points.size())
     {
@@ -247,7 +247,7 @@ ParameterPointGreedySelector::computePointRequiringResidual()
 }
 
 void
-ParameterPointGreedySelector::setPointResidualError(double error, int rank, int num_procs)
+GreedyParameterPointSelector::setPointResidual(double error, int rank, int num_procs)
 {
     CAROM_VERIFY(error >= 0);
     CAROM_VERIFY(d_point_requiring_residual_computed);
@@ -302,7 +302,7 @@ ParameterPointGreedySelector::setPointResidualError(double error, int rank, int 
 // given index into parameter point set, return index of nearest
 // already sampled point
 int
-ParameterPointGreedySelector::obtainNearestROMIndex(int index)
+GreedyParameterPointSelector::getNearestROM(int index)
 {
 
     CAROM_VERIFY(index >= 0 && index < d_parameter_points.size());
@@ -327,7 +327,7 @@ ParameterPointGreedySelector::obtainNearestROMIndex(int index)
     return closest_point_index;
 }
 
-ParameterPointGreedySelector::~ParameterPointGreedySelector()
+GreedyParameterPointSelector::~GreedyParameterPointSelector()
 {
 }
 

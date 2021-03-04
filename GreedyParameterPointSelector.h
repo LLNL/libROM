@@ -11,8 +11,8 @@
 // Description: This class greedily selects parameter points
 //              for the construction of a ROM database.
 
-#ifndef included_ParameterPointGreedySelector_h
-#define included_ParameterPointGreedySelector_h
+#ifndef included_GreedyParameterPointSelector_h
+#define included_GreedyParameterPointSelector_h
 
 #include "BasisGenerator.h"
 #include <random>
@@ -26,12 +26,12 @@ class Matrix;
 class Vector;
 
 /**
- * Class ParameterPointGreedySelector is an class defining the interface a
+ * Class GreedyParameterPointSelector is an class defining the interface a
  *       greedy algorithm that given a domain of parameter points, iteratively
  *       returns the next best parameter point to sample in order to create
  *       a ROM database efficiently.
  */
-class ParameterPointGreedySelector
+class GreedyParameterPointSelector
 {
    public:
      /**
@@ -47,7 +47,7 @@ class ParameterPointGreedySelector
                                 determining the first parameter point to sample.
       * @param[in] random_seed A random seed.
       */
-     ParameterPointGreedySelector(
+     GreedyParameterPointSelector(
         std::vector<Vector> parameter_points,
         double tolerance,
         double saturation,
@@ -57,7 +57,7 @@ class ParameterPointGreedySelector
         int random_seed = 1,
         bool debug_algorithm = false);
 
-    ParameterPointGreedySelector(
+    GreedyParameterPointSelector(
         std::vector<double> parameter_points,
         double tolerance,
         double saturation,
@@ -70,7 +70,7 @@ class ParameterPointGreedySelector
       /**
        * @brief Destructor.
        */
-      ~ParameterPointGreedySelector();
+      ~GreedyParameterPointSelector();
 
       /**
        * @brief Returns the next parameter point for which sampling is required.
@@ -79,7 +79,7 @@ class ParameterPointGreedySelector
        *         is not ready to be sampled.
        */
       int
-      computeNextSampleParameterPoint();
+      getNextParameterPoint();
 
       /**
        * @brief Compute point whose residual the greedy algorithm requires.
@@ -90,7 +90,7 @@ class ParameterPointGreedySelector
        *         residual is not currently required.
        */
       int
-      computePointRequiringResidual();
+      getNextPointRequiringResidual();
 
       /**
        * @brief Set the residual error of the specified parameter point.
@@ -98,7 +98,7 @@ class ParameterPointGreedySelector
        * @return The index of the point in the list of parameters.
        */
       void
-      setPointResidualError(double error, int rank, int num_procs);
+      setPointResidual(double error, int rank, int num_procs);
 
       /**
        * @brief Returns the index to the nearest local ROM to the specified parameter point.
@@ -106,7 +106,7 @@ class ParameterPointGreedySelector
        * @return The index of the point in the list of parameters.
        */
       int
-      obtainNearestROMIndex(int index);
+      getNearestROM(int index);
 
   private:
 

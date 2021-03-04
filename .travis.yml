@@ -63,3 +63,5 @@ script:
   - ./test_IncrementalSVD
   - ./test_RandomizedSVD
   - mpirun -n 3 --oversubscribe test_RandomizedSVD
+  - ./test_GreedyParameterPointSelector
+  - mpirun -n 3 --oversubscribe test_GreedyParameterPointSelector
