@@ -249,6 +249,10 @@ class GreedyParameterPointSelector
        std::default_random_engine rng;
 };
 
+// Given a a vector/double, find the nearest point in a domain.
+int getNearestPoint(std::vector<Vector> paramPoints, Vector point);
+int getNearestPoint(std::vector<double> paramPoints, double point);
+
 }
 
 #endif

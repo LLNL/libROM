@@ -264,7 +264,7 @@ GreedyParameterPointSelector::setPointResidual(double error, int rank, int num_p
 
     double total_error = 0;
     for (int i = 0; i < num_procs; i++) {
-        total_error = pow(proc_errors[i], 2);
+        total_error += pow(proc_errors[i], 2);
     }
     total_error = sqrt(total_error);
 
@@ -327,6 +327,46 @@ GreedyParameterPointSelector::getNearestROM(int index)
 
 GreedyParameterPointSelector::~GreedyParameterPointSelector()
 {
+}
+
+int getNearestPoint(std::vector<Vector> paramPoints, Vector point)
+{
+
+    double closest_dist_to_points = INT_MAX;
+    int closest_point_index = -1;
+
+    for (int i = 0; i < paramPoints.size(); i++)
+    {
+        Vector diff;
+        point.minus(paramPoints[i], diff);
+        double dist = diff.norm();
+        if (dist < closest_dist_to_points)
+        {
+            closest_dist_to_points = dist;
+            closest_point_index = i;
+        }
+    }
+
+    return closest_point_index;
+}
+
+int getNearestPoint(std::vector<double> paramPoints, double point)
+{
+
+    double closest_dist_to_points = INT_MAX;
+    int closest_point_index = -1;
+
+    for (int i = 0; i < paramPoints.size(); i++)
+    {
+        double dist = abs(point - paramPoints[i]);
+        if (dist < closest_dist_to_points)
+        {
+            closest_dist_to_points = dist;
+            closest_point_index = i;
+        }
+    }
+
+    return closest_point_index;
 }
 
 }
