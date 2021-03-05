@@ -108,7 +108,6 @@ GreedyParameterPointSelector::constructObject(
 int
 GreedyParameterPointSelector::getNextParameterPoint()
 {
-
     if (d_parameter_sampled_indices.size() == d_parameter_points.size())
     {
         d_procedure_completed = true;
@@ -242,6 +241,11 @@ GreedyParameterPointSelector::getNextPointRequiringResidual()
                 return d_next_point_requiring_residual;
             }
         }
+    }
+
+    if (d_next_point_requiring_residual == -1)
+    {
+        d_iteration_started = false;
     }
 
     return d_next_point_requiring_residual;
