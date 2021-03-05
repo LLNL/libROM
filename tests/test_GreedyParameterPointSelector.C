@@ -80,24 +80,24 @@ TEST(GreedyParameterPointSelectorSerialTest, Test_GreedyParameterPointSelectorCe
 
     firstPoint = caromGreedySelector.getNextPointRequiringResidual();
     EXPECT_EQ(firstPoint, 1);
-    caromGreedySelector.setPointResidual(0.9, d_rank, d_num_procs);
+    caromGreedySelector.setPointResidual(0.3, d_rank, d_num_procs);
     secondPoint = caromGreedySelector.getNextPointRequiringResidual();
     EXPECT_EQ(secondPoint, 3);
     caromGreedySelector.setPointResidual(25.0, d_rank, d_num_procs);
     thirdPoint = caromGreedySelector.getNextPointRequiringResidual();
     EXPECT_EQ(thirdPoint, 4);
-    caromGreedySelector.setPointResidual(0.9, d_rank, d_num_procs);
+    caromGreedySelector.setPointResidual(0.3, d_rank, d_num_procs);
     nextPointToSample = caromGreedySelector.getNextParameterPoint();
     EXPECT_EQ(paramPoints[nextPointToSample], paramPoints[secondPoint]);
 
     // ERRORS: [0, 0.9, 0, 0.9, 0.9, INF]
 
     firstPoint = caromGreedySelector.getNextPointRequiringResidual();
-    caromGreedySelector.setPointResidual(0.9, d_rank, d_num_procs);
+    caromGreedySelector.setPointResidual(0.3, d_rank, d_num_procs);
     EXPECT_EQ(firstPoint, 1);
     secondPoint = caromGreedySelector.getNextPointRequiringResidual();
     EXPECT_EQ(secondPoint, 5);
-    caromGreedySelector.setPointResidual(0.9, d_rank, d_num_procs);
+    caromGreedySelector.setPointResidual(0.3, d_rank, d_num_procs);
 
     // ERRORS: [0, 0.9, 0, 0, 0.9, 0.9]
 
