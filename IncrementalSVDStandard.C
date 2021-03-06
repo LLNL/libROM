@@ -84,10 +84,10 @@ IncrementalSVDStandard::buildInitialSVD(
    d_time_interval_start_times[num_time_intervals] = time;
 
    // Build d_S for this new time interval.
-   d_S = new Matrix(1, 1, false);
+   d_S = new Vector(1, false);
    Vector u_vec(u, d_dim, true);
    double norm_u = u_vec.norm();
-   d_S->item(0, 0) = norm_u;
+   d_S->item(0) = norm_u;
 
    // Build d_U for this new time interval.
    d_U = new Matrix(d_dim, 1, true);
@@ -137,7 +137,10 @@ IncrementalSVDStandard::addLinearlyDependentSample(
    for (int row = 0; row < d_num_samples; ++row){
       for (int col = 0; col < d_num_samples; ++col) {
          Amod.item(row, col) = A->item(row, col);
-         d_S->item(row, col) = sigma->item(row, col);
+         if (row == col)
+         {
+           d_S->item(col) = sigma->item(row, col);
+         }
       }
    }
 
@@ -219,7 +222,11 @@ IncrementalSVDStandard::addNewSample(
    }
 
    delete d_S;
-   d_S = sigma;
+   int num_dim = std::min(sigma->numRows(), sigma->numColumns());
+   d_S = new Vector(num_dim, false);
+   for (int i = 0; i < num_dim; i++) {
+     d_S->item(i) = sigma->item(i,i);
+   }
 
    // We now have another sample.
    ++d_num_samples;

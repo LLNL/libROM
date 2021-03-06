@@ -13,6 +13,7 @@
 #include "BasisWriter.h"
 #include "HDFDatabase.h"
 #include "Matrix.h"
+#include "Vector.h"
 #include "BasisGenerator.h"
 #include "Utilities.h"
 
@@ -113,13 +114,12 @@ BasisWriter::writeBasis(const std::string& kind)
         d_database->putDoubleArray(tmp, &tbasis->item(0, 0), num_rows*num_cols);
       }
 
-      const Matrix* sv = d_basis_generator->getSingularValues();
-      num_rows = sv->numRows();
-      num_cols = num_rows;
+      const Vector* sv = d_basis_generator->getSingularValues();
+      int sv_dim = sv->dim();
       sprintf(tmp, "singular_value_size_%06d", d_num_intervals_written);
-      d_database->putInteger(tmp, num_rows);
+      d_database->putInteger(tmp, sv_dim);
       sprintf(tmp, "singular_value_%06d", d_num_intervals_written);
-      d_database->putDoubleArray(tmp, &sv->item(0, 0), num_rows*num_cols);
+      d_database->putDoubleArray(tmp, &sv->item(0), sv_dim);
 
       ++d_num_intervals_written;
 

@@ -216,11 +216,11 @@ RandomizedSVD::computeSVD()
 
     // Allocate the appropriate matrices and gather their elements.
     d_basis = new Matrix(svd_input_mat_distributed_rows, ncolumns, false);
-    d_S = new Matrix(ncolumns, ncolumns, false);
+    d_S = new Vector(ncolumns, false);
     {
        CAROM_VERIFY(ncolumns >= 0);
        unsigned nc = static_cast<unsigned>(ncolumns);
-       memset(&d_S->item(0, 0), 0, nc*nc*sizeof(double));
+       memset(&d_S->item(0), 0, nc*sizeof(double));
     }
     d_basis_right = new Matrix(ncolumns, d_subspace_dim, false);
 
@@ -238,7 +238,7 @@ RandomizedSVD::computeSVD()
     }
 
     for (int i = 0; i < ncolumns; ++i)
-       d_S->item(i, i) = d_factorizer->S[static_cast<unsigned>(i)];
+       d_S->item(i) = d_factorizer->S[static_cast<unsigned>(i)];
 
     // Lift solution back to higher dimension
     Matrix* d_new_basis = Q->mult(d_basis);

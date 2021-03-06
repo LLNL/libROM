@@ -97,7 +97,7 @@ class SVD
        * @return The singular values for the current time interval.
        */
       virtual
-      const Matrix*
+      const Vector*
       getSingularValues() = 0;
 
       /**
@@ -237,12 +237,12 @@ class SVD
       Matrix* d_W;
 
       /**
-       * @brief The matrix S which is small.
+       * @brief The vector S which is small.
        *
-       * For all SVD algorithms, S is not distributed and the entire matrix
+       * For all SVD algorithms, S is not distributed and the entire vector
        * exists on each processor.
        */
-      Matrix* d_S;
+      Vector* d_S;
 
       /**
        * @brief The globalized snapshot vectors for the current time interval.
