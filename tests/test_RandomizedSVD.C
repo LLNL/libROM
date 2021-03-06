@@ -78,10 +78,8 @@ TEST(RandomizedSVDTest, Test_RandomizedSVD)
      -8.83662121247607013075e-01,     -3.96326568787719990539e-01,     -2.49131504120077035269e-01,
      -4.13541107843521604792e-01,     4.11501040257107097986e-01,      8.12188799473910205684e-01};
 
-   double* sv_true_ans = new double[9] {
-     4.74592085430968513293e+00,      0.00000000000000000000e+00,      0.00000000000000000000e+00,
-     0.00000000000000000000e+00,      3.25364999902110074714e+00,      0.00000000000000000000e+00,
-     0.00000000000000000000e+00,      0.00000000000000000000e+00,      2.14185949946548248590e+00};
+   double* sv_true_ans = new double[3] {
+     4.74592085430968513293e+00,      3.25364999902110074714e+00,      2.14185949946548248590e+00};
 
   CAROM::Options randomized_svd_options = CAROM::Options(d_num_rows, 3, 1);
   randomized_svd_options.setMaxBasisDimension(num_total_rows);
@@ -94,18 +92,16 @@ TEST(RandomizedSVDTest, Test_RandomizedSVD)
 
   const CAROM::Matrix* d_basis = sampler.getSpatialBasis();
   const CAROM::Matrix* d_basis_right = sampler.getTemporalBasis();
-  const CAROM::Matrix* sv = sampler.getSingularValues();
+  const CAROM::Vector* sv = sampler.getSingularValues();
 
   EXPECT_EQ(d_basis->numRows(), d_num_rows);
   EXPECT_EQ(d_basis->numColumns(), 3);
   EXPECT_EQ(d_basis_right->numRows(), 3);
   EXPECT_EQ(d_basis_right->numColumns(), 3);
-  EXPECT_EQ(sv->numRows(), 3);
-  EXPECT_EQ(sv->numColumns(), 3);
+  EXPECT_EQ(sv->dim(), 3);
 
   double* d_basis_vals = d_basis->getData();
   double* d_basis_right_vals = d_basis_right->getData();
-  double* sv_vals = sv->getData();
 
   for (int i = 0; i < d_num_rows * 3; i++) {
 
@@ -116,8 +112,8 @@ TEST(RandomizedSVDTest, Test_RandomizedSVD)
     EXPECT_NEAR(abs(d_basis_right_vals[i]), abs(basis_right_true_ans[i]), 1e-7);
   }
 
-  for (int i = 0; i < 9; i++) {
-    EXPECT_NEAR(sv_vals[i], sv_true_ans[i], 1e-7);
+  for (int i = 0; i < 3; i++) {
+    EXPECT_NEAR(sv->item(i), sv_true_ans[i], 1e-7);
   }
 }
 
@@ -173,10 +169,8 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposed)
      -8.83662121247607013075e-01,     -3.96326568787719990539e-01,     -2.49131504120077035269e-01,
      -4.13541107843521604792e-01,     4.11501040257107097986e-01,      8.12188799473910205684e-01};
 
-   double* sv_true_ans = new double[9] {
-     4.74592085430968513293e+00,      0.00000000000000000000e+00,      0.00000000000000000000e+00,
-     0.00000000000000000000e+00,      3.25364999902110074714e+00,      0.00000000000000000000e+00,
-     0.00000000000000000000e+00,      0.00000000000000000000e+00,      2.14185949946548248590e+00};
+   double* sv_true_ans = new double[3] {
+     4.74592085430968513293e+00,      3.25364999902110074714e+00,      2.14185949946548248590e+00};
 
   CAROM::Options randomized_svd_options = CAROM::Options(d_num_rows, 5, 1);
   randomized_svd_options.setMaxBasisDimension(num_total_rows);
@@ -191,7 +185,7 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposed)
 
   const CAROM::Matrix* d_basis = sampler.getSpatialBasis();
   const CAROM::Matrix* d_basis_right = sampler.getTemporalBasis();
-  const CAROM::Matrix* sv = sampler.getSingularValues();
+  const CAROM::Vector* sv = sampler.getSingularValues();
 
   num_total_rows = 5;
   d_num_rows = num_total_rows / d_num_procs;
@@ -206,12 +200,10 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposed)
   EXPECT_EQ(d_basis_right->numColumns(), 3);
   EXPECT_EQ(d_basis->numRows(), 3);
   EXPECT_EQ(d_basis->numColumns(), 3);
-  EXPECT_EQ(sv->numRows(), 3);
-  EXPECT_EQ(sv->numColumns(), 3);
+  EXPECT_EQ(sv->dim(), 3);
 
   double* d_basis_vals = d_basis->getData();
   double* d_basis_right_vals = d_basis_right->getData();
-  double* sv_vals = sv->getData();
 
   MPI_Allgather(MPI_IN_PLACE,
 			     1,
@@ -233,8 +225,8 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposed)
     EXPECT_NEAR(abs(d_basis_vals[i]), abs(basis_true_ans[i]), 1e-7);
   }
 
-  for (int i = 0; i < 9; i++) {
-    EXPECT_NEAR(sv_vals[i], sv_true_ans[i], 1e-7);
+  for (int i = 0; i < 3; i++) {
+    EXPECT_NEAR(sv->item(i), sv_true_ans[i], 1e-7);
   }
 }
 
@@ -287,9 +279,8 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDSmallerSubspace)
      -3.18552083217684134375e-01,     5.63151606900417212032e-01,
      -8.61623137159813645702e-01,     -5.07334680179376329434e-01};
 
-   double* sv_true_ans = new double[4] {
-      4.69316598773643711695e+00,      0.00000000000000000000e+00,
-      0.00000000000000000000e+00,      3.01185616415252432887e+00};
+   double* sv_true_ans = new double[2] {
+      4.69316598773643711695e+00,      3.01185616415252432887e+00};
 
   CAROM::Options randomized_svd_options = CAROM::Options(d_num_rows, 3, 1);
   randomized_svd_options.setMaxBasisDimension(num_total_rows);
@@ -302,18 +293,16 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDSmallerSubspace)
 
   const CAROM::Matrix* d_basis = sampler.getSpatialBasis();
   const CAROM::Matrix* d_basis_right = sampler.getTemporalBasis();
-  const CAROM::Matrix* sv = sampler.getSingularValues();
+  const CAROM::Vector* sv = sampler.getSingularValues();
 
   EXPECT_EQ(d_basis->numRows(), d_num_rows);
   EXPECT_EQ(d_basis->numColumns(), 2);
   EXPECT_EQ(d_basis_right->numRows(), 2);
   EXPECT_EQ(d_basis_right->numColumns(), 2);
-  EXPECT_EQ(sv->numRows(), 2);
-  EXPECT_EQ(sv->numColumns(), 2);
+  EXPECT_EQ(sv->dim(), 2);
 
   double* d_basis_vals = d_basis->getData();
   double* d_basis_right_vals = d_basis_right->getData();
-  double* sv_vals = sv->getData();
 
   for (int i = 0; i < d_num_rows * 2; i++) {
     EXPECT_NEAR(abs(d_basis_vals[i]), abs(basis_true_ans[row_offset[d_rank] * 2 + i]), 1e-7);
@@ -323,8 +312,8 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDSmallerSubspace)
     EXPECT_NEAR(abs(d_basis_right_vals[i]), abs(basis_right_true_ans[i]), 1e-7);
   }
 
-  for (int i = 0; i < 4; i++) {
-    EXPECT_NEAR(sv_vals[i], sv_true_ans[i], 1e-7);
+  for (int i = 0; i < 2; i++) {
+    EXPECT_NEAR(sv->item(i), sv_true_ans[i], 1e-7);
   }
 }
 
@@ -379,9 +368,8 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposedSmallerSubspace)
      -3.18552083217684134375e-01,     5.63151606900417212032e-01,
      -8.61623137159813645702e-01,     -5.07334680179376329434e-01};
 
-   double* sv_true_ans = new double[4] {
-      4.69316598773643711695e+00,      0.00000000000000000000e+00,
-      0.00000000000000000000e+00,      3.01185616415252432887e+00};
+   double* sv_true_ans = new double[2] {
+      4.69316598773643711695e+00,      3.01185616415252432887e+00};
 
   CAROM::Options randomized_svd_options = CAROM::Options(d_num_rows, 5, 1);
   randomized_svd_options.setMaxBasisDimension(num_total_rows);
@@ -396,7 +384,7 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposedSmallerSubspace)
 
   const CAROM::Matrix* d_basis = sampler.getSpatialBasis();
   const CAROM::Matrix* d_basis_right = sampler.getTemporalBasis();
-  const CAROM::Matrix* sv = sampler.getSingularValues();
+  const CAROM::Vector* sv = sampler.getSingularValues();
 
   num_total_rows = 5;
   d_num_rows = num_total_rows / d_num_procs;
@@ -411,12 +399,10 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposedSmallerSubspace)
   EXPECT_EQ(d_basis_right->numColumns(), 2);
   EXPECT_EQ(d_basis->numRows(), 2);
   EXPECT_EQ(d_basis->numColumns(), 2);
-  EXPECT_EQ(sv->numRows(), 2);
-  EXPECT_EQ(sv->numColumns(), 2);
+  EXPECT_EQ(sv->dim(), 2);
 
   double* d_basis_vals = d_basis->getData();
   double* d_basis_right_vals = d_basis_right->getData();
-  double* sv_vals = sv->getData();
 
   MPI_Allgather(MPI_IN_PLACE,
 			     1,
@@ -438,8 +424,8 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposedSmallerSubspace)
     EXPECT_NEAR(abs(d_basis_vals[i]), abs(basis_true_ans[i]), 1e-7);
   }
 
-  for (int i = 0; i < 4; i++) {
-    EXPECT_NEAR(sv_vals[i], sv_true_ans[i], 1e-7);
+  for (int i = 0; i < 2; i++) {
+    EXPECT_NEAR(sv->item(i), sv_true_ans[i], 1e-7);
   }
 }
 

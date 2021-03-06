@@ -120,12 +120,12 @@ IncrementalSVD::IncrementalSVD(
          }
 
          // Read d_S.
-         d_state_database->getInteger("S_num_rows", num_rows);
-         d_state_database->getInteger("S_num_cols", num_cols);
-         d_S = new Matrix(num_rows, num_cols, false);
+         int num_dim;
+         d_state_database->getInteger("S_num_dim", num_dim);
+         d_S = new Vector(num_dim, false);
          d_state_database->getDoubleArray("S",
-                                          &d_S->item(0, 0),
-                                          num_rows*num_cols);
+                                          &d_S->item(0),
+                                          num_dim);
 
          // Set d_num_samples.
          d_num_samples = num_cols;
@@ -156,13 +156,11 @@ IncrementalSVD::~IncrementalSVD()
       d_state_database->putDoubleArray("U", &d_U->item(0, 0), num_rows*num_cols);
 
       // Save d_S.
-      num_rows = d_S->numRows();
-      d_state_database->putInteger("S_num_rows", num_rows);
-      num_cols = d_S->numColumns();
-      d_state_database->putInteger("S_num_cols", num_cols);
+      int num_dim = d_S->dim();
+      d_state_database->putInteger("S_num_dim", num_dim);
       d_state_database->putDoubleArray("S",
-                                       &d_S->item(0, 0),
-                                       num_rows*num_cols);
+                                       &d_S->item(0),
+                                       num_dim);
 
       if (d_update_right_SV) {
         // Save d_W.
@@ -211,10 +209,8 @@ IncrementalSVD::takeSample(
       const Matrix* basis = getSpatialBasis();
       if (d_rank == 0) {
          // Print d_S.
-         for (int row = 0; row < d_num_samples; ++row) {
-            for (int col = 0; col < d_num_samples; ++col) {
-               printf("%.16e  ", d_S->item(row, col));
-            }
+         for (int col = 0; col < d_num_samples; ++col) {
+            printf("%.16e  ", d_S->item(col));
             printf("\n");
          }
          printf("\n");
@@ -278,7 +274,7 @@ IncrementalSVD::getTemporalBasis()
    return d_basis_right;
 }
 
-const Matrix*
+const Vector*
 IncrementalSVD::getSingularValues()
 {
    CAROM_ASSERT(d_S != 0);
@@ -420,7 +416,14 @@ IncrementalSVD::constructQ(
    for (int row = 0; row < d_num_samples; ++row) {
       q_idx = row;
       for (int col = 0; col < d_num_samples; ++col) {
-         Q[q_idx] = d_S->item(row, col);
+        if (row == col)
+        {
+          Q[q_idx] = d_S->item(col);
+        }
+        else
+        {
+          Q[q_idx] = 0.0;
+        }
          q_idx += d_num_samples+1;
       }
       Q[q_idx] = l->item(row);
