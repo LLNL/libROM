@@ -381,14 +381,19 @@ GreedyParameterPointSelector::getParameterPointDomain()
 }
 
 void
-GreedyParameterPointSelector::printSampledPoints(std::string const& path)
+GreedyParameterPointSelector::writeSampledPoints(std::string const& path)
 {
     std::ofstream out_path;
     out_path.open(path);
-    for (auto itr = d_parameter_sampled_indices.begin(); itr != d_parameter_sampled_indices.end(); ++itr) {
-        out_path << *itr << std::endl;
-    }
+    out_path << d_parameter_sampled_indices.size() << std::endl;
     out_path.close();
+
+    int counter = 0;
+    for (auto itr = d_parameter_sampled_indices.begin(); itr != d_parameter_sampled_indices.end(); ++itr) {
+        std::string vec_path = path + "_" + std::to_string(counter);
+        d_parameter_points[*itr].write(vec_path);
+        counter++;
+    }
 }
 
 GreedyParameterPointSelector::~GreedyParameterPointSelector()
@@ -433,6 +438,28 @@ int getNearestPoint(std::vector<double> paramPoints, double point)
     }
 
     return closest_point_index;
+}
+
+std::vector<Vector>
+readSampledPoints(std::string const& path)
+{
+
+    std::ifstream in_path;
+    in_path.open(path);
+    int num_sampled_points = 0;
+    in_path >> num_sampled_points;
+    in_path.close();
+
+    std::vector<Vector> sampled_points;
+    for (int i = 0; i < num_sampled_points; i++)
+    {
+        std::string vec_path = path + "_" + std::to_string(i);
+        Vector point;
+        point.read(vec_path);
+        sampled_points.push_back(point);
+    }
+
+    return sampled_points;
 }
 
 }
