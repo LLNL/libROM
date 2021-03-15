@@ -59,6 +59,50 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
         subset_size, convergence_subset_size, use_centroid, random_seed, debug_algorithm);
 }
 
+GreedyParameterPointSelector::GreedyParameterPointSelector(
+    double param_space_min,
+    double param_space_max,
+    double param_space_size,
+    double tolerance,
+    double saturation,
+    int subset_size,
+    int convergence_subset_size,
+    bool use_centroid,
+    int random_seed,
+    bool debug_algorithm)
+{
+    //convert parameter_points from double to Vector
+    CAROM_VERIFY(param_space_max > param_space_min);
+    CAROM_VERIFY(param_space_size > 0);
+
+    std::vector<Vector> parameter_points_vec;
+    Vector vec(1, false);
+    if (param_space_size == 1)
+    {
+        vec.item(0) = (param_space_min + param_space_max) / 2;
+        parameter_points_vec.push_back(vec);
+    }
+    else if (param_space_size == 2)
+    {
+        double frequency = abs(param_space_max - param_space_min) / (param_space_size + 1);
+        for (int i = 0; i < param_space_size; i++) {
+            vec.item(0) = param_space_min + (i + 1) * frequency;
+            parameter_points_vec.push_back(vec);
+        }
+    }
+    else
+    {
+        double frequency = abs(param_space_max - param_space_min) / param_space_size;
+        for (int i = 0; i < param_space_size; i++) {
+            vec.item(0) = param_space_min + i * frequency;
+            parameter_points_vec.push_back(vec);
+        }
+    }
+
+    constructObject(parameter_points_vec, tolerance, saturation,
+        subset_size, convergence_subset_size, use_centroid, random_seed, debug_algorithm);
+}
+
 void
 GreedyParameterPointSelector::constructObject(
     std::vector<Vector> parameter_points,
@@ -328,6 +372,12 @@ GreedyParameterPointSelector::getNearestROM(int index)
     }
 
     return closest_point_index;
+}
+
+std::vector<Vector>
+GreedyParameterPointSelector::getParameterPointDomain()
+{
+    return d_parameter_points;
 }
 
 void

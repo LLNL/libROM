@@ -87,6 +87,18 @@ class GreedyParameterPointSelector
         int random_seed = 1,
         bool debug_algorithm = false);
 
+    GreedyParameterPointSelector(
+        double param_space_min,
+        double param_space_max,
+        double param_space_size,
+        double tolerance,
+        double saturation,
+        int subset_size,
+        int convergence_subset_size,
+        bool use_centroid = true,
+        int random_seed = 1,
+        bool debug_algorithm = false);
+
       /**
        * @brief Destructor.
        */
@@ -127,6 +139,12 @@ class GreedyParameterPointSelector
        */
       int
       getNearestROM(int index);
+
+      /**
+       * @brief Get the domain of the parameter points.
+       */
+      std::vector<Vector>
+      getParameterPointDomain();
 
       /**
        * @brief Print the sampled parameter points to a file.
