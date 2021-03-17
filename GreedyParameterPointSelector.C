@@ -30,7 +30,6 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
     int random_seed,
     bool debug_algorithm)
 {
-
     constructObject(parameter_points, tolerance, saturation,
         subset_size, convergence_subset_size, use_centroid, random_seed, debug_algorithm);
 }
@@ -45,9 +44,6 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
     int random_seed,
     bool debug_algorithm)
 {
-    //convert parameter_points from double to Vector
-    CAROM_VERIFY(parameter_points.size() > 0);
-
     std::vector<Vector> parameter_points_vec;
     for (int i = 0; i < parameter_points.size(); i++) {
         Vector vec(1, false);
@@ -62,7 +58,7 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
 GreedyParameterPointSelector::GreedyParameterPointSelector(
     double param_space_min,
     double param_space_max,
-    double param_space_size,
+    int param_space_size,
     double tolerance,
     double saturation,
     int subset_size,
@@ -71,36 +67,83 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
     int random_seed,
     bool debug_algorithm)
 {
-    //convert parameter_points from double to Vector
-    CAROM_VERIFY(param_space_max > param_space_min);
-    CAROM_VERIFY(param_space_size > 0);
+    Vector param_space_min_vec(1, false);
+    param_space_min_vec.item(0) = param_space_min;
+    Vector param_space_max_vec(1, false);
+    param_space_max_vec.item(0) = param_space_max;
 
-    std::vector<Vector> parameter_points_vec;
-    Vector vec(1, false);
-    if (param_space_size == 1)
-    {
-        vec.item(0) = (param_space_min + param_space_max) / 2;
-        parameter_points_vec.push_back(vec);
-    }
-    else if (param_space_size == 2)
-    {
-        double frequency = abs(param_space_max - param_space_min) / (param_space_size + 1);
-        for (int i = 0; i < param_space_size; i++) {
-            vec.item(0) = param_space_min + (i + 1) * frequency;
-            parameter_points_vec.push_back(vec);
-        }
-    }
-    else
-    {
-        double frequency = abs(param_space_max - param_space_min) / param_space_size;
-        for (int i = 0; i < param_space_size; i++) {
-            vec.item(0) = param_space_min + i * frequency;
-            parameter_points_vec.push_back(vec);
-        }
-    }
+    std::vector<Vector> parameter_points_vec =
+        constructParameterPoints(param_space_min_vec, param_space_max_vec, param_space_size);
 
     constructObject(parameter_points_vec, tolerance, saturation,
         subset_size, convergence_subset_size, use_centroid, random_seed, debug_algorithm);
+}
+
+GreedyParameterPointSelector::GreedyParameterPointSelector(
+    Vector param_space_min,
+    Vector param_space_max,
+    int param_space_size,
+    double tolerance,
+    double saturation,
+    int subset_size,
+    int convergence_subset_size,
+    bool use_centroid,
+    int random_seed,
+    bool debug_algorithm)
+{
+    std::vector<Vector> parameter_points_vec =
+        constructParameterPoints(param_space_min, param_space_max, param_space_size);
+
+    constructObject(parameter_points_vec, tolerance, saturation,
+        subset_size, convergence_subset_size, use_centroid, random_seed, debug_algorithm);
+}
+
+std::vector<Vector>
+GreedyParameterPointSelector::constructParameterPoints(
+    Vector param_space_min,
+    Vector param_space_max,
+    int param_space_size)
+{
+    CAROM_VERIFY(param_space_min.dim() == param_space_max.dim());
+
+    bool isGreater = false;
+    for (int i = 0; i < param_space_min.dim(); i++)
+    {
+        if (param_space_size == 1)
+        {
+            if (param_space_max.item(i) >= param_space_min.item(i))
+            {
+                isGreater = true;
+                break;
+            }
+        }
+        else
+        {
+            if (param_space_max.item(i) > param_space_min.item(i))
+            {
+                isGreater = true;
+                break;
+            }
+        }
+    }
+    CAROM_VERIFY(isGreater);
+
+    std::vector<Vector> parameter_points_vec;
+    std::vector<double> frequencies;
+    Vector vec(param_space_min.dim(), false);
+    for (int i = 0; i < param_space_min.dim(); i++)
+    {
+        frequencies[i] = abs(param_space_max.item(i) - param_space_min.item(i)) / param_space_size;
+    }
+    for (int i = 0; i < param_space_size; i++) {
+        for (int j = 0; j < param_space_min.dim(); j++)
+        {
+            vec.item(j) = param_space_min.item(j) + i * frequencies[j];
+        }
+        parameter_points_vec.push_back(vec);
+    }
+
+    return parameter_points_vec;
 }
 
 void
@@ -174,12 +217,12 @@ GreedyParameterPointSelector::getNextParameterPoint()
             }
             centroid.mult(1.0 / d_parameter_points.size(), centroid);
 
-            double min_dist_to_centroid = INT_MAX;
+            double min_dist_to_centroid;
             for (int i = 0; i < d_parameter_points.size(); i++) {
                 Vector diff;
                 centroid.minus(d_parameter_points[i], diff);
                 double dist_to_centroid = diff.norm();
-                if (dist_to_centroid < min_dist_to_centroid)
+                if (i == 0 || dist_to_centroid < min_dist_to_centroid)
                 {
                     min_dist_to_centroid = dist_to_centroid;
                     d_next_point_to_sample = i;
@@ -301,26 +344,19 @@ GreedyParameterPointSelector::setPointResidual(double error, int rank, int num_p
     CAROM_VERIFY(error >= 0);
     CAROM_VERIFY(d_point_requiring_residual_computed);
 
-    double *proc_errors = new double[num_procs];
-    proc_errors[rank] = error;
-    CAROM_VERIFY(MPI_Allgather(MPI_IN_PLACE,
+    double proc_errors = pow(error, 2);
+    CAROM_VERIFY(MPI_Allreduce(MPI_IN_PLACE,
+            &proc_errors,
             1,
             MPI_DOUBLE,
-            proc_errors,
-            1,
-            MPI_DOUBLE,
+            MPI_SUM,
             MPI_COMM_WORLD) == MPI_SUCCESS);
+    proc_errors = sqrt(proc_errors);
 
-    double total_error = 0;
-    for (int i = 0; i < num_procs; i++) {
-        total_error += pow(proc_errors[i], 2);
-    }
-    total_error = sqrt(total_error);
-
-    d_parameter_point_errors[d_parameter_point_random_indices[d_counter]] = total_error;
-    if (total_error > d_max_error)
+    d_parameter_point_errors[d_parameter_point_random_indices[d_counter]] = proc_errors;
+    if (proc_errors > d_max_error)
     {
-        d_max_error = total_error;
+        d_max_error = proc_errors;
         d_next_point_to_sample = d_parameter_point_random_indices[d_counter];
     }
 

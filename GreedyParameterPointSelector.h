@@ -12,7 +12,7 @@
 //              for the construction of a ROM database. The implemented
 //              greedy algorithm is obtained from algorithm 2 of Choi et. al's
 //              paper "Gradient-based constrained optimization using a database
-//              of linear reduced-order models".
+//              of linear reduced-order models": https://arxiv.org/abs/1506.07849
 //
 //              The greedy algorithm workflow is as follows:
 //              1. Construct the GreedyParameterPointSelector by giving it a
@@ -44,7 +44,7 @@ class Matrix;
 class Vector;
 
 /**
- * Class GreedyParameterPointSelector is an class defining the interface a
+ * Class GreedyParameterPointSelector is a class defining the interface of a
  *       greedy algorithm that given a domain of parameter points, iteratively
  *       returns the next best parameter point to sample in order to create
  *       a ROM database efficiently.
@@ -88,9 +88,21 @@ class GreedyParameterPointSelector
         bool debug_algorithm = false);
 
     GreedyParameterPointSelector(
+        Vector param_space_min,
+        Vector param_space_max,
+        int param_space_size,
+        double tolerance,
+        double saturation,
+        int subset_size,
+        int convergence_subset_size,
+        bool use_centroid = true,
+        int random_seed = 1,
+        bool debug_algorithm = false);
+
+    GreedyParameterPointSelector(
         double param_space_min,
         double param_space_max,
-        double param_space_size,
+        int param_space_size,
         double tolerance,
         double saturation,
         int subset_size,
@@ -154,6 +166,11 @@ class GreedyParameterPointSelector
 
   private:
 
+      std::vector<Vector> constructParameterPoints(
+          Vector param_space_min,
+          Vector param_space_max,
+          int param_space_size);
+
       void constructObject(
           std::vector<Vector> parameter_points,
           double tolerance,
@@ -175,17 +192,17 @@ class GreedyParameterPointSelector
       std::set<int> d_parameter_sampled_indices;
 
       /**
-       * @brief The parameter point indices (used to generate the random subsets)
+       * @brief The parameter point indices (used to generate the random subsets).
        */
       std::vector<int> d_parameter_point_random_indices;
 
       /**
-       * @brief The current errors of the parameter points
+       * @brief The current errors of the parameter points.
        */
       std::vector<double> d_parameter_point_errors;
 
       /**
-       * @brief The current max error of the parameter points of the current iteration
+       * @brief The current max error of the parameter points of the current iteration.
        */
       double d_max_error;
 
@@ -195,7 +212,7 @@ class GreedyParameterPointSelector
       double d_tol;
 
      /**
-      * @brief The saturation constant
+      * @brief The saturation constant.
       */
       double d_sat;
 
@@ -208,7 +225,6 @@ class GreedyParameterPointSelector
       * @brief The size of the subset of parameter points used to check convergence.
       */
       int d_convergence_subset_size;
-
 
      /**
       * @brief The next parameter point to sample.
@@ -268,7 +284,7 @@ class GreedyParameterPointSelector
         bool d_procedure_completed;
 
         /**
-         * @brief Random engine used to generate subsets
+         * @brief Random engine used to generate subsets.
          */
        std::default_random_engine rng;
 };
