@@ -111,6 +111,9 @@ class GreedyParameterPointSelector
         int random_seed = 1,
         bool debug_algorithm = false);
 
+    GreedyParameterPointSelector
+        (std::string const& base_file_name);
+
       /**
        * @brief Destructor.
        */
@@ -157,6 +160,9 @@ class GreedyParameterPointSelector
        */
       std::vector<Vector>
       getParameterPointDomain();
+
+      void
+      save(std::string const& base_file_name);
 
       /**
        * @brief Print the sampled parameter points to a file.
