@@ -169,6 +169,66 @@ TEST(GreedyParameterPointSelectorSerialTest, Test_GreedyParameterPointSelector)
 
 }
 
+TEST(GreedyParameterPointSelectorSerialTest, Test_GreedyParameterPointSaveAndLoad)
+{
+    // Get the rank of this process, and the number of processors.
+    int mpi_init, d_rank, d_num_procs;
+    MPI_Initialized(&mpi_init);
+    if (mpi_init == 0) {
+      MPI_Init(nullptr, nullptr);
+    }
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+
+    std::vector<double> paramPoints = {1.0, 2.0, 3.0, 99.0, 100.0, 101.0};
+    CAROM::GreedyParameterPointSelector caromGreedySelector(paramPoints, 1, 1, 3, 4, false, 1, true);
+
+    caromGreedySelector.save("greedy_test");
+
+    CAROM::GreedyParameterPointSelector caromGreedySelectorLoad("greedy_test");
+    caromGreedySelectorLoad.save("greedy_test_LOAD");
+
+    int closestROMIndex = caromGreedySelector.getNearestROM(0);
+    int closestROMIndexLoad = caromGreedySelectorLoad.getNearestROM(0);
+    EXPECT_EQ(closestROMIndex, closestROMIndexLoad);
+
+    int nextPointToSample = caromGreedySelector.getNextParameterPoint();
+    int nextPointToSampleLoad = caromGreedySelectorLoad.getNextParameterPoint();
+    EXPECT_EQ(nextPointToSample, nextPointToSampleLoad);
+    EXPECT_EQ(paramPoints[nextPointToSample], paramPoints[nextPointToSampleLoad]);
+
+    closestROMIndex = caromGreedySelector.getNearestROM(0);
+    closestROMIndexLoad = caromGreedySelectorLoad.getNearestROM(0);
+    EXPECT_EQ(closestROMIndex, closestROMIndexLoad);
+
+    // ERRORS: [INF, INF, 0, INF, INF]
+
+    int firstPoint = caromGreedySelector.getNextPointRequiringResidual();
+    int firstPointLoad = caromGreedySelectorLoad.getNextPointRequiringResidual();
+    EXPECT_EQ(firstPoint, firstPointLoad);
+    caromGreedySelector.setPointResidual(100.0, d_rank, d_num_procs);
+    caromGreedySelectorLoad.setPointResidual(100.0, d_rank, d_num_procs);
+    int secondPoint = caromGreedySelector.getNextPointRequiringResidual();
+    int secondPointLoad = caromGreedySelectorLoad.getNextPointRequiringResidual();
+    EXPECT_EQ(secondPoint, secondPointLoad);
+    caromGreedySelector.setPointResidual(50.0, d_rank, d_num_procs);
+    caromGreedySelectorLoad.setPointResidual(50.0, d_rank, d_num_procs);
+    int thirdPoint = caromGreedySelector.getNextPointRequiringResidual();
+    int thirdPointLoad = caromGreedySelectorLoad.getNextPointRequiringResidual();
+    EXPECT_EQ(thirdPoint, thirdPointLoad);
+    caromGreedySelector.setPointResidual(30.0, d_rank, d_num_procs);
+    caromGreedySelectorLoad.setPointResidual(30.0, d_rank, d_num_procs);
+
+    closestROMIndex = caromGreedySelector.getNearestROM(0);
+    closestROMIndexLoad = caromGreedySelectorLoad.getNearestROM(0);
+    EXPECT_EQ(closestROMIndex, closestROMIndexLoad);
+    nextPointToSample = caromGreedySelector.getNextParameterPoint();
+    nextPointToSampleLoad = caromGreedySelectorLoad.getNextParameterPoint();
+    EXPECT_EQ(paramPoints[nextPointToSample], paramPoints[nextPointToSampleLoad]);
+
+}
+
 int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);

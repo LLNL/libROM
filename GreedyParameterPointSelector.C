@@ -134,19 +134,21 @@ GreedyParameterPointSelector::GreedyParameterPointSelector
     sprintf(tmp, "num_parameter_sampled_indices");
     int num_parameter_sampled_indices;
     database.getInteger(tmp, num_parameter_sampled_indices);
-    int temp_parameter_sampled_indices[num_parameter_sampled_indices];
-    sprintf(tmp, "parameter_sampled_indices");
-    database.getIntegerArray(tmp, &temp_parameter_sampled_indices[0], num_parameter_sampled_indices);
-    for (int i = 0; i < num_parameter_sampled_indices; i++)
+    if (num_parameter_sampled_indices > 0)
     {
-        d_parameter_sampled_indices.insert(temp_parameter_sampled_indices[i]);
+      int temp_parameter_sampled_indices[num_parameter_sampled_indices];
+      sprintf(tmp, "parameter_sampled_indices");
+      database.getIntegerArray(tmp, &temp_parameter_sampled_indices[0], num_parameter_sampled_indices);
+      for (int i = 0; i < num_parameter_sampled_indices; i++)
+      {
+          d_parameter_sampled_indices.insert(temp_parameter_sampled_indices[i]);
+      }
     }
 
     int bool_int_temp;
-
     sprintf(tmp, "procedure_completed");
     database.getInteger(tmp, bool_int_temp);
-    d_procedure_completed = bool_int_temp;
+    d_procedure_completed = (bool) bool_int_temp;
 
     if (!d_procedure_completed)
     {
@@ -166,27 +168,28 @@ GreedyParameterPointSelector::GreedyParameterPointSelector
         database.getInteger(tmp, d_next_point_requiring_residual);
         sprintf(tmp, "use_centroid");
         database.getInteger(tmp, bool_int_temp);
-        d_use_centroid = bool_int_temp;
+        d_use_centroid = (bool) bool_int_temp;
         sprintf(tmp, "iteration_started");
         database.getInteger(tmp, bool_int_temp);
-        d_iteration_started = bool_int_temp;
+        d_iteration_started = (bool) bool_int_temp;
         sprintf(tmp, "point_requiring_residual_computed");
         database.getInteger(tmp, bool_int_temp);
-        d_point_requiring_residual_computed = bool_int_temp;
+        d_point_requiring_residual_computed = (bool) bool_int_temp;
         sprintf(tmp, "subset_created");
         database.getInteger(tmp, bool_int_temp);
-        d_subset_created = bool_int_temp;
+        d_subset_created = (bool) bool_int_temp;
         sprintf(tmp, "debug_algorithm");
         database.getInteger(tmp, bool_int_temp);
-        d_debug_algorithm = bool_int_temp;
+        d_debug_algorithm = (bool) bool_int_temp;
         sprintf(tmp, "counter");
         database.getInteger(tmp, d_counter);
         sprintf(tmp, "subset_counter");
         database.getInteger(tmp, d_subset_counter);
 
         sprintf(tmp, "parameter_point_random_indices");
-        d_parameter_point_random_indices.resize(d_subset_size);
-        database.getIntegerArray(tmp, &d_parameter_point_random_indices[0], d_subset_size);
+        d_parameter_point_random_indices.resize(d_parameter_points.size());
+        database.getIntegerArray(tmp, &d_parameter_point_random_indices[0], d_parameter_points.size());
+
         sprintf(tmp, "parameter_point_errors");
         d_parameter_point_errors.resize(d_parameter_points.size());
         database.getDoubleArray(tmp, &d_parameter_point_errors[0], d_parameter_points.size());
@@ -559,48 +562,52 @@ GreedyParameterPointSelector::save(std::string const& base_file_name)
 
     sprintf(tmp, "num_parameter_sampled_indices");
     database.putInteger(tmp, d_parameter_sampled_indices.size());
-    sprintf(tmp, "parameter_sampled_indices");
-    std::vector<int> d_parameter_sampled_indices_vec(d_parameter_sampled_indices.begin(), d_parameter_sampled_indices.end());
-    database.putIntegerArray(tmp, &d_parameter_sampled_indices_vec[0], d_parameter_sampled_indices.size());
+    if (d_parameter_sampled_indices.size() > 0)
+    {
+      sprintf(tmp, "parameter_sampled_indices");
+      std::vector<int> d_parameter_sampled_indices_vec(d_parameter_sampled_indices.begin(), d_parameter_sampled_indices.end());
+      database.putIntegerArray(tmp, &d_parameter_sampled_indices_vec[0], d_parameter_sampled_indices.size());
+
+    }
 
     sprintf(tmp, "procedure_completed");
     database.putInteger(tmp, d_procedure_completed);
 
     if (!d_procedure_completed)
     {
-        sprintf(tmp, "parameter_point_random_indices");
-        database.putIntegerArray(tmp, &d_parameter_point_random_indices[0], d_parameter_point_random_indices.size());
-        sprintf(tmp, "parameter_point_errors");
-        database.putDoubleArray(tmp, &d_parameter_point_errors[0], d_parameter_point_errors.size());
+      sprintf(tmp, "max_error");
+      database.putDouble(tmp, d_max_error);
+      sprintf(tmp, "tol");
+      database.putDouble(tmp, d_tol);
+      sprintf(tmp, "sat");
+      database.putDouble(tmp, d_sat);
+      sprintf(tmp, "subset_size");
+      database.putInteger(tmp, d_subset_size);
+      sprintf(tmp, "convergence_subset_size");
+      database.putInteger(tmp, d_convergence_subset_size);
+      sprintf(tmp, "next_point_to_sample");
+      database.putInteger(tmp, d_next_point_to_sample);
+      sprintf(tmp, "next_point_requiring_residual");
+      database.putInteger(tmp, d_next_point_requiring_residual);
+      sprintf(tmp, "use_centroid");
+      database.putInteger(tmp, d_use_centroid);
+      sprintf(tmp, "iteration_started");
+      database.putInteger(tmp, d_iteration_started);
+      sprintf(tmp, "point_requiring_residual_computed");
+      database.putInteger(tmp, d_point_requiring_residual_computed);
+      sprintf(tmp, "subset_created");
+      database.putInteger(tmp, d_subset_created);
+      sprintf(tmp, "debug_algorithm");
+      database.putInteger(tmp, d_debug_algorithm);
+      sprintf(tmp, "counter");
+      database.putInteger(tmp, d_counter);
+      sprintf(tmp, "subset_counter");
+      database.putInteger(tmp, d_subset_counter);
 
-        sprintf(tmp, "max_error");
-        database.putDouble(tmp, d_max_error);
-        sprintf(tmp, "tol");
-        database.putDouble(tmp, d_tol);
-        sprintf(tmp, "sat");
-        database.putDouble(tmp, d_sat);
-        sprintf(tmp, "subset_size");
-        database.putInteger(tmp, d_subset_size);
-        sprintf(tmp, "convergence_subset_size");
-        database.putInteger(tmp, d_convergence_subset_size);
-        sprintf(tmp, "next_point_to_sample");
-        database.putInteger(tmp, d_next_point_to_sample);
-        sprintf(tmp, "next_point_requiring_residual");
-        database.putInteger(tmp, d_next_point_requiring_residual);
-        sprintf(tmp, "use_centroid");
-        database.putInteger(tmp, d_use_centroid);
-        sprintf(tmp, "iteration_started");
-        database.putInteger(tmp, d_iteration_started);
-        sprintf(tmp, "point_requiring_residual_computed");
-        database.putInteger(tmp, d_point_requiring_residual_computed);
-        sprintf(tmp, "subset_created");
-        database.putInteger(tmp, d_subset_created);
-        sprintf(tmp, "debug_algorithm");
-        database.putInteger(tmp, d_debug_algorithm);
-        sprintf(tmp, "counter");
-        database.putInteger(tmp, d_counter);
-        sprintf(tmp, "subset_counter");
-        database.putInteger(tmp, d_subset_counter);
+      sprintf(tmp, "parameter_point_random_indices");
+      database.putIntegerArray(tmp, &d_parameter_point_random_indices[0], d_parameter_point_random_indices.size());
+      sprintf(tmp, "parameter_point_errors");
+      database.putDoubleArray(tmp, &d_parameter_point_errors[0], d_parameter_point_errors.size());
     }
     database.close();
 }
