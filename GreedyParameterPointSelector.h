@@ -161,14 +161,17 @@ class GreedyParameterPointSelector
       std::vector<Vector>
       getParameterPointDomain();
 
-      void
-      save(std::string const& base_file_name);
+      /**
+       * @brief Get the sampled parameter points.
+       */
+      std::vector<Vector>
+      getSampledParameterPoints();
 
       /**
-       * @brief Print the sampled parameter points to a file.
+       * @brief Save the object state to a file.
        */
       void
-      writeSampledPoints(std::string const& path);
+      save(std::string const& base_file_name);
 
   private:
 
@@ -294,10 +297,6 @@ class GreedyParameterPointSelector
          */
        std::default_random_engine rng;
 };
-
-// Read the sampled parameter points from a base file path.
-std::vector<Vector>
-readSampledPoints(std::string const& path);
 
 // Given a a vector/double, find the nearest point in a domain.
 int getNearestPoint(std::vector<Vector> paramPoints, Vector point);

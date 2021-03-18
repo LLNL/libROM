@@ -232,7 +232,7 @@ GreedyParameterPointSelector::constructParameterPoints(
     Vector vec(param_space_min.dim(), false);
     for (int i = 0; i < param_space_min.dim(); i++)
     {
-        frequencies[i] = abs(param_space_max.item(i) - param_space_min.item(i)) / param_space_size;
+        frequencies.push_back(std::abs(param_space_max.item(i) - param_space_min.item(i)) / (param_space_size - 1));
     }
     for (int i = 0; i < param_space_size; i++) {
         for (int j = 0; j < param_space_min.dim(); j++)
@@ -515,20 +515,14 @@ GreedyParameterPointSelector::getParameterPointDomain()
     return d_parameter_points;
 }
 
-void
-GreedyParameterPointSelector::writeSampledPoints(std::string const& path)
+std::vector<Vector>
+GreedyParameterPointSelector::getSampledParameterPoints()
 {
-    std::ofstream out_path;
-    out_path.open(path);
-    out_path << d_parameter_sampled_indices.size() << std::endl;
-    out_path.close();
-
-    int counter = 0;
+    std::vector<Vector> sampled_points;
     for (auto itr = d_parameter_sampled_indices.begin(); itr != d_parameter_sampled_indices.end(); ++itr) {
-        std::string vec_path = path + "_" + std::to_string(counter);
-        d_parameter_points[*itr].write(vec_path);
-        counter++;
+        sampled_points.push_back(d_parameter_points[*itr]);
     }
+    return sampled_points;
 }
 
 void
@@ -654,28 +648,6 @@ int getNearestPoint(std::vector<double> paramPoints, double point)
     }
 
     return closest_point_index;
-}
-
-std::vector<Vector>
-readSampledPoints(std::string const& path)
-{
-
-    std::ifstream in_path;
-    in_path.open(path);
-    int num_sampled_points = 0;
-    in_path >> num_sampled_points;
-    in_path.close();
-
-    std::vector<Vector> sampled_points;
-    for (int i = 0; i < num_sampled_points; i++)
-    {
-        std::string vec_path = path + "_" + std::to_string(i);
-        Vector point;
-        point.read(vec_path);
-        sampled_points.push_back(point);
-    }
-
-    return sampled_points;
 }
 
 }
