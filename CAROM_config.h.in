@@ -24,7 +24,7 @@
 #cmakedefine CAROM_HAS_GTEST
 
 /* Enable assertion checking */
-#cmakedefine DEBUG_CHECK_ASSERTIONS
+#cmakedefine CAROM_DEBUG_CHECK_ASSERTIONS
 // #define DEBUG_CHECK_ASSERTIONS 1
 
 /* Define to dummy `main' function (if any) required to link to the Fortran
@@ -46,72 +46,72 @@
 // #define FC_FUNC_(name,NAME) name ## _
 
 /* Define if you have a BLAS library. */
-#cmakedefine01 HAVE_BLAS
+#cmakedefine01 CAROM_HAVE_BLAS
 
 /* define if the compiler supports basic C++11 syntax */
-#cmakedefine01 HAVE_CXX11
+#cmakedefine01 CAROM_HAVE_CXX11
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
-#cmakedefine01 HAVE_DLFCN_H
+#cmakedefine01 CAROM_HAVE_DLFCN_H
 
 /* Defined if you have HDF5 support */
-#cmakedefine01 HAVE_HDF5
+#cmakedefine01 CAROM_HAVE_HDF5
 
 /* Define to 1 if you have the <inttypes.h> header file. */
-#cmakedefine01 HAVE_INTTYPES_H
+#cmakedefine01 CAROM_HAVE_INTTYPES_H
 
 /* Define if you have LAPACK library. */
-#cmakedefine01 HAVE_LAPACK
+#cmakedefine01 CAROM_HAVE_LAPACK
 
 /* Define to 1 if you have the <memory.h> header file. */
-#cmakedefine01 HAVE_MEMORY_H
+#cmakedefine01 CAROM_HAVE_MEMORY_H
 
 /* Define to 1 if you have the <stdint.h> header file. */
-#cmakedefine01 HAVE_STDINT_H 1
+#cmakedefine01 CAROM_HAVE_STDINT_H 1
 
 /* Define to 1 if you have the <stdlib.h> header file. */
-#cmakedefine01 HAVE_STDLIB_H 1
+#cmakedefine01 CAROM_HAVE_STDLIB_H 1
 
 /* Define to 1 if you have the <strings.h> header file. */
-#cmakedefine01 HAVE_STRINGS_H
+#cmakedefine01 CAROM_HAVE_STRINGS_H
 
 /* Define to 1 if you have the <string.h> header file. */
-#cmakedefine01 HAVE_STRING_H
+#cmakedefine01 CAROM_HAVE_STRING_H
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
-#cmakedefine01 HAVE_SYS_STAT_H
+#cmakedefine01 CAROM_HAVE_SYS_STAT_H
 
 /* Define to 1 if you have the <sys/types.h> header file. */
-#cmakedefine01 HAVE_SYS_TYPES_H
+#cmakedefine01 CAROM_HAVE_SYS_TYPES_H
 
 /* Define to 1 if you have the <unistd.h> header file. */
-#cmakedefine01 HAVE_UNISTD_H
+#cmakedefine01 CAROM_HAVE_UNISTD_H
 
 /* Name of package */
-#define PACKAGE "@PACKAGE@"
+#define CAROM_PACKAGE "@PACKAGE@"
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT ""
+#define CAROM_PACKAGE_BUGREPORT ""
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "@PACKAGE_NAME@"
+#define CAROM_PACKAGE_NAME "@PACKAGE_NAME@"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "@PACKAGE_STRING@"
+#define CAROM_PACKAGE_STRING "@PACKAGE_STRING@"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "@PACKAGE_TARNAME@"
+#define CAROM_PACKAGE_TARNAME "@PACKAGE_TARNAME@"
 
 /* Define to the home page for this package. */
-#define PACKAGE_URL "@PACKAGE_URL@"
+#define CAROM_PACKAGE_URL "@PACKAGE_URL@"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "@PACKAGE_VERSION@"
+#define CAROM_PACKAGE_VERSION "@PACKAGE_VERSION@"
 
 /* Define to 1 if you have the ANSI C header files. */
-#cmakedefine01 STDC_HEADERS
+#cmakedefine01 CAROM_STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "@VERSION@"
+#define CAROM_VERSION "@VERSION@"
 
 #endif
