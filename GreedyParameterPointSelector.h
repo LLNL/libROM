@@ -173,6 +173,12 @@ class GreedyParameterPointSelector
       void
       save(std::string const& base_file_name);
 
+      /**
+       * @brief Check if the greedy algorithm procedure is complete.
+       */
+      bool
+      isComplete();
+
   private:
 
       std::vector<Vector> constructParameterPoints(

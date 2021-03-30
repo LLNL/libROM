@@ -294,9 +294,8 @@ GreedyParameterPointSelector::constructObject(
 int
 GreedyParameterPointSelector::getNextParameterPoint()
 {
-    if (d_parameter_sampled_indices.size() == d_parameter_points.size())
+    if (isComplete())
     {
-        d_procedure_completed = true;
         return -1;
     }
     if (d_iteration_started || d_procedure_completed)
@@ -378,9 +377,8 @@ GreedyParameterPointSelector::getNextParameterPoint()
 int
 GreedyParameterPointSelector::getNextPointRequiringResidual()
 {
-    if (d_parameter_sampled_indices.size() == d_parameter_points.size())
+    if (isComplete())
     {
-        d_procedure_completed = true;
         return -1;
     }
     if (d_subset_counter == d_subset_size)
@@ -604,6 +602,16 @@ GreedyParameterPointSelector::save(std::string const& base_file_name)
       database.putDoubleArray(tmp, &d_parameter_point_errors[0], d_parameter_point_errors.size());
     }
     database.close();
+}
+
+bool
+GreedyParameterPointSelector::isComplete()
+{
+    if (d_parameter_sampled_indices.size() == d_parameter_points.size())
+    {
+        d_procedure_completed = true;
+    }
+    return d_procedure_completed;
 }
 
 GreedyParameterPointSelector::~GreedyParameterPointSelector()
