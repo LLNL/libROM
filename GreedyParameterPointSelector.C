@@ -316,6 +316,29 @@ GreedyParameterPointSelector::constructObject(
         d_parameter_point_random_indices.push_back(i);
     }
     rng.seed(random_seed);
+
+
+    if (d_rank == 0)
+    {
+        if (d_output_log_path == "")
+        {
+            std::cout << "Greedy tolerance: " << d_tol << std::endl;
+            std::cout << "Greedy saturation constant: " << d_sat << std::endl;
+            std::cout << "Greedy iteration subset size: " << d_subset_size << std::endl;
+            std::cout << "Greedy convergence subset size: " << d_convergence_subset_size << std::endl;
+        }
+        else
+        {
+            std::ofstream database_history;
+            database_history.open(d_output_log_path, std::ios::app);
+            database_history << "Greedy tolerance: " << d_tol << std::endl;
+            database_history << "Greedy saturation constant: " << d_sat << std::endl;
+            database_history << "Greedy iteration subset size: " << d_subset_size << std::endl;
+            database_history << "Greedy convergence subset size: " << d_convergence_subset_size << std::endl;
+            database_history.close();
+        }
+    }
+
 }
 
 int
