@@ -73,6 +73,7 @@ class GreedyParameterPointSelector
         double saturation,
         int subset_size,
         int convergence_subset_size,
+        std::string output_log_path = "",
         bool use_centroid = true,
         int random_seed = 1,
         bool debug_algorithm = false);
@@ -83,6 +84,7 @@ class GreedyParameterPointSelector
         double saturation,
         int subset_size,
         int convergence_subset_size,
+        std::string output_log_path = "",
         bool use_centroid = true,
         int random_seed = 1,
         bool debug_algorithm = false);
@@ -95,6 +97,7 @@ class GreedyParameterPointSelector
         double saturation,
         int subset_size,
         int convergence_subset_size,
+        std::string output_log_path = "",
         bool use_centroid = true,
         int random_seed = 1,
         bool debug_algorithm = false);
@@ -107,12 +110,14 @@ class GreedyParameterPointSelector
         double saturation,
         int subset_size,
         int convergence_subset_size,
+        std::string output_log_path = "",
         bool use_centroid = true,
         int random_seed = 1,
         bool debug_algorithm = false);
 
-    GreedyParameterPointSelector
-        (std::string const& base_file_name);
+    GreedyParameterPointSelector(
+         std::string const& base_file_name,
+         std::string output_log_path = "");
 
       /**
        * @brief Destructor.
@@ -142,10 +147,10 @@ class GreedyParameterPointSelector
       /**
        * @brief Set the residual error of the specified parameter point.
        *
-       * @return The index of the point in the list of parameters.
+       * @return The total relative residual error
        */
-      void
-      setPointResidual(double error, int rank, int num_procs);
+      double
+      setPointResidual(double error, int vec_size);
 
       /**
        * @brief Returns the index to the nearest local ROM to the specified parameter point.
@@ -192,6 +197,7 @@ class GreedyParameterPointSelector
           double saturation,
           int subset_size,
           int convergence_subset_size,
+          std::string output_log_path,
           bool use_centroid,
           int random_seed,
           bool debug_algorithm);
@@ -215,6 +221,16 @@ class GreedyParameterPointSelector
        * @brief The current errors of the parameter points.
        */
       std::vector<double> d_parameter_point_errors;
+
+      /**
+       * @brief The local ROMs used to obtain the current errors of the parameter points.
+       */
+      std::vector<int> d_parameter_point_local_rom;
+
+      /**
+       * @brief Output log path.
+       */
+      std::string d_output_log_path;
 
       /**
        * @brief The current max error of the parameter points of the current iteration.
@@ -264,6 +280,11 @@ class GreedyParameterPointSelector
        bool d_iteration_started;
 
        /**
+        * @brief Whether the database is in the convergence verifying phase.
+        */
+        bool d_convergence_started;
+
+       /**
         * @brief Whether the database has already computed a new paramter point
         *        requiring a residual.
         */
@@ -297,6 +318,8 @@ class GreedyParameterPointSelector
         * @brief Whether the greedy procedure has completed.
         */
         bool d_procedure_completed;
+
+        int d_rank;
 
         /**
          * @brief Random engine used to generate subsets.

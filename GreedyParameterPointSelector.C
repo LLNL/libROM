@@ -27,12 +27,13 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
     double saturation,
     int subset_size,
     int convergence_subset_size,
+    std::string output_log_path,
     bool use_centroid,
     int random_seed,
     bool debug_algorithm)
 {
     constructObject(parameter_points, tolerance, saturation,
-        subset_size, convergence_subset_size, use_centroid, random_seed, debug_algorithm);
+        subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
 }
 
 GreedyParameterPointSelector::GreedyParameterPointSelector(
@@ -41,6 +42,7 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
     double saturation,
     int subset_size,
     int convergence_subset_size,
+    std::string output_log_path,
     bool use_centroid,
     int random_seed,
     bool debug_algorithm)
@@ -53,7 +55,7 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
     }
 
     constructObject(parameter_points_vec, tolerance, saturation,
-        subset_size, convergence_subset_size, use_centroid, random_seed, debug_algorithm);
+        subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
 }
 
 GreedyParameterPointSelector::GreedyParameterPointSelector(
@@ -64,6 +66,7 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
     double saturation,
     int subset_size,
     int convergence_subset_size,
+    std::string output_log_path,
     bool use_centroid,
     int random_seed,
     bool debug_algorithm)
@@ -77,7 +80,7 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
         constructParameterPoints(param_space_min_vec, param_space_max_vec, param_space_size);
 
     constructObject(parameter_points_vec, tolerance, saturation,
-        subset_size, convergence_subset_size, use_centroid, random_seed, debug_algorithm);
+        subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
 }
 
 GreedyParameterPointSelector::GreedyParameterPointSelector(
@@ -88,6 +91,7 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
     double saturation,
     int subset_size,
     int convergence_subset_size,
+    std::string output_log_path,
     bool use_centroid,
     int random_seed,
     bool debug_algorithm)
@@ -96,26 +100,28 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
         constructParameterPoints(param_space_min, param_space_max, param_space_size);
 
     constructObject(parameter_points_vec, tolerance, saturation,
-        subset_size, convergence_subset_size, use_centroid, random_seed, debug_algorithm);
+        subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
 }
 
 GreedyParameterPointSelector::GreedyParameterPointSelector
-    (std::string const& base_file_name)
+    (std::string const& base_file_name,
+     std::string output_log_path)
 {
     CAROM_ASSERT(!base_file_name.empty());
 
     int mpi_init;
     MPI_Initialized(&mpi_init);
-    int rank;
     if (mpi_init) {
-       MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+       MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     }
     else {
-       rank = 0;
+       d_rank = 0;
     }
 
+    d_output_log_path = output_log_path;
+
     char tmp[100];
-    sprintf(tmp, ".%06d", rank);
+    sprintf(tmp, ".%06d", d_rank);
     std::string full_file_name = base_file_name + tmp;
     HDFDatabase database;
     database.open(full_file_name);
@@ -172,6 +178,9 @@ GreedyParameterPointSelector::GreedyParameterPointSelector
         sprintf(tmp, "iteration_started");
         database.getInteger(tmp, bool_int_temp);
         d_iteration_started = (bool) bool_int_temp;
+        sprintf(tmp, "convergence_started");
+        database.getInteger(tmp, bool_int_temp);
+        d_convergence_started = (bool) bool_int_temp;
         sprintf(tmp, "point_requiring_residual_computed");
         database.getInteger(tmp, bool_int_temp);
         d_point_requiring_residual_computed = (bool) bool_int_temp;
@@ -193,6 +202,10 @@ GreedyParameterPointSelector::GreedyParameterPointSelector
         sprintf(tmp, "parameter_point_errors");
         d_parameter_point_errors.resize(d_parameter_points.size());
         database.getDoubleArray(tmp, &d_parameter_point_errors[0], d_parameter_points.size());
+
+        sprintf(tmp, "parameter_point_local_rom");
+        d_parameter_point_local_rom.resize(d_parameter_points.size());
+        database.getIntegerArray(tmp, &d_parameter_point_local_rom[0], d_parameter_points.size());
     }
     database.close();
 }
@@ -252,6 +265,7 @@ GreedyParameterPointSelector::constructObject(
     double saturation,
     int subset_size,
     int convergence_subset_size,
+    std::string output_log_path,
     bool use_centroid,
     int random_seed,
     bool debug_algorithm)
@@ -261,19 +275,31 @@ GreedyParameterPointSelector::constructObject(
     CAROM_VERIFY(saturation > 0.0);
     CAROM_VERIFY(subset_size > 0 && subset_size <= parameter_points.size());
     CAROM_VERIFY(convergence_subset_size > 0 && convergence_subset_size <= parameter_points.size());
+    CAROM_VERIFY(subset_size < convergence_subset_size);
     CAROM_VERIFY(random_seed > 0);
+
+    int mpi_init;
+    MPI_Initialized(&mpi_init);
+    if (mpi_init) {
+       MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
+    }
+    else {
+       d_rank = 0;
+    }
 
     d_parameter_points = parameter_points;
     d_tol = tolerance;
     d_sat = saturation;
     d_subset_size = subset_size;
     d_convergence_subset_size = convergence_subset_size;
+    d_output_log_path = output_log_path;
     d_use_centroid = use_centroid;
     d_max_error = 0;
     d_next_point_to_sample = -1;
     d_next_point_requiring_residual = -1;
     d_point_requiring_residual_computed = false;
     d_iteration_started = false;
+    d_convergence_started = false;
     d_subset_created = false;
     d_procedure_completed = false;
     d_subset_counter = 0;
@@ -286,6 +312,7 @@ GreedyParameterPointSelector::constructObject(
 
     for (int i = 0 ; i < d_parameter_points.size(); i++) {
         d_parameter_point_errors.push_back(INT_MAX);
+        d_parameter_point_local_rom.push_back(-1);
         d_parameter_point_random_indices.push_back(i);
     }
     rng.seed(random_seed);
@@ -298,7 +325,7 @@ GreedyParameterPointSelector::getNextParameterPoint()
     {
         return -1;
     }
-    if (d_iteration_started || d_procedure_completed)
+    if (d_iteration_started)
     {
         return -1;
     }
@@ -361,7 +388,9 @@ GreedyParameterPointSelector::getNextParameterPoint()
     d_next_point_to_sample = -1;
 
     d_parameter_point_errors[curr_point_to_sample] = 0;
+    d_parameter_point_local_rom[curr_point_to_sample] = curr_point_to_sample;
 
+    d_convergence_started = false;
     d_subset_created = false;
     d_subset_counter = 0;
     d_counter = -1;
@@ -370,6 +399,36 @@ GreedyParameterPointSelector::getNextParameterPoint()
     CAROM_VERIFY(search == d_parameter_sampled_indices.end());
 
     d_parameter_sampled_indices.insert(curr_point_to_sample);
+
+    if (d_rank == 0)
+    {
+        if (d_output_log_path == "")
+        {
+            std::cout << "Point sampled at [ ";
+            for (int i = 0 ; i < d_parameter_points[curr_point_to_sample].dim(); i++)
+            {
+                std::cout << d_parameter_points[curr_point_to_sample].item(i) << " ";
+            }
+            std::cout << "]" << std::endl;
+        }
+        else
+        {
+            std::ofstream database_history;
+            database_history.open(d_output_log_path, std::ios::app);
+            database_history << "Point sampled at [ ";
+            for (int i = 0 ; i < d_parameter_points[curr_point_to_sample].dim(); i++)
+            {
+                database_history << d_parameter_points[curr_point_to_sample].item(i) << " ";
+            }
+            database_history << "]" << std::endl;
+            database_history.close();
+        }
+    }
+
+    // Precompute next residual point
+    // This will allow us to figure out if the greedy algorithm has terminated
+    // early without needing an extra call to the residual function.
+    getNextPointRequiringResidual();
 
     return curr_point_to_sample;
 }
@@ -381,17 +440,27 @@ GreedyParameterPointSelector::getNextPointRequiringResidual()
     {
         return -1;
     }
-    if (d_subset_counter == d_subset_size)
-    {
-        return -1;
-    }
-    if (!d_iteration_started || d_procedure_completed)
+    if (!d_iteration_started)
     {
         return -1;
     }
     if (d_point_requiring_residual_computed)
     {
-        return -1;
+        return d_next_point_requiring_residual;
+    }
+    if (d_convergence_started)
+    {
+        if (d_subset_counter == d_convergence_subset_size)
+        {
+            return -1;
+        }
+    }
+    else
+    {
+        if (d_subset_counter == d_subset_size)
+        {
+            return -1;
+        }
     }
 
     if(!d_subset_created)
@@ -407,50 +476,281 @@ GreedyParameterPointSelector::getNextPointRequiringResidual()
     d_next_point_requiring_residual = -1;
 
     //get next point requiring residual
-    while (d_counter < (int) d_parameter_points.size() - 1)
+    if (d_convergence_started)
     {
-        d_counter++;
-        if (d_subset_counter == d_subset_size)
+        while (d_counter < (int) d_parameter_points.size() - 1)
         {
-            break;
-        }
-        auto search = d_parameter_sampled_indices.find(d_parameter_point_random_indices[d_counter]);
-        if (search == d_parameter_sampled_indices.end())
-        {
-            d_subset_counter++;
-            if (d_sat * d_parameter_point_errors[d_parameter_point_random_indices[d_counter]] > d_max_error)
+            d_counter++;
+            if (d_subset_counter == d_convergence_subset_size)
             {
-                d_next_point_requiring_residual = d_parameter_point_random_indices[d_counter];
-                d_point_requiring_residual_computed = true;
-                return d_next_point_requiring_residual;
+                break;
+            }
+            auto search = d_parameter_sampled_indices.find(d_parameter_point_random_indices[d_counter]);
+            if (search == d_parameter_sampled_indices.end())
+            {
+                d_subset_counter++;
+
+                double curr_error = d_parameter_point_errors[d_parameter_point_random_indices[d_counter]];
+                if (curr_error > d_tol)
+                {
+                    // if we have already computed this residual at the same local rom, the residual will not improve
+                    // no need to calculate the residual again
+                    if (d_parameter_point_local_rom[d_parameter_point_random_indices[d_counter]] == getNearestROM(d_parameter_point_random_indices[d_counter]))
+                    {
+                        d_max_error = curr_error;
+                        d_next_point_to_sample = d_parameter_point_random_indices[d_counter];
+                        if (d_rank == 0)
+                        {
+                            if (d_output_log_path == "")
+                            {
+                                std::cout << "Residual at [ ";
+                                for (int i = 0 ; i < d_parameter_points[d_parameter_point_random_indices[d_counter]].dim(); i++)
+                                {
+                                    std::cout << d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i) << " ";
+                                }
+                                std::cout << "] skipped." << std::endl;
+                                std::cout << "Residual already computed at the same nearest local ROM." << std::endl;
+                            }
+                            else
+                            {
+                                std::ofstream database_history;
+                                database_history.open(d_output_log_path, std::ios::app);
+                                database_history << "Residual at [ ";
+                                for (int i = 0 ; i < d_parameter_points[d_parameter_point_random_indices[d_counter]].dim(); i++)
+                                {
+                                    database_history << d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i) << " ";
+                                }
+                                database_history << "] skipped." << std::endl;
+                                database_history << "Residual already computed using the same nearest local ROM." << std::endl;
+                                database_history.close();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        d_next_point_requiring_residual = d_parameter_point_random_indices[d_counter];
+                        d_point_requiring_residual_computed = true;
+                        return d_next_point_requiring_residual;
+                    }
+                }
+                else
+                {
+                    if (d_rank == 0)
+                    {
+                        std::cout << d_parameter_point_random_indices[d_counter] << std::endl;
+                        if (d_output_log_path == "")
+                        {
+                            std::cout << "Residual at [ ";
+                            for (int i = 0 ; i < d_parameter_points[d_parameter_point_random_indices[d_counter]].dim(); i++)
+                            {
+                                std::cout << d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i) << " ";
+                            }
+                            std::cout << "] skipped." << std::endl;
+                            std::cout << "Residual " << curr_error << " is less than tolerance " << d_tol << std::endl;
+                        }
+                        else
+                        {
+                            std::ofstream database_history;
+                            database_history.open(d_output_log_path, std::ios::app);
+                            database_history << "Residual at [ ";
+                            for (int i = 0 ; i < d_parameter_points[d_parameter_point_random_indices[d_counter]].dim(); i++)
+                            {
+                                database_history << d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i) << " ";
+                            }
+                            database_history << "] skipped." << std::endl;
+                            database_history << "Residual " << curr_error << " is less than tolerance " << d_tol << std::endl;
+                            database_history.close();
+                        }
+                    }
+                }
             }
         }
-    }
 
-    if (d_next_point_requiring_residual == -1)
+        if (d_next_point_requiring_residual == -1)
+        {
+            if (d_rank == 0)
+            {
+                if (d_output_log_path == "")
+                {
+                    std::cout << "Ran out of points to sample for convergence." << std::endl;
+                    std::cout << "Convergence achieved.";
+                }
+                else
+                {
+                    std::ofstream database_history;
+                    database_history.open(d_output_log_path, std::ios::app);
+                    database_history << "Ran out of points to sample for convergence." << std::endl;
+                    database_history << "Convergence achieved." << std::endl;
+                    database_history.close();
+                }
+            }
+            d_procedure_completed = true;
+        }
+    }
+    else
     {
-        d_iteration_started = false;
+        while (d_counter < (int) d_parameter_points.size() - 1)
+        {
+            d_counter++;
+            if (d_subset_counter == d_subset_size)
+            {
+                break;
+            }
+            auto search = d_parameter_sampled_indices.find(d_parameter_point_random_indices[d_counter]);
+            if (search == d_parameter_sampled_indices.end())
+            {
+                d_subset_counter++;
+                double error_with_sat_factor = d_sat * d_parameter_point_errors[d_parameter_point_random_indices[d_counter]];
+                if (error_with_sat_factor > d_max_error)
+                {
+                    // if we have already computed this residual at the same local rom, the residual will not improve
+                    // no need to calculate the residual again
+                    if (d_parameter_point_local_rom[d_parameter_point_random_indices[d_counter]] == getNearestROM(d_parameter_point_random_indices[d_counter]))
+                    {
+                        d_max_error = error_with_sat_factor;
+                        d_next_point_to_sample = d_parameter_point_random_indices[d_counter];
+                        if (d_rank == 0)
+                        {
+                            if (d_output_log_path == "")
+                            {
+                                std::cout << "Residual at [ ";
+                                for (int i = 0 ; i < d_parameter_points[d_parameter_point_random_indices[d_counter]].dim(); i++)
+                                {
+                                    std::cout << d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i) << " ";
+                                }
+                                std::cout << "] skipped." << std::endl;
+                                std::cout << "Residual already computed at the same local ROM." << std::endl;
+                            }
+                            else
+                            {
+                                std::ofstream database_history;
+                                database_history.open(d_output_log_path, std::ios::app);
+                                database_history << "Residual at [ ";
+                                for (int i = 0 ; i < d_parameter_points[d_parameter_point_random_indices[d_counter]].dim(); i++)
+                                {
+                                    database_history << d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i) << " ";
+                                }
+                                database_history << "] skipped." << std::endl;
+                                database_history << "Residual already computed at the same local ROM." << std::endl;
+                                database_history.close();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        d_next_point_requiring_residual = d_parameter_point_random_indices[d_counter];
+                        d_point_requiring_residual_computed = true;
+                        return d_next_point_requiring_residual;
+                    }
+                }
+                else
+                {
+                    if (d_rank == 0)
+                    {
+                        if (d_output_log_path == "")
+                        {
+                            std::cout << "Residual at [ ";
+                            for (int i = 0 ; i < d_parameter_points[d_parameter_point_random_indices[d_counter]].dim(); i++)
+                            {
+                                std::cout << d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i) << " ";
+                            }
+                            std::cout << "] skipped." << std::endl;
+                            std::cout << "Residual multiplied by saturation factor " << error_with_sat_factor
+                                << " is less than current max error " << d_max_error << std::endl;
+                        }
+                        else
+                        {
+                            std::ofstream database_history;
+                            database_history.open(d_output_log_path, std::ios::app);
+                            database_history << "Residual at [ ";
+                            for (int i = 0 ; i < d_parameter_points[d_parameter_point_random_indices[d_counter]].dim(); i++)
+                            {
+                                database_history << d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i) << " ";
+                            }
+                            database_history << "] skipped." << std::endl;
+                            database_history << "Residual multiplied by saturation factor " << error_with_sat_factor
+                                << " is less than current max error " << d_max_error << std::endl;
+                            database_history.close();
+                        }
+                    }
+                }
+            }
+        }
+        if (d_next_point_requiring_residual == -1)
+        {
+            if (d_rank == 0)
+            {
+                if (d_output_log_path == "")
+                {
+                    std::cout << "Ran out of points to sample this iteration." << std::endl;
+                }
+                else
+                {
+                    std::ofstream database_history;
+                    database_history.open(d_output_log_path, std::ios::app);
+                    database_history << "Ran out of points to sample this iteration." << std::endl;
+                    database_history.close();
+                }
+            }
+            d_iteration_started = false;
+        }
     }
 
     return d_next_point_requiring_residual;
 }
 
-void
-GreedyParameterPointSelector::setPointResidual(double error, int rank, int num_procs)
+double
+GreedyParameterPointSelector::setPointResidual(double error, int vec_size)
 {
     CAROM_VERIFY(error >= 0);
     CAROM_VERIFY(d_point_requiring_residual_computed);
 
     double proc_errors = pow(error, 2);
+    int total_vec_size = vec_size;
     CAROM_VERIFY(MPI_Allreduce(MPI_IN_PLACE,
             &proc_errors,
             1,
             MPI_DOUBLE,
             MPI_SUM,
             MPI_COMM_WORLD) == MPI_SUCCESS);
+    CAROM_VERIFY(MPI_Allreduce(MPI_IN_PLACE,
+            &total_vec_size,
+            1,
+            MPI_INT,
+            MPI_SUM,
+            MPI_COMM_WORLD) == MPI_SUCCESS);
     proc_errors = sqrt(proc_errors);
-
+    proc_errors /= total_vec_size;
     d_parameter_point_errors[d_parameter_point_random_indices[d_counter]] = proc_errors;
+    d_parameter_point_local_rom[d_parameter_point_random_indices[d_counter]] = getNearestROM(d_parameter_point_random_indices[d_counter]);
+
+    if (d_rank == 0)
+    {
+        if (d_output_log_path == "")
+        {
+            std::cout << "Residual computed at [ ";
+            for (int i = 0 ; i < d_parameter_points[d_parameter_point_random_indices[d_counter]].dim(); i++)
+            {
+                std::cout << d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i) << " ";
+            }
+            std::cout << "]" << std::endl;
+            std::cout << "Residual: " << proc_errors << std::endl;
+        }
+        else
+        {
+            std::ofstream database_history;
+            database_history.open(d_output_log_path, std::ios::app);
+            database_history << "Residual computed at [ ";
+            for (int i = 0 ; i < d_parameter_points[d_parameter_point_random_indices[d_counter]].dim(); i++)
+            {
+                database_history << d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i) << " ";
+            }
+            database_history << "]" << std::endl;
+            database_history << "Residual: " << proc_errors << std::endl;
+            database_history.close();
+        }
+    }
+
     if (proc_errors > d_max_error)
     {
         d_max_error = proc_errors;
@@ -459,26 +759,75 @@ GreedyParameterPointSelector::setPointResidual(double error, int rank, int num_p
 
     d_point_requiring_residual_computed = false;
 
-    if (d_subset_counter == d_subset_size || d_counter == (int) d_parameter_points.size() - 1)
+    if (d_convergence_started)
     {
-        d_iteration_started = false;
-        if (d_max_error < d_tol)
+        if (d_max_error >= d_tol)
         {
-            if (!d_debug_algorithm)
-            {
-              std::shuffle(d_parameter_point_random_indices.begin(), d_parameter_point_random_indices.end(), rng);
-            }
-
+            d_iteration_started = false;
+        }
+        else if (d_subset_counter == d_convergence_subset_size || d_counter == (int) d_parameter_points.size() - 1)
+        {
             d_procedure_completed = true;
-            for (int i = 0; i < d_convergence_subset_size; i++)
+        }
+    }
+    else
+    {
+        if (d_subset_counter == d_subset_size || d_counter == (int) d_parameter_points.size() - 1)
+        {
+            if (d_max_error < d_tol)
             {
-                if (d_parameter_point_errors[d_parameter_point_random_indices[i]] >= d_tol)
+                if (!d_debug_algorithm)
                 {
-                    d_procedure_completed = false;
+                  std::shuffle(d_parameter_point_random_indices.begin(), d_parameter_point_random_indices.end(), rng);
+                }
+                d_convergence_started = true;
+                d_max_error = 0;
+                d_counter = 0;
+                d_subset_counter = 0;
+
+                if (d_rank == 0)
+                {
+                    if (d_output_log_path == "")
+                    {
+                        std::cout << "Tolerance " << d_tol << " met. Computing convergence." << std::endl;
+                    }
+                    else
+                    {
+                        std::ofstream database_history;
+                        database_history.open(d_output_log_path, std::ios::app);
+                        database_history << "Tolerance " << d_tol << " met. Computing convergence." << std::endl;
+                        database_history.close();
+                    }
+                }
+
+            }
+            else
+            {
+                d_iteration_started = false;
+                if (d_rank == 0)
+                {
+                    if (d_output_log_path == "")
+                    {
+                        std::cout << "Tolerance " << d_tol << " not met." << std::endl;
+                    }
+                    else
+                    {
+                        std::ofstream database_history;
+                        database_history.open(d_output_log_path, std::ios::app);
+                        database_history << "Tolerance " << d_tol << " not met." << std::endl;
+                        database_history.close();
+                    }
                 }
             }
         }
     }
+
+    // Precompute next residual point
+    // This will allow us to figure out if the greedy algorithm has terminated
+    // early without needing an extra call to the residual function.
+    getNextPointRequiringResidual();
+
+    return proc_errors;
 }
 
 int
@@ -528,18 +877,8 @@ GreedyParameterPointSelector::save(std::string const& base_file_name)
 {
     CAROM_ASSERT(!base_file_name.empty());
 
-    int mpi_init;
-    MPI_Initialized(&mpi_init);
-    int rank;
-    if (mpi_init) {
-       MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    }
-    else {
-       rank = 0;
-    }
-
     char tmp[100];
-    sprintf(tmp, ".%06d", rank);
+    sprintf(tmp, ".%06d", d_rank);
     std::string full_file_name = base_file_name + tmp;
     HDFDatabase database;
     database.create(full_file_name);
@@ -585,6 +924,8 @@ GreedyParameterPointSelector::save(std::string const& base_file_name)
       database.putInteger(tmp, d_use_centroid);
       sprintf(tmp, "iteration_started");
       database.putInteger(tmp, d_iteration_started);
+      sprintf(tmp, "convergence_started");
+      database.putInteger(tmp, d_convergence_started);
       sprintf(tmp, "point_requiring_residual_computed");
       database.putInteger(tmp, d_point_requiring_residual_computed);
       sprintf(tmp, "subset_created");
@@ -600,6 +941,8 @@ GreedyParameterPointSelector::save(std::string const& base_file_name)
       database.putIntegerArray(tmp, &d_parameter_point_random_indices[0], d_parameter_point_random_indices.size());
       sprintf(tmp, "parameter_point_errors");
       database.putDoubleArray(tmp, &d_parameter_point_errors[0], d_parameter_point_errors.size());
+      sprintf(tmp, "parameter_point_local_rom");
+      database.putIntegerArray(tmp, &d_parameter_point_local_rom[0], d_parameter_point_local_rom.size());
     }
     database.close();
 }
