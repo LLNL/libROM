@@ -509,7 +509,7 @@ GreedyParameterPointSelector::getNextPointRequiringResidual()
                                     std::cout << d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i) << " ";
                                 }
                                 std::cout << "] skipped." << std::endl;
-                                std::cout << "Residual already computed at the same nearest local ROM." << std::endl;
+                                std::cout << "Residual " << curr_error << " already computed at the same nearest local ROM." << std::endl;
                             }
                             else
                             {
@@ -521,7 +521,7 @@ GreedyParameterPointSelector::getNextPointRequiringResidual()
                                     database_history << d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i) << " ";
                                 }
                                 database_history << "] skipped." << std::endl;
-                                database_history << "Residual already computed using the same nearest local ROM." << std::endl;
+                                database_history << "Residual " << curr_error << " already computed using the same nearest local ROM." << std::endl;
                                 database_history.close();
                             }
                         }
@@ -619,7 +619,7 @@ GreedyParameterPointSelector::getNextPointRequiringResidual()
                                     std::cout << d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i) << " ";
                                 }
                                 std::cout << "] skipped." << std::endl;
-                                std::cout << "Residual already computed at the same nearest local ROM." << std::endl;
+                                std::cout << "Residual multiplied by saturation factor " << error_with_sat_factor << " already computed at the same local ROM." << std::endl;
                             }
                             else
                             {
@@ -631,7 +631,7 @@ GreedyParameterPointSelector::getNextPointRequiringResidual()
                                     database_history << d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i) << " ";
                                 }
                                 database_history << "] skipped." << std::endl;
-                                database_history << "Residual already computed at the same nearest local ROM." << std::endl;
+                                database_history << "Residual multiplied by saturation factor " << error_with_sat_factor << " already computed at the same local ROM." << std::endl;
                                 database_history.close();
                             }
                         }

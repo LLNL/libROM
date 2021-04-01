@@ -319,6 +319,9 @@ class GreedyParameterPointSelector
         */
         bool d_procedure_completed;
 
+        /**
+         * @brief The rank of the given processor.
+         */
         int d_rank;
 
         /**
