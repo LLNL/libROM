@@ -25,18 +25,7 @@ jobs:
             make
             cmake -DCMAKE_BUILD_TYPE=Optimized ..
             make
-      - name: Run tests
-        run: |
-            cd ${GITHUB_WORKSPACE}/build
-            ./test_SVD
-            ./test_Vector
-            ./test_Matrix
-            ./test_DEIM
-            ./test_GNAT
-            ./test_QDEIM
-            ./test_IncrementalSVD
-            ./test_RandomizedSVD
-            mpirun -n 3 --oversubscribe test_RandomizedSVD
+      - uses: ${GITHUB_WORKSPACE}/.github/workflows/run_tests.yml
   mac:
     runs-on: macos-latest
     steps:
@@ -66,15 +55,4 @@ jobs:
             make
             cmake -DCMAKE_BUILD_TYPE=Optimized ..
             make
-      - name: Run tests
-        run: |
-            cd ${GITHUB_WORKSPACE}/build
-            ./test_SVD
-            ./test_Vector
-            ./test_Matrix
-            ./test_DEIM
-            ./test_GNAT
-            ./test_QDEIM
-            ./test_IncrementalSVD
-            ./test_RandomizedSVD
-            mpirun -n 3 --oversubscribe test_RandomizedSVD
+      - uses: ${GITHUB_WORKSPACE}/.github/workflows/run_tests.yml
