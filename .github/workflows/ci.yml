@@ -55,4 +55,5 @@ jobs:
             make
             cmake -DCMAKE_BUILD_TYPE=Optimized ..
             make
-      - uses: ./.github/workflows/run_tests
+      - name: Begin test suite
+        uses: ./.github/workflows/run_tests
