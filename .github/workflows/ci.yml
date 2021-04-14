@@ -4,9 +4,15 @@ jobs:
   linux:
     runs-on: ubuntu-latest
     steps:
+      - name: Install Linux dependencies
+        uses: actions/checkout@v2
       - run: sudo apt-get install libmpich-dev libblas-dev liblapack-dev libscalapack-mpi-dev libhdf5-serial-dev
       - run: export CC=mpicc
       - run: export CXX=mpicxx
-      - name: Install Linux dependencies
-        uses: actions/checkout@v2
-      - run: echo "asdf"
+      - name: Install libROM dependencies
+      - run: DEPS_DIR="${GITHUB_WORKSPACE}/deps"
+      - run: mkdir ${DEPS_DIR} && cd ${DEPS_DIR}
+      - run: git clone https://github.com/google/googletest
+      - run: cd googletest && mkdir build && cd build
+      - run: cmake .. && make && sudo make install
+      - run: PATH=${DEPS_DIR}/googletest:${DEPS_DIR}/googletest/build:$PATH
