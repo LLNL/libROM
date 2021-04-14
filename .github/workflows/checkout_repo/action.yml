@@ -1,8 +1,6 @@
 runs:
   using: "composite"
   steps:
-     - name: Check out libROM
-       uses: actions/checkout@v2
      - name: Install libROM dependencies
        run: |
            DEPS_DIR="${GITHUB_WORKSPACE}/deps"
