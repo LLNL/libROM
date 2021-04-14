@@ -31,49 +31,49 @@ namespace CAROM {
  */
 class RandomizedSVD : public StaticSVD
 {
-   private:
-     friend class BasisGenerator;
+private:
+    friend class BasisGenerator;
 
-     /**
-      * @brief Constructor.
-      *
-      * @param[in] options The struct containing the options for this SVD
-      *                    implementation.
-      */
-     RandomizedSVD(
+    /**
+     * @brief Constructor.
+     *
+     * @param[in] options The struct containing the options for this SVD
+     *                    implementation.
+     */
+    RandomizedSVD(
         Options options
-        );
+    );
 
-      /**
-       * @brief Unimplemented default constructor.
-       */
-      RandomizedSVD();
+    /**
+     * @brief Unimplemented default constructor.
+     */
+    RandomizedSVD();
 
-      /**
-       * @brief Unimplemented copy constructor.
-       */
-      RandomizedSVD(
-         const RandomizedSVD& other);
+    /**
+     * @brief Unimplemented copy constructor.
+     */
+    RandomizedSVD(
+        const RandomizedSVD& other);
 
-      /**
-       * @brief Unimplemented assignment operator.
-       */
-      RandomizedSVD&
-      operator = (
-         const RandomizedSVD& rhs);
+    /**
+     * @brief Unimplemented assignment operator.
+     */
+    RandomizedSVD&
+    operator = (
+        const RandomizedSVD& rhs);
 
-      /**
-       * @brief Gathers samples from all other processors to form complete
-       * sample of system and computes the SVD.
-       */
-      void
-      computeSVD();
+    /**
+     * @brief Gathers samples from all other processors to form complete
+     * sample of system and computes the SVD.
+     */
+    void
+    computeSVD();
 
-      /**
-       * @brief Number of dimensions of the randomized subspace the
-       * snapshot matrix will be projected to.
-       */
-      int d_subspace_dim;
+    /**
+     * @brief Number of dimensions of the randomized subspace the
+     * snapshot matrix will be projected to.
+     */
+    int d_subspace_dim;
 };
 
 }

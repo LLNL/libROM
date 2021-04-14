@@ -28,7 +28,9 @@ void free_matrix_data(struct SLPK_Matrix* A)
 void svd_init(struct SVDManager* mgr, struct SLPK_Matrix* A)
 {
     mgr->A = A;
-    mgr->U = NULL; mgr->S = NULL; mgr->V = NULL;
+    mgr->U = NULL;
+    mgr->S = NULL;
+    mgr->V = NULL;
     mgr->dou = 1;
     mgr->dov = 0;
     mgr->done = 0;
