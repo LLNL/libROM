@@ -23,6 +23,7 @@ namespace CAROM {
 
 GreedyParameterPointSelector::GreedyParameterPointSelector(
     std::vector<Vector> parameter_points,
+    bool check_local_rom,
     double tolerance,
     double saturation,
     int subset_size,
@@ -32,12 +33,13 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
     int random_seed,
     bool debug_algorithm)
 {
-    constructObject(parameter_points, tolerance, saturation,
+    constructObject(parameter_points, check_local_rom, tolerance, saturation,
         subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
 }
 
 GreedyParameterPointSelector::GreedyParameterPointSelector(
     std::vector<double> parameter_points,
+    bool check_local_rom,
     double tolerance,
     double saturation,
     int subset_size,
@@ -54,7 +56,7 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
         parameter_points_vec.push_back(vec);
     }
 
-    constructObject(parameter_points_vec, tolerance, saturation,
+    constructObject(parameter_points_vec, check_local_rom, tolerance, saturation,
         subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
 }
 
@@ -62,6 +64,7 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
     double param_space_min,
     double param_space_max,
     int param_space_size,
+    bool check_local_rom,
     double tolerance,
     double saturation,
     int subset_size,
@@ -79,7 +82,7 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
     std::vector<Vector> parameter_points_vec =
         constructParameterPoints(param_space_min_vec, param_space_max_vec, param_space_size);
 
-    constructObject(parameter_points_vec, tolerance, saturation,
+    constructObject(parameter_points_vec, check_local_rom, tolerance, saturation,
         subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
 }
 
@@ -87,6 +90,7 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
     Vector param_space_min,
     Vector param_space_max,
     int param_space_size,
+    bool check_local_rom,
     double tolerance,
     double saturation,
     int subset_size,
@@ -99,7 +103,7 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
     std::vector<Vector> parameter_points_vec =
         constructParameterPoints(param_space_min, param_space_max, param_space_size);
 
-    constructObject(parameter_points_vec, tolerance, saturation,
+    constructObject(parameter_points_vec, check_local_rom, tolerance, saturation,
         subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
 }
 
@@ -172,6 +176,9 @@ GreedyParameterPointSelector::GreedyParameterPointSelector
         database.getInteger(tmp, d_next_point_to_sample);
         sprintf(tmp, "next_point_requiring_residual");
         database.getInteger(tmp, d_next_point_requiring_residual);
+        sprintf(tmp, "check_local_rom");
+        database.getInteger(tmp, bool_int_temp);
+        d_check_local_rom = (bool) bool_int_temp;
         sprintf(tmp, "use_centroid");
         database.getInteger(tmp, bool_int_temp);
         d_use_centroid = (bool) bool_int_temp;
@@ -300,6 +307,7 @@ GreedyParameterPointSelector::constructParameterPoints(
 void
 GreedyParameterPointSelector::constructObject(
     std::vector<Vector> parameter_points,
+    bool check_local_rom,
     double tolerance,
     double saturation,
     int subset_size,
@@ -327,6 +335,7 @@ GreedyParameterPointSelector::constructObject(
     }
 
     d_parameter_points = parameter_points;
+    d_check_local_rom = check_local_rom;
     d_tol = tolerance;
     d_sat = saturation;
     d_subset_size = subset_size;
@@ -487,10 +496,18 @@ GreedyParameterPointSelector::getNextParameterPoint()
         }
     }
 
-    // Precompute next residual point
-    // This will allow us to figure out if the greedy algorithm has terminated
-    // early without needing an extra call to the residual function.
-    getNextPointRequiringResidual();
+    if (d_check_local_rom)
+    {
+        d_next_point_requiring_residual = curr_point_to_sample;
+        d_point_requiring_residual_computed = true;
+    }
+    else
+    {
+        // Precompute next residual point
+        // This will allow us to figure out if the greedy algorithm has terminated
+        // early without needing an extra call to the residual function.
+        getNextPointRequiringResidual();
+    }
 
     return curr_point_to_sample;
 }
@@ -789,6 +806,52 @@ GreedyParameterPointSelector::setPointResidual(double error, int vec_size)
             MPI_COMM_WORLD) == MPI_SUCCESS);
     proc_errors = sqrt(proc_errors);
     proc_errors /= total_vec_size;
+
+    if (d_check_local_rom)
+    {
+        auto search = d_parameter_sampled_indices.find(d_next_point_requiring_residual);
+        CAROM_VERIFY(search != d_parameter_sampled_indices.end());
+
+        d_parameter_point_errors[d_next_point_requiring_residual] = proc_errors;
+        d_parameter_point_local_rom[d_next_point_requiring_residual] = d_next_point_requiring_residual;
+
+        if (d_rank == 0)
+        {
+            if (d_output_log_path == "")
+            {
+                std::cout << "Local ROM Residual computed at [ ";
+                for (int i = 0 ; i < d_parameter_points[d_next_point_requiring_residual].dim(); i++)
+                {
+                    std::cout << d_parameter_points[d_next_point_requiring_residual].item(i) << " ";
+                }
+                std::cout << "]" << std::endl;
+                std::cout << "Local ROM Residual (tolerance unchecked): " << proc_errors << std::endl;
+            }
+            else
+            {
+                std::ofstream database_history;
+                database_history.open(d_output_log_path, std::ios::app);
+                database_history << "Local ROM Residual computed at [ ";
+                for (int i = 0 ; i < d_parameter_points[d_next_point_requiring_residual].dim(); i++)
+                {
+                    database_history << d_parameter_points[d_next_point_requiring_residual].item(i) << " ";
+                }
+                database_history << "]" << std::endl;
+                database_history << "Local ROM Residual (tolerance unchecked): " << proc_errors << std::endl;
+                database_history.close();
+            }
+        }
+
+        d_point_requiring_residual_computed = false;
+
+        // Precompute next residual point
+        // This will allow us to figure out if the greedy algorithm has terminated
+        // early without needing an extra call to the residual function.
+        getNextPointRequiringResidual();
+
+        return proc_errors;
+    }
+
     if (proc_errors < d_parameter_point_errors[d_parameter_point_random_indices[d_counter]])
     {
         d_parameter_point_errors[d_parameter_point_random_indices[d_counter]] = proc_errors;
@@ -1008,6 +1071,8 @@ GreedyParameterPointSelector::save(std::string const& base_file_name)
       database.putInteger(tmp, d_next_point_to_sample);
       sprintf(tmp, "next_point_requiring_residual");
       database.putInteger(tmp, d_next_point_requiring_residual);
+      sprintf(tmp, "check_local_rom");
+      database.putInteger(tmp, d_check_local_rom);
       sprintf(tmp, "use_centroid");
       database.putInteger(tmp, d_use_centroid);
       sprintf(tmp, "iteration_started");

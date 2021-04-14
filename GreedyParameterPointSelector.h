@@ -57,6 +57,7 @@ class GreedyParameterPointSelector
       *
       * @param[in] parameter_points A vector of CAROM::Vectors containing
                                     the different parameter points.
+      * @param[in] check_local_rom Compute local ROM residual each iteration.
       * @param[in] tolerance A tolerance value for which to end the algorithm.
       * @param[in] saturation A saturation constant.
       * @param[in] subset_size The size of the random subset.
@@ -69,6 +70,7 @@ class GreedyParameterPointSelector
       */
      GreedyParameterPointSelector(
         std::vector<Vector> parameter_points,
+        bool check_local_rom,
         double tolerance,
         double saturation,
         int subset_size,
@@ -80,6 +82,7 @@ class GreedyParameterPointSelector
 
     GreedyParameterPointSelector(
         std::vector<double> parameter_points,
+        bool check_local_rom,
         double tolerance,
         double saturation,
         int subset_size,
@@ -93,6 +96,7 @@ class GreedyParameterPointSelector
         Vector param_space_min,
         Vector param_space_max,
         int param_space_size,
+        bool check_local_rom,
         double tolerance,
         double saturation,
         int subset_size,
@@ -106,6 +110,7 @@ class GreedyParameterPointSelector
         double param_space_min,
         double param_space_max,
         int param_space_size,
+        bool check_local_rom,
         double tolerance,
         double saturation,
         int subset_size,
@@ -193,6 +198,7 @@ class GreedyParameterPointSelector
 
       void constructObject(
           std::vector<Vector> parameter_points,
+          bool check_local_rom,
           double tolerance,
           double saturation,
           int subset_size,
@@ -274,6 +280,12 @@ class GreedyParameterPointSelector
       *        parameter point.
       */
       bool d_use_centroid;
+
+      /**
+       * @brief Whether the check the last sampled local ROM's residual
+       *        after each iteration.
+       */
+       bool d_check_local_rom;
 
       /**
        * @brief Whether the database has already computed a new parameter point

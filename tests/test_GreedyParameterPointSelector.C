@@ -40,7 +40,7 @@ TEST(GreedyParameterPointSelectorSerialTest, Test_GreedyParameterPointSelectorCe
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
 
     std::vector<double> paramPoints = {1.0, 2.0, 3.0, 99.0, 100.0, 101.0};
-    CAROM::GreedyParameterPointSelector caromGreedySelector(paramPoints, 1, 1, 3, 4, "", true, 1, true);
+    CAROM::GreedyParameterPointSelector caromGreedySelector(paramPoints, false, 1, 1, 3, 4, "", true, 1, true);
 
     int nextPointToSample = caromGreedySelector.getNextParameterPoint();
     EXPECT_EQ(nextPointToSample, 2);
@@ -98,7 +98,7 @@ TEST(GreedyParameterPointSelectorSerialTest, Test_GreedyParameterPointSelector)
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
 
     std::vector<double> paramPoints = {1.0, 2.0, 3.0, 99.0, 100.0, 101.0};
-    CAROM::GreedyParameterPointSelector caromGreedySelector(paramPoints, 1, 1, 3, 4, "", false, 1, true);
+    CAROM::GreedyParameterPointSelector caromGreedySelector(paramPoints, false, 1, 1, 3, 4, "", false, 1, true);
 
     int closestROMIndex = caromGreedySelector.getNearestROM(0);
     EXPECT_EQ(closestROMIndex, -1);
@@ -156,7 +156,7 @@ TEST(GreedyParameterPointSelectorSerialTest, Test_GreedyParameterPointSaveAndLoa
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
 
     std::vector<double> paramPoints = {1.0, 2.0, 3.0, 99.0, 100.0, 101.0};
-    CAROM::GreedyParameterPointSelector caromGreedySelector(paramPoints, 1, 1, 3, 4, "", false, 1, true);
+    CAROM::GreedyParameterPointSelector caromGreedySelector(paramPoints, false, 1, 1, 3, 4, "", false, 1, true);
 
     caromGreedySelector.save("greedy_test");
 
