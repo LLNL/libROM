@@ -65,27 +65,24 @@ TEST(GreedyParameterPointSelectorSerialTest, Test_GreedyParameterPointSelectorCe
     // ERRORS: [0, 50, 0, 30, INF, INF]
 
     firstPoint = caromGreedySelector.getNextPointRequiringResidual();
-    EXPECT_EQ(firstPoint, 1);
-    caromGreedySelector.setPointResidual(0.3, 1);
-    secondPoint = caromGreedySelector.getNextPointRequiringResidual();
-    EXPECT_EQ(secondPoint, 4);
+    EXPECT_EQ(firstPoint, 4);
     caromGreedySelector.setPointResidual(35.0, 1);
     nextPointToSample = caromGreedySelector.getNextParameterPoint();
-    EXPECT_EQ(paramPoints[nextPointToSample], paramPoints[secondPoint]);
+    EXPECT_EQ(paramPoints[nextPointToSample], paramPoints[1]);
 
-    // ERRORS: [0, 0.9, 0, 0.9, 0.9, INF]
+    // ERRORS: [0, 0, 0, 30, 35, INF]
+
+    firstPoint = caromGreedySelector.getNextPointRequiringResidual();
+    caromGreedySelector.setPointResidual(0.3, 1);
+    EXPECT_EQ(firstPoint, 5);
+    nextPointToSample = caromGreedySelector.getNextParameterPoint();
+    EXPECT_EQ(paramPoints[nextPointToSample], paramPoints[4]);
+
+    // ERRORS: [0, 0, 0, 30, 0, 0.3]
 
     firstPoint = caromGreedySelector.getNextPointRequiringResidual();
     caromGreedySelector.setPointResidual(0.3, 1);
     EXPECT_EQ(firstPoint, 3);
-    secondPoint = caromGreedySelector.getNextPointRequiringResidual();
-    EXPECT_EQ(secondPoint, 5);
-    caromGreedySelector.setPointResidual(0.3, 1);
-
-    // ERRORS: [0, 0.9, 0, 0, 0.9, 0.9]
-
-    nextPointToSample = caromGreedySelector.getNextParameterPoint();
-    EXPECT_EQ(nextPointToSample, -1);
 }
 
 TEST(GreedyParameterPointSelectorSerialTest, Test_GreedyParameterPointSelector)
@@ -133,16 +130,13 @@ TEST(GreedyParameterPointSelectorSerialTest, Test_GreedyParameterPointSelector)
     // ERRORS: [0, 50, 0, 30, INF, INF]
 
     firstPoint = caromGreedySelector.getNextPointRequiringResidual();
-    EXPECT_EQ(firstPoint, 1);
+    EXPECT_EQ(firstPoint, 4);
     caromGreedySelector.setPointResidual(0.9, 1);
-    secondPoint = caromGreedySelector.getNextPointRequiringResidual();
-    EXPECT_EQ(secondPoint, 4);
-    caromGreedySelector.setPointResidual(35.0, 1);
     nextPointToSample = caromGreedySelector.getNextParameterPoint();
-    EXPECT_EQ(paramPoints[nextPointToSample], paramPoints[secondPoint]);
+    EXPECT_EQ(paramPoints[nextPointToSample], paramPoints[1]);
 
     closestROMIndex = caromGreedySelector.getNearestROM(1);
-    EXPECT_EQ(closestROMIndex, 0);
+    EXPECT_EQ(closestROMIndex, 1);
 
     closestROMIndex = caromGreedySelector.getNearestROM(4);
     EXPECT_EQ(closestROMIndex, 2);
