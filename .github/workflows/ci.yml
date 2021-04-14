@@ -9,9 +9,9 @@ jobs:
             sudo apt-get install libmpich-dev libblas-dev liblapack-dev libscalapack-mpi-dev libhdf5-serial-dev
             export CC=mpicc
             export CXX=mpicxx
-      - name: Install libROM dependencies
+      - name: Check out libROM
         uses: actions/checkout@v2
-        run: |
+      - run: |
             DEPS_DIR="${GITHUB_WORKSPACE}/deps"
             mkdir ${DEPS_DIR} && cd ${DEPS_DIR}
             git clone https://github.com/google/googletest
