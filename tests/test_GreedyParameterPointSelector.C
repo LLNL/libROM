@@ -24,7 +24,7 @@
  * Simple smoke test to make sure Google Test is properly linked
  */
 TEST(GoogleTestFramework, GoogleTestFrameworkFound) {
-  SUCCEED();
+    SUCCEED();
 }
 
 TEST(GreedyParameterPointSelectorSerialTest, Test_GreedyParameterPointSelectorCentroid)
@@ -33,7 +33,7 @@ TEST(GreedyParameterPointSelectorSerialTest, Test_GreedyParameterPointSelectorCe
     int mpi_init, d_rank, d_num_procs;
     MPI_Initialized(&mpi_init);
     if (mpi_init == 0) {
-      MPI_Init(nullptr, nullptr);
+        MPI_Init(nullptr, nullptr);
     }
 
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
@@ -91,7 +91,7 @@ TEST(GreedyParameterPointSelectorSerialTest, Test_GreedyParameterPointSelector)
     int mpi_init, d_rank, d_num_procs;
     MPI_Initialized(&mpi_init);
     if (mpi_init == 0) {
-      MPI_Init(nullptr, nullptr);
+        MPI_Init(nullptr, nullptr);
     }
 
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
@@ -149,7 +149,7 @@ TEST(GreedyParameterPointSelectorSerialTest, Test_GreedyParameterPointSaveAndLoa
     int mpi_init, d_rank, d_num_procs;
     MPI_Initialized(&mpi_init);
     if (mpi_init == 0) {
-      MPI_Init(nullptr, nullptr);
+        MPI_Init(nullptr, nullptr);
     }
 
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
@@ -205,17 +205,17 @@ TEST(GreedyParameterPointSelectorSerialTest, Test_GreedyParameterPointSaveAndLoa
 
 int main(int argc, char* argv[])
 {
-  ::testing::InitGoogleTest(&argc, argv);
-  MPI_Init(&argc, &argv);
-  int result = RUN_ALL_TESTS();
-  MPI_Finalize();
-  return result;
+    ::testing::InitGoogleTest(&argc, argv);
+    MPI_Init(&argc, &argv);
+    int result = RUN_ALL_TESTS();
+    MPI_Finalize();
+    return result;
 }
 #else // #ifndef CAROM_HAS_GTEST
 int main()
 {
-  std::cout << "libROM was compiled without Google Test support, so unit "
-	    << "tests have been disabled. To enable unit tests, compile "
-	    << "libROM with Google Test support." << std::endl;
+    std::cout << "libROM was compiled without Google Test support, so unit "
+              << "tests have been disabled. To enable unit tests, compile "
+              << "libROM with Google Test support." << std::endl;
 }
 #endif // #endif CAROM_HAS_GTEST

@@ -34,7 +34,7 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
     bool debug_algorithm)
 {
     constructObject(parameter_points, check_local_rom, tolerance, saturation,
-        subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
+                    subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
 }
 
 GreedyParameterPointSelector::GreedyParameterPointSelector(
@@ -57,7 +57,7 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
     }
 
     constructObject(parameter_points_vec, check_local_rom, tolerance, saturation,
-        subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
+                    subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
 }
 
 GreedyParameterPointSelector::GreedyParameterPointSelector(
@@ -83,7 +83,7 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
         constructParameterPoints(param_space_min_vec, param_space_max_vec, param_space_size);
 
     constructObject(parameter_points_vec, check_local_rom, tolerance, saturation,
-        subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
+                    subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
 }
 
 GreedyParameterPointSelector::GreedyParameterPointSelector(
@@ -104,22 +104,22 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
         constructParameterPoints(param_space_min, param_space_max, param_space_size);
 
     constructObject(parameter_points_vec, check_local_rom, tolerance, saturation,
-        subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
+                    subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
 }
 
 GreedyParameterPointSelector::GreedyParameterPointSelector
-    (std::string const& base_file_name,
-     std::string output_log_path)
+(std::string const& base_file_name,
+ std::string output_log_path)
 {
     CAROM_ASSERT(!base_file_name.empty());
 
     int mpi_init;
     MPI_Initialized(&mpi_init);
     if (mpi_init) {
-       MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
+        MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     }
     else {
-       d_rank = 0;
+        d_rank = 0;
     }
 
     d_output_log_path = output_log_path;
@@ -146,13 +146,13 @@ GreedyParameterPointSelector::GreedyParameterPointSelector
     database.getInteger(tmp, num_parameter_sampled_indices);
     if (num_parameter_sampled_indices > 0)
     {
-      int temp_parameter_sampled_indices[num_parameter_sampled_indices];
-      sprintf(tmp, "parameter_sampled_indices");
-      database.getIntegerArray(tmp, &temp_parameter_sampled_indices[0], num_parameter_sampled_indices);
-      for (int i = 0; i < num_parameter_sampled_indices; i++)
-      {
-          d_parameter_sampled_indices.insert(temp_parameter_sampled_indices[i]);
-      }
+        int temp_parameter_sampled_indices[num_parameter_sampled_indices];
+        sprintf(tmp, "parameter_sampled_indices");
+        database.getIntegerArray(tmp, &temp_parameter_sampled_indices[0], num_parameter_sampled_indices);
+        for (int i = 0; i < num_parameter_sampled_indices; i++)
+        {
+            d_parameter_sampled_indices.insert(temp_parameter_sampled_indices[i]);
+        }
     }
 
     int bool_int_temp;
@@ -328,10 +328,10 @@ GreedyParameterPointSelector::constructObject(
     int mpi_init;
     MPI_Initialized(&mpi_init);
     if (mpi_init) {
-       MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
+        MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     }
     else {
-       d_rank = 0;
+        d_rank = 0;
     }
 
     d_parameter_points = parameter_points;
@@ -547,7 +547,7 @@ GreedyParameterPointSelector::getNextPointRequiringResidual()
         // generate random shuffle
         if (!d_debug_algorithm)
         {
-          std::shuffle(d_parameter_point_random_indices.begin(), d_parameter_point_random_indices.end(), rng);
+            std::shuffle(d_parameter_point_random_indices.begin(), d_parameter_point_random_indices.end(), rng);
         }
         d_subset_created = true;
     }
@@ -734,7 +734,7 @@ GreedyParameterPointSelector::getNextPointRequiringResidual()
                             }
                             std::cout << "] skipped." << std::endl;
                             std::cout << "Residual multiplied by saturation factor " << error_with_sat_factor
-                                << " is less than current max error " << d_max_error << std::endl;
+                                      << " is less than current max error " << d_max_error << std::endl;
                         }
                         else
                         {
@@ -747,7 +747,7 @@ GreedyParameterPointSelector::getNextPointRequiringResidual()
                             }
                             database_history << "] skipped." << std::endl;
                             database_history << "Residual multiplied by saturation factor " << error_with_sat_factor
-                                << " is less than current max error " << d_max_error << std::endl;
+                                             << " is less than current max error " << d_max_error << std::endl;
                             database_history.close();
                         }
                     }
@@ -793,17 +793,17 @@ GreedyParameterPointSelector::setPointResidual(double error, int vec_size)
     double proc_errors = pow(error, 2);
     int total_vec_size = vec_size;
     CAROM_VERIFY(MPI_Allreduce(MPI_IN_PLACE,
-            &proc_errors,
-            1,
-            MPI_DOUBLE,
-            MPI_SUM,
-            MPI_COMM_WORLD) == MPI_SUCCESS);
+                               &proc_errors,
+                               1,
+                               MPI_DOUBLE,
+                               MPI_SUM,
+                               MPI_COMM_WORLD) == MPI_SUCCESS);
     CAROM_VERIFY(MPI_Allreduce(MPI_IN_PLACE,
-            &total_vec_size,
-            1,
-            MPI_INT,
-            MPI_SUM,
-            MPI_COMM_WORLD) == MPI_SUCCESS);
+                               &total_vec_size,
+                               1,
+                               MPI_INT,
+                               MPI_SUM,
+                               MPI_COMM_WORLD) == MPI_SUCCESS);
     proc_errors = sqrt(proc_errors);
     proc_errors /= total_vec_size;
 
@@ -947,7 +947,7 @@ GreedyParameterPointSelector::startConvergence()
 {
     if (!d_debug_algorithm)
     {
-      std::shuffle(d_parameter_point_random_indices.begin(), d_parameter_point_random_indices.end(), rng);
+        std::shuffle(d_parameter_point_random_indices.begin(), d_parameter_point_random_indices.end(), rng);
     }
     d_convergence_started = true;
     d_max_error = 0;
@@ -991,7 +991,7 @@ GreedyParameterPointSelector::getNearestROM(int index)
             d_parameter_points[index].minus(d_parameter_points[*itr], diff);
             double dist = diff.norm();
             if (dist < closest_dist_to_points ||
-                (dist == closest_dist_to_points && *itr == d_parameter_point_local_rom[index]))
+                    (dist == closest_dist_to_points && *itr == d_parameter_point_local_rom[index]))
             {
                 closest_dist_to_points = dist;
                 closest_point_index = *itr;
@@ -1047,9 +1047,9 @@ GreedyParameterPointSelector::save(std::string const& base_file_name)
     database.putInteger(tmp, d_parameter_sampled_indices.size());
     if (d_parameter_sampled_indices.size() > 0)
     {
-      sprintf(tmp, "parameter_sampled_indices");
-      std::vector<int> d_parameter_sampled_indices_vec(d_parameter_sampled_indices.begin(), d_parameter_sampled_indices.end());
-      database.putIntegerArray(tmp, &d_parameter_sampled_indices_vec[0], d_parameter_sampled_indices.size());
+        sprintf(tmp, "parameter_sampled_indices");
+        std::vector<int> d_parameter_sampled_indices_vec(d_parameter_sampled_indices.begin(), d_parameter_sampled_indices.end());
+        database.putIntegerArray(tmp, &d_parameter_sampled_indices_vec[0], d_parameter_sampled_indices.size());
 
     }
 
@@ -1058,45 +1058,45 @@ GreedyParameterPointSelector::save(std::string const& base_file_name)
 
     if (!d_procedure_completed)
     {
-      sprintf(tmp, "max_error");
-      database.putDouble(tmp, d_max_error);
-      sprintf(tmp, "tol");
-      database.putDouble(tmp, d_tol);
-      sprintf(tmp, "sat");
-      database.putDouble(tmp, d_sat);
-      sprintf(tmp, "subset_size");
-      database.putInteger(tmp, d_subset_size);
-      sprintf(tmp, "convergence_subset_size");
-      database.putInteger(tmp, d_convergence_subset_size);
-      sprintf(tmp, "next_point_to_sample");
-      database.putInteger(tmp, d_next_point_to_sample);
-      sprintf(tmp, "next_point_requiring_residual");
-      database.putInteger(tmp, d_next_point_requiring_residual);
-      sprintf(tmp, "check_local_rom");
-      database.putInteger(tmp, d_check_local_rom);
-      sprintf(tmp, "use_centroid");
-      database.putInteger(tmp, d_use_centroid);
-      sprintf(tmp, "iteration_started");
-      database.putInteger(tmp, d_iteration_started);
-      sprintf(tmp, "convergence_started");
-      database.putInteger(tmp, d_convergence_started);
-      sprintf(tmp, "point_requiring_residual_computed");
-      database.putInteger(tmp, d_point_requiring_residual_computed);
-      sprintf(tmp, "subset_created");
-      database.putInteger(tmp, d_subset_created);
-      sprintf(tmp, "debug_algorithm");
-      database.putInteger(tmp, d_debug_algorithm);
-      sprintf(tmp, "counter");
-      database.putInteger(tmp, d_counter);
-      sprintf(tmp, "subset_counter");
-      database.putInteger(tmp, d_subset_counter);
+        sprintf(tmp, "max_error");
+        database.putDouble(tmp, d_max_error);
+        sprintf(tmp, "tol");
+        database.putDouble(tmp, d_tol);
+        sprintf(tmp, "sat");
+        database.putDouble(tmp, d_sat);
+        sprintf(tmp, "subset_size");
+        database.putInteger(tmp, d_subset_size);
+        sprintf(tmp, "convergence_subset_size");
+        database.putInteger(tmp, d_convergence_subset_size);
+        sprintf(tmp, "next_point_to_sample");
+        database.putInteger(tmp, d_next_point_to_sample);
+        sprintf(tmp, "next_point_requiring_residual");
+        database.putInteger(tmp, d_next_point_requiring_residual);
+        sprintf(tmp, "check_local_rom");
+        database.putInteger(tmp, d_check_local_rom);
+        sprintf(tmp, "use_centroid");
+        database.putInteger(tmp, d_use_centroid);
+        sprintf(tmp, "iteration_started");
+        database.putInteger(tmp, d_iteration_started);
+        sprintf(tmp, "convergence_started");
+        database.putInteger(tmp, d_convergence_started);
+        sprintf(tmp, "point_requiring_residual_computed");
+        database.putInteger(tmp, d_point_requiring_residual_computed);
+        sprintf(tmp, "subset_created");
+        database.putInteger(tmp, d_subset_created);
+        sprintf(tmp, "debug_algorithm");
+        database.putInteger(tmp, d_debug_algorithm);
+        sprintf(tmp, "counter");
+        database.putInteger(tmp, d_counter);
+        sprintf(tmp, "subset_counter");
+        database.putInteger(tmp, d_subset_counter);
 
-      sprintf(tmp, "parameter_point_random_indices");
-      database.putIntegerArray(tmp, &d_parameter_point_random_indices[0], d_parameter_point_random_indices.size());
-      sprintf(tmp, "parameter_point_errors");
-      database.putDoubleArray(tmp, &d_parameter_point_errors[0], d_parameter_point_errors.size());
-      sprintf(tmp, "parameter_point_local_rom");
-      database.putIntegerArray(tmp, &d_parameter_point_local_rom[0], d_parameter_point_local_rom.size());
+        sprintf(tmp, "parameter_point_random_indices");
+        database.putIntegerArray(tmp, &d_parameter_point_random_indices[0], d_parameter_point_random_indices.size());
+        sprintf(tmp, "parameter_point_errors");
+        database.putDoubleArray(tmp, &d_parameter_point_errors[0], d_parameter_point_errors.size());
+        sprintf(tmp, "parameter_point_local_rom");
+        database.putIntegerArray(tmp, &d_parameter_point_local_rom[0], d_parameter_point_local_rom.size());
     }
     database.close();
 }
