@@ -20,7 +20,7 @@ jobs:
             PATH=${DEPS_DIR}/googletest:${DEPS_DIR}/googletest/build:$PATH
       - name: Build libROM
         run: |
-            cd ${TRAVIS_BUILD_DIR}/build
+            cd ${GITHUB_WORKSPACE}/build
             cmake -DCMAKE_BUILD_TYPE=Debug ..
             make
             cmake -DCMAKE_BUILD_TYPE=Optimized ..
