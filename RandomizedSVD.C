@@ -184,7 +184,8 @@ RandomizedSVD::computeSVD()
     scatter_block(&svd_input, 1, 1,
                   svd_input_mat->getData(),
                   svd_input_mat->numColumns(), svd_input_mat->numDistributedRows(),0);
-    delete svd_input_mat, snapshot_matrix;
+    delete svd_input_mat;
+    delete snapshot_matrix;
 
     // This block does the actual ScaLAPACK call to do the factorization.
     svd_init(d_factorizer.get(), &svd_input);
