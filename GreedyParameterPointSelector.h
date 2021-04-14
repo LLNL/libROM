@@ -202,6 +202,8 @@ class GreedyParameterPointSelector
           int random_seed,
           bool debug_algorithm);
 
+      void startConvergence();
+
       /**
        * @brief The parameter points to explore.
        */

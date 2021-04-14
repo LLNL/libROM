@@ -240,6 +240,45 @@ GreedyParameterPointSelector::constructParameterPoints(
     }
     CAROM_VERIFY(isGreater);
 
+    if (d_rank == 0)
+    {
+        if (d_output_log_path == "")
+        {
+            std::cout << "Total number of sample points: " << param_space_size << std::endl;
+            std::cout << "Parameter space minimum: [ ";
+            for (int i = 0 ; i < param_space_min.dim(); i++)
+            {
+                std::cout << param_space_min.item(i) << " ";
+            }
+            std::cout << "]" << std::endl;
+            std::cout << "Parameter space maximum: [ ";
+            for (int i = 0 ; i < param_space_max.dim(); i++)
+            {
+                std::cout << param_space_max.item(i) << " ";
+            }
+            std::cout << "]" << std::endl;
+        }
+        else
+        {
+            std::ofstream database_history;
+            database_history.open(d_output_log_path, std::ios::app);
+            database_history << "Total number of sample points: " << param_space_size << std::endl;
+            database_history << "Parameter space minimum: [ ";
+            for (int i = 0 ; i < param_space_min.dim(); i++)
+            {
+                database_history << param_space_min.item(i) << " ";
+            }
+            database_history << "]" << std::endl;
+            database_history << "Parameter space maximum: [ ";
+            for (int i = 0 ; i < param_space_max.dim(); i++)
+            {
+                database_history << param_space_max.item(i) << " ";
+            }
+            database_history << "]" << std::endl;
+            database_history.close();
+        }
+    }
+
     std::vector<Vector> parameter_points_vec;
     std::vector<double> frequencies;
     Vector vec(param_space_min.dim(), false);
@@ -560,7 +599,6 @@ GreedyParameterPointSelector::getNextPointRequiringResidual()
                 {
                     if (d_rank == 0)
                     {
-                        std::cout << d_parameter_point_random_indices[d_counter] << std::endl;
                         if (d_output_log_path == "")
                         {
                             std::cout << "Residual at [ ";
@@ -715,7 +753,14 @@ GreedyParameterPointSelector::getNextPointRequiringResidual()
                     database_history.close();
                 }
             }
-            d_iteration_started = false;
+            if (d_max_error < d_tol)
+            {
+                startConvergence();
+            }
+            else
+            {
+                d_iteration_started = false;
+            }
         }
     }
 
@@ -744,8 +789,11 @@ GreedyParameterPointSelector::setPointResidual(double error, int vec_size)
             MPI_COMM_WORLD) == MPI_SUCCESS);
     proc_errors = sqrt(proc_errors);
     proc_errors /= total_vec_size;
-    d_parameter_point_errors[d_parameter_point_random_indices[d_counter]] = proc_errors;
-    d_parameter_point_local_rom[d_parameter_point_random_indices[d_counter]] = getNearestROM(d_parameter_point_random_indices[d_counter]);
+    if (proc_errors < d_parameter_point_errors[d_parameter_point_random_indices[d_counter]])
+    {
+        d_parameter_point_errors[d_parameter_point_random_indices[d_counter]] = proc_errors;
+        d_parameter_point_local_rom[d_parameter_point_random_indices[d_counter]] = getNearestROM(d_parameter_point_random_indices[d_counter]);
+    }
 
     if (d_rank == 0)
     {
@@ -799,30 +847,7 @@ GreedyParameterPointSelector::setPointResidual(double error, int vec_size)
         {
             if (d_max_error < d_tol)
             {
-                if (!d_debug_algorithm)
-                {
-                  std::shuffle(d_parameter_point_random_indices.begin(), d_parameter_point_random_indices.end(), rng);
-                }
-                d_convergence_started = true;
-                d_max_error = 0;
-                d_counter = 0;
-                d_subset_counter = 0;
-
-                if (d_rank == 0)
-                {
-                    if (d_output_log_path == "")
-                    {
-                        std::cout << "Tolerance " << d_tol << " met. Computing convergence." << std::endl;
-                    }
-                    else
-                    {
-                        std::ofstream database_history;
-                        database_history.open(d_output_log_path, std::ios::app);
-                        database_history << "Tolerance " << d_tol << " met. Computing convergence." << std::endl;
-                        database_history.close();
-                    }
-                }
-
+                startConvergence();
             }
             else
             {
@@ -853,6 +878,39 @@ GreedyParameterPointSelector::setPointResidual(double error, int vec_size)
     return proc_errors;
 }
 
+void
+GreedyParameterPointSelector::startConvergence()
+{
+    if (!d_debug_algorithm)
+    {
+      std::shuffle(d_parameter_point_random_indices.begin(), d_parameter_point_random_indices.end(), rng);
+    }
+    d_convergence_started = true;
+    d_max_error = 0;
+    d_counter = 0;
+    d_subset_counter = 0;
+
+    if (d_rank == 0)
+    {
+        if (d_output_log_path == "")
+        {
+            std::cout << "Tolerance " << d_tol << " met. Computing convergence." << std::endl;
+        }
+        else
+        {
+            std::ofstream database_history;
+            database_history.open(d_output_log_path, std::ios::app);
+            database_history << "Tolerance " << d_tol << " met. Computing convergence." << std::endl;
+            database_history.close();
+        }
+    }
+
+    // Precompute next residual point
+    // This will allow us to figure out if the greedy algorithm has terminated
+    // early without needing an extra call to the residual function.
+    getNextPointRequiringResidual();
+}
+
 int
 GreedyParameterPointSelector::getNearestROM(int index)
 {
@@ -868,11 +926,18 @@ GreedyParameterPointSelector::getNearestROM(int index)
             Vector diff;
             d_parameter_points[index].minus(d_parameter_points[*itr], diff);
             double dist = diff.norm();
-            if (dist < closest_dist_to_points)
+            if (dist < closest_dist_to_points ||
+                (dist == closest_dist_to_points && *itr == d_parameter_point_local_rom[index]))
             {
                 closest_dist_to_points = dist;
                 closest_point_index = *itr;
             }
+        }
+        else
+        {
+            closest_dist_to_points = 0;
+            closest_point_index = *itr;
+            break;
         }
     }
 
