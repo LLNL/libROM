@@ -60,6 +60,7 @@ jobs:
             PATH=${DEPS_DIR}/googletest:${DEPS_DIR}/googletest/build:$PATH
       - name: Build libROM
         run: |
+            ls /usr/local/bin
             PATH=/usr/local/bin:$PATH
             cd ${GITHUB_WORKSPACE}/build
             cmake -DCMAKE_BUILD_TYPE=Debug ..
