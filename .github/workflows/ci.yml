@@ -27,6 +27,7 @@ jobs:
             make
       - name: Run tests
         run: |
+            cd ${GITHUB_WORKSPACE}/build
             ./test_SVD
             ./test_Vector
             ./test_Matrix
