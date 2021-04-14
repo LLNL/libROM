@@ -810,46 +810,47 @@ GreedyParameterPointSelector::setPointResidual(double error, int vec_size)
     if (d_check_local_rom)
     {
         auto search = d_parameter_sampled_indices.find(d_next_point_requiring_residual);
-        CAROM_VERIFY(search != d_parameter_sampled_indices.end());
-
-        d_parameter_point_errors[d_next_point_requiring_residual] = proc_errors;
-        d_parameter_point_local_rom[d_next_point_requiring_residual] = d_next_point_requiring_residual;
-
-        if (d_rank == 0)
+        if (search != d_parameter_sampled_indices.end())
         {
-            if (d_output_log_path == "")
+            d_parameter_point_errors[d_next_point_requiring_residual] = proc_errors;
+            d_parameter_point_local_rom[d_next_point_requiring_residual] = d_next_point_requiring_residual;
+
+            if (d_rank == 0)
             {
-                std::cout << "Local ROM Residual computed at [ ";
-                for (int i = 0 ; i < d_parameter_points[d_next_point_requiring_residual].dim(); i++)
+                if (d_output_log_path == "")
                 {
-                    std::cout << d_parameter_points[d_next_point_requiring_residual].item(i) << " ";
+                    std::cout << "Local ROM Residual computed at [ ";
+                    for (int i = 0 ; i < d_parameter_points[d_next_point_requiring_residual].dim(); i++)
+                    {
+                        std::cout << d_parameter_points[d_next_point_requiring_residual].item(i) << " ";
+                    }
+                    std::cout << "]" << std::endl;
+                    std::cout << "Local ROM Residual (tolerance unchecked): " << proc_errors << std::endl;
                 }
-                std::cout << "]" << std::endl;
-                std::cout << "Local ROM Residual (tolerance unchecked): " << proc_errors << std::endl;
-            }
-            else
-            {
-                std::ofstream database_history;
-                database_history.open(d_output_log_path, std::ios::app);
-                database_history << "Local ROM Residual computed at [ ";
-                for (int i = 0 ; i < d_parameter_points[d_next_point_requiring_residual].dim(); i++)
+                else
                 {
-                    database_history << d_parameter_points[d_next_point_requiring_residual].item(i) << " ";
+                    std::ofstream database_history;
+                    database_history.open(d_output_log_path, std::ios::app);
+                    database_history << "Local ROM Residual computed at [ ";
+                    for (int i = 0 ; i < d_parameter_points[d_next_point_requiring_residual].dim(); i++)
+                    {
+                        database_history << d_parameter_points[d_next_point_requiring_residual].item(i) << " ";
+                    }
+                    database_history << "]" << std::endl;
+                    database_history << "Local ROM Residual (tolerance unchecked): " << proc_errors << std::endl;
+                    database_history.close();
                 }
-                database_history << "]" << std::endl;
-                database_history << "Local ROM Residual (tolerance unchecked): " << proc_errors << std::endl;
-                database_history.close();
             }
+
+            d_point_requiring_residual_computed = false;
+
+            // Precompute next residual point
+            // This will allow us to figure out if the greedy algorithm has terminated
+            // early without needing an extra call to the residual function.
+            getNextPointRequiringResidual();
+
+            return proc_errors;
         }
-
-        d_point_requiring_residual_computed = false;
-
-        // Precompute next residual point
-        // This will allow us to figure out if the greedy algorithm has terminated
-        // early without needing an extra call to the residual function.
-        getNextPointRequiringResidual();
-
-        return proc_errors;
     }
 
     if (proc_errors < d_parameter_point_errors[d_parameter_point_random_indices[d_counter]])
