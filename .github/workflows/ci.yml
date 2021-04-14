@@ -5,10 +5,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install Linux dependencies
-        uses: actions/checkout@v2
         run: sudo apt-get install libmpich-dev libblas-dev liblapack-dev libscalapack-mpi-dev libhdf5-serial-dev
         run: export CC=mpicc
         run: export CXX=mpicxx
+      - name: Check out libROM
+        uses: actions/checkout@v2
       - name: Install libROM dependencies
         run: DEPS_DIR="${GITHUB_WORKSPACE}/deps"
         run: mkdir ${DEPS_DIR} && cd ${DEPS_DIR}
