@@ -7,8 +7,6 @@ jobs:
       - name: Install Linux dependencies
         run: |
             sudo apt-get install libmpich-dev libblas-dev liblapack-dev libscalapack-mpi-dev libhdf5-serial-dev
-            export CC=mpicc
-            export CXX=mpicxx
       - name: Check out libROM
         uses: actions/checkout@v2
       - run: |
@@ -21,6 +19,8 @@ jobs:
       - name: Build libROM
         run: |
             cd ${GITHUB_WORKSPACE}/build
+            export CC=mpicc
+            export CXX=mpicxx
             cmake -DCMAKE_BUILD_TYPE=Debug ..
             make
             cmake -DCMAKE_BUILD_TYPE=Optimized ..
