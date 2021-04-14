@@ -7,15 +7,7 @@ jobs:
       - name: Install Linux dependencies
         run: |
             sudo apt-get install libmpich-dev libblas-dev liblapack-dev libscalapack-mpi-dev libhdf5-serial-dev
-      - name: Check out libROM
-        uses: actions/checkout@v2
-      - run: |
-            DEPS_DIR="${GITHUB_WORKSPACE}/deps"
-            mkdir ${DEPS_DIR} && cd ${DEPS_DIR}
-            git clone https://github.com/google/googletest
-            cd googletest && mkdir build && cd build
-            cmake .. && make && sudo make install
-            PATH=${DEPS_DIR}/googletest:${DEPS_DIR}/googletest/build:$PATH
+      - uses: ./.github/workflows/checkout_repo
       - name: Build libROM
         run: |
             cd ${GITHUB_WORKSPACE}/build
@@ -31,22 +23,12 @@ jobs:
     steps:
       - name: Install Mac dependencies
         run: |
-            brew install gfortran
             brew install open-mpi
             brew install openblas
             brew install lapack
             brew install scalapack
             brew install hdf5
-            brew install cmake
-      - name: Check out libROM
-        uses: actions/checkout@v2
-      - run: |
-            DEPS_DIR="${GITHUB_WORKSPACE}/deps"
-            mkdir ${DEPS_DIR} && cd ${DEPS_DIR}
-            git clone https://github.com/google/googletest
-            cd googletest && mkdir build && cd build
-            cmake .. && make && sudo make install
-            PATH=${DEPS_DIR}/googletest:${DEPS_DIR}/googletest/build:$PATH
+      - uses: ./.github/workflows/checkout_repo
       - name: Build libROM
         run: |
             export FC=/usr/local/bin/gfortran-10
@@ -55,5 +37,4 @@ jobs:
             make
             cmake -DCMAKE_BUILD_TYPE=Optimized ..
             make
-      - name: Begin test suite
-        uses: ./.github/workflows/run_tests
+      - uses: ./.github/workflows/run_tests
