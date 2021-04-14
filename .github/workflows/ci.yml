@@ -25,7 +25,7 @@ jobs:
             make
             cmake -DCMAKE_BUILD_TYPE=Optimized ..
             make
-      - uses: ./.github/workflows/tests
+      - uses: ./.github/workflows/run_tests
   mac:
     runs-on: macos-latest
     steps:
@@ -55,4 +55,4 @@ jobs:
             make
             cmake -DCMAKE_BUILD_TYPE=Optimized ..
             make
-      - uses: ./.github/workflows/tests
+      - uses: ./.github/workflows/run_tests
