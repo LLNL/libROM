@@ -18,3 +18,21 @@ jobs:
             cd googletest && mkdir build && cd build
             cmake .. && make && sudo make install
             PATH=${DEPS_DIR}/googletest:${DEPS_DIR}/googletest/build:$PATH
+      - name: Build libROM
+      - run: |
+            cd ${TRAVIS_BUILD_DIR}/build
+            cmake -DCMAKE_BUILD_TYPE=Debug ..
+            make
+            cmake -DCMAKE_BUILD_TYPE=Optimized ..
+            make
+      - name: Run tests
+      - run: |
+            ./test_SVD
+            ./test_Vector
+            ./test_Matrix
+            ./test_DEIM
+            ./test_GNAT
+            ./test_QDEIM
+            ./test_IncrementalSVD
+            ./test_RandomizedSVD
+            mpirun -n 3 --oversubscribe test_RandomizedSVD
