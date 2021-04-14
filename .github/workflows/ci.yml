@@ -1,0 +1,22 @@
+name: Continuous Integration
+on: [push]
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Linux dependencies
+      - run: sudo apt-get install libmpich-dev libblas-dev liblapack-dev libscalapack-mpi-dev libhdf5-serial-dev
+      - run: export CC=mpicc
+      - run: export CXX=mpicxx
+      - uses: actions/run_tests@v1
+  mac:
+    runs-on: macos-latest
+    steps:
+      - name: Install Mac dependencies
+      - run: brew install open-mpi
+      - run: brew install openblas
+      - run: brew install lapack
+      - run: brew install scalapack
+      - run: brew install hdf5
+      - run: brew install cmake
+      - uses: actions/run_tests@v1
