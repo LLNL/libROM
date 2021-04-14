@@ -19,14 +19,14 @@ jobs:
             cmake .. && make && sudo make install
             PATH=${DEPS_DIR}/googletest:${DEPS_DIR}/googletest/build:$PATH
       - name: Build libROM
-      - run: |
+        run: |
             cd ${TRAVIS_BUILD_DIR}/build
             cmake -DCMAKE_BUILD_TYPE=Debug ..
             make
             cmake -DCMAKE_BUILD_TYPE=Optimized ..
             make
       - name: Run tests
-      - run: |
+        run: |
             ./test_SVD
             ./test_Vector
             ./test_Matrix
