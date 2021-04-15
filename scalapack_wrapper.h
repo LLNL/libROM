@@ -21,7 +21,7 @@
 #ifdef __cplusplus
 extern "C" {
 #else
-    #include <stdbool.h>
+#include <stdbool.h>
 #endif
 
 /* Ensure that this typedef matches the parameter definition in

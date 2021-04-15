@@ -35,20 +35,20 @@ const int ParallelBuffer::DEFAULT_BUFFER_SIZE = 128;
  */
 ParallelBuffer::ParallelBuffer()
 {
-   int mpi_init;
-   MPI_Initialized(&mpi_init);
-   int rank;
-   if (mpi_init) {
-      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-   }
-   else {
-      rank = 0;
-   }
-   d_prefix = "P=" + Utilities::processorToString(rank) + ":";
-   d_ostream = &std::cerr;
-   d_buffer = 0;
-   d_buffer_size = 0;
-   d_buffer_ptr = 0;
+    int mpi_init;
+    MPI_Initialized(&mpi_init);
+    int rank;
+    if (mpi_init) {
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    }
+    else {
+        rank = 0;
+    }
+    d_prefix = "P=" + Utilities::processorToString(rank) + ":";
+    d_ostream = &std::cerr;
+    d_buffer = 0;
+    d_buffer_size = 0;
+    d_buffer_ptr = 0;
 }
 
 /*
@@ -61,9 +61,9 @@ ParallelBuffer::ParallelBuffer()
  */
 ParallelBuffer::~ParallelBuffer()
 {
-   if (d_buffer) {
-      delete[] d_buffer;
-   }
+    if (d_buffer) {
+        delete[] d_buffer;
+    }
 }
 
 /*
@@ -77,51 +77,51 @@ ParallelBuffer::~ParallelBuffer()
  */
 void
 ParallelBuffer::outputString(
-   const std::string& text,
-   int length)
+    const std::string& text,
+    int length)
 {
-   if (length > 0) {
+    if (length > 0) {
 
-      /*
-       * If we need to allocate the internal buffer, then do so.
-       */
-      if (!d_buffer) {
-         d_buffer = new char[DEFAULT_BUFFER_SIZE];
-         d_buffer_size = DEFAULT_BUFFER_SIZE;
-         d_buffer_ptr = 0;
-      }
+        /*
+         * If we need to allocate the internal buffer, then do so.
+         */
+        if (!d_buffer) {
+            d_buffer = new char[DEFAULT_BUFFER_SIZE];
+            d_buffer_size = DEFAULT_BUFFER_SIZE;
+            d_buffer_ptr = 0;
+        }
 
-      /*
-       * If the buffer pointer is zero, then prepend the prefix.
-       */
-      if (d_buffer_ptr == 0) {
-         copyToBuffer(d_prefix, static_cast<int>(d_prefix.length()));
-      }
+        /*
+         * If the buffer pointer is zero, then prepend the prefix.
+         */
+        if (d_buffer_ptr == 0) {
+            copyToBuffer(d_prefix, static_cast<int>(d_prefix.length()));
+        }
 
-      /*
-       * Search for an end-of-line in the string.
-       */
+        /*
+         * Search for an end-of-line in the string.
+         */
 //      const int eol_ptr = static_cast<int>(text.find('\n'));
-      int eol_ptr = 0;
-      for ( ; (eol_ptr < length) && (text[eol_ptr] != '\n'); eol_ptr++) {}
+        int eol_ptr = 0;
+        for ( ; (eol_ptr < length) && (text[eol_ptr] != '\n'); eol_ptr++) {}
 
-      /*
-       * If no end-of-line is found, copy the entire text string but do not
-       * output.  Otherwise copy the text string through the end-of-line,
-       * output, and recurse with the remainder of the text string if there are
-       * more characters in it.
-       */
-      if (eol_ptr == length) {
-         copyToBuffer(text, length);
-      } else {
-         const int ncopy = eol_ptr + 1;
-         copyToBuffer(text, ncopy);
-         outputBuffer();
-         if (ncopy < length) {
-            outputString(text.substr(ncopy), length - ncopy);
-         }
-      }
-   }
+        /*
+         * If no end-of-line is found, copy the entire text string but do not
+         * output.  Otherwise copy the text string through the end-of-line,
+         * output, and recurse with the remainder of the text string if there are
+         * more characters in it.
+         */
+        if (eol_ptr == length) {
+            copyToBuffer(text, length);
+        } else {
+            const int ncopy = eol_ptr + 1;
+            copyToBuffer(text, ncopy);
+            outputBuffer();
+            if (ncopy < length) {
+                outputString(text.substr(ncopy), length - ncopy);
+            }
+        }
+    }
 }
 
 /*
@@ -135,11 +135,11 @@ ParallelBuffer::outputString(
 int
 ParallelBuffer::sync()
 {
-   const int n = static_cast<int>(pptr() - pbase());
-   if (n > 0) {
-      outputString(pbase(), n);
-   }
-   return 0;
+    const int n = static_cast<int>(pptr() - pbase());
+    if (n > 0) {
+        outputString(pbase(), n);
+    }
+    return 0;
 }
 
 /*
@@ -157,12 +157,12 @@ ParallelBuffer::sync()
 #if !defined(__INTEL_COMPILER) && (defined(__GNUG__))
 std::streamsize
 ParallelBuffer::xsputn(
-   const std::string& text,
-   std::streamsize n)
+    const std::string& text,
+    std::streamsize n)
 {
-   sync();
-   if (n > 0) outputString(text, static_cast<int>(n));
-   return n;
+    sync();
+    if (n > 0) outputString(text, static_cast<int>(n));
+    return n;
 }
 #endif
 
@@ -176,20 +176,20 @@ ParallelBuffer::xsputn(
  */
 int
 ParallelBuffer::overflow(
-   int ch)
+    int ch)
 {
-   const int n = static_cast<int>(pptr() - pbase());
-   if (n && sync()) {
-      return EOF;
-   }
-   if (ch != EOF) {
-      char character[2];
-      character[0] = (char)ch;
-      character[1] = 0;
-      outputString(character, 1);
-   }
-   pbump(-n);
-   return 0;
+    const int n = static_cast<int>(pptr() - pbase());
+    if (n && sync()) {
+        return EOF;
+    }
+    if (ch != EOF) {
+        char character[2];
+        character[0] = (char)ch;
+        character[1] = 0;
+        outputString(character, 1);
+    }
+    pbump(-n);
+    return 0;
 }
 
 /*
@@ -203,37 +203,37 @@ ParallelBuffer::overflow(
  */
 void
 ParallelBuffer::copyToBuffer(
-   const std::string& text,
-   int length)
+    const std::string& text,
+    int length)
 {
-   /*
-    * First check whether we need to increase the size of the buffer
-    */
-   if (d_buffer_ptr + length > d_buffer_size) {
-      int new_size;
-      if (d_buffer_ptr + length > 2 * d_buffer_size) {
-         new_size = d_buffer_ptr + length;
-      }
-      else {
-         new_size = 2 * d_buffer_size;
-      }
-      char* new_buffer = new char[new_size];
+    /*
+     * First check whether we need to increase the size of the buffer
+     */
+    if (d_buffer_ptr + length > d_buffer_size) {
+        int new_size;
+        if (d_buffer_ptr + length > 2 * d_buffer_size) {
+            new_size = d_buffer_ptr + length;
+        }
+        else {
+            new_size = 2 * d_buffer_size;
+        }
+        char* new_buffer = new char[new_size];
 
-      if (d_buffer_ptr > 0) {
-         (void)strncpy(new_buffer, d_buffer, d_buffer_ptr);
-      }
-      delete[] d_buffer;
+        if (d_buffer_ptr > 0) {
+            (void)strncpy(new_buffer, d_buffer, d_buffer_ptr);
+        }
+        delete[] d_buffer;
 
-      d_buffer = new_buffer;
-      d_buffer_size = new_size;
-   }
-   CAROM_ASSERT(d_buffer_ptr + length <= d_buffer_size);
+        d_buffer = new_buffer;
+        d_buffer_size = new_size;
+    }
+    CAROM_ASSERT(d_buffer_ptr + length <= d_buffer_size);
 
-   /*
-    * Copy data from the input into the internal buffer and increment pointer
-    */
-   strncpy(d_buffer + d_buffer_ptr, text.c_str(), length);
-   d_buffer_ptr += length;
+    /*
+     * Copy data from the input into the internal buffer and increment pointer
+     */
+    strncpy(d_buffer + d_buffer_ptr, text.c_str(), length);
+    d_buffer_ptr += length;
 }
 
 /*
@@ -247,13 +247,13 @@ ParallelBuffer::copyToBuffer(
 void
 ParallelBuffer::outputBuffer()
 {
-   if (d_buffer_ptr > 0) {
-      if (d_ostream) {
-         d_ostream->write(d_buffer, d_buffer_ptr);
-         d_ostream->flush();
-      }
-      d_buffer_ptr = 0;
-   }
+    if (d_buffer_ptr > 0) {
+        if (d_ostream) {
+            d_ostream->write(d_buffer, d_buffer_ptr);
+            d_ostream->flush();
+        }
+        d_buffer_ptr = 0;
+    }
 }
 
 }

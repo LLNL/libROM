@@ -23,9 +23,9 @@ class Matrix;
 // global row containing the maximum of a basis vector.
 typedef struct
 {
-   double row_val;
-   int row;
-   int proc;
+    double row_val;
+    int row;
+    int proc;
 } RowInfo;
 
 // The function to use as an MPI_Op in the reduction to determine the row and
