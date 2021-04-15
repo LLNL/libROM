@@ -54,11 +54,20 @@ LLNL-CODE-766763
 
 # Installation
 
-To copmile libROM for Laghos (Mac and LLNL LC Machines):
-1. ./scripts/laghos_compile.sh
+To compile libROM with default build settings (Mac and LLNL LC Machines):
+```sh
+ ./scripts/compile.sh
+```
 
 To compile libROM for Ardra (LLNL LC Machines only):
-1. ./scripts/ardra_compile.sh
+```sh
+./scripts/ardra_compile.sh
+```
+
+To compile libROM using a different toolchain (Mac and LLNL LC Machines):
+```sh
+./scripts/toolchain_compile.sh toolchain.cmake
+```
 
 # Installing via Spack
 
