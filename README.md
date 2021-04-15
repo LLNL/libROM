@@ -64,7 +64,7 @@ To compile libROM for Ardra (LLNL LC Machines only):
 ./scripts/ardra_compile.sh
 ```
 
-To compile libROM using a different toolchain (Mac and LLNL LC Machines):
+To compile libROM using a different toolchain within cmake/toolchains (Mac and LLNL LC Machines):
 ```sh
 ./scripts/toolchain_compile.sh toolchain.cmake
 ```
