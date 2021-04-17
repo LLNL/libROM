@@ -33,8 +33,10 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
     int random_seed,
     bool debug_algorithm)
 {
-    constructObject(parameter_points, check_local_rom, tolerance, saturation,
+    constructObject(check_local_rom, tolerance, saturation,
                     subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
+
+    initializeParameterPoints(parameter_points);
 }
 
 GreedyParameterPointSelector::GreedyParameterPointSelector(
@@ -56,8 +58,10 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
         parameter_points_vec.push_back(vec);
     }
 
-    constructObject(parameter_points_vec, check_local_rom, tolerance, saturation,
+    constructObject(check_local_rom, tolerance, saturation,
                     subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
+
+    initializeParameterPoints(parameter_points_vec);
 }
 
 GreedyParameterPointSelector::GreedyParameterPointSelector(
@@ -79,11 +83,13 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
     Vector param_space_max_vec(1, false);
     param_space_max_vec.item(0) = param_space_max;
 
+    constructObject(check_local_rom, tolerance, saturation, subset_size,
+                    convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
+
     std::vector<Vector> parameter_points_vec =
         constructParameterPoints(param_space_min_vec, param_space_max_vec, param_space_size);
 
-    constructObject(parameter_points_vec, check_local_rom, tolerance, saturation,
-                    subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
+    initializeParameterPoints(parameter_points_vec);
 }
 
 GreedyParameterPointSelector::GreedyParameterPointSelector(
@@ -100,11 +106,13 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
     int random_seed,
     bool debug_algorithm)
 {
+    constructObject(check_local_rom, tolerance, saturation, subset_size,
+                    convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
+
     std::vector<Vector> parameter_points_vec =
         constructParameterPoints(param_space_min, param_space_max, param_space_size);
 
-    constructObject(parameter_points_vec, check_local_rom, tolerance, saturation,
-                    subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
+    initializeParameterPoints(parameter_points_vec);
 }
 
 GreedyParameterPointSelector::GreedyParameterPointSelector
@@ -306,7 +314,6 @@ GreedyParameterPointSelector::constructParameterPoints(
 
 void
 GreedyParameterPointSelector::constructObject(
-    std::vector<Vector> parameter_points,
     bool check_local_rom,
     double tolerance,
     double saturation,
@@ -317,11 +324,10 @@ GreedyParameterPointSelector::constructObject(
     int random_seed,
     bool debug_algorithm)
 {
-    CAROM_VERIFY(parameter_points.size() > 0);
     CAROM_VERIFY(tolerance > 0.0);
     CAROM_VERIFY(saturation > 0.0);
-    CAROM_VERIFY(subset_size > 0 && subset_size <= parameter_points.size());
-    CAROM_VERIFY(convergence_subset_size > 0 && convergence_subset_size <= parameter_points.size());
+    CAROM_VERIFY(subset_size > 0);
+    CAROM_VERIFY(convergence_subset_size > 0);
     CAROM_VERIFY(subset_size < convergence_subset_size);
     CAROM_VERIFY(random_seed > 0);
 
@@ -334,7 +340,6 @@ GreedyParameterPointSelector::constructObject(
         d_rank = 0;
     }
 
-    d_parameter_points = parameter_points;
     d_check_local_rom = check_local_rom;
     d_tol = tolerance;
     d_sat = saturation;
@@ -354,17 +359,7 @@ GreedyParameterPointSelector::constructObject(
     d_counter = -1;
     d_debug_algorithm = debug_algorithm;
 
-    for (int i = 0; i < d_parameter_points.size() - 1; i++) {
-        CAROM_VERIFY(d_parameter_points[i].dim() == d_parameter_points[i + 1].dim());
-    }
-
-    for (int i = 0 ; i < d_parameter_points.size(); i++) {
-        d_parameter_point_errors.push_back(INT_MAX);
-        d_parameter_point_local_rom.push_back(-1);
-        d_parameter_point_random_indices.push_back(i);
-    }
     rng.seed(random_seed);
-
 
     if (d_rank == 0)
     {
@@ -386,7 +381,27 @@ GreedyParameterPointSelector::constructObject(
             database_history.close();
         }
     }
+}
 
+void
+GreedyParameterPointSelector::initializeParameterPoints(
+    std::vector<Vector> parameter_points)
+{
+    CAROM_VERIFY(parameter_points.size() > 0);
+    CAROM_VERIFY(d_subset_size <= parameter_points.size());
+    CAROM_VERIFY(d_convergence_subset_size <= parameter_points.size());
+
+    d_parameter_points = parameter_points;
+
+    for (int i = 0; i < d_parameter_points.size() - 1; i++) {
+        CAROM_VERIFY(d_parameter_points[i].dim() == d_parameter_points[i + 1].dim());
+    }
+
+    for (int i = 0 ; i < d_parameter_points.size(); i++) {
+        d_parameter_point_errors.push_back(INT_MAX);
+        d_parameter_point_local_rom.push_back(-1);
+        d_parameter_point_random_indices.push_back(i);
+    }
 }
 
 int

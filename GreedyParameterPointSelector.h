@@ -197,7 +197,6 @@ private:
         int param_space_size);
 
     void constructObject(
-        std::vector<Vector> parameter_points,
         bool check_local_rom,
         double tolerance,
         double saturation,
@@ -207,6 +206,9 @@ private:
         bool use_centroid,
         int random_seed,
         bool debug_algorithm);
+
+    void initializeParameterPoints(
+        std::vector<Vector> parameter_points);
 
     void startConvergence();
 
