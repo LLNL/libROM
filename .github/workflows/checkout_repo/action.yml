@@ -1,0 +1,12 @@
+runs:
+  using: "composite"
+  steps:
+     - name: Install libROM dependencies
+       run: |
+           DEPS_DIR="${GITHUB_WORKSPACE}/deps"
+           mkdir ${DEPS_DIR} && cd ${DEPS_DIR}
+           git clone https://github.com/google/googletest
+           cd googletest && mkdir build && cd build
+           cmake .. && make && sudo make install
+           PATH=${DEPS_DIR}/googletest:${DEPS_DIR}/googletest/build:$PATH
+       shell: bash
