@@ -1,6 +1,6 @@
 /*******************************************************************************
  *
- * Copyright (c) 2013-2019, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2021, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT file for
  * details.
  *
@@ -28,7 +28,9 @@ void free_matrix_data(struct SLPK_Matrix* A)
 void svd_init(struct SVDManager* mgr, struct SLPK_Matrix* A)
 {
     mgr->A = A;
-    mgr->U = NULL; mgr->S = NULL; mgr->V = NULL;
+    mgr->U = NULL;
+    mgr->S = NULL;
+    mgr->V = NULL;
     mgr->dou = 1;
     mgr->dov = 0;
     mgr->done = 0;
@@ -37,7 +39,9 @@ void svd_init(struct SVDManager* mgr, struct SLPK_Matrix* A)
 void qr_init(struct QRManager* mgr, struct SLPK_Matrix* A)
 {
     mgr->A = A;
+    mgr->tau = NULL;
     mgr->ipiv = NULL;
+    mgr->tauSize = 0;
     mgr->ipivSize = 0;
 }
 
@@ -57,7 +61,7 @@ void factorize_prep(struct SVDManager* mgr)
         make_similar_matrix(V, SIZE, A->n, A->ctxt, A->mb, A->nb);
         mgr->V = V;
     }
-    
+
     if (mgr->S == NULL) {
         mgr->S = malloc(sizeof(REAL_TYPE) * SIZE);
     }
@@ -67,6 +71,9 @@ void qrfactorize_prep(struct QRManager* mgr)
 {
     if (mgr->ipiv == NULL && mgr->ipivSize > 0) {
         mgr->ipiv = malloc(sizeof(int) * mgr->ipivSize);
+    }
+    if (mgr->tau == NULL && mgr->tauSize > 0) {
+        mgr->tau = malloc(sizeof(REAL_TYPE) * mgr->tauSize);
     }
 }
 

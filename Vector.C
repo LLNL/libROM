@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2019, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2021, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -23,479 +23,479 @@
 namespace CAROM {
 
 Vector::Vector() :
-   d_vec(NULL),
-   d_alloc_size(0),
-   d_distributed(false),
-   d_owns_data(true)
+    d_vec(NULL),
+    d_alloc_size(0),
+    d_distributed(false),
+    d_owns_data(true)
 {}
 
 Vector::Vector(
-   int dim,
-   bool distributed) :
-   d_vec(NULL),
-   d_alloc_size(0),
-   d_distributed(distributed),
-   d_owns_data(true)
+    int dim,
+    bool distributed) :
+    d_vec(NULL),
+    d_alloc_size(0),
+    d_distributed(distributed),
+    d_owns_data(true)
 {
-   CAROM_VERIFY(dim > 0);
-   setSize(dim);
-   int mpi_init;
-   MPI_Initialized(&mpi_init);
-   if (mpi_init) {
-      MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
-   }
-   else {
-      d_num_procs = 1;
-   }
+    CAROM_VERIFY(dim > 0);
+    setSize(dim);
+    int mpi_init;
+    MPI_Initialized(&mpi_init);
+    if (mpi_init) {
+        MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+    }
+    else {
+        d_num_procs = 1;
+    }
 }
 
 Vector::Vector(
-   double* vec,
-   int dim,
-   bool distributed,
-   bool copy_data) :
-   d_vec(NULL),
-   d_alloc_size(0),
-   d_distributed(distributed),
-   d_owns_data(copy_data)
+    double* vec,
+    int dim,
+    bool distributed,
+    bool copy_data) :
+    d_vec(NULL),
+    d_alloc_size(0),
+    d_distributed(distributed),
+    d_owns_data(copy_data)
 {
-   CAROM_VERIFY(vec != 0);
-   CAROM_VERIFY(dim > 0);
-   if (copy_data) {
-      setSize(dim);
-      memcpy(d_vec, vec, d_alloc_size*sizeof(double));
-   }
-   else {
-      d_vec = vec;
-      d_alloc_size = dim;
-      d_dim = dim;
-   }
-   int mpi_init;
-   MPI_Initialized(&mpi_init);
-   if (mpi_init) {
-      MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
-   }
-   else {
-      d_num_procs = 1;
-   }
+    CAROM_VERIFY(vec != 0);
+    CAROM_VERIFY(dim > 0);
+    if (copy_data) {
+        setSize(dim);
+        memcpy(d_vec, vec, d_alloc_size*sizeof(double));
+    }
+    else {
+        d_vec = vec;
+        d_alloc_size = dim;
+        d_dim = dim;
+    }
+    int mpi_init;
+    MPI_Initialized(&mpi_init);
+    if (mpi_init) {
+        MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+    }
+    else {
+        d_num_procs = 1;
+    }
 }
 
 Vector::Vector(
-   const Vector& other) :
-   d_vec(NULL),
-   d_alloc_size(0),
-   d_distributed(other.d_distributed),
-   d_owns_data(true)
+    const Vector& other) :
+    d_vec(NULL),
+    d_alloc_size(0),
+    d_distributed(other.d_distributed),
+    d_owns_data(true)
 {
-   setSize(other.d_dim);
-   int mpi_init;
-   MPI_Initialized(&mpi_init);
-   if (mpi_init) {
-      MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
-   }
-   else {
-      d_num_procs = 1;
-   }
-   memcpy(d_vec, other.d_vec, d_alloc_size*sizeof(double));
+    setSize(other.d_dim);
+    int mpi_init;
+    MPI_Initialized(&mpi_init);
+    if (mpi_init) {
+        MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+    }
+    else {
+        d_num_procs = 1;
+    }
+    memcpy(d_vec, other.d_vec, d_alloc_size*sizeof(double));
 }
 
 Vector::~Vector()
 {
-   if (d_owns_data && d_vec) {
-      delete [] d_vec;
-   }
+    if (d_owns_data && d_vec) {
+        delete [] d_vec;
+    }
 }
 
 Vector&
 Vector::operator = (
-   const Vector& rhs)
+    const Vector& rhs)
 {
-   d_distributed = rhs.d_distributed;
-   d_num_procs = rhs.d_num_procs;
-   setSize(rhs.d_dim);
-   memcpy(d_vec, rhs.d_vec, d_dim*sizeof(double));
-   return *this;
+    d_distributed = rhs.d_distributed;
+    d_num_procs = rhs.d_num_procs;
+    setSize(rhs.d_dim);
+    memcpy(d_vec, rhs.d_vec, d_dim*sizeof(double));
+    return *this;
 }
 
 Vector&
 Vector::operator += (
-   const Vector& rhs)
+    const Vector& rhs)
 {
-   CAROM_VERIFY(d_dim == rhs.d_dim);
-   for(int i=0; i<d_dim; ++i) d_vec[i] += rhs.d_vec[i];
-   return *this;
+    CAROM_VERIFY(d_dim == rhs.d_dim);
+    for(int i=0; i<d_dim; ++i) d_vec[i] += rhs.d_vec[i];
+    return *this;
 }
 
 Vector&
 Vector::operator = (const double& a)
 {
-   for(int i=0; i<d_dim; ++i) d_vec[i] = a;
-   return *this;
+    for(int i=0; i<d_dim; ++i) d_vec[i] = a;
+    return *this;
 }
 
 Vector&
 Vector::transform(std::function<void(const int size, double* vector)> transformer) {
-      transformer(d_dim, d_vec);
-      return *this;
+    transformer(d_dim, d_vec);
+    return *this;
 }
 
 void
 Vector::transform(Vector& result, std::function<void(const int size, double* vector)> transformer) const {
-      result.setSize(d_dim);
-      result.d_distributed = d_distributed;
-      transformer(d_dim, result.d_vec);
+    result.setSize(d_dim);
+    result.d_distributed = d_distributed;
+    transformer(d_dim, result.d_vec);
 }
 
 void
 Vector::transform(Vector*& result, std::function<void(const int size, double* vector)> transformer) const {
-      // If the result has not been allocated then do so.  Otherwise size it
-      // correctly.
-      if (result == 0) {
-          result = new Vector(d_dim, d_distributed);
-      }
-      else {
-          result->setSize(d_dim);
-          result->d_distributed = d_distributed;
-      }
-      transformer(d_dim, result->d_vec);
+    // If the result has not been allocated then do so.  Otherwise size it
+    // correctly.
+    if (result == 0) {
+        result = new Vector(d_dim, d_distributed);
+    }
+    else {
+        result->setSize(d_dim);
+        result->d_distributed = d_distributed;
+    }
+    transformer(d_dim, result->d_vec);
 }
 
 Vector&
 Vector::transform(std::function<void(const int size, double* origVector, double* resultVector)> transformer) {
-      Vector* origVector = new Vector(*this);
-      transformer(d_dim, origVector->d_vec, d_vec);
-      delete origVector;
-      return *this;
+    Vector* origVector = new Vector(*this);
+    transformer(d_dim, origVector->d_vec, d_vec);
+    delete origVector;
+    return *this;
 }
 
 void
 Vector::transform(Vector& result, std::function<void(const int size, double* origVector, double* resultVector)> transformer) const {
-      Vector* origVector = new Vector(*this);
-      result.setSize(d_dim);
-      result.d_distributed = d_distributed;
-      transformer(d_dim, origVector->d_vec, result.d_vec);
-      delete origVector;
+    Vector* origVector = new Vector(*this);
+    result.setSize(d_dim);
+    result.d_distributed = d_distributed;
+    transformer(d_dim, origVector->d_vec, result.d_vec);
+    delete origVector;
 }
 
 void
 Vector::transform(Vector*& result, std::function<void(const int size, double* origVector, double* resultVector)> transformer) const {
-      // If the result has not been allocated then do so.  Otherwise size it
-      // correctly.
-      Vector* origVector = new Vector(*this);
-      if (result == 0) {
-          result = new Vector(d_dim, d_distributed);
-      }
-      else {
-          result->setSize(d_dim);
-          result->d_distributed = d_distributed;
-      }
-      transformer(d_dim, origVector->d_vec, result->d_vec);
-      delete origVector;
+    // If the result has not been allocated then do so.  Otherwise size it
+    // correctly.
+    Vector* origVector = new Vector(*this);
+    if (result == 0) {
+        result = new Vector(d_dim, d_distributed);
+    }
+    else {
+        result->setSize(d_dim);
+        result->d_distributed = d_distributed;
+    }
+    transformer(d_dim, origVector->d_vec, result->d_vec);
+    delete origVector;
 }
 
 double
 Vector::inner_product(
-   const Vector& other) const
+    const Vector& other) const
 {
-   CAROM_VERIFY(dim() == other.dim());
-   CAROM_ASSERT(distributed() == other.distributed());
-   double ip;
-   double local_ip = 0.0;
-   for (int i = 0; i < d_dim; ++i) {
-      local_ip += d_vec[i]*other.d_vec[i];
-   }
-   if (d_num_procs > 1 && d_distributed) {
-      MPI_Allreduce(&local_ip, &ip, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-   }
-   else {
-      ip = local_ip;
-   }
-   return ip;
+    CAROM_VERIFY(dim() == other.dim());
+    CAROM_ASSERT(distributed() == other.distributed());
+    double ip;
+    double local_ip = 0.0;
+    for (int i = 0; i < d_dim; ++i) {
+        local_ip += d_vec[i]*other.d_vec[i];
+    }
+    if (d_num_procs > 1 && d_distributed) {
+        MPI_Allreduce(&local_ip, &ip, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    }
+    else {
+        ip = local_ip;
+    }
+    return ip;
 }
 
 double
 Vector::norm() const
 {
-   double ip = inner_product(this);
-   double norm = sqrt(ip);
-   return norm;
+    double ip = inner_product(this);
+    double norm = sqrt(ip);
+    return norm;
 }
 
 double
 Vector::normalize()
 {
-   double Norm = norm();
-   for (int i = 0; i < d_dim; ++i) {
-      d_vec[i] /= Norm;
-   }
-   return Norm;
+    double Norm = norm();
+    for (int i = 0; i < d_dim; ++i) {
+        d_vec[i] /= Norm;
+    }
+    return Norm;
 }
 
 void
 Vector::plus(
-   const Vector& other,
-   Vector*& result) const
+    const Vector& other,
+    Vector*& result) const
 {
-   CAROM_ASSERT(result == 0 || result->distributed() == distributed());
-   CAROM_ASSERT(distributed() == other.distributed());
-   CAROM_VERIFY(dim() == other.dim());
+    CAROM_ASSERT(result == 0 || result->distributed() == distributed());
+    CAROM_ASSERT(distributed() == other.distributed());
+    CAROM_VERIFY(dim() == other.dim());
 
-   // If the result has not been allocated then do so.  Otherwise size it
-   // correctly.
-   if (result == 0) {
-      result = new Vector(d_dim, d_distributed);
-   }
-   else {
-      result->setSize(d_dim);
-   }
+    // If the result has not been allocated then do so.  Otherwise size it
+    // correctly.
+    if (result == 0) {
+        result = new Vector(d_dim, d_distributed);
+    }
+    else {
+        result->setSize(d_dim);
+    }
 
-   // Do the addition.
-   for (int i = 0; i < d_dim; ++i) {
-      result->d_vec[i] = d_vec[i] + other.d_vec[i];
-   }
+    // Do the addition.
+    for (int i = 0; i < d_dim; ++i) {
+        result->d_vec[i] = d_vec[i] + other.d_vec[i];
+    }
 }
 
 void
 Vector::plus(
-   const Vector& other,
-   Vector& result) const
+    const Vector& other,
+    Vector& result) const
 {
-   CAROM_ASSERT(result.distributed() == distributed());
-   CAROM_ASSERT(distributed() == other.distributed());
-   CAROM_VERIFY(dim() == other.dim());
+    CAROM_ASSERT(result.distributed() == distributed());
+    CAROM_ASSERT(distributed() == other.distributed());
+    CAROM_VERIFY(dim() == other.dim());
 
-   // Size result correctly.
-   result.setSize(d_dim);
+    // Size result correctly.
+    result.setSize(d_dim);
 
-   // Do the addition.
-   for (int i = 0; i < d_dim; ++i) {
-      result.d_vec[i] = d_vec[i] + other.d_vec[i];
-   }
+    // Do the addition.
+    for (int i = 0; i < d_dim; ++i) {
+        result.d_vec[i] = d_vec[i] + other.d_vec[i];
+    }
 }
 
 void
 Vector::plusAx(
-   double factor,
-   const Vector& other,
-   Vector*& result) const
+    double factor,
+    const Vector& other,
+    Vector*& result) const
 {
-   CAROM_ASSERT(result == 0 || result->distributed() == distributed());
-   CAROM_ASSERT(distributed() == other.distributed());
-   CAROM_VERIFY(dim() == other.dim());
+    CAROM_ASSERT(result == 0 || result->distributed() == distributed());
+    CAROM_ASSERT(distributed() == other.distributed());
+    CAROM_VERIFY(dim() == other.dim());
 
-   // If the result has not been allocated then do so.  Otherwise size it
-   // correctly.
-   if (result == 0) {
-      result = new Vector(d_dim, d_distributed);
-   }
-   else {
-      result->setSize(d_dim);
-   }
+    // If the result has not been allocated then do so.  Otherwise size it
+    // correctly.
+    if (result == 0) {
+        result = new Vector(d_dim, d_distributed);
+    }
+    else {
+        result->setSize(d_dim);
+    }
 
-   // Do the addition.
-   for (int i = 0; i < d_dim; ++i) {
-      result->d_vec[i] = d_vec[i] + factor*other.d_vec[i];
-   }
+    // Do the addition.
+    for (int i = 0; i < d_dim; ++i) {
+        result->d_vec[i] = d_vec[i] + factor*other.d_vec[i];
+    }
 }
 
 void
 Vector::plusAx(
-   double factor,
-   const Vector& other,
-   Vector& result) const
+    double factor,
+    const Vector& other,
+    Vector& result) const
 {
-   CAROM_ASSERT(result.distributed() == distributed());
-   CAROM_ASSERT(distributed() == other.distributed());
-   CAROM_VERIFY(dim() == other.dim());
+    CAROM_ASSERT(result.distributed() == distributed());
+    CAROM_ASSERT(distributed() == other.distributed());
+    CAROM_VERIFY(dim() == other.dim());
 
-   // Size result correctly.
-   result.setSize(d_dim);
+    // Size result correctly.
+    result.setSize(d_dim);
 
-   // Do the addition.
-   for (int i = 0; i < d_dim; ++i) {
-      result.d_vec[i] = d_vec[i] + factor*other.d_vec[i];
-   }
+    // Do the addition.
+    for (int i = 0; i < d_dim; ++i) {
+        result.d_vec[i] = d_vec[i] + factor*other.d_vec[i];
+    }
 }
 
 void
 Vector::plusEqAx(
-   double factor,
-   const Vector& other)
+    double factor,
+    const Vector& other)
 {
-   CAROM_ASSERT(distributed() == other.distributed());
-   CAROM_VERIFY(dim() == other.dim());
+    CAROM_ASSERT(distributed() == other.distributed());
+    CAROM_VERIFY(dim() == other.dim());
 
-   // Do the addition.
-   for (int i = 0; i < d_dim; ++i) {
-      d_vec[i] += factor*other.d_vec[i];
-   }
+    // Do the addition.
+    for (int i = 0; i < d_dim; ++i) {
+        d_vec[i] += factor*other.d_vec[i];
+    }
 }
 
 void
 Vector::minus(
-   const Vector& other,
-   Vector*& result) const
+    const Vector& other,
+    Vector*& result) const
 {
-   CAROM_ASSERT(result == 0 || result->distributed() == distributed());
-   CAROM_ASSERT(distributed() == other.distributed());
-   CAROM_VERIFY(dim() == other.dim());
+    CAROM_ASSERT(result == 0 || result->distributed() == distributed());
+    CAROM_ASSERT(distributed() == other.distributed());
+    CAROM_VERIFY(dim() == other.dim());
 
-   // If the result has not been allocated then do so.  Otherwise size it
-   // correctly.
-   if (result == 0) {
-      result = new Vector(d_dim, d_distributed);
-   }
-   else {
-      result->setSize(d_dim);
-   }
+    // If the result has not been allocated then do so.  Otherwise size it
+    // correctly.
+    if (result == 0) {
+        result = new Vector(d_dim, d_distributed);
+    }
+    else {
+        result->setSize(d_dim);
+    }
 
-   // Do the subtraction.
-   for (int i = 0; i < d_dim; ++i) {
-      result->d_vec[i] = d_vec[i] - other.d_vec[i];
-   }
+    // Do the subtraction.
+    for (int i = 0; i < d_dim; ++i) {
+        result->d_vec[i] = d_vec[i] - other.d_vec[i];
+    }
 }
 
 void
 Vector::minus(
-   const Vector& other,
-   Vector& result) const
+    const Vector& other,
+    Vector& result) const
 {
-   CAROM_ASSERT(result.distributed() == distributed());
-   CAROM_ASSERT(distributed() == other.distributed());
-   CAROM_VERIFY(dim() == other.dim());
+    CAROM_ASSERT(result.distributed() == distributed());
+    CAROM_ASSERT(distributed() == other.distributed());
+    CAROM_VERIFY(dim() == other.dim());
 
-   // Size result correctly.
-   result.setSize(d_dim);
+    // Size result correctly.
+    result.setSize(d_dim);
 
-   // Do the subtraction.
-   for (int i = 0; i < d_dim; ++i) {
-      result.d_vec[i] = d_vec[i] - other.d_vec[i];
-   }
+    // Do the subtraction.
+    for (int i = 0; i < d_dim; ++i) {
+        result.d_vec[i] = d_vec[i] - other.d_vec[i];
+    }
 }
 
 void
 Vector::mult(
-   double factor,
-   Vector*& result) const
+    double factor,
+    Vector*& result) const
 {
-   CAROM_ASSERT(result == 0 || result->distributed() == distributed());
+    CAROM_ASSERT(result == 0 || result->distributed() == distributed());
 
-   // If the result has not been allocated then do so.  Otherwise size it
-   // correctly.
-   if (result == 0) {
-      result = new Vector(d_dim, d_distributed);
-   }
-   else {
-      result->setSize(d_dim);
-   }
+    // If the result has not been allocated then do so.  Otherwise size it
+    // correctly.
+    if (result == 0) {
+        result = new Vector(d_dim, d_distributed);
+    }
+    else {
+        result->setSize(d_dim);
+    }
 
-   // Do the multiplication.
-   for (int i = 0; i < d_dim; ++i) {
-      result->d_vec[i] = factor*d_vec[i];
-   }
+    // Do the multiplication.
+    for (int i = 0; i < d_dim; ++i) {
+        result->d_vec[i] = factor*d_vec[i];
+    }
 }
 
 void
 Vector::mult(
-   double factor,
-   Vector& result) const
+    double factor,
+    Vector& result) const
 {
-   CAROM_ASSERT(result.distributed() == distributed());
+    CAROM_ASSERT(result.distributed() == distributed());
 
-   // Size result correctly.
-   result.setSize(d_dim);
+    // Size result correctly.
+    result.setSize(d_dim);
 
-   // Do the multiplication.
-   for (int i = 0; i < d_dim; ++i) {
-      result.d_vec[i] = factor*d_vec[i];
-   }
+    // Do the multiplication.
+    for (int i = 0; i < d_dim; ++i) {
+        result.d_vec[i] = factor*d_vec[i];
+    }
 }
 
 void
 Vector::write(const std::string& base_file_name)
 {
-   CAROM_ASSERT(!base_file_name.empty());
+    CAROM_ASSERT(!base_file_name.empty());
 
-   int mpi_init;
-   MPI_Initialized(&mpi_init);
-   int rank;
-   if (mpi_init) {
-      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-   }
-   else {
-      rank = 0;
-   }
+    int mpi_init;
+    MPI_Initialized(&mpi_init);
+    int rank;
+    if (mpi_init) {
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    }
+    else {
+        rank = 0;
+    }
 
-   char tmp[100];
-   sprintf(tmp, ".%06d", rank);
-   std::string full_file_name = base_file_name + tmp;
-   HDFDatabase database;
-   database.create(full_file_name);
+    char tmp[100];
+    sprintf(tmp, ".%06d", rank);
+    std::string full_file_name = base_file_name + tmp;
+    HDFDatabase database;
+    database.create(full_file_name);
 
-   sprintf(tmp, "distributed");
-   database.putInteger(tmp, d_distributed);
-   sprintf(tmp, "dim");
-   database.putInteger(tmp, d_dim);
-   sprintf(tmp, "data");
-   database.putDoubleArray(tmp, d_vec, d_dim);
-   database.close();
+    sprintf(tmp, "distributed");
+    database.putInteger(tmp, d_distributed);
+    sprintf(tmp, "dim");
+    database.putInteger(tmp, d_dim);
+    sprintf(tmp, "data");
+    database.putDoubleArray(tmp, d_vec, d_dim);
+    database.close();
 }
 
 void
 Vector::print(const char * prefix)
 {
-   int my_rank;
-   const bool success = MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-   CAROM_ASSERT(success);
+    int my_rank;
+    const bool success = MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+    CAROM_ASSERT(success);
 
-   std::string filename_str = prefix + std::to_string(my_rank);
-   const char * filename = filename_str.c_str();
-   FILE * pFile = fopen(filename,"w");
-   for (int k = 0; k < d_dim; ++k) {
-     fprintf(pFile, " %25.20e\n", d_vec[k]);
-   }
-   fclose(pFile);
+    std::string filename_str = prefix + std::to_string(my_rank);
+    const char * filename = filename_str.c_str();
+    FILE * pFile = fopen(filename,"w");
+    for (int k = 0; k < d_dim; ++k) {
+        fprintf(pFile, " %25.20e\n", d_vec[k]);
+    }
+    fclose(pFile);
 }
 
 void
 Vector::read(const std::string& base_file_name)
 {
-   CAROM_ASSERT(!base_file_name.empty());
+    CAROM_ASSERT(!base_file_name.empty());
 
-   int mpi_init;
-   MPI_Initialized(&mpi_init);
-   int rank;
-   if (mpi_init) {
-      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-   }
-   else {
-      rank = 0;
-   }
+    int mpi_init;
+    MPI_Initialized(&mpi_init);
+    int rank;
+    if (mpi_init) {
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    }
+    else {
+        rank = 0;
+    }
 
-   char tmp[100];
-   sprintf(tmp, ".%06d", rank);
-   std::string full_file_name = base_file_name + tmp;
-   HDFDatabase database;
-   database.open(full_file_name);
+    char tmp[100];
+    sprintf(tmp, ".%06d", rank);
+    std::string full_file_name = base_file_name + tmp;
+    HDFDatabase database;
+    database.open(full_file_name);
 
-   sprintf(tmp, "distributed");
-   int distributed;
-   database.getInteger(tmp, distributed);
-   d_distributed = bool(distributed);
-   int dim;
-   sprintf(tmp, "dim");
-   database.getInteger(tmp, dim);
-   setSize(dim);
-   sprintf(tmp, "data");
-   database.getDoubleArray(tmp, d_vec, d_alloc_size);
-   d_owns_data = true;
-   if (mpi_init) {
-      MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
-   }
-   else {
-      d_num_procs = 1;
-   }
-   database.close();
+    sprintf(tmp, "distributed");
+    int distributed;
+    database.getInteger(tmp, distributed);
+    d_distributed = bool(distributed);
+    int dim;
+    sprintf(tmp, "dim");
+    database.getInteger(tmp, dim);
+    setSize(dim);
+    sprintf(tmp, "data");
+    database.getDoubleArray(tmp, d_vec, d_alloc_size);
+    d_owns_data = true;
+    if (mpi_init) {
+        MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+    }
+    else {
+        d_num_procs = 1;
+    }
+    database.close();
 }
 
 }

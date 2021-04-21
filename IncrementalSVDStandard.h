@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2019, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2021, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -16,6 +16,7 @@
 #define included_IncrementalSVDStandard_h
 
 #include "IncrementalSVD.h"
+#include "Options.h"
 
 namespace CAROM {
 
@@ -24,102 +25,104 @@ namespace CAROM {
  */
 class IncrementalSVDStandard : public IncrementalSVD
 {
-   public:
-      /**
-       * @brief Constructor.
-       *
-       * @param[in] options The struct containing the options for this basis
-       *                    generator.
-       * @param[in] basis_file_name The base part of the name of the file
-       *                            containing the basis vectors.  Each process
-       *                            will append its process ID to this base
-       *                            name.
-       */
-      IncrementalSVDStandard(
-         IncrementalSVDOptions options,
-         const std::string& basis_file_name);
+public:
+    /**
+     * @brief Destructor.
+     */
+    ~IncrementalSVDStandard();
 
-      /**
-       * @brief Destructor.
-       */
-      ~IncrementalSVDStandard();
+private:
+    friend class BasisGenerator;
 
-   private:
-      /**
-       * @brief Unimplemented default constructor.
-       */
-      IncrementalSVDStandard();
+    /**
+     * @brief Constructor.
+     *
+     * @param[in] options The struct containing the options for this SVD
+     *                    implementation.
+     * @param[in] basis_file_name The base part of the name of the file
+     *                            containing the basis vectors.  Each process
+     *                            will append its process ID to this base
+     *                            name.
+     */
+    IncrementalSVDStandard(
+        Options options,
+        const std::string& basis_file_name);
 
-      /**
-       * @brief Unimplemented copy constructor.
-       */
-      IncrementalSVDStandard(
-         const IncrementalSVDStandard& other);
+    /**
+     * @brief Unimplemented default constructor.
+     */
+    IncrementalSVDStandard();
 
-      /**
-       * @brief Unimplemented assignment operator.
-       */
-      IncrementalSVDStandard&
-      operator = (
-         const IncrementalSVDStandard& rhs);
+    /**
+     * @brief Unimplemented copy constructor.
+     */
+    IncrementalSVDStandard(
+        const IncrementalSVDStandard& other);
 
-      /**
-       * @brief Constructs the first svd.
-       *
-       * @pre u != 0
-       * @pre time >= 0.0
-       *
-       * @param[in] u The first state.
-       * @param[in] time The simulation time for the first state.
-       */
-      virtual
-      void
-      buildInitialSVD(
-         double* u,
-         double time);
+    /**
+     * @brief Unimplemented assignment operator.
+     */
+    IncrementalSVDStandard&
+    operator = (
+        const IncrementalSVDStandard& rhs);
 
-      /**
-       * @brief Computes the current basis vectors.
-       */
-      virtual
-      void
-      computeBasis();
+    /**
+     * @brief Constructs the first svd.
+     *
+     * @pre u != 0
+     * @pre time >= 0.0
+     *
+     * @param[in] u The first state.
+     * @param[in] time The simulation time for the first state.
+     */
+    virtual
+    void
+    buildInitialSVD(
+        double* u,
+        double time);
 
-      /**
-       * Add a linearly dependent sample to the svd.
-       *
-       * @pre A != 0
-       * @pre sigma != 0
-       *
-       * @param[in] A The left singular vectors.
-       * @param[in] W The right singular vectors.
-       * @param[in] sigma The singular values.
-       */
-      void
-      addLinearlyDependentSample(
-         const Matrix* A,
-         const Matrix* W,
-         const Matrix* sigma);
+    /**
+     * @brief Computes the current basis vectors.
+     */
+    virtual
+    void
+    computeBasis();
 
-      /**
-       * @brief Add a new, unique sample to the svd.
-       *
-       * @pre j != 0
-       * @pre A != 0
-       * @pre W != 0
-       * @pre sigma != 0
-       *
-       * @param[in] j The new column of d_U.
-       * @param[in] A The left singular vectors.
-       * @param[in] W The right singular vectors.
-       * @param[in] sigma The singular values.
-       */
-      void
-      addNewSample(
-         const Vector* j,
-         const Matrix* A,
-         const Matrix* W,
-         Matrix* sigma);
+    /**
+     * Add a linearly dependent sample to the svd.
+     *
+     * @pre A != 0
+     * @pre sigma != 0
+     *
+     * @param[in] A The left singular vectors.
+     * @param[in] W The right singular vectors.
+     * @param[in] sigma The singular values.
+     */
+    void
+    addLinearlyDependentSample(
+        const Matrix* A,
+        const Matrix* W,
+        const Matrix* sigma);
+
+    /**
+     * @brief Add a new, unique sample to the svd.
+     *
+     * @pre j != 0
+     * @pre A != 0
+     * @pre W != 0
+     * @pre sigma != 0
+     *
+     * @param[in] j The new column of d_U.
+     * @param[in] A The left singular vectors.
+     * @param[in] W The right singular vectors.
+     * @param[in] sigma The singular values.
+     */
+    void
+    addNewSample(
+        const Vector* j,
+        const Matrix* A,
+        const Matrix* W,
+        Matrix* sigma);
 };
 
 }

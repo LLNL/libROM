@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2019, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2021, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -23,9 +23,9 @@ class Matrix;
 // global row containing the maximum of a basis vector.
 typedef struct
 {
-   double row_val;
-   int row;
-   int proc;
+    double row_val;
+    int row;
+    int proc;
 } RowInfo;
 
 // The function to use as an MPI_Op in the reduction to determine the row and
