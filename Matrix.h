@@ -747,6 +747,17 @@ public:
     void transpose();
 
     /**
+     * @brief Computes the transposePseudoinverse of this.
+     *
+     * @pre !distributed()
+     * @pre numRows() >= numColumns()
+     *
+     * Assumes this is full column rank; may fail if this is not
+     * full column rank.
+     */
+    void transposePseudoinverse();
+
+    /**
      * @brief Compute the leading numColumns() column pivots from a
      * QR decomposition with column pivots (QRCP) of the transpose
      * of this.
@@ -984,78 +995,6 @@ private:
     void
     qrcp_pivots_transpose_distributed_elemental_unbalanced
     (int* row_pivot, int* row_pivot_owner, int pivots_requested) const;
-
-    /**
-     * @brief Computes the transposePseudoinverse of this.
-     *
-     * @pre !distributed()
-     * @pre numRows() >= numColumns()
-     *
-     * Assumes this is full column rank; may fail if this is not
-     * full column rank.
-     */
-    void transposePseudoinverse();
-    // TODO: this is too many friends
-
-    friend void GNAT(const Matrix*,
-                     const int,
-                     int*,
-                     int*,
-                     Matrix&,
-                     const int,
-                     const int,
-                     const int);
-
-    friend void QDEIM(const Matrix*,
-                      const int,
-                      int*,
-                      int*,
-                      Matrix&,
-                      const int,
-                      const int,
-                      const int);
-
-    friend void SampleTemporalIndices(const Matrix*,
-                                      const Matrix*,
-                                      const int,
-                                      int*,
-                                      //Matrix&,
-                                      const int,
-                                      const int,
-                                      const int,
-                                      const bool);
-
-    friend void SampleSpatialIndices(const Matrix*,
-                                     const Matrix*,
-                                     const int,
-                                     const int,
-                                     int*,
-                                     int*,
-                                     int*,
-                                     Matrix&,
-                                     const int,
-                                     const int,
-                                     const int);
-
-    /*
-    friend void SpaceTimeSampling(const Matrix*,
-    		       const Matrix*,
-    			const int,
-    			std::vector<int>&,
-    			int*,
-    			int*,
-    			Matrix&,
-    			const int,
-    			const int,
-    			const int,
-    			const int,
-    			const bool);
-    */
-
-    friend void GetSampledSpaceTimeBasis(std::vector<int> const& t_samples,
-                                         const Matrix* t_basis,
-                                         Matrix const& s_basis_sampled,
-                                         Matrix& f_basis_sampled_inv);
 
     /**
      * @brief The storage for the Matrix's values on this processor.
