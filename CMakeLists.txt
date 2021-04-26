@@ -138,7 +138,7 @@ foreach(module IN LISTS module_list)
 endforeach(module) # IN LISTS module_list
 
 list(APPEND source_files
-  Options)
+  Options.h)
 
 list(APPEND source_files
   scalapack_c_wrapper.c

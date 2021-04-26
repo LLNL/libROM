@@ -1,0 +1,19 @@
+runs:
+  using: "composite"
+  steps:
+    - name: Run tests
+      run: |
+          cd ${GITHUB_WORKSPACE}/build
+          ./test_SVD
+          ./test_Vector
+          ./test_Matrix
+          ./test_DEIM
+          ./test_GNAT
+          ./test_QDEIM
+          ./test_IncrementalSVD
+          ./test_RandomizedSVD
+          mpirun -n 3 --oversubscribe test_RandomizedSVD
+          ./test_GreedyParameterPointSelector
+          mpirun -n 3 --oversubscribe test_GreedyParameterPointSelector
+
+      shell: bash

@@ -1,0 +1,48 @@
+name: CI
+on:
+  push:
+  pull_request:
+    branches:
+      - master
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Linux dependencies
+        run: |
+            sudo apt-get install libmpich-dev libblas-dev liblapack-dev libscalapack-mpi-dev libhdf5-serial-dev
+      - name: Check out libROM
+        uses: actions/checkout@v2
+      - uses: ./.github/workflows/checkout_repo
+      - name: Build libROM
+        run: |
+            cd ${GITHUB_WORKSPACE}/build
+            export CC=mpicc
+            export CXX=mpicxx
+            cmake -DCMAKE_BUILD_TYPE=Debug ..
+            make
+            cmake -DCMAKE_BUILD_TYPE=Optimized ..
+            make
+      - uses: ./.github/workflows/run_tests
+  mac:
+    runs-on: macos-latest
+    steps:
+      - name: Install Mac dependencies
+        run: |
+            brew install open-mpi
+            brew install openblas
+            brew install lapack
+            brew install scalapack
+            brew install hdf5
+      - name: Check out libROM
+        uses: actions/checkout@v2
+      - uses: ./.github/workflows/checkout_repo
+      - name: Build libROM
+        run: |
+            export FC=/usr/local/bin/gfortran-10
+            cd ${GITHUB_WORKSPACE}/build
+            cmake -DCMAKE_BUILD_TYPE=Debug ..
+            make
+            cmake -DCMAKE_BUILD_TYPE=Optimized ..
+            make
+      - uses: ./.github/workflows/run_tests
