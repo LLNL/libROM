@@ -115,7 +115,10 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
 
     initializeParameterPoints(parameter_points);
 
-    addDatabaseFromFile(warm_start_file_name);
+    if (warm_start_file_name != "")
+    {
+        addDatabaseFromFile(warm_start_file_name);
+    }
 }
 
 GreedyParameterPointSelector::GreedyParameterPointSelector(
@@ -143,7 +146,10 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
 
     initializeParameterPoints(parameter_points_vec);
 
-    addDatabaseFromFile(warm_start_file_name);
+    if (warm_start_file_name != "")
+    {
+        addDatabaseFromFile(warm_start_file_name);
+    }
 }
 
 GreedyParameterPointSelector::GreedyParameterPointSelector(
@@ -174,7 +180,10 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
 
     initializeParameterPoints(parameter_points_vec);
 
-    addDatabaseFromFile(warm_start_file_name);
+    if (warm_start_file_name != "")
+    {
+        addDatabaseFromFile(warm_start_file_name);
+    }
 }
 
 GreedyParameterPointSelector::GreedyParameterPointSelector(
@@ -200,7 +209,10 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
 
     initializeParameterPoints(parameter_points_vec);
 
-    addDatabaseFromFile(warm_start_file_name);
+    if (warm_start_file_name != "")
+    {
+        addDatabaseFromFile(warm_start_file_name);
+    }
 }
 
 GreedyParameterPointSelector::GreedyParameterPointSelector(
@@ -831,13 +843,13 @@ GreedyParameterPointSelector::getNextSubsetPointRequiringResidual()
         {
             if (d_output_log_path == "")
             {
-                std::cout << "Ran out of points to calculate residual in this iteration." << std::endl;
+                std::cout << "Ran out of points to calculate residual for in this iteration." << std::endl;
             }
             else
             {
                 std::ofstream database_history;
                 database_history.open(d_output_log_path, std::ios::app);
-                database_history << "Ran out of points to calculate residual in this iteration." << std::endl;
+                database_history << "Ran out of points to calculate residual for in this iteration." << std::endl;
                 database_history.close();
             }
         }
