@@ -15,11 +15,11 @@
 
 namespace CAROM {
 
-// TODO: update this documentation
 /**
  * @brief
  *
- * @param[in] f_basis The basis vectors for the RHS.
+ * @param[in] s_basis The spatial basis vectors.
+ * @param[in] t_basis The temporal basis vectors.
  * @param[in] num_samples The number of samples to compute.
  * @param[in] num_f_basis_vectors_used The number of basis vectors in f_basis
  *                                     to use in the algorithm.
