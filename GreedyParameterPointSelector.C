@@ -885,9 +885,8 @@ GreedyParameterPointSelector::getNextConvergencePointRequiringResidual()
     d_next_point_requiring_residual = -1;
 
     //get next point requiring residual
-    while (d_counter < (int) d_convergence_points.size() - 1)
+    while (d_counter < (int) d_convergence_points.size())
     {
-        d_counter++;
         d_next_point_requiring_residual = d_counter;
         d_point_requiring_residual_computed = true;
         Vector* result1 = new Vector(d_convergence_points[d_next_point_requiring_residual]);
@@ -1102,9 +1101,9 @@ GreedyParameterPointSelector::setConvergenceResidual(double proc_errors)
     {
         d_iteration_started = false;
         double curr_max_error = 0.0;
-        for (int i = 0; i < d_parameter_point_errors.size(); i++)
+        for (int i = 0; i < d_parameter_points.size(); i++)
         {
-            auto search = d_parameter_sampled_indices.find(d_parameter_point_random_indices[d_counter]);
+            auto search = d_parameter_sampled_indices.find(i);
             if (search == d_parameter_sampled_indices.end())
             {
                 if (d_parameter_point_errors[i] > curr_max_error)
@@ -1117,7 +1116,12 @@ GreedyParameterPointSelector::setConvergenceResidual(double proc_errors)
         printToleranceNotMet();
         generateConvergenceSubset();
     }
-    else if (d_counter == d_convergence_subset_size)
+    else
+    {
+        d_counter++;
+    }
+
+    if (d_counter == d_convergence_subset_size)
     {
         d_procedure_completed = true;
     }
