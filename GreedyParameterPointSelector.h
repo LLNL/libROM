@@ -43,6 +43,11 @@ class BasisGenerator;
 class Matrix;
 class Vector;
 
+struct GreedyResidualPoint {
+    std::shared_ptr<Vector> point;
+    std::shared_ptr<Vector> localROM;
+};
+
 /**
  * Class GreedyParameterPointSelector is a class defining the interface of a
  *       greedy algorithm that given a domain of parameter points, iteratively
@@ -76,6 +81,7 @@ public:
         int subset_size,
         int convergence_subset_size,
         std::string output_log_path = "",
+        std::string warm_start_file_name = "",
         bool use_centroid = true,
         int random_seed = 1,
         bool debug_algorithm = false);
@@ -88,6 +94,7 @@ public:
         int subset_size,
         int convergence_subset_size,
         std::string output_log_path = "",
+        std::string warm_start_file_name = "",
         bool use_centroid = true,
         int random_seed = 1,
         bool debug_algorithm = false);
@@ -102,6 +109,7 @@ public:
         int subset_size,
         int convergence_subset_size,
         std::string output_log_path = "",
+        std::string warm_start_file_name = "",
         bool use_centroid = true,
         int random_seed = 1,
         bool debug_algorithm = false);
@@ -116,12 +124,13 @@ public:
         int subset_size,
         int convergence_subset_size,
         std::string output_log_path = "",
+        std::string warm_start_file_name = "",
         bool use_centroid = true,
         int random_seed = 1,
         bool debug_algorithm = false);
 
     GreedyParameterPointSelector(
-        std::string const& base_file_name,
+        std::string base_file_name,
         std::string output_log_path = "");
 
     /**
@@ -132,38 +141,37 @@ public:
     /**
      * @brief Returns the next parameter point for which sampling is required.
      *
-     * @return The index of the point in the list of parameters, or -1 if a point
-     *         is not ready to be sampled.
+     * @return The point, or NULL if a point is not ready to be sampled.
      */
-    int
+    std::shared_ptr<Vector>
     getNextParameterPoint();
 
     /**
-     * @brief Compute point whose residual the greedy algorithm requires.
+     * @brief Returns the next parameter point whose residual the greedy
+     *        algorithm requires.
      *
      * @param[in]
      *
-     * @return The index of the point in the list of parameters, or -1 if a
+     * @return A tuple where the first element is the point, and the second
+     *         element is the nearest local ROM. Both elements will be NULL if a
      *         residual is not currently required.
      */
-    int
+    struct GreedyResidualPoint
     getNextPointRequiringResidual();
 
     /**
      * @brief Set the residual error of the specified parameter point.
-     *
-     * @return The total relative residual error
      */
-    double
+    void
     setPointResidual(double error, int vec_size);
 
     /**
-     * @brief Returns the index to the nearest local ROM to the specified parameter point.
+     * @brief Returns the nearest local ROM to the specified parameter point.
      *
-     * @return The index of the point in the list of parameters.
+     * @return The point in the list of parameters.
      */
-    int
-    getNearestROM(int index);
+    std::shared_ptr<Vector>
+    getNearestROM(Vector point);
 
     /**
      * @brief Get the domain of the parameter points.
@@ -181,7 +189,7 @@ public:
      * @brief Save the object state to a file.
      */
     void
-    save(std::string const& base_file_name);
+    save(std::string base_file_name);
 
     /**
      * @brief Check if the greedy algorithm procedure is complete.
@@ -190,6 +198,12 @@ public:
     isComplete();
 
 private:
+
+    void addDatabaseFromFile(
+        std::string const& warm_start_file_name);
+
+    void load(
+        std::string base_file_name);
 
     std::vector<Vector> constructParameterPoints(
         Vector param_space_min,
@@ -210,12 +224,49 @@ private:
     void initializeParameterPoints(
         std::vector<Vector> parameter_points);
 
+    struct GreedyResidualPoint getNextSubsetPointRequiringResidual();
+
+    struct GreedyResidualPoint getNextConvergencePointRequiringResidual();
+
+    void printResidual(Vector residualPoint, double proc_errors);
+
+    void printToleranceNotMet();
+
+    void setSubsetResidual(double proc_errors);
+
+    void setConvergenceResidual(double proc_errors);
+
+    void generateConvergenceSubset();
+
     void startConvergence();
+
+    /**
+     * @brief Returns the index to the nearest local ROM to the specified parameter point.
+     *
+     * @return The index of the point in the list of parameters.
+     */
+    int
+    getNearestROMIndex(int index);
 
     /**
      * @brief The parameter points to explore.
      */
     std::vector<Vector> d_parameter_points;
+
+    /**
+     * @brief The convergence parameter points to explore.
+     */
+    std::vector<Vector> d_convergence_points;
+
+    /**
+     * @brief The minimum of the parameter space.
+     */
+    Vector min_param_point;
+
+    /**
+     * @brief The maximum of the parameter space.
+     */
+    Vector max_param_point;
 
     /**
      * @brief The parameter points that were already sampled.
@@ -344,11 +395,14 @@ private:
      * @brief Random engine used to generate subsets.
      */
     std::default_random_engine rng;
+    std::vector<std::uniform_real_distribution<double>> unif;
 };
 
 // Given a a vector/double, find the nearest point in a domain.
-int getNearestPoint(std::vector<Vector> paramPoints, Vector point);
-int getNearestPoint(std::vector<double> paramPoints, double point);
+Vector getNearestPoint(std::vector<Vector> paramPoints, Vector point);
+double getNearestPoint(std::vector<double> paramPoints, double point);
+int getNearestPointIndex(std::vector<Vector> paramPoints, Vector point);
+int getNearestPointIndex(std::vector<double> paramPoints, double point);
 
 }
 
