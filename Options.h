@@ -24,22 +24,22 @@ namespace CAROM {
 class Options
 {
 public:
-  /**
-   * @brief Constructor.
-   *
-   * @pre dim_ > 0
-   * @pre samples_per_time_interval_ > 0
-   * @pre max_time_intervals == -1 || max_time_intervals > 0
-   *
-   * @param[in] dim_ The dimension of the system on this processor.
-   * @param[in] samples_per_time_interval_ The maximum number of samples in
-   *                                      each time interval.
-   * @param[in] max_time_intervals_ The maximum number of time intervals.
-   * @param[in] update_right_SV_ Whether to update the right SV or not.
-   * @param[in] write_snapshots_ Whether to automatically write snapshots matrices
-   *                        instead of basis matrices.
-   *
-   */
+    /**
+     * @brief Constructor.
+     *
+     * @pre dim_ > 0
+     * @pre samples_per_time_interval_ > 0
+     * @pre max_time_intervals == -1 || max_time_intervals > 0
+     *
+     * @param[in] dim_ The dimension of the system on this processor.
+     * @param[in] samples_per_time_interval_ The maximum number of samples in
+     *                                      each time interval.
+     * @param[in] max_time_intervals_ The maximum number of time intervals.
+     * @param[in] update_right_SV_ Whether to update the right SV or not.
+     * @param[in] write_snapshots_ Whether to automatically write snapshots matrices
+     *                        instead of basis matrices.
+     *
+     */
     Options(int dim_,
             int samples_per_time_interval_,
             int max_time_intervals_ = -1,
