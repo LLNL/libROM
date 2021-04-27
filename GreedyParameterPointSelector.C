@@ -938,6 +938,11 @@ GreedyParameterPointSelector::setPointResidual(double error, int vec_size)
     proc_errors = sqrt(proc_errors);
     proc_errors /= total_vec_size;
 
+    if (!std::isfinite(proc_errors))
+    {
+        proc_errors = INT_MAX;
+    }
+
     if (d_convergence_started)
     {
         setConvergenceResidual(proc_errors);
