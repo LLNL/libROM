@@ -40,49 +40,48 @@ TEST(GreedyParameterPointSelectorSerialTest, Test_GreedyParameterPointSelectorCe
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
 
     std::vector<double> paramPoints = {1.0, 2.0, 3.0, 99.0, 100.0, 101.0};
-    CAROM::GreedyParameterPointSelector caromGreedySelector(paramPoints, false, 1, 1, 3, 4, "", true, 1, true);
+    CAROM::GreedyParameterPointSelector caromGreedySelector(paramPoints, false, 1, 1, 3, 4, "", "", true, 1, true);
 
-    int nextPointToSample = caromGreedySelector.getNextParameterPoint();
-    EXPECT_EQ(nextPointToSample, 2);
-    EXPECT_EQ(paramPoints[nextPointToSample], 3.0);
+    std::shared_ptr<CAROM::Vector> nextPointToSample = caromGreedySelector.getNextParameterPoint();
+    EXPECT_EQ(nextPointToSample.get()->item(0), 3.0);
 
     // ERRORS: [INF, INF, 0, INF, INF]
 
-    int firstPoint = caromGreedySelector.getNextPointRequiringResidual();
-    EXPECT_EQ(firstPoint, 0);
+    struct CAROM::GreedyResidualPoint firstPoint = caromGreedySelector.getNextPointRequiringResidual();
+    EXPECT_EQ(firstPoint.point.get()->item(0), 1.0);
 
     caromGreedySelector.setPointResidual(100.0, 1);
 
-    int secondPoint = caromGreedySelector.getNextPointRequiringResidual();
-    EXPECT_EQ(secondPoint, 1);
+    struct CAROM::GreedyResidualPoint secondPoint = caromGreedySelector.getNextPointRequiringResidual();
+    EXPECT_EQ(secondPoint.point.get()->item(0), 2.0);
     caromGreedySelector.setPointResidual(50.0, 1);
-    int thirdPoint = caromGreedySelector.getNextPointRequiringResidual();
-    EXPECT_EQ(thirdPoint, 3);
+    struct CAROM::GreedyResidualPoint thirdPoint = caromGreedySelector.getNextPointRequiringResidual();
+    EXPECT_EQ(thirdPoint.point.get()->item(0), 99.0);
     caromGreedySelector.setPointResidual(30.0, 1);
     nextPointToSample = caromGreedySelector.getNextParameterPoint();
-    EXPECT_EQ(paramPoints[nextPointToSample], paramPoints[firstPoint]);
+    EXPECT_EQ(nextPointToSample.get()->item(0), firstPoint.point.get()->item(0));
 
     // ERRORS: [0, 50, 0, 30, INF, INF]
 
     firstPoint = caromGreedySelector.getNextPointRequiringResidual();
-    EXPECT_EQ(firstPoint, 4);
+    EXPECT_EQ(firstPoint.point.get()->item(0), 100.0);
     caromGreedySelector.setPointResidual(35.0, 1);
     nextPointToSample = caromGreedySelector.getNextParameterPoint();
-    EXPECT_EQ(paramPoints[nextPointToSample], paramPoints[1]);
+    EXPECT_EQ(nextPointToSample.get()->item(0), paramPoints[1]);
 
     // ERRORS: [0, 0, 0, 30, 35, INF]
 
     firstPoint = caromGreedySelector.getNextPointRequiringResidual();
     caromGreedySelector.setPointResidual(0.3, 1);
-    EXPECT_EQ(firstPoint, 5);
+    EXPECT_EQ(firstPoint.point.get()->item(0), 101.0);
     nextPointToSample = caromGreedySelector.getNextParameterPoint();
-    EXPECT_EQ(paramPoints[nextPointToSample], paramPoints[4]);
+    EXPECT_EQ(nextPointToSample.get()->item(0), paramPoints[4]);
 
     // ERRORS: [0, 0, 0, 30, 0, 0.3]
 
     firstPoint = caromGreedySelector.getNextPointRequiringResidual();
     caromGreedySelector.setPointResidual(0.3, 1);
-    EXPECT_EQ(firstPoint, 3);
+    EXPECT_EQ(firstPoint.point.get()->item(0), 99.0);
 }
 
 TEST(GreedyParameterPointSelectorSerialTest, Test_GreedyParameterPointSelector)
@@ -98,48 +97,54 @@ TEST(GreedyParameterPointSelectorSerialTest, Test_GreedyParameterPointSelector)
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
 
     std::vector<double> paramPoints = {1.0, 2.0, 3.0, 99.0, 100.0, 101.0};
-    CAROM::GreedyParameterPointSelector caromGreedySelector(paramPoints, false, 1, 1, 3, 4, "", false, 1, true);
+    CAROM::GreedyParameterPointSelector caromGreedySelector(paramPoints, false, 1, 1, 3, 4, "", "", false, 1, true);
 
-    int closestROMIndex = caromGreedySelector.getNearestROM(0);
-    EXPECT_EQ(closestROMIndex, -1);
+    CAROM::Vector pointToFindNearestROM(1, false);
+    pointToFindNearestROM.item(0) = 1.0;
 
-    int nextPointToSample = caromGreedySelector.getNextParameterPoint();
-    EXPECT_EQ(nextPointToSample, 2);
-    EXPECT_EQ(paramPoints[nextPointToSample], 3.0);
+    std::shared_ptr<CAROM::Vector> closestROM = caromGreedySelector.getNearestROM(pointToFindNearestROM);
+    EXPECT_EQ(closestROM.get(), nullptr);
 
-    closestROMIndex = caromGreedySelector.getNearestROM(0);
-    EXPECT_EQ(closestROMIndex, 2);
+    std::shared_ptr<CAROM::Vector> nextPointToSample = caromGreedySelector.getNextParameterPoint();
+    EXPECT_EQ(nextPointToSample.get()->item(0), 3.0);
+
+    closestROM = caromGreedySelector.getNearestROM(pointToFindNearestROM);
+    EXPECT_EQ(closestROM.get()->item(0), 3.0);
 
     // ERRORS: [INF, INF, 0, INF, INF]
 
-    int firstPoint = caromGreedySelector.getNextPointRequiringResidual();
-    EXPECT_EQ(firstPoint, 0);
+    struct CAROM::GreedyResidualPoint firstPoint = caromGreedySelector.getNextPointRequiringResidual();
+    EXPECT_EQ(firstPoint.point.get()->item(0), 1.0);
     caromGreedySelector.setPointResidual(100.0, 1);
-    int secondPoint = caromGreedySelector.getNextPointRequiringResidual();
-    EXPECT_EQ(secondPoint, 1);
+    struct CAROM::GreedyResidualPoint secondPoint = caromGreedySelector.getNextPointRequiringResidual();
+    EXPECT_EQ(secondPoint.point.get()->item(0), 2.0);
     caromGreedySelector.setPointResidual(50.0, 1);
-    int thirdPoint = caromGreedySelector.getNextPointRequiringResidual();
-    EXPECT_EQ(thirdPoint, 3);
+    struct CAROM::GreedyResidualPoint thirdPoint = caromGreedySelector.getNextPointRequiringResidual();
+    EXPECT_EQ(thirdPoint.point.get()->item(0), 99.0);
     caromGreedySelector.setPointResidual(30.0, 1);
 
-    closestROMIndex = caromGreedySelector.getNearestROM(0);
-    EXPECT_EQ(closestROMIndex, 2);
+    closestROM = caromGreedySelector.getNearestROM(pointToFindNearestROM);
+    EXPECT_EQ(closestROM.get()->item(0), 3.0);
     nextPointToSample = caromGreedySelector.getNextParameterPoint();
-    EXPECT_EQ(paramPoints[nextPointToSample], paramPoints[firstPoint]);
+    EXPECT_EQ(nextPointToSample.get()->item(0), firstPoint.point.get()->item(0));
 
     // ERRORS: [0, 50, 0, 30, INF, INF]
 
     firstPoint = caromGreedySelector.getNextPointRequiringResidual();
-    EXPECT_EQ(firstPoint, 4);
+    EXPECT_EQ(firstPoint.point.get()->item(0), 100.0);
     caromGreedySelector.setPointResidual(0.9, 1);
     nextPointToSample = caromGreedySelector.getNextParameterPoint();
-    EXPECT_EQ(paramPoints[nextPointToSample], paramPoints[1]);
+    EXPECT_EQ(nextPointToSample.get()->item(0), paramPoints[1]);
 
-    closestROMIndex = caromGreedySelector.getNearestROM(1);
-    EXPECT_EQ(closestROMIndex, 1);
+    pointToFindNearestROM.item(0) = 2.0;
 
-    closestROMIndex = caromGreedySelector.getNearestROM(4);
-    EXPECT_EQ(closestROMIndex, 2);
+    closestROM = caromGreedySelector.getNearestROM(pointToFindNearestROM);
+    EXPECT_EQ(closestROM.get()->item(0), 2.0);
+
+    pointToFindNearestROM.item(0) = 100.0;
+
+    closestROM = caromGreedySelector.getNearestROM(pointToFindNearestROM);
+    EXPECT_EQ(closestROM.get()->item(0), 3.0);
 
 }
 
@@ -156,50 +161,52 @@ TEST(GreedyParameterPointSelectorSerialTest, Test_GreedyParameterPointSaveAndLoa
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
 
     std::vector<double> paramPoints = {1.0, 2.0, 3.0, 99.0, 100.0, 101.0};
-    CAROM::GreedyParameterPointSelector caromGreedySelector(paramPoints, false, 1, 1, 3, 4, "", false, 1, true);
+    CAROM::GreedyParameterPointSelector caromGreedySelector(paramPoints, false, 1, 1, 3, 4, "", "", false, 1, true);
 
     caromGreedySelector.save("greedy_test");
 
     CAROM::GreedyParameterPointSelector caromGreedySelectorLoad("greedy_test");
     caromGreedySelectorLoad.save("greedy_test_LOAD");
 
-    int closestROMIndex = caromGreedySelector.getNearestROM(0);
-    int closestROMIndexLoad = caromGreedySelectorLoad.getNearestROM(0);
-    EXPECT_EQ(closestROMIndex, closestROMIndexLoad);
+    CAROM::Vector pointToFindNearestROM(1, false);
+    pointToFindNearestROM.item(0) = 1.0;
 
-    int nextPointToSample = caromGreedySelector.getNextParameterPoint();
-    int nextPointToSampleLoad = caromGreedySelectorLoad.getNextParameterPoint();
-    EXPECT_EQ(nextPointToSample, nextPointToSampleLoad);
-    EXPECT_EQ(paramPoints[nextPointToSample], paramPoints[nextPointToSampleLoad]);
+    std::shared_ptr<CAROM::Vector> closestROM = caromGreedySelector.getNearestROM(pointToFindNearestROM);
+    std::shared_ptr<CAROM::Vector> closestROMLoad = caromGreedySelectorLoad.getNearestROM(pointToFindNearestROM);
+    EXPECT_EQ(closestROM.get(), closestROMLoad.get());
 
-    closestROMIndex = caromGreedySelector.getNearestROM(0);
-    closestROMIndexLoad = caromGreedySelectorLoad.getNearestROM(0);
-    EXPECT_EQ(closestROMIndex, closestROMIndexLoad);
+    std::shared_ptr<CAROM::Vector> nextPointToSample = caromGreedySelector.getNextParameterPoint();
+    std::shared_ptr<CAROM::Vector> nextPointToSampleLoad = caromGreedySelectorLoad.getNextParameterPoint();
+    EXPECT_EQ(nextPointToSample.get()->item(0), nextPointToSampleLoad.get()->item(0));
+
+    closestROM = caromGreedySelector.getNearestROM(pointToFindNearestROM);
+    closestROMLoad = caromGreedySelectorLoad.getNearestROM(pointToFindNearestROM);
+    EXPECT_EQ(closestROM.get()->item(0), closestROMLoad.get()->item(0));
 
     // ERRORS: [INF, INF, 0, INF, INF]
 
-    int firstPoint = caromGreedySelector.getNextPointRequiringResidual();
-    int firstPointLoad = caromGreedySelectorLoad.getNextPointRequiringResidual();
-    EXPECT_EQ(firstPoint, firstPointLoad);
+    struct CAROM::GreedyResidualPoint firstPoint = caromGreedySelector.getNextPointRequiringResidual();
+    struct CAROM::GreedyResidualPoint firstPointLoad = caromGreedySelectorLoad.getNextPointRequiringResidual();
+    EXPECT_EQ(firstPoint.point.get()->item(0), firstPointLoad.point.get()->item(0));
     caromGreedySelector.setPointResidual(100.0, 1);
     caromGreedySelectorLoad.setPointResidual(100.0, 1);
-    int secondPoint = caromGreedySelector.getNextPointRequiringResidual();
-    int secondPointLoad = caromGreedySelectorLoad.getNextPointRequiringResidual();
-    EXPECT_EQ(secondPoint, secondPointLoad);
+    struct CAROM::GreedyResidualPoint secondPoint = caromGreedySelector.getNextPointRequiringResidual();
+    struct CAROM::GreedyResidualPoint secondPointLoad = caromGreedySelectorLoad.getNextPointRequiringResidual();
+    EXPECT_EQ(secondPoint.point.get()->item(0), secondPointLoad.point.get()->item(0));
     caromGreedySelector.setPointResidual(50.0, 1);
     caromGreedySelectorLoad.setPointResidual(50.0, 1);
-    int thirdPoint = caromGreedySelector.getNextPointRequiringResidual();
-    int thirdPointLoad = caromGreedySelectorLoad.getNextPointRequiringResidual();
-    EXPECT_EQ(thirdPoint, thirdPointLoad);
+    struct CAROM::GreedyResidualPoint thirdPoint = caromGreedySelector.getNextPointRequiringResidual();
+    struct CAROM::GreedyResidualPoint thirdPointLoad = caromGreedySelectorLoad.getNextPointRequiringResidual();
+    EXPECT_EQ(thirdPoint.point.get()->item(0), thirdPointLoad.point.get()->item(0));
     caromGreedySelector.setPointResidual(30.0, 1);
     caromGreedySelectorLoad.setPointResidual(30.0, 1);
 
-    closestROMIndex = caromGreedySelector.getNearestROM(0);
-    closestROMIndexLoad = caromGreedySelectorLoad.getNearestROM(0);
-    EXPECT_EQ(closestROMIndex, closestROMIndexLoad);
+    closestROM = caromGreedySelector.getNearestROM(pointToFindNearestROM);
+    closestROMLoad = caromGreedySelectorLoad.getNearestROM(pointToFindNearestROM);
+    EXPECT_EQ(closestROM.get()->item(0), closestROMLoad.get()->item(0));
     nextPointToSample = caromGreedySelector.getNextParameterPoint();
     nextPointToSampleLoad = caromGreedySelectorLoad.getNextParameterPoint();
-    EXPECT_EQ(paramPoints[nextPointToSample], paramPoints[nextPointToSampleLoad]);
+    EXPECT_EQ(nextPointToSample.get()->item(0), nextPointToSampleLoad.get()->item(0));
 
 }
 
