@@ -261,12 +261,12 @@ private:
     /**
      * @brief The minimum of the parameter space.
      */
-    Vector min_param_point;
+    Vector d_min_param_point;
 
     /**
      * @brief The maximum of the parameter space.
      */
-    Vector max_param_point;
+    Vector d_max_param_point;
 
     /**
      * @brief The parameter points that were already sampled.
@@ -395,7 +395,6 @@ private:
      * @brief Random engine used to generate subsets.
      */
     std::default_random_engine rng;
-    std::vector<std::uniform_real_distribution<double>> unif;
 };
 
 // Given a a vector/double, find the nearest point in a domain.

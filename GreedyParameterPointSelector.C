@@ -294,6 +294,12 @@ GreedyParameterPointSelector::load(
         d_parameter_points.push_back(point);
     }
 
+    std::string vec_path = base_file_name + "_min_point";
+    d_min_param_point.read(vec_path);
+
+    vec_path = base_file_name + "_max_point";
+    d_max_param_point.read(vec_path);
+
     sprintf(tmp, "num_parameter_sampled_indices");
     int num_parameter_sampled_indices;
     database.getInteger(tmp, num_parameter_sampled_indices);
@@ -557,20 +563,16 @@ GreedyParameterPointSelector::initializeParameterPoints(
         d_parameter_point_random_indices.push_back(i);
     }
 
-    min_param_point = d_parameter_points.front();
-    max_param_point = d_parameter_points.back();
+    d_min_param_point = d_parameter_points.front();
+    d_max_param_point = d_parameter_points.back();
+
     for (int i = 0; i < d_parameter_points.size(); i++)
     {
         for (int j = 0; j < d_parameter_points[i].dim(); j++)
         {
-            min_param_point.item(j) = std::min(min_param_point.item(j), d_parameter_points[i].item(j));
-            max_param_point.item(j) = std::max(max_param_point.item(j), d_parameter_points[i].item(j));
+            d_min_param_point.item(j) = std::min(d_min_param_point.item(j), d_parameter_points[i].item(j));
+            d_max_param_point.item(j) = std::max(d_max_param_point.item(j), d_parameter_points[i].item(j));
         }
-    }
-
-    for (int i = 0; i < min_param_point.dim(); i++)
-    {
-        unif.push_back(std::uniform_real_distribution<double>(min_param_point.item(i), max_param_point.item(i)));
     }
 
     generateConvergenceSubset();
@@ -1133,9 +1135,15 @@ GreedyParameterPointSelector::generateConvergenceSubset()
 {
     d_convergence_points.clear();
 
+    std::vector<std::uniform_real_distribution<double>> unif;
+    for (int i = 0; i < d_min_param_point.dim(); i++)
+    {
+        unif.push_back(std::uniform_real_distribution<double>(d_min_param_point.item(i), d_max_param_point.item(i)));
+    }
+
     for (int i = 0; i < d_convergence_subset_size; i++)
     {
-        Vector point(min_param_point.dim(), false);
+        Vector point(d_min_param_point.dim(), false);
         for (int j = 0; j < point.dim(); j++)
         {
             point.item(j) = unif[j](rng);
@@ -1274,6 +1282,12 @@ GreedyParameterPointSelector::save(std::string base_file_name)
         std::string vec_path = base_file_name + "_conv_" + std::to_string(i);
         d_convergence_points[i].write(vec_path);
     }
+
+    std::string vec_path = base_file_name + "_min_point";
+    d_min_param_point.write(vec_path);
+
+    vec_path = base_file_name + "_max_point";
+    d_max_param_point.write(vec_path);
 
     sprintf(tmp, "num_parameter_sampled_indices");
     database.putInteger(tmp, d_parameter_sampled_indices.size());
