@@ -33,6 +33,7 @@ public:
      *
      * @param[in] options The struct containing the options for this abstract
      * SVD class.
+     * @see Options
      */
     SVD(
         Options options);
@@ -172,6 +173,10 @@ public:
             static_cast<unsigned>(num_time_intervals) + 1);
     }
 
+    /**
+     * @brief Get the number of samples taken.
+     *
+     */
     int getNumSamples() const
     {
         return d_num_samples;

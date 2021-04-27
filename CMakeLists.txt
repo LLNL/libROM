@@ -251,17 +251,14 @@ endif(GTEST_FOUND)
 
 # NOTE(goxberry@gmail.com, oxberry1@llnl.gov): This code snippet
 # builds the Doxygen documentation, but outputs said documentation to
-# ${CMAKE_CURRENT_SOURCE_DIR}/docs/rom-dox)...
+# ${CMAKE_CURRENT_SOURCE_DIR}/docs)...
 if(DOXYGEN_FOUND)
-  set(doxyfile_in ${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in)
-  set(doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
-
-  configure_file(${doxyfile_in} ${doxyfile} @ONLY)
+  set(doxyfile ${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile)
 
   add_custom_target(
     documentation ALL
     COMMAND ${DOXYGEN_EXECUTABLE} ${doxyfile}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/docs
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Generating API documentation with Doxygen"
     VERBATIM
     )
@@ -271,7 +268,7 @@ if(DOXYGEN_FOUND)
     doxygen_tagfile
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_CURRENT_SOURCE_DIR}/rom.tag
-    ${CMAKE_CURRENT_BINARY_DIR}/rom-dox/html/rom.tag)
+    ${CMAKE_CURRENT_BINARY_DIR}/docs/html/rom.tag)
   add_dependencies(doxygen_tagfile documentation)
 
 endif(DOXYGEN_FOUND)

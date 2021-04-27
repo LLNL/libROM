@@ -27,7 +27,7 @@ namespace CAROM {
 /**
  * StaticSVD implements the interface of class SVD for the static SVD
  * algorithm.  This algorithm is not scalable and is intended primarily as a
- * sanity check of the incremental svd algorithm.
+ * sanity check of the incremental SVD algorithm.
  */
 class StaticSVD : public SVD
 {
@@ -38,7 +38,7 @@ public:
     ~StaticSVD();
 
     /**
-     * @brief Collect the new sample, u_in at supplied time.
+     * @brief Collect the new sample, u_in at the supplied time.
      *
      * @pre u_in != 0
      * @pre time >= 0.0
@@ -57,7 +57,8 @@ public:
         bool add_without_increase = false);
 
     /**
-     * @brief Returns the basis vectors for the current time interval.
+     * @brief Returns the basis vectors for the current time interval as a
+     *        Matrix.
      *
      * @post thisIntervalBasisCurrent()
      *
@@ -68,7 +69,8 @@ public:
     getSpatialBasis();
 
     /**
-     * @brief Returns the temporal basis vectors for the current time interval.
+     * @brief Returns the temporal basis vectors for the current time interval as
+     *        a Matrix.
      *
      * @post thisIntervalBasisCurrent()
      *
@@ -105,6 +107,7 @@ protected:
       *
       * @param[in] options The struct containing the options for this SVD
       *                    implementation.
+      * @see Options
       */
     StaticSVD(
         Options options
@@ -112,17 +115,17 @@ protected:
 
     /**
      * @brief Gathers samples from all other processors to form complete
-     * sample of system and computes the SVD.
+     *        sample of system and computes the SVD.
      */
     virtual void
     computeSVD();
 
     /**
-     * @brief Tells if the basis vectors for this time interval are up to
-     * date.
+     * @brief Checks if the basis vectors for this time interval are up to
+     *        date.
      *
      * @return True if the basis vectors for this time interval are up to
-     * date.
+     *         date.
      */
     bool
     thisIntervalBasisCurrent()
@@ -142,7 +145,7 @@ protected:
 
     /**
      * @brief Flag to indicate if the basis vectors for the current time
-     * interval are up to date.
+     *        interval are up to date.
      */
     bool d_this_interval_basis_current;
 
@@ -158,14 +161,15 @@ protected:
 
     /**
      * @brief The starting row (0-based) of the matrix that each process owns.
-     * Stored to avoid an MPI operation to get this operation every time we
-     * scatter a sample.
+     *        Stored to avoid an MPI operation to get this operation every time
+     *        we scatter a sample.
      */
     std::vector<int> d_istarts;
 
     /**
      * @brief The number of rows that each process owns. Stored to avoid
-     * an MPI operation to get this operation every time we scatter a sample.
+     *        an MPI operation to get this operation every time we scatter a
+     *        sample.
      */
     std::vector<int> d_dims;
 
@@ -175,9 +179,13 @@ protected:
     int d_total_dim;
 
     /**
-     * @brief The number of processor rows and processor columns in the grid.
+     * @brief The number of processor rows in the grid.
      */
     int d_nprow;
+
+    /**
+     * @brief The number of processor columns in the grid.
+     */
     int d_npcol;
 
     /**
@@ -187,7 +195,7 @@ protected:
 
     /**
      * @brief Get the system's total row dimension and where my rows sit in
-     * the matrix.
+     *        the matrix.
      */
     void get_global_info();
 
@@ -201,9 +209,18 @@ protected:
      */
     double d_singular_value_tol;
 
+    /**
+     * @brief Delete the samples from ScaLAPACK.
+     */
     void delete_samples();
+    /**
+     * @brief Delete the factorizer from ScaLAPACK.
+     */
     void delete_factorizer();
 
+    /**
+     * @brief Broadcast the sample to all processors.
+     */
     void broadcast_sample(const double* u_in);
 
 private:

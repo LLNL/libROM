@@ -20,9 +20,9 @@
 namespace CAROM {
 
 /**
- * A simple matrix class in which the rows may be distributed across multuple
- * processes.  This class supports only the basic operations that are needed by
- * the SVD library.
+ * Class Matrix is a simple matrix class in which the rows may be distributed
+ * across multiple processes. This class supports only the basic operations that
+ * are needed by the SVD library.
  */
 class Matrix
 {
@@ -206,9 +206,8 @@ public:
     }
 
     /**
-     * @brief Returns the number of columns in the Matrix.
-     *
-     * This method will return the same value from each processor.
+     * @brief Returns the number of columns in the Matrix. This method will
+      *       return the same value from each processor.
      *
      * @return The number of columns of the Matrix.
      */
@@ -413,7 +412,8 @@ public:
     * @pre !other.distributed()
     * @pre numColumns() == other.dim()
     *
-    * @param[in] other The Vector to multiply with this.
+    * @param[in] this_row The row of the matrix to multiple with other.
+    * @param[in] other The Vector to multiply with this_row of the matrix.
     * @param[out] result The product Vector.
     */
     void
@@ -435,7 +435,8 @@ public:
     * @pre !other.distributed()
     * @pre numColumns() == other.dim()
     *
-    * @param[in] other The Vector to multiply with this.
+    * @param[in] this_row The row of the matrix to multiple with other.
+    * @param[in] other The Vector to multiply with this_row of the matrix.
     * @param[out] other The product Vector.
     */
     void
@@ -756,8 +757,9 @@ public:
      * from QRCP of transpose of this Matrix, has length pivots_requested
      * @param[out] row_pivot_owner Array of process rank that owns
      * each pivot on the communicator owned by this Matrix.
-     * @param[in]  number of pivots requested, must be less than or equal
-     * to the number of rows of this Matrix.
+     * @param[in] pivots_requested The number of pivots requested, must be less
+     *                             than or equal to the number of rows of this
+     *                             Matrix.
      */
     void
     qrcp_pivots_transpose(int* row_pivot,
@@ -851,7 +853,7 @@ public:
     /**
      * @brief write Matrix into (a) HDF file(s).
      *
-     * @param[in] prefix The name of the prefix of the file name.
+     * @param[in] base_file_name The base part of the file name.
      *
      */
     void write(const std::string& base_file_name);
@@ -859,11 +861,14 @@ public:
     /**
      * @brief read Matrix into (a) HDF file(s).
      *
-     * @param[in] prefix The name of the prefix of the file name.
+     * @param[in] base_file_name The base part of the file name.
      *
      */
     void read(const std::string& base_file_name);
 
+    /**
+     * @brief Get the matrix data as a pointer.
+     */
     double *getData() const
     {
         return d_mat;
@@ -871,12 +876,7 @@ public:
 
 private:
     /**
-     * @brief Default constructor is not implemented.
-     */
-    // Matrix();
-
-    /**
-     * @brief Compute number of rows across all processors
+     * @brief Compute number of rows across all processors.
      *
      * @pre distributed()
      */
@@ -1090,10 +1090,11 @@ Matrix outerProduct(const Vector &v, const Vector &w);
  *
  * @param[in] v Vector of elements that will be on the diagonal of the
  *              output matrix.
- * @param[out] diagonalMatrix The diagonal matrix created by this function.
  *
  * @post diagonalMatrix.distributed() == v.distributed()
  * @post diagonalMatrix.numRows() == v.dim()
+ *
+ * @return The diagonal matrix created by this function.
  */
 Matrix DiagonalMatrixFactory(const Vector &v);
 
@@ -1105,10 +1106,11 @@ Matrix DiagonalMatrixFactory(const Vector &v);
  *
  * @param[in] v Vector of elements that will be on the diagonal of the
  *              output matrix.
- * @param[out] diagonalMatrix The diagonal matrix created by this function.
  *
  * @post diagonalMatrix.distributed() == v.distributed()
  * @post diagonalMatrix.numRows() == v.dim()
+ *
+ * @return The identity matrix created by this function.
  */
 Matrix IdentityMatrixFactory(const Vector &v);
 

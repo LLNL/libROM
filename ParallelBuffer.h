@@ -174,6 +174,9 @@ private:
      */
     int d_buffer_ptr;
 
+    /**
+     * @brief The default buffer size.
+     */
     static const int DEFAULT_BUFFER_SIZE;
 };
 
