@@ -1047,7 +1047,6 @@ private:
     bool d_owns_data;
 };
 
-
 /**
  * @brief Computes the outer product of two Vectors, v and w.
  *

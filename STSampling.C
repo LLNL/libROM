@@ -41,13 +41,11 @@ void SampleTemporalIndices(const Matrix* s_basis,
     // Get the number of basis vectors and the size of each basis vector.
     CAROM_VERIFY(0 < num_f_basis_vectors_used && num_f_basis_vectors_used <= s_basis->numColumns()
                  && num_f_basis_vectors_used <= t_basis->numColumns());
-    CAROM_VERIFY(num_samples_req > 0);  // TODO: just replace num_samples with num_samples_req
+    CAROM_VERIFY(num_samples_req > 0);
     const int num_basis_vectors =
         std::min(num_f_basis_vectors_used, s_basis->numColumns());
-    //const int num_samples = num_samples_req > 0 ? num_samples_req : num_basis_vectors;
     const int num_samples = num_samples_req;
     const int numExcluded = excludeFinalTime ? 1 : 0;
-    //CAROM_VERIFY(num_basis_vectors <= num_samples && num_samples <= t_basis->numRows() - numExcluded);
     CAROM_VERIFY(num_samples <= t_basis->numRows() - numExcluded);
     const int s_size = s_basis->numRows();
     const int t_size = t_basis->numRows();
