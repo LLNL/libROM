@@ -1,0 +1,221 @@
+/******************************************************************************
+ *
+ * Copyright (c) 2013-2021, Lawrence Livermore National Security, LLC
+ * and other libROM project developers. See the top-level COPYRIGHT
+ * file for details.
+ *
+ * SPDX-License-Identifier: (Apache-2.0 OR MIT)
+ *
+ *****************************************************************************/
+
+// Description: This class greedily selects parameter points
+//              for the construction of a ROM database.
+
+#include "GreedyParameterPointRandomSampler.h"
+#include "HDFDatabase.h"
+#include "mpi.h"
+#include <cmath>
+#include <algorithm>
+#include <limits.h>
+#include <fstream>
+
+namespace CAROM {
+
+GreedyParameterPointRandomSampler::GreedyParameterPointRandomSampler(
+    double param_space_min,
+    double param_space_max,
+    int num_parameter_points,
+    bool check_local_rom,
+    double relative_error_tolerance,
+    double alpha,
+    int subset_size,
+    int convergence_subset_size,
+    bool use_latin_hypercube,
+    std::string output_log_path,
+    std::string warm_start_file_name,
+    bool use_centroid,
+    int random_seed,
+    bool debug_algorithm) :
+    GreedyParameterPointSampler(
+        param_space_min,
+        param_space_max,
+        num_parameter_points,
+        check_local_rom,
+        relative_error_tolerance,
+        alpha,
+        subset_size,
+        convergence_subset_size,
+        output_log_path,
+        warm_start_file_name,
+        use_centroid,
+        random_seed,
+        debug_algorithm
+    )
+{
+    d_use_latin_hypercube = use_latin_hypercube;
+
+    constructParameterPoints();
+    initializeParameterPoints();
+
+    if (warm_start_file_name != "")
+    {
+        addDatabaseFromFile(warm_start_file_name);
+    }
+}
+
+GreedyParameterPointRandomSampler::GreedyParameterPointRandomSampler(
+    Vector param_space_min,
+    Vector param_space_max,
+    int num_parameter_points,
+    bool check_local_rom,
+    double relative_error_tolerance,
+    double alpha,
+    int subset_size,
+    int convergence_subset_size,
+    bool use_latin_hypercube,
+    std::string output_log_path,
+    std::string warm_start_file_name,
+    bool use_centroid,
+    int random_seed,
+    bool debug_algorithm) :
+    GreedyParameterPointSampler(
+        param_space_min,
+        param_space_max,
+        num_parameter_points,
+        check_local_rom,
+        relative_error_tolerance,
+        alpha,
+        subset_size,
+        convergence_subset_size,
+        output_log_path,
+        warm_start_file_name,
+        use_centroid,
+        random_seed,
+        debug_algorithm
+    )
+{
+    d_use_latin_hypercube = use_latin_hypercube;
+
+    constructParameterPoints();
+    initializeParameterPoints();
+
+    if (warm_start_file_name != "")
+    {
+        addDatabaseFromFile(warm_start_file_name);
+    }
+}
+
+GreedyParameterPointRandomSampler::GreedyParameterPointRandomSampler(
+    std::string base_file_name,
+    std::string output_log_path) :
+    GreedyParameterPointSampler(
+        base_file_name,
+        output_log_path
+    ){}
+
+void
+GreedyParameterPointRandomSampler::constructParameterPoints()
+{
+    GreedyParameterPointSampler::constructParameterPoints();
+
+    Vector vec(d_min_param_point.dim(), false);
+
+    if (d_use_latin_hypercube)
+    {
+        std::vector<double> frequencies;
+        std::vector<std::vector<double>> point_coordinates;
+        for (int i = 0; i < d_min_param_point.dim(); i++)
+        {
+            frequencies.push_back(std::abs(d_max_param_point.item(i) - d_min_param_point.item(i)) / d_num_parameter_points);
+        }
+        
+        for (int i = 0; i < d_num_parameter_points; i++) {
+            point_coordinates.push_back(std::vector<double>());
+            for (int j = 0; j < d_min_param_point.dim(); j++)
+            {
+                double low = d_min_param_point.item(j) + i * frequencies[j];
+                double high = d_min_param_point.item(j) + ((i + 1) * frequencies[j]);
+                std::uniform_real_distribution<double> unif(low, high);
+                point_coordinates[i].push_back(unif(rng));
+            }
+        }
+
+        std::uniform_int_distribution<int> index_dist(0, d_num_parameter_points - 1);
+        for (int i = 0; i < d_num_parameter_points; i++)
+        {
+            for (int j = 0; j < d_min_param_point.dim(); j++)
+            {
+                int point_index = index_dist(rng);
+                vec.item(j) = point_coordinates[point_index][j];
+            }
+            d_parameter_points.push_back(vec);
+        }
+    }
+    else
+    {
+        d_parameter_points = generateRandomPoints(d_num_parameter_points);
+    }
+}
+
+void
+GreedyParameterPointRandomSampler::load(std::string base_file_name)
+{
+    GreedyParameterPointSampler::load(base_file_name);
+
+    char tmp[100];
+    sprintf(tmp, ".%06d", d_rank);
+    std::string full_file_name = base_file_name + tmp;
+    HDFDatabase database;
+    database.open(full_file_name);
+
+    if (!d_procedure_completed)
+    {
+        int bool_int_temp;
+        sprintf(tmp, "use_latin_hypercube");
+        database.getInteger(tmp, bool_int_temp);
+        d_use_latin_hypercube = (bool) bool_int_temp;
+    }
+
+    database.close();
+}
+
+void
+GreedyParameterPointRandomSampler::save(std::string base_file_name)
+{
+    GreedyParameterPointSampler::save(base_file_name);
+
+    char tmp[100];
+    sprintf(tmp, ".%06d", d_rank);
+    std::string full_file_name = base_file_name + tmp;
+    HDFDatabase database;
+    database.open(full_file_name);
+
+    if (!d_procedure_completed)
+    {
+        sprintf(tmp, "use_latin_hypercube");
+        database.putInteger(tmp, d_use_latin_hypercube);
+
+    }
+
+    database.close();
+}
+
+void
+GreedyParameterPointRandomSampler::getNextParameterPointAfterConvergenceFailure()
+{
+    if (d_use_latin_hypercube)
+    {
+        d_next_point_to_sample = getNearestNonSampledPoint(d_convergence_points[d_counter]);
+    }
+    else
+    {
+        d_parameter_points.push_back(d_convergence_points[d_counter]);
+        d_next_point_to_sample = d_parameter_points.size() - 1;
+    }
+}
+
+GreedyParameterPointRandomSampler::~GreedyParameterPointRandomSampler()
+{
+}
+
+}

@@ -124,7 +124,9 @@ set(module_list
   IncrementalSVDStandard
   StaticSVD
   RandomizedSVD
-  GreedyParameterPointSelector
+  GreedyParameterPointSampler
+  GreedyParameterPointRandomSampler
+  GreedyParameterPointPreDefinedSampler
   Database
   HDFDatabase
   Utilities
@@ -237,8 +239,7 @@ if(GTEST_FOUND)
     SVD
     StaticSVD
     RandomizedSVD
-    IncrementalSVD
-    GreedyParameterPointSelector)
+    IncrementalSVD)
   foreach(stem IN LISTS unit_test_stems)
     add_executable(test_${stem} tests/test_${stem}.C)
     target_link_libraries(test_${stem} PRIVATE ROM

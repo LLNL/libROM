@@ -11,11 +11,11 @@
 // Description: This class greedily selects parameter points
 //              for the construction of a ROM database.
 
-#include "GreedyParameterPointSelector.h"
-#include "Vector.h"
+#include "GreedyParameterPointSampler.h"
 #include "HDFDatabase.h"
 #include "mpi.h"
 #include <cmath>
+#include <algorithm>
 #include <limits.h>
 #include <fstream>
 
@@ -97,11 +97,11 @@ getNearestPointIndex(std::vector<double> param_points, double point)
     return closest_point_index;
 }
 
-GreedyParameterPointSelector::GreedyParameterPointSelector(
+GreedyParameterPointSampler::GreedyParameterPointSampler(
     std::vector<Vector> parameter_points,
     bool check_local_rom,
-    double tolerance,
-    double saturation,
+    double relative_error_tolerance,
+    double alpha,
     int subset_size,
     int convergence_subset_size,
     std::string output_log_path,
@@ -110,22 +110,20 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
     int random_seed,
     bool debug_algorithm)
 {
-    constructObject(check_local_rom, tolerance, saturation,
+
+    d_num_parameter_points = parameter_points.size();
+    CAROM_VERIFY(d_num_parameter_points >= 1);
+    d_parameter_points = parameter_points;
+
+    constructObject(check_local_rom, relative_error_tolerance, alpha,
                     subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
-
-    initializeParameterPoints(parameter_points);
-
-    if (warm_start_file_name != "")
-    {
-        addDatabaseFromFile(warm_start_file_name);
-    }
 }
 
-GreedyParameterPointSelector::GreedyParameterPointSelector(
+GreedyParameterPointSampler::GreedyParameterPointSampler(
     std::vector<double> parameter_points,
     bool check_local_rom,
-    double tolerance,
-    double saturation,
+    double relative_error_tolerance,
+    double alpha,
     int subset_size,
     int convergence_subset_size,
     std::string output_log_path,
@@ -134,31 +132,30 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
     int random_seed,
     bool debug_algorithm)
 {
+
+    d_num_parameter_points = parameter_points.size();
+
     std::vector<Vector> parameter_points_vec;
-    for (int i = 0; i < parameter_points.size(); i++) {
+    for (int i = 0; i < parameter_points.size(); i++)
+    {
         Vector vec(1, false);
         vec.item(0) = parameter_points[i];
         parameter_points_vec.push_back(vec);
     }
+    CAROM_VERIFY(d_num_parameter_points >= 1);
+    d_parameter_points = parameter_points_vec;
 
-    constructObject(check_local_rom, tolerance, saturation,
+    constructObject(check_local_rom, relative_error_tolerance, alpha,
                     subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
-
-    initializeParameterPoints(parameter_points_vec);
-
-    if (warm_start_file_name != "")
-    {
-        addDatabaseFromFile(warm_start_file_name);
-    }
 }
 
-GreedyParameterPointSelector::GreedyParameterPointSelector(
-    double param_space_min,
-    double param_space_max,
-    int param_space_size,
+GreedyParameterPointSampler::GreedyParameterPointSampler(
+    Vector param_space_min,
+    Vector param_space_max,
+    int num_parameter_points,
     bool check_local_rom,
-    double tolerance,
-    double saturation,
+    double relative_error_tolerance,
+    double alpha,
     int subset_size,
     int convergence_subset_size,
     std::string output_log_path,
@@ -167,55 +164,45 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
     int random_seed,
     bool debug_algorithm)
 {
+
+    d_min_param_point = param_space_min;
+    d_max_param_point = param_space_max;
+    d_num_parameter_points = num_parameter_points;
+
+    constructObject(check_local_rom, relative_error_tolerance, alpha, subset_size,
+                    convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
+}
+
+GreedyParameterPointSampler::GreedyParameterPointSampler(
+    double param_space_min,
+    double param_space_max,
+    int num_parameter_points,
+    bool check_local_rom,
+    double relative_error_tolerance,
+    double alpha,
+    int subset_size,
+    int convergence_subset_size,
+    std::string output_log_path,
+    std::string warm_start_file_name,
+    bool use_centroid,
+    int random_seed,
+    bool debug_algorithm)
+{
+
     Vector param_space_min_vec(1, false);
     param_space_min_vec.item(0) = param_space_min;
     Vector param_space_max_vec(1, false);
     param_space_max_vec.item(0) = param_space_max;
 
-    constructObject(check_local_rom, tolerance, saturation, subset_size,
+    d_min_param_point = param_space_min_vec;
+    d_max_param_point = param_space_max_vec;
+    d_num_parameter_points = num_parameter_points;
+
+    constructObject(check_local_rom, relative_error_tolerance, alpha, subset_size,
                     convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
-
-    std::vector<Vector> parameter_points_vec =
-        constructParameterPoints(param_space_min_vec, param_space_max_vec, param_space_size);
-
-    initializeParameterPoints(parameter_points_vec);
-
-    if (warm_start_file_name != "")
-    {
-        addDatabaseFromFile(warm_start_file_name);
-    }
 }
 
-GreedyParameterPointSelector::GreedyParameterPointSelector(
-    Vector param_space_min,
-    Vector param_space_max,
-    int param_space_size,
-    bool check_local_rom,
-    double tolerance,
-    double saturation,
-    int subset_size,
-    int convergence_subset_size,
-    std::string output_log_path,
-    std::string warm_start_file_name,
-    bool use_centroid,
-    int random_seed,
-    bool debug_algorithm)
-{
-    constructObject(check_local_rom, tolerance, saturation, subset_size,
-                    convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
-
-    std::vector<Vector> parameter_points_vec =
-        constructParameterPoints(param_space_min, param_space_max, param_space_size);
-
-    initializeParameterPoints(parameter_points_vec);
-
-    if (warm_start_file_name != "")
-    {
-        addDatabaseFromFile(warm_start_file_name);
-    }
-}
-
-GreedyParameterPointSelector::GreedyParameterPointSelector(
+GreedyParameterPointSampler::GreedyParameterPointSampler(
     std::string base_file_name,
     std::string output_log_path)
 {
@@ -236,7 +223,7 @@ GreedyParameterPointSelector::GreedyParameterPointSelector(
 }
 
 void
-GreedyParameterPointSelector::addDatabaseFromFile(
+GreedyParameterPointSampler::addDatabaseFromFile(
     std::string const& warm_start_file_name)
 {
     char tmp[100];
@@ -274,7 +261,7 @@ GreedyParameterPointSelector::addDatabaseFromFile(
 }
 
 void
-GreedyParameterPointSelector::load(
+GreedyParameterPointSampler::load(
     std::string base_file_name)
 {
     char tmp[100];
@@ -323,10 +310,14 @@ GreedyParameterPointSelector::load(
     {
         sprintf(tmp, "max_error");
         database.getDouble(tmp, d_max_error);
-        sprintf(tmp, "tol");
-        database.getDouble(tmp, d_tol);
-        sprintf(tmp, "sat");
-        database.getDouble(tmp, d_sat);
+        sprintf(tmp, "curr_relative_error");
+        database.getDouble(tmp, d_curr_relative_error);
+        sprintf(tmp, "error_indicator_tol");
+        database.getDouble(tmp, d_error_indicator_tol);
+        sprintf(tmp, "relative_error_tol");
+        database.getDouble(tmp, d_relative_error_tol);
+        sprintf(tmp, "alpha");
+        database.getDouble(tmp, d_alpha);
         sprintf(tmp, "subset_size");
         database.getInteger(tmp, d_subset_size);
         sprintf(tmp, "convergence_subset_size");
@@ -347,6 +338,9 @@ GreedyParameterPointSelector::load(
         sprintf(tmp, "convergence_started");
         database.getInteger(tmp, bool_int_temp);
         d_convergence_started = (bool) bool_int_temp;
+        sprintf(tmp, "next_parameter_point_computed");
+        database.getInteger(tmp, bool_int_temp);
+        d_next_parameter_point_computed = (bool) bool_int_temp;
         sprintf(tmp, "point_requiring_residual_computed");
         database.getInteger(tmp, bool_int_temp);
         d_point_requiring_residual_computed = (bool) bool_int_temp;
@@ -384,21 +378,18 @@ GreedyParameterPointSelector::load(
     database.close();
 }
 
-std::vector<Vector>
-GreedyParameterPointSelector::constructParameterPoints(
-    Vector param_space_min,
-    Vector param_space_max,
-    int param_space_size)
+void
+GreedyParameterPointSampler::constructParameterPoints()
 {
-    CAROM_VERIFY(param_space_min.dim() == param_space_max.dim());
-    CAROM_VERIFY(param_space_size >= 1);
+    CAROM_VERIFY(d_min_param_point.dim() == d_max_param_point.dim());
+    CAROM_VERIFY(d_num_parameter_points >= 1);
 
     bool isGreater = false;
-    for (int i = 0; i < param_space_min.dim(); i++)
+    for (int i = 0; i < d_min_param_point.dim(); i++)
     {
-        if (param_space_size == 1)
+        if (d_num_parameter_points == 1)
         {
-            if (param_space_max.item(i) >= param_space_min.item(i))
+            if (d_max_param_point.item(i) >= d_min_param_point.item(i))
             {
                 isGreater = true;
                 break;
@@ -406,7 +397,7 @@ GreedyParameterPointSelector::constructParameterPoints(
         }
         else
         {
-            if (param_space_max.item(i) > param_space_min.item(i))
+            if (d_max_param_point.item(i) > d_min_param_point.item(i))
             {
                 isGreater = true;
                 break;
@@ -419,17 +410,17 @@ GreedyParameterPointSelector::constructParameterPoints(
     {
         if (d_output_log_path == "")
         {
-            std::cout << "Total number of sample points: " << param_space_size << std::endl;
+            std::cout << "Total number of sample points: " << d_num_parameter_points << std::endl;
             std::cout << "Parameter space minimum: [ ";
-            for (int i = 0 ; i < param_space_min.dim(); i++)
+            for (int i = 0 ; i < d_min_param_point.dim(); i++)
             {
-                std::cout << param_space_min.item(i) << " ";
+                std::cout << d_min_param_point.item(i) << " ";
             }
             std::cout << "]" << std::endl;
             std::cout << "Parameter space maximum: [ ";
-            for (int i = 0 ; i < param_space_max.dim(); i++)
+            for (int i = 0 ; i < d_max_param_point.dim(); i++)
             {
-                std::cout << param_space_max.item(i) << " ";
+                std::cout << d_max_param_point.item(i) << " ";
             }
             std::cout << "]" << std::endl;
         }
@@ -437,46 +428,29 @@ GreedyParameterPointSelector::constructParameterPoints(
         {
             std::ofstream database_history;
             database_history.open(d_output_log_path, std::ios::app);
-            database_history << "Total number of sample points: " << param_space_size << std::endl;
+            database_history << "Total number of sample points: " << d_num_parameter_points << std::endl;
             database_history << "Parameter space minimum: [ ";
-            for (int i = 0 ; i < param_space_min.dim(); i++)
+            for (int i = 0 ; i < d_min_param_point.dim(); i++)
             {
-                database_history << param_space_min.item(i) << " ";
+                database_history << d_min_param_point.item(i) << " ";
             }
             database_history << "]" << std::endl;
             database_history << "Parameter space maximum: [ ";
-            for (int i = 0 ; i < param_space_max.dim(); i++)
+            for (int i = 0 ; i < d_max_param_point.dim(); i++)
             {
-                database_history << param_space_max.item(i) << " ";
+                database_history << d_max_param_point.item(i) << " ";
             }
             database_history << "]" << std::endl;
             database_history.close();
         }
     }
-
-    std::vector<Vector> parameter_points_vec;
-    std::vector<double> frequencies;
-    Vector vec(param_space_min.dim(), false);
-    for (int i = 0; i < param_space_min.dim(); i++)
-    {
-        frequencies.push_back(std::abs(param_space_max.item(i) - param_space_min.item(i)) / (param_space_size - 1));
-    }
-    for (int i = 0; i < param_space_size; i++) {
-        for (int j = 0; j < param_space_min.dim(); j++)
-        {
-            vec.item(j) = param_space_min.item(j) + i * frequencies[j];
-        }
-        parameter_points_vec.push_back(vec);
-    }
-
-    return parameter_points_vec;
 }
 
 void
-GreedyParameterPointSelector::constructObject(
+GreedyParameterPointSampler::constructObject(
     bool check_local_rom,
-    double tolerance,
-    double saturation,
+    double relative_error_tolerance,
+    double alpha,
     int subset_size,
     int convergence_subset_size,
     std::string output_log_path,
@@ -484,8 +458,8 @@ GreedyParameterPointSelector::constructObject(
     int random_seed,
     bool debug_algorithm)
 {
-    CAROM_VERIFY(tolerance > 0.0);
-    CAROM_VERIFY(saturation > 0.0);
+    CAROM_VERIFY(relative_error_tolerance > 0.0);
+    CAROM_VERIFY(alpha >= 1.0);
     CAROM_VERIFY(subset_size > 0);
     CAROM_VERIFY(convergence_subset_size > 0);
     CAROM_VERIFY(subset_size < convergence_subset_size);
@@ -501,8 +475,9 @@ GreedyParameterPointSelector::constructObject(
     }
 
     d_check_local_rom = check_local_rom;
-    d_tol = tolerance;
-    d_sat = saturation;
+    d_error_indicator_tol = 0.0;
+    d_relative_error_tol = relative_error_tolerance;
+    d_alpha = alpha;
     d_subset_size = subset_size;
     d_convergence_subset_size = convergence_subset_size;
     d_output_log_path = output_log_path;
@@ -510,6 +485,7 @@ GreedyParameterPointSelector::constructObject(
     d_max_error = 0;
     d_next_point_to_sample = -1;
     d_next_point_requiring_residual = -1;
+    d_next_parameter_point_computed = false;
     d_point_requiring_residual_computed = false;
     d_iteration_started = false;
     d_convergence_started = false;
@@ -525,8 +501,8 @@ GreedyParameterPointSelector::constructObject(
     {
         if (d_output_log_path == "")
         {
-            std::cout << "Greedy tolerance: " << d_tol << std::endl;
-            std::cout << "Greedy saturation constant: " << d_sat << std::endl;
+            std::cout << "Greedy relative error tolerance: " << d_relative_error_tol << std::endl;
+            std::cout << "Greedy alpha constant: " << d_alpha << std::endl;
             std::cout << "Greedy iteration subset size: " << d_subset_size << std::endl;
             std::cout << "Greedy convergence subset size: " << d_convergence_subset_size << std::endl;
         }
@@ -534,8 +510,8 @@ GreedyParameterPointSelector::constructObject(
         {
             std::ofstream database_history;
             database_history.open(d_output_log_path, std::ios::app);
-            database_history << "Greedy tolerance: " << d_tol << std::endl;
-            database_history << "Greedy saturation constant: " << d_sat << std::endl;
+            database_history << "Greedy relative error tolerance: " << d_relative_error_tol << std::endl;
+            database_history << "Greedy alpha constant: " << d_alpha << std::endl;
             database_history << "Greedy iteration subset size: " << d_subset_size << std::endl;
             database_history << "Greedy convergence subset size: " << d_convergence_subset_size << std::endl;
             database_history.close();
@@ -544,14 +520,11 @@ GreedyParameterPointSelector::constructObject(
 }
 
 void
-GreedyParameterPointSelector::initializeParameterPoints(
-    std::vector<Vector> parameter_points)
+GreedyParameterPointSampler::initializeParameterPoints()
 {
-    CAROM_VERIFY(parameter_points.size() > 0);
-    CAROM_VERIFY(d_subset_size <= parameter_points.size());
-    CAROM_VERIFY(d_convergence_subset_size <= parameter_points.size());
-
-    d_parameter_points = parameter_points;
+    CAROM_VERIFY(d_parameter_points.size() > 0);
+    CAROM_VERIFY(d_subset_size <= d_parameter_points.size());
+    CAROM_VERIFY(d_convergence_subset_size <= d_parameter_points.size());
 
     for (int i = 0; i < d_parameter_points.size() - 1; i++) {
         CAROM_VERIFY(d_parameter_points[i].dim() == d_parameter_points[i + 1].dim());
@@ -563,23 +536,11 @@ GreedyParameterPointSelector::initializeParameterPoints(
         d_parameter_point_random_indices.push_back(i);
     }
 
-    d_min_param_point = d_parameter_points.front();
-    d_max_param_point = d_parameter_points.back();
-
-    for (int i = 0; i < d_parameter_points.size(); i++)
-    {
-        for (int j = 0; j < d_parameter_points[i].dim(); j++)
-        {
-            d_min_param_point.item(j) = std::min(d_min_param_point.item(j), d_parameter_points[i].item(j));
-            d_max_param_point.item(j) = std::max(d_max_param_point.item(j), d_parameter_points[i].item(j));
-        }
-    }
-
     generateConvergenceSubset();
 }
 
 std::shared_ptr<Vector>
-GreedyParameterPointSelector::getNextParameterPoint()
+GreedyParameterPointSampler::getNextParameterPoint()
 {
     if (isComplete())
     {
@@ -588,6 +549,11 @@ GreedyParameterPointSelector::getNextParameterPoint()
     if (d_iteration_started)
     {
         return std::shared_ptr<Vector>(nullptr);
+    }
+    if (d_next_parameter_point_computed)
+    {
+        Vector* result = new Vector(d_parameter_points[d_next_point_to_sample]);
+        return std::shared_ptr<Vector>(result);
     }
 
     if (d_parameter_sampled_indices.size() == 0)
@@ -641,14 +607,9 @@ GreedyParameterPointSelector::getNextParameterPoint()
         }
     }
 
-    d_iteration_started = true;
     d_max_error = 0;
 
     int curr_point_to_sample = d_next_point_to_sample;
-    d_next_point_to_sample = -1;
-
-    d_parameter_point_errors[curr_point_to_sample] = 0;
-    d_parameter_point_local_rom[curr_point_to_sample] = curr_point_to_sample;
 
     d_convergence_started = false;
     d_subset_created = false;
@@ -685,17 +646,25 @@ GreedyParameterPointSelector::getNextParameterPoint()
         }
     }
 
-    if (d_check_local_rom)
+    if (d_parameter_sampled_indices.size() > 1)
     {
-        d_next_point_requiring_residual = curr_point_to_sample;
-        d_point_requiring_residual_computed = true;
+        d_next_parameter_point_computed = true;
     }
     else
     {
-        // Precompute next residual point
-        // This will allow us to figure out if the greedy algorithm has terminated
-        // early without needing an extra call to the residual function.
-        getNextPointRequiringResidual();
+        if (d_check_local_rom)
+        {
+            d_next_point_requiring_residual = curr_point_to_sample;
+            d_point_requiring_residual_computed = true;
+            d_iteration_started = true;
+        }
+        else
+        {
+            // Precompute next residual point
+            // This will allow us to figure out if the greedy algorithm has terminated
+            // early without needing an extra call to the residual function.
+            getNextPointRequiringResidual();
+        }
     }
 
     Vector* result = new Vector(d_parameter_points[curr_point_to_sample]);
@@ -703,7 +672,25 @@ GreedyParameterPointSelector::getNextParameterPoint()
 }
 
 struct GreedyResidualPoint
-GreedyParameterPointSelector::getNextPointRequiringResidual()
+GreedyParameterPointSampler::getNextPointRequiringRelativeError()
+{
+    if (isComplete())
+    {
+        return createGreedyResidualPoint(nullptr, nullptr);
+    }
+    if (!d_next_parameter_point_computed)
+    {
+        return createGreedyResidualPoint(nullptr, nullptr);
+    }
+
+    Vector* result1 = new Vector(d_parameter_points[d_next_point_to_sample]);
+    Vector* result2 = new Vector(d_parameter_points[getNearestROMIndex(d_next_point_to_sample, true)]);
+
+    return createGreedyResidualPoint(result1, result2);
+}
+
+struct GreedyResidualPoint
+GreedyParameterPointSampler::getNextPointRequiringResidual()
 {
     if (isComplete())
     {
@@ -725,12 +712,12 @@ GreedyParameterPointSelector::getNextPointRequiringResidual()
 }
 
 struct GreedyResidualPoint
-GreedyParameterPointSelector::getNextSubsetPointRequiringResidual()
+GreedyParameterPointSampler::getNextSubsetPointRequiringResidual()
 {
     if (d_point_requiring_residual_computed)
     {
         Vector* result1 = new Vector(d_parameter_points[d_next_point_requiring_residual]);
-        Vector* result2 = new Vector(d_parameter_points[getNearestROMIndex(d_next_point_requiring_residual)]);
+        Vector* result2 = new Vector(d_parameter_points[getNearestROMIndex(d_next_point_requiring_residual, false)]);
         return createGreedyResidualPoint(result1, result2);
     }
     if (d_subset_counter == d_subset_size)
@@ -761,14 +748,14 @@ GreedyParameterPointSelector::getNextSubsetPointRequiringResidual()
         if (search == d_parameter_sampled_indices.end())
         {
             d_subset_counter++;
-            double error_with_sat_factor = d_sat * d_parameter_point_errors[d_parameter_point_random_indices[d_counter]];
-            if (error_with_sat_factor > d_max_error)
+            double curr_error = d_parameter_point_errors[d_parameter_point_random_indices[d_counter]];
+            if (curr_error > d_max_error)
             {
                 // if we have already computed this residual at the same local rom, the residual will not improve
                 // no need to calculate the residual again
-                if (d_parameter_point_local_rom[d_parameter_point_random_indices[d_counter]] == getNearestROMIndex(d_parameter_point_random_indices[d_counter]))
+                if (d_parameter_point_local_rom[d_parameter_point_random_indices[d_counter]] == getNearestROMIndex(d_parameter_point_random_indices[d_counter], false))
                 {
-                    d_max_error = error_with_sat_factor;
+                    d_max_error = curr_error;
                     d_next_point_to_sample = d_parameter_point_random_indices[d_counter];
                     if (d_rank == 0)
                     {
@@ -780,7 +767,7 @@ GreedyParameterPointSelector::getNextSubsetPointRequiringResidual()
                                 std::cout << d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i) << " ";
                             }
                             std::cout << "] skipped." << std::endl;
-                            std::cout << "Residual multiplied by saturation factor " << error_with_sat_factor << " already computed at the same local ROM." << std::endl;
+                            std::cout << "Residual " << curr_error << " already computed at the same local ROM." << std::endl;
                         }
                         else
                         {
@@ -792,7 +779,7 @@ GreedyParameterPointSelector::getNextSubsetPointRequiringResidual()
                                 database_history << d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i) << " ";
                             }
                             database_history << "] skipped." << std::endl;
-                            database_history << "Residual multiplied by saturation factor " << error_with_sat_factor << " already computed at the same local ROM." << std::endl;
+                            database_history << "Residual " << curr_error << " already computed at the same local ROM." << std::endl;
                             database_history.close();
                         }
                     }
@@ -802,7 +789,7 @@ GreedyParameterPointSelector::getNextSubsetPointRequiringResidual()
                     d_next_point_requiring_residual = d_parameter_point_random_indices[d_counter];
                     d_point_requiring_residual_computed = true;
                     Vector* result1 = new Vector(d_parameter_points[d_next_point_requiring_residual]);
-                    Vector* result2 = new Vector(d_parameter_points[getNearestROMIndex(d_next_point_requiring_residual)]);
+                    Vector* result2 = new Vector(d_parameter_points[getNearestROMIndex(d_next_point_requiring_residual, false)]);
                     return createGreedyResidualPoint(result1, result2);
                 }
             }
@@ -818,7 +805,7 @@ GreedyParameterPointSelector::getNextSubsetPointRequiringResidual()
                             std::cout << d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i) << " ";
                         }
                         std::cout << "] skipped." << std::endl;
-                        std::cout << "Residual multiplied by saturation factor " << error_with_sat_factor
+                        std::cout << "Residual " << curr_error
                                   << " is less than current max error " << d_max_error << std::endl;
                     }
                     else
@@ -831,7 +818,7 @@ GreedyParameterPointSelector::getNextSubsetPointRequiringResidual()
                             database_history << d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i) << " ";
                         }
                         database_history << "] skipped." << std::endl;
-                        database_history << "Residual multiplied by saturation factor " << error_with_sat_factor
+                        database_history << "Residual " << curr_error
                                          << " is less than current max error " << d_max_error << std::endl;
                         database_history.close();
                     }
@@ -855,7 +842,7 @@ GreedyParameterPointSelector::getNextSubsetPointRequiringResidual()
                 database_history.close();
             }
         }
-        if (d_max_error < d_tol)
+        if (d_max_error < d_error_indicator_tol)
         {
             startConvergence();
         }
@@ -869,7 +856,7 @@ GreedyParameterPointSelector::getNextSubsetPointRequiringResidual()
 }
 
 struct GreedyResidualPoint
-GreedyParameterPointSelector::getNextConvergencePointRequiringResidual()
+GreedyParameterPointSampler::getNextConvergencePointRequiringResidual()
 {
     if (d_point_requiring_residual_computed)
     {
@@ -917,7 +904,106 @@ GreedyParameterPointSelector::getNextConvergencePointRequiringResidual()
 }
 
 void
-GreedyParameterPointSelector::setPointResidual(double error, int vec_size)
+GreedyParameterPointSampler::setPointRelativeError(double error)
+{
+    CAROM_VERIFY(error >= 0);
+    CAROM_VERIFY(d_next_parameter_point_computed);
+
+    if (!std::isfinite(error))
+    {
+        error = INT_MAX;
+    }
+
+    if (d_rank == 0)
+    {
+        if (d_output_log_path == "")
+        {
+            std::cout << "Relative error computed at [ ";
+            for (int i = 0 ; i < d_parameter_points[d_next_point_to_sample].dim(); i++)
+            {
+                std::cout << d_parameter_points[d_next_point_to_sample].item(i) << " ";
+            }
+            std::cout << "]" << std::endl;
+            std::cout << "Relative error: " << error << std::endl;
+        }
+        else
+        {
+            std::ofstream database_history;
+            database_history.open(d_output_log_path, std::ios::app);
+            database_history << "Relative error computed at [ ";
+            for (int i = 0 ; i < d_parameter_points[d_next_point_to_sample].dim(); i++)
+            {
+                database_history << d_parameter_points[d_next_point_to_sample].item(i) << " ";
+            }
+            database_history << "]" << std::endl;
+            database_history << "Relative error: " << error << std::endl;
+            database_history.close();
+        }
+    }
+
+    d_curr_relative_error = error;
+    d_next_parameter_point_computed = false;
+    d_iteration_started = true;
+
+    double old_error_indicator_tol = d_error_indicator_tol;
+    if (d_parameter_sampled_indices.size() > 1)
+    {
+        if (d_curr_relative_error <= d_relative_error_tol)
+        {
+            d_error_indicator_tol = std::max(d_alpha * d_error_indicator_tol, d_relative_error_tol * d_parameter_point_errors[d_next_point_to_sample] / d_curr_relative_error);
+        }
+        else
+        {
+            d_error_indicator_tol = std::min(d_error_indicator_tol, d_relative_error_tol * d_parameter_point_errors[d_next_point_to_sample] / d_curr_relative_error);
+        }
+        if (d_rank == 0)
+        {
+            if (d_output_log_path == "")
+            {
+                if (old_error_indicator_tol != d_error_indicator_tol)
+                {
+                    std::cout << "Tolerance was adaptively changed from " << old_error_indicator_tol << " to " << d_error_indicator_tol << std::endl;
+                }
+            }
+            else
+            {
+                std::ofstream database_history;
+                database_history.open(d_output_log_path, std::ios::app);
+                if (old_error_indicator_tol != d_error_indicator_tol)
+                {
+                    database_history << "Tolerance was adaptively changed from " << old_error_indicator_tol << " to " << d_error_indicator_tol << std::endl;
+                }
+                database_history.close();
+            }
+        }
+    }
+
+    d_parameter_point_errors[d_next_point_to_sample] = 0;
+    d_parameter_point_local_rom[d_next_point_to_sample] = d_next_point_to_sample;
+
+    if (d_parameter_sampled_indices.size() > 1 && d_curr_relative_error <= d_relative_error_tol)
+    {
+        startConvergence();
+    }
+    else
+    {
+        if (d_check_local_rom)
+        {
+            d_next_point_requiring_residual = d_next_point_to_sample;
+            d_point_requiring_residual_computed = true;
+        }
+        else
+        {
+            // Precompute next residual point
+            // This will allow us to figure out if the greedy algorithm has terminated
+            // early without needing an extra call to the residual function.
+            getNextPointRequiringResidual();
+        }
+    }
+}
+
+void
+GreedyParameterPointSampler::setPointResidual(double error, int vec_size)
 {
     CAROM_VERIFY(error >= 0);
     CAROM_VERIFY(d_point_requiring_residual_computed);
@@ -955,7 +1041,7 @@ GreedyParameterPointSelector::setPointResidual(double error, int vec_size)
 }
 
 void
-GreedyParameterPointSelector::printResidual(Vector residualPoint, double proc_errors)
+GreedyParameterPointSampler::printResidual(Vector residualPoint, double proc_errors)
 {
     if (d_rank == 0)
     {
@@ -986,26 +1072,26 @@ GreedyParameterPointSelector::printResidual(Vector residualPoint, double proc_er
 }
 
 void
-GreedyParameterPointSelector::printToleranceNotMet()
+GreedyParameterPointSampler::printErrorIndicatorToleranceNotMet()
 {
     if (d_rank == 0)
     {
         if (d_output_log_path == "")
         {
-            std::cout << "Tolerance " << d_tol << " not met." << std::endl;
+            std::cout << "Tolerance " << d_error_indicator_tol << " not met." << std::endl;
         }
         else
         {
             std::ofstream database_history;
             database_history.open(d_output_log_path, std::ios::app);
-            database_history << "Tolerance " << d_tol << " not met." << std::endl;
+            database_history << "Tolerance " << d_error_indicator_tol << " not met." << std::endl;
             database_history.close();
         }
     }
 }
 
 void
-GreedyParameterPointSelector::setSubsetResidual(double proc_errors)
+GreedyParameterPointSampler::setSubsetResidual(double proc_errors)
 {
     if (d_check_local_rom)
     {
@@ -1014,6 +1100,9 @@ GreedyParameterPointSelector::setSubsetResidual(double proc_errors)
         {
             d_parameter_point_errors[d_next_point_requiring_residual] = proc_errors;
             d_parameter_point_local_rom[d_next_point_requiring_residual] = d_next_point_requiring_residual;
+
+            double old_error_indicator_tol = d_error_indicator_tol;
+            d_error_indicator_tol = std::max(d_error_indicator_tol, proc_errors);
 
             if (d_rank == 0)
             {
@@ -1026,6 +1115,10 @@ GreedyParameterPointSelector::setSubsetResidual(double proc_errors)
                     }
                     std::cout << "]" << std::endl;
                     std::cout << "Local ROM Residual (tolerance unchecked): " << proc_errors << std::endl;
+                    if (old_error_indicator_tol != d_error_indicator_tol)
+                    {
+                        std::cout << "Tolerance was adaptively changed from " << old_error_indicator_tol << " to " << d_error_indicator_tol << std::endl;
+                    }
                 }
                 else
                 {
@@ -1038,6 +1131,10 @@ GreedyParameterPointSelector::setSubsetResidual(double proc_errors)
                     }
                     database_history << "]" << std::endl;
                     database_history << "Local ROM Residual (tolerance unchecked): " << proc_errors << std::endl;
+                    if (old_error_indicator_tol != d_error_indicator_tol)
+                    {
+                        database_history << "Tolerance was adaptively changed from " << old_error_indicator_tol << " to " << d_error_indicator_tol << std::endl;
+                    }
                     database_history.close();
                 }
             }
@@ -1056,7 +1153,7 @@ GreedyParameterPointSelector::setSubsetResidual(double proc_errors)
     if (proc_errors < d_parameter_point_errors[d_parameter_point_random_indices[d_counter]])
     {
         d_parameter_point_errors[d_parameter_point_random_indices[d_counter]] = proc_errors;
-        d_parameter_point_local_rom[d_parameter_point_random_indices[d_counter]] = getNearestROMIndex(d_parameter_point_random_indices[d_counter]);
+        d_parameter_point_local_rom[d_parameter_point_random_indices[d_counter]] = getNearestROMIndex(d_parameter_point_random_indices[d_counter], false);
     }
 
     printResidual(d_parameter_points[d_parameter_point_random_indices[d_counter]], proc_errors);
@@ -1071,14 +1168,14 @@ GreedyParameterPointSelector::setSubsetResidual(double proc_errors)
 
     if (d_subset_counter == d_subset_size || d_counter == (int) d_parameter_points.size() - 1)
     {
-        if (d_max_error < d_tol)
+        if (d_max_error < d_error_indicator_tol)
         {
             startConvergence();
         }
         else
         {
             d_iteration_started = false;
-            printToleranceNotMet();
+            printErrorIndicatorToleranceNotMet();
         }
     }
 
@@ -1091,29 +1188,23 @@ GreedyParameterPointSelector::setSubsetResidual(double proc_errors)
 }
 
 void
-GreedyParameterPointSelector::setConvergenceResidual(double proc_errors)
+GreedyParameterPointSampler::setConvergenceResidual(double proc_errors)
 {
     printResidual(d_convergence_points[d_counter], proc_errors);
 
     d_point_requiring_residual_computed = false;
 
-    if (proc_errors >= d_tol)
+    // ADD NEW FUNCTION TO CHOOSE POINT AFTER CONVERGENCE FAILED
+    if (proc_errors > d_max_error)
+    {
+        d_max_error = proc_errors;
+    }
+
+    if (proc_errors >= d_error_indicator_tol)
     {
         d_iteration_started = false;
-        double curr_max_error = 0.0;
-        for (int i = 0; i < d_parameter_points.size(); i++)
-        {
-            auto search = d_parameter_sampled_indices.find(i);
-            if (search == d_parameter_sampled_indices.end())
-            {
-                if (d_parameter_point_errors[i] > curr_max_error)
-                {
-                    curr_max_error = d_parameter_point_errors[i];
-                    d_next_point_to_sample = i;
-                }
-            }
-        }
-        printToleranceNotMet();
+        printErrorIndicatorToleranceNotMet();
+        getNextParameterPointAfterConvergenceFailure();
         generateConvergenceSubset();
     }
     else
@@ -1130,14 +1221,48 @@ GreedyParameterPointSelector::setConvergenceResidual(double proc_errors)
     // This will allow us to figure out if the greedy algorithm has terminated
     // early without needing an extra call to the residual function.
     getNextPointRequiringResidual();
-
-    return;
 }
 
 void
-GreedyParameterPointSelector::generateConvergenceSubset()
+GreedyParameterPointSampler::generateConvergenceSubset()
 {
     d_convergence_points.clear();
+    d_convergence_points = generateRandomPoints(d_convergence_subset_size);
+}
+
+void
+GreedyParameterPointSampler::startConvergence()
+{
+    d_convergence_started = true;
+    d_max_error = 0;
+    d_counter = 0;
+    d_subset_counter = 0;
+
+    if (d_rank == 0)
+    {
+        if (d_output_log_path == "")
+        {
+            std::cout << "Tolerance " << d_error_indicator_tol << " met. Computing convergence." << std::endl;
+        }
+        else
+        {
+            std::ofstream database_history;
+            database_history.open(d_output_log_path, std::ios::app);
+            database_history << "Tolerance " << d_error_indicator_tol << " met. Computing convergence." << std::endl;
+            database_history.close();
+        }
+    }
+
+    // Precompute next residual point
+    // This will allow us to figure out if the greedy algorithm has terminated
+    // early without needing an extra call to the residual function.
+    getNextPointRequiringResidual();
+}
+
+std::vector<Vector>
+GreedyParameterPointSampler::generateRandomPoints(int num_points)
+{
+    std::vector<Vector> random_points;
 
     std::vector<std::uniform_real_distribution<double>> unif;
     for (int i = 0; i < d_min_param_point.dim(); i++)
@@ -1152,41 +1277,13 @@ GreedyParameterPointSelector::generateConvergenceSubset()
         {
             point.item(j) = unif[j](rng);
         }
-        d_convergence_points.push_back(point);
+        random_points.push_back(point);
     }
-}
-
-void
-GreedyParameterPointSelector::startConvergence()
-{
-    d_convergence_started = true;
-    d_max_error = 0;
-    d_counter = 0;
-    d_subset_counter = 0;
-
-    if (d_rank == 0)
-    {
-        if (d_output_log_path == "")
-        {
-            std::cout << "Tolerance " << d_tol << " met. Computing convergence." << std::endl;
-        }
-        else
-        {
-            std::ofstream database_history;
-            database_history.open(d_output_log_path, std::ios::app);
-            database_history << "Tolerance " << d_tol << " met. Computing convergence." << std::endl;
-            database_history.close();
-        }
-    }
-
-    // Precompute next residual point
-    // This will allow us to figure out if the greedy algorithm has terminated
-    // early without needing an extra call to the residual function.
-    getNextPointRequiringResidual();
+    return random_points;
 }
 
 std::shared_ptr<Vector>
-GreedyParameterPointSelector::getNearestROM(Vector point)
+GreedyParameterPointSampler::getNearestROM(Vector point)
 {
 
     CAROM_VERIFY(point.dim() == d_parameter_points[0].dim());
@@ -1215,7 +1312,32 @@ GreedyParameterPointSelector::getNearestROM(Vector point)
 }
 
 int
-GreedyParameterPointSelector::getNearestROMIndex(int index)
+GreedyParameterPointSampler::getNearestNonSampledPoint(Vector point)
+{
+    double closest_dist_to_points = INT_MAX;
+    int closest_point_index = -1;
+
+    for (int i = 0; i < d_parameter_points.size(); i++)
+    {
+        auto search = d_parameter_sampled_indices.find(i);
+        if (search == d_parameter_sampled_indices.end())
+        {
+            Vector diff;
+            point.minus(d_parameter_points[i], diff);
+            double dist = diff.norm();
+            if (dist < closest_dist_to_points)
+            {
+                closest_dist_to_points = dist;
+                closest_point_index = i;
+            }
+        }
+    }
+
+    return closest_point_index;
+}
+
+int
+GreedyParameterPointSampler::getNearestROMIndex(int index, bool ignore_self)
 {
 
     CAROM_VERIFY(index >= 0 && index < d_parameter_points.size());
@@ -1236,7 +1358,7 @@ GreedyParameterPointSelector::getNearestROMIndex(int index)
                 closest_point_index = *itr;
             }
         }
-        else
+        else if (!ignore_self)
         {
             closest_dist_to_points = 0;
             closest_point_index = *itr;
@@ -1248,13 +1370,13 @@ GreedyParameterPointSelector::getNearestROMIndex(int index)
 }
 
 std::vector<Vector>
-GreedyParameterPointSelector::getParameterPointDomain()
+GreedyParameterPointSampler::getParameterPointDomain()
 {
     return d_parameter_points;
 }
 
 std::vector<Vector>
-GreedyParameterPointSelector::getSampledParameterPoints()
+GreedyParameterPointSampler::getSampledParameterPoints()
 {
     std::vector<Vector> sampled_points;
     for (auto itr = d_parameter_sampled_indices.begin(); itr != d_parameter_sampled_indices.end(); ++itr) {
@@ -1264,7 +1386,7 @@ GreedyParameterPointSelector::getSampledParameterPoints()
 }
 
 void
-GreedyParameterPointSelector::save(std::string base_file_name)
+GreedyParameterPointSampler::save(std::string base_file_name)
 {
     CAROM_ASSERT(!base_file_name.empty());
 
@@ -1310,10 +1432,14 @@ GreedyParameterPointSelector::save(std::string base_file_name)
     {
         sprintf(tmp, "max_error");
         database.putDouble(tmp, d_max_error);
-        sprintf(tmp, "tol");
-        database.putDouble(tmp, d_tol);
-        sprintf(tmp, "sat");
-        database.putDouble(tmp, d_sat);
+        sprintf(tmp, "curr_relative_error");
+        database.putDouble(tmp, d_curr_relative_error);
+        sprintf(tmp, "error_indicator_tol");
+        database.putDouble(tmp, d_error_indicator_tol);
+        sprintf(tmp, "relative_error_tol");
+        database.putDouble(tmp, d_relative_error_tol);
+        sprintf(tmp, "alpha");
+        database.putDouble(tmp, d_alpha);
         sprintf(tmp, "subset_size");
         database.putInteger(tmp, d_subset_size);
         sprintf(tmp, "convergence_subset_size");
@@ -1330,6 +1456,8 @@ GreedyParameterPointSelector::save(std::string base_file_name)
         database.putInteger(tmp, d_iteration_started);
         sprintf(tmp, "convergence_started");
         database.putInteger(tmp, d_convergence_started);
+        sprintf(tmp, "next_parameter_point_computed");
+        database.putInteger(tmp, d_next_parameter_point_computed);
         sprintf(tmp, "point_requiring_residual_computed");
         database.putInteger(tmp, d_point_requiring_residual_computed);
         sprintf(tmp, "subset_created");
@@ -1352,16 +1480,16 @@ GreedyParameterPointSelector::save(std::string base_file_name)
 }
 
 bool
-GreedyParameterPointSelector::isComplete()
+GreedyParameterPointSampler::isComplete()
 {
-    if (d_parameter_sampled_indices.size() == d_parameter_points.size())
+    if (d_parameter_sampled_indices.size() == d_num_parameter_points)
     {
         d_procedure_completed = true;
     }
     return d_procedure_completed;
 }
 
-GreedyParameterPointSelector::~GreedyParameterPointSelector()
+GreedyParameterPointSampler::~GreedyParameterPointSampler()
 {
 }
 
