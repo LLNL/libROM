@@ -70,7 +70,7 @@ public:
                                    the different parameter points.
      * @param[in] check_local_rom Compute local ROM residual each iteration.
      * @param[in] tolerance A tolerance value for which to end the algorithm.
-     * @param[in] saturation A saturation constant.
+     * @param[in] alpha A alpha constant.
      * @param[in] subset_size The size of the random subset.
      * @param[in] convergence_subset_size The size of the convergence subset.
      * @param[in] use_centroid Whether to use the centroid heuristic when
@@ -83,7 +83,7 @@ public:
         std::vector<Vector> parameter_points,
         bool check_local_rom,
         double relative_error_tolerance,
-        double saturation,
+        double alpha,
         int subset_size,
         int convergence_subset_size,
         std::string output_log_path = "",
@@ -96,7 +96,7 @@ public:
         std::vector<double> parameter_points,
         bool check_local_rom,
         double relative_error_tolerance,
-        double saturation,
+        double alpha,
         int subset_size,
         int convergence_subset_size,
         std::string output_log_path = "",
@@ -111,7 +111,7 @@ public:
         int num_parameter_points,
         bool check_local_rom,
         double relative_error_tolerance,
-        double saturation,
+        double alpha,
         int subset_size,
         int convergence_subset_size,
         std::string output_log_path = "",
@@ -126,7 +126,7 @@ public:
         int num_parameter_points,
         bool check_local_rom,
         double relative_error_tolerance,
-        double saturation,
+        double alpha,
         int subset_size,
         int convergence_subset_size,
         std::string output_log_path = "",
@@ -225,7 +225,7 @@ protected:
     void constructObject(
         bool check_local_rom,
         double relative_error_tolerance,
-        double saturation,
+        double alpha,
         int subset_size,
         int convergence_subset_size,
         std::string output_log_path,

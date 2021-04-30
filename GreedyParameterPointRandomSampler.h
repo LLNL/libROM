@@ -52,7 +52,7 @@ public:
                                    the different parameter points.
      * @param[in] check_local_rom Compute local ROM residual each iteration.
      * @param[in] tolerance A tolerance value for which to end the algorithm.
-     * @param[in] saturation A saturation constant.
+     * @param[in] alpha A alpha constant.
      * @param[in] subset_size The size of the random subset.
      * @param[in] convergence_subset_size The size of the convergence subset.
      * @param[in] use_centroid Whether to use the centroid heuristic when
@@ -67,7 +67,7 @@ public:
         int num_parameter_points,
         bool check_local_rom,
         double relative_error_tolerance,
-        double saturation,
+        double alpha,
         int subset_size,
         int convergence_subset_size,
         bool use_latin_hypercube,
@@ -83,7 +83,7 @@ public:
         int num_parameter_points,
         bool check_local_rom,
         double relative_error_tolerance,
-        double saturation,
+        double alpha,
         int subset_size,
         int convergence_subset_size,
         bool use_latin_hypercube,
