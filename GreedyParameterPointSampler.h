@@ -84,6 +84,7 @@ public:
         bool check_local_rom,
         double relative_error_tolerance,
         double alpha,
+        double max_clamp,
         int subset_size,
         int convergence_subset_size,
         std::string output_log_path = "",
@@ -97,6 +98,7 @@ public:
         bool check_local_rom,
         double relative_error_tolerance,
         double alpha,
+        double max_clamp,
         int subset_size,
         int convergence_subset_size,
         std::string output_log_path = "",
@@ -112,6 +114,7 @@ public:
         bool check_local_rom,
         double relative_error_tolerance,
         double alpha,
+        double max_clamp,
         int subset_size,
         int convergence_subset_size,
         std::string output_log_path = "",
@@ -127,6 +130,7 @@ public:
         bool check_local_rom,
         double relative_error_tolerance,
         double alpha,
+        double max_clamp,
         int subset_size,
         int convergence_subset_size,
         std::string output_log_path = "",
@@ -226,6 +230,7 @@ protected:
         bool check_local_rom,
         double relative_error_tolerance,
         double alpha,
+        double max_clamp,
         int subset_size,
         int convergence_subset_size,
         std::string output_log_path,
@@ -322,6 +327,11 @@ protected:
      * @brief The convergence tolerance used to terminate the greedy procedure.
      */
     double d_alpha;
+
+    /**
+     * @brief The convergence tolerance used to terminate the greedy procedure.
+     */
+    double d_max_clamp;
 
     /**
      * @brief The convergence tolerance used to terminate the greedy procedure.

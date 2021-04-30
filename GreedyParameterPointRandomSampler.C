@@ -28,6 +28,7 @@ GreedyParameterPointRandomSampler::GreedyParameterPointRandomSampler(
     bool check_local_rom,
     double relative_error_tolerance,
     double alpha,
+    double max_clamp,
     int subset_size,
     int convergence_subset_size,
     bool use_latin_hypercube,
@@ -43,6 +44,7 @@ GreedyParameterPointRandomSampler::GreedyParameterPointRandomSampler(
         check_local_rom,
         relative_error_tolerance,
         alpha,
+        max_clamp,
         subset_size,
         convergence_subset_size,
         output_log_path,
@@ -70,6 +72,7 @@ GreedyParameterPointRandomSampler::GreedyParameterPointRandomSampler(
     bool check_local_rom,
     double relative_error_tolerance,
     double alpha,
+    double max_clamp,
     int subset_size,
     int convergence_subset_size,
     bool use_latin_hypercube,
@@ -85,6 +88,7 @@ GreedyParameterPointRandomSampler::GreedyParameterPointRandomSampler(
         check_local_rom,
         relative_error_tolerance,
         alpha,
+        max_clamp,
         subset_size,
         convergence_subset_size,
         output_log_path,
@@ -128,7 +132,7 @@ GreedyParameterPointRandomSampler::constructParameterPoints()
         {
             frequencies.push_back(std::abs(d_max_param_point.item(i) - d_min_param_point.item(i)) / d_num_parameter_points);
         }
-        
+
         for (int i = 0; i < d_num_parameter_points; i++) {
             point_coordinates.push_back(std::vector<double>());
             for (int j = 0; j < d_min_param_point.dim(); j++)

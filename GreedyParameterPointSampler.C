@@ -102,6 +102,7 @@ GreedyParameterPointSampler::GreedyParameterPointSampler(
     bool check_local_rom,
     double relative_error_tolerance,
     double alpha,
+    double max_clamp,
     int subset_size,
     int convergence_subset_size,
     std::string output_log_path,
@@ -115,7 +116,7 @@ GreedyParameterPointSampler::GreedyParameterPointSampler(
     CAROM_VERIFY(d_num_parameter_points >= 1);
     d_parameter_points = parameter_points;
 
-    constructObject(check_local_rom, relative_error_tolerance, alpha,
+    constructObject(check_local_rom, relative_error_tolerance, alpha, max_clamp,
                     subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
 }
 
@@ -124,6 +125,7 @@ GreedyParameterPointSampler::GreedyParameterPointSampler(
     bool check_local_rom,
     double relative_error_tolerance,
     double alpha,
+    double max_clamp,
     int subset_size,
     int convergence_subset_size,
     std::string output_log_path,
@@ -145,7 +147,7 @@ GreedyParameterPointSampler::GreedyParameterPointSampler(
     CAROM_VERIFY(d_num_parameter_points >= 1);
     d_parameter_points = parameter_points_vec;
 
-    constructObject(check_local_rom, relative_error_tolerance, alpha,
+    constructObject(check_local_rom, relative_error_tolerance, alpha, max_clamp,
                     subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
 }
 
@@ -156,6 +158,7 @@ GreedyParameterPointSampler::GreedyParameterPointSampler(
     bool check_local_rom,
     double relative_error_tolerance,
     double alpha,
+    double max_clamp,
     int subset_size,
     int convergence_subset_size,
     std::string output_log_path,
@@ -169,7 +172,7 @@ GreedyParameterPointSampler::GreedyParameterPointSampler(
     d_max_param_point = param_space_max;
     d_num_parameter_points = num_parameter_points;
 
-    constructObject(check_local_rom, relative_error_tolerance, alpha, subset_size,
+    constructObject(check_local_rom, relative_error_tolerance, alpha, max_clamp, subset_size,
                     convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
 }
 
@@ -180,6 +183,7 @@ GreedyParameterPointSampler::GreedyParameterPointSampler(
     bool check_local_rom,
     double relative_error_tolerance,
     double alpha,
+    double max_clamp,
     int subset_size,
     int convergence_subset_size,
     std::string output_log_path,
@@ -198,7 +202,7 @@ GreedyParameterPointSampler::GreedyParameterPointSampler(
     d_max_param_point = param_space_max_vec;
     d_num_parameter_points = num_parameter_points;
 
-    constructObject(check_local_rom, relative_error_tolerance, alpha, subset_size,
+    constructObject(check_local_rom, relative_error_tolerance, alpha, max_clamp, subset_size,
                     convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
 }
 
@@ -318,6 +322,8 @@ GreedyParameterPointSampler::load(
         database.getDouble(tmp, d_relative_error_tol);
         sprintf(tmp, "alpha");
         database.getDouble(tmp, d_alpha);
+        sprintf(tmp, "max_clamp");
+        database.getDouble(tmp, d_max_clamp);
         sprintf(tmp, "subset_size");
         database.getInteger(tmp, d_subset_size);
         sprintf(tmp, "convergence_subset_size");
@@ -451,6 +457,7 @@ GreedyParameterPointSampler::constructObject(
     bool check_local_rom,
     double relative_error_tolerance,
     double alpha,
+    double max_clamp,
     int subset_size,
     int convergence_subset_size,
     std::string output_log_path,
@@ -460,6 +467,7 @@ GreedyParameterPointSampler::constructObject(
 {
     CAROM_VERIFY(relative_error_tolerance > 0.0);
     CAROM_VERIFY(alpha >= 1.0);
+    CAROM_VERIFY(max_clamp >= 0.0 || max_clamp == -1);
     CAROM_VERIFY(subset_size > 0);
     CAROM_VERIFY(convergence_subset_size > 0);
     CAROM_VERIFY(subset_size < convergence_subset_size);
@@ -478,6 +486,7 @@ GreedyParameterPointSampler::constructObject(
     d_error_indicator_tol = 0.0;
     d_relative_error_tol = relative_error_tolerance;
     d_alpha = alpha;
+    d_max_clamp = max_clamp;
     d_subset_size = subset_size;
     d_convergence_subset_size = convergence_subset_size;
     d_output_log_path = output_log_path;
@@ -503,6 +512,7 @@ GreedyParameterPointSampler::constructObject(
         {
             std::cout << "Greedy relative error tolerance: " << d_relative_error_tol << std::endl;
             std::cout << "Greedy alpha constant: " << d_alpha << std::endl;
+            std::cout << "Greedy max clamp constant: " << d_max_clamp << std::endl;
             std::cout << "Greedy iteration subset size: " << d_subset_size << std::endl;
             std::cout << "Greedy convergence subset size: " << d_convergence_subset_size << std::endl;
         }
@@ -512,6 +522,7 @@ GreedyParameterPointSampler::constructObject(
             database_history.open(d_output_log_path, std::ios::app);
             database_history << "Greedy relative error tolerance: " << d_relative_error_tol << std::endl;
             database_history << "Greedy alpha constant: " << d_alpha << std::endl;
+            database_history << "Greedy max clamp constant: " << d_max_clamp << std::endl;
             database_history << "Greedy iteration subset size: " << d_subset_size << std::endl;
             database_history << "Greedy convergence subset size: " << d_convergence_subset_size << std::endl;
             database_history.close();
@@ -946,11 +957,12 @@ GreedyParameterPointSampler::setPointRelativeError(double error)
     d_iteration_started = true;
 
     double old_error_indicator_tol = d_error_indicator_tol;
+    
     if (d_parameter_sampled_indices.size() > 1)
     {
         if (d_curr_relative_error <= d_relative_error_tol)
         {
-            d_error_indicator_tol = std::max(d_alpha * d_error_indicator_tol, d_relative_error_tol * d_parameter_point_errors[d_next_point_to_sample] / d_curr_relative_error);
+            d_error_indicator_tol = std::max(d_alpha * d_error_indicator_tol, std::min(d_max_clamp * d_parameter_point_errors[d_next_point_to_sample], d_relative_error_tol * d_parameter_point_errors[d_next_point_to_sample] / d_curr_relative_error));
         }
         else
         {
@@ -1117,6 +1129,7 @@ GreedyParameterPointSampler::setSubsetResidual(double proc_errors)
                     std::cout << "Local ROM Residual (tolerance unchecked): " << proc_errors << std::endl;
                     if (old_error_indicator_tol != d_error_indicator_tol)
                     {
+                        std::cout << "Residual at the local ROM was higher than the previous tolerance." << std::endl;
                         std::cout << "Tolerance was adaptively changed from " << old_error_indicator_tol << " to " << d_error_indicator_tol << std::endl;
                     }
                 }
@@ -1133,6 +1146,7 @@ GreedyParameterPointSampler::setSubsetResidual(double proc_errors)
                     database_history << "Local ROM Residual (tolerance unchecked): " << proc_errors << std::endl;
                     if (old_error_indicator_tol != d_error_indicator_tol)
                     {
+                        database_history << "Residual at the local ROM was higher than the previous tolerance." << std::endl;
                         database_history << "Tolerance was adaptively changed from " << old_error_indicator_tol << " to " << d_error_indicator_tol << std::endl;
                     }
                     database_history.close();
@@ -1440,6 +1454,8 @@ GreedyParameterPointSampler::save(std::string base_file_name)
         database.putDouble(tmp, d_relative_error_tol);
         sprintf(tmp, "alpha");
         database.putDouble(tmp, d_alpha);
+        sprintf(tmp, "max_clamp");
+        database.putDouble(tmp, d_max_clamp);
         sprintf(tmp, "subset_size");
         database.putInteger(tmp, d_subset_size);
         sprintf(tmp, "convergence_subset_size");
