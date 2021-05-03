@@ -1,33 +1,37 @@
 # Introduction
 
-libROM is a library to compute proper orthogonal decomposition-based
-reduced order models (POD-based ROMs). It also contains some code to
-compute hyperreduced POD-based ROMs using the discrete empirical
-interpolation method (DEIM).
+libROM is a free, lightweight, scalable C++ library for data-driven physical
+simulation methods from the intrusive projection-based reduced order models to
+non-intrusive black-box approaches. 
+
+
+# History of libROM
+
+The original libROM release was written by William Arrighi (retired) mainly to
+implement a C++ scalable and incremental singular value decomposition based on
+the journal paper, i.e., 
+
+> Geoffrey M. Oxberry, Tanya Kostova-Vassilevska, William Arrighi, and Kyle Chand, [_Limited-memory adaptive snapshot selection for proper orthogonal decomposition_] (https://onlinelibrary.wiley.com/doi/full/10.1002/nme.5283), International Journal of Numerical Methods in Engineering, **109**:198--217.
+
+In addition to the incremental singular value decomposition, many other features
+are added:
+
+## Features
+
+- Dynamic data collection
+- Data compression
+- Greedy algorithm
+- Hyper-reduction
 
 # Authors
-
-The original libROM release was written by Bill Arrighi based on
-prototype MATLAB code written by Geoffrey Oxberry and Kyle Chand. This
-MATLAB code implemented the algorithm presented in
-
-Geoffrey M. Oxberry, Tanya Kostova-Vassilevska, William Arrighi, and
-Kyle Chand, [_Limited-memory adaptive snapshot selection for proper
-orthogonal
-decomposition_](https://onlinelibrary.wiley.com/doi/full/10.1002/nme.5283),
-International Journal of Numerical Methods in Engineering,
-**109**:198--217.
-
-The key algorithmic idea of computing an SVD incrementally to train
-POD-based ROMs on the fly was conceived by Kyle Chand and refined by
-Geoffrey Oxberry based on his PhD thesis work, with collaborative
-contributions by Bill Arrighi and Tanya Kostova-Vassilevska.
-
-Subsequent commits to libROM have been made by Geoffrey Oxberry,
-Robert W. Anderson, Youngsoo Choi, and Dylan Copeland. In particular,
-Bill Arrighi and Robert W. Anderson have contributed an implementation
-of DEIM to libROM, and Dylan Copeland has contributed an
-implementation of GNAT to libROM.
+Robert W. Anderson (LLNL),
+Siu Wun (Tony) Cheung (LLNL),
+Youngsoo Choi (LLNL),
+Dylan Copeland (LLNL),
+Kevin Huynh (LLNL),
+Jessica Lauzon (Stanford),
+Sean McBane (UT Austin),
+Geoffrey Oxberry (LLNL).
 
 # License
 
