@@ -25,7 +25,7 @@ are added:
 
 # Authors
 Robert W. Anderson (LLNL),
-Siu Wun (Tony) Cheung (LLNL),
+Siu Wun Cheung (LLNL),
 Youngsoo Choi (LLNL),
 Dylan Copeland (LLNL),
 Kevin Huynh (LLNL),
