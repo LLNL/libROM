@@ -16,6 +16,7 @@
 #define included_Matrix_h
 
 #include "Vector.h"
+#include <vector>
 
 namespace CAROM {
 
@@ -746,6 +747,17 @@ public:
     void transpose();
 
     /**
+     * @brief Computes the transposePseudoinverse of this.
+     *
+     * @pre !distributed()
+     * @pre numRows() >= numColumns()
+     *
+     * Assumes this is full column rank; may fail if this is not
+     * full column rank.
+     */
+    void transposePseudoinverse();
+
+    /**
      * @brief Compute the leading numColumns() column pivots from a
      * QR decomposition with column pivots (QRCP) of the transpose
      * of this.
@@ -985,34 +997,6 @@ private:
     (int* row_pivot, int* row_pivot_owner, int pivots_requested) const;
 
     /**
-     * @brief Computes the transposePseudoinverse of this.
-     *
-     * @pre !distributed()
-     * @pre numRows() >= numColumns()
-     *
-     * Assumes this is full column rank; may fail if this is not
-     * full column rank.
-     */
-    void transposePseudoinverse();
-    friend void GNAT(const Matrix*,
-                     const int,
-                     int*,
-                     int*,
-                     Matrix&,
-                     const int,
-                     const int,
-                     const int);
-
-    friend void QDEIM(const Matrix*,
-                      const int,
-                      int*,
-                      int*,
-                      Matrix&,
-                      const int,
-                      const int,
-                      const int);
-
-    /**
      * @brief The storage for the Matrix's values on this processor.
      */
     double* d_mat;
@@ -1112,6 +1096,11 @@ Matrix DiagonalMatrixFactory(const Vector &v);
  */
 Matrix IdentityMatrixFactory(const Vector &v);
 
+Matrix* SpaceTimeProduct(const CAROM::Matrix* As, const CAROM::Matrix* At,
+                         const CAROM::Matrix* Bs, const CAROM::Matrix* Bt,
+                         const std::vector<double> *tscale=NULL,
+                         const bool At0at0=false, const bool Bt0at0=false,
+                         const bool lagB=false, const bool skip0=false);
 }
 
 #endif
