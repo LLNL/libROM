@@ -1215,9 +1215,6 @@ GreedyParameterPointSampler::setConvergenceResidual(double proc_errors)
 
     if (proc_errors >= d_error_indicator_tol)
     {
-        d_parameter_points.push_back(d_convergence_points[d_counter]);
-        d_parameter_point_errors.push_back(d_max_error);
-        d_parameter_point_local_rom.push_back(getNearestROMIndex(d_next_point_to_sample, true));
         d_iteration_started = false;
         printErrorIndicatorToleranceNotMet();
         getNextParameterPointAfterConvergenceFailure();
