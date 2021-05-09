@@ -207,15 +207,7 @@ GreedyParameterPointRandomSampler::save(std::string base_file_name)
 void
 GreedyParameterPointRandomSampler::getNextParameterPointAfterConvergenceFailure()
 {
-    if (d_use_latin_hypercube)
-    {
-        d_next_point_to_sample = getNearestNonSampledPoint(d_convergence_points[d_counter]);
-    }
-    else
-    {
-        d_parameter_points.push_back(d_convergence_points[d_counter]);
-        d_next_point_to_sample = d_parameter_points.size() - 1;
-    }
+    d_next_point_to_sample = d_parameter_points.size() - 1;
 }
 
 GreedyParameterPointRandomSampler::~GreedyParameterPointRandomSampler()

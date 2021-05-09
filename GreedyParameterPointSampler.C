@@ -957,7 +957,7 @@ GreedyParameterPointSampler::setPointRelativeError(double error)
     d_iteration_started = true;
 
     double old_error_indicator_tol = d_error_indicator_tol;
-    
+
     if (d_parameter_sampled_indices.size() > 1)
     {
         if (d_curr_relative_error <= d_relative_error_tol)
@@ -1208,7 +1208,6 @@ GreedyParameterPointSampler::setConvergenceResidual(double proc_errors)
 
     d_point_requiring_residual_computed = false;
 
-    // ADD NEW FUNCTION TO CHOOSE POINT AFTER CONVERGENCE FAILED
     if (proc_errors > d_max_error)
     {
         d_max_error = proc_errors;
@@ -1216,6 +1215,9 @@ GreedyParameterPointSampler::setConvergenceResidual(double proc_errors)
 
     if (proc_errors >= d_error_indicator_tol)
     {
+        d_parameter_points.push_back(d_convergence_points[d_counter]);
+        d_parameter_point_errors.push_back(d_max_error);
+        d_parameter_point_local_rom.push_back(getNearestROMIndex(d_next_point_to_sample, true));
         d_iteration_started = false;
         printErrorIndicatorToleranceNotMet();
         getNextParameterPointAfterConvergenceFailure();
