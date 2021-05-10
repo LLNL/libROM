@@ -18,12 +18,12 @@
 //              1. Construct the GreedyParameterPointSampler by giving it a
 //                 domain of parameter points.
 //              2. Request a parameter point to sample.
-//              3. Request a parameter point to compute an error residual for.
+//              3. Request a parameter point to compute an error indicator for.
 //              4. Request the nearest ROM to the parameter point requiring a
-//                 residual.
-//              5. Give the computed residual to the GreedyParameterPointSampler.
+//                 error indicator.
+//              5. Give the computed error indicator to the GreedyParameterPointSampler.
 //              6. Repeat steps 4 and 5 until the GreedyParameterPointSampler
-//                 no longer requires more residuals to be computed.
+//                 no longer requires more error indicators to be computed.
 //              7. Repeat steps 2 to 6 until the GreedyParameterPointSampler
 //                 no longer requires more parameter points to be sampled.
 //              8. The ROM database is now complete, meeting the error tolerance
@@ -49,7 +49,7 @@ namespace CAROM {
 
 class Vector;
 
-struct GreedyResidualPoint {
+struct GreedyErrorIndicatorPoint {
     std::shared_ptr<Vector> point;
     std::shared_ptr<Vector> localROM;
 };
@@ -68,7 +68,7 @@ public:
      *
      * @param[in] parameter_points A vector of CAROM::Vectors containing
                                    the different parameter points.
-     * @param[in] check_local_rom Compute local ROM residual each iteration.
+     * @param[in] check_local_rom Compute local ROM error indicator each iteration.
      * @param[in] tolerance A tolerance value for which to end the algorithm.
      * @param[in] alpha A alpha constant.
      * @param[in] subset_size The size of the random subset.
@@ -156,30 +156,30 @@ public:
     std::shared_ptr<Vector>
     getNextParameterPoint();
 
-    struct GreedyResidualPoint
+    struct GreedyErrorIndicatorPoint
     getNextPointRequiringRelativeError();
 
     /**
-     * @brief Returns the next parameter point whose residual the greedy
+     * @brief Returns the next parameter point whose error indicator the greedy
      *        algorithm requires.
      *
      * @param[in]
      *
      * @return A tuple where the first element is the point, and the second
      *         element is the nearest local ROM. Both elements will be NULL if a
-     *         residual is not currently required.
+     *         error indicator is not currently required.
      */
-    struct GreedyResidualPoint
-    getNextPointRequiringResidual();
+    struct GreedyErrorIndicatorPoint
+    getNextPointRequiringErrorIndicator();
 
     void
     setPointRelativeError(double error);
 
     /**
-     * @brief Set the residual error of the specified parameter point.
+     * @brief Set the error indicator error of the specified parameter point.
      */
     void
-    setPointResidual(double error, int vec_size);
+    setPointErrorIndicator(double error, int vec_size);
 
     int
     getNearestNonSampledPoint(Vector point);
@@ -240,19 +240,19 @@ protected:
 
     void initializeParameterPoints();
 
-    struct GreedyResidualPoint getNextSubsetPointRequiringResidual();
+    struct GreedyErrorIndicatorPoint getNextSubsetPointRequiringErrorIndicator();
 
-    struct GreedyResidualPoint getNextConvergencePointRequiringResidual();
+    struct GreedyErrorIndicatorPoint getNextConvergencePointRequiringErrorIndicator();
 
     std::vector<Vector> generateRandomPoints(int num_points);
 
-    void printResidual(Vector residualPoint, double proc_errors);
+    void printErrorIndicator(Vector errorIndicatorPoint, double proc_errors);
 
     void printErrorIndicatorToleranceNotMet();
 
-    void setSubsetResidual(double proc_errors);
+    void setSubsetErrorIndicator(double proc_errors);
 
-    void setConvergenceResidual(double proc_errors);
+    void setConvergenceErrorIndicator(double proc_errors);
 
     void generateConvergenceSubset();
 
@@ -364,9 +364,9 @@ protected:
     int d_next_point_to_sample;
 
     /**
-     * @brief The next parameter point requiring a residual.
+     * @brief The next parameter point requiring a error indicator.
      */
-    int d_next_point_requiring_residual;
+    int d_next_point_requiring_error_indicator;
 
     /**
      * @brief Whether the use the centroid heuristic for obtaining the first
@@ -375,7 +375,7 @@ protected:
     bool d_use_centroid;
 
     /**
-     * @brief Whether the check the last sampled local ROM's residual
+     * @brief Whether the check the last sampled local ROM's error indicator
      *        after each iteration.
      */
     bool d_check_local_rom;
@@ -393,15 +393,15 @@ protected:
 
     /**
      * @brief Whether the database has already computed a new paramter point
-     *        requiring a residual.
+     *        requiring a error indicator.
      */
     bool d_next_parameter_point_computed;
 
     /**
      * @brief Whether the database has already computed a new paramter point
-     *        requiring a residual.
+     *        requiring a error indicator.
      */
-    bool d_point_requiring_residual_computed;
+    bool d_point_requiring_error_indicator_computed;
 
     /**
      * @brief Whether the database has already created a random subset
@@ -448,9 +448,9 @@ protected:
     std::default_random_engine rng;
 };
 
-// Create a greedy residual point.
-struct GreedyResidualPoint createGreedyResidualPoint(Vector* point, Vector* localROM);
-struct GreedyResidualPoint createGreedyResidualPoint(Vector* point, std::shared_ptr<Vector>& localROM);
+// Create a greedy error indicator point.
+struct GreedyErrorIndicatorPoint createGreedyErrorIndicatorPoint(Vector* point, Vector* localROM);
+struct GreedyErrorIndicatorPoint createGreedyErrorIndicatorPoint(Vector* point, std::shared_ptr<Vector>& localROM);
 
 // Given a a vector/double, find the nearest point in a domain.
 Vector getNearestPoint(std::vector<Vector> paramPoints, Vector point);

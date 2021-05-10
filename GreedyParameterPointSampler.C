@@ -21,19 +21,19 @@
 
 namespace CAROM {
 
-struct GreedyResidualPoint
-createGreedyResidualPoint(Vector* point, Vector* localROM)
+struct GreedyErrorIndicatorPoint
+createGreedyErrorIndicatorPoint(Vector* point, Vector* localROM)
 {
-    struct GreedyResidualPoint result;
+    struct GreedyErrorIndicatorPoint result;
     result.point = std::shared_ptr<Vector>(point);
     result.localROM = std::shared_ptr<Vector>(localROM);
     return result;
 }
 
-struct GreedyResidualPoint
-createGreedyResidualPoint(Vector* point, std::shared_ptr<Vector>& localROM)
+struct GreedyErrorIndicatorPoint
+createGreedyErrorIndicatorPoint(Vector* point, std::shared_ptr<Vector>& localROM)
 {
-    struct GreedyResidualPoint result;
+    struct GreedyErrorIndicatorPoint result;
     result.point = std::shared_ptr<Vector>(point);
     result.localROM = localROM;
     return result;
@@ -330,8 +330,8 @@ GreedyParameterPointSampler::load(
         database.getInteger(tmp, d_convergence_subset_size);
         sprintf(tmp, "next_point_to_sample");
         database.getInteger(tmp, d_next_point_to_sample);
-        sprintf(tmp, "next_point_requiring_residual");
-        database.getInteger(tmp, d_next_point_requiring_residual);
+        sprintf(tmp, "next_point_requiring_error_indicator");
+        database.getInteger(tmp, d_next_point_requiring_error_indicator);
         sprintf(tmp, "check_local_rom");
         database.getInteger(tmp, bool_int_temp);
         d_check_local_rom = (bool) bool_int_temp;
@@ -347,9 +347,9 @@ GreedyParameterPointSampler::load(
         sprintf(tmp, "next_parameter_point_computed");
         database.getInteger(tmp, bool_int_temp);
         d_next_parameter_point_computed = (bool) bool_int_temp;
-        sprintf(tmp, "point_requiring_residual_computed");
+        sprintf(tmp, "point_requiring_error_indicator_computed");
         database.getInteger(tmp, bool_int_temp);
-        d_point_requiring_residual_computed = (bool) bool_int_temp;
+        d_point_requiring_error_indicator_computed = (bool) bool_int_temp;
         sprintf(tmp, "subset_created");
         database.getInteger(tmp, bool_int_temp);
         d_subset_created = (bool) bool_int_temp;
@@ -497,9 +497,9 @@ GreedyParameterPointSampler::constructObject(
     d_use_centroid = use_centroid;
     d_max_error = 0;
     d_next_point_to_sample = -1;
-    d_next_point_requiring_residual = -1;
+    d_next_point_requiring_error_indicator = -1;
     d_next_parameter_point_computed = false;
-    d_point_requiring_residual_computed = false;
+    d_point_requiring_error_indicator_computed = false;
     d_iteration_started = false;
     d_convergence_started = false;
     d_subset_created = false;
@@ -668,16 +668,16 @@ GreedyParameterPointSampler::getNextParameterPoint()
     return std::shared_ptr<Vector>(result);
 }
 
-struct GreedyResidualPoint
+struct GreedyErrorIndicatorPoint
 GreedyParameterPointSampler::getNextPointRequiringRelativeError()
 {
     if (isComplete())
     {
-        return createGreedyResidualPoint(nullptr, nullptr);
+        return createGreedyErrorIndicatorPoint(nullptr, nullptr);
     }
     if (!d_next_parameter_point_computed)
     {
-        return createGreedyResidualPoint(nullptr, nullptr);
+        return createGreedyErrorIndicatorPoint(nullptr, nullptr);
     }
 
     Vector* result1 = new Vector(d_parameter_points[d_next_point_to_sample]);
@@ -692,43 +692,43 @@ GreedyParameterPointSampler::getNextPointRequiringRelativeError()
         result2 = new Vector(d_parameter_points[getNearestROMIndex(d_next_point_to_sample, true)]);
     }
 
-    return createGreedyResidualPoint(result1, result2);
+    return createGreedyErrorIndicatorPoint(result1, result2);
 }
 
-struct GreedyResidualPoint
-GreedyParameterPointSampler::getNextPointRequiringResidual()
+struct GreedyErrorIndicatorPoint
+GreedyParameterPointSampler::getNextPointRequiringErrorIndicator()
 {
     if (isComplete())
     {
-        return createGreedyResidualPoint(nullptr, nullptr);
+        return createGreedyErrorIndicatorPoint(nullptr, nullptr);
     }
     if (!d_iteration_started)
     {
-        return createGreedyResidualPoint(nullptr, nullptr);
+        return createGreedyErrorIndicatorPoint(nullptr, nullptr);
     }
 
     if (d_convergence_started)
     {
-        return getNextConvergencePointRequiringResidual();
+        return getNextConvergencePointRequiringErrorIndicator();
     }
     else
     {
-        return getNextSubsetPointRequiringResidual();
+        return getNextSubsetPointRequiringErrorIndicator();
     }
 }
 
-struct GreedyResidualPoint
-GreedyParameterPointSampler::getNextSubsetPointRequiringResidual()
+struct GreedyErrorIndicatorPoint
+GreedyParameterPointSampler::getNextSubsetPointRequiringErrorIndicator()
 {
-    if (d_point_requiring_residual_computed)
+    if (d_point_requiring_error_indicator_computed)
     {
-        Vector* result1 = new Vector(d_parameter_points[d_next_point_requiring_residual]);
-        Vector* result2 = new Vector(d_parameter_points[getNearestROMIndex(d_next_point_requiring_residual, false)]);
-        return createGreedyResidualPoint(result1, result2);
+        Vector* result1 = new Vector(d_parameter_points[d_next_point_requiring_error_indicator]);
+        Vector* result2 = new Vector(d_parameter_points[getNearestROMIndex(d_next_point_requiring_error_indicator, false)]);
+        return createGreedyErrorIndicatorPoint(result1, result2);
     }
     if (d_subset_counter == d_subset_size)
     {
-        return createGreedyResidualPoint(nullptr, nullptr);
+        return createGreedyErrorIndicatorPoint(nullptr, nullptr);
     }
 
     if(!d_subset_created)
@@ -741,7 +741,7 @@ GreedyParameterPointSampler::getNextSubsetPointRequiringResidual()
         d_subset_created = true;
     }
 
-    d_next_point_requiring_residual = -1;
+    d_next_point_requiring_error_indicator = -1;
 
     while (d_counter < (int) d_parameter_points.size() - 1)
     {
@@ -757,8 +757,8 @@ GreedyParameterPointSampler::getNextSubsetPointRequiringResidual()
             double curr_error = d_parameter_point_errors[d_parameter_point_random_indices[d_counter]];
             if (curr_error > d_max_error)
             {
-                // if we have already computed this residual at the same local rom, the residual will not improve
-                // no need to calculate the residual again
+                // if we have already computed this error indicator at the same local rom, the error indicator will not improve
+                // no need to calculate the error indicator again
                 if (d_parameter_point_local_rom[d_parameter_point_random_indices[d_counter]] == getNearestROMIndex(d_parameter_point_random_indices[d_counter], false))
                 {
                     d_max_error = curr_error;
@@ -767,36 +767,36 @@ GreedyParameterPointSampler::getNextSubsetPointRequiringResidual()
                     {
                         if (d_output_log_path == "")
                         {
-                            std::cout << "Residual at [ ";
+                            std::cout << "Error indicator at [ ";
                             for (int i = 0 ; i < d_parameter_points[d_parameter_point_random_indices[d_counter]].dim(); i++)
                             {
                                 std::cout << d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i) << " ";
                             }
                             std::cout << "] skipped." << std::endl;
-                            std::cout << "Residual " << curr_error << " already computed at the same local ROM." << std::endl;
+                            std::cout << "Error indicator " << curr_error << " already computed at the same local ROM." << std::endl;
                         }
                         else
                         {
                             std::ofstream database_history;
                             database_history.open(d_output_log_path, std::ios::app);
-                            database_history << "Residual at [ ";
+                            database_history << "Error indicator at [ ";
                             for (int i = 0 ; i < d_parameter_points[d_parameter_point_random_indices[d_counter]].dim(); i++)
                             {
                                 database_history << d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i) << " ";
                             }
                             database_history << "] skipped." << std::endl;
-                            database_history << "Residual " << curr_error << " already computed at the same local ROM." << std::endl;
+                            database_history << "Error indicator " << curr_error << " already computed at the same local ROM." << std::endl;
                             database_history.close();
                         }
                     }
                 }
                 else
                 {
-                    d_next_point_requiring_residual = d_parameter_point_random_indices[d_counter];
-                    d_point_requiring_residual_computed = true;
-                    Vector* result1 = new Vector(d_parameter_points[d_next_point_requiring_residual]);
-                    Vector* result2 = new Vector(d_parameter_points[getNearestROMIndex(d_next_point_requiring_residual, false)]);
-                    return createGreedyResidualPoint(result1, result2);
+                    d_next_point_requiring_error_indicator = d_parameter_point_random_indices[d_counter];
+                    d_point_requiring_error_indicator_computed = true;
+                    Vector* result1 = new Vector(d_parameter_points[d_next_point_requiring_error_indicator]);
+                    Vector* result2 = new Vector(d_parameter_points[getNearestROMIndex(d_next_point_requiring_error_indicator, false)]);
+                    return createGreedyErrorIndicatorPoint(result1, result2);
                 }
             }
             else
@@ -805,26 +805,26 @@ GreedyParameterPointSampler::getNextSubsetPointRequiringResidual()
                 {
                     if (d_output_log_path == "")
                     {
-                        std::cout << "Residual at [ ";
+                        std::cout << "Error indicator at [ ";
                         for (int i = 0 ; i < d_parameter_points[d_parameter_point_random_indices[d_counter]].dim(); i++)
                         {
                             std::cout << d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i) << " ";
                         }
                         std::cout << "] skipped." << std::endl;
-                        std::cout << "Residual " << curr_error
+                        std::cout << "Error indicator " << curr_error
                                   << " is less than current max error " << d_max_error << std::endl;
                     }
                     else
                     {
                         std::ofstream database_history;
                         database_history.open(d_output_log_path, std::ios::app);
-                        database_history << "Residual at [ ";
+                        database_history << "Error indicator at [ ";
                         for (int i = 0 ; i < d_parameter_points[d_parameter_point_random_indices[d_counter]].dim(); i++)
                         {
                             database_history << d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i) << " ";
                         }
                         database_history << "] skipped." << std::endl;
-                        database_history << "Residual " << curr_error
+                        database_history << "Error indicator " << curr_error
                                          << " is less than current max error " << d_max_error << std::endl;
                         database_history.close();
                     }
@@ -832,19 +832,19 @@ GreedyParameterPointSampler::getNextSubsetPointRequiringResidual()
             }
         }
     }
-    if (d_next_point_requiring_residual == -1)
+    if (d_next_point_requiring_error_indicator == -1)
     {
         if (d_rank == 0)
         {
             if (d_output_log_path == "")
             {
-                std::cout << "Ran out of points to calculate residual for in this iteration." << std::endl;
+                std::cout << "Ran out of points to calculate error indicator for in this iteration." << std::endl;
             }
             else
             {
                 std::ofstream database_history;
                 database_history.open(d_output_log_path, std::ios::app);
-                database_history << "Ran out of points to calculate residual for in this iteration." << std::endl;
+                database_history << "Ran out of points to calculate error indicator for in this iteration." << std::endl;
                 database_history.close();
             }
         }
@@ -858,36 +858,36 @@ GreedyParameterPointSampler::getNextSubsetPointRequiringResidual()
         }
     }
 
-    return createGreedyResidualPoint(nullptr, nullptr);
+    return createGreedyErrorIndicatorPoint(nullptr, nullptr);
 }
 
-struct GreedyResidualPoint
-GreedyParameterPointSampler::getNextConvergencePointRequiringResidual()
+struct GreedyErrorIndicatorPoint
+GreedyParameterPointSampler::getNextConvergencePointRequiringErrorIndicator()
 {
-    if (d_point_requiring_residual_computed)
+    if (d_point_requiring_error_indicator_computed)
     {
-        Vector* result1 = new Vector(d_convergence_points[d_next_point_requiring_residual]);
-        std::shared_ptr<Vector> result2 = getNearestROM(d_convergence_points[d_next_point_requiring_residual]);
-        return createGreedyResidualPoint(result1, result2);
+        Vector* result1 = new Vector(d_convergence_points[d_next_point_requiring_error_indicator]);
+        std::shared_ptr<Vector> result2 = getNearestROM(d_convergence_points[d_next_point_requiring_error_indicator]);
+        return createGreedyErrorIndicatorPoint(result1, result2);
     }
     if (d_counter == d_convergence_subset_size)
     {
-        return createGreedyResidualPoint(nullptr, nullptr);
+        return createGreedyErrorIndicatorPoint(nullptr, nullptr);
     }
 
-    d_next_point_requiring_residual = -1;
+    d_next_point_requiring_error_indicator = -1;
 
-    //get next point requiring residual
+    //get next point requiring error indicator
     while (d_counter < (int) d_convergence_points.size())
     {
-        d_next_point_requiring_residual = d_counter;
-        d_point_requiring_residual_computed = true;
-        Vector* result1 = new Vector(d_convergence_points[d_next_point_requiring_residual]);
-        std::shared_ptr<Vector> result2 = getNearestROM(d_convergence_points[d_next_point_requiring_residual]);
-        return createGreedyResidualPoint(result1, result2);
+        d_next_point_requiring_error_indicator = d_counter;
+        d_point_requiring_error_indicator_computed = true;
+        Vector* result1 = new Vector(d_convergence_points[d_next_point_requiring_error_indicator]);
+        std::shared_ptr<Vector> result2 = getNearestROM(d_convergence_points[d_next_point_requiring_error_indicator]);
+        return createGreedyErrorIndicatorPoint(result1, result2);
     }
 
-    if (d_next_point_requiring_residual == -1)
+    if (d_next_point_requiring_error_indicator == -1)
     {
         if (d_rank == 0)
         {
@@ -906,7 +906,7 @@ GreedyParameterPointSampler::getNextConvergencePointRequiringResidual()
         d_procedure_completed = true;
     }
 
-    return createGreedyResidualPoint(nullptr, nullptr);
+    return createGreedyErrorIndicatorPoint(nullptr, nullptr);
 }
 
 void
@@ -955,12 +955,62 @@ GreedyParameterPointSampler::setPointRelativeError(double error)
 
     if (d_parameter_sampled_indices.size() > 1)
     {
+        double max1 = d_alpha * d_error_indicator_tol;
+        double min1 = d_max_clamp * d_parameter_point_errors[d_next_point_to_sample];
+        double min2 = d_relative_error_tol * d_parameter_point_errors[d_next_point_to_sample] / d_curr_relative_error;
+
         if (d_curr_relative_error <= d_relative_error_tol)
         {
+            if (d_rank == 0)
+            {
+                if (d_output_log_path == "")
+                {
+                    std::cout << "The relative error was smaller than the Greedy relative error tolerance. The error indicator tolerance must increase." << std::endl;
+                    std::cout << "Greedy alpha constant * Greedy relative error tolerance: " << max1 << std::endl;
+                    std::cout << "The minimum value the greedy error indicator tolerance must increase to is: " << max1 << std::endl;
+                    std::cout << "Greedy max clamp constant * Current max error indicator: " << min1 << std::endl;
+                    std::cout << "Greedy relative error tolerance * Current max error indicator / Current relative error: " << min2 << std::endl;
+                    std::cout << "The maximum value the greedy error indicator tolerance is allowed to change is the minimum of the previous two values: " << std::min(min1, min2) << std::endl;
+                }
+                else
+                {
+                    std::ofstream database_history;
+                    database_history.open(d_output_log_path, std::ios::app);
+                    database_history << "The relative error was smaller than the Greedy relative error tolerance. The error indicator tolerance must increase." << std::endl;
+                    database_history << "Greedy alpha constant * Greedy relative error tolerance: " << max1 << std::endl;
+                    database_history << "The minimum value the greedy error indicator tolerance must increase to is: " << max1 << std::endl;
+                    database_history << "Greedy max clamp constant * Current max error indicator: " << min1 << std::endl;
+                    database_history << "Greedy relative error tolerance * Current max error indicator / Current relative error: " << min2 << std::endl;
+                    database_history << "The maximum value the greedy error indicator tolerance is allowed to change is the minimum of the previous two values: " << std::min(min1, min2) << std::endl;
+                    database_history.close();
+                }
+            }
             d_error_indicator_tol = std::max(d_alpha * d_error_indicator_tol, std::min(d_max_clamp * d_parameter_point_errors[d_next_point_to_sample], d_relative_error_tol * d_parameter_point_errors[d_next_point_to_sample] / d_curr_relative_error));
         }
         else
         {
+            double min1 = d_relative_error_tol * d_parameter_point_errors[d_next_point_to_sample] / d_curr_relative_error;
+
+            if (d_rank == 0)
+            {
+                if (d_output_log_path == "")
+                {
+                    std::cout << "The relative error was larger than the Greedy relative error tolerance. The error indicator tolerance must decrease." << std::endl;
+                    std::cout << "Greedy alpha constant * Greedy relative error tolerance: " << d_error_indicator_tol<< std::endl;
+                    std::cout << "Greedy relative error tolerance * Current max error indicator / Current relative error: " << min1 << std::endl;
+                    std::cout << "The minimum value the greedy error indicator tolerance is allowed to change is: " << min1 << std::endl;
+                }
+                else
+                {
+                    std::ofstream database_history;
+                    database_history.open(d_output_log_path, std::ios::app);
+                    database_history << "The relative error was larger than the Greedy relative error tolerance. The error indicator tolerance must decrease." << std::endl;
+                    database_history << "Greedy alpha constant * Greedy relative error tolerance: " << d_error_indicator_tol<< std::endl;
+                    database_history << "Greedy relative error tolerance * Current max error indicator / Current relative error: " << min1 << std::endl;
+                    database_history << "The minimum value the greedy error indicator tolerance is allowed to change is: " << min1 << std::endl;
+                    database_history.close();
+                }
+            }
             d_error_indicator_tol = std::min(d_error_indicator_tol, d_relative_error_tol * d_parameter_point_errors[d_next_point_to_sample] / d_curr_relative_error);
         }
         if (d_rank == 0)
@@ -969,7 +1019,7 @@ GreedyParameterPointSampler::setPointRelativeError(double error)
             {
                 if (old_error_indicator_tol != d_error_indicator_tol)
                 {
-                    std::cout << "Tolerance was adaptively changed from " << old_error_indicator_tol << " to " << d_error_indicator_tol << std::endl;
+                    std::cout << "Error indicator tolerance was adaptively changed from " << old_error_indicator_tol << " to " << d_error_indicator_tol << std::endl;
                 }
             }
             else
@@ -978,7 +1028,7 @@ GreedyParameterPointSampler::setPointRelativeError(double error)
                 database_history.open(d_output_log_path, std::ios::app);
                 if (old_error_indicator_tol != d_error_indicator_tol)
                 {
-                    database_history << "Tolerance was adaptively changed from " << old_error_indicator_tol << " to " << d_error_indicator_tol << std::endl;
+                    database_history << "Error indicator tolerance was adaptively changed from " << old_error_indicator_tol << " to " << d_error_indicator_tol << std::endl;
                 }
                 database_history.close();
             }
@@ -990,30 +1040,44 @@ GreedyParameterPointSampler::setPointRelativeError(double error)
 
     if (d_parameter_sampled_indices.size() > 1 && d_curr_relative_error <= d_relative_error_tol)
     {
+        if (d_rank == 0)
+        {
+            if (d_output_log_path == "")
+            {
+                std::cout << "The relative error was smaller than the Greedy relative error tolerance. Computing convergence." << std::endl;
+            }
+            else
+            {
+                std::ofstream database_history;
+                database_history.open(d_output_log_path, std::ios::app);
+                database_history << "The relative error was smaller than the Greedy relative error tolerance. Computing convergence." << std::endl;
+                database_history.close();
+            }
+        }
         startConvergence();
     }
     else
     {
         if (d_check_local_rom)
         {
-            d_next_point_requiring_residual = d_next_point_to_sample;
-            d_point_requiring_residual_computed = true;
+            d_next_point_requiring_error_indicator = d_next_point_to_sample;
+            d_point_requiring_error_indicator_computed = true;
         }
         else
         {
-            // Precompute next residual point
+            // Precompute next error indicator point
             // This will allow us to figure out if the greedy algorithm has terminated
-            // early without needing an extra call to the residual function.
-            getNextPointRequiringResidual();
+            // early without needing an extra call to the error indicator function.
+            getNextPointRequiringErrorIndicator();
         }
     }
 }
 
 void
-GreedyParameterPointSampler::setPointResidual(double error, int vec_size)
+GreedyParameterPointSampler::setPointErrorIndicator(double error, int vec_size)
 {
     CAROM_VERIFY(error >= 0);
-    CAROM_VERIFY(d_point_requiring_residual_computed);
+    CAROM_VERIFY(d_point_requiring_error_indicator_computed);
 
     double proc_errors = pow(error, 2);
     int total_vec_size = vec_size;
@@ -1039,40 +1103,40 @@ GreedyParameterPointSampler::setPointResidual(double error, int vec_size)
 
     if (d_convergence_started)
     {
-        setConvergenceResidual(proc_errors);
+        setConvergenceErrorIndicator(proc_errors);
     }
     else
     {
-        setSubsetResidual(proc_errors);
+        setSubsetErrorIndicator(proc_errors);
     }
 }
 
 void
-GreedyParameterPointSampler::printResidual(Vector residualPoint, double proc_errors)
+GreedyParameterPointSampler::printErrorIndicator(Vector errorIndicatorPoint, double proc_errors)
 {
     if (d_rank == 0)
     {
         if (d_output_log_path == "")
         {
-            std::cout << "Residual computed at [ ";
-            for (int i = 0 ; i < residualPoint.dim(); i++)
+            std::cout << "Error indicator computed at [ ";
+            for (int i = 0 ; i < errorIndicatorPoint.dim(); i++)
             {
-                std::cout << residualPoint.item(i) << " ";
+                std::cout << errorIndicatorPoint.item(i) << " ";
             }
             std::cout << "]" << std::endl;
-            std::cout << "Residual: " << proc_errors << std::endl;
+            std::cout << "Error indicator: " << proc_errors << std::endl;
         }
         else
         {
             std::ofstream database_history;
             database_history.open(d_output_log_path, std::ios::app);
-            database_history << "Residual computed at [ ";
-            for (int i = 0 ; i < residualPoint.dim(); i++)
+            database_history << "Error indicator computed at [ ";
+            for (int i = 0 ; i < errorIndicatorPoint.dim(); i++)
             {
-                database_history << residualPoint.item(i) << " ";
+                database_history << errorIndicatorPoint.item(i) << " ";
             }
             database_history << "]" << std::endl;
-            database_history << "Residual: " << proc_errors << std::endl;
+            database_history << "Error indicator: " << proc_errors << std::endl;
             database_history.close();
         }
     }
@@ -1085,75 +1149,80 @@ GreedyParameterPointSampler::printErrorIndicatorToleranceNotMet()
     {
         if (d_output_log_path == "")
         {
-            std::cout << "Tolerance " << d_error_indicator_tol << " not met." << std::endl;
+            std::cout << "Error indicator tolerance " << d_error_indicator_tol << " not met." << std::endl;
         }
         else
         {
             std::ofstream database_history;
             database_history.open(d_output_log_path, std::ios::app);
-            database_history << "Tolerance " << d_error_indicator_tol << " not met." << std::endl;
+            database_history << "Error indicator tolerance " << d_error_indicator_tol << " not met." << std::endl;
             database_history.close();
         }
     }
 }
 
 void
-GreedyParameterPointSampler::setSubsetResidual(double proc_errors)
+GreedyParameterPointSampler::setSubsetErrorIndicator(double proc_errors)
 {
     if (d_check_local_rom)
     {
-        auto search = d_parameter_sampled_indices.find(d_next_point_requiring_residual);
+        auto search = d_parameter_sampled_indices.find(d_next_point_requiring_error_indicator);
         if (search != d_parameter_sampled_indices.end())
         {
-            d_parameter_point_errors[d_next_point_requiring_residual] = proc_errors;
-            d_parameter_point_local_rom[d_next_point_requiring_residual] = d_next_point_requiring_residual;
+            d_parameter_point_errors[d_next_point_requiring_error_indicator] = proc_errors;
+            d_parameter_point_local_rom[d_next_point_requiring_error_indicator] = d_next_point_requiring_error_indicator;
 
-            double old_error_indicator_tol = d_error_indicator_tol;
-            d_error_indicator_tol = std::max(d_error_indicator_tol, proc_errors);
-
-            if (d_rank == 0)
+            if (d_parameter_sampled_indices.size() == 1)
             {
-                if (d_output_log_path == "")
+                double old_error_indicator_tol = d_error_indicator_tol;
+                d_error_indicator_tol = std::max(d_error_indicator_tol, proc_errors);
+
+                if (d_rank == 0)
                 {
-                    std::cout << "Local ROM Residual computed at [ ";
-                    for (int i = 0 ; i < d_parameter_points[d_next_point_requiring_residual].dim(); i++)
+                    if (d_output_log_path == "")
                     {
-                        std::cout << d_parameter_points[d_next_point_requiring_residual].item(i) << " ";
+                        std::cout << "Local ROM Error indicator computed at [ ";
+                        for (int i = 0 ; i < d_parameter_points[d_next_point_requiring_error_indicator].dim(); i++)
+                        {
+                            std::cout << d_parameter_points[d_next_point_requiring_error_indicator].item(i) << " ";
+                        }
+                        std::cout << "]" << std::endl;
+                        std::cout << "Local ROM Error indicator (tolerance unchecked): " << proc_errors << std::endl;
+                        if (old_error_indicator_tol != d_error_indicator_tol)
+                        {
+                            std::cout << "Error indicator at the local ROM was higher than the previous tolerance." << std::endl;
+                            std::cout << "The error indicator tolerance should always be at least the error indicator at the local ROM since this error indicator is a lower bound." << std::endl;
+                            std::cout << "Error indicator tolerance was adaptively changed from " << old_error_indicator_tol << " to " << d_error_indicator_tol << std::endl;
+                        }
                     }
-                    std::cout << "]" << std::endl;
-                    std::cout << "Local ROM Residual (tolerance unchecked): " << proc_errors << std::endl;
-                    if (old_error_indicator_tol != d_error_indicator_tol)
+                    else
                     {
-                        std::cout << "Residual at the local ROM was higher than the previous tolerance." << std::endl;
-                        std::cout << "Tolerance was adaptively changed from " << old_error_indicator_tol << " to " << d_error_indicator_tol << std::endl;
+                        std::ofstream database_history;
+                        database_history.open(d_output_log_path, std::ios::app);
+                        database_history << "Local ROM Error indicator computed at [ ";
+                        for (int i = 0 ; i < d_parameter_points[d_next_point_requiring_error_indicator].dim(); i++)
+                        {
+                            database_history << d_parameter_points[d_next_point_requiring_error_indicator].item(i) << " ";
+                        }
+                        database_history << "]" << std::endl;
+                        database_history << "Local ROM Error indicator (tolerance unchecked): " << proc_errors << std::endl;
+                        if (old_error_indicator_tol != d_error_indicator_tol)
+                        {
+                            database_history << "Error indicator at the local ROM was higher than the previous tolerance." << std::endl;
+                            database_history << "The error indicator tolerance should always be at least the error indicator at the local ROM since this error indicator is a lower bound." << std::endl;
+                            database_history << "Error indicator tolerance was adaptively changed from " << old_error_indicator_tol << " to " << d_error_indicator_tol << std::endl;
+                        }
+                        database_history.close();
                     }
-                }
-                else
-                {
-                    std::ofstream database_history;
-                    database_history.open(d_output_log_path, std::ios::app);
-                    database_history << "Local ROM Residual computed at [ ";
-                    for (int i = 0 ; i < d_parameter_points[d_next_point_requiring_residual].dim(); i++)
-                    {
-                        database_history << d_parameter_points[d_next_point_requiring_residual].item(i) << " ";
-                    }
-                    database_history << "]" << std::endl;
-                    database_history << "Local ROM Residual (tolerance unchecked): " << proc_errors << std::endl;
-                    if (old_error_indicator_tol != d_error_indicator_tol)
-                    {
-                        database_history << "Residual at the local ROM was higher than the previous tolerance." << std::endl;
-                        database_history << "Tolerance was adaptively changed from " << old_error_indicator_tol << " to " << d_error_indicator_tol << std::endl;
-                    }
-                    database_history.close();
                 }
             }
 
-            d_point_requiring_residual_computed = false;
+            d_point_requiring_error_indicator_computed = false;
 
-            // Precompute next residual point
+            // Precompute next error indicator point
             // This will allow us to figure out if the greedy algorithm has terminated
-            // early without needing an extra call to the residual function.
-            getNextPointRequiringResidual();
+            // early without needing an extra call to the error indicator function.
+            getNextPointRequiringErrorIndicator();
 
             return;
         }
@@ -1165,9 +1234,9 @@ GreedyParameterPointSampler::setSubsetResidual(double proc_errors)
         d_parameter_point_local_rom[d_parameter_point_random_indices[d_counter]] = getNearestROMIndex(d_parameter_point_random_indices[d_counter], false);
     }
 
-    printResidual(d_parameter_points[d_parameter_point_random_indices[d_counter]], proc_errors);
+    printErrorIndicator(d_parameter_points[d_parameter_point_random_indices[d_counter]], proc_errors);
 
-    d_point_requiring_residual_computed = false;
+    d_point_requiring_error_indicator_computed = false;
 
     if (proc_errors > d_max_error)
     {
@@ -1188,20 +1257,20 @@ GreedyParameterPointSampler::setSubsetResidual(double proc_errors)
         }
     }
 
-    // Precompute next residual point
+    // Precompute next error indicator point
     // This will allow us to figure out if the greedy algorithm has terminated
-    // early without needing an extra call to the residual function.
-    getNextPointRequiringResidual();
+    // early without needing an extra call to the error indicator function.
+    getNextPointRequiringErrorIndicator();
 
     return;
 }
 
 void
-GreedyParameterPointSampler::setConvergenceResidual(double proc_errors)
+GreedyParameterPointSampler::setConvergenceErrorIndicator(double proc_errors)
 {
-    printResidual(d_convergence_points[d_counter], proc_errors);
+    printErrorIndicator(d_convergence_points[d_counter], proc_errors);
 
-    d_point_requiring_residual_computed = false;
+    d_point_requiring_error_indicator_computed = false;
 
     if (proc_errors > d_max_error)
     {
@@ -1225,10 +1294,10 @@ GreedyParameterPointSampler::setConvergenceResidual(double proc_errors)
         d_procedure_completed = true;
     }
 
-    // Precompute next residual point
+    // Precompute next error indicator point
     // This will allow us to figure out if the greedy algorithm has terminated
-    // early without needing an extra call to the residual function.
-    getNextPointRequiringResidual();
+    // early without needing an extra call to the error indicator function.
+    getNextPointRequiringErrorIndicator();
 }
 
 void
@@ -1250,21 +1319,21 @@ GreedyParameterPointSampler::startConvergence()
     {
         if (d_output_log_path == "")
         {
-            std::cout << "Tolerance " << d_error_indicator_tol << " met. Computing convergence." << std::endl;
+            std::cout << "Error indicator tolerance " << d_error_indicator_tol << " met. Computing convergence." << std::endl;
         }
         else
         {
             std::ofstream database_history;
             database_history.open(d_output_log_path, std::ios::app);
-            database_history << "Tolerance " << d_error_indicator_tol << " met. Computing convergence." << std::endl;
+            database_history << "Error indicator tolerance " << d_error_indicator_tol << " met. Computing convergence." << std::endl;
             database_history.close();
         }
     }
 
-    // Precompute next residual point
+    // Precompute next error indicator point
     // This will allow us to figure out if the greedy algorithm has terminated
-    // early without needing an extra call to the residual function.
-    getNextPointRequiringResidual();
+    // early without needing an extra call to the error indicator function.
+    getNextPointRequiringErrorIndicator();
 }
 
 std::vector<Vector>
@@ -1456,8 +1525,8 @@ GreedyParameterPointSampler::save(std::string base_file_name)
         database.putInteger(tmp, d_convergence_subset_size);
         sprintf(tmp, "next_point_to_sample");
         database.putInteger(tmp, d_next_point_to_sample);
-        sprintf(tmp, "next_point_requiring_residual");
-        database.putInteger(tmp, d_next_point_requiring_residual);
+        sprintf(tmp, "next_point_requiring_error_indicator");
+        database.putInteger(tmp, d_next_point_requiring_error_indicator);
         sprintf(tmp, "check_local_rom");
         database.putInteger(tmp, d_check_local_rom);
         sprintf(tmp, "use_centroid");
@@ -1468,8 +1537,8 @@ GreedyParameterPointSampler::save(std::string base_file_name)
         database.putInteger(tmp, d_convergence_started);
         sprintf(tmp, "next_parameter_point_computed");
         database.putInteger(tmp, d_next_parameter_point_computed);
-        sprintf(tmp, "point_requiring_residual_computed");
-        database.putInteger(tmp, d_point_requiring_residual_computed);
+        sprintf(tmp, "point_requiring_error_indicator_computed");
+        database.putInteger(tmp, d_point_requiring_error_indicator_computed);
         sprintf(tmp, "subset_created");
         database.putInteger(tmp, d_subset_created);
         sprintf(tmp, "debug_algorithm");

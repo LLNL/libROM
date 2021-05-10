@@ -18,12 +18,12 @@
 //              1. Construct the GreedyParameterPointRandomSampler by giving it a
 //                 domain of parameter points.
 //              2. Request a parameter point to sample.
-//              3. Request a parameter point to compute an error residual for.
+//              3. Request a parameter point to compute an error error indicator for.
 //              4. Request the nearest ROM to the parameter point requiring a
-//                 residual.
-//              5. Give the computed residual to the GreedyParameterPointRandomSampler.
+//                 error indicator.
+//              5. Give the computed error indicator to the GreedyParameterPointRandomSampler.
 //              6. Repeat steps 4 and 5 until the GreedyParameterPointRandomSampler
-//                 no longer requires more residuals to be computed.
+//                 no longer requires more error indicators to be computed.
 //              7. Repeat steps 2 to 6 until the GreedyParameterPointRandomSampler
 //                 no longer requires more parameter points to be sampled.
 //              8. The ROM database is now complete, meeting the error tolerance
@@ -50,7 +50,7 @@ public:
      *
      * @param[in] parameter_points A vector of CAROM::Vectors containing
                                    the different parameter points.
-     * @param[in] check_local_rom Compute local ROM residual each iteration.
+     * @param[in] check_local_rom Compute local ROM error indicator each iteration.
      * @param[in] tolerance A tolerance value for which to end the algorithm.
      * @param[in] alpha A alpha constant.
      * @param[in] subset_size The size of the random subset.
