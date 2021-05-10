@@ -9,7 +9,7 @@
  *****************************************************************************/
 
 // Description: The wrapper class for an SVD algorithm and
-//              sampler.  This class provides controls all aspects of basis
+//              sampler.  This class controls all aspects of basis
 //              vector generation.
 
 #ifndef included_BasisGenerator_h
@@ -40,10 +40,9 @@ class BasisReader;
 class Matrix;
 
 /**
- * Class BasisGenerator is an class defining the interface for
- * the generation of basis vectors via the svd method.  This class wraps the
- * SVD algorithm and sampler and controls all aspects
- * of basis vector generation.
+ * Class BasisGenerator defines the interface for the generation of basis
+ * vectors via the SVD method.  This class wraps the SVD algorithm and sampler
+ * and controls all aspects of basis vector generation.
  */
 class BasisGenerator
 {
@@ -86,7 +85,9 @@ public:
         double time);
 
     /**
-     * @brief if true, it updates right basis vectors
+     * @brief Check whether right basis vectors will be updated.
+     *
+     * * @return True if the right basis vectors will be updated.
      */
     bool
     updateRightSV()
@@ -103,6 +104,9 @@ public:
      * @param[in] u_in The state at the specified time.
      * @param[in] time The simulation time for the state.
      * @param[in] dt The current simulation dt.
+     * @param[in] add_without_increase If true, the addLinearlyDependent is
+     *                                 invoked. This only applies to incremental
+     *                                 SVD.
      *
      * @return True if the sampling was successful.
      */
@@ -116,7 +120,8 @@ public:
     /**
      * @brief Signal that the final sample has been taken.
      *
-     * @param[in] kind "basis" or "snapshot" to write one or the other.
+     * @param[in] kind A string equal to "basis" or "snapshot", representing
+     *                 which one will be written.
      */
     void
     endSamples(const std::string& kind = "basis")
@@ -142,8 +147,9 @@ public:
      *
      * @param[in] base_file_name The base part of the name of the files
      *                           holding the basis / snapshot vectors.
-     * @param[in] kind Either basis or snapshot, the kind of data to load.
-     * @param[in] cut_off The max number of bases or snapshots to read.
+     * @param[in] kind A string equal to "basis" or "snapshot", representing
+     *                 which kind of data to load.
+     * @param[in] cut_off The maximum number of bases or snapshots to read.
      * @param[in] db_format Format of the file to read.
      */
     void
@@ -247,6 +253,11 @@ public:
         return d_svd->getBasisIntervalStartTime(which_interval);
     }
 
+    /**
+     * @brief Returns the number of samples taken.
+     *
+     * @return The number of samples taken.
+     */
     int getNumSamples() const
     {
         return d_svd->getNumSamples();

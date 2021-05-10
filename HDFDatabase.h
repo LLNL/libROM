@@ -41,7 +41,7 @@ public:
      *
      * @param[in] file_name Name of HDF5 database file to create.
      *
-     * @return true if file create was successful.
+     * @return True if file create was successful.
      */
     virtual
     bool
@@ -53,7 +53,7 @@ public:
      *
      * @param[in] file_name Name of existing HDF5 database file to open.
      *
-     * @return true if file open was successful.
+     * @return True if file open was successful.
      */
     virtual
     bool
@@ -63,7 +63,7 @@ public:
     /**
      * @brief Closes the currently open HDF5 database file.
      *
-     * @return true if the file close was successful.
+     * @return True if the file close was successful.
      */
     virtual
     bool
@@ -163,13 +163,12 @@ private:
 
     /**
      * @brief Returns true if the specified key represents an integer entry.
-     *
-     * If the key does not exist or if the string is empty then false is
-     * returned.
+     *        If the key does not exist or if the string is empty then false is
+     *        returned.
      *
      * @param[in] key The key associated with the data we are interested in.
      *
-     * @return true if the data associated with key is an integer array.
+     * @return True if the data associated with key is an integer array.
      */
     bool
     isInteger(
@@ -177,13 +176,12 @@ private:
 
     /**
      * @brief Returns true if the specified key represents a double entry.
-     *
-     * If the key does not exist or if the string is empty then false is
-     * returned.
+     *        If the key does not exist or if the string is empty then false is
+     *        returned.
      *
      * @param[in] key The key associated with the data we are interested in.
      *
-     * @return true if the data associated with key is a double array.
+     * @return True if the data associated with key is a double array.
      */
     bool
     isDouble(
@@ -226,7 +224,14 @@ private:
      * */
     hid_t d_group_id;
 
+    /**
+     * @brief The key representing a double array.
+     * */
     static const int KEY_DOUBLE_ARRAY;
+
+    /**
+     * @brief The key representing an integer array.
+     * */
     static const int KEY_INT_ARRAY;
 };
 

@@ -41,7 +41,7 @@ public:
      *
      * @param[in] file_name Name of database file to create.
      *
-     * @return true if file create was successful.
+     * @return True if file create was successful.
      */
     virtual
     bool
@@ -53,7 +53,7 @@ public:
      *
      * @param[in] file_name Name of existing database file to open.
      *
-     * @return true if file open was successful.
+     * @return True if file open was successful.
      */
     virtual
     bool
@@ -63,7 +63,7 @@ public:
     /**
      * @brief Closes the currently open database file.
      *
-     * @return true if the file close was successful.
+     * @return True if the file close was successful.
      */
     virtual
     bool
@@ -71,7 +71,7 @@ public:
 
     /**
      * @brief Writes an integer associated with the supplied key to currently
-     * open database file.
+     *        open database file.
      *
      * @param[in] key The key associated with the value to be written.
      * @param[in] data The integer value to be written.
@@ -86,7 +86,7 @@ public:
 
     /**
      * @brief Writes an array of integers associated with the supplied key to
-     * the currently open database file.
+     *        the currently open database file.
      *
      * @param[in] key The key associated with the array of values to be
      *                written.
@@ -102,7 +102,7 @@ public:
 
     /**
      * @brief Writes a double associated with the supplied key to currently
-     * open database file.
+     *        open database file.
      *
      * @param[in] key The key associated with the value to be written.
      * @param[in] data The double value to be written.
@@ -117,7 +117,7 @@ public:
 
     /**
      * @brief Writes an array of doubles associated with the supplied key to
-     * the currently open database file.
+     *        the currently open database file.
      *
      * @param[in] key The key associated with the array of values to be
      *                written.
@@ -133,7 +133,7 @@ public:
 
     /**
      * @brief Reads an integer associated with the supplied key from the
-     * currently open database file.
+     *        currently open database file.
      *
      * @param[in] key The key associated with the value to be read.
      * @param[out] data The integer value read.
@@ -148,7 +148,7 @@ public:
 
     /**
      * @brief Reads an array of integers associated with the supplied key
-     * from the currently open database file.
+     *        from the currently open database file.
      *
      * @param[in] key The key associated with the array of values to be
      *                read.
@@ -164,7 +164,7 @@ public:
 
     /**
      * @brief Reads a double associated with the supplied key from the
-     * currently open database file.
+     *        currently open database file.
      *
      * @param[in] key The key associated with the value to be read.
      * @param[out] data The double value read.
@@ -179,7 +179,7 @@ public:
 
     /**
      * @brief Reads an array of doubles associated with the supplied key
-     * from the currently open database file.
+     *        from the currently open database file.
      *
      * @param[in] key The key associated with the array of values to be
      *                read.
@@ -194,9 +194,8 @@ public:
         int nelements) = 0;
 
     /**
-     * @brief Implemented database file formats.
-     *
-     * Add to this enum each time a new database format is implemented.
+     * @brief Implemented database file formats. Add to this enum each time a
+     *        new database format is implemented.
      */
     enum formats {
         HDF5

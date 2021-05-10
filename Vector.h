@@ -21,9 +21,9 @@
 namespace CAROM {
 
 /**
- * A simple vector class in which the dimensions may be distributed across
- * multiple processes.  This class supports only the basic operations that are
- * needed by the SVD library.
+ * Class Vector is a simple vector class in which the dimensions may be
+ * distributed across multiple processes.  This class supports only the basic
+ * operations that are needed by the SVD library.
  */
 class Vector
 {
@@ -117,8 +117,8 @@ public:
     /**
      * @brief Transform the vector using a supplied function.
      *
-     * @param[in] f(const int size, double* vector) A transformer function which takes
-     * in as input a size and a vector.
+     * @param[in] transformer A transformer function which takes in as input a
+     *            size and a vector.
      *
      * @return The newly transformed vector.
      */
@@ -127,26 +127,24 @@ public:
 
     /**
      * @brief Transform a vector using a supplied function and store the
-     * results in another vector.
+     *        results in another vector.
      *
-     * @param[in] Vector& result A vector which will store the transformed
-     * result
+     * @param[out] result A vector which will store the transformed result.
      *
-     * @param[in] f(const int size, double* vector) A transformer function
-     * which takes in as input a size and transforms the vector.
+     * @param[in] transformer A transformer function which takes in as input a
+    *             size and transforms the vector.
      */
     void
     transform(Vector& result, std::function<void(const int size, double* vector)> transformer) const;
 
     /**
      * @brief Transform a vector using a supplied function and store the
-     * results in another vector.
+     *        results in another vector.
      *
-     * @param[in] Vector& result A vector which will store the transformed
-     * result
+     * @param[out] result A vector which will store the transformed result.
      *
-     * @param[in] f(const int size, double* vector) A transformer function
-     * which takes in as input a size and transforms the vector.
+     * @param[in] transformer A transformer function which takes in as input a
+     *            size and transforms the vector.
      */
     void
     transform(Vector*& result, std::function<void(const int size, double* vector)> transformer) const;
@@ -154,12 +152,9 @@ public:
     /**
      * @brief Transform the vector using a supplied function.
      *
-     * @param[in] Vector& result A vector which will store the transformed
-     * result
-     *
-     * @param[in] f(const int size, double* origVector, double* resultVector)
-     * A transformer function which takes in as input a size and transforms
-     * the origVector and stores the result in resultVector.
+     * @param[in] transformer A transformer function which takes in as input a
+     *            size and transforms the origVector and stores the result in
+     *            resultVector.
      *
      * @return The newly transformed vector.
      */
@@ -168,28 +163,26 @@ public:
 
     /**
      * @brief Transform a vector using a supplied function and store the
-     * results in another vector.
+     *        results in another vector.
      *
-     * @param[in] Vector& result A vector which will store the transformed
-     * result
+     * @param[out] result A vector which will store the transformed result.
      *
-     * @param[in] f(const int size, double* origVector, double* resultVector)
-     * A transformer function which takes in as input a size and transforms
-     * the origVector and stores the result in resultVector.
+     * @param[in] transformer A transformer function which takes in as input a
+     *            size and transforms the origVector and stores the result in
+     *            resultVector.
      */
     void
     transform(Vector& result, std::function<void(const int size, double* origVector, double* resultVector)> transformer) const;
 
     /**
      * @brief Transform a vector using a supplied function and store the
-     * results in another vector.
+     *        results in another vector.
      *
-     * @param[in] Vector& result A vector which will store the transformed
-     * result
+     * @param[out] result A vector which will store the transformed result.
      *
-     * @param[in] f(const int size, double* origVector, double* resultVector)
-     * A transformer function which takes in as input a size and transforms
-     * the origVector and stores the result in resultVector.
+     * @param[in] transformer A transformer function which takes in as input a
+     *            size and transforms the origVector and stores the result in
+     *            resultVector.
      */
     void
     transform(Vector*& result, std::function<void(const int size, double* origVector, double* resultVector)> transformer) const;
@@ -424,6 +417,7 @@ public:
      * @pre distributed() == other.distributed()
      * @pre dim() == other.dim()
      *
+     * @param[in] factor Multiplicative factor applied to other.
      * @param[in] other The other summand.
      * @param[out] result this + factor*other
      */
@@ -442,6 +436,7 @@ public:
      * @pre distributed() == other.distributed()
      * @pre dim() == other.dim()
      *
+     * @param[in] factor Multiplicative factor applied to other.
      * @param[in] other The other summand.
      * @param[out] result this + factor*other
      */
@@ -681,7 +676,7 @@ public:
     /**
      * @brief write Vector into (a) HDF file(s).
      *
-     * @param[in] prefix The name of the prefix of the file name.
+     * @param[in] base_file_name The base part of the file name.
      *
      */
     void write(const std::string& base_file_name);
@@ -689,17 +684,12 @@ public:
     /**
      * @brief read Vector from (a) HDF file(s).
      *
-     * @param[in] prefix The name of the prefix of the file name.
+     * @param[in] base_file_name The base part of the file name.
      *
      */
     void read(const std::string& base_file_name);
 
 private:
-    /**
-     * @brief Default constructor is not implemented.
-     */
-    // Vector();
-
     /**
      * @brief The storage for the Vector's values on this processor.
      */

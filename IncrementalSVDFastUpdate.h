@@ -20,7 +20,7 @@
 namespace CAROM {
 
 /**
- * IncrementalSVDFastUpdate implements Brand's fast update incremental SVD
+ * Class IncrementalSVDFastUpdate implements Brand's fast update incremental SVD
  * algorithm by implementing the pure virtual methods of the IncrementalSVD
  * base class.
  */
@@ -44,6 +44,7 @@ private:
      *                            containing the basis vectors.  Each process
      *                            will append its process ID to this base
      *                            name.
+     * @see Options
      */
     IncrementalSVDFastUpdate(
         Options options,
@@ -68,7 +69,7 @@ private:
         const IncrementalSVDFastUpdate& rhs);
 
     /**
-     * @brief Constructs the first svd.
+     * @brief Constructs the first SVD.
      *
      * @pre u != 0
      * @pre time >= 0.0
@@ -90,7 +91,7 @@ private:
     computeBasis();
 
     /**
-     * @brief Add a linearly dependent sample to the svd.
+     * @brief Add a linearly dependent sample to the SVD.
      *
      * @pre A != 0
      * @pre sigma != 0
@@ -106,7 +107,7 @@ private:
         const Matrix* sigma);
 
     /**
-     * @brief Add a new, unique sample to the svd.
+     * @brief Add a new, unique sample to the SVD.
      *
      * @pre j != 0
      * @pre A != 0
@@ -126,16 +127,13 @@ private:
         Matrix* sigma);
 
     /**
-     * @brief The matrix U'.
-     *
-     * U' is not distributed and the entire matrix exists on each processor.
+     * @brief The matrix U'. U' is not distributed and the entire matrix
+     *        exists on each processor.
      */
     Matrix* d_Up;
 
     /**
-     * @brief
-     *
-     * singular_value_tol is a tolerance value used to remove small singular values
+     * @brief The tolerance value used to remove small singular values.
      */
     double d_singular_value_tol;
 
