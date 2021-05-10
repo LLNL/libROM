@@ -662,26 +662,7 @@ GreedyParameterPointSampler::getNextParameterPoint()
         }
     }
 
-    if (d_parameter_sampled_indices.size() > 1)
-    {
-        d_next_parameter_point_computed = true;
-    }
-    else
-    {
-        if (d_check_local_rom)
-        {
-            d_next_point_requiring_residual = curr_point_to_sample;
-            d_point_requiring_residual_computed = true;
-            d_iteration_started = true;
-        }
-        else
-        {
-            // Precompute next residual point
-            // This will allow us to figure out if the greedy algorithm has terminated
-            // early without needing an extra call to the residual function.
-            getNextPointRequiringResidual();
-        }
-    }
+    d_next_parameter_point_computed = true;
 
     Vector* result = new Vector(d_parameter_points[curr_point_to_sample]);
     return std::shared_ptr<Vector>(result);
@@ -700,7 +681,16 @@ GreedyParameterPointSampler::getNextPointRequiringRelativeError()
     }
 
     Vector* result1 = new Vector(d_parameter_points[d_next_point_to_sample]);
-    Vector* result2 = new Vector(d_parameter_points[getNearestROMIndex(d_next_point_to_sample, true)]);
+    Vector* result2 = NULL;
+
+    if (d_parameter_sampled_indices.size() == 1)
+    {
+        result2 = new Vector(d_parameter_points[getNearestROMIndex(d_next_point_to_sample, false)]);
+    }
+    else
+    {
+        result2 = new Vector(d_parameter_points[getNearestROMIndex(d_next_point_to_sample, true)]);
+    }
 
     return createGreedyResidualPoint(result1, result2);
 }
