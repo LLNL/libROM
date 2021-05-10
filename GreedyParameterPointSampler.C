@@ -360,6 +360,8 @@ GreedyParameterPointSampler::load(
         database.getInteger(tmp, d_counter);
         sprintf(tmp, "subset_counter");
         database.getInteger(tmp, d_subset_counter);
+        sprintf(tmp, "random_seed");
+        database.getInteger(tmp, d_random_seed);
 
         sprintf(tmp, "parameter_point_random_indices");
         d_parameter_point_random_indices.resize(d_parameter_points.size());
@@ -382,6 +384,8 @@ GreedyParameterPointSampler::load(
         }
     }
     database.close();
+
+    rng.seed(d_random_seed + d_parameter_sampled_indices.size());
 }
 
 void
@@ -503,8 +507,9 @@ GreedyParameterPointSampler::constructObject(
     d_subset_counter = 0;
     d_counter = -1;
     d_debug_algorithm = debug_algorithm;
+    d_random_seed = random_seed;
 
-    rng.seed(random_seed);
+    rng.seed(d_random_seed);
 
     if (d_rank == 0)
     {
@@ -1483,6 +1488,8 @@ GreedyParameterPointSampler::save(std::string base_file_name)
         database.putInteger(tmp, d_counter);
         sprintf(tmp, "subset_counter");
         database.putInteger(tmp, d_subset_counter);
+        sprintf(tmp, "random_seed");
+        database.putInteger(tmp, d_random_seed);
 
         sprintf(tmp, "parameter_point_random_indices");
         database.putIntegerArray(tmp, &d_parameter_point_random_indices[0], d_parameter_point_random_indices.size());

@@ -438,6 +438,11 @@ protected:
     int d_rank;
 
     /**
+     * @brief Then random seed used to generate subsets.
+     */
+    int d_random_seed;
+
+    /**
      * @brief Random engine used to generate subsets.
      */
     std::default_random_engine rng;
