@@ -324,6 +324,8 @@ GreedyParameterPointSampler::load(
         database.getDouble(tmp, d_alpha);
         sprintf(tmp, "max_clamp");
         database.getDouble(tmp, d_max_clamp);
+        sprintf(tmp, "max_num_parameter_points");
+        database.getInteger(tmp, d_num_parameter_points);
         sprintf(tmp, "subset_size");
         database.getInteger(tmp, d_subset_size);
         sprintf(tmp, "convergence_subset_size");
@@ -925,7 +927,7 @@ GreedyParameterPointSampler::setPointRelativeError(double error)
     }
     else
     {
-        if (d_check_local_rom)
+        if (d_check_local_rom || d_parameter_sampled_indices.size() == 1)
         {
             d_next_point_requiring_error_indicator = d_next_point_to_sample;
             d_point_requiring_error_indicator_computed = true;
@@ -1025,7 +1027,7 @@ GreedyParameterPointSampler::printErrorIndicatorToleranceNotMet()
 void
 GreedyParameterPointSampler::setSubsetErrorIndicator(double proc_errors)
 {
-    if (d_check_local_rom)
+    if (d_check_local_rom || d_parameter_sampled_indices.size() == 1)
     {
         auto search = d_parameter_sampled_indices.find(d_next_point_requiring_error_indicator);
         if (search != d_parameter_sampled_indices.end())
@@ -1180,7 +1182,7 @@ GreedyParameterPointSampler::generateRandomPoints(int num_points)
         unif.push_back(std::uniform_real_distribution<double>(d_min_param_point.item(i), d_max_param_point.item(i)));
     }
 
-    for (int i = 0; i < d_convergence_subset_size; i++)
+    for (int i = 0; i < num_points; i++)
     {
         Vector point(d_min_param_point.dim(), false);
         for (int j = 0; j < point.dim(); j++)
@@ -1352,6 +1354,8 @@ GreedyParameterPointSampler::save(std::string base_file_name)
         database.putDouble(tmp, d_alpha);
         sprintf(tmp, "max_clamp");
         database.putDouble(tmp, d_max_clamp);
+        sprintf(tmp, "max_num_parameter_points");
+        database.putInteger(tmp, d_num_parameter_points);
         sprintf(tmp, "subset_size");
         database.putInteger(tmp, d_subset_size);
         sprintf(tmp, "convergence_subset_size");
@@ -1396,7 +1400,7 @@ GreedyParameterPointSampler::save(std::string base_file_name)
 bool
 GreedyParameterPointSampler::isComplete()
 {
-    if (d_parameter_sampled_indices.size() == d_num_parameter_points)
+    if (!d_procedure_completed && d_parameter_sampled_indices.size() == d_num_parameter_points)
     {
         if (d_rank == 0)
         {
