@@ -471,7 +471,7 @@ GreedyParameterPointSampler::constructObject(
 {
     CAROM_VERIFY(relative_error_tolerance > 0.0);
     CAROM_VERIFY(alpha >= 1.0);
-    CAROM_VERIFY(max_clamp >= 0.0 || max_clamp == -1);
+    CAROM_VERIFY(max_clamp >= 1.0);
     CAROM_VERIFY(subset_size > 0);
     CAROM_VERIFY(convergence_subset_size > 0);
     CAROM_VERIFY(subset_size < convergence_subset_size);
