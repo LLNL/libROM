@@ -42,9 +42,6 @@ TEST(GreedyParameterPointRandomSamplerSerialTest, Test_GreedyParameterPointRando
     CAROM::GreedyParameterPointRandomSampler caromGreedySampler(0.5, 2.5, 5, false, 0.1, 1, 1, 3, 4, false, "", "", true, 1, true);
 
     std::vector<CAROM::Vector> paramDomain = caromGreedySampler.getParameterPointDomain();
-    for (int i = 0; i < paramDomain.size(); i++) {
-      std::cout << paramDomain[i].item(0) << " ";
-    }
 
     std::shared_ptr<CAROM::Vector> nextPointToSample = caromGreedySampler.getNextParameterPoint();
     EXPECT_EQ(nextPointToSample.get()->item(0), paramDomain[3].item(0));
