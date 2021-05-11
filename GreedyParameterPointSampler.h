@@ -413,6 +413,11 @@ protected:
     std::vector<Vector> generateRandomPoints(int num_points);
 
     /**
+     * @brief Print to output_log_file or cout.
+     */
+    void agnosticPrint(std::string str);
+
+    /**
      * @brief Print the error indicator.
      *
      * @param[in] errorIndicatorPoint The vector where the error indicator

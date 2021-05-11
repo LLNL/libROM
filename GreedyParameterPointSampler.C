@@ -418,41 +418,21 @@ GreedyParameterPointSampler::constructParameterPoints()
 
     if (d_rank == 0)
     {
-        if (d_output_log_path == "")
+        std::string str;
+        str += "Total number of sample points: " + std::to_string(d_num_parameter_points) + "\n";
+        str += "Parameter space minimum: [ ";
+        for (int i = 0 ; i < d_min_param_point.dim(); i++)
         {
-            std::cout << "Total number of sample points: " << d_num_parameter_points << std::endl;
-            std::cout << "Parameter space minimum: [ ";
-            for (int i = 0 ; i < d_min_param_point.dim(); i++)
-            {
-                std::cout << d_min_param_point.item(i) << " ";
-            }
-            std::cout << "]" << std::endl;
-            std::cout << "Parameter space maximum: [ ";
-            for (int i = 0 ; i < d_max_param_point.dim(); i++)
-            {
-                std::cout << d_max_param_point.item(i) << " ";
-            }
-            std::cout << "]" << std::endl;
+            str += std::to_string(d_min_param_point.item(i)) + " ";
         }
-        else
+        str += "]\n";
+        str += "Parameter space maximum: [ ";
+        for (int i = 0 ; i < d_max_param_point.dim(); i++)
         {
-            std::ofstream database_history;
-            database_history.open(d_output_log_path, std::ios::app);
-            database_history << "Total number of sample points: " << d_num_parameter_points << std::endl;
-            database_history << "Parameter space minimum: [ ";
-            for (int i = 0 ; i < d_min_param_point.dim(); i++)
-            {
-                database_history << d_min_param_point.item(i) << " ";
-            }
-            database_history << "]" << std::endl;
-            database_history << "Parameter space maximum: [ ";
-            for (int i = 0 ; i < d_max_param_point.dim(); i++)
-            {
-                database_history << d_max_param_point.item(i) << " ";
-            }
-            database_history << "]" << std::endl;
-            database_history.close();
+            str += std::to_string(d_max_param_point.item(i)) + " ";
         }
+        str += "]\n";
+        agnosticPrint(str);
     }
 }
 
@@ -513,25 +493,13 @@ GreedyParameterPointSampler::constructObject(
 
     if (d_rank == 0)
     {
-        if (d_output_log_path == "")
-        {
-            std::cout << "Relative error tolerance: " << d_relative_error_tol << std::endl;
-            std::cout << "Alpha constant: " << d_alpha << std::endl;
-            std::cout << "Max clamp constant: " << d_max_clamp << std::endl;
-            std::cout << "Iteration subset size: " << d_subset_size << std::endl;
-            std::cout << "Convergence subset size: " << d_convergence_subset_size << std::endl;
-        }
-        else
-        {
-            std::ofstream database_history;
-            database_history.open(d_output_log_path, std::ios::app);
-            database_history << "Relative error tolerance: " << d_relative_error_tol << std::endl;
-            database_history << "Alpha constant: " << d_alpha << std::endl;
-            database_history << "Max clamp constant: " << d_max_clamp << std::endl;
-            database_history << "Iteration subset size: " << d_subset_size << std::endl;
-            database_history << "Convergence subset size: " << d_convergence_subset_size << std::endl;
-            database_history.close();
-        }
+        std::string str;
+        str += "Relative error tolerance: " + std::to_string(d_relative_error_tol) + "\n";
+        str += "Alpha constant: " + std::to_string(d_alpha) + "\n";
+        str += "Max clamp constant: " + std::to_string(d_max_clamp) + "\n";
+        str += "Iteration subset size: " + std::to_string(d_subset_size) + "\n";
+        str += "Convergence subset size: " + std::to_string(d_convergence_subset_size) + "\n";
+        agnosticPrint(str);
     }
 }
 
@@ -639,27 +607,14 @@ GreedyParameterPointSampler::getNextParameterPoint()
 
     if (d_rank == 0)
     {
-        if (d_output_log_path == "")
+        std::string str;
+        str += "Point sampled at [ ";
+        for (int i = 0 ; i < d_parameter_points[curr_point_to_sample].dim(); i++)
         {
-            std::cout << "Point sampled at [ ";
-            for (int i = 0 ; i < d_parameter_points[curr_point_to_sample].dim(); i++)
-            {
-                std::cout << d_parameter_points[curr_point_to_sample].item(i) << " ";
-            }
-            std::cout << "]" << std::endl;
+            str += std::to_string(d_parameter_points[curr_point_to_sample].item(i)) + " ";
         }
-        else
-        {
-            std::ofstream database_history;
-            database_history.open(d_output_log_path, std::ios::app);
-            database_history << "Point sampled at [ ";
-            for (int i = 0 ; i < d_parameter_points[curr_point_to_sample].dim(); i++)
-            {
-                database_history << d_parameter_points[curr_point_to_sample].item(i) << " ";
-            }
-            database_history << "]" << std::endl;
-            database_history.close();
-        }
+        str += "]\n";
+        agnosticPrint(str);
     }
 
     d_next_parameter_point_computed = true;
@@ -765,29 +720,15 @@ GreedyParameterPointSampler::getNextSubsetPointRequiringErrorIndicator()
                     d_next_point_to_sample = d_parameter_point_random_indices[d_counter];
                     if (d_rank == 0)
                     {
-                        if (d_output_log_path == "")
+                        std::string str;
+                        str += "Error indicator at [ ";
+                        for (int i = 0 ; i < d_parameter_points[d_parameter_point_random_indices[d_counter]].dim(); i++)
                         {
-                            std::cout << "Error indicator at [ ";
-                            for (int i = 0 ; i < d_parameter_points[d_parameter_point_random_indices[d_counter]].dim(); i++)
-                            {
-                                std::cout << d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i) << " ";
-                            }
-                            std::cout << "] skipped." << std::endl;
-                            std::cout << "Error indicator " << curr_error << " already computed at the same local ROM." << std::endl;
+                            str += std::to_string(d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i)) + " ";
                         }
-                        else
-                        {
-                            std::ofstream database_history;
-                            database_history.open(d_output_log_path, std::ios::app);
-                            database_history << "Error indicator at [ ";
-                            for (int i = 0 ; i < d_parameter_points[d_parameter_point_random_indices[d_counter]].dim(); i++)
-                            {
-                                database_history << d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i) << " ";
-                            }
-                            database_history << "] skipped." << std::endl;
-                            database_history << "Error indicator " << curr_error << " already computed at the same local ROM." << std::endl;
-                            database_history.close();
-                        }
+                        str += "] skipped.\n";
+                        str += "Error indicator " + std::to_string(curr_error) + " already computed at the same local ROM.\n";
+                        agnosticPrint(str);
                     }
                 }
                 else
@@ -803,31 +744,15 @@ GreedyParameterPointSampler::getNextSubsetPointRequiringErrorIndicator()
             {
                 if (d_rank == 0)
                 {
-                    if (d_output_log_path == "")
+                    std::string str;
+                    str += "Error indicator at [ ";
+                    for (int i = 0 ; i < d_parameter_points[d_parameter_point_random_indices[d_counter]].dim(); i++)
                     {
-                        std::cout << "Error indicator at [ ";
-                        for (int i = 0 ; i < d_parameter_points[d_parameter_point_random_indices[d_counter]].dim(); i++)
-                        {
-                            std::cout << d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i) << " ";
-                        }
-                        std::cout << "] skipped." << std::endl;
-                        std::cout << "Error indicator " << curr_error
-                                  << " is less than current max error " << d_max_error << std::endl;
+                        str += std::to_string(d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i)) + " ";
                     }
-                    else
-                    {
-                        std::ofstream database_history;
-                        database_history.open(d_output_log_path, std::ios::app);
-                        database_history << "Error indicator at [ ";
-                        for (int i = 0 ; i < d_parameter_points[d_parameter_point_random_indices[d_counter]].dim(); i++)
-                        {
-                            database_history << d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i) << " ";
-                        }
-                        database_history << "] skipped." << std::endl;
-                        database_history << "Error indicator " << curr_error
-                                         << " is less than current max error " << d_max_error << std::endl;
-                        database_history.close();
-                    }
+                    str += "] skipped.\n";
+                    str += "Error indicator " + std::to_string(curr_error) + " is less than current max error " + std::to_string(d_max_error) + "\n";
+                    agnosticPrint(str);
                 }
             }
         }
@@ -836,17 +761,9 @@ GreedyParameterPointSampler::getNextSubsetPointRequiringErrorIndicator()
     {
         if (d_rank == 0)
         {
-            if (d_output_log_path == "")
-            {
-                std::cout << "Ran out of points to calculate error indicator for in this iteration." << std::endl;
-            }
-            else
-            {
-                std::ofstream database_history;
-                database_history.open(d_output_log_path, std::ios::app);
-                database_history << "Ran out of points to calculate error indicator for in this iteration." << std::endl;
-                database_history.close();
-            }
+            std::string str;
+            str += "Ran out of points to calculate error indicator for in this iteration.\n";
+            agnosticPrint(str);
         }
         if (d_max_error < d_error_indicator_tol)
         {
@@ -902,17 +819,9 @@ GreedyParameterPointSampler::printSamplingType(std::string sampling_type)
 {
     if (d_rank == 0)
     {
-        if (d_output_log_path == "")
-        {
-            std::cout << "Sampling type: " << sampling_type << std::endl;
-        }
-        else
-        {
-            std::ofstream database_history;
-            database_history.open(d_output_log_path, std::ios::app);
-            database_history << "Sampling type: " << sampling_type << std::endl;
-            database_history.close();
-        }
+        std::string str;
+        str += "Sampling type: " + sampling_type + "\n";
+        agnosticPrint(str);
     }
 }
 
@@ -921,17 +830,9 @@ GreedyParameterPointSampler::printConvergenceAchieved()
 {
     if (d_rank == 0)
     {
-        if (d_output_log_path == "")
-        {
-            std::cout << "Convergence achieved.";
-        }
-        else
-        {
-            std::ofstream database_history;
-            database_history.open(d_output_log_path, std::ios::app);
-            database_history << "Convergence achieved." << std::endl;
-            database_history.close();
-        }
+        std::string str;
+        str += "Convergence achieved.\n";
+        agnosticPrint(str);
     }
 }
 
@@ -950,26 +851,15 @@ GreedyParameterPointSampler::setPointRelativeError(double error)
     {
         if (d_output_log_path == "")
         {
-            std::cout << "Relative error computed at [ ";
+            std::string str;
+            str += "Relative error computed at [ ";
             for (int i = 0 ; i < d_parameter_points[d_next_point_to_sample].dim(); i++)
             {
-                std::cout << d_parameter_points[d_next_point_to_sample].item(i) << " ";
+                str += std::to_string(d_parameter_points[d_next_point_to_sample].item(i)) + " ";
             }
-            std::cout << "]" << std::endl;
-            std::cout << "Relative error: " << error << std::endl;
-        }
-        else
-        {
-            std::ofstream database_history;
-            database_history.open(d_output_log_path, std::ios::app);
-            database_history << "Relative error computed at [ ";
-            for (int i = 0 ; i < d_parameter_points[d_next_point_to_sample].dim(); i++)
-            {
-                database_history << d_parameter_points[d_next_point_to_sample].item(i) << " ";
-            }
-            database_history << "]" << std::endl;
-            database_history << "Relative error: " << error << std::endl;
-            database_history.close();
+            str += "]\n";
+            str += "Relative error: " + std::to_string(error) + "\n";
+            agnosticPrint(str);
         }
     }
 
@@ -989,27 +879,14 @@ GreedyParameterPointSampler::setPointRelativeError(double error)
         {
             if (d_rank == 0)
             {
-                if (d_output_log_path == "")
-                {
-                    std::cout << "The relative error was smaller than the relative error tolerance. The error indicator tolerance must increase." << std::endl;
-                    std::cout << "Alpha constant * relative error tolerance: " << max1 << std::endl;
-                    std::cout << "The minimum value the error indicator tolerance can take is: " << max1 << std::endl;
-                    std::cout << "Max clamp constant * current max error indicator: " << min1 << std::endl;
-                    std::cout << "Relative error tolerance * current max error indicator / current relative error: " << min2 << std::endl;
-                    std::cout << "The maximum value the error indicator tolerance can take is the minimum of the previous two values: " << std::min(min1, min2) << std::endl;
-                }
-                else
-                {
-                    std::ofstream database_history;
-                    database_history.open(d_output_log_path, std::ios::app);
-                    database_history << "The relative error was smaller than the relative error tolerance. The error indicator tolerance must increase." << std::endl;
-                    database_history << "Alpha constant * relative error tolerance: " << max1 << std::endl;
-                    database_history << "The minimum value the error indicator tolerance can take is: " << max1 << std::endl;
-                    database_history << "Max clamp constant * current max error indicator: " << min1 << std::endl;
-                    database_history << "Relative error tolerance * current max error indicator / current relative error: " << min2 << std::endl;
-                    database_history << "The maximum value the error indicator tolerance can take is the minimum of the previous two values: " << std::min(min1, min2) << std::endl;
-                    database_history.close();
-                }
+                std::string str;
+                str += "The relative error was smaller than the relative error tolerance. The error indicator tolerance must increase.\n";
+                str += "Alpha constant * relative error tolerance: " + std::to_string(max1) + "\n";
+                str += "The minimum value the error indicator tolerance can take is: " + std::to_string(max1) + "\n";
+                str += "Max clamp constant * current max error indicator: " + std::to_string(min1) + "\n";
+                str += "Relative error tolerance * current max error indicator / current relative error: " + std::to_string(min2) + "\n";
+                str += "The maximum value the error indicator tolerance can take is the minimum of the previous two values: " + std::to_string(std::min(min1, min2)) + "\n";
+                agnosticPrint(str);
             }
             d_error_indicator_tol = std::max(max1, std::min(min1, min2));
         }
@@ -1019,44 +896,22 @@ GreedyParameterPointSampler::setPointRelativeError(double error)
 
             if (d_rank == 0)
             {
-                if (d_output_log_path == "")
-                {
-                    std::cout << "The relative error was larger than the relative error tolerance. The error indicator tolerance must decrease." << std::endl;
-                    std::cout << "Current error indicator tolerance: " << d_error_indicator_tol << std::endl;
-                    std::cout << "Relative error tolerance * current max error indicator / current relative error: " << min1 << std::endl;
-                    std::cout << "The minimum value the error indicator tolerance can take is: " << min1 << std::endl;
-                }
-                else
-                {
-                    std::ofstream database_history;
-                    database_history.open(d_output_log_path, std::ios::app);
-                    database_history << "The relative error was larger than the relative error tolerance. The error indicator tolerance must decrease." << std::endl;
-                    database_history << "Current error indicator tolerance: " << d_error_indicator_tol<< std::endl;
-                    database_history << "Relative error tolerance * current max error indicator / current relative error: " << min1 << std::endl;
-                    database_history << "The minimum value the error indicator tolerance can take is: " << min1 << std::endl;
-                    database_history.close();
-                }
+                std::string str;
+                str += "The relative error was larger than the relative error tolerance. The error indicator tolerance must decrease.\n";
+                str += "Current error indicator tolerance: " + std::to_string(d_error_indicator_tol) + "\n";
+                str += "Relative error tolerance * current max error indicator / current relative error: " + std::to_string(min1) + "\n";
+                str += "The minimum value the error indicator tolerance can take is: " + std::to_string(min1) + "\n";
+                agnosticPrint(str);
             }
             d_error_indicator_tol = std::min(d_error_indicator_tol, min1);
         }
         if (d_rank == 0)
         {
-            if (d_output_log_path == "")
+            if (old_error_indicator_tol != d_error_indicator_tol)
             {
-                if (old_error_indicator_tol != d_error_indicator_tol)
-                {
-                    std::cout << "Error indicator tolerance was adaptively changed from " << old_error_indicator_tol << " to " << d_error_indicator_tol << std::endl;
-                }
-            }
-            else
-            {
-                std::ofstream database_history;
-                database_history.open(d_output_log_path, std::ios::app);
-                if (old_error_indicator_tol != d_error_indicator_tol)
-                {
-                    database_history << "Error indicator tolerance was adaptively changed from " << old_error_indicator_tol << " to " << d_error_indicator_tol << std::endl;
-                }
-                database_history.close();
+                std::string str;
+                str += "Error indicator tolerance was adaptively changed from " + std::to_string(old_error_indicator_tol) + " to " + std::to_string(d_error_indicator_tol) + "\n";
+                agnosticPrint(str);
             }
         }
     }
@@ -1128,29 +983,31 @@ GreedyParameterPointSampler::printErrorIndicator(Vector errorIndicatorPoint, dou
 {
     if (d_rank == 0)
     {
-        if (d_output_log_path == "")
+        std::string str;
+        str += "Error indicator computed at [ ";
+        for (int i = 0 ; i < errorIndicatorPoint.dim(); i++)
         {
-            std::cout << "Error indicator computed at [ ";
-            for (int i = 0 ; i < errorIndicatorPoint.dim(); i++)
-            {
-                std::cout << errorIndicatorPoint.item(i) << " ";
-            }
-            std::cout << "]" << std::endl;
-            std::cout << "Error indicator: " << proc_errors << std::endl;
+            str += std::to_string(errorIndicatorPoint.item(i)) + " ";
         }
-        else
-        {
-            std::ofstream database_history;
-            database_history.open(d_output_log_path, std::ios::app);
-            database_history << "Error indicator computed at [ ";
-            for (int i = 0 ; i < errorIndicatorPoint.dim(); i++)
-            {
-                database_history << errorIndicatorPoint.item(i) << " ";
-            }
-            database_history << "]" << std::endl;
-            database_history << "Error indicator: " << proc_errors << std::endl;
-            database_history.close();
-        }
+        str += "]\n";
+        str += "Error indicator: " + std::to_string(proc_errors) + "\n";
+        agnosticPrint(str);
+    }
+}
+
+void
+GreedyParameterPointSampler::agnosticPrint(std::string str)
+{
+    if (d_output_log_path == "")
+    {
+        std::cout << str;
+    }
+    else
+    {
+        std::ofstream database_history;
+        database_history.open(d_output_log_path, std::ios::app);
+        database_history << str;
+        database_history.close();
     }
 }
 
@@ -1159,17 +1016,9 @@ GreedyParameterPointSampler::printErrorIndicatorToleranceNotMet()
 {
     if (d_rank == 0)
     {
-        if (d_output_log_path == "")
-        {
-            std::cout << "Error indicator tolerance " << d_error_indicator_tol << " not met." << std::endl;
-        }
-        else
-        {
-            std::ofstream database_history;
-            database_history.open(d_output_log_path, std::ios::app);
-            database_history << "Error indicator tolerance " << d_error_indicator_tol << " not met." << std::endl;
-            database_history.close();
-        }
+        std::string str;
+        str += "Error indicator tolerance " + std::to_string(d_error_indicator_tol) + " not met.\n";
+        agnosticPrint(str);
     }
 }
 
@@ -1191,41 +1040,21 @@ GreedyParameterPointSampler::setSubsetErrorIndicator(double proc_errors)
             }
             if (d_rank == 0)
             {
-                if (d_output_log_path == "")
+                std::string str;
+                str += "Local ROM error indicator computed at [ ";
+                for (int i = 0 ; i < d_parameter_points[d_next_point_requiring_error_indicator].dim(); i++)
                 {
-                    std::cout << "Local ROM error indicator computed at [ ";
-                    for (int i = 0 ; i < d_parameter_points[d_next_point_requiring_error_indicator].dim(); i++)
-                    {
-                        std::cout << d_parameter_points[d_next_point_requiring_error_indicator].item(i) << " ";
-                    }
-                    std::cout << "]" << std::endl;
-                    std::cout << "Local ROM error indicator (tolerance unchecked): " << proc_errors << std::endl;
-                    if (old_error_indicator_tol != d_error_indicator_tol)
-                    {
-                        std::cout << "Error indicator at the local ROM was higher than the previous tolerance." << std::endl;
-                        std::cout << "The error indicator tolerance should always be at least the error indicator at the local ROM." << std::endl;
-                        std::cout << "Error indicator tolerance was adaptively changed from " << old_error_indicator_tol << " to " << d_error_indicator_tol << std::endl;
-                    }
+                    str += std::to_string(d_parameter_points[d_next_point_requiring_error_indicator].item(i)) + " ";
                 }
-                else
+                str += "]\n";
+                str += "Local ROM error indicator (tolerance unchecked): " + std::to_string(proc_errors) + "\n";
+                if (old_error_indicator_tol != d_error_indicator_tol)
                 {
-                    std::ofstream database_history;
-                    database_history.open(d_output_log_path, std::ios::app);
-                    database_history << "Local ROM error indicator computed at [ ";
-                    for (int i = 0 ; i < d_parameter_points[d_next_point_requiring_error_indicator].dim(); i++)
-                    {
-                        database_history << d_parameter_points[d_next_point_requiring_error_indicator].item(i) << " ";
-                    }
-                    database_history << "]" << std::endl;
-                    database_history << "Local ROM error indicator (tolerance unchecked): " << proc_errors << std::endl;
-                    if (old_error_indicator_tol != d_error_indicator_tol)
-                    {
-                        database_history << "Error indicator at the local ROM was higher than the previous tolerance." << std::endl;
-                        database_history << "The error indicator tolerance should always be at least the error indicator at the local ROM." << std::endl;
-                        database_history << "Error indicator tolerance was adaptively changed from " << old_error_indicator_tol << " to " << d_error_indicator_tol << std::endl;
-                    }
-                    database_history.close();
+                    str += "Error indicator at the local ROM was higher than the previous tolerance.\n";
+                    str += "The error indicator tolerance should always be at least the error indicator at the local ROM.\n";
+                    str += "Error indicator tolerance was adaptively changed from " + std::to_string(old_error_indicator_tol) + " to " + std::to_string(d_error_indicator_tol) + "\n";
                 }
+                agnosticPrint(str);
             }
 
             d_point_requiring_error_indicator_computed = false;
@@ -1329,17 +1158,9 @@ GreedyParameterPointSampler::startConvergence()
 
     if (d_rank == 0)
     {
-        if (d_output_log_path == "")
-        {
-            std::cout << "Error indicator tolerance " << d_error_indicator_tol << " met. Computing convergence." << std::endl;
-        }
-        else
-        {
-            std::ofstream database_history;
-            database_history.open(d_output_log_path, std::ios::app);
-            database_history << "Error indicator tolerance " << d_error_indicator_tol << " met. Computing convergence." << std::endl;
-            database_history.close();
-        }
+        std::string str;
+        str += "Error indicator tolerance " + std::to_string(d_error_indicator_tol) + " met. Computing convergence.\n";
+        agnosticPrint(str);
     }
 
     // Precompute next error indicator point
@@ -1579,17 +1400,9 @@ GreedyParameterPointSampler::isComplete()
     {
         if (d_rank == 0)
         {
-            if (d_output_log_path == "")
-            {
-                std::cout << "Maximum number of parameter points reached. Stopping now." << std::endl;
-            }
-            else
-            {
-                std::ofstream database_history;
-                database_history.open(d_output_log_path, std::ios::app);
-                database_history << "Maximum number of parameter points reached. Stopping now." << std::endl;
-                database_history.close();
-            }
+            std::string str;
+            str += "Maximum number of parameter points reached. Stopping now.\n";
+            agnosticPrint(str);
         }
         d_procedure_completed = true;
     }
