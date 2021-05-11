@@ -70,8 +70,8 @@ public:
     isNewBasis(
         double time)
     {
-        CAROM_ASSERT(0 < numTimeIntervals());
-        CAROM_ASSERT(0 <= time);
+        CAROM_VERIFY(0 < numTimeIntervals());
+        CAROM_VERIFY(0 <= time);
         bool result = false;
         if (d_last_basis_idx == -1) {
             result = true;
@@ -90,37 +90,87 @@ public:
         return result;
     }
 
+    /**
+     *
+     * @brief Reads the basis from a file and stores the information.
+     */
     void readBasis(
         const std::string& base_file_name = "",
         Database::formats db_format = Database::HDF5);
 
     /**
      *
-     * @brief Returns the basis vectors for the requested time.
+     * @brief Returns the spatial basis vectors for the requested time as a
+     *        Matrix.
      *
      * @pre 0 < numTimeIntervals()
      * @pre 0 <= time
      *
      * @param[in] time Time for which we want the basis vectors.
      *
-     * @return The basis vectors time the requested time.
+     * @return The spatial basis vectors for the requested time.
      */
     const Matrix*
     getSpatialBasis(
         double time);
 
+    /**
+     *
+     * @brief Returns the temporal basis vectors for the requested time as
+     *        a Matrix.
+     *
+     * @pre 0 < numTimeIntervals()
+     * @pre 0 <= time
+     *
+     * @param[in] time Time for which we want the basis vectors.
+     *
+     * @return The temporal basis vectors for the requested time.
+     */
     const Matrix*
     getTemporalBasis(
         double time);
 
+    /**
+     *
+     * @brief Returns the singular values for the requested time.
+     *
+     * @pre 0 < numTimeIntervals()
+     * @pre 0 <= time
+     *
+     * @param[in] time Time for which we want the basis vectors.
+     *
+     * @return The temporal basis vectors for the requested time.
+     */
     const Vector*
     getSingularValues(
         double time);
 
+    /**
+     *
+     * @brief Returns the snapshot matrix for the requested time.
+     *
+     * @pre 0 < numTimeIntervals()
+     * @pre 0 <= time
+     *
+     * @param[in] time Time for which we want the basis vectors.
+     *
+     * @return The snapshot matrix for the requested time.
+     */
     const Matrix*
     getSnapshotMatrix(
         double time);
 
+    /**
+     *
+     * @brief Returns the Matlab-stored basis for the requested time.
+     *
+     * @pre 0 < numTimeIntervals()
+     * @pre 0 <= time
+     *
+     * @param[in] time Time for which we want the basis vectors.
+     *
+     * @return The Matlab-stored basis for the requested time.
+     */
     Matrix
     getMatlabBasis(
         double time);
