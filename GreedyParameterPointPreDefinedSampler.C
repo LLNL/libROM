@@ -47,6 +47,7 @@ GreedyParameterPointPreDefinedSampler::GreedyParameterPointPreDefinedSampler(
         debug_algorithm
     )
 {
+    printSamplingType("pre-defined");
     constructParameterPoints();
     initializeParameterPoints();
 
@@ -84,6 +85,7 @@ GreedyParameterPointPreDefinedSampler::GreedyParameterPointPreDefinedSampler(
         debug_algorithm
     )
 {
+    printSamplingType("pre-defined");
     constructParameterPoints();
     initializeParameterPoints();
 

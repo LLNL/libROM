@@ -250,6 +250,10 @@ protected:
 
     void printErrorIndicatorToleranceNotMet();
 
+    void printSamplingType(std::string sampling_type);
+
+    void printConvergenceAchieved();
+
     void setSubsetErrorIndicator(double proc_errors);
 
     void setConvergenceErrorIndicator(double proc_errors);

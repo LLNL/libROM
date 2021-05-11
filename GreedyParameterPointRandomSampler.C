@@ -56,6 +56,15 @@ GreedyParameterPointRandomSampler::GreedyParameterPointRandomSampler(
 {
     d_use_latin_hypercube = use_latin_hypercube;
 
+    if (d_use_latin_hypercube)
+    {
+        printSamplingType("latin-hypercube");
+    }
+    else
+    {
+        printSamplingType("random");
+    }
+
     constructParameterPoints();
     initializeParameterPoints();
 
@@ -100,6 +109,15 @@ GreedyParameterPointRandomSampler::GreedyParameterPointRandomSampler(
 {
     d_use_latin_hypercube = use_latin_hypercube;
 
+    if (d_use_latin_hypercube)
+    {
+        printSamplingType("latin-hypercube");
+    }
+    else
+    {
+        printSamplingType("random");
+    }
+
     constructParameterPoints();
     initializeParameterPoints();
 
@@ -128,6 +146,7 @@ GreedyParameterPointRandomSampler::constructParameterPoints()
     {
         std::vector<double> frequencies;
         std::vector<std::vector<double>> point_coordinates;
+        std::vector<int> point_indices;
         for (int i = 0; i < d_min_param_point.dim(); i++)
         {
             frequencies.push_back(std::abs(d_max_param_point.item(i) - d_min_param_point.item(i)) / d_num_parameter_points);
@@ -144,13 +163,20 @@ GreedyParameterPointRandomSampler::constructParameterPoints()
             }
         }
 
-        std::uniform_int_distribution<int> index_dist(0, d_num_parameter_points - 1);
+        for (int i = 0; i < std::pow(d_num_parameter_points, d_min_param_point.dim()); i++)
+        {
+            point_indices.push_back(i);
+        }
+
+        std::shuffle(point_indices.begin(), point_indices.end(), rng);
+
         for (int i = 0; i < d_num_parameter_points; i++)
         {
+            int point_index = point_indices[i];
             for (int j = 0; j < d_min_param_point.dim(); j++)
             {
-                int point_index = index_dist(rng);
-                vec.item(j) = point_coordinates[point_index][j];
+                vec.item(j) = point_coordinates[point_index % d_num_parameter_points][j];
+                point_index /= d_num_parameter_points;
             }
             d_parameter_points.push_back(vec);
         }
@@ -210,6 +236,7 @@ GreedyParameterPointRandomSampler::getNextParameterPointAfterConvergenceFailure(
     d_parameter_points.push_back(d_convergence_points[d_counter]);
     d_parameter_point_errors.push_back(d_max_error);
     d_parameter_point_local_rom.push_back(getNearestROMIndex(d_next_point_to_sample, true));
+    d_parameter_point_random_indices.push_back(d_parameter_point_random_indices.size());
     d_next_point_to_sample = d_parameter_points.size() - 1;
 }
 
