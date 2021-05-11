@@ -133,7 +133,7 @@ GreedyParameterPointRandomSampler::GreedyParameterPointRandomSampler(
     GreedyParameterPointSampler(
         base_file_name,
         output_log_path
-    ){}
+    ) {}
 
 void
 GreedyParameterPointRandomSampler::constructParameterPoints()

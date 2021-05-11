@@ -101,7 +101,7 @@ GreedyParameterPointPreDefinedSampler::GreedyParameterPointPreDefinedSampler(
     GreedyParameterPointSampler(
         base_file_name,
         output_log_path
-    ){}
+    ) {}
 
 void
 GreedyParameterPointPreDefinedSampler::constructParameterPoints()

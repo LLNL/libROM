@@ -8,26 +8,8 @@
  *
  *****************************************************************************/
 
-// Description: This class greedily selects parameter points
-//              for the construction of a ROM database. The implemented
-//              greedy algorithm is obtained from algorithm 2 of Choi et. al's
-//              paper "Gradient-based constrained optimization using a database
-//              of linear reduced-order models": https://arxiv.org/abs/1506.07849
-//
-//              The greedy algorithm workflow is as follows:
-//              1. Construct the GreedyParameterPointRandomSampler by giving it a
-//                 domain of parameter points.
-//              2. Request a parameter point to sample.
-//              3. Request a parameter point to compute an error error indicator for.
-//              4. Request the nearest ROM to the parameter point requiring a
-//                 error indicator.
-//              5. Give the computed error indicator to the GreedyParameterPointRandomSampler.
-//              6. Repeat steps 4 and 5 until the GreedyParameterPointRandomSampler
-//                 no longer requires more error indicators to be computed.
-//              7. Repeat steps 2 to 6 until the GreedyParameterPointRandomSampler
-//                 no longer requires more parameter points to be sampled.
-//              8. The ROM database is now complete, meeting the error tolerance
-//                 for all parameter points within the domain.
+// Description: The concrete implementation of the Choi et. al's greedy algorithm
+//              using random sampling or latin-hypercube sampling.
 
 #ifndef included_GreedyParameterPointRandomSampler_h
 #define included_GreedyParameterPointRandomSampler_h
@@ -37,10 +19,9 @@
 namespace CAROM {
 
 /**
- * Class GreedyParameterPointRandomSampler is a class defining the interface of a
- *       greedy algorithm that given a domain of parameter points, iteratively
- *       returns the next best parameter point to sample in order to create
- *       a ROM database efficiently.
+ * Class GreedyParameterPointRandomSampler implements a variant of
+ *               Choi et. al's greedy algorithm using random sampling or
+ *               latin-hypercube sampling.
  */
 class GreedyParameterPointRandomSampler : public GreedyParameterPointSampler
 {
@@ -48,13 +29,27 @@ public:
     /**
      * @brief Constructor.
      *
-     * @param[in] parameter_points A vector of CAROM::Vectors containing
-                                   the different parameter points.
+     * @param[in] param_space_min A CAROM::Vector representing the minimum
+                                  of the parameter space domain.
+     * @param[in] param_space_max A CAROM::Vector representing the maximum
+                                  of the parameter space domain.
+     * @param[in] num_parameter_points The maximum number of parameter points
+                                       to sample.
      * @param[in] check_local_rom Compute local ROM error indicator each iteration.
-     * @param[in] tolerance A tolerance value for which to end the algorithm.
-     * @param[in] alpha A alpha constant.
+     * @param[in] relative_error_tolerance The relative error tolerance value
+                                           for which to end the algorithm.
+     * @param[in] alpha A alpha constant to increase greedy algorithm by each
+                        iteration.
+     * @param[in] max_clamp A scalar factor representing the maximum amount
+                            the error indicator tolerance can change per iteration.
      * @param[in] subset_size The size of the random subset.
      * @param[in] convergence_subset_size The size of the convergence subset.
+     * @param[in] use_latin_hypercube Whether to use latin-hypercube sampling
+                                      instead of random sampling.
+     * @param[in] output_log_path The path to the output log file. If not used,
+                                  outputs to stdout.
+     * @param[in] warm_start_file_name The path to the HDF5 file of a previous
+                                       database to use as a warm start.
      * @param[in] use_centroid Whether to use the centroid heuristic when
                                determining the first parameter point to sample.
      * @param[in] random_seed A random seed.
@@ -78,6 +73,36 @@ public:
         int random_seed = 1,
         bool debug_algorithm = false);
 
+    /**
+     * @brief Constructor.
+     *
+     * @param[in] param_space_min A double representing the minimum
+                                  of the parameter space domain.
+     * @param[in] param_space_max A double representing the maximum
+                                  of the parameter space domain.
+     * @param[in] num_parameter_points The maximum number of parameter points
+                                       to sample.
+     * @param[in] check_local_rom Compute local ROM error indicator each iteration.
+     * @param[in] relative_error_tolerance The relative error tolerance value
+                                           for which to end the algorithm.
+     * @param[in] alpha A alpha constant to increase greedy algorithm by each
+                        iteration.
+     * @param[in] max_clamp A scalar factor representing the maximum amount
+                            the error indicator tolerance can change per iteration.
+     * @param[in] subset_size The size of the random subset.
+     * @param[in] convergence_subset_size The size of the convergence subset.
+     * @param[in] use_latin_hypercube Whether to use latin-hypercube sampling
+                                      instead of random sampling.
+     * @param[in] output_log_path The path to the output log file. If not used,
+                                  outputs to stdout.
+     * @param[in] warm_start_file_name The path to the HDF5 file of a previous
+                                       database to use as a warm start.
+     * @param[in] use_centroid Whether to use the centroid heuristic when
+                               determining the first parameter point to sample.
+     * @param[in] random_seed A random seed.
+     * @param[in] debug_algorithm Whether to turn off all randomness for
+     *                            debugging purposes.
+     */
     GreedyParameterPointRandomSampler(
         double param_space_min,
         double param_space_max,
@@ -95,12 +120,23 @@ public:
         int random_seed = 1,
         bool debug_algorithm = false);
 
+    /**
+     * @brief Constructor.
+     *
+     * @param[in] base_file_name The base part of the file of the
+                                 database to load when restarting from a save.
+     * @param[in] output_log_path The path to the output log file. If not used,
+                                  outputs to stdout.
+     */
     GreedyParameterPointRandomSampler(
         std::string base_file_name,
         std::string output_log_path = "");
 
     /**
      * @brief Save the object state to a file.
+     *
+     * @param[in] base_file_name The base part of the file to save the
+     *                           database to.
      */
     void
     save(std::string base_file_name);
@@ -112,10 +148,22 @@ public:
 
 protected:
 
+    /**
+     * @brief Load the object state from a file.
+     *
+     * @param[in] base_file_name The base part of the file to load the
+     *                           database from.
+     */
     void load(std::string base_file_name);
 
+    /**
+     * @brief Construct the list of parameter point candidates to sample.
+     */
     void constructParameterPoints();
 
+    /**
+     * @brief Get the next parameter point to sample after a convergence failure.
+     */
     void getNextParameterPointAfterConvergenceFailure();
 
     /**
