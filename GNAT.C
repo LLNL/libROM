@@ -90,7 +90,7 @@ void GNAT(const Matrix* f_basis,
 
     // The small matrix inverted by the algorithm.  We'll allocate the largest
     // matrix we'll need and set its size at each step in the algorithm.
-    Matrix M(num_basis_vectors, num_basis_vectors, false);
+    Matrix M(num_samples, num_basis_vectors-1, false);
 
     // Scratch space used throughout the algorithm.
     double* c = new double [num_basis_vectors];

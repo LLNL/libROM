@@ -21,7 +21,7 @@
 namespace CAROM {
 
 /**
- * A class which embodies the standard incremental SVD algorithm.
+ * Class IncrementalSVDStandard embodies the standard incremental SVD algorithm.
  */
 class IncrementalSVDStandard : public IncrementalSVD
 {
@@ -43,6 +43,7 @@ private:
      *                            containing the basis vectors.  Each process
      *                            will append its process ID to this base
      *                            name.
+     * @see Options
      */
     IncrementalSVDStandard(
         Options options,
@@ -67,7 +68,7 @@ private:
         const IncrementalSVDStandard& rhs);
 
     /**
-     * @brief Constructs the first svd.
+     * @brief Constructs the first SVD.
      *
      * @pre u != 0
      * @pre time >= 0.0
@@ -89,7 +90,7 @@ private:
     computeBasis();
 
     /**
-     * Add a linearly dependent sample to the svd.
+     * @brief Add a linearly dependent sample to the SVD.
      *
      * @pre A != 0
      * @pre sigma != 0
@@ -105,7 +106,7 @@ private:
         const Matrix* sigma);
 
     /**
-     * @brief Add a new, unique sample to the svd.
+     * @brief Add a new, unique sample to the SVD.
      *
      * @pre j != 0
      * @pre A != 0

@@ -22,7 +22,7 @@ namespace CAROM {
 
 /**
  * @brief A null use of a variable, use to avoid GNU compiler warnings about
- * unused variables.
+ *        unused variables.
  */
 #define CAROM_NULL_USE(variable)                         \
    do {                                                  \
@@ -31,9 +31,8 @@ namespace CAROM {
 
 /**
  * @brief Throw an error assertion from within any C++ source code.
- *
- * The macro argument may be any standard ostream expression.  The file and
- * line number of the abort are also printed.
+ *        The macro argument may be any standard ostream expression. The file
+ *        and line number of the abort are also printed.
  */
 #define CAROM_ERROR(X)                                       \
    do {                                                      \
@@ -44,10 +43,8 @@ namespace CAROM {
 
 /**
  * @brief Throw an error assertion from within any C++ source code if the given
- * expression is not true.
- *
- * This is a parallel-friendly version of assert.  The file and line number of
- * the abort are also printed.
+ *        expression is not true. This is a parallel-friendly version of assert.
+ *        The file and line number of the abort are also printed.
  */
 #define CAROM_VERIFY(EXP)                                       \
     do {                                                         \
@@ -60,10 +57,8 @@ namespace CAROM {
 
 /**
  * @brief Throw an error assertion from within any C++ source code if the given
- * expression is not true.
- *
- * This is a parallel-friendly version of assert.  The file and line number of
- * the abort are also printed.
+ *        expression is not true. This is a parallel-friendly version of assert.
+ *        The file and line number of the abort are also printed.
  */
 #ifdef DEBUG_CHECK_ASSERTIONS
 
@@ -85,16 +80,15 @@ namespace CAROM {
 #endif
 
 /**
- * Utilities contains basic, static, utility routines for error reporting,
- * string manipulations, etc.
+ * Struct BasisGenerator defines Utilities contains basic, static, utility
+ * routines for error reporting, string manipulations, etc.
  */
 struct Utilities
 {
     /**
-     * @brief Cleanly ends the program when something horrible happend and
-     * prints a message about what took place.
-     *
-     * Takes into account whether MPI is or isn't running to decide how to die.
+     * @brief Cleanly ends the program when something horrible happened and
+     *        prints a message about what took place. Takes into account
+     *        whether MPI is or isn't running to decide how to die.
      *
      * @param[in] message Message to print about the cause of the abort.
      * @param[in] filename Name of the file where the abort was called.
@@ -107,10 +101,8 @@ struct Utilities
         int line);
 
     /**
-     * @brief Converts a processor ID to a string.
-     *
-     * Use this to ensure same width is used when converting a processor ID to
-     * a string representation.
+     * @brief Converts a processor ID to a string. Use this to ensure same width
+     *        is used when converting a processor ID to a string representation.
      *
      * @param[in] processorID of the processor
      *

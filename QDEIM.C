@@ -8,7 +8,7 @@
  *
  *****************************************************************************/
 
-// Description: Interface to the DEIM algorithm to determine the rows of the
+// Description: Interface to the QDEIM algorithm to determine the rows of the
 // rhs to be sampled for the interpolation of the rhs.
 
 #include "Matrix.h"
@@ -30,16 +30,6 @@ extern "C" {
 
 namespace CAROM {
 
-/* Implement QDEIM algorithm from Zlatko Drmac, Serkan Gugercin, "A
-   new selection operator for the discrete empirical interpolation
-   method -- Improved a priori error bound and extensions", SIAM
-   Journal on Scientific Computing, Volume 38, Issue 2, pages
-   A631-A648, 2016.
-   Oversampling uses GappyPOD+E from Peherstorfer, Drmac, Gugercin,
-   "Stability of discrete empirical interpolation and gappy proper
-   orthogonal decomposition with randomized and deterministic
-   sampling points", preprint May 20, 2020.
-*/
 void
 QDEIM(const Matrix* f_basis,
       int num_f_basis_vectors_used,

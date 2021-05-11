@@ -9,7 +9,7 @@
  *****************************************************************************/
 
 // Description: The abstract wrapper class for an abstract SVD algorithm and
-//              sampler.  This class provides interfaces to each so that an
+//              sampler. This class provides interfaces to each so that an
 //              application only needs to instantiate one concrete
 //              implementation of this class to control all aspects of basis
 //              vector generation.

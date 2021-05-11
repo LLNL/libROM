@@ -21,7 +21,7 @@
 namespace CAROM {
 
 /**
- * IncrementalSVD is an abstract class defining the internal API of the
+ * Abstract class IncrementalSVD defines the internal API of the
  * incremental SVD algorithm.
  */
 class IncrementalSVD : public SVD
@@ -36,6 +36,7 @@ public:
      *                            containing the basis vectors.  Each process
      *                            will append its process ID to this base
      *                            name.
+     * @see Options
      */
     IncrementalSVD(
         Options options,
@@ -67,7 +68,8 @@ public:
         bool add_without_increase = false);
 
     /**
-     * @brief Returns the basis vectors for the current time interval.
+     * @brief Returns the basis vectors for the current time interval as a
+     *        Matrix.
      *
      * @return The basis vectors for the current time interval.
      */
@@ -76,7 +78,8 @@ public:
     getSpatialBasis();
 
     /**
-     * @brief Returns the temporal basis vectors for the current time interval.
+     * @brief Returns the temporal basis vectors for the current time interval
+     *        as a Matrix.
      *
      * @return The temporal basis vectors for the current time interval.
      */
@@ -104,7 +107,7 @@ public:
 
 protected:
     /**
-     * @brief Constructs the first svd.
+     * @brief Constructs the first SVD.
      *
      * @pre u != 0
      * @pre time >= 0.0
@@ -124,8 +127,9 @@ protected:
      * @pre u != 0
      *
      * @param[in] u The new state.
+     * @param[in] add_without_increase If true, addLinearlyDependent is invoked.
      *
-     * @return True if building the incremental svd was successful.
+     * @return True if building the incremental SVD was successful.
      */
     virtual
     bool
@@ -140,7 +144,7 @@ protected:
     computeBasis() = 0;
 
     /**
-     * @brief Construct the matrix Q whose svd is needed.
+     * @brief Construct the matrix Q whose SVD is needed.
      *
      * @pre l != 0
      * @pre l.dim() == numSamples()
@@ -157,18 +161,17 @@ protected:
 
     /**
      * @brief Given a matrix, A, returns 2 of the 3 components of its
-     * singular value decomposition.
-     *
-     * The right singular vectors are not needed and therefore not returned.
+     *        singular value decomposition. The right singular vectors are not
+     *        needed and therefore not returned.
      *
      * @pre A != 0
      *
-     * @param[in] A The matrix whose svd is needed.
+     * @param[in] A The matrix whose SVD is needed.
      * @param[out] U The left singular vectors of A.
      * @param[out] S The singular values of A.
      * @param[out] V The right singular vectors of A.
      *
-     * @return True if the svd succeeded.
+     * @return True if the SVD succeeded.
      */
     bool
     svd(
@@ -178,7 +181,7 @@ protected:
         Matrix*& V);
 
     /**
-     * Add a linearly dependent sample to the svd.
+     * @brief Add a linearly dependent sample to the SVD.
      *
      * @pre A != 0
      * @pre sigma != 0
@@ -195,7 +198,7 @@ protected:
         const Matrix* sigma) = 0;
 
     /**
-     * @brief Add a new, unique sample to the svd.
+     * @brief Add a new, unique sample to the SVD.
      *
      * @pre j != 0
      * @pre A != 0
@@ -203,6 +206,7 @@ protected:
      *
      * @param[in] j The new column of d_U.
      * @param[in] A The left singular vectors.
+     * @param[in] W The right singular vectors.
      * @param[in] sigma The singular values.
      */
     virtual
@@ -255,17 +259,17 @@ protected:
     double d_linearity_tol;
 
     /**
-     * @brief If true, skip linearly dependent samples.
+     * @brief Whether to skip linearly dependent samples.
      */
     bool d_skip_linearly_dependent;
 
     /**
-     * @brief the maximum basis dimension
+     * @brief The maximum basis dimension
      */
     int d_max_basis_dimension;
 
     /**
-     * @brief Total number of processors.
+     * @brief The total number of processors.
      */
     int d_size;
 
@@ -275,7 +279,7 @@ protected:
     int d_rank;
 
     /**
-     * @brief Dimension of the system on each processor.
+     * @brief The dimension of the system on each processor.
      */
     std::vector<int> d_proc_dims;
 
@@ -286,26 +290,25 @@ protected:
 
     /**
      * @brief If true the state of the SVD will be written to disk when the
-     * object is deleted.
-     *
-     * If there are multiple time intervals then the state will not be saved
-     * as restoring such a state makes no sense.
+     *        object is deleted. If there are multiple time intervals then
+     *        the state will not be saved as restoring such a state makes no
+     *        sense.
      */
     bool d_save_state;
 
     /**
-     * @brief If true the right singular vectors will be updated
+     * @brief Whether to update the right singular vectors.
      */
     bool d_update_right_SV;
 
     /**
      * @brief Pointer to the database that will hold saved state data if the
-     * state is to be saved.
+     *        state is to be saved.
      */
     Database* d_state_database;
 
     /**
-     * @brief Name of file to which state is save to or restored from.
+     * @brief The name of file to which state is saved or restored from.
      */
     std::string d_state_file_name;
 

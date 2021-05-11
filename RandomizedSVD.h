@@ -25,9 +25,10 @@
 namespace CAROM {
 
 /**
- * RandomizedSVD implements the interface of class SVD for the Randomized SVD
- * algorithm.  This algorithm is not scalable and is intended primarily as a
- * sanity check of the incremental svd algorithm.
+ * Class RandomizedSVD implements the Randomized SVD algorithm introduced in
+ *    "Finding Structure with Randomness: Probabilistic Algorithms for
+ *    Constructing Approximate Matrix Decompositions" by N. Halko, P. G.
+ *    Martinsson, and J. A. Tropp
  */
 class RandomizedSVD : public StaticSVD
 {
@@ -70,7 +71,7 @@ private:
     computeSVD();
 
     /**
-     * @brief Number of dimensions of the randomized subspace the
+     * @brief The number of dimensions of the randomized subspace the
      * snapshot matrix will be projected to.
      */
     int d_subspace_dim;
