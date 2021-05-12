@@ -1,0 +1,267 @@
+\hypertarget{class_c_a_r_o_m_1_1_static_s_v_d}{\section{C\-A\-R\-O\-M\-:\-:Static\-S\-V\-D Class Reference}
+\label{class_c_a_r_o_m_1_1_static_s_v_d}\index{C\-A\-R\-O\-M\-::\-Static\-S\-V\-D@{C\-A\-R\-O\-M\-::\-Static\-S\-V\-D}}
+}
+
+
+{\ttfamily \#include $<$Static\-S\-V\-D.\-h$>$}
+
+Inheritance diagram for C\-A\-R\-O\-M\-:\-:Static\-S\-V\-D\-:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=3.000000cm]{class_c_a_r_o_m_1_1_static_s_v_d}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_a38fe9d5c3d8ef47f0e40353078015e7a}{$\sim$\-Static\-S\-V\-D} ()
+\item 
+virtual bool \hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_a6776aa994a771b6b4a39a96a77f8e6c2}{take\-Sample} (double $\ast$u\-\_\-in, double time, bool add\-\_\-without\-\_\-increase=false)
+\begin{DoxyCompactList}\small\item\em Collect the new sample, u\-\_\-in at the supplied time. \end{DoxyCompactList}\item 
+virtual const \hyperlink{class_c_a_r_o_m_1_1_matrix}{Matrix} $\ast$ \hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_aafd2a6fe2b2488fb24160d80013a7194}{get\-Spatial\-Basis} ()
+\begin{DoxyCompactList}\small\item\em Returns the basis vectors for the current time interval as a \hyperlink{class_c_a_r_o_m_1_1_matrix}{Matrix}. \end{DoxyCompactList}\item 
+virtual const \hyperlink{class_c_a_r_o_m_1_1_matrix}{Matrix} $\ast$ \hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_a25750394f6513f0ae99dfd02f513b1da}{get\-Temporal\-Basis} ()
+\begin{DoxyCompactList}\small\item\em Returns the temporal basis vectors for the current time interval as a \hyperlink{class_c_a_r_o_m_1_1_matrix}{Matrix}. \end{DoxyCompactList}\item 
+virtual const \hyperlink{class_c_a_r_o_m_1_1_vector}{Vector} $\ast$ \hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_abbb6aebb985310c464040746e597a4da}{get\-Singular\-Values} ()
+\begin{DoxyCompactList}\small\item\em Returns the singular values for the current time interval. \end{DoxyCompactList}\item 
+virtual const \hyperlink{class_c_a_r_o_m_1_1_matrix}{Matrix} $\ast$ \hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_afd8e0bf6c2e53a39e47e7554eba3f8f0}{get\-Snapshot\-Matrix} ()
+\begin{DoxyCompactList}\small\item\em Returns the snapshot matrix for the current time interval. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_a7db32fa4778422244a7b5230f9b7481f}{Static\-S\-V\-D} (\hyperlink{class_c_a_r_o_m_1_1_options}{Options} options)
+\begin{DoxyCompactList}\small\item\em Constructor. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_static_s_v_d_a84a3a716b20657be429866c873424e3c}{virtual void \hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_a84a3a716b20657be429866c873424e3c}{compute\-S\-V\-D} ()}\label{class_c_a_r_o_m_1_1_static_s_v_d_a84a3a716b20657be429866c873424e3c}
+
+\begin{DoxyCompactList}\small\item\em Gathers samples from all other processors to form complete sample of system and computes the \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D}. \end{DoxyCompactList}\item 
+bool \hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_a8c59671fcd305f798bc3c185b6595345}{this\-Interval\-Basis\-Current} ()
+\begin{DoxyCompactList}\small\item\em Checks if the basis vectors for this time interval are up to date. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_static_s_v_d_a4871175e1c83e6a3013595ffad89e248}{void \hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_a4871175e1c83e6a3013595ffad89e248}{get\-\_\-global\-\_\-info} ()}\label{class_c_a_r_o_m_1_1_static_s_v_d_a4871175e1c83e6a3013595ffad89e248}
+
+\begin{DoxyCompactList}\small\item\em Get the system's total row dimension and where my rows sit in the matrix. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_static_s_v_d_a48c3bc32b0d15ad95fe9a9966581157a}{void \hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_a48c3bc32b0d15ad95fe9a9966581157a}{delete\-\_\-samples} ()}\label{class_c_a_r_o_m_1_1_static_s_v_d_a48c3bc32b0d15ad95fe9a9966581157a}
+
+\begin{DoxyCompactList}\small\item\em Delete the samples from Sca\-L\-A\-P\-A\-C\-K. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_static_s_v_d_a4539c67bd0fc29dde6603173c6eaeffd}{void \hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_a4539c67bd0fc29dde6603173c6eaeffd}{delete\-\_\-factorizer} ()}\label{class_c_a_r_o_m_1_1_static_s_v_d_a4539c67bd0fc29dde6603173c6eaeffd}
+
+\begin{DoxyCompactList}\small\item\em Delete the factorizer from Sca\-L\-A\-P\-A\-C\-K. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_static_s_v_d_a5dd0024af19c1c302b4b374a11b1bcd7}{void \hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_a5dd0024af19c1c302b4b374a11b1bcd7}{broadcast\-\_\-sample} (const double $\ast$u\-\_\-in)}\label{class_c_a_r_o_m_1_1_static_s_v_d_a5dd0024af19c1c302b4b374a11b1bcd7}
+
+\begin{DoxyCompactList}\small\item\em Broadcast the sample to all processors. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_c_a_r_o_m_1_1_static_s_v_d_a9c41d5d0f382d40e30052faae9d8ed53}{std\-::unique\-\_\-ptr$<$ S\-L\-P\-K\-\_\-\-Matrix $>$ \hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_a9c41d5d0f382d40e30052faae9d8ed53}{d\-\_\-samples}}\label{class_c_a_r_o_m_1_1_static_s_v_d_a9c41d5d0f382d40e30052faae9d8ed53}
+
+\begin{DoxyCompactList}\small\item\em Current samples of the system. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_static_s_v_d_ab190353592dfd9c6ba6ceb3853e5d3a7}{std\-::unique\-\_\-ptr$<$ S\-V\-D\-Manager $>$ \hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_ab190353592dfd9c6ba6ceb3853e5d3a7}{d\-\_\-factorizer}}\label{class_c_a_r_o_m_1_1_static_s_v_d_ab190353592dfd9c6ba6ceb3853e5d3a7}
+
+\begin{DoxyCompactList}\small\item\em Factorization manager object used to compute the \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D}. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_static_s_v_d_a807ec34cff9fe5e62ae2f84cd8dad151}{bool \hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_a807ec34cff9fe5e62ae2f84cd8dad151}{d\-\_\-this\-\_\-interval\-\_\-basis\-\_\-current}}\label{class_c_a_r_o_m_1_1_static_s_v_d_a807ec34cff9fe5e62ae2f84cd8dad151}
+
+\begin{DoxyCompactList}\small\item\em Flag to indicate if the basis vectors for the current time interval are up to date. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_static_s_v_d_a1454841fa7e3afaae10f52583ef4b8fe}{int \hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_a1454841fa7e3afaae10f52583ef4b8fe}{d\-\_\-rank}}\label{class_c_a_r_o_m_1_1_static_s_v_d_a1454841fa7e3afaae10f52583ef4b8fe}
+
+\begin{DoxyCompactList}\small\item\em The rank of the process this object belongs to. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_static_s_v_d_ad3e3b35402a5ef9813dd9a0d403e2212}{int \hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_ad3e3b35402a5ef9813dd9a0d403e2212}{d\-\_\-num\-\_\-procs}}\label{class_c_a_r_o_m_1_1_static_s_v_d_ad3e3b35402a5ef9813dd9a0d403e2212}
+
+\begin{DoxyCompactList}\small\item\em The number of processors being run on. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_static_s_v_d_a681f31b3a5c8e134346865e21d33f8e0}{std\-::vector$<$ int $>$ \hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_a681f31b3a5c8e134346865e21d33f8e0}{d\-\_\-istarts}}\label{class_c_a_r_o_m_1_1_static_s_v_d_a681f31b3a5c8e134346865e21d33f8e0}
+
+\begin{DoxyCompactList}\small\item\em The starting row (0-\/based) of the matrix that each process owns. Stored to avoid an M\-P\-I operation to get this operation every time we scatter a sample. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_static_s_v_d_aee0dd1ce7f230cec30ca51b3206f5d3d}{std\-::vector$<$ int $>$ \hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_aee0dd1ce7f230cec30ca51b3206f5d3d}{d\-\_\-dims}}\label{class_c_a_r_o_m_1_1_static_s_v_d_aee0dd1ce7f230cec30ca51b3206f5d3d}
+
+\begin{DoxyCompactList}\small\item\em The number of rows that each process owns. Stored to avoid an M\-P\-I operation to get this operation every time we scatter a sample. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_static_s_v_d_a73e6408bd26fba550ba23a7dee558dd0}{int \hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_a73e6408bd26fba550ba23a7dee558dd0}{d\-\_\-total\-\_\-dim}}\label{class_c_a_r_o_m_1_1_static_s_v_d_a73e6408bd26fba550ba23a7dee558dd0}
+
+\begin{DoxyCompactList}\small\item\em The total dimension of the system (row dimension) \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_static_s_v_d_a1d66d0c978bdb071e57e4c90fe0fbd0c}{int \hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_a1d66d0c978bdb071e57e4c90fe0fbd0c}{d\-\_\-nprow}}\label{class_c_a_r_o_m_1_1_static_s_v_d_a1d66d0c978bdb071e57e4c90fe0fbd0c}
+
+\begin{DoxyCompactList}\small\item\em The number of processor rows in the grid. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_static_s_v_d_a3f8e127315710034a70c05f11a58198b}{int \hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_a3f8e127315710034a70c05f11a58198b}{d\-\_\-npcol}}\label{class_c_a_r_o_m_1_1_static_s_v_d_a3f8e127315710034a70c05f11a58198b}
+
+\begin{DoxyCompactList}\small\item\em The number of processor columns in the grid. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_static_s_v_d_ab9136905dc7a77975aa22baf5b26cebf}{int \hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_ab9136905dc7a77975aa22baf5b26cebf}{d\-\_\-blocksize}}\label{class_c_a_r_o_m_1_1_static_s_v_d_ab9136905dc7a77975aa22baf5b26cebf}
+
+\begin{DoxyCompactList}\small\item\em The block size used internally for computing the \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D}. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_static_s_v_d_a8ccff71fcfbf639a2f38a1e438f520dd}{int \hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_a8ccff71fcfbf639a2f38a1e438f520dd}{d\-\_\-max\-\_\-basis\-\_\-dimension}}\label{class_c_a_r_o_m_1_1_static_s_v_d_a8ccff71fcfbf639a2f38a1e438f520dd}
+
+\begin{DoxyCompactList}\small\item\em The max number of basis vectors to return. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_static_s_v_d_a02d8eb7feaad508faa2abba9e1de6a4f}{double \hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_a02d8eb7feaad508faa2abba9e1de6a4f}{d\-\_\-singular\-\_\-value\-\_\-tol}}\label{class_c_a_r_o_m_1_1_static_s_v_d_a02d8eb7feaad508faa2abba9e1de6a4f}
+
+\begin{DoxyCompactList}\small\item\em The tolerance for singular values below which to drop vectors. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Friends}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_c_a_r_o_m_1_1_static_s_v_d_a14677f178902af98cccb02b0058fd326}{class {\bfseries Basis\-Generator}}\label{class_c_a_r_o_m_1_1_static_s_v_d_a14677f178902af98cccb02b0058fd326}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\hyperlink{class_c_a_r_o_m_1_1_static_s_v_d}{Static\-S\-V\-D} implements the interface of class \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} for the static \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm. This algorithm is not scalable and is intended primarily as a sanity check of the incremental \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm. 
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{class_c_a_r_o_m_1_1_static_s_v_d_a38fe9d5c3d8ef47f0e40353078015e7a}{\index{C\-A\-R\-O\-M\-::\-Static\-S\-V\-D@{C\-A\-R\-O\-M\-::\-Static\-S\-V\-D}!$\sim$\-Static\-S\-V\-D@{$\sim$\-Static\-S\-V\-D}}
+\index{$\sim$\-Static\-S\-V\-D@{$\sim$\-Static\-S\-V\-D}!CAROM::StaticSVD@{C\-A\-R\-O\-M\-::\-Static\-S\-V\-D}}
+\subsubsection[{$\sim$\-Static\-S\-V\-D}]{\setlength{\rightskip}{0pt plus 5cm}C\-A\-R\-O\-M\-::\-Static\-S\-V\-D\-::$\sim$\-Static\-S\-V\-D (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_c_a_r_o_m_1_1_static_s_v_d_a38fe9d5c3d8ef47f0e40353078015e7a}
+Destructor. \hypertarget{class_c_a_r_o_m_1_1_static_s_v_d_a7db32fa4778422244a7b5230f9b7481f}{\index{C\-A\-R\-O\-M\-::\-Static\-S\-V\-D@{C\-A\-R\-O\-M\-::\-Static\-S\-V\-D}!Static\-S\-V\-D@{Static\-S\-V\-D}}
+\index{Static\-S\-V\-D@{Static\-S\-V\-D}!CAROM::StaticSVD@{C\-A\-R\-O\-M\-::\-Static\-S\-V\-D}}
+\subsubsection[{Static\-S\-V\-D}]{\setlength{\rightskip}{0pt plus 5cm}C\-A\-R\-O\-M\-::\-Static\-S\-V\-D\-::\-Static\-S\-V\-D (
+\begin{DoxyParamCaption}
+\item[{{\bf Options}}]{options}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [protected]}}}\label{class_c_a_r_o_m_1_1_static_s_v_d_a7db32fa4778422244a7b5230f9b7481f}
+
+
+Constructor. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em options} & The struct containing the options for this \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} implementation. \\
+\hline
+\end{DoxyParams}
+\begin{DoxySeeAlso}{See Also}
+\hyperlink{class_c_a_r_o_m_1_1_options}{Options} 
+\end{DoxySeeAlso}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{class_c_a_r_o_m_1_1_static_s_v_d_abbb6aebb985310c464040746e597a4da}{\index{C\-A\-R\-O\-M\-::\-Static\-S\-V\-D@{C\-A\-R\-O\-M\-::\-Static\-S\-V\-D}!get\-Singular\-Values@{get\-Singular\-Values}}
+\index{get\-Singular\-Values@{get\-Singular\-Values}!CAROM::StaticSVD@{C\-A\-R\-O\-M\-::\-Static\-S\-V\-D}}
+\subsubsection[{get\-Singular\-Values}]{\setlength{\rightskip}{0pt plus 5cm}virtual const {\bf Vector}$\ast$ C\-A\-R\-O\-M\-::\-Static\-S\-V\-D\-::get\-Singular\-Values (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [virtual]}}}\label{class_c_a_r_o_m_1_1_static_s_v_d_abbb6aebb985310c464040746e597a4da}
+
+
+Returns the singular values for the current time interval. 
+
+\begin{DoxyPostcond}{Postcondition}
+\hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_a8c59671fcd305f798bc3c185b6595345}{this\-Interval\-Basis\-Current()}
+\end{DoxyPostcond}
+\begin{DoxyReturn}{Returns}
+The singular values for the current time interval. 
+\end{DoxyReturn}
+
+
+Implements \hyperlink{class_c_a_r_o_m_1_1_s_v_d_ab9bbaa07ffc11ef329be712669a6c95b}{C\-A\-R\-O\-M\-::\-S\-V\-D}.
+
+\hypertarget{class_c_a_r_o_m_1_1_static_s_v_d_afd8e0bf6c2e53a39e47e7554eba3f8f0}{\index{C\-A\-R\-O\-M\-::\-Static\-S\-V\-D@{C\-A\-R\-O\-M\-::\-Static\-S\-V\-D}!get\-Snapshot\-Matrix@{get\-Snapshot\-Matrix}}
+\index{get\-Snapshot\-Matrix@{get\-Snapshot\-Matrix}!CAROM::StaticSVD@{C\-A\-R\-O\-M\-::\-Static\-S\-V\-D}}
+\subsubsection[{get\-Snapshot\-Matrix}]{\setlength{\rightskip}{0pt plus 5cm}virtual const {\bf Matrix}$\ast$ C\-A\-R\-O\-M\-::\-Static\-S\-V\-D\-::get\-Snapshot\-Matrix (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [virtual]}}}\label{class_c_a_r_o_m_1_1_static_s_v_d_afd8e0bf6c2e53a39e47e7554eba3f8f0}
+
+
+Returns the snapshot matrix for the current time interval. 
+
+\begin{DoxyReturn}{Returns}
+The snapshot matrix for the current time interval. 
+\end{DoxyReturn}
+
+
+Implements \hyperlink{class_c_a_r_o_m_1_1_s_v_d_a96b482e76d8c8f7278008af4a0bebf85}{C\-A\-R\-O\-M\-::\-S\-V\-D}.
+
+\hypertarget{class_c_a_r_o_m_1_1_static_s_v_d_aafd2a6fe2b2488fb24160d80013a7194}{\index{C\-A\-R\-O\-M\-::\-Static\-S\-V\-D@{C\-A\-R\-O\-M\-::\-Static\-S\-V\-D}!get\-Spatial\-Basis@{get\-Spatial\-Basis}}
+\index{get\-Spatial\-Basis@{get\-Spatial\-Basis}!CAROM::StaticSVD@{C\-A\-R\-O\-M\-::\-Static\-S\-V\-D}}
+\subsubsection[{get\-Spatial\-Basis}]{\setlength{\rightskip}{0pt plus 5cm}virtual const {\bf Matrix}$\ast$ C\-A\-R\-O\-M\-::\-Static\-S\-V\-D\-::get\-Spatial\-Basis (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [virtual]}}}\label{class_c_a_r_o_m_1_1_static_s_v_d_aafd2a6fe2b2488fb24160d80013a7194}
+
+
+Returns the basis vectors for the current time interval as a \hyperlink{class_c_a_r_o_m_1_1_matrix}{Matrix}. 
+
+\begin{DoxyPostcond}{Postcondition}
+\hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_a8c59671fcd305f798bc3c185b6595345}{this\-Interval\-Basis\-Current()}
+\end{DoxyPostcond}
+\begin{DoxyReturn}{Returns}
+The basis vectors for the current time interval. 
+\end{DoxyReturn}
+
+
+Implements \hyperlink{class_c_a_r_o_m_1_1_s_v_d_ab152d85dfb91958d2265dd54046752dc}{C\-A\-R\-O\-M\-::\-S\-V\-D}.
+
+\hypertarget{class_c_a_r_o_m_1_1_static_s_v_d_a25750394f6513f0ae99dfd02f513b1da}{\index{C\-A\-R\-O\-M\-::\-Static\-S\-V\-D@{C\-A\-R\-O\-M\-::\-Static\-S\-V\-D}!get\-Temporal\-Basis@{get\-Temporal\-Basis}}
+\index{get\-Temporal\-Basis@{get\-Temporal\-Basis}!CAROM::StaticSVD@{C\-A\-R\-O\-M\-::\-Static\-S\-V\-D}}
+\subsubsection[{get\-Temporal\-Basis}]{\setlength{\rightskip}{0pt plus 5cm}virtual const {\bf Matrix}$\ast$ C\-A\-R\-O\-M\-::\-Static\-S\-V\-D\-::get\-Temporal\-Basis (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [virtual]}}}\label{class_c_a_r_o_m_1_1_static_s_v_d_a25750394f6513f0ae99dfd02f513b1da}
+
+
+Returns the temporal basis vectors for the current time interval as a \hyperlink{class_c_a_r_o_m_1_1_matrix}{Matrix}. 
+
+\begin{DoxyPostcond}{Postcondition}
+\hyperlink{class_c_a_r_o_m_1_1_static_s_v_d_a8c59671fcd305f798bc3c185b6595345}{this\-Interval\-Basis\-Current()}
+\end{DoxyPostcond}
+\begin{DoxyReturn}{Returns}
+The temporal basis vectors for the current time interval. 
+\end{DoxyReturn}
+
+
+Implements \hyperlink{class_c_a_r_o_m_1_1_s_v_d_a42820d67808cad0b5cc2af1590b98ff9}{C\-A\-R\-O\-M\-::\-S\-V\-D}.
+
+\hypertarget{class_c_a_r_o_m_1_1_static_s_v_d_a6776aa994a771b6b4a39a96a77f8e6c2}{\index{C\-A\-R\-O\-M\-::\-Static\-S\-V\-D@{C\-A\-R\-O\-M\-::\-Static\-S\-V\-D}!take\-Sample@{take\-Sample}}
+\index{take\-Sample@{take\-Sample}!CAROM::StaticSVD@{C\-A\-R\-O\-M\-::\-Static\-S\-V\-D}}
+\subsubsection[{take\-Sample}]{\setlength{\rightskip}{0pt plus 5cm}virtual bool C\-A\-R\-O\-M\-::\-Static\-S\-V\-D\-::take\-Sample (
+\begin{DoxyParamCaption}
+\item[{double $\ast$}]{u\-\_\-in, }
+\item[{double}]{time, }
+\item[{bool}]{add\-\_\-without\-\_\-increase = {\ttfamily false}}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [virtual]}}}\label{class_c_a_r_o_m_1_1_static_s_v_d_a6776aa994a771b6b4a39a96a77f8e6c2}
+
+
+Collect the new sample, u\-\_\-in at the supplied time. 
+
+\begin{DoxyPrecond}{Precondition}
+u\-\_\-in != 0 
+
+time $>$= 0.\-0
+\end{DoxyPrecond}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em u\-\_\-in} & The new sample. \\
+\hline
+\mbox{\tt in}  & {\em time} & The simulation time of the new sample. \\
+\hline
+\mbox{\tt in}  & {\em add\-\_\-without\-\_\-increase} & If true, then add\-Linearly\-Dependent will be invoked\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if the sampling was successful. 
+\end{DoxyReturn}
+
+
+Implements \hyperlink{class_c_a_r_o_m_1_1_s_v_d_a5ed8a558690b130c49c2e923cc625769}{C\-A\-R\-O\-M\-::\-S\-V\-D}.
+
+\hypertarget{class_c_a_r_o_m_1_1_static_s_v_d_a8c59671fcd305f798bc3c185b6595345}{\index{C\-A\-R\-O\-M\-::\-Static\-S\-V\-D@{C\-A\-R\-O\-M\-::\-Static\-S\-V\-D}!this\-Interval\-Basis\-Current@{this\-Interval\-Basis\-Current}}
+\index{this\-Interval\-Basis\-Current@{this\-Interval\-Basis\-Current}!CAROM::StaticSVD@{C\-A\-R\-O\-M\-::\-Static\-S\-V\-D}}
+\subsubsection[{this\-Interval\-Basis\-Current}]{\setlength{\rightskip}{0pt plus 5cm}bool C\-A\-R\-O\-M\-::\-Static\-S\-V\-D\-::this\-Interval\-Basis\-Current (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}}\label{class_c_a_r_o_m_1_1_static_s_v_d_a8c59671fcd305f798bc3c185b6595345}
+
+
+Checks if the basis vectors for this time interval are up to date. 
+
+\begin{DoxyReturn}{Returns}
+True if the basis vectors for this time interval are up to date. 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+Static\-S\-V\-D.\-h\end{DoxyCompactItemize}

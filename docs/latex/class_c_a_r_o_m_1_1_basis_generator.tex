@@ -1,0 +1,348 @@
+\hypertarget{class_c_a_r_o_m_1_1_basis_generator}{\section{C\-A\-R\-O\-M\-:\-:Basis\-Generator Class Reference}
+\label{class_c_a_r_o_m_1_1_basis_generator}\index{C\-A\-R\-O\-M\-::\-Basis\-Generator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}}
+}
+
+
+{\ttfamily \#include $<$Basis\-Generator.\-h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{class_c_a_r_o_m_1_1_basis_generator_af8ab59fbf70df5759d42477a98acb129}{Basis\-Generator} (\hyperlink{class_c_a_r_o_m_1_1_options}{Options} options, bool incremental, const std\-::string \&basis\-\_\-file\-\_\-name=\char`\"{}\char`\"{}, \hyperlink{class_c_a_r_o_m_1_1_database_a8ab29ee6466ef8415ee0ef93d94cc5f7}{Database\-::formats} file\-\_\-format=Database\-::\-H\-D\-F5)
+\begin{DoxyCompactList}\small\item\em Constructor. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_basis_generator_aaff407525e946b643de371a46ab070aa}{\hyperlink{class_c_a_r_o_m_1_1_basis_generator_aaff407525e946b643de371a46ab070aa}{$\sim$\-Basis\-Generator} ()}\label{class_c_a_r_o_m_1_1_basis_generator_aaff407525e946b643de371a46ab070aa}
+
+\begin{DoxyCompactList}\small\item\em Destructor. \end{DoxyCompactList}\item 
+bool \hyperlink{class_c_a_r_o_m_1_1_basis_generator_a4d717cbc01cb35746b87027532dbc7fb}{is\-Next\-Sample} (double time)
+\begin{DoxyCompactList}\small\item\em Returns true if it is time for the next svd sample. \end{DoxyCompactList}\item 
+bool \hyperlink{class_c_a_r_o_m_1_1_basis_generator_a38812e86b4ae3dbe274906987abdddd2}{update\-Right\-S\-V} ()
+\begin{DoxyCompactList}\small\item\em Check whether right basis vectors will be updated. \end{DoxyCompactList}\item 
+bool \hyperlink{class_c_a_r_o_m_1_1_basis_generator_a07cf39647b203f99f22b6bf7e0cedb67}{take\-Sample} (double $\ast$u\-\_\-in, double time, double dt, bool add\-\_\-without\-\_\-increase=false)
+\begin{DoxyCompactList}\small\item\em Sample the new state, u\-\_\-in, at the given time. \end{DoxyCompactList}\item 
+void \hyperlink{class_c_a_r_o_m_1_1_basis_generator_a87092ad38163c566e1e1341f59f78d74}{end\-Samples} (const std\-::string \&kind=\char`\"{}basis\char`\"{})
+\begin{DoxyCompactList}\small\item\em Signal that the final sample has been taken. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_basis_generator_a11091780421f1ca5f781ec006c6ae608}{void \hyperlink{class_c_a_r_o_m_1_1_basis_generator_a11091780421f1ca5f781ec006c6ae608}{write\-Snapshot} ()}\label{class_c_a_r_o_m_1_1_basis_generator_a11091780421f1ca5f781ec006c6ae608}
+
+\begin{DoxyCompactList}\small\item\em Write current snapshot matrix. \end{DoxyCompactList}\item 
+void \hyperlink{class_c_a_r_o_m_1_1_basis_generator_a6a62155535209b2ca67207043cffc29e}{load\-Samples} (const std\-::string \&base\-\_\-file\-\_\-name, const std\-::string \&kind=\char`\"{}basis\char`\"{}, int cut\-\_\-off=1e9, Database\-::formats db\-\_\-format=\-Database\-::\-H\-D\-F5)
+\begin{DoxyCompactList}\small\item\em Load previously saved sample (basis or state). \end{DoxyCompactList}\item 
+double \hyperlink{class_c_a_r_o_m_1_1_basis_generator_ab4e33379fd6b66633c9c98ed5ea770e9}{compute\-Next\-Sample\-Time} (double $\ast$u\-\_\-in, double $\ast$rhs\-\_\-in, double time)
+\begin{DoxyCompactList}\small\item\em Computes next time an svd sample is needed. \end{DoxyCompactList}\item 
+const \hyperlink{class_c_a_r_o_m_1_1_matrix}{Matrix} $\ast$ \hyperlink{class_c_a_r_o_m_1_1_basis_generator_a9823bb3cb51c1fad86e0f8ef33af82f5}{get\-Spatial\-Basis} ()
+\begin{DoxyCompactList}\small\item\em Returns the basis vectors for the current time interval as a \hyperlink{class_c_a_r_o_m_1_1_matrix}{Matrix}. \end{DoxyCompactList}\item 
+const \hyperlink{class_c_a_r_o_m_1_1_matrix}{Matrix} $\ast$ \hyperlink{class_c_a_r_o_m_1_1_basis_generator_a8f5cf06defb7b872cbbedfc329f0fe4b}{get\-Temporal\-Basis} ()
+\begin{DoxyCompactList}\small\item\em Returns the temporal basis vectors for the current time interval as a \hyperlink{class_c_a_r_o_m_1_1_matrix}{Matrix}. \end{DoxyCompactList}\item 
+const \hyperlink{class_c_a_r_o_m_1_1_vector}{Vector} $\ast$ \hyperlink{class_c_a_r_o_m_1_1_basis_generator_afb6b66f706cf7773f330b77db1a6252f}{get\-Singular\-Values} ()
+\begin{DoxyCompactList}\small\item\em Returns the singular values for the current time interval as a \hyperlink{class_c_a_r_o_m_1_1_vector}{Vector}. \end{DoxyCompactList}\item 
+const \hyperlink{class_c_a_r_o_m_1_1_matrix}{Matrix} $\ast$ \hyperlink{class_c_a_r_o_m_1_1_basis_generator_a11d6944c39a92f3707a41a07c7411825}{get\-Snapshot\-Matrix} ()
+\begin{DoxyCompactList}\small\item\em Returns the snapshot matrix for the current time interval. \end{DoxyCompactList}\item 
+int \hyperlink{class_c_a_r_o_m_1_1_basis_generator_a691dbd10eac5510f9e361d15e2bc1e26}{get\-Num\-Basis\-Time\-Intervals} () const 
+\begin{DoxyCompactList}\small\item\em Returns the number of time intervals on which different sets of basis vectors are defined. \end{DoxyCompactList}\item 
+double \hyperlink{class_c_a_r_o_m_1_1_basis_generator_a416a07725bb0a2dea258fb2f090256e9}{get\-Basis\-Interval\-Start\-Time} (int which\-\_\-interval) const 
+\begin{DoxyCompactList}\small\item\em Returns the start time for the requested time interval. \end{DoxyCompactList}\item 
+int \hyperlink{class_c_a_r_o_m_1_1_basis_generator_a1b8f46066493239cda68f40af92a6a23}{get\-Num\-Samples} () const 
+\begin{DoxyCompactList}\small\item\em Returns the number of samples taken. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_c_a_r_o_m_1_1_basis_generator_a97fb4191bc3e3d905afaf1ba328f9a35}{\hyperlink{class_c_a_r_o_m_1_1_basis_writer}{Basis\-Writer} $\ast$ \hyperlink{class_c_a_r_o_m_1_1_basis_generator_a97fb4191bc3e3d905afaf1ba328f9a35}{d\-\_\-basis\-\_\-writer}}\label{class_c_a_r_o_m_1_1_basis_generator_a97fb4191bc3e3d905afaf1ba328f9a35}
+
+\begin{DoxyCompactList}\small\item\em Writer of basis vectors. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_basis_generator_a4b40e47a51eba2750b94826a417ee7b0}{\hyperlink{class_c_a_r_o_m_1_1_basis_reader}{Basis\-Reader} $\ast$ \hyperlink{class_c_a_r_o_m_1_1_basis_generator_a4b40e47a51eba2750b94826a417ee7b0}{d\-\_\-basis\-\_\-reader}}\label{class_c_a_r_o_m_1_1_basis_generator_a4b40e47a51eba2750b94826a417ee7b0}
+
+\begin{DoxyCompactList}\small\item\em Reader of basis vectors. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_basis_generator_a29b41ef680c51c919fe66cea2e1942bc}{bool \hyperlink{class_c_a_r_o_m_1_1_basis_generator_a29b41ef680c51c919fe66cea2e1942bc}{d\-\_\-write\-\_\-snapshots}}\label{class_c_a_r_o_m_1_1_basis_generator_a29b41ef680c51c919fe66cea2e1942bc}
+
+\begin{DoxyCompactList}\small\item\em Whether to write snapshots instead of bases. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_basis_generator_aa09bd927752edca874108ca09d9bcc7e}{boost\-::shared\-\_\-ptr$<$ \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} $>$ \hyperlink{class_c_a_r_o_m_1_1_basis_generator_aa09bd927752edca874108ca09d9bcc7e}{d\-\_\-svd}}\label{class_c_a_r_o_m_1_1_basis_generator_aa09bd927752edca874108ca09d9bcc7e}
+
+\begin{DoxyCompactList}\small\item\em Pointer to the abstract \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm object. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Class \hyperlink{class_c_a_r_o_m_1_1_basis_generator}{Basis\-Generator} defines the interface for the generation of basis vectors via the \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} method. This class wraps the \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm and sampler and controls all aspects of basis vector generation. 
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{class_c_a_r_o_m_1_1_basis_generator_af8ab59fbf70df5759d42477a98acb129}{\index{C\-A\-R\-O\-M\-::\-Basis\-Generator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}!Basis\-Generator@{Basis\-Generator}}
+\index{Basis\-Generator@{Basis\-Generator}!CAROM::BasisGenerator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}}
+\subsubsection[{Basis\-Generator}]{\setlength{\rightskip}{0pt plus 5cm}C\-A\-R\-O\-M\-::\-Basis\-Generator\-::\-Basis\-Generator (
+\begin{DoxyParamCaption}
+\item[{{\bf Options}}]{options, }
+\item[{bool}]{incremental, }
+\item[{const std\-::string \&}]{basis\-\_\-file\-\_\-name = {\ttfamily \char`\"{}\char`\"{}}, }
+\item[{{\bf Database\-::formats}}]{file\-\_\-format = {\ttfamily Database\-:\-:HDF5}}
+\end{DoxyParamCaption}
+)}}\label{class_c_a_r_o_m_1_1_basis_generator_af8ab59fbf70df5759d42477a98acb129}
+
+
+Constructor. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em options} & The struct containing the options for this basis generator. \\
+\hline
+\mbox{\tt in}  & {\em incremental} & Whether to conduct static or incremental \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} \\
+\hline
+\mbox{\tt in}  & {\em basis\-\_\-file\-\_\-name} & The base part of the name of the file containing the basis vectors. Each process will append its process I\-D to this base name. \\
+\hline
+\mbox{\tt in}  & {\em file\-\_\-format} & The format of the file containing the basis vectors. \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{class_c_a_r_o_m_1_1_basis_generator_ab4e33379fd6b66633c9c98ed5ea770e9}{\index{C\-A\-R\-O\-M\-::\-Basis\-Generator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}!compute\-Next\-Sample\-Time@{compute\-Next\-Sample\-Time}}
+\index{compute\-Next\-Sample\-Time@{compute\-Next\-Sample\-Time}!CAROM::BasisGenerator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}}
+\subsubsection[{compute\-Next\-Sample\-Time}]{\setlength{\rightskip}{0pt plus 5cm}double C\-A\-R\-O\-M\-::\-Basis\-Generator\-::compute\-Next\-Sample\-Time (
+\begin{DoxyParamCaption}
+\item[{double $\ast$}]{u\-\_\-in, }
+\item[{double $\ast$}]{rhs\-\_\-in, }
+\item[{double}]{time}
+\end{DoxyParamCaption}
+)}}\label{class_c_a_r_o_m_1_1_basis_generator_ab4e33379fd6b66633c9c98ed5ea770e9}
+
+
+Computes next time an svd sample is needed. 
+
+\begin{DoxyPrecond}{Precondition}
+u\-\_\-in != 0 
+
+rhs\-\_\-in != 0 
+
+time $>$= 0.\-0
+\end{DoxyPrecond}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em u\-\_\-in} & The state at the specified time. \\
+\hline
+\mbox{\tt in}  & {\em rhs\-\_\-in} & The right hand side at the specified time. \\
+\hline
+\mbox{\tt in}  & {\em time} & The simulation time for the state. \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_c_a_r_o_m_1_1_basis_generator_a87092ad38163c566e1e1341f59f78d74}{\index{C\-A\-R\-O\-M\-::\-Basis\-Generator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}!end\-Samples@{end\-Samples}}
+\index{end\-Samples@{end\-Samples}!CAROM::BasisGenerator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}}
+\subsubsection[{end\-Samples}]{\setlength{\rightskip}{0pt plus 5cm}void C\-A\-R\-O\-M\-::\-Basis\-Generator\-::end\-Samples (
+\begin{DoxyParamCaption}
+\item[{const std\-::string \&}]{kind = {\ttfamily \char`\"{}basis\char`\"{}}}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{class_c_a_r_o_m_1_1_basis_generator_a87092ad38163c566e1e1341f59f78d74}
+
+
+Signal that the final sample has been taken. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em kind} & A string equal to \char`\"{}basis\char`\"{} or \char`\"{}snapshot\char`\"{}, representing which one will be written. \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_c_a_r_o_m_1_1_basis_generator_a416a07725bb0a2dea258fb2f090256e9}{\index{C\-A\-R\-O\-M\-::\-Basis\-Generator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}!get\-Basis\-Interval\-Start\-Time@{get\-Basis\-Interval\-Start\-Time}}
+\index{get\-Basis\-Interval\-Start\-Time@{get\-Basis\-Interval\-Start\-Time}!CAROM::BasisGenerator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}}
+\subsubsection[{get\-Basis\-Interval\-Start\-Time}]{\setlength{\rightskip}{0pt plus 5cm}double C\-A\-R\-O\-M\-::\-Basis\-Generator\-::get\-Basis\-Interval\-Start\-Time (
+\begin{DoxyParamCaption}
+\item[{int}]{which\-\_\-interval}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{class_c_a_r_o_m_1_1_basis_generator_a416a07725bb0a2dea258fb2f090256e9}
+
+
+Returns the start time for the requested time interval. 
+
+\begin{DoxyPrecond}{Precondition}
+0 $<$= which\-\_\-interval 
+
+which\-\_\-interval $<$ \hyperlink{class_c_a_r_o_m_1_1_basis_generator_a691dbd10eac5510f9e361d15e2bc1e26}{get\-Num\-Basis\-Time\-Intervals()}
+\end{DoxyPrecond}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em which\-\_\-interval} & Time interval whose start time is needed.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The start time for the requested time interval. 
+\end{DoxyReturn}
+\hypertarget{class_c_a_r_o_m_1_1_basis_generator_a691dbd10eac5510f9e361d15e2bc1e26}{\index{C\-A\-R\-O\-M\-::\-Basis\-Generator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}!get\-Num\-Basis\-Time\-Intervals@{get\-Num\-Basis\-Time\-Intervals}}
+\index{get\-Num\-Basis\-Time\-Intervals@{get\-Num\-Basis\-Time\-Intervals}!CAROM::BasisGenerator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}}
+\subsubsection[{get\-Num\-Basis\-Time\-Intervals}]{\setlength{\rightskip}{0pt plus 5cm}int C\-A\-R\-O\-M\-::\-Basis\-Generator\-::get\-Num\-Basis\-Time\-Intervals (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{class_c_a_r_o_m_1_1_basis_generator_a691dbd10eac5510f9e361d15e2bc1e26}
+
+
+Returns the number of time intervals on which different sets of basis vectors are defined. 
+
+\begin{DoxyReturn}{Returns}
+The number of time intervals on which there are basis vectors. 
+\end{DoxyReturn}
+\hypertarget{class_c_a_r_o_m_1_1_basis_generator_a1b8f46066493239cda68f40af92a6a23}{\index{C\-A\-R\-O\-M\-::\-Basis\-Generator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}!get\-Num\-Samples@{get\-Num\-Samples}}
+\index{get\-Num\-Samples@{get\-Num\-Samples}!CAROM::BasisGenerator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}}
+\subsubsection[{get\-Num\-Samples}]{\setlength{\rightskip}{0pt plus 5cm}int C\-A\-R\-O\-M\-::\-Basis\-Generator\-::get\-Num\-Samples (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{class_c_a_r_o_m_1_1_basis_generator_a1b8f46066493239cda68f40af92a6a23}
+
+
+Returns the number of samples taken. 
+
+\begin{DoxyReturn}{Returns}
+The number of samples taken. 
+\end{DoxyReturn}
+\hypertarget{class_c_a_r_o_m_1_1_basis_generator_afb6b66f706cf7773f330b77db1a6252f}{\index{C\-A\-R\-O\-M\-::\-Basis\-Generator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}!get\-Singular\-Values@{get\-Singular\-Values}}
+\index{get\-Singular\-Values@{get\-Singular\-Values}!CAROM::BasisGenerator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}}
+\subsubsection[{get\-Singular\-Values}]{\setlength{\rightskip}{0pt plus 5cm}const {\bf Vector}$\ast$ C\-A\-R\-O\-M\-::\-Basis\-Generator\-::get\-Singular\-Values (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{class_c_a_r_o_m_1_1_basis_generator_afb6b66f706cf7773f330b77db1a6252f}
+
+
+Returns the singular values for the current time interval as a \hyperlink{class_c_a_r_o_m_1_1_vector}{Vector}. 
+
+\begin{DoxyReturn}{Returns}
+The singular values for the current time interval. 
+\end{DoxyReturn}
+\hypertarget{class_c_a_r_o_m_1_1_basis_generator_a11d6944c39a92f3707a41a07c7411825}{\index{C\-A\-R\-O\-M\-::\-Basis\-Generator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}!get\-Snapshot\-Matrix@{get\-Snapshot\-Matrix}}
+\index{get\-Snapshot\-Matrix@{get\-Snapshot\-Matrix}!CAROM::BasisGenerator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}}
+\subsubsection[{get\-Snapshot\-Matrix}]{\setlength{\rightskip}{0pt plus 5cm}const {\bf Matrix}$\ast$ C\-A\-R\-O\-M\-::\-Basis\-Generator\-::get\-Snapshot\-Matrix (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{class_c_a_r_o_m_1_1_basis_generator_a11d6944c39a92f3707a41a07c7411825}
+
+
+Returns the snapshot matrix for the current time interval. 
+
+\begin{DoxyReturn}{Returns}
+The snapshot matrix for the current time interval. 
+\end{DoxyReturn}
+\hypertarget{class_c_a_r_o_m_1_1_basis_generator_a9823bb3cb51c1fad86e0f8ef33af82f5}{\index{C\-A\-R\-O\-M\-::\-Basis\-Generator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}!get\-Spatial\-Basis@{get\-Spatial\-Basis}}
+\index{get\-Spatial\-Basis@{get\-Spatial\-Basis}!CAROM::BasisGenerator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}}
+\subsubsection[{get\-Spatial\-Basis}]{\setlength{\rightskip}{0pt plus 5cm}const {\bf Matrix}$\ast$ C\-A\-R\-O\-M\-::\-Basis\-Generator\-::get\-Spatial\-Basis (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{class_c_a_r_o_m_1_1_basis_generator_a9823bb3cb51c1fad86e0f8ef33af82f5}
+
+
+Returns the basis vectors for the current time interval as a \hyperlink{class_c_a_r_o_m_1_1_matrix}{Matrix}. 
+
+\begin{DoxyReturn}{Returns}
+The basis vectors for the current time interval. 
+\end{DoxyReturn}
+\hypertarget{class_c_a_r_o_m_1_1_basis_generator_a8f5cf06defb7b872cbbedfc329f0fe4b}{\index{C\-A\-R\-O\-M\-::\-Basis\-Generator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}!get\-Temporal\-Basis@{get\-Temporal\-Basis}}
+\index{get\-Temporal\-Basis@{get\-Temporal\-Basis}!CAROM::BasisGenerator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}}
+\subsubsection[{get\-Temporal\-Basis}]{\setlength{\rightskip}{0pt plus 5cm}const {\bf Matrix}$\ast$ C\-A\-R\-O\-M\-::\-Basis\-Generator\-::get\-Temporal\-Basis (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{class_c_a_r_o_m_1_1_basis_generator_a8f5cf06defb7b872cbbedfc329f0fe4b}
+
+
+Returns the temporal basis vectors for the current time interval as a \hyperlink{class_c_a_r_o_m_1_1_matrix}{Matrix}. 
+
+\begin{DoxyReturn}{Returns}
+The temporal basis vectors for the current time interval. 
+\end{DoxyReturn}
+\hypertarget{class_c_a_r_o_m_1_1_basis_generator_a4d717cbc01cb35746b87027532dbc7fb}{\index{C\-A\-R\-O\-M\-::\-Basis\-Generator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}!is\-Next\-Sample@{is\-Next\-Sample}}
+\index{is\-Next\-Sample@{is\-Next\-Sample}!CAROM::BasisGenerator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}}
+\subsubsection[{is\-Next\-Sample}]{\setlength{\rightskip}{0pt plus 5cm}bool C\-A\-R\-O\-M\-::\-Basis\-Generator\-::is\-Next\-Sample (
+\begin{DoxyParamCaption}
+\item[{double}]{time}
+\end{DoxyParamCaption}
+)}}\label{class_c_a_r_o_m_1_1_basis_generator_a4d717cbc01cb35746b87027532dbc7fb}
+
+
+Returns true if it is time for the next svd sample. 
+
+\begin{DoxyPrecond}{Precondition}
+time $>$= 0.\-0
+\end{DoxyPrecond}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em time} & Time of interest.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if it is time for the next sample to be taken. 
+\end{DoxyReturn}
+\hypertarget{class_c_a_r_o_m_1_1_basis_generator_a6a62155535209b2ca67207043cffc29e}{\index{C\-A\-R\-O\-M\-::\-Basis\-Generator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}!load\-Samples@{load\-Samples}}
+\index{load\-Samples@{load\-Samples}!CAROM::BasisGenerator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}}
+\subsubsection[{load\-Samples}]{\setlength{\rightskip}{0pt plus 5cm}void C\-A\-R\-O\-M\-::\-Basis\-Generator\-::load\-Samples (
+\begin{DoxyParamCaption}
+\item[{const std\-::string \&}]{base\-\_\-file\-\_\-name, }
+\item[{const std\-::string \&}]{kind = {\ttfamily \char`\"{}basis\char`\"{}}, }
+\item[{int}]{cut\-\_\-off = {\ttfamily 1e9}, }
+\item[{{\bf Database\-::formats}}]{db\-\_\-format = {\ttfamily Database\-:\-:HDF5}}
+\end{DoxyParamCaption}
+)}}\label{class_c_a_r_o_m_1_1_basis_generator_a6a62155535209b2ca67207043cffc29e}
+
+
+Load previously saved sample (basis or state). 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em base\-\_\-file\-\_\-name} & The base part of the name of the files holding the basis / snapshot vectors. \\
+\hline
+\mbox{\tt in}  & {\em kind} & A string equal to \char`\"{}basis\char`\"{} or \char`\"{}snapshot\char`\"{}, representing which kind of data to load. \\
+\hline
+\mbox{\tt in}  & {\em cut\-\_\-off} & The maximum number of bases or snapshots to read. \\
+\hline
+\mbox{\tt in}  & {\em db\-\_\-format} & Format of the file to read. \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_c_a_r_o_m_1_1_basis_generator_a07cf39647b203f99f22b6bf7e0cedb67}{\index{C\-A\-R\-O\-M\-::\-Basis\-Generator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}!take\-Sample@{take\-Sample}}
+\index{take\-Sample@{take\-Sample}!CAROM::BasisGenerator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}}
+\subsubsection[{take\-Sample}]{\setlength{\rightskip}{0pt plus 5cm}bool C\-A\-R\-O\-M\-::\-Basis\-Generator\-::take\-Sample (
+\begin{DoxyParamCaption}
+\item[{double $\ast$}]{u\-\_\-in, }
+\item[{double}]{time, }
+\item[{double}]{dt, }
+\item[{bool}]{add\-\_\-without\-\_\-increase = {\ttfamily false}}
+\end{DoxyParamCaption}
+)}}\label{class_c_a_r_o_m_1_1_basis_generator_a07cf39647b203f99f22b6bf7e0cedb67}
+
+
+Sample the new state, u\-\_\-in, at the given time. 
+
+\begin{DoxyPrecond}{Precondition}
+u\-\_\-in != 0 
+
+time $>$= 0.\-0
+\end{DoxyPrecond}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em u\-\_\-in} & The state at the specified time. \\
+\hline
+\mbox{\tt in}  & {\em time} & The simulation time for the state. \\
+\hline
+\mbox{\tt in}  & {\em dt} & The current simulation dt. \\
+\hline
+\mbox{\tt in}  & {\em add\-\_\-without\-\_\-increase} & If true, the add\-Linearly\-Dependent is invoked. This only applies to incremental \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D}.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if the sampling was successful. 
+\end{DoxyReturn}
+\hypertarget{class_c_a_r_o_m_1_1_basis_generator_a38812e86b4ae3dbe274906987abdddd2}{\index{C\-A\-R\-O\-M\-::\-Basis\-Generator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}!update\-Right\-S\-V@{update\-Right\-S\-V}}
+\index{update\-Right\-S\-V@{update\-Right\-S\-V}!CAROM::BasisGenerator@{C\-A\-R\-O\-M\-::\-Basis\-Generator}}
+\subsubsection[{update\-Right\-S\-V}]{\setlength{\rightskip}{0pt plus 5cm}bool C\-A\-R\-O\-M\-::\-Basis\-Generator\-::update\-Right\-S\-V (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{class_c_a_r_o_m_1_1_basis_generator_a38812e86b4ae3dbe274906987abdddd2}
+
+
+Check whether right basis vectors will be updated. 
+
+
+\begin{DoxyItemize}
+\item \begin{DoxyReturn}{Returns}
+True if the right basis vectors will be updated. 
+\end{DoxyReturn}
+
+\end{DoxyItemize}
+
+The documentation for this class was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+Basis\-Generator.\-h\end{DoxyCompactItemize}
