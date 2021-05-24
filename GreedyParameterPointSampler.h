@@ -80,8 +80,6 @@ public:
      * @param[in] use_centroid Whether to use the centroid heuristic when
      *                         determining the first parameter point to sample.
      * @param[in] random_seed A random seed.
-     * @param[in] debug_algorithm Whether to turn off all randomness for
-     *                            debugging purposes.
      */
     GreedyParameterPointSampler(
         std::vector<Vector> parameter_points,
@@ -94,8 +92,7 @@ public:
         std::string output_log_path = "",
         std::string warm_start_file_name = "",
         bool use_centroid = true,
-        int random_seed = 1,
-        bool debug_algorithm = false);
+        int random_seed = 1);
 
     /**
      * @brief Constructor.
@@ -114,8 +111,6 @@ public:
      * @param[in] use_centroid Whether to use the centroid heuristic when
      *                         determining the first parameter point to sample.
      * @param[in] random_seed A random seed.
-     * @param[in] debug_algorithm Whether to turn off all randomness for
-     *                            debugging purposes.
      */
     GreedyParameterPointSampler(
         std::vector<double> parameter_points,
@@ -128,8 +123,7 @@ public:
         std::string output_log_path = "",
         std::string warm_start_file_name = "",
         bool use_centroid = true,
-        int random_seed = 1,
-        bool debug_algorithm = false);
+        int random_seed = 1);
 
     /**
      * @brief Constructor.
@@ -158,8 +152,6 @@ public:
      * @param[in] use_centroid Whether to use the centroid heuristic when
      *                         determining the first parameter point to sample.
      * @param[in] random_seed A random seed.
-     * @param[in] debug_algorithm Whether to turn off all randomness for
-     *                            debugging purposes.
      */
     GreedyParameterPointSampler(
         Vector param_space_min,
@@ -174,8 +166,7 @@ public:
         std::string output_log_path = "",
         std::string warm_start_file_name = "",
         bool use_centroid = true,
-        int random_seed = 1,
-        bool debug_algorithm = false);
+        int random_seed = 1);
 
     /**
      * @brief Constructor.
@@ -204,8 +195,6 @@ public:
      * @param[in] use_centroid Whether to use the centroid heuristic when
      *                         determining the first parameter point to sample.
      * @param[in] random_seed A random seed.
-     * @param[in] debug_algorithm Whether to turn off all randomness for
-     *                            debugging purposes.
      */
     GreedyParameterPointSampler(
         double param_space_min,
@@ -220,8 +209,7 @@ public:
         std::string output_log_path = "",
         std::string warm_start_file_name = "",
         bool use_centroid = true,
-        int random_seed = 1,
-        bool debug_algorithm = false);
+        int random_seed = 1);
 
     /**
      * @brief Constructor.
@@ -386,8 +374,7 @@ protected:
         int convergence_subset_size,
         std::string output_log_path,
         bool use_centroid,
-        int random_seed,
-        bool debug_algorithm);
+        int random_seed);
 
     /**
      * @brief Initialize the list of parameter point candidates to sample.
@@ -635,12 +622,6 @@ protected:
      *        for this iteration.
      */
     bool d_subset_created;
-
-    /**
-     * @brief Turn off randomness for debugging purposes.
-     *
-     */
-    bool d_debug_algorithm;
 
     /**
      * @brief An internal counter.

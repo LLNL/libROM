@@ -40,7 +40,7 @@ TEST(GreedyParameterPointPreDefinedSamplerSerialTest, Test_GreedyParameterPointP
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
 
     std::vector<double> paramPoints = {1.0, 2.0, 3.0, 99.0, 100.0, 101.0};
-    CAROM::GreedyParameterPointPreDefinedSampler caromGreedySampler(paramPoints, false, 0.1, 1, 1, 3, 4, "", "", true, 1, true);
+    CAROM::GreedyParameterPointPreDefinedSampler caromGreedySampler(paramPoints, false, 0.1, 1, 1, 3, 4, "", "", true, 1);
 
     std::shared_ptr<CAROM::Vector> nextPointToSample = caromGreedySampler.getNextParameterPoint();
     EXPECT_EQ(nextPointToSample.get()->item(0), 3.0);
@@ -108,7 +108,7 @@ TEST(GreedyParameterPointPreDefinedSamplerSerialTest, Test_GreedyParameterPointS
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
 
     std::vector<double> paramPoints = {1.0, 2.0, 3.0, 99.0, 100.0, 101.0};
-    CAROM::GreedyParameterPointPreDefinedSampler caromGreedySampler(paramPoints, false, 0.1, 1, 1, 3, 4, "", "", false, 1, true);
+    CAROM::GreedyParameterPointPreDefinedSampler caromGreedySampler(paramPoints, false, 0.1, 1, 1, 3, 4, "", "", false, 1);
     caromGreedySampler.save("greedy_test");
 
     CAROM::GreedyParameterPointPreDefinedSampler caromGreedySamplerLoad("greedy_test");

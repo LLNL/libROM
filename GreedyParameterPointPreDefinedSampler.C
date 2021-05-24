@@ -30,8 +30,7 @@ GreedyParameterPointPreDefinedSampler::GreedyParameterPointPreDefinedSampler(
     std::string output_log_path,
     std::string warm_start_file_name,
     bool use_centroid,
-    int random_seed,
-    bool debug_algorithm) :
+    int random_seed) :
     GreedyParameterPointSampler(
         parameter_points,
         check_local_rom,
@@ -43,8 +42,7 @@ GreedyParameterPointPreDefinedSampler::GreedyParameterPointPreDefinedSampler(
         output_log_path,
         warm_start_file_name,
         use_centroid,
-        random_seed,
-        debug_algorithm
+        random_seed
     )
 {
     printSamplingType("pre-defined");
@@ -68,8 +66,7 @@ GreedyParameterPointPreDefinedSampler::GreedyParameterPointPreDefinedSampler(
     std::string output_log_path,
     std::string warm_start_file_name,
     bool use_centroid,
-    int random_seed,
-    bool debug_algorithm) :
+    int random_seed) :
     GreedyParameterPointSampler(
         parameter_points,
         check_local_rom,
@@ -81,8 +78,7 @@ GreedyParameterPointPreDefinedSampler::GreedyParameterPointPreDefinedSampler(
         output_log_path,
         warm_start_file_name,
         use_centroid,
-        random_seed,
-        debug_algorithm
+        random_seed
     )
 {
     printSamplingType("pre-defined");

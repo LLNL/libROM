@@ -108,8 +108,7 @@ GreedyParameterPointSampler::GreedyParameterPointSampler(
     std::string output_log_path,
     std::string warm_start_file_name,
     bool use_centroid,
-    int random_seed,
-    bool debug_algorithm)
+    int random_seed)
 {
 
     d_num_parameter_points = parameter_points.size();
@@ -117,7 +116,7 @@ GreedyParameterPointSampler::GreedyParameterPointSampler(
     d_parameter_points = parameter_points;
 
     constructObject(check_local_rom, relative_error_tolerance, alpha, max_clamp,
-                    subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
+                    subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed);
 }
 
 GreedyParameterPointSampler::GreedyParameterPointSampler(
@@ -131,8 +130,7 @@ GreedyParameterPointSampler::GreedyParameterPointSampler(
     std::string output_log_path,
     std::string warm_start_file_name,
     bool use_centroid,
-    int random_seed,
-    bool debug_algorithm)
+    int random_seed)
 {
 
     d_num_parameter_points = parameter_points.size();
@@ -148,7 +146,7 @@ GreedyParameterPointSampler::GreedyParameterPointSampler(
     d_parameter_points = parameter_points_vec;
 
     constructObject(check_local_rom, relative_error_tolerance, alpha, max_clamp,
-                    subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
+                    subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed);
 }
 
 GreedyParameterPointSampler::GreedyParameterPointSampler(
@@ -164,8 +162,7 @@ GreedyParameterPointSampler::GreedyParameterPointSampler(
     std::string output_log_path,
     std::string warm_start_file_name,
     bool use_centroid,
-    int random_seed,
-    bool debug_algorithm)
+    int random_seed)
 {
 
     d_min_param_point = param_space_min;
@@ -173,7 +170,7 @@ GreedyParameterPointSampler::GreedyParameterPointSampler(
     d_num_parameter_points = num_parameter_points;
 
     constructObject(check_local_rom, relative_error_tolerance, alpha, max_clamp, subset_size,
-                    convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
+                    convergence_subset_size, output_log_path, use_centroid, random_seed);
 }
 
 GreedyParameterPointSampler::GreedyParameterPointSampler(
@@ -189,8 +186,7 @@ GreedyParameterPointSampler::GreedyParameterPointSampler(
     std::string output_log_path,
     std::string warm_start_file_name,
     bool use_centroid,
-    int random_seed,
-    bool debug_algorithm)
+    int random_seed)
 {
 
     Vector param_space_min_vec(1, false);
@@ -203,7 +199,7 @@ GreedyParameterPointSampler::GreedyParameterPointSampler(
     d_num_parameter_points = num_parameter_points;
 
     constructObject(check_local_rom, relative_error_tolerance, alpha, max_clamp, subset_size,
-                    convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
+                    convergence_subset_size, output_log_path, use_centroid, random_seed);
 }
 
 GreedyParameterPointSampler::GreedyParameterPointSampler(
@@ -355,9 +351,6 @@ GreedyParameterPointSampler::load(
         sprintf(tmp, "subset_created");
         database.getInteger(tmp, bool_int_temp);
         d_subset_created = (bool) bool_int_temp;
-        sprintf(tmp, "debug_algorithm");
-        database.getInteger(tmp, bool_int_temp);
-        d_debug_algorithm = (bool) bool_int_temp;
         sprintf(tmp, "counter");
         database.getInteger(tmp, d_counter);
         sprintf(tmp, "subset_counter");
@@ -448,8 +441,7 @@ GreedyParameterPointSampler::constructObject(
     int convergence_subset_size,
     std::string output_log_path,
     bool use_centroid,
-    int random_seed,
-    bool debug_algorithm)
+    int random_seed)
 {
     CAROM_VERIFY(relative_error_tolerance > 0.0);
     CAROM_VERIFY(alpha >= 1.0);
@@ -488,7 +480,6 @@ GreedyParameterPointSampler::constructObject(
     d_procedure_completed = false;
     d_subset_counter = 0;
     d_counter = -1;
-    d_debug_algorithm = debug_algorithm;
     d_random_seed = random_seed;
 
     rng.seed(d_random_seed);
@@ -691,10 +682,7 @@ GreedyParameterPointSampler::getNextSubsetPointRequiringErrorIndicator()
     if(!d_subset_created)
     {
         // generate random shuffle
-        if (!d_debug_algorithm)
-        {
-            std::shuffle(d_parameter_point_random_indices.begin(), d_parameter_point_random_indices.end(), rng);
-        }
+        std::shuffle(d_parameter_point_random_indices.begin(), d_parameter_point_random_indices.end(), rng);
         d_subset_created = true;
     }
 
@@ -1378,8 +1366,6 @@ GreedyParameterPointSampler::save(std::string base_file_name)
         database.putInteger(tmp, d_point_requiring_error_indicator_computed);
         sprintf(tmp, "subset_created");
         database.putInteger(tmp, d_subset_created);
-        sprintf(tmp, "debug_algorithm");
-        database.putInteger(tmp, d_debug_algorithm);
         sprintf(tmp, "counter");
         database.putInteger(tmp, d_counter);
         sprintf(tmp, "subset_counter");
