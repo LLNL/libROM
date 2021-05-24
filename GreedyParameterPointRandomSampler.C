@@ -138,7 +138,7 @@ GreedyParameterPointRandomSampler::GreedyParameterPointRandomSampler(
 void
 GreedyParameterPointRandomSampler::constructParameterPoints()
 {
-    GreedyParameterPointSampler::constructParameterPoints();
+    checkParameterPointInput();
 
     Vector vec(d_min_param_point.dim(), false);
 

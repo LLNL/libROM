@@ -17,13 +17,14 @@
 //              The greedy algorithm workflow is as follows:
 //              1. Construct the GreedyParameterPointSampler by giving it a
 //                 domain of parameter points.
-//              2. Request a parameter point to sample.
-//              3. Request a parameter point to compute an error error indicator for.
+//              2. Request a parameter point to create a local ROM at.
+//              3. Request a parameter point to compute an error error indicator
+//                 for using the nearest local ROM.
 //              4. Give the computed error indicator to the GreedyParameterPointSampler.
 //              5. Repeat steps 3 and 4 until the GreedyParameterPointSampler
 //                 no longer requires more error indicators to be computed.
 //              6. Repeat steps 2 to 5 until the GreedyParameterPointSampler
-//                 no longer requires more parameter points to be sampled.
+//                 no longer requires more local ROMs to be created.
 //              7. The ROM database is now complete, meeting the error tolerance
 //                 for all parameter points within the domain.
 
@@ -64,13 +65,14 @@ public:
     /**
      * @brief Constructor.
      *
-     * @param[in] parameter_points A vector of CAROM::Vectors containing
-     *                             the different parameter points.
+     * @param[in] parameter_points A vector of CAROM::Vectors containing many
+     *                             user-defined parameter points from which a
+     *                             subset will be chosen for building ROMs.
      * @param[in] check_local_rom Compute local ROM error indicator each iteration.
      * @param[in] relative_error_tolerance The relative error tolerance value
      *                                     for which to end the algorithm.
-     * @param[in] alpha A alpha constant to increase greedy algorithm by each
-     *                  iteration.
+     * @param[in] alpha A constant factor to increase the error indicator
+     *                  tolerance each iteration.
      * @param[in] max_clamp A scalar factor representing the maximum amount
      *                      the error indicator tolerance can change per iteration.
      * @param[in] subset_size The size of the random subset.
@@ -132,9 +134,9 @@ public:
     /**
      * @brief Constructor.
      *
-     * @param[in] param_space_min A CAROM::Vectors representing the minimum
+     * @param[in] param_space_min A CAROM::Vector representing the minimum
      *                            of the parameter space domain.
-     * @param[in] param_space_max A CAROM::Vectors representing the maximum
+     * @param[in] param_space_max A CAROM::Vector representing the maximum
      *                            of the parameter space domain.
      * @param[in] num_parameter_points The maximum number of parameter points
      *                                 to sample.
@@ -365,7 +367,12 @@ protected:
     /**
      * @brief Construct the list of parameter point candidates to sample.
      */
-    virtual void constructParameterPoints();
+    virtual void constructParameterPoints() = 0;
+
+    /**
+     * @brief Construct the list of parameter point candidates to sample.
+     */
+    void checkParameterPointInput();
 
     /**
      * @brief Construct the GreedyParameterPointSampler object.
@@ -406,7 +413,7 @@ protected:
     /**
      * @brief Generate a vector of random points.
      *
-     * @param[in] num_points The number of opints to generate
+     * @param[in] num_points The number of points to generate
      *
      * @return A vector of random points.
      */

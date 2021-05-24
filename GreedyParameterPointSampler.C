@@ -391,7 +391,7 @@ GreedyParameterPointSampler::load(
 }
 
 void
-GreedyParameterPointSampler::constructParameterPoints()
+GreedyParameterPointSampler::checkParameterPointInput()
 {
     CAROM_VERIFY(d_min_param_point.dim() == d_max_param_point.dim());
     CAROM_VERIFY(d_num_parameter_points >= 1);
@@ -798,7 +798,7 @@ GreedyParameterPointSampler::getNextConvergencePointRequiringErrorIndicator()
     d_next_point_requiring_error_indicator = -1;
 
     //get next point requiring error indicator
-    while (d_counter < (int) d_convergence_points.size())
+    if (d_counter < (int) d_convergence_points.size())
     {
         d_next_point_requiring_error_indicator = d_counter;
         d_point_requiring_error_indicator_computed = true;

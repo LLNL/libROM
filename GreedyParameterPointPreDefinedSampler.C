@@ -118,7 +118,7 @@ GreedyParameterPointPreDefinedSampler::constructParameterPoints()
         }
     }
 
-    GreedyParameterPointSampler::constructParameterPoints();
+    checkParameterPointInput();
 }
 
 void
