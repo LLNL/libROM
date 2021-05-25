@@ -35,7 +35,8 @@ GreedyParameterPointRandomSampler::GreedyParameterPointRandomSampler(
     std::string output_log_path,
     std::string warm_start_file_name,
     bool use_centroid,
-    int random_seed) :
+    int random_seed,
+    bool debug_algorithm) :
     GreedyParameterPointSampler(
         param_space_min,
         param_space_max,
@@ -49,7 +50,8 @@ GreedyParameterPointRandomSampler::GreedyParameterPointRandomSampler(
         output_log_path,
         warm_start_file_name,
         use_centroid,
-        random_seed
+        random_seed,
+        debug_algorithm
     )
 {
     d_use_latin_hypercube = use_latin_hypercube;
@@ -86,7 +88,8 @@ GreedyParameterPointRandomSampler::GreedyParameterPointRandomSampler(
     std::string output_log_path,
     std::string warm_start_file_name,
     bool use_centroid,
-    int random_seed) :
+    int random_seed,
+    bool debug_algorithm) :
     GreedyParameterPointSampler(
         param_space_min,
         param_space_max,
@@ -100,7 +103,8 @@ GreedyParameterPointRandomSampler::GreedyParameterPointRandomSampler(
         output_log_path,
         warm_start_file_name,
         use_centroid,
-        random_seed
+        random_seed,
+        debug_algorithm
     )
 {
     d_use_latin_hypercube = use_latin_hypercube;
