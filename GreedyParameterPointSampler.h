@@ -480,7 +480,7 @@ protected:
      * @return The index of the point in the list of parameters.
      */
     int
-    getNearestROMIndex(int index, bool ignore_self);
+    getNearestROMIndexToSampledPoint(int index, bool ignore_self);
 
     /**
      * @brief The parameter points to explore.

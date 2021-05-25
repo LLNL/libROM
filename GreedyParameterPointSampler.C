@@ -633,11 +633,11 @@ GreedyParameterPointSampler::getNextPointRequiringRelativeError()
 
     if (d_parameter_sampled_indices.size() == 1)
     {
-        result2 = new Vector(d_parameter_points[getNearestROMIndex(d_next_point_to_sample, false)]);
+        result2 = new Vector(d_parameter_points[getNearestROMIndexToSampledPoint(d_next_point_to_sample, false)]);
     }
     else
     {
-        result2 = new Vector(d_parameter_points[getNearestROMIndex(d_next_point_to_sample, true)]);
+        result2 = new Vector(d_parameter_points[getNearestROMIndexToSampledPoint(d_next_point_to_sample, true)]);
     }
 
     return createGreedyErrorIndicatorPoint(result1, result2);
@@ -671,7 +671,7 @@ GreedyParameterPointSampler::getNextSubsetPointRequiringErrorIndicator()
     if (d_point_requiring_error_indicator_computed)
     {
         Vector* result1 = new Vector(d_parameter_points[d_next_point_requiring_error_indicator]);
-        Vector* result2 = new Vector(d_parameter_points[getNearestROMIndex(d_next_point_requiring_error_indicator, false)]);
+        Vector* result2 = new Vector(d_parameter_points[getNearestROMIndexToSampledPoint(d_next_point_requiring_error_indicator, false)]);
         return createGreedyErrorIndicatorPoint(result1, result2);
     }
     if (d_subset_counter == d_subset_size)
@@ -704,7 +704,7 @@ GreedyParameterPointSampler::getNextSubsetPointRequiringErrorIndicator()
             {
                 // if we have already computed this error indicator at the same local rom, the error indicator will not improve
                 // no need to calculate the error indicator again
-                if (d_parameter_point_local_rom[d_parameter_point_random_indices[d_counter]] == getNearestROMIndex(d_parameter_point_random_indices[d_counter], false))
+                if (d_parameter_point_local_rom[d_parameter_point_random_indices[d_counter]] == getNearestROMIndexToSampledPoint(d_parameter_point_random_indices[d_counter], false))
                 {
                     d_max_error = curr_error;
                     d_next_point_to_sample = d_parameter_point_random_indices[d_counter];
@@ -726,7 +726,7 @@ GreedyParameterPointSampler::getNextSubsetPointRequiringErrorIndicator()
                     d_next_point_requiring_error_indicator = d_parameter_point_random_indices[d_counter];
                     d_point_requiring_error_indicator_computed = true;
                     Vector* result1 = new Vector(d_parameter_points[d_next_point_requiring_error_indicator]);
-                    Vector* result2 = new Vector(d_parameter_points[getNearestROMIndex(d_next_point_requiring_error_indicator, false)]);
+                    Vector* result2 = new Vector(d_parameter_points[getNearestROMIndexToSampledPoint(d_next_point_requiring_error_indicator, false)]);
                     return createGreedyErrorIndicatorPoint(result1, result2);
                 }
             }
@@ -1061,7 +1061,7 @@ GreedyParameterPointSampler::setSubsetErrorIndicator(double proc_errors)
     if (proc_errors < d_parameter_point_errors[d_parameter_point_random_indices[d_counter]])
     {
         d_parameter_point_errors[d_parameter_point_random_indices[d_counter]] = proc_errors;
-        d_parameter_point_local_rom[d_parameter_point_random_indices[d_counter]] = getNearestROMIndex(d_parameter_point_random_indices[d_counter], false);
+        d_parameter_point_local_rom[d_parameter_point_random_indices[d_counter]] = getNearestROMIndexToSampledPoint(d_parameter_point_random_indices[d_counter], false);
     }
 
     printErrorIndicator(d_parameter_points[d_parameter_point_random_indices[d_counter]], proc_errors);
@@ -1237,7 +1237,7 @@ GreedyParameterPointSampler::getNearestNonSampledPoint(Vector point)
 }
 
 int
-GreedyParameterPointSampler::getNearestROMIndex(int index, bool ignore_self)
+GreedyParameterPointSampler::getNearestROMIndexToSampledPoint(int index, bool ignore_self)
 {
 
     CAROM_VERIFY(index >= 0 && index < d_parameter_points.size());
