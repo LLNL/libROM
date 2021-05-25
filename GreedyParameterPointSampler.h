@@ -484,7 +484,8 @@ protected:
     virtual void getNextParameterPointAfterConvergenceFailure() = 0;
 
     /**
-     * @brief Returns the index to the nearest local ROM to the specified parameter point.
+     * @brief Returns the index to the nearest local ROM to the specified
+     *        parameter point index in the parameter point list.
      *
      * @param[in] index The index of the specified parameter point.
      * @param[in] ignore_self Whether to ignore the specified parameter point
@@ -493,7 +494,7 @@ protected:
      * @return The index of the point in the list of parameters.
      */
     int
-    getNearestROMIndexToSampledPoint(int index, bool ignore_self);
+    getNearestROMIndexToParameterPoint(int index, bool ignore_self);
 
     /**
      * @brief The parameter points to explore.
