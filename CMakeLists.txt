@@ -139,8 +139,12 @@ foreach(module IN LISTS module_list)
 endforeach(module) # IN LISTS module_list
 
 list(APPEND source_files
-  Options.h
-  SampleMesh.hpp)
+  Options.h)
+
+if (USE_MFEM)
+    list(APPEND source_files
+      SampleMesh.hpp)
+endif()
 
 list(APPEND source_files
   scalapack_c_wrapper.c
