@@ -63,6 +63,9 @@ if [[ $BUILD_TYPE == "Debug" ]]; then
         git pull
         make pdebug -j MFEM_USE_MPI=YES MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB"
     fi
+    cd $LIB_DIR
+    rm mfem
+    ln -s mfem_debug mfem
 else
     if [ ! -d "mfem_parallel" ]; then
       UPDATE_LIBS=true
@@ -73,4 +76,7 @@ else
         git pull
         make parallel -j MFEM_USE_MPI=YES MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB"
     fi
+    cd $LIB_DIR
+    rm mfem
+    ln -s mfem_parallel mfem
 fi

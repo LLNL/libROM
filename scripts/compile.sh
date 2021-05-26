@@ -49,6 +49,11 @@ if [[ -n "${TOOLCHAIN_FILE}" ]] && [[ $ARDRA == "true" ]]; then
 fi
 
 REPO_PREFIX=$(git rev-parse --show-toplevel)
+
+if [[ $USE_MFEM == "On" ]]; then
+    . ${REPO_PREFIX}/scripts/setup.sh
+fi
+
 if [[ $ARDRA == "true" ]]; then
     mkdir ${REPO_PREFIX}/buildArdra
     pushd ${REPO_PREFIX}/buildArdra
@@ -56,10 +61,6 @@ else
     pushd ${REPO_PREFIX}/build
 fi
 rm -rf *
-
-if [[ $USE_MFEM == "On" ]]; then
-    . ${REPO_PREFIX}/scripts/setup.sh
-fi
 
 if [ "$(uname)" == "Darwin" ]; then
   which -s brew > /dev/null
