@@ -13,4 +13,7 @@ runs:
           ./test_IncrementalSVD
           ./test_RandomizedSVD
           mpirun -n 3 --oversubscribe test_RandomizedSVD
+          ./test_GreedyParameterPointPreDefinedSampler
+          mpirun -n 3 --oversubscribe test_GreedyParameterPointPreDefinedSampler
+
       shell: bash
