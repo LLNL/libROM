@@ -55,6 +55,8 @@
 #include "mfem.hpp"
 #include <fstream>
 #include <iostream>
+#include "BasisGenerator.h"
+#include "BasisReader.h"
 
 using namespace std;
 using namespace mfem;
@@ -74,6 +76,11 @@ int main(int argc, char *argv[])
    bool pa = false;
    const char *device_config = "cpu";
    bool visualization = true;
+   bool visit = true;
+   bool offline = true;
+   int precision = 8;
+   double coef = 1.0;
+   double bcoef = 1.0;
 
    OptionsParser args(argc, argv);
    args.AddOption(&mesh_file, "-m", "--mesh",
@@ -85,11 +92,20 @@ int main(int argc, char *argv[])
                   "--no-static-condensation", "Enable static condensation.");
    args.AddOption(&pa, "-pa", "--partial-assembly", "-no-pa",
                   "--no-partial-assembly", "Enable Partial Assembly.");
+   args.AddOption(&coef, "-cf", "--coefficient",
+                  "Coefficient.");
+   args.AddOption(&bcoef, "-bcf", "--bcoefficient",
+                  "b Coefficient.");
    args.AddOption(&device_config, "-d", "--device",
                   "Device configuration string, see Device::Configure().");
+   args.AddOption(&visit, "-visit", "--visit-datafiles", "-no-visit",
+                  "--no-visit-datafiles",
+                  "Save data files for VisIt (visit.llnl.gov) visualization.");
    args.AddOption(&visualization, "-vis", "--visualization", "-no-vis",
                   "--no-visualization",
                   "Enable or disable GLVis visualization.");
+   args.AddOption(&offline, "-offline", "--offline", "-online", "--online",
+                  "Enable or disable the offline phase.");
    args.Parse();
    if (!args.Good())
    {
@@ -185,12 +201,29 @@ int main(int argc, char *argv[])
       fespace.GetEssentialTrueDofs(ess_bdr, ess_tdof_list);
    }
 
+   // 9. Set BasisGenerator if offline / set BasisReader if online
+   int max_num_snapshots = 100;
+   bool update_right_SV = false;
+   bool isIncremental = false;
+   const std::string basisFileName = "basis";
+   const CAROM::Matrix* spatialbasis;
+   CAROM::Options* options;
+   CAROM::BasisGenerator *generator;
+   DenseMatrix *reducedBasis;
+   int numRowRB, numColumnRB;
+   if (offline) 
+   {
+      options = new CAROM::Options(fespace.GetTrueVSize(), max_num_snapshots, 1, update_right_SV);
+      generator = new CAROM::BasisGenerator(*options, isIncremental, basisFileName);
+   } 
+
    // 9. Set up the parallel linear form b(.) which corresponds to the
    //    right-hand side of the FEM linear system, which in this case is
    //    (1,phi_i) where phi_i are the basis functions in fespace.
    ParLinearForm b(&fespace);
-   ConstantCoefficient one(1.0);
-   b.AddDomainIntegrator(new DomainLFIntegrator(one));
+   ConstantCoefficient one(coef);
+   ConstantCoefficient bone(bcoef);
+   b.AddDomainIntegrator(new DomainLFIntegrator(bone));
    b.Assemble();
 
    // 10. Define the solution vector x as a parallel finite element grid function
@@ -217,29 +250,69 @@ int main(int argc, char *argv[])
    Vector B, X;
    a.FormLinearSystem(ess_tdof_list, x, b, A, X, B);
 
+   if(offline) {
    // 13. Solve the linear system A X = B.
    //     * With full assembly, use the BoomerAMG preconditioner from hypre.
    //     * With partial assembly, use Jacobi smoothing, for now.
-   Solver *prec = NULL;
-   if (pa)
-   {
-      if (UsesTensorBasis(fespace))
+      Solver *prec = NULL;
+      if (pa)
       {
-         prec = new OperatorJacobiSmoother(a, ess_tdof_list);
+          if (UsesTensorBasis(fespace))
+          {
+            prec = new OperatorJacobiSmoother(a, ess_tdof_list);
+          }
       }
+      else
+      {
+          prec = new HypreBoomerAMG;
+      }
+      CGSolver cg(MPI_COMM_WORLD);
+      cg.SetRelTol(1e-12);
+      cg.SetMaxIter(2000);
+      cg.SetPrintLevel(1);
+      if (prec) { cg.SetPreconditioner(*prec); }
+      cg.SetOperator(*A);
+      cg.Mult(B, X);
+      delete prec;
+
+   // 14. take sample
+      bool addSample = generator->takeSample(X.GetData(), 0.0, 0.01);
+
+   // 15. static SVD
+      generator->getSpatialBasis();
+      generator->endSamples();
+      if (myid == 0)
+      {
+        printf("ROM dimension = %d\n",numColumnRB);
+      }
+      delete generator;
+      delete options;
+   } else { // online
+      CAROM::BasisReader reader(basisFileName);
+      spatialbasis = reader.getSpatialBasis(0.0);
+      numRowRB = spatialbasis->numRows();
+      numColumnRB = spatialbasis->numColumns();
+      if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB, numColumnRB);
+      reducedBasis = new DenseMatrix(spatialbasis->getData(), numColumnRB, numRowRB);
+      reducedBasis->Transpose();
+      CAROM::Matrix dummy(spatialbasis->getData(), numRowRB, numColumnRB, true);
+      Vector abv(numRowRB), bv(numRowRB), bv2(numRowRB);
+      Vector reducedRHS(numColumnRB), reducedSol(numColumnRB);
+      DenseMatrix invReducedA(numColumnRB);
+      for(int j=0; j < numColumnRB; ++j) {
+        bv.SetData(reducedBasis->GetColumn(j));
+        A->Mult(bv, abv);
+        reducedRHS(j) = bv*B; 
+        for(int i=0; i<numColumnRB; ++i) {
+           reducedBasis->GetColumn(i, bv2);
+           invReducedA(i,j) = abv*bv2;
+        }
+      }
+      invReducedA.Invert();
+      invReducedA.Mult(reducedRHS, reducedSol);
+      reducedBasis->Mult(reducedSol,X); // restore full state
+      delete reducedBasis;
    }
-   else
-   {
-      prec = new HypreBoomerAMG;
-   }
-   CGSolver cg(MPI_COMM_WORLD);
-   cg.SetRelTol(1e-12);
-   cg.SetMaxIter(2000);
-   cg.SetPrintLevel(1);
-   if (prec) { cg.SetPreconditioner(*prec); }
-   cg.SetOperator(*A);
-   cg.Mult(B, X);
-   delete prec;
 
    // 14. Recover the parallel grid function corresponding to X. This is the
    //     local finite element solution on each processor.
@@ -261,7 +334,19 @@ int main(int argc, char *argv[])
       x.Save(sol_ofs);
    }
 
-   // 16. Send the solution by socket to a GLVis server.
+   // 16. Save data in the VisIt format.
+   DataCollection *dc = NULL;
+   if (visit)
+   {
+      if(offline) dc = new VisItDataCollection("Example1", &pmesh);
+      else dc = new VisItDataCollection("Example1_rom", &pmesh);
+      dc->SetPrecision(precision);
+      dc->RegisterField("solution", &x);
+      dc->Save();
+      delete dc;
+   }
+
+   // 17. Send the solution by socket to a GLVis server. 
    if (visualization)
    {
       char vishost[] = "localhost";
@@ -272,7 +357,7 @@ int main(int argc, char *argv[])
       sol_sock << "solution\n" << pmesh << x << flush;
    }
 
-   // 17. Free the used memory.
+   // 18. Free the used memory.
    if (delete_fec)
    {
       delete fec;
