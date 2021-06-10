@@ -131,6 +131,7 @@ set(module_list
   HDFDatabase
   Utilities
   ParallelBuffer
+  DMD
   DEIM
   QDEIM
   GNAT
@@ -234,6 +235,7 @@ if(GTEST_FOUND)
   set(unit_test_stems
     Vector
     Matrix
+    DMD
     DEIM
     GNAT
     QDEIM
