@@ -43,10 +43,11 @@ set(libROM_CMAKE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 set(libROM_CMAKE_MODULE_PATH ${libROM_CMAKE_PATH}/modules)
 list(APPEND CMAKE_MODULE_PATH ${libROM_CMAKE_MODULE_PATH})
 
+option(USE_MFEM "Build libROM with MFEM" OFF)
+
 include(FortranCInterface)
 FortranCInterface_HEADER(${CMAKE_SOURCE_DIR}/FCMangle.h
   MACRO_NAMESPACE "CAROM_FC_")
-
 ## Set a bunch of variables to generate a configure header
 # Enable assertion checking if debug symbols generated
 if((CMAKE_BUILD_TYPE STREQUAL "Debug") OR
@@ -144,6 +145,11 @@ endforeach(module) # IN LISTS module_list
 list(APPEND source_files
   Options.h)
 
+if (USE_MFEM)
+    list(APPEND source_files
+      SampleMesh.hpp)
+endif()
+
 list(APPEND source_files
   scalapack_c_wrapper.c
   scalapack_f_wrapper.f90)
@@ -183,6 +189,16 @@ find_package(Doxygen 1.8.5)
 
 find_package(GTest 1.6.0)
 
+if (USE_MFEM)
+    find_library(MFEM mfem "${CMAKE_SOURCE_DIR}/dependencies/mfem")
+    find_library(HYPRE HYPRE "${CMAKE_SOURCE_DIR}/dependencies/hypre/src/hypre/lib")
+    find_library(PARMETIS parmetis "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/build/lib/libparmetis")
+    find_library(METIS metis "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/build/lib/libmetis")
+    find_path(MFEM_INCLUDES mfem.hpp "${CMAKE_SOURCE_DIR}/dependencies/mfem")
+    find_path(HYPRE_INCLUDES HYPRE.h "${CMAKE_SOURCE_DIR}/dependencies/hypre/src/hypre/include")
+    find_path(PARMETIS_INCLUDES metis.h "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/metis/include")
+endif()
+
 # PUBLIC dependencies are transitive; these dependencies are used in
 # the API headers *and* in their implementations
 #
@@ -199,18 +215,39 @@ find_package(GTest 1.6.0)
 # 3.0.
 target_link_libraries(ROM
   PUBLIC ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran ${HDF5_LIBRARIES}
-  ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES}
+  ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} ${MFEM} ${HYPRE} ${PARMETIS} ${METIS}
   PRIVATE ${ZLIB_LIBRARIES} ZLIB::ZLIB)
 
 target_include_directories(ROM PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}
+  ${MFEM_INCLUDES}
+  ${HYPRE_INCLUDES}
+  ${PARMETIS_INCLUDES}
   ${HDF5_C_INCLUDE_DIRS}
   ${MPI_C_INCLUDE_DIRS}
+  ${MFEM_C_INCLUDE_DIRS}
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Use the C++11 standard as an entire feature instead of
 # enumerating individual compiler features for simplicity
 target_compile_features(ROM PRIVATE cxx_std_11)
+
+if (USE_MFEM)
+  set(examples
+    ex1p
+    ex16p)
+
+  foreach(name IN LISTS examples)
+    add_executable(${name} examples/${name}.cpp)
+
+    target_link_libraries(${name}
+      PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
+    target_include_directories(${name}
+      PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+      ${MPI_C_INCLUDE_DIRS})
+    target_compile_features(${name} PRIVATE cxx_std_11)
+  endforeach(name) # IN LISTS examples
+endif()
 
 set(regression_test_names
   smoke_test
