@@ -1,4 +1,4 @@
-//                       MFEM libROM Example 1 parametric ROM Laplace problem 
+//               libROM MFEM Example 1 parametric ROM Laplace problem 
 //
 // Compile with: ./scripts/compile.sh -m 
 //
