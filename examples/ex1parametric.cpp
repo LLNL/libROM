@@ -1,56 +1,30 @@
-//                       MFEM Example 1 - Parallel Version
+//                       MFEM libROM Example 1 - Parallel Version
 //
-// Compile with: make ex1p
+// Compile with: ./scripts/compile.sh -m 
 //
-// Sample runs:  mpirun -np 4 ex1p -m ../data/square-disc.mesh
-//               mpirun -np 4 ex1p -m ../data/star.mesh
-//               mpirun -np 4 ex1p -m ../data/star-mixed.mesh
-//               mpirun -np 4 ex1p -m ../data/escher.mesh
-//               mpirun -np 4 ex1p -m ../data/fichera.mesh
-//               mpirun -np 4 ex1p -m ../data/fichera-mixed.mesh
-//               mpirun -np 4 ex1p -m ../data/toroid-wedge.mesh
-//               mpirun -np 4 ex1p -m ../data/periodic-annulus-sector.msh
-//               mpirun -np 4 ex1p -m ../data/periodic-torus-sector.msh
-//               mpirun -np 4 ex1p -m ../data/square-disc-p2.vtk -o 2
-//               mpirun -np 4 ex1p -m ../data/square-disc-p3.mesh -o 3
-//               mpirun -np 4 ex1p -m ../data/square-disc-nurbs.mesh -o -1
-//               mpirun -np 4 ex1p -m ../data/star-mixed-p2.mesh -o 2
-//               mpirun -np 4 ex1p -m ../data/disc-nurbs.mesh -o -1
-//               mpirun -np 4 ex1p -m ../data/pipe-nurbs.mesh -o -1
-//               mpirun -np 4 ex1p -m ../data/ball-nurbs.mesh -o 2
-//               mpirun -np 4 ex1p -m ../data/fichera-mixed-p2.mesh -o 2
-//               mpirun -np 4 ex1p -m ../data/star-surf.mesh
-//               mpirun -np 4 ex1p -m ../data/square-disc-surf.mesh
-//               mpirun -np 4 ex1p -m ../data/inline-segment.mesh
-//               mpirun -np 4 ex1p -m ../data/amr-quad.mesh
-//               mpirun -np 4 ex1p -m ../data/amr-hex.mesh
-//               mpirun -np 4 ex1p -m ../data/mobius-strip.mesh
-//               mpirun -np 4 ex1p -m ../data/mobius-strip.mesh -o -1 -sc
+// Description:  This example code demonstrates the use of MFEM and libROM to
 //
-// Device sample runs:
-//               mpirun -np 4 ex1p -pa -d cuda
-//               mpirun -np 4 ex1p -pa -d occa-cuda
-//               mpirun -np 4 ex1p -pa -d raja-omp
-//               mpirun -np 4 ex1p -pa -d ceed-cpu
-//             * mpirun -np 4 ex1p -pa -d ceed-cuda
-//             * mpirun -np 4 ex1p -pa -d ceed-hip
-//               mpirun -np 4 ex1p -pa -d ceed-cuda:/gpu/cuda/shared
-//               mpirun -np 4 ex1p -m ../data/beam-tet.mesh -pa -d ceed-cpu
+//               define a simple projection-based reduced order model of the
+//               Laplace problem -Delta u = f(x) with homogeneous Dirichlet
+//               boundary conditions and spatially varying right hand side f.  
 //
-// Description:  This example code demonstrates the use of MFEM to define a
-//               simple finite element discretization of the Laplace problem
-//               -Delta u = 1 with homogeneous Dirichlet boundary conditions.
-//               Specifically, we discretize using a FE space of the specified
-//               order, or if order < 1 using an isoparametric/isogeometric
-//               space (i.e. quadratic for quadratic curvilinear mesh, NURBS for
-//               NURBS mesh, etc.)
+//               The example highlights the three distinct processes, i.e.,
+//               offline, merge, and online. The offline phase runs MFEM full
+//               order model and store the snapshot data in HDF file. You can
+//               run as many offline phases as you wish to sample the parameter
+//               space.  The merge phase reads all the snapshot files, builds a
+//               global reduced basis, and stores the basis in a HDF file.  The
+//               online phase reads the basis, builds ROM operator, and solves
+//               reduced order system.
 //
-//               The example highlights the use of mesh refinement, finite
-//               element grid functions, as well as linear and bilinear forms
-//               corresponding to the left-hand side and right-hand side of the
-//               discrete linear system. We also cover the explicit elimination
-//               of essential boundary conditions, static condensation, and the
-//               optional connection to the GLVis tool for visualization.
+// Offline phase: ex1parametric -offline -f 1.0 -id 0
+//                ex1parametric -offline -f 1.1 -id 1
+//                ex1parametric -offline -f 1.2 -id 2
+//               
+// Merge phase:   ex1parametric -merge -ns 3
+//
+// Online phase:  ex1parametric -online -f 1.15
+//
 
 #include "mfem.hpp"
 #include <fstream>
@@ -60,6 +34,11 @@
 
 using namespace std;
 using namespace mfem;
+
+// rhs function. See below for implementation.
+double rhs(const Vector &);
+double freq = 1.0, kappa;
+int dim;
 
 int main(int argc, char *argv[])
 {
@@ -77,10 +56,13 @@ int main(int argc, char *argv[])
    const char *device_config = "cpu";
    bool visualization = true;
    bool visit = true;
-   bool offline = true;
+   bool offline = false;
+   bool merge = false;
+   bool online = false;
    int precision = 8;
+   int id = 0;
+   int nsets = 0;
    double coef = 1.0;
-   double bcoef = 1.0;
 
    OptionsParser args(argc, argv);
    args.AddOption(&mesh_file, "-m", "--mesh",
@@ -88,14 +70,16 @@ int main(int argc, char *argv[])
    args.AddOption(&order, "-o", "--order",
                   "Finite element order (polynomial degree) or -1 for"
                   " isoparametric space.");
+   args.AddOption(&id, "-id", "--id", "Parametric id");
+   args.AddOption(&nsets, "-ns", "--nset", "Number of parametric snapshot sets");
    args.AddOption(&static_cond, "-sc", "--static-condensation", "-no-sc",
                   "--no-static-condensation", "Enable static condensation.");
    args.AddOption(&pa, "-pa", "--partial-assembly", "-no-pa",
                   "--no-partial-assembly", "Enable Partial Assembly.");
+   args.AddOption(&freq, "-f", "--frequency", "Set the frequency for the exact"
+                  " solution.");
    args.AddOption(&coef, "-cf", "--coefficient",
                   "Coefficient.");
-   args.AddOption(&bcoef, "-bcf", "--bcoefficient",
-                  "b Coefficient.");
    args.AddOption(&device_config, "-d", "--device",
                   "Device configuration string, see Device::Configure().");
    args.AddOption(&visit, "-visit", "--visit-datafiles", "-no-visit",
@@ -104,8 +88,12 @@ int main(int argc, char *argv[])
    args.AddOption(&visualization, "-vis", "--visualization", "-no-vis",
                   "--no-visualization",
                   "Enable or disable GLVis visualization.");
-   args.AddOption(&offline, "-offline", "--offline", "-online", "--online",
+   args.AddOption(&offline, "-offline", "--offline", "-no-offline", "--no-offline",
                   "Enable or disable the offline phase.");
+   args.AddOption(&online, "-online", "--online", "-no-online", "--no-online",
+                  "Enable or disable the online phase.");
+   args.AddOption(&merge, "-merge", "--merge", "-no-merge", "--no-merge",
+                  "Enable or disable the merge phase.");
    args.Parse();
    if (!args.Good())
    {
@@ -120,6 +108,10 @@ int main(int argc, char *argv[])
    {
       args.PrintOptions(cout);
    }
+   kappa = freq * M_PI;
+
+   bool check = (offline && !merge && !online) || (!offline && merge && !online) || (!offline && !merge && online);
+   MFEM_VERIFY(check, "only one of offline, merge, or online must be true!"); 
 
    // 3. Enable hardware devices such as GPUs, and programming models such as
    //    CUDA, OCCA, RAJA and OpenMP based on command line options.
@@ -130,7 +122,7 @@ int main(int argc, char *argv[])
    //    can handle triangular, quadrilateral, tetrahedral, hexahedral, surface
    //    and volume meshes with the same code.
    Mesh mesh(mesh_file, 1, 1);
-   int dim = mesh.Dimension();
+   dim = mesh.Dimension();
 
    // 5. Refine the serial mesh on all processors to increase the resolution. In
    //    this example we do 'ref_levels' of uniform refinement. We choose
@@ -202,46 +194,73 @@ int main(int argc, char *argv[])
    }
 
    // 9. Initiate ROM related variables
-   //    Set BasisGenerator if offline 
    int max_num_snapshots = 100;
    bool update_right_SV = false;
    bool isIncremental = false;
-   const std::string basisFileName = "basis";
+   const std::string basisName = "disp";
+   const std::string basisFileName = basisName + std::to_string(id);
    const CAROM::Matrix* spatialbasis;
    CAROM::Options* options;
    CAROM::BasisGenerator *generator;
    DenseMatrix *reducedBasis;
    int numRowRB, numColumnRB;
-   StopWatch solveTimer;
+   StopWatch solveTimer, assembleTimer, mergeTimer;
+
+   // 10. Set BasisGenerator if offline 
    if (offline) 
    {
       options = new CAROM::Options(fespace.GetTrueVSize(), max_num_snapshots, 1, update_right_SV);
       generator = new CAROM::BasisGenerator(*options, isIncremental, basisFileName);
-   } 
+   }
 
-   // 10. Set up the parallel linear form b(.) which corresponds to the
-   //    right-hand side of the FEM linear system, which in this case is
-   //    (1,phi_i) where phi_i are the basis functions in fespace.
-   ParLinearForm b(&fespace);
-   ConstantCoefficient one(coef);
-   ConstantCoefficient bone(bcoef);
-   b.AddDomainIntegrator(new DomainLFIntegrator(bone));
-   b.Assemble();
+   // 11. The merge phase
+   if (merge) 
+   {
+      mergeTimer.Start();
+      std::unique_ptr<CAROM::BasisGenerator> basis_generator;
+      options = new CAROM::Options(fespace.GetTrueVSize(), max_num_snapshots, 1, update_right_SV);
+      generator = new CAROM::BasisGenerator(*options, isIncremental, basisName);
+      for (int paramID=0; paramID<nsets; ++paramID)
+      {
+        std::string snapshot_filename = basisName + std::to_string(paramID) + "_snapshot";
+        generator->loadSamples(snapshot_filename,"snapshot");
+      }
+      generator->writeSnapshot();
+      generator->endSamples(); // save the merged basis file
+      mergeTimer.Stop();
+      if (myid == 0) 
+      {
+        printf("Elapsed time for merging and building ROM basis: %e second\n", mergeTimer.RealTime());
+      }
+      delete generator;
+      delete options;
+      return 0;
+   }
 
-   // 11. Define the solution vector x as a parallel finite element grid function
+   // 12. Set up the parallel linear form b(.) which corresponds to the
+   //     right-hand side of the FEM linear system, which in this case is
+   //     (f,phi_i) where f is given by the function f_exact and phi_i are the
+   //     basis functions in the finite element fespace.
+   ParLinearForm *b = new ParLinearForm(&fespace);
+   FunctionCoefficient f(rhs);
+   b->AddDomainIntegrator(new DomainLFIntegrator(f));
+   b->Assemble();
+
+   // 13. Define the solution vector x as a parallel finite element grid function
    //     corresponding to fespace. Initialize x with initial guess of zero,
    //     which satisfies the boundary conditions.
    ParGridFunction x(&fespace);
    x = 0.0;
 
-   // 12. Set up the parallel bilinear form a(.,.) on the finite element space
+   // 14. Set up the parallel bilinear form a(.,.) on the finite element space
    //     corresponding to the Laplacian operator -Delta, by adding the Diffusion
    //     domain integrator.
    ParBilinearForm a(&fespace);
+   ConstantCoefficient one(coef);
    if (pa) { a.SetAssemblyLevel(AssemblyLevel::PARTIAL); }
    a.AddDomainIntegrator(new DiffusionIntegrator(one));
 
-   // 13. Assemble the parallel bilinear form and the corresponding linear
+   // 15. Assemble the parallel bilinear form and the corresponding linear
    //     system, applying any necessary transformations such as: parallel
    //     assembly, eliminating boundary conditions, applying conforming
    //     constraints for non-conforming AMR, static condensation, etc.
@@ -250,12 +269,12 @@ int main(int argc, char *argv[])
 
    OperatorPtr A;
    Vector B, X;
-   a.FormLinearSystem(ess_tdof_list, x, b, A, X, B);
+   a.FormLinearSystem(ess_tdof_list, x, *b, A, X, B);
 
-   if(offline) {
-   // 14. Solve the full order linear system A X = B if offline
-   //     * With full assembly, use the BoomerAMG preconditioner from hypre.
-   //     * With partial assembly, use Jacobi smoothing, for now.
+   // 16. The offline phase
+   if(offline) 
+   {
+      // 17. Solve the full order linear system A X = B
       Solver *prec = NULL;
       if (pa)
       {
@@ -264,7 +283,7 @@ int main(int argc, char *argv[])
             prec = new OperatorJacobiSmoother(a, ess_tdof_list);
           }
       }
-      else
+      else 
       {
           prec = new HypreBoomerAMG;
       }
@@ -279,27 +298,27 @@ int main(int argc, char *argv[])
       solveTimer.Stop();
       delete prec;
 
-   // 15. take sample for ROM
+      // 18. take and write snapshot for ROM
       bool addSample = generator->takeSample(X.GetData(), 0.0, 0.01);
-
-   // 16. static SVD to 
-      generator->getSpatialBasis();
+      generator->writeSnapshot();
       generator->endSamples();
-      if (myid == 0)
-      {
-        printf("ROM dimension = %d\n",numColumnRB);
-      }
       delete generator;
       delete options;
-   } else { // online
-      CAROM::BasisReader reader(basisFileName);
+   } 
+
+   // 19. The online phase
+   if (online) { 
+      // 20. read the reduced basis
+      assembleTimer.Start();
+      CAROM::BasisReader reader(basisName);
       spatialbasis = reader.getSpatialBasis(0.0);
       numRowRB = spatialbasis->numRows();
       numColumnRB = spatialbasis->numColumns();
       if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB, numColumnRB);
       reducedBasis = new DenseMatrix(spatialbasis->getData(), numColumnRB, numRowRB);
-      reducedBasis->Transpose();
-      CAROM::Matrix dummy(spatialbasis->getData(), numRowRB, numColumnRB, true);
+      reducedBasis->Transpose(); // libROM stores the matrix in row-wise 
+
+      // 21. form inverse ROM operator
       Vector abv(numRowRB), bv(numRowRB), bv2(numRowRB);
       Vector reducedRHS(numColumnRB), reducedSol(numColumnRB);
       DenseMatrix invReducedA(numColumnRB);
@@ -313,18 +332,23 @@ int main(int argc, char *argv[])
         }
       }
       invReducedA.Invert();
+      assembleTimer.Stop();
+
+      // 22. solve ROM
       solveTimer.Start();
       invReducedA.Mult(reducedRHS, reducedSol);
       solveTimer.Stop();
-      reducedBasis->Mult(reducedSol,X); // restore full state
+
+      // 23. reconstruct FOM state
+      reducedBasis->Mult(reducedSol,X); 
       delete reducedBasis;
    }
 
-   // 17. Recover the parallel grid function corresponding to X. This is the
+   // 24. Recover the parallel grid function corresponding to X. This is the
    //     local finite element solution on each processor.
-   a.RecoverFEMSolution(X, b, x);
+   a.RecoverFEMSolution(X, *b, x);
 
-   // 18. Save the refined mesh and the solution in parallel. This output can
+   // 25. Save the refined mesh and the solution in parallel. This output can
    //     be viewed later using GLVis: "glvis -np <np> -m mesh -g sol".
    {
       ostringstream mesh_name, sol_name;
@@ -332,45 +356,53 @@ int main(int argc, char *argv[])
       sol_name << "sol." << setfill('0') << setw(6) << myid;
 
       ofstream mesh_ofs(mesh_name.str().c_str());
-      mesh_ofs.precision(8);
+      mesh_ofs.precision(precision);
       pmesh.Print(mesh_ofs);
 
       ofstream sol_ofs(sol_name.str().c_str());
-      sol_ofs.precision(8);
+      sol_ofs.precision(precision);
       x.Save(sol_ofs);
    }
 
-   // 19. Save data in the VisIt format.
+   // 26. Save data in the VisIt format.
    DataCollection *dc = NULL;
    if (visit)
    {
       if(offline) dc = new VisItDataCollection("Example1", &pmesh);
-      else dc = new VisItDataCollection("Example1_rom", &pmesh);
+      else if(online) dc = new VisItDataCollection("Example1_rom", &pmesh);
       dc->SetPrecision(precision);
       dc->RegisterField("solution", &x);
       dc->Save();
       delete dc;
    }
 
-   // 20. Send the solution by socket to a GLVis server. 
+   // 27. Send the solution by socket to a GLVis server. 
    if (visualization)
    {
       char vishost[] = "localhost";
       int  visport   = 19916;
       socketstream sol_sock(vishost, visport);
       sol_sock << "parallel " << num_procs << " " << myid << "\n";
-      sol_sock.precision(8);
+      sol_sock.precision(precision);
       sol_sock << "solution\n" << pmesh << x << flush;
    }
 
-   // 21. print timing info
+   // 28. print timing info
    if (myid == 0) 
    {
-      if(offline) printf("Elapsed time for solving FOM: %e second\n", solveTimer.RealTime());
-      else printf("Elapsed time for solving ROM: %e second\n", solveTimer.RealTime());
+      if(offline) 
+      {
+        printf("Elapsed time for assembling FOM: %e second\n", assembleTimer.RealTime());
+        printf("Elapsed time for solving FOM: %e second\n", solveTimer.RealTime());
+      }
+      if(online) 
+      {
+        printf("Elapsed time for assembling ROM: %e second\n", assembleTimer.RealTime());
+        printf("Elapsed time for solving ROM: %e second\n", solveTimer.RealTime());
+      }
    }
 
-   // 22. Free the used memory.
+   // 29. Free the used memory.
    if (delete_fec)
    {
       delete fec;
@@ -378,4 +410,18 @@ int main(int argc, char *argv[])
    MPI_Finalize();
 
    return 0;
+}
+
+// 30. define spatially varying righthand side function
+double rhs(const Vector &x)
+{
+   if (dim == 3)
+   {
+      return sin(kappa * (x(0) + x(1) + x(2)));
+   }
+   else
+   {
+      return sin(kappa * (x(0) + x(1)));
+   }
+
 }
