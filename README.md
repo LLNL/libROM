@@ -2,7 +2,7 @@
 
 libROM is a free, lightweight, scalable C++ library for data-driven physical
 simulation methods from the intrusive projection-based reduced order models to
-non-intrusive black-box approaches. 
+non-intrusive black-box approaches.
 
 ## Features
 
@@ -57,15 +57,13 @@ To compile libROM with default build settings (Mac and LLNL LC Machines):
  ./scripts/compile.sh
 ```
 
-To compile libROM for Ardra (LLNL LC Machines only):
-```sh
-./scripts/ardra_compile.sh
-```
+Compilation options:
 
-To compile libROM using a different toolchain within cmake/toolchains (Mac and LLNL LC Machines):
-```sh
-./scripts/toolchain_compile.sh toolchain.cmake
-```
+- -a: Compile a special build for the LLNL codebase: Ardra
+- -d: Compile in debug mode.
+- -m: Compile with MFEM (required to run the libROM examples)
+- -t: Use your own cmake/toolchain
+- -u: Update all of libROM's dependencies.
 
 # Installing via Spack
 
