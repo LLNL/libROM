@@ -234,6 +234,7 @@ target_compile_features(ROM PRIVATE cxx_std_11)
 if (USE_MFEM)
   set(examples
     ex1parametric
+    ex9p
     ex16p)
 
   foreach(name IN LISTS examples)

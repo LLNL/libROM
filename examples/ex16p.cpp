@@ -99,15 +99,15 @@ int main(int argc, char *argv[])
    // 2. Parse command-line options.
    const char *mesh_file = "../dependencies/mfem/data/star.mesh";
    int ser_ref_levels = 2;
-   int par_ref_levels = 1;
-   int order = 2;
+   int par_ref_levels = 2;
+   int order = 3;
    int ode_solver_type = 3;
    double t_final = 0.5;
    double dt = 1.0e-2;
    double alpha = 1.0e-2;
    double kappa = 0.5;
    bool visualization = true;
-   bool visit = false;
+   bool visit = true;
    int vis_steps = 5;
    bool adios2 = false;
 
