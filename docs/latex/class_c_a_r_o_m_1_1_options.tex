@@ -1,0 +1,310 @@
+\hypertarget{class_c_a_r_o_m_1_1_options}{\section{C\-A\-R\-O\-M\-:\-:Options Class Reference}
+\label{class_c_a_r_o_m_1_1_options}\index{C\-A\-R\-O\-M\-::\-Options@{C\-A\-R\-O\-M\-::\-Options}}
+}
+
+
+{\ttfamily \#include $<$Options.\-h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{class_c_a_r_o_m_1_1_options_a874b8ffeae177a17d13aa1dacd54b3b1}{Options} (int dim\-\_\-, int samples\-\_\-per\-\_\-time\-\_\-interval\-\_\-, int max\-\_\-time\-\_\-intervals\-\_\-=-\/1, bool update\-\_\-right\-\_\-\-S\-V\-\_\-=false, bool write\-\_\-snapshots\-\_\-=false)
+\begin{DoxyCompactList}\small\item\em Constructor. \end{DoxyCompactList}\item 
+\hyperlink{class_c_a_r_o_m_1_1_options}{Options} \hyperlink{class_c_a_r_o_m_1_1_options_a7a4f3556eb166ad69a36f6afdd38fc34}{set\-Max\-Basis\-Dimension} (int max\-\_\-basis\-\_\-dimension\-\_\-)
+\begin{DoxyCompactList}\small\item\em Sets the maximum basis dimension of the \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm. \end{DoxyCompactList}\item 
+\hyperlink{class_c_a_r_o_m_1_1_options}{Options} \hyperlink{class_c_a_r_o_m_1_1_options_a4be02c86ed3eac7648c46c7df04b1ef3}{set\-Singular\-Value\-Tol} (double singular\-\_\-value\-\_\-tol\-\_\-)
+\begin{DoxyCompactList}\small\item\em Sets the singular value tolerance of the \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm. \end{DoxyCompactList}\item 
+\hyperlink{class_c_a_r_o_m_1_1_options}{Options} \hyperlink{class_c_a_r_o_m_1_1_options_a8ab6dca0209a9631b2f2d92d25266a3b}{set\-Debug\-Mode} (bool debug\-\_\-algorithm\-\_\-)
+\begin{DoxyCompactList}\small\item\em Sets whether debugging is turned on. \end{DoxyCompactList}\item 
+\hyperlink{class_c_a_r_o_m_1_1_options}{Options} \hyperlink{class_c_a_r_o_m_1_1_options_a9671d1b229b77ad7920e34538fffe545}{set\-Randomized\-S\-V\-D} (bool randomized\-\_\-, int randomized\-\_\-subspace\-\_\-dim\-\_\-=-\/1, int random\-\_\-seed\-\_\-=1)
+\begin{DoxyCompactList}\small\item\em Sets the parameters of the randomized \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm. \end{DoxyCompactList}\item 
+\hyperlink{class_c_a_r_o_m_1_1_options}{Options} \hyperlink{class_c_a_r_o_m_1_1_options_a7645650c79d11d98e5bcbcda17082427}{set\-Incremental\-S\-V\-D} (double linearity\-\_\-tol\-\_\-, double initial\-\_\-dt\-\_\-, double sampling\-\_\-tol\-\_\-, double max\-\_\-time\-\_\-between\-\_\-samples\-\_\-, bool fast\-\_\-update\-\_\-=false, bool skip\-\_\-linearly\-\_\-dependent\-\_\-=false)
+\begin{DoxyCompactList}\small\item\em Sets the essential parameters of the incremental \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm. \end{DoxyCompactList}\item 
+\hyperlink{class_c_a_r_o_m_1_1_options}{Options} \hyperlink{class_c_a_r_o_m_1_1_options_abd0d6542bd910164fbbf5065928a4b44}{set\-State\-I\-O} (bool save\-\_\-state\-\_\-, bool restore\-\_\-state\-\_\-)
+\begin{DoxyCompactList}\small\item\em Sets the state I\-O parameters of the incremental \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm. \end{DoxyCompactList}\item 
+\hyperlink{class_c_a_r_o_m_1_1_options}{Options} \hyperlink{class_c_a_r_o_m_1_1_options_a61449695e0b8e088c19a66702e1b30be}{set\-Sampling\-Time\-Step\-Scale} (double min\-\_\-sampling\-\_\-time\-\_\-step\-\_\-scale\-\_\-, double sampling\-\_\-time\-\_\-step\-\_\-scale\-\_\-, double max\-\_\-sampling\-\_\-time\-\_\-step\-\_\-scale\-\_\-)
+\begin{DoxyCompactList}\small\item\em Sets the sampling time step scaling of the incremental \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_c_a_r_o_m_1_1_options_a3dcbbe0328d917370440fe46e4079066}{int \hyperlink{class_c_a_r_o_m_1_1_options_a3dcbbe0328d917370440fe46e4079066}{dim} = -\/1}\label{class_c_a_r_o_m_1_1_options_a3dcbbe0328d917370440fe46e4079066}
+
+\begin{DoxyCompactList}\small\item\em The dimension of the system on this processor. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_options_a3cd57273c5f4ad1529e7bde0423905b4}{int \hyperlink{class_c_a_r_o_m_1_1_options_a3cd57273c5f4ad1529e7bde0423905b4}{samples\-\_\-per\-\_\-time\-\_\-interval} = -\/1}\label{class_c_a_r_o_m_1_1_options_a3cd57273c5f4ad1529e7bde0423905b4}
+
+\begin{DoxyCompactList}\small\item\em The number of samples per time interval. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_options_adbab54dd56b332ca53a07fbe86db38d8}{int \hyperlink{class_c_a_r_o_m_1_1_options_adbab54dd56b332ca53a07fbe86db38d8}{max\-\_\-time\-\_\-intervals} = -\/1}\label{class_c_a_r_o_m_1_1_options_adbab54dd56b332ca53a07fbe86db38d8}
+
+\begin{DoxyCompactList}\small\item\em The maximum number of time intervals. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_options_a9b8bf5620184c454562ff8a20a945455}{bool \hyperlink{class_c_a_r_o_m_1_1_options_a9b8bf5620184c454562ff8a20a945455}{update\-\_\-right\-\_\-\-S\-V} = false}\label{class_c_a_r_o_m_1_1_options_a9b8bf5620184c454562ff8a20a945455}
+
+\begin{DoxyCompactList}\small\item\em Whether to update the right singular values. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_options_a11c7ea4437d805fa63076ed99d77b72e}{bool \hyperlink{class_c_a_r_o_m_1_1_options_a11c7ea4437d805fa63076ed99d77b72e}{write\-\_\-snapshots} = false}\label{class_c_a_r_o_m_1_1_options_a11c7ea4437d805fa63076ed99d77b72e}
+
+\begin{DoxyCompactList}\small\item\em Whether to write snapshots or bases. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_options_ad0857e9143399ed45372af5fc93fcc04}{int \hyperlink{class_c_a_r_o_m_1_1_options_ad0857e9143399ed45372af5fc93fcc04}{max\-\_\-basis\-\_\-dimension} = -\/1}\label{class_c_a_r_o_m_1_1_options_ad0857e9143399ed45372af5fc93fcc04}
+
+\begin{DoxyCompactList}\small\item\em The maximum dimension of the basis. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_options_a4ea6403c2691e27ae93e2c90278ddd07}{double \hyperlink{class_c_a_r_o_m_1_1_options_a4ea6403c2691e27ae93e2c90278ddd07}{singular\-\_\-value\-\_\-tol} = 0}\label{class_c_a_r_o_m_1_1_options_a4ea6403c2691e27ae93e2c90278ddd07}
+
+\begin{DoxyCompactList}\small\item\em The singular value tolerance used in the \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_options_a0ddd46bec99881ccc905c685fe566780}{bool \hyperlink{class_c_a_r_o_m_1_1_options_a0ddd46bec99881ccc905c685fe566780}{debug\-\_\-algorithm} = false}\label{class_c_a_r_o_m_1_1_options_a0ddd46bec99881ccc905c685fe566780}
+
+\begin{DoxyCompactList}\small\item\em Whether debugging is turned on (any randomness is turned off). \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_options_a97db01507e0bf9e499ab2dc85237307e}{bool \hyperlink{class_c_a_r_o_m_1_1_options_a97db01507e0bf9e499ab2dc85237307e}{randomized} = false}\label{class_c_a_r_o_m_1_1_options_a97db01507e0bf9e499ab2dc85237307e}
+
+\begin{DoxyCompactList}\small\item\em Whether to use the randomized \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_options_a2d0dcbbbfc18af3d987cbb9f5d289cef}{int \hyperlink{class_c_a_r_o_m_1_1_options_a2d0dcbbbfc18af3d987cbb9f5d289cef}{randomized\-\_\-subspace\-\_\-dim} = -\/1}\label{class_c_a_r_o_m_1_1_options_a2d0dcbbbfc18af3d987cbb9f5d289cef}
+
+\begin{DoxyCompactList}\small\item\em The dimension of the randomized subspace used in the randomized \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algogrithm. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_options_aeb26a358e68fb7064ad16eec153e5b10}{int \hyperlink{class_c_a_r_o_m_1_1_options_aeb26a358e68fb7064ad16eec153e5b10}{random\-\_\-seed} = 1}\label{class_c_a_r_o_m_1_1_options_aeb26a358e68fb7064ad16eec153e5b10}
+
+\begin{DoxyCompactList}\small\item\em The random seed used to initialize the algorithm. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_options_a5651dca03c7c47395cb9ce97758cd0d2}{double \hyperlink{class_c_a_r_o_m_1_1_options_a5651dca03c7c47395cb9ce97758cd0d2}{linearity\-\_\-tol} = -\/1}\label{class_c_a_r_o_m_1_1_options_a5651dca03c7c47395cb9ce97758cd0d2}
+
+\begin{DoxyCompactList}\small\item\em The tolerance of the incremental \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm to determine whether or not a sample is linearly dependent. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_options_accd24e67958038456cb8bab11c0e781c}{double \hyperlink{class_c_a_r_o_m_1_1_options_accd24e67958038456cb8bab11c0e781c}{initial\-\_\-dt} = -\/1}\label{class_c_a_r_o_m_1_1_options_accd24e67958038456cb8bab11c0e781c}
+
+\begin{DoxyCompactList}\small\item\em The initial simulation time step of the incremental \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_options_a6ab3cb5c3dd848e354d0ca4cbc30aea5}{double \hyperlink{class_c_a_r_o_m_1_1_options_a6ab3cb5c3dd848e354d0ca4cbc30aea5}{sampling\-\_\-tol} = -\/1}\label{class_c_a_r_o_m_1_1_options_a6ab3cb5c3dd848e354d0ca4cbc30aea5}
+
+\begin{DoxyCompactList}\small\item\em The sampling control tolerance of the incremental \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm. Limits error in projection of solution into reduced order space. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_options_a0c22532e19d6e6405524ab4e327a0a9c}{double \hyperlink{class_c_a_r_o_m_1_1_options_a0c22532e19d6e6405524ab4e327a0a9c}{max\-\_\-time\-\_\-between\-\_\-samples} = -\/1}\label{class_c_a_r_o_m_1_1_options_a0c22532e19d6e6405524ab4e327a0a9c}
+
+\begin{DoxyCompactList}\small\item\em The upper bound on time between samples of the incremental \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_options_a9d5f92693f84d6bb43653efafe81f8a0}{bool \hyperlink{class_c_a_r_o_m_1_1_options_a9d5f92693f84d6bb43653efafe81f8a0}{fast\-\_\-update} = false}\label{class_c_a_r_o_m_1_1_options_a9d5f92693f84d6bb43653efafe81f8a0}
+
+\begin{DoxyCompactList}\small\item\em If true use the fast update version of the incremental \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_options_abb8146fb15a83f240c5339d7f7595617}{bool \hyperlink{class_c_a_r_o_m_1_1_options_abb8146fb15a83f240c5339d7f7595617}{skip\-\_\-linearly\-\_\-dependent} = false}\label{class_c_a_r_o_m_1_1_options_abb8146fb15a83f240c5339d7f7595617}
+
+\begin{DoxyCompactList}\small\item\em If true skip linearly dependent samples of the incremental \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_options_a64e8620da2a87b13635511589881e386}{bool \hyperlink{class_c_a_r_o_m_1_1_options_a64e8620da2a87b13635511589881e386}{save\-\_\-state} = false}\label{class_c_a_r_o_m_1_1_options_a64e8620da2a87b13635511589881e386}
+
+\begin{DoxyCompactList}\small\item\em If true the state of the incremental \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} will be written to disk when the object is deleted. If there are multiple time intervals then the state will not be saved as restoring such a state makes no sense. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_options_a2a72a87c998cbebc89e87c7c1fd5928e}{bool \hyperlink{class_c_a_r_o_m_1_1_options_a2a72a87c998cbebc89e87c7c1fd5928e}{restore\-\_\-state} = false}\label{class_c_a_r_o_m_1_1_options_a2a72a87c998cbebc89e87c7c1fd5928e}
+
+\begin{DoxyCompactList}\small\item\em If true the state of the incremental \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} will be restored when the object is created. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_options_a771b334ea9813880d6bb0e681e01294e}{double \hyperlink{class_c_a_r_o_m_1_1_options_a771b334ea9813880d6bb0e681e01294e}{min\-\_\-sampling\-\_\-time\-\_\-step\-\_\-scale} = 0.\-1}\label{class_c_a_r_o_m_1_1_options_a771b334ea9813880d6bb0e681e01294e}
+
+\begin{DoxyCompactList}\small\item\em The minimum overall scale factor to apply to time step of the incremental \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_options_afef7c7f57a29e4b56b3a5586ba6c7e45}{double \hyperlink{class_c_a_r_o_m_1_1_options_afef7c7f57a29e4b56b3a5586ba6c7e45}{sampling\-\_\-time\-\_\-step\-\_\-scale} = 0.\-8}\label{class_c_a_r_o_m_1_1_options_afef7c7f57a29e4b56b3a5586ba6c7e45}
+
+\begin{DoxyCompactList}\small\item\em The scaling factor to apply to sampling algorithm of the incremental \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_options_a48c79ce92c45be923f431ec6d9c28b99}{double \hyperlink{class_c_a_r_o_m_1_1_options_a48c79ce92c45be923f431ec6d9c28b99}{max\-\_\-sampling\-\_\-time\-\_\-step\-\_\-scale} = 5.\-0}\label{class_c_a_r_o_m_1_1_options_a48c79ce92c45be923f431ec6d9c28b99}
+
+\begin{DoxyCompactList}\small\item\em The maximum overall scale factor to apply to time step of the incremental \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Class \hyperlink{class_c_a_r_o_m_1_1_options}{Options} defines the parameters to the \hyperlink{class_c_a_r_o_m_1_1_basis_generator}{Basis\-Generator} class and \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm. \hyperlink{class_c_a_r_o_m_1_1_static_s_v_d}{Static\-S\-V\-D}, \hyperlink{class_c_a_r_o_m_1_1_randomized_s_v_d}{Randomized\-S\-V\-D}, and \hyperlink{class_c_a_r_o_m_1_1_incremental_s_v_d}{Incremental\-S\-V\-D} parameters can be set. 
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{class_c_a_r_o_m_1_1_options_a874b8ffeae177a17d13aa1dacd54b3b1}{\index{C\-A\-R\-O\-M\-::\-Options@{C\-A\-R\-O\-M\-::\-Options}!Options@{Options}}
+\index{Options@{Options}!CAROM::Options@{C\-A\-R\-O\-M\-::\-Options}}
+\subsubsection[{Options}]{\setlength{\rightskip}{0pt plus 5cm}C\-A\-R\-O\-M\-::\-Options\-::\-Options (
+\begin{DoxyParamCaption}
+\item[{int}]{dim\-\_\-, }
+\item[{int}]{samples\-\_\-per\-\_\-time\-\_\-interval\-\_\-, }
+\item[{int}]{max\-\_\-time\-\_\-intervals\-\_\- = {\ttfamily -\/1}, }
+\item[{bool}]{update\-\_\-right\-\_\-\-S\-V\-\_\- = {\ttfamily false}, }
+\item[{bool}]{write\-\_\-snapshots\-\_\- = {\ttfamily false}}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{class_c_a_r_o_m_1_1_options_a874b8ffeae177a17d13aa1dacd54b3b1}
+
+
+Constructor. 
+
+\begin{DoxyPrecond}{Precondition}
+dim\-\_\- $>$ 0 
+
+samples\-\_\-per\-\_\-time\-\_\-interval\-\_\- $>$ 0 
+
+max\-\_\-time\-\_\-intervals == -\/1 $|$$|$ max\-\_\-time\-\_\-intervals $>$ 0
+\end{DoxyPrecond}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em dim\-\_\-} & The dimension of the system on this processor. \\
+\hline
+\mbox{\tt in}  & {\em samples\-\_\-per\-\_\-time\-\_\-interval\-\_\-} & The maximum number of samples in each time interval. \\
+\hline
+\mbox{\tt in}  & {\em max\-\_\-time\-\_\-intervals\-\_\-} & The maximum number of time intervals. \\
+\hline
+\mbox{\tt in}  & {\em update\-\_\-right\-\_\-\-S\-V\-\_\-} & Whether to update the right S\-V or not. \\
+\hline
+\mbox{\tt in}  & {\em write\-\_\-snapshots\-\_\-} & Whether to automatically write snapshots matrices instead of basis matrices. \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{class_c_a_r_o_m_1_1_options_a8ab6dca0209a9631b2f2d92d25266a3b}{\index{C\-A\-R\-O\-M\-::\-Options@{C\-A\-R\-O\-M\-::\-Options}!set\-Debug\-Mode@{set\-Debug\-Mode}}
+\index{set\-Debug\-Mode@{set\-Debug\-Mode}!CAROM::Options@{C\-A\-R\-O\-M\-::\-Options}}
+\subsubsection[{set\-Debug\-Mode}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Options} C\-A\-R\-O\-M\-::\-Options\-::set\-Debug\-Mode (
+\begin{DoxyParamCaption}
+\item[{bool}]{debug\-\_\-algorithm\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{class_c_a_r_o_m_1_1_options_a8ab6dca0209a9631b2f2d92d25266a3b}
+
+
+Sets whether debugging is turned on. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em debug\-\_\-algorithm\-\_\-} & Whether to turn on debugging. \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_c_a_r_o_m_1_1_options_a7645650c79d11d98e5bcbcda17082427}{\index{C\-A\-R\-O\-M\-::\-Options@{C\-A\-R\-O\-M\-::\-Options}!set\-Incremental\-S\-V\-D@{set\-Incremental\-S\-V\-D}}
+\index{set\-Incremental\-S\-V\-D@{set\-Incremental\-S\-V\-D}!CAROM::Options@{C\-A\-R\-O\-M\-::\-Options}}
+\subsubsection[{set\-Incremental\-S\-V\-D}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Options} C\-A\-R\-O\-M\-::\-Options\-::set\-Incremental\-S\-V\-D (
+\begin{DoxyParamCaption}
+\item[{double}]{linearity\-\_\-tol\-\_\-, }
+\item[{double}]{initial\-\_\-dt\-\_\-, }
+\item[{double}]{sampling\-\_\-tol\-\_\-, }
+\item[{double}]{max\-\_\-time\-\_\-between\-\_\-samples\-\_\-, }
+\item[{bool}]{fast\-\_\-update\-\_\- = {\ttfamily false}, }
+\item[{bool}]{skip\-\_\-linearly\-\_\-dependent\-\_\- = {\ttfamily false}}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{class_c_a_r_o_m_1_1_options_a7645650c79d11d98e5bcbcda17082427}
+
+
+Sets the essential parameters of the incremental \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm. 
+
+\begin{DoxyPrecond}{Precondition}
+linearity\-\_\-tol\-\_\- $>$ 0.\-0 
+
+initial\-\_\-dt\-\_\- $>$ 0.\-0 
+
+sampling\-\_\-tol\-\_\- $>$ 0.\-0
+\end{DoxyPrecond}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em linearity\-\_\-tol\-\_\-} & Tolerance to determine whether or not a sample is linearly dependent. \\
+\hline
+\mbox{\tt in}  & {\em initial\-\_\-dt\-\_\-} & Initial simulation time step. \\
+\hline
+\mbox{\tt in}  & {\em sampling\-\_\-tol\-\_\-} & Sampling control tolerance. Limits error in projection of solution into reduced order space. \\
+\hline
+\mbox{\tt in}  & {\em max\-\_\-time\-\_\-between\-\_\-samples\-\_\-} & Upper bound on time between samples. \\
+\hline
+\mbox{\tt in}  & {\em fast\-\_\-update\-\_\-} & If true use the fast update algorithm. \\
+\hline
+\mbox{\tt in}  & {\em skip\-\_\-linearly\-\_\-dependent\-\_\-} & If true skip linearly dependent samples. \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_c_a_r_o_m_1_1_options_a7a4f3556eb166ad69a36f6afdd38fc34}{\index{C\-A\-R\-O\-M\-::\-Options@{C\-A\-R\-O\-M\-::\-Options}!set\-Max\-Basis\-Dimension@{set\-Max\-Basis\-Dimension}}
+\index{set\-Max\-Basis\-Dimension@{set\-Max\-Basis\-Dimension}!CAROM::Options@{C\-A\-R\-O\-M\-::\-Options}}
+\subsubsection[{set\-Max\-Basis\-Dimension}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Options} C\-A\-R\-O\-M\-::\-Options\-::set\-Max\-Basis\-Dimension (
+\begin{DoxyParamCaption}
+\item[{int}]{max\-\_\-basis\-\_\-dimension\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{class_c_a_r_o_m_1_1_options_a7a4f3556eb166ad69a36f6afdd38fc34}
+
+
+Sets the maximum basis dimension of the \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm. 
+
+\begin{DoxyPrecond}{Precondition}
+max\-\_\-basis\-\_\-dimension\-\_\- $>$ 0
+\end{DoxyPrecond}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em max\-\_\-basis\-\_\-dimension\-\_\-} & The maximum basis dimension of the basis. \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_c_a_r_o_m_1_1_options_a9671d1b229b77ad7920e34538fffe545}{\index{C\-A\-R\-O\-M\-::\-Options@{C\-A\-R\-O\-M\-::\-Options}!set\-Randomized\-S\-V\-D@{set\-Randomized\-S\-V\-D}}
+\index{set\-Randomized\-S\-V\-D@{set\-Randomized\-S\-V\-D}!CAROM::Options@{C\-A\-R\-O\-M\-::\-Options}}
+\subsubsection[{set\-Randomized\-S\-V\-D}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Options} C\-A\-R\-O\-M\-::\-Options\-::set\-Randomized\-S\-V\-D (
+\begin{DoxyParamCaption}
+\item[{bool}]{randomized\-\_\-, }
+\item[{int}]{randomized\-\_\-subspace\-\_\-dim\-\_\- = {\ttfamily -\/1}, }
+\item[{int}]{random\-\_\-seed\-\_\- = {\ttfamily 1}}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{class_c_a_r_o_m_1_1_options_a9671d1b229b77ad7920e34538fffe545}
+
+
+Sets the parameters of the randomized \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em randomized\-\_\-} & Whether to use randomization. \\
+\hline
+\mbox{\tt in}  & {\em randomized\-\_\-subspace\-\_\-dim\-\_\-} & The dimension of the randomized subspace \\
+\hline
+\mbox{\tt in}  & {\em random\-\_\-seed\-\_\-} & The random seed used to initialize the algorithm. \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_c_a_r_o_m_1_1_options_a61449695e0b8e088c19a66702e1b30be}{\index{C\-A\-R\-O\-M\-::\-Options@{C\-A\-R\-O\-M\-::\-Options}!set\-Sampling\-Time\-Step\-Scale@{set\-Sampling\-Time\-Step\-Scale}}
+\index{set\-Sampling\-Time\-Step\-Scale@{set\-Sampling\-Time\-Step\-Scale}!CAROM::Options@{C\-A\-R\-O\-M\-::\-Options}}
+\subsubsection[{set\-Sampling\-Time\-Step\-Scale}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Options} C\-A\-R\-O\-M\-::\-Options\-::set\-Sampling\-Time\-Step\-Scale (
+\begin{DoxyParamCaption}
+\item[{double}]{min\-\_\-sampling\-\_\-time\-\_\-step\-\_\-scale\-\_\-, }
+\item[{double}]{sampling\-\_\-time\-\_\-step\-\_\-scale\-\_\-, }
+\item[{double}]{max\-\_\-sampling\-\_\-time\-\_\-step\-\_\-scale\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{class_c_a_r_o_m_1_1_options_a61449695e0b8e088c19a66702e1b30be}
+
+
+Sets the sampling time step scaling of the incremental \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm. 
+
+\begin{DoxyPrecond}{Precondition}
+max\-\_\-time\-\_\-between\-\_\-samples\-\_\- $>$ 0.\-0 
+
+min\-\_\-sampling\-\_\-time\-\_\-step\-\_\-scale\-\_\- $>$= 0.\-0 
+
+sampling\-\_\-time\-\_\-step\-\_\-scale\-\_\- $>$= 0.\-0 
+
+max\-\_\-sampling\-\_\-time\-\_\-step\-\_\-scale\-\_\- $>$= 0.\-0 
+
+min\-\_\-sampling\-\_\-time\-\_\-step\-\_\-scale\-\_\- $<$= max\-\_\-sampling\-\_\-time\-\_\-step\-\_\-scale
+\end{DoxyPrecond}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em min\-\_\-sampling\-\_\-time\-\_\-step\-\_\-scale\-\_\-} & Minimum overall scale factor to apply to time step. \\
+\hline
+\mbox{\tt in}  & {\em sampling\-\_\-time\-\_\-step\-\_\-scale\-\_\-} & Scale factor to apply to sampling algorithm. \\
+\hline
+\mbox{\tt in}  & {\em max\-\_\-sampling\-\_\-time\-\_\-step\-\_\-scale\-\_\-} & Maximum overall scale factor to apply to time step. \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_c_a_r_o_m_1_1_options_a4be02c86ed3eac7648c46c7df04b1ef3}{\index{C\-A\-R\-O\-M\-::\-Options@{C\-A\-R\-O\-M\-::\-Options}!set\-Singular\-Value\-Tol@{set\-Singular\-Value\-Tol}}
+\index{set\-Singular\-Value\-Tol@{set\-Singular\-Value\-Tol}!CAROM::Options@{C\-A\-R\-O\-M\-::\-Options}}
+\subsubsection[{set\-Singular\-Value\-Tol}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Options} C\-A\-R\-O\-M\-::\-Options\-::set\-Singular\-Value\-Tol (
+\begin{DoxyParamCaption}
+\item[{double}]{singular\-\_\-value\-\_\-tol\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{class_c_a_r_o_m_1_1_options_a4be02c86ed3eac7648c46c7df04b1ef3}
+
+
+Sets the singular value tolerance of the \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm. 
+
+\begin{DoxyPrecond}{Precondition}
+singular\-\_\-value\-\_\-tol\-\_\- $>$= 0
+\end{DoxyPrecond}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em singular\-\_\-value\-\_\-tol\-\_\-} & The singular value tolerance of the \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm. If both max\-\_\-basis\-\_\-dimension and singular\-\_\-value\-\_\-tol would result in truncating the basis, the dimension of the returned basis will be the minimum of the number of vectors that is computed from each. \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_c_a_r_o_m_1_1_options_abd0d6542bd910164fbbf5065928a4b44}{\index{C\-A\-R\-O\-M\-::\-Options@{C\-A\-R\-O\-M\-::\-Options}!set\-State\-I\-O@{set\-State\-I\-O}}
+\index{set\-State\-I\-O@{set\-State\-I\-O}!CAROM::Options@{C\-A\-R\-O\-M\-::\-Options}}
+\subsubsection[{set\-State\-I\-O}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Options} C\-A\-R\-O\-M\-::\-Options\-::set\-State\-I\-O (
+\begin{DoxyParamCaption}
+\item[{bool}]{save\-\_\-state\-\_\-, }
+\item[{bool}]{restore\-\_\-state\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{class_c_a_r_o_m_1_1_options_abd0d6542bd910164fbbf5065928a4b44}
+
+
+Sets the state I\-O parameters of the incremental \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} algorithm. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em save\-\_\-state\-\_\-} & If true the state of the \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} will be written to disk when the object is deleted. If there are multiple time intervals then the state will not be saved as restoring such a state makes no sense. \\
+\hline
+\mbox{\tt in}  & {\em restore\-\_\-state\-\_\-} & If true the state of the \hyperlink{class_c_a_r_o_m_1_1_s_v_d}{S\-V\-D} will be restored when the object is created. \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+Options.\-h\end{DoxyCompactItemize}

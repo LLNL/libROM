@@ -1,0 +1,215 @@
+\hypertarget{class_c_a_r_o_m_1_1_basis_reader}{\section{C\-A\-R\-O\-M\-:\-:Basis\-Reader Class Reference}
+\label{class_c_a_r_o_m_1_1_basis_reader}\index{C\-A\-R\-O\-M\-::\-Basis\-Reader@{C\-A\-R\-O\-M\-::\-Basis\-Reader}}
+}
+
+
+{\ttfamily \#include $<$Basis\-Reader.\-h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{class_c_a_r_o_m_1_1_basis_reader_ab4d0ee6ca4a7071ab8c3fd61b58b9e97}{Basis\-Reader} (const std\-::string \&base\-\_\-file\-\_\-name, \hyperlink{class_c_a_r_o_m_1_1_database_a8ab29ee6466ef8415ee0ef93d94cc5f7}{Database\-::formats} db\-\_\-format=Database\-::\-H\-D\-F5)
+\begin{DoxyCompactList}\small\item\em The constructor for the \hyperlink{class_c_a_r_o_m_1_1_basis_reader}{Basis\-Reader} class takes the base part of the name of the files holding the basis vectors and the file format. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_basis_reader_ac4f468fdf09507336a62adadd9443a0f}{\hyperlink{class_c_a_r_o_m_1_1_basis_reader_ac4f468fdf09507336a62adadd9443a0f}{$\sim$\-Basis\-Reader} ()}\label{class_c_a_r_o_m_1_1_basis_reader_ac4f468fdf09507336a62adadd9443a0f}
+
+\begin{DoxyCompactList}\small\item\em Destructor. \end{DoxyCompactList}\item 
+bool \hyperlink{class_c_a_r_o_m_1_1_basis_reader_a1653f9dd5985a34ace9e4886d8668b0a}{is\-New\-Basis} (double time)
+\begin{DoxyCompactList}\small\item\em Returns true if the basis vectors at requested time are different from the last requested basis vectors. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_basis_reader_a24260370b460b0253d8efeb1cea81d4b}{void \hyperlink{class_c_a_r_o_m_1_1_basis_reader_a24260370b460b0253d8efeb1cea81d4b}{read\-Basis} (const std\-::string \&base\-\_\-file\-\_\-name=\char`\"{}\char`\"{}, \hyperlink{class_c_a_r_o_m_1_1_database_a8ab29ee6466ef8415ee0ef93d94cc5f7}{Database\-::formats} db\-\_\-format=Database\-::\-H\-D\-F5)}\label{class_c_a_r_o_m_1_1_basis_reader_a24260370b460b0253d8efeb1cea81d4b}
+
+\begin{DoxyCompactList}\small\item\em Reads the basis from a file and stores the information. \end{DoxyCompactList}\item 
+const \hyperlink{class_c_a_r_o_m_1_1_matrix}{Matrix} $\ast$ \hyperlink{class_c_a_r_o_m_1_1_basis_reader_a4e876f4494ba2e62e6f153b78038e297}{get\-Spatial\-Basis} (double time)
+\begin{DoxyCompactList}\small\item\em Returns the spatial basis vectors for the requested time as a \hyperlink{class_c_a_r_o_m_1_1_matrix}{Matrix}. \end{DoxyCompactList}\item 
+const \hyperlink{class_c_a_r_o_m_1_1_matrix}{Matrix} $\ast$ \hyperlink{class_c_a_r_o_m_1_1_basis_reader_a8d8b2e71aeeb7b16519ee5e9a5722ea6}{get\-Temporal\-Basis} (double time)
+\begin{DoxyCompactList}\small\item\em Returns the temporal basis vectors for the requested time as a \hyperlink{class_c_a_r_o_m_1_1_matrix}{Matrix}. \end{DoxyCompactList}\item 
+const \hyperlink{class_c_a_r_o_m_1_1_vector}{Vector} $\ast$ \hyperlink{class_c_a_r_o_m_1_1_basis_reader_a7f634aee36bea05e8b7a8967d3ff1ea4}{get\-Singular\-Values} (double time)
+\begin{DoxyCompactList}\small\item\em Returns the singular values for the requested time. \end{DoxyCompactList}\item 
+const \hyperlink{class_c_a_r_o_m_1_1_matrix}{Matrix} $\ast$ \hyperlink{class_c_a_r_o_m_1_1_basis_reader_ac8d91a7b3cf324f4ecda28e0160aec66}{get\-Snapshot\-Matrix} (double time)
+\begin{DoxyCompactList}\small\item\em Returns the snapshot matrix for the requested time. \end{DoxyCompactList}\item 
+\hyperlink{class_c_a_r_o_m_1_1_matrix}{Matrix} \hyperlink{class_c_a_r_o_m_1_1_basis_reader_abe480f59f6f5b2706f842f8ad3903650}{get\-Matlab\-Basis} (double time)
+\begin{DoxyCompactList}\small\item\em Returns the Matlab-\/stored basis for the requested time. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Class \hyperlink{class_c_a_r_o_m_1_1_basis_reader}{Basis\-Reader} reads the basis vectors from a file written by class \hyperlink{class_c_a_r_o_m_1_1_basis_writer}{Basis\-Writer}.
+
+\begin{DoxySeeAlso}{See Also}
+\hyperlink{class_c_a_r_o_m_1_1_basis_writer}{Basis\-Writer} 
+\end{DoxySeeAlso}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{class_c_a_r_o_m_1_1_basis_reader_ab4d0ee6ca4a7071ab8c3fd61b58b9e97}{\index{C\-A\-R\-O\-M\-::\-Basis\-Reader@{C\-A\-R\-O\-M\-::\-Basis\-Reader}!Basis\-Reader@{Basis\-Reader}}
+\index{Basis\-Reader@{Basis\-Reader}!CAROM::BasisReader@{C\-A\-R\-O\-M\-::\-Basis\-Reader}}
+\subsubsection[{Basis\-Reader}]{\setlength{\rightskip}{0pt plus 5cm}C\-A\-R\-O\-M\-::\-Basis\-Reader\-::\-Basis\-Reader (
+\begin{DoxyParamCaption}
+\item[{const std\-::string \&}]{base\-\_\-file\-\_\-name, }
+\item[{{\bf Database\-::formats}}]{db\-\_\-format = {\ttfamily Database\-:\-:HDF5}}
+\end{DoxyParamCaption}
+)}}\label{class_c_a_r_o_m_1_1_basis_reader_ab4d0ee6ca4a7071ab8c3fd61b58b9e97}
+
+
+The constructor for the \hyperlink{class_c_a_r_o_m_1_1_basis_reader}{Basis\-Reader} class takes the base part of the name of the files holding the basis vectors and the file format. 
+
+\begin{DoxyPrecond}{Precondition}
+!base\-\_\-file\-\_\-name.empty()
+\end{DoxyPrecond}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em base\-\_\-file\-\_\-name} & The base part of the name of the files holding the basis vectors. \\
+\hline
+\mbox{\tt in}  & {\em db\-\_\-format} & Format of the file to read. One of the implemented file formats defined in \hyperlink{class_c_a_r_o_m_1_1_database}{Database}. \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{class_c_a_r_o_m_1_1_basis_reader_abe480f59f6f5b2706f842f8ad3903650}{\index{C\-A\-R\-O\-M\-::\-Basis\-Reader@{C\-A\-R\-O\-M\-::\-Basis\-Reader}!get\-Matlab\-Basis@{get\-Matlab\-Basis}}
+\index{get\-Matlab\-Basis@{get\-Matlab\-Basis}!CAROM::BasisReader@{C\-A\-R\-O\-M\-::\-Basis\-Reader}}
+\subsubsection[{get\-Matlab\-Basis}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Matrix} C\-A\-R\-O\-M\-::\-Basis\-Reader\-::get\-Matlab\-Basis (
+\begin{DoxyParamCaption}
+\item[{double}]{time}
+\end{DoxyParamCaption}
+)}}\label{class_c_a_r_o_m_1_1_basis_reader_abe480f59f6f5b2706f842f8ad3903650}
+
+
+Returns the Matlab-\/stored basis for the requested time. 
+
+\begin{DoxyPrecond}{Precondition}
+0 $<$ num\-Time\-Intervals() 
+
+0 $<$= time
+\end{DoxyPrecond}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em time} & Time for which we want the basis vectors.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The Matlab-\/stored basis for the requested time. 
+\end{DoxyReturn}
+\hypertarget{class_c_a_r_o_m_1_1_basis_reader_a7f634aee36bea05e8b7a8967d3ff1ea4}{\index{C\-A\-R\-O\-M\-::\-Basis\-Reader@{C\-A\-R\-O\-M\-::\-Basis\-Reader}!get\-Singular\-Values@{get\-Singular\-Values}}
+\index{get\-Singular\-Values@{get\-Singular\-Values}!CAROM::BasisReader@{C\-A\-R\-O\-M\-::\-Basis\-Reader}}
+\subsubsection[{get\-Singular\-Values}]{\setlength{\rightskip}{0pt plus 5cm}const {\bf Vector}$\ast$ C\-A\-R\-O\-M\-::\-Basis\-Reader\-::get\-Singular\-Values (
+\begin{DoxyParamCaption}
+\item[{double}]{time}
+\end{DoxyParamCaption}
+)}}\label{class_c_a_r_o_m_1_1_basis_reader_a7f634aee36bea05e8b7a8967d3ff1ea4}
+
+
+Returns the singular values for the requested time. 
+
+\begin{DoxyPrecond}{Precondition}
+0 $<$ num\-Time\-Intervals() 
+
+0 $<$= time
+\end{DoxyPrecond}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em time} & Time for which we want the basis vectors.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The temporal basis vectors for the requested time. 
+\end{DoxyReturn}
+\hypertarget{class_c_a_r_o_m_1_1_basis_reader_ac8d91a7b3cf324f4ecda28e0160aec66}{\index{C\-A\-R\-O\-M\-::\-Basis\-Reader@{C\-A\-R\-O\-M\-::\-Basis\-Reader}!get\-Snapshot\-Matrix@{get\-Snapshot\-Matrix}}
+\index{get\-Snapshot\-Matrix@{get\-Snapshot\-Matrix}!CAROM::BasisReader@{C\-A\-R\-O\-M\-::\-Basis\-Reader}}
+\subsubsection[{get\-Snapshot\-Matrix}]{\setlength{\rightskip}{0pt plus 5cm}const {\bf Matrix}$\ast$ C\-A\-R\-O\-M\-::\-Basis\-Reader\-::get\-Snapshot\-Matrix (
+\begin{DoxyParamCaption}
+\item[{double}]{time}
+\end{DoxyParamCaption}
+)}}\label{class_c_a_r_o_m_1_1_basis_reader_ac8d91a7b3cf324f4ecda28e0160aec66}
+
+
+Returns the snapshot matrix for the requested time. 
+
+\begin{DoxyPrecond}{Precondition}
+0 $<$ num\-Time\-Intervals() 
+
+0 $<$= time
+\end{DoxyPrecond}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em time} & Time for which we want the basis vectors.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The snapshot matrix for the requested time. 
+\end{DoxyReturn}
+\hypertarget{class_c_a_r_o_m_1_1_basis_reader_a4e876f4494ba2e62e6f153b78038e297}{\index{C\-A\-R\-O\-M\-::\-Basis\-Reader@{C\-A\-R\-O\-M\-::\-Basis\-Reader}!get\-Spatial\-Basis@{get\-Spatial\-Basis}}
+\index{get\-Spatial\-Basis@{get\-Spatial\-Basis}!CAROM::BasisReader@{C\-A\-R\-O\-M\-::\-Basis\-Reader}}
+\subsubsection[{get\-Spatial\-Basis}]{\setlength{\rightskip}{0pt plus 5cm}const {\bf Matrix}$\ast$ C\-A\-R\-O\-M\-::\-Basis\-Reader\-::get\-Spatial\-Basis (
+\begin{DoxyParamCaption}
+\item[{double}]{time}
+\end{DoxyParamCaption}
+)}}\label{class_c_a_r_o_m_1_1_basis_reader_a4e876f4494ba2e62e6f153b78038e297}
+
+
+Returns the spatial basis vectors for the requested time as a \hyperlink{class_c_a_r_o_m_1_1_matrix}{Matrix}. 
+
+\begin{DoxyPrecond}{Precondition}
+0 $<$ num\-Time\-Intervals() 
+
+0 $<$= time
+\end{DoxyPrecond}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em time} & Time for which we want the basis vectors.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The spatial basis vectors for the requested time. 
+\end{DoxyReturn}
+\hypertarget{class_c_a_r_o_m_1_1_basis_reader_a8d8b2e71aeeb7b16519ee5e9a5722ea6}{\index{C\-A\-R\-O\-M\-::\-Basis\-Reader@{C\-A\-R\-O\-M\-::\-Basis\-Reader}!get\-Temporal\-Basis@{get\-Temporal\-Basis}}
+\index{get\-Temporal\-Basis@{get\-Temporal\-Basis}!CAROM::BasisReader@{C\-A\-R\-O\-M\-::\-Basis\-Reader}}
+\subsubsection[{get\-Temporal\-Basis}]{\setlength{\rightskip}{0pt plus 5cm}const {\bf Matrix}$\ast$ C\-A\-R\-O\-M\-::\-Basis\-Reader\-::get\-Temporal\-Basis (
+\begin{DoxyParamCaption}
+\item[{double}]{time}
+\end{DoxyParamCaption}
+)}}\label{class_c_a_r_o_m_1_1_basis_reader_a8d8b2e71aeeb7b16519ee5e9a5722ea6}
+
+
+Returns the temporal basis vectors for the requested time as a \hyperlink{class_c_a_r_o_m_1_1_matrix}{Matrix}. 
+
+\begin{DoxyPrecond}{Precondition}
+0 $<$ num\-Time\-Intervals() 
+
+0 $<$= time
+\end{DoxyPrecond}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em time} & Time for which we want the basis vectors.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The temporal basis vectors for the requested time. 
+\end{DoxyReturn}
+\hypertarget{class_c_a_r_o_m_1_1_basis_reader_a1653f9dd5985a34ace9e4886d8668b0a}{\index{C\-A\-R\-O\-M\-::\-Basis\-Reader@{C\-A\-R\-O\-M\-::\-Basis\-Reader}!is\-New\-Basis@{is\-New\-Basis}}
+\index{is\-New\-Basis@{is\-New\-Basis}!CAROM::BasisReader@{C\-A\-R\-O\-M\-::\-Basis\-Reader}}
+\subsubsection[{is\-New\-Basis}]{\setlength{\rightskip}{0pt plus 5cm}bool C\-A\-R\-O\-M\-::\-Basis\-Reader\-::is\-New\-Basis (
+\begin{DoxyParamCaption}
+\item[{double}]{time}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{class_c_a_r_o_m_1_1_basis_reader_a1653f9dd5985a34ace9e4886d8668b0a}
+
+
+Returns true if the basis vectors at requested time are different from the last requested basis vectors. 
+
+\begin{DoxyPrecond}{Precondition}
+0 $<$ num\-Time\-Intervals() 
+
+0 $<$= time
+\end{DoxyPrecond}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em time} & Time at which we are interested in the basis vectors.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if the basis vectors at the requested time are different from the last requested basis vectors. 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+Basis\-Reader.\-h\end{DoxyCompactItemize}

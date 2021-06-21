@@ -1,0 +1,155 @@
+\hypertarget{class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler}{\section{C\-A\-R\-O\-M\-:\-:Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler Class Reference}
+\label{class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler}\index{C\-A\-R\-O\-M\-::\-Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler@{C\-A\-R\-O\-M\-::\-Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler}}
+}
+
+
+{\ttfamily \#include $<$Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler.\-h$>$}
+
+Inheritance diagram for C\-A\-R\-O\-M\-:\-:Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler\-:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler_aa7fc81a5faa35358fb98d2d8b0c55266}{Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler} (std\-::vector$<$ \hyperlink{class_c_a_r_o_m_1_1_vector}{Vector} $>$ parameter\-\_\-points, bool check\-\_\-local\-\_\-rom, double relative\-\_\-error\-\_\-tolerance, double alpha, double max\-\_\-clamp, int subset\-\_\-size, int convergence\-\_\-subset\-\_\-size, std\-::string output\-\_\-log\-\_\-path=\char`\"{}\char`\"{}, std\-::string warm\-\_\-start\-\_\-file\-\_\-name=\char`\"{}\char`\"{}, bool use\-\_\-centroid=true, int random\-\_\-seed=1, bool debug\-\_\-algorithm=false)
+\begin{DoxyCompactList}\small\item\em Constructor. \end{DoxyCompactList}\item 
+\hyperlink{class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler_a0508e37506741255ea63e18693afd71e}{Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler} (std\-::vector$<$ double $>$ parameter\-\_\-points, bool check\-\_\-local\-\_\-rom, double relative\-\_\-error\-\_\-tolerance, double alpha, double max\-\_\-clamp, int subset\-\_\-size, int convergence\-\_\-subset\-\_\-size, std\-::string output\-\_\-log\-\_\-path=\char`\"{}\char`\"{}, std\-::string warm\-\_\-start\-\_\-file\-\_\-name=\char`\"{}\char`\"{}, bool use\-\_\-centroid=true, int random\-\_\-seed=1, bool debug\-\_\-algorithm=false)
+\begin{DoxyCompactList}\small\item\em Constructor. \end{DoxyCompactList}\item 
+\hyperlink{class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler_a2b8bc3f172c00273d11a503af4bb53c5}{Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler} (std\-::string base\-\_\-file\-\_\-name, std\-::string output\-\_\-log\-\_\-path=\char`\"{}\char`\"{})
+\begin{DoxyCompactList}\small\item\em Constructor. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler_ac92a151af6f2c319040425bc698a48a7}{\hyperlink{class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler_ac92a151af6f2c319040425bc698a48a7}{$\sim$\-Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler} ()}\label{class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler_ac92a151af6f2c319040425bc698a48a7}
+
+\begin{DoxyCompactList}\small\item\em Destructor. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler_a38590cbc42e76266ca787f94c3d6a7cc}{void \hyperlink{class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler_a38590cbc42e76266ca787f94c3d6a7cc}{construct\-Parameter\-Points} ()}\label{class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler_a38590cbc42e76266ca787f94c3d6a7cc}
+
+\begin{DoxyCompactList}\small\item\em Construct the list of parameter point candidates to sample. \end{DoxyCompactList}\item 
+\hypertarget{class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler_adaab047450d7ab8892e6c3de08376680}{void \hyperlink{class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler_adaab047450d7ab8892e6c3de08376680}{get\-Next\-Parameter\-Point\-After\-Convergence\-Failure} ()}\label{class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler_adaab047450d7ab8892e6c3de08376680}
+
+\begin{DoxyCompactList}\small\item\em Get the next parameter point to sample after a convergence failure. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+Class \hyperlink{class_c_a_r_o_m_1_1_greedy_parameter_point_random_sampler}{Greedy\-Parameter\-Point\-Random\-Sampler} implements a variant of Choi et. al's greedy algorithm using pre-\/defined parameter points. 
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler_aa7fc81a5faa35358fb98d2d8b0c55266}{\index{C\-A\-R\-O\-M\-::\-Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler@{C\-A\-R\-O\-M\-::\-Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler}!Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler@{Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler}}
+\index{Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler@{Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler}!CAROM::GreedyParameterPointPreDefinedSampler@{C\-A\-R\-O\-M\-::\-Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler}}
+\subsubsection[{Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler}]{\setlength{\rightskip}{0pt plus 5cm}C\-A\-R\-O\-M\-::\-Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler\-::\-Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler (
+\begin{DoxyParamCaption}
+\item[{std\-::vector$<$ {\bf Vector} $>$}]{parameter\-\_\-points, }
+\item[{bool}]{check\-\_\-local\-\_\-rom, }
+\item[{double}]{relative\-\_\-error\-\_\-tolerance, }
+\item[{double}]{alpha, }
+\item[{double}]{max\-\_\-clamp, }
+\item[{int}]{subset\-\_\-size, }
+\item[{int}]{convergence\-\_\-subset\-\_\-size, }
+\item[{std\-::string}]{output\-\_\-log\-\_\-path = {\ttfamily \char`\"{}\char`\"{}}, }
+\item[{std\-::string}]{warm\-\_\-start\-\_\-file\-\_\-name = {\ttfamily \char`\"{}\char`\"{}}, }
+\item[{bool}]{use\-\_\-centroid = {\ttfamily true}, }
+\item[{int}]{random\-\_\-seed = {\ttfamily 1}, }
+\item[{bool}]{debug\-\_\-algorithm = {\ttfamily false}}
+\end{DoxyParamCaption}
+)}}\label{class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler_aa7fc81a5faa35358fb98d2d8b0c55266}
+
+
+Constructor. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em parameter\-\_\-points} & A vector of C\-A\-R\-O\-M\-::\-Vectors containing the different parameter points. \\
+\hline
+\mbox{\tt in}  & {\em check\-\_\-local\-\_\-rom} & Compute local R\-O\-M error indicator each iteration. \\
+\hline
+\mbox{\tt in}  & {\em relative\-\_\-error\-\_\-tolerance} & The relative error tolerance value for which to end the algorithm. \\
+\hline
+\mbox{\tt in}  & {\em alpha} & A alpha constant to increase greedy algorithm by each iteration. \\
+\hline
+\mbox{\tt in}  & {\em max\-\_\-clamp} & A scalar factor representing the maximum amount the error indicator tolerance can change per iteration. \\
+\hline
+\mbox{\tt in}  & {\em subset\-\_\-size} & The size of the random subset. \\
+\hline
+\mbox{\tt in}  & {\em convergence\-\_\-subset\-\_\-size} & The size of the convergence subset. \\
+\hline
+\mbox{\tt in}  & {\em use\-\_\-centroid} & Whether to use the centroid heuristic when determining the first parameter point to sample. \\
+\hline
+\mbox{\tt in}  & {\em random\-\_\-seed} & A random seed. \\
+\hline
+\mbox{\tt in}  & {\em debug\-\_\-algorithm} & Whether to turn off all randomness for debugging purposes. \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler_a0508e37506741255ea63e18693afd71e}{\index{C\-A\-R\-O\-M\-::\-Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler@{C\-A\-R\-O\-M\-::\-Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler}!Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler@{Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler}}
+\index{Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler@{Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler}!CAROM::GreedyParameterPointPreDefinedSampler@{C\-A\-R\-O\-M\-::\-Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler}}
+\subsubsection[{Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler}]{\setlength{\rightskip}{0pt plus 5cm}C\-A\-R\-O\-M\-::\-Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler\-::\-Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler (
+\begin{DoxyParamCaption}
+\item[{std\-::vector$<$ double $>$}]{parameter\-\_\-points, }
+\item[{bool}]{check\-\_\-local\-\_\-rom, }
+\item[{double}]{relative\-\_\-error\-\_\-tolerance, }
+\item[{double}]{alpha, }
+\item[{double}]{max\-\_\-clamp, }
+\item[{int}]{subset\-\_\-size, }
+\item[{int}]{convergence\-\_\-subset\-\_\-size, }
+\item[{std\-::string}]{output\-\_\-log\-\_\-path = {\ttfamily \char`\"{}\char`\"{}}, }
+\item[{std\-::string}]{warm\-\_\-start\-\_\-file\-\_\-name = {\ttfamily \char`\"{}\char`\"{}}, }
+\item[{bool}]{use\-\_\-centroid = {\ttfamily true}, }
+\item[{int}]{random\-\_\-seed = {\ttfamily 1}, }
+\item[{bool}]{debug\-\_\-algorithm = {\ttfamily false}}
+\end{DoxyParamCaption}
+)}}\label{class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler_a0508e37506741255ea63e18693afd71e}
+
+
+Constructor. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em parameter\-\_\-points} & A vector of doubles containing the different parameter points. \\
+\hline
+\mbox{\tt in}  & {\em check\-\_\-local\-\_\-rom} & Compute local R\-O\-M error indicator each iteration. \\
+\hline
+\mbox{\tt in}  & {\em relative\-\_\-error\-\_\-tolerance} & The relative error tolerance value for which to end the algorithm. \\
+\hline
+\mbox{\tt in}  & {\em alpha} & A alpha constant to increase greedy algorithm by each iteration. \\
+\hline
+\mbox{\tt in}  & {\em max\-\_\-clamp} & A scalar factor representing the maximum amount the error indicator tolerance can change per iteration. \\
+\hline
+\mbox{\tt in}  & {\em subset\-\_\-size} & The size of the random subset. \\
+\hline
+\mbox{\tt in}  & {\em convergence\-\_\-subset\-\_\-size} & The size of the convergence subset. \\
+\hline
+\mbox{\tt in}  & {\em use\-\_\-centroid} & Whether to use the centroid heuristic when determining the first parameter point to sample. \\
+\hline
+\mbox{\tt in}  & {\em random\-\_\-seed} & A random seed. \\
+\hline
+\mbox{\tt in}  & {\em debug\-\_\-algorithm} & Whether to turn off all randomness for debugging purposes. \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler_a2b8bc3f172c00273d11a503af4bb53c5}{\index{C\-A\-R\-O\-M\-::\-Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler@{C\-A\-R\-O\-M\-::\-Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler}!Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler@{Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler}}
+\index{Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler@{Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler}!CAROM::GreedyParameterPointPreDefinedSampler@{C\-A\-R\-O\-M\-::\-Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler}}
+\subsubsection[{Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler}]{\setlength{\rightskip}{0pt plus 5cm}C\-A\-R\-O\-M\-::\-Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler\-::\-Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler (
+\begin{DoxyParamCaption}
+\item[{std\-::string}]{base\-\_\-file\-\_\-name, }
+\item[{std\-::string}]{output\-\_\-log\-\_\-path = {\ttfamily \char`\"{}\char`\"{}}}
+\end{DoxyParamCaption}
+)}}\label{class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler_a2b8bc3f172c00273d11a503af4bb53c5}
+
+
+Constructor. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em base\-\_\-file\-\_\-name} & The base part of the file of the database to load when restarting from a save. \\
+\hline
+\mbox{\tt in}  & {\em output\-\_\-log\-\_\-path} & The path to the output log file. If not used, outputs to stdout. \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+Greedy\-Parameter\-Point\-Pre\-Defined\-Sampler.\-h\end{DoxyCompactItemize}

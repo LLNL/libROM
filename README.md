@@ -4,18 +4,6 @@ libROM is a free, lightweight, scalable C++ library for data-driven physical
 simulation methods from the intrusive projection-based reduced order models to
 non-intrusive black-box approaches.
 
-
-# History of libROM
-
-The original libROM release was written by William Arrighi (retired) mainly to
-implement a C++ scalable and incremental singular value decomposition based on
-the journal paper, i.e.,
-
-> Geoffrey M. Oxberry, Tanya Kostova-Vassilevska, William Arrighi, and Kyle Chand, [_Limited-memory adaptive snapshot selection for proper orthogonal decomposition_] (https://onlinelibrary.wiley.com/doi/full/10.1002/nme.5283), International Journal of Numerical Methods in Engineering, **109**:198--217.
-
-In addition to the incremental singular value decomposition, many other features
-are added:
-
 ## Features
 
 - Dynamic data collection
@@ -23,8 +11,14 @@ are added:
 - Greedy algorithm
 - Hyper-reduction
 
+## Features to be added
+
+- Dynamic mode decomposition (DMD)
+- Sparse identification of nonlinear dynamics (SINDy) 
+
 # Authors
 Robert W. Anderson (LLNL),
+William Arrighi (LLNL),
 Siu Wun Cheung (LLNL),
 Youngsoo Choi (LLNL),
 Dylan Copeland (LLNL),
