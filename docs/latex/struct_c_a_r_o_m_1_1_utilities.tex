@@ -1,0 +1,66 @@
+\hypertarget{struct_c_a_r_o_m_1_1_utilities}{\section{C\-A\-R\-O\-M\-:\-:Utilities Struct Reference}
+\label{struct_c_a_r_o_m_1_1_utilities}\index{C\-A\-R\-O\-M\-::\-Utilities@{C\-A\-R\-O\-M\-::\-Utilities}}
+}
+
+
+{\ttfamily \#include $<$Utilities.\-h$>$}
+
+\subsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static void \hyperlink{struct_c_a_r_o_m_1_1_utilities_a9c48f5024b78376e1255fd647b6d7239}{abort} (const std\-::string \&message, const std\-::string \&filename, int line)
+\begin{DoxyCompactList}\small\item\em Cleanly ends the program when something horrible happened and prints a message about what took place. Takes into account whether M\-P\-I is or isn't running to decide how to die. \end{DoxyCompactList}\item 
+static std\-::string \hyperlink{struct_c_a_r_o_m_1_1_utilities_a1dd483f2124104a09b61a2f582b2766e}{processor\-To\-String} (int processor\-I\-D)
+\begin{DoxyCompactList}\small\item\em Converts a processor I\-D to a string. Use this to ensure same width is used when converting a processor I\-D to a string representation. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Struct \hyperlink{class_c_a_r_o_m_1_1_basis_generator}{Basis\-Generator} defines \hyperlink{struct_c_a_r_o_m_1_1_utilities}{Utilities} contains basic, static, utility routines for error reporting, string manipulations, etc. 
+
+\subsection{Member Function Documentation}
+\hypertarget{struct_c_a_r_o_m_1_1_utilities_a9c48f5024b78376e1255fd647b6d7239}{\index{C\-A\-R\-O\-M\-::\-Utilities@{C\-A\-R\-O\-M\-::\-Utilities}!abort@{abort}}
+\index{abort@{abort}!CAROM::Utilities@{C\-A\-R\-O\-M\-::\-Utilities}}
+\subsubsection[{abort}]{\setlength{\rightskip}{0pt plus 5cm}static void C\-A\-R\-O\-M\-::\-Utilities\-::abort (
+\begin{DoxyParamCaption}
+\item[{const std\-::string \&}]{message, }
+\item[{const std\-::string \&}]{filename, }
+\item[{int}]{line}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{struct_c_a_r_o_m_1_1_utilities_a9c48f5024b78376e1255fd647b6d7239}
+
+
+Cleanly ends the program when something horrible happened and prints a message about what took place. Takes into account whether M\-P\-I is or isn't running to decide how to die. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em message} & Message to print about the cause of the abort. \\
+\hline
+\mbox{\tt in}  & {\em filename} & Name of the file where the abort was called. \\
+\hline
+\mbox{\tt in}  & {\em line} & Line number in the file where the abort was called. \\
+\hline
+\end{DoxyParams}
+\hypertarget{struct_c_a_r_o_m_1_1_utilities_a1dd483f2124104a09b61a2f582b2766e}{\index{C\-A\-R\-O\-M\-::\-Utilities@{C\-A\-R\-O\-M\-::\-Utilities}!processor\-To\-String@{processor\-To\-String}}
+\index{processor\-To\-String@{processor\-To\-String}!CAROM::Utilities@{C\-A\-R\-O\-M\-::\-Utilities}}
+\subsubsection[{processor\-To\-String}]{\setlength{\rightskip}{0pt plus 5cm}static std\-::string C\-A\-R\-O\-M\-::\-Utilities\-::processor\-To\-String (
+\begin{DoxyParamCaption}
+\item[{int}]{processor\-I\-D}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{struct_c_a_r_o_m_1_1_utilities_a1dd483f2124104a09b61a2f582b2766e}
+
+
+Converts a processor I\-D to a string. Use this to ensure same width is used when converting a processor I\-D to a string representation. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em processor\-I\-D} & of the processor\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The string representation of processor I\-D of fixed width prepended with 0s. 
+\end{DoxyReturn}
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+Utilities.\-h\end{DoxyCompactItemize}
