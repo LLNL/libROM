@@ -3,19 +3,19 @@
 // Compile with: ./scripts/compile.sh -m 
 //
 // Description:  This example code demonstrates the use of MFEM and libROM to
-//
 //               define a simple projection-based reduced order model of the
 //               Laplace problem -Delta u = f(x) with homogeneous Dirichlet
 //               boundary conditions and spatially varying right hand side f.  
 //
-//               The example highlights the three distinct processes, i.e.,
-//               offline, merge, and online. The offline phase runs MFEM full
-//               order model and store the snapshot data in HDF file. You can
-//               run as many offline phases as you wish to sample the parameter
-//               space.  The merge phase reads all the snapshot files, builds a
-//               global reduced basis, and stores the basis in a HDF file.  The
-//               online phase reads the basis, builds ROM operator, and solves
-//               reduced order system.
+//               The example highlights three distinct ROM processes, i.e.,
+//               offline, merge, and online. The offline phase runs the full
+//               order model and stores the snapshot data in an HDF file. You
+//               can run as many offline phases as you wish to sample the
+//               parameter space. The merge phase reads all the snapshot files,
+//               builds a global reduced basis, and stores the basis in an HDF
+//               file. The online phase reads the basis, builds the ROM
+//               operator, solves the reduced order system, and lifts the
+//               solution to the full order space.
 //
 // Offline phase: ex1parametric -offline -f 1.0 -id 0
 //                ex1parametric -offline -f 1.1 -id 1
@@ -24,7 +24,7 @@
 // Merge phase:   ex1parametric -merge -ns 3
 //
 // Online phase:  ex1parametric -online -f 1.15
-//
+
 
 #include "mfem.hpp"
 #include <fstream>
@@ -197,12 +197,11 @@ int main(int argc, char *argv[])
    int max_num_snapshots = 100;
    bool update_right_SV = false;
    bool isIncremental = false;
-   const std::string basisName = "disp";
+   const std::string basisName = "basis";
    const std::string basisFileName = basisName + std::to_string(id);
    const CAROM::Matrix* spatialbasis;
    CAROM::Options* options;
    CAROM::BasisGenerator *generator;
-   DenseMatrix *reducedBasis;
    int numRowRB, numColumnRB;
    StopWatch solveTimer, assembleTimer, mergeTimer;
 
@@ -234,6 +233,7 @@ int main(int argc, char *argv[])
       }
       delete generator;
       delete options;
+      MPI_Finalize();
       return 0;
    }
 
@@ -315,19 +315,20 @@ int main(int argc, char *argv[])
       numRowRB = spatialbasis->numRows();
       numColumnRB = spatialbasis->numColumns();
       if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB, numColumnRB);
-      reducedBasis = new DenseMatrix(spatialbasis->getData(), numColumnRB, numRowRB);
-      reducedBasis->Transpose(); // libROM stores the matrix in row-wise 
+
+      // libROM stores the matrix row-wise, so wrapping as a DenseMatrix in MFEM means it is transposed.
+      DenseMatrix *reducedBasisT = new DenseMatrix(spatialbasis->getData(), numColumnRB, numRowRB);
 
       // 21. form inverse ROM operator
       Vector abv(numRowRB), bv(numRowRB), bv2(numRowRB);
       Vector reducedRHS(numColumnRB), reducedSol(numColumnRB);
       DenseMatrix invReducedA(numColumnRB);
       for(int j=0; j < numColumnRB; ++j) {
-        bv.SetData(reducedBasis->GetColumn(j));
+        reducedBasisT->GetRow(j, bv);
         A->Mult(bv, abv);
         reducedRHS(j) = bv*B; 
         for(int i=0; i<numColumnRB; ++i) {
-           reducedBasis->GetColumn(i, bv2);
+           reducedBasisT->GetRow(i, bv2);
            invReducedA(i,j) = abv*bv2;
         }
       }
@@ -340,8 +341,8 @@ int main(int argc, char *argv[])
       solveTimer.Stop();
 
       // 23. reconstruct FOM state
-      reducedBasis->Mult(reducedSol,X); 
-      delete reducedBasis;
+      reducedBasisT->MultTranspose(reducedSol,X);
+      delete reducedBasisT;
    }
 
    // 24. Recover the parallel grid function corresponding to X. This is the
