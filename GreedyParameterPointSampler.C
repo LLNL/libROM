@@ -902,7 +902,7 @@ GreedyParameterPointSampler::setPointRelativeError(double error)
                 str += "The relative error was larger than the relative error tolerance. The error indicator tolerance must decrease.\n";
                 str += "Current error indicator tolerance: " + std::to_string(d_error_indicator_tol) + "\n";
                 str += "Relative error tolerance * current max error indicator / current relative error: " + std::to_string(min1) + "\n";
-                str += "The minimum value the error indicator tolerance can take is: " + std::to_string(min1) + "\n";
+                str += "The minimum value the error indicator tolerance can take is: " + std::to_string(std::min(d_error_indicator_tol, min1)) + "\n";
                 agnosticPrint(str);
             }
             d_error_indicator_tol = std::min(d_error_indicator_tol, min1);
