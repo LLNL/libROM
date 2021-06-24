@@ -827,6 +827,43 @@ Matrix::read(const std::string& base_file_name)
 }
 
 void
+Matrix::local_read(const std::string& base_file_name, int rank)
+{
+    CAROM_VERIFY(!base_file_name.empty());
+
+    int mpi_init;
+    MPI_Initialized(&mpi_init);
+    if (mpi_init) {
+        MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+    }
+    else {
+        d_num_procs = 1;
+    }
+
+    char tmp[100];
+    sprintf(tmp, ".%06d", rank);
+    std::string full_file_name = base_file_name + tmp;
+    HDFDatabase database;
+    database.open(full_file_name);
+
+    sprintf(tmp, "distributed");
+    int distributed;
+    database.getInteger(tmp, distributed);
+    d_distributed = bool(distributed);
+    int num_rows;
+    sprintf(tmp, "num_rows");
+    database.getInteger(tmp, num_rows);
+    int num_cols;
+    sprintf(tmp, "num_cols");
+    database.getInteger(tmp, num_cols);
+    setSize(num_rows,num_cols);
+    sprintf(tmp, "data");
+    database.getDoubleArray(tmp, d_mat, d_alloc_size);
+    d_owns_data = true;
+    database.close();
+}
+
+void
 Matrix::calculateNumDistributedRows() {
     if (d_distributed && d_num_procs > 1) {
         int num_total_rows = d_num_rows;

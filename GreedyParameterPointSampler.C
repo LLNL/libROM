@@ -247,7 +247,7 @@ GreedyParameterPointSampler::addDatabaseFromFile(
         {
             std::string vec_path = warm_start_file_name + "_" + std::to_string(i);
             Vector point;
-            point.read(vec_path);
+            point.local_read(vec_path, 0);
             for (int j = 0; j < d_parameter_points.size(); j++)
             {
                 Vector diff;
@@ -279,15 +279,15 @@ GreedyParameterPointSampler::load(
     {
         std::string vec_path = base_file_name + "_" + std::to_string(i);
         Vector point;
-        point.read(vec_path);
+        point.local_read(vec_path, 0);
         d_parameter_points.push_back(point);
     }
 
     std::string vec_path = base_file_name + "_min_point";
-    d_min_param_point.read(vec_path);
+    d_min_param_point.local_read(vec_path, 0);
 
     vec_path = base_file_name + "_max_point";
-    d_max_param_point.read(vec_path);
+    d_max_param_point.local_read(vec_path, 0);
 
     sprintf(tmp, "num_parameter_sampled_indices");
     int num_parameter_sampled_indices;
@@ -379,7 +379,7 @@ GreedyParameterPointSampler::load(
         {
             std::string vec_path = base_file_name + "_conv_" + std::to_string(i);
             Vector point;
-            point.read(vec_path);
+            point.local_read(vec_path, 0);
             d_convergence_points.push_back(point);
         }
     }
@@ -1333,7 +1333,6 @@ GreedyParameterPointSampler::save(std::string base_file_name)
             sprintf(tmp, "parameter_sampled_indices");
             std::vector<int> d_parameter_sampled_indices_vec(d_parameter_sampled_indices.begin(), d_parameter_sampled_indices.end());
             database.putIntegerArray(tmp, &d_parameter_sampled_indices_vec[0], d_parameter_sampled_indices.size());
-
         }
 
         sprintf(tmp, "procedure_completed");

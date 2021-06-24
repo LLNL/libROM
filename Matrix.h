@@ -879,6 +879,14 @@ public:
     void read(const std::string& base_file_name);
 
     /**
+     * @brief read Matrix into (a) HDF file(s).
+     *
+     * @param[in] base_file_name The base part of the file name.
+     *
+     */
+    void local_read(const std::string& base_file_name, int rank);
+
+    /**
      * @brief Get the matrix data as a pointer.
      */
     double *getData() const
