@@ -80,13 +80,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p>libROM is a free, lightweight, scalable C++ library for data-driven physical simulation methods from the intrusive projection-based reduced order models to non-intrusive black-box approaches.</p>
-<h1>History of libROM</h1>
-<p>The original libROM release was written by William Arrighi (retired) mainly to implement a C++ scalable and incremental singular value decomposition based on the journal paper, i.e.,</p>
-<blockquote class="doxtable">
-<p>Geoffrey M. Oxberry, Tanya Kostova-Vassilevska, William Arrighi, and Kyle Chand, <a href="https://onlinelibrary.wiley.com/doi/full/10.1002/nme.5283">_Limited-memory adaptive snapshot selection for proper orthogonal decomposition_</a>, International Journal of Numerical Methods in Engineering, <b>109</b>:198&ndash;217.</p>
-<p></p>
-</blockquote>
-<p>In addition to the incremental singular value decomposition, many other features are added:</p>
 <h2>Features</h2>
 <ul>
 <li>Dynamic data collection</li>
@@ -94,8 +87,13 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li>Greedy algorithm</li>
 <li>Hyper-reduction</li>
 </ul>
+<h2>Features to be added</h2>
+<ul>
+<li>Dynamic mode decomposition (DMD)</li>
+<li>Sparse identification of nonlinear dynamics (SINDy)</li>
+</ul>
 <h1>Authors</h1>
-<p>Robert W. Anderson (LLNL), Siu Wun Cheung (LLNL), Youngsoo Choi (LLNL), Dylan Copeland (LLNL), Kevin Huynh (LLNL), Jessica Lauzon (Stanford), Sean McBane (UT Austin), Geoffrey Oxberry (LLNL).</p>
+<p>Robert W. Anderson (LLNL), William Arrighi (LLNL), Siu Wun Cheung (LLNL), Youngsoo Choi (LLNL), Dylan Copeland (LLNL), Kevin Huynh (LLNL), Jessica Lauzon (Stanford), Sean McBane (UT Austin), Geoffrey Oxberry (LLNL).</p>
 <h1>License</h1>
 <p>libROM is distributed under the terms of both the MIT license and the Apache License (Version 2.0). Users may choose either license at their option.</p>
 <p>All new contributions must be made under both the MIT and Apache-2.0 licenses.</p>
@@ -105,8 +103,14 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <p>LLNL-CODE-686965 (up to commit 299876e0a0304f25db56f1f9e2eb2c61ef199048) LLNL-CODE-766763</p>
 <h1>Installation</h1>
 <p>To compile libROM with default build settings (Mac and LLNL LC Machines): ```sh ./scripts/compile.sh ```</p>
-<p>To compile libROM for Ardra (LLNL LC Machines only): ```sh ./scripts/ardra_compile.sh ```</p>
-<p>To compile libROM using a different toolchain within cmake/toolchains (Mac and LLNL LC Machines): ```sh ./scripts/toolchain_compile.sh toolchain.cmake ```</p>
+<p>Compilation options:</p>
+<ul>
+<li>-a: Compile a special build for the LLNL codebase: Ardra</li>
+<li>-d: Compile in debug mode.</li>
+<li>-m: Compile with MFEM (required to run the libROM examples)</li>
+<li>-t: Use your own cmake/toolchain</li>
+<li>-u: Update all of libROM's dependencies.</li>
+</ul>
 <h1>Installing via Spack</h1>
 <p>There is a Spack package for libROM; however, the version it installs is the latest public release. See the <a href="http://spack.readthedocs.io/en/latest/index.html">spack documentation</a> for details on how to use Spack. </p>
 </div></div><!-- contents -->
