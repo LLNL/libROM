@@ -1394,6 +1394,7 @@ GreedyParameterPointSampler::save(std::string base_file_name)
         }
         database.close();
     }
+    MPI_Barrier(MPI_COMM_WORLD);
 }
 
 bool
