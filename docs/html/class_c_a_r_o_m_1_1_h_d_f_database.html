@@ -119,9 +119,9 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="c
 <tr class="memitem:ab86ee99a63cf0259ed1c87d57f3b0960"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_h_d_f_database.html#ab86ee99a63cf0259ed1c87d57f3b0960">create</a> (const std::string &amp;file_name)</td></tr>
 <tr class="memdesc:ab86ee99a63cf0259ed1c87d57f3b0960"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a new HDF5 database file with the supplied name.  <a href="#ab86ee99a63cf0259ed1c87d57f3b0960">More...</a><br/></td></tr>
 <tr class="separator:ab86ee99a63cf0259ed1c87d57f3b0960"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1dc9c865d0338214b1006e3e447c9137"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_h_d_f_database.html#a1dc9c865d0338214b1006e3e447c9137">open</a> (const std::string &amp;file_name)</td></tr>
-<tr class="memdesc:a1dc9c865d0338214b1006e3e447c9137"><td class="mdescLeft">&#160;</td><td class="mdescRight">Opens an existing HDF5 database file with the supplied name.  <a href="#a1dc9c865d0338214b1006e3e447c9137">More...</a><br/></td></tr>
-<tr class="separator:a1dc9c865d0338214b1006e3e447c9137"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad221573d351a1f0a2e2356e1a4320089"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_h_d_f_database.html#ad221573d351a1f0a2e2356e1a4320089">open</a> (const std::string &amp;file_name, const std::string &amp;type)</td></tr>
+<tr class="memdesc:ad221573d351a1f0a2e2356e1a4320089"><td class="mdescLeft">&#160;</td><td class="mdescRight">Opens an existing HDF5 database file with the supplied name.  <a href="#ad221573d351a1f0a2e2356e1a4320089">More...</a><br/></td></tr>
+<tr class="separator:ad221573d351a1f0a2e2356e1a4320089"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a94c9a5972e98e4426c3bdc255ee1dfdc"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_h_d_f_database.html#a94c9a5972e98e4426c3bdc255ee1dfdc">close</a> ()</td></tr>
 <tr class="memdesc:a94c9a5972e98e4426c3bdc255ee1dfdc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Closes the currently open HDF5 database file.  <a href="#a94c9a5972e98e4426c3bdc255ee1dfdc">More...</a><br/></td></tr>
 <tr class="separator:a94c9a5972e98e4426c3bdc255ee1dfdc"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -343,7 +343,7 @@ data != 0 || nelements == 0</dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="a1dc9c865d0338214b1006e3e447c9137"></a>
+<a class="anchor" id="ad221573d351a1f0a2e2356e1a4320089"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -354,8 +354,18 @@ data != 0 || nelements == 0</dd></dl>
           <td class="memname">virtual bool CAROM::HDFDatabase::open </td>
           <td>(</td>
           <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>file_name</em></td><td>)</td>
+          <td class="paramname"><em>file_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>type</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
   </td>
@@ -368,13 +378,14 @@ data != 0 || nelements == 0</dd></dl>
 <p>Opens an existing HDF5 database file with the supplied name. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">file_name</td><td>Name of existing HDF5 database file to open.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">file_name</td><td>Name of existing HDF5 database file to open. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">type</td><td>Read/write type ("r"/"wr")</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>True if file open was successful. </dd></dl>
 
-<p>Implements <a class="el" href="class_c_a_r_o_m_1_1_database.html#abc4f4f4e7af7e9b340854d3e7562483e">CAROM::Database</a>.</p>
+<p>Implements <a class="el" href="class_c_a_r_o_m_1_1_database.html#a420af85386e4d1aa5f20227116f60f83">CAROM::Database</a>.</p>
 
 </div>
 </div>

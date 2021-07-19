@@ -116,106 +116,107 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_database.html#a5399793945da517596be573c47796223">create</a>(</div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;        <span class="keyword">const</span> std::string&amp; file_name) = 0;</div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    <span class="keyword">virtual</span></div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    <span class="keywordtype">bool</span></div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_database.html#abc4f4f4e7af7e9b340854d3e7562483e">open</a>(</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;        <span class="keyword">const</span> std::string&amp; file_name) = 0;</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    <span class="keyword">virtual</span></div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    <span class="keywordtype">bool</span></div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_database.html#a75da8db9a3ffa8c4c150f67e62a600e8">close</a>() = 0;</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00080"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_database.html#ab765fefcca1980db5d65f40fd618986d">   80</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_database.html#ab765fefcca1980db5d65f40fd618986d">putInteger</a>(</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;        <span class="keyword">const</span> std::string&amp; key,</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;        <span class="keywordtype">int</span> data)</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    {</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_database.html#a3de6b822f53f16bd8fe8eaff2ce520c3">putIntegerArray</a>(key, &amp;data, 1);</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    }</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;    <span class="keyword">virtual</span></div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_database.html#a3de6b822f53f16bd8fe8eaff2ce520c3">putIntegerArray</a>(</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;        <span class="keyword">const</span> std::string&amp; key,</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;        <span class="keyword">const</span> <span class="keywordtype">int</span>* <span class="keyword">const</span> data,</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;        <span class="keywordtype">int</span> nelements) = 0;</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00111"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_database.html#aac3a202671f838713e8d4b5dc47b2dca">  111</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_database.html#aac3a202671f838713e8d4b5dc47b2dca">putDouble</a>(</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;        <span class="keyword">const</span> std::string&amp; key,</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;        <span class="keywordtype">double</span> data)</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    {</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_database.html#ae85e8cc70193d2802eb73db94fa54975">putDoubleArray</a>(key, &amp;data, 1);</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;    }</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;    <span class="keyword">virtual</span></div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_database.html#ae85e8cc70193d2802eb73db94fa54975">putDoubleArray</a>(</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;        <span class="keyword">const</span> std::string&amp; key,</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;        <span class="keyword">const</span> <span class="keywordtype">double</span>* <span class="keyword">const</span> data,</div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;        <span class="keywordtype">int</span> nelements) = 0;</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;</div>
-<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00142"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_database.html#a5734113f2bec0450fc014f84abdc41c4">  142</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_database.html#a5734113f2bec0450fc014f84abdc41c4">getInteger</a>(</div>
-<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;        <span class="keyword">const</span> std::string&amp; key,</div>
-<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;        <span class="keywordtype">int</span>&amp; data)</div>
-<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;    {</div>
-<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_database.html#a7a518cc3a2b49fbfe70b45030319741d">getIntegerArray</a>(key, &amp;data, 1);</div>
-<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;    }</div>
-<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;</div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;    <span class="keyword">virtual</span></div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_database.html#a7a518cc3a2b49fbfe70b45030319741d">getIntegerArray</a>(</div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;        <span class="keyword">const</span> std::string&amp; key,</div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;        <span class="keywordtype">int</span>* data,</div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;        <span class="keywordtype">int</span> nelements) = 0;</div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;</div>
-<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00173"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_database.html#aee76ac7276135e202f0d5d6a6adce034">  173</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_database.html#aee76ac7276135e202f0d5d6a6adce034">getDouble</a>(</div>
-<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;        <span class="keyword">const</span> std::string&amp; key,</div>
-<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;        <span class="keywordtype">double</span>&amp; data)</div>
-<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;    {</div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_database.html#ab5775af8c9f41f00c4bd8d23227f1b8d">getDoubleArray</a>(key, &amp;data, 1);</div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;    }</div>
-<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;</div>
-<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;    <span class="keyword">virtual</span></div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_database.html#ab5775af8c9f41f00c4bd8d23227f1b8d">getDoubleArray</a>(</div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;        <span class="keyword">const</span> std::string&amp; key,</div>
-<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;        <span class="keywordtype">double</span>* data,</div>
-<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;        <span class="keywordtype">int</span> nelements) = 0;</div>
-<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;</div>
-<div class="line"><a name="l00200"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_database.html#a8ab29ee6466ef8415ee0ef93d94cc5f7">  200</a></span>&#160;    <span class="keyword">enum</span> <a class="code" href="class_c_a_r_o_m_1_1_database.html#a8ab29ee6466ef8415ee0ef93d94cc5f7">formats</a> {</div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;        HDF5</div>
-<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;    };</div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;</div>
-<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_database.html#a52d814f0e3f7ab79a7a81df58a269e24">Database</a>(</div>
-<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_database.html">Database</a>&amp; other);</div>
-<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;</div>
-<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_database.html">Database</a>&amp;</div>
-<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;    operator = (</div>
-<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_database.html">Database</a>&amp; rhs);</div>
-<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;};</div>
-<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;</div>
-<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;}</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    <span class="keyword">virtual</span></div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    <span class="keywordtype">bool</span></div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_database.html#a420af85386e4d1aa5f20227116f60f83">open</a>(</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;        <span class="keyword">const</span> std::string&amp; file_name,</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;        <span class="keyword">const</span> std::string&amp; type) = 0;</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    <span class="keyword">virtual</span></div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;    <span class="keywordtype">bool</span></div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_database.html#a75da8db9a3ffa8c4c150f67e62a600e8">close</a>() = 0;</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00082"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_database.html#ab765fefcca1980db5d65f40fd618986d">   82</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_database.html#ab765fefcca1980db5d65f40fd618986d">putInteger</a>(</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;        <span class="keyword">const</span> std::string&amp; key,</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;        <span class="keywordtype">int</span> data)</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    {</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_database.html#a3de6b822f53f16bd8fe8eaff2ce520c3">putIntegerArray</a>(key, &amp;data, 1);</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    }</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;    <span class="keyword">virtual</span></div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_database.html#a3de6b822f53f16bd8fe8eaff2ce520c3">putIntegerArray</a>(</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;        <span class="keyword">const</span> std::string&amp; key,</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;        <span class="keyword">const</span> <span class="keywordtype">int</span>* <span class="keyword">const</span> data,</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;        <span class="keywordtype">int</span> nelements) = 0;</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00113"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_database.html#aac3a202671f838713e8d4b5dc47b2dca">  113</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_database.html#aac3a202671f838713e8d4b5dc47b2dca">putDouble</a>(</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;        <span class="keyword">const</span> std::string&amp; key,</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;        <span class="keywordtype">double</span> data)</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;    {</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_database.html#ae85e8cc70193d2802eb73db94fa54975">putDoubleArray</a>(key, &amp;data, 1);</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    }</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;</div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;    <span class="keyword">virtual</span></div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_database.html#ae85e8cc70193d2802eb73db94fa54975">putDoubleArray</a>(</div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;        <span class="keyword">const</span> std::string&amp; key,</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;        <span class="keyword">const</span> <span class="keywordtype">double</span>* <span class="keyword">const</span> data,</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;        <span class="keywordtype">int</span> nelements) = 0;</div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;</div>
+<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00144"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_database.html#a5734113f2bec0450fc014f84abdc41c4">  144</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_database.html#a5734113f2bec0450fc014f84abdc41c4">getInteger</a>(</div>
+<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;        <span class="keyword">const</span> std::string&amp; key,</div>
+<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;        <span class="keywordtype">int</span>&amp; data)</div>
+<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;    {</div>
+<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_database.html#a7a518cc3a2b49fbfe70b45030319741d">getIntegerArray</a>(key, &amp;data, 1);</div>
+<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;    }</div>
+<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;</div>
+<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;    <span class="keyword">virtual</span></div>
+<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_database.html#a7a518cc3a2b49fbfe70b45030319741d">getIntegerArray</a>(</div>
+<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;        <span class="keyword">const</span> std::string&amp; key,</div>
+<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;        <span class="keywordtype">int</span>* data,</div>
+<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;        <span class="keywordtype">int</span> nelements) = 0;</div>
+<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;</div>
+<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00175"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_database.html#aee76ac7276135e202f0d5d6a6adce034">  175</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_database.html#aee76ac7276135e202f0d5d6a6adce034">getDouble</a>(</div>
+<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;        <span class="keyword">const</span> std::string&amp; key,</div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;        <span class="keywordtype">double</span>&amp; data)</div>
+<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;    {</div>
+<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_database.html#ab5775af8c9f41f00c4bd8d23227f1b8d">getDoubleArray</a>(key, &amp;data, 1);</div>
+<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;    }</div>
+<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;</div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;    <span class="keyword">virtual</span></div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_database.html#ab5775af8c9f41f00c4bd8d23227f1b8d">getDoubleArray</a>(</div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;        <span class="keyword">const</span> std::string&amp; key,</div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;        <span class="keywordtype">double</span>* data,</div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;        <span class="keywordtype">int</span> nelements) = 0;</div>
+<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;</div>
+<div class="line"><a name="l00202"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_database.html#a8ab29ee6466ef8415ee0ef93d94cc5f7">  202</a></span>&#160;    <span class="keyword">enum</span> <a class="code" href="class_c_a_r_o_m_1_1_database.html#a8ab29ee6466ef8415ee0ef93d94cc5f7">formats</a> {</div>
+<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;        HDF5</div>
+<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;    };</div>
+<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;</div>
+<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_database.html#a52d814f0e3f7ab79a7a81df58a269e24">Database</a>(</div>
+<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_database.html">Database</a>&amp; other);</div>
+<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;</div>
+<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_database.html">Database</a>&amp;</div>
+<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;    operator = (</div>
+<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_database.html">Database</a>&amp; rhs);</div>
+<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;};</div>
 <div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;</div>
-<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;}</div>
+<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;</div>
+<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_database_html_ab5775af8c9f41f00c4bd8d23227f1b8d"><div class="ttname"><a href="class_c_a_r_o_m_1_1_database.html#ab5775af8c9f41f00c4bd8d23227f1b8d">CAROM::Database::getDoubleArray</a></div><div class="ttdeci">virtual void getDoubleArray(const std::string &amp;key, double *data, int nelements)=0</div><div class="ttdoc">Reads an array of doubles associated with the supplied key from the currently open database file...</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_database_html_a5399793945da517596be573c47796223"><div class="ttname"><a href="class_c_a_r_o_m_1_1_database.html#a5399793945da517596be573c47796223">CAROM::Database::create</a></div><div class="ttdeci">virtual bool create(const std::string &amp;file_name)=0</div><div class="ttdoc">Creates a new database file with the supplied name. </div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_database_html_a52d814f0e3f7ab79a7a81df58a269e24"><div class="ttname"><a href="class_c_a_r_o_m_1_1_database.html#a52d814f0e3f7ab79a7a81df58a269e24">CAROM::Database::Database</a></div><div class="ttdeci">Database()</div><div class="ttdoc">Default constructor. </div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_database_html_a8ab29ee6466ef8415ee0ef93d94cc5f7"><div class="ttname"><a href="class_c_a_r_o_m_1_1_database.html#a8ab29ee6466ef8415ee0ef93d94cc5f7">CAROM::Database::formats</a></div><div class="ttdeci">formats</div><div class="ttdoc">Implemented database file formats. Add to this enum each time a new database format is implemented...</div><div class="ttdef"><b>Definition:</b> Database.h:200</div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_database_html_a8ab29ee6466ef8415ee0ef93d94cc5f7"><div class="ttname"><a href="class_c_a_r_o_m_1_1_database.html#a8ab29ee6466ef8415ee0ef93d94cc5f7">CAROM::Database::formats</a></div><div class="ttdeci">formats</div><div class="ttdoc">Implemented database file formats. Add to this enum each time a new database format is implemented...</div><div class="ttdef"><b>Definition:</b> Database.h:202</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_database_html_a7a518cc3a2b49fbfe70b45030319741d"><div class="ttname"><a href="class_c_a_r_o_m_1_1_database.html#a7a518cc3a2b49fbfe70b45030319741d">CAROM::Database::getIntegerArray</a></div><div class="ttdeci">virtual void getIntegerArray(const std::string &amp;key, int *data, int nelements)=0</div><div class="ttdoc">Reads an array of integers associated with the supplied key from the currently open database file...</div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_database_html_ab765fefcca1980db5d65f40fd618986d"><div class="ttname"><a href="class_c_a_r_o_m_1_1_database.html#ab765fefcca1980db5d65f40fd618986d">CAROM::Database::putInteger</a></div><div class="ttdeci">void putInteger(const std::string &amp;key, int data)</div><div class="ttdoc">Writes an integer associated with the supplied key to currently open database file. </div><div class="ttdef"><b>Definition:</b> Database.h:80</div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_database_html_a420af85386e4d1aa5f20227116f60f83"><div class="ttname"><a href="class_c_a_r_o_m_1_1_database.html#a420af85386e4d1aa5f20227116f60f83">CAROM::Database::open</a></div><div class="ttdeci">virtual bool open(const std::string &amp;file_name, const std::string &amp;type)=0</div><div class="ttdoc">Opens an existing database file with the supplied name. </div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_database_html_ab765fefcca1980db5d65f40fd618986d"><div class="ttname"><a href="class_c_a_r_o_m_1_1_database.html#ab765fefcca1980db5d65f40fd618986d">CAROM::Database::putInteger</a></div><div class="ttdeci">void putInteger(const std::string &amp;key, int data)</div><div class="ttdoc">Writes an integer associated with the supplied key to currently open database file. </div><div class="ttdef"><b>Definition:</b> Database.h:82</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_database_html_ac30c27c5448929dd1817475c766e212d"><div class="ttname"><a href="class_c_a_r_o_m_1_1_database.html#ac30c27c5448929dd1817475c766e212d">CAROM::Database::~Database</a></div><div class="ttdeci">virtual ~Database()</div><div class="ttdoc">Destructor. </div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_database_html_a5734113f2bec0450fc014f84abdc41c4"><div class="ttname"><a href="class_c_a_r_o_m_1_1_database.html#a5734113f2bec0450fc014f84abdc41c4">CAROM::Database::getInteger</a></div><div class="ttdeci">void getInteger(const std::string &amp;key, int &amp;data)</div><div class="ttdoc">Reads an integer associated with the supplied key from the currently open database file...</div><div class="ttdef"><b>Definition:</b> Database.h:142</div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_database_html_a5734113f2bec0450fc014f84abdc41c4"><div class="ttname"><a href="class_c_a_r_o_m_1_1_database.html#a5734113f2bec0450fc014f84abdc41c4">CAROM::Database::getInteger</a></div><div class="ttdeci">void getInteger(const std::string &amp;key, int &amp;data)</div><div class="ttdoc">Reads an integer associated with the supplied key from the currently open database file...</div><div class="ttdef"><b>Definition:</b> Database.h:144</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_database_html_a3de6b822f53f16bd8fe8eaff2ce520c3"><div class="ttname"><a href="class_c_a_r_o_m_1_1_database.html#a3de6b822f53f16bd8fe8eaff2ce520c3">CAROM::Database::putIntegerArray</a></div><div class="ttdeci">virtual void putIntegerArray(const std::string &amp;key, const int *const data, int nelements)=0</div><div class="ttdoc">Writes an array of integers associated with the supplied key to the currently open database file...</div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_database_html_aac3a202671f838713e8d4b5dc47b2dca"><div class="ttname"><a href="class_c_a_r_o_m_1_1_database.html#aac3a202671f838713e8d4b5dc47b2dca">CAROM::Database::putDouble</a></div><div class="ttdeci">void putDouble(const std::string &amp;key, double data)</div><div class="ttdoc">Writes a double associated with the supplied key to currently open database file. ...</div><div class="ttdef"><b>Definition:</b> Database.h:111</div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_database_html_aac3a202671f838713e8d4b5dc47b2dca"><div class="ttname"><a href="class_c_a_r_o_m_1_1_database.html#aac3a202671f838713e8d4b5dc47b2dca">CAROM::Database::putDouble</a></div><div class="ttdeci">void putDouble(const std::string &amp;key, double data)</div><div class="ttdoc">Writes a double associated with the supplied key to currently open database file. ...</div><div class="ttdef"><b>Definition:</b> Database.h:113</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_database_html"><div class="ttname"><a href="class_c_a_r_o_m_1_1_database.html">CAROM::Database</a></div><div class="ttdef"><b>Definition:</b> Database.h:25</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_database_html_a75da8db9a3ffa8c4c150f67e62a600e8"><div class="ttname"><a href="class_c_a_r_o_m_1_1_database.html#a75da8db9a3ffa8c4c150f67e62a600e8">CAROM::Database::close</a></div><div class="ttdeci">virtual bool close()=0</div><div class="ttdoc">Closes the currently open database file. </div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_database_html_aee76ac7276135e202f0d5d6a6adce034"><div class="ttname"><a href="class_c_a_r_o_m_1_1_database.html#aee76ac7276135e202f0d5d6a6adce034">CAROM::Database::getDouble</a></div><div class="ttdeci">void getDouble(const std::string &amp;key, double &amp;data)</div><div class="ttdoc">Reads a double associated with the supplied key from the currently open database file. </div><div class="ttdef"><b>Definition:</b> Database.h:173</div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_database_html_aee76ac7276135e202f0d5d6a6adce034"><div class="ttname"><a href="class_c_a_r_o_m_1_1_database.html#aee76ac7276135e202f0d5d6a6adce034">CAROM::Database::getDouble</a></div><div class="ttdeci">void getDouble(const std::string &amp;key, double &amp;data)</div><div class="ttdoc">Reads a double associated with the supplied key from the currently open database file. </div><div class="ttdef"><b>Definition:</b> Database.h:175</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_database_html_ae85e8cc70193d2802eb73db94fa54975"><div class="ttname"><a href="class_c_a_r_o_m_1_1_database.html#ae85e8cc70193d2802eb73db94fa54975">CAROM::Database::putDoubleArray</a></div><div class="ttdeci">virtual void putDoubleArray(const std::string &amp;key, const double *const data, int nelements)=0</div><div class="ttdoc">Writes an array of doubles associated with the supplied key to the currently open database file...</div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_database_html_abc4f4f4e7af7e9b340854d3e7562483e"><div class="ttname"><a href="class_c_a_r_o_m_1_1_database.html#abc4f4f4e7af7e9b340854d3e7562483e">CAROM::Database::open</a></div><div class="ttdeci">virtual bool open(const std::string &amp;file_name)=0</div><div class="ttdoc">Opens an existing database file with the supplied name. </div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

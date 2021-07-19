@@ -233,7 +233,7 @@ GreedyParameterPointSampler::addDatabaseFromFile(
     char tmp[100];
     std::string full_file_name = warm_start_file_name;
     HDFDatabase database;
-    database.open(full_file_name);
+    database.open(full_file_name, "r");
 
     sprintf(tmp, "num_parameter_sampled_indices");
     int num_parameter_sampled_indices;
@@ -270,7 +270,7 @@ GreedyParameterPointSampler::load(
     char tmp[100];
     std::string full_file_name = base_file_name;
     HDFDatabase database;
-    database.open(full_file_name);
+    database.open(full_file_name, "r");
 
     sprintf(tmp, "num_parameter_points");
     int num_parameter_points;

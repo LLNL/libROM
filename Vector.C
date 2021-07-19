@@ -476,7 +476,7 @@ Vector::read(const std::string& base_file_name)
     sprintf(tmp, ".%06d", rank);
     std::string full_file_name = base_file_name + tmp;
     HDFDatabase database;
-    database.open(full_file_name);
+    database.open(full_file_name, "r");
 
     sprintf(tmp, "distributed");
     int distributed;
@@ -510,7 +510,7 @@ Vector::local_read(const std::string& base_file_name, int rank)
     sprintf(tmp, ".%06d", rank);
     std::string full_file_name = base_file_name + tmp;
     HDFDatabase database;
-    database.open(full_file_name);
+    database.open(full_file_name, "r");
 
     sprintf(tmp, "distributed");
     int distributed;

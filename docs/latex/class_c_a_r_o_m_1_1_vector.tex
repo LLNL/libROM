@@ -96,6 +96,8 @@ void \hyperlink{class_c_a_r_o_m_1_1_vector_a73fc052af63b99e06e9315c72727a0ee}{pr
 void \hyperlink{class_c_a_r_o_m_1_1_vector_a8eeaff9eedc7ab261577670e98f356c3}{write} (const std\-::string \&base\-\_\-file\-\_\-name)
 \begin{DoxyCompactList}\small\item\em write \hyperlink{class_c_a_r_o_m_1_1_vector}{Vector} into (a) H\-D\-F file(s). \end{DoxyCompactList}\item 
 void \hyperlink{class_c_a_r_o_m_1_1_vector_a2b38fbc6b7d898bcc0399e1380a436d3}{read} (const std\-::string \&base\-\_\-file\-\_\-name)
+\begin{DoxyCompactList}\small\item\em read \hyperlink{class_c_a_r_o_m_1_1_vector}{Vector} from (a) H\-D\-F file(s). \end{DoxyCompactList}\item 
+void \hyperlink{class_c_a_r_o_m_1_1_vector_adc03e6513482466f5d3367d8e54dce4f}{local\-\_\-read} (const std\-::string \&base\-\_\-file\-\_\-name, int rank)
 \begin{DoxyCompactList}\small\item\em read \hyperlink{class_c_a_r_o_m_1_1_vector}{Vector} from (a) H\-D\-F file(s). \end{DoxyCompactList}\end{DoxyCompactItemize}
 
 
@@ -302,6 +304,23 @@ Allows constructs of the form vec\mbox{[}i\mbox{]} = val;
 \begin{DoxyReturn}{Returns}
 The requested component of the \hyperlink{class_c_a_r_o_m_1_1_vector}{Vector} on this processor. 
 \end{DoxyReturn}
+\hypertarget{class_c_a_r_o_m_1_1_vector_adc03e6513482466f5d3367d8e54dce4f}{\index{C\-A\-R\-O\-M\-::\-Vector@{C\-A\-R\-O\-M\-::\-Vector}!local\-\_\-read@{local\-\_\-read}}
+\index{local\-\_\-read@{local\-\_\-read}!CAROM::Vector@{C\-A\-R\-O\-M\-::\-Vector}}
+\subsubsection[{local\-\_\-read}]{\setlength{\rightskip}{0pt plus 5cm}void C\-A\-R\-O\-M\-::\-Vector\-::local\-\_\-read (
+\begin{DoxyParamCaption}
+\item[{const std\-::string \&}]{base\-\_\-file\-\_\-name, }
+\item[{int}]{rank}
+\end{DoxyParamCaption}
+)}}\label{class_c_a_r_o_m_1_1_vector_adc03e6513482466f5d3367d8e54dce4f}
+
+
+read \hyperlink{class_c_a_r_o_m_1_1_vector}{Vector} from (a) H\-D\-F file(s). 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em base\-\_\-file\-\_\-name} & The base part of the file name. \\
+\hline
+\end{DoxyParams}
 \hypertarget{class_c_a_r_o_m_1_1_vector_ac7e6bd13bfb89ae084f1933789055999}{\index{C\-A\-R\-O\-M\-::\-Vector@{C\-A\-R\-O\-M\-::\-Vector}!minus@{minus}}
 \index{minus@{minus}!CAROM::Vector@{C\-A\-R\-O\-M\-::\-Vector}}
 \subsubsection[{minus}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Vector}$\ast$ C\-A\-R\-O\-M\-::\-Vector\-::minus (

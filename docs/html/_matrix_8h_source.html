@@ -403,81 +403,84 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00872"></a><span class="lineno">  872</span>&#160;</div>
 <div class="line"><a name="l00879"></a><span class="lineno">  879</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="class_c_a_r_o_m_1_1_matrix.html#acdc4a8fd238f64d8106b8f1ba8f2384e">read</a>(<span class="keyword">const</span> std::string&amp; base_file_name);</div>
 <div class="line"><a name="l00880"></a><span class="lineno">  880</span>&#160;</div>
-<div class="line"><a name="l00884"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_matrix.html#a951b1d63fafbc9b4ddd112bd400ca758">  884</a></span>&#160;    <span class="keywordtype">double</span> *<a class="code" href="class_c_a_r_o_m_1_1_matrix.html#a951b1d63fafbc9b4ddd112bd400ca758">getData</a>()<span class="keyword"> const</span></div>
-<div class="line"><a name="l00885"></a><span class="lineno">  885</span>&#160;<span class="keyword">    </span>{</div>
-<div class="line"><a name="l00886"></a><span class="lineno">  886</span>&#160;        <span class="keywordflow">return</span> d_mat;</div>
-<div class="line"><a name="l00887"></a><span class="lineno">  887</span>&#160;    }</div>
+<div class="line"><a name="l00887"></a><span class="lineno">  887</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="class_c_a_r_o_m_1_1_matrix.html#a09da21ed0f70b190d5625303ea2d92e4">local_read</a>(<span class="keyword">const</span> std::string&amp; base_file_name, <span class="keywordtype">int</span> rank);</div>
 <div class="line"><a name="l00888"></a><span class="lineno">  888</span>&#160;</div>
-<div class="line"><a name="l00889"></a><span class="lineno">  889</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00895"></a><span class="lineno">  895</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00896"></a><span class="lineno">  896</span>&#160;    calculateNumDistributedRows();</div>
-<div class="line"><a name="l00897"></a><span class="lineno">  897</span>&#160;</div>
-<div class="line"><a name="l00912"></a><span class="lineno">  912</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00913"></a><span class="lineno">  913</span>&#160;    qrcp_pivots_transpose_serial(<span class="keywordtype">int</span>* row_pivot,</div>
-<div class="line"><a name="l00914"></a><span class="lineno">  914</span>&#160;                                 <span class="keywordtype">int</span>* row_pivot_owner,</div>
-<div class="line"><a name="l00915"></a><span class="lineno">  915</span>&#160;                                 <span class="keywordtype">int</span>  pivots_requested) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00916"></a><span class="lineno">  916</span>&#160;</div>
-<div class="line"><a name="l00931"></a><span class="lineno">  931</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00932"></a><span class="lineno">  932</span>&#160;    qrcp_pivots_transpose_distributed(<span class="keywordtype">int</span>* row_pivot,</div>
-<div class="line"><a name="l00933"></a><span class="lineno">  933</span>&#160;                                      <span class="keywordtype">int</span>* row_pivot_owner,</div>
-<div class="line"><a name="l00934"></a><span class="lineno">  934</span>&#160;                                      <span class="keywordtype">int</span>  pivots_requested) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00935"></a><span class="lineno">  935</span>&#160;</div>
-<div class="line"><a name="l00936"></a><span class="lineno">  936</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00937"></a><span class="lineno">  937</span>&#160;    qrcp_pivots_transpose_distributed_scalapack(<span class="keywordtype">int</span>* row_pivot,</div>
-<div class="line"><a name="l00938"></a><span class="lineno">  938</span>&#160;            <span class="keywordtype">int</span>* row_pivot_owner,</div>
-<div class="line"><a name="l00939"></a><span class="lineno">  939</span>&#160;            <span class="keywordtype">int</span>  pivots_requested) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00940"></a><span class="lineno">  940</span>&#160;</div>
-<div class="line"><a name="l00956"></a><span class="lineno">  956</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00957"></a><span class="lineno">  957</span>&#160;    qrcp_pivots_transpose_distributed_elemental(<span class="keywordtype">int</span>* row_pivot,</div>
-<div class="line"><a name="l00958"></a><span class="lineno">  958</span>&#160;            <span class="keywordtype">int</span>* row_pivot_owner,</div>
-<div class="line"><a name="l00959"></a><span class="lineno">  959</span>&#160;            <span class="keywordtype">int</span>  pivots_requested) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00960"></a><span class="lineno">  960</span>&#160;</div>
-<div class="line"><a name="l00976"></a><span class="lineno">  976</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00977"></a><span class="lineno">  977</span>&#160;    qrcp_pivots_transpose_distributed_elemental_balanced</div>
-<div class="line"><a name="l00978"></a><span class="lineno">  978</span>&#160;    (<span class="keywordtype">int</span>* row_pivot, <span class="keywordtype">int</span>* row_pivot_owner, <span class="keywordtype">int</span> pivots_requested) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00979"></a><span class="lineno">  979</span>&#160;</div>
-<div class="line"><a name="l00995"></a><span class="lineno">  995</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00996"></a><span class="lineno">  996</span>&#160;    qrcp_pivots_transpose_distributed_elemental_unbalanced</div>
-<div class="line"><a name="l00997"></a><span class="lineno">  997</span>&#160;    (<span class="keywordtype">int</span>* row_pivot, <span class="keywordtype">int</span>* row_pivot_owner, <span class="keywordtype">int</span> pivots_requested) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00998"></a><span class="lineno">  998</span>&#160;</div>
-<div class="line"><a name="l01002"></a><span class="lineno"> 1002</span>&#160;    <span class="keywordtype">double</span>* d_mat;</div>
-<div class="line"><a name="l01003"></a><span class="lineno"> 1003</span>&#160;</div>
-<div class="line"><a name="l01007"></a><span class="lineno"> 1007</span>&#160;    <span class="keywordtype">int</span> d_num_rows;</div>
-<div class="line"><a name="l01008"></a><span class="lineno"> 1008</span>&#160;</div>
-<div class="line"><a name="l01012"></a><span class="lineno"> 1012</span>&#160;    <span class="keywordtype">int</span> d_num_distributed_rows;</div>
-<div class="line"><a name="l01013"></a><span class="lineno"> 1013</span>&#160;</div>
-<div class="line"><a name="l01020"></a><span class="lineno"> 1020</span>&#160;    <span class="keywordtype">int</span> d_num_cols;</div>
+<div class="line"><a name="l00892"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_matrix.html#a951b1d63fafbc9b4ddd112bd400ca758">  892</a></span>&#160;    <span class="keywordtype">double</span> *<a class="code" href="class_c_a_r_o_m_1_1_matrix.html#a951b1d63fafbc9b4ddd112bd400ca758">getData</a>()<span class="keyword"> const</span></div>
+<div class="line"><a name="l00893"></a><span class="lineno">  893</span>&#160;<span class="keyword">    </span>{</div>
+<div class="line"><a name="l00894"></a><span class="lineno">  894</span>&#160;        <span class="keywordflow">return</span> d_mat;</div>
+<div class="line"><a name="l00895"></a><span class="lineno">  895</span>&#160;    }</div>
+<div class="line"><a name="l00896"></a><span class="lineno">  896</span>&#160;</div>
+<div class="line"><a name="l00897"></a><span class="lineno">  897</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l00903"></a><span class="lineno">  903</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00904"></a><span class="lineno">  904</span>&#160;    calculateNumDistributedRows();</div>
+<div class="line"><a name="l00905"></a><span class="lineno">  905</span>&#160;</div>
+<div class="line"><a name="l00920"></a><span class="lineno">  920</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00921"></a><span class="lineno">  921</span>&#160;    qrcp_pivots_transpose_serial(<span class="keywordtype">int</span>* row_pivot,</div>
+<div class="line"><a name="l00922"></a><span class="lineno">  922</span>&#160;                                 <span class="keywordtype">int</span>* row_pivot_owner,</div>
+<div class="line"><a name="l00923"></a><span class="lineno">  923</span>&#160;                                 <span class="keywordtype">int</span>  pivots_requested) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00924"></a><span class="lineno">  924</span>&#160;</div>
+<div class="line"><a name="l00939"></a><span class="lineno">  939</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00940"></a><span class="lineno">  940</span>&#160;    qrcp_pivots_transpose_distributed(<span class="keywordtype">int</span>* row_pivot,</div>
+<div class="line"><a name="l00941"></a><span class="lineno">  941</span>&#160;                                      <span class="keywordtype">int</span>* row_pivot_owner,</div>
+<div class="line"><a name="l00942"></a><span class="lineno">  942</span>&#160;                                      <span class="keywordtype">int</span>  pivots_requested) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00943"></a><span class="lineno">  943</span>&#160;</div>
+<div class="line"><a name="l00944"></a><span class="lineno">  944</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00945"></a><span class="lineno">  945</span>&#160;    qrcp_pivots_transpose_distributed_scalapack(<span class="keywordtype">int</span>* row_pivot,</div>
+<div class="line"><a name="l00946"></a><span class="lineno">  946</span>&#160;            <span class="keywordtype">int</span>* row_pivot_owner,</div>
+<div class="line"><a name="l00947"></a><span class="lineno">  947</span>&#160;            <span class="keywordtype">int</span>  pivots_requested) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00948"></a><span class="lineno">  948</span>&#160;</div>
+<div class="line"><a name="l00964"></a><span class="lineno">  964</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00965"></a><span class="lineno">  965</span>&#160;    qrcp_pivots_transpose_distributed_elemental(<span class="keywordtype">int</span>* row_pivot,</div>
+<div class="line"><a name="l00966"></a><span class="lineno">  966</span>&#160;            <span class="keywordtype">int</span>* row_pivot_owner,</div>
+<div class="line"><a name="l00967"></a><span class="lineno">  967</span>&#160;            <span class="keywordtype">int</span>  pivots_requested) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00968"></a><span class="lineno">  968</span>&#160;</div>
+<div class="line"><a name="l00984"></a><span class="lineno">  984</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00985"></a><span class="lineno">  985</span>&#160;    qrcp_pivots_transpose_distributed_elemental_balanced</div>
+<div class="line"><a name="l00986"></a><span class="lineno">  986</span>&#160;    (<span class="keywordtype">int</span>* row_pivot, <span class="keywordtype">int</span>* row_pivot_owner, <span class="keywordtype">int</span> pivots_requested) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00987"></a><span class="lineno">  987</span>&#160;</div>
+<div class="line"><a name="l01003"></a><span class="lineno"> 1003</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l01004"></a><span class="lineno"> 1004</span>&#160;    qrcp_pivots_transpose_distributed_elemental_unbalanced</div>
+<div class="line"><a name="l01005"></a><span class="lineno"> 1005</span>&#160;    (<span class="keywordtype">int</span>* row_pivot, <span class="keywordtype">int</span>* row_pivot_owner, <span class="keywordtype">int</span> pivots_requested) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l01006"></a><span class="lineno"> 1006</span>&#160;</div>
+<div class="line"><a name="l01010"></a><span class="lineno"> 1010</span>&#160;    <span class="keywordtype">double</span>* d_mat;</div>
+<div class="line"><a name="l01011"></a><span class="lineno"> 1011</span>&#160;</div>
+<div class="line"><a name="l01015"></a><span class="lineno"> 1015</span>&#160;    <span class="keywordtype">int</span> d_num_rows;</div>
+<div class="line"><a name="l01016"></a><span class="lineno"> 1016</span>&#160;</div>
+<div class="line"><a name="l01020"></a><span class="lineno"> 1020</span>&#160;    <span class="keywordtype">int</span> d_num_distributed_rows;</div>
 <div class="line"><a name="l01021"></a><span class="lineno"> 1021</span>&#160;</div>
-<div class="line"><a name="l01027"></a><span class="lineno"> 1027</span>&#160;    <span class="keywordtype">int</span> d_alloc_size;</div>
-<div class="line"><a name="l01028"></a><span class="lineno"> 1028</span>&#160;</div>
-<div class="line"><a name="l01034"></a><span class="lineno"> 1034</span>&#160;    <span class="keywordtype">bool</span> d_distributed;</div>
-<div class="line"><a name="l01035"></a><span class="lineno"> 1035</span>&#160;</div>
-<div class="line"><a name="l01039"></a><span class="lineno"> 1039</span>&#160;    <span class="keywordtype">int</span> d_num_procs;</div>
-<div class="line"><a name="l01040"></a><span class="lineno"> 1040</span>&#160;</div>
-<div class="line"><a name="l01047"></a><span class="lineno"> 1047</span>&#160;    <span class="keywordtype">bool</span> d_owns_data;</div>
-<div class="line"><a name="l01048"></a><span class="lineno"> 1048</span>&#160;};</div>
-<div class="line"><a name="l01049"></a><span class="lineno"> 1049</span>&#160;</div>
-<div class="line"><a name="l01064"></a><span class="lineno"> 1064</span>&#160;<span class="comment">// NOTE(goxberry@gmail.com; oxberry1@llnl.gov): Passing by value is</span></div>
-<div class="line"><a name="l01065"></a><span class="lineno"> 1065</span>&#160;<span class="comment">// supposed to be more idiomatic C++11; consider passing by value</span></div>
-<div class="line"><a name="l01066"></a><span class="lineno"> 1066</span>&#160;<span class="comment">// instead of passing by reference.</span></div>
-<div class="line"><a name="l01067"></a><span class="lineno"> 1067</span>&#160;Matrix outerProduct(<span class="keyword">const</span> Vector &amp;v, <span class="keyword">const</span> Vector &amp;w);</div>
-<div class="line"><a name="l01068"></a><span class="lineno"> 1068</span>&#160;</div>
-<div class="line"><a name="l01083"></a><span class="lineno"> 1083</span>&#160;Matrix DiagonalMatrixFactory(<span class="keyword">const</span> Vector &amp;v);</div>
-<div class="line"><a name="l01084"></a><span class="lineno"> 1084</span>&#160;</div>
-<div class="line"><a name="l01099"></a><span class="lineno"> 1099</span>&#160;Matrix IdentityMatrixFactory(<span class="keyword">const</span> Vector &amp;v);</div>
-<div class="line"><a name="l01100"></a><span class="lineno"> 1100</span>&#160;</div>
-<div class="line"><a name="l01101"></a><span class="lineno"> 1101</span>&#160;Matrix* SpaceTimeProduct(<span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">CAROM::Matrix</a>* As, <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">CAROM::Matrix</a>* At,</div>
-<div class="line"><a name="l01102"></a><span class="lineno"> 1102</span>&#160;                         <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">CAROM::Matrix</a>* Bs, <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">CAROM::Matrix</a>* Bt,</div>
-<div class="line"><a name="l01103"></a><span class="lineno"> 1103</span>&#160;                         <span class="keyword">const</span> std::vector&lt;double&gt; *tscale=NULL,</div>
-<div class="line"><a name="l01104"></a><span class="lineno"> 1104</span>&#160;                         <span class="keyword">const</span> <span class="keywordtype">bool</span> At0at0=<span class="keyword">false</span>, <span class="keyword">const</span> <span class="keywordtype">bool</span> Bt0at0=<span class="keyword">false</span>,</div>
-<div class="line"><a name="l01105"></a><span class="lineno"> 1105</span>&#160;                         <span class="keyword">const</span> <span class="keywordtype">bool</span> lagB=<span class="keyword">false</span>, <span class="keyword">const</span> <span class="keywordtype">bool</span> skip0=<span class="keyword">false</span>);</div>
-<div class="line"><a name="l01106"></a><span class="lineno"> 1106</span>&#160;}</div>
-<div class="line"><a name="l01107"></a><span class="lineno"> 1107</span>&#160;</div>
-<div class="line"><a name="l01108"></a><span class="lineno"> 1108</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l01028"></a><span class="lineno"> 1028</span>&#160;    <span class="keywordtype">int</span> d_num_cols;</div>
+<div class="line"><a name="l01029"></a><span class="lineno"> 1029</span>&#160;</div>
+<div class="line"><a name="l01035"></a><span class="lineno"> 1035</span>&#160;    <span class="keywordtype">int</span> d_alloc_size;</div>
+<div class="line"><a name="l01036"></a><span class="lineno"> 1036</span>&#160;</div>
+<div class="line"><a name="l01042"></a><span class="lineno"> 1042</span>&#160;    <span class="keywordtype">bool</span> d_distributed;</div>
+<div class="line"><a name="l01043"></a><span class="lineno"> 1043</span>&#160;</div>
+<div class="line"><a name="l01047"></a><span class="lineno"> 1047</span>&#160;    <span class="keywordtype">int</span> d_num_procs;</div>
+<div class="line"><a name="l01048"></a><span class="lineno"> 1048</span>&#160;</div>
+<div class="line"><a name="l01055"></a><span class="lineno"> 1055</span>&#160;    <span class="keywordtype">bool</span> d_owns_data;</div>
+<div class="line"><a name="l01056"></a><span class="lineno"> 1056</span>&#160;};</div>
+<div class="line"><a name="l01057"></a><span class="lineno"> 1057</span>&#160;</div>
+<div class="line"><a name="l01072"></a><span class="lineno"> 1072</span>&#160;<span class="comment">// NOTE(goxberry@gmail.com; oxberry1@llnl.gov): Passing by value is</span></div>
+<div class="line"><a name="l01073"></a><span class="lineno"> 1073</span>&#160;<span class="comment">// supposed to be more idiomatic C++11; consider passing by value</span></div>
+<div class="line"><a name="l01074"></a><span class="lineno"> 1074</span>&#160;<span class="comment">// instead of passing by reference.</span></div>
+<div class="line"><a name="l01075"></a><span class="lineno"> 1075</span>&#160;Matrix outerProduct(<span class="keyword">const</span> Vector &amp;v, <span class="keyword">const</span> Vector &amp;w);</div>
+<div class="line"><a name="l01076"></a><span class="lineno"> 1076</span>&#160;</div>
+<div class="line"><a name="l01091"></a><span class="lineno"> 1091</span>&#160;Matrix DiagonalMatrixFactory(<span class="keyword">const</span> Vector &amp;v);</div>
+<div class="line"><a name="l01092"></a><span class="lineno"> 1092</span>&#160;</div>
+<div class="line"><a name="l01107"></a><span class="lineno"> 1107</span>&#160;Matrix IdentityMatrixFactory(<span class="keyword">const</span> Vector &amp;v);</div>
+<div class="line"><a name="l01108"></a><span class="lineno"> 1108</span>&#160;</div>
+<div class="line"><a name="l01109"></a><span class="lineno"> 1109</span>&#160;Matrix* SpaceTimeProduct(<span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">CAROM::Matrix</a>* As, <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">CAROM::Matrix</a>* At,</div>
+<div class="line"><a name="l01110"></a><span class="lineno"> 1110</span>&#160;                         <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">CAROM::Matrix</a>* Bs, <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">CAROM::Matrix</a>* Bt,</div>
+<div class="line"><a name="l01111"></a><span class="lineno"> 1111</span>&#160;                         <span class="keyword">const</span> std::vector&lt;double&gt; *tscale=NULL,</div>
+<div class="line"><a name="l01112"></a><span class="lineno"> 1112</span>&#160;                         <span class="keyword">const</span> <span class="keywordtype">bool</span> At0at0=<span class="keyword">false</span>, <span class="keyword">const</span> <span class="keywordtype">bool</span> Bt0at0=<span class="keyword">false</span>,</div>
+<div class="line"><a name="l01113"></a><span class="lineno"> 1113</span>&#160;                         <span class="keyword">const</span> <span class="keywordtype">bool</span> lagB=<span class="keyword">false</span>, <span class="keyword">const</span> <span class="keywordtype">bool</span> skip0=<span class="keyword">false</span>);</div>
+<div class="line"><a name="l01114"></a><span class="lineno"> 1114</span>&#160;}</div>
+<div class="line"><a name="l01115"></a><span class="lineno"> 1115</span>&#160;</div>
+<div class="line"><a name="l01116"></a><span class="lineno"> 1116</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_matrix_html_a1fa97045bd32621d803043ccab7f715f"><div class="ttname"><a href="class_c_a_r_o_m_1_1_matrix.html#a1fa97045bd32621d803043ccab7f715f">CAROM::Matrix::numDistributedRows</a></div><div class="ttdeci">int numDistributedRows() const </div><div class="ttdoc">Returns the number of rows of the Matrix across all processors. </div><div class="ttdef"><b>Definition:</b> Matrix.h:201</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_matrix_html_acdc4a8fd238f64d8106b8f1ba8f2384e"><div class="ttname"><a href="class_c_a_r_o_m_1_1_matrix.html#acdc4a8fd238f64d8106b8f1ba8f2384e">CAROM::Matrix::read</a></div><div class="ttdeci">void read(const std::string &amp;base_file_name)</div><div class="ttdoc">read Matrix into (a) HDF file(s). </div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_matrix_html_aeb1c2a74e21480520dd71cafc7435965"><div class="ttname"><a href="class_c_a_r_o_m_1_1_matrix.html#aeb1c2a74e21480520dd71cafc7435965">CAROM::Matrix::balanced</a></div><div class="ttdeci">bool balanced() const </div><div class="ttdoc">Returns true if rows of matrix are load-balanced. </div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_matrix_html_a8f3c54f1b7d88acb73751cbb904f1162"><div class="ttname"><a href="class_c_a_r_o_m_1_1_matrix.html#a8f3c54f1b7d88acb73751cbb904f1162">CAROM::Matrix::print</a></div><div class="ttdeci">void print(const char *prefix)</div><div class="ttdoc">print Matrix into (a) ascii file(s). </div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_matrix_html_a09da21ed0f70b190d5625303ea2d92e4"><div class="ttname"><a href="class_c_a_r_o_m_1_1_matrix.html#a09da21ed0f70b190d5625303ea2d92e4">CAROM::Matrix::local_read</a></div><div class="ttdeci">void local_read(const std::string &amp;base_file_name, int rank)</div><div class="ttdoc">read Matrix into (a) HDF file(s). </div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_matrix_html_a438765b6451b63759c22b39917c128b1"><div class="ttname"><a href="class_c_a_r_o_m_1_1_matrix.html#a438765b6451b63759c22b39917c128b1">CAROM::Matrix::pointwise_mult</a></div><div class="ttdeci">void pointwise_mult(int this_row, const Vector &amp;other, Vector &amp;result) const </div><div class="ttdoc">Multiplies a specified row of this Matrix with other pointwise. </div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_matrix_html_adbda42e4d009f8176b773ec0d87dd665"><div class="ttname"><a href="class_c_a_r_o_m_1_1_matrix.html#adbda42e4d009f8176b773ec0d87dd665">CAROM::Matrix::numRows</a></div><div class="ttdeci">int numRows() const </div><div class="ttdoc">Returns the number of rows of the Matrix on this processor. </div><div class="ttdef"><b>Definition:</b> Matrix.h:190</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_matrix_html_ad293fe4af27e17f0a3f5fbda6a3e887f"><div class="ttname"><a href="class_c_a_r_o_m_1_1_matrix.html#ad293fe4af27e17f0a3f5fbda6a3e887f">CAROM::Matrix::getColumn</a></div><div class="ttdeci">Vector * getColumn(int column) const </div><div class="ttdoc">Returns a column of the matrix (not owned by Matrix). </div><div class="ttdef"><b>Definition:</b> Matrix.h:716</div></div>
@@ -507,7 +510,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="ttc" id="class_c_a_r_o_m_1_1_matrix_html_a39c61227789aca94eafd288065f13948"><div class="ttname"><a href="class_c_a_r_o_m_1_1_matrix.html#a39c61227789aca94eafd288065f13948">CAROM::Matrix::transposeMult</a></div><div class="ttdeci">Vector * transposeMult(const Vector *other) const </div><div class="ttdoc">Multiplies the transpose of this Matrix with other and returns the product, pointer version...</div><div class="ttdef"><b>Definition:</b> Matrix.h:602</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_matrix_html_ac9f13fd71ea3caced3b42597ada9b7ef"><div class="ttname"><a href="class_c_a_r_o_m_1_1_matrix.html#ac9f13fd71ea3caced3b42597ada9b7ef">CAROM::Matrix::transposeMult</a></div><div class="ttdeci">Matrix * transposeMult(const Matrix *other) const </div><div class="ttdoc">Multiplies the transpose of this Matrix with other and returns the product, pointer version...</div><div class="ttdef"><b>Definition:</b> Matrix.h:513</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_matrix_html_ae3b84c8b1748711319d55bfc086b6f82"><div class="ttname"><a href="class_c_a_r_o_m_1_1_matrix.html#ae3b84c8b1748711319d55bfc086b6f82">CAROM::Matrix::transpose</a></div><div class="ttdeci">void transpose()</div><div class="ttdoc">Replaces this Matrix with its transpose (in place), in the serial square case only. </div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_matrix_html_a951b1d63fafbc9b4ddd112bd400ca758"><div class="ttname"><a href="class_c_a_r_o_m_1_1_matrix.html#a951b1d63fafbc9b4ddd112bd400ca758">CAROM::Matrix::getData</a></div><div class="ttdeci">double * getData() const </div><div class="ttdoc">Get the matrix data as a pointer. </div><div class="ttdef"><b>Definition:</b> Matrix.h:884</div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_matrix_html_a951b1d63fafbc9b4ddd112bd400ca758"><div class="ttname"><a href="class_c_a_r_o_m_1_1_matrix.html#a951b1d63fafbc9b4ddd112bd400ca758">CAROM::Matrix::getData</a></div><div class="ttdeci">double * getData() const </div><div class="ttdoc">Get the matrix data as a pointer. </div><div class="ttdef"><b>Definition:</b> Matrix.h:892</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_matrix_html_a2a78bfc980b999b4d52e1e6eb599f0de"><div class="ttname"><a href="class_c_a_r_o_m_1_1_matrix.html#a2a78bfc980b999b4d52e1e6eb599f0de">CAROM::Matrix::inverse</a></div><div class="ttdeci">Matrix * inverse() const </div><div class="ttdoc">Computes and returns the inverse of this. </div><div class="ttdef"><b>Definition:</b> Matrix.h:660</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->

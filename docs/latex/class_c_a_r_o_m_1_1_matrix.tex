@@ -112,6 +112,8 @@ void \hyperlink{class_c_a_r_o_m_1_1_matrix_ad19dad3788172b6bd5836e606ff071a3}{wr
 \begin{DoxyCompactList}\small\item\em write \hyperlink{class_c_a_r_o_m_1_1_matrix}{Matrix} into (a) H\-D\-F file(s). \end{DoxyCompactList}\item 
 void \hyperlink{class_c_a_r_o_m_1_1_matrix_acdc4a8fd238f64d8106b8f1ba8f2384e}{read} (const std\-::string \&base\-\_\-file\-\_\-name)
 \begin{DoxyCompactList}\small\item\em read \hyperlink{class_c_a_r_o_m_1_1_matrix}{Matrix} into (a) H\-D\-F file(s). \end{DoxyCompactList}\item 
+void \hyperlink{class_c_a_r_o_m_1_1_matrix_a09da21ed0f70b190d5625303ea2d92e4}{local\-\_\-read} (const std\-::string \&base\-\_\-file\-\_\-name, int rank)
+\begin{DoxyCompactList}\small\item\em read \hyperlink{class_c_a_r_o_m_1_1_matrix}{Matrix} into (a) H\-D\-F file(s). \end{DoxyCompactList}\item 
 \hypertarget{class_c_a_r_o_m_1_1_matrix_a951b1d63fafbc9b4ddd112bd400ca758}{double $\ast$ \hyperlink{class_c_a_r_o_m_1_1_matrix_a951b1d63fafbc9b4ddd112bd400ca758}{get\-Data} () const }\label{class_c_a_r_o_m_1_1_matrix_a951b1d63fafbc9b4ddd112bd400ca758}
 
 \begin{DoxyCompactList}\small\item\em Get the matrix data as a pointer. \end{DoxyCompactList}\end{DoxyCompactItemize}
@@ -399,6 +401,23 @@ Allows constructs of the form mat\mbox{[}i, j\mbox{]} = val;
 \mbox{\tt in}  & {\em row} & The row of the \hyperlink{class_c_a_r_o_m_1_1_matrix}{Matrix} value on this processor requested. \\
 \hline
 \mbox{\tt in}  & {\em col} & The column of the \hyperlink{class_c_a_r_o_m_1_1_matrix}{Matrix} value requested. \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_c_a_r_o_m_1_1_matrix_a09da21ed0f70b190d5625303ea2d92e4}{\index{C\-A\-R\-O\-M\-::\-Matrix@{C\-A\-R\-O\-M\-::\-Matrix}!local\-\_\-read@{local\-\_\-read}}
+\index{local\-\_\-read@{local\-\_\-read}!CAROM::Matrix@{C\-A\-R\-O\-M\-::\-Matrix}}
+\subsubsection[{local\-\_\-read}]{\setlength{\rightskip}{0pt plus 5cm}void C\-A\-R\-O\-M\-::\-Matrix\-::local\-\_\-read (
+\begin{DoxyParamCaption}
+\item[{const std\-::string \&}]{base\-\_\-file\-\_\-name, }
+\item[{int}]{rank}
+\end{DoxyParamCaption}
+)}}\label{class_c_a_r_o_m_1_1_matrix_a09da21ed0f70b190d5625303ea2d92e4}
+
+
+read \hyperlink{class_c_a_r_o_m_1_1_matrix}{Matrix} into (a) H\-D\-F file(s). 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em base\-\_\-file\-\_\-name} & The base part of the file name. \\
 \hline
 \end{DoxyParams}
 \hypertarget{class_c_a_r_o_m_1_1_matrix_a67ae901268ab6138bf2bf9822da4fb10}{\index{C\-A\-R\-O\-M\-::\-Matrix@{C\-A\-R\-O\-M\-::\-Matrix}!mult@{mult}}

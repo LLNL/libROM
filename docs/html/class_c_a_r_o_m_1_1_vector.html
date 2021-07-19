@@ -232,6 +232,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a2b38fbc6b7d898bcc0399e1380a436d3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_vector.html#a2b38fbc6b7d898bcc0399e1380a436d3">read</a> (const std::string &amp;base_file_name)</td></tr>
 <tr class="memdesc:a2b38fbc6b7d898bcc0399e1380a436d3"><td class="mdescLeft">&#160;</td><td class="mdescRight">read <a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> from (a) HDF file(s).  <a href="#a2b38fbc6b7d898bcc0399e1380a436d3">More...</a><br/></td></tr>
 <tr class="separator:a2b38fbc6b7d898bcc0399e1380a436d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adc03e6513482466f5d3367d8e54dce4f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_vector.html#adc03e6513482466f5d3367d8e54dce4f">local_read</a> (const std::string &amp;base_file_name, int rank)</td></tr>
+<tr class="memdesc:adc03e6513482466f5d3367d8e54dce4f"><td class="mdescLeft">&#160;</td><td class="mdescRight">read <a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> from (a) HDF file(s).  <a href="#adc03e6513482466f5d3367d8e54dce4f">More...</a><br/></td></tr>
+<tr class="separator:adc03e6513482466f5d3367d8e54dce4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Class <a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> is a simple vector class in which the dimensions may be distributed across multiple processes. This class supports only the basic operations that are needed by the <a class="el" href="class_c_a_r_o_m_1_1_s_v_d.html">SVD</a> library. </p>
@@ -535,6 +538,40 @@ dim &gt; 0</dd></dl>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>The requested component of the <a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> on this processor. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="adc03e6513482466f5d3367d8e54dce4f"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void CAROM::Vector::local_read </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>base_file_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>rank</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>read <a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> from (a) HDF file(s). </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">base_file_name</td><td>The base part of the file name. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

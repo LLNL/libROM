@@ -91,7 +91,7 @@ IncrementalSVD::IncrementalSVD(
     if (options.restore_state) {
         // Open state database file.
         d_state_database = new HDFDatabase();
-        bool is_good = d_state_database->open(d_state_file_name);
+        bool is_good = d_state_database->open(d_state_file_name, "r");
         if (is_good) {
             // Read time interval start time.
             double time;

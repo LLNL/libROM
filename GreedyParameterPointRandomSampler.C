@@ -195,7 +195,7 @@ GreedyParameterPointRandomSampler::load(std::string base_file_name)
     char tmp[100];
     std::string full_file_name = base_file_name;
     HDFDatabase database;
-    database.open(full_file_name);
+    database.open(full_file_name, "r");
 
     if (!d_procedure_completed)
     {
@@ -218,7 +218,7 @@ GreedyParameterPointRandomSampler::save(std::string base_file_name)
         char tmp[100];
         std::string full_file_name = base_file_name;
         HDFDatabase database;
-        database.open(full_file_name);
+        database.open(full_file_name, "wr");
 
         if (!d_procedure_completed)
         {

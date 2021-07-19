@@ -22,7 +22,7 @@ Inheritance diagram for C\-A\-R\-O\-M\-:\-:H\-D\-F\-Database\-:\begin{figure}[H]
 \begin{DoxyCompactList}\small\item\em Destructor. \end{DoxyCompactList}\item 
 virtual bool \hyperlink{class_c_a_r_o_m_1_1_h_d_f_database_ab86ee99a63cf0259ed1c87d57f3b0960}{create} (const std\-::string \&file\-\_\-name)
 \begin{DoxyCompactList}\small\item\em Creates a new H\-D\-F5 database file with the supplied name. \end{DoxyCompactList}\item 
-virtual bool \hyperlink{class_c_a_r_o_m_1_1_h_d_f_database_a1dc9c865d0338214b1006e3e447c9137}{open} (const std\-::string \&file\-\_\-name)
+virtual bool \hyperlink{class_c_a_r_o_m_1_1_h_d_f_database_ad221573d351a1f0a2e2356e1a4320089}{open} (const std\-::string \&file\-\_\-name, const std\-::string \&type)
 \begin{DoxyCompactList}\small\item\em Opens an existing H\-D\-F5 database file with the supplied name. \end{DoxyCompactList}\item 
 virtual bool \hyperlink{class_c_a_r_o_m_1_1_h_d_f_database_a94c9a5972e98e4426c3bdc255ee1dfdc}{close} ()
 \begin{DoxyCompactList}\small\item\em Closes the currently open H\-D\-F5 database file. \end{DoxyCompactList}\item 
@@ -144,20 +144,23 @@ data != 0 $|$$|$ nelements == 0
 
 Implements \hyperlink{class_c_a_r_o_m_1_1_database_a7a518cc3a2b49fbfe70b45030319741d}{C\-A\-R\-O\-M\-::\-Database}.
 
-\hypertarget{class_c_a_r_o_m_1_1_h_d_f_database_a1dc9c865d0338214b1006e3e447c9137}{\index{C\-A\-R\-O\-M\-::\-H\-D\-F\-Database@{C\-A\-R\-O\-M\-::\-H\-D\-F\-Database}!open@{open}}
+\hypertarget{class_c_a_r_o_m_1_1_h_d_f_database_ad221573d351a1f0a2e2356e1a4320089}{\index{C\-A\-R\-O\-M\-::\-H\-D\-F\-Database@{C\-A\-R\-O\-M\-::\-H\-D\-F\-Database}!open@{open}}
 \index{open@{open}!CAROM::HDFDatabase@{C\-A\-R\-O\-M\-::\-H\-D\-F\-Database}}
 \subsubsection[{open}]{\setlength{\rightskip}{0pt plus 5cm}virtual bool C\-A\-R\-O\-M\-::\-H\-D\-F\-Database\-::open (
 \begin{DoxyParamCaption}
-\item[{const std\-::string \&}]{file\-\_\-name}
+\item[{const std\-::string \&}]{file\-\_\-name, }
+\item[{const std\-::string \&}]{type}
 \end{DoxyParamCaption}
-)\hspace{0.3cm}{\ttfamily [virtual]}}}\label{class_c_a_r_o_m_1_1_h_d_f_database_a1dc9c865d0338214b1006e3e447c9137}
+)\hspace{0.3cm}{\ttfamily [virtual]}}}\label{class_c_a_r_o_m_1_1_h_d_f_database_ad221573d351a1f0a2e2356e1a4320089}
 
 
 Opens an existing H\-D\-F5 database file with the supplied name. 
 
 
 \begin{DoxyParams}[1]{Parameters}
-\mbox{\tt in}  & {\em file\-\_\-name} & Name of existing H\-D\-F5 database file to open.\\
+\mbox{\tt in}  & {\em file\-\_\-name} & Name of existing H\-D\-F5 database file to open. \\
+\hline
+\mbox{\tt in}  & {\em type} & Read/write type (\char`\"{}r\char`\"{}/\char`\"{}wr\char`\"{})\\
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
@@ -165,7 +168,7 @@ True if file open was successful.
 \end{DoxyReturn}
 
 
-Implements \hyperlink{class_c_a_r_o_m_1_1_database_abc4f4f4e7af7e9b340854d3e7562483e}{C\-A\-R\-O\-M\-::\-Database}.
+Implements \hyperlink{class_c_a_r_o_m_1_1_database_a420af85386e4d1aa5f20227116f60f83}{C\-A\-R\-O\-M\-::\-Database}.
 
 \hypertarget{class_c_a_r_o_m_1_1_h_d_f_database_ad30894245e7ce642f24be9328b86b91b}{\index{C\-A\-R\-O\-M\-::\-H\-D\-F\-Database@{C\-A\-R\-O\-M\-::\-H\-D\-F\-Database}!put\-Double\-Array@{put\-Double\-Array}}
 \index{put\-Double\-Array@{put\-Double\-Array}!CAROM::HDFDatabase@{C\-A\-R\-O\-M\-::\-H\-D\-F\-Database}}
