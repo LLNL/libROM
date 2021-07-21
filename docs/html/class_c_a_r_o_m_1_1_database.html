@@ -127,9 +127,9 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="c
 <tr class="memitem:a5399793945da517596be573c47796223"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_database.html#a5399793945da517596be573c47796223">create</a> (const std::string &amp;file_name)=0</td></tr>
 <tr class="memdesc:a5399793945da517596be573c47796223"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a new database file with the supplied name.  <a href="#a5399793945da517596be573c47796223">More...</a><br/></td></tr>
 <tr class="separator:a5399793945da517596be573c47796223"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abc4f4f4e7af7e9b340854d3e7562483e"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_database.html#abc4f4f4e7af7e9b340854d3e7562483e">open</a> (const std::string &amp;file_name)=0</td></tr>
-<tr class="memdesc:abc4f4f4e7af7e9b340854d3e7562483e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Opens an existing database file with the supplied name.  <a href="#abc4f4f4e7af7e9b340854d3e7562483e">More...</a><br/></td></tr>
-<tr class="separator:abc4f4f4e7af7e9b340854d3e7562483e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a420af85386e4d1aa5f20227116f60f83"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_database.html#a420af85386e4d1aa5f20227116f60f83">open</a> (const std::string &amp;file_name, const std::string &amp;type)=0</td></tr>
+<tr class="memdesc:a420af85386e4d1aa5f20227116f60f83"><td class="mdescLeft">&#160;</td><td class="mdescRight">Opens an existing database file with the supplied name.  <a href="#a420af85386e4d1aa5f20227116f60f83">More...</a><br/></td></tr>
+<tr class="separator:a420af85386e4d1aa5f20227116f60f83"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a75da8db9a3ffa8c4c150f67e62a600e8"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_database.html#a75da8db9a3ffa8c4c150f67e62a600e8">close</a> ()=0</td></tr>
 <tr class="memdesc:a75da8db9a3ffa8c4c150f67e62a600e8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Closes the currently open database file.  <a href="#a75da8db9a3ffa8c4c150f67e62a600e8">More...</a><br/></td></tr>
 <tr class="separator:a75da8db9a3ffa8c4c150f67e62a600e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -414,7 +414,7 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="c
 
 </div>
 </div>
-<a class="anchor" id="abc4f4f4e7af7e9b340854d3e7562483e"></a>
+<a class="anchor" id="a420af85386e4d1aa5f20227116f60f83"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -425,8 +425,18 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="c
           <td class="memname">virtual bool CAROM::Database::open </td>
           <td>(</td>
           <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>file_name</em></td><td>)</td>
+          <td class="paramname"><em>file_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>type</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
   </td>
@@ -439,13 +449,14 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="c
 <p>Opens an existing database file with the supplied name. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">file_name</td><td>Name of existing database file to open.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">file_name</td><td>Name of existing database file to open. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">type</td><td>Read/write type ("r"/"wr")</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>True if file open was successful. </dd></dl>
 
-<p>Implemented in <a class="el" href="class_c_a_r_o_m_1_1_h_d_f_database.html#a1dc9c865d0338214b1006e3e447c9137">CAROM::HDFDatabase</a>.</p>
+<p>Implemented in <a class="el" href="class_c_a_r_o_m_1_1_h_d_f_database.html#ad221573d351a1f0a2e2356e1a4320089">CAROM::HDFDatabase</a>.</p>
 
 </div>
 </div>

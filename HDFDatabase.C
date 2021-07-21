@@ -60,12 +60,24 @@ HDFDatabase::create(
 
 bool
 HDFDatabase::open(
-    const std::string& file_name)
+    const std::string& file_name,
+    const std::string& type)
 {
     CAROM_ASSERT(!file_name.empty());
-    hid_t file_id = H5Fopen(file_name.c_str(),
-                            H5F_ACC_RDWR,
-                            H5P_DEFAULT);
+    CAROM_VERIFY(type == "r" || type == "wr");
+    hid_t file_id;
+    if (type == "r")
+    {
+        file_id = H5Fopen(file_name.c_str(),
+                          H5F_ACC_RDONLY,
+                          H5P_DEFAULT);
+    }
+    else if (type == "wr")
+    {
+        file_id = H5Fopen(file_name.c_str(),
+                          H5F_ACC_RDWR,
+                          H5P_DEFAULT);
+    }
     bool result = file_id >= 0;
     CAROM_ASSERT(result);
     d_is_file = true;

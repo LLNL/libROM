@@ -231,10 +231,9 @@ GreedyParameterPointSampler::addDatabaseFromFile(
     std::string const& warm_start_file_name)
 {
     char tmp[100];
-    sprintf(tmp, ".%06d", d_rank);
-    std::string full_file_name = warm_start_file_name + tmp;
+    std::string full_file_name = warm_start_file_name;
     HDFDatabase database;
-    database.open(full_file_name);
+    database.open(full_file_name, "r");
 
     sprintf(tmp, "num_parameter_sampled_indices");
     int num_parameter_sampled_indices;
@@ -248,7 +247,7 @@ GreedyParameterPointSampler::addDatabaseFromFile(
         {
             std::string vec_path = warm_start_file_name + "_" + std::to_string(i);
             Vector point;
-            point.read(vec_path);
+            point.local_read(vec_path, 0);
             for (int j = 0; j < d_parameter_points.size(); j++)
             {
                 Vector diff;
@@ -269,10 +268,9 @@ GreedyParameterPointSampler::load(
     std::string base_file_name)
 {
     char tmp[100];
-    sprintf(tmp, ".%06d", d_rank);
-    std::string full_file_name = base_file_name + tmp;
+    std::string full_file_name = base_file_name;
     HDFDatabase database;
-    database.open(full_file_name);
+    database.open(full_file_name, "r");
 
     sprintf(tmp, "num_parameter_points");
     int num_parameter_points;
@@ -281,15 +279,15 @@ GreedyParameterPointSampler::load(
     {
         std::string vec_path = base_file_name + "_" + std::to_string(i);
         Vector point;
-        point.read(vec_path);
+        point.local_read(vec_path, 0);
         d_parameter_points.push_back(point);
     }
 
     std::string vec_path = base_file_name + "_min_point";
-    d_min_param_point.read(vec_path);
+    d_min_param_point.local_read(vec_path, 0);
 
     vec_path = base_file_name + "_max_point";
-    d_max_param_point.read(vec_path);
+    d_max_param_point.local_read(vec_path, 0);
 
     sprintf(tmp, "num_parameter_sampled_indices");
     int num_parameter_sampled_indices;
@@ -381,7 +379,7 @@ GreedyParameterPointSampler::load(
         {
             std::string vec_path = base_file_name + "_conv_" + std::to_string(i);
             Vector point;
-            point.read(vec_path);
+            point.local_read(vec_path, 0);
             d_convergence_points.push_back(point);
         }
     }
@@ -1302,99 +1300,101 @@ GreedyParameterPointSampler::save(std::string base_file_name)
 {
     CAROM_ASSERT(!base_file_name.empty());
 
-    char tmp[100];
-    sprintf(tmp, ".%06d", d_rank);
-    std::string full_file_name = base_file_name + tmp;
-    HDFDatabase database;
-    database.create(full_file_name);
-
-    sprintf(tmp, "num_parameter_points");
-    database.putInteger(tmp, d_parameter_points.size());
-    for (int i = 0; i < d_parameter_points.size(); i++)
+    if (d_rank == 0)
     {
-        std::string vec_path = base_file_name + "_" + std::to_string(i);
-        d_parameter_points[i].write(vec_path);
+        char tmp[100];
+        std::string full_file_name = base_file_name;
+        HDFDatabase database;
+        database.create(full_file_name);
+
+        sprintf(tmp, "num_parameter_points");
+        database.putInteger(tmp, d_parameter_points.size());
+        for (int i = 0; i < d_parameter_points.size(); i++)
+        {
+            std::string vec_path = base_file_name + "_" + std::to_string(i);
+            d_parameter_points[i].write(vec_path);
+        }
+        for (int i = 0; i < d_convergence_points.size(); i++)
+        {
+            std::string vec_path = base_file_name + "_conv_" + std::to_string(i);
+            d_convergence_points[i].write(vec_path);
+        }
+
+        std::string vec_path = base_file_name + "_min_point";
+        d_min_param_point.write(vec_path);
+
+        vec_path = base_file_name + "_max_point";
+        d_max_param_point.write(vec_path);
+
+        sprintf(tmp, "num_parameter_sampled_indices");
+        database.putInteger(tmp, d_parameter_sampled_indices.size());
+        if (d_parameter_sampled_indices.size() > 0)
+        {
+            sprintf(tmp, "parameter_sampled_indices");
+            std::vector<int> d_parameter_sampled_indices_vec(d_parameter_sampled_indices.begin(), d_parameter_sampled_indices.end());
+            database.putIntegerArray(tmp, &d_parameter_sampled_indices_vec[0], d_parameter_sampled_indices.size());
+        }
+
+        sprintf(tmp, "procedure_completed");
+        database.putInteger(tmp, d_procedure_completed);
+
+        if (!d_procedure_completed)
+        {
+            sprintf(tmp, "max_error");
+            database.putDouble(tmp, d_max_error);
+            sprintf(tmp, "curr_relative_error");
+            database.putDouble(tmp, d_curr_relative_error);
+            sprintf(tmp, "error_indicator_tol");
+            database.putDouble(tmp, d_error_indicator_tol);
+            sprintf(tmp, "relative_error_tol");
+            database.putDouble(tmp, d_relative_error_tol);
+            sprintf(tmp, "alpha");
+            database.putDouble(tmp, d_alpha);
+            sprintf(tmp, "max_clamp");
+            database.putDouble(tmp, d_max_clamp);
+            sprintf(tmp, "max_num_parameter_points");
+            database.putInteger(tmp, d_num_parameter_points);
+            sprintf(tmp, "subset_size");
+            database.putInteger(tmp, d_subset_size);
+            sprintf(tmp, "convergence_subset_size");
+            database.putInteger(tmp, d_convergence_subset_size);
+            sprintf(tmp, "next_point_to_sample");
+            database.putInteger(tmp, d_next_point_to_sample);
+            sprintf(tmp, "next_point_requiring_error_indicator");
+            database.putInteger(tmp, d_next_point_requiring_error_indicator);
+            sprintf(tmp, "check_local_rom");
+            database.putInteger(tmp, d_check_local_rom);
+            sprintf(tmp, "use_centroid");
+            database.putInteger(tmp, d_use_centroid);
+            sprintf(tmp, "iteration_started");
+            database.putInteger(tmp, d_iteration_started);
+            sprintf(tmp, "convergence_started");
+            database.putInteger(tmp, d_convergence_started);
+            sprintf(tmp, "next_parameter_point_computed");
+            database.putInteger(tmp, d_next_parameter_point_computed);
+            sprintf(tmp, "point_requiring_error_indicator_computed");
+            database.putInteger(tmp, d_point_requiring_error_indicator_computed);
+            sprintf(tmp, "subset_created");
+            database.putInteger(tmp, d_subset_created);
+            sprintf(tmp, "debug_algorithm");
+            database.putInteger(tmp, d_debug_algorithm);
+            sprintf(tmp, "counter");
+            database.putInteger(tmp, d_counter);
+            sprintf(tmp, "subset_counter");
+            database.putInteger(tmp, d_subset_counter);
+            sprintf(tmp, "random_seed");
+            database.putInteger(tmp, d_random_seed);
+
+            sprintf(tmp, "parameter_point_random_indices");
+            database.putIntegerArray(tmp, &d_parameter_point_random_indices[0], d_parameter_point_random_indices.size());
+            sprintf(tmp, "parameter_point_errors");
+            database.putDoubleArray(tmp, &d_parameter_point_errors[0], d_parameter_point_errors.size());
+            sprintf(tmp, "parameter_point_local_rom");
+            database.putIntegerArray(tmp, &d_parameter_point_local_rom[0], d_parameter_point_local_rom.size());
+        }
+        database.close();
     }
-    for (int i = 0; i < d_convergence_points.size(); i++)
-    {
-        std::string vec_path = base_file_name + "_conv_" + std::to_string(i);
-        d_convergence_points[i].write(vec_path);
-    }
-
-    std::string vec_path = base_file_name + "_min_point";
-    d_min_param_point.write(vec_path);
-
-    vec_path = base_file_name + "_max_point";
-    d_max_param_point.write(vec_path);
-
-    sprintf(tmp, "num_parameter_sampled_indices");
-    database.putInteger(tmp, d_parameter_sampled_indices.size());
-    if (d_parameter_sampled_indices.size() > 0)
-    {
-        sprintf(tmp, "parameter_sampled_indices");
-        std::vector<int> d_parameter_sampled_indices_vec(d_parameter_sampled_indices.begin(), d_parameter_sampled_indices.end());
-        database.putIntegerArray(tmp, &d_parameter_sampled_indices_vec[0], d_parameter_sampled_indices.size());
-
-    }
-
-    sprintf(tmp, "procedure_completed");
-    database.putInteger(tmp, d_procedure_completed);
-
-    if (!d_procedure_completed)
-    {
-        sprintf(tmp, "max_error");
-        database.putDouble(tmp, d_max_error);
-        sprintf(tmp, "curr_relative_error");
-        database.putDouble(tmp, d_curr_relative_error);
-        sprintf(tmp, "error_indicator_tol");
-        database.putDouble(tmp, d_error_indicator_tol);
-        sprintf(tmp, "relative_error_tol");
-        database.putDouble(tmp, d_relative_error_tol);
-        sprintf(tmp, "alpha");
-        database.putDouble(tmp, d_alpha);
-        sprintf(tmp, "max_clamp");
-        database.putDouble(tmp, d_max_clamp);
-        sprintf(tmp, "max_num_parameter_points");
-        database.putInteger(tmp, d_num_parameter_points);
-        sprintf(tmp, "subset_size");
-        database.putInteger(tmp, d_subset_size);
-        sprintf(tmp, "convergence_subset_size");
-        database.putInteger(tmp, d_convergence_subset_size);
-        sprintf(tmp, "next_point_to_sample");
-        database.putInteger(tmp, d_next_point_to_sample);
-        sprintf(tmp, "next_point_requiring_error_indicator");
-        database.putInteger(tmp, d_next_point_requiring_error_indicator);
-        sprintf(tmp, "check_local_rom");
-        database.putInteger(tmp, d_check_local_rom);
-        sprintf(tmp, "use_centroid");
-        database.putInteger(tmp, d_use_centroid);
-        sprintf(tmp, "iteration_started");
-        database.putInteger(tmp, d_iteration_started);
-        sprintf(tmp, "convergence_started");
-        database.putInteger(tmp, d_convergence_started);
-        sprintf(tmp, "next_parameter_point_computed");
-        database.putInteger(tmp, d_next_parameter_point_computed);
-        sprintf(tmp, "point_requiring_error_indicator_computed");
-        database.putInteger(tmp, d_point_requiring_error_indicator_computed);
-        sprintf(tmp, "subset_created");
-        database.putInteger(tmp, d_subset_created);
-        sprintf(tmp, "debug_algorithm");
-        database.putInteger(tmp, d_debug_algorithm);
-        sprintf(tmp, "counter");
-        database.putInteger(tmp, d_counter);
-        sprintf(tmp, "subset_counter");
-        database.putInteger(tmp, d_subset_counter);
-        sprintf(tmp, "random_seed");
-        database.putInteger(tmp, d_random_seed);
-
-        sprintf(tmp, "parameter_point_random_indices");
-        database.putIntegerArray(tmp, &d_parameter_point_random_indices[0], d_parameter_point_random_indices.size());
-        sprintf(tmp, "parameter_point_errors");
-        database.putDoubleArray(tmp, &d_parameter_point_errors[0], d_parameter_point_errors.size());
-        sprintf(tmp, "parameter_point_local_rom");
-        database.putIntegerArray(tmp, &d_parameter_point_local_rom[0], d_parameter_point_local_rom.size());
-    }
-    database.close();
+    MPI_Barrier(MPI_COMM_WORLD);
 }
 
 bool

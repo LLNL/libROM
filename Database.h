@@ -52,13 +52,15 @@ public:
      * @brief Opens an existing database file with the supplied name.
      *
      * @param[in] file_name Name of existing database file to open.
+     * @param[in] type Read/write type ("r"/"wr")
      *
      * @return True if file open was successful.
      */
     virtual
     bool
     open(
-        const std::string& file_name) = 0;
+        const std::string& file_name,
+        const std::string& type) = 0;
 
     /**
      * @brief Closes the currently open database file.

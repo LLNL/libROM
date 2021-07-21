@@ -476,7 +476,41 @@ Vector::read(const std::string& base_file_name)
     sprintf(tmp, ".%06d", rank);
     std::string full_file_name = base_file_name + tmp;
     HDFDatabase database;
-    database.open(full_file_name);
+    database.open(full_file_name, "r");
+
+    sprintf(tmp, "distributed");
+    int distributed;
+    database.getInteger(tmp, distributed);
+    d_distributed = bool(distributed);
+    int dim;
+    sprintf(tmp, "dim");
+    database.getInteger(tmp, dim);
+    setSize(dim);
+    sprintf(tmp, "data");
+    database.getDoubleArray(tmp, d_vec, d_alloc_size);
+    d_owns_data = true;
+    if (mpi_init) {
+        MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+    }
+    else {
+        d_num_procs = 1;
+    }
+    database.close();
+}
+
+void
+Vector::local_read(const std::string& base_file_name, int rank)
+{
+    CAROM_ASSERT(!base_file_name.empty());
+
+    int mpi_init;
+    MPI_Initialized(&mpi_init);
+
+    char tmp[100];
+    sprintf(tmp, ".%06d", rank);
+    std::string full_file_name = base_file_name + tmp;
+    HDFDatabase database;
+    database.open(full_file_name, "r");
 
     sprintf(tmp, "distributed");
     int distributed;
