@@ -56,9 +56,15 @@ public:
 
 private:
 
-    Matrix* phi;
+    void constructDMD(const Matrix* f_snapshots,
+                      int rank,
+                      int num_procs);
 
-    Matrix* S;
+    Matrix* d_phi;
+
+    double d_energy_fraction;
+
+    int d_k;
 
 };
 
