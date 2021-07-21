@@ -193,10 +193,9 @@ GreedyParameterPointRandomSampler::load(std::string base_file_name)
     GreedyParameterPointSampler::load(base_file_name);
 
     char tmp[100];
-    sprintf(tmp, ".%06d", d_rank);
-    std::string full_file_name = base_file_name + tmp;
+    std::string full_file_name = base_file_name;
     HDFDatabase database;
-    database.open(full_file_name);
+    database.open(full_file_name, "r");
 
     if (!d_procedure_completed)
     {
@@ -214,20 +213,21 @@ GreedyParameterPointRandomSampler::save(std::string base_file_name)
 {
     GreedyParameterPointSampler::save(base_file_name);
 
-    char tmp[100];
-    sprintf(tmp, ".%06d", d_rank);
-    std::string full_file_name = base_file_name + tmp;
-    HDFDatabase database;
-    database.open(full_file_name);
-
-    if (!d_procedure_completed)
+    if (d_rank == 0)
     {
-        sprintf(tmp, "use_latin_hypercube");
-        database.putInteger(tmp, d_use_latin_hypercube);
+        char tmp[100];
+        std::string full_file_name = base_file_name;
+        HDFDatabase database;
+        database.open(full_file_name, "wr");
 
+        if (!d_procedure_completed)
+        {
+            sprintf(tmp, "use_latin_hypercube");
+            database.putInteger(tmp, d_use_latin_hypercube);
+        }
+
+        database.close();
     }
-
-    database.close();
 }
 
 void

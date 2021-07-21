@@ -49,7 +49,7 @@ BasisReader::BasisReader(
     }
 
     std::cout << "Opening file: " << full_file_name << std::endl;
-    d_database->open(full_file_name);
+    d_database->open(full_file_name, "r");
 
     int num_time_intervals;
     double foo;
@@ -101,7 +101,7 @@ BasisReader::readBasis(
     }
 
     std::cout << "Opening file: " << full_file_name << std::endl;
-    d_database->open(full_file_name);
+    d_database->open(full_file_name, "r");
 
     int num_time_intervals;
     double foo;

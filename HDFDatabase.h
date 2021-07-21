@@ -52,13 +52,15 @@ public:
      * @brief Opens an existing HDF5 database file with the supplied name.
      *
      * @param[in] file_name Name of existing HDF5 database file to open.
+     * @param[in] type Read/write type ("r"/"wr")
      *
      * @return True if file open was successful.
      */
     virtual
     bool
     open(
-        const std::string& file_name);
+        const std::string& file_name,
+        const std::string& type);
 
     /**
      * @brief Closes the currently open HDF5 database file.

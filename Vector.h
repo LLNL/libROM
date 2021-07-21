@@ -689,6 +689,14 @@ public:
      */
     void read(const std::string& base_file_name);
 
+    /**
+     * @brief read Vector from (a) HDF file(s).
+     *
+     * @param[in] base_file_name The base part of the file name.
+     *
+     */
+    void local_read(const std::string& base_file_name, int rank);
+
 private:
     /**
      * @brief The storage for the Vector's values on this processor.
