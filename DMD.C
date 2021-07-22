@@ -152,11 +152,6 @@ namespace CAROM {
         // Allocate the appropriate matrices and gather their elements.
         Matrix* d_basis = new Matrix(f_snapshots->numRows(), d_k, true);
         Vector* d_S_inv = new Vector(d_k, false);
-        {
-            CAROM_VERIFY(d_k >= 0);
-            unsigned nc = static_cast<unsigned>(d_k);
-            memset(&d_S_inv->item(0), 0, nc*sizeof(double));
-        }
 
         Matrix* d_basis_right = new Matrix(d_k, d_k, false);
         for (int rank = 0; rank < num_procs; ++rank) {
