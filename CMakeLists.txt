@@ -236,6 +236,7 @@ if (USE_MFEM)
   set(examples
     ex1parametric
     ex9p
+    ex10
     ex16p)
 
   foreach(name IN LISTS examples)

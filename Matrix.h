@@ -154,7 +154,7 @@ public:
             if (d_mat) {
                 delete [] d_mat;
             }
-            d_mat = new double [new_size];
+            d_mat = new double [new_size] {};
             d_alloc_size = new_size;
         }
         d_num_rows = num_rows;

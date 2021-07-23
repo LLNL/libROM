@@ -3,14 +3,14 @@
 // Compile with: make ex10
 //
 // Sample runs:
-//    ex10 -m ../data/beam-quad.mesh -s 3 -r 2 -o 2 -dt 3
-//    ex10 -m ../data/beam-tri.mesh -s 3 -r 2 -o 2 -dt 3
-//    ex10 -m ../data/beam-hex.mesh -s 2 -r 1 -o 2 -dt 3
-//    ex10 -m ../data/beam-tet.mesh -s 2 -r 1 -o 2 -dt 3
-//    ex10 -m ../data/beam-wedge.mesh -s 2 -r 1 -o 2 -dt 3
-//    ex10 -m ../data/beam-quad.mesh -s 14 -r 2 -o 2 -dt 0.03 -vs 20
-//    ex10 -m ../data/beam-hex.mesh -s 14 -r 1 -o 2 -dt 0.05 -vs 20
-//    ex10 -m ../data/beam-quad-amr.mesh -s 3 -r 2 -o 2 -dt 3
+//    ex10 -s 3 -r 2 -o 2 -dt 3
+//    ex10 -s 3 -r 2 -o 2 -dt 3
+//    ex10 -s 2 -r 1 -o 2 -dt 3
+//    ex10 -s 2 -r 1 -o 2 -dt 3
+//    ex10 -s 2 -r 1 -o 2 -dt 3
+//    ex10 -s 14 -r 2 -o 2 -dt 0.03 -vs 20
+//    ex10 -s 14 -r 1 -o 2 -dt 0.05 -vs 20
+//    ex10 -s 3 -r 2 -o 2 -dt 3
 //
 // Description:  This examples solves a time dependent nonlinear elasticity
 //               problem of the form dv/dt = H(x) + S v, dx/dt = v, where H is a
@@ -35,7 +35,11 @@
 //               We recommend viewing examples 2 and 9 before viewing this
 //               example.
 
+#include "mpi.h"
 #include "mfem.hpp"
+#include "DMD.h"
+#include "Vector.h"
+#include "Matrix.h"
 #include <memory>
 #include <iostream>
 #include <fstream>
@@ -156,8 +160,19 @@ void visualize(ostream &out, Mesh *mesh, GridFunction *deformed_nodes,
 
 int main(int argc, char *argv[])
 {
+
+    // Get the rank of this process, and the number of processors.
+    int mpi_init, rank, num_procs;
+    MPI_Initialized(&mpi_init);
+    if (mpi_init == 0) {
+        MPI_Init(nullptr, nullptr);
+    }
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
+
    // 1. Parse command-line options.
-   const char *mesh_file = "../data/beam-quad.mesh";
+   const char *mesh_file = "../dependencies/mfem/data/beam-quad.mesh";
    int ref_levels = 2;
    int order = 2;
    int ode_solver_type = 3;
@@ -166,6 +181,8 @@ int main(int argc, char *argv[])
    double visc = 1e-2;
    double mu = 0.25;
    double K = 5.0;
+   double ef = 0.99;
+   int rdim = -1;
    bool visualization = true;
    int vis_steps = 1;
 
@@ -197,6 +214,10 @@ int main(int argc, char *argv[])
                   "Enable or disable GLVis visualization.");
    args.AddOption(&vis_steps, "-vs", "--visualization-steps",
                   "Visualize every n-th timestep.");
+   args.AddOption(&ef, "-ef", "--energy_fraction",
+                  "Energy fraction for DMD.");
+   args.AddOption(&rdim, "-rdim", "--rdim",
+                         "Reduced dimension for DMD.");
    args.Parse();
    if (!args.Good())
    {
@@ -261,6 +282,7 @@ int main(int argc, char *argv[])
    fe_offset[2] = 2*fe_size;
 
    BlockVector vx(fe_offset);
+   vector<CAROM::Vector> vx_samples;
    GridFunction v, x;
    v.MakeTRef(&fespace, vx.GetBlock(0), 0);
    x.MakeTRef(&fespace, vx.GetBlock(1), 0);
@@ -317,6 +339,9 @@ int main(int argc, char *argv[])
    oper.SetTime(t);
    ode_solver->Init(oper);
 
+   CAROM::Vector init_sample(vx.GetData(), vx.Size(), false);
+   vx_samples.push_back(init_sample);
+
    // 8. Perform time-integration (looping over the time iterations, ti, with a
    //    time-step dt).
    bool last_step = false;
@@ -325,6 +350,9 @@ int main(int argc, char *argv[])
       double dt_real = min(dt, t_final - t);
 
       ode_solver->Step(vx, t, dt_real);
+
+      CAROM::Vector curr_sample(vx.GetData(), vx.Size(), false);
+      vx_samples.push_back(curr_sample);
 
       last_step = (t >= t_final - 1e-8*dt);
 
@@ -368,9 +396,41 @@ int main(int argc, char *argv[])
       w.Save(ee_ofs);
    }
 
+   const CAROM::Matrix* snapshot_matrix = CAROM::createSnapshotMatrix(vx_samples);
+   CAROM::DMD* dmd;
+
+   if (rdim != -1 && ef != -1)
+   {
+       std::cout << "Both rdim and ef are set. ef will be ignored." << std::endl;
+   }
+
+   if (rdim != -1)
+   {
+       std::cout << "Creating DMD with rdim: " << rdim << std::endl;
+       dmd = new CAROM::DMD(snapshot_matrix, rdim, rank, num_procs);
+   }
+   else if (ef != -1)
+   {
+       std::cout << "Creating DMD with energy fraction: " << ef << std::endl;
+       dmd = new CAROM::DMD(snapshot_matrix, ef, rank, num_procs);
+   }
+
+   std::cout << "Predicting xv state at t_final using DMD" << std::endl;
+   CAROM::Vector* result = dmd->predict(t_final, dt);
+
+   Vector dmd_solution(result->getData(), result->dim());
+   Vector true_solution(vx_samples.back().getData(), vx_samples.back().dim());
+   Vector diff(true_solution.Size());
+   subtract(dmd_solution, true_solution, diff);
+
+   std::cout << "Relative error at t_final: " << t_final << " is " << diff.Norml2() / diff.Size() << std::endl;
+
    // 10. Free the used memory.
+   delete snapshot_matrix;
    delete ode_solver;
    delete mesh;
+   delete dmd;
+   delete result;
 
    return 0;
 }
