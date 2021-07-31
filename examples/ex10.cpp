@@ -423,7 +423,7 @@ int main(int argc, char *argv[])
    Vector diff(true_solution.Size());
    subtract(dmd_solution, true_solution, diff);
 
-   std::cout << "Relative error at t_final: " << t_final << " is " << diff.Norml2() / diff.Size() << std::endl;
+   std::cout << "Relative error at t_final: " << t_final << " is " << diff.Norml2() / true_solution.Norml2() << std::endl;
 
    // 10. Free the used memory.
    delete snapshot_matrix;

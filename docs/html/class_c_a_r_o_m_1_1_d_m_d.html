@@ -103,9 +103,15 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:af8e80cd3f183c221258fd6d8fdaa8002"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_d_m_d.html#af8e80cd3f183c221258fd6d8fdaa8002">DMD</a> (const <a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a> *f_snapshots, int k, int rank, int num_procs)</td></tr>
 <tr class="memdesc:af8e80cd3f183c221258fd6d8fdaa8002"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor.  <a href="#af8e80cd3f183c221258fd6d8fdaa8002">More...</a><br/></td></tr>
 <tr class="separator:af8e80cd3f183c221258fd6d8fdaa8002"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a448148919753e49cc8f791a21ab614c9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_d_m_d.html#a448148919753e49cc8f791a21ab614c9">predict</a> (int t)</td></tr>
-<tr class="memdesc:a448148919753e49cc8f791a21ab614c9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Predict state given a time.  <a href="#a448148919753e49cc8f791a21ab614c9">More...</a><br/></td></tr>
-<tr class="separator:a448148919753e49cc8f791a21ab614c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a68ab1c2074360d2598bd416344ec8c77"><td class="memItemLeft" align="right" valign="top">std::pair&lt; <a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> *, <a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_d_m_d.html#a68ab1c2074360d2598bd416344ec8c77">projectInitialCondition</a> (const <a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> *init)</td></tr>
+<tr class="memdesc:a68ab1c2074360d2598bd416344ec8c77"><td class="mdescLeft">&#160;</td><td class="mdescRight">Predict new initial condition using d_phi.  <a href="#a68ab1c2074360d2598bd416344ec8c77">More...</a><br/></td></tr>
+<tr class="separator:a68ab1c2074360d2598bd416344ec8c77"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af9dde435ede73a4868f7d5b144ddded3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_d_m_d.html#af9dde435ede73a4868f7d5b144ddded3">predict</a> (int t, int dt)</td></tr>
+<tr class="memdesc:af9dde435ede73a4868f7d5b144ddded3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Predict state given a time. Uses the projected initial condition of the training dataset (the first column).  <a href="#af9dde435ede73a4868f7d5b144ddded3">More...</a><br/></td></tr>
+<tr class="separator:af9dde435ede73a4868f7d5b144ddded3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a46b2bb3b3444d4201329a8bbe9570fe5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_d_m_d.html#a46b2bb3b3444d4201329a8bbe9570fe5">predict</a> (const std::pair&lt; <a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> *, <a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> * &gt; init, int t, int dt)</td></tr>
+<tr class="memdesc:a46b2bb3b3444d4201329a8bbe9570fe5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Predict state given a new initial condition and time. The initial condition must be projected using projectInitialCondition for correct results.  <a href="#a46b2bb3b3444d4201329a8bbe9570fe5">More...</a><br/></td></tr>
+<tr class="separator:a46b2bb3b3444d4201329a8bbe9570fe5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a class="anchor" id="a2d82e5cde01b2ebb886a0f4a1818183a"></a>
@@ -207,23 +213,101 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="a448148919753e49cc8f791a21ab614c9"></a>
+<a class="anchor" id="af9dde435ede73a4868f7d5b144ddded3"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> CAROM::DMD::predict </td>
+          <td class="memname"><a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* CAROM::DMD::predict </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>t</em></td><td>)</td>
+          <td class="paramname"><em>t</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>dt</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Predict state given a time. Uses the projected initial condition of the training dataset (the first column). </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">t</td><td>The time of the outputted state. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dt</td><td>The delta time of the simulation. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a46b2bb3b3444d4201329a8bbe9570fe5"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* CAROM::DMD::predict </td>
+          <td>(</td>
+          <td class="paramtype">const std::pair&lt; <a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> *, <a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> * &gt;&#160;</td>
+          <td class="paramname"><em>init</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>t</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>dt</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Predict state given a new initial condition and time. The initial condition must be projected using projectInitialCondition for correct results. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">init</td><td>The initial condition. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">t</td><td>The time of the outputted state. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dt</td><td>The delta time of the simulation. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a68ab1c2074360d2598bd416344ec8c77"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::pair&lt;<a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>*, <a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>*&gt; CAROM::DMD::projectInitialCondition </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> *&#160;</td>
+          <td class="paramname"><em>init</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>Predict state given a time. </p>
+<p>Predict new initial condition using d_phi. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">init</td><td>The initial condition. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">t</td><td>The time of the outputted state. </td></tr>
   </table>
   </dd>

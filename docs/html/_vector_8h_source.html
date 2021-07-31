@@ -167,7 +167,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;            <span class="keywordflow">if</span> (d_vec) {</div>
 <div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;                <span class="keyword">delete</span> [] d_vec;</div>
 <div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;            }</div>
-<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;            d_vec = <span class="keyword">new</span> <span class="keywordtype">double</span> [<a class="code" href="class_c_a_r_o_m_1_1_vector.html#a8f8e5d44c3f2cd12e2f4090ddf97c735">dim</a>];</div>
+<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;            d_vec = <span class="keyword">new</span> <span class="keywordtype">double</span> [<a class="code" href="class_c_a_r_o_m_1_1_vector.html#a8f8e5d44c3f2cd12e2f4090ddf97c735">dim</a>] {};</div>
 <div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;            d_alloc_size = <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a8f8e5d44c3f2cd12e2f4090ddf97c735">dim</a>;</div>
 <div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;        }</div>
 <div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;        d_dim = <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a8f8e5d44c3f2cd12e2f4090ddf97c735">dim</a>;</div>
@@ -355,23 +355,28 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;</div>
 <div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html#adc03e6513482466f5d3367d8e54dce4f">local_read</a>(<span class="keyword">const</span> std::string&amp; base_file_name, <span class="keywordtype">int</span> rank);</div>
 <div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;</div>
-<div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00704"></a><span class="lineno">  704</span>&#160;    <span class="keywordtype">double</span>* d_vec;</div>
-<div class="line"><a name="l00705"></a><span class="lineno">  705</span>&#160;</div>
-<div class="line"><a name="l00709"></a><span class="lineno">  709</span>&#160;    <span class="keywordtype">int</span> d_dim;</div>
-<div class="line"><a name="l00710"></a><span class="lineno">  710</span>&#160;</div>
-<div class="line"><a name="l00716"></a><span class="lineno">  716</span>&#160;    <span class="keywordtype">int</span> d_alloc_size;</div>
-<div class="line"><a name="l00717"></a><span class="lineno">  717</span>&#160;</div>
-<div class="line"><a name="l00724"></a><span class="lineno">  724</span>&#160;    <span class="keywordtype">bool</span> d_distributed;</div>
+<div class="line"><a name="l00703"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#a913d7dcc122687709dee85adba99dbf4">  703</a></span>&#160;    <span class="keywordtype">double</span> *<a class="code" href="class_c_a_r_o_m_1_1_vector.html#a913d7dcc122687709dee85adba99dbf4">getData</a>()<span class="keyword"> const</span></div>
+<div class="line"><a name="l00704"></a><span class="lineno">  704</span>&#160;<span class="keyword">    </span>{</div>
+<div class="line"><a name="l00705"></a><span class="lineno">  705</span>&#160;        <span class="keywordflow">return</span> d_vec;</div>
+<div class="line"><a name="l00706"></a><span class="lineno">  706</span>&#160;    }</div>
+<div class="line"><a name="l00707"></a><span class="lineno">  707</span>&#160;</div>
+<div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l00712"></a><span class="lineno">  712</span>&#160;    <span class="keywordtype">double</span>* d_vec;</div>
+<div class="line"><a name="l00713"></a><span class="lineno">  713</span>&#160;</div>
+<div class="line"><a name="l00717"></a><span class="lineno">  717</span>&#160;    <span class="keywordtype">int</span> d_dim;</div>
+<div class="line"><a name="l00718"></a><span class="lineno">  718</span>&#160;</div>
+<div class="line"><a name="l00724"></a><span class="lineno">  724</span>&#160;    <span class="keywordtype">int</span> d_alloc_size;</div>
 <div class="line"><a name="l00725"></a><span class="lineno">  725</span>&#160;</div>
-<div class="line"><a name="l00729"></a><span class="lineno">  729</span>&#160;    <span class="keywordtype">int</span> d_num_procs;</div>
-<div class="line"><a name="l00730"></a><span class="lineno">  730</span>&#160;</div>
-<div class="line"><a name="l00737"></a><span class="lineno">  737</span>&#160;    <span class="keywordtype">bool</span> d_owns_data;</div>
-<div class="line"><a name="l00738"></a><span class="lineno">  738</span>&#160;};</div>
-<div class="line"><a name="l00739"></a><span class="lineno">  739</span>&#160;</div>
-<div class="line"><a name="l00740"></a><span class="lineno">  740</span>&#160;}</div>
-<div class="line"><a name="l00741"></a><span class="lineno">  741</span>&#160;</div>
-<div class="line"><a name="l00742"></a><span class="lineno">  742</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00732"></a><span class="lineno">  732</span>&#160;    <span class="keywordtype">bool</span> d_distributed;</div>
+<div class="line"><a name="l00733"></a><span class="lineno">  733</span>&#160;</div>
+<div class="line"><a name="l00737"></a><span class="lineno">  737</span>&#160;    <span class="keywordtype">int</span> d_num_procs;</div>
+<div class="line"><a name="l00738"></a><span class="lineno">  738</span>&#160;</div>
+<div class="line"><a name="l00745"></a><span class="lineno">  745</span>&#160;    <span class="keywordtype">bool</span> d_owns_data;</div>
+<div class="line"><a name="l00746"></a><span class="lineno">  746</span>&#160;};</div>
+<div class="line"><a name="l00747"></a><span class="lineno">  747</span>&#160;</div>
+<div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;}</div>
+<div class="line"><a name="l00749"></a><span class="lineno">  749</span>&#160;</div>
+<div class="line"><a name="l00750"></a><span class="lineno">  750</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_aa03e1dcf3b1572995fadc70562c737d7"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#aa03e1dcf3b1572995fadc70562c737d7">CAROM::Vector::item</a></div><div class="ttdeci">const double &amp; item(int i) const </div><div class="ttdoc">Const Vector member access. </div><div class="ttdef"><b>Definition:</b> Vector.h:612</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_ace7a3b2cc2fb52c71f294d80cb8de222"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#ace7a3b2cc2fb52c71f294d80cb8de222">CAROM::Vector::plusAx</a></div><div class="ttdeci">Vector * plusAx(double factor, const Vector &amp;other)</div><div class="ttdoc">Adds factor*other and this and returns the result, reference version. </div><div class="ttdef"><b>Definition:</b> Vector.h:380</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a2004f874de68848d1a0720afdfccd4b2"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a2004f874de68848d1a0720afdfccd4b2">CAROM::Vector::plus</a></div><div class="ttdeci">Vector * plus(const Vector &amp;other) const </div><div class="ttdoc">Adds other and this and returns the result, reference version. </div><div class="ttdef"><b>Definition:</b> Vector.h:305</div></div>
@@ -380,6 +385,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a2b38fbc6b7d898bcc0399e1380a436d3"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a2b38fbc6b7d898bcc0399e1380a436d3">CAROM::Vector::read</a></div><div class="ttdeci">void read(const std::string &amp;base_file_name)</div><div class="ttdoc">read Vector from (a) HDF file(s). </div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_adc03e6513482466f5d3367d8e54dce4f"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#adc03e6513482466f5d3367d8e54dce4f">CAROM::Vector::local_read</a></div><div class="ttdeci">void local_read(const std::string &amp;base_file_name, int rank)</div><div class="ttdoc">read Vector from (a) HDF file(s). </div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a8eeaff9eedc7ab261577670e98f356c3"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a8eeaff9eedc7ab261577670e98f356c3">CAROM::Vector::write</a></div><div class="ttdeci">void write(const std::string &amp;base_file_name)</div><div class="ttdoc">write Vector into (a) HDF file(s). </div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a913d7dcc122687709dee85adba99dbf4"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a913d7dcc122687709dee85adba99dbf4">CAROM::Vector::getData</a></div><div class="ttdeci">double * getData() const </div><div class="ttdoc">Get the vector data as a pointer. </div><div class="ttdef"><b>Definition:</b> Vector.h:703</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a5958bc816279be7cc190e4bdfedb4636"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a5958bc816279be7cc190e4bdfedb4636">CAROM::Vector::mult</a></div><div class="ttdeci">Vector * mult(double factor) const </div><div class="ttdoc">Multiplies this by the supplied constant and returns the result. </div><div class="ttdef"><b>Definition:</b> Vector.h:566</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a4c92d8b8a9c156ff394cf87d4079fa99"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a4c92d8b8a9c156ff394cf87d4079fa99">CAROM::Vector::operator+=</a></div><div class="ttdeci">Vector &amp; operator+=(const Vector &amp;rhs)</div><div class="ttdoc">Addition operator. </div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a1543d65aaadb8016a071a4df9725d366"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a1543d65aaadb8016a071a4df9725d366">CAROM::Vector::setSize</a></div><div class="ttdeci">void setSize(int dim)</div><div class="ttdoc">Sets the length of the vector and reallocates storage if needed. </div><div class="ttdef"><b>Definition:</b> Vector.h:199</div></div>

@@ -100,51 +100,64 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define included_DMD_h</span></div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#include &lt;vector&gt;</span></div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="keyword">namespace </span>CAROM {</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="keyword">class </span>Matrix;</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="keyword">class </span>Vector;</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;</div>
-<div class="line"><a name="l00023"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_d_m_d.html">   23</a></span>&#160;<span class="keyword">class </span><a class="code" href="class_c_a_r_o_m_1_1_d_m_d.html">DMD</a></div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;{</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_d_m_d.html#a2d82e5cde01b2ebb886a0f4a1818183a">DMD</a>(<span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* f_snapshots,</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;        <span class="keywordtype">double</span> energy_fraction,</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;        <span class="keywordtype">int</span> rank,</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;        <span class="keywordtype">int</span> num_procs);</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_d_m_d.html#a2d82e5cde01b2ebb886a0f4a1818183a">DMD</a>(<span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* f_snapshots,</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;        <span class="keywordtype">int</span> k,</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;        <span class="keywordtype">int</span> rank,</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;        <span class="keywordtype">int</span> num_procs);</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> <a class="code" href="class_c_a_r_o_m_1_1_d_m_d.html#a448148919753e49cc8f791a21ab614c9">predict</a>(<span class="keywordtype">int</span> t);</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#include &lt;complex&gt;</span></div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="keyword">namespace </span>CAROM {</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="keyword">class </span>Matrix;</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="keyword">class </span>Vector;</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;</div>
+<div class="line"><a name="l00024"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_d_m_d.html">   24</a></span>&#160;<span class="keyword">class </span><a class="code" href="class_c_a_r_o_m_1_1_d_m_d.html">DMD</a></div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;{</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_d_m_d.html#a2d82e5cde01b2ebb886a0f4a1818183a">DMD</a>(<span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* f_snapshots,</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;        <span class="keywordtype">double</span> energy_fraction,</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;        <span class="keywordtype">int</span> rank,</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;        <span class="keywordtype">int</span> num_procs);</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_d_m_d.html#a2d82e5cde01b2ebb886a0f4a1818183a">DMD</a>(<span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* f_snapshots,</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;        <span class="keywordtype">int</span> k,</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;        <span class="keywordtype">int</span> rank,</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;        <span class="keywordtype">int</span> num_procs);</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    std::pair&lt;Vector*, Vector*&gt; <a class="code" href="class_c_a_r_o_m_1_1_d_m_d.html#a68ab1c2074360d2598bd416344ec8c77">projectInitialCondition</a>(<span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* init);</div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    <span class="keywordtype">void</span> constructDMD(<span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* f_snapshots,</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;                      <span class="keywordtype">int</span> rank,</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;                      <span class="keywordtype">int</span> num_procs);</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* d_phi;</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    <span class="keywordtype">double</span> d_energy_fraction;</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    <span class="keywordtype">int</span> d_k;</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;};</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* createSnapshotMatrix(std::vector&lt;Vector&gt; snapshots);</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;}</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_d_m_d_html_a448148919753e49cc8f791a21ab614c9"><div class="ttname"><a href="class_c_a_r_o_m_1_1_d_m_d.html#a448148919753e49cc8f791a21ab614c9">CAROM::DMD::predict</a></div><div class="ttdeci">Vector predict(int t)</div><div class="ttdoc">Predict state given a time. </div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_d_m_d_html"><div class="ttname"><a href="class_c_a_r_o_m_1_1_d_m_d.html">CAROM::DMD</a></div><div class="ttdef"><b>Definition:</b> DMD.h:23</div></div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* <a class="code" href="class_c_a_r_o_m_1_1_d_m_d.html#af9dde435ede73a4868f7d5b144ddded3">predict</a>(<span class="keywordtype">int</span> t, <span class="keywordtype">int</span> dt);</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* <a class="code" href="class_c_a_r_o_m_1_1_d_m_d.html#af9dde435ede73a4868f7d5b144ddded3">predict</a>(<span class="keyword">const</span> std::pair&lt;Vector*, Vector*&gt; init, <span class="keywordtype">int</span> t, <span class="keywordtype">int</span> dt);</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    std::pair&lt;Matrix*, Matrix*&gt; phiMultEigs(<span class="keywordtype">int</span> t, <span class="keywordtype">int</span> dt);</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    <span class="keywordtype">void</span> constructDMD(<span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* f_snapshots,</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;                      <span class="keywordtype">int</span> rank,</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;                      <span class="keywordtype">int</span> num_procs);</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* d_phi_real;</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* d_phi_imaginary;</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* d_projected_init_real;</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* d_projected_init_imaginary;</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    std::vector&lt;std::complex&lt;double&gt;&gt; d_eigs;</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;    <span class="keywordtype">double</span> d_energy_fraction;</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;    <span class="keywordtype">int</span> d_k;</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;};</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;<span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* createSnapshotMatrix(std::vector&lt;Vector&gt; snapshots);</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;}</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_d_m_d_html"><div class="ttname"><a href="class_c_a_r_o_m_1_1_d_m_d.html">CAROM::DMD</a></div><div class="ttdef"><b>Definition:</b> DMD.h:24</div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_d_m_d_html_af9dde435ede73a4868f7d5b144ddded3"><div class="ttname"><a href="class_c_a_r_o_m_1_1_d_m_d.html#af9dde435ede73a4868f7d5b144ddded3">CAROM::DMD::predict</a></div><div class="ttdeci">Vector * predict(int t, int dt)</div><div class="ttdoc">Predict state given a time. Uses the projected initial condition of the training dataset (the first c...</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_matrix_html"><div class="ttname"><a href="class_c_a_r_o_m_1_1_matrix.html">CAROM::Matrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.h:28</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html">CAROM::Vector</a></div><div class="ttdef"><b>Definition:</b> Vector.h:28</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_d_m_d_html_a2d82e5cde01b2ebb886a0f4a1818183a"><div class="ttname"><a href="class_c_a_r_o_m_1_1_d_m_d.html#a2d82e5cde01b2ebb886a0f4a1818183a">CAROM::DMD::DMD</a></div><div class="ttdeci">DMD(const Matrix *f_snapshots, double energy_fraction, int rank, int num_procs)</div><div class="ttdoc">Constructor. </div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_d_m_d_html_a68ab1c2074360d2598bd416344ec8c77"><div class="ttname"><a href="class_c_a_r_o_m_1_1_d_m_d.html#a68ab1c2074360d2598bd416344ec8c77">CAROM::DMD::projectInitialCondition</a></div><div class="ttdeci">std::pair&lt; Vector *, Vector * &gt; projectInitialCondition(const Vector *init)</div><div class="ttdoc">Predict new initial condition using d_phi. </div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

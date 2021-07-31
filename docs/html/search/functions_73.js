@@ -15,6 +15,6 @@ var searchData=
   ['setsubseterrorindicator',['setSubsetErrorIndicator',['../class_c_a_r_o_m_1_1_greedy_parameter_point_sampler.html#a3540229b83be8da1b15bd66b84912b88',1,'CAROM::GreedyParameterPointSampler']]],
   ['startconvergence',['startConvergence',['../class_c_a_r_o_m_1_1_greedy_parameter_point_sampler.html#a3edd3a853f6b5242ea12eb8da8a13a62',1,'CAROM::GreedyParameterPointSampler']]],
   ['staticsvd',['StaticSVD',['../class_c_a_r_o_m_1_1_static_s_v_d.html#a7db32fa4778422244a7b5230f9b7481f',1,'CAROM::StaticSVD']]],
-  ['svd',['svd',['../class_c_a_r_o_m_1_1_incremental_s_v_d.html#aade80460f0cfb9f6b66e07089b647802',1,'CAROM::IncrementalSVD::svd()'],['../class_c_a_r_o_m_1_1_s_v_d.html#a20c7b447885f81e763067da0685d04a4',1,'CAROM::SVD::SVD()']]],
+  ['svd',['SVD',['../class_c_a_r_o_m_1_1_s_v_d.html#a20c7b447885f81e763067da0685d04a4',1,'CAROM::SVD::SVD()'],['../class_c_a_r_o_m_1_1_incremental_s_v_d.html#aade80460f0cfb9f6b66e07089b647802',1,'CAROM::IncrementalSVD::svd()']]],
   ['sync',['sync',['../class_c_a_r_o_m_1_1_parallel_buffer.html#a53f1cd6e167519b793e9bd830659f8c9',1,'CAROM::ParallelBuffer']]]
 ];
