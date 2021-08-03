@@ -274,7 +274,6 @@ if(GTEST_FOUND)
   set(unit_test_stems
     Vector
     Matrix
-    DMD
     DEIM
     GNAT
     QDEIM
