@@ -46,34 +46,57 @@ using namespace std;
 
 namespace CAROM {
 
-DMD::DMD(const Matrix* f_snapshots,
-         double energy_fraction,
-         int rank,
-         int num_procs)
+DMD::DMD(int dim)
 {
+    // Get the rank of this process, and the number of processors.
+    int mpi_init;
+    MPI_Initialized(&mpi_init);
+    if (mpi_init == 0) {
+        MPI_Init(nullptr, nullptr);
+    }
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+    d_dim = dim;
+}
+
+bool DMD::takeSample(double* u_in)
+{
+    CAROM_VERIFY(u_in != 0);
+
+    Vector sample(u_in, d_dim, true);
+    d_snapshots.push_back(sample);
+    return true;
+}
+
+void DMD::train(double energy_fraction)
+{
+    const Matrix* f_snapshots = getSnapshotMatrix(d_snapshots);
     CAROM_VERIFY(f_snapshots->numColumns() > 1);
     CAROM_VERIFY(energy_fraction > 0 && energy_fraction <= 1);
     d_energy_fraction = energy_fraction;
     d_k = f_snapshots->numColumns() - 1;
-    constructDMD(f_snapshots, rank, num_procs);
+    constructDMD(f_snapshots, d_rank, d_num_procs);
+
+    delete f_snapshots;
 }
 
-DMD::DMD(const Matrix* f_snapshots,
-         int k,
-         int rank,
-         int num_procs)
+void DMD::train(int k)
 {
+    const Matrix* f_snapshots = getSnapshotMatrix(d_snapshots);
     CAROM_VERIFY(f_snapshots->numColumns() > 1);
     CAROM_VERIFY(k > 0 && k <= f_snapshots->numColumns() - 1);
     d_energy_fraction = -1;
     d_k = k;
-    constructDMD(f_snapshots, rank, num_procs);
+    constructDMD(f_snapshots, d_rank, d_num_procs);
+
+    delete f_snapshots;
 }
 
 void
 DMD::constructDMD(const Matrix* f_snapshots,
-                  int rank,
-                  int num_procs)
+                  int d_rank,
+                  int d_num_procs)
 {
     Matrix* f_snapshots_minus = new Matrix(f_snapshots->numRows(),
                                            f_snapshots->numColumns() - 1, f_snapshots->distributed());
@@ -95,9 +118,9 @@ DMD::constructDMD(const Matrix* f_snapshots,
             f_snapshots->item(i, f_snapshots->numColumns() - 1);
     }
 
-    int *row_offset = new int[num_procs + 1];
-    row_offset[num_procs] = f_snapshots_minus->numDistributedRows();
-    row_offset[rank] = f_snapshots_minus->numRows();
+    int *row_offset = new int[d_num_procs + 1];
+    row_offset[d_num_procs] = f_snapshots_minus->numDistributedRows();
+    row_offset[d_rank] = f_snapshots_minus->numRows();
 
     CAROM_VERIFY(MPI_Allgather(MPI_IN_PLACE,
                                1,
@@ -106,25 +129,28 @@ DMD::constructDMD(const Matrix* f_snapshots,
                                1,
                                MPI_INT,
                                MPI_COMM_WORLD) == MPI_SUCCESS);
-    for (int i = num_procs - 1; i >= 0; i--) {
+    for (int i = d_num_procs - 1; i >= 0; i--) {
         row_offset[i] = row_offset[i + 1] - row_offset[i];
     }
 
     CAROM_VERIFY(row_offset[0] == 0);
 
-    int d_blocksize = row_offset[num_procs] / num_procs;
-    if (row_offset[num_procs] % num_procs != 0) d_blocksize += 1;
+    int d_blocksize = row_offset[d_num_procs] / d_num_procs;
+    if (row_offset[d_num_procs] % d_num_procs != 0) d_blocksize += 1;
 
     SLPK_Matrix svd_input;
 
     // Calculate svd of snapshots_minus
     initialize_matrix(&svd_input, f_snapshots_minus->numColumns(),
                       f_snapshots_minus->numDistributedRows(),
-                      1, num_procs, d_blocksize, d_blocksize);
-    scatter_block(&svd_input, 1, 1,
-                  f_snapshots_minus->getData(),
-                  f_snapshots_minus->numColumns(),
-                  f_snapshots_minus->numDistributedRows(),0);
+                      1, d_num_procs, d_blocksize, d_blocksize);
+    for (int rank = 0; rank < d_num_procs; ++rank)
+    {
+        scatter_block(&svd_input, 1, row_offset[rank] + 1,
+                      f_snapshots_minus->getData(),
+                      f_snapshots_minus->numColumns(),
+                      row_offset[rank + 1] - row_offset[rank], rank);
+    }
 
     std::unique_ptr<SVDManager> d_factorizer(new SVDManager);
 
@@ -159,18 +185,18 @@ DMD::constructDMD(const Matrix* f_snapshots,
     Matrix* d_S_inv = new Matrix(d_k, d_k, false);
 
     Matrix* d_basis_right = new Matrix(f_snapshots_minus->numColumns(), d_k, false);
-    for (int rank = 0; rank < num_procs; ++rank) {
+    for (int d_rank = 0; d_rank < d_num_procs; ++d_rank) {
         // V is computed in the transposed order so no reordering necessary.
         gather_block(&d_basis->item(0, 0), d_factorizer->V,
-                     1, row_offset[static_cast<unsigned>(rank)]+1,
-                     d_k, row_offset[static_cast<unsigned>(rank) + 1] -
-                     row_offset[static_cast<unsigned>(rank)],
-                     rank);
+                     1, row_offset[static_cast<unsigned>(d_rank)]+1,
+                     d_k, row_offset[static_cast<unsigned>(d_rank) + 1] -
+                     row_offset[static_cast<unsigned>(d_rank)],
+                     d_rank);
 
         // gather_transposed_block does the same as gather_block, but transposes
         // it; here, it is used to go from column-major to row-major order.
         gather_transposed_block(&d_basis_right->item(0, 0), d_factorizer->U, 1, 1,
-                                f_snapshots_minus->numColumns(), d_k, rank);
+                                f_snapshots_minus->numColumns(), d_k, d_rank);
     }
 
     // Get inverse of singular values by multiplying by reciprocal.
@@ -257,12 +283,13 @@ DMD::constructDMD(const Matrix* f_snapshots,
     d_phi_real = f_snapshots_plus_mult_d_basis_right_mult_d_S_inv->mult(ev_real);
     d_phi_imaginary = f_snapshots_plus_mult_d_basis_right_mult_d_S_inv->mult(ev_imaginary);
 
-    Vector* init = new Vector(f_snapshots_minus->numRows(), false);
+    Vector* init = new Vector(f_snapshots_minus->numRows(), true);
     for (int i = 0; i < init->dim(); i++)
     {
         init->item(i) = f_snapshots_minus->item(i, 0);
     }
 
+    // Calculate pinv(d_phi) * initial_condition.
     projectInitialCondition(init);
 
     delete d_basis;
@@ -288,7 +315,6 @@ DMD::constructDMD(const Matrix* f_snapshots,
 std::pair<Vector*, Vector*>
 DMD::projectInitialCondition(const Vector* init)
 {
-
     Matrix* d_phi_real_squared = d_phi_real->transposeMult(d_phi_real);
     Matrix* d_phi_real_squared_2 = d_phi_imaginary->transposeMult(d_phi_imaginary);
     *d_phi_real_squared -= *d_phi_real_squared_2;
@@ -431,7 +457,7 @@ DMD::phiMultEigs(int t,
     return std::pair<Matrix*,Matrix*>(d_phi_mult_eigs_real, d_phi_mult_eigs_imaginary);
 }
 
-const Matrix* createSnapshotMatrix(std::vector<Vector> snapshots)
+const Matrix* getSnapshotMatrix(std::vector<Vector> snapshots)
 {
     CAROM_VERIFY(snapshots.size() > 0);
     CAROM_VERIFY(snapshots[0].dim() > 0);

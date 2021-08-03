@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['sampler',['Sampler',['../class_c_a_r_o_m_1_1_sampler.html#a3a292fcbea929cb7d773921dec8752a0',1,'CAROM::Sampler']]],
   ['save',['save',['../class_c_a_r_o_m_1_1_greedy_parameter_point_random_sampler.html#a7e064b349a978a06a0b83ea40fa8f899',1,'CAROM::GreedyParameterPointRandomSampler::save()'],['../class_c_a_r_o_m_1_1_greedy_parameter_point_sampler.html#a6ca108547601bbf32d4f56003c486500',1,'CAROM::GreedyParameterPointSampler::save()']]],
   ['setconvergenceerrorindicator',['setConvergenceErrorIndicator',['../class_c_a_r_o_m_1_1_greedy_parameter_point_sampler.html#ae46c8c2638d5cf8c3070ad9b668100ec',1,'CAROM::GreedyParameterPointSampler']]],
   ['setdebugmode',['setDebugMode',['../class_c_a_r_o_m_1_1_options.html#a8ab6dca0209a9631b2f2d92d25266a3b',1,'CAROM::Options']]],

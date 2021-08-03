@@ -13,6 +13,7 @@ var searchData=
   ['_7eincrementalsvdstandard',['~IncrementalSVDStandard',['../class_c_a_r_o_m_1_1_incremental_s_v_d_standard.html#a97d171ab198d738d2abb6ea92400ac7f',1,'CAROM::IncrementalSVDStandard']]],
   ['_7ematrix',['~Matrix',['../class_c_a_r_o_m_1_1_matrix.html#abb5b039c240bdc22ab142ff63fa7f4ba',1,'CAROM::Matrix']]],
   ['_7eparallelbuffer',['~ParallelBuffer',['../class_c_a_r_o_m_1_1_parallel_buffer.html#a59d63b50bbf75f26af7540687a42a9d3',1,'CAROM::ParallelBuffer']]],
+  ['_7esampler',['~Sampler',['../class_c_a_r_o_m_1_1_sampler.html#a8722d7f3d8c84682fcb6a60098727ad7',1,'CAROM::Sampler']]],
   ['_7estaticsvd',['~StaticSVD',['../class_c_a_r_o_m_1_1_static_s_v_d.html#a38fe9d5c3d8ef47f0e40353078015e7a',1,'CAROM::StaticSVD']]],
   ['_7esvd',['~SVD',['../class_c_a_r_o_m_1_1_s_v_d.html#a4939973d4f9d812c74f6e749d91cc473',1,'CAROM::SVD']]],
   ['_7evector',['~Vector',['../class_c_a_r_o_m_1_1_vector.html#aa751475ec55bc679c7e874b0b442f59f',1,'CAROM::Vector']]]

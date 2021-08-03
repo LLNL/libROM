@@ -1,16 +1,16 @@
-//                                MFEM Example 10
+//                       MFEM Example 10 - Parallel Version
 //
-// Compile with: make ex10
+// Compile with: make ex10p
 //
 // Sample runs:
-//    ex10 -s 3 -r 2 -o 2 -dt 3
-//    ex10 -s 3 -r 2 -o 2 -dt 3
-//    ex10 -s 2 -r 1 -o 2 -dt 3
-//    ex10 -s 2 -r 1 -o 2 -dt 3
-//    ex10 -s 2 -r 1 -o 2 -dt 3
-//    ex10 -s 14 -r 2 -o 2 -dt 0.03 -vs 20
-//    ex10 -s 14 -r 1 -o 2 -dt 0.05 -vs 20
-//    ex10 -s 3 -r 2 -o 2 -dt 3
+//    mpirun -np 4 ex10p -s 3 -rs 2 -dt 3
+//    mpirun -np 4 ex10p -s 3 -rs 2 -dt 3
+//    mpirun -np 4 ex10p -s 2 -rs 1 -dt 3
+//    mpirun -np 4 ex10p -m -s 2 -rs 1 -dt 3
+//    mpirun -np 4 ex10p -m -s 2 -rs 1 -dt 3
+//    mpirun -np 4 ex10p -m -s 14 -rs 2 -dt 0.03 -vs 20
+//    mpirun -np 4 ex10p -m -s 14 -rs 1 -dt 0.05 -vs 20
+//    mpirun -np 4 ex10p -m -s 3 -rs 2 -dt 3
 //
 // Description:  This examples solves a time dependent nonlinear elasticity
 //               problem of the form dv/dt = H(x) + S v, dx/dt = v, where H is a
@@ -35,12 +35,11 @@
 //               We recommend viewing examples 2 and 9 before viewing this
 //               example.
 
-#include "mpi.h"
 #include "mfem.hpp"
 #include "DMD.h"
 #include "Vector.h"
-#include "Matrix.h"
 #include <memory>
+#include <cmath>
 #include <iostream>
 #include <fstream>
 
@@ -62,15 +61,17 @@ class ReducedSystemOperator;
 class HyperelasticOperator : public TimeDependentOperator
 {
 protected:
-   FiniteElementSpace &fespace;
+   ParFiniteElementSpace &fespace;
+   Array<int> ess_tdof_list;
 
-   BilinearForm M, S;
-   NonlinearForm H;
+   ParBilinearForm M, S;
+   ParNonlinearForm H;
    double viscosity;
    HyperelasticModel *model;
 
-   CGSolver M_solver; // Krylov solver for inverting the mass matrix M
-   DSmoother M_prec;  // Preconditioner for the mass matrix M
+   HypreParMatrix *Mmat; // Mass matrix from ParallelAssemble()
+   CGSolver M_solver;    // Krylov solver for inverting the mass matrix M
+   HypreSmoother M_prec; // Preconditioner for the mass matrix M
 
    /** Nonlinear operator defining the reduced backward Euler equation for the
        velocity. Used in the implementation of method ImplicitSolve. */
@@ -87,7 +88,7 @@ protected:
    mutable Vector z; // auxiliary vector
 
 public:
-   HyperelasticOperator(FiniteElementSpace &f, Array<int> &ess_bdr,
+   HyperelasticOperator(ParFiniteElementSpace &f, Array<int> &ess_bdr,
                         double visc, double mu, double K);
 
    /// Compute the right-hand side of the ODE system.
@@ -96,9 +97,10 @@ public:
        This is the only requirement for high-order SDIRK implicit integration.*/
    virtual void ImplicitSolve(const double dt, const Vector &x, Vector &k);
 
-   double ElasticEnergy(const Vector &x) const;
-   double KineticEnergy(const Vector &v) const;
-   void GetElasticEnergyDensity(const GridFunction &x, GridFunction &w) const;
+   double ElasticEnergy(const ParGridFunction &x) const;
+   double KineticEnergy(const ParGridFunction &v) const;
+   void GetElasticEnergyDensity(const ParGridFunction &x,
+                                ParGridFunction &w) const;
 
    virtual ~HyperelasticOperator();
 };
@@ -110,15 +112,17 @@ public:
 class ReducedSystemOperator : public Operator
 {
 private:
-   BilinearForm *M, *S;
-   NonlinearForm *H;
-   mutable SparseMatrix *Jacobian;
+   ParBilinearForm *M, *S;
+   ParNonlinearForm *H;
+   mutable HypreParMatrix *Jacobian;
    double dt;
    const Vector *v, *x;
    mutable Vector w, z;
+   const Array<int> &ess_tdof_list;
 
 public:
-   ReducedSystemOperator(BilinearForm *M_, BilinearForm *S_, NonlinearForm *H_);
+   ReducedSystemOperator(ParBilinearForm *M_, ParBilinearForm *S_,
+                         ParNonlinearForm *H_, const Array<int> &ess_tdof_list);
 
    /// Set current dt, v, x values - needed to compute action and Jacobian.
    void SetParameters(double dt_, const Vector *v_, const Vector *x_);
@@ -138,12 +142,12 @@ public:
 class ElasticEnergyCoefficient : public Coefficient
 {
 private:
-   HyperelasticModel  &model;
-   const GridFunction &x;
-   DenseMatrix         J;
+   HyperelasticModel     &model;
+   const ParGridFunction &x;
+   DenseMatrix            J;
 
 public:
-   ElasticEnergyCoefficient(HyperelasticModel &m, const GridFunction &x_)
+   ElasticEnergyCoefficient(HyperelasticModel &m, const ParGridFunction &x_)
       : model(m), x(x_) { }
    virtual double Eval(ElementTransformation &T, const IntegrationPoint &ip);
    virtual ~ElasticEnergyCoefficient() { }
@@ -153,27 +157,23 @@ void InitialDeformation(const Vector &x, Vector &y);
 
 void InitialVelocity(const Vector &x, Vector &v);
 
-void visualize(ostream &out, Mesh *mesh, GridFunction *deformed_nodes,
-               GridFunction *field, const char *field_name = NULL,
+void visualize(ostream &out, ParMesh *mesh, ParGridFunction *deformed_nodes,
+               ParGridFunction *field, const char *field_name = NULL,
                bool init_vis = false);
 
 
 int main(int argc, char *argv[])
 {
+   // 1. Initialize MPI.
+   int num_procs, myid;
+   MPI_Init(&argc, &argv);
+   MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
+   MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
-    // Get the rank of this process, and the number of processors.
-    int mpi_init, rank, num_procs;
-    MPI_Initialized(&mpi_init);
-    if (mpi_init == 0) {
-        MPI_Init(nullptr, nullptr);
-    }
-
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
-
-   // 1. Parse command-line options.
+   // 2. Parse command-line options.
    const char *mesh_file = "../dependencies/mfem/data/beam-quad.mesh";
-   int ref_levels = 2;
+   int ser_ref_levels = 2;
+   int par_ref_levels = 0;
    int order = 2;
    int ode_solver_type = 3;
    double t_final = 300.0;
@@ -181,6 +181,7 @@ int main(int argc, char *argv[])
    double visc = 1e-2;
    double mu = 0.25;
    double K = 5.0;
+   bool adaptive_lin_rtol = true;
    double ef = 0.99;
    int rdim = -1;
    bool visualization = true;
@@ -189,8 +190,10 @@ int main(int argc, char *argv[])
    OptionsParser args(argc, argv);
    args.AddOption(&mesh_file, "-m", "--mesh",
                   "Mesh file to use.");
-   args.AddOption(&ref_levels, "-r", "--refine",
-                  "Number of times to refine the mesh uniformly.");
+   args.AddOption(&ser_ref_levels, "-rs", "--refine-serial",
+                  "Number of times to refine the mesh uniformly in serial.");
+   args.AddOption(&par_ref_levels, "-rp", "--refine-parallel",
+                  "Number of times to refine the mesh uniformly in parallel.");
    args.AddOption(&order, "-o", "--order",
                   "Order (degree) of the finite elements.");
    args.AddOption(&ode_solver_type, "-s", "--ode-solver",
@@ -209,6 +212,9 @@ int main(int argc, char *argv[])
                   "Shear modulus in the Neo-Hookean hyperelastic model.");
    args.AddOption(&K, "-K", "--bulk-modulus",
                   "Bulk modulus in the Neo-Hookean hyperelastic model.");
+   args.AddOption(&adaptive_lin_rtol, "-alrtol", "--adaptive-lin-rtol",
+                  "-no-alrtol", "--no-adaptive-lin-rtol",
+                  "Enable or disable adaptive linear solver rtol.");
    args.AddOption(&visualization, "-vis", "--visualization", "-no-vis",
                   "--no-visualization",
                   "Enable or disable GLVis visualization.");
@@ -221,26 +227,34 @@ int main(int argc, char *argv[])
    args.Parse();
    if (!args.Good())
    {
-      args.PrintUsage(cout);
+      if (myid == 0)
+      {
+         args.PrintUsage(cout);
+      }
+      MPI_Finalize();
       return 1;
    }
-   args.PrintOptions(cout);
+   if (myid == 0)
+   {
+      args.PrintOptions(cout);
+   }
 
-   // 2. Read the mesh from the given mesh file. We can handle triangular,
-   //    quadrilateral, tetrahedral and hexahedral meshes with the same code.
+   // 3. Read the serial mesh from the given mesh file on all processors. We can
+   //    handle triangular, quadrilateral, tetrahedral and hexahedral meshes
+   //    with the same code.
    Mesh *mesh = new Mesh(mesh_file, 1, 1);
    int dim = mesh->Dimension();
 
-   // 3. Define the ODE solver used for time integration. Several implicit
+   // 4. Define the ODE solver used for time integration. Several implicit
    //    singly diagonal implicit Runge-Kutta (SDIRK) methods, as well as
    //    explicit Runge-Kutta methods are available.
    ODESolver *ode_solver;
    switch (ode_solver_type)
    {
       // Implicit L-stable methods
-      case 1: ode_solver = new BackwardEulerSolver; break;
-      case 2: ode_solver = new SDIRK23Solver(2); break;
-      case 3: ode_solver = new SDIRK33Solver; break;
+      case 1:  ode_solver = new BackwardEulerSolver; break;
+      case 2:  ode_solver = new SDIRK23Solver(2); break;
+      case 3:  ode_solver = new SDIRK33Solver; break;
       // Explicit methods
       case 11: ode_solver = new ForwardEulerSolver; break;
       case 12: ode_solver = new RK2Solver(0.5); break; // midpoint method
@@ -252,62 +266,81 @@ int main(int argc, char *argv[])
       case 23: ode_solver = new SDIRK23Solver; break;
       case 24: ode_solver = new SDIRK34Solver; break;
       default:
-         cout << "Unknown ODE solver type: " << ode_solver_type << '\n';
+         if (myid == 0)
+         {
+            cout << "Unknown ODE solver type: " << ode_solver_type << '\n';
+         }
          delete mesh;
+         MPI_Finalize();
          return 3;
    }
 
-   // 4. Refine the mesh to increase the resolution. In this example we do
-   //    'ref_levels' of uniform refinement, where 'ref_levels' is a
-   //    command-line parameter.
-   for (int lev = 0; lev < ref_levels; lev++)
+   // 5. Refine the mesh in serial to increase the resolution. In this example
+   //    we do 'ser_ref_levels' of uniform refinement, where 'ser_ref_levels' is
+   //    a command-line parameter.
+   for (int lev = 0; lev < ser_ref_levels; lev++)
    {
       mesh->UniformRefinement();
    }
 
-   // 5. Define the vector finite element spaces representing the mesh
-   //    deformation x, the velocity v, and the initial configuration, x_ref.
-   //    Define also the elastic energy density, w, which is in a discontinuous
-   //    higher-order space. Since x and v are integrated in time as a system,
-   //    we group them together in block vector vx, with offsets given by the
-   //    fe_offset array.
+   // 6. Define a parallel mesh by a partitioning of the serial mesh. Refine
+   //    this mesh further in parallel to increase the resolution. Once the
+   //    parallel mesh is defined, the serial mesh can be deleted.
+   ParMesh *pmesh = new ParMesh(MPI_COMM_WORLD, *mesh);
+   delete mesh;
+   for (int lev = 0; lev < par_ref_levels; lev++)
+   {
+      pmesh->UniformRefinement();
+   }
+
+   // 7. Define the parallel vector finite element spaces representing the mesh
+   //    deformation x_gf, the velocity v_gf, and the initial configuration,
+   //    x_ref. Define also the elastic energy density, w_gf, which is in a
+   //    discontinuous higher-order space. Since x and v are integrated in time
+   //    as a system, we group them together in block vector vx, on the unique
+   //    parallel degrees of freedom, with offsets given by array true_offset.
    H1_FECollection fe_coll(order, dim);
-   FiniteElementSpace fespace(mesh, &fe_coll, dim);
+   ParFiniteElementSpace fespace(pmesh, &fe_coll, dim);
 
-   int fe_size = fespace.GetTrueVSize();
-   cout << "Number of velocity/deformation unknowns: " << fe_size << endl;
-   Array<int> fe_offset(3);
-   fe_offset[0] = 0;
-   fe_offset[1] = fe_size;
-   fe_offset[2] = 2*fe_size;
+   HYPRE_BigInt glob_size = fespace.GlobalTrueVSize();
+   if (myid == 0)
+   {
+      cout << "Number of velocity/deformation unknowns: " << glob_size << endl;
+   }
+   int true_size = fespace.TrueVSize();
+   Array<int> true_offset(3);
+   true_offset[0] = 0;
+   true_offset[1] = true_size;
+   true_offset[2] = 2*true_size;
 
-   BlockVector vx(fe_offset);
-   vector<CAROM::Vector> vx_samples;
-   GridFunction v, x;
-   v.MakeTRef(&fespace, vx.GetBlock(0), 0);
-   x.MakeTRef(&fespace, vx.GetBlock(1), 0);
+   BlockVector vx(true_offset);
+   ParGridFunction v_gf, x_gf;
+   v_gf.MakeTRef(&fespace, vx, true_offset[0]);
+   x_gf.MakeTRef(&fespace, vx, true_offset[1]);
 
-   GridFunction x_ref(&fespace);
-   mesh->GetNodes(x_ref);
+   ParGridFunction x_ref(&fespace);
+   pmesh->GetNodes(x_ref);
 
    L2_FECollection w_fec(order + 1, dim);
-   FiniteElementSpace w_fespace(mesh, &w_fec);
-   GridFunction w(&w_fespace);
+   ParFiniteElementSpace w_fespace(pmesh, &w_fec);
+   ParGridFunction w_gf(&w_fespace);
 
-   // 6. Set the initial conditions for v and x, and the boundary conditions on
-   //    a beam-like mesh (see description above).
+   // 8. Set the initial conditions for v_gf, x_gf and vx, and define the
+   //    boundary conditions on a beam-like mesh (see description above).
    VectorFunctionCoefficient velo(dim, InitialVelocity);
-   v.ProjectCoefficient(velo);
-   v.SetTrueVector();
+   v_gf.ProjectCoefficient(velo);
+   v_gf.SetTrueVector();
    VectorFunctionCoefficient deform(dim, InitialDeformation);
-   x.ProjectCoefficient(deform);
-   x.SetTrueVector();
+   x_gf.ProjectCoefficient(deform);
+   x_gf.SetTrueVector();
+
+   v_gf.SetFromTrueVector(); x_gf.SetFromTrueVector();
 
    Array<int> ess_bdr(fespace.GetMesh()->bdr_attributes.Max());
    ess_bdr = 0;
    ess_bdr[0] = 1; // boundary attribute 1 (index 0) is fixed
 
-   // 7. Initialize the hyperelastic operator, the GLVis visualization and print
+   // 9. Initialize the hyperelastic operator, the GLVis visualization and print
    //    the initial energies.
    HyperelasticOperator oper(fespace, ess_bdr, visc, mu, K);
 
@@ -318,32 +351,39 @@ int main(int argc, char *argv[])
       int  visport   = 19916;
       vis_v.open(vishost, visport);
       vis_v.precision(8);
-      v.SetFromTrueVector(); x.SetFromTrueVector();
-      visualize(vis_v, mesh, &x, &v, "Velocity", true);
+      visualize(vis_v, pmesh, &x_gf, &v_gf, "Velocity", true);
+      // Make sure all ranks have sent their 'v' solution before initiating
+      // another set of GLVis connections (one from each rank):
+      MPI_Barrier(pmesh->GetComm());
       vis_w.open(vishost, visport);
       if (vis_w)
       {
-         oper.GetElasticEnergyDensity(x, w);
+         oper.GetElasticEnergyDensity(x_gf, w_gf);
          vis_w.precision(8);
-         visualize(vis_w, mesh, &x, &w, "Elastic energy density", true);
+         visualize(vis_w, pmesh, &x_gf, &w_gf, "Elastic energy density", true);
       }
    }
 
-   double ee0 = oper.ElasticEnergy(x.GetTrueVector());
-   double ke0 = oper.KineticEnergy(v.GetTrueVector());
-   cout << "initial elastic energy (EE) = " << ee0 << endl;
-   cout << "initial kinetic energy (KE) = " << ke0 << endl;
-   cout << "initial   total energy (TE) = " << (ee0 + ke0) << endl;
+   double ee0 = oper.ElasticEnergy(x_gf);
+   double ke0 = oper.KineticEnergy(v_gf);
+   if (myid == 0)
+   {
+      cout << "initial elastic energy (EE) = " << ee0 << endl;
+      cout << "initial kinetic energy (KE) = " << ke0 << endl;
+      cout << "initial   total energy (TE) = " << (ee0 + ke0) << endl;
+   }
 
    double t = 0.0;
    oper.SetTime(t);
    ode_solver->Init(oper);
 
-   CAROM::Vector init_sample(vx.GetData(), vx.Size(), false);
-   vx_samples.push_back(init_sample);
+   // 10. Create DMD object and take initial sample.
+   CAROM::DMD dmd(vx.Size());
+   dmd.takeSample(vx.GetData());
 
-   // 8. Perform time-integration (looping over the time iterations, ti, with a
-   //    time-step dt).
+   // 11. Perform time-integration
+   //     (looping over the time iterations, ti, with a time-step dt).
+   //     (taking samples and storing it into the dmd object)
    bool last_step = false;
    for (int ti = 1; !last_step; ti++)
    {
@@ -351,93 +391,133 @@ int main(int argc, char *argv[])
 
       ode_solver->Step(vx, t, dt_real);
 
-      CAROM::Vector curr_sample(vx.GetData(), vx.Size(), false);
-      vx_samples.push_back(curr_sample);
+      dmd.takeSample(vx.GetData());
 
       last_step = (t >= t_final - 1e-8*dt);
 
       if (last_step || (ti % vis_steps) == 0)
       {
-         double ee = oper.ElasticEnergy(x.GetTrueVector());
-         double ke = oper.KineticEnergy(v.GetTrueVector());
+         v_gf.SetFromTrueVector(); x_gf.SetFromTrueVector();
 
-         cout << "step " << ti << ", t = " << t << ", EE = " << ee << ", KE = "
-              << ke << ", ΔTE = " << (ee+ke)-(ee0+ke0) << endl;
+         double ee = oper.ElasticEnergy(x_gf);
+         double ke = oper.KineticEnergy(v_gf);
+
+         if (myid == 0)
+         {
+            cout << "step " << ti << ", t = " << t << ", EE = " << ee
+                 << ", KE = " << ke << ", ΔTE = " << (ee+ke)-(ee0+ke0) << endl;
+         }
 
          if (visualization)
          {
-            v.SetFromTrueVector(); x.SetFromTrueVector();
-            visualize(vis_v, mesh, &x, &v);
+            visualize(vis_v, pmesh, &x_gf, &v_gf);
             if (vis_w)
             {
-               oper.GetElasticEnergyDensity(x, w);
-               visualize(vis_w, mesh, &x, &w);
+               oper.GetElasticEnergyDensity(x_gf, w_gf);
+               visualize(vis_w, pmesh, &x_gf, &w_gf);
             }
          }
       }
    }
 
-   // 9. Save the displaced mesh, the velocity and elastic energy.
+   // 12. Save the displaced mesh, the velocity and elastic energy.
    {
-      v.SetFromTrueVector(); x.SetFromTrueVector();
-      GridFunction *nodes = &x;
+      v_gf.SetFromTrueVector(); x_gf.SetFromTrueVector();
+      GridFunction *nodes = &x_gf;
       int owns_nodes = 0;
-      mesh->SwapNodes(nodes, owns_nodes);
-      ofstream mesh_ofs("deformed.mesh");
+      pmesh->SwapNodes(nodes, owns_nodes);
+
+      ostringstream mesh_name, velo_name, ee_name;
+      mesh_name << "deformed." << setfill('0') << setw(6) << myid;
+      velo_name << "velocity." << setfill('0') << setw(6) << myid;
+      ee_name << "elastic_energy." << setfill('0') << setw(6) << myid;
+
+      ofstream mesh_ofs(mesh_name.str().c_str());
       mesh_ofs.precision(8);
-      mesh->Print(mesh_ofs);
-      mesh->SwapNodes(nodes, owns_nodes);
-      ofstream velo_ofs("velocity.sol");
+      pmesh->Print(mesh_ofs);
+      pmesh->SwapNodes(nodes, owns_nodes);
+      ofstream velo_ofs(velo_name.str().c_str());
       velo_ofs.precision(8);
-      v.Save(velo_ofs);
-      ofstream ee_ofs("elastic_energy.sol");
+      v_gf.Save(velo_ofs);
+      ofstream ee_ofs(ee_name.str().c_str());
       ee_ofs.precision(8);
-      oper.GetElasticEnergyDensity(x, w);
-      w.Save(ee_ofs);
+      oper.GetElasticEnergyDensity(x_gf, w_gf);
+      w_gf.Save(ee_ofs);
    }
 
-   const CAROM::Matrix* snapshot_matrix = CAROM::createSnapshotMatrix(vx_samples);
-   CAROM::DMD* dmd;
-
-   if (rdim != -1 && ef != -1)
+   // 13. Calculate the DMD modes.
+   if (myid == 0 && rdim != -1 && ef != -1)
    {
        std::cout << "Both rdim and ef are set. ef will be ignored." << std::endl;
    }
 
    if (rdim != -1)
    {
-       std::cout << "Creating DMD with rdim: " << rdim << std::endl;
-       dmd = new CAROM::DMD(snapshot_matrix, rdim, rank, num_procs);
+       if (myid == 0)
+       {
+           std::cout << "Creating DMD with rdim: " << rdim << std::endl;
+       }
+       dmd.train(rdim);
    }
    else if (ef != -1)
    {
-       std::cout << "Creating DMD with energy fraction: " << ef << std::endl;
-       dmd = new CAROM::DMD(snapshot_matrix, ef, rank, num_procs);
+       if (myid == 0)
+       {
+           std::cout << "Creating DMD with energy fraction: " << ef << std::endl;
+       }
+       dmd.train(ef);
    }
 
-   std::cout << "Predicting xv state at t_final using DMD" << std::endl;
-   CAROM::Vector* result = dmd->predict(t_final, dt);
+   // 14. Predict the state at t_final using DMD.
+   if (myid == 0)
+   {
+       std::cout << "Predicting xv state at t_final using DMD" << std::endl;
+   }
+   CAROM::Vector* result = dmd.predict(t_final, dt);
 
+   // 15. Calculate the relative error between the DMD final solution and the true solution.
    Vector dmd_solution(result->getData(), result->dim());
-   Vector true_solution(vx_samples.back().getData(), vx_samples.back().dim());
+   Vector true_solution(vx.GetData(), vx.Size());
    Vector diff(true_solution.Size());
    subtract(dmd_solution, true_solution, diff);
 
-   std::cout << "Relative error at t_final: " << t_final << " is " << diff.Norml2() / true_solution.Norml2() << std::endl;
+   double* diff_norm = new double[num_procs] {};
+   double proc_diff_norm = diff.Norml2();
+   MPI_Gather(&proc_diff_norm, 1, MPI_DOUBLE, diff_norm, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+   double* true_solution_norm = new double[num_procs] {};
+   double proc_true_solution_norm = true_solution.Norml2();
+   MPI_Gather(&proc_true_solution_norm, 1, MPI_DOUBLE, true_solution_norm, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-   // 10. Free the used memory.
-   delete snapshot_matrix;
+   if (myid == 0)
+   {
+       double tot_diff_norm = 0;
+       double tot_true_solution_norm = 0;
+       for (int i = 0; i < num_procs; i++)
+       {
+           tot_diff_norm += std::pow(diff_norm[i], 2);
+           tot_true_solution_norm += std::pow(true_solution_norm[i], 2);
+       }
+       tot_diff_norm = std::sqrt(tot_diff_norm);
+       tot_true_solution_norm = std::sqrt(tot_true_solution_norm);
+
+       std::cout << "Relative error at t_final: " << t_final << " is " << tot_diff_norm / tot_true_solution_norm << std::endl;
+
+   }
+
+   // 16. Free the used memory.
    delete ode_solver;
-   delete mesh;
-   delete dmd;
+   delete pmesh;
    delete result;
+   delete [] diff_norm;
+   delete [] true_solution_norm;
+
+   MPI_Finalize();
 
    return 0;
 }
 
-
-void visualize(ostream &out, Mesh *mesh, GridFunction *deformed_nodes,
-               GridFunction *field, const char *field_name, bool init_vis)
+void visualize(ostream &out, ParMesh *mesh, ParGridFunction *deformed_nodes,
+               ParGridFunction *field, const char *field_name, bool init_vis)
 {
    if (!out)
    {
@@ -449,6 +529,7 @@ void visualize(ostream &out, Mesh *mesh, GridFunction *deformed_nodes,
 
    mesh->SwapNodes(nodes, owns_nodes);
 
+   out << "parallel " << mesh->GetNRanks() << " " << mesh->GetMyRank() << "\n";
    out << "solution\n" << *mesh << *field;
 
    mesh->SwapNodes(nodes, owns_nodes);
@@ -471,9 +552,11 @@ void visualize(ostream &out, Mesh *mesh, GridFunction *deformed_nodes,
 
 
 ReducedSystemOperator::ReducedSystemOperator(
-   BilinearForm *M_, BilinearForm *S_, NonlinearForm *H_)
-   : Operator(M_->Height()), M(M_), S(S_), H(H_), Jacobian(NULL),
-     dt(0.0), v(NULL), x(NULL), w(height), z(height)
+   ParBilinearForm *M_, ParBilinearForm *S_, ParNonlinearForm *H_,
+   const Array<int> &ess_tdof_list_)
+   : Operator(M_->ParFESpace()->TrueVSize()), M(M_), S(S_), H(H_),
+     Jacobian(NULL), dt(0.0), v(NULL), x(NULL), w(height), z(height),
+     ess_tdof_list(ess_tdof_list_)
 { }
 
 void ReducedSystemOperator::SetParameters(double dt_, const Vector *v_,
@@ -488,18 +571,22 @@ void ReducedSystemOperator::Mult(const Vector &k, Vector &y) const
    add(*v, dt, k, w);
    add(*x, dt, w, z);
    H->Mult(z, y);
-   M->AddMult(k, y);
-   S->AddMult(w, y);
+   M->TrueAddMult(k, y);
+   S->TrueAddMult(w, y);
+   y.SetSubVector(ess_tdof_list, 0.0);
 }
 
 Operator &ReducedSystemOperator::GetGradient(const Vector &k) const
 {
    delete Jacobian;
-   Jacobian = Add(1.0, M->SpMat(), dt, S->SpMat());
+   SparseMatrix *localJ = Add(1.0, M->SpMat(), dt, S->SpMat());
    add(*v, dt, k, w);
    add(*x, dt, w, z);
-   SparseMatrix *grad_H = dynamic_cast<SparseMatrix *>(&H->GetGradient(z));
-   Jacobian->Add(dt*dt, *grad_H);
+   localJ->Add(dt*dt, H->GetLocalGradient(z));
+   Jacobian = M->ParallelAssemble(localJ);
+   delete localJ;
+   HypreParMatrix *Je = Jacobian->EliminateRowsCols(ess_tdof_list);
+   delete Je;
    return *Jacobian;
 }
 
@@ -509,12 +596,13 @@ ReducedSystemOperator::~ReducedSystemOperator()
 }
 
 
-HyperelasticOperator::HyperelasticOperator(FiniteElementSpace &f,
+HyperelasticOperator::HyperelasticOperator(ParFiniteElementSpace &f,
                                            Array<int> &ess_bdr, double visc,
                                            double mu, double K)
-   : TimeDependentOperator(2*f.GetTrueVSize(), 0.0), fespace(f),
+   : TimeDependentOperator(2*f.TrueVSize(), 0.0), fespace(f),
      M(&fespace), S(&fespace), H(&fespace),
-     viscosity(visc), z(height/2)
+     viscosity(visc), M_solver(f.GetComm()), newton_solver(f.GetComm()),
+     z(height/2)
 {
    const double rel_tol = 1e-8;
    const int skip_zero_entries = 0;
@@ -523,18 +611,20 @@ HyperelasticOperator::HyperelasticOperator(FiniteElementSpace &f,
    ConstantCoefficient rho0(ref_density);
    M.AddDomainIntegrator(new VectorMassIntegrator(rho0));
    M.Assemble(skip_zero_entries);
-   Array<int> ess_tdof_list;
+   M.Finalize(skip_zero_entries);
+   Mmat = M.ParallelAssemble();
    fespace.GetEssentialTrueDofs(ess_bdr, ess_tdof_list);
-   SparseMatrix tmp;
-   M.FormSystemMatrix(ess_tdof_list, tmp);
+   HypreParMatrix *Me = Mmat->EliminateRowsCols(ess_tdof_list);
+   delete Me;
 
    M_solver.iterative_mode = false;
    M_solver.SetRelTol(rel_tol);
    M_solver.SetAbsTol(0.0);
    M_solver.SetMaxIter(30);
    M_solver.SetPrintLevel(0);
+   M_prec.SetType(HypreSmoother::Jacobi);
    M_solver.SetPreconditioner(M_prec);
-   M_solver.SetOperator(M.SpMat());
+   M_solver.SetOperator(*Mmat);
 
    model = new NeoHookeanModel(mu, K);
    H.AddDomainIntegrator(new HyperelasticNLFIntegrator(model));
@@ -543,23 +633,22 @@ HyperelasticOperator::HyperelasticOperator(FiniteElementSpace &f,
    ConstantCoefficient visc_coeff(viscosity);
    S.AddDomainIntegrator(new VectorDiffusionIntegrator(visc_coeff));
    S.Assemble(skip_zero_entries);
-   S.FormSystemMatrix(ess_tdof_list, tmp);
+   S.Finalize(skip_zero_entries);
 
-   reduced_oper = new ReducedSystemOperator(&M, &S, &H);
+   reduced_oper = new ReducedSystemOperator(&M, &S, &H, ess_tdof_list);
 
-#ifndef MFEM_USE_SUITESPARSE
-   J_prec = new DSmoother(1);
-   MINRESSolver *J_minres = new MINRESSolver;
+   HypreSmoother *J_hypreSmoother = new HypreSmoother;
+   J_hypreSmoother->SetType(HypreSmoother::l1Jacobi);
+   J_hypreSmoother->SetPositiveDiagonal(true);
+   J_prec = J_hypreSmoother;
+
+   MINRESSolver *J_minres = new MINRESSolver(f.GetComm());
    J_minres->SetRelTol(rel_tol);
    J_minres->SetAbsTol(0.0);
    J_minres->SetMaxIter(300);
    J_minres->SetPrintLevel(-1);
    J_minres->SetPreconditioner(*J_prec);
    J_solver = J_minres;
-#else
-   J_solver = new UMFPackSolver;
-   J_prec = NULL;
-#endif
 
    newton_solver.iterative_mode = false;
    newton_solver.SetSolver(*J_solver);
@@ -567,6 +656,7 @@ HyperelasticOperator::HyperelasticOperator(FiniteElementSpace &f,
    newton_solver.SetPrintLevel(1); // print Newton iterations
    newton_solver.SetRelTol(rel_tol);
    newton_solver.SetAbsTol(0.0);
+   newton_solver.SetAdaptiveLinRtol(2, 0.5, 0.9);
    newton_solver.SetMaxIter(10);
 }
 
@@ -582,7 +672,8 @@ void HyperelasticOperator::Mult(const Vector &vx, Vector &dvx_dt) const
    H.Mult(x, z);
    if (viscosity != 0.0)
    {
-      S.AddMult(v, z);
+      S.TrueAddMult(v, z);
+      z.SetSubVector(ess_tdof_list, 0.0);
    }
    z.Neg(); // z = -z
    M_solver.Mult(z, dv_dt);
@@ -612,18 +703,22 @@ void HyperelasticOperator::ImplicitSolve(const double dt,
    add(v, dt, dv_dt, dx_dt);
 }
 
-double HyperelasticOperator::ElasticEnergy(const Vector &x) const
+double HyperelasticOperator::ElasticEnergy(const ParGridFunction &x) const
 {
    return H.GetEnergy(x);
 }
 
-double HyperelasticOperator::KineticEnergy(const Vector &v) const
+double HyperelasticOperator::KineticEnergy(const ParGridFunction &v) const
 {
-   return 0.5*M.InnerProduct(v, v);
+   double loc_energy = 0.5*M.InnerProduct(v, v);
+   double energy;
+   MPI_Allreduce(&loc_energy, &energy, 1, MPI_DOUBLE, MPI_SUM,
+                 fespace.GetComm());
+   return energy;
 }
 
 void HyperelasticOperator::GetElasticEnergyDensity(
-   const GridFunction &x, GridFunction &w) const
+   const ParGridFunction &x, ParGridFunction &w) const
 {
    ElasticEnergyCoefficient w_coeff(*model, x);
    w.ProjectCoefficient(w_coeff);
@@ -635,6 +730,7 @@ HyperelasticOperator::~HyperelasticOperator()
    delete J_prec;
    delete reduced_oper;
    delete model;
+   delete Mmat;
 }
 
 

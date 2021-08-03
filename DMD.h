@@ -24,37 +24,37 @@ class Vector;
 class DMD
 {
 public:
-    /**
-     * @brief Constructor.
-     *
-     * @param[in] f_snapshots The snapshot vectors for the RHS.
-     * @param[in] energy_fraction The energy fraction to keep after doing SVD.
-     * @param[in] rank The rank of this process.
-     * @param[in] num_procs The total number of processes.
-     */
-    DMD(const Matrix* f_snapshots,
-        double energy_fraction,
-        int rank,
-        int num_procs);
 
     /**
      * @brief Constructor.
-     *
-     * @param[in] f_snapshots The snapshot vectors for the RHS.
-     * @param[in] k The number of modes (eigenvalues) to keep after doing SVD.
-     * @param[in] rank The rank of this process.
-     * @param[in] num_procs The total number of processes.
      */
-    DMD(const Matrix* f_snapshots,
-        int k,
-        int rank,
-        int num_procs);
+    DMD(int dim);
+
+    /**
+     * @brief Sample the new state, u_in.
+     *
+     * @pre u_in != 0
+     *
+     * @param[in] u_in The state at the specified time.
+     *
+     * @return True if the sampling was successful.
+     */
+    bool takeSample(double* u_in);
+
+    /**
+     * @param[in] energy_fraction The energy fraction to keep after doing SVD.
+     */
+    void train(double energy_fraction);
+
+    /**
+     * @param[in] k The number of modes (eigenvalues) to keep after doing SVD.
+     */
+    void train(int k);
 
     /**
      * @brief Predict new initial condition using d_phi.
      *
      * @param[in] init The initial condition.
-     * @param[in] t The time of the outputted state.
      */
     std::pair<Vector*, Vector*> projectInitialCondition(const Vector* init);
 
@@ -80,33 +80,101 @@ public:
 
 private:
 
+    /**
+     * @brief Unimplemented default constructor.
+     */
+    DMD();
+
+    /**
+     * @brief Unimplemented copy constructor.
+     */
+    DMD(
+        const DMD& other);
+
+    /**
+     * @brief Unimplemented assignment operator.
+     */
+    DMD&
+    operator = (
+        const DMD& rhs);
+
+    /**
+     * @brief The rank of the process this object belongs to.
+     */
+    int d_rank;
+
+    /**
+     * @brief The number of processors being run on.
+     */
+    int d_num_procs;
+
+    /**
+     * @brief The total dimensions of the sample vector.
+     */
+    int d_dim;
+
+    /**
+     * @brief std::vector holding the snapshots.
+     */
+    std::vector<Vector> d_snapshots;
+
+    /**
+     * @brief Internal function to multiply d_phi with the eigenvalues.
+     */
     std::pair<Matrix*, Matrix*> phiMultEigs(int t, int dt);
 
+    /**
+     * @brief Internal function to obtain the DMD modes.
+     */
     void constructDMD(const Matrix* f_snapshots,
                       int rank,
                       int num_procs);
 
+    /**
+     * @brief The real part of d_phi.
+     */
     Matrix* d_phi_real;
+
+    /**
+     * @brief The imaginary part of d_phi.
+     */
     Matrix* d_phi_imaginary;
+
+    /**
+     * @brief The real part of the projected initial condition.
+     */
     Vector* d_projected_init_real;
+
+    /**
+     * @brief The imaginary part of the projected initial condition.
+     */
     Vector* d_projected_init_imaginary;
 
+    /**
+     * @brief A vector holding the complex eigenvalues of the eigenmodes.
+     */
     std::vector<std::complex<double>> d_eigs;
 
+    /**
+     * @brief The energy fraction used to obtain the DMD modes.
+     */
     double d_energy_fraction;
 
+    /**
+     * @brief The number of columns used after obtaining the SVD decomposition.
+     */
     int d_k;
 
 };
 
 /**
- * @brief Create a snapshot matrix from a vector of CAROM::Vector snapshots.
+ * @brief Get the snapshot matrix from a vector of CAROM::Vector snapshots.
  *        The snapshot matrix will remain distributed if the snapshots are
           distributed.
  *
  * @param[in] snapshots The vector of CAROM::Vector snapshots
  */
-const Matrix* createSnapshotMatrix(std::vector<Vector> snapshots);
+const Matrix* getSnapshotMatrix(std::vector<Vector> snapshots);
 
 }
 
