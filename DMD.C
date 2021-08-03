@@ -312,7 +312,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
 }
 
 
-std::pair<Vector*, Vector*>
+void
 DMD::projectInitialCondition(const Vector* init)
 {
     Matrix* d_phi_real_squared = d_phi_real->transposeMult(d_phi_real);

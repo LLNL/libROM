@@ -56,7 +56,7 @@ public:
      *
      * @param[in] init The initial condition.
      */
-    std::pair<Vector*, Vector*> projectInitialCondition(const Vector* init);
+    void projectInitialCondition(const Vector* init);
 
     /**
      * @brief Predict state given a time. Uses the projected initial condition of the

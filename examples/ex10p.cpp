@@ -501,7 +501,6 @@ int main(int argc, char *argv[])
        tot_true_solution_norm = std::sqrt(tot_true_solution_norm);
 
        std::cout << "Relative error at t_final: " << t_final << " is " << tot_diff_norm / tot_true_solution_norm << std::endl;
-
    }
 
    // 16. Free the used memory.
