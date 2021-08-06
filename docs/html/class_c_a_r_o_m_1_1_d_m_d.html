@@ -111,28 +111,28 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a9bc54a6621fdc33181e8d7fade2981cc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_d_m_d.html#a9bc54a6621fdc33181e8d7fade2981cc">projectInitialCondition</a> (const <a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> *init)</td></tr>
 <tr class="memdesc:a9bc54a6621fdc33181e8d7fade2981cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Predict new initial condition using d_phi.  <a href="#a9bc54a6621fdc33181e8d7fade2981cc">More...</a><br/></td></tr>
 <tr class="separator:a9bc54a6621fdc33181e8d7fade2981cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af9dde435ede73a4868f7d5b144ddded3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_d_m_d.html#af9dde435ede73a4868f7d5b144ddded3">predict</a> (int t, int dt)</td></tr>
-<tr class="memdesc:af9dde435ede73a4868f7d5b144ddded3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Predict state given a time. Uses the projected initial condition of the training dataset (the first column).  <a href="#af9dde435ede73a4868f7d5b144ddded3">More...</a><br/></td></tr>
-<tr class="separator:af9dde435ede73a4868f7d5b144ddded3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a46b2bb3b3444d4201329a8bbe9570fe5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_d_m_d.html#a46b2bb3b3444d4201329a8bbe9570fe5">predict</a> (const std::pair&lt; <a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> *, <a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> * &gt; init, int t, int dt)</td></tr>
-<tr class="memdesc:a46b2bb3b3444d4201329a8bbe9570fe5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Predict state given a new initial condition and time. The initial condition must be projected using projectInitialCondition for correct results.  <a href="#a46b2bb3b3444d4201329a8bbe9570fe5">More...</a><br/></td></tr>
-<tr class="separator:a46b2bb3b3444d4201329a8bbe9570fe5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a149a973f26d17f4fd78c8ec38802a14c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_d_m_d.html#a149a973f26d17f4fd78c8ec38802a14c">predict</a> (double t, double dt)</td></tr>
+<tr class="memdesc:a149a973f26d17f4fd78c8ec38802a14c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Predict state given a time. Uses the projected initial condition of the training dataset (the first column).  <a href="#a149a973f26d17f4fd78c8ec38802a14c">More...</a><br/></td></tr>
+<tr class="separator:a149a973f26d17f4fd78c8ec38802a14c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a44c57940779b9441a9eb40f230583584"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_d_m_d.html#a44c57940779b9441a9eb40f230583584">predict</a> (const std::pair&lt; <a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> *, <a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> * &gt; init, double t, double dt)</td></tr>
+<tr class="memdesc:a44c57940779b9441a9eb40f230583584"><td class="mdescLeft">&#160;</td><td class="mdescRight">Predict state given a new initial condition and time. The initial condition must be projected using projectInitialCondition for correct results.  <a href="#a44c57940779b9441a9eb40f230583584">More...</a><br/></td></tr>
+<tr class="separator:a44c57940779b9441a9eb40f230583584"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="af9dde435ede73a4868f7d5b144ddded3"></a>
+<a class="anchor" id="a149a973f26d17f4fd78c8ec38802a14c"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* CAROM::DMD::predict </td>
           <td>(</td>
-          <td class="paramtype">int&#160;</td>
+          <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>t</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
+          <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>dt</em>&#160;</td>
         </tr>
         <tr>
@@ -154,7 +154,7 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a46b2bb3b3444d4201329a8bbe9570fe5"></a>
+<a class="anchor" id="a44c57940779b9441a9eb40f230583584"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -167,13 +167,13 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
+          <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>t</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
+          <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>dt</em>&#160;</td>
         </tr>
         <tr>

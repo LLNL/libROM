@@ -65,7 +65,7 @@ public:
      * @param[in] t The time of the outputted state.
      * @param[in] dt The delta time of the simulation.
      */
-    Vector* predict(int t, int dt);
+    Vector* predict(double t, double dt);
 
     /**
      * @brief Predict state given a new initial condition and time.
@@ -76,7 +76,7 @@ public:
      * @param[in] t The time of the outputted state.
      * @param[in] dt The delta time of the simulation.
      */
-    Vector* predict(const std::pair<Vector*, Vector*> init, int t, int dt);
+    Vector* predict(const std::pair<Vector*, Vector*> init, double t, double dt);
 
 private:
 
@@ -121,7 +121,7 @@ private:
     /**
      * @brief Internal function to multiply d_phi with the eigenvalues.
      */
-    std::pair<Matrix*, Matrix*> phiMultEigs(int t, int dt);
+    std::pair<Matrix*, Matrix*> phiMultEigs(double t, double dt);
 
     /**
      * @brief Internal function to obtain the DMD modes.

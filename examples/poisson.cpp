@@ -1,10 +1,10 @@
-//               libROM MFEM Example 1 parametric ROM Laplace problem 
+//               libROM MFEM Example: parametric ROM for Poisson problem 
 //
 // Compile with: ./scripts/compile.sh -m 
 //
 // Description:  This example code demonstrates the use of MFEM and libROM to
 //               define a simple projection-based reduced order model of the
-//               Laplace problem -Delta u = f(x) with homogeneous Dirichlet
+//               Poisson problem -Delta u = f(x) with homogeneous Dirichlet
 //               boundary conditions and spatially varying right hand side f.  
 //
 //               The example highlights three distinct ROM processes, i.e.,
@@ -17,13 +17,13 @@
 //               operator, solves the reduced order system, and lifts the
 //               solution to the full order space.
 //
-// Offline phase: ex1parametric -offline -f 1.0 -id 0
-//                ex1parametric -offline -f 1.1 -id 1
-//                ex1parametric -offline -f 1.2 -id 2
+// Offline phase: poisson -offline -f 1.0 -id 0
+//                poisson -offline -f 1.1 -id 1
+//                poisson -offline -f 1.2 -id 2
 //               
-// Merge phase:   ex1parametric -merge -ns 3
+// Merge phase:   poisson -merge -ns 3
 //
-// Online phase:  ex1parametric -online -f 1.15
+// Online phase:  poisson -online -f 1.15
 
 
 #include "mfem.hpp"
@@ -224,7 +224,6 @@ int main(int argc, char *argv[])
         std::string snapshot_filename = basisName + std::to_string(paramID) + "_snapshot";
         generator->loadSamples(snapshot_filename,"snapshot");
       }
-      generator->writeSnapshot();
       generator->endSamples(); // save the merged basis file
       mergeTimer.Stop();
       if (myid == 0) 
@@ -301,7 +300,6 @@ int main(int argc, char *argv[])
       // 18. take and write snapshot for ROM
       bool addSample = generator->takeSample(X.GetData(), 0.0, 0.01);
       generator->writeSnapshot();
-      generator->endSamples();
       delete generator;
       delete options;
    } 

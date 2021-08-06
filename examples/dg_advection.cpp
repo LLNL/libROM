@@ -1,33 +1,20 @@
-//                       MFEM Example 9 - Parallel Version
+//                       libROM MFEM Example: DG Advection
 //
-// Compile with: make ex9p
+// Compile with: make dg_advection
 //
 // Sample runs:
-//    mpirun -np 4 ex9p -m ../data/periodic-segment.mesh -p 0 -dt 0.005
-//    mpirun -np 4 ex9p -m ../data/periodic-square.mesh -p 0 -dt 0.01
-//    mpirun -np 4 ex9p -m ../data/periodic-hexagon.mesh -p 0 -dt 0.01
-//    mpirun -np 4 ex9p -m ../data/periodic-square.mesh -p 1 -dt 0.005 -tf 9
-//    mpirun -np 4 ex9p -m ../data/periodic-hexagon.mesh -p 1 -dt 0.005 -tf 9
-//    mpirun -np 4 ex9p -m ../data/amr-quad.mesh -p 1 -rp 1 -dt 0.002 -tf 9
-//    mpirun -np 4 ex9p -m ../data/amr-quad.mesh -p 1 -rp 1 -dt 0.02 -s 13 -tf 9
-//    mpirun -np 4 ex9p -m ../data/star-q3.mesh -p 1 -rp 1 -dt 0.004 -tf 9
-//    mpirun -np 4 ex9p -m ../data/star-mixed.mesh -p 1 -rp 1 -dt 0.004 -tf 9
-//    mpirun -np 4 ex9p -m ../data/disc-nurbs.mesh -p 1 -rp 1 -dt 0.005 -tf 9
-//    mpirun -np 4 ex9p -m ../data/disc-nurbs.mesh -p 2 -rp 1 -dt 0.005 -tf 9
-//    mpirun -np 4 ex9p -m ../data/periodic-square.mesh -p 3 -rp 2 -dt 0.0025 -tf 9 -vs 20
-//    mpirun -np 4 ex9p -m ../data/periodic-cube.mesh -p 0 -o 2 -rp 1 -dt 0.01 -tf 8
-//    mpirun -np 4 ex9p -m ../data/periodic-square.msh -p 0 -rs 2 -dt 0.005 -tf 2
-//    mpirun -np 4 ex9p -m ../data/periodic-cube.msh -p 0 -rs 1 -o 2 -tf 2
-//    mpirun -np 3 ex9p -m ../data/amr-hex.mesh -p 1 -rs 1 -rp 0 -dt 0.005 -tf 0.5
-//
-// Device sample runs:
-//    mpirun -np 4 ex9p -pa
-//    mpirun -np 4 ex9p -ea
-//    mpirun -np 4 ex9p -fa
-//    mpirun -np 4 ex9p -pa -m ../data/periodic-cube.mesh
-//    mpirun -np 4 ex9p -pa -m ../data/periodic-cube.mesh -d cuda
-//    mpirun -np 4 ex9p -ea -m ../data/periodic-cube.mesh -d cuda
-//    mpirun -np 4 ex9p -fa -m ../data/periodic-cube.mesh -d cuda
+//    mpirun -np 4 dg_advection -p 0 -dt 0.005
+//    mpirun -np 4 dg_advection -p 0 -dt 0.01
+//    mpirun -np 4 dg_advection -p 1 -dt 0.005 -tf 9
+//    mpirun -np 4 dg_advection -p 1 -rp 1 -dt 0.002 -tf 9
+//    mpirun -np 4 dg_advection -p 1 -rp 1 -dt 0.02 -s 13 -tf 9
+//    mpirun -np 4 dg_advection -p 1 -rp 1 -dt 0.004 -tf 9
+//    mpirun -np 4 dg_advection -p 1 -rp 1 -dt 0.005 -tf 9
+//    mpirun -np 4 dg_advection -p 3 -rp 2 -dt 0.0025 -tf 9 -vs 20
+//    mpirun -np 4 dg_advection -p 0 -o 2 -rp 1 -dt 0.01 -tf 8
+//    mpirun -np 4 dg_advection -p 0 -rs 2 -dt 0.005 -tf 2
+//    mpirun -np 4 dg_advection -p 0 -rs 1 -o 2 -tf 2
+//    mpirun -np 3 dg_advection -p 1 -rs 1 -rp 0 -dt 0.005 -tf 0.5
 //
 // Description:  This example code solves the time-dependent advection equation
 //               du/dt + v.grad(u) = 0, where v is a given fluid velocity, and
@@ -44,6 +31,9 @@
 //               are also illustrated.
 
 #include "mfem.hpp"
+#include "DMD.h"
+#include "Vector.h"
+#include <cmath>
 #include <fstream>
 #include <iostream>
 
@@ -238,7 +228,7 @@ int main(int argc, char *argv[])
 
    // 2. Parse command-line options.
    problem = 0;
-   const char *mesh_file = "../data/periodic-hexagon.mesh";
+   const char *mesh_file = "../dependencies/mfem/data/periodic-hexagon.mesh";
    int ser_ref_levels = 2;
    int par_ref_levels = 0;
    int order = 3;
@@ -249,6 +239,8 @@ int main(int argc, char *argv[])
    int ode_solver_type = 4;
    double t_final = 10.0;
    double dt = 0.01;
+   double ef = 0.9999;
+   int rdim = -1;
    bool visualization = true;
    bool visit = false;
    bool paraview = false;
@@ -312,6 +304,10 @@ int main(int argc, char *argv[])
                   "Use binary (Sidre) or ascii format for VisIt data files.");
    args.AddOption(&vis_steps, "-vs", "--visualization-steps",
                   "Visualize every n-th timestep.");
+   args.AddOption(&ef, "-ef", "--energy_fraction",
+                  "Energy fraction for DMD.");
+   args.AddOption(&rdim, "-rdim", "--rdim",
+                         "Reduced dimension for DMD.");
    args.Parse();
    if (!args.Good())
    {
@@ -453,8 +449,8 @@ int main(int argc, char *argv[])
 
    {
       ostringstream mesh_name, sol_name;
-      mesh_name << "ex9-mesh." << setfill('0') << setw(6) << myid;
-      sol_name << "ex9-init." << setfill('0') << setw(6) << myid;
+      mesh_name << "dg_advection-mesh." << setfill('0') << setw(6) << myid;
+      sol_name << "dg_advection-init." << setfill('0') << setw(6) << myid;
       ofstream omesh(mesh_name.str().c_str());
       omesh.precision(precision);
       pmesh->Print(omesh);
@@ -471,14 +467,14 @@ int main(int argc, char *argv[])
       if (binary)
       {
 #ifdef MFEM_USE_SIDRE
-         dc = new SidreDataCollection("Example9-Parallel", pmesh);
+         dc = new SidreDataCollection("DG_Advection", pmesh);
 #else
          MFEM_ABORT("Must build with MFEM_USE_SIDRE=YES for binary output.");
 #endif
       }
       else
       {
-         dc = new VisItDataCollection("Example9-Parallel", pmesh);
+         dc = new VisItDataCollection("DG_Advection", pmesh);
          dc->SetPrecision(precision);
          // To save the mesh using MFEM's parallel mesh format:
          // dc->SetFormat(DataCollection::PARALLEL_FORMAT);
@@ -492,7 +488,7 @@ int main(int argc, char *argv[])
    ParaViewDataCollection *pd = NULL;
    if (paraview)
    {
-      pd = new ParaViewDataCollection("Example9P", pmesh);
+      pd = new ParaViewDataCollection("DG_Advection", pmesh);
       pd->SetPrefixPath("ParaView");
       pd->RegisterField("solution", u);
       pd->SetLevelsOfDetail(order);
@@ -512,7 +508,7 @@ int main(int argc, char *argv[])
       std::string postfix(mesh_file);
       postfix.erase(0, std::string("../data/").size() );
       postfix += "_o" + std::to_string(order);
-      const std::string collection_name = "ex9-p-" + postfix + ".bp";
+      const std::string collection_name = "dg_advection-p-" + postfix + ".bp";
 
       adios2_dc = new ADIOS2DataCollection(MPI_COMM_WORLD, collection_name, pmesh);
       // output data substreams are half the number of mpi processes
@@ -564,11 +560,18 @@ int main(int argc, char *argv[])
    adv.SetTime(t);
    ode_solver->Init(adv);
 
+   // 11. Create DMD object and take initial sample.
+   CAROM::DMD dmd_U(U->Size());
+   dmd_U.takeSample(U->GetData());
+
    bool done = false;
    for (int ti = 0; !done; )
    {
       double dt_real = min(dt, t_final - t);
       ode_solver->Step(*U, t, dt_real);
+
+      dmd_U.takeSample(U->GetData());
+
       ti++;
 
       done = (t >= t_final - 1e-8*dt);
@@ -617,17 +620,75 @@ int main(int argc, char *argv[])
    }
 
    // 12. Save the final solution in parallel. This output can be viewed later
-   //     using GLVis: "glvis -np <np> -m ex9-mesh -g ex9-final".
+   //     using GLVis: "glvis -np <np> -m dg_advection-mesh -g dg_advection-final".
    {
       *u = *U;
       ostringstream sol_name;
-      sol_name << "ex9-final." << setfill('0') << setw(6) << myid;
+      sol_name << "dg_advection-final." << setfill('0') << setw(6) << myid;
       ofstream osol(sol_name.str().c_str());
       osol.precision(precision);
       u->Save(osol);
    }
 
-   // 13. Free the used memory.
+   // 13. Calculate the DMD modes.
+   if (myid == 0 && rdim != -1 && ef != -1)
+   {
+       std::cout << "Both rdim and ef are set. ef will be ignored." << std::endl;
+   }
+
+   if (rdim != -1)
+   {
+       if (myid == 0)
+       {
+           std::cout << "Creating DMD with rdim: " << rdim << std::endl;
+       }
+       dmd_U.train(rdim);
+   }
+   else if (ef != -1)
+   {
+       if (myid == 0)
+       {
+           std::cout << "Creating DMD with energy fraction: " << ef << std::endl;
+       }
+       dmd_U.train(ef);
+   }
+
+   // 14. Predict the state at t_final using DMD.
+   if (myid == 0)
+   {
+       std::cout << "Predicting solution at t_final using DMD" << std::endl;
+   }
+   CAROM::Vector* result_u = dmd_U.predict(t_final, dt);
+
+   // 15. Calculate the relative error between the DMD final solution and the true solution.
+   Vector dmd_solution_u(result_u->getData(), result_u->dim());
+   Vector true_solution_u(U->GetData(), U->Size());
+   Vector diff_u(true_solution_u.Size());
+   subtract(dmd_solution_u, true_solution_u, diff_u);
+
+   double* diff_norm_u = new double[num_procs] {};
+   double proc_diff_norm_u = diff_u.Norml2();
+   MPI_Gather(&proc_diff_norm_u, 1, MPI_DOUBLE, diff_norm_u, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+   double* true_solution_u_norm = new double[num_procs] {};
+   double proc_true_solution_u_norm = true_solution_u.Norml2();
+   MPI_Gather(&proc_true_solution_u_norm, 1, MPI_DOUBLE, true_solution_u_norm, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+   if (myid == 0)
+   {
+       double tot_diff_norm_u = 0;
+       double tot_true_solution_u_norm = 0;
+       for (int i = 0; i < num_procs; i++)
+       {
+           tot_diff_norm_u += std::pow(diff_norm_u[i], 2);
+           tot_true_solution_u_norm += std::pow(true_solution_u_norm[i], 2);
+       }
+       tot_diff_norm_u = std::sqrt(tot_diff_norm_u);
+       tot_true_solution_u_norm = std::sqrt(tot_true_solution_u_norm);
+
+       std::cout << "Relative error of solution (u) at t_final: " << t_final << " is " << tot_diff_norm_u / tot_true_solution_u_norm << std::endl;
+   }
+
+   // 16. Free the used memory.
    delete U;
    delete u;
    delete B;
@@ -638,6 +699,9 @@ int main(int argc, char *argv[])
    delete pmesh;
    delete ode_solver;
    delete pd;
+   delete result_u;
+   delete [] diff_norm_u;
+   delete [] true_solution_u_norm;
 #ifdef MFEM_USE_ADIOS2
    if (adios2)
    {
