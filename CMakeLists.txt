@@ -235,9 +235,9 @@ target_compile_features(ROM PRIVATE cxx_std_11)
 if (USE_MFEM)
   set(examples
     ex1parametric
-    ex9p
-    ex10p
-    ex16p)
+    dg_advection
+    nonlinear_elasticity
+    heat_conduction)
 
   foreach(name IN LISTS examples)
     add_executable(${name} examples/${name}.cpp)

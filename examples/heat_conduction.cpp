@@ -1,20 +1,16 @@
-//                       MFEM Example 16 - Parallel Version
+//                       libROM MFEM Example: Heat_Conduction
 //
-// Compile with: make ex16p
+// Compile with: make heat_conduction
 //
-// Sample runs:  mpirun -np 4 ex16p
-//               mpirun -np 4 ex16p -m ../data/inline-tri.mesh
-//               mpirun -np 4 ex16p -m ../data/disc-nurbs.mesh -tf 2
-//               mpirun -np 4 ex16p -s 1 -a 0.0 -k 1.0
-//               mpirun -np 4 ex16p -s 2 -a 1.0 -k 0.0
-//               mpirun -np 8 ex16p -s 3 -a 0.5 -k 0.5 -o 4
-//               mpirun -np 4 ex16p -s 14 -dt 1.0e-4 -tf 4.0e-2 -vs 40
-//               mpirun -np 16 ex16p -m ../data/fichera-q2.mesh
-//               mpirun -np 16 ex16p -m ../data/fichera-mixed.mesh
-//               mpirun -np 16 ex16p -m ../data/escher-p2.mesh
-//               mpirun -np 8 ex16p -m ../data/beam-tet.mesh -tf 10 -dt 0.1
-//               mpirun -np 4 ex16p -m ../data/amr-quad.mesh -o 4 -rs 0 -rp 0
-//               mpirun -np 4 ex16p -m ../data/amr-hex.mesh -o 2 -rs 0 -rp 0
+// Sample runs:  mpirun -np 4 heat_conduction
+//               mpirun -np 4 heat_conduction -tf 2
+//               mpirun -np 4 heat_conduction -s 1 -a 0.0 -k 1.0
+//               mpirun -np 4 heat_conduction -s 2 -a 1.0 -k 0.0
+//               mpirun -np 8 heat_conduction -s 3 -a 0.5 -k 0.5 -o 4
+//               mpirun -np 4 heat_conduction -s 14 -dt 1.0e-4 -tf 4.0e-2 -vs 40
+//               mpirun -np 8 heat_conduction -tf 10 -dt 0.1
+//               mpirun -np 4 heat_conduction -o 4 -rs 0 -rp 0
+//               mpirun -np 4 heat_conduction -o 2 -rs 0 -rp 0
 //
 // Description:  This example solves a time dependent nonlinear heat equation
 //               problem of the form du/dt = C(u), with a non-linear diffusion
@@ -26,11 +22,11 @@
 //               ConductionOperator::ImplicitSolve is the only requirement for
 //               high-order implicit (SDIRK) time integration. Optional saving
 //               with ADIOS2 (adios2.readthedocs.io) is also illustrated.
-//
-//               We recommend viewing examples 2, 9 and 10 before viewing this
-//               example.
 
 #include "mfem.hpp"
+#include "DMD.h"
+#include "Vector.h"
+#include <cmath>
 #include <fstream>
 #include <iostream>
 
@@ -106,6 +102,8 @@ int main(int argc, char *argv[])
    double dt = 1.0e-2;
    double alpha = 1.0e-2;
    double kappa = 0.5;
+   double ef = 0.9999;
+   int rdim = -1;
    bool visualization = true;
    bool visit = false;
    int vis_steps = 5;
@@ -145,6 +143,10 @@ int main(int argc, char *argv[])
    args.AddOption(&adios2, "-adios2", "--adios2-streams", "-no-adios2",
                   "--no-adios2-streams",
                   "Save data using adios2 streams.");
+   args.AddOption(&ef, "-ef", "--energy_fraction",
+                  "Energy fraction for DMD.");
+   args.AddOption(&rdim, "-rdim", "--rdim",
+                         "Reduced dimension for DMD.");
    args.Parse();
    if (!args.Good())
    {
@@ -234,8 +236,8 @@ int main(int argc, char *argv[])
    u_gf.SetFromTrueDofs(u);
    {
       ostringstream mesh_name, sol_name;
-      mesh_name << "ex16-mesh." << setfill('0') << setw(6) << myid;
-      sol_name << "ex16-init." << setfill('0') << setw(6) << myid;
+      mesh_name << "heat_conduction-mesh." << setfill('0') << setw(6) << myid;
+      sol_name << "heat_conduction-init." << setfill('0') << setw(6) << myid;
       ofstream omesh(mesh_name.str().c_str());
       omesh.precision(precision);
       pmesh->Print(omesh);
@@ -244,7 +246,7 @@ int main(int argc, char *argv[])
       u_gf.Save(osol);
    }
 
-   VisItDataCollection visit_dc("Example16-Parallel", pmesh);
+   VisItDataCollection visit_dc("Heat_Conduction", pmesh);
    visit_dc.RegisterField("temperature", &u_gf);
    if (visit)
    {
@@ -263,7 +265,7 @@ int main(int argc, char *argv[])
       postfix.erase(0, std::string("../data/").size() );
       postfix += "_o" + std::to_string(order);
       postfix += "_solver" + std::to_string(ode_solver_type);
-      const std::string collection_name = "ex16-p-" + postfix + ".bp";
+      const std::string collection_name = "heat_conduction-p-" + postfix + ".bp";
 
       adios2_dc = new ADIOS2DataCollection(MPI_COMM_WORLD, collection_name, pmesh);
       adios2_dc->SetParameter("SubStreams", std::to_string(num_procs/2) );
@@ -313,6 +315,11 @@ int main(int argc, char *argv[])
    ode_solver->Init(oper);
    double t = 0.0;
 
+   // 11. Create DMD object and take initial sample.
+   u_gf.SetFromTrueDofs(u);
+   CAROM::DMD dmd_u(u.Size());
+   dmd_u.takeSample(u.GetData());
+
    bool last_step = false;
    for (int ti = 1; !last_step; ti++)
    {
@@ -322,6 +329,8 @@ int main(int argc, char *argv[])
       }
 
       ode_solver->Step(u, t, dt);
+      u_gf.SetFromTrueDofs(u);
+      dmd_u.takeSample(u.GetData());
 
       if (last_step || (ti % vis_steps) == 0)
       {
@@ -363,19 +372,81 @@ int main(int argc, char *argv[])
    }
 #endif
 
-   // 11. Save the final solution in parallel. This output can be viewed later
-   //     using GLVis: "glvis -np <np> -m ex16-mesh -g ex16-final".
+   // 12. Save the final solution in parallel. This output can be viewed later
+   //     using GLVis: "glvis -np <np> -m heat_conduction-mesh -g heat_conduction-final".
    {
       ostringstream sol_name;
-      sol_name << "ex16-final." << setfill('0') << setw(6) << myid;
+      sol_name << "heat_conduction-final." << setfill('0') << setw(6) << myid;
       ofstream osol(sol_name.str().c_str());
       osol.precision(precision);
       u_gf.Save(osol);
    }
 
-   // 12. Free the used memory.
+   // 13. Calculate the DMD modes.
+   if (myid == 0 && rdim != -1 && ef != -1)
+   {
+       std::cout << "Both rdim and ef are set. ef will be ignored." << std::endl;
+   }
+
+   if (rdim != -1)
+   {
+       if (myid == 0)
+       {
+           std::cout << "Creating DMD with rdim: " << rdim << std::endl;
+       }
+       dmd_u.train(rdim);
+   }
+   else if (ef != -1)
+   {
+       if (myid == 0)
+       {
+           std::cout << "Creating DMD with energy fraction: " << ef << std::endl;
+       }
+       dmd_u.train(ef);
+   }
+
+   // 14. Predict the state at t_final using DMD.
+   if (myid == 0)
+   {
+       std::cout << "Predicting position and velocity at t_final using DMD" << std::endl;
+   }
+   CAROM::Vector* result_u = dmd_u.predict(t_final, dt);
+
+   // 15. Calculate the relative error between the DMD final solution and the true solution.
+   Vector dmd_solution_u(result_u->getData(), result_u->dim());
+   Vector true_solution_u(u.GetData(), u.Size());
+   Vector diff_u(true_solution_u.Size());
+   subtract(dmd_solution_u, true_solution_u, diff_u);
+
+   double* diff_norm_u = new double[num_procs] {};
+   double proc_diff_norm_u = diff_u.Norml2();
+   MPI_Gather(&proc_diff_norm_u, 1, MPI_DOUBLE, diff_norm_u, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+   double* true_solution_u_norm = new double[num_procs] {};
+   double proc_true_solution_u_norm = true_solution_u.Norml2();
+   MPI_Gather(&proc_true_solution_u_norm, 1, MPI_DOUBLE, true_solution_u_norm, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+   if (myid == 0)
+   {
+       double tot_diff_norm_u = 0;
+       double tot_true_solution_u_norm = 0;
+       for (int i = 0; i < num_procs; i++)
+       {
+           tot_diff_norm_u += std::pow(diff_norm_u[i], 2);
+           tot_true_solution_u_norm += std::pow(true_solution_u_norm[i], 2);
+       }
+       tot_diff_norm_u = std::sqrt(tot_diff_norm_u);
+       tot_true_solution_u_norm = std::sqrt(tot_true_solution_u_norm);
+
+       std::cout << "Relative error of temperature (u) at t_final: " << t_final << " is " << tot_diff_norm_u / tot_true_solution_u_norm << std::endl;
+   }
+
+
+   // 16. Free the used memory.
    delete ode_solver;
    delete pmesh;
+   delete result_u;
+   delete [] diff_norm_u;
+   delete [] true_solution_u_norm;
 
    MPI_Finalize();
 

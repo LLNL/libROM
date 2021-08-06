@@ -1,16 +1,16 @@
-//                       MFEM Example 10 - Parallel Version
+//                       libROM MFEM Example: Nonlinear elasticity
 //
-// Compile with: make ex10p
+// Compile with: make nonlinear_elasticity
 //
 // Sample runs:
-//    mpirun -np 4 ex10p -s 3 -rs 2 -dt 3
-//    mpirun -np 4 ex10p -s 3 -rs 2 -dt 3
-//    mpirun -np 4 ex10p -s 2 -rs 1 -dt 3
-//    mpirun -np 4 ex10p -m -s 2 -rs 1 -dt 3
-//    mpirun -np 4 ex10p -m -s 2 -rs 1 -dt 3
-//    mpirun -np 4 ex10p -m -s 14 -rs 2 -dt 0.03 -vs 20
-//    mpirun -np 4 ex10p -m -s 14 -rs 1 -dt 0.05 -vs 20
-//    mpirun -np 4 ex10p -m -s 3 -rs 2 -dt 3
+//    mpirun -np 4 nonlinear_elasticity -s 3 -rs 2 -dt 3
+//    mpirun -np 4 nonlinear_elasticity -s 3 -rs 2 -dt 3
+//    mpirun -np 4 nonlinear_elasticity -s 2 -rs 1 -dt 3
+//    mpirun -np 4 nonlinear_elasticity -m -s 2 -rs 1 -dt 3
+//    mpirun -np 4 nonlinear_elasticity -m -s 2 -rs 1 -dt 3
+//    mpirun -np 4 nonlinear_elasticity -m -s 14 -rs 2 -dt 0.03 -vs 20
+//    mpirun -np 4 nonlinear_elasticity -m -s 14 -rs 1 -dt 0.05 -vs 20
+//    mpirun -np 4 nonlinear_elasticity -m -s 3 -rs 2 -dt 3
 //
 // Description:  This examples solves a time dependent nonlinear elasticity
 //               problem of the form dv/dt = H(x) + S v, dx/dt = v, where H is a
@@ -31,9 +31,6 @@
 //               (preconditioned) inner solver. Note that implementing the
 //               method HyperelasticOperator::ImplicitSolve is the only
 //               requirement for high-order implicit (SDIRK) time integration.
-//
-//               We recommend viewing examples 2 and 9 before viewing this
-//               example.
 
 #include "mfem.hpp"
 #include "DMD.h"
@@ -182,9 +179,10 @@ int main(int argc, char *argv[])
    double mu = 0.25;
    double K = 5.0;
    bool adaptive_lin_rtol = true;
-   double ef = 0.99;
+   double ef = 0.9999;
    int rdim = -1;
    bool visualization = true;
+   bool visit = false;
    int vis_steps = 1;
 
    OptionsParser args(argc, argv);
@@ -218,6 +216,9 @@ int main(int argc, char *argv[])
    args.AddOption(&visualization, "-vis", "--visualization", "-no-vis",
                   "--no-visualization",
                   "Enable or disable GLVis visualization.");
+   args.AddOption(&visit, "-visit", "--visit-datafiles", "-no-visit",
+                  "--no-visit-datafiles",
+                  "Save data files for VisIt (visit.llnl.gov) visualization.");
    args.AddOption(&vis_steps, "-vs", "--visualization-steps",
                   "Visualize every n-th timestep.");
    args.AddOption(&ef, "-ef", "--energy_fraction",
@@ -364,6 +365,22 @@ int main(int argc, char *argv[])
       }
    }
 
+   // Create data collection for solution output: either VisItDataCollection for
+   // ascii data files, or SidreDataCollection for binary data files.
+   DataCollection *dc = NULL;
+   if (visit)
+   {
+      dc = new VisItDataCollection("Nonlinear_Elasticity", pmesh);
+      dc->SetPrecision(8);
+      // To save the mesh using MFEM's parallel mesh format:
+      // dc->SetFormat(DataCollection::PARALLEL_FORMAT);
+      dc->RegisterField("x", &x_gf);
+      dc->RegisterField("v", &v_gf);
+      dc->SetCycle(0);
+      dc->SetTime(0.0);
+      dc->Save();
+   }
+
    double ee0 = oper.ElasticEnergy(x_gf);
    double ke0 = oper.KineticEnergy(v_gf);
    if (myid == 0)
@@ -419,6 +436,13 @@ int main(int argc, char *argv[])
                oper.GetElasticEnergyDensity(x_gf, w_gf);
                visualize(vis_w, pmesh, &x_gf, &w_gf);
             }
+         }
+
+         if (visit)
+         {
+            dc->SetCycle(ti);
+            dc->SetTime(t);
+            dc->Save();
          }
       }
    }
@@ -476,7 +500,7 @@ int main(int argc, char *argv[])
    // 14. Predict the state at t_final using DMD.
    if (myid == 0)
    {
-       std::cout << "Predicting xv state at t_final using DMD" << std::endl;
+       std::cout << "Predicting position and velocity at t_final using DMD" << std::endl;
    }
    CAROM::Vector* result_x = dmd_x.predict(t_final, dt);
    CAROM::Vector* result_v = dmd_v.predict(t_final, dt);
@@ -524,8 +548,8 @@ int main(int argc, char *argv[])
        tot_diff_norm_v = std::sqrt(tot_diff_norm_v);
        tot_true_solution_v_norm = std::sqrt(tot_true_solution_v_norm);
 
-       std::cout << "Relative error of x at t_final: " << t_final << " is " << tot_diff_norm_x / tot_true_solution_x_norm << std::endl;
-       std::cout << "Relative error of v at t_final: " << t_final << " is " << tot_diff_norm_v / tot_true_solution_v_norm << std::endl;
+       std::cout << "Relative error of position (x) at t_final: " << t_final << " is " << tot_diff_norm_x / tot_true_solution_x_norm << std::endl;
+       std::cout << "Relative error of velocity (v) at t_final: " << t_final << " is " << tot_diff_norm_v / tot_true_solution_v_norm << std::endl;
    }
 
    // 16. Free the used memory.
@@ -537,6 +561,7 @@ int main(int argc, char *argv[])
    delete [] true_solution_x_norm;
    delete [] diff_norm_v;
    delete [] true_solution_v_norm;
+   delete dc;
 
    MPI_Finalize();
 

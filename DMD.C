@@ -180,6 +180,8 @@ DMD::constructDMD(const Matrix* f_snapshots,
         }
     }
 
+    std::cout << "Using " << d_k << " basis vectors out of " << f_snapshots->numColumns() << "." << std::endl;
+
     // Allocate the appropriate matrices and gather their elements.
     Matrix* d_basis = new Matrix(f_snapshots->numRows(), d_k, f_snapshots->distributed());
     Matrix* d_S_inv = new Matrix(d_k, d_k, false);
