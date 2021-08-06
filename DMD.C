@@ -71,7 +71,7 @@ bool DMD::takeSample(double* u_in)
 
 void DMD::train(double energy_fraction)
 {
-    const Matrix* f_snapshots = getSnapshotMatrix(d_snapshots);
+    const Matrix* f_snapshots = getSnapshotMatrix();
     CAROM_VERIFY(f_snapshots->numColumns() > 1);
     CAROM_VERIFY(energy_fraction > 0 && energy_fraction <= 1);
     d_energy_fraction = energy_fraction;
@@ -83,7 +83,7 @@ void DMD::train(double energy_fraction)
 
 void DMD::train(int k)
 {
-    const Matrix* f_snapshots = getSnapshotMatrix(d_snapshots);
+    const Matrix* f_snapshots = getSnapshotMatrix();
     CAROM_VERIFY(f_snapshots->numColumns() > 1);
     CAROM_VERIFY(k > 0 && k <= f_snapshots->numColumns() - 1);
     d_energy_fraction = -1;
@@ -459,24 +459,25 @@ DMD::phiMultEigs(double t,
     return std::pair<Matrix*,Matrix*>(d_phi_mult_eigs_real, d_phi_mult_eigs_imaginary);
 }
 
-const Matrix* getSnapshotMatrix(std::vector<Vector> snapshots)
+const Matrix*
+DMD::getSnapshotMatrix()
 {
-    CAROM_VERIFY(snapshots.size() > 0);
-    CAROM_VERIFY(snapshots[0].dim() > 0);
-    for (int i = 0 ; i < snapshots.size() - 1; i++)
+    CAROM_VERIFY(d_snapshots.size() > 0);
+    CAROM_VERIFY(d_snapshots[0].dim() > 0);
+    for (int i = 0 ; i < d_snapshots.size() - 1; i++)
     {
-        CAROM_VERIFY(snapshots[i].dim() == snapshots[i + 1].dim());
-        CAROM_VERIFY(snapshots[i].distributed() == snapshots[i + 1].distributed());
+        CAROM_VERIFY(d_snapshots[i].dim() == d_snapshots[i + 1].dim());
+        CAROM_VERIFY(d_snapshots[i].distributed() == d_snapshots[i + 1].distributed());
     }
 
-    Matrix* snapshot_mat = new Matrix(snapshots[0].dim(), snapshots.size(), snapshots[0].distributed());
+    Matrix* snapshot_mat = new Matrix(d_snapshots[0].dim(), d_snapshots.size(), d_snapshots[0].distributed());
 
     // This might be slow since we're accessing a different memory address each time.
-    for (int i = 0; i < snapshots[0].dim(); i++)
+    for (int i = 0; i < d_snapshots[0].dim(); i++)
     {
-        for (int j = 0; j < snapshots.size(); j++)
+        for (int j = 0; j < d_snapshots.size(); j++)
         {
-            snapshot_mat->item(i, j) = snapshots[j].item(i);
+            snapshot_mat->item(i, j) = d_snapshots[j].item(i);
         }
     }
 

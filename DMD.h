@@ -78,6 +78,11 @@ public:
      */
     Vector* predict(const std::pair<Vector*, Vector*> init, double t, double dt);
 
+    /**
+     * @brief Get the snapshot matrix contained within d_snapshots.
+     */
+    const Matrix* getSnapshotMatrix();
+
 private:
 
     /**
@@ -166,15 +171,6 @@ private:
     int d_k;
 
 };
-
-/**
- * @brief Get the snapshot matrix from a vector of CAROM::Vector snapshots.
- *        The snapshot matrix will remain distributed if the snapshots are
-          distributed.
- *
- * @param[in] snapshots The vector of CAROM::Vector snapshots
- */
-const Matrix* getSnapshotMatrix(std::vector<Vector> snapshots);
 
 }
 
