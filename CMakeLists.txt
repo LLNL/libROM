@@ -276,6 +276,7 @@ if(GTEST_FOUND)
     Vector
     Matrix
     DEIM
+    DMD
     GNAT
     QDEIM
     SVD
