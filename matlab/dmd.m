@@ -15,7 +15,7 @@ function dmd(X, m_used, t, dt)
     Atilde = U'*X2*V*inv(S);
     [W,eigs] = eig(Atilde);
     Phi = X2*V*inv(S)*W;
-    pred = Phi*eigs^(t/dt)*pinv(Phi)*b0
+    pred = Phi*eigs^(t/dt)*pinv(Phi)*b0;
     norm(real(pred-X(:,end)))/norm(real(X(:,end)))
 
 end
