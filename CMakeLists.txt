@@ -237,7 +237,8 @@ if (USE_MFEM)
     ex1parametric
     dg_advection
     nonlinear_elasticity
-    heat_conduction)
+    heat_conduction
+    dg_euler)
 
   foreach(name IN LISTS examples)
     add_executable(${name} examples/${name}.cpp)
