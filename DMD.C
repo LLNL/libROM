@@ -398,8 +398,8 @@ DMD::projectInitialCondition(const Vector* init)
 }
 
 Vector*
-DMD::predict(int t,
-             int dt)
+DMD::predict(double t,
+             double dt)
 {
     const std::pair<Vector*, Vector*> d_projected_init_pair(d_projected_init_real, d_projected_init_imaginary);
     return predict(d_projected_init_pair, t, dt);
@@ -407,8 +407,8 @@ DMD::predict(int t,
 
 Vector*
 DMD::predict(const std::pair<Vector*, Vector*> init,
-             int t,
-             int dt)
+             double t,
+             double dt)
 {
     std::pair<Matrix*, Matrix*> d_phi_pair = phiMultEigs(t, dt);
     Matrix* d_phi_mult_eigs_real = d_phi_pair.first;
@@ -427,13 +427,13 @@ DMD::predict(const std::pair<Vector*, Vector*> init,
 }
 
 std::pair<Matrix*, Matrix*>
-DMD::phiMultEigs(int t,
-                 int dt)
+DMD::phiMultEigs(double t,
+                 double dt)
 {
     Matrix* d_eigs_exp_real = new Matrix(d_k, d_k, false);
     Matrix* d_eigs_exp_imaginary = new Matrix(d_k, d_k, false);
 
-    double exp_power = (double) t / dt;
+    double exp_power = t / dt;
 
     for (int i = 0; i < d_k; i++)
     {
