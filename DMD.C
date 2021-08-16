@@ -162,10 +162,10 @@ DMD::constructDMD(const Matrix* f_snapshots,
     free_matrix_data(&svd_input);
 
     // Compute how many basis vectors we will actually use.
+    int num_singular_vectors = std::min(f_snapshots_minus->numColumns(), f_snapshots_minus->numDistributedRows());
     if (d_energy_fraction != -1)
     {
         double total_energy = 0.0;
-        int num_singular_vectors = std::min(f_snapshots_minus->numColumns(), f_snapshots_minus->numDistributedRows());
         for (int i = 0; i < num_singular_vectors; i++)
         {
             total_energy += d_factorizer->S[i];
