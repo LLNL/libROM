@@ -1,7 +1,5 @@
 var searchData=
 [
-  ['sampler',['Sampler',['../class_c_a_r_o_m_1_1_sampler.html',1,'CAROM']]],
-  ['sampler',['Sampler',['../class_c_a_r_o_m_1_1_sampler.html#a3a292fcbea929cb7d773921dec8752a0',1,'CAROM::Sampler']]],
   ['samples_5fper_5ftime_5finterval',['samples_per_time_interval',['../class_c_a_r_o_m_1_1_options.html#a3cd57273c5f4ad1529e7bde0423905b4',1,'CAROM::Options']]],
   ['sampling_5ftime_5fstep_5fscale',['sampling_time_step_scale',['../class_c_a_r_o_m_1_1_options.html#afef7c7f57a29e4b56b3a5586ba6c7e45',1,'CAROM::Options']]],
   ['sampling_5ftol',['sampling_tol',['../class_c_a_r_o_m_1_1_options.html#a6ab3cb5c3dd848e354d0ca4cbc30aea5',1,'CAROM::Options']]],
