@@ -9,16 +9,9 @@ function dmd(X, m_used, t, dt)
     b0 = X(:,1);
 
     [U, S, V] = svd(X1, 'econ');
-    'ya'
-    size(U)
-    size(S)
-    size(V)
     U = U(:,1:m_used);
     S = S(1:m_used,1:m_used);
     V = V(:,1:m_used);
-    size(U)
-    size(V)
-    size(S)
     Atilde = U'*X2*V*inv(S);
     [W,eigs] = eig(Atilde);
     Phi = X2*V*inv(S)*W;
