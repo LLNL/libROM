@@ -144,6 +144,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
     initialize_matrix(&svd_input, f_snapshots_minus->numColumns(),
                       f_snapshots_minus->numDistributedRows(),
                       1, d_num_procs, d_blocksize, d_blocksize);
+
     for (int rank = 0; rank < d_num_procs; ++rank)
     {
         scatter_block(&svd_input, 1, row_offset[rank] + 1,
@@ -164,23 +165,24 @@ DMD::constructDMD(const Matrix* f_snapshots,
     if (d_energy_fraction != -1)
     {
         double total_energy = 0.0;
-        for (int i = 0; i < f_snapshots->numColumns(); i++)
+        int num_singular_vectors = std::min(f_snapshots_minus->numColumns(), f_snapshots_minus->numDistributedRows());
+        for (int i = 0; i < num_singular_vectors; i++)
         {
             total_energy += d_factorizer->S[i];
         }
         double current_energy = 0.0;
-        for (int i = 0; i < f_snapshots->numColumns(); i++)
+        for (int i = 0; i < num_singular_vectors; i++)
         {
             current_energy += d_factorizer->S[i];
             if (current_energy / total_energy >= d_energy_fraction)
             {
-                d_k = i;
+                d_k = i + 1;
                 break;
             }
         }
     }
 
-    std::cout << "Using " << d_k << " basis vectors out of " << f_snapshots->numColumns() << "." << std::endl;
+    std::cout << "Using " << d_k << " basis vectors out of " << f_snapshots_minus->numColumns() << "." << std::endl;
 
     // Allocate the appropriate matrices and gather their elements.
     Matrix* d_basis = new Matrix(f_snapshots->numRows(), d_k, f_snapshots->distributed());
