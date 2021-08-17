@@ -100,7 +100,8 @@ GNAT(const Matrix* f_basis,
      Matrix& f_basis_sampled_inv,
      const int myid,
      const int num_procs,
-     const int num_samples_req = -1);
+     const int num_samples_req = -1,
+     std::vector<int> *init_samples=NULL);
 }
 
 #endif

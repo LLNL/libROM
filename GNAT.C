@@ -30,7 +30,8 @@ void GNAT(const Matrix* f_basis,
           Matrix& f_basis_sampled_inv,
           const int myid,
           const int num_procs,
-          const int num_samples_req)
+          const int num_samples_req,
+	  std::vector<int> *init_samples)
 {
     // This algorithm determines the rows of f that should be sampled, the
     // processor that owns each sampled row, and fills f_basis_sampled_inv with
@@ -103,6 +104,27 @@ void GNAT(const Matrix* f_basis,
                   num_f_basis_cols,
                   f_basis_sampled_inv.distributed());
 
+    // Gather information about initial samples given as input.
+    const int num_init_samples = init_samples ? init_samples->size() : 0;
+    int total_num_init_samples = 0;
+    MPI_Allreduce(&num_init_samples, &total_num_init_samples, 1,
+		  MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+
+    int init_sample_offset = 0;
+    if (total_num_init_samples > 0)
+      {
+	CAROM_VERIFY(init_samples);
+	std::vector<int> all_num_init_samples(num_procs);
+	std::vector<int> all_init_samples(total_num_init_samples);
+
+	MPI_Allgather(&num_init_samples, 1, MPI_INT, all_num_init_samples.data(), 1, MPI_INT, MPI_COMM_WORLD);
+
+	for (int i = 0; i < myid; ++i)
+	  {
+	    init_sample_offset += all_num_init_samples[i];
+	  }
+      }
+
     // Figure out the 1st sampled rows of the RHS.
     RowInfo f_bv_max_local, f_bv_max_global;
 
@@ -112,18 +134,33 @@ void GNAT(const Matrix* f_basis,
     {
         f_bv_max_local.row_val = -1.0;
         f_bv_max_local.proc = myid;
-        for (int i = 0; i < basis_size; ++i) {
-            // Check whether this row has already been sampled.
-            std::set<int>::const_iterator found = proc_sampled_f_row[myid].find(i);
-            if (found == proc_sampled_f_row[myid].end()) // not found
-            {
-                double f_bv_val = fabs(f_basis->item(i, 0));
-                if (f_bv_val > f_bv_max_local.row_val) {
+
+	if (k < total_num_init_samples)
+	  {
+	    // Take sample from init_samples on the corresponding process
+	    if (k >= init_sample_offset && k - init_sample_offset < num_init_samples)
+	      {
+		f_bv_max_local.row_val = 1.0;  // arbitrary number, ensuring maximum
+		f_bv_max_local.row = (*init_samples)[k - init_sample_offset];
+	      }
+	  }
+	else
+	  {
+	    // Compute sample by the greedy algorithm
+	    for (int i = 0; i < basis_size; ++i) {
+	      // Check whether this row has already been sampled.
+	      std::set<int>::const_iterator found = proc_sampled_f_row[myid].find(i);
+	      if (found == proc_sampled_f_row[myid].end()) // not found
+		{
+		  double f_bv_val = fabs(f_basis->item(i, 0));
+		  if (f_bv_val > f_bv_max_local.row_val) {
                     f_bv_max_local.row_val = f_bv_val;
                     f_bv_max_local.row = i;
-                }
-            }
-        }
+		  }
+		}
+	    }
+	  }
+
         MPI_Allreduce(&f_bv_max_local, &f_bv_max_global, 1,
                       MaxRowType, RowInfoOp, MPI_COMM_WORLD);
 
@@ -178,27 +215,42 @@ void GNAT(const Matrix* f_basis,
         {
             // Now figure out the next sampled row of the basis of f.
             // Compute the first S basis vectors of the RHS times c and find the
-            // row of this product have the greatest absolute value.  This is the
+            // row of this product have the greatest absolute value. This is the
             // next sampled row of the basis of f.
             f_bv_max_local.row_val = -1.0;
             f_bv_max_local.proc = myid;
-            for (int F_row = 0; F_row < basis_size; ++F_row) {
-                // Check whether this row has already been sampled.
-                std::set<int>::const_iterator found = proc_sampled_f_row[myid].find(F_row);
-                if (found == proc_sampled_f_row[myid].end()) // not found
-                {
-                    double tmp = 0.0;
-                    for (int F_col = 0; F_col < i; ++F_col) {
-                        tmp += f_basis->item(F_row, F_col)*c[F_col];
-                    }
-                    const double r_val = fabs(f_basis->item(F_row, i) - tmp);
 
-                    if (r_val > f_bv_max_local.row_val) {
+	    if (ns + k < total_num_init_samples)
+	      {
+		// Take sample from init_samples on the corresponding process
+		if (ns + k >= init_sample_offset && ns + k - init_sample_offset < num_init_samples)
+		  {
+		    f_bv_max_local.row_val = 1.0;  // arbitrary number, ensuring maximum
+		    f_bv_max_local.row = (*init_samples)[ns + k - init_sample_offset];
+		  }
+	      }
+	    else
+	      {
+		// Compute sample by the greedy algorithm
+		for (int F_row = 0; F_row < basis_size; ++F_row) {
+		  // Check whether this row has already been sampled.
+		  std::set<int>::const_iterator found = proc_sampled_f_row[myid].find(F_row);
+		  if (found == proc_sampled_f_row[myid].end()) // not found
+		    {
+		      double tmp = 0.0;
+		      for (int F_col = 0; F_col < i; ++F_col) {
+                        tmp += f_basis->item(F_row, F_col)*c[F_col];
+		      }
+		      const double r_val = fabs(f_basis->item(F_row, i) - tmp);
+
+		      if (r_val > f_bv_max_local.row_val) {
                         f_bv_max_local.row_val = r_val;
                         f_bv_max_local.row = F_row;
-                    }
-                }
-            }
+		      }
+		    }
+		}
+	      }
+
             MPI_Allreduce(&f_bv_max_local, &f_bv_max_global, 1,
                           MaxRowType, RowInfoOp, MPI_COMM_WORLD);
 
