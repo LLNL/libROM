@@ -580,25 +580,42 @@ int main(int argc, char *argv[])
     //     iterations, ti, with a time-step dt).
     FE_Evolution adv(*m, *k, *B, prec_type);
 
+    StopWatch fom_timer, dmd_training_timer, dmd_prediction_timer;
+
+    fom_timer.Start();
+
     double t = 0.0;
     adv.SetTime(t);
     ode_solver->Init(adv);
+
+    fom_timer.Stop();
+
+    dmd_training_timer.Start();
 
     // 11. Create DMD object and take initial sample.
     CAROM::DMD dmd_U(U->Size());
     dmd_U.takeSample(U->GetData());
 
+    dmd_training_timer.Stop();
+
     bool done = false;
     for (int ti = 0; !done; )
     {
+
+        fom_timer.Start();
+
         double dt_real = min(dt, t_final - t);
         ode_solver->Step(*U, t, dt_real);
+        ti++;
+        done = (t >= t_final - 1e-8*dt);
+
+        fom_timer.Stop();
+
+        dmd_training_timer.Start();
 
         dmd_U.takeSample(U->GetData());
 
-        ti++;
-
-        done = (t >= t_final - 1e-8*dt);
+        dmd_training_timer.Stop();
 
         if (done || ti % vis_steps == 0)
         {
@@ -660,6 +677,8 @@ int main(int argc, char *argv[])
         std::cout << "Both rdim and ef are set. ef will be ignored." << std::endl;
     }
 
+    dmd_training_timer.Start();
+
     if (rdim != -1)
     {
         if (myid == 0)
@@ -677,12 +696,18 @@ int main(int argc, char *argv[])
         dmd_U.train(ef);
     }
 
+    dmd_training_timer.Stop();
+
+    dmd_prediction_timer.Start();
+
     // 14. Predict the state at t_final using DMD.
     if (myid == 0)
     {
         std::cout << "Predicting solution at t_final using DMD" << std::endl;
     }
     CAROM::Vector* result_u = dmd_U.predict(t_final, dt);
+
+    dmd_prediction_timer.Stop();
 
     // 15. Calculate the relative error between the DMD final solution and the true solution.
     Vector dmd_solution_u(result_u->getData(), result_u->dim());
@@ -710,6 +735,9 @@ int main(int argc, char *argv[])
         tot_true_solution_u_norm = std::sqrt(tot_true_solution_u_norm);
 
         std::cout << "Relative error of solution (u) at t_final: " << t_final << " is " << tot_diff_norm_u / tot_true_solution_u_norm << std::endl;
+        printf("Elapsed time for solving FOM: %e second\n", fom_timer.RealTime());
+        printf("Elapsed time for training DMD: %e second\n", dmd_training_timer.RealTime());
+        printf("Elapsed time for predicting DMD: %e second\n", dmd_prediction_timer.RealTime());
     }
 
     // 16. Free the used memory.

@@ -320,9 +320,17 @@ int main(int argc, char *argv[])
     tic_toc.Clear();
     tic_toc.Start();
 
+    StopWatch fom_timer, dmd_training_timer, dmd_prediction_timer;
+
+    fom_timer.Start();
+
     double t = 0.0;
     euler.SetTime(t);
     ode_solver->Init(euler);
+
+    fom_timer.Stop();
+
+    dmd_training_timer.Start();
 
     CAROM::DMD dmd_dens(u_block.GetBlock(0).Size());
     CAROM::DMD dmd_x_mom(u_block.GetBlock(1).Size());
@@ -332,6 +340,8 @@ int main(int argc, char *argv[])
     dmd_x_mom.takeSample(u_block.GetBlock(1).GetData());
     dmd_y_mom.takeSample(u_block.GetBlock(2).GetData());
     dmd_e.takeSample(u_block.GetBlock(3).GetData());
+
+    dmd_training_timer.Stop();
 
     if (cfl > 0)
     {
@@ -354,13 +364,11 @@ int main(int argc, char *argv[])
     bool done = false;
     for (int ti = 0; !done; )
     {
+        fom_timer.Start();
+
         double dt_real = min(dt, t_final - t);
 
         ode_solver->Step(sol, t, dt_real);
-        dmd_dens.takeSample(u_block.GetBlock(0).GetData());
-        dmd_x_mom.takeSample(u_block.GetBlock(1).GetData());
-        dmd_y_mom.takeSample(u_block.GetBlock(2).GetData());
-        dmd_e.takeSample(u_block.GetBlock(3).GetData());
         if (cfl > 0)
         {
             // Reduce to find the global maximum wave speed
@@ -375,6 +383,18 @@ int main(int argc, char *argv[])
         ti++;
 
         done = (t >= t_final - 1e-8*dt);
+
+        fom_timer.Stop();
+
+        dmd_training_timer.Start();
+
+        dmd_dens.takeSample(u_block.GetBlock(0).GetData());
+        dmd_x_mom.takeSample(u_block.GetBlock(1).GetData());
+        dmd_y_mom.takeSample(u_block.GetBlock(2).GetData());
+        dmd_e.takeSample(u_block.GetBlock(3).GetData());
+
+        dmd_training_timer.Stop();
+
         if (done || ti % vis_steps == 0)
         {
             if (mpi.Root())
@@ -429,6 +449,8 @@ int main(int argc, char *argv[])
         std::cout << "Both rdim and ef are set. ef will be ignored." << std::endl;
     }
 
+    dmd_training_timer.Start();
+
     if (rdim != -1)
     {
         if (mpi.WorldRank() == 0)
@@ -452,6 +474,10 @@ int main(int argc, char *argv[])
         dmd_e.train(ef);
     }
 
+    dmd_training_timer.Stop();
+
+    dmd_prediction_timer.Start();
+
     // 14. Predict the state at t_final using DMD.
     if (mpi.WorldRank() == 0)
     {
@@ -461,6 +487,8 @@ int main(int argc, char *argv[])
     CAROM::Vector* result_x_mom = dmd_x_mom.predict(t_final, dt);
     CAROM::Vector* result_y_mom = dmd_y_mom.predict(t_final, dt);
     CAROM::Vector* result_e = dmd_e.predict(t_final, dt);
+
+    dmd_prediction_timer.Stop();
 
     // 15. Calculate the relative error between the DMD final solution and the true solution.
     Vector dmd_solution_dens(result_dens->getData(), result_dens->dim());
@@ -545,6 +573,9 @@ int main(int argc, char *argv[])
         std::cout << "Relative error of x-momentum (x_mom) at t_final: " << t_final << " is " << tot_diff_norm_x_mom / tot_true_solution_x_mom_norm << std::endl;
         std::cout << "Relative error of y-momentum (y_mom) at t_final: " << t_final << " is " << tot_diff_norm_y_mom / tot_true_solution_y_mom_norm << std::endl;
         std::cout << "Relative error of energy (e) at t_final: " << t_final << " is " << tot_diff_norm_e / tot_true_solution_e_norm << std::endl;
+        printf("Elapsed time for solving FOM: %e second\n", fom_timer.RealTime());
+        printf("Elapsed time for training DMD: %e second\n", dmd_training_timer.RealTime());
+        printf("Elapsed time for predicting DMD: %e second\n", dmd_prediction_timer.RealTime());
     }
 
     // Free the used memory.
