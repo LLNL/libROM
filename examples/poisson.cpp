@@ -1,4 +1,4 @@
-//               libROM MFEM Example: parametric ROM for Poisson problem
+//               libROM MFEM Example: parametric ROM for Poisson problem (adapted from ex1p.cpp)
 //
 // Compile with: ./scripts/compile.sh -m
 //

@@ -1,4 +1,4 @@
-//                         libROM MFEM Example: DG Euler Equations
+//                         libROM MFEM Example: DG Euler Equations (adapted from ex18p.cpp)
 //
 // Compile with: make dg_euler
 //
@@ -483,10 +483,10 @@ int main(int argc, char *argv[])
     {
         std::cout << "Predicting density, momentum, and energy at t_final using DMD" << std::endl;
     }
-    CAROM::Vector* result_dens = dmd_dens.predict(t_final, dt);
-    CAROM::Vector* result_x_mom = dmd_x_mom.predict(t_final, dt);
-    CAROM::Vector* result_y_mom = dmd_y_mom.predict(t_final, dt);
-    CAROM::Vector* result_e = dmd_e.predict(t_final, dt);
+    CAROM::Vector* result_dens = dmd_dens.predict(t_final/dt);
+    CAROM::Vector* result_x_mom = dmd_x_mom.predict(t_final/dt);
+    CAROM::Vector* result_y_mom = dmd_y_mom.predict(t_final/dt);
+    CAROM::Vector* result_e = dmd_e.predict(t_final/dt);
 
     dmd_prediction_timer.Stop();
 
@@ -496,83 +496,39 @@ int main(int argc, char *argv[])
     Vector diff_dens(true_solution_dens.Size());
     subtract(dmd_solution_dens, true_solution_dens, diff_dens);
 
+    double tot_diff_norm_dens = sqrt(InnerProduct(MPI_COMM_WORLD, diff_dens, diff_dens));
+    double tot_true_solution_dens_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution_dens, true_solution_dens));
+
     Vector dmd_solution_x_mom(result_x_mom->getData(), result_x_mom->dim());
     Vector true_solution_x_mom(u_block.GetBlock(1).GetData(), u_block.GetBlock(1).Size());
     Vector diff_x_mom(true_solution_x_mom.Size());
     subtract(dmd_solution_x_mom, true_solution_x_mom, diff_x_mom);
+
+    double tot_diff_norm_x_mom = sqrt(InnerProduct(MPI_COMM_WORLD, diff_x_mom, diff_x_mom));
+    double tot_true_solution_x_mom_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution_x_mom, true_solution_x_mom));
 
     Vector dmd_solution_y_mom(result_y_mom->getData(), result_y_mom->dim());
     Vector true_solution_y_mom(u_block.GetBlock(2).GetData(), u_block.GetBlock(2).Size());
     Vector diff_y_mom(true_solution_y_mom.Size());
     subtract(dmd_solution_y_mom, true_solution_y_mom, diff_y_mom);
 
+    double tot_diff_norm_y_mom = sqrt(InnerProduct(MPI_COMM_WORLD, diff_y_mom, diff_y_mom));
+    double tot_true_solution_y_mom_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution_y_mom, true_solution_y_mom));
+
     Vector dmd_solution_e(result_e->getData(), result_e->dim());
     Vector true_solution_e(u_block.GetBlock(3).GetData(), u_block.GetBlock(3).Size());
     Vector diff_e(true_solution_e.Size());
     subtract(dmd_solution_e, true_solution_e, diff_e);
 
-    double* diff_norm_dens = new double[mpi.WorldSize()] {};
-    double proc_diff_norm_dens = diff_dens.Norml2();
-    MPI_Gather(&proc_diff_norm_dens, 1, MPI_DOUBLE, diff_norm_dens, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    double* true_solution_dens_norm = new double[mpi.WorldSize()] {};
-    double proc_true_solution_dens_norm = true_solution_dens.Norml2();
-    MPI_Gather(&proc_true_solution_dens_norm, 1, MPI_DOUBLE, true_solution_dens_norm, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
-    double* diff_norm_x_mom = new double[mpi.WorldSize()] {};
-    double proc_diff_norm_x_mom = diff_x_mom.Norml2();
-    MPI_Gather(&proc_diff_norm_x_mom, 1, MPI_DOUBLE, diff_norm_x_mom, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    double* true_solution_x_mom_norm = new double[mpi.WorldSize()] {};
-    double proc_true_solution_x_mom_norm = true_solution_x_mom.Norml2();
-    MPI_Gather(&proc_true_solution_x_mom_norm, 1, MPI_DOUBLE, true_solution_x_mom_norm, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
-    double* diff_norm_y_mom = new double[mpi.WorldSize()] {};
-    double proc_diff_norm_y_mom = diff_y_mom.Norml2();
-    MPI_Gather(&proc_diff_norm_y_mom, 1, MPI_DOUBLE, diff_norm_y_mom, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    double* true_solution_y_mom_norm = new double[mpi.WorldSize()] {};
-    double proc_true_solution_y_mom_norm = true_solution_y_mom.Norml2();
-    MPI_Gather(&proc_true_solution_y_mom_norm, 1, MPI_DOUBLE, true_solution_y_mom_norm, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
-    double* diff_norm_e = new double[mpi.WorldSize()] {};
-    double proc_diff_norm_e = diff_e.Norml2();
-    MPI_Gather(&proc_diff_norm_e, 1, MPI_DOUBLE, diff_norm_e, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    double* true_solution_e_norm = new double[mpi.WorldSize()] {};
-    double proc_true_solution_e_norm = true_solution_e.Norml2();
-    MPI_Gather(&proc_true_solution_e_norm, 1, MPI_DOUBLE, true_solution_e_norm, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    double tot_diff_norm_e = sqrt(InnerProduct(MPI_COMM_WORLD, diff_e, diff_e));
+    double tot_true_solution_e_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution_e, true_solution_e));
 
     if (mpi.WorldRank() == 0)
     {
-        double tot_diff_norm_dens = 0;
-        double tot_true_solution_dens_norm = 0;
-        double tot_diff_norm_x_mom = 0;
-        double tot_true_solution_x_mom_norm = 0;
-        double tot_diff_norm_y_mom = 0;
-        double tot_true_solution_y_mom_norm = 0;
-        double tot_diff_norm_e = 0;
-        double tot_true_solution_e_norm = 0;
-        for (int i = 0; i < mpi.WorldSize(); i++)
-        {
-            tot_diff_norm_dens += std::pow(diff_norm_dens[i], 2);
-            tot_true_solution_dens_norm += std::pow(true_solution_dens_norm[i], 2);
-            tot_diff_norm_x_mom += std::pow(diff_norm_x_mom[i], 2);
-            tot_true_solution_x_mom_norm += std::pow(true_solution_x_mom_norm[i], 2);
-            tot_diff_norm_y_mom += std::pow(diff_norm_y_mom[i], 2);
-            tot_true_solution_y_mom_norm += std::pow(true_solution_y_mom_norm[i], 2);
-            tot_diff_norm_e += std::pow(diff_norm_e[i], 2);
-            tot_true_solution_e_norm += std::pow(true_solution_e_norm[i], 2);
-        }
-        tot_diff_norm_dens = std::sqrt(tot_diff_norm_dens);
-        tot_true_solution_dens_norm = std::sqrt(tot_true_solution_dens_norm);
-        tot_diff_norm_x_mom = std::sqrt(tot_diff_norm_x_mom);
-        tot_true_solution_x_mom_norm = std::sqrt(tot_true_solution_x_mom_norm);
-        tot_diff_norm_y_mom = std::sqrt(tot_diff_norm_y_mom);
-        tot_true_solution_y_mom_norm = std::sqrt(tot_true_solution_y_mom_norm);
-        tot_diff_norm_e = std::sqrt(tot_diff_norm_e);
-        tot_true_solution_e_norm = std::sqrt(tot_true_solution_e_norm);
-
-        std::cout << "Relative error of density (dens) at t_final: " << t_final << " is " << tot_diff_norm_dens / tot_true_solution_dens_norm << std::endl;
-        std::cout << "Relative error of x-momentum (x_mom) at t_final: " << t_final << " is " << tot_diff_norm_x_mom / tot_true_solution_x_mom_norm << std::endl;
-        std::cout << "Relative error of y-momentum (y_mom) at t_final: " << t_final << " is " << tot_diff_norm_y_mom / tot_true_solution_y_mom_norm << std::endl;
-        std::cout << "Relative error of energy (e) at t_final: " << t_final << " is " << tot_diff_norm_e / tot_true_solution_e_norm << std::endl;
+        std::cout << "Relative error of DMD density (dens) at t_final: " << t_final << " is " << tot_diff_norm_dens / tot_true_solution_dens_norm << std::endl;
+        std::cout << "Relative error of DMD x-momentum (x_mom) at t_final: " << t_final << " is " << tot_diff_norm_x_mom / tot_true_solution_x_mom_norm << std::endl;
+        std::cout << "Relative error of DMD y-momentum (y_mom) at t_final: " << t_final << " is " << tot_diff_norm_y_mom / tot_true_solution_y_mom_norm << std::endl;
+        std::cout << "Relative error of DMD energy (e) at t_final: " << t_final << " is " << tot_diff_norm_e / tot_true_solution_e_norm << std::endl;
         printf("Elapsed time for solving FOM: %e second\n", fom_timer.RealTime());
         printf("Elapsed time for training DMD: %e second\n", dmd_training_timer.RealTime());
         printf("Elapsed time for predicting DMD: %e second\n", dmd_prediction_timer.RealTime());
@@ -581,17 +537,9 @@ int main(int argc, char *argv[])
     // Free the used memory.
     delete ode_solver;
     delete result_dens;
-    delete [] diff_norm_dens;
-    delete [] true_solution_dens_norm;
     delete result_x_mom;
-    delete [] diff_norm_x_mom;
-    delete [] true_solution_x_mom_norm;
     delete result_y_mom;
-    delete [] diff_norm_y_mom;
-    delete [] true_solution_y_mom_norm;
     delete result_e;
-    delete [] diff_norm_e;
-    delete [] true_solution_e_norm;
 
     return 0;
 }

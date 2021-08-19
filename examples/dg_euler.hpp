@@ -1,4 +1,4 @@
-//                  MFEM Example 18 - Serial/Parallel Shared Code
+//                  libROM MFEM Example: DG Euler Equations (adapted from ex18p.cpp)
 
 #include "mfem.hpp"
 

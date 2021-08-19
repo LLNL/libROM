@@ -8,7 +8,7 @@
  *
  *****************************************************************************/
 
-// Description:Computes the DMD algorithm on the given snapshot matrix.
+// Description: Computes the DMD algorithm on the given snapshot matrix.
 
 #ifndef included_DMD_h
 #define included_DMD_h
@@ -27,6 +27,8 @@ public:
 
     /**
      * @brief Constructor.
+     *
+     * @param[in] dim The full-order state dimension.
      */
     DMD(int dim);
 
@@ -36,10 +38,8 @@ public:
      * @pre u_in != 0
      *
      * @param[in] u_in The state at the specified time.
-     *
-     * @return True if the sampling was successful.
      */
-    bool takeSample(double* u_in);
+    void takeSample(double* u_in);
 
     /**
      * @param[in] energy_fraction The energy fraction to keep after doing SVD.
@@ -62,10 +62,9 @@ public:
      * @brief Predict state given a time. Uses the projected initial condition of the
      *        training dataset (the first column).
      *
-     * @param[in] t The time of the outputted state.
-     * @param[in] dt The delta time of the simulation.
+     * @param[in] n The time of the outputted state (t/dt)
      */
-    Vector* predict(double t, double dt);
+    Vector* predict(double n);
 
     /**
      * @brief Predict state given a new initial condition and time.
@@ -73,10 +72,9 @@ public:
      *        for correct results.
      *
      * @param[in] init The initial condition.
-     * @param[in] t The time of the outputted state.
-     * @param[in] dt The delta time of the simulation.
+     * @param[in] n The time of the outputted state (t/dt)
      */
-    Vector* predict(const std::pair<Vector*, Vector*> init, double t, double dt);
+    Vector* predict(const std::pair<Vector*, Vector*> init, double n);
 
     /**
      * @brief Get the snapshot matrix contained within d_snapshots.
@@ -114,7 +112,7 @@ private:
     int d_num_procs;
 
     /**
-     * @brief The total dimensions of the sample vector.
+     * @brief The total dimension of the sample vector.
      */
     int d_dim;
 
@@ -126,7 +124,7 @@ private:
     /**
      * @brief Internal function to multiply d_phi with the eigenvalues.
      */
-    std::pair<Matrix*, Matrix*> phiMultEigs(double t, double dt);
+    std::pair<Matrix*, Matrix*> phiMultEigs(double n);
 
     /**
      * @brief Internal function to obtain the DMD modes.

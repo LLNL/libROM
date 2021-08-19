@@ -1,4 +1,4 @@
-//                       libROM MFEM Example: DG Advection
+//                       libROM MFEM Example: DG Advection (adapted from ex9p.cpp)
 //
 // Compile with: make dg_advection
 //
@@ -592,6 +592,8 @@ int main(int argc, char *argv[])
 
     dmd_training_timer.Start();
 
+    std::cout << U->Size() << std::endl;
+
     // 11. Create DMD object and take initial sample.
     CAROM::DMD dmd_U(U->Size());
     dmd_U.takeSample(U->GetData());
@@ -705,7 +707,7 @@ int main(int argc, char *argv[])
     {
         std::cout << "Predicting solution at t_final using DMD" << std::endl;
     }
-    CAROM::Vector* result_u = dmd_U.predict(t_final, dt);
+    CAROM::Vector* result_u = dmd_U.predict(t_final/dt);
 
     dmd_prediction_timer.Stop();
 
@@ -715,26 +717,12 @@ int main(int argc, char *argv[])
     Vector diff_u(true_solution_u.Size());
     subtract(dmd_solution_u, true_solution_u, diff_u);
 
-    double* diff_norm_u = new double[num_procs] {};
-    double proc_diff_norm_u = diff_u.Norml2();
-    MPI_Gather(&proc_diff_norm_u, 1, MPI_DOUBLE, diff_norm_u, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    double* true_solution_u_norm = new double[num_procs] {};
-    double proc_true_solution_u_norm = true_solution_u.Norml2();
-    MPI_Gather(&proc_true_solution_u_norm, 1, MPI_DOUBLE, true_solution_u_norm, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    double tot_diff_norm_u = sqrt(InnerProduct(MPI_COMM_WORLD, diff_u, diff_u));
+    double tot_true_solution_u_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution_u, true_solution_u));
 
     if (myid == 0)
     {
-        double tot_diff_norm_u = 0;
-        double tot_true_solution_u_norm = 0;
-        for (int i = 0; i < num_procs; i++)
-        {
-            tot_diff_norm_u += std::pow(diff_norm_u[i], 2);
-            tot_true_solution_u_norm += std::pow(true_solution_u_norm[i], 2);
-        }
-        tot_diff_norm_u = std::sqrt(tot_diff_norm_u);
-        tot_true_solution_u_norm = std::sqrt(tot_true_solution_u_norm);
-
-        std::cout << "Relative error of solution (u) at t_final: " << t_final << " is " << tot_diff_norm_u / tot_true_solution_u_norm << std::endl;
+        std::cout << "Relative error of DMD solution (u) at t_final: " << t_final << " is " << tot_diff_norm_u / tot_true_solution_u_norm << std::endl;
         printf("Elapsed time for solving FOM: %e second\n", fom_timer.RealTime());
         printf("Elapsed time for training DMD: %e second\n", dmd_training_timer.RealTime());
         printf("Elapsed time for predicting DMD: %e second\n", dmd_prediction_timer.RealTime());
@@ -752,8 +740,6 @@ int main(int argc, char *argv[])
     delete ode_solver;
     delete pd;
     delete result_u;
-    delete [] diff_norm_u;
-    delete [] true_solution_u_norm;
 #ifdef MFEM_USE_ADIOS2
     if (adios2)
     {
