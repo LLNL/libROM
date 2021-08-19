@@ -2,6 +2,10 @@
 //
 // Compile with: make dg_euler
 //
+// For DMD:
+//   mpirun -n 8 dg_euler
+//   mpirun -n 8 dg_euler -p 2 -rs 2 -rp 1 -o 1 -s 3 -visit
+//
 // Sample runs:
 //
 //       mpirun -np 4 dg_euler -p 1 -rs 2 -rp 1 -o 1 -s 3

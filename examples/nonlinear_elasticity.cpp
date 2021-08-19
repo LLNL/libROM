@@ -2,6 +2,9 @@
 //
 // Compile with: make nonlinear_elasticity
 //
+// For DMD:
+//   mpirun -np 8 nonlinear_elasticity -s 2 -rs 1 -dt 0.01 -tf 5 -visit
+//
 // Sample runs:
 //    mpirun -np 4 nonlinear_elasticity -s 3 -rs 2 -dt 3
 //    mpirun -np 4 nonlinear_elasticity -s 3 -rs 2 -dt 3

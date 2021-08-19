@@ -2,6 +2,10 @@
 //
 // Compile with: make heat_conduction
 //
+// For DMD:
+//   mpirun -np 8 heat_conduction
+//   mpirun -np 8 heat_conduction -s 3 -a 0.5 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit
+//
 // Sample runs:  mpirun -np 4 heat_conduction
 //               mpirun -np 4 heat_conduction -tf 2
 //               mpirun -np 4 heat_conduction -s 1 -a 0.0 -k 1.0

@@ -2,6 +2,10 @@
 //
 // Compile with: make dg_advection
 //
+// For DMD:
+//   mpirun -np 8 dg_advection
+//   mpirun -np 8 dg_advection -p 3 -rp 1 -dt 0.005 -tf 4 -visit
+//
 // Sample runs:
 //    mpirun -np 4 dg_advection -p 0 -dt 0.005
 //    mpirun -np 4 dg_advection -p 0 -dt 0.01
