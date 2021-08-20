@@ -8,17 +8,18 @@
 //               boundary conditions and spatially varying right hand side f.
 //
 //               The example highlights the greedy algorithm. The build_database phase
-//               builds the ROM database using different frequncies. The use_database
-//               phase uses the ROM database  to reads the basis of the nearest point
-//               to the specified frequency, builds the ROM operator, solves the
-//               reduced order system, and lifts the solution to the full order space.
+//               builds the ROM database using different frequncies and a latin-hypercube
+//               sampling procedure. The use_database phase uses the ROM database to reads
+//               the basis of the nearest point to the specified frequency, builds the ROM
+//               operator, solves thereduced order system, and lifts the solution to the
+//               full order space.
 //
-// build_database phase: poisson_greedy -build_database -greedy-param-min 1.0 -greedy-param-max 1.2 -greedy-param-size 5 -greedysubsize 2 -greedyconvsize 3
+// build_database phase: poisson_greedy -build_database -greedy-param-min 1.0 -greedy-param-max 1.2 -greedy-param-size 5 -greedysubsize 2 -greedyconvsize 3 -greedyrelerrortol 0.01
 // use_database phase:   poisson_greedy -offline -f 1.15 (create a new solution to compare with)
 // use_database phase:   poisson_greedy -use_database -online -f 1.15 (use the database to compute at f 1.15 while comparing to the true offline solution at f 1.15)
 //
 // Larger example:
-// build_database phase: poisson_greedy -build_database -greedy-param-min 0.5 -greedy-param-max 1.5 -greedy-param-size 15 -greedysubsize 4 -greedyconvsize 6
+// build_database phase: poisson_greedy -build_database -greedy-param-min 0.5 -greedy-param-max 1.5 -greedy-param-size 15 -greedysubsize 4 -greedyconvsize 6 -greedyrelerrortol 0.01
 // use_database phase:   poisson_greedy -offline -f X.XX (create a new solution to compare with. Set X.XX to your desired frequency.)
 // use_database phase:   poisson_greedy -use_database -online -f X.XX (use the database to compute at f X.XX while comparing to the true offline solution at f X.XX)
 
@@ -61,7 +62,7 @@ int main(int argc, char *argv[])
     double greedy_param_space_min = 1.0;
     double greedy_param_space_max = 1.0;
     int greedy_param_space_size = 0;
-    double greedy_tol = 0.01;
+    double greedy_relative_error_tol = 0.01;
     int greedy_subset_size = 0;
     int greedy_convergence_subset_size = 0;
     int precision = 16;
@@ -100,7 +101,7 @@ int main(int argc, char *argv[])
     args.AddOption(&greedy_param_space_min, "-greedy-param-min", "--greedy-param-min", "The minimum value of the parameter point space.");
     args.AddOption(&greedy_param_space_max, "-greedy-param-max", "--greedy-param-max", "The maximum value of the parameter point space.");
     args.AddOption(&greedy_param_space_size, "-greedy-param-size", "--greedy-param-size", "The number of values to search in the parameter point space.");
-    args.AddOption(&greedy_tol, "-greedytol", "--greedytol", "The greedy algorithm tolerance.");
+    args.AddOption(&greedy_relative_error_tol, "-greedyrelerrortol", "--greedyrelerrortol", "The greedy algorithm relative error tolerance.");
     args.AddOption(&greedy_subset_size, "-greedysubsize", "--greedysubsize", "The greedy algorithm subset size.");
     args.AddOption(&greedy_convergence_subset_size, "-greedyconvsize", "--greedyconvsize", "The greedy algorithm convergence subset size.");
     args.Parse();
@@ -134,7 +135,7 @@ int main(int argc, char *argv[])
         }
         infile.close();
         greedy_sampler = new CAROM::GreedyParameterPointRandomSampler(greedy_param_space_min, greedy_param_space_max,
-            greedy_param_space_size, false, greedy_tol, 1.05,
+            greedy_param_space_size, false, greedy_relative_error_tol, 1.05,
             2.0, greedy_subset_size, greedy_convergence_subset_size,
             true, "poisson_greedy_algorithm_log.txt");
     }
@@ -496,6 +497,7 @@ int main(int argc, char *argv[])
         }
 
         double curr_error = 0;
+
         // 29. Calculate the relative error as commanded by the greedy algorithm.
         if (calc_rel_error)
         {
@@ -546,10 +548,9 @@ int main(int argc, char *argv[])
             std::cout << "The error indicator is: " << curr_error << std::endl;
         }
 
-        // 30. If calculating the relative error, or we are the offline phase of
-        //     a regular simulation without using the greedy algorithm, create
-        //     a global ROM basis.
-        if (calc_rel_error || (offline && !build_database) || (offline && build_database && basisIdentifiers.size() == 1))
+        // 30. If calculating the relative error, or after we sampled our first point,
+        //     create a global ROM basis.
+        if (calc_rel_error || (offline && basisIdentifiers.size() == 1))
         {
             mergeTimer.Start();
             std::unique_ptr<CAROM::BasisGenerator> basis_generator;
