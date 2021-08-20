@@ -8,7 +8,7 @@
  *
  *****************************************************************************/
 
-// Description: Interface to the DMD algorithm.
+// Description: Implementation of the DMD algorithm.
 
 #include "DMD.h"
 
@@ -27,14 +27,10 @@
 #include "scalapack_wrapper.h"
 
 /* Use automatically detected Fortran name-mangling scheme */
-#define dgeev CAROM_FC_GLOBAL(dgeev, DGEEV)
 #define zgetrf CAROM_FC_GLOBAL(zgetrf, ZGETRF)
 #define zgetri CAROM_FC_GLOBAL(zgetri, ZGETRI)
 
 extern "C" {
-    // Compute eigenvalue and eigenvectors of real non-symmetric matrix.
-    void dgeev(char*, char*, int*, double*, int*, double*, double*, double*, int*, double*, int*, double*, int*, int*);
-
     // LU decomposition of a general matrix.
     void zgetrf(int*, int*, double*, int*, int*, int*);
 
@@ -60,13 +56,12 @@ DMD::DMD(int dim)
     d_dim = dim;
 }
 
-bool DMD::takeSample(double* u_in)
+void DMD::takeSample(double* u_in)
 {
     CAROM_VERIFY(u_in != 0);
 
     Vector sample(u_in, d_dim, true);
     d_snapshots.push_back(sample);
-    return true;
 }
 
 void DMD::train(double energy_fraction)
@@ -86,7 +81,7 @@ void DMD::train(int k)
     const Matrix* f_snapshots = getSnapshotMatrix();
     CAROM_VERIFY(f_snapshots->numColumns() > 1);
     CAROM_VERIFY(k > 0 && k <= f_snapshots->numColumns() - 1);
-    d_energy_fraction = -1;
+    d_energy_fraction = -1.0;
     d_k = k;
     constructDMD(f_snapshots, d_rank, d_num_procs);
 
@@ -98,6 +93,9 @@ DMD::constructDMD(const Matrix* f_snapshots,
                   int d_rank,
                   int d_num_procs)
 {
+    // TODO: Making two copies of the snapshot matrix has a lot of overhead.
+    //       We need to figure out a way to do submatrix multiplication and to
+    //       reimplement this algorithm using one snapshot matrix.
     Matrix* f_snapshots_minus = new Matrix(f_snapshots->numRows(),
                                            f_snapshots->numColumns() - 1, f_snapshots->distributed());
     Matrix* f_snapshots_plus = new Matrix(f_snapshots->numRows(),
@@ -108,11 +106,10 @@ DMD::constructDMD(const Matrix* f_snapshots,
     // snapshots_plus = all columns of snapshots except first
     for (int i = 0; i < f_snapshots->numRows(); i++)
     {
-        f_snapshots_minus->item(i, 0) = f_snapshots->item(i, 0);
-        for (int j = 1; j < f_snapshots->numColumns() - 1; j++)
+        for (int j = 0; j < f_snapshots->numColumns() - 1; j++)
         {
             f_snapshots_minus->item(i, j) = f_snapshots->item(i, j);
-            f_snapshots_plus->item(i, j - 1) = f_snapshots->item(i, j);
+            f_snapshots_plus->item(i, j) = f_snapshots->item(i, j + 1);
         }
         f_snapshots_plus->item(i, f_snapshots->numColumns() - 2) =
             f_snapshots->item(i, f_snapshots->numColumns() - 1);
@@ -163,7 +160,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
 
     // Compute how many basis vectors we will actually use.
     int num_singular_vectors = std::min(f_snapshots_minus->numColumns(), f_snapshots_minus->numDistributedRows());
-    if (d_energy_fraction != -1)
+    if (d_energy_fraction != -1.0)
     {
         double total_energy = 0.0;
         for (int i = 0; i < num_singular_vectors; i++)
@@ -214,78 +211,15 @@ DMD::constructDMD(const Matrix* f_snapshots,
     Matrix* d_basis_mult_f_snapshots_plus_mult_d_basis_right = d_basis_mult_f_snapshots_plus->mult(d_basis_right);
     Matrix* A_tilde = d_basis_mult_f_snapshots_plus_mult_d_basis_right->mult(d_S_inv);
 
-    // Calculate eigenvalues/eigenvectors of A_tilde
-    // Call lapack routines to do the eigensolve.
-    char jobvl, jobrl;
-
-    // Calculate right eigenvectors only.
-    jobvl = 'N';
-    jobrl = 'V';
-
-    int info;
-    int lwork = std::max(d_k*d_k, 10*d_k);
-    double* work = new double [lwork];
-    double* e_real = new double [d_k];
-    double* e_imaginary = new double [d_k];
-    double* ev_l = NULL;
-    Matrix* ev_r = new Matrix(d_k, d_k, false);
-
-    // A_tilde now in a row major representation.  Put it
-    // into column major order.
-    for (int row = 0; row < d_k; ++row) {
-        for (int col = row+1; col < d_k; ++col) {
-            double tmp = A_tilde->item(row, col);
-            A_tilde->item(row, col) = A_tilde->item(col, row);
-            A_tilde->item(col, row) = tmp;
-        }
-    }
-
-    // Now call lapack to do the eigensolve.
-    dgeev(&jobvl, &jobrl, &d_k, A_tilde->getData(), &d_k, e_real, e_imaginary, ev_l, &d_k, ev_r->getData(), &d_k, work, &lwork, &info);
-
-    // Eigenvalues now in a column major representation.  Put it
-    // into row major order.
-    for (int row = 0; row < d_k; ++row) {
-        for (int col = row+1; col < d_k; ++col) {
-            double tmp = ev_r->item(row, col);
-            ev_r->item(row, col) = ev_r->item(col, row);
-            ev_r->item(col, row) = tmp;
-        }
-    }
-
-    Matrix* ev_real = new Matrix(d_k, d_k, false);
-    Matrix* ev_imaginary = new Matrix(d_k, d_k, false);
-
-    // Separate lapack eigenvector into real and imaginary parts
-    for (int k = 0; k < d_k; ++k)
-    {
-        for (int row = 0; row < d_k; ++row) {
-            ev_real->item(row, k) = ev_r->item(row, k);
-        }
-        if (e_imaginary[k] != 0)
-        {
-            for (int row = 0; row < d_k; ++row) {
-                ev_real->item(row, k + 1) = ev_r->item(row, k);
-                ev_imaginary->item(row, k) = ev_r->item(row, k + 1);
-                ev_imaginary->item(row, k + 1) = -ev_r->item(row, k + 1);
-            }
-
-            // Skip the next eigenvalue since it'll be part of the complex
-            // conjugate pair.
-            ++k;
-        }
-    }
-
-    for (int i = 0; i < d_k; i++)
-    {
-        d_eigs.push_back(std::complex<double>(e_real[i], e_imaginary[i]));
-    }
+    // Calculate the right eigenvalues/eigenvectors of A_tilde
+    EigenPair eigenpair = RightEigenSolve(A_tilde);
+    d_eigs = eigenpair.eigs;
 
     // Calculate phi
     Matrix* f_snapshots_plus_mult_d_basis_right = f_snapshots_plus->mult(d_basis_right);
     Matrix* f_snapshots_plus_mult_d_basis_right_mult_d_S_inv = f_snapshots_plus_mult_d_basis_right->mult(d_S_inv);
-    d_phi_real = f_snapshots_plus_mult_d_basis_right_mult_d_S_inv->mult(ev_real);
-    d_phi_imaginary = f_snapshots_plus_mult_d_basis_right_mult_d_S_inv->mult(ev_imaginary);
+    d_phi_real = f_snapshots_plus_mult_d_basis_right_mult_d_S_inv->mult(eigenpair.ev_real);
+    d_phi_imaginary = f_snapshots_plus_mult_d_basis_right_mult_d_S_inv->mult(eigenpair.ev_imaginary);
 
     Vector* init = new Vector(f_snapshots_minus->numRows(), true);
     for (int i = 0; i < init->dim(); i++)
@@ -306,12 +240,8 @@ DMD::constructDMD(const Matrix* f_snapshots,
     delete f_snapshots_plus_mult_d_basis_right_mult_d_S_inv;
     delete f_snapshots_minus;
     delete f_snapshots_plus;
-    delete ev_l;
-    delete ev_r;
-    delete ev_real;
-    delete ev_imaginary;
-    delete [] e_real;
-    delete [] e_imaginary;
+    delete eigenpair.ev_real;
+    delete eigenpair.ev_imaginary;
     delete init;
 }
 
@@ -349,7 +279,7 @@ DMD::projectInitialCondition(const Vector* init)
     // Set up some stuff the lapack routines need.
     int info;
     int mtx_size = d_phi_real_squared->numColumns();
-    int lwork = mtx_size*mtx_size;
+    int lwork = mtx_size*mtx_size*std::max(10,d_num_procs);
     int* ipiv = new int [mtx_size];
     double* work = new double [lwork];
 
@@ -387,12 +317,12 @@ DMD::projectInitialCondition(const Vector* init)
 
     delete d_phi_real_squared;
     delete d_phi_real_squared_2;
-    delete  d_projected_init_real_1;
-    delete  d_projected_init_real_2;
+    delete d_projected_init_real_1;
+    delete d_projected_init_real_2;
     delete d_phi_imaginary_squared;
     delete d_phi_imaginary_squared_2;
-    delete  d_projected_init_imaginary_1;
-    delete  d_projected_init_imaginary_2;
+    delete d_projected_init_imaginary_1;
+    delete d_projected_init_imaginary_2;
     delete rhs_real;
     delete rhs_imaginary;
 
@@ -402,19 +332,17 @@ DMD::projectInitialCondition(const Vector* init)
 }
 
 Vector*
-DMD::predict(double t,
-             double dt)
+DMD::predict(double n)
 {
     const std::pair<Vector*, Vector*> d_projected_init_pair(d_projected_init_real, d_projected_init_imaginary);
-    return predict(d_projected_init_pair, t, dt);
+    return predict(d_projected_init_pair, n);
 }
 
 Vector*
 DMD::predict(const std::pair<Vector*, Vector*> init,
-             double t,
-             double dt)
+             double n)
 {
-    std::pair<Matrix*, Matrix*> d_phi_pair = phiMultEigs(t, dt);
+    std::pair<Matrix*, Matrix*> d_phi_pair = phiMultEigs(n);
     Matrix* d_phi_mult_eigs_real = d_phi_pair.first;
     Matrix* d_phi_mult_eigs_imaginary = d_phi_pair.second;
 
@@ -431,17 +359,14 @@ DMD::predict(const std::pair<Vector*, Vector*> init,
 }
 
 std::pair<Matrix*, Matrix*>
-DMD::phiMultEigs(double t,
-                 double dt)
+DMD::phiMultEigs(double n)
 {
     Matrix* d_eigs_exp_real = new Matrix(d_k, d_k, false);
     Matrix* d_eigs_exp_imaginary = new Matrix(d_k, d_k, false);
 
-    double exp_power = t / dt;
-
     for (int i = 0; i < d_k; i++)
     {
-        std::complex<double> eig_exp = std::pow(d_eigs[i], exp_power);
+        std::complex<double> eig_exp = std::pow(d_eigs[i], n);
         d_eigs_exp_real->item(i, i) = std::real(eig_exp);
         d_eigs_exp_imaginary->item(i, i) = std::imag(eig_exp);
     }
@@ -474,7 +399,6 @@ DMD::getSnapshotMatrix()
 
     Matrix* snapshot_mat = new Matrix(d_snapshots[0].dim(), d_snapshots.size(), d_snapshots[0].distributed());
 
-    // This might be slow since we're accessing a different memory address each time.
     for (int i = 0; i < d_snapshots[0].dim(); i++)
     {
         for (int j = 0; j < d_snapshots.size(); j++)

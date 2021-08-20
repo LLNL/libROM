@@ -1,6 +1,10 @@
-//                       libROM MFEM Example: Heat_Conduction
+//                       libROM MFEM Example: Heat_Conduction (adapted from ex16p.cpp)
 //
 // Compile with: make heat_conduction
+//
+// For DMD:
+//   mpirun -np 8 heat_conduction
+//   mpirun -np 8 heat_conduction -s 3 -a 0.5 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit
 //
 // Sample runs:  mpirun -np 4 heat_conduction
 //               mpirun -np 4 heat_conduction -tf 2
@@ -332,27 +336,46 @@ int main(int argc, char *argv[])
         }
     }
 
+    StopWatch fom_timer, dmd_training_timer, dmd_prediction_timer;
+
+    fom_timer.Start();
+
     // 10. Perform time-integration (looping over the time iterations, ti, with a
     //     time-step dt).
     ode_solver->Init(oper);
     double t = 0.0;
+
+    fom_timer.Stop();
+
+    dmd_training_timer.Start();
 
     // 11. Create DMD object and take initial sample.
     u_gf.SetFromTrueDofs(u);
     CAROM::DMD dmd_u(u.Size());
     dmd_u.takeSample(u.GetData());
 
+    dmd_training_timer.Stop();
+
     bool last_step = false;
     for (int ti = 1; !last_step; ti++)
     {
+        fom_timer.Start();
+
         if (t + dt >= t_final - dt/2)
         {
             last_step = true;
         }
 
         ode_solver->Step(u, t, dt);
+
+        fom_timer.Stop();
+
+        dmd_training_timer.Start();
+
         u_gf.SetFromTrueDofs(u);
         dmd_u.takeSample(u.GetData());
+
+        dmd_training_timer.Stop();
 
         if (last_step || (ti % vis_steps) == 0)
         {
@@ -410,6 +433,8 @@ int main(int argc, char *argv[])
         std::cout << "Both rdim and ef are set. ef will be ignored." << std::endl;
     }
 
+    dmd_training_timer.Start();
+
     if (rdim != -1)
     {
         if (myid == 0)
@@ -427,12 +452,18 @@ int main(int argc, char *argv[])
         dmd_u.train(ef);
     }
 
+    dmd_training_timer.Stop();
+
+    dmd_prediction_timer.Start();
+
     // 14. Predict the state at t_final using DMD.
     if (myid == 0)
     {
         std::cout << "Predicting position and velocity at t_final using DMD" << std::endl;
     }
-    CAROM::Vector* result_u = dmd_u.predict(t_final, dt);
+    CAROM::Vector* result_u = dmd_u.predict(t_final/dt);
+
+    dmd_prediction_timer.Stop();
 
     // 15. Calculate the relative error between the DMD final solution and the true solution.
     Vector dmd_solution_u(result_u->getData(), result_u->dim());
@@ -440,35 +471,22 @@ int main(int argc, char *argv[])
     Vector diff_u(true_solution_u.Size());
     subtract(dmd_solution_u, true_solution_u, diff_u);
 
-    double* diff_norm_u = new double[num_procs] {};
-    double proc_diff_norm_u = diff_u.Norml2();
-    MPI_Gather(&proc_diff_norm_u, 1, MPI_DOUBLE, diff_norm_u, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    double* true_solution_u_norm = new double[num_procs] {};
-    double proc_true_solution_u_norm = true_solution_u.Norml2();
-    MPI_Gather(&proc_true_solution_u_norm, 1, MPI_DOUBLE, true_solution_u_norm, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    double tot_diff_norm_u = sqrt(InnerProduct(MPI_COMM_WORLD, diff_u, diff_u));
+    double tot_true_solution_u_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution_u, true_solution_u));
 
     if (myid == 0)
     {
-        double tot_diff_norm_u = 0;
-        double tot_true_solution_u_norm = 0;
-        for (int i = 0; i < num_procs; i++)
-        {
-            tot_diff_norm_u += std::pow(diff_norm_u[i], 2);
-            tot_true_solution_u_norm += std::pow(true_solution_u_norm[i], 2);
-        }
-        tot_diff_norm_u = std::sqrt(tot_diff_norm_u);
-        tot_true_solution_u_norm = std::sqrt(tot_true_solution_u_norm);
 
-        std::cout << "Relative error of temperature (u) at t_final: " << t_final << " is " << tot_diff_norm_u / tot_true_solution_u_norm << std::endl;
+        std::cout << "Relative error of DMD temperature (u) at t_final: " << t_final << " is " << tot_diff_norm_u / tot_true_solution_u_norm << std::endl;
+        printf("Elapsed time for solving FOM: %e second\n", fom_timer.RealTime());
+        printf("Elapsed time for training DMD: %e second\n", dmd_training_timer.RealTime());
+        printf("Elapsed time for predicting DMD: %e second\n", dmd_prediction_timer.RealTime());
     }
-
 
     // 16. Free the used memory.
     delete ode_solver;
     delete pmesh;
     delete result_u;
-    delete [] diff_norm_u;
-    delete [] true_solution_u_norm;
 
     MPI_Finalize();
 

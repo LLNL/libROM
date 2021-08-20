@@ -74,7 +74,7 @@ TEST(DMDTest, Test_DMD)
     dmd.takeSample(&sample3[row_offset[d_rank]]);
 
     dmd.train(2);
-    CAROM::Vector* result = dmd.predict(3, 1);
+    CAROM::Vector* result = dmd.predict(3.0);
 
     for (int i = 0; i < d_num_rows; i++) {
         EXPECT_NEAR(result->item(i), prediction_baseline[row_offset[d_rank] + i], 1e-3);

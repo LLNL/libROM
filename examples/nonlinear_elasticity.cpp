@@ -1,6 +1,9 @@
-//                       libROM MFEM Example: Nonlinear elasticity
+//                       libROM MFEM Example: Nonlinear elasticity (adapted from ex10p.cpp)
 //
 // Compile with: make nonlinear_elasticity
+//
+// For DMD:
+//   mpirun -np 8 nonlinear_elasticity -s 2 -rs 1 -dt 0.01 -tf 5 -visit
 //
 // Sample runs:
 //    mpirun -np 4 nonlinear_elasticity -s 3 -rs 2 -dt 3
@@ -413,9 +416,17 @@ int main(int argc, char *argv[])
         cout << "initial   total energy (TE) = " << (ee0 + ke0) << endl;
     }
 
+    StopWatch fom_timer, dmd_training_timer, dmd_prediction_timer;
+
+    fom_timer.Start();
+
     double t = 0.0;
     oper.SetTime(t);
     ode_solver->Init(oper);
+
+    fom_timer.Stop();
+
+    dmd_training_timer.Start();
 
     // 10. Create DMD object and take initial sample.
     CAROM::DMD dmd_x(x_gf.GetTrueVector().Size());
@@ -423,20 +434,28 @@ int main(int argc, char *argv[])
     dmd_x.takeSample(x_gf.GetTrueVector());
     dmd_v.takeSample(v_gf.GetTrueVector());
 
+    dmd_training_timer.Stop();
+
     // 11. Perform time-integration
     //     (looping over the time iterations, ti, with a time-step dt).
     //     (taking samples and storing it into the dmd object)
     bool last_step = false;
     for (int ti = 1; !last_step; ti++)
     {
-        double dt_real = min(dt, t_final - t);
+        fom_timer.Start();
 
+        double dt_real = min(dt, t_final - t);
         ode_solver->Step(vx, t, dt_real);
+        last_step = (t >= t_final - 1e-8*dt);
+
+        fom_timer.Stop();
+
+        dmd_training_timer.Start();
 
         dmd_x.takeSample(x_gf.GetTrueVector());
         dmd_v.takeSample(v_gf.GetTrueVector());
 
-        last_step = (t >= t_final - 1e-8*dt);
+        dmd_training_timer.Stop();
 
         if (last_step || (ti % vis_steps) == 0)
         {
@@ -503,6 +522,8 @@ int main(int argc, char *argv[])
         std::cout << "Both rdim and ef are set. ef will be ignored." << std::endl;
     }
 
+    dmd_training_timer.Start();
+
     if (rdim != -1)
     {
         if (myid == 0)
@@ -522,13 +543,19 @@ int main(int argc, char *argv[])
         dmd_v.train(ef);
     }
 
+    dmd_training_timer.Stop();
+
+    dmd_prediction_timer.Start();
+
     // 14. Predict the state at t_final using DMD.
     if (myid == 0)
     {
         std::cout << "Predicting position and velocity at t_final using DMD" << std::endl;
     }
-    CAROM::Vector* result_x = dmd_x.predict(t_final, dt);
-    CAROM::Vector* result_v = dmd_v.predict(t_final, dt);
+    CAROM::Vector* result_x = dmd_x.predict(t_final/dt);
+    CAROM::Vector* result_v = dmd_v.predict(t_final/dt);
+
+    dmd_prediction_timer.Stop();
 
     // 15. Calculate the relative error between the DMD final solution and the true solution.
     Vector dmd_solution_x(result_x->getData(), result_x->dim());
@@ -536,45 +563,24 @@ int main(int argc, char *argv[])
     Vector diff_x(true_solution_x.Size());
     subtract(dmd_solution_x, true_solution_x, diff_x);
 
+    double tot_diff_norm_x = sqrt(InnerProduct(MPI_COMM_WORLD, diff_x, diff_x));
+    double tot_true_solution_x_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution_x, true_solution_x));
+
     Vector dmd_solution_v(result_v->getData(), result_v->dim());
     Vector true_solution_v(v_gf.GetTrueVector(), v_gf.GetTrueVector().Size());
     Vector diff_v(true_solution_v.Size());
     subtract(dmd_solution_v, true_solution_v, diff_v);
 
-    double* diff_norm_x = new double[num_procs] {};
-    double proc_diff_norm_x = diff_x.Norml2();
-    MPI_Gather(&proc_diff_norm_x, 1, MPI_DOUBLE, diff_norm_x, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    double* true_solution_x_norm = new double[num_procs] {};
-    double proc_true_solution_x_norm = true_solution_x.Norml2();
-    MPI_Gather(&proc_true_solution_x_norm, 1, MPI_DOUBLE, true_solution_x_norm, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
-    double* diff_norm_v = new double[num_procs] {};
-    double proc_diff_norm_v = diff_v.Norml2();
-    MPI_Gather(&proc_diff_norm_v, 1, MPI_DOUBLE, diff_norm_v, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    double* true_solution_v_norm = new double[num_procs] {};
-    double proc_true_solution_v_norm = true_solution_v.Norml2();
-    MPI_Gather(&proc_true_solution_v_norm, 1, MPI_DOUBLE, true_solution_v_norm, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    double tot_diff_norm_v = sqrt(InnerProduct(MPI_COMM_WORLD, diff_v, diff_v));
+    double tot_true_solution_v_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution_v, true_solution_v));
 
     if (myid == 0)
     {
-        double tot_diff_norm_x = 0;
-        double tot_true_solution_x_norm = 0;
-        double tot_diff_norm_v = 0;
-        double tot_true_solution_v_norm = 0;
-        for (int i = 0; i < num_procs; i++)
-        {
-            tot_diff_norm_x += std::pow(diff_norm_x[i], 2);
-            tot_true_solution_x_norm += std::pow(true_solution_x_norm[i], 2);
-            tot_diff_norm_v += std::pow(diff_norm_v[i], 2);
-            tot_true_solution_v_norm += std::pow(true_solution_v_norm[i], 2);
-        }
-        tot_diff_norm_x = std::sqrt(tot_diff_norm_x);
-        tot_true_solution_x_norm = std::sqrt(tot_true_solution_x_norm);
-        tot_diff_norm_v = std::sqrt(tot_diff_norm_v);
-        tot_true_solution_v_norm = std::sqrt(tot_true_solution_v_norm);
-
-        std::cout << "Relative error of position (x) at t_final: " << t_final << " is " << tot_diff_norm_x / tot_true_solution_x_norm << std::endl;
-        std::cout << "Relative error of velocity (v) at t_final: " << t_final << " is " << tot_diff_norm_v / tot_true_solution_v_norm << std::endl;
+        std::cout << "Relative error of DMD position (x) at t_final: " << t_final << " is " << tot_diff_norm_x / tot_true_solution_x_norm << std::endl;
+        std::cout << "Relative error of DMD velocity (v) at t_final: " << t_final << " is " << tot_diff_norm_v / tot_true_solution_v_norm << std::endl;
+        printf("Elapsed time for solving FOM: %e second\n", fom_timer.RealTime());
+        printf("Elapsed time for training DMD: %e second\n", dmd_training_timer.RealTime());
+        printf("Elapsed time for predicting DMD: %e second\n", dmd_prediction_timer.RealTime());
     }
 
     // 16. Free the used memory.
@@ -582,10 +588,6 @@ int main(int argc, char *argv[])
     delete pmesh;
     delete result_x;
     delete result_v;
-    delete [] diff_norm_x;
-    delete [] true_solution_x_norm;
-    delete [] diff_norm_v;
-    delete [] true_solution_v_norm;
     delete dc;
 
     MPI_Finalize();
