@@ -608,7 +608,7 @@ GreedyParameterPointSampler::getNextParameterPoint()
     if (d_rank == 0)
     {
         std::string str;
-        str += "Point sampled at [ ";
+        str += "\nPoint sampled at [ ";
         for (int i = 0 ; i < d_parameter_points[curr_point_to_sample].dim(); i++)
         {
             str += std::to_string(d_parameter_points[curr_point_to_sample].item(i)) + " ";
@@ -832,6 +832,19 @@ GreedyParameterPointSampler::printConvergenceAchieved()
     {
         std::string str;
         str += "Convergence achieved.\n";
+        agnosticPrint(str);
+
+        str = "\nSampled Parameter Points\n";
+        std::vector<Vector> sampled_points = getSampledParameterPoints();
+        for (int i = 0; i < sampled_points.size(); i++)
+        {
+            str += "[ ";
+            for (int j = 0 ; j < sampled_points[i].dim(); j++)
+            {
+                str += std::to_string(sampled_points[i].item(j)) + " ";
+            }
+            str += "]\n";
+        }
         agnosticPrint(str);
     }
 }
