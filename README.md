@@ -7,14 +7,14 @@ non-intrusive black-box approaches.
 ## Features
 
 - Dynamic data collection
+- Dynamic mode decomposition (DMD)
 - Data compression
 - Greedy algorithm
 - Hyper-reduction
 
 ## Features to be added
 
-- Dynamic mode decomposition (DMD)
-- Sparse identification of nonlinear dynamics (SINDy) 
+- Sparse identification of nonlinear dynamics (SINDy)
 
 # Authors
 Robert W. Anderson (LLNL),

@@ -70,11 +70,13 @@ var searchData=
   ['d_5fuse_5flatin_5fhypercube',['d_use_latin_hypercube',['../class_c_a_r_o_m_1_1_greedy_parameter_point_random_sampler.html#a51ebba4567d92b71ef4cc25c2c87d95f',1,'CAROM::GreedyParameterPointRandomSampler']]],
   ['d_5fw',['d_W',['../class_c_a_r_o_m_1_1_s_v_d.html#adb215548e00558097e34d4afad15035b',1,'CAROM::SVD']]],
   ['d_5fwrite_5fsnapshots',['d_write_snapshots',['../class_c_a_r_o_m_1_1_basis_generator.html#a29b41ef680c51c919fe66cea2e1942bc',1,'CAROM::BasisGenerator']]],
-  ['database',['Database',['../class_c_a_r_o_m_1_1_database.html#a52d814f0e3f7ab79a7a81df58a269e24',1,'CAROM::Database']]],
   ['database',['Database',['../class_c_a_r_o_m_1_1_database.html',1,'CAROM']]],
+  ['database',['Database',['../class_c_a_r_o_m_1_1_database.html#a52d814f0e3f7ab79a7a81df58a269e24',1,'CAROM::Database']]],
   ['debug_5falgorithm',['debug_algorithm',['../class_c_a_r_o_m_1_1_options.html#a0ddd46bec99881ccc905c685fe566780',1,'CAROM::Options']]],
   ['delete_5ffactorizer',['delete_factorizer',['../class_c_a_r_o_m_1_1_static_s_v_d.html#a4539c67bd0fc29dde6603173c6eaeffd',1,'CAROM::StaticSVD']]],
   ['delete_5fsamples',['delete_samples',['../class_c_a_r_o_m_1_1_static_s_v_d.html#a48c3bc32b0d15ad95fe9a9966581157a',1,'CAROM::StaticSVD']]],
   ['dim',['dim',['../class_c_a_r_o_m_1_1_options.html#a3dcbbe0328d917370440fe46e4079066',1,'CAROM::Options::dim()'],['../class_c_a_r_o_m_1_1_vector.html#a8f8e5d44c3f2cd12e2f4090ddf97c735',1,'CAROM::Vector::dim()']]],
-  ['distributed',['distributed',['../class_c_a_r_o_m_1_1_matrix.html#a861d3e43b223e8f3217f64a536281605',1,'CAROM::Matrix::distributed()'],['../class_c_a_r_o_m_1_1_vector.html#a0fe8ff4dfdb1357d1bb67f7945491841',1,'CAROM::Vector::distributed()']]]
+  ['distributed',['distributed',['../class_c_a_r_o_m_1_1_matrix.html#a861d3e43b223e8f3217f64a536281605',1,'CAROM::Matrix::distributed()'],['../class_c_a_r_o_m_1_1_vector.html#a0fe8ff4dfdb1357d1bb67f7945491841',1,'CAROM::Vector::distributed()']]],
+  ['dmd',['DMD',['../class_c_a_r_o_m_1_1_d_m_d.html#a8a162c955bc57771a8a05838df5c1eea',1,'CAROM::DMD']]],
+  ['dmd',['DMD',['../class_c_a_r_o_m_1_1_d_m_d.html',1,'CAROM']]]
 ];
