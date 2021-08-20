@@ -544,7 +544,7 @@ int main(int argc, char *argv[])
         // 30. If calculating the relative error, or we are the offline phase of
         //     a regular simulation without using the greedy algorithm, create
         //     a global ROM basis.
-        if (calc_rel_error || (offline && !build_database))
+        if (calc_rel_error || (offline && !build_database) || (offline && build_database && basisIdentifiers.size() == 1))
         {
             mergeTimer.Start();
             std::unique_ptr<CAROM::BasisGenerator> basis_generator;
