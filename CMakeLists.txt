@@ -235,6 +235,7 @@ target_compile_features(ROM PRIVATE cxx_std_11)
 if (USE_MFEM)
   set(examples
     poisson
+    poisson_greedy
     dg_advection
     nonlinear_elasticity
     heat_conduction

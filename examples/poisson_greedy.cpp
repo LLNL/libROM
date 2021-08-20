@@ -1,4 +1,4 @@
-//               libROM MFEM Example: parametric ROM for Poisson problem
+//               libROM MFEM Example: parametric ROM for Poisson problem (adapted from ex1p.cpp)
 //
 // Compile with: ./scripts/compile.sh -m
 //
@@ -13,13 +13,14 @@
 //               to the specified frequency, builds the ROM operator, solves the
 //               reduced order system, and lifts the solution to the full order space.
 //
-// build_database phase: poisson -build_database -greedy-param-min 1.0 -greedy-param-max 1.2 -greedy-param-size 5 -greedysubsize 2 -greedyconvsize 3
-// use_database phase:   poisson -offline -f 1.15 (create a new solution to compare with)
-// use_database phase:   poisson -use_database -online -f 1.15 (use the database to compute at f 1.15 while comparing to the true offline solution at f 1.15)
+// build_database phase: poisson_greedy -build_database -greedy-param-min 1.0 -greedy-param-max 1.2 -greedy-param-size 5 -greedysubsize 2 -greedyconvsize 3
+// use_database phase:   poisson_greedy -offline -f 1.15 (create a new solution to compare with)
+// use_database phase:   poisson_greedy -use_database -online -f 1.15 (use the database to compute at f 1.15 while comparing to the true offline solution at f 1.15)
 
 #include "mfem.hpp"
 #include <fstream>
 #include <iostream>
+#include <vector>
 #include "GreedyParameterPointRandomSampler.h"
 #include "BasisGenerator.h"
 #include "BasisReader.h"
@@ -113,11 +114,14 @@ int main(int argc, char *argv[])
     }
 
     CAROM::GreedyParameterPointSampler* greedy_sampler = NULL;
+    MFEM_VERIFY(!build_database || !use_database, "both build_database and use_database can not be used at the same time.");
+
+    // 3. Set up the ROM database for the greedy algorithm to run.
     if (build_database)
     {
         MFEM_VERIFY(!offline && !online, "offline and online must be turned off during the build_database phase.");
         MFEM_VERIFY(!visit && !visualization, "visit and visualization must be turned off during the build_database phase.")
-        std::ifstream infile("greedy_algorithm_data");
+        std::ifstream infile("poisson_greedy_algorithm_data");
         if (infile.good())
         {
             if (myid == 0) std::cout << "The database has already been built. Exiting." << std::endl;
@@ -129,19 +133,23 @@ int main(int argc, char *argv[])
             2.0, greedy_subset_size, greedy_convergence_subset_size,
             true, "poisson_greedy_algorithm_log.txt");
     }
-    if (use_database)
+    // 3. Or use the database set up by the greedy algorithm.
+    else if (use_database)
     {
         MFEM_VERIFY(!offline && online, "offline must be turned off and online must be turned on during the build_database phase.");
-        std::ifstream infile("greedy_algorithm_data");
+        std::ifstream infile("poisson_greedy_algorithm_data");
         if (!infile.good())
         {
             if (myid == 0) std::cout << "The database has not been built. Exiting." << std::endl;
             return 0;
         }
         infile.close();
-        greedy_sampler = new CAROM::GreedyParameterPointRandomSampler("greedy_algorithm_data");
     }
 
+    vector<string> basisIdentifiers;
+
+    // The simulation is wrapped in a do-while statement so that the greedy
+    // algorithm (build_database) can run multiple simulations in succession.
     do
     {
         if (build_database)
@@ -151,8 +159,11 @@ int main(int argc, char *argv[])
         }
         bool calc_rel_error = false;
         bool calc_err_indicator = false;
-        std::string local_rom_basis_identifier = "";
         std::string curr_basis_identifier = "";
+
+        // 4. Set the correct stage of the greedy algorithm (i.e. sampling new point,
+        //    calculating relative error of the last sampled point, or calculating
+        //    an error indicator at a new point.)
         if (build_database)
         {
             double local_rom_freq = 0.0;
@@ -194,43 +205,34 @@ int main(int argc, char *argv[])
                 else
                 {
                     if (myid == 0) std::cout << "The greedy algorithm has finished." << std::endl;
-                    greedy_sampler->save("greedy_algorithm_data");
+                    greedy_sampler->save("poisson_greedy_algorithm_data");
                     build_database = false;
                     continue;
                 }
             }
-            local_rom_basis_identifier += "_" + to_string(local_rom_freq);
+            // 4a. Set the correct frequency as commanded by the greedy algorithm.
             curr_basis_identifier += "_" + to_string(curr_freq);
             freq = curr_freq;
-        }
-        if (use_database)
-        {
-            CAROM::Vector parameter_point(1, false);
-            parameter_point.item(0) = freq;
-            std::shared_ptr<CAROM::Vector> nearestROM = greedy_sampler->getNearestROM(parameter_point);
-            double local_rom_freq = nearestROM.get()->item(0);
-            local_rom_basis_identifier += "_" + to_string(local_rom_freq);
-            if (myid == 0) std::cout << "Using the basis obtained at the frequency: " << local_rom_freq << std::endl;
         }
 
         if (myid == 0) std::cout << "Running loop at the frequency: " << freq << std::endl;
 
         kappa = freq * M_PI;
 
-        // 3. Enable hardware devices such as GPUs, and programming models such as
+        // 5. Enable hardware devices such as GPUs, and programming models such as
         //    CUDA, OCCA, RAJA and OpenMP based on command line options.
         Device device(device_config);
         if (myid == 0) {
             device.Print();
         }
 
-        // 4. Read the (serial) mesh from the given mesh file on all processors.  We
+        // 6. Read the (serial) mesh from the given mesh file on all processors.  We
         //    can handle triangular, quadrilateral, tetrahedral, hexahedral, surface
         //    and volume meshes with the same code.
         Mesh mesh(mesh_file, 1, 1);
         dim = mesh.Dimension();
 
-        // 5. Refine the serial mesh on all processors to increase the resolution. In
+        // 7. Refine the serial mesh on all processors to increase the resolution. In
         //    this example we do 'ref_levels' of uniform refinement. We choose
         //    'ref_levels' to be the largest number that gives a final mesh with no
         //    more than 10,000 elements.
@@ -243,7 +245,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        // 6. Define a parallel mesh by a partitioning of the serial mesh. Refine
+        // 8. Define a parallel mesh by a partitioning of the serial mesh. Refine
         //    this mesh further in parallel to increase the resolution. Once the
         //    parallel mesh is defined, the serial mesh can be deleted.
         ParMesh pmesh(MPI_COMM_WORLD, mesh);
@@ -256,7 +258,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        // 7. Define a parallel finite element space on the parallel mesh. Here we
+        // 9. Define a parallel finite element space on the parallel mesh. Here we
         //    use continuous Lagrange finite elements of the specified order. If
         //    order < 1, we instead use an isoparametric/isogeometric space.
         FiniteElementCollection *fec;
@@ -287,7 +289,7 @@ int main(int argc, char *argv[])
             cout << "Number of finite element unknowns: " << size << endl;
         }
 
-        // 8. Determine the list of true (i.e. parallel conforming) essential
+        // 10. Determine the list of true (i.e. parallel conforming) essential
         //    boundary dofs. In this example, the boundary conditions are defined
         //    by marking all the boundary attributes from the mesh as essential
         //    (Dirichlet) and converting them to a list of true dofs.
@@ -299,19 +301,26 @@ int main(int argc, char *argv[])
             fespace.GetEssentialTrueDofs(ess_bdr, ess_tdof_list);
         }
 
-        // 9. Initiate ROM related variables
+        // 11. Initiate ROM related variables
         int max_num_snapshots = 100;
         bool update_right_SV = false;
         bool isIncremental = false;
         const std::string saveBasisName = "basis" + curr_basis_identifier;
-        const std::string loadBasisName = "basis" + local_rom_basis_identifier;
+        std::string loadBasisName = "basis";
+
+        // 11a. If using the greedy algorithm, load the global greedy basis.
+        if (build_database || use_database)
+        {
+            loadBasisName += "_greedy";
+        }
+
         const CAROM::Matrix* spatialbasis;
         CAROM::Options* options;
         CAROM::BasisGenerator *generator;
         int numRowRB, numColumnRB;
-        StopWatch solveTimer, assembleTimer;
+        StopWatch solveTimer, assembleTimer, mergeTimer;
 
-        // 10. Set BasisGenerator if offline
+        // 12. Set BasisGenerator if offline
         if (offline)
         {
             options = new CAROM::Options(fespace.GetTrueVSize(), max_num_snapshots, 1, update_right_SV);
@@ -319,7 +328,7 @@ int main(int argc, char *argv[])
             generator = new CAROM::BasisGenerator(*options, isIncremental, saveBasisName);
         }
 
-        // 12. Set up the parallel linear form b(.) which corresponds to the
+        // 13. Set up the parallel linear form b(.) which corresponds to the
         //     right-hand side of the FEM linear system, which in this case is
         //     (f,phi_i) where f is given by the function f_exact and phi_i are the
         //     basis functions in the finite element fespace.
@@ -328,13 +337,13 @@ int main(int argc, char *argv[])
         b->AddDomainIntegrator(new DomainLFIntegrator(f));
         b->Assemble();
 
-        // 13. Define the solution vector x as a parallel finite element grid function
+        // 14. Define the solution vector x as a parallel finite element grid function
         //     corresponding to fespace. Initialize x with initial guess of zero,
         //     which satisfies the boundary conditions.
         ParGridFunction x(&fespace);
         x = 0.0;
 
-        // 14. Set up the parallel bilinear form a(.,.) on the finite element space
+        // 15. Set up the parallel bilinear form a(.,.) on the finite element space
         //     corresponding to the Laplacian operator -Delta, by adding the Diffusion
         //     domain integrator.
         ParBilinearForm a(&fespace);
@@ -344,7 +353,7 @@ int main(int argc, char *argv[])
         }
         a.AddDomainIntegrator(new DiffusionIntegrator(one));
 
-        // 15. Assemble the parallel bilinear form and the corresponding linear
+        // 16. Assemble the parallel bilinear form and the corresponding linear
         //     system, applying any necessary transformations such as: parallel
         //     assembly, eliminating boundary conditions, applying conforming
         //     constraints for non-conforming AMR, static condensation, etc.
@@ -357,10 +366,10 @@ int main(int argc, char *argv[])
         Vector B, X;
         a.FormLinearSystem(ess_tdof_list, x, *b, A, X, B);
 
-        // 16. The offline phase
+        // 17. The offline phase
         if(offline)
         {
-            // 17. Solve the full order linear system A X = B
+            // 18. Solve the full order linear system A X = B
             Solver *prec = NULL;
             if (pa)
             {
@@ -386,18 +395,18 @@ int main(int argc, char *argv[])
             solveTimer.Stop();
             delete prec;
 
-            // 18. take and write snapshot for ROM
+            // 19. take and write snapshot for ROM
             bool addSample = generator->takeSample(X.GetData(), 0.0, 0.01);
-            generator->endSamples();
+            generator->writeSnapshot();
+            basisIdentifiers.push_back(saveBasisName);
             delete generator;
             delete options;
         }
 
-        // 19. The online phase
+        // 20. The online phase
         if (online) {
-            // 20. read the reduced basis
+            // 21. read the reduced basis
             assembleTimer.Start();
-            if (myid == 0) std::cout << "Loading basis from: " << loadBasisName << std::endl;
             CAROM::BasisReader reader(loadBasisName);
             spatialbasis = reader.getSpatialBasis(0.0);
             numRowRB = spatialbasis->numRows();
@@ -407,7 +416,7 @@ int main(int argc, char *argv[])
             // libROM stores the matrix row-wise, so wrapping as a DenseMatrix in MFEM means it is transposed.
             DenseMatrix *reducedBasisT = new DenseMatrix(spatialbasis->getData(), numColumnRB, numRowRB);
 
-            // 21. form inverse ROM operator
+            // 22. form inverse ROM operator
             Vector abv(numRowRB), bv(numRowRB), bv2(numRowRB);
             Vector reducedRHS(numColumnRB), reducedSol(numColumnRB);
             DenseMatrix invReducedA(numColumnRB);
@@ -423,21 +432,21 @@ int main(int argc, char *argv[])
             invReducedA.Invert();
             assembleTimer.Stop();
 
-            // 22. solve ROM
+            // 23. solve ROM
             solveTimer.Start();
             invReducedA.Mult(reducedRHS, reducedSol);
             solveTimer.Stop();
 
-            // 23. reconstruct FOM state
+            // 24. reconstruct FOM state
             reducedBasisT->MultTranspose(reducedSol,X);
             delete reducedBasisT;
         }
 
-        // 24. Recover the parallel grid function corresponding to X. This is the
+        // 25. Recover the parallel grid function corresponding to X. This is the
         //     local finite element solution on each processor.
         a.RecoverFEMSolution(X, *b, x);
 
-        // 25. Save the refined mesh and the solution in parallel. This output can
+        // 26. Save the refined mesh and the solution in parallel. This output can
         //     be viewed later using GLVis: "glvis -np <np> -m mesh -g sol".
         if (offline)
         {
@@ -458,7 +467,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        // 26. Save data in the VisIt format.
+        // 27. Save data in the VisIt format.
         DataCollection *dc = NULL;
         if (visit)
         {
@@ -470,7 +479,7 @@ int main(int argc, char *argv[])
             delete dc;
         }
 
-        // 27. Send the solution by socket to a GLVis server.
+        // 28. Send the solution by socket to a GLVis server.
         if (visualization)
         {
             char vishost[] = "localhost";
@@ -482,6 +491,7 @@ int main(int argc, char *argv[])
         }
 
         double curr_error = 0;
+        // 29. Calculate the relative error as commanded by the greedy algorithm.
         if (calc_rel_error)
         {
             Vector true_solution(X.Size());
@@ -494,9 +504,10 @@ int main(int argc, char *argv[])
             Vector residual(X.Size());
             subtract(X, true_solution, residual);
             curr_error = residual.Norml2() / true_solution.Norml2();
-            if (myid == 0) std::cout << "The relative error of rank 0 is: " << curr_error << std::endl;
+            if (myid == 0) std::cout << "The relative error is: " << curr_error << std::endl;
             greedy_sampler->setPointRelativeError(curr_error);
         }
+        // 29. Or calculate the error indicator as commanded by the greedy algorithm.
         else if (calc_err_indicator)
         {
             Vector AX(X.Size());
@@ -504,9 +515,11 @@ int main(int argc, char *argv[])
             Vector residual(X.Size());
             subtract(B, AX, residual);
             curr_error = residual.Norml2();
-            std::cout << "The error indicator of rank 0 is: " << curr_error << std::endl;
+            std::cout << "The error indicator is: " << curr_error << std::endl;
             greedy_sampler->setPointErrorIndicator(curr_error, 1);
         }
+        // 29. Or if not using the greedy algorithm, output the relative error
+        //     the error indicator of the point. (just for extra information)
         else if (!build_database && online)
         {
             Vector true_solution(X.Size());
@@ -519,16 +532,40 @@ int main(int argc, char *argv[])
             Vector residual(X.Size());
             subtract(X, true_solution, residual);
             curr_error = residual.Norml2() / true_solution.Norml2();
-            if (myid == 0) std::cout << "The relative error of rank 0 is: " << curr_error << std::endl;
+            if (myid == 0) std::cout << "The relative error is: " << curr_error << std::endl;
 
             Vector AX(X.Size());
             A->Mult(X, AX);
             subtract(B, AX, residual);
             curr_error = residual.Norml2();
-            std::cout << "The error indicator of rank 0 is: " << curr_error << std::endl;
+            std::cout << "The error indicator is: " << curr_error << std::endl;
         }
 
-        // 28. print timing info
+        // 30. If calculating the relative error, or we are the offline phase of
+        //     a regular simulation without using the greedy algorithm, create
+        //     a global ROM basis.
+        if (calc_rel_error || (offline && !build_database))
+        {
+            mergeTimer.Start();
+            std::unique_ptr<CAROM::BasisGenerator> basis_generator;
+            options = new CAROM::Options(fespace.GetTrueVSize(), max_num_snapshots, 1, update_right_SV);
+            generator = new CAROM::BasisGenerator(*options, isIncremental, loadBasisName);
+            for (int i = 0; i < basisIdentifiers.size(); ++i)
+            {
+                std::string snapshot_filename = basisIdentifiers[i] + "_snapshot";
+                generator->loadSamples(snapshot_filename,"snapshot");
+            }
+            generator->endSamples(); // save the merged basis file
+            mergeTimer.Stop();
+            if (myid == 0)
+            {
+                printf("Elapsed time for merging and building ROM basis: %e second\n", mergeTimer.RealTime());
+            }
+            delete generator;
+            delete options;
+        }
+
+        // 31. print timing info
         if (myid == 0)
         {
             if(offline)
@@ -543,7 +580,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        // 29. Free the used memory.
+        // 32. Free the used memory.
         if (delete_fec)
         {
             delete fec;
@@ -556,7 +593,7 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-// 30. define spatially varying righthand side function
+// 33. define spatially varying righthand side function
 double rhs(const Vector &x)
 {
     if (dim == 3)
