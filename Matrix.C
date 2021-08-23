@@ -27,11 +27,15 @@
 #include "scalapack_wrapper.h"
 
 /* Use automatically detected Fortran name-mangling scheme */
+#define dgeev CAROM_FC_GLOBAL(dgeev, DGEEV)
 #define dgetrf CAROM_FC_GLOBAL(dgetrf, DGETRF)
 #define dgetri CAROM_FC_GLOBAL(dgetri, DGETRI)
 #define dgeqp3 CAROM_FC_GLOBAL(dgeqp3, DGEQP3)
 
 extern "C" {
+// Compute eigenvalue and eigenvectors of real non-symmetric matrix.
+    void dgeev(char*, char*, int*, double*, int*, double*, double*, double*, int*, double*, int*, double*, int*, int*);
+
 // LU decomposition of a general matrix.
     void dgetrf(int*, int*, double*, int*, int*, int*);
 
@@ -1661,6 +1665,79 @@ Matrix IdentityMatrixFactory(const Vector &v)
     Vector temporary(v);
     temporary = 1.0;
     return DiagonalMatrixFactory(temporary);
+}
+
+struct EigenPair RightEigenSolve(Matrix* A)
+{
+    char jobvl = 'N', jobrl = 'V';
+
+    int info;
+    int k = A->numColumns();
+    int lwork = std::max(k*k, 10*k);
+    double* work = new double [lwork];
+    double* e_real = new double [k];
+    double* e_imaginary = new double [k];
+    double* ev_l = NULL;
+    Matrix* ev_r = new Matrix(k, k, false);
+
+    // A now in a row major representation.  Put it
+    // into column major order.
+    for (int row = 0; row < k; ++row) {
+        for (int col = row+1; col < k; ++col) {
+            double tmp = A->item(row, col);
+            A->item(row, col) = A->item(col, row);
+            A->item(col, row) = tmp;
+        }
+    }
+
+    // Now call lapack to do the eigensolve.
+    dgeev(&jobvl, &jobrl, &k, A->getData(), &k, e_real, e_imaginary, ev_l, &k, ev_r->getData(), &k, work, &lwork, &info);
+
+    // Eigenvalues now in a column major representation.  Put it
+    // into row major order.
+    for (int row = 0; row < k; ++row) {
+        for (int col = row+1; col < k; ++col) {
+            double tmp = ev_r->item(row, col);
+            ev_r->item(row, col) = ev_r->item(col, row);
+            ev_r->item(col, row) = tmp;
+        }
+    }
+
+    EigenPair eigenpair;
+    eigenpair.ev_real = new Matrix(k, k, false);
+    eigenpair.ev_imaginary = new Matrix(k, k, false);
+
+    // Separate lapack eigenvector into real and imaginary parts
+    for (int i = 0; i < k; ++i)
+    {
+        for (int row = 0; row < k; ++row) {
+            eigenpair.ev_real->item(row, i) = ev_r->item(row, i);
+        }
+        if (e_imaginary[i] != 0)
+        {
+            for (int row = 0; row < k; ++row) {
+                eigenpair.ev_real->item(row, i + 1) = ev_r->item(row, i);
+                eigenpair.ev_imaginary->item(row, i) = ev_r->item(row, i + 1);
+                eigenpair.ev_imaginary->item(row, i + 1) = -ev_r->item(row, i + 1);
+            }
+
+            // Skip the next eigenvalue since it'll be part of the complex
+            // conjugate pair.
+            ++i;
+        }
+    }
+
+    for (int i = 0; i < k; i++)
+    {
+        eigenpair.eigs.push_back(std::complex<double>(e_real[i], e_imaginary[i]));
+    }
+
+    delete [] work;
+    delete [] e_real;
+    delete [] e_imaginary;
+    delete ev_r;
+
+    return eigenpair;
 }
 
 // Compute the product A^T * B, where A is represented by the space-time

@@ -17,6 +17,7 @@
 
 #include "Vector.h"
 #include <vector>
+#include <complex>
 
 namespace CAROM {
 
@@ -154,7 +155,7 @@ public:
             if (d_mat) {
                 delete [] d_mat;
             }
-            d_mat = new double [new_size];
+            d_mat = new double [new_size] {};
             d_alloc_size = new_size;
         }
         d_num_rows = num_rows;
@@ -1105,6 +1106,26 @@ Matrix DiagonalMatrixFactory(const Vector &v);
  * @return The identity matrix created by this function.
  */
 Matrix IdentityMatrixFactory(const Vector &v);
+
+/**
+ * struct EigenPair is a struct to hold the real and imaginary eigenvectors
+ * of a matrix along with its eigenvalues.
+ */
+struct EigenPair {
+    Matrix* ev_real;
+    Matrix* ev_imaginary;
+    std::vector<std::complex<double>> eigs;
+};
+
+/**
+ * @brief Computes the eigenvectors/eigenvalues of an NxN real nonsymmetric matrix.
+ *
+ * @param[in] A The NxN real nonsymmetric matrix to be eigendecomposed.
+ *
+ * @return The eigenvectors and eigenvalues of the eigensolve. The eigenvector matrices
+ *         contained within the returning struct must be destroyed by the user.
+ */
+struct EigenPair RightEigenSolve(Matrix* A);
 
 Matrix* SpaceTimeProduct(const CAROM::Matrix* As, const CAROM::Matrix* At,
                          const CAROM::Matrix* Bs, const CAROM::Matrix* Bt,
