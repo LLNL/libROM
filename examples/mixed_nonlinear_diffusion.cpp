@@ -1,9 +1,9 @@
-//               libROM MFEM Example: parametric ROM for Poisson problem 
+//               libROM MFEM Example: parametric ROM for nonlinear diffusion problem
 //
 // Compile with: ./scripts/compile.sh -m 
 //
 // Description:  This example solves a time dependent nonlinear diffusion equation
-//               du/dt + div(v) = f, grad u = -a(u) v. After discretization by FEM,
+//               du/dt + div(v) = f, grad u = -a(u) v. After discretization by mixed FEM,
 //               M(u) v + B^T u = 0
 //               B v - C u_t = -f
 //               where 
@@ -15,9 +15,9 @@
 //               For the purpose of using an ODE solver, this can be expressed as
 //               u_t = C^{-1} (f - B M(u)^{-1} B^T u) = F(u)
 
-// Sample runs:  mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -fom -no-rom
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -fom -no-rom -merge -ns 1
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -rom -no-fom -rrdim 8 -rwdim 8
+// Sample runs:  mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -offline
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -merge -ns 1
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -online -rrdim 8 -rwdim 8
 
 #include "mfem.hpp"
 
@@ -30,8 +30,7 @@
 #include "SampleMesh.hpp"
 
 
-#define NLDIFF_TEST_2PU
-//#define INITIAL_STEP_TEST
+typedef enum {ANALYTIC, INIT_STEP} PROBLEM;
 
 #define MIXED_POD
 #define HYPERREDUCE_SOURCE
@@ -40,6 +39,8 @@ using namespace mfem;
 using namespace std;
 
 
+static bool nonlinear_problem;
+static int problem;
 
 class NonlinearDiffusionOperator;
 class RomOperator;
@@ -366,7 +367,8 @@ int main(int argc, char *argv[])
   MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
   // 2. Parse command-line options.
-  double t_start_run = MPI_Wtime();
+  nonlinear_problem = true;
+  problem = ANALYTIC;
   const char *mesh_file = "../data/star.mesh";
   int ser_ref_levels = 2;
   int par_ref_levels = 1;
@@ -383,18 +385,11 @@ int main(int argc, char *argv[])
   int newton_iter = 1000;
 
   // ROM parameters
-  bool fom = false;
-  bool rom = false;
+  bool offline = false;
   bool merge = false;
+  bool online = false;
 
   int nsets = 0;
-
-  bool gen_basis = true; // TODO: eliminate this
-  const bool takeSampleAtAllSteps = false;
-
-  // TODO: remove these
-  double model_linearity_tol = 1.e-7;
-  double model_sampling_tol = 1.e-7;
 
   int id = 0;
   
@@ -402,9 +397,6 @@ int main(int argc, char *argv[])
   int rrdim = -1;  // number of basis vectors to use
   int rwdim = -1;  // number of basis vectors to use
 
-  //rrdim = 1;
-  //rwdim = 1;
-  
   int precision = 16;
   cout.precision(precision);
 
@@ -422,10 +414,6 @@ int main(int argc, char *argv[])
 		 "Basis dimension for vector finite element space.");
   args.AddOption(&rwdim, "-rwdim", "--rwdim",
 		 "Basis dimension for scalar finite element space.");
-  args.AddOption(&model_linearity_tol, "-lt", "--linearity-tol",
-		 "libROM linearity tolerance.");
-  args.AddOption(&model_sampling_tol, "-st", "--sampling-tol",
-		 "libROM sampling tolerance.");
   args.AddOption(&ode_solver_type, "-s", "--ode-solver",
 		 "ODE solver: 1 - Backward Euler, 2 - SDIRK2, 3 - SDIRK3,\n\t"
 		 "\t   11 - Forward Euler, 12 - RK2, 13 - RK3 SSP, 14 - RK4.");
@@ -441,16 +429,11 @@ int main(int argc, char *argv[])
 		 "Save data files for VisIt (visit.llnl.gov) visualization.");
   args.AddOption(&vis_steps, "-vs", "--visualization-steps",
 		 "Visualize every n-th timestep.");
-  args.AddOption(&fom, "-fom", "--full-order-model-only",
-		 "-no-fom", "--no-full-order-model-only",
-		 "Compute only the full order model");
-  args.AddOption(&rom, "-rom", "--reduced-order-model-only",
-		 "-no-rom", "--no-reduced-order-model-only",
-		 "Compute only the reduced order model using given basis.");
-  args.AddOption(&gen_basis, "-gb", "--generate-basis",
-		 "-no-gb", "--no-generate-basis",
-		 "Generate a basis from the full order model.");
   args.AddOption(&nsets, "-ns", "--nset", "Number of parametric snapshot sets");
+  args.AddOption(&offline, "-offline", "--offline", "-no-offline", "--no-offline",
+		 "Enable or disable the offline phase.");
+  args.AddOption(&online, "-online", "--online", "-no-online", "--no-online",
+		 "Enable or disable the online phase.");
   args.AddOption(&merge, "-merge", "--merge", "-no-merge", "--no-merge",
 		 "Enable or disable the merge phase.");
 
@@ -462,21 +445,19 @@ int main(int argc, char *argv[])
       return 1;
     }
 
-  if (rom)
-    {
-      gen_basis = false;
-      //vis_steps = 1000000;
-    }
-
   if (myid == 0)
     {
       args.PrintOptions(cout);
     }
 
-  MFEM_VERIFY(fom != rom, "Must run in either fom or rom mode.");
+  const bool check = (offline && !merge && !online) || (!offline && merge && !online) || (!offline && !merge && online);
+  MFEM_VERIFY(check, "only one of offline, merge, or online must be true!");
 
   MFEM_VERIFY(ode_solver_type == 1, "Only backward Euler is currently supported.");
-  
+
+  StopWatch solveTimer, totalTimer;
+  totalTimer.Start();
+
   // 3. Read the serial mesh from the given mesh file on all processors. We can
   //    handle triangular, quadrilateral, tetrahedral and hexahedral meshes
   //    with the same code.
@@ -544,8 +525,6 @@ int main(int argc, char *argv[])
       cout << "Global number of RT unknowns: " << dimR << endl;
     }
 
-  StopWatch solveTimer, assembleTimer, mergeTimer; // TODO
-
   bool update_right_SV = false;
   bool isIncremental = false;
   const std::string basisFileName = "basis" + std::to_string(id);
@@ -554,17 +533,18 @@ int main(int argc, char *argv[])
   // The merge phase
   if (merge) 
     {
-      mergeTimer.Start();
+      totalTimer.Clear();
+      totalTimer.Start();
 
       MergeBasis(R_space.GetTrueVSize(), nsets, max_num_snapshots, "R");
       MergeBasis(R_space.GetTrueVSize(), nsets, max_num_snapshots, "FR");
       MergeBasis(W_space.GetTrueVSize(), nsets, max_num_snapshots, "W");
       MergeBasis(W_space.GetTrueVSize(), nsets, max_num_snapshots, "S");
       
-      mergeTimer.Stop();
+      totalTimer.Stop();
       if (myid == 0) 
       {
-        printf("Elapsed time for merging and building ROM basis: %e second\n", mergeTimer.RealTime());
+        printf("Elapsed time for merging and building ROM basis: %e second\n", totalTimer.RealTime());
       }
       MPI_Finalize();
       return 0;
@@ -634,7 +614,7 @@ int main(int argc, char *argv[])
   }
 
   VisItDataCollection * visit_dc;
-  if(fom)
+  if (offline)
     visit_dc = new VisItDataCollection("nldiff-fom", pmesh);
   else
     visit_dc = new VisItDataCollection("nldiff-rom", pmesh);
@@ -691,7 +671,7 @@ int main(int argc, char *argv[])
   CAROM::BasisGenerator *basis_generator_W = 0;
 #endif
 
-  if (gen_basis) {
+  if (offline) {
     CAROM::Options options_R(R_space.GetTrueVSize(), max_num_snapshots, 1, update_right_SV);
     CAROM::Options options_W(W_space.GetTrueVSize(), max_num_snapshots, 1, update_right_SV);
 
@@ -722,7 +702,7 @@ int main(int argc, char *argv[])
   const CAROM::Matrix* BW_librom = 0;
   const CAROM::Matrix* S_librom = 0;
   
-  if (rom)
+  if (online)
     {
 #ifdef MIXED_POD
       CAROM::BasisReader readerR("basisR");
@@ -1013,11 +993,13 @@ int main(int argc, char *argv[])
   ConstantCoefficient coeff0(0.0);
 
   oper.newtonFailure = false;
-  
+
+  solveTimer.Start();
+
   bool last_step = false;
   for (int ti = 1; !last_step; ti++)
     {
-      if (gen_basis && !oper.newtonFailure)
+      if (offline && !oper.newtonFailure)
 	{
 #ifndef MIXED_POD
 	  if (basis_generator->isNextSample(t))
@@ -1043,7 +1025,7 @@ int main(int argc, char *argv[])
 	    }
 
 #ifdef MIXED_POD
-	  if (basis_generator_R->isNextSample(t) || takeSampleAtAllSteps)
+	  if (basis_generator_R->isNextSample(t))
 	    {
 	      oper.CopyDuDt(dudt);
 
@@ -1057,7 +1039,7 @@ int main(int argc, char *argv[])
 	      basis_generator_FR->takeSample(Mu.GetData(), t, dt);
 	    }
 
-	  if (sampleW || takeSampleAtAllSteps)
+	  if (sampleW)
 	    {
 	      oper.CopyDuDt_W(dudt);
 
@@ -1067,7 +1049,7 @@ int main(int argc, char *argv[])
 #endif
 	}
 
-      if (rom)
+      if (online)
 	{
 	  if (myid == 0)
 	    {
@@ -1105,9 +1087,9 @@ int main(int argc, char *argv[])
       if (myid == 0)
 	{
 	  cout << "step " << ti << ", t = " << t << " == " << oper.GetTime() << ", dt " << dt << endl;
-	  
-	  if (rom)
-	    cout << "rom t " << romop->GetTime() << endl;
+
+	  if (online)
+	    cout << "rom time " << romop->GetTime() << endl;
 	}
       
       if (t >= t_final - dt/2)
@@ -1118,7 +1100,7 @@ int main(int argc, char *argv[])
 	  FunctionCoefficient exsol(ExactSolution);
 	  exsol.SetTime(oper.GetTime());
 
-	  if (rom)  // Lift ROM solution to FOM.
+	  if (online)  // Lift ROM solution to FOM.
 	    {
 	      //exsol.SetTime(romop->GetTime());  // romop time is not set for non-root processes in parallel 
 	      exsol.SetTime(t);
@@ -1159,7 +1141,10 @@ int main(int argc, char *argv[])
       // oper.SetParameters(u);
     }  // timestep loop
 
-  if (gen_basis)
+  solveTimer.Stop();
+  if (myid == 0) cout << "Elapsed time for time integration loop " << solveTimer.RealTime() << endl;
+
+  if (offline)
     {
       // Sample final solution, to prevent extrapolation in ROM between the last sample and the end of the simulation.
 
@@ -1295,13 +1280,8 @@ int main(int argc, char *argv[])
   if (!SchurComplement)
     delete u_W;
 
-  // TODO: use StopWatch instead
-  double t_run = MPI_Wtime() - t_start_run;
-  double max_run = 0;
-  MPI_Reduce(&t_run,&max_run, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
-  if (myid == 0) {
-     printf("[max] run time = %f\n",max_run); 
-  }
+  totalTimer.Stop();
+  if (myid == 0) cout << "Elapsed time for entire simulation " << totalTimer.RealTime() << endl;
 
   MPI_Finalize();
   return 0;
@@ -2269,15 +2249,16 @@ void RomOperator::LiftToSp(const CAROM::Vector& r, CAROM::Vector& s) const
 
 double InitialTemperature(const Vector &x)
 {
-  //return x[0]*(1.0-x[0])*x[1]*(1.0-x[1]);
-#ifdef INITIAL_STEP_TEST
-  if (0.25 < x[0] && x[0] < 0.75 && 0.25 < x[1] && x[1] < 0.75)
-    return 1.0;
+  if (problem == INIT_STEP)
+    {
+      if (0.25 < x[0] && x[0] < 0.75 && 0.25 < x[1] && x[1] < 0.75)
+	return 1.0;
+      else
+	return 0.0;
+    }
   else
     return 0.0;
-#else
-  return 0.0;
-#endif
+
   /*
   // Note that inhomogeneous Dirichlet boundary conditions are not implemented, so bad results can be obtained with 
   // initial conditions that are nonzero on the boundary.
@@ -2358,31 +2339,29 @@ double SourceFunction_2pu(const Vector &x, const double t)
 
 double SourceFunction(const Vector &x, const double t)
 {
-#ifdef NLDIFF_TEST_2PU
-#ifdef INITIAL_STEP_TEST
-  return 0.0;
-#else
-  return SourceFunction_2pu(x, t);
-#endif
-#else
-  return SourceFunction_linear(x, t);
-#endif
+  if (nonlinear_problem)
+    {
+      if (problem == INIT_STEP)
+	return 0.0;
+      else
+	return SourceFunction_2pu(x, t);
+    }
+  else
+    return SourceFunction_linear(x, t);
 }
 
 double NonlinearCoefficient(const double u)
 {
-#ifdef NLDIFF_TEST_2PU
-  return 2.0 + u;
-#else
-  return 1.0;
-#endif
+  if (nonlinear_problem)
+    return 2.0 + u;
+  else
+    return 1.0;
 }
 
 double NonlinearCoefficientDerivative(const double u)
 {
-#ifdef NLDIFF_TEST_2PU
-  return 1.0;
-#else
-  return 0.0;
-#endif
+  if (nonlinear_problem)
+    return 1.0;
+  else
+    return 0.0;
 }
