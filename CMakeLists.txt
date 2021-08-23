@@ -234,6 +234,7 @@ target_compile_features(ROM PRIVATE cxx_std_11)
 if (USE_MFEM)
   set(examples
     poisson
+    mixed_nonlinear_diffusion
     ex9p
     ex16p)
 
