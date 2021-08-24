@@ -25,6 +25,13 @@
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -offline -p 1
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -merge -ns 1 -p 1
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -online -rrdim 8 -rwdim 8 -p 1
+//
+//               Initial step parametric test
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -offline -p 1 -id 0 -sh 0.25
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -offline -p 1 -id 1 -sh 0.15
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -offline -p 1 -id 2 -sh 0.35
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -merge -ns 3 -p 1
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -online -rrdim 8 -rwdim 8 -p 1 -sh 0.3 -id 0
 
 #include "mfem.hpp"
 
@@ -48,7 +55,7 @@ using namespace std;
 
 static bool nonlinear_problem;
 static int problem;
-static double diffusion_c;
+static double diffusion_c, step_half;
 
 class NonlinearDiffusionOperator;
 class RomOperator;
@@ -350,7 +357,7 @@ void MergeBasis(const int dimFOM, const int nparam, const int max_num_snapshots,
   bool update_right_SV = false;
   bool isIncremental = false;
 
-  CAROM::Options options(dimFOM, max_num_snapshots, 1, update_right_SV);
+  CAROM::Options options(dimFOM, nparam * max_num_snapshots, 1, update_right_SV);
   CAROM::BasisGenerator generator(options, isIncremental, "basis" + name);
       
   for (int paramID=0; paramID<nparam; ++paramID)
@@ -374,6 +381,7 @@ int main(int argc, char *argv[])
   nonlinear_problem = true;
   problem = ANALYTIC;
   diffusion_c = 2.0;
+  step_half = 0.25;
   const char *mesh_file = "../data/star.mesh";
   int ser_ref_levels = 2;
   int par_ref_levels = 1;
@@ -416,6 +424,7 @@ int main(int argc, char *argv[])
 		 "Order (degree) of the finite elements.");
   args.AddOption(&id_param, "-id", "--id", "Parametric index");
   args.AddOption(&problem, "-p", "--problem", "Problem setup to use");
+  args.AddOption(&step_half, "-sh", "--stephalf", "Initial step function half-width");
   args.AddOption(&diffusion_c, "-dc", "--diffusion-constant", "Diffusion coefficient constant term");
   args.AddOption(&rrdim, "-rrdim", "--rrdim",
 		 "Basis dimension for vector finite element space.");
@@ -2286,7 +2295,7 @@ double InitialTemperature(const Vector &x)
 {
   if (problem == INIT_STEP)
     {
-      if (0.25 < x[0] && x[0] < 0.75 && 0.25 < x[1] && x[1] < 0.75)
+      if (0.5 - step_half < x[0] && x[0] < 0.5 + step_half && 0.5 - step_half < x[1] && x[1] < 0.5 + step_half)
 	return 1.0;
       else
 	return 0.0;
