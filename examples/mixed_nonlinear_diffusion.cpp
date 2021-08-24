@@ -391,7 +391,7 @@ int main(int argc, char *argv[])
 
   int nsets = 0;
 
-  int id = 0;
+  int id_param = 0;
   
   int rdim = -1;  // number of basis vectors to use
   int rrdim = -1;  // number of basis vectors to use
@@ -409,7 +409,7 @@ int main(int argc, char *argv[])
 		 "Number of times to refine the mesh uniformly in parallel.");
   args.AddOption(&order, "-o", "--order",
 		 "Order (degree) of the finite elements.");
-  args.AddOption(&id, "-id", "--id", "Parametric id");
+  args.AddOption(&id_param, "-id", "--id", "Parametric index");
   args.AddOption(&rrdim, "-rrdim", "--rrdim",
 		 "Basis dimension for vector finite element space.");
   args.AddOption(&rwdim, "-rwdim", "--rwdim",
@@ -527,7 +527,7 @@ int main(int argc, char *argv[])
 
   bool update_right_SV = false;
   bool isIncremental = false;
-  const std::string basisFileName = "basis" + std::to_string(id);
+  const std::string basisFileName = "basis" + std::to_string(id_param);
   int max_num_snapshots = int(t_final/dt) + 2;
 
   // The merge phase
@@ -601,10 +601,11 @@ int main(int argc, char *argv[])
   if (SchurComplement)
     u_gf.SetFromTrueDofs(*u_W);
 
+  if (offline)
   {
     ostringstream mesh_name, sol_name;
     mesh_name << "nldiff-mesh." << setfill('0') << setw(6) << myid;
-    sol_name << "nldiff-init." << setfill('0') << setw(6) << myid;
+    sol_name << "nldiff-init" << id_param << "." << setfill('0') << setw(6) << myid;
     ofstream omesh(mesh_name.str().c_str());
     omesh.precision(precision);
     pmesh->Print(omesh);
@@ -613,15 +614,15 @@ int main(int argc, char *argv[])
     u_gf.Save(osol);
   }
 
-  VisItDataCollection * visit_dc;
-  if (offline)
-    visit_dc = new VisItDataCollection("nldiff-fom", pmesh);
-  else
-    visit_dc = new VisItDataCollection("nldiff-rom", pmesh);
-
-  visit_dc->RegisterField("temperature", &u_gf);
+  VisItDataCollection * visit_dc = NULL;
   if (visit)
     {
+      if (offline)
+	visit_dc = new VisItDataCollection("nldiff-fom", pmesh);
+      else
+	visit_dc = new VisItDataCollection("nldiff-rom", pmesh);
+
+      visit_dc->RegisterField("temperature", &u_gf);
       visit_dc->SetCycle(0);
       visit_dc->SetTime(0.0);
       visit_dc->Save();
@@ -729,25 +730,6 @@ int main(int argc, char *argv[])
       if (myid == 0)
 	printf("reduced W dim = %d\n",rwdim);
 
-      // For debugging, visualize basis vectors in W space.
-      if (false)
-	{
-	  Vector basis_i(N2);
-	  
-	  for (int i=0; i<rwdim; ++i)
-	    {
-	      ostringstream sol_name;
-	      sol_name << "nldiff-basisW." << setfill('0') << setw(6) << myid;
-	      ofstream osol(sol_name.str().c_str());
-	      osol.precision(precision);
-	      for (int j=0; j<N2; ++j)
-		basis_i[j] = (*BW_librom)(j, i);
-	      
-	      u_gf.SetFromTrueDofs(basis_i);
-	      u_gf.Save(osol);
-	    }
-	}
-      
       // To get the basis U_R, considering the relation M(u) v + B^T u = 0 in the FOM, we can just use
       // U_R = B^T V_W. Note that V_W and V_R may have different numbers of columns, which is fine.
       // TODO: maybe we need POD applied to B^T multiplied by W-snapshots, or just a basis generator for
@@ -1006,6 +988,7 @@ int main(int argc, char *argv[])
 	    {
 	      oper.CopyDuDt(dudt);
 
+	      // TODO: offset by initial state?
 	      basis_generator->takeSample(u.GetData(), t, dt);
 	      basis_generator->computeNextSampleTime(u.GetData(), dudt.GetData(), t);
 	    }
@@ -1116,8 +1099,27 @@ int main(int argc, char *argv[])
 #else
 	      B_librom->mult(*w, *u_librom);
 #endif
+
+	      if (last_step)
+		{
+		  // Calculate the relative l2 error between the final ROM solution and FOM solution, using id_param for FOM solution.
+		  Vector fom_solution(N2);
+		  ifstream solution_file;
+		  ostringstream solution_filename;
+		  solution_filename << "nldiff-fom-final" << id_param << "." << setfill('0') << setw(6) << myid;
+
+		  if (myid == 0) std::cout << "Comparing current run to solution at: " << solution_filename.str() << " with offline parameter index " << id_param << std::endl;
+		  solution_file.open(solution_filename.str());
+		  fom_solution.Load(solution_file, N2);
+		  solution_file.close();
+		  const double fomNorm = sqrt(InnerProduct(MPI_COMM_WORLD, fom_solution, fom_solution));
+		  //const double romNorm = sqrt(InnerProduct(MPI_COMM_WORLD, *u_W, *u_W));
+		  fom_solution -= *u_W;
+		  const double diffNorm = sqrt(InnerProduct(MPI_COMM_WORLD, fom_solution, fom_solution));
+		  if (myid == 0) std::cout << "Relative l2 error of ROM solution " << diffNorm / fomNorm << std::endl;
+		}
 	    }
-	  
+
 	  u_gf.SetFromTrueDofs(*u_W);
 	  const double l2err = u_gf.ComputeL2Error(exsol);
 	  const double l2nrm = u_gf.ComputeL2Error(coeff0);
@@ -1143,6 +1145,9 @@ int main(int argc, char *argv[])
 
   solveTimer.Stop();
   if (myid == 0) cout << "Elapsed time for time integration loop " << solveTimer.RealTime() << endl;
+
+  if (visit)
+    delete visit_dc;
 
   if (offline)
     {
@@ -1264,12 +1269,21 @@ int main(int argc, char *argv[])
 
   // 11. Save the final solution in parallel. This output can be viewed later
   //     using GLVis: "glvis -np <np> -m nldiff-mesh -g nldiff-final".
+  if (offline)
   {
-    ostringstream sol_name;
-    sol_name << "nldiff-final." << setfill('0') << setw(6) << myid;
+    ostringstream sol_name, fomsol_name;
+    sol_name << "nldiff-final" << id_param << "." << setfill('0') << setw(6) << myid;
     ofstream osol(sol_name.str().c_str());
     osol.precision(precision);
     u_gf.Save(osol);
+
+    fomsol_name << "nldiff-fom-final" << id_param << "." << setfill('0') << setw(6) << myid;
+    ofstream fomsol(fomsol_name.str().c_str());
+    fomsol.precision(precision);
+    for (int i = 0; i < N2; ++i)
+      {
+	fomsol << (*u_W)[i] << std::endl;
+      }
   }
 
   // 12. Free the used memory.
