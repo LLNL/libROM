@@ -15,14 +15,22 @@
 //               For the purpose of using an ODE solver, this can be expressed as
 //               u_t = C^{-1} (f - B M(u)^{-1} B^T u) = F(u)
 
-// Sample runs:  mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -offline
+// Sample runs:
+//               Analytic test
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -offline
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -merge -ns 1
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -online -rrdim 8 -rwdim 8
+//
+//               Initial step test
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -offline -p 1
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -merge -ns 1 -p 1
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -online -rrdim 8 -rwdim 8 -p 1
 
 #include "mfem.hpp"
 
 #include <fstream>
 #include <iostream>
+#include <algorithm>
 
 #include "BasisGenerator.h"
 #include "BasisReader.h"
@@ -33,7 +41,6 @@
 typedef enum {ANALYTIC, INIT_STEP} PROBLEM;
 
 #define MIXED_POD
-#define HYPERREDUCE_SOURCE
 
 using namespace mfem;
 using namespace std;
@@ -41,6 +48,7 @@ using namespace std;
 
 static bool nonlinear_problem;
 static int problem;
+static double diffusion_c;
 
 class NonlinearDiffusionOperator;
 class RomOperator;
@@ -228,17 +236,16 @@ private:
   vector<int> s2sp;
   const CAROM::Matrix *Vsinv;
 
-#ifdef HYPERREDUCE_SOURCE
+  // Data for source function
   vector<int> s2sp_S;
   const CAROM::Matrix *Ssinv;
   mutable CAROM::Vector zS;
   mutable CAROM::Vector zT;  
-  CAROM::Matrix S;
-#endif
+  const CAROM::Matrix *S;
   
   mutable DenseMatrix J;
 
-  bool hyperreduce;
+  bool hyperreduce, hyperreduce_source;
   bool sourceFOM;
 
   CAROM::Vector *ufom_librom, *ufom_R_librom, *ufom_W_librom;
@@ -271,11 +278,10 @@ public:
 #endif
 	      const CAROM::Matrix *Bsinv, const int N1,
 	      const double newton_rel_tol, const double newton_abs_tol, const int newton_iter, const vector<int>& s2sp,
-#ifdef HYPERREDUCE_SOURCE
 	      const CAROM::Matrix* S_, const vector<int>& s2sp_S_, const CAROM::Matrix *Ssinv_,
-#endif
-	      const vector<int>& st2sp, const vector<int>& sprows, const vector<int>& all_sprows, const int myid);
-  
+	      const vector<int>& st2sp, const vector<int>& sprows, const vector<int>& all_sprows, const int myid,
+	      const bool hyperreduce_source);
+
   virtual void Mult(const Vector &y, Vector &dy_dt) const;
   void Mult_Hyperreduced(const Vector &y, Vector &dy_dt) const;
   void Mult_FullOrder(const Vector &y, Vector &dy_dt) const;
@@ -290,9 +296,7 @@ public:
 
   CAROM::Matrix V_W, V_R, VTU_R;
 
-#ifdef HYPERREDUCE_SOURCE
   CAROM::Matrix VTCS_W;
-#endif
   
   virtual ~RomOperator();
 };
@@ -369,6 +373,7 @@ int main(int argc, char *argv[])
   // 2. Parse command-line options.
   nonlinear_problem = true;
   problem = ANALYTIC;
+  diffusion_c = 2.0;
   const char *mesh_file = "../data/star.mesh";
   int ser_ref_levels = 2;
   int par_ref_levels = 1;
@@ -410,6 +415,8 @@ int main(int argc, char *argv[])
   args.AddOption(&order, "-o", "--order",
 		 "Order (degree) of the finite elements.");
   args.AddOption(&id_param, "-id", "--id", "Parametric index");
+  args.AddOption(&problem, "-p", "--problem", "Problem setup to use");
+  args.AddOption(&diffusion_c, "-dc", "--diffusion-constant", "Diffusion coefficient constant term");
   args.AddOption(&rrdim, "-rrdim", "--rrdim",
 		 "Basis dimension for vector finite element space.");
   args.AddOption(&rwdim, "-rwdim", "--rwdim",
@@ -454,6 +461,8 @@ int main(int argc, char *argv[])
   MFEM_VERIFY(check, "only one of offline, merge, or online must be true!");
 
   MFEM_VERIFY(ode_solver_type == 1, "Only backward Euler is currently supported.");
+
+  const bool hyperreduce_source = (problem != INIT_STEP);
 
   StopWatch solveTimer, totalTimer;
   totalTimer.Start();
@@ -539,8 +548,10 @@ int main(int argc, char *argv[])
       MergeBasis(R_space.GetTrueVSize(), nsets, max_num_snapshots, "R");
       MergeBasis(R_space.GetTrueVSize(), nsets, max_num_snapshots, "FR");
       MergeBasis(W_space.GetTrueVSize(), nsets, max_num_snapshots, "W");
-      MergeBasis(W_space.GetTrueVSize(), nsets, max_num_snapshots, "S");
-      
+
+      if (hyperreduce_source)
+	MergeBasis(W_space.GetTrueVSize(), nsets, max_num_snapshots, "S");
+
       totalTimer.Stop();
       if (myid == 0) 
       {
@@ -662,10 +673,8 @@ int main(int argc, char *argv[])
 	}
     }
 
-  CAROM::BasisGenerator *basis_generator = 0;
-#ifdef HYPERREDUCE_SOURCE
+  CAROM::BasisGenerator *basis_generator = 0; // TODO: remove
   CAROM::BasisGenerator *basis_generator_S = 0;
-#endif
 #ifdef MIXED_POD
   CAROM::BasisGenerator *basis_generator_R = 0;
   CAROM::BasisGenerator *basis_generator_FR = 0;
@@ -676,9 +685,8 @@ int main(int argc, char *argv[])
     CAROM::Options options_R(R_space.GetTrueVSize(), max_num_snapshots, 1, update_right_SV);
     CAROM::Options options_W(W_space.GetTrueVSize(), max_num_snapshots, 1, update_right_SV);
 
-#ifdef HYPERREDUCE_SOURCE
-    basis_generator_S = new CAROM::BasisGenerator(options_W, isIncremental, basisFileName + "_S");
-#endif
+    if (hyperreduce_source)
+      basis_generator_S = new CAROM::BasisGenerator(options_W, isIncremental, basisFileName + "_S");
 
 #ifdef MIXED_POD
     basis_generator_R = new CAROM::BasisGenerator(options_R, isIncremental, basisFileName + "_R");
@@ -711,7 +719,7 @@ int main(int argc, char *argv[])
       if (rrdim == -1)
 	rrdim = BR_librom->numColumns();
       else
-	BR_librom = GetFirstColumns(rrdim, BR_librom);
+	BR_librom = GetFirstColumns(rrdim, BR_librom);  // TODO: reduce rrdim if too large
 
       MFEM_VERIFY(BR_librom->numRows() == N1, "");
       
@@ -745,6 +753,7 @@ int main(int argc, char *argv[])
 
       // Compute sample points using DEIM
 
+      // TODO: reduce this?
       const int nldim = FR_librom->numColumns(); // rwdim;
 
       cout << "FR dim " << FR_librom->numColumns() << endl;
@@ -767,51 +776,58 @@ int main(int argc, char *argv[])
                   myid,
                   num_procs);
 
-#ifdef HYPERREDUCE_SOURCE
-      CAROM::BasisReader readerS("basisS");
-      S_librom = readerS.getSpatialBasis(0.0);
-
-      // Compute sample points using DEIM
-
-      const int nsdim = S_librom->numColumns();
-
-      cout << "S dim " << nsdim << endl;
-      
-      vector<int> sample_dofs_S(nsdim);  // Indices of the sampled rows
-      vector<int> num_sample_dofs_per_proc_S(num_procs);
-      CAROM::Matrix *Ssinv = new CAROM::Matrix(nsdim, nsdim, false);
-
-      // Now execute the DEIM algorithm to get the sampling information.
-      CAROM::DEIM(S_librom,
-                  nsdim,
-                  &sample_dofs_S[0],
-                  &num_sample_dofs_per_proc_S[0],
-                  *Ssinv,
-                  myid,
-                  num_procs);
-      
-      // Merge sample_dofs and sample_dofs_S
-      int* allNR = new int [num_procs];
-      MPI_Allgather(&N1, 1, MPI_INT, allNR, 1, MPI_INT, MPI_COMM_WORLD);
-
-      vector<int> sample_dofs_withS(sample_dofs.size() + sample_dofs_S.size());  // Indices of the sampled rows
-      vector<int> num_sample_dofs_per_proc_withS(num_procs);
-      int offset = 0;
-      int offset_S = 0;
-      for (int p=0; p<num_procs; ++p)
+      vector<int> sample_dofs_withS;  // Indices of the sampled rows
+      int nsdim = 0;
+      int *allNR = 0;
+      CAROM::Matrix *Ssinv = 0;
+      vector<int> num_sample_dofs_per_proc_withS;
+      CAROM::BasisReader *readerS = 0;
+      if (hyperreduce_source)
 	{
-	  for (int i=0; i<num_sample_dofs_per_proc[p]; ++i)
-	    sample_dofs_withS[offset + offset_S + i] = sample_dofs[offset + i];
+	  readerS = new CAROM::BasisReader("basisS");
+	  S_librom = readerS->getSpatialBasis(0.0);
 
-	  offset += num_sample_dofs_per_proc[p];
+	  // Compute sample points using DEIM
+
+	  nsdim = S_librom->numColumns();
+
+	  cout << "S dim " << nsdim << endl;
+      
+	  vector<int> sample_dofs_S(nsdim);  // Indices of the sampled rows
+	  vector<int> num_sample_dofs_per_proc_S(num_procs);
+	  Ssinv = new CAROM::Matrix(nsdim, nsdim, false);
+
+	  // Now execute the DEIM algorithm to get the sampling information.
+	  CAROM::DEIM(S_librom,
+		      nsdim,
+		      &sample_dofs_S[0],
+		      &num_sample_dofs_per_proc_S[0],
+		      *Ssinv,
+		      myid,
+		      num_procs);
+      
+	  // Merge sample_dofs and sample_dofs_S
+	  allNR = new int [num_procs];
+	  MPI_Allgather(&N1, 1, MPI_INT, allNR, 1, MPI_INT, MPI_COMM_WORLD);
+
+	  sample_dofs_withS.resize(sample_dofs.size() + sample_dofs_S.size());  // Indices of the sampled rows
+	  num_sample_dofs_per_proc_withS.resize(num_procs);
+	  int offset = 0;
+	  int offset_S = 0;
+	  for (int p=0; p<num_procs; ++p)
+	    {
+	      for (int i=0; i<num_sample_dofs_per_proc[p]; ++i)
+		sample_dofs_withS[offset + offset_S + i] = sample_dofs[offset + i];
+
+	      offset += num_sample_dofs_per_proc[p];
 	  
-	  for (int i=0; i<num_sample_dofs_per_proc_S[p]; ++i)
-	    sample_dofs_withS[offset + offset_S + i] = allNR[p] + sample_dofs_S[offset_S + i];
+	      for (int i=0; i<num_sample_dofs_per_proc_S[p]; ++i)
+		sample_dofs_withS[offset + offset_S + i] = allNR[p] + sample_dofs_S[offset_S + i];
 
-	  offset_S += num_sample_dofs_per_proc_S[p];
-	  num_sample_dofs_per_proc_withS[p] = num_sample_dofs_per_proc[p] + num_sample_dofs_per_proc_S[p];
+	      offset_S += num_sample_dofs_per_proc_S[p];
+	      num_sample_dofs_per_proc_withS[p] = num_sample_dofs_per_proc[p] + num_sample_dofs_per_proc_S[p];
+	    }
 	}
-#endif      
 #else      
       CAROM::BasisReader reader("basis");
       B_librom = reader.getSpatialBasis(0.0);
@@ -858,57 +874,61 @@ int main(int argc, char *argv[])
 
       vector<int> sprows;
       vector<int> all_sprows;
+      vector<int> s2sp_S;
 
-#ifdef HYPERREDUCE_SOURCE
-      vector<int> s2sp_withS;
-      CAROM::CreateSampleMesh(*pmesh, H1_space, R_space, W_space, hdiv_coll, l2_coll, rom_com, sample_dofs_withS, num_sample_dofs_per_proc_withS,
-		       sample_pmesh, sprows, all_sprows, s2sp_withS, st2sp, sp_R_space, sp_W_space);
-
-      vector<int> s2sp_S(nsdim);
-      if (myid == 0)
+      if (hyperreduce_source)
 	{
-	  MFEM_VERIFY(s2sp_withS.size() == nldim + nsdim, "");
+	  vector<int> s2sp_withS;
+	  CAROM::CreateSampleMesh(*pmesh, H1_space, R_space, W_space, hdiv_coll, l2_coll, rom_com, sample_dofs_withS, num_sample_dofs_per_proc_withS,
+				  sample_pmesh, sprows, all_sprows, s2sp_withS, st2sp, sp_R_space, sp_W_space);
 
-	  const int NRsp = sp_R_space->GetTrueVSize();
-      
-	  s2sp.resize(nldim);
-	  /*
-	  for (int i=0; i<nldim; ++i)
-	    s2sp[i] = s2sp_withS[i];
-
-	  for (int i=0; i<nsdim; ++i)
-	    s2sp_S[i] = s2sp_withS[nldim + i] - NRsp;
-	  */
-	  
-	  int count = 0;
-	  int count_S = 0;
-
-	  offset = 0;
-	  for (int p=0; p<num_procs; ++p)
+	  s2sp_S.resize(nsdim);
+	  if (myid == 0)
 	    {
-	      for (int i=0; i<num_sample_dofs_per_proc_withS[p]; ++i)
-		{
-		  if (sample_dofs_withS[offset + i] >= allNR[p])
-		    {
-		      s2sp_S[count_S] = s2sp_withS[offset + i] - NRsp;
-		      count_S++;
-		    }
-		  else
-		    {
-		      s2sp[count] = s2sp_withS[offset + i];
-		      count++;
-		    }
-		}
+	      MFEM_VERIFY(s2sp_withS.size() == nldim + nsdim, "");
 
-	      offset += num_sample_dofs_per_proc_withS[p];
-	    }
+	      const int NRsp = sp_R_space->GetTrueVSize();
+
+	      s2sp.resize(nldim);
+	      /*
+		for (int i=0; i<nldim; ++i)
+		s2sp[i] = s2sp_withS[i];
+
+		for (int i=0; i<nsdim; ++i)
+		s2sp_S[i] = s2sp_withS[nldim + i] - NRsp;
+	      */
 	  
-	  MFEM_VERIFY(count == nldim && count_S == nsdim, "");
+	      int count = 0;
+	      int count_S = 0;
+
+	      int offset = 0;
+	      for (int p=0; p<num_procs; ++p)
+		{
+		  for (int i=0; i<num_sample_dofs_per_proc_withS[p]; ++i)
+		    {
+		      if (sample_dofs_withS[offset + i] >= allNR[p])
+			{
+			  s2sp_S[count_S] = s2sp_withS[offset + i] - NRsp;
+			  count_S++;
+			}
+		      else
+			{
+			  s2sp[count] = s2sp_withS[offset + i];
+			  count++;
+			}
+		    }
+
+		  offset += num_sample_dofs_per_proc_withS[p];
+		}
+	  
+	      MFEM_VERIFY(count == nldim && count_S == nsdim, "");
+	    }
 	}
-#else
-      CreateSampleMesh(*pmesh, H1_space, R_space, W_space, hdiv_coll, l2_coll, rom_com, sample_dofs, num_sample_dofs_per_proc,
-		       sample_pmesh, sprows, all_sprows, s2sp, st2sp, sp_R_space, sp_W_space);
-#endif
+      else
+	{
+	  CAROM::CreateSampleMesh(*pmesh, H1_space, R_space, W_space, hdiv_coll, l2_coll, rom_com, sample_dofs, num_sample_dofs_per_proc,
+				  sample_pmesh, sprows, all_sprows, s2sp, st2sp, sp_R_space, sp_W_space);
+	}
 
       w = new CAROM::Vector(rrdim + rwdim, false);
       w_W = new CAROM::Vector(rwdim, false);
@@ -958,12 +978,12 @@ int main(int argc, char *argv[])
 			      B_librom,
 #endif
 			      Bsinv, N1, newton_rel_tol, newton_abs_tol, newton_iter, s2sp,
-#ifdef HYPERREDUCE_SOURCE
 			      S_librom, s2sp_S, Ssinv,
-#endif
-			      st2sp, sprows, all_sprows, myid);
+			      st2sp, sprows, all_sprows, myid, hyperreduce_source);
       
       ode_solver->Init(*romop);
+
+      delete readerS;
     }
   else  // fom
     ode_solver->Init(oper);
@@ -996,15 +1016,13 @@ int main(int argc, char *argv[])
 
 	  const bool sampleW = basis_generator_W->isNextSample(t);
 	  
-	  if (sampleW) // (basis_generator_S->isNextSample(t))
+	  if (sampleW && hyperreduce_source) // TODO: Instead, basis_generator_S->isNextSample(t) could be used if dS/dt were computed.
 	    {
 	      oper.GetSource(source);
-#ifdef HYPERREDUCE_SOURCE	      
 	      basis_generator_S->takeSample(source.GetData(), t, dt);
 	      // TODO: dfdt? In this example, one can implement the exact formula.
 	      //   In general, one can use finite differences in time (dudt is computed that way). 
 	      //basis_generator_S->computeNextSampleTime(u.GetData(), dfdt.GetData(), t);
-#endif
 	    }
 
 #ifdef MIXED_POD
@@ -1083,6 +1101,8 @@ int main(int argc, char *argv[])
 	  FunctionCoefficient exsol(ExactSolution);
 	  exsol.SetTime(oper.GetTime());
 
+	  u_gf.SetFromTrueDofs(*u_W);
+
 	  if (online)  // Lift ROM solution to FOM.
 	    {
 	      //exsol.SetTime(romop->GetTime());  // romop time is not set for non-root processes in parallel 
@@ -1105,8 +1125,9 @@ int main(int argc, char *argv[])
 		  // Calculate the relative l2 error between the final ROM solution and FOM solution, using id_param for FOM solution.
 		  Vector fom_solution(N2);
 		  ifstream solution_file;
-		  ostringstream solution_filename;
-		  solution_filename << "nldiff-fom-final" << id_param << "." << setfill('0') << setw(6) << myid;
+		  ostringstream solution_filename, rom_filename;
+		  solution_filename << "nldiff-fom-values-final" << id_param << "." << setfill('0') << setw(6) << myid;
+		  rom_filename << "nldiff-rom-final" << id_param << "." << setfill('0') << setw(6) << myid;
 
 		  if (myid == 0) std::cout << "Comparing current run to solution at: " << solution_filename.str() << " with offline parameter index " << id_param << std::endl;
 		  solution_file.open(solution_filename.str());
@@ -1117,15 +1138,21 @@ int main(int argc, char *argv[])
 		  fom_solution -= *u_W;
 		  const double diffNorm = sqrt(InnerProduct(MPI_COMM_WORLD, fom_solution, fom_solution));
 		  if (myid == 0) std::cout << "Relative l2 error of ROM solution " << diffNorm / fomNorm << std::endl;
+
+		  ofstream osol(rom_filename.str().c_str());
+		  osol.precision(precision);
+		  u_gf.Save(osol);
 		}
 	    }
 
-	  u_gf.SetFromTrueDofs(*u_W);
-	  const double l2err = u_gf.ComputeL2Error(exsol);
-	  const double l2nrm = u_gf.ComputeL2Error(coeff0);
+	  if (problem == ANALYTIC)
+	    {
+	      const double l2err = u_gf.ComputeL2Error(exsol);
+	      const double l2nrm = u_gf.ComputeL2Error(coeff0);
 
-	  if (myid == 0)
-	    cout << "L2 norm of error: " << l2err << ", FEM solution norm " << l2nrm << ", relative norm " << l2err / l2nrm << endl;
+	      if (myid == 0)
+		cout << "L2 norm of exact error: " << l2err << ", FEM solution norm " << l2nrm << ", relative norm " << l2err / l2nrm << endl;
+	    }
 
 	  if (visualization)
 	    {
@@ -1183,7 +1210,6 @@ int main(int argc, char *argv[])
 #ifdef MIXED_POD
       // R space
       basis_generator_R->takeSample(u.GetData(), t, dt);
-      basis_generator_R->computeNextSampleTime(u.GetData(), dudt.GetData(), t);
 
       Vector u_R(u.GetData(), N1);
       Vector Mu(N1);
@@ -1211,22 +1237,19 @@ int main(int argc, char *argv[])
 	}
 
       // W space
-      oper.CopyDuDt_W(dudt);
 
       // TODO: why call computeNextSampleTime if you just do takeSample on every step anyway?
       basis_generator_W->takeSample(u_W->GetData(), t, dt);
-      basis_generator_W->computeNextSampleTime(u_W->GetData(), dudt.GetData(), t);
+      basis_generator_W->writeSnapshot();
 
       oper.GetSource(source);
 
-#ifdef HYPERREDUCE_SOURCE
-      basis_generator_S->takeSample(source.GetData(), t, dt);
-      basis_generator_S->writeSnapshot();
-#endif
+      if (hyperreduce_source)
+	{
+	  basis_generator_S->takeSample(source.GetData(), t, dt);
+	  basis_generator_S->writeSnapshot();
+	}
       
-      // Terminate the sampling and write out information.
-      basis_generator_W->writeSnapshot();
-
       rom_dim = basis_generator_W->getSpatialBasis()->numColumns();
       cout << "W-space ROM dimension = " << rom_dim << endl;
 
@@ -1241,28 +1264,27 @@ int main(int argc, char *argv[])
 	  }
 	}
 
-#ifdef HYPERREDUCE_SOURCE
-      rom_dim = basis_generator_S->getSpatialBasis()->numColumns();
-      const CAROM::Vector* sing_vals_S = basis_generator_S->getSingularValues();
-
-      if (myid == 0)
+      if (hyperreduce_source)
 	{
-	  cout << "S-space ROM dimension = " << rom_dim << endl;
+	  rom_dim = basis_generator_S->getSpatialBasis()->numColumns();
+	  const CAROM::Vector* sing_vals_S = basis_generator_S->getSingularValues();
 
-	  cout << "Singular Values:" << endl;
-	  for (int sv = 0; sv < sing_vals_S->dim(); ++sv) {
-            double this_sv = (*sing_vals_S)(sv);
-            cout << this_sv << endl;
-	  }
-#endif
+	  if (myid == 0)
+	    {
+	      cout << "S-space ROM dimension = " << rom_dim << endl;
+
+	      cout << "Singular Values:" << endl;
+	      for (int sv = 0; sv < sing_vals_S->dim(); ++sv) {
+		double this_sv = (*sing_vals_S)(sv);
+		cout << this_sv << endl;
+	      }
+	    }
 	}
-      
+
       delete basis_generator_R;
       delete basis_generator_FR;
       delete basis_generator_W;
-#ifdef HYPERREDUCE_SOURCE
       delete basis_generator_S;      
-#endif
 #endif      
       delete basis_generator;
     }
@@ -1277,7 +1299,7 @@ int main(int argc, char *argv[])
     osol.precision(precision);
     u_gf.Save(osol);
 
-    fomsol_name << "nldiff-fom-final" << id_param << "." << setfill('0') << setw(6) << myid;
+    fomsol_name << "nldiff-fom-values-final" << id_param << "." << setfill('0') << setw(6) << myid;
     ofstream fomsol(fomsol_name.str().c_str());
     fomsol.precision(precision);
     for (int i = 0; i < N2; ++i)
@@ -1791,10 +1813,9 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
 #endif
 			 const CAROM::Matrix *Bsinv, const int N1,
 			 const double newton_rel_tol, const double newton_abs_tol, const int newton_iter, const vector<int>& s2sp_,
-#ifdef HYPERREDUCE_SOURCE
 			 const CAROM::Matrix* S_, const vector<int>& s2sp_S_, const CAROM::Matrix *Ssinv_,
-#endif
-			 const vector<int>& st2sp, const vector<int>& sprows, const vector<int>& all_sprows, const int myid)
+			 const vector<int>& st2sp, const vector<int>& sprows, const vector<int>& all_sprows, const int myid,
+			 const bool hyperreduce_source_)
   : TimeDependentOperator(rrdim_ + rwdim_, 0.0),
     newton_solver(),
     fom(fom_), fomSp(fomSp_), BR(NULL), rrdim(rrdim_), rwdim(rwdim_), nldim(nldim_),
@@ -1804,11 +1825,9 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
     V_R(N1, rrdim_, true), V_W(V_full->numRows() - N1, rwdim_, true),
 #endif
     y0(height), dydt_prev(height), zY(nldim, false), zN(nldim, false), s2sp(s2sp_), Vsinv(Bsinv), J(height),
-#ifdef HYPERREDUCE_SOURCE
-    s2sp_S(s2sp_S_), nsdim(s2sp_S_.size()), zS(s2sp_S_.size(), false), zT(s2sp_S_.size(), false), Ssinv(Ssinv_),
-    VTCS_W(rwdim, s2sp_S_.size(), false), S(*S_),
-#endif   
-    VtzR(rrdim_, false)
+    s2sp_S(s2sp_S_), nsdim(s2sp_S_.size()), zS(std::max(s2sp_S_.size(), std::size_t(1)), false), zT(std::max(s2sp_S_.size(), std::size_t(1)), false), Ssinv(Ssinv_),
+    VTCS_W(rwdim, std::max(s2sp_S_.size(), std::size_t(1)), false), S(S_),
+    VtzR(rrdim_, false), hyperreduce_source(hyperreduce_source_)
 {
   dydt_prev = 0.0;
 
@@ -1919,9 +1938,8 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
       zfomW.SetSize(fom->zW.Size());
     }
 
-#ifdef HYPERREDUCE_SOURCE
-  Compute_CtAB(fom->Cmat, S, V_W, nsdim, rwdim, &VTCS_W);
-#endif     
+  if (hyperreduce_source)
+    Compute_CtAB(fom->Cmat, *S, V_W, nsdim, rwdim, &VTCS_W);
 }
 
 RomOperator::~RomOperator()
@@ -1998,26 +2016,29 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
 
       fomSp->GetSource(fomSp->zW);
 
-#ifdef HYPERREDUCE_SOURCE
-      // Select entries
-      for (int i=0; i<nsdim; ++i)
-	zT(i) = fomSp->zW(s2sp_S[i]);
+      if (hyperreduce_source)
+	{
+	  // Select entries
+	  for (int i=0; i<nsdim; ++i)
+	    zT(i) = fomSp->zW(s2sp_S[i]);
 
-      Ssinv->mult(zT, zS);
+	  Ssinv->mult(zT, zS);
 
-      // Multiply by the f-basis, followed by C, followed by V_W^T. This is stored in VTCS_W = V_W^T CS.
-      VTCS_W.multPlus(resW_librom, zS, -1.0);
-#else
-      fomSp->Cmat->Mult(fomSp->zW, *usp_W);
+	  // Multiply by the f-basis, followed by C, followed by V_W^T. This is stored in VTCS_W = V_W^T CS.
+	  VTCS_W.multPlus(resW_librom, zS, -1.0);
+	}
+      else
+	{
+	  fomSp->Cmat->Mult(fomSp->zW, *usp_W);
 
-      // TODO (question): under what conditions should it be adequate to evaluate the source function only on the sample mesh? In other words, does the sample mesh construction ensure that the source function will be well represented?
+	  // TODO (question): under what conditions should it be adequate to evaluate the source function only on the sample mesh? In other words, does the sample mesh construction ensure that the source function will be well represented?
   
-      const int nRsp = fomSp->zR.Size();
-      const int nWsp = fomSp->zW.Size();
-      for (int i=0; i<rwdim; ++i)
-	for (int j=0; j<nWsp; ++j)
-	  res[rrdim + i] -= (*BWsp)(j, i) * (*usp_W)[j];
-#endif
+	  const int nRsp = fomSp->zR.Size();
+	  const int nWsp = fomSp->zW.Size();
+	  for (int i=0; i<rwdim; ++i)
+	    for (int j=0; j<nWsp; ++j)
+	      res[rrdim + i] -= (*BWsp)(j, i) * (*usp_W)[j];
+	}
     }
   
   /*
@@ -2318,12 +2339,12 @@ double SourceFunction_linear(const Vector &x, const double t)
   return (4.0 * pi * ct * sx * sy) + (st * 8.0 * pi * pi * sx * sy);
 }
 
-// a(u) = 2 + u
-double SourceFunction_2pu(const Vector &x, const double t)
+// a(u) = c + u, where c = diffusion_c
+double SourceFunction_cpu(const Vector &x, const double t)
 {
   // du/dt + div(v) = f, grad u = -a(u) v
   // u(x,y) = sin(2 pi x) sin(2 pi y) sin(4 pi t)
-  // a(u) = 2 + sin(2 pi x) sin(2 pi y) sin(4 pi t)
+  // a(u) = c + sin(2 pi x) sin(2 pi y) sin(4 pi t)
   // Set cx = cos(2 pi x), sy = sin(2 pi y), etc. Then v = -2 pi st/(2+sx sy st) * [cx sy, sx cy] = -2 pi st/a * [cx sy, sx cy]
 
   // div(v) = 4 pi^2 cx^2 sy^2 st^2 / a^2 + 4 pi^2 st / a * sx sy         (dv_x/dx)
@@ -2346,7 +2367,7 @@ double SourceFunction_2pu(const Vector &x, const double t)
   const double st = sin(4.0 * pi * t);
   const double ct = cos(4.0 * pi * t);
 
-  const double a = 2.0 + (sx * sy * st);
+  const double a = diffusion_c + (sx * sy * st);
 
   return (4.0 * pi * ct * sx * sy) + (st * 4.0 * pi * pi * ((cx*sy*cx*sy*st/a) + (2.0*sx*sy) + (sx*cy*sx*cy*st/a)) / a);
 }
@@ -2358,7 +2379,7 @@ double SourceFunction(const Vector &x, const double t)
       if (problem == INIT_STEP)
 	return 0.0;
       else
-	return SourceFunction_2pu(x, t);
+	return SourceFunction_cpu(x, t);
     }
   else
     return SourceFunction_linear(x, t);
@@ -2367,7 +2388,7 @@ double SourceFunction(const Vector &x, const double t)
 double NonlinearCoefficient(const double u)
 {
   if (nonlinear_problem)
-    return 2.0 + u;
+    return diffusion_c + u;
   else
     return 1.0;
 }
