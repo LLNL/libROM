@@ -56,6 +56,7 @@ int main(int argc, char *argv[])
     const char *device_config = "cpu";
     bool visualization = true;
     bool visit = true;
+    bool fom = false;
     bool offline = false;
     bool merge = false;
     bool online = false;
@@ -88,6 +89,8 @@ int main(int argc, char *argv[])
     args.AddOption(&visualization, "-vis", "--visualization", "-no-vis",
                    "--no-visualization",
                    "Enable or disable GLVis visualization.");
+    args.AddOption(&fom, "-fom", "--fom", "-no-fom", "--no-fom",
+                   "Enable or disable the fom phase.");
     args.AddOption(&offline, "-offline", "--offline", "-no-offline", "--no-offline",
                    "Enable or disable the offline phase.");
     args.AddOption(&online, "-online", "--online", "-no-online", "--no-online",
@@ -110,6 +113,7 @@ int main(int argc, char *argv[])
     }
     kappa = freq * M_PI;
 
+    if (fom) MFEM_VERIFY(fom && !offline && !online && !merge, "everything must be turned off if fom is used.");
     bool check = (offline && !merge && !online) || (!offline && merge && !online) || (!offline && !merge && online);
     MFEM_VERIFY(check, "only one of offline, merge, or online must be true!");
 
@@ -205,7 +209,7 @@ int main(int argc, char *argv[])
     CAROM::Options* options;
     CAROM::BasisGenerator *generator;
     int numRowRB, numColumnRB;
-    StopWatch fomSolveTimer, fomAssembleTimer, romSolveTimer, romAssembleTimer, romMergeTimer;
+    StopWatch solveTimer, assembleTimer, mergeTimer;
 
     // 10. Set BasisGenerator if offline
     if (offline)
@@ -217,7 +221,7 @@ int main(int argc, char *argv[])
     // 11. The merge phase
     if (merge)
     {
-        romMergeTimer.Start();
+        mergeTimer.Start();
         std::unique_ptr<CAROM::BasisGenerator> basis_generator;
         options = new CAROM::Options(fespace.GetTrueVSize(), max_num_snapshots, 1, update_right_SV);
         generator = new CAROM::BasisGenerator(*options, isIncremental, basisName);
@@ -227,10 +231,10 @@ int main(int argc, char *argv[])
             generator->loadSamples(snapshot_filename,"snapshot");
         }
         generator->endSamples(); // save the merged basis file
-        romMergeTimer.Stop();
+        mergeTimer.Stop();
         if (myid == 0)
         {
-            printf("Elapsed time for merging and building ROM basis: %e second\n", romMergeTimer.RealTime());
+            printf("Elapsed time for merging and building ROM basis: %e second\n", mergeTimer.RealTime());
         }
         delete generator;
         delete options;
@@ -242,8 +246,7 @@ int main(int argc, char *argv[])
     //     right-hand side of the FEM linear system, which in this case is
     //     (f,phi_i) where f is given by the function f_exact and phi_i are the
     //     basis functions in the finite element fespace.
-    fomAssembleTimer.Start();
-    romAssembleTimer.Start();
+    assembleTimer.Start();
     ParLinearForm *b = new ParLinearForm(&fespace);
     FunctionCoefficient f(rhs);
     b->AddDomainIntegrator(new DomainLFIntegrator(f));
@@ -277,11 +280,10 @@ int main(int argc, char *argv[])
     OperatorPtr A;
     Vector B, X;
     a.FormLinearSystem(ess_tdof_list, x, *b, A, X, B);
-    fomAssembleTimer.Stop();
-    romAssembleTimer.Stop();
+    assembleTimer.Stop();
 
     // 16. The offline phase
-    if(offline)
+    if(fom || offline)
     {
         // 17. Solve the full order linear system A X = B
         Solver *prec = NULL;
@@ -304,22 +306,25 @@ int main(int argc, char *argv[])
             cg.SetPreconditioner(*prec);
         }
         cg.SetOperator(*A);
-        fomSolveTimer.Start();
+        solveTimer.Start();
         cg.Mult(B, X);
-        fomSolveTimer.Stop();
+        solveTimer.Stop();
         delete prec;
 
         // 18. take and write snapshot for ROM
-        bool addSample = generator->takeSample(X.GetData(), 0.0, 0.01);
-        generator->writeSnapshot();
-        delete generator;
-        delete options;
+        if (offline)
+        {
+            bool addSample = generator->takeSample(X.GetData(), 0.0, 0.01);
+            generator->writeSnapshot();
+            delete generator;
+            delete options;
+        }
     }
 
     // 19. The online phase
     if (online) {
         // 20. read the reduced basis
-        romAssembleTimer.Start();
+        assembleTimer.Start();
         CAROM::BasisReader reader(basisName);
         spatialbasis = reader.getSpatialBasis(0.0);
         numRowRB = spatialbasis->numRows();
@@ -343,12 +348,12 @@ int main(int argc, char *argv[])
             }
         }
         invReducedA.Invert();
-        romAssembleTimer.Stop();
+        assembleTimer.Stop();
 
         // 22. solve ROM
-        romSolveTimer.Start();
+        solveTimer.Start();
         invReducedA.Mult(reducedRHS, reducedSol);
-        romSolveTimer.Stop();
+        solveTimer.Stop();
 
         // 23. reconstruct FOM state
         reducedBasisT->MultTranspose(reducedSol,X);
@@ -401,15 +406,15 @@ int main(int argc, char *argv[])
     // 28. print timing info
     if (myid == 0)
     {
-        if(offline)
+        if(fom || offline)
         {
-            printf("Elapsed time for assembling FOM: %e second\n", fomAssembleTimer.RealTime());
-            printf("Elapsed time for solving FOM: %e second\n", fomSolveTimer.RealTime());
+            printf("Elapsed time for assembling FOM: %e second\n", assembleTimer.RealTime());
+            printf("Elapsed time for solving FOM: %e second\n", solveTimer.RealTime());
         }
         if(online)
         {
-            printf("Elapsed time for assembling ROM: %e second\n", romAssembleTimer.RealTime());
-            printf("Elapsed time for solving ROM: %e second\n", romSolveTimer.RealTime());
+            printf("Elapsed time for assembling ROM: %e second\n", assembleTimer.RealTime());
+            printf("Elapsed time for solving ROM: %e second\n", solveTimer.RealTime());
         }
     }
 
