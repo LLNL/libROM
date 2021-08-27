@@ -205,7 +205,7 @@ int main(int argc, char *argv[])
     CAROM::Options* options;
     CAROM::BasisGenerator *generator;
     int numRowRB, numColumnRB;
-    StopWatch solveTimer, assembleTimer, mergeTimer;
+    StopWatch fomSolveTimer, fomAssembleTimer, romSolveTimer, romAssembleTimer, romMergeTimer;
 
     // 10. Set BasisGenerator if offline
     if (offline)
@@ -217,7 +217,7 @@ int main(int argc, char *argv[])
     // 11. The merge phase
     if (merge)
     {
-        mergeTimer.Start();
+        romMergeTimer.Start();
         std::unique_ptr<CAROM::BasisGenerator> basis_generator;
         options = new CAROM::Options(fespace.GetTrueVSize(), max_num_snapshots, 1, update_right_SV);
         generator = new CAROM::BasisGenerator(*options, isIncremental, basisName);
@@ -227,10 +227,10 @@ int main(int argc, char *argv[])
             generator->loadSamples(snapshot_filename,"snapshot");
         }
         generator->endSamples(); // save the merged basis file
-        mergeTimer.Stop();
+        romMergeTimer.Stop();
         if (myid == 0)
         {
-            printf("Elapsed time for merging and building ROM basis: %e second\n", mergeTimer.RealTime());
+            printf("Elapsed time for merging and building ROM basis: %e second\n", romMergeTimer.RealTime());
         }
         delete generator;
         delete options;
@@ -242,6 +242,8 @@ int main(int argc, char *argv[])
     //     right-hand side of the FEM linear system, which in this case is
     //     (f,phi_i) where f is given by the function f_exact and phi_i are the
     //     basis functions in the finite element fespace.
+    fomAssembleTimer.Start();
+    romAssembleTimer.Start();
     ParLinearForm *b = new ParLinearForm(&fespace);
     FunctionCoefficient f(rhs);
     b->AddDomainIntegrator(new DomainLFIntegrator(f));
@@ -275,6 +277,8 @@ int main(int argc, char *argv[])
     OperatorPtr A;
     Vector B, X;
     a.FormLinearSystem(ess_tdof_list, x, *b, A, X, B);
+    fomAssembleTimer.Stop();
+    romAssembleTimer.Stop();
 
     // 16. The offline phase
     if(offline)
@@ -300,9 +304,9 @@ int main(int argc, char *argv[])
             cg.SetPreconditioner(*prec);
         }
         cg.SetOperator(*A);
-        solveTimer.Start();
+        fomSolveTimer.Start();
         cg.Mult(B, X);
-        solveTimer.Stop();
+        fomSolveTimer.Stop();
         delete prec;
 
         // 18. take and write snapshot for ROM
@@ -315,7 +319,7 @@ int main(int argc, char *argv[])
     // 19. The online phase
     if (online) {
         // 20. read the reduced basis
-        assembleTimer.Start();
+        romAssembleTimer.Start();
         CAROM::BasisReader reader(basisName);
         spatialbasis = reader.getSpatialBasis(0.0);
         numRowRB = spatialbasis->numRows();
@@ -339,12 +343,12 @@ int main(int argc, char *argv[])
             }
         }
         invReducedA.Invert();
-        assembleTimer.Stop();
+        romAssembleTimer.Stop();
 
         // 22. solve ROM
-        solveTimer.Start();
+        romSolveTimer.Start();
         invReducedA.Mult(reducedRHS, reducedSol);
-        solveTimer.Stop();
+        romSolveTimer.Stop();
 
         // 23. reconstruct FOM state
         reducedBasisT->MultTranspose(reducedSol,X);
@@ -399,13 +403,13 @@ int main(int argc, char *argv[])
     {
         if(offline)
         {
-            printf("Elapsed time for assembling FOM: %e second\n", assembleTimer.RealTime());
-            printf("Elapsed time for solving FOM: %e second\n", solveTimer.RealTime());
+            printf("Elapsed time for assembling FOM: %e second\n", fomAssembleTimer.RealTime());
+            printf("Elapsed time for solving FOM: %e second\n", fomSolveTimer.RealTime());
         }
         if(online)
         {
-            printf("Elapsed time for assembling ROM: %e second\n", assembleTimer.RealTime());
-            printf("Elapsed time for solving ROM: %e second\n", solveTimer.RealTime());
+            printf("Elapsed time for assembling ROM: %e second\n", romAssembleTimer.RealTime());
+            printf("Elapsed time for solving ROM: %e second\n", romSolveTimer.RealTime());
         }
     }
 
