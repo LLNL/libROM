@@ -8,19 +8,18 @@
 //               boundary conditions and spatially varying right hand side f.
 //
 //               The example highlights the greedy algorithm. The build_database phase
-//               builds the ROM database using different frequncies and a latin-hypercube
-//               sampling procedure. The use_database phase uses the ROM database to reads
-//               the basis of the nearest point to the specified frequency, builds the ROM
-//               operator, solves thereduced order system, and lifts the solution to the
-//               full order space.
+//               builds a global ROM database using different frequncies and a latin-hypercube
+//               sampling procedure. The use_database phase uses the global ROM database,
+//               builds the ROM operator, solves thereduced order system, and
+//               lifts the solution to the full order space.
 //
 // build_database phase: poisson_greedy -build_database -greedy-param-min 1.0 -greedy-param-max 1.2 -greedy-param-size 5 -greedysubsize 2 -greedyconvsize 3 -greedyrelerrortol 0.01
-// use_database phase:   poisson_greedy -offline -f 1.15 (create a new solution to compare with)
+// use_database phase:   poisson_greedy -fom -f 1.15 (create a new solution to compare with)
 // use_database phase:   poisson_greedy -use_database -online -f 1.15 (use the database to compute at f 1.15 while comparing to the true offline solution at f 1.15)
 //
 // Larger example:
 // build_database phase: poisson_greedy -build_database -greedy-param-min 0.5 -greedy-param-max 1.5 -greedy-param-size 15 -greedysubsize 4 -greedyconvsize 6 -greedyrelerrortol 0.01
-// use_database phase:   poisson_greedy -offline -f X.XX (create a new solution to compare with. Set X.XX to your desired frequency.)
+// use_database phase:   poisson_greedy -fom -f X.XX (create a new solution to compare with. Set X.XX to your desired frequency.)
 // use_database phase:   poisson_greedy -use_database -online -f X.XX (use the database to compute at f X.XX while comparing to the true offline solution at f X.XX)
 
 #include "mfem.hpp"
@@ -57,6 +56,7 @@ int main(int argc, char *argv[])
     bool visit = false;
     bool build_database = false;
     bool use_database = false;
+    bool fom = false;
     bool offline = false;
     bool online = false;
     double greedy_param_space_min = 1.0;
@@ -94,6 +94,8 @@ int main(int argc, char *argv[])
                    "Enable or disable the build_database phase of the greedy algorithm.");
     args.AddOption(&use_database, "-use_database", "--use_database", "-no-use_database", "--no-use_database",
                    "Enable or disable the use_database phase of the greedy algorithm.");
+    args.AddOption(&fom, "-fom", "--fom", "-no-fom", "--no-fom",
+                   "Enable or disable the fom phase.");
     args.AddOption(&offline, "-offline", "--offline", "-no-offline", "--no-offline",
                    "Enable or disable the offline phase.");
     args.AddOption(&online, "-online", "--online", "-no-online", "--no-online",
@@ -118,6 +120,8 @@ int main(int argc, char *argv[])
     {
         args.PrintOptions(cout);
     }
+
+    if (fom) MFEM_VERIFY(fom && !build_database && !use_database && !offline && !online, "everything must be turned off if fom is used.");
 
     CAROM::GreedyParameterPointSampler* greedy_sampler = NULL;
     MFEM_VERIFY(!build_database || !use_database, "both build_database and use_database can not be used at the same time.");
@@ -373,7 +377,7 @@ int main(int argc, char *argv[])
         a.FormLinearSystem(ess_tdof_list, x, *b, A, X, B);
 
         // 17. The offline phase
-        if(offline)
+        if(fom || offline)
         {
             // 18. Solve the full order linear system A X = B
             Solver *prec = NULL;
@@ -402,11 +406,14 @@ int main(int argc, char *argv[])
             delete prec;
 
             // 19. take and write snapshot for ROM
-            bool addSample = generator->takeSample(X.GetData(), 0.0, 0.01);
-            generator->writeSnapshot();
-            basisIdentifiers.push_back(saveBasisName);
-            delete generator;
-            delete options;
+            if (offline)
+            {
+                bool addSample = generator->takeSample(X.GetData(), 0.0, 0.01);
+                generator->writeSnapshot();
+                basisIdentifiers.push_back(saveBasisName);
+                delete generator;
+                delete options;
+            }
         }
 
         // 20. The online phase
@@ -454,7 +461,7 @@ int main(int argc, char *argv[])
 
         // 26. Save the refined mesh and the solution in parallel. This output can
         //     be viewed later using GLVis: "glvis -np <np> -m mesh -g sol".
-        if (offline)
+        if (fom || offline)
         {
             ostringstream mesh_name, sol_name;
             mesh_name << "Mesh" << curr_basis_identifier << myid;
