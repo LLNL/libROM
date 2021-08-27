@@ -343,6 +343,7 @@ int main(int argc, char *argv[])
         //     (f,phi_i) where f is given by the function f_exact and phi_i are the
         //     basis functions in the finite element fespace.
         fomAssembleTimer.Start();
+        romAssembleTimer.Start();
         ParLinearForm *b = new ParLinearForm(&fespace);
         FunctionCoefficient f(rhs);
         b->AddDomainIntegrator(new DomainLFIntegrator(f));
@@ -377,6 +378,7 @@ int main(int argc, char *argv[])
         Vector B, X;
         a.FormLinearSystem(ess_tdof_list, x, *b, A, X, B);
         fomAssembleTimer.Stop();
+        romAssembleTimer.Stop();
 
         // 17. The offline phase
         if(fom || offline)
