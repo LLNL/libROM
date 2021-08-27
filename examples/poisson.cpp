@@ -56,6 +56,7 @@ int main(int argc, char *argv[])
     const char *device_config = "cpu";
     bool visualization = true;
     bool visit = true;
+    bool fom = false;
     bool offline = false;
     bool merge = false;
     bool online = false;
@@ -88,6 +89,8 @@ int main(int argc, char *argv[])
     args.AddOption(&visualization, "-vis", "--visualization", "-no-vis",
                    "--no-visualization",
                    "Enable or disable GLVis visualization.");
+    args.AddOption(&fom, "-fom", "--fom", "-no-fom", "--no-fom",
+                   "Enable or disable the fom phase.");
     args.AddOption(&offline, "-offline", "--offline", "-no-offline", "--no-offline",
                    "Enable or disable the offline phase.");
     args.AddOption(&online, "-online", "--online", "-no-online", "--no-online",
@@ -110,6 +113,7 @@ int main(int argc, char *argv[])
     }
     kappa = freq * M_PI;
 
+    if (fom) MFEM_VERIFY(fom && !offline && !online && !merge, "everything must be turned off if fom is used.");
     bool check = (offline && !merge && !online) || (!offline && merge && !online) || (!offline && !merge && online);
     MFEM_VERIFY(check, "only one of offline, merge, or online must be true!");
 
@@ -242,6 +246,7 @@ int main(int argc, char *argv[])
     //     right-hand side of the FEM linear system, which in this case is
     //     (f,phi_i) where f is given by the function f_exact and phi_i are the
     //     basis functions in the finite element fespace.
+    assembleTimer.Start();
     ParLinearForm *b = new ParLinearForm(&fespace);
     FunctionCoefficient f(rhs);
     b->AddDomainIntegrator(new DomainLFIntegrator(f));
@@ -275,9 +280,10 @@ int main(int argc, char *argv[])
     OperatorPtr A;
     Vector B, X;
     a.FormLinearSystem(ess_tdof_list, x, *b, A, X, B);
+    assembleTimer.Stop();
 
     // 16. The offline phase
-    if(offline)
+    if(fom || offline)
     {
         // 17. Solve the full order linear system A X = B
         Solver *prec = NULL;
@@ -306,10 +312,13 @@ int main(int argc, char *argv[])
         delete prec;
 
         // 18. take and write snapshot for ROM
-        bool addSample = generator->takeSample(X.GetData(), 0.0, 0.01);
-        generator->writeSnapshot();
-        delete generator;
-        delete options;
+        if (offline)
+        {
+            bool addSample = generator->takeSample(X.GetData(), 0.0, 0.01);
+            generator->writeSnapshot();
+            delete generator;
+            delete options;
+        }
     }
 
     // 19. The online phase
@@ -397,7 +406,7 @@ int main(int argc, char *argv[])
     // 28. print timing info
     if (myid == 0)
     {
-        if(offline)
+        if(fom || offline)
         {
             printf("Elapsed time for assembling FOM: %e second\n", assembleTimer.RealTime());
             printf("Elapsed time for solving FOM: %e second\n", solveTimer.RealTime());
