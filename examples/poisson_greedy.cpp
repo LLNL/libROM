@@ -581,7 +581,7 @@ int main(int argc, char *argv[])
         // 31. print timing info
         if (myid == 0)
         {
-            if(offline)
+            if(fom || offline)
             {
                 printf("Elapsed time for assembling FOM: %e second\n", assembleTimer.RealTime());
                 printf("Elapsed time for solving FOM: %e second\n", solveTimer.RealTime());
