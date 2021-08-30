@@ -47,8 +47,6 @@
 
 typedef enum {ANALYTIC, INIT_STEP} PROBLEM;
 
-#define MIXED_POD
-
 //#define USE_GNAT
 
 using namespace mfem;
@@ -281,11 +279,7 @@ protected:
 public:
   RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOperator *fomSp_, const int rrdim_, const int rwdim_,
 	      const int nldim_,
-#ifdef MIXED_POD
 	      const CAROM::Matrix* V_R_, const CAROM::Matrix* U_R_, const CAROM::Matrix* V_W_,
-#else
-	      const CAROM::Matrix* V_full,
-#endif
 	      const CAROM::Matrix *Bsinv, const int N1,
 	      const double newton_rel_tol, const double newton_abs_tol, const int newton_iter, const vector<int>& s2sp,
 	      const CAROM::Matrix* S_, const vector<int>& s2sp_S_, const CAROM::Matrix *Ssinv_,
@@ -311,7 +305,7 @@ public:
   virtual ~RomOperator();
 };
 
-// TODO: remove this?
+// TODO: remove this by making online computation serial?
 void BroadcastUndistributedRomVector(CAROM::Vector* v)
 {
   const int N = v->dim();
@@ -685,13 +679,10 @@ int main(int argc, char *argv[])
 	}
     }
 
-  CAROM::BasisGenerator *basis_generator = 0; // TODO: remove
   CAROM::BasisGenerator *basis_generator_S = 0;
-#ifdef MIXED_POD
   CAROM::BasisGenerator *basis_generator_R = 0;
   CAROM::BasisGenerator *basis_generator_FR = 0;
   CAROM::BasisGenerator *basis_generator_W = 0;
-#endif
 
   if (offline) {
     CAROM::Options options_R(R_space.GetTrueVSize(), max_num_snapshots, 1, update_right_SV);
@@ -700,16 +691,10 @@ int main(int argc, char *argv[])
     if (hyperreduce_source)
       basis_generator_S = new CAROM::BasisGenerator(options_W, isIncremental, basisFileName + "_S");
 
-#ifdef MIXED_POD
     basis_generator_R = new CAROM::BasisGenerator(options_R, isIncremental, basisFileName + "_R");
     basis_generator_W = new CAROM::BasisGenerator(options_W, isIncremental, basisFileName + "_W");
 
     basis_generator_FR = new CAROM::BasisGenerator(options_R, isIncremental, basisFileName + "_FR");
-#else
-    // TODO: remove this when you remove ifndef MIXED_POD case, as this just samples the monolithic vector.
-    CAROM::Options options(fdim, max_num_snapshots, 1, update_right_SV);
-    basis_generator = new CAROM::BasisGenerator(options, isIncremental, basisFileName);
-#endif
   }
   
   vector<int> s2sp;   // mapping from sample dofs in original mesh (s) to stencil dofs in sample mesh (s+)
@@ -728,7 +713,6 @@ int main(int argc, char *argv[])
 
   if (online)
     {
-#ifdef MIXED_POD
       CAROM::BasisReader readerR("basisR");
       BR_librom = readerR.getSpatialBasis(0.0);
       if (rrdim == -1)
@@ -874,36 +858,7 @@ int main(int argc, char *argv[])
 	      num_sample_dofs_per_proc_withS[p] = num_sample_dofs_per_proc[p] + num_sample_dofs_per_proc_S[p];
 	    }
 	}
-#else      
-      CAROM::BasisReader reader("basis");
-      B_librom = reader.getSpatialBasis(0.0);
-      if (rdim == -1)
-	rdim = B_librom->numColumns();
 
-      MFEM_VERIFY(B_librom->numRows() == fdim, "");
-      
-      // Compute sample points using DEIM
-
-      vector<int> sample_dofs(rdim);  // Indices of the sampled rows
-      vector<int> num_sample_dofs_per_proc(num_procs);
-      CAROM::Matrix *Bsinv = new CAROM::Matrix(rdim, rdim, false);
-
-      // Now execute the DEIM algorithm to get the sampling information.
-      CAROM::DEIM(B_librom,
-                  rdim,
-                  &sample_dofs[0],
-                  &num_sample_dofs_per_proc[0],
-                  *Bsinv,
-                  myid,
-                  num_procs);
-
-      if (myid == 0)
-	printf("reduced dim = %d\n",rdim);
-
-      rrdim = rdim;
-      rwdim = rdim;
-#endif
-      
       // Construct sample mesh
 
       // TODO: put this in CreateSampleMesh!
@@ -989,14 +944,9 @@ int main(int argc, char *argv[])
       w = new CAROM::Vector(rrdim + rwdim, false);
       w_W = new CAROM::Vector(rwdim, false);
       
-#ifdef MIXED_POD
       // Initialize w = B_W^T u.
       BW_librom->transposeMult(*u_W_librom, *w_W);
-#else
-      // Initialize w = B^T u. Since u_R = 0, this is the same as w = B_W^T u_W = B_W^T u_W + B_R^T u_R = B^T u.
-      B_librom->transposeMult(*u_librom, *w_W);
-#endif
-      
+
       for (int i=0; i<rrdim; ++i)
 	(*w)(i) = 0.0;
 
@@ -1028,11 +978,7 @@ int main(int argc, char *argv[])
 	}
       
       romop = new RomOperator(&oper, soper, rrdim, rwdim, nldim,
-#ifdef MIXED_POD			      
 			      BR_librom, FR_librom, BW_librom,
-#else
-			      B_librom,
-#endif
 			      Bsinv, N1, newton_rel_tol, newton_abs_tol, newton_iter, s2sp,
 			      S_librom, s2sp_S, Ssinv,
 			      st2sp, sprows, all_sprows, myid, hyperreduce_source);
@@ -1059,17 +1005,6 @@ int main(int argc, char *argv[])
     {
       if (offline && !oper.newtonFailure)
 	{
-#ifndef MIXED_POD
-	  if (basis_generator->isNextSample(t))
-	    {
-	      oper.CopyDuDt(dudt);
-
-	      // TODO: offset by initial state?
-	      basis_generator->takeSample(u.GetData(), t, dt);
-	      basis_generator->computeNextSampleTime(u.GetData(), dudt.GetData(), t);
-	    }
-#endif
-
 	  const bool sampleW = basis_generator_W->isNextSample(t);
 	  
 	  if (sampleW && hyperreduce_source) // TODO: Instead, basis_generator_S->isNextSample(t) could be used if dS/dt were computed.
@@ -1081,7 +1016,6 @@ int main(int argc, char *argv[])
 	      //basis_generator_S->computeNextSampleTime(u.GetData(), dfdt.GetData(), t);
 	    }
 
-#ifdef MIXED_POD
 	  if (basis_generator_R->isNextSample(t))
 	    {
 	      oper.CopyDuDt(dudt);
@@ -1103,7 +1037,6 @@ int main(int argc, char *argv[])
 	      basis_generator_W->takeSample(u_W->GetData(), t, dt);
 	      basis_generator_W->computeNextSampleTime(u_W->GetData(), dudt.GetData(), t);
 	    }
-#endif
 	}
 
       if (online)
@@ -1164,15 +1097,11 @@ int main(int argc, char *argv[])
 	      
 	      BroadcastUndistributedRomVector(w);
 	      
-#ifdef MIXED_POD
 	      // BW_librom->mult(*w, *u_W_librom);
 	      for (int i=0; i<rwdim; ++i)
 		(*w_W)(i) = (*w)(rrdim + i);
 	      
 	      romop->V_W.mult(*w_W, *u_W_librom);
-#else
-	      B_librom->mult(*w, *u_librom);
-#endif
 
 	      u_gf.SetFromTrueDofs(*u_W);
 
@@ -1239,33 +1168,7 @@ int main(int argc, char *argv[])
       // Sample final solution, to prevent extrapolation in ROM between the last sample and the end of the simulation.
 
       oper.CopyDuDt(dudt);
-      
-#ifndef MIXED_POD
 
-      basis_generator->takeSample(u.GetData(), t, dt);
-      basis_generator->computeNextSampleTime(u.GetData(), dudt.GetData(), t);
-
-      // Terminate the sampling and write out information.
-      basis_generator->writeSnapshot();
-
-      // TODO: replace this with BasisGeneratorFinalSummary after moving it to libROM, or remove it if not necessary?
-      // TODO: do this only in the merge phase.
-      if (myid == 0)
-	{
-	  int rom_dim = basis_generator->getSpatialBasis()->numColumns();
-	  cout << "ROM dimension = " << rom_dim << endl;
-
-	  const CAROM::Vector* sing_vals = basis_generator->getSingularValues();
-            
-	  cout << "Singular Values:" << endl;
-	  for (int sv = 0; sv < sing_vals->dim(); ++sv) {
-            double this_sv = (*sing_vals)(sv);
-            cout << this_sv << endl;
-	  }
-	}
-#endif
-
-#ifdef MIXED_POD
       // R space
       basis_generator_R->takeSample(u.GetData(), t, dt);
 
@@ -1343,8 +1246,6 @@ int main(int argc, char *argv[])
       delete basis_generator_FR;
       delete basis_generator_W;
       delete basis_generator_S;      
-#endif      
-      delete basis_generator;
     }
 
   // 11. Save the final solution in parallel. This output can be viewed later
@@ -1706,7 +1607,6 @@ NonlinearDiffusionOperator::~NonlinearDiffusionOperator()
 void Compute_CtAB(const HypreParMatrix* A,
 		  const CAROM::Matrix& B,  // Distributed matrix.
 		  const CAROM::Matrix& C,  // Distributed matrix.
-		  const int ncolB, const int ncolC,
 		  CAROM::Matrix* CtAB)     // Non-distributed (local) matrix, computed identically and redundantly on every process.
 {
   MFEM_VERIFY(B.distributed() && C.distributed() && !CtAB->distributed(), "");
@@ -1715,33 +1615,10 @@ void Compute_CtAB(const HypreParMatrix* A,
   MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
   
   const int num_rows = B.numRows();
-  const int num_cols = ncolB; // B.numColumns();
+  const int num_cols = B.numColumns();
   const int num_rows_A = A->GetNumRows();
-  int* partitioning_B = new int[num_procs+1];
-  int* partitioning_A = new int[num_procs+1];
-  MPI_Allgather(&num_rows, 1, MPI_INT, partitioning_B, 1, MPI_INT, MPI_COMM_WORLD);
-  MPI_Allgather(&num_rows_A, 1, MPI_INT, partitioning_A, 1, MPI_INT, MPI_COMM_WORLD);
 
   MFEM_VERIFY(C.numRows() == num_rows_A, "");
-
-  int next_start_A = 0;
-  int next_start_B = 0;
-  for (int i = 0; i < num_procs; ++i)
-    {
-      int last = partitioning_A[i];
-      partitioning_A[i] = next_start_A;
-      next_start_A += last;
-
-      last = partitioning_B[i];
-      partitioning_B[i] = next_start_B;
-      next_start_B += last;      
-    }
-  
-  partitioning_A[num_procs] = next_start_A;
-  partitioning_B[num_procs] = next_start_B;
-
-  //HypreParVector Bvec(MPI_COMM_WORLD, next_start_B, partitioning_B);
-  //HypreParVector ABvec(MPI_COMM_WORLD, next_start_A, partitioning_A);
 
   Vector Bvec(num_rows);
   Vector ABvec(num_rows_A);
@@ -1750,40 +1627,20 @@ void Compute_CtAB(const HypreParMatrix* A,
   
   for (int i = 0; i < num_cols; ++i) {
     for (int j = 0; j < num_rows; ++j) {
-      //Bvec.Elem(j) = B(j, i);
       Bvec[j] = B(j, i);
     }
     A->Mult(Bvec, ABvec);
     for (int j = 0; j < num_rows_A; ++j) {
-      //AB(j, i) = ABvec.Elem(j);
       AB(j, i) = ABvec[j];
     }
   }
   
   C.transposeMult(AB, CtAB);
-  /*
-  for (int i = 0; i < ncolC; ++i)
-    for (int j = 0; j < num_cols; ++j)
-      {
-	double rij = 0.0;
-	for (int k = 0; k < C.numRows(); ++k)
-	  rij += C(k, i) * AB(k, j);
-
-	(*CtAB)(i, j) = rij;
-      }
-  */
-  
-  delete [] partitioning_A;
-  delete [] partitioning_B;
 }
 
 RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOperator *fomSp_, const int rrdim_, const int rwdim_,
 			 const int nldim_,
-#ifdef MIXED_POD
 			 const CAROM::Matrix* V_R_, const CAROM::Matrix* U_R_, const CAROM::Matrix* V_W_,
-#else
-			 const CAROM::Matrix* V_full,
-#endif
 			 const CAROM::Matrix *Bsinv, const int N1,
 			 const double newton_rel_tol, const double newton_abs_tol, const int newton_iter, const vector<int>& s2sp_,
 			 const CAROM::Matrix* S_, const vector<int>& s2sp_S_, const CAROM::Matrix *Ssinv_,
@@ -1793,11 +1650,7 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
     newton_solver(),
     fom(fom_), fomSp(fomSp_), BR(NULL), rrdim(rrdim_), rwdim(rwdim_), nldim(nldim_),
     nsamp_R(s2sp_.size()), nsamp_S(s2sp_S_.size()),
-#ifdef MIXED_POD
     V_R(*V_R_), U_R(U_R_), V_W(*V_W_), VTU_R(rrdim_, nldim_, false),
-#else
-    V_R(N1, rrdim_, true), V_W(V_full->numRows() - N1, rwdim_, true),
-#endif
     // TODO: get rid of the zero dimension hacks here
     y0(height), dydt_prev(height), zY(nldim, false), zN(std::max(nsamp_R, 1), false), s2sp(s2sp_), Vsinv(Bsinv), J(height),
     s2sp_S(s2sp_S_), nsdim(S_->numColumns()), zS(std::max(s2sp_S_.size(), std::size_t(1)), false), zT(std::max(s2sp_S_.size(), std::size_t(1)), false), Ssinv(Ssinv_),
@@ -1813,23 +1666,7 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
       BWsp = new CAROM::Matrix(fomSp->zW.Size(), rwdim, false);
     }
   
-#ifdef MIXED_POD
   V_R.transposeMult(*U_R, VTU_R);
-#else
-  MFEM_VERIFY(V_full->numColumns() == rrdim && V_full->numColumns() == rwdim, "");
-
-  for (int i = 0; i < V_R.numRows(); ++i)
-    {
-      for (int j = 0; j < rrdim; ++j)
-	V_R(i, j) = (*V_full)(i, j);
-    }
-
-  for (int i = 0; i < V_W.numRows(); ++i)
-    {
-      for (int j = 0; j < rwdim; ++j)
-	V_W(i, j) = (*V_full)(N1 + i, j);
-    }
-#endif
 
   GatherDistributedMatrixRows(V_R, V_W, rrdim, rwdim, fom->fespace_R.GetVSize(), fom->fespace_R, fom->fespace_W, st2sp, sprows, all_sprows, *BRsp, *BWsp);
   
@@ -1837,8 +1674,8 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
 
   BR = new CAROM::Matrix(rwdim, rrdim, false);
   CR = new CAROM::Matrix(rwdim, rwdim, false);
-  Compute_CtAB(fom->Bmat, V_R, V_W, rrdim, rwdim, BR);
-  Compute_CtAB(fom->Cmat, V_W, V_W, rwdim, rwdim, CR);
+  Compute_CtAB(fom->Bmat, V_R, V_W, BR);
+  Compute_CtAB(fom->Cmat, V_W, V_W, CR);
 
   //BR->print("parBR");
   //CR->print("parCR");
@@ -1914,7 +1751,7 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
     }
 
   if (hyperreduce_source)
-    Compute_CtAB(fom->Cmat, *S, V_W, nsdim, rwdim, &VTCS_W);
+    Compute_CtAB(fom->Cmat, *S, V_W, &VTCS_W);
 }
 
 RomOperator::~RomOperator()
