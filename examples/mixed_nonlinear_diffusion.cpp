@@ -146,14 +146,13 @@ protected:
 
   HypreParMatrix *Bmat;
   HypreParMatrix *BTmat;
-  //mutable OperatorPtr Cmat; //, Mmat;
   mutable HypreParMatrix Mprimemat;
 
   mutable BlockOperator *fullOp;
   mutable BlockOperator *fullGradient;
   mutable BlockDiagonalPreconditioner *fullPrec;
 
-  Array<int> block_offsets, block_trueOffsets;
+  Array<int> block_trueOffsets;
 
   double current_dt;
 
@@ -582,7 +581,6 @@ int main(int argc, char *argv[])
   Vector *sp_u_W = &sp_u;
 
   Vector *wMFEM = 0;
-  //Vector *usp = 0;
   
   CAROM::Vector *u_librom = 0;
   CAROM::Vector *u_W_librom = 0;
@@ -737,7 +735,7 @@ int main(int argc, char *argv[])
       if (myid == 0)
 	printf("reduced W dim = %d\n",rwdim);
 
-      // To get the basis U_R, considering the relation M(u) v + B^T u = 0 in the FOM, we can just use
+      // TODO: To get the basis U_R, considering the relation M(u) v + B^T u = 0 in the FOM, we can just use
       // U_R = B^T V_W. Note that V_W and V_R may have different numbers of columns, which is fine.
       // TODO: maybe we need POD applied to B^T multiplied by W-snapshots, or just a basis generator for
       // snapshots of M(u) v. This could be different from B^T multiplied by POD results for the W solutions.
@@ -900,14 +898,7 @@ int main(int argc, char *argv[])
 	      const int NRsp = sp_R_space->GetTrueVSize();
 
 	      s2sp.resize(nsamp_R);
-	      /*
-		for (int i=0; i<nldim; ++i)
-		s2sp[i] = s2sp_withS[i];
 
-		for (int i=0; i<nsdim; ++i)
-		s2sp_S[i] = s2sp_withS[nldim + i] - NRsp;
-	      */
-	  
 	      int count = 0;
 	      int count_S = 0;
 
@@ -976,7 +967,7 @@ int main(int argc, char *argv[])
  
 	  soper = new NonlinearDiffusionOperator(*sp_R_space, *sp_W_space, newton_rel_tol, newton_abs_tol, newton_iter, sp_u, SchurComplement);
 	}
-      
+
       romop = new RomOperator(&oper, soper, rrdim, rwdim, nldim,
 			      BR_librom, FR_librom, BW_librom,
 			      Bsinv, N1, newton_rel_tol, newton_abs_tol, newton_iter, s2sp,
@@ -1092,12 +1083,10 @@ int main(int argc, char *argv[])
 
 	  if (online)  // Lift ROM solution to FOM.
 	    {
-	      //exsol.SetTime(romop->GetTime());  // romop time is not set for non-root processes in parallel 
 	      exsol.SetTime(t);
 	      
 	      BroadcastUndistributedRomVector(w);
 	      
-	      // BW_librom->mult(*w, *u_W_librom);
 	      for (int i=0; i<rwdim; ++i)
 		(*w_W)(i) = (*w)(rrdim + i);
 	      
@@ -1154,7 +1143,6 @@ int main(int argc, char *argv[])
 	      visit_dc->Save();
 	    }
 	}
-      // oper.SetParameters(u);
     }  // timestep loop
 
   solveTimer.Stop();
@@ -1321,13 +1309,7 @@ NonlinearDiffusionOperator::NonlinearDiffusionOperator(ParFiniteElementSpace &fR
 
   delete bVarf;
 
-  // See ex5p.cpp for an explanation of block_offsets and block_trueOffsets
-  block_offsets.SetSize(3); // number of variables + 1
-  block_offsets[0] = 0;
-  block_offsets[1] = fespace_R.GetVSize();
-  block_offsets[2] = fespace_W.GetVSize();
-  block_offsets.PartialSum();
-
+  // See ex5p.cpp for an explanation of block_trueOffsets
   block_trueOffsets.SetSize(3); // number of variables + 1
   block_trueOffsets[0] = 0;
   block_trueOffsets[1] = fespace_R.GetTrueVSize();
@@ -1341,12 +1323,12 @@ NonlinearDiffusionOperator::NonlinearDiffusionOperator(ParFiniteElementSpace &fR
   // Set the newton solve parameters
 
   //Solver *J_prec = new DSmoother(1);
-  //GMRESSolver *J_gmres = new GMRESSolver;
   J_gmres = new GMRESSolver(MPI_COMM_WORLD);
   J_gmres->SetRelTol(linear_solver_rel_tol);
   J_gmres->SetAbsTol(0.0);
   J_gmres->SetMaxIter(1000);
   J_gmres->SetPrintLevel(2);
+  // TODO: precondition, for an efficient FOM solver.
   // J_gmres->SetPreconditioner(*J_prec);
 
   newton_solver.iterative_mode = true;
@@ -1548,11 +1530,7 @@ void NonlinearDiffusionOperator::SetParameters(const Vector &u) const
   Mprime->Assemble();
   Mprime->FormSystemMatrix(ess_Rdof_list, Mprimemat);
 
-  //Mprimemat.Print("mpm.txt");
-  
   Mprimemat *= current_dt;
-
-  //Mprimemat.Print("mpm.txt");
 
   delete M_solver;
   M_solver = new CGSolver(fespace_R.GetComm());
@@ -1721,10 +1699,6 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
       usp_W_librom = new CAROM::Vector(usp_W->GetData(), usp_W->Size(), false, false);
   
       MFEM_VERIFY(nsamp_R == s2sp.size(), "");
-      /*
-      for (int i=0; i<nldim; ++i)
-	MFEM_VERIFY(s2sp[i] < usp_R->Size(), "Selected indices should be in sample mesh R space.");
-      */
     }
   
   hyperreduce = true;
@@ -1767,14 +1741,6 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
   Vector y(y0);
   y.Add(current_dt, dy_dt);
 
-  /*
-  for (int i=0; i<rrdim+rwdim; ++i)
-    cout << "y[" << i << "] = " << y[i] << endl;
-
-  for (int i=0; i<rrdim+rwdim; ++i)
-    cout << "dydt[" << i << "] = " << dy_dt[i] << endl;
-  */
-  
   // Evaluate the ROM residual:
   // [ V_R^T U_R U_{R,s}^{-1} M(a(Pst V_W yW)) Pst V_R yR + BR^T yW ]
   // [ CR dyW_dt - BR yR - V_W^t C f ]
@@ -1858,11 +1824,6 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
 	      res[rrdim + i] -= (*BWsp)(j, i) * (*usp_W)[j];
 	}
     }
-  
-  /*
-  for (int i=0; i<rrdim+rwdim; ++i)
-    cout << "r[" << i << "] = " << res[i] << endl;
-  */
 }
 
 void RomOperator::Mult_FullOrder(const Vector &dy_dt, Vector &res) const
@@ -1872,14 +1833,6 @@ void RomOperator::Mult_FullOrder(const Vector &dy_dt, Vector &res) const
   Vector y(y0);
   y.Add(current_dt, dy_dt);
 
-  /*
-  for (int i=0; i<rrdim+rwdim; ++i)
-    cout << "y[" << i << "] = " << y[i] << endl;
-
-  for (int i=0; i<rrdim+rwdim; ++i)
-    cout << "dydt[" << i << "] = " << dy_dt[i] << endl;
-  */
-  
   // Evaluate the unreduced ROM residual:
   // [ V_R^T M(a(V_W yW)) V_R yR + BR^T yW ]
   // [ CR dyW_dt - BR yR - V_W^t Cf ]
@@ -1915,11 +1868,6 @@ void RomOperator::Mult_FullOrder(const Vector &dy_dt, Vector &res) const
   
   CR->multPlus(resW_librom, dyW_dt_librom, 1.0);
   BR->multPlus(resW_librom, yR_librom, -1.0);
-  
-  /*
-  for (int i=0; i<rrdim+rwdim; ++i)
-    cout << "r[" << i << "] = " << res[i] << endl;
-  */
 }
 
 void RomOperator::Mult(const Vector &dy_dt, Vector &res) const
@@ -2019,23 +1967,8 @@ Operator &RomOperator::GetGradient(const Vector &u) const
 	  for (int j=0; j<nsamp_R; ++j)
 	    z(j) = zR[s2sp[j]];
 
-	  /*
-	    if (i == 0)
-	    {
-	    for (int j=0; j<usp_R->Size(); ++j)
-	    cout << "BR0(" << j << ") " << (*BRsp)(j,i) << endl;
-	    
-	    for (int j=0; j<usp_R->Size(); ++j)
-	    cout << "zR0(" << j << ") " << zR[j] << endl;
-	  
-	    for (int j=0; j<rrdim; ++j)
-	    cout << "z0(" << j << ") " << z(j) << endl;
-	    }
-	  */
-      
 	  // Note that it would be better to just store VTU_R * Vsinv, but these are small matrices. 
       
-	  // Vsinv->mult(r, c);
 #ifdef USE_GNAT
 	  Vsinv->transposeMult(z, r);
 #else
@@ -2053,14 +1986,6 @@ Operator &RomOperator::GetGradient(const Vector &u) const
 	  fom->Mprimemat.Mult(*ufom_R, zfomR);
 	  V_R.transposeMult(*zfomR_librom, c);  // V_R^T M(a'(V_W yW)) V_R(:,i)
 	}
-      
-      /*
-      if (i == 0)
-	{
-	  for (int j=0; j<rrdim; ++j)
-	    cout << "c0(" << j << ") " << c(j) << endl;
-	}
-      */
       
       for (int j=0; j<rrdim; ++j)
 	J(j, i) = c(j);  // This already includes a factor of current_dt, from Mprimemat.
@@ -2081,12 +2006,6 @@ Operator &RomOperator::GetGradient(const Vector &u) const
     }
 
   /*
-  for (int i=0; i<rrdim+rwdim; ++i)
-    for (int j=0; j<rrdim+rwdim; ++j)
-      cout << "J(" << i << "," << j << ") " << J(i,j) << endl;
-  */
-  
-  /*
   gradient->SetBlock(0, 0, JR, current_dt);
   gradient->SetBlock(0, 1, BRT, current_dt);
   gradient->SetBlock(1, 0, BR, -current_dt);
@@ -2097,13 +2016,6 @@ Operator &RomOperator::GetGradient(const Vector &u) const
 
   return J;
 }
-
-/*
-void RomOperator::LiftToSp(const CAROM::Vector& r, CAROM::Vector& s) const
-{
-  Bsp->mult(r, s);
-}
-*/
 
 double InitialTemperature(const Vector &x)
 {
@@ -2116,19 +2028,6 @@ double InitialTemperature(const Vector &x)
     }
   else
     return 0.0;
-
-  /*
-  // Note that inhomogeneous Dirichlet boundary conditions are not implemented, so bad results can be obtained with 
-  // initial conditions that are nonzero on the boundary.
-  if (x.Norml2() < 0.5)
-    {
-      return 2.0;
-    }
-  else
-    {
-      return 1.0;
-    }
-  */
 }
 
 double ExactSolution(const Vector &x, const double t)
