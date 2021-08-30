@@ -49,9 +49,10 @@ typedef enum {ANALYTIC, INIT_STEP} PROBLEM;
 
 #define MIXED_POD
 
+//#define USE_GNAT
+
 using namespace mfem;
 using namespace std;
-
 
 static bool nonlinear_problem;
 static int problem;
@@ -138,8 +139,6 @@ private:
 protected:
   friend class RomOperator;
   
-  ParFiniteElementSpace &fespace_R;  // RT finite element space
-  ParFiniteElementSpace &fespace_W;  // L2 discontinuous scalar finite element space
   Array<int> ess_Rdof_list; // this list remains empty for pure essential b.c.
 
   mutable ParBilinearForm *M;
@@ -222,6 +221,9 @@ public:
 
   virtual ~NonlinearDiffusionOperator();
 
+  ParFiniteElementSpace &fespace_R;  // RT finite element space
+  ParFiniteElementSpace &fespace_W;  // L2 discontinuous scalar finite element space
+
   bool newtonFailure;
 };
 
@@ -229,6 +231,7 @@ class RomOperator : public TimeDependentOperator
 {
 private:
   int rrdim, rwdim, nldim, nsdim;
+  int nsamp_R, nsamp_S;
   double current_dt;
   NewtonSolver newton_solver;
   GMRESSolver *J_gmres;
@@ -393,9 +396,9 @@ int main(int argc, char *argv[])
   bool visualization = false;
   bool visit = false;
   int vis_steps = 5;
-  double newton_rel_tol = 1e-6;
+  double newton_rel_tol = 1e-4;
   double newton_abs_tol = 1e-10;
-  int newton_iter = 1000;
+  int newton_iter = 10;
 
   // ROM parameters
   bool offline = false;
@@ -719,7 +722,10 @@ int main(int argc, char *argv[])
   const CAROM::Matrix* FR_librom = 0;
   const CAROM::Matrix* BW_librom = 0;
   const CAROM::Matrix* S_librom = 0;
-  
+
+  int nsamp_R = -1;
+  int nsamp_S = -1;
+
   if (online)
     {
 #ifdef MIXED_POD
@@ -772,11 +778,25 @@ int main(int argc, char *argv[])
       if (FR_librom->numColumns() > nldim)
 	FR_librom = GetFirstColumns(nldim, FR_librom);
       
-      vector<int> sample_dofs(nldim);  // Indices of the sampled rows
       vector<int> num_sample_dofs_per_proc(num_procs);
-      CAROM::Matrix *Bsinv = new CAROM::Matrix(nldim, nldim, false);
 
+      nsamp_R = nldim;
+
+#ifdef USE_GNAT
+      vector<int> sample_dofs(nsamp_R);  // Indices of the sampled rows
+      CAROM::Matrix *Bsinv = new CAROM::Matrix(nsamp_R, nldim, false);
+      CAROM::GNAT(FR_librom,
+                  nldim,
+                  &sample_dofs[0],
+                  &num_sample_dofs_per_proc[0],
+                  *Bsinv,
+                  myid,
+                  num_procs,
+		  nsamp_R);
+#else
       // Now execute the DEIM algorithm to get the sampling information.
+      CAROM::Matrix *Bsinv = new CAROM::Matrix(nldim, nldim, false);
+      vector<int> sample_dofs(nldim);  // Indices of the sampled rows
       CAROM::DEIM(FR_librom,
                   nldim,
                   &sample_dofs[0],
@@ -784,6 +804,7 @@ int main(int argc, char *argv[])
                   *Bsinv,
                   myid,
                   num_procs);
+#endif
 
       vector<int> sample_dofs_withS;  // Indices of the sampled rows
       int nsdim = 0;
@@ -802,11 +823,26 @@ int main(int argc, char *argv[])
 
 	  cout << "S dim " << nsdim << endl;
       
-	  vector<int> sample_dofs_S(nsdim);  // Indices of the sampled rows
 	  vector<int> num_sample_dofs_per_proc_S(num_procs);
-	  Ssinv = new CAROM::Matrix(nsdim, nsdim, false);
 
 	  // Now execute the DEIM algorithm to get the sampling information.
+	  nsamp_S = nsdim;
+
+#ifdef USE_GNAT
+	  Ssinv = new CAROM::Matrix(nsamp_S, nsdim, false);
+	  vector<int> sample_dofs_S(nsamp_S);  // Indices of the sampled rows
+
+	  CAROM::GNAT(S_librom,
+		      nsdim,
+		      &sample_dofs_S[0],
+		      &num_sample_dofs_per_proc_S[0],
+		      *Ssinv,
+		      myid,
+		      num_procs,
+		      nsamp_S);
+#else
+	  Ssinv = new CAROM::Matrix(nsdim, nsdim, false);
+	  vector<int> sample_dofs_S(nsdim);  // Indices of the sampled rows
 	  CAROM::DEIM(S_librom,
 		      nsdim,
 		      &sample_dofs_S[0],
@@ -814,7 +850,8 @@ int main(int argc, char *argv[])
 		      *Ssinv,
 		      myid,
 		      num_procs);
-      
+#endif
+
 	  // Merge sample_dofs and sample_dofs_S
 	  allNR = new int [num_procs];
 	  MPI_Allgather(&N1, 1, MPI_INT, allNR, 1, MPI_INT, MPI_COMM_WORLD);
@@ -869,6 +906,7 @@ int main(int argc, char *argv[])
       
       // Construct sample mesh
 
+      // TODO: put this in CreateSampleMesh!
       // Define a superfluous finite element space, merely to get global vertex indices for the sample mesh construction.
       H1_FECollection h1_coll(1, dim);  // Must be first order, to get a bijection between vertices and DOF's.
       ParFiniteElementSpace H1_space(pmesh, &h1_coll);  // This constructor effectively sets vertex (DOF) global indices.
@@ -891,14 +929,22 @@ int main(int argc, char *argv[])
 	  CAROM::CreateSampleMesh(*pmesh, H1_space, R_space, W_space, hdiv_coll, l2_coll, rom_com, sample_dofs_withS, num_sample_dofs_per_proc_withS,
 				  sample_pmesh, sprows, all_sprows, s2sp_withS, st2sp, sp_R_space, sp_W_space);
 
-	  s2sp_S.resize(nsdim);
 	  if (myid == 0)
 	    {
+	      s2sp_S.resize(nsamp_S);
+
+#ifndef USE_GNAT
 	      MFEM_VERIFY(s2sp_withS.size() == nldim + nsdim, "");
+#endif
+	      MFEM_VERIFY(s2sp_withS.size() == nsamp_R + nsamp_S, "");
+
+	      ofstream sfile("smesh");
+	      sample_pmesh->Print(sfile);
+	      sfile.close();
 
 	      const int NRsp = sp_R_space->GetTrueVSize();
 
-	      s2sp.resize(nldim);
+	      s2sp.resize(nsamp_R);
 	      /*
 		for (int i=0; i<nldim; ++i)
 		s2sp[i] = s2sp_withS[i];
@@ -930,7 +976,8 @@ int main(int argc, char *argv[])
 		  offset += num_sample_dofs_per_proc_withS[p];
 		}
 	  
-	      MFEM_VERIFY(count == nldim && count_S == nsdim, "");
+	      //MFEM_VERIFY(count == nldim && count_S == nsdim, "");
+	      MFEM_VERIFY(count == nsamp_R && count_S == nsamp_S, "");
 	    }
 	}
       else
@@ -1110,8 +1157,6 @@ int main(int argc, char *argv[])
 	  FunctionCoefficient exsol(ExactSolution);
 	  exsol.SetTime(oper.GetTime());
 
-	  u_gf.SetFromTrueDofs(*u_W);
-
 	  if (online)  // Lift ROM solution to FOM.
 	    {
 	      //exsol.SetTime(romop->GetTime());  // romop time is not set for non-root processes in parallel 
@@ -1128,6 +1173,8 @@ int main(int argc, char *argv[])
 #else
 	      B_librom->mult(*w, *u_librom);
 #endif
+
+	      u_gf.SetFromTrueDofs(*u_W);
 
 	      if (last_step)
 		{
@@ -1153,6 +1200,8 @@ int main(int argc, char *argv[])
 		  u_gf.Save(osol);
 		}
 	    }
+	  else
+	    u_gf.SetFromTrueDofs(*u_W);
 
 	  if (problem == ANALYTIC)
 	    {
@@ -1728,91 +1777,6 @@ void Compute_CtAB(const HypreParMatrix* A,
   delete [] partitioning_B;
 }
 
-void GatherDistributedMatrixRows(const CAROM::Matrix& BR, const CAROM::Matrix& BW, const int rrdim, const int rwdim,
-				 const vector<int>& st2sp, const vector<int>& sprows,
-				 const vector<int>& all_sprows, CAROM::Matrix& BRsp, CAROM::Matrix& BWsp)
-{
-  // Create B sample+ matrix Bsp (B^s+)
-  // On P0 get number of rows each processor contributes to Bsp.
-
-  int num_procs, myid;
-  MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
-  MPI_Comm_rank(MPI_COMM_WORLD, &myid);
-  
-  //const int rrdim = BR.numColumns();
-  //const int rwdim = BW.numColumns();
-  
-  const int NR = BR.numRows();
-  const int num_sprows = static_cast<int>(sprows.size());
-  int* cts = new int [num_procs];
-  int* allNR = new int [num_procs];
-  MPI_Allgather(&num_sprows, 1, MPI_INT, cts, 1, MPI_INT, MPI_COMM_WORLD);
-  MPI_Allgather(&NR, 1, MPI_INT, allNR, 1, MPI_INT, MPI_COMM_WORLD);
-  int* offsets = new int [num_procs];
-  offsets[0] = 0;
-  for (int i = 1; i < num_procs; ++i) {
-    offsets[i] = offsets[i-1] + cts[i-1];
-  }
-
-  MFEM_VERIFY(offsets[num_procs-1] + cts[num_procs-1] == all_sprows.size(), "");
-  
-  if (myid == 0) {
-    const int NRsp = BRsp.numRows();
-
-    for (int i = 0; i < num_sprows; i++) {
-      int row = sprows[i];
-      if (row < NR)
-	{
-	  for (int j = 0; j < rrdim; ++j)
-	    BRsp(st2sp[i], j) = BR(row, j);
-	}
-      else
-	{
-	  for (int j = 0; j < rwdim; ++j)
-	    BWsp(st2sp[i] - NRsp, j) = BW(row - NR, j);
-	}
-    }
-    int Bsp_row = num_sprows;
-    MPI_Status status;
-    for (int i = 1; i < num_procs; ++i) {
-      for (int j = 0; j < cts[i]; ++j) {
-	if (all_sprows[Bsp_row] < allNR[i])
-	  MPI_Recv(&BRsp(st2sp[Bsp_row], 0), rrdim, MPI_DOUBLE,
-		   i, offsets[i]+j, MPI_COMM_WORLD, &status);  // Note that this may redundantly overwrite some rows corresponding to shared DOF's.
-	else
-	  MPI_Recv(&BWsp(st2sp[Bsp_row] - NRsp, 0), rwdim, MPI_DOUBLE,
-		   i, offsets[i]+j, MPI_COMM_WORLD, &status);  // Note that this may redundantly overwrite some rows corresponding to shared DOF's.
-	++Bsp_row;
-      }
-    }
-
-    MFEM_VERIFY(Bsp_row == all_sprows.size(), "");
-  }
-  else {
-    double* v = new double [std::max(rrdim,rwdim)];
-    for (int i = 0; i < num_sprows; i++) {
-      int row = sprows[i];
-      if (row < NR)
-	{
-	  for (int j = 0; j < rrdim; ++j)
-	    v[j] = BR(row, j);
-	  MPI_Send(v, rrdim, MPI_DOUBLE, 0, offsets[myid]+i, MPI_COMM_WORLD);
-	}
-      else
-	{
-	  for (int j = 0; j < rwdim; ++j)
-	    v[j] = BW(row - NR, j);
-	  MPI_Send(v, rwdim, MPI_DOUBLE, 0, offsets[myid]+i, MPI_COMM_WORLD);
-	}
-    }
-    delete [] v;
-  }
-
-  delete [] cts;
-  delete [] offsets;
-  delete [] allNR;
-}
-
 RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOperator *fomSp_, const int rrdim_, const int rwdim_,
 			 const int nldim_,
 #ifdef MIXED_POD
@@ -1828,13 +1792,15 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
   : TimeDependentOperator(rrdim_ + rwdim_, 0.0),
     newton_solver(),
     fom(fom_), fomSp(fomSp_), BR(NULL), rrdim(rrdim_), rwdim(rwdim_), nldim(nldim_),
+    nsamp_R(s2sp_.size()), nsamp_S(s2sp_S_.size()),
 #ifdef MIXED_POD
     V_R(*V_R_), U_R(U_R_), V_W(*V_W_), VTU_R(rrdim_, nldim_, false),
 #else
     V_R(N1, rrdim_, true), V_W(V_full->numRows() - N1, rwdim_, true),
 #endif
-    y0(height), dydt_prev(height), zY(nldim, false), zN(nldim, false), s2sp(s2sp_), Vsinv(Bsinv), J(height),
-    s2sp_S(s2sp_S_), nsdim(s2sp_S_.size()), zS(std::max(s2sp_S_.size(), std::size_t(1)), false), zT(std::max(s2sp_S_.size(), std::size_t(1)), false), Ssinv(Ssinv_),
+    // TODO: get rid of the zero dimension hacks here
+    y0(height), dydt_prev(height), zY(nldim, false), zN(std::max(nsamp_R, 1), false), s2sp(s2sp_), Vsinv(Bsinv), J(height),
+    s2sp_S(s2sp_S_), nsdim(S_->numColumns()), zS(std::max(s2sp_S_.size(), std::size_t(1)), false), zT(std::max(s2sp_S_.size(), std::size_t(1)), false), Ssinv(Ssinv_),
     VTCS_W(rwdim, std::max(s2sp_S_.size(), std::size_t(1)), false), S(S_),
     VtzR(rrdim_, false), hyperreduce_source(hyperreduce_source_)
 {
@@ -1865,7 +1831,7 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
     }
 #endif
 
-  GatherDistributedMatrixRows(V_R, V_W, rrdim, rwdim, st2sp, sprows, all_sprows, *BRsp, *BWsp);
+  GatherDistributedMatrixRows(V_R, V_W, rrdim, rwdim, fom->fespace_R.GetVSize(), fom->fespace_R, fom->fespace_W, st2sp, sprows, all_sprows, *BRsp, *BWsp);
   
   // Compute BR = V_W^t B V_R and CR = V_W^t C V_W, and store them throughout the simulation.
 
@@ -1917,7 +1883,7 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
       usp_R_librom = new CAROM::Vector(usp_R->GetData(), usp_R->Size(), false, false);
       usp_W_librom = new CAROM::Vector(usp_W->GetData(), usp_W->Size(), false, false);
   
-      MFEM_VERIFY(nldim == s2sp.size(), "");
+      MFEM_VERIFY(nsamp_R == s2sp.size(), "");
       /*
       for (int i=0; i<nldim; ++i)
 	MFEM_VERIFY(s2sp[i] < usp_R->Size(), "Selected indices should be in sample mesh R space.");
@@ -1995,11 +1961,15 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
   fomSp->Mmat->Mult(*usp_R, zR);  // M(a(Pst V_W yW)) Pst V_R yR
 
   // Select entries out of zR.
-  for (int i=0; i<nldim; ++i)
+  for (int i=0; i<nsamp_R; ++i)
     zN(i) = zR[s2sp[i]];
 
-  // Note that it would be better to just store VTU_R * Vsinv, but these are small matrices. 
+  // Note that it would be better to just store VTU_R * Vsinv, but these are small matrices.
+#ifdef USE_GNAT
+  Vsinv->transposeMult(zN, zY);
+#else
   Vsinv->mult(zN, zY);
+#endif
 
   BR->transposeMult(yW_librom, resR_librom);
   VTU_R.multPlus(resR_librom, zY, 1.0);
@@ -2028,10 +1998,14 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
       if (hyperreduce_source)
 	{
 	  // Select entries
-	  for (int i=0; i<nsdim; ++i)
+	  for (int i=0; i<nsamp_S; ++i)
 	    zT(i) = fomSp->zW(s2sp_S[i]);
 
+#ifdef USE_GNAT
+	  Ssinv->transposeMult(zT, zS);
+#else
 	  Ssinv->mult(zT, zS);
+#endif
 
 	  // Multiply by the f-basis, followed by C, followed by V_W^T. This is stored in VTCS_W = V_W^T CS.
 	  VTCS_W.multPlus(resW_librom, zS, -1.0);
@@ -2040,8 +2014,6 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
 	{
 	  fomSp->Cmat->Mult(fomSp->zW, *usp_W);
 
-	  // TODO (question): under what conditions should it be adequate to evaluate the source function only on the sample mesh? In other words, does the sample mesh construction ensure that the source function will be well represented?
-  
 	  const int nRsp = fomSp->zR.Size();
 	  const int nWsp = fomSp->zW.Size();
 	  for (int i=0; i<rwdim; ++i)
@@ -2195,7 +2167,7 @@ Operator &RomOperator::GetGradient(const Vector &u) const
 
   CAROM::Vector r(nldim, false);
   CAROM::Vector c(rrdim, false);
-  CAROM::Vector z(nldim, false);
+  CAROM::Vector z(nsamp_R, false);
   
   for (int i=0; i<rrdim; ++i)
     {
@@ -2207,7 +2179,7 @@ Operator &RomOperator::GetGradient(const Vector &u) const
       
 	  fomSp->Mprimemat.Mult(*usp_R, zR);
 
-	  for (int j=0; j<nldim; ++j)
+	  for (int j=0; j<nsamp_R; ++j)
 	    z(j) = zR[s2sp[j]];
 
 	  /*
@@ -2227,7 +2199,12 @@ Operator &RomOperator::GetGradient(const Vector &u) const
 	  // Note that it would be better to just store VTU_R * Vsinv, but these are small matrices. 
       
 	  // Vsinv->mult(r, c);
+#ifdef USE_GNAT
+	  Vsinv->transposeMult(z, r);
+#else
 	  Vsinv->mult(z, r);
+#endif
+
 	  VTU_R.mult(r, c);
 	}
       else
@@ -2280,7 +2257,7 @@ Operator &RomOperator::GetGradient(const Vector &u) const
   */
 
   // PrintFDJacobian(u);
-  
+
   return J;
 }
 
