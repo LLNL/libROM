@@ -1,12 +1,11 @@
-//               libROM MFEM Example: parametric ROM for Poisson problem
-//               (adapted from MFEM example ex1p)
+//               libROM MFEM Example: parametric ROM for Poisson problem (adapted from ex1p.cpp)
 //
-// Compile with: ./scripts/compile.sh -m 
+// Compile with: ./scripts/compile.sh -m
 //
 // Description:  This example code demonstrates the use of MFEM and libROM to
 //               define a simple projection-based reduced order model of the
 //               Poisson problem -Delta u = f(x) with homogeneous Dirichlet
-//               boundary conditions and spatially varying right hand side f.  
+//               boundary conditions and spatially varying right hand side f.
 //
 //               The example highlights three distinct ROM processes, i.e.,
 //               offline, merge, and online. The offline phase runs the full
@@ -21,7 +20,7 @@
 // Offline phase: poisson -offline -f 1.0 -id 0
 //                poisson -offline -f 1.1 -id 1
 //                poisson -offline -f 1.2 -id 2
-//               
+//
 // Merge phase:   poisson -merge -ns 3
 //
 // Online phase:  poisson -online -f 1.15
@@ -432,13 +431,13 @@ int main(int argc, char *argv[])
 // 30. define spatially varying righthand side function
 double rhs(const Vector &x)
 {
-   if (dim == 3)
-   {
-      return sin(kappa * (x(0) + x(1) + x(2)));
-   }
-   else
-   {
-      return sin(kappa * (x(0) + x(1)));
-   }
+    if (dim == 3)
+    {
+        return sin(kappa * (x(0) + x(1) + x(2)));
+    }
+    else
+    {
+        return sin(kappa * (x(0) + x(1)));
+    }
 
 }
