@@ -3,8 +3,8 @@
 // Compile with: make dg_advection
 //
 // For DMD:
-//   mpirun -np 8 dg_advection
-//   mpirun -np 8 dg_advection -p 3 -rp 1 -dt 0.005 -tf 4 -visit
+//   mpirun -np 8 dg_advection -dmd
+//   mpirun -np 8 dg_advection -dmd -p 3 -rp 1 -dt 0.005 -tf 4 -visit
 //
 // Sample runs:
 //    mpirun -np 4 dg_advection -p 0 -dt 0.005
@@ -37,6 +37,8 @@
 #include "mfem.hpp"
 #include "DMD.h"
 #include "Vector.h"
+#include "BasisGenerator.h"
+#include "BasisReader.h"
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -56,6 +58,16 @@ double u0_function(const Vector &x);
 
 // Inflow boundary condition
 double inflow_function(const Vector &x);
+
+void Compute_CtAB(const HypreParMatrix* A,
+		  const CAROM::Matrix& B,  // Distributed matrix.
+		  const CAROM::Matrix& C,  // Distributed matrix.
+		  CAROM::Matrix* CtAB);     // Non-distributed (local) matrix, computed identically and redundantly on every process.
+
+          void Compute_CtAB_vec(const HypreParMatrix* A,
+          		  const HypreParVector& B,  // Distributed vector.
+          		  const CAROM::Matrix& C,  // Distributed matrix.
+          		  CAROM::Vector* CtAB_vec);     // Non-distributed (local) vector, computed identically and redundantly on every process.
 
 // Mesh bounding box
 Vector bb_min, bb_max;
@@ -99,7 +111,9 @@ public:
         delete AIR_solver;
         AIR_solver = new HypreBoomerAMG(A_s);
         AIR_solver->SetAdvectiveOptions(1, "", "FA");
-        AIR_solver->SetPrintLevel(0);
+        AIR_solver->SetPrintLevel(0);    // 6. Define the parallel mesh by a partitioning of the serial mesh. Refine
+    //    this mesh further in parallel to increase the resolution. Once the
+    //    parallel mesh is defined, the serial mesh can be deleted.
         AIR_solver->SetMaxLevels(50);
     }
 
@@ -245,6 +259,9 @@ int main(int argc, char *argv[])
     double dt = 0.01;
     double ef = 0.9999;
     int rdim = -1;
+    bool offline = false;
+    bool online = false;
+    bool dmd = false;
     bool visualization = true;
     bool visit = false;
     bool paraview = false;
@@ -308,6 +325,13 @@ int main(int argc, char *argv[])
                    "Use binary (Sidre) or ascii format for VisIt data files.");
     args.AddOption(&vis_steps, "-vs", "--visualization-steps",
                    "Visualize every n-th timestep.");
+    args.AddOption(&offline, "-offline", "--offline", "-no-offline", "--no-offline",
+                   "Enable or disable the offline phase.");
+    args.AddOption(&online, "-online", "--online", "-no-online", "--no-online",
+                   "Enable or disable the online phase.");
+    args.AddOption(&dmd, "-dmd", "--dmd", "-no-dmd",
+                   "--no-dmd",
+                   "Enable or disable DMD.");
     args.AddOption(&ef, "-ef", "--energy_fraction",
                    "Energy fraction for DMD.");
     args.AddOption(&rdim, "-rdim", "--rdim",
@@ -382,7 +406,9 @@ int main(int argc, char *argv[])
         {
             cout << "Unknown ODE solver type: " << ode_solver_type << '\n';
         }
-        delete mesh;
+        delete mesh;    // 6. Define the parallel mesh by a partitioning of the serial mesh. Refine
+    //    this mesh further in parallel to increase the resolution. Once the
+    //    parallel mesh is defined, the serial mesh can be deleted.
         return 3;
     }
 
@@ -593,16 +619,92 @@ int main(int argc, char *argv[])
     ode_solver->Init(adv);
 
     fom_timer.Stop();
+    CAROM::DMD* dmd_U = NULL;
 
-    dmd_training_timer.Start();
+    if (dmd)
+    {
+        dmd_training_timer.Start();
 
-    std::cout << U->Size() << std::endl;
+        // 11. Create DMD object and take initial sample.
+        dmd_U = new CAROM::DMD(U->Size());
+        dmd_U->takeSample(U->GetData());
 
-    // 11. Create DMD object and take initial sample.
-    CAROM::DMD dmd_U(U->Size());
-    dmd_U.takeSample(U->GetData());
+        dmd_training_timer.Stop();
+    }
 
-    dmd_training_timer.Stop();
+    int max_num_snapshots = t_final / dt + 1;
+    bool update_right_SV = false;
+    bool isIncremental = false;
+    const std::string basisName = "basis";
+    const CAROM::Matrix* spatialbasis;
+    CAROM::Options* options;
+    CAROM::BasisGenerator *generator;
+    int numRowRB, numColumnRB;
+
+    Vector u_init(*U->GlobalVector());
+
+    // 10. Set BasisGenerator if offline
+    if (offline)
+    {
+        options = new CAROM::Options(U->Size(), max_num_snapshots, 1, update_right_SV);
+        generator = new CAROM::BasisGenerator(*options, isIncremental, basisName);
+        Vector u_curr(*U->GlobalVector());
+        Vector u_in(U->Size());
+        subtract(u_curr, u_init, u_in);
+        bool addSample = generator->takeSample(u_in.GetData(), t, dt);
+    }
+
+    if (online)
+    {
+        CAROM::BasisReader reader(basisName);
+        spatialbasis = reader.getSpatialBasis(0.0);
+        numRowRB = spatialbasis->numRows();
+        numColumnRB = spatialbasis->numColumns();
+        if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB, numColumnRB);
+
+        OperatorHandle M, K;
+
+        std::cout << "A" << std::endl;
+
+        if (m->GetAssemblyLevel()==AssemblyLevel::LEGACY)
+        {
+            M.Reset(m->ParallelAssemble(), true);
+            K.Reset(k->ParallelAssemble(), true);
+        }
+        else
+        {
+            M.Reset(m, false);
+            K.Reset(k, false);
+        }
+
+        std::cout << "B" << std::endl;
+
+        HypreParMatrix &M_mat = *M.As<HypreParMatrix>();
+        HypreParMatrix &K_mat = *K.As<HypreParMatrix>();
+
+        std::cout << "C" << std::endl;
+
+        CAROM::Matrix M_hat(numRowRB, numColumnRB, false);
+        Compute_CtAB(&M_mat, *spatialbasis, *spatialbasis, &M_hat);
+
+        std::cout << "D" << std::endl;
+
+        CAROM::Matrix K_hat(numRowRB, numColumnRB, false);
+        Compute_CtAB(&K_mat, *spatialbasis, *spatialbasis, &K_hat);
+
+        std::cout << "E" << std::endl;
+
+        Vector b_vec = *U->GlobalVector();
+        CAROM::Vector b_carom(b_vec.GetData(), b_vec.Size(), true);
+        CAROM::Vector* b_hat = spatialbasis->transposeMult(&b_carom);
+
+        std::cout << "F" << std::endl;
+
+        CAROM::Vector u_init_hat(numRowRB, false);
+        Compute_CtAB_vec(&K_mat, *U, *spatialbasis, &u_init_hat);
+
+        std::cout << "G" << std::endl;
+    }
 
     bool done = false;
     for (int ti = 0; !done; )
@@ -617,11 +719,23 @@ int main(int argc, char *argv[])
 
         fom_timer.Stop();
 
-        dmd_training_timer.Start();
+        if (dmd)
+        {
+            dmd_training_timer.Start();
 
-        dmd_U.takeSample(U->GetData());
+            dmd_U->takeSample(U->GetData());
 
-        dmd_training_timer.Stop();
+            dmd_training_timer.Stop();
+        }
+
+        // 18. take and write snapshot for ROM
+        if (offline)
+        {
+            Vector u_curr(*U->GlobalVector());
+            Vector u_in(U->Size());
+            subtract(u_curr, u_init, u_in);
+            bool addSample = generator->takeSample(u_in.GetData(), t, dt);
+        }
 
         if (done || ti % vis_steps == 0)
         {
@@ -666,6 +780,13 @@ int main(int argc, char *argv[])
         }
     }
 
+    if (offline)
+    {
+        generator->endSamples();
+        delete generator;
+        delete options;
+    }
+
     // 12. Save the final solution in parallel. This output can be viewed later
     //     using GLVis: "glvis -np <np> -m dg_advection-mesh -g dg_advection-final".
     {
@@ -677,59 +798,64 @@ int main(int argc, char *argv[])
         u->Save(osol);
     }
 
-    // 13. Calculate the DMD modes.
-    if (myid == 0 && rdim != -1 && ef != -1)
+    if (dmd)
     {
-        std::cout << "Both rdim and ef are set. ef will be ignored." << std::endl;
-    }
+        // 13. Calculate the DMD modes.
+        if (myid == 0 && rdim != -1 && ef != -1)
+        {
+            std::cout << "Both rdim and ef are set. ef will be ignored." << std::endl;
+        }
 
-    dmd_training_timer.Start();
+        dmd_training_timer.Start();
 
-    if (rdim != -1)
-    {
+        if (rdim != -1)
+        {
+            if (myid == 0)
+            {
+                std::cout << "Creating DMD with rdim: " << rdim << std::endl;
+            }
+            dmd_U->train(rdim);
+        }
+        else if (ef != -1)
+        {
+            if (myid == 0)
+            {
+                std::cout << "Creating DMD with energy fraction: " << ef << std::endl;
+            }
+            dmd_U->train(ef);
+        }
+
+        dmd_training_timer.Stop();
+
+        dmd_prediction_timer.Start();
+
+        // 14. Predict the state at t_final using DMD.
         if (myid == 0)
         {
-            std::cout << "Creating DMD with rdim: " << rdim << std::endl;
+            std::cout << "Predicting solution at t_final using DMD" << std::endl;
         }
-        dmd_U.train(rdim);
-    }
-    else if (ef != -1)
-    {
+        CAROM::Vector* result_u = dmd_U->predict(t_final/dt);
+
+        dmd_prediction_timer.Stop();
+
+        // 15. Calculate the relative error between the DMD final solution and the true solution.
+        Vector dmd_solution_u(result_u->getData(), result_u->dim());
+        Vector true_solution_u(U->GetData(), U->Size());
+        Vector diff_u(true_solution_u.Size());
+        subtract(dmd_solution_u, true_solution_u, diff_u);
+
+        double tot_diff_norm_u = sqrt(InnerProduct(MPI_COMM_WORLD, diff_u, diff_u));
+        double tot_true_solution_u_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution_u, true_solution_u));
+
         if (myid == 0)
         {
-            std::cout << "Creating DMD with energy fraction: " << ef << std::endl;
+            std::cout << "Relative error of DMD solution (u) at t_final: " << t_final << " is " << tot_diff_norm_u / tot_true_solution_u_norm << std::endl;
+            printf("Elapsed time for solving FOM: %e second\n", fom_timer.RealTime());
+            printf("Elapsed time for training DMD: %e second\n", dmd_training_timer.RealTime());
+            printf("Elapsed time for predicting DMD: %e second\n", dmd_prediction_timer.RealTime());
         }
-        dmd_U.train(ef);
-    }
 
-    dmd_training_timer.Stop();
-
-    dmd_prediction_timer.Start();
-
-    // 14. Predict the state at t_final using DMD.
-    if (myid == 0)
-    {
-        std::cout << "Predicting solution at t_final using DMD" << std::endl;
-    }
-    CAROM::Vector* result_u = dmd_U.predict(t_final/dt);
-
-    dmd_prediction_timer.Stop();
-
-    // 15. Calculate the relative error between the DMD final solution and the true solution.
-    Vector dmd_solution_u(result_u->getData(), result_u->dim());
-    Vector true_solution_u(U->GetData(), U->Size());
-    Vector diff_u(true_solution_u.Size());
-    subtract(dmd_solution_u, true_solution_u, diff_u);
-
-    double tot_diff_norm_u = sqrt(InnerProduct(MPI_COMM_WORLD, diff_u, diff_u));
-    double tot_true_solution_u_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution_u, true_solution_u));
-
-    if (myid == 0)
-    {
-        std::cout << "Relative error of DMD solution (u) at t_final: " << t_final << " is " << tot_diff_norm_u / tot_true_solution_u_norm << std::endl;
-        printf("Elapsed time for solving FOM: %e second\n", fom_timer.RealTime());
-        printf("Elapsed time for training DMD: %e second\n", dmd_training_timer.RealTime());
-        printf("Elapsed time for predicting DMD: %e second\n", dmd_prediction_timer.RealTime());
+        delete result_u;
     }
 
     // 16. Free the used memory.
@@ -743,7 +869,6 @@ int main(int argc, char *argv[])
     delete pmesh;
     delete ode_solver;
     delete pd;
-    delete result_u;
 #ifdef MFEM_USE_ADIOS2
     if (adios2)
     {
@@ -975,4 +1100,59 @@ double inflow_function(const Vector &x)
         return 0.0;
     }
     return 0.0;
+}
+
+void Compute_CtAB(const HypreParMatrix* A,
+		  const CAROM::Matrix& B,  // Distributed matrix.
+		  const CAROM::Matrix& C,  // Distributed matrix.
+		  CAROM::Matrix* CtAB)     // Non-distributed (local) matrix, computed identically and redundantly on every process.
+{
+  MFEM_VERIFY(B.distributed() && C.distributed() && !CtAB->distributed(), "");
+
+  int num_procs;
+  MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
+
+  const int num_rows = B.numRows();
+  const int num_cols = B.numColumns();
+  const int num_rows_A = A->GetNumRows();
+
+  MFEM_VERIFY(C.numRows() == num_rows_A, "");
+
+  Vector Bvec(num_rows);
+  Vector ABvec(num_rows_A);
+
+  CAROM::Matrix AB(num_rows_A, num_cols, true);
+
+  for (int i = 0; i < num_cols; ++i) {
+    for (int j = 0; j < num_rows; ++j) {
+      Bvec[j] = B(j, i);
+    }
+    A->Mult(Bvec, ABvec);
+    for (int j = 0; j < num_rows_A; ++j) {
+      AB(j, i) = ABvec[j];
+    }
+  }
+
+  C.transposeMult(AB, CtAB);
+}
+
+void Compute_CtAB_vec(const HypreParMatrix* A,
+		  const HypreParVector& B,  // Distributed vector.
+		  const CAROM::Matrix& C,  // Distributed matrix.
+		  CAROM::Vector* CtAB_vec)     // Non-distributed (local) vector, computed identically and redundantly on every process.
+{
+  MFEM_VERIFY(C.distributed() && !CtAB_vec->distributed(), "");
+
+  int num_procs;
+  MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
+
+  MFEM_VERIFY(C.numRows() == A->GetNumRows(), "");
+  MFEM_VERIFY(B.GlobalSize() == A->GetGlobalNumRows(), "");
+
+  HypreParVector* AB = new HypreParVector(B);
+  A->Mult(B, *AB);
+
+  Vector b_vec = *AB->GlobalVector();
+  CAROM::Vector b_carom(b_vec.GetData(), b_vec.Size(), true);
+  C.transposeMult(b_carom, CtAB_vec);
 }
