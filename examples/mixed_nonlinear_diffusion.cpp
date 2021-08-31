@@ -10,6 +10,8 @@
 //               M(u) = \int_\Omega a(u) w_h \cdot v_h d\Omega   w_h, v_h \in R_h
 //               B = -\int_\Omega \div w_h q_h d\Omega   w_h \in R_h, q_h \in W_h
 //               C = \int_\Omega q_h p_h d\Omega   p_h \in W_h, q_h \in W_h
+//               Here, R_h is a Raviart-Thomas finite element subspace of H(div),
+//               and W_h is a finite element subspace of L2.
 //               The first equation allows the substitution v = -M(u)^{-1} B^T u, so
 //               C u_t + B M(u)^{-1} B^T u = f
 //               For the purpose of using an ODE solver, this can be expressed as
@@ -277,8 +279,8 @@ protected:
   NonlinearDiffusionOperator *fomSp;
   
 public:
-  RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOperator *fomSp_, const int rrdim_, const int rwdim_,
-	      const int nldim_,
+  RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOperator *fomSp_,
+	      const int rrdim_, const int rwdim_, const int nldim_,
 	      const CAROM::Matrix* V_R_, const CAROM::Matrix* U_R_, const CAROM::Matrix* V_W_,
 	      const CAROM::Matrix *Bsinv, const int N1,
 	      const double newton_rel_tol, const double newton_abs_tol, const int newton_iter, const vector<int>& s2sp,
@@ -331,7 +333,7 @@ double ExactSolution(const Vector &x, const double t);
 double NonlinearCoefficient(const double u);
 double NonlinearCoefficientDerivative(const double u);
 
-// TODO: remove this?
+// TODO: move this to the library?
 CAROM::Matrix* GetFirstColumns(const int N, const CAROM::Matrix* A)
 {
   CAROM::Matrix* S = new CAROM::Matrix(A->numRows(), std::min(N, A->numColumns()), A->distributed());
@@ -381,7 +383,6 @@ int main(int argc, char *argv[])
   int ser_ref_levels = 2;
   int par_ref_levels = 1;
   int order = 0;
-  int ode_solver_type = 1;
   double t_final = 1.0e-1;
   double maxdt = 1.0e-3;
   double dt = maxdt;
@@ -422,12 +423,9 @@ int main(int argc, char *argv[])
   args.AddOption(&step_half, "-sh", "--stephalf", "Initial step function half-width");
   args.AddOption(&diffusion_c, "-dc", "--diffusion-constant", "Diffusion coefficient constant term");
   args.AddOption(&rrdim, "-rrdim", "--rrdim",
-		 "Basis dimension for vector finite element space.");
+		 "Basis dimension for H(div) vector finite element space.");
   args.AddOption(&rwdim, "-rwdim", "--rwdim",
-		 "Basis dimension for scalar finite element space.");
-  args.AddOption(&ode_solver_type, "-s", "--ode-solver",
-		 "ODE solver: 1 - Backward Euler, 2 - SDIRK2, 3 - SDIRK3,\n\t"
-		 "\t   11 - Forward Euler, 12 - RK2, 13 - RK3 SSP, 14 - RK4.");
+		 "Basis dimension for L2 scalar finite element space.");
   args.AddOption(&t_final, "-tf", "--t-final",
 		 "Final time; start time is 0.");
   args.AddOption(&dt, "-dt", "--time-step",
@@ -464,8 +462,6 @@ int main(int argc, char *argv[])
   const bool check = (offline && !merge && !online) || (!offline && merge && !online) || (!offline && !merge && online);
   MFEM_VERIFY(check, "only one of offline, merge, or online must be true!");
 
-  MFEM_VERIFY(ode_solver_type == 1, "Only backward Euler is currently supported.");
-
   const bool hyperreduce_source = (problem != INIT_STEP);
 
   StopWatch solveTimer, totalTimer;
@@ -477,31 +473,9 @@ int main(int argc, char *argv[])
   Mesh *mesh = new Mesh(mesh_file, 1, 1);
   const int dim = mesh->Dimension();
 
-  // 4. Define the ODE solver used for time integration. Several implicit
-  //    singly diagonal implicit Runge-Kutta (SDIRK) methods, as well as
-  //    explicit Runge-Kutta methods are available.
-  ODESolver *ode_solver;
-  switch (ode_solver_type)
-    {
-      // Implicit L-stable methods
-    case 1:  ode_solver = new BackwardEulerSolver; break;
-    case 2:  ode_solver = new SDIRK23Solver(2); break;
-    case 3:  ode_solver = new SDIRK33Solver; break;
-      // Explicit methods
-    case 11: ode_solver = new ForwardEulerSolver; break;
-    case 12: ode_solver = new RK2Solver(0.5); break; // midpoint method
-    case 13: ode_solver = new RK3SSPSolver; break;
-    case 14: ode_solver = new RK4Solver; break;
-    //case 15: ode_solver = new GeneralizedAlphaSolver(0.5); break;
-      // Implicit A-stable methods (not L-stable)
-    case 22: ode_solver = new ImplicitMidpointSolver; break;
-    case 23: ode_solver = new SDIRK23Solver; break;
-    case 24: ode_solver = new SDIRK34Solver; break;
-    default:
-      cout << "Unknown ODE solver type: " << ode_solver_type << '\n';
-      delete mesh;
-      return 3;
-    }
+  // 4. Define the ODE solver used for time integration. For this example,
+  //    only backward Euler is currently supported.
+  BackwardEulerSolver ode_solver;
 
   // 5. Refine the mesh in serial to increase the resolution. In this example
   //    we do 'ser_ref_levels' of uniform refinement, where 'ser_ref_levels' is
@@ -609,8 +583,8 @@ int main(int argc, char *argv[])
     }
 
   // 9. Initialize the diffusion operator and the VisIt visualization.
-  NonlinearDiffusionOperator oper(R_space, W_space, newton_rel_tol, newton_abs_tol, newton_iter, u, SchurComplement);
-  NonlinearDiffusionOperator *soper = 0;
+  NonlinearDiffusionOperator oper(R_space, W_space, newton_rel_tol, newton_abs_tol, newton_iter, u, SchurComplement);  // FOM operator
+  NonlinearDiffusionOperator *soper = 0;  // Sample mesh operator
   
   if (SchurComplement)
     u_gf.SetFromTrueDofs(*u_W);
@@ -676,10 +650,10 @@ int main(int argc, char *argv[])
 	}
     }
 
-  CAROM::BasisGenerator *basis_generator_S = 0;
-  CAROM::BasisGenerator *basis_generator_R = 0;
-  CAROM::BasisGenerator *basis_generator_FR = 0;
-  CAROM::BasisGenerator *basis_generator_W = 0;
+  CAROM::BasisGenerator *basis_generator_R = 0;  // For the solution component in vector H(div)
+  CAROM::BasisGenerator *basis_generator_W = 0;  // For the solution component in scalar L2
+  CAROM::BasisGenerator *basis_generator_FR = 0; // For the nonlinear term M(u)v with u in L2, v in H(div)
+  CAROM::BasisGenerator *basis_generator_S = 0;  // For the source in scalar L2
 
   if (offline) {
     CAROM::Options options_R(R_space.GetTrueVSize(), max_num_snapshots, 1, update_right_SV);
@@ -747,7 +721,7 @@ int main(int argc, char *argv[])
       CAROM::BasisReader readerFR("basisFR");
       FR_librom = readerFR.getSpatialBasis(0.0);
 
-      // Compute sample points using DEIM
+      // Compute sample points using DEIM, for hyperreduction
 
       // TODO: reduce this?
       const int nldim = FR_librom->numColumns(); // rwdim;
@@ -973,12 +947,12 @@ int main(int argc, char *argv[])
 			      S_librom, s2sp_S, Ssinv,
 			      st2sp, sprows, all_sprows, myid, hyperreduce_source);
       
-      ode_solver->Init(*romop);
+      ode_solver.Init(*romop);
 
       delete readerS;
     }
   else  // fom
-    ode_solver->Init(oper);
+    ode_solver.Init(oper);
 
   // 10. Perform time-integration (looping over the time iterations, ti, with a time-step dt).
   double t = 0.0;
@@ -1033,7 +1007,7 @@ int main(int argc, char *argv[])
 	{
 	  if (myid == 0)
 	    {
-	      ode_solver->Step(*wMFEM, t, dt);
+	      ode_solver.Step(*wMFEM, t, dt);
 	    }
 
 	  MPI_Bcast(&t, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -1043,7 +1017,7 @@ int main(int argc, char *argv[])
 	  oper.newtonFailure = false;
 	  uprev = u;  // Save solution, to reset in case of a Newton failure.
 	  const double tprev = t;
-	  ode_solver->Step(u, t, dt);
+	  ode_solver.Step(u, t, dt);
 
 	  if (oper.newtonFailure)
 	    {
@@ -1255,7 +1229,6 @@ int main(int argc, char *argv[])
   }
 
   // 12. Free the used memory.
-  delete ode_solver;
   delete pmesh;
   delete romop;
   
@@ -1654,9 +1627,6 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
   Compute_CtAB(fom->Bmat, V_R, V_W, BR);
   Compute_CtAB(fom->Cmat, V_W, V_W, CR);
 
-  //BR->print("parBR");
-  //CR->print("parCR");
-  
   // The ROM residual is
   // [ V_{R,s}^{-1} M(a(Pst V_W u)) Pst V_R v + V_R^t B^T V_W u ]
   // [ V_W^t C V_W du_dt - V_W^t B V_R v - V_W^t f ]
@@ -1754,7 +1724,6 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
   CAROM::Vector dyW_dt_librom(dy_dt.GetData() + rrdim, rwdim, false, false);
   
   // 1. Lift u_s+ = B_s+ y
-  //LiftToSp(y_librom, *usp_librom);
   BRsp->mult(yR_librom, *usp_R_librom);
   BWsp->mult(yW_librom, *usp_W_librom);
   
@@ -1909,6 +1878,7 @@ void RomOperator::ImplicitSolve(const double dt, const Vector &y, Vector &dy_dt)
     }
 }
 
+// Debugging tool for checking Jacobian
 void RomOperator::PrintFDJacobian(const Vector &u) const
 {
   const int N = u.Size();
@@ -2004,6 +1974,7 @@ Operator &RomOperator::GetGradient(const Vector &u) const
 	}
     }
 
+  // TODO: define Jacobian block-wise rather than entry-wise?
   /*
   gradient->SetBlock(0, 0, JR, current_dt);
   gradient->SetBlock(0, 1, BRT, current_dt);
