@@ -31,7 +31,8 @@
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -offline -p 1 -id 1 -sh 0.15
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -offline -p 1 -id 2 -sh 0.35
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -merge -ns 3 -p 1
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -online -rrdim 8 -rwdim 8 -p 1 -sh 0.3 -id 0
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -offline -p 1 -id 3 -sh 0.3
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -online -rrdim 8 -rwdim 8 -p 1 -sh 0.3 -id 3
 
 #include "mfem.hpp"
 
@@ -227,7 +228,7 @@ public:
 class RomOperator : public TimeDependentOperator
 {
 private:
-  int rrdim, rwdim, nldim, nsdim;
+  int rrdim, rwdim, nldim;
   int nsamp_R, nsamp_S;
   double current_dt;
   NewtonSolver newton_solver;
@@ -294,8 +295,6 @@ public:
   virtual void ImplicitSolve(const double dt, const Vector &y, Vector &dy_dt);
 
   virtual Operator &GetGradient(const Vector &y) const;
-
-  // void LiftToSp(const CAROM::Vector& r, CAROM::Vector& s) const;
 
   CAROM::Matrix V_W, V_R, VTU_R;
 
@@ -1631,7 +1630,7 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
     V_R(*V_R_), U_R(U_R_), V_W(*V_W_), VTU_R(rrdim_, nldim_, false),
     // TODO: get rid of the zero dimension hacks here
     y0(height), dydt_prev(height), zY(nldim, false), zN(std::max(nsamp_R, 1), false), s2sp(s2sp_), Vsinv(Bsinv), J(height),
-    s2sp_S(s2sp_S_), nsdim(S_->numColumns()), zS(std::max(s2sp_S_.size(), std::size_t(1)), false), zT(std::max(s2sp_S_.size(), std::size_t(1)), false), Ssinv(Ssinv_),
+    s2sp_S(s2sp_S_), zS(std::max(s2sp_S_.size(), std::size_t(1)), false), zT(std::max(s2sp_S_.size(), std::size_t(1)), false), Ssinv(Ssinv_),
     VTCS_W(rwdim, std::max(s2sp_S_.size(), std::size_t(1)), false), S(S_),
     VtzR(rrdim_, false), hyperreduce_source(hyperreduce_source_)
 {
