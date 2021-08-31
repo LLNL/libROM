@@ -18,23 +18,23 @@
 //               u_t = C^{-1} (f - B M(u)^{-1} B^T u) = F(u)
 
 // Sample runs:
-//               Analytic test
+//               Analytic test (reproductive)
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -offline
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -merge -ns 1
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -online -rrdim 8 -rwdim 8
 //
-//               Initial step test
+//               Initial step test (reproductive)
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -offline -p 1
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -merge -ns 1 -p 1
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -online -rrdim 8 -rwdim 8 -p 1
 //
-//               Initial step parametric test
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -offline -p 1 -id 0 -sh 0.25
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -offline -p 1 -id 1 -sh 0.15
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -offline -p 1 -id 2 -sh 0.35
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -merge -ns 3 -p 1
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -offline -p 1 -id 3 -sh 0.3
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -online -rrdim 8 -rwdim 8 -p 1 -sh 0.3 -id 3
+//               Initial step parametric test (predictive)
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -p 1 -offline -id 0 -sh 0.25
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -p 1 -offline -id 1 -sh 0.15
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -p 1 -offline -id 2 -sh 0.35
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -p 1 -merge -ns 3
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -p 1 -offline -id 3 -sh 0.3
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -p 1 -online -rrdim 8 -rwdim 8 -sh 0.3 -id 3
 
 #include "mfem.hpp"
 
@@ -347,6 +347,53 @@ CAROM::Matrix* GetFirstColumns(const int N, const CAROM::Matrix* A)
   return S;
 }
 
+// TODO: move this to the library?
+void BasisGeneratorFinalSummary(CAROM::BasisGenerator* bg, const double energyFraction, int & cutoff, const std::string cutoffOutputPath)
+{
+  const int rom_dim = bg->getSpatialBasis()->numColumns();
+  const CAROM::Vector* sing_vals = bg->getSingularValues();
+
+  MFEM_VERIFY(rom_dim <= sing_vals->dim(), "");
+
+  double sum = 0.0;
+  for (int sv = 0; sv < sing_vals->dim(); ++sv) {
+    sum += (*sing_vals)(sv);
+  }
+
+  vector<double> energy_fractions = {0.9999, 0.999, 0.99, 0.9};
+  bool reached_cutoff = false;
+
+  ofstream outfile(cutoffOutputPath);
+
+  double partialSum = 0.0;
+  for (int sv = 0; sv < sing_vals->dim(); ++sv) {
+    partialSum += (*sing_vals)(sv);
+    for (int i = energy_fractions.size() - 1; i >= 0; i--)
+      {
+	if (partialSum / sum > energy_fractions[i])
+	  {
+	    outfile << "For energy fraction: " << energy_fractions[i] << ", take first "
+		    << sv+1 << " of " << sing_vals->dim() << " basis vectors" << endl;
+	    energy_fractions.pop_back();
+	  }
+	else
+	  {
+	    break;
+	  }
+      }
+
+    if (!reached_cutoff && partialSum / sum > energyFraction)
+      {
+	cutoff = sv+1;
+	reached_cutoff = true;
+      }
+  }
+
+  if (!reached_cutoff) cutoff = sing_vals->dim();
+  outfile << "Take first " << cutoff << " of " << sing_vals->dim() << " basis vectors" << endl;
+  outfile.close();
+}
+
 void MergeBasis(const int dimFOM, const int nparam, const int max_num_snapshots, std::string name)
 {
   MFEM_VERIFY(nparam > 0, "Must specify a positive number of parameter sets");
@@ -364,6 +411,9 @@ void MergeBasis(const int dimFOM, const int nparam, const int max_num_snapshots,
     }
 
   generator.endSamples(); // save the merged basis file
+
+  int cutoff = 0;
+  BasisGeneratorFinalSummary(&generator, 0.9999, cutoff, "mergedSV_" + name);
 }
 
 int main(int argc, char *argv[])
@@ -1143,21 +1193,6 @@ int main(int argc, char *argv[])
       basis_generator_R->writeSnapshot();
       basis_generator_FR->writeSnapshot();
 
-      int rom_dim = basis_generator_R->getSpatialBasis()->numColumns();
-      cout << "R-space ROM dimension = " << rom_dim << endl;
-
-      const CAROM::Vector* sing_vals_R = basis_generator_R->getSingularValues();
-
-      if (myid == 0)
-	{
-            
-	  cout << "Singular Values:" << endl;
-	  for (int sv = 0; sv < sing_vals_R->dim(); ++sv) {
-            double this_sv = (*sing_vals_R)(sv);
-            cout << this_sv << endl;
-	  }
-	}
-
       // W space
 
       // TODO: why call computeNextSampleTime if you just do takeSample on every step anyway?
@@ -1170,37 +1205,6 @@ int main(int argc, char *argv[])
 	{
 	  basis_generator_S->takeSample(source.GetData(), t, dt);
 	  basis_generator_S->writeSnapshot();
-	}
-      
-      rom_dim = basis_generator_W->getSpatialBasis()->numColumns();
-      cout << "W-space ROM dimension = " << rom_dim << endl;
-
-      const CAROM::Vector* sing_vals_W = basis_generator_W->getSingularValues();
-
-      if (myid == 0)
-	{
-	  cout << "Singular Values:" << endl;
-	  for (int sv = 0; sv < sing_vals_W->dim(); ++sv) {
-            double this_sv = (*sing_vals_W)(sv);
-            cout << this_sv << endl;
-	  }
-	}
-
-      if (hyperreduce_source)
-	{
-	  rom_dim = basis_generator_S->getSpatialBasis()->numColumns();
-	  const CAROM::Vector* sing_vals_S = basis_generator_S->getSingularValues();
-
-	  if (myid == 0)
-	    {
-	      cout << "S-space ROM dimension = " << rom_dim << endl;
-
-	      cout << "Singular Values:" << endl;
-	      for (int sv = 0; sv < sing_vals_S->dim(); ++sv) {
-		double this_sv = (*sing_vals_S)(sv);
-		cout << this_sv << endl;
-	      }
-	    }
 	}
 
       delete basis_generator_R;
