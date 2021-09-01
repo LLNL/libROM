@@ -242,7 +242,6 @@ Matrix::getFirstNColumns(int n) const
 
     Matrix* first_n_columns = NULL;
     getFirstNColumns(n, first_n_columns);
-    std::cout << "BE" << std::endl;
     return first_n_columns;
 }
 
@@ -256,19 +255,14 @@ Matrix::getFirstNColumns(
 
     // If the result has not been allocated then do so.  Otherwise size it
     // correctly.
-    std::cout << "B" << std::endl;
     if (result == 0)
     {
-        std::cout << "BB" << std::endl;
         result = new Matrix(d_num_rows, n, d_distributed);
     }
     else
     {
-        std::cout << "BC" << std::endl;
         result->setSize(d_num_rows, n);
     }
-
-    std::cout << "BD" << std::endl;
 
     for (int i = 0; i < d_num_rows; i++)
     {
