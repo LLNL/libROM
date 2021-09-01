@@ -116,6 +116,44 @@ public:
 
     /**
      *
+     * @brief Returns the first n spatial basis vectors for the requested time
+     *        as a Matrix.
+     *
+     * @pre 0 < numTimeIntervals()
+     * @pre 0 <= time
+     * @pre 0 < n < numColumns()
+     *
+     * @param[in] time Time for which we want the basis vectors.
+     * @param[in] n    The number of spatial basis vectors desired.
+     *
+     * @return The spatial basis vectors for the requested time.
+     */
+    const Matrix*
+    getSpatialBasis(
+        double time,
+        int n);
+
+    /**
+     *
+     * @brief Returns the first n spatial basis vectors for the requested time
+     *        as a Matrix that capture the given energy fraction.
+     *
+     * @pre 0 < numTimeIntervals()
+     * @pre 0 <= time
+     * @pre 0 <= ef <= 1.0
+     *
+     * @param[in] time Time for which we want the basis vectors.
+     * @param[in] ef   The desired energy fraction.
+     *
+     * @return The spatial basis vectors for the requested time.
+     */
+    const Matrix*
+    getSpatialBasis(
+        double time,
+        double ef);
+
+    /**
+     *
      * @brief Returns the temporal basis vectors for the requested time as
      *        a Matrix.
      *
@@ -123,12 +161,50 @@ public:
      * @pre 0 <= time
      *
      * @param[in] time Time for which we want the basis vectors.
+     * @param[in] n    The number of temporal basis vectors desired.
      *
      * @return The temporal basis vectors for the requested time.
      */
     const Matrix*
     getTemporalBasis(
         double time);
+
+    /**
+     *
+     * @brief Returns the first n temporal basis vectors for the requested time
+     *        as a Matrix.
+     *
+     * @pre 0 < numTimeIntervals()
+     * @pre 0 <= time
+     * @pre 0 < n < numColumns()
+     *
+     * @param[in] time Time for which we want the basis vectors.
+     ** @pre 0 <= ef <= 1.0
+     * @return The temporal basis vectors for the requested time.
+     */
+    const Matrix*
+    getTemporalBasis(
+        double time,
+        int n);
+
+    /**
+     *
+     * @brief Returns the first n temporal basis vectors for the requested time
+     *        as a Matrix that capture the given energy fraction.
+     *
+     * @pre 0 < numTimeIntervals()
+     * @pre 0 <= time
+     * @pre 0 <= ef <= 1.0
+     *
+     * @param[in] time Time for which we want the basis vectors.
+     * @param[in] ef   The desired energy fraction.
+     *
+     * @return The temporal basis vectors for the requested time.
+     */
+    const Matrix*
+    getTemporalBasis(
+        double time,
+        double ef);
 
     /**
      *
@@ -144,6 +220,25 @@ public:
     const Vector*
     getSingularValues(
         double time);
+
+    /**
+     *
+     * @brief Returns the largest singular values for the requested time
+     *        that capture the given energy fraction.
+     *
+     * @pre 0 < numTimeIntervals()
+     * @pre 0 <= time
+     * @pre 0 <= ef <= 1.0
+     *
+     * @param[in] time Time for which we want the basis vectors.
+     * @param[in] ef   The desired energy fraction.
+     *
+     * @return The temporal basis vectors for the requested time.
+     */
+    const Vector*
+    getSingularValues(
+        double time,
+        double ef);
 
     /**
      *

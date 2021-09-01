@@ -148,6 +148,71 @@ BasisReader::getSpatialBasis(
 }
 
 const Matrix*
+BasisReader::getSpatialBasis(
+    double time,
+    int n)
+{
+    CAROM_ASSERT(0 < numTimeIntervals());
+    CAROM_ASSERT(0 <= time);
+    int num_time_intervals = numTimeIntervals();
+    int i;
+    for (i = 0; i < num_time_intervals-1; ++i) {
+        if (d_time_interval_start_times[i] <= time &&
+                time < d_time_interval_start_times[i+1]) {
+            break;
+        }
+    }
+    d_last_basis_idx = i;
+    char tmp[100];
+    int num_rows;
+    sprintf(tmp, "spatial_basis_num_rows_%06d", i);
+    d_database->getInteger(tmp, num_rows);
+    int num_cols;
+    sprintf(tmp, "spatial_basis_num_cols_%06d", i);
+    d_database->getInteger(tmp, num_cols);
+    if (d_spatial_basis_vectors) {
+        delete d_spatial_basis_vectors;
+    }
+    CAROM_VERIFY(0 < n <= num_cols);
+    d_spatial_basis_vectors = new Matrix(num_rows, n, true);
+    sprintf(tmp, "spatial_basis_%06d", i);
+    d_database->getDoubleArray(tmp,
+                               &d_spatial_basis_vectors->item(0, 0),
+                               num_rows*n,
+                               n,
+                               num_cols - n);
+    return d_spatial_basis_vectors;
+}
+
+const Matrix*
+BasisReader::getSpatialBasis(
+    double time,
+    double ef)
+{
+    const Vector* sv = getSingularValues(time);
+    double total_energy = 0.0;
+    double energy = 0.0;
+    for (int i = 0; i < sv->dim(); i++)
+    {
+        total_energy += sv->item(i);
+    }
+
+    int num_used_singular_values = 0;
+    for (int i = 0; i < sv->dim(); i++)
+    {
+        energy += sv->item(i);
+        num_used_singular_values++;
+        if (energy >= ef)
+        {
+            break;
+        }
+    }
+
+    delete sv;
+    return getSpatialBasis(time, num_used_singular_values);
+}
+
+const Matrix*
 BasisReader::getTemporalBasis(
     double time)
 {
@@ -180,6 +245,71 @@ BasisReader::getTemporalBasis(
     return d_temporal_basis_vectors;
 }
 
+const Matrix*
+BasisReader::getTemporalBasis(
+    double time,
+    int n)
+{
+    CAROM_ASSERT(0 < numTimeIntervals());
+    CAROM_ASSERT(0 <= time);
+    int num_time_intervals = numTimeIntervals();
+    int i;
+    for (i = 0; i < num_time_intervals-1; ++i) {
+        if (d_time_interval_start_times[i] <= time &&
+                time < d_time_interval_start_times[i+1]) {
+            break;
+        }
+    }
+    d_last_basis_idx = i;
+    char tmp[100];
+    int num_rows;
+    sprintf(tmp, "temporal_basis_num_rows_%06d", i);
+    d_database->getInteger(tmp, num_rows);
+    int num_cols;
+    sprintf(tmp, "temporal_basis_num_cols_%06d", i);
+    d_database->getInteger(tmp, num_cols);
+    if (d_temporal_basis_vectors) {
+        delete d_temporal_basis_vectors;
+    }
+    CAROM_VERIFY(0 < n <= num_cols);
+    d_temporal_basis_vectors = new Matrix(num_rows, n, true);
+    sprintf(tmp, "temporal_basis_%06d", i);
+    d_database->getDoubleArray(tmp,
+                               &d_temporal_basis_vectors->item(0, 0),
+                               num_rows*n,
+                               n,
+                               num_cols - n);
+    return d_temporal_basis_vectors;
+}
+
+const Matrix*
+BasisReader::getTemporalBasis(
+    double time,
+    double ef)
+{
+    const Vector* sv = getSingularValues(time);
+    double total_energy = 0.0;
+    double energy = 0.0;
+    for (int i = 0; i < sv->dim(); i++)
+    {
+        total_energy += sv->item(i);
+    }
+
+    int num_used_singular_values = 0;
+    for (int i = 0; i < sv->dim(); i++)
+    {
+        energy += sv->item(i);
+        num_used_singular_values++;
+        if (energy >= ef)
+        {
+            break;
+        }
+    }
+
+    delete sv;
+    return getTemporalBasis(time, num_used_singular_values);
+}
+
 const Vector*
 BasisReader::getSingularValues(
     double time)
@@ -208,6 +338,40 @@ BasisReader::getSingularValues(
                                &d_singular_values->item(0),
                                size);
     return d_singular_values;
+}
+
+const Vector*
+BasisReader::getSingularValues(
+    double time,
+    double ef)
+{
+    const Vector* sv = getSingularValues(time);
+    double total_energy = 0.0;
+    double energy = 0.0;
+    for (int i = 0; i < sv->dim(); i++)
+    {
+        total_energy += sv->item(i);
+    }
+
+    int num_used_singular_values = 0;
+    for (int i = 0; i < sv->dim(); i++)
+    {
+        energy += sv->item(i);
+        num_used_singular_values++;
+        if (energy >= ef)
+        {
+            break;
+        }
+    }
+
+    Vector* truncated_sv = new Vector(num_used_singular_values, false);
+    for (int i = 0; i < num_used_singular_values; i++)
+    {
+        truncated_sv->item(i) = sv->item(i);
+    }
+
+    delete sv;
+    return truncated_sv;
 }
 
 const Matrix*

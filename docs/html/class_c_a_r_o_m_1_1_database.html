@@ -157,6 +157,9 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="c
 <tr class="memitem:ab5775af8c9f41f00c4bd8d23227f1b8d"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_database.html#ab5775af8c9f41f00c4bd8d23227f1b8d">getDoubleArray</a> (const std::string &amp;key, double *data, int nelements)=0</td></tr>
 <tr class="memdesc:ab5775af8c9f41f00c4bd8d23227f1b8d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reads an array of doubles associated with the supplied key from the currently open database file.  <a href="#ab5775af8c9f41f00c4bd8d23227f1b8d">More...</a><br/></td></tr>
 <tr class="separator:ab5775af8c9f41f00c4bd8d23227f1b8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a539f628b7413cb3c433df6731c0eba00"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_database.html#a539f628b7413cb3c433df6731c0eba00">getDoubleArray</a> (const std::string &amp;key, double *data, int nelements, int block_size, int stride)=0</td></tr>
+<tr class="memdesc:a539f628b7413cb3c433df6731c0eba00"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reads an array of doubles associated with the supplied key from the currently open database file.  <a href="#a539f628b7413cb3c433df6731c0eba00">More...</a><br/></td></tr>
+<tr class="separator:a539f628b7413cb3c433df6731c0eba00"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Class <a class="el" href="class_c_a_r_o_m_1_1_database.html">Database</a> is an abstract base class that provides basic ability to write to and read from a file. It's capabilities are limited to what the <a class="el" href="class_c_a_r_o_m_1_1_s_v_d.html">SVD</a> algorithm needs to read and write its basis vectors. </p>
@@ -316,6 +319,72 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="c
 </dl>
 
 <p>Implemented in <a class="el" href="class_c_a_r_o_m_1_1_h_d_f_database.html#a0f763843de50277edddc58351ea2f46e">CAROM::HDFDatabase</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a539f628b7413cb3c433df6731c0eba00"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void CAROM::Database::getDoubleArray </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>key</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nelements</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>block_size</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>stride</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Reads an array of doubles associated with the supplied key from the currently open database file. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">key</td><td>The key associated with the array of values to be read. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">data</td><td>The allocated array of double values to be read. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nelements</td><td>The number of doubles in the array. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">block_size</td><td>The block size to read from the HDF5 dataset. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">stride</td><td>The stride to read from the HDF5 dataset. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Implemented in <a class="el" href="class_c_a_r_o_m_1_1_h_d_f_database.html#a9322470c2809c4c36360a0d5a8aa74c4">CAROM::HDFDatabase</a>.</p>
 
 </div>
 </div>

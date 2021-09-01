@@ -222,6 +222,8 @@ public:
     /**
      * @brief Get the first N columns of a matrix.
      *
+     * @pre 0 < n < numColumns()
+     *
      * @return The truncated Matrix.
      */
     Matrix*
@@ -231,6 +233,7 @@ public:
      * @brief Get the first N columns of a matrix.
      *
      * @pre result.distributed() == distributed()
+     * @pre 0 < n < numColumns()
      *
      * @param[out] result The truncated Matrix.
      */
@@ -243,6 +246,7 @@ public:
      * @brief Get the first N columns of a matrix.
      *
      * @pre result.distributed() == distributed()
+     * @pre 0 < n < numColumns()
      *
      * @param[out] result The truncated Matrix.
      */
