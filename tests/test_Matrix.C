@@ -327,7 +327,7 @@ TEST(MatrixSerialTest, Test_get_first_n_columns)
     CAROM::Matrix* truncated_matrix = matrix.getFirstNColumns(2);
 
     EXPECT_EQ(truncated_matrix->numRows(), 4);
-    EXPECT_EQ(truncated_matrix->numCols(), 2);
+    EXPECT_EQ(truncated_matrix->numColumns(), 2);
 
     EXPECT_DOUBLE_EQ(truncated_matrix->item(0, 0), 0.0);
     EXPECT_DOUBLE_EQ(truncated_matrix->item(0, 1), 1.0);
