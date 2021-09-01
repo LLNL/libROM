@@ -33,8 +33,8 @@ namespace CAROM {
 void
 QDEIM(const Matrix* f_basis,
       int num_f_basis_vectors_used,
-      int* f_sampled_row,
-      int* f_sampled_rows_per_proc,
+      std::vector<int> f_sampled_row,
+      std::vector<int> f_sampled_rows_per_proc,
       Matrix& f_basis_sampled_inv,
       const int myid,
       const int num_procs,
@@ -46,7 +46,7 @@ QDEIM(const Matrix* f_basis,
 
     CAROM_VERIFY(num_f_basis_vectors_used == f_basis->numColumns());  // The QR implementation uses the entire matrix.
     CAROM_VERIFY(f_basis->numColumns() <= num_samples_req && num_samples_req <= f_basis->numDistributedRows());
-    CAROM_VERIFY(num_samples_req == f_basis_sampled_inv.numRows() && f_basis->numColumns() == f_basis_sampled_inv.numColumns());
+    CAROM_VERIFY(num_samples_req == f_basis_sampled_inv.numRows() && f_basis->numColumns() f_sample== f_basis_sampled_inv.numColumns());
     CAROM_VERIFY(!f_basis_sampled_inv.distributed());
 
     // QR will determine (numCol) pivots, which will define the first (numCol) samples.
@@ -60,7 +60,7 @@ QDEIM(const Matrix* f_basis,
 
     // QDEIM computes selection/interpolation indices by taking a
     // column-pivoted QR-decomposition of the transpose of its input matrix.
-    f_basis->qrcp_pivots_transpose(f_sampled_row,
+    f_basis->qrcp_pivots_transpose(f_sampled_row.data(),
                                    f_sampled_row_owner.data(),
                                    num_samples_req_QR);
 
@@ -117,7 +117,7 @@ QDEIM(const Matrix* f_basis,
             }
         }
 
-        MPI_Bcast(f_sampled_rows_per_proc, num_procs, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(f_sampled_rows_per_proc.data(), num_procs, MPI_INT, 0, MPI_COMM_WORLD);
 
         int count = 0;
         MPI_Scatter(ns.data(), 1, MPI_INT, &count, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -395,8 +395,8 @@ QDEIM(const Matrix* f_basis,
                 f_sampled_row[i] = sortedRow[i];
         }
 
-        MPI_Bcast(f_sampled_row, num_samples_req, MPI_INT, 0, MPI_COMM_WORLD);
-        MPI_Bcast(f_sampled_rows_per_proc, num_procs, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(f_sampled_row.data(), num_samples_req, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(f_sampled_rows_per_proc.data(), num_procs, MPI_INT, 0, MPI_COMM_WORLD);
     }
     else
     {
