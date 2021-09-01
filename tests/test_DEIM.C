@@ -61,7 +61,7 @@ TEST(DEIMSerialTest, Test_DEIM)
     double* DEIM_res = NULL;
     std::vector<int> f_sampled_row(num_cols, 0);
     std::vector<int> f_sampled_row_true_ans{0, 1, 4, 5, 9};
-    std::vector<int> f_sampled_rows_per_proc(num_cols, 0);
+    std::vector<int> f_sampled_rows_per_proc(1, 0);
     CAROM::Matrix f_basis_sampled_inv = CAROM::Matrix(num_cols, num_cols, false);
     CAROM::DEIM(u, num_cols, f_sampled_row, f_sampled_rows_per_proc, f_basis_sampled_inv, 0, 1);
 
@@ -114,7 +114,7 @@ TEST(DEIMSerialTest, Test_DEIM_decreased_used_basis_vectors)
     double* DEIM_res = NULL;
     std::vector<int> f_sampled_row(num_basis_vectors_used, 0);
     std::vector<int> f_sampled_row_true_ans{0, 1, 4};
-    std::vector<int> f_sampled_rows_per_proc(num_basis_vectors_used, 0);
+    std::vector<int> f_sampled_rows_per_proc(1, 0);
     CAROM::Matrix f_basis_sampled_inv = CAROM::Matrix(num_basis_vectors_used, num_basis_vectors_used, false);
     CAROM::DEIM(u, num_basis_vectors_used, f_sampled_row, f_sampled_rows_per_proc, f_basis_sampled_inv, 0, 1);
 

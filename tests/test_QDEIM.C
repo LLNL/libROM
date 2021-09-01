@@ -61,7 +61,7 @@ TEST(QDEIMSerialTest, Test_QDEIM)
     double* QDEIM_res = NULL;
     std::vector<int> f_sampled_row(num_cols, 0);
     std::vector<int> f_sampled_row_true_ans{1, 2, 4, 6, 9};
-    std::vector<int> f_sampled_rows_per_proc(num_cols, 0);
+    std::vector<int> f_sampled_rows_per_proc(1, 0);
     CAROM::Matrix f_basis_sampled_inv = CAROM::Matrix(num_cols, num_cols, false);
     CAROM::QDEIM(u, num_cols, f_sampled_row, f_sampled_rows_per_proc, f_basis_sampled_inv, 0, 1, num_cols);
 
@@ -120,7 +120,7 @@ TEST(QDEIMSerialTest, Test_QDEIM_gpode_oversampling)
     double* QDEIM_res = NULL;
     std::vector<int> f_sampled_row(num_samples, 0);
     std::vector<int> f_sampled_row_true_ans{0, 1, 2, 4, 5, 6, 8, 9};
-    std::vector<int> f_sampled_rows_per_proc(num_samples, 0);
+    std::vector<int> f_sampled_rows_per_proc(1, 0);
     CAROM::Matrix f_basis_sampled_inv = CAROM::Matrix(num_samples, num_cols, false);
     CAROM::QDEIM(u, num_cols, f_sampled_row, f_sampled_rows_per_proc, f_basis_sampled_inv, 0, 1, num_samples);
 
