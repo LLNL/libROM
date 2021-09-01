@@ -180,7 +180,7 @@ BasisReader::getSpatialBasis(
                                &d_spatial_basis_vectors->item(0, 0),
                                num_rows*n,
                                n,
-                               num_cols - n);
+                               num_cols);
     return d_spatial_basis_vectors;
 }
 
@@ -278,7 +278,7 @@ BasisReader::getTemporalBasis(
                                &d_temporal_basis_vectors->item(0, 0),
                                num_rows*n,
                                n,
-                               num_cols - n);
+                               num_cols);
     return d_temporal_basis_vectors;
 }
 

@@ -313,20 +313,20 @@ HDFDatabase::getDoubleArray(
     CAROM_ASSERT(dspace >= 0);
 
     hsize_t nsel = H5Sget_select_npoints(dspace);
-    CAROM_ASSERT(static_cast<int>(nsel) == nelements);
 
     herr_t errf;
     if (nsel > 0) {
 
-        hsize_t array_size[1] = {(hsize_t) nelements};
+        hsize_t num_blocks[1] = {(hsize_t) nelements/block_size};
+        hsize_t buffer_array_size[1] = {(hsize_t) nelements};
         hsize_t offsets[1] = {0};
         hsize_t strides[1] = {(hsize_t) stride};
         hsize_t block_sizes[1] = {(hsize_t) block_size};
-        hid_t nodespace = H5Screate_simple(1,array_size,NULL);
+        hid_t nodespace = H5Screate_simple(1,buffer_array_size,NULL);
 
         // select hyperslab
         H5Sselect_hyperslab(dspace, H5S_SELECT_SET, offsets,
-            strides, array_size, block_sizes);
+            strides, num_blocks, block_sizes);
 
         errf = H5Dread(dset, H5T_NATIVE_DOUBLE, nodespace, dspace, H5P_DEFAULT, data);
         CAROM_ASSERT(errf >= 0);
