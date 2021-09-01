@@ -318,10 +318,10 @@ HDFDatabase::getDoubleArray(
     herr_t errf;
     if (nsel > 0) {
 
-        hsize_t array_size[1] = {nelements};
+        hsize_t array_size[1] = {(hsize_t) nelements};
         hsize_t offsets[1] = {0};
-        hsize_t strides[1] = {stride};
-        hsize_t block_sizes[1] = {block_size};
+        hsize_t strides[1] = {(hsize_t) stride};
+        hsize_t block_sizes[1] = {(hsize_t) block_size};
         hid_t nodespace = H5Screate_simple(1,array_size,NULL);
 
         // select hyperslab
