@@ -322,7 +322,8 @@ TEST(MatrixSerialTest, Test_get_first_n_columns)
      *               [12.0  13.0  14.0  15.0]
      */
     double d_mat[16] = {0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0,
-                       11.0, 12.0, 13.0, 14.0, 15.0};
+                        11.0, 12.0, 13.0, 14.0, 15.0
+                       };
     CAROM::Matrix matrix(d_mat, 4, 4, false);
     CAROM::Matrix* truncated_matrix = matrix.getFirstNColumns(2);
 

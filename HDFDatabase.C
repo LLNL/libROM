@@ -326,7 +326,7 @@ HDFDatabase::getDoubleArray(
 
         // select hyperslab
         H5Sselect_hyperslab(dspace, H5S_SELECT_SET, offsets,
-            strides, num_blocks, block_sizes);
+                            strides, num_blocks, block_sizes);
 
         errf = H5Dread(dset, H5T_NATIVE_DOUBLE, nodespace, dspace, H5P_DEFAULT, data);
         CAROM_ASSERT(errf >= 0);
