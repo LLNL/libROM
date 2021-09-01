@@ -139,9 +139,9 @@ int main(int argc, char *argv[])
         }
         infile.close();
         greedy_sampler = new CAROM::GreedyParameterPointRandomSampler(greedy_param_space_min, greedy_param_space_max,
-            greedy_param_space_size, false, greedy_relative_error_tol, 1.05,
-            2.0, greedy_subset_size, greedy_convergence_subset_size,
-            true, "poisson_greedy_algorithm_log.txt");
+                greedy_param_space_size, false, greedy_relative_error_tol, 1.05,
+                2.0, greedy_subset_size, greedy_convergence_subset_size,
+                true, "poisson_greedy_algorithm_log.txt");
     }
     // 3. Or use the database set up by the greedy algorithm.
     else if (use_database)
