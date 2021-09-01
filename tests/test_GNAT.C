@@ -60,7 +60,7 @@ TEST(GNATSerialTest, Test_GNAT_deim)
     CAROM::Matrix* u = new CAROM::Matrix(orthonormal_mat, num_rows, num_cols, false);
     double* GNAT_res = NULL;
     std::vector<int> f_sampled_row(num_cols, 0);
-    std::vector<int> f_sampled_row_true_ans{1, 2, 4, 5, 9};
+    std::vector<int> f_sampled_row_true_ans{0, 1, 4, 5, 9};
     std::vector<int> f_sampled_rows_per_proc(num_cols, 0);
     CAROM::Matrix f_basis_sampled_inv = CAROM::Matrix(num_cols, num_cols, false);
     CAROM::GNAT(u, num_cols, f_sampled_row, f_sampled_rows_per_proc, f_basis_sampled_inv, 0, 1);
