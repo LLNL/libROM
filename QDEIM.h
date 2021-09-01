@@ -50,8 +50,8 @@ class Matrix;
 void
 QDEIM(const Matrix* f_basis,
       int num_f_basis_vectors_used,
-      std::vector<int> f_sampled_row,
-      std::vector<int> f_sampled_rows_per_proc,
+      std::vector<int>& f_sampled_row,
+      std::vector<int>& f_sampled_rows_per_proc,
       Matrix& f_basis_sampled_inv,
       const int myid,
       const int num_procs,
