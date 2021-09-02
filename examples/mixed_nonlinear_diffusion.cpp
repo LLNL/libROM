@@ -1305,6 +1305,7 @@ NonlinearDiffusionOperator::NonlinearDiffusionOperator(ParFiniteElementSpace &fR
   J_gmres->SetMaxIter(1000);
   J_gmres->SetPrintLevel(2);
   // TODO: precondition, for an efficient FOM solver.
+  // For example, see ex5p and miniapps/solvers/block-solvers.cpp in MFEM.
   // J_gmres->SetPreconditioner(*J_prec);
 
   newton_solver.iterative_mode = true;
