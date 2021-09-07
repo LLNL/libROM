@@ -3,38 +3,38 @@
 // Compile with: ./scripts/compile.sh -m 
 //
 // Description:  This example solves a time dependent nonlinear diffusion equation
-//               du/dt + div(v) = f, grad u = -a(u) v. After discretization by mixed FEM,
-//               M(u) v + B^T u = 0
-//               B v - C u_t = -f
+//               dp/dt + div(v) = f, grad p = -a(p) v. After discretization by mixed FEM,
+//               M(p) v + B^T p = 0
+//               B v - C p_t = -f
 //               where 
-//               M(u) = \int_\Omega a(u) w_h \cdot v_h d\Omega   w_h, v_h \in R_h
+//               M(p) = \int_\Omega a(p) w_h \cdot v_h d\Omega   w_h, v_h \in R_h
 //               B = -\int_\Omega \div w_h q_h d\Omega   w_h \in R_h, q_h \in W_h
 //               C = \int_\Omega q_h p_h d\Omega   p_h \in W_h, q_h \in W_h
 //               Here, R_h is a Raviart-Thomas finite element subspace of H(div),
 //               and W_h is a finite element subspace of L2.
-//               The first equation allows the substitution v = -M(u)^{-1} B^T u, so
-//               C u_t + B M(u)^{-1} B^T u = f
+//               The first equation allows the substitution v = -M(p)^{-1} B^T p, so
+//               C p_t + B M(p)^{-1} B^T p = f
 //               For the purpose of using an ODE solver, this can be expressed as
-//               u_t = C^{-1} (f - B M(u)^{-1} B^T u) = F(u)
+//               p_t = C^{-1} (f - B M(p)^{-1} B^T p) = F(p)
 
 // Sample runs:
 //               Analytic test (reproductive)
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -offline
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -merge -ns 1
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -online -rrdim 8 -rwdim 8
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../dependencies/mfem/data/inline-quad.mesh -offline
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../dependencies/mfem/data/inline-quad.mesh -merge -ns 1
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../dependencies/mfem/data/inline-quad.mesh -online -rrdim 8 -rwdim 8
 //
 //               Initial step test (reproductive)
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -offline -p 1
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -merge -ns 1 -p 1
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -online -rrdim 8 -rwdim 8 -p 1
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../dependencies/mfem/data/inline-quad.mesh -offline -p 1
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../dependencies/mfem/data/inline-quad.mesh -merge -ns 1 -p 1
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../dependencies/mfem/data/inline-quad.mesh -online -rrdim 8 -rwdim 8 -p 1
 //
 //               Initial step parametric test (predictive)
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -p 1 -offline -id 0 -sh 0.25
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -p 1 -offline -id 1 -sh 0.15
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -p 1 -offline -id 2 -sh 0.35
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -p 1 -merge -ns 3
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -p 1 -offline -id 3 -sh 0.3
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../mfem/data/inline-quad.mesh -p 1 -online -rrdim 8 -rwdim 8 -sh 0.3 -id 3
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../dependencies/mfem/data/inline-quad.mesh -p 1 -offline -id 0 -sh 0.25
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../dependencies/mfem/data/inline-quad.mesh -p 1 -offline -id 1 -sh 0.15
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../dependencies/mfem/data/inline-quad.mesh -p 1 -offline -id 2 -sh 0.35
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../dependencies/mfem/data/inline-quad.mesh -p 1 -merge -ns 3
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../dependencies/mfem/data/inline-quad.mesh -p 1 -offline -id 3 -sh 0.3
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../dependencies/mfem/data/inline-quad.mesh -p 1 -online -rrdim 8 -rwdim 8 -sh 0.3 -id 3
 
 #include "mfem.hpp"
 
@@ -108,14 +108,14 @@ void NonlinearDiffusionGradientOperator::SetParameters(Operator *C_solver_, Oper
 
 void NonlinearDiffusionGradientOperator::Mult(const Vector &x, Vector &y) const
 {
-  // Gradient is I + dt C^{-1} B M(u)^{-1} B^T - dt C^{-1} B M(u)^{-1} M(a'(u)) M(u)^{-1} B^T
-  //   = I + dt C^{-1} B (I - M(u)^{-1} M(a'(u))) M(u)^{-1} B^T
+  // Gradient is I + dt C^{-1} B M(p)^{-1} B^T - dt C^{-1} B M(p)^{-1} M(a'(p)) M(p)^{-1} B^T
+  //   = I + dt C^{-1} B (I - M(p)^{-1} M(a'(p))) M(p)^{-1} B^T
 
-  // Apply M(u)^{-1} B^T
+  // Apply M(p)^{-1} B^T
   B->MultTranspose(x, zR);
   M_solver->Mult(zR, yR);
 
-  // Apply (I - M(u)^{-1} M(a'(u))) to yR
+  // Apply (I - M(p)^{-1} M(a'(p))) to yR
 
   M_prime->Mult(yR, zR);
   M_solver->Mult(zR, xR);
@@ -173,8 +173,8 @@ protected:
 
   double linear_solver_rel_tol;
 
-  Vector u0;
-  Vector dudt_prev;
+  Vector p0;
+  Vector dpdt_prev;
 
   mutable Vector zR; // auxiliary vector
   mutable Vector yR; // auxiliary vector
@@ -183,40 +183,40 @@ protected:
 public:
   NonlinearDiffusionOperator(ParFiniteElementSpace &fR, ParFiniteElementSpace &fW,
 			     const double rel_tol, const double abs_tol,
-			     const int iter, const Vector &u, const bool SchurComplement_);
+			     const int iter, const Vector &p, const bool SchurComplement_);
 
-  virtual void Mult(const Vector &u, Vector &du_dt) const;
+  virtual void Mult(const Vector &p, Vector &dp_dt) const;
 
-  void Mult_Mmat(const Vector &u, Vector &Mu) const
+  void Mult_Mmat(const Vector &p, Vector &Mp) const
   {
-    Mmat->Mult(u, Mu);
+    Mmat->Mult(p, Mp);
   }
   
-  void Mult_FullSystem(const Vector &u, Vector &du_dt) const;
-  void Mult_SchurComplement(const Vector &u, Vector &du_dt) const;
+  void Mult_FullSystem(const Vector &p, Vector &dp_dt) const;
+  void Mult_SchurComplement(const Vector &p, Vector &dp_dt) const;
   void SetBTV(const CAROM::Matrix *V, CAROM::Matrix *BTV) const;
   
   void GetSource(Vector& s) const;
   
-  /** Solve the Backward-Euler equation: k = f(u + dt*k, t), for the unknown k.
+  /** Solve the Backward-Euler equation: k = f(p + dt*k, t), for the unknown k.
       This is the only requirement for high-order SDIRK implicit integration.*/
-  virtual void ImplicitSolve(const double dt, const Vector &u, Vector &du_dt);
+  virtual void ImplicitSolve(const double dt, const Vector &p, Vector &dp_dt);
 
-  virtual Operator &GetGradient(const Vector &u) const;
+  virtual Operator &GetGradient(const Vector &p) const;
 
-  /// Update the diffusion BilinearForm K using the given true-dof vector `u`.
-  void SetParameters(const Vector &u) const;
+  /// Update the diffusion BilinearForm K using the given true-dof vector `p`.
+  void SetParameters(const Vector &p) const;
 
-  void CopyDuDt(Vector &dudt) const
+  void CopyDpDt(Vector &dpdt) const
   {
-    dudt = dudt_prev;
+    dpdt = dpdt_prev;
   }
 
-  void CopyDuDt_W(Vector &dudt) const
+  void CopyDpDt_W(Vector &dpdt) const
   {
-    Vector dudt_W(dudt_prev.GetData() + zR.Size(), zW.Size());
+    Vector dpdt_W(dpdt_prev.GetData() + zR.Size(), zW.Size());
     
-    dudt = dudt_W;
+    dpdt = dpdt_W;
   }
 
   virtual ~NonlinearDiffusionOperator();
@@ -236,10 +236,10 @@ private:
   NewtonSolver newton_solver;
   GMRESSolver *J_gmres;
   CAROM::Matrix *BRsp, *BWsp;
-  CAROM::Vector *usp_librom, *usp_R_librom, *usp_W_librom;
-  Vector *usp;
-  Vector *usp_R;
-  Vector *usp_W;
+  CAROM::Vector *psp_librom, *psp_R_librom, *psp_W_librom;
+  Vector *psp;
+  Vector *psp_R;
+  Vector *psp_W;
   mutable Vector zR;
   mutable CAROM::Vector zY;
   mutable CAROM::Vector zN;
@@ -258,16 +258,16 @@ private:
   bool hyperreduce, hyperreduce_source;
   bool sourceFOM;
 
-  CAROM::Vector *ufom_librom, *ufom_R_librom, *ufom_W_librom;
-  Vector *ufom;
-  Vector *ufom_R;
-  Vector *ufom_W;
+  CAROM::Vector *pfom_librom, *pfom_R_librom, *pfom_W_librom;
+  Vector *pfom;
+  Vector *pfom_R;
+  Vector *pfom_W;
   mutable Vector zfomR;
   mutable Vector zfomW;
   CAROM::Vector *zfomR_librom;
   mutable CAROM::Vector VtzR;
 
-  void PrintFDJacobian(const Vector &u) const;
+  void PrintFDJacobian(const Vector &p) const;
   
 protected:
   CAROM::Matrix* BR;
@@ -292,7 +292,7 @@ public:
   void Mult_Hyperreduced(const Vector &y, Vector &dy_dt) const;
   void Mult_FullOrder(const Vector &y, Vector &dy_dt) const;
 
-  /** Solve the Backward-Euler equation: k = f(u + dt*k, t), for the unknown k.
+  /** Solve the Backward-Euler equation: k = f(p + dt*k, t), for the unknown k.
       This is the only requirement for high-order SDIRK implicit integration.*/
   virtual void ImplicitSolve(const double dt, const Vector &y, Vector &dy_dt);
 
@@ -330,8 +330,8 @@ void BroadcastUndistributedRomVector(CAROM::Vector* v)
 double InitialTemperature(const Vector &x);
 double SourceFunction(const Vector &x, const double t);
 double ExactSolution(const Vector &x, const double t);
-double NonlinearCoefficient(const double u);
-double NonlinearCoefficientDerivative(const double u);
+double NonlinearCoefficient(const double p);
+double NonlinearCoefficientDerivative(const double p);
 
 // TODO: move this to the library?
 CAROM::Matrix* GetFirstColumns(const int N, const CAROM::Matrix* A)
@@ -589,24 +589,24 @@ int main(int argc, char *argv[])
       return 0;
     }
   
-  ParGridFunction u_gf(&W_space);
+  ParGridFunction p_gf(&W_space);
 
-  // 8. Set the initial conditions for u.
+  // 8. Set the initial conditions for p.
 
   const bool SchurComplement = false;
 
-  FunctionCoefficient u_0(InitialTemperature);
-  u_gf.ProjectCoefficient(u_0);
-  Vector u, uprev, dudt, source;
-  Vector *u_W = &u;
-  ParGridFunction* sp_u_gf = 0;
-  Vector sp_u;
-  Vector *sp_u_W = &sp_u;
+  FunctionCoefficient p_0(InitialTemperature);
+  p_gf.ProjectCoefficient(p_0);
+  Vector p, pprev, dpdt, source;
+  Vector *p_W = &p;
+  ParGridFunction* sp_p_gf = 0;
+  Vector sp_p;
+  Vector *sp_p_W = &sp_p;
 
   Vector *wMFEM = 0;
   
-  CAROM::Vector *u_librom = 0;
-  CAROM::Vector *u_W_librom = 0;
+  CAROM::Vector *p_librom = 0;
+  CAROM::Vector *p_W_librom = 0;
   CAROM::Vector* w_W = 0;
   CAROM::Vector* w = 0;
   
@@ -618,26 +618,26 @@ int main(int argc, char *argv[])
   cout << myid << ": Local number of RT unknowns: " << N1 << endl;
   
   if (SchurComplement)
-    u_gf.GetTrueDofs(u);
+    p_gf.GetTrueDofs(p);
   else
     {
-      u_librom = new CAROM::Vector(fdim, true);
-      u.SetDataAndSize(&((*u_librom)(0)), fdim);
-      u_W_librom = new CAROM::Vector(&((*u_librom)(N1)), N2, true, false);
+      p_librom = new CAROM::Vector(fdim, true);
+      p.SetDataAndSize(&((*p_librom)(0)), fdim);
+      p_W_librom = new CAROM::Vector(&((*p_librom)(N1)), N2, true, false);
 
-      u = 0.0;
-      u_W = new Vector(u.GetData() + N1, N2);
-      u_gf.GetTrueDofs(*u_W);
+      p = 0.0;
+      p_W = new Vector(p.GetData() + N1, N2);
+      p_gf.GetTrueDofs(*p_W);
 
       source.SetSize(N2);
     }
 
   // 9. Initialize the diffusion operator and the VisIt visualization.
-  NonlinearDiffusionOperator oper(R_space, W_space, newton_rel_tol, newton_abs_tol, newton_iter, u, SchurComplement);  // FOM operator
+  NonlinearDiffusionOperator oper(R_space, W_space, newton_rel_tol, newton_abs_tol, newton_iter, p, SchurComplement);  // FOM operator
   NonlinearDiffusionOperator *soper = 0;  // Sample mesh operator
   
   if (SchurComplement)
-    u_gf.SetFromTrueDofs(*u_W);
+    p_gf.SetFromTrueDofs(*p_W);
 
   if (offline)
   {
@@ -649,7 +649,7 @@ int main(int argc, char *argv[])
     pmesh->Print(omesh);
     ofstream osol(sol_name.str().c_str());
     osol.precision(precision);
-    u_gf.Save(osol);
+    p_gf.Save(osol);
   }
 
   VisItDataCollection * visit_dc = NULL;
@@ -660,7 +660,7 @@ int main(int argc, char *argv[])
       else
 	visit_dc = new VisItDataCollection("nldiff-rom", pmesh);
 
-      visit_dc->RegisterField("temperature", &u_gf);
+      visit_dc->RegisterField("temperature", &p_gf);
       visit_dc->SetCycle(0);
       visit_dc->SetTime(0.0);
       visit_dc->Save();
@@ -689,7 +689,7 @@ int main(int argc, char *argv[])
       else
 	{
 	  sout.precision(precision);
-	  sout << "solution\n" << *pmesh << u_gf;
+	  sout << "solution\n" << *pmesh << p_gf;
 	  sout << "pause\n";
 	  sout << flush;
 	  if (myid == 0)
@@ -702,7 +702,7 @@ int main(int argc, char *argv[])
 
   CAROM::BasisGenerator *basis_generator_R = 0;  // For the solution component in vector H(div)
   CAROM::BasisGenerator *basis_generator_W = 0;  // For the solution component in scalar L2
-  CAROM::BasisGenerator *basis_generator_FR = 0; // For the nonlinear term M(u)v with u in L2, v in H(div)
+  CAROM::BasisGenerator *basis_generator_FR = 0; // For the nonlinear term M(p)v with p in L2, v in H(div)
   CAROM::BasisGenerator *basis_generator_S = 0;  // For the source in scalar L2
 
   if (offline) {
@@ -758,10 +758,10 @@ int main(int argc, char *argv[])
       if (myid == 0)
 	printf("reduced W dim = %d\n",rwdim);
 
-      // TODO: To get the basis U_R, considering the relation M(u) v + B^T u = 0 in the FOM, we can just use
+      // TODO: To get the basis U_R, considering the relation M(p) v + B^T p = 0 in the FOM, we can just use
       // U_R = B^T V_W. Note that V_W and V_R may have different numbers of columns, which is fine.
       // TODO: maybe we need POD applied to B^T multiplied by W-snapshots, or just a basis generator for
-      // snapshots of M(u) v. This could be different from B^T multiplied by POD results for the W solutions.
+      // snapshots of M(p) v. This could be different from B^T multiplied by POD results for the W solutions.
 
       /*
       FR_librom = new CAROM::Matrix(N1, rwdim, true);
@@ -958,8 +958,8 @@ int main(int argc, char *argv[])
       w = new CAROM::Vector(rrdim + rwdim, false);
       w_W = new CAROM::Vector(rwdim, false);
       
-      // Initialize w = B_W^T u.
-      BW_librom->transposeMult(*u_W_librom, *w_W);
+      // Initialize w = B_W^T p.
+      BW_librom->transposeMult(*p_W_librom, *w_W);
 
       for (int i=0; i<rrdim; ++i)
 	(*w)(i) = 0.0;
@@ -972,23 +972,23 @@ int main(int argc, char *argv[])
 	  
       if (myid == 0)
 	{
-	  // Initialize sp_u with initial conditions.
+	  // Initialize sp_p with initial conditions.
 	  if (SchurComplement)
 	    {
 	      MFEM_VERIFY(false, "Schur complement formulation cannot be used with ROM.");
 	    }
 	  else
 	    {
-	      sp_u_gf = new ParGridFunction(sp_W_space);
-	      sp_u_gf->ProjectCoefficient(u_0);
+	      sp_p_gf = new ParGridFunction(sp_W_space);
+	      sp_p_gf->ProjectCoefficient(p_0);
 
-	      sp_u.SetSize(sp_R_space->GetTrueVSize() + sp_W_space->GetTrueVSize());
-	      sp_u = 0.0;
-	      sp_u_W = new Vector(sp_u.GetData() + sp_R_space->GetTrueVSize(), sp_W_space->GetTrueVSize());
-	      sp_u_gf->GetTrueDofs(*sp_u_W);
+	      sp_p.SetSize(sp_R_space->GetTrueVSize() + sp_W_space->GetTrueVSize());
+	      sp_p = 0.0;
+	      sp_p_W = new Vector(sp_p.GetData() + sp_R_space->GetTrueVSize(), sp_W_space->GetTrueVSize());
+	      sp_p_gf->GetTrueDofs(*sp_p_W);
 	    }
  
-	  soper = new NonlinearDiffusionOperator(*sp_R_space, *sp_W_space, newton_rel_tol, newton_abs_tol, newton_iter, sp_u, SchurComplement);
+	  soper = new NonlinearDiffusionOperator(*sp_R_space, *sp_W_space, newton_rel_tol, newton_abs_tol, newton_iter, sp_p, SchurComplement);
 	}
 
       romop = new RomOperator(&oper, soper, rrdim, rwdim, nldim,
@@ -1026,30 +1026,30 @@ int main(int argc, char *argv[])
 	      oper.GetSource(source);
 	      basis_generator_S->takeSample(source.GetData(), t, dt);
 	      // TODO: dfdt? In this example, one can implement the exact formula.
-	      //   In general, one can use finite differences in time (dudt is computed that way). 
-	      //basis_generator_S->computeNextSampleTime(u.GetData(), dfdt.GetData(), t);
+	      //   In general, one can use finite differences in time (dpdt is computed that way). 
+	      //basis_generator_S->computeNextSampleTime(p.GetData(), dfdt.GetData(), t);
 	    }
 
 	  if (basis_generator_R->isNextSample(t))
 	    {
-	      oper.CopyDuDt(dudt);
+	      oper.CopyDpDt(dpdt);
 
-	      basis_generator_R->takeSample(u.GetData(), t, dt);
-	      basis_generator_R->computeNextSampleTime(u.GetData(), dudt.GetData(), t);
+	      basis_generator_R->takeSample(p.GetData(), t, dt);
+	      basis_generator_R->computeNextSampleTime(p.GetData(), dpdt.GetData(), t);
 
-	      Vector u_R(u.GetData(), N1);
-	      Vector Mu(N1);
-	      oper.SetParameters(u);
-	      oper.Mult_Mmat(u_R, Mu);
-	      basis_generator_FR->takeSample(Mu.GetData(), t, dt);
+	      Vector p_R(p.GetData(), N1);
+	      Vector Mp(N1);
+	      oper.SetParameters(p);
+	      oper.Mult_Mmat(p_R, Mp);
+	      basis_generator_FR->takeSample(Mp.GetData(), t, dt);
 	    }
 
 	  if (sampleW)
 	    {
-	      oper.CopyDuDt_W(dudt);
+	      oper.CopyDpDt_W(dpdt);
 
-	      basis_generator_W->takeSample(u_W->GetData(), t, dt);
-	      basis_generator_W->computeNextSampleTime(u_W->GetData(), dudt.GetData(), t);
+	      basis_generator_W->takeSample(p_W->GetData(), t, dt);
+	      basis_generator_W->computeNextSampleTime(p_W->GetData(), dpdt.GetData(), t);
 	    }
 	}
 
@@ -1065,14 +1065,14 @@ int main(int argc, char *argv[])
       else  // fom
 	{
 	  oper.newtonFailure = false;
-	  uprev = u;  // Save solution, to reset in case of a Newton failure.
+	  pprev = p;  // Save solution, to reset in case of a Newton failure.
 	  const double tprev = t;
-	  ode_solver.Step(u, t, dt);
+	  ode_solver.Step(p, t, dt);
 
 	  if (oper.newtonFailure)
 	    {
 	      // Reset and retry.
-	      u = uprev;
+	      p = pprev;
 	      t = tprev;
 	      dt *= 0.5;
 	      cout << "step " << ti << ", t = " << t << " had a Newton failure, cutting dt to " << dt << endl;
@@ -1113,9 +1113,9 @@ int main(int argc, char *argv[])
 	      for (int i=0; i<rwdim; ++i)
 		(*w_W)(i) = (*w)(rrdim + i);
 	      
-	      romop->V_W.mult(*w_W, *u_W_librom);
+	      romop->V_W.mult(*w_W, *p_W_librom);
 
-	      u_gf.SetFromTrueDofs(*u_W);
+	      p_gf.SetFromTrueDofs(*p_W);
 
 	      if (last_step)
 		{
@@ -1131,23 +1131,23 @@ int main(int argc, char *argv[])
 		  fom_solution.Load(solution_file, N2);
 		  solution_file.close();
 		  const double fomNorm = sqrt(InnerProduct(MPI_COMM_WORLD, fom_solution, fom_solution));
-		  //const double romNorm = sqrt(InnerProduct(MPI_COMM_WORLD, *u_W, *u_W));
-		  fom_solution -= *u_W;
+		  //const double romNorm = sqrt(InnerProduct(MPI_COMM_WORLD, *p_W, *p_W));
+		  fom_solution -= *p_W;
 		  const double diffNorm = sqrt(InnerProduct(MPI_COMM_WORLD, fom_solution, fom_solution));
 		  if (myid == 0) std::cout << "Relative l2 error of ROM solution " << diffNorm / fomNorm << std::endl;
 
 		  ofstream osol(rom_filename.str().c_str());
 		  osol.precision(precision);
-		  u_gf.Save(osol);
+		  p_gf.Save(osol);
 		}
 	    }
 	  else
-	    u_gf.SetFromTrueDofs(*u_W);
+	    p_gf.SetFromTrueDofs(*p_W);
 
 	  if (problem == ANALYTIC)
 	    {
-	      const double l2err = u_gf.ComputeL2Error(exsol);
-	      const double l2nrm = u_gf.ComputeL2Error(coeff0);
+	      const double l2err = p_gf.ComputeL2Error(exsol);
+	      const double l2nrm = p_gf.ComputeL2Error(coeff0);
 
 	      if (myid == 0)
 		cout << "L2 norm of exact error: " << l2err << ", FEM solution norm " << l2nrm << ", relative norm " << l2err / l2nrm << endl;
@@ -1156,7 +1156,7 @@ int main(int argc, char *argv[])
 	  if (visualization)
 	    {
 	      sout << "parallel " << num_procs << " " << myid << "\n";
-	      sout << "solution\n" << *pmesh << u_gf << flush;
+	      sout << "solution\n" << *pmesh << p_gf << flush;
 	    }
 
 	  if (visit)
@@ -1178,16 +1178,16 @@ int main(int argc, char *argv[])
     {
       // Sample final solution, to prevent extrapolation in ROM between the last sample and the end of the simulation.
 
-      oper.CopyDuDt(dudt);
+      oper.CopyDpDt(dpdt);
 
       // R space
-      basis_generator_R->takeSample(u.GetData(), t, dt);
+      basis_generator_R->takeSample(p.GetData(), t, dt);
 
-      Vector u_R(u.GetData(), N1);
-      Vector Mu(N1);
-      oper.SetParameters(u);
-      oper.Mult_Mmat(u_R, Mu);
-      basis_generator_FR->takeSample(Mu.GetData(), t, dt);
+      Vector p_R(p.GetData(), N1);
+      Vector Mp(N1);
+      oper.SetParameters(p);
+      oper.Mult_Mmat(p_R, Mp);
+      basis_generator_FR->takeSample(Mp.GetData(), t, dt);
       
       // Terminate the sampling and write out information.
       basis_generator_R->writeSnapshot();
@@ -1196,7 +1196,7 @@ int main(int argc, char *argv[])
       // W space
 
       // TODO: why call computeNextSampleTime if you just do takeSample on every step anyway?
-      basis_generator_W->takeSample(u_W->GetData(), t, dt);
+      basis_generator_W->takeSample(p_W->GetData(), t, dt);
       basis_generator_W->writeSnapshot();
 
       oper.GetSource(source);
@@ -1221,14 +1221,14 @@ int main(int argc, char *argv[])
     sol_name << "nldiff-final" << id_param << "." << setfill('0') << setw(6) << myid;
     ofstream osol(sol_name.str().c_str());
     osol.precision(precision);
-    u_gf.Save(osol);
+    p_gf.Save(osol);
 
     fomsol_name << "nldiff-fom-values-final" << id_param << "." << setfill('0') << setw(6) << myid;
     ofstream fomsol(fomsol_name.str().c_str());
     fomsol.precision(precision);
     for (int i = 0; i < N2; ++i)
       {
-	fomsol << (*u_W)[i] << std::endl;
+	fomsol << (*p_W)[i] << std::endl;
       }
   }
 
@@ -1237,7 +1237,7 @@ int main(int argc, char *argv[])
   delete romop;
   
   if (!SchurComplement)
-    delete u_W;
+    delete p_W;
 
   totalTimer.Stop();
   if (myid == 0) cout << "Elapsed time for entire simulation " << totalTimer.RealTime() << endl;
@@ -1248,11 +1248,11 @@ int main(int argc, char *argv[])
 
 NonlinearDiffusionOperator::NonlinearDiffusionOperator(ParFiniteElementSpace &fR, ParFiniteElementSpace &fW,
 						       const double rel_tol, const double abs_tol, 
-						       const int iter, const Vector &u, const bool SchurComplement_)
+						       const int iter, const Vector &p, const bool SchurComplement_)
   : TimeDependentOperator(SchurComplement_ ? fW.GetTrueVSize() : fR.GetTrueVSize() + fW.GetTrueVSize(), 0.0), 
     fespace_R(fR), fespace_W(fW), M(NULL), C(NULL), Bmat(NULL), BTmat(NULL), Mprime(NULL), current_dt(0.0), 
     newton_solver(fW.GetComm()), M_solver(NULL), C_solver(fW.GetComm()), zW(fW.GetTrueVSize()), yR(fR.GetTrueVSize()),
-    zR(fR.GetTrueVSize()), u0(height), dudt_prev(height),
+    zR(fR.GetTrueVSize()), p0(height), dpdt_prev(height),
     SchurComplement(SchurComplement_), fullOp(NULL), fullGradient(NULL), fullPrec(NULL)
 {
   gradient = new NonlinearDiffusionGradientOperator(fR.GetTrueVSize(), fW.GetTrueVSize());
@@ -1292,7 +1292,7 @@ NonlinearDiffusionOperator::NonlinearDiffusionOperator(ParFiniteElementSpace &fR
   block_trueOffsets[2] = fespace_W.GetTrueVSize();
   block_trueOffsets.PartialSum();
 
-  // SetParameters(u);
+  // SetParameters(p);
 
   M_prec.SetType(HypreSmoother::Jacobi);
 
@@ -1316,7 +1316,7 @@ NonlinearDiffusionOperator::NonlinearDiffusionOperator(ParFiniteElementSpace &fR
   newton_solver.SetAbsTol(abs_tol);
   newton_solver.SetMaxIter(iter);
 
-  dudt_prev = 0.0;
+  dpdt_prev = 0.0;
 }
 
 void NonlinearDiffusionOperator::SetBTV(const CAROM::Matrix *V, CAROM::Matrix *BTV) const 
@@ -1339,18 +1339,18 @@ void NonlinearDiffusionOperator::SetBTV(const CAROM::Matrix *V, CAROM::Matrix *B
     }
 }
  
-void NonlinearDiffusionOperator::Mult(const Vector &du_dt, Vector &res) const
+void NonlinearDiffusionOperator::Mult(const Vector &dp_dt, Vector &res) const
 {
   if (SchurComplement)
-    Mult_SchurComplement(du_dt, res);
+    Mult_SchurComplement(dp_dt, res);
   else 
-    Mult_FullSystem(du_dt, res);
+    Mult_FullSystem(dp_dt, res);
 }
 
-void NonlinearDiffusionOperator::Mult_SchurComplement(const Vector &du_dt, Vector &res) const
+void NonlinearDiffusionOperator::Mult_SchurComplement(const Vector &dp_dt, Vector &res) const
 {
   // Compute:
-  //    du_dt - C^{-1} (f - B M(u)^{-1} B^T u), with u = u0 + dt*du_dt
+  //    dp_dt - C^{-1} (f - B M(p)^{-1} B^T p), with p = p0 + dt*dp_dt
 
   // Set grid function for f
   ParGridFunction f_gf(&fespace_W);
@@ -1361,17 +1361,17 @@ void NonlinearDiffusionOperator::Mult_SchurComplement(const Vector &du_dt, Vecto
   Vector fproj;
   f_gf.GetTrueDofs(fproj);
 
-  Vector u(u0);
-  u.Add(current_dt, du_dt);
+  Vector p(p0);
+  p.Add(current_dt, dp_dt);
 
-  SetParameters(u);  // Create M(a(u)), M(aprime(u))
+  SetParameters(p);  // Create M(a(p)), M(aprime(p))
 
-  // Compute C^{-1} (f - B M(u)^{-1} B^T u)
-  Bmat->MultTranspose(u, zR);
+  // Compute C^{-1} (f - B M(p)^{-1} B^T p)
+  Bmat->MultTranspose(p, zR);
   M_solver->Mult(zR, yR);
   Bmat->Mult(yR, zW);
 
-  res = du_dt;
+  res = dp_dt;
   res.Add(-1.0, fproj);
 
   C_solver.Mult(zW, fproj);
@@ -1390,70 +1390,70 @@ void NonlinearDiffusionOperator::GetSource(Vector& s) const
   f_gf.GetTrueDofs(s);
 }
 
-void NonlinearDiffusionOperator::Mult_FullSystem(const Vector &du_dt, Vector &res) const
+void NonlinearDiffusionOperator::Mult_FullSystem(const Vector &dp_dt, Vector &res) const
 {
   // Compute:
-  //    [   Mv + B^T u   ], with u = u0 + dt*du_dt
-  //    [C du_dt - Bv - f]       v = v0 + dt*dv_dt
+  //    [   Mv + B^T p   ], with p = p0 + dt*dp_dt
+  //    [C dp_dt - Bv - f]       v = v0 + dt*dv_dt
 
   GetSource(zW);
   
-  Vector u(u0);
-  u.Add(current_dt, du_dt);
+  Vector p(p0);
+  p.Add(current_dt, dp_dt);
 
-  SetParameters(u);  // Create fullOp
+  SetParameters(p);  // Create fullOp
 
-  fullOp->Mult(u, res);  // Sets the first block row of res. The second block row is computed below.
+  fullOp->Mult(p, res);  // Sets the first block row of res. The second block row is computed below.
 
-  Vector u_R(u.GetData() + block_trueOffsets[0], block_trueOffsets[1]-block_trueOffsets[0]);
-  Vector ut_W(du_dt.GetData() + block_trueOffsets[1], block_trueOffsets[2]-block_trueOffsets[1]);
+  Vector p_R(p.GetData() + block_trueOffsets[0], block_trueOffsets[1]-block_trueOffsets[0]);
+  Vector pt_W(dp_dt.GetData() + block_trueOffsets[1], block_trueOffsets[2]-block_trueOffsets[1]);
   Vector res_W(res.GetData() + block_trueOffsets[1], block_trueOffsets[2]-block_trueOffsets[1]);
 
-  res_W = ut_W;
+  res_W = pt_W;
   res_W.Add(-1.0, zW);  // -= f
-  Cmat->Mult(res_W, zW);  // = C du_dt - Cf
+  Cmat->Mult(res_W, zW);  // = C dp_dt - Cf
 
   res_W = zW;
 
-  Bmat->Mult(u_R, zW);  // Bv
+  Bmat->Mult(p_R, zW);  // Bv
   res_W.Add(-1.0, zW);  // -= Bv
 }
 
 void NonlinearDiffusionOperator::ImplicitSolve(const double dt,
-					       const Vector &u, Vector &du_dt)
+					       const Vector &p, Vector &dp_dt)
 {
   // Solve the equation:
-  //    du_dt = C^{-1} (f - B M(u + dt du_dt)^{-1} B^T (u + dt du_dt)), in the Schur complement case
-  // for du_dt
+  //    dp_dt = C^{-1} (f - B M(p + dt dp_dt)^{-1} B^T (p + dt dp_dt)), in the Schur complement case
+  // for dp_dt
 
   current_dt = dt;
   // MFEM_VERIFY(dt == current_dt, ""); // SDIRK methods use the same dt
 
-  u0 = u;
+  p0 = p;
   
-  // Set the initial guess for du_dt, to be used by newton_solver.
-  //du_dt = 0.0;
-  du_dt = dudt_prev;
+  // Set the initial guess for dp_dt, to be used by newton_solver.
+  //dp_dt = 0.0;
+  dp_dt = dpdt_prev;
 
   Vector zero; // empty vector is interpreted as zero r.h.s. by NewtonSolver
-  newton_solver.Mult(zero, du_dt);
+  newton_solver.Mult(zero, dp_dt);
 
   // MFEM_VERIFY(newton_solver.GetConverged(), "Newton solver did not converge.");
   if (newton_solver.GetConverged())
-    dudt_prev = du_dt;
+    dpdt_prev = dp_dt;
   else
     {
-      du_dt = 0.0;  // Zero update in SDIRK Step() function.
+      dp_dt = 0.0;  // Zero update in SDIRK Step() function.
       newtonFailure = true;
     }
 }
 
-Operator &NonlinearDiffusionOperator::GetGradient(const Vector &u) const
+Operator &NonlinearDiffusionOperator::GetGradient(const Vector &p) const
 {
   // Note that if a matrix A depends on a parameter t, then dA^{-1}/dt = -A^{-1} dA/dt A^{-1}.
-  // (d/du) M(u)^{-1} = -M(u)^{-1} M(a'(u)) M(u)^{-1}
+  // (d/dp) M(p)^{-1} = -M(p)^{-1} M(a'(p)) M(p)^{-1}
 
-  // Gradient is C^{-1} B M(a(u))^{-1} B^T - C^{-1} B M(u)^{-1} M(a'(u)) M(u)^{-1} B^T, Schur complement case.
+  // Gradient is C^{-1} B M(a(p))^{-1} B^T - C^{-1} B M(p)^{-1} M(a'(p)) M(p)^{-1} B^T, Schur complement case.
 
   if (SchurComplement)
     return *gradient;
@@ -1461,26 +1461,26 @@ Operator &NonlinearDiffusionOperator::GetGradient(const Vector &u) const
     return *fullGradient;
 }
 
-void NonlinearDiffusionOperator::SetParameters(const Vector &u) const 
+void NonlinearDiffusionOperator::SetParameters(const Vector &p) const 
 {
-  // Set grid function for a(u)
-  ParGridFunction u_gf(&fespace_W);
+  // Set grid function for a(p)
+  ParGridFunction p_gf(&fespace_W);
   ParGridFunction a_gf(&fespace_W);
   ParGridFunction aprime_gf(&fespace_W);
   ParGridFunction a_plus_aprime_gf(&fespace_W);
 
   if (SchurComplement)
-    u_gf.SetFromTrueDofs(u);
+    p_gf.SetFromTrueDofs(p);
   else
     {
-      Vector u_W(u.GetData() + block_trueOffsets[1], block_trueOffsets[2]-block_trueOffsets[1]);
-      u_gf.SetFromTrueDofs(u_W);
+      Vector p_W(p.GetData() + block_trueOffsets[1], block_trueOffsets[2]-block_trueOffsets[1]);
+      p_gf.SetFromTrueDofs(p_W);
     }
 
   for (int i = 0; i < a_gf.Size(); i++)
     {
-      a_gf(i) = NonlinearCoefficient(u_gf(i));
-      aprime_gf(i) = NonlinearCoefficientDerivative(u_gf(i));
+      a_gf(i) = NonlinearCoefficient(p_gf(i));
+      aprime_gf(i) = NonlinearCoefficientDerivative(p_gf(i));
       a_plus_aprime_gf(i) = a_gf(i) + aprime_gf(i);
     }
 
@@ -1633,9 +1633,9 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
   Compute_CtAB(fom->Cmat, V_W, V_W, CR);
 
   // The ROM residual is
-  // [ V_{R,s}^{-1} M(a(Pst V_W u)) Pst V_R v + V_R^t B^T V_W u ]
-  // [ V_W^t C V_W du_dt - V_W^t B V_R v - V_W^t f ]
-  // or, with [v, u] = [V_R yR, V_W yW],
+  // [ V_{R,s}^{-1} M(a(Pst V_W p)) Pst V_R v + V_R^t B^T V_W p ]
+  // [ V_W^t C V_W dp_dt - V_W^t B V_R v - V_W^t f ]
+  // or, with [v, p] = [V_R yR, V_W yW],
   // [ V_{R,s}^{-1} M(a(Pst V_W yW)) Pst V_R yR + BR^T yW ]
   // [ CR dyW_dt - BR yR - V_W^t f ]
   // The Jacobian with respect to [dyR_dt, dyW_dt], with [yR, yW] = [yR0, yW0] + dt * [dyR_dt, dyW_dt], is
@@ -1662,15 +1662,15 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
 
       const int spdim = fomSp->Height();
 
-      usp_librom = new CAROM::Vector(spdim, false);
-      usp = new Vector(&((*usp_librom)(0)), spdim);
+      psp_librom = new CAROM::Vector(spdim, false);
+      psp = new Vector(&((*psp_librom)(0)), spdim);
 
-      // Define sub-vectors of usp. 
-      usp_R = new Vector(usp->GetData(), fomSp->zR.Size());
-      usp_W = new Vector(usp->GetData() + fomSp->zR.Size(), fomSp->zW.Size());
+      // Define sub-vectors of psp. 
+      psp_R = new Vector(psp->GetData(), fomSp->zR.Size());
+      psp_W = new Vector(psp->GetData() + fomSp->zR.Size(), fomSp->zW.Size());
 
-      usp_R_librom = new CAROM::Vector(usp_R->GetData(), usp_R->Size(), false, false);
-      usp_W_librom = new CAROM::Vector(usp_W->GetData(), usp_W->Size(), false, false);
+      psp_R_librom = new CAROM::Vector(psp_R->GetData(), psp_R->Size(), false, false);
+      psp_W_librom = new CAROM::Vector(psp_W->GetData(), psp_W->Size(), false, false);
   
       MFEM_VERIFY(nsamp_R == s2sp.size(), "");
     }
@@ -1682,15 +1682,15 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
     {
       const int fdim = fom->Height();
 
-      ufom_librom = new CAROM::Vector(fdim, false);
-      ufom = new Vector(&((*ufom_librom)(0)), fdim);
+      pfom_librom = new CAROM::Vector(fdim, false);
+      pfom = new Vector(&((*pfom_librom)(0)), fdim);
 
-      // Define sub-vectors of ufom. 
-      ufom_R = new Vector(ufom->GetData(), fom->zR.Size());
-      ufom_W = new Vector(ufom->GetData() + fom->zR.Size(), fom->zW.Size());
+      // Define sub-vectors of pfom. 
+      pfom_R = new Vector(pfom->GetData(), fom->zR.Size());
+      pfom_W = new Vector(pfom->GetData() + fom->zR.Size(), fom->zW.Size());
 
-      ufom_R_librom = new CAROM::Vector(ufom_R->GetData(), ufom_R->Size(), false, false);
-      ufom_W_librom = new CAROM::Vector(ufom_W->GetData(), ufom_W->Size(), false, false);
+      pfom_R_librom = new CAROM::Vector(pfom_R->GetData(), pfom_R->Size(), false, false);
+      pfom_W_librom = new CAROM::Vector(pfom_W->GetData(), pfom_W->Size(), false, false);
 
       zfomR.SetSize(fom->zR.Size());
       zfomR_librom = new CAROM::Vector(zfomR.GetData(), zfomR.Size(), false, false);
@@ -1728,13 +1728,13 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
 
   CAROM::Vector dyW_dt_librom(dy_dt.GetData() + rrdim, rwdim, false, false);
   
-  // 1. Lift u_s+ = B_s+ y
-  BRsp->mult(yR_librom, *usp_R_librom);
-  BWsp->mult(yW_librom, *usp_W_librom);
+  // 1. Lift p_s+ = B_s+ y
+  BRsp->mult(yR_librom, *psp_R_librom);
+  BWsp->mult(yW_librom, *psp_W_librom);
   
-  fomSp->SetParameters(*usp);
+  fomSp->SetParameters(*psp);
 
-  fomSp->Mmat->Mult(*usp_R, zR);  // M(a(Pst V_W yW)) Pst V_R yR
+  fomSp->Mmat->Mult(*psp_R, zR);  // M(a(Pst V_W yW)) Pst V_R yR
 
   // Select entries out of zR.
   for (int i=0; i<nsamp_R; ++i)
@@ -1757,9 +1757,9 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
       fom->GetSource(zfomW);
       zfomW.Neg();
 
-      fom->Cmat->Mult(zfomW, *ufom_W);
+      fom->Cmat->Mult(zfomW, *pfom_W);
   
-      V_W.transposeMult(*ufom_W_librom, resW_librom);
+      V_W.transposeMult(*pfom_W_librom, resW_librom);
 
       CR->multPlus(resW_librom, dyW_dt_librom, 1.0);
       BR->multPlus(resW_librom, yR_librom, -1.0);
@@ -1788,13 +1788,13 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
 	}
       else
 	{
-	  fomSp->Cmat->Mult(fomSp->zW, *usp_W);
+	  fomSp->Cmat->Mult(fomSp->zW, *psp_W);
 
 	  const int nRsp = fomSp->zR.Size();
 	  const int nWsp = fomSp->zW.Size();
 	  for (int i=0; i<rwdim; ++i)
 	    for (int j=0; j<nWsp; ++j)
-	      res[rrdim + i] -= (*BWsp)(j, i) * (*usp_W)[j];
+	      res[rrdim + i] -= (*BWsp)(j, i) * (*psp_W)[j];
 	}
     }
 }
@@ -1819,13 +1819,13 @@ void RomOperator::Mult_FullOrder(const Vector &dy_dt, Vector &res) const
 
   CAROM::Vector dyW_dt_librom(dy_dt.GetData() + rrdim, rwdim, false, false);
   
-  // 1. Lift u_fom = [V_R^T V_W^T]^T y
-  V_R.mult(yR_librom, *ufom_R_librom);
-  V_W.mult(yW_librom, *ufom_W_librom);
+  // 1. Lift p_fom = [V_R^T V_W^T]^T y
+  V_R.mult(yR_librom, *pfom_R_librom);
+  V_W.mult(yW_librom, *pfom_W_librom);
   
-  fom->SetParameters(*ufom);
+  fom->SetParameters(*pfom);
 
-  fom->Mmat->Mult(*ufom_R, zfomR);  // M(a(V_W yW)) V_R yR
+  fom->Mmat->Mult(*pfom_R, zfomR);  // M(a(V_W yW)) V_R yR
   V_R.transposeMult(*zfomR_librom, VtzR);  // V_R^T M(a(V_W yW)) V_R yR
 
   BR->transposeMult(yW_librom, resR_librom);
@@ -1835,9 +1835,9 @@ void RomOperator::Mult_FullOrder(const Vector &dy_dt, Vector &res) const
   fom->GetSource(zfomW);
   zfomW.Neg();
 
-  fom->Cmat->Mult(zfomW, *ufom_W);
+  fom->Cmat->Mult(zfomW, *pfom_W);
   
-  V_W.transposeMult(*ufom_W_librom, resW_librom);
+  V_W.transposeMult(*pfom_W_librom, resW_librom);
   
   CR->multPlus(resW_librom, dyW_dt_librom, 1.0);
   BR->multPlus(resW_librom, yR_librom, -1.0);
@@ -1865,8 +1865,8 @@ void RomOperator::ImplicitSolve(const double dt, const Vector &y, Vector &dy_dt)
       fom->current_dt = dt;
     }
   
-  // Set the initial guess for du_dt, to be used by newton_solver.
-  //du_dt = 0.0;
+  // Set the initial guess for dp_dt, to be used by newton_solver.
+  //dp_dt = 0.0;
   dy_dt = dydt_prev;
 
   Vector zero; // empty vector is interpreted as zero r.h.s. by NewtonSolver
@@ -1884,10 +1884,10 @@ void RomOperator::ImplicitSolve(const double dt, const Vector &y, Vector &dy_dt)
 }
 
 // Debugging tool for checking Jacobian
-void RomOperator::PrintFDJacobian(const Vector &u) const
+void RomOperator::PrintFDJacobian(const Vector &p) const
 {
-  const int N = u.Size();
-  Vector up(N);
+  const int N = p.Size();
+  Vector pp(N);
   Vector r(N);
   Vector r0(N);
 
@@ -1895,14 +1895,14 @@ void RomOperator::PrintFDJacobian(const Vector &u) const
   
   DenseMatrix JFD(N);
 
-  Mult(u, r0);
+  Mult(p, r0);
 
   for (int j=0; j<N; ++j)
     {
-      up = u;
-      up[j] += d;
+      pp = p;
+      pp[j] += d;
 
-      Mult(up, r);
+      Mult(pp, r);
 
       r -= r0;
       r /= d;
@@ -1914,7 +1914,7 @@ void RomOperator::PrintFDJacobian(const Vector &u) const
   JFD.Print(cout);
 }
 
-Operator &RomOperator::GetGradient(const Vector &u) const
+Operator &RomOperator::GetGradient(const Vector &p) const
 {
   // The Jacobian with respect to [dyR_dt, dyW_dt], with [yR, yW] = [yR0, yW0] + dt * [dyR_dt, dyW_dt], is
   // [ dt V_{R,s}^{-1} M(a'(Pst V_W yW)) Pst V_R  dt BR^T ]
@@ -1933,10 +1933,10 @@ Operator &RomOperator::GetGradient(const Vector &u) const
       if (hyperreduce)
 	{
 	  // Compute the i-th column of M(a'(Pst V_W yW)) Pst V_R.
-	  for (int j=0; j<usp_R->Size(); ++j)
-	    (*usp_R)[j] = (*BRsp)(j,i);
+	  for (int j=0; j<psp_R->Size(); ++j)
+	    (*psp_R)[j] = (*BRsp)(j,i);
       
-	  fomSp->Mprimemat.Mult(*usp_R, zR);
+	  fomSp->Mprimemat.Mult(*psp_R, zR);
 
 	  for (int j=0; j<nsamp_R; ++j)
 	    z(j) = zR[s2sp[j]];
@@ -1954,10 +1954,10 @@ Operator &RomOperator::GetGradient(const Vector &u) const
       else
 	{
 	  // Compute the i-th column of V_R^T M(a'(V_W yW)) V_R.
-	  for (int j=0; j<ufom_R->Size(); ++j)
-	    (*ufom_R)[j] = V_R(j,i);
+	  for (int j=0; j<pfom_R->Size(); ++j)
+	    (*pfom_R)[j] = V_R(j,i);
       
-	  fom->Mprimemat.Mult(*ufom_R, zfomR);
+	  fom->Mprimemat.Mult(*pfom_R, zfomR);
 	  V_R.transposeMult(*zfomR_librom, c);  // V_R^T M(a'(V_W yW)) V_R(:,i)
 	}
       
@@ -1987,7 +1987,7 @@ Operator &RomOperator::GetGradient(const Vector &u) const
   gradient->SetBlock(1, 1, CR);
   */
 
-  // PrintFDJacobian(u);
+  // PrintFDJacobian(p);
 
   return J;
 }
@@ -2014,13 +2014,13 @@ double ExactSolution(const Vector &x, const double t)
 
 double SourceFunction_linear(const Vector &x, const double t)
 {
-  // du/dt + div(v) = f, grad u = -a(u) v
-  // u(x,y) = sin(2 pi x) sin(2 pi y) sin(4 pi t)
-  // a(u) = 1
+  // dp/dt + div(v) = f, grad p = -a(p) v
+  // p(x,y) = sin(2 pi x) sin(2 pi y) sin(4 pi t)
+  // a(p) = 1
   // Set cx = cos(2 pi x), sy = sin(2 pi y), etc. Then v = -2 pi [cx sy st, sx cy st]
   // div(v) = 8 pi^2 sx sy st
   
-  // du/dt + div(v) = 4 pi sin(2 pi x) sin(2 pi y) cos(4 pi t) + 8 pi^2 sx sy st
+  // dp/dt + div(v) = 4 pi sin(2 pi x) sin(2 pi y) cos(4 pi t) + 8 pi^2 sx sy st
 
   //return 0.0;
 
@@ -2036,19 +2036,19 @@ double SourceFunction_linear(const Vector &x, const double t)
   return (4.0 * pi * ct * sx * sy) + (st * 8.0 * pi * pi * sx * sy);
 }
 
-// a(u) = c + u, where c = diffusion_c
+// a(p) = c + p, where c = diffusion_c
 double SourceFunction_cpu(const Vector &x, const double t)
 {
-  // du/dt + div(v) = f, grad u = -a(u) v
-  // u(x,y) = sin(2 pi x) sin(2 pi y) sin(4 pi t)
-  // a(u) = c + sin(2 pi x) sin(2 pi y) sin(4 pi t)
+  // dp/dt + div(v) = f, grad p = -a(p) v
+  // p(x,y) = sin(2 pi x) sin(2 pi y) sin(4 pi t)
+  // a(p) = c + sin(2 pi x) sin(2 pi y) sin(4 pi t)
   // Set cx = cos(2 pi x), sy = sin(2 pi y), etc. Then v = -2 pi st/(2+sx sy st) * [cx sy, sx cy] = -2 pi st/a * [cx sy, sx cy]
 
   // div(v) = 4 pi^2 cx^2 sy^2 st^2 / a^2 + 4 pi^2 st / a * sx sy         (dv_x/dx)
   //            + 4 pi^2 sx^2 cy^2 st^2 / a^2 + 4 pi^2 st / a * sx sy     (dv_y/dy)
   //        = 4 pi^2 st / a * [(cx sy)^2 st / a + 2 sx sy + (sx cy)^2 st / a]
   
-  // du/dt + div(v) = 4 pi sx sy ct + 4 pi^2 st / a * [(cx sy)^2 st / a + 2 sx sy + (sx cy)^2 st / a]
+  // dp/dt + div(v) = 4 pi sx sy ct + 4 pi^2 st / a * [(cx sy)^2 st / a + 2 sx sy + (sx cy)^2 st / a]
 
   //return 0.0;
 
@@ -2082,15 +2082,15 @@ double SourceFunction(const Vector &x, const double t)
     return SourceFunction_linear(x, t);
 }
 
-double NonlinearCoefficient(const double u)
+double NonlinearCoefficient(const double p)
 {
   if (nonlinear_problem)
-    return diffusion_c + u;
+    return diffusion_c + p;
   else
     return 1.0;
 }
 
-double NonlinearCoefficientDerivative(const double u)
+double NonlinearCoefficientDerivative(const double p)
 {
   if (nonlinear_problem)
     return 1.0;
