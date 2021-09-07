@@ -134,9 +134,6 @@ void NonlinearDiffusionGradientOperator::Mult(const Vector &x, Vector &y) const
 class NonlinearDiffusionOperator : public TimeDependentOperator
 {
   
-private:
-  bool SchurComplement;
-
 protected:
   friend class RomOperator;
   
@@ -183,7 +180,7 @@ protected:
 public:
   NonlinearDiffusionOperator(ParFiniteElementSpace &fR, ParFiniteElementSpace &fW,
 			     const double rel_tol, const double abs_tol,
-			     const int iter, const Vector &p, const bool SchurComplement_);
+			     const int iter, const Vector &p);
 
   virtual void Mult(const Vector &p, Vector &dp_dt) const;
 
@@ -193,7 +190,6 @@ public:
   }
   
   void Mult_FullSystem(const Vector &p, Vector &dp_dt) const;
-  void Mult_SchurComplement(const Vector &p, Vector &dp_dt) const;
   void SetBTV(const CAROM::Matrix *V, CAROM::Matrix *BTV) const;
   
   void GetSource(Vector& s) const;
@@ -595,8 +591,6 @@ int main(int argc, char *argv[])
 
   // 8. Set the initial conditions for p.
 
-  const bool SchurComplement = false;
-
   FunctionCoefficient p_0(InitialTemperature);
   p_gf.ProjectCoefficient(p_0);
   Vector p, pprev, dpdt, source;
@@ -619,28 +613,22 @@ int main(int argc, char *argv[])
   cout << myid << ": Local number of L2 unknowns: " << N2 << endl;
   cout << myid << ": Local number of RT unknowns: " << N1 << endl;
   
-  if (SchurComplement)
-    p_gf.GetTrueDofs(p);
-  else
-    {
-      p_librom = new CAROM::Vector(fdim, true);
-      p.SetDataAndSize(&((*p_librom)(0)), fdim);
-      p_W_librom = new CAROM::Vector(&((*p_librom)(N1)), N2, true, false);
+  {
+    p_librom = new CAROM::Vector(fdim, true);
+    p.SetDataAndSize(&((*p_librom)(0)), fdim);
+    p_W_librom = new CAROM::Vector(&((*p_librom)(N1)), N2, true, false);
 
-      p = 0.0;
-      p_W = new Vector(p.GetData() + N1, N2);
-      p_gf.GetTrueDofs(*p_W);
+    p = 0.0;
+    p_W = new Vector(p.GetData() + N1, N2);
+    p_gf.GetTrueDofs(*p_W);
 
-      source.SetSize(N2);
-    }
+    source.SetSize(N2);
+  }
 
   // 9. Initialize the diffusion operator and the VisIt visualization.
-  NonlinearDiffusionOperator oper(R_space, W_space, newton_rel_tol, newton_abs_tol, newton_iter, p, SchurComplement);  // FOM operator
+  NonlinearDiffusionOperator oper(R_space, W_space, newton_rel_tol, newton_abs_tol, newton_iter, p);  // FOM operator
   NonlinearDiffusionOperator *soper = 0;  // Sample mesh operator
   
-  if (SchurComplement)
-    p_gf.SetFromTrueDofs(*p_W);
-
   if (offline)
   {
     ostringstream mesh_name, sol_name;
@@ -975,22 +963,17 @@ int main(int argc, char *argv[])
       if (myid == 0)
 	{
 	  // Initialize sp_p with initial conditions.
-	  if (SchurComplement)
-	    {
-	      MFEM_VERIFY(false, "Schur complement formulation cannot be used with ROM.");
-	    }
-	  else
-	    {
-	      sp_p_gf = new ParGridFunction(sp_W_space);
-	      sp_p_gf->ProjectCoefficient(p_0);
+    {
+      sp_p_gf = new ParGridFunction(sp_W_space);
+      sp_p_gf->ProjectCoefficient(p_0);
 
-	      sp_p.SetSize(sp_R_space->GetTrueVSize() + sp_W_space->GetTrueVSize());
-	      sp_p = 0.0;
-	      sp_p_W = new Vector(sp_p.GetData() + sp_R_space->GetTrueVSize(), sp_W_space->GetTrueVSize());
-	      sp_p_gf->GetTrueDofs(*sp_p_W);
-	    }
+      sp_p.SetSize(sp_R_space->GetTrueVSize() + sp_W_space->GetTrueVSize());
+      sp_p = 0.0;
+      sp_p_W = new Vector(sp_p.GetData() + sp_R_space->GetTrueVSize(), sp_W_space->GetTrueVSize());
+      sp_p_gf->GetTrueDofs(*sp_p_W);
+    }
  
-	  soper = new NonlinearDiffusionOperator(*sp_R_space, *sp_W_space, newton_rel_tol, newton_abs_tol, newton_iter, sp_p, SchurComplement);
+	  soper = new NonlinearDiffusionOperator(*sp_R_space, *sp_W_space, newton_rel_tol, newton_abs_tol, newton_iter, sp_p);
 	}
 
       romop = new RomOperator(&oper, soper, rrdim, rwdim, nldim,
@@ -1238,8 +1221,7 @@ int main(int argc, char *argv[])
   delete pmesh;
   delete romop;
   
-  if (!SchurComplement)
-    delete p_W;
+  delete p_W;
 
   totalTimer.Stop();
   if (myid == 0) cout << "Elapsed time for entire simulation " << totalTimer.RealTime() << endl;
@@ -1250,12 +1232,12 @@ int main(int argc, char *argv[])
 
 NonlinearDiffusionOperator::NonlinearDiffusionOperator(ParFiniteElementSpace &fR, ParFiniteElementSpace &fW,
 						       const double rel_tol, const double abs_tol, 
-						       const int iter, const Vector &p, const bool SchurComplement_)
-  : TimeDependentOperator(SchurComplement_ ? fW.GetTrueVSize() : fR.GetTrueVSize() + fW.GetTrueVSize(), 0.0), 
+						       const int iter, const Vector &p)
+  : TimeDependentOperator(fR.GetTrueVSize() + fW.GetTrueVSize(), 0.0), 
     fespace_R(fR), fespace_W(fW), M(NULL), C(NULL), Bmat(NULL), BTmat(NULL), Mprime(NULL), current_dt(0.0), 
     newton_solver(fW.GetComm()), M_solver(NULL), C_solver(fW.GetComm()), zW(fW.GetTrueVSize()), yR(fR.GetTrueVSize()),
     zR(fR.GetTrueVSize()), p0(height), dpdt_prev(height),
-    SchurComplement(SchurComplement_), fullOp(NULL), fullGradient(NULL), fullPrec(NULL)
+    fullOp(NULL), fullGradient(NULL), fullPrec(NULL)
 {
   gradient = new NonlinearDiffusionGradientOperator(fR.GetTrueVSize(), fW.GetTrueVSize());
 
@@ -1343,42 +1325,7 @@ void NonlinearDiffusionOperator::SetBTV(const CAROM::Matrix *V, CAROM::Matrix *B
  
 void NonlinearDiffusionOperator::Mult(const Vector &dp_dt, Vector &res) const
 {
-  if (SchurComplement)
-    Mult_SchurComplement(dp_dt, res);
-  else 
-    Mult_FullSystem(dp_dt, res);
-}
-
-void NonlinearDiffusionOperator::Mult_SchurComplement(const Vector &dp_dt, Vector &res) const
-{
-  // Compute:
-  //    dp_dt - C^{-1} (f - B M(p)^{-1} B^T p), with p = p0 + dt*dp_dt
-
-  // Set grid function for f
-  ParGridFunction f_gf(&fespace_W);
-
-  FunctionCoefficient f(SourceFunction);
-  f.SetTime(GetTime());
-  f_gf.ProjectCoefficient(f);
-  Vector fproj;
-  f_gf.GetTrueDofs(fproj);
-
-  Vector p(p0);
-  p.Add(current_dt, dp_dt);
-
-  SetParameters(p);  // Create M(a(p)), M(aprime(p))
-
-  // Compute C^{-1} (f - B M(p)^{-1} B^T p)
-  Bmat->MultTranspose(p, zR);
-  M_solver->Mult(zR, yR);
-  Bmat->Mult(yR, zW);
-
-  res = dp_dt;
-  res.Add(-1.0, fproj);
-
-  C_solver.Mult(zW, fproj);
-
-  res.Add(1.0, fproj);
+  Mult_FullSystem(dp_dt, res);
 }
 
 void NonlinearDiffusionOperator::GetSource(Vector& s) const
@@ -1457,10 +1404,7 @@ Operator &NonlinearDiffusionOperator::GetGradient(const Vector &p) const
 
   // Gradient is C^{-1} B M(a(p))^{-1} B^T - C^{-1} B M(p)^{-1} M(a'(p)) M(p)^{-1} B^T, Schur complement case.
 
-  if (SchurComplement)
-    return *gradient;
-  else
-    return *fullGradient;
+  return *fullGradient;
 }
 
 void NonlinearDiffusionOperator::SetParameters(const Vector &p) const 
@@ -1471,13 +1415,10 @@ void NonlinearDiffusionOperator::SetParameters(const Vector &p) const
   ParGridFunction aprime_gf(&fespace_W);
   ParGridFunction a_plus_aprime_gf(&fespace_W);
 
-  if (SchurComplement)
-    p_gf.SetFromTrueDofs(p);
-  else
-    {
-      Vector p_W(p.GetData() + block_trueOffsets[1], block_trueOffsets[2]-block_trueOffsets[1]);
-      p_gf.SetFromTrueDofs(p_W);
-    }
+  {
+    Vector p_W(p.GetData() + block_trueOffsets[1], block_trueOffsets[2]-block_trueOffsets[1]);
+    p_gf.SetFromTrueDofs(p_W);
+  }
 
   for (int i = 0; i < a_gf.Size(); i++)
     {
@@ -1501,10 +1442,7 @@ void NonlinearDiffusionOperator::SetParameters(const Vector &p) const
   delete Mprime;
   Mprime = new ParBilinearForm(&fespace_R);
 
-  if (SchurComplement)
-    Mprime->AddDomainIntegrator(new VectorFEMassIntegrator(aprime_coeff));
-  else
-    Mprime->AddDomainIntegrator(new VectorFEMassIntegrator(a_plus_aprime_coeff));
+  Mprime->AddDomainIntegrator(new VectorFEMassIntegrator(a_plus_aprime_coeff));
 
   Mprime->Assemble();
   Mprime->FormSystemMatrix(ess_Rdof_list, Mprimemat);
@@ -1521,35 +1459,29 @@ void NonlinearDiffusionOperator::SetParameters(const Vector &p) const
   M_solver->SetPrintLevel(-1);
   M_solver->SetPreconditioner(M_prec);
 
-  if (SchurComplement)
-    {
-      M_solver->SetOperator(*Mmat);
-      gradient->SetParameters(&C_solver, M_solver, &Mprimemat, Bmat, current_dt);
-    }
-  else
-    {
-      M_solver->SetOperator(Mprimemat);
+  {
+    M_solver->SetOperator(Mprimemat);
 
-      delete fullOp;
-      fullOp = new BlockOperator(block_trueOffsets);
-      fullOp->SetBlock(0, 0, Mmat);
-      fullOp->SetBlock(0, 1, BTmat);
-      fullOp->SetBlock(1, 0, Bmat, -1.0);
-      fullOp->SetBlock(1, 1, Cmat);
+    delete fullOp;
+    fullOp = new BlockOperator(block_trueOffsets);
+    fullOp->SetBlock(0, 0, Mmat);
+    fullOp->SetBlock(0, 1, BTmat);
+    fullOp->SetBlock(1, 0, Bmat, -1.0);
+    fullOp->SetBlock(1, 1, Cmat);
 
-      delete fullGradient;
-      fullGradient = new BlockOperator(block_trueOffsets);
-      fullGradient->SetBlock(0, 0, &Mprimemat);
-      fullGradient->SetBlock(0, 1, BTmat, current_dt);
-      fullGradient->SetBlock(1, 0, Bmat, -current_dt);
-      fullGradient->SetBlock(1, 1, Cmat);
+    delete fullGradient;
+    fullGradient = new BlockOperator(block_trueOffsets);
+    fullGradient->SetBlock(0, 0, &Mprimemat);
+    fullGradient->SetBlock(0, 1, BTmat, current_dt);
+    fullGradient->SetBlock(1, 0, Bmat, -current_dt);
+    fullGradient->SetBlock(1, 1, Cmat);
 
-      delete fullPrec;
-      fullPrec = new BlockDiagonalPreconditioner(block_trueOffsets);
-      fullPrec->SetDiagonalBlock(0, M_solver);
-      fullPrec->SetDiagonalBlock(1, &C_solver);
-      J_gmres->SetPreconditioner(*fullPrec);
-    }
+    delete fullPrec;
+    fullPrec = new BlockDiagonalPreconditioner(block_trueOffsets);
+    fullPrec->SetDiagonalBlock(0, M_solver);
+    fullPrec->SetDiagonalBlock(1, &C_solver);
+    J_gmres->SetPreconditioner(*fullPrec);
+  }
 }
 
 NonlinearDiffusionOperator::~NonlinearDiffusionOperator()
