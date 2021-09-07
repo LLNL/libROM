@@ -429,7 +429,7 @@ int main(int argc, char *argv[])
   problem = ANALYTIC;
   diffusion_c = 2.0;
   step_half = 0.25;
-  const char *mesh_file = "../data/star.mesh";
+  const char *mesh_file = "../dependencies/mfem/data/star.mesh";
   int ser_ref_levels = 2;
   int par_ref_levels = 1;
   int order = 0;
@@ -577,8 +577,10 @@ int main(int argc, char *argv[])
       MergeBasis(R_space.GetTrueVSize(), nsets, max_num_snapshots, "FR");
       MergeBasis(W_space.GetTrueVSize(), nsets, max_num_snapshots, "W");
 
-      if (hyperreduce_source)
-	MergeBasis(W_space.GetTrueVSize(), nsets, max_num_snapshots, "S");
+      if (hyperreduce_source) 
+      {
+	      MergeBasis(W_space.GetTrueVSize(), nsets, max_num_snapshots, "S");
+      }  
 
       totalTimer.Stop();
       if (myid == 0) 
