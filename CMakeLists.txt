@@ -147,7 +147,8 @@ list(APPEND source_files
 
 if (USE_MFEM)
     list(APPEND source_files
-      SampleMesh.hpp)
+      SampleMesh.hpp
+      SampleMesh.cpp)
 endif()
 
 list(APPEND source_files
