@@ -196,6 +196,26 @@ public:
         int nelements) = 0;
 
     /**
+     * @brief Reads an array of doubles associated with the supplied key
+     *        from the currently open database file.
+     *
+     * @param[in] key The key associated with the array of values to be
+     *                read.
+     * @param[out] data The allocated array of double values to be read.
+     * @param[in] nelements The number of doubles in the array.
+     * @param[in] block_size The block size to read from the HDF5 dataset.
+     * @param[in] stride The stride to read from the HDF5 dataset.
+     */
+    virtual
+    void
+    getDoubleArray(
+        const std::string& key,
+        double* data,
+        int nelements,
+        int block_size,
+        int stride) = 0;
+
+    /**
      * @brief Implemented database file formats. Add to this enum each time a
      *        new database format is implemented.
      */
