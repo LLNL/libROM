@@ -644,7 +644,7 @@ void Set_s2sp(const int myid, const int num_procs, vector<int> const& spNtrue, c
 #ifdef FULL_DOF_STENCIL
 void Finish_s2sp_augmented(const int rank, const int nprocs, vector<ParFiniteElementSpace*> & fespace,
                            vector<vector<int>>& dofs_block, vector<vector<int> >& dofs_sub_to_sdofs,
-			   vector<vector<int> >& local_num_dofs_sub, const bool dofsTrue, vector<int> & s2sp_)
+                           vector<vector<int> >& local_num_dofs_sub, const bool dofsTrue, vector<int> & s2sp_)
 {
     const int nspaces = fespace.size();
 
@@ -1145,7 +1145,7 @@ void GatherDistributedMatrixRows(const CAROM::Matrix& BR, const CAROM::Matrix& B
 
 void GatherDistributedMatrixRows1(const CAROM::Matrix& B, const int rdim,
 #ifdef FULL_DOF_STENCIL
-                                  //const int os0, const int os1,
+                                  const int os0, const int os1, const int ossp,
                                   ParFiniteElementSpace& fespace,
 #endif
                                   const vector<int>& st2sp, const vector<int>& sprows,
@@ -1159,6 +1159,7 @@ void GatherDistributedMatrixRows1(const CAROM::Matrix& B, const int rdim,
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
     MFEM_VERIFY(rdim <= B.numColumns(), "");
 
+    /*
     const int Nfull = fespace.GetVSize();
 
     vector<int> allNfull(num_procs);
@@ -1169,10 +1170,12 @@ void GatherDistributedMatrixRows1(const CAROM::Matrix& B, const int rdim,
         os0 += allNfull[i];
 
     const int os1 = os0 + allNfull[myid];  // Full DOF offset for the next process
+    */
 
     vector<int> allos0(num_procs);
     vector<int> allos1(num_procs);
 
+    /*
     allos0[0] = 0;
     for (int i=1; i<num_procs; ++i)
         allos0[i] = allos0[i-1] + allNfull[i-1];
@@ -1181,6 +1184,10 @@ void GatherDistributedMatrixRows1(const CAROM::Matrix& B, const int rdim,
     {
         allos1[i] = allos0[i] + allNfull[i];
     }
+    */
+
+    MPI_Allgather(&os0, 1, MPI_INT, allos0.data(), 1, MPI_INT, MPI_COMM_WORLD);
+    MPI_Allgather(&os1, 1, MPI_INT, allos1.data(), 1, MPI_INT, MPI_COMM_WORLD);
 
     const int num_sprows = static_cast<int>(sprows.size());
 
@@ -1249,13 +1256,16 @@ void GatherDistributedMatrixRows1(const CAROM::Matrix& B, const int rdim,
             if (os0 <= row && row < os1)
             {
 #ifdef FULL_DOF_STENCIL
-                const int ltdof = fespace.GetLocalTDofNumber(row);
+                const int ltdof = fespace.GetLocalTDofNumber(row - os0);
                 if (ltdof >= 0 && st2sp[i] >= 0)
                 {
-                    MFEM_VERIFY(st2sp[i] < Nsp, "");
+                    if (!(0 <= st2sp[i] - ossp && st2sp[i] - ossp < Nsp))
+                        mfem::out << "BUG";
+
+                    MFEM_VERIFY(0 <= st2sp[i] - ossp && st2sp[i] - ossp < Nsp, "");
 
                     for (int j = 0; j < rdim; ++j)
-                        Bsp(st2sp[i], j) = B(ltdof, j);
+                        Bsp(st2sp[i] - ossp, j) = B(ltdof, j);
                 }
 #else
                 for (int j = 0; j < rdim; ++j)
@@ -1277,7 +1287,8 @@ void GatherDistributedMatrixRows1(const CAROM::Matrix& B, const int rdim,
                 const int sti = offsetSP[i] + all_sprows_true[Bsp_row];
                 if (allos0[i] <= all_sprows[sti] && all_sprows[sti] < allos1[i])
                 {
-                    MPI_Recv(&Bsp(st2sp[sti], 0), rdim, MPI_DOUBLE,
+                    MFEM_VERIFY(0 <= st2sp[sti] - ossp && st2sp[sti] - ossp < Bsp.numRows(), "");
+                    MPI_Recv(&Bsp(st2sp[sti] - ossp, 0), rdim, MPI_DOUBLE,
                              i, offsets[i]+j, MPI_COMM_WORLD, &status);  // Note that this may redundantly overwrite some rows corresponding to shared DOF's.
                 }
 #else
