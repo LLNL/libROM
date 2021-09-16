@@ -92,14 +92,6 @@ public:
 
     /**
      *
-     * @brief Reads the basis from a file and stores the information.
-     */
-    void readBasis(
-        const std::string& base_file_name = "",
-        Database::formats db_format = Database::HDF5);
-
-    /**
-     *
      * @brief Returns the spatial basis vectors for the requested time as a
      *        Matrix.
      *
@@ -110,9 +102,47 @@ public:
      *
      * @return The spatial basis vectors for the requested time.
      */
-    const Matrix*
+    Matrix*
     getSpatialBasis(
         double time);
+
+    /**
+     *
+     * @brief Returns the first n spatial basis vectors for the requested time
+     *        as a Matrix.
+     *
+     * @pre 0 < numTimeIntervals()
+     * @pre 0 <= time
+     * @pre 0 < n < numColumns()
+     *
+     * @param[in] time Time for which we want the basis vectors.
+     * @param[in] n    The number of spatial basis vectors desired.
+     *
+     * @return The spatial basis vectors for the requested time.
+     */
+    Matrix*
+    getSpatialBasis(
+        double time,
+        int n);
+
+    /**
+     *
+     * @brief Returns the first n spatial basis vectors for the requested time
+     *        as a Matrix that capture the given energy fraction.
+     *
+     * @pre 0 < numTimeIntervals()
+     * @pre 0 <= time
+     * @pre 0 <= ef <= 1.0
+     *
+     * @param[in] time Time for which we want the basis vectors.
+     * @param[in] ef   The desired energy fraction.
+     *
+     * @return The spatial basis vectors for the requested time.
+     */
+    Matrix*
+    getSpatialBasis(
+        double time,
+        double ef);
 
     /**
      *
@@ -123,12 +153,50 @@ public:
      * @pre 0 <= time
      *
      * @param[in] time Time for which we want the basis vectors.
+     * @param[in] n    The number of temporal basis vectors desired.
      *
      * @return The temporal basis vectors for the requested time.
      */
-    const Matrix*
+    Matrix*
     getTemporalBasis(
         double time);
+
+    /**
+     *
+     * @brief Returns the first n temporal basis vectors for the requested time
+     *        as a Matrix.
+     *
+     * @pre 0 < numTimeIntervals()
+     * @pre 0 <= time
+     * @pre 0 < n < numColumns()
+     *
+     * @param[in] time Time for which we want the basis vectors.
+     ** @pre 0 <= ef <= 1.0
+     * @return The temporal basis vectors for the requested time.
+     */
+    Matrix*
+    getTemporalBasis(
+        double time,
+        int n);
+
+    /**
+     *
+     * @brief Returns the first n temporal basis vectors for the requested time
+     *        as a Matrix that capture the given energy fraction.
+     *
+     * @pre 0 < numTimeIntervals()
+     * @pre 0 <= time
+     * @pre 0 <= ef <= 1.0
+     *
+     * @param[in] time Time for which we want the basis vectors.
+     * @param[in] ef   The desired energy fraction.
+     *
+     * @return The temporal basis vectors for the requested time.
+     */
+    Matrix*
+    getTemporalBasis(
+        double time,
+        double ef);
 
     /**
      *
@@ -141,9 +209,28 @@ public:
      *
      * @return The temporal basis vectors for the requested time.
      */
-    const Vector*
+    Vector*
     getSingularValues(
         double time);
+
+    /**
+     *
+     * @brief Returns the largest singular values for the requested time
+     *        that capture the given energy fraction.
+     *
+     * @pre 0 < numTimeIntervals()
+     * @pre 0 <= time
+     * @pre 0 <= ef <= 1.0
+     *
+     * @param[in] time Time for which we want the basis vectors.
+     * @param[in] ef   The desired energy fraction.
+     *
+     * @return The temporal basis vectors for the requested time.
+     */
+    Vector*
+    getSingularValues(
+        double time,
+        double ef);
 
     /**
      *
@@ -156,23 +243,8 @@ public:
      *
      * @return The snapshot matrix for the requested time.
      */
-    const Matrix*
+    Matrix*
     getSnapshotMatrix(
-        double time);
-
-    /**
-     *
-     * @brief Returns the Matlab-stored basis for the requested time.
-     *
-     * @pre 0 < numTimeIntervals()
-     * @pre 0 <= time
-     *
-     * @param[in] time Time for which we want the basis vectors.
-     *
-     * @return The Matlab-stored basis for the requested time.
-     */
-    Matrix
-    getMatlabBasis(
         double time);
 
 private:
@@ -211,26 +283,6 @@ private:
     std::vector<double> d_time_interval_start_times;
 
     /**
-     * @brief The currently requested basis vectors.
-     */
-    Matrix* d_spatial_basis_vectors;
-
-    /**
-     * @brief The currently requested temporal basis vectors.
-     */
-    Matrix* d_temporal_basis_vectors;
-
-    /**
-     * @brief The currently requested singular values.
-     */
-    Vector* d_singular_values;
-
-    /**
-     * @brief The currently requested snapshot matrix.
-     */
-    Matrix* d_snapshots;
-
-    /**
      * @brief The database being read from.
      */
     Database* d_database;
@@ -241,7 +293,7 @@ private:
     std::string base_file_name_;
 
     /**
-     * @brief Full file name of database incuding rank.
+     * @brief Full file name of database including rank.
      */
     std::string full_file_name;
 
