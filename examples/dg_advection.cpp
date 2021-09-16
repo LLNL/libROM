@@ -3,9 +3,13 @@
 // Compile with: make dg_advection
 //
 // For DMD:
-//   mpirun -np 8 dg_advection -dmd
-//   mpirun -np 8 dg_advection -dmd -p 3 -rp 1 -dt 0.005 -tf 4 -visit
+//    mpirun -np 8 dg_advection -dmd
+//    mpirun -np 8 dg_advection -dmd -p 3 -rp 1 -dt 0.005 -tf 4 -visit
 //
+// For ROM (reproductive case):
+//    dg_advection -offline
+//    dg_advection -online
+
 // Sample runs:
 //    mpirun -np 4 dg_advection -p 0 -dt 0.005
 //    mpirun -np 4 dg_advection -p 0 -dt 0.01
@@ -218,7 +222,7 @@ public:
 class ROM_FE_Evolution : public TimeDependentOperator
 {
 private:
-    DenseMatrix *M, *K, *M_inv;
+    DenseMatrix *M, *K, *M_inv, *A_inv;
     Vector *b, *u_init_hat;
     mutable Vector z;
 
@@ -673,7 +677,7 @@ int main(int argc, char *argv[])
     if (online)
     {
         CAROM::BasisReader reader(basisName);
-        spatialbasis = reader.getSpatialBasis(0.0, 0.9999);
+        spatialbasis = reader.getSpatialBasis(0.0, ef);
         numRowRB = spatialbasis->numRows();
         numColumnRB = spatialbasis->numColumns();
         if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB, numColumnRB);
@@ -983,12 +987,17 @@ void ROM_FE_Evolution::ImplicitSolve(const double dt, const Vector &x, Vector &k
     K->Mult(x, z);
     z += *b;
     z += *u_init_hat;
-    DenseMatrix A(K->NumRows(), K->NumCols());
-    A.Set(dt, *K);
-    DenseMatrix B(*M);
-    B -= A;
-    B.Invert();
-    B.Mult(z, k);
+
+    // Assume dt is constant. Pre-compute A_inv.
+    if (A_inv == NULL)
+    {
+        DenseMatrix A(K->NumRows(), K->NumCols());
+        A.Set(dt, *K);
+        A_inv = new DenseMatrix(*M);
+        *A_inv -= A;
+        A_inv->Invert();
+    }
+    A_inv->Mult(z, k);
 }
 
 void ROM_FE_Evolution::Mult(const Vector &x, Vector &y) const
@@ -1003,6 +1012,7 @@ void ROM_FE_Evolution::Mult(const Vector &x, Vector &y) const
 ROM_FE_Evolution::~ROM_FE_Evolution()
 {
     delete M_inv;
+    delete A_inv;
 }
 
 
