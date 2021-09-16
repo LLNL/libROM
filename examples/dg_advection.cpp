@@ -60,14 +60,14 @@ double u0_function(const Vector &x);
 double inflow_function(const Vector &x);
 
 void Compute_CtAB(const HypreParMatrix* A,
-		  const CAROM::Matrix& B,  // Distributed matrix.
-		  const CAROM::Matrix& C,  // Distributed matrix.
-		  CAROM::Matrix* CtAB);     // Non-distributed (local) matrix, computed identically and redundantly on every process.
+                  const CAROM::Matrix& B,  // Distributed matrix.
+                  const CAROM::Matrix& C,  // Distributed matrix.
+                  CAROM::Matrix* CtAB);     // Non-distributed (local) matrix, computed identically and redundantly on every process.
 
-          void Compute_CtAB_vec(const HypreParMatrix* A,
-          		  const HypreParVector& B,  // Distributed vector.
-          		  const CAROM::Matrix& C,  // Distributed matrix.
-          		  CAROM::Vector* CtAB_vec);     // Non-distributed (local) vector, computed identically and redundantly on every process.
+void Compute_CtAB_vec(const HypreParMatrix* A,
+                      const HypreParVector& B,  // Distributed vector.
+                      const CAROM::Matrix& C,  // Distributed matrix.
+                      CAROM::Vector* CtAB_vec);     // Non-distributed (local) vector, computed identically and redundantly on every process.
 
 // Mesh bounding box
 Vector bb_min, bb_max;
@@ -112,8 +112,8 @@ public:
         AIR_solver = new HypreBoomerAMG(A_s);
         AIR_solver->SetAdvectiveOptions(1, "", "FA");
         AIR_solver->SetPrintLevel(0);    // 6. Define the parallel mesh by a partitioning of the serial mesh. Refine
-    //    this mesh further in parallel to increase the resolution. Once the
-    //    parallel mesh is defined, the serial mesh can be deleted.
+        //    this mesh further in parallel to increase the resolution. Once the
+        //    parallel mesh is defined, the serial mesh can be deleted.
         AIR_solver->SetMaxLevels(50);
     }
 
@@ -215,6 +215,28 @@ public:
     and advection matrices, and b describes the flow on the boundary. This can
     be written as a general ODE, du/dt = M^{-1} (K u + b), and this class is
     used to evaluate the right-hand side. */
+class ROM_FE_Evolution : public TimeDependentOperator
+{
+private:
+    DenseMatrix *M, *K, *M_inv;
+    Vector *b, *u_init_hat;
+    mutable Vector z;
+
+public:
+    ROM_FE_Evolution(DenseMatrix* M_, DenseMatrix* K_, Vector* b_, Vector* u_init_hat_, int num_rows, int num_cols);
+
+    virtual void Mult(const Vector &x, Vector &y) const;
+    virtual void ImplicitSolve(const double dt, const Vector &x, Vector &k);
+
+    virtual ~ROM_FE_Evolution();
+};
+
+
+/** A time-dependent operator for the right-hand side of the ODE. The DG weak
+    form of du/dt = -v.grad(u) is M du/dt = K u + b, where M and K are the mass
+    and advection matrices, and b describes the flow on the boundary. This can
+    be written as a general ODE, du/dt = M^{-1} (K u + b), and this class is
+    used to evaluate the right-hand side. */
 class FE_Evolution : public TimeDependentOperator
 {
 private:
@@ -254,7 +276,7 @@ int main(int argc, char *argv[])
     bool ea = false;
     bool fa = false;
     const char *device_config = "cpu";
-    int ode_solver_type = 4;
+    int ode_solver_type = 11;
     double t_final = 10.0;
     double dt = 0.01;
     double ef = 0.9999;
@@ -273,7 +295,7 @@ int main(int argc, char *argv[])
 #else
     PrecType prec_type = PrecType::ILU;
 #endif
-    int precision = 8;
+    int precision = 16;
     cout.precision(precision);
 
     OptionsParser args(argc, argv);
@@ -407,8 +429,8 @@ int main(int argc, char *argv[])
             cout << "Unknown ODE solver type: " << ode_solver_type << '\n';
         }
         delete mesh;    // 6. Define the parallel mesh by a partitioning of the serial mesh. Refine
-    //    this mesh further in parallel to increase the resolution. Once the
-    //    parallel mesh is defined, the serial mesh can be deleted.
+        //    this mesh further in parallel to increase the resolution. Once the
+        //    parallel mesh is defined, the serial mesh can be deleted.
         return 3;
     }
 
@@ -605,22 +627,10 @@ int main(int argc, char *argv[])
         }
     }
 
-    // 10. Define the time-dependent evolution operator describing the ODE
-    //     right-hand side, and perform time-integration (looping over the time
-    //     iterations, ti, with a time-step dt).
-    FE_Evolution adv(*m, *k, *B, prec_type);
-
     StopWatch fom_timer, dmd_training_timer, dmd_prediction_timer;
-
-    fom_timer.Start();
-
     double t = 0.0;
-    adv.SetTime(t);
-    ode_solver->Init(adv);
 
-    fom_timer.Stop();
     CAROM::DMD* dmd_U = NULL;
-
     if (dmd)
     {
         dmd_training_timer.Start();
@@ -641,7 +651,13 @@ int main(int argc, char *argv[])
     CAROM::BasisGenerator *generator;
     int numRowRB, numColumnRB;
 
+    CAROM::Matrix *M_hat_carom, *K_hat_carom;
+    DenseMatrix *M_hat, *K_hat;
+    CAROM::Vector *b_hat_carom, *u_init_hat_carom;
+    Vector *b_hat, *u_init_hat;
+
     Vector u_init(*U->GlobalVector());
+    Vector *u_in;
 
     // 10. Set BasisGenerator if offline
     if (offline)
@@ -649,22 +665,20 @@ int main(int argc, char *argv[])
         options = new CAROM::Options(U->Size(), max_num_snapshots, 1, update_right_SV);
         generator = new CAROM::BasisGenerator(*options, isIncremental, basisName);
         Vector u_curr(*U->GlobalVector());
-        Vector u_in(U->Size());
-        subtract(u_curr, u_init, u_in);
-        bool addSample = generator->takeSample(u_in.GetData(), t, dt);
+        Vector u_centered(U->Size());
+        subtract(u_curr, u_init, u_centered);
+        bool addSample = generator->takeSample(u_centered.GetData(), t, dt);
     }
 
     if (online)
     {
         CAROM::BasisReader reader(basisName);
-        spatialbasis = reader.getSpatialBasis(0.0);
+        spatialbasis = reader.getSpatialBasis(0.0, 0.9999);
         numRowRB = spatialbasis->numRows();
         numColumnRB = spatialbasis->numColumns();
         if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB, numColumnRB);
 
         OperatorHandle M, K;
-
-        std::cout << "A" << std::endl;
 
         if (m->GetAssemblyLevel()==AssemblyLevel::LEGACY)
         {
@@ -677,33 +691,54 @@ int main(int argc, char *argv[])
             K.Reset(k, false);
         }
 
-        std::cout << "B" << std::endl;
-
         HypreParMatrix &M_mat = *M.As<HypreParMatrix>();
         HypreParMatrix &K_mat = *K.As<HypreParMatrix>();
+        M_hat_carom = new CAROM::Matrix(numRowRB, numColumnRB, false);
+        Compute_CtAB(&M_mat, *spatialbasis, *spatialbasis, M_hat_carom);
 
-        std::cout << "C" << std::endl;
+        // libROM stores the matrix row-wise, so wrapping as a DenseMatrix in MFEM means it is transposed.
+        M_hat = new DenseMatrix(numColumnRB, numColumnRB);
+        M_hat->Set(1, M_hat_carom->getData());
+        M_hat->Transpose();
 
-        CAROM::Matrix M_hat(numRowRB, numColumnRB, false);
-        Compute_CtAB(&M_mat, *spatialbasis, *spatialbasis, &M_hat);
+        K_hat_carom = new CAROM::Matrix(numRowRB, numColumnRB, false);
+        Compute_CtAB(&K_mat, *spatialbasis, *spatialbasis, K_hat_carom);
 
-        std::cout << "D" << std::endl;
+        // libROM stores the matrix row-wise, so wrapping as a DenseMatrix in MFEM means it is transposed.
+        K_hat = new DenseMatrix(numColumnRB, numColumnRB);
+        K_hat->Set(1, K_hat_carom->getData());
+        K_hat->Transpose();
 
-        CAROM::Matrix K_hat(numRowRB, numColumnRB, false);
-        Compute_CtAB(&K_mat, *spatialbasis, *spatialbasis, &K_hat);
+        Vector b_vec = *B->GlobalVector();
 
-        std::cout << "E" << std::endl;
-
-        Vector b_vec = *U->GlobalVector();
         CAROM::Vector b_carom(b_vec.GetData(), b_vec.Size(), true);
-        CAROM::Vector* b_hat = spatialbasis->transposeMult(&b_carom);
+        b_hat_carom = spatialbasis->transposeMult(&b_carom);
+        b_hat = new Vector(b_hat_carom->getData(), b_hat_carom->dim());
 
-        std::cout << "F" << std::endl;
+        u_init_hat_carom = new CAROM::Vector(numColumnRB, false);
+        Compute_CtAB_vec(&K_mat, *U, *spatialbasis, u_init_hat_carom);
+        u_init_hat = new Vector(u_init_hat_carom->getData(), u_init_hat_carom->dim());
 
-        CAROM::Vector u_init_hat(numRowRB, false);
-        Compute_CtAB_vec(&K_mat, *U, *spatialbasis, &u_init_hat);
+        u_in = new Vector(numColumnRB);
+        *u_in = 0.0;
+    }
 
-        std::cout << "G" << std::endl;
+    TimeDependentOperator* adv;
+
+    // 10. Define the time-dependent evolution operator describing the ODE
+    //     right-hand side, and perform time-integration (looping over the time
+    //     iterations, ti, with a time-step dt).
+    if (online)
+    {
+        adv = new ROM_FE_Evolution(M_hat, K_hat, b_hat, u_init_hat, numRowRB, numColumnRB);
+        adv->SetTime(t);
+        ode_solver->Init(*adv);
+    }
+    else
+    {
+        adv = new FE_Evolution(*m, *k, *B, prec_type);
+        adv->SetTime(t);
+        ode_solver->Init(*adv);
     }
 
     bool done = false;
@@ -713,7 +748,14 @@ int main(int argc, char *argv[])
         fom_timer.Start();
 
         double dt_real = min(dt, t_final - t);
-        ode_solver->Step(*U, t, dt_real);
+        if (online)
+        {
+            ode_solver->Step(*u_in, t, dt_real);
+        }
+        else
+        {
+            ode_solver->Step(*U, t, dt_real);
+        }
         ti++;
         done = (t >= t_final - 1e-8*dt);
 
@@ -732,9 +774,9 @@ int main(int argc, char *argv[])
         if (offline)
         {
             Vector u_curr(*U->GlobalVector());
-            Vector u_in(U->Size());
-            subtract(u_curr, u_init, u_in);
-            bool addSample = generator->takeSample(u_in.GetData(), t, dt);
+            Vector u_centered(U->Size());
+            subtract(u_curr, u_init, u_centered);
+            bool addSample = generator->takeSample(u_centered.GetData(), t, dt);
         }
 
         if (done || ti % vis_steps == 0)
@@ -787,15 +829,53 @@ int main(int argc, char *argv[])
         delete options;
     }
 
+    if (online)
+    {
+        CAROM::Vector u_hat_final_carom(u_in->GetData(), u_in->Size(), false);
+        CAROM::Vector* u_final_carom = spatialbasis->mult(u_hat_final_carom);
+        Vector u_final(u_final_carom->getData(), u_final_carom->dim());
+        u_final += u_init;
+
+        Vector fom_solution(U->Size());
+        ifstream solution_file;
+        ostringstream solution_filename;
+        solution_filename << "dg_advection-final." << setfill('0') << setw(6) << myid;
+        solution_file.open(solution_filename.str());
+        fom_solution.Load(solution_file, U->Size());
+        const double fomNorm = sqrt(InnerProduct(MPI_COMM_WORLD, fom_solution, fom_solution));
+        fom_solution -= u_final;
+        const double diffNorm = sqrt(InnerProduct(MPI_COMM_WORLD, fom_solution, fom_solution));
+        if (myid == 0) std::cout << "Relative l2 error of ROM solution " << diffNorm / fomNorm << std::endl;
+
+        delete spatialbasis;
+        delete M_hat_carom;
+        delete K_hat_carom;
+        delete M_hat;
+        delete K_hat;
+        delete b_hat_carom;
+        delete u_init_hat_carom;
+        delete b_hat;
+        delete u_init_hat;
+        delete u_in;
+        delete u_final_carom;
+    }
+
     // 12. Save the final solution in parallel. This output can be viewed later
     //     using GLVis: "glvis -np <np> -m dg_advection-mesh -g dg_advection-final".
+    if (offline)
     {
         *u = *U;
         ostringstream sol_name;
         sol_name << "dg_advection-final." << setfill('0') << setw(6) << myid;
         ofstream osol(sol_name.str().c_str());
         osol.precision(precision);
-        u->Save(osol);
+        Vector tv(u->ParFESpace()->GetTrueVSize());
+        u->GetTrueDofs(tv);
+
+        for (int i=0; i<tv.Size(); ++i)
+            osol << tv[i] << std::endl;
+
+        osol.close();
     }
 
     if (dmd)
@@ -878,6 +958,51 @@ int main(int argc, char *argv[])
     delete dc;
 
     return 0;
+}
+
+
+// Implementation of class ROM_FE_Evolution
+ROM_FE_Evolution::ROM_FE_Evolution(DenseMatrix* M_, DenseMatrix* K_, Vector* b_, Vector* u_init_hat_, int num_rows, int num_cols)
+    : TimeDependentOperator(num_cols),
+      z(num_cols)
+{
+    M = M_;
+    K = K_;
+    b = b_;
+    u_init_hat = u_init_hat_;
+    M_inv = new DenseMatrix(*M_);
+    M_inv->Invert();
+}
+
+// Solve the equation:
+//    u_t = M_hat^{-1}(K_hatu + b_hat + u_init_hat),
+// by solving associated linear system
+//    (M_hat - dt*K_hat) d = K_hat*u + b_hat + u_init_hat
+void ROM_FE_Evolution::ImplicitSolve(const double dt, const Vector &x, Vector &k)
+{
+    K->Mult(x, z);
+    z += *b;
+    z += *u_init_hat;
+    DenseMatrix A(K->NumRows(), K->NumCols());
+    A.Set(dt, *K);
+    DenseMatrix B(*M);
+    B -= A;
+    B.Invert();
+    B.Mult(z, k);
+}
+
+void ROM_FE_Evolution::Mult(const Vector &x, Vector &y) const
+{
+    // y = M_hat^{-1} (K_hat x + b_hat + u_init_hat )
+    K->Mult(x, z);
+    z += *b;
+    z += *u_init_hat;
+    M_inv->Mult(z, y);
+}
+
+ROM_FE_Evolution::~ROM_FE_Evolution()
+{
+    delete M_inv;
 }
 
 
@@ -1103,56 +1228,56 @@ double inflow_function(const Vector &x)
 }
 
 void Compute_CtAB(const HypreParMatrix* A,
-		  const CAROM::Matrix& B,  // Distributed matrix.
-		  const CAROM::Matrix& C,  // Distributed matrix.
-		  CAROM::Matrix* CtAB)     // Non-distributed (local) matrix, computed identically and redundantly on every process.
+                  const CAROM::Matrix& B,  // Distributed matrix.
+                  const CAROM::Matrix& C,  // Distributed matrix.
+                  CAROM::Matrix* CtAB)     // Non-distributed (local) matrix, computed identically and redundantly on every process.
 {
-  MFEM_VERIFY(B.distributed() && C.distributed() && !CtAB->distributed(), "");
+    MFEM_VERIFY(B.distributed() && C.distributed() && !CtAB->distributed(), "");
 
-  int num_procs;
-  MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
+    int num_procs;
+    MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
 
-  const int num_rows = B.numRows();
-  const int num_cols = B.numColumns();
-  const int num_rows_A = A->GetNumRows();
+    const int num_rows = B.numRows();
+    const int num_cols = B.numColumns();
+    const int num_rows_A = A->GetNumRows();
 
-  MFEM_VERIFY(C.numRows() == num_rows_A, "");
+    MFEM_VERIFY(C.numRows() == num_rows_A, "");
 
-  Vector Bvec(num_rows);
-  Vector ABvec(num_rows_A);
+    Vector Bvec(num_rows);
+    Vector ABvec(num_rows_A);
 
-  CAROM::Matrix AB(num_rows_A, num_cols, true);
+    CAROM::Matrix AB(num_rows_A, num_cols, true);
 
-  for (int i = 0; i < num_cols; ++i) {
-    for (int j = 0; j < num_rows; ++j) {
-      Bvec[j] = B(j, i);
+    for (int i = 0; i < num_cols; ++i) {
+        for (int j = 0; j < num_rows; ++j) {
+            Bvec[j] = B(j, i);
+        }
+        A->Mult(Bvec, ABvec);
+        for (int j = 0; j < num_rows_A; ++j) {
+            AB(j, i) = ABvec[j];
+        }
     }
-    A->Mult(Bvec, ABvec);
-    for (int j = 0; j < num_rows_A; ++j) {
-      AB(j, i) = ABvec[j];
-    }
-  }
 
-  C.transposeMult(AB, CtAB);
+    C.transposeMult(AB, CtAB);
 }
 
 void Compute_CtAB_vec(const HypreParMatrix* A,
-		  const HypreParVector& B,  // Distributed vector.
-		  const CAROM::Matrix& C,  // Distributed matrix.
-		  CAROM::Vector* CtAB_vec)     // Non-distributed (local) vector, computed identically and redundantly on every process.
+                      const HypreParVector& B,  // Distributed vector.
+                      const CAROM::Matrix& C,  // Distributed matrix.
+                      CAROM::Vector* CtAB_vec)     // Non-distributed (local) vector, computed identically and redundantly on every process.
 {
-  MFEM_VERIFY(C.distributed() && !CtAB_vec->distributed(), "");
+    MFEM_VERIFY(C.distributed() && !CtAB_vec->distributed(), "");
 
-  int num_procs;
-  MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
+    int num_procs;
+    MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
 
-  MFEM_VERIFY(C.numRows() == A->GetNumRows(), "");
-  MFEM_VERIFY(B.GlobalSize() == A->GetGlobalNumRows(), "");
+    MFEM_VERIFY(C.numRows() == A->GetNumRows(), "");
+    MFEM_VERIFY(B.GlobalSize() == A->GetGlobalNumRows(), "");
 
-  HypreParVector* AB = new HypreParVector(B);
-  A->Mult(B, *AB);
+    HypreParVector* AB = new HypreParVector(B);
+    A->Mult(B, *AB);
 
-  Vector b_vec = *AB->GlobalVector();
-  CAROM::Vector b_carom(b_vec.GetData(), b_vec.Size(), true);
-  C.transposeMult(b_carom, CtAB_vec);
+    Vector b_vec = *AB->GlobalVector();
+    CAROM::Vector b_carom(b_vec.GetData(), b_vec.Size(), true);
+    C.transposeMult(b_carom, CtAB_vec);
 }
