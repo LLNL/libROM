@@ -227,7 +227,7 @@ private:
     mutable Vector z;
 
 public:
-    ROM_FE_Evolution(DenseMatrix* M_, DenseMatrix* K_, Vector* b_, Vector* u_init_hat_, int num_rows, int num_cols);
+    ROM_FE_Evolution(DenseMatrix* M_, DenseMatrix* K_, Vector* b_, Vector* u_init_hat_, int num_cols);
 
     virtual void Mult(const Vector &x, Vector &y) const;
     virtual void ImplicitSolve(const double dt, const Vector &x, Vector &k);
@@ -734,7 +734,7 @@ int main(int argc, char *argv[])
     //     iterations, ti, with a time-step dt).
     if (online)
     {
-        adv = new ROM_FE_Evolution(M_hat, K_hat, b_hat, u_init_hat, numRowRB, numColumnRB);
+        adv = new ROM_FE_Evolution(M_hat, K_hat, b_hat, u_init_hat, numColumnRB);
         adv->SetTime(t);
         ode_solver->Init(*adv);
     }
@@ -966,7 +966,7 @@ int main(int argc, char *argv[])
 
 
 // Implementation of class ROM_FE_Evolution
-ROM_FE_Evolution::ROM_FE_Evolution(DenseMatrix* M_, DenseMatrix* K_, Vector* b_, Vector* u_init_hat_, int num_rows, int num_cols)
+ROM_FE_Evolution::ROM_FE_Evolution(DenseMatrix* M_, DenseMatrix* K_, Vector* b_, Vector* u_init_hat_, int num_cols)
     : TimeDependentOperator(num_cols),
       z(num_cols)
 {
