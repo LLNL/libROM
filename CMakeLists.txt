@@ -132,6 +132,7 @@ set(module_list
   HDFDatabase
   Utilities
   ParallelBuffer
+  DMD
   DEIM
   QDEIM
   GNAT
@@ -234,8 +235,11 @@ target_compile_features(ROM PRIVATE cxx_std_11)
 if (USE_MFEM)
   set(examples
     poisson
-    ex9p
-    ex16p)
+    poisson_greedy
+    dg_advection
+    nonlinear_elasticity
+    heat_conduction
+    dg_euler)
 
   foreach(name IN LISTS examples)
     add_executable(${name} examples/${name}.cpp)
@@ -273,6 +277,7 @@ if(GTEST_FOUND)
     Vector
     Matrix
     DEIM
+    DMD
     GNAT
     QDEIM
     SVD

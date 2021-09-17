@@ -608,7 +608,7 @@ GreedyParameterPointSampler::getNextParameterPoint()
     if (d_rank == 0)
     {
         std::string str;
-        str += "Point sampled at [ ";
+        str += "\nPoint sampled at [ ";
         for (int i = 0 ; i < d_parameter_points[curr_point_to_sample].dim(); i++)
         {
             str += std::to_string(d_parameter_points[curr_point_to_sample].item(i)) + " ";
@@ -832,6 +832,23 @@ GreedyParameterPointSampler::printConvergenceAchieved()
     {
         std::string str;
         str += "Convergence achieved.\n";
+        agnosticPrint(str);
+
+        str = "\nSampled Parameter Points\n";
+        std::vector<std::pair<double, int>> first_dim_of_sampled_points;
+        for (auto itr = d_parameter_sampled_indices.begin(); itr != d_parameter_sampled_indices.end(); ++itr) {
+            first_dim_of_sampled_points.push_back(std::make_pair(d_parameter_points[*itr].item(0), *itr));
+        }
+        sort(first_dim_of_sampled_points.begin(), first_dim_of_sampled_points.end());
+        for (int i = 0; i < first_dim_of_sampled_points.size(); i++)
+        {
+            str += "[ ";
+            for (int j = 0 ; j < d_parameter_points[first_dim_of_sampled_points[i].second].dim(); j++)
+            {
+                str += std::to_string(d_parameter_points[first_dim_of_sampled_points[i].second].item(j)) + " ";
+            }
+            str += "]\n";
+        }
         agnosticPrint(str);
     }
 }

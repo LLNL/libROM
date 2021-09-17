@@ -14,6 +14,8 @@
 #ifndef included_DEIM_h
 #define included_DEIM_h
 
+#include <vector>
+
 namespace CAROM {
 
 class Matrix;
@@ -63,8 +65,8 @@ void RowInfoMax(RowInfo* a, RowInfo* b, int* len, MPI_Datatype* type);
 void
 DEIM(const Matrix* f_basis,
      int num_f_basis_vectors_used,
-     int* f_sampled_row,
-     int* f_sampled_rows_per_proc,
+     std::vector<int>& f_sampled_row,
+     std::vector<int>& f_sampled_rows_per_proc,
      Matrix& f_basis_sampled_inv,
      int myid,
      int num_procs);
@@ -95,8 +97,8 @@ DEIM(const Matrix* f_basis,
 void
 GNAT(const Matrix* f_basis,
      const int num_f_basis_vectors_used,
-     int* f_sampled_row,
-     int* f_sampled_rows_per_proc,
+     std::vector<int>& f_sampled_row,
+     std::vector<int>& f_sampled_rows_per_proc,
      Matrix& f_basis_sampled_inv,
      const int myid,
      const int num_procs,

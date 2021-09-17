@@ -143,6 +143,15 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memitem:ac0fae4db551542e9a5cdc401a38fe39f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_matrix.html#ac0fae4db551542e9a5cdc401a38fe39f">numColumns</a> () const </td></tr>
 <tr class="memdesc:ac0fae4db551542e9a5cdc401a38fe39f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the number of columns in the <a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>. This method will return the same value from each processor.  <a href="#ac0fae4db551542e9a5cdc401a38fe39f">More...</a><br/></td></tr>
 <tr class="separator:ac0fae4db551542e9a5cdc401a38fe39f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a527ee723869375508c306bb8e24ef5a5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_matrix.html#a527ee723869375508c306bb8e24ef5a5">getFirstNColumns</a> (int n) const </td></tr>
+<tr class="memdesc:a527ee723869375508c306bb8e24ef5a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the first N columns of a matrix.  <a href="#a527ee723869375508c306bb8e24ef5a5">More...</a><br/></td></tr>
+<tr class="separator:a527ee723869375508c306bb8e24ef5a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad6cc5f4cdfd2418ace0cf3df2e5410bb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_matrix.html#ad6cc5f4cdfd2418ace0cf3df2e5410bb">getFirstNColumns</a> (int n, <a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a> *&amp;result) const </td></tr>
+<tr class="memdesc:ad6cc5f4cdfd2418ace0cf3df2e5410bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the first N columns of a matrix.  <a href="#ad6cc5f4cdfd2418ace0cf3df2e5410bb">More...</a><br/></td></tr>
+<tr class="separator:ad6cc5f4cdfd2418ace0cf3df2e5410bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab070e0d8de57bc9567d949864af70195"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_matrix.html#ab070e0d8de57bc9567d949864af70195">getFirstNColumns</a> (int n, <a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a> &amp;result) const </td></tr>
+<tr class="memdesc:ab070e0d8de57bc9567d949864af70195"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the first N columns of a matrix.  <a href="#ab070e0d8de57bc9567d949864af70195">More...</a><br/></td></tr>
+<tr class="separator:ab070e0d8de57bc9567d949864af70195"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a67ae901268ab6138bf2bf9822da4fb10"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_matrix.html#a67ae901268ab6138bf2bf9822da4fb10">mult</a> (const <a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a> &amp;other) const </td></tr>
 <tr class="memdesc:a67ae901268ab6138bf2bf9822da4fb10"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multiplies this <a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a> with other and returns the product, reference version.  <a href="#a67ae901268ab6138bf2bf9822da4fb10">More...</a><br/></td></tr>
 <tr class="separator:a67ae901268ab6138bf2bf9822da4fb10"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -522,6 +531,100 @@ num_cols &gt; 0</dd></dl>
 
 <p>Returns a column of the matrix (not owned by <a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>). </p>
 <dl class="section return"><dt>Returns</dt><dd>A column of the matrix (not owned by <a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>). </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a527ee723869375508c306bb8e24ef5a5"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* CAROM::Matrix::getFirstNColumns </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>n</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get the first N columns of a matrix. </p>
+<dl class="section pre"><dt>Precondition</dt><dd>0 &lt; n &lt; <a class="el" href="class_c_a_r_o_m_1_1_matrix.html#ac0fae4db551542e9a5cdc401a38fe39f" title="Returns the number of columns in the Matrix. This method will return the same value from each process...">numColumns()</a></dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The truncated <a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ad6cc5f4cdfd2418ace0cf3df2e5410bb"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void CAROM::Matrix::getFirstNColumns </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>n</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a> *&amp;&#160;</td>
+          <td class="paramname"><em>result</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get the first N columns of a matrix. </p>
+<dl class="section pre"><dt>Precondition</dt><dd>result.distributed() == <a class="el" href="class_c_a_r_o_m_1_1_matrix.html#a861d3e43b223e8f3217f64a536281605" title="Returns true if the Matrix is distributed. ">distributed()</a> </dd>
+<dd>
+0 &lt; n &lt; <a class="el" href="class_c_a_r_o_m_1_1_matrix.html#ac0fae4db551542e9a5cdc401a38fe39f" title="Returns the number of columns in the Matrix. This method will return the same value from each process...">numColumns()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">result</td><td>The truncated <a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="ab070e0d8de57bc9567d949864af70195"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void CAROM::Matrix::getFirstNColumns </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>n</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a> &amp;&#160;</td>
+          <td class="paramname"><em>result</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get the first N columns of a matrix. </p>
+<dl class="section pre"><dt>Precondition</dt><dd>result.distributed() == <a class="el" href="class_c_a_r_o_m_1_1_matrix.html#a861d3e43b223e8f3217f64a536281605" title="Returns true if the Matrix is distributed. ">distributed()</a> </dd>
+<dd>
+0 &lt; n &lt; <a class="el" href="class_c_a_r_o_m_1_1_matrix.html#ac0fae4db551542e9a5cdc401a38fe39f" title="Returns the number of columns in the Matrix. This method will return the same value from each process...">numColumns()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">result</td><td>The truncated <a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

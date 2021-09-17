@@ -206,7 +206,7 @@ public:
             if (d_vec) {
                 delete [] d_vec;
             }
-            d_vec = new double [dim];
+            d_vec = new double [dim] {};
             d_alloc_size = dim;
         }
         d_dim = dim;
@@ -696,6 +696,14 @@ public:
      *
      */
     void local_read(const std::string& base_file_name, int rank);
+
+    /**
+     * @brief Get the vector data as a pointer.
+     */
+    double *getData() const
+    {
+        return d_vec;
+    }
 
 private:
     /**

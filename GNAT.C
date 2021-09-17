@@ -25,14 +25,16 @@ namespace CAROM {
 
 void GNAT(const Matrix* f_basis,
           const int num_f_basis_vectors_used,
-          int* f_sampled_row,
-          int* f_sampled_rows_per_proc,
+          std::vector<int>& f_sampled_row,
+          std::vector<int>& f_sampled_rows_per_proc,
           Matrix& f_basis_sampled_inv,
           const int myid,
           const int num_procs,
           const int num_samples_req,
 	  std::vector<int> *init_samples)
 {
+    CAROM_VERIFY(num_procs == f_sampled_rows_per_proc.size());
+
     // This algorithm determines the rows of f that should be sampled, the
     // processor that owns each sampled row, and fills f_basis_sampled_inv with
     // the inverse of the sampled rows of the basis of the RHS.
@@ -82,6 +84,7 @@ void GNAT(const Matrix* f_basis,
         std::min(num_f_basis_vectors_used, f_basis->numColumns());
     const int num_samples = num_samples_req > 0 ? num_samples_req : num_basis_vectors;
     CAROM_VERIFY(num_basis_vectors <= num_samples && num_samples <= f_basis->numDistributedRows());
+    CAROM_VERIFY(num_samples == f_sampled_row.size());
     CAROM_VERIFY(num_samples == f_basis_sampled_inv.numRows() && num_basis_vectors == f_basis_sampled_inv.numColumns());
     CAROM_VERIFY(!f_basis_sampled_inv.distributed());
     const int basis_size = f_basis->numRows();
