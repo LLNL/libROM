@@ -41,14 +41,14 @@ MatrixInterpolater::MatrixInterpolater(std::vector<Vector*> parameter_points,
                                        std::vector<Matrix*> rotation_matrices,
                                        std::vector<Matrix*> reduced_matrices,
                                        int ref_point,
-                                       std::string matrix_manifold) :
+                                       std::string matrix_type) :
                                        Interpolater(parameter_points,
                                                     rotation_matrices,
                                                     ref_point)
 {
     CAROM_VERIFY(reduced_matrices.size() == rotation_matrices.size());
-    CAROM_VERIFY(matrix_manifold == "SPD" || matrix_manifold == "NS" || matrix_manifold == "R");
-    d_matrix_manifold = matrix_manifold;
+    CAROM_VERIFY(matrix_type == "SPD" || matrix_type == "NS" || matrix_type == "R" || matrix_type == "B");
+    d_matrix_type = matrix_type;
 
     // Rotate the reduced matrices
     for (int i = 0; i < reduced_matrices.size(); i++)
@@ -60,25 +60,33 @@ MatrixInterpolater::MatrixInterpolater(std::vector<Vector*> parameter_points,
         }
         else
         {
-            Matrix* Q_tA = rotation_matrices[i]->transposeMult(reduced_matrices[i]);
-            Matrix* Q_tAQ = Q_tA->mult(rotation_matrices[i]);
-            delete Q_tA;
-            d_rotated_reduced_matrices.push_back(Q_tAQ);
+            if (d_matrix_type == "B")
+            {
+                Matrix* AQ = reduced_matrices[i]->mult(rotation_matrices[i]);
+                d_rotated_reduced_matrices.push_back(AQ);
+            }
+            else
+            {
+                Matrix* Q_tA = rotation_matrices[i]->transposeMult(reduced_matrices[i]);
+                Matrix* Q_tAQ = Q_tA->mult(rotation_matrices[i]);
+                delete Q_tA;
+                d_rotated_reduced_matrices.push_back(Q_tAQ);
+            }
         }
     }
 }
 
 Matrix* MatrixInterpolater::interpolate(Vector* point)
 {
-    if (d_matrix_manifold == "SPD")
+    if (d_matrix_type == "SPD")
     {
         return interpolateSPDMatrix(point);
     }
-    else if (d_matrix_manifold == "NS")
+    else if (d_matrix_type == "NS")
     {
         return interpolateNonSingularMatrix(point);
     }
-    else if (d_matrix_manifold == "R")
+    else if (d_matrix_type == "R" || d_matrix_type == "B")
     {
         return interpolateMatrix(point);
     }

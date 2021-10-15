@@ -106,9 +106,9 @@ Inheritance diagram for CAROM::MatrixInterpolater:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a0b5a496b17f1ad5521384ee6c84193f4"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_matrix_interpolater.html#a0b5a496b17f1ad5521384ee6c84193f4">MatrixInterpolater</a> (std::vector&lt; <a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> * &gt; parameter_points, std::vector&lt; <a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a> * &gt; rotation_matrices, std::vector&lt; <a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a> * &gt; reduced_matrices, int ref_point, std::string matrix_manifold)</td></tr>
-<tr class="memdesc:a0b5a496b17f1ad5521384ee6c84193f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor.  <a href="#a0b5a496b17f1ad5521384ee6c84193f4">More...</a><br/></td></tr>
-<tr class="separator:a0b5a496b17f1ad5521384ee6c84193f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a561c6a483c612a7b35bd5f71d49c5353"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_matrix_interpolater.html#a561c6a483c612a7b35bd5f71d49c5353">MatrixInterpolater</a> (std::vector&lt; <a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> * &gt; parameter_points, std::vector&lt; <a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a> * &gt; rotation_matrices, std::vector&lt; <a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a> * &gt; reduced_matrices, int ref_point, std::string matrix_type)</td></tr>
+<tr class="memdesc:a561c6a483c612a7b35bd5f71d49c5353"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor.  <a href="#a561c6a483c612a7b35bd5f71d49c5353">More...</a><br/></td></tr>
+<tr class="separator:a561c6a483c612a7b35bd5f71d49c5353"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a609b8d298abcc16cb240c0a8c7c75dde"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_matrix_interpolater.html#a609b8d298abcc16cb240c0a8c7c75dde">interpolate</a> (<a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> *point)</td></tr>
 <tr class="memdesc:a609b8d298abcc16cb240c0a8c7c75dde"><td class="mdescLeft">&#160;</td><td class="mdescRight">Interpolate to unsampled parameter point.  <a href="#a609b8d298abcc16cb240c0a8c7c75dde">More...</a><br/></td></tr>
 <tr class="separator:a609b8d298abcc16cb240c0a8c7c75dde"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -144,9 +144,13 @@ std::vector&lt; <a class="el" href="class_c_a_r_o_m_1_1_vector.html">Vector</a> 
 std::vector&lt; <a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_interpolater.html#ae4f9fdf346b3ae211fb29120ded1a4e0">d_rotation_matrices</a></td></tr>
 <tr class="memdesc:ae4f9fdf346b3ae211fb29120ded1a4e0 inherit pro_attribs_class_c_a_r_o_m_1_1_interpolater"><td class="mdescLeft">&#160;</td><td class="mdescRight">The reduced bases with compatible coordinates. <br/></td></tr>
 <tr class="separator:ae4f9fdf346b3ae211fb29120ded1a4e0 inherit pro_attribs_class_c_a_r_o_m_1_1_interpolater"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adeba3fc5816b658f4dd22a04123d6f5d inherit pro_attribs_class_c_a_r_o_m_1_1_interpolater"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adeba3fc5816b658f4dd22a04123d6f5d"></a>
+<a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_interpolater.html#adeba3fc5816b658f4dd22a04123d6f5d">d_lambda_T</a></td></tr>
+<tr class="memdesc:adeba3fc5816b658f4dd22a04123d6f5d inherit pro_attribs_class_c_a_r_o_m_1_1_interpolater"><td class="mdescLeft">&#160;</td><td class="mdescRight">The reduced elements in tangential space. <br/></td></tr>
+<tr class="separator:adeba3fc5816b658f4dd22a04123d6f5d inherit pro_attribs_class_c_a_r_o_m_1_1_interpolater"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a class="anchor" id="a0b5a496b17f1ad5521384ee6c84193f4"></a>
+<a class="anchor" id="a561c6a483c612a7b35bd5f71d49c5353"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -178,7 +182,7 @@ std::vector&lt; <a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a> 
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">std::string&#160;</td>
-          <td class="paramname"><em>matrix_manifold</em>&#160;</td>
+          <td class="paramname"><em>matrix_type</em>&#160;</td>
         </tr>
         <tr>
           <td></td>

@@ -19,6 +19,7 @@ var searchData=
   ['d_5ffactorizer',['d_factorizer',['../class_c_a_r_o_m_1_1_static_s_v_d.html#ab190353592dfd9c6ba6ceb3853e5d3a7',1,'CAROM::StaticSVD']]],
   ['d_5fistarts',['d_istarts',['../class_c_a_r_o_m_1_1_static_s_v_d.html#a681f31b3a5c8e134346865e21d33f8e0',1,'CAROM::StaticSVD']]],
   ['d_5fiteration_5fstarted',['d_iteration_started',['../class_c_a_r_o_m_1_1_greedy_parameter_point_sampler.html#aa19524dde1add5168f3826d280a56074',1,'CAROM::GreedyParameterPointSampler']]],
+  ['d_5flambda_5ft',['d_lambda_T',['../class_c_a_r_o_m_1_1_interpolater.html#adeba3fc5816b658f4dd22a04123d6f5d',1,'CAROM::Interpolater']]],
   ['d_5flinearity_5ftol',['d_linearity_tol',['../class_c_a_r_o_m_1_1_incremental_s_v_d.html#a3c49e9496b716f451d54e2d2a924717c',1,'CAROM::IncrementalSVD']]],
   ['d_5fmax_5fbasis_5fdimension',['d_max_basis_dimension',['../class_c_a_r_o_m_1_1_incremental_s_v_d.html#a585fb78a9a58093014220a4e09ae176d',1,'CAROM::IncrementalSVD::d_max_basis_dimension()'],['../class_c_a_r_o_m_1_1_static_s_v_d.html#a8ccff71fcfbf639a2f38a1e438f520dd',1,'CAROM::StaticSVD::d_max_basis_dimension()']]],
   ['d_5fmax_5fclamp',['d_max_clamp',['../class_c_a_r_o_m_1_1_greedy_parameter_point_sampler.html#ab78f1e0885cba23ab67f660a3090ede6',1,'CAROM::GreedyParameterPointSampler']]],

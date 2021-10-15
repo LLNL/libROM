@@ -3,7 +3,7 @@ var searchData=
   ['matrix',['Matrix',['../class_c_a_r_o_m_1_1_matrix.html',1,'CAROM']]],
   ['matrix',['Matrix',['../class_c_a_r_o_m_1_1_matrix.html#ad68ec85e555f2ad2f684da50cabd5df6',1,'CAROM::Matrix::Matrix()'],['../class_c_a_r_o_m_1_1_matrix.html#aa5c81dbee59703eb959e7e1b6dae2e8b',1,'CAROM::Matrix::Matrix(int num_rows, int num_cols, bool distributed, bool randomized=false)'],['../class_c_a_r_o_m_1_1_matrix.html#afe257256e4912f550567bd1524076807',1,'CAROM::Matrix::Matrix(double *mat, int num_rows, int num_cols, bool distributed, bool copy_data=true)'],['../class_c_a_r_o_m_1_1_matrix.html#abf54e74356673b4139c704eaf9091e4d',1,'CAROM::Matrix::Matrix(const Matrix &amp;other)']]],
   ['matrixinterpolater',['MatrixInterpolater',['../class_c_a_r_o_m_1_1_matrix_interpolater.html',1,'CAROM']]],
-  ['matrixinterpolater',['MatrixInterpolater',['../class_c_a_r_o_m_1_1_matrix_interpolater.html#a0b5a496b17f1ad5521384ee6c84193f4',1,'CAROM::MatrixInterpolater']]],
+  ['matrixinterpolater',['MatrixInterpolater',['../class_c_a_r_o_m_1_1_matrix_interpolater.html#a561c6a483c612a7b35bd5f71d49c5353',1,'CAROM::MatrixInterpolater']]],
   ['max_5fbasis_5fdimension',['max_basis_dimension',['../class_c_a_r_o_m_1_1_options.html#ad0857e9143399ed45372af5fc93fcc04',1,'CAROM::Options']]],
   ['max_5fsampling_5ftime_5fstep_5fscale',['max_sampling_time_step_scale',['../class_c_a_r_o_m_1_1_options.html#a48c79ce92c45be923f431ec6d9c28b99',1,'CAROM::Options']]],
   ['max_5ftime_5fbetween_5fsamples',['max_time_between_samples',['../class_c_a_r_o_m_1_1_options.html#a0c22532e19d6e6405524ab4e327a0a9c',1,'CAROM::Options']]],

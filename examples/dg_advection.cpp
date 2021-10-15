@@ -23,7 +23,7 @@
 //    dg_advection -online -ff 1.07 -tf 3.0 -rdim 20
 //    dg_advection -offline -ff 1.08
 //    dg_advection -online -ff 1.08 -tf 3.0 -rdim 20
-//    dg_advection -offline -ff 1.05 -tf 3.0
+//    dg_advection -fom -ff 1.05 -tf 3.0
 //    dg_advection -online -ff 1.05 -tf 3.0 -interpolate -rdim 20
 
 // Sample runs:
@@ -306,6 +306,7 @@ int main(int argc, char *argv[])
     double ef = 0.9999;
     f_factor = 1.0;
     int rdim = -1;
+    bool fom = false;
     bool offline = false;
     bool online = false;
     bool interpolate = false;
@@ -375,6 +376,8 @@ int main(int argc, char *argv[])
                    "Use binary (Sidre) or ascii format for VisIt data files.");
     args.AddOption(&vis_steps, "-vs", "--visualization-steps",
                    "Visualize every n-th timestep.");
+    args.AddOption(&fom, "-fom", "--fom", "-no-fom", "--no-fom",
+                   "Enable or disable the fom phase.");
     args.AddOption(&offline, "-offline", "--offline", "-no-offline", "--no-offline",
                    "Enable or disable the offline phase.");
     args.AddOption(&online, "-online", "--online", "-no-online", "--no-online",
@@ -702,18 +705,17 @@ int main(int argc, char *argv[])
 
     if (online)
     {
-        CAROM::BasisReader reader(basisName);
-        if (rdim != -1)
-        {
-            spatialbasis = reader.getSpatialBasis(0.0, rdim);
-        }
-        else
-        {
-            spatialbasis = reader.getSpatialBasis(0.0, ef);
-        }
-
         if (!interpolate)
         {
+            CAROM::BasisReader reader(basisName);
+            if (rdim != -1)
+            {
+                spatialbasis = reader.getSpatialBasis(0.0, rdim);
+            }
+            else
+            {
+                spatialbasis = reader.getSpatialBasis(0.0, ef);
+            }
             numRowRB = spatialbasis->numRows();
             numColumnRB = spatialbasis->numColumns();
             if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB, numColumnRB);
@@ -753,7 +755,6 @@ int main(int argc, char *argv[])
             K_hat->Transpose();
 
             Vector b_vec = *B->GlobalVector();
-
             CAROM::Vector b_carom(b_vec.GetData(), b_vec.Size(), true);
             b_hat_carom = spatialbasis->transposeMult(&b_carom);
             b_hat_carom->write("b_hat_" + std::to_string(f_factor));
@@ -829,10 +830,12 @@ int main(int argc, char *argv[])
             int ref_point = getCenterPoint(parameter_points, false);
             std::vector<CAROM::Matrix*> rotation_matrices = obtainRotationMatrices(parameter_points, bases, ref_point);
 
+            CAROM::MatrixInterpolater basis_interpolater(parameter_points, rotation_matrices, bases, ref_point, "B");
             CAROM::MatrixInterpolater M_interpolater(parameter_points, rotation_matrices, M_hats, ref_point, "SPD");
             CAROM::MatrixInterpolater K_interpolater(parameter_points, rotation_matrices, K_hats, ref_point, "R");
             CAROM::VectorInterpolater b_interpolater(parameter_points, rotation_matrices, b_hats, ref_point);
             CAROM::VectorInterpolater u_init_interpolater(parameter_points, rotation_matrices, u_init_hats, ref_point);
+            spatialbasis = basis_interpolater.interpolate(curr_point);
             M_hat_carom = M_interpolater.interpolate(curr_point);
             K_hat_carom = K_interpolater.interpolate(curr_point);
             b_hat_carom = b_interpolater.interpolate(curr_point);
@@ -995,7 +998,7 @@ int main(int argc, char *argv[])
 
     // 12. Save the final solution in parallel. This output can be viewed later
     //     using GLVis: "glvis -np <np> -m dg_advection-mesh -g dg_advection-final".
-    if (offline)
+    if (offline || fom)
     {
         *u = *U;
         ostringstream sol_name;

@@ -116,7 +116,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;                       std::vector&lt;Matrix*&gt; rotation_matrices,</div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;                       std::vector&lt;Matrix*&gt; reduced_matrices,</div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;                       <span class="keywordtype">int</span> ref_point,</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;                       std::string matrix_manifold);</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;                       std::string matrix_type);</div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;</div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* <a class="code" href="class_c_a_r_o_m_1_1_matrix_interpolater.html#a609b8d298abcc16cb240c0a8c7c75dde">interpolate</a>(<a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* point);</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;</div>
@@ -141,18 +141,16 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;</div>
 <div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;           <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* interpolateMatrix(<a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* point);</div>
 <div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    std::string d_matrix_manifold;</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    std::string d_matrix_type;</div>
 <div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;</div>
 <div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;    std::vector&lt;Matrix*&gt; d_rotated_reduced_matrices;</div>
 <div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* d_lambda;</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* d_x_half_power;</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;};</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;}</div>
 <div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* d_x_half_power;</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;};</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;}</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_matrix_interpolater_html"><div class="ttname"><a href="class_c_a_r_o_m_1_1_matrix_interpolater.html">CAROM::MatrixInterpolater</a></div><div class="ttdef"><b>Definition:</b> MatrixInterpolater.h:25</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_matrix_html"><div class="ttname"><a href="class_c_a_r_o_m_1_1_matrix.html">CAROM::Matrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.h:29</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html">CAROM::Vector</a></div><div class="ttdef"><b>Definition:</b> Vector.h:29</div></div>

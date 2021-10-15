@@ -35,7 +35,7 @@ public:
                        std::vector<Matrix*> rotation_matrices,
                        std::vector<Matrix*> reduced_matrices,
                        int ref_point,
-                       std::string matrix_manifold);
+                       std::string matrix_type);
 
    /**
     * @brief Interpolate to unsampled parameter point.
@@ -102,7 +102,7 @@ private:
     /**
      * @brief The matrix manifold
      */
-    std::string d_matrix_manifold;
+    std::string d_matrix_type;
 
     /**
      * @brief The reduced matrices with compatible coordinates.

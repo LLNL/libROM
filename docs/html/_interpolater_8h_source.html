@@ -126,27 +126,30 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;</div>
 <div class="line"><a name="l00061"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_interpolater.html#ae4f9fdf346b3ae211fb29120ded1a4e0">   61</a></span>&#160;    std::vector&lt;Matrix*&gt; <a class="code" href="class_c_a_r_o_m_1_1_interpolater.html#ae4f9fdf346b3ae211fb29120ded1a4e0">d_rotation_matrices</a>;</div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    std::vector&lt;double&gt; <a class="code" href="class_c_a_r_o_m_1_1_interpolater.html#a1a2087bf24a1696437fc27f705e70063">obtainRBF</a>(<a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* point);</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_interpolater.html">Interpolater</a>();</div>
+<div class="line"><a name="l00066"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_interpolater.html#adeba3fc5816b658f4dd22a04123d6f5d">   66</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* <a class="code" href="class_c_a_r_o_m_1_1_interpolater.html#adeba3fc5816b658f4dd22a04123d6f5d">d_lambda_T</a>;</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    std::vector&lt;double&gt; <a class="code" href="class_c_a_r_o_m_1_1_interpolater.html#a1a2087bf24a1696437fc27f705e70063">obtainRBF</a>(<a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* point);</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="keyword">private</span>:</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_interpolater.html">Interpolater</a>(</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_interpolater.html">Interpolater</a>&amp; other);</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_interpolater.html">Interpolater</a>&amp;</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    operator = (</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_interpolater.html">Interpolater</a>&amp; rhs);</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;};</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;std::vector&lt;Matrix*&gt; obtainRotationMatrices(std::vector&lt;Vector*&gt; parameter_points,</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;                                            std::vector&lt;Matrix*&gt; bases,</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;                                            <span class="keywordtype">int</span> ref_point);</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;}</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_interpolater.html">Interpolater</a>();</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_interpolater.html">Interpolater</a>(</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_interpolater.html">Interpolater</a>&amp; other);</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_interpolater.html">Interpolater</a>&amp;</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    operator = (</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_interpolater.html">Interpolater</a>&amp; rhs);</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;};</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;std::vector&lt;Matrix*&gt; obtainRotationMatrices(std::vector&lt;Vector*&gt; parameter_points,</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;                                            std::vector&lt;Matrix*&gt; bases,</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;                                            <span class="keywordtype">int</span> ref_point);</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;}</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_matrix_html"><div class="ttname"><a href="class_c_a_r_o_m_1_1_matrix.html">CAROM::Matrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.h:29</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_interpolater_html_ae6410b68a5bb1a016feb4fb4aa1a283b"><div class="ttname"><a href="class_c_a_r_o_m_1_1_interpolater.html#ae6410b68a5bb1a016feb4fb4aa1a283b">CAROM::Interpolater::d_parameter_points</a></div><div class="ttdeci">std::vector&lt; Vector * &gt; d_parameter_points</div><div class="ttdoc">The sampled parameter points. </div><div class="ttdef"><b>Definition:</b> Interpolater.h:56</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_interpolater_html_a1a2087bf24a1696437fc27f705e70063"><div class="ttname"><a href="class_c_a_r_o_m_1_1_interpolater.html#a1a2087bf24a1696437fc27f705e70063">CAROM::Interpolater::obtainRBF</a></div><div class="ttdeci">std::vector&lt; double &gt; obtainRBF(Vector *point)</div><div class="ttdoc">Interpolate to unsampled parameter point. </div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_interpolater_html_a636620edb069b748f207abf8e2fba903"><div class="ttname"><a href="class_c_a_r_o_m_1_1_interpolater.html#a636620edb069b748f207abf8e2fba903">CAROM::Interpolater::d_rank</a></div><div class="ttdeci">int d_rank</div><div class="ttdoc">The rank of the process this object belongs to. </div><div class="ttdef"><b>Definition:</b> Interpolater.h:41</div></div>
@@ -154,6 +157,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="ttc" id="class_c_a_r_o_m_1_1_interpolater_html_a1e01de2ee405cd00edbcb0ca94d0a11c"><div class="ttname"><a href="class_c_a_r_o_m_1_1_interpolater.html#a1e01de2ee405cd00edbcb0ca94d0a11c">CAROM::Interpolater::d_ref_point</a></div><div class="ttdeci">int d_ref_point</div><div class="ttdoc">The reference point;. </div><div class="ttdef"><b>Definition:</b> Interpolater.h:51</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_interpolater_html"><div class="ttname"><a href="class_c_a_r_o_m_1_1_interpolater.html">CAROM::Interpolater</a></div><div class="ttdef"><b>Definition:</b> Interpolater.h:23</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_interpolater_html_ae4f9fdf346b3ae211fb29120ded1a4e0"><div class="ttname"><a href="class_c_a_r_o_m_1_1_interpolater.html#ae4f9fdf346b3ae211fb29120ded1a4e0">CAROM::Interpolater::d_rotation_matrices</a></div><div class="ttdeci">std::vector&lt; Matrix * &gt; d_rotation_matrices</div><div class="ttdoc">The reduced bases with compatible coordinates. </div><div class="ttdef"><b>Definition:</b> Interpolater.h:61</div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_interpolater_html_adeba3fc5816b658f4dd22a04123d6f5d"><div class="ttname"><a href="class_c_a_r_o_m_1_1_interpolater.html#adeba3fc5816b658f4dd22a04123d6f5d">CAROM::Interpolater::d_lambda_T</a></div><div class="ttdeci">Matrix * d_lambda_T</div><div class="ttdoc">The reduced elements in tangential space. </div><div class="ttdef"><b>Definition:</b> Interpolater.h:66</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_interpolater_html_abccb853a34e352007a6426905c1b1cf0"><div class="ttname"><a href="class_c_a_r_o_m_1_1_interpolater.html#abccb853a34e352007a6426905c1b1cf0">CAROM::Interpolater::d_num_procs</a></div><div class="ttdeci">int d_num_procs</div><div class="ttdoc">The number of processors being run on. </div><div class="ttdef"><b>Definition:</b> Interpolater.h:46</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
