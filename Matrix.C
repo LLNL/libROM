@@ -27,12 +27,16 @@
 #include "scalapack_wrapper.h"
 
 /* Use automatically detected Fortran name-mangling scheme */
+#define dsyev CAROM_FC_GLOBAL(dsyev, DSYEV)
 #define dgeev CAROM_FC_GLOBAL(dgeev, DGEEV)
 #define dgetrf CAROM_FC_GLOBAL(dgetrf, DGETRF)
 #define dgetri CAROM_FC_GLOBAL(dgetri, DGETRI)
 #define dgeqp3 CAROM_FC_GLOBAL(dgeqp3, DGEQP3)
 
 extern "C" {
+// Compute eigenvalue and eigenvectors of real symmetric matrix.
+    void dsyev(char*, char*, int*, double*, int*, double*, double*, int*, int*);
+
 // Compute eigenvalue and eigenvectors of real non-symmetric matrix.
     void dgeev(char*, char*, int*, double*, int*, double*, double*, double*, int*, double*, int*, double*, int*, int*);
 
@@ -798,7 +802,7 @@ void Matrix::transposePseudoinverse()
 }
 
 void
-Matrix::print(const char * prefix)
+Matrix::print(const char * prefix) const
 {
     int my_rank;
     const bool success = MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
@@ -817,7 +821,7 @@ Matrix::print(const char * prefix)
 }
 
 void
-Matrix::write(const std::string& base_file_name)
+Matrix::write(const std::string& base_file_name) const
 {
     CAROM_VERIFY(!base_file_name.empty());
 
@@ -1725,7 +1729,54 @@ Matrix IdentityMatrixFactory(const Vector &v)
     return DiagonalMatrixFactory(temporary);
 }
 
-struct EigenPair RightEigenSolve(Matrix* A)
+struct EigenPair SymmetricRightEigenSolve(Matrix* A)
+{
+    char jobz = 'V', uplo = 'U';
+
+    int info;
+    int k = A->numColumns();
+    int lwork = std::max(1, 10*k-1);
+    double* work = new double [lwork];
+    double* eigs = new double [k];
+    Matrix* ev = new Matrix(*A);
+
+    // ev now in a row major representation.  Put it
+    // into column major order.
+    for (int row = 0; row < k; ++row) {
+        for (int col = row+1; col < k; ++col) {
+            double tmp = ev->item(row, col);
+            ev->item(row, col) = ev->item(col, row);
+            ev->item(col, row) = tmp;
+        }
+    }
+
+    // Now call lapack to do the eigensolve.
+    dsyev(&jobz, &uplo, &k, ev->getData(), &k, eigs, work, &lwork, &info);
+
+    // Eigenvectors now in a column major representation.  Put it
+    // into row major order.
+    for (int row = 0; row < k; ++row) {
+        for (int col = row+1; col < k; ++col) {
+            double tmp = ev->item(row, col);
+            ev->item(row, col) = ev->item(col, row);
+            ev->item(col, row) = tmp;
+        }
+    }
+
+    EigenPair eigenpair;
+    eigenpair.ev = ev;
+    for (int i = 0; i < k; i++)
+    {
+        eigenpair.eigs.push_back(eigs[i]);
+    }
+
+    delete [] work;
+    delete [] eigs;
+
+    return eigenpair;
+}
+
+struct ComplexEigenPair NonSymmetricRightEigenSolve(Matrix* A)
 {
     char jobvl = 'N', jobrl = 'V';
 
@@ -1737,21 +1788,23 @@ struct EigenPair RightEigenSolve(Matrix* A)
     double* e_imaginary = new double [k];
     double* ev_l = NULL;
     Matrix* ev_r = new Matrix(k, k, false);
+    Matrix* A_copy = new Matrix(*A);
 
     // A now in a row major representation.  Put it
     // into column major order.
     for (int row = 0; row < k; ++row) {
         for (int col = row+1; col < k; ++col) {
-            double tmp = A->item(row, col);
-            A->item(row, col) = A->item(col, row);
-            A->item(col, row) = tmp;
+            double tmp = A_copy->item(row, col);
+            A_copy->item(row, col) = A_copy->item(col, row);
+            A_copy->item(col, row) = tmp;
         }
     }
 
     // Now call lapack to do the eigensolve.
-    dgeev(&jobvl, &jobrl, &k, A->getData(), &k, e_real, e_imaginary, ev_l, &k, ev_r->getData(), &k, work, &lwork, &info);
+    dgeev(&jobvl, &jobrl, &k, A_copy->getData(), &k, e_real, e_imaginary, ev_l,
+        &k, ev_r->getData(), &k, work, &lwork, &info);
 
-    // Eigenvalues now in a column major representation.  Put it
+    // Eigenvectors now in a column major representation.  Put it
     // into row major order.
     for (int row = 0; row < k; ++row) {
         for (int col = row+1; col < k; ++col) {
@@ -1761,7 +1814,7 @@ struct EigenPair RightEigenSolve(Matrix* A)
         }
     }
 
-    EigenPair eigenpair;
+    ComplexEigenPair eigenpair;
     eigenpair.ev_real = new Matrix(k, k, false);
     eigenpair.ev_imaginary = new Matrix(k, k, false);
 
@@ -1794,6 +1847,7 @@ struct EigenPair RightEigenSolve(Matrix* A)
     delete [] e_real;
     delete [] e_imaginary;
     delete ev_r;
+    delete A_copy;
 
     return eigenpair;
 }

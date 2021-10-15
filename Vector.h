@@ -16,6 +16,7 @@
 #define included_Vector_h
 
 #include "Utilities.h"
+#include <vector>
 #include <functional>
 
 namespace CAROM {
@@ -744,6 +745,13 @@ private:
      */
     bool d_owns_data;
 };
+
+/**
+ * @brief Get center point of a group of points.
+
+ */
+int getCenterPoint(std::vector<Vector*> points,
+                   bool use_centroid);
 
 }
 

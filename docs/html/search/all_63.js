@@ -4,6 +4,7 @@ var searchData=
   ['checkparameterpointinput',['checkParameterPointInput',['../class_c_a_r_o_m_1_1_greedy_parameter_point_sampler.html#a577a3a0b7fd389c138b88e13f0637b37',1,'CAROM::GreedyParameterPointSampler']]],
   ['close',['close',['../class_c_a_r_o_m_1_1_database.html#a75da8db9a3ffa8c4c150f67e62a600e8',1,'CAROM::Database::close()'],['../class_c_a_r_o_m_1_1_h_d_f_database.html#a94c9a5972e98e4426c3bdc255ee1dfdc',1,'CAROM::HDFDatabase::close()']]],
   ['communicate_5fu',['COMMUNICATE_U',['../class_c_a_r_o_m_1_1_incremental_s_v_d.html#a4fced260f1783640543bbc9c17cb72fc',1,'CAROM::IncrementalSVD']]],
+  ['complexeigenpair',['ComplexEigenPair',['../struct_c_a_r_o_m_1_1_complex_eigen_pair.html',1,'CAROM']]],
   ['computebasis',['computeBasis',['../class_c_a_r_o_m_1_1_incremental_s_v_d.html#a552daa55d3af451c56c00e43625b92b5',1,'CAROM::IncrementalSVD']]],
   ['computenextsampletime',['computeNextSampleTime',['../class_c_a_r_o_m_1_1_basis_generator.html#ab4e33379fd6b66633c9c98ed5ea770e9',1,'CAROM::BasisGenerator']]],
   ['computesvd',['computeSVD',['../class_c_a_r_o_m_1_1_static_s_v_d.html#a84a3a716b20657be429866c873424e3c',1,'CAROM::StaticSVD']]],

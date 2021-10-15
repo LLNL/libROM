@@ -102,306 +102,310 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define included_Vector_h</span></div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor">#include &quot;Utilities.h&quot;</span></div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#include &lt;functional&gt;</span></div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="keyword">namespace </span>CAROM {</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;</div>
-<div class="line"><a name="l00028"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html">   28</a></span>&#160;<span class="keyword">class </span><a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a></div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;{</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>();</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>(</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;        <span class="keywordtype">int</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a8f8e5d44c3f2cd12e2f4090ddf97c735">dim</a>,</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;        <span class="keywordtype">bool</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a0fe8ff4dfdb1357d1bb67f7945491841">distributed</a>);</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>(</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;        <span class="keywordtype">double</span>* vec,</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;        <span class="keywordtype">int</span> dim,</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;        <span class="keywordtype">bool</span> distributed,</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;        <span class="keywordtype">bool</span> copy_data = <span class="keyword">true</span>);</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>(</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; other);</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#aa751475ec55bc679c7e874b0b442f59f">~Vector</a>();</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp;</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a77b17dde248f3c532ac31dcf9632e9c4">operator = </a>(</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; rhs);</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp;</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a4c92d8b8a9c156ff394cf87d4079fa99">operator += </a>(</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; rhs);</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp;</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a77b17dde248f3c532ac31dcf9632e9c4">operator = </a>(</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;        <span class="keyword">const</span> <span class="keywordtype">double</span>&amp; a);</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;</div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp;</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#aee8568a55c608718bf2d50031f1cf8dc">transform</a>(std::function&lt;<span class="keywordtype">void</span>(<span class="keyword">const</span> <span class="keywordtype">int</span> size, <span class="keywordtype">double</span>* vector)&gt; transformer);</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;</div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#aee8568a55c608718bf2d50031f1cf8dc">transform</a>(<a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; result, std::function&lt;<span class="keywordtype">void</span>(<span class="keyword">const</span> <span class="keywordtype">int</span> size, <span class="keywordtype">double</span>* vector)&gt; transformer) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;</div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#aee8568a55c608718bf2d50031f1cf8dc">transform</a>(<a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>*&amp; result, std::function&lt;<span class="keywordtype">void</span>(<span class="keyword">const</span> <span class="keywordtype">int</span> size, <span class="keywordtype">double</span>* vector)&gt; transformer) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;</div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp;</div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#aee8568a55c608718bf2d50031f1cf8dc">transform</a>(std::function&lt;<span class="keywordtype">void</span>(<span class="keyword">const</span> <span class="keywordtype">int</span> size, <span class="keywordtype">double</span>* origVector, <span class="keywordtype">double</span>* resultVector)&gt; transformer);</div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;</div>
-<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#aee8568a55c608718bf2d50031f1cf8dc">transform</a>(<a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; result, std::function&lt;<span class="keywordtype">void</span>(<span class="keyword">const</span> <span class="keywordtype">int</span> size, <span class="keywordtype">double</span>* origVector, <span class="keywordtype">double</span>* resultVector)&gt; transformer) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;</div>
-<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#aee8568a55c608718bf2d50031f1cf8dc">transform</a>(<a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>*&amp; result, std::function&lt;<span class="keywordtype">void</span>(<span class="keyword">const</span> <span class="keywordtype">int</span> size, <span class="keywordtype">double</span>* origVector, <span class="keywordtype">double</span>* resultVector)&gt; transformer) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;</div>
-<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00199"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#a1543d65aaadb8016a071a4df9725d366">  199</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a1543d65aaadb8016a071a4df9725d366">setSize</a>(</div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;        <span class="keywordtype">int</span> dim)</div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;    {</div>
-<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;        <span class="keywordflow">if</span> (dim &gt; d_alloc_size) {</div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;            <span class="keywordflow">if</span> (!d_owns_data) {</div>
-<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;                CAROM_ERROR(<span class="stringliteral">&quot;Can not reallocate externally owned storage.&quot;</span>);</div>
-<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;            }</div>
-<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;            <span class="keywordflow">if</span> (d_vec) {</div>
-<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;                <span class="keyword">delete</span> [] d_vec;</div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;            }</div>
-<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;            d_vec = <span class="keyword">new</span> <span class="keywordtype">double</span> [<a class="code" href="class_c_a_r_o_m_1_1_vector.html#a8f8e5d44c3f2cd12e2f4090ddf97c735">dim</a>] {};</div>
-<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;            d_alloc_size = <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a8f8e5d44c3f2cd12e2f4090ddf97c735">dim</a>;</div>
-<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;        }</div>
-<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;        d_dim = <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a8f8e5d44c3f2cd12e2f4090ddf97c735">dim</a>;</div>
-<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;    }</div>
-<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;</div>
-<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;    <span class="keywordtype">bool</span></div>
-<div class="line"><a name="l00221"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#a0fe8ff4dfdb1357d1bb67f7945491841">  221</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a0fe8ff4dfdb1357d1bb67f7945491841">distributed</a>()<span class="keyword"> const</span></div>
-<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;<span class="keyword">    </span>{</div>
-<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;        <span class="keywordflow">return</span> d_distributed;</div>
-<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;    }</div>
-<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;</div>
-<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;    <span class="keywordtype">int</span></div>
-<div class="line"><a name="l00232"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#a8f8e5d44c3f2cd12e2f4090ddf97c735">  232</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a8f8e5d44c3f2cd12e2f4090ddf97c735">dim</a>()<span class="keyword"> const</span></div>
-<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;<span class="keyword">    </span>{</div>
-<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;        <span class="keywordflow">return</span> d_dim;</div>
-<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;    }</div>
-<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;</div>
-<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;    <span class="keywordtype">double</span></div>
-<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#ad78f78bb34948e935c6d7aad47ca9902">inner_product</a>(</div>
-<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; other) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;</div>
-<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;    <span class="keywordtype">double</span></div>
-<div class="line"><a name="l00267"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#aaf42efa8ebaad147be85baf2ed013a13">  267</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#aaf42efa8ebaad147be85baf2ed013a13">inner_product</a>(</div>
-<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* other)<span class="keyword"> const</span></div>
-<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;<span class="keyword">    </span>{</div>
-<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;        CAROM_VERIFY(other != 0);</div>
-<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html#ad78f78bb34948e935c6d7aad47ca9902">inner_product</a>(*other);</div>
-<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;    }</div>
-<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;</div>
-<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;    <span class="keywordtype">double</span></div>
-<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#af699f7fcf238cf7fe47031ce21b45f5a">norm</a>() <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;</div>
-<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;    <span class="keywordtype">double</span></div>
-<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a82c59b2b1135267440cc127e0f782b4b">normalize</a>();</div>
-<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;</div>
-<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>*</div>
-<div class="line"><a name="l00305"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#a2004f874de68848d1a0720afdfccd4b2">  305</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a2004f874de68848d1a0720afdfccd4b2">plus</a>(</div>
-<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; other)<span class="keyword"> const</span></div>
-<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;<span class="keyword">    </span>{</div>
-<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* result = 0;</div>
-<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a2004f874de68848d1a0720afdfccd4b2">plus</a>(other, result);</div>
-<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;        <span class="keywordflow">return</span> result;</div>
-<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;    }</div>
-<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;</div>
-<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>*</div>
-<div class="line"><a name="l00325"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#aa7dd759525e6fecb0f531dcb8b1b41a1">  325</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#aa7dd759525e6fecb0f531dcb8b1b41a1">plus</a>(</div>
-<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* other)<span class="keyword"> const</span></div>
-<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;<span class="keyword">    </span>{</div>
-<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;        CAROM_VERIFY(other != 0);</div>
-<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a2004f874de68848d1a0720afdfccd4b2">plus</a>(*other);</div>
-<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;    }</div>
-<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;</div>
-<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a2004f874de68848d1a0720afdfccd4b2">plus</a>(</div>
-<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; other,</div>
-<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>*&amp; result) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;</div>
-<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a2004f874de68848d1a0720afdfccd4b2">plus</a>(</div>
-<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; other,</div>
-<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; result) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;</div>
-<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>*</div>
-<div class="line"><a name="l00380"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#ace7a3b2cc2fb52c71f294d80cb8de222">  380</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#ace7a3b2cc2fb52c71f294d80cb8de222">plusAx</a>(</div>
-<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;        <span class="keywordtype">double</span> factor,</div>
-<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; other)</div>
-<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;    {</div>
-<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* result = 0;</div>
-<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html#ace7a3b2cc2fb52c71f294d80cb8de222">plusAx</a>(factor, other, result);</div>
-<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;        <span class="keywordflow">return</span> result;</div>
-<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;    }</div>
-<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;</div>
-<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>*</div>
-<div class="line"><a name="l00402"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#a47bb52d90d711ed3b7991dc211bd3a80">  402</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a47bb52d90d711ed3b7991dc211bd3a80">plusAx</a>(</div>
-<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;        <span class="keywordtype">double</span> factor,</div>
-<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* other)</div>
-<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;    {</div>
-<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;        CAROM_VERIFY(other != 0);</div>
-<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html#ace7a3b2cc2fb52c71f294d80cb8de222">plusAx</a>(factor, *other);</div>
-<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;    }</div>
-<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;</div>
-<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#ace7a3b2cc2fb52c71f294d80cb8de222">plusAx</a>(</div>
-<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;        <span class="keywordtype">double</span> factor,</div>
-<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; other,</div>
-<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>*&amp; result) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;</div>
-<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#ace7a3b2cc2fb52c71f294d80cb8de222">plusAx</a>(</div>
-<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;        <span class="keywordtype">double</span> factor,</div>
-<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; other,</div>
-<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; result) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;</div>
-<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#aae3ef84fdd8263704316175f681f25d1">plusEqAx</a>(</div>
-<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;        <span class="keywordtype">double</span> factor,</div>
-<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; other);</div>
-<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;</div>
-<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00474"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#a5c766f8f3ebdf13e9b90ddfd106c73e6">  474</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a5c766f8f3ebdf13e9b90ddfd106c73e6">plusEqAx</a>(</div>
-<div class="line"><a name="l00475"></a><span class="lineno">  475</span>&#160;        <span class="keywordtype">double</span> factor,</div>
-<div class="line"><a name="l00476"></a><span class="lineno">  476</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* other)</div>
-<div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;    {</div>
-<div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160;        CAROM_VERIFY(other != 0);</div>
-<div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html#aae3ef84fdd8263704316175f681f25d1">plusEqAx</a>(factor, *other);</div>
-<div class="line"><a name="l00480"></a><span class="lineno">  480</span>&#160;    }</div>
-<div class="line"><a name="l00481"></a><span class="lineno">  481</span>&#160;</div>
-<div class="line"><a name="l00493"></a><span class="lineno">  493</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>*</div>
-<div class="line"><a name="l00494"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#ac7e6bd13bfb89ae084f1933789055999">  494</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#ac7e6bd13bfb89ae084f1933789055999">minus</a>(</div>
-<div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; other)<span class="keyword"> const</span></div>
-<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;<span class="keyword">    </span>{</div>
-<div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* result = 0;</div>
-<div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html#ac7e6bd13bfb89ae084f1933789055999">minus</a>(other, result);</div>
-<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;        <span class="keywordflow">return</span> result;</div>
-<div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;    }</div>
-<div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;</div>
-<div class="line"><a name="l00514"></a><span class="lineno">  514</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>*</div>
-<div class="line"><a name="l00515"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#a8fdd8bfd9524c1c0084ea4572f8aeeb9">  515</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a8fdd8bfd9524c1c0084ea4572f8aeeb9">minus</a>(</div>
-<div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* other)<span class="keyword"> const</span></div>
-<div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;<span class="keyword">    </span>{</div>
-<div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;        CAROM_VERIFY(other != 0);</div>
-<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html#ac7e6bd13bfb89ae084f1933789055999">minus</a>(*other);</div>
-<div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;    }</div>
-<div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;</div>
-<div class="line"><a name="l00535"></a><span class="lineno">  535</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00536"></a><span class="lineno">  536</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#ac7e6bd13bfb89ae084f1933789055999">minus</a>(</div>
-<div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; other,</div>
-<div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>*&amp; result) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160;</div>
-<div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#ac7e6bd13bfb89ae084f1933789055999">minus</a>(</div>
-<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; other,</div>
-<div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; result) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;</div>
-<div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>*</div>
-<div class="line"><a name="l00566"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#a5958bc816279be7cc190e4bdfedb4636">  566</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a5958bc816279be7cc190e4bdfedb4636">mult</a>(</div>
-<div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;        <span class="keywordtype">double</span> factor)<span class="keyword"> const</span></div>
-<div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;<span class="keyword">    </span>{</div>
-<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* result = 0;</div>
-<div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a5958bc816279be7cc190e4bdfedb4636">mult</a>(factor, result);</div>
-<div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;        <span class="keywordflow">return</span> result;</div>
-<div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;    }</div>
-<div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;</div>
-<div class="line"><a name="l00583"></a><span class="lineno">  583</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00584"></a><span class="lineno">  584</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a5958bc816279be7cc190e4bdfedb4636">mult</a>(</div>
-<div class="line"><a name="l00585"></a><span class="lineno">  585</span>&#160;        <span class="keywordtype">double</span> factor,</div>
-<div class="line"><a name="l00586"></a><span class="lineno">  586</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>*&amp; result) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00587"></a><span class="lineno">  587</span>&#160;</div>
-<div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a5958bc816279be7cc190e4bdfedb4636">mult</a>(</div>
-<div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;        <span class="keywordtype">double</span> factor,</div>
-<div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; result) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;</div>
-<div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">double</span>&amp;</div>
-<div class="line"><a name="l00612"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#aa03e1dcf3b1572995fadc70562c737d7">  612</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#aa03e1dcf3b1572995fadc70562c737d7">item</a>(</div>
-<div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;        <span class="keywordtype">int</span> i)<span class="keyword"> const</span></div>
-<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;<span class="keyword">    </span>{</div>
-<div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;        CAROM_ASSERT((0 &lt;= i) &amp;&amp; (i &lt; <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a8f8e5d44c3f2cd12e2f4090ddf97c735">dim</a>()));</div>
-<div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;        <span class="keywordflow">return</span> d_vec[i];</div>
-<div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;    }</div>
-<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;</div>
-<div class="line"><a name="l00630"></a><span class="lineno">  630</span>&#160;    <span class="keywordtype">double</span>&amp;</div>
-<div class="line"><a name="l00631"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#a1c785725e7de5b533510a96ee163a963">  631</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a1c785725e7de5b533510a96ee163a963">item</a>(</div>
-<div class="line"><a name="l00632"></a><span class="lineno">  632</span>&#160;        <span class="keywordtype">int</span> i)</div>
-<div class="line"><a name="l00633"></a><span class="lineno">  633</span>&#160;    {</div>
-<div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;        CAROM_ASSERT((0 &lt;= i) &amp;&amp; (i &lt; <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a8f8e5d44c3f2cd12e2f4090ddf97c735">dim</a>()));</div>
-<div class="line"><a name="l00635"></a><span class="lineno">  635</span>&#160;        <span class="keywordflow">return</span> d_vec[i];</div>
-<div class="line"><a name="l00636"></a><span class="lineno">  636</span>&#160;    }</div>
-<div class="line"><a name="l00637"></a><span class="lineno">  637</span>&#160;</div>
-<div class="line"><a name="l00647"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#a0395f0c266a3e237573b3a8c483f2693">  647</a></span>&#160;    <span class="keyword">const</span> <span class="keywordtype">double</span>&amp; <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a0395f0c266a3e237573b3a8c483f2693">operator() </a>(<span class="keywordtype">int</span> i)<span class="keyword"> const</span></div>
-<div class="line"><a name="l00648"></a><span class="lineno">  648</span>&#160;<span class="keyword">    </span>{</div>
-<div class="line"><a name="l00649"></a><span class="lineno">  649</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html#aa03e1dcf3b1572995fadc70562c737d7">item</a>(i);</div>
-<div class="line"><a name="l00650"></a><span class="lineno">  650</span>&#160;    }</div>
-<div class="line"><a name="l00651"></a><span class="lineno">  651</span>&#160;</div>
-<div class="line"><a name="l00663"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#af30be05120dabaa00932c9276df5d55c">  663</a></span>&#160;    <span class="keywordtype">double</span>&amp; <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a0395f0c266a3e237573b3a8c483f2693">operator() </a>(<span class="keywordtype">int</span> i)</div>
-<div class="line"><a name="l00664"></a><span class="lineno">  664</span>&#160;    {</div>
-<div class="line"><a name="l00665"></a><span class="lineno">  665</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html#aa03e1dcf3b1572995fadc70562c737d7">item</a>(i);</div>
-<div class="line"><a name="l00666"></a><span class="lineno">  666</span>&#160;    }</div>
-<div class="line"><a name="l00667"></a><span class="lineno">  667</span>&#160;</div>
-<div class="line"><a name="l00674"></a><span class="lineno">  674</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a73fc052af63b99e06e9315c72727a0ee">print</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> * prefix);</div>
-<div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160;</div>
-<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a8eeaff9eedc7ab261577670e98f356c3">write</a>(<span class="keyword">const</span> std::string&amp; base_file_name);</div>
-<div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;</div>
-<div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a2b38fbc6b7d898bcc0399e1380a436d3">read</a>(<span class="keyword">const</span> std::string&amp; base_file_name);</div>
-<div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;</div>
-<div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html#adc03e6513482466f5d3367d8e54dce4f">local_read</a>(<span class="keyword">const</span> std::string&amp; base_file_name, <span class="keywordtype">int</span> rank);</div>
-<div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;</div>
-<div class="line"><a name="l00703"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#a913d7dcc122687709dee85adba99dbf4">  703</a></span>&#160;    <span class="keywordtype">double</span> *<a class="code" href="class_c_a_r_o_m_1_1_vector.html#a913d7dcc122687709dee85adba99dbf4">getData</a>()<span class="keyword"> const</span></div>
-<div class="line"><a name="l00704"></a><span class="lineno">  704</span>&#160;<span class="keyword">    </span>{</div>
-<div class="line"><a name="l00705"></a><span class="lineno">  705</span>&#160;        <span class="keywordflow">return</span> d_vec;</div>
-<div class="line"><a name="l00706"></a><span class="lineno">  706</span>&#160;    }</div>
-<div class="line"><a name="l00707"></a><span class="lineno">  707</span>&#160;</div>
-<div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00712"></a><span class="lineno">  712</span>&#160;    <span class="keywordtype">double</span>* d_vec;</div>
-<div class="line"><a name="l00713"></a><span class="lineno">  713</span>&#160;</div>
-<div class="line"><a name="l00717"></a><span class="lineno">  717</span>&#160;    <span class="keywordtype">int</span> d_dim;</div>
-<div class="line"><a name="l00718"></a><span class="lineno">  718</span>&#160;</div>
-<div class="line"><a name="l00724"></a><span class="lineno">  724</span>&#160;    <span class="keywordtype">int</span> d_alloc_size;</div>
-<div class="line"><a name="l00725"></a><span class="lineno">  725</span>&#160;</div>
-<div class="line"><a name="l00732"></a><span class="lineno">  732</span>&#160;    <span class="keywordtype">bool</span> d_distributed;</div>
-<div class="line"><a name="l00733"></a><span class="lineno">  733</span>&#160;</div>
-<div class="line"><a name="l00737"></a><span class="lineno">  737</span>&#160;    <span class="keywordtype">int</span> d_num_procs;</div>
-<div class="line"><a name="l00738"></a><span class="lineno">  738</span>&#160;</div>
-<div class="line"><a name="l00745"></a><span class="lineno">  745</span>&#160;    <span class="keywordtype">bool</span> d_owns_data;</div>
-<div class="line"><a name="l00746"></a><span class="lineno">  746</span>&#160;};</div>
-<div class="line"><a name="l00747"></a><span class="lineno">  747</span>&#160;</div>
-<div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;}</div>
-<div class="line"><a name="l00749"></a><span class="lineno">  749</span>&#160;</div>
-<div class="line"><a name="l00750"></a><span class="lineno">  750</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_aa03e1dcf3b1572995fadc70562c737d7"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#aa03e1dcf3b1572995fadc70562c737d7">CAROM::Vector::item</a></div><div class="ttdeci">const double &amp; item(int i) const </div><div class="ttdoc">Const Vector member access. </div><div class="ttdef"><b>Definition:</b> Vector.h:612</div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_ace7a3b2cc2fb52c71f294d80cb8de222"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#ace7a3b2cc2fb52c71f294d80cb8de222">CAROM::Vector::plusAx</a></div><div class="ttdeci">Vector * plusAx(double factor, const Vector &amp;other)</div><div class="ttdoc">Adds factor*other and this and returns the result, reference version. </div><div class="ttdef"><b>Definition:</b> Vector.h:380</div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a2004f874de68848d1a0720afdfccd4b2"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a2004f874de68848d1a0720afdfccd4b2">CAROM::Vector::plus</a></div><div class="ttdeci">Vector * plus(const Vector &amp;other) const </div><div class="ttdoc">Adds other and this and returns the result, reference version. </div><div class="ttdef"><b>Definition:</b> Vector.h:305</div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_ac7e6bd13bfb89ae084f1933789055999"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#ac7e6bd13bfb89ae084f1933789055999">CAROM::Vector::minus</a></div><div class="ttdeci">Vector * minus(const Vector &amp;other) const </div><div class="ttdoc">Subtracts other and this and returns the result, reference version. </div><div class="ttdef"><b>Definition:</b> Vector.h:494</div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a0395f0c266a3e237573b3a8c483f2693"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a0395f0c266a3e237573b3a8c483f2693">CAROM::Vector::operator()</a></div><div class="ttdeci">const double &amp; operator()(int i) const </div><div class="ttdoc">Const Vector member access. </div><div class="ttdef"><b>Definition:</b> Vector.h:647</div></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#include &lt;vector&gt;</span></div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#include &lt;functional&gt;</span></div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="keyword">namespace </span>CAROM {</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;</div>
+<div class="line"><a name="l00029"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html">   29</a></span>&#160;<span class="keyword">class </span><a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a></div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;{</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>();</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>(</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;        <span class="keywordtype">int</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a8f8e5d44c3f2cd12e2f4090ddf97c735">dim</a>,</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;        <span class="keywordtype">bool</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a0fe8ff4dfdb1357d1bb67f7945491841">distributed</a>);</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>(</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;        <span class="keywordtype">double</span>* vec,</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;        <span class="keywordtype">int</span> dim,</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;        <span class="keywordtype">bool</span> distributed,</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;        <span class="keywordtype">bool</span> copy_data = <span class="keyword">true</span>);</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>(</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; other);</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#aa751475ec55bc679c7e874b0b442f59f">~Vector</a>();</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp;</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a77b17dde248f3c532ac31dcf9632e9c4">operator = </a>(</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; rhs);</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp;</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a4c92d8b8a9c156ff394cf87d4079fa99">operator += </a>(</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; rhs);</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp;</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a77b17dde248f3c532ac31dcf9632e9c4">operator = </a>(</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;        <span class="keyword">const</span> <span class="keywordtype">double</span>&amp; a);</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;</div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp;</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#aee8568a55c608718bf2d50031f1cf8dc">transform</a>(std::function&lt;<span class="keywordtype">void</span>(<span class="keyword">const</span> <span class="keywordtype">int</span> size, <span class="keywordtype">double</span>* vector)&gt; transformer);</div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;</div>
+<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#aee8568a55c608718bf2d50031f1cf8dc">transform</a>(<a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; result, std::function&lt;<span class="keywordtype">void</span>(<span class="keyword">const</span> <span class="keywordtype">int</span> size, <span class="keywordtype">double</span>* vector)&gt; transformer) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;</div>
+<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#aee8568a55c608718bf2d50031f1cf8dc">transform</a>(<a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>*&amp; result, std::function&lt;<span class="keywordtype">void</span>(<span class="keyword">const</span> <span class="keywordtype">int</span> size, <span class="keywordtype">double</span>* vector)&gt; transformer) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;</div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp;</div>
+<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#aee8568a55c608718bf2d50031f1cf8dc">transform</a>(std::function&lt;<span class="keywordtype">void</span>(<span class="keyword">const</span> <span class="keywordtype">int</span> size, <span class="keywordtype">double</span>* origVector, <span class="keywordtype">double</span>* resultVector)&gt; transformer);</div>
+<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;</div>
+<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#aee8568a55c608718bf2d50031f1cf8dc">transform</a>(<a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; result, std::function&lt;<span class="keywordtype">void</span>(<span class="keyword">const</span> <span class="keywordtype">int</span> size, <span class="keywordtype">double</span>* origVector, <span class="keywordtype">double</span>* resultVector)&gt; transformer) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;</div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#aee8568a55c608718bf2d50031f1cf8dc">transform</a>(<a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>*&amp; result, std::function&lt;<span class="keywordtype">void</span>(<span class="keyword">const</span> <span class="keywordtype">int</span> size, <span class="keywordtype">double</span>* origVector, <span class="keywordtype">double</span>* resultVector)&gt; transformer) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;</div>
+<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00200"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#a1543d65aaadb8016a071a4df9725d366">  200</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a1543d65aaadb8016a071a4df9725d366">setSize</a>(</div>
+<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;        <span class="keywordtype">int</span> dim)</div>
+<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;    {</div>
+<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;        <span class="keywordflow">if</span> (dim &gt; d_alloc_size) {</div>
+<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;            <span class="keywordflow">if</span> (!d_owns_data) {</div>
+<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;                CAROM_ERROR(<span class="stringliteral">&quot;Can not reallocate externally owned storage.&quot;</span>);</div>
+<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;            }</div>
+<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;            <span class="keywordflow">if</span> (d_vec) {</div>
+<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;                <span class="keyword">delete</span> [] d_vec;</div>
+<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;            }</div>
+<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;            d_vec = <span class="keyword">new</span> <span class="keywordtype">double</span> [<a class="code" href="class_c_a_r_o_m_1_1_vector.html#a8f8e5d44c3f2cd12e2f4090ddf97c735">dim</a>] {};</div>
+<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;            d_alloc_size = <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a8f8e5d44c3f2cd12e2f4090ddf97c735">dim</a>;</div>
+<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;        }</div>
+<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;        d_dim = <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a8f8e5d44c3f2cd12e2f4090ddf97c735">dim</a>;</div>
+<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;    }</div>
+<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;</div>
+<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;    <span class="keywordtype">bool</span></div>
+<div class="line"><a name="l00222"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#a0fe8ff4dfdb1357d1bb67f7945491841">  222</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a0fe8ff4dfdb1357d1bb67f7945491841">distributed</a>()<span class="keyword"> const</span></div>
+<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;<span class="keyword">    </span>{</div>
+<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;        <span class="keywordflow">return</span> d_distributed;</div>
+<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;    }</div>
+<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;</div>
+<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;    <span class="keywordtype">int</span></div>
+<div class="line"><a name="l00233"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#a8f8e5d44c3f2cd12e2f4090ddf97c735">  233</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a8f8e5d44c3f2cd12e2f4090ddf97c735">dim</a>()<span class="keyword"> const</span></div>
+<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;<span class="keyword">    </span>{</div>
+<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;        <span class="keywordflow">return</span> d_dim;</div>
+<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;    }</div>
+<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;</div>
+<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;    <span class="keywordtype">double</span></div>
+<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#ad78f78bb34948e935c6d7aad47ca9902">inner_product</a>(</div>
+<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; other) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;</div>
+<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;    <span class="keywordtype">double</span></div>
+<div class="line"><a name="l00268"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#aaf42efa8ebaad147be85baf2ed013a13">  268</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#aaf42efa8ebaad147be85baf2ed013a13">inner_product</a>(</div>
+<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* other)<span class="keyword"> const</span></div>
+<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;<span class="keyword">    </span>{</div>
+<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;        CAROM_VERIFY(other != 0);</div>
+<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html#ad78f78bb34948e935c6d7aad47ca9902">inner_product</a>(*other);</div>
+<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;    }</div>
+<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;</div>
+<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;    <span class="keywordtype">double</span></div>
+<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#af699f7fcf238cf7fe47031ce21b45f5a">norm</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;</div>
+<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;    <span class="keywordtype">double</span></div>
+<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a82c59b2b1135267440cc127e0f782b4b">normalize</a>();</div>
+<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;</div>
+<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>*</div>
+<div class="line"><a name="l00306"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#a2004f874de68848d1a0720afdfccd4b2">  306</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a2004f874de68848d1a0720afdfccd4b2">plus</a>(</div>
+<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; other)<span class="keyword"> const</span></div>
+<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;<span class="keyword">    </span>{</div>
+<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* result = 0;</div>
+<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a2004f874de68848d1a0720afdfccd4b2">plus</a>(other, result);</div>
+<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;        <span class="keywordflow">return</span> result;</div>
+<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;    }</div>
+<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;</div>
+<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>*</div>
+<div class="line"><a name="l00326"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#aa7dd759525e6fecb0f531dcb8b1b41a1">  326</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#aa7dd759525e6fecb0f531dcb8b1b41a1">plus</a>(</div>
+<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* other)<span class="keyword"> const</span></div>
+<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;<span class="keyword">    </span>{</div>
+<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;        CAROM_VERIFY(other != 0);</div>
+<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a2004f874de68848d1a0720afdfccd4b2">plus</a>(*other);</div>
+<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;    }</div>
+<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;</div>
+<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a2004f874de68848d1a0720afdfccd4b2">plus</a>(</div>
+<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; other,</div>
+<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>*&amp; result) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;</div>
+<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a2004f874de68848d1a0720afdfccd4b2">plus</a>(</div>
+<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; other,</div>
+<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; result) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;</div>
+<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>*</div>
+<div class="line"><a name="l00381"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#ace7a3b2cc2fb52c71f294d80cb8de222">  381</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#ace7a3b2cc2fb52c71f294d80cb8de222">plusAx</a>(</div>
+<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;        <span class="keywordtype">double</span> factor,</div>
+<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; other)</div>
+<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;    {</div>
+<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* result = 0;</div>
+<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html#ace7a3b2cc2fb52c71f294d80cb8de222">plusAx</a>(factor, other, result);</div>
+<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;        <span class="keywordflow">return</span> result;</div>
+<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;    }</div>
+<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;</div>
+<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>*</div>
+<div class="line"><a name="l00403"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#a47bb52d90d711ed3b7991dc211bd3a80">  403</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a47bb52d90d711ed3b7991dc211bd3a80">plusAx</a>(</div>
+<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;        <span class="keywordtype">double</span> factor,</div>
+<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* other)</div>
+<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;    {</div>
+<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;        CAROM_VERIFY(other != 0);</div>
+<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html#ace7a3b2cc2fb52c71f294d80cb8de222">plusAx</a>(factor, *other);</div>
+<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;    }</div>
+<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;</div>
+<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#ace7a3b2cc2fb52c71f294d80cb8de222">plusAx</a>(</div>
+<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;        <span class="keywordtype">double</span> factor,</div>
+<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; other,</div>
+<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>*&amp; result) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;</div>
+<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#ace7a3b2cc2fb52c71f294d80cb8de222">plusAx</a>(</div>
+<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;        <span class="keywordtype">double</span> factor,</div>
+<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; other,</div>
+<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; result) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;</div>
+<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#aae3ef84fdd8263704316175f681f25d1">plusEqAx</a>(</div>
+<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;        <span class="keywordtype">double</span> factor,</div>
+<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; other);</div>
+<div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;</div>
+<div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00475"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#a5c766f8f3ebdf13e9b90ddfd106c73e6">  475</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a5c766f8f3ebdf13e9b90ddfd106c73e6">plusEqAx</a>(</div>
+<div class="line"><a name="l00476"></a><span class="lineno">  476</span>&#160;        <span class="keywordtype">double</span> factor,</div>
+<div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* other)</div>
+<div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160;    {</div>
+<div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;        CAROM_VERIFY(other != 0);</div>
+<div class="line"><a name="l00480"></a><span class="lineno">  480</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html#aae3ef84fdd8263704316175f681f25d1">plusEqAx</a>(factor, *other);</div>
+<div class="line"><a name="l00481"></a><span class="lineno">  481</span>&#160;    }</div>
+<div class="line"><a name="l00482"></a><span class="lineno">  482</span>&#160;</div>
+<div class="line"><a name="l00494"></a><span class="lineno">  494</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>*</div>
+<div class="line"><a name="l00495"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#ac7e6bd13bfb89ae084f1933789055999">  495</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#ac7e6bd13bfb89ae084f1933789055999">minus</a>(</div>
+<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; other)<span class="keyword"> const</span></div>
+<div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;<span class="keyword">    </span>{</div>
+<div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* result = 0;</div>
+<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html#ac7e6bd13bfb89ae084f1933789055999">minus</a>(other, result);</div>
+<div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;        <span class="keywordflow">return</span> result;</div>
+<div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;    }</div>
+<div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;</div>
+<div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>*</div>
+<div class="line"><a name="l00516"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#a8fdd8bfd9524c1c0084ea4572f8aeeb9">  516</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a8fdd8bfd9524c1c0084ea4572f8aeeb9">minus</a>(</div>
+<div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* other)<span class="keyword"> const</span></div>
+<div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;<span class="keyword">    </span>{</div>
+<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;        CAROM_VERIFY(other != 0);</div>
+<div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html#ac7e6bd13bfb89ae084f1933789055999">minus</a>(*other);</div>
+<div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;    }</div>
+<div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;</div>
+<div class="line"><a name="l00536"></a><span class="lineno">  536</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#ac7e6bd13bfb89ae084f1933789055999">minus</a>(</div>
+<div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; other,</div>
+<div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>*&amp; result) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;</div>
+<div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#ac7e6bd13bfb89ae084f1933789055999">minus</a>(</div>
+<div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; other,</div>
+<div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; result) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;</div>
+<div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>*</div>
+<div class="line"><a name="l00567"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#a5958bc816279be7cc190e4bdfedb4636">  567</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a5958bc816279be7cc190e4bdfedb4636">mult</a>(</div>
+<div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;        <span class="keywordtype">double</span> factor)<span class="keyword"> const</span></div>
+<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;<span class="keyword">    </span>{</div>
+<div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* result = 0;</div>
+<div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a5958bc816279be7cc190e4bdfedb4636">mult</a>(factor, result);</div>
+<div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;        <span class="keywordflow">return</span> result;</div>
+<div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;    }</div>
+<div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;</div>
+<div class="line"><a name="l00584"></a><span class="lineno">  584</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00585"></a><span class="lineno">  585</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a5958bc816279be7cc190e4bdfedb4636">mult</a>(</div>
+<div class="line"><a name="l00586"></a><span class="lineno">  586</span>&#160;        <span class="keywordtype">double</span> factor,</div>
+<div class="line"><a name="l00587"></a><span class="lineno">  587</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>*&amp; result) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00588"></a><span class="lineno">  588</span>&#160;</div>
+<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;    <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a5958bc816279be7cc190e4bdfedb4636">mult</a>(</div>
+<div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;        <span class="keywordtype">double</span> factor,</div>
+<div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>&amp; result) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;</div>
+<div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">double</span>&amp;</div>
+<div class="line"><a name="l00613"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#aa03e1dcf3b1572995fadc70562c737d7">  613</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#aa03e1dcf3b1572995fadc70562c737d7">item</a>(</div>
+<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;        <span class="keywordtype">int</span> i)<span class="keyword"> const</span></div>
+<div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;<span class="keyword">    </span>{</div>
+<div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;        CAROM_ASSERT((0 &lt;= i) &amp;&amp; (i &lt; <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a8f8e5d44c3f2cd12e2f4090ddf97c735">dim</a>()));</div>
+<div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;        <span class="keywordflow">return</span> d_vec[i];</div>
+<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;    }</div>
+<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;</div>
+<div class="line"><a name="l00631"></a><span class="lineno">  631</span>&#160;    <span class="keywordtype">double</span>&amp;</div>
+<div class="line"><a name="l00632"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#a1c785725e7de5b533510a96ee163a963">  632</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a1c785725e7de5b533510a96ee163a963">item</a>(</div>
+<div class="line"><a name="l00633"></a><span class="lineno">  633</span>&#160;        <span class="keywordtype">int</span> i)</div>
+<div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;    {</div>
+<div class="line"><a name="l00635"></a><span class="lineno">  635</span>&#160;        CAROM_ASSERT((0 &lt;= i) &amp;&amp; (i &lt; <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a8f8e5d44c3f2cd12e2f4090ddf97c735">dim</a>()));</div>
+<div class="line"><a name="l00636"></a><span class="lineno">  636</span>&#160;        <span class="keywordflow">return</span> d_vec[i];</div>
+<div class="line"><a name="l00637"></a><span class="lineno">  637</span>&#160;    }</div>
+<div class="line"><a name="l00638"></a><span class="lineno">  638</span>&#160;</div>
+<div class="line"><a name="l00648"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#a0395f0c266a3e237573b3a8c483f2693">  648</a></span>&#160;    <span class="keyword">const</span> <span class="keywordtype">double</span>&amp; <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a0395f0c266a3e237573b3a8c483f2693">operator() </a>(<span class="keywordtype">int</span> i)<span class="keyword"> const</span></div>
+<div class="line"><a name="l00649"></a><span class="lineno">  649</span>&#160;<span class="keyword">    </span>{</div>
+<div class="line"><a name="l00650"></a><span class="lineno">  650</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html#aa03e1dcf3b1572995fadc70562c737d7">item</a>(i);</div>
+<div class="line"><a name="l00651"></a><span class="lineno">  651</span>&#160;    }</div>
+<div class="line"><a name="l00652"></a><span class="lineno">  652</span>&#160;</div>
+<div class="line"><a name="l00664"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#af30be05120dabaa00932c9276df5d55c">  664</a></span>&#160;    <span class="keywordtype">double</span>&amp; <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a0395f0c266a3e237573b3a8c483f2693">operator() </a>(<span class="keywordtype">int</span> i)</div>
+<div class="line"><a name="l00665"></a><span class="lineno">  665</span>&#160;    {</div>
+<div class="line"><a name="l00666"></a><span class="lineno">  666</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html#aa03e1dcf3b1572995fadc70562c737d7">item</a>(i);</div>
+<div class="line"><a name="l00667"></a><span class="lineno">  667</span>&#160;    }</div>
+<div class="line"><a name="l00668"></a><span class="lineno">  668</span>&#160;</div>
+<div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a73fc052af63b99e06e9315c72727a0ee">print</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> * prefix);</div>
+<div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160;</div>
+<div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a8eeaff9eedc7ab261577670e98f356c3">write</a>(<span class="keyword">const</span> std::string&amp; base_file_name);</div>
+<div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;</div>
+<div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a2b38fbc6b7d898bcc0399e1380a436d3">read</a>(<span class="keyword">const</span> std::string&amp; base_file_name);</div>
+<div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160;</div>
+<div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html#adc03e6513482466f5d3367d8e54dce4f">local_read</a>(<span class="keyword">const</span> std::string&amp; base_file_name, <span class="keywordtype">int</span> rank);</div>
+<div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;</div>
+<div class="line"><a name="l00704"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#a913d7dcc122687709dee85adba99dbf4">  704</a></span>&#160;    <span class="keywordtype">double</span> *<a class="code" href="class_c_a_r_o_m_1_1_vector.html#a913d7dcc122687709dee85adba99dbf4">getData</a>()<span class="keyword"> const</span></div>
+<div class="line"><a name="l00705"></a><span class="lineno">  705</span>&#160;<span class="keyword">    </span>{</div>
+<div class="line"><a name="l00706"></a><span class="lineno">  706</span>&#160;        <span class="keywordflow">return</span> d_vec;</div>
+<div class="line"><a name="l00707"></a><span class="lineno">  707</span>&#160;    }</div>
+<div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;</div>
+<div class="line"><a name="l00709"></a><span class="lineno">  709</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l00713"></a><span class="lineno">  713</span>&#160;    <span class="keywordtype">double</span>* d_vec;</div>
+<div class="line"><a name="l00714"></a><span class="lineno">  714</span>&#160;</div>
+<div class="line"><a name="l00718"></a><span class="lineno">  718</span>&#160;    <span class="keywordtype">int</span> d_dim;</div>
+<div class="line"><a name="l00719"></a><span class="lineno">  719</span>&#160;</div>
+<div class="line"><a name="l00725"></a><span class="lineno">  725</span>&#160;    <span class="keywordtype">int</span> d_alloc_size;</div>
+<div class="line"><a name="l00726"></a><span class="lineno">  726</span>&#160;</div>
+<div class="line"><a name="l00733"></a><span class="lineno">  733</span>&#160;    <span class="keywordtype">bool</span> d_distributed;</div>
+<div class="line"><a name="l00734"></a><span class="lineno">  734</span>&#160;</div>
+<div class="line"><a name="l00738"></a><span class="lineno">  738</span>&#160;    <span class="keywordtype">int</span> d_num_procs;</div>
+<div class="line"><a name="l00739"></a><span class="lineno">  739</span>&#160;</div>
+<div class="line"><a name="l00746"></a><span class="lineno">  746</span>&#160;    <span class="keywordtype">bool</span> d_owns_data;</div>
+<div class="line"><a name="l00747"></a><span class="lineno">  747</span>&#160;};</div>
+<div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;</div>
+<div class="line"><a name="l00753"></a><span class="lineno">  753</span>&#160;<span class="keywordtype">int</span> getCenterPoint(std::vector&lt;Vector*&gt; points,</div>
+<div class="line"><a name="l00754"></a><span class="lineno">  754</span>&#160;                   <span class="keywordtype">bool</span> use_centroid);</div>
+<div class="line"><a name="l00755"></a><span class="lineno">  755</span>&#160;</div>
+<div class="line"><a name="l00756"></a><span class="lineno">  756</span>&#160;}</div>
+<div class="line"><a name="l00757"></a><span class="lineno">  757</span>&#160;</div>
+<div class="line"><a name="l00758"></a><span class="lineno">  758</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_aa03e1dcf3b1572995fadc70562c737d7"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#aa03e1dcf3b1572995fadc70562c737d7">CAROM::Vector::item</a></div><div class="ttdeci">const double &amp; item(int i) const </div><div class="ttdoc">Const Vector member access. </div><div class="ttdef"><b>Definition:</b> Vector.h:613</div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_ace7a3b2cc2fb52c71f294d80cb8de222"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#ace7a3b2cc2fb52c71f294d80cb8de222">CAROM::Vector::plusAx</a></div><div class="ttdeci">Vector * plusAx(double factor, const Vector &amp;other)</div><div class="ttdoc">Adds factor*other and this and returns the result, reference version. </div><div class="ttdef"><b>Definition:</b> Vector.h:381</div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a2004f874de68848d1a0720afdfccd4b2"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a2004f874de68848d1a0720afdfccd4b2">CAROM::Vector::plus</a></div><div class="ttdeci">Vector * plus(const Vector &amp;other) const </div><div class="ttdoc">Adds other and this and returns the result, reference version. </div><div class="ttdef"><b>Definition:</b> Vector.h:306</div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_ac7e6bd13bfb89ae084f1933789055999"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#ac7e6bd13bfb89ae084f1933789055999">CAROM::Vector::minus</a></div><div class="ttdeci">Vector * minus(const Vector &amp;other) const </div><div class="ttdoc">Subtracts other and this and returns the result, reference version. </div><div class="ttdef"><b>Definition:</b> Vector.h:495</div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a0395f0c266a3e237573b3a8c483f2693"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a0395f0c266a3e237573b3a8c483f2693">CAROM::Vector::operator()</a></div><div class="ttdeci">const double &amp; operator()(int i) const </div><div class="ttdoc">Const Vector member access. </div><div class="ttdef"><b>Definition:</b> Vector.h:648</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a2b38fbc6b7d898bcc0399e1380a436d3"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a2b38fbc6b7d898bcc0399e1380a436d3">CAROM::Vector::read</a></div><div class="ttdeci">void read(const std::string &amp;base_file_name)</div><div class="ttdoc">read Vector from (a) HDF file(s). </div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_adc03e6513482466f5d3367d8e54dce4f"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#adc03e6513482466f5d3367d8e54dce4f">CAROM::Vector::local_read</a></div><div class="ttdeci">void local_read(const std::string &amp;base_file_name, int rank)</div><div class="ttdoc">read Vector from (a) HDF file(s). </div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a8eeaff9eedc7ab261577670e98f356c3"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a8eeaff9eedc7ab261577670e98f356c3">CAROM::Vector::write</a></div><div class="ttdeci">void write(const std::string &amp;base_file_name)</div><div class="ttdoc">write Vector into (a) HDF file(s). </div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a913d7dcc122687709dee85adba99dbf4"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a913d7dcc122687709dee85adba99dbf4">CAROM::Vector::getData</a></div><div class="ttdeci">double * getData() const </div><div class="ttdoc">Get the vector data as a pointer. </div><div class="ttdef"><b>Definition:</b> Vector.h:703</div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a5958bc816279be7cc190e4bdfedb4636"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a5958bc816279be7cc190e4bdfedb4636">CAROM::Vector::mult</a></div><div class="ttdeci">Vector * mult(double factor) const </div><div class="ttdoc">Multiplies this by the supplied constant and returns the result. </div><div class="ttdef"><b>Definition:</b> Vector.h:566</div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a913d7dcc122687709dee85adba99dbf4"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a913d7dcc122687709dee85adba99dbf4">CAROM::Vector::getData</a></div><div class="ttdeci">double * getData() const </div><div class="ttdoc">Get the vector data as a pointer. </div><div class="ttdef"><b>Definition:</b> Vector.h:704</div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a5958bc816279be7cc190e4bdfedb4636"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a5958bc816279be7cc190e4bdfedb4636">CAROM::Vector::mult</a></div><div class="ttdeci">Vector * mult(double factor) const </div><div class="ttdoc">Multiplies this by the supplied constant and returns the result. </div><div class="ttdef"><b>Definition:</b> Vector.h:567</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a4c92d8b8a9c156ff394cf87d4079fa99"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a4c92d8b8a9c156ff394cf87d4079fa99">CAROM::Vector::operator+=</a></div><div class="ttdeci">Vector &amp; operator+=(const Vector &amp;rhs)</div><div class="ttdoc">Addition operator. </div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a1543d65aaadb8016a071a4df9725d366"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a1543d65aaadb8016a071a4df9725d366">CAROM::Vector::setSize</a></div><div class="ttdeci">void setSize(int dim)</div><div class="ttdoc">Sets the length of the vector and reallocates storage if needed. </div><div class="ttdef"><b>Definition:</b> Vector.h:199</div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a8f8e5d44c3f2cd12e2f4090ddf97c735"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a8f8e5d44c3f2cd12e2f4090ddf97c735">CAROM::Vector::dim</a></div><div class="ttdeci">int dim() const </div><div class="ttdoc">Returns the dimension of the Vector on this processor. </div><div class="ttdef"><b>Definition:</b> Vector.h:232</div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a5c766f8f3ebdf13e9b90ddfd106c73e6"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a5c766f8f3ebdf13e9b90ddfd106c73e6">CAROM::Vector::plusEqAx</a></div><div class="ttdeci">void plusEqAx(double factor, const Vector *other)</div><div class="ttdoc">Adds factor*other to this, pointer version. </div><div class="ttdef"><b>Definition:</b> Vector.h:474</div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a8fdd8bfd9524c1c0084ea4572f8aeeb9"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a8fdd8bfd9524c1c0084ea4572f8aeeb9">CAROM::Vector::minus</a></div><div class="ttdeci">Vector * minus(const Vector *other) const </div><div class="ttdoc">Subtracts other and this and returns the result, pointer version. </div><div class="ttdef"><b>Definition:</b> Vector.h:515</div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a1543d65aaadb8016a071a4df9725d366"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a1543d65aaadb8016a071a4df9725d366">CAROM::Vector::setSize</a></div><div class="ttdeci">void setSize(int dim)</div><div class="ttdoc">Sets the length of the vector and reallocates storage if needed. </div><div class="ttdef"><b>Definition:</b> Vector.h:200</div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a8f8e5d44c3f2cd12e2f4090ddf97c735"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a8f8e5d44c3f2cd12e2f4090ddf97c735">CAROM::Vector::dim</a></div><div class="ttdeci">int dim() const </div><div class="ttdoc">Returns the dimension of the Vector on this processor. </div><div class="ttdef"><b>Definition:</b> Vector.h:233</div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a5c766f8f3ebdf13e9b90ddfd106c73e6"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a5c766f8f3ebdf13e9b90ddfd106c73e6">CAROM::Vector::plusEqAx</a></div><div class="ttdeci">void plusEqAx(double factor, const Vector *other)</div><div class="ttdoc">Adds factor*other to this, pointer version. </div><div class="ttdef"><b>Definition:</b> Vector.h:475</div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a8fdd8bfd9524c1c0084ea4572f8aeeb9"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a8fdd8bfd9524c1c0084ea4572f8aeeb9">CAROM::Vector::minus</a></div><div class="ttdeci">Vector * minus(const Vector *other) const </div><div class="ttdoc">Subtracts other and this and returns the result, pointer version. </div><div class="ttdef"><b>Definition:</b> Vector.h:516</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a82c59b2b1135267440cc127e0f782b4b"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a82c59b2b1135267440cc127e0f782b4b">CAROM::Vector::normalize</a></div><div class="ttdeci">double normalize()</div><div class="ttdoc">Normalizes the Vector and returns its norm. </div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html">CAROM::Vector</a></div><div class="ttdef"><b>Definition:</b> Vector.h:28</div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html">CAROM::Vector</a></div><div class="ttdef"><b>Definition:</b> Vector.h:29</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a73fc052af63b99e06e9315c72727a0ee"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a73fc052af63b99e06e9315c72727a0ee">CAROM::Vector::print</a></div><div class="ttdeci">void print(const char *prefix)</div><div class="ttdoc">print Vector into (a) ascii file(s). </div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_aa7dd759525e6fecb0f531dcb8b1b41a1"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#aa7dd759525e6fecb0f531dcb8b1b41a1">CAROM::Vector::plus</a></div><div class="ttdeci">Vector * plus(const Vector *other) const </div><div class="ttdoc">Adds other and this and returns the result, pointer version. </div><div class="ttdef"><b>Definition:</b> Vector.h:325</div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a1c785725e7de5b533510a96ee163a963"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a1c785725e7de5b533510a96ee163a963">CAROM::Vector::item</a></div><div class="ttdeci">double &amp; item(int i)</div><div class="ttdoc">Non-const Vector member access. </div><div class="ttdef"><b>Definition:</b> Vector.h:631</div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_aa7dd759525e6fecb0f531dcb8b1b41a1"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#aa7dd759525e6fecb0f531dcb8b1b41a1">CAROM::Vector::plus</a></div><div class="ttdeci">Vector * plus(const Vector *other) const </div><div class="ttdoc">Adds other and this and returns the result, pointer version. </div><div class="ttdef"><b>Definition:</b> Vector.h:326</div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a1c785725e7de5b533510a96ee163a963"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a1c785725e7de5b533510a96ee163a963">CAROM::Vector::item</a></div><div class="ttdeci">double &amp; item(int i)</div><div class="ttdoc">Non-const Vector member access. </div><div class="ttdef"><b>Definition:</b> Vector.h:632</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_aee8568a55c608718bf2d50031f1cf8dc"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#aee8568a55c608718bf2d50031f1cf8dc">CAROM::Vector::transform</a></div><div class="ttdeci">Vector &amp; transform(std::function&lt; void(const int size, double *vector)&gt; transformer)</div><div class="ttdoc">Transform the vector using a supplied function. </div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a47bb52d90d711ed3b7991dc211bd3a80"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a47bb52d90d711ed3b7991dc211bd3a80">CAROM::Vector::plusAx</a></div><div class="ttdeci">Vector * plusAx(double factor, const Vector *other)</div><div class="ttdoc">Adds factor*other and this and returns the result, pointer version. </div><div class="ttdef"><b>Definition:</b> Vector.h:402</div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_aaf42efa8ebaad147be85baf2ed013a13"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#aaf42efa8ebaad147be85baf2ed013a13">CAROM::Vector::inner_product</a></div><div class="ttdeci">double inner_product(const Vector *other) const </div><div class="ttdoc">Inner product, pointer version. </div><div class="ttdef"><b>Definition:</b> Vector.h:267</div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a47bb52d90d711ed3b7991dc211bd3a80"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a47bb52d90d711ed3b7991dc211bd3a80">CAROM::Vector::plusAx</a></div><div class="ttdeci">Vector * plusAx(double factor, const Vector *other)</div><div class="ttdoc">Adds factor*other and this and returns the result, pointer version. </div><div class="ttdef"><b>Definition:</b> Vector.h:403</div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_aaf42efa8ebaad147be85baf2ed013a13"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#aaf42efa8ebaad147be85baf2ed013a13">CAROM::Vector::inner_product</a></div><div class="ttdeci">double inner_product(const Vector *other) const </div><div class="ttdoc">Inner product, pointer version. </div><div class="ttdef"><b>Definition:</b> Vector.h:268</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a77b17dde248f3c532ac31dcf9632e9c4"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a77b17dde248f3c532ac31dcf9632e9c4">CAROM::Vector::operator=</a></div><div class="ttdeci">Vector &amp; operator=(const Vector &amp;rhs)</div><div class="ttdoc">Assignment operator. </div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a0fe8ff4dfdb1357d1bb67f7945491841"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a0fe8ff4dfdb1357d1bb67f7945491841">CAROM::Vector::distributed</a></div><div class="ttdeci">bool distributed() const </div><div class="ttdoc">Returns true if the Vector is distributed. </div><div class="ttdef"><b>Definition:</b> Vector.h:221</div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a0fe8ff4dfdb1357d1bb67f7945491841"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a0fe8ff4dfdb1357d1bb67f7945491841">CAROM::Vector::distributed</a></div><div class="ttdeci">bool distributed() const </div><div class="ttdoc">Returns true if the Vector is distributed. </div><div class="ttdef"><b>Definition:</b> Vector.h:222</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_aae3ef84fdd8263704316175f681f25d1"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#aae3ef84fdd8263704316175f681f25d1">CAROM::Vector::plusEqAx</a></div><div class="ttdeci">void plusEqAx(double factor, const Vector &amp;other)</div><div class="ttdoc">Adds factor*other to this, reference version. </div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_ad78f78bb34948e935c6d7aad47ca9902"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#ad78f78bb34948e935c6d7aad47ca9902">CAROM::Vector::inner_product</a></div><div class="ttdeci">double inner_product(const Vector &amp;other) const </div><div class="ttdoc">Inner product, reference form. </div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_af699f7fcf238cf7fe47031ce21b45f5a"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#af699f7fcf238cf7fe47031ce21b45f5a">CAROM::Vector::norm</a></div><div class="ttdeci">double norm() const </div><div class="ttdoc">Form the norm of this. </div></div>

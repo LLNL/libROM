@@ -9,6 +9,22 @@
 // For ROM (reproductive case):
 //    dg_advection -offline
 //    dg_advection -online
+//
+// For ROM (parametric case using matrix interpolation):
+//    dg_advection -offline -ff 1.02
+//    dg_advection -online -ff 1.02 -tf 3.0 -rdim 20
+//    dg_advection -offline -ff 1.03
+//    dg_advection -online -ff 1.03 -tf 3.0 -rdim 20
+//    dg_advection -offline -ff 1.04
+//    dg_advection -online -ff 1.04 -tf 3.0 -rdim 20
+//    dg_advection -offline -ff 1.06
+//    dg_advection -online -ff 1.06 -tf 3.0 -rdim 20
+//    dg_advection -offline -ff 1.07
+//    dg_advection -online -ff 1.07 -tf 3.0 -rdim 20
+//    dg_advection -offline -ff 1.08
+//    dg_advection -online -ff 1.08 -tf 3.0 -rdim 20
+//    dg_advection -offline -ff 1.05 -tf 3.0
+//    dg_advection -online -ff 1.05 -tf 3.0 -interpolate -rdim 20
 
 // Sample runs:
 //    mpirun -np 4 dg_advection -p 0 -dt 0.005
@@ -41,9 +57,12 @@
 #include "mfem.hpp"
 #include "DMD.h"
 #include "Vector.h"
+#include "MatrixInterpolater.h"
+#include "VectorInterpolater.h"
 #include "BasisGenerator.h"
 #include "BasisReader.h"
 #include <cmath>
+#include <set>
 #include <fstream>
 #include <iostream>
 
@@ -53,6 +72,7 @@ using namespace mfem;
 // Choice for the problem setup. The fluid velocity, initial condition and
 // inflow boundary condition are chosen based on this parameter.
 int problem;
+double f_factor;
 
 // Velocity coefficient
 void velocity_function(const Vector &x, Vector &v);
@@ -271,7 +291,7 @@ int main(int argc, char *argv[])
     int myid = mpi.WorldRank();
 
     // 2. Parse command-line options.
-    problem = 0;
+    problem = 3;
     const char *mesh_file = "../dependencies/mfem/data/periodic-hexagon.mesh";
     int ser_ref_levels = 2;
     int par_ref_levels = 0;
@@ -284,9 +304,11 @@ int main(int argc, char *argv[])
     double t_final = 10.0;
     double dt = 0.01;
     double ef = 0.9999;
+    f_factor = 1.0;
     int rdim = -1;
     bool offline = false;
     bool online = false;
+    bool interpolate = false;
     bool dmd = false;
     bool visualization = true;
     bool visit = false;
@@ -332,6 +354,8 @@ int main(int argc, char *argv[])
                    "Final time; start time is 0.");
     args.AddOption(&dt, "-dt", "--time-step",
                    "Time step.");
+   args.AddOption(&f_factor, "-ff", "--f-factor",
+                  "Frequency scalar factor.");
     args.AddOption((int *)&prec_type, "-pt", "--prec-type", "Preconditioner for "
                    "implicit solves. 0 for ILU, 1 for pAIR-AMG.");
     args.AddOption(&visualization, "-vis", "--visualization", "-no-vis",
@@ -355,13 +379,15 @@ int main(int argc, char *argv[])
                    "Enable or disable the offline phase.");
     args.AddOption(&online, "-online", "--online", "-no-online", "--no-online",
                    "Enable or disable the online phase.");
+    args.AddOption(&interpolate, "-interpolate", "--interpolate", "-no-interpolate", "--no-interpolate",
+                   "Enable or disable matrix interpolation during the online phase.");
     args.AddOption(&dmd, "-dmd", "--dmd", "-no-dmd",
                    "--no-dmd",
                    "Enable or disable DMD.");
     args.AddOption(&ef, "-ef", "--energy_fraction",
-                   "Energy fraction for DMD.");
+                   "Energy fraction.");
     args.AddOption(&rdim, "-rdim", "--rdim",
-                   "Reduced dimension for DMD.");
+                   "Reduced dimension.");
     args.Parse();
     if (!args.Good())
     {
@@ -649,7 +675,7 @@ int main(int argc, char *argv[])
     int max_num_snapshots = t_final / dt + 1;
     bool update_right_SV = false;
     bool isIncremental = false;
-    const std::string basisName = "basis";
+    const std::string basisName = "basis_" + std::to_string(f_factor);
     const CAROM::Matrix* spatialbasis;
     CAROM::Options* options;
     CAROM::BasisGenerator *generator;
@@ -677,51 +703,154 @@ int main(int argc, char *argv[])
     if (online)
     {
         CAROM::BasisReader reader(basisName);
-        spatialbasis = reader.getSpatialBasis(0.0, ef);
-        numRowRB = spatialbasis->numRows();
-        numColumnRB = spatialbasis->numColumns();
-        if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB, numColumnRB);
-
-        OperatorHandle M, K;
-
-        if (m->GetAssemblyLevel()==AssemblyLevel::LEGACY)
+        if (rdim != -1)
         {
-            M.Reset(m->ParallelAssemble(), true);
-            K.Reset(k->ParallelAssemble(), true);
+            spatialbasis = reader.getSpatialBasis(0.0, rdim);
         }
         else
         {
-            M.Reset(m, false);
-            K.Reset(k, false);
+            spatialbasis = reader.getSpatialBasis(0.0, ef);
         }
 
-        HypreParMatrix &M_mat = *M.As<HypreParMatrix>();
-        HypreParMatrix &K_mat = *K.As<HypreParMatrix>();
-        M_hat_carom = new CAROM::Matrix(numRowRB, numColumnRB, false);
-        Compute_CtAB(&M_mat, *spatialbasis, *spatialbasis, M_hat_carom);
+        if (!interpolate)
+        {
+            numRowRB = spatialbasis->numRows();
+            numColumnRB = spatialbasis->numColumns();
+            if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB, numColumnRB);
 
-        // libROM stores the matrix row-wise, so wrapping as a DenseMatrix in MFEM means it is transposed.
-        M_hat = new DenseMatrix(numColumnRB, numColumnRB);
-        M_hat->Set(1, M_hat_carom->getData());
-        M_hat->Transpose();
+            OperatorHandle M, K;
 
-        K_hat_carom = new CAROM::Matrix(numRowRB, numColumnRB, false);
-        Compute_CtAB(&K_mat, *spatialbasis, *spatialbasis, K_hat_carom);
+            if (m->GetAssemblyLevel()==AssemblyLevel::LEGACY)
+            {
+                M.Reset(m->ParallelAssemble(), true);
+                K.Reset(k->ParallelAssemble(), true);
+            }
+            else
+            {
+                M.Reset(m, false);
+                K.Reset(k, false);
+            }
 
-        // libROM stores the matrix row-wise, so wrapping as a DenseMatrix in MFEM means it is transposed.
-        K_hat = new DenseMatrix(numColumnRB, numColumnRB);
-        K_hat->Set(1, K_hat_carom->getData());
-        K_hat->Transpose();
+            HypreParMatrix &M_mat = *M.As<HypreParMatrix>();
+            HypreParMatrix &K_mat = *K.As<HypreParMatrix>();
 
-        Vector b_vec = *B->GlobalVector();
+            M_hat_carom = new CAROM::Matrix(numRowRB, numColumnRB, false);
+            Compute_CtAB(&M_mat, *spatialbasis, *spatialbasis, M_hat_carom);
+            M_hat_carom->write("M_hat_" + std::to_string(f_factor));
 
-        CAROM::Vector b_carom(b_vec.GetData(), b_vec.Size(), true);
-        b_hat_carom = spatialbasis->transposeMult(&b_carom);
-        b_hat = new Vector(b_hat_carom->getData(), b_hat_carom->dim());
+            // libROM stores the matrix row-wise, so wrapping as a DenseMatrix in MFEM means it is transposed.
+            M_hat = new DenseMatrix(numColumnRB, numColumnRB);
+            M_hat->Set(1, M_hat_carom->getData());
+            M_hat->Transpose();
 
-        u_init_hat_carom = new CAROM::Vector(numColumnRB, false);
-        Compute_CtAB_vec(&K_mat, *U, *spatialbasis, u_init_hat_carom);
-        u_init_hat = new Vector(u_init_hat_carom->getData(), u_init_hat_carom->dim());
+            K_hat_carom = new CAROM::Matrix(numRowRB, numColumnRB, false);
+            Compute_CtAB(&K_mat, *spatialbasis, *spatialbasis, K_hat_carom);
+            K_hat_carom->write("K_hat_" + std::to_string(f_factor));
+
+            // libROM stores the matrix row-wise, so wrapping as a DenseMatrix in MFEM means it is transposed.
+            K_hat = new DenseMatrix(numColumnRB, numColumnRB);
+            K_hat->Set(1, K_hat_carom->getData());
+            K_hat->Transpose();
+
+            Vector b_vec = *B->GlobalVector();
+
+            CAROM::Vector b_carom(b_vec.GetData(), b_vec.Size(), true);
+            b_hat_carom = spatialbasis->transposeMult(&b_carom);
+            b_hat_carom->write("b_hat_" + std::to_string(f_factor));
+            b_hat = new Vector(b_hat_carom->getData(), b_hat_carom->dim());
+
+            u_init_hat_carom = new CAROM::Vector(numColumnRB, false);
+            Compute_CtAB_vec(&K_mat, *U, *spatialbasis, u_init_hat_carom);
+            u_init_hat_carom->write("u_init_hat_" + std::to_string(f_factor));
+            u_init_hat = new Vector(u_init_hat_carom->getData(), u_init_hat_carom->dim());
+
+            std::ofstream fout;
+            fout.open("frequencies.txt", std::ios::app);
+            fout << f_factor << std::endl;
+            fout.close();
+        }
+        else
+        {
+            std::fstream fin("frequencies.txt", std::ios_base::in);
+            double freq;
+            std::set<double> frequencies;
+            while (fin >> freq)
+            {
+                frequencies.insert(freq);
+            }
+            fin.close();
+
+            std::vector<CAROM::Vector*> parameter_points;
+            std::vector<CAROM::Matrix*> bases;
+            std::vector<CAROM::Matrix*> K_hats;
+            std::vector<CAROM::Matrix*> M_hats;
+            std::vector<CAROM::Vector*> b_hats;
+            std::vector<CAROM::Vector*> u_init_hats;
+            std::ofstream fout;
+            fout.open("frequencies.txt");
+            for(auto it = frequencies.begin(); it != frequencies.end(); it++)
+            {
+                CAROM::Vector* point = new CAROM::Vector(1, false);
+                point->item(0) = *it;
+                parameter_points.push_back(point);
+                fout << *it << std::endl;
+
+                std::string parametricBasisName = "basis_" + std::to_string(*it);
+                CAROM::BasisReader reader(parametricBasisName);
+
+                MFEM_VERIFY(rdim != -1, "rdim must be used for interpolation.");
+                CAROM::Matrix* parametricSpatialBasis = reader.getSpatialBasis(0.0, rdim);
+                numRowRB = parametricSpatialBasis->numRows();
+                numColumnRB = parametricSpatialBasis->numColumns();
+                bases.push_back(parametricSpatialBasis);
+
+                CAROM::Matrix* parametricMhat = new CAROM::Matrix();
+                parametricMhat->read("M_hat_" + std::to_string(*it));
+                M_hats.push_back(parametricMhat);
+
+                CAROM::Matrix* parametricKhat = new CAROM::Matrix();
+                parametricKhat->read("K_hat_" + std::to_string(*it));
+                K_hats.push_back(parametricKhat);
+
+                CAROM::Vector* parametricbhat = new CAROM::Vector();
+                parametricbhat->read("b_hat_" + std::to_string(*it));
+                b_hats.push_back(parametricbhat);
+
+                CAROM::Vector* parametricuinithat = new CAROM::Vector();
+                parametricuinithat->read("u_init_hat_" + std::to_string(*it));
+                u_init_hats.push_back(parametricuinithat);
+            }
+            fout.close();
+            if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB, numColumnRB);
+
+            CAROM::Vector* curr_point = new CAROM::Vector(1, false);
+            curr_point->item(0) = f_factor;
+
+            int ref_point = getCenterPoint(parameter_points, false);
+            std::vector<CAROM::Matrix*> rotation_matrices = obtainRotationMatrices(parameter_points, bases, ref_point);
+
+            CAROM::MatrixInterpolater M_interpolater(parameter_points, rotation_matrices, M_hats, ref_point, "SPD");
+            CAROM::MatrixInterpolater K_interpolater(parameter_points, rotation_matrices, K_hats, ref_point, "R");
+            CAROM::VectorInterpolater b_interpolater(parameter_points, rotation_matrices, b_hats, ref_point);
+            CAROM::VectorInterpolater u_init_interpolater(parameter_points, rotation_matrices, u_init_hats, ref_point);
+            M_hat_carom = M_interpolater.interpolate(curr_point);
+            K_hat_carom = K_interpolater.interpolate(curr_point);
+            b_hat_carom = b_interpolater.interpolate(curr_point);
+            u_init_hat_carom = u_init_interpolater.interpolate(curr_point);
+
+            // libROM stores the matrix row-wise, so wrapping as a DenseMatrix in MFEM means it is transposed.
+            M_hat = new DenseMatrix(numColumnRB, numColumnRB);
+            M_hat->Set(1, M_hat_carom->getData());
+            M_hat->Transpose();
+
+            // libROM stores the matrix row-wise, so wrapping as a DenseMatrix in MFEM means it is transposed.
+            K_hat = new DenseMatrix(numColumnRB, numColumnRB);
+            K_hat->Set(1, K_hat_carom->getData());
+            K_hat->Transpose();
+
+            b_hat = new Vector(b_hat_carom->getData(), b_hat_carom->dim());
+            u_init_hat = new Vector(u_init_hat_carom->getData(), u_init_hat_carom->dim());
+        }
 
         u_in = new Vector(numColumnRB);
         *u_in = 0.0;
@@ -843,7 +972,7 @@ int main(int argc, char *argv[])
         Vector fom_solution(U->Size());
         ifstream solution_file;
         ostringstream solution_filename;
-        solution_filename << "dg_advection-final." << setfill('0') << setw(6) << myid;
+        solution_filename << "dg_advection-final." << f_factor << "." << setfill('0') << setw(6) << myid;
         solution_file.open(solution_filename.str());
         fom_solution.Load(solution_file, U->Size());
         const double fomNorm = sqrt(InnerProduct(MPI_COMM_WORLD, fom_solution, fom_solution));
@@ -870,7 +999,7 @@ int main(int argc, char *argv[])
     {
         *u = *U;
         ostringstream sol_name;
-        sol_name << "dg_advection-final." << setfill('0') << setw(6) << myid;
+        sol_name << "dg_advection-final." << f_factor << "." << setfill('0') << setw(6) << myid;
         ofstream osol(sol_name.str().c_str());
         osol.precision(precision);
         Vector tv(u->ParFESpace()->GetTrueVSize());
@@ -973,6 +1102,8 @@ ROM_FE_Evolution::ROM_FE_Evolution(DenseMatrix* M_, DenseMatrix* K_, Vector* b_,
     M = M_;
     K = K_;
     b = b_;
+    A_inv = NULL;
+    M_inv = NULL;
     u_init_hat = u_init_hat_;
     M_inv = new DenseMatrix(*M_);
     M_inv->Invert();
@@ -997,6 +1128,7 @@ void ROM_FE_Evolution::ImplicitSolve(const double dt, const Vector &x, Vector &k
         *A_inv -= A;
         A_inv->Invert();
     }
+
     A_inv->Mult(z, k);
 }
 
@@ -1216,7 +1348,7 @@ double u0_function(const Vector &x)
     }
     case 3:
     {
-        const double f = M_PI;
+        const double f = M_PI * f_factor;
         return sin(f*X(0))*sin(f*X(1));
     }
     }

@@ -212,7 +212,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
     Matrix* A_tilde = d_basis_mult_f_snapshots_plus_mult_d_basis_right->mult(d_S_inv);
 
     // Calculate the right eigenvalues/eigenvectors of A_tilde
-    EigenPair eigenpair = RightEigenSolve(A_tilde);
+    ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(A_tilde);
     d_eigs = eigenpair.eigs;
 
     // Calculate phi

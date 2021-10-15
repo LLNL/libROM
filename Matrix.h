@@ -897,7 +897,7 @@ public:
      * @param[in] prefix The name of the prefix of the file name.
      *
      */
-    void print(const char * prefix);
+    void print(const char * prefix) const;
 
     /**
      * @brief write Matrix into (a) HDF file(s).
@@ -905,7 +905,7 @@ public:
      * @param[in] base_file_name The base part of the file name.
      *
      */
-    void write(const std::string& base_file_name);
+    void write(const std::string& base_file_name) const;
 
     /**
      * @brief read Matrix into (a) HDF file(s).
@@ -1144,14 +1144,34 @@ Matrix DiagonalMatrixFactory(const Vector &v);
 Matrix IdentityMatrixFactory(const Vector &v);
 
 /**
- * struct EigenPair is a struct to hold the real and imaginary eigenvectors
- * of a matrix along with its eigenvalues.
+ * struct EigenPair is a struct to hold the real eigenvectors
+ * of a matrix along with its real eigenvalues.
  */
 struct EigenPair {
+    Matrix* ev;
+    std::vector<double> eigs;
+};
+
+
+/**
+ * struct ComplexEigenPair is a struct to hold the real and imaginary eigenvectors
+ * of a matrix along with its eigenvalues.
+ */
+struct ComplexEigenPair {
     Matrix* ev_real;
     Matrix* ev_imaginary;
     std::vector<std::complex<double>> eigs;
 };
+
+/**
+ * @brief Computes the eigenvectors/eigenvalues of an NxN real symmetric matrix.
+ *
+ * @param[in] A The NxN real symmetric matrix to be eigendecomposed.
+ *
+ * @return The eigenvectors and eigenvalues of the eigensolve. The eigenvector matrices
+ *         contained within the returning struct must be destroyed by the user.
+ */
+struct EigenPair SymmetricRightEigenSolve(Matrix* A);
 
 /**
  * @brief Computes the eigenvectors/eigenvalues of an NxN real nonsymmetric matrix.
@@ -1161,7 +1181,7 @@ struct EigenPair {
  * @return The eigenvectors and eigenvalues of the eigensolve. The eigenvector matrices
  *         contained within the returning struct must be destroyed by the user.
  */
-struct EigenPair RightEigenSolve(Matrix* A);
+struct ComplexEigenPair NonSymmetricRightEigenSolve(Matrix* A);
 
 Matrix* SpaceTimeProduct(const CAROM::Matrix* As, const CAROM::Matrix* At,
                          const CAROM::Matrix* Bs, const CAROM::Matrix* Bt,
