@@ -105,37 +105,7 @@ std::vector<Matrix*> obtainRotationMatrices(std::vector<Vector*> parameter_point
             continue;
         }
 
-        // std::cout << "bases[i]" << std::endl;
-        // std::cout << bases[i]->numRows() << " " << bases[i]->numColumns() << std::endl;
-        // for (int j = 0; j < bases[i]->numRows(); j++)
-        // {
-        //     for (int k = 0; k < bases[i]->numColumns(); k++)
-        //     {
-        //         std::cout << bases[i]->item(j, k) << " ";
-        //     }
-        //     std::cout << std::endl;
-        // }
-        // std::cout << "bases[ref]" << std::endl;
-        // for (int j = 0; j < bases[i]->numRows(); j++)
-        // {
-        //     for (int k = 0; k < bases[i]->numColumns(); k++)
-        //     {
-        //         std::cout << bases[ref_point]->item(j, k) << " ";
-        //     }
-        //     std::cout << std::endl;
-        // }
-
         Matrix* basis_mult_basis = bases[i]->transposeMult(bases[ref_point]);
-
-        // std::cout << "basis_multed" << std::endl;
-        // for (int j = 0; j < 10; j++)
-        // {
-        //     for (int k = 0; k < 10; k++)
-        //     {
-        //         std::cout << basis_mult_basis->item(j, k) << " ";
-        //     }
-        //     std::cout << std::endl;
-        // }
         SLPK_Matrix svd_input;
 
         int *row_offset = new int[num_procs + 1];
@@ -194,35 +164,7 @@ std::vector<Matrix*> obtainRotationMatrices(std::vector<Vector*> parameter_point
                                  basis_mult_basis->numColumns(), basis_mult_basis->numColumns(), rank);
         }
 
-        // std::cout << "baseis_l" << std::endl;
-        // for (int j = 0; j < 10; j++)
-        // {
-        //     for (int k = 0; k < 10; k++)
-        //     {
-        //         std::cout << basis->item(j, k) << " ";
-        //     }
-        //     std::cout << std::endl;
-        // }
-        // std::cout << "basis_r" << std::endl;
-        // for (int j = 0; j < 10; j++)
-        // {
-        //     for (int k = 0; k < 10; k++)
-        //     {
-        //         std::cout << basis_right->item(j, k) << " ";
-        //     }
-        //     std::cout << std::endl;
-        // }
-
         Matrix* rotation_matrix = basis->mult(basis_right);
-        // std::cout << "rotation_matrix" << std::endl;
-        // for (int j = 0; j < 10; j++)
-        // {
-        //     for (int k = 0; k < 10; k++)
-        //     {
-        //         std::cout << rotation_matrix->item(j, k) << " ";
-        //     }
-        //     std::cout << std::endl;
-        // }
 
         delete [] row_offset;
         delete basis_mult_basis;
