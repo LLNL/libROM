@@ -22,7 +22,8 @@ class Vector;
 
 class Interpolater
 {
-public:
+
+protected:
 
     /**
      * @brief Constructor.
@@ -32,8 +33,6 @@ public:
     Interpolater(std::vector<Vector*> parameter_points,
                  std::vector<Matrix*> rotation_matrices,
                  int ref_point);
-
-protected:
 
     /**
      * @brief The rank of the process this object belongs to.
