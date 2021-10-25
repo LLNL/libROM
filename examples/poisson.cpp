@@ -113,9 +113,15 @@ int main(int argc, char *argv[])
     }
     kappa = freq * M_PI;
 
-    if (fom) MFEM_VERIFY(fom && !offline && !online && !merge, "everything must be turned off if fom is used.");
-    bool check = (offline && !merge && !online) || (!offline && merge && !online) || (!offline && !merge && online);
-    MFEM_VERIFY(check, "only one of offline, merge, or online must be true!");
+    if (fom)
+    {
+        MFEM_VERIFY(fom && !offline && !online && !merge, "everything must be turned off if fom is used.");
+    }
+    else
+    {
+        bool check = (offline && !merge && !online) || (!offline && merge && !online) || (!offline && !merge && online);
+        MFEM_VERIFY(check, "only one of offline, merge, or online must be true!");
+    }
 
     // 3. Enable hardware devices such as GPUs, and programming models such as
     //    CUDA, OCCA, RAJA and OpenMP based on command line options.

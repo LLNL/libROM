@@ -240,6 +240,8 @@ if (USE_MFEM)
     poisson
     poisson_greedy
     dg_advection
+    dg_advection_global_rom
+    dg_advection_dmd
     nonlinear_elasticity
     heat_conduction
     dg_euler)
