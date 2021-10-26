@@ -68,8 +68,8 @@ std::vector<double> Interpolater::obtainRBF(Vector* point)
 }
 
 std::vector<Matrix*> obtainRotationMatrices(std::vector<Vector*> parameter_points,
-                                            std::vector<Matrix*> bases,
-                                            int ref_point)
+        std::vector<Matrix*> bases,
+        int ref_point)
 {
     // Get the rank of this process, and the number of processors.
     int mpi_init;
@@ -98,7 +98,7 @@ std::vector<Matrix*> obtainRotationMatrices(std::vector<Vector*> parameter_point
         if (i == ref_point)
         {
             Matrix* identity_matrix = new Matrix(bases[i]->numColumns(), bases[i]->numColumns(), false);
-            for (int j = 0; j < identity_matrix->numColumns(); j++){
+            for (int j = 0; j < identity_matrix->numColumns(); j++) {
                 identity_matrix->item(j, j) = 1.0;
             }
             rotation_matrices.push_back(identity_matrix);
@@ -159,9 +159,9 @@ std::vector<Matrix*> obtainRotationMatrices(std::vector<Vector*> parameter_point
                          row_offset[static_cast<unsigned>(rank)],
                          rank);
 
-             // U is computed in the transposed order so no reordering necessary.
-             gather_block(&basis_right->item(0, 0), d_factorizer->U, 1, 1,
-                                 basis_mult_basis->numColumns(), basis_mult_basis->numColumns(), rank);
+            // U is computed in the transposed order so no reordering necessary.
+            gather_block(&basis_right->item(0, 0), d_factorizer->U, 1, 1,
+                         basis_mult_basis->numColumns(), basis_mult_basis->numColumns(), rank);
         }
 
         Matrix* rotation_matrix = basis->mult(basis_right);

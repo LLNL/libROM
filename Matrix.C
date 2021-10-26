@@ -1802,7 +1802,7 @@ struct ComplexEigenPair NonSymmetricRightEigenSolve(Matrix* A)
 
     // Now call lapack to do the eigensolve.
     dgeev(&jobvl, &jobrl, &k, A_copy->getData(), &k, e_real, e_imaginary, ev_l,
-        &k, ev_r->getData(), &k, work, &lwork, &info);
+          &k, ev_r->getData(), &k, work, &lwork, &info);
 
     // Eigenvectors now in a column major representation.  Put it
     // into row major order.

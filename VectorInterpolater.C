@@ -42,9 +42,9 @@ VectorInterpolater::VectorInterpolater(std::vector<Vector*> parameter_points,
                                        std::vector<Matrix*> rotation_matrices,
                                        std::vector<Vector*> reduced_vectors,
                                        int ref_point) :
-                                       Interpolater(parameter_points,
-                                                    rotation_matrices,
-                                                    ref_point)
+    Interpolater(parameter_points,
+                 rotation_matrices,
+                 ref_point)
 {
     CAROM_VERIFY(reduced_vectors.size() == rotation_matrices.size());
 

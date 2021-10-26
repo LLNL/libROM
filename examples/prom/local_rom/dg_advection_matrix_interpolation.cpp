@@ -349,8 +349,8 @@ int main(int argc, char *argv[])
                    "Final time; start time is 0.");
     args.AddOption(&dt, "-dt", "--time-step",
                    "Time step.");
-   args.AddOption(&f_factor, "-ff", "--f-factor",
-                  "Frequency scalar factor.");
+    args.AddOption(&f_factor, "-ff", "--f-factor",
+                   "Frequency scalar factor.");
     args.AddOption((int *)&prec_type, "-pt", "--prec-type", "Preconditioner for "
                    "implicit solves. 0 for ILU, 1 for pAIR-AMG.");
     args.AddOption(&visualization, "-vis", "--visualization", "-no-vis",

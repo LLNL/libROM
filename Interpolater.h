@@ -28,7 +28,11 @@ protected:
     /**
      * @brief Constructor.
      *
-     * @param[in] dim The full-order state dimension.
+     * @param[in] parameter_points The parameter points.
+     * @param[in] rotation_matrices The rotation matrices associated with
+     *                              each parameter point.
+     * @param[in] ref_point The index within the vector of parameter points
+     *                      to the reference point
      */
     Interpolater(std::vector<Vector*> parameter_points,
                  std::vector<Matrix*> rotation_matrices,
@@ -45,7 +49,8 @@ protected:
     int d_num_procs;
 
     /**
-     * @brief The reference point;
+     * @brief The index within the vector of parameter points
+     *        to the reference point
      */
     int d_ref_point;
 
@@ -65,7 +70,8 @@ protected:
     Matrix* d_lambda_T;
 
     /**
-     * @brief Interpolate to unsampled parameter point.
+     * @brief Compute the RBF from the parameter points with the
+     *        unsampled parameter point.
      *
      * @param[in] point The unsampled parameter point.
      */
@@ -92,9 +98,19 @@ private:
         const Interpolater& rhs);
 };
 
+/**
+ * @brief Obtain the rotation matrices for all the parameter points using
+ *        the basis of the reference point.
+ *
+ * @param[in] parameter_points The parameter points.
+ * @param[in] bases The spatial basis associated with
+ *                  each parameter point.
+ * @param[in] ref_point The index within the vector of parameter points
+ *                      to the reference point
+ */
 std::vector<Matrix*> obtainRotationMatrices(std::vector<Vector*> parameter_points,
-                                            std::vector<Matrix*> bases,
-                                            int ref_point);
+        std::vector<Matrix*> bases,
+        int ref_point);
 
 }
 

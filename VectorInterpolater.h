@@ -29,18 +29,24 @@ public:
     /**
      * @brief Constructor.
      *
-     * @param[in] dim The full-order state dimension.
+     * @param[in] parameter_points The parameter points.
+     * @param[in] rotation_matrices The rotation matrices associated with
+     *                              each parameter point.
+     * @param[in] reduced_vectors The reduced vectors associated with
+     *                            each parameter point.
+     * @param[in] ref_point The index within the vector of parameter points
+     *                      to the reference point
      */
     VectorInterpolater(std::vector<Vector*> parameter_points,
                        std::vector<Matrix*> rotation_matrices,
                        std::vector<Vector*> reduced_vectors,
                        int ref_point);
 
-   /**
-    * @brief Interpolate to unsampled parameter point.
-    *
-    * @param[in] point The unsampled parameter point.
-    */
+    /**
+     * @brief Obtain the interpolated reduced vector of the unsampled parameter point.
+     *
+     * @param[in] point The unsampled parameter point.
+     */
     Vector* interpolate(Vector* point);
 
 private:
@@ -63,19 +69,22 @@ private:
     operator = (
         const VectorInterpolater& rhs);
 
-        /**
-         * @brief Interpolate to unsampled parameter point.
-         *
-         * @param[in] point The unsampled parameter point.
-         */
-        void obtainLambda(std::vector<Vector*> gammas);
+    /**
+     * @brief Solve the system of equations of the gammas to obtain the
+     *        lambda for the P matrix.
+     *
+     * @param[in] gammas The vector of gamma matrices.
+     */
+    void obtainLambda(std::vector<Vector*> gammas);
 
-        /**
-         * @brief Interpolate to unsampled parameter point.
-         *
-         * @param[in] point The unsampled parameter point.
-         */
-        Vector* obtainLogInterpolatedVector(std::vector<double> inv_q);
+    /**
+     * @brief Obtain the interpolated vector of the unsampled parameter point
+     *           in log space.
+     *
+     * @param[in] inv_q The inverse quadratic RBF values between the
+     *                  parameter points and the unsampled parameter point.
+     */
+    Vector* obtainLogInterpolatedVector(std::vector<double> inv_q);
 
     /**
      * @brief The reduced vectors with compatible coordinates.

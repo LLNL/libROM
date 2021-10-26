@@ -42,9 +42,9 @@ MatrixInterpolater::MatrixInterpolater(std::vector<Vector*> parameter_points,
                                        std::vector<Matrix*> reduced_matrices,
                                        int ref_point,
                                        std::string matrix_type) :
-                                       Interpolater(parameter_points,
-                                                    rotation_matrices,
-                                                    ref_point)
+    Interpolater(parameter_points,
+                 rotation_matrices,
+                 ref_point)
 {
     CAROM_VERIFY(reduced_matrices.size() == rotation_matrices.size());
     CAROM_VERIFY(matrix_type == "SPD" || matrix_type == "NS" || matrix_type == "R" || matrix_type == "B");
