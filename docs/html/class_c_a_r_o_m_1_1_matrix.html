@@ -261,7 +261,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memdesc:acdc4a8fd238f64d8106b8f1ba8f2384e"><td class="mdescLeft">&#160;</td><td class="mdescRight">read <a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a> into (a) HDF file(s).  <a href="#acdc4a8fd238f64d8106b8f1ba8f2384e">More...</a><br/></td></tr>
 <tr class="separator:acdc4a8fd238f64d8106b8f1ba8f2384e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a09da21ed0f70b190d5625303ea2d92e4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_matrix.html#a09da21ed0f70b190d5625303ea2d92e4">local_read</a> (const std::string &amp;base_file_name, int rank)</td></tr>
-<tr class="memdesc:a09da21ed0f70b190d5625303ea2d92e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">read <a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a> into (a) HDF file(s).  <a href="#a09da21ed0f70b190d5625303ea2d92e4">More...</a><br/></td></tr>
+<tr class="memdesc:a09da21ed0f70b190d5625303ea2d92e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">read a single rank of a distributed <a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a> into (a) HDF file(s).  <a href="#a09da21ed0f70b190d5625303ea2d92e4">More...</a><br/></td></tr>
 <tr class="separator:a09da21ed0f70b190d5625303ea2d92e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a951b1d63fafbc9b4ddd112bd400ca758"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a951b1d63fafbc9b4ddd112bd400ca758"></a>
 double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_matrix.html#a951b1d63fafbc9b4ddd112bd400ca758">getData</a> () const </td></tr>
@@ -550,6 +550,12 @@ num_cols &gt; 0</dd></dl>
 
 <p>Get the first N columns of a matrix. </p>
 <dl class="section pre"><dt>Precondition</dt><dd>0 &lt; n &lt; <a class="el" href="class_c_a_r_o_m_1_1_matrix.html#ac0fae4db551542e9a5cdc401a38fe39f" title="Returns the number of columns in the Matrix. This method will return the same value from each process...">numColumns()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>The number of columns to return.</td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="section return"><dt>Returns</dt><dd>The truncated <a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>. </dd></dl>
 
 </div>
@@ -584,6 +590,7 @@ num_cols &gt; 0</dd></dl>
 0 &lt; n &lt; <a class="el" href="class_c_a_r_o_m_1_1_matrix.html#ac0fae4db551542e9a5cdc401a38fe39f" title="Returns the number of columns in the Matrix. This method will return the same value from each process...">numColumns()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>The number of columns to return.</td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">result</td><td>The truncated <a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>. </td></tr>
   </table>
   </dd>
@@ -621,6 +628,7 @@ num_cols &gt; 0</dd></dl>
 0 &lt; n &lt; <a class="el" href="class_c_a_r_o_m_1_1_matrix.html#ac0fae4db551542e9a5cdc401a38fe39f" title="Returns the number of columns in the Matrix. This method will return the same value from each process...">numColumns()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>The number of columns to return.</td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">result</td><td>The truncated <a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>. </td></tr>
   </table>
   </dd>
@@ -854,10 +862,11 @@ num_cols &gt; 0</dd></dl>
       </table>
 </div><div class="memdoc">
 
-<p>read <a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a> into (a) HDF file(s). </p>
+<p>read a single rank of a distributed <a class="el" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a> into (a) HDF file(s). </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">base_file_name</td><td>The base part of the file name. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rank</td><td>The rank to read from. </td></tr>
   </table>
   </dd>
 </dl>

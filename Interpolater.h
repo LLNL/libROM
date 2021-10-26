@@ -20,6 +20,10 @@ namespace CAROM {
 class Matrix;
 class Vector;
 
+/**
+ * Interpolater is a uninstantiable protected class that retains common
+ * functionality between the MatrixInterpolater and VectorInterpolater classes.
+ */
 class Interpolater
 {
 

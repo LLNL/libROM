@@ -224,6 +224,8 @@ public:
      *
      * @pre 0 < n < numColumns()
      *
+     * @param[in] n The number of columns to return.
+     *
      * @return The truncated Matrix.
      */
     Matrix*
@@ -234,6 +236,8 @@ public:
      *
      * @pre result.distributed() == distributed()
      * @pre 0 < n < numColumns()
+     *
+     * @param[in] n The number of columns to return.
      *
      * @param[out] result The truncated Matrix.
      */
@@ -247,6 +251,8 @@ public:
      *
      * @pre result.distributed() == distributed()
      * @pre 0 < n < numColumns()
+     *
+     * @param[in] n The number of columns to return.
      *
      * @param[out] result The truncated Matrix.
      */
@@ -916,9 +922,10 @@ public:
     void read(const std::string& base_file_name);
 
     /**
-     * @brief read Matrix into (a) HDF file(s).
+     * @brief read a single rank of a distributed Matrix into (a) HDF file(s).
      *
      * @param[in] base_file_name The base part of the file name.
+     * @param[in] rank The rank to read from.
      *
      */
     void local_read(const std::string& base_file_name, int rank);
@@ -1148,7 +1155,15 @@ Matrix IdentityMatrixFactory(const Vector &v);
  * of a matrix along with its real eigenvalues.
  */
 struct EigenPair {
+
+    /**
+     * @brief The eigenvectors in matrix form.
+     */
     Matrix* ev;
+
+    /**
+     * @brief The corresponding eigenvalues.
+     */
     std::vector<double> eigs;
 };
 
@@ -1158,8 +1173,20 @@ struct EigenPair {
  * of a matrix along with its eigenvalues.
  */
 struct ComplexEigenPair {
+
+    /**
+     * @brief The real component of the eigenvectors in matrix form.
+     */
     Matrix* ev_real;
+
+    /**
+     * @brief The imaginary component of the eigenvectors in matrix form.
+     */
     Matrix* ev_imaginary;
+
+    /**
+     * @brief The corresponding complex eigenvalues.
+     */
     std::vector<std::complex<double>> eigs;
 };
 

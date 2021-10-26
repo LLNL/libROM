@@ -22,6 +22,10 @@ namespace CAROM {
 class Matrix;
 class Vector;
 
+/**
+ * VectorInterpolater interpolates reduced vectors of a set of parameter points
+ * and returns an interpolated reduced vector for an unseen parameter point.
+ */
 class VectorInterpolater : public Interpolater
 {
 public:

@@ -21,6 +21,9 @@ namespace CAROM {
 class Matrix;
 class Vector;
 
+/**
+ * Class DMD implements Brunton's DMD algorithm on a given snapshot matrix.
+ */
 class DMD
 {
 public:

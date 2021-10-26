@@ -354,42 +354,42 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;</div>
 <div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html#a2b38fbc6b7d898bcc0399e1380a436d3">read</a>(<span class="keyword">const</span> std::string&amp; base_file_name);</div>
 <div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160;</div>
-<div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html#adc03e6513482466f5d3367d8e54dce4f">local_read</a>(<span class="keyword">const</span> std::string&amp; base_file_name, <span class="keywordtype">int</span> rank);</div>
-<div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;</div>
-<div class="line"><a name="l00704"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#a913d7dcc122687709dee85adba99dbf4">  704</a></span>&#160;    <span class="keywordtype">double</span> *<a class="code" href="class_c_a_r_o_m_1_1_vector.html#a913d7dcc122687709dee85adba99dbf4">getData</a>()<span class="keyword"> const</span></div>
-<div class="line"><a name="l00705"></a><span class="lineno">  705</span>&#160;<span class="keyword">    </span>{</div>
-<div class="line"><a name="l00706"></a><span class="lineno">  706</span>&#160;        <span class="keywordflow">return</span> d_vec;</div>
-<div class="line"><a name="l00707"></a><span class="lineno">  707</span>&#160;    }</div>
-<div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;</div>
-<div class="line"><a name="l00709"></a><span class="lineno">  709</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00713"></a><span class="lineno">  713</span>&#160;    <span class="keywordtype">double</span>* d_vec;</div>
-<div class="line"><a name="l00714"></a><span class="lineno">  714</span>&#160;</div>
-<div class="line"><a name="l00718"></a><span class="lineno">  718</span>&#160;    <span class="keywordtype">int</span> d_dim;</div>
-<div class="line"><a name="l00719"></a><span class="lineno">  719</span>&#160;</div>
-<div class="line"><a name="l00725"></a><span class="lineno">  725</span>&#160;    <span class="keywordtype">int</span> d_alloc_size;</div>
-<div class="line"><a name="l00726"></a><span class="lineno">  726</span>&#160;</div>
-<div class="line"><a name="l00733"></a><span class="lineno">  733</span>&#160;    <span class="keywordtype">bool</span> d_distributed;</div>
-<div class="line"><a name="l00734"></a><span class="lineno">  734</span>&#160;</div>
-<div class="line"><a name="l00738"></a><span class="lineno">  738</span>&#160;    <span class="keywordtype">int</span> d_num_procs;</div>
-<div class="line"><a name="l00739"></a><span class="lineno">  739</span>&#160;</div>
-<div class="line"><a name="l00746"></a><span class="lineno">  746</span>&#160;    <span class="keywordtype">bool</span> d_owns_data;</div>
-<div class="line"><a name="l00747"></a><span class="lineno">  747</span>&#160;};</div>
-<div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;</div>
-<div class="line"><a name="l00753"></a><span class="lineno">  753</span>&#160;<span class="keywordtype">int</span> getCenterPoint(std::vector&lt;Vector*&gt; points,</div>
-<div class="line"><a name="l00754"></a><span class="lineno">  754</span>&#160;                   <span class="keywordtype">bool</span> use_centroid);</div>
-<div class="line"><a name="l00755"></a><span class="lineno">  755</span>&#160;</div>
-<div class="line"><a name="l00756"></a><span class="lineno">  756</span>&#160;}</div>
-<div class="line"><a name="l00757"></a><span class="lineno">  757</span>&#160;</div>
-<div class="line"><a name="l00758"></a><span class="lineno">  758</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="class_c_a_r_o_m_1_1_vector.html#adc03e6513482466f5d3367d8e54dce4f">local_read</a>(<span class="keyword">const</span> std::string&amp; base_file_name, <span class="keywordtype">int</span> rank);</div>
+<div class="line"><a name="l00701"></a><span class="lineno">  701</span>&#160;</div>
+<div class="line"><a name="l00705"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_vector.html#a913d7dcc122687709dee85adba99dbf4">  705</a></span>&#160;    <span class="keywordtype">double</span> *<a class="code" href="class_c_a_r_o_m_1_1_vector.html#a913d7dcc122687709dee85adba99dbf4">getData</a>()<span class="keyword"> const</span></div>
+<div class="line"><a name="l00706"></a><span class="lineno">  706</span>&#160;<span class="keyword">    </span>{</div>
+<div class="line"><a name="l00707"></a><span class="lineno">  707</span>&#160;        <span class="keywordflow">return</span> d_vec;</div>
+<div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;    }</div>
+<div class="line"><a name="l00709"></a><span class="lineno">  709</span>&#160;</div>
+<div class="line"><a name="l00710"></a><span class="lineno">  710</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l00714"></a><span class="lineno">  714</span>&#160;    <span class="keywordtype">double</span>* d_vec;</div>
+<div class="line"><a name="l00715"></a><span class="lineno">  715</span>&#160;</div>
+<div class="line"><a name="l00719"></a><span class="lineno">  719</span>&#160;    <span class="keywordtype">int</span> d_dim;</div>
+<div class="line"><a name="l00720"></a><span class="lineno">  720</span>&#160;</div>
+<div class="line"><a name="l00726"></a><span class="lineno">  726</span>&#160;    <span class="keywordtype">int</span> d_alloc_size;</div>
+<div class="line"><a name="l00727"></a><span class="lineno">  727</span>&#160;</div>
+<div class="line"><a name="l00734"></a><span class="lineno">  734</span>&#160;    <span class="keywordtype">bool</span> d_distributed;</div>
+<div class="line"><a name="l00735"></a><span class="lineno">  735</span>&#160;</div>
+<div class="line"><a name="l00739"></a><span class="lineno">  739</span>&#160;    <span class="keywordtype">int</span> d_num_procs;</div>
+<div class="line"><a name="l00740"></a><span class="lineno">  740</span>&#160;</div>
+<div class="line"><a name="l00747"></a><span class="lineno">  747</span>&#160;    <span class="keywordtype">bool</span> d_owns_data;</div>
+<div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;};</div>
+<div class="line"><a name="l00749"></a><span class="lineno">  749</span>&#160;</div>
+<div class="line"><a name="l00754"></a><span class="lineno">  754</span>&#160;<span class="keywordtype">int</span> getCenterPoint(std::vector&lt;Vector*&gt; points,</div>
+<div class="line"><a name="l00755"></a><span class="lineno">  755</span>&#160;                   <span class="keywordtype">bool</span> use_centroid);</div>
+<div class="line"><a name="l00756"></a><span class="lineno">  756</span>&#160;</div>
+<div class="line"><a name="l00757"></a><span class="lineno">  757</span>&#160;}</div>
+<div class="line"><a name="l00758"></a><span class="lineno">  758</span>&#160;</div>
+<div class="line"><a name="l00759"></a><span class="lineno">  759</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_aa03e1dcf3b1572995fadc70562c737d7"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#aa03e1dcf3b1572995fadc70562c737d7">CAROM::Vector::item</a></div><div class="ttdeci">const double &amp; item(int i) const </div><div class="ttdoc">Const Vector member access. </div><div class="ttdef"><b>Definition:</b> Vector.h:613</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_ace7a3b2cc2fb52c71f294d80cb8de222"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#ace7a3b2cc2fb52c71f294d80cb8de222">CAROM::Vector::plusAx</a></div><div class="ttdeci">Vector * plusAx(double factor, const Vector &amp;other)</div><div class="ttdoc">Adds factor*other and this and returns the result, reference version. </div><div class="ttdef"><b>Definition:</b> Vector.h:381</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a2004f874de68848d1a0720afdfccd4b2"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a2004f874de68848d1a0720afdfccd4b2">CAROM::Vector::plus</a></div><div class="ttdeci">Vector * plus(const Vector &amp;other) const </div><div class="ttdoc">Adds other and this and returns the result, reference version. </div><div class="ttdef"><b>Definition:</b> Vector.h:306</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_ac7e6bd13bfb89ae084f1933789055999"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#ac7e6bd13bfb89ae084f1933789055999">CAROM::Vector::minus</a></div><div class="ttdeci">Vector * minus(const Vector &amp;other) const </div><div class="ttdoc">Subtracts other and this and returns the result, reference version. </div><div class="ttdef"><b>Definition:</b> Vector.h:495</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a0395f0c266a3e237573b3a8c483f2693"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a0395f0c266a3e237573b3a8c483f2693">CAROM::Vector::operator()</a></div><div class="ttdeci">const double &amp; operator()(int i) const </div><div class="ttdoc">Const Vector member access. </div><div class="ttdef"><b>Definition:</b> Vector.h:648</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a2b38fbc6b7d898bcc0399e1380a436d3"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a2b38fbc6b7d898bcc0399e1380a436d3">CAROM::Vector::read</a></div><div class="ttdeci">void read(const std::string &amp;base_file_name)</div><div class="ttdoc">read Vector from (a) HDF file(s). </div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_adc03e6513482466f5d3367d8e54dce4f"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#adc03e6513482466f5d3367d8e54dce4f">CAROM::Vector::local_read</a></div><div class="ttdeci">void local_read(const std::string &amp;base_file_name, int rank)</div><div class="ttdoc">read Vector from (a) HDF file(s). </div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_adc03e6513482466f5d3367d8e54dce4f"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#adc03e6513482466f5d3367d8e54dce4f">CAROM::Vector::local_read</a></div><div class="ttdeci">void local_read(const std::string &amp;base_file_name, int rank)</div><div class="ttdoc">read read a single rank of a distributed Vector from (a) HDF file(s). </div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a8eeaff9eedc7ab261577670e98f356c3"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a8eeaff9eedc7ab261577670e98f356c3">CAROM::Vector::write</a></div><div class="ttdeci">void write(const std::string &amp;base_file_name)</div><div class="ttdoc">write Vector into (a) HDF file(s). </div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a913d7dcc122687709dee85adba99dbf4"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a913d7dcc122687709dee85adba99dbf4">CAROM::Vector::getData</a></div><div class="ttdeci">double * getData() const </div><div class="ttdoc">Get the vector data as a pointer. </div><div class="ttdef"><b>Definition:</b> Vector.h:704</div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a913d7dcc122687709dee85adba99dbf4"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a913d7dcc122687709dee85adba99dbf4">CAROM::Vector::getData</a></div><div class="ttdeci">double * getData() const </div><div class="ttdoc">Get the vector data as a pointer. </div><div class="ttdef"><b>Definition:</b> Vector.h:705</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a5958bc816279be7cc190e4bdfedb4636"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a5958bc816279be7cc190e4bdfedb4636">CAROM::Vector::mult</a></div><div class="ttdeci">Vector * mult(double factor) const </div><div class="ttdoc">Multiplies this by the supplied constant and returns the result. </div><div class="ttdef"><b>Definition:</b> Vector.h:567</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a4c92d8b8a9c156ff394cf87d4079fa99"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a4c92d8b8a9c156ff394cf87d4079fa99">CAROM::Vector::operator+=</a></div><div class="ttdeci">Vector &amp; operator+=(const Vector &amp;rhs)</div><div class="ttdoc">Addition operator. </div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html_a1543d65aaadb8016a071a4df9725d366"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html#a1543d65aaadb8016a071a4df9725d366">CAROM::Vector::setSize</a></div><div class="ttdeci">void setSize(int dim)</div><div class="ttdoc">Sets the length of the vector and reallocates storage if needed. </div><div class="ttdef"><b>Definition:</b> Vector.h:200</div></div>

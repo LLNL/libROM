@@ -691,9 +691,10 @@ public:
     void read(const std::string& base_file_name);
 
     /**
-     * @brief read Vector from (a) HDF file(s).
+     * @brief read read a single rank of a distributed Vector from (a) HDF file(s).
      *
      * @param[in] base_file_name The base part of the file name.
+     * @param[in] rank The rank to read from.
      *
      */
     void local_read(const std::string& base_file_name, int rank);

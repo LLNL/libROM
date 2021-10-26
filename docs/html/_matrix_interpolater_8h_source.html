@@ -108,54 +108,54 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="keyword">class </span>Matrix;</div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="keyword">class </span>Vector;</div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;</div>
-<div class="line"><a name="l00025"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_matrix_interpolater.html">   25</a></span>&#160;<span class="keyword">class </span><a class="code" href="class_c_a_r_o_m_1_1_matrix_interpolater.html">MatrixInterpolater</a> : <span class="keyword">public</span> <a class="code" href="class_c_a_r_o_m_1_1_interpolater.html">Interpolater</a></div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;{</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_matrix_interpolater.html">MatrixInterpolater</a>(std::vector&lt;Vector*&gt; parameter_points,</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;                       std::vector&lt;Matrix*&gt; rotation_matrices,</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;                       std::vector&lt;Matrix*&gt; reduced_matrices,</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;                       <span class="keywordtype">int</span> ref_point,</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;                       std::string matrix_type);</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* <a class="code" href="class_c_a_r_o_m_1_1_matrix_interpolater.html#a609b8d298abcc16cb240c0a8c7c75dde">interpolate</a>(<a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* point);</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_matrix_interpolater.html">MatrixInterpolater</a>();</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_matrix_interpolater.html">MatrixInterpolater</a>(</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_matrix_interpolater.html">MatrixInterpolater</a>&amp; other);</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_matrix_interpolater.html">MatrixInterpolater</a>&amp;</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    operator = (</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_matrix_interpolater.html">MatrixInterpolater</a>&amp; rhs);</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* obtainLambda(std::vector&lt;Matrix*&gt; gammas);</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;        <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* obtainLogInterpolatedMatrix(std::vector&lt;double&gt; inv_q);</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;         <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* interpolateSPDMatrix(<a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* point);</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;          <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* interpolateNonSingularMatrix(<a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* point);</div>
+<div class="line"><a name="l00029"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_matrix_interpolater.html">   29</a></span>&#160;<span class="keyword">class </span><a class="code" href="class_c_a_r_o_m_1_1_matrix_interpolater.html">MatrixInterpolater</a> : <span class="keyword">public</span> <a class="code" href="class_c_a_r_o_m_1_1_interpolater.html">Interpolater</a></div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;{</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_matrix_interpolater.html">MatrixInterpolater</a>(std::vector&lt;Vector*&gt; parameter_points,</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;                       std::vector&lt;Matrix*&gt; rotation_matrices,</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;                       std::vector&lt;Matrix*&gt; reduced_matrices,</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;                       <span class="keywordtype">int</span> ref_point,</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;                       std::string matrix_type);</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* <a class="code" href="class_c_a_r_o_m_1_1_matrix_interpolater.html#a609b8d298abcc16cb240c0a8c7c75dde">interpolate</a>(<a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* point);</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_matrix_interpolater.html">MatrixInterpolater</a>();</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_matrix_interpolater.html">MatrixInterpolater</a>(</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_matrix_interpolater.html">MatrixInterpolater</a>&amp; other);</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_matrix_interpolater.html">MatrixInterpolater</a>&amp;</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    operator = (</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;        <span class="keyword">const</span> <a class="code" href="class_c_a_r_o_m_1_1_matrix_interpolater.html">MatrixInterpolater</a>&amp; rhs);</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    <span class="keywordtype">void</span> obtainLambda(std::vector&lt;Matrix*&gt; gammas);</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* obtainLogInterpolatedMatrix(std::vector&lt;double&gt; inv_q);</div>
 <div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;           <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* interpolateMatrix(<a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* point);</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    std::string d_matrix_type;</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;    std::vector&lt;Matrix*&gt; d_rotated_reduced_matrices;</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* d_x_half_power;</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;};</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;}</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_matrix_interpolater_html"><div class="ttname"><a href="class_c_a_r_o_m_1_1_matrix_interpolater.html">CAROM::MatrixInterpolater</a></div><div class="ttdef"><b>Definition:</b> MatrixInterpolater.h:25</div></div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* interpolateSPDMatrix(<a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* point);</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* interpolateNonSingularMatrix(<a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* point);</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* interpolateMatrix(<a class="code" href="class_c_a_r_o_m_1_1_vector.html">Vector</a>* point);</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;    std::string d_matrix_type;</div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;    std::vector&lt;Matrix*&gt; d_rotated_reduced_matrices;</div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;</div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_matrix.html">Matrix</a>* d_x_half_power;</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;};</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;</div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;}</div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;</div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_matrix_interpolater_html"><div class="ttname"><a href="class_c_a_r_o_m_1_1_matrix_interpolater.html">CAROM::MatrixInterpolater</a></div><div class="ttdef"><b>Definition:</b> MatrixInterpolater.h:29</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_matrix_html"><div class="ttname"><a href="class_c_a_r_o_m_1_1_matrix.html">CAROM::Matrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.h:29</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_vector_html"><div class="ttname"><a href="class_c_a_r_o_m_1_1_vector.html">CAROM::Vector</a></div><div class="ttdef"><b>Definition:</b> Vector.h:29</div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_interpolater_html"><div class="ttname"><a href="class_c_a_r_o_m_1_1_interpolater.html">CAROM::Interpolater</a></div><div class="ttdef"><b>Definition:</b> Interpolater.h:23</div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_matrix_interpolater_html_a609b8d298abcc16cb240c0a8c7c75dde"><div class="ttname"><a href="class_c_a_r_o_m_1_1_matrix_interpolater.html#a609b8d298abcc16cb240c0a8c7c75dde">CAROM::MatrixInterpolater::interpolate</a></div><div class="ttdeci">Matrix * interpolate(Vector *point)</div><div class="ttdoc">Interpolate to unsampled parameter point. </div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_interpolater_html"><div class="ttname"><a href="class_c_a_r_o_m_1_1_interpolater.html">CAROM::Interpolater</a></div><div class="ttdef"><b>Definition:</b> Interpolater.h:27</div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_matrix_interpolater_html_a609b8d298abcc16cb240c0a8c7c75dde"><div class="ttname"><a href="class_c_a_r_o_m_1_1_matrix_interpolater.html#a609b8d298abcc16cb240c0a8c7c75dde">CAROM::MatrixInterpolater::interpolate</a></div><div class="ttdeci">Matrix * interpolate(Vector *point)</div><div class="ttdoc">Obtain the interpolated reduced matrix of the unsampled parameter point. </div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

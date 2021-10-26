@@ -40,6 +40,10 @@ public:
                             the error indicator tolerance can change per iteration.
      * @param[in] subset_size The size of the random subset.
      * @param[in] convergence_subset_size The size of the convergence subset.
+     * @param[in] output_log_path The path to the output log file. If not used,
+     *                            outputs to stdout.
+     * @param[in] warm_start_file_name The path to the HDF5 file of a previous
+     *                                 database to use as a warm start.
      * @param[in] use_centroid Whether to use the centroid heuristic when
                                determining the first parameter point to sample.
      * @param[in] random_seed A random seed.
@@ -74,6 +78,10 @@ public:
                             the error indicator tolerance can change per iteration.
      * @param[in] subset_size The size of the random subset.
      * @param[in] convergence_subset_size The size of the convergence subset.
+     * @param[in] output_log_path The path to the output log file. If not used,
+     *                            outputs to stdout.
+     * @param[in] warm_start_file_name The path to the HDF5 file of a previous
+     *                                 database to use as a warm start.
      * @param[in] use_centroid Whether to use the centroid heuristic when
                                determining the first parameter point to sample.
      * @param[in] random_seed A random seed.

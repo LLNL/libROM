@@ -107,55 +107,55 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00026"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler.html">   26</a></span>&#160;<span class="keyword">class </span><a class="code" href="class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler.html">GreedyParameterPointPreDefinedSampler</a> : <span class="keyword">public</span> <a class="code" href="class_c_a_r_o_m_1_1_greedy_parameter_point_sampler.html">GreedyParameterPointSampler</a></div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;{</div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler.html#aa7fc81a5faa35358fb98d2d8b0c55266">GreedyParameterPointPreDefinedSampler</a>(</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;        std::vector&lt;Vector&gt; parameter_points,</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;        <span class="keywordtype">bool</span> check_local_rom,</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;        <span class="keywordtype">double</span> relative_error_tolerance,</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;        <span class="keywordtype">double</span> alpha,</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;        <span class="keywordtype">double</span> max_clamp,</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;        <span class="keywordtype">int</span> subset_size,</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;        <span class="keywordtype">int</span> convergence_subset_size,</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;        std::string output_log_path = <span class="stringliteral">&quot;&quot;</span>,</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;        std::string warm_start_file_name = <span class="stringliteral">&quot;&quot;</span>,</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;        <span class="keywordtype">bool</span> use_centroid = <span class="keyword">true</span>,</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;        <span class="keywordtype">int</span> random_seed = 1,</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;        <span class="keywordtype">bool</span> debug_algorithm = <span class="keyword">false</span>);</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler.html#aa7fc81a5faa35358fb98d2d8b0c55266">GreedyParameterPointPreDefinedSampler</a>(</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;        std::vector&lt;double&gt; parameter_points,</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;        <span class="keywordtype">bool</span> check_local_rom,</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;        <span class="keywordtype">double</span> relative_error_tolerance,</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;        <span class="keywordtype">double</span> alpha,</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;        <span class="keywordtype">double</span> max_clamp,</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;        <span class="keywordtype">int</span> subset_size,</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;        <span class="keywordtype">int</span> convergence_subset_size,</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;        std::string output_log_path = <span class="stringliteral">&quot;&quot;</span>,</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;        std::string warm_start_file_name = <span class="stringliteral">&quot;&quot;</span>,</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;        <span class="keywordtype">bool</span> use_centroid = <span class="keyword">true</span>,</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;        <span class="keywordtype">int</span> random_seed = 1,</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;        <span class="keywordtype">bool</span> debug_algorithm = <span class="keyword">false</span>);</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler.html#aa7fc81a5faa35358fb98d2d8b0c55266">GreedyParameterPointPreDefinedSampler</a>(</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;        std::string base_file_name,</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;        std::string output_log_path = <span class="stringliteral">&quot;&quot;</span>);</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler.html#ac92a151af6f2c319040425bc698a48a7">~GreedyParameterPointPreDefinedSampler</a>();</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;<span class="keyword">protected</span>:</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler.html#a38590cbc42e76266ca787f94c3d6a7cc">constructParameterPoints</a>();</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler.html#adaab047450d7ab8892e6c3de08376680">getNextParameterPointAfterConvergenceFailure</a>();</div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;};</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;}</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler.html#aa7fc81a5faa35358fb98d2d8b0c55266">GreedyParameterPointPreDefinedSampler</a>(</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;        std::vector&lt;Vector&gt; parameter_points,</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;        <span class="keywordtype">bool</span> check_local_rom,</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;        <span class="keywordtype">double</span> relative_error_tolerance,</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;        <span class="keywordtype">double</span> alpha,</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;        <span class="keywordtype">double</span> max_clamp,</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;        <span class="keywordtype">int</span> subset_size,</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;        <span class="keywordtype">int</span> convergence_subset_size,</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;        std::string output_log_path = <span class="stringliteral">&quot;&quot;</span>,</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;        std::string warm_start_file_name = <span class="stringliteral">&quot;&quot;</span>,</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;        <span class="keywordtype">bool</span> use_centroid = <span class="keyword">true</span>,</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;        <span class="keywordtype">int</span> random_seed = 1,</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;        <span class="keywordtype">bool</span> debug_algorithm = <span class="keyword">false</span>);</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler.html#aa7fc81a5faa35358fb98d2d8b0c55266">GreedyParameterPointPreDefinedSampler</a>(</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;        std::vector&lt;double&gt; parameter_points,</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;        <span class="keywordtype">bool</span> check_local_rom,</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;        <span class="keywordtype">double</span> relative_error_tolerance,</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;        <span class="keywordtype">double</span> alpha,</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;        <span class="keywordtype">double</span> max_clamp,</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;        <span class="keywordtype">int</span> subset_size,</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;        <span class="keywordtype">int</span> convergence_subset_size,</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;        std::string output_log_path = <span class="stringliteral">&quot;&quot;</span>,</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;        std::string warm_start_file_name = <span class="stringliteral">&quot;&quot;</span>,</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;        <span class="keywordtype">bool</span> use_centroid = <span class="keyword">true</span>,</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;        <span class="keywordtype">int</span> random_seed = 1,</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;        <span class="keywordtype">bool</span> debug_algorithm = <span class="keyword">false</span>);</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler.html#aa7fc81a5faa35358fb98d2d8b0c55266">GreedyParameterPointPreDefinedSampler</a>(</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;        std::string base_file_name,</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;        std::string output_log_path = <span class="stringliteral">&quot;&quot;</span>);</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler.html#ac92a151af6f2c319040425bc698a48a7">~GreedyParameterPointPreDefinedSampler</a>();</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;<span class="keyword">protected</span>:</div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler.html#a38590cbc42e76266ca787f94c3d6a7cc">constructParameterPoints</a>();</div>
 <div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler.html#adaab047450d7ab8892e6c3de08376680">getNextParameterPointAfterConvergenceFailure</a>();</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;};</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;</div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;}</div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;</div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler_html_aa7fc81a5faa35358fb98d2d8b0c55266"><div class="ttname"><a href="class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler.html#aa7fc81a5faa35358fb98d2d8b0c55266">CAROM::GreedyParameterPointPreDefinedSampler::GreedyParameterPointPreDefinedSampler</a></div><div class="ttdeci">GreedyParameterPointPreDefinedSampler(std::vector&lt; Vector &gt; parameter_points, bool check_local_rom, double relative_error_tolerance, double alpha, double max_clamp, int subset_size, int convergence_subset_size, std::string output_log_path=&quot;&quot;, std::string warm_start_file_name=&quot;&quot;, bool use_centroid=true, int random_seed=1, bool debug_algorithm=false)</div><div class="ttdoc">Constructor. </div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler_html"><div class="ttname"><a href="class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler.html">CAROM::GreedyParameterPointPreDefinedSampler</a></div><div class="ttdef"><b>Definition:</b> GreedyParameterPointPreDefinedSampler.h:26</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler_html_adaab047450d7ab8892e6c3de08376680"><div class="ttname"><a href="class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler.html#adaab047450d7ab8892e6c3de08376680">CAROM::GreedyParameterPointPreDefinedSampler::getNextParameterPointAfterConvergenceFailure</a></div><div class="ttdeci">void getNextParameterPointAfterConvergenceFailure()</div><div class="ttdoc">Get the next parameter point to sample after a convergence failure. </div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler_html_ac92a151af6f2c319040425bc698a48a7"><div class="ttname"><a href="class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler.html#ac92a151af6f2c319040425bc698a48a7">CAROM::GreedyParameterPointPreDefinedSampler::~GreedyParameterPointPreDefinedSampler</a></div><div class="ttdeci">~GreedyParameterPointPreDefinedSampler()</div><div class="ttdoc">Destructor. </div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_greedy_parameter_point_sampler_html"><div class="ttname"><a href="class_c_a_r_o_m_1_1_greedy_parameter_point_sampler.html">CAROM::GreedyParameterPointSampler</a></div><div class="ttdef"><b>Definition:</b> GreedyParameterPointSampler.h:62</div></div>
+<div class="ttc" id="class_c_a_r_o_m_1_1_greedy_parameter_point_sampler_html"><div class="ttname"><a href="class_c_a_r_o_m_1_1_greedy_parameter_point_sampler.html">CAROM::GreedyParameterPointSampler</a></div><div class="ttdef"><b>Definition:</b> GreedyParameterPointSampler.h:74</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler_html_a38590cbc42e76266ca787f94c3d6a7cc"><div class="ttname"><a href="class_c_a_r_o_m_1_1_greedy_parameter_point_pre_defined_sampler.html#a38590cbc42e76266ca787f94c3d6a7cc">CAROM::GreedyParameterPointPreDefinedSampler::constructParameterPoints</a></div><div class="ttdeci">void constructParameterPoints()</div><div class="ttdoc">Construct the list of parameter point candidates to sample. </div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
