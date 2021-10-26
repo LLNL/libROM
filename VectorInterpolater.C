@@ -64,7 +64,7 @@ VectorInterpolater::VectorInterpolater(std::vector<Vector*> parameter_points,
     }
 }
 
-Matrix* VectorInterpolater::obtainLambda(std::vector<Vector*> gammas)
+void VectorInterpolater::obtainLambda(std::vector<Vector*> gammas)
 {
 
     // Solving f = B*lambda

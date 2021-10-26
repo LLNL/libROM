@@ -68,7 +68,7 @@ private:
          *
          * @param[in] point The unsampled parameter point.
          */
-        Matrix* obtainLambda(std::vector<Vector*> gammas);
+        void obtainLambda(std::vector<Vector*> gammas);
 
         /**
          * @brief Interpolate to unsampled parameter point.

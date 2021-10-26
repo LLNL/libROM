@@ -86,13 +86,13 @@ Matrix* MatrixInterpolater::interpolate(Vector* point)
     {
         return interpolateNonSingularMatrix(point);
     }
-    else if (d_matrix_type == "R" || d_matrix_type == "B")
+    else
     {
         return interpolateMatrix(point);
     }
 }
 
-Matrix* MatrixInterpolater::obtainLambda(std::vector<Matrix*> gammas)
+void MatrixInterpolater::obtainLambda(std::vector<Matrix*> gammas)
 {
 
     // Solving f = B*lambda
