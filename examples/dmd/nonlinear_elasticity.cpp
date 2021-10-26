@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
     // 2. Parse command-line options.
-    const char *mesh_file = "../dependencies/mfem/data/beam-quad.mesh";
+    const char *mesh_file = "../../dependencies/mfem/data/beam-quad.mesh";
     int ser_ref_levels = 2;
     int par_ref_levels = 0;
     int order = 2;

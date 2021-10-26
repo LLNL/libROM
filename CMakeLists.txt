@@ -237,17 +237,32 @@ target_compile_features(ROM PRIVATE cxx_std_11)
 
 if (USE_MFEM)
   set(examples
-    poisson
+    poisson_rom
     poisson_greedy
+    dg_advection_rom
+    dg_advection_matrix_interpolation
     dg_advection
-    dg_advection_global_rom
-    dg_advection_dmd
     nonlinear_elasticity
     heat_conduction
     dg_euler)
+  set(example_directories
+    prom/global_rom
+    prom/local_rom
+    prom/global_rom
+    prom/local_rom
+    dmd
+    dmd
+    dmd
+    dmd)
 
-  foreach(name IN LISTS examples)
-    add_executable(${name} examples/${name}.cpp)
+  list(LENGTH examples len1)
+  math(EXPR len2 "${len1} - 1")
+
+  foreach(val RANGE ${len2})
+    list(GET examples ${val} name)
+    list(GET example_directories ${val} example_dir)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${example_dir})
+    add_executable(${name} examples/${example_dir}/${name}.cpp)
 
     target_link_libraries(${name}
       PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
@@ -255,7 +270,7 @@ if (USE_MFEM)
       PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
       ${MPI_C_INCLUDE_DIRS})
     target_compile_features(${name} PRIVATE cxx_std_11)
-  endforeach(name) # IN LISTS examples
+  endforeach() # IN LISTS examples
 endif()
 
 set(regression_test_names
@@ -265,6 +280,8 @@ set(regression_test_names
   random_test
   smoke_static
   load_samples)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests)
 
 foreach(name IN LISTS regression_test_names)
   add_executable(${name} tests/${name}.C)

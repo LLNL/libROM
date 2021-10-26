@@ -17,13 +17,13 @@
 //               operator, solves the reduced order system, and lifts the
 //               solution to the full order space.
 //
-// Offline phase: poisson -offline -f 1.0 -id 0
-//                poisson -offline -f 1.1 -id 1
-//                poisson -offline -f 1.2 -id 2
+// Offline phase: poisson_rom -offline -f 1.0 -id 0
+//                poisson_rom -offline -f 1.1 -id 1
+//                poisson_rom -offline -f 1.2 -id 2
 //
-// Merge phase:   poisson -merge -ns 3
+// Merge phase:   poisson_rom -merge -ns 3
 //
-// Online phase:  poisson -online -f 1.15
+// Online phase:  poisson_rom -online -f 1.15
 
 
 #include "mfem.hpp"
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
     // 2. Parse command-line options.
-    const char *mesh_file = "../dependencies/mfem/data/star.mesh";
+    const char *mesh_file = "../../../dependencies/mfem/data/star.mesh";
     int order = 1;
     bool static_cond = false;
     bool pa = false;
