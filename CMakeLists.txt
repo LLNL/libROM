@@ -261,7 +261,7 @@ if (USE_MFEM)
   foreach(val RANGE ${len2})
     list(GET examples ${val} name)
     list(GET example_directories ${val} example_dir)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${example_dir})
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/examples/${example_dir})
     add_executable(${name} examples/${example_dir}/${name}.cpp)
 
     target_link_libraries(${name}
