@@ -71,3 +71,15 @@ There is a Spack package for libROM; however, the version it installs
 is the latest public release. See the [spack
 documentation](http://spack.readthedocs.io/en/latest/index.html) for
 details on how to use Spack.
+
+To install libROM with default options using spack.
+
+```sh
+ spack install librom
+```
+
+To install libROM with MFEM using spack.
+
+```sh
+ spack install librom +mfem
+```

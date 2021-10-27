@@ -44,6 +44,7 @@ set(libROM_CMAKE_MODULE_PATH ${libROM_CMAKE_PATH}/modules)
 list(APPEND CMAKE_MODULE_PATH ${libROM_CMAKE_MODULE_PATH})
 
 option(USE_MFEM "Build libROM with MFEM" OFF)
+option(BUILD_STATIC "Build libROM as a static library" OFF)
 
 include(FortranCInterface)
 FortranCInterface_HEADER(${CMAKE_SOURCE_DIR}/FCMangle.h
@@ -156,8 +157,11 @@ endif()
 list(APPEND source_files
   scalapack_c_wrapper.c
   scalapack_f_wrapper.f90)
-
-add_library(ROM SHARED ${source_files})
+if (BUILD_STATIC)
+  add_library(ROM ${source_files})
+else()
+  add_library(ROM SHARED ${source_files})
+endif()
 
 # List minimum version requirements for dependencies where possible to make
 # packaging easier later.
