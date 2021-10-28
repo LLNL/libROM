@@ -241,19 +241,19 @@ target_compile_features(ROM PRIVATE cxx_std_11)
 
 if (USE_MFEM)
   set(examples
-    poisson_rom
-    poisson_greedy
-    dg_advection_rom
-    dg_advection_matrix_interpolation
+    poisson_global_rom
+    poisson_local_rom_greedy
+    dg_advection_global_rom
+    dg_advection_local_rom_matrix_interp
     dg_advection
     nonlinear_elasticity
     heat_conduction
     dg_euler)
   set(example_directories
-    prom/global_rom
-    prom/local_rom
-    prom/global_rom
-    prom/local_rom
+    prom
+    prom
+    prom
+    prom
     dmd
     dmd
     dmd
