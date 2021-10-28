@@ -13,14 +13,14 @@
 //               builds the ROM operator, solves thereduced order system, and
 //               lifts the solution to the full order space.
 //
-// build_database phase: poisson_greedy -build_database -greedy-param-min 1.0 -greedy-param-max 1.2 -greedy-param-size 5 -greedysubsize 2 -greedyconvsize 3 -greedyrelerrortol 0.01
-// use_database phase:   poisson_greedy -fom -f 1.15 (create a new solution to compare with)
-// use_database phase:   poisson_greedy -use_database -online -f 1.15 (use the database to compute at f 1.15 while comparing to the true offline solution at f 1.15)
+// build_database phase: poisson_local_rom_greedy -build_database -greedy-param-min 1.0 -greedy-param-max 1.2 -greedy-param-size 5 -greedysubsize 2 -greedyconvsize 3 -greedyrelerrortol 0.01
+// use_database phase:   poisson_local_rom_greedy -fom -f 1.15 (create a new solution to compare with)
+// use_database phase:   poisson_local_rom_greedy -use_database -online -f 1.15 (use the database to compute at f 1.15 while comparing to the true offline solution at f 1.15)
 //
 // Larger example:
-// build_database phase: poisson_greedy -build_database -greedy-param-min 0.5 -greedy-param-max 1.5 -greedy-param-size 15 -greedysubsize 4 -greedyconvsize 6 -greedyrelerrortol 0.01
-// use_database phase:   poisson_greedy -fom -f X.XX (create a new solution to compare with. Set X.XX to your desired frequency.)
-// use_database phase:   poisson_greedy -use_database -online -f X.XX (use the database to compute at f X.XX while comparing to the true offline solution at f X.XX)
+// build_database phase: poisson_local_rom_greedy -build_database -greedy-param-min 0.5 -greedy-param-max 1.5 -greedy-param-size 15 -greedysubsize 4 -greedyconvsize 6 -greedyrelerrortol 0.01
+// use_database phase:   poisson_local_rom_greedy -fom -f X.XX (create a new solution to compare with. Set X.XX to your desired frequency.)
+// use_database phase:   poisson_local_rom_greedy -use_database -online -f X.XX (use the database to compute at f X.XX while comparing to the true offline solution at f X.XX)
 
 #include "mfem.hpp"
 #include <fstream>
@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
     // 2. Parse command-line options.
-    const char *mesh_file = "../../../../dependencies/mfem/data/star.mesh";
+    const char *mesh_file = "../../../dependencies/mfem/data/star.mesh";
     int order = 1;
     bool static_cond = false;
     bool pa = false;
@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
     {
         MFEM_VERIFY(!offline && !online, "offline and online must be turned off during the build_database phase.");
         MFEM_VERIFY(!visit && !visualization, "visit and visualization must be turned off during the build_database phase.")
-        std::ifstream infile("poisson_greedy_algorithm_data");
+        std::ifstream infile("poisson_local_rom_greedy_algorithm_data");
         if (infile.good())
         {
             if (myid == 0) std::cout << "The database has already been built. Exiting." << std::endl;
@@ -141,13 +141,13 @@ int main(int argc, char *argv[])
         greedy_sampler = new CAROM::GreedyParameterPointRandomSampler(greedy_param_space_min, greedy_param_space_max,
                 greedy_param_space_size, false, greedy_relative_error_tol, 1.05,
                 2.0, greedy_subset_size, greedy_convergence_subset_size,
-                true, "poisson_greedy_algorithm_log.txt");
+                true, "poisson_local_rom_greedy_algorithm_log.txt");
     }
     // 3. Or use the database set up by the greedy algorithm.
     else if (use_database)
     {
         MFEM_VERIFY(!offline && online, "offline must be turned off and online must be turned on during the build_database phase.");
-        std::ifstream infile("poisson_greedy_algorithm_data");
+        std::ifstream infile("poisson_local_rom_greedy_algorithm_data");
         if (!infile.good())
         {
             if (myid == 0) std::cout << "The database has not been built. Exiting." << std::endl;
@@ -215,7 +215,7 @@ int main(int argc, char *argv[])
                 else
                 {
                     if (myid == 0) std::cout << "The greedy algorithm has finished." << std::endl;
-                    greedy_sampler->save("poisson_greedy_algorithm_data");
+                    greedy_sampler->save("poisson_local_rom_greedy_algorithm_data");
                     build_database = false;
                     continue;
                 }
