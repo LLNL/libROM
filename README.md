@@ -75,13 +75,13 @@ LLNL-CODE-766763
 
 # Authors
 - Robert W. Anderson (LLNL)
-- William Arrighi (LLNL),
-- Kyle Chand (LLNL),
-- Siu Wun Cheung (LLNL),
-- Youngsoo Choi (LLNL),
-- Dylan Copeland (LLNL),
-- Kevin Huynh (LLNL),
-- Tanya Kostova-Vassilevska (LLNL),
-- Jessica Lauzon (Stanford),
-- Sean McBane (UT Austin),
-- Geoffrey Oxberry (LLNL).
+- William Arrighi (LLNL)
+- Kyle Chand (LLNL)
+- Siu Wun Cheung (LLNL)
+- Youngsoo Choi (LLNL)
+- Dylan Copeland (LLNL)
+- Kevin Huynh (LLNL)
+- Tanya Kostova-Vassilevska (LLNL)
+- Jessica Lauzon (Stanford)
+- Sean McBane (UT Austin)
+- Geoffrey Oxberry (LLNL)
