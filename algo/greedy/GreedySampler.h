@@ -31,7 +31,7 @@
 #ifndef included_GreedySampler_h
 #define included_GreedySampler_h
 
-#include "Vector.h"
+#include "linalg/Vector.h"
 #include <string>
 #include <vector>
 #include <set>

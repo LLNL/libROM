@@ -15,7 +15,7 @@
 #define included_IncrementalSVD_h
 
 #include "SVD.h"
-#include "Options.h"
+#include "linalg/Options.h"
 #include "utils/Database.h"
 
 namespace CAROM {

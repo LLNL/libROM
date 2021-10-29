@@ -115,24 +115,24 @@ configure_file(${CMAKE_SOURCE_DIR}/CAROM_config.h.in
 # some file name "stems" for generating file names. This construction
 # is useful when files may be moved to different directories.
 set(module_list
-  Matrix
-  Vector
-  BasisGenerator
-  BasisReader
-  BasisWriter
-  svd/IncrementalSVD
-  svd/IncrementalSVDFastUpdate
-  svd/IncrementalSVDStandard
-  svd/RandomizedSVD
-  svd/StaticSVD
-  svd/SVD
-  greedy/GreedyCustomSampler
-  greedy/GreedyRandomSampler
-  greedy/GreedySampler
-  manifold_interp/Interpolater
-  manifold_interp/MatrixInterpolater
-  manifold_interp/VectorInterpolater
-  DMD
+  linalg/BasisGenerator
+  linalg/BasisReader
+  linalg/BasisWriter
+  linalg/Matrix
+  linalg/Vector
+  linalg/svd/IncrementalSVD
+  linalg/svd/IncrementalSVDFastUpdate
+  linalg/svd/IncrementalSVDStandard
+  linalg/svd/RandomizedSVD
+  linalg/svd/SVD
+  linalg/svd/StaticSVD
+  algo/DMD
+  algo/greedy/GreedyCustomSampler
+  algo/greedy/GreedyRandomSampler
+  algo/greedy/GreedySampler
+  algo/manifold_interp/Interpolater
+  algo/manifold_interp/MatrixInterpolater
+  algo/manifold_interp/VectorInterpolater
   hyperreduction/DEIM
   hyperreduction/GNAT
   hyperreduction/QDEIM
@@ -147,7 +147,8 @@ foreach(module IN LISTS module_list)
 endforeach(module) # IN LISTS module_list
 
 list(APPEND source_files
-  Options.h)
+  linalg/Options.h
+  librom.h)
 
 if (USE_MFEM)
     list(APPEND source_files
@@ -155,8 +156,8 @@ if (USE_MFEM)
 endif()
 
 list(APPEND source_files
-  scalapack_c_wrapper.c
-  scalapack_f_wrapper.f90)
+  linalg/scalapack_c_wrapper.c
+  linalg/scalapack_f_wrapper.f90)
 if (BUILD_STATIC)
   add_library(ROM ${source_files})
 else()

@@ -26,9 +26,9 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
-#include "greedy/GreedyRandomSampler.h"
-#include "BasisGenerator.h"
-#include "BasisReader.h"
+#include "algo/greedy/GreedyRandomSampler.h"
+#include "linalg/BasisGenerator.h"
+#include "linalg/BasisReader.h"
 
 using namespace std;
 using namespace mfem;

@@ -14,7 +14,7 @@
 #include "RandomizedSVD.h"
 
 #include "mpi.h"
-#include "scalapack_wrapper.h"
+#include "linalg/scalapack_wrapper.h"
 
 #include <limits.h>
 #include <algorithm>

@@ -16,7 +16,7 @@
 #ifdef CAROM_HAS_GTEST
 #include<gtest/gtest.h>
 #include <mpi.h>
-#include "greedy/GreedyCustomSampler.h"
+#include "algo/greedy/GreedyCustomSampler.h"
 #define _USE_MATH_DEFINES
 #include <cmath>
 

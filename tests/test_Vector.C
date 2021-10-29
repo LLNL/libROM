@@ -16,7 +16,7 @@
 #ifdef CAROM_HAS_GTEST
 #include<gtest/gtest.h>
 #include <mpi.h>
-#include "Vector.h"
+#include "linalg/Vector.h"
 #define _USE_MATH_DEFINES
 #include <cmath>
 

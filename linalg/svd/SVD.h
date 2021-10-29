@@ -14,8 +14,8 @@
 #ifndef included_SVD_h
 #define included_SVD_h
 
-#include "Matrix.h"
-#include "Options.h"
+#include "linalg/Matrix.h"
+#include "linalg/Options.h"
 #include <vector>
 
 namespace CAROM {

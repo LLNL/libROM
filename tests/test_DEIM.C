@@ -17,7 +17,7 @@
 #include<gtest/gtest.h>
 #include <mpi.h>
 #include "hyperreduction/DEIM.h"
-#include "Matrix.h"
+#include "linalg/Matrix.h"
 #define _USE_MATH_DEFINES
 #include <cmath>
 

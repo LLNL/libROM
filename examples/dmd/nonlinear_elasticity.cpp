@@ -36,8 +36,8 @@
 //               requirement for high-order implicit (SDIRK) time integration.
 
 #include "mfem.hpp"
-#include "DMD.h"
-#include "Vector.h"
+#include "algo/DMD.h"
+#include "linalg/Vector.h"
 #include <memory>
 #include <cmath>
 #include <iostream>

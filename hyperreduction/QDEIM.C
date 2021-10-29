@@ -11,7 +11,7 @@
 // Description: Interface to the QDEIM algorithm to determine the rows of the
 // rhs to be sampled for the interpolation of the rhs.
 
-#include "Matrix.h"
+#include "linalg/Matrix.h"
 #include "mpi.h"
 #include <cmath>
 

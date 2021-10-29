@@ -8,7 +8,7 @@
  *
  *****************************************************************************/
 
-#include "Matrix.h"
+#include "linalg/Matrix.h"
 #include "mpi.h"
 #include <cmath>
 #include <map>

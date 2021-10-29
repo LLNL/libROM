@@ -51,11 +51,11 @@
 //               are also illustrated.
 
 #include "mfem.hpp"
-#include "Vector.h"
-#include "manifold_interp/MatrixInterpolater.h"
-#include "manifold_interp/VectorInterpolater.h"
-#include "BasisGenerator.h"
-#include "BasisReader.h"
+#include "linalg/Vector.h"
+#include "algo/manifold_interp/MatrixInterpolater.h"
+#include "algo/manifold_interp/VectorInterpolater.h"
+#include "linalg/BasisGenerator.h"
+#include "linalg/BasisReader.h"
 #include <cmath>
 #include <set>
 #include <fstream>

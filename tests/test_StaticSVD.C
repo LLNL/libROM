@@ -8,7 +8,7 @@
  *
  *****************************************************************************/
 
-#include "BasisGenerator.h"
+#include "linalg/BasisGenerator.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>

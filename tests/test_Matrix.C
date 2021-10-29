@@ -16,7 +16,7 @@
 #ifdef CAROM_HAS_GTEST
 #include<gtest/gtest.h>
 #include <mpi.h>
-#include "Matrix.h"
+#include "linalg/Matrix.h"
 
 /**
  * Simple smoke test to make sure Google Test is properly linked

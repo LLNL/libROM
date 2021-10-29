@@ -11,8 +11,8 @@
 // Description: Simple test of the incremental fast update algorithm and
 //              incremental sampler.
 
-#include "BasisGenerator.h"
-#include "scalapack_wrapper.h"
+#include "linalg/BasisGenerator.h"
+#include "linalg/scalapack_wrapper.h"
 #include "mpi.h"
 
 #include <stdio.h>

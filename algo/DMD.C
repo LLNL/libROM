@@ -12,9 +12,9 @@
 
 #include "DMD.h"
 
-#include "Matrix.h"
-#include "Vector.h"
-#include "scalapack_wrapper.h"
+#include "linalg/Matrix.h"
+#include "linalg/Vector.h"
+#include "linalg/scalapack_wrapper.h"
 #include "mpi.h"
 
 /* Use C++11 built-in shared pointers if available; else fallback to Boost. */
@@ -23,8 +23,6 @@
 #else
 #include <boost/shared_ptr.hpp>
 #endif
-
-#include "scalapack_wrapper.h"
 
 /* Use automatically detected Fortran name-mangling scheme */
 #define zgetrf CAROM_FC_GLOBAL(zgetrf, ZGETRF)

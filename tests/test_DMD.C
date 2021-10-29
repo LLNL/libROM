@@ -18,8 +18,8 @@
 #ifdef CAROM_HAS_GTEST
 #include<gtest/gtest.h>
 #include <mpi.h>
-#include "DMD.h"
-#include "Vector.h"
+#include "algo/DMD.h"
+#include "linalg/Vector.h"
 #define _USE_MATH_DEFINES
 #include <cmath>
 

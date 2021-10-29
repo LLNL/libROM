@@ -11,7 +11,7 @@
 // Description: Simple test of the incremental fast update algorithm and
 //              incremental sampler.
 
-#include "BasisGenerator.h"
+#include "linalg/BasisGenerator.h"
 
 #include "mpi.h"
 

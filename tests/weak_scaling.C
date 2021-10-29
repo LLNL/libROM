@@ -14,7 +14,7 @@
 //              same for all processor decompositions when
 //              dim * number of processors is constant.
 
-#include "BasisGenerator.h"
+#include "linalg/BasisGenerator.h"
 
 #include "mpi.h"
 

@@ -15,8 +15,8 @@
 #define included_StaticSVD_h
 
 #include "SVD.h"
-#include "Options.h"
-#include "scalapack_wrapper.h"
+#include "linalg/Options.h"
+#include "linalg/scalapack_wrapper.h"
 
 #include <limits>
 #include <memory>

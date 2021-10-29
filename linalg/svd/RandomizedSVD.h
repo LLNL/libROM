@@ -15,8 +15,8 @@
 #define included_RandomizedSVD_h
 
 #include "StaticSVD.h"
-#include "Options.h"
-#include "scalapack_wrapper.h"
+#include "linalg/Options.h"
+#include "linalg/scalapack_wrapper.h"
 
 #include <limits>
 #include <memory>

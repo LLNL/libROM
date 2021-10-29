@@ -14,9 +14,9 @@
 
 #include <limits.h>
 #include <cmath>
-#include "Matrix.h"
-#include "Vector.h"
-#include "scalapack_wrapper.h"
+#include "linalg/Matrix.h"
+#include "linalg/Vector.h"
+#include "linalg/scalapack_wrapper.h"
 #include "mpi.h"
 
 /* Use C++11 built-in shared pointers if available; else fallback to Boost. */

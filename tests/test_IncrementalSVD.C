@@ -16,7 +16,7 @@
 #ifdef CAROM_HAS_GTEST
 #include<gtest/gtest.h>
 #include <mpi.h>
-#include "IncrementalSVD.h"
+#include "linalg/svd/IncrementalSVD.h"
 
 /**
  * Simple smoke test to make sure Google Test is properly linked
