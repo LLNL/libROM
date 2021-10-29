@@ -18,7 +18,7 @@
 #include "BasisWriter.h"
 #include "BasisReader.h"
 #include "Options.h"
-#include "SVD.h"
+#include "svd/SVD.h"
 
 #include "mpi.h"
 

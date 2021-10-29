@@ -15,10 +15,10 @@
 //              vector generation.
 
 #include "BasisGenerator.h"
-#include "StaticSVD.h"
-#include "RandomizedSVD.h"
-#include "IncrementalSVDStandard.h"
-#include "IncrementalSVDFastUpdate.h"
+#include "svd/StaticSVD.h"
+#include "svd/RandomizedSVD.h"
+#include "svd/IncrementalSVDStandard.h"
+#include "svd/IncrementalSVDFastUpdate.h"
 
 namespace CAROM {
 

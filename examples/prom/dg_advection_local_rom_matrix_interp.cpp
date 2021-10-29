@@ -52,8 +52,8 @@
 
 #include "mfem.hpp"
 #include "Vector.h"
-#include "MatrixInterpolater.h"
-#include "VectorInterpolater.h"
+#include "manifold_interp/MatrixInterpolater.h"
+#include "manifold_interp/VectorInterpolater.h"
 #include "BasisGenerator.h"
 #include "BasisReader.h"
 #include <cmath>

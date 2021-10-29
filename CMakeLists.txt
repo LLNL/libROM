@@ -120,18 +120,18 @@ set(module_list
   BasisGenerator
   BasisReader
   BasisWriter
-  SVD
-  IncrementalSVD
-  IncrementalSVDFastUpdate
-  IncrementalSVDStandard
-  StaticSVD
-  RandomizedSVD
+  svd/IncrementalSVD
+  svd/IncrementalSVDFastUpdate
+  svd/IncrementalSVDStandard
+  svd/RandomizedSVD
+  svd/StaticSVD
+  svd/SVD
   greedy/GreedyCustomSampler
   greedy/GreedyRandomSampler
   greedy/GreedySampler
-  Interpolater
-  MatrixInterpolater
-  VectorInterpolater
+  manifold_interp/Interpolater
+  manifold_interp/MatrixInterpolater
+  manifold_interp/VectorInterpolater
   DMD
   hyperreduction/DEIM
   hyperreduction/GNAT
@@ -151,7 +151,7 @@ list(APPEND source_files
 
 if (USE_MFEM)
     list(APPEND source_files
-      SampleMesh.hpp)
+      mfem/SampleMesh.hpp)
 endif()
 
 list(APPEND source_files

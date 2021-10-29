@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['obtainrbf',['obtainRBF',['../class_c_a_r_o_m_1_1_interpolater.html#a1a2087bf24a1696437fc27f705e70063',1,'CAROM::Interpolater']]],
   ['operator_28_29',['operator()',['../class_c_a_r_o_m_1_1_matrix.html#a4be140c4a974a5591f286872bba00900',1,'CAROM::Matrix::operator()(int row, int col) const '],['../class_c_a_r_o_m_1_1_matrix.html#a6881e755c9a08b362157501b4b8349f9',1,'CAROM::Matrix::operator()(int row, int col)'],['../class_c_a_r_o_m_1_1_vector.html#a0395f0c266a3e237573b3a8c483f2693',1,'CAROM::Vector::operator()(int i) const '],['../class_c_a_r_o_m_1_1_vector.html#af30be05120dabaa00932c9276df5d55c',1,'CAROM::Vector::operator()(int i)']]],
   ['operator_2b_3d',['operator+=',['../class_c_a_r_o_m_1_1_matrix.html#a9eeeaf162c0cbd6a23dd4f00b56b8425',1,'CAROM::Matrix::operator+=()'],['../class_c_a_r_o_m_1_1_vector.html#a4c92d8b8a9c156ff394cf87d4079fa99',1,'CAROM::Vector::operator+=()']]],
   ['operator_2d_3d',['operator-=',['../class_c_a_r_o_m_1_1_matrix.html#a916566ad6fcc2ba6eae2a3675e813625',1,'CAROM::Matrix']]],

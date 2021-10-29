@@ -63,7 +63,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
     <ul class="tablist">
       <li><a href="annotated.html"><span>Class&#160;List</span></a></li>
       <li><a href="classes.html"><span>Class&#160;Index</span></a></li>
-      <li><a href="hierarchy.html"><span>Class&#160;Hierarchy</span></a></li>
       <li><a href="functions.html"><span>Class&#160;Members</span></a></li>
     </ul>
   </div>
@@ -166,12 +165,12 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memdesc:a29b41ef680c51c919fe66cea2e1942bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether to write snapshots instead of bases. <br/></td></tr>
 <tr class="separator:a29b41ef680c51c919fe66cea2e1942bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa09bd927752edca874108ca09d9bcc7e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa09bd927752edca874108ca09d9bcc7e"></a>
-boost::shared_ptr&lt; <a class="el" href="class_c_a_r_o_m_1_1_s_v_d.html">SVD</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_basis_generator.html#aa09bd927752edca874108ca09d9bcc7e">d_svd</a></td></tr>
-<tr class="memdesc:aa09bd927752edca874108ca09d9bcc7e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pointer to the abstract <a class="el" href="class_c_a_r_o_m_1_1_s_v_d.html">SVD</a> algorithm object. <br/></td></tr>
+boost::shared_ptr&lt; SVD &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_basis_generator.html#aa09bd927752edca874108ca09d9bcc7e">d_svd</a></td></tr>
+<tr class="memdesc:aa09bd927752edca874108ca09d9bcc7e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pointer to the abstract SVD algorithm object. <br/></td></tr>
 <tr class="separator:aa09bd927752edca874108ca09d9bcc7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Class <a class="el" href="class_c_a_r_o_m_1_1_basis_generator.html">BasisGenerator</a> defines the interface for the generation of basis vectors via the <a class="el" href="class_c_a_r_o_m_1_1_s_v_d.html">SVD</a> method. This class wraps the <a class="el" href="class_c_a_r_o_m_1_1_s_v_d.html">SVD</a> algorithm and sampler and controls all aspects of basis vector generation. </p>
+<div class="textblock"><p>Class <a class="el" href="class_c_a_r_o_m_1_1_basis_generator.html">BasisGenerator</a> defines the interface for the generation of basis vectors via the SVD method. This class wraps the SVD algorithm and sampler and controls all aspects of basis vector generation. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a class="anchor" id="af8ab59fbf70df5759d42477a98acb129"></a>
 <div class="memitem">
@@ -213,7 +212,7 @@ boost::shared_ptr&lt; <a class="el" href="class_c_a_r_o_m_1_1_s_v_d.html">SVD</a
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">options</td><td>The struct containing the options for this basis generator. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">incremental</td><td>Whether to conduct static or incremental <a class="el" href="class_c_a_r_o_m_1_1_s_v_d.html">SVD</a> </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">incremental</td><td>Whether to conduct static or incremental SVD </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">basis_file_name</td><td>The base part of the name of the file containing the basis vectors. Each process will append its process ID to this base name. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">file_format</td><td>The format of the file containing the basis vectors. </td></tr>
   </table>
@@ -614,7 +613,7 @@ time &gt;= 0.0</dd></dl>
     <tr><td class="paramdir">[in]</td><td class="paramname">u_in</td><td>The state at the specified time. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">time</td><td>The simulation time for the state. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">dt</td><td>The current simulation dt. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">add_without_increase</td><td>If true, the addLinearlyDependent is invoked. This only applies to incremental <a class="el" href="class_c_a_r_o_m_1_1_s_v_d.html">SVD</a>.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">add_without_increase</td><td>If true, the addLinearlyDependent is invoked. This only applies to incremental SVD.</td></tr>
   </table>
   </dd>
 </dl>
