@@ -8,19 +8,19 @@
 //
 // For ROM (parametric case using matrix interpolation):
 //    dg_advection_local_rom_matrix_interp -offline -ff 1.02
-//    dg_advection_local_rom_matrix_interp -online -ff 1.02 -tf 3.0 -rdim 20
+//    dg_advection_local_rom_matrix_interp -online -ff 1.02 -interpolate_prep -rdim 40
 //    dg_advection_local_rom_matrix_interp -offline -ff 1.03
-//    dg_advection_local_rom_matrix_interp -online -ff 1.03 -tf 3.0 -rdim 20
+//    dg_advection_local_rom_matrix_interp -online -ff 1.03 -interpolate_prep -rdim 40
 //    dg_advection_local_rom_matrix_interp -offline -ff 1.04
-//    dg_advection_local_rom_matrix_interp -online -ff 1.04 -tf 3.0 -rdim 20
+//    dg_advection_local_rom_matrix_interp -online -ff 1.04 -interpolate_prep -rdim 40
 //    dg_advection_local_rom_matrix_interp -offline -ff 1.06
-//    dg_advection_local_rom_matrix_interp -online -ff 1.06 -tf 3.0 -rdim 20
+//    dg_advection_local_rom_matrix_interp -online -ff 1.06 -interpolate_prep -rdim 40
 //    dg_advection_local_rom_matrix_interp -offline -ff 1.07
-//    dg_advection_local_rom_matrix_interp -online -ff 1.07 -tf 3.0 -rdim 20
+//    dg_advection_local_rom_matrix_interp -online -ff 1.07 -interpolate_prep -rdim 40
 //    dg_advection_local_rom_matrix_interp -offline -ff 1.08
-//    dg_advection_local_rom_matrix_interp -online -ff 1.08 -tf 3.0 -rdim 20
-//    dg_advection_local_rom_matrix_interp -fom -ff 1.05 -tf 3.0
-//    dg_advection_local_rom_matrix_interp -online -ff 1.05 -tf 3.0 -interpolate -rdim 20
+//    dg_advection_local_rom_matrix_interp -online -ff 1.08 -interpolate_prep -rdim 40
+//    dg_advection_local_rom_matrix_interp -fom -ff 1.05
+//    dg_advection_local_rom_matrix_interp -online -ff 1.05 -interpolate -rdim 40
 //
 // Sample runs:
 //    mpirun -np 4 dg_advection_local_rom_matrix_interp -p 0 -dt 0.005
@@ -305,6 +305,7 @@ int main(int argc, char *argv[])
     bool offline = false;
     bool online = false;
     bool interpolate = false;
+    bool interpolate_prep = false;
     bool visualization = true;
     bool visit = false;
     bool paraview = false;
@@ -378,6 +379,8 @@ int main(int argc, char *argv[])
                    "Enable or disable the online phase.");
     args.AddOption(&interpolate, "-interpolate", "--interpolate", "-no-interpolate", "--no-interpolate",
                    "Enable or disable matrix interpolation during the online phase.");
+    args.AddOption(&interpolate_prep, "-interpolate_prep", "--interpolate_prep", "-no-interpolate_prep", "--no-interpolate_prep",
+                   "Enable or disable matrix interpolation preparation during the online phase.");
     args.AddOption(&ef, "-ef", "--energy_fraction",
                    "Energy fraction.");
     args.AddOption(&rdim, "-rdim", "--rdim",
@@ -717,7 +720,7 @@ int main(int argc, char *argv[])
 
             M_hat_carom = new CAROM::Matrix(numRowRB, numColumnRB, false);
             Compute_CtAB(&M_mat, *spatialbasis, *spatialbasis, M_hat_carom);
-            M_hat_carom->write("M_hat_" + std::to_string(f_factor));
+            if (interpolate_prep) M_hat_carom->write("M_hat_" + std::to_string(f_factor));
 
             // libROM stores the matrix row-wise, so wrapping as a DenseMatrix in MFEM means it is transposed.
             M_hat = new DenseMatrix(numColumnRB, numColumnRB);
@@ -726,7 +729,7 @@ int main(int argc, char *argv[])
 
             K_hat_carom = new CAROM::Matrix(numRowRB, numColumnRB, false);
             Compute_CtAB(&K_mat, *spatialbasis, *spatialbasis, K_hat_carom);
-            K_hat_carom->write("K_hat_" + std::to_string(f_factor));
+            if (interpolate_prep) K_hat_carom->write("K_hat_" + std::to_string(f_factor));
 
             // libROM stores the matrix row-wise, so wrapping as a DenseMatrix in MFEM means it is transposed.
             K_hat = new DenseMatrix(numColumnRB, numColumnRB);
@@ -736,18 +739,22 @@ int main(int argc, char *argv[])
             Vector b_vec = *B->GlobalVector();
             CAROM::Vector b_carom(b_vec.GetData(), b_vec.Size(), true);
             b_hat_carom = spatialbasis->transposeMult(&b_carom);
-            b_hat_carom->write("b_hat_" + std::to_string(f_factor));
+            if (interpolate_prep) b_hat_carom->write("b_hat_" + std::to_string(f_factor));
             b_hat = new Vector(b_hat_carom->getData(), b_hat_carom->dim());
 
             u_init_hat_carom = new CAROM::Vector(numColumnRB, false);
             Compute_CtAB_vec(&K_mat, *U, *spatialbasis, u_init_hat_carom);
-            u_init_hat_carom->write("u_init_hat_" + std::to_string(f_factor));
+            if (interpolate_prep) u_init_hat_carom->write("u_init_hat_" + std::to_string(f_factor));
             u_init_hat = new Vector(u_init_hat_carom->getData(), u_init_hat_carom->dim());
 
-            std::ofstream fout;
-            fout.open("frequencies.txt", std::ios::app);
-            fout << f_factor << std::endl;
-            fout.close();
+            if (interpolate_prep)
+            {
+                std::ofstream fout;
+                fout.open("frequencies.txt", std::ios::app);
+                fout << f_factor << std::endl;
+                fout.close();
+                return 0;
+            }
         }
         else
         {
