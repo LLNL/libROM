@@ -16,7 +16,7 @@
 #ifdef CAROM_HAS_GTEST
 #include<gtest/gtest.h>
 #include <mpi.h>
-#include "DEIM.h"
+#include "hyperreduction/DEIM.h"
 #include "Matrix.h"
 #define _USE_MATH_DEFINES
 #include <cmath>
