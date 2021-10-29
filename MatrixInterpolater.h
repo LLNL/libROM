@@ -25,6 +25,9 @@ class Vector;
 /**
  * MatrixInterpolater interpolates reduced matrices of a set of parameter points
  * and returns an interpolated reduced matrix for an unseen parameter point.
+ * The interpolation algorithm was adapted from "Gradient-based
+ * Constrained Optimization Using a Database of Linear Reduced-Order Models"
+ * by Y. Choi et al.
  */
 class MatrixInterpolater : public Interpolater
 {

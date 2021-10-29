@@ -23,6 +23,9 @@ class Vector;
 /**
  * Interpolater is a uninstantiable protected class that retains common
  * functionality between the MatrixInterpolater and VectorInterpolater classes.
+ * The interpolation algorithm was adapted from "Gradient-based
+ * Constrained Optimization Using a Database of Linear Reduced-Order Models"
+ * by Y. Choi et al.
  */
 class Interpolater
 {
