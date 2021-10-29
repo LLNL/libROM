@@ -8,17 +8,17 @@
 //
 // For ROM (parametric case using matrix interpolation):
 //    dg_advection_local_rom_matrix_interp -offline -ff 1.02
-//    dg_advection_local_rom_matrix_interp -online_interp_prep -ff 1.02 -rdim 40
+//    dg_advection_local_rom_matrix_interp -interp_prep -ff 1.02 -rdim 40
 //    dg_advection_local_rom_matrix_interp -offline -ff 1.03
-//    dg_advection_local_rom_matrix_interp -online_interp_prep -ff 1.03 -rdim 40
+//    dg_advection_local_rom_matrix_interp -interp_prep -ff 1.03 -rdim 40
 //    dg_advection_local_rom_matrix_interp -offline -ff 1.04
-//    dg_advection_local_rom_matrix_interp -online_interp_prep -ff 1.04 -rdim 40
+//    dg_advection_local_rom_matrix_interp -interp_prep -ff 1.04 -rdim 40
 //    dg_advection_local_rom_matrix_interp -offline -ff 1.06
-//    dg_advection_local_rom_matrix_interp -online_interp_prep -ff 1.06 -rdim 40
+//    dg_advection_local_rom_matrix_interp -interp_prep -ff 1.06 -rdim 40
 //    dg_advection_local_rom_matrix_interp -offline -ff 1.07
-//    dg_advection_local_rom_matrix_interp -online_interp_prep -ff 1.07 -rdim 40
+//    dg_advection_local_rom_matrix_interp -interp_prep -ff 1.07 -rdim 40
 //    dg_advection_local_rom_matrix_interp -offline -ff 1.08
-//    dg_advection_local_rom_matrix_interp -online_interp_prep -ff 1.08 -rdim 40
+//    dg_advection_local_rom_matrix_interp -interp_prep -ff 1.08 -rdim 40
 //    dg_advection_local_rom_matrix_interp -fom -ff 1.05
 //    dg_advection_local_rom_matrix_interp -online_interp -ff 1.05 -rdim 40
 //
@@ -305,7 +305,7 @@ int main(int argc, char *argv[])
     bool offline = false;
     bool online = false;
     bool online_interp = false;
-    bool online_interp_prep = false;
+    bool interp_prep = false;
     bool visualization = true;
     bool visit = false;
     bool paraview = false;
@@ -379,7 +379,7 @@ int main(int argc, char *argv[])
                    "Enable or disable the online phase.");
     args.AddOption(&online_interp, "-online_interp", "--online_interp", "-no-online_interp", "--no-online_interp",
                    "Enable or disable matrix interpolation during the online phase.");
-    args.AddOption(&online_interp_prep, "-online_interp_prep", "--online_interp_prep", "-no-online_interp_prep", "--no-online_interp_prep",
+    args.AddOption(&interp_prep, "-interp_prep", "--interp_prep", "-no-interp_prep", "--no-interp_prep",
                    "Enable or disable matrix interpolation preparation during the online phase.");
     args.AddOption(&ef, "-ef", "--energy_fraction",
                    "Energy fraction.");
@@ -404,12 +404,12 @@ int main(int argc, char *argv[])
         device.Print();
     }
 
-    bool check = (!online && !online_interp_prep && !online_interp) ||
-        (online && !online_interp_prep && !online_interp) || (!online && online_interp_prep && !online_interp) ||
-        (!online && !online_interp_prep && online_interp);
-    MFEM_VERIFY(check, "only one of online, online_interp_prep, or online_interp can be true!");
+    bool check = (!online && !interp_prep && !online_interp) ||
+        (online && !interp_prep && !online_interp) || (!online && interp_prep && !online_interp) ||
+        (!online && !interp_prep && online_interp);
+    MFEM_VERIFY(check, "only one of online, interp_prep, or online_interp can be true!");
 
-    if (online_interp_prep || online_interp)
+    if (interp_prep || online_interp)
     {
         online = true;
     }
@@ -730,7 +730,7 @@ int main(int argc, char *argv[])
 
             M_hat_carom = new CAROM::Matrix(numRowRB, numColumnRB, false);
             Compute_CtAB(&M_mat, *spatialbasis, *spatialbasis, M_hat_carom);
-            if (online_interp_prep) M_hat_carom->write("M_hat_" + std::to_string(f_factor));
+            if (interp_prep) M_hat_carom->write("M_hat_" + std::to_string(f_factor));
 
             // libROM stores the matrix row-wise, so wrapping as a DenseMatrix in MFEM means it is transposed.
             M_hat = new DenseMatrix(numColumnRB, numColumnRB);
@@ -739,7 +739,7 @@ int main(int argc, char *argv[])
 
             K_hat_carom = new CAROM::Matrix(numRowRB, numColumnRB, false);
             Compute_CtAB(&K_mat, *spatialbasis, *spatialbasis, K_hat_carom);
-            if (online_interp_prep) K_hat_carom->write("K_hat_" + std::to_string(f_factor));
+            if (interp_prep) K_hat_carom->write("K_hat_" + std::to_string(f_factor));
 
             // libROM stores the matrix row-wise, so wrapping as a DenseMatrix in MFEM means it is transposed.
             K_hat = new DenseMatrix(numColumnRB, numColumnRB);
@@ -749,15 +749,15 @@ int main(int argc, char *argv[])
             Vector b_vec = *B->GlobalVector();
             CAROM::Vector b_carom(b_vec.GetData(), b_vec.Size(), true);
             b_hat_carom = spatialbasis->transposeMult(&b_carom);
-            if (online_interp_prep) b_hat_carom->write("b_hat_" + std::to_string(f_factor));
+            if (interp_prep) b_hat_carom->write("b_hat_" + std::to_string(f_factor));
             b_hat = new Vector(b_hat_carom->getData(), b_hat_carom->dim());
 
             u_init_hat_carom = new CAROM::Vector(numColumnRB, false);
             Compute_CtAB_vec(&K_mat, *U, *spatialbasis, u_init_hat_carom);
-            if (online_interp_prep) u_init_hat_carom->write("u_init_hat_" + std::to_string(f_factor));
+            if (interp_prep) u_init_hat_carom->write("u_init_hat_" + std::to_string(f_factor));
             u_init_hat = new Vector(u_init_hat_carom->getData(), u_init_hat_carom->dim());
 
-            if (online_interp_prep)
+            if (interp_prep)
             {
                 std::ofstream fout;
                 fout.open("frequencies.txt", std::ios::app);
