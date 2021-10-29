@@ -65,7 +65,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Enumerations</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Variables</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -92,15 +92,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <ul>
 <li>Sparse identification of nonlinear dynamics (SINDy)</li>
 </ul>
-<h1>Authors</h1>
-<p>Robert W. Anderson (LLNL), William Arrighi (LLNL), Siu Wun Cheung (LLNL), Youngsoo Choi (LLNL), Dylan Copeland (LLNL), Kevin Huynh (LLNL), Jessica Lauzon (Stanford), Sean McBane (UT Austin), Geoffrey Oxberry (LLNL).</p>
-<h1>License</h1>
-<p>libROM is distributed under the terms of both the MIT license and the Apache License (Version 2.0). Users may choose either license at their option.</p>
-<p>All new contributions must be made under both the MIT and Apache-2.0 licenses.</p>
-<p>See <a href="https://github.com/LLNL/libROM/blob/master/LICENSE-MIT">LICENSE-MIT</a>, <a href="https://github.com/LLNL/libROM/blob/master/LICENSE-APACHE">LICENSE-APACHE</a>, <a href="https://github.com/LLNL/libROM/blob/master/COPYRIGHT">COPYRIGHT</a>, and <a href="https://github.com/LLNL/libROM/blob/master/NOTICE">NOTICE</a> for details.</p>
-<p>Up to commit 299876e0a0304f25db56f1f9e2eb2c61ef199048, libROM was previously released under the terms of the BSD-3 license.</p>
-<p>SPDX_License-Identifier: (Apache-2.0 OR MIT)</p>
-<p>LLNL-CODE-686965 (up to commit 299876e0a0304f25db56f1f9e2eb2c61ef199048) LLNL-CODE-766763</p>
 <h1>Installation</h1>
 <p>To compile libROM with default build settings (Mac and LLNL LC Machines): ```sh ./scripts/compile.sh ```</p>
 <p>Compilation options:</p>
@@ -116,7 +107,28 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <p>To install libROM with default options using spack.</p>
 <p>```sh spack install librom ```</p>
 <p>To install libROM with MFEM using spack.</p>
-<p>```sh spack install librom +mfem ``` </p>
+<p>```sh spack install librom +mfem ```</p>
+<h1>License</h1>
+<p>libROM is distributed under the terms of both the MIT license and the Apache License (Version 2.0). Users may choose either license at their option.</p>
+<p>All new contributions must be made under both the MIT and Apache-2.0 licenses.</p>
+<p>See <a href="https://github.com/LLNL/libROM/blob/master/LICENSE-MIT">LICENSE-MIT</a>, <a href="https://github.com/LLNL/libROM/blob/master/LICENSE-APACHE">LICENSE-APACHE</a>, <a href="https://github.com/LLNL/libROM/blob/master/COPYRIGHT">COPYRIGHT</a>, and <a href="https://github.com/LLNL/libROM/blob/master/NOTICE">NOTICE</a> for details.</p>
+<p>Up to commit 299876e0a0304f25db56f1f9e2eb2c61ef199048, libROM was previously released under the terms of the BSD-3 license.</p>
+<p>SPDX_License-Identifier: (Apache-2.0 OR MIT)</p>
+<p>LLNL-CODE-686965 (up to commit 299876e0a0304f25db56f1f9e2eb2c61ef199048) LLNL-CODE-766763</p>
+<h1>Authors</h1>
+<ul>
+<li>Robert W. Anderson (LLNL)</li>
+<li>William Arrighi (LLNL),</li>
+<li>Kyle Chand (LLNL),</li>
+<li>Siu Wun Cheung (LLNL),</li>
+<li>Youngsoo Choi (LLNL),</li>
+<li>Dylan Copeland (LLNL),</li>
+<li>Kevin Huynh (LLNL),</li>
+<li>Tanya Kostova-Vassilevska (LLNL),</li>
+<li>Jessica Lauzon (Stanford),</li>
+<li>Sean McBane (UT Austin),</li>
+<li>Geoffrey Oxberry (LLNL). </li>
+</ul>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

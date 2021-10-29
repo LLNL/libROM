@@ -16,7 +16,7 @@
 
 #include "SVD.h"
 #include "Options.h"
-#include "Database.h"
+#include "utils/Database.h"
 
 namespace CAROM {
 

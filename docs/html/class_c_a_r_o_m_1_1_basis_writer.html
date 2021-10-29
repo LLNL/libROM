@@ -72,7 +72,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Enumerations</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Variables</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -99,7 +99,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a759adfff8fb4c96fb7cd57a67d00efad"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_basis_writer.html#a759adfff8fb4c96fb7cd57a67d00efad">BasisWriter</a> (<a class="el" href="class_c_a_r_o_m_1_1_basis_generator.html">BasisGenerator</a> *basis_generator, const std::string &amp;base_file_name, <a class="el" href="class_c_a_r_o_m_1_1_database.html#a8ab29ee6466ef8415ee0ef93d94cc5f7">Database::formats</a> db_format=Database::HDF5)</td></tr>
+<tr class="memitem:a759adfff8fb4c96fb7cd57a67d00efad"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_a_r_o_m_1_1_basis_writer.html#a759adfff8fb4c96fb7cd57a67d00efad">BasisWriter</a> (<a class="el" href="class_c_a_r_o_m_1_1_basis_generator.html">BasisGenerator</a> *basis_generator, const std::string &amp;base_file_name, Database::formats db_format=Database::HDF5)</td></tr>
 <tr class="memdesc:a759adfff8fb4c96fb7cd57a67d00efad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor.  <a href="#a759adfff8fb4c96fb7cd57a67d00efad">More...</a><br/></td></tr>
 <tr class="separator:a759adfff8fb4c96fb7cd57a67d00efad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2887f128097832d8bf59f03245e8ca6c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2887f128097832d8bf59f03245e8ca6c"></a>
@@ -133,7 +133,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="class_c_a_r_o_m_1_1_database.html#a8ab29ee6466ef8415ee0ef93d94cc5f7">Database::formats</a>&#160;</td>
+          <td class="paramtype">Database::formats&#160;</td>
           <td class="paramname"><em>db_format</em> = <code>Database::HDF5</code>&#160;</td>
         </tr>
         <tr>
@@ -152,7 +152,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">basis_generator</td><td>The generator of the basis vectors to be written. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">base_file_name</td><td>The base part of the name of the files holding the basis vectors. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">db_format</td><td>Format of the file to read. One of the implemented file formats defined in <a class="el" href="class_c_a_r_o_m_1_1_database.html">Database</a>. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">db_format</td><td>Format of the file to read. One of the implemented file formats defined in Database. </td></tr>
   </table>
   </dd>
 </dl>

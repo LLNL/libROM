@@ -20,9 +20,8 @@ var searchData=
   ['singular_5fvalue_5ftol',['singular_value_tol',['../class_c_a_r_o_m_1_1_options.html#a4ea6403c2691e27ae93e2c90278ddd07',1,'CAROM::Options']]],
   ['skip_5flinearly_5fdependent',['skip_linearly_dependent',['../class_c_a_r_o_m_1_1_options.html#abb8146fb15a83f240c5339d7f7595617',1,'CAROM::Options']]],
   ['startconvergence',['startConvergence',['../class_c_a_r_o_m_1_1_greedy_parameter_point_sampler.html#a3edd3a853f6b5242ea12eb8da8a13a62',1,'CAROM::GreedyParameterPointSampler']]],
-  ['staticsvd',['StaticSVD',['../class_c_a_r_o_m_1_1_static_s_v_d.html',1,'CAROM']]],
   ['staticsvd',['StaticSVD',['../class_c_a_r_o_m_1_1_static_s_v_d.html#a7db32fa4778422244a7b5230f9b7481f',1,'CAROM::StaticSVD']]],
-  ['svd',['svd',['../class_c_a_r_o_m_1_1_incremental_s_v_d.html#aade80460f0cfb9f6b66e07089b647802',1,'CAROM::IncrementalSVD::svd()'],['../class_c_a_r_o_m_1_1_s_v_d.html#a20c7b447885f81e763067da0685d04a4',1,'CAROM::SVD::SVD()']]],
-  ['svd',['SVD',['../class_c_a_r_o_m_1_1_s_v_d.html',1,'CAROM']]],
-  ['sync',['sync',['../class_c_a_r_o_m_1_1_parallel_buffer.html#a53f1cd6e167519b793e9bd830659f8c9',1,'CAROM::ParallelBuffer']]]
+  ['staticsvd',['StaticSVD',['../class_c_a_r_o_m_1_1_static_s_v_d.html',1,'CAROM']]],
+  ['svd',['SVD',['../class_c_a_r_o_m_1_1_s_v_d.html#a20c7b447885f81e763067da0685d04a4',1,'CAROM::SVD::SVD()'],['../class_c_a_r_o_m_1_1_incremental_s_v_d.html#aade80460f0cfb9f6b66e07089b647802',1,'CAROM::IncrementalSVD::svd()']]],
+  ['svd',['SVD',['../class_c_a_r_o_m_1_1_s_v_d.html',1,'CAROM']]]
 ];

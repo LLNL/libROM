@@ -11,11 +11,11 @@
 // Description: A class that writes basis vectors to a file.
 
 #include "BasisWriter.h"
-#include "HDFDatabase.h"
+#include "utils/HDFDatabase.h"
 #include "Matrix.h"
 #include "Vector.h"
 #include "BasisGenerator.h"
-#include "Utilities.h"
+#include "utils/Utilities.h"
 
 #include "mpi.h"
 

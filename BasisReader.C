@@ -11,7 +11,7 @@
 // Description: A class that reads basis vectors from a file.
 
 #include "BasisReader.h"
-#include "HDFDatabase.h"
+#include "utils/HDFDatabase.h"
 #include "Matrix.h"
 #include "Vector.h"
 #include "mpi.h"

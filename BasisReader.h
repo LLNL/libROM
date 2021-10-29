@@ -13,8 +13,8 @@
 #ifndef included_BasisReader_h
 #define included_BasisReader_h
 
-#include "Utilities.h"
-#include "Database.h"
+#include "utils/Utilities.h"
+#include "utils/Database.h"
 #include <string>
 #include <vector>
 

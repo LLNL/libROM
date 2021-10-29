@@ -70,7 +70,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Enumerations</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Variables</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -102,7 +102,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#include &quot;SVD.h&quot;</span></div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor">#include &quot;Options.h&quot;</span></div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#include &quot;Database.h&quot;</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#include &quot;utils/Database.h&quot;</span></div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;</div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="keyword">namespace </span>CAROM {</div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;</div>
@@ -215,7 +215,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;</div>
 <div class="line"><a name="l00302"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_incremental_s_v_d.html#a3289b31326d526b985001bf617982e62">  302</a></span>&#160;    <span class="keywordtype">bool</span> <a class="code" href="class_c_a_r_o_m_1_1_incremental_s_v_d.html#a3289b31326d526b985001bf617982e62">d_update_right_SV</a>;</div>
 <div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;</div>
-<div class="line"><a name="l00308"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_incremental_s_v_d.html#a29d5353eb6d9076d162e7359aa85cb7a">  308</a></span>&#160;    <a class="code" href="class_c_a_r_o_m_1_1_database.html">Database</a>* <a class="code" href="class_c_a_r_o_m_1_1_incremental_s_v_d.html#a29d5353eb6d9076d162e7359aa85cb7a">d_state_database</a>;</div>
+<div class="line"><a name="l00308"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_incremental_s_v_d.html#a29d5353eb6d9076d162e7359aa85cb7a">  308</a></span>&#160;    Database* <a class="code" href="class_c_a_r_o_m_1_1_incremental_s_v_d.html#a29d5353eb6d9076d162e7359aa85cb7a">d_state_database</a>;</div>
 <div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;</div>
 <div class="line"><a name="l00313"></a><span class="lineno"><a class="line" href="class_c_a_r_o_m_1_1_incremental_s_v_d.html#a744f223bffa3f21c1db1dc2036250ef1">  313</a></span>&#160;    std::string <a class="code" href="class_c_a_r_o_m_1_1_incremental_s_v_d.html#a744f223bffa3f21c1db1dc2036250ef1">d_state_file_name</a>;</div>
 <div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;</div>
@@ -263,7 +263,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="ttc" id="class_c_a_r_o_m_1_1_incremental_s_v_d_html_a4fced260f1783640543bbc9c17cb72fc"><div class="ttname"><a href="class_c_a_r_o_m_1_1_incremental_s_v_d.html#a4fced260f1783640543bbc9c17cb72fc">CAROM::IncrementalSVD::COMMUNICATE_U</a></div><div class="ttdeci">static const int COMMUNICATE_U</div><div class="ttdoc">MPI message tag. </div><div class="ttdef"><b>Definition:</b> IncrementalSVD.h:318</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_incremental_s_v_d_html_aade80460f0cfb9f6b66e07089b647802"><div class="ttname"><a href="class_c_a_r_o_m_1_1_incremental_s_v_d.html#aade80460f0cfb9f6b66e07089b647802">CAROM::IncrementalSVD::svd</a></div><div class="ttdeci">bool svd(double *A, Matrix *&amp;U, Matrix *&amp;S, Matrix *&amp;V)</div><div class="ttdoc">Given a matrix, A, returns 2 of the 3 components of its singular value decomposition. The right singular vectors are not needed and therefore not returned. </div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_options_html"><div class="ttname"><a href="class_c_a_r_o_m_1_1_options.html">CAROM::Options</a></div><div class="ttdef"><b>Definition:</b> Options.h:24</div></div>
-<div class="ttc" id="class_c_a_r_o_m_1_1_database_html"><div class="ttname"><a href="class_c_a_r_o_m_1_1_database.html">CAROM::Database</a></div><div class="ttdef"><b>Definition:</b> Database.h:25</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_s_v_d_html"><div class="ttname"><a href="class_c_a_r_o_m_1_1_s_v_d.html">CAROM::SVD</a></div><div class="ttdef"><b>Definition:</b> SVD.h:28</div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_incremental_s_v_d_html_a552daa55d3af451c56c00e43625b92b5"><div class="ttname"><a href="class_c_a_r_o_m_1_1_incremental_s_v_d.html#a552daa55d3af451c56c00e43625b92b5">CAROM::IncrementalSVD::computeBasis</a></div><div class="ttdeci">virtual void computeBasis()=0</div><div class="ttdoc">Computes the current basis vectors. </div></div>
 <div class="ttc" id="class_c_a_r_o_m_1_1_incremental_s_v_d_html_a990854bd1eae209a722160647b362109"><div class="ttname"><a href="class_c_a_r_o_m_1_1_incremental_s_v_d.html#a990854bd1eae209a722160647b362109">CAROM::IncrementalSVD::numSamples</a></div><div class="ttdeci">int numSamples()</div><div class="ttdoc">The number of samples stored. </div><div class="ttdef"><b>Definition:</b> IncrementalSVD.h:226</div></div>

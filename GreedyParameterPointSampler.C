@@ -12,7 +12,7 @@
 //              for the construction of a ROM database.
 
 #include "GreedyParameterPointSampler.h"
-#include "HDFDatabase.h"
+#include "utils/HDFDatabase.h"
 #include "mpi.h"
 #include <cmath>
 #include <algorithm>

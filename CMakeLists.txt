@@ -132,10 +132,10 @@ set(module_list
   Interpolater
   MatrixInterpolater
   VectorInterpolater
-  Database
-  HDFDatabase
-  Utilities
-  ParallelBuffer
+  utils/Database
+  utils/HDFDatabase
+  utils/Utilities
+  utils/ParallelBuffer
   DMD
   DEIM
   QDEIM

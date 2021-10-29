@@ -12,7 +12,7 @@
 //              using Matthew Brand's "fast update" method.
 
 #include "IncrementalSVDFastUpdate.h"
-#include "HDFDatabase.h"
+#include "utils/HDFDatabase.h"
 
 #include "mpi.h"
 

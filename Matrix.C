@@ -13,7 +13,7 @@
 //              distributed Matrix has its rows distributed across processors.
 
 #include "Matrix.h"
-#include "HDFDatabase.h"
+#include "utils/HDFDatabase.h"
 
 #include "mpi.h"
 #include <string.h>

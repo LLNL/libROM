@@ -13,7 +13,7 @@
 #ifndef included_BasisWriter_h
 #define included_BasisWriter_h
 
-#include "Database.h"
+#include "utils/Database.h"
 #include <string>
 
 namespace CAROM {

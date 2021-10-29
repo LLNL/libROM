@@ -12,7 +12,7 @@
 //              interface.
 
 #include "IncrementalSVD.h"
-#include "HDFDatabase.h"
+#include "utils/HDFDatabase.h"
 
 #include "mpi.h"
 

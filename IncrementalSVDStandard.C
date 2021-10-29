@@ -13,7 +13,7 @@
 //              the "fast update" method.
 
 #include "IncrementalSVDStandard.h"
-#include "HDFDatabase.h"
+#include "utils/HDFDatabase.h"
 
 #include "mpi.h"
 
