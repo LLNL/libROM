@@ -15,21 +15,21 @@
 //              of linear reduced-order models": https://arxiv.org/abs/1506.07849
 //
 //              The greedy algorithm workflow is as follows:
-//              1. Construct the GreedyParameterPointSampler by giving it a
+//              1. Construct the GreedySampler by giving it a
 //                 domain of parameter points.
 //              2. Request a parameter point to create a local ROM at.
 //              3. Request a parameter point to compute an error error indicator
 //                 for using the nearest local ROM.
-//              4. Give the computed error indicator to the GreedyParameterPointSampler.
-//              5. Repeat steps 3 and 4 until the GreedyParameterPointSampler
+//              4. Give the computed error indicator to the GreedySampler.
+//              5. Repeat steps 3 and 4 until the GreedySampler
 //                 no longer requires more error indicators to be computed.
-//              6. Repeat steps 2 to 5 until the GreedyParameterPointSampler
+//              6. Repeat steps 2 to 5 until the GreedySampler
 //                 no longer requires more local ROMs to be created.
 //              7. The ROM database is now complete, meeting the error tolerance
 //                 for all parameter points within the domain.
 
-#ifndef included_GreedyParameterPointSampler_h
-#define included_GreedyParameterPointSampler_h
+#ifndef included_GreedySampler_h
+#define included_GreedySampler_h
 
 #include "Vector.h"
 #include <string>
@@ -66,12 +66,12 @@ struct GreedyErrorIndicatorPoint {
 };
 
 /**
- * Class GreedyParameterPointSampler is a class defining the interface of a
+ * Class GreedySampler is a class defining the interface of a
  *       greedy algorithm that given a domain of parameter points, iteratively
  *       returns the next best parameter point to sample in order to create
  *       a ROM database efficiently.
  */
-class GreedyParameterPointSampler
+class GreedySampler
 {
 public:
     /**
@@ -99,7 +99,7 @@ public:
      * @param[in] debug_algorithm Whether to turn off all randomness for
      *                            debugging purposes.
      */
-    GreedyParameterPointSampler(
+    GreedySampler(
         std::vector<Vector> parameter_points,
         bool check_local_rom,
         double relative_error_tolerance,
@@ -137,7 +137,7 @@ public:
      * @param[in] debug_algorithm Whether to turn off all randomness for
      *                            debugging purposes.
      */
-    GreedyParameterPointSampler(
+    GreedySampler(
         std::vector<double> parameter_points,
         bool check_local_rom,
         double relative_error_tolerance,
@@ -179,7 +179,7 @@ public:
      * @param[in] debug_algorithm Whether to turn off all randomness for
      *                            debugging purposes.
      */
-    GreedyParameterPointSampler(
+    GreedySampler(
         Vector param_space_min,
         Vector param_space_max,
         int num_parameter_points,
@@ -223,7 +223,7 @@ public:
      * @param[in] debug_algorithm Whether to turn off all randomness for
      *                            debugging purposes.
      */
-    GreedyParameterPointSampler(
+    GreedySampler(
         double param_space_min,
         double param_space_max,
         int num_parameter_points,
@@ -247,14 +247,14 @@ public:
      * @param[in] output_log_path The path to the output log file. If not used,
      *                            outputs to stdout.
      */
-    GreedyParameterPointSampler(
+    GreedySampler(
         std::string base_file_name,
         std::string output_log_path = "");
 
     /**
      * @brief Destructor.
      */
-    ~GreedyParameterPointSampler();
+    ~GreedySampler();
 
     /**
      * @brief Returns the next parameter point for which sampling is required.
@@ -391,7 +391,7 @@ protected:
     void checkParameterPointInput();
 
     /**
-     * @brief Construct the GreedyParameterPointSampler object.
+     * @brief Construct the GreedySampler object.
      */
     void constructObject(
         bool check_local_rom,

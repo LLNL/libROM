@@ -11,7 +11,7 @@
 // Description: This class greedily selects parameter points
 //              for the construction of a ROM database.
 
-#include "GreedyParameterPointSampler.h"
+#include "GreedySampler.h"
 #include "utils/HDFDatabase.h"
 #include "mpi.h"
 #include <cmath>
@@ -97,7 +97,7 @@ getNearestPointIndex(std::vector<double> param_points, double point)
     return closest_point_index;
 }
 
-GreedyParameterPointSampler::GreedyParameterPointSampler(
+GreedySampler::GreedySampler(
     std::vector<Vector> parameter_points,
     bool check_local_rom,
     double relative_error_tolerance,
@@ -120,7 +120,7 @@ GreedyParameterPointSampler::GreedyParameterPointSampler(
                     subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
 }
 
-GreedyParameterPointSampler::GreedyParameterPointSampler(
+GreedySampler::GreedySampler(
     std::vector<double> parameter_points,
     bool check_local_rom,
     double relative_error_tolerance,
@@ -151,7 +151,7 @@ GreedyParameterPointSampler::GreedyParameterPointSampler(
                     subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
 }
 
-GreedyParameterPointSampler::GreedyParameterPointSampler(
+GreedySampler::GreedySampler(
     Vector param_space_min,
     Vector param_space_max,
     int num_parameter_points,
@@ -176,7 +176,7 @@ GreedyParameterPointSampler::GreedyParameterPointSampler(
                     convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
 }
 
-GreedyParameterPointSampler::GreedyParameterPointSampler(
+GreedySampler::GreedySampler(
     double param_space_min,
     double param_space_max,
     int num_parameter_points,
@@ -206,7 +206,7 @@ GreedyParameterPointSampler::GreedyParameterPointSampler(
                     convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
 }
 
-GreedyParameterPointSampler::GreedyParameterPointSampler(
+GreedySampler::GreedySampler(
     std::string base_file_name,
     std::string output_log_path)
 {
@@ -227,7 +227,7 @@ GreedyParameterPointSampler::GreedyParameterPointSampler(
 }
 
 void
-GreedyParameterPointSampler::addDatabaseFromFile(
+GreedySampler::addDatabaseFromFile(
     std::string const& warm_start_file_name)
 {
     char tmp[100];
@@ -264,7 +264,7 @@ GreedyParameterPointSampler::addDatabaseFromFile(
 }
 
 void
-GreedyParameterPointSampler::load(
+GreedySampler::load(
     std::string base_file_name)
 {
     char tmp[100];
@@ -389,7 +389,7 @@ GreedyParameterPointSampler::load(
 }
 
 void
-GreedyParameterPointSampler::checkParameterPointInput()
+GreedySampler::checkParameterPointInput()
 {
     CAROM_VERIFY(d_min_param_point.dim() == d_max_param_point.dim());
     CAROM_VERIFY(d_num_parameter_points >= 1);
@@ -437,7 +437,7 @@ GreedyParameterPointSampler::checkParameterPointInput()
 }
 
 void
-GreedyParameterPointSampler::constructObject(
+GreedySampler::constructObject(
     bool check_local_rom,
     double relative_error_tolerance,
     double alpha,
@@ -504,7 +504,7 @@ GreedyParameterPointSampler::constructObject(
 }
 
 void
-GreedyParameterPointSampler::initializeParameterPoints()
+GreedySampler::initializeParameterPoints()
 {
     CAROM_VERIFY(d_parameter_points.size() > 0);
     CAROM_VERIFY(d_subset_size <= d_parameter_points.size());
@@ -524,7 +524,7 @@ GreedyParameterPointSampler::initializeParameterPoints()
 }
 
 std::shared_ptr<Vector>
-GreedyParameterPointSampler::getNextParameterPoint()
+GreedySampler::getNextParameterPoint()
 {
     if (isComplete())
     {
@@ -624,7 +624,7 @@ GreedyParameterPointSampler::getNextParameterPoint()
 }
 
 struct GreedyErrorIndicatorPoint
-GreedyParameterPointSampler::getNextPointRequiringRelativeError()
+GreedySampler::getNextPointRequiringRelativeError()
 {
     if (isComplete())
     {
@@ -651,7 +651,7 @@ GreedyParameterPointSampler::getNextPointRequiringRelativeError()
 }
 
 struct GreedyErrorIndicatorPoint
-GreedyParameterPointSampler::getNextPointRequiringErrorIndicator()
+GreedySampler::getNextPointRequiringErrorIndicator()
 {
     if (isComplete())
     {
@@ -673,7 +673,7 @@ GreedyParameterPointSampler::getNextPointRequiringErrorIndicator()
 }
 
 struct GreedyErrorIndicatorPoint
-GreedyParameterPointSampler::getNextSubsetPointRequiringErrorIndicator()
+GreedySampler::getNextSubsetPointRequiringErrorIndicator()
 {
     if (d_point_requiring_error_indicator_computed)
     {
@@ -780,7 +780,7 @@ GreedyParameterPointSampler::getNextSubsetPointRequiringErrorIndicator()
 }
 
 struct GreedyErrorIndicatorPoint
-GreedyParameterPointSampler::getNextConvergencePointRequiringErrorIndicator()
+GreedySampler::getNextConvergencePointRequiringErrorIndicator()
 {
     if (d_point_requiring_error_indicator_computed)
     {
@@ -815,7 +815,7 @@ GreedyParameterPointSampler::getNextConvergencePointRequiringErrorIndicator()
 }
 
 void
-GreedyParameterPointSampler::printSamplingType(std::string sampling_type)
+GreedySampler::printSamplingType(std::string sampling_type)
 {
     if (d_rank == 0)
     {
@@ -826,7 +826,7 @@ GreedyParameterPointSampler::printSamplingType(std::string sampling_type)
 }
 
 void
-GreedyParameterPointSampler::printConvergenceAchieved()
+GreedySampler::printConvergenceAchieved()
 {
     if (d_rank == 0)
     {
@@ -854,7 +854,7 @@ GreedyParameterPointSampler::printConvergenceAchieved()
 }
 
 void
-GreedyParameterPointSampler::setPointRelativeError(double error)
+GreedySampler::setPointRelativeError(double error)
 {
     CAROM_VERIFY(error >= 0);
     CAROM_VERIFY(d_next_parameter_point_computed);
@@ -958,7 +958,7 @@ GreedyParameterPointSampler::setPointRelativeError(double error)
 }
 
 void
-GreedyParameterPointSampler::setPointErrorIndicator(double error, int vec_size)
+GreedySampler::setPointErrorIndicator(double error, int vec_size)
 {
     CAROM_VERIFY(error >= 0);
     CAROM_VERIFY(d_point_requiring_error_indicator_computed);
@@ -996,7 +996,7 @@ GreedyParameterPointSampler::setPointErrorIndicator(double error, int vec_size)
 }
 
 void
-GreedyParameterPointSampler::printErrorIndicator(Vector errorIndicatorPoint, double proc_errors)
+GreedySampler::printErrorIndicator(Vector errorIndicatorPoint, double proc_errors)
 {
     if (d_rank == 0)
     {
@@ -1013,7 +1013,7 @@ GreedyParameterPointSampler::printErrorIndicator(Vector errorIndicatorPoint, dou
 }
 
 void
-GreedyParameterPointSampler::agnosticPrint(std::string str)
+GreedySampler::agnosticPrint(std::string str)
 {
     if (d_output_log_path == "")
     {
@@ -1029,7 +1029,7 @@ GreedyParameterPointSampler::agnosticPrint(std::string str)
 }
 
 void
-GreedyParameterPointSampler::printErrorIndicatorToleranceNotMet()
+GreedySampler::printErrorIndicatorToleranceNotMet()
 {
     if (d_rank == 0)
     {
@@ -1040,7 +1040,7 @@ GreedyParameterPointSampler::printErrorIndicatorToleranceNotMet()
 }
 
 void
-GreedyParameterPointSampler::setSubsetErrorIndicator(double proc_errors)
+GreedySampler::setSubsetErrorIndicator(double proc_errors)
 {
     if (d_check_local_rom || d_parameter_sampled_indices.size() == 1)
     {
@@ -1123,7 +1123,7 @@ GreedyParameterPointSampler::setSubsetErrorIndicator(double proc_errors)
 }
 
 void
-GreedyParameterPointSampler::setConvergenceErrorIndicator(double proc_errors)
+GreedySampler::setConvergenceErrorIndicator(double proc_errors)
 {
     printErrorIndicator(d_convergence_points[d_counter], proc_errors);
 
@@ -1159,14 +1159,14 @@ GreedyParameterPointSampler::setConvergenceErrorIndicator(double proc_errors)
 }
 
 void
-GreedyParameterPointSampler::generateConvergenceSubset()
+GreedySampler::generateConvergenceSubset()
 {
     d_convergence_points.clear();
     d_convergence_points = generateRandomPoints(d_convergence_subset_size);
 }
 
 void
-GreedyParameterPointSampler::startConvergence()
+GreedySampler::startConvergence()
 {
     d_convergence_started = true;
     d_max_error = 0;
@@ -1187,7 +1187,7 @@ GreedyParameterPointSampler::startConvergence()
 }
 
 std::vector<Vector>
-GreedyParameterPointSampler::generateRandomPoints(int num_points)
+GreedySampler::generateRandomPoints(int num_points)
 {
     std::vector<Vector> random_points;
 
@@ -1210,7 +1210,7 @@ GreedyParameterPointSampler::generateRandomPoints(int num_points)
 }
 
 std::shared_ptr<Vector>
-GreedyParameterPointSampler::getNearestROM(Vector point)
+GreedySampler::getNearestROM(Vector point)
 {
 
     CAROM_VERIFY(point.dim() == d_parameter_points[0].dim());
@@ -1239,7 +1239,7 @@ GreedyParameterPointSampler::getNearestROM(Vector point)
 }
 
 int
-GreedyParameterPointSampler::getNearestNonSampledPoint(Vector point)
+GreedySampler::getNearestNonSampledPoint(Vector point)
 {
     double closest_dist_to_points = INT_MAX;
     int closest_point_index = -1;
@@ -1264,7 +1264,7 @@ GreedyParameterPointSampler::getNearestNonSampledPoint(Vector point)
 }
 
 int
-GreedyParameterPointSampler::getNearestROMIndexToParameterPoint(int index, bool ignore_self)
+GreedySampler::getNearestROMIndexToParameterPoint(int index, bool ignore_self)
 {
 
     CAROM_VERIFY(index >= 0 && index < d_parameter_points.size());
@@ -1297,13 +1297,13 @@ GreedyParameterPointSampler::getNearestROMIndexToParameterPoint(int index, bool 
 }
 
 std::vector<Vector>
-GreedyParameterPointSampler::getParameterPointDomain()
+GreedySampler::getParameterPointDomain()
 {
     return d_parameter_points;
 }
 
 std::vector<Vector>
-GreedyParameterPointSampler::getSampledParameterPoints()
+GreedySampler::getSampledParameterPoints()
 {
     std::vector<Vector> sampled_points;
     for (auto itr = d_parameter_sampled_indices.begin(); itr != d_parameter_sampled_indices.end(); ++itr) {
@@ -1313,7 +1313,7 @@ GreedyParameterPointSampler::getSampledParameterPoints()
 }
 
 void
-GreedyParameterPointSampler::save(std::string base_file_name)
+GreedySampler::save(std::string base_file_name)
 {
     CAROM_ASSERT(!base_file_name.empty());
 
@@ -1415,7 +1415,7 @@ GreedyParameterPointSampler::save(std::string base_file_name)
 }
 
 bool
-GreedyParameterPointSampler::isComplete()
+GreedySampler::isComplete()
 {
     if (!d_procedure_completed && d_parameter_sampled_indices.size() == d_num_parameter_points)
     {
@@ -1430,7 +1430,7 @@ GreedyParameterPointSampler::isComplete()
     return d_procedure_completed;
 }
 
-GreedyParameterPointSampler::~GreedyParameterPointSampler()
+GreedySampler::~GreedySampler()
 {
 }
 

@@ -11,7 +11,7 @@
 // Description: This class greedily selects parameter points
 //              for the construction of a ROM database.
 
-#include "GreedyParameterPointPreDefinedSampler.h"
+#include "GreedyCustomSampler.h"
 #include <cmath>
 #include <algorithm>
 #include <limits.h>
@@ -19,7 +19,7 @@
 
 namespace CAROM {
 
-GreedyParameterPointPreDefinedSampler::GreedyParameterPointPreDefinedSampler(
+GreedyCustomSampler::GreedyCustomSampler(
     std::vector<double> parameter_points,
     bool check_local_rom,
     double relative_error_tolerance,
@@ -32,7 +32,7 @@ GreedyParameterPointPreDefinedSampler::GreedyParameterPointPreDefinedSampler(
     bool use_centroid,
     int random_seed,
     bool debug_algorithm) :
-    GreedyParameterPointSampler(
+    GreedySampler(
         parameter_points,
         check_local_rom,
         relative_error_tolerance,
@@ -57,7 +57,7 @@ GreedyParameterPointPreDefinedSampler::GreedyParameterPointPreDefinedSampler(
     }
 }
 
-GreedyParameterPointPreDefinedSampler::GreedyParameterPointPreDefinedSampler(
+GreedyCustomSampler::GreedyCustomSampler(
     std::vector<Vector> parameter_points,
     bool check_local_rom,
     double relative_error_tolerance,
@@ -70,7 +70,7 @@ GreedyParameterPointPreDefinedSampler::GreedyParameterPointPreDefinedSampler(
     bool use_centroid,
     int random_seed,
     bool debug_algorithm) :
-    GreedyParameterPointSampler(
+    GreedySampler(
         parameter_points,
         check_local_rom,
         relative_error_tolerance,
@@ -95,16 +95,16 @@ GreedyParameterPointPreDefinedSampler::GreedyParameterPointPreDefinedSampler(
     }
 }
 
-GreedyParameterPointPreDefinedSampler::GreedyParameterPointPreDefinedSampler(
+GreedyCustomSampler::GreedyCustomSampler(
     std::string base_file_name,
     std::string output_log_path) :
-    GreedyParameterPointSampler(
+    GreedySampler(
         base_file_name,
         output_log_path
     ) {}
 
 void
-GreedyParameterPointPreDefinedSampler::constructParameterPoints()
+GreedyCustomSampler::constructParameterPoints()
 {
     d_min_param_point = d_parameter_points[0];
     d_max_param_point = d_parameter_points[0];
@@ -122,12 +122,12 @@ GreedyParameterPointPreDefinedSampler::constructParameterPoints()
 }
 
 void
-GreedyParameterPointPreDefinedSampler::getNextParameterPointAfterConvergenceFailure()
+GreedyCustomSampler::getNextParameterPointAfterConvergenceFailure()
 {
     d_next_point_to_sample = getNearestNonSampledPoint(d_convergence_points[d_counter]);
 }
 
-GreedyParameterPointPreDefinedSampler::~GreedyParameterPointPreDefinedSampler()
+GreedyCustomSampler::~GreedyCustomSampler()
 {
 }
 

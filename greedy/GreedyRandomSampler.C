@@ -11,7 +11,7 @@
 // Description: This class greedily selects parameter points
 //              for the construction of a ROM database.
 
-#include "GreedyParameterPointRandomSampler.h"
+#include "GreedyRandomSampler.h"
 #include "utils/HDFDatabase.h"
 #include "mpi.h"
 #include <cmath>
@@ -21,7 +21,7 @@
 
 namespace CAROM {
 
-GreedyParameterPointRandomSampler::GreedyParameterPointRandomSampler(
+GreedyRandomSampler::GreedyRandomSampler(
     double param_space_min,
     double param_space_max,
     int num_parameter_points,
@@ -37,7 +37,7 @@ GreedyParameterPointRandomSampler::GreedyParameterPointRandomSampler(
     bool use_centroid,
     int random_seed,
     bool debug_algorithm) :
-    GreedyParameterPointSampler(
+    GreedySampler(
         param_space_min,
         param_space_max,
         num_parameter_points,
@@ -74,7 +74,7 @@ GreedyParameterPointRandomSampler::GreedyParameterPointRandomSampler(
     }
 }
 
-GreedyParameterPointRandomSampler::GreedyParameterPointRandomSampler(
+GreedyRandomSampler::GreedyRandomSampler(
     Vector param_space_min,
     Vector param_space_max,
     int num_parameter_points,
@@ -90,7 +90,7 @@ GreedyParameterPointRandomSampler::GreedyParameterPointRandomSampler(
     bool use_centroid,
     int random_seed,
     bool debug_algorithm) :
-    GreedyParameterPointSampler(
+    GreedySampler(
         param_space_min,
         param_space_max,
         num_parameter_points,
@@ -127,16 +127,16 @@ GreedyParameterPointRandomSampler::GreedyParameterPointRandomSampler(
     }
 }
 
-GreedyParameterPointRandomSampler::GreedyParameterPointRandomSampler(
+GreedyRandomSampler::GreedyRandomSampler(
     std::string base_file_name,
     std::string output_log_path) :
-    GreedyParameterPointSampler(
+    GreedySampler(
         base_file_name,
         output_log_path
     ) {}
 
 void
-GreedyParameterPointRandomSampler::constructParameterPoints()
+GreedyRandomSampler::constructParameterPoints()
 {
     checkParameterPointInput();
 
@@ -188,9 +188,9 @@ GreedyParameterPointRandomSampler::constructParameterPoints()
 }
 
 void
-GreedyParameterPointRandomSampler::load(std::string base_file_name)
+GreedyRandomSampler::load(std::string base_file_name)
 {
-    GreedyParameterPointSampler::load(base_file_name);
+    GreedySampler::load(base_file_name);
 
     char tmp[100];
     std::string full_file_name = base_file_name;
@@ -209,9 +209,9 @@ GreedyParameterPointRandomSampler::load(std::string base_file_name)
 }
 
 void
-GreedyParameterPointRandomSampler::save(std::string base_file_name)
+GreedyRandomSampler::save(std::string base_file_name)
 {
-    GreedyParameterPointSampler::save(base_file_name);
+    GreedySampler::save(base_file_name);
 
     if (d_rank == 0)
     {
@@ -231,7 +231,7 @@ GreedyParameterPointRandomSampler::save(std::string base_file_name)
 }
 
 void
-GreedyParameterPointRandomSampler::getNextParameterPointAfterConvergenceFailure()
+GreedyRandomSampler::getNextParameterPointAfterConvergenceFailure()
 {
     d_parameter_points.push_back(d_convergence_points[d_counter]);
     d_parameter_point_errors.push_back(d_max_error);
@@ -240,7 +240,7 @@ GreedyParameterPointRandomSampler::getNextParameterPointAfterConvergenceFailure(
     d_next_point_to_sample = d_parameter_points.size() - 1;
 }
 
-GreedyParameterPointRandomSampler::~GreedyParameterPointRandomSampler()
+GreedyRandomSampler::~GreedyRandomSampler()
 {
 }
 

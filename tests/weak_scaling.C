@@ -14,7 +14,7 @@
 //              same for all processor decompositions when
 //              dim * number of processors is constant.
 
-#include "../BasisGenerator.h"
+#include "BasisGenerator.h"
 
 #include "mpi.h"
 

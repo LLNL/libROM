@@ -26,7 +26,7 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
-#include "GreedyParameterPointRandomSampler.h"
+#include "greedy/GreedyRandomSampler.h"
 #include "BasisGenerator.h"
 #include "BasisReader.h"
 
@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
 
     if (fom) MFEM_VERIFY(fom && !build_database && !use_database && !offline && !online, "everything must be turned off if fom is used.");
 
-    CAROM::GreedyParameterPointSampler* greedy_sampler = NULL;
+    CAROM::GreedySampler* greedy_sampler = NULL;
     MFEM_VERIFY(!build_database || !use_database, "both build_database and use_database can not be used at the same time.");
 
     // 3. Set up the ROM database for the greedy algorithm to run.
@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
             return 0;
         }
         infile.close();
-        greedy_sampler = new CAROM::GreedyParameterPointRandomSampler(greedy_param_space_min, greedy_param_space_max,
+        greedy_sampler = new CAROM::GreedyRandomSampler(greedy_param_space_min, greedy_param_space_max,
                 greedy_param_space_size, false, greedy_relative_error_tol, 1.05,
                 2.0, greedy_subset_size, greedy_convergence_subset_size,
                 true, "poisson_local_rom_greedy_algorithm_log.txt");

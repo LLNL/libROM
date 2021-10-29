@@ -6,6 +6,5 @@ var searchData=
   ['randomizedsvd',['RandomizedSVD',['../class_c_a_r_o_m_1_1_randomized_s_v_d.html',1,'CAROM']]],
   ['read',['read',['../class_c_a_r_o_m_1_1_matrix.html#acdc4a8fd238f64d8106b8f1ba8f2384e',1,'CAROM::Matrix::read()'],['../class_c_a_r_o_m_1_1_vector.html#a2b38fbc6b7d898bcc0399e1380a436d3',1,'CAROM::Vector::read()']]],
   ['reorthogonalize',['reOrthogonalize',['../class_c_a_r_o_m_1_1_incremental_s_v_d.html#a527589bf79c7ae0636c3bba4a2861b28',1,'CAROM::IncrementalSVD']]],
-  ['restore_5fstate',['restore_state',['../class_c_a_r_o_m_1_1_options.html#a2a72a87c998cbebc89e87c7c1fd5928e',1,'CAROM::Options']]],
-  ['rng',['rng',['../class_c_a_r_o_m_1_1_greedy_parameter_point_sampler.html#ab73040c124af2bd61d63f16698f8e36e',1,'CAROM::GreedyParameterPointSampler']]]
+  ['restore_5fstate',['restore_state',['../class_c_a_r_o_m_1_1_options.html#a2a72a87c998cbebc89e87c7c1fd5928e',1,'CAROM::Options']]]
 ];

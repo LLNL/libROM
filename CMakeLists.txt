@@ -126,21 +126,21 @@ set(module_list
   IncrementalSVDStandard
   StaticSVD
   RandomizedSVD
-  GreedyParameterPointSampler
-  GreedyParameterPointRandomSampler
-  GreedyParameterPointPreDefinedSampler
+  greedy/GreedyCustomSampler
+  greedy/GreedyRandomSampler
+  greedy/GreedySampler
   Interpolater
   MatrixInterpolater
   VectorInterpolater
+  DMD
+  hyperreduction/DEIM
+  hyperreduction/GNAT
+  hyperreduction/QDEIM
+  hyperreduction/STSampling
   utils/Database
   utils/HDFDatabase
   utils/Utilities
-  utils/ParallelBuffer
-  DMD
-  DEIM
-  QDEIM
-  GNAT
-  STSampling)
+  utils/ParallelBuffer)
 set(source_files)
 foreach(module IN LISTS module_list)
   list(APPEND source_files ${module}.C)
@@ -310,7 +310,7 @@ if(GTEST_FOUND)
     StaticSVD
     RandomizedSVD
     IncrementalSVD
-    GreedyParameterPointPreDefinedSampler)
+    GreedyCustomSampler)
   foreach(stem IN LISTS unit_test_stems)
     add_executable(test_${stem} tests/test_${stem}.C)
     target_link_libraries(test_${stem} PRIVATE ROM

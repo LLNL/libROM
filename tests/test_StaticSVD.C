@@ -1,4 +1,14 @@
-#include "../BasisGenerator.h"
+/******************************************************************************
+ *
+ * Copyright (c) 2013-2021, Lawrence Livermore National Security, LLC
+ * and other libROM project developers. See the top-level COPYRIGHT
+ * file for details.
+ *
+ * SPDX-License-Identifier: (Apache-2.0 OR MIT)
+ *
+ *****************************************************************************/
+
+#include "BasisGenerator.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
