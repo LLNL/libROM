@@ -31,7 +31,8 @@ namespace CAROM {
 
 Interpolater::Interpolater(std::vector<Vector*> parameter_points,
                            std::vector<Matrix*> rotation_matrices,
-                           int ref_point)
+                           int ref_point,
+                           double epsilon)
 {
     CAROM_VERIFY(parameter_points.size() == rotation_matrices.size());
     CAROM_VERIFY(parameter_points.size() > 0);
@@ -50,6 +51,7 @@ Interpolater::Interpolater(std::vector<Vector*> parameter_points,
     d_rotation_matrices = rotation_matrices;
     d_ref_point = ref_point;
     d_lambda_T = NULL;
+    d_epsilon = epsilon;
 }
 
 std::vector<double> Interpolater::obtainRBF(Vector* point)
@@ -60,7 +62,7 @@ std::vector<double> Interpolater::obtainRBF(Vector* point)
     {
         Vector diff;
         point->minus(*d_parameter_points[i], diff);
-        double res = 1.0 / (1.0 + std::pow(diff.norm(), 2));
+        double res = 1.0 / (1.0 + std::pow(d_epsilon*diff.norm(), 2));
         inv_q.push_back(res);
     }
 
