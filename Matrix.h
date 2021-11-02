@@ -220,6 +220,42 @@ public:
     }
 
     /**
+     * @brief Get the first N columns of a matrix.
+     *
+     * @pre 0 < n < numColumns()
+     *
+     * @return The truncated Matrix.
+     */
+    Matrix*
+    getFirstNColumns(int n) const;
+
+    /**
+     * @brief Get the first N columns of a matrix.
+     *
+     * @pre result.distributed() == distributed()
+     * @pre 0 < n < numColumns()
+     *
+     * @param[out] result The truncated Matrix.
+     */
+    void
+    getFirstNColumns(
+        int n,
+        Matrix*& result) const;
+
+    /**
+     * @brief Get the first N columns of a matrix.
+     *
+     * @pre result.distributed() == distributed()
+     * @pre 0 < n < numColumns()
+     *
+     * @param[out] result The truncated Matrix.
+     */
+    void
+    getFirstNColumns(
+        int n,
+        Matrix& result) const;
+
+    /**
      * @brief Multiplies this Matrix with other and returns the product,
      * reference version.
      *

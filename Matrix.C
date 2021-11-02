@@ -235,6 +235,64 @@ Matrix::operator = (
     return *this;
 }
 
+Matrix*
+Matrix::getFirstNColumns(int n) const
+{
+    CAROM_VERIFY(n > 0 && n <= d_num_cols);
+
+    Matrix* first_n_columns = NULL;
+    getFirstNColumns(n, first_n_columns);
+    return first_n_columns;
+}
+
+void
+Matrix::getFirstNColumns(
+    int n,
+    Matrix*& result) const
+{
+    CAROM_VERIFY(result == 0 || result->distributed() == distributed());
+    CAROM_VERIFY(n > 0 && n <= d_num_cols);
+
+    // If the result has not been allocated then do so.  Otherwise size it
+    // correctly.
+    if (result == 0)
+    {
+        result = new Matrix(d_num_rows, n, d_distributed);
+    }
+    else
+    {
+        result->setSize(d_num_rows, n);
+    }
+
+    for (int i = 0; i < d_num_rows; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            result->item(i, j) = item(i, j);
+        }
+    }
+}
+
+void
+Matrix::getFirstNColumns(
+    int n,
+    Matrix& result) const
+{
+    CAROM_VERIFY(result.distributed() == distributed());
+    CAROM_VERIFY(n > 0 && n <= d_num_cols);
+
+    // Size result correctly.
+    result.setSize(d_num_rows, n);
+
+    for (int i = 0; i < d_num_rows; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            result.item(i, j) = item(i, j);
+        }
+    }
+}
+
 void
 Matrix::mult(
     const Matrix& other,
