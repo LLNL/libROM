@@ -52,8 +52,8 @@
 
 #include "mfem.hpp"
 #include "Vector.h"
-#include "MatrixInterpolater.h"
-#include "VectorInterpolater.h"
+#include "MatrixInterpolator.h"
+#include "VectorInterpolator.h"
 #include "BasisGenerator.h"
 #include "BasisReader.h"
 #include <cmath>
@@ -826,16 +826,16 @@ int main(int argc, char *argv[])
             int ref_point = getCenterPoint(parameter_points, false);
             std::vector<CAROM::Matrix*> rotation_matrices = obtainRotationMatrices(parameter_points, bases, ref_point);
 
-            CAROM::MatrixInterpolater basis_interpolater(parameter_points, rotation_matrices, bases, ref_point, "B");
-            CAROM::MatrixInterpolater M_interpolater(parameter_points, rotation_matrices, M_hats, ref_point, "SPD");
-            CAROM::MatrixInterpolater K_interpolater(parameter_points, rotation_matrices, K_hats, ref_point, "R");
-            CAROM::VectorInterpolater b_interpolater(parameter_points, rotation_matrices, b_hats, ref_point);
-            CAROM::VectorInterpolater u_init_interpolater(parameter_points, rotation_matrices, u_init_hats, ref_point);
-            spatialbasis = basis_interpolater.interpolate(curr_point);
-            M_hat_carom = M_interpolater.interpolate(curr_point);
-            K_hat_carom = K_interpolater.interpolate(curr_point);
-            b_hat_carom = b_interpolater.interpolate(curr_point);
-            u_init_hat_carom = u_init_interpolater.interpolate(curr_point);
+            CAROM::MatrixInterpolator basis_interpolator(parameter_points, rotation_matrices, bases, ref_point, "B");
+            CAROM::MatrixInterpolator M_interpolator(parameter_points, rotation_matrices, M_hats, ref_point, "SPD");
+            CAROM::MatrixInterpolator K_interpolator(parameter_points, rotation_matrices, K_hats, ref_point, "R");
+            CAROM::VectorInterpolator b_interpolator(parameter_points, rotation_matrices, b_hats, ref_point);
+            CAROM::VectorInterpolator u_init_interpolator(parameter_points, rotation_matrices, u_init_hats, ref_point);
+            spatialbasis = basis_interpolator.interpolate(curr_point);
+            M_hat_carom = M_interpolator.interpolate(curr_point);
+            K_hat_carom = K_interpolator.interpolate(curr_point);
+            b_hat_carom = b_interpolator.interpolate(curr_point);
+            u_init_hat_carom = u_init_interpolator.interpolate(curr_point);
 
             // libROM stores the matrix row-wise, so wrapping as a DenseMatrix in MFEM means it is transposed.
             M_hat = new DenseMatrix(numColumnRB, numColumnRB);

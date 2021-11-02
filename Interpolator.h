@@ -8,10 +8,10 @@
  *
  *****************************************************************************/
 
-// Description: Computes the Interpolater algorithm on the given snapshot matrix.
+// Description: Computes the Interpolator algorithm on the given snapshot matrix.
 
-#ifndef included_Interpolater_h
-#define included_Interpolater_h
+#ifndef included_Interpolator_h
+#define included_Interpolator_h
 
 #include <vector>
 
@@ -21,13 +21,13 @@ class Matrix;
 class Vector;
 
 /**
- * Interpolater is a uninstantiable protected class that retains common
- * functionality between the MatrixInterpolater and VectorInterpolater classes.
+ * Interpolator is a uninstantiable protected class that retains common
+ * functionality between the MatrixInterpolator and VectorInterpolator classes.
  * The interpolation algorithm was adapted from "Gradient-based
  * Constrained Optimization Using a Database of Linear Reduced-Order Models"
  * by Y. Choi et al.
  */
-class Interpolater
+class Interpolator
 {
 
 protected:
@@ -41,7 +41,7 @@ protected:
      * @param[in] ref_point The index within the vector of parameter points
      *                      to the reference point
      */
-    Interpolater(std::vector<Vector*> parameter_points,
+    Interpolator(std::vector<Vector*> parameter_points,
                  std::vector<Matrix*> rotation_matrices,
                  int ref_point);
 
@@ -89,20 +89,20 @@ private:
     /**
      * @brief Unimplemented default constructor.
      */
-    Interpolater();
+    Interpolator();
 
     /**
      * @brief Unimplemented copy constructor.
      */
-    Interpolater(
-        const Interpolater& other);
+    Interpolator(
+        const Interpolator& other);
 
     /**
      * @brief Unimplemented assignment operator.
      */
-    Interpolater&
+    Interpolator&
     operator = (
-        const Interpolater& rhs);
+        const Interpolator& rhs);
 };
 
 /**

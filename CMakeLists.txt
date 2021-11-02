@@ -129,9 +129,9 @@ set(module_list
   GreedyParameterPointSampler
   GreedyParameterPointRandomSampler
   GreedyParameterPointPreDefinedSampler
-  Interpolater
-  MatrixInterpolater
-  VectorInterpolater
+  Interpolator
+  MatrixInterpolator
+  VectorInterpolator
   Database
   HDFDatabase
   Utilities

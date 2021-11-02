@@ -8,9 +8,9 @@
  *
  *****************************************************************************/
 
-// Description: Implementation of the MatrixInterpolater algorithm.
+// Description: Implementation of the MatrixInterpolator algorithm.
 
-#include "MatrixInterpolater.h"
+#include "MatrixInterpolator.h"
 
 #include <limits.h>
 #include <cmath>
@@ -37,12 +37,12 @@ using namespace std;
 
 namespace CAROM {
 
-MatrixInterpolater::MatrixInterpolater(std::vector<Vector*> parameter_points,
+MatrixInterpolator::MatrixInterpolator(std::vector<Vector*> parameter_points,
                                        std::vector<Matrix*> rotation_matrices,
                                        std::vector<Matrix*> reduced_matrices,
                                        int ref_point,
                                        std::string matrix_type) :
-    Interpolater(parameter_points,
+    Interpolator(parameter_points,
                  rotation_matrices,
                  ref_point)
 {
@@ -76,7 +76,7 @@ MatrixInterpolater::MatrixInterpolater(std::vector<Vector*> parameter_points,
     }
 }
 
-Matrix* MatrixInterpolater::interpolate(Vector* point)
+Matrix* MatrixInterpolator::interpolate(Vector* point)
 {
     if (d_matrix_type == "SPD")
     {
@@ -92,7 +92,7 @@ Matrix* MatrixInterpolater::interpolate(Vector* point)
     }
 }
 
-void MatrixInterpolater::obtainLambda(std::vector<Matrix*> gammas)
+void MatrixInterpolator::obtainLambda(std::vector<Matrix*> gammas)
 {
 
     // Solving f = B*lambda
@@ -133,7 +133,7 @@ void MatrixInterpolater::obtainLambda(std::vector<Matrix*> gammas)
     d_lambda_T = f_T;
 }
 
-Matrix* MatrixInterpolater::obtainLogInterpolatedMatrix(std::vector<double> inv_q)
+Matrix* MatrixInterpolator::obtainLogInterpolatedMatrix(std::vector<double> inv_q)
 {
     Matrix* log_interpolated_matrix = new Matrix(d_rotated_reduced_matrices[d_ref_point]->numRows(), d_rotated_reduced_matrices[d_ref_point]->numColumns(), d_rotated_reduced_matrices[d_ref_point]->distributed());
     CAROM_VERIFY(d_rotated_reduced_matrices[d_ref_point]->numRows() * d_rotated_reduced_matrices[d_ref_point]->numColumns() == d_lambda_T->numRows());
@@ -148,7 +148,7 @@ Matrix* MatrixInterpolater::obtainLogInterpolatedMatrix(std::vector<double> inv_
     return log_interpolated_matrix;
 }
 
-Matrix* MatrixInterpolater::interpolateSPDMatrix(Vector* point)
+Matrix* MatrixInterpolator::interpolateSPDMatrix(Vector* point)
 {
     if (d_lambda_T == NULL)
     {
@@ -270,7 +270,7 @@ Matrix* MatrixInterpolater::interpolateSPDMatrix(Vector* point)
 
 }
 
-Matrix* MatrixInterpolater::interpolateNonSingularMatrix(Vector* point)
+Matrix* MatrixInterpolator::interpolateNonSingularMatrix(Vector* point)
 {
     if (d_lambda_T == NULL)
     {
@@ -365,7 +365,7 @@ Matrix* MatrixInterpolater::interpolateNonSingularMatrix(Vector* point)
     return interpolated_matrix;
 }
 
-Matrix* MatrixInterpolater::interpolateMatrix(Vector* point)
+Matrix* MatrixInterpolator::interpolateMatrix(Vector* point)
 {
     if (d_lambda_T == NULL)
     {

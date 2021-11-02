@@ -8,9 +8,9 @@
  *
  *****************************************************************************/
 
-// Description: Implementation of the Interpolater algorithm.
+// Description: Implementation of the Interpolator algorithm.
 
-#include "Interpolater.h"
+#include "Interpolator.h"
 
 #include <limits.h>
 #include <cmath>
@@ -29,7 +29,7 @@ using namespace std;
 
 namespace CAROM {
 
-Interpolater::Interpolater(std::vector<Vector*> parameter_points,
+Interpolator::Interpolator(std::vector<Vector*> parameter_points,
                            std::vector<Matrix*> rotation_matrices,
                            int ref_point)
 {
@@ -52,7 +52,7 @@ Interpolater::Interpolater(std::vector<Vector*> parameter_points,
     d_lambda_T = NULL;
 }
 
-std::vector<double> Interpolater::obtainRBF(Vector* point)
+std::vector<double> Interpolator::obtainRBF(Vector* point)
 {
     // Inverse quadratic RBF
     std::vector<double> inv_q;

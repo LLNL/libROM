@@ -8,9 +8,9 @@
  *
  *****************************************************************************/
 
-// Description: Implementation of the VectorInterpolater algorithm.
+// Description: Implementation of the VectorInterpolator algorithm.
 
-#include "VectorInterpolater.h"
+#include "VectorInterpolator.h"
 
 #include <limits.h>
 #include <cmath>
@@ -38,11 +38,11 @@ using namespace std;
 
 namespace CAROM {
 
-VectorInterpolater::VectorInterpolater(std::vector<Vector*> parameter_points,
+VectorInterpolator::VectorInterpolator(std::vector<Vector*> parameter_points,
                                        std::vector<Matrix*> rotation_matrices,
                                        std::vector<Vector*> reduced_vectors,
                                        int ref_point) :
-    Interpolater(parameter_points,
+    Interpolator(parameter_points,
                  rotation_matrices,
                  ref_point)
 {
@@ -64,7 +64,7 @@ VectorInterpolater::VectorInterpolater(std::vector<Vector*> parameter_points,
     }
 }
 
-void VectorInterpolater::obtainLambda(std::vector<Vector*> gammas)
+void VectorInterpolator::obtainLambda(std::vector<Vector*> gammas)
 {
 
     // Solving f = B*lambda
@@ -105,7 +105,7 @@ void VectorInterpolater::obtainLambda(std::vector<Vector*> gammas)
     d_lambda_T = f_T;
 }
 
-Vector* VectorInterpolater::obtainLogInterpolatedVector(std::vector<double> inv_q)
+Vector* VectorInterpolator::obtainLogInterpolatedVector(std::vector<double> inv_q)
 {
     Vector* log_interpolated_vector = new Vector(d_rotated_reduced_vectors[d_ref_point]->dim(), d_rotated_reduced_vectors[d_ref_point]->distributed());
     CAROM_VERIFY(d_rotated_reduced_vectors[d_ref_point]->dim() == d_lambda_T->numRows());
@@ -120,7 +120,7 @@ Vector* VectorInterpolater::obtainLogInterpolatedVector(std::vector<double> inv_
     return log_interpolated_vector;
 }
 
-Vector* VectorInterpolater::interpolate(Vector* point)
+Vector* VectorInterpolator::interpolate(Vector* point)
 {
     if (d_lambda_T == NULL)
     {

@@ -8,12 +8,12 @@
  *
  *****************************************************************************/
 
-// Description: Computes the VectorInterpolater algorithm on the given snapshot matrix.
+// Description: Computes the VectorInterpolator algorithm on the given snapshot matrix.
 
-#ifndef included_VectorInterpolater_h
-#define included_VectorInterpolater_h
+#ifndef included_VectorInterpolator_h
+#define included_VectorInterpolator_h
 
-#include "Interpolater.h"
+#include "Interpolator.h"
 #include <vector>
 #include <string>
 
@@ -23,13 +23,13 @@ class Matrix;
 class Vector;
 
 /**
- * VectorInterpolater interpolates reduced vectors of a set of parameter points
+ * VectorInterpolator interpolates reduced vectors of a set of parameter points
  * and returns an interpolated reduced vector for an unseen parameter point.
  * The interpolation algorithm was adapted from "Gradient-based
  * Constrained Optimization Using a Database of Linear Reduced-Order Models"
  * by Y. Choi et al.
  */
-class VectorInterpolater : public Interpolater
+class VectorInterpolator : public Interpolator
 {
 public:
 
@@ -44,7 +44,7 @@ public:
      * @param[in] ref_point The index within the vector of parameter points
      *                      to the reference point
      */
-    VectorInterpolater(std::vector<Vector*> parameter_points,
+    VectorInterpolator(std::vector<Vector*> parameter_points,
                        std::vector<Matrix*> rotation_matrices,
                        std::vector<Vector*> reduced_vectors,
                        int ref_point);
@@ -61,20 +61,20 @@ private:
     /**
      * @brief Unimplemented default constructor.
      */
-    VectorInterpolater();
+    VectorInterpolator();
 
     /**
      * @brief Unimplemented copy constructor.
      */
-    VectorInterpolater(
-        const VectorInterpolater& other);
+    VectorInterpolator(
+        const VectorInterpolator& other);
 
     /**
      * @brief Unimplemented assignment operator.
      */
-    VectorInterpolater&
+    VectorInterpolator&
     operator = (
-        const VectorInterpolater& rhs);
+        const VectorInterpolator& rhs);
 
     /**
      * @brief Solve the system of equations of the gammas to obtain the
