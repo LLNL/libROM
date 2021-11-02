@@ -43,7 +43,8 @@ protected:
      */
     Interpolator(std::vector<Vector*> parameter_points,
                  std::vector<Matrix*> rotation_matrices,
-                 int ref_point);
+                 int ref_point,
+                 double epsilon = 1.0);
 
     /**
      * @brief The rank of the process this object belongs to.
@@ -60,6 +61,13 @@ protected:
      *        to the reference point
      */
     int d_ref_point;
+
+    /**
+     * @brief The RBF parameter that determines the width of influence.
+     *        a small epsilon: larger influential width
+     *        a large epsilon: smaller influential width
+     */
+    int d_epsilon;
 
     /**
      * @brief The sampled parameter points.

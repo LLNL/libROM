@@ -47,7 +47,8 @@ public:
     VectorInterpolator(std::vector<Vector*> parameter_points,
                        std::vector<Matrix*> rotation_matrices,
                        std::vector<Vector*> reduced_vectors,
-                       int ref_point);
+                       int ref_point,
+                       double epsilon = 1.0);
 
     /**
      * @brief Obtain the interpolated reduced vector of the unsampled parameter point.

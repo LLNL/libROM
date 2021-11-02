@@ -50,7 +50,8 @@ public:
                        std::vector<Matrix*> rotation_matrices,
                        std::vector<Matrix*> reduced_matrices,
                        int ref_point,
-                       std::string matrix_type);
+                       std::string matrix_type,
+                       double epsilon = 1.0);
 
     /**
      * @brief Obtain the interpolated reduced matrix of the unsampled parameter point.
