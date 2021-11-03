@@ -5,6 +5,7 @@
 #include "mpi.h"
 
 #include <set>
+#include <string>
 
 using namespace mfem;
 using namespace std;
@@ -769,7 +770,8 @@ namespace CAROM {
                           vector<int>& all_stencil_dofs, /* stencil_dofs, gathered over all processes */
                           vector<int>& s2sp,
                           vector<int>& st2sp,
-                          ParFiniteElementSpace*& spfespace1, ParFiniteElementSpace*& spfespace2
+                          ParFiniteElementSpace*& spfespace1, ParFiniteElementSpace*& spfespace2,
+			  std::string filename
                          )
     {
         int myid, num_procs;
@@ -878,6 +880,34 @@ namespace CAROM {
     #ifdef FULL_DOF_STENCIL
         Finish_s2sp_augmented(myid, num_procs, fespace1, fespace2, stencil_dofs1, stencil_dofs2, stencil_dofs_sub_to_stencil_dofs, local_num_stencil_dofs_sub, false, st2sp);
     #endif
+
+	if (!filename.empty())
+	  {
+	    // Write files for global pmesh and a piecewise constant function with 1 on sample mesh elements and 0 elsewhere.
+	    // Note that this is a visualization of the sample mesh elements, not the sampled DOFs. That is, it shows all elements
+	    // that contain a sampled DOF, which could be at a vertex, edge, face, or volume.
+
+	    L2_FECollection l2_coll(1, pmesh.Dimension());  // order 1
+	    ParFiniteElementSpace pwc_space(&pmesh, &l2_coll); // piecewise constant space on global mesh
+	    ParGridFunction marker(&pwc_space);
+	    marker = 0.0;
+            for (set<int>::const_iterator it = elems.begin(); it != elems.end(); ++it)
+	      {
+		Array<int> dofs;
+		pwc_space.GetElementVDofs(*it, dofs);
+
+                for (int i = 0; i < dofs.Size(); i++)
+		  {
+                    const int dof_i = dofs[i] >= 0 ? dofs[i] : -1 - dofs[i];
+		    marker[dof_i] = 1;
+		  }
+	      }
+
+	    VisItDataCollection visit_dc(filename, &pmesh);
+	    visit_dc.RegisterField("Sample Elements", &marker);
+	    visit_dc.SetFormat(DataCollection::SERIAL_FORMAT);
+	    visit_dc.Save();
+	  }
     }
 
     void GatherDistributedMatrixRows(const CAROM::Matrix& BR, const CAROM::Matrix& BW, const int rrdim, const int rwdim,
