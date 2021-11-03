@@ -190,7 +190,7 @@ public:
 
     /**
      * @brief Sets the length of the vector and reallocates storage if
-     * needed.
+     * needed. All values are initalized to zero.
      *
      * @param[in] dim When undistributed, the total dimension of the Vector.
      *                When distributed, the part of the total dimension of
@@ -207,7 +207,9 @@ public:
             if (d_vec) {
                 delete [] d_vec;
             }
-            d_vec = new double [dim] {};
+
+            // Allocate new array and initialize all values to zero.
+            d_vec = new double [dim] {0.0};
             d_alloc_size = dim;
         }
         d_dim = dim;
