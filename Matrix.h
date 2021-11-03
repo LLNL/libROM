@@ -157,7 +157,7 @@ public:
             }
 
             // Allocate new array and initialize all values to zero.
-            d_mat = new double [new_size] {0};
+            d_mat = new double [new_size] {0.0};
             d_alloc_size = new_size;
         }
         d_num_rows = num_rows;
