@@ -137,7 +137,7 @@ public:
 
     /**
      * @brief Sets the number of rows and columns of the matrix and
-     * reallocates storage if needed.
+     * reallocates storage if needed. All values are initalized to zero.
      *
      * @param[in] num_rows New number of rows
      * @param[in] num_cols New number of cols
@@ -155,7 +155,9 @@ public:
             if (d_mat) {
                 delete [] d_mat;
             }
-            d_mat = new double [new_size] {};
+
+            // Allocate new array and initialize all values to zero.
+            d_mat = new double [new_size] {0};
             d_alloc_size = new_size;
         }
         d_num_rows = num_rows;
