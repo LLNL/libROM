@@ -530,12 +530,6 @@ void Set_s2sp(const int myid, const int num_procs, vector<int> const& spNtrue, c
     const int nspaces = spfespace.size();
     MFEM_VERIFY(nspaces == spNtrue.size(), "");
 
-    vector<int> spaceOS(nspaces);
-
-    spaceOS[0] = 0;
-    for (int i=1; i<nspaces; ++i)
-        spaceOS[i] = spaceOS[i-1] + spfespace[i-1]->GetVSize();
-
     int mySampleDofOffset = 0;
     vector<int> os;
     os.assign(nspaces, 0);
@@ -590,6 +584,12 @@ void Set_s2sp(const int myid, const int num_procs, vector<int> const& spNtrue, c
     // The remaining code in this function only sets s2sp, only on the root process.
     if (myid != 0)
         return;
+
+    vector<int> spaceOS(nspaces);
+
+    spaceOS[0] = 0;
+    for (int i=1; i<nspaces; ++i)
+        spaceOS[i] = spaceOS[i-1] + spfespace[i-1]->GetVSize();
 
     s2sp.resize(global_num_sample_dofs);
 
