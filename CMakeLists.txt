@@ -236,6 +236,7 @@ if (USE_MFEM)
   set(examples
     poisson
     poisson_greedy
+    mixed_nonlinear_diffusion
     dg_advection
     nonlinear_elasticity
     heat_conduction
