@@ -956,32 +956,8 @@ void GatherDistributedMatrixRows(const CAROM::Matrix& B, const int rdim,
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
     MFEM_VERIFY(rdim <= B.numColumns(), "");
 
-    /*
-    const int Nfull = fespace.GetVSize();
-
-    vector<int> allNfull(num_procs);
-    MPI_Allgather(&Nfull, 1, MPI_INT, allNfull.data(), 1, MPI_INT, MPI_COMM_WORLD);
-
-    int os0 = 0;  // Full DOF offset for this process
-    for (int i=0; i<myid; ++i)
-        os0 += allNfull[i];
-
-    const int os1 = os0 + allNfull[myid];  // Full DOF offset for the next process
-    */
-
     vector<int> allos0(num_procs);
     vector<int> allos1(num_procs);
-
-    /*
-    allos0[0] = 0;
-    for (int i=1; i<num_procs; ++i)
-        allos0[i] = allos0[i-1] + allNfull[i-1];
-
-    for (int i=0; i<num_procs; ++i)
-    {
-        allos1[i] = allos0[i] + allNfull[i];
-    }
-    */
 
     MPI_Allgather(&os0, 1, MPI_INT, allos0.data(), 1, MPI_INT, MPI_COMM_WORLD);
     MPI_Allgather(&os1, 1, MPI_INT, allos1.data(), 1, MPI_INT, MPI_COMM_WORLD);
