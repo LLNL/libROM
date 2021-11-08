@@ -200,6 +200,11 @@ Matrix* MatrixInterpolator::interpolateSPDMatrix(Vector* point)
                 delete x_half_power_inv_mult_y;
 
                 // Diagonalize X^-1/2*Y*X^-1/2 to obtain the log of this matrix.
+                // Diagonalize YX^-1 to obtain log of this matrix.
+                // Following https://en.wikipedia.org/wiki/Logarithm_of_a_matrix
+                // 1. Diagonalize M to obtain M' = V^-1*M*V. M' are the eigenvalues
+                // of M and V are the eigenvectors of M.
+                // 2. log M = V(log M')V^-1
                 EigenPair log_eigenpair = SymmetricRightEigenSolve(x_half_power_inv_mult_y_mult_x_half_power_inv);
                 delete x_half_power_inv_mult_y_mult_x_half_power_inv;
                 Matrix* log_ev = log_eigenpair.ev;
@@ -208,6 +213,7 @@ Matrix* MatrixInterpolator::interpolateSPDMatrix(Vector* point)
                 Matrix* log_eigs = new Matrix(log_eigenpair.eigs.size(), log_eigenpair.eigs.size(), false);
                 for (int i = 0; i < log_eigenpair.eigs.size(); i++)
                 {
+                    std::cout << "Some eigenvalues of this matrix are negative, which leads to NaN values when taking the log. Aborting." << std::endl;
                     CAROM_VERIFY(log_eigenpair.eigs[i] > 0);
                     log_eigs->item(i, i) = std::log(log_eigenpair.eigs[i]);
                 }
@@ -240,6 +246,11 @@ Matrix* MatrixInterpolator::interpolateSPDMatrix(Vector* point)
     Matrix* log_interpolated_matrix = obtainLogInterpolatedMatrix(inv_q);
 
     // Diagonalize the new gamma so we can exponentiate it
+    // Diagonalize X to obtain exp(X) of this matrix.
+    // Following https://en.wikipedia.org/wiki/Matrix_exponential
+    // 1. Diagonalize M to obtain M' = V^-1*M*V. M' are the eigenvalues
+    // of M and V are the eigenvectors of M.
+    // 2. exp M = V(exp M')V^-1
     EigenPair exp_eigenpair = SymmetricRightEigenSolve(log_interpolated_matrix);
     delete log_interpolated_matrix;
 
@@ -255,7 +266,7 @@ Matrix* MatrixInterpolator::interpolateSPDMatrix(Vector* point)
     exp_ev->inverse(exp_ev_inv);
     Matrix* exp_ev_mult_exp_eig = exp_ev->mult(exp_eigs);
 
-    // Expoentiate gamma
+    // Exponetiate gamma
     Matrix* exp_gamma = exp_ev_mult_exp_eig->mult(exp_ev_inv);
 
     delete exp_ev;
@@ -296,6 +307,10 @@ Matrix* MatrixInterpolator::interpolateNonSingularMatrix(Vector* point)
                 Matrix* y_mult_ref_matrix_inv = d_rotated_reduced_matrices[i]->mult(ref_matrix_inv);
 
                 // Diagonalize YX^-1 to obtain log of this matrix.
+                // Following https://en.wikipedia.org/wiki/Logarithm_of_a_matrix
+                // 1. Diagonalize M to obtain M' = V^-1*M*V. M' are the eigenvalues
+                // of M and V are the eigenvectors of M.
+                // 2. log M = V(log M')V^-1
                 EigenPair log_eigenpair = SymmetricRightEigenSolve(y_mult_ref_matrix_inv);
                 delete y_mult_ref_matrix_inv;
                 Matrix* log_ev = log_eigenpair.ev;
@@ -304,6 +319,7 @@ Matrix* MatrixInterpolator::interpolateNonSingularMatrix(Vector* point)
                 Matrix* log_eigs = new Matrix(log_eigenpair.eigs.size(), log_eigenpair.eigs.size(), false);
                 for (int i = 0; i < log_eigenpair.eigs.size(); i++)
                 {
+                    std::cout << "Some eigenvalues of this matrix are negative, which leads to NaN values when taking the log. Aborting." << std::endl;
                     CAROM_VERIFY(log_eigenpair.eigs[i] > 0);
                     log_eigs->item(i, i) = std::log(log_eigenpair.eigs[i]);
                 }
@@ -335,6 +351,11 @@ Matrix* MatrixInterpolator::interpolateNonSingularMatrix(Vector* point)
     Matrix* log_interpolated_matrix = obtainLogInterpolatedMatrix(inv_q);
 
     // Diagonalize the new gamma so we can exponentiate it
+    // Diagonalize X to obtain exp(X) of this matrix.
+    // Following https://en.wikipedia.org/wiki/Matrix_exponential
+    // 1. Diagonalize M to obtain M' = V^-1*M*V. M' are the eigenvalues
+    // of M and V are the eigenvectors of M.
+    // 2. exp M = V(exp M')V^-1
     EigenPair exp_eigenpair = SymmetricRightEigenSolve(log_interpolated_matrix);
     delete log_interpolated_matrix;
     Matrix* exp_ev = exp_eigenpair.ev;
@@ -352,7 +373,7 @@ Matrix* MatrixInterpolator::interpolateNonSingularMatrix(Vector* point)
     // Perform log mapping.
     Matrix* exp_ev_mult_exp_eig = exp_ev->mult(exp_eigs);
 
-    // Expoentiate gamma
+    // Exponetiate gamma
     Matrix* exp_gamma = exp_ev_mult_exp_eig->mult(exp_ev_inv);
 
     delete exp_ev;

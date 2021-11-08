@@ -21,7 +21,7 @@ class Matrix;
 class Vector;
 
 /**
- * Interpolator is a uninstantiable protected class that retains common
+ * Interpolator is an uninstantiable protected class that retains common
  * functionality between the MatrixInterpolator and VectorInterpolator classes.
  * The interpolation algorithm was adapted from "Gradient-based
  * Constrained Optimization Using a Database of Linear Reduced-Order Models"

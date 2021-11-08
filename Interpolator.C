@@ -62,7 +62,8 @@ std::vector<double> Interpolator::obtainRBF(Vector* point)
     {
         Vector diff;
         point->minus(*d_parameter_points[i], diff);
-        double res = 1.0 / (1.0 + std::pow(d_epsilon*diff.norm(), 2));
+        double eps_squared = d_epsilon * d_epsilon;
+        double res = 1.0 / (1.0 + (eps_squared * diff.norm2()));
         inv_q.push_back(res);
     }
 

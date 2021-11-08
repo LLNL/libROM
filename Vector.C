@@ -216,9 +216,15 @@ Vector::inner_product(
 double
 Vector::norm() const
 {
-    double ip = inner_product(this);
-    double norm = sqrt(ip);
+    double norm = sqrt(norm2());
     return norm;
+}
+
+double
+Vector::norm2() const
+{
+    double norm2 = inner_product(this);
+    return norm2;
 }
 
 double

@@ -285,6 +285,16 @@ public:
     norm() const;
 
     /**
+     * @brief Form the squared norm of this.
+     *
+     * For a distributed Vector this is a parallel operation.
+     *
+     * @return The squared norm of this.
+     */
+    double
+    norm2() const;
+
+    /**
      * @brief Normalizes the Vector and returns its norm.
      *
      * For a distributed Vector this is a parallel operation.

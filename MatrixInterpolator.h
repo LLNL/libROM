@@ -43,8 +43,10 @@ public:
      *                             each parameter point.
      * @param[in] ref_point The index within the vector of parameter points
      *                      to the reference point
-     * @param[in] matrix_type The type of matrix (R = real, B = basis,
-     *                        NS = nonsingular, SPD = symmetric positive-definite)
+     * @param[in] matrix_type The type of matrix (R = real, B = basis [also a real
+     *                        matrix, but uses a unique rotation specific to bases
+     *                        (AQ)], NS = nonsingular, SPD = symmetric
+     *                        positive-definite)
      */
     MatrixInterpolator(std::vector<Vector*> parameter_points,
                        std::vector<Matrix*> rotation_matrices,
