@@ -49,12 +49,18 @@ public:
      *                        matrix, but uses a unique rotation specific to bases
      *                        (AQ)], NS = nonsingular, SPD = symmetric
      *                        positive-definite)
+     * @param[in] rbf       The RBF type ("G" == gaussian, "MQ" == multiquadric,
+     *                      "IQ" == inverse quadratic, "IMQ" == inverse
+     *                      multiquadric)
+     * @param[in] epsilon   The RBF parameter that determines the width of
+                            influence.
      */
     MatrixInterpolator(std::vector<Vector*> parameter_points,
                        std::vector<Matrix*> rotation_matrices,
                        std::vector<Matrix*> reduced_matrices,
                        int ref_point,
                        std::string matrix_type,
+                       std::string rbf = "G",
                        double epsilon = 1.0);
 
     /**

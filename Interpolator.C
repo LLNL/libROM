@@ -32,10 +32,12 @@ namespace CAROM {
 Interpolator::Interpolator(std::vector<Vector*> parameter_points,
                            std::vector<Matrix*> rotation_matrices,
                            int ref_point,
+                           std::string rbf,
                            double epsilon)
 {
     CAROM_VERIFY(parameter_points.size() == rotation_matrices.size());
     CAROM_VERIFY(parameter_points.size() > 0);
+    CAROM_VERIFY(rbf == "G" || rbf == "IQ" || rbf == "MQ" || rbf == "IMQ");
 
     // Get the rank of this process, and the number of processors.
     int mpi_init;
@@ -51,23 +53,49 @@ Interpolator::Interpolator(std::vector<Vector*> parameter_points,
     d_rotation_matrices = rotation_matrices;
     d_ref_point = ref_point;
     d_lambda_T = NULL;
+    d_rbf = rbf;
     d_epsilon = epsilon;
 }
 
-std::vector<double> Interpolator::obtainRBF(Vector* point)
+std::vector<double> Interpolator::obtainRBFToTrainingPoints(Vector* point)
 {
-    // Inverse quadratic RBF
-    std::vector<double> inv_q;
+    std::vector<double> rbf;
     for (int i = 0; i < d_parameter_points.size(); i++)
     {
-        Vector diff;
-        point->minus(*d_parameter_points[i], diff);
-        double eps_squared = d_epsilon * d_epsilon;
-        double res = 1.0 / (1.0 + (eps_squared * diff.norm2()));
-        inv_q.push_back(res);
+        rbf.push_back(obtainRBF(point, d_parameter_points[i]));
+    }
+    return rbf;
+}
+
+double Interpolator::obtainRBF(Vector* point1, Vector* point2)
+{
+    Vector diff;
+    point1->minus(*point2, diff);
+    double eps_norm_squared = d_epsilon * d_epsilon * diff.norm2();
+    double res = 0.0;
+
+    // Gaussian RBF
+    if (d_rbf == "G")
+    {
+        res = std::exp(-eps_norm_squared);
+    }
+    // Multiquadric RBF
+    else if (d_rbf == "MQ")
+    {
+        res = std::sqrt(1.0 + eps_norm_squared);
+    }
+    // Inverse quadratic RBF
+    else if (d_rbf == "IQ")
+    {
+        res = 1.0 / (1.0 + eps_norm_squared);
+    }
+    // Inverse multiquadric RBF
+    else if (d_rbf == "IMQ")
+    {
+        res = 1.0 / std::sqrt(1.0 + eps_norm_squared);
     }
 
-    return inv_q;
+    return res;
 }
 
 std::vector<Matrix*> obtainRotationMatrices(std::vector<Vector*> parameter_points,

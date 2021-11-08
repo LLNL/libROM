@@ -42,10 +42,12 @@ VectorInterpolator::VectorInterpolator(std::vector<Vector*> parameter_points,
                                        std::vector<Matrix*> rotation_matrices,
                                        std::vector<Vector*> reduced_vectors,
                                        int ref_point,
+                                       std::string rbf,
                                        double epsilon) :
     Interpolator(parameter_points,
                  rotation_matrices,
                  ref_point,
+                 rbf,
                  epsilon)
 {
     CAROM_VERIFY(reduced_vectors.size() == rotation_matrices.size());
@@ -79,15 +81,13 @@ void VectorInterpolator::obtainLambda(std::vector<Vector*> gammas)
         }
     }
 
-    // Obtain B vector by calculating inverse quadratic distance.
+    // Obtain B vector by calculating RBF.
     Matrix* B = new Matrix(gammas.size(), gammas.size(), false);
     for (int i = 0; i < B->numRows(); i++)
     {
         for (int j = i + 1; j < B->numColumns(); j++)
         {
-            Vector diff;
-            d_parameter_points[i]->minus(*d_parameter_points[j], diff);
-            double res = 1.0 / (1.0 + diff.norm2());
+            double res = obtainRBF(d_parameter_points[i], d_parameter_points[j]);
             B->item(i, j) = res;
             B->item(j, i) = res;
         }
@@ -107,15 +107,15 @@ void VectorInterpolator::obtainLambda(std::vector<Vector*> gammas)
     d_lambda_T = f_T;
 }
 
-Vector* VectorInterpolator::obtainLogInterpolatedVector(std::vector<double> inv_q)
+Vector* VectorInterpolator::obtainLogInterpolatedVector(std::vector<double> rbf)
 {
     Vector* log_interpolated_vector = new Vector(d_rotated_reduced_vectors[d_ref_point]->dim(), d_rotated_reduced_vectors[d_ref_point]->distributed());
     CAROM_VERIFY(d_rotated_reduced_vectors[d_ref_point]->dim() == d_lambda_T->numRows());
     for (int i = 0; i < d_lambda_T->numRows(); i++)
     {
-        for (int j = 0; j < inv_q.size(); j++)
+        for (int j = 0; j < rbf.size(); j++)
         {
-            log_interpolated_vector->getData()[i] += d_lambda_T->item(i, j) * inv_q[j];
+            log_interpolated_vector->getData()[i] += d_lambda_T->item(i, j) * rbf[j];
         }
     }
 
@@ -150,10 +150,10 @@ Vector* VectorInterpolator::interpolate(Vector* point)
     }
 
     // Obtain distances from database points to new point
-    std::vector<double> inv_q = obtainRBF(point);
+    std::vector<double> rbf = obtainRBFToTrainingPoints(point);
 
     // Interpolate gammas to get gamma for new point
-    Vector* log_interpolated_vector = obtainLogInterpolatedVector(inv_q);
+    Vector* log_interpolated_vector = obtainLogInterpolatedVector(rbf);
 
     // The exp mapping is X + the interpolated gamma
     Vector* interpolated_vector = d_rotated_reduced_vectors[d_ref_point]->plus(log_interpolated_vector);

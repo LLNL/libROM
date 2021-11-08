@@ -43,11 +43,17 @@ public:
      *                            each parameter point.
      * @param[in] ref_point The index within the vector of parameter points
      *                      to the reference point
+     * @param[in] rbf       The RBF type ("G" == gaussian, "MQ" == multiquadric,
+     *                      "IQ" == inverse quadratic, "IMQ" == inverse
+     *                      multiquadric)
+     * @param[in] epsilon   The RBF parameter that determines the width of
+                            influence.
      */
     VectorInterpolator(std::vector<Vector*> parameter_points,
                        std::vector<Matrix*> rotation_matrices,
                        std::vector<Vector*> reduced_vectors,
                        int ref_point,
+                       std::string rbf = "G",
                        double epsilon = 1.0);
 
     /**

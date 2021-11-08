@@ -14,6 +14,7 @@
 #define included_Interpolator_h
 
 #include <vector>
+#include <string>
 
 namespace CAROM {
 
@@ -40,10 +41,16 @@ protected:
      *                              each parameter point.
      * @param[in] ref_point The index within the vector of parameter points
      *                      to the reference point
+     * @param[in] rbf       The RBF type ("G" == gaussian, "MQ" == multiquadric,
+     *                      "IQ" == inverse quadratic, "IMQ" == inverse
+     *                      multiquadric)
+     * @param[in] epsilon   The RBF parameter that determines the width of
+                            influence.
      */
     Interpolator(std::vector<Vector*> parameter_points,
                  std::vector<Matrix*> rotation_matrices,
                  int ref_point,
+                 std::string rbf,
                  double epsilon = 1.0);
 
     /**
@@ -61,6 +68,13 @@ protected:
      *        to the reference point
      */
     int d_ref_point;
+
+    /**
+     * @brief The RBF type (gaussian, multiquadric, inverse quadratic, inverse
+     *        multiquadric)
+     */
+    std::string d_rbf;
+
 
     /**
      * @brief The RBF parameter that determines the width of influence.
@@ -90,7 +104,15 @@ protected:
      *
      * @param[in] point The unsampled parameter point.
      */
-    std::vector<double> obtainRBF(Vector* point);
+    std::vector<double> obtainRBFToTrainingPoints(Vector* point);
+
+    /**
+     * @brief Compute the RBF between two points.
+     *
+     * @param[in] point1 The first point.
+     * @param[in] point2 The second point.
+     */
+    double obtainRBF(Vector* point1, Vector* point2);
 
 private:
 

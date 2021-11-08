@@ -42,10 +42,12 @@ MatrixInterpolator::MatrixInterpolator(std::vector<Vector*> parameter_points,
                                        std::vector<Matrix*> reduced_matrices,
                                        int ref_point,
                                        std::string matrix_type,
+                                       std::string rbf,
                                        double epsilon) :
     Interpolator(parameter_points,
                  rotation_matrices,
                  ref_point,
+                 rbf,
                  epsilon)
 {
     CAROM_VERIFY(reduced_matrices.size() == rotation_matrices.size());
@@ -107,15 +109,13 @@ void MatrixInterpolator::obtainLambda(std::vector<Matrix*> gammas)
         }
     }
 
-    // Obtain B matrix by calculating inverse quadratic distance.
+    // Obtain B matrix by calculating RBF.
     Matrix* B = new Matrix(gammas.size(), gammas.size(), false);
     for (int i = 0; i < B->numRows(); i++)
     {
         for (int j = i + 1; j < B->numColumns(); j++)
         {
-            Vector diff;
-            d_parameter_points[i]->minus(*d_parameter_points[j], diff);
-            double res = 1.0 / (1.0 + diff.norm2());
+            double res = obtainRBF(d_parameter_points[i], d_parameter_points[j]);
             B->item(i, j) = res;
             B->item(j, i) = res;
         }
@@ -135,15 +135,15 @@ void MatrixInterpolator::obtainLambda(std::vector<Matrix*> gammas)
     d_lambda_T = f_T;
 }
 
-Matrix* MatrixInterpolator::obtainLogInterpolatedMatrix(std::vector<double> inv_q)
+Matrix* MatrixInterpolator::obtainLogInterpolatedMatrix(std::vector<double> rbf)
 {
     Matrix* log_interpolated_matrix = new Matrix(d_rotated_reduced_matrices[d_ref_point]->numRows(), d_rotated_reduced_matrices[d_ref_point]->numColumns(), d_rotated_reduced_matrices[d_ref_point]->distributed());
     CAROM_VERIFY(d_rotated_reduced_matrices[d_ref_point]->numRows() * d_rotated_reduced_matrices[d_ref_point]->numColumns() == d_lambda_T->numRows());
     for (int i = 0; i < d_lambda_T->numRows(); i++)
     {
-        for (int j = 0; j < inv_q.size(); j++)
+        for (int j = 0; j < rbf.size(); j++)
         {
-            log_interpolated_matrix->getData()[i] += d_lambda_T->item(i, j) * inv_q[j];
+            log_interpolated_matrix->getData()[i] += d_lambda_T->item(i, j) * rbf[j];
         }
     }
 
@@ -240,10 +240,10 @@ Matrix* MatrixInterpolator::interpolateSPDMatrix(Vector* point)
     }
 
     // Obtain distances from database points to new point
-    std::vector<double> inv_q = obtainRBF(point);
+    std::vector<double> rbf = obtainRBFToTrainingPoints(point);
 
     // Interpolate gammas to get gamma for new point
-    Matrix* log_interpolated_matrix = obtainLogInterpolatedMatrix(inv_q);
+    Matrix* log_interpolated_matrix = obtainLogInterpolatedMatrix(rbf);
 
     // Diagonalize the new gamma so we can exponentiate it
     // Diagonalize X to obtain exp(X) of this matrix.
@@ -345,10 +345,10 @@ Matrix* MatrixInterpolator::interpolateNonSingularMatrix(Vector* point)
     }
 
     // Obtain distances from database points to new point
-    std::vector<double> inv_q = obtainRBF(point);
+    std::vector<double> rbf = obtainRBFToTrainingPoints(point);
 
     // Interpolate gammas to get gamma for new point
-    Matrix* log_interpolated_matrix = obtainLogInterpolatedMatrix(inv_q);
+    Matrix* log_interpolated_matrix = obtainLogInterpolatedMatrix(rbf);
 
     // Diagonalize the new gamma so we can exponentiate it
     // Diagonalize X to obtain exp(X) of this matrix.
@@ -416,10 +416,10 @@ Matrix* MatrixInterpolator::interpolateMatrix(Vector* point)
         obtainLambda(gammas);
     }
     // Obtain distances from database points to new point
-    std::vector<double> inv_q = obtainRBF(point);
+    std::vector<double> rbf = obtainRBFToTrainingPoints(point);
 
     // Interpolate gammas to get gamma for new point
-    Matrix* interpolated_matrix = obtainLogInterpolatedMatrix(inv_q);
+    Matrix* interpolated_matrix = obtainLogInterpolatedMatrix(rbf);
 
     // The exp mapping is X + the interpolated gamma
     *interpolated_matrix += *d_rotated_reduced_matrices[d_ref_point];

@@ -299,7 +299,8 @@ int main(int argc, char *argv[])
     double t_final = 10.0;
     double dt = 0.01;
     double ef = 0.9999;
-    double rbf_inv_width = 1.0;
+    const char *rbf_type = "G";
+    double rbf_width = 1.0;
     f_factor = 1.0;
     int rdim = -1;
     bool fom = false;
@@ -384,7 +385,9 @@ int main(int argc, char *argv[])
                    "Enable or disable matrix interpolation preparation during the online phase.");
     args.AddOption(&ef, "-ef", "--energy_fraction",
                    "Energy fraction.");
-    args.AddOption(&rbf_inv_width, "-riw", "--rbf_inv_width",
+    args.AddOption(&rbf_type, "-rt", "--rbf_type",
+                   "RBF type ('G' == gaussian, 'MQ'== multiquadric, 'IQ' == inverse quadratic, 'IMQ' == inverse multiquadric).");
+    args.AddOption(&rbf_width, "-rw", "--rbf_width",
                    "RBF inverse width.");
     args.AddOption(&rdim, "-rdim", "--rdim",
                    "Reduced dimension.");
@@ -408,8 +411,8 @@ int main(int argc, char *argv[])
     }
 
     bool check = (!online && !interp_prep && !online_interp) ||
-        (online && !interp_prep && !online_interp) || (!online && interp_prep && !online_interp) ||
-        (!online && !interp_prep && online_interp);
+                 (online && !interp_prep && !online_interp) || (!online && interp_prep && !online_interp) ||
+                 (!online && !interp_prep && online_interp);
     MFEM_VERIFY(check, "only one of online, interp_prep, or online_interp can be true!");
 
     if (interp_prep || online_interp)
@@ -829,11 +832,11 @@ int main(int argc, char *argv[])
             int ref_point = getCenterPoint(parameter_points, false);
             std::vector<CAROM::Matrix*> rotation_matrices = obtainRotationMatrices(parameter_points, bases, ref_point);
 
-            CAROM::MatrixInterpolator basis_interpolator(parameter_points, rotation_matrices, bases, ref_point, "B", rbf_inv_width);
-            CAROM::MatrixInterpolator M_interpolator(parameter_points, rotation_matrices, M_hats, ref_point, "SPD", rbf_inv_width);
-            CAROM::MatrixInterpolator K_interpolator(parameter_points, rotation_matrices, K_hats, ref_point, "R", rbf_inv_width);
-            CAROM::VectorInterpolator b_interpolator(parameter_points, rotation_matrices, b_hats, ref_point, rbf_inv_width);
-            CAROM::VectorInterpolator u_init_interpolator(parameter_points, rotation_matrices, u_init_hats, ref_point, rbf_inv_width);
+            CAROM::MatrixInterpolator basis_interpolator(parameter_points, rotation_matrices, bases, ref_point, "B", rbf_type, rbf_width);
+            CAROM::MatrixInterpolator M_interpolator(parameter_points, rotation_matrices, M_hats, ref_point, "SPD", rbf_type, rbf_width);
+            CAROM::MatrixInterpolator K_interpolator(parameter_points, rotation_matrices, K_hats, ref_point, "R", rbf_type, rbf_width);
+            CAROM::VectorInterpolator b_interpolator(parameter_points, rotation_matrices, b_hats, ref_point, rbf_type, rbf_width);
+            CAROM::VectorInterpolator u_init_interpolator(parameter_points, rotation_matrices, u_init_hats, ref_point, rbf_type, rbf_width);
             spatialbasis = basis_interpolator.interpolate(curr_point);
             M_hat_carom = M_interpolator.interpolate(curr_point);
             K_hat_carom = K_interpolator.interpolate(curr_point);
