@@ -190,7 +190,7 @@ public:
 
     /**
      * @brief Sets the length of the vector and reallocates storage if
-     * needed. All values are initalized to zero.
+     * needed. All values are initialized to zero.
      *
      * @param[in] dim When undistributed, the total dimension of the Vector.
      *                When distributed, the part of the total dimension of
@@ -764,6 +764,13 @@ private:
 
  */
 int getCenterPoint(std::vector<Vector*> points,
+                   bool use_centroid);
+
+/**
+* @brief Get center point of a group of points.
+
+*/
+int getCenterPoint(std::vector<Vector> points,
                    bool use_centroid);
 
 }

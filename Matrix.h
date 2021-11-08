@@ -137,7 +137,7 @@ public:
 
     /**
      * @brief Sets the number of rows and columns of the matrix and
-     * reallocates storage if needed. All values are initalized to zero.
+     * reallocates storage if needed. All values are initialized to zero.
      *
      * @param[in] num_rows New number of rows
      * @param[in] num_cols New number of cols

@@ -25,6 +25,8 @@ class Vector;
 /**
  * MatrixInterpolator interpolates reduced matrices of a set of parameter points
  * and returns an interpolated reduced matrix for an unseen parameter point.
+ * The performance of this algorithm depends on the matrix sizes being small
+ * because of its computational complexity due to direct matrix inversion.
  * The interpolation algorithm was adapted from "Gradient-based
  * Constrained Optimization Using a Database of Linear Reduced-Order Models"
  * by Y. Choi et al.

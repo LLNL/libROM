@@ -115,7 +115,7 @@ void MatrixInterpolator::obtainLambda(std::vector<Matrix*> gammas)
         {
             Vector diff;
             d_parameter_points[i]->minus(*d_parameter_points[j], diff);
-            double res = 1.0 / (1.0 + std::pow(diff.norm(), 2));
+            double res = 1.0 / (1.0 + diff.norm2());
             B->item(i, j) = res;
             B->item(j, i) = res;
         }
@@ -266,7 +266,7 @@ Matrix* MatrixInterpolator::interpolateSPDMatrix(Vector* point)
     exp_ev->inverse(exp_ev_inv);
     Matrix* exp_ev_mult_exp_eig = exp_ev->mult(exp_eigs);
 
-    // Exponetiate gamma
+    // Exponentiate gamma
     Matrix* exp_gamma = exp_ev_mult_exp_eig->mult(exp_ev_inv);
 
     delete exp_ev;
@@ -373,7 +373,7 @@ Matrix* MatrixInterpolator::interpolateNonSingularMatrix(Vector* point)
     // Perform log mapping.
     Matrix* exp_ev_mult_exp_eig = exp_ev->mult(exp_eigs);
 
-    // Exponetiate gamma
+    // Exponentiate gamma
     Matrix* exp_gamma = exp_ev_mult_exp_eig->mult(exp_ev_inv);
 
     delete exp_ev;

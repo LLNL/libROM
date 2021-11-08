@@ -87,7 +87,7 @@ void VectorInterpolator::obtainLambda(std::vector<Vector*> gammas)
         {
             Vector diff;
             d_parameter_points[i]->minus(*d_parameter_points[j], diff);
-            double res = 1.0 / (1.0 + std::pow(diff.norm(), 2));
+            double res = 1.0 / (1.0 + diff.norm2());
             B->item(i, j) = res;
             B->item(j, i) = res;
         }

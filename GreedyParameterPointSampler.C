@@ -542,53 +542,7 @@ GreedyParameterPointSampler::getNextParameterPoint()
 
     if (d_parameter_sampled_indices.size() == 0)
     {
-        // get center-most point
-        // obtain the centroid and find the point closest to centroid
-        if (d_use_centroid)
-        {
-            Vector centroid(d_parameter_points[0]);
-            for (int i = 1; i < d_parameter_points.size(); i++) {
-                centroid += d_parameter_points[i];
-            }
-            centroid.mult(1.0 / d_parameter_points.size(), centroid);
-
-            double min_dist_to_centroid;
-            for (int i = 0; i < d_parameter_points.size(); i++) {
-                Vector diff;
-                centroid.minus(d_parameter_points[i], diff);
-                double dist_to_centroid = diff.norm();
-                if (i == 0 || dist_to_centroid < min_dist_to_centroid)
-                {
-                    min_dist_to_centroid = dist_to_centroid;
-                    d_next_point_to_sample = i;
-                }
-            }
-        }
-
-        // otherwise, do a brute force search to obtain
-        // the point closest to all other points
-        else
-        {
-            std::vector<double> dist_to_points(d_parameter_points.size(), 0);
-            for (int i = 0; i < d_parameter_points.size(); i++) {
-                for (int j = i + 1; j < d_parameter_points.size(); j++) {
-                    Vector diff;
-                    d_parameter_points[i].minus(d_parameter_points[j], diff);
-                    double dist = diff.norm();
-                    dist_to_points[i] += dist;
-                    dist_to_points[j] += dist;
-                }
-            }
-
-            double closest_dist_to_points = INT_MAX;
-            for (int i = 0; i < dist_to_points.size(); i++) {
-                if (dist_to_points[i] < closest_dist_to_points)
-                {
-                    closest_dist_to_points = dist_to_points[i];
-                    d_next_point_to_sample = i;
-                }
-            }
-        }
+        d_next_point_to_sample = getCenterPoint(d_parameter_points, d_use_centroid);
     }
 
     d_max_error = 0;
