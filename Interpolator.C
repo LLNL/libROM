@@ -137,67 +137,26 @@ std::vector<Matrix*> obtainRotationMatrices(std::vector<Vector*> parameter_point
         }
 
         Matrix* basis_mult_basis = bases[i]->transposeMult(bases[ref_point]);
-        SLPK_Matrix svd_input;
+        Matrix* basis = new Matrix(basis_mult_basis->numRows(), basis_mult_basis->numColumns(), false);
+        Matrix* basis_right = new Matrix(basis_mult_basis->numColumns(), basis_mult_basis->numColumns(), false);
 
-        int *row_offset = new int[num_procs + 1];
-        row_offset[num_procs] = basis_mult_basis->numDistributedRows();
-        row_offset[rank] = basis_mult_basis->numRows();
-
-        CAROM_VERIFY(MPI_Allgather(MPI_IN_PLACE,
-                                   1,
-                                   MPI_INT,
-                                   row_offset,
-                                   1,
-                                   MPI_INT,
-                                   MPI_COMM_WORLD) == MPI_SUCCESS);
-        for (int j = num_procs - 1; j >= 0; j--) {
-            row_offset[j] = row_offset[j + 1] - row_offset[j];
-        }
-
-        CAROM_VERIFY(row_offset[0] == 0);
-
-        int d_blocksize = row_offset[num_procs] / num_procs;
-        if (row_offset[num_procs] % num_procs != 0) d_blocksize += 1;
-
-        initialize_matrix(&svd_input, basis_mult_basis->numColumns(),
-                          basis_mult_basis->numDistributedRows(),
-                          1, num_procs, d_blocksize, d_blocksize);
-
-        for (int rank = 0; rank < num_procs; ++rank)
+        // We need to compute the SVD of basis_mult_basis. Since it is
+        // undistributed due to the transposeMult, let's use lapack's serial SVD
+        // on rank 0 only.
+        if (rank == 0)
         {
-            scatter_block(&svd_input, 1, row_offset[rank] + 1,
-                          basis_mult_basis->getData(),
-                          basis_mult_basis->numColumns(),
-                          row_offset[rank + 1] - row_offset[rank], rank);
+            Vector* sv = new Vector(basis_mult_basis->numColumns(), false);
+            SerialSVD(basis_mult_basis, basis, sv, basis_right);
+            delete sv;
         }
 
-        std::unique_ptr<SVDManager> d_factorizer(new SVDManager);
+        // Broadcast U and V which are computed only on root.
+        MPI_Bcast(basis->getData(), basis->numRows() * basis->numColumns(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        MPI_Bcast(basis_right->getData(), basis_right->numRows() * basis_right->numColumns(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-        // This block does the actual ScaLAPACK call to do the factorization.
-        svd_init(d_factorizer.get(), &svd_input);
-        d_factorizer->dov = 1;
-        factorize(d_factorizer.get());
-        free_matrix_data(&svd_input);
-
-        // Allocate the appropriate matrices and gather their elements.
-        Matrix* basis = new Matrix(basis_mult_basis->numRows(), basis_mult_basis->numColumns(), basis_mult_basis->distributed());
-        Matrix* basis_right = new Matrix(basis_mult_basis->numColumns(), basis_mult_basis->numColumns(), basis_mult_basis->distributed());
-        for (int rank = 0; rank < num_procs; ++rank) {
-            // V is computed in the transposed order so no reordering necessary.
-            gather_block(&basis->item(0, 0), d_factorizer->V,
-                         1, row_offset[static_cast<unsigned>(rank)]+1,
-                         basis_mult_basis->numColumns(), row_offset[static_cast<unsigned>(rank) + 1] -
-                         row_offset[static_cast<unsigned>(rank)],
-                         rank);
-
-            // U is computed in the transposed order so no reordering necessary.
-            gather_block(&basis_right->item(0, 0), d_factorizer->U, 1, 1,
-                         basis_mult_basis->numColumns(), basis_mult_basis->numColumns(), rank);
-        }
-
+        // Obtain the rotation matrix.
         Matrix* rotation_matrix = basis->mult(basis_right);
 
-        delete [] row_offset;
         delete basis_mult_basis;
         delete basis;
         delete basis_right;
