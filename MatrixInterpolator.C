@@ -215,7 +215,7 @@ Matrix* MatrixInterpolator::interpolateSPDMatrix(Vector* point)
                 {
                     if (log_eigenpair.eigs[i] > 0)
                     {
-                        std::cout << "Some eigenvalues of this matrix are negative, which leads to NaN values when taking the log. Aborting." << std::endl;
+                        if (d_rank == 0) std::cout << "Some eigenvalues of this matrix are negative, which leads to NaN values when taking the log. Aborting." << std::endl;
                         CAROM_VERIFY(log_eigenpair.eigs[i] > 0);
                     }
                     log_eigs->item(i, i) = std::log(log_eigenpair.eigs[i]);
@@ -324,7 +324,7 @@ Matrix* MatrixInterpolator::interpolateNonSingularMatrix(Vector* point)
                 {
                     if (log_eigenpair.eigs[i] > 0)
                     {
-                        std::cout << "Some eigenvalues of this matrix are negative, which leads to NaN values when taking the log. Aborting." << std::endl;
+                        if (d_rank == 0) std::cout << "Some eigenvalues of this matrix are negative, which leads to NaN values when taking the log. Aborting." << std::endl;
                         CAROM_VERIFY(log_eigenpair.eigs[i] > 0);
                     }
                     log_eigs->item(i, i) = std::log(log_eigenpair.eigs[i]);
