@@ -1222,8 +1222,6 @@ struct SerialSVDDecomposition
  * @param[in] U The matrix to write the left singular vectors into.
  * @param[in] S The vector to write the singular values into.
  * @param[in] V The matrix to write the right singular vectors into.
- * @param[in] LR Whether to output the left or right singular vectors.
- *               ("L" == left, "R" == right, "LR" == both)
  *
  * @return The singular value decomposition within the input parameters U, S,
  *         and V.
@@ -1231,22 +1229,18 @@ struct SerialSVDDecomposition
 void SerialSVD(Matrix* A,
                Matrix* U,
                Vector* S,
-               Matrix* V,
-               std::string LR);
+               Matrix* V);
 
 /**
  * @brief Computes the SVD of a undistributed matrix in serial.
  *
  * @param[in] A The MxN undistributed matrix to be eigendecomposed.
- * @param[in] LR Whether to output the left or right singular vectors.
- *               ("L" == left, "R" == right, "LR" == both)
  *
  * @return The singular value decomposition within a struct. The matrices
  *         and vector contained within the returning struct must be destroyed by
  *         the user.
  */
-struct SerialSVDDecomposition SerialSVD(Matrix* A,
-                                        std::string LR);
+struct SerialSVDDecomposition SerialSVD(Matrix* A);
 
 /**
  * @brief Computes the eigenvectors/eigenvalues of an NxN real symmetric matrix.

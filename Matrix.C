@@ -1861,42 +1861,34 @@ struct ComplexEigenPair NonSymmetricRightEigenSolve(Matrix* A)
 void SerialSVD(Matrix* A,
                Matrix* U,
                Vector* S,
-               Matrix* V,
-               std::string LR)
+               Matrix* V)
 {
     CAROM_VERIFY(!A->distributed());
     int m = A->numRows();
     int n = A->numColumns();
 
     Matrix* A_copy = new Matrix(*A);
-    if (LR == "L" || LR == "LR")
+    if (U == NULL)
     {
-        CAROM_VERIFY(U != 0);
-        CAROM_VERIFY(!U->distributed());
-        if (U == NULL)
-        {
-            U = new Matrix(m, std::min(m, n), false);
-        }
-        else
-        {
-            U->setSize(m, std::min(m, n));
-        }
+        U = new Matrix(m, std::min(m, n), false);
     }
-    if (LR == "R" || LR == "LR")
+    else
     {
-        CAROM_VERIFY(V != 0);
+        CAROM_VERIFY(!U->distributed());
+        U->setSize(m, std::min(m, n));
+    }
+    if (V == NULL)
+    {
         CAROM_VERIFY(!V->distributed());
-        if (V == NULL)
-        {
-            V = new Matrix(std::min(m, n), n, false);
-        }
-        else
-        {
-            V->setSize(std::min(m, n), n);
-        }
+        V = new Matrix(std::min(m, n), n, false);
+    }
+    else
+    {
+        V->setSize(std::min(m, n), n);
     }
     if (S == NULL)
     {
+        CAROM_VERIFY(!S->distributed());
         S = new Vector(n, false);
     }
     else
@@ -1913,21 +1905,8 @@ void SerialSVD(Matrix* A,
     int iwork[8*std::min(m, n)];
     int info;
 
-    if (LR == "L")
-    {
-        dgesdd(&jobz, &m, &n, A_copy->getData(), &lda, S->getData(), U->getData(), &ldu, NULL,
-               &ldv, work, &lwork, iwork, &info);
-    }
-    else if (LR == "R")
-    {
-        dgesdd(&jobz, &m, &n, A_copy->getData(), &lda, S->getData(), NULL, &ldu, V->getData(),
-               &ldv, work, &lwork, iwork, &info);
-    }
-    else if (LR == "LR")
-    {
-        dgesdd(&jobz, &m, &n, A_copy->getData(), &lda, S->getData(), U->getData(), &ldu, V->getData(),
-               &ldv, work, &lwork, iwork, &info);
-    }
+    dgesdd(&jobz, &m, &n, A_copy->getData(), &lda, S->getData(), U->getData(), &ldu, V->getData(),
+           &ldv, work, &lwork, iwork, &info);
 
     CAROM_VERIFY(info == 0);
 
@@ -1935,15 +1914,14 @@ void SerialSVD(Matrix* A,
     delete A_copy;
 }
 
-struct SerialSVDDecomposition SerialSVD(Matrix* A,
-                                        std::string LR)
+struct SerialSVDDecomposition SerialSVD(Matrix* A)
 {
     CAROM_VERIFY(!A->distributed());
     Matrix* U = NULL;
     Vector* S = NULL;
     Matrix* V = NULL;
 
-    SerialSVD(A, U, S, V, LR);
+    SerialSVD(A, U, S, V);
 
     struct SerialSVDDecomposition decomp;
     decomp.U = U;

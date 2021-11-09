@@ -218,7 +218,8 @@ QDEIM(const Matrix* f_basis,
                 }
                 Matrix* U = NULL;
                 Vector sigma(n, false);
-                SerialSVD(&A, U, &sigma, &V, "R");
+                SerialSVD(&A, U, &sigma, &V);
+                delete U;
 
                 g = (sigma.getData()[n-2] * sigma.getData()[n-2]) - (sigma.getData()[n-1] * sigma.getData()[n-1]);
 

@@ -320,7 +320,7 @@ void BroadcastUndistributedRomVector(CAROM::Vector* v)
     for (int i=0; i<N; ++i)
         (*v)(i) = d[i];
 
-    delete d;
+    delete [] d;
 }
 
 double InitialTemperature(const Vector &x);
