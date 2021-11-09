@@ -32,6 +32,7 @@
 #define dgetrf CAROM_FC_GLOBAL(dgetrf, DGETRF)
 #define dgetri CAROM_FC_GLOBAL(dgetri, DGETRI)
 #define dgeqp3 CAROM_FC_GLOBAL(dgeqp3, DGEQP3)
+#define dgesdd CAROM_FC_GLOBAL(dgesdd, DGESDD)
 
 extern "C" {
 // Compute eigenvalue and eigenvectors of real symmetric matrix.
@@ -48,6 +49,11 @@ extern "C" {
 
 // BLAS-3 version of QR decomposition with column pivoting
     void dgeqp3(int*, int*, double*, int*, int*, double*, double*, int*, int*);
+
+// Serial SVD of a matrix.
+    void dgesdd(char*, int*, int*, double*, int*,
+                double*, double*, int*, double*, int*,
+                double*, int*, int*, int*);
 }
 
 namespace CAROM {
@@ -1850,6 +1856,101 @@ struct ComplexEigenPair NonSymmetricRightEigenSolve(Matrix* A)
     delete A_copy;
 
     return eigenpair;
+}
+
+void SerialSVD(Matrix* A,
+               Matrix* U,
+               Vector* S,
+               Matrix* V,
+               std::string LR)
+{
+    CAROM_VERIFY(!A->distributed());
+    int m = A->numRows();
+    int n = A->numColumns();
+
+    Matrix* A_copy = new Matrix(*A);
+    if (LR == "L" || LR == "LR")
+    {
+        CAROM_VERIFY(U != 0);
+        CAROM_VERIFY(!U->distributed());
+        if (U == NULL)
+        {
+            U = new Matrix(m, std::min(m, n), false);
+        }
+        else
+        {
+            U->setSize(m, std::min(m, n));
+        }
+    }
+    if (LR == "R" || LR == "LR")
+    {
+        CAROM_VERIFY(V != 0);
+        CAROM_VERIFY(!V->distributed());
+        if (V == NULL)
+        {
+            V = new Matrix(std::min(m, n), n, false);
+        }
+        else
+        {
+            V->setSize(std::min(m, n), n);
+        }
+    }
+    if (S == NULL)
+    {
+        S = new Vector(n, false);
+    }
+    else
+    {
+        S->setSize(n);
+    }
+
+    char jobz = 'S';
+    int lda = m;
+    int ldu = m;
+    int ldv = std::min(m, n);
+    int lwork = 4 * m * n * m * n + 7 * m * n;
+    double* work = new double [lwork];
+    int iwork[8*std::min(m, n)];
+    int info;
+
+    if (LR == "L")
+    {
+        dgesdd(&jobz, &m, &n, A_copy->getData(), &lda, S->getData(), U->getData(), &ldu, NULL,
+               &ldv, work, &lwork, iwork, &info);
+    }
+    else if (LR == "R")
+    {
+        dgesdd(&jobz, &m, &n, A_copy->getData(), &lda, S->getData(), NULL, &ldu, V->getData(),
+               &ldv, work, &lwork, iwork, &info);
+    }
+    else if (LR == "LR")
+    {
+        dgesdd(&jobz, &m, &n, A_copy->getData(), &lda, S->getData(), U->getData(), &ldu, V->getData(),
+               &ldv, work, &lwork, iwork, &info);
+    }
+
+    CAROM_VERIFY(info == 0);
+
+    delete [] work;
+    delete A_copy;
+}
+
+struct SerialSVDDecomposition SerialSVD(Matrix* A,
+                                        std::string LR)
+{
+    CAROM_VERIFY(!A->distributed());
+    Matrix* U = NULL;
+    Vector* S = NULL;
+    Matrix* V = NULL;
+
+    SerialSVD(A, U, S, V, LR);
+
+    struct SerialSVDDecomposition decomp;
+    decomp.U = U;
+    decomp.S = S;
+    decomp.V = V;
+
+    return decomp;
 }
 
 // Compute the product A^T * B, where A is represented by the space-time
