@@ -146,7 +146,7 @@ std::vector<Matrix*> obtainRotationMatrices(std::vector<Vector*> parameter_point
         if (rank == 0)
         {
             Vector* sv = new Vector(basis_mult_basis->numColumns(), false);
-            SerialSVD(basis_mult_basis, basis, sv, basis_right);
+            SerialSVD(basis_mult_basis, basis_right, sv, basis);
             delete sv;
         }
 
