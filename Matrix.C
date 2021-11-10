@@ -1899,8 +1899,9 @@ void SerialSVD(Matrix* A,
     char jobz = 'S';
     int lda = m;
     int ldu = m;
-    int ldv = std::min(m, n);
-    int lwork = 4 * m * n * m * n + 7 * m * n;
+    int ldv = n;
+    int mn = std::min(m, n);
+    int lwork = 4 * mn * mn + 7 * mn;
     double* work = new double [lwork];
     int iwork[8*std::min(m, n)];
     int info;
