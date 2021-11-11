@@ -516,6 +516,95 @@ public:
         double c) const;
 
     /**
+     * @brief Multiplies this Matrix with the transpose of other and returns
+     * the product, reference version.
+     *
+     * Supports multiplication of two undistributed matrices returning an
+     * undistributed Matrix.
+     *
+     * @pre !distributed()
+     * @pre distributed() == other->distributed()
+     * @pre numCols() == other->numRows()
+     *
+     * @param[in] other The Matrix to multiply with this.
+     *
+     * @return The product Matrix.
+     */
+    Matrix*
+    multTranspose(
+        const Matrix& other) const
+    {
+        Matrix* result = 0;
+        multTranspose(other, result);
+        return result;
+    }
+
+    /**
+     * @brief Multiplies this Matrix with the transpose of other and returns
+     * the product, pointer version.
+     *
+     * Supports multiplication of two undistributed matrices returning an
+     * undistributed Matrix.
+     *
+     * @pre other != 0
+     * @pre !distributed()
+     * @pre distributed() == other->distributed()
+     * @pre numCols() == other->numRows()
+     *
+     * @param[in] other The Matrix to multiply with this.
+     *
+     * @return The product Matrix.
+     */
+    Matrix*
+    multTranspose(
+        const Matrix* other) const
+    {
+        CAROM_VERIFY(other != 0);
+        return multTranspose(*other);
+    }
+
+    /**
+     * @brief Multiplies this Matrix with the transpose of other and fills
+     * result with the answer.
+     *
+     * Supports multiplication of two undistributed matrices returning an
+     * undistributed Matrix. If result has not been allocated it will be,
+     * otherwise it will be sized accordingly.
+     *
+     * @pre result == 0 || !result->distributed()
+     * @pre !distributed()
+     * @pre distributed() == other->distributed()
+     * @pre numCols() == other->numRows()
+     *
+     * @param[in] other The Matrix to multiply with this.
+     * @param[out] result The product Matrix.
+     */
+    void
+    multTranspose(
+        const Matrix& other,
+        Matrix*& result) const;
+
+    /**
+     * @brief Multiplies this Matrix with the transpose of other and fills
+     * result with the answer.
+     *
+     * Supports multiplication of two undistributed matrices returning an
+     * undistributed Matrix. Result will be sized accordingly.
+     *
+     * @pre !result.distributed()
+     * @pre !distributed()
+     * @pre distributed() == other->distributed()
+     * @pre numCols() == other->numRows()
+     *
+     * @param[in] other The Matrix to multiply with this.
+     * @param[out] result The product Matrix.
+     */
+    void
+    multTranspose(
+        const Matrix& other,
+        Matrix& result) const;
+
+    /**
      * @brief Multiplies the transpose of this Matrix with other and returns
      * the product, reference version.
      *

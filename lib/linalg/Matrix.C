@@ -461,6 +461,62 @@ Matrix::multPlus(
 }
 
 void
+Matrix::multTranspose(
+    const Matrix& other,
+    Matrix*& result) const
+{
+    CAROM_VERIFY(result == 0 || !result->distributed());
+    CAROM_VERIFY(!distributed());
+    CAROM_VERIFY(distributed() == other.distributed());
+    CAROM_VERIFY(numColumns() == other.numRows());
+
+    // If the result has not been allocated then do so.  Otherwise size it
+    // correctly.
+    if (result == 0) {
+        result = new Matrix(d_num_rows, other.d_num_rows, false);
+    }
+    else {
+        result->setSize(d_num_rows, other.d_num_rows);
+    }
+
+    // Do the multiplication.
+    for (int this_row = 0; this_row < d_num_rows; ++this_row) {
+        for (int other_row = 0; other_row < other.d_num_rows; ++other_row) {
+            double result_val = 0.0;
+            for (int entry = 0; entry < d_num_cols; ++entry) {
+                result_val += item(this_row, entry)*other.item(other_row, entry);
+            }
+            result->item(this_row, other_row) = result_val;
+        }
+    }
+}
+
+void
+Matrix::multTranspose(
+    const Matrix& other,
+    Matrix& result) const
+{
+    CAROM_VERIFY(!result.distributed());
+    CAROM_VERIFY(!distributed());
+    CAROM_VERIFY(distributed() == other.distributed());
+    CAROM_VERIFY(numColumns() == other.numRows());
+
+    // Size result correctly.
+    result.setSize(d_num_rows, other.d_num_rows);
+
+    // Do the multiplication.
+    for (int this_row = 0; this_row < d_num_rows; ++this_row) {
+        for (int other_row = 0; other_row < other.d_num_rows; ++other_row) {
+            double result_val = 0.0;
+            for (int entry = 0; entry < d_num_cols; ++entry) {
+                result_val += item(this_row, entry)*other.item(other_row, entry);
+            }
+            result.item(this_row, other_row) = result_val;
+        }
+    }
+}
+
+void
 Matrix::transposeMult(
     const Matrix& other,
     Matrix*& result) const
@@ -469,8 +525,8 @@ Matrix::transposeMult(
     CAROM_VERIFY(distributed() == other.distributed());
     CAROM_VERIFY(numRows() == other.numRows());
 
-    // If the result has not been allocated then do so.  Otherwise size it
-    // correctly.
+// If the result has not been allocated then do so.  Otherwise size it
+// correctly.
     if (result == 0) {
         result = new Matrix(d_num_cols, other.d_num_cols, false);
     }
@@ -806,6 +862,41 @@ void Matrix::transposePseudoinverse()
         delete AtA;
     }
 }
+//
+// void Matrix::rightTransposePseudoinverse()
+// {
+//     CAROM_VERIFY(!distributed());
+//     CAROM_VERIFY(numRows() >= numColumns());
+//
+//     if (numRows() == numColumns())
+//     {
+//         inverse();
+//     }
+//     else
+//     {
+//         Matrix *AtA = this->transposeMult(this);
+//
+//         // Directly invert AtA, which is a bad idea if AtA is not small.
+//         AtA->inverse();
+//
+//         // Pseudoinverse is (AtA)^{-1}*this^T, but we store the transpose of the result in this, namely this*(AtA)^{-T}.
+//         Vector row(numColumns(), false);
+//         Vector res(numColumns(), false);
+//         for (int i=0; i<numRows(); ++i)
+//         {   // Compute i-th row of this multiplied by (AtA)^{-T}, whose transpose is (AtA)^{-1} times i-th row transposed.
+//             for (int j=0; j<numColumns(); ++j)
+//                 row.item(j) = this->item(i,j);
+//
+//             AtA->mult(row, res);
+//
+//             // Overwrite i-th row with transpose of result.
+//             for (int j=0; j<numColumns(); ++j)
+//                 this->item(i,j) = res.item(j);
+//         }
+//
+//         delete AtA;
+//     }
+// }
 
 void
 Matrix::print(const char * prefix) const

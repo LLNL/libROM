@@ -122,6 +122,14 @@ TEST(MatrixSerialTest, Test_setSize)
  *
  *  * void mult(const Matrix&, Matrix&) const
  *
+ *  * Matrix* multTranspose(const Matrix&) const
+ *
+ *  * Matrix* multTranspose(const Matrix*) const
+ *
+ *  * void multTranspose(const Matrix&, Matrix*&) const
+ *
+ *  * void multTranspose(const Matrix&, Matrix&) const
+ *
  *  * Matrix* transposeMult(const Matrix&) const
  *
  *  * Matrix* transposeMult(const Matrix*) const
@@ -448,6 +456,42 @@ TEST(MatrixSerialTest, Test_void_mult_output_pointer)
     EXPECT_DOUBLE_EQ(result->item(1, 1), 1.0);
 
     delete result;
+}
+
+TEST(MatrixSerialTest, Test_mult_transpose)
+{
+    /**
+     *  Build matrix [ 1.0   2.0   3.0]
+     *               [ 5.0   6.0   7.0]
+     *
+     */
+    double mat[6] = {1.0, 2.0, 3.0, 5.0, 6.0, 7.0};
+    const CAROM::Matrix matrix(mat, 2, 3, false, true);
+
+    /**
+     *  Build other matrix  [ 1.0   0.0   0.0]
+     *                      [ 9.0   6.0   3.0]
+     *                      [ 4.0   6.0   3.0]
+     *                      [ 2.0   5.0   1.0]
+     *
+     */
+    double other[12] = {1.0, 0.0, 0.0, 9.0, 6.0, 3.0, 4.0, 6.0, 3.0, 2.0, 5.0, 1.0};
+    const CAROM::Matrix other_matrix(other, 4, 3, false, true);
+
+    CAROM::Matrix *result = NULL;
+    result = matrix.multTranspose(other_matrix);
+    EXPECT_EQ(result->numRows(), 2);
+    EXPECT_EQ(result->numColumns(), 4);
+    EXPECT_DOUBLE_EQ(result->item(0, 0), 1.0);
+    EXPECT_DOUBLE_EQ(result->item(0, 1), 30.0);
+    EXPECT_DOUBLE_EQ(result->item(0, 2), 25.0);
+    EXPECT_DOUBLE_EQ(result->item(0, 3), 15.0);
+    EXPECT_DOUBLE_EQ(result->item(1, 0), 5.0);
+    EXPECT_DOUBLE_EQ(result->item(1, 1), 102.0);
+    EXPECT_DOUBLE_EQ(result->item(1, 2), 77.0);
+    EXPECT_DOUBLE_EQ(result->item(1, 3), 47.0);
+    delete result;
+    result = NULL;
 }
 
 TEST(MatrixSerialTest, Test_pMatrix_transpose_mult_output_reference)
