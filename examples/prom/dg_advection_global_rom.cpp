@@ -44,9 +44,9 @@
 //               are also illustrated.
 
 #include "mfem.hpp"
-#include "Vector.h"
-#include "BasisGenerator.h"
-#include "BasisReader.h"
+#include "linalg/Vector.h"
+#include "linalg/BasisGenerator.h"
+#include "linalg/BasisReader.h"
 #include <cmath>
 #include <set>
 #include <fstream>

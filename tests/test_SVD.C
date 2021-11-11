@@ -16,8 +16,8 @@
 #ifdef CAROM_HAS_GTEST
 #include<gtest/gtest.h>
 #include <mpi.h>
-#include "../Options.h"
-#include "../SVD.h"
+#include "linalg/Options.h"
+#include "linalg/svd/SVD.h"
 
 /**
  * Simple smoke test to make sure Google Test is properly linked

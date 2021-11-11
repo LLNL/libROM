@@ -16,6 +16,7 @@ jobs:
       - uses: ./.github/workflows/checkout_repo
       - name: Build libROM
         run: |
+            mkdir ${GITHUB_WORKSPACE}/build
             cd ${GITHUB_WORKSPACE}/build
             export CC=mpicc
             export CXX=mpicxx
@@ -40,6 +41,7 @@ jobs:
       - name: Build libROM
         run: |
             export FC=/usr/local/bin/gfortran-10
+            mkdir ${GITHUB_WORKSPACE}/build
             cd ${GITHUB_WORKSPACE}/build
             cmake -DCMAKE_BUILD_TYPE=Debug ..
             make

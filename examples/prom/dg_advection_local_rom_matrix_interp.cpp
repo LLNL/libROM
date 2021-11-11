@@ -51,11 +51,11 @@
 //               are also illustrated.
 
 #include "mfem.hpp"
-#include "Vector.h"
-#include "MatrixInterpolator.h"
-#include "VectorInterpolator.h"
-#include "BasisGenerator.h"
-#include "BasisReader.h"
+#include "linalg/Vector.h"
+#include "algo/manifold_interp/MatrixInterpolator.h"
+#include "algo/manifold_interp/VectorInterpolator.h"
+#include "linalg/BasisGenerator.h"
+#include "linalg/BasisReader.h"
 #include <cmath>
 #include <set>
 #include <fstream>
@@ -383,12 +383,12 @@ int main(int argc, char *argv[])
                    "Enable or disable matrix interpolation during the online phase.");
     args.AddOption(&interp_prep, "-interp_prep", "--interp_prep", "-no-interp_prep", "--no-interp_prep",
                    "Enable or disable matrix interpolation preparation during the online phase.");
-    args.AddOption(&ef, "-ef", "--energy_fraction",
-                   "Energy fraction.");
     args.AddOption(&rbf_type, "-rt", "--rbf_type",
                    "RBF type ('G' == gaussian, 'MQ'== multiquadric, 'IQ' == inverse quadratic, 'IMQ' == inverse multiquadric).");
     args.AddOption(&rbf_width, "-rw", "--rbf_width",
                    "RBF inverse width.");
+    args.AddOption(&ef, "-ef", "--energy_fraction",
+                   "Energy fraction.");
     args.AddOption(&rdim, "-rdim", "--rdim",
                    "Reduced dimension.");
     args.Parse();

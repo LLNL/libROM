@@ -42,10 +42,10 @@
 #include <iostream>
 #include <algorithm>
 
-#include "BasisGenerator.h"
-#include "BasisReader.h"
-#include "DEIM.h"
-#include "SampleMesh.hpp"
+#include "linalg/BasisGenerator.h"
+#include "linalg/BasisReader.h"
+#include "hyperreduction/DEIM.h"
+#include "mfem/SampleMesh.hpp"
 
 
 typedef enum {ANALYTIC, INIT_STEP} PROBLEM;
