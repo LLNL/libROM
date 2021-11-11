@@ -153,7 +153,6 @@ public:
      * @pre 0 <= time
      *
      * @param[in] time Time for which we want the basis vectors.
-     * @param[in] n    The number of temporal basis vectors desired.
      *
      * @return The temporal basis vectors for the requested time.
      */
@@ -171,7 +170,8 @@ public:
      * @pre 0 < n < numColumns()
      *
      * @param[in] time Time for which we want the basis vectors.
-     ** @pre 0 <= ef <= 1.0
+     * @param[in] n    The number of temporal basis vectors desired.
+     *
      * @return The temporal basis vectors for the requested time.
      */
     Matrix*

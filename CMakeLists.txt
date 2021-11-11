@@ -44,6 +44,7 @@ set(libROM_CMAKE_MODULE_PATH ${libROM_CMAKE_PATH}/modules)
 list(APPEND CMAKE_MODULE_PATH ${libROM_CMAKE_MODULE_PATH})
 
 option(USE_MFEM "Build libROM with MFEM" OFF)
+option(BUILD_STATIC "Build libROM as a static library" OFF)
 
 include(FortranCInterface)
 FortranCInterface_HEADER(${CMAKE_SOURCE_DIR}/FCMangle.h
@@ -128,6 +129,9 @@ set(module_list
   GreedyParameterPointSampler
   GreedyParameterPointRandomSampler
   GreedyParameterPointPreDefinedSampler
+  Interpolator
+  MatrixInterpolator
+  VectorInterpolator
   Database
   HDFDatabase
   Utilities
@@ -153,8 +157,11 @@ endif()
 list(APPEND source_files
   scalapack_c_wrapper.c
   scalapack_f_wrapper.f90)
-
-add_library(ROM SHARED ${source_files})
+if (BUILD_STATIC)
+  add_library(ROM ${source_files})
+else()
+  add_library(ROM SHARED ${source_files})
+endif()
 
 # List minimum version requirements for dependencies where possible to make
 # packaging easier later.
@@ -234,16 +241,34 @@ target_compile_features(ROM PRIVATE cxx_std_11)
 
 if (USE_MFEM)
   set(examples
-    poisson
-    poisson_greedy
+    poisson_global_rom
+    poisson_local_rom_greedy
+    dg_advection_global_rom
+    dg_advection_local_rom_matrix_interp
     mixed_nonlinear_diffusion
     dg_advection
     nonlinear_elasticity
     heat_conduction
     dg_euler)
+  set(example_directories
+    prom
+    prom
+    prom
+    prom
+    prom
+    dmd
+    dmd
+    dmd
+    dmd)
 
-  foreach(name IN LISTS examples)
-    add_executable(${name} examples/${name}.cpp)
+  list(LENGTH examples len1)
+  math(EXPR len2 "${len1} - 1")
+
+  foreach(val RANGE ${len2})
+    list(GET examples ${val} name)
+    list(GET example_directories ${val} example_dir)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/examples/${example_dir})
+    add_executable(${name} examples/${example_dir}/${name}.cpp)
 
     target_link_libraries(${name}
       PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
@@ -251,7 +276,7 @@ if (USE_MFEM)
       PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
       ${MPI_C_INCLUDE_DIRS})
     target_compile_features(${name} PRIVATE cxx_std_11)
-  endforeach(name) # IN LISTS examples
+  endforeach() # IN LISTS examples
 endif()
 
 set(regression_test_names
@@ -261,6 +286,8 @@ set(regression_test_names
   random_test
   smoke_static
   load_samples)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests)
 
 foreach(name IN LISTS regression_test_names)
   add_executable(${name} tests/${name}.C)

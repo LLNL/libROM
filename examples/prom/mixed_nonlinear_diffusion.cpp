@@ -19,22 +19,22 @@
 
 // Sample runs:
 //               Analytic test (reproductive)
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../dependencies/mfem/data/inline-quad.mesh -offline
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../dependencies/mfem/data/inline-quad.mesh -merge -ns 1
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../dependencies/mfem/data/inline-quad.mesh -online -rrdim 8 -rwdim 8
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../dependencies/mfem/data/inline-quad.mesh -offline
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../dependencies/mfem/data/inline-quad.mesh -merge -ns 1
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../dependencies/mfem/data/inline-quad.mesh -online -rrdim 8 -rwdim 8
 //
 //               Initial step test (reproductive)
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../dependencies/mfem/data/inline-quad.mesh -offline -p 1
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../dependencies/mfem/data/inline-quad.mesh -merge -ns 1 -p 1
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../dependencies/mfem/data/inline-quad.mesh -online -rrdim 8 -rwdim 8 -p 1
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../dependencies/mfem/data/inline-quad.mesh -offline -p 1
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../dependencies/mfem/data/inline-quad.mesh -merge -ns 1 -p 1
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../dependencies/mfem/data/inline-quad.mesh -online -rrdim 8 -rwdim 8 -p 1
 //
 //               Initial step parametric test (predictive)
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../dependencies/mfem/data/inline-quad.mesh -p 1 -offline -id 0 -sh 0.25
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../dependencies/mfem/data/inline-quad.mesh -p 1 -offline -id 1 -sh 0.15
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../dependencies/mfem/data/inline-quad.mesh -p 1 -offline -id 2 -sh 0.35
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../dependencies/mfem/data/inline-quad.mesh -p 1 -merge -ns 3
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../dependencies/mfem/data/inline-quad.mesh -p 1 -offline -id 3 -sh 0.3
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../dependencies/mfem/data/inline-quad.mesh -p 1 -online -rrdim 8 -rwdim 8 -sh 0.3 -id 3
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../dependencies/mfem/data/inline-quad.mesh -p 1 -offline -id 0 -sh 0.25
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../dependencies/mfem/data/inline-quad.mesh -p 1 -offline -id 1 -sh 0.15
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../dependencies/mfem/data/inline-quad.mesh -p 1 -offline -id 2 -sh 0.35
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../dependencies/mfem/data/inline-quad.mesh -p 1 -merge -ns 3
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../dependencies/mfem/data/inline-quad.mesh -p 1 -offline -id 3 -sh 0.3
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../dependencies/mfem/data/inline-quad.mesh -p 1 -online -rrdim 8 -rwdim 8 -sh 0.3 -id 3
 
 #include "mfem.hpp"
 
@@ -320,7 +320,7 @@ void BroadcastUndistributedRomVector(CAROM::Vector* v)
     for (int i=0; i<N; ++i)
         (*v)(i) = d[i];
 
-    delete d;
+    delete [] d;
 }
 
 double InitialTemperature(const Vector &x);
@@ -425,7 +425,7 @@ int main(int argc, char *argv[])
     problem = ANALYTIC;
     diffusion_c = 2.0;
     step_half = 0.25;
-    const char *mesh_file = "../dependencies/mfem/data/star.mesh";
+    const char *mesh_file = "../../dependencies/mfem/data/star.mesh";
     int ser_ref_levels = 2;
     int par_ref_levels = 1;
     int order = 0;
@@ -782,8 +782,8 @@ int main(int argc, char *argv[])
         CAROM::Matrix *Bsinv = new CAROM::Matrix(nsamp_R, nldim, false);
         CAROM::GNAT(FR_librom,
                     nldim,
-                    &sample_dofs[0],
-                    &num_sample_dofs_per_proc[0],
+                    sample_dofs,
+                    num_sample_dofs_per_proc,
                     *Bsinv,
                     myid,
                     num_procs,
@@ -794,8 +794,8 @@ int main(int argc, char *argv[])
         vector<int> sample_dofs(nldim);  // Indices of the sampled rows
         CAROM::DEIM(FR_librom,
                     nldim,
-                    &sample_dofs[0],
-                    &num_sample_dofs_per_proc[0],
+                    sample_dofs,
+                    num_sample_dofs_per_proc,
                     *Bsinv,
                     myid,
                     num_procs);
@@ -829,8 +829,8 @@ int main(int argc, char *argv[])
 
             CAROM::GNAT(S_librom,
                         nsdim,
-                        &sample_dofs_S[0],
-                        &num_sample_dofs_per_proc_S[0],
+                        sample_dofs_S,
+                        num_sample_dofs_per_proc_S,
                         *Ssinv,
                         myid,
                         num_procs,
@@ -840,8 +840,8 @@ int main(int argc, char *argv[])
             vector<int> sample_dofs_S(nsdim);  // Indices of the sampled rows
             CAROM::DEIM(S_librom,
                         nsdim,
-                        &sample_dofs_S[0],
-                        &num_sample_dofs_per_proc_S[0],
+                        sample_dofs_S,
+                        num_sample_dofs_per_proc_S,
                         *Ssinv,
                         myid,
                         num_procs);

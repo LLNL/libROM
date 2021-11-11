@@ -70,7 +70,6 @@ void DMD::train(double energy_fraction)
     CAROM_VERIFY(f_snapshots->numColumns() > 1);
     CAROM_VERIFY(energy_fraction > 0 && energy_fraction <= 1);
     d_energy_fraction = energy_fraction;
-    d_k = f_snapshots->numColumns() - 1;
     constructDMD(f_snapshots, d_rank, d_num_procs);
 
     delete f_snapshots;
@@ -162,6 +161,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
     int num_singular_vectors = std::min(f_snapshots_minus->numColumns(), f_snapshots_minus->numDistributedRows());
     if (d_energy_fraction != -1.0)
     {
+        d_k = num_singular_vectors;
         double total_energy = 0.0;
         for (int i = 0; i < num_singular_vectors; i++)
         {
@@ -212,7 +212,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
     Matrix* A_tilde = d_basis_mult_f_snapshots_plus_mult_d_basis_right->mult(d_S_inv);
 
     // Calculate the right eigenvalues/eigenvectors of A_tilde
-    EigenPair eigenpair = RightEigenSolve(A_tilde);
+    ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(A_tilde);
     d_eigs = eigenpair.eigs;
 
     // Calculate phi

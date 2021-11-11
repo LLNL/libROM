@@ -8,7 +8,10 @@
  *
  *****************************************************************************/
 
-// Description: Computes the DMD algorithm on the given snapshot matrix.
+// Description: Computes the DMD algorithm on the given snapshot matrix. The
+//              implemented dynamic mode decomposition algorithm is derived from
+//              Tu et. al's paper "On Dynamic Mode Decomposition: Theory and
+//              Applications": https://arxiv.org/abs/1312.0041
 
 #ifndef included_DMD_h
 #define included_DMD_h
@@ -21,6 +24,9 @@ namespace CAROM {
 class Matrix;
 class Vector;
 
+/**
+ * Class DMD implements the DMD algorithm on a given snapshot matrix.
+ */
 class DMD
 {
 public:
