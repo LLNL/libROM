@@ -15,7 +15,7 @@ runs:
           mpirun -n 3 --oversubscribe tests/test_RandomizedSVD
           ./tests/test_DMD
           mpirun -n 3 --oversubscribe tests/test_DMD
-          ./tests/test_GreedyParameterPointPreDefinedSampler
-          mpirun -n 3 --oversubscribe tests/test_GreedyParameterPointPreDefinedSampler
+          ./tests/test_GreedyCustomSampler
+          mpirun -n 3 --oversubscribe tests/test_GreedyCustomSampler
 
       shell: bash

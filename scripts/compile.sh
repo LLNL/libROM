@@ -55,9 +55,10 @@ if [[ $USE_MFEM == "On" ]]; then
 fi
 
 if [[ $ARDRA == "true" ]]; then
-    mkdir ${REPO_PREFIX}/buildArdra
+    mkdir -p ${REPO_PREFIX}/buildArdra
     pushd ${REPO_PREFIX}/buildArdra
 else
+    mkdir -p ${REPO_PREFIX}/build
     pushd ${REPO_PREFIX}/build
 fi
 rm -rf *

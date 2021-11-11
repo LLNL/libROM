@@ -35,8 +35,8 @@
 //               are also illustrated.
 
 #include "mfem.hpp"
-#include "DMD.h"
-#include "Vector.h"
+#include "algo/DMD.h"
+#include "linalg/Vector.h"
 #include <cmath>
 #include <fstream>
 #include <iostream>
