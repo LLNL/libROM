@@ -19,15 +19,6 @@
 #include <set>
 #include <algorithm>
 
-/* Use Autotools-detected Fortran name-mangling scheme */
-#define dgesdd CAROM_FC_GLOBAL(dgesdd, DGESDD)
-
-extern "C" {
-    void dgesdd(char*, int*, int*, double*, int*,
-                double*, double*, int*, double*, int*,
-                double*, int*, int*, int*);
-}
-
 namespace CAROM {
 
 void
@@ -166,10 +157,6 @@ QDEIM(const Matrix* f_basis,
         MPI_Gatherv(my_sampled_row_data.data(), count*numCol, MPI_DOUBLE, sampled_row_data.data(),
                     ns.data(), disp.data(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-        // At this point, only the first (numCol) entries of f_sampled_row and rows of sampled_row_data are set by QR.
-        // Now set the remaining (num_samples_req - numCol) samples by GappyPOD+E.
-        std::vector<double> A((myid == 0) ? num_samples_req * numCol : 0);
-
         const int nf = f_basis->numRows();
 
         std::vector<int> rcnt(num_procs);
@@ -215,33 +202,26 @@ QDEIM(const Matrix* f_basis,
             double g = 0.0;
             if (myid == 0)
             {
+                // At this point, only the first (numCol) entries of f_sampled_row and rows of sampled_row_data are set by QR.
+                // Now set the remaining (num_samples_req - numCol) samples by GappyPOD+E.
+                Matrix A(m, n, false);
+
                 // Compute SVD of the first s rows of sampled_row_data locally on root
                 // Use lapack's dgesdd Fortran function to perform the SVD. As this is
                 // Fortran, A and all the computed matrices are in column major order.
-
                 for (int i=0; i<m; ++i)
+                {
                     for (int j=0; j<n; ++j)
                     {
-                        A[i + (j*m)] = sampled_row_data[(i*numCol) + j];
+                        A.getData()[i + (j*m)] = sampled_row_data[(i*numCol) + j];
                     }
+                }
+                Matrix* U = NULL;
+                Vector sigma(n, false);
+                SerialSVD(&A, U, &sigma, &V);
+                delete U;
 
-                std::vector<double> sigma(n);
-                char jobz = 'O';
-                int lda = m;
-                int ldu = 1;
-                int ldv = n;
-                int lwork = (3*n) + std::max(m, (5*n*n) + (4*n));
-                double* work = new double [lwork];
-                int iwork[8*n];
-                int info;
-                dgesdd(&jobz, &m, &n, A.data(), &lda, sigma.data(), NULL, &ldu, &V.item(0, 0),
-                       &ldv, work, &lwork, iwork, &info);
-
-                CAROM_VERIFY(info == 0);
-
-                delete [] work;
-
-                g = (sigma[n-2] * sigma[n-2]) - (sigma[n-1] * sigma[n-1]);
+                g = (sigma.getData()[n-2] * sigma.getData()[n-2]) - (sigma.getData()[n-1] * sigma.getData()[n-1]);
 
                 // Note that V stores the right singular vectors row-wise
 

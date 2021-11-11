@@ -216,9 +216,15 @@ Vector::inner_product(
 double
 Vector::norm() const
 {
-    double ip = inner_product(this);
-    double norm = sqrt(ip);
+    double norm = sqrt(norm2());
     return norm;
+}
+
+double
+Vector::norm2() const
+{
+    double norm2 = inner_product(this);
+    return norm2;
 }
 
 double
@@ -586,6 +592,17 @@ int getCenterPoint(std::vector<Vector*> points,
     }
 
     return center_point;
+}
+
+int getCenterPoint(std::vector<Vector> points,
+                   bool use_centroid)
+{
+    std::vector<Vector*> temp_points;
+    for (int i = 0; i < points.size(); i++)
+    {
+        temp_points.push_back(&points[i]);
+    }
+    return getCenterPoint(temp_points, use_centroid);
 }
 
 }

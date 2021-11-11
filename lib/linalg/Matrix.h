@@ -18,6 +18,7 @@
 #include "Vector.h"
 #include <vector>
 #include <complex>
+#include <string>
 
 namespace CAROM {
 
@@ -137,7 +138,7 @@ public:
 
     /**
      * @brief Sets the number of rows and columns of the matrix and
-     * reallocates storage if needed.
+     * reallocates storage if needed. All values are initialized to zero.
      *
      * @param[in] num_rows New number of rows
      * @param[in] num_cols New number of cols
@@ -155,7 +156,9 @@ public:
             if (d_mat) {
                 delete [] d_mat;
             }
-            d_mat = new double [new_size] {};
+
+            // Allocate new array and initialize all values to zero.
+            d_mat = new double [new_size] {0.0};
             d_alloc_size = new_size;
         }
         d_num_rows = num_rows;
@@ -1189,6 +1192,55 @@ struct ComplexEigenPair {
      */
     std::vector<std::complex<double>> eigs;
 };
+
+/**
+ * struct ComplexEigenPair is a struct to hold the singular value decomposition
+ * of an undistributed matrix.
+ */
+struct SerialSVDDecomposition
+{
+    /**
+     * @brief The left singular vectors.
+     */
+    Matrix* U;
+
+    /**
+     * @brief The singular values.
+     */
+    Vector* S;
+
+    /**
+     * @brief The right singular vectors.
+     */
+    Matrix* V;
+};
+
+/**
+ * @brief Computes the SVD of a undistributed matrix in serial.
+ *
+ * @param[in] A The MxN undistributed matrix to be eigendecomposed.
+ * @param[in] U The matrix to write the left singular vectors into.
+ * @param[in] S The vector to write the singular values into.
+ * @param[in] V The matrix to write the right singular vectors into.
+ *
+ * @return The singular value decomposition within the input parameters U, S,
+ *         and V.
+ */
+void SerialSVD(Matrix* A,
+               Matrix* U,
+               Vector* S,
+               Matrix* V);
+
+/**
+ * @brief Computes the SVD of a undistributed matrix in serial.
+ *
+ * @param[in] A The MxN undistributed matrix to be eigendecomposed.
+ *
+ * @return The singular value decomposition within a struct. The matrices
+ *         and vector contained within the returning struct must be destroyed by
+ *         the user.
+ */
+struct SerialSVDDecomposition SerialSVD(Matrix* A);
 
 /**
  * @brief Computes the eigenvectors/eigenvalues of an NxN real symmetric matrix.

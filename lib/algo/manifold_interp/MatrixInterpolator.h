@@ -8,12 +8,12 @@
  *
  *****************************************************************************/
 
-// Description: Computes the MatrixInterpolater algorithm on the given snapshot matrix.
+// Description: Computes the MatrixInterpolator algorithm on the given snapshot matrix.
 
-#ifndef included_MatrixInterpolater_h
-#define included_MatrixInterpolater_h
+#ifndef included_MatrixInterpolator_h
+#define included_MatrixInterpolator_h
 
-#include "Interpolater.h"
+#include "Interpolator.h"
 #include <vector>
 #include <string>
 
@@ -23,13 +23,15 @@ class Matrix;
 class Vector;
 
 /**
- * MatrixInterpolater interpolates reduced matrices of a set of parameter points
+ * MatrixInterpolator interpolates reduced matrices of a set of parameter points
  * and returns an interpolated reduced matrix for an unseen parameter point.
+ * The performance of this algorithm depends on the matrix sizes being small
+ * because of its computational complexity due to direct matrix inversion.
  * The interpolation algorithm was adapted from "Gradient-based
  * Constrained Optimization Using a Database of Linear Reduced-Order Models"
  * by Y. Choi et al.
  */
-class MatrixInterpolater : public Interpolater
+class MatrixInterpolator : public Interpolator
 {
 public:
 
@@ -43,14 +45,23 @@ public:
      *                             each parameter point.
      * @param[in] ref_point The index within the vector of parameter points
      *                      to the reference point
-     * @param[in] matrix_type The type of matrix (R = real, B = basis,
-     *                        NS = nonsingular, SPD = symmetric positive-definite)
+     * @param[in] matrix_type The type of matrix (R = real, B = basis [also a real
+     *                        matrix, but uses a unique rotation specific to bases
+     *                        (AQ)], NS = nonsingular, SPD = symmetric
+     *                        positive-definite)
+     * @param[in] rbf       The RBF type ("G" == gaussian, "MQ" == multiquadric,
+     *                      "IQ" == inverse quadratic, "IMQ" == inverse
+     *                      multiquadric)
+     * @param[in] epsilon   The RBF parameter that determines the width of
+                            influence.
      */
-    MatrixInterpolater(std::vector<Vector*> parameter_points,
+    MatrixInterpolator(std::vector<Vector*> parameter_points,
                        std::vector<Matrix*> rotation_matrices,
                        std::vector<Matrix*> reduced_matrices,
                        int ref_point,
-                       std::string matrix_type);
+                       std::string matrix_type,
+                       std::string rbf = "G",
+                       double epsilon = 1.0);
 
     /**
      * @brief Obtain the interpolated reduced matrix of the unsampled parameter point.
@@ -64,20 +75,20 @@ private:
     /**
      * @brief Unimplemented default constructor.
      */
-    MatrixInterpolater();
+    MatrixInterpolator();
 
     /**
      * @brief Unimplemented copy constructor.
      */
-    MatrixInterpolater(
-        const MatrixInterpolater& other);
+    MatrixInterpolator(
+        const MatrixInterpolator& other);
 
     /**
      * @brief Unimplemented assignment operator.
      */
-    MatrixInterpolater&
+    MatrixInterpolator&
     operator = (
-        const MatrixInterpolater& rhs);
+        const MatrixInterpolator& rhs);
 
     /**
      * @brief Solve the system of equations of the gammas to obtain the

@@ -131,11 +131,13 @@ if (USE_MFEM)
     poisson_local_rom_greedy
     dg_advection_global_rom
     dg_advection_local_rom_matrix_interp
+    mixed_nonlinear_diffusion
     dg_advection
     nonlinear_elasticity
     heat_conduction
     dg_euler)
   set(example_directories
+    prom
     prom
     prom
     prom

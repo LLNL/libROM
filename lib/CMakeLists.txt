@@ -36,9 +36,9 @@ set(module_list
   algo/greedy/GreedyCustomSampler
   algo/greedy/GreedyRandomSampler
   algo/greedy/GreedySampler
-  algo/manifold_interp/Interpolater
-  algo/manifold_interp/MatrixInterpolater
-  algo/manifold_interp/VectorInterpolater
+  algo/manifold_interp/Interpolator
+  algo/manifold_interp/MatrixInterpolator
+  algo/manifold_interp/VectorInterpolator
   hyperreduction/DEIM
   hyperreduction/GNAT
   hyperreduction/QDEIM
