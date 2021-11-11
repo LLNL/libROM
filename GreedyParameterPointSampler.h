@@ -48,8 +48,20 @@ namespace CAROM {
 
 class Vector;
 
+/**
+ * struct GreedyErrorIndicatorPoint is a struct containing the information
+ * required to calculate the error indicator at a specified parameter point.
+ */
 struct GreedyErrorIndicatorPoint {
+
+    /**
+     * @brief The parameter point to calculate the error indicator.
+     */
     std::shared_ptr<Vector> point;
+
+    /**
+     * @brief The parameter point of the closest local ROM.
+     */
     std::shared_ptr<Vector> localROM;
 };
 
@@ -77,6 +89,10 @@ public:
      *                      the error indicator tolerance can change per iteration.
      * @param[in] subset_size The size of the random subset.
      * @param[in] convergence_subset_size The size of the convergence subset.
+     * @param[in] output_log_path The path to the output log file. If not used,
+     *                            outputs to stdout.
+     * @param[in] warm_start_file_name The path to the HDF5 file of a previous
+     *                                 database to use as a warm start.
      * @param[in] use_centroid Whether to use the centroid heuristic when
      *                         determining the first parameter point to sample.
      * @param[in] random_seed A random seed.
@@ -111,6 +127,10 @@ public:
      *                      the error indicator tolerance can change per iteration.
      * @param[in] subset_size The size of the random subset.
      * @param[in] convergence_subset_size The size of the convergence subset.
+     * @param[in] output_log_path The path to the output log file. If not used,
+     *                            outputs to stdout.
+     * @param[in] warm_start_file_name The path to the HDF5 file of a previous
+     *                                 database to use as a warm start.
      * @param[in] use_centroid Whether to use the centroid heuristic when
      *                         determining the first parameter point to sample.
      * @param[in] random_seed A random seed.
@@ -149,8 +169,6 @@ public:
      *                      the error indicator tolerance can change per iteration.
      * @param[in] subset_size The size of the random subset.
      * @param[in] convergence_subset_size The size of the convergence subset.
-     * @param[in] use_latin_hypercube Whether to use latin-hypercube sampling
-     *                                instead of random sampling.
      * @param[in] output_log_path The path to the output log file. If not used,
      *                            outputs to stdout.
      * @param[in] warm_start_file_name The path to the HDF5 file of a previous
@@ -195,8 +213,6 @@ public:
      *                     the error indicator tolerance can change per iteration.
      * @param[in] subset_size The size of the random subset.
      * @param[in] convergence_subset_size The size of the convergence subset.
-     * @param[in] use_latin_hypercube Whether to use latin-hypercube sampling
-     *                                instead of random sampling.
      * @param[in] output_log_path The path to the output log file. If not used,
      *                            outputs to stdout.
      * @param[in] warm_start_file_name The path to the HDF5 file of a previous

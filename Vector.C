@@ -216,9 +216,15 @@ Vector::inner_product(
 double
 Vector::norm() const
 {
-    double ip = inner_product(this);
-    double norm = sqrt(ip);
+    double norm = sqrt(norm2());
     return norm;
+}
+
+double
+Vector::norm2() const
+{
+    double norm2 = inner_product(this);
+    return norm2;
 }
 
 double
@@ -530,6 +536,73 @@ Vector::local_read(const std::string& base_file_name, int rank)
         d_num_procs = 1;
     }
     database.close();
+}
+
+int getCenterPoint(std::vector<Vector*> points,
+                   bool use_centroid)
+{
+    int center_point;
+
+    // get center-most point
+    // obtain the centroid and find the point closest to centroid
+    if (use_centroid)
+    {
+        Vector centroid(*points[0]);
+        for (int i = 1; i < points.size(); i++) {
+            centroid += *points[i];
+        }
+        centroid.mult(1.0 / points.size(), centroid);
+
+        double min_dist_to_centroid;
+        for (int i = 0; i < points.size(); i++) {
+            Vector diff;
+            centroid.minus(*points[i], diff);
+            double dist_to_centroid = diff.norm();
+            if (i == 0 || dist_to_centroid < min_dist_to_centroid)
+            {
+                min_dist_to_centroid = dist_to_centroid;
+                center_point = i;
+            }
+        }
+    }
+
+    // otherwise, do a brute force search to obtain
+    // the point closest to all other points
+    else
+    {
+        std::vector<double> dist_to_points(points.size(), 0);
+        for (int i = 0; i < points.size(); i++) {
+            for (int j = i + 1; j < points.size(); j++) {
+                Vector diff;
+                points[i]->minus(*points[j], diff);
+                double dist = diff.norm();
+                dist_to_points[i] += dist;
+                dist_to_points[j] += dist;
+            }
+        }
+
+        double closest_dist_to_points = INT_MAX;
+        for (int i = 0; i < dist_to_points.size(); i++) {
+            if (dist_to_points[i] < closest_dist_to_points)
+            {
+                closest_dist_to_points = dist_to_points[i];
+                center_point = i;
+            }
+        }
+    }
+
+    return center_point;
+}
+
+int getCenterPoint(std::vector<Vector> points,
+                   bool use_centroid)
+{
+    std::vector<Vector*> temp_points;
+    for (int i = 0; i < points.size(); i++)
+    {
+        temp_points.push_back(&points[i]);
+    }
+    return getCenterPoint(temp_points, use_centroid);
 }
 
 }

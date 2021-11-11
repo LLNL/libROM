@@ -16,6 +16,7 @@
 #define included_Vector_h
 
 #include "Utilities.h"
+#include <vector>
 #include <functional>
 
 namespace CAROM {
@@ -189,7 +190,7 @@ public:
 
     /**
      * @brief Sets the length of the vector and reallocates storage if
-     * needed.
+     * needed. All values are initialized to zero.
      *
      * @param[in] dim When undistributed, the total dimension of the Vector.
      *                When distributed, the part of the total dimension of
@@ -206,7 +207,9 @@ public:
             if (d_vec) {
                 delete [] d_vec;
             }
-            d_vec = new double [dim] {};
+
+            // Allocate new array and initialize all values to zero.
+            d_vec = new double [dim] {0.0};
             d_alloc_size = dim;
         }
         d_dim = dim;
@@ -280,6 +283,16 @@ public:
      */
     double
     norm() const;
+
+    /**
+     * @brief Form the squared norm of this.
+     *
+     * For a distributed Vector this is a parallel operation.
+     *
+     * @return The squared norm of this.
+     */
+    double
+    norm2() const;
 
     /**
      * @brief Normalizes the Vector and returns its norm.
@@ -690,9 +703,10 @@ public:
     void read(const std::string& base_file_name);
 
     /**
-     * @brief read Vector from (a) HDF file(s).
+     * @brief read read a single rank of a distributed Vector from (a) HDF file(s).
      *
      * @param[in] base_file_name The base part of the file name.
+     * @param[in] rank The rank to read from.
      *
      */
     void local_read(const std::string& base_file_name, int rank);
@@ -744,6 +758,20 @@ private:
      */
     bool d_owns_data;
 };
+
+/**
+ * @brief Get center point of a group of points.
+
+ */
+int getCenterPoint(std::vector<Vector*> points,
+                   bool use_centroid);
+
+/**
+* @brief Get center point of a group of points.
+
+*/
+int getCenterPoint(std::vector<Vector> points,
+                   bool use_centroid);
 
 }
 

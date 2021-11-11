@@ -18,6 +18,7 @@
 #include "Vector.h"
 #include <vector>
 #include <complex>
+#include <string>
 
 namespace CAROM {
 
@@ -137,7 +138,7 @@ public:
 
     /**
      * @brief Sets the number of rows and columns of the matrix and
-     * reallocates storage if needed.
+     * reallocates storage if needed. All values are initialized to zero.
      *
      * @param[in] num_rows New number of rows
      * @param[in] num_cols New number of cols
@@ -155,7 +156,9 @@ public:
             if (d_mat) {
                 delete [] d_mat;
             }
-            d_mat = new double [new_size] {};
+
+            // Allocate new array and initialize all values to zero.
+            d_mat = new double [new_size] {0.0};
             d_alloc_size = new_size;
         }
         d_num_rows = num_rows;
@@ -224,6 +227,8 @@ public:
      *
      * @pre 0 < n < numColumns()
      *
+     * @param[in] n The number of columns to return.
+     *
      * @return The truncated Matrix.
      */
     Matrix*
@@ -234,6 +239,8 @@ public:
      *
      * @pre result.distributed() == distributed()
      * @pre 0 < n < numColumns()
+     *
+     * @param[in] n The number of columns to return.
      *
      * @param[out] result The truncated Matrix.
      */
@@ -247,6 +254,8 @@ public:
      *
      * @pre result.distributed() == distributed()
      * @pre 0 < n < numColumns()
+     *
+     * @param[in] n The number of columns to return.
      *
      * @param[out] result The truncated Matrix.
      */
@@ -897,7 +906,7 @@ public:
      * @param[in] prefix The name of the prefix of the file name.
      *
      */
-    void print(const char * prefix);
+    void print(const char * prefix) const;
 
     /**
      * @brief write Matrix into (a) HDF file(s).
@@ -905,7 +914,7 @@ public:
      * @param[in] base_file_name The base part of the file name.
      *
      */
-    void write(const std::string& base_file_name);
+    void write(const std::string& base_file_name) const;
 
     /**
      * @brief read Matrix into (a) HDF file(s).
@@ -916,9 +925,10 @@ public:
     void read(const std::string& base_file_name);
 
     /**
-     * @brief read Matrix into (a) HDF file(s).
+     * @brief read a single rank of a distributed Matrix into (a) HDF file(s).
      *
      * @param[in] base_file_name The base part of the file name.
+     * @param[in] rank The rank to read from.
      *
      */
     void local_read(const std::string& base_file_name, int rank);
@@ -1144,14 +1154,103 @@ Matrix DiagonalMatrixFactory(const Vector &v);
 Matrix IdentityMatrixFactory(const Vector &v);
 
 /**
- * struct EigenPair is a struct to hold the real and imaginary eigenvectors
- * of a matrix along with its eigenvalues.
+ * struct EigenPair is a struct to hold the real eigenvectors
+ * of a matrix along with its real eigenvalues.
  */
 struct EigenPair {
+
+    /**
+     * @brief The eigenvectors in matrix form.
+     */
+    Matrix* ev;
+
+    /**
+     * @brief The corresponding eigenvalues.
+     */
+    std::vector<double> eigs;
+};
+
+
+/**
+ * struct ComplexEigenPair is a struct to hold the real and imaginary eigenvectors
+ * of a matrix along with its eigenvalues.
+ */
+struct ComplexEigenPair {
+
+    /**
+     * @brief The real component of the eigenvectors in matrix form.
+     */
     Matrix* ev_real;
+
+    /**
+     * @brief The imaginary component of the eigenvectors in matrix form.
+     */
     Matrix* ev_imaginary;
+
+    /**
+     * @brief The corresponding complex eigenvalues.
+     */
     std::vector<std::complex<double>> eigs;
 };
+
+/**
+ * struct ComplexEigenPair is a struct to hold the singular value decomposition
+ * of an undistributed matrix.
+ */
+struct SerialSVDDecomposition
+{
+    /**
+     * @brief The left singular vectors.
+     */
+    Matrix* U;
+
+    /**
+     * @brief The singular values.
+     */
+    Vector* S;
+
+    /**
+     * @brief The right singular vectors.
+     */
+    Matrix* V;
+};
+
+/**
+ * @brief Computes the SVD of a undistributed matrix in serial.
+ *
+ * @param[in] A The MxN undistributed matrix to be eigendecomposed.
+ * @param[in] U The matrix to write the left singular vectors into.
+ * @param[in] S The vector to write the singular values into.
+ * @param[in] V The matrix to write the right singular vectors into.
+ *
+ * @return The singular value decomposition within the input parameters U, S,
+ *         and V.
+ */
+void SerialSVD(Matrix* A,
+               Matrix* U,
+               Vector* S,
+               Matrix* V);
+
+/**
+ * @brief Computes the SVD of a undistributed matrix in serial.
+ *
+ * @param[in] A The MxN undistributed matrix to be eigendecomposed.
+ *
+ * @return The singular value decomposition within a struct. The matrices
+ *         and vector contained within the returning struct must be destroyed by
+ *         the user.
+ */
+struct SerialSVDDecomposition SerialSVD(Matrix* A);
+
+/**
+ * @brief Computes the eigenvectors/eigenvalues of an NxN real symmetric matrix.
+ *
+ * @param[in] A The NxN real symmetric matrix to be eigendecomposed.
+ *
+ * @return The eigenvectors and eigenvalues of the eigensolve. The eigenvector matrices
+ *         contained within the returning struct must be destroyed by the user.
+ */
+struct EigenPair SymmetricRightEigenSolve(Matrix* A);
 
 /**
  * @brief Computes the eigenvectors/eigenvalues of an NxN real nonsymmetric matrix.
@@ -1161,7 +1260,7 @@ struct EigenPair {
  * @return The eigenvectors and eigenvalues of the eigensolve. The eigenvector matrices
  *         contained within the returning struct must be destroyed by the user.
  */
-struct EigenPair RightEigenSolve(Matrix* A);
+struct ComplexEigenPair NonSymmetricRightEigenSolve(Matrix* A);
 
 Matrix* SpaceTimeProduct(const CAROM::Matrix* As, const CAROM::Matrix* At,
                          const CAROM::Matrix* Bs, const CAROM::Matrix* Bt,
