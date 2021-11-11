@@ -167,6 +167,7 @@ endif()
 
 set(regression_test_names
   smoke_test
+  test_include
   uneven_dist
   weak_scaling
   random_test
