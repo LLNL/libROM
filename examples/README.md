@@ -3,14 +3,14 @@
 These data and examples are built using MFEM and derived from their examples
 (https://mfem.org/examples/). libROM's examples are divided into two categories.
 
-## DMD
+## Dynamic Mode Decomposition (DMD)
 
 - DG Advection
 - DG Euler
 - Heat Conduction
 - Nonlinear Elasticity
 
-## PROM
+## Projection-based Reduced Order Models (PROM)
 
 - DG Advection (Global ROM)
 - DG Advection (Local ROM with matrix interpolation)
