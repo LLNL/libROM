@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
 
     // 2. Parse command-line options.
     problem = 1;
-    const char *mesh_file = "../../../dependencies/mfem/data/periodic-square.mesh";
+    const char *mesh_file = "../data/periodic-square.mesh";
     int ser_ref_levels = 0;
     int par_ref_levels = 1;
     int order = 3;

@@ -19,22 +19,22 @@
 
 // Sample runs:
 //               Analytic test (reproductive)
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../dependencies/mfem/data/inline-quad.mesh -offline
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../dependencies/mfem/data/inline-quad.mesh -merge -ns 1
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../dependencies/mfem/data/inline-quad.mesh -online -rrdim 8 -rwdim 8
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -offline
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -merge -ns 1
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8
 //
 //               Initial step test (reproductive)
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../dependencies/mfem/data/inline-quad.mesh -offline -p 1
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../dependencies/mfem/data/inline-quad.mesh -merge -ns 1 -p 1
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../dependencies/mfem/data/inline-quad.mesh -online -rrdim 8 -rwdim 8 -p 1
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -offline -p 1
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -merge -ns 1 -p 1
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -p 1
 //
 //               Initial step parametric test (predictive)
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../dependencies/mfem/data/inline-quad.mesh -p 1 -offline -id 0 -sh 0.25
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../dependencies/mfem/data/inline-quad.mesh -p 1 -offline -id 1 -sh 0.15
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../dependencies/mfem/data/inline-quad.mesh -p 1 -offline -id 2 -sh 0.35
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../dependencies/mfem/data/inline-quad.mesh -p 1 -merge -ns 3
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../dependencies/mfem/data/inline-quad.mesh -p 1 -offline -id 3 -sh 0.3
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -m ../../dependencies/mfem/data/inline-quad.mesh -p 1 -online -rrdim 8 -rwdim 8 -sh 0.3 -id 3
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -offline -id 0 -sh 0.25
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -offline -id 1 -sh 0.15
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -offline -id 2 -sh 0.35
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -merge -ns 3
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -offline -id 3 -sh 0.3
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -sh 0.3 -id 3
 
 #include "mfem.hpp"
 
@@ -425,7 +425,7 @@ int main(int argc, char *argv[])
     problem = ANALYTIC;
     diffusion_c = 2.0;
     step_half = 0.25;
-    const char *mesh_file = "../../dependencies/mfem/data/star.mesh";
+    const char *mesh_file = "../data/inline-quad.mesh";
     int ser_ref_levels = 2;
     int par_ref_levels = 1;
     int order = 0;
