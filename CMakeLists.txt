@@ -24,7 +24,7 @@ cmake_policy(SET CMP0074 NEW) # Use <PackageName>_ROOT variables in find_package
 # for MPI and HDF5 dependency checking. The Fortran language must be enabled
 # for Fortran-C name mangling convention detection.
 project(libROM
-  VERSION 0.0.1
+  VERSION 1.0.0
   DESCRIPTION "Model reduction library emphasizing large-scale parallelism"
   HOMEPAGE_URL "https://github.com/LLNL/libROM"
   LANGUAGES C CXX Fortran)
@@ -163,6 +163,7 @@ if (USE_MFEM)
       ${MPI_C_INCLUDE_DIRS})
     target_compile_features(${name} PRIVATE cxx_std_11)
   endforeach() # IN LISTS examples
+  file(COPY examples/data DESTINATION ${CMAKE_BINARY_DIR}/examples)
 endif()
 
 set(regression_test_names
