@@ -74,7 +74,7 @@ if [ "$(uname)" == "Darwin" ]; then
   if [[ $? != 0 ]] ; then
       xcode-select --install
   fi
-  softwareupdate -r -i
+  softwareupdate --all --install --force
   brew list open-mpi > /dev/null || brew install open-mpi
   brew list openblas > /dev/null || brew install openblas
   brew list lapack > /dev/null || brew install lapack
