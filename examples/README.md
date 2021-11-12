@@ -1,4 +1,4 @@
-# Tests
+# Examples
 
 These data and examples are built using MFEM and derived from their examples
 (https://mfem.org/examples/). libROM's examples are divided into two categories.
