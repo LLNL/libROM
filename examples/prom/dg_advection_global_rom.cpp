@@ -278,7 +278,7 @@ int main(int argc, char *argv[])
 
     // 2. Parse command-line options.
     problem = 3;
-    const char *mesh_file = "../../../dependencies/mfem/data/periodic-hexagon.mesh";
+    const char *mesh_file = "../data/periodic-hexagon.mesh";
     int ser_ref_levels = 2;
     int par_ref_levels = 0;
     int order = 3;

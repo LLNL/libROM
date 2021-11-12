@@ -79,6 +79,7 @@ if [ "$(uname)" == "Darwin" ]; then
   brew list lapack > /dev/null || brew install lapack
   brew list scalapack > /dev/null || brew install scalapack
   brew list hdf5 > /dev/null || brew install hdf5
+  brew list cmake > /dev/null || brew install cmake
   cmake ${REPO_PREFIX} \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -DUSE_MFEM=${USE_MFEM}
