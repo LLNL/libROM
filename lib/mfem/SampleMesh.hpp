@@ -16,7 +16,7 @@
 #include "mfem.hpp"
 #include "mpi.h"
 
-#include "Matrix.h"
+#include "linalg/Matrix.h"
 
 using namespace mfem;
 using namespace std;
