@@ -277,8 +277,9 @@ protected:
 public:
     RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOperator *fomSp_,
                 const int rrdim_, const int rwdim_, const int nldim_,
+                const vector<int>& spaceOS, const vector<int>& spaceOSSP,
                 const CAROM::Matrix* V_R_, const CAROM::Matrix* U_R_, const CAROM::Matrix* V_W_,
-                const CAROM::Matrix *Bsinv, const int N1,
+                const CAROM::Matrix *Bsinv,
                 const double newton_rel_tol, const double newton_abs_tol, const int newton_iter, const vector<int>& s2sp,
                 const CAROM::Matrix* S_, const vector<int>& s2sp_S_, const CAROM::Matrix *Ssinv_,
                 const vector<int>& st2sp, const vector<int>& sprows, const vector<int>& all_sprows, const int myid,
@@ -872,10 +873,11 @@ int main(int argc, char *argv[])
 
         // Construct sample mesh
 
-        // TODO: put this in CreateSampleMesh!
-        // Define a superfluous finite element space, merely to get global vertex indices for the sample mesh construction.
-        H1_FECollection h1_coll(1, dim);  // Must be first order, to get a bijection between vertices and DOF's.
-        ParFiniteElementSpace H1_space(pmesh, &h1_coll);  // This constructor effectively sets vertex (DOF) global indices.
+        const int nspaces = 2;
+        std::vector<ParFiniteElementSpace*> fespace(nspaces);
+        std::vector<ParFiniteElementSpace*> spfespace(nspaces);
+        fespace[0] = &R_space;
+        fespace[1] = &W_space;
 
         ParFiniteElementSpace *sp_R_space, *sp_W_space;
 
@@ -892,8 +894,11 @@ int main(int argc, char *argv[])
         if (hyperreduce_source)
         {
             vector<int> s2sp_withS;
-            CAROM::CreateSampleMesh(*pmesh, H1_space, R_space, W_space, hdiv_coll, l2_coll, rom_com, sample_dofs_withS, num_sample_dofs_per_proc_withS,
-                                    sample_pmesh, sprows, all_sprows, s2sp_withS, st2sp, sp_R_space, sp_W_space);
+            CAROM::CreateSampleMesh(*pmesh, fespace, rom_com, sample_dofs_withS, num_sample_dofs_per_proc_withS,
+                                    sample_pmesh, sprows, all_sprows, s2sp_withS, st2sp, spfespace);
+
+            sp_R_space = spfespace[0];
+            sp_W_space = spfespace[1];
 
             if (myid == 0)
             {
@@ -941,8 +946,27 @@ int main(int argc, char *argv[])
         }
         else
         {
-            CAROM::CreateSampleMesh(*pmesh, H1_space, R_space, W_space, hdiv_coll, l2_coll, rom_com, sample_dofs, num_sample_dofs_per_proc,
-                                    sample_pmesh, sprows, all_sprows, s2sp, st2sp, sp_R_space, sp_W_space);
+            CAROM::CreateSampleMesh(*pmesh, fespace, rom_com, sample_dofs, num_sample_dofs_per_proc,
+                                    sample_pmesh, sprows, all_sprows, s2sp, st2sp, spfespace);
+            sp_R_space = spfespace[0];
+            sp_W_space = spfespace[1];
+        }
+
+        std::vector<int> spaceOS, spaceOSSP;
+        spaceOS.assign(nspaces + 1, 0);
+        spaceOSSP.assign(nspaces, 0);
+
+        for (int i=0; i<nspaces; ++i)
+        {
+            spaceOS[i+1] = spaceOS[i] + fespace[i]->GetVSize();
+        }
+
+        if (myid == 0)
+        {
+            for (int i=0; i<nspaces - 1; ++i)
+            {
+                spaceOSSP[i+1] = spaceOSSP[i] + spfespace[i]->GetVSize();
+            }
         }
 
         w = new CAROM::Vector(rrdim + rwdim, false);
@@ -977,8 +1001,9 @@ int main(int argc, char *argv[])
         }
 
         romop = new RomOperator(&oper, soper, rrdim, rwdim, nldim,
+                                spaceOS, spaceOSSP,
                                 BR_librom, FR_librom, BW_librom,
-                                Bsinv, N1, newton_rel_tol, newton_abs_tol, newton_iter, s2sp,
+                                Bsinv, newton_rel_tol, newton_abs_tol, newton_iter, s2sp,
                                 S_librom, s2sp_S, Ssinv,
                                 st2sp, sprows, all_sprows, myid, hyperreduce_source);
 
@@ -1528,9 +1553,9 @@ void Compute_CtAB(const HypreParMatrix* A,
 }
 
 RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOperator *fomSp_, const int rrdim_, const int rwdim_,
-                         const int nldim_,
+                         const int nldim_, const vector<int>& spaceOS, const vector<int>& spaceOSSP,
                          const CAROM::Matrix* V_R_, const CAROM::Matrix* U_R_, const CAROM::Matrix* V_W_,
-                         const CAROM::Matrix *Bsinv, const int N1,
+                         const CAROM::Matrix *Bsinv,
                          const double newton_rel_tol, const double newton_abs_tol, const int newton_iter, const vector<int>& s2sp_,
                          const CAROM::Matrix* S_, const vector<int>& s2sp_S_, const CAROM::Matrix *Ssinv_,
                          const vector<int>& st2sp, const vector<int>& sprows, const vector<int>& all_sprows, const int myid,
@@ -1557,7 +1582,8 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
 
     V_R.transposeMult(*U_R, VTU_R);
 
-    GatherDistributedMatrixRows(V_R, V_W, rrdim, rwdim, fom->fespace_R.GetVSize(), fom->fespace_R, fom->fespace_W, st2sp, sprows, all_sprows, *BRsp, *BWsp);
+    GatherDistributedMatrixRows(V_R, rrdim, spaceOS[0], spaceOS[1], spaceOSSP[0], fom->fespace_R, st2sp, sprows, all_sprows, *BRsp);
+    GatherDistributedMatrixRows(V_W, rwdim, spaceOS[1], spaceOS[2], spaceOSSP[1], fom->fespace_W, st2sp, sprows, all_sprows, *BWsp);
 
     // Compute BR = V_W^t B V_R and CR = V_W^t C V_W, and store them throughout the simulation.
 
