@@ -25,6 +25,19 @@ namespace CAROM {
 
 #define FULL_DOF_STENCIL
 
+class SampleMeshManager
+{
+public:
+  SampleMeshManager();
+
+  void ConstructSampleMesh();
+
+  /**
+   * @brief Destructor.
+   */
+  ~SampleMeshManager();
+};
+
 void FindStencilElements(const vector<int>& sample_dofs_gid,
                          set<int>& elements,
                          ParFiniteElementSpace& fespace)
