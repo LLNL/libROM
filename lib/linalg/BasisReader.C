@@ -402,6 +402,8 @@ BasisReader::getSnapshotMatrix(
     int num_cols;
     sprintf(tmp, "snapshot_matrix_num_cols_%06d", i);
     d_database->getInteger(tmp, num_cols);
+    CAROM_VERIFY(0 < start_col <= num_cols);
+    CAROM_VERIFY(start_col <= end_col && end_col <= num_cols);
     int num_cols_to_read = end_col - start_col + 1;
 
     Matrix* snapshots = new Matrix(num_rows, num_cols_to_read, false);
