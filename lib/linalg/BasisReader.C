@@ -242,7 +242,7 @@ BasisReader::getTemporalBasis(
     d_database->getDoubleArray(tmp,
                                &temporal_basis_vectors->item(0, 0),
                                num_rows*num_cols_to_read,
-                               0,
+                               start_col - 1,
                                num_cols_to_read,
                                num_cols);
     return temporal_basis_vectors;
