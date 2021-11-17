@@ -320,7 +320,7 @@ HDFDatabase::getDoubleArray(
 
         hsize_t num_blocks[1] = {(hsize_t) nelements/block_size};
         hsize_t buffer_array_size[1] = {(hsize_t) nelements};
-        hsize_t offsets[1] = {offset};
+        hsize_t offsets[1] = {(hsize_t) offset};
         hsize_t strides[1] = {(hsize_t) stride};
         hsize_t block_sizes[1] = {(hsize_t) block_size};
         hid_t nodespace = H5Screate_simple(1,buffer_array_size,NULL);
