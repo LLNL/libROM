@@ -113,7 +113,7 @@ public:
      *
      * @pre 0 < numTimeIntervals()
      * @pre 0 <= time
-     * @pre 0 < n < numColumns()
+     * @pre 0 < n <= numColumns()
      *
      * @param[in] time Time for which we want the basis vectors.
      * @param[in] n    The number of spatial basis vectors desired.
@@ -124,6 +124,28 @@ public:
     getSpatialBasis(
         double time,
         int n);
+
+    /**
+     *
+     * @brief Returns spatial basis vectors from start_col to end_col for the
+     *        requested time as a Matrix.
+     *
+     * @pre 0 < numTimeIntervals()
+     * @pre 0 <= time
+     * @pre 0 < start_col <= numColumns()
+     * @pre start_col <= end_col <= numColumns()
+     *
+     * @param[in] time         Time for which we want the basis vectors.
+     * @param[in] start_col    The starting column desired.
+     * @param[in] end_col      The starting column desired.
+     *
+     * @return The spatial basis vectors for the requested time.
+     */
+    Matrix*
+    getSpatialBasis(
+        double time,
+        int start_col,
+        int end_col);
 
     /**
      *
@@ -167,7 +189,7 @@ public:
      *
      * @pre 0 < numTimeIntervals()
      * @pre 0 <= time
-     * @pre 0 < n < numColumns()
+     * @pre 0 < n <= numColumns()
      *
      * @param[in] time Time for which we want the basis vectors.
      * @param[in] n    The number of temporal basis vectors desired.
@@ -178,6 +200,28 @@ public:
     getTemporalBasis(
         double time,
         int n);
+
+    /**
+     *
+     * @brief Returns temporal basis vectors from start_col to end_col for the
+     *        requested time as a Matrix.
+     *
+     * @pre 0 < numTimeIntervals()
+     * @pre 0 <= time
+     * @pre 0 < start_col <= numColumns()
+     * @pre start_col <= end_col <= numColumns()
+     *
+     * @param[in] time         Time for which we want the basis vectors.
+     * @param[in] start_col    The starting column desired.
+     * @param[in] end_col      The starting column desired.
+     *
+     * @return The temporal basis vectors for the requested time.
+     */
+    Matrix*
+    getTemporalBasis(
+        double time,
+        int start_col,
+        int end_col);
 
     /**
      *
@@ -246,6 +290,45 @@ public:
     Matrix*
     getSnapshotMatrix(
         double time);
+
+    /**
+     *
+     * @brief Returns the first n columns of the snapshot matrix for the requested time.
+     *
+     * @pre 0 < numTimeIntervals()
+     * @pre 0 <= time
+     * @pre 0 < n <= numColumns()
+     *
+     * @param[in] time Time for which we want the basis vectors.
+     * @param[in] n    The number of basis vectors desired.
+     *
+     * @return The snapshot matrix for the requested time.
+     */
+    Matrix*
+    getSnapshotMatrix(
+        double time,
+        int n);
+
+    /**
+     *
+     * @brief Returns the snapshot matrix from start_col to end_col for the requested time.
+     *
+     * @pre 0 < numTimeIntervals()
+     * @pre 0 <= time
+     * @pre 0 < start_col <= numColumns()
+     * @pre start_col <= end_col <= numColumns()
+     *
+     * @param[in] time Time for which we want the basis vectors.
+     * @param[in] start_col    The starting column desired.
+     * @param[in] end_col      The starting column desired.
+     *
+     * @return The snapshot matrix for the requested time.
+     */
+    Matrix*
+    getSnapshotMatrix(
+        double time,
+        int start_col,
+        int end_col);
 
 private:
     /**
