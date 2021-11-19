@@ -55,9 +55,10 @@ if [[ $USE_MFEM == "On" ]]; then
 fi
 
 if [[ $ARDRA == "true" ]]; then
-    mkdir ${REPO_PREFIX}/buildArdra
+    mkdir -p ${REPO_PREFIX}/buildArdra
     pushd ${REPO_PREFIX}/buildArdra
 else
+    mkdir -p ${REPO_PREFIX}/build
     pushd ${REPO_PREFIX}/build
 fi
 rm -rf *
@@ -73,11 +74,13 @@ if [ "$(uname)" == "Darwin" ]; then
   if [[ $? != 0 ]] ; then
       xcode-select --install
   fi
+  softwareupdate --all --install --force
   brew list open-mpi > /dev/null || brew install open-mpi
   brew list openblas > /dev/null || brew install openblas
   brew list lapack > /dev/null || brew install lapack
   brew list scalapack > /dev/null || brew install scalapack
   brew list hdf5 > /dev/null || brew install hdf5
+  brew list cmake > /dev/null || brew install cmake
   cmake ${REPO_PREFIX} \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -DUSE_MFEM=${USE_MFEM}

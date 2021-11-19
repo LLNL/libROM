@@ -16,16 +16,39 @@ non-intrusive black-box approaches.
 
 - Sparse identification of nonlinear dynamics (SINDy)
 
-# Authors
-Robert W. Anderson (LLNL),
-William Arrighi (LLNL),
-Siu Wun Cheung (LLNL),
-Youngsoo Choi (LLNL),
-Dylan Copeland (LLNL),
-Kevin Huynh (LLNL),
-Jessica Lauzon (Stanford),
-Sean McBane (UT Austin),
-Geoffrey Oxberry (LLNL).
+# Installation
+
+To compile libROM with default build settings (Mac and LLNL LC Machines):
+```sh
+ ./scripts/compile.sh
+```
+
+Compilation options:
+
+- -a: Compile a special build for the LLNL codebase: Ardra
+- -d: Compile in debug mode.
+- -m: Compile with MFEM (required to run the libROM examples)
+- -t: Use your own cmake/toolchain
+- -u: Update all of libROM's dependencies.
+
+# Installing via Spack
+
+There is a Spack package for libROM; however, the version it installs
+is the latest public release. See the [spack
+documentation](http://spack.readthedocs.io/en/latest/index.html) for
+details on how to use Spack.
+
+To install libROM with default options using spack.
+
+```sh
+ spack install librom
+```
+
+To install libROM with MFEM using spack.
+
+```sh
+ spack install librom +mfem
+```
 
 # License
 
@@ -50,24 +73,16 @@ SPDX_License-Identifier: (Apache-2.0 OR MIT)
 LLNL-CODE-686965 (up to commit 299876e0a0304f25db56f1f9e2eb2c61ef199048)
 LLNL-CODE-766763
 
-# Installation
 
-To compile libROM with default build settings (Mac and LLNL LC Machines):
-```sh
- ./scripts/compile.sh
-```
-
-Compilation options:
-
-- -a: Compile a special build for the LLNL codebase: Ardra
-- -d: Compile in debug mode.
-- -m: Compile with MFEM (required to run the libROM examples)
-- -t: Use your own cmake/toolchain
-- -u: Update all of libROM's dependencies.
-
-# Installing via Spack
-
-There is a Spack package for libROM; however, the version it installs
-is the latest public release. See the [spack
-documentation](http://spack.readthedocs.io/en/latest/index.html) for
-details on how to use Spack.
+# Authors
+- Robert W. Anderson (LLNL)
+- William Arrighi (LLNL)
+- Kyle Chand (LLNL)
+- Siu Wun Cheung (LLNL)
+- Youngsoo Choi (LLNL)
+- Dylan Copeland (LLNL)
+- Kevin Huynh (LLNL)
+- Tanya Kostova-Vassilevska (LLNL)
+- Jessica Lauzon (Stanford)
+- Sean McBane (UT Austin)
+- Geoffrey Oxberry (LLNL)
