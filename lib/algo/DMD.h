@@ -42,10 +42,12 @@ public:
      * @brief Sample the new state, u_in.
      *
      * @pre u_in != 0
+     * @pre t >= 0.0
      *
-     * @param[in] u_in The state at the specified time.
+     * @param[in] u_in The new state.
+     * @param[in] t    The time of the newly sampled state.
      */
-    void takeSample(double* u_in);
+    void takeSample(double* u_in, double t);
 
     /**
      * @param[in] energy_fraction The energy fraction to keep after doing SVD.
@@ -127,6 +129,10 @@ private:
      */
     std::vector<Vector> d_snapshots;
 
+    std::vector<double> d_sampled_times;
+
+    bool d_trained;
+
     /**
      * @brief Internal function to multiply d_phi with the eigenvalues.
      */
@@ -138,6 +144,8 @@ private:
     void constructDMD(const Matrix* f_snapshots,
                       int rank,
                       int num_procs);
+
+   double interpolateSampledTime(double n);
 
     /**
      * @brief The real part of d_phi.
