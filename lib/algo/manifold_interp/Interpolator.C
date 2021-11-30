@@ -33,11 +33,13 @@ Interpolator::Interpolator(std::vector<Vector*> parameter_points,
                            std::vector<Matrix*> rotation_matrices,
                            int ref_point,
                            std::string rbf,
+                           std::string interp_method,
                            double epsilon)
 {
     CAROM_VERIFY(parameter_points.size() == rotation_matrices.size());
-    CAROM_VERIFY(parameter_points.size() > 0);
+    CAROM_VERIFY(parameter_points.size() > 1);
     CAROM_VERIFY(rbf == "G" || rbf == "IQ" || rbf == "MQ" || rbf == "IMQ");
+    CAROM_VERIFY(interp_method == "LS" || interp_method == "IDW" || interp_method == "LP");
 
     // Get the rank of this process, and the number of processors.
     int mpi_init;
@@ -54,17 +56,85 @@ Interpolator::Interpolator(std::vector<Vector*> parameter_points,
     d_ref_point = ref_point;
     d_lambda_T = NULL;
     d_rbf = rbf;
+    d_interp_method = interp_method;
     d_epsilon = epsilon;
 }
 
 std::vector<double> Interpolator::obtainRBFToTrainingPoints(Vector* point)
 {
     std::vector<double> rbf;
-    for (int i = 0; i < d_parameter_points.size(); i++)
+    if (d_interp_method == "LS")
     {
-        rbf.push_back(obtainRBF(point, d_parameter_points[i]));
+        for (int i = 0; i < d_parameter_points.size(); i++)
+        {
+            rbf.push_back(obtainRBF(point, d_parameter_points[i]));
+        }
+    }
+    else if (d_interp_method == "IDW")
+    {
+        bool distance_is_zero = false;
+        for (int i = 0; i < d_parameter_points.size(); i++)
+        {
+            rbf.push_back(obtainRBF(point, d_parameter_points[i]));
+            if (rbf.back() == 1.0)
+            {
+                distance_is_zero = true;
+            }
+        }
+        if (d_interp_method == "IDW" && distance_is_zero)
+        {
+            for (int i = 0; i < rbf.size(); i++)
+            {
+                if (rbf[i] != 1.0)
+                {
+                    rbf[i] = 0.0;
+                }
+            }
+        }
+    }
+    else if (d_interp_method == "LP")
+    {
+        for (int i = 0; i < d_parameter_points.size(); i++)
+        {
+            double coeff;
+            bool first = true;
+            for (int j = 0; j < d_parameter_points.size(); j++)
+            {
+                if (i == j)
+                {
+                    continue;
+                }
+
+                Vector numerator_vec, denomenator_vec;
+                point->minus(*d_parameter_points[j], numerator_vec);
+                d_parameter_points[i]->minus(*d_parameter_points[j], denomenator_vec);
+                double numerator = numerator_vec.norm();
+                double denomenator = denomenator_vec.norm();
+
+                if (first)
+                {
+                    coeff = (numerator / denomenator);
+                    first = false;
+                }
+                else
+                {
+                    coeff *= (numerator / denomenator);
+                }
+            }
+            rbf.push_back(coeff);
+        }
     }
     return rbf;
+}
+
+double Interpolator::rbfWeightedSum(std::vector<double> rbf)
+{
+    double sum = 0.0;
+    for (int i = 0; i < rbf.size(); i++)
+    {
+        sum += rbf[i];
+    }
+    return sum;
 }
 
 double Interpolator::obtainRBF(Vector* point1, Vector* point2)

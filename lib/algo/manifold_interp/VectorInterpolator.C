@@ -43,11 +43,13 @@ VectorInterpolator::VectorInterpolator(std::vector<Vector*> parameter_points,
                                        std::vector<Vector*> reduced_vectors,
                                        int ref_point,
                                        std::string rbf,
+                                       std::string interp_method,
                                        double epsilon) :
     Interpolator(parameter_points,
                  rotation_matrices,
                  ref_point,
                  rbf,
+                 interp_method,
                  epsilon)
 {
     CAROM_VERIFY(reduced_vectors.size() == rotation_matrices.size());
@@ -70,52 +72,78 @@ VectorInterpolator::VectorInterpolator(std::vector<Vector*> parameter_points,
 
 void VectorInterpolator::obtainLambda(std::vector<Vector*> gammas)
 {
-
-    // Solving f = B*lambda
-    Matrix* f_T = new Matrix(gammas[0]->dim(), gammas.size(), false);
-    for (int i = 0; i < f_T->numRows(); i++)
+    if (d_interp_method == "LS")
     {
-        for (int j = 0; j < f_T->numColumns(); j++)
+        // Solving f = B*lambda
+        Matrix* f_T = new Matrix(gammas[0]->dim(), gammas.size(), false);
+        for (int i = 0; i < f_T->numRows(); i++)
         {
-            f_T->item(i, j) = gammas[j]->getData()[i];
+            for (int j = 0; j < f_T->numColumns(); j++)
+            {
+                f_T->item(i, j) = gammas[j]->getData()[i];
+            }
         }
-    }
 
-    // Obtain B vector by calculating RBF.
-    Matrix* B = new Matrix(gammas.size(), gammas.size(), false);
-    for (int i = 0; i < B->numRows(); i++)
-    {
-        for (int j = i + 1; j < B->numColumns(); j++)
+        // Obtain B vector by calculating RBF.
+        Matrix* B = new Matrix(gammas.size(), gammas.size(), false);
+        for (int i = 0; i < B->numRows(); i++)
         {
-            double res = obtainRBF(d_parameter_points[i], d_parameter_points[j]);
-            B->item(i, j) = res;
-            B->item(j, i) = res;
+            for (int j = i + 1; j < B->numColumns(); j++)
+            {
+                double res = obtainRBF(d_parameter_points[i], d_parameter_points[j]);
+                B->item(i, j) = res;
+                B->item(j, i) = res;
+            }
         }
+
+        int gamma_size = gammas.size();
+        int num_elements = gammas[0]->dim();
+        int* ipiv = new int[gamma_size];
+        int info;
+
+        dgesv(&gamma_size, &num_elements, B->getData(),  &gamma_size, ipiv, f_T->getData(), &gamma_size, &info);
+        CAROM_VERIFY(info == 0);
+
+        delete [] ipiv;
+        delete B;
+
+        d_lambda_T = f_T;
     }
-
-    int gamma_size = gammas.size();
-    int num_elements = gammas[0]->dim();
-    int* ipiv = new int[gamma_size];
-    int info;
-
-    dgesv(&gamma_size, &num_elements, B->getData(),  &gamma_size, ipiv, f_T->getData(), &gamma_size, &info);
-    CAROM_VERIFY(info == 0);
-
-    delete [] ipiv;
-    delete B;
-
-    d_lambda_T = f_T;
 }
 
 Vector* VectorInterpolator::obtainLogInterpolatedVector(std::vector<double> rbf)
 {
     Vector* log_interpolated_vector = new Vector(d_rotated_reduced_vectors[d_ref_point]->dim(), d_rotated_reduced_vectors[d_ref_point]->distributed());
-    CAROM_VERIFY(d_rotated_reduced_vectors[d_ref_point]->dim() == d_lambda_T->numRows());
-    for (int i = 0; i < d_lambda_T->numRows(); i++)
+    if (d_interp_method == "LS")
     {
-        for (int j = 0; j < rbf.size(); j++)
+        for (int i = 0; i < d_lambda_T->numRows(); i++)
         {
-            log_interpolated_vector->getData()[i] += d_lambda_T->item(i, j) * rbf[j];
+            for (int j = 0; j < rbf.size(); j++)
+            {
+                log_interpolated_vector->getData()[i] += d_lambda_T->item(i, j) * rbf[j];
+            }
+        }
+    }
+    else if (d_interp_method == "IDW")
+    {
+        double sum = rbfWeightedSum(rbf);
+        for (int i = 0; i < d_rotated_reduced_vectors[d_ref_point]->dim(); i++)
+        {
+            for (int j = 0; j < rbf.size(); j++)
+            {
+                log_interpolated_vector->getData()[i] += gammas[j]->getData()[i] * rbf[j];
+            }
+            log_interpolated_vector->getData()[i] /= sum;
+        }
+    }
+    else if (d_interp_method == "LP")
+    {
+        for (int i = 0; i < d_rotated_reduced_vectors[d_ref_point]->dim(); i++)
+        {
+            for (int j = 0; j < rbf.size(); j++)
+            {
+                log_interpolated_vector->getData()[i] += gammas[j]->getData()[i] * rbf[j];
+            }
         }
     }
 
@@ -124,10 +152,8 @@ Vector* VectorInterpolator::obtainLogInterpolatedVector(std::vector<double> rbf)
 
 Vector* VectorInterpolator::interpolate(Vector* point)
 {
-    if (d_lambda_T == NULL)
+    if (gammas.size() == 0)
     {
-        // Perform log mapping by doing Y - X.
-        std::vector<Vector*> gammas;
 
         for (int i = 0; i < d_parameter_points.size(); i++)
         {

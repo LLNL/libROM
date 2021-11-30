@@ -52,6 +52,8 @@ public:
      * @param[in] rbf       The RBF type ("G" == gaussian, "MQ" == multiquadric,
      *                      "IQ" == inverse quadratic, "IMQ" == inverse
      *                      multiquadric)
+     * @param[in] interp_method  The interpolation method type ("LS" == linear solve,
+     *                      "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
      * @param[in] epsilon   The RBF parameter that determines the width of
                             influence.
      */
@@ -61,6 +63,7 @@ public:
                        int ref_point,
                        std::string matrix_type,
                        std::string rbf = "G",
+                       std::string interp_method = "LS",
                        double epsilon = 1.0);
 
     /**
