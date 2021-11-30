@@ -107,11 +107,6 @@ protected:
     Matrix* d_lambda_T;
 
     /**
-     * @brief The reduced elements in tangential space.
-     */
-    std::vector<Vector*> gammas;
-
-    /**
      * @brief Compute the RBF from the parameter points with the
      *        unsampled parameter point.
      *

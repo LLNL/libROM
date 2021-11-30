@@ -81,7 +81,7 @@ std::vector<double> Interpolator::obtainRBFToTrainingPoints(Vector* point)
                 distance_is_zero = true;
             }
         }
-        if (d_interp_method == "IDW" && distance_is_zero)
+        if (distance_is_zero)
         {
             for (int i = 0; i < rbf.size(); i++)
             {

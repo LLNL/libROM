@@ -96,10 +96,8 @@ private:
     /**
      * @brief Solve the system of equations of the gammas to obtain the
      *        lambda for the P matrix.
-     *
-     * @param[in] gammas The vector of gamma matrices.
      */
-    void obtainLambda(std::vector<Matrix*> gammas);
+    void obtainLambda();
 
     /**
      * @brief Obtain the interpolated matrix of the unsampled parameter point
@@ -142,6 +140,11 @@ private:
      * @brief The reduced matrices with compatible coordinates.
      */
     std::vector<Matrix*> d_rotated_reduced_matrices;
+
+    /**
+     * @brief The reduced elements in tangential space.
+     */
+    std::vector<Matrix*> d_gammas;
 
     /**
      * @brief The reduced matrix of the reference point to the half power.

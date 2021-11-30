@@ -70,22 +70,22 @@ VectorInterpolator::VectorInterpolator(std::vector<Vector*> parameter_points,
     }
 }
 
-void VectorInterpolator::obtainLambda(std::vector<Vector*> gammas)
+void VectorInterpolator::obtainLambda()
 {
     if (d_interp_method == "LS")
     {
         // Solving f = B*lambda
-        Matrix* f_T = new Matrix(gammas[0]->dim(), gammas.size(), false);
+        Matrix* f_T = new Matrix(d_gammas[0]->dim(), d_gammas.size(), false);
         for (int i = 0; i < f_T->numRows(); i++)
         {
             for (int j = 0; j < f_T->numColumns(); j++)
             {
-                f_T->item(i, j) = gammas[j]->getData()[i];
+                f_T->item(i, j) = d_gammas[j]->getData()[i];
             }
         }
 
         // Obtain B vector by calculating RBF.
-        Matrix* B = new Matrix(gammas.size(), gammas.size(), false);
+        Matrix* B = new Matrix(d_gammas.size(), d_gammas.size(), false);
         for (int i = 0; i < B->numRows(); i++)
         {
             for (int j = i + 1; j < B->numColumns(); j++)
@@ -96,8 +96,8 @@ void VectorInterpolator::obtainLambda(std::vector<Vector*> gammas)
             }
         }
 
-        int gamma_size = gammas.size();
-        int num_elements = gammas[0]->dim();
+        int gamma_size = d_gammas.size();
+        int num_elements = d_gammas[0]->dim();
         int* ipiv = new int[gamma_size];
         int info;
 
@@ -131,7 +131,7 @@ Vector* VectorInterpolator::obtainLogInterpolatedVector(std::vector<double> rbf)
         {
             for (int j = 0; j < rbf.size(); j++)
             {
-                log_interpolated_vector->getData()[i] += gammas[j]->getData()[i] * rbf[j];
+                log_interpolated_vector->getData()[i] += d_gammas[j]->getData()[i] * rbf[j];
             }
             log_interpolated_vector->getData()[i] /= sum;
         }
@@ -142,7 +142,7 @@ Vector* VectorInterpolator::obtainLogInterpolatedVector(std::vector<double> rbf)
         {
             for (int j = 0; j < rbf.size(); j++)
             {
-                log_interpolated_vector->getData()[i] += gammas[j]->getData()[i] * rbf[j];
+                log_interpolated_vector->getData()[i] += d_gammas[j]->getData()[i] * rbf[j];
             }
         }
     }
@@ -152,7 +152,7 @@ Vector* VectorInterpolator::obtainLogInterpolatedVector(std::vector<double> rbf)
 
 Vector* VectorInterpolator::interpolate(Vector* point)
 {
-    if (gammas.size() == 0)
+    if (d_gammas.size() == 0)
     {
 
         for (int i = 0; i < d_parameter_points.size(); i++)
@@ -161,18 +161,18 @@ Vector* VectorInterpolator::interpolate(Vector* point)
             if (i == d_ref_point)
             {
                 Vector* gamma = new Vector(d_rotated_reduced_vectors[d_ref_point]->dim(), d_rotated_reduced_vectors[d_ref_point]->distributed());
-                gammas.push_back(gamma);
+                d_gammas.push_back(gamma);
             }
             else
             {
                 // Gamma is Y - X
                 Vector* gamma = d_rotated_reduced_vectors[i]->minus(*d_rotated_reduced_vectors[d_ref_point]);
-                gammas.push_back(gamma);
+                d_gammas.push_back(gamma);
             }
         }
 
         // Obtain lambda for the P interpolation vector
-        obtainLambda(gammas);
+        obtainLambda();
     }
 
     // Obtain distances from database points to new point

@@ -98,23 +98,23 @@ Matrix* MatrixInterpolator::interpolate(Vector* point)
     }
 }
 
-void MatrixInterpolator::obtainLambda(std::vector<Matrix*> gammas)
+void MatrixInterpolator::obtainLambda()
 {
 
     if (d_interp_method == "LS")
     {
         // Solving f = B*lambda
-        Matrix* f_T = new Matrix(gammas[0]->numRows() * gammas[0]->numColumns(), gammas.size(), false);
+        Matrix* f_T = new Matrix(d_gammas[0]->numRows() * d_gammas[0]->numColumns(), d_gammas.size(), false);
         for (int i = 0; i < f_T->numRows(); i++)
         {
             for (int j = 0; j < f_T->numColumns(); j++)
             {
-                f_T->item(i, j) = gammas[j]->getData()[i];
+                f_T->item(i, j) = d_gammas[j]->getData()[i];
             }
         }
 
         // Obtain B matrix by calculating RBF.
-        Matrix* B = new Matrix(gammas.size(), gammas.size(), false);
+        Matrix* B = new Matrix(d_gammas.size(), d_gammas.size(), false);
         for (int i = 0; i < B->numRows(); i++)
         {
             for (int j = i + 1; j < B->numColumns(); j++)
@@ -125,8 +125,8 @@ void MatrixInterpolator::obtainLambda(std::vector<Matrix*> gammas)
             }
         }
 
-        int gamma_size = gammas.size();
-        int num_elements = gammas[0]->numRows() * gammas[0]->numColumns();
+        int gamma_size = d_gammas.size();
+        int num_elements = d_gammas[0]->numRows() * d_gammas[0]->numColumns();
         int* ipiv = new int[gamma_size];
         int info;
 
@@ -161,7 +161,7 @@ Matrix* MatrixInterpolator::obtainLogInterpolatedMatrix(std::vector<double> rbf)
         {
             for (int j = 0; j < rbf.size(); j++)
             {
-                log_interpolated_matrix->getData()[i] += gammas[j]->getData()[i] * rbf[j];
+                log_interpolated_matrix->getData()[i] += d_gammas[j]->getData()[i] * rbf[j];
             }
             log_interpolated_matrix->getData()[i] /= sum;
         }
@@ -173,7 +173,7 @@ Matrix* MatrixInterpolator::obtainLogInterpolatedMatrix(std::vector<double> rbf)
         {
             for (int j = 0; j < rbf.size(); j++)
             {
-                log_interpolated_matrix->getData()[i] += gammas[j]->getData()[i] * rbf[j];
+                log_interpolated_matrix->getData()[i] += d_gammas[j]->getData()[i] * rbf[j];
             }
         }
     }
@@ -182,7 +182,7 @@ Matrix* MatrixInterpolator::obtainLogInterpolatedMatrix(std::vector<double> rbf)
 
 Matrix* MatrixInterpolator::interpolateSPDMatrix(Vector* point)
 {
-    if (gammas.size() == 0)
+    if (d_gammas.size() == 0)
     {
         // Diagonalize X to work towards obtaining X^-1/2
         EigenPair ref_reduced_matrix_eigenpair = SymmetricRightEigenSolve(d_rotated_reduced_matrices[d_ref_point]);
@@ -217,7 +217,7 @@ Matrix* MatrixInterpolator::interpolateSPDMatrix(Vector* point)
             if (i == d_ref_point)
             {
                 Matrix* gamma = new Matrix(x_half_power_inv->numRows(), x_half_power_inv->numColumns(), x_half_power_inv->distributed());
-                gammas.push_back(gamma);
+                d_gammas.push_back(gamma);
             }
             else
             {
@@ -255,7 +255,7 @@ Matrix* MatrixInterpolator::interpolateSPDMatrix(Vector* point)
                 // Perform log mapping.
                 Matrix* log_ev_mult_log_eig = log_ev->mult(log_eigs);
                 Matrix* gamma = log_ev_mult_log_eig->mult(log_ev_inv);
-                gammas.push_back(gamma);
+                d_gammas.push_back(gamma);
 
                 delete log_ev;
                 delete log_ev_inv;
@@ -267,7 +267,7 @@ Matrix* MatrixInterpolator::interpolateSPDMatrix(Vector* point)
         delete x_half_power_inv;
 
         // Obtain lambda for the P interpolation matrix
-        obtainLambda(gammas);
+        obtainLambda();
     }
 
     // Obtain distances from database points to new point
@@ -316,7 +316,7 @@ Matrix* MatrixInterpolator::interpolateSPDMatrix(Vector* point)
 
 Matrix* MatrixInterpolator::interpolateNonSingularMatrix(Vector* point)
 {
-    if (gammas.size() == 0)
+    if (d_gammas.size() == 0)
     {
         // Invert X
         Matrix* ref_matrix_inv = NULL;
@@ -328,7 +328,7 @@ Matrix* MatrixInterpolator::interpolateNonSingularMatrix(Vector* point)
             if (i == d_ref_point)
             {
                 Matrix* gamma = new Matrix(ref_matrix_inv->numRows(), ref_matrix_inv->numColumns(), ref_matrix_inv->distributed());
-                gammas.push_back(gamma);
+                d_gammas.push_back(gamma);
             }
             else
             {
@@ -360,7 +360,7 @@ Matrix* MatrixInterpolator::interpolateNonSingularMatrix(Vector* point)
                 // Perform log mapping.
                 Matrix* log_ev_mult_log_eig = log_ev->mult(log_eigs);
                 Matrix* gamma = log_ev_mult_log_eig->mult(log_ev_inv);
-                gammas.push_back(gamma);
+                d_gammas.push_back(gamma);
 
                 delete log_ev;
                 delete log_ev_inv;
@@ -372,7 +372,7 @@ Matrix* MatrixInterpolator::interpolateNonSingularMatrix(Vector* point)
         delete ref_matrix_inv;
 
         // Obtain lambda for the P interpolation matrix
-        obtainLambda(gammas);
+        obtainLambda();
     }
 
     // Obtain distances from database points to new point
@@ -421,7 +421,7 @@ Matrix* MatrixInterpolator::interpolateNonSingularMatrix(Vector* point)
 
 Matrix* MatrixInterpolator::interpolateMatrix(Vector* point)
 {
-    if (gammas.size() == 0)
+    if (d_gammas.size() == 0)
     {
         for (int i = 0; i < d_parameter_points.size(); i++)
         {
@@ -429,19 +429,19 @@ Matrix* MatrixInterpolator::interpolateMatrix(Vector* point)
             if (i == d_ref_point)
             {
                 Matrix* gamma = new Matrix(d_rotated_reduced_matrices[d_ref_point]->numRows(), d_rotated_reduced_matrices[d_ref_point]->numColumns(), d_rotated_reduced_matrices[d_ref_point]->distributed());
-                gammas.push_back(gamma);
+                d_gammas.push_back(gamma);
             }
             else
             {
                 // Gamma is Y - X
                 Matrix* gamma = new Matrix(*d_rotated_reduced_matrices[i]);
                 *gamma -= *d_rotated_reduced_matrices[d_ref_point];
-                gammas.push_back(gamma);
+                d_gammas.push_back(gamma);
             }
         }
 
         // Obtain lambda for the P interpolation matrix
-        obtainLambda(gammas);
+        obtainLambda();
     }
     // Obtain distances from database points to new point
     std::vector<double> rbf = obtainRBFToTrainingPoints(point);
