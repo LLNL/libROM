@@ -27,11 +27,11 @@
 #endif
 
 /* Use automatically detected Fortran name-mangling scheme */
-#define dgesv CAROM_FC_GLOBAL(dgesv, DGESV)
+#define dposv CAROM_FC_GLOBAL(dposv, DPOSV)
 
 extern "C" {
     // Solve a system of linear equations.
-    void dgesv(int*, int*, double*, int*, int*, double*, int*, int*);
+    void dposv(char*, int*, int*, double*, int*, double*, int*, int*);
 }
 
 using namespace std;
@@ -88,6 +88,7 @@ void VectorInterpolator::obtainLambda()
         Matrix* B = new Matrix(d_gammas.size(), d_gammas.size(), false);
         for (int i = 0; i < B->numRows(); i++)
         {
+            B->item(i, i) = 1.0;
             for (int j = i + 1; j < B->numColumns(); j++)
             {
                 double res = obtainRBF(d_parameter_points[i], d_parameter_points[j]);
@@ -96,15 +97,14 @@ void VectorInterpolator::obtainLambda()
             }
         }
 
+        char uplo = 'U';
         int gamma_size = d_gammas.size();
         int num_elements = d_gammas[0]->dim();
-        int* ipiv = new int[gamma_size];
         int info;
 
-        dgesv(&gamma_size, &num_elements, B->getData(),  &gamma_size, ipiv, f_T->getData(), &gamma_size, &info);
+        dposv(&uplo, &gamma_size, &num_elements, B->getData(),  &gamma_size, f_T->getData(), &gamma_size, &info);
         CAROM_VERIFY(info == 0);
 
-        delete [] ipiv;
         delete B;
 
         d_lambda_T = f_T;

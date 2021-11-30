@@ -300,7 +300,7 @@ int main(int argc, char *argv[])
     double dt = 0.01;
     double ef = 0.9999;
     const char *rbf_type = "G";
-    const char *interp_method = "IDW";
+    const char *interp_method = "LS";
     double rbf_width = 1.0;
     f_factor = 1.0;
     int rdim = -1;
