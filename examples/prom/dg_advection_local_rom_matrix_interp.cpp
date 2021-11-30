@@ -20,7 +20,9 @@
 //    dg_advection_local_rom_matrix_interp -offline -ff 1.08
 //    dg_advection_local_rom_matrix_interp -interp_prep -ff 1.08 -rdim 40
 //    dg_advection_local_rom_matrix_interp -fom -ff 1.05
-//    dg_advection_local_rom_matrix_interp -online_interp -ff 1.05 -rdim 40
+//    dg_advection_local_rom_matrix_interp -online_interp -ff 1.05 -rdim 40 (interpolate using a linear solve)
+//    dg_advection_local_rom_matrix_interp -online_interp -ff 1.05 -rdim 40 -im "LP" (interpolate using lagragian polynomials)
+//    dg_advection_local_rom_matrix_interp -online_interp -ff 1.05 -rdim 40 -im "IDW" (interpolate using inverse distance weighting)
 //
 // Sample runs:
 //    mpirun -np 4 dg_advection_local_rom_matrix_interp -p 0 -dt 0.005
