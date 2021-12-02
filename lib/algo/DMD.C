@@ -408,4 +408,9 @@ DMD::getSnapshotMatrix()
     return snapshot_mat;
 }
 
+void DMD::clearSample()
+{
+    d_snapshots.clear();
+}
+
 }

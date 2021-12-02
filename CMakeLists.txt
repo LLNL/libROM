@@ -135,13 +135,15 @@ if (USE_MFEM)
     dg_advection
     nonlinear_elasticity
     heat_conduction
-    dg_euler)
+    dg_euler
+    pore_collapse)
   set(example_directories
     prom
     prom
     prom
     prom
     prom
+    dmd
     dmd
     dmd
     dmd

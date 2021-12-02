@@ -87,6 +87,11 @@ public:
      */
     const Matrix* getSnapshotMatrix();
 
+    /**
+     * @brief Clear the snapshot matrix.
+     */
+    void clearSample();
+
 private:
 
     /**
