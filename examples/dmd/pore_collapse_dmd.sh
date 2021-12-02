@@ -17,4 +17,5 @@ do
         echo ${i}gpa >> pore_collapse_list/training_gpa
 done
 
-srun -n 4 pore_collapse
+cp pore_collapse_list/training_gpa pore_collapse_list/testing_gpa
+srun -n 4 ../../build/examples/dmd/pore_collapse
