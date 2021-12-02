@@ -74,14 +74,14 @@ int main(int argc, char *argv[])
 
     std::string par_dir; 
     std::ifstream training_par_list((std::string(list_dir) + "/training_par").c_str()); 
-    while std::getline(training_par_list, par_dir)
+    while (std::getline(training_par_list, par_dir))
     {
         std::ifstream snap_list((std::string(list_dir) + "/" + par_dir).c_str());
         std::string snap;
-        while std::getline(snap_list, snap)
+        while (std::getline(snap_list, snap))
         {
             CAROM::HDFDatabase database;
-            database.open(std::string(data_dir) + "/" + par_dir "/" + snap, "r");
+            database.open(std::string(data_dir) + "/" + par_dir + "/" + snap, "r");
             database.getDoubleArray(variable, sample, 1);
             dmd.takeSample(sample);
         }
@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
     }
 
     std::ifstream testing_par_list((std::string(list_dir) + "/testing_par").c_str()); 
-    while std::getline(testing_par_list, par_dir)
+    while (std::getline(testing_par_list, par_dir))
     {
         if (myid == 0)
         {
@@ -116,21 +116,19 @@ int main(int argc, char *argv[])
         std::string snap;
         int num_steps = 0;
         dmd.clearSample();
-        while std::getline(snap_list, snap)
+        while (std::getline(snap_list, snap) && num_steps <= round(t_final/dt))
         {
             CAROM::HDFDatabase database;
-            database.open(std::string(data_dir) + "/" + par_dir "/" + snap, "r");
+            database.open(std::string(data_dir) + "/" + par_dir + "/" + snap, "r");
             database.getDoubleArray(variable, sample, 1);
             dmd.takeSample(sample);
             num_steps += 1;
         }
 
         // 14. Predict the state at t_final using DMD.
-        num_steps = std::min(num_steps, round(t_final/dt));
-        t_final = dt*num_steps;
         if (myid == 0)
         {
-            cout << "Final time t_final = " << t_final << endl;
+            cout << "Final time t_final = " << dt*num_steps << endl;
         }
         CAROM::Vector* result = dmd.predict(num_steps - 1);
 
