@@ -895,7 +895,7 @@ int main(int argc, char *argv[])
         {
             vector<int> s2sp_withS;
             CAROM::CreateSampleMesh(*pmesh, fespace, rom_com, sample_dofs_withS, num_sample_dofs_per_proc_withS,
-                                    sample_pmesh, sprows, all_sprows, s2sp_withS, st2sp, spfespace);
+                                    sample_pmesh, sprows, all_sprows, s2sp_withS, st2sp, spfespace, "");
 
             sp_R_space = spfespace[0];
             sp_W_space = spfespace[1];
@@ -947,7 +947,7 @@ int main(int argc, char *argv[])
         else
         {
             CAROM::CreateSampleMesh(*pmesh, fespace, rom_com, sample_dofs, num_sample_dofs_per_proc,
-                                    sample_pmesh, sprows, all_sprows, s2sp, st2sp, spfespace);
+                                    sample_pmesh, sprows, all_sprows, s2sp, st2sp, spfespace, "");
             sp_R_space = spfespace[0];
             sp_W_space = spfespace[1];
         }
