@@ -311,7 +311,7 @@ DMD::projectInitialCondition(const Vector* init)
 
     Vector* d_projected_init_imaginary_1 = d_phi_real_squared->mult(rhs_imaginary);
     Vector* d_projected_init_imaginary_2 = d_phi_imaginary_squared->mult(rhs_real);
-    d_projected_init_imaginary =  d_projected_init_imaginary_2->minus(d_projected_init_imaginary_1);
+    d_projected_init_imaginary = d_projected_init_imaginary_2->minus(d_projected_init_imaginary_1);
 
     delete d_phi_real_squared;
     delete d_phi_real_squared_2;
