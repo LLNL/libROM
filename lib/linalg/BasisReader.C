@@ -100,6 +100,15 @@ BasisReader::getSpatialBasis(
     double time,
     int n)
 {
+    return getSpatialBasis(time, 1, n);
+}
+
+Matrix*
+BasisReader::getSpatialBasis(
+    double time,
+    int start_col,
+    int end_col)
+{
     CAROM_ASSERT(0 < numTimeIntervals());
     CAROM_ASSERT(0 <= time);
     int num_time_intervals = numTimeIntervals();
@@ -118,14 +127,17 @@ BasisReader::getSpatialBasis(
     int num_cols;
     sprintf(tmp, "spatial_basis_num_cols_%06d", i);
     d_database->getInteger(tmp, num_cols);
-    CAROM_VERIFY(0 < n <= num_cols);
+    CAROM_VERIFY(0 < start_col <= num_cols);
+    CAROM_VERIFY(start_col <= end_col && end_col <= num_cols);
+    int num_cols_to_read = end_col - start_col + 1;
 
-    Matrix* spatial_basis_vectors = new Matrix(num_rows, n, true);
+    Matrix* spatial_basis_vectors = new Matrix(num_rows, num_cols_to_read, true);
     sprintf(tmp, "spatial_basis_%06d", i);
     d_database->getDoubleArray(tmp,
                                &spatial_basis_vectors->item(0, 0),
-                               num_rows*n,
-                               n,
+                               num_rows*num_cols_to_read,
+                               start_col - 1,
+                               num_cols_to_read,
                                num_cols);
     return spatial_basis_vectors;
 }
@@ -194,6 +206,15 @@ BasisReader::getTemporalBasis(
     double time,
     int n)
 {
+    return getTemporalBasis(time, 1, n);
+}
+
+Matrix*
+BasisReader::getTemporalBasis(
+    double time,
+    int start_col,
+    int end_col)
+{
     CAROM_ASSERT(0 < numTimeIntervals());
     CAROM_ASSERT(0 <= time);
     int num_time_intervals = numTimeIntervals();
@@ -212,14 +233,17 @@ BasisReader::getTemporalBasis(
     int num_cols;
     sprintf(tmp, "temporal_basis_num_cols_%06d", i);
     d_database->getInteger(tmp, num_cols);
-    CAROM_VERIFY(0 < n <= num_cols);
+    CAROM_VERIFY(0 < start_col <= num_cols);
+    CAROM_VERIFY(start_col <= end_col && end_col <= num_cols);
+    int num_cols_to_read = end_col - start_col + 1;
 
-    Matrix* temporal_basis_vectors = new Matrix(num_rows, n, true);
+    Matrix* temporal_basis_vectors = new Matrix(num_rows, num_cols_to_read, true);
     sprintf(tmp, "temporal_basis_%06d", i);
     d_database->getDoubleArray(tmp,
                                &temporal_basis_vectors->item(0, 0),
-                               num_rows*n,
-                               n,
+                               num_rows*num_cols_to_read,
+                               start_col - 1,
+                               num_cols_to_read,
                                num_cols);
     return temporal_basis_vectors;
 }
@@ -343,6 +367,53 @@ BasisReader::getSnapshotMatrix(
     d_database->getDoubleArray(tmp,
                                &snapshots->item(0, 0),
                                num_rows*num_cols);
+    return snapshots;
+}
+
+Matrix*
+BasisReader::getSnapshotMatrix(
+    double time,
+    int n)
+{
+    return getSnapshotMatrix(time, 1, n);
+}
+
+Matrix*
+BasisReader::getSnapshotMatrix(
+    double time,
+    int start_col,
+    int end_col)
+{
+    CAROM_ASSERT(0 < numTimeIntervals());
+    CAROM_ASSERT(0 <= time);
+    int num_time_intervals = numTimeIntervals();
+    int i;
+    for (i = 0; i < num_time_intervals-1; ++i) {
+        if (d_time_interval_start_times[i] <= time &&
+                time < d_time_interval_start_times[i+1]) {
+            break;
+        }
+    }
+    d_last_basis_idx = i;
+    char tmp[100];
+    int num_rows;
+    sprintf(tmp, "snapshot_matrix_num_rows_%06d", i);
+    d_database->getInteger(tmp, num_rows);
+    int num_cols;
+    sprintf(tmp, "snapshot_matrix_num_cols_%06d", i);
+    d_database->getInteger(tmp, num_cols);
+    CAROM_VERIFY(0 < start_col <= num_cols);
+    CAROM_VERIFY(start_col <= end_col && end_col <= num_cols);
+    int num_cols_to_read = end_col - start_col + 1;
+
+    Matrix* snapshots = new Matrix(num_rows, num_cols_to_read, false);
+    sprintf(tmp, "snapshot_matrix_%06d", i);
+    d_database->getDoubleArray(tmp,
+                               &snapshots->item(0, 0),
+                               num_rows*num_cols_to_read,
+                               start_col - 1,
+                               num_cols_to_read,
+                               num_cols);
     return snapshots;
 }
 }

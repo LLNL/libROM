@@ -203,6 +203,7 @@ public:
      *                read.
      * @param[out] data The allocated array of double values to be read.
      * @param[in] nelements The number of doubles in the array.
+     * @param[in] offset The initial offset in the array.
      * @param[in] block_size The block size to read from the HDF5 dataset.
      * @param[in] stride The stride to read from the HDF5 dataset.
      */
@@ -212,6 +213,7 @@ public:
         const std::string& key,
         double* data,
         int nelements,
+        int offset,
         int block_size,
         int stride) = 0;
 
