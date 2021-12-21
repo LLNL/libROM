@@ -128,8 +128,9 @@ protected:
      */
     std::vector<Vector> d_snapshots;
 
-    std::vector<double> d_sampled_times;
-
+    /**
+     * @brief Whether the DMD has been trained or not.
+     */
     bool d_trained;
 
     /**
