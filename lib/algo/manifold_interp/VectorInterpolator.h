@@ -46,6 +46,8 @@ public:
      * @param[in] rbf       The RBF type ("G" == gaussian, "MQ" == multiquadric,
      *                      "IQ" == inverse quadratic, "IMQ" == inverse
      *                      multiquadric)
+     * @param[in] interp_method  The interpolation method type ("LS" == linear solve,
+     *                      "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
      * @param[in] epsilon   The RBF parameter that determines the width of
                             influence.
      */
@@ -54,6 +56,7 @@ public:
                        std::vector<Vector*> reduced_vectors,
                        int ref_point,
                        std::string rbf = "G",
+                       std::string interp_method = "LS",
                        double epsilon = 1.0);
 
     /**
@@ -86,10 +89,8 @@ private:
     /**
      * @brief Solve the system of equations of the gammas to obtain the
      *        lambda for the P matrix.
-     *
-     * @param[in] gammas The vector of gamma matrices.
      */
-    void obtainLambda(std::vector<Vector*> gammas);
+    void obtainLambda();
 
     /**
      * @brief Obtain the interpolated vector of the unsampled parameter point
@@ -104,6 +105,11 @@ private:
      * @brief The reduced vectors with compatible coordinates.
      */
     std::vector<Vector*> d_rotated_reduced_vectors;
+
+    /**
+     * @brief The reduced elements in tangential space.
+     */
+    std::vector<Vector*> d_gammas;
 };
 
 }
