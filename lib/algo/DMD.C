@@ -256,11 +256,11 @@ DMD::projectInitialCondition(const Vector* init)
 {
     Matrix* d_phi_real_squared = d_phi_real->transposeMult(d_phi_real);
     Matrix* d_phi_real_squared_2 = d_phi_imaginary->transposeMult(d_phi_imaginary);
-    *d_phi_real_squared -= *d_phi_real_squared_2;
+    *d_phi_real_squared += *d_phi_real_squared_2;
 
     Matrix* d_phi_imaginary_squared = d_phi_real->transposeMult(d_phi_imaginary);
     Matrix* d_phi_imaginary_squared_2 = d_phi_imaginary->transposeMult(d_phi_real);
-    *d_phi_imaginary_squared += *d_phi_imaginary_squared_2;
+    *d_phi_imaginary_squared -= *d_phi_imaginary_squared_2;
 
     double* inverse_input = new double[d_phi_real_squared->numRows() * d_phi_real_squared->numColumns() * 2];
     for (int i = 0; i < d_phi_real_squared->numRows(); i++)
@@ -312,13 +312,13 @@ DMD::projectInitialCondition(const Vector* init)
     Vector* rhs_real = d_phi_real->transposeMult(init);
     Vector* rhs_imaginary = d_phi_imaginary->transposeMult(init);
 
-    Vector* d_projected_init_real_1 = d_phi_real_squared->mult( rhs_real);
+    Vector* d_projected_init_real_1 = d_phi_real_squared->mult(rhs_real);
     Vector* d_projected_init_real_2 = d_phi_imaginary_squared->mult(rhs_imaginary);
-    d_projected_init_real = d_projected_init_real_1->minus(d_projected_init_real_2);
+    d_projected_init_real = d_projected_init_real_1->plus(d_projected_init_real_2);
 
     Vector* d_projected_init_imaginary_1 = d_phi_real_squared->mult(rhs_imaginary);
     Vector* d_projected_init_imaginary_2 = d_phi_imaginary_squared->mult(rhs_real);
-    d_projected_init_imaginary =  d_projected_init_imaginary_1->plus(d_projected_init_imaginary_2);
+    d_projected_init_imaginary = d_projected_init_imaginary_2->minus(d_projected_init_imaginary_1);
 
     delete d_phi_real_squared;
     delete d_phi_real_squared_2;

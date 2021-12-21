@@ -12,6 +12,7 @@
 #define SAMPLEMESH_H
 
 #include <set>
+#include <string>
 
 #include "mfem.hpp"
 #include "mpi.h"
@@ -53,8 +54,67 @@ next:
     }
 }
 
+void FindSampledMeshEntities(const int type, const vector<int>& sample_dofs_gid, set<int>& entities, ParFiniteElementSpace& fespace)
+{
+    int N = 0;
+    switch (type)
+    {
+    case 0:
+        N = fespace.GetParMesh()->GetNE();
+        break;
+    case 1:
+        N = fespace.GetParMesh()->GetNFaces();
+        break;
+    case 2:
+        N = fespace.GetParMesh()->GetNEdges();
+        break;
+    case 3:
+        N = fespace.GetParMesh()->GetNV();
+        break;
+    }
+
+    for (int k = 0; k < N; k++)
+    {
+        Array<int> dofs;
+
+        switch (type)
+        {
+        case 0:
+            fespace.GetElementInteriorVDofs(k, dofs);
+            break;
+        case 1:
+            fespace.GetFaceVDofs(k, dofs);
+            break;
+        case 2:
+            fespace.GetEdgeVDofs(k, dofs);
+            break;
+        case 3:
+            fespace.GetVertexVDofs(k, dofs);
+            break;
+        }
+
+        for (vector<int>::const_iterator it = sample_dofs_gid.begin(); it != sample_dofs_gid.end(); ++it)
+        {
+            for (int i = 0; i < dofs.Size(); i++)
+            {
+                const int dof_i = dofs[i] >= 0 ? dofs[i] : -1 - dofs[i];
+                int global_dof = fespace.GetGlobalTDofNumber(dof_i);
+                if (global_dof == *it)
+                {
+                    entities.insert(k);
+                    goto next;
+                }
+            }
+        }
+next:
+        continue;
+    }
+
+}
+
 void GetLocalSampleMeshElements(ParMesh& pmesh, ParFiniteElementSpace& fespace, const vector<int>& sample_dofs,
-                                const vector<int>& local_num_sample_dofs, set<int>& elems)
+                                const vector<int>& local_num_sample_dofs, set<int>& elems,
+                                bool getSampledEntities, set<int>& intElems, set<int>& faces, set<int>& edges, set<int>& vertices)
 {
     int myid;
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
@@ -98,6 +158,14 @@ void GetLocalSampleMeshElements(ParMesh& pmesh, ParFiniteElementSpace& fespace, 
     // sample_dofs_gid and the total number of elements in the stencil mesh.
     elems.clear();
     FindStencilElements(sample_dofs_gid, elems, fespace);
+
+    if (getSampledEntities)
+    {
+        FindSampledMeshEntities(0, sample_dofs_gid, intElems, fespace);
+        if (fespace.GetParMesh()->Dimension() == 3) FindSampledMeshEntities(1, sample_dofs_gid, faces, fespace);
+        FindSampledMeshEntities(2, sample_dofs_gid, edges, fespace);
+        FindSampledMeshEntities(3, sample_dofs_gid, vertices, fespace);
+    }
 
     delete [] offsets;
 }
@@ -803,6 +871,179 @@ void Finish_s2sp_augmented(const int rank, const int nprocs, vector<ParFiniteEle
 }
 #endif
 
+void ParaViewPrintAttributes(const std::string &fname,
+                             Mesh &mesh,
+                             int entity_dim,
+                             const Array<int> *el_number=nullptr,
+                             const Array<int> *vert_number=nullptr)
+{
+    std::ofstream out(fname + ".vtu");
+
+    out << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\"";
+    out << " byte_order=\"" << VTKByteOrder() << "\">\n";
+    out << "<UnstructuredGrid>\n";
+
+    const std::string fmt_str = "ascii";
+
+    int dim = mesh.Dimension();
+    int ne = 0;
+    if (entity_dim == 1)
+    {
+        if (dim == 1) {
+            ne = mesh.GetNE();
+        }
+        else {
+            ne = mesh.GetNEdges();
+        }
+    }
+    else if (entity_dim == 2)
+    {
+        if (dim == 2) {
+            ne = mesh.GetNE();
+        }
+        else {
+            ne = mesh.GetNFaces();
+        }
+    }
+    else if (entity_dim == 3)
+    {
+        ne = mesh.GetNE();
+    }
+    int np = mesh.GetNV();
+
+    auto get_geom = [mesh,entity_dim,dim](int i)
+    {
+        if (entity_dim == 1) {
+            return Geometry::SEGMENT;
+        }
+        else if (entity_dim == 2 && dim > 2) {
+            return mesh.GetFaceGeometry(i);
+        }
+        else {
+            return mesh.GetElementGeometry(i);
+        }
+    };
+
+    auto get_verts = [mesh,entity_dim,dim](int i, Array<int> &v)
+    {
+        if (entity_dim == dim) {
+            mesh.GetElementVertices(i, v);
+        }
+        else if (entity_dim == 1) {
+            mesh.GetEdgeVertices(i, v);
+        }
+        else if (entity_dim == 2) {
+            mesh.GetFaceVertices(i, v);
+        }
+    };
+
+    out << "<Piece NumberOfPoints=\"" << np << "\" NumberOfCells=\""
+        << ne << "\">\n";
+
+    // print out the points
+    out << "<Points>\n";
+    out << "<DataArray type=\"" << "Float64"
+        << "\" NumberOfComponents=\"3\" format=\"" << fmt_str << "\">\n";
+    for (int i = 0; i < np; i++)
+    {
+        const double *v = mesh.GetVertex(i);
+        for (int d = 0; d < 3; ++ d)
+        {
+            if (d < mesh.SpaceDimension()) {
+                out << v[d] << " ";
+            }
+            else {
+                out << "0.0 ";
+            }
+        }
+        out << '\n';
+    }
+    out << "</DataArray>" << std::endl;
+    out << "</Points>" << std::endl;
+
+    out << "<Cells>" << std::endl;
+    out << "<DataArray type=\"Int32\" Name=\"connectivity\" format=\""
+        << fmt_str << "\">" << std::endl;
+    for (int i = 0; i < ne; i++)
+    {
+        Array<int> v;
+        Geometry::Type geom = get_geom(i);
+        get_verts(i, v);
+        const int *p = VTKGeometry::VertexPermutation[geom];
+        for (int j = 0; j < v.Size(); ++j)
+        {
+            out << v[p ? p[j] : j] << " ";
+        }
+        out << '\n';
+    }
+    out << "</DataArray>" << std::endl;
+
+    out << "<DataArray type=\"Int32\" Name=\"offsets\" format=\""
+        << fmt_str << "\">" << std::endl;
+    // offsets
+    int coff = 0;
+    for (int i = 0; i < ne; ++i)
+    {
+        Array<int> v;
+        get_verts(i, v);
+        coff += v.Size();
+        out << coff << '\n';
+    }
+    out << "</DataArray>" << std::endl;
+    out << "<DataArray type=\"UInt8\" Name=\"types\" format=\""
+        << fmt_str << "\">" << std::endl;
+    // cell types
+    for (int i = 0; i < ne; i++)
+    {
+        Geometry::Type geom = get_geom(i);
+        out << VTKGeometry::Map[geom] << '\n';
+    }
+    out << "</DataArray>" << std::endl;
+    out << "</Cells>" << std::endl;
+
+    out << "<CellData Scalars=\"attribute\">" << std::endl;
+
+    if (el_number)
+    {
+        std::string array_name;
+        if (entity_dim == dim) {
+            array_name = "element number";
+        }
+        else if (entity_dim == 2) {
+            array_name = "face number";
+        }
+        else if (entity_dim == 1) {
+            array_name = "edge number";
+        }
+        out << "<DataArray type=\"Int32\" Name=\""
+            << array_name << "\" format=\""
+            << fmt_str << "\">" << std::endl;
+        for (int i = 0; i < ne; i++)
+        {
+            out << (*el_number)[i] << '\n';
+        }
+        out << "</DataArray>" << std::endl;
+    }
+    out << "</CellData>" << std::endl;
+
+    if (vert_number)
+    {
+        out << "<PointData>" << std::endl;
+        out << "<DataArray type=\"Int32\" Name=\"vertex number\" format=\""
+            << fmt_str << "\">" << std::endl;
+        for (int i = 0; i < np; i++)
+        {
+            out << (*vert_number)[i] << '\n';
+        }
+        out << "</DataArray>" << std::endl;
+        out << "</PointData>" << std::endl;
+    }
+
+    out << "</Piece>\n"; // need to close the piece open in the PrintVTU method
+    out << "</UnstructuredGrid>\n";
+    out << "</VTKFile>" << std::endl;
+}
+
 void CreateSampleMesh(ParMesh& pmesh,
                       vector<ParFiniteElementSpace*> & fespace,
                       MPI_Comm& rom_com,
@@ -813,7 +1054,8 @@ void CreateSampleMesh(ParMesh& pmesh,
                       vector<int>& all_stencil_dofs, /* stencil_dofs, gathered over all processes */
                       vector<int>& s2sp,
                       vector<int>& st2sp,
-                      vector<ParFiniteElementSpace*> & spfespace)
+                      vector<ParFiniteElementSpace*> & spfespace,
+                      std::string filename)
 {
     int myid, num_procs;
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
@@ -841,20 +1083,33 @@ void CreateSampleMesh(ParMesh& pmesh,
     SplitDofsIntoBlocks(Ntrue, sample_dofs, local_num_sample_dofs,
                         sample_dofs_block, sample_dofs_sub_to_sample_dofs, local_num_sample_dofs_sub);
 
+    const bool getSampledEntities = !filename.empty();
+    set<int> intElems, faces, edges, vertices;  // Local mesh entities containing sampled DOFs, used only for ParaView visualization.
+
     // Find all local elements that should be included, using all spaces.
-    GetLocalSampleMeshElements(pmesh, *fespace[0], sample_dofs_block[0], local_num_sample_dofs_sub[0], elems);
+    GetLocalSampleMeshElements(pmesh, *fespace[0], sample_dofs_block[0], local_num_sample_dofs_sub[0], elems,
+                               getSampledEntities, intElems, faces, edges, vertices);
     GetLocalDofsToLocalElementMap(*fespace[0], sample_dofs_block[0], local_num_sample_dofs_sub[0], elems, localSampleDofsToElem_sub[0], localSampleDofsToElemDof_sub[0], true);
     for (int i=1; i<nspaces; ++i)
     {
         set<int> elems_i;
+        set<int> intElems_i, faces_i, edges_i, vertices_i;  // Local mesh entities containing sampled DOFs, used only for ParaView visualization.
 
-        GetLocalSampleMeshElements(pmesh, *fespace[i], sample_dofs_block[i], local_num_sample_dofs_sub[i], elems_i);
+        GetLocalSampleMeshElements(pmesh, *fespace[i], sample_dofs_block[i], local_num_sample_dofs_sub[i], elems_i,
+                                   getSampledEntities, intElems_i, faces_i, edges_i, vertices_i);
         GetLocalDofsToLocalElementMap(*fespace[i], sample_dofs_block[i], local_num_sample_dofs_sub[i], elems_i, localSampleDofsToElem_sub[i], localSampleDofsToElemDof_sub[i], true);
 
         // Merge the elements found for all spaces.
         elems.insert(elems_i.begin(), elems_i.end());
-    }
 
+        if (getSampledEntities)
+        {
+            intElems.insert(intElems_i.begin(), intElems_i.end());
+            faces.insert(faces_i.begin(), faces_i.end());
+            edges.insert(edges_i.begin(), edges_i.end());
+            vertices.insert(vertices_i.begin(), vertices_i.end());
+        }
+    }
 
     vector<int> elemLocalIndices;
     vector<map<int, int> > elemLocalIndicesInverse;
@@ -938,6 +1193,80 @@ void CreateSampleMesh(ParMesh& pmesh,
 #ifdef FULL_DOF_STENCIL
     Finish_s2sp_augmented(myid, num_procs, fespace, stencil_dofs_block, stencil_dofs_sub_to_stencil_dofs, local_num_stencil_dofs_sub, false, st2sp);
 #endif
+
+    if (!filename.empty())
+    {
+        // Write files for global pmesh and a piecewise constant function with 1 on sample mesh elements and 0 elsewhere.
+        // Note that this is a visualization of the sample mesh elements, not the sampled DOFs. That is, it shows all elements
+        // that contain a sampled DOF, which could be at a vertex, edge, face, or volume.
+
+        L2_FECollection l2_coll(1, pmesh.Dimension());  // order 1
+        ParFiniteElementSpace pwc_space(&pmesh, &l2_coll); // piecewise constant space on global mesh
+        ParGridFunction marker(&pwc_space);
+        marker = 0.0;
+        for (set<int>::const_iterator it = elems.begin(); it != elems.end(); ++it)
+        {
+            Array<int> dofs;
+            pwc_space.GetElementVDofs(*it, dofs);
+
+            for (int i = 0; i < dofs.Size(); i++)
+            {
+                const int dof_i = dofs[i] >= 0 ? dofs[i] : -1 - dofs[i];
+                marker[dof_i] = 1;
+            }
+        }
+
+        VisItDataCollection visit_dc(filename, &pmesh);
+        visit_dc.RegisterField("Sample Elements", &marker);
+        visit_dc.SetFormat(DataCollection::SERIAL_FORMAT);
+        visit_dc.Save();
+
+        // Write ParaView files to visualize sampled elements, edges, and vertices
+        int ne = pmesh.GetNE();
+        int nv = pmesh.GetNV();
+        int nf = pmesh.GetNFaces();
+        int nedge = pmesh.GetNEdges();
+
+        Array<int> e(ne), v(nv), f(nf), edge(nedge);
+        e = 0;
+        v = 0;
+        f = 0;
+        edge = 0;
+
+        for (set<int>::const_iterator it = intElems.begin(); it != intElems.end(); ++it)
+        {
+            e[*it] = 1;
+        }
+
+        for (set<int>::const_iterator it = faces.begin(); it != faces.end(); ++it)
+        {
+            f[*it] = 1;
+        }
+
+        for (set<int>::const_iterator it = edges.begin(); it != edges.end(); ++it)
+        {
+            edge[*it] = 1;
+        }
+
+        for (set<int>::const_iterator it = vertices.begin(); it != vertices.end(); ++it)
+        {
+            v[*it] = 1;
+        }
+
+        /*
+        for (int i=0; i<ne/2; ++i) { e[i] = 0; }
+        for (int i=0; i<nv/2; ++i) { v[i] = 0; }
+        for (int i=0; i<nf/2; ++i) { f[i] = 0; }
+        for (int i=0; i<nedge/2; ++i) { edge[i] = 0; }
+        */
+
+        ParaViewPrintAttributes(filename + "_pv", pmesh, pmesh.Dimension(), &e, &v);
+        if (pmesh.Dimension() == 3)
+        {
+            ParaViewPrintAttributes(filename + "_pv_face", pmesh, 2, &f, &v);
+        }
+        ParaViewPrintAttributes(filename + "_pv_edge", pmesh, 1, &edge, &v);
+    }
 }
 
 void GatherDistributedMatrixRows(const CAROM::Matrix& B, const int rdim,
