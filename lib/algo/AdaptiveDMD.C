@@ -12,31 +12,7 @@
 
 #include "AdaptiveDMD.h"
 
-#include "linalg/Matrix.h"
 #include "linalg/Vector.h"
-#include "linalg/scalapack_wrapper.h"
-#include "mpi.h"
-
-/* Use C++11 built-in shared pointers if available; else fallback to Boost. */
-#if __cplusplus >= 201103L
-#include <memory>
-#else
-#include <boost/shared_ptr.hpp>
-#endif
-
-/* Use automatically detected Fortran name-mangling scheme */
-#define zgetrf CAROM_FC_GLOBAL(zgetrf, ZGETRF)
-#define zgetri CAROM_FC_GLOBAL(zgetri, ZGETRI)
-
-extern "C" {
-    // LU decomposition of a general matrix.
-    void zgetrf(int*, int*, double*, int*, int*, int*);
-
-    // Generate inverse of a matrix given its LU decomposition.
-    void zgetri(int*, double*, int*, int*, double*, int*, int*);
-}
-
-using namespace std;
 
 namespace CAROM {
 

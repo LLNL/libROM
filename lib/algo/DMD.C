@@ -36,8 +36,6 @@ extern "C" {
     void zgetri(int*, double*, int*, int*, double*, int*, int*);
 }
 
-using namespace std;
-
 namespace CAROM {
 
 DMD::DMD(int dim)

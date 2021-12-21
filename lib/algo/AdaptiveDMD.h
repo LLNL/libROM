@@ -8,21 +8,18 @@
  *
  *****************************************************************************/
 
-// Description: Computes the AdaptiveDMD algorithm on the given snapshot matrix. The
-//              implemented dynamic mode decomposition algorithm is derived from
-//              Tu et. al's paper "On Dynamic Mode Decomposition: Theory and
-//              Applications": https://arxiv.org/abs/1312.0041
+// Description: Computes the AdaptiveDMD algorithm on the given snapshot matrix.
+//              The AdaptiveDMD algorithm should be used if the dt changes
+//              between the samples.
 
 #ifndef included_AdaptiveDMD_h
 #define included_AdaptiveDMD_h
 
 #include "DMD.h"
 #include <vector>
-#include <complex>
 
 namespace CAROM {
 
-class Matrix;
 class Vector;
 
 /**
