@@ -55,16 +55,11 @@ DMD::DMD(int dim)
     d_trained = false;
 }
 
-void DMD::takeSample(double* u_in, double t)
+void DMD::takeSample(double* u_in)
 {
     CAROM_VERIFY(u_in != 0);
     Vector sample(u_in, d_dim, true);
-    if (d_snapshots.empty())
-    {
-        CAROM_VERIFY(t == 0.0);
-    }
     d_snapshots.push_back(sample);
-    d_sampled_times.push_back(t);
 }
 
 void DMD::train(double energy_fraction)
@@ -336,28 +331,6 @@ DMD::projectInitialCondition(const Vector* init)
     delete [] work;
 }
 
-double
-DMD::interpolateSampledTime(double n)
-{
-    for (int i = 0; i < d_sampled_times.size(); i++)
-    {
-        if (n == d_sampled_times[i])
-        {
-            return (double) i;
-        }
-        else if (n < d_sampled_times[i])
-        {
-            double range = d_sampled_times[i] - d_sampled_times[i - 1];
-            double offset = (n - d_sampled_times[i - 1]) / range;
-            return (double) ((i - 1) + offset);
-        }
-    }
-
-    // We are unable to handle this case and will error out.
-    std::cout << "The inputted time was greater than the final sampled time. Interpolation can not occur. Aborting." << std::endl;
-    abort();
-}
-
 Vector*
 DMD::predict(double n)
 {
@@ -371,10 +344,7 @@ DMD::predict(const std::pair<Vector*, Vector*> init,
 {
     CAROM_VERIFY(d_trained);
     CAROM_VERIFY(n >= 0.0);
-    CAROM_VERIFY(n <= d_sampled_times.back());
-    double interpolated_sampled_time = interpolateSampledTime(n);
-
-    std::pair<Matrix*, Matrix*> d_phi_pair = phiMultEigs(interpolated_sampled_time);
+    std::pair<Matrix*, Matrix*> d_phi_pair = phiMultEigs(n);
     Matrix* d_phi_mult_eigs_real = d_phi_pair.first;
     Matrix* d_phi_mult_eigs_imaginary = d_phi_pair.second;
 

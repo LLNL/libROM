@@ -45,9 +45,8 @@ public:
      * @pre t >= 0.0
      *
      * @param[in] u_in The new state.
-     * @param[in] t    The time of the newly sampled state.
      */
-    void takeSample(double* u_in, double t);
+    void takeSample(double* u_in);
 
     /**
      * @param[in] energy_fraction The energy fraction to keep after doing SVD.
@@ -89,7 +88,7 @@ public:
      */
     const Matrix* getSnapshotMatrix();
 
-private:
+protected:
 
     /**
      * @brief Unimplemented default constructor.
@@ -144,8 +143,6 @@ private:
     void constructDMD(const Matrix* f_snapshots,
                       int rank,
                       int num_procs);
-
-   double interpolateSampledTime(double n);
 
     /**
      * @brief The real part of d_phi.
