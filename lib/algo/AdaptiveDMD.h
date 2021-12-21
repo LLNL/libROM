@@ -49,12 +49,20 @@ public:
     void takeSample(double* u_in, double t);
 
     /**
+     * @brief Predict state given a time. Uses the projected initial condition of the
+     *        training dataset (the first column).
+     *
+     * @param[in] n The time of the outputted state (t)
+     */
+    Vector* predict(double n);
+
+    /**
      * @brief Predict state given a new initial condition and time.
      *        The initial condition must be projected using projectInitialCondition
      *        for correct results.
      *
      * @param[in] init The initial condition.
-     * @param[in] n The time of the outputted state (t/dt)
+     * @param[in] n The time of the outputted state (t)
      */
     Vector* predict(const std::pair<Vector*, Vector*> init, double n);
 

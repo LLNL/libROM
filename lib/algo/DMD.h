@@ -46,7 +46,7 @@ public:
      *
      * @param[in] u_in The new state.
      */
-    void takeSample(double* u_in);
+    virtual void takeSample(double* u_in);
 
     /**
      * @param[in] energy_fraction The energy fraction to keep after doing SVD.
@@ -71,7 +71,7 @@ public:
      *
      * @param[in] n The time of the outputted state (t/dt)
      */
-    Vector* predict(double n);
+    virtual Vector* predict(double n);
 
     /**
      * @brief Predict state given a new initial condition and time.
@@ -81,7 +81,7 @@ public:
      * @param[in] init The initial condition.
      * @param[in] n The time of the outputted state (t/dt)
      */
-    Vector* predict(const std::pair<Vector*, Vector*> init, double n);
+    virtual Vector* predict(const std::pair<Vector*, Vector*> init, double n);
 
     /**
      * @brief Get the snapshot matrix contained within d_snapshots.

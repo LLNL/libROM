@@ -66,6 +66,13 @@ AdaptiveDMD::interpolateSampledTime(double n)
 }
 
 Vector*
+AdaptiveDMD::predict(double n)
+{
+    const std::pair<Vector*, Vector*> d_projected_init_pair(d_projected_init_real, d_projected_init_imaginary);
+    return predict(d_projected_init_pair, n);
+}
+
+Vector*
 AdaptiveDMD::predict(const std::pair<Vector*, Vector*> init,
                      double n)
 {
