@@ -112,6 +112,10 @@ private:
     std::vector<Vector*> d_gammas;
 };
 
+Vector* obtainInterpolatedVector(std::vector<Vector*> parameter_points, std::vector<Vector*> data, Matrix* f_T, std::string interp_method, std::vector<double> rbf);
+
+Matrix* solveLinearSystem(std::vector<Vector*> parameter_points, std::vector<Vector*> data, std::string interp_method, std::string rbf, double epsilon);
+
 }
 
 #endif

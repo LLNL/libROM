@@ -49,14 +49,25 @@ public:
     virtual void takeSample(double* u_in);
 
     /**
+     * @brief Sample the new state, u_in.
+     *
+     * @pre u_in != 0
+     * @pre t >= 0.0
+     *
+     * @param[in] u_in The new state.
+     * @param[in] t    The time of the newly sampled state.
+     */
+    virtual void takeSample(double* u_in, double t);
+
+    /**
      * @param[in] energy_fraction The energy fraction to keep after doing SVD.
      */
-    void train(double energy_fraction);
+    virtual void train(double energy_fraction);
 
     /**
      * @param[in] k The number of modes (eigenvalues) to keep after doing SVD.
      */
-    void train(int k);
+    virtual void train(int k);
 
     /**
      * @brief Predict new initial condition using d_phi.
@@ -71,7 +82,7 @@ public:
      *
      * @param[in] n The time of the outputted state (t/dt)
      */
-    virtual Vector* predict(double n);
+    Vector* predict(double n);
 
     /**
      * @brief Predict state given a new initial condition and time.
@@ -81,7 +92,7 @@ public:
      * @param[in] init The initial condition.
      * @param[in] n The time of the outputted state (t/dt)
      */
-    virtual Vector* predict(const std::pair<Vector*, Vector*> init, double n);
+    Vector* predict(const std::pair<Vector*, Vector*> init, double n);
 
     /**
      * @brief Get the snapshot matrix contained within d_snapshots.
@@ -109,6 +120,23 @@ protected:
         const DMD& rhs);
 
     /**
+     * @brief Internal function to multiply d_phi with the eigenvalues.
+     */
+    std::pair<Matrix*, Matrix*> phiMultEigs(double n);
+
+    /**
+     * @brief Internal function to obtain the DMD modes.
+     */
+    void constructDMD(const Matrix* f_snapshots,
+                      int rank,
+                      int num_procs);
+
+    /**
+     * @brief Get the snapshot matrix contained within d_snapshots.
+     */
+    const Matrix* createSnapshotMatrix(std::vector<Vector*> snapshots);
+
+    /**
      * @brief The rank of the process this object belongs to.
      */
     int d_rank;
@@ -126,24 +154,12 @@ protected:
     /**
      * @brief std::vector holding the snapshots.
      */
-    std::vector<Vector> d_snapshots;
+    std::vector<Vector*> d_snapshots;
 
     /**
      * @brief Whether the DMD has been trained or not.
      */
     bool d_trained;
-
-    /**
-     * @brief Internal function to multiply d_phi with the eigenvalues.
-     */
-    std::pair<Matrix*, Matrix*> phiMultEigs(double n);
-
-    /**
-     * @brief Internal function to obtain the DMD modes.
-     */
-    void constructDMD(const Matrix* f_snapshots,
-                      int rank,
-                      int num_procs);
 
     /**
      * @brief The real part of d_phi.

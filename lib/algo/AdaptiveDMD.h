@@ -10,7 +10,10 @@
 
 // Description: Computes the AdaptiveDMD algorithm on the given snapshot matrix.
 //              The AdaptiveDMD algorithm should be used if the dt changes
-//              between the samples.
+//              between the samples. This algorithm interpolates the ununiformly
+//              sampled samples such that they are uniformly distanced and the
+//              dt is constant (a prequisite of the DMD algorithm). The smaller
+//              dt is, the finer the fidelity of the interpolation.
 
 #ifndef included_AdaptiveDMD_h
 #define included_AdaptiveDMD_h
@@ -32,10 +35,13 @@ public:
     /**
      * @brief Constructor.
      *
-     * @param[in] dim The full-order state dimension.
-     * @param[in] adaptive_dt Whether the dt is adaptive.
+     * @param[in] dim         The full-order state dimension.
+     * @param[in] desired_dt  The dt to uniformly interpolate the samples between.
+     * @param[in] interp_method  The interpolation method type ("LS" == linear solve,
+     *                           "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
+     * @param[in] rbf         Which RBF to compute.
      */
-    AdaptiveDMD(int dim);
+    AdaptiveDMD(int dim, double desired_dt, std::string interp_method, std::string rbf);
 
     /**
      * @brief Sample the new state, u_in.
@@ -49,22 +55,14 @@ public:
     void takeSample(double* u_in, double t);
 
     /**
-     * @brief Predict state given a time. Uses the projected initial condition of the
-     *        training dataset (the first column).
-     *
-     * @param[in] n The time of the outputted state (t)
+     * @param[in] energy_fraction The energy fraction to keep after doing SVD.
      */
-    Vector* predict(double n);
+    void train(double energy_fraction);
 
     /**
-     * @brief Predict state given a new initial condition and time.
-     *        The initial condition must be projected using projectInitialCondition
-     *        for correct results.
-     *
-     * @param[in] init The initial condition.
-     * @param[in] n The time of the outputted state (t)
+     * @param[in] k The number of modes (eigenvalues) to keep after doing SVD.
      */
-    Vector* predict(const std::pair<Vector*, Vector*> init, double n);
+    void train(int k);
 
 private:
 
@@ -87,17 +85,31 @@ private:
         const AdaptiveDMD& rhs);
 
     /**
-     * @brief The stored times of each sample.
+     * @brief Internal function to obtain the interpolated snapshots.
      */
-    std::vector<double> d_sampled_times;
+    const Matrix* interpolateSnapshots();
 
     /**
-     * @brief Interpolate n to obtain the sampled time to input into the DMD
-     *        prediction algorithm.
-     *
-     * @param[in] n The time of the outputted state (t/dt)
+     * @brief The stored times of each sample.
      */
-    double interpolateSampledTime(double n);
+    std::vector<Vector*> d_sampled_times;
+
+    /**
+     * @brief The dt to uniformly interpolate the samples between.
+     */
+    double d_dt;
+
+    /**
+     * @brief The RBF type (gaussian, multiquadric, inverse quadratic, inverse
+     *        multiquadric)
+     */
+    std::string d_rbf;
+
+    /**
+     * @brief The interpolation method (linear solve, inverse distance weighting,
+     *        lagrangian polynomials)
+     */
+    std::string d_interp_method;
 };
 
 }

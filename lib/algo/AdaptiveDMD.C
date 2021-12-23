@@ -11,19 +11,27 @@
 // Description: Implementation of the AdaptiveDMD algorithm.
 
 #include "AdaptiveDMD.h"
+#include "manifold_interp/VectorInterpolator.h"
 
+#include "linalg/Matrix.h"
 #include "linalg/Vector.h"
 
 namespace CAROM {
 
-AdaptiveDMD::AdaptiveDMD(int dim) : DMD(dim)
+AdaptiveDMD::AdaptiveDMD(int dim, double desired_dt, std::string interp_method, std::string rbf) : DMD(dim)
 {
+    CAROM_VERIFY(desired_dt > 0.0);
+    CAROM_VERIFY(rbf == "G" || rbf == "IQ" || rbf == "MQ" || rbf == "IMQ");
+    CAROM_VERIFY(interp_method == "LS" || interp_method == "IDW" || interp_method == "LP");
+    d_dt = desired_dt;
+    d_interp_method = interp_method;
+    d_rbf = rbf;
 }
 
 void AdaptiveDMD::takeSample(double* u_in, double t)
 {
     CAROM_VERIFY(u_in != 0);
-    Vector sample(u_in, d_dim, true);
+    Vector* sample = new Vector(u_in, d_dim, true);
     if (d_snapshots.empty())
     {
         CAROM_VERIFY(t == 0.0);
@@ -31,56 +39,113 @@ void AdaptiveDMD::takeSample(double* u_in, double t)
 
     // If we have sampled another snapshot at the same timestep, replace
     // the previous sample with the new one.
-    if (!d_sampled_times.empty() && d_sampled_times.back() == t)
+    if (!d_sampled_times.empty() && d_sampled_times.back()->item(0) == t)
     {
+        Vector* last_snapshot = d_snapshots.back();
+        delete last_snapshot;
         d_snapshots.pop_back();
         d_snapshots.push_back(sample);
     }
     else
     {
         d_snapshots.push_back(sample);
-        d_sampled_times.push_back(t);
+        Vector* sampled_time = new Vector(&t, 1, false);
+        d_sampled_times.push_back(sampled_time);
     }
 }
 
-double
-AdaptiveDMD::interpolateSampledTime(double n)
+void AdaptiveDMD::train(double energy_fraction)
 {
-    for (int i = 0; i < d_sampled_times.size(); i++)
+    const Matrix* f_snapshots = interpolateSnapshots();
+    CAROM_VERIFY(f_snapshots->numColumns() > 1);
+    CAROM_VERIFY(energy_fraction > 0 && energy_fraction <= 1);
+    d_energy_fraction = energy_fraction;
+    constructDMD(f_snapshots, d_rank, d_num_procs);
+
+    delete f_snapshots;
+}
+
+void AdaptiveDMD::train(int k)
+{
+    const Matrix* f_snapshots = interpolateSnapshots();
+    CAROM_VERIFY(f_snapshots->numColumns() > 1);
+    CAROM_VERIFY(k > 0 && k <= f_snapshots->numColumns() - 1);
+    d_energy_fraction = -1.0;
+    d_k = k;
+    constructDMD(f_snapshots, d_rank, d_num_procs);
+
+    delete f_snapshots;
+}
+
+const Matrix* AdaptiveDMD::interpolateSnapshots()
+{
+    CAROM_VERIFY(d_sampled_times.back()->item(0) > d_dt);
+
+    // Find the nearest dt that evenly divides the snapshots.
+    int num_time_steps = std::round(d_sampled_times.back()->item(0) / d_dt);
+    double new_dt = d_sampled_times.back()->item(0) / num_time_steps;
+    if (new_dt != d_dt)
     {
-        if (n == d_sampled_times[i])
-        {
-            return (double) i;
-        }
-        else if (n < d_sampled_times[i])
-        {
-            double range = d_sampled_times[i] - d_sampled_times[i - 1];
-            double offset = (n - d_sampled_times[i - 1]) / range;
-            return (double) ((i - 1) + offset);
-        }
+        d_dt = new_dt;
+        std::cout << "Setting desired dt to " << d_dt << " to ensure a constant dt given the final sampled time." << std::endl;
     }
 
-    // We are unable to handle this case and will error out.
-    std::cout << "The inputted time was greater than the final sampled time. Interpolation can not occur. Aborting." << std::endl;
-    abort();
-}
+    // Find ideal epsilon. For the first snapshot, the second snapshot should have
+    // an RBF of less than rbf_boundary
+    double epsilon;
+    double dt_squared = d_dt * d_dt;
+    double rbf_boundary = 0.99;
 
-Vector*
-AdaptiveDMD::predict(double n)
-{
-    const std::pair<Vector*, Vector*> d_projected_init_pair(d_projected_init_real, d_projected_init_imaginary);
-    return predict(d_projected_init_pair, n);
-}
+    // Gaussian RBF
+    if (d_rbf == "G")
+    {
+        epsilon = std::sqrt(-std::log(rbf_boundary) / dt_squared);
+    }
+    // Multiquadric RBF
+    else if (d_rbf == "MQ")
+    {
+        epsilon = std::sqrt(((rbf_boundary * rbf_boundary) - 1) / dt_squared);
+    }
+    // Inverse quadratic RBF
+    else if (d_rbf == "IQ")
+    {
+        epsilon = std::sqrt(((1 / rbf_boundary) - 1) / dt_squared);
+    }
+    // Inverse multiquadric RBF
+    else if (d_rbf == "IMQ")
+    {
+        epsilon = std::sqrt((((1 / rbf_boundary) * (1 / rbf_boundary)) - 1) / dt_squared);
+    }
 
-Vector*
-AdaptiveDMD::predict(const std::pair<Vector*, Vector*> init,
-                     double n)
-{
-    CAROM_VERIFY(d_trained);
-    CAROM_VERIFY(n >= 0.0);
-    CAROM_VERIFY(n <= d_sampled_times.back());
-    double interpolated_sampled_time = interpolateSampledTime(n);
-    DMD::predict(init, interpolated_sampled_time);
+    std::cout << "Setting epsilon to " << epsilon << std::endl;
+
+    // Solve the linear system if required.
+    Matrix* f_T = NULL;
+    if (d_interp_method == "LS")
+    {
+        f_T = solveLinearSystem(d_sampled_times, d_snapshots, d_interp_method, d_rbf, epsilon);
+    }
+
+    std::vector<Vector*> interpolated_snapshots;
+
+    // Create interpolated snapshots using d_dt as the desired dt.
+    for (int i = 0; i <= num_time_steps; i++)
+    {
+        double curr_time = i * d_dt;
+        std::cout << "Creating new interpolated sample at: " << curr_time << std::endl;
+        CAROM::Vector* point = new Vector(&curr_time, 1, false);
+
+        // Obtain distances from database points to new point
+        std::vector<double> rbf = obtainRBFToTrainingPoints(d_sampled_times, d_interp_method, d_rbf, epsilon, point);
+
+        // Obtain the interpolated snapshot.
+        CAROM::Vector* curr_interpolated_snapshot = obtainInterpolatedVector(d_sampled_times, d_snapshots, f_T, d_interp_method, rbf);
+        interpolated_snapshots.push_back(curr_interpolated_snapshot);
+
+        delete point;
+    }
+
+    return createSnapshotMatrix(interpolated_snapshots);
 }
 
 }

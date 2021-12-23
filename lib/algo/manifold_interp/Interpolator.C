@@ -60,45 +60,46 @@ Interpolator::Interpolator(std::vector<Vector*> parameter_points,
     d_epsilon = epsilon;
 }
 
-std::vector<double> Interpolator::obtainRBFToTrainingPoints(Vector* point)
+std::vector<double> obtainRBFToTrainingPoints(std::vector<Vector*> parameter_points,
+    std::string interp_method, std::string rbf, double epsilon, Vector* point)
 {
-    std::vector<double> rbf;
-    if (d_interp_method == "LS")
+    std::vector<double> rbfs;
+    if (interp_method == "LS")
     {
-        for (int i = 0; i < d_parameter_points.size(); i++)
+        for (int i = 0; i < parameter_points.size(); i++)
         {
-            rbf.push_back(obtainRBF(point, d_parameter_points[i]));
+            rbfs.push_back(obtainRBF(rbf, epsilon, point, parameter_points[i]));
         }
     }
-    else if (d_interp_method == "IDW")
+    else if (interp_method == "IDW")
     {
         bool distance_is_zero = false;
-        for (int i = 0; i < d_parameter_points.size(); i++)
+        for (int i = 0; i < parameter_points.size(); i++)
         {
-            rbf.push_back(obtainRBF(point, d_parameter_points[i]));
-            if (rbf.back() == 1.0)
+            rbfs.push_back(obtainRBF(rbf, epsilon, point, parameter_points[i]));
+            if (rbfs.back() == 1.0)
             {
                 distance_is_zero = true;
             }
         }
         if (distance_is_zero)
         {
-            for (int i = 0; i < rbf.size(); i++)
+            for (int i = 0; i < rbfs.size(); i++)
             {
-                if (rbf[i] != 1.0)
+                if (rbfs[i] != 1.0)
                 {
-                    rbf[i] = 0.0;
+                    rbfs[i] = 0.0;
                 }
             }
         }
     }
-    else if (d_interp_method == "LP")
+    else if (interp_method == "LP")
     {
-        for (int i = 0; i < d_parameter_points.size(); i++)
+        for (int i = 0; i < parameter_points.size(); i++)
         {
             double coeff;
             bool first = true;
-            for (int j = 0; j < d_parameter_points.size(); j++)
+            for (int j = 0; j < parameter_points.size(); j++)
             {
                 if (i == j)
                 {
@@ -106,8 +107,8 @@ std::vector<double> Interpolator::obtainRBFToTrainingPoints(Vector* point)
                 }
 
                 Vector numerator_vec, denomenator_vec;
-                point->minus(*d_parameter_points[j], numerator_vec);
-                d_parameter_points[i]->minus(*d_parameter_points[j], denomenator_vec);
+                point->minus(*parameter_points[j], numerator_vec);
+                parameter_points[i]->minus(*parameter_points[j], denomenator_vec);
                 double numerator = numerator_vec.norm();
                 double denomenator = denomenator_vec.norm();
 
@@ -121,13 +122,13 @@ std::vector<double> Interpolator::obtainRBFToTrainingPoints(Vector* point)
                     coeff *= (numerator / denomenator);
                 }
             }
-            rbf.push_back(coeff);
+            rbfs.push_back(coeff);
         }
     }
-    return rbf;
+    return rbfs;
 }
 
-double Interpolator::rbfWeightedSum(std::vector<double> rbf)
+double rbfWeightedSum(std::vector<double> rbf)
 {
     double sum = 0.0;
     for (int i = 0; i < rbf.size(); i++)
@@ -137,30 +138,30 @@ double Interpolator::rbfWeightedSum(std::vector<double> rbf)
     return sum;
 }
 
-double Interpolator::obtainRBF(Vector* point1, Vector* point2)
+double obtainRBF(std::string rbf, double epsilon, Vector* point1, Vector* point2)
 {
     Vector diff;
     point1->minus(*point2, diff);
-    double eps_norm_squared = d_epsilon * d_epsilon * diff.norm2();
+    double eps_norm_squared = epsilon * epsilon * diff.norm2();
     double res = 0.0;
 
     // Gaussian RBF
-    if (d_rbf == "G")
+    if (rbf == "G")
     {
         res = std::exp(-eps_norm_squared);
     }
     // Multiquadric RBF
-    else if (d_rbf == "MQ")
+    else if (rbf == "MQ")
     {
         res = std::sqrt(1.0 + eps_norm_squared);
     }
     // Inverse quadratic RBF
-    else if (d_rbf == "IQ")
+    else if (rbf == "IQ")
     {
         res = 1.0 / (1.0 + eps_norm_squared);
     }
     // Inverse multiquadric RBF
-    else if (d_rbf == "IMQ")
+    else if (rbf == "IMQ")
     {
         res = 1.0 / std::sqrt(1.0 + eps_norm_squared);
     }

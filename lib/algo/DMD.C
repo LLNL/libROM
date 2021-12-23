@@ -56,8 +56,13 @@ DMD::DMD(int dim)
 void DMD::takeSample(double* u_in)
 {
     CAROM_VERIFY(u_in != 0);
-    Vector sample(u_in, d_dim, true);
+    Vector* sample = new Vector(u_in, d_dim, true);
     d_snapshots.push_back(sample);
+}
+
+void DMD::takeSample(double* u_in, double t)
+{
+    takeSample(u_in);
 }
 
 void DMD::train(double energy_fraction)
@@ -389,21 +394,27 @@ DMD::phiMultEigs(double n)
 const Matrix*
 DMD::getSnapshotMatrix()
 {
-    CAROM_VERIFY(d_snapshots.size() > 0);
-    CAROM_VERIFY(d_snapshots[0].dim() > 0);
-    for (int i = 0 ; i < d_snapshots.size() - 1; i++)
+    return createSnapshotMatrix(d_snapshots);
+}
+
+const Matrix*
+DMD::createSnapshotMatrix(std::vector<Vector*> snapshots)
+{
+    CAROM_VERIFY(snapshots.size() > 0);
+    CAROM_VERIFY(snapshots[0]->dim() > 0);
+    for (int i = 0 ; i < snapshots.size() - 1; i++)
     {
-        CAROM_VERIFY(d_snapshots[i].dim() == d_snapshots[i + 1].dim());
-        CAROM_VERIFY(d_snapshots[i].distributed() == d_snapshots[i + 1].distributed());
+        CAROM_VERIFY(snapshots[i]->dim() == snapshots[i + 1]->dim());
+        CAROM_VERIFY(snapshots[i]->distributed() == snapshots[i + 1]->distributed());
     }
 
-    Matrix* snapshot_mat = new Matrix(d_snapshots[0].dim(), d_snapshots.size(), d_snapshots[0].distributed());
+    Matrix* snapshot_mat = new Matrix(snapshots[0]->dim(), snapshots.size(), snapshots[0]->distributed());
 
-    for (int i = 0; i < d_snapshots[0].dim(); i++)
+    for (int i = 0; i < snapshots[0]->dim(); i++)
     {
-        for (int j = 0; j < d_snapshots.size(); j++)
+        for (int j = 0; j < snapshots.size(); j++)
         {
-            snapshot_mat->item(i, j) = d_snapshots[j].item(i);
+            snapshot_mat->item(i, j) = snapshots[j]->item(i);
         }
     }
 

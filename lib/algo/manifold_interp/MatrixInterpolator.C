@@ -120,7 +120,7 @@ void MatrixInterpolator::obtainLambda()
             B->item(i, i) = 1.0;
             for (int j = i + 1; j < B->numColumns(); j++)
             {
-                double res = obtainRBF(d_parameter_points[i], d_parameter_points[j]);
+                double res = obtainRBF(d_rbf, d_epsilon, d_parameter_points[i], d_parameter_points[j]);
                 B->item(i, j) = res;
                 B->item(j, i) = res;
             }
@@ -271,7 +271,7 @@ Matrix* MatrixInterpolator::interpolateSPDMatrix(Vector* point)
     }
 
     // Obtain distances from database points to new point
-    std::vector<double> rbf = obtainRBFToTrainingPoints(point);
+    std::vector<double> rbf = obtainRBFToTrainingPoints(d_parameter_points, d_interp_method, d_rbf, d_epsilon, point);
 
     // Interpolate gammas to get gamma for new point
     Matrix* log_interpolated_matrix = obtainLogInterpolatedMatrix(rbf);
@@ -376,7 +376,7 @@ Matrix* MatrixInterpolator::interpolateNonSingularMatrix(Vector* point)
     }
 
     // Obtain distances from database points to new point
-    std::vector<double> rbf = obtainRBFToTrainingPoints(point);
+    std::vector<double> rbf = obtainRBFToTrainingPoints(d_parameter_points, d_interp_method, d_rbf, d_epsilon, point);
 
     // Interpolate gammas to get gamma for new point
     Matrix* log_interpolated_matrix = obtainLogInterpolatedMatrix(rbf);
@@ -444,7 +444,7 @@ Matrix* MatrixInterpolator::interpolateMatrix(Vector* point)
         obtainLambda();
     }
     // Obtain distances from database points to new point
-    std::vector<double> rbf = obtainRBFToTrainingPoints(point);
+    std::vector<double> rbf = obtainRBFToTrainingPoints(d_parameter_points, d_interp_method, d_rbf, d_epsilon, point);
 
     // Interpolate gammas to get gamma for new point
     Matrix* interpolated_matrix = obtainLogInterpolatedMatrix(rbf);
