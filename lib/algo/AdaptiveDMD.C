@@ -18,7 +18,7 @@
 
 namespace CAROM {
 
-AdaptiveDMD::AdaptiveDMD(int dim, double desired_dt, std::string interp_method, std::string rbf) : DMD(dim)
+AdaptiveDMD::AdaptiveDMD(int dim, double desired_dt, std::string interp_method, std::string rbf, double epsilon) : DMD(dim)
 {
     CAROM_VERIFY(desired_dt > 0.0);
     CAROM_VERIFY(rbf == "G" || rbf == "IQ" || rbf == "MQ" || rbf == "IMQ");
@@ -26,6 +26,7 @@ AdaptiveDMD::AdaptiveDMD(int dim, double desired_dt, std::string interp_method, 
     d_dt = desired_dt;
     d_interp_method = interp_method;
     d_rbf = rbf;
+    d_epsilon = epsilon;
 }
 
 void AdaptiveDMD::takeSample(double* u_in, double t)
@@ -90,40 +91,12 @@ const Matrix* AdaptiveDMD::interpolateSnapshots()
         std::cout << "Setting desired dt to " << d_dt << " to ensure a constant dt given the final sampled time." << std::endl;
     }
 
-    // Find ideal epsilon. For the first snapshot, the second snapshot should have
-    // an RBF of less than rbf_boundary
-    double epsilon;
-    double dt_squared = d_dt * d_dt;
-    double rbf_boundary = 0.99;
-
-    // Gaussian RBF
-    if (d_rbf == "G")
-    {
-        epsilon = std::sqrt(-std::log(rbf_boundary) / dt_squared);
-    }
-    // Multiquadric RBF
-    else if (d_rbf == "MQ")
-    {
-        epsilon = std::sqrt(((rbf_boundary * rbf_boundary) - 1) / dt_squared);
-    }
-    // Inverse quadratic RBF
-    else if (d_rbf == "IQ")
-    {
-        epsilon = std::sqrt(((1 / rbf_boundary) - 1) / dt_squared);
-    }
-    // Inverse multiquadric RBF
-    else if (d_rbf == "IMQ")
-    {
-        epsilon = std::sqrt((((1 / rbf_boundary) * (1 / rbf_boundary)) - 1) / dt_squared);
-    }
-
-    std::cout << "Setting epsilon to " << epsilon << std::endl;
-
     // Solve the linear system if required.
     Matrix* f_T = NULL;
     if (d_interp_method == "LS")
     {
-        f_T = solveLinearSystem(d_sampled_times, d_snapshots, d_interp_method, d_rbf, epsilon);
+        f_T = solveLinearSystem(d_sampled_times, d_snapshots, d_interp_method, d_rbf, d_epsilon);
+        std::cout << "Epsilon auto-corrected by the linear solve to " << d_epsilon << std::endl;
     }
 
     std::vector<Vector*> interpolated_snapshots;
@@ -136,7 +109,7 @@ const Matrix* AdaptiveDMD::interpolateSnapshots()
         CAROM::Vector* point = new Vector(&curr_time, 1, false);
 
         // Obtain distances from database points to new point
-        std::vector<double> rbf = obtainRBFToTrainingPoints(d_sampled_times, d_interp_method, d_rbf, epsilon, point);
+        std::vector<double> rbf = obtainRBFToTrainingPoints(d_sampled_times, d_interp_method, d_rbf, d_epsilon, point);
 
         // Obtain the interpolated snapshot.
         CAROM::Vector* curr_interpolated_snapshot = obtainInterpolatedVector(d_sampled_times, d_snapshots, f_T, d_interp_method, rbf);

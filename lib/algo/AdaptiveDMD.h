@@ -40,8 +40,10 @@ public:
      * @param[in] interp_method  The interpolation method type ("LS" == linear solve,
      *                           "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
      * @param[in] rbf         Which RBF to compute.
+     * @param[in] epsilon   The RBF parameter that determines the width of
+                            influence.
      */
-    AdaptiveDMD(int dim, double desired_dt, std::string interp_method, std::string rbf);
+    AdaptiveDMD(int dim, double desired_dt, std::string interp_method, std::string rbf, double epsilon = 1.0);
 
     /**
      * @brief Sample the new state, u_in.
@@ -110,6 +112,13 @@ private:
      *        lagrangian polynomials)
      */
     std::string d_interp_method;
+
+    /**
+     * @brief The RBF parameter that determines the width of influence.
+     *        a small epsilon: larger influential width
+     *        a large epsilon: smaller influential width
+     */
+    double d_epsilon;
 };
 
 }

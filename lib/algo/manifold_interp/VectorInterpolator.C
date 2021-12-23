@@ -159,7 +159,7 @@ Vector* obtainInterpolatedVector(std::vector<Vector*> parameter_points, std::vec
     return interpolated_vector;
 }
 
-Matrix* solveLinearSystem(std::vector<Vector*> parameter_points, std::vector<Vector*> data, std::string interp_method, std::string rbf, double epsilon)
+Matrix* solveLinearSystem(std::vector<Vector*> parameter_points, std::vector<Vector*> data, std::string interp_method, std::string rbf, double& epsilon)
 {
     if (interp_method == "LS")
     {
