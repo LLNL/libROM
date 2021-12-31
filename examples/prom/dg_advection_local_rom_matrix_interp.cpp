@@ -20,7 +20,9 @@
 //    dg_advection_local_rom_matrix_interp -offline -ff 1.08
 //    dg_advection_local_rom_matrix_interp -interp_prep -ff 1.08 -rdim 40
 //    dg_advection_local_rom_matrix_interp -fom -ff 1.05
-//    dg_advection_local_rom_matrix_interp -online_interp -ff 1.05 -rdim 40
+//    dg_advection_local_rom_matrix_interp -online_interp -ff 1.05 -rdim 40 (interpolate using a linear solve)
+//    dg_advection_local_rom_matrix_interp -online_interp -ff 1.05 -rdim 40 -im "LP" (interpolate using lagragian polynomials)
+//    dg_advection_local_rom_matrix_interp -online_interp -ff 1.05 -rdim 40 -im "IDW" (interpolate using inverse distance weighting)
 //
 // Sample runs:
 //    mpirun -np 4 dg_advection_local_rom_matrix_interp -p 0 -dt 0.005
@@ -300,6 +302,7 @@ int main(int argc, char *argv[])
     double dt = 0.01;
     double ef = 0.9999;
     const char *rbf_type = "G";
+    const char *interp_method = "LS";
     double rbf_width = 1.0;
     f_factor = 1.0;
     int rdim = -1;
@@ -385,6 +388,8 @@ int main(int argc, char *argv[])
                    "Enable or disable matrix interpolation preparation during the online phase.");
     args.AddOption(&rbf_type, "-rt", "--rbf_type",
                    "RBF type ('G' == gaussian, 'MQ'== multiquadric, 'IQ' == inverse quadratic, 'IMQ' == inverse multiquadric).");
+    args.AddOption(&interp_method, "-im", "--interp_method",
+                   "Interpolation method ('LS' == linear solve, 'IDW'== inverse distance weighting, 'LP' == lagrangian polynomials).");
     args.AddOption(&rbf_width, "-rw", "--rbf_width",
                    "RBF inverse width.");
     args.AddOption(&ef, "-ef", "--energy_fraction",
@@ -832,11 +837,11 @@ int main(int argc, char *argv[])
             int ref_point = getCenterPoint(parameter_points, false);
             std::vector<CAROM::Matrix*> rotation_matrices = obtainRotationMatrices(parameter_points, bases, ref_point);
 
-            CAROM::MatrixInterpolator basis_interpolator(parameter_points, rotation_matrices, bases, ref_point, "B", rbf_type, rbf_width);
-            CAROM::MatrixInterpolator M_interpolator(parameter_points, rotation_matrices, M_hats, ref_point, "SPD", rbf_type, rbf_width);
-            CAROM::MatrixInterpolator K_interpolator(parameter_points, rotation_matrices, K_hats, ref_point, "R", rbf_type, rbf_width);
-            CAROM::VectorInterpolator b_interpolator(parameter_points, rotation_matrices, b_hats, ref_point, rbf_type, rbf_width);
-            CAROM::VectorInterpolator u_init_interpolator(parameter_points, rotation_matrices, u_init_hats, ref_point, rbf_type, rbf_width);
+            CAROM::MatrixInterpolator basis_interpolator(parameter_points, rotation_matrices, bases, ref_point, "B", rbf_type, interp_method, rbf_width);
+            CAROM::MatrixInterpolator M_interpolator(parameter_points, rotation_matrices, M_hats, ref_point, "SPD", rbf_type, interp_method, rbf_width);
+            CAROM::MatrixInterpolator K_interpolator(parameter_points, rotation_matrices, K_hats, ref_point, "R", rbf_type, interp_method, rbf_width);
+            CAROM::VectorInterpolator b_interpolator(parameter_points, rotation_matrices, b_hats, ref_point, rbf_type, interp_method, rbf_width);
+            CAROM::VectorInterpolator u_init_interpolator(parameter_points, rotation_matrices, u_init_hats, ref_point, rbf_type, interp_method, rbf_width);
             spatialbasis = basis_interpolator.interpolate(curr_point);
             M_hat_carom = M_interpolator.interpolate(curr_point);
             K_hat_carom = K_interpolator.interpolate(curr_point);

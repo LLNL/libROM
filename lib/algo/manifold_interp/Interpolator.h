@@ -44,6 +44,8 @@ protected:
      * @param[in] rbf       The RBF type ("G" == gaussian, "MQ" == multiquadric,
      *                      "IQ" == inverse quadratic, "IMQ" == inverse
      *                      multiquadric)
+     * @param[in] interp_method  The interpolation method type ("LS" == linear solve,
+     *                      "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
      * @param[in] epsilon   The RBF parameter that determines the width of
                             influence.
      */
@@ -51,6 +53,7 @@ protected:
                  std::vector<Matrix*> rotation_matrices,
                  int ref_point,
                  std::string rbf,
+                 std::string interp_method,
                  double epsilon = 1.0);
 
     /**
@@ -75,6 +78,11 @@ protected:
      */
     std::string d_rbf;
 
+    /**
+     * @brief The interpolation method (linear solve, inverse distance weighting,
+     *        lagrangian polynomials)
+     */
+    std::string d_interp_method;
 
     /**
      * @brief The RBF parameter that determines the width of influence.
@@ -94,7 +102,7 @@ protected:
     std::vector<Matrix*> d_rotation_matrices;
 
     /**
-     * @brief The reduced elements in tangential space.
+     * @brief The RHS of the linear solve in tangential space.
      */
     Matrix* d_lambda_T;
 
@@ -105,6 +113,13 @@ protected:
      * @param[in] point The unsampled parameter point.
      */
     std::vector<double> obtainRBFToTrainingPoints(Vector* point);
+
+    /**
+     * @brief Compute the sum of the RBF weights.
+     *
+     * @param[in] rbf The vector holding the rbfs of the training points.
+     */
+    double rbfWeightedSum(std::vector<double> rbf);
 
     /**
      * @brief Compute the RBF between two points.
