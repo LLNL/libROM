@@ -29,18 +29,24 @@ namespace CAROM {
 class SampleMeshManager
 {
 public:
-    SampleMeshManager(vector<ParFiniteElementSpace*> & fespace_, string visFileName);
+    SampleMeshManager(vector<ParFiniteElementSpace*> & fespace_, string visFileName="");
 
     int RegisterSampledVariable(const int space, vector<int> const& sample_dofs_v, vector<int> const& num_sample_dofs_per_proc);
-    void GatherDistributedMatrixRows(const int var, CAROM::Matrix const& B, const int rdim, CAROM::Matrix& Bsp);
+    void ConstructSampleMesh();
+    void GatherDistributedMatrixRows(const int var, CAROM::Matrix const& B, const int rdim, CAROM::Matrix& Bsp) const;
 
-    /**
+  ParFiniteElementSpace* GetSampleFESpace(const int space) const { return spfespace[space]; }
+  int GetNumVarSamples(const int var) const;
+
+  void SampleFromSampleMesh(const int space, mfem::Vector const& v, CAROM::Vector & s) const;
+
+  /**
      * @brief Destructor.
      */
-    ~SampleMeshManager();
+    ~SampleMeshManager()
+  { }
 
 private:
-    void ConstructSampleMesh();
     void CreateSampleMesh(vector<int>& stencil_dofs, vector<int>& all_stencil_dofs);
 
     void SetSampleMaps();
@@ -49,7 +55,7 @@ private:
     bool finalized;
 
     const int nspaces;
-    int nvar;
+    int nvar = 0;
 
     int myid, nprocs;
     MPI_Comm root_comm;
@@ -76,7 +82,7 @@ private:
     vector<int> spaceTOS, spaceOS, spaceOSSP;
     vector<vector<int>> spaceOSall;
 
-    vector<vector<int>> s2sp_space;
+  vector<vector<int>> s2sp_space; // TODO: is this ever used, or just s2sp_var?
 
     // TODO: more descriptive name?
     string filename;  // For visualization output

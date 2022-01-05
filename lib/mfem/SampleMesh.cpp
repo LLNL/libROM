@@ -1070,7 +1070,6 @@ int SampleMeshManager::RegisterSampledVariable(const int space, vector<int> cons
             MFEM_VERIFY(os + num_sample_dofs_per_proc[p] == sample_dofs_v.size(), "");
         }
 
-        MFEM_ABORT("initialize sample_dofs_proc with the right dimensions");
         for (int j=0; j<num_sample_dofs_per_proc[p]; ++j)
             sample_dofs_proc[space][p].insert(sample_dofs_v[os + j]);
     }
@@ -1079,27 +1078,41 @@ int SampleMeshManager::RegisterSampledVariable(const int space, vector<int> cons
     sample_dofs_var.push_back(sample_dofs_v);
     varSpace.push_back(space);
     //numSamples.push_back(sample_dofs_v.size());
+    nvar = varSpace.size();
 }
 
 void SampleMeshManager::SetSampleMaps()
 {
     num_sample_dofs_per_proc_merged.assign(nprocs, 0);
 
-    int os_merged = 0;
+    vector<vector<int>> allspaceTOS(nspaces);
+
+    for (int i=0; i<nspaces; ++i)
+    {
+        allspaceTOS[i].resize(nprocs);
+        MPI_Allgather(&spaceTOS[i], 1, MPI_INT, allspaceTOS[i].data(), 1, MPI_INT, MPI_COMM_WORLD);
+    }
+
+    //int os_merged = 0;
 
     for (int p=0; p<nprocs; ++p)
     {
-        for (int i=0; i<nspaces; ++i)
+      vector<int> sample_dofs_os(nspaces);
+
+      for (int i=0; i<nspaces; ++i)
         {
             num_sample_dofs_per_proc_merged[p] += sample_dofs_proc[i][p].size();
+	    const int os = allspaceTOS[i][p];
+	    sample_dofs_os[i] = sample_dofs.size();
 
             for (std::set<int>::const_iterator it = sample_dofs_proc[i][p].begin(); it != sample_dofs_proc[i][p].end(); ++it)
             {
-                sample_dofs.push_back((*it));
+                sample_dofs.push_back(os + (*it));
             }
         }
 
         // For each variable v and each of the num_sample_dofs_per_proc[v][p] samples, set s2sp_var[v][] to be its index in sample_dofs
+	s2sp_var.resize(nvar);
         for (int v=0; v<nvar; ++v)
         {
             const int space = varSpace[v];
@@ -1108,7 +1121,8 @@ void SampleMeshManager::SetSampleMaps()
             for (int q=0; q<p; ++q)
                 os += num_sample_dofs_per_proc_var[v][q];
 
-            s2sp_var[v].resize(sample_dofs_var[v].size());
+	    const int nvs = sample_dofs_var[v].size();
+            s2sp_var[v].resize(nvs);
 
             for (int j=0; j<num_sample_dofs_per_proc_var[v][p]; ++j)
             {
@@ -1127,11 +1141,12 @@ void SampleMeshManager::SetSampleMaps()
                 }
 
                 MFEM_VERIFY(k >= 0, "");
-                s2sp_var[v][os + j] = os_merged + k;
+                //s2sp_var[v][os + j] = os_merged + k;
+                s2sp_var[v][os + j] = sample_dofs_os[space] + k;
             }
         }
 
-        os_merged += num_sample_dofs_per_proc_merged[p];
+        //os_merged += num_sample_dofs_per_proc_merged[p];
     }  // loop over p
 }
 
@@ -1141,10 +1156,6 @@ void SampleMeshManager::ConstructSampleMesh()
 
     nvar = varSpace.size();
     MFEM_VERIFY(nvar == sample_dofs_var.size() && nvar == num_sample_dofs_per_proc_var.size(), "");
-
-    SetSampleMaps();
-
-    CreateSampleMesh(sprows, all_sprows); // TODO: eliminate arguments?
 
     // TODO: put this code in a function?
     spaceOS.assign(nspaces + 1, 0);
@@ -1157,6 +1168,9 @@ void SampleMeshManager::ConstructSampleMesh()
         spaceTOS[i+1] = spaceTOS[i] + fespace[i]->GetTrueVSize();
     }
 
+    SetSampleMaps();
+    CreateSampleMesh(sprows, all_sprows); // TODO: eliminate arguments?
+
     if (myid == 0)
     {
         for (int i = 0; i < nspaces - 1; ++i)
@@ -1164,10 +1178,12 @@ void SampleMeshManager::ConstructSampleMesh()
             spaceOSSP[i+1] = spaceOSSP[i] + spfespace[i]->GetVSize();
         }
 
+	/* TODO
         for (int i=0; i<nspaces; ++i)
             delete spfespace[i];
 
         spfespace.clear();
+	*/
 
         sample_pmesh->ReorientTetMesh();  // re-orient the mesh, required for tets, no-op for hex
         sample_pmesh->EnsureNodes();
@@ -1184,6 +1200,7 @@ void SampleMeshManager::FinishSampleMaps()
     s2sp_space.resize(nspaces);
 
     {
+      // TODO: if this is used in more than one place, then store it in the class.
         // Set spaceOSall by gathering spaceTOS from all processes, for all spaces.
         vector<int> data(nprocs * (nspaces+1));
         MPI_Allgather(spaceTOS.data(), nspaces+1, MPI_INT, data.data(), nspaces+1, MPI_INT, MPI_COMM_WORLD);
@@ -1212,7 +1229,7 @@ void SampleMeshManager::FinishSampleMaps()
 
     MFEM_VERIFY(s2sp.size() == offset, "");
 
-    // Define the map s2sp_var from variables samples to sample mesh dofs.
+    // Define the map s2sp_var from variable samples to sample mesh dofs.
     for (int v=0; v<nvar; ++v)
     {
         const int s = varSpace[v];
@@ -1223,7 +1240,7 @@ void SampleMeshManager::FinishSampleMaps()
             {
                 MFEM_VERIFY(spaceOSall[s][p] <= sample_dofs[s2sp_var[v][os_p + j]] && sample_dofs[s2sp_var[v][os_p + j]] < spaceOSall[s+1][p], "");
                 const int spId = s2sp[s2sp_var[v][os_p + j]];
-                s2sp_var[v][os_p + j] = spId;
+                s2sp_var[v][os_p + j] = spId - spaceOSSP[s];
             }
 
             os_p += num_sample_dofs_per_proc_var[v][p];
@@ -1231,6 +1248,24 @@ void SampleMeshManager::FinishSampleMaps()
 
         MFEM_VERIFY(os_p == sample_dofs_var[v].size(), "");
     }
+}
+
+int SampleMeshManager::GetNumVarSamples(const int var) const
+{
+  MFEM_VERIFY(0 <= var && var < nvar, "Invalid variable index");
+  return sample_dofs_var[var].size();
+}
+
+void SampleMeshManager::SampleFromSampleMesh(const int var, mfem::Vector const& v, CAROM::Vector & s) const
+{
+  MFEM_VERIFY(0 <= var && var < nvar, "Invalid variable index");
+
+  const int n = s2sp_var[var].size();
+  const int space = varSpace[var];
+  MFEM_VERIFY(s.dim() == n, "");
+  MFEM_VERIFY(v.Size() == spfespace[space]->GetTrueVSize(), "");
+  for (int i=0; i<n; ++i)
+    s(i) = v[s2sp_var[var][i]];
 }
 
 void GatherDistributedMatrixRows_aux(const CAROM::Matrix& B, const int rdim,
@@ -1325,9 +1360,6 @@ void GatherDistributedMatrixRows_aux(const CAROM::Matrix& B, const int rdim,
                 const int ltdof = fespace.GetLocalTDofNumber(row - os0);
                 if (ltdof >= 0 && st2sp[i] >= 0)
                 {
-                    if (!(0 <= st2sp[i] - ossp && st2sp[i] - ossp < Nsp))
-                        mfem::out << "BUG";
-
                     MFEM_VERIFY(0 <= st2sp[i] - ossp && st2sp[i] - ossp < Nsp, "");
 
                     for (int j = 0; j < rdim; ++j)
@@ -1406,7 +1438,7 @@ void GatherDistributedMatrixRows_aux(const CAROM::Matrix& B, const int rdim,
 #endif
 }
 
-void SampleMeshManager::GatherDistributedMatrixRows(const int var, CAROM::Matrix const& B, const int rdim, CAROM::Matrix& Bsp)
+void SampleMeshManager::GatherDistributedMatrixRows(const int var, CAROM::Matrix const& B, const int rdim, CAROM::Matrix& Bsp) const
 {
     MFEM_VERIFY(0 <= var && var < nvar, "Invalid variable index");
     const int s = varSpace[var];

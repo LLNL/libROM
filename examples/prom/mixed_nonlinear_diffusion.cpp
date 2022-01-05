@@ -50,6 +50,9 @@
 
 typedef enum {ANALYTIC, INIT_STEP} PROBLEM;
 
+typedef enum {RSPACE, WSPACE} FESPACE;
+typedef enum {PVAR, VVAR, SVAR} SAMPLEDVAR;
+
 //#define USE_GNAT
 
 using namespace mfem;
@@ -239,11 +242,9 @@ private:
     mutable Vector zR;
     mutable CAROM::Vector zY;
     mutable CAROM::Vector zN;
-    vector<int> s2sp;
     const CAROM::Matrix *Vsinv;
 
     // Data for source function
-    vector<int> s2sp_S;
     const CAROM::Matrix *Ssinv;
     mutable CAROM::Vector zS;
     mutable CAROM::Vector zT;
@@ -263,6 +264,8 @@ private:
     CAROM::Vector *zfomR_librom;
     mutable CAROM::Vector VtzR;
 
+  CAROM::SampleMeshManager *smm;
+
     void PrintFDJacobian(const Vector &p) const;
 
 protected:
@@ -277,12 +280,13 @@ protected:
 public:
     RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOperator *fomSp_,
                 const int rrdim_, const int rwdim_, const int nldim_,
-                const vector<int>& spaceOS, const vector<int>& spaceOSSP,
+		CAROM::SampleMeshManager *smm_,
                 const CAROM::Matrix* V_R_, const CAROM::Matrix* U_R_, const CAROM::Matrix* V_W_,
                 const CAROM::Matrix *Bsinv,
-                const double newton_rel_tol, const double newton_abs_tol, const int newton_iter, const vector<int>& s2sp,
-                const CAROM::Matrix* S_, const vector<int>& s2sp_S_, const CAROM::Matrix *Ssinv_,
-                const vector<int>& st2sp, const vector<int>& sprows, const vector<int>& all_sprows, const int myid,
+                const double newton_rel_tol, const double newton_abs_tol, const int newton_iter,
+                const CAROM::Matrix* S_,
+		const CAROM::Matrix *Ssinv_,
+		const int myid,
                 const bool hyperreduce_source);
 
     virtual void Mult(const Vector &y, Vector &dy_dt) const;
@@ -709,9 +713,6 @@ int main(int argc, char *argv[])
         basis_generator_FR = new CAROM::BasisGenerator(options_R, isIncremental, basisFileName + "_FR");
     }
 
-    vector<int> s2sp;   // mapping from sample dofs in original mesh (s) to stencil dofs in sample mesh (s+)
-    vector<int> st2sp;  // mapping from stencil dofs in original mesh (st) to stencil dofs in sample mesh (s+)
-    ParMesh* sample_pmesh = 0;
     RomOperator *romop = 0;
 
     const CAROM::Matrix* B_librom = 0;
@@ -722,6 +723,8 @@ int main(int argc, char *argv[])
 
     int nsamp_R = -1;
     int nsamp_S = -1;
+
+    CAROM::SampleMeshManager *smm = nullptr;
 
     if (online)
     {
@@ -802,9 +805,12 @@ int main(int argc, char *argv[])
                     num_procs);
 #endif
 
+	vector<int> sample_dofs_S;  // Indices of the sampled rows
+	vector<int> num_sample_dofs_per_proc_S(num_procs);
+
         vector<int> sample_dofs_withS;  // Indices of the sampled rows
         int nsdim = 0;
-        int *allNR = 0;
+        //int *allNR = 0;
         CAROM::Matrix *Ssinv = 0;
         vector<int> num_sample_dofs_per_proc_withS;
         CAROM::BasisReader *readerS = 0;
@@ -819,14 +825,13 @@ int main(int argc, char *argv[])
 
             cout << "S dim " << nsdim << endl;
 
-            vector<int> num_sample_dofs_per_proc_S(num_procs);
-
             // Now execute the DEIM algorithm to get the sampling information.
             nsamp_S = nsdim;
+	    sample_dofs_S.resize(nsamp_S);
 
 #ifdef USE_GNAT
             Ssinv = new CAROM::Matrix(nsamp_S, nsdim, false);
-            vector<int> sample_dofs_S(nsamp_S);  // Indices of the sampled rows
+	    sample_dofs_S.resize(nsamp_S);
 
             CAROM::GNAT(S_librom,
                         nsdim,
@@ -838,7 +843,7 @@ int main(int argc, char *argv[])
                         nsamp_S);
 #else
             Ssinv = new CAROM::Matrix(nsdim, nsdim, false);
-            vector<int> sample_dofs_S(nsdim);  // Indices of the sampled rows
+	    sample_dofs_S.resize(nsdim);
             CAROM::DEIM(S_librom,
                         nsdim,
                         sample_dofs_S,
@@ -847,28 +852,6 @@ int main(int argc, char *argv[])
                         myid,
                         num_procs);
 #endif
-
-            // Merge sample_dofs and sample_dofs_S
-            allNR = new int [num_procs];
-            MPI_Allgather(&N1, 1, MPI_INT, allNR, 1, MPI_INT, MPI_COMM_WORLD);
-
-            sample_dofs_withS.resize(sample_dofs.size() + sample_dofs_S.size());  // Indices of the sampled rows
-            num_sample_dofs_per_proc_withS.resize(num_procs);
-            int offset = 0;
-            int offset_S = 0;
-            for (int p=0; p<num_procs; ++p)
-            {
-                for (int i=0; i<num_sample_dofs_per_proc[p]; ++i)
-                    sample_dofs_withS[offset + offset_S + i] = sample_dofs[offset + i];
-
-                offset += num_sample_dofs_per_proc[p];
-
-                for (int i=0; i<num_sample_dofs_per_proc_S[p]; ++i)
-                    sample_dofs_withS[offset + offset_S + i] = allNR[p] + sample_dofs_S[offset_S + i];
-
-                offset_S += num_sample_dofs_per_proc_S[p];
-                num_sample_dofs_per_proc_withS[p] = num_sample_dofs_per_proc[p] + num_sample_dofs_per_proc_S[p];
-            }
         }
 
         // Construct sample mesh
@@ -881,93 +864,24 @@ int main(int argc, char *argv[])
 
         ParFiniteElementSpace *sp_R_space, *sp_W_space;
 
-        MPI_Comm rom_com;
-        int color = myid != 0;
-        const int status = MPI_Comm_split(MPI_COMM_WORLD, color, myid, &rom_com);
-        MFEM_VERIFY(status == MPI_SUCCESS,
-                    "Construction of hyperreduction comm failed");
+	smm = new CAROM::SampleMeshManager(fespace);
 
-        vector<int> sprows;
-        vector<int> all_sprows;
-        vector<int> s2sp_S;
+	vector<int> sample_dofs_empty;  // Potential variable in W space has no sample DOFs.
+	vector<int> num_sample_dofs_per_proc_empty;
+	num_sample_dofs_per_proc_empty.assign(num_procs, 0);
+	smm->RegisterSampledVariable(WSPACE, sample_dofs_empty, num_sample_dofs_per_proc_empty);
 
         if (hyperreduce_source)
         {
-            vector<int> s2sp_withS;
-            CAROM::CreateSampleMesh(*pmesh, fespace, rom_com, sample_dofs_withS, num_sample_dofs_per_proc_withS,
-                                    sample_pmesh, sprows, all_sprows, s2sp_withS, st2sp, spfespace, "");
-
-            sp_R_space = spfespace[0];
-            sp_W_space = spfespace[1];
-
-            if (myid == 0)
-            {
-                s2sp_S.resize(nsamp_S);
-
-#ifndef USE_GNAT
-                MFEM_VERIFY(s2sp_withS.size() == nldim + nsdim, "");
-#endif
-                MFEM_VERIFY(s2sp_withS.size() == nsamp_R + nsamp_S, "");
-
-                ofstream sfile("smesh");
-                sample_pmesh->Print(sfile);
-                sfile.close();
-
-                const int NRsp = sp_R_space->GetTrueVSize();
-
-                s2sp.resize(nsamp_R);
-
-                int count = 0;
-                int count_S = 0;
-
-                int offset = 0;
-                for (int p=0; p<num_procs; ++p)
-                {
-                    for (int i=0; i<num_sample_dofs_per_proc_withS[p]; ++i)
-                    {
-                        if (sample_dofs_withS[offset + i] >= allNR[p])
-                        {
-                            s2sp_S[count_S] = s2sp_withS[offset + i] - NRsp;
-                            count_S++;
-                        }
-                        else
-                        {
-                            s2sp[count] = s2sp_withS[offset + i];
-                            count++;
-                        }
-                    }
-
-                    offset += num_sample_dofs_per_proc_withS[p];
-                }
-
-                //MFEM_VERIFY(count == nldim && count_S == nsdim, "");
-                MFEM_VERIFY(count == nsamp_R && count_S == nsamp_S, "");
-            }
+	  smm->RegisterSampledVariable(RSPACE, sample_dofs, num_sample_dofs_per_proc);
+	  smm->RegisterSampledVariable(WSPACE, sample_dofs_S, num_sample_dofs_per_proc_S);
         }
         else
         {
-            CAROM::CreateSampleMesh(*pmesh, fespace, rom_com, sample_dofs, num_sample_dofs_per_proc,
-                                    sample_pmesh, sprows, all_sprows, s2sp, st2sp, spfespace, "");
-            sp_R_space = spfespace[0];
-            sp_W_space = spfespace[1];
+	  smm->RegisterSampledVariable(RSPACE, sample_dofs, num_sample_dofs_per_proc);
         }
 
-        std::vector<int> spaceOS, spaceOSSP;
-        spaceOS.assign(nspaces + 1, 0);
-        spaceOSSP.assign(nspaces, 0);
-
-        for (int i=0; i<nspaces; ++i)
-        {
-            spaceOS[i+1] = spaceOS[i] + fespace[i]->GetVSize();
-        }
-
-        if (myid == 0)
-        {
-            for (int i=0; i<nspaces - 1; ++i)
-            {
-                spaceOSSP[i+1] = spaceOSSP[i] + spfespace[i]->GetVSize();
-            }
-        }
+	smm->ConstructSampleMesh();
 
         w = new CAROM::Vector(rrdim + rwdim, false);
         w_W = new CAROM::Vector(rwdim, false);
@@ -986,7 +900,10 @@ int main(int argc, char *argv[])
 
         if (myid == 0)
         {
-            // Initialize sp_p with initial conditions.
+	  sp_R_space = smm->GetSampleFESpace(RSPACE);
+	  sp_W_space = smm->GetSampleFESpace(WSPACE);
+
+	  // Initialize sp_p with initial conditions.
             {
                 sp_p_gf = new ParGridFunction(sp_W_space);
                 sp_p_gf->ProjectCoefficient(p_0);
@@ -1001,11 +918,12 @@ int main(int argc, char *argv[])
         }
 
         romop = new RomOperator(&oper, soper, rrdim, rwdim, nldim,
-                                spaceOS, spaceOSSP,
+				smm,
                                 BR_librom, FR_librom, BW_librom,
-                                Bsinv, newton_rel_tol, newton_abs_tol, newton_iter, s2sp,
-                                S_librom, s2sp_S, Ssinv,
-                                st2sp, sprows, all_sprows, myid, hyperreduce_source);
+                                Bsinv, newton_rel_tol, newton_abs_tol, newton_iter,
+                                S_librom,
+				Ssinv,
+				myid, hyperreduce_source);
 
         ode_solver.Init(*romop);
 
@@ -1553,22 +1471,25 @@ void Compute_CtAB(const HypreParMatrix* A,
 }
 
 RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOperator *fomSp_, const int rrdim_, const int rwdim_,
-                         const int nldim_, const vector<int>& spaceOS, const vector<int>& spaceOSSP,
+                         const int nldim_,
+			 CAROM::SampleMeshManager *smm_,
                          const CAROM::Matrix* V_R_, const CAROM::Matrix* U_R_, const CAROM::Matrix* V_W_,
                          const CAROM::Matrix *Bsinv,
-                         const double newton_rel_tol, const double newton_abs_tol, const int newton_iter, const vector<int>& s2sp_,
-                         const CAROM::Matrix* S_, const vector<int>& s2sp_S_, const CAROM::Matrix *Ssinv_,
-                         const vector<int>& st2sp, const vector<int>& sprows, const vector<int>& all_sprows, const int myid,
+                         const double newton_rel_tol, const double newton_abs_tol, const int newton_iter,
+                         const CAROM::Matrix* S_,
+			 const CAROM::Matrix *Ssinv_,
+			 const int myid,
                          const bool hyperreduce_source_)
     : TimeDependentOperator(rrdim_ + rwdim_, 0.0),
       newton_solver(),
       fom(fom_), fomSp(fomSp_), BR(NULL), rrdim(rrdim_), rwdim(rwdim_), nldim(nldim_),
-      nsamp_R(s2sp_.size()), nsamp_S(s2sp_S_.size()),
+      smm(smm_),
+      nsamp_R(smm_->GetNumVarSamples(VVAR)), nsamp_S(hyperreduce_source_ ? smm_->GetNumVarSamples(SVAR) : 0),
       V_R(*V_R_), U_R(U_R_), V_W(*V_W_), VTU_R(rrdim_, nldim_, false),
-      // TODO: get rid of the zero dimension hacks here
-      y0(height), dydt_prev(height), zY(nldim, false), zN(std::max(nsamp_R, 1), false), s2sp(s2sp_), Vsinv(Bsinv), J(height),
-      s2sp_S(s2sp_S_), zS(std::max(s2sp_S_.size(), std::size_t(1)), false), zT(std::max(s2sp_S_.size(), std::size_t(1)), false), Ssinv(Ssinv_),
-      VTCS_W(rwdim, std::max(s2sp_S_.size(), std::size_t(1)), false), S(S_),
+      y0(height), dydt_prev(height), zY(nldim, false), zN(std::max(nsamp_R, 1), false),
+      Vsinv(Bsinv), J(height),
+      zS(std::max(nsamp_S, 1), false), zT(std::max(nsamp_S, 1), false), Ssinv(Ssinv_),
+      VTCS_W(rwdim, std::max(nsamp_S, 1), false), S(S_),
       VtzR(rrdim_, false), hyperreduce_source(hyperreduce_source_)
 {
     dydt_prev = 0.0;
@@ -1582,8 +1503,8 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
 
     V_R.transposeMult(*U_R, VTU_R);
 
-    GatherDistributedMatrixRows(V_R, rrdim, spaceOS[0], spaceOS[1], spaceOSSP[0], fom->fespace_R, st2sp, sprows, all_sprows, *BRsp);
-    GatherDistributedMatrixRows(V_W, rwdim, spaceOS[1], spaceOS[2], spaceOSSP[1], fom->fespace_W, st2sp, sprows, all_sprows, *BWsp);
+    smm->GatherDistributedMatrixRows(VVAR, V_R, rrdim, *BRsp);
+    smm->GatherDistributedMatrixRows(PVAR, V_W, rwdim, *BWsp);
 
     // Compute BR = V_W^t B V_R and CR = V_W^t C V_W, and store them throughout the simulation.
 
@@ -1632,7 +1553,7 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
         psp_R_librom = new CAROM::Vector(psp_R->GetData(), psp_R->Size(), false, false);
         psp_W_librom = new CAROM::Vector(psp_W->GetData(), psp_W->Size(), false, false);
 
-        MFEM_VERIFY(nsamp_R == s2sp.size(), "");
+        //MFEM_VERIFY(nsamp_R == s2sp.size(), "");
     }
 
     hyperreduce = true;
@@ -1697,8 +1618,7 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
     fomSp->Mmat->Mult(*psp_R, zR);  // M(a(Pst V_W yW)) Pst V_R yR
 
     // Select entries out of zR.
-    for (int i=0; i<nsamp_R; ++i)
-        zN(i) = zR[s2sp[i]];
+    smm->SampleFromSampleMesh(VVAR, zR, zN);
 
     // Note that it would be better to just store VTU_R * Vsinv, but these are small matrices.
 #ifdef USE_GNAT
@@ -1734,8 +1654,7 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
         if (hyperreduce_source)
         {
             // Select entries
-            for (int i=0; i<nsamp_S; ++i)
-                zT(i) = fomSp->zW(s2sp_S[i]);
+	  smm->SampleFromSampleMesh(SVAR, fomSp->zW, zT);
 
 #ifdef USE_GNAT
             Ssinv->transposeMult(zT, zS);
@@ -1898,8 +1817,7 @@ Operator &RomOperator::GetGradient(const Vector &p) const
 
             fomSp->Mprimemat.Mult(*psp_R, zR);
 
-            for (int j=0; j<nsamp_R; ++j)
-                z(j) = zR[s2sp[j]];
+	    smm->SampleFromSampleMesh(VVAR, zR, z);
 
             // Note that it would be better to just store VTU_R * Vsinv, but these are small matrices.
 
