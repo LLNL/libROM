@@ -35,16 +35,18 @@ public:
     void ConstructSampleMesh();
     void GatherDistributedMatrixRows(const int var, CAROM::Matrix const& B, const int rdim, CAROM::Matrix& Bsp) const;
 
-  ParFiniteElementSpace* GetSampleFESpace(const int space) const { return spfespace[space]; }
-  int GetNumVarSamples(const int var) const;
+    ParFiniteElementSpace* GetSampleFESpace(const int space) const {
+        return spfespace[space];
+    }
+    int GetNumVarSamples(const int var) const;
 
-  void SampleFromSampleMesh(const int space, mfem::Vector const& v, CAROM::Vector & s) const;
+    void SampleFromSampleMesh(const int space, mfem::Vector const& v, CAROM::Vector & s) const;
 
-  /**
-     * @brief Destructor.
-     */
+    /**
+       * @brief Destructor.
+       */
     ~SampleMeshManager()
-  { }
+    { }
 
 private:
     void CreateSampleMesh(vector<int>& stencil_dofs, vector<int>& all_stencil_dofs);
@@ -82,7 +84,7 @@ private:
     vector<int> spaceTOS, spaceOS, spaceOSSP;
     vector<vector<int>> spaceOSall;
 
-  vector<vector<int>> s2sp_space; // TODO: is this ever used, or just s2sp_var?
+    vector<vector<int>> s2sp_space; // TODO: is this ever used, or just s2sp_var?
 
     // TODO: more descriptive name?
     string filename;  // For visualization output
