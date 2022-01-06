@@ -1618,7 +1618,7 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
     fomSp->Mmat->Mult(*psp_R, zR);  // M(a(Pst V_W yW)) Pst V_R yR
 
     // Select entries out of zR.
-    smm->SampleFromSampleMesh(VVAR, zR, zN);
+    smm->GetSampledValues(VVAR, zR, zN);
 
     // Note that it would be better to just store VTU_R * Vsinv, but these are small matrices.
 #ifdef USE_GNAT
@@ -1654,7 +1654,7 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
         if (hyperreduce_source)
         {
             // Select entries
-            smm->SampleFromSampleMesh(SVAR, fomSp->zW, zT);
+            smm->GetSampledValues(SVAR, fomSp->zW, zT);
 
 #ifdef USE_GNAT
             Ssinv->transposeMult(zT, zS);
@@ -1817,7 +1817,7 @@ Operator &RomOperator::GetGradient(const Vector &p) const
 
             fomSp->Mprimemat.Mult(*psp_R, zR);
 
-            smm->SampleFromSampleMesh(VVAR, zR, z);
+            smm->GetSampledValues(VVAR, zR, z);
 
             // Note that it would be better to just store VTU_R * Vsinv, but these are small matrices.
 

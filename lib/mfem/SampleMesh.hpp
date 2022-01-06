@@ -38,13 +38,20 @@ public:
     ParFiniteElementSpace* GetSampleFESpace(const int space) const {
         return spfespace[space];
     }
+
+    ParMesh* GetSampleMesh() const {
+        return sample_pmesh;
+    }
+
     int GetNumVarSamples(const int var) const;
 
-    void SampleFromSampleMesh(const int space, mfem::Vector const& v, CAROM::Vector & s) const;
+    void GetSampledValues(const int var, mfem::Vector const& v, CAROM::Vector & s) const;
+
+    void WriteVariableSampleMap(const int var, std::string file_name) const;
 
     /**
-       * @brief Destructor.
-       */
+         * @brief Destructor.
+         */
     ~SampleMeshManager()
     { }
 
@@ -90,8 +97,19 @@ private:
     string filename;  // For visualization output
 };
 
+class SampleDOFSelector {
+public:
+    SampleDOFSelector() { }
 
-}
+    void ReadMapFromFile(std::string file_name);
+
+    void GetSampledValues(const int var, mfem::Vector const& v, CAROM::Vector & s) const;
+
+private:
+    vector<vector<int>> s2sp_var;
+};
+
+}  // namespace CAROM
 
 
 #endif // SAMPLEMESH_H

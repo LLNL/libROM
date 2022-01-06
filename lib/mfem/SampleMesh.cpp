@@ -1256,7 +1256,7 @@ int SampleMeshManager::GetNumVarSamples(const int var) const
     return sample_dofs_var[var].size();
 }
 
-void SampleMeshManager::SampleFromSampleMesh(const int var, mfem::Vector const& v, CAROM::Vector & s) const
+void SampleMeshManager::GetSampledValues(const int var, mfem::Vector const& v, CAROM::Vector & s) const
 {
     MFEM_VERIFY(0 <= var && var < nvar, "Invalid variable index");
 
@@ -1266,6 +1266,18 @@ void SampleMeshManager::SampleFromSampleMesh(const int var, mfem::Vector const& 
     MFEM_VERIFY(v.Size() == spfespace[space]->GetTrueVSize(), "");
     for (int i=0; i<n; ++i)
         s(i) = v[s2sp_var[var][i]];
+}
+
+void SampleMeshManager::WriteVariableSampleMap(const int var, std::string file_name) const
+{
+    MFEM_VERIFY(0 <= var && var < nvar, "Invalid variable index");
+    ofstream file;
+    file.open(file_name);
+    for (int i=0; i<s2sp_var[var].size(); ++i)
+    {
+        file << s2sp_var[var][i] << endl;
+    }
+    file.close();
 }
 
 void GatherDistributedMatrixRows_aux(const CAROM::Matrix& B, const int rdim,
@@ -1656,4 +1668,28 @@ void SampleMeshManager::CreateSampleMesh(vector<int>& stencil_dofs, /* Local tru
     }
 }
 
+void SampleDOFSelector::ReadMapFromFile(std::string file_name)
+{
+    vector<int> v;
+    ifstream file;
+    file.open(file_name);
+    string line;
+    while(getline(file, line)) {
+        v.push_back(stoi(line));
+    }
+    file.close();
+
+    s2sp_var.push_back(v);
 }
+
+void SampleDOFSelector::GetSampledValues(const int var, mfem::Vector const& v, CAROM::Vector & s) const
+{
+    MFEM_VERIFY(0 <= var && var < s2sp_var.size(), "Invalid variable index");
+
+    const int n = s2sp_var[var].size();
+    MFEM_VERIFY(s.dim() == n, "");
+    for (int i=0; i<n; ++i)
+        s(i) = v[s2sp_var[var][i]];
+}
+
+} // namespace CAROM
