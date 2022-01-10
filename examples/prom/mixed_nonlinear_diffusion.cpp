@@ -51,7 +51,6 @@
 typedef enum {ANALYTIC, INIT_STEP} PROBLEM;
 
 typedef enum {RSPACE, WSPACE} FESPACE;
-typedef enum {PVAR, VVAR, SVAR} SAMPLEDVAR;
 
 //#define USE_GNAT
 
@@ -869,16 +868,16 @@ int main(int argc, char *argv[])
         vector<int> sample_dofs_empty;  // Potential variable in W space has no sample DOFs.
         vector<int> num_sample_dofs_per_proc_empty;
         num_sample_dofs_per_proc_empty.assign(num_procs, 0);
-        smm->RegisterSampledVariable(WSPACE, sample_dofs_empty, num_sample_dofs_per_proc_empty);
+        smm->RegisterSampledVariable("P", WSPACE, sample_dofs_empty, num_sample_dofs_per_proc_empty);
 
         if (hyperreduce_source)
         {
-            smm->RegisterSampledVariable(RSPACE, sample_dofs, num_sample_dofs_per_proc);
-            smm->RegisterSampledVariable(WSPACE, sample_dofs_S, num_sample_dofs_per_proc_S);
+            smm->RegisterSampledVariable("V", RSPACE, sample_dofs, num_sample_dofs_per_proc);
+            smm->RegisterSampledVariable("S", WSPACE, sample_dofs_S, num_sample_dofs_per_proc_S);
         }
         else
         {
-            smm->RegisterSampledVariable(RSPACE, sample_dofs, num_sample_dofs_per_proc);
+            smm->RegisterSampledVariable("V", RSPACE, sample_dofs, num_sample_dofs_per_proc);
         }
 
         smm->ConstructSampleMesh();
@@ -1484,7 +1483,7 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
       newton_solver(),
       fom(fom_), fomSp(fomSp_), BR(NULL), rrdim(rrdim_), rwdim(rwdim_), nldim(nldim_),
       smm(smm_),
-      nsamp_R(smm_->GetNumVarSamples(VVAR)), nsamp_S(hyperreduce_source_ ? smm_->GetNumVarSamples(SVAR) : 0),
+      nsamp_R(smm_->GetNumVarSamples("V")), nsamp_S(hyperreduce_source_ ? smm_->GetNumVarSamples("S") : 0),
       V_R(*V_R_), U_R(U_R_), V_W(*V_W_), VTU_R(rrdim_, nldim_, false),
       y0(height), dydt_prev(height), zY(nldim, false), zN(std::max(nsamp_R, 1), false),
       Vsinv(Bsinv), J(height),
@@ -1503,8 +1502,8 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
 
     V_R.transposeMult(*U_R, VTU_R);
 
-    smm->GatherDistributedMatrixRows(VVAR, V_R, rrdim, *BRsp);
-    smm->GatherDistributedMatrixRows(PVAR, V_W, rwdim, *BWsp);
+    smm->GatherDistributedMatrixRows("V", V_R, rrdim, *BRsp);
+    smm->GatherDistributedMatrixRows("P", V_W, rwdim, *BWsp);
 
     // Compute BR = V_W^t B V_R and CR = V_W^t C V_W, and store them throughout the simulation.
 
@@ -1618,7 +1617,7 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
     fomSp->Mmat->Mult(*psp_R, zR);  // M(a(Pst V_W yW)) Pst V_R yR
 
     // Select entries out of zR.
-    smm->GetSampledValues(VVAR, zR, zN);
+    smm->GetSampledValues("V", zR, zN);
 
     // Note that it would be better to just store VTU_R * Vsinv, but these are small matrices.
 #ifdef USE_GNAT
@@ -1654,7 +1653,7 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
         if (hyperreduce_source)
         {
             // Select entries
-            smm->GetSampledValues(SVAR, fomSp->zW, zT);
+            smm->GetSampledValues("S", fomSp->zW, zT);
 
 #ifdef USE_GNAT
             Ssinv->transposeMult(zT, zS);
@@ -1817,7 +1816,7 @@ Operator &RomOperator::GetGradient(const Vector &p) const
 
             fomSp->Mprimemat.Mult(*psp_R, zR);
 
-            smm->GetSampledValues(VVAR, zR, z);
+            smm->GetSampledValues("V", zR, z);
 
             // Note that it would be better to just store VTU_R * Vsinv, but these are small matrices.
 
