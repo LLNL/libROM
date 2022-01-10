@@ -1187,17 +1187,15 @@ void SampleMeshManager::ConstructSampleMesh()
 
         sample_pmesh->ReorientTetMesh();  // re-orient the mesh, required for tets, no-op for hex
         sample_pmesh->EnsureNodes();
-
-        FinishSampleMaps();
     }
+
+    FinishSampleMaps();
 
     finalized = true;
 }
 
 void SampleMeshManager::FinishSampleMaps()
 {
-    MFEM_VERIFY(myid == 0, "");
-    s2sp_space.resize(nspaces);
 
     {
         // TODO: if this is used in more than one place, then store it in the class.
@@ -1210,6 +1208,11 @@ void SampleMeshManager::FinishSampleMaps()
             for (int s=0; s<nspaces+1; ++s)
                 spaceOSall[s][p] = data[(p*(nspaces+1)) + s];
     }
+
+    if (myid != 0)
+        return;
+
+    s2sp_space.resize(nspaces);
 
     int offset = 0;
     for (int p=0; p<nprocs; ++p)
