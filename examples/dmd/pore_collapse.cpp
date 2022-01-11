@@ -98,28 +98,26 @@ int main(int argc, char *argv[])
         {
             cout << "Loading samples for " << par_dir << " to train DMD." << endl;
         }
-        std::ifstream snap_list((std::string(list_dir) + "/" + par_dir).c_str());
+        std::ifstream snap_ifs((std::string(list_dir) + "/" + par_dir).c_str());
         std::string snap; // run_036.*
-        std::string data_list_filename; // {zone_*,tkelv}.csv
+        std::string time_filename; // tval.txt
+        std::string data_filename; // {zone_*,tkelv}.csv
         int num_samp = 0;
-        while (std::getline(snap_list, snap))
+        double tval = 0.0;
+        while (std::getline(snap_ifs, snap))
         {
-            data_list_filename = std::string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv"; 
-            std::ifstream data_list(data_list_filename.c_str()); 
-            double t = 0.0;
-            int row = -1;
+            std::ifstream tval_ifs((std::string(data_dir) + "/" + par_dir + "/" + snap + "/tval.txt").c_str()) 
+            tval_ifs >> tval;
+            data_filename = std::string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv"; 
+            std::ifstream data_ifs(data_filename.c_str()); 
+            int row = 0;
             double data = 0.0; 
-            while (data_list >> data)
+            while (data_ifs >> data)
             {
-                if (row >= 0) sample[row++] = data;
-                else
-                {
-                    t = data;
-                    row = 0;
-                }
+                sample[row++] = data;
             }
             MFEM_VERIFY(row == dim, "Dimension disagree.");
-            dmd.takeSample(sample, t);
+            dmd.takeSample(sample, tval);
             num_samp++;
         }
         if (myid == 0)
