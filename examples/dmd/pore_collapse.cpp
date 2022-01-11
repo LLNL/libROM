@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
             else
             {
                 dmd_prediction_timer.Start();
-                CAROM::Vector* result = dmd.predict(tval/ddt - 1);
+                CAROM::Vector* result = dmd.predict(tval/ddt);
                 dmd_prediction_timer.Stop();
                 if (myid == 0)
                 {
