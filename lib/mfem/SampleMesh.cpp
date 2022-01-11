@@ -1043,14 +1043,6 @@ SampleMeshManager::SampleMeshManager(vector<ParFiniteElementSpace*> & fespace_, 
 
     sample_dofs_proc.assign(nspaces, vector<set<int>> (nprocs));
 
-    /*
-    for (int i=0; i<nspaces; ++i)
-      {
-    set<int> s;
-    sample_dofs_proc.push_back(s);  // initialize with empty sets
-      }
-    */
-
     finalized = false;
 }
 
@@ -1101,8 +1093,6 @@ void SampleMeshManager::SetSampleMaps()
         MPI_Allgather(&spaceTOS[i], 1, MPI_INT, allspaceTOS[i].data(), 1, MPI_INT, MPI_COMM_WORLD);
     }
 
-    //int os_merged = 0;
-
     for (int p=0; p<nprocs; ++p)
     {
         vector<int> sample_dofs_os(nspaces);
@@ -1149,12 +1139,9 @@ void SampleMeshManager::SetSampleMaps()
                 }
 
                 MFEM_VERIFY(k >= 0, "");
-                //s2sp_var[v][os + j] = os_merged + k;
                 s2sp_var[v][os + j] = sample_dofs_os[space] + k;
             }
         }
-
-        //os_merged += num_sample_dofs_per_proc_merged[p];
     }  // loop over p
 }
 
@@ -1165,7 +1152,6 @@ void SampleMeshManager::ConstructSampleMesh()
     nvar = varSpace.size();
     MFEM_VERIFY(nvar == sample_dofs_var.size() && nvar == num_sample_dofs_per_proc_var.size(), "");
 
-    // TODO: put this code in a function?
     spaceOS.assign(nspaces + 1, 0);
     spaceTOS.assign(nspaces + 1, 0);
     spaceOSSP.assign(nspaces, 0);
@@ -1475,10 +1461,6 @@ void SampleMeshManager::CreateSampleMesh()
     vector<vector<int> > local_num_sample_dofs_sub(nspaces);
     vector<vector<int> > localSampleDofsToElem_sub(nspaces);
     vector<vector<int> > localSampleDofsToElemDof_sub(nspaces);
-
-    //ParFiniteElementSpace* fespace[2] = {&fespace1, &fespace2};
-
-    //const int N1 = fespace1.TrueVSize();
 
     vector<int> Ntrue(nspaces);
     for (int i=0; i<nspaces; ++i)

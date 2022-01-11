@@ -283,10 +283,8 @@ public:
                 const CAROM::Matrix* V_R_, const CAROM::Matrix* U_R_, const CAROM::Matrix* V_W_,
                 const CAROM::Matrix *Bsinv,
                 const double newton_rel_tol, const double newton_abs_tol, const int newton_iter,
-                const CAROM::Matrix* S_,
-                const CAROM::Matrix *Ssinv_,
-                const int myid,
-                const bool hyperreduce_source);
+                const CAROM::Matrix* S_, const CAROM::Matrix *Ssinv_,
+                const int myid, const bool hyperreduce_source);
 
     virtual void Mult(const Vector &y, Vector &dy_dt) const;
     void Mult_Hyperreduced(const Vector &y, Vector &dy_dt) const;
@@ -809,7 +807,6 @@ int main(int argc, char *argv[])
 
         vector<int> sample_dofs_withS;  // Indices of the sampled rows
         int nsdim = 0;
-        //int *allNR = 0;
         CAROM::Matrix *Ssinv = 0;
         vector<int> num_sample_dofs_per_proc_withS;
         CAROM::BasisReader *readerS = 0;
@@ -916,13 +913,10 @@ int main(int argc, char *argv[])
             soper = new NonlinearDiffusionOperator(*sp_R_space, *sp_W_space, newton_rel_tol, newton_abs_tol, newton_iter, sp_p);
         }
 
-        romop = new RomOperator(&oper, soper, rrdim, rwdim, nldim,
-                                smm,
+        romop = new RomOperator(&oper, soper, rrdim, rwdim, nldim, smm,
                                 BR_librom, FR_librom, BW_librom,
                                 Bsinv, newton_rel_tol, newton_abs_tol, newton_iter,
-                                S_librom,
-                                Ssinv,
-                                myid, hyperreduce_source);
+                                S_librom, Ssinv, myid, hyperreduce_source);
 
         ode_solver.Init(*romop);
 
@@ -1470,15 +1464,12 @@ void Compute_CtAB(const HypreParMatrix* A,
 }
 
 RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOperator *fomSp_, const int rrdim_, const int rwdim_,
-                         const int nldim_,
-                         CAROM::SampleMeshManager *smm_,
+                         const int nldim_, CAROM::SampleMeshManager *smm_,
                          const CAROM::Matrix* V_R_, const CAROM::Matrix* U_R_, const CAROM::Matrix* V_W_,
                          const CAROM::Matrix *Bsinv,
                          const double newton_rel_tol, const double newton_abs_tol, const int newton_iter,
-                         const CAROM::Matrix* S_,
-                         const CAROM::Matrix *Ssinv_,
-                         const int myid,
-                         const bool hyperreduce_source_)
+                         const CAROM::Matrix* S_, const CAROM::Matrix *Ssinv_,
+                         const int myid, const bool hyperreduce_source_)
     : TimeDependentOperator(rrdim_ + rwdim_, 0.0),
       newton_solver(),
       fom(fom_), fomSp(fomSp_), BR(NULL), rrdim(rrdim_), rwdim(rwdim_), nldim(nldim_),
@@ -1551,8 +1542,6 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
 
         psp_R_librom = new CAROM::Vector(psp_R->GetData(), psp_R->Size(), false, false);
         psp_W_librom = new CAROM::Vector(psp_W->GetData(), psp_W->Size(), false, false);
-
-        //MFEM_VERIFY(nsamp_R == s2sp.size(), "");
     }
 
     hyperreduce = true;

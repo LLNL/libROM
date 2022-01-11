@@ -41,6 +41,7 @@ public:
      *
      * @param[in] fespace_ Arbitrarily many ParFiniteElementSpaces defined on the same full-order mesh. Each sampled variable
      *                     must be defined on one of these spaces. All spaces must be specified in the constructor.
+     *
      * @param[in] visFileName If non-empty, this filename is used for VisIt and ParaView output of the sample mesh
      *                        and the sampled DOFs on the full-order mesh.
      */
