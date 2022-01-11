@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
     int num_procs = mpi.WorldSize();
     int myid = mpi.WorldRank();
 
-    double t_final = 0.006;
+    double t_final = -1.0;
     double dtc = 0.0;
     double ddt = 0.00005;
     double dmd_epsilon = 1.0;
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 
     std::string variable = std::string(var_name);
     int dim = -1;
-    std::ifstream var_dim((std::string(list_dir) + "/dim.txt").c_str());
+    std::ifstream var_dim((std::string(data_dir) + "/dim.txt").c_str());
     var_dim >> dim;
     if (myid == 0)
     {
@@ -88,10 +88,12 @@ int main(int argc, char *argv[])
 
     StopWatch dmd_training_timer, dmd_prediction_timer;
 
-    dmd_training_timer.Start();
 
-    CAROM::AdaptiveDMD dmd(dim, ddt, "LS", "G", dmd_epsilon);;
     std::string par_dir; // *gpa 
+    std::string snap; // run_036.*
+
+    dmd_training_timer.Start();
+    CAROM::AdaptiveDMD dmd(dim, ddt, "LS", "G", dmd_epsilon);;
     std::ifstream training_par_list((std::string(list_dir) + "/training_gpa").c_str());  
     while (std::getline(training_par_list, par_dir))
     {
@@ -100,17 +102,13 @@ int main(int argc, char *argv[])
             cout << "Loading samples for " << par_dir << " to train DMD." << endl;
         }
         std::ifstream snap_ifs((std::string(list_dir) + "/" + par_dir).c_str());
-        std::string snap; // run_036.*
-        std::string time_filename; // tval.txt
-        std::string data_filename; // {zone_*,tkelv}.csv
         int num_samp = 0;
         double tval = 0.0;
         while (std::getline(snap_ifs, snap))
         {
             std::ifstream tval_ifs((std::string(data_dir) + "/" + par_dir + "/" + snap + "/tval.txt").c_str());
             tval_ifs >> tval;
-            data_filename = std::string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv"; 
-            std::ifstream data_ifs(data_filename.c_str()); 
+            std::ifstream data_ifs((std::string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv").c_str()); // {zone*, tkelv}.csv
             int row = 0;
             double data = 0.0; 
             while (data_ifs >> data)
@@ -146,10 +144,10 @@ int main(int argc, char *argv[])
     }
 
     dmd_training_timer.Stop();
-    dmd_prediction_timer.Start();
 
     int num_tests = 0;
     std::ifstream testing_par_list((std::string(list_dir) + "/testing_gpa").c_str()); 
+    CAROM::Vector* init_cond = new CAROM::Vector(dim, true);
     while (std::getline(testing_par_list, par_dir))
     {
         if (myid == 0)
@@ -157,73 +155,70 @@ int main(int argc, char *argv[])
             cout << "Predicting solution for " << par_dir << " using DMD." << endl;
         }
         std::ifstream snap_list((std::string(list_dir) + "/" + par_dir).c_str());
-        std::string snap; // run_036.*
-        std::string data_list_filename; // {zone_*,tkelv}.csv
+        std::string data_filename; // {zone_*,tkelv}.csv
         int num_steps = 0;
-        while (std::getline(snap_list, snap) && num_steps <= round(t_final/ddt))
+        double tval = 0.0;
+        while (std::getline(snap_list, snap))
         {
-            data_list_filename = std::string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv"; 
-            if (num_steps == 0)
+            std::ifstream tval_ifs((std::string(data_dir) + "/" + par_dir + "/" + snap + "/tval.txt").c_str());
+            tval_ifs >> tval;
+            data_filename = std::string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv"; 
+            std::ifstream data_ifs(data_filename.c_str()); 
+            int row = 0;
+            double data = 0.0; 
+            while (data_ifs >> data)
             {
-                std::ifstream data_list(data_list_filename.c_str()); 
-                int row = 0;
-                double data = 0.0; 
-                CAROM::Vector* init_cond = new CAROM::Vector(dim, true);
-                while (data_list >> data)
+                if (num_steps == 0)
                 {
                     init_cond->item(row++) = data; 
                 }
+                else 
+                {
+                    sample[row++] = data; 
+                }
+            }
+            if (myid == 0)
+            {
+                cout << "State " << data_filename << " read." << endl;
+            }
+            MFEM_VERIFY(row == dim, "Dimension disagree.");
+
+            if (num_steps == 0)
+            {
+                dmd.projectInitialCondition(init_cond);
+            }
+            else
+            {
+                dmd_prediction_timer.Start();
+                CAROM::Vector* result = dmd.predict(tval/ddt - 1);
+                dmd_prediction_timer.Stop();
                 if (myid == 0)
                 {
-                    cout << "Initial state " << data_list_filename << " read." << endl;
+                    cout << "Solution #" << num_steps << " predicted at t = " << tval << "." << endl;
                 }
-                MFEM_VERIFY(row == dim, "Dimension disagree.");
-                dmd.projectInitialCondition(init_cond);
-                delete init_cond;
+
+                // Calculate the relative error between the DMD final solution and the true solution.
+                Vector dmd_solution(result->getData(), result->dim());
+                Vector true_solution(sample, dim);
+                Vector diff(true_solution.Size());
+                subtract(dmd_solution, true_solution, diff);
+
+                double tot_diff_norm = sqrt(InnerProduct(MPI_COMM_WORLD, diff, diff));
+                double tot_true_solution_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution, true_solution));
+
+                if (myid == 0)
+                {
+                    cout << "Relative error of DMD solution at t = " << tval << " is " << tot_diff_norm / tot_true_solution_norm << endl;
+                }
+
+                delete result;
             }
             num_steps++;
         }
-
-        std::ifstream data_list(data_list_filename.c_str()); 
-        int row = 0;
-        double data = 0.0; 
-        while (data_list >> data)
-        {
-            sample[row++] = data;
-        }
-        if (myid == 0)
-        {
-            cout << "Final solution " << data_list_filename << " read." << endl;
-        }
-        MFEM_VERIFY(row == dim, "Dimension disagree.");
-
-        // 14. Predict the state at t_final using DMD.
-        CAROM::Vector* result = dmd.predict(num_steps - 1);
-        if (myid == 0)
-        {
-            cout << "Solution predicted at final time t_final = " << ddt * (num_steps - 1) << "." << endl;
-        }
-
-        // 15. Calculate the relative error between the DMD final solution and the true solution.
-        Vector dmd_solution(result->getData(), result->dim());
-        Vector true_solution(sample, dim);
-        Vector diff(true_solution.Size());
-        subtract(dmd_solution, true_solution, diff);
-
-        double tot_diff_norm = sqrt(InnerProduct(MPI_COMM_WORLD, diff, diff));
-        double tot_true_solution_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution, true_solution));
-
-        if (myid == 0)
-        {
-            cout << "Relative error of DMD solution at t_final is " << tot_diff_norm / tot_true_solution_norm << endl;
-        }
-
-        num_tests++;
-        delete result;
+        num_tests += num_steps;
     }
     testing_par_list.close();
 
-    dmd_prediction_timer.Stop();
     MFEM_VERIFY(num_tests > 0, "No prediction is made.");
 
     if (myid == 0)
