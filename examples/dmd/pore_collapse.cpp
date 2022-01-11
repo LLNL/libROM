@@ -29,7 +29,9 @@ int main(int argc, char *argv[])
     int myid = mpi.WorldRank();
 
     double t_final = 0.006;
-    double dt = 0.00005;
+    double dtc = 0.0;
+    double ddt = 0.00005;
+    double dmd_epsilon = 1.0;
     double ef = 1.0;
     int rdim = -1;
     const char *list_dir = "/usr/workspace/nlrom/poreCollapse/libROM_data/pore_collapse_list";
@@ -41,8 +43,12 @@ int main(int argc, char *argv[])
     OptionsParser args(argc, argv);
     args.AddOption(&t_final, "-tf", "--t-final",
                    "Final time; start time is 0.");
-    args.AddOption(&dt, "-dt", "--time-step",
-                   "Time step size.");
+    args.AddOption(&dtc, "-dtc", "--dtc", 
+                   "Fixed (constant) dt.");
+    args.AddOption(&ddt, "-ddt", "--dtime-step",
+                   "Desired Time step.");
+    args.AddOption(&dmd_epsilon, "-dmde", "--dmde",
+                   "DMD epsilon.");
     args.AddOption(&ef, "-ef", "--energy_fraction",
                    "Energy fraction for DMD.");
     args.AddOption(&rdim, "-rdim", "--rdim",
@@ -67,6 +73,8 @@ int main(int argc, char *argv[])
         args.PrintOptions(cout);
     }
 
+    if (dtc > 0.0) ddt = dtc;
+
     std::string variable = std::string(var_name);
     int dim = -1;
     std::ifstream var_dim((std::string(list_dir) + "/dim.txt").c_str());
@@ -81,7 +89,7 @@ int main(int argc, char *argv[])
 
     dmd_training_timer.Start();
 
-    CAROM::DMD dmd(dim);
+    CAROM::AdaptiveDMD dmd(dim, ddt, "LS", "G", dmd_epsilon);;
     std::string par_dir; // *gpa 
     std::ifstream training_par_list((std::string(list_dir) + "/training_gpa").c_str());  
     while (std::getline(training_par_list, par_dir))
@@ -98,14 +106,20 @@ int main(int argc, char *argv[])
         {
             data_list_filename = std::string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv"; 
             std::ifstream data_list(data_list_filename.c_str()); 
-            int row = 0;
+            double t = 0.0;
+            int row = -1;
             double data = 0.0; 
             while (data_list >> data)
             {
-                sample[row++] = data;
+                if (row >= 0) sample[row++] = data;
+                else
+                {
+                    t = data;
+                    row = 0;
+                }
             }
             MFEM_VERIFY(row == dim, "Dimension disagree.");
-            dmd.takeSample(sample);
+            dmd.takeSample(sample, t);
             num_samp++;
         }
         if (myid == 0)
@@ -147,7 +161,7 @@ int main(int argc, char *argv[])
         std::string snap; // run_036.*
         std::string data_list_filename; // {zone_*,tkelv}.csv
         int num_steps = 0;
-        while (std::getline(snap_list, snap) && num_steps <= round(t_final/dt))
+        while (std::getline(snap_list, snap) && num_steps <= round(t_final/ddt))
         {
             data_list_filename = std::string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv"; 
             if (num_steps == 0)
@@ -188,7 +202,7 @@ int main(int argc, char *argv[])
         CAROM::Vector* result = dmd.predict(num_steps - 1);
         if (myid == 0)
         {
-            cout << "Solution predicted at final time t_final = " << dt * (num_steps - 1) << "." << endl;
+            cout << "Solution predicted at final time t_final = " << ddt * (num_steps - 1) << "." << endl;
         }
 
         // 15. Calculate the relative error between the DMD final solution and the true solution.
