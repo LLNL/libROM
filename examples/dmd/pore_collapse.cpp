@@ -12,6 +12,7 @@
 
 #include "mfem.hpp"
 #include "algo/DMD.h"
+#include "algo/AdaptiveDMD.h"
 #include "linalg/Vector.h"
 #include "utils/HDFDatabase.h"
 #include <cmath>
@@ -106,7 +107,7 @@ int main(int argc, char *argv[])
         double tval = 0.0;
         while (std::getline(snap_ifs, snap))
         {
-            std::ifstream tval_ifs((std::string(data_dir) + "/" + par_dir + "/" + snap + "/tval.txt").c_str()) 
+            std::ifstream tval_ifs((std::string(data_dir) + "/" + par_dir + "/" + snap + "/tval.txt").c_str());
             tval_ifs >> tval;
             data_filename = std::string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv"; 
             std::ifstream data_ifs(data_filename.c_str()); 
