@@ -20,6 +20,10 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 LIB_DIR=$SCRIPT_DIR/../dependencies
 mkdir -p $LIB_DIR
 
+export CFLAGS="-fPIC"
+export CPPFLAGS="-fPIC"
+export CXXFLAGS="-fPIC"
+
 # Install HYPRE
 cd $LIB_DIR
 if [ ! -d "hypre" ]; then
@@ -47,6 +51,10 @@ if [ ! -d "parmetis-4.0.3" ]; then
   ln -s $MACHINE_ARCH lib
 fi
 
+unset CFLAGS
+unset CPPFLAGS
+unset CXXFLAGS
+
 METIS_DIR=$LIB_DIR/parmetis-4.0.3
 METIS_OPT=-I${METIS_DIR}/metis/include
 METIS_LIB="-L${METIS_DIR}/build/lib/libparmetis -lparmetis -L${METIS_DIR}/build/lib/libmetis -lmetis"
@@ -61,7 +69,7 @@ if [[ $BUILD_TYPE == "Debug" ]]; then
     if [[ $UPDATE_LIBS == "true" ]]; then
         cd mfem_debug
         git pull
-        make pdebug -j MFEM_USE_MPI=YES MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB"
+        make pdebug -j STATIC=NO SHARED=YES MFEM_USE_MPI=YES MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB"
     fi
     cd $LIB_DIR
     rm mfem
@@ -74,7 +82,7 @@ else
     if [[ $UPDATE_LIBS == "true" ]]; then
         cd mfem_parallel
         git pull
-        make parallel -j MFEM_USE_MPI=YES MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB"
+        make parallel -j STATIC=NO SHARED=YES MFEM_USE_MPI=YES MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB"
     fi
     cd $LIB_DIR
     rm mfem
