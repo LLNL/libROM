@@ -74,8 +74,6 @@ int main(int argc, char *argv[])
         args.PrintOptions(cout);
     }
 
-    if (dtc > 0.0) ddt = dtc;
-
     std::string variable = std::string(var_name);
     int dim = -1;
     std::ifstream var_dim((std::string(data_dir) + "/dim.txt").c_str());
@@ -92,8 +90,15 @@ int main(int argc, char *argv[])
     std::string par_dir; // *gpa 
     std::string snap; // run_036.*
 
-    //CAROM::DMD dmd(dim); // TODO: unify?
-    CAROM::AdaptiveDMD dmd(dim, ddt, "LS", "G", dmd_epsilon);
+    CAROM::DMD* dmd = nullptr;
+    if (dtc > 0.0){
+        ddt = dtc;
+        dmd = new CAROM::DMD(dim);
+    }
+    else
+    {
+        dmd = new CAROM::AdaptiveDMD(dim, ddt, "LS", "G", dmd_epsilon);
+    }
 
     dmd_training_timer.Start();
     std::ifstream training_par_list((std::string(list_dir) + "/training_gpa").c_str());  
@@ -118,7 +123,7 @@ int main(int argc, char *argv[])
                 sample[row++] = data;
             }
             MFEM_VERIFY(row == dim, "Dimension disagree.");
-            dmd.takeSample(sample, tval);
+            dmd->takeSample(sample, tval);
             num_samp++;
         }
         if (myid == 0)
@@ -134,7 +139,7 @@ int main(int argc, char *argv[])
         {
             cout << "Creating DMD with rdim: " << rdim << endl;
         }
-        dmd.train(rdim);
+        dmd->train(rdim);
     }
     else if (ef != -1)
     {
@@ -142,7 +147,7 @@ int main(int argc, char *argv[])
         {
             cout << "Creating DMD with energy fraction: " << ef << endl;
         }
-        dmd.train(ef);
+        dmd->train(ef);
     }
 
     dmd_training_timer.Stop();
@@ -188,7 +193,7 @@ int main(int argc, char *argv[])
 
             if (num_steps == 0)
             {
-                dmd.projectInitialCondition(init_cond);
+                dmd->projectInitialCondition(init_cond);
                 if (t_final > 0.0)
                 {
                     num_tests = 1;
@@ -197,7 +202,7 @@ int main(int argc, char *argv[])
                         cout << "Predicting DMD solution at t = " << t_final << "." << endl;
                     }
                     dmd_prediction_timer.Start();
-                    result = dmd.predict(t_final/ddt);
+                    result = dmd->predict(t_final/ddt);
                     dmd_prediction_timer.Stop();
                     // TODO: store result
                     break;
@@ -212,7 +217,7 @@ int main(int argc, char *argv[])
                     cout << "DMD power = " << dmd_power << "." << endl;
                 }
                 dmd_prediction_timer.Start();
-                result = dmd.predict(dmd_power);
+                result = dmd->predict(dmd_power);
                 dmd_prediction_timer.Stop();
 
                 // Calculate the relative error between the DMD final solution and the true solution.
