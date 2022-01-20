@@ -14,6 +14,7 @@
 #include "algo/DMD.h"
 #include "algo/AdaptiveDMD.h"
 #include "linalg/Vector.h"
+#include "linalg/Matrix.h"
 #include "utils/HDFDatabase.h"
 #include <cmath>
 #include <fstream>
@@ -91,17 +92,19 @@ int main(int argc, char *argv[])
     std::string snap; // run_036.*
 
     CAROM::DMD* dmd = nullptr;
+    CAROM::AdaptiveDMD* admd = nullptr;
     if (dtc > 0.0){
-        ddt = dtc;
         dmd = new CAROM::DMD(dim);
     }
     else
     {
         dmd = new CAROM::AdaptiveDMD(dim, ddt, "LS", "G", dmd_epsilon);
+        admd = dynamic_cast<CAROM::AdaptiveDMD*> (dmd);
     }
 
-    dmd_training_timer.Start();
+    int num_tests = 0;
     std::ifstream training_par_list((std::string(list_dir) + "/training_gpa").c_str());  
+    dmd_training_timer.Start();
     while (std::getline(training_par_list, par_dir))
     {
         if (myid == 0)
@@ -130,6 +133,7 @@ int main(int argc, char *argv[])
         {
             cout << "Loaded " << num_samp << " samples for " << par_dir << "." << endl;
         }
+        num_tests++;
     }
     training_par_list.close();
 
@@ -152,10 +156,45 @@ int main(int argc, char *argv[])
 
     dmd_training_timer.Stop();
 
-    int num_tests = 0;
+    CAROM::Vector* result = new CAROM::Vector(dim, true);
+    if (admd)
+    {
+        MFEM_VERIFY(num_tests == 1, "Adaptive DMD only works with 1 training parameter.");
+        dtc = admd->getTruedt();
+        const CAROM::Matrix* f_snapshots = admd->getInterpolatedSnapshots();
+        CAROM::Vector* isnap = new CAROM::Vector(dim, true);
+        if (myid == 0)
+        {
+            cout << "Verifying Adaptive DMD solution." << endl;
+        }
+        for (int k = 0; k < f_snapshots->numColumns(); ++k)
+        {
+            double tval = k * dtc;
+            f_snapshots->getColumn(k, isnap);
+            result = admd->predict(k);
+
+            Vector dmd_solution(result->getData(), dim);
+            Vector true_solution(isnap->getData(), dim);
+            Vector diff(true_solution.Size());
+            subtract(dmd_solution, true_solution, diff);
+
+            double tot_diff_norm = sqrt(InnerProduct(MPI_COMM_WORLD, diff, diff));
+            double tot_true_solution_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution, true_solution));
+
+            if (myid == 0)
+            {
+                printf("Total elapsed time for predicting DMD: %e second\n", dmd_prediction_timer.RealTime());
+                cout << "Norm of true solution at t = " << tval << " is " << tot_true_solution_norm << endl;
+                cout << "Absolute error of DMD solution at t = " << tval << " is " << tot_diff_norm << endl;
+                cout << "Relative error of DMD solution at t = " << tval << " is " << tot_diff_norm / tot_true_solution_norm << endl;
+            }
+        }
+        delete isnap;
+    }
+
+    num_tests = 0;
     std::ifstream testing_par_list((std::string(list_dir) + "/testing_gpa").c_str()); 
     CAROM::Vector* init_cond = new CAROM::Vector(dim, true);
-    CAROM::Vector* result = new CAROM::Vector(dim, true);
 
     while (std::getline(testing_par_list, par_dir))
     {
@@ -195,7 +234,7 @@ int main(int argc, char *argv[])
             if (num_steps == 0)
             {
                 dmd->projectInitialCondition(init_cond);
-                if (t_final > 0.0)
+                if (t_final > 0.0) // Practical prediction
                 {
                     num_tests = 1;
                     if (myid == 0)
@@ -203,15 +242,15 @@ int main(int argc, char *argv[])
                         cout << "Predicting DMD solution at t = " << t_final << "." << endl;
                     }
                     dmd_prediction_timer.Start();
-                    result = dmd->predict(t_final/ddt);
+                    result = dmd->predict(t_final/dtc);
                     dmd_prediction_timer.Stop();
                     // TODO: store result
-                    break;
+                    return 0;
                 }
             }
-            else // Verify DMD prediction results
+            else // Verify DMD prediction results against dataset
             {
-                double dmd_power = (dtc > 0) ? num_steps : tval/ddt;
+                double dmd_power = tval/dtc;
                 if (myid == 0)
                 {
                     cout << "Predicting DMD solution #" << num_steps << " at t = " << tval << "." << endl;
@@ -246,6 +285,7 @@ int main(int argc, char *argv[])
     testing_par_list.close();
 
     MFEM_VERIFY(num_tests > 0, "No prediction is made.");
+
     if (myid == 0)
     {
         printf("Elapsed time for training DMD: %e second\n", dmd_training_timer.RealTime());
@@ -255,5 +295,7 @@ int main(int argc, char *argv[])
 
     delete sample;
     delete result;
+    delete init_cond;
+    delete dmd;
     return 0;
 }

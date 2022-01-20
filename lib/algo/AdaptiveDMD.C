@@ -121,4 +121,13 @@ const Matrix* AdaptiveDMD::interpolateSnapshots()
     return createSnapshotMatrix(interpolated_snapshots);
 }
 
+double AdaptiveDMD::getTruedt()
+{
+    return d_dt;
+}
+
+const Matrix* AdaptiveDMD::getInterpolatedSnapshots()
+{
+    return interpolateSnapshots();
+}
 }

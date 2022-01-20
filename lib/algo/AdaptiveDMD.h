@@ -66,6 +66,10 @@ public:
      */
     void train(int k);
 
+    double getTruedt();
+
+    const Matrix* getInterpolatedSnapshots(); 
+
 private:
 
     /**
@@ -85,11 +89,6 @@ private:
     AdaptiveDMD&
     operator = (
         const AdaptiveDMD& rhs);
-
-    /**
-     * @brief Internal function to obtain the interpolated snapshots.
-     */
-    const Matrix* interpolateSnapshots();
 
     /**
      * @brief The stored times of each sample.
@@ -112,6 +111,11 @@ private:
      *        lagrangian polynomials)
      */
     std::string d_interp_method;
+
+    /**
+     * @brief Internal function to obtain the interpolated snapshots.
+     */
+    const Matrix* interpolateSnapshots();
 
     /**
      * @brief The RBF parameter that determines the width of influence.
