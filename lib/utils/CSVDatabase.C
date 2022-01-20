@@ -15,9 +15,6 @@
 
 namespace CAROM {
 
-const int CSVDatabase::KEY_DOUBLE_ARRAY = 0;
-const int CSVDatabase::KEY_INT_ARRAY = 1;
-
 CSVDatabase::CSVDatabase() :
     d_file_name("")
 {
