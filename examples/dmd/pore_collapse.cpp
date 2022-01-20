@@ -156,6 +156,7 @@ int main(int argc, char *argv[])
     std::ifstream testing_par_list((std::string(list_dir) + "/testing_gpa").c_str()); 
     CAROM::Vector* init_cond = new CAROM::Vector(dim, true);
     CAROM::Vector* result = new CAROM::Vector(dim, true);
+
     while (std::getline(testing_par_list, par_dir))
     {
         if (myid == 0)
@@ -243,10 +244,8 @@ int main(int argc, char *argv[])
         num_tests += num_steps;
     }
     testing_par_list.close();
-    delete result;
 
     MFEM_VERIFY(num_tests > 0, "No prediction is made.");
-
     if (myid == 0)
     {
         printf("Elapsed time for training DMD: %e second\n", dmd_training_timer.RealTime());
@@ -255,5 +254,6 @@ int main(int argc, char *argv[])
     }
 
     delete sample;
+    delete result;
     return 0;
 }
