@@ -58,7 +58,7 @@ CSVDatabase::putIntegerArray(
     std::ofstream d_fs(key.c_str());
     for (int i = 0; i < nelements; ++i)
     {
-        d_fs << data[i];
+        d_fs << data[i] << std::endl;
     }
 }
 
@@ -75,7 +75,7 @@ CSVDatabase::putDoubleArray(
     std::ofstream d_fs(key.c_str());
     for (int i = 0; i < nelements; ++i)
     {
-        d_fs << data[i];
+        d_fs << data[i] << std::endl;
     }
 }
 
@@ -91,16 +91,16 @@ CSVDatabase::getIntegerArray(
 #endif
 
     std::ifstream d_fs(key.c_str());
-    std::Vector<int> tmp;
+    std::vector<int> tmp;
     int data_entry = 0.0;
     while (d_fs >> data_entry)
     {
         tmp.push_back(data_entry);
     }
-    data = new int[tmp.Size()];
-    for (int i = 0; i < tmp.Size(); ++i)
+    data = new int[tmp.Ssze()];
+    for (int i = 0; i < tmp.size(); ++i)
     {
-        data[i] = tmp(i);
+        data[i] = tmp[i];
     }
 }
 
@@ -116,16 +116,16 @@ CSVDatabase::getDoubleArray(
 #endif
 
     std::ifstream d_fs(key.c_str());
-    std::Vector<double> tmp;
+    std::vector<double> tmp;
     double data_entry = 0.0;
     while (d_fs >> data_entry)
     {
         tmp.push_back(data_entry);
     }
-    data = new double[tmp.Size()];
-    for (int i = 0; i < tmp.Size(); ++i)
+    data = new double[tmp.size()];
+    for (int i = 0; i < tmp.size(); ++i)
     {
-        data[i] = tmp(i);
+        data[i] = tmp[i];
     }
 }
 
