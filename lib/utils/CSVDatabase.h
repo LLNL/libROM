@@ -169,7 +169,7 @@ public:
     void
     getDoubleArray(
         const std::string& key,
-        double* dat5a,
+        double* data,
         int nelements,
         int offset,
         int block_size,
