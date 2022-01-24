@@ -100,7 +100,6 @@ CSVDatabase::getIntegerArray(
         tmp.push_back(data_entry);
     }
     CAROM_ASSERT(nelements == tmp.size());
-    data = new int[tmp.size()];
     for (int i = 0; i < tmp.size(); ++i)
     {
         data[i] = tmp[i];
@@ -127,7 +126,6 @@ CSVDatabase::getDoubleArray(
         tmp.push_back(data_entry);
     }
     CAROM_ASSERT(nelements == tmp.size());
-    data = new double[tmp.size()];
     for (int i = 0; i < tmp.size(); ++i)
     {
         data[i] = tmp[i];
@@ -151,7 +149,6 @@ CSVDatabase::getDoubleArray(
 
     std::ifstream d_fs(key.c_str());
     std::string line, data_entry;
-    int* data = new int[nelements];
     int count = 0;
     while (count < nelements && r_fs >> line)
     {
@@ -160,7 +157,7 @@ CSVDatabase::getDoubleArray(
         {
             if (offset-- > stride)
             {
-                data[count++] = std::stoi(data_entry); 
+                data[count++] = std::stod(data_entry); 
             }
             if (offset == 0)
             {
