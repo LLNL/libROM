@@ -68,7 +68,7 @@ public:
      * @param[in] num_cols The total number of columns of the Matrix.
      * @param[in] distributed If true the rows of the Matrix are spread over
      *                        all processors.
-     * @param[in] copy_data If true the matrix allocates is own storage and
+     * @param[in] copy_data If true the matrix allocates its own storage and
      *                      copies the contents of mat into its own storage.
      *                      Otherwise it uses mat as its storage.
      */
