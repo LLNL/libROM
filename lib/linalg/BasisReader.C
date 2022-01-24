@@ -12,6 +12,7 @@
 
 #include "BasisReader.h"
 #include "utils/HDFDatabase.h"
+#include "utils/CSVDatabase.h"
 #include "Matrix.h"
 #include "Vector.h"
 #include "mpi.h"
