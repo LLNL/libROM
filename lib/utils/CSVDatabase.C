@@ -12,11 +12,11 @@
 
 #include "CSVDatabase.h"
 #include "Utilities.h"
+#include <vector>
 
 namespace CAROM {
 
-CSVDatabase::CSVDatabase() :
-    d_file_name("")
+CSVDatabase::CSVDatabase()
 {
 }
 
@@ -150,7 +150,7 @@ CSVDatabase::getDoubleArray(
     std::ifstream d_fs(key.c_str());
     std::string line, data_entry;
     int count = 0;
-    while (count < nelements && r_fs >> line)
+    while (count < nelements && d_fs >> line)
     {
         std::stringstream ss(line);
         while (std::getline(ss, data_entry, ','))
