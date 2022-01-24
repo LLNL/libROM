@@ -43,6 +43,9 @@ BasisReader::BasisReader(
     if (db_format == Database::HDF5) {
         d_database = new HDFDatabase();
     }
+    else if (db_format == Database::CSV) {
+        d_database = new CSVDatabase();
+    }
 
     std::cout << "Opening file: " << full_file_name << std::endl;
     d_database->open(full_file_name, "r");
