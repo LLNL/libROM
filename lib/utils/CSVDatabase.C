@@ -99,7 +99,7 @@ CSVDatabase::getIntegerArray(
     {
         tmp.push_back(data_entry);
     }
-    data = new int[tmp.Ssze()];
+    data = new int[tmp.size()];
     for (int i = 0; i < tmp.size(); ++i)
     {
         data[i] = tmp[i];
