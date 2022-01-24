@@ -87,7 +87,6 @@ int main(int argc, char *argv[])
 
     StopWatch dmd_training_timer, dmd_prediction_timer;
 
-
     std::string par_dir; // *gpa 
     std::string snap; // run_036.*
 
@@ -297,5 +296,6 @@ int main(int argc, char *argv[])
     delete result;
     delete init_cond;
     delete dmd;
+    delete admd;
     return 0;
 }
