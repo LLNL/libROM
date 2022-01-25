@@ -191,8 +191,14 @@ int main(int argc, char *argv[])
         delete isnap;
     }
 
-    num_tests = 0;
     std::ifstream testing_par_list((std::string(list_dir) + "/testing_gpa").c_str()); 
+    if (testing_par_list.fail())
+    {
+        testing_par_list.clear();
+        testing_par_list.open((std::string(list_dir) + "/training_gpa").c_str());
+    }
+
+    num_tests = 0;
     CAROM::Vector* init_cond = new CAROM::Vector(dim, true);
 
     while (std::getline(testing_par_list, par_dir))
