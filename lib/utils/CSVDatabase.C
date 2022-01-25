@@ -95,15 +95,12 @@ CSVDatabase::getIntegerArray(
     std::ifstream d_fs(key.c_str());
     std::vector<int> tmp;
     int data_entry = 0.0;
-    while (d_fs >> data_entry)
+    for (int i = 0; i < nelements; ++i)
     {
-        tmp.push_back(data_entry);
+        d_fs >> data_entry;
+        data[i] = data_entry;
     }
-    CAROM_ASSERT(nelements == tmp.size());
-    for (int i = 0; i < tmp.size(); ++i)
-    {
-        data[i] = tmp[i];
-    }
+    CAROM_ASSERT(d_fs.eof());
     d_fs.close();
 }
 
@@ -119,17 +116,13 @@ CSVDatabase::getDoubleArray(
 #endif
 
     std::ifstream d_fs(key.c_str());
-    std::vector<double> tmp;
     double data_entry = 0.0;
-    while (d_fs >> data_entry)
+    for (int i = 0; i < nelements; ++i)
     {
-        tmp.push_back(data_entry);
+        d_fs >> data_entry;
+        data[i] = data_entry;
     }
-    CAROM_ASSERT(nelements == tmp.size());
-    for (int i = 0; i < tmp.size(); ++i)
-    {
-        data[i] = tmp[i];
-    }
+    CAROM_ASSERT(d_fs.eof());
     d_fs.close();
 }
 
@@ -152,8 +145,8 @@ CSVDatabase::getDoubleArray(
     int count = 0;
     while (count < nelements && d_fs >> line)
     {
-        std::stringstream ss(line);
-        while (std::getline(ss, data_entry, ','))
+        std::stringstream d_ss(line);
+        while (std::getline(d_ss, data_entry, ','))
         {
             if (offset-- > stride)
             {
