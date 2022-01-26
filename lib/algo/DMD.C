@@ -166,6 +166,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
         double total_energy = 0.0;
         for (int i = 0; i < num_singular_vectors; i++)
         {
+            std::cout << "Singular value #" << i << ": " << d_factorizer->S[i] << std::endl;
             total_energy += d_factorizer->S[i];
         }
         double current_energy = 0.0;
@@ -215,6 +216,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
     // Calculate the right eigenvalues/eigenvectors of A_tilde
     ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(A_tilde);
     d_eigs = eigenpair.eigs;
+    for (int i = 0; i < d_eigs.size(); ++i) std::cout << "Eigenvalue #" << i << ": " << d_eigs[i] << std::endl;
 
     // Calculate phi
     Matrix* f_snapshots_plus_mult_d_basis_right = f_snapshots_plus->mult(d_basis_right);
