@@ -46,6 +46,7 @@ set(module_list
   hyperreduction/STSampling
   utils/Database
   utils/HDFDatabase
+  utils/CSVDatabase
   utils/Utilities
   utils/ParallelBuffer)
 set(source_files)

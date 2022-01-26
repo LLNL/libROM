@@ -8,50 +8,51 @@
  *
  *****************************************************************************/
 
-// Description: The abstract database class defines interface for databases.
+// Description: The concrete database implementation using CSV.
 
-#ifndef included_Database_h
-#define included_Database_h
+#ifndef included_CSVDatabase_h
+#define included_CSVDatabase_h
 
+#include "Database.h"
 #include <string>
+#include <fstream>
+#include <sstream>
 
 namespace CAROM {
 
 /**
- * Class Database is an abstract base class that provides basic ability to
- * write to and read from a file.  It's capabilities are limited to what the
- * SVD algorithm needs to read and write its basis vectors.
+ * CSVDatabase implements the interface of Database for CSV database files.
  */
-class Database
+class CSVDatabase : public Database
 {
 public:
     /**
      * @brief Default constructor.
      */
-    Database();
+    CSVDatabase();
 
     /**
      * @brief Destructor.
      */
     virtual
-    ~Database();
+    ~CSVDatabase();
 
     /**
-     * @brief Creates a new database file with the supplied name.
+     * @brief Creates a new CSV database file with the supplied name.
      *
-     * @param[in] file_name Name of database file to create.
+     * @param[in] file_name Name of CSV database file to create.
      *
      * @return True if file create was successful.
      */
     virtual
     bool
     create(
-        const std::string& file_name) = 0;
+        const std::string& file_name);
 
     /**
-     * @brief Opens an existing database file with the supplied name.
+     * @brief Opens an existing CSV database file with the supplied name.
      *
-     * @param[in] file_name Name of existing database file to open.
+     * @param[in] file_name Name of existing CSV database file to open.
      * @param[in] type Read/write type ("r"/"wr")
      *
      * @return True if file open was successful.
@@ -60,35 +61,24 @@ public:
     bool
     open(
         const std::string& file_name,
-        const std::string& type) = 0;
+        const std::string& type);
 
     /**
-     * @brief Closes the currently open database file.
+     * @brief Closes the currently open CSV database file.
      *
      * @return True if the file close was successful.
      */
     virtual
     bool
-    close() = 0;
-
-    /**
-     * @brief Writes an integer associated with the supplied key to currently
-     *        open database file.
-     *
-     * @param[in] key The key associated with the value to be written.
-     * @param[in] data The integer value to be written.
-     */
-    void
-    putInteger(
-        const std::string& key,
-        int data)
-    {
-        putIntegerArray(key, &data, 1);
-    }
+    close();
 
     /**
      * @brief Writes an array of integers associated with the supplied key to
-     *        the currently open database file.
+     * the currently open CSV database file.
+     *
+     * @pre !key.empty()
+     * @pre data != 0
+     * @pre nelements > 0
      *
      * @param[in] key The key associated with the array of values to be
      *                written.
@@ -100,26 +90,15 @@ public:
     putIntegerArray(
         const std::string& key,
         const int* const data,
-        int nelements) = 0;
-
-    /**
-     * @brief Writes a double associated with the supplied key to currently
-     *        open database file.
-     *
-     * @param[in] key The key associated with the value to be written.
-     * @param[in] data The double value to be written.
-     */
-    void
-    putDouble(
-        const std::string& key,
-        double data)
-    {
-        putDoubleArray(key, &data, 1);
-    }
+        int nelements);
 
     /**
      * @brief Writes an array of doubles associated with the supplied key to
-     *        the currently open database file.
+     * the currently open CSV database file.
+     *
+     * @pre !key.empty()
+     * @pre data != 0
+     * @pre nelements > 0
      *
      * @param[in] key The key associated with the array of values to be
      *                written.
@@ -131,26 +110,14 @@ public:
     putDoubleArray(
         const std::string& key,
         const double* const data,
-        int nelements) = 0;
-
-    /**
-     * @brief Reads an integer associated with the supplied key from the
-     *        currently open database file.
-     *
-     * @param[in] key The key associated with the value to be read.
-     * @param[out] data The integer value read.
-     */
-    void
-    getInteger(
-        const std::string& key,
-        int& data)
-    {
-        getIntegerArray(key, &data, 1);
-    }
+        int nelements);
 
     /**
      * @brief Reads an array of integers associated with the supplied key
-     *        from the currently open database file.
+     * from the currently open CSV database file.
+     *
+     * @pre !key.empty()
+     * @pre data != 0 || nelements == 0
      *
      * @param[in] key The key associated with the array of values to be
      *                read.
@@ -162,26 +129,14 @@ public:
     getIntegerArray(
         const std::string& key,
         int* data,
-        int nelements) = 0;
-
-    /**
-     * @brief Reads a double associated with the supplied key from the
-     *        currently open database file.
-     *
-     * @param[in] key The key associated with the value to be read.
-     * @param[out] data The double value read.
-     */
-    void
-    getDouble(
-        const std::string& key,
-        double& data)
-    {
-        getDoubleArray(key, &data, 1);
-    }
+        int nelements);
 
     /**
      * @brief Reads an array of doubles associated with the supplied key
-     *        from the currently open database file.
+     * from the currently open CSV database file.
+     *
+     * @pre !key.empty()
+     * @pre data != 0 || nelements == 0
      *
      * @param[in] key The key associated with the array of values to be
      *                read.
@@ -193,19 +148,22 @@ public:
     getDoubleArray(
         const std::string& key,
         double* data,
-        int nelements) = 0;
+        int nelements);
 
     /**
      * @brief Reads an array of doubles associated with the supplied key
-     *        from the currently open database file.
+     * from the currently open CSV database file.
+     *
+     * @pre !key.empty()
+     * @pre data != 0 || nelements == 0
      *
      * @param[in] key The key associated with the array of values to be
      *                read.
      * @param[out] data The allocated array of double values to be read.
      * @param[in] nelements The number of doubles in the array.
      * @param[in] offset The initial offset in the array.
-     * @param[in] block_size The block size to read from the HDF5 dataset.
-     * @param[in] stride The stride to read from the HDF5 dataset.
+     * @param[in] block_size The block size to read from the CSV dataset.
+     * @param[in] stride The stride to read from the CSV dataset.
      */
     virtual
     void
@@ -215,30 +173,22 @@ public:
         int nelements,
         int offset,
         int block_size,
-        int stride) = 0;
-
-    /**
-     * @brief Implemented database file formats. Add to this enum each time a
-     *        new database format is implemented.
-     */
-    enum formats {
-        HDF5,
-        CSV
-    };
+        int stride);
 
 private:
     /**
      * @brief Unimplemented copy constructor.
      */
-    Database(
-        const Database& other);
+    CSVDatabase(
+        const CSVDatabase& other);
 
     /**
      * @brief Unimplemented assignment operator.
      */
-    Database&
+    CSVDatabase&
     operator = (
-        const Database& rhs);
+        const CSVDatabase& rhs);
+
 };
 
 }
