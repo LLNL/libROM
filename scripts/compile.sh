@@ -13,10 +13,11 @@
 ARDRA=false
 BUILD_TYPE="Optimized"
 USE_MFEM="Off"
+MFEM_DIR=""
 UPDATE_LIBS=false
 
 # Get options
-while getopts "ah:dh:mh:t:uh" o;
+while getopts "ah:dh:mh:p:t:uh" o;
 do
     case "${o}" in
         a)
@@ -27,6 +28,9 @@ do
             ;;
         m)
             USE_MFEM="On"
+            ;;
+        p)
+            MFEM_DIR=${OPTARG}
             ;;
         t)
             TOOLCHAIN_FILE=${OPTARG}
@@ -83,7 +87,8 @@ if [ "$(uname)" == "Darwin" ]; then
   brew list cmake > /dev/null || brew install cmake
   cmake ${REPO_PREFIX} \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-        -DUSE_MFEM=${USE_MFEM}
+        -DUSE_MFEM=${USE_MFEM} \
+        -DMFEM_DIR=${MFEM_DIR}
   make
 elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
   if [[ $ARDRA == "true" ]]; then
@@ -94,7 +99,8 @@ elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
   cmake ${REPO_PREFIX} \
         -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-        -DUSE_MFEM=${USE_MFEM}
+        -DUSE_MFEM=${USE_MFEM} \
+        -DMFEM_DIR=${MFEM_DIR}
   make -j8
 fi
 popd
