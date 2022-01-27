@@ -81,6 +81,7 @@ void AdaptiveDMD::train(int k)
 void AdaptiveDMD::interpolateSnapshots()
 {
     CAROM_VERIFY(d_sampled_times.back()->item(0) > d_dt);
+    CAROM_VERIFY(d_interp_snapshots.size() == 0);
 
     // Find the nearest dt that evenly divides the snapshots.
     int num_time_steps = std::round(d_sampled_times.back()->item(0) / d_dt);
@@ -98,8 +99,6 @@ void AdaptiveDMD::interpolateSnapshots()
         f_T = solveLinearSystem(d_sampled_times, d_snapshots, d_interp_method, d_rbf, d_epsilon);
         std::cout << "Epsilon auto-corrected by the linear solve to " << d_epsilon << std::endl;
     }
-
-    CAROM_ASSERT(d_interp_snapshots.size() == 0);
 
     // Create interpolated snapshots using d_dt as the desired dt.
     for (int i = 0; i <= num_time_steps; i++)
