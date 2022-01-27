@@ -15,6 +15,7 @@
 #include "linalg/Matrix.h"
 #include "linalg/Vector.h"
 #include "linalg/scalapack_wrapper.h"
+#include "utils/CSVDatabase.h"
 #include "mpi.h"
 
 /* Use C++11 built-in shared pointers if available; else fallback to Boost. */
@@ -182,6 +183,8 @@ DMD::constructDMD(const Matrix* f_snapshots,
     }
 
     std::cout << "Using " << d_k << " basis vectors out of " << num_singular_vectors << "." << std::endl;
+    CSVDatabase* db_CSVOutput(new CSVDatabase);
+    db_CSVOutput->putDoubleArray("SV.csv", d_factorizer->S, num_singular_vectors);
 
     // Allocate the appropriate matrices and gather their elements.
     Matrix* d_basis = new Matrix(f_snapshots->numRows(), d_k, f_snapshots->distributed());
@@ -248,6 +251,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
     delete eigenpair.ev_real;
     delete eigenpair.ev_imaginary;
     delete init;
+    delete db_CSVOutput;
 }
 
 

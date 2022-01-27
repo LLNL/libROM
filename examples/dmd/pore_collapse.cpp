@@ -302,6 +302,5 @@ int main(int argc, char *argv[])
     delete result;
     delete init_cond;
     delete dmd;
-    delete admd;
     return 0;
 }
