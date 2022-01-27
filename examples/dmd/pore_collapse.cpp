@@ -16,6 +16,7 @@
 #include "linalg/Vector.h"
 #include "linalg/Matrix.h"
 #include "utils/HDFDatabase.h"
+#include "utils/CSVDatabase.h"
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -84,6 +85,7 @@ int main(int argc, char *argv[])
         cout << "Variable " << var_name << " has dimension " << dim << "." << endl;
     }
     double* sample = new double[dim];
+    CAROM::CSVDatabase* csv_db(new CAROM::CSVDatabase);
 
     StopWatch dmd_training_timer, dmd_prediction_timer;
 
@@ -102,6 +104,7 @@ int main(int argc, char *argv[])
     }
 
     int num_tests = 0;
+    std::string data_filename; 
     std::ifstream training_par_list((std::string(list_dir) + "/training_gpa").c_str());  
     dmd_training_timer.Start();
     while (std::getline(training_par_list, par_dir))
@@ -115,16 +118,9 @@ int main(int argc, char *argv[])
         double tval = 0.0;
         while (std::getline(snap_ifs, snap))
         {
-            std::ifstream tval_ifs((std::string(data_dir) + "/" + par_dir + "/" + snap + "/tval.txt").c_str());
-            tval_ifs >> tval;
-            std::ifstream data_ifs((std::string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv").c_str()); // {zone*, tkelv}.csv
-            int row = 0;
-            double data = 0.0; 
-            while (data_ifs >> data)
-            {
-                sample[row++] = data;
-            }
-            MFEM_VERIFY(row == dim, "Dimension disagree.");
+            csv_db->getDoubleArray(std::string(data_dir) + "/" + par_dir + "/" + snap + "/tval.txt", &tval, 1);
+            data_filename = std::string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv"; // {zone_*,tkelv}.csv
+            csv_db->getDoubleArray(data_filename, sample, dim);
             dmd->takeSample(sample, tval);
             num_samp++;
         }
@@ -208,36 +204,24 @@ int main(int argc, char *argv[])
             cout << "Predicting solution for " << par_dir << " using DMD." << endl;
         }
         std::ifstream snap_list((std::string(list_dir) + "/" + par_dir).c_str());
-        std::string data_filename; // {zone_*,tkelv}.csv
         int num_steps = 0;
         double tval = 0.0;
         while (std::getline(snap_list, snap))
         {
-            std::ifstream tval_ifs((std::string(data_dir) + "/" + par_dir + "/" + snap + "/tval.txt").c_str());
-            tval_ifs >> tval;
-            data_filename = std::string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv"; 
-            std::ifstream data_ifs(data_filename.c_str()); 
-            int row = 0;
-            double data = 0.0; 
-            while (data_ifs >> data)
-            {
-                if (num_steps == 0)
-                {
-                    init_cond->item(row++) = data; 
-                }
-                else 
-                {
-                    sample[row++] = data; 
-                }
-            }
+            csv_db->getDoubleArray(std::string(data_dir) + "/" + par_dir + "/" + snap + "/tval.txt", &tval, 1);
+            data_filename = std::string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv"; // {zone_*,tkelv}.csv
+            csv_db->getDoubleArray(data_filename, sample, dim);
             if (myid == 0)
             {
                 cout << "State " << data_filename << " read." << endl;
             }
-            MFEM_VERIFY(row == dim, "Dimension disagree.");
 
             if (num_steps == 0)
             {
+                for (int i = 0; i < dim; ++i)
+                {
+                    init_cond->item(i) = sample[i]; 
+                }
                 dmd->projectInitialCondition(init_cond);
                 if (t_final > 0.0) // Practical prediction
                 {
