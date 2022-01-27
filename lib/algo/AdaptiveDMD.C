@@ -99,7 +99,7 @@ void AdaptiveDMD::interpolateSnapshots()
         std::cout << "Epsilon auto-corrected by the linear solve to " << d_epsilon << std::endl;
     }
 
-    d_interp_snapshots.clear();
+    CAROM_ASSERT(d_interp_snapshots.size() == 0);
 
     // Create interpolated snapshots using d_dt as the desired dt.
     for (int i = 0; i <= num_time_steps; i++)
@@ -126,6 +126,7 @@ double AdaptiveDMD::getTruedt()
 
 const Matrix* AdaptiveDMD::getInterpolatedSnapshots()
 {
+    if (d_interp_snapshots.size() == 0) interpolateSnapshots();
     return createSnapshotMatrix(d_interp_snapshots);
 }
 }
