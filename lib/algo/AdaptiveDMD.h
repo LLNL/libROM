@@ -66,8 +66,14 @@ public:
      */
     void train(int k);
 
+    /**
+     * @brief Get the true dt between interpolated snapshots. 
+     */
     double getTruedt();
 
+    /**
+     * @brief Get the interpolated snapshot matrix contained within d_interp_snapshots.
+     */
     const Matrix* getInterpolatedSnapshots(); 
 
 private:
@@ -113,9 +119,14 @@ private:
     std::string d_interp_method;
 
     /**
+     * @brief std::vector holding the interpolated snapshots.
+     */
+    std::vector<Vector*> d_interp_snapshots;
+
+    /**
      * @brief Internal function to obtain the interpolated snapshots.
      */
-    const Matrix* interpolateSnapshots();
+    void interpolateSnapshots();
 
     /**
      * @brief The RBF parameter that determines the width of influence.

@@ -57,7 +57,7 @@ void AdaptiveDMD::takeSample(double* u_in, double t)
 
 void AdaptiveDMD::train(double energy_fraction)
 {
-    const Matrix* f_snapshots = interpolateSnapshots();
+    const Matrix* f_snapshots = getInterpolatedSnapshots();
     CAROM_VERIFY(f_snapshots->numColumns() > 1);
     CAROM_VERIFY(energy_fraction > 0 && energy_fraction <= 1);
     d_energy_fraction = energy_fraction;
@@ -68,7 +68,7 @@ void AdaptiveDMD::train(double energy_fraction)
 
 void AdaptiveDMD::train(int k)
 {
-    const Matrix* f_snapshots = interpolateSnapshots();
+    const Matrix* f_snapshots = getInterpolatedSnapshots();
     CAROM_VERIFY(f_snapshots->numColumns() > 1);
     CAROM_VERIFY(k > 0 && k <= f_snapshots->numColumns() - 1);
     d_energy_fraction = -1.0;
@@ -78,7 +78,7 @@ void AdaptiveDMD::train(int k)
     delete f_snapshots;
 }
 
-const Matrix* AdaptiveDMD::interpolateSnapshots()
+void AdaptiveDMD::interpolateSnapshots()
 {
     CAROM_VERIFY(d_sampled_times.back()->item(0) > d_dt);
 
@@ -99,7 +99,7 @@ const Matrix* AdaptiveDMD::interpolateSnapshots()
         std::cout << "Epsilon auto-corrected by the linear solve to " << d_epsilon << std::endl;
     }
 
-    std::vector<Vector*> interpolated_snapshots;
+    d_interp_snapshots.clear();
 
     // Create interpolated snapshots using d_dt as the desired dt.
     for (int i = 0; i <= num_time_steps; i++)
@@ -113,12 +113,10 @@ const Matrix* AdaptiveDMD::interpolateSnapshots()
 
         // Obtain the interpolated snapshot.
         CAROM::Vector* curr_interpolated_snapshot = obtainInterpolatedVector(d_sampled_times, d_snapshots, f_T, d_interp_method, rbf);
-        interpolated_snapshots.push_back(curr_interpolated_snapshot);
+        d_interp_snapshots.push_back(curr_interpolated_snapshot);
 
         delete point;
     }
-
-    return createSnapshotMatrix(interpolated_snapshots);
 }
 
 double AdaptiveDMD::getTruedt()
@@ -128,6 +126,6 @@ double AdaptiveDMD::getTruedt()
 
 const Matrix* AdaptiveDMD::getInterpolatedSnapshots()
 {
-    return interpolateSnapshots();
+    return createSnapshotMatrix(d_interp_snapshots);
 }
 }
