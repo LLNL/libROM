@@ -31,6 +31,7 @@ int main(int argc, char *argv[])
     int num_procs = mpi.WorldSize();
     int myid = mpi.WorldRank();
 
+    double t_init = 0.0;
     double t_final = -1.0;
     double dtc = 0.0;
     double ddt = 0.00005;
@@ -44,8 +45,10 @@ int main(int argc, char *argv[])
     cout.precision(precision);
 
     OptionsParser args(argc, argv);
+    args.AddOption(&t_init, "-ti", "--t-init",
+                   "Start time.");
     args.AddOption(&t_final, "-tf", "--t-final",
-                   "Final time; start time is 0.");
+                   "Final time.");
     args.AddOption(&dtc, "-dtc", "--dtc", 
                    "Fixed (constant) dt.");
     args.AddOption(&ddt, "-ddt", "--dtime-step",
@@ -119,9 +122,13 @@ int main(int argc, char *argv[])
         while (std::getline(snap_ifs, snap))
         {
             csv_db->getDoubleArray(std::string(data_dir) + "/" + par_dir + "/" + snap + "/tval.txt", &tval, 1);
+            if (num_samp == 0)
+            {
+                t_init = tval;
+            }
             data_filename = std::string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv"; // {zone_*,tkelv}.csv
             csv_db->getDoubleArray(data_filename, sample, dim);
-            dmd->takeSample(sample, tval);
+            dmd->takeSample(sample, tval - t_init);
             num_samp++;
         }
         if (myid == 0)
@@ -164,7 +171,7 @@ int main(int argc, char *argv[])
         }
         for (int k = 0; k < f_snapshots->numColumns(); ++k)
         {
-            double tval = k * dtc;
+            double tval = t_init + k * dtc;
             f_snapshots->getColumn(k, isnap);
             result = admd->predict(k);
 
@@ -218,6 +225,7 @@ int main(int argc, char *argv[])
 
             if (num_steps == 0)
             {
+                t_init = tval;
                 for (int i = 0; i < dim; ++i)
                 {
                     init_cond->item(i) = sample[i]; 
@@ -231,7 +239,7 @@ int main(int argc, char *argv[])
                         cout << "Predicting DMD solution at t = " << t_final << "." << endl;
                     }
                     dmd_prediction_timer.Start();
-                    result = dmd->predict(t_final/dtc);
+                    result = dmd->predict((t_final-t_init)/dtc);
                     dmd_prediction_timer.Stop();
                     // TODO: store result
                     return 0;
@@ -239,7 +247,7 @@ int main(int argc, char *argv[])
             }
             else // Verify DMD prediction results against dataset
             {
-                double dmd_power = tval/dtc;
+                double dmd_power = (tval-t_init)/dtc;
                 if (myid == 0)
                 {
                     cout << "Predicting DMD solution #" << num_steps << " at t = " << tval << "." << endl;
