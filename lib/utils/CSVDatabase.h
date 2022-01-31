@@ -16,7 +16,7 @@
 #include "Database.h"
 #include <string>
 #include <fstream>
-#include <sstream>
+#include <vector>
 
 namespace CAROM {
 
@@ -174,6 +174,23 @@ public:
         int offset,
         int block_size,
         int stride);
+
+    /**
+     * @brief Reads a list of strings associated with the supplied key
+     * from the currently open CSV database file.
+     *
+     * @pre !key.empty()
+     *
+     * @param[in] key The key associated with the array of values to be
+     *                read.
+     * @param[out] data The allocated vector of string values to be read.
+     * @param[in] append True if append to the list, otherwise overwite.
+     */
+    void
+    getStringList(
+        const std::string& key,
+        std::vector<std::string> &data, 
+        bool append);
 
 private:
     /**

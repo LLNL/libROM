@@ -161,4 +161,22 @@ CSVDatabase::getDoubleArray(
     d_fs.close();
 }
 
+void
+CSVDatabase::getStringList(
+    const std::string& key,
+    std::vector<std::string> &data, 
+    bool append)
+{
+    CAROM_ASSERT(!key.empty());
+    if (!append) data.clear();
+
+    std::ifstream d_fs(key.c_str());
+    std::string data_entry;
+    while (d_fs >> data_entry)
+    {
+        data.push_back(data_entry);
+    }
+    d_fs.close();
+}
+
 }
