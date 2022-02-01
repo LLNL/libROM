@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     double t_final = -1.0;
     double dtc = 0.0;
     double ddt = 0.00005;
-    double dmd_epsilon = 1.0;
+    double dmd_epsilon = -1.0;
     double ef = 1.0;
     int rdim = -1;
     const char *list_dir = "/usr/workspace/nlrom/poreCollapse/libROM_data/pore_collapse_list";
