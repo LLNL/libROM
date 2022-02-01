@@ -1,6 +1,5 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2021, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -200,8 +199,8 @@ Matrix* solveLinearSystem(std::vector<Vector*> parameter_points, std::vector<Vec
 
             if (info != 0)
             {
-                epsilon = epsilon + 1.0;
-                std::cout << "Linear solve failed. Increasing epsilon by 1 to " << epsilon << std::endl;
+                epsilon = epsilon * 1.01;
+                std::cout << "Linear solve failed. Increasing epsilon by 1 %% to " << epsilon << std::endl;
                 delete f_T;
             }
         }
