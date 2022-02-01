@@ -18,7 +18,6 @@
 #include "utils/HDFDatabase.h"
 #include "utils/CSVDatabase.h"
 #include <cmath>
-#include <fstream>
 #include <iostream>
 
 using namespace std;
