@@ -95,7 +95,7 @@ const Matrix* AdaptiveDMD::interpolateSnapshots()
     Matrix* f_T = NULL;
     if (d_interp_method == "LS")
     {
-        d_epsilon = 0.5 / d_dt;
+        if (d_epsilon < 0.0) d_epsilon = 0.5 / d_dt;
         f_T = solveLinearSystem(d_sampled_times, d_snapshots, d_interp_method, d_rbf, d_epsilon);
         std::cout << "Epsilon auto-corrected by the linear solve to " << d_epsilon << std::endl;
     }
