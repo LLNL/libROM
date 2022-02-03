@@ -140,7 +140,7 @@ private:
  * @param[in] point The unsampled parameter point.
  */
 std::vector<double> obtainRBFToTrainingPoints(std::vector<Vector*> parameter_points,
-    std::string interp_method, std::string rbf, double epsilon, Vector* point);
+        std::string interp_method, std::string rbf, double epsilon, Vector* point);
 
 /**
  * @brief Compute the sum of the RBF weights.

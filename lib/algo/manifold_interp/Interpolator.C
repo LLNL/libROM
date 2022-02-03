@@ -61,7 +61,7 @@ Interpolator::Interpolator(std::vector<Vector*> parameter_points,
 }
 
 std::vector<double> obtainRBFToTrainingPoints(std::vector<Vector*> parameter_points,
-    std::string interp_method, std::string rbf, double epsilon, Vector* point)
+        std::string interp_method, std::string rbf, double epsilon, Vector* point)
 {
     std::vector<double> rbfs;
     if (interp_method == "LS")
