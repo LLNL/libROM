@@ -132,6 +132,23 @@ public:
         int nelements);
 
     /**
+     * @brief Reads an array of integers associated with the supplied key
+     * from the currently open CSV database file.
+     *
+     * @pre !key.empty()
+     *
+     * @param[in] key The key associated with the array of values to be
+     *                read.
+     * @param[out] data The allocated vector of integer values to be read.
+     * @param[in] append True if append to the list, otherwise overwite.
+     */
+    void
+    getIntegerArray(
+        const std::string& key,
+        std::vector<int> &data, 
+        bool append);
+
+    /**
      * @brief Reads an array of doubles associated with the supplied key
      * from the currently open CSV database file.
      *
@@ -149,6 +166,27 @@ public:
         const std::string& key,
         double* data,
         int nelements);
+
+    /**
+     * @brief Reads a sub-array of doubles associated with the supplied key
+     * from the currently open CSV database file.
+     *
+     * @pre !key.empty()
+     * @pre data != 0 || nelements == 0
+     *
+     * @param[in] key The key associated with the array of values to be
+     *                read.
+     * @param[out] data The allocated sub-array of double values to be read.
+     * @param[in] nelements The number of doubles in the full array.
+     * @param[in] idx The set of indices in the sub-array.
+     */
+    virtual
+    void
+    getDoubleArray(
+        const std::string& key,
+        double* data,
+        int nelements, 
+        std::vector<int> idx);
 
     /**
      * @brief Reads an array of doubles associated with the supplied key
@@ -181,9 +219,9 @@ public:
      *
      * @pre !key.empty()
      *
-     * @param[in] key The key associated with the array of values to be
+     * @param[in] key The key associated with the list of strings to be
      *                read.
-     * @param[out] data The allocated vector of string values to be read.
+     * @param[out] data The allocated vector of strings to be read.
      * @param[in] append True if append to the list, otherwise overwite.
      */
     void

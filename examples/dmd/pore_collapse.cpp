@@ -81,13 +81,21 @@ int main(int argc, char *argv[])
     CAROM::CSVDatabase* csv_db(new CAROM::CSVDatabase);
 
     std::string variable = std::string(var_name);
-    int dim = -1;
-    csv_db->getIntegerArray(std::string(data_dir) + "/dim.txt", &dim, 1);
+    int nelements = -1;
+    csv_db->getIntegerArray(std::string(data_dir) + "/dim.txt", &nelements, 1);
     if (myid == 0)
     {
-        cout << "Variable " << var_name << " has dimension " << dim << "." << endl;
+        cout << "Variable " << var_name << " has dimension " << nelements << "." << endl;
     }
-    double* sample = new double[dim];
+
+    int dim = nelements;
+    std::vector<int> idx_state;
+    csv_db->getIntegerArray(std::string(data_dir) + "/index.csv", idx_state, false);
+    if (idx_state.size() > 0)
+    {
+        cout << "Restricting on " << idx_state.size() << " entries out of " << dim << "." << endl;
+        dim = idx_state.size();
+    }
 
     CAROM::DMD* dmd = nullptr;
     CAROM::AdaptiveDMD* admd = nullptr;
@@ -104,6 +112,7 @@ int main(int argc, char *argv[])
     csv_db->getStringList(std::string(list_dir) + "/training_gpa", training_par_list, false);
     int npar = training_par_list.size();
 
+    double* sample = new double[dim];
     StopWatch dmd_training_timer, dmd_prediction_timer;
     dmd_training_timer.Start();
 
@@ -127,7 +136,7 @@ int main(int argc, char *argv[])
                 t_init = tval;
             }
             std::string data_filename = std::string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv"; // {zone_*,tkelv}.csv
-            csv_db->getDoubleArray(data_filename, sample, dim);
+            csv_db->getDoubleArray(data_filename, sample, nelements, idx_state);
             dmd->takeSample(sample, tval - t_init);
         }
         if (myid == 0)
@@ -213,7 +222,7 @@ int main(int argc, char *argv[])
             std::string snap = snap_list[idx_snap]; // run_036.*
             csv_db->getDoubleArray(std::string(data_dir) + "/" + par_dir + "/" + snap + "/tval.txt", &tval, 1);
             std::string data_filename = std::string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv"; // {zone_*,tkelv}.csv
-            csv_db->getDoubleArray(data_filename, sample, dim);
+            csv_db->getDoubleArray(data_filename, sample, nelements, idx_state);
             if (myid == 0)
             {
                 cout << "State " << data_filename << " read." << endl;
@@ -283,7 +292,7 @@ int main(int argc, char *argv[])
         printf("Average elapsed time for predicting DMD: %e second\n", dmd_prediction_timer.RealTime() / num_tests);
     }
 
-    delete sample;
+    delete[] sample;
     delete result;
     delete init_cond;
     delete dmd;

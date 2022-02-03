@@ -104,6 +104,24 @@ CSVDatabase::getIntegerArray(
 }
 
 void
+CSVDatabase::getIntegerArray(
+    const std::string& key,
+    std::vector<int> &data, 
+    bool append)
+{
+    CAROM_ASSERT(!key.empty());
+    if (!append) data.clear();
+
+    std::ifstream d_fs(key.c_str());
+    int data_entry;
+    while (d_fs >> data_entry)
+    {
+        data.push_back(data_entry);
+    }
+    d_fs.close();
+}
+
+void
 CSVDatabase::getDoubleArray(
     const std::string& key,
     double* data,
@@ -123,6 +141,42 @@ CSVDatabase::getDoubleArray(
     }
     CAROM_ASSERT(d_fs.eof());
     d_fs.close();
+}
+
+void
+CSVDatabase::getDoubleArray(
+    const std::string& key,
+    double* data,
+    int nelements,
+    std::vector<int> idx)
+{
+    CAROM_ASSERT(!key.empty());
+#ifndef DEBUG_CHECK_ASSERTIONS
+    CAROM_NULL_USE(nelements);
+#endif
+
+    if (idx.size() == 0)
+    {
+        getDoubleArray(key, data, nelements);
+    }
+    else
+    {
+        std::ifstream d_fs(key.c_str());
+        int k = 0;
+        double data_entry = 0.0;
+        for (int i = 0; i < nelements; ++i)
+        {
+            d_fs >> data_entry;
+            if (idx[k] == i)
+            {
+                data[i] = data_entry;
+                k += 1;
+            }
+        }
+        CAROM_ASSERT(d_fs.eof());
+        CAROM_ASSERT(k == idx.size());
+        d_fs.close();
+    }
 }
 
 void
