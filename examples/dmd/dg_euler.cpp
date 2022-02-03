@@ -459,7 +459,7 @@ int main(int argc, char *argv[])
     {
         if (mpi.WorldRank() == 0)
         {
-            std::cout << "Creating DMD with rdim: " << rdim << std::endl;
+            std::cout << "Creating AdaptiveDMD with rdim: " << rdim << std::endl;
         }
         dmd_dens.train(rdim);
         dmd_x_mom.train(rdim);
@@ -470,7 +470,7 @@ int main(int argc, char *argv[])
     {
         if (mpi.WorldRank() == 0)
         {
-            std::cout << "Creating DMD with energy fraction: " << ef << std::endl;
+            std::cout << "Creating AdaptiveDMD with energy fraction: " << ef << std::endl;
         }
         dmd_dens.train(ef);
         dmd_x_mom.train(ef);
@@ -485,7 +485,7 @@ int main(int argc, char *argv[])
     // 14. Predict the state at t_final using DMD.
     if (mpi.WorldRank() == 0)
     {
-        std::cout << "Predicting density, momentum, and energy at t_final using DMD" << std::endl;
+        std::cout << "Predicting density, momentum, and energy at t_final using AdaptiveDMD" << std::endl;
     }
     CAROM::Vector* result_dens = dmd_dens.predict(t_final);
     CAROM::Vector* result_x_mom = dmd_x_mom.predict(t_final);
@@ -529,13 +529,13 @@ int main(int argc, char *argv[])
 
     if (mpi.WorldRank() == 0)
     {
-        std::cout << "Relative error of DMD density (dens) at t_final: " << t_final << " is " << tot_diff_norm_dens / tot_true_solution_dens_norm << std::endl;
-        std::cout << "Relative error of DMD x-momentum (x_mom) at t_final: " << t_final << " is " << tot_diff_norm_x_mom / tot_true_solution_x_mom_norm << std::endl;
-        std::cout << "Relative error of DMD y-momentum (y_mom) at t_final: " << t_final << " is " << tot_diff_norm_y_mom / tot_true_solution_y_mom_norm << std::endl;
-        std::cout << "Relative error of DMD energy (e) at t_final: " << t_final << " is " << tot_diff_norm_e / tot_true_solution_e_norm << std::endl;
+        std::cout << "Relative error of AdaptiveDMD density (dens) at t_final: " << t_final << " is " << tot_diff_norm_dens / tot_true_solution_dens_norm << std::endl;
+        std::cout << "Relative error of AdaptiveDMD x-momentum (x_mom) at t_final: " << t_final << " is " << tot_diff_norm_x_mom / tot_true_solution_x_mom_norm << std::endl;
+        std::cout << "Relative error of AdaptiveDMD y-momentum (y_mom) at t_final: " << t_final << " is " << tot_diff_norm_y_mom / tot_true_solution_y_mom_norm << std::endl;
+        std::cout << "Relative error of AdaptiveDMD energy (e) at t_final: " << t_final << " is " << tot_diff_norm_e / tot_true_solution_e_norm << std::endl;
         printf("Elapsed time for solving FOM: %e second\n", fom_timer.RealTime());
-        printf("Elapsed time for training DMD: %e second\n", dmd_training_timer.RealTime());
-        printf("Elapsed time for predicting DMD: %e second\n", dmd_prediction_timer.RealTime());
+        printf("Elapsed time for training AdaptiveDMD: %e second\n", dmd_training_timer.RealTime());
+        printf("Elapsed time for predicting AdaptiveDMD: %e second\n", dmd_prediction_timer.RealTime());
     }
 
     // Free the used memory.
