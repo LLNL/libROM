@@ -83,7 +83,7 @@ public:
      *
      * @param[in] t The time of the outputted state
      */
-    Vector* predict(double t);
+    virtual Vector* predict(double t);
 
     /**
      * @brief Predict state given a new initial condition and time.
@@ -93,7 +93,7 @@ public:
      * @param[in] init The initial condition.
      * @param[in] t The time of the outputted state
      */
-    Vector* predict(const std::pair<Vector*, Vector*> init, double t);
+    virtual Vector* predict(const std::pair<Vector*, Vector*> init, double t);
 
     /**
      * @brief Get the snapshot matrix contained within d_snapshots.

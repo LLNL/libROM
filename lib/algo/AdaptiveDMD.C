@@ -32,10 +32,16 @@ AdaptiveDMD::AdaptiveDMD(int dim, double desired_dt, std::string rbf, std::strin
 void AdaptiveDMD::takeSample(double* u_in, double t)
 {
     CAROM_VERIFY(u_in != 0);
+    CAROM_VERIFY(t >= 0.0);
     Vector* sample = new Vector(u_in, d_dim, true);
     if (d_snapshots.empty())
     {
-        CAROM_VERIFY(t == 0.0);
+        d_t_offset = t;
+        t = 0.0;
+    }
+    else
+    {
+        t -= d_t_offset;
     }
 
     // If we have sampled another snapshot at the same timestep, replace
@@ -76,6 +82,18 @@ void AdaptiveDMD::train(int k)
     constructDMD(f_snapshots, d_rank, d_num_procs);
 
     delete f_snapshots;
+}
+
+Vector* AdaptiveDMD::predict(double t)
+{
+    const std::pair<Vector*, Vector*> d_projected_init_pair(d_projected_init_real, d_projected_init_imaginary);
+    return predict(d_projected_init_pair, t);
+}
+
+Vector* AdaptiveDMD::predict(const std::pair<Vector*, Vector*> init, double t)
+{
+    t -= d_t_offset;
+    return DMD::predict(init, t);
 }
 
 const Matrix* AdaptiveDMD::interpolateSnapshots()
