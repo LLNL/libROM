@@ -93,7 +93,6 @@ CSVDatabase::getIntegerArray(
 #endif
 
     std::ifstream d_fs(key.c_str());
-    std::vector<int> tmp;
     int data_entry = 0.0;
     for (int i = 0; i < nelements; ++i)
     {
