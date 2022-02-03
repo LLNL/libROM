@@ -596,10 +596,8 @@ int main(int argc, char *argv[])
 
     dmd_training_timer.Start();
 
-    std::cout << U->Size() << std::endl;
-
     // 11. Create DMD object and take initial sample.
-    CAROM::DMD dmd_U(U->Size());
+    CAROM::DMD dmd_U(U->Size(), dt);
     dmd_U.takeSample(U->GetData());
 
     dmd_training_timer.Stop();
@@ -711,7 +709,7 @@ int main(int argc, char *argv[])
     {
         std::cout << "Predicting solution at t_final using DMD" << std::endl;
     }
-    CAROM::Vector* result_u = dmd_U.predict(t_final/dt);
+    CAROM::Vector* result_u = dmd_U.predict(t_final);
 
     dmd_prediction_timer.Stop();
 

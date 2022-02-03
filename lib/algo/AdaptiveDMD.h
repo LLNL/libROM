@@ -37,13 +37,15 @@ public:
      *
      * @param[in] dim         The full-order state dimension.
      * @param[in] desired_dt  The dt to uniformly interpolate the samples between.
+     * @param[in] rbf         The RBF type ("G" == gaussian, "MQ" == multiquadric,
+     *                        "IQ" == inverse quadratic, "IMQ" == inverse
+     *                        multiquadric)
      * @param[in] interp_method  The interpolation method type ("LS" == linear solve,
      *                           "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
-     * @param[in] rbf         Which RBF to compute.
      * @param[in] epsilon   The RBF parameter that determines the width of
                             influence.
      */
-    AdaptiveDMD(int dim, double desired_dt, std::string interp_method, std::string rbf, double epsilon = 1.0);
+    AdaptiveDMD(int dim, double desired_dt, std::string rbf = "G", std::string interp_method = "LS", double epsilon = -1.0);
 
     /**
      * @brief Sample the new state, u_in.
@@ -95,11 +97,6 @@ private:
      * @brief The stored times of each sample.
      */
     std::vector<Vector*> d_sampled_times;
-
-    /**
-     * @brief The dt to uniformly interpolate the samples between.
-     */
-    double d_dt;
 
     /**
      * @brief The RBF type (gaussian, multiquadric, inverse quadratic, inverse

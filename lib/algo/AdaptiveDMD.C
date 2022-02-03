@@ -18,7 +18,7 @@
 
 namespace CAROM {
 
-AdaptiveDMD::AdaptiveDMD(int dim, double desired_dt, std::string interp_method, std::string rbf, double epsilon) : DMD(dim)
+AdaptiveDMD::AdaptiveDMD(int dim, double desired_dt, std::string rbf, std::string interp_method, double epsilon) : DMD(dim, desired_dt)
 {
     CAROM_VERIFY(desired_dt > 0.0);
     CAROM_VERIFY(rbf == "G" || rbf == "IQ" || rbf == "MQ" || rbf == "IMQ");
@@ -95,7 +95,7 @@ const Matrix* AdaptiveDMD::interpolateSnapshots()
     Matrix* f_T = NULL;
     if (d_interp_method == "LS")
     {
-        if (d_epsilon < 0.0) d_epsilon = 0.5 / d_dt;
+        if (d_epsilon <= 0.0) d_epsilon = 0.5 / d_dt;
         f_T = solveLinearSystem(d_sampled_times, d_snapshots, d_interp_method, d_rbf, d_epsilon);
         std::cout << "Epsilon auto-corrected by the linear solve to " << d_epsilon << std::endl;
     }
