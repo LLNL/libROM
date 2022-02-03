@@ -92,7 +92,8 @@ Vector* VectorInterpolator::interpolate(Vector* point)
             // For ref point, gamma is the zero vector.
             if (i == d_ref_point)
             {
-                Vector* gamma = new Vector(d_rotated_reduced_vectors[d_ref_point]->dim(), d_rotated_reduced_vectors[d_ref_point]->distributed());
+                Vector* gamma = new Vector(d_rotated_reduced_vectors[d_ref_point]->dim(),
+                                           d_rotated_reduced_vectors[d_ref_point]->distributed());
                 d_gammas.push_back(gamma);
             }
             else
@@ -108,7 +109,8 @@ Vector* VectorInterpolator::interpolate(Vector* point)
     }
 
     // Obtain distances from database points to new point
-    std::vector<double> rbf = obtainRBFToTrainingPoints(d_parameter_points, d_interp_method, d_rbf, d_epsilon, point);
+    std::vector<double> rbf = obtainRBFToTrainingPoints(d_parameter_points,
+                              d_interp_method, d_rbf, d_epsilon, point);
 
     // Interpolate gammas to get gamma for new point
     Vector* log_interpolated_vector = obtainLogInterpolatedVector(rbf);
@@ -119,7 +121,9 @@ Vector* VectorInterpolator::interpolate(Vector* point)
     return interpolated_vector;
 }
 
-Vector* obtainInterpolatedVector(std::vector<Vector*> parameter_points, std::vector<Vector*> data, Matrix* f_T, std::string interp_method, std::vector<double> rbf)
+Vector* obtainInterpolatedVector(std::vector<Vector*> parameter_points,
+                                 std::vector<Vector*> data, Matrix* f_T,
+                                 std::string interp_method, std::vector<double> rbf)
 {
     Vector* interpolated_vector = new Vector(data[0]->dim(), data[0]->distributed());
     if (interp_method == "LS")
@@ -158,7 +162,9 @@ Vector* obtainInterpolatedVector(std::vector<Vector*> parameter_points, std::vec
     return interpolated_vector;
 }
 
-Matrix* solveLinearSystem(std::vector<Vector*> parameter_points, std::vector<Vector*> data, std::string interp_method, std::string rbf, double& epsilon)
+Matrix* solveLinearSystem(std::vector<Vector*> parameter_points,
+                          std::vector<Vector*> data, std::string interp_method,
+                          std::string rbf, double& epsilon)
 {
     if (interp_method == "LS")
     {
@@ -193,7 +199,8 @@ Matrix* solveLinearSystem(std::vector<Vector*> parameter_points, std::vector<Vec
             int gamma_size = data.size();
             int num_elements = data[0]->dim();
 
-            dposv(&uplo, &gamma_size, &num_elements, B->getData(),  &gamma_size, f_T->getData(), &gamma_size, &info);
+            dposv(&uplo, &gamma_size, &num_elements, B->getData(),  &gamma_size,
+                  f_T->getData(), &gamma_size, &info);
 
             delete B;
 
