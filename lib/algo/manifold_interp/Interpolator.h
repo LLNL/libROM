@@ -147,7 +147,7 @@ std::vector<double> obtainRBFToTrainingPoints(std::vector<Vector*> parameter_poi
  *
  * @param[in] rbf The vector holding the rbfs of the training points.
  */
-double rbfWeightedSum(std::vector<double> rbf);
+double rbfWeightedSum(std::vector<double>& rbf);
 
 /**
  * @brief Compute the RBF between two points.

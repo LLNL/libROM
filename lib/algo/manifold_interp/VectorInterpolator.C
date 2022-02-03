@@ -77,9 +77,9 @@ void VectorInterpolator::obtainLambda()
     }
 }
 
-Vector* VectorInterpolator::obtainLogInterpolatedVector(std::vector<double> rbf)
+Vector* VectorInterpolator::obtainLogInterpolatedVector(std::vector<double>& rbf)
 {
-    return obtainInterpolatedVector(d_parameter_points, d_gammas, d_lambda_T, d_interp_method, rbf);
+    return obtainInterpolatedVector(d_gammas, d_lambda_T, d_interp_method, rbf);
 }
 
 Vector* VectorInterpolator::interpolate(Vector* point)
@@ -121,9 +121,8 @@ Vector* VectorInterpolator::interpolate(Vector* point)
     return interpolated_vector;
 }
 
-Vector* obtainInterpolatedVector(std::vector<Vector*> parameter_points,
-                                 std::vector<Vector*> data, Matrix* f_T,
-                                 std::string interp_method, std::vector<double> rbf)
+Vector* obtainInterpolatedVector(std::vector<Vector*> data, Matrix* f_T,
+                                 std::string interp_method, std::vector<double>& rbf)
 {
     Vector* interpolated_vector = new Vector(data[0]->dim(), data[0]->distributed());
     if (interp_method == "LS")

@@ -102,10 +102,10 @@ private:
     /**
      * @brief Obtain the interpolated matrix of the unsampled parameter point
      *        in log space.
-     * @param[in] inv_q The inverse quadratic RBF values between the
-     *                  parameter points and the unsampled parameter point.
+     * @param[in] rbf The RBF values between the parameter points and
+     *                the unsampled parameter point.
      */
-    Matrix* obtainLogInterpolatedMatrix(std::vector<double> inv_q);
+    Matrix* obtainLogInterpolatedMatrix(std::vector<double>& rbf);
 
     /**
      * @brief Obtain the interpolated SPD reduced matrix for the unsampled

@@ -113,7 +113,7 @@ const Matrix* AdaptiveDMD::interpolateSnapshots()
         std::vector<double> rbf = obtainRBFToTrainingPoints(d_sampled_times, d_interp_method, d_rbf, d_epsilon, point);
 
         // Obtain the interpolated snapshot.
-        CAROM::Vector* curr_interpolated_snapshot = obtainInterpolatedVector(d_sampled_times, d_snapshots, f_T, d_interp_method, rbf);
+        CAROM::Vector* curr_interpolated_snapshot = obtainInterpolatedVector(d_snapshots, f_T, d_interp_method, rbf);
         interpolated_snapshots.push_back(curr_interpolated_snapshot);
 
         delete point;

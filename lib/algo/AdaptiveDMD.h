@@ -10,10 +10,10 @@
 
 // Description: Computes the AdaptiveDMD algorithm on the given snapshot matrix.
 //              The AdaptiveDMD algorithm should be used if the dt changes
-//              between the samples. This algorithm interpolates the ununiformly
-//              sampled samples such that they are uniformly distanced and the
-//              dt is constant (a prequisite of the DMD algorithm). The smaller
-//              dt is, the finer the fidelity of the interpolation.
+//              between the samples. This algorithm uniformly interpolates the samples
+//              that may have been taken with variable steps, using the constant step dt
+//              (a prequisite of the DMD algorithm). The smaller dt is, the finer
+//              the fidelity of the interpolation.
 
 #ifndef included_AdaptiveDMD_h
 #define included_AdaptiveDMD_h
@@ -36,7 +36,7 @@ public:
      * @brief Constructor.
      *
      * @param[in] dim         The full-order state dimension.
-     * @param[in] desired_dt  The dt to uniformly interpolate the samples between.
+     * @param[in] desired_dt  The constant step size for uniform interpolation of samples.
      * @param[in] rbf         The RBF type ("G" == gaussian, "MQ" == multiquadric,
      *                        "IQ" == inverse quadratic, "IMQ" == inverse
      *                        multiquadric)

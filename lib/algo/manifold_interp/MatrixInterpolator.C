@@ -142,7 +142,7 @@ void MatrixInterpolator::obtainLambda()
     }
 }
 
-Matrix* MatrixInterpolator::obtainLogInterpolatedMatrix(std::vector<double> rbf)
+Matrix* MatrixInterpolator::obtainLogInterpolatedMatrix(std::vector<double>& rbf)
 {
     Matrix* log_interpolated_matrix = new Matrix(d_rotated_reduced_matrices[d_ref_point]->numRows(),
             d_rotated_reduced_matrices[d_ref_point]->numColumns(), d_rotated_reduced_matrices[d_ref_point]->distributed());

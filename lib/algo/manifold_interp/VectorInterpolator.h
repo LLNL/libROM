@@ -96,10 +96,10 @@ private:
      * @brief Obtain the interpolated vector of the unsampled parameter point
      *           in log space.
      *
-     * @param[in] inv_q The inverse quadratic RBF values between the
-     *                  parameter points and the unsampled parameter point.
+     * @param[in] rbf The RBF values between the parameter points and
+     *                the unsampled parameter point.
      */
-    Vector* obtainLogInterpolatedVector(std::vector<double> inv_q);
+    Vector* obtainLogInterpolatedVector(std::vector<double>& rbf);
 
     /**
      * @brief The reduced vectors with compatible coordinates.
@@ -112,9 +112,8 @@ private:
     std::vector<Vector*> d_gammas;
 };
 
-Vector* obtainInterpolatedVector(std::vector<Vector*> parameter_points,
-                                 std::vector<Vector*> data, Matrix* f_T,
-                                 std::string interp_method, std::vector<double> rbf);
+Vector* obtainInterpolatedVector(std::vector<Vector*> data, Matrix* f_T,
+                                 std::string interp_method, std::vector<double>& rbf);
 
 Matrix* solveLinearSystem(std::vector<Vector*> parameter_points,
                           std::vector<Vector*> data, std::string interp_method,
