@@ -61,7 +61,7 @@ Interpolator::Interpolator(std::vector<Vector*> parameter_points,
 }
 
 std::vector<double> obtainRBFToTrainingPoints(std::vector<Vector*> parameter_points,
-    std::string interp_method, std::string rbf, double epsilon, Vector* point)
+        std::string interp_method, std::string rbf, double epsilon, Vector* point)
 {
     std::vector<double> rbfs;
     if (interp_method == "LS")
@@ -128,7 +128,7 @@ std::vector<double> obtainRBFToTrainingPoints(std::vector<Vector*> parameter_poi
     return rbfs;
 }
 
-double rbfWeightedSum(std::vector<double> rbf)
+double rbfWeightedSum(std::vector<double>& rbf)
 {
     double sum = 0.0;
     for (int i = 0; i < rbf.size(); i++)

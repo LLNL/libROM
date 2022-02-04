@@ -35,8 +35,9 @@ public:
      * @brief Constructor.
      *
      * @param[in] dim The full-order state dimension.
+     * @param[in] dt The dt between samples.
      */
-    DMD(int dim);
+    DMD(int dim, double dt);
 
     /**
      * @brief Sample the new state, u_in.
@@ -80,9 +81,9 @@ public:
      * @brief Predict state given a time. Uses the projected initial condition of the
      *        training dataset (the first column).
      *
-     * @param[in] n The time of the outputted state (t/dt)
+     * @param[in] t The time of the outputted state
      */
-    Vector* predict(double n);
+    virtual Vector* predict(double t);
 
     /**
      * @brief Predict state given a new initial condition and time.
@@ -90,9 +91,9 @@ public:
      *        for correct results.
      *
      * @param[in] init The initial condition.
-     * @param[in] n The time of the outputted state (t/dt)
+     * @param[in] t The time of the outputted state
      */
-    Vector* predict(const std::pair<Vector*, Vector*> init, double n);
+    virtual Vector* predict(const std::pair<Vector*, Vector*> init, double t);
 
     /**
      * @brief Get the snapshot matrix contained within d_snapshots.
@@ -150,6 +151,11 @@ protected:
      * @brief The total dimension of the sample vector.
      */
     int d_dim;
+
+    /**
+     * @brief The dt between samples.
+     */
+    double d_dt;
 
     /**
      * @brief std::vector holding the snapshots.

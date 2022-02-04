@@ -2,7 +2,7 @@
 //
 // Compile with: make dg_euler
 //
-// For DMD:
+// For AdaptiveDMD:
 //   mpirun -n 8 dg_euler
 //   mpirun -n 8 dg_euler -p 2 -rs 2 -rp 1 -o 1 -s 3 -visit
 //
@@ -43,7 +43,7 @@
 //               example.
 
 #include "mfem.hpp"
-#include "algo/DMD.h"
+#include "algo/AdaptiveDMD.h"
 #include "linalg/Vector.h"
 #include <cmath>
 #include <fstream>
@@ -120,9 +120,9 @@ int main(int argc, char *argv[])
     args.AddOption(&vis_steps, "-vs", "--visualization-steps",
                    "Visualize every n-th timestep.");
     args.AddOption(&ef, "-ef", "--energy_fraction",
-                   "Energy fraction for DMD.");
+                   "Energy fraction for AdaptiveDMD.");
     args.AddOption(&rdim, "-rdim", "--rdim",
-                   "Reduced dimension for DMD.");
+                   "Reduced dimension for AdaptiveDMD.");
 
     args.Parse();
     if (!args.Good())
@@ -334,19 +334,6 @@ int main(int argc, char *argv[])
 
     fom_timer.Stop();
 
-    dmd_training_timer.Start();
-
-    CAROM::DMD dmd_dens(u_block.GetBlock(0).Size());
-    CAROM::DMD dmd_x_mom(u_block.GetBlock(1).Size());
-    CAROM::DMD dmd_y_mom(u_block.GetBlock(2).Size());
-    CAROM::DMD dmd_e(u_block.GetBlock(3).Size());
-    dmd_dens.takeSample(u_block.GetBlock(0).GetData());
-    dmd_x_mom.takeSample(u_block.GetBlock(1).GetData());
-    dmd_y_mom.takeSample(u_block.GetBlock(2).GetData());
-    dmd_e.takeSample(u_block.GetBlock(3).GetData());
-
-    dmd_training_timer.Stop();
-
     if (cfl > 0)
     {
         // Find a safe dt, using a temporary vector. Calling Mult() computes the
@@ -363,6 +350,19 @@ int main(int argc, char *argv[])
         }
         dt = cfl * hmin / max_char_speed / (2*order+1);
     }
+
+    dmd_training_timer.Start();
+
+    CAROM::AdaptiveDMD dmd_dens(u_block.GetBlock(0).Size(), dt);
+    CAROM::AdaptiveDMD dmd_x_mom(u_block.GetBlock(1).Size(), dt);
+    CAROM::AdaptiveDMD dmd_y_mom(u_block.GetBlock(2).Size(), dt);
+    CAROM::AdaptiveDMD dmd_e(u_block.GetBlock(3).Size(), dt);
+    dmd_dens.takeSample(u_block.GetBlock(0).GetData(), t);
+    dmd_x_mom.takeSample(u_block.GetBlock(1).GetData(), t);
+    dmd_y_mom.takeSample(u_block.GetBlock(2).GetData(), t);
+    dmd_e.takeSample(u_block.GetBlock(3).GetData(), t);
+
+    dmd_training_timer.Stop();
 
     // Integrate in time.
     bool done = false;
@@ -392,10 +392,10 @@ int main(int argc, char *argv[])
 
         dmd_training_timer.Start();
 
-        dmd_dens.takeSample(u_block.GetBlock(0).GetData());
-        dmd_x_mom.takeSample(u_block.GetBlock(1).GetData());
-        dmd_y_mom.takeSample(u_block.GetBlock(2).GetData());
-        dmd_e.takeSample(u_block.GetBlock(3).GetData());
+        dmd_dens.takeSample(u_block.GetBlock(0).GetData(), t);
+        dmd_x_mom.takeSample(u_block.GetBlock(1).GetData(), t);
+        dmd_y_mom.takeSample(u_block.GetBlock(2).GetData(), t);
+        dmd_e.takeSample(u_block.GetBlock(3).GetData(), t);
 
         dmd_training_timer.Stop();
 
@@ -459,7 +459,7 @@ int main(int argc, char *argv[])
     {
         if (mpi.WorldRank() == 0)
         {
-            std::cout << "Creating DMD with rdim: " << rdim << std::endl;
+            std::cout << "Creating AdaptiveDMD with rdim: " << rdim << std::endl;
         }
         dmd_dens.train(rdim);
         dmd_x_mom.train(rdim);
@@ -470,7 +470,7 @@ int main(int argc, char *argv[])
     {
         if (mpi.WorldRank() == 0)
         {
-            std::cout << "Creating DMD with energy fraction: " << ef << std::endl;
+            std::cout << "Creating AdaptiveDMD with energy fraction: " << ef << std::endl;
         }
         dmd_dens.train(ef);
         dmd_x_mom.train(ef);
@@ -485,12 +485,12 @@ int main(int argc, char *argv[])
     // 14. Predict the state at t_final using DMD.
     if (mpi.WorldRank() == 0)
     {
-        std::cout << "Predicting density, momentum, and energy at t_final using DMD" << std::endl;
+        std::cout << "Predicting density, momentum, and energy at t_final using AdaptiveDMD" << std::endl;
     }
-    CAROM::Vector* result_dens = dmd_dens.predict(t_final/dt);
-    CAROM::Vector* result_x_mom = dmd_x_mom.predict(t_final/dt);
-    CAROM::Vector* result_y_mom = dmd_y_mom.predict(t_final/dt);
-    CAROM::Vector* result_e = dmd_e.predict(t_final/dt);
+    CAROM::Vector* result_dens = dmd_dens.predict(t_final);
+    CAROM::Vector* result_x_mom = dmd_x_mom.predict(t_final);
+    CAROM::Vector* result_y_mom = dmd_y_mom.predict(t_final);
+    CAROM::Vector* result_e = dmd_e.predict(t_final);
 
     dmd_prediction_timer.Stop();
 
@@ -529,13 +529,13 @@ int main(int argc, char *argv[])
 
     if (mpi.WorldRank() == 0)
     {
-        std::cout << "Relative error of DMD density (dens) at t_final: " << t_final << " is " << tot_diff_norm_dens / tot_true_solution_dens_norm << std::endl;
-        std::cout << "Relative error of DMD x-momentum (x_mom) at t_final: " << t_final << " is " << tot_diff_norm_x_mom / tot_true_solution_x_mom_norm << std::endl;
-        std::cout << "Relative error of DMD y-momentum (y_mom) at t_final: " << t_final << " is " << tot_diff_norm_y_mom / tot_true_solution_y_mom_norm << std::endl;
-        std::cout << "Relative error of DMD energy (e) at t_final: " << t_final << " is " << tot_diff_norm_e / tot_true_solution_e_norm << std::endl;
+        std::cout << "Relative error of AdaptiveDMD density (dens) at t_final: " << t_final << " is " << tot_diff_norm_dens / tot_true_solution_dens_norm << std::endl;
+        std::cout << "Relative error of AdaptiveDMD x-momentum (x_mom) at t_final: " << t_final << " is " << tot_diff_norm_x_mom / tot_true_solution_x_mom_norm << std::endl;
+        std::cout << "Relative error of AdaptiveDMD y-momentum (y_mom) at t_final: " << t_final << " is " << tot_diff_norm_y_mom / tot_true_solution_y_mom_norm << std::endl;
+        std::cout << "Relative error of AdaptiveDMD energy (e) at t_final: " << t_final << " is " << tot_diff_norm_e / tot_true_solution_e_norm << std::endl;
         printf("Elapsed time for solving FOM: %e second\n", fom_timer.RealTime());
-        printf("Elapsed time for training DMD: %e second\n", dmd_training_timer.RealTime());
-        printf("Elapsed time for predicting DMD: %e second\n", dmd_prediction_timer.RealTime());
+        printf("Elapsed time for training AdaptiveDMD: %e second\n", dmd_training_timer.RealTime());
+        printf("Elapsed time for predicting AdaptiveDMD: %e second\n", dmd_prediction_timer.RealTime());
     }
 
     // Free the used memory.

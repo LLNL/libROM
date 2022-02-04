@@ -18,7 +18,7 @@
 
 namespace CAROM {
 
-AdaptiveDMD::AdaptiveDMD(int dim, double desired_dt, std::string interp_method, std::string rbf, double epsilon) : DMD(dim)
+AdaptiveDMD::AdaptiveDMD(int dim, double desired_dt, std::string rbf, std::string interp_method, double epsilon) : DMD(dim, desired_dt)
 {
     CAROM_VERIFY(desired_dt > 0.0);
     CAROM_VERIFY(rbf == "G" || rbf == "IQ" || rbf == "MQ" || rbf == "IMQ");
@@ -32,10 +32,16 @@ AdaptiveDMD::AdaptiveDMD(int dim, double desired_dt, std::string interp_method, 
 void AdaptiveDMD::takeSample(double* u_in, double t)
 {
     CAROM_VERIFY(u_in != 0);
+    CAROM_VERIFY(t >= 0.0);
     Vector* sample = new Vector(u_in, d_dim, true);
     if (d_snapshots.empty())
     {
-        CAROM_VERIFY(t == 0.0);
+        d_t_offset = t;
+        t = 0.0;
+    }
+    else
+    {
+        t -= d_t_offset;
     }
 
     // If we have sampled another snapshot at the same timestep, replace
@@ -78,6 +84,18 @@ void AdaptiveDMD::train(int k)
     delete f_snapshots;
 }
 
+Vector* AdaptiveDMD::predict(double t)
+{
+    const std::pair<Vector*, Vector*> d_projected_init_pair(d_projected_init_real, d_projected_init_imaginary);
+    return predict(d_projected_init_pair, t);
+}
+
+Vector* AdaptiveDMD::predict(const std::pair<Vector*, Vector*> init, double t)
+{
+    t -= d_t_offset;
+    return DMD::predict(init, t);
+}
+
 void AdaptiveDMD::interpolateSnapshots()
 {
     CAROM_VERIFY(d_sampled_times.back()->item(0) > d_dt);
@@ -96,7 +114,7 @@ void AdaptiveDMD::interpolateSnapshots()
     Matrix* f_T = NULL;
     if (d_interp_method == "LS")
     {
-        if (d_epsilon < 0.0) d_epsilon = 0.5 / d_dt;
+        if (d_epsilon <= 0.0) d_epsilon = 0.5 / d_dt;
         f_T = solveLinearSystem(d_sampled_times, d_snapshots, d_interp_method, d_rbf, d_epsilon);
         std::cout << "Epsilon auto-corrected by the linear solve to " << d_epsilon << std::endl;
     }
@@ -112,7 +130,7 @@ void AdaptiveDMD::interpolateSnapshots()
         std::vector<double> rbf = obtainRBFToTrainingPoints(d_sampled_times, d_interp_method, d_rbf, d_epsilon, point);
 
         // Obtain the interpolated snapshot.
-        CAROM::Vector* curr_interpolated_snapshot = obtainInterpolatedVector(d_sampled_times, d_snapshots, f_T, d_interp_method, rbf);
+        CAROM::Vector* curr_interpolated_snapshot = obtainInterpolatedVector(d_snapshots, f_T, d_interp_method, rbf);
         d_interp_snapshots.push_back(curr_interpolated_snapshot);
 
         delete point;

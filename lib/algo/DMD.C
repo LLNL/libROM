@@ -39,8 +39,11 @@ extern "C" {
 
 namespace CAROM {
 
-DMD::DMD(int dim)
+DMD::DMD(int dim, double dt)
 {
+    CAROM_VERIFY(dim > 0);
+    CAROM_VERIFY(dt > 0);
+
     // Get the rank of this process, and the number of processors.
     int mpi_init;
     MPI_Initialized(&mpi_init);
@@ -51,6 +54,7 @@ DMD::DMD(int dim)
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
     d_dim = dim;
+    d_dt = dt;
     d_trained = false;
 }
 
@@ -341,19 +345,20 @@ DMD::projectInitialCondition(const Vector* init)
 }
 
 Vector*
-DMD::predict(double n)
+DMD::predict(double t)
 {
     const std::pair<Vector*, Vector*> d_projected_init_pair(d_projected_init_real, d_projected_init_imaginary);
-    return predict(d_projected_init_pair, n);
+    return predict(d_projected_init_pair, t);
 }
 
 Vector*
 DMD::predict(const std::pair<Vector*, Vector*> init,
-             double n)
+             double t)
 {
     CAROM_VERIFY(d_trained);
-    CAROM_VERIFY(n >= 0.0);
-    std::pair<Matrix*, Matrix*> d_phi_pair = phiMultEigs(n);
+    CAROM_VERIFY(t >= 0.0);
+    double t_dt = t / d_dt;
+    std::pair<Matrix*, Matrix*> d_phi_pair = phiMultEigs(t_dt);
     Matrix* d_phi_mult_eigs_real = d_phi_pair.first;
     Matrix* d_phi_mult_eigs_imaginary = d_phi_pair.second;
 
