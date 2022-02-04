@@ -93,8 +93,9 @@ int main(int argc, char *argv[])
     csv_db->getIntegerArray(std::string(data_dir) + "/index.csv", idx_state, false);
     if (idx_state.size() > 0)
     {
-        cout << "Restricting on " << idx_state.size() << " entries out of " << dim << "." << endl;
         dim = idx_state.size();
+        cout << "Restricting on " << dim << " entries out of " << nelements << "." << endl;
+        for (int k = 0; k < dim; ++k) cout << k << "-th index: " << idx_state[k] << endl;
     }
 
     CAROM::DMD* dmd = nullptr;

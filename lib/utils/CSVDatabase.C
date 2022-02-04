@@ -169,8 +169,7 @@ CSVDatabase::getDoubleArray(
             d_fs >> data_entry;
             if (idx[k] == i)
             {
-                data[i] = data_entry;
-                k += 1;
+                data[k++] = data_entry;
             }
         }
         CAROM_ASSERT(d_fs.eof());
