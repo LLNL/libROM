@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        dmd = new CAROM::AdaptiveDMD(dim, ddt, "LS", "G", dmd_epsilon);
+        dmd = new CAROM::AdaptiveDMD(dim, ddt, "G", "LS", dmd_epsilon);
         admd = dynamic_cast<CAROM::AdaptiveDMD*> (dmd);
     }
 
