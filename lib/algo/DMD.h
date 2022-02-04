@@ -35,27 +35,40 @@ public:
      * @brief Constructor.
      *
      * @param[in] dim The full-order state dimension.
+     * @param[in] dt The dt between samples.
      */
-    DMD(int dim);
+    DMD(int dim, double dt);
 
     /**
      * @brief Sample the new state, u_in.
      *
      * @pre u_in != 0
+     * @pre t >= 0.0
      *
-     * @param[in] u_in The state at the specified time.
+     * @param[in] u_in The new state.
      */
-    void takeSample(double* u_in);
+    virtual void takeSample(double* u_in);
+
+    /**
+     * @brief Sample the new state, u_in.
+     *
+     * @pre u_in != 0
+     * @pre t >= 0.0
+     *
+     * @param[in] u_in The new state.
+     * @param[in] t    The time of the newly sampled state.
+     */
+    virtual void takeSample(double* u_in, double t);
 
     /**
      * @param[in] energy_fraction The energy fraction to keep after doing SVD.
      */
-    void train(double energy_fraction);
+    virtual void train(double energy_fraction);
 
     /**
      * @param[in] k The number of modes (eigenvalues) to keep after doing SVD.
      */
-    void train(int k);
+    virtual void train(int k);
 
     /**
      * @brief Predict new initial condition using d_phi.
@@ -68,9 +81,9 @@ public:
      * @brief Predict state given a time. Uses the projected initial condition of the
      *        training dataset (the first column).
      *
-     * @param[in] n The time of the outputted state (t/dt)
+     * @param[in] t The time of the outputted state
      */
-    Vector* predict(double n);
+    virtual Vector* predict(double t);
 
     /**
      * @brief Predict state given a new initial condition and time.
@@ -78,16 +91,16 @@ public:
      *        for correct results.
      *
      * @param[in] init The initial condition.
-     * @param[in] n The time of the outputted state (t/dt)
+     * @param[in] t The time of the outputted state
      */
-    Vector* predict(const std::pair<Vector*, Vector*> init, double n);
+    virtual Vector* predict(const std::pair<Vector*, Vector*> init, double t);
 
     /**
      * @brief Get the snapshot matrix contained within d_snapshots.
      */
     const Matrix* getSnapshotMatrix();
 
-private:
+protected:
 
     /**
      * @brief Unimplemented default constructor.
@@ -108,6 +121,23 @@ private:
         const DMD& rhs);
 
     /**
+     * @brief Internal function to multiply d_phi with the eigenvalues.
+     */
+    std::pair<Matrix*, Matrix*> phiMultEigs(double n);
+
+    /**
+     * @brief Internal function to obtain the DMD modes.
+     */
+    void constructDMD(const Matrix* f_snapshots,
+                      int rank,
+                      int num_procs);
+
+    /**
+     * @brief Get the snapshot matrix contained within d_snapshots.
+     */
+    const Matrix* createSnapshotMatrix(std::vector<Vector*> snapshots);
+
+    /**
      * @brief The rank of the process this object belongs to.
      */
     int d_rank;
@@ -123,21 +153,19 @@ private:
     int d_dim;
 
     /**
+     * @brief The dt between samples.
+     */
+    double d_dt;
+
+    /**
      * @brief std::vector holding the snapshots.
      */
-    std::vector<Vector> d_snapshots;
+    std::vector<Vector*> d_snapshots;
 
     /**
-     * @brief Internal function to multiply d_phi with the eigenvalues.
+     * @brief Whether the DMD has been trained or not.
      */
-    std::pair<Matrix*, Matrix*> phiMultEigs(double n);
-
-    /**
-     * @brief Internal function to obtain the DMD modes.
-     */
-    void constructDMD(const Matrix* f_snapshots,
-                      int rank,
-                      int num_procs);
+    bool d_trained;
 
     /**
      * @brief The real part of d_phi.

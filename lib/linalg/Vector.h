@@ -58,7 +58,7 @@ public:
      *                the Vector on this processor.
      * @param[in] distributed If true the dimensions of the Vector are spread
      *                        over all processors.
-     * @param[in] copy_data If true the vector allocates is own storage and
+     * @param[in] copy_data If true the vector allocates its own storage and
      *                      copies the contents of vec into its own storage.
      *                      Otherwise it uses vec as its storage.
      */

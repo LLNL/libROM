@@ -68,7 +68,7 @@ TEST(DMDTest, Test_DMD)
     double* sample3 = new double[5] {-1.3499, 3.0349, 0.7254, -0.0631, 0.7147};
     double* prediction_baseline = new double[5] {-0.0847, 0.0805, 0.0338, 0.1146, 0.1125};
 
-    CAROM::DMD dmd(d_num_rows);
+    CAROM::DMD dmd(d_num_rows, 1.0);
     dmd.takeSample(&sample1[row_offset[d_rank]]);
     dmd.takeSample(&sample2[row_offset[d_rank]]);
     dmd.takeSample(&sample3[row_offset[d_rank]]);

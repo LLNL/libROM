@@ -36,12 +36,13 @@ extern "C" {
     void zgetri(int*, double*, int*, int*, double*, int*, int*);
 }
 
-using namespace std;
-
 namespace CAROM {
 
-DMD::DMD(int dim)
+DMD::DMD(int dim, double dt)
 {
+    CAROM_VERIFY(dim > 0);
+    CAROM_VERIFY(dt > 0);
+
     // Get the rank of this process, and the number of processors.
     int mpi_init;
     MPI_Initialized(&mpi_init);
@@ -52,14 +53,20 @@ DMD::DMD(int dim)
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
     d_dim = dim;
+    d_dt = dt;
+    d_trained = false;
 }
 
 void DMD::takeSample(double* u_in)
 {
     CAROM_VERIFY(u_in != 0);
-
-    Vector sample(u_in, d_dim, true);
+    Vector* sample = new Vector(u_in, d_dim, true);
     d_snapshots.push_back(sample);
+}
+
+void DMD::takeSample(double* u_in, double t)
+{
+    takeSample(u_in);
 }
 
 void DMD::train(double energy_fraction)
@@ -228,6 +235,8 @@ DMD::constructDMD(const Matrix* f_snapshots,
     // Calculate pinv(d_phi) * initial_condition.
     projectInitialCondition(init);
 
+    d_trained = true;
+
     delete d_basis;
     delete d_basis_right;
     delete d_S_inv;
@@ -330,17 +339,20 @@ DMD::projectInitialCondition(const Vector* init)
 }
 
 Vector*
-DMD::predict(double n)
+DMD::predict(double t)
 {
     const std::pair<Vector*, Vector*> d_projected_init_pair(d_projected_init_real, d_projected_init_imaginary);
-    return predict(d_projected_init_pair, n);
+    return predict(d_projected_init_pair, t);
 }
 
 Vector*
 DMD::predict(const std::pair<Vector*, Vector*> init,
-             double n)
+             double t)
 {
-    std::pair<Matrix*, Matrix*> d_phi_pair = phiMultEigs(n);
+    CAROM_VERIFY(d_trained);
+    CAROM_VERIFY(t >= 0.0);
+    double t_dt = t / d_dt;
+    std::pair<Matrix*, Matrix*> d_phi_pair = phiMultEigs(t_dt);
     Matrix* d_phi_mult_eigs_real = d_phi_pair.first;
     Matrix* d_phi_mult_eigs_imaginary = d_phi_pair.second;
 
@@ -387,21 +399,27 @@ DMD::phiMultEigs(double n)
 const Matrix*
 DMD::getSnapshotMatrix()
 {
-    CAROM_VERIFY(d_snapshots.size() > 0);
-    CAROM_VERIFY(d_snapshots[0].dim() > 0);
-    for (int i = 0 ; i < d_snapshots.size() - 1; i++)
+    return createSnapshotMatrix(d_snapshots);
+}
+
+const Matrix*
+DMD::createSnapshotMatrix(std::vector<Vector*> snapshots)
+{
+    CAROM_VERIFY(snapshots.size() > 0);
+    CAROM_VERIFY(snapshots[0]->dim() > 0);
+    for (int i = 0 ; i < snapshots.size() - 1; i++)
     {
-        CAROM_VERIFY(d_snapshots[i].dim() == d_snapshots[i + 1].dim());
-        CAROM_VERIFY(d_snapshots[i].distributed() == d_snapshots[i + 1].distributed());
+        CAROM_VERIFY(snapshots[i]->dim() == snapshots[i + 1]->dim());
+        CAROM_VERIFY(snapshots[i]->distributed() == snapshots[i + 1]->distributed());
     }
 
-    Matrix* snapshot_mat = new Matrix(d_snapshots[0].dim(), d_snapshots.size(), d_snapshots[0].distributed());
+    Matrix* snapshot_mat = new Matrix(snapshots[0]->dim(), snapshots.size(), snapshots[0]->distributed());
 
-    for (int i = 0; i < d_snapshots[0].dim(); i++)
+    for (int i = 0; i < snapshots[0]->dim(); i++)
     {
-        for (int j = 0; j < d_snapshots.size(); j++)
+        for (int j = 0; j < snapshots.size(); j++)
         {
-            snapshot_mat->item(i, j) = d_snapshots[j].item(i);
+            snapshot_mat->item(i, j) = snapshots[j]->item(i);
         }
     }
 

@@ -89,7 +89,7 @@ protected:
      *        a small epsilon: larger influential width
      *        a large epsilon: smaller influential width
      */
-    int d_epsilon;
+    double d_epsilon;
 
     /**
      * @brief The sampled parameter points.
@@ -105,29 +105,6 @@ protected:
      * @brief The RHS of the linear solve in tangential space.
      */
     Matrix* d_lambda_T;
-
-    /**
-     * @brief Compute the RBF from the parameter points with the
-     *        unsampled parameter point.
-     *
-     * @param[in] point The unsampled parameter point.
-     */
-    std::vector<double> obtainRBFToTrainingPoints(Vector* point);
-
-    /**
-     * @brief Compute the sum of the RBF weights.
-     *
-     * @param[in] rbf The vector holding the rbfs of the training points.
-     */
-    double rbfWeightedSum(std::vector<double> rbf);
-
-    /**
-     * @brief Compute the RBF between two points.
-     *
-     * @param[in] point1 The first point.
-     * @param[in] point2 The second point.
-     */
-    double obtainRBF(Vector* point1, Vector* point2);
 
 private:
 
@@ -149,6 +126,39 @@ private:
     operator = (
         const Interpolator& rhs);
 };
+
+/**
+ * @brief Compute the RBF from the parameter points with the
+ *        unsampled parameter point.
+ *
+ * @param[in] parameter_points The parameter points.
+ * @param[in] interp_method  The interpolation method type ("LS" == linear solve,
+ *                           "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
+ * @param[in] rbf Which RBF to compute.
+ * @param[in] epsilon   The RBF parameter that determines the width of
+                        influence.
+ * @param[in] point The unsampled parameter point.
+ */
+std::vector<double> obtainRBFToTrainingPoints(std::vector<Vector*> parameter_points,
+        std::string interp_method, std::string rbf, double epsilon, Vector* point);
+
+/**
+ * @brief Compute the sum of the RBF weights.
+ *
+ * @param[in] rbf The vector holding the rbfs of the training points.
+ */
+double rbfWeightedSum(std::vector<double>& rbf);
+
+/**
+ * @brief Compute the RBF between two points.
+ *
+ * @param[in] rbf Which RBF to compute.
+ * @param[in] epsilon   The RBF parameter that determines the width of
+                        influence.
+ * @param[in] point1 The first point.
+ * @param[in] point2 The second point.
+ */
+double obtainRBF(std::string rbf, double epsilon, Vector* point1, Vector* point2);
 
 /**
  * @brief Obtain the rotation matrices for all the parameter points using

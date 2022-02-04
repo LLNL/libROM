@@ -351,7 +351,7 @@ int main(int argc, char *argv[])
 
     // 11. Create DMD object and take initial sample.
     u_gf.SetFromTrueDofs(u);
-    CAROM::DMD dmd_u(u.Size());
+    CAROM::DMD dmd_u(u.Size(), dt);
     dmd_u.takeSample(u.GetData());
 
     dmd_training_timer.Stop();
@@ -461,7 +461,7 @@ int main(int argc, char *argv[])
     {
         std::cout << "Predicting position and velocity at t_final using DMD" << std::endl;
     }
-    CAROM::Vector* result_u = dmd_u.predict(t_final/dt);
+    CAROM::Vector* result_u = dmd_u.predict(t_final);
 
     dmd_prediction_timer.Stop();
 
