@@ -60,7 +60,8 @@ list(APPEND source_files
 
 if (USE_MFEM)
     list(APPEND source_files
-      mfem/SampleMesh.hpp)
+      mfem/SampleMesh.hpp
+      mfem/SampleMesh.cpp)
 endif()
 
 list(APPEND source_files

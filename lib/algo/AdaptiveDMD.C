@@ -64,6 +64,7 @@ void AdaptiveDMD::takeSample(double* u_in, double t)
 void AdaptiveDMD::train(double energy_fraction)
 {
     const Matrix* f_snapshots = getInterpolatedSnapshots();
+    const Matrix* f_snapshots = interpolateSnapshots();
     CAROM_VERIFY(f_snapshots->numColumns() > 1);
     CAROM_VERIFY(energy_fraction > 0 && energy_fraction <= 1);
     d_energy_fraction = energy_fraction;
@@ -75,6 +76,7 @@ void AdaptiveDMD::train(double energy_fraction)
 void AdaptiveDMD::train(int k)
 {
     const Matrix* f_snapshots = getInterpolatedSnapshots();
+    const Matrix* f_snapshots = interpolateSnapshots();
     CAROM_VERIFY(f_snapshots->numColumns() > 1);
     CAROM_VERIFY(k > 0 && k <= f_snapshots->numColumns() - 1);
     d_energy_fraction = -1.0;
@@ -147,4 +149,5 @@ const Matrix* AdaptiveDMD::getInterpolatedSnapshots()
     if (d_interp_snapshots.size() == 0) interpolateSnapshots();
     return createSnapshotMatrix(d_interp_snapshots);
 }
+
 }
