@@ -17,6 +17,7 @@
 #include <string>
 #include <fstream>
 #include <vector>
+#include <complex>
 
 namespace CAROM {
 
@@ -113,6 +114,26 @@ public:
         int nelements);
 
     /**
+     * @brief Writes a vector of complex doubles associated with the supplied key to
+     * the currently open CSV database file.
+     *
+     * @pre !key.empty()
+     * @pre data != 0
+     * @pre nelements > 0
+     *
+     * @param[in] key The key associated with the vector of values to be
+     *                written.
+     * @param[in] data The vector of complex double values to be written.
+     * @param[in] nelements The number of complex doubles in the vector.
+     */
+    virtual
+    void
+    putComplexVector(
+        const std::string& key,
+        const std::vector<std::complex<double>> data,
+        int nelements);
+
+    /**
      * @brief Reads an array of integers associated with the supplied key
      * from the currently open CSV database file.
      *
@@ -132,18 +153,18 @@ public:
         int nelements);
 
     /**
-     * @brief Reads an array of integers associated with the supplied key
+     * @brief Reads a vector of integers associated with the supplied key
      * from the currently open CSV database file.
      *
      * @pre !key.empty()
      *
-     * @param[in] key The key associated with the array of values to be
+     * @param[in] key The key associated with the vector of values to be
      *                read.
      * @param[out] data The allocated vector of integer values to be read.
-     * @param[in] append True if append to the list, otherwise overwite.
+     * @param[in] append True if append to the vector, otherwise overwite.
      */
     void
-    getIntegerArray(
+    getIntegerVector(
         const std::string& key,
         std::vector<int> &data, 
         bool append);
@@ -214,18 +235,18 @@ public:
         int stride);
 
     /**
-     * @brief Reads a list of strings associated with the supplied key
+     * @brief Reads a vector of strings associated with the supplied key
      * from the currently open CSV database file.
      *
      * @pre !key.empty()
      *
-     * @param[in] key The key associated with the list of strings to be
+     * @param[in] key The key associated with the vector of strings to be
      *                read.
      * @param[out] data The allocated vector of strings to be read.
-     * @param[in] append True if append to the list, otherwise overwite.
+     * @param[in] append True if append to the vector, otherwise overwite.
      */
     void
-    getStringList(
+    getStringVector(
         const std::string& key,
         std::vector<std::string> &data, 
         bool append);

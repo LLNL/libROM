@@ -137,7 +137,7 @@ void AdaptiveDMD::interpolateSnapshots()
     }
 }
 
-double AdaptiveDMD::getTruedt()
+double AdaptiveDMD::getTrueDt()
 {
     return d_dt;
 }

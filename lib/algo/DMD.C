@@ -187,8 +187,6 @@ DMD::constructDMD(const Matrix* f_snapshots,
     }
 
     std::cout << "Using " << d_k << " basis vectors out of " << num_singular_vectors << "." << std::endl;
-    CSVDatabase* db_CSVOutput(new CSVDatabase);
-    db_CSVOutput->putDoubleArray("SV.csv", d_factorizer->S, num_singular_vectors);
 
     // Allocate the appropriate matrices and gather their elements.
     Matrix* d_basis = new Matrix(f_snapshots->numRows(), d_k, f_snapshots->distributed());
@@ -223,7 +221,6 @@ DMD::constructDMD(const Matrix* f_snapshots,
     // Calculate the right eigenvalues/eigenvectors of A_tilde
     ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(A_tilde);
     d_eigs = eigenpair.eigs;
-    for (int i = 0; i < d_eigs.size(); ++i) std::cout << "Eigenvalue #" << i << ": " << d_eigs[i] << std::endl;
 
     // Calculate phi
     Matrix* f_snapshots_plus_mult_d_basis_right = f_snapshots_plus->mult(d_basis_right);
@@ -242,6 +239,10 @@ DMD::constructDMD(const Matrix* f_snapshots,
 
     d_trained = true;
 
+    CSVDatabase* csv_db(new CSVDatabase);
+    csv_db->putDoubleArray("singular_value.csv", d_factorizer->S, num_singular_vectors);
+    csv_db->putComplexVector("eigenvalue.csv", d_eigs, d_eigs.size());
+
     delete d_basis;
     delete d_basis_right;
     delete d_S_inv;
@@ -255,7 +256,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
     delete eigenpair.ev_real;
     delete eigenpair.ev_imaginary;
     delete init;
-    delete db_CSVOutput;
+    delete csv_db;
 }
 
 

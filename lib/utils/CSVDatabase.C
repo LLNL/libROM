@@ -13,6 +13,7 @@
 #include "CSVDatabase.h"
 #include "Utilities.h"
 #include <vector>
+#include <complex>
 
 namespace CAROM {
 
@@ -82,6 +83,24 @@ CSVDatabase::putDoubleArray(
 }
 
 void
+CSVDatabase::putComplexVector(
+    const std::string& key,
+    const std::vector<std::complex<double>> data,
+    int nelements)
+{
+    CAROM_ASSERT(!key.empty());
+    CAROM_ASSERT(data != 0);
+    CAROM_ASSERT(nelements > 0);
+
+    std::ofstream d_fs(key.c_str());
+    for (int i = 0; i < nelements; ++i)
+    {
+        d_fs << std::real(data[i]) << "," << std::imag(data[i]) << std::endl;
+    }
+    d_fs.close();
+}
+
+void
 CSVDatabase::getIntegerArray(
     const std::string& key,
     int* data,
@@ -104,7 +123,7 @@ CSVDatabase::getIntegerArray(
 }
 
 void
-CSVDatabase::getIntegerArray(
+CSVDatabase::getIntegerVector(
     const std::string& key,
     std::vector<int> &data, 
     bool append)
@@ -214,7 +233,7 @@ CSVDatabase::getDoubleArray(
 }
 
 void
-CSVDatabase::getStringList(
+CSVDatabase::getStringVector(
     const std::string& key,
     std::vector<std::string> &data, 
     bool append)

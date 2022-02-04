@@ -73,7 +73,7 @@ public:
     /**
      * @brief Get the true dt between interpolated snapshots. 
      */
-    double getTruedt();
+    double getTrueDt();
 
     /**
      * @brief Get the interpolated snapshot matrix contained within d_interp_snapshots.

@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
 
     int dim = nelements;
     std::vector<int> idx_state;
-    csv_db->getIntegerArray(std::string(data_dir) + "/index.csv", idx_state, false);
+    csv_db->getIntegerVector(std::string(data_dir) + "/index.csv", idx_state, false);
     if (idx_state.size() > 0)
     {
         dim = idx_state.size();
@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
     }
 
     std::vector<std::string> training_par_list;
-    csv_db->getStringList(std::string(list_dir) + "/training_gpa", training_par_list, false);
+    csv_db->getStringVector(std::string(list_dir) + "/training_gpa", training_par_list, false);
     int npar = training_par_list.size();
 
     double* sample = new double[dim];
@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
             cout << "Loading samples for " << par_dir << " to train DMD." << endl;
         }
         std::vector<std::string> snap_list;
-        csv_db->getStringList(std::string(list_dir) + "/" + par_dir, snap_list, false);
+        csv_db->getStringVector(std::string(list_dir) + "/" + par_dir, snap_list, false);
         int num_snap = snap_list.size();
         double tval = 0.0;
         for (int idx_snap = 0; idx_snap < num_snap; ++idx_snap)
@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
     if (admd)
     {
         MFEM_VERIFY(npar == 1, "Adaptive DMD only works with 1 training parameter.");
-        dtc = admd->getTruedt();
+        dtc = admd->getTrueDt();
         const CAROM::Matrix* f_snapshots = admd->getInterpolatedSnapshots();
         CAROM::Vector* isnap = new CAROM::Vector(dim, true);
         if (myid == 0)
@@ -201,7 +201,7 @@ int main(int argc, char *argv[])
     }
 
     std::vector<std::string> testing_par_list;
-    csv_db->getStringList(std::string(list_dir) + "/testing_gpa", testing_par_list, false);
+    csv_db->getStringVector(std::string(list_dir) + "/testing_gpa", testing_par_list, false);
     npar = testing_par_list.size();
 
     int num_tests = 0;
@@ -215,7 +215,7 @@ int main(int argc, char *argv[])
             cout << "Predicting solution for " << par_dir << " using DMD." << endl;
         }
         std::vector<std::string> snap_list;
-        csv_db->getStringList(std::string(list_dir) + "/" + par_dir, snap_list, false);
+        csv_db->getStringVector(std::string(list_dir) + "/" + par_dir, snap_list, false);
         int num_snap = snap_list.size();
         double tval = 0.0;
         for (int idx_snap = 0; idx_snap < num_snap; ++idx_snap)
