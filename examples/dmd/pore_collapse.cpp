@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
     CAROM::DMD* dmd = nullptr;
     CAROM::AdaptiveDMD* admd = nullptr;
     if (dtc > 0.0){
-        dmd = new CAROM::DMD(dim);
+        dmd = new CAROM::DMD(dim, dtc);
     }
     else
     {
@@ -178,9 +178,9 @@ int main(int argc, char *argv[])
         }
         for (int k = 0; k < f_snapshots->numColumns(); ++k)
         {
-            double tval = t_init + k * dtc;
+            double tval = t_init + k*dtc;
             f_snapshots->getColumn(k, isnap);
-            result = admd->predict(k);
+            result = admd->predict(tval-t_init);
 
             Vector dmd_solution(result->getData(), dim);
             Vector true_solution(isnap->getData(), dim);
@@ -245,7 +245,7 @@ int main(int argc, char *argv[])
                         cout << "Predicting DMD solution at t = " << t_final << "." << endl;
                     }
                     dmd_prediction_timer.Start();
-                    result = dmd->predict((t_final-t_init)/dtc);
+                    result = dmd->predict(t_final-t_init);
                     dmd_prediction_timer.Stop();
                     // TODO: store result
                     return 0;
@@ -253,14 +253,12 @@ int main(int argc, char *argv[])
             }
             else // Verify DMD prediction results against dataset
             {
-                double dmd_power = (tval-t_init)/dtc;
                 if (myid == 0)
                 {
                     cout << "Predicting DMD solution #" << idx_snap << " at t = " << tval << "." << endl;
-                    cout << "DMD power = " << dmd_power << "." << endl;
                 }
                 dmd_prediction_timer.Start();
-                result = dmd->predict(dmd_power);
+                result = dmd->predict(tval-t_init);
                 dmd_prediction_timer.Stop();
 
                 // Calculate the relative error between the DMD final solution and the true solution.
