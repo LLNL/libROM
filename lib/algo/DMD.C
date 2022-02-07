@@ -58,16 +58,16 @@ DMD::DMD(int dim, double dt)
     d_trained = false;
 }
 
-void DMD::takeSample(double* u_in)
-{
-    CAROM_VERIFY(u_in != 0);
-    Vector* sample = new Vector(u_in, d_dim, true);
-    d_snapshots.push_back(sample);
-}
-
 void DMD::takeSample(double* u_in, double t)
 {
-    takeSample(u_in);
+    CAROM_VERIFY(u_in != 0);
+    CAROM_VERIFY(t >= 0.0);
+    Vector* sample = new Vector(u_in, d_dim, true);
+    if (d_snapshots.empty())
+    {
+        d_t_offset = t;
+    }
+    d_snapshots.push_back(sample);
 }
 
 void DMD::train(double energy_fraction)
@@ -358,6 +358,7 @@ DMD::predict(const std::pair<Vector*, Vector*> init,
 {
     CAROM_VERIFY(d_trained);
     CAROM_VERIFY(t >= 0.0);
+    t -= d_t_offset;
     double t_dt = t / d_dt;
     std::pair<Matrix*, Matrix*> d_phi_pair = phiMultEigs(t_dt);
     Matrix* d_phi_mult_eigs_real = d_phi_pair.first;

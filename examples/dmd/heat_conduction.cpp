@@ -352,7 +352,7 @@ int main(int argc, char *argv[])
     // 11. Create DMD object and take initial sample.
     u_gf.SetFromTrueDofs(u);
     CAROM::DMD dmd_u(u.Size(), dt);
-    dmd_u.takeSample(u.GetData());
+    dmd_u.takeSample(u.GetData(), t);
 
     dmd_training_timer.Stop();
 
@@ -373,7 +373,7 @@ int main(int argc, char *argv[])
         dmd_training_timer.Start();
 
         u_gf.SetFromTrueDofs(u);
-        dmd_u.takeSample(u.GetData());
+        dmd_u.takeSample(u.GetData(), t);
 
         dmd_training_timer.Stop();
 
