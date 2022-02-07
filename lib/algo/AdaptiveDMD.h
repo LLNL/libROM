@@ -13,9 +13,7 @@
 //              between the samples. This algorithm uniformly interpolates the samples
 //              that may have been taken with variable steps, using the constant step dt
 //              (a prequisite of the DMD algorithm). The smaller dt is, the finer
-//              the fidelity of the interpolation. This algorithm also works in
-//              the case that the first sample does not start from t = 0.0 by
-//              incorporating a time offset.
+//              the fidelity of the interpolation.
 
 #ifndef included_AdaptiveDMD_h
 #define included_AdaptiveDMD_h

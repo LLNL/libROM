@@ -12,6 +12,8 @@
 //              implemented dynamic mode decomposition algorithm is derived from
 //              Tu et. al's paper "On Dynamic Mode Decomposition: Theory and
 //              Applications": https://arxiv.org/abs/1312.0041
+//              This algorithm also works in the case that the first sample does
+//              not start from t = 0.0 by incorporating a time offset.
 
 #ifndef included_DMD_h
 #define included_DMD_h
