@@ -46,16 +46,6 @@ public:
      * @pre t >= 0.0
      *
      * @param[in] u_in The new state.
-     */
-    virtual void takeSample(double* u_in);
-
-    /**
-     * @brief Sample the new state, u_in.
-     *
-     * @pre u_in != 0
-     * @pre t >= 0.0
-     *
-     * @param[in] u_in The new state.
      * @param[in] t    The time of the newly sampled state.
      */
     virtual void takeSample(double* u_in, double t);
@@ -83,7 +73,7 @@ public:
      *
      * @param[in] t The time of the outputted state
      */
-    virtual Vector* predict(double t);
+    Vector* predict(double t);
 
     /**
      * @brief Predict state given a new initial condition and time.
@@ -93,7 +83,7 @@ public:
      * @param[in] init The initial condition.
      * @param[in] t The time of the outputted state
      */
-    virtual Vector* predict(const std::pair<Vector*, Vector*> init, double t);
+    Vector* predict(const std::pair<Vector*, Vector*> init, double t);
 
     /**
      * @brief Get the snapshot matrix contained within d_snapshots.
@@ -156,6 +146,11 @@ protected:
      * @brief The dt between samples.
      */
     double d_dt;
+
+    /**
+     * @brief The time offset of the first sample.
+     */
+    double d_t_offset;
 
     /**
      * @brief std::vector holding the snapshots.

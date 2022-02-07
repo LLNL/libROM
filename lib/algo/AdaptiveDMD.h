@@ -70,24 +70,6 @@ public:
      */
     void train(int k);
 
-    /**
-     * @brief Predict state given a time. Uses the projected initial condition of the
-     *        training dataset (the first column).
-     *
-     * @param[in] t The time of the outputted state
-     */
-    Vector* predict(double t);
-
-    /**
-     * @brief Predict state given a new initial condition and time.
-     *        The initial condition must be projected using projectInitialCondition
-     *        for correct results.
-     *
-     * @param[in] init The initial condition.
-     * @param[in] t The time of the outputted state
-     */
-    Vector* predict(const std::pair<Vector*, Vector*> init, double t);
-
 private:
 
     /**
@@ -136,11 +118,6 @@ private:
      *        a large epsilon: smaller influential width
      */
     double d_epsilon;
-
-    /**
-     * @brief The time offset of the first sample.
-     */
-    double d_t_offset;
 };
 
 }
