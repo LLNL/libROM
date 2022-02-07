@@ -30,7 +30,6 @@ int main(int argc, char *argv[])
     int num_procs = mpi.WorldSize();
     int myid = mpi.WorldRank();
 
-    double t_init = 0.0;
     double t_final = -1.0;
     double dtc = 0.0;
     double ddt = 0.00005;
@@ -44,8 +43,6 @@ int main(int argc, char *argv[])
     cout.precision(precision);
 
     OptionsParser args(argc, argv);
-    args.AddOption(&t_init, "-ti", "--t-init",
-                   "Start time.");
     args.AddOption(&t_final, "-tf", "--t-final",
                    "Final time.");
     args.AddOption(&dtc, "-dtc", "--dtc", 
@@ -95,7 +92,6 @@ int main(int argc, char *argv[])
     {
         dim = idx_state.size();
         cout << "Restricting on " << dim << " entries out of " << nelements << "." << endl;
-        for (int k = 0; k < dim; ++k) cout << k << "-th index: " << idx_state[k] << endl;
     }
 
     CAROM::DMD* dmd = nullptr;
@@ -132,13 +128,9 @@ int main(int argc, char *argv[])
         {
             std::string snap = snap_list[idx_snap]; // run_036.*
             csv_db->getDoubleArray(std::string(data_dir) + "/" + par_dir + "/" + snap + "/tval.txt", &tval, 1);
-            if (idx_snap == 0)
-            {
-                t_init = tval;
-            }
             std::string data_filename = std::string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv"; // {zone_*,tkelv}.csv
             csv_db->getDoubleArray(data_filename, sample, nelements, idx_state);
-            dmd->takeSample(sample, tval - t_init);
+            dmd->takeSample(sample, tval);
         }
         if (myid == 0)
         {
@@ -169,6 +161,7 @@ int main(int argc, char *argv[])
     if (admd)
     {
         MFEM_VERIFY(npar == 1, "Adaptive DMD only works with 1 training parameter.");
+        double t_init = dmd->getTimeOffset();
         dtc = admd->getTrueDt();
         const CAROM::Matrix* f_snapshots = admd->getInterpolatedSnapshots();
         CAROM::Vector* isnap = new CAROM::Vector(dim, true);
@@ -178,9 +171,8 @@ int main(int argc, char *argv[])
         }
         for (int k = 0; k < f_snapshots->numColumns(); ++k)
         {
-            double tval = t_init + k*dtc;
             f_snapshots->getColumn(k, isnap);
-            result = admd->predict(tval-t_init);
+            result = admd->predict(t_init+k*dtc);
 
             Vector dmd_solution(result->getData(), dim);
             Vector true_solution(isnap->getData(), dim);
@@ -192,9 +184,9 @@ int main(int argc, char *argv[])
 
             if (myid == 0)
             {
-                cout << "Norm of true solution at t = " << tval << " is " << tot_true_solution_norm << endl;
-                cout << "Absolute error of DMD solution at t = " << tval << " is " << tot_diff_norm << endl;
-                cout << "Relative error of DMD solution at t = " << tval << " is " << tot_diff_norm / tot_true_solution_norm << endl;
+                cout << "Norm of " << k << "-th interpolated snapshot is " << tot_true_solution_norm << endl;
+                cout << "Absolute error of DMD prediction for " << k << "-th interpolated snapshot is " << tot_diff_norm << endl;
+                cout << "Relative error of DMD prediction for " << k << "-th interpolated snapshot is " << tot_diff_norm / tot_true_solution_norm << endl;
             }
         }
         delete isnap;
@@ -231,7 +223,6 @@ int main(int argc, char *argv[])
 
             if (idx_snap == 0)
             {
-                t_init = tval;
                 for (int i = 0; i < dim; ++i)
                 {
                     init_cond->item(i) = sample[i]; 
@@ -245,7 +236,7 @@ int main(int argc, char *argv[])
                         cout << "Predicting DMD solution at t = " << t_final << "." << endl;
                     }
                     dmd_prediction_timer.Start();
-                    result = dmd->predict(t_final-t_init);
+                    result = dmd->predict(t_final);
                     dmd_prediction_timer.Stop();
                     // TODO: store result
                     return 0;
@@ -258,7 +249,7 @@ int main(int argc, char *argv[])
                     cout << "Predicting DMD solution #" << idx_snap << " at t = " << tval << "." << endl;
                 }
                 dmd_prediction_timer.Start();
-                result = dmd->predict(tval-t_init);
+                result = dmd->predict(tval);
                 dmd_prediction_timer.Stop();
 
                 // Calculate the relative error between the DMD final solution and the true solution.

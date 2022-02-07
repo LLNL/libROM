@@ -404,6 +404,12 @@ DMD::phiMultEigs(double n)
     return std::pair<Matrix*,Matrix*>(d_phi_mult_eigs_real, d_phi_mult_eigs_imaginary);
 }
 
+double
+DMD::getTimeOffset() const
+{
+    return d_t_offset;
+}
+
 const Matrix*
 DMD::getSnapshotMatrix()
 {

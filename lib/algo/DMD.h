@@ -88,6 +88,11 @@ public:
     Vector* predict(const std::pair<Vector*, Vector*> init, double t);
 
     /**
+     * @brief Get the time offset contained within d_t_offset.
+     */
+    double getTimeOffset() const;
+
+    /**
      * @brief Get the snapshot matrix contained within d_snapshots.
      */
     const Matrix* getSnapshotMatrix();
