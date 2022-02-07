@@ -166,10 +166,10 @@ Matrix* solveLinearSystem(std::vector<Vector*> parameter_points,
                           std::vector<Vector*> data, std::string interp_method,
                           std::string rbf, double& epsilon)
 {
+    Matrix* f_T = NULL;
     if (interp_method == "LS")
     {
         int info = 1;
-        Matrix* f_T = NULL;
         while (info != 0)
         {
             // Solving f = B*lambda
@@ -211,9 +211,8 @@ Matrix* solveLinearSystem(std::vector<Vector*> parameter_points,
                 delete f_T;
             }
         }
-
-        return f_T;
     }
+    return f_T;
 }
 
 }

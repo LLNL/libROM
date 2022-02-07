@@ -12,6 +12,8 @@
 //              implemented dynamic mode decomposition algorithm is derived from
 //              Tu et. al's paper "On Dynamic Mode Decomposition: Theory and
 //              Applications": https://arxiv.org/abs/1312.0041
+//              This algorithm also works in the case that the first sample does
+//              not start from t = 0.0 by incorporating a time offset.
 
 #ifndef included_DMD_h
 #define included_DMD_h
@@ -38,16 +40,6 @@ public:
      * @param[in] dt The dt between samples.
      */
     DMD(int dim, double dt);
-
-    /**
-     * @brief Sample the new state, u_in.
-     *
-     * @pre u_in != 0
-     * @pre t >= 0.0
-     *
-     * @param[in] u_in The new state.
-     */
-    virtual void takeSample(double* u_in);
 
     /**
      * @brief Sample the new state, u_in.
@@ -83,7 +75,7 @@ public:
      *
      * @param[in] t The time of the outputted state
      */
-    virtual Vector* predict(double t);
+    Vector* predict(double t);
 
     /**
      * @brief Predict state given a new initial condition and time.
@@ -93,7 +85,7 @@ public:
      * @param[in] init The initial condition.
      * @param[in] t The time of the outputted state
      */
-    virtual Vector* predict(const std::pair<Vector*, Vector*> init, double t);
+    Vector* predict(const std::pair<Vector*, Vector*> init, double t);
 
     /**
      * @brief Get the snapshot matrix contained within d_snapshots.
@@ -156,6 +148,11 @@ protected:
      * @brief The dt between samples.
      */
     double d_dt;
+
+    /**
+     * @brief The time offset of the first sample.
+     */
+    double d_t_offset;
 
     /**
      * @brief std::vector holding the snapshots.

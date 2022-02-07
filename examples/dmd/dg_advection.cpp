@@ -598,7 +598,7 @@ int main(int argc, char *argv[])
 
     // 11. Create DMD object and take initial sample.
     CAROM::DMD dmd_U(U->Size(), dt);
-    dmd_U.takeSample(U->GetData());
+    dmd_U.takeSample(U->GetData(), t);
 
     dmd_training_timer.Stop();
 
@@ -617,7 +617,7 @@ int main(int argc, char *argv[])
 
         dmd_training_timer.Start();
 
-        dmd_U.takeSample(U->GetData());
+        dmd_U.takeSample(U->GetData(), t);
 
         dmd_training_timer.Stop();
 

@@ -84,18 +84,6 @@ void AdaptiveDMD::train(int k)
     delete f_snapshots;
 }
 
-Vector* AdaptiveDMD::predict(double t)
-{
-    const std::pair<Vector*, Vector*> d_projected_init_pair(d_projected_init_real, d_projected_init_imaginary);
-    return predict(d_projected_init_pair, t);
-}
-
-Vector* AdaptiveDMD::predict(const std::pair<Vector*, Vector*> init, double t)
-{
-    t -= d_t_offset;
-    return DMD::predict(init, t);
-}
-
 const Matrix* AdaptiveDMD::interpolateSnapshots()
 {
     CAROM_VERIFY(d_sampled_times.back()->item(0) > d_dt);
