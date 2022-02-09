@@ -136,7 +136,7 @@ if (USE_MFEM)
     nonlinear_elasticity
     heat_conduction
     dg_euler
-    pore_collapse)
+    generic_csv)
   set(example_directories
     prom
     prom
