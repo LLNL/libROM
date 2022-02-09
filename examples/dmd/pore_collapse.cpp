@@ -16,8 +16,10 @@
 // 1. LIST_DIR/training_par.csv           -- each row specifies one training DATASET 
 // 2. LIST_DIR/testing_par.csv            -- each row specifies one testing DATASET
 // 3. LIST_DIR/DATASET.csv                -- each row specifies one STATE in DATASET
-// 4. DATA_DIR/DATASET/STATE/VAR_NAME.csv -- each row specifies one coefficient in STATE
+// 4. DATA_DIR/DATASET/STATE/VAR_NAME.csv -- each row specifies one value of VAR_NAME of STATE
 // 5. DATA_DIR/DATASET/STATE/tval.csv     -- specifies the time instance of STATE
+// 6. DATA_DIR/dim.csv                    -- specifies the dimension of VAR_NAME
+// 7. DATA_DIR/index.csv                  -- (optional) each row specifies one DOF of VAR_NAME
 
 #include "mfem.hpp"
 #include "algo/DMD.h"
@@ -116,7 +118,7 @@ int main(int argc, char *argv[])
 
     std::string variable = std::string(var_name);
     int nelements = -1;
-    csv_db->getIntegerArray(std::string(data_dir) + "/dim.txt", &nelements, 1);
+    csv_db->getIntegerArray(std::string(data_dir) + "/dim.csv", &nelements, 1);
     if (myid == 0)
     {
         cout << "Variable " << var_name << " has dimension " << nelements << "." << endl;
@@ -254,7 +256,7 @@ int main(int argc, char *argv[])
         for (int idx_snap = 0; idx_snap < num_snap; ++idx_snap)
         {
             std::string snap = snap_list[idx_snap]; // STATE
-            csv_db->getDoubleArray(std::string(data_dir) + "/" + par_dir + "/" + snap + "/tval.txt", &tval, 1);
+            csv_db->getDoubleArray(std::string(data_dir) + "/" + par_dir + "/" + snap + "/tval.csv", &tval, 1);
             std::string data_filename = std::string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv"; // path to VAR_NAME.csv
             csv_db->getDoubleArray(data_filename, sample, nelements, idx_state);
             if (myid == 0)
