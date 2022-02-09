@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
     CAROM::Vector* result = new CAROM::Vector(dim, true);
     if (admd)
     {
-        MFEM_VERIFY(npar == 1, "Adaptive DMD only works with 1 training parameter.");
+        CAROM_VERIFY(npar == 1);
         double t_init = dmd->getTimeOffset();
         dtc = admd->getTrueDt();
         const CAROM::Matrix* f_snapshots = admd->getInterpolatedSnapshots();
@@ -303,7 +303,7 @@ int main(int argc, char *argv[])
         num_tests += num_snap;
     }
 
-    MFEM_VERIFY(num_tests > 0, "No prediction is made.");
+    CAROM_VERIFY(num_tests > 0);
 
     if (myid == 0)
     {
