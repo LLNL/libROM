@@ -9,6 +9,15 @@
  *****************************************************************************/
 
 // Description: DMD on general CSV datasets.
+//
+// User specify file locations and names by -list LIST_DIR -data DATA_DIR -var VAR_NAME
+// 
+// File structure:
+// 1. LIST_DIR/training_par.csv           -- each row specifies one training DATASET 
+// 2. LIST_DIR/testing_par.csv            -- each row specifies one testing DATASET
+// 3. LIST_DIR/DATASET.csv                -- each row specifies one STATE in DATASET
+// 4. DATA_DIR/DATASET/STATE/VAR_NAME.csv -- each row specifies one coefficient in STATE
+// 5. DATA_DIR/DATASET/STATE/tval.csv     -- specifies the time instance of STATE
 
 #include "mfem.hpp"
 #include "algo/DMD.h"
@@ -43,8 +52,8 @@ int main(int argc, char *argv[])
     double dmd_epsilon = -1.0;
     double ef = 1.0;
     int rdim = -1;
-    const char *list_dir = "list";
-    const char *data_dir = "data";
+    const char *list_dir = "";
+    const char *data_dir = "";
     const char *var_name = "var";
     const char *basename = "";
     int precision = 16;
@@ -134,7 +143,7 @@ int main(int argc, char *argv[])
     }
 
     std::vector<std::string> training_par_list;
-    csv_db->getStringVector(std::string(list_dir) + "/training_gpa", training_par_list, false);
+    csv_db->getStringVector(std::string(list_dir) + "/training_par.csv", training_par_list, false);
     int npar = training_par_list.size();
 
     double* sample = new double[dim];
@@ -143,7 +152,7 @@ int main(int argc, char *argv[])
 
     for (int idx_test = 0; idx_test < npar; ++idx_test) 
     {
-        std::string par_dir = training_par_list[idx_test]; // *gpa
+        std::string par_dir = training_par_list[idx_test]; // training DATASET
         if (myid == 0)
         {
             cout << "Loading samples for " << par_dir << " to train DMD." << endl;
@@ -154,9 +163,9 @@ int main(int argc, char *argv[])
         double tval = 0.0;
         for (int idx_snap = 0; idx_snap < num_snap; ++idx_snap)
         {
-            std::string snap = snap_list[idx_snap]; // run_036.*
-            csv_db->getDoubleArray(std::string(data_dir) + "/" + par_dir + "/" + snap + "/tval.txt", &tval, 1);
-            std::string data_filename = std::string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv"; // {zone_*,tkelv}.csv
+            std::string snap = snap_list[idx_snap]; // STATE
+            csv_db->getDoubleArray(std::string(data_dir) + "/" + par_dir + "/" + snap + "/tval.csv", &tval, 1);
+            std::string data_filename = std::string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv"; // path to VAR_NAME.csv
             csv_db->getDoubleArray(data_filename, sample, nelements, idx_state);
             dmd->takeSample(sample, tval);
         }
@@ -192,7 +201,7 @@ int main(int argc, char *argv[])
     CAROM::Vector* result = new CAROM::Vector(dim, true);
     if (admd)
     {
-        CAROM_VERIFY(npar == 1);
+        CAROM_VERIFY(npar == 1); // TODO
         double t_init = dmd->getTimeOffset();
         dtc = admd->getTrueDt();
         const CAROM::Matrix* f_snapshots = admd->getInterpolatedSnapshots();
@@ -225,7 +234,7 @@ int main(int argc, char *argv[])
     }
 
     std::vector<std::string> testing_par_list;
-    csv_db->getStringVector(std::string(list_dir) + "/testing_gpa", testing_par_list, false);
+    csv_db->getStringVector(std::string(list_dir) + "/testing_par.csv", testing_par_list, false);
     npar = testing_par_list.size();
 
     int num_tests = 0;
@@ -233,7 +242,7 @@ int main(int argc, char *argv[])
 
     for (int idx_test = 0; idx_test < npar; ++idx_test) 
     {
-        std::string par_dir = testing_par_list[idx_test]; // *gpa
+        std::string par_dir = testing_par_list[idx_test]; // testing DATASET
         if (myid == 0)
         {
             cout << "Predicting solution for " << par_dir << " using DMD." << endl;
@@ -244,9 +253,9 @@ int main(int argc, char *argv[])
         double tval = 0.0;
         for (int idx_snap = 0; idx_snap < num_snap; ++idx_snap)
         {
-            std::string snap = snap_list[idx_snap]; // run_036.*
+            std::string snap = snap_list[idx_snap]; // STATE
             csv_db->getDoubleArray(std::string(data_dir) + "/" + par_dir + "/" + snap + "/tval.txt", &tval, 1);
-            std::string data_filename = std::string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv"; // {zone_*,tkelv}.csv
+            std::string data_filename = std::string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv"; // path to VAR_NAME.csv
             csv_db->getDoubleArray(data_filename, sample, nelements, idx_state);
             if (myid == 0)
             {
@@ -260,7 +269,7 @@ int main(int argc, char *argv[])
                     init_cond->item(i) = sample[i]; 
                 }
                 dmd->projectInitialCondition(init_cond);
-                if (t_final > 0.0) // Practical prediction
+                if (t_final > 0.0) // Actual prediction
                 {
                     num_tests = 1;
                     if (myid == 0)
