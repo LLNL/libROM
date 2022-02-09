@@ -20,6 +20,13 @@
 #include <cmath>
 #include <iostream>
 
+#ifndef _WIN32
+#include <sys/stat.h>  // mkdir
+#else
+#include <direct.h>    // _mkdir
+#define mkdir(dir, mode) _mkdir(dir)
+#endif
+
 using namespace std;
 using namespace mfem;
 
@@ -81,6 +88,17 @@ int main(int argc, char *argv[])
     std::string outputPath = "run";
     if (std::string(basename) != "") {
         outputPath += "/" + std::string(basename);
+    }
+
+    if (mpi.Root()) {
+        const char path_delim = '/';
+        std::string::size_type pos = 0;
+        do {
+            pos = outputPath.find(path_delim, pos+1);
+            std::string subdir = outputPath.substr(0, pos);
+            mkdir(subdir.c_str(), 0777);
+        }
+        while (pos != std::string::npos);
     }
 
     CAROM::CSVDatabase* csv_db(new CAROM::CSVDatabase);
