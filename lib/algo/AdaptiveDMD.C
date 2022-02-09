@@ -112,7 +112,7 @@ void AdaptiveDMD::interpolateSnapshots()
     for (int i = 0; i <= num_time_steps; i++)
     {
         double curr_time = i * d_dt;
-        std::cout << "Creating new interpolated sample at: " << curr_time << std::endl;
+        std::cout << "Creating new interpolated sample at: " << d_t_offset + curr_time << std::endl;
         CAROM::Vector* point = new Vector(&curr_time, 1, false);
 
         // Obtain distances from database points to new point
