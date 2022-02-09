@@ -18,7 +18,7 @@
 #include "utils/CSVDatabase.h"
 #include "mpi.h"
 
-#include<cstring>
+#include <cstring>
 
 /* Use C++11 built-in shared pointers if available; else fallback to Boost. */
 #if __cplusplus >= 201103L
