@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
             cout << "Loading samples for " << par_dir << " to train DMD." << endl;
         }
         std::vector<std::string> snap_list;
-        csv_db->getStringVector(std::string(list_dir) + "/" + par_dir, snap_list, false);
+        csv_db->getStringVector(std::string(list_dir) + "/" + par_dir + ".csv", snap_list, false);
         int num_snap = snap_list.size();
         double tval = 0.0;
         for (int idx_snap = 0; idx_snap < num_snap; ++idx_snap)
@@ -248,7 +248,7 @@ int main(int argc, char *argv[])
             cout << "Predicting solution for " << par_dir << " using DMD." << endl;
         }
         std::vector<std::string> snap_list;
-        csv_db->getStringVector(std::string(list_dir) + "/" + par_dir, snap_list, false);
+        csv_db->getStringVector(std::string(list_dir) + "/" + par_dir + ".csv", snap_list, false);
         int num_snap = snap_list.size();
         double tval = 0.0;
         for (int idx_snap = 0; idx_snap < num_snap; ++idx_snap)
