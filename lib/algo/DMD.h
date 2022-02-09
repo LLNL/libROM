@@ -65,7 +65,7 @@ public:
     /**
      * @brief Output the DMD record in CSV files.
      */
-    void summary(std::string output_path);
+    void summary(int rank, std::string output_path);
 
     /**
      * @brief Predict new initial condition using d_phi.
