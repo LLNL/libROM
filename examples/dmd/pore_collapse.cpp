@@ -39,13 +39,13 @@ int main(int argc, char *argv[])
 
     double t_final = -1.0;
     double dtc = 0.0;
-    double ddt = 0.00005;
+    double ddt = 0.0;
     double dmd_epsilon = -1.0;
     double ef = 1.0;
     int rdim = -1;
-    const char *list_dir = "/usr/workspace/nlrom/poreCollapse/libROM_data/pore_collapse_list";
-    const char *data_dir = "/usr/workspace/nlrom/poreCollapse/libROM_data/pore_collapse_data";
-    const char *var_name = "tkelv";
+    const char *list_dir = "list";
+    const char *data_dir = "data";
+    const char *var_name = "var";
     const char *basename = "";
     int precision = 16;
     cout.precision(precision);
@@ -84,6 +84,8 @@ int main(int argc, char *argv[])
     {
         args.PrintOptions(cout);
     }
+
+    CAROM_VERIFY((dtc > 0.0 || ddt > 0.0) && !(dtc > 0.0 && ddt > 0.0));
 
     std::string outputPath = "run";
     if (std::string(basename) != "") {
