@@ -18,6 +18,8 @@
 #include "utils/CSVDatabase.h"
 #include "mpi.h"
 
+#include<cstring>
+
 /* Use C++11 built-in shared pointers if available; else fallback to Boost. */
 #if __cplusplus >= 201103L
 #include <memory>
@@ -164,18 +166,18 @@ DMD::constructDMD(const Matrix* f_snapshots,
     free_matrix_data(&svd_input);
 
     // Compute how many basis vectors we will actually use.
-    int num_singular_vectors = std::min(f_snapshots_minus->numColumns(), f_snapshots_minus->numDistributedRows());
+    d_num_singular_vectors = std::min(f_snapshots_minus->numColumns(), f_snapshots_minus->numDistributedRows());
     if (d_energy_fraction != -1.0)
     {
-        d_k = num_singular_vectors;
+        d_k = d_num_singular_vectors;
         double total_energy = 0.0;
-        for (int i = 0; i < num_singular_vectors; i++)
+        for (int i = 0; i < d_num_singular_vectors; i++)
         {
-            std::cout << "Singular value #" << i << ": " << d_factorizer->S[i] << std::endl;
+            d_sv.push_back(d_factorizer->S[i]);
             total_energy += d_factorizer->S[i];
         }
         double current_energy = 0.0;
-        for (int i = 0; i < num_singular_vectors; i++)
+        for (int i = 0; i < d_num_singular_vectors; i++)
         {
             current_energy += d_factorizer->S[i];
             if (current_energy / total_energy >= d_energy_fraction)
@@ -186,7 +188,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
         }
     }
 
-    std::cout << "Using " << d_k << " basis vectors out of " << num_singular_vectors << "." << std::endl;
+    std::cout << "Using " << d_k << " basis vectors out of " << d_num_singular_vectors << "." << std::endl;
 
     // Allocate the appropriate matrices and gather their elements.
     Matrix* d_basis = new Matrix(f_snapshots->numRows(), d_k, f_snapshots->distributed());
@@ -239,10 +241,6 @@ DMD::constructDMD(const Matrix* f_snapshots,
 
     d_trained = true;
 
-    CSVDatabase* csv_db(new CSVDatabase);
-    csv_db->putDoubleArray("singular_value.csv", d_factorizer->S, num_singular_vectors);
-    csv_db->putComplexVector("eigenvalue.csv", d_eigs, d_eigs.size());
-
     delete d_basis;
     delete d_basis_right;
     delete d_S_inv;
@@ -256,7 +254,6 @@ DMD::constructDMD(const Matrix* f_snapshots,
     delete eigenpair.ev_real;
     delete eigenpair.ev_imaginary;
     delete init;
-    delete csv_db;
 }
 
 
@@ -438,6 +435,17 @@ DMD::createSnapshotMatrix(std::vector<Vector*> snapshots)
     }
 
     return snapshot_mat;
+}
+
+void
+DMD::summary(std::string output_path)
+{
+    CSVDatabase* csv_db(new CSVDatabase);
+
+    csv_db->putDoubleVector(output_path + "/singular_value.csv", d_sv, d_num_singular_vectors);
+    csv_db->putComplexVector(output_path + "/eigenvalue.csv", d_eigs, d_eigs.size());
+
+    delete csv_db;
 }
 
 }

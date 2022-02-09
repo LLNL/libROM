@@ -114,6 +114,26 @@ public:
         int nelements);
 
     /**
+     * @brief Writes a vector of doubles associated with the supplied key to
+     * the currently open CSV database file.
+     *
+     * @pre !key.empty()
+     * @pre data != 0
+     * @pre nelements > 0
+     *
+     * @param[in] key The key associated with the vector of values to be
+     *                written.
+     * @param[in] data The vector of double values to be written.
+     * @param[in] nelements The number of doubles in the vector.
+     */
+    virtual
+    void
+    putDoubleVector(
+        const std::string& key,
+        const std::vector<double> data,
+        int nelements);
+
+    /**
      * @brief Writes a vector of complex doubles associated with the supplied key to
      * the currently open CSV database file.
      *

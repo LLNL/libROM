@@ -8,7 +8,7 @@
  *
  *****************************************************************************/
 
-// Description: DMD on poreCollapse.
+// Description: DMD on general CSV datasets.
 
 #include "mfem.hpp"
 #include "algo/DMD.h"
@@ -39,6 +39,7 @@ int main(int argc, char *argv[])
     const char *list_dir = "/usr/workspace/nlrom/poreCollapse/libROM_data/pore_collapse_list";
     const char *data_dir = "/usr/workspace/nlrom/poreCollapse/libROM_data/pore_collapse_data";
     const char *var_name = "tkelv";
+    const char *basename = "";
     int precision = 16;
     cout.precision(precision);
 
@@ -50,17 +51,19 @@ int main(int argc, char *argv[])
     args.AddOption(&ddt, "-ddt", "--dtime-step",
                    "Desired Time step.");
     args.AddOption(&dmd_epsilon, "-dmde", "--dmde",
-                   "DMD epsilon.");
-    args.AddOption(&ef, "-ef", "--energy_fraction",
+                   "Parameter epsilon for controlling radial basis functions.");
+    args.AddOption(&ef, "-ef", "--energy-fraction",
                    "Energy fraction for DMD.");
     args.AddOption(&rdim, "-rdim", "--rdim",
                    "Reduced dimension for DMD.");
-    args.AddOption(&list_dir, "-list", "--list_dir",
+    args.AddOption(&list_dir, "-list", "--list-directory",
                    "Location of training and testing data list.");
-    args.AddOption(&data_dir, "-data", "--data_dir",
+    args.AddOption(&data_dir, "-data", "--data-directory",
                    "Location of training and testing data.");
-    args.AddOption(&var_name, "-var", "--var_name",
+    args.AddOption(&var_name, "-var", "--variable-name",
                    "Name of variable.");
+    args.AddOption(&basename, "-o", "--outputfile-name",
+                   "Name of the sub-folder to dump files within the run directory.");
     args.Parse();
     if (!args.Good())
     {
@@ -73,6 +76,11 @@ int main(int argc, char *argv[])
     if (mpi.Root())
     {
         args.PrintOptions(cout);
+    }
+
+    std::string outputPath = "run";
+    if (std::string(basename) != "") {
+        outputPath += "/" + std::string(basename);
     }
 
     CAROM::CSVDatabase* csv_db(new CAROM::CSVDatabase);
@@ -156,6 +164,7 @@ int main(int argc, char *argv[])
     }
 
     dmd_training_timer.Stop();
+    dmd->summary(outputPath);
 
     CAROM::Vector* result = new CAROM::Vector(dim, true);
     if (admd)

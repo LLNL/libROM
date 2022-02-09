@@ -83,6 +83,24 @@ CSVDatabase::putDoubleArray(
 }
 
 void
+CSVDatabase::putDoubleVector(
+    const std::string& key,
+    const std::vector<double> data,
+    int nelements)
+{
+    CAROM_ASSERT(!key.empty());
+    CAROM_ASSERT(data != 0);
+    CAROM_ASSERT(nelements > 0);
+
+    std::ofstream d_fs(key.c_str());
+    for (int i = 0; i < nelements; ++i)
+    {
+        d_fs << data[i] << std::endl;
+    }
+    d_fs.close();
+}
+
+void
 CSVDatabase::putComplexVector(
     const std::string& key,
     const std::vector<std::complex<double>> data,
