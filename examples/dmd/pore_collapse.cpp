@@ -164,7 +164,10 @@ int main(int argc, char *argv[])
     }
 
     dmd_training_timer.Stop();
-    dmd->summary(outputPath);
+    if (myid == 0)
+    {
+        dmd->summary(outputPath);
+    }
 
     CAROM::Vector* result = new CAROM::Vector(dim, true);
     if (admd)
