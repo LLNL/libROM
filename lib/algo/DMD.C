@@ -438,9 +438,9 @@ DMD::createSnapshotMatrix(std::vector<Vector*> snapshots)
 }
 
 void
-DMD::summary(int rank, std::string output_path)
+DMD::summary(std::string output_path)
 {
-    if (rank == 0)
+    if (d_rank == 0)
     {
         CSVDatabase* csv_db(new CSVDatabase);
 
