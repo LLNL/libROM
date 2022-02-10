@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     double dtc = 0.0;
     double ddt = 0.0;
     double dmd_epsilon = -1.0;
-    double ef = 1.0;
+    double ef = 0.9999;
     int rdim = -1;
     const char *list_dir = "";
     const char *data_dir = "";
@@ -201,26 +201,28 @@ int main(int argc, char *argv[])
     if (admd)
     {
         CAROM_VERIFY(npar == 1); // TODO
+        std::vector<double> interp_error;
         double t_init = dmd->getTimeOffset();
         dtc = admd->getTrueDt();
         const CAROM::Matrix* f_snapshots = admd->getInterpolatedSnapshots();
-        CAROM::Vector* isnap = new CAROM::Vector(dim, true);
+        CAROM::Vector* interp_snap = new CAROM::Vector(dim, true);
         if (myid == 0)
         {
             cout << "Verifying Adaptive DMD solution." << endl;
         }
         for (int k = 0; k < f_snapshots->numColumns(); ++k)
         {
-            f_snapshots->getColumn(k, isnap);
+            f_snapshots->getColumn(k, interp_snap);
             result = admd->predict(t_init+k*dtc);
 
             Vector dmd_solution(result->getData(), dim);
-            Vector true_solution(isnap->getData(), dim);
+            Vector true_solution(interp_snap->getData(), dim);
             Vector diff(true_solution.Size());
             subtract(dmd_solution, true_solution, diff);
 
             double tot_diff_norm = sqrt(InnerProduct(MPI_COMM_WORLD, diff, diff));
             double tot_true_solution_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution, true_solution));
+            interp_error.push_back(tot_diff_norm / tot_true_solution_norm);
 
             if (myid == 0)
             {
@@ -229,7 +231,11 @@ int main(int argc, char *argv[])
                 cout << "Relative error of DMD prediction for " << k << "-th interpolated snapshot is " << tot_diff_norm / tot_true_solution_norm << endl;
             }
         }
-        delete isnap;
+        if (myid == 0)
+        {
+            csv_db->putDoubleVector(outputPath + "/interp_error.csv", interp_error, f_snapshots->numColumns());
+        }
+        delete interp_snap;
     }
 
     std::vector<std::string> testing_par_list;
@@ -238,6 +244,7 @@ int main(int argc, char *argv[])
 
     int num_tests = 0;
     CAROM::Vector* init_cond = new CAROM::Vector(dim, true);
+    std::vector<double> prediction_error;
 
     for (int idx_test = 0; idx_test < npar; ++idx_test) 
     {
@@ -300,6 +307,7 @@ int main(int argc, char *argv[])
 
                 double tot_diff_norm = sqrt(InnerProduct(MPI_COMM_WORLD, diff, diff));
                 double tot_true_solution_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution, true_solution));
+                prediction_error.push_back(tot_diff_norm / tot_true_solution_norm);
 
                 if (myid == 0)
                 {
@@ -307,9 +315,13 @@ int main(int argc, char *argv[])
                     cout << "Absolute error of DMD solution at t = " << tval << " is " << tot_diff_norm << endl;
                     cout << "Relative error of DMD solution at t = " << tval << " is " << tot_diff_norm / tot_true_solution_norm << endl;
                 }
-
             }
         }
+        if (myid == 0)
+        {
+            csv_db->putDoubleVector(outputPath + "/" + par_dir + "_prediction_error.csv", prediction_error, num_snap);
+        }
+        prediction_error.clear();
         num_tests += num_snap;
     }
 
