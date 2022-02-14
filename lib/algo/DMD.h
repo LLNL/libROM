@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2021, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -36,8 +36,8 @@ public:
     /**
      * @brief Constructor.
      *
-     * @param[in] dim The full-order state dimension.
-     * @param[in] dt The dt between samples.
+     * @param[in] dim        The full-order state dimension.
+     * @param[in] dt         The dt between samples.
      */
     DMD(int dim, double dt);
 
@@ -63,6 +63,11 @@ public:
     virtual void train(int k);
 
     /**
+     * @brief Output the DMD record in CSV files.
+     */
+    void summary(std::string output_path);
+
+    /**
      * @brief Predict new initial condition using d_phi.
      *
      * @param[in] init The initial condition.
@@ -86,6 +91,11 @@ public:
      * @param[in] t The time of the outputted state
      */
     Vector* predict(const std::pair<Vector*, Vector*> init, double t);
+
+    /**
+     * @brief Get the time offset contained within d_t_offset.
+     */
+    double getTimeOffset() const;
 
     /**
      * @brief Get the snapshot matrix contained within d_snapshots.
@@ -145,7 +155,7 @@ protected:
     int d_dim;
 
     /**
-     * @brief The dt between samples.
+     * @brief The time step size between samples.
      */
     double d_dt;
 
@@ -163,6 +173,26 @@ protected:
      * @brief Whether the DMD has been trained or not.
      */
     bool d_trained;
+
+    /**
+     * @brief The maximum number of singular vectors. 
+     */
+    int d_num_singular_vectors;
+
+    /**
+     * @brief std::vector holding the signular values.
+     */
+    std::vector<double> d_sv;
+
+    /**
+     * @brief The energy fraction used to obtain the DMD modes.
+     */
+    double d_energy_fraction;
+
+    /**
+     * @brief The number of columns used after obtaining the SVD decomposition.
+     */
+    int d_k;
 
     /**
      * @brief The real part of d_phi.
@@ -188,16 +218,6 @@ protected:
      * @brief A vector holding the complex eigenvalues of the eigenmodes.
      */
     std::vector<std::complex<double>> d_eigs;
-
-    /**
-     * @brief The energy fraction used to obtain the DMD modes.
-     */
-    double d_energy_fraction;
-
-    /**
-     * @brief The number of columns used after obtaining the SVD decomposition.
-     */
-    int d_k;
 
 };
 

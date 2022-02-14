@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2021, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -18,7 +18,8 @@
 
 namespace CAROM {
 
-AdaptiveDMD::AdaptiveDMD(int dim, double desired_dt, std::string rbf, std::string interp_method, double epsilon) : DMD(dim, desired_dt)
+AdaptiveDMD::AdaptiveDMD(int dim, double desired_dt, std::string rbf, std::string interp_method, 
+                         double epsilon) : DMD(dim, desired_dt)
 {
     CAROM_VERIFY(desired_dt > 0.0);
     CAROM_VERIFY(rbf == "G" || rbf == "IQ" || rbf == "MQ" || rbf == "IMQ");
@@ -63,7 +64,7 @@ void AdaptiveDMD::takeSample(double* u_in, double t)
 
 void AdaptiveDMD::train(double energy_fraction)
 {
-    const Matrix* f_snapshots = interpolateSnapshots();
+    const Matrix* f_snapshots = getInterpolatedSnapshots();
     CAROM_VERIFY(f_snapshots->numColumns() > 1);
     CAROM_VERIFY(energy_fraction > 0 && energy_fraction <= 1);
     d_energy_fraction = energy_fraction;
@@ -74,7 +75,7 @@ void AdaptiveDMD::train(double energy_fraction)
 
 void AdaptiveDMD::train(int k)
 {
-    const Matrix* f_snapshots = interpolateSnapshots();
+    const Matrix* f_snapshots = getInterpolatedSnapshots();
     CAROM_VERIFY(f_snapshots->numColumns() > 1);
     CAROM_VERIFY(k > 0 && k <= f_snapshots->numColumns() - 1);
     d_energy_fraction = -1.0;
@@ -84,9 +85,10 @@ void AdaptiveDMD::train(int k)
     delete f_snapshots;
 }
 
-const Matrix* AdaptiveDMD::interpolateSnapshots()
+void AdaptiveDMD::interpolateSnapshots()
 {
     CAROM_VERIFY(d_sampled_times.back()->item(0) > d_dt);
+    CAROM_VERIFY(d_interp_snapshots.size() == 0);
 
     // Find the nearest dt that evenly divides the snapshots.
     int num_time_steps = std::round(d_sampled_times.back()->item(0) / d_dt);
@@ -106,13 +108,11 @@ const Matrix* AdaptiveDMD::interpolateSnapshots()
         std::cout << "Epsilon auto-corrected by the linear solve to " << d_epsilon << std::endl;
     }
 
-    std::vector<Vector*> interpolated_snapshots;
-
     // Create interpolated snapshots using d_dt as the desired dt.
     for (int i = 0; i <= num_time_steps; i++)
     {
         double curr_time = i * d_dt;
-        std::cout << "Creating new interpolated sample at: " << curr_time << std::endl;
+        std::cout << "Creating new interpolated sample at: " << d_t_offset + curr_time << std::endl;
         CAROM::Vector* point = new Vector(&curr_time, 1, false);
 
         // Obtain distances from database points to new point
@@ -120,12 +120,21 @@ const Matrix* AdaptiveDMD::interpolateSnapshots()
 
         // Obtain the interpolated snapshot.
         CAROM::Vector* curr_interpolated_snapshot = obtainInterpolatedVector(d_snapshots, f_T, d_interp_method, rbf);
-        interpolated_snapshots.push_back(curr_interpolated_snapshot);
+        d_interp_snapshots.push_back(curr_interpolated_snapshot);
 
         delete point;
     }
+}
 
-    return createSnapshotMatrix(interpolated_snapshots);
+double AdaptiveDMD::getTrueDt() const
+{
+    return d_dt;
+}
+
+const Matrix* AdaptiveDMD::getInterpolatedSnapshots()
+{
+    if (d_interp_snapshots.size() == 0) interpolateSnapshots();
+    return createSnapshotMatrix(d_interp_snapshots);
 }
 
 }

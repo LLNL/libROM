@@ -12,6 +12,7 @@
 
 #include "BasisReader.h"
 #include "utils/HDFDatabase.h"
+#include "utils/CSVDatabase.h"
 #include "Matrix.h"
 #include "Vector.h"
 #include "mpi.h"
@@ -42,6 +43,9 @@ BasisReader::BasisReader(
     full_file_name = base_file_name + tmp;
     if (db_format == Database::HDF5) {
         d_database = new HDFDatabase();
+    }
+    else if (db_format == Database::CSV) {
+        d_database = new CSVDatabase();
     }
 
     std::cout << "Opening file: " << full_file_name << std::endl;

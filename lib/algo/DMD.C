@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2021, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -15,7 +15,10 @@
 #include "linalg/Matrix.h"
 #include "linalg/Vector.h"
 #include "linalg/scalapack_wrapper.h"
+#include "utils/CSVDatabase.h"
 #include "mpi.h"
+
+#include <cstring>
 
 /* Use C++11 built-in shared pointers if available; else fallback to Boost. */
 #if __cplusplus >= 201103L
@@ -163,17 +166,18 @@ DMD::constructDMD(const Matrix* f_snapshots,
     free_matrix_data(&svd_input);
 
     // Compute how many basis vectors we will actually use.
-    int num_singular_vectors = std::min(f_snapshots_minus->numColumns(), f_snapshots_minus->numDistributedRows());
+    d_num_singular_vectors = std::min(f_snapshots_minus->numColumns(), f_snapshots_minus->numDistributedRows());
     if (d_energy_fraction != -1.0)
     {
-        d_k = num_singular_vectors;
+        d_k = d_num_singular_vectors;
         double total_energy = 0.0;
-        for (int i = 0; i < num_singular_vectors; i++)
+        for (int i = 0; i < d_num_singular_vectors; i++)
         {
+            d_sv.push_back(d_factorizer->S[i]);
             total_energy += d_factorizer->S[i];
         }
         double current_energy = 0.0;
-        for (int i = 0; i < num_singular_vectors; i++)
+        for (int i = 0; i < d_num_singular_vectors; i++)
         {
             current_energy += d_factorizer->S[i];
             if (current_energy / total_energy >= d_energy_fraction)
@@ -184,7 +188,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
         }
     }
 
-    std::cout << "Using " << d_k << " basis vectors out of " << num_singular_vectors << "." << std::endl;
+    std::cout << "Using " << d_k << " basis vectors out of " << d_num_singular_vectors << "." << std::endl;
 
     // Allocate the appropriate matrices and gather their elements.
     Matrix* d_basis = new Matrix(f_snapshots->numRows(), d_k, f_snapshots->distributed());
@@ -397,6 +401,12 @@ DMD::phiMultEigs(double n)
     return std::pair<Matrix*,Matrix*>(d_phi_mult_eigs_real, d_phi_mult_eigs_imaginary);
 }
 
+double
+DMD::getTimeOffset() const
+{
+    return d_t_offset;
+}
+
 const Matrix*
 DMD::getSnapshotMatrix()
 {
@@ -425,6 +435,20 @@ DMD::createSnapshotMatrix(std::vector<Vector*> snapshots)
     }
 
     return snapshot_mat;
+}
+
+void
+DMD::summary(std::string output_path)
+{
+    if (d_rank == 0)
+    {
+        CSVDatabase* csv_db(new CSVDatabase);
+
+        csv_db->putDoubleVector(output_path + "/singular_value.csv", d_sv, d_num_singular_vectors);
+        csv_db->putComplexVector(output_path + "/eigenvalue.csv", d_eigs, d_eigs.size());
+
+        delete csv_db;
+    }
 }
 
 }

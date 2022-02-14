@@ -222,7 +222,8 @@ public:
      *        new database format is implemented.
      */
     enum formats {
-        HDF5
+        HDF5,
+        CSV
     };
 
 private:
