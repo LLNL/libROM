@@ -344,6 +344,7 @@ int main(int argc, char *argv[])
     //     time-step dt).
     ode_solver->Init(oper);
     double t = 0.0;
+    vector<double> ts;
 
     fom_timer.Stop();
 
@@ -353,6 +354,7 @@ int main(int argc, char *argv[])
     u_gf.SetFromTrueDofs(u);
     CAROM::DMD dmd_u(u.Size(), dt);
     dmd_u.takeSample(u.GetData(), t);
+    ts.push_back(t);
 
     dmd_training_timer.Stop();
 
@@ -374,6 +376,7 @@ int main(int argc, char *argv[])
 
         u_gf.SetFromTrueDofs(u);
         dmd_u.takeSample(u.GetData(), t);
+        ts.push_back(t);
 
         dmd_training_timer.Stop();
 
@@ -454,20 +457,56 @@ int main(int argc, char *argv[])
 
     dmd_training_timer.Stop();
 
+    Vector true_solution_u(u.GetData(), u.Size());
+
     dmd_prediction_timer.Start();
 
     // 14. Predict the state at t_final using DMD.
     if (myid == 0)
     {
-        std::cout << "Predicting position and velocity at t_final using DMD" << std::endl;
+        std::cout << "Predicting temperature using DMD" << std::endl;
     }
-    CAROM::Vector* result_u = dmd_u.predict(t_final);
+
+    CAROM::Vector* result_u = dmd_u.predict(ts[0]);
+    Vector initial_dmd_solution_u(result_u->getData(), result_u->dim());
+    u_gf.SetFromTrueDofs(initial_dmd_solution_u);
+
+    VisItDataCollection dmd_visit_dc("DMD_Heat_Conduction", pmesh);
+    dmd_visit_dc.RegisterField("temperature", &u_gf);
+    if (visit)
+    {
+        dmd_visit_dc.SetCycle(0);
+        dmd_visit_dc.SetTime(0.0);
+        dmd_visit_dc.Save();
+    }
+
+    delete result_u;
+
+    for (int i = 1; i < ts.size(); i++)
+    {
+        result_u = dmd_u.predict(ts[i]);
+        Vector dmd_solution_u(result_u->getData(), result_u->dim());
+        u_gf.SetFromTrueDofs(dmd_solution_u);
+
+        if (i == ts.size() - 1 || (i % vis_steps) == 0)
+        {
+            if (visit)
+            {
+                dmd_visit_dc.SetCycle(i);
+                dmd_visit_dc.SetTime(ts[i]);
+                dmd_visit_dc.Save();
+            }
+        }
+
+        delete result_u;
+    }
 
     dmd_prediction_timer.Stop();
 
+    result_u = dmd_u.predict(t_final);
+
     // 15. Calculate the relative error between the DMD final solution and the true solution.
     Vector dmd_solution_u(result_u->getData(), result_u->dim());
-    Vector true_solution_u(u.GetData(), u.Size());
     Vector diff_u(true_solution_u.Size());
     subtract(dmd_solution_u, true_solution_u, diff_u);
 

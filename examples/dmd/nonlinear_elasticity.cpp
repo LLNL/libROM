@@ -421,6 +421,7 @@ int main(int argc, char *argv[])
     fom_timer.Start();
 
     double t = 0.0;
+    vector<double> ts;
     oper.SetTime(t);
     ode_solver->Init(oper);
 
@@ -433,6 +434,7 @@ int main(int argc, char *argv[])
     CAROM::DMD dmd_v(v_gf.GetTrueVector().Size(), dt);
     dmd_x.takeSample(x_gf.GetTrueVector(), t);
     dmd_v.takeSample(v_gf.GetTrueVector(), t);
+    ts.push_back(t);
 
     dmd_training_timer.Stop();
 
@@ -454,6 +456,7 @@ int main(int argc, char *argv[])
 
         dmd_x.takeSample(x_gf.GetTrueVector(), t);
         dmd_v.takeSample(v_gf.GetTrueVector(), t);
+        ts.push_back(t);
 
         dmd_training_timer.Stop();
 
@@ -545,21 +548,73 @@ int main(int argc, char *argv[])
 
     dmd_training_timer.Stop();
 
+    Vector true_solution_x(x_gf.GetTrueVector(), x_gf.GetTrueVector().Size());
+    Vector true_solution_v(v_gf.GetTrueVector(), v_gf.GetTrueVector().Size());
+
     dmd_prediction_timer.Start();
 
     // 14. Predict the state at t_final using DMD.
     if (myid == 0)
     {
-        std::cout << "Predicting position and velocity at t_final using DMD" << std::endl;
+        std::cout << "Predicting position and velocity using DMD" << std::endl;
     }
-    CAROM::Vector* result_x = dmd_x.predict(t_final);
-    CAROM::Vector* result_v = dmd_v.predict(t_final);
+
+    CAROM::Vector* result_x = dmd_x.predict(ts[0]);
+    CAROM::Vector* result_v = dmd_v.predict(ts[0]);
+    Vector initial_dmd_solution_x(result_x->getData(), result_x->dim());
+    Vector initial_dmd_solution_v(result_v->getData(), result_v->dim());
+    x_gf.SetFromTrueDofs(initial_dmd_solution_x);
+    v_gf.SetFromTrueDofs(initial_dmd_solution_v);
+
+    DataCollection *dmd_dc = NULL;
+    if (visit)
+    {
+        dmd_dc = new VisItDataCollection("DMD_Nonlinear_Elasticity", pmesh);
+        dmd_dc->SetPrecision(8);
+        // To save the mesh using MFEM's parallel mesh format:
+        // dc->SetFormat(DataCollection::PARALLEL_FORMAT);
+        dmd_dc->RegisterField("x", &x_gf);
+        dmd_dc->RegisterField("v", &v_gf);
+        dmd_dc->SetCycle(0);
+        dmd_dc->SetTime(0.0);
+        dmd_dc->Save();
+    }
+
+    delete result_x;
+    delete result_v;
+
+    for (int i = 1; i < ts.size(); i++)
+    {
+        result_x = dmd_x.predict(ts[i]);
+        result_v = dmd_v.predict(ts[i]);
+        Vector dmd_solution_x(result_x->getData(), result_x->dim());
+        Vector dmd_solution_v(result_v->getData(), result_v->dim());
+        x_gf.SetFromTrueDofs(dmd_solution_x);
+        v_gf.SetFromTrueDofs(dmd_solution_v);
+
+        if (i == ts.size() - 1 || (i % vis_steps) == 0)
+        {
+            if (visit)
+            {
+                dmd_dc->SetCycle(i);
+                dmd_dc->SetTime(ts[i]);
+                dmd_dc->Save();
+            }
+        }
+
+        delete result_x;
+        delete result_v;
+    }
+
+    dmd_prediction_timer.Stop();
+
+    result_x = dmd_x.predict(t_final);
+    result_v = dmd_v.predict(t_final);
 
     dmd_prediction_timer.Stop();
 
     // 15. Calculate the relative error between the DMD final solution and the true solution.
     Vector dmd_solution_x(result_x->getData(), result_x->dim());
-    Vector true_solution_x(x_gf.GetTrueVector(), x_gf.GetTrueVector().Size());
     Vector diff_x(true_solution_x.Size());
     subtract(dmd_solution_x, true_solution_x, diff_x);
 
@@ -567,7 +622,6 @@ int main(int argc, char *argv[])
     double tot_true_solution_x_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution_x, true_solution_x));
 
     Vector dmd_solution_v(result_v->getData(), result_v->dim());
-    Vector true_solution_v(v_gf.GetTrueVector(), v_gf.GetTrueVector().Size());
     Vector diff_v(true_solution_v.Size());
     subtract(dmd_solution_v, true_solution_v, diff_v);
 
@@ -589,6 +643,7 @@ int main(int argc, char *argv[])
     delete result_x;
     delete result_v;
     delete dc;
+    delete dmd_dc;
 
     MPI_Finalize();
 
