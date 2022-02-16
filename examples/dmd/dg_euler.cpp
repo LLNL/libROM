@@ -483,10 +483,15 @@ int main(int argc, char *argv[])
 
     dmd_training_timer.Stop();
 
-    Vector true_solution_dens(u_block.GetBlock(0).GetData(), u_block.GetBlock(0).Size());
-    Vector true_solution_x_mom(u_block.GetBlock(1).GetData(), u_block.GetBlock(1).Size());
-    Vector true_solution_y_mom(u_block.GetBlock(2).GetData(), u_block.GetBlock(2).Size());
-    Vector true_solution_e(u_block.GetBlock(3).GetData(), u_block.GetBlock(3).Size());
+    Vector true_solution_dens(u_block.GetBlock(0).Size());
+    true_solution_dens = u_block.GetBlock(0).GetData();
+    Vector true_solution_x_mom(u_block.GetBlock(1).Size());
+    true_solution_x_mom = u_block.GetBlock(1).GetData();
+    Vector true_solution_y_mom(u_block.GetBlock(2).Size());
+    true_solution_y_mom = u_block.GetBlock(2).GetData();
+    Vector true_solution_e(u_block.GetBlock(3).Size());
+    true_solution_e = u_block.GetBlock(3).GetData();
+
 
     dmd_prediction_timer.Start();
 
@@ -560,8 +565,6 @@ int main(int argc, char *argv[])
     result_x_mom = dmd_x_mom.predict(t_final);
     result_y_mom = dmd_y_mom.predict(t_final);
     result_e = dmd_e.predict(t_final);
-
-    dmd_prediction_timer.Stop();
 
     // 15. Calculate the relative error between the DMD final solution and the true solution.
     Vector dmd_solution_dens(result_dens->getData(), result_dens->dim());

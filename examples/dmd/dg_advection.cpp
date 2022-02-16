@@ -705,7 +705,8 @@ int main(int argc, char *argv[])
 
     dmd_training_timer.Stop();
 
-    Vector true_solution_u(U->GetData(), U->Size());
+    Vector true_solution_u(U->Size());
+    true_solution_u = U->GetData();
 
     dmd_prediction_timer.Start();
 

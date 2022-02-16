@@ -548,8 +548,11 @@ int main(int argc, char *argv[])
 
     dmd_training_timer.Stop();
 
-    Vector true_solution_x(x_gf.GetTrueVector(), x_gf.GetTrueVector().Size());
-    Vector true_solution_v(v_gf.GetTrueVector(), v_gf.GetTrueVector().Size());
+    Vector true_solution_x(x_gf.GetTrueVector().Size());
+    true_solution_x = x_gf.GetTrueVector();
+
+    Vector true_solution_v(v_gf.GetTrueVector().Size());
+    true_solution_v = v_gf.GetTrueVector();
 
     dmd_prediction_timer.Start();
 
@@ -610,8 +613,6 @@ int main(int argc, char *argv[])
 
     result_x = dmd_x.predict(t_final);
     result_v = dmd_v.predict(t_final);
-
-    dmd_prediction_timer.Stop();
 
     // 15. Calculate the relative error between the DMD final solution and the true solution.
     Vector dmd_solution_x(result_x->getData(), result_x->dim());
