@@ -255,6 +255,23 @@ public:
         int stride);
 
     /**
+     * @brief Reads a vector of doubles associated with the supplied key
+     * from the currently open CSV database file.
+     *
+     * @pre !key.empty()
+     *
+     * @param[in] key The key associated with the vector of values to be
+     *                read.
+     * @param[out] data The allocated vector of double values to be read.
+     * @param[in] append True if append to the vector, otherwise overwite.
+     */
+    void
+    getDoubleVector(
+        const std::string& key,
+        std::vector<double> &data, 
+        bool append);
+
+    /**
      * @brief Reads a vector of strings associated with the supplied key
      * from the currently open CSV database file.
      *
@@ -270,6 +287,18 @@ public:
         const std::string& key,
         std::vector<std::string> &data, 
         bool append);
+
+    /**
+     * @brief Count the number of lines of CSV database file.
+     *
+     * @pre !key.empty()
+     *
+     * @param[in] key The key associated with the vector of strings to be
+     *                read.
+     */
+    int
+    getLineCount(
+        const std::string& key);
 
 private:
     /**

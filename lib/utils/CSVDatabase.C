@@ -251,6 +251,24 @@ CSVDatabase::getDoubleArray(
 }
 
 void
+CSVDatabase::getDoubleVector(
+    const std::string& key,
+    std::vector<double> &data, 
+    bool append)
+{
+    CAROM_ASSERT(!key.empty());
+    if (!append) data.clear();
+
+    std::ifstream d_fs(key.c_str());
+    double data_entry;
+    while (d_fs >> data_entry)
+    {
+        data.push_back(data_entry);
+    }
+    d_fs.close();
+}
+
+void
 CSVDatabase::getStringVector(
     const std::string& key,
     std::vector<std::string> &data, 
@@ -266,6 +284,16 @@ CSVDatabase::getStringVector(
         data.push_back(data_entry);
     }
     d_fs.close();
+}
+
+int
+CSVDatabase::getLineCount(
+    const std::string& key)
+{
+    CAROM_ASSERT(!key.empty());
+    std::vector<std::string> dummy;
+    getStringVector(key, dummy, false);
+    return dummy.size();
 }
 
 }
