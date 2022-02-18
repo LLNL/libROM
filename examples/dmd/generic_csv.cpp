@@ -156,7 +156,6 @@ int main(int argc, char *argv[])
     }
 
     int numWindows = ceil(num_train_snap[0] / windowNumSamples);
-    cout << "159: " << numWindows << ", " << windowNumSamples << endl; // debug
     vector<double> indicator_val;
     csv_db->getDoubleVector(string(data_dir) + "/indicator_val.csv", indicator_val, false);
     if (indicator_val.size() > 0)
@@ -164,7 +163,6 @@ int main(int argc, char *argv[])
         numWindows = indicator_val.size();
         windowNumSamples = infty;
     }
-    cout << "167: " << numWindows << ", " << windowNumSamples << endl; // debug
 
     vector<CAROM::DMD*> dmd;
     dmd.assign(numWindows, nullptr);
@@ -213,16 +211,13 @@ int main(int argc, char *argv[])
             if (curr_window+1 < numWindows && idx_snap+1 < num_train_snap[idx_dataset])
             {
                 bool new_window = false;
-                cout << "216: " << numWindows << ", " << windowNumSamples << endl; // debug
                 if (windowNumSamples < infty)
                 {
                     new_window = (idx_snap >= (curr_window+1)*windowNumSamples);
-                    cout << "217: Starting window #" << curr_window+1 << " at " << idx_snap << ", " << tval << endl; // debug
                 }
                 else 
                 {
                     new_window = (tval >= indicator_val[curr_window+1]);
-                    cout << "224: Starting window #" << curr_window+1 << " at " << idx_snap << ", " << tval << endl; // debug
                 }
                 if (new_window)
                 {
