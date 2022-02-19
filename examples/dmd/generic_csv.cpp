@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
         num_train_snap.push_back(csv_db->getLineCount(string(list_dir) + "/" + par_dir + ".csv"));
     }
 
-    int numWindows = ceil(num_train_snap[0] / windowNumSamples);
+    int numWindows = (windowNumSamples < infty) ? ceil(num_train_snap[0] / windowNumSamples) : 1;
     vector<double> indicator_val;
     csv_db->getDoubleVector(string(data_dir) + "/indicator_val.csv", indicator_val, false);
     if (indicator_val.size() > 0)
