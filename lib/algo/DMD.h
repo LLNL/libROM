@@ -42,6 +42,14 @@ public:
     DMD(int dim, double dt);
 
     /**
+     * @brief Constructor.
+     *
+     * @param[in] base_file_name The base part of the file of the
+     *                           database to load when restarting from a save.
+     */
+    DMD(std::string base_file_name);
+
+    /**
      * @brief Sample the new state, u_in.
      *
      * @pre u_in != 0
@@ -102,6 +110,22 @@ public:
      */
     const Matrix* getSnapshotMatrix();
 
+    /**
+     * @brief Load the object state from a file.
+     *
+     * @param[in] base_file_name The base part of the file to load the
+     *                           database from.
+     */
+    virtual void load(std::string base_file_name);
+
+    /**
+     * @brief Save the object state to a file.
+     *
+     * @param[in] base_file_name The base part of the file to save the
+     *                           database to.
+     */
+    virtual void save(std::string base_file_name);
+
 protected:
 
     /**
@@ -125,7 +149,7 @@ protected:
     /**
      * @brief Internal function to multiply d_phi with the eigenvalues.
      */
-    std::pair<Matrix*, Matrix*> phiMultEigs(double n);
+    std::pair<Matrix*, Matrix*> phiMultEigs(double t);
 
     /**
      * @brief Internal function to obtain the DMD modes.
@@ -175,7 +199,7 @@ protected:
     bool d_trained;
 
     /**
-     * @brief The maximum number of singular vectors. 
+     * @brief The maximum number of singular vectors.
      */
     int d_num_singular_vectors;
 
