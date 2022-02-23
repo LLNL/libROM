@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
     }
 
     double* sample = new double[dim];
-    StopWatch dmd_training_timer, dmd_prediction_timer;
+    StopWatch dmd_training_timer, dmd_preprocess_timer, dmd_prediction_timer;
     dmd_training_timer.Start();
 
     for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
@@ -360,6 +360,7 @@ int main(int argc, char *argv[])
 
             if (idx_snap == 0)
             {
+                dmd_preprocess_timer.Start();
                 for (int i = 0; i < dim; ++i)
                 {
                     init_cond->item(i) = sample[i]; 
@@ -373,6 +374,7 @@ int main(int argc, char *argv[])
                     dmd[window]->projectInitialCondition(init_cond);
                     init_cond = dmd[window]->predict(indicator_val[window+1]);
                 }
+                dmd_preprocess_timer.Stop();
             }
 
             if (t_final > 0.0) // Actual prediction without true solution for comparison
@@ -445,6 +447,7 @@ int main(int argc, char *argv[])
     if (myid == 0)
     {
         printf("Elapsed time for training DMD: %e second\n", dmd_training_timer.RealTime());
+        printf("Elapsed time for preprocessing DMD: %e second\n", dmd_preprocess_timer.RealTime());
         printf("Total elapsed time for predicting DMD: %e second\n", dmd_prediction_timer.RealTime());
         printf("Average elapsed time for predicting DMD: %e second\n", dmd_prediction_timer.RealTime() / num_tests);
     }
