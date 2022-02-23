@@ -79,6 +79,14 @@ TEST(DMDTest, Test_DMD)
     for (int i = 0; i < d_num_rows; i++) {
         EXPECT_NEAR(result->item(i), prediction_baseline[row_offset[d_rank] + i], 1e-3);
     }
+
+    dmd.save("test_DMD");
+    CAROM::DMD dmd_load("test_DMD");
+    CAROM::Vector* result_load = dmd_load.predict(3.0);
+
+    for (int i = 0; i < d_num_rows; i++) {
+        EXPECT_NEAR(result_load->item(i), prediction_baseline[row_offset[d_rank] + i], 1e-3);
+    }
 }
 
 int main(int argc, char* argv[])
