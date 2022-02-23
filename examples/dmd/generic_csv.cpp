@@ -66,6 +66,7 @@ int main(int argc, char *argv[])
     const char *data_dir = "";
     const char *var_name = "var";
     const char *basename = "";
+    bool save_csv = false;
 
     OptionsParser args(argc, argv);
     args.AddOption(&t_final, "-tf", "--t-final",
@@ -90,6 +91,8 @@ int main(int argc, char *argv[])
                    "Name of variable.");
     args.AddOption(&basename, "-o", "--outputfile-name",
                    "Name of the sub-folder to dump files within the run directory.");
+    args.AddOption(&save_csv, "-csv", "--csv", "-no-csv", "--no-csv",
+                   "Enable or disable prediction result output (files in CSV format).");
     args.Parse();
     if (!args.Good())
     {
@@ -105,6 +108,11 @@ int main(int argc, char *argv[])
     }
 
     CAROM_VERIFY((dtc > 0.0 || ddt > 0.0) && !(dtc > 0.0 && ddt > 0.0));
+
+    if (t_final > 0.0)
+    {
+        save_csv = true;
+    }
 
     string outputPath = "run";
     if (string(basename) != "") {
@@ -263,13 +271,13 @@ int main(int argc, char *argv[])
             }
             dmd[window]->train(ef);
         }
-        dmd[window]->summary(outputPath); // TODO: add window as arg
+        dmd[window]->summary(outputPath, window); 
     }
 
     dmd_training_timer.Stop();
 
     CAROM::Vector* result = new CAROM::Vector(dim, true);
-    if (ddt > 0.0 && npar == 1)
+    if (ddt > 0.0 && npar == 1) // Assuming indicator value increases with snapshot order. Not true for parametric.
     {
         CAROM::AdaptiveDMD* admd = nullptr; 
         CAROM::Vector* interp_snap = new CAROM::Vector(dim, true);
@@ -310,7 +318,8 @@ int main(int argc, char *argv[])
             }
             if (myid == 0)
             {
-                csv_db->putDoubleVector(outputPath + "/window" + to_string(window) + "_interp_error.csv", interp_error, f_snapshots->numColumns());
+                csv_db->putDoubleVector(outputPath + "/window" + to_string(window) + "_interp_error.csv", 
+                                        interp_error, f_snapshots->numColumns());
             }
             interp_error.clear();
         }
@@ -366,9 +375,9 @@ int main(int argc, char *argv[])
                 }
             }
 
-            if (t_final > 0.0) // Actual prediction
+            if (t_final > 0.0) // Actual prediction without true solution for comparison
             {
-                num_tests = 1;
+                num_tests += 1;
                 while (curr_window+1 < numWindows && t_final > indicator_val[curr_window+1])
                 {
                     curr_window += 1;
@@ -380,8 +389,11 @@ int main(int argc, char *argv[])
                 dmd_prediction_timer.Start();
                 result = dmd[curr_window]->predict(t_final);
                 dmd_prediction_timer.Stop();
-                // TODO: store result and output timer
-                return 0;
+                if (myid == 0)
+                {
+                    csv_db->putDoubleArray(outputPath + "/" + par_dir + "_final_time_prediction.csv", result->getData(), dim); 
+                }
+                idx_snap = num_snap; // escape for-loop over idx_snap
             }
             else // Verify DMD prediction results against dataset
             {
@@ -413,15 +425,19 @@ int main(int argc, char *argv[])
                     cout << "Norm of true solution at t = " << tval << " is " << tot_true_solution_norm << endl;
                     cout << "Absolute error of DMD solution at t = " << tval << " is " << tot_diff_norm << endl;
                     cout << "Relative error of DMD solution at t = " << tval << " is " << rel_error << endl;
+                    if (save_csv)
+                    {
+                        csv_db->putDoubleArray(outputPath + "/" + par_dir + "_" + snap + "_prediction.csv", result->getData(), dim); 
+                    }
                 }
             }
         }
-        if (myid == 0)
+        if (myid == 0 && t_final <= 0.0)
         {
             csv_db->putDoubleVector(outputPath + "/" + par_dir + "_prediction_error.csv", prediction_error, num_snap);
         }
         prediction_error.clear();
-        num_tests += num_snap;
+        num_tests = (t_final > 0.0) ? num_tests + 1 : num_tests + num_snap;
     }
 
     CAROM_VERIFY(num_tests > 0);
