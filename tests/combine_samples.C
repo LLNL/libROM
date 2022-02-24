@@ -1,0 +1,186 @@
+/******************************************************************************
+ *
+ * Copyright (c) 2013-2021, Lawrence Livermore National Security, LLC
+ * and other libROM project developers. See the top-level COPYRIGHT
+ * file for details.
+ *
+ * SPDX-License-Identifier: (Apache-2.0 OR MIT)
+ *
+ *****************************************************************************/
+
+// Description: This is a file function that reads snapshot or basis files
+//				and computes the SVD over the group. Also provides the option
+//				to subtract the mean of the group before computing the SVD.
+//
+// Assumptions: You are running this file with the same number of processors
+//				as when the snapshots/bases were saved.
+//
+// Inputs:
+//		[1] List of file names without extension.
+//		[2] Optional: "-b" or "basis" to compute SVD over bases instead 
+//			of snapshots. (Snapshots are default.)
+// 		[3] Optional: "-m" or "mean" to subtract the mean before 
+//			computing the SVD. (No subtraction is default.)
+//
+// Outputs:
+//		[1] total_snapshot.*:           single hdf5 file (per rank) of all loaded data.
+//		[2] mean.*:                     single hdf5 file (per rank) with subtracted mean.
+//		[3] total.* OR total_meansub.*: single hdf5 file (per rank) with the new POD basis.
+//
+// Example: mpirun -n 2 ./combine_samples file1 file2 file3 -b -m
+
+#include "linalg/BasisGenerator.h"
+#include "linalg/scalapack_wrapper.h"
+#include "linalg/BasisReader.h"
+#include "linalg/BasisWriter.h"
+#include <vector>
+#include "mpi.h"
+#include <string>
+#include <stdio.h>
+
+int main(int argc, char* argv[])
+{
+    // Initialize MPI
+    MPI_Init(&argc, &argv);
+    int size;
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	
+    std::vector<std::string> sample_names;
+	int snaps = 0; 
+	int dim   = 0;
+    bool subtract_mean = false;
+    std::string kind = "snapshot";
+	
+    if (argc >= 2) {
+	    for (int i = 1; i < argc; i++) {
+	        if (!strcmp(argv[i], "basis") || !strcmp(argv[i], "-b")) { 
+                if (rank==0) std::cout << "Argument " << i << " identified as basis or -b" << std::endl;
+	            kind = "basis"; 
+	        } 
+	        else if (!strcmp(argv[i], "mean") || !strcmp(argv[i], "-m")) {
+	    	    if (rank==0) std::cout << "Will subtract mean" << std::endl;
+	    	    subtract_mean = true;
+	        }
+	        else {
+	    	    sample_names.push_back(argv[i]); 
+	        }
+	    }
+    }
+    else {
+	    if (rank==0) std::cout << "No arguments passed." << std::endl;
+	    return 1;
+    }
+ 
+    /*-- Read dimension and count number of snapshots/bases --*/
+	if (rank==0) std::cout << "Opening files to read dimension and count number of snapshots/bases" << std::endl;
+    for (const auto& sample_name: sample_names) {
+        CAROM::BasisReader reader(sample_name);
+		
+		if (kind == "snapshot") {
+		    CAROM::Matrix *snapshots = (CAROM::Matrix*) reader.getSnapshotMatrix(0);
+		    dim    = snapshots->numRows();
+		    snaps += snapshots->numColumns();
+	    }
+		else {
+			CAROM::Matrix *basis = (CAROM::Matrix*) reader.getSpatialBasis(0);
+		    dim    = basis->numRows();
+		    snaps += basis->numColumns();
+		}
+    }
+	
+	CAROM_VERIFY((snaps > 0) && (dim > 0));
+	
+    /*-- Load data from input files --*/
+    std::string generator_filename = "total";
+    std::unique_ptr<CAROM::BasisGenerator> static_basis_generator;
+    static_basis_generator.reset(new CAROM::BasisGenerator(
+                                     CAROM::Options(dim, snaps).setMaxBasisDimension(snaps), false,
+                                     generator_filename));
+
+    if (rank==0) std::cout << "Loading data from " << kind << std::endl;
+    for(const auto& sample_name: sample_names) {
+	    static_basis_generator->loadSamples(sample_name, kind);
+    }
+
+    if (rank==0) std::cout << "Saving data uploaded as a snapshot" << std::endl;
+    static_basis_generator->writeSnapshot();
+	
+    if (!subtract_mean) {
+	    /*-- Compute SVD and save file --*/
+	    if (rank==0) std::cout << "Computing SVD" << std::endl;
+	    int rom_dim = static_basis_generator->getSpatialBasis()->numColumns();
+	    if (rank==0) std::cout << "U ROM Dimension: " << rom_dim << std::endl;
+	    static_basis_generator->endSamples();
+    }
+    else {
+		// Close file so it can be opened:
+	    static_basis_generator = nullptr;		
+
+    	/*-- load data from hdf5 file to find the mean and subtract it --*/
+    	if (rank==0) std::cout << "Reading snapshots" << std::endl;
+    	CAROM::BasisReader reader(generator_filename+"_snapshot");
+    	CAROM::Matrix *snapshots = (CAROM::Matrix*) reader.getSnapshotMatrix(0);
+    	
+    	int num_rows = snapshots->numRows();
+    	int num_cols = snapshots->numColumns();
+    	double* sum = new double[num_rows];
+    	
+    	/*-- Find the mean per row and write to hdf5 --*/
+	    if (rank==0) std::cout << "Subtracting mean" << std::endl;
+	    std::unique_ptr<CAROM::BasisGenerator> generator_to_write;
+    	generator_to_write.reset(new CAROM::BasisGenerator(
+    	                             CAROM::Options(dim, 1).setMaxBasisDimension(1), false, "mean"));
+    	for (int row = 0; row < num_rows; ++row) {
+    	    sum[row] = 0;
+    	    for (int col = 0; col < num_cols; ++col) {
+    	        sum[row] += snapshots->item(row,col);
+    	    }
+    	    sum[row] = sum[row] / num_cols;
+    	}
+		
+	    generator_to_write->takeSample(sum, 0.0, false);
+	    generator_to_write->writeSnapshot();
+    	
+	    /*-- Subtract mean from snapshot/bases matrix --*/
+    	CAROM::Matrix* snaps_mean = new CAROM::Matrix(num_rows, num_cols, false);
+    	
+    	for (int row = 0; row < num_rows; ++row) {
+    	    for (int col = 0; col < num_cols; ++col) {
+    	        snaps_mean->item(row,col) = snapshots->item(row,col) - sum[row];
+    	    }
+    	}
+    	
+    	/*-- Load new samples with mean subtracted --*/
+    	std::unique_ptr<CAROM::BasisGenerator> static_basis_generator2;
+    	static_basis_generator2.reset(new CAROM::BasisGenerator(
+    	    CAROM::Options(dim, snaps).setMaxBasisDimension(snaps), false,
+    	    generator_filename+"_meansub"));
+    	
+    	for (int col = 0; col < num_cols; col++) {
+    	    double* snap_cur = new double[num_rows];
+    	  
+    	    for (int row = 0; row < num_rows; row++) {
+    	        snap_cur[row] = snaps_mean->item(row,col);
+    	    } 
+    	    static_basis_generator2->takeSample(snap_cur, 0.0, false);
+    	  
+    	    delete[] snap_cur;
+    	}
+    	
+    	/*-- Compute SVD and save file --*/
+    	if (rank==0) std::cout << "Computing SVD" << std::endl;
+    	int rom_dim = static_basis_generator2->getSpatialBasis()->numColumns();
+    	if (rank==0) std::cout << "U ROM Dimension: " << rom_dim << std::endl;
+    	static_basis_generator2->endSamples();
+		
+	    delete[] sum;
+	    delete snaps_mean;
+    	static_basis_generator2 = nullptr;
+	    generator_to_write = nullptr;
+    }
+	
+    MPI_Finalize();
+    return 0;
+ }

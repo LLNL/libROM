@@ -175,7 +175,8 @@ set(regression_test_names
   weak_scaling
   random_test
   smoke_static
-  load_samples)
+  load_samples
+  combine_samples)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests)
 
