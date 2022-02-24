@@ -430,6 +430,10 @@ int main(int argc, char *argv[])
                     if (save_csv)
                     {
                         csv_db->putDoubleArray(outputPath + "/" + par_dir + "_" + snap + "_prediction.csv", result->getData(), dim); 
+                        if (dim < nelements)
+                        {
+                            csv_db->putDoubleArray(outputPath + "/" + par_dir + "_" + snap + "_state.csv", sample, dim); 
+                        }
                     }
                 }
             }
