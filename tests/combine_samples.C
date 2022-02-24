@@ -9,23 +9,23 @@
  *****************************************************************************/
 
 // Description: This is a file function that reads snapshot or basis files
-//				and computes the SVD over the group. Also provides the option
-//				to subtract the mean of the group before computing the SVD.
+//		and computes the SVD over the group. Also provides the option
+//		to subtract the mean of the group before computing the SVD.
 //
 // Assumptions: You are running this file with the same number of processors
-//				as when the snapshots/bases were saved.
+//		as when the snapshots/bases were saved.
 //
 // Inputs:
-//		[1] List of file names without extension.
-//		[2] Optional: "-b" or "basis" to compute SVD over bases instead 
-//			of snapshots. (Snapshots are default.)
-// 		[3] Optional: "-m" or "mean" to subtract the mean before 
-//			computing the SVD. (No subtraction is default.)
+//	[1] List of file names without extension.
+//	[2] Optional: "-b" or "basis" to compute SVD over bases instead 
+//	    of snapshots. (Snapshots are default.)
+// 	[3] Optional: "-m" or "mean" to subtract the mean before 
+//	    computing the SVD. (No subtraction is default.)
 //
 // Outputs:
-//		[1] total_snapshot.*:           single hdf5 file (per rank) of all loaded data.
-//		[2] mean.*:                     single hdf5 file (per rank) with subtracted mean.
-//		[3] total.* OR total_meansub.*: single hdf5 file (per rank) with the new POD basis.
+//	[1] total_snapshot.*:           single hdf5 file (per rank) of all loaded data.
+//	[2] mean.*:                     single hdf5 file (per rank) with subtracted mean.
+//	[3] total.* OR total_meansub.*: single hdf5 file (per rank) with the new POD basis.
 //
 // Example: mpirun -n 2 ./combine_samples file1 file2 file3 -b -m
 
@@ -48,49 +48,49 @@ int main(int argc, char* argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	
     std::vector<std::string> sample_names;
-	int snaps = 0; 
-	int dim   = 0;
+    int snaps = 0; 
+    int dim   = 0;
     bool subtract_mean = false;
     std::string kind = "snapshot";
 	
     if (argc >= 2) {
-	    for (int i = 1; i < argc; i++) {
-	        if (!strcmp(argv[i], "basis") || !strcmp(argv[i], "-b")) { 
-                if (rank==0) std::cout << "Argument " << i << " identified as basis or -b" << std::endl;
-	            kind = "basis"; 
-	        } 
-	        else if (!strcmp(argv[i], "mean") || !strcmp(argv[i], "-m")) {
-	    	    if (rank==0) std::cout << "Will subtract mean" << std::endl;
-	    	    subtract_mean = true;
-	        }
-	        else {
-	    	    sample_names.push_back(argv[i]); 
-	        }
+        for (int i = 1; i < argc; i++) {
+	    if (!strcmp(argv[i], "basis") || !strcmp(argv[i], "-b")) { 
+            if (rank==0) std::cout << "Argument " << i << " identified as basis or -b" << std::endl;
+                kind = "basis"; 
+            } 
+            else if (!strcmp(argv[i], "mean") || !strcmp(argv[i], "-m")) {
+                if (rank==0) std::cout << "Will subtract mean" << std::endl;
+	    	subtract_mean = true;
 	    }
+	    else {
+                sample_names.push_back(argv[i]); 
+	    }
+	}
     }
     else {
-	    if (rank==0) std::cout << "No arguments passed." << std::endl;
-	    return 1;
+        if (rank==0) std::cout << "No arguments passed." << std::endl;
+        return 1;
     }
  
     /*-- Read dimension and count number of snapshots/bases --*/
-	if (rank==0) std::cout << "Opening files to read dimension and count number of snapshots/bases" << std::endl;
+    if (rank==0) std::cout << "Opening files to read dimension and count number of snapshots/bases" << std::endl;
     for (const auto& sample_name: sample_names) {
         CAROM::BasisReader reader(sample_name);
 		
-		if (kind == "snapshot") {
-		    CAROM::Matrix *snapshots = (CAROM::Matrix*) reader.getSnapshotMatrix(0);
-		    dim    = snapshots->numRows();
-		    snaps += snapshots->numColumns();
-	    }
-		else {
-			CAROM::Matrix *basis = (CAROM::Matrix*) reader.getSpatialBasis(0);
-		    dim    = basis->numRows();
-		    snaps += basis->numColumns();
-		}
+        if (kind == "snapshot") {
+	    CAROM::Matrix *snapshots = (CAROM::Matrix*) reader.getSnapshotMatrix(0);
+	    dim    = snapshots->numRows();
+ 	    snaps += snapshots->numColumns();
+        }
+	else {
+            CAROM::Matrix *basis = (CAROM::Matrix*) reader.getSpatialBasis(0);
+	    dim    = basis->numRows();
+	    snaps += basis->numColumns();
+	}
     }
 	
-	CAROM_VERIFY((snaps > 0) && (dim > 0));
+    CAROM_VERIFY((snaps > 0) && (dim > 0));
 	
     /*-- Load data from input files --*/
     std::string generator_filename = "total";
@@ -101,22 +101,22 @@ int main(int argc, char* argv[])
 
     if (rank==0) std::cout << "Loading data from " << kind << std::endl;
     for(const auto& sample_name: sample_names) {
-	    static_basis_generator->loadSamples(sample_name, kind);
+        static_basis_generator->loadSamples(sample_name, kind);
     }
 
     if (rank==0) std::cout << "Saving data uploaded as a snapshot" << std::endl;
     static_basis_generator->writeSnapshot();
 	
     if (!subtract_mean) {
-	    /*-- Compute SVD and save file --*/
-	    if (rank==0) std::cout << "Computing SVD" << std::endl;
-	    int rom_dim = static_basis_generator->getSpatialBasis()->numColumns();
-	    if (rank==0) std::cout << "U ROM Dimension: " << rom_dim << std::endl;
-	    static_basis_generator->endSamples();
+        /*-- Compute SVD and save file --*/
+        if (rank==0) std::cout << "Computing SVD" << std::endl;
+        int rom_dim = static_basis_generator->getSpatialBasis()->numColumns();
+        if (rank==0) std::cout << "U ROM Dimension: " << rom_dim << std::endl;
+        static_basis_generator->endSamples();
     }
     else {
-		// Close file so it can be opened:
-	    static_basis_generator = nullptr;		
+        // Close file so it can be opened:
+        static_basis_generator = nullptr;		
 
     	/*-- load data from hdf5 file to find the mean and subtract it --*/
     	if (rank==0) std::cout << "Reading snapshots" << std::endl;
@@ -128,8 +128,8 @@ int main(int argc, char* argv[])
     	double* sum = new double[num_rows];
     	
     	/*-- Find the mean per row and write to hdf5 --*/
-	    if (rank==0) std::cout << "Subtracting mean" << std::endl;
-	    std::unique_ptr<CAROM::BasisGenerator> generator_to_write;
+        if (rank==0) std::cout << "Subtracting mean" << std::endl;
+        std::unique_ptr<CAROM::BasisGenerator> generator_to_write;
     	generator_to_write.reset(new CAROM::BasisGenerator(
     	                             CAROM::Options(dim, 1).setMaxBasisDimension(1), false, "mean"));
     	for (int row = 0; row < num_rows; ++row) {
@@ -140,10 +140,10 @@ int main(int argc, char* argv[])
     	    sum[row] = sum[row] / num_cols;
     	}
 		
-	    generator_to_write->takeSample(sum, 0.0, false);
-	    generator_to_write->writeSnapshot();
+        generator_to_write->takeSample(sum, 0.0, false);
+        generator_to_write->writeSnapshot();
     	
-	    /*-- Subtract mean from snapshot/bases matrix --*/
+        /*-- Subtract mean from snapshot/bases matrix --*/
     	CAROM::Matrix* snaps_mean = new CAROM::Matrix(num_rows, num_cols, false);
     	
     	for (int row = 0; row < num_rows; ++row) {
@@ -175,10 +175,10 @@ int main(int argc, char* argv[])
     	if (rank==0) std::cout << "U ROM Dimension: " << rom_dim << std::endl;
     	static_basis_generator2->endSamples();
 		
-	    delete[] sum;
-	    delete snaps_mean;
+        delete[] sum;
+        delete snaps_mean;
     	static_basis_generator2 = nullptr;
-	    generator_to_write = nullptr;
+        generator_to_write = nullptr;
     }
 	
     MPI_Finalize();
