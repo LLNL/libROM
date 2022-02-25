@@ -50,6 +50,15 @@ public:
     DMD(std::string base_file_name);
 
     /**
+     * @brief Constructor.
+     *
+     * @param[in] eigs d_eigs
+     * @param[in] phi_real d_phi_real
+     * @param[in] phi_imaginary d_phi_imaginary
+     */
+    DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real, Matrix* phi_imaginary);
+
+    /**
      * @brief Sample the new state, u_in.
      *
      * @pre u_in != 0
@@ -91,16 +100,6 @@ public:
     Vector* predict(double t);
 
     /**
-     * @brief Predict state given a new initial condition and time.
-     *        The initial condition must be projected using projectInitialCondition
-     *        for correct results.
-     *
-     * @param[in] init The initial condition.
-     * @param[in] t The time of the outputted state
-     */
-    Vector* predict(const std::pair<Vector*, Vector*> init, double t);
-
-    /**
      * @brief Get the time offset contained within d_t_offset.
      */
     double getTimeOffset() const;
@@ -127,6 +126,12 @@ public:
     virtual void save(std::string base_file_name);
 
 protected:
+    friend DMD* getParametricDMD(std::vector<Vector*> parameter_points,
+                                 std::vector<DMD*> dmds,
+                                 Vector* desired_point,
+                                 std::string rbf,
+                                 std::string interp_method,
+                                 double epsilon);
 
     /**
      * @brief Unimplemented default constructor.
@@ -199,6 +204,11 @@ protected:
     bool d_trained;
 
     /**
+     * @brief Whether the initial condition has been projected.
+     */
+    bool d_init_projected;
+
+    /**
      * @brief The maximum number of singular vectors.
      */
     int d_num_singular_vectors;
@@ -217,6 +227,16 @@ protected:
      * @brief The number of columns used after obtaining the SVD decomposition.
      */
     int d_k;
+
+    /**
+     * @brief The left singular vector basis.
+     */
+    Matrix* d_basis;
+
+    /**
+     * @brief A_tilde
+     */
+    Matrix* d_A_tilde;
 
     /**
      * @brief The real part of d_phi.

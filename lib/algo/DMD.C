@@ -59,6 +59,7 @@ DMD::DMD(int dim, double dt)
     d_dim = dim;
     d_dt = dt;
     d_trained = false;
+    d_init_projected = false;
 }
 
 DMD::DMD(std::string base_file_name)
@@ -73,8 +74,28 @@ DMD::DMD(std::string base_file_name)
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
     d_trained = true;
+    d_init_projected = true;
 
     load(base_file_name);
+}
+
+DMD::DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real, Matrix* phi_imaginary)
+{
+    // Get the rank of this process, and the number of processors.
+    int mpi_init;
+    MPI_Initialized(&mpi_init);
+    if (mpi_init == 0) {
+        MPI_Init(nullptr, nullptr);
+    }
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+    d_trained = true;
+    d_init_projected = false;
+
+    d_eigs = eigs;
+    d_phi_real = phi_real;
+    d_phi_imaginary = phi_imaginary;
 }
 
 void DMD::takeSample(double* u_in, double t)
@@ -208,10 +229,10 @@ DMD::constructDMD(const Matrix* f_snapshots,
     std::cout << "Using " << d_k << " basis vectors out of " << d_num_singular_vectors << "." << std::endl;
 
     // Allocate the appropriate matrices and gather their elements.
-    Matrix* d_basis = new Matrix(f_snapshots->numRows(), d_k, f_snapshots->distributed());
+    d_basis = new Matrix(f_snapshots->numRows(), d_k, f_snapshots->distributed());
     Matrix* d_S_inv = new Matrix(d_k, d_k, false);
-
     Matrix* d_basis_right = new Matrix(f_snapshots_minus->numColumns(), d_k, false);
+
     for (int d_rank = 0; d_rank < d_num_procs; ++d_rank) {
         // V is computed in the transposed order so no reordering necessary.
         gather_block(&d_basis->item(0, 0), d_factorizer->V,
@@ -235,10 +256,10 @@ DMD::constructDMD(const Matrix* f_snapshots,
     // Calculate A_tilde = U_transpose * f_snapshots_plus * V * inv(S)
     Matrix* d_basis_mult_f_snapshots_plus = d_basis->transposeMult(f_snapshots_plus);
     Matrix* d_basis_mult_f_snapshots_plus_mult_d_basis_right = d_basis_mult_f_snapshots_plus->mult(d_basis_right);
-    Matrix* A_tilde = d_basis_mult_f_snapshots_plus_mult_d_basis_right->mult(d_S_inv);
+    d_A_tilde = d_basis_mult_f_snapshots_plus_mult_d_basis_right->mult(d_S_inv);
 
     // Calculate the right eigenvalues/eigenvectors of A_tilde
-    ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(A_tilde);
+    ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(d_A_tilde);
     d_eigs = eigenpair.eigs;
 
     // Calculate phi
@@ -258,12 +279,10 @@ DMD::constructDMD(const Matrix* f_snapshots,
 
     d_trained = true;
 
-    delete d_basis;
     delete d_basis_right;
     delete d_S_inv;
     delete d_basis_mult_f_snapshots_plus;
     delete d_basis_mult_f_snapshots_plus_mult_d_basis_right;
-    delete A_tilde;
     delete f_snapshots_plus_mult_d_basis_right;
     delete f_snapshots_plus_mult_d_basis_right_mult_d_S_inv;
     delete f_snapshots_minus;
@@ -357,29 +376,25 @@ DMD::projectInitialCondition(const Vector* init)
     delete [] inverse_input;
     delete [] ipiv;
     delete [] work;
+
+    d_init_projected = true;
 }
 
 Vector*
 DMD::predict(double t)
 {
-    const std::pair<Vector*, Vector*> d_projected_init_pair(d_projected_init_real, d_projected_init_imaginary);
-    return predict(d_projected_init_pair, t);
-}
-
-Vector*
-DMD::predict(const std::pair<Vector*, Vector*> init,
-             double t)
-{
     CAROM_VERIFY(d_trained);
+    CAROM_VERIFY(d_init_projected);
     CAROM_VERIFY(t >= 0.0);
+
     t -= d_t_offset;
     double t_dt = t / d_dt;
     std::pair<Matrix*, Matrix*> d_phi_pair = phiMultEigs(t_dt);
     Matrix* d_phi_mult_eigs_real = d_phi_pair.first;
     Matrix* d_phi_mult_eigs_imaginary = d_phi_pair.second;
 
-    Vector* d_predicted_state_real_1 = d_phi_mult_eigs_real->mult(init.first);
-    Vector* d_predicted_state_real_2 = d_phi_mult_eigs_imaginary->mult(init.second);
+    Vector* d_predicted_state_real_1 = d_phi_mult_eigs_real->mult(d_projected_init_real);
+    Vector* d_predicted_state_real_2 = d_phi_mult_eigs_imaginary->mult(d_projected_init_imaginary);
     Vector* d_predicted_state_real = d_predicted_state_real_1->minus(d_predicted_state_real_2);
 
     delete d_phi_mult_eigs_real;
@@ -494,6 +509,14 @@ DMD::load(std::string base_file_name)
     }
     database.close();
 
+    full_file_name = base_file_name + "_basis";
+    d_basis = new Matrix();
+    d_basis->read(full_file_name);
+
+    full_file_name = base_file_name + "_A_tilde";
+    d_A_tilde = new Matrix();
+    d_A_tilde->read(full_file_name);
+
     full_file_name = base_file_name + "_phi_real";
     d_phi_real = new Matrix();
     d_phi_real->read(full_file_name);
@@ -555,7 +578,13 @@ DMD::save(std::string base_file_name)
         database.close();
     }
 
-    std::string full_file_name = base_file_name + "_phi_real";
+    std::string full_file_name = base_file_name + "_basis";
+    d_basis->write(full_file_name);
+
+    full_file_name = base_file_name + "_A_tilde";
+    d_A_tilde->write(full_file_name);
+
+    full_file_name = base_file_name + "_phi_real";
     d_phi_real->write(full_file_name);
 
     full_file_name = base_file_name + "_phi_imaginary";
