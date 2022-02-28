@@ -62,6 +62,7 @@ int main(int argc, char *argv[])
     double ef = 0.9999;
     int rdim = -1;
     int windowNumSamples = infty;
+    int windowOverlapSamples = 0;
     const char *list_dir = "";
     const char *data_dir = "";
     const char *var_name = "var";
@@ -83,6 +84,8 @@ int main(int argc, char *argv[])
                    "Reduced dimension for DMD.");
     args.AddOption(&windowNumSamples, "-nwinsamp", "--numwindowsamples", 
                    "Number of samples in DMD windows.");
+    args.AddOption(&windowOverlapSamples, "-nwinover", "--numwindowoverlap", 
+                   "Number of samples for DMD window overlap.");
     args.AddOption(&list_dir, "-list", "--list-directory",
                    "Location of training and testing data list.");
     args.AddOption(&data_dir, "-data", "--data-directory",
@@ -172,6 +175,8 @@ int main(int argc, char *argv[])
         windowNumSamples = infty;
     }
 
+    CAROM_VERIFY(windowOverlapSamples < windowNumSamples);
+
     vector<CAROM::DMD*> dmd;
     dmd.assign(numWindows, nullptr);
     if (myid == 0)
@@ -209,6 +214,7 @@ int main(int argc, char *argv[])
             indicator_val.push_back(tval);
         }
 
+        int overlap_count = 0;
         for (int idx_snap = 0; idx_snap < num_train_snap[idx_dataset]; ++idx_snap)
         {
             string snap = snap_list[idx_snap]; // STATE
@@ -216,6 +222,11 @@ int main(int argc, char *argv[])
             string data_filename = string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv"; // path to VAR_NAME.csv
             csv_db->getDoubleArray(data_filename, sample, nelements, idx_state);
             dmd[curr_window]->takeSample(sample, tval);
+            if (overlap_count > 0)
+            {
+                dmd[curr_window-1]->takeSample(sample, tval);
+                overlap_count -= 1;
+            }
             if (curr_window+1 < numWindows && idx_snap+1 < num_train_snap[idx_dataset])
             {
                 bool new_window = false;
@@ -229,6 +240,7 @@ int main(int argc, char *argv[])
                 }
                 if (new_window)
                 {
+                    overlap_count = windowOverlapSamples;
                     curr_window += 1;
                     if (windowNumSamples < infty)
                     {
@@ -332,7 +344,7 @@ int main(int argc, char *argv[])
 
     int num_tests = 0;
     CAROM::Vector* init_cond = new CAROM::Vector(dim, true);
-    vector<double> prediction_error;
+    vector<double> prediction_time, prediction_error;
 
     for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset) 
     {
@@ -420,6 +432,8 @@ int main(int argc, char *argv[])
                 double tot_diff_norm = sqrt(InnerProduct(MPI_COMM_WORLD, diff, diff));
                 double tot_true_solution_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution, true_solution));
                 double rel_error = tot_diff_norm / tot_true_solution_norm;
+
+                prediction_time.push_back(tval);
                 prediction_error.push_back(rel_error);
 
                 if (myid == 0)
@@ -440,8 +454,10 @@ int main(int argc, char *argv[])
         }
         if (myid == 0 && t_final <= 0.0)
         {
+            csv_db->putDoubleVector(outputPath + "/" + par_dir + "_prediction_time.csv", prediction_time, num_snap);
             csv_db->putDoubleVector(outputPath + "/" + par_dir + "_prediction_error.csv", prediction_error, num_snap);
         }
+        prediction_time.clear();
         prediction_error.clear();
         num_tests = (t_final > 0.0) ? num_tests + 1 : num_tests + num_snap;
     }
