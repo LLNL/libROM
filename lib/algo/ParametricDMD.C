@@ -27,6 +27,7 @@ DMD* getParametricDMD(std::vector<Vector*> parameter_points,
                       double epsilon)
 {
     CAROM_VERIFY(parameter_points.size() == dmds.size());
+    CAROM_VERIFY(dmds.size() > 1);
     for (int i = 0; i < dmds.size() - 1; i++)
     {
         CAROM_VERIFY(dmds[i]->d_dt == dmds[i + 1]->d_dt);
