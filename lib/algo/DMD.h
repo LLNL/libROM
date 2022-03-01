@@ -44,7 +44,7 @@ public:
     /**
      * @brief Constructor.
      *
-     * @param[in] base_file_name The base part of the file of the
+     * @param[in] base_file_name The base part of the filename of the
      *                           database to load when restarting from a save.
      */
     DMD(std::string base_file_name);
@@ -113,7 +113,7 @@ public:
     /**
      * @brief Load the object state from a file.
      *
-     * @param[in] base_file_name The base part of the file to load the
+     * @param[in] base_file_name The base part of the filename to load the
      *                           database from.
      */
     virtual void load(std::string base_file_name);
@@ -121,7 +121,7 @@ public:
     /**
      * @brief Save the object state to a file.
      *
-     * @param[in] base_file_name The base part of the file to save the
+     * @param[in] base_file_name The base part of the filename to save the
      *                           database to.
      */
     virtual void save(std::string base_file_name);
