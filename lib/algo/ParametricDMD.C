@@ -48,7 +48,7 @@ DMD* getParametricDMD(std::vector<Vector*> parameter_points,
     CAROM::MatrixInterpolator basis_interpolator(parameter_points, rotation_matrices, bases, ref_point, "B", rbf, interp_method, epsilon);
     Matrix* W = basis_interpolator.interpolate(desired_point);
 
-    CAROM::MatrixInterpolator A_tilde_interpolator(parameter_points, rotation_matrices, A_tildes, ref_point, "SPD", rbf, interp_method, epsilon);
+    CAROM::MatrixInterpolator A_tilde_interpolator(parameter_points, rotation_matrices, A_tildes, ref_point, "R", rbf, interp_method, epsilon);
     Matrix* A_tilde = A_tilde_interpolator.interpolate(desired_point);
 
     // Calculate the right eigenvalues/eigenvectors of A_tilde
@@ -59,7 +59,7 @@ DMD* getParametricDMD(std::vector<Vector*> parameter_points,
     Matrix* phi_real = W->mult(eigenpair.ev_real);
     Matrix* phi_imaginary = W->mult(eigenpair.ev_imaginary);
 
-    DMD* desired_dmd = new DMD(eigs, phi_real, phi_imaginary);
+    DMD* desired_dmd = new DMD(eigs, phi_real, phi_imaginary, dmds[0]->d_k, dmds[0]->d_dt, dmds[0]->d_t_offset);
 
     delete W;
     delete A_tilde;

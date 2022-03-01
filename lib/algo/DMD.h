@@ -55,8 +55,11 @@ public:
      * @param[in] eigs d_eigs
      * @param[in] phi_real d_phi_real
      * @param[in] phi_imaginary d_phi_imaginary
+     * @param[in] k d_k
+     * @param[in] dt d_dt
+     * @param[in] t_offset d_t_offset
      */
-    DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real, Matrix* phi_imaginary);
+    DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real, Matrix* phi_imaginary, int k, double dt, double t_offset);
 
     /**
      * @brief Sample the new state, u_in.
@@ -231,32 +234,32 @@ protected:
     /**
      * @brief The left singular vector basis.
      */
-    Matrix* d_basis;
+    Matrix* d_basis = NULL;
 
     /**
      * @brief A_tilde
      */
-    Matrix* d_A_tilde;
+    Matrix* d_A_tilde = NULL;
 
     /**
      * @brief The real part of d_phi.
      */
-    Matrix* d_phi_real;
+    Matrix* d_phi_real = NULL;
 
     /**
      * @brief The imaginary part of d_phi.
      */
-    Matrix* d_phi_imaginary;
+    Matrix* d_phi_imaginary = NULL;
 
     /**
      * @brief The real part of the projected initial condition.
      */
-    Vector* d_projected_init_real;
+    Vector* d_projected_init_real = NULL;
 
     /**
      * @brief The imaginary part of the projected initial condition.
      */
-    Vector* d_projected_init_imaginary;
+    Vector* d_projected_init_imaginary = NULL;
 
     /**
      * @brief A vector holding the complex eigenvalues of the eigenmodes.

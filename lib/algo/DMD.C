@@ -79,7 +79,7 @@ DMD::DMD(std::string base_file_name)
     load(base_file_name);
 }
 
-DMD::DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real, Matrix* phi_imaginary)
+DMD::DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real, Matrix* phi_imaginary, int k, double dt, double t_offset)
 {
     // Get the rank of this process, and the number of processors.
     int mpi_init;
@@ -96,6 +96,9 @@ DMD::DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real, Matrix* phi_i
     d_eigs = eigs;
     d_phi_real = phi_real;
     d_phi_imaginary = phi_imaginary;
+    d_k = k;
+    d_dt = dt;
+    d_t_offset = t_offset;
 }
 
 void DMD::takeSample(double* u_in, double t)
@@ -578,11 +581,19 @@ DMD::save(std::string base_file_name)
         database.close();
     }
 
-    std::string full_file_name = base_file_name + "_basis";
-    d_basis->write(full_file_name);
+    std::string full_file_name;
 
-    full_file_name = base_file_name + "_A_tilde";
-    d_A_tilde->write(full_file_name);
+    if (d_basis != NULL)
+    {
+        full_file_name = base_file_name + "_basis";
+        d_basis->write(full_file_name);
+    }
+
+    if (d_A_tilde != NULL)
+    {
+        full_file_name = base_file_name + "_A_tilde";
+        d_A_tilde->write(full_file_name);
+    }
 
     full_file_name = base_file_name + "_phi_real";
     d_phi_real->write(full_file_name);
