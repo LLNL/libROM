@@ -44,8 +44,8 @@ public:
      *                           "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
      * @param[in] epsilon        The RBF parameter that determines the width of influence.
      */
-    AdaptiveDMD(int dim, double desired_dt, std::string rbf = "G", std::string interp_method = "LS", 
-	        double epsilon = -1.0);
+    AdaptiveDMD(int dim, double desired_dt, std::string rbf = "G", std::string interp_method = "LS",
+                double epsilon = -1.0);
 
     /**
      * @brief Sample the new state, u_in.
@@ -69,14 +69,14 @@ public:
     void train(int k);
 
     /**
-     * @brief Get the true dt between interpolated snapshots. 
+     * @brief Get the true dt between interpolated snapshots.
      */
     double getTrueDt() const;
 
     /**
      * @brief Get the interpolated snapshot matrix contained within d_interp_snapshots.
      */
-    const Matrix* getInterpolatedSnapshots(); 
+    const Matrix* getInterpolatedSnapshots();
 
 private:
 

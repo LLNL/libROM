@@ -18,7 +18,7 @@
 
 namespace CAROM {
 
-AdaptiveDMD::AdaptiveDMD(int dim, double desired_dt, std::string rbf, std::string interp_method, 
+AdaptiveDMD::AdaptiveDMD(int dim, double desired_dt, std::string rbf, std::string interp_method,
                          double epsilon) : DMD(dim, desired_dt)
 {
     CAROM_VERIFY(desired_dt > 0.0);

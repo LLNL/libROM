@@ -50,18 +50,6 @@ public:
     DMD(std::string base_file_name);
 
     /**
-     * @brief Constructor.
-     *
-     * @param[in] eigs d_eigs
-     * @param[in] phi_real d_phi_real
-     * @param[in] phi_imaginary d_phi_imaginary
-     * @param[in] k d_k
-     * @param[in] dt d_dt
-     * @param[in] t_offset d_t_offset
-     */
-    DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real, Matrix* phi_imaginary, int k, double dt, double t_offset);
-
-    /**
      * @brief Sample the new state, u_in.
      *
      * @pre u_in != 0
@@ -129,12 +117,25 @@ public:
     virtual void save(std::string base_file_name);
 
 protected:
+
     friend DMD* getParametricDMD(std::vector<Vector*> parameter_points,
                                  std::vector<DMD*> dmds,
                                  Vector* desired_point,
                                  std::string rbf,
                                  std::string interp_method,
                                  double epsilon);
+
+    /**
+     * @brief Constructor.
+     *
+     * @param[in] eigs d_eigs
+     * @param[in] phi_real d_phi_real
+     * @param[in] phi_imaginary d_phi_imaginary
+     * @param[in] k d_k
+     * @param[in] dt d_dt
+     * @param[in] t_offset d_t_offset
+     */
+    DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real, Matrix* phi_imaginary, int k, double dt, double t_offset);
 
     /**
      * @brief Unimplemented default constructor.
