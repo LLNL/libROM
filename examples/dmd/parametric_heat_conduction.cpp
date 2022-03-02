@@ -1,23 +1,30 @@
-//                       libROM MFEM Example: Heat_Conduction (adapted from ex16p.cpp)
+//                       libROM MFEM Example: Parametric_Heat_Conduction (adapted from ex16p.cpp)
 //
-// Compile with: make heat_conduction
+// Compile with: make parametric_heat_conduction
 //
-// For DMD:
-//   mpirun -np 8 heat_conduction -offline
-//   mpirun -np 8 heat_conduction -s 3 -a 0.5 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit -offline
-//   mpirun -np 8 heat_conduction -s 3 -a 0.7 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit -offline
-//   mpirun -np 8 heat_conduction -s 3 -a 0.5 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit
-//   mpirun -np 8 heat_conduction -s 3 -a 0.5 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit -online -predict
+// For Parametric DMD (ex. 1):
+//   mpirun -np 8 parametric_heat_conduction -a 0.1 -offline -rdim 16
+//   mpirun -np 8 parametric_heat_conduction -a 0.15 -offline -rdim 16
+//   mpirun -np 8 parametric_heat_conduction -a 0.25 -offline -rdim 16
+//   mpirun -np 8 parametric_heat_conduction -a 0.3 -offline -rdim 16
+//   mpirun -np 8 parametric_heat_conduction -a 0.2 -visit -online -predict
+
+// For Parametric DMD (ex. 2):
+//   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.5 -k 0.5 -o 4 -tf 0.7 -vs 1 -offline -rdim 20
+//   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.55 -k 0.5 -o 4 -tf 0.7 -vs 1 -offline -rdim 20
+//   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.65 -k 0.5 -o 4 -tf 0.7 -vs 1 -offline -rdim 20
+//   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.7 -k 0.5 -o 4 -tf 0.7 -vs 1 -offline -rdim 20
+//   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.6 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit -online -predict
 //
-// Sample runs:  mpirun -np 4 heat_conduction
-//               mpirun -np 4 heat_conduction -tf 2
-//               mpirun -np 4 heat_conduction -s 1 -a 0.0 -k 1.0
-//               mpirun -np 4 heat_conduction -s 2 -a 1.0 -k 0.0
-//               mpirun -np 8 heat_conduction -s 3 -a 0.5 -k 0.5 -o 4
-//               mpirun -np 4 heat_conduction -s 14 -dt 1.0e-4 -tf 4.0e-2 -vs 40
-//               mpirun -np 8 heat_conduction -tf 10 -dt 0.1
-//               mpirun -np 4 heat_conduction -o 4 -rs 0 -rp 0
-//               mpirun -np 4 heat_conduction -o 2 -rs 0 -rp 0
+// Sample runs:  mpirun -np 4 parametric_heat_conduction
+//               mpirun -np 4 parametric_heat_conduction -tf 2
+//               mpirun -np 4 parametric_heat_conduction -s 1 -a 0.0 -k 1.0
+//               mpirun -np 4 parametric_heat_conduction -s 2 -a 1.0 -k 0.0
+//               mpirun -np 8 parametric_heat_conduction -s 3 -a 0.5 -k 0.5 -o 4
+//               mpirun -np 4 parametric_heat_conduction -s 14 -dt 1.0e-4 -tf 4.0e-2 -vs 40
+//               mpirun -np 8 parametric_heat_conduction -tf 10 -dt 0.1
+//               mpirun -np 4 parametric_heat_conduction -o 4 -rs 0 -rp 0
+//               mpirun -np 4 parametric_heat_conduction -o 2 -rs 0 -rp 0
 //
 // Description:  This example solves a time dependent nonlinear heat equation
 //               problem of the form du/dt = C(u), with a non-linear diffusion
@@ -282,8 +289,8 @@ int main(int argc, char *argv[])
     u_gf.SetFromTrueDofs(u);
     {
         ostringstream mesh_name, sol_name;
-        mesh_name << "heat_conduction-mesh." << setfill('0') << setw(6) << myid;
-        sol_name << "heat_conduction-init." << setfill('0') << setw(6) << myid;
+        mesh_name << "parametric_heat_conduction-mesh." << setfill('0') << setw(6) << myid;
+        sol_name << "parametric_heat_conduction-init." << setfill('0') << setw(6) << myid;
         ofstream omesh(mesh_name.str().c_str());
         omesh.precision(precision);
         pmesh->Print(omesh);
@@ -292,7 +299,7 @@ int main(int argc, char *argv[])
         u_gf.Save(osol);
     }
 
-    VisItDataCollection visit_dc("Heat_Conduction", pmesh);
+    VisItDataCollection visit_dc("Parametric_Heat_Conduction", pmesh);
     visit_dc.RegisterField("temperature", &u_gf);
     if (visit)
     {
@@ -311,7 +318,7 @@ int main(int argc, char *argv[])
         postfix.erase(0, std::string("../data/").size() );
         postfix += "_o" + std::to_string(order);
         postfix += "_solver" + std::to_string(ode_solver_type);
-        const std::string collection_name = "heat_conduction-p-" + postfix + ".bp";
+        const std::string collection_name = "parametric_heat_conduction-p-" + postfix + ".bp";
 
         adios2_dc = new ADIOS2DataCollection(MPI_COMM_WORLD, collection_name, pmesh);
         adios2_dc->SetParameter("SubStreams", std::to_string(num_procs/2) );
@@ -457,10 +464,10 @@ int main(int argc, char *argv[])
 #endif
 
     // 12. Save the final solution in parallel. This output can be viewed later
-    //     using GLVis: "glvis -np <np> -m heat_conduction-mesh -g heat_conduction-final".
+    //     using GLVis: "glvis -np <np> -m parametric_heat_conduction-mesh -g parametric_heat_conduction-final".
     {
         ostringstream sol_name;
-        sol_name << "heat_conduction-final." << setfill('0') << setw(6) << myid;
+        sol_name << "parametric_heat_conduction-final." << setfill('0') << setw(6) << myid;
         ofstream osol(sol_name.str().c_str());
         osol.precision(precision);
         u_gf.Save(osol);
@@ -547,7 +554,7 @@ int main(int argc, char *argv[])
             Vector initial_dmd_solution_u(result_u->getData(), result_u->dim());
             u_gf.SetFromTrueDofs(initial_dmd_solution_u);
 
-            VisItDataCollection dmd_visit_dc("DMD_Heat_Conduction", pmesh);
+            VisItDataCollection dmd_visit_dc("DMD_Parametric_Heat_Conduction", pmesh);
             dmd_visit_dc.RegisterField("temperature", &u_gf);
             if (visit)
             {
