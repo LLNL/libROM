@@ -21,13 +21,16 @@
 //	    of snapshots. (Snapshots are default.)
 // 	[3] Optional: "-m" or "mean" to subtract the mean before 
 //	    computing the SVD. (No subtraction is default.)
+//      [4] Optional: "-o" or "offset" to subtract an arbitrary offset vector
+//          before computing the SVD. Offset vector file supplied as next argument.
 //
 // Outputs:
 //	[1] total_snapshot.*:           single hdf5 file (per rank) of all loaded data.
 //	[2] mean.*:                     single hdf5 file (per rank) with subtracted mean.
 //	[3] total.* OR total_meansub.*: single hdf5 file (per rank) with the new POD basis.
 //
-// Example: mpirun -n 2 ./combine_samples file1 file2 file3 -b -m
+// Examples: mpirun -n 2 ./combine_samples file1 file2 file3 -b -m
+//           mpirun -n 2 ./combine_samples -o offsetfile file1 file2 file3
 
 #include "linalg/BasisGenerator.h"
 #include "linalg/scalapack_wrapper.h"
@@ -51,8 +54,12 @@ int main(int argc, char* argv[])
     int snaps = 0; 
     int dim   = 0;
     bool subtract_mean = false;
+    bool subtract_offset = false;
     std::string kind = "snapshot";
-	
+    std::string offset_file;
+
+    bool offset_arg = false;	
+
     if (argc >= 2) {
         for (int i = 1; i < argc; i++) {
 	    if (!strcmp(argv[i], "basis") || !strcmp(argv[i], "-b")) { 
@@ -63,6 +70,15 @@ int main(int argc, char* argv[])
                 if (rank==0) std::cout << "Will subtract mean" << std::endl;
 	    	subtract_mean = true;
 	    }
+            else if (offset_arg) {
+                offset_file = argv[i];
+                offset_arg = false;
+            }
+            else if (!strcmp(argv[i], "offset") || !strcmp(argv[i], "-o")) {
+                if (rank==0) std::cout << "Will subtract offset" << std::endl;
+                subtract_offset = true;
+                offset_arg = true;
+            }
 	    else {
                 sample_names.push_back(argv[i]); 
 	    }
@@ -107,7 +123,7 @@ int main(int argc, char* argv[])
     if (rank==0) std::cout << "Saving data uploaded as a snapshot" << std::endl;
     static_basis_generator->writeSnapshot();
 	
-    if (!subtract_mean) {
+    if (!subtract_mean && !subtract_offset) {
         /*-- Compute SVD and save file --*/
         if (rank==0) std::cout << "Computing SVD" << std::endl;
         int rom_dim = static_basis_generator->getSpatialBasis()->numColumns();
@@ -115,40 +131,45 @@ int main(int argc, char* argv[])
         static_basis_generator->endSamples();
     }
     else {
-        // Close file so it can be opened:
-        static_basis_generator = nullptr;		
-
     	/*-- load data from hdf5 file to find the mean and subtract it --*/
     	if (rank==0) std::cout << "Reading snapshots" << std::endl;
-    	CAROM::BasisReader reader(generator_filename+"_snapshot");
-    	CAROM::Matrix *snapshots = (CAROM::Matrix*) reader.getSnapshotMatrix(0);
-    	
+    	CAROM::Matrix *snapshots = (CAROM::Matrix*) static_basis_generator->getSnapshotMatrix();
+        
     	int num_rows = snapshots->numRows();
     	int num_cols = snapshots->numColumns();
-    	double* sum = new double[num_rows];
+    	double* offset = new double[num_rows];
     	
-    	/*-- Find the mean per row and write to hdf5 --*/
-        if (rank==0) std::cout << "Subtracting mean" << std::endl;
-        std::unique_ptr<CAROM::BasisGenerator> generator_to_write;
-    	generator_to_write.reset(new CAROM::BasisGenerator(
-    	                             CAROM::Options(dim, 1).setMaxBasisDimension(1), false, "mean"));
-    	for (int row = 0; row < num_rows; ++row) {
-    	    sum[row] = 0;
-    	    for (int col = 0; col < num_cols; ++col) {
-    	        sum[row] += snapshots->item(row,col);
+        if (subtract_mean) {
+    	    /*-- Find the mean per row and write to hdf5 --*/
+            if (rank==0) std::cout << "Subtracting mean" << std::endl;
+            std::unique_ptr<CAROM::BasisGenerator> generator_to_write;
+    	    generator_to_write.reset(new CAROM::BasisGenerator(
+    	                                 CAROM::Options(dim, 1).setMaxBasisDimension(1), false, "mean"));
+    	    for (int row = 0; row < num_rows; ++row) {
+    	        offset[row] = 0;
+    	        for (int col = 0; col < num_cols; ++col) {
+    	            offset[row] += snapshots->item(row,col);
+    	        }
+    	        offset[row] = offset[row] / num_cols;
     	    }
-    	    sum[row] = sum[row] / num_cols;
-    	}
 		
-        generator_to_write->takeSample(sum, 0.0, false);
-        generator_to_write->writeSnapshot();
-    	
+            generator_to_write->takeSample(offset, 0.0, false);
+            generator_to_write->writeSnapshot();
+            generator_to_write = nullptr;
+    	}
+        else if (subtract_offset) {
+            /*-- Open offset file --*/
+            CAROM::BasisReader reader(offset_file);
+            
+	    
+        }
+
         /*-- Subtract mean from snapshot/bases matrix --*/
     	CAROM::Matrix* snaps_mean = new CAROM::Matrix(num_rows, num_cols, false);
     	
     	for (int row = 0; row < num_rows; ++row) {
     	    for (int col = 0; col < num_cols; ++col) {
-    	        snaps_mean->item(row,col) = snapshots->item(row,col) - sum[row];
+    	        snaps_mean->item(row,col) = snapshots->item(row,col) - offset[row];
     	    }
     	}
     	
@@ -175,12 +196,12 @@ int main(int argc, char* argv[])
     	if (rank==0) std::cout << "U ROM Dimension: " << rom_dim << std::endl;
     	static_basis_generator2->endSamples();
 		
-        delete[] sum;
+        delete[] offset;
         delete snaps_mean;
     	static_basis_generator2 = nullptr;
-        generator_to_write = nullptr;
     }
-	
+    static_basis_generator = nullptr;	
+    
     MPI_Finalize();
     return 0;
  }
