@@ -2,20 +2,37 @@
 //
 // Compile with: make parametric_heat_conduction
 //
-// For Parametric DMD (ex. 1):
+// In these examples, the radius of the interface between different initial temperatures and the
+// alpha coefficient are modified.
+//
+// For Parametric DMD (ex. 1) (radius, interpolation):
 //   rm -rf parameters.txt
-//   mpirun -np 8 parametric_heat_conduction -a 0.1 -offline -rdim 16
-//   mpirun -np 8 parametric_heat_conduction -a 0.15 -offline -rdim 16
-//   mpirun -np 8 parametric_heat_conduction -a 0.25 -offline -rdim 16
-//   mpirun -np 8 parametric_heat_conduction -a 0.3 -offline -rdim 16
+//   mpirun -np 8 parametric_heat_conduction -r 0.4 -visit -offline -rdim 16
+//   mpirun -np 8 parametric_heat_conduction -r 0.45 -visit -offline -rdim 16
+//   mpirun -np 8 parametric_heat_conduction -r 0.55 -visit -offline -rdim 16
+//   mpirun -np 8 parametric_heat_conduction -r 0.6 -visit -offline -rdim 16
+//   mpirun -np 8 parametric_heat_conduction -r 0.5 -visit -online -predict
+
+// For Parametric DMD (ex. 2) (radius, extrapolation):
+//   rm -rf parameters.txt
+//   mpirun -np 8 parametric_heat_conduction -r 0.1 -a 0.01 -visit -offline -rdim 16
+//   mpirun -np 8 parametric_heat_conduction -r 0.2 -a 0.02 -visit -offline -rdim 16
+//   mpirun -np 8 parametric_heat_conduction -r 0.5 -a 0.03 -visit -online -predict
+//
+// For Parametric DMD (ex. 3) (alpha, interpolation):
+//   rm -rf parameters.txt
+//   mpirun -np 8 parametric_heat_conduction -a 0.1 -visit -offline -rdim 16
+//   mpirun -np 8 parametric_heat_conduction -a 0.15 -visit -offline -rdim 16
+//   mpirun -np 8 parametric_heat_conduction -a 0.25 -visit -offline -rdim 16
+//   mpirun -np 8 parametric_heat_conduction -a 0.3 -visit -offline -rdim 16
 //   mpirun -np 8 parametric_heat_conduction -a 0.2 -visit -online -predict
 
-// For Parametric DMD (ex. 2):
+// For Parametric DMD (ex. 4) (alpha, interpolation):
 //   rm -rf parameters.txt
-//   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.5 -k 0.5 -o 4 -tf 0.7 -vs 1 -offline -rdim 20
-//   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.55 -k 0.5 -o 4 -tf 0.7 -vs 1 -offline -rdim 20
-//   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.65 -k 0.5 -o 4 -tf 0.7 -vs 1 -offline -rdim 20
-//   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.7 -k 0.5 -o 4 -tf 0.7 -vs 1 -offline -rdim 20
+//   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.5 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit -offline -rdim 20
+//   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.55 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit -offline -rdim 20
+//   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.65 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit -offline -rdim 20
+//   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.7 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit -offline -rdim 20
 //   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.6 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit -online -predict
 //
 // Sample runs:  mpirun -np 4 parametric_heat_conduction
@@ -101,6 +118,8 @@ public:
 
 double InitialTemperature(const Vector &x);
 
+double radius = 0.5;
+
 int main(int argc, char *argv[])
 {
     // 1. Initialize MPI.
@@ -152,6 +171,8 @@ int main(int argc, char *argv[])
                    "Alpha coefficient.");
     args.AddOption(&kappa, "-k", "--kappa",
                    "Kappa coefficient offset.");
+    args.AddOption(&radius, "-r", "--radius",
+                       "Radius of the interface of initial temperature.");
     args.AddOption(&epsilon, "-eps", "--eps",
                    "DMD Epsilon.");
     args.AddOption(&visualization, "-vis", "--visualization", "-no-vis",
@@ -291,8 +312,8 @@ int main(int argc, char *argv[])
     u_gf.SetFromTrueDofs(u);
     {
         ostringstream mesh_name, sol_name;
-        mesh_name << "parametric_heat_conduction-mesh." << setfill('0') << setw(6) << myid;
-        sol_name << "parametric_heat_conduction-init." << setfill('0') << setw(6) << myid;
+        mesh_name << "parametric_heat_conduction_" << to_string(radius) << "_" << to_string(alpha) << "-mesh." << setfill('0') << setw(6) << myid;
+        sol_name << "parametric_heat_conduction_" << to_string(radius) << "_" << to_string(alpha) << "-init." << setfill('0') << setw(6) << myid;
         ofstream omesh(mesh_name.str().c_str());
         omesh.precision(precision);
         pmesh->Print(omesh);
@@ -301,7 +322,7 @@ int main(int argc, char *argv[])
         u_gf.Save(osol);
     }
 
-    VisItDataCollection visit_dc("Parametric_Heat_Conduction", pmesh);
+    VisItDataCollection visit_dc("Parametric_Heat_Conduction_" + to_string(radius) + "_" + to_string(alpha), pmesh);
     visit_dc.RegisterField("temperature", &u_gf);
     if (visit)
     {
@@ -388,6 +409,10 @@ int main(int argc, char *argv[])
         u_gf.SetFromTrueDofs(u);
         dmd_u = new CAROM::DMD(u.Size(), dt);
         dmd_u->takeSample(u.GetData(), t);
+        if (myid == 0)
+        {
+            std::cout << "Taking snapshot at: " << t << std::endl;
+        }
 
         dmd_training_timer.Stop();
     }
@@ -419,6 +444,10 @@ int main(int argc, char *argv[])
 
             u_gf.SetFromTrueDofs(u);
             dmd_u->takeSample(u.GetData(), t);
+            if (myid == 0)
+            {
+                std::cout << "Taking snapshot at: " << t << std::endl;
+            }
 
             dmd_training_timer.Stop();
         }
@@ -469,7 +498,7 @@ int main(int argc, char *argv[])
     //     using GLVis: "glvis -np <np> -m parametric_heat_conduction-mesh -g parametric_heat_conduction-final".
     {
         ostringstream sol_name;
-        sol_name << "parametric_heat_conduction-final." << setfill('0') << setw(6) << myid;
+        sol_name << "parametric_heat_conduction_" << to_string(radius) << "_" << to_string(alpha) << "-final." << setfill('0') << setw(6) << myid;
         ofstream osol(sol_name.str().c_str());
         osol.precision(precision);
         u_gf.Save(osol);
@@ -491,11 +520,11 @@ int main(int argc, char *argv[])
 
             dmd_training_timer.Stop();
 
-            dmd_u->save(to_string(alpha));
+            dmd_u->save(to_string(radius) + "_" + to_string(alpha));
 
             std::ofstream fout;
             fout.open("parameters.txt", std::ios::app);
-            fout << alpha << std::endl;
+            fout << radius << " " << alpha << std::endl;
             fout.close();
         }
 
@@ -507,30 +536,33 @@ int main(int argc, char *argv[])
             }
 
             std::fstream fin("parameters.txt", std::ios_base::in);
-            double curr_alpha;
-            std::set<double> alphas;
-            while (fin >> curr_alpha)
+            double curr_param;
+            std::vector<std::string> dmd_paths;
+            std::vector<CAROM::Vector*> param_vectors;
+
+            while (fin >> curr_param)
             {
-                alphas.insert(curr_alpha);
+                double curr_radius = curr_param;
+                fin >> curr_param;
+                double curr_alpha = curr_param;
+
+                std::cout << curr_radius << " " << curr_alpha << std::endl;
+
+                dmd_paths.push_back(to_string(curr_radius) + "_" + to_string(curr_alpha));
+                CAROM::Vector* param_vector = new CAROM::Vector(2, false);
+                param_vector->item(0) = curr_radius;
+                param_vector->item(1) = curr_alpha;
+                param_vectors.push_back(param_vector);
             }
             fin.close();
 
-            std::vector<std::string> dmd_paths;
-            std::vector<CAROM::Vector*> alpha_vectors;
-            for (auto i = alphas.begin(); i != alphas.end(); i++)
-            {
-                dmd_paths.push_back(to_string(*i));
-                CAROM::Vector* alpha_vector = new CAROM::Vector(1, false);
-                alpha_vector->item(0) = *i;
-                alpha_vectors.push_back(alpha_vector);
-            }
-
-            CAROM::Vector* desired_alpha = new CAROM::Vector(1, false);
-            desired_alpha->item(0) = alpha;
+            CAROM::Vector* desired_param = new CAROM::Vector(2, false);
+            desired_param->item(0) = radius;
+            desired_param->item(1) = alpha;
 
             dmd_training_timer.Start();
 
-            dmd_u = getParametricDMD(alpha_vectors, dmd_paths, desired_alpha, "G", "LS", epsilon);
+            dmd_u = getParametricDMD(param_vectors, dmd_paths, desired_param, "G", "LS", epsilon);
 
             dmd_u->projectInitialCondition(init);
 
@@ -547,14 +579,14 @@ int main(int argc, char *argv[])
             // 14. Predict the state at t_final using DMD.
             if (myid == 0)
             {
-                std::cout << "Predicting temperature using DMD" << std::endl;
+                std::cout << "Predicting temperature using DMD at: " << ts[0] << std::endl;
             }
 
             CAROM::Vector* result_u = dmd_u->predict(ts[0]);
             Vector initial_dmd_solution_u(result_u->getData(), result_u->dim());
             u_gf.SetFromTrueDofs(initial_dmd_solution_u);
 
-            VisItDataCollection dmd_visit_dc("DMD_Parametric_Heat_Conduction", pmesh);
+            VisItDataCollection dmd_visit_dc("DMD_Parametric_Heat_Conduction_" + to_string(radius) + "_" + to_string(alpha), pmesh);
             dmd_visit_dc.RegisterField("temperature", &u_gf);
             if (visit)
             {
@@ -568,6 +600,11 @@ int main(int argc, char *argv[])
             for (int i = 1; i < ts.size(); i++)
             {
                 result_u = dmd_u->predict(ts[i]);
+                if (myid == 0)
+                {
+                    std::cout << "Predicting temperature using DMD at: " << ts[i] << std::endl;
+                }
+
                 Vector dmd_solution_u(result_u->getData(), result_u->dim());
                 u_gf.SetFromTrueDofs(dmd_solution_u);
 
@@ -722,7 +759,7 @@ ConductionOperator::~ConductionOperator()
 
 double InitialTemperature(const Vector &x)
 {
-    if (x.Norml2() < 0.5)
+    if (x.Norml2() < radius)
     {
         return 2.0;
     }
