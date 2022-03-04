@@ -534,8 +534,6 @@ int main(int argc, char *argv[])
 
             dmd_u->projectInitialCondition(init);
 
-            dmd_u->save("parametric_test");
-
             dmd_training_timer.Stop();
         }
 
