@@ -13,7 +13,7 @@
 //   mpirun -np 8 parametric_heat_conduction -r 0.6 -visit -offline -rdim 16
 //   mpirun -np 8 parametric_heat_conduction -r 0.5 -visit -online -predict
 
-// For Parametric DMD (ex. 2) (radius, extrapolation):
+// For Parametric DMD (ex. 2) (radius & alpha, extrapolation):
 //   rm -rf parameters.txt
 //   mpirun -np 8 parametric_heat_conduction -r 0.1 -a 0.01 -visit -offline -rdim 16
 //   mpirun -np 8 parametric_heat_conduction -r 0.2 -a 0.02 -visit -offline -rdim 16
