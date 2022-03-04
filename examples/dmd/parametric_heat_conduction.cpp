@@ -3,6 +3,7 @@
 // Compile with: make parametric_heat_conduction
 //
 // For Parametric DMD (ex. 1):
+//   rm -rf parameters.txt
 //   mpirun -np 8 parametric_heat_conduction -a 0.1 -offline -rdim 16
 //   mpirun -np 8 parametric_heat_conduction -a 0.15 -offline -rdim 16
 //   mpirun -np 8 parametric_heat_conduction -a 0.25 -offline -rdim 16
@@ -10,6 +11,7 @@
 //   mpirun -np 8 parametric_heat_conduction -a 0.2 -visit -online -predict
 
 // For Parametric DMD (ex. 2):
+//   rm -rf parameters.txt
 //   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.5 -k 0.5 -o 4 -tf 0.7 -vs 1 -offline -rdim 20
 //   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.55 -k 0.5 -o 4 -tf 0.7 -vs 1 -offline -rdim 20
 //   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.65 -k 0.5 -o 4 -tf 0.7 -vs 1 -offline -rdim 20
