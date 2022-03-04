@@ -7,6 +7,7 @@
 //    dg_advection_local_rom_matrix_interp -online
 //
 // For ROM (parametric case using matrix interpolation):
+//    rm -rf frequencies.txt
 //    dg_advection_local_rom_matrix_interp -offline -ff 1.02
 //    dg_advection_local_rom_matrix_interp -interp_prep -ff 1.02 -rdim 40
 //    dg_advection_local_rom_matrix_interp -offline -ff 1.03
