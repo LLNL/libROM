@@ -74,14 +74,13 @@ public:
     close();
 
     /**
-     * @brief Writes an array of integers associated with the supplied key to
-     * the currently open CSV database file.
+     * @brief Writes an array of integers associated with the supplied filename.
      *
-     * @pre !key.empty()
+     * @pre !file_name.empty()
      * @pre data != 0
      * @pre nelements > 0
      *
-     * @param[in] key The key associated with the array of values to be
+     * @param[in] file_name The filename associated with the array of values to be
      *                written.
      * @param[in] data The array of integer values to be written.
      * @param[in] nelements The number of integers in the array.
@@ -89,19 +88,18 @@ public:
     virtual
     void
     putIntegerArray(
-        const std::string& key,
+        const std::string& file_name,
         const int* const data,
         int nelements);
 
     /**
-     * @brief Writes an array of doubles associated with the supplied key to
-     * the currently open CSV database file.
+     * @brief Writes an array of doubles associated with the supplied filename.
      *
-     * @pre !key.empty()
+     * @pre !file_name.empty()
      * @pre data != 0
      * @pre nelements > 0
      *
-     * @param[in] key The key associated with the array of values to be
+     * @param[in] file_name The filename associated with the array of values to be
      *                written.
      * @param[in] data The array of double values to be written.
      * @param[in] nelements The number of doubles in the array.
@@ -109,19 +107,19 @@ public:
     virtual
     void
     putDoubleArray(
-        const std::string& key,
+        const std::string& file_name,
         const double* const data,
         int nelements);
 
     /**
-     * @brief Writes a vector of doubles associated with the supplied key to
+     * @brief Writes a vector of doubles associated with the supplied filename to
      * the currently open CSV database file.
      *
-     * @pre !key.empty()
+     * @pre !file_name.empty()
      * @pre data != 0
      * @pre nelements > 0
      *
-     * @param[in] key The key associated with the vector of values to be
+     * @param[in] file_name The filename associated with the vector of values to be
      *                written.
      * @param[in] data The vector of double values to be written.
      * @param[in] nelements The number of doubles in the vector.
@@ -129,19 +127,18 @@ public:
     virtual
     void
     putDoubleVector(
-        const std::string& key,
+        const std::string& file_name,
         const std::vector<double> data,
         int nelements);
 
     /**
-     * @brief Writes a vector of complex doubles associated with the supplied key to
-     * the currently open CSV database file.
+     * @brief Writes a vector of complex doubles associated with the supplied filename.
      *
-     * @pre !key.empty()
+     * @pre !file_name.empty()
      * @pre data != 0
      * @pre nelements > 0
      *
-     * @param[in] key The key associated with the vector of values to be
+     * @param[in] file_name The filename associated with the vector of values to be
      *                written.
      * @param[in] data The vector of complex double values to be written.
      * @param[in] nelements The number of complex doubles in the vector.
@@ -149,18 +146,17 @@ public:
     virtual
     void
     putComplexVector(
-        const std::string& key,
+        const std::string& file_name,
         const std::vector<std::complex<double>> data,
         int nelements);
 
     /**
-     * @brief Reads an array of integers associated with the supplied key
-     * from the currently open CSV database file.
+     * @brief Reads an array of integers associated with the supplied filename.
      *
-     * @pre !key.empty()
+     * @pre !file_name.empty()
      * @pre data != 0 || nelements == 0
      *
-     * @param[in] key The key associated with the array of values to be
+     * @param[in] file_name The filename associated with the array of values to be
      *                read.
      * @param[out] data The allocated array of integer values to be read.
      * @param[in] nelements The number of integers in the array.
@@ -168,35 +164,33 @@ public:
     virtual
     void
     getIntegerArray(
-        const std::string& key,
+        const std::string& file_name,
         int* data,
         int nelements);
 
     /**
-     * @brief Reads a vector of integers associated with the supplied key
-     * from the currently open CSV database file.
+     * @brief Reads a vector of integers associated with the supplied filename.
      *
-     * @pre !key.empty()
+     * @pre !file_name.empty()
      *
-     * @param[in] key The key associated with the vector of values to be
+     * @param[in] file_name The filename associated with the vector of values to be
      *                read.
      * @param[out] data The allocated vector of integer values to be read.
-     * @param[in] append True if append to the vector, otherwise overwite.
+     * @param[in] append If true, append to the vector, otherwise overwrite.
      */
     void
     getIntegerVector(
-        const std::string& key,
+        const std::string& file_name,
         std::vector<int> &data, 
         bool append);
 
     /**
-     * @brief Reads an array of doubles associated with the supplied key
-     * from the currently open CSV database file.
+     * @brief Reads an array of doubles associated with the supplied filename.
      *
-     * @pre !key.empty()
+     * @pre !file_name.empty()
      * @pre data != 0 || nelements == 0
      *
-     * @param[in] key The key associated with the array of values to be
+     * @param[in] file_name The filename associated with the array of values to be
      *                read.
      * @param[out] data The allocated array of double values to be read.
      * @param[in] nelements The number of doubles in the array.
@@ -204,18 +198,17 @@ public:
     virtual
     void
     getDoubleArray(
-        const std::string& key,
+        const std::string& file_name,
         double* data,
         int nelements);
 
     /**
-     * @brief Reads a sub-array of doubles associated with the supplied key
-     * from the currently open CSV database file.
+     * @brief Reads a sub-array of doubles associated with the supplied filename.
      *
-     * @pre !key.empty()
+     * @pre !file_name.empty()
      * @pre data != 0 || nelements == 0
      *
-     * @param[in] key The key associated with the array of values to be
+     * @param[in] file_name The filename associated with the array of values to be
      *                read.
      * @param[out] data The allocated sub-array of double values to be read.
      * @param[in] nelements The number of doubles in the full array.
@@ -224,19 +217,18 @@ public:
     virtual
     void
     getDoubleArray(
-        const std::string& key,
+        const std::string& file_name,
         double* data,
         int nelements, 
         std::vector<int> idx);
 
     /**
-     * @brief Reads an array of doubles associated with the supplied key
-     * from the currently open CSV database file.
+     * @brief Reads an array of doubles associated with the supplied filename.
      *
-     * @pre !key.empty()
+     * @pre !file_name.empty()
      * @pre data != 0 || nelements == 0
      *
-     * @param[in] key The key associated with the array of values to be
+     * @param[in] file_name The filename associated with the array of values to be
      *                read.
      * @param[out] data The allocated array of double values to be read.
      * @param[in] nelements The number of doubles in the array.
@@ -247,7 +239,7 @@ public:
     virtual
     void
     getDoubleArray(
-        const std::string& key,
+        const std::string& file_name,
         double* data,
         int nelements,
         int offset,
@@ -255,50 +247,48 @@ public:
         int stride);
 
     /**
-     * @brief Reads a vector of doubles associated with the supplied key
-     * from the currently open CSV database file.
+     * @brief Reads a vector of doubles associated with the supplied filename.
      *
-     * @pre !key.empty()
+     * @pre !file_name.empty()
      *
-     * @param[in] key The key associated with the vector of values to be
+     * @param[in] file_name The filename associated with the vector of values to be
      *                read.
      * @param[out] data The allocated vector of double values to be read.
-     * @param[in] append True if append to the vector, otherwise overwite.
+     * @param[in] append If true, append to the vector, otherwise overwrite.
      */
     void
     getDoubleVector(
-        const std::string& key,
+        const std::string& file_name,
         std::vector<double> &data, 
         bool append);
 
     /**
-     * @brief Reads a vector of strings associated with the supplied key
-     * from the currently open CSV database file.
+     * @brief Reads a vector of strings associated with the supplied filename.
      *
-     * @pre !key.empty()
+     * @pre !file_name.empty()
      *
-     * @param[in] key The key associated with the vector of strings to be
+     * @param[in] file_name The filename associated with the vector of strings to be
      *                read.
      * @param[out] data The allocated vector of strings to be read.
-     * @param[in] append True if append to the vector, otherwise overwite.
+     * @param[in] append If true, append to the vector, otherwise overwrite.
      */
     void
     getStringVector(
-        const std::string& key,
+        const std::string& file_name,
         std::vector<std::string> &data, 
         bool append);
 
     /**
      * @brief Count the number of lines of CSV database file.
      *
-     * @pre !key.empty()
+     * @pre !file_name.empty()
      *
-     * @param[in] key The key associated with the vector of strings to be
+     * @param[in] file_name The filename associated with the vector of strings to be
      *                read.
      */
     int
     getLineCount(
-        const std::string& key);
+        const std::string& file_name);
 
 private:
     /**

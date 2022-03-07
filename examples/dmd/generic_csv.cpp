@@ -248,7 +248,11 @@ int main(int argc, char *argv[])
                     }
                     if (ddt > 0.0)
                     {
-                        dmd[curr_window] = new CAROM::AdaptiveDMD(dim, ddt, "G", "LS", dmd_epsilon);
+                        double dddt = ddt;
+                        if (curr_window == 8) dddt = 1.5E-5;
+                        if (curr_window == 9) dddt = 1E-5;
+                        if (curr_window == 13) dddt = 1.5E-5;
+                        dmd[curr_window] = new CAROM::AdaptiveDMD(dim, dddt, "G", "LS", dmd_epsilon);
                     }
                     else
                     {
@@ -283,7 +287,7 @@ int main(int argc, char *argv[])
             }
             dmd[window]->train(ef);
         }
-        dmd[window]->summary(outputPath, window); 
+        dmd[window]->summary(outputPath + "/window" + to_string(window)); 
     }
 
     dmd_training_timer.Stop();

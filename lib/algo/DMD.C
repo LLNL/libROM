@@ -438,14 +438,14 @@ DMD::createSnapshotMatrix(std::vector<Vector*> snapshots)
 }
 
 void
-DMD::summary(std::string output_path, int window)
+DMD::summary(std::string output_path)
 {
     if (d_rank == 0)
     {
         CSVDatabase* csv_db(new CSVDatabase);
 
-        csv_db->putDoubleVector(output_path + "/window" + std::to_string(window) + "_singular_value.csv", d_sv, d_num_singular_vectors);
-        csv_db->putComplexVector(output_path + "/window" + std::to_string(window) + "_eigenvalue.csv", d_eigs, d_eigs.size());
+        csv_db->putDoubleVector(output_path + "_singular_value.csv", d_sv, d_num_singular_vectors);
+        csv_db->putComplexVector(output_path + "_eigenvalue.csv", d_eigs, d_eigs.size());
 
         delete csv_db;
     }
