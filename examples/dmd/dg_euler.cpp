@@ -492,7 +492,6 @@ int main(int argc, char *argv[])
     Vector true_solution_e(u_block.GetBlock(3).Size());
     true_solution_e = u_block.GetBlock(3).GetData();
 
-
     dmd_prediction_timer.Start();
 
     // 14. Predict the state at t_final using DMD.
