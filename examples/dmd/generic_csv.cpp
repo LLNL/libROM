@@ -327,6 +327,7 @@ int main(int argc, char *argv[])
                     cout << "Absolute error of DMD prediction for interpolated snapshot #" << k << " is " << tot_diff_norm << endl;
                     cout << "Relative error of DMD prediction for interpolated snapshot #" << k << " is " << rel_error << endl;
                 }
+                delete result;
             }
             if (myid == 0)
             {
@@ -408,6 +409,7 @@ int main(int argc, char *argv[])
                     csv_db->putDoubleArray(outputPath + "/" + par_dir + "_final_time_prediction.csv", result->getData(), dim); 
                 }
                 idx_snap = num_snap; // escape for-loop over idx_snap
+                delete result;
             }
             else // Verify DMD prediction results against dataset
             {
@@ -450,6 +452,7 @@ int main(int argc, char *argv[])
                         }
                     }
                 }
+                delete result;
             }
         }
         if (myid == 0 && t_final <= 0.0)
@@ -473,7 +476,6 @@ int main(int argc, char *argv[])
     }
 
     delete[] sample;
-    delete result;
     delete init_cond;
     return 0;
 }
