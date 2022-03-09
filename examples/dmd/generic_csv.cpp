@@ -374,18 +374,25 @@ int main(int argc, char *argv[])
             if (idx_snap == 0)
             {
                 dmd_preprocess_timer.Start();
-                for (int i = 0; i < dim; ++i)
-                {
-                    init_cond->item(i) = sample[i];
-                }
                 for (int window = 0; window < numWindows; ++window)
                 {
+                    if (window == 0)
+                    {
+                        for (int i = 0; i < dim; ++i)
+                        {
+                            init_cond->item(i) = sample[i];
+                        }
+                    }
+                    else
+                    {
+                        init_cond = dmd[window-1]->predict(indicator_val[window]);
+                    }
                     if (myid == 0)
                     {
                         cout << "Projecting initial condition at t = " << indicator_val[window] << " for DMD model #" << window << endl;
                     }
                     dmd[window]->projectInitialCondition(init_cond);
-                    init_cond = dmd[window]->predict(indicator_val[window+1]);
+                    delete init_cond;
                 }
                 dmd_preprocess_timer.Stop();
             }
@@ -476,6 +483,5 @@ int main(int argc, char *argv[])
     }
 
     delete[] sample;
-    delete init_cond;
     return 0;
 }
