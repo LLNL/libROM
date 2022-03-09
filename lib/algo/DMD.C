@@ -101,22 +101,6 @@ DMD::DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real, Matrix* phi_i
     d_t_offset = t_offset;
 }
 
-DMD::DMD(std::string base_file_name)
-{
-    // Get the rank of this process, and the number of processors.
-    int mpi_init;
-    MPI_Initialized(&mpi_init);
-    if (mpi_init == 0) {
-        MPI_Init(nullptr, nullptr);
-    }
-
-    MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
-    d_trained = true;
-
-    load(base_file_name);
-}
-
 void DMD::takeSample(double* u_in, double t)
 {
     CAROM_VERIFY(u_in != 0);
