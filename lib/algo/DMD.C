@@ -577,8 +577,8 @@ DMD::summary(std::string output_path)
     {
         CSVDatabase* csv_db(new CSVDatabase);
 
-        csv_db->putDoubleVector(output_path + "/singular_value.csv", d_sv, d_num_singular_vectors);
-        csv_db->putComplexVector(output_path + "/eigenvalue.csv", d_eigs, d_eigs.size());
+        csv_db->putDoubleVector(output_path + "_singular_value.csv", d_sv, d_num_singular_vectors);
+        csv_db->putComplexVector(output_path + "_eigenvalue.csv", d_eigs, d_eigs.size());
 
         delete csv_db;
     }
