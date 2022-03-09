@@ -16,6 +16,7 @@
 #include "linalg/Vector.h"
 #include "linalg/scalapack_wrapper.h"
 #include "utils/CSVDatabase.h"
+#include "utils/HDFDatabase.h"
 #include "mpi.h"
 
 #include <cstring>
@@ -58,6 +59,22 @@ DMD::DMD(int dim, double dt)
     d_dim = dim;
     d_dt = dt;
     d_trained = false;
+}
+
+DMD::DMD(std::string base_file_name)
+{
+    // Get the rank of this process, and the number of processors.
+    int mpi_init;
+    MPI_Initialized(&mpi_init);
+    if (mpi_init == 0) {
+        MPI_Init(nullptr, nullptr);
+    }
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+    d_trained = true;
+
+    load(base_file_name);
 }
 
 void DMD::takeSample(double* u_in, double t)
@@ -374,14 +391,14 @@ DMD::predict(const std::pair<Vector*, Vector*> init,
 }
 
 std::pair<Matrix*, Matrix*>
-DMD::phiMultEigs(double n)
+DMD::phiMultEigs(double t)
 {
     Matrix* d_eigs_exp_real = new Matrix(d_k, d_k, false);
     Matrix* d_eigs_exp_imaginary = new Matrix(d_k, d_k, false);
 
     for (int i = 0; i < d_k; i++)
     {
-        std::complex<double> eig_exp = std::pow(d_eigs[i], n);
+        std::complex<double> eig_exp = std::pow(d_eigs[i], t);
         d_eigs_exp_real->item(i, i) = std::real(eig_exp);
         d_eigs_exp_imaginary->item(i, i) = std::imag(eig_exp);
     }
@@ -435,6 +452,122 @@ DMD::createSnapshotMatrix(std::vector<Vector*> snapshots)
     }
 
     return snapshot_mat;
+}
+
+void
+DMD::load(std::string base_file_name)
+{
+    CAROM_ASSERT(!base_file_name.empty());
+
+    char tmp[100];
+    std::string full_file_name = base_file_name;
+    HDFDatabase database;
+    database.open(full_file_name, "r");
+
+    sprintf(tmp, "dt");
+    database.getDouble(tmp, d_dt);
+
+    sprintf(tmp, "t_offset");
+    database.getDouble(tmp, d_t_offset);
+
+    sprintf(tmp, "k");
+    database.getInteger(tmp, d_k);
+
+    sprintf(tmp, "num_eigs");
+    int num_eigs;
+    database.getInteger(tmp, num_eigs);
+
+    std::vector<double> eigs_real;
+    std::vector<double> eigs_imag;
+
+    sprintf(tmp, "eigs_real");
+    eigs_real.resize(num_eigs);
+    database.getDoubleArray(tmp, &eigs_real[0], num_eigs);
+
+    sprintf(tmp, "eigs_imag");
+    eigs_imag.resize(num_eigs);
+    database.getDoubleArray(tmp, &eigs_imag[0], num_eigs);
+
+    for (int i = 0; i < num_eigs; i++)
+    {
+        d_eigs.push_back(std::complex<double>(eigs_real[i], eigs_imag[i]));
+    }
+    database.close();
+
+    full_file_name = base_file_name + "_phi_real";
+    d_phi_real = new Matrix();
+    d_phi_real->read(full_file_name);
+
+    full_file_name = base_file_name + "_phi_imaginary";
+    d_phi_imaginary = new Matrix();
+    d_phi_imaginary->read(full_file_name);
+
+    full_file_name = base_file_name + "_projected_init_real";
+    d_projected_init_real = new Vector();
+    d_projected_init_real->read(full_file_name);
+
+    full_file_name = base_file_name + "_projected_init_imaginary";
+    d_projected_init_imaginary = new Vector();
+    d_projected_init_imaginary->read(full_file_name);
+
+    MPI_Barrier(MPI_COMM_WORLD);
+}
+
+void
+DMD::save(std::string base_file_name)
+{
+    CAROM_ASSERT(!base_file_name.empty());
+    CAROM_VERIFY(d_trained);
+
+    if (d_rank == 0)
+    {
+        char tmp[100];
+        std::string full_file_name = base_file_name;
+        HDFDatabase database;
+        database.create(full_file_name);
+
+        sprintf(tmp, "dt");
+        database.putDouble(tmp, d_dt);
+
+        sprintf(tmp, "t_offset");
+        database.putDouble(tmp, d_t_offset);
+
+        sprintf(tmp, "k");
+        database.putInteger(tmp, d_k);
+
+        sprintf(tmp, "num_eigs");
+        database.putInteger(tmp, d_eigs.size());
+
+        std::vector<double> eigs_real;
+        std::vector<double> eigs_imag;
+
+        for (int i = 0; i < d_eigs.size(); i++)
+        {
+            eigs_real.push_back(d_eigs[i].real());
+            eigs_imag.push_back(d_eigs[i].imag());
+        }
+
+        sprintf(tmp, "eigs_real");
+        database.putDoubleArray(tmp, &eigs_real[0], eigs_real.size());
+
+        sprintf(tmp, "eigs_imag");
+        database.putDoubleArray(tmp, &eigs_imag[0], eigs_imag.size());
+        database.close();
+    }
+
+    std::string full_file_name = base_file_name + "_phi_real";
+    d_phi_real->write(full_file_name);
+
+    full_file_name = base_file_name + "_phi_imaginary";
+    d_phi_imaginary->write(full_file_name);
+
+    full_file_name = base_file_name + "_projected_init_real";
+    d_projected_init_real->write(full_file_name);
+
+    full_file_name = base_file_name + "_projected_init_imaginary";
+    d_projected_init_imaginary->write(full_file_name);
+
+    MPI_Barrier(MPI_COMM_WORLD);
 }
 
 void
