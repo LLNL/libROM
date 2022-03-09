@@ -11,9 +11,9 @@
 // Description: DMD on general CSV datasets.
 //
 // User specify file locations and names by -list LIST_DIR -data DATA_DIR -var VAR_NAME
-// 
+//
 // File structure:
-// 1. LIST_DIR/training_par.csv           -- each row specifies one training DATASET 
+// 1. LIST_DIR/training_par.csv           -- each row specifies one training DATASET
 // 2. LIST_DIR/testing_par.csv            -- each row specifies one testing DATASET
 // 3. LIST_DIR/DATASET.csv                -- each row specifies one STATE in DATASET
 // 4. DATA_DIR/DATASET/STATE/VAR_NAME.csv -- each row specifies one value of VAR_NAME of STATE
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
     OptionsParser args(argc, argv);
     args.AddOption(&t_final, "-tf", "--t-final",
                    "Final time.");
-    args.AddOption(&dtc, "-dtc", "--dtc", 
+    args.AddOption(&dtc, "-dtc", "--dtc",
                    "Fixed (constant) dt.");
     args.AddOption(&ddt, "-ddt", "--dtime-step",
                    "Desired Time step.");
@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
     StopWatch dmd_training_timer, dmd_prediction_timer;
     dmd_training_timer.Start();
 
-    for (int idx_test = 0; idx_test < npar; ++idx_test) 
+    for (int idx_test = 0; idx_test < npar; ++idx_test)
     {
         std::string par_dir = training_par_list[idx_test]; // training DATASET
         if (myid == 0)
@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
     CAROM::Vector* init_cond = new CAROM::Vector(dim, true);
     std::vector<double> prediction_error;
 
-    for (int idx_test = 0; idx_test < npar; ++idx_test) 
+    for (int idx_test = 0; idx_test < npar; ++idx_test)
     {
         std::string par_dir = testing_par_list[idx_test]; // testing DATASET
         if (myid == 0)
@@ -272,7 +272,7 @@ int main(int argc, char *argv[])
             {
                 for (int i = 0; i < dim; ++i)
                 {
-                    init_cond->item(i) = sample[i]; 
+                    init_cond->item(i) = sample[i];
                 }
                 dmd->projectInitialCondition(init_cond);
                 if (t_final > 0.0) // Actual prediction

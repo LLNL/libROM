@@ -589,6 +589,7 @@ int main(int argc, char *argv[])
     fom_timer.Start();
 
     double t = 0.0;
+    vector<double> ts;
     adv.SetTime(t);
     ode_solver->Init(adv);
 
@@ -599,6 +600,7 @@ int main(int argc, char *argv[])
     // 11. Create DMD object and take initial sample.
     CAROM::DMD dmd_U(U->Size(), dt);
     dmd_U.takeSample(U->GetData(), t);
+    ts.push_back(t);
 
     dmd_training_timer.Stop();
 
@@ -618,6 +620,7 @@ int main(int argc, char *argv[])
         dmd_training_timer.Start();
 
         dmd_U.takeSample(U->GetData(), t);
+        ts.push_back(t);
 
         dmd_training_timer.Stop();
 
@@ -702,20 +705,61 @@ int main(int argc, char *argv[])
 
     dmd_training_timer.Stop();
 
+    Vector true_solution_u(U->Size());
+    true_solution_u = U->GetData();
+
     dmd_prediction_timer.Start();
 
     // 14. Predict the state at t_final using DMD.
     if (myid == 0)
     {
-        std::cout << "Predicting solution at t_final using DMD" << std::endl;
+        std::cout << "Predicting solution using DMD" << std::endl;
     }
-    CAROM::Vector* result_u = dmd_U.predict(t_final);
+
+    CAROM::Vector* result_u = dmd_U.predict(ts[0]);
+    Vector initial_dmd_solution_u(result_u->getData(), result_u->dim());
+    u->SetFromTrueDofs(initial_dmd_solution_u);
+
+    DataCollection *dmd_dc = NULL;
+    if (visit)
+    {
+        dmd_dc = new VisItDataCollection("DMD_DG_Advection", pmesh);
+        dmd_dc->SetPrecision(precision);
+        // To save the mesh using MFEM's parallel mesh format:
+        // dc->SetFormat(DataCollection::PARALLEL_FORMAT);
+        dmd_dc->RegisterField("solution", u);
+        dmd_dc->SetCycle(0);
+        dmd_dc->SetTime(0.0);
+        dmd_dc->Save();
+    }
+
+    delete result_u;
+
+    for (int i = 1; i < ts.size(); i++)
+    {
+        result_u = dmd_U.predict(ts[i]);
+        Vector dmd_solution_u(result_u->getData(), result_u->dim());
+        u->SetFromTrueDofs(dmd_solution_u);
+
+        if (i == ts.size() - 1 || (i % vis_steps) == 0)
+        {
+            if (visit)
+            {
+                dmd_dc->SetCycle(i);
+                dmd_dc->SetTime(ts[i]);
+                dmd_dc->Save();
+            }
+        }
+
+        delete result_u;
+    }
 
     dmd_prediction_timer.Stop();
 
+    result_u = dmd_U.predict(t_final);
+
     // 15. Calculate the relative error between the DMD final solution and the true solution.
     Vector dmd_solution_u(result_u->getData(), result_u->dim());
-    Vector true_solution_u(U->GetData(), U->Size());
     Vector diff_u(true_solution_u.Size());
     subtract(dmd_solution_u, true_solution_u, diff_u);
 
@@ -749,6 +793,7 @@ int main(int argc, char *argv[])
     }
 #endif
     delete dc;
+    delete dmd_dc;
 
     return 0;
 }
