@@ -45,7 +45,6 @@ namespace CAROM {
 DMD::DMD(int dim, double dt)
 {
     CAROM_VERIFY(dim > 0);
-    CAROM_VERIFY(dt > 0);
 
     // Get the rank of this process, and the number of processors.
     int mpi_init;
@@ -389,6 +388,7 @@ DMD::predict(double t)
     CAROM_VERIFY(d_trained);
     CAROM_VERIFY(d_init_projected);
     CAROM_VERIFY(t >= 0.0);
+    CAROM_VERIFY(d_dt > 0.0);
 
     t -= d_t_offset;
     double t_dt = t / d_dt;

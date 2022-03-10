@@ -22,7 +22,6 @@ namespace CAROM {
 AdaptiveDMD::AdaptiveDMD(int dim, double desired_dt, std::string rbf, std::string interp_method,
                          double epsilon) : DMD(dim, desired_dt)
 {
-    CAROM_VERIFY(desired_dt > 0.0);
     CAROM_VERIFY(rbf == "G" || rbf == "IQ" || rbf == "MQ" || rbf == "IMQ");
     CAROM_VERIFY(interp_method == "LS" || interp_method == "IDW" || interp_method == "LP");
     d_dt = desired_dt;
@@ -90,7 +89,7 @@ void AdaptiveDMD::interpolateSnapshots()
 {
     CAROM_VERIFY(d_interp_snapshots.size() == 0);
     CAROM_VERIFY(d_sampled_times.size() > 1);
-    if (d_dt < 0)
+    if (d_dt <= 0.0)
     {
         std::vector<double> d_sampled_dts;
         for (int i = 1; i < d_sampled_times.size(); i++)
@@ -101,7 +100,7 @@ void AdaptiveDMD::interpolateSnapshots()
         auto m = d_sampled_dts.begin() + d_sampled_dts.size() / 2;
         std::nth_element(d_sampled_dts.begin(), m, d_sampled_dts.end());
 
-        std::cout << "Setting desired dt to the median dt: " << d_sampled_dts[d_sampled_dts.size() / 2] << std::endl;
+        std::cout << "Setting desired dt to the median dt between the samples: " << d_sampled_dts[d_sampled_dts.size() / 2] << std::endl;
         d_dt = d_sampled_dts[d_sampled_dts.size() / 2];
     }
     CAROM_VERIFY(d_sampled_times.back()->item(0) > d_dt);

@@ -37,7 +37,7 @@ public:
      *
      * @param[in] dim            The full-order state dimension.
      * @param[in] desired_dt     The constant step size for uniform interpolation of samples.
-     *                           If set below 0.0, desired_dt will be set to the median of
+     *                           If set equal to or below 0.0, desired_dt will be set to the median of
      *                           the different dt's between the samples.
      * @param[in] rbf            The RBF type ("G" == gaussian, "MQ" == multiquadric,
      *                           "IQ" == inverse quadratic, "IMQ" == inverse
