@@ -207,10 +207,7 @@ Matrix* solveLinearSystem(std::vector<Vector*> parameter_points,
             if (info != 0)
             {
                 epsilon = epsilon * 1.01;
-                if (d_rank == 0)
-                {
-                    std::cout << "Linear solve failed. Increasing epsilon by 1% to " << epsilon << std::endl;
-                }
+                std::cout << "Linear solve failed. Increasing epsilon by 1% to " << epsilon << std::endl;
                 delete f_T;
             }
         }
