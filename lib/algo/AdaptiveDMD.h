@@ -45,9 +45,9 @@ public:
      * @param[in] interp_method  The interpolation method type ("LS" == linear solve,
      *                           "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
      * @param[in] epsilon        The RBF parameter that determines the width of influence.
-     *                           If set below 0.0, epsilon will be estimated to 0.5 / desired_dt.
+     *                           If set equal to or below 0.0, epsilon will be estimated to 0.5 / desired_dt.
      */
-    AdaptiveDMD(int dim, double desired_dt, std::string rbf = "G", std::string interp_method = "LS",
+    AdaptiveDMD(int dim, double desired_dt = -1.0, std::string rbf = "G", std::string interp_method = "LS",
                 double epsilon = -1.0);
 
     /**
