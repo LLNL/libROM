@@ -101,7 +101,7 @@ void AdaptiveDMD::interpolateSnapshots()
         auto m = d_sampled_dts.begin() + d_sampled_dts.size()/2;
         std::nth_element(d_sampled_dts.begin(), m, d_sampled_dts.end());
 
-        std::cout << "Setting desired dt to the median dt: " << d_sampled_dts[d_sampled_dts.size()/2] << '\n';
+        std::cout << "Setting desired dt to the median dt: " << d_sampled_dts[d_sampled_dts.size()/2] << std::endl;
         d_dt = d_sampled_dts[d_sampled_dts.size()/2];
     }
     CAROM_VERIFY(d_sampled_times.back()->item(0) > d_dt);
