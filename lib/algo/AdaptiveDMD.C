@@ -35,6 +35,8 @@ void AdaptiveDMD::takeSample(double* u_in, double t)
     CAROM_VERIFY(u_in != 0);
     CAROM_VERIFY(t >= 0.0);
     Vector* sample = new Vector(u_in, d_dim, true);
+
+    double orig_t = t;
     if (d_snapshots.empty())
     {
         d_t_offset = t;
@@ -45,21 +47,29 @@ void AdaptiveDMD::takeSample(double* u_in, double t)
         t -= d_t_offset;
     }
 
-    // If we have sampled another snapshot at the same timestep, replace
-    // the previous sample with the new one.
-    if (!d_sampled_times.empty() && d_sampled_times.back()->item(0) == t)
+    // Erase any snapshots taken at the same or later time
+    while (!d_sampled_times.empty() && d_sampled_times.back()->item(0) >= t)
     {
+        if (d_rank == 0) std::cout << "Removing existing snapshot at time: " << d_t_offset + d_sampled_times.back()->item(0) << std::endl;
         Vector* last_snapshot = d_snapshots.back();
         delete last_snapshot;
         d_snapshots.pop_back();
-        d_snapshots.push_back(sample);
+        d_sampled_times.pop_back();
+    }
+
+    if (d_snapshots.empty())
+    {
+        d_t_offset = orig_t;
+        t = 0.0;
     }
     else
     {
-        d_snapshots.push_back(sample);
-        Vector* sampled_time = new Vector(&t, 1, false);
-        d_sampled_times.push_back(sampled_time);
+        CAROM_VERIFY(d_sampled_times.back()->item(0) < t);
     }
+
+    d_snapshots.push_back(sample);
+    Vector* sampled_time = new Vector(&t, 1, false);
+    d_sampled_times.push_back(sampled_time);
 }
 
 void AdaptiveDMD::train(double energy_fraction)
@@ -94,13 +104,12 @@ void AdaptiveDMD::interpolateSnapshots()
         std::vector<double> d_sampled_dts;
         for (int i = 1; i < d_sampled_times.size(); i++)
         {
-            d_sampled_dts.push_back(d_sampled_times[i] - d_sampled_times[i - 1]);
+            d_sampled_dts.push_back(d_sampled_times[i]->item(0) - d_sampled_times[i - 1]->item(0));
         }
 
         auto m = d_sampled_dts.begin() + d_sampled_dts.size() / 2;
         std::nth_element(d_sampled_dts.begin(), m, d_sampled_dts.end());
-
-        std::cout << "Setting desired dt to the median dt between the samples: " << d_sampled_dts[d_sampled_dts.size() / 2] << std::endl;
+        if (d_rank == 0) std::cout << "Setting desired dt to the median dt between the samples: " << d_sampled_dts[d_sampled_dts.size() / 2] << std::endl;
         d_dt = d_sampled_dts[d_sampled_dts.size() / 2];
     }
     CAROM_VERIFY(d_sampled_times.back()->item(0) > d_dt);
@@ -111,7 +120,7 @@ void AdaptiveDMD::interpolateSnapshots()
     if (new_dt != d_dt)
     {
         d_dt = new_dt;
-        std::cout << "Setting desired dt to " << d_dt << " to ensure a constant dt given the final sampled time." << std::endl;
+        if (d_rank == 0) std::cout << "Setting desired dt to " << d_dt << " to ensure a constant dt given the final sampled time." << std::endl;
     }
 
     // Solve the linear system if required.
@@ -120,14 +129,14 @@ void AdaptiveDMD::interpolateSnapshots()
     {
         if (d_epsilon <= 0.0) d_epsilon = 0.5 / d_dt;
         f_T = solveLinearSystem(d_sampled_times, d_snapshots, d_interp_method, d_rbf, d_epsilon);
-        std::cout << "Epsilon auto-corrected by the linear solve to " << d_epsilon << std::endl;
+        if (d_rank == 0) std::cout << "Epsilon auto-corrected by the linear solve to " << d_epsilon << std::endl;
     }
 
     // Create interpolated snapshots using d_dt as the desired dt.
     for (int i = 0; i <= num_time_steps; i++)
     {
         double curr_time = i * d_dt;
-        std::cout << "Creating new interpolated sample at: " << d_t_offset + curr_time << std::endl;
+        if (d_rank == 0) std::cout << "Creating new interpolated sample at: " << d_t_offset + curr_time << std::endl;
         CAROM::Vector* point = new Vector(&curr_time, 1, false);
 
         // Obtain distances from database points to new point
