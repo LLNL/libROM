@@ -15,6 +15,7 @@
 
 #include "linalg/Matrix.h"
 #include "linalg/Vector.h"
+#include <algorithm>
 
 namespace CAROM {
 
@@ -87,8 +88,22 @@ void AdaptiveDMD::train(int k)
 
 void AdaptiveDMD::interpolateSnapshots()
 {
-    CAROM_VERIFY(d_sampled_times.back()->item(0) > d_dt);
     CAROM_VERIFY(d_interp_snapshots.size() == 0);
+    if (d_dt < 0)
+    {
+        std::vector<double> d_sampled_dts;
+        for (int i = 1; i < d_sampled_times.size(); i++)
+        {
+            d_sampled_dts.push_back(d_sampled_times[i] - d_sampled_times[i - 1]);
+        }
+
+        auto m = d_sampled_dts.begin() + d_sampled_dts.size()/2;
+        std::nth_element(d_sampled_dts.begin(), m, d_sampled_dts.end());
+
+        std::cout << "Setting desired dt to the median dt: " << d_sampled_dts[d_sampled_dts.size()/2] << '\n';
+        d_dt = d_sampled_dts[d_sampled_dts.size()/2];
+    }
+    CAROM_VERIFY(d_sampled_times.back()->item(0) > d_dt);
 
     // Find the nearest dt that evenly divides the snapshots.
     int num_time_steps = std::round(d_sampled_times.back()->item(0) / d_dt);
