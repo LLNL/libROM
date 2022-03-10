@@ -98,11 +98,11 @@ void AdaptiveDMD::interpolateSnapshots()
             d_sampled_dts.push_back(d_sampled_times[i] - d_sampled_times[i - 1]);
         }
 
-        auto m = d_sampled_dts.begin() + d_sampled_dts.size()/2;
+        auto m = d_sampled_dts.begin() + d_sampled_dts.size() / 2;
         std::nth_element(d_sampled_dts.begin(), m, d_sampled_dts.end());
 
-        std::cout << "Setting desired dt to the median dt: " << d_sampled_dts[d_sampled_dts.size()/2] << std::endl;
-        d_dt = d_sampled_dts[d_sampled_dts.size()/2];
+        std::cout << "Setting desired dt to the median dt: " << d_sampled_dts[d_sampled_dts.size() / 2] << std::endl;
+        d_dt = d_sampled_dts[d_sampled_dts.size() / 2];
     }
     CAROM_VERIFY(d_sampled_times.back()->item(0) > d_dt);
 
