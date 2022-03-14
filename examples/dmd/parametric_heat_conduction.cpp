@@ -19,8 +19,8 @@
 //   mpirun -np 8 parametric_heat_conduction -r 0.2 -visit -offline -rdim 16
 //   mpirun -np 8 parametric_heat_conduction -r 0.5 -visit -online -predict (performs well, even though extrapolation)
 //   mpirun -np 8 parametric_heat_conduction -r 0.5 -cx 0.5 -cy 0.5 -visit -online -predict (doesn't perform well)
-//   mpirun -np 8 parametric_heat_conduction -r 0.6 -cx 0.6 -cy 0.6 -visit -offline (let's add another training point)
-//   mpirun -np 8 parametric_heat_conduction -r 0.6 -cx 0.5 -cy 0.5 -visit -offline (let's add another training point)
+//   mpirun -np 8 parametric_heat_conduction -r 0.6 -cx 0.6 -cy 0.6 -visit -offline -rdim 16 (let's add another training point)
+//   mpirun -np 8 parametric_heat_conduction -r 0.6 -cx 0.5 -cy 0.5 -visit -offline -rdim 16 (let's add another training point)
 //   mpirun -np 8 parametric_heat_conduction -r 0.5 -cx 0.5 -cy 0.5 -visit -online -predict (now performs well)
 //
 // For Parametric DMD (ex. 3) (alpha, interpolation):
