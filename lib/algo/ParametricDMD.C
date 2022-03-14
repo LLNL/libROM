@@ -43,7 +43,7 @@ DMD* getParametricDMD(std::vector<Vector*> parameter_points,
         A_tildes.push_back(dmds[i]->d_A_tilde);
     }
 
-    int ref_point = getCenterPoint(parameter_points, false);
+    int ref_point = getClosestPoint(parameter_points, desired_point);
     std::vector<CAROM::Matrix*> rotation_matrices = obtainRotationMatrices(parameter_points, bases, ref_point);
 
     CAROM::MatrixInterpolator basis_interpolator(parameter_points, rotation_matrices, bases, ref_point, "B", rbf, interp_method, epsilon);

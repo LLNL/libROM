@@ -605,4 +605,34 @@ int getCenterPoint(std::vector<Vector> points,
     return getCenterPoint(temp_points, use_centroid);
 }
 
+int getClosestPoint(std::vector<Vector*> points,
+                    Vector* test_point)
+{
+    int closest_point = 0;
+    double closest_dist_to_test_point = INT_MAX;
+    for (int i = 0; i < points.size(); i++) {
+        Vector diff;
+        test_point->minus(*points[i], diff);
+        double dist = diff.norm();
+        if (dist < closest_dist_to_test_point)
+        {
+            closest_dist_to_test_point = dist;
+            closest_point = i;
+        }
+    }
+
+    return closest_point;
+}
+
+int getClosestPoint(std::vector<Vector> points,
+                    Vector test_point)
+{
+    std::vector<Vector*> temp_points;
+    for (int i = 0; i < points.size(); i++)
+    {
+        temp_points.push_back(&points[i]);
+    }
+    return getClosestPoint(temp_points, &test_point);
+}
+
 }
