@@ -777,15 +777,15 @@ int getCenterPoint(std::vector<Vector> points,
 * @brief Get closest point to a test point among a group of points.
 
 */
-int getClosestPoint(std::vector<Vector> points,
-                    Vector test_point);
+int getClosestPoint(std::vector<Vector*> points,
+                    Vector* test_point);
 
 /**
 * @brief Get closest point to a test point among a group of points.
 
 */
-int getClosestPoint(std::vector<Vector*> points,
-                    Vector* test_point);
+int getClosestPoint(std::vector<Vector> points,
+                    Vector test_point);
 }
 
 #endif
