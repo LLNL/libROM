@@ -98,6 +98,7 @@ void AdaptiveDMD::train(int k)
 void AdaptiveDMD::interpolateSnapshots()
 {
     CAROM_VERIFY(d_interp_snapshots.size() == 0);
+    CAROM_VERIFY(d_snapshots.size() == d_sampled_times.size());
     CAROM_VERIFY(d_sampled_times.size() > 1);
     if (d_dt <= 0.0)
     {
