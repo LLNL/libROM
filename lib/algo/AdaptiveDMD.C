@@ -100,6 +100,9 @@ void AdaptiveDMD::interpolateSnapshots()
     CAROM_VERIFY(d_interp_snapshots.size() == 0);
     CAROM_VERIFY(d_snapshots.size() == d_sampled_times.size());
     CAROM_VERIFY(d_sampled_times.size() > 1);
+
+    if (d_rank == 0) std::cout << "Number of snapshots is: " << d_snapshots.size() << std::endl;
+
     if (d_dt <= 0.0)
     {
         std::vector<double> d_sampled_dts;
@@ -149,6 +152,8 @@ void AdaptiveDMD::interpolateSnapshots()
 
         delete point;
     }
+
+    if (d_rank == 0) std::cout << "Number of interpolated snapshots is: " << d_interp_snapshots.size() << std::endl;
 }
 
 double AdaptiveDMD::getTrueDt() const
