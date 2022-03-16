@@ -210,20 +210,23 @@ DMD::constructDMD(const Matrix* f_snapshots,
     if (d_energy_fraction != -1.0)
     {
         d_k = d_num_singular_vectors;
-        double total_energy = 0.0;
-        for (int i = 0; i < d_num_singular_vectors; i++)
+        if (d_energy_fraction < 1.0)
         {
-            d_sv.push_back(d_factorizer->S[i]);
-            total_energy += d_factorizer->S[i];
-        }
-        double current_energy = 0.0;
-        for (int i = 0; i < d_num_singular_vectors; i++)
-        {
-            current_energy += d_factorizer->S[i];
-            if (current_energy / total_energy >= d_energy_fraction)
+            double total_energy = 0.0;
+            for (int i = 0; i < d_num_singular_vectors; i++)
             {
-                d_k = i + 1;
-                break;
+                d_sv.push_back(d_factorizer->S[i]);
+                total_energy += d_factorizer->S[i];
+            }
+            double current_energy = 0.0;
+            for (int i = 0; i < d_num_singular_vectors; i++)
+            {
+                current_energy += d_factorizer->S[i];
+                if (current_energy / total_energy >= d_energy_fraction)
+                {
+                    d_k = i + 1;
+                    break;
+                }
             }
         }
     }
