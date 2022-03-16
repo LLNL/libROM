@@ -103,8 +103,10 @@ void AdaptiveDMD::interpolateSnapshots()
 
     if (d_rank == 0) std::cout << "Number of snapshots is: " << d_snapshots.size() << std::endl;
 
+    bool automate_dt = false;
     if (d_dt <= 0.0)
     {
+        automate_dt = true;
         std::vector<double> d_sampled_dts;
         for (int i = 1; i < d_sampled_times.size(); i++)
         {
@@ -120,6 +122,11 @@ void AdaptiveDMD::interpolateSnapshots()
 
     // Find the nearest dt that evenly divides the snapshots.
     int num_time_steps = std::round(d_sampled_times.back()->item(0) / d_dt);
+    if (automate_dt && num_time_steps < d_sampled_times.size())
+    {
+        num_time_steps = d_sampled_times.size();
+        if (d_rank == 0) std::cout << "There will be less interpolated snapshots than FOM snapshots. dt will be decreased." << std::endl;
+    }
     double new_dt = d_sampled_times.back()->item(0) / num_time_steps;
     if (new_dt != d_dt)
     {
