@@ -66,10 +66,6 @@ int main(int argc, char* argv[])
             if (rank==0) std::cout << "Argument " << i << " identified as basis or -b" << std::endl;
                 kind = "basis"; 
             } 
-            else if (!strcmp(argv[i], "mean") || !strcmp(argv[i], "-m")) {
-                if (rank==0) std::cout << "Will subtract mean" << std::endl;
-	    	subtract_mean = true;
-	    }
             else if (offset_arg) {
                 offset_file = argv[i];
                 offset_arg = false;
@@ -79,6 +75,10 @@ int main(int argc, char* argv[])
                 subtract_offset = true;
                 offset_arg = true;
             }
+            else if (!strcmp(argv[i], "mean") || !strcmp(argv[i], "-m")) {
+                if (rank==0) std::cout << "Will subtract mean" << std::endl;
+	    	subtract_mean = true;
+	    }
 	    else {
                 sample_names.push_back(argv[i]); 
 	    }
@@ -137,31 +137,24 @@ int main(int argc, char* argv[])
         
     	int num_rows = snapshots->numRows();
     	int num_cols = snapshots->numColumns();
-    	double* offset = new double[num_rows];
+        CAROM::Vector *offset = new CAROM::Vector(num_rows, true);
+    	//double* offset = new double[num_rows];
     	
         if (subtract_mean) {
     	    /*-- Find the mean per row and write to hdf5 --*/
             if (rank==0) std::cout << "Subtracting mean" << std::endl;
-            std::unique_ptr<CAROM::BasisGenerator> generator_to_write;
-    	    generator_to_write.reset(new CAROM::BasisGenerator(
-    	                                 CAROM::Options(dim, 1).setMaxBasisDimension(1), false, "mean"));
     	    for (int row = 0; row < num_rows; ++row) {
-    	        offset[row] = 0;
+    	        (*offset)(row) = 0;
     	        for (int col = 0; col < num_cols; ++col) {
-    	            offset[row] += snapshots->item(row,col);
+    	            (*offset)(row) += snapshots->item(row,col);
     	        }
-    	        offset[row] = offset[row] / num_cols;
     	    }
-		
-            generator_to_write->takeSample(offset, 0.0, false);
-            generator_to_write->writeSnapshot();
-            generator_to_write = nullptr;
+            offset->mult(1.0 / (double)num_cols, offset);
+		    offset->write("mean");
     	}
         else if (subtract_offset) {
-            /*-- Open offset file --*/
-            CAROM::BasisReader reader(offset_file);
-            
-	    
+            if (rank==0) std::cout << "Subtracting offset from file: " << offset_file << std::endl;
+            offset->read(offset_file);
         }
 
         /*-- Subtract mean from snapshot/bases matrix --*/
@@ -169,15 +162,15 @@ int main(int argc, char* argv[])
     	
     	for (int row = 0; row < num_rows; ++row) {
     	    for (int col = 0; col < num_cols; ++col) {
-    	        snaps_mean->item(row,col) = snapshots->item(row,col) - offset[row];
+    	        snaps_mean->item(row,col) = snapshots->item(row,col) - (*offset)(row);
     	    }
     	}
     	
-    	/*-- Load new samples with mean subtracted --*/
+    	/*-- Load new samples with mean/offset subtracted --*/
     	std::unique_ptr<CAROM::BasisGenerator> static_basis_generator2;
     	static_basis_generator2.reset(new CAROM::BasisGenerator(
     	    CAROM::Options(dim, snaps).setMaxBasisDimension(snaps), false,
-    	    generator_filename+"_meansub"));
+    	    generator_filename+"_sub"));
     	
     	for (int col = 0; col < num_cols; col++) {
     	    double* snap_cur = new double[num_rows];
@@ -196,7 +189,7 @@ int main(int argc, char* argv[])
     	if (rank==0) std::cout << "U ROM Dimension: " << rom_dim << std::endl;
     	static_basis_generator2->endSamples();
 		
-        delete[] offset;
+        delete offset;
         delete snaps_mean;
     	static_basis_generator2 = nullptr;
     }
