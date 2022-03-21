@@ -163,11 +163,9 @@ int main(int argc, char* argv[])
         }
 
         /*-- Subtract mean or offset from snapshot/bases matrix --*/
-    	CAROM::Matrix* snaps_mean = new CAROM::Matrix(num_rows, num_cols, false);
-    	
     	for (int row = 0; row < num_rows; ++row) {
     	    for (int col = 0; col < num_cols; ++col) {
-    	        snaps_mean->item(row,col) = snapshots->item(row,col) - (*offset)(row);
+    	        snapshots->item(row,col) = snapshots->item(row,col) - (*offset)(row);
     	    }
     	}
     	
@@ -178,15 +176,11 @@ int main(int argc, char* argv[])
     	    generator_filename+"_sub"));
     	
     	for (int col = 0; col < num_cols; col++) {
-    	    double* snap_cur = new double[num_rows];
+            CAROM::Vector *snap_cur = new CAROM::Vector(num_rows, true);
     	  
-    	    for (int row = 0; row < num_rows; row++) {
-    	        snap_cur[row] = snaps_mean->item(row,col);
-    	    } 
-    	    static_basis_generator2->takeSample(snap_cur, 0.0, false);
-    	  
-    	    delete[] snap_cur;
-    	}
+    	    snap_cur = snapshots->getColumn(col);
+    	    static_basis_generator2->takeSample(snap_cur->getData(), 0.0, false);
+    	}  
     	
     	/*-- Compute SVD and save file --*/
     	if (rank==0) std::cout << "Computing SVD" << std::endl;
@@ -195,7 +189,6 @@ int main(int argc, char* argv[])
     	static_basis_generator2->endSamples();
 		
         delete offset;
-        delete snaps_mean;
     	static_basis_generator2 = nullptr;
     }
     static_basis_generator = nullptr;	
