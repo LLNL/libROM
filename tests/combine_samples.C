@@ -88,6 +88,8 @@ int main(int argc, char* argv[])
         if (rank==0) std::cout << "No arguments passed." << std::endl;
         return 1;
     }
+	
+    CAROM_VERIFY(!(subtract_mean && subtract_offset)); // both should not be selected 
  
     /*-- Read dimension and count number of snapshots/bases --*/
     if (rank==0) std::cout << "Opening files to read dimension and count number of snapshots/bases" << std::endl;
@@ -107,10 +109,10 @@ int main(int argc, char* argv[])
 	    snaps += basis->numColumns();
 	    if (dimFirst == 0) dimFirst = dim;
 	}
+	CAROM_VERIFY(dim == dimFirst); // ensures all files have the same dimension distribution
     }
 	
     CAROM_VERIFY((snaps > 0) && (dim > 0));
-    CAROM_VERIFY(dim == dimFirst); // help to ensure files have the same dimensions
 	
     /*-- Load data from input files --*/
     std::string generator_filename = "total";
