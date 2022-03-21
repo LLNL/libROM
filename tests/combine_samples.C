@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2021, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -8,9 +8,9 @@
  *
  *****************************************************************************/
 
-// Description: This is a file function that reads snapshot or basis files
-//		and computes the SVD over the group. Also provides the option
-//		to subtract the mean of the group before computing the SVD.
+// Description: This function reads snapshot or basis files and computes the
+//		SVD over the group. Also provides the option to subtract the
+//		mean or a supplied offset vector before computing the SVD.
 //
 // Assumptions: You are running this file with the same number of processors
 //		as when the snapshots/bases were saved.
@@ -91,6 +91,7 @@ int main(int argc, char* argv[])
  
     /*-- Read dimension and count number of snapshots/bases --*/
     if (rank==0) std::cout << "Opening files to read dimension and count number of snapshots/bases" << std::endl;
+    int dimFirst = 0;
     for (const auto& sample_name: sample_names) {
         CAROM::BasisReader reader(sample_name);
 		
@@ -98,15 +99,18 @@ int main(int argc, char* argv[])
 	    CAROM::Matrix *snapshots = (CAROM::Matrix*) reader.getSnapshotMatrix(0);
 	    dim    = snapshots->numRows();
  	    snaps += snapshots->numColumns();
+	    if (dimFirst == 0) dimFirst = dim;
         }
 	else {
             CAROM::Matrix *basis = (CAROM::Matrix*) reader.getSpatialBasis(0);
 	    dim    = basis->numRows();
 	    snaps += basis->numColumns();
+	    if (dimFirst == 0) dimFirst = dim;
 	}
     }
 	
     CAROM_VERIFY((snaps > 0) && (dim > 0));
+    CAROM_VERIFY(dim == dimFirst); // help to ensure files have the same dimensions
 	
     /*-- Load data from input files --*/
     std::string generator_filename = "total";
@@ -120,7 +124,7 @@ int main(int argc, char* argv[])
         static_basis_generator->loadSamples(sample_name, kind);
     }
 
-    if (rank==0) std::cout << "Saving data uploaded as a snapshot" << std::endl;
+    if (rank==0) std::cout << "Saving data uploaded as a snapshot matrix" << std::endl;
     static_basis_generator->writeSnapshot();
 	
     if (!subtract_mean && !subtract_offset) {
@@ -138,7 +142,6 @@ int main(int argc, char* argv[])
     	int num_rows = snapshots->numRows();
     	int num_cols = snapshots->numColumns();
         CAROM::Vector *offset = new CAROM::Vector(num_rows, true);
-    	//double* offset = new double[num_rows];
     	
         if (subtract_mean) {
     	    /*-- Find the mean per row and write to hdf5 --*/
@@ -157,7 +160,7 @@ int main(int argc, char* argv[])
             offset->read(offset_file);
         }
 
-        /*-- Subtract mean from snapshot/bases matrix --*/
+        /*-- Subtract mean or offset from snapshot/bases matrix --*/
     	CAROM::Matrix* snaps_mean = new CAROM::Matrix(num_rows, num_cols, false);
     	
     	for (int row = 0; row < num_rows; ++row) {
