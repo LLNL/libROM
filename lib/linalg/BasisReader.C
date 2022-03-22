@@ -366,7 +366,7 @@ BasisReader::getDim(
 }
 
 int 
-BasisReader::getNSamples(
+BasisReader::getNumSamples(
     double time)
 {
     CAROM_ASSERT(0 < numTimeIntervals());
@@ -403,7 +403,7 @@ BasisReader::getSnapshotMatrix(
     }
     d_last_basis_idx = i;
     int num_rows = getDim(time);
-    int num_cols = getNSamples(time);
+    int num_cols = getNumSamples(time);
 
     char tmp[100];
     Matrix* snapshots = new Matrix(num_rows, num_cols, false);

@@ -293,7 +293,7 @@ public:
      * @return The number of samples in file.
      */
     int
-    getNSamples(
+    getNumSamples(
         double time);
 
     /**
