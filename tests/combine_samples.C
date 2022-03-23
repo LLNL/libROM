@@ -98,9 +98,8 @@ int main(int argc, char* argv[])
         CAROM::BasisReader reader(sample_name);
 		
         if (kind == "snapshot") {
-	    CAROM::Matrix *snapshots = (CAROM::Matrix*) reader.getSnapshotMatrix(0);
-	    dim    = snapshots->numRows();
- 	    snaps += snapshots->numColumns();
+	    dim    = reader.getDim(0);
+ 	    snaps += reader.getNumSamples(0);
 	    if (dimFirst == 0) dimFirst = dim;
         }
 	else {
