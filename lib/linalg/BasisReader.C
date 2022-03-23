@@ -343,8 +343,8 @@ BasisReader::getSingularValues(
     return truncated_singular_values;
 }
 
-Matrix*
-BasisReader::getSnapshotMatrix(
+int
+BasisReader::getDim( 
     double time)
 {
     CAROM_ASSERT(0 < numTimeIntervals());
@@ -362,10 +362,50 @@ BasisReader::getSnapshotMatrix(
     int num_rows;
     sprintf(tmp, "snapshot_matrix_num_rows_%06d", i);
     d_database->getInteger(tmp, num_rows);
+    return num_rows;
+}
+
+int 
+BasisReader::getNumSamples(
+    double time)
+{
+    CAROM_ASSERT(0 < numTimeIntervals());
+    CAROM_ASSERT(0 <= time);
+    int num_time_intervals = numTimeIntervals();
+    int i;
+    for (i = 0; i < num_time_intervals-1; ++i) {
+        if (d_time_interval_start_times[i] <= time &&
+                time < d_time_interval_start_times[i+1]) {
+            break;
+        }
+    }
+    d_last_basis_idx = i;
+    char tmp[100];
     int num_cols;
     sprintf(tmp, "snapshot_matrix_num_cols_%06d", i);
     d_database->getInteger(tmp, num_cols);
+    return num_cols;
+}
 
+Matrix*
+BasisReader::getSnapshotMatrix(
+    double time)
+{
+    CAROM_ASSERT(0 < numTimeIntervals());
+    CAROM_ASSERT(0 <= time);
+    int num_time_intervals = numTimeIntervals();
+    int i;
+    for (i = 0; i < num_time_intervals-1; ++i) {
+        if (d_time_interval_start_times[i] <= time &&
+                time < d_time_interval_start_times[i+1]) {
+            break;
+        }
+    }
+    d_last_basis_idx = i;
+    int num_rows = getDim(time);
+    int num_cols = getNumSamples(time);
+
+    char tmp[100];
     Matrix* snapshots = new Matrix(num_rows, num_cols, false);
     sprintf(tmp, "snapshot_matrix_%06d", i);
     d_database->getDoubleArray(tmp,

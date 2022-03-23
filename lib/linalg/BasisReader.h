@@ -278,6 +278,26 @@ public:
 
     /**
      *
+     * @brief Returns the dimension of the system on this processor.
+     *
+     * @return The dimension of the system on this processor.
+     */
+    int
+    getDim(
+        double time);
+
+    /**
+     *
+     * @brief Returns the number of samples (columns) in file.
+     *
+     * @return The number of samples in file.
+     */
+    int
+    getNumSamples(
+        double time);
+
+    /**
+     *
      * @brief Returns the snapshot matrix for the requested time.
      *
      * @pre 0 < numTimeIntervals()
