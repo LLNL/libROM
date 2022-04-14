@@ -104,6 +104,17 @@ public:
         const Vector& rhs);
 
     /**
+     * @brief Subtraction operator.
+     *
+     * @param[in] rhs The Vector to subtract from this.
+     *
+     * @return This after rhs has been subtracted from it.
+     */
+    Vector&
+    operator -= (
+        const Vector& rhs);
+
+    /**
      * @brief Equal operator.
      *
      * @param[in] a The double precision number to which every

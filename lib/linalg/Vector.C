@@ -127,6 +127,15 @@ Vector::operator += (
 }
 
 Vector&
+Vector::operator -= (
+    const Vector& rhs)
+{
+    CAROM_VERIFY(d_dim == rhs.d_dim);
+    for(int i=0; i<d_dim; ++i) d_vec[i] -= rhs.d_vec[i];
+    return *this;
+}
+
+Vector&
 Vector::operator = (const double& a)
 {
     for(int i=0; i<d_dim; ++i) d_vec[i] = a;
