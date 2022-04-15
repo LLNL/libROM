@@ -135,6 +135,7 @@ if (USE_MFEM)
     dg_advection
     nonlinear_elasticity
     heat_conduction
+    parametric_heat_conduction
     dg_euler
     generic_csv)
   set(example_directories
@@ -143,6 +144,7 @@ if (USE_MFEM)
     prom
     prom
     prom
+    dmd
     dmd
     dmd
     dmd

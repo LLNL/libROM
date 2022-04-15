@@ -127,6 +127,15 @@ Vector::operator += (
 }
 
 Vector&
+Vector::operator -= (
+    const Vector& rhs)
+{
+    CAROM_VERIFY(d_dim == rhs.d_dim);
+    for(int i=0; i<d_dim; ++i) d_vec[i] -= rhs.d_vec[i];
+    return *this;
+}
+
+Vector&
 Vector::operator = (const double& a)
 {
     for(int i=0; i<d_dim; ++i) d_vec[i] = a;
@@ -538,7 +547,7 @@ Vector::local_read(const std::string& base_file_name, int rank)
     database.close();
 }
 
-int getCenterPoint(std::vector<Vector*> points,
+int getCenterPoint(std::vector<Vector*>& points,
                    bool use_centroid)
 {
     int center_point;
@@ -594,7 +603,7 @@ int getCenterPoint(std::vector<Vector*> points,
     return center_point;
 }
 
-int getCenterPoint(std::vector<Vector> points,
+int getCenterPoint(std::vector<Vector>& points,
                    bool use_centroid)
 {
     std::vector<Vector*> temp_points;
@@ -603,6 +612,36 @@ int getCenterPoint(std::vector<Vector> points,
         temp_points.push_back(&points[i]);
     }
     return getCenterPoint(temp_points, use_centroid);
+}
+
+int getClosestPoint(std::vector<Vector*>& points,
+                    Vector* test_point)
+{
+    int closest_point = 0;
+    double closest_dist_to_test_point = INT_MAX;
+    for (int i = 0; i < points.size(); i++) {
+        Vector diff;
+        test_point->minus(*points[i], diff);
+        double dist = diff.norm();
+        if (dist < closest_dist_to_test_point)
+        {
+            closest_dist_to_test_point = dist;
+            closest_point = i;
+        }
+    }
+
+    return closest_point;
+}
+
+int getClosestPoint(std::vector<Vector>& points,
+                    Vector test_point)
+{
+    std::vector<Vector*> temp_points;
+    for (int i = 0; i < points.size(); i++)
+    {
+        temp_points.push_back(&points[i]);
+    }
+    return getClosestPoint(temp_points, &test_point);
 }
 
 }
