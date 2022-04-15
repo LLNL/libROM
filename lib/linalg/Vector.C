@@ -547,7 +547,7 @@ Vector::local_read(const std::string& base_file_name, int rank)
     database.close();
 }
 
-int getCenterPoint(std::vector<Vector*> points,
+int getCenterPoint(std::vector<Vector*>& points,
                    bool use_centroid)
 {
     int center_point;
@@ -603,7 +603,7 @@ int getCenterPoint(std::vector<Vector*> points,
     return center_point;
 }
 
-int getCenterPoint(std::vector<Vector> points,
+int getCenterPoint(std::vector<Vector>& points,
                    bool use_centroid)
 {
     std::vector<Vector*> temp_points;
@@ -614,7 +614,7 @@ int getCenterPoint(std::vector<Vector> points,
     return getCenterPoint(temp_points, use_centroid);
 }
 
-int getClosestPoint(std::vector<Vector*> points,
+int getClosestPoint(std::vector<Vector*>& points,
                     Vector* test_point)
 {
     int closest_point = 0;
@@ -633,7 +633,7 @@ int getClosestPoint(std::vector<Vector*> points,
     return closest_point;
 }
 
-int getClosestPoint(std::vector<Vector> points,
+int getClosestPoint(std::vector<Vector>& points,
                     Vector test_point)
 {
     std::vector<Vector*> temp_points;

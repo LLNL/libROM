@@ -774,28 +774,28 @@ private:
  * @brief Get center point of a group of points.
 
  */
-int getCenterPoint(std::vector<Vector*> points,
+int getCenterPoint(std::vector<Vector*>& points,
                    bool use_centroid);
 
 /**
 * @brief Get center point of a group of points.
 
 */
-int getCenterPoint(std::vector<Vector> points,
+int getCenterPoint(std::vector<Vector>& points,
                    bool use_centroid);
 
 /**
 * @brief Get closest point to a test point among a group of points.
 
 */
-int getClosestPoint(std::vector<Vector*> points,
+int getClosestPoint(std::vector<Vector*>& points,
                     Vector* test_point);
 
 /**
 * @brief Get closest point to a test point among a group of points.
 
 */
-int getClosestPoint(std::vector<Vector> points,
+int getClosestPoint(std::vector<Vector>& points,
                     Vector test_point);
 }
 

@@ -17,10 +17,14 @@
 //   rm -rf parameters.txt
 //   mpirun -np 8 parametric_heat_conduction -r 0.1 -visit -offline -rdim 16
 //   mpirun -np 8 parametric_heat_conduction -r 0.2 -visit -offline -rdim 16
-//   mpirun -np 8 parametric_heat_conduction -r 0.5 -visit -online -predict (performs well, even though extrapolation)
-//   mpirun -np 8 parametric_heat_conduction -r 0.5 -cx 0.5 -cy 0.5 -visit -online -predict (doesn't perform well)
-//   mpirun -np 8 parametric_heat_conduction -r 0.6 -cx 0.6 -cy 0.6 -visit -offline -rdim 16 (let's add another training point)
-//   mpirun -np 8 parametric_heat_conduction -r 0.5 -cx 0.5 -cy 0.5 -visit -online -predict (now performs well)
+//   mpirun -np 8 parametric_heat_conduction -r 0.5 -visit -online -predict
+//   (performs well, even though extrapolation)
+//   mpirun -np 8 parametric_heat_conduction -r 0.5 -cx 0.5 -cy 0.5 -visit -online -predict
+//   (doesn't perform well)
+//   mpirun -np 8 parametric_heat_conduction -r 0.6 -cx 0.6 -cy 0.6 -visit -offline -rdim 16
+//   (let's add another training point)
+//   mpirun -np 8 parametric_heat_conduction -r 0.5 -cx 0.5 -cy 0.5 -visit -online -predict
+//   (now performs well)
 //
 // For Parametric DMD (ex. 3) (alpha, interpolation):
 //   rm -rf parameters.txt
@@ -321,8 +325,12 @@ int main(int argc, char *argv[])
     u_gf.SetFromTrueDofs(u);
     {
         ostringstream mesh_name, sol_name;
-        mesh_name << "parametric_heat_conduction_" << to_string(radius) << "_" << to_string(alpha) << "_" << to_string(cx) << "_" << to_string(cy) << "-mesh." << setfill('0') << setw(6) << myid;
-        sol_name << "parametric_heat_conduction_" << to_string(radius) << "_" << to_string(alpha) << "_" << to_string(cx) << "_" << to_string(cy) << "-init." << setfill('0') << setw(6) << myid;
+        mesh_name << "parametric_heat_conduction_" << to_string(radius) << "_"
+            << to_string(alpha) << "_" << to_string(cx) << "_" << to_string(cy)
+            << "-mesh." << setfill('0') << setw(6) << myid;
+        sol_name << "parametric_heat_conduction_" << to_string(radius) << "_"
+            << to_string(alpha) << "_" << to_string(cx) << "_" << to_string(cy)
+            << "-init." << setfill('0') << setw(6) << myid;
         ofstream omesh(mesh_name.str().c_str());
         omesh.precision(precision);
         pmesh->Print(omesh);
@@ -331,7 +339,9 @@ int main(int argc, char *argv[])
         u_gf.Save(osol);
     }
 
-    VisItDataCollection visit_dc("Parametric_Heat_Conduction_" + to_string(radius) + "_" + to_string(alpha) + "_" + to_string(cx) + "_" + to_string(cy), pmesh);
+    VisItDataCollection visit_dc("Parametric_Heat_Conduction_" +
+        to_string(radius) + "_" + to_string(alpha) + "_" + to_string(cx) + "_" +
+        to_string(cy), pmesh);
     visit_dc.RegisterField("temperature", &u_gf);
     if (visit)
     {
@@ -350,7 +360,8 @@ int main(int argc, char *argv[])
         postfix.erase(0, std::string("../data/").size() );
         postfix += "_o" + std::to_string(order);
         postfix += "_solver" + std::to_string(ode_solver_type);
-        const std::string collection_name = "parametric_heat_conduction-p-" + postfix + ".bp";
+        const std::string collection_name = "parametric_heat_conduction-p-" +
+            postfix + ".bp";
 
         adios2_dc = new ADIOS2DataCollection(MPI_COMM_WORLD, collection_name, pmesh);
         adios2_dc->SetParameter("SubStreams", std::to_string(num_procs/2) );
@@ -507,7 +518,9 @@ int main(int argc, char *argv[])
     //     using GLVis: "glvis -np <np> -m parametric_heat_conduction-mesh -g parametric_heat_conduction-final".
     {
         ostringstream sol_name;
-        sol_name << "parametric_heat_conduction_" << to_string(radius) << "_" << to_string(alpha) << "_" << to_string(cx) << "_" << to_string(cy) << "-final." << setfill('0') << setw(6) << myid;
+        sol_name << "parametric_heat_conduction_" << to_string(radius) << "_"
+            << to_string(alpha) << "_" << to_string(cx) << "_" << to_string(cy)
+            << "-final." << setfill('0') << setw(6) << myid;
         ofstream osol(sol_name.str().c_str());
         osol.precision(precision);
         u_gf.Save(osol);
@@ -529,7 +542,8 @@ int main(int argc, char *argv[])
 
             dmd_training_timer.Stop();
 
-            dmd_u->save(to_string(radius) + "_" + to_string(alpha) + "_" + to_string(cx) + "_" + to_string(cy));
+            dmd_u->save(to_string(radius) + "_" + to_string(alpha) + "_" +
+                to_string(cx) + "_" + to_string(cy));
 
             std::ofstream fout;
             fout.open("parameters.txt", std::ios::app);
@@ -559,7 +573,9 @@ int main(int argc, char *argv[])
                 fin >> curr_param;
                 double curr_cy = curr_param;
 
-                dmd_paths.push_back(to_string(curr_radius) + "_" + to_string(curr_alpha) + "_" + to_string(curr_cx) + "_" + to_string(curr_cy));
+                dmd_paths.push_back(to_string(curr_radius) + "_" +
+                    to_string(curr_alpha) + "_" + to_string(curr_cx) + "_" +
+                    to_string(curr_cy));
                 CAROM::Vector* param_vector = new CAROM::Vector(4, false);
                 param_vector->item(0) = curr_radius;
                 param_vector->item(1) = curr_alpha;
@@ -577,7 +593,8 @@ int main(int argc, char *argv[])
 
             dmd_training_timer.Start();
 
-            dmd_u = getParametricDMD(param_vectors, dmd_paths, desired_param, "G", "LS", epsilon);
+            dmd_u = getParametricDMD(param_vectors, dmd_paths, desired_param,
+                "G", "LS", epsilon);
 
             dmd_u->projectInitialCondition(init);
 
@@ -601,7 +618,9 @@ int main(int argc, char *argv[])
             Vector initial_dmd_solution_u(result_u->getData(), result_u->dim());
             u_gf.SetFromTrueDofs(initial_dmd_solution_u);
 
-            VisItDataCollection dmd_visit_dc("DMD_Parametric_Heat_Conduction_" + to_string(radius) + "_" + to_string(alpha) + "_" + to_string(cx) + "_" + to_string(cy), pmesh);
+            VisItDataCollection dmd_visit_dc("DMD_Parametric_Heat_Conduction_" +
+                to_string(radius) + "_" + to_string(alpha) + "_" +
+                to_string(cx) + "_" + to_string(cy), pmesh);
             dmd_visit_dc.RegisterField("temperature", &u_gf);
             if (visit)
             {
@@ -646,11 +665,13 @@ int main(int argc, char *argv[])
             subtract(dmd_solution_u, true_solution_u, diff_u);
 
             double tot_diff_norm_u = sqrt(InnerProduct(MPI_COMM_WORLD, diff_u, diff_u));
-            double tot_true_solution_u_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution_u, true_solution_u));
+            double tot_true_solution_u_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
+                true_solution_u, true_solution_u));
 
             if (myid == 0)
             {
-                std::cout << "Relative error of DMD temperature (u) at t_final: " << t_final << " is " << tot_diff_norm_u / tot_true_solution_u_norm << std::endl;
+                std::cout << "Relative error of DMD temperature (u) at t_final: "
+                    << t_final << " is " << tot_diff_norm_u / tot_true_solution_u_norm << std::endl;
                 printf("Elapsed time for predicting DMD: %e second\n", dmd_prediction_timer.RealTime());
             }
 

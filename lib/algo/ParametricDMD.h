@@ -42,8 +42,8 @@ class Vector;
  * @param[in] epsilon   The RBF parameter that determines the width of
                         influence.
  */
-DMD* getParametricDMD(std::vector<Vector*> parameter_points,
-                      std::vector<DMD*> dmds,
+DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
+                      std::vector<DMD*>& dmds,
                       Vector* desired_point,
                       std::string rbf = "G",
                       std::string interp_method = "LS",
@@ -64,8 +64,8 @@ DMD* getParametricDMD(std::vector<Vector*> parameter_points,
  * @param[in] epsilon   The RBF parameter that determines the width of
                         influence.
  */
-DMD* getParametricDMD(std::vector<Vector*> parameter_points,
-                      std::vector<std::string> dmd_paths,
+DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
+                      std::vector<std::string>& dmd_paths,
                       Vector* desired_point,
                       std::string rbf = "G",
                       std::string interp_method = "LS",

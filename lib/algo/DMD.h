@@ -118,8 +118,8 @@ public:
 
 protected:
 
-    friend DMD* getParametricDMD(std::vector<Vector*> parameter_points,
-                                 std::vector<DMD*> dmds,
+    friend DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
+                                 std::vector<DMD*>& dmds,
                                  Vector* desired_point,
                                  std::string rbf,
                                  std::string interp_method,
