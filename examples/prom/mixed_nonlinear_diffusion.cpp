@@ -64,6 +64,85 @@ static double diffusion_c, step_half;
 class NonlinearDiffusionOperator;
 class RomOperator;
 
+// Element matrix assembly, copying element loop from BilinearForm::Assemble(int skip_zeros)
+// and element matrix computation from VectorFEMassIntegrator::AssembleElementMatrix.
+
+void AssembleElementMatrix_VectorFEMassIntegrator(Coefficient *Q,
+						  const FiniteElement &el,
+						  ElementTransformation &Trans,
+						  DenseMatrix &elmat)
+{
+   int dof = el.GetDof();
+   int spaceDim = Trans.GetSpaceDim();
+
+   double w;
+
+   DenseMatrix trial_vshape(dof, spaceDim);
+
+   elmat.SetSize(dof);
+   elmat = 0.0;
+
+   const IntegrationRule *ir = NULL;
+   if (ir == NULL)
+   {
+      // int order = 2 * el.GetOrder();
+      int order = Trans.OrderW() + 2 * el.GetOrder();
+      ir = &IntRules.Get(el.GetGeomType(), order);
+   }
+
+   for (int i = 0; i < ir->GetNPoints(); i++)
+   {
+      const IntegrationPoint &ip = ir->IntPoint(i);
+
+      Trans.SetIntPoint(&ip);
+
+      el.CalcVShape(Trans, trial_vshape);
+
+      w = ip.weight * Trans.Weight();
+
+      if (Q)
+	{
+	  w *= Q -> Eval (Trans, ip);
+	}
+      AddMult_a_AAt (w, trial_vshape, elmat);
+   }
+}
+
+SparseMatrix* Assemble_VectorFEMassIntegrator(Coefficient *Q, ParFiniteElementSpace *fes)
+{
+  ElementTransformation *eltrans;
+  DofTransformation * doftrans;
+  Mesh *mesh = fes -> GetMesh();
+  DenseMatrix elmat;
+  int skip_zeros = 1;
+
+  SparseMatrix *mat = new SparseMatrix(fes->GetTrueVSize());
+
+  Array<int> vdofs;
+
+  for (int i = 0; i < fes -> GetNE(); i++)
+    {
+      doftrans = fes->GetElementVDofs(i, vdofs);
+      elmat.SetSize(0);
+      const FiniteElement &fe = *fes->GetFE(i);
+      eltrans = fes->GetElementTransformation(i);
+
+      //domain_integs[k]->AssembleElementMatrix(fe, *eltrans, elemmat);
+      AssembleElementMatrix_VectorFEMassIntegrator(Q, fe, *eltrans, elmat);
+
+      if (doftrans)
+	{
+	  MFEM_ABORT("TODO");
+	}
+
+      mat->AddSubMatrix(vdofs, vdofs, elmat, skip_zeros);
+    }
+
+  mat->Finalize(skip_zeros);
+
+  return mat;
+}
+
 class NonlinearDiffusionGradientOperator : public Operator
 {
 private:
@@ -412,6 +491,370 @@ void MergeBasis(const int dimFOM, const int nparam, const int max_num_snapshots,
 
     int cutoff = 0;
     BasisGeneratorFinalSummary(&generator, 0.9999, cutoff, "mergedSV_" + name);
+}
+
+// Compute v = -M(p)^{-1} B^T p
+void ComputeDualVector(ParFiniteElementSpace *fespace_R, ParFiniteElementSpace *fespace_W,
+		       const HypreParMatrix *B, Vector const& p, Vector & v)
+{
+  MFEM_VERIFY(v.Size() == fespace_R->GetTrueVSize(), "");
+
+  Vector rhs(fespace_R->GetTrueVSize());
+
+  // Set grid function for a(p)
+  ParGridFunction p_gf(fespace_W);
+
+  p_gf.SetFromTrueDofs(p);
+
+  GridFunctionCoefficient p_coeff(&p_gf);
+  TransformedCoefficient a_coeff(&p_coeff, NonlinearCoefficient);
+  TransformedCoefficient aprime_coeff(&p_coeff, NonlinearCoefficientDerivative);
+
+  ParBilinearForm *M = new ParBilinearForm(fespace_R);
+
+  M->AddDomainIntegrator(new VectorFEMassIntegrator(a_coeff));
+  M->Assemble();
+  M->Finalize();
+
+  HypreParMatrix *Mmat = M->ParallelAssemble();
+  CGSolver M_solver(fespace_R->GetComm());
+  HypreSmoother M_prec;  // Preconditioner for the R mass matrix M
+  M_prec.SetType(HypreSmoother::Jacobi);
+
+  const double linear_solver_rel_tol = 1.0e-14;
+
+  M_solver.iterative_mode = false;
+  M_solver.SetRelTol(linear_solver_rel_tol);
+  M_solver.SetAbsTol(0.0);
+  M_solver.SetMaxIter(1000);
+  M_solver.SetPrintLevel(-1);
+  M_solver.SetPreconditioner(M_prec);
+
+  M_solver.SetOperator(*Mmat);
+
+  B->MultTranspose(p, rhs);
+  rhs *= -1.0;
+  M_solver.Mult(rhs, v);
+
+  delete M;
+  delete Mmat;
+  // TODO: delete Mmat in other places?
+}
+
+void SetDualVectors(ParFiniteElementSpace *fespace_R, ParFiniteElementSpace *fespace_W,
+		    const CAROM::Matrix* p, DenseMatrix & dual)
+{
+  ParMixedBilinearForm *bVarf(new ParMixedBilinearForm(fespace_R, fespace_W));
+  bVarf->AddDomainIntegrator(new VectorFEDivergenceIntegrator);
+  bVarf->Assemble();
+  bVarf->Finalize();
+  HypreParMatrix *Bmat = bVarf->ParallelAssemble();
+
+  delete bVarf;
+
+  Vector dual_i;
+  Vector p_i(p->numRows());
+  for (int i=0; i<p->numColumns(); ++i)
+    {
+      for (int j = 0; j < p->numRows(); ++j)
+	p_i[j] = (*p)(j, i);
+
+      dual.GetColumnReference(i, dual_i);
+      ComputeDualVector(fespace_R, fespace_W, Bmat, p_i, dual_i);
+    }
+
+  delete Bmat;
+}
+
+// Compute a(p) u . v at all quadrature points on the given element. Coefficient Q is a(p);
+// TODO: remove p input?
+void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const& vdofs,
+			  Coefficient *Q, Vector const& p, Vector const& u, Vector const& v,
+			  FiniteElement const& fe, ElementTransformation & Trans, Vector & r)
+{
+  MFEM_VERIFY(r.Size() == ir->GetNPoints(), "");
+  int dof = fe.GetDof();
+  int spaceDim = Trans.GetSpaceDim();
+
+  Vector u_i(spaceDim);
+  Vector v_i(spaceDim);
+
+  DenseMatrix trial_vshape(dof, spaceDim);
+
+  for (int i = 0; i < ir->GetNPoints(); i++)
+    {
+      const IntegrationPoint &ip = ir->IntPoint(i);
+
+      Trans.SetIntPoint(&ip);
+
+      fe.CalcVShape(Trans, trial_vshape);
+
+      double w = ip.weight * Trans.Weight();
+
+      u_i = 0.0;
+      v_i = 0.0;
+
+      for (int j=0; j<dof; ++j)
+	for (int k=0; k<spaceDim; ++k)
+	  {
+	    u_i[k] += u[vdofs[j]] * trial_vshape(j, k);
+	    v_i[k] += v[vdofs[j]] * trial_vshape(j, k);
+	  }
+
+      if (Q)
+	{
+	  w *= Q -> Eval (Trans, ip);
+	}
+
+      r[i] = 0.0;
+      for (int k=0; k<spaceDim; ++k)
+	{
+	  r[i] += u_i[k] * v_i[k];
+	}
+
+      r[i] *= w;
+   }
+}
+
+void NNLS(DenseMatrix const& Gt, const int ne, Array<double> const& w_el, Vector & x)
+{
+  const double tau = 1.0e-2;  // TODO: input this
+
+  const int m = Gt.NumRows();
+  const int n = Gt.NumCols();
+
+  const int nqe = w_el.Size();
+
+  MFEM_VERIFY(m == ne * nqe, "");
+
+  Vector b(n);
+  Vector w(m);
+  Vector r(n);
+  Vector u(m);
+
+  Vector z(m);
+  x.SetSize(m);
+
+  CAROM::Vector bc(b.GetData(), n, false, false);
+
+  for (int i=0; i<ne; ++i)
+    {
+      for (int j=0; j<nqe; ++j)
+	w[(i*nqe) + j] = w_el[j];
+    }
+
+  Gt.MultTranspose(w, b);  // b = Gw
+
+  r = b;
+  x = 0.0;
+
+  const double bnorm = b.Norml2();
+
+  std::set<int> ids;
+
+  int outer = 0;
+  while (r.Norml2() >= tau * bnorm)
+    {
+      cout << "Outer loop iter " << outer << ", r norm " << r.Norml2() << endl;
+      outer++;
+
+      Gt.Mult(r, u);
+
+      // Set id to max_value_index(u), without absolute values.
+      int id = 0;
+      double maxu = u[0];
+      for (int i=1; i<m; ++i)
+	{
+	  const double u_i = u[i];
+	  if (u_i > maxu)
+	    {
+	      maxu = u_i;
+	      id = i;
+	    }
+	}
+
+      ids.insert(id);
+
+      int inner = 0;
+      while (true)
+	{
+	  cout << "Inner loop iter " << inner << endl;
+	  inner++;
+
+	  // Extract the submatrix G_{ids}
+	  CAROM::Matrix Gsub(n, ids.size(), false);
+
+	  int count = 0;
+	  for (auto i : ids)
+	    {
+	      for (int j=0; j<n; ++j)
+		{
+		  Gsub(j, count) = Gt(i, j);
+		}
+	      count++;
+	    }
+
+	  MFEM_VERIFY(Gsub.numColumns() < n, "");
+
+	  // Compute the pseudo-inverse of Gsub, storing its transpose in Gsub.
+	  Gsub.transposePseudoinverse();
+
+	  CAROM::Vector t(Gsub.numColumns(), false);
+	  Gsub.transposeMult(bc, t);
+
+	  z = 0.0;
+
+	  double minz = t(0);
+	  count = 0;
+	  for (auto i : ids)
+	    {
+	      z[i] = t(count);
+
+	      if (t(count) < minz)
+		minz = t(count);
+
+	      count++;
+	    }
+
+	  if (minz > 0.0)
+	    {
+	      x = z;
+	      break;
+	    }
+
+	  // Find max feasible step from x to z, which is at most 1.
+	  double step = 1.0;
+	  bool initStep = false;
+	  for (int i=0; i<m; ++i)
+	    {
+	      // Solve for x + s * (z - x) = 0 => s = x / (x - z), assuming x != z.
+	      if (x[i] != 0.0 && fabs(x[i] - z[i]) > 1.0e-8 && z[i] <= 0.0)
+		{
+		  const double s = x[i] / (x[i] - z[i]);
+		  if (initStep)
+		    {
+		      step = std::min(step, s);
+		    }
+		  else
+		    {
+		      initStep = true;
+		      step = s;
+		    }
+		}
+	    }
+
+	  // Set x = x + step (z - x) = (1 - step) x + step z
+	  x *= 1.0 - step;
+	  x.Add(step, z);
+
+	  // Find the zero value indices of x and set ids to {1, ..., m} \ {zero value indices}
+	  //ids.clear();
+	  for (int i=0; i<m; ++i)  // TODO: can you just loop over entries in ids?
+	    {
+	      //zero[i] = (x[i] <= 0.0);
+	      /*
+	      if (x[i] > 0.0)
+		{
+		  ids.insert(i);
+		}
+	      */
+	      if (x[i] <= 0.0)
+		{
+		  ids.erase(i);
+		}
+	    }
+	} // inner loop
+
+      // Update r = b - Gx
+      r = b;
+      Gt.AddMultTranspose_a(-1.0, x, r);
+    }  // outer loop
+}
+
+void SetupEQP(ParFiniteElementSpace *fespace_R, ParFiniteElementSpace *fespace_W, const CAROM::Matrix* BR, const CAROM::Matrix* BW, Vector & sol)
+{
+  const IntegrationRule *ir0 = NULL;
+  if (ir0 == NULL)
+    {
+      // int order = 2 * el.GetOrder();
+      const FiniteElement &fe = *fespace_R->GetFE(0);
+      ElementTransformation *eltrans = fespace_R->GetElementTransformation(0);
+
+      int order = eltrans->OrderW() + 2 * fe.GetOrder();
+      ir0 = &IntRules.Get(fe.GetGeomType(), order);
+    }
+
+  const int nqe = ir0->GetNPoints();
+  const int ne = fespace_R->GetNE();
+  const int NB = BR->numColumns();
+  const int NQ = ne * nqe;
+
+  MFEM_VERIFY(NB == BW->numColumns(), "TODO: generalize this");
+
+  // Compute R vectors dual to W basis vectors
+  DenseMatrix Rdual(BR->numRows(), NB);
+  SetDualVectors(fespace_R, fespace_W, BW, Rdual);
+
+  MFEM_VERIFY(NB == Rdual.Width(), "");
+
+  // Compute G of size NB^2 x NQ
+
+  DenseMatrix Gt(NQ, NB*NB);  // Store Gt rather than G, since DenseMatrix is traversed column-wise, and NQ >> NB^2.
+
+  Vector Rdual_i;
+  Vector p_i(BW->numRows());
+  Vector v_j(BR->numRows());
+
+  Vector r(nqe);
+
+  for (int i=0; i<NB; ++i)
+    {
+      for (int j = 0; j < BW->numRows(); ++j)
+	p_i[j] = (*BW)(j, i);
+
+      // Set grid function for a(p)
+      ParGridFunction p_gf(fespace_W);
+
+      p_gf.SetFromTrueDofs(p_i);
+
+      GridFunctionCoefficient p_coeff(&p_gf);
+      TransformedCoefficient a_coeff(&p_coeff, NonlinearCoefficient);
+
+      Rdual.GetColumnReference(i, Rdual_i);
+
+      for (int j=0; j<NB; ++j)
+	{
+	  for (int k = 0; k < BR->numRows(); ++k)
+	    v_j[k] = (*BR)(k, j);
+
+	  // TODO: is it better to make the element loop the outer loop?
+	  for (int e=0; e<ne; ++e)
+	    {
+	      Array<int> vdofs;
+	      DofTransformation *doftrans = fespace_R->GetElementVDofs(e, vdofs);
+	      const FiniteElement &fe = *fespace_R->GetFE(i);
+	      ElementTransformation *eltrans = fespace_R->GetElementTransformation(i);
+
+	      ComputeElementRowOfG(ir0, vdofs, &a_coeff, p_i, Rdual_i, v_j, fe, *eltrans, r);
+
+	      for (int m=0; m<nqe; ++m)
+		Gt((e*nqe) + m, j + (i*NB)) = r[m];
+	    }
+	}
+    }
+
+  Array<double> const& w_el = ir0->GetWeights();
+  MFEM_VERIFY(w_el.Size() == nqe, "");
+
+  NNLS(Gt, ne, w_el, sol);
+  int nnz = 0;
+  for (int i=0; i<sol.Size(); ++i)
+    {
+      if (sol[i] != 0.0)
+	nnz++;
+    }
+
+  cout << "Number of nonzeros in NNLS solution: " << nnz << ", out of " << sol.Size() << endl;
 }
 
 int main(int argc, char *argv[])
@@ -774,6 +1217,13 @@ int main(int argc, char *argv[])
         if (FR_librom->numColumns() > nldim)
             FR_librom = GetFirstColumns(nldim, FR_librom);
 
+	// TODO: make the option to do EQP or GNAT. Currently it does both.
+
+	// EQP setup
+	Vector eqpSol;
+	SetupEQP(&R_space, &W_space, BR_librom, BW_librom, eqpSol);
+
+	// GNAT setup
         vector<int> num_sample_dofs_per_proc(num_procs);
 
         nsamp_R = nldim;
@@ -1347,27 +1797,19 @@ void NonlinearDiffusionOperator::SetParameters(const Vector &p) const
 {
     // Set grid function for a(p)
     ParGridFunction p_gf(&fespace_W);
-    ParGridFunction a_gf(&fespace_W);
-    ParGridFunction aprime_gf(&fespace_W);
-    ParGridFunction a_plus_aprime_gf(&fespace_W);
 
     {
         Vector p_W(p.GetData() + block_trueOffsets[1], block_trueOffsets[2]-block_trueOffsets[1]);
         p_gf.SetFromTrueDofs(p_W);
     }
 
-    for (int i = 0; i < a_gf.Size(); i++)
-    {
-        a_gf(i) = NonlinearCoefficient(p_gf(i));
-        aprime_gf(i) = NonlinearCoefficientDerivative(p_gf(i));
-        a_plus_aprime_gf(i) = a_gf(i) + aprime_gf(i);
-    }
-
-    GridFunctionCoefficient a_coeff(&a_gf);
-    GridFunctionCoefficient aprime_coeff(&aprime_gf);
-    GridFunctionCoefficient a_plus_aprime_coeff(&a_plus_aprime_gf);
+    GridFunctionCoefficient p_coeff(&p_gf);
+    TransformedCoefficient a_coeff(&p_coeff, NonlinearCoefficient);
+    TransformedCoefficient aprime_coeff(&p_coeff, NonlinearCoefficientDerivative);
+    SumCoefficient a_plus_aprime_coeff(a_coeff, aprime_coeff);
 
     delete M;
+    // TODO: delete Mmat?
     M = new ParBilinearForm(&fespace_R);
 
     M->AddDomainIntegrator(new VectorFEMassIntegrator(a_coeff));
@@ -1418,6 +1860,30 @@ void NonlinearDiffusionOperator::SetParameters(const Vector &p) const
         fullPrec->SetDiagonalBlock(1, &C_solver);
         J_gmres->SetPreconditioner(*fullPrec);
     }
+
+    // EQP
+
+    /*
+    // Testing FOM mass matrix assembly
+    SparseMatrix *amat = Assemble_VectorFEMassIntegrator(&a_coeff, &fespace_R);
+    SparseMatrix Mdiag;
+    Mmat->GetDiag(Mdiag);
+
+    const double nrm1 = Mdiag.MaxNorm();
+    const double nrm2 = amat->MaxNorm();
+
+    SparseMatrix *diff = Add(1.0, Mdiag, -1.0, *amat);
+
+    const double nrm3 = diff->MaxNorm();
+
+    cout << "M matrix max norms: " << nrm1 << ", " << nrm2
+	 << ", diff norm " << nrm3 << endl;
+
+    delete amat;
+    delete diff;
+    */
+
+    // Assemble matrix used in NNLS
 }
 
 NonlinearDiffusionOperator::~NonlinearDiffusionOperator()
