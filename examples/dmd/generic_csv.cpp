@@ -483,5 +483,10 @@ int main(int argc, char *argv[])
     }
 
     delete[] sample;
+    for (int window = 0; window < numWindows; ++window)
+    {
+        delete dmd[window];
+    }
+
     return 0;
 }

@@ -640,6 +640,8 @@ int main(int argc, char *argv[])
 
         if (i % windowNumSamples == 0 && i < ts.size()-1)
         {
+            delete dmd_x[curr_window];
+            delete dmd_v[curr_window];
             curr_window++;
         }
     }
