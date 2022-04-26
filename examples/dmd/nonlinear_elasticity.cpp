@@ -4,6 +4,8 @@
 //
 // For DMD:
 //   mpirun -np 8 nonlinear_elasticity -s 2 -rs 1 -dt 0.01 -tf 5 -visit
+//   mpirun -np 8 nonlinear_elasticity -s 2 -rs 1 -dt 0.02 -tf 20 -nwinsamp 10 -visit
+//   mpirun -np 8 nonlinear_elasticity -s 2 -rs 1 -dt 0.05 -tf 50 -nwinsamp 10 -visit
 //
 // Sample runs:
 //    mpirun -np 4 nonlinear_elasticity -s 3 -rs 2 -dt 3
@@ -437,11 +439,9 @@ int main(int argc, char *argv[])
     int curr_window = 0;
     vector<CAROM::DMD*> dmd_x;
     vector<CAROM::DMD*> dmd_v;
-    vector<double> tw;
 
     dmd_x.push_back(new CAROM::DMD(x_gf.GetTrueVector().Size(), dt));
     dmd_v.push_back(new CAROM::DMD(v_gf.GetTrueVector().Size(), dt));
-    tw.push_back(t);
 
     dmd_x[curr_window]->takeSample(x_gf.GetTrueVector(), t);
     dmd_v[curr_window]->takeSample(v_gf.GetTrueVector(), t);
@@ -473,7 +473,6 @@ int main(int argc, char *argv[])
             curr_window++;
             dmd_x.push_back(new CAROM::DMD(x_gf.GetTrueVector().Size(), dt));
             dmd_v.push_back(new CAROM::DMD(v_gf.GetTrueVector().Size(), dt));
-            tw.push_back(t);
 
             dmd_x[curr_window]->takeSample(x_gf.GetTrueVector(), t);
             dmd_v[curr_window]->takeSample(v_gf.GetTrueVector(), t);
