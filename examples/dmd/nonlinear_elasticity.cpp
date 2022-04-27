@@ -2,8 +2,48 @@
 //
 // Compile with: make nonlinear_elasticity
 //
+// =================================================================================
+//
+// Sample runs and results for serial DMD:
+//
+// Command 1:
+//   ./nonlinear_elasticity -s 2 -rs 1 -dt 0.02 -tf 20 -visit
+//
+// Output 1:
+//   Relative error of DMD position (x) at t_final: 20 is 0.000571937
+//   Relative error of DMD velocity (v) at t_final: 20 is 6.16546
+//
+// Command 2:
+//   ./nonlinear_elasticity -s 2 -rs 1 -dt 0.05 -tf 50.0 -visit
+//
+// Output 2:
+//   Relative error of DMD position (x) at t_final: 50 is 7.98169
+//   Relative error of DMD velocity (v) at t_final: 50 is 0.0276505
+//
+// =================================================================================
+//
+// Sample runs and results for time windowing DMD:
+//
+// Command 1:
+//   ./nonlinear_elasticity -s 2 -rs 1 -dt 0.02 -tf 20 -nwinsamp 10 -visit
+//
+// Output 1:
+//   Relative error of DMD position (x) at t_final: 20 is 4.11479e-06
+//   Relative error of DMD velocity (v) at t_final: 20 is 9.43364e-05
+//
+// Command 2:
+//   ./nonlinear_elasticity -s 2 -rs 1 -dt 0.05 -tf 50.0 -nwinsamp 10 -visit
+//
+// Output 2:
+//   Relative error of DMD position (x) at t_final: 50 is 1.57678e-05
+//   Relative error of DMD velocity (v) at t_final: 50 is 2.2577e-05
+//
+// =================================================================================
+//
 // For DMD:
 //   mpirun -np 8 nonlinear_elasticity -s 2 -rs 1 -dt 0.01 -tf 5 -visit
+//   mpirun -np 8 nonlinear_elasticity -s 2 -rs 1 -dt 0.02 -tf 20 -nwinsamp 10 -visit
+//   mpirun -np 8 nonlinear_elasticity -s 2 -rs 1 -dt 0.05 -tf 50 -nwinsamp 10 -visit
 //
 // Sample runs:
 //    mpirun -np 4 nonlinear_elasticity -s 3 -rs 2 -dt 3
@@ -14,6 +54,8 @@
 //    mpirun -np 4 nonlinear_elasticity -m -s 14 -rs 2 -dt 0.03 -vs 20
 //    mpirun -np 4 nonlinear_elasticity -m -s 14 -rs 1 -dt 0.05 -vs 20
 //    mpirun -np 4 nonlinear_elasticity -m -s 3 -rs 2 -dt 3
+//
+// =================================================================================
 //
 // Description:  This examples solves a time dependent nonlinear elasticity
 //               problem of the form dv/dt = H(x) + S v, dx/dt = v, where H is a
@@ -40,6 +82,7 @@
 #include "linalg/Vector.h"
 #include <memory>
 #include <cmath>
+#include <limits>
 #include <iostream>
 #include <fstream>
 
@@ -184,6 +227,7 @@ int main(int argc, char *argv[])
     bool adaptive_lin_rtol = true;
     double ef = 0.9999;
     int rdim = -1;
+    int windowNumSamples = numeric_limits<int>::max();
     bool visualization = true;
     bool visit = false;
     int vis_steps = 1;
@@ -228,6 +272,8 @@ int main(int argc, char *argv[])
                    "Energy fraction for DMD.");
     args.AddOption(&rdim, "-rdim", "--rdim",
                    "Reduced dimension for DMD.");
+    args.AddOption(&windowNumSamples, "-nwinsamp", "--numwindowsamples", 
+                   "Number of samples in DMD windows.");
     args.Parse();
     if (!args.Good())
     {
@@ -430,10 +476,15 @@ int main(int argc, char *argv[])
     dmd_training_timer.Start();
 
     // 10. Create DMD object and take initial sample.
-    CAROM::DMD dmd_x(x_gf.GetTrueVector().Size(), dt);
-    CAROM::DMD dmd_v(v_gf.GetTrueVector().Size(), dt);
-    dmd_x.takeSample(x_gf.GetTrueVector(), t);
-    dmd_v.takeSample(v_gf.GetTrueVector(), t);
+    int curr_window = 0;
+    vector<CAROM::DMD*> dmd_x;
+    vector<CAROM::DMD*> dmd_v;
+
+    dmd_x.push_back(new CAROM::DMD(x_gf.GetTrueVector().Size(), dt));
+    dmd_v.push_back(new CAROM::DMD(v_gf.GetTrueVector().Size(), dt));
+
+    dmd_x[curr_window]->takeSample(x_gf.GetTrueVector(), t);
+    dmd_v[curr_window]->takeSample(v_gf.GetTrueVector(), t);
     ts.push_back(t);
 
     dmd_training_timer.Stop();
@@ -454,8 +505,19 @@ int main(int argc, char *argv[])
 
         dmd_training_timer.Start();
 
-        dmd_x.takeSample(x_gf.GetTrueVector(), t);
-        dmd_v.takeSample(v_gf.GetTrueVector(), t);
+        dmd_x[curr_window]->takeSample(x_gf.GetTrueVector(), t);
+        dmd_v[curr_window]->takeSample(v_gf.GetTrueVector(), t);
+
+        if (ti % windowNumSamples == 0 && !last_step)
+        {
+            curr_window++;
+            dmd_x.push_back(new CAROM::DMD(x_gf.GetTrueVector().Size(), dt));
+            dmd_v.push_back(new CAROM::DMD(v_gf.GetTrueVector().Size(), dt));
+
+            dmd_x[curr_window]->takeSample(x_gf.GetTrueVector(), t);
+            dmd_v[curr_window]->takeSample(v_gf.GetTrueVector(), t);
+        }
+
         ts.push_back(t);
 
         dmd_training_timer.Stop();
@@ -533,8 +595,11 @@ int main(int argc, char *argv[])
         {
             std::cout << "Creating DMD with rdim: " << rdim << std::endl;
         }
-        dmd_x.train(rdim);
-        dmd_v.train(rdim);
+        for (int w = 0; w < dmd_x.size(); ++w)
+        {
+            dmd_x[w]->train(rdim);
+            dmd_v[w]->train(rdim);
+        }
     }
     else if (ef != -1)
     {
@@ -542,8 +607,11 @@ int main(int argc, char *argv[])
         {
             std::cout << "Creating DMD with energy fraction: " << ef << std::endl;
         }
-        dmd_x.train(ef);
-        dmd_v.train(ef);
+        for (int w = 0; w < dmd_x.size(); ++w)
+        {
+            dmd_x[w]->train(ef);
+            dmd_v[w]->train(ef);
+        }
     }
 
     dmd_training_timer.Stop();
@@ -562,8 +630,9 @@ int main(int argc, char *argv[])
         std::cout << "Predicting position and velocity using DMD" << std::endl;
     }
 
-    CAROM::Vector* result_x = dmd_x.predict(ts[0]);
-    CAROM::Vector* result_v = dmd_v.predict(ts[0]);
+    curr_window = 0;
+    CAROM::Vector* result_x = dmd_x[curr_window]->predict(ts[0]);
+    CAROM::Vector* result_v = dmd_v[curr_window]->predict(ts[0]);
     Vector initial_dmd_solution_x(result_x->getData(), result_x->dim());
     Vector initial_dmd_solution_v(result_v->getData(), result_v->dim());
     x_gf.SetFromTrueDofs(initial_dmd_solution_x);
@@ -588,8 +657,8 @@ int main(int argc, char *argv[])
 
     for (int i = 1; i < ts.size(); i++)
     {
-        result_x = dmd_x.predict(ts[i]);
-        result_v = dmd_v.predict(ts[i]);
+        result_x = dmd_x[curr_window]->predict(ts[i]);
+        result_v = dmd_v[curr_window]->predict(ts[i]);
         Vector dmd_solution_x(result_x->getData(), result_x->dim());
         Vector dmd_solution_v(result_v->getData(), result_v->dim());
         x_gf.SetFromTrueDofs(dmd_solution_x);
@@ -607,12 +676,19 @@ int main(int argc, char *argv[])
 
         delete result_x;
         delete result_v;
+
+        if (i % windowNumSamples == 0 && i < ts.size()-1)
+        {
+            delete dmd_x[curr_window];
+            delete dmd_v[curr_window];
+            curr_window++;
+        }
     }
 
     dmd_prediction_timer.Stop();
 
-    result_x = dmd_x.predict(t_final);
-    result_v = dmd_v.predict(t_final);
+    result_x = dmd_x[curr_window]->predict(t_final);
+    result_v = dmd_v[curr_window]->predict(t_final);
 
     // 15. Calculate the relative error between the DMD final solution and the true solution.
     Vector dmd_solution_x(result_x->getData(), result_x->dim());
@@ -645,6 +721,8 @@ int main(int argc, char *argv[])
     delete result_v;
     delete dc;
     delete dmd_dc;
+    delete dmd_x[curr_window];
+    delete dmd_v[curr_window];
 
     MPI_Finalize();
 
