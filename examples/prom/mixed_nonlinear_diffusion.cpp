@@ -143,6 +143,124 @@ SparseMatrix* Assemble_VectorFEMassIntegrator(Coefficient *Q, ParFiniteElementSp
   return mat;
 }
 
+void VectorFEMassIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR, ParFiniteElementSpace *fesW,
+					      Vector *weights, const IntegrationRule *ir, Coefficient *Q,
+					      CAROM::Matrix const& V, CAROM::Vector const& x, Vector & res)
+{
+  const int rdim = V.numColumns();
+  MFEM_VERIFY(x.dim() == rdim, "");
+  MFEM_VERIFY(V.numRows() == fesR->GetTrueVSize(), "");
+
+  const int ne = fesR->GetNE();
+  const int nqe = weights->Size() / ne;
+
+  MFEM_VERIFY(nqe == ir->GetWeights().Size(), "");
+  MFEM_VERIFY(nqe * ne == weights->Size(), "");
+
+  std::set<int> elements;
+  std::vector<double> rw;
+  std::vector<int> qp;
+
+  for (int i=0; i<weights->Size(); ++i)
+    {
+      if ((*weights)[i] > 1.0e-12)
+	{
+	  const int e = i / nqe;  // Element index
+	  elements.insert(e);
+	  rw.push_back((*weights)[i]);
+	  qp.push_back(i);
+	}
+    }
+
+  cout << "VectorFEMassIntegrator_ComputeReducedEQP using " << elements.size () << " elements out of " << ne << endl;
+
+  ElementTransformation *eltrans;
+  DofTransformation * doftrans;
+  const FiniteElement *fe = NULL;
+  Array<int> vdofs;
+
+  DenseMatrix trial_vshape;
+
+  Vector Vx;
+  res.SetSize(rdim);
+  res = 0.0;
+
+  int eprev = -1;
+  int dof = 0;
+  int spaceDim = 0;
+
+  // TODO: try to optimize this function by storing some intermediate computations?
+
+  for (int i=0; i<rw.size(); ++i)
+    {
+      const int e = qp[i] / nqe;  // Element index
+      const int qpi = qp[i] - (e*nqe);  // Local (element) index of the quadrature point
+      const IntegrationPoint &ip = ir->IntPoint(qpi);
+
+      if (e != eprev)  // Update element transformation
+	{
+	  doftrans = fesR->GetElementVDofs(e, vdofs);
+	  fe = fesR->GetFE(e);
+	  eltrans = fesR->GetElementTransformation(e);
+
+	  if (doftrans)
+	    {
+	      MFEM_ABORT("TODO");
+	    }
+
+	  dof = fe->GetDof();
+	  spaceDim = eltrans->GetSpaceDim();
+	  trial_vshape.SetSize(dof, spaceDim);
+	  Vx.SetSize(spaceDim);
+
+	  MFEM_VERIFY(vdofs.Size() == dof, "");  // TODO: remove this. It is obvious.
+	}
+
+      // Integrate at the current point
+
+      eltrans->SetIntPoint(&ip);
+      fe->CalcVShape(*eltrans, trial_vshape);
+
+      double w = ip.weight * rw[i]; // using rw[i] instead of eltrans.Weight();
+
+      if (Q)
+	{
+	  w *= Q -> Eval(*eltrans, ip);
+	}
+
+      // Lift Vx at ip.
+      Vx = 0.0;
+      for (int k=0; k<dof; ++k)
+	{
+	  double Vx_k = 0.0;
+	  for (int j=0; j<rdim; ++j)
+	    {
+	      Vx_k += V(vdofs[k], j) * x(j);
+	    }
+
+	  for (int j=0; j<spaceDim; ++j)
+	    Vx[j] += Vx_k * trial_vshape(k, j);
+	}
+
+      for (int j=0; j<rdim; ++j)
+	{
+	  double rj = 0.0;
+	  for (int k=0; k<spaceDim; ++k)
+	    {
+	      double Vjk = 0.0;
+	      for (int l=0; l<dof; ++l)
+		{
+		  Vjk += V(vdofs[l], j) * trial_vshape(l, k);
+		}
+
+	      rj += Vx[k] * Vjk;
+	    }
+
+	  res[j] += w * rj;
+	}
+    }
+}
+
 class NonlinearDiffusionGradientOperator : public Operator
 {
 private:
@@ -332,8 +450,17 @@ private:
 
     bool hyperreduce, hyperreduce_source;
     bool sourceFOM;
+  bool eqp = true;
+    Vector *eqpw;
+  const IntegrationRule *ir_eqp;
 
-    CAROM::Vector *pfom_librom, *pfom_R_librom, *pfom_W_librom;
+  mutable ParGridFunction p_gf;
+  GridFunctionCoefficient p_coeff;
+  mutable TransformedCoefficient a_coeff;
+  TransformedCoefficient aprime_coeff;
+  mutable SumCoefficient a_plus_aprime_coeff;
+
+  CAROM::Vector *pfom_librom, *pfom_R_librom, *pfom_W_librom;
     Vector *pfom;
     Vector *pfom_R;
     Vector *pfom_W;
@@ -363,10 +490,11 @@ public:
                 const CAROM::Matrix *Bsinv,
                 const double newton_rel_tol, const double newton_abs_tol, const int newton_iter,
                 const CAROM::Matrix* S_, const CAROM::Matrix *Ssinv_,
-                const int myid, const bool hyperreduce_source);
+                const int myid, const bool hyperreduce_source, Vector *eqpSol, const IntegrationRule *ir_eqp_);
 
     virtual void Mult(const Vector &y, Vector &dy_dt) const;
     void Mult_Hyperreduced(const Vector &y, Vector &dy_dt) const;
+    void Mult_EQP(const Vector &y, Vector &dy_dt) const;
     void Mult_FullOrder(const Vector &y, Vector &dy_dt) const;
 
     /** Solve the Backward-Euler equation: k = f(p + dt*k, t), for the unknown k.
@@ -595,11 +723,14 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const& vdofs,
       v_i = 0.0;
 
       for (int j=0; j<dof; ++j)
-	for (int k=0; k<spaceDim; ++k)
-	  {
-	    u_i[k] += u[vdofs[j]] * trial_vshape(j, k);
-	    v_i[k] += v[vdofs[j]] * trial_vshape(j, k);
-	  }
+	{
+	  const int dofj = (vdofs[j] >= 0) ? vdofs[j] : -1 - vdofs[j];
+	  for (int k=0; k<spaceDim; ++k)
+	    {
+	      u_i[k] += u[dofj] * trial_vshape(j, k);
+	      v_i[k] += v[dofj] * trial_vshape(j, k);
+	    }
+	}
 
       if (Q)
 	{
@@ -618,7 +749,7 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const& vdofs,
 
 void NNLS(DenseMatrix const& Gt, const int ne, Array<double> const& w_el, Vector & x)
 {
-  const double tau = 1.0e-2;  // TODO: input this
+  const double tau = 1.0e-3;  // TODO: input this
 
   const int m = Gt.NumRows();
   const int n = Gt.NumCols();
@@ -771,7 +902,7 @@ void NNLS(DenseMatrix const& Gt, const int ne, Array<double> const& w_el, Vector
     }  // outer loop
 }
 
-void SetupEQP(ParFiniteElementSpace *fespace_R, ParFiniteElementSpace *fespace_W, const CAROM::Matrix* BR, const CAROM::Matrix* BW, Vector & sol)
+const IntegrationRule* SetupEQP(ParFiniteElementSpace *fespace_R, ParFiniteElementSpace *fespace_W, const CAROM::Matrix* BR, const CAROM::Matrix* BW, Vector & sol)
 {
   const IntegrationRule *ir0 = NULL;
   if (ir0 == NULL)
@@ -855,6 +986,8 @@ void SetupEQP(ParFiniteElementSpace *fespace_R, ParFiniteElementSpace *fespace_W
     }
 
   cout << "Number of nonzeros in NNLS solution: " << nnz << ", out of " << sol.Size() << endl;
+
+  return ir0;
 }
 
 int main(int argc, char *argv[])
@@ -1166,6 +1299,8 @@ int main(int argc, char *argv[])
 
     CAROM::SampleMeshManager *smm = nullptr;
 
+    Vector eqpSol;
+
     if (online)
     {
         CAROM::BasisReader readerR("basisR");
@@ -1220,8 +1355,7 @@ int main(int argc, char *argv[])
 	// TODO: make the option to do EQP or GNAT. Currently it does both.
 
 	// EQP setup
-	Vector eqpSol;
-	SetupEQP(&R_space, &W_space, BR_librom, BW_librom, eqpSol);
+	const IntegrationRule *ir_eqp = SetupEQP(&R_space, &W_space, BR_librom, BW_librom, eqpSol);
 
 	// GNAT setup
         vector<int> num_sample_dofs_per_proc(num_procs);
@@ -1366,7 +1500,7 @@ int main(int argc, char *argv[])
         romop = new RomOperator(&oper, soper, rrdim, rwdim, nldim, smm,
                                 BR_librom, FR_librom, BW_librom,
                                 Bsinv, newton_rel_tol, newton_abs_tol, newton_iter,
-                                S_librom, Ssinv, myid, hyperreduce_source);
+                                S_librom, Ssinv, myid, hyperreduce_source, &eqpSol, ir_eqp);
 
         ode_solver.Init(*romop);
 
@@ -1935,7 +2069,7 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
                          const CAROM::Matrix *Bsinv,
                          const double newton_rel_tol, const double newton_abs_tol, const int newton_iter,
                          const CAROM::Matrix* S_, const CAROM::Matrix *Ssinv_,
-                         const int myid, const bool hyperreduce_source_)
+                         const int myid, const bool hyperreduce_source_, Vector *eqpSol, const IntegrationRule *ir_eqp_)
     : TimeDependentOperator(rrdim_ + rwdim_, 0.0),
       newton_solver(),
       fom(fom_), fomSp(fomSp_), BR(NULL), rrdim(rrdim_), rwdim(rwdim_), nldim(nldim_),
@@ -1946,7 +2080,10 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
       Vsinv(Bsinv), J(height),
       zS(std::max(nsamp_S, 1), false), zT(std::max(nsamp_S, 1), false), Ssinv(Ssinv_),
       VTCS_W(rwdim, std::max(nsamp_S, 1), false), S(S_),
-      VtzR(rrdim_, false), hyperreduce_source(hyperreduce_source_)
+      VtzR(rrdim_, false), hyperreduce_source(hyperreduce_source_), eqpw(eqpSol), ir_eqp(ir_eqp_),
+      p_gf(&(fom_->fespace_W)), p_coeff(&p_gf), a_coeff(&p_coeff, NonlinearCoefficient),
+      aprime_coeff(&p_coeff, NonlinearCoefficientDerivative),
+      a_plus_aprime_coeff(a_coeff, aprime_coeff)
 {
     dydt_prev = 0.0;
 
@@ -2032,6 +2169,11 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
 
         zfomW.SetSize(fom->zW.Size());
     }
+    else if (eqp)
+      {
+        pfom_W_librom = new CAROM::Vector(fom->zW.Size(), true);
+	pfom_W = new Vector(pfom_W_librom->getData(), fom->zW.Size());
+      }
 
     if (hyperreduce_source)
         Compute_CtAB(fom->Cmat, *S, V_W, &VTCS_W);
@@ -2041,6 +2183,11 @@ RomOperator::~RomOperator()
 {
     delete BR;
     delete CR;
+}
+
+void RomOperator::Mult_EQP(const Vector &dy_dt, Vector &res) const
+{
+  // TODO: use or remove this?
 }
 
 void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
@@ -2063,6 +2210,33 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
 
     CAROM::Vector dyW_dt_librom(dy_dt.GetData() + rrdim, rwdim, false, false);
 
+    BR->transposeMult(yW_librom, resR_librom);
+
+    if (eqp)
+      {
+	// Compute reduced matrix for nonlinear term V_R^T M(a(V_W yW)) V_R, which is normally FOM (as in Mult_FullOrder), but has reduced cost using EQP.
+
+	// TODO: this approach for setting the coefficient a(p) has FOM cost and needs to be reduced to just the quadrature points of interest.
+	// Set grid function for a(p)
+
+	// Lift pfom_W = V_W yW
+	V_W.mult(yW_librom, *pfom_W_librom);
+
+	p_gf.SetFromTrueDofs(*pfom_W);
+
+	Vector resEQP;
+	VectorFEMassIntegrator_ComputeReducedEQP(&(fom->fespace_R), &(fom->fespace_W), eqpw, ir_eqp, &a_coeff, V_R, yR_librom, resEQP);
+
+	// NOTE: in the hyperreduction case, the residual is of dimension nldim, which is the dimension of the ROM space for the nonlinear term.
+	// In the EQP case, there is no use of a ROM space for the nonlinear term. Instead, the FOM computation of the nonlinear term
+	// is approximated by the reduced quadrature rule in the FOM space. Therefore, the residual here is of dimension rrdim.
+
+	MFEM_VERIFY(resEQP.Size() == rrdim, "");
+	for (int i=0; i<rrdim; ++i)
+	  res[i] += resEQP[i];
+      }
+    else
+      {
     // 1. Lift p_s+ = B_s+ y
     BRsp->mult(yR_librom, *psp_R_librom);
     BWsp->mult(yW_librom, *psp_W_librom);
@@ -2081,8 +2255,8 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
     Vsinv->mult(zN, zY);
 #endif
 
-    BR->transposeMult(yW_librom, resR_librom);
     VTU_R.multPlus(resR_librom, zY, 1.0);
+      }
 
     // Apply V_W^t C to fsp
 
@@ -2179,7 +2353,14 @@ void RomOperator::Mult_FullOrder(const Vector &dy_dt, Vector &res) const
 void RomOperator::Mult(const Vector &dy_dt, Vector &res) const
 {
     if (hyperreduce)
-        Mult_Hyperreduced(dy_dt, res);
+      {
+	/*
+	if (eqp)
+	  Mult_EQP(dy_dt, res);
+	else
+	*/
+	  Mult_Hyperreduced(dy_dt, res);
+      }
     else
         Mult_FullOrder(dy_dt, res);
 }
@@ -2263,7 +2444,27 @@ Operator &RomOperator::GetGradient(const Vector &p) const
 
     for (int i=0; i<rrdim; ++i)
     {
-        if (hyperreduce)
+      if (eqp)
+	{
+	  // Compute the i-th column of V_R^T M(a'(V_W yW)) V_R, using EQP.
+
+	  // Note that a_plus_aprime_coeff is already set from the lifted V_W yW variable, in Mult().
+	  Vector resEQP;
+	  CAROM::Vector e_i(rrdim, false);
+	  e_i = 0.0;
+	  e_i(i) = 1.0;
+	  VectorFEMassIntegrator_ComputeReducedEQP(&(fom->fespace_R), &(fom->fespace_W), eqpw, ir_eqp, &a_plus_aprime_coeff, V_R, e_i, resEQP);
+
+	  // NOTE: in the hyperreduction case, the residual is of dimension nldim, which is the dimension of the ROM space for the nonlinear term.
+	  // In the EQP case, there is no use of a ROM space for the nonlinear term. Instead, the FOM computation of the nonlinear term
+	  // is approximated by the reduced quadrature rule in the FOM space. Therefore, the residual here is of dimension rrdim.
+
+	  MFEM_VERIFY(resEQP.Size() == rrdim, "");
+
+	  for (int j=0; j<rrdim; ++j)
+	    c(j) = current_dt * resEQP[j];
+	}
+      else if (hyperreduce)
         {
             // Compute the i-th column of M(a'(Pst V_W yW)) Pst V_R.
             for (int j=0; j<psp_R->Size(); ++j)
