@@ -14,7 +14,8 @@ non-intrusive black-box approaches.
 
 ## Features to be added
 
-- Sparse identification of nonlinear dynamics (SINDy)
+- S-OPT: stable sampling algorithm for hyper-reduction
+- EQP: quadrature-based hyper-reduction sampling algorithm
 
 # Installation
 
@@ -79,8 +80,10 @@ LLNL-CODE-766763
 - William Arrighi (LLNL)
 - Kyle Chand (LLNL)
 - Siu Wun Cheung (LLNL)
+- Eric Chin (LLNL)
 - Youngsoo Choi (LLNL)
 - Dylan Copeland (LLNL)
+- Debojyoti Ghosh (LLNL)
 - Kevin Huynh (LLNL)
 - Tanya Kostova-Vassilevska (LLNL)
 - Jessica Lauzon (Stanford)
