@@ -681,6 +681,8 @@ int main(int argc, char *argv[])
     delete result_v;
     delete dc;
     delete dmd_dc;
+    delete dmd_x[curr_window];
+    delete dmd_v[curr_window];
 
     MPI_Finalize();
 
