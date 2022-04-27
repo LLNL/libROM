@@ -2,6 +2,44 @@
 //
 // Compile with: make nonlinear_elasticity
 //
+// =================================================================================
+//
+// Sample runs and results for serial DMD:
+//
+// Command 1:
+//   ./nonlinear_elasticity -s 2 -rs 1 -dt 0.02 -tf 20 -visit
+//
+// Output 1:
+//   Relative error of DMD position (x) at t_final: 20 is 0.000571937
+//   Relative error of DMD velocity (v) at t_final: 20 is 6.16546
+//
+// Command 2:
+//   ./nonlinear_elasticity -s 2 -rs 1 -dt 0.05 -tf 50.0 -visit
+//
+// Output 2:
+//   Relative error of DMD position (x) at t_final: 50 is 7.98169
+//   Relative error of DMD velocity (v) at t_final: 50 is 0.0276505
+//
+// =================================================================================
+//
+// Sample runs and results for time windowing DMD:
+//
+// Command 1:
+//   ./nonlinear_elasticity -s 2 -rs 1 -dt 0.02 -tf 20 -nwinsamp 10 -visit
+//
+// Output 1:
+//   Relative error of DMD position (x) at t_final: 20 is 4.11479e-06
+//   Relative error of DMD velocity (v) at t_final: 20 is 9.43364e-05
+//
+// Command 2:
+//   ./nonlinear_elasticity -s 2 -rs 1 -dt 0.05 -tf 50.0 -nwinsamp 10 -visit
+//
+// Output 2:
+//   Relative error of DMD position (x) at t_final: 50 is 1.57678e-05
+//   Relative error of DMD velocity (v) at t_final: 50 is 2.2577e-05
+//
+// =================================================================================
+//
 // For DMD:
 //   mpirun -np 8 nonlinear_elasticity -s 2 -rs 1 -dt 0.01 -tf 5 -visit
 //   mpirun -np 8 nonlinear_elasticity -s 2 -rs 1 -dt 0.02 -tf 20 -nwinsamp 10 -visit
@@ -16,6 +54,8 @@
 //    mpirun -np 4 nonlinear_elasticity -m -s 14 -rs 2 -dt 0.03 -vs 20
 //    mpirun -np 4 nonlinear_elasticity -m -s 14 -rs 1 -dt 0.05 -vs 20
 //    mpirun -np 4 nonlinear_elasticity -m -s 3 -rs 2 -dt 3
+//
+// =================================================================================
 //
 // Description:  This examples solves a time dependent nonlinear elasticity
 //               problem of the form dv/dt = H(x) + S v, dx/dt = v, where H is a
