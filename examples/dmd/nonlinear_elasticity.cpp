@@ -758,7 +758,9 @@ void visualize(ostream &out, ParMesh *mesh, ParGridFunction *deformed_nodes,
         }
         out << "keys cm\n";         // show colorbar and mesh
         out << "autoscale value\n"; // update value-range; keep mesh-extents fixed
-        out << "pause\n";
+        //out << "pause\n";
+        //cout << "GLVis visualization paused."
+        //     << " Press space (in the GLVis window) to resume it.\n";
     }
     out << flush;
 }

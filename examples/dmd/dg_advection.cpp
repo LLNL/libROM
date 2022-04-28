@@ -571,11 +571,11 @@ int main(int argc, char *argv[])
             sout << "parallel " << num_procs << " " << myid << "\n";
             sout.precision(precision);
             sout << "solution\n" << *pmesh << *u;
-            sout << "pause\n";
+            //sout << "pause\n";
             sout << flush;
-            if (mpi.Root())
-                cout << "GLVis visualization paused."
-                     << " Press space (in the GLVis window) to resume it.\n";
+            //if (mpi.Root())
+            //    cout << "GLVis visualization paused."
+            //         << " Press space (in the GLVis window) to resume it.\n";
         }
     }
 
