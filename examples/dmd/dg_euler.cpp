@@ -2,17 +2,38 @@
 //
 // Compile with: make dg_euler
 //
-// For AdaptiveDMD:
-//   mpirun -n 8 dg_euler
-//   mpirun -n 8 dg_euler -p 2 -rs 2 -rp 1 -o 1 -s 3 -visit
+// =================================================================================
 //
-// Sample runs:
+// Sample runs and results for adaptive DMD:
 //
-//       mpirun -np 4 dg_euler -p 1 -rs 2 -rp 1 -o 1 -s 3
-//       mpirun -np 4 dg_euler -p 1 -rs 1 -rp 1 -o 3 -s 4
-//       mpirun -np 4 dg_euler -p 1 -rs 1 -rp 1 -o 5 -s 6
-//       mpirun -np 4 dg_euler -p 2 -rs 1 -rp 1 -o 1 -s 3
-//       mpirun -np 4 dg_euler -p 2 -rs 1 -rp 1 -o 3 -s 3
+// Command 1:
+//   mpirun -np 8 dg_euler -p 1 -rs 1 -rp 1 -o 5 -s 6 -tf 0.1 -visit
+//
+// Output 1:
+//   Relative error of AdaptiveDMD density (dens) at t_final: 0.1 is 0.00015279217
+//   Relative error of AdaptiveDMD x-momentum (x_mom) at t_final: 0.1 is 2.9074268e-05
+//   Relative error of AdaptiveDMD y-momentum (y_mom) at t_final: 0.1 is 8.9542312e-05
+//   Relative error of AdaptiveDMD energy (e) at t_final: 0.1 is 6.8687185e-05
+//
+// Command 2:
+//   mpirun -np 8 dg_euler -p 2 -rs 2 -rp 1 -o 1 -s 3 -tf 0.1 -visit
+//
+// Output 2:
+//   Relative error of AdaptiveDMD density (dens) at t_final: 0.1 is 2.1881846e-06
+//   Relative error of AdaptiveDMD x-momentum (x_mom) at t_final: 0.1 is 4.3873307e-05
+//   Relative error of AdaptiveDMD y-momentum (y_mom) at t_final: 0.1 is 0.0026632618
+//   Relative error of AdaptiveDMD energy (e) at t_final: 0.1 is 2.3054118e-06
+//
+// Command 3:
+//   mpirun -np 8 dg_euler -p 2 -rs 2 -rp 1 -o 1 -s 3 -visit
+//
+// Output 3:
+//   Relative error of AdaptiveDMD density (dens) at t_final: 2 is 1.9677493e-05
+//   Relative error of AdaptiveDMD x-momentum (x_mom) at t_final: 2 is 0.00011781827
+//   Relative error of AdaptiveDMD y-momentum (y_mom) at t_final: 2 is 0.00017120499
+//   Relative error of AdaptiveDMD energy (e) at t_final: 2 is 1.9836223e-05
+//
+// =================================================================================
 //
 // Description:  This example code solves the compressible Euler system of
 //               equations, a model nonlinear hyperbolic PDE, with a
