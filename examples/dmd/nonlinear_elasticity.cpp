@@ -668,12 +668,16 @@ int main(int argc, char *argv[])
 
         if (i == ts.size() - 1 || (i % vis_steps) == 0)
         {
+            GridFunction *nodes = &x_gf;
+            int owns_nodes = 0;
+            pmesh->SwapNodes(nodes, owns_nodes);
             if (visit)
             {
                 dmd_dc->SetCycle(i);
                 dmd_dc->SetTime(ts[i]);
                 dmd_dc->Save();
             }
+            pmesh->SwapNodes(nodes, owns_nodes);
         }
 
         delete result_x;
