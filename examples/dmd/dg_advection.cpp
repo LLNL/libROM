@@ -19,22 +19,6 @@
 //   Relative error of DMD solution (u) at t_final: 4 is 0.00019053762
 //
 // =================================================================================
-// For DMD:
-//   mpirun -np 8 dg_advection
-//   mpirun -np 8 dg_advection -p 3 -rp 1 -dt 0.005 -tf 4 -visit
-//
-// Sample runs:
-//    mpirun -np 4 dg_advection -p 0 -dt 0.005
-//    mpirun -np 4 dg_advection -p 1 -dt 0.005 -tf 9
-//    mpirun -np 4 dg_advection -p 1 -rp 1 -dt 0.002 -tf 9
-//    mpirun -np 4 dg_advection -p 1 -rp 1 -dt 0.02 -s 13 -tf 9
-//    mpirun -np 4 dg_advection -p 1 -rp 1 -dt 0.004 -tf 9
-//    mpirun -np 4 dg_advection -p 1 -rp 1 -dt 0.005 -tf 9
-//    mpirun -np 4 dg_advection -p 3 -rp 2 -dt 0.0025 -tf 9 -vs 20
-//    mpirun -np 4 dg_advection -p 0 -o 2 -rp 1 -dt 0.01 -tf 8
-//    mpirun -np 4 dg_advection -p 0 -rs 2 -dt 0.005 -tf 2
-//    mpirun -np 4 dg_advection -p 0 -rs 1 -o 2 -tf 2
-//    mpirun -np 3 dg_advection -p 1 -rs 1 -rp 0 -dt 0.005 -tf 0.5
 //
 // Description:  This example code solves the time-dependent advection equation
 //               du/dt + v.grad(u) = 0, where v is a given fluid velocity, and
