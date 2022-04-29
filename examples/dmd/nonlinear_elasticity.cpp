@@ -13,14 +13,14 @@
 //   Relative error of DMD position (x) at t_final: 5 is 6.95681e-05
 //   Relative error of DMD velocity (v) at t_final: 5 is 0.00139776
 //
-// Command 2:
+// Command 2: (Serial DMD does not work well)
 //   mpirun -np 8 nonlinear_elasticity -s 2 -rs 1 -dt 0.02 -tf 20 -visit
 //
 // Output 2:
 //   Relative error of DMD position (x) at t_final: 20 is 0.000571937
 //   Relative error of DMD velocity (v) at t_final: 20 is 6.16546
 //
-// Command 3:
+// Command 3: (Serial DMD does not work well)
 //   mpirun -np 8 nonlinear_elasticity -s 2 -rs 1 -dt 0.05 -tf 50 -visit
 //
 // Output 3:
@@ -38,14 +38,14 @@
 //   Relative error of DMD position (x) at t_final: 5 is 2.37444e-06
 //   Relative error of DMD velocity (v) at t_final: 5 is 3.40045e-05
 //
-// Command 2:
+// Command 2: (Time windowing DMD works significantly better than seiral DMD)
 //   mpirun -np 8 nonlinear_elasticity -s 2 -rs 1 -dt 0.02 -tf 20 -nwinsamp 10 -visit
 //
 // Output 2:
 //   Relative error of DMD position (x) at t_final: 20 is 4.11479e-06
 //   Relative error of DMD velocity (v) at t_final: 20 is 9.43364e-05
 //
-// Command 3:
+// Command 3: (Time windowing DMD works significantly better than seiral DMD)
 //   mpirun -np 8 nonlinear_elasticity -s 2 -rs 1 -dt 0.05 -tf 50 -nwinsamp 10 -visit
 //
 // Output 3:
