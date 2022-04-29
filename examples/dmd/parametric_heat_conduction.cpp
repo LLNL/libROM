@@ -2,6 +2,8 @@
 //
 // Compile with: make parametric_heat_conduction
 //
+// =================================================================================
+//
 // In these examples, the radius of the interface between different initial temperatures, the
 // alpha coefficient, and two center location variables are modified.
 //
@@ -12,7 +14,7 @@
 //   mpirun -np 8 parametric_heat_conduction -r 0.55 -visit -offline -rdim 16
 //   mpirun -np 8 parametric_heat_conduction -r 0.6 -visit -offline -rdim 16
 //   mpirun -np 8 parametric_heat_conduction -r 0.5 -visit -online -predict
-
+//
 // For Parametric DMD (ex. 2) (radius & cx & cy, extrapolation):
 //   rm -rf parameters.txt
 //   mpirun -np 8 parametric_heat_conduction -r 0.1 -visit -offline -rdim 16
@@ -33,7 +35,7 @@
 //   mpirun -np 8 parametric_heat_conduction -a 0.25 -visit -offline -rdim 16
 //   mpirun -np 8 parametric_heat_conduction -a 0.3 -visit -offline -rdim 16
 //   mpirun -np 8 parametric_heat_conduction -a 0.2 -visit -online -predict
-
+//
 // For Parametric DMD (ex. 4) (alpha, interpolation):
 //   rm -rf parameters.txt
 //   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.5 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit -offline -rdim 20
@@ -42,15 +44,7 @@
 //   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.7 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit -offline -rdim 20
 //   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.6 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit -online -predict
 //
-// Sample runs:  mpirun -np 4 parametric_heat_conduction
-//               mpirun -np 4 parametric_heat_conduction -tf 2
-//               mpirun -np 4 parametric_heat_conduction -s 1 -a 0.0 -k 1.0
-//               mpirun -np 4 parametric_heat_conduction -s 2 -a 1.0 -k 0.0
-//               mpirun -np 8 parametric_heat_conduction -s 3 -a 0.5 -k 0.5 -o 4
-//               mpirun -np 4 parametric_heat_conduction -s 14 -dt 1.0e-4 -tf 4.0e-2 -vs 40
-//               mpirun -np 8 parametric_heat_conduction -tf 10 -dt 0.1
-//               mpirun -np 4 parametric_heat_conduction -o 4 -rs 0 -rp 0
-//               mpirun -np 4 parametric_heat_conduction -o 2 -rs 0 -rp 0
+// =================================================================================
 //
 // Description:  This example solves a time dependent nonlinear heat equation
 //               problem of the form du/dt = C(u), with a non-linear diffusion

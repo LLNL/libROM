@@ -2,13 +2,29 @@
 //
 // Compile with: make dg_advection
 //
+// =================================================================================
+//
+// Sample runs and results for DMD:
+//
+// Command 1:
+//   mpirun -np 8 dg_advection -p 0 -dt 0.01 -tf 2 -visit
+//
+// Output 1:
+//   Relative error of DMD solution (u) at t_final: 2 is 0.00031683336
+//
+// Command 2:
+//   mpirun -np 8 dg_advection -p 3 -rp 1 -dt 0.005 -tf 4 -visit
+//
+// Output 2:
+//   Relative error of DMD solution (u) at t_final: 4 is 0.00019053762
+//
+// =================================================================================
 // For DMD:
 //   mpirun -np 8 dg_advection
 //   mpirun -np 8 dg_advection -p 3 -rp 1 -dt 0.005 -tf 4 -visit
 //
 // Sample runs:
 //    mpirun -np 4 dg_advection -p 0 -dt 0.005
-//    mpirun -np 4 dg_advection -p 0 -dt 0.01
 //    mpirun -np 4 dg_advection -p 1 -dt 0.005 -tf 9
 //    mpirun -np 4 dg_advection -p 1 -rp 1 -dt 0.002 -tf 9
 //    mpirun -np 4 dg_advection -p 1 -rp 1 -dt 0.02 -s 13 -tf 9
