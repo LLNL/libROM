@@ -1,3 +1,11 @@
+                        Library for Reduced Order Models
+                      _   _   _      ___    ___    __  __ 
+                     | | (_) | |__  | _ \  / _ \  |  \/  |
+                     | | | | | '_ \ |   / | (_) | | |\/| |
+                     |_| |_| |_.__/ |_|_\  \___/  |_|  |_|
+                                                                             
+                             https://librom.net
+
 # Introduction
 
 libROM is a free, lightweight, scalable C++ library for data-driven physical
