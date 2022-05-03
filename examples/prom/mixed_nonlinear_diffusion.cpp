@@ -214,6 +214,8 @@ void VectorFEMassIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR, ParFi
 	  Vx.SetSize(spaceDim);
 
 	  MFEM_VERIFY(vdofs.Size() == dof, "");  // TODO: remove this. It is obvious.
+
+	  eprev = e;
 	}
 
       // Integrate at the current point
@@ -221,7 +223,7 @@ void VectorFEMassIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR, ParFi
       eltrans->SetIntPoint(&ip);
       fe->CalcVShape(*eltrans, trial_vshape);
 
-      double w = ip.weight * rw[i]; // using rw[i] instead of eltrans.Weight();
+      double w = eltrans->Weight() * rw[i]; // using rw[i] instead of ip.weight
 
       if (Q)
 	{
@@ -232,11 +234,15 @@ void VectorFEMassIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR, ParFi
       Vx = 0.0;
       for (int k=0; k<dof; ++k)
 	{
+	  const int dofk = (vdofs[k] >= 0) ? vdofs[k] : -1 - vdofs[k];
+
 	  double Vx_k = 0.0;
 	  for (int j=0; j<rdim; ++j)
 	    {
-	      Vx_k += V(vdofs[k], j) * x(j);
+	      Vx_k += V(dofk, j) * x(j);
 	    }
+
+	  if (vdofs[k] < 0) Vx_k = -Vx_k;
 
 	  for (int j=0; j<spaceDim; ++j)
 	    Vx[j] += Vx_k * trial_vshape(k, j);
@@ -250,7 +256,9 @@ void VectorFEMassIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR, ParFi
 	      double Vjk = 0.0;
 	      for (int l=0; l<dof; ++l)
 		{
-		  Vjk += V(vdofs[l], j) * trial_vshape(l, k);
+		  const int dofl = (vdofs[l] >= 0) ? vdofs[l] : -1 - vdofs[l];
+		  const double s = (vdofs[l] >= 0) ? 1.0 : -1.0;
+		  Vjk += s * V(dofl, j) * trial_vshape(l, k);
 		}
 
 	      rj += Vx[k] * Vjk;
@@ -749,7 +757,7 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const& vdofs,
 
 void NNLS(DenseMatrix const& Gt, const int ne, Array<double> const& w_el, Vector & x)
 {
-  const double tau = 1.0e-3;  // TODO: input this
+  const double tau = 1.0e-5;  // TODO: input this
 
   const int m = Gt.NumRows();
   const int n = Gt.NumCols();
