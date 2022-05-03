@@ -2,6 +2,23 @@
 //
 // Compile with: make heat_conduction
 //
+// =================================================================================
+//
+// Sample runs and results for DMD:
+//
+// Command 1:
+//   mpirun -np 8 heat_conduction -s 1 -a 0.0 -k 1.0 -visit
+//
+// Output 1:
+//   Relative error of DMD temperature (u) at t_final: 0.5 is 0.00049906934
+//
+// Command 2:
+//   mpirun -np 8 heat_conduction -s 3 -a 0.5 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit
+//
+// Output 2:
+//   Relative error of DMD temperature (u) at t_final: 0.7 is 0.00082289823
+//
+// =================================================================================
 // For DMD:
 //   mpirun -np 8 heat_conduction
 //   mpirun -np 8 heat_conduction -s 3 -a 0.5 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit
@@ -326,13 +343,7 @@ int main(int argc, char *argv[])
         {
             sout.precision(precision);
             sout << "solution\n" << *pmesh << u_gf;
-            sout << "pause\n";
             sout << flush;
-            if (myid == 0)
-            {
-                cout << "GLVis visualization paused."
-                     << " Press space (in the GLVis window) to resume it.\n";
-            }
         }
     }
 

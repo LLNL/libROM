@@ -7,16 +7,23 @@
 // Sample runs and results for serial DMD:
 //
 // Command 1:
-//   ./nonlinear_elasticity -s 2 -rs 1 -dt 0.02 -tf 20 -visit
+//   mpirun -np 8 nonlinear_elasticity -s 2 -rs 1 -dt 0.01 -tf 5 -visit
 //
 // Output 1:
+//   Relative error of DMD position (x) at t_final: 5 is 6.95681e-05
+//   Relative error of DMD velocity (v) at t_final: 5 is 0.00139776
+//
+// Command 2: (Serial DMD does not work well)
+//   mpirun -np 8 nonlinear_elasticity -s 2 -rs 1 -dt 0.02 -tf 20 -visit
+//
+// Output 2:
 //   Relative error of DMD position (x) at t_final: 20 is 0.000571937
 //   Relative error of DMD velocity (v) at t_final: 20 is 6.16546
 //
-// Command 2:
-//   ./nonlinear_elasticity -s 2 -rs 1 -dt 0.05 -tf 50.0 -visit
+// Command 3: (Serial DMD does not work well)
+//   mpirun -np 8 nonlinear_elasticity -s 2 -rs 1 -dt 0.05 -tf 50 -visit
 //
-// Output 2:
+// Output 3:
 //   Relative error of DMD position (x) at t_final: 50 is 7.98169
 //   Relative error of DMD velocity (v) at t_final: 50 is 0.0276505
 //
@@ -25,35 +32,25 @@
 // Sample runs and results for time windowing DMD:
 //
 // Command 1:
-//   ./nonlinear_elasticity -s 2 -rs 1 -dt 0.02 -tf 20 -nwinsamp 10 -visit
+//   mpirun -np 8 nonlinear_elasticity -s 2 -rs 1 -dt 0.01 -tf 5 -nwinsamp 10 -visit
 //
 // Output 1:
+//   Relative error of DMD position (x) at t_final: 5 is 2.37444e-06
+//   Relative error of DMD velocity (v) at t_final: 5 is 3.40045e-05
+//
+// Command 2: (Time windowing DMD works significantly better than serial DMD)
+//   mpirun -np 8 nonlinear_elasticity -s 2 -rs 1 -dt 0.02 -tf 20 -nwinsamp 10 -visit
+//
+// Output 2:
 //   Relative error of DMD position (x) at t_final: 20 is 4.11479e-06
 //   Relative error of DMD velocity (v) at t_final: 20 is 9.43364e-05
 //
-// Command 2:
-//   ./nonlinear_elasticity -s 2 -rs 1 -dt 0.05 -tf 50.0 -nwinsamp 10 -visit
-//
-// Output 2:
-//   Relative error of DMD position (x) at t_final: 50 is 1.57678e-05
-//   Relative error of DMD velocity (v) at t_final: 50 is 2.2577e-05
-//
-// =================================================================================
-//
-// For DMD:
-//   mpirun -np 8 nonlinear_elasticity -s 2 -rs 1 -dt 0.01 -tf 5 -visit
-//   mpirun -np 8 nonlinear_elasticity -s 2 -rs 1 -dt 0.02 -tf 20 -nwinsamp 10 -visit
+// Command 3: (Time windowing DMD works significantly better than serial DMD)
 //   mpirun -np 8 nonlinear_elasticity -s 2 -rs 1 -dt 0.05 -tf 50 -nwinsamp 10 -visit
 //
-// Sample runs:
-//    mpirun -np 4 nonlinear_elasticity -s 3 -rs 2 -dt 3
-//    mpirun -np 4 nonlinear_elasticity -s 3 -rs 2 -dt 3
-//    mpirun -np 4 nonlinear_elasticity -s 2 -rs 1 -dt 3
-//    mpirun -np 4 nonlinear_elasticity -m -s 2 -rs 1 -dt 3
-//    mpirun -np 4 nonlinear_elasticity -m -s 2 -rs 1 -dt 3
-//    mpirun -np 4 nonlinear_elasticity -m -s 14 -rs 2 -dt 0.03 -vs 20
-//    mpirun -np 4 nonlinear_elasticity -m -s 14 -rs 1 -dt 0.05 -vs 20
-//    mpirun -np 4 nonlinear_elasticity -m -s 3 -rs 2 -dt 3
+// Output 3:
+//   Relative error of DMD position (x) at t_final: 50 is 1.57678e-05
+//   Relative error of DMD velocity (v) at t_final: 50 is 2.2577e-05
 //
 // =================================================================================
 //
@@ -666,12 +663,16 @@ int main(int argc, char *argv[])
 
         if (i == ts.size() - 1 || (i % vis_steps) == 0)
         {
+            GridFunction *nodes = &x_gf;
+            int owns_nodes = 0;
+            pmesh->SwapNodes(nodes, owns_nodes);
             if (visit)
             {
                 dmd_dc->SetCycle(i);
                 dmd_dc->SetTime(ts[i]);
                 dmd_dc->Save();
             }
+            pmesh->SwapNodes(nodes, owns_nodes);
         }
 
         delete result_x;
@@ -758,7 +759,6 @@ void visualize(ostream &out, ParMesh *mesh, ParGridFunction *deformed_nodes,
         }
         out << "keys cm\n";         // show colorbar and mesh
         out << "autoscale value\n"; // update value-range; keep mesh-extents fixed
-        out << "pause\n";
     }
     out << flush;
 }
