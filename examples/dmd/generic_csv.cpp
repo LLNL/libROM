@@ -20,7 +20,6 @@
 // 5. DATA_DIR/DATASET/STATE/tval.csv     -- specifies the time instance of STATE
 // 6. DATA_DIR/dim.csv                    -- specifies the dimension of VAR_NAME
 // 7. DATA_DIR/index.csv                  -- (optional) each row specifies one DOF of VAR_NAME
-// 8. DATA_DIR/indicator_val.csv          -- (optional) each row specifies one indicator endpoint value
 
 #include "mfem.hpp"
 #include "algo/DMD.h"
@@ -32,6 +31,7 @@
 #include <cmath>
 #include <iostream>
 #include <limits>
+#include <algorithm>
 
 #ifndef _WIN32
 #include <sys/stat.h>  // mkdir
@@ -66,6 +66,7 @@ int main(int argc, char *argv[])
     const char *list_dir = "";
     const char *data_dir = "";
     const char *var_name = "var";
+    bool train = true;
     const char *basename = "";
     bool save_csv = false;
 
@@ -92,6 +93,8 @@ int main(int argc, char *argv[])
                    "Location of training and testing data.");
     args.AddOption(&var_name, "-var", "--variable-name",
                    "Name of variable.");
+    args.AddOption(&train, "-train", "--train", "-no-train", "--no-train",
+                   "Enable or disable DMD training.");
     args.AddOption(&basename, "-o", "--outputfile-name",
                    "Name of the sub-folder to dump files within the run directory.");
     args.AddOption(&save_csv, "-csv", "--csv", "-no-csv", "--no-csv",
@@ -111,6 +114,7 @@ int main(int argc, char *argv[])
     }
 
     CAROM_VERIFY((dtc > 0.0 || ddt > 0.0) && !(dtc > 0.0 && ddt > 0.0));
+    double dt_est = max(ddt, dtc);
 
     if (t_final > 0.0)
     {
@@ -154,91 +158,130 @@ int main(int argc, char *argv[])
             cout << "Restricting on " << dim << " entries out of " << nelements << "." << endl;
         }
     }
-
-    vector<string> training_par_list;
-    csv_db->getStringVector(string(list_dir) + "/training_par.csv", training_par_list, false);
-    int npar = training_par_list.size();
-    CAROM_VERIFY(npar == 1); // TODO: parametric DMD
-    vector<int> num_train_snap;
-    for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
-    {
-        string par_dir = training_par_list[idx_dataset]; // training DATASET
-        num_train_snap.push_back(csv_db->getLineCount(string(list_dir) + "/" + par_dir + ".csv"));
-    }
-
-    int numWindows = (windowNumSamples < infty) ? ceil(num_train_snap[0] / windowNumSamples) : 1;
+    int numWindows = 1;
     vector<double> indicator_val;
-    csv_db->getDoubleVector(string(data_dir) + "/indicator_val.csv", indicator_val, false);
+    csv_db->getDoubleVector(string(outputPath) + "/indicator_val.csv", indicator_val, false);
     if (indicator_val.size() > 0)
     {
         numWindows = indicator_val.size();
-        windowNumSamples = infty;
+        if (myid == 0)
+        {
+            cout << "Read indicator range partition." << endl;
+        }
     }
 
-    CAROM_VERIFY(windowOverlapSamples < windowNumSamples);
+    int npar = 0;
+    vector<int> num_train_snap;
+    vector<double> indicator_init;
+    vector<double> indicator_last;
+    vector<string> training_par_list;
+    if (train)
+    {
+        csv_db->getStringVector(string(list_dir) + "/training_par.csv", training_par_list, false);
+        npar = training_par_list.size();
+        CAROM_VERIFY(npar == 1); // TODO: parametric DMD
+
+        for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
+        {
+            string par_dir = training_par_list[idx_dataset]; // training DATASET
+
+            vector<string> snap_list;
+            csv_db->getStringVector(string(list_dir) + "/" + par_dir + ".csv", snap_list, false);
+            num_train_snap.push_back(snap_list.size());
+
+            double tval = 0.0;
+            csv_db->getDoubleArray(string(data_dir) + "/" + par_dir + "/" + snap_list[0] + "/tval.csv", &tval, 1);
+            indicator_init.push_back(tval);
+
+            csv_db->getDoubleArray(string(data_dir) + "/" + par_dir + "/" + snap_list[snap_list.size()-1] + "/tval.csv", &tval, 1);
+            indicator_last.push_back(tval);
+        }
+
+        CAROM_VERIFY(windowOverlapSamples < windowNumSamples);
+        if (windowNumSamples < infty && indicator_val.size() == 0)
+        {
+            double indicator_min = *min_element(indicator_init.begin(), indicator_init.end());
+            double indicator_max = *max_element(indicator_last.begin(), indicator_last.end());
+            numWindows = ceil((indicator_max - indicator_min) / (dt_est * windowNumSamples));
+            for (int window = 0; window < numWindows; ++window)
+            {
+                indicator_val.push_back(indicator_min + dt_est * windowNumSamples * window);
+            }
+            if (myid == 0)
+            {
+                cout << "Created new indicator range partition." << endl;
+                csv_db->putDoubleVector(string(outputPath) + "/indicator_val.csv", indicator_val, numWindows);
+            }
+        }
+    }
 
     vector<CAROM::DMD*> dmd;
     dmd.assign(numWindows, nullptr);
     if (myid == 0)
     {
-        cout << "Indicator range partitioned into " << numWindows << " subintervals." << endl;
-    }
-
-    double* sample = new double[dim];
-    StopWatch dmd_training_timer, dmd_preprocess_timer, dmd_prediction_timer;
-    dmd_training_timer.Start();
-
-    for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
-    {
-        string par_dir = training_par_list[idx_dataset]; // training DATASET
-        if (myid == 0)
+        if (numWindows > 1)
         {
-            cout << "Loading samples for " << par_dir << " to train DMD." << endl;
-        }
-        vector<string> snap_list;
-        csv_db->getStringVector(string(list_dir) + "/" + par_dir + ".csv", snap_list, false);
-
-        int curr_window = 0; // assuming first snapshot falls into first window
-        if (ddt > 0.0)
-        {
-            dmd[curr_window] = new CAROM::AdaptiveDMD(dim, ddt, "G", "LS", dmd_epsilon);
+            cout << "Using time windowing DMD with " << numWindows << " windows." << endl;
         }
         else
         {
-            dmd[curr_window] = new CAROM::DMD(dim, dtc);
+            cout << "Using serial DMD." << endl;
         }
-
-        double tval = 0.0;
-        if (indicator_val.size() == 0)
+    }
+    for (int window = 0; window < numWindows; ++window)
+    {
+        if (train)
         {
-            indicator_val.push_back(tval);
-        }
-
-        int overlap_count = 0;
-        for (int idx_snap = 0; idx_snap < num_train_snap[idx_dataset]; ++idx_snap)
-        {
-            string snap = snap_list[idx_snap]; // STATE
-            csv_db->getDoubleArray(string(data_dir) + "/" + par_dir + "/" + snap + "/tval.csv", &tval, 1);
-            string data_filename = string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv"; // path to VAR_NAME.csv
-            csv_db->getDoubleArray(data_filename, sample, nelements, idx_state);
-            dmd[curr_window]->takeSample(sample, tval);
-            if (overlap_count > 0)
+            if (ddt > 0.0)
             {
-                dmd[curr_window-1]->takeSample(sample, tval);
-                overlap_count -= 1;
+                dmd[window] = new CAROM::AdaptiveDMD(dim, ddt, "G", "LS", dmd_epsilon);
             }
-            if (curr_window+1 < numWindows && idx_snap+1 < num_train_snap[idx_dataset])
+            else
             {
-                bool new_window = false;
-                if (windowNumSamples < infty)
+                dmd[window] = new CAROM::DMD(dim, dtc);
+            }
+        }
+        else
+        {
+            dmd[window]->load(outputPath + "/window" + to_string(window)); 
+        }
+    }
+
+    StopWatch dmd_training_timer, dmd_preprocess_timer, dmd_prediction_timer;
+    double* sample = new double[dim];
+    CAROM::Vector* result = new CAROM::Vector(dim, true);
+
+    if (train)
+    {
+        dmd_training_timer.Start();
+
+        for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
+        {
+            string par_dir = training_par_list[idx_dataset]; // training DATASET
+            if (myid == 0)
+            {
+                cout << "Loading samples for " << par_dir << " to train DMD." << endl;
+            }
+            vector<string> snap_list;
+            csv_db->getStringVector(string(list_dir) + "/" + par_dir + ".csv", snap_list, false);
+
+            int curr_window = 0; 
+            int overlap_count = 0;
+            for (int idx_snap = 0; idx_snap < num_train_snap[idx_dataset]; ++idx_snap)
+            {
+                string snap = snap_list[idx_snap]; // STATE
+                double tval = 0.0;
+                csv_db->getDoubleArray(string(data_dir) + "/" + par_dir + "/" + snap + "/tval.csv", &tval, 1);
+                string data_filename = string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv"; // path to VAR_NAME.csv
+                csv_db->getDoubleArray(data_filename, sample, nelements, idx_state);
+                dmd[curr_window]->takeSample(sample, tval);
+                if (overlap_count > 0)
                 {
-                    new_window = (idx_snap >= (curr_window+1)*windowNumSamples);
+                    dmd[curr_window-1]->takeSample(sample, tval);
+                    overlap_count -= 1;
                 }
-                else 
-                {
-                    new_window = (tval >= indicator_val[curr_window+1]);
-                }
-                if (new_window)
+                if (curr_window+1 < numWindows && idx_snap+1 < num_train_snap[idx_dataset] && 
+                    tval > indicator_val[curr_window+1] - dt_est / 10.0)
                 {
                     overlap_count = windowOverlapSamples;
                     curr_window += 1;
@@ -246,99 +289,98 @@ int main(int argc, char *argv[])
                     {
                         indicator_val.push_back(tval);
                     }
-                    if (ddt > 0.0)
-                    {
-                        dmd[curr_window] = new CAROM::AdaptiveDMD(dim, ddt, "G", "LS", dmd_epsilon);
-                    }
-                    else
-                    {
-                        dmd[curr_window] = new CAROM::DMD(dim, dtc);
-                    }
                     dmd[curr_window]->takeSample(sample, tval);
                 }
             }
-        }
 
-        if (myid == 0)
-        {
-            cout << "Loaded " << num_train_snap[idx_dataset] << " samples for " << par_dir << "." << endl;
-        }
-    }
-
-    for (int window = 0; window < numWindows; ++window)
-    {
-        if (rdim != -1)
-        {
             if (myid == 0)
             {
-                cout << "Creating DMD model #" << window << " with rdim: " << rdim << endl;
+                cout << "Loaded " << num_train_snap[idx_dataset] << " samples for " << par_dir << "." << endl;
             }
-            dmd[window]->train(rdim);
         }
-        else if (ef != -1)
-        {
-            if (myid == 0)
-            {
-                cout << "Creating DMD model #" << window << " with energy fraction: " << ef << endl;
-            }
-            dmd[window]->train(ef);
-        }
-        dmd[window]->summary(outputPath + "/window" + to_string(window)); 
-    }
-
-    dmd_training_timer.Stop();
-
-    CAROM::Vector* result = new CAROM::Vector(dim, true);
-    if (ddt > 0.0 && npar == 1) // Assuming indicator value increases with snapshot order. Not true for parametric.
-    {
-        CAROM::AdaptiveDMD* admd = nullptr; 
-        CAROM::Vector* interp_snap = new CAROM::Vector(dim, true);
-        vector<double> interp_error;
 
         for (int window = 0; window < numWindows; ++window)
         {
-            admd = dynamic_cast<CAROM::AdaptiveDMD*> (dmd[window]);
-            double t_init = dmd[window]->getTimeOffset();
-
-            dtc = admd->getTrueDt();
-            const CAROM::Matrix* f_snapshots = admd->getInterpolatedSnapshots();
-            if (myid == 0)
+            if (rdim != -1)
             {
-                cout << "Verifying Adaptive DMD model #" << window << " against interpolated snapshots." << endl;
-            }
-            for (int k = 0; k < f_snapshots->numColumns(); ++k)
-            {
-                f_snapshots->getColumn(k, interp_snap);
-                result = admd->predict(t_init+k*dtc);
-
-                Vector dmd_solution(result->getData(), dim);
-                Vector true_solution(interp_snap->getData(), dim);
-                Vector diff(true_solution.Size());
-                subtract(dmd_solution, true_solution, diff);
-
-                double tot_diff_norm = sqrt(InnerProduct(MPI_COMM_WORLD, diff, diff));
-                double tot_true_solution_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution, true_solution));
-                double rel_error = tot_diff_norm / tot_true_solution_norm;
-                interp_error.push_back(rel_error);
-
                 if (myid == 0)
                 {
-                    cout << "Norm of interpolated snapshot #" << k << " is " << tot_true_solution_norm << endl;
-                    cout << "Absolute error of DMD prediction for interpolated snapshot #" << k << " is " << tot_diff_norm << endl;
-                    cout << "Relative error of DMD prediction for interpolated snapshot #" << k << " is " << rel_error << endl;
+                    cout << "Creating DMD model #" << window << " with rdim: " << rdim << endl;
                 }
-                delete result;
+                dmd[window]->train(rdim);
             }
+            else if (ef != -1)
+            {
+                if (myid == 0)
+                {
+                    cout << "Creating DMD model #" << window << " with energy fraction: " << ef << endl;
+                }
+                dmd[window]->train(ef);
+            }
+            dmd[window]->save(outputPath + "/window" + to_string(window)); 
             if (myid == 0)
             {
-                csv_db->putDoubleVector(outputPath + "/window" + to_string(window) + "_interp_error.csv", 
-                                        interp_error, f_snapshots->numColumns());
+                dmd[window]->summary(outputPath + "/window" + to_string(window)); 
             }
-            interp_error.clear();
         }
-        delete interp_snap;
-    }
 
+        if (myid == 0 && windowNumSamples < infty)
+        {
+            csv_db->putDoubleVector(string(data_dir) + "/indicator_val.csv", indicator_val, numWindows);
+        }
+        dmd_training_timer.Stop();
+
+        if (ddt > 0.0 && npar == 1) // TODO: Verify at all training par
+        {
+            CAROM::AdaptiveDMD* admd = nullptr; 
+            CAROM::Vector* interp_snap = new CAROM::Vector(dim, true);
+            vector<double> interp_error;
+
+            for (int window = 0; window < numWindows; ++window)
+            {
+                admd = dynamic_cast<CAROM::AdaptiveDMD*> (dmd[window]);
+                double t_init = dmd[window]->getTimeOffset();
+
+                dtc = admd->getTrueDt();
+                const CAROM::Matrix* f_snapshots = admd->getInterpolatedSnapshots();
+                if (myid == 0)
+                {
+                    cout << "Verifying Adaptive DMD model #" << window << " against interpolated snapshots." << endl;
+                }
+                for (int k = 0; k < f_snapshots->numColumns(); ++k)
+                {
+                    f_snapshots->getColumn(k, interp_snap);
+                    result = admd->predict(t_init+k*dtc);
+
+                    Vector dmd_solution(result->getData(), dim);
+                    Vector true_solution(interp_snap->getData(), dim);
+                    Vector diff(true_solution.Size());
+                    subtract(dmd_solution, true_solution, diff);
+
+                    double tot_diff_norm = sqrt(InnerProduct(MPI_COMM_WORLD, diff, diff));
+                    double tot_true_solution_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution, true_solution));
+                    double rel_error = tot_diff_norm / tot_true_solution_norm;
+                    interp_error.push_back(rel_error);
+
+                    if (myid == 0)
+                    {
+                        cout << "Norm of interpolated snapshot #" << k << " is " << tot_true_solution_norm << endl;
+                        cout << "Absolute error of DMD prediction for interpolated snapshot #" << k << " is " << tot_diff_norm << endl;
+                        cout << "Relative error of DMD prediction for interpolated snapshot #" << k << " is " << rel_error << endl;
+                    }
+                    delete result;
+                }
+                if (myid == 0)
+                {
+                    csv_db->putDoubleVector(outputPath + "/window" + to_string(window) + "_interp_error.csv", 
+                                            interp_error, f_snapshots->numColumns());
+                }
+                interp_error.clear();
+            }
+            delete interp_snap;
+        }
+    }
+ 
     vector<string> testing_par_list;
     csv_db->getStringVector(string(list_dir) + "/testing_par.csv", testing_par_list, false);
     npar = testing_par_list.size();
@@ -392,7 +434,6 @@ int main(int argc, char *argv[])
                         cout << "Projecting initial condition at t = " << indicator_val[window] << " for DMD model #" << window << endl;
                     }
                     dmd[window]->projectInitialCondition(init_cond);
-                    delete init_cond;
                 }
                 dmd_preprocess_timer.Stop();
             }
@@ -482,7 +523,9 @@ int main(int argc, char *argv[])
         printf("Average elapsed time for predicting DMD: %e second\n", dmd_prediction_timer.RealTime() / num_tests);
     }
 
+    delete csv_db;
     delete[] sample;
+    delete init_cond;
     for (int window = 0; window < numWindows; ++window)
     {
         delete dmd[window];
