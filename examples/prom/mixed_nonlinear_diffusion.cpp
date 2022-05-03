@@ -144,30 +144,32 @@ SparseMatrix* Assemble_VectorFEMassIntegrator(Coefficient *Q, ParFiniteElementSp
 }
 
 void VectorFEMassIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR, ParFiniteElementSpace *fesW,
-					      Vector *weights, const IntegrationRule *ir, Coefficient *Q,
+					      CAROM::Vector *CAROM_weights, const IntegrationRule *ir, Coefficient *Q,
 					      CAROM::Matrix const& V, CAROM::Vector const& x, Vector & res)
 {
+  Vector weights(CAROM_weights->getData(), CAROM_weights->dim());
+
   const int rdim = V.numColumns();
   MFEM_VERIFY(x.dim() == rdim, "");
   MFEM_VERIFY(V.numRows() == fesR->GetTrueVSize(), "");
 
   const int ne = fesR->GetNE();
-  const int nqe = weights->Size() / ne;
+  const int nqe = weights.Size() / ne;
 
   MFEM_VERIFY(nqe == ir->GetWeights().Size(), "");
-  MFEM_VERIFY(nqe * ne == weights->Size(), "");
+  MFEM_VERIFY(nqe * ne == weights.Size(), "");
 
   std::set<int> elements;
   std::vector<double> rw;
   std::vector<int> qp;
 
-  for (int i=0; i<weights->Size(); ++i)
+  for (int i=0; i<weights.Size(); ++i)
     {
-      if ((*weights)[i] > 1.0e-12)
+      if (weights[i] > 1.0e-12)
 	{
 	  const int e = i / nqe;  // Element index
 	  elements.insert(e);
-	  rw.push_back((*weights)[i]);
+	  rw.push_back(weights[i]);
 	  qp.push_back(i);
 	}
     }
@@ -459,7 +461,7 @@ private:
     bool hyperreduce, hyperreduce_source;
     bool sourceFOM;
   bool eqp = true;
-    Vector *eqpw;
+  CAROM::Vector *eqpw;
   const IntegrationRule *ir_eqp;
 
   mutable ParGridFunction p_gf;
@@ -498,7 +500,7 @@ public:
                 const CAROM::Matrix *Bsinv,
                 const double newton_rel_tol, const double newton_abs_tol, const int newton_iter,
                 const CAROM::Matrix* S_, const CAROM::Matrix *Ssinv_,
-                const int myid, const bool hyperreduce_source, Vector *eqpSol, const IntegrationRule *ir_eqp_);
+                const int myid, const bool hyperreduce_source, CAROM::Vector *eqpSol, const IntegrationRule *ir_eqp_);
 
     virtual void Mult(const Vector &y, Vector &dy_dt) const;
     void Mult_Hyperreduced(const Vector &y, Vector &dy_dt) const;
@@ -755,45 +757,44 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const& vdofs,
    }
 }
 
-void NNLS(const double tau, DenseMatrix const& Gt, Vector const& w, Vector & x, int printLevel)
+void NNLS(const double tau, CAROM::Matrix const& G, CAROM::Vector const& w, CAROM::Vector & x, int printLevel)
 {
-  const int m = Gt.NumRows();
-  const int n = Gt.NumCols();
+  const int n = G.numRows();
+  const int m = G.numColumns();
 
-  MFEM_VERIFY(m == w.Size(), "");
+  CAROM_VERIFY(m == w.dim() && m == x.dim());
 
-  Vector b(n);
-  Vector r(n);
-  Vector u(m);
+  CAROM::Vector b(n, false);
+  CAROM::Vector r(n, false);
+  CAROM::Vector u(m, false);
 
-  Vector z(m);
-  x.SetSize(m);
+  CAROM::Vector z(m, false);
 
-  CAROM::Vector bc(b.GetData(), n, false, false);
+  CAROM::Vector bc(b.getData(), n, false, false);
 
-  Gt.MultTranspose(w, b);  // b = Gw
+  G.mult(w, b);  // b = Gw
 
   r = b;
   x = 0.0;
 
-  const double bnorm = b.Norml2();
+  const double bnorm = b.norm();
 
   std::set<int> ids;
 
   int outer = 0;
-  while (r.Norml2() >= tau * bnorm)
+  while (r.norm() >= tau * bnorm)
     {
-      if (printLevel) cout << "NNLS Outer loop iter " << outer << ", r norm " << r.Norml2() << endl;
+      if (printLevel) cout << "NNLS Outer loop iter " << outer << ", r norm " << r.norm() << endl;
       outer++;
 
-      Gt.Mult(r, u);
+      G.transposeMult(r, u);
 
       // Set id to max_value_index(u), without absolute values.
       int id = 0;
-      double maxu = u[0];
+      double maxu = u(0);
       for (int i=1; i<m; ++i)
 	{
-	  const double u_i = u[i];
+	  const double u_i = u(i);
 	  if (u_i > maxu)
 	    {
 	      maxu = u_i;
@@ -817,7 +818,7 @@ void NNLS(const double tau, DenseMatrix const& Gt, Vector const& w, Vector & x, 
 	    {
 	      for (int j=0; j<n; ++j)
 		{
-		  Gsub(j, count) = Gt(i, j);
+		  Gsub(j, count) = G(j, i);
 		}
 	      count++;
 	    }
@@ -836,7 +837,7 @@ void NNLS(const double tau, DenseMatrix const& Gt, Vector const& w, Vector & x, 
 	  count = 0;
 	  for (auto i : ids)
 	    {
-	      z[i] = t(count);
+	      z(i) = t(count);
 
 	      if (t(count) < minz)
 		minz = t(count);
@@ -856,9 +857,9 @@ void NNLS(const double tau, DenseMatrix const& Gt, Vector const& w, Vector & x, 
 	  for (int i=0; i<m; ++i)
 	    {
 	      // Solve for x + s * (z - x) = 0 => s = x / (x - z), assuming x != z.
-	      if (x[i] != 0.0 && fabs(x[i] - z[i]) > 1.0e-8 && z[i] <= 0.0)
+	      if (x(i) != 0.0 && fabs(x(i) - z(i)) > 1.0e-8 && z(i) <= 0.0)
 		{
-		  const double s = x[i] / (x[i] - z[i]);
+		  const double s = x(i) / (x(i) - z(i));
 		  if (initStep)
 		    {
 		      step = std::min(step, s);
@@ -873,11 +874,12 @@ void NNLS(const double tau, DenseMatrix const& Gt, Vector const& w, Vector & x, 
 
 	  // Set x = x + step (z - x) = (1 - step) x + step z
 	  x *= 1.0 - step;
-	  x.Add(step, z);
+	  z *= step;
+	  x += z;
 
 	  for (auto i : ids)
 	    {
-	      if (x[i] <= 0.0)
+	      if (x(i) <= 0.0)
 		{
 		  ids.erase(i);
 		}
@@ -885,25 +887,16 @@ void NNLS(const double tau, DenseMatrix const& Gt, Vector const& w, Vector & x, 
 	} // inner loop
 
       // Update r = b - Gx
-      r = b;
-      Gt.AddMultTranspose_a(-1.0, x, r);
+      G.mult(x, r);
+      r *= -1.0;
+      r += b;
     }  // outer loop
 }
 
-const IntegrationRule* SetupEQP(const double tauNNLS, ParFiniteElementSpace *fespace_R, ParFiniteElementSpace *fespace_W,
-				const CAROM::Matrix* BR, const CAROM::Matrix* BW, Vector & sol)
+const IntegrationRule* SetupEQP(const double tauNNLS, const IntegrationRule *ir0,
+				ParFiniteElementSpace *fespace_R, ParFiniteElementSpace *fespace_W,
+				const CAROM::Matrix* BR, const CAROM::Matrix* BW, CAROM::Vector & sol)
 {
-  const IntegrationRule *ir0 = NULL;
-  if (ir0 == NULL)
-    {
-      // int order = 2 * el.GetOrder();
-      const FiniteElement &fe = *fespace_R->GetFE(0);
-      ElementTransformation *eltrans = fespace_R->GetElementTransformation(0);
-
-      int order = eltrans->OrderW() + 2 * fe.GetOrder();
-      ir0 = &IntRules.Get(fe.GetGeomType(), order);
-    }
-
   const int nqe = ir0->GetNPoints();
   const int ne = fespace_R->GetNE();
   const int NB = BR->numColumns();
@@ -918,8 +911,7 @@ const IntegrationRule* SetupEQP(const double tauNNLS, ParFiniteElementSpace *fes
   MFEM_VERIFY(NB == Rdual.Width(), "");
 
   // Compute G of size NB^2 x NQ
-
-  DenseMatrix Gt(NQ, NB*NB);  // Store Gt rather than G, since DenseMatrix is traversed column-wise, and NQ >> NB^2.
+  CAROM::Matrix G(NB*NB, NQ, false);
 
   Vector Rdual_i;
   Vector p_i(BW->numRows());
@@ -958,7 +950,7 @@ const IntegrationRule* SetupEQP(const double tauNNLS, ParFiniteElementSpace *fes
 	      ComputeElementRowOfG(ir0, vdofs, &a_coeff, p_i, Rdual_i, v_j, fe, *eltrans, r);
 
 	      for (int m=0; m<nqe; ++m)
-		Gt((e*nqe) + m, j + (i*NB)) = r[m];
+		G(j + (i*NB), (e*nqe) + m) = r[m];
 	    }
 	}
     }
@@ -966,23 +958,23 @@ const IntegrationRule* SetupEQP(const double tauNNLS, ParFiniteElementSpace *fes
   Array<double> const& w_el = ir0->GetWeights();
   MFEM_VERIFY(w_el.Size() == nqe, "");
 
-  Vector w(ne * nqe);
+  CAROM::Vector w(ne * nqe, false);
 
   for (int i=0; i<ne; ++i)
     {
       for (int j=0; j<nqe; ++j)
-	w[(i*nqe) + j] = w_el[j];
+	w((i*nqe) + j) = w_el[j];
     }
 
-  NNLS(tauNNLS, Gt, w, sol, 1);
+  NNLS(tauNNLS, G, w, sol, 1);
   int nnz = 0;
-  for (int i=0; i<sol.Size(); ++i)
+  for (int i=0; i<sol.dim(); ++i)
     {
-      if (sol[i] != 0.0)
+      if (sol(i) != 0.0)
 	nnz++;
     }
 
-  cout << "Number of nonzeros in NNLS solution: " << nnz << ", out of " << sol.Size() << endl;
+  cout << "Number of nonzeros in NNLS solution: " << nnz << ", out of " << sol.dim() << endl;
 
   return ir0;
 }
@@ -1300,7 +1292,7 @@ int main(int argc, char *argv[])
 
     CAROM::SampleMeshManager *smm = nullptr;
 
-    Vector eqpSol;
+    CAROM::Vector *eqpSol = nullptr;
 
     if (online)
     {
@@ -1356,7 +1348,19 @@ int main(int argc, char *argv[])
 	// TODO: make the option to do EQP or GNAT. Currently it does both.
 
 	// EQP setup
-	const IntegrationRule *ir_eqp = SetupEQP(tauNNLS, &R_space, &W_space, BR_librom, BW_librom, eqpSol);
+	const IntegrationRule *ir0 = NULL;
+	if (ir0 == NULL)
+	  {
+	    // int order = 2 * el.GetOrder();
+	    const FiniteElement &fe = *R_space.GetFE(0);
+	    ElementTransformation *eltrans = R_space.GetElementTransformation(0);
+
+	    int order = eltrans->OrderW() + 2 * fe.GetOrder();
+	    ir0 = &IntRules.Get(fe.GetGeomType(), order);
+	  }
+
+	eqpSol = new CAROM::Vector(ir0->GetNPoints() * R_space.GetNE(), false);
+	SetupEQP(tauNNLS, ir0, &R_space, &W_space, BR_librom, BW_librom, *eqpSol);
 
 	// GNAT setup
         vector<int> num_sample_dofs_per_proc(num_procs);
@@ -1501,7 +1505,7 @@ int main(int argc, char *argv[])
         romop = new RomOperator(&oper, soper, rrdim, rwdim, nldim, smm,
                                 BR_librom, FR_librom, BW_librom,
                                 Bsinv, newton_rel_tol, newton_abs_tol, newton_iter,
-                                S_librom, Ssinv, myid, hyperreduce_source, &eqpSol, ir_eqp);
+                                S_librom, Ssinv, myid, hyperreduce_source, eqpSol, ir0);
 
         ode_solver.Init(*romop);
 
@@ -2070,7 +2074,7 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
                          const CAROM::Matrix *Bsinv,
                          const double newton_rel_tol, const double newton_abs_tol, const int newton_iter,
                          const CAROM::Matrix* S_, const CAROM::Matrix *Ssinv_,
-                         const int myid, const bool hyperreduce_source_, Vector *eqpSol, const IntegrationRule *ir_eqp_)
+                         const int myid, const bool hyperreduce_source_, CAROM::Vector *eqpSol, const IntegrationRule *ir_eqp_)
     : TimeDependentOperator(rrdim_ + rwdim_, 0.0),
       newton_solver(),
       fom(fom_), fomSp(fomSp_), BR(NULL), rrdim(rrdim_), rwdim(rwdim_), nldim(nldim_),

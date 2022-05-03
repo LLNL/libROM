@@ -143,6 +143,13 @@ Vector::operator = (const double& a)
 }
 
 Vector&
+Vector::operator *= (const double& a)
+{
+    for(int i=0; i<d_dim; ++i) d_vec[i] *= a;
+    return *this;
+}
+
+Vector&
 Vector::transform(std::function<void(const int size, double* vector)> transformer) {
     transformer(d_dim, d_vec);
     return *this;
