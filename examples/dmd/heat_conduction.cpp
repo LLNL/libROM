@@ -343,13 +343,7 @@ int main(int argc, char *argv[])
         {
             sout.precision(precision);
             sout << "solution\n" << *pmesh << u_gf;
-            //sout << "pause\n";
             sout << flush;
-            //if (myid == 0)
-            //{
-            //    cout << "GLVis visualization paused."
-            //         << " Press space (in the GLVis window) to resume it.\n";
-            //}
         }
     }
 

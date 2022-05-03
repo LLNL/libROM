@@ -432,11 +432,6 @@ int main(int argc, char *argv[])
             vis_w.precision(8);
             visualize(vis_w, pmesh, &x_gf, &w_gf, "Elastic energy density", true);
         }
-        //if (my_id == 0)
-        //{
-            //cout << "GLVis visualization paused."
-            //     << " Press space (in the GLVis window) to resume it.\n";
-        //}
     }
 
     // Create data collection for solution output: either VisItDataCollection for
@@ -764,7 +759,6 @@ void visualize(ostream &out, ParMesh *mesh, ParGridFunction *deformed_nodes,
         }
         out << "keys cm\n";         // show colorbar and mesh
         out << "autoscale value\n"; // update value-range; keep mesh-extents fixed
-        //out << "pause\n";
     }
     out << flush;
 }
