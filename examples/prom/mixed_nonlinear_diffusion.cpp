@@ -770,8 +770,6 @@ void NNLS(const double tau, CAROM::Matrix const& G, CAROM::Vector const& w, CARO
 
   CAROM::Vector z(m, false);
 
-  CAROM::Vector bc(b.getData(), n, false, false);
-
   G.mult(w, b);  // b = Gw
 
   r = b;
@@ -789,25 +787,30 @@ void NNLS(const double tau, CAROM::Matrix const& G, CAROM::Vector const& w, CARO
 
       G.transposeMult(r, u);
 
-      // Set id to max_value_index(u), without absolute values.
-      int id = 0;
-      double maxu = u(0);
-      for (int i=1; i<m; ++i)
+      // Set id to max_value_index(u) for entries not in ids, without absolute values.
+      int id = -1;
+      double maxu = 0.0;
+      for (int i=0; i<m; ++i)
 	{
-	  const double u_i = u(i);
-	  if (u_i > maxu)
+	  auto search = ids.find(i);
+	  if (search == ids.end()) // if i is not in ids
 	    {
-	      maxu = u_i;
-	      id = i;
+	      const double u_i = u(i);
+	      if (id == -1 || u_i > maxu)
+		{
+		  maxu = u_i;
+		  id = i;
+		}
 	    }
 	}
 
+      CAROM_VERIFY(id >= 0);
       ids.insert(id);
 
       int inner = 0;
       while (true)
 	{
-	  if (printLevel) cout << "NNLS inner loop iter " << inner << endl;
+	  if (printLevel) cout << "NNLS inner loop iter " << inner << ", size " << ids.size() << endl;
 	  inner++;
 
 	  // Extract the submatrix G_{ids}
@@ -823,13 +826,13 @@ void NNLS(const double tau, CAROM::Matrix const& G, CAROM::Vector const& w, CARO
 	      count++;
 	    }
 
-	  MFEM_VERIFY(Gsub.numColumns() < n, "");
+	  CAROM_VERIFY(Gsub.numColumns() < n);
 
 	  // Compute the pseudo-inverse of Gsub, storing its transpose in Gsub.
 	  Gsub.transposePseudoinverse();
 
 	  CAROM::Vector t(Gsub.numColumns(), false);
-	  Gsub.transposeMult(bc, t);
+	  Gsub.transposeMult(b, t);
 
 	  z = 0.0;
 
@@ -845,6 +848,8 @@ void NNLS(const double tau, CAROM::Matrix const& G, CAROM::Vector const& w, CARO
 	      count++;
 	    }
 
+	  CAROM_VERIFY(count == t.dim());
+
 	  if (minz > 0.0)
 	    {
 	      x = z;
@@ -854,7 +859,8 @@ void NNLS(const double tau, CAROM::Matrix const& G, CAROM::Vector const& w, CARO
 	  // Find max feasible step from x to z, which is at most 1.
 	  double step = 1.0;
 	  bool initStep = false;
-	  for (int i=0; i<m; ++i)
+
+	  for (auto i : ids)
 	    {
 	      // Solve for x + s * (z - x) = 0 => s = x / (x - z), assuming x != z.
 	      if (x(i) != 0.0 && fabs(x(i) - z(i)) > 1.0e-8 && z(i) <= 0.0)
