@@ -1,14 +1,8 @@
-                        Library for Reduced Order Models
-                      _   _   _      ___    ___    __  __ 
-                     | | (_) | |__  | _ \  / _ \  |  \/  |
-                     | | | | | '_ \ |   / | (_) | | |\/| |
-                     |_| |_| |_.__/ |_|_\  \___/  |_|  |_|
-                                                                             
-                            https://www.librom.net
+![libROM Logo](https://www.librom.net/img/logo-libROM2.png)
 
 # Introduction
 
-libROM is a free, lightweight, scalable C++ library for data-driven physical
+[libROM](https://www.librom.net) is a free, lightweight, scalable C++ library for data-driven physical
 simulation methods from the intrusive projection-based reduced order models to
 non-intrusive black-box approaches.
 
