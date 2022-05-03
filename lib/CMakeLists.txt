@@ -45,6 +45,7 @@ set(module_list
   hyperreduction/GNAT
   hyperreduction/QDEIM
   hyperreduction/STSampling
+  hyperreduction/NNLS
   utils/Database
   utils/HDFDatabase
   utils/CSVDatabase
