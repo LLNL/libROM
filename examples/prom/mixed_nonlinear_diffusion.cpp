@@ -755,19 +755,14 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const& vdofs,
    }
 }
 
-void NNLS(DenseMatrix const& Gt, const int ne, Array<double> const& w_el, Vector & x)
+void NNLS(const double tau, DenseMatrix const& Gt, Vector const& w, Vector & x, int printLevel)
 {
-  const double tau = 1.0e-5;  // TODO: input this
-
   const int m = Gt.NumRows();
   const int n = Gt.NumCols();
 
-  const int nqe = w_el.Size();
-
-  MFEM_VERIFY(m == ne * nqe, "");
+  MFEM_VERIFY(m == w.Size(), "");
 
   Vector b(n);
-  Vector w(m);
   Vector r(n);
   Vector u(m);
 
@@ -775,12 +770,6 @@ void NNLS(DenseMatrix const& Gt, const int ne, Array<double> const& w_el, Vector
   x.SetSize(m);
 
   CAROM::Vector bc(b.GetData(), n, false, false);
-
-  for (int i=0; i<ne; ++i)
-    {
-      for (int j=0; j<nqe; ++j)
-	w[(i*nqe) + j] = w_el[j];
-    }
 
   Gt.MultTranspose(w, b);  // b = Gw
 
@@ -794,7 +783,7 @@ void NNLS(DenseMatrix const& Gt, const int ne, Array<double> const& w_el, Vector
   int outer = 0;
   while (r.Norml2() >= tau * bnorm)
     {
-      cout << "Outer loop iter " << outer << ", r norm " << r.Norml2() << endl;
+      if (printLevel) cout << "NNLS Outer loop iter " << outer << ", r norm " << r.Norml2() << endl;
       outer++;
 
       Gt.Mult(r, u);
@@ -817,7 +806,7 @@ void NNLS(DenseMatrix const& Gt, const int ne, Array<double> const& w_el, Vector
       int inner = 0;
       while (true)
 	{
-	  cout << "Inner loop iter " << inner << endl;
+	  if (printLevel) cout << "NNLS inner loop iter " << inner << endl;
 	  inner++;
 
 	  // Extract the submatrix G_{ids}
@@ -886,17 +875,8 @@ void NNLS(DenseMatrix const& Gt, const int ne, Array<double> const& w_el, Vector
 	  x *= 1.0 - step;
 	  x.Add(step, z);
 
-	  // Find the zero value indices of x and set ids to {1, ..., m} \ {zero value indices}
-	  //ids.clear();
-	  for (int i=0; i<m; ++i)  // TODO: can you just loop over entries in ids?
+	  for (auto i : ids)
 	    {
-	      //zero[i] = (x[i] <= 0.0);
-	      /*
-	      if (x[i] > 0.0)
-		{
-		  ids.insert(i);
-		}
-	      */
 	      if (x[i] <= 0.0)
 		{
 		  ids.erase(i);
@@ -910,7 +890,8 @@ void NNLS(DenseMatrix const& Gt, const int ne, Array<double> const& w_el, Vector
     }  // outer loop
 }
 
-const IntegrationRule* SetupEQP(ParFiniteElementSpace *fespace_R, ParFiniteElementSpace *fespace_W, const CAROM::Matrix* BR, const CAROM::Matrix* BW, Vector & sol)
+const IntegrationRule* SetupEQP(const double tauNNLS, ParFiniteElementSpace *fespace_R, ParFiniteElementSpace *fespace_W,
+				const CAROM::Matrix* BR, const CAROM::Matrix* BW, Vector & sol)
 {
   const IntegrationRule *ir0 = NULL;
   if (ir0 == NULL)
@@ -985,7 +966,15 @@ const IntegrationRule* SetupEQP(ParFiniteElementSpace *fespace_R, ParFiniteEleme
   Array<double> const& w_el = ir0->GetWeights();
   MFEM_VERIFY(w_el.Size() == nqe, "");
 
-  NNLS(Gt, ne, w_el, sol);
+  Vector w(ne * nqe);
+
+  for (int i=0; i<ne; ++i)
+    {
+      for (int j=0; j<nqe; ++j)
+	w[(i*nqe) + j] = w_el[j];
+    }
+
+  NNLS(tauNNLS, Gt, w, sol, 1);
   int nnz = 0;
   for (int i=0; i<sol.Size(); ++i)
     {
@@ -1038,6 +1027,8 @@ int main(int argc, char *argv[])
     int rrdim = -1;  // number of basis vectors to use
     int rwdim = -1;  // number of basis vectors to use
 
+    double tauNNLS = 1.0e-5;
+
     int precision = 16;
     cout.precision(precision);
 
@@ -1077,6 +1068,8 @@ int main(int argc, char *argv[])
                    "Enable or disable the online phase.");
     args.AddOption(&merge, "-merge", "--merge", "-no-merge", "--no-merge",
                    "Enable or disable the merge phase.");
+    args.AddOption(&tauNNLS, "-tolnnls", "--tol-nnls",
+                   "Tolerance for NNLS used in EQP.");
 
     args.Parse();
     if (!args.Good())
@@ -1363,7 +1356,7 @@ int main(int argc, char *argv[])
 	// TODO: make the option to do EQP or GNAT. Currently it does both.
 
 	// EQP setup
-	const IntegrationRule *ir_eqp = SetupEQP(&R_space, &W_space, BR_librom, BW_librom, eqpSol);
+	const IntegrationRule *ir_eqp = SetupEQP(tauNNLS, &R_space, &W_space, BR_librom, BW_librom, eqpSol);
 
 	// GNAT setup
         vector<int> num_sample_dofs_per_proc(num_procs);
