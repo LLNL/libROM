@@ -71,11 +71,6 @@ public:
     virtual void train(int k);
 
     /**
-     * @brief Output the DMD record in CSV files.
-     */
-    void summary(std::string output_path);
-
-    /**
      * @brief Predict new initial condition using d_phi.
      *
      * @param[in] init The initial condition.
@@ -115,6 +110,11 @@ public:
      *                           database to.
      */
     virtual void save(std::string base_file_name);
+
+    /**
+     * @brief Output the DMD record in CSV files.
+     */
+    void summary(std::string base_file_name);
 
 protected:
 

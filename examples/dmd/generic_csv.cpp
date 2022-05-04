@@ -158,6 +158,7 @@ int main(int argc, char *argv[])
             cout << "Restricting on " << dim << " entries out of " << nelements << "." << endl;
         }
     }
+
     int numWindows = 1;
     vector<double> indicator_val;
     csv_db->getDoubleVector(string(outputPath) + "/indicator_val.csv", indicator_val, false);
@@ -166,7 +167,7 @@ int main(int argc, char *argv[])
         numWindows = indicator_val.size();
         if (myid == 0)
         {
-            cout << "Read indicator range partition." << endl;
+            cout << "Read indicator range partition with " << numWindows << " windows." << endl;
         }
     }
 
@@ -228,6 +229,7 @@ int main(int argc, char *argv[])
             cout << "Using serial DMD." << endl;
         }
     }
+
     for (int window = 0; window < numWindows; ++window)
     {
         if (train)
@@ -243,7 +245,11 @@ int main(int argc, char *argv[])
         }
         else
         {
-            dmd[window]->load(outputPath + "/window" + to_string(window)); 
+            if (myid == 0)
+            {
+                cout << "Loading DMD model #" << window << "." << endl;
+            }
+            dmd[window] = new CAROM::DMD(outputPath + "/window" + to_string(window)); 
         }
     }
 
