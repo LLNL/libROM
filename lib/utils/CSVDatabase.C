@@ -279,7 +279,7 @@ CSVDatabase::getStringVector(
 
     std::ifstream d_fs(file_name.c_str());
     std::string data_entry;
-    while (d_fs >> data_entry)
+    while (std::getline(d_fs, data_entry))
     {
         data.push_back(data_entry);
     }
@@ -290,10 +290,15 @@ int
 CSVDatabase::getLineCount(
     const std::string& file_name)
 {
+    int count = 0;
     CAROM_ASSERT(!file_name.empty());
-    std::vector<std::string> dummy;
-    getStringVector(file_name, dummy, false);
-    return dummy.size();
+    std::ifstream d_fs(file_name.c_str());
+    std::string data_entry;
+    while (std::getline(d_fs, data_entry))
+    {
+        count += 1;
+    }
+    return count;
 }
 
 }
