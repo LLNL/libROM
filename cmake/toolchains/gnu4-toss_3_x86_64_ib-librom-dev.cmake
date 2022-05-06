@@ -1,14 +1,14 @@
 # Toolchain for Lawrence Livermore National Laboratory TOSS3 machines
 # (e.g., Quartz), assuming the following dependencies:
 #
-# - MVAPICH2/2.3 with Intel 19.0.4 compilers
+# - MVAPICH2/2.2 with GNU 4.9.3 compilers
 # - Intel MKL
-# - HDF5 1.8.18
+# - HDF5 1.8.17
 
 # Use MPI compiler wrappers because it simplifies detection of MPI
-set(CMAKE_C_COMPILER mpicc)
-set(CMAKE_CXX_COMPILER mpicxx)
-set(CMAKE_Fortran_COMPILER mpif90)
+set(CMAKE_C_COMPILER /usr/tce/packages/mvapich2/mvapich2-2.2-gcc-4.9.3/bin/mpicc)
+set(CMAKE_CXX_COMPILER /usr/tce/packages/mvapich2/mvapich2-2.2-gcc-4.9.3/bin/mpicxx)
+set(CMAKE_Fortran_COMPILER /usr/tce/packages/mvapich2/mvapich2-2.2-gcc-4.9.3/bin/mpif90)
 set(BLA_VENDOR Intel10_64lp)
 set(HDF5_ROOT /usr/tce/packages/hdf5/hdf5-serial-1.8.17-gcc4.9.3)
 #string(APPEND CMAKE_CXX_FLAGS_INIT " -gxx-name=/usr/tce/packages/gcc/gcc-7.1.0/bin/g++")
