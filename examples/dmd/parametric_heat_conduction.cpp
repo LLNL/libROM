@@ -570,6 +570,7 @@ int main(int argc, char *argv[])
                 param_vector->item(2) = curr_cx;
                 param_vector->item(3) = curr_cy;
                 param_vectors.push_back(param_vector);
+                delete param_vector;
             }
             fin.close();
 
@@ -587,6 +588,7 @@ int main(int argc, char *argv[])
             dmd_u->projectInitialCondition(init);
 
             dmd_training_timer.Stop();
+            delete desired_param;
         }
 
         if (predict)

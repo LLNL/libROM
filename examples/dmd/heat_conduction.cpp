@@ -19,9 +19,6 @@
 //   Relative error of DMD temperature (u) at t_final: 0.7 is 0.00082289823
 //
 // =================================================================================
-// For DMD:
-//   mpirun -np 8 heat_conduction
-//   mpirun -np 8 heat_conduction -s 3 -a 0.5 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit
 //
 // Sample runs:  mpirun -np 4 heat_conduction
 //               mpirun -np 4 heat_conduction -tf 2
