@@ -137,13 +137,15 @@ if (USE_MFEM)
     heat_conduction
     parametric_heat_conduction
     dg_euler
-    generic_csv)
+    generic_csv
+    parametric_tw_csv)
   set(example_directories
     prom
     prom
     prom
     prom
     prom
+    dmd
     dmd
     dmd
     dmd
