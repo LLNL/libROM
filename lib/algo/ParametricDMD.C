@@ -14,6 +14,7 @@
 #include "manifold_interp/MatrixInterpolator.h"
 #include "linalg/Matrix.h"
 #include "linalg/Vector.h"
+#include "mpi.h"
 
 #include <complex>
 
@@ -35,6 +36,14 @@ DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
         CAROM_VERIFY(dmds[i]->d_k == dmds[i + 1]->d_k);
     }
 
+    int mpi_init, rank;
+    MPI_Initialized(&mpi_init);
+    if (mpi_init == 0) {
+        MPI_Init(nullptr, nullptr);
+    }
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
     std::vector<Matrix*> bases;
     std::vector<Matrix*> A_tildes;
     for (int i = 0; i < dmds.size(); i++)
@@ -47,12 +56,19 @@ DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
     std::vector<CAROM::Matrix*> rotation_matrices = obtainRotationMatrices(parameter_points,
         bases, ref_point);
 
+    if (epsilon <= 0.0) epsilon = 0.5 / dmds[0]->d_dt;
+
     CAROM::MatrixInterpolator basis_interpolator(parameter_points,
         rotation_matrices, bases, ref_point, "B", rbf, interp_method, epsilon);
+    if (rank == 0) std::cout << "Epsilon auto-corrected by the linear solve to " << epsilon << std::endl;
     Matrix* W = basis_interpolator.interpolate(desired_point);
 
+    double old_epsilon = epsilon;
     CAROM::MatrixInterpolator A_tilde_interpolator(parameter_points,
         rotation_matrices, A_tildes, ref_point, "R", rbf, interp_method, epsilon);
+    if (old_epsilon != epsilon && rank == 0) std::cout << "A_tilde failed to interpolate using basis's epsilon. " <<
+        "It is unclear how to proceed since the basis and A_tilde should have the same epsilon." << std::endl;
+    CAROM_VERIFY(old_epsilon == epsilon);
     Matrix* A_tilde = A_tilde_interpolator.interpolate(desired_point);
 
     // Calculate the right eigenvalues/eigenvectors of A_tilde
