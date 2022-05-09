@@ -123,7 +123,7 @@ protected:
                                  Vector* desired_point,
                                  std::string rbf,
                                  std::string interp_method,
-                                 double epsilon);
+                                 double closest_rbf_val);
 
     /**
      * @brief Constructor.

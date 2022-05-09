@@ -44,13 +44,13 @@ MatrixInterpolator::MatrixInterpolator(std::vector<Vector*> parameter_points,
                                        std::string matrix_type,
                                        std::string rbf,
                                        std::string interp_method,
-                                       double epsilon) :
+                                       double closest_rbf_val) :
     Interpolator(parameter_points,
                  rotation_matrices,
                  ref_point,
                  rbf,
                  interp_method,
-                 epsilon)
+                 closest_rbf_val)
 {
     CAROM_VERIFY(reduced_matrices.size() == rotation_matrices.size());
     CAROM_VERIFY(matrix_type == "SPD" || matrix_type == "NS" || matrix_type == "R" || matrix_type == "B");
@@ -102,54 +102,41 @@ void MatrixInterpolator::obtainLambda()
 {
     if (d_interp_method == "LS")
     {
-        int info = 1;
-        while (info != 0)
+        // Solving f = B*lambda
+        Matrix* f_T = new Matrix(d_gammas[0]->numRows() * d_gammas[0]->numColumns(),
+                                 d_gammas.size(), false);
+        for (int i = 0; i < f_T->numRows(); i++)
         {
-            // Solving f = B*lambda
-            Matrix* f_T = new Matrix(d_gammas[0]->numRows() * d_gammas[0]->numColumns(),
-                                     d_gammas.size(), false);
-            for (int i = 0; i < f_T->numRows(); i++)
+            for (int j = 0; j < f_T->numColumns(); j++)
             {
-                for (int j = 0; j < f_T->numColumns(); j++)
-                {
-                    f_T->item(i, j) = d_gammas[j]->getData()[i];
-                }
-            }
-
-            // Obtain B matrix by calculating RBF.
-            Matrix* B = new Matrix(d_gammas.size(), d_gammas.size(), false);
-            for (int i = 0; i < B->numRows(); i++)
-            {
-                B->item(i, i) = 1.0;
-                for (int j = i + 1; j < B->numColumns(); j++)
-                {
-                    double res = obtainRBF(d_rbf, d_epsilon, d_parameter_points[i], d_parameter_points[j]);
-                    B->item(i, j) = res;
-                    B->item(j, i) = res;
-                }
-            }
-
-            char uplo = 'U';
-            int gamma_size = d_gammas.size();
-            int num_elements = d_gammas[0]->numRows() * d_gammas[0]->numColumns();
-            int info;
-
-            dposv(&uplo, &gamma_size, &num_elements, B->getData(),  &gamma_size,
-                  f_T->getData(), &gamma_size, &info);
-
-            delete B;
-
-            if (info != 0)
-            {
-                d_epsilon = d_epsilon * 1.01;
-                if (d_rank == 0) std::cout << "Linear solve failed. Increasing epsilon by 1% to " << d_epsilon << std::endl;
-                delete f_T;
-            }
-            else
-            {
-                d_lambda_T = f_T;
+                f_T->item(i, j) = d_gammas[j]->getData()[i];
             }
         }
+
+        // Obtain B matrix by calculating RBF.
+        Matrix* B = new Matrix(d_gammas.size(), d_gammas.size(), false);
+        for (int i = 0; i < B->numRows(); i++)
+        {
+            B->item(i, i) = 1.0;
+            for (int j = i + 1; j < B->numColumns(); j++)
+            {
+                double res = obtainRBF(d_rbf, d_epsilon, d_parameter_points[i], d_parameter_points[j]);
+                B->item(i, j) = res;
+                B->item(j, i) = res;
+            }
+        }
+
+        char uplo = 'U';
+        int gamma_size = d_gammas.size();
+        int num_elements = d_gammas[0]->numRows() * d_gammas[0]->numColumns();
+        int info;
+
+        dposv(&uplo, &gamma_size, &num_elements, B->getData(),  &gamma_size,
+              f_T->getData(), &gamma_size, &info);
+
+        delete B;
+
+        d_lambda_T = f_T;
     }
 }
 

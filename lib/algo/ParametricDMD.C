@@ -25,7 +25,7 @@ DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
                       Vector* desired_point,
                       std::string rbf,
                       std::string interp_method,
-                      double epsilon)
+                      double closest_rbf_val)
 {
     CAROM_VERIFY(parameter_points.size() == dmds.size());
     CAROM_VERIFY(dmds.size() > 1);
@@ -56,22 +56,13 @@ DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
     std::vector<CAROM::Matrix*> rotation_matrices = obtainRotationMatrices(parameter_points,
         bases, ref_point);
 
-    if (epsilon <= 0.0) epsilon = 0.5 / dmds[0]->d_dt;
-
+    double old_closest_rbf_val = closest_rbf_val;
     CAROM::MatrixInterpolator basis_interpolator(parameter_points,
-        rotation_matrices, bases, ref_point, "B", rbf, interp_method, epsilon);
-    epsilon = basis_interpolator.getEpsilon();
-    if (rank == 0) std::cout << "Epsilon auto-corrected by the basis interpolator's linear solve to " << epsilon << std::endl;
+        rotation_matrices, bases, ref_point, "B", rbf, interp_method, closest_rbf_val);
     Matrix* W = basis_interpolator.interpolate(desired_point);
 
     CAROM::MatrixInterpolator A_tilde_interpolator(parameter_points,
-        rotation_matrices, A_tildes, ref_point, "R", rbf, interp_method, epsilon);
-    if (epsilon != A_tilde_interpolator.getEpsilon() && rank == 0)
-    {
-        std::cout << "Failed to interpolate A_tilde using basis's epsilon. " <<
-        "It is unclear how to proceed since the basis and A_tilde should have the same epsilon." << std::endl;
-    }
-    CAROM_VERIFY(epsilon == A_tilde_interpolator.getEpsilon());
+        rotation_matrices, A_tildes, ref_point, "R", rbf, interp_method, closest_rbf_val);
     Matrix* A_tilde = A_tilde_interpolator.interpolate(desired_point);
 
     // Calculate the right eigenvalues/eigenvectors of A_tilde
@@ -98,7 +89,7 @@ DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
                       Vector* desired_point,
                       std::string rbf,
                       std::string interp_method,
-                      double epsilon)
+                      double closest_rbf_val)
 {
     std::vector<DMD*> dmds;
     for (int i = 0; i < dmd_paths.size(); i++)
@@ -108,7 +99,7 @@ DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
     }
 
     DMD* desired_dmd = getParametricDMD(parameter_points, dmds, desired_point,
-        rbf, interp_method, epsilon);
+        rbf, interp_method, closest_rbf_val);
     for (int i = 0; i < dmds.size(); i++)
     {
         delete dmds[i];

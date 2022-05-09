@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
     double dt = 1.0e-2;
     double alpha = 1.0e-2;
     double kappa = 0.5;
-    double epsilon = 500.0;
+    double closest_rbf_val = 0.9;
     int rdim = -1;
     bool offline = false;
     bool online = false;
@@ -180,8 +180,8 @@ int main(int argc, char *argv[])
                        "Center offset in the x direction.");
     args.AddOption(&cy, "-cy", "--center_y",
                        "Center offset in the y direction.");
-    args.AddOption(&epsilon, "-eps", "--eps",
-                   "DMD Epsilon.");
+    args.AddOption(&closest_rbf_val, "-crv", "--crv",
+                   "DMD Closest RBF Value.");
     args.AddOption(&visualization, "-vis", "--visualization", "-no-vis",
                    "--no-visualization",
                    "Enable or disable GLVis visualization.");
@@ -583,7 +583,7 @@ int main(int argc, char *argv[])
             dmd_training_timer.Start();
 
             dmd_u = getParametricDMD(param_vectors, dmd_paths, desired_param,
-                "G", "LS", epsilon);
+                "G", "LS", closest_rbf_val);
 
             dmd_u->projectInitialCondition(init);
 

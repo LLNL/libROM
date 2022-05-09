@@ -44,13 +44,13 @@ VectorInterpolator::VectorInterpolator(std::vector<Vector*> parameter_points,
                                        int ref_point,
                                        std::string rbf,
                                        std::string interp_method,
-                                       double epsilon) :
+                                       double closest_rbf_val) :
     Interpolator(parameter_points,
                  rotation_matrices,
                  ref_point,
                  rbf,
                  interp_method,
-                 epsilon)
+                 closest_rbf_val)
 {
     CAROM_VERIFY(reduced_vectors.size() == rotation_matrices.size());
 
@@ -166,7 +166,6 @@ Matrix* solveLinearSystem(std::vector<Vector*> parameter_points,
                           std::vector<Vector*> data, std::string interp_method,
                           std::string rbf, double& epsilon)
 {
-
     int mpi_init, rank;
     MPI_Initialized(&mpi_init);
     if (mpi_init == 0) {
@@ -178,49 +177,40 @@ Matrix* solveLinearSystem(std::vector<Vector*> parameter_points,
     Matrix* f_T = NULL;
     if (interp_method == "LS")
     {
-        int info = 1;
-        while (info != 0)
+        // Solving f = B*lambda
+        f_T = new Matrix(data[0]->dim(), data.size(), false);
+        for (int i = 0; i < f_T->numRows(); i++)
         {
-            // Solving f = B*lambda
-            f_T = new Matrix(data[0]->dim(), data.size(), false);
-            for (int i = 0; i < f_T->numRows(); i++)
+            for (int j = 0; j < f_T->numColumns(); j++)
             {
-                for (int j = 0; j < f_T->numColumns(); j++)
-                {
-                    f_T->item(i, j) = data[j]->getData()[i];
-                }
-            }
-
-            // Obtain B vector by calculating RBF.
-            Matrix* B = new Matrix(data.size(), data.size(), false);
-            for (int i = 0; i < B->numRows(); i++)
-            {
-                B->item(i, i) = 1.0;
-                for (int j = i + 1; j < B->numColumns(); j++)
-                {
-                    double res = obtainRBF(rbf, epsilon, parameter_points[i], parameter_points[j]);
-                    B->item(i, j) = res;
-                    B->item(j, i) = res;
-                }
-            }
-
-            char uplo = 'U';
-            int gamma_size = data.size();
-            int num_elements = data[0]->dim();
-
-            dposv(&uplo, &gamma_size, &num_elements, B->getData(),  &gamma_size,
-                  f_T->getData(), &gamma_size, &info);
-
-            delete B;
-
-            if (info != 0)
-            {
-                epsilon = epsilon * 1.01;
-                if (rank == 0) std::cout << "Linear solve failed. Increasing epsilon by 1% to " << epsilon << std::endl;
-                delete f_T;
+                f_T->item(i, j) = data[j]->getData()[i];
             }
         }
+
+        // Obtain B vector by calculating RBF.
+        Matrix* B = new Matrix(data.size(), data.size(), false);
+        for (int i = 0; i < B->numRows(); i++)
+        {
+            B->item(i, i) = 1.0;
+            for (int j = i + 1; j < B->numColumns(); j++)
+            {
+                double res = obtainRBF(rbf, epsilon, parameter_points[i], parameter_points[j]);
+                B->item(i, j) = res;
+                B->item(j, i) = res;
+            }
+        }
+
+        char uplo = 'U';
+        int gamma_size = data.size();
+        int num_elements = data[0]->dim();
+        int info;
+
+        dposv(&uplo, &gamma_size, &num_elements, B->getData(),  &gamma_size,
+              f_T->getData(), &gamma_size, &info);
+
+        delete B;
     }
+
     return f_T;
 }
 

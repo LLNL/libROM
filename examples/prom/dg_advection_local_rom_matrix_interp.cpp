@@ -388,7 +388,7 @@ int main(int argc, char *argv[])
     args.AddOption(&interp_prep, "-interp_prep", "--interp_prep", "-no-interp_prep", "--no-interp_prep",
                    "Enable or disable matrix interpolation preparation during the online phase.");
     args.AddOption(&rbf_type, "-rt", "--rbf_type",
-                   "RBF type ('G' == gaussian, 'MQ'== multiquadric, 'IQ' == inverse quadratic, 'IMQ' == inverse multiquadric).");
+                   "RBF type ('G' == gaussian, 'IQ' == inverse quadratic, 'IMQ' == inverse multiquadric).");
     args.AddOption(&interp_method, "-im", "--interp_method",
                    "Interpolation method ('LS' == linear solve, 'IDW'== inverse distance weighting, 'LP' == lagrangian polynomials).");
     args.AddOption(&rbf_width, "-rw", "--rbf_width",

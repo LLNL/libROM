@@ -30,37 +30,30 @@ class Vector;
  */
 class Interpolator
 {
-public:
-
-    /**
-     * @brief Get the interpolator's epsilon.
-     */
-    double getEpsilon();
-
 protected:
 
     /**
      * @brief Constructor.
      *
-     * @param[in] parameter_points The parameter points.
+     * @param[in] parameter_points  The parameter points.
      * @param[in] rotation_matrices The rotation matrices associated with
      *                              each parameter point.
-     * @param[in] ref_point The index within the vector of parameter points
-     *                      to the reference point
-     * @param[in] rbf       The RBF type ("G" == gaussian, "MQ" == multiquadric,
-     *                      "IQ" == inverse quadratic, "IMQ" == inverse
-     *                      multiquadric)
-     * @param[in] interp_method  The interpolation method type ("LS" == linear solve,
-     *                      "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
-     * @param[in] epsilon   The RBF parameter that determines the width of
-                            influence.
+     * @param[in] ref_point         The index within the vector of parameter points
+     *                              to the reference point
+     * @param[in] rbf               The RBF type ("G" == gaussian,
+     *                              "IQ" == inverse quadratic, "IMQ" == inverse
+     *                              multiquadric)
+     * @param[in] interp_method     The interpolation method type ("LS" == linear solve,
+     *                             "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
+     * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
+     *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
      */
     Interpolator(std::vector<Vector*> parameter_points,
                  std::vector<Matrix*> rotation_matrices,
                  int ref_point,
                  std::string rbf,
                  std::string interp_method,
-                 double epsilon = 1.0);
+                 double closest_rbf_val = 0.9);
 
     /**
      * @brief The rank of the process this object belongs to.
@@ -165,6 +158,16 @@ double rbfWeightedSum(std::vector<double>& rbf);
  * @param[in] point2 The second point.
  */
 double obtainRBF(std::string rbf, double epsilon, Vector* point1, Vector* point2);
+
+/**
+ * @brief Convert closest RBF value to an epsilon value.
+ *
+ * @param[in] parameter_points  The parameter points.
+ * @param[in] rbf               Which RBF to compute.
+ * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
+ *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
+ */
+double convertClosestRBFToEpsilon(std::vector<Vector*> parameter_points, std::string rbf, double closest_rbf_val);
 
 /**
  * @brief Obtain the rotation matrices for all the parameter points using
