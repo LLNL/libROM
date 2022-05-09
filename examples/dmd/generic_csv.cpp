@@ -8,9 +8,9 @@
  *
  *****************************************************************************/
 
-// Description: Serial time windowing DMD on general CSV datasets.
+// Description: Local time windowing DMD on general CSV datasets.
 //
-// User specify file locations and names by -list LIST_DIR -data DATA_DIR -var VAR_NAME
+// User specify file locations and names by -list LIST_DIR -data DATA_DIR -var VAR_NAME -o OUT_DIR
 //
 // File structure:
 // 1. LIST_DIR/training_par.csv           -- each row specifies one training DATASET
@@ -20,6 +20,7 @@
 // 5. DATA_DIR/DATASET/STATE/tval.csv     -- specifies the time instance of STATE
 // 6. DATA_DIR/dim.csv                    -- specifies the dimension of VAR_NAME
 // 7. DATA_DIR/index.csv                  -- (optional) each row specifies one DOF of VAR_NAME
+// 8. run/OUT_DIR/indicator_val.csv       -- (optional) each row specifies one indicator endpoint value
 
 #include "mfem.hpp"
 #include "algo/DMD.h"
@@ -62,9 +63,9 @@ int main(int argc, char *argv[])
     int rdim = -1;
     int windowNumSamples = infty;
     int windowOverlapSamples = 0;
-    const char *list_dir = "";
-    const char *data_dir = "";
-    const char *var_name = "var";
+    const char *list_dir = "../data/hc_test0";
+    const char *data_dir = "../data/hc_data";
+    const char *var_name = "sol";
     bool train = true;
     const char *basename = "";
     bool save_csv = false;
@@ -113,7 +114,6 @@ int main(int argc, char *argv[])
     }
 
     CAROM_VERIFY((dtc > 0.0 || ddt > 0.0) && !(dtc > 0.0 && ddt > 0.0));
-    double dt_est = max(ddt, dtc);
 
     if (t_final > 0.0)
     {
@@ -254,7 +254,7 @@ int main(int argc, char *argv[])
             double tval = 0.0;
             csv_db.getDoubleArray(string(data_dir) + "/" + par_dir + "/" + snap + "/tval.csv", &tval, 1);
 
-            if (idx_snap == 0 && windowNumSamples < infty)
+            if (idx_snap == 0)
             {
                 indicator_val.push_back(tval);
             }
