@@ -100,45 +100,56 @@ Matrix* MatrixInterpolator::interpolate(Vector* point)
 
 void MatrixInterpolator::obtainLambda()
 {
-
     if (d_interp_method == "LS")
     {
-        // Solving f = B*lambda
-        Matrix* f_T = new Matrix(d_gammas[0]->numRows() * d_gammas[0]->numColumns(),
-                                 d_gammas.size(), false);
-        for (int i = 0; i < f_T->numRows(); i++)
+        int info = 1;
+        while (info != 0)
         {
-            for (int j = 0; j < f_T->numColumns(); j++)
+            // Solving f = B*lambda
+            Matrix* f_T = new Matrix(d_gammas[0]->numRows() * d_gammas[0]->numColumns(),
+                                     d_gammas.size(), false);
+            for (int i = 0; i < f_T->numRows(); i++)
             {
-                f_T->item(i, j) = d_gammas[j]->getData()[i];
+                for (int j = 0; j < f_T->numColumns(); j++)
+                {
+                    f_T->item(i, j) = d_gammas[j]->getData()[i];
+                }
+            }
+
+            // Obtain B matrix by calculating RBF.
+            Matrix* B = new Matrix(d_gammas.size(), d_gammas.size(), false);
+            for (int i = 0; i < B->numRows(); i++)
+            {
+                B->item(i, i) = 1.0;
+                for (int j = i + 1; j < B->numColumns(); j++)
+                {
+                    double res = obtainRBF(d_rbf, d_epsilon, d_parameter_points[i], d_parameter_points[j]);
+                    B->item(i, j) = res;
+                    B->item(j, i) = res;
+                }
+            }
+
+            char uplo = 'U';
+            int gamma_size = d_gammas.size();
+            int num_elements = d_gammas[0]->numRows() * d_gammas[0]->numColumns();
+            int info;
+
+            dposv(&uplo, &gamma_size, &num_elements, B->getData(),  &gamma_size,
+                  f_T->getData(), &gamma_size, &info);
+
+            delete B;
+
+            if (info != 0)
+            {
+                d_epsilon = d_epsilon * 1.01;
+                if (d_rank == 0) std::cout << "Linear solve failed. Increasing epsilon by 1% to " << d_epsilon << std::endl;
+                delete f_T;
+            }
+            else
+            {
+                d_lambda_T = f_T;
             }
         }
-
-        // Obtain B matrix by calculating RBF.
-        Matrix* B = new Matrix(d_gammas.size(), d_gammas.size(), false);
-        for (int i = 0; i < B->numRows(); i++)
-        {
-            B->item(i, i) = 1.0;
-            for (int j = i + 1; j < B->numColumns(); j++)
-            {
-                double res = obtainRBF(d_rbf, d_epsilon, d_parameter_points[i], d_parameter_points[j]);
-                B->item(i, j) = res;
-                B->item(j, i) = res;
-            }
-        }
-
-        char uplo = 'U';
-        int gamma_size = d_gammas.size();
-        int num_elements = d_gammas[0]->numRows() * d_gammas[0]->numColumns();
-        int info;
-
-        dposv(&uplo, &gamma_size, &num_elements, B->getData(),  &gamma_size,
-              f_T->getData(), &gamma_size, &info);
-        CAROM_VERIFY(info == 0);
-
-        delete B;
-
-        d_lambda_T = f_T;
     }
 }
 
