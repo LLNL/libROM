@@ -10,7 +10,7 @@
 
 // Description: Parametric time windowing DMD on general CSV datasets.
 //
-// User specify file locations and names by -list LIST_DIR -data DATA_DIR -var VAR_NAME
+// User specify file locations and names by -list LIST_DIR -data DATA_DIR -var VAR_NAME -o OUT_DIR
 //
 // File structure:
 // 1. LIST_DIR/training_par.csv           -- each row specifies one training DATASET
@@ -20,6 +20,7 @@
 // 5. DATA_DIR/DATASET/STATE/tval.csv     -- specifies the time instance of STATE
 // 6. DATA_DIR/dim.csv                    -- specifies the dimension of VAR_NAME
 // 7. DATA_DIR/index.csv                  -- (optional) each row specifies one DOF of VAR_NAME
+// 8. run/OUT_DIR/indicator_val.csv       -- (optional) each row specifies one indicator endpoint value
 
 #include "mfem.hpp"
 #include "algo/DMD.h"
@@ -63,12 +64,12 @@ int main(int argc, char *argv[])
     int rdim = -1;
     int windowNumSamples = infty;
     int windowOverlapSamples = 0;
-    const char *list_dir = "";
-    const char *data_dir = "";
-    const char *var_name = "var";
+    const char *list_dir = "../data/hc_test2";
+    const char *data_dir = "../data/hc_data";
+    const char *var_name = "sol";
     bool offline = false;
     bool online = false;
-    double pdmd_epsilon = 1.0;
+    double pdmd_epsilon = 500.0;
     bool predict = false;
     const char *basename = "";
     bool save_csv = false;
