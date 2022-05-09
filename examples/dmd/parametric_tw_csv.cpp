@@ -195,7 +195,6 @@ int main(int argc, char *argv[])
     }
 
     csv_db.getStringVector(string(list_dir) + "/training_par.csv", training_par_list, false);
-    CAROM::Vector* curr_par = nullptr;
     int dpar = -1;
 
     for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
@@ -208,11 +207,12 @@ int main(int argc, char *argv[])
             par_info.push_back(par_entry);
         }
 
+        dpar = par_info.size() - 1;
+        CAROM::Vector* curr_par = new CAROM::Vector(dpar, false);
+
         if (idx_dataset == 0)
         {
-            dpar = par_info.size() - 1;
             CAROM_VERIFY(dpar > 0);
-            curr_par = new CAROM::Vector(dpar, false);
             if (myid == 0)
             {
                 cout << "Dimension of parametric space = " << dpar << "." << endl;
@@ -372,6 +372,8 @@ int main(int argc, char *argv[])
         } // escape for-loop over idx_dataset
         dmd_training_timer.Stop();
     } // escape if-statement of offline
+
+    CAROM::Vector* curr_par = new CAROM::Vector(dpar, false);
 
     if (online)
     {
