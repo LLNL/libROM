@@ -30,6 +30,12 @@ class Vector;
  */
 class Interpolator
 {
+public:
+
+    /**
+     * @brief Get the interpolator's epsilon.
+     */
+    double getEpsilon();
 
 protected:
 

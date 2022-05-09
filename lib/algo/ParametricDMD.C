@@ -60,15 +60,18 @@ DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
 
     CAROM::MatrixInterpolator basis_interpolator(parameter_points,
         rotation_matrices, bases, ref_point, "B", rbf, interp_method, epsilon);
-    if (rank == 0) std::cout << "Epsilon auto-corrected by the linear solve to " << epsilon << std::endl;
+    epsilon = basis_interpolator.getEpsilon();
+    if (rank == 0) std::cout << "Epsilon auto-corrected by the basis interpolator's linear solve to " << epsilon << std::endl;
     Matrix* W = basis_interpolator.interpolate(desired_point);
 
-    double old_epsilon = epsilon;
     CAROM::MatrixInterpolator A_tilde_interpolator(parameter_points,
         rotation_matrices, A_tildes, ref_point, "R", rbf, interp_method, epsilon);
-    if (old_epsilon != epsilon && rank == 0) std::cout << "A_tilde failed to interpolate using basis's epsilon. " <<
+    if (epsilon != A_tilde_interpolator.getEpsilon() && rank == 0)
+    {
+        std::cout << "Failed to interpolate A_tilde using basis's epsilon. " <<
         "It is unclear how to proceed since the basis and A_tilde should have the same epsilon." << std::endl;
-    CAROM_VERIFY(old_epsilon == epsilon);
+    }
+    CAROM_VERIFY(epsilon == A_tilde_interpolator.getEpsilon());
     Matrix* A_tilde = A_tilde_interpolator.interpolate(desired_point);
 
     // Calculate the right eigenvalues/eigenvectors of A_tilde

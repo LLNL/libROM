@@ -60,6 +60,11 @@ Interpolator::Interpolator(std::vector<Vector*> parameter_points,
     d_epsilon = epsilon;
 }
 
+double Interpolator::getEpsilon()
+{
+    return d_epsilon;
+}
+
 std::vector<double> obtainRBFToTrainingPoints(std::vector<Vector*> parameter_points,
         std::string interp_method, std::string rbf, double epsilon, Vector* point)
 {
