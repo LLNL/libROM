@@ -207,6 +207,11 @@ DMD::constructDMD(const Matrix* f_snapshots,
 
     // Compute how many basis vectors we will actually use.
     d_num_singular_vectors = std::min(f_snapshots_minus->numColumns(), f_snapshots_minus->numDistributedRows());
+    for (int i = 0; i < d_num_singular_vectors; i++)
+    {
+        d_sv.push_back(d_factorizer->S[i]);
+    }
+
     if (d_energy_fraction != -1.0)
     {
         d_k = d_num_singular_vectors;
@@ -215,7 +220,6 @@ DMD::constructDMD(const Matrix* f_snapshots,
             double total_energy = 0.0;
             for (int i = 0; i < d_num_singular_vectors; i++)
             {
-                d_sv.push_back(d_factorizer->S[i]);
                 total_energy += d_factorizer->S[i];
             }
             double current_energy = 0.0;
