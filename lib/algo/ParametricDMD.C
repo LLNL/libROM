@@ -35,6 +35,7 @@ DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
         CAROM_VERIFY(dmds[i]->d_t_offset == dmds[i + 1]->d_t_offset);
         CAROM_VERIFY(dmds[i]->d_k == dmds[i + 1]->d_k);
     }
+    CAROM_VERIFY(closest_rbf_val >= 0.0 && closest_rbf_val <= 1.0);
 
     int mpi_init, rank;
     MPI_Initialized(&mpi_init);
@@ -56,7 +57,6 @@ DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
     std::vector<CAROM::Matrix*> rotation_matrices = obtainRotationMatrices(parameter_points,
         bases, ref_point);
 
-    double old_closest_rbf_val = closest_rbf_val;
     CAROM::MatrixInterpolator basis_interpolator(parameter_points,
         rotation_matrices, bases, ref_point, "B", rbf, interp_method, closest_rbf_val);
     Matrix* W = basis_interpolator.interpolate(desired_point);

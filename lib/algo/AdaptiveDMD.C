@@ -24,6 +24,7 @@ AdaptiveDMD::AdaptiveDMD(int dim, double desired_dt, std::string rbf, std::strin
 {
     CAROM_VERIFY(rbf == "G" || rbf == "IQ" || rbf == "IMQ");
     CAROM_VERIFY(interp_method == "LS" || interp_method == "IDW" || interp_method == "LP");
+    CAROM_VERIFY(closest_rbf_val >= 0.0 && closest_rbf_val <= 1.0);
     d_dt = desired_dt;
     d_interp_method = interp_method;
     d_rbf = rbf;

@@ -40,6 +40,7 @@ Interpolator::Interpolator(std::vector<Vector*> parameter_points,
     CAROM_VERIFY(parameter_points.size() > 1);
     CAROM_VERIFY(rbf == "G" || rbf == "IQ" || rbf == "IMQ");
     CAROM_VERIFY(interp_method == "LS" || interp_method == "IDW" || interp_method == "LP");
+    CAROM_VERIFY(closest_rbf_val >= 0.0 && closest_rbf_val <= 1.0);
 
     // Get the rank of this process, and the number of processors.
     int mpi_init;
