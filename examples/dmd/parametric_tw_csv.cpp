@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
     double t_final = -1.0;
     double dtc = 0.0;
     double ddt = 0.0;
-    double admd_epsilon = -1.0;
+    double admd_closest_rbf_val = 0.9;
     double ef = 0.9999;
     int rdim = -1;
     int windowNumSamples = infty;
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
     const char *var_name = "var";
     bool offline = false;
     bool online = false;
-    double pdmd_epsilon = 1.0;
+    double pdmd_closest_rbf_val = 0.9;
     bool predict = false;
     const char *basename = "";
     bool save_csv = false;
@@ -80,15 +80,15 @@ int main(int argc, char *argv[])
                    "Fixed (constant) dt.");
     args.AddOption(&ddt, "-ddt", "--dtime-step",
                    "Desired Time step.");
-    args.AddOption(&admd_epsilon, "-admde", "--admde",
-                   "Parameter epsilon for controlling radial basis functions in adaptive DMD.");
+    args.AddOption(&admd_closest_rbf_val, "-admde", "--admde",
+                   "Parameter for controlling radial basis function value for the closest two time steps values in adaptive DMD.");
     args.AddOption(&ef, "-ef", "--energy-fraction",
                    "Energy fraction for DMD.");
     args.AddOption(&rdim, "-rdim", "--rdim",
                    "Reduced dimension for DMD.");
-    args.AddOption(&windowNumSamples, "-nwinsamp", "--numwindowsamples", 
+    args.AddOption(&windowNumSamples, "-nwinsamp", "--numwindowsamples",
                    "Number of samples in DMD windows.");
-    args.AddOption(&windowOverlapSamples, "-nwinover", "--numwindowoverlap", 
+    args.AddOption(&windowOverlapSamples, "-nwinover", "--numwindowoverlap",
                    "Number of samples for DMD window overlap.");
     args.AddOption(&list_dir, "-list", "--list-directory",
                    "Location of training and testing data list.");
@@ -100,8 +100,8 @@ int main(int argc, char *argv[])
                    "Enable or disable the offline phase.");
     args.AddOption(&online, "-online", "--online", "-no-online", "--no-online",
                    "Enable or disable the online phase.");
-    args.AddOption(&pdmd_epsilon, "-pdmde", "--pdmde",
-                   "Parameter epsilon for controlling radial basis functions in interpolating DMD.");
+    args.AddOption(&pdmd_closest_rbf_val, "-pdmde", "--pdmde",
+                   "Parameter for controlling radial basis function value for the closest two parameter points in interpolating DMD.");
     args.AddOption(&predict, "-predict", "--predict", "-no-predict", "--no-predict",
                    "Enable or disable DMD prediction.");
     args.AddOption(&basename, "-o", "--outputfile-name",
@@ -290,7 +290,7 @@ int main(int argc, char *argv[])
             {
                 if (ddt > 0.0)
                 {
-                    dmd_w[idx_dataset] = new CAROM::AdaptiveDMD(dim, ddt, "G", "LS", admd_epsilon);
+                    dmd_w[idx_dataset] = new CAROM::AdaptiveDMD(dim, ddt, "G", "LS", admd_closest_rbf_val);
                 }
                 else
                 {
@@ -311,7 +311,7 @@ int main(int argc, char *argv[])
             vector<string> snap_list;
             csv_db.getStringVector(string(list_dir) + "/" + par_dir + ".csv", snap_list, false);
 
-            int curr_window = 0; 
+            int curr_window = 0;
             int overlap_count = 0;
             for (int idx_snap = 0; idx_snap < num_train_snap[idx_dataset]; ++idx_snap)
             {
@@ -326,7 +326,7 @@ int main(int argc, char *argv[])
                     dmd[curr_window-1][idx_dataset]->takeSample(sample, tval);
                     overlap_count -= 1;
                 }
-                if (curr_window+1 < numWindows && idx_snap+1 < num_train_snap[idx_dataset] && 
+                if (curr_window+1 < numWindows && idx_snap+1 < num_train_snap[idx_dataset] &&
                     tval > indicator_val[curr_window+1] - dt_est / 100.0) // a rough estimate to correct the precision of the indicator range partition
                 {
                     overlap_count = windowOverlapSamples;
@@ -362,16 +362,16 @@ int main(int argc, char *argv[])
                     }
                     dmd[window][idx_dataset]->train(ef);
                 }
-                dmd[window][idx_dataset]->save(outputPath + "/window" + to_string(window) + "_par" + to_string(idx_dataset)); 
+                dmd[window][idx_dataset]->save(outputPath + "/window" + to_string(window) + "_par" + to_string(idx_dataset));
                 if (myid == 0)
                 {
-                    dmd[window][idx_dataset]->summary(outputPath + "/window" + to_string(window) + "_par" + to_string(idx_dataset)); 
+                    dmd[window][idx_dataset]->summary(outputPath + "/window" + to_string(window) + "_par" + to_string(idx_dataset));
                 }
             } // escape for-loop over window
         } // escape for-loop over idx_dataset
         dmd_training_timer.Stop();
     } // escape if-statement of offline
- 
+
     if (online)
     {
         par_dir_list.clear();
@@ -425,9 +425,9 @@ int main(int argc, char *argv[])
                 for (int idx_trainset = 0; idx_trainset < par_vectors.size(); ++idx_trainset)
                 {
                     dmd_paths.push_back(outputPath + "/window" + to_string(window) + "_par" + to_string(idx_trainset));
-                }                   
+                }
 
-                dmd[window][idx_dataset] = getParametricDMD(par_vectors, dmd_paths, curr_par, "G", "LS", pdmd_epsilon);
+                dmd[window][idx_dataset] = getParametricDMD(par_vectors, dmd_paths, curr_par, "G", "LS", pdmd_closest_rbf_val);
                 if (window == 0)
                 {
                     for (int i = 0; i < dim; ++i)
@@ -445,7 +445,7 @@ int main(int argc, char *argv[])
                 }
                 dmd[window][idx_dataset]->projectInitialCondition(init_cond);
             } // escape for-loop over window
-            
+
         } // escape for-loop over idx_dataset
         delete init_cond;
         dmd_training_timer.Stop();
@@ -460,7 +460,7 @@ int main(int argc, char *argv[])
 
         for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
         {
-            string par_dir = par_dir_list[idx_dataset]; 
+            string par_dir = par_dir_list[idx_dataset];
             if (myid == 0)
             {
                 cout << "Predicting solution for " << par_dir << " using DMD." << endl;
@@ -496,7 +496,7 @@ int main(int argc, char *argv[])
                     CAROM::Vector* result = dmd[curr_window][idx_dataset]->predict(t_final);
                     if (myid == 0)
                     {
-                        csv_db.putDoubleArray(outputPath + "/" + par_dir + "_final_time_prediction.csv", result->getData(), dim); 
+                        csv_db.putDoubleArray(outputPath + "/" + par_dir + "_final_time_prediction.csv", result->getData(), dim);
                     }
                     idx_snap = num_snap; // escape for-loop over idx_snap
                     delete result;
@@ -533,10 +533,10 @@ int main(int argc, char *argv[])
                         cout << "Relative error of DMD solution at t = " << tval << " is " << rel_error << endl;
                         if (save_csv)
                         {
-                            csv_db.putDoubleArray(outputPath + "/" + par_dir + "_" + snap + "_prediction.csv", result->getData(), dim); 
+                            csv_db.putDoubleArray(outputPath + "/" + par_dir + "_" + snap + "_prediction.csv", result->getData(), dim);
                             if (dim < nelements)
                             {
-                                csv_db.putDoubleArray(outputPath + "/" + par_dir + "_" + snap + "_state.csv", sample, dim); 
+                                csv_db.putDoubleArray(outputPath + "/" + par_dir + "_" + snap + "_state.csv", sample, dim);
                             }
                         }
                     }
