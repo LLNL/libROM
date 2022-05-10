@@ -431,7 +431,16 @@ int main(int argc, char *argv[])
                     dmd_paths.push_back(outputPath + "/window" + to_string(window) + "_par" + to_string(idx_trainset));
                 }
 
+                if (myid == 0)
+                {
+                    cout << "Interpolating DMD model #" << window << endl;
+                }
                 dmd[window][idx_dataset] = getParametricDMD(par_vectors, dmd_paths, curr_par, "G", "LS", pdmd_closest_rbf_val);
+
+                if (myid == 0)
+                {
+                    cout << "Projecting initial condition at t = " << indicator_val[window] << " for DMD model #" << window << endl;
+                }
                 if (window == 0)
                 {
                     for (int i = 0; i < dim; ++i)
@@ -442,10 +451,6 @@ int main(int argc, char *argv[])
                 else
                 {
                     init_cond = dmd[window-1][idx_dataset]->predict(indicator_val[window]);
-                }
-                if (myid == 0)
-                {
-                    cout << "Projecting initial condition at t = " << indicator_val[window] << " for DMD model #" << window << endl;
                 }
                 dmd[window][idx_dataset]->projectInitialCondition(init_cond);
             } // escape for-loop over window
