@@ -1,6 +1,8 @@
+![libROM Logo](https://www.librom.net/img/logo-libROM2.png)
+
 # Introduction
 
-libROM is a free, lightweight, scalable C++ library for data-driven physical
+[libROM](https://www.librom.net) is a free, lightweight, scalable C++ library for data-driven physical
 simulation methods from the intrusive projection-based reduced order models to
 non-intrusive black-box approaches.
 
