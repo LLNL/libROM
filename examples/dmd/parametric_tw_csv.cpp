@@ -176,6 +176,7 @@ int main(int argc, char *argv[])
     if (indicator_val.size() > 0)
     {
         numWindows = indicator_val.size();
+        windowNumSamples = infty;
         if (myid == 0)
         {
             cout << "Read indicator range partition with " << numWindows << " windows." << endl;
