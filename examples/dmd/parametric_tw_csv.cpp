@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    int numWindows = 1;
+    int numWindows = 0;
     vector<double> indicator_val;
     csv_db.getDoubleVector(string(outputPath) + "/indicator_val.csv", indicator_val, false);
     if (indicator_val.size() > 0)
@@ -244,26 +244,27 @@ int main(int argc, char *argv[])
 
             csv_db.getDoubleArray(string(data_dir) + "/" + par_dir + "/" + snap_list[snap_list.size()-1] + "/tval.csv", &tval, 1);
             indicator_last.push_back(tval);
-        }
 
-        CAROM_VERIFY(windowOverlapSamples < windowNumSamples);
-        if (windowNumSamples < infty && indicator_val.size() == 0)
-        {
-            double indicator_min = *min_element(indicator_init.begin(), indicator_init.end());
-            double indicator_max = *max_element(indicator_last.begin(), indicator_last.end());
-            numWindows = ceil((indicator_max - indicator_min) / (dt_est * windowNumSamples));
-            for (int window = 0; window < numWindows; ++window)
+            CAROM_VERIFY(windowOverlapSamples < windowNumSamples);
+            if (indicator_val.size() == 0)
             {
-                indicator_val.push_back(indicator_min + dt_est * windowNumSamples * window);
-            }
-            if (myid == 0)
-            {
-                cout << "Created new indicator range partition." << endl;
-                csv_db.putDoubleVector(string(outputPath) + "/indicator_val.csv", indicator_val, numWindows);
+                double indicator_min = *min_element(indicator_init.begin(), indicator_init.end());
+                double indicator_max = *max_element(indicator_last.begin(), indicator_last.end());
+                numWindows = (windowNumSamples < infty) ? ceil((indicator_max - indicator_min) / (dt_est * windowNumSamples)) : 1;
+                for (int window = 0; window < numWindows; ++window)
+                {
+                    indicator_val.push_back(indicator_min + dt_est * windowNumSamples * window);
+                }
+                if (myid == 0)
+                {
+                    cout << "Created new indicator range partition." << endl;
+                    csv_db.putDoubleVector(string(outputPath) + "/indicator_val.csv", indicator_val, numWindows);
+                }
             }
         }
     }
 
+    CAROM_VERIFY(numWindows > 0);
     if (myid == 0)
     {
         if (numWindows > 1)
@@ -409,6 +410,11 @@ int main(int argc, char *argv[])
 
             string par_dir = par_info[0];
             par_dir_list.push_back(par_dir);
+            if (myid == 0)
+            {
+                cout << "Interpolating DMD models for dataset " << par_dir << endl;
+            }
+
             vector<string> snap_list;
             csv_db.getStringVector(string(list_dir) + "/" + par_dir + ".csv", snap_list, false);
             int num_snap = snap_list.size();
