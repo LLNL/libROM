@@ -20,16 +20,6 @@
 //
 // =================================================================================
 //
-// Sample runs:  mpirun -np 4 heat_conduction
-//               mpirun -np 4 heat_conduction -tf 2
-//               mpirun -np 4 heat_conduction -s 1 -a 0.0 -k 1.0
-//               mpirun -np 4 heat_conduction -s 2 -a 1.0 -k 0.0
-//               mpirun -np 8 heat_conduction -s 3 -a 0.5 -k 0.5 -o 4
-//               mpirun -np 4 heat_conduction -s 14 -dt 1.0e-4 -tf 4.0e-2 -vs 40
-//               mpirun -np 8 heat_conduction -tf 10 -dt 0.1
-//               mpirun -np 4 heat_conduction -o 4 -rs 0 -rp 0
-//               mpirun -np 4 heat_conduction -o 2 -rs 0 -rp 0
-//
 // Description:  This example solves a time dependent nonlinear heat equation
 //               problem of the form du/dt = C(u), with a non-linear diffusion
 //               operator C(u) = \nabla \cdot (\kappa + \alpha u) \nabla u.

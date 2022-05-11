@@ -8,6 +8,40 @@
  *
  *****************************************************************************/
 
+// Compile with: make parametric_tw_csv
+//
+// =================================================================================
+//
+// Sample runs and results for parametric serial DMD:
+//
+// Command 1:
+//   mpirun -np 8 parametric_tw_csv -list ../data/hc_test2 -data ../data/hc_data -dtc 0.01 -rdim 1 -offline -predict
+//   mpirun -np 8 parametric_tw_csv -list ../data/hc_test2 -data ../data/hc_data -dtc 0.01 -rdim 1 -online -predict
+//
+// Output 1 in run/hc_test_par0_prediction_error.csv:
+//   0.245743
+//   0.20615
+//   0.18531
+//   0.171529
+//   0.161157
+//
+// =================================================================================
+//
+// Sample runs and results for parametric time windoing DMD:
+//
+// Command 1:
+//   mpirun -np 8 parametric_tw_csv -list ../data/hc_test2 -data ../data/hc_data -dtc 0.01 -rdim 1 -nwinsamp 2 -offline -predict
+//   mpirun -np 8 parametric_tw_csv -list ../data/hc_test2 -data ../data/hc_data -dtc 0.01 -rdim 1 -nwinsamp 2 -online -predict
+//
+// Output 1 in run/hc_test_par0_prediction_error.csv:
+//   0.263574
+//   0.226403
+//   0.206596
+//   0.163667
+//   0.152302
+//
+// =================================================================================
+//
 // Description: Parametric time windowing DMD on general CSV datasets.
 //
 // User specify file locations and names by -list LIST_DIR -data DATA_DIR -var VAR_NAME -o OUT_DIR
@@ -172,14 +206,16 @@ int main(int argc, char *argv[])
 
     int numWindows = 0;
     vector<double> indicator_val;
-    csv_db.getDoubleVector(string(outputPath) + "/indicator_val.csv", indicator_val, false);
-    if (indicator_val.size() > 0)
+    if (online || windowNumSamples == infty)
     {
-        numWindows = indicator_val.size();
-        windowNumSamples = infty;
-        if (myid == 0)
+        csv_db.getDoubleVector(string(outputPath) + "/indicator_val.csv", indicator_val, false);
+        if (indicator_val.size() > 0)
         {
-            cout << "Read indicator range partition with " << numWindows << " windows." << endl;
+            numWindows = indicator_val.size();
+            if (myid == 0)
+            {
+                cout << "Read indicator range partition with " << numWindows << " windows." << endl;
+            }
         }
     }
 

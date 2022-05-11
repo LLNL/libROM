@@ -8,6 +8,38 @@
  *
  *****************************************************************************/
 
+// Compile with: make generic_csv
+//
+// =================================================================================
+//
+// Sample runs and results for local serial DMD:
+//
+// Command 1:
+//   mpirun -np 8 generic_csv -list ../data/hc_test0 -data ../data/hc_data -dtc 0.01 -rdim 1
+//
+// Output 1 in run/hc_test_par0_prediction_error.csv:
+//   0.283432
+//   0.248881
+//   0.229603
+//   0.214939
+//   0.202248
+//
+// =================================================================================
+//
+// Sample runs and results for local time windoing DMD:
+//
+// Command 1:
+//   mpirun -np 8 generic_csv -list ../data/hc_test0 -data ../data/hc_data -dtc 0.01 -rdim 1 -nwinsamp 2
+//
+// Output 1 in run/hc_test_par0_prediction_error.csv:
+//   0.283517
+//   0.24891
+//   0.229544
+//   0.215171
+//   0.20249
+//
+// =================================================================================
+//
 // Description: Local time windowing DMD on general CSV datasets.
 //
 // User specify file locations and names by -list LIST_DIR -data DATA_DIR -var VAR_NAME -o OUT_DIR
@@ -160,14 +192,16 @@ int main(int argc, char *argv[])
 
     int numWindows = 1;
     vector<double> indicator_val;
-    csv_db.getDoubleVector(string(outputPath) + "/indicator_val.csv", indicator_val, false);
-    if (indicator_val.size() > 0)
+    if (windowNumSamples == infty || !train)
     {
-        numWindows = indicator_val.size();
-        windowNumSamples = infty;
-        if (myid == 0)
+        csv_db.getDoubleVector(string(outputPath) + "/indicator_val.csv", indicator_val, false);
+        if (indicator_val.size() > 0)
         {
-            cout << "Read indicator range partition with " << numWindows << " windows." << endl;
+            numWindows = indicator_val.size();
+            if (myid == 0)
+            {
+                cout << "Read indicator range partition with " << numWindows << " windows." << endl;
+            }
         }
     }
 
