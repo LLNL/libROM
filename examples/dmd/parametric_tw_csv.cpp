@@ -44,11 +44,11 @@
 //
 // Description: Parametric time windowing DMD on general CSV datasets.
 //
-// User specify file locations and names by -list LIST_DIR -data DATA_DIR -var VAR_NAME -o OUT_DIR
+// User specify file locations and names by -list LIST_DIR -train-set TRAIN_LIST -test-set TEST_LIST -data DATA_DIR -var VAR_NAME -o OUT_DIR
 //
 // File structure:
-// 1. LIST_DIR/training_par.csv           -- each row specifies one training DATASET
-// 2. LIST_DIR/testing_par.csv            -- each row specifies one testing DATASET
+// 1. LIST_DIR/TRAIN_LIST.csv             -- each row specifies one training DATASET
+// 2. LIST_DIR/TEST_LIST.csv              -- each row specifies one testing DATASET
 // 3. LIST_DIR/DATASET.csv                -- each row specifies one STATE in DATASET
 // 4. DATA_DIR/DATASET/STATE/VAR_NAME.csv -- each row specifies one value of VAR_NAME of STATE
 // 5. DATA_DIR/DATASET/STATE/tval.csv     -- specifies the time instance of STATE
@@ -90,10 +90,14 @@ int main(int argc, char *argv[])
     int myid = mpi.WorldRank();
 
     // 2. Parse command-line options.
+    bool offline = false;
+    bool online = false;
+    bool predict = false;
     double t_final = -1.0;
     double dtc = 0.0;
     double ddt = 0.0;
     double admd_closest_rbf_val = 0.9;
+    double pdmd_closest_rbf_val = 0.9;
     double ef = 0.9999;
     int rdim = -1;
     int numWindows = 0;
@@ -102,14 +106,18 @@ int main(int argc, char *argv[])
     const char *list_dir = "../data/hc_test2";
     const char *data_dir = "../data/hc_data";
     const char *var_name = "sol";
-    bool offline = false;
-    bool online = false;
-    double pdmd_closest_rbf_val = 0.9;
-    bool predict = false;
+    const char *train_list = "training_par.csv";
+    const char *test_list = "testing_par.csv";
     const char *basename = "";
     bool save_csv = false;
 
     OptionsParser args(argc, argv);
+    args.AddOption(&offline, "-offline", "--offline", "-no-offline", "--no-offline",
+                   "Enable or disable the offline phase.");
+    args.AddOption(&online, "-online", "--online", "-no-online", "--no-online",
+                   "Enable or disable the online phase.");
+    args.AddOption(&predict, "-predict", "--predict", "-no-predict", "--no-predict",
+                   "Enable or disable DMD prediction.");
     args.AddOption(&t_final, "-tf", "--t-final",
                    "Final time.");
     args.AddOption(&dtc, "-dtc", "--dtc",
@@ -118,6 +126,8 @@ int main(int argc, char *argv[])
                    "Desired Time step.");
     args.AddOption(&admd_closest_rbf_val, "-admde", "--admde",
                    "Parameter for controlling radial basis function value for the closest two time steps values in adaptive DMD.");
+    args.AddOption(&pdmd_closest_rbf_val, "-pdmde", "--pdmde",
+                   "Parameter for controlling radial basis function value for the closest two parameter points in interpolating DMD.");
     args.AddOption(&ef, "-ef", "--energy-fraction",
                    "Energy fraction for DMD.");
     args.AddOption(&rdim, "-rdim", "--rdim",
@@ -134,14 +144,10 @@ int main(int argc, char *argv[])
                    "Location of training and testing data.");
     args.AddOption(&var_name, "-var", "--variable-name",
                    "Name of variable.");
-    args.AddOption(&offline, "-offline", "--offline", "-no-offline", "--no-offline",
-                   "Enable or disable the offline phase.");
-    args.AddOption(&online, "-online", "--online", "-no-online", "--no-online",
-                   "Enable or disable the online phase.");
-    args.AddOption(&pdmd_closest_rbf_val, "-pdmde", "--pdmde",
-                   "Parameter for controlling radial basis function value for the closest two parameter points in interpolating DMD.");
-    args.AddOption(&predict, "-predict", "--predict", "-no-predict", "--no-predict",
-                   "Enable or disable DMD prediction.");
+    args.AddOption(&train_list, "-train-set", "--training-set-name",
+                   "Name of the training datasets within the list directory.");
+    args.AddOption(&test_list, "-test-set", "--testing-set-name",
+                   "Name of the testing datasets within the list directory.");
     args.AddOption(&basename, "-o", "--outputfile-name",
                    "Name of the sub-folder to dump files within the run directory.");
     args.AddOption(&save_csv, "-csv", "--csv", "-no-csv", "--no-csv",
@@ -188,8 +194,9 @@ int main(int argc, char *argv[])
     CAROM::CSVDatabase csv_db;
 
     string variable = string(var_name);
-    int nelements = -1;
+    int nelements = 0;
     csv_db.getIntegerArray(string(data_dir) + "/dim.csv", &nelements, 1);
+    CAROM_VERIFY(nelements > 0);
     if (myid == 0)
     {
         cout << "Variable " << var_name << " has dimension " << nelements << "." << endl;
@@ -234,14 +241,14 @@ int main(int argc, char *argv[])
     vector<int> num_train_snap; // DATASET size
     vector<double> indicator_init, indicator_last; // DATASET indicator range
 
-    int npar = csv_db.getLineCount(string(list_dir) + "/training_par.csv");
+    int npar = csv_db.getLineCount(string(list_dir) + "/" + train_list + ".csv");
     CAROM_VERIFY(npar > 1);
     if (myid == 0)
     {
         cout << "Loading " << npar << " training datasets." << endl;
     }
 
-    csv_db.getStringVector(string(list_dir) + "/training_par.csv", training_par_list, false);
+    csv_db.getStringVector(string(list_dir) + "/" + train_list + ".csv", training_par_list, false);
     int dpar = -1;
 
     for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
@@ -428,13 +435,13 @@ int main(int argc, char *argv[])
         par_dir_list.clear();
 
         dmd_training_timer.Start();
-        npar = csv_db.getLineCount(string(list_dir) + "/testing_par.csv");
+        npar = csv_db.getLineCount(string(list_dir) + "/" + test_list + ".csv");
         if (myid == 0)
         {
             cout << "Loading " << npar << " testing datasets." << endl;
         }
 
-        csv_db.getStringVector(string(list_dir) + "/testing_par.csv", testing_par_list, false);
+        csv_db.getStringVector(string(list_dir) + "/" + test_list + ".csv", testing_par_list, false);
         dmd_w.assign(npar, nullptr);
         dmd.assign(numWindows, dmd_w);
 
