@@ -26,7 +26,7 @@
 //
 // =================================================================================
 //
-// Sample runs and results for local time windoing DMD:
+// Sample runs and results for local time windowing DMD:
 //
 // Command 1:
 //   mpirun -np 8 local_tw_csv -list ../data/hc_test0 -data ../data/hc_data -dtc 0.01 -rdim 1 -nwinsamp 2

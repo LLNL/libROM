@@ -27,7 +27,7 @@
 //
 // =================================================================================
 //
-// Sample runs and results for parametric time windoing DMD:
+// Sample runs and results for parametric time windowing DMD:
 //
 // Command 1:
 //   mpirun -np 8 parametric_tw_csv -list ../data/hc_test2 -data ../data/hc_data -dtc 0.01 -rdim 1 -nwinsamp 2 -offline -predict
