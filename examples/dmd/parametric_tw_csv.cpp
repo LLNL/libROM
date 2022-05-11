@@ -96,6 +96,7 @@ int main(int argc, char *argv[])
     double admd_closest_rbf_val = 0.9;
     double ef = 0.9999;
     int rdim = -1;
+    int numWindows = 0;
     int windowNumSamples = infty;
     int windowOverlapSamples = 0;
     const char *list_dir = "../data/hc_test2";
@@ -121,6 +122,8 @@ int main(int argc, char *argv[])
                    "Energy fraction for DMD.");
     args.AddOption(&rdim, "-rdim", "--rdim",
                    "Reduced dimension for DMD.");
+    args.AddOption(&numWindows, "-nwin", "--numwindows",
+                   "Number of DMD windows.");
     args.AddOption(&windowNumSamples, "-nwinsamp", "--numwindowsamples",
                    "Number of samples in DMD windows.");
     args.AddOption(&windowOverlapSamples, "-nwinover", "--numwindowoverlap",
@@ -204,14 +207,20 @@ int main(int argc, char *argv[])
         }
     }
 
-    int numWindows = 0;
     vector<double> indicator_val;
-    if (online || windowNumSamples == infty)
+    if (online || numWindows > 0)
     {
         csv_db.getDoubleVector(string(outputPath) + "/indicator_val.csv", indicator_val, false);
         if (indicator_val.size() > 0)
         {
-            numWindows = indicator_val.size();
+            if (numWindows > 0)
+            {
+                CAROM_VERIFY(numWindows == indicator_val.size());
+            }
+            else
+            {
+                numWindows = indicator_val.size();
+            }
             if (myid == 0)
             {
                 cout << "Read indicator range partition with " << numWindows << " windows." << endl;

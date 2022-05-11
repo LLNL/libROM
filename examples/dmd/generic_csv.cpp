@@ -93,6 +93,7 @@ int main(int argc, char *argv[])
     double dmd_epsilon = -1.0;
     double ef = 0.9999;
     int rdim = -1;
+    int numWindows = 0;
     int windowNumSamples = infty;
     int windowOverlapSamples = 0;
     const char *list_dir = "../data/hc_test0";
@@ -115,6 +116,8 @@ int main(int argc, char *argv[])
                    "Energy fraction for DMD.");
     args.AddOption(&rdim, "-rdim", "--rdim",
                    "Reduced dimension for DMD.");
+    args.AddOption(&numWindows, "-nwin", "--numwindows", 
+                   "Number of DMD windows.");
     args.AddOption(&windowNumSamples, "-nwinsamp", "--numwindowsamples", 
                    "Number of samples in DMD windows.");
     args.AddOption(&windowOverlapSamples, "-nwinover", "--numwindowoverlap", 
@@ -190,14 +193,20 @@ int main(int argc, char *argv[])
         }
     }
 
-    int numWindows = 1;
     vector<double> indicator_val;
-    if (windowNumSamples == infty || !train)
+    if (!train || numWindows > 0)
     {
         csv_db.getDoubleVector(string(outputPath) + "/indicator_val.csv", indicator_val, false);
         if (indicator_val.size() > 0)
         {
-            numWindows = indicator_val.size();
+            if (numWindows > 0)
+            {
+                CAROM_VERIFY(numWindows == indicator_val.size());
+            }
+            else
+            {
+                numWindows = indicator_val.size();
+            }
             if (myid == 0)
             {
                 cout << "Read indicator range partition with " << numWindows << " windows." << endl;
@@ -220,14 +229,10 @@ int main(int argc, char *argv[])
         num_train_snap = csv_db.getLineCount(string(list_dir) + "/" + par_dir + ".csv");
 
         CAROM_VERIFY(windowOverlapSamples < windowNumSamples);
-        if (windowNumSamples < infty)
-        {
-            numWindows = ceil(num_train_snap / windowNumSamples);
-        }
+        numWindows = (windowNumSamples < infty) ? ceil(num_train_snap / windowNumSamples) : 1;
     }
 
-    vector<CAROM::DMD*> dmd;
-    dmd.assign(numWindows, nullptr);
+    CAROM_VERIFY(numWindows > 0);
     if (myid == 0)
     {
         if (numWindows > 1)
@@ -240,6 +245,8 @@ int main(int argc, char *argv[])
         }
     }
 
+    vector<CAROM::DMD*> dmd;
+    dmd.assign(numWindows, nullptr);
     for (int window = 0; window < numWindows; ++window)
     {
         if (train)
