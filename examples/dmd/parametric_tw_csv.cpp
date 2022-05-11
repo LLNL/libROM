@@ -235,6 +235,7 @@ int main(int argc, char *argv[])
     vector<double> indicator_init, indicator_last; // DATASET indicator range
 
     int npar = csv_db.getLineCount(string(list_dir) + "/training_par.csv");
+    CAROM_VERIFY(npar > 1);
     if (myid == 0)
     {
         cout << "Loading " << npar << " training datasets." << endl;
