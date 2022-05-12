@@ -15,7 +15,7 @@
 // Sample runs and results for local serial DMD:
 //
 // Command 1:
-//   mpirun -np 8 local_tw_csv -list ../data/hc_test0 -data ../data/hc_data -dtc 0.01 -rdim 1
+//   mpirun -np 8 local_tw_csv -train-set local_train -test-set local_test  -dtc 0.01 -rdim 1
 //
 // Output 1 in run/hc_test_par0_prediction_error.csv:
 //   0.283432
@@ -29,7 +29,7 @@
 // Sample runs and results for local time windowing DMD:
 //
 // Command 1:
-//   mpirun -np 8 local_tw_csv -list ../data/hc_test0 -data ../data/hc_data -dtc 0.01 -rdim 1 -nwinsamp 2
+//   mpirun -np 8 local_tw_csv -train-set local_train -test-set local_test  -dtc 0.01 -rdim 1 -nwinsamp 2
 //
 // Output 1 in run/hc_test_par0_prediction_error.csv:
 //   0.283517
@@ -99,11 +99,11 @@ int main(int argc, char *argv[])
     double admd_closest_rbf_val = 0.9;
     double ef = 0.9999;
     int rdim = -1;
-    const char *list_dir = "../data/hc_test0";
+    const char *list_dir = "../data/hc_list";
     const char *data_dir = "../data/hc_data";
     const char *var_name = "sol";
-    const char *train_list = "training_par.csv";
-    const char *test_list = "testing_par.csv";
+    const char *train_list = "training_par";
+    const char *test_list = "testing_par";
     const char *basename = "";
     bool save_csv = false;
 

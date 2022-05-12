@@ -15,8 +15,8 @@
 // Sample runs and results for parametric serial DMD:
 //
 // Command 1:
-//   mpirun -np 8 parametric_tw_csv -list ../data/hc_test2 -data ../data/hc_data -dtc 0.01 -rdim 1 -offline -predict
-//   mpirun -np 8 parametric_tw_csv -list ../data/hc_test2 -data ../data/hc_data -dtc 0.01 -rdim 1 -online -predict
+//   mpirun -np 8 parametric_tw_csv -train-set par3_train -dtc 0.01 -rdim 1 -offline -predict
+//   mpirun -np 8 parametric_tw_csv -train-set par3_train -test-set par_test -dtc 0.01 -rdim 1 -online -predict
 //
 // Output 1 in run/hc_test_par0_prediction_error.csv:
 //   0.245743
@@ -30,8 +30,8 @@
 // Sample runs and results for parametric time windowing DMD:
 //
 // Command 1:
-//   mpirun -np 8 parametric_tw_csv -list ../data/hc_test2 -data ../data/hc_data -dtc 0.01 -rdim 1 -nwinsamp 2 -offline -predict
-//   mpirun -np 8 parametric_tw_csv -list ../data/hc_test2 -data ../data/hc_data -dtc 0.01 -rdim 1 -nwinsamp 2 -online -predict
+//   mpirun -np 8 parametric_tw_csv -train-set par3_train -dtc 0.01 -rdim 1 -nwinsamp 2 -offline -predict
+//   mpirun -np 8 parametric_tw_csv -train-set par3_train -test-set par_test -dtc 0.01 -rdim 1 -nwinsamp 2 -online -predict
 //
 // Output 1 in run/hc_test_par0_prediction_error.csv:
 //   0.263574
@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
     double pdmd_closest_rbf_val = 0.9;
     double ef = 0.9999;
     int rdim = -1;
-    const char *list_dir = "../data/hc_test2";
+    const char *list_dir = "../data/hc_list";
     const char *data_dir = "../data/hc_data";
     const char *var_name = "sol";
     const char *train_list = "training_par";
