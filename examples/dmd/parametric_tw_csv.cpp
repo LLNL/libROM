@@ -96,13 +96,15 @@ int main(int argc, char *argv[])
     double t_final = -1.0;
     double dtc = 0.0;
     double ddt = 0.0;
+    int numWindows = 0;
+    int windowNumSamples = infty;
+    int windowOverlapSamples = 0;
+    const char *rbf = "G";
+    const char *interp_method = "LS";
     double admd_closest_rbf_val = 0.9;
     double pdmd_closest_rbf_val = 0.9;
     double ef = 0.9999;
     int rdim = -1;
-    int numWindows = 0;
-    int windowNumSamples = infty;
-    int windowOverlapSamples = 0;
     const char *list_dir = "../data/hc_test2";
     const char *data_dir = "../data/hc_data";
     const char *var_name = "sol";
@@ -124,6 +126,16 @@ int main(int argc, char *argv[])
                    "Fixed (constant) dt.");
     args.AddOption(&ddt, "-ddt", "--dtime-step",
                    "Desired Time step.");
+    args.AddOption(&numWindows, "-nwin", "--numwindows",
+                   "Number of DMD windows.");
+    args.AddOption(&windowNumSamples, "-nwinsamp", "--numwindowsamples",
+                   "Number of samples in DMD windows.");
+    args.AddOption(&windowOverlapSamples, "-nwinover", "--numwindowoverlap",
+                   "Number of samples for DMD window overlap.");
+    args.AddOption(&rbf, "-rbf", "--radial-basis-function",
+                   "Radial basis function used in interpolation. Options: \"G\", \"IQ\", \"IMQ\".");
+    args.AddOption(&interp_method, "-interp", "--interpolation-method",
+                   "Method of interpolation. Options: \"LS\", \"IDW\", \"LP\".");
     args.AddOption(&admd_closest_rbf_val, "-admde", "--admde",
                    "Parameter for controlling radial basis function value for the closest two time steps values in adaptive DMD.");
     args.AddOption(&pdmd_closest_rbf_val, "-pdmde", "--pdmde",
@@ -132,12 +144,6 @@ int main(int argc, char *argv[])
                    "Energy fraction for DMD.");
     args.AddOption(&rdim, "-rdim", "--rdim",
                    "Reduced dimension for DMD.");
-    args.AddOption(&numWindows, "-nwin", "--numwindows",
-                   "Number of DMD windows.");
-    args.AddOption(&windowNumSamples, "-nwinsamp", "--numwindowsamples",
-                   "Number of samples in DMD windows.");
-    args.AddOption(&windowOverlapSamples, "-nwinover", "--numwindowoverlap",
-                   "Number of samples for DMD window overlap.");
     args.AddOption(&list_dir, "-list", "--list-directory",
                    "Location of training and testing data list.");
     args.AddOption(&data_dir, "-data", "--data-directory",
@@ -346,7 +352,7 @@ int main(int argc, char *argv[])
             {
                 if (ddt > 0.0)
                 {
-                    dmd_w[idx_dataset] = new CAROM::AdaptiveDMD(dim, ddt, "G", "LS", admd_closest_rbf_val);
+                    dmd_w[idx_dataset] = new CAROM::AdaptiveDMD(dim, ddt, string(rbf), string(interp_method), admd_closest_rbf_val);
                 }
                 else
                 {
@@ -494,7 +500,7 @@ int main(int argc, char *argv[])
                 {
                     cout << "Interpolating DMD model #" << window << endl;
                 }
-                dmd[window][idx_dataset] = getParametricDMD(par_vectors, dmd_paths, curr_par, "G", "LS", pdmd_closest_rbf_val);
+                dmd[window][idx_dataset] = getParametricDMD(par_vectors, dmd_paths, curr_par, string(rbf), string(interp_method), pdmd_closest_rbf_val);
 
                 if (myid == 0)
                 {
