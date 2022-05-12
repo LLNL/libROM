@@ -108,8 +108,8 @@ int main(int argc, char *argv[])
     const char *list_dir = "../data/hc_test2";
     const char *data_dir = "../data/hc_data";
     const char *var_name = "sol";
-    const char *train_list = "training_par.csv";
-    const char *test_list = "testing_par.csv";
+    const char *train_list = "training_par";
+    const char *test_list = "testing_par";
     const char *basename = "";
     bool save_csv = false;
 
