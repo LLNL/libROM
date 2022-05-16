@@ -424,6 +424,12 @@ int main(int argc, char *argv[])
                     }
                     dmd[window][idx_dataset]->train(ef);
                 }
+                if (window > 1 && predict)
+                {
+                    CAROM::Vector* init_cond = dmd[window-1][idx_dataset]->predict(indicator_val[window]);
+                    dmd[window][idx_dataset]->projectInitialCondition(init_cond);
+                    delete init_cond;
+                }
                 dmd[window][idx_dataset]->save(outputPath + "/window" + to_string(window) + "_par" + to_string(idx_dataset));
                 if (myid == 0)
                 {
@@ -452,7 +458,6 @@ int main(int argc, char *argv[])
         dmd.assign(numWindows, dmd_w);
 
         int num_tests = 0;
-        CAROM::Vector* init_cond = new CAROM::Vector(dim, true);
         vector<double> prediction_time, prediction_error;
 
         for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
@@ -506,8 +511,10 @@ int main(int argc, char *argv[])
                 {
                     cout << "Projecting initial condition at t = " << indicator_val[window] << " for DMD model #" << window << endl;
                 }
+                CAROM::Vector* init_cond = nullptr;
                 if (window == 0)
                 {
+                    init_cond = new CAROM::Vector(dim, true);
                     for (int i = 0; i < dim; ++i)
                     {
                         init_cond->item(i) = sample[i];
@@ -518,10 +525,10 @@ int main(int argc, char *argv[])
                     init_cond = dmd[window-1][idx_dataset]->predict(indicator_val[window]);
                 }
                 dmd[window][idx_dataset]->projectInitialCondition(init_cond);
+                delete init_cond;
             } // escape for-loop over window
 
         } // escape for-loop over idx_dataset
-        delete init_cond;
         dmd_training_timer.Stop();
     } // escape if-statement of online
 

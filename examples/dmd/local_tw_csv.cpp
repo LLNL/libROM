@@ -437,7 +437,6 @@ int main(int argc, char *argv[])
     csv_db.getStringVector(string(list_dir) + "/" + test_list + ".csv", testing_par_list, false);
 
     int num_tests = 0;
-    CAROM::Vector* init_cond = new CAROM::Vector(dim, true);
     vector<double> prediction_time, prediction_error;
 
     for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
@@ -469,10 +468,16 @@ int main(int argc, char *argv[])
             if (idx_snap == 0)
             {
                 dmd_preprocess_timer.Start();
+                CAROM::Vector* init_cond = nullptr;
                 for (int window = 0; window < numWindows; ++window)
                 {
+                    if (myid == 0)
+                    {
+                        cout << "Projecting initial condition at t = " << indicator_val[window] << " for DMD model #" << window << endl;
+                    }
                     if (window == 0)
                     {
+                        init_cond = new CAROM::Vector(dim, true);
                         for (int i = 0; i < dim; ++i)
                         {
                             init_cond->item(i) = sample[i];
@@ -482,11 +487,8 @@ int main(int argc, char *argv[])
                     {
                         init_cond = dmd[window-1]->predict(indicator_val[window]);
                     }
-                    if (myid == 0)
-                    {
-                        cout << "Projecting initial condition at t = " << indicator_val[window] << " for DMD model #" << window << endl;
-                    }
                     dmd[window]->projectInitialCondition(init_cond);
+                    delete init_cond;
                 }
                 dmd_preprocess_timer.Stop();
             }
@@ -577,7 +579,6 @@ int main(int argc, char *argv[])
     }
 
     delete[] sample;
-    delete init_cond;
     for (int window = 0; window < numWindows; ++window)
     {
         delete dmd[window];
