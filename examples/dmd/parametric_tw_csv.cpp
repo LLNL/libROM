@@ -424,8 +424,12 @@ int main(int argc, char *argv[])
                     }
                     dmd[window][idx_dataset]->train(ef);
                 }
-                if (window > 1 && predict)
+                if (window > 0 && predict)
                 {
+                    if (myid == 0)
+                    {
+                        cout << "Projecting initial condition at t = " << indicator_val[window] << " for DMD model #" << window << endl;
+                    }
                     CAROM::Vector* init_cond = dmd[window-1][idx_dataset]->predict(indicator_val[window]);
                     dmd[window][idx_dataset]->projectInitialCondition(init_cond);
                     delete init_cond;
