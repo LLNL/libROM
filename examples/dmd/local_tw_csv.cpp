@@ -116,11 +116,11 @@ int main(int argc, char *argv[])
                    "Fixed (constant) dt.");
     args.AddOption(&ddt, "-ddt", "--dtime-step",
                    "Desired Time step.");
-    args.AddOption(&numWindows, "-nwin", "--numwindows", 
+    args.AddOption(&numWindows, "-nwin", "--numwindows",
                    "Number of DMD windows.");
-    args.AddOption(&windowNumSamples, "-nwinsamp", "--numwindowsamples", 
+    args.AddOption(&windowNumSamples, "-nwinsamp", "--numwindowsamples",
                    "Number of samples in DMD windows.");
-    args.AddOption(&windowOverlapSamples, "-nwinover", "--numwindowoverlap", 
+    args.AddOption(&windowOverlapSamples, "-nwinover", "--numwindowoverlap",
                    "Number of samples for DMD window overlap.");
     args.AddOption(&rbf, "-rbf", "--radial-basis-function",
                    "Radial basis function used in interpolation. Options: \"G\", \"IQ\", \"IMQ\".");
@@ -279,7 +279,7 @@ int main(int argc, char *argv[])
             {
                 cout << "Loading DMD model #" << window << "." << endl;
             }
-            dmd[window] = new CAROM::DMD(outputPath + "/window" + to_string(window)); 
+            dmd[window] = new CAROM::DMD(outputPath + "/window" + to_string(window));
         }
     }
 
@@ -300,7 +300,7 @@ int main(int argc, char *argv[])
         vector<string> snap_list;
         csv_db.getStringVector(string(list_dir) + "/" + par_dir + ".csv", snap_list, false);
 
-        int curr_window = 0; 
+        int curr_window = 0;
         int overlap_count = 0;
         for (int idx_snap = 0; idx_snap < num_train_snap; ++idx_snap)
         {
@@ -321,14 +321,14 @@ int main(int argc, char *argv[])
                 dmd[curr_window-1]->takeSample(sample, tval);
                 overlap_count -= 1;
             }
-            if (curr_window+1 < numWindows && idx_snap+1 < num_train_snap) 
+            if (curr_window+1 < numWindows && idx_snap+1 < num_train_snap)
             {
                 bool new_window = false;
                 if (windowNumSamples < infty)
                 {
                     new_window = (idx_snap >= (curr_window+1)*windowNumSamples);
                 }
-                else 
+                else
                 {
                     new_window = (tval >= indicator_val[curr_window+1]);
                 }
@@ -373,10 +373,10 @@ int main(int argc, char *argv[])
                 }
                 dmd[window]->train(ef);
             }
-            dmd[window]->save(outputPath + "/window" + to_string(window)); 
+            dmd[window]->save(outputPath + "/window" + to_string(window));
             if (myid == 0)
             {
-                dmd[window]->summary(outputPath + "/window" + to_string(window)); 
+                dmd[window]->summary(outputPath + "/window" + to_string(window));
             }
         }
 
@@ -384,7 +384,7 @@ int main(int argc, char *argv[])
 
         if (ddt > 0.0)
         {
-            CAROM::AdaptiveDMD* admd = nullptr; 
+            CAROM::AdaptiveDMD* admd = nullptr;
             CAROM::Vector interp_snap(dim, true);
             vector<double> interp_error;
 
@@ -424,14 +424,14 @@ int main(int argc, char *argv[])
                 }
                 if (myid == 0)
                 {
-                    csv_db.putDoubleVector(outputPath + "/window" + to_string(window) + "_interp_error.csv", 
-                                            interp_error, f_snapshots->numColumns());
+                    csv_db.putDoubleVector(outputPath + "/window" + to_string(window) + "_interp_error.csv",
+                                           interp_error, f_snapshots->numColumns());
                 }
                 interp_error.clear();
             }
         }
     }
- 
+
     vector<string> testing_par_list;
     npar = csv_db.getLineCount(string(list_dir) + "/" + test_list + ".csv");
     csv_db.getStringVector(string(list_dir) + "/" + test_list + ".csv", testing_par_list, false);
@@ -507,7 +507,7 @@ int main(int argc, char *argv[])
                 dmd_prediction_timer.Stop();
                 if (myid == 0)
                 {
-                    csv_db.putDoubleArray(outputPath + "/" + par_dir + "_final_time_prediction.csv", result->getData(), dim); 
+                    csv_db.putDoubleArray(outputPath + "/" + par_dir + "_final_time_prediction.csv", result->getData(), dim);
                 }
                 idx_snap = num_snap; // escape for-loop over idx_snap
                 delete result;
@@ -546,10 +546,10 @@ int main(int argc, char *argv[])
                     cout << "Relative error of DMD solution at t = " << tval << " is " << rel_error << endl;
                     if (save_csv)
                     {
-                        csv_db.putDoubleArray(outputPath + "/" + par_dir + "_" + snap + "_prediction.csv", result->getData(), dim); 
+                        csv_db.putDoubleArray(outputPath + "/" + par_dir + "_" + snap + "_prediction.csv", result->getData(), dim);
                         if (dim < nelements)
                         {
-                            csv_db.putDoubleArray(outputPath + "/" + par_dir + "_" + snap + "_state.csv", sample, dim); 
+                            csv_db.putDoubleArray(outputPath + "/" + par_dir + "_" + snap + "_state.csv", sample, dim);
                         }
                     }
                 }

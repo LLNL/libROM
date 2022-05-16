@@ -207,6 +207,11 @@ Matrix* solveLinearSystem(std::vector<Vector*> parameter_points,
 
         dposv(&uplo, &gamma_size, &num_elements, B->getData(),  &gamma_size,
               f_T->getData(), &gamma_size, &info);
+        if (info != 0)
+        {
+            std::cout << "Linear solve failed. Please choose a different epsilon value." << std::endl;
+        }
+        CAROM_VERIFY(info == 0);
 
         delete B;
     }

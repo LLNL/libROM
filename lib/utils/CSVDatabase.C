@@ -143,7 +143,7 @@ CSVDatabase::getIntegerArray(
 void
 CSVDatabase::getIntegerVector(
     const std::string& file_name,
-    std::vector<int> &data, 
+    std::vector<int> &data,
     bool append)
 {
     CAROM_ASSERT(!file_name.empty());
@@ -239,7 +239,7 @@ CSVDatabase::getDoubleArray(
         {
             if (offset-- > stride)
             {
-                data[count++] = std::stod(data_entry); 
+                data[count++] = std::stod(data_entry);
             }
             if (offset == 0)
             {
@@ -253,7 +253,7 @@ CSVDatabase::getDoubleArray(
 void
 CSVDatabase::getDoubleVector(
     const std::string& file_name,
-    std::vector<double> &data, 
+    std::vector<double> &data,
     bool append)
 {
     CAROM_ASSERT(!file_name.empty());
@@ -271,7 +271,7 @@ CSVDatabase::getDoubleVector(
 void
 CSVDatabase::getStringVector(
     const std::string& file_name,
-    std::vector<std::string> &data, 
+    std::vector<std::string> &data,
     bool append)
 {
     CAROM_ASSERT(!file_name.empty());

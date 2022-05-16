@@ -181,7 +181,7 @@ public:
     void
     getIntegerVector(
         const std::string& file_name,
-        std::vector<int> &data, 
+        std::vector<int> &data,
         bool append);
 
     /**
@@ -219,7 +219,7 @@ public:
     getDoubleArray(
         const std::string& file_name,
         double* data,
-        int nelements, 
+        int nelements,
         std::vector<int> idx);
 
     /**
@@ -259,7 +259,7 @@ public:
     void
     getDoubleVector(
         const std::string& file_name,
-        std::vector<double> &data, 
+        std::vector<double> &data,
         bool append);
 
     /**
@@ -275,7 +275,7 @@ public:
     void
     getStringVector(
         const std::string& file_name,
-        std::vector<std::string> &data, 
+        std::vector<std::string> &data,
         bool append);
 
     /**

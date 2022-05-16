@@ -344,7 +344,7 @@ BasisReader::getSingularValues(
 }
 
 int
-BasisReader::getDim( 
+BasisReader::getDim(
     double time)
 {
     CAROM_ASSERT(0 < numTimeIntervals());
@@ -365,7 +365,7 @@ BasisReader::getDim(
     return num_rows;
 }
 
-int 
+int
 BasisReader::getNumSamples(
     double time)
 {

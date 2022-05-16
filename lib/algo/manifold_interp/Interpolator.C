@@ -167,7 +167,7 @@ double obtainRBF(std::string rbf, double epsilon, Vector* point1, Vector* point2
 
 
 double convertClosestRBFToEpsilon(std::vector<Vector*> parameter_points,
-        std::string rbf, double closest_rbf_val)
+                                  std::string rbf, double closest_rbf_val)
 {
     double closest_point_dist = INT_MAX;
     double epsilon;

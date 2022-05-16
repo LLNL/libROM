@@ -389,7 +389,7 @@ int main(int argc, char *argv[])
                     overlap_count -= 1;
                 }
                 if (curr_window+1 < numWindows && idx_snap+1 < num_train_snap[idx_dataset] &&
-                    tval > indicator_val[curr_window+1] - dt_est / 100.0) // a rough estimate to correct the precision of the indicator range partition
+                        tval > indicator_val[curr_window+1] - dt_est / 100.0) // a rough estimate to correct the precision of the indicator range partition
                 {
                     overlap_count = windowOverlapSamples;
                     curr_window += 1;

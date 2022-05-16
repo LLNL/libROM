@@ -269,7 +269,7 @@ int main(int argc, char *argv[])
                    "Energy fraction for DMD.");
     args.AddOption(&rdim, "-rdim", "--rdim",
                    "Reduced dimension for DMD.");
-    args.AddOption(&windowNumSamples, "-nwinsamp", "--numwindowsamples", 
+    args.AddOption(&windowNumSamples, "-nwinsamp", "--numwindowsamples",
                    "Number of samples in DMD windows.");
     args.Parse();
     if (!args.Good())
