@@ -97,18 +97,11 @@ int main(int argc, char* argv[])
     for (const auto& sample_name: sample_names) {
         CAROM::BasisReader reader(sample_name);
 		
-        if (kind == "snapshot") {
-	    dim    = reader.getDim(0);
- 	    snaps += reader.getNumSamples(0);
+	    dim    = reader.getDim(kind, 0);
+ 	    snaps += reader.getNumSamples(kind, 0);
 	    if (dimFirst == 0) dimFirst = dim;
-        }
-	else {
-            CAROM::Matrix *basis = (CAROM::Matrix*) reader.getSpatialBasis(0);
-	    dim    = basis->numRows();
-	    snaps += basis->numColumns();
-	    if (dimFirst == 0) dimFirst = dim;
-	}
-	CAROM_VERIFY(dim == dimFirst); // ensures all files have the same dimension distribution
+	    
+	    CAROM_VERIFY(dim == dimFirst); // ensures all files have the same dimension distribution
     }
 	
     CAROM_VERIFY((snaps > 0) && (dim > 0));
