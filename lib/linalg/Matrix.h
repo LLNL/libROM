@@ -824,6 +824,20 @@ public:
                           int* row_pivot_owner,
                           int  pivots_requested) const;
 
+  /**
+   * @brief Computes and returns the orthogonality of the matrix.
+   *
+   * @return The orthogonality of the matrix.
+   */
+  double
+  checkOrthogonality();
+
+  /**
+   * @brief Orthogonalizes the matrix.
+   */
+  void
+  orthogonalize();
+
     /**
      * @brief Const Matrix member access. Matrix data is stored in
      * row-major format.

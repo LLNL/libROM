@@ -229,30 +229,6 @@ protected:
     }
 
     /**
-     * @brief Computes and returns the orthogonality of m.
-     *
-     * @pre m != 0
-     *
-     * @param[in] m The matrix to check.
-     *
-     * @return The orthogonality of m.
-     */
-    double
-    checkOrthogonality(
-        const Matrix* m);
-
-    /**
-     * @brief Reorthogonalizes m.
-     *
-     * @pre m != 0
-     *
-     * @param[in,out] m The matrix to reorthogonalize.
-     */
-    void
-    reOrthogonalize(
-        Matrix* m);
-
-    /**
      * @brief Tolerance to determine whether or not a sample is linearly
      * dependent.
      */

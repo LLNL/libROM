@@ -1552,6 +1552,71 @@ const
 #endif
 }
 
+double
+Matrix::checkOrthogonality()
+{
+    double result = 0.0;
+    if (d_num_cols > 1) {
+        int last_col = d_num_cols-1;
+        double tmp = 0.0;
+        for (int i = 0; i < d_num_rows; ++i) {
+            tmp += item(i, 0) * item(i, last_col);
+        }
+        if (d_distributed && d_num_procs > 1) {
+            MPI_Allreduce(&tmp, &result, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        }
+        else {
+            result = tmp;
+        }
+    }
+    return result;
+}
+
+void
+Matrix::orthogonalize()
+{
+    for (int work = 1; work < d_num_cols; ++work) {
+        double tmp;
+        for (int col = 0; col < work; ++col) {
+            double factor = 0.0;
+            tmp = 0.0;
+            for (int i = 0; i < d_num_rows; ++i) {
+                tmp += item(i, col)*item(i, work);
+            }
+            if (d_num_procs > 1) {
+                MPI_Allreduce(&tmp,
+                              &factor,
+                              1,
+                              MPI_DOUBLE,
+                              MPI_SUM,
+                              MPI_COMM_WORLD);
+            }
+            else {
+                factor = tmp;
+            }
+
+            for (int i = 0; i < d_num_rows; ++i) {
+                item(i, work) -= factor*item(i, col);
+            }
+        }
+        double norm = 0.0;
+        tmp = 0.0;
+        for (int i = 0; i < d_num_rows; ++i) {
+            tmp += item(i, work)*item(i, work);
+        }
+        if (d_num_procs > 1) {
+            MPI_Allreduce(&tmp, &norm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        }
+        else {
+            norm = tmp;
+        }
+        norm = sqrt(norm);
+        for (int i = 0; i < d_num_rows; ++i) {
+            item(i, work) /= norm;
+        }
+    }
+}
+
 Matrix outerProduct(const Vector &v, const Vector &w)
 {
     /*
