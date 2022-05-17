@@ -742,6 +742,8 @@ public:
         return d_vec;
     }
 
+  double localMin(int nmax = 0);
+
 private:
     /**
      * @brief The storage for the Vector's values on this processor.

@@ -831,7 +831,32 @@ const IntegrationRule* SetupEQP(const double tauNNLS, const IntegrationRule *ir0
 	w((i*nqe) + j) = w_el[j];
     }
 
-  NNLS(tauNNLS, G, w, sol, 1);
+  //NNLS(tauNNLS, G, w, sol, 1);
+
+  {
+    CAROM::NNLSSolver nnls;
+    nnls.set_qrresidual_mode(CAROM::NNLSSolver::QRresidualMode::hybrid);
+    nnls.set_verbosity(2);
+
+    CAROM::Vector rhs_ub(G.numRows(), false);
+    G.mult(w, rhs_ub);  // rhs = Gw
+
+    CAROM::Vector rhs_lb(rhs_ub);
+
+    const double delta = 1.0e-11;
+    for (int i=0; i<rhs_ub.dim(); ++i)
+      {
+	rhs_lb(i) -= delta;
+	rhs_ub(i) += delta;
+      }
+
+    rhs_lb *= 1.0 / ((double) nnls.getNumProcs());
+    rhs_ub *= 1.0 / ((double) nnls.getNumProcs());
+
+    nnls.normalize_constraints(G, rhs_lb, rhs_ub);
+    nnls.solve_parallel_with_scalapack(G, rhs_lb, rhs_ub, sol);
+  }
+
   int nnz = 0;
   for (int i=0; i<sol.dim(); ++i)
     {
