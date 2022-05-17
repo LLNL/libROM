@@ -469,6 +469,12 @@ Matrix* MatrixInterpolator::interpolateMatrix(Vector* point)
 
     // The exp mapping is X + the interpolated gamma
     *interpolated_matrix += *d_rotated_reduced_matrices[d_ref_point];
+
+    // Orthogonalize the interpolated matrix if it is a basis.
+    if (d_matrix_type == "B")
+    {
+        interpolated_matrix->orthogonalize();
+    }
     return interpolated_matrix;
 }
 
