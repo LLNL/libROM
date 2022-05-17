@@ -34,6 +34,7 @@ set(module_list
   linalg/svd/StaticSVD
   algo/DMD
   algo/AdaptiveDMD
+  algo/ParametricDMD
   algo/greedy/GreedyCustomSampler
   algo/greedy/GreedyRandomSampler
   algo/greedy/GreedySampler

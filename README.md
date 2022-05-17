@@ -1,6 +1,8 @@
+![libROM Logo](https://www.librom.net/img/logo-libROM2.png)
+
 # Introduction
 
-libROM is a free, lightweight, scalable C++ library for data-driven physical
+[libROM](https://www.librom.net) is a free, lightweight, scalable C++ library for data-driven physical
 simulation methods from the intrusive projection-based reduced order models to
 non-intrusive black-box approaches.
 
@@ -9,12 +11,14 @@ non-intrusive black-box approaches.
 - Dynamic data collection
 - Dynamic mode decomposition (DMD)
 - Data compression
-- Greedy algorithm
-- Hyper-reduction
+- Physics-informed Greedy algorithm
+- Projection-based hyper-reduction
 
 ## Features to be added
 
-- Sparse identification of nonlinear dynamics (SINDy)
+- S-OPT: stable sampling algorithm for hyper-reduction
+- EQP: quadrature-based hyper-reduction sampling algorithm
+- Python interface
 
 # Installation
 
@@ -50,6 +54,29 @@ To install libROM with MFEM using spack.
  spack install librom +mfem
 ```
 
+# Compiling and linking with libROM
+
+To compile and link an existing code with libROM, follow these steps:
+
+- Add libROM/lib to the include path
+```sh
+ -I/path/to/libROM/lib
+```
+- Add the following to the linker flags (LDFLAGS)
+```sh
+ -Wl,-rpath,/path/to/libROM/build/lib -L/path/to/libROM/build/lib
+```
+- Add the following library
+```sh
+ -lROM
+```
+
+For example,
+```sh
+mpicxx myapp.cpp -I/path/to/libROM/lib -Wl,-rpath,/path/to/libROM/build/lib -L/path/to/libROM/build/lib -lROM -o myapp.out
+```
+
+
 # License
 
 libROM is distributed under the terms of both the MIT license and the
@@ -79,10 +106,15 @@ LLNL-CODE-766763
 - William Arrighi (LLNL)
 - Kyle Chand (LLNL)
 - Siu Wun Cheung (LLNL)
+- Eric Chin (LLNL)
 - Youngsoo Choi (LLNL)
 - Dylan Copeland (LLNL)
+- William Fries (University of Arizona)
+- Debojyoti Ghosh (LLNL)
+- Xiaolong He (UC San Diego)
 - Kevin Huynh (LLNL)
 - Tanya Kostova-Vassilevska (LLNL)
 - Jessica Lauzon (Stanford)
 - Sean McBane (UT Austin)
+- Yeonjong Shin (KAIST)
 - Geoffrey Oxberry (LLNL)

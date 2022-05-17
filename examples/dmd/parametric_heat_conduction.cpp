@@ -1,37 +1,50 @@
-//                       libROM MFEM Example: Heat_Conduction (adapted from ex16p.cpp)
+//                       libROM MFEM Example: Parametric_Heat_Conduction (adapted from ex16p.cpp)
 //
-// Compile with: make heat_conduction
-//
-// =================================================================================
-//
-// Sample runs and results for DMD:
-//
-// Command 1:
-//   mpirun -np 8 heat_conduction -s 1 -a 0.0 -k 1.0 -visit
-//
-// Output 1:
-//   Relative error of DMD temperature (u) at t_final: 0.5 is 0.00049906934
-//
-// Command 2:
-//   mpirun -np 8 heat_conduction -s 3 -a 0.5 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit
-//
-// Output 2:
-//   Relative error of DMD temperature (u) at t_final: 0.7 is 0.00082289823
+// Compile with: make parametric_heat_conduction
 //
 // =================================================================================
-// For DMD:
-//   mpirun -np 8 heat_conduction
-//   mpirun -np 8 heat_conduction -s 3 -a 0.5 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit
 //
-// Sample runs:  mpirun -np 4 heat_conduction
-//               mpirun -np 4 heat_conduction -tf 2
-//               mpirun -np 4 heat_conduction -s 1 -a 0.0 -k 1.0
-//               mpirun -np 4 heat_conduction -s 2 -a 1.0 -k 0.0
-//               mpirun -np 8 heat_conduction -s 3 -a 0.5 -k 0.5 -o 4
-//               mpirun -np 4 heat_conduction -s 14 -dt 1.0e-4 -tf 4.0e-2 -vs 40
-//               mpirun -np 8 heat_conduction -tf 10 -dt 0.1
-//               mpirun -np 4 heat_conduction -o 4 -rs 0 -rp 0
-//               mpirun -np 4 heat_conduction -o 2 -rs 0 -rp 0
+// In these examples, the radius of the interface between different initial temperatures, the
+// alpha coefficient, and two center location variables are modified.
+//
+// For Parametric DMD (ex. 1) (radius, interpolation):
+//   rm -rf parameters.txt
+//   mpirun -np 8 parametric_heat_conduction -r 0.4 -visit -offline -rdim 16
+//   mpirun -np 8 parametric_heat_conduction -r 0.45 -visit -offline -rdim 16
+//   mpirun -np 8 parametric_heat_conduction -r 0.55 -visit -offline -rdim 16
+//   mpirun -np 8 parametric_heat_conduction -r 0.6 -visit -offline -rdim 16
+//   mpirun -np 8 parametric_heat_conduction -r 0.5 -visit -online -predict
+//
+// For Parametric DMD (ex. 2) (radius & cx & cy, extrapolation):
+//   rm -rf parameters.txt
+//   mpirun -np 8 parametric_heat_conduction -r 0.1 -visit -offline -rdim 16
+//   mpirun -np 8 parametric_heat_conduction -r 0.2 -visit -offline -rdim 16
+//   mpirun -np 8 parametric_heat_conduction -r 0.5 -visit -online -predict
+//   (performs well, even though extrapolation)
+//   mpirun -np 8 parametric_heat_conduction -r 0.5 -cx 0.5 -cy 0.5 -visit -online -predict
+//   (doesn't perform well)
+//   mpirun -np 8 parametric_heat_conduction -r 0.6 -cx 0.6 -cy 0.6 -visit -offline -rdim 16
+//   (let's add another training point)
+//   mpirun -np 8 parametric_heat_conduction -r 0.5 -cx 0.5 -cy 0.5 -visit -online -predict
+//   (now performs well)
+//
+// For Parametric DMD (ex. 3) (alpha, interpolation):
+//   rm -rf parameters.txt
+//   mpirun -np 8 parametric_heat_conduction -a 0.1 -visit -offline -rdim 16
+//   mpirun -np 8 parametric_heat_conduction -a 0.15 -visit -offline -rdim 16
+//   mpirun -np 8 parametric_heat_conduction -a 0.25 -visit -offline -rdim 16
+//   mpirun -np 8 parametric_heat_conduction -a 0.3 -visit -offline -rdim 16
+//   mpirun -np 8 parametric_heat_conduction -a 0.2 -visit -online -predict
+//
+// For Parametric DMD (ex. 4) (alpha, interpolation):
+//   rm -rf parameters.txt
+//   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.5 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit -offline -rdim 20
+//   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.55 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit -offline -rdim 20
+//   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.65 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit -offline -rdim 20
+//   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.7 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit -offline -rdim 20
+//   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.6 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit -online -predict
+//
+// =================================================================================
 //
 // Description:  This example solves a time dependent nonlinear heat equation
 //               problem of the form du/dt = C(u), with a non-linear diffusion
@@ -46,6 +59,7 @@
 
 #include "mfem.hpp"
 #include "algo/DMD.h"
+#include "algo/ParametricDMD.h"
 #include "linalg/Vector.h"
 #include <cmath>
 #include <fstream>
@@ -105,6 +119,10 @@ public:
 
 double InitialTemperature(const Vector &x);
 
+double radius = 0.5;
+double cx = 0.0;
+double cy = 0.0;
+
 int main(int argc, char *argv[])
 {
     // 1. Initialize MPI.
@@ -123,8 +141,11 @@ int main(int argc, char *argv[])
     double dt = 1.0e-2;
     double alpha = 1.0e-2;
     double kappa = 0.5;
-    double ef = 0.9999;
+    double epsilon = 500.0;
     int rdim = -1;
+    bool offline = false;
+    bool online = false;
+    bool predict = false;
     bool visualization = true;
     bool visit = false;
     int vis_steps = 5;
@@ -153,6 +174,14 @@ int main(int argc, char *argv[])
                    "Alpha coefficient.");
     args.AddOption(&kappa, "-k", "--kappa",
                    "Kappa coefficient offset.");
+    args.AddOption(&radius, "-r", "--radius",
+                       "Radius of the interface of initial temperature.");
+    args.AddOption(&cx, "-cx", "--center_x",
+                       "Center offset in the x direction.");
+    args.AddOption(&cy, "-cy", "--center_y",
+                       "Center offset in the y direction.");
+    args.AddOption(&epsilon, "-eps", "--eps",
+                   "DMD Epsilon.");
     args.AddOption(&visualization, "-vis", "--visualization", "-no-vis",
                    "--no-visualization",
                    "Enable or disable GLVis visualization.");
@@ -161,11 +190,15 @@ int main(int argc, char *argv[])
                    "Save data files for VisIt (visit.llnl.gov) visualization.");
     args.AddOption(&vis_steps, "-vs", "--visualization-steps",
                    "Visualize every n-th timestep.");
+    args.AddOption(&offline, "-offline", "--offline", "-no-offline", "--no-offline",
+                   "Enable or disable the offline phase.");
+    args.AddOption(&online, "-online", "--online", "-no-online", "--no-online",
+                   "Enable or disable the online phase.");
+    args.AddOption(&predict, "-predict", "--predict", "-no-predict", "--no-predict",
+                   "Enable or disable DMD prediction.");
     args.AddOption(&adios2, "-adios2", "--adios2-streams", "-no-adios2",
                    "--no-adios2-streams",
                    "Save data using adios2 streams.");
-    args.AddOption(&ef, "-ef", "--energy_fraction",
-                   "Energy fraction for DMD.");
     args.AddOption(&rdim, "-rdim", "--rdim",
                    "Reduced dimension for DMD.");
     args.Parse();
@@ -179,6 +212,13 @@ int main(int argc, char *argv[])
     if (myid == 0)
     {
         args.PrintOptions(cout);
+    }
+
+    MFEM_VERIFY(!(offline && online), "both offline and online can not be true!");
+
+    if (offline)
+    {
+        MFEM_VERIFY(rdim != -1, "rdim must be set.");
     }
 
     // 3. Read the serial mesh from the given mesh file on all processors. We can
@@ -279,8 +319,12 @@ int main(int argc, char *argv[])
     u_gf.SetFromTrueDofs(u);
     {
         ostringstream mesh_name, sol_name;
-        mesh_name << "heat_conduction-mesh." << setfill('0') << setw(6) << myid;
-        sol_name << "heat_conduction-init." << setfill('0') << setw(6) << myid;
+        mesh_name << "parametric_heat_conduction_" << to_string(radius) << "_"
+            << to_string(alpha) << "_" << to_string(cx) << "_" << to_string(cy)
+            << "-mesh." << setfill('0') << setw(6) << myid;
+        sol_name << "parametric_heat_conduction_" << to_string(radius) << "_"
+            << to_string(alpha) << "_" << to_string(cx) << "_" << to_string(cy)
+            << "-init." << setfill('0') << setw(6) << myid;
         ofstream omesh(mesh_name.str().c_str());
         omesh.precision(precision);
         pmesh->Print(omesh);
@@ -289,7 +333,9 @@ int main(int argc, char *argv[])
         u_gf.Save(osol);
     }
 
-    VisItDataCollection visit_dc("Heat_Conduction", pmesh);
+    VisItDataCollection visit_dc("Parametric_Heat_Conduction_" +
+        to_string(radius) + "_" + to_string(alpha) + "_" + to_string(cx) + "_" +
+        to_string(cy), pmesh);
     visit_dc.RegisterField("temperature", &u_gf);
     if (visit)
     {
@@ -308,7 +354,8 @@ int main(int argc, char *argv[])
         postfix.erase(0, std::string("../data/").size() );
         postfix += "_o" + std::to_string(order);
         postfix += "_solver" + std::to_string(ode_solver_type);
-        const std::string collection_name = "heat_conduction-p-" + postfix + ".bp";
+        const std::string collection_name = "parametric_heat_conduction-p-" +
+            postfix + ".bp";
 
         adios2_dc = new ADIOS2DataCollection(MPI_COMM_WORLD, collection_name, pmesh);
         adios2_dc->SetParameter("SubStreams", std::to_string(num_procs/2) );
@@ -356,18 +403,34 @@ int main(int argc, char *argv[])
     ode_solver->Init(oper);
     double t = 0.0;
     vector<double> ts;
+    CAROM::Vector* init = NULL;
 
     fom_timer.Stop();
 
-    dmd_training_timer.Start();
+    CAROM::DMD* dmd_u = NULL;
 
-    // 11. Create DMD object and take initial sample.
-    u_gf.SetFromTrueDofs(u);
-    CAROM::DMD dmd_u(u.Size(), dt);
-    dmd_u.takeSample(u.GetData(), t);
+    if (offline)
+    {
+        dmd_training_timer.Start();
+
+        // 11. Create DMD object and take initial sample.
+        u_gf.SetFromTrueDofs(u);
+        dmd_u = new CAROM::DMD(u.Size(), dt);
+        dmd_u->takeSample(u.GetData(), t);
+        if (myid == 0)
+        {
+            std::cout << "Taking snapshot at: " << t << std::endl;
+        }
+
+        dmd_training_timer.Stop();
+    }
+    if (online)
+    {
+        u_gf.SetFromTrueDofs(u);
+        init = new CAROM::Vector(u.GetData(), u.Size(), true);
+    }
+
     ts.push_back(t);
-
-    dmd_training_timer.Stop();
 
     bool last_step = false;
     for (int ti = 1; !last_step; ti++)
@@ -383,13 +446,21 @@ int main(int argc, char *argv[])
 
         fom_timer.Stop();
 
-        dmd_training_timer.Start();
+        if (offline)
+        {
+            dmd_training_timer.Start();
 
-        u_gf.SetFromTrueDofs(u);
-        dmd_u.takeSample(u.GetData(), t);
+            u_gf.SetFromTrueDofs(u);
+            dmd_u->takeSample(u.GetData(), t);
+            if (myid == 0)
+            {
+                std::cout << "Taking snapshot at: " << t << std::endl;
+            }
+
+            dmd_training_timer.Stop();
+        }
+
         ts.push_back(t);
-
-        dmd_training_timer.Stop();
 
         if (last_step || (ti % vis_steps) == 0)
         {
@@ -432,112 +503,187 @@ int main(int argc, char *argv[])
 #endif
 
     // 12. Save the final solution in parallel. This output can be viewed later
-    //     using GLVis: "glvis -np <np> -m heat_conduction-mesh -g heat_conduction-final".
+    //     using GLVis: "glvis -np <np> -m parametric_heat_conduction-mesh -g parametric_heat_conduction-final".
     {
         ostringstream sol_name;
-        sol_name << "heat_conduction-final." << setfill('0') << setw(6) << myid;
+        sol_name << "parametric_heat_conduction_" << to_string(radius) << "_"
+            << to_string(alpha) << "_" << to_string(cx) << "_" << to_string(cy)
+            << "-final." << setfill('0') << setw(6) << myid;
         ofstream osol(sol_name.str().c_str());
         osol.precision(precision);
         u_gf.Save(osol);
     }
 
     // 13. Calculate the DMD modes.
-    if (myid == 0 && rdim != -1 && ef != -1)
+    if (offline || online)
     {
-        std::cout << "Both rdim and ef are set. ef will be ignored." << std::endl;
-    }
-
-    dmd_training_timer.Start();
-
-    if (rdim != -1)
-    {
-        if (myid == 0)
+        if (offline)
         {
-            std::cout << "Creating DMD with rdim: " << rdim << std::endl;
+            if (myid == 0)
+            {
+                std::cout << "Creating DMD with rdim: " << rdim << std::endl;
+            }
+
+            dmd_training_timer.Start();
+
+            dmd_u->train(rdim);
+
+            dmd_training_timer.Stop();
+
+            dmd_u->save(to_string(radius) + "_" + to_string(alpha) + "_" +
+                to_string(cx) + "_" + to_string(cy));
+
+            std::ofstream fout;
+            fout.open("parameters.txt", std::ios::app);
+            fout << radius << " " << alpha << " " << cx << " " << cy << std::endl;
+            fout.close();
         }
-        dmd_u.train(rdim);
-    }
-    else if (ef != -1)
-    {
-        if (myid == 0)
+
+        if (online)
         {
-            std::cout << "Creating DMD with energy fraction: " << ef << std::endl;
+            if (myid == 0)
+            {
+                std::cout << "Creating DMD using the rdim of the offline phase" << std::endl;
+            }
+
+            std::fstream fin("parameters.txt", std::ios_base::in);
+            double curr_param;
+            std::vector<std::string> dmd_paths;
+            std::vector<CAROM::Vector*> param_vectors;
+
+            while (fin >> curr_param)
+            {
+                double curr_radius = curr_param;
+                fin >> curr_param;
+                double curr_alpha = curr_param;
+                fin >> curr_param;
+                double curr_cx = curr_param;
+                fin >> curr_param;
+                double curr_cy = curr_param;
+
+                dmd_paths.push_back(to_string(curr_radius) + "_" +
+                    to_string(curr_alpha) + "_" + to_string(curr_cx) + "_" +
+                    to_string(curr_cy));
+                CAROM::Vector* param_vector = new CAROM::Vector(4, false);
+                param_vector->item(0) = curr_radius;
+                param_vector->item(1) = curr_alpha;
+                param_vector->item(2) = curr_cx;
+                param_vector->item(3) = curr_cy;
+                param_vectors.push_back(param_vector);
+            }
+            fin.close();
+
+            CAROM::Vector* desired_param = new CAROM::Vector(4, false);
+            desired_param->item(0) = radius;
+            desired_param->item(1) = alpha;
+            desired_param->item(2) = cx;
+            desired_param->item(3) = cy;
+
+            dmd_training_timer.Start();
+
+            dmd_u = getParametricDMD(param_vectors, dmd_paths, desired_param,
+                "G", "LS", epsilon);
+
+            dmd_u->projectInitialCondition(init);
+
+            dmd_training_timer.Stop();
         }
-        dmd_u.train(ef);
-    }
 
-    dmd_training_timer.Stop();
-
-    Vector true_solution_u(u.Size());
-    true_solution_u = u.GetData();
-
-    dmd_prediction_timer.Start();
-
-    // 14. Predict the state at t_final using DMD.
-    if (myid == 0)
-    {
-        std::cout << "Predicting temperature using DMD" << std::endl;
-    }
-
-    CAROM::Vector* result_u = dmd_u.predict(ts[0]);
-    Vector initial_dmd_solution_u(result_u->getData(), result_u->dim());
-    u_gf.SetFromTrueDofs(initial_dmd_solution_u);
-
-    VisItDataCollection dmd_visit_dc("DMD_Heat_Conduction", pmesh);
-    dmd_visit_dc.RegisterField("temperature", &u_gf);
-    if (visit)
-    {
-        dmd_visit_dc.SetCycle(0);
-        dmd_visit_dc.SetTime(0.0);
-        dmd_visit_dc.Save();
-    }
-
-    delete result_u;
-
-    for (int i = 1; i < ts.size(); i++)
-    {
-        result_u = dmd_u.predict(ts[i]);
-        Vector dmd_solution_u(result_u->getData(), result_u->dim());
-        u_gf.SetFromTrueDofs(dmd_solution_u);
-
-        if (i == ts.size() - 1 || (i % vis_steps) == 0)
+        if (predict)
         {
+            Vector true_solution_u(u.Size());
+            true_solution_u = u.GetData();
+
+            dmd_prediction_timer.Start();
+
+            // 14. Predict the state at t_final using DMD.
+            if (myid == 0)
+            {
+                std::cout << "Predicting temperature using DMD at: " << ts[0] << std::endl;
+            }
+
+            CAROM::Vector* result_u = dmd_u->predict(ts[0]);
+            Vector initial_dmd_solution_u(result_u->getData(), result_u->dim());
+            u_gf.SetFromTrueDofs(initial_dmd_solution_u);
+
+            VisItDataCollection dmd_visit_dc("DMD_Parametric_Heat_Conduction_" +
+                to_string(radius) + "_" + to_string(alpha) + "_" +
+                to_string(cx) + "_" + to_string(cy), pmesh);
+            dmd_visit_dc.RegisterField("temperature", &u_gf);
             if (visit)
             {
-                dmd_visit_dc.SetCycle(i);
-                dmd_visit_dc.SetTime(ts[i]);
+                dmd_visit_dc.SetCycle(0);
+                dmd_visit_dc.SetTime(0.0);
                 dmd_visit_dc.Save();
             }
+
+            delete result_u;
+
+            for (int i = 1; i < ts.size(); i++)
+            {
+                result_u = dmd_u->predict(ts[i]);
+                if (myid == 0)
+                {
+                    std::cout << "Predicting temperature using DMD at: " << ts[i] << std::endl;
+                }
+
+                Vector dmd_solution_u(result_u->getData(), result_u->dim());
+                u_gf.SetFromTrueDofs(dmd_solution_u);
+
+                if (i == ts.size() - 1 || (i % vis_steps) == 0)
+                {
+                    if (visit)
+                    {
+                        dmd_visit_dc.SetCycle(i);
+                        dmd_visit_dc.SetTime(ts[i]);
+                        dmd_visit_dc.Save();
+                    }
+                }
+
+                delete result_u;
+            }
+
+            dmd_prediction_timer.Stop();
+
+            result_u = dmd_u->predict(t_final);
+
+            // 15. Calculate the relative error between the DMD final solution and the true solution.
+            Vector dmd_solution_u(result_u->getData(), result_u->dim());
+            Vector diff_u(true_solution_u.Size());
+            subtract(dmd_solution_u, true_solution_u, diff_u);
+
+            double tot_diff_norm_u = sqrt(InnerProduct(MPI_COMM_WORLD, diff_u, diff_u));
+            double tot_true_solution_u_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
+                true_solution_u, true_solution_u));
+
+            if (myid == 0)
+            {
+                std::cout << "Relative error of DMD temperature (u) at t_final: "
+                    << t_final << " is " << tot_diff_norm_u / tot_true_solution_u_norm << std::endl;
+                printf("Elapsed time for predicting DMD: %e second\n", dmd_prediction_timer.RealTime());
+            }
+
+            delete result_u;
         }
 
-        delete result_u;
+        if (myid == 0)
+        {
+            printf("Elapsed time for training DMD: %e second\n", dmd_training_timer.RealTime());
+        }
     }
-
-    dmd_prediction_timer.Stop();
-
-    result_u = dmd_u.predict(t_final);
-
-    // 15. Calculate the relative error between the DMD final solution and the true solution.
-    Vector dmd_solution_u(result_u->getData(), result_u->dim());
-    Vector diff_u(true_solution_u.Size());
-    subtract(dmd_solution_u, true_solution_u, diff_u);
-
-    double tot_diff_norm_u = sqrt(InnerProduct(MPI_COMM_WORLD, diff_u, diff_u));
-    double tot_true_solution_u_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution_u, true_solution_u));
 
     if (myid == 0)
     {
-
-        std::cout << "Relative error of DMD temperature (u) at t_final: " << t_final << " is " << tot_diff_norm_u / tot_true_solution_u_norm << std::endl;
         printf("Elapsed time for solving FOM: %e second\n", fom_timer.RealTime());
-        printf("Elapsed time for training DMD: %e second\n", dmd_training_timer.RealTime());
-        printf("Elapsed time for predicting DMD: %e second\n", dmd_prediction_timer.RealTime());
     }
 
     // 16. Free the used memory.
     delete ode_solver;
     delete pmesh;
-    delete result_u;
+    if (offline)
+    {
+        delete dmd_u;
+    }
 
     MPI_Finalize();
 
@@ -637,7 +783,12 @@ ConductionOperator::~ConductionOperator()
 
 double InitialTemperature(const Vector &x)
 {
-    if (x.Norml2() < 0.5)
+    Vector y(x);
+    Vector c(2);
+    c.Elem(0) = cx;
+    c.Elem(1) = cy;
+    y -= c;
+    if (y.Norml2() < radius)
     {
         return 2.0;
     }

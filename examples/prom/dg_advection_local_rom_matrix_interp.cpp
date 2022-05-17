@@ -7,6 +7,7 @@
 //    dg_advection_local_rom_matrix_interp -online
 //
 // For ROM (parametric case using matrix interpolation):
+//    rm -rf frequencies.txt
 //    dg_advection_local_rom_matrix_interp -offline -ff 1.02
 //    dg_advection_local_rom_matrix_interp -interp_prep -ff 1.02 -rdim 40
 //    dg_advection_local_rom_matrix_interp -offline -ff 1.03
@@ -834,7 +835,7 @@ int main(int argc, char *argv[])
             CAROM::Vector* curr_point = new CAROM::Vector(1, false);
             curr_point->item(0) = f_factor;
 
-            int ref_point = getCenterPoint(parameter_points, false);
+            int ref_point = getClosestPoint(parameter_points, curr_point);
             std::vector<CAROM::Matrix*> rotation_matrices = obtainRotationMatrices(parameter_points, bases, ref_point);
 
             CAROM::MatrixInterpolator basis_interpolator(parameter_points, rotation_matrices, bases, ref_point, "B", rbf_type, interp_method, rbf_width);

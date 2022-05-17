@@ -166,6 +166,15 @@ Matrix* solveLinearSystem(std::vector<Vector*> parameter_points,
                           std::vector<Vector*> data, std::string interp_method,
                           std::string rbf, double& epsilon)
 {
+
+    int mpi_init, rank;
+    MPI_Initialized(&mpi_init);
+    if (mpi_init == 0) {
+        MPI_Init(nullptr, nullptr);
+    }
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
     Matrix* f_T = NULL;
     if (interp_method == "LS")
     {
@@ -207,7 +216,7 @@ Matrix* solveLinearSystem(std::vector<Vector*> parameter_points,
             if (info != 0)
             {
                 epsilon = epsilon * 1.01;
-                std::cout << "Linear solve failed. Increasing epsilon by 1 %% to " << epsilon << std::endl;
+                if (rank == 0) std::cout << "Linear solve failed. Increasing epsilon by 1% to " << epsilon << std::endl;
                 delete f_T;
             }
         }
