@@ -1,0 +1,15 @@
+#!/bin/bash
+#BSUB -nnodes 1
+#BSUB -J 1dBg
+#BSUB -W 12:00
+#BSUB -q pbatch
+#BSUB -o job_%J.out
+#BSUB -e job_%J.err
+# -wa 'KILL
+
+eval "$(conda shell.bash hook)"
+conda activate tfvenv
+jupyter nbconvert --to script train_model.ipynb
+sed -i '/ipython/d' ./*.py
+sed -i '/plt.show()/d' ./*.py
+jsrun -r 1 python -u train_model.py

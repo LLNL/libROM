@@ -24,26 +24,19 @@ def full_network(params):
     model_params = []
     if params['coeff_exist']:
         model_params = pickle.load(open(params['fig_path'] + params['save_name'] + '_params.pkl', 'rb'))['model_params']
-        
     if 'include_sine' in params.keys():
         include_sine = params['include_sine']
     else:
         include_sine = False
-        
     if 'include_cosine' in params.keys():
         include_cosine = params['include_cosine']
     else:
         include_cosine = False
-        
     library_dim = params['library_dim']
-    model_order = params['model_order']
 
     network = {}
-
     x = tf.placeholder(tf.float32, shape=[None, num_sindy, input_dim], name='x')
     dx = tf.placeholder(tf.float32, shape=[None, num_sindy, input_dim], name='dx')
-    if model_order == 2:
-        ddx = tf.placeholder(tf.float32, shape=[None, num_sindy, input_dim], name='ddx')
 
     # Autoencoder
     if activation == 'linear':
@@ -54,13 +47,9 @@ def full_network(params):
                                                                                                               model_params,
                                                                                                               activation=activation)
 
-        
     # compute dz/dt
     if params['diff'] == 'symb': # symbolic differentiation
-        if model_order == 1:
-            dz = z_derivative(x, dx, encoder_weights, encoder_biases, activation=activation) # [batch,num_sindy,latent_dim]
-        else:
-            dz,ddz = z_derivative_order2(x, dx, ddx, encoder_weights, encoder_biases, activation=activation)
+        dz = z_derivative(x, dx, encoder_weights, encoder_biases, activation=activation) # [batch,num_sindy,latent_dim]
     elif params['diff'] == 'auto': # automatic differentiation
         dzdx_batch = batch_jacobian(z, x)
         dzdx = []
@@ -69,23 +58,18 @@ def full_network(params):
         dzdx = tf.stack(dzdx, axis=1) # [batch,num_sindy,output_dim]
         dz = tf.matmul(dzdx, dx[:,:,:,None])[:,:,:,0] # [batch,num_sindy,latent_dim]
         
-        
     # SINDy
     Theta = []
     sindy_coefficients = []
     sindy_predict = [] # [batch,num_sindy,latent_dim]
-
-        
+    
     if params['sequential_thresholding']: # 1 mask for all local SINDys
         coefficient_mask = tf.placeholder(tf.float32, shape=[library_dim,latent_dim], name='coefficient_mask')
         network['coefficient_mask'] = coefficient_mask
             
 
     for i in range(num_sindy):
-        if model_order == 1:
-            Theta.append(sindy_library_tf(z[:,i,:], latent_dim, poly_order, include_sine, include_cosine))
-        else:
-            Theta.append(sindy_library_tf_order2(z, dz, latent_dim, poly_order, include_sine, include_cosine))
+        Theta.append(sindy_library_tf(z[:,i,:], latent_dim, poly_order, include_sine, include_cosine))
         
         if params['coeff_exist']:
             if i < len(model_params[0]):
@@ -127,8 +111,7 @@ def full_network(params):
             dx_decode = tf.linalg.matmul(dxdz_decode, sindy_predict[:,:,:,None])[:,:,:,0] # [batch,num_sindy,input_dim]
     else:
         dx_decode = tf.zeros(tf.shape(dx))
-        
-        
+         
     network['x'] = x   # [batch,num_sindy,input_dim]
     network['dx'] = dx # [batch,num_sindy,input_dim]
     network['z'] = z   # [batch,num_sindy,latent_dim]
@@ -141,14 +124,7 @@ def full_network(params):
     network['decoder_biases'] = decoder_biases
     network['Theta'] = Theta # list
     network['sindy_coefficients'] = sindy_coefficients # list
-    
-    if model_order == 1:
-        network['dz_predict'] = sindy_predict # [batch,num_sindy,latent_dim]
-    else:
-        network['ddz'] = ddz
-        network['ddz_predict'] = sindy_predict
-        network['ddx'] = ddx
-        network['ddx_decode'] = ddx_decode
+    network['dz_predict'] = sindy_predict # [batch,num_sindy,latent_dim]
     return network
 
     
@@ -164,17 +140,10 @@ def define_loss(network, params):
     x_decode = network['x_decode']  # [batch,num_sindy,input_dim]
     num_sindy = params['num_sindy'] # number of local SINDys
     sindy_coefficients = network['sindy_coefficients']
-    
-    if params['model_order'] == 1:
-        dz = network['dz']                 # [batch,num_sindy,latent_dim]
-        dz_predict = network['dz_predict'] # [batch,num_sindy,latent_dim]
-        dx = network['dx']                 # [batch,num_sindy,input_dim]
-        dx_decode = network['dx_decode']   # [batch,num_sindy,input_dim]
-    else:
-        ddz = network['ddz']
-        ddz_predict = network['ddz_predict']
-        ddx = network['ddx']
-        ddx_decode = network['ddx_decode']
+    dz = network['dz']                 # [batch,num_sindy,latent_dim]
+    dz_predict = network['dz_predict'] # [batch,num_sindy,latent_dim]
+    dx = network['dx']                 # [batch,num_sindy,input_dim]
+    dx_decode = network['dx_decode']   # [batch,num_sindy,input_dim]
         
     losses = {}
     losses['decoder'] = tf.zeros((1))
@@ -184,12 +153,8 @@ def define_loss(network, params):
     
     for i in range(num_sindy):
         losses['decoder'] += tf.reduce_mean((x[:,i,:] - x_decode[:,i,:])**2)
-        if params['model_order'] == 1:
-            losses['sindy_x'] += tf.reduce_mean((dx[:,i,:] - dx_decode[:,i,:])**2)
-            losses['sindy_z'] += tf.reduce_mean((dz[:,i,:] - dz_predict[:,i,:])**2)
-        else:
-            losses['sindy_x'] = tf.reduce_mean((ddx - ddx_decode)**2)
-            losses['sindy_z'] = tf.reduce_mean((ddz - ddz_predict)**2)
+        losses['sindy_x'] += tf.reduce_mean((dx[:,i,:] - dx_decode[:,i,:])**2)
+        losses['sindy_z'] += tf.reduce_mean((dz[:,i,:] - dz_predict[:,i,:])**2)
         losses['sindy_regularization'] += tf.reduce_mean(tf.abs(sindy_coefficients[i]))
         
     loss = params['loss_weight_decoder'] * losses['decoder'] \
