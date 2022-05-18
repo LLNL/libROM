@@ -12,6 +12,7 @@
 // rhs to be sampled for the interpolation of the rhs.
 
 #include "linalg/Matrix.h"
+#include "Utilities.h"
 #include "mpi.h"
 #include <cmath>
 #include <vector>
@@ -19,7 +20,7 @@
 #include <set>
 #include <algorithm>
 
-#include "DEIM.h"
+#include "GNAT.h"
 
 namespace CAROM {
 

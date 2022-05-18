@@ -292,7 +292,9 @@ void qrfactorize(struct QRManager*);
 
 void qaction(struct QRManager*, struct SLPK_Matrix* A, int S, int T);
 
-void qcompute(struct QRManager*);
+void qrcompute(struct QRManager*);
+
+void lqcompute(struct QRManager*);
 
 void lqfactorize(struct QRManager*);
 

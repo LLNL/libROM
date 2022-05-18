@@ -638,7 +638,49 @@ subroutine qaction(mgr, A, S, T) bind(C)
     deallocate(work)
 end subroutine
 
-subroutine qcompute(mgr) bind(C)
+subroutine qrcompute(mgr) bind(C)
+    use mpi
+    use ISO_FORTRAN_ENV, only: error_unit
+
+    type(QRManager), intent(inout) :: mgr
+    integer :: mrank, ierr
+
+    type(SLPK_Matrix), pointer :: A
+    integer :: desca(9), lwork
+
+    real(REAL_KIND), allocatable :: work(:)
+    real(REAL_KIND) :: bestwork(1)
+
+    real(REAL_KIND), pointer :: Adata(:, :)
+    real(REAL_KIND), pointer :: tau(:)
+
+    call MPI_Comm_rank(MPI_COMM_WORLD, mrank, ierr)
+    call c_f_pointer(mgr%A, A)
+    call descinit(desca, A%m, A%n, A%mb, A%nb, 0, 0, A%ctxt, A%mm, ierr)
+    call c_f_pointer(A%mdata, Adata, [A%mm, A%mn])
+
+    call c_f_pointer(mgr%tau, tau, [mgr%tauSize])
+
+    ! First call just sets bestwork(1) to work size
+    lwork = -1
+    call pdorgqr(A%m, A%n, mgr%tauSize, Adata, 1, 1, desca, tau, &
+         & bestwork, lwork, ierr)
+    lwork = bestwork(1)
+    allocate(work(lwork))
+
+    ! Now work is allocated, and factorization is done next
+    call pdorgqr(A%m, A%n, mgr%tauSize, Adata, 1, 1, desca, tau, work, lwork, ierr)
+    if (mrank .eq. 0) then
+        if (ierr .lt. 0) then
+            write(error_unit, *) "QR: error: argument ", -ierr, " had an illegal value"
+        elseif (ierr .gt. 0) then
+            write(error_unit, *) "QR: unknown error"
+        endif
+    endif
+    deallocate(work)
+end subroutine
+
+subroutine lqcompute(mgr) bind(C)
     use mpi
     use ISO_FORTRAN_ENV, only: error_unit
 

@@ -181,8 +181,8 @@ public:
     void
     getIntegerVector(
         const std::string& file_name,
-        std::vector<int> &data, 
-        bool append);
+        std::vector<int> &data,
+        bool append = false);
 
     /**
      * @brief Reads an array of doubles associated with the supplied filename.
@@ -219,7 +219,7 @@ public:
     getDoubleArray(
         const std::string& file_name,
         double* data,
-        int nelements, 
+        int nelements,
         std::vector<int> idx);
 
     /**
@@ -259,8 +259,8 @@ public:
     void
     getDoubleVector(
         const std::string& file_name,
-        std::vector<double> &data, 
-        bool append);
+        std::vector<double> &data,
+        bool append = false);
 
     /**
      * @brief Reads a vector of strings associated with the supplied filename.
@@ -275,8 +275,8 @@ public:
     void
     getStringVector(
         const std::string& file_name,
-        std::vector<std::string> &data, 
-        bool append);
+        std::vector<std::string> &data,
+        bool append = false);
 
     /**
      * @brief Count the number of lines of CSV database file.

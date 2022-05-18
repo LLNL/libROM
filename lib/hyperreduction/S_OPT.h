@@ -8,11 +8,11 @@
  *
  *****************************************************************************/
 
-// Description: Interface to the DEIM algorithm to determine the rows of the
+// Description: Interface to the S_OPT algorithm to determine the rows of the
 // rhs to be sampled for the interpolation of the rhs.
 
-#ifndef included_DEIM_h
-#define included_DEIM_h
+#ifndef included_S_OPT_h
+#define included_S_OPT_h
 
 #include <vector>
 
@@ -21,7 +21,7 @@ namespace CAROM {
 class Matrix;
 
 /**
- * @brief Computes the DEIM algorithm on the given basis.
+ * @brief Computes the S_OPT algorithm on the given basis.
  *
  * Implemented from Saifon Chaturantabut and Danny C. Sorensen "Nonlinear Model
  * Reduction via Discrete Empirical Interpolation", SIAM J. Sci. Comput., 32(5),
@@ -41,12 +41,15 @@ class Matrix;
  * @param[in] num_procs The total number of processes.
  */
 void
-DEIM(const Matrix* f_basis,
-     int num_f_basis_vectors_used,
-     std::vector<int>& f_sampled_row,
-     std::vector<int>& f_sampled_rows_per_proc,
-     Matrix& f_basis_sampled_inv,
-     int myid,
-     int num_procs);
+S_OPT(const Matrix* f_basis,
+      bool use_qr_basis,
+      int num_f_basis_vectors_used,
+      std::vector<int>& f_sampled_row,
+      std::vector<int>& f_sampled_rows_per_proc,
+      const int myid,
+      const int num_procs,
+      const int num_samples_req);
+
+}
 
 #endif

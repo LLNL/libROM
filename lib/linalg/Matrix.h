@@ -491,6 +491,36 @@ public:
         int this_row,
         Vector& other) const;
 
+    /**
+     * @brief Square every element in the matrix.
+     *
+     * @return The product Matrix.
+     */
+    Matrix*
+    pointwise_square() const
+    {
+        Matrix* result = 0;
+        pointwise_square(result);
+        return result;
+    }
+
+    /**
+     * @brief Square every element in the matrix.
+     *
+     * @param[out] result The product Matrix.
+     */
+    void
+    pointwise_square(
+        Matrix*& result) const;
+
+    /**
+     * @brief Square every element in the matrix.
+     *
+     * @param[out] result The product Matrix.
+     */
+    void
+    pointwise_square(
+        Matrix& result) const;
 
     /**
      * @brief Computes a += this*b*c.

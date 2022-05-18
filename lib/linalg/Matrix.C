@@ -440,6 +440,43 @@ Matrix::pointwise_mult(
     }
 }
 
+
+void
+Matrix::pointwise_square(
+    Matrix*& result) const
+{
+    // If the result has not been allocated then do so.  Otherwise size it
+    // correctly.
+    if (result == 0) {
+        result = new Matrix(d_num_rows, d_num_cols, d_distributed);
+    }
+    else {
+        result->setSize(d_num_rows, d_num_cols);
+    }
+
+    // Do the pointwise square.
+    for (int this_row = 0; this_row < d_num_rows; ++this_row) {
+        for (int this_col = 0; this_col < d_num_cols; ++this_col) {
+            result->item(this_row, this_col) = item(this_row, this_col) * item(this_row, this_col);
+        }
+    }
+}
+
+void
+Matrix::pointwise_square(
+    Matrix& result) const
+{
+    // Size result correctly.
+    result.setSize(d_num_rows, d_num_cols);
+
+    // Do the pointwise square.
+    for (int this_row = 0; this_row < d_num_rows; ++this_row) {
+        for (int this_col = 0; this_col < d_num_cols; ++this_col) {
+            result.item(this_row, this_col) = item(this_row, this_col) * item(this_row, this_col);
+        }
+    }
+}
+
 void
 Matrix::multPlus(
     Vector& a,
