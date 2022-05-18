@@ -64,6 +64,14 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include "utils/CSVDatabase.h"
+
+#ifndef _WIN32
+#include <sys/stat.h>  // mkdir
+#else
+#include <direct.h>    // _mkdir
+#define mkdir(dir, mode) _mkdir(dir)
+#endif
 
 using namespace std;
 using namespace mfem;
@@ -150,6 +158,8 @@ int main(int argc, char *argv[])
     bool visit = false;
     int vis_steps = 5;
     bool adios2 = false;
+    bool save_csv = false;
+    const char *basename = "";
 
     int precision = 8;
     cout.precision(precision);
@@ -190,6 +200,8 @@ int main(int argc, char *argv[])
                    "Save data files for VisIt (visit.llnl.gov) visualization.");
     args.AddOption(&vis_steps, "-vs", "--visualization-steps",
                    "Visualize every n-th timestep.");
+    args.AddOption(&rdim, "-rdim", "--rdim",
+                   "Reduced dimension for DMD.");
     args.AddOption(&offline, "-offline", "--offline", "-no-offline", "--no-offline",
                    "Enable or disable the offline phase.");
     args.AddOption(&online, "-online", "--online", "-no-online", "--no-online",
@@ -199,8 +211,10 @@ int main(int argc, char *argv[])
     args.AddOption(&adios2, "-adios2", "--adios2-streams", "-no-adios2",
                    "--no-adios2-streams",
                    "Save data using adios2 streams.");
-    args.AddOption(&rdim, "-rdim", "--rdim",
-                   "Reduced dimension for DMD.");
+    args.AddOption(&save_csv, "-csv", "--csv", "-no-csv", "--no-csv",
+                   "Enable or disable MFEM result output (files in CSV format).");
+    args.AddOption(&basename, "-o", "--outputfile-name",
+                   "Name of the sub-folder to dump files within the run directory.");
     args.Parse();
     if (!args.Good())
     {
@@ -212,6 +226,22 @@ int main(int argc, char *argv[])
     if (myid == 0)
     {
         args.PrintOptions(cout);
+    }
+
+    string outputPath = "run";
+    if (string(basename) != "") {
+        outputPath += "/" + string(basename);
+    }
+
+    if (save_csv && myid == 0) {
+        const char path_delim = '/';
+        string::size_type pos = 0;
+        do {
+            pos = outputPath.find(path_delim, pos+1);
+            string subdir = outputPath.substr(0, pos);
+            mkdir(subdir.c_str(), 0777);
+        }
+        while (pos != string::npos);
     }
 
     MFEM_VERIFY(!(offline && online), "both offline and online can not be true!");
@@ -403,11 +433,13 @@ int main(int argc, char *argv[])
     ode_solver->Init(oper);
     double t = 0.0;
     vector<double> ts;
+    vector<double> taux(t, 1);
     CAROM::Vector* init = NULL;
 
     fom_timer.Stop();
 
     CAROM::DMD* dmd_u = NULL;
+    CAROM::CSVDatabase csv_db;
 
     if (offline)
     {
@@ -417,6 +449,14 @@ int main(int argc, char *argv[])
         u_gf.SetFromTrueDofs(u);
         dmd_u = new CAROM::DMD(u.Size(), dt);
         dmd_u->takeSample(u.GetData(), t);
+
+        if (save_csv && myid == 0)
+        {
+            mkdir((string(outputPath) + "/step0").c_str(), 0777);
+            csv_db.putDoubleArray(string(outputPath) + "/step0/sol.csv", u.GetData(), u.Size());
+            csv_db.putDoubleVector(string(outputPath) + "/step0/tval.csv", taux, 1);
+        }
+
         if (myid == 0)
         {
             std::cout << "Taking snapshot at: " << t << std::endl;
@@ -452,6 +492,15 @@ int main(int argc, char *argv[])
 
             u_gf.SetFromTrueDofs(u);
             dmd_u->takeSample(u.GetData(), t);
+
+            if (save_csv && myid == 0)
+            {
+                taux[0] = t;
+                mkdir((string(outputPath) + "/step" + to_string(ti)).c_str(), 0777);
+                csv_db.putDoubleArray(string(outputPath) + "/step" + to_string(ti) + "/sol.csv", u.GetData(), u.Size());
+                csv_db.putDoubleVector(string(outputPath) + "/step" + to_string(ti) + "/tval.csv", taux, 1);
+            }
+
             if (myid == 0)
             {
                 std::cout << "Taking snapshot at: " << t << std::endl;
