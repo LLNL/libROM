@@ -8,7 +8,7 @@
  *
  *****************************************************************************/
 
-// Description: Interface to the DEIM algorithm to determine the rows of the
+// Description: Interface to the GNAT algorithm to determine the rows of the
 // rhs to be sampled for the interpolation of the rhs.
 
 #include "linalg/Matrix.h"

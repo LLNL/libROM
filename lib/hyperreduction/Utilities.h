@@ -39,4 +39,6 @@ void RowInfoMax(RowInfo* a, RowInfo* b, int* len, MPI_Datatype* type);
 
 #endif /* DOXYGEN_IGNORE */
 
+}
+
 #endif

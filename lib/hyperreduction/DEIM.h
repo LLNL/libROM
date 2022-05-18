@@ -49,4 +49,6 @@ DEIM(const Matrix* f_basis,
      int myid,
      int num_procs);
 
+}
+
 #endif
