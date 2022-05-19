@@ -53,7 +53,7 @@
 // 4. DATA_DIR/dim.csv                    -- specifies the dimension of VAR_NAME
 // 5. DATA_DIR/DATASET/tval.csv           -- specifies the time instances
 // 6. DATA_DIR/DATASET/STATE/VAR_NAME.csv -- each row specifies one value of VAR_NAME of STATE
-// 7. DATA_DIR/DATASET/TEMPORAL_IDX.csv   -- (optional) each row specifies one temporal index of VAR_NAME
+// 7. DATA_DIR/DATASET/TEMPORAL_IDX.csv   -- (optional) specifies the first and last temporal index in DATASET
 // 8. DATA_DIR/SPATIAL_IDX.csv            -- (optional) each row specifies one spatial index of VAR_NAME
 // 9. run/OUT_DIR/indicator_val.csv       -- (optional) each row specifies one indicator endpoint value
 
@@ -111,8 +111,8 @@ int main(int argc, char *argv[])
     const char *var_name = "sol";
     const char *train_list = "training_par";
     const char *test_list = "testing_par";
-    const char *temporal_idx = "temporal_idx";
-    const char *spatial_idx = "spatial_idx";
+    const char *temporal_idx_list = "temporal_idx";
+    const char *spatial_idx_list = "spatial_idx";
     const char *basename = "";
     bool save_csv = false;
 
@@ -157,6 +157,10 @@ int main(int argc, char *argv[])
                    "Name of the training datasets within the list directory.");
     args.AddOption(&test_list, "-test-set", "--testing-set-name",
                    "Name of the testing datasets within the list directory.");
+    args.AddOption(&temporal_idx_list, "-t-idx", "--temporal0index",
+                   "Name of the file indicating bound of temporal indices.");
+    args.AddOption(&spatial_idx_list, "-x-idx", "--spatial-index",
+                   "Name of the file indicating spatial indices.");
     args.AddOption(&basename, "-o", "--outputfile-name",
                    "Name of the sub-folder to dump files within the run directory.");
     args.AddOption(&save_csv, "-csv", "--csv", "-no-csv", "--no-csv",
@@ -213,7 +217,7 @@ int main(int argc, char *argv[])
 
     int dim = nelements;
     vector<int> idx_state;
-    csv_db.getIntegerVector(string(data_dir) + "/" + string(spatial_idx) + ".csv", idx_state, false);
+    csv_db.getIntegerVector(string(data_dir) + "/" + string(spatial_idx_list) + ".csv", idx_state, false);
     if (idx_state.size() > 0)
     {
         dim = idx_state.size();
@@ -376,9 +380,25 @@ int main(int argc, char *argv[])
             vector<string> snap_list;
             csv_db.getStringVector(string(list_dir) + "/" + par_dir + ".csv", snap_list, false);
 
+            vector<int> snap_bound; 
+            csv_db.getIntegerVector(string(data_dir) + "/" + par_dir + "/" + temporal_idx_list + ".csv", snap_bound, 2);
+            if (snap_bound.size() > 0)
+            {
+                CAROM_VERIFY(snap_bound.size() == 2);
+                if (myid == 0)
+                {
+                    cout << "Restricting on snapshot #" << snap_bound[0] << " to " << snap_bound[1] << "." << endl;
+                }
+            }
+            else
+            {
+                snap_bound.push_back(0);
+                snap_bound.push_back(num_train_snap[idx_dataset]-1);
+            }
+
             int curr_window = 0;
             int overlap_count = 0;
-            for (int idx_snap = 0; idx_snap < num_train_snap[idx_dataset]; ++idx_snap)
+            for (int idx_snap = snap_bound[0]; idx_snap <= snap_bound[1]; ++idx_snap)
             {
                 string snap = snap_list[idx_snap]; // STATE
                 double tval = 0.0;
@@ -557,9 +577,25 @@ int main(int argc, char *argv[])
             csv_db.getStringVector(string(list_dir) + "/" + par_dir + ".csv", snap_list, false);
             int num_snap = snap_list.size();
 
+            vector<int> snap_bound; 
+            csv_db.getIntegerVector(string(data_dir) + "/" + par_dir + "/" + temporal_idx_list + ".csv", snap_bound, 2);
+            if (snap_bound.size() > 0)
+            {
+                CAROM_VERIFY(snap_bound.size() == 2);
+                if (myid == 0)
+                {
+                    cout << "Restricting on snapshot #" << snap_bound[0] << " to " << snap_bound[1] << "." << endl;
+                }
+            }
+            else
+            {
+                snap_bound.push_back(0);
+                snap_bound.push_back(num_snap-1);
+            }
+
             int curr_window = 0;
             double tval = 0.0;
-            for (int idx_snap = 0; idx_snap < num_snap; ++idx_snap)
+            for (int idx_snap = snap_bound[0]; idx_snap <= snap_bound[1]; ++idx_snap)
             {
                 string snap = snap_list[idx_snap]; // STATE
                 csv_db.getDoubleArray(string(data_dir) + "/" + par_dir + "/" + snap + "/tval.csv", &tval, 1);
