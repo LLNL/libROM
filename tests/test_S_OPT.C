@@ -57,6 +57,20 @@ TEST(S_OPTSerialTest, Test_S_OPT)
 
     double* orthonormal_mat = new double[num_rows * num_cols];
 
+    // Result of S_OPT (f_basis_sampled_inv)
+    double* S_OPT_true_ans = new double[50] {
+        -2.34972,  0.0965949, 0.606533, 0.638275, -0.386026,
+        -2.44988,  0.430449,  1.07449,  1.25031,  -0.647952,
+        -2.54602,  0.803596,  1.43966,  1.59905,  -0.715677,
+        -3.37144,  3.97716,   1.47431,  1.69748,  -0.171356,
+        -3.49946,  4.15045,   1.03944,  1.29441,   0.25575,
+        -3.57175,  1.92897,  -3.25661, -2.99323,   2.22553,
+        -3.32192, -0.969017, -4.72273, -2.43004,   0.548499,
+        -3.38077, -5.25456,  -2.08931,  5.26275,  -2.44579,
+        -3.39278, -4.41453,   4.52803, -0.244015,  4.43685,
+        -2.01887, -1.11166,   3.18003, -6.02615,  -4.53692
+    };
+
     int index = 0;
     for (int i = 0; i < num_rows; i++)
     {
@@ -80,17 +94,17 @@ TEST(S_OPTSerialTest, Test_S_OPT)
         EXPECT_EQ(f_sampled_row[i], f_sampled_row_true_ans[i]);
     }
 
-    // // Compare the norm between the S_OPT result and the true S_OPT answer
-    // double l2_norm_diff = 0.0;
-    // for (int i = 0; i < num_cols; i++) {
-    //     for (int j = 0; j < num_cols; j++) {
-    //         l2_norm_diff += pow(abs(S_OPT_true_ans[i * num_cols + j] - f_basis_sampled_inv(i, j)), 2);
-    //     }
-    // }
-    // l2_norm_diff = sqrt(l2_norm_diff);
-    //
-    // // Allow for some error due to float rounding
-    // EXPECT_TRUE(l2_norm_diff < 1e-5);
+    // Compare the norm between the S_OPT result and the true S_OPT answer
+    double l2_norm_diff = 0.0;
+    for (int i = 0; i < num_samples; i++) {
+        for (int j = 0; j < num_cols; j++) {
+            l2_norm_diff += pow(abs(S_OPT_true_ans[i * num_cols + j] - f_basis_sampled_inv.item(i, j)), 2);
+        }
+    }
+    l2_norm_diff = sqrt(l2_norm_diff);
+
+    // Allow for some error due to float rounding
+    EXPECT_TRUE(l2_norm_diff < 1e-4);
 }
 
 int main(int argc, char* argv[])
