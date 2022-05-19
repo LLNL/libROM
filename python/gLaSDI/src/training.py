@@ -84,18 +84,29 @@ def train_network(training_data, params):
         param_flag = True # flag to indicate whether to update parameters
         with tf.Session(config = params['config']) as sess:
             sess.run(tf.global_variables_initializer())
+            params['coeff_exist'] = True
+            sindy_coefficients = []
+            for i in range(len(autoencoder_network['sindy_coefficients'])):
+                sindy_coefficients.append(sess.run(autoencoder_network['sindy_coefficients'][i], feed_dict={}))
+            params['model_params'] = []
+            params['model_params'].append(sindy_coefficients)
+            params['model_params'].append(sess.run(autoencoder_network['encoder_weights'], feed_dict={}))
+            params['model_params'].append(sess.run(autoencoder_network['encoder_biases'], feed_dict={}))
+            params['model_params'].append(sess.run(autoencoder_network['decoder_weights'], feed_dict={}))
+            params['model_params'].append(sess.run(autoencoder_network['decoder_biases'], feed_dict={}))
+              
             if epoch_count == 0:
                 print(f'* Evaluating')
-                err_array_tmp, max_err, idx, param_tmp, sindy_idx_tmp = err_map_subset(sess, autoencoder_network, 
-                                                                                    params, test_data=test_data,
-                                                                                    err_type=params['err_type'])
+                # random subset evaluation
+                err_array_tmp, max_err, idx, param_tmp, sindy_idx_tmp = err_map_subset(params, test_data=test_data,
+                                                                                       err_type=params['err_type'])
                 testing_losses.append(max_err)
                 err_array.append(err_array_tmp)
                 max_err_idx_param.append([])
                 sindy_idx.append(sindy_idx_tmp)
                 
-            for i in range(params['update_epoch']):
-                for j in range(params['epoch_size']//params['batch_size']):
+            for i in range(params['update_epoch']): # loop over epochs
+                for j in range(params['epoch_size']//params['batch_size']): # loop over batches
                     batch_idxs = np.arange(j*params['batch_size'], (j+1)*params['batch_size'])
                     train_dict = create_feed_dictionary(training_data, params, idxs=batch_idxs)
                     sess.run(train_op, feed_dict=train_dict)
@@ -122,16 +133,14 @@ def train_network(training_data, params):
                     params['model_params'].append(sess.run(autoencoder_network['encoder_biases'], feed_dict={}))
                     params['model_params'].append(sess.run(autoencoder_network['decoder_weights'], feed_dict={}))
                     params['model_params'].append(sess.run(autoencoder_network['decoder_biases'], feed_dict={}))
-                    params['coeff_exist'] = True
                     pickle.dump(params, open(params['fig_path'] + params['save_name'] + '_params.pkl', 'wb'))
                     saver.save(sess, params['fig_path'] + params['save_name'])
             
             
             # Evaluate current model on a random subset of parameters using a specified error indicator
             print(f'* Evaluating')
-            err_array_tmp, max_err, idx, param_tmp, sindy_idx_tmp = err_map_subset(sess, autoencoder_network, 
-                                                                                params, test_data=test_data,
-                                                                                err_type=params['err_type'])
+            err_array_tmp, max_err, idx, param_tmp, sindy_idx_tmp = err_map_subset(params, test_data=test_data,
+                                                                                   err_type=params['err_type'])
             testing_losses.append(max_err)
             err_array.append(err_array_tmp)
             max_err_idx_param.append(copy.copy(max_err_idx_param[-1]))
@@ -140,8 +149,7 @@ def train_network(training_data, params):
             
             # Update tolerance for error indicator
             tol_old = params['tol']
-            params['tol'], max_rel_err = update_tol(sess, autoencoder_network, params, 
-                                       training_data, err_type=params['err_type'])
+            params['tol'], max_rel_err = update_tol(params, training_data, err_type=params['err_type'])
             print(f"  Max rel. err.: {max_rel_err:.1f}%, Update tolerance for error indicator from {tol_old:.5f} to {params['tol']:.5f}")
             
             
@@ -163,15 +171,13 @@ def train_network(training_data, params):
             params['model_params'].append(sess.run(autoencoder_network['encoder_biases'], feed_dict={}))
             params['model_params'].append(sess.run(autoencoder_network['decoder_weights'], feed_dict={}))
             params['model_params'].append(sess.run(autoencoder_network['decoder_biases'], feed_dict={}))
-            params['coeff_exist'] = True
-            
             pickle.dump(params, open(params['fig_path'] + params['save_name'] + '_params.pkl', 'wb'))
             final_losses = sess.run((losses['decoder'], losses['sindy_x'], losses['sindy_z'],
                                      losses['sindy_regularization']), feed_dict=train_dict)
             saver.save(sess, params['fig_path'] + params['save_name'])
             
             
-            # Update training data
+            # Update training dataset and parameter set
             for i in training_data['param']:
                 if np.linalg.norm(i-test_data['param'][idx]) < 1e-8:
                     print(f"  PARAMETERS EXIST, NOT adding it!")
@@ -197,11 +203,12 @@ def train_network(training_data, params):
                 subset_ratio = params['subsize']/params['num_test']*100 # new subset size
                 print(f"  Max error indicator <= Tol! Current subset ratio {subset_ratio:.1f}%")
 
-            if 'sindy_max' in params.keys() and params['sindy_max'] != None:
+            # check termination criterion
+            if 'sindy_max' in params.keys() and params['sindy_max'] != None: # prescribed number of local DIs
                 if params['num_sindy'] == params['sindy_max']+1:
                     print(f"  Max # SINDys {params['sindy_max']:d} is reached! Training done!")
                     train_flag = False 
-            elif subset_ratio >= params['subsize_max']: 
+            elif subset_ratio >= params['subsize_max']: # prescribed error toerlance
                 print(f"  Current subset ratio {subset_ratio:.1f}% >= Target subset ratio {params['subsize_max']:.1f}%!")
                 train_flag = False 
                 
@@ -224,7 +231,8 @@ def train_network(training_data, params):
 
 def NN(x, weights, biases, activation):
     """
-    This networks serve as either an encoder or a decoder.
+    This network serves as either an encoder or a decoder, 
+    where the output layer has a linear activation.
     """
     num_layers = len(weights)
     for i in range(num_layers-1):
@@ -239,50 +247,64 @@ def NN(x, weights, biases, activation):
     return x
 
 
-def eval_perf(sess, tensorflow_run_tuple, autoencoder_network, params, test_data, test_param, idx=None):
+def eval_model(test_data, params, test_param, idx=None, knn=4, calc_dz=False, calc_du=False):
     """
-    This function evaluates the model on a given testing parameter case.
+    This function evaluates the gLaSDI model on a given testing parameter case.
     
     inputs:
-        sess: the tensorflow session
-        autoencoder_network: the autoencoder network
-        test_data: data of testing parameter case (could be updated to just provide the 
+        test_data: dict, data of testing parameter case (could be updated to just provide the 
                     initial condition of the testing parameter case)
-        idx: the index of the DI used for evaluation; used when knn=1; if knn=1 and it is None, 
-                the DI closest to the testing parameter will be used.
+        params: dict, parameters of the gLaSDI model
+        test_param: parameters of the testing case
+        idx: int or None, the index of the DI used for evaluation; used only when knn=1; if knn=1 and it is None, 
+             the DI closest to the testing parameter will be used.
+        knn: int, the number of nearest local DIs used for convex interpolation of the DI coefficient matrix of the testing case
+        calc_dz: bool, whether or not to calculate dz/dt
+        calc_du: bool, whether or not to calculate du/dt
     
-    outputs:
-        u_sim: prediction of full-order model solutions by DI and decoder
-        idx: the index of the DI closest to the testing parameter based on the Euclidean distance
+    outputs: 
+        u_decoder: autoencoder reconstruction of full-order model solution u
+        du_decoder: autoencoder prediction of du/dt
+        u_sim: gLaSDI prediction of u by DI and decoder
+        du_sim: gLaSDI prediction of du/dt by DI and decoder
+        z_encoder: encoder-predicted latent-space dynamics
+        dz_encoder: encoder-predicted gradient of latent-space dynamics
+        z_sim: DI-predicted latent-space dynamics
+        dz_sim: DI-predicted gradient of latent-space dynamics
+        idx: the index of the DI closest to the testing case based on the Euclidean distance
+        timer_rom: computational time of each step
     """
+    timer = []
+    
+    # Step 1: Encoder-predicted latent-space dynamics and autoencoder reconstruction,
+    # which is excluded from the measurement of ROM computational time
+    timer.append(time()) 
+    include_sine = False
+    include_cosine = False
     if 'include_sine' in params.keys():
         include_sine = params['include_sine']
-    else:
-        include_sine = False
-        
     if 'include_cosine' in params.keys():
         include_cosine = params['include_cosine']
-    else:
-        include_cosine = False
         
-    test_dictionary = create_feed_dictionary2(test_data, params, idxs=1)
-    tf_results = sess.run(tensorflow_run_tuple, feed_dict=test_dictionary)
+    z_encoder = NN(test_data['x'], params['model_params'][1], params['model_params'][2], params['activation']) # encoder
+    u_decoder = NN(z_encoder, params['model_params'][3], params['model_params'][4], params['activation']) # decoder
     
-    test_set_results = {}
-    for i,key in enumerate(autoencoder_network.keys()):
-        test_set_results[key] = tf_results[i]
-
+    
+    # Step 2: find the nearest neighbor (optional)
+    timer.append(time()) 
     if idx == None:
         train_param = np.stack(params['param'])
         idx = np.argmin(np.linalg.norm(train_param-test_param, axis=1))
-
-    # calculate SINDy coefficients
-    if params['convex_knn'] == 1: # nearest SINDy's coefficient
-        sindy_coeff = test_set_results['sindy_coefficients'][idx]   
+    
+    
+    # Step 3: calculate DI coefficient matrix
+    timer.append(time())        
+    if knn == 1:
+        sindy_coeff = params['model_params'][0][idx]
         
-    else: # KNN convex interpolation of coefficients
+    else: # KNN convex interpolation of coefficient matrix
         dist = np.linalg.norm(train_param-test_param, axis=1)
-        knn_idx = np.argsort(dist)[:params['convex_knn']]
+        knn_idx = np.argsort(dist)[:knn]
         phi = np.zeros_like(knn_idx)
         if dist[knn_idx[0]] == 0: # check if the min distance is zero
             phi[0] = 1
@@ -290,30 +312,54 @@ def eval_perf(sess, tensorflow_run_tuple, autoencoder_network, params, test_data
             phi = 1 / np.linalg.norm(train_param[knn_idx]-test_param, axis=1)**2
         psi = phi / phi.sum()
 
-        sindy_coeff = np.zeros(test_set_results['sindy_coefficients'][0].shape)
+        sindy_coeff = np.zeros(params['model_params'][0][0].shape)
         for i,kidx in enumerate(knn_idx):
-            sindy_coeff += psi[i] * test_set_results['sindy_coefficients'][kidx]
+            sindy_coeff += psi[i] * params['model_params'][0][kidx]
+            
 
-    # predict latent-space dynamics given the initial condition of latent-space variables
-    z_sim = sindy_simulate(test_set_results['z'][0,idx,:], 
-                           test_data['t'].squeeze(), 
+    # Step 4: DI-predicted lastent-space dynamics and physical dynamics
+    timer.append(time())
+    z_sim = sindy_simulate(z_encoder[0,:], test_data['t'].squeeze(), 
                            sindy_coeff, params['poly_order'], 
-                           include_sine, include_cosine)
-    u_sim = NN(z_sim, test_set_results['decoder_weights'], 
-               test_set_results['decoder_biases'], params['activation'])
-    return u_sim, idx
+                           include_sine,include_cosine)
+    u_sim = NN(z_sim, params['model_params'][3], params['model_params'][4], params['activation'])
+
+    timer.append(time())
+    timer1 = np.array(timer)
+    timer2 = timer1[1:]
+    timer_rom = timer2 - timer1[:-1]
+    
+    # calculate dz/dt, du/dt
+    if calc_dz:
+        dz_encoder = derivative(z_encoder,params['pde']['tstop'])
+        dz_sim = derivative(z_sim,params['pde']['tstop'])
+    else:
+        dz_encoder = 0
+        dz_sim = 0
+        
+    if calc_du:
+        du_decoder = derivative(u_decoder,params['pde']['tstop'])
+        du_sim = derivative(u_sim,params['pde']['tstop'])
+    else:
+        du_decoder = 0
+        du_sim = 0
+    return u_decoder, du_decoder, u_sim, du_sim, z_encoder, dz_encoder, z_sim, dz_sim, idx, timer_rom
 
 
-def err_map_subset(sess, autoencoder_network, params, test_data=None, err_type=1):
+def err_map_subset(params, test_data=None, err_type=1):
     """
     This function computes errors in random subsets of the parameter space 
     using a speciffied error indicator. The subset size and the threshold for 
     error indicator are adjusted during training.
     inputs:
+        params: dict, parameters of the gLaSDI model
         test_data: dict, testing data
         err_type: int, types of error indicator. 
-                1: max relative error (if test data available)
-                2: residual norm (mean)
+                 1: max relative error (if test data is available)
+                 2: residual norm for 1D Burgers eqn
+                 3: residual norm for 2D Burgers eqn
+                 4: residual norm for time dependent heat conduction (MFEM example 16)
+                 5: residual norm for radial advection (MFEM example 9)
     outputs:
         err_array: ndarray, errors in the parameter space
         err_max: float, max error
@@ -321,10 +367,6 @@ def err_map_subset(sess, autoencoder_network, params, test_data=None, err_type=1
         test_data['param'][err_idx]: ndarray, parameters of the case with max error
         sindy_idx: ndarray, indices of local SINDys used for evaluation
     """
-    tensorflow_run_tuple = ()
-    for key in autoencoder_network.keys():
-        tensorflow_run_tuple += (autoencoder_network[key],)
-    
     amp = params['test_param'][:,0]
     width = params['test_param'][:,1]
     err_array = np.zeros([amp.size, width.size])
@@ -342,8 +384,8 @@ def err_map_subset(sess, autoencoder_network, params, test_data=None, err_type=1
     for i,a in enumerate(amp):
         for j,w in enumerate(width):
             if count in subset:
-                u_sim, idx = eval_perf(sess, tensorflow_run_tuple, autoencoder_network, params,
-                                       test_data['data'][count], test_data['param'][count])
+                _,_,u_sim,_,_,_,_,_,idx,_ = eval_model(test_data['data'][count], params, 
+                                                       test_data['param'][count], knn=params['convex_knn'])
                 sindy_idx[i,j] = idx+1
                 params['pde']['param'] = [a, w]
                 err_array[i,j] = err_indicator(u_sim, params, 
@@ -360,29 +402,28 @@ def err_map_subset(sess, autoencoder_network, params, test_data=None, err_type=1
     return err_array, err_max, err_idx, test_data['param'][err_idx], sindy_idx
 
 
-def update_tol(sess, autoencoder_network, params, training_data, err_type=1):
+def update_tol(params, training_data, err_type=1):
     """
     This function computes the error indicator and max relative errors of existing 
     training cases in order to update the tolerance threshold of the error indicator.
     inputs:
+        params: dict, parameters of the gLaSDI model
         training_data: dict, training data
         err_type: int, types of error indicator. 
-                1: max relative error (if test data available)
-                2: residual norm (mean), 1D Burgers' eqn
-                3: residual norm (mean), 2D Burgers' eqn
+                 1: max relative error (if test data is available)
+                 2: residual norm for 1D Burgers eqn
+                 3: residual norm for 2D Burgers eqn
+                 4: residual norm for time dependent heat conduction (MFEM example 16)
+                 5: residual norm for radial advection (MFEM example 9)
     outputs:
         tol_new: float, updated tolerance for the error indicator
     """
-    tensorflow_run_tuple = ()
-    for key in autoencoder_network.keys():
-        tensorflow_run_tuple += (autoencoder_network[key],)
-    
     num_sindy = params['num_sindy']
-    err1 = np.zeros(num_sindy)
-    err2 = np.zeros(num_sindy)
+    err1 = np.zeros(num_sindy) # residual norm
+    err2 = np.zeros(num_sindy) # max relative error
     for i in range(num_sindy):
-        u_sim,_ = eval_perf(sess, tensorflow_run_tuple, autoencoder_network, params,
-                            training_data['data'][i], training_data['param'][i])
+        _,_,u_sim,_,_,_,_,_,idx,_ = eval_model(training_data['data'][i], params, 
+                                               training_data['param'][i], knn=params['convex_knn'])
         params['pde']['param'] = [training_data['param'][i][0], training_data['param'][i][1]]
         err1[i] = err_indicator(u_sim, params, data=training_data['data'][i]['x'], err_type=err_type) # residual norm
         err2[i] = err_indicator(u_sim, params, data=training_data['data'][i]['x'], err_type=1) # max relative error
@@ -518,82 +559,6 @@ def create_feed_dictionary2(data, params, idxs=None):
         
     feed_dict['learning_rate:0'] = params['learning_rate']
     return feed_dict
-
-
-def eval_model(test_data, params, test_param, idx=None, knn=4, calc_dz=False, calc_du=False):
-    """
-    This function evaluates the trained gLaSDI model.
-    """
-    timer = []
-    
-    # Step 1: set up tf graph and load parameters, can be optimized, excluded from ROM computational time
-    timer.append(time()) 
-    include_sine = False
-    include_cosine = False
-    if 'include_sine' in params.keys():
-        include_sine = params['include_sine']
-    if 'include_cosine' in params.keys():
-        include_cosine = params['include_cosine']
-        
-    z_encoder = NN(test_data['x'], params['model_params'][1], params['model_params'][2], params['activation']) # encoder
-    u_decoder = NN(z_encoder, params['model_params'][3], params['model_params'][4], params['activation']) # decoder
-    
-    
-    # Step 2: find the nearest neighbor (optional)
-    timer.append(time()) 
-    if idx == None:
-        train_param = np.stack(params['param'])
-        idx = np.argmin(np.linalg.norm(train_param-test_param, axis=1))
-    
-    
-    # Step 3: calculate SINDy coefficients
-    timer.append(time())        
-    if knn == 1:
-        print(f"Index of the nearest local SINDy: {idx+1}")
-        sindy_coeff = params['model_params'][0][idx]
-        
-    else: # KNN convex interpolation of coefficients
-        dist = np.linalg.norm(train_param-test_param, axis=1)
-        knn_idx = np.argsort(dist)[:knn]
-        phi = np.zeros_like(knn_idx)
-        if dist[knn_idx[0]] == 0: # check if the min distance is zero
-            phi[0] = 1
-        else:
-            phi = 1 / np.linalg.norm(train_param[knn_idx]-test_param, axis=1)**2
-        psi = phi / phi.sum()
-
-        sindy_coeff = np.zeros(params['model_params'][0][0].shape)
-        for i,kidx in enumerate(knn_idx):
-            sindy_coeff += psi[i] * params['model_params'][0][kidx]
-            
-
-    # Step 4: lastent-space dynamics prediction and obtain physical dynamics
-    timer.append(time())
-    z_sim = sindy_simulate(z_encoder[0,:], test_data['t'].squeeze(), 
-                           sindy_coeff, params['poly_order'], 
-                           include_sine,include_cosine)
-    u_sim = NN(z_sim, params['model_params'][3], params['model_params'][4], params['activation'])
-
-    timer.append(time())
-    
-    if calc_dz:
-        dz_encoder = derivative(z_encoder,params['pde']['tstop'])
-        dz_sim = derivative(z_sim,params['pde']['tstop'])
-    else:
-        dz_encoder = 0
-        dz_sim = 0
-        
-    if calc_du:
-        du_decoder = derivative(u_decoder,params['pde']['tstop'])
-        du_sim = derivative(u_sim,params['pde']['tstop'])
-    else:
-        du_decoder = 0
-        du_sim = 0
-    
-    timer1 = np.array(timer)
-    timer2 = timer1[1:]
-    timer_rom = timer2 - timer1[:-1]
-    return u_decoder, du_decoder, u_sim, du_sim, z_encoder, dz_encoder, z_sim, dz_sim, idx, timer_rom
 
 
 # heat map of max relative errors
