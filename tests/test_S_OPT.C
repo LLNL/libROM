@@ -39,11 +39,11 @@ TEST(S_OPTSerialTest, Test_S_OPT)
     std::vector<double> col5;
 
     CAROM::CSVDatabase database;
-    database.getDoubleVector("../../tests/s_opt_data/col1.csv", col1);
-    database.getDoubleVector("../../tests/s_opt_data/col2.csv", col2);
-    database.getDoubleVector("../../tests/s_opt_data/col3.csv", col3);
-    database.getDoubleVector("../../tests/s_opt_data/col4.csv", col4);
-    database.getDoubleVector("../../tests/s_opt_data/col5.csv", col5);
+    database.getDoubleVector("../tests/s_opt_data/col1.csv", col1);
+    database.getDoubleVector("../tests/s_opt_data/col2.csv", col2);
+    database.getDoubleVector("../tests/s_opt_data/col3.csv", col3);
+    database.getDoubleVector("../tests/s_opt_data/col4.csv", col4);
+    database.getDoubleVector("../tests/s_opt_data/col5.csv", col5);
 
     cols.push_back(col1);
     cols.push_back(col2);
