@@ -69,9 +69,10 @@ public:
     /**
      * @brief Obtain the interpolated reduced matrix of the unsampled parameter point.
      *
-     * @param[in] point The unsampled parameter point.
+     * @param[in] point         The unsampled parameter point.
+     * @param[in] orthogonalize Whether to orthogonalize the resulting interpolated matrix.
      */
-    Matrix* interpolate(Vector* point);
+    Matrix* interpolate(Vector* point, bool orthogonalize = false);
 
 private:
 

@@ -1552,26 +1552,6 @@ const
 #endif
 }
 
-double
-Matrix::checkOrthogonality()
-{
-    double result = 0.0;
-    if (d_num_cols > 1) {
-        int last_col = d_num_cols-1;
-        double tmp = 0.0;
-        for (int i = 0; i < d_num_rows; ++i) {
-            tmp += item(i, 0) * item(i, last_col);
-        }
-        if (d_distributed && d_num_procs > 1) {
-            MPI_Allreduce(&tmp, &result, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        }
-        else {
-            result = tmp;
-        }
-    }
-    return result;
-}
-
 void
 Matrix::orthogonalize()
 {

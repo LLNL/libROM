@@ -825,14 +825,6 @@ public:
                           int  pivots_requested) const;
 
     /**
-     * @brief Computes and returns the orthogonality of the matrix.
-     *
-     * @return The orthogonality of the matrix.
-     */
-    double
-    checkOrthogonality();
-
-    /**
      * @brief Orthogonalizes the matrix.
      */
     void

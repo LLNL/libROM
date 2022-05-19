@@ -123,7 +123,8 @@ protected:
                                  Vector* desired_point,
                                  std::string rbf,
                                  std::string interp_method,
-                                 double closest_rbf_val);
+                                 double closest_rbf_val,
+                                 bool reorthogonalize_W);
 
     /**
      * @brief Constructor.

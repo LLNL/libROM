@@ -25,7 +25,8 @@ DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
                       Vector* desired_point,
                       std::string rbf,
                       std::string interp_method,
-                      double closest_rbf_val)
+                      double closest_rbf_val,
+                      bool reorthogonalize_W)
 {
     CAROM_VERIFY(parameter_points.size() == dmds.size());
     CAROM_VERIFY(dmds.size() > 1);
@@ -59,7 +60,7 @@ DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
 
     CAROM::MatrixInterpolator basis_interpolator(parameter_points,
             rotation_matrices, bases, ref_point, "B", rbf, interp_method, closest_rbf_val);
-    Matrix* W = basis_interpolator.interpolate(desired_point);
+    Matrix* W = basis_interpolator.interpolate(desired_point, reorthogonalize_W);
 
     CAROM::MatrixInterpolator A_tilde_interpolator(parameter_points,
             rotation_matrices, A_tildes, ref_point, "R", rbf, interp_method, closest_rbf_val);
@@ -89,7 +90,8 @@ DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
                       Vector* desired_point,
                       std::string rbf,
                       std::string interp_method,
-                      double closest_rbf_val)
+                      double closest_rbf_val,
+                      bool reorthogonalize_W)
 {
     std::vector<DMD*> dmds;
     for (int i = 0; i < dmd_paths.size(); i++)
@@ -99,7 +101,8 @@ DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
     }
 
     DMD* desired_dmd = getParametricDMD(parameter_points, dmds, desired_point,
-                                        rbf, interp_method, closest_rbf_val);
+                                        rbf, interp_method, closest_rbf_val,
+                                        reorthogonalize_W);
     for (int i = 0; i < dmds.size(); i++)
     {
         delete dmds[i];

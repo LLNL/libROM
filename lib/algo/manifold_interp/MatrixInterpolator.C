@@ -82,20 +82,28 @@ MatrixInterpolator::MatrixInterpolator(std::vector<Vector*> parameter_points,
     }
 }
 
-Matrix* MatrixInterpolator::interpolate(Vector* point)
+Matrix* MatrixInterpolator::interpolate(Vector* point, bool orthogonalize)
 {
+    Matrix* interpolated_matrix = NULL;
     if (d_matrix_type == "SPD")
     {
-        return interpolateSPDMatrix(point);
+        interpolated_matrix = interpolateSPDMatrix(point);
     }
     else if (d_matrix_type == "NS")
     {
-        return interpolateNonSingularMatrix(point);
+        interpolated_matrix = interpolateNonSingularMatrix(point);
     }
     else
     {
-        return interpolateMatrix(point);
+        interpolated_matrix = interpolateMatrix(point);
     }
+
+    // Orthogonalize the interpolated matrix if requested.
+    if (orthogonalize)
+    {
+        interpolated_matrix->orthogonalize();
+    }
+    return interpolated_matrix;
 }
 
 void MatrixInterpolator::obtainLambda()
@@ -470,11 +478,6 @@ Matrix* MatrixInterpolator::interpolateMatrix(Vector* point)
     // The exp mapping is X + the interpolated gamma
     *interpolated_matrix += *d_rotated_reduced_matrices[d_ref_point];
 
-    // Orthogonalize the interpolated matrix if it is a basis.
-    if (d_matrix_type == "B")
-    {
-        interpolated_matrix->orthogonalize();
-    }
     return interpolated_matrix;
 }
 

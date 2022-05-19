@@ -517,4 +517,28 @@ IncrementalSVD::svd(
     return info == 0;
 }
 
+double
+IncrementalSVD::checkOrthogonality(
+    const Matrix* m)
+{
+    CAROM_ASSERT(m != 0);
+
+    double result = 0.0;
+    if (d_num_samples > 1) {
+        int last_col = d_num_samples-1;
+        double tmp = 0.0;
+        int num_rows = m->numRows();
+        for (int i = 0; i < num_rows; ++i) {
+            tmp += m->item(i, 0) * m->item(i, last_col);
+        }
+        if (m->distributed() && d_size > 1) {
+            MPI_Allreduce(&tmp, &result, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        }
+        else {
+            result = tmp;
+        }
+    }
+    return result;
+}
+
 }
