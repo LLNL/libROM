@@ -48,11 +48,12 @@
 // 1. LIST_DIR/TRAIN_LIST.csv             -- each row specifies one training DATASET
 // 2. LIST_DIR/TEST_LIST.csv              -- each row specifies one testing DATASET
 // 3. LIST_DIR/DATASET.csv                -- each row specifies one STATE in DATASET
-// 4. DATA_DIR/DATASET/STATE/VAR_NAME.csv -- each row specifies one value of VAR_NAME of STATE
-// 5. DATA_DIR/DATASET/STATE/tval.csv     -- specifies the time instance of STATE
-// 6. DATA_DIR/dim.csv                    -- specifies the dimension of VAR_NAME
-// 7. DATA_DIR/index.csv                  -- (optional) each row specifies one DOF of VAR_NAME
-// 8. run/OUT_DIR/indicator_val.csv       -- (optional) each row specifies one indicator endpoint value
+// 4. DATA_DIR/dim.csv                    -- specifies the dimension of VAR_NAME
+// 5. DATA_DIR/DATASET/tval.csv           -- specifies the time instances
+// 6. DATA_DIR/DATASET/STATE/VAR_NAME.csv -- each row specifies one value of VAR_NAME of STATE
+// 7. DATA_DIR/DATASET/TEMPORAL_IDX.csv   -- (optional) each row specifies one temporal index of VAR_NAME
+// 8. DATA_DIR/SPATIAL_IDX.csv            -- (optional) each row specifies one spatial index of VAR_NAME
+// 9. run/OUT_DIR/indicator_val.csv       -- (optional) each row specifies one indicator endpoint value
 
 #include "mfem.hpp"
 #include "algo/DMD.h"
@@ -104,6 +105,8 @@ int main(int argc, char *argv[])
     const char *var_name = "sol";
     const char *train_list = "training_par";
     const char *test_list = "testing_par";
+    const char *temporal_idx = "temporal_idx";
+    const char *spatial_idx = "spatial_idx";
     const char *basename = "";
     bool save_csv = false;
 
@@ -196,7 +199,7 @@ int main(int argc, char *argv[])
 
     int dim = nelements;
     vector<int> idx_state;
-    csv_db.getIntegerVector(string(data_dir) + "/index.csv", idx_state, false);
+    csv_db.getIntegerVector(string(data_dir) + "/" + string(spatial_idx) + ".csv", idx_state, false);
     if (idx_state.size() > 0)
     {
         dim = idx_state.size();
