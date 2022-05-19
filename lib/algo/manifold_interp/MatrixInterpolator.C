@@ -477,7 +477,6 @@ Matrix* MatrixInterpolator::interpolateMatrix(Vector* point)
 
     // The exp mapping is X + the interpolated gamma
     *interpolated_matrix += *d_rotated_reduced_matrices[d_ref_point];
-
     return interpolated_matrix;
 }
 
