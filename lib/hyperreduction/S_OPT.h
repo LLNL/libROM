@@ -23,9 +23,9 @@ class Matrix;
 /**
  * @brief Computes the S_OPT algorithm on the given basis.
  *
- * Implemented from Saifon Chaturantabut and Danny C. Sorensen "Nonlinear Model
- * Reduction via Discrete Empirical Interpolation", SIAM J. Sci. Comput., 32(5),
- * 2737–2764. (28 pages)
+ * Implemented from Yeonjong Shin and Dongbin Xiu's "Nonadaptive Quasi-Optimal Points
+ * Selection for Least Squares Linear Regression", SIAM J. Sci. Comput., 38(1),
+ * A385-A411. (26 pages)
  *
  * @param[in] f_basis The basis vectors for the RHS.
  * @param[in] num_f_basis_vectors_used The number of basis vectors in f_basis
@@ -39,6 +39,9 @@ class Matrix;
  * @param[out] f_basis_sampled_inv The inverse of the sampled basis of the RHS.
  * @param[in] myid The rank of this process.
  * @param[in] num_procs The total number of processes.
+ * @param[in] num_samples_req The minimum number of samples required.
+ * @param[in] qr_factorize Whether to factorize the incoming matrix. Null-op
+ *                         when the incoming matrix is a basis.
  */
 void
 S_OPT(const Matrix* f_basis,
@@ -48,7 +51,7 @@ S_OPT(const Matrix* f_basis,
       Matrix& f_basis_sampled_inv,
       const int myid,
       const int num_procs,
-      const int num_samples_req,
+      const int num_samples_req = -1,
       bool qr_factorize = false);
 
 }
