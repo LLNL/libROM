@@ -42,13 +42,14 @@ class Matrix;
  */
 void
 S_OPT(const Matrix* f_basis,
-      bool use_qr_basis,
       int num_f_basis_vectors_used,
       std::vector<int>& f_sampled_row,
       std::vector<int>& f_sampled_rows_per_proc,
+      Matrix& f_basis_sampled_inv,
       const int myid,
       const int num_procs,
-      const int num_samples_req);
+      const int num_samples_req,
+      bool qr_factorize = false);
 
 }
 

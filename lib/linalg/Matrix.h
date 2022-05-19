@@ -492,15 +492,86 @@ public:
         Vector& other) const;
 
     /**
+     * @brief Multiplies two matrices element-wise.
+     *
+     * @pre numRows() == other.numRows()
+     * @pre numColumns() == other.numColumns()
+     *
+     * @param[in] other The Matrix to multiply with this.
+     *
+     * @return The product Matrix.
+     */
+    Matrix*
+    elementwise_mult(
+        const Matrix& other) const
+    {
+        Matrix* result = 0;
+        elementwise_mult(other, result);
+        return result;
+    }
+
+    /**
+    * @brief Multiplies two matrices element-wise and returns the product,
+    * pointer version.
+    *
+    * @pre other != 0
+    * @pre numRows() == other.numRows()
+    * @pre numColumns() == other.numColumns()
+     *
+     * @param[in] other The Matrix to multiply with this.
+     *
+     * @return The product Matrix.
+     */
+    Matrix*
+    elementwise_mult(
+        const Matrix* other) const
+    {
+        CAROM_VERIFY(other != 0);
+        return elementwise_mult(*other);
+    }
+
+    /**
+    * @brief Multiplies two matrices element-wise and fills result with the
+    * answer.
+    *
+     * @pre result == 0 || result->distributed() == distributed()
+    * @pre numRows() == other.numRows()
+    * @pre numColumns() == other.numColumns()
+     *
+     * @param[in] other The Matrix to multiply with this.
+     * @param[out] result The product Matrix.
+     */
+    void
+    elementwise_mult(
+        const Matrix& other,
+        Matrix*& result) const;
+
+    /**
+    * @brief Multiplies two matrices element-wise and fills result with the
+    * answer.
+    *
+     * @pre result == 0 || result->distributed() == distributed()
+    * @pre numRows() == other.numRows()
+    * @pre numColumns() == other.numColumns()
+     *
+     * @param[in] other The Matrix to multiply with this.
+     * @param[out] result The product Matrix.
+     */
+    void
+    elementwise_mult(
+        const Matrix& other,
+        Matrix& result) const;
+
+    /**
      * @brief Square every element in the matrix.
      *
      * @return The product Matrix.
      */
     Matrix*
-    pointwise_square() const
+    elementwise_square() const
     {
         Matrix* result = 0;
-        pointwise_square(result);
+        elementwise_square(result);
         return result;
     }
 
@@ -510,7 +581,7 @@ public:
      * @param[out] result The product Matrix.
      */
     void
-    pointwise_square(
+    elementwise_square(
         Matrix*& result) const;
 
     /**
@@ -519,7 +590,7 @@ public:
      * @param[out] result The product Matrix.
      */
     void
-    pointwise_square(
+    elementwise_square(
         Matrix& result) const;
 
     /**

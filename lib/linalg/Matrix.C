@@ -442,7 +442,53 @@ Matrix::pointwise_mult(
 
 
 void
-Matrix::pointwise_square(
+Matrix::elementwise_mult(
+    const Matrix& other,
+    Matrix*& result) const
+{
+    CAROM_VERIFY(result == 0 || result->distributed() == distributed());
+    CAROM_VERIFY(numRows() == other.numRows());
+    CAROM_VERIFY(numColumns() == other.numColumns());
+
+    // If the result has not been allocated then do so.  Otherwise size it
+    // correctly.
+    if (result == 0) {
+        result = new Matrix(d_num_rows, d_num_cols, d_distributed);
+    }
+    else {
+        result->setSize(d_num_rows, d_num_cols);
+    }
+
+    // Do the element-wise multiplication.
+    for (int this_row = 0; this_row < d_num_rows; ++this_row) {
+        for (int other_col = 0; other_col < d_num_cols; ++other_col) {
+            result->item(this_row, other_col) = item(this_row, other_col) * other.item(this_row, other_col);
+        }
+    }
+}
+
+void
+Matrix::elementwise_mult(
+    const Matrix& other,
+    Matrix& result) const
+{
+    CAROM_VERIFY(result.distributed() == distributed());
+    CAROM_VERIFY(numRows() == other.numRows());
+    CAROM_VERIFY(numColumns() == other.numColumns());
+
+    // Size result correctly.
+    result.setSize(d_num_rows, other.d_num_cols);
+
+    // Do the multiplication.
+    for (int this_row = 0; this_row < d_num_rows; ++this_row) {
+        for (int other_col = 0; other_col < d_num_cols; ++other_col) {
+            result.item(this_row, other_col) = item(this_row, other_col) * other.item(this_row, other_col);
+        }
+    }
+}
+
+void
+Matrix::elementwise_square(
     Matrix*& result) const
 {
     // If the result has not been allocated then do so.  Otherwise size it
@@ -463,7 +509,7 @@ Matrix::pointwise_square(
 }
 
 void
-Matrix::pointwise_square(
+Matrix::elementwise_square(
     Matrix& result) const
 {
     // Size result correctly.
