@@ -213,7 +213,7 @@ int main(int argc, char *argv[])
                    "Save data using adios2 streams.");
     args.AddOption(&save_csv, "-csv", "--csv", "-no-csv", "--no-csv",
                    "Enable or disable MFEM result output (files in CSV format).");
-    args.AddOption(&basename, "-o", "--outputfile-name",
+    args.AddOption(&basename, "-out", "--outputfile-name",
                    "Name of the sub-folder to dump files within the run directory.");
     args.Parse();
     if (!args.Good())
