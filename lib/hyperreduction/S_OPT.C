@@ -138,7 +138,6 @@ S_OPT(const Matrix* f_basis,
                           f_basis->getData(), num_cols,
                           row_offset[rank + 1] - row_offset[rank], rank);
         }
-        delete f_basis;
 
         QRManager QRmgr;
         qr_init(&QRmgr, &slpk_f_basis);
