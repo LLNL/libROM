@@ -3,7 +3,7 @@
 # Subtract the mean from 2 snapshots, and compute the SVD over the mean-subtracted snapshot matrix.
 ./../build/examples/misc/combine_samples -m load_samples_data/sample1_snapshot load_samples_data/sample2_snapshot
 
-# Read 2 basis files, and compute the mean over the combined basis.
+# Read 2 basis files, and compute the SVD over the combined basis.
 ./../build/examples/misc/combine_samples -b load_samples_data/sample1_basis load_samples_data/sample2_basis
 
 # Snapshot files can be written after data is collected using a static basis generator. 
