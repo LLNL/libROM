@@ -540,7 +540,7 @@ int main(int argc, char *argv[])
         oper.SetParameters(u);
     }
 
-    if (save_csv && myid == 0)
+    if (offline && save_csv && myid == 0)
     {
         csv_db.putDoubleVector(string(outputPath) + "/tval.csv", ts, false);
     }
