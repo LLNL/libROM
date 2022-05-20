@@ -582,10 +582,13 @@ int main(int argc, char *argv[])
             dmd_u->save(to_string(radius) + "_" + to_string(alpha) + "_" +
                         to_string(cx) + "_" + to_string(cy));
 
-            std::ofstream fout;
-            fout.open("parameters.txt", std::ios::app);
-            fout << radius << " " << alpha << " " << cx << " " << cy << std::endl;
-            fout.close();
+            if (myid == 0)
+            {
+                std::ofstream fout;
+                fout.open("parameters.txt", std::ios::app);
+                fout << radius << " " << alpha << " " << cx << " " << cy << std::endl;
+                fout.close();
+            }
         }
 
         if (online)
