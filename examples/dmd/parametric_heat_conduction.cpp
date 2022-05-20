@@ -433,7 +433,6 @@ int main(int argc, char *argv[])
     ode_solver->Init(oper);
     double t = 0.0;
     vector<double> ts;
-    vector<double> taux(t, 1);
     CAROM::Vector* init = NULL;
 
     fom_timer.Stop();
@@ -454,7 +453,6 @@ int main(int argc, char *argv[])
         {
             mkdir((string(outputPath) + "/step0").c_str(), 0777);
             csv_db.putDoubleArray(string(outputPath) + "/step0/sol.csv", u.GetData(), u.Size());
-            csv_db.putDoubleVector(string(outputPath) + "/step0/tval.csv", taux, 1);
         }
 
         if (myid == 0)
@@ -495,10 +493,8 @@ int main(int argc, char *argv[])
 
             if (save_csv && myid == 0)
             {
-                taux[0] = t;
                 mkdir((string(outputPath) + "/step" + to_string(ti)).c_str(), 0777);
                 csv_db.putDoubleArray(string(outputPath) + "/step" + to_string(ti) + "/sol.csv", u.GetData(), u.Size());
-                csv_db.putDoubleVector(string(outputPath) + "/step" + to_string(ti) + "/tval.csv", taux, 1);
             }
 
             if (myid == 0)
@@ -542,6 +538,11 @@ int main(int argc, char *argv[])
 #endif
         }
         oper.SetParameters(u);
+    }
+
+    if (save_csv && myid == 0)
+    {
+        csv_db.putDoubleVector(string(outputPath) + "/tval.csv", ts, false);
     }
 
 #ifdef MFEM_USE_ADIOS2
