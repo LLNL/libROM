@@ -251,6 +251,8 @@ int main(int argc, char *argv[])
         csv_db.getIntegerVector(string(data_dir) + "/" + par_dir + "/" + temporal_idx_list + ".csv", snap_bound, false);
         if (snap_bound.size() > 0)
         {
+            snap_bound[0] -= 1;
+            snap_bound[1] -= 1;
             CAROM_VERIFY(snap_bound.size() == 2);
             num_train_snap = snap_bound[1] - snap_bound[0] + 1;
         }
@@ -328,6 +330,8 @@ int main(int argc, char *argv[])
         csv_db.getIntegerVector(string(data_dir) + "/" + par_dir + "/" + temporal_idx_list + ".csv", snap_bound, false);
         if (snap_bound.size() > 0)
         {
+            snap_bound[0] -= 1;
+            snap_bound[1] -= 1;
             CAROM_VERIFY(snap_bound.size() == 2);
             if (myid == 0)
             {
@@ -347,7 +351,7 @@ int main(int argc, char *argv[])
             string snap = snap_list[idx_snap]; // STATE
             double tval = tvec[idx_snap];
 
-            if (idx_snap == 0)
+            if (idx_snap == snap_bound[0])
             {
                 indicator_val.push_back(tval);
             }
@@ -498,6 +502,8 @@ int main(int argc, char *argv[])
         csv_db.getIntegerVector(string(data_dir) + "/" + par_dir + "/" + temporal_idx_list + ".csv", snap_bound, false);
         if (snap_bound.size() > 0)
         {
+            snap_bound[0] -= 1;
+            snap_bound[1] -= 1;
             CAROM_VERIFY(snap_bound.size() == 2);
             if (myid == 0)
             {

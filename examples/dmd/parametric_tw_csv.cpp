@@ -299,6 +299,8 @@ int main(int argc, char *argv[])
         csv_db.getIntegerVector(string(data_dir) + "/" + par_dir + "/" + temporal_idx_list + ".csv", snap_bound, 2);
         if (snap_bound.size() > 0)
         {
+            snap_bound[0] -= 1;
+            snap_bound[1] -= 1;
             if (myid == 0)
             {
                 cout << "Restricting on snapshot #" << snap_bound[0] << " to " << snap_bound[1] << "." << endl;
@@ -403,6 +405,8 @@ int main(int argc, char *argv[])
             csv_db.getIntegerVector(string(data_dir) + "/" + par_dir + "/" + temporal_idx_list + ".csv", snap_bound, false);
             if (snap_bound.size() > 0)
             {
+                snap_bound[0] -= 1;
+                snap_bound[1] -= 1;
                 CAROM_VERIFY(snap_bound.size() == 2);
                 if (myid == 0)
                 {
@@ -540,6 +544,8 @@ int main(int argc, char *argv[])
             csv_db.getIntegerVector(string(data_dir) + "/" + par_dir + "/" + temporal_idx_list + ".csv", snap_bound, false);
             if (snap_bound.size() > 0)
             {
+                snap_bound[0] -= 1;
+                snap_bound[1] -= 1;
                 CAROM_VERIFY(snap_bound.size() == 2);
                 if (myid == 0)
                 {
@@ -620,6 +626,8 @@ int main(int argc, char *argv[])
             csv_db.getIntegerVector(string(data_dir) + "/" + par_dir + "/" + temporal_idx_list + ".csv", snap_bound, false);
             if (snap_bound.size() > 0)
             {
+                snap_bound[0] -= 1;
+                snap_bound[1] -= 1;
                 CAROM_VERIFY(snap_bound.size() == 2);
                 if (myid == 0)
                 {
