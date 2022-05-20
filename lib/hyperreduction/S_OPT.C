@@ -96,13 +96,14 @@ S_OPT(const Matrix* f_basis,
     const int num_samples = num_samples_req > 0 ? num_samples_req : num_basis_vectors;
     CAROM_VERIFY(num_basis_vectors <= num_samples && num_samples <= f_basis->numDistributedRows());
     CAROM_VERIFY(num_samples == f_sampled_row.size());
-    CAROM_VERIFY(num_samples == f_basis_sampled_inv.numRows() && num_basis_vectors == f_basis_sampled_inv.numColumns());
+    CAROM_VERIFY(num_samples == f_basis_sampled_inv.numRows() &&
+        num_basis_vectors == f_basis_sampled_inv.numColumns());
     CAROM_VERIFY(!f_basis_sampled_inv.distributed());
 
     int num_rows = f_basis->numRows();
     int num_cols = num_basis_vectors;
 
-    Matrix* Vo = NULL;
+    const Matrix* Vo = NULL;
 
     if (qr_factorize)
     {
@@ -155,26 +156,26 @@ S_OPT(const Matrix* f_basis,
 
         // Obtain Q
         lqcompute(&QRmgr);
-        Vo = new Matrix(row_offset[myid + 1] - row_offset[myid], num_cols, true);
+        Matrix* qr_factorized_basis = new Matrix(row_offset[myid + 1] - row_offset[myid],
+            num_cols, true);
         for (int rank = 0; rank < num_procs; ++rank) {
-            gather_block(&Vo->item(0, 0), QRmgr.A,
+            gather_block(&qr_factorized_basis->item(0, 0), QRmgr.A,
                          1, row_offset[rank] + 1,
                          num_cols, row_offset[rank + 1] - row_offset[rank],
                          rank);
         }
+        Vo = qr_factorized_basis;
+
         free(QRmgr.tau);
         free(QRmgr.ipiv);
         free_matrix_data(QRmgr.A);
     }
     else
     {
-        Vo = new Matrix(*f_basis);
+        Vo = f_basis;
     }
 
     int num_samples_obtained = 0;
-
-    // Square Vo.
-    Matrix* nVo = Vo->elementwise_square();
 
     // Scratch space used throughout the algorithm.
     double* c = new double [num_basis_vectors];
@@ -213,6 +214,9 @@ S_OPT(const Matrix* f_basis,
     proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
     proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] = 0;
     num_samples_obtained++;
+
+    // Square Vo.
+    Matrix* nVo = Vo->elementwise_square();
 
     Vector* A = new Vector(num_rows, true);
     Vector* noM = new Vector(num_rows, true);
@@ -274,7 +278,8 @@ S_OPT(const Matrix* f_basis,
             delete A0_T_mult_A0;
             delete [] ipiv;
 
-            Matrix* c_T = new Matrix(rhs->getData() + rhs->numColumns(), rhs->numRows() - 1, rhs->numColumns(), false, true);
+            Matrix* c_T = new Matrix(rhs->getData() + rhs->numColumns(),
+                rhs->numRows() - 1, rhs->numColumns(), true, true);
             Matrix* Vo_first_i_columns = Vo->getFirstNColumns(i - 1);
             Matrix* Vo_first_i_columns_mult_c_T = Vo_first_i_columns->elementwise_mult(c_T);
 
@@ -354,7 +359,7 @@ S_OPT(const Matrix* f_basis,
                 A->item(j) = std::max(0.0, ata + (Vo->item(j, i - 1) * Vo->item(j, i - 1)) - tmp);
             }
 
-            Matrix nV(1, i, true);
+            Matrix nV(1, i, false);
             for (int j = 0; j < i; j++)
             {
                 for (int k = 0; k < num_samples_obtained; k++)
@@ -400,7 +405,7 @@ S_OPT(const Matrix* f_basis,
             delete lhs;
             delete [] ipiv;
 
-            Matrix nV(1, num_cols, true);
+            Matrix nV(1, num_cols, false);
             for (int j = 0; j < num_cols; j++)
             {
                 for (int k = 0; k < num_samples_obtained; k++)
@@ -493,7 +498,10 @@ S_OPT(const Matrix* f_basis,
 
     delete A;
     delete noM;
-    delete Vo;
+    if (qr_factorize)
+    {
+        delete Vo;
+    }
     delete nVo;
     delete [] c;
 }

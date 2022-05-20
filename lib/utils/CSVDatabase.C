@@ -237,18 +237,25 @@ CSVDatabase::getDoubleArray(
     CAROM_VERIFY(!d_fs.fail());
     std::string line, data_entry;
     int count = 0;
+    int curr_block_remaining = block_size;
     while (count < nelements && d_fs >> line)
     {
         std::stringstream d_ss(line);
         while (std::getline(d_ss, data_entry, ','))
         {
-            if (offset-- > stride)
+            if (offset > 0)
+            {
+                offset--;
+            }
+            else
             {
                 data[count++] = std::stod(data_entry);
-            }
-            if (offset == 0)
-            {
-                offset = stride + block_size;
+                curr_block_remaining--;
+                if (curr_block_remaining == 0)
+                {
+                    offset = stride - 1;
+                    curr_block_remaining = block_size;
+                }
             }
         }
     }
