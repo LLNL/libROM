@@ -22,14 +22,6 @@
 
 #include "S_OPT.h"
 
-/* Use automatically detected Fortran name-mangling scheme */
-#define dgesv CAROM_FC_GLOBAL(dgesv, DGESV)
-
-extern "C" {
-    // Solve a system of linear equations.
-    void dgesv(int*, int*, double*, int*, int*, double*, int*, int*);
-}
-
 using namespace std;
 
 namespace CAROM {
