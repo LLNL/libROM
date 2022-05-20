@@ -294,7 +294,22 @@ int main(int argc, char *argv[])
         par_dir_list.push_back(par_dir);
         vector<string> snap_list;
         csv_db.getStringVector(string(list_dir) + "/" + par_dir + ".csv", snap_list, false);
-        num_train_snap.push_back(snap_list.size());
+
+        vector<int> snap_bound; 
+        csv_db.getIntegerVector(string(data_dir) + "/" + par_dir + "/" + temporal_idx_list + ".csv", snap_bound, 2);
+        if (snap_bound.size() > 0)
+        {
+            if (myid == 0)
+            {
+                cout << "Restricting on snapshot #" << snap_bound[0] << " to " << snap_bound[1] << "." << endl;
+            }
+        }
+        else
+        {
+            snap_bound.push_back(0);
+            snap_bound.push_back(snap_list.size()-1);
+        }
+        num_train_snap.push_back(snap_bound[1] - snap_bound[0] + 1);
 
         for (int par_order = 0; par_order < dpar; ++par_order)
         {
@@ -304,12 +319,12 @@ int main(int argc, char *argv[])
 
         if (offline)
         {
-            double tval = 0.0;
-            csv_db.getDoubleArray(string(data_dir) + "/" + par_dir + "/" + snap_list[0] + "/tval.csv", &tval, 1);
-            indicator_init.push_back(tval);
+            vector<double> tvec;
+            csv_db.getDoubleVector(string(data_dir) + "/" + par_dir + "/tval.csv", tvec, false);
+            CAROM_VERIFY(tvec.size() == snap_list.size());
 
-            csv_db.getDoubleArray(string(data_dir) + "/" + par_dir + "/" + snap_list[snap_list.size()-1] + "/tval.csv", &tval, 1);
-            indicator_last.push_back(tval);
+            indicator_init.push_back(tvec[snap_bound[0]]);
+            indicator_last.push_back(tvec[snap_bound[1]]);
 
             CAROM_VERIFY(windowOverlapSamples < windowNumSamples);
             if (indicator_val.size() == 0)
@@ -380,8 +395,12 @@ int main(int argc, char *argv[])
             vector<string> snap_list;
             csv_db.getStringVector(string(list_dir) + "/" + par_dir + ".csv", snap_list, false);
 
+            vector<double> tvec;
+            csv_db.getDoubleVector(string(data_dir) + "/" + par_dir + "/tval.csv", tvec, false);
+            CAROM_VERIFY(tvec.size() == snap_list.size());
+
             vector<int> snap_bound; 
-            csv_db.getIntegerVector(string(data_dir) + "/" + par_dir + "/" + temporal_idx_list + ".csv", snap_bound, 2);
+            csv_db.getIntegerVector(string(data_dir) + "/" + par_dir + "/" + temporal_idx_list + ".csv", snap_bound, false);
             if (snap_bound.size() > 0)
             {
                 CAROM_VERIFY(snap_bound.size() == 2);
@@ -393,7 +412,7 @@ int main(int argc, char *argv[])
             else
             {
                 snap_bound.push_back(0);
-                snap_bound.push_back(num_train_snap[idx_dataset]-1);
+                snap_bound.push_back(snap_list.size()-1);
             }
 
             int curr_window = 0;
@@ -401,8 +420,7 @@ int main(int argc, char *argv[])
             for (int idx_snap = snap_bound[0]; idx_snap <= snap_bound[1]; ++idx_snap)
             {
                 string snap = snap_list[idx_snap]; // STATE
-                double tval = 0.0;
-                csv_db.getDoubleArray(string(data_dir) + "/" + par_dir + "/" + snap + "/tval.csv", &tval, 1);
+                double tval = tvec[idx_snap];
                 string data_filename = string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv"; // path to VAR_NAME.csv
                 csv_db.getDoubleArray(data_filename, sample, nelements, idx_state);
                 dmd[curr_window][idx_dataset]->takeSample(sample, tval);
@@ -411,7 +429,7 @@ int main(int argc, char *argv[])
                     dmd[curr_window-1][idx_dataset]->takeSample(sample, tval);
                     overlap_count -= 1;
                 }
-                if (curr_window+1 < numWindows && idx_snap+1 < num_train_snap[idx_dataset] &&
+                if (curr_window+1 < numWindows && idx_snap+1 < snap_list.size() &&
                         tval > indicator_val[curr_window+1] - dt_est / 100.0) // a rough estimate to correct the precision of the indicator range partition
                 {
                     overlap_count = windowOverlapSamples;
@@ -508,16 +526,34 @@ int main(int argc, char *argv[])
 
             vector<string> snap_list;
             csv_db.getStringVector(string(list_dir) + "/" + par_dir + ".csv", snap_list, false);
-            int num_snap = snap_list.size();
 
             for (int par_order = 0; par_order < dpar; ++par_order)
             {
                 curr_par->item(par_order) = stod(par_info[par_order+1]);
             }
 
-            string snap = snap_list[0]; // STATE
-            double tval = 0.0;
-            csv_db.getDoubleArray(string(data_dir) + "/" + par_dir + "/" + snap + "/tval.csv", &tval, 1);
+            vector<double> tvec;
+            csv_db.getDoubleVector(string(data_dir) + "/" + par_dir + "/tval.csv", tvec, false);
+            CAROM_VERIFY(tvec.size() == snap_list.size());
+
+            vector<int> snap_bound; 
+            csv_db.getIntegerVector(string(data_dir) + "/" + par_dir + "/" + temporal_idx_list + ".csv", snap_bound, false);
+            if (snap_bound.size() > 0)
+            {
+                CAROM_VERIFY(snap_bound.size() == 2);
+                if (myid == 0)
+                {
+                    cout << "Restricting on snapshot #" << snap_bound[0] << " to " << snap_bound[1] << "." << endl;
+                }
+            }
+            else
+            {
+                snap_bound.push_back(0);
+                snap_bound.push_back(snap_list.size()-1);
+            }
+
+            string snap = snap_list[snap_bound[0]]; // STATE
+            double tval = tvec[snap_bound[0]];
             string data_filename = string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv"; // path to VAR_NAME.csv
             csv_db.getDoubleArray(data_filename, sample, nelements, idx_state);
             for (int window = 0; window < numWindows; ++window)
@@ -575,10 +611,13 @@ int main(int argc, char *argv[])
             }
             vector<string> snap_list;
             csv_db.getStringVector(string(list_dir) + "/" + par_dir + ".csv", snap_list, false);
-            int num_snap = snap_list.size();
+
+            vector<double> tvec;
+            csv_db.getDoubleVector(string(data_dir) + "/" + par_dir + "/tval.csv", tvec, false);
+            CAROM_VERIFY(tvec.size() == snap_list.size());
 
             vector<int> snap_bound; 
-            csv_db.getIntegerVector(string(data_dir) + "/" + par_dir + "/" + temporal_idx_list + ".csv", snap_bound, 2);
+            csv_db.getIntegerVector(string(data_dir) + "/" + par_dir + "/" + temporal_idx_list + ".csv", snap_bound, false);
             if (snap_bound.size() > 0)
             {
                 CAROM_VERIFY(snap_bound.size() == 2);
@@ -590,15 +629,15 @@ int main(int argc, char *argv[])
             else
             {
                 snap_bound.push_back(0);
-                snap_bound.push_back(num_snap-1);
+                snap_bound.push_back(snap_list.size()-1);
             }
 
+            int num_snap = snap_bound[1] - snap_bound[0] + 1;
             int curr_window = 0;
-            double tval = 0.0;
             for (int idx_snap = snap_bound[0]; idx_snap <= snap_bound[1]; ++idx_snap)
             {
                 string snap = snap_list[idx_snap]; // STATE
-                csv_db.getDoubleArray(string(data_dir) + "/" + par_dir + "/" + snap + "/tval.csv", &tval, 1);
+                double tval = tvec[idx_snap];
                 string data_filename = string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv"; // path to VAR_NAME.csv
                 csv_db.getDoubleArray(data_filename, sample, nelements, idx_state);
                 if (myid == 0)
@@ -622,7 +661,7 @@ int main(int argc, char *argv[])
                     {
                         csv_db.putDoubleArray(outputPath + "/" + par_dir + "_final_time_prediction.csv", result->getData(), dim);
                     }
-                    idx_snap = num_snap; // escape for-loop over idx_snap
+                    idx_snap = snap_bound[1]+1; // escape for-loop over idx_snap
                     delete result;
                 }
                 else // Verify DMD prediction results against dataset
