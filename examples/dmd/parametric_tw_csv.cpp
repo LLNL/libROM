@@ -433,7 +433,7 @@ int main(int argc, char *argv[])
                     dmd[curr_window-1][idx_dataset]->takeSample(sample, tval);
                     overlap_count -= 1;
                 }
-                if (curr_window+1 < numWindows && idx_snap+1 < snap_list.size() &&
+                if (curr_window+1 < numWindows && idx_snap+1 <= snap_bound[1] &&
                         tval > indicator_val[curr_window+1] - dt_est / 100.0) // a rough estimate to correct the precision of the indicator range partition
                 {
                     overlap_count = windowOverlapSamples;

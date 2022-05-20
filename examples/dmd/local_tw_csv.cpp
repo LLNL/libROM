@@ -364,7 +364,7 @@ int main(int argc, char *argv[])
                 dmd[curr_window-1]->takeSample(sample, tval);
                 overlap_count -= 1;
             }
-            if (curr_window+1 < numWindows && idx_snap+1 < snap_list.size())
+            if (curr_window+1 < numWindows && idx_snap+1 <= snap_bound[1])
             {
                 bool new_window = false;
                 if (windowNumSamples < infty)
