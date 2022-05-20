@@ -542,7 +542,7 @@ int main(int argc, char *argv[])
 
     if (offline && save_csv && myid == 0)
     {
-        csv_db.putDoubleVector(string(outputPath) + "/tval.csv", ts, false);
+        csv_db.putDoubleVector(string(outputPath) + "/tval.csv", ts, ts.size());
     }
 
 #ifdef MFEM_USE_ADIOS2
