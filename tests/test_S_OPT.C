@@ -31,29 +31,53 @@ TEST(GoogleTestFramework, GoogleTestFrameworkFound) {
 
 TEST(S_OPTSerialTest, Test_S_OPT)
 {
-    std::vector<std::vector<double>> cols;
-    std::vector<double> col1;
-    std::vector<double> col2;
-    std::vector<double> col3;
-    std::vector<double> col4;
-    std::vector<double> col5;
+    // Get the rank of this process, and the number of processors.
+    int mpi_init, d_rank, d_num_procs;
+    MPI_Initialized(&mpi_init);
+    if (mpi_init == 0) {
+        MPI_Init(nullptr, nullptr);
+    }
 
-    CAROM::CSVDatabase database;
-    database.getDoubleVector("../tests/s_opt_data/col1.csv", col1);
-    database.getDoubleVector("../tests/s_opt_data/col2.csv", col2);
-    database.getDoubleVector("../tests/s_opt_data/col3.csv", col3);
-    database.getDoubleVector("../tests/s_opt_data/col4.csv", col4);
-    database.getDoubleVector("../tests/s_opt_data/col5.csv", col5);
+    MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
 
-    cols.push_back(col1);
-    cols.push_back(col2);
-    cols.push_back(col3);
-    cols.push_back(col4);
-    cols.push_back(col5);
-
-    int num_rows = 1000;
+    int num_total_rows = 1000;
     int num_cols = 5;
     int num_samples = 10;
+
+    int num_rows = num_total_rows / d_num_procs;
+    if (num_total_rows % d_num_procs > d_rank) {
+        num_rows++;
+    }
+    int *row_offset = new int[d_num_procs + 1];
+    row_offset[d_num_procs] = num_total_rows;
+    row_offset[d_rank] = num_rows;
+
+    MPI_Allgather(MPI_IN_PLACE,
+                  1,
+                  MPI_INT,
+                  row_offset,
+                  1,
+                  MPI_INT,
+                  MPI_COMM_WORLD);
+
+    for (int i = d_num_procs - 1; i >= 0; i--) {
+        row_offset[i] = row_offset[i + 1] - row_offset[i];
+    }
+
+    std::vector<double*> cols;
+    for (int i = 0; i < num_cols; i++)
+    {
+        double* tmp = new double[num_rows];
+        cols.push_back(tmp);
+    }
+
+    CAROM::CSVDatabase database;
+    database.getDoubleArray("../tests/s_opt_data/col1.csv",  cols[0], num_rows, row_offset[d_rank], 1, 1);
+    database.getDoubleArray("../tests/s_opt_data/col2.csv",  cols[1], num_rows, row_offset[d_rank], 1, 1);
+    database.getDoubleArray("../tests/s_opt_data/col3.csv",  cols[2], num_rows, row_offset[d_rank], 1, 1);
+    database.getDoubleArray("../tests/s_opt_data/col4.csv",  cols[3], num_rows, row_offset[d_rank], 1, 1);
+    database.getDoubleArray("../tests/s_opt_data/col5.csv",  cols[4], num_rows, row_offset[d_rank], 1, 1);
 
     double* orthonormal_mat = new double[num_rows * num_cols];
 
@@ -86,9 +110,19 @@ TEST(S_OPTSerialTest, Test_S_OPT)
     double* S_OPT_res = NULL;
     std::vector<int> f_sampled_row(num_samples, 0);
     std::vector<int> f_sampled_row_true_ans{61, 92, 113, 257, 281, 410, 466, 545, 638, 716};
-    std::vector<int> f_sampled_rows_per_proc(1, 0);
+    std::vector<int> f_sampled_rows_per_proc(d_num_procs, 0);
     CAROM::Matrix f_basis_sampled_inv = CAROM::Matrix(num_samples, num_cols, false);
-    CAROM::S_OPT(u, num_cols, f_sampled_row, f_sampled_rows_per_proc, f_basis_sampled_inv, 0, 1, num_samples);
+    CAROM::S_OPT(u, num_cols, f_sampled_row, f_sampled_rows_per_proc, f_basis_sampled_inv, d_rank, d_num_procs, num_samples);
+
+    int curr_index = 0;
+    for (int i = 1; i < f_sampled_rows_per_proc.size(); i++)
+    {
+        curr_index += f_sampled_rows_per_proc[i - 1];
+        for (int j = curr_index; j < curr_index + f_sampled_rows_per_proc[i]; j++)
+        {
+            f_sampled_row[j] += row_offset[i];
+        }
+    }
 
     for (int i = 0; i < num_cols; i++) {
         EXPECT_EQ(f_sampled_row[i], f_sampled_row_true_ans[i]);
@@ -111,7 +145,9 @@ int main(int argc, char* argv[])
 {
     ::testing::InitGoogleTest(&argc, argv);
     MPI_Init(&argc, &argv);
-    return RUN_ALL_TESTS();
+    int result = RUN_ALL_TESTS();
+    MPI_Finalize();
+    return result;
 }
 #else // #ifndef CAROM_HAS_GTEST
 int main()
