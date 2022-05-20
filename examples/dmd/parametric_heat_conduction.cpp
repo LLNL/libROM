@@ -449,12 +449,6 @@ int main(int argc, char *argv[])
         dmd_u = new CAROM::DMD(u.Size(), dt);
         dmd_u->takeSample(u.GetData(), t);
 
-        if (save_csv && myid == 0)
-        {
-            mkdir((string(outputPath) + "/step0").c_str(), 0777);
-            csv_db.putDoubleArray(string(outputPath) + "/step0/sol.csv", u.GetData(), u.Size());
-        }
-
         if (myid == 0)
         {
             std::cout << "Taking snapshot at: " << t << std::endl;
@@ -466,6 +460,12 @@ int main(int argc, char *argv[])
     {
         u_gf.SetFromTrueDofs(u);
         init = new CAROM::Vector(u.GetData(), u.Size(), true);
+    }
+
+    if (save_csv && myid == 0)
+    {
+        mkdir((string(outputPath) + "/step0").c_str(), 0777);
+        csv_db.putDoubleArray(string(outputPath) + "/step0/sol.csv", u.GetData(), u.Size());
     }
 
     ts.push_back(t);
@@ -491,18 +491,18 @@ int main(int argc, char *argv[])
             u_gf.SetFromTrueDofs(u);
             dmd_u->takeSample(u.GetData(), t);
 
-            if (save_csv && myid == 0)
-            {
-                mkdir((string(outputPath) + "/step" + to_string(ti)).c_str(), 0777);
-                csv_db.putDoubleArray(string(outputPath) + "/step" + to_string(ti) + "/sol.csv", u.GetData(), u.Size());
-            }
-
             if (myid == 0)
             {
                 std::cout << "Taking snapshot at: " << t << std::endl;
             }
 
             dmd_training_timer.Stop();
+        }
+
+        if (save_csv && myid == 0)
+        {
+            mkdir((string(outputPath) + "/step" + to_string(ti)).c_str(), 0777);
+            csv_db.putDoubleArray(string(outputPath) + "/step" + to_string(ti) + "/sol.csv", u.GetData(), u.Size());
         }
 
         ts.push_back(t);
@@ -540,7 +540,7 @@ int main(int argc, char *argv[])
         oper.SetParameters(u);
     }
 
-    if (offline && save_csv && myid == 0)
+    if (save_csv && myid == 0)
     {
         csv_db.putDoubleVector(string(outputPath) + "/tval.csv", ts, ts.size());
     }
