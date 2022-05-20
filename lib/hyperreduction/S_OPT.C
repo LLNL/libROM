@@ -93,6 +93,8 @@ S_OPT(const Matrix* f_basis,
 
     int num_rows = f_basis->numRows();
 
+    // If num_basis_vectors is less than the number of columns of the basis,
+    // we need to truncate the basis.
     const Matrix* f_basis_truncated = NULL;
     if (num_basis_vectors < f_basis->numColumns())
     {
@@ -105,7 +107,6 @@ S_OPT(const Matrix* f_basis,
 
     const Matrix* Vo = NULL;
 
-    // Get QR factorization of basis
     int *row_offset = new int[num_procs + 1];
     row_offset[num_procs] = f_basis_truncated->numDistributedRows();
     row_offset[myid] = num_rows;
@@ -128,6 +129,7 @@ S_OPT(const Matrix* f_basis,
     int nrow_blocks = num_procs;
     int ncol_blocks = 1;
 
+    // Use the QR factorization of the input matrix, if requested
     if (qr_factorize)
     {
         int blocksize = row_offset[num_procs] / num_procs;
@@ -407,7 +409,6 @@ S_OPT(const Matrix* f_basis,
             }
             MPI_Bcast(c, rhs->numColumns(), MPI_DOUBLE,
                       0, MPI_COMM_WORLD);
-            // Now add the first sampled row of the basis of the RHS to tmp_fs.
             for (int j = 0; j < rhs->numColumns(); ++j) {
                 rhs_first_row.item(j) = c[j];
             }
