@@ -35,6 +35,16 @@ if [ ! -d "hypre" ]; then
   make -j
 fi
 
+# Install GSLIB
+cd $LIB_DIR
+if [ ! -d "gslib" ]; then
+  wget https://github.com/gslib/gslib/archive/v1.0.7.tar.gz
+  tar -zxvf v1.0.7.tar.gz
+  mv gslib-1.0.7 gslib
+  cd gslib
+  make CC=mpicc -j
+fi
+
 # Install PARMETIS 4.0.3
 cd $LIB_DIR
 if [ ! -d "parmetis-4.0.3" ]; then
@@ -69,7 +79,7 @@ if [[ $BUILD_TYPE == "Debug" ]]; then
     if [[ $UPDATE_LIBS == "true" ]]; then
         cd mfem_debug
         git pull
-        make pdebug -j STATIC=NO SHARED=YES MFEM_USE_MPI=YES MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB"
+        make pdebug -j STATIC=NO SHARED=YES MFEM_USE_MPI=YES MFEM_USE_GSLIB=YES MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB"
     fi
     cd $LIB_DIR
     rm mfem
@@ -82,7 +92,7 @@ else
     if [[ $UPDATE_LIBS == "true" ]]; then
         cd mfem_parallel
         git pull
-        make parallel -j STATIC=NO SHARED=YES MFEM_USE_MPI=YES MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB"
+        make parallel -j STATIC=NO SHARED=YES MFEM_USE_MPI=YES MFEM_USE_GSLIB=YES MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB"
     fi
     cd $LIB_DIR
     rm mfem
