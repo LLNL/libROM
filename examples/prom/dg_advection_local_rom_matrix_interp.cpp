@@ -771,10 +771,13 @@ int main(int argc, char *argv[])
 
             if (interp_prep)
             {
-                std::ofstream fout;
-                fout.open("frequencies.txt", std::ios::app);
-                fout << f_factor << std::endl;
-                fout.close();
+                if (myid == 0)
+                {
+                    std::ofstream fout;
+                    fout.open("frequencies.txt", std::ios::app);
+                    fout << f_factor << std::endl;
+                    fout.close();
+                }
                 return 0;
             }
         }
