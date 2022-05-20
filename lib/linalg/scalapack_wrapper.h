@@ -277,6 +277,17 @@ void wrapper_finalize();
  */
 void print_debug_info(struct SLPK_Matrix* A);
 
+struct LSManager
+{
+    struct SLPK_Matrix* A, *B;
+    int* ipiv;
+    int ipivSize;
+};
+
+void ls_init(struct LSManager* mgr, struct SLPK_Matrix* A, struct SLPK_Matrix* B);
+
+void linear_solve(struct LSManager*);
+
 struct QRManager
 {
     struct SLPK_Matrix* A;
