@@ -92,13 +92,22 @@ S_OPT(const Matrix* f_basis,
     CAROM_VERIFY(!f_basis_sampled_inv.distributed());
 
     int num_rows = f_basis->numRows();
-    int num_cols = num_basis_vectors;
+
+    const Matrix* f_basis_truncated = NULL;
+    if (num_basis_vectors < f_basis->numColumns())
+    {
+        f_basis_truncated = f_basis->getFirstNColumns(num_basis_vectors);
+    }
+    else
+    {
+        f_basis_truncated = f_basis;
+    }
 
     const Matrix* Vo = NULL;
 
     // Get QR factorization of basis
     int *row_offset = new int[num_procs + 1];
-    row_offset[num_procs] = f_basis->numDistributedRows();
+    row_offset[num_procs] = f_basis_truncated->numDistributedRows();
     row_offset[myid] = num_rows;
 
     CAROM_VERIFY(MPI_Allgather(MPI_IN_PLACE,
@@ -123,11 +132,11 @@ S_OPT(const Matrix* f_basis,
     {
         int blocksize = row_offset[num_procs] / num_procs;
         if (row_offset[num_procs] % num_procs != 0) blocksize += 1;
-        initialize_matrix(&slpk_f_basis, num_cols, f_basis->numDistributedRows(),
-                          ncol_blocks, nrow_blocks, num_cols, blocksize);
+        initialize_matrix(&slpk_f_basis, num_basis_vectors, f_basis_truncated->numDistributedRows(),
+                          ncol_blocks, nrow_blocks, num_basis_vectors, blocksize);
         for (int rank = 0; rank < num_procs; ++rank) {
             scatter_block(&slpk_f_basis, 1, row_offset[rank] + 1,
-                          f_basis->getData(), num_cols,
+                          f_basis_truncated->getData(), num_basis_vectors,
                           row_offset[rank + 1] - row_offset[rank], rank);
         }
 
@@ -136,7 +145,7 @@ S_OPT(const Matrix* f_basis,
         lqfactorize(&QRmgr);
 
         // Manipulate QRmgr.A to get elementary household reflectors.
-        for (int i = row_offset[myid]; i < num_cols; i++) {
+        for (int i = row_offset[myid]; i < num_basis_vectors; i++) {
             for (int j = 0; j < i - row_offset[myid] && j < row_offset[myid +  1]; j++) {
                 QRmgr.A->mdata[j * QRmgr.A->mm + i] = 0;
             }
@@ -148,13 +157,14 @@ S_OPT(const Matrix* f_basis,
         // Obtain Q
         lqcompute(&QRmgr);
         Matrix* qr_factorized_basis = new Matrix(row_offset[myid + 1] - row_offset[myid],
-                num_cols, f_basis->distributed());
+                num_basis_vectors, f_basis->distributed());
         for (int rank = 0; rank < num_procs; ++rank) {
             gather_block(&qr_factorized_basis->item(0, 0), QRmgr.A,
                          1, row_offset[rank] + 1,
-                         num_cols, row_offset[rank + 1] - row_offset[rank],
+                         num_basis_vectors, row_offset[rank + 1] - row_offset[rank],
                          rank);
         }
+        delete f_basis_truncated;
         Vo = qr_factorized_basis;
 
         free(QRmgr.tau);
@@ -163,7 +173,7 @@ S_OPT(const Matrix* f_basis,
     }
     else
     {
-        Vo = f_basis;
+        Vo = f_basis_truncated;
     }
 
     int num_samples_obtained = 0;
@@ -175,7 +185,7 @@ S_OPT(const Matrix* f_basis,
     vector<map<int, int> > proc_f_row_to_tmp_fs_row(num_procs);
     int num_f_basis_cols = f_basis_sampled_inv.numColumns();
     Matrix V1(num_samples,
-              num_cols,
+              num_basis_vectors,
               false);
 
     RowInfo f_bv_max_local, f_bv_max_global;
@@ -214,7 +224,7 @@ S_OPT(const Matrix* f_basis,
 
     for (int i = 2; i <= num_samples; i++)
     {
-        if (i <= num_cols)
+        if (i <= num_basis_vectors)
         {
             Matrix A0(i - 1, i - 1, false);
             Matrix V1_last_col(i - 1, 1, false);
@@ -449,7 +459,7 @@ S_OPT(const Matrix* f_basis,
         }
         else
         {
-            Matrix* curr_V1 = new Matrix(V1.getData(), num_samples_obtained, num_cols, false, true);
+            Matrix* curr_V1 = new Matrix(V1.getData(), num_samples_obtained, num_basis_vectors, false, true);
             Matrix* lhs = curr_V1->transposeMult(curr_V1);
 
             delete curr_V1;
@@ -504,8 +514,8 @@ S_OPT(const Matrix* f_basis,
             delete [] pdgesv_row_offset;
             free(LSmgr.ipiv);
 
-            Vector nV(num_cols, false);
-            for (int j = 0; j < num_cols; j++)
+            Vector nV(num_basis_vectors, false);
+            for (int j = 0; j < num_basis_vectors; j++)
             {
                 for (int k = 0; k < num_samples_obtained; k++)
                 {
@@ -516,7 +526,7 @@ S_OPT(const Matrix* f_basis,
             for (int j = 0; j < noM->dim(); j++)
             {
                 noM->item(j) = 0.0;
-                for (int k = 0; k < num_cols; k++)
+                for (int k = 0; k < num_basis_vectors; k++)
                 {
                     noM->item(j) += std::log(nV.item(k) + nVo->item(j, k));
                 }
@@ -597,7 +607,7 @@ S_OPT(const Matrix* f_basis,
 
     delete A;
     delete noM;
-    if (qr_factorize)
+    if (qr_factorize || num_basis_vectors < f_basis->numColumns())
     {
         delete Vo;
     }
