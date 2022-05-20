@@ -151,6 +151,25 @@ public:
         int nelements);
 
     /**
+     * @brief Writes a vector of strings associated with the supplied filename.
+     *
+     * @pre !file_name.empty()
+     * @pre data != 0
+     * @pre nelements > 0
+     *
+     * @param[in] file_name The filename associated with the vector of values to be
+     *                written.
+     * @param[in] data The vector of strings to be written.
+     * @param[in] nelements The number of strings in the vector.
+     */
+    virtual
+    void
+    putStringVector(
+        const std::string& file_name,
+        const std::vector<std::string> data,
+        int nelements);
+
+    /**
      * @brief Reads an array of integers associated with the supplied filename.
      *
      * @pre !file_name.empty()

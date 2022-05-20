@@ -119,6 +119,24 @@ CSVDatabase::putComplexVector(
 }
 
 void
+CSVDatabase::putStringVector(
+    const std::string& file_name,
+    const std::vector<std::string> data,
+    int nelements)
+{
+    CAROM_ASSERT(!file_name.empty());
+    CAROM_ASSERT(data != 0);
+    CAROM_ASSERT(nelements > 0);
+
+    std::ofstream d_fs(file_name.c_str());
+    for (int i = 0; i < nelements; ++i)
+    {
+        d_fs << data[i] << std::endl;
+    }
+    d_fs.close();
+}
+
+void
 CSVDatabase::getIntegerArray(
     const std::string& file_name,
     int* data,

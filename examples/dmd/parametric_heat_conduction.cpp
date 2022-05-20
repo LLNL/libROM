@@ -435,10 +435,12 @@ int main(int argc, char *argv[])
     vector<double> ts;
     CAROM::Vector* init = NULL;
 
+    CAROM::CSVDatabase csv_db;
+    vector<string> snap_list;
+
     fom_timer.Stop();
 
     CAROM::DMD* dmd_u = NULL;
-    CAROM::CSVDatabase csv_db;
 
     if (offline)
     {
@@ -469,6 +471,7 @@ int main(int argc, char *argv[])
     }
 
     ts.push_back(t);
+    snap_list.push_back("step0");
 
     bool last_step = false;
     for (int ti = 1; !last_step; ti++)
@@ -506,6 +509,7 @@ int main(int argc, char *argv[])
         }
 
         ts.push_back(t);
+        snap_list.push_back("step" + to_string(ti));
 
         if (last_step || (ti % vis_steps) == 0)
         {
@@ -543,6 +547,7 @@ int main(int argc, char *argv[])
     if (save_csv && myid == 0)
     {
         csv_db.putDoubleVector(string(outputPath) + "/tval.csv", ts, ts.size());
+        csv_db.putStringVector(string(outputPath) + "/snap_list.csv", snap_list, snap_list.size());
     }
 
 #ifdef MFEM_USE_ADIOS2
