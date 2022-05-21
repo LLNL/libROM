@@ -129,8 +129,8 @@ int main(int argc, char *argv[])
                    "Radial basis function used in interpolation. Options: \"G\", \"IQ\", \"IMQ\".");
     args.AddOption(&interp_method, "-interp", "--interpolation-method",
                    "Method of interpolation. Options: \"LS\", \"IDW\", \"LP\".");
-    args.AddOption(&admd_closest_rbf_val, "-admde", "--admde",
-                   "Parameter for controlling radial basis function value for the closest two time steps values in adaptive DMD.");
+    args.AddOption(&admd_closest_rbf_val, "-acrv", "--admd-crv",
+                   "Adaptive DMD closest RBF value.");
     args.AddOption(&ef, "-ef", "--energy-fraction",
                    "Energy fraction for DMD.");
     args.AddOption(&rdim, "-rdim", "--rdim",
