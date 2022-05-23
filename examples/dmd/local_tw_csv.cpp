@@ -357,7 +357,7 @@ int main(int argc, char *argv[])
                 bool new_window = false;
                 if (windowNumSamples < infty)
                 {
-                    new_window = (idx_snap >= (curr_window+1)*windowNumSamples);
+                    new_window = (idx_snap >= snap_bound[0] + (curr_window+1)*windowNumSamples);
                 }
                 else
                 {
