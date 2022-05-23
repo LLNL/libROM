@@ -12,33 +12,19 @@
 //
 // =================================================================================
 //
-// Sample runs and results for parametric serial DMD:
+// Sample script for parametric DMD on heat conduction: heat_conduction_csv.sh
 //
-// Command 1:
-//   mpirun -np 8 parametric_tw_csv -train-set par3_train -dtc 0.01 -rdim 1 -offline -predict
-//   mpirun -np 8 parametric_tw_csv -train-set par3_train -test-set par_test -dtc 0.01 -rdim 1 -online -predict
+// Parametric serial DMD command:
+//   parametric_tw_csv -o parametric_csv_serial -rdim 16 -dtc 0.01
 //
-// Output 1 in run/hc_test_par0_prediction_error.csv:
-//   0.245743
-//   0.20615
-//   0.18531
-//   0.171529
-//   0.161157
+// Final-time prediction error (Last line in run/parametric_csv_serial/hc_par5_prediction_error.csv):
+//   0.00308529
 //
-// =================================================================================
+// Parametric time windowing DMD command:
+//   parametric_tw_csv -o parametric_csv_tw -rdim 16 -nwinsamp 25 -dtc 0.01
 //
-// Sample runs and results for parametric time windowing DMD:
-//
-// Command 1:
-//   mpirun -np 8 parametric_tw_csv -train-set par3_train -dtc 0.01 -rdim 1 -nwinsamp 2 -offline -predict
-//   mpirun -np 8 parametric_tw_csv -train-set par3_train -test-set par_test -dtc 0.01 -rdim 1 -nwinsamp 2 -online -predict
-//
-// Output 1 in run/hc_test_par0_prediction_error.csv:
-//   0.263574
-//   0.226403
-//   0.206596
-//   0.163667
-//   0.152302
+// Final-time prediction error (Last line in run/parametric_csv_tw/hc_par5_prediction_error.csv):
+//   0.0572576
 //
 // =================================================================================
 //

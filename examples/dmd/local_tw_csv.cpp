@@ -12,31 +12,19 @@
 //
 // =================================================================================
 //
-// Sample runs and results for local serial DMD:
+// Sample script for local DMD on heat conduction: heat_conduction_csv.sh
 //
-// Command 1:
-//   mpirun -np 8 local_tw_csv -train-set local_train -test-set local_test  -dtc 0.01 -rdim 1
+// Local serial DMD command:
+//   local_tw_csv -o local_csv_serial -rdim 16 -dtc 0.01
 //
-// Output 1 in run/hc_test_par0_prediction_error.csv:
-//   0.283432
-//   0.248881
-//   0.229603
-//   0.214939
-//   0.202248
+// Final-time prediction error (Last line in run/local_csv_serial/hc_par5_prediction_error.csv):
+//   0.000199922
 //
-// =================================================================================
+// Local time windowing DMD command:
+//   local_tw_csv -o local_csv_tw -rdim 16 -nwinsamp 25 -dtc 0.01
 //
-// Sample runs and results for local time windowing DMD:
-//
-// Command 1:
-//   mpirun -np 8 local_tw_csv -train-set local_train -test-set local_test  -dtc 0.01 -rdim 1 -nwinsamp 2
-//
-// Output 1 in run/hc_test_par0_prediction_error.csv:
-//   0.283517
-//   0.24891
-//   0.229544
-//   0.215171
-//   0.20249
+// Final-time prediction error (Last line in run/local_csv_tw/hc_par5_prediction_error.csv):
+//   0.000334656
 //
 // =================================================================================
 //
