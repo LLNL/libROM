@@ -54,6 +54,29 @@ To install libROM with MFEM using spack.
  spack install librom +mfem
 ```
 
+# Compiling and linking with libROM
+
+To compile and link an existing code with libROM, follow these steps:
+
+- Add libROM/lib to the include path
+```sh
+ -I/path/to/libROM/lib
+```
+- Add the following to the linker flags (LDFLAGS)
+```sh
+ -Wl,-rpath,/path/to/libROM/build/lib -L/path/to/libROM/build/lib
+```
+- Add the following library
+```sh
+ -lROM
+```
+
+For example,
+```sh
+mpicxx myapp.cpp -I/path/to/libROM/lib -Wl,-rpath,/path/to/libROM/build/lib -L/path/to/libROM/build/lib -lROM -o myapp.out
+```
+
+
 # License
 
 libROM is distributed under the terms of both the MIT license and the

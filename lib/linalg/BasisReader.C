@@ -83,14 +83,10 @@ BasisReader::getSpatialBasis(
         }
     }
     d_last_basis_idx = i;
-    char tmp[100];
-    int num_rows;
-    sprintf(tmp, "spatial_basis_num_rows_%06d", i);
-    d_database->getInteger(tmp, num_rows);
-    int num_cols;
-    sprintf(tmp, "spatial_basis_num_cols_%06d", i);
-    d_database->getInteger(tmp, num_cols);
+    int num_rows = getDim("basis",time);
+    int num_cols = getNumSamples("basis",time);
 
+    char tmp[100];
     Matrix* spatial_basis_vectors = new Matrix(num_rows, num_cols, true);
     sprintf(tmp, "spatial_basis_%06d", i);
     d_database->getDoubleArray(tmp,
@@ -124,13 +120,10 @@ BasisReader::getSpatialBasis(
         }
     }
     d_last_basis_idx = i;
+    int num_rows = getDim("basis",time);
+    int num_cols = getNumSamples("basis",time);
+
     char tmp[100];
-    int num_rows;
-    sprintf(tmp, "spatial_basis_num_rows_%06d", i);
-    d_database->getInteger(tmp, num_rows);
-    int num_cols;
-    sprintf(tmp, "spatial_basis_num_cols_%06d", i);
-    d_database->getInteger(tmp, num_cols);
     CAROM_VERIFY(0 < start_col <= num_cols);
     CAROM_VERIFY(start_col <= end_col && end_col <= num_cols);
     int num_cols_to_read = end_col - start_col + 1;
@@ -189,14 +182,10 @@ BasisReader::getTemporalBasis(
         }
     }
     d_last_basis_idx = i;
-    char tmp[100];
-    int num_rows;
-    sprintf(tmp, "temporal_basis_num_rows_%06d", i);
-    d_database->getInteger(tmp, num_rows);
-    int num_cols;
-    sprintf(tmp, "temporal_basis_num_cols_%06d", i);
-    d_database->getInteger(tmp, num_cols);
+    int num_rows = getDim("temporal_basis",time);
+    int num_cols = getNumSamples("temporal_basis",time);
 
+    char tmp[100];
     Matrix* temporal_basis_vectors = new Matrix(num_rows, num_cols, true);
     sprintf(tmp, "temporal_basis_%06d", i);
     d_database->getDoubleArray(tmp,
@@ -230,13 +219,10 @@ BasisReader::getTemporalBasis(
         }
     }
     d_last_basis_idx = i;
+    int num_rows = getDim("temporal_basis",time);
+    int num_cols = getNumSamples("temporal_basis",time);
+
     char tmp[100];
-    int num_rows;
-    sprintf(tmp, "temporal_basis_num_rows_%06d", i);
-    d_database->getInteger(tmp, num_rows);
-    int num_cols;
-    sprintf(tmp, "temporal_basis_num_cols_%06d", i);
-    d_database->getInteger(tmp, num_cols);
     CAROM_VERIFY(0 < start_col <= num_cols);
     CAROM_VERIFY(start_col <= end_col && end_col <= num_cols);
     int num_cols_to_read = end_col - start_col + 1;
@@ -344,11 +330,16 @@ BasisReader::getSingularValues(
 }
 
 int
-BasisReader::getDim(
+BasisReader::getDim( 
+    const std::string kind,
     double time)
 {
     CAROM_ASSERT(0 < numTimeIntervals());
     CAROM_ASSERT(0 <= time);
+    CAROM_ASSERT((kind == "basis") || 
+                 (kind == "snapshot") || 
+                 (kind == "temporal_basis"));
+    
     int num_time_intervals = numTimeIntervals();
     int i;
     for (i = 0; i < num_time_intervals-1; ++i) {
@@ -360,17 +351,24 @@ BasisReader::getDim(
     d_last_basis_idx = i;
     char tmp[100];
     int num_rows;
-    sprintf(tmp, "snapshot_matrix_num_rows_%06d", i);
+    if (kind == "basis") sprintf(tmp, "spatial_basis_num_rows_%06d", i);
+    else if (kind == "snapshot") sprintf(tmp, "snapshot_matrix_num_rows_%06d", i);
+    else if (kind == "temporal_basis") sprintf(tmp, "temporal_basis_num_rows_%06d", i);
     d_database->getInteger(tmp, num_rows);
     return num_rows;
 }
 
 int
 BasisReader::getNumSamples(
+    const std::string kind,
     double time)
 {
     CAROM_ASSERT(0 < numTimeIntervals());
     CAROM_ASSERT(0 <= time);
+    CAROM_ASSERT((kind == "basis") || 
+                 (kind == "snapshot") || 
+                 (kind == "temporal_basis"));
+
     int num_time_intervals = numTimeIntervals();
     int i;
     for (i = 0; i < num_time_intervals-1; ++i) {
@@ -382,7 +380,9 @@ BasisReader::getNumSamples(
     d_last_basis_idx = i;
     char tmp[100];
     int num_cols;
-    sprintf(tmp, "snapshot_matrix_num_cols_%06d", i);
+    if (kind == "basis") sprintf(tmp, "spatial_basis_num_cols_%06d", i);
+    else if (kind == "snapshot") sprintf(tmp, "snapshot_matrix_num_cols_%06d", i);
+    else if (kind == "temporal_basis") sprintf(tmp, "temporal_basis_num_cols_%06d", i);
     d_database->getInteger(tmp, num_cols);
     return num_cols;
 }
@@ -402,8 +402,8 @@ BasisReader::getSnapshotMatrix(
         }
     }
     d_last_basis_idx = i;
-    int num_rows = getDim(time);
-    int num_cols = getNumSamples(time);
+    int num_rows = getDim("snapshot",time);
+    int num_cols = getNumSamples("snapshot",time);
 
     char tmp[100];
     Matrix* snapshots = new Matrix(num_rows, num_cols, false);
@@ -439,17 +439,14 @@ BasisReader::getSnapshotMatrix(
         }
     }
     d_last_basis_idx = i;
-    char tmp[100];
-    int num_rows;
-    sprintf(tmp, "snapshot_matrix_num_rows_%06d", i);
-    d_database->getInteger(tmp, num_rows);
-    int num_cols;
-    sprintf(tmp, "snapshot_matrix_num_cols_%06d", i);
-    d_database->getInteger(tmp, num_cols);
+    int num_rows = getDim("snapshot",time);
+    int num_cols = getNumSamples("snapshot",time);
+
     CAROM_VERIFY(0 < start_col <= num_cols);
     CAROM_VERIFY(start_col <= end_col && end_col <= num_cols);
     int num_cols_to_read = end_col - start_col + 1;
 
+    char tmp[100];
     Matrix* snapshots = new Matrix(num_rows, num_cols_to_read, false);
     sprintf(tmp, "snapshot_matrix_%06d", i);
     d_database->getDoubleArray(tmp,

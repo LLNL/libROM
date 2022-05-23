@@ -19,5 +19,6 @@ FCMangle.h
 # Do not track executables
 build
 
-# Do not track docs/latex
+# Do not track docs/latex and docs/html
 docs/latex
+docs/html
