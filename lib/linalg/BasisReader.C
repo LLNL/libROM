@@ -330,16 +330,16 @@ BasisReader::getSingularValues(
 }
 
 int
-BasisReader::getDim( 
+BasisReader::getDim(
     const std::string kind,
     double time)
 {
     CAROM_ASSERT(0 < numTimeIntervals());
     CAROM_ASSERT(0 <= time);
-    CAROM_ASSERT((kind == "basis") || 
-                 (kind == "snapshot") || 
+    CAROM_ASSERT((kind == "basis") ||
+                 (kind == "snapshot") ||
                  (kind == "temporal_basis"));
-    
+
     int num_time_intervals = numTimeIntervals();
     int i;
     for (i = 0; i < num_time_intervals-1; ++i) {
@@ -365,8 +365,8 @@ BasisReader::getNumSamples(
 {
     CAROM_ASSERT(0 < numTimeIntervals());
     CAROM_ASSERT(0 <= time);
-    CAROM_ASSERT((kind == "basis") || 
-                 (kind == "snapshot") || 
+    CAROM_ASSERT((kind == "basis") ||
+                 (kind == "snapshot") ||
                  (kind == "temporal_basis"));
 
     int num_time_intervals = numTimeIntervals();
