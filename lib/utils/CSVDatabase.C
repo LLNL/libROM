@@ -52,9 +52,9 @@ CSVDatabase::putIntegerArray(
     const int* const data,
     int nelements)
 {
-    CAROM_ASSERT(!file_name.empty());
-    CAROM_ASSERT(data != 0);
-    CAROM_ASSERT(nelements > 0);
+    CAROM_VERIFY(!file_name.empty());
+    CAROM_VERIFY(data != 0);
+    CAROM_VERIFY(nelements > 0);
 
     std::ofstream d_fs(file_name.c_str());
     for (int i = 0; i < nelements; ++i)
@@ -70,9 +70,9 @@ CSVDatabase::putDoubleArray(
     const double* const data,
     int nelements)
 {
-    CAROM_ASSERT(!file_name.empty());
-    CAROM_ASSERT(data != 0);
-    CAROM_ASSERT(nelements > 0);
+    CAROM_VERIFY(!file_name.empty());
+    CAROM_VERIFY(data != 0);
+    CAROM_VERIFY(nelements > 0);
 
     std::ofstream d_fs(file_name.c_str());
     for (int i = 0; i < nelements; ++i)
@@ -88,9 +88,9 @@ CSVDatabase::putDoubleVector(
     const std::vector<double> data,
     int nelements)
 {
-    CAROM_ASSERT(!file_name.empty());
-    CAROM_ASSERT(data != 0);
-    CAROM_ASSERT(nelements > 0);
+    CAROM_VERIFY(!file_name.empty());
+    CAROM_VERIFY(data != 0);
+    CAROM_VERIFY(nelements > 0);
 
     std::ofstream d_fs(file_name.c_str());
     for (int i = 0; i < nelements; ++i)
@@ -106,9 +106,9 @@ CSVDatabase::putComplexVector(
     const std::vector<std::complex<double>> data,
     int nelements)
 {
-    CAROM_ASSERT(!file_name.empty());
-    CAROM_ASSERT(data != 0);
-    CAROM_ASSERT(nelements > 0);
+    CAROM_VERIFY(!file_name.empty());
+    CAROM_VERIFY(data != 0);
+    CAROM_VERIFY(nelements > 0);
 
     std::ofstream d_fs(file_name.c_str());
     for (int i = 0; i < nelements; ++i)
@@ -124,9 +124,9 @@ CSVDatabase::putStringVector(
     const std::vector<std::string> data,
     int nelements)
 {
-    CAROM_ASSERT(!file_name.empty());
-    CAROM_ASSERT(data != 0);
-    CAROM_ASSERT(nelements > 0);
+    CAROM_VERIFY(!file_name.empty());
+    CAROM_VERIFY(data != 0);
+    CAROM_VERIFY(nelements > 0);
 
     std::ofstream d_fs(file_name.c_str());
     for (int i = 0; i < nelements; ++i)
@@ -142,7 +142,7 @@ CSVDatabase::getIntegerArray(
     int* data,
     int nelements)
 {
-    CAROM_ASSERT(!file_name.empty());
+    CAROM_VERIFY(!file_name.empty());
 #ifndef DEBUG_CHECK_ASSERTIONS
     CAROM_NULL_USE(nelements);
 #endif
@@ -154,7 +154,7 @@ CSVDatabase::getIntegerArray(
         d_fs >> data_entry;
         data[i] = data_entry;
     }
-    CAROM_ASSERT(d_fs.eof());
+    CAROM_VERIFY(d_fs.eof());
     d_fs.close();
 }
 
@@ -164,7 +164,7 @@ CSVDatabase::getIntegerVector(
     std::vector<int> &data,
     bool append)
 {
-    CAROM_ASSERT(!file_name.empty());
+    CAROM_VERIFY(!file_name.empty());
     if (!append) data.clear();
 
     std::ifstream d_fs(file_name.c_str());
@@ -182,7 +182,7 @@ CSVDatabase::getDoubleArray(
     double* data,
     int nelements)
 {
-    CAROM_ASSERT(!file_name.empty());
+    CAROM_VERIFY(!file_name.empty());
 #ifndef DEBUG_CHECK_ASSERTIONS
     CAROM_NULL_USE(nelements);
 #endif
@@ -194,7 +194,7 @@ CSVDatabase::getDoubleArray(
         d_fs >> data_entry;
         data[i] = data_entry;
     }
-    CAROM_ASSERT(d_fs.eof());
+    CAROM_VERIFY(d_fs.eof());
     d_fs.close();
 }
 
@@ -205,7 +205,7 @@ CSVDatabase::getDoubleArray(
     int nelements,
     std::vector<int> idx)
 {
-    CAROM_ASSERT(!file_name.empty());
+    CAROM_VERIFY(!file_name.empty());
 #ifndef DEBUG_CHECK_ASSERTIONS
     CAROM_NULL_USE(nelements);
 #endif
@@ -227,8 +227,8 @@ CSVDatabase::getDoubleArray(
                 data[k++] = data_entry;
             }
         }
-        CAROM_ASSERT(d_fs.eof());
-        CAROM_ASSERT(k == idx.size());
+        CAROM_VERIFY(d_fs.eof());
+        CAROM_VERIFY(k == idx.size());
         d_fs.close();
     }
 }
@@ -242,7 +242,7 @@ CSVDatabase::getDoubleArray(
     int block_size,
     int stride)
 {
-    CAROM_ASSERT(!file_name.empty());
+    CAROM_VERIFY(!file_name.empty());
 #ifndef DEBUG_CHECK_ASSERTIONS
     CAROM_NULL_USE(nelements);
 #endif
@@ -274,7 +274,7 @@ CSVDatabase::getDoubleVector(
     std::vector<double> &data,
     bool append)
 {
-    CAROM_ASSERT(!file_name.empty());
+    CAROM_VERIFY(!file_name.empty());
     if (!append) data.clear();
 
     std::ifstream d_fs(file_name.c_str());
@@ -292,7 +292,7 @@ CSVDatabase::getStringVector(
     std::vector<std::string> &data,
     bool append)
 {
-    CAROM_ASSERT(!file_name.empty());
+    CAROM_VERIFY(!file_name.empty());
     if (!append) data.clear();
 
     std::ifstream d_fs(file_name.c_str());
@@ -309,7 +309,7 @@ CSVDatabase::getLineCount(
     const std::string& file_name)
 {
     int count = 0;
-    CAROM_ASSERT(!file_name.empty());
+    CAROM_VERIFY(!file_name.empty());
     std::ifstream d_fs(file_name.c_str());
     std::string data_entry;
     while (std::getline(d_fs, data_entry))

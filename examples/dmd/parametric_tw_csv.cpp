@@ -86,6 +86,7 @@ int main(int argc, char *argv[])
     int numWindows = 0;
     int windowNumSamples = infty;
     int windowOverlapSamples = 0;
+    bool offset_indicator = true;
     const char *rbf = "G";
     const char *interp_method = "LS";
     double admd_closest_rbf_val = 0.9;
@@ -121,6 +122,8 @@ int main(int argc, char *argv[])
                    "Number of samples in DMD windows.");
     args.AddOption(&windowOverlapSamples, "-nwinover", "--numwindowoverlap",
                    "Number of samples for DMD window overlap.");
+    args.AddOption(&offset_indicator, "-os", "--offset-indicator", "-no-os", "--no-offset-indicator", 
+                   "Enable or distable the option of offset indicator.");
     args.AddOption(&rbf, "-rbf", "--radial-basis-function",
                    "Radial basis function used in interpolation. Options: \"G\", \"IQ\", \"IMQ\".");
     args.AddOption(&interp_method, "-interp", "--interpolation-method",
@@ -311,8 +314,16 @@ int main(int argc, char *argv[])
             csv_db.getDoubleVector(string(data_dir) + "/" + par_dir + "/tval.csv", tvec, false);
             CAROM_VERIFY(tvec.size() == snap_list.size());
 
-            indicator_init.push_back(tvec[snap_bound[0]]);
-            indicator_last.push_back(tvec[snap_bound[1]]);
+            if (offset_indicator)
+            {
+                indicator_init.push_back(0.0);
+                indicator_last.push_back(tvec[snap_bound[1]]-tvec[snap_bound[0]]);
+            }
+            else
+            {
+                indicator_init.push_back(tvec[snap_bound[0]]);
+                indicator_last.push_back(tvec[snap_bound[1]]);
+            }
 
             CAROM_VERIFY(windowOverlapSamples < windowNumSamples);
             if (indicator_val.size() == 0)
@@ -413,22 +424,23 @@ int main(int argc, char *argv[])
                 double tval = tvec[idx_snap];
                 string data_filename = string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv"; // path to VAR_NAME.csv
                 csv_db.getDoubleArray(data_filename, sample, nelements, idx_state);
-                dmd[curr_window][idx_dataset]->takeSample(sample, tval);
+                dmd[curr_window][idx_dataset]->takeSample(sample, tval - offset_indicator * tvec[snap_bound[0]]);
                 if (overlap_count > 0)
                 {
-                    dmd[curr_window-1][idx_dataset]->takeSample(sample, tval);
+                    dmd[curr_window-1][idx_dataset]->takeSample(sample, tval - offset_indicator * tvec[snap_bound[0]]);
                     overlap_count -= 1;
                 }
+                // a rough estimate to correct the precision of the indicator range partition
                 if (curr_window+1 < numWindows && idx_snap+1 <= snap_bound[1] &&
-                        tval > indicator_val[curr_window+1] - dt_est / 100.0) // a rough estimate to correct the precision of the indicator range partition
+                        tval - (offset_indicator) * tvec[snap_bound[0]] > indicator_val[curr_window+1] - dt_est / 100.0) 
                 {
                     overlap_count = windowOverlapSamples;
                     curr_window += 1;
                     if (windowNumSamples < infty)
                     {
-                        indicator_val.push_back(tval);
+                        indicator_val.push_back(tval - offset_indicator * tvec[snap_bound[0]]);
                     }
-                    dmd[curr_window][idx_dataset]->takeSample(sample, tval);
+                    dmd[curr_window][idx_dataset]->takeSample(sample, tval - offset_indicator * tvec[snap_bound[0]]);
                 }
             }
 
@@ -545,7 +557,6 @@ int main(int argc, char *argv[])
             }
 
             string snap = snap_list[snap_bound[0]]; // STATE
-            double tval = tvec[snap_bound[0]];
             string data_filename = string(data_dir) + "/" + par_dir + "/" + snap + "/" + variable + ".csv"; // path to VAR_NAME.csv
             csv_db.getDoubleArray(data_filename, sample, nelements, idx_state);
             for (int window = 0; window < numWindows; ++window)
@@ -642,7 +653,7 @@ int main(int argc, char *argv[])
                 if (t_final > 0.0) // Actual prediction without true solution for comparison
                 {
                     num_tests += 1;
-                    while (curr_window+1 < numWindows && t_final > indicator_val[curr_window+1])
+                    while (curr_window+1 < numWindows && t_final - offset_indicator * tvec[snap_bound[0]] > indicator_val[curr_window+1])
                     {
                         curr_window += 1;
                     }
@@ -650,7 +661,7 @@ int main(int argc, char *argv[])
                     {
                         cout << "Predicting DMD solution at t = " << t_final << " using DMD model #" << curr_window << endl;
                     }
-                    CAROM::Vector* result = dmd[curr_window][idx_dataset]->predict(t_final);
+                    CAROM::Vector* result = dmd[curr_window][idx_dataset]->predict(t_final - offset_indicator * tvec[snap_bound[0]]);
                     if (myid == 0)
                     {
                         csv_db.putDoubleArray(outputPath + "/" + par_dir + "_final_time_prediction.csv", result->getData(), dim);
@@ -660,7 +671,7 @@ int main(int argc, char *argv[])
                 }
                 else // Verify DMD prediction results against dataset
                 {
-                    while (curr_window+1 < numWindows && tval > indicator_val[curr_window+1])
+                    while (curr_window+1 < numWindows && tval - offset_indicator * tvec[snap_bound[0]] > indicator_val[curr_window+1])
                     {
                         curr_window += 1;
                     }
@@ -668,7 +679,7 @@ int main(int argc, char *argv[])
                     {
                         cout << "Predicting DMD solution #" << idx_snap << " at t = " << tval << " using DMD model #" << curr_window << endl;
                     }
-                    CAROM::Vector* result = dmd[curr_window][idx_dataset]->predict(tval);
+                    CAROM::Vector* result = dmd[curr_window][idx_dataset]->predict(tval - offset_indicator * tvec[snap_bound[0]]);
 
                     // Calculate the relative error between the DMD final solution and the true solution.
                     Vector dmd_solution(result->getData(), result->dim());
