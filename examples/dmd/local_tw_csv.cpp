@@ -10,18 +10,18 @@
 
 // Compile with: make local_tw_csv
 //
+// Generate CSV databse on heat conduction with: heat_conduction_csv.sh
+//
 // =================================================================================
 //
-// Sample script for local DMD on heat conduction: heat_conduction_csv.sh
-//
 // Local serial DMD command:
-//   local_tw_csv -o local_csv_serial -rdim 16 -dtc 0.01
+//   mpirun -np 8 local_tw_csv -o local_csv_serial -rdim 16 -dtc 0.01
 //
 // Final-time prediction error (Last line in run/local_csv_serial/hc_par5_prediction_error.csv):
 //   0.000199922
 //
 // Local time windowing DMD command:
-//   local_tw_csv -o local_csv_tw -rdim 16 -nwinsamp 25 -dtc 0.01
+//   mpirun -np 8 local_tw_csv -o local_csv_tw -rdim 16 -nwinsamp 25 -dtc 0.01
 //
 // Final-time prediction error (Last line in run/local_csv_tw/hc_par5_prediction_error.csv):
 //   0.000334656
