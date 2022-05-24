@@ -228,20 +228,24 @@ int main(int argc, char *argv[])
         args.PrintOptions(cout);
     }
 
-    string outputPath = "run";
-    if (string(basename) != "") {
-        outputPath += "/" + string(basename);
-    }
-
-    if (save_csv && myid == 0) {
-        const char path_delim = '/';
-        string::size_type pos = 0;
-        do {
-            pos = outputPath.find(path_delim, pos+1);
-            string subdir = outputPath.substr(0, pos);
-            mkdir(subdir.c_str(), 0777);
+    string outputPath = ".";
+    if (save_csv)
+    {
+        outputPath = "run";
+        if (string(basename) != "") {
+            outputPath += string(basename);
         }
-        while (pos != string::npos);
+        if (myid == 0)
+        {
+            const char path_delim = '/';
+            string::size_type pos = 0;
+            do {
+                pos = outputPath.find(path_delim, pos+1);
+                string subdir = outputPath.substr(0, pos);
+                mkdir(subdir.c_str(), 0777);
+            }
+            while (pos != string::npos);
+        }
     }
 
     MFEM_VERIFY(!(offline && online), "both offline and online can not be true!");
@@ -349,10 +353,10 @@ int main(int argc, char *argv[])
     u_gf.SetFromTrueDofs(u);
     {
         ostringstream mesh_name, sol_name;
-        mesh_name << "parametric_heat_conduction_" << to_string(radius) << "_"
+        mesh_name << outputPath << "/parametric_heat_conduction_" << to_string(radius) << "_"
                   << to_string(alpha) << "_" << to_string(cx) << "_" << to_string(cy)
                   << "-mesh." << setfill('0') << setw(6) << myid;
-        sol_name << "parametric_heat_conduction_" << to_string(radius) << "_"
+        sol_name << outputPath << "/parametric_heat_conduction_" << to_string(radius) << "_"
                  << to_string(alpha) << "_" << to_string(cx) << "_" << to_string(cy)
                  << "-init." << setfill('0') << setw(6) << myid;
         ofstream omesh(mesh_name.str().c_str());
@@ -363,7 +367,7 @@ int main(int argc, char *argv[])
         u_gf.Save(osol);
     }
 
-    VisItDataCollection visit_dc("Parametric_Heat_Conduction_" +
+    VisItDataCollection visit_dc(outputPath + "/Parametric_Heat_Conduction_" +
                                  to_string(radius) + "_" + to_string(alpha) + "_" + to_string(cx) + "_" +
                                  to_string(cy), pmesh);
     visit_dc.RegisterField("temperature", &u_gf);
@@ -384,7 +388,7 @@ int main(int argc, char *argv[])
         postfix.erase(0, std::string("../data/").size() );
         postfix += "_o" + std::to_string(order);
         postfix += "_solver" + std::to_string(ode_solver_type);
-        const std::string collection_name = "parametric_heat_conduction-p-" +
+        const std::string collection_name = outputPath + "parametric_heat_conduction-p-" +
                                             postfix + ".bp";
 
         adios2_dc = new ADIOS2DataCollection(MPI_COMM_WORLD, collection_name, pmesh);
@@ -561,7 +565,7 @@ int main(int argc, char *argv[])
     //     using GLVis: "glvis -np <np> -m parametric_heat_conduction-mesh -g parametric_heat_conduction-final".
     {
         ostringstream sol_name;
-        sol_name << "parametric_heat_conduction_" << to_string(radius) << "_"
+        sol_name << outputPath << "/parametric_heat_conduction_" << to_string(radius) << "_"
                  << to_string(alpha) << "_" << to_string(cx) << "_" << to_string(cy)
                  << "-final." << setfill('0') << setw(6) << myid;
         ofstream osol(sol_name.str().c_str());
@@ -585,7 +589,7 @@ int main(int argc, char *argv[])
 
             dmd_training_timer.Stop();
 
-            dmd_u->save(to_string(radius) + "_" + to_string(alpha) + "_" +
+            dmd_u->save(outputPath + "/" + to_string(radius) + "_" + to_string(alpha) + "_" +
                         to_string(cx) + "_" + to_string(cy));
 
             if (myid == 0)
@@ -619,7 +623,7 @@ int main(int argc, char *argv[])
                 fin >> curr_param;
                 double curr_cy = curr_param;
 
-                dmd_paths.push_back(to_string(curr_radius) + "_" +
+                dmd_paths.push_back(outputPath + "/" + to_string(curr_radius) + "_" +
                                     to_string(curr_alpha) + "_" + to_string(curr_cx) + "_" +
                                     to_string(curr_cy));
                 CAROM::Vector* param_vector = new CAROM::Vector(4, false);
@@ -665,7 +669,7 @@ int main(int argc, char *argv[])
             Vector initial_dmd_solution_u(result_u->getData(), result_u->dim());
             u_gf.SetFromTrueDofs(initial_dmd_solution_u);
 
-            VisItDataCollection dmd_visit_dc("DMD_Parametric_Heat_Conduction_" +
+            VisItDataCollection dmd_visit_dc(outputPath + "/DMD_Parametric_Heat_Conduction_" +
                                              to_string(radius) + "_" + to_string(alpha) + "_" +
                                              to_string(cx) + "_" + to_string(cy), pmesh);
             dmd_visit_dc.RegisterField("temperature", &u_gf);

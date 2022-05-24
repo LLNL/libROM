@@ -14,7 +14,7 @@ case "$(uname -s)" in
 		  COMMAND="mpirun -oversubscribe"
 			MACHINE="Darwin";;
     *)
-			echo "The regression tests can only run on Linux and MAC."
+			echo "The CSV databse test can only run on Linux and MAC."
 			exit 1
 esac
 

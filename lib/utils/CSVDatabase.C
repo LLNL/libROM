@@ -89,8 +89,8 @@ CSVDatabase::putDoubleVector(
     int nelements)
 {
     CAROM_VERIFY(!file_name.empty());
-    CAROM_VERIFY(data != 0);
     CAROM_VERIFY(nelements > 0);
+    CAROM_VERIFY(data.size() == nelements);
 
     std::ofstream d_fs(file_name.c_str());
     for (int i = 0; i < nelements; ++i)
@@ -107,8 +107,8 @@ CSVDatabase::putComplexVector(
     int nelements)
 {
     CAROM_VERIFY(!file_name.empty());
-    CAROM_VERIFY(data != 0);
     CAROM_VERIFY(nelements > 0);
+    CAROM_VERIFY(data.size() == nelements);
 
     std::ofstream d_fs(file_name.c_str());
     for (int i = 0; i < nelements; ++i)
@@ -125,8 +125,8 @@ CSVDatabase::putStringVector(
     int nelements)
 {
     CAROM_VERIFY(!file_name.empty());
-    CAROM_VERIFY(data != 0);
     CAROM_VERIFY(nelements > 0);
+    CAROM_ASSERT(data != 0);
 
     std::ofstream d_fs(file_name.c_str());
     for (int i = 0; i < nelements; ++i)
@@ -148,13 +148,12 @@ CSVDatabase::getIntegerArray(
 #endif
 
     std::ifstream d_fs(file_name.c_str());
-    int data_entry = 0.0;
+    int data_entry = 0;
     for (int i = 0; i < nelements; ++i)
     {
         d_fs >> data_entry;
         data[i] = data_entry;
     }
-    CAROM_VERIFY(d_fs.eof());
     d_fs.close();
 }
 
@@ -194,7 +193,6 @@ CSVDatabase::getDoubleArray(
         d_fs >> data_entry;
         data[i] = data_entry;
     }
-    CAROM_VERIFY(d_fs.eof());
     d_fs.close();
 }
 
@@ -227,7 +225,6 @@ CSVDatabase::getDoubleArray(
                 data[k++] = data_entry;
             }
         }
-        CAROM_VERIFY(d_fs.eof());
         CAROM_VERIFY(k == idx.size());
         d_fs.close();
     }
