@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
                    "Number of samples in DMD windows.");
     args.AddOption(&windowOverlapSamples, "-nwinover", "--numwindowoverlap",
                    "Number of samples for DMD window overlap.");
-    args.AddOption(&offset_indicator, "-os", "--offset-indicator", "-no-os", "--no-offset-indicator", 
+    args.AddOption(&offset_indicator, "-os", "--offset-indicator", "-no-os", "--no-offset-indicator",
                    "Enable or distable the option of offset indicator.");
     args.AddOption(&rbf, "-rbf", "--radial-basis-function",
                    "Radial basis function used in interpolation. Options: \"G\", \"IQ\", \"IMQ\".");
@@ -284,7 +284,7 @@ int main(int argc, char *argv[])
         vector<string> snap_list;
         csv_db.getStringVector(string(list_dir) + "/" + par_dir + ".csv", snap_list, false);
 
-        vector<int> snap_bound; 
+        vector<int> snap_bound;
         csv_db.getIntegerVector(string(data_dir) + "/" + par_dir + "/" + temporal_idx_list + ".csv", snap_bound, 2);
         if (snap_bound.size() > 0)
         {
@@ -398,7 +398,7 @@ int main(int argc, char *argv[])
             csv_db.getDoubleVector(string(data_dir) + "/" + par_dir + "/tval.csv", tvec, false);
             CAROM_VERIFY(tvec.size() == snap_list.size());
 
-            vector<int> snap_bound; 
+            vector<int> snap_bound;
             csv_db.getIntegerVector(string(data_dir) + "/" + par_dir + "/" + temporal_idx_list + ".csv", snap_bound, false);
             if (snap_bound.size() > 0)
             {
@@ -432,7 +432,7 @@ int main(int argc, char *argv[])
                 }
                 // a rough estimate to correct the precision of the indicator range partition
                 if (curr_window+1 < numWindows && idx_snap+1 <= snap_bound[1] &&
-                        tval - (offset_indicator) * tvec[snap_bound[0]] > indicator_val[curr_window+1] - dt_est / 100.0) 
+                        tval - (offset_indicator) * tvec[snap_bound[0]] > indicator_val[curr_window+1] - dt_est / 100.0)
                 {
                     overlap_count = windowOverlapSamples;
                     curr_window += 1;
@@ -538,7 +538,7 @@ int main(int argc, char *argv[])
             csv_db.getDoubleVector(string(data_dir) + "/" + par_dir + "/tval.csv", tvec, false);
             CAROM_VERIFY(tvec.size() == snap_list.size());
 
-            vector<int> snap_bound; 
+            vector<int> snap_bound;
             csv_db.getIntegerVector(string(data_dir) + "/" + par_dir + "/" + temporal_idx_list + ".csv", snap_bound, false);
             if (snap_bound.size() > 0)
             {
@@ -619,7 +619,7 @@ int main(int argc, char *argv[])
             csv_db.getDoubleVector(string(data_dir) + "/" + par_dir + "/tval.csv", tvec, false);
             CAROM_VERIFY(tvec.size() == snap_list.size());
 
-            vector<int> snap_bound; 
+            vector<int> snap_bound;
             csv_db.getIntegerVector(string(data_dir) + "/" + par_dir + "/" + temporal_idx_list + ".csv", snap_bound, false);
             if (snap_bound.size() > 0)
             {

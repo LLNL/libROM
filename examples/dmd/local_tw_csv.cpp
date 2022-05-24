@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
         string par_dir;
         getline(par_ss, par_dir, ',');
 
-        vector<int> snap_bound; 
+        vector<int> snap_bound;
         csv_db.getIntegerVector(string(data_dir) + "/" + par_dir + "/" + temporal_idx_list + ".csv", snap_bound, false);
         if (snap_bound.size() > 0)
         {
@@ -314,7 +314,7 @@ int main(int argc, char *argv[])
         csv_db.getDoubleVector(string(data_dir) + "/" + par_dir + "/tval.csv", tvec, false);
         CAROM_VERIFY(tvec.size() == snap_list.size());
 
-        vector<int> snap_bound; 
+        vector<int> snap_bound;
         csv_db.getIntegerVector(string(data_dir) + "/" + par_dir + "/" + temporal_idx_list + ".csv", snap_bound, false);
         if (snap_bound.size() > 0)
         {
@@ -486,7 +486,7 @@ int main(int argc, char *argv[])
         csv_db.getDoubleVector(string(data_dir) + "/" + par_dir + "/tval.csv", tvec, false);
         CAROM_VERIFY(tvec.size() == snap_list.size());
 
-        vector<int> snap_bound; 
+        vector<int> snap_bound;
         csv_db.getIntegerVector(string(data_dir) + "/" + par_dir + "/" + temporal_idx_list + ".csv", snap_bound, false);
         if (snap_bound.size() > 0)
         {
