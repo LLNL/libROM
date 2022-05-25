@@ -233,7 +233,7 @@ int main(int argc, char *argv[])
     {
         outputPath = "run";
         if (string(basename) != "") {
-            outputPath += string(basename);
+            outputPath += "/" + string(basename);
         }
         if (myid == 0)
         {
@@ -388,7 +388,7 @@ int main(int argc, char *argv[])
         postfix.erase(0, std::string("../data/").size() );
         postfix += "_o" + std::to_string(order);
         postfix += "_solver" + std::to_string(ode_solver_type);
-        const std::string collection_name = outputPath + "parametric_heat_conduction-p-" +
+        const std::string collection_name = outputPath + "/parametric_heat_conduction-p-" +
                                             postfix + ".bp";
 
         adios2_dc = new ADIOS2DataCollection(MPI_COMM_WORLD, collection_name, pmesh);
@@ -470,8 +470,8 @@ int main(int argc, char *argv[])
 
     if (save_csv && myid == 0)
     {
-        mkdir((string(outputPath) + "/step0").c_str(), 0777);
-        csv_db.putDoubleArray(string(outputPath) + "/step0/sol.csv", u.GetData(), u.Size());
+        mkdir((outputPath + "/step0").c_str(), 0777);
+        csv_db.putDoubleArray(outputPath + "/step0/sol.csv", u.GetData(), u.Size());
     }
 
     ts.push_back(t);
@@ -508,8 +508,8 @@ int main(int argc, char *argv[])
 
         if (save_csv && myid == 0)
         {
-            mkdir((string(outputPath) + "/step" + to_string(ti)).c_str(), 0777);
-            csv_db.putDoubleArray(string(outputPath) + "/step" + to_string(ti) + "/sol.csv", u.GetData(), u.Size());
+            mkdir((outputPath + "/step" + to_string(ti)).c_str(), 0777);
+            csv_db.putDoubleArray(outputPath + "/step" + to_string(ti) + "/sol.csv", u.GetData(), u.Size());
         }
 
         ts.push_back(t);
@@ -550,8 +550,8 @@ int main(int argc, char *argv[])
 
     if (save_csv && myid == 0)
     {
-        csv_db.putDoubleVector(string(outputPath) + "/tval.csv", ts, ts.size());
-        csv_db.putStringVector(string(outputPath) + "/snap_list.csv", snap_list, snap_list.size());
+        csv_db.putDoubleVector(outputPath + "/tval.csv", ts, ts.size());
+        csv_db.putStringVector(outputPath + "/snap_list.csv", snap_list, snap_list.size());
     }
 
 #ifdef MFEM_USE_ADIOS2
