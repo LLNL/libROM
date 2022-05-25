@@ -473,7 +473,7 @@ int main(int argc, char *argv[])
                     {
                         cout << "Projecting initial condition at t = " << indicator_val[window] << " for DMD model #" << window << endl;
                     }
-                    CAROM::Vector* init_cond = dmd[window-1][idx_dataset]->predict(indicator_val[window]);
+                    CAROM::Vector* init_cond = dmd[window-1][idx_dataset]->predict((offset_indicator) ? indicator_val[window] - indicator_val[window-1] : indicator_val[window]);
                     dmd[window][idx_dataset]->projectInitialCondition(init_cond);
                     delete init_cond;
                 }
@@ -588,7 +588,7 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
-                    init_cond = dmd[window-1][idx_dataset]->predict(indicator_val[window]);
+                    init_cond = dmd[window-1][idx_dataset]->predict((offset_indicator) ? indicator_val[window] - indicator_val[window-1] : indicator_val[window]);
                 }
                 dmd[window][idx_dataset]->projectInitialCondition(init_cond);
                 delete init_cond;
