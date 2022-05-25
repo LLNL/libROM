@@ -714,7 +714,7 @@ int main(int argc, char *argv[])
             if (myid == 0 && t_final <= 0.0)
             {
                 csv_db.putDoubleVector(outputPath + "/" + par_dir + "_prediction_time.csv", prediction_time, num_snap);
-                csv_db.putDoubleVector(outputPath + "/" + par_dir + "_prediction_error.csv", prediction_error, num_snap);
+                csv_db.putDoubleVector(outputPath + "/" + par_dir + "_prediction_error.csv", prediction_error, num_snap, 16);
             }
             prediction_time.clear();
             prediction_error.clear();

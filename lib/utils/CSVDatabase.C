@@ -88,14 +88,15 @@ void
 CSVDatabase::putDoubleVector(
     const std::string& file_name,
     const std::vector<double> data,
-    int nelements)
+    int nelements,
+    int precision)
 {
     CAROM_VERIFY(!file_name.empty());
     CAROM_VERIFY(nelements > 0);
     CAROM_VERIFY(data.size() == nelements);
 
     std::ofstream d_fs(file_name.c_str());
-    d_fs << std::setprecision(16) << std::fixed;
+    d_fs << std::setprecision(precision) << std::fixed;
     for (int i = 0; i < nelements; ++i)
     {
         d_fs << data[i] << std::endl;
@@ -107,14 +108,15 @@ void
 CSVDatabase::putComplexVector(
     const std::string& file_name,
     const std::vector<std::complex<double>> data,
-    int nelements)
+    int nelements,
+    int precision)
 {
     CAROM_VERIFY(!file_name.empty());
     CAROM_VERIFY(nelements > 0);
     CAROM_VERIFY(data.size() == nelements);
 
     std::ofstream d_fs(file_name.c_str());
-    d_fs << std::setprecision(16) << std::fixed;
+    d_fs << std::setprecision(precision) << std::fixed;
     for (int i = 0; i < nelements; ++i)
     {
         d_fs << std::real(data[i]) << "," << std::imag(data[i]) << std::endl;
