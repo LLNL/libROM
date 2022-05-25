@@ -250,7 +250,7 @@ int main(int argc, char *argv[])
         }
 
         CAROM_VERIFY(windowOverlapSamples < windowNumSamples);
-        numWindows = (windowNumSamples < infty) ? ceil(num_train_snap / windowNumSamples) : 1;
+        numWindows = (windowNumSamples < infty) ? round((double) (num_train_snap-1) / (double) windowNumSamples) : 1;
     }
 
     CAROM_VERIFY(numWindows > 0);
@@ -381,7 +381,7 @@ int main(int argc, char *argv[])
             cout << "Loaded " << num_train_snap << " samples for " << par_dir << "." << endl;
             if (windowNumSamples < infty)
             {
-                cout << "Created new indicator range partition." << endl;
+                cout << "Created new indicator range partition with " << numWindows << " windows."  << endl;
                 csv_db.putDoubleVector(string(outputPath) + "/indicator_val.csv", indicator_val, numWindows);
             }
         }

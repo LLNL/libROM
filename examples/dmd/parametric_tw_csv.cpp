@@ -330,14 +330,14 @@ int main(int argc, char *argv[])
             {
                 double indicator_min = *min_element(indicator_init.begin(), indicator_init.end());
                 double indicator_max = *max_element(indicator_last.begin(), indicator_last.end());
-                numWindows = (windowNumSamples < infty) ? ceil((indicator_max - indicator_min) / (dt_est * windowNumSamples)) : 1;
+                numWindows = (windowNumSamples < infty) ? round((indicator_max - indicator_min) / (dt_est * windowNumSamples)) : 1;
                 for (int window = 0; window < numWindows; ++window)
                 {
                     indicator_val.push_back(indicator_min + dt_est * windowNumSamples * window);
                 }
                 if (myid == 0)
                 {
-                    cout << "Created new indicator range partition." << endl;
+                    cout << "Created new indicator range partition with " << numWindows << " windows." << endl;
                     csv_db.putDoubleVector(string(outputPath) + "/indicator_val.csv", indicator_val, numWindows);
                 }
             }
