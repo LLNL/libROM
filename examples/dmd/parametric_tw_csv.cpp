@@ -18,13 +18,13 @@
 //   mpirun -np 8 parametric_tw_csv -o parametric_csv_serial -rdim 16 -dtc 0.01
 //
 // Final-time prediction error (Last line in run/parametric_csv_serial/hc_par5_prediction_error.csv):
-//   0.00308529
+//   0.0012598331433506
 //
 // Parametric time windowing DMD command:
 //   mpirun -np 8 parametric_tw_csv -o parametric_csv_tw -rdim 16 -nwinsamp 25 -dtc 0.01
 //
 // Final-time prediction error (Last line in run/parametric_csv_tw/hc_par5_prediction_error.csv):
-//   0.0572576
+//   0.0007348122935743
 //
 // =================================================================================
 //
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
     int numWindows = 0;
     int windowNumSamples = infty;
     int windowOverlapSamples = 0;
-    bool offset_indicator = true;
+    bool offset_indicator = false;
     const char *rbf = "G";
     const char *interp_method = "LS";
     double admd_closest_rbf_val = 0.9;

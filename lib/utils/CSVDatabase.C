@@ -76,7 +76,7 @@ CSVDatabase::putDoubleArray(
     CAROM_VERIFY(nelements > 0);
 
     std::ofstream d_fs(file_name.c_str());
-    d_fs << std::setprecision(16) << std::fixed;
+    d_fs << std::setprecision(10) << std::fixed;
     for (int i = 0; i < nelements; ++i)
     {
         d_fs << data[i] << std::endl;
