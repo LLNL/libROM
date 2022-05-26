@@ -155,7 +155,7 @@ CSVDatabase::getIntegerArray(
 
     std::ifstream d_fs(file_name.c_str());
     CAROM_VERIFY(!d_fs.fail());
-    int data_entry = 0.0;
+    int data_entry = 0;
     for (int i = 0; i < nelements; ++i)
     {
         d_fs >> data_entry;
