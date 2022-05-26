@@ -79,14 +79,16 @@ RandomizedSVD::computeSVD()
                                    MPI_INT,
                                    MPI_COMM_WORLD) == MPI_SUCCESS);
         for (int i = d_num_procs - 1; i >= 0; i--) {
-            snapshot_transpose_row_offset[i] = snapshot_transpose_row_offset[i + 1] - snapshot_transpose_row_offset[i];
+            snapshot_transpose_row_offset[i] = snapshot_transpose_row_offset[i + 1] -
+                                               snapshot_transpose_row_offset[i];
         }
 
         CAROM_VERIFY(snapshot_transpose_row_offset[0] == 0);
         for (int rank = 0; rank < d_num_procs; ++rank) {
             gather_block(&snapshot_matrix->item(0, 0), d_samples.get(),
                          1, snapshot_transpose_row_offset[rank] + 1,
-                         num_rows, snapshot_transpose_row_offset[rank + 1] - snapshot_transpose_row_offset[rank],
+                         num_rows, snapshot_transpose_row_offset[rank + 1] -
+                         snapshot_transpose_row_offset[rank],
                          rank);
         }
         delete [] snapshot_transpose_row_offset;
@@ -107,7 +109,8 @@ RandomizedSVD::computeSVD()
         }
     }
     else {
-        rand_mat = new Matrix(snapshot_matrix->numColumns(), d_subspace_dim, false, true);
+        rand_mat = new Matrix(snapshot_matrix->numColumns(), d_subspace_dim, false,
+                              true);
     }
 
     // Project snapshot matrix onto random subspace
@@ -139,7 +142,8 @@ RandomizedSVD::computeSVD()
     d_npcol = 1;
     int d_blocksize = row_offset[d_num_procs] / d_num_procs;
     if (row_offset[d_num_procs] % d_num_procs != 0) d_blocksize += 1;
-    initialize_matrix(&slpk_rand_proj, rand_proj->numColumns(), rand_proj->numDistributedRows(),
+    initialize_matrix(&slpk_rand_proj, rand_proj->numColumns(),
+                      rand_proj->numDistributedRows(),
                       d_npcol, d_nprow, rand_proj->numColumns(), d_blocksize);
     for (int rank = 0; rank < d_num_procs; ++rank) {
         scatter_block(&slpk_rand_proj, 1, row_offset[rank] + 1,
@@ -154,7 +158,8 @@ RandomizedSVD::computeSVD()
 
     // Manipulate QRmgr.A to get elementary household reflectors.
     for (int i = row_offset[d_rank]; i < d_subspace_dim; i++) {
-        for (int j = 0; j < i - row_offset[d_rank] && j < row_offset[d_rank +  1]; j++) {
+        for (int j = 0; j < i - row_offset[d_rank]
+                && j < row_offset[d_rank +  1]; j++) {
             QRmgr.A->mdata[j * QRmgr.A->mm + i] = 0;
         }
         if (i < row_offset[d_rank + 1]) {
@@ -164,7 +169,8 @@ RandomizedSVD::computeSVD()
 
     // Obtain Q
     qcompute(&QRmgr);
-    Matrix* Q = new Matrix(row_offset[d_rank + 1] - row_offset[d_rank], d_subspace_dim, true);
+    Matrix* Q = new Matrix(row_offset[d_rank + 1] - row_offset[d_rank],
+                           d_subspace_dim, true);
     for (int rank = 0; rank < d_num_procs; ++rank) {
         gather_block(&Q->item(0, 0), QRmgr.A,
                      1, row_offset[rank] + 1,
@@ -179,7 +185,8 @@ RandomizedSVD::computeSVD()
     int svd_input_mat_distributed_rows = svd_input_mat->numDistributedRows();
 
     SLPK_Matrix svd_input;
-    initialize_matrix(&svd_input, svd_input_mat->numColumns(), svd_input_mat->numDistributedRows(),
+    initialize_matrix(&svd_input, svd_input_mat->numColumns(),
+                      svd_input_mat->numDistributedRows(),
                       d_npcol, d_nprow, d_blocksize, d_blocksize);
     scatter_block(&svd_input, 1, 1,
                   svd_input_mat->getData(),

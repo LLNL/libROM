@@ -353,7 +353,8 @@ BasisReader::getDim(
     int num_rows;
     if (kind == "basis") sprintf(tmp, "spatial_basis_num_rows_%06d", i);
     else if (kind == "snapshot") sprintf(tmp, "snapshot_matrix_num_rows_%06d", i);
-    else if (kind == "temporal_basis") sprintf(tmp, "temporal_basis_num_rows_%06d", i);
+    else if (kind == "temporal_basis") sprintf(tmp, "temporal_basis_num_rows_%06d",
+                i);
     d_database->getInteger(tmp, num_rows);
     return num_rows;
 }
@@ -382,7 +383,8 @@ BasisReader::getNumSamples(
     int num_cols;
     if (kind == "basis") sprintf(tmp, "spatial_basis_num_cols_%06d", i);
     else if (kind == "snapshot") sprintf(tmp, "snapshot_matrix_num_cols_%06d", i);
-    else if (kind == "temporal_basis") sprintf(tmp, "temporal_basis_num_cols_%06d", i);
+    else if (kind == "temporal_basis") sprintf(tmp, "temporal_basis_num_cols_%06d",
+                i);
     d_database->getInteger(tmp, num_cols);
     return num_cols;
 }

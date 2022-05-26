@@ -115,11 +115,13 @@ int main(int argc, char *argv[])
 
     if (fom)
     {
-        MFEM_VERIFY(fom && !offline && !online && !merge, "everything must be turned off if fom is used.");
+        MFEM_VERIFY(fom && !offline && !online
+                    && !merge, "everything must be turned off if fom is used.");
     }
     else
     {
-        bool check = (offline && !merge && !online) || (!offline && merge && !online) || (!offline && !merge && online);
+        bool check = (offline && !merge && !online) || (!offline && merge && !online)
+                     || (!offline && !merge && online);
         MFEM_VERIFY(check, "only one of offline, merge, or online must be true!");
     }
 
@@ -220,7 +222,8 @@ int main(int argc, char *argv[])
     // 10. Set BasisGenerator if offline
     if (offline)
     {
-        options = new CAROM::Options(fespace.GetTrueVSize(), max_num_snapshots, 1, update_right_SV);
+        options = new CAROM::Options(fespace.GetTrueVSize(), max_num_snapshots, 1,
+                                     update_right_SV);
         generator = new CAROM::BasisGenerator(*options, isIncremental, basisFileName);
     }
 
@@ -229,18 +232,21 @@ int main(int argc, char *argv[])
     {
         mergeTimer.Start();
         std::unique_ptr<CAROM::BasisGenerator> basis_generator;
-        options = new CAROM::Options(fespace.GetTrueVSize(), max_num_snapshots, 1, update_right_SV);
+        options = new CAROM::Options(fespace.GetTrueVSize(), max_num_snapshots, 1,
+                                     update_right_SV);
         generator = new CAROM::BasisGenerator(*options, isIncremental, basisName);
         for (int paramID=0; paramID<nsets; ++paramID)
         {
-            std::string snapshot_filename = basisName + std::to_string(paramID) + "_snapshot";
+            std::string snapshot_filename = basisName + std::to_string(
+                                                paramID) + "_snapshot";
             generator->loadSamples(snapshot_filename,"snapshot");
         }
         generator->endSamples(); // save the merged basis file
         mergeTimer.Stop();
         if (myid == 0)
         {
-            printf("Elapsed time for merging and building ROM basis: %e second\n", mergeTimer.RealTime());
+            printf("Elapsed time for merging and building ROM basis: %e second\n",
+                   mergeTimer.RealTime());
         }
         delete generator;
         delete options;
@@ -335,10 +341,12 @@ int main(int argc, char *argv[])
         spatialbasis = reader.getSpatialBasis(0.0);
         numRowRB = spatialbasis->numRows();
         numColumnRB = spatialbasis->numColumns();
-        if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB, numColumnRB);
+        if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB,
+                                  numColumnRB);
 
         // libROM stores the matrix row-wise, so wrapping as a DenseMatrix in MFEM means it is transposed.
-        DenseMatrix *reducedBasisT = new DenseMatrix(spatialbasis->getData(), numColumnRB, numRowRB);
+        DenseMatrix *reducedBasisT = new DenseMatrix(spatialbasis->getData(),
+                numColumnRB, numRowRB);
 
         // 21. form inverse ROM operator
         Vector abv(numRowRB), bv(numRowRB), bv2(numRowRB);
@@ -414,12 +422,14 @@ int main(int argc, char *argv[])
     {
         if(fom || offline)
         {
-            printf("Elapsed time for assembling FOM: %e second\n", assembleTimer.RealTime());
+            printf("Elapsed time for assembling FOM: %e second\n",
+                   assembleTimer.RealTime());
             printf("Elapsed time for solving FOM: %e second\n", solveTimer.RealTime());
         }
         if(online)
         {
-            printf("Elapsed time for assembling ROM: %e second\n", assembleTimer.RealTime());
+            printf("Elapsed time for assembling ROM: %e second\n",
+                   assembleTimer.RealTime());
             printf("Elapsed time for solving ROM: %e second\n", solveTimer.RealTime());
         }
     }

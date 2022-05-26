@@ -56,15 +56,17 @@ DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
     }
 
     int ref_point = getClosestPoint(parameter_points, desired_point);
-    std::vector<CAROM::Matrix*> rotation_matrices = obtainRotationMatrices(parameter_points,
-            bases, ref_point);
+    std::vector<CAROM::Matrix*> rotation_matrices = obtainRotationMatrices(
+                parameter_points,
+                bases, ref_point);
 
     CAROM::MatrixInterpolator basis_interpolator(parameter_points,
             rotation_matrices, bases, ref_point, "B", rbf, interp_method, closest_rbf_val);
     Matrix* W = basis_interpolator.interpolate(desired_point);
 
     CAROM::MatrixInterpolator A_tilde_interpolator(parameter_points,
-            rotation_matrices, A_tildes, ref_point, "R", rbf, interp_method, closest_rbf_val);
+            rotation_matrices, A_tildes, ref_point, "R", rbf, interp_method,
+            closest_rbf_val);
     Matrix* A_tilde = A_tilde_interpolator.interpolate(desired_point);
 
     // Calculate the right eigenvalues/eigenvectors of A_tilde

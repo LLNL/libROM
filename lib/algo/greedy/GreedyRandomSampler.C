@@ -149,7 +149,8 @@ GreedyRandomSampler::constructParameterPoints()
         std::vector<int> point_indices;
         for (int i = 0; i < d_min_param_point.dim(); i++)
         {
-            frequencies.push_back(std::abs(d_max_param_point.item(i) - d_min_param_point.item(i)) / d_num_parameter_points);
+            frequencies.push_back(std::abs(d_max_param_point.item(i) -
+                                           d_min_param_point.item(i)) / d_num_parameter_points);
         }
 
         for (int i = 0; i < d_num_parameter_points; i++) {
@@ -163,7 +164,8 @@ GreedyRandomSampler::constructParameterPoints()
             }
         }
 
-        for (int i = 0; i < std::pow(d_num_parameter_points, d_min_param_point.dim()); i++)
+        for (int i = 0; i < std::pow(d_num_parameter_points, d_min_param_point.dim());
+                i++)
         {
             point_indices.push_back(i);
         }
@@ -235,8 +237,10 @@ GreedyRandomSampler::getNextParameterPointAfterConvergenceFailure()
 {
     d_parameter_points.push_back(d_convergence_points[d_counter]);
     d_parameter_point_errors.push_back(d_max_error);
-    d_parameter_point_local_rom.push_back(getNearestROMIndexToParameterPoint(d_next_point_to_sample, true));
-    d_parameter_point_random_indices.push_back(d_parameter_point_random_indices.size());
+    d_parameter_point_local_rom.push_back(getNearestROMIndexToParameterPoint(
+            d_next_point_to_sample, true));
+    d_parameter_point_random_indices.push_back(
+        d_parameter_point_random_indices.size());
     d_next_point_to_sample = d_parameter_points.size() - 1;
 }
 

@@ -35,7 +35,8 @@ BasisGenerator::BasisGenerator(
     CAROM_VERIFY(options.dim > 0);
     CAROM_VERIFY(options.samples_per_time_interval > 0);
     CAROM_VERIFY(options.singular_value_tol >= 0);
-    CAROM_VERIFY(options.max_time_intervals == -1 || options.max_time_intervals > 0);
+    CAROM_VERIFY(options.max_time_intervals == -1
+                 || options.max_time_intervals > 0);
     CAROM_VERIFY(options.max_basis_dimension > 0);
     if (incremental)
     {
@@ -46,7 +47,8 @@ BasisGenerator::BasisGenerator(
         CAROM_VERIFY(options.min_sampling_time_step_scale >= 0.0);
         CAROM_VERIFY(options.sampling_time_step_scale >= 0.0);
         CAROM_VERIFY(options.max_sampling_time_step_scale >= 0.0);
-        CAROM_VERIFY(options.min_sampling_time_step_scale <= options.max_sampling_time_step_scale);
+        CAROM_VERIFY(options.min_sampling_time_step_scale <=
+                     options.max_sampling_time_step_scale);
     }
 
     if (!basis_file_name.empty()) {

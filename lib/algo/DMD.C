@@ -78,7 +78,8 @@ DMD::DMD(std::string base_file_name)
     load(base_file_name);
 }
 
-DMD::DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real, Matrix* phi_imaginary, int k, double dt, double t_offset)
+DMD::DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
+         Matrix* phi_imaginary, int k, double dt, double t_offset)
 {
     // Get the rank of this process, and the number of processors.
     int mpi_init;
@@ -206,7 +207,8 @@ DMD::constructDMD(const Matrix* f_snapshots,
     free_matrix_data(&svd_input);
 
     // Compute how many basis vectors we will actually use.
-    d_num_singular_vectors = std::min(f_snapshots_minus->numColumns(), f_snapshots_minus->numDistributedRows());
+    d_num_singular_vectors = std::min(f_snapshots_minus->numColumns(),
+                                      f_snapshots_minus->numDistributedRows());
     for (int i = 0; i < d_num_singular_vectors; i++)
     {
         d_sv.push_back(d_factorizer->S[i]);
@@ -235,7 +237,8 @@ DMD::constructDMD(const Matrix* f_snapshots,
         }
     }
 
-    if (d_rank == 0) std::cout << "Using " << d_k << " basis vectors out of " << d_num_singular_vectors << "." << std::endl;
+    if (d_rank == 0) std::cout << "Using " << d_k << " basis vectors out of " <<
+                                   d_num_singular_vectors << "." << std::endl;
 
     // Allocate the appropriate matrices and gather their elements.
     d_basis = new Matrix(f_snapshots->numRows(), d_k, f_snapshots->distributed());
@@ -263,8 +266,10 @@ DMD::constructDMD(const Matrix* f_snapshots,
     }
 
     // Calculate A_tilde = U_transpose * f_snapshots_plus * V * inv(S)
-    Matrix* d_basis_mult_f_snapshots_plus = d_basis->transposeMult(f_snapshots_plus);
-    Matrix* d_basis_mult_f_snapshots_plus_mult_d_basis_right = d_basis_mult_f_snapshots_plus->mult(d_basis_right);
+    Matrix* d_basis_mult_f_snapshots_plus = d_basis->transposeMult(
+            f_snapshots_plus);
+    Matrix* d_basis_mult_f_snapshots_plus_mult_d_basis_right =
+        d_basis_mult_f_snapshots_plus->mult(d_basis_right);
     d_A_tilde = d_basis_mult_f_snapshots_plus_mult_d_basis_right->mult(d_S_inv);
 
     // Calculate the right eigenvalues/eigenvectors of A_tilde
@@ -272,10 +277,14 @@ DMD::constructDMD(const Matrix* f_snapshots,
     d_eigs = eigenpair.eigs;
 
     // Calculate phi
-    Matrix* f_snapshots_plus_mult_d_basis_right = f_snapshots_plus->mult(d_basis_right);
-    Matrix* f_snapshots_plus_mult_d_basis_right_mult_d_S_inv = f_snapshots_plus_mult_d_basis_right->mult(d_S_inv);
-    d_phi_real = f_snapshots_plus_mult_d_basis_right_mult_d_S_inv->mult(eigenpair.ev_real);
-    d_phi_imaginary = f_snapshots_plus_mult_d_basis_right_mult_d_S_inv->mult(eigenpair.ev_imaginary);
+    Matrix* f_snapshots_plus_mult_d_basis_right = f_snapshots_plus->mult(
+                d_basis_right);
+    Matrix* f_snapshots_plus_mult_d_basis_right_mult_d_S_inv =
+        f_snapshots_plus_mult_d_basis_right->mult(d_S_inv);
+    d_phi_real = f_snapshots_plus_mult_d_basis_right_mult_d_S_inv->mult(
+                     eigenpair.ev_real);
+    d_phi_imaginary = f_snapshots_plus_mult_d_basis_right_mult_d_S_inv->mult(
+                          eigenpair.ev_imaginary);
 
     Vector* init = new Vector(f_snapshots_minus->numRows(), true);
     for (int i = 0; i < init->dim(); i++)
@@ -313,7 +322,8 @@ DMD::projectInitialCondition(const Vector* init)
     Matrix* d_phi_imaginary_squared_2 = d_phi_imaginary->transposeMult(d_phi_real);
     *d_phi_imaginary_squared -= *d_phi_imaginary_squared_2;
 
-    double* inverse_input = new double[d_phi_real_squared->numRows() * d_phi_real_squared->numColumns() * 2];
+    double* inverse_input = new double[d_phi_real_squared->numRows() *
+                                       d_phi_real_squared->numColumns() * 2];
     for (int i = 0; i < d_phi_real_squared->numRows(); i++)
     {
         int k = 0;
@@ -321,11 +331,13 @@ DMD::projectInitialCondition(const Vector* init)
         {
             if (j % 2 == 0)
             {
-                inverse_input[d_phi_real_squared->numColumns() * 2 * i + j] = d_phi_real_squared->item(i, k);
+                inverse_input[d_phi_real_squared->numColumns() * 2 * i + j] =
+                    d_phi_real_squared->item(i, k);
             }
             else
             {
-                inverse_input[d_phi_imaginary_squared->numColumns() * 2 * i + j] = d_phi_imaginary_squared->item(i, k);
+                inverse_input[d_phi_imaginary_squared->numColumns() * 2 * i + j] =
+                    d_phi_imaginary_squared->item(i, k);
                 k++;
             }
         }
@@ -350,11 +362,13 @@ DMD::projectInitialCondition(const Vector* init)
         {
             if (j % 2 == 0)
             {
-                d_phi_real_squared->item(i, k) = inverse_input[d_phi_real_squared->numColumns() * 2 * i + j];
+                d_phi_real_squared->item(i,
+                                         k) = inverse_input[d_phi_real_squared->numColumns() * 2 * i + j];
             }
             else
             {
-                d_phi_imaginary_squared->item(i, k) = inverse_input[d_phi_imaginary_squared->numColumns() * 2 * i + j];
+                d_phi_imaginary_squared->item(i,
+                                              k) = inverse_input[d_phi_imaginary_squared->numColumns() * 2 * i + j];
                 k++;
             }
         }
@@ -369,7 +383,8 @@ DMD::projectInitialCondition(const Vector* init)
 
     Vector* d_projected_init_imaginary_1 = d_phi_real_squared->mult(rhs_imaginary);
     Vector* d_projected_init_imaginary_2 = d_phi_imaginary_squared->mult(rhs_real);
-    d_projected_init_imaginary = d_projected_init_imaginary_2->minus(d_projected_init_imaginary_1);
+    d_projected_init_imaginary = d_projected_init_imaginary_2->minus(
+                                     d_projected_init_imaginary_1);
 
     delete d_phi_real_squared;
     delete d_phi_real_squared_2;
@@ -403,9 +418,12 @@ DMD::predict(double t)
     Matrix* d_phi_mult_eigs_real = d_phi_pair.first;
     Matrix* d_phi_mult_eigs_imaginary = d_phi_pair.second;
 
-    Vector* d_predicted_state_real_1 = d_phi_mult_eigs_real->mult(d_projected_init_real);
-    Vector* d_predicted_state_real_2 = d_phi_mult_eigs_imaginary->mult(d_projected_init_imaginary);
-    Vector* d_predicted_state_real = d_predicted_state_real_1->minus(d_predicted_state_real_2);
+    Vector* d_predicted_state_real_1 = d_phi_mult_eigs_real->mult(
+                                           d_projected_init_real);
+    Vector* d_predicted_state_real_2 = d_phi_mult_eigs_imaginary->mult(
+                                           d_projected_init_imaginary);
+    Vector* d_predicted_state_real = d_predicted_state_real_1->minus(
+                                         d_predicted_state_real_2);
 
     delete d_phi_mult_eigs_real;
     delete d_phi_mult_eigs_imaginary;
@@ -440,7 +458,8 @@ DMD::phiMultEigs(double t)
     delete d_phi_mult_eigs_real_2;
     delete d_phi_mult_eigs_imaginary_2;
 
-    return std::pair<Matrix*,Matrix*>(d_phi_mult_eigs_real, d_phi_mult_eigs_imaginary);
+    return std::pair<Matrix*,Matrix*>(d_phi_mult_eigs_real,
+                                      d_phi_mult_eigs_imaginary);
 }
 
 double
@@ -466,7 +485,8 @@ DMD::createSnapshotMatrix(std::vector<Vector*> snapshots)
         CAROM_VERIFY(snapshots[i]->distributed() == snapshots[i + 1]->distributed());
     }
 
-    Matrix* snapshot_mat = new Matrix(snapshots[0]->dim(), snapshots.size(), snapshots[0]->distributed());
+    Matrix* snapshot_mat = new Matrix(snapshots[0]->dim(), snapshots.size(),
+                                      snapshots[0]->distributed());
 
     for (int i = 0; i < snapshots[0]->dim(); i++)
     {
@@ -624,8 +644,10 @@ DMD::summary(std::string base_file_name)
     {
         CSVDatabase* csv_db(new CSVDatabase);
 
-        csv_db->putDoubleVector(base_file_name + "_singular_value.csv", d_sv, d_num_singular_vectors, 16);
-        csv_db->putComplexVector(base_file_name + "_eigenvalue.csv", d_eigs, d_eigs.size(), 16);
+        csv_db->putDoubleVector(base_file_name + "_singular_value.csv", d_sv,
+                                d_num_singular_vectors, 16);
+        csv_db->putComplexVector(base_file_name + "_eigenvalue.csv", d_eigs,
+                                 d_eigs.size(), 16);
 
         delete csv_db;
     }
