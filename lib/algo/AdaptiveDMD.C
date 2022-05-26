@@ -20,14 +20,15 @@
 namespace CAROM {
 
 AdaptiveDMD::AdaptiveDMD(int dim, double desired_dt, std::string rbf, std::string interp_method,
-                         double epsilon) : DMD(dim, desired_dt)
+                         double closest_rbf_val) : DMD(dim, desired_dt)
 {
-    CAROM_VERIFY(rbf == "G" || rbf == "IQ" || rbf == "MQ" || rbf == "IMQ");
+    CAROM_VERIFY(rbf == "G" || rbf == "IQ" || rbf == "IMQ");
     CAROM_VERIFY(interp_method == "LS" || interp_method == "IDW" || interp_method == "LP");
+    CAROM_VERIFY(closest_rbf_val >= 0.0 && closest_rbf_val <= 1.0);
     d_dt = desired_dt;
     d_interp_method = interp_method;
     d_rbf = rbf;
-    d_epsilon = epsilon;
+    d_closest_rbf_val = closest_rbf_val;
 }
 
 void AdaptiveDMD::takeSample(double* u_in, double t)
@@ -136,11 +137,10 @@ void AdaptiveDMD::interpolateSnapshots()
 
     // Solve the linear system if required.
     Matrix* f_T = NULL;
+    double epsilon = convertClosestRBFToEpsilon(d_sampled_times, d_rbf, d_closest_rbf_val);
     if (d_interp_method == "LS")
     {
-        if (d_epsilon <= 0.0) d_epsilon = 0.5 / d_dt;
-        f_T = solveLinearSystem(d_sampled_times, d_snapshots, d_interp_method, d_rbf, d_epsilon);
-        if (d_rank == 0) std::cout << "Epsilon auto-corrected by the linear solve to " << d_epsilon << std::endl;
+        f_T = solveLinearSystem(d_sampled_times, d_snapshots, d_interp_method, d_rbf, epsilon);
     }
 
     // Create interpolated snapshots using d_dt as the desired dt.
@@ -151,7 +151,7 @@ void AdaptiveDMD::interpolateSnapshots()
         CAROM::Vector* point = new Vector(&curr_time, 1, false);
 
         // Obtain distances from database points to new point
-        std::vector<double> rbf = obtainRBFToTrainingPoints(d_sampled_times, d_interp_method, d_rbf, d_epsilon, point);
+        std::vector<double> rbf = obtainRBFToTrainingPoints(d_sampled_times, d_interp_method, d_rbf, epsilon, point);
 
         // Obtain the interpolated snapshot.
         CAROM::Vector* curr_interpolated_snapshot = obtainInterpolatedVector(d_snapshots, f_T, d_interp_method, rbf);

@@ -31,45 +31,45 @@ class Vector;
  * @brief Constructor.
  *
  * @param[in] parameter_points The parameter points.
- * @param[in] dmds The DMD objects associated with
- *                       each parameter point.
- * @param[in] desired_point The desired point to create a parametric DMD at.
- * @param[in] rbf       The RBF type ("G" == gaussian, "MQ" == multiquadric,
- *                      "IQ" == inverse quadratic, "IMQ" == inverse
- *                      multiquadric)
- * @param[in] interp_method  The interpolation method type ("LS" == linear solve,
- *                      "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
- * @param[in] epsilon   The RBF parameter that determines the width of
-                        influence.
+ * @param[in] dmds             The DMD objects associated with
+ *                             each parameter point.
+ * @param[in] desired_point    The desired point to create a parametric DMD at.
+ * @param[in] rbf              The RBF type ("G" == gaussian,
+ *                             "IQ" == inverse quadratic, "IMQ" == inverse
+ *                             multiquadric)
+ * @param[in] interp_method    The interpolation method type ("LS" == linear solve,
+ *                             "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
+ * @param[in] closest_rbf_val  The RBF parameter determines the width of influence.
+ *                             Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
  */
 DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
                       std::vector<DMD*>& dmds,
                       Vector* desired_point,
                       std::string rbf = "G",
                       std::string interp_method = "LS",
-                      double epsilon = 1.0);
+                      double closest_rbf_val = 0.9);
 
 /**
  * @brief Constructor.
  *
  * @param[in] parameter_points The parameter points.
- * @param[in] dmd_paths The paths to the saved DMD objects associated with
- *                       each parameter point.
- * @param[in] desired_point The desired point to create a parametric DMD at.
- * @param[in] rbf       The RBF type ("G" == gaussian, "MQ" == multiquadric,
- *                      "IQ" == inverse quadratic, "IMQ" == inverse
- *                      multiquadric)
- * @param[in] interp_method  The interpolation method type ("LS" == linear solve,
- *                      "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
- * @param[in] epsilon   The RBF parameter that determines the width of
-                        influence.
+ * @param[in] dmd_paths        The paths to the saved DMD objects associated with
+ *                             each parameter point.
+ * @param[in] desired_point    The desired point to create a parametric DMD at.
+ * @param[in] rbf              The RBF type ("G" == gaussian,
+ *                             "IQ" == inverse quadratic, "IMQ" == inverse
+ *                             multiquadric)
+ * @param[in] interp_method    The interpolation method type ("LS" == linear solve,
+ *                             "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
+ * @param[in] closest_rbf_val  The RBF parameter determines the width of influence.
+ *                             Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
  */
 DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
                       std::vector<std::string>& dmd_paths,
                       Vector* desired_point,
                       std::string rbf = "G",
                       std::string interp_method = "LS",
-                      double epsilon = 1.0);
+                      double closest_rbf_val = 0.9);
 }
 
 #endif

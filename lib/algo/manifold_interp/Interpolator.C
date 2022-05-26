@@ -34,12 +34,13 @@ Interpolator::Interpolator(std::vector<Vector*> parameter_points,
                            int ref_point,
                            std::string rbf,
                            std::string interp_method,
-                           double epsilon)
+                           double closest_rbf_val)
 {
     CAROM_VERIFY(parameter_points.size() == rotation_matrices.size());
     CAROM_VERIFY(parameter_points.size() > 1);
-    CAROM_VERIFY(rbf == "G" || rbf == "IQ" || rbf == "MQ" || rbf == "IMQ");
+    CAROM_VERIFY(rbf == "G" || rbf == "IQ" || rbf == "IMQ");
     CAROM_VERIFY(interp_method == "LS" || interp_method == "IDW" || interp_method == "LP");
+    CAROM_VERIFY(closest_rbf_val >= 0.0 && closest_rbf_val <= 1.0);
 
     // Get the rank of this process, and the number of processors.
     int mpi_init;
@@ -57,7 +58,7 @@ Interpolator::Interpolator(std::vector<Vector*> parameter_points,
     d_lambda_T = NULL;
     d_rbf = rbf;
     d_interp_method = interp_method;
-    d_epsilon = epsilon;
+    d_epsilon = convertClosestRBFToEpsilon(parameter_points, rbf, closest_rbf_val);
 }
 
 std::vector<double> obtainRBFToTrainingPoints(std::vector<Vector*> parameter_points,
@@ -150,11 +151,6 @@ double obtainRBF(std::string rbf, double epsilon, Vector* point1, Vector* point2
     {
         res = std::exp(-eps_norm_squared);
     }
-    // Multiquadric RBF
-    else if (rbf == "MQ")
-    {
-        res = std::sqrt(1.0 + eps_norm_squared);
-    }
     // Inverse quadratic RBF
     else if (rbf == "IQ")
     {
@@ -167,6 +163,50 @@ double obtainRBF(std::string rbf, double epsilon, Vector* point1, Vector* point2
     }
 
     return res;
+}
+
+
+double convertClosestRBFToEpsilon(std::vector<Vector*> parameter_points,
+                                  std::string rbf, double closest_rbf_val)
+{
+    double closest_point_dist = INT_MAX;
+    double epsilon;
+    for (int i = 0; i < parameter_points.size(); i++)
+    {
+        for (int j = 0; j < parameter_points.size(); j++)
+        {
+            if (i == j)
+            {
+                continue;
+            }
+
+            Vector diff;
+            parameter_points[i]->minus(*parameter_points[j], diff);
+            double dist = diff.norm2();
+            if (dist < closest_point_dist)
+            {
+                closest_point_dist = dist;
+
+                // Gaussian RBF
+                if (rbf == "G")
+                {
+                    epsilon = std::sqrt(-std::log(closest_rbf_val) / diff.norm2());
+                }
+                // Inverse quadratic RBF
+                else if (rbf == "IQ")
+                {
+                    epsilon = std::sqrt(((1.0 / closest_rbf_val) - 1.0) / diff.norm2());
+                }
+                // Inverse multiquadric RBF
+                else if (rbf == "IMQ")
+                {
+                    epsilon = std::sqrt((std::pow(1.0 / closest_rbf_val, 2) - 1.0) / diff.norm2());
+                }
+            }
+        }
+    }
+
+    return epsilon;
 }
 
 std::vector<Matrix*> obtainRotationMatrices(std::vector<Vector*> parameter_points,
