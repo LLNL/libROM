@@ -505,14 +505,36 @@ int main(int argc, char *argv[])
         dmd_x[curr_window]->takeSample(x_gf.GetTrueVector(), t);
         dmd_v[curr_window]->takeSample(v_gf.GetTrueVector(), t);
 
-        if (ti % windowNumSamples == 0 && !last_step)
+        if (ti % windowNumSamples == 0)
         {
-            curr_window++;
-            dmd_x.push_back(new CAROM::DMD(x_gf.GetTrueVector().Size(), dt));
-            dmd_v.push_back(new CAROM::DMD(v_gf.GetTrueVector().Size(), dt));
+            if (rdim != -1)
+            {
+                if (myid == 0)
+                {
+                    std::cout << "Creating DMD with rdim: " << rdim << std::endl;
+                }
+                dmd_x[curr_window]->train(rdim);
+                dmd_v[curr_window]->train(rdim);
+            }
+            else if (ef != -1)
+            {
+                if (myid == 0)
+                {
+                    std::cout << "Creating DMD with energy fraction: " << ef << std::endl;
+                }
+                dmd_x[curr_window]->train(ef);
+                dmd_v[curr_window]->train(ef);
+            }
 
-            dmd_x[curr_window]->takeSample(x_gf.GetTrueVector(), t);
-            dmd_v[curr_window]->takeSample(v_gf.GetTrueVector(), t);
+            if (!last_step)
+            {
+                curr_window++;
+                dmd_x.push_back(new CAROM::DMD(x_gf.GetTrueVector().Size(), dt));
+                dmd_v.push_back(new CAROM::DMD(v_gf.GetTrueVector().Size(), dt));
+
+                dmd_x[curr_window]->takeSample(x_gf.GetTrueVector(), t);
+                dmd_v[curr_window]->takeSample(v_gf.GetTrueVector(), t);
+            }
         }
 
         ts.push_back(t);
@@ -586,30 +608,6 @@ int main(int argc, char *argv[])
 
     dmd_training_timer.Start();
 
-    if (rdim != -1)
-    {
-        if (myid == 0)
-        {
-            std::cout << "Creating DMD with rdim: " << rdim << std::endl;
-        }
-        for (int w = 0; w < dmd_x.size(); ++w)
-        {
-            dmd_x[w]->train(rdim);
-            dmd_v[w]->train(rdim);
-        }
-    }
-    else if (ef != -1)
-    {
-        if (myid == 0)
-        {
-            std::cout << "Creating DMD with energy fraction: " << ef << std::endl;
-        }
-        for (int w = 0; w < dmd_x.size(); ++w)
-        {
-            dmd_x[w]->train(ef);
-            dmd_v[w]->train(ef);
-        }
-    }
 
     dmd_training_timer.Stop();
 

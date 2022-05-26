@@ -170,7 +170,24 @@ if (USE_MFEM)
     target_compile_features(${name} PRIVATE cxx_std_11)
   endforeach() # IN LISTS examples
   file(COPY examples/data DESTINATION ${CMAKE_BINARY_DIR}/examples)
+  file(COPY examples/dmd/heat_conduction_csv.sh DESTINATION ${CMAKE_BINARY_DIR}/examples/dmd)
 endif()
+
+set(misc_example_names
+  combine_samples)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/examples/misc)
+
+foreach(name IN LISTS misc_example_names)
+  add_executable(${name} examples/misc/${name}.C)
+
+  target_link_libraries(${name}
+    PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
+  target_include_directories(${name}
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+    ${MPI_C_INCLUDE_DIRS})
+  target_compile_features(${name} PRIVATE cxx_std_11)
+endforeach(name) # IN LISTS misc_exmaple_names
 
 set(regression_test_names
   smoke_test

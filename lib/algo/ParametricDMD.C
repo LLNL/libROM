@@ -33,7 +33,9 @@ DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
     for (int i = 0; i < dmds.size() - 1; i++)
     {
         CAROM_VERIFY(dmds[i]->d_dt == dmds[i + 1]->d_dt);
-        CAROM_VERIFY(dmds[i]->d_t_offset == dmds[i + 1]->d_t_offset);
+        // This check each model has the same starting time,
+        // which is not a valid assumption for advection problems
+        //CAROM_VERIFY(dmds[i]->d_t_offset == dmds[i + 1]->d_t_offset);
         CAROM_VERIFY(dmds[i]->d_k == dmds[i + 1]->d_k);
     }
     CAROM_VERIFY(closest_rbf_val >= 0.0 && closest_rbf_val <= 1.0);

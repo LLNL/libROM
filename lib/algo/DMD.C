@@ -624,8 +624,8 @@ DMD::summary(std::string base_file_name)
     {
         CSVDatabase* csv_db(new CSVDatabase);
 
-        csv_db->putDoubleVector(base_file_name + "_singular_value.csv", d_sv, d_num_singular_vectors);
-        csv_db->putComplexVector(base_file_name + "_eigenvalue.csv", d_eigs, d_eigs.size());
+        csv_db->putDoubleVector(base_file_name + "_singular_value.csv", d_sv, d_num_singular_vectors, 16);
+        csv_db->putComplexVector(base_file_name + "_eigenvalue.csv", d_eigs, d_eigs.size(), 16);
 
         delete csv_db;
     }
