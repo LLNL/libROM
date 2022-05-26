@@ -44,13 +44,13 @@ MatrixInterpolator::MatrixInterpolator(std::vector<Vector*> parameter_points,
                                        std::string matrix_type,
                                        std::string rbf,
                                        std::string interp_method,
-                                       double epsilon) :
+                                       double closest_rbf_val) :
     Interpolator(parameter_points,
                  rotation_matrices,
                  ref_point,
                  rbf,
                  interp_method,
-                 epsilon)
+                 closest_rbf_val)
 {
     CAROM_VERIFY(reduced_matrices.size() == rotation_matrices.size());
     CAROM_VERIFY(matrix_type == "SPD" || matrix_type == "NS" || matrix_type == "R" || matrix_type == "B");
@@ -100,7 +100,6 @@ Matrix* MatrixInterpolator::interpolate(Vector* point)
 
 void MatrixInterpolator::obtainLambda()
 {
-
     if (d_interp_method == "LS")
     {
         // Solving f = B*lambda
@@ -134,6 +133,10 @@ void MatrixInterpolator::obtainLambda()
 
         dposv(&uplo, &gamma_size, &num_elements, B->getData(),  &gamma_size,
               f_T->getData(), &gamma_size, &info);
+        if (info != 0)
+        {
+            std::cout << "Linear solve failed. Please choose a different epsilon value." << std::endl;
+        }
         CAROM_VERIFY(info == 0);
 
         delete B;

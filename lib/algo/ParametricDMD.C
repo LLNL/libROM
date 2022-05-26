@@ -14,6 +14,7 @@
 #include "manifold_interp/MatrixInterpolator.h"
 #include "linalg/Matrix.h"
 #include "linalg/Vector.h"
+#include "mpi.h"
 
 #include <complex>
 
@@ -24,16 +25,27 @@ DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
                       Vector* desired_point,
                       std::string rbf,
                       std::string interp_method,
-                      double epsilon)
+                      double closest_rbf_val)
 {
     CAROM_VERIFY(parameter_points.size() == dmds.size());
     CAROM_VERIFY(dmds.size() > 1);
     for (int i = 0; i < dmds.size() - 1; i++)
     {
         CAROM_VERIFY(dmds[i]->d_dt == dmds[i + 1]->d_dt);
-        CAROM_VERIFY(dmds[i]->d_t_offset == dmds[i + 1]->d_t_offset);
+        // This check each model has the same starting time,
+        // which is not a valid assumption for advection problems
+        //CAROM_VERIFY(dmds[i]->d_t_offset == dmds[i + 1]->d_t_offset);
         CAROM_VERIFY(dmds[i]->d_k == dmds[i + 1]->d_k);
     }
+    CAROM_VERIFY(closest_rbf_val >= 0.0 && closest_rbf_val <= 1.0);
+
+    int mpi_init, rank;
+    MPI_Initialized(&mpi_init);
+    if (mpi_init == 0) {
+        MPI_Init(nullptr, nullptr);
+    }
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     std::vector<Matrix*> bases;
     std::vector<Matrix*> A_tildes;
@@ -45,14 +57,14 @@ DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
 
     int ref_point = getClosestPoint(parameter_points, desired_point);
     std::vector<CAROM::Matrix*> rotation_matrices = obtainRotationMatrices(parameter_points,
-        bases, ref_point);
+            bases, ref_point);
 
     CAROM::MatrixInterpolator basis_interpolator(parameter_points,
-        rotation_matrices, bases, ref_point, "B", rbf, interp_method, epsilon);
+            rotation_matrices, bases, ref_point, "B", rbf, interp_method, closest_rbf_val);
     Matrix* W = basis_interpolator.interpolate(desired_point);
 
     CAROM::MatrixInterpolator A_tilde_interpolator(parameter_points,
-        rotation_matrices, A_tildes, ref_point, "R", rbf, interp_method, epsilon);
+            rotation_matrices, A_tildes, ref_point, "R", rbf, interp_method, closest_rbf_val);
     Matrix* A_tilde = A_tilde_interpolator.interpolate(desired_point);
 
     // Calculate the right eigenvalues/eigenvectors of A_tilde
@@ -64,7 +76,7 @@ DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
     Matrix* phi_imaginary = W->mult(eigenpair.ev_imaginary);
 
     DMD* desired_dmd = new DMD(eigs, phi_real, phi_imaginary, dmds[0]->d_k,
-        dmds[0]->d_dt, dmds[0]->d_t_offset);
+                               dmds[0]->d_dt, dmds[0]->d_t_offset);
 
     delete W;
     delete A_tilde;
@@ -79,7 +91,7 @@ DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
                       Vector* desired_point,
                       std::string rbf,
                       std::string interp_method,
-                      double epsilon)
+                      double closest_rbf_val)
 {
     std::vector<DMD*> dmds;
     for (int i = 0; i < dmd_paths.size(); i++)
@@ -89,7 +101,7 @@ DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
     }
 
     DMD* desired_dmd = getParametricDMD(parameter_points, dmds, desired_point,
-        rbf, interp_method, epsilon);
+                                        rbf, interp_method, closest_rbf_val);
     for (int i = 0; i < dmds.size(); i++)
     {
         delete dmds[i];

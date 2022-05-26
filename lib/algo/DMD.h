@@ -71,11 +71,6 @@ public:
     virtual void train(int k);
 
     /**
-     * @brief Output the DMD record in CSV files.
-     */
-    void summary(std::string output_path);
-
-    /**
      * @brief Predict new initial condition using d_phi.
      *
      * @param[in] init The initial condition.
@@ -116,6 +111,11 @@ public:
      */
     virtual void save(std::string base_file_name);
 
+    /**
+     * @brief Output the DMD record in CSV files.
+     */
+    void summary(std::string base_file_name);
+
 protected:
 
     friend DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
@@ -123,7 +123,7 @@ protected:
                                  Vector* desired_point,
                                  std::string rbf,
                                  std::string interp_method,
-                                 double epsilon);
+                                 double closest_rbf_val);
 
     /**
      * @brief Constructor.

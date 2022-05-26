@@ -123,13 +123,15 @@ public:
      *                written.
      * @param[in] data The vector of double values to be written.
      * @param[in] nelements The number of doubles in the vector.
+     * @param[in] precision The precision of values to be written.
      */
     virtual
     void
     putDoubleVector(
         const std::string& file_name,
         const std::vector<double> data,
-        int nelements);
+        int nelements,
+        int precision = 6);
 
     /**
      * @brief Writes a vector of complex doubles associated with the supplied filename.
@@ -142,12 +144,33 @@ public:
      *                written.
      * @param[in] data The vector of complex double values to be written.
      * @param[in] nelements The number of complex doubles in the vector.
+     * @param[in] precision The precision of values to be written.
      */
     virtual
     void
     putComplexVector(
         const std::string& file_name,
         const std::vector<std::complex<double>> data,
+        int nelements,
+        int precision = 6);
+
+    /**
+     * @brief Writes a vector of strings associated with the supplied filename.
+     *
+     * @pre !file_name.empty()
+     * @pre data != 0
+     * @pre nelements > 0
+     *
+     * @param[in] file_name The filename associated with the vector of values to be
+     *                written.
+     * @param[in] data The vector of strings to be written.
+     * @param[in] nelements The number of strings in the vector.
+     */
+    virtual
+    void
+    putStringVector(
+        const std::string& file_name,
+        const std::vector<std::string> data,
         int nelements);
 
     /**

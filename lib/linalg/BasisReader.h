@@ -284,6 +284,7 @@ public:
      */
     int
     getDim(
+        const std::string kind,
         double time);
 
     /**
@@ -294,6 +295,7 @@ public:
      */
     int
     getNumSamples(
+        const std::string kind,
         double time);
 
     /**
