@@ -292,7 +292,7 @@ int main(int argc, char *argv[])
             snap_bound[1] -= 1;
             if (myid == 0)
             {
-                cout << "Restricting on snapshot #" << snap_bound[0] << " to " << snap_bound[1] << "." << endl;
+                cout << "Restricting on snapshot #" << snap_bound[0] << " to #" << snap_bound[1] << "." << endl;
             }
         }
         else
@@ -324,23 +324,23 @@ int main(int argc, char *argv[])
                 indicator_init.push_back(tvec[snap_bound[0]]);
                 indicator_last.push_back(tvec[snap_bound[1]]);
             }
+        }
+    }
 
-            CAROM_VERIFY(windowOverlapSamples < windowNumSamples);
-            if (indicator_val.size() == 0)
-            {
-                double indicator_min = *min_element(indicator_init.begin(), indicator_init.end());
-                double indicator_max = *max_element(indicator_last.begin(), indicator_last.end());
-                numWindows = (windowNumSamples < infty) ? round((indicator_max - indicator_min) / (dt_est * windowNumSamples)) : 1;
-                for (int window = 0; window < numWindows; ++window)
-                {
-                    indicator_val.push_back(indicator_min + dt_est * windowNumSamples * window);
-                }
-                if (myid == 0)
-                {
-                    cout << "Created new indicator range partition with " << numWindows << " windows." << endl;
-                    csv_db.putDoubleVector(string(outputPath) + "/indicator_val.csv", indicator_val, numWindows);
-                }
-            }
+    CAROM_VERIFY(windowOverlapSamples < windowNumSamples);
+    if (offline && indicator_val.size() == 0)
+    {
+        double indicator_min = *min_element(indicator_init.begin(), indicator_init.end());
+        double indicator_max = *max_element(indicator_last.begin(), indicator_last.end());
+        numWindows = (windowNumSamples < infty) ? round((indicator_max - indicator_min) / (dt_est * windowNumSamples)) : 1;
+        for (int window = 0; window < numWindows; ++window)
+        {
+            indicator_val.push_back(indicator_min + dt_est * windowNumSamples * window);
+        }
+        if (myid == 0)
+        {
+            cout << "Created new indicator range partition with " << numWindows << " windows." << endl;
+            csv_db.putDoubleVector(string(outputPath) + "/indicator_val.csv", indicator_val, numWindows);
         }
     }
 
@@ -407,7 +407,7 @@ int main(int argc, char *argv[])
                 CAROM_VERIFY(snap_bound.size() == 2);
                 if (myid == 0)
                 {
-                    cout << "Restricting on snapshot #" << snap_bound[0] << " to " << snap_bound[1] << "." << endl;
+                    cout << "Restricting on snapshot #" << snap_bound[0] << " to #" << snap_bound[1] << "." << endl;
                 }
             }
             else
@@ -431,15 +431,11 @@ int main(int argc, char *argv[])
                     overlap_count -= 1;
                 }
                 // a rough estimate to correct the precision of the indicator range partition
-                if (curr_window+1 < numWindows && idx_snap+1 <= snap_bound[1] &&
-                        tval - (offset_indicator) * tvec[snap_bound[0]] > indicator_val[curr_window+1] - dt_est / 100.0)
+                double indicator_snap = tval - offset_indicator * tvec[snap_bound[0]] + dt_est / 100.0;
+                if (curr_window+1 < numWindows && idx_snap+1 <= snap_bound[1] && indicator_snap > indicator_val[curr_window+1])
                 {
                     overlap_count = windowOverlapSamples;
                     curr_window += 1;
-                    if (windowNumSamples < infty)
-                    {
-                        indicator_val.push_back(tval - offset_indicator * tvec[snap_bound[0]]);
-                    }
                     dmd[curr_window][idx_dataset]->takeSample(sample, tval - offset_indicator * tvec[snap_bound[0]]);
                 }
             }
@@ -471,9 +467,9 @@ int main(int argc, char *argv[])
                 {
                     if (myid == 0)
                     {
-                        cout << "Projecting initial condition at t = " << indicator_val[window] << " for DMD model #" << window << endl;
+                        cout << "Projecting initial condition at t = " << indicator_val[window] + offset_indicator * tvec[snap_bound[0]] << " for DMD model #" << window << endl;
                     }
-                    CAROM::Vector* init_cond = dmd[window-1][idx_dataset]->predict((offset_indicator) ? indicator_val[window] - indicator_val[window-1] : indicator_val[window]);
+                    CAROM::Vector* init_cond = dmd[window-1][idx_dataset]->predict(indicator_val[window]);
                     dmd[window][idx_dataset]->projectInitialCondition(init_cond);
                     delete init_cond;
                 }
@@ -575,7 +571,7 @@ int main(int argc, char *argv[])
 
                 if (myid == 0)
                 {
-                    cout << "Projecting initial condition at t = " << indicator_val[window] << " for DMD model #" << window << endl;
+                    cout << "Projecting initial condition at t = " << indicator_val[window] + offset_indicator * tvec[snap_bound[0]] << " for DMD model #" << window << endl;
                 }
                 CAROM::Vector* init_cond = nullptr;
                 if (window == 0)
@@ -588,7 +584,7 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
-                    init_cond = dmd[window-1][idx_dataset]->predict((offset_indicator) ? indicator_val[window] - indicator_val[window-1] : indicator_val[window]);
+                    init_cond = dmd[window-1][idx_dataset]->predict(indicator_val[window]);
                 }
                 dmd[window][idx_dataset]->projectInitialCondition(init_cond);
                 delete init_cond;
