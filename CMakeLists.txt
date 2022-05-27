@@ -137,6 +137,7 @@ if (USE_MFEM)
     heat_conduction
     parametric_heat_conduction
     dg_euler
+    dg_euler_test
     local_tw_csv
     parametric_tw_csv)
   set(example_directories
@@ -145,6 +146,7 @@ if (USE_MFEM)
     prom
     prom
     prom
+    dmd
     dmd
     dmd
     dmd
