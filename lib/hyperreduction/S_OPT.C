@@ -227,7 +227,7 @@ S_OPT(const Matrix* f_basis,
     Matrix tt1(num_rows, num_basis_vectors - 1, f_basis->distributed());
     Matrix g1(tt.numRows(), tt.numColumns(), f_basis->distributed());
     Matrix GG(tt1.numRows(), tt1.numColumns(), f_basis->distributed());
-    Vector rhs_first_row(num_basis_vectors - 1, false);
+    Vector ls_res_first_row(num_basis_vectors - 1, false);
     Vector nV(num_basis_vectors, false);
 
     for (int i = 2; i <= num_samples; i++)
@@ -258,7 +258,8 @@ S_OPT(const Matrix* f_basis,
                 }
             }
 
-            Matrix* A0_T_mult_A0 = A0.transposeMult(A0);
+            Matrix* lhs = A0.transposeMult(A0);
+            lhs->inverse();
             Matrix* rhs = NULL;
             if (myid == 0)
             {
@@ -287,63 +288,20 @@ S_OPT(const Matrix* f_basis,
                 }
             }
 
-            SLPK_Matrix slpk_lhs, slpk_rhs;
-
-            std::vector<int> pdgesv_row_offset(num_procs + 1);
-            pdgesv_row_offset[num_procs] = rhs->numDistributedRows();
-            pdgesv_row_offset[myid] = rhs->numRows();
-
-            CAROM_VERIFY(MPI_Allgather(MPI_IN_PLACE,
-                                       1,
-                                       MPI_INT,
-                                       pdgesv_row_offset.data(),
-                                       1,
-                                       MPI_INT,
-                                       MPI_COMM_WORLD) == MPI_SUCCESS);
-            for (int j = num_procs - 1; j >= 0; j--) {
-                pdgesv_row_offset[j] = pdgesv_row_offset[j + 1] - pdgesv_row_offset[j];
-            }
-
-            CAROM_VERIFY(pdgesv_row_offset[0] == 0);
-
-            int blocksize = pdgesv_row_offset[num_procs] / num_procs;
-            if (pdgesv_row_offset[num_procs] % num_procs != 0) blocksize += 1;
-            initialize_matrix(&slpk_rhs, rhs->numColumns(), rhs->numDistributedRows(),
-                              ncol_blocks, nrow_blocks, rhs->numColumns(), blocksize);
-            for (int rank = 0; rank < num_procs; ++rank) {
-                scatter_block(&slpk_rhs, 1, pdgesv_row_offset[rank] + 1,
-                              rhs->getData(), rhs->numColumns(),
-                              pdgesv_row_offset[rank + 1] - pdgesv_row_offset[rank], rank);
-            }
-
-            create_local_matrix(&slpk_lhs, A0_T_mult_A0->getData(), A0_T_mult_A0->numRows(),
-                                A0_T_mult_A0->numColumns(), 0);
-            slpk_lhs.ctxt = slpk_rhs.ctxt;
-
-            LSManager LSmgr;
-            ls_init(&LSmgr, &slpk_lhs, &slpk_rhs);
-            linear_solve(&LSmgr);
-
-            for (int rank = 0; rank < num_procs; ++rank) {
-                gather_block(&rhs->item(0, 0), LSmgr.B,
-                             1, pdgesv_row_offset[rank] + 1, rhs->numColumns(),
-                             pdgesv_row_offset[rank + 1] - pdgesv_row_offset[rank],
-                             rank);
-            }
-
-            delete A0_T_mult_A0;
-            free(LSmgr.ipiv);
+            Matrix* ls_res = rhs->mult(lhs);
+            delete lhs;
+            delete rhs;
 
             Matrix* c_T = NULL;
             if (myid == 0)
             {
-                c_T = new Matrix(rhs->getData() + rhs->numColumns(),
-                                 rhs->numRows() - 1, rhs->numColumns(), f_basis->distributed(), true);
+                c_T = new Matrix(ls_res->getData() + ls_res->numColumns(),
+                                 ls_res->numRows() - 1, ls_res->numColumns(), f_basis->distributed(), true);
             }
             else
             {
-                c_T = new Matrix(rhs->getData(),
-                                 rhs->numRows(), rhs->numColumns(), f_basis->distributed(), true);
+                c_T = new Matrix(ls_res->getData(),
+                                 ls_res->numRows(), ls_res->numColumns(), f_basis->distributed(), true);
             }
             Matrix* Vo_first_i_columns = Vo->getFirstNColumns(i - 1);
 
@@ -401,27 +359,27 @@ S_OPT(const Matrix* f_basis,
             delete c_T;
             delete g3;
 
-            rhs_first_row.setSize(rhs->numColumns());
+            ls_res_first_row.setSize(ls_res->numColumns());
             if (myid == 0) {
-                for (int j = 0; j < rhs->numColumns(); ++j) {
-                    c[j] = rhs->item(0, j);
+                for (int j = 0; j < ls_res->numColumns(); ++j) {
+                    c[j] = ls_res->item(0, j);
                 }
             }
-            MPI_Bcast(c.data(), rhs->numColumns(), MPI_DOUBLE,
+            MPI_Bcast(c.data(), ls_res->numColumns(), MPI_DOUBLE,
                       0, MPI_COMM_WORLD);
-            for (int j = 0; j < rhs->numColumns(); ++j) {
-                rhs_first_row.item(j) = c[j];
+            for (int j = 0; j < ls_res->numColumns(); ++j) {
+                ls_res_first_row.item(j) = c[j];
             }
             GG.setSize(tt1.numRows(), tt1.numColumns());
             for (int j = 0; j < GG.numRows(); j++)
             {
                 for (int k = 0; k < GG.numColumns(); k++)
                 {
-                    GG.item(j, k) = rhs_first_row.item(k) + tt1.item(j, k);
+                    GG.item(j, k) = ls_res_first_row.item(k) + tt1.item(j, k);
                 }
             }
 
-            delete rhs;
+            delete ls_res;
 
             for (int j = 0; j < A->dim(); j++)
             {
@@ -466,54 +424,13 @@ S_OPT(const Matrix* f_basis,
 
             delete curr_V1;
 
-            Matrix* b = new Matrix(*Vo);
+            Matrix* rhs = new Matrix(*Vo);
 
-            SLPK_Matrix slpk_lhs, slpk_rhs;
+            lhs->inverse();
 
-            std::vector<int> pdgesv_row_offset(num_procs + 1);
-            pdgesv_row_offset[num_procs] = b->numDistributedRows();
-            pdgesv_row_offset[myid] = b->numRows();
-
-            CAROM_VERIFY(MPI_Allgather(MPI_IN_PLACE,
-                                       1,
-                                       MPI_INT,
-                                       pdgesv_row_offset.data(),
-                                       1,
-                                       MPI_INT,
-                                       MPI_COMM_WORLD) == MPI_SUCCESS);
-            for (int j = num_procs - 1; j >= 0; j--) {
-                pdgesv_row_offset[j] = pdgesv_row_offset[j + 1] - pdgesv_row_offset[j];
-            }
-
-            CAROM_VERIFY(pdgesv_row_offset[0] == 0);
-
-            int blocksize = pdgesv_row_offset[num_procs] / num_procs;
-            if (pdgesv_row_offset[num_procs] % num_procs != 0) blocksize += 1;
-            initialize_matrix(&slpk_rhs, b->numColumns(), b->numDistributedRows(),
-                              ncol_blocks, nrow_blocks, b->numColumns(), blocksize);
-            for (int rank = 0; rank < num_procs; ++rank) {
-                scatter_block(&slpk_rhs, 1, pdgesv_row_offset[rank] + 1,
-                              b->getData(), b->numColumns(),
-                              pdgesv_row_offset[rank + 1] - pdgesv_row_offset[rank], rank);
-            }
-
-            create_local_matrix(&slpk_lhs, lhs->getData(), lhs->numRows(),
-                                lhs->numColumns(), 0);
-            slpk_lhs.ctxt = slpk_rhs.ctxt;
-
-            LSManager LSmgr;
-            ls_init(&LSmgr, &slpk_lhs, &slpk_rhs);
-            linear_solve(&LSmgr);
-
-            for (int rank = 0; rank < num_procs; ++rank) {
-                gather_block(&b->item(0, 0), LSmgr.B,
-                             1, pdgesv_row_offset[rank] + 1, b->numColumns(),
-                             pdgesv_row_offset[rank + 1] - pdgesv_row_offset[rank],
-                             rank);
-            }
-
+            Matrix* ls_res = rhs->mult(lhs);
             delete lhs;
-            free(LSmgr.ipiv);
+            delete rhs;
 
             nV.setSize(num_basis_vectors);
             for (int j = 0; j < num_basis_vectors; j++)
@@ -539,12 +456,12 @@ S_OPT(const Matrix* f_basis,
                 double tmp = 0.0;
                 for (int k = 0; k < Vo->numColumns(); k++)
                 {
-                    tmp += Vo->item(j, k) * b->item(j, k);
+                    tmp += Vo->item(j, k) * ls_res->item(j, k);
                 }
                 A->item(j) = std::log(1 + tmp) - noM->item(j);
             }
 
-            delete b;
+            delete ls_res;
         }
 
         f_bv_max_local.row_val = -1.0;
