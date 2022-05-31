@@ -424,9 +424,8 @@ S_OPT(const Matrix* f_basis,
 
             delete curr_V1;
 
-            Matrix* rhs = new Matrix(*Vo);
-
             lhs->inverse();
+            Matrix* rhs = new Matrix(*Vo);
 
             Matrix* ls_res = rhs->mult(lhs);
             delete lhs;
