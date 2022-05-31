@@ -40,8 +40,8 @@ class Matrix;
  * @param[in] myid The rank of this process.
  * @param[in] num_procs The total number of processes.
  * @param[in] num_samples_req The minimum number of samples required.
- * @param[in] qr_factorize Whether to factorize the incoming matrix. Null-op
- *                         when the incoming matrix is a basis.
+ * @param[in] qr_factorize Whether to factorize the incoming matrix. Performs
+ *                         unnecessary computation when the incoming matrix is a basis.
  */
 void
 S_OPT(const Matrix* f_basis,

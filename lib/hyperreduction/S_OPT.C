@@ -107,14 +107,14 @@ S_OPT(const Matrix* f_basis,
 
     const Matrix* Vo = NULL;
 
-    int *row_offset = new int[num_procs + 1];
+    std::vector<int> row_offset(num_procs + 1);
     row_offset[num_procs] = f_basis_truncated->numDistributedRows();
     row_offset[myid] = num_rows;
 
     CAROM_VERIFY(MPI_Allgather(MPI_IN_PLACE,
                                1,
                                MPI_INT,
-                               row_offset,
+                               row_offset.data(),
                                1,
                                MPI_INT,
                                MPI_COMM_WORLD) == MPI_SUCCESS);
@@ -181,7 +181,7 @@ S_OPT(const Matrix* f_basis,
     int num_samples_obtained = 0;
 
     // Scratch space used throughout the algorithm.
-    double* c = new double [num_basis_vectors];
+    std::vector<double> c(num_basis_vectors);
 
     vector<set<int> > proc_sampled_f_row(num_procs);
     vector<map<int, int> > proc_f_row_to_tmp_fs_row(num_procs);
@@ -208,7 +208,7 @@ S_OPT(const Matrix* f_basis,
             c[j] = Vo->item(f_bv_max_global.row, j);
         }
     }
-    MPI_Bcast(c, num_basis_vectors, MPI_DOUBLE,
+    MPI_Bcast(c.data(), num_basis_vectors, MPI_DOUBLE,
               f_bv_max_global.proc, MPI_COMM_WORLD);
     // Now add the first sampled row of the basis of the RHS to tmp_fs.
     for (int j = 0; j < num_basis_vectors; ++j) {
@@ -218,18 +218,24 @@ S_OPT(const Matrix* f_basis,
     proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] = 0;
     num_samples_obtained++;
 
-    // Square Vo.
-    Matrix* nVo = Vo->elementwise_square();
-
     Vector* A = new Vector(num_rows, f_basis->distributed());
     Vector* noM = new Vector(num_rows, f_basis->distributed());
+
+    Matrix A0(num_basis_vectors - 1, num_basis_vectors - 1, false);
+    Matrix V1_last_col(num_basis_vectors - 1, 1, false);
+    Matrix tt(num_rows, num_basis_vectors - 1, f_basis->distributed());
+    Matrix tt1(num_rows, num_basis_vectors - 1, f_basis->distributed());
+    Matrix g1(tt.numRows(), tt.numColumns(), f_basis->distributed());
+    Matrix GG(tt1.numRows(), tt1.numColumns(), f_basis->distributed());
+    Vector rhs_first_row(num_basis_vectors - 1, false);
+    Vector nV(num_basis_vectors, false);
 
     for (int i = 2; i <= num_samples; i++)
     {
         if (i <= num_basis_vectors)
         {
-            Matrix A0(i - 1, i - 1, false);
-            Matrix V1_last_col(i - 1, 1, false);
+            A0.setSize(i - 1, i - 1);
+            V1_last_col.setSize(i - 1, 1);
             for (int j = 0; j < num_samples_obtained; j++)
             {
                 for (int k = 0; k < i - 1; k++)
@@ -240,20 +246,17 @@ S_OPT(const Matrix* f_basis,
             }
 
             Matrix* atA0 = V1_last_col.transposeMult(A0);
-            Matrix tt(num_rows, i - 1, f_basis->distributed());
-            Matrix tt1(num_rows, i - 1, f_basis->distributed());
-            Matrix* V1_last_col_squared = V1_last_col.elementwise_square();
+            tt.setSize(num_rows, i - 1);
+            tt1.setSize(num_rows, i - 1);
 
             double ata = 0.0;
-            for (int j = 0; j < V1_last_col_squared->numRows(); j++)
+            for (int j = 0; j < V1_last_col.numRows(); j++)
             {
-                for (int k = 0; k < V1_last_col_squared->numColumns(); k++)
+                for (int k = 0; k < V1_last_col.numColumns(); k++)
                 {
-                    ata += V1_last_col_squared->item(j, k);
+                    ata += (V1_last_col.item(j, k) * V1_last_col.item(j, k));
                 }
             }
-
-            delete V1_last_col_squared;
 
             Matrix* A0_T_mult_A0 = A0.transposeMult(A0);
             Matrix* rhs = NULL;
@@ -286,19 +289,19 @@ S_OPT(const Matrix* f_basis,
 
             SLPK_Matrix slpk_lhs, slpk_rhs;
 
-            int *pdgesv_row_offset = new int[num_procs + 1];
+            std::vector<int> pdgesv_row_offset(num_procs + 1);
             pdgesv_row_offset[num_procs] = rhs->numDistributedRows();
             pdgesv_row_offset[myid] = rhs->numRows();
 
             CAROM_VERIFY(MPI_Allgather(MPI_IN_PLACE,
                                        1,
                                        MPI_INT,
-                                       pdgesv_row_offset,
+                                       pdgesv_row_offset.data(),
                                        1,
                                        MPI_INT,
                                        MPI_COMM_WORLD) == MPI_SUCCESS);
-            for (int i = num_procs - 1; i >= 0; i--) {
-                pdgesv_row_offset[i] = pdgesv_row_offset[i + 1] - pdgesv_row_offset[i];
+            for (int j = num_procs - 1; j >= 0; j--) {
+                pdgesv_row_offset[j] = pdgesv_row_offset[j + 1] - pdgesv_row_offset[j];
             }
 
             CAROM_VERIFY(pdgesv_row_offset[0] == 0);
@@ -329,7 +332,6 @@ S_OPT(const Matrix* f_basis,
             }
 
             delete A0_T_mult_A0;
-            delete [] pdgesv_row_offset;
             free(LSmgr.ipiv);
 
             Matrix* c_T = NULL;
@@ -344,21 +346,19 @@ S_OPT(const Matrix* f_basis,
                                  rhs->numRows(), rhs->numColumns(), f_basis->distributed(), true);
             }
             Matrix* Vo_first_i_columns = Vo->getFirstNColumns(i - 1);
-            Matrix* Vo_first_i_columns_mult_c_T = Vo_first_i_columns->elementwise_mult(c_T);
 
             Vector* b = new Vector(num_rows, f_basis->distributed());
-            for (int j = 0; j < Vo_first_i_columns_mult_c_T->numRows(); j++)
+            for (int j = 0; j < Vo_first_i_columns->numRows(); j++)
             {
                 double tmp = 1.0;
-                for (int k = 0; k < Vo_first_i_columns_mult_c_T->numColumns(); k++)
+                for (int k = 0; k < Vo_first_i_columns->numColumns(); k++)
                 {
-                    tmp += Vo_first_i_columns_mult_c_T->item(j, k);
+                    tmp += (Vo_first_i_columns->item(j, k) * c_T->item(j, k));
                 }
                 b->item(j) = tmp;
             }
 
             delete Vo_first_i_columns;
-            delete Vo_first_i_columns_mult_c_T;
 
             for (int j = 0; j < num_rows; j++)
             {
@@ -368,7 +368,7 @@ S_OPT(const Matrix* f_basis,
                 }
             }
 
-            Matrix g1(tt.numRows(), tt.numColumns(), f_basis->distributed());
+            g1.setSize(tt.numRows(), tt.numColumns());
             for (int j = 0; j < g1.numRows(); j++)
             {
                 for (int k = 0; k < g1.numColumns(); k++)
@@ -401,18 +401,18 @@ S_OPT(const Matrix* f_basis,
             delete c_T;
             delete g3;
 
-            Vector rhs_first_row(rhs->numColumns(), false);
+            rhs_first_row.setSize(rhs->numColumns());
             if (myid == 0) {
                 for (int j = 0; j < rhs->numColumns(); ++j) {
                     c[j] = rhs->item(0, j);
                 }
             }
-            MPI_Bcast(c, rhs->numColumns(), MPI_DOUBLE,
+            MPI_Bcast(c.data(), rhs->numColumns(), MPI_DOUBLE,
                       0, MPI_COMM_WORLD);
             for (int j = 0; j < rhs->numColumns(); ++j) {
                 rhs_first_row.item(j) = c[j];
             }
-            Matrix GG(tt1.numRows(), tt1.numColumns(), f_basis->distributed());
+            GG.setSize(tt1.numRows(), tt1.numColumns());
             for (int j = 0; j < GG.numRows(); j++)
             {
                 for (int k = 0; k < GG.numColumns(); k++)
@@ -433,9 +433,10 @@ S_OPT(const Matrix* f_basis,
                 A->item(j) = std::max(0.0, ata + (Vo->item(j, i - 1) * Vo->item(j, i - 1)) - tmp);
             }
 
-            Vector nV(i, false);
+            nV.setSize(i);
             for (int j = 0; j < i; j++)
             {
+                nV.item(j) = 0.0;
                 for (int k = 0; k < num_samples_obtained; k++)
                 {
                     nV.item(j) += (V1.item(k, j) * V1.item(k, j));
@@ -447,7 +448,7 @@ S_OPT(const Matrix* f_basis,
                 noM->item(j) = 0.0;
                 for (int k = 0; k < i; k++)
                 {
-                    noM->item(j) += std::log(nV.item(k) + nVo->item(j, k));
+                    noM->item(j) += std::log(nV.item(k) + (Vo->item(j, k) * Vo->item(j, k)));
                 }
             }
 
@@ -469,19 +470,19 @@ S_OPT(const Matrix* f_basis,
 
             SLPK_Matrix slpk_lhs, slpk_rhs;
 
-            int *pdgesv_row_offset = new int[num_procs + 1];
+            std::vector<int> pdgesv_row_offset(num_procs + 1);
             pdgesv_row_offset[num_procs] = b->numDistributedRows();
             pdgesv_row_offset[myid] = b->numRows();
 
             CAROM_VERIFY(MPI_Allgather(MPI_IN_PLACE,
                                        1,
                                        MPI_INT,
-                                       pdgesv_row_offset,
+                                       pdgesv_row_offset.data(),
                                        1,
                                        MPI_INT,
                                        MPI_COMM_WORLD) == MPI_SUCCESS);
-            for (int i = num_procs - 1; i >= 0; i--) {
-                pdgesv_row_offset[i] = pdgesv_row_offset[i + 1] - pdgesv_row_offset[i];
+            for (int j = num_procs - 1; j >= 0; j--) {
+                pdgesv_row_offset[j] = pdgesv_row_offset[j + 1] - pdgesv_row_offset[j];
             }
 
             CAROM_VERIFY(pdgesv_row_offset[0] == 0);
@@ -512,12 +513,12 @@ S_OPT(const Matrix* f_basis,
             }
 
             delete lhs;
-            delete [] pdgesv_row_offset;
             free(LSmgr.ipiv);
 
-            Vector nV(num_basis_vectors, false);
+            nV.setSize(num_basis_vectors);
             for (int j = 0; j < num_basis_vectors; j++)
             {
+                nV.item(j) = 0.0;
                 for (int k = 0; k < num_samples_obtained; k++)
                 {
                     nV.item(j) += (V1.item(k, j) * V1.item(k, j));
@@ -529,7 +530,7 @@ S_OPT(const Matrix* f_basis,
                 noM->item(j) = 0.0;
                 for (int k = 0; k < num_basis_vectors; k++)
                 {
-                    noM->item(j) += std::log(nV.item(k) + nVo->item(j, k));
+                    noM->item(j) += std::log(nV.item(k) + (Vo->item(j, k) * Vo->item(j, k)));
                 }
             }
 
@@ -566,7 +567,7 @@ S_OPT(const Matrix* f_basis,
                 c[j] = Vo->item(f_bv_max_global.row, j);
             }
         }
-        MPI_Bcast(c, num_basis_vectors, MPI_DOUBLE,
+        MPI_Bcast(c.data(), num_basis_vectors, MPI_DOUBLE,
                   f_bv_max_global.proc, MPI_COMM_WORLD);
         // Now add the first sampled row of the basis of the RHS to tmp_fs.
         for (int j = 0; j < num_basis_vectors; ++j) {
@@ -612,8 +613,6 @@ S_OPT(const Matrix* f_basis,
     {
         delete Vo;
     }
-    delete nVo;
-    delete [] c;
 }
 
 }
