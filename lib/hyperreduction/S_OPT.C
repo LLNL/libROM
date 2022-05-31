@@ -421,15 +421,12 @@ S_OPT(const Matrix* f_basis,
         {
             Matrix* curr_V1 = new Matrix(V1.getData(), num_samples_obtained, num_basis_vectors, false, true);
             Matrix* lhs = curr_V1->transposeMult(curr_V1);
+            lhs->inverse();
 
             delete curr_V1;
 
-            lhs->inverse();
-            Matrix* rhs = new Matrix(*Vo);
-
-            Matrix* ls_res = rhs->mult(lhs);
+            Matrix* ls_res = Vo->mult(lhs);
             delete lhs;
-            delete rhs;
 
             nV.setSize(num_basis_vectors);
             for (int j = 0; j < num_basis_vectors; j++)
