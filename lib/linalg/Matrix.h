@@ -918,7 +918,7 @@ public:
      * @return The Q of the QR factorization of this.
      */
     Matrix*
-    qr_factorize() const
+    qr_factorize() const;
 
     /**
      * @brief Compute the leading numColumns() column pivots from a
