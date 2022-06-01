@@ -494,6 +494,8 @@ public:
     /**
      * @brief Multiplies two matrices element-wise.
      *
+     * @pre result.distributed() == distributed()
+     * @pre distributed() == other.distributed()
      * @pre numRows() == other.numRows()
      * @pre numColumns() == other.numColumns()
      *
@@ -511,12 +513,13 @@ public:
     }
 
     /**
-    * @brief Multiplies two matrices element-wise and returns the product,
-    * pointer version.
-    *
-    * @pre other != 0
-    * @pre numRows() == other.numRows()
-    * @pre numColumns() == other.numColumns()
+     * @brief Multiplies two matrices element-wise and returns the product,
+     * pointer version.
+     *
+     * @pre other != 0
+     * @pre distributed() == other.distributed()
+     * @pre numRows() == other.numRows()
+     * @pre numColumns() == other.numColumns()
      *
      * @param[in] other The Matrix to multiply with this.
      *
@@ -531,12 +534,13 @@ public:
     }
 
     /**
-    * @brief Multiplies two matrices element-wise and fills result with the
-    * answer.
-    *
+     * @brief Multiplies two matrices element-wise and fills result with the
+     * answer.
+     *
      * @pre result == 0 || result->distributed() == distributed()
-    * @pre numRows() == other.numRows()
-    * @pre numColumns() == other.numColumns()
+     * @pre distributed() == other.distributed()
+     * @pre numRows() == other.numRows()
+     * @pre numColumns() == other.numColumns()
      *
      * @param[in] other The Matrix to multiply with this.
      * @param[out] result The product Matrix.
@@ -547,12 +551,13 @@ public:
         Matrix*& result) const;
 
     /**
-    * @brief Multiplies two matrices element-wise and fills result with the
-    * answer.
-    *
+     * @brief Multiplies two matrices element-wise and fills result with the
+     * answer.
+     *
      * @pre result == 0 || result->distributed() == distributed()
-    * @pre numRows() == other.numRows()
-    * @pre numColumns() == other.numColumns()
+     * @pre distributed() == other.distributed()
+     * @pre numRows() == other.numRows()
+     * @pre numColumns() == other.numColumns()
      *
      * @param[in] other The Matrix to multiply with this.
      * @param[out] result The product Matrix.
@@ -578,6 +583,7 @@ public:
     /**
      * @brief Square every element in the matrix.
      *
+     * @pre result == 0 || result->distributed() == distributed()
      * @param[out] result The product Matrix.
      */
     void
@@ -587,6 +593,7 @@ public:
     /**
      * @brief Square every element in the matrix.
      *
+     * @pre result == 0 || result->distributed() == distributed()
      * @param[out] result The product Matrix.
      */
     void

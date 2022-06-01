@@ -447,6 +447,7 @@ Matrix::elementwise_mult(
     Matrix*& result) const
 {
     CAROM_VERIFY(result == 0 || result->distributed() == distributed());
+    CAROM_VERIFY(distributed() == other.distributed());
     CAROM_VERIFY(numRows() == other.numRows());
     CAROM_VERIFY(numColumns() == other.numColumns());
 
@@ -473,6 +474,7 @@ Matrix::elementwise_mult(
     Matrix& result) const
 {
     CAROM_VERIFY(result.distributed() == distributed());
+    CAROM_VERIFY(distributed() == other.distributed());
     CAROM_VERIFY(numRows() == other.numRows());
     CAROM_VERIFY(numColumns() == other.numColumns());
 
