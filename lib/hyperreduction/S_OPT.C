@@ -9,7 +9,7 @@
  *****************************************************************************/
 
 // Description: Interface to the S_OPT algorithm to determine the rows of the
-// rhs to be sampled for the interpolation of the rhs->
+// basis to be sampled for the interpolation of the basis.
 
 #include "linalg/Matrix.h"
 #include "Utilities.h"
