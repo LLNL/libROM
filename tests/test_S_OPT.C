@@ -41,7 +41,7 @@ TEST(S_OPTSerialTest, Test_S_OPT)
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
 
-    int num_total_rows = 1000;
+    int num_total_rows = 100;
     int num_cols = 5;
     int num_samples = 10;
 
@@ -83,16 +83,16 @@ TEST(S_OPTSerialTest, Test_S_OPT)
 
     // Result of S_OPT (f_basis_sampled_inv)
     double* S_OPT_true_ans = new double[50] {
-        -2.34972,  0.0965949, 0.606533, 0.638275, -0.386026,
-        -2.44988,  0.430449,  1.07449,  1.25031,  -0.647952,
-        -2.54602,  0.803596,  1.43966,  1.59905,  -0.715677,
-        -3.37144,  3.97716,   1.47431,  1.69748,  -0.171356,
-        -3.49946,  4.15045,   1.03944,  1.29441,   0.25575,
-        -3.57175,  1.92897,  -3.25661, -2.99323,   2.22553,
-        -3.32192, -0.969017, -4.72273, -2.43004,   0.548499,
-        -3.38077, -5.25456,  -2.08931,  5.26275,  -2.44579,
-        -3.39278, -4.41453,   4.52803, -0.244015,  4.43685,
-        -2.01887, -1.11166,   3.18003, -6.02615,  -4.53692
+        -0.5918106,  1.141427,   1.142373,   1.477501,  -0.7002456,
+         -1.204534,  1.608694,   0.5777631, -0.8686062,  0.9839489,
+          -1.21845,  1.569369,   0.4668517, -0.958101,   0.9462786,
+         -1.023713,  0.2118963, -1.029118,  -0.3487639, -0.740034,
+         -1.016572,  0.1513296, -1.060517,  -0.2849657, -0.774013,
+         -1.009973,  0.0911333, -1.088985,  -0.2200843, -0.8032426,
+         -1.107097, -0.8899746, -0.7112781,  1.030203,   0.2788396,
+         -1.173239, -1.002324,  -0.1872992,  1.061846,   0.969148,
+         -1.040098, -1.004302,   0.8125958,  0.2427455,  0.9231714,
+         -0.570251, -0.9721371,  1.327513,  -1.113124,  -1.083388
     };
 
     int index = 0;
@@ -109,7 +109,7 @@ TEST(S_OPTSerialTest, Test_S_OPT)
 
     double* S_OPT_res = NULL;
     std::vector<int> f_sampled_row(num_samples, 0);
-    std::vector<int> f_sampled_row_true_ans{61, 92, 113, 257, 281, 410, 466, 545, 638, 716};
+    std::vector<int> f_sampled_row_true_ans{0, 19, 21, 48, 49, 50, 72, 79, 90, 97};
     std::vector<int> f_sampled_rows_per_proc(d_num_procs, 0);
     CAROM::Matrix f_basis_sampled_inv = CAROM::Matrix(num_samples, num_cols, false);
     CAROM::S_OPT(u, num_cols, f_sampled_row, f_sampled_rows_per_proc, f_basis_sampled_inv, d_rank, d_num_procs, num_samples);
@@ -153,7 +153,7 @@ TEST(S_OPTSerialTest, Test_S_OPT_less_basis_vectors)
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
 
-    int num_total_rows = 1000;
+    int num_total_rows = 100;
     int num_cols = 5;
     int num_basis_vectors = 3;
     int num_samples = 5;
@@ -196,11 +196,11 @@ TEST(S_OPTSerialTest, Test_S_OPT_less_basis_vectors)
 
     // Result of S_OPT (f_basis_sampled_inv)
     double* S_OPT_true_ans = new double[15] {
-        -7.52134,  16.0657,  4.54446,
-        -7.05122,  11.4397, -2.97289,
-        -4.47364, -11.1503, -6.29663,
-        -6.07884, -9.32863,  4.80828,
-        -5.97378, -8.06992,  4.44313
+        -1.433786,  2.925154,   2.209402,
+        -1.861405,  0.6665424, -1.247851,
+        -1.890357,  0.5250462, -1.304832,
+        -1.935721,  0.3061151, -1.365598,
+        -2.835807, -3.503679,   1.97353
     };
 
     int index = 0;
@@ -217,7 +217,7 @@ TEST(S_OPTSerialTest, Test_S_OPT_less_basis_vectors)
 
     double* S_OPT_res = NULL;
     std::vector<int> f_sampled_row(num_samples, 0);
-    std::vector<int> f_sampled_row_true_ans{144, 410, 466, 716, 720};
+    std::vector<int> f_sampled_row_true_ans{0, 44, 46, 49, 90};
     std::vector<int> f_sampled_rows_per_proc(d_num_procs, 0);
     CAROM::Matrix f_basis_sampled_inv = CAROM::Matrix(num_samples, num_basis_vectors, false);
     CAROM::S_OPT(u, num_basis_vectors, f_sampled_row, f_sampled_rows_per_proc, f_basis_sampled_inv, d_rank, d_num_procs, num_samples);
@@ -261,7 +261,7 @@ TEST(S_OPTSerialTest, Test_S_OPT_QR)
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
 
-    int num_total_rows = 1000;
+    int num_total_rows = 100;
     int num_cols = 5;
     int num_basis_vectors = 3;
     int num_samples = 5;
@@ -304,11 +304,11 @@ TEST(S_OPTSerialTest, Test_S_OPT_QR)
 
     // Result of S_OPT (f_basis_sampled_inv)
     double* S_OPT_true_ans = new double[15] {
-        -7.52134,  16.0657, -4.54446,
-        -7.05122,  11.4397,  2.97289,
-        -4.47364, -11.1503,  6.29663,
-        -6.07884, -9.32863, -4.80828,
-        -5.97378, -8.06992, -4.44313
+       -1.433785, -2.925153, -2.209402,
+       -1.861404, -0.6665415, 1.24785,
+       -1.890357, -0.5250456, 1.304833,
+        -1.93572, -0.3061142, 1.365598,
+       -2.835807,  3.503679, -1.97353
     };
 
     int index = 0;
@@ -325,7 +325,7 @@ TEST(S_OPTSerialTest, Test_S_OPT_QR)
 
     double* S_OPT_res = NULL;
     std::vector<int> f_sampled_row(num_samples, 0);
-    std::vector<int> f_sampled_row_true_ans{144, 410, 466, 716, 720};
+    std::vector<int> f_sampled_row_true_ans{0, 44, 46, 49, 90};
     std::vector<int> f_sampled_rows_per_proc(d_num_procs, 0);
     CAROM::Matrix f_basis_sampled_inv = CAROM::Matrix(num_samples, num_basis_vectors, false);
     CAROM::S_OPT(u, num_basis_vectors, f_sampled_row, f_sampled_rows_per_proc, f_basis_sampled_inv, d_rank, d_num_procs, num_samples, true);
