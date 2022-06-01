@@ -13,7 +13,6 @@
 
 #include "linalg/Matrix.h"
 #include "Utilities.h"
-#include "linalg/scalapack_wrapper.h"
 #include "mpi.h"
 #include <cmath>
 #include <vector>
@@ -107,71 +106,10 @@ S_OPT(const Matrix* f_basis,
 
     const Matrix* Vo = NULL;
 
-    std::vector<int> row_offset(num_procs + 1);
-    row_offset[num_procs] = f_basis_truncated->numDistributedRows();
-    row_offset[myid] = num_rows;
-
-    CAROM_VERIFY(MPI_Allgather(MPI_IN_PLACE,
-                               1,
-                               MPI_INT,
-                               row_offset.data(),
-                               1,
-                               MPI_INT,
-                               MPI_COMM_WORLD) == MPI_SUCCESS);
-    for (int i = num_procs - 1; i >= 0; i--) {
-        row_offset[i] = row_offset[i + 1] - row_offset[i];
-    }
-
-    CAROM_VERIFY(row_offset[0] == 0);
-
-    SLPK_Matrix slpk_f_basis;
-
-    int nrow_blocks = num_procs;
-    int ncol_blocks = 1;
-
     // Use the QR factorization of the input matrix, if requested
     if (qr_factorize)
     {
-        int blocksize = row_offset[num_procs] / num_procs;
-        if (row_offset[num_procs] % num_procs != 0) blocksize += 1;
-        initialize_matrix(&slpk_f_basis, num_basis_vectors, f_basis_truncated->numDistributedRows(),
-                          ncol_blocks, nrow_blocks, num_basis_vectors, blocksize);
-        for (int rank = 0; rank < num_procs; ++rank) {
-            scatter_block(&slpk_f_basis, 1, row_offset[rank] + 1,
-                          f_basis_truncated->getData(), num_basis_vectors,
-                          row_offset[rank + 1] - row_offset[rank], rank);
-        }
-
-        QRManager QRmgr;
-        qr_init(&QRmgr, &slpk_f_basis);
-        lqfactorize(&QRmgr);
-
-        // Manipulate QRmgr.A to get elementary household reflectors.
-        for (int i = row_offset[myid]; i < num_basis_vectors; i++) {
-            for (int j = 0; j < i - row_offset[myid] && j < row_offset[myid +  1]; j++) {
-                QRmgr.A->mdata[j * QRmgr.A->mm + i] = 0;
-            }
-            if (i < row_offset[myid + 1]) {
-                QRmgr.A->mdata[(i - row_offset[myid]) * QRmgr.A->mm + i] = 1;
-            }
-        }
-
-        // Obtain Q
-        lqcompute(&QRmgr);
-        Matrix* qr_factorized_basis = new Matrix(row_offset[myid + 1] - row_offset[myid],
-                num_basis_vectors, f_basis->distributed());
-        for (int rank = 0; rank < num_procs; ++rank) {
-            gather_block(&qr_factorized_basis->item(0, 0), QRmgr.A,
-                         1, row_offset[rank] + 1,
-                         num_basis_vectors, row_offset[rank + 1] - row_offset[rank],
-                         rank);
-        }
-        delete f_basis_truncated;
-        Vo = qr_factorized_basis;
-
-        free(QRmgr.tau);
-        free(QRmgr.ipiv);
-        free_matrix_data(QRmgr.A);
+        Vo = f_basis_truncated->qr_factorize();
     }
     else
     {

@@ -913,6 +913,14 @@ public:
     void transposePseudoinverse();
 
     /**
+     * @brief Computes and returns the Q of the QR factorization of this.
+     *
+     * @return The Q of the QR factorization of this.
+     */
+    Matrix*
+    qr_factorize() const
+
+    /**
      * @brief Compute the leading numColumns() column pivots from a
      * QR decomposition with column pivots (QRCP) of the transpose
      * of this.

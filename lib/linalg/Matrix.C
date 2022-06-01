@@ -1037,6 +1037,78 @@ Matrix::calculateNumDistributedRows() {
     }
 }
 
+Matrix*
+Matrix::qr_factorize() const
+{
+    int myid;
+    MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+
+    std::vector<int> row_offset(d_num_procs + 1);
+    row_offset[d_num_procs] = numDistributedRows();
+    row_offset[myid] = numRows();
+
+    CAROM_VERIFY(MPI_Allgather(MPI_IN_PLACE,
+                               1,
+                               MPI_INT,
+                               row_offset.data(),
+                               1,
+                               MPI_INT,
+                               MPI_COMM_WORLD) == MPI_SUCCESS);
+    for (int i = d_num_procs - 1; i >= 0; i--) {
+        row_offset[i] = row_offset[i + 1] - row_offset[i];
+    }
+
+    CAROM_VERIFY(row_offset[0] == 0);
+
+    SLPK_Matrix slpk;
+
+    int nrow_blocks = d_num_procs;
+    int ncol_blocks = 1;
+
+    int blocksize = row_offset[d_num_procs] / d_num_procs;
+    if (row_offset[d_num_procs] % d_num_procs != 0) blocksize += 1;
+    initialize_matrix(&slpk, numColumns(), numDistributedRows(),
+                      ncol_blocks, nrow_blocks, numColumns(), blocksize);
+    for (int rank = 0; rank < d_num_procs; ++rank) {
+        scatter_block(&slpk, 1, row_offset[rank] + 1,
+                      getData(), numColumns(),
+                      row_offset[rank + 1] - row_offset[rank], rank);
+    }
+
+    QRManager QRmgr;
+    qr_init(&QRmgr, &slpk);
+    lqfactorize(&QRmgr);
+
+    // Manipulate QRmgr.A to get elementary household reflectors.
+    for (int i = row_offset[myid]; i < numColumns(); i++) {
+        for (int j = 0; j < i - row_offset[myid] && j < row_offset[myid +  1]; j++) {
+            QRmgr.A->mdata[j * QRmgr.A->mm + i] = 0;
+        }
+        if (i < row_offset[myid + 1]) {
+            QRmgr.A->mdata[(i - row_offset[myid]) * QRmgr.A->mm + i] = 1;
+        }
+    }
+
+    // Obtain Q
+    lqcompute(&QRmgr);
+    Matrix* qr_factorized_matrix = new Matrix(row_offset[myid + 1] - row_offset[myid],
+            numColumns(), distributed());
+    for (int rank = 0; rank < d_num_procs; ++rank) {
+        gather_block(&qr_factorized_matrix->item(0, 0), QRmgr.A,
+                     1, row_offset[rank] + 1,
+                     numColumns(), row_offset[rank + 1] - row_offset[rank],
+                     rank);
+    }
+
+    free_matrix_data(&slpk);
+    release_context(&slpk);
+
+    free(QRmgr.tau);
+    free(QRmgr.ipiv);
+
+    return qr_factorized_matrix;
+}
+
 void
 Matrix::qrcp_pivots_transpose(int* row_pivot,
                               int* row_pivot_owner,

@@ -115,64 +115,7 @@ RandomizedSVD::computeSVD()
     int rand_proj_rows = rand_proj->numRows();
     delete rand_mat;
 
-    // Get LQ factorization of random projection
-    int *row_offset = new int[d_num_procs + 1];
-    row_offset[d_num_procs] = rand_proj->numDistributedRows();
-    row_offset[d_rank] = rand_proj_rows;
-
-    CAROM_VERIFY(MPI_Allgather(MPI_IN_PLACE,
-                               1,
-                               MPI_INT,
-                               row_offset,
-                               1,
-                               MPI_INT,
-                               MPI_COMM_WORLD) == MPI_SUCCESS);
-    for (int i = d_num_procs - 1; i >= 0; i--) {
-        row_offset[i] = row_offset[i + 1] - row_offset[i];
-    }
-
-    CAROM_VERIFY(row_offset[0] == 0);
-
-    SLPK_Matrix slpk_rand_proj;
-
-    d_nprow = d_num_procs;
-    d_npcol = 1;
-    int d_blocksize = row_offset[d_num_procs] / d_num_procs;
-    if (row_offset[d_num_procs] % d_num_procs != 0) d_blocksize += 1;
-    initialize_matrix(&slpk_rand_proj, rand_proj->numColumns(), rand_proj->numDistributedRows(),
-                      d_npcol, d_nprow, rand_proj->numColumns(), d_blocksize);
-    for (int rank = 0; rank < d_num_procs; ++rank) {
-        scatter_block(&slpk_rand_proj, 1, row_offset[rank] + 1,
-                      rand_proj->getData(), rand_proj->numColumns(),
-                      row_offset[rank + 1] - row_offset[rank], rank);
-    }
-    delete rand_proj;
-
-    QRManager QRmgr;
-    qr_init(&QRmgr, &slpk_rand_proj);
-    lqfactorize(&QRmgr);
-
-    // Manipulate QRmgr.A to get elementary household reflectors.
-    for (int i = row_offset[d_rank]; i < d_subspace_dim; i++) {
-        for (int j = 0; j < i - row_offset[d_rank] && j < row_offset[d_rank +  1]; j++) {
-            QRmgr.A->mdata[j * QRmgr.A->mm + i] = 0;
-        }
-        if (i < row_offset[d_rank + 1]) {
-            QRmgr.A->mdata[(i - row_offset[d_rank]) * QRmgr.A->mm + i] = 1;
-        }
-    }
-
-    // Obtain Q
-    lqcompute(&QRmgr);
-    Matrix* Q = new Matrix(row_offset[d_rank + 1] - row_offset[d_rank], d_subspace_dim, true);
-    for (int rank = 0; rank < d_num_procs; ++rank) {
-        gather_block(&Q->item(0, 0), QRmgr.A,
-                     1, row_offset[rank] + 1,
-                     d_subspace_dim, row_offset[rank + 1] - row_offset[rank],
-                     rank);
-    }
-    free(QRmgr.tau);
-    free(QRmgr.ipiv);
+    Matrix* Q = rand_proj->qr_factorize();
 
     // Project d_samples onto Q
     Matrix* svd_input_mat = Q->transposeMult(snapshot_matrix);
@@ -254,10 +197,7 @@ RandomizedSVD::computeSVD()
 
     d_this_interval_basis_current = true;
     delete Q;
-    free_matrix_data(QRmgr.A);
-    release_context(&slpk_rand_proj);
     release_context(&svd_input);
-    delete [] row_offset;
 
     if (d_debug_algorithm) {
         if (d_rank == 0) {
