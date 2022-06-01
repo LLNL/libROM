@@ -460,9 +460,13 @@ S_OPT(const Matrix* f_basis,
 
     delete A;
     delete noM;
-    if (qr_factorize || num_basis_vectors < f_basis->numColumns())
+    if (qr_factorize)
     {
         delete Vo;
+    }
+    if (num_basis_vectors < f_basis->numColumns())
+    {
+        delete f_basis_truncated;
     }
 }
 
