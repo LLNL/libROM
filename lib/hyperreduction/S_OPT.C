@@ -156,277 +156,283 @@ S_OPT(const Matrix* f_basis,
     proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] = 0;
     num_samples_obtained++;
 
-    Vector* A = new Vector(num_rows, f_basis->distributed());
-    Vector* noM = new Vector(num_rows, f_basis->distributed());
-
-    Matrix A0(num_basis_vectors - 1, num_basis_vectors - 1, false);
-    Matrix V1_last_col(num_basis_vectors - 1, 1, false);
-    Matrix tt(num_rows, num_basis_vectors - 1, f_basis->distributed());
-    Matrix tt1(num_rows, num_basis_vectors - 1, f_basis->distributed());
-    Matrix g1(tt.numRows(), tt.numColumns(), f_basis->distributed());
-    Matrix GG(tt1.numRows(), tt1.numColumns(), f_basis->distributed());
-    Vector ls_res_first_row(num_basis_vectors - 1, false);
-    Vector nV(num_basis_vectors, false);
-
-    for (int i = 2; i <= num_samples; i++)
+    if (num_samples > 1)
     {
-        if (i <= num_basis_vectors)
+        Vector* A = new Vector(num_rows, f_basis->distributed());
+        Vector* noM = new Vector(num_rows, f_basis->distributed());
+
+        Matrix A0(num_basis_vectors - 1, num_basis_vectors - 1, false);
+        Matrix V1_last_col(num_basis_vectors - 1, 1, false);
+        Matrix tt(num_rows, num_basis_vectors - 1, f_basis->distributed());
+        Matrix tt1(num_rows, num_basis_vectors - 1, f_basis->distributed());
+        Matrix g1(tt.numRows(), tt.numColumns(), f_basis->distributed());
+        Matrix GG(tt1.numRows(), tt1.numColumns(), f_basis->distributed());
+        Vector ls_res_first_row(num_basis_vectors - 1, false);
+        Vector nV(num_basis_vectors, false);
+
+        for (int i = 2; i <= num_samples; i++)
         {
-            A0.setSize(i - 1, i - 1);
-            V1_last_col.setSize(i - 1, 1);
-            for (int j = 0; j < num_samples_obtained; j++)
+            if (i <= num_basis_vectors)
             {
-                for (int k = 0; k < i - 1; k++)
+                A0.setSize(i - 1, i - 1);
+                V1_last_col.setSize(i - 1, 1);
+                for (int j = 0; j < num_samples_obtained; j++)
                 {
-                    A0.item(j, k) = V1.item(j, k);
-                }
-                V1_last_col.item(j, 0) = V1.item(j, i - 1);
-            }
-
-            Matrix* atA0 = V1_last_col.transposeMult(A0);
-            tt.setSize(num_rows, i - 1);
-            tt1.setSize(num_rows, i - 1);
-
-            double ata = 0.0;
-            for (int j = 0; j < V1_last_col.numRows(); j++)
-            {
-                for (int k = 0; k < V1_last_col.numColumns(); k++)
-                {
-                    ata += (V1_last_col.item(j, k) * V1_last_col.item(j, k));
-                }
-            }
-
-            Matrix* lhs = A0.transposeMult(A0);
-            lhs->inverse();
-            Matrix* rhs = NULL;
-            if (myid == 0)
-            {
-                rhs = new Matrix(num_rows + atA0->numRows(), i - 1, f_basis->distributed());
-                for (int k = 0; k < rhs->numColumns(); k++)
-                {
-                    rhs->item(0, k) = atA0->item(0, k);
-                }
-                for (int j = 1; j < rhs->numRows(); j++)
-                {
-                    for (int k = 0; k < rhs->numColumns(); k++)
+                    for (int k = 0; k < i - 1; k++)
                     {
-                        rhs->item(j, k) = Vo->item(j - 1, k);
+                        A0.item(j, k) = V1.item(j, k);
+                    }
+                    V1_last_col.item(j, 0) = V1.item(j, i - 1);
+                }
+
+                Matrix* atA0 = V1_last_col.transposeMult(A0);
+                tt.setSize(num_rows, i - 1);
+                tt1.setSize(num_rows, i - 1);
+
+                double ata = 0.0;
+                for (int j = 0; j < V1_last_col.numRows(); j++)
+                {
+                    for (int k = 0; k < V1_last_col.numColumns(); k++)
+                    {
+                        ata += (V1_last_col.item(j, k) * V1_last_col.item(j, k));
                     }
                 }
-            }
-            else
-            {
-                rhs = new Matrix(num_rows, i - 1, f_basis->distributed());
-                for (int j = 0; j < rhs->numRows(); j++)
+
+                Matrix* lhs = A0.transposeMult(A0);
+                lhs->inverse();
+                Matrix* rhs = NULL;
+                if (myid == 0)
                 {
+                    rhs = new Matrix(num_rows + atA0->numRows(), i - 1, f_basis->distributed());
                     for (int k = 0; k < rhs->numColumns(); k++)
                     {
-                        rhs->item(j, k) = Vo->item(j, k);
+                        rhs->item(0, k) = atA0->item(0, k);
+                    }
+                    for (int j = 1; j < rhs->numRows(); j++)
+                    {
+                        for (int k = 0; k < rhs->numColumns(); k++)
+                        {
+                            rhs->item(j, k) = Vo->item(j - 1, k);
+                        }
                     }
                 }
-            }
-
-            Matrix* ls_res = rhs->mult(lhs);
-            delete lhs;
-            delete rhs;
-
-            Matrix* c_T = NULL;
-            if (myid == 0)
-            {
-                c_T = new Matrix(ls_res->getData() + ls_res->numColumns(),
-                                 ls_res->numRows() - 1, ls_res->numColumns(), f_basis->distributed(), true);
-            }
-            else
-            {
-                c_T = new Matrix(ls_res->getData(),
-                                 ls_res->numRows(), ls_res->numColumns(), f_basis->distributed(), true);
-            }
-            Matrix* Vo_first_i_columns = Vo->getFirstNColumns(i - 1);
-
-            Vector* b = new Vector(num_rows, f_basis->distributed());
-            for (int j = 0; j < Vo_first_i_columns->numRows(); j++)
-            {
-                double tmp = 1.0;
-                for (int k = 0; k < Vo_first_i_columns->numColumns(); k++)
+                else
                 {
-                    tmp += (Vo_first_i_columns->item(j, k) * c_T->item(j, k));
+                    rhs = new Matrix(num_rows, i - 1, f_basis->distributed());
+                    for (int j = 0; j < rhs->numRows(); j++)
+                    {
+                        for (int k = 0; k < rhs->numColumns(); k++)
+                        {
+                            rhs->item(j, k) = Vo->item(j, k);
+                        }
+                    }
                 }
-                b->item(j) = tmp;
-            }
 
-            delete Vo_first_i_columns;
+                Matrix* ls_res = rhs->mult(lhs);
+                delete lhs;
+                delete rhs;
 
-            for (int j = 0; j < num_rows; j++)
-            {
-                for (int zz = 0; zz < i - 1; zz++)
+                Matrix* c_T = NULL;
+                if (myid == 0)
                 {
-                    tt.item(j, zz) = Vo->item(j, zz) * Vo->item(j, i - 1);
+                    c_T = new Matrix(ls_res->getData() + ls_res->numColumns(),
+                                     ls_res->numRows() - 1, ls_res->numColumns(), f_basis->distributed(), true);
                 }
-            }
-
-            g1.setSize(tt.numRows(), tt.numColumns());
-            for (int j = 0; j < g1.numRows(); j++)
-            {
-                for (int k = 0; k < g1.numColumns(); k++)
+                else
                 {
-                    g1.item(j, k) = atA0->item(0, k) + tt.item(j, k);
+                    c_T = new Matrix(ls_res->getData(),
+                                     ls_res->numRows(), ls_res->numColumns(), f_basis->distributed(), true);
                 }
-            }
+                Matrix* Vo_first_i_columns = Vo->getFirstNColumns(i - 1);
 
-            delete atA0;
-
-            Vector* g3 = new Vector(num_rows, f_basis->distributed());
-            for (int j = 0; j < c_T->numRows(); j++)
-            {
-                double tmp = 0.0;
-                for (int k = 0; k < c_T->numColumns(); k++)
+                Vector* b = new Vector(num_rows, f_basis->distributed());
+                for (int j = 0; j < Vo_first_i_columns->numRows(); j++)
                 {
-                    tmp += c_T->item(j, k) * g1.item(j, k);
+                    double tmp = 1.0;
+                    for (int k = 0; k < Vo_first_i_columns->numColumns(); k++)
+                    {
+                        tmp += (Vo_first_i_columns->item(j, k) * c_T->item(j, k));
+                    }
+                    b->item(j) = tmp;
                 }
-                g3->item(j) = tmp / b->item(j);
-            }
 
-            for (int j = 0; j < num_rows; j++)
-            {
-                for (int zz = 0; zz < i - 1; zz++)
+                delete Vo_first_i_columns;
+
+                for (int j = 0; j < num_rows; j++)
                 {
-                    tt1.item(j, zz) = c_T->item(j, zz) * (Vo->item(j, i - 1) - g3->item(j));
+                    for (int zz = 0; zz < i - 1; zz++)
+                    {
+                        tt.item(j, zz) = Vo->item(j, zz) * Vo->item(j, i - 1);
+                    }
                 }
-            }
 
-            delete c_T;
-            delete g3;
+                g1.setSize(tt.numRows(), tt.numColumns());
+                for (int j = 0; j < g1.numRows(); j++)
+                {
+                    for (int k = 0; k < g1.numColumns(); k++)
+                    {
+                        g1.item(j, k) = atA0->item(0, k) + tt.item(j, k);
+                    }
+                }
 
-            ls_res_first_row.setSize(ls_res->numColumns());
-            if (myid == 0) {
+                delete atA0;
+
+                Vector* g3 = new Vector(num_rows, f_basis->distributed());
+                for (int j = 0; j < c_T->numRows(); j++)
+                {
+                    double tmp = 0.0;
+                    for (int k = 0; k < c_T->numColumns(); k++)
+                    {
+                        tmp += c_T->item(j, k) * g1.item(j, k);
+                    }
+                    g3->item(j) = tmp / b->item(j);
+                }
+
+                for (int j = 0; j < num_rows; j++)
+                {
+                    for (int zz = 0; zz < i - 1; zz++)
+                    {
+                        tt1.item(j, zz) = c_T->item(j, zz) * (Vo->item(j, i - 1) - g3->item(j));
+                    }
+                }
+
+                delete c_T;
+                delete g3;
+
+                ls_res_first_row.setSize(ls_res->numColumns());
+                if (myid == 0) {
+                    for (int j = 0; j < ls_res->numColumns(); ++j) {
+                        c[j] = ls_res->item(0, j);
+                    }
+                }
+                MPI_Bcast(c.data(), ls_res->numColumns(), MPI_DOUBLE,
+                          0, MPI_COMM_WORLD);
                 for (int j = 0; j < ls_res->numColumns(); ++j) {
-                    c[j] = ls_res->item(0, j);
+                    ls_res_first_row.item(j) = c[j];
                 }
-            }
-            MPI_Bcast(c.data(), ls_res->numColumns(), MPI_DOUBLE,
-                      0, MPI_COMM_WORLD);
-            for (int j = 0; j < ls_res->numColumns(); ++j) {
-                ls_res_first_row.item(j) = c[j];
-            }
-            GG.setSize(tt1.numRows(), tt1.numColumns());
-            for (int j = 0; j < GG.numRows(); j++)
-            {
-                for (int k = 0; k < GG.numColumns(); k++)
+                GG.setSize(tt1.numRows(), tt1.numColumns());
+                for (int j = 0; j < GG.numRows(); j++)
                 {
-                    GG.item(j, k) = ls_res_first_row.item(k) + tt1.item(j, k);
+                    for (int k = 0; k < GG.numColumns(); k++)
+                    {
+                        GG.item(j, k) = ls_res_first_row.item(k) + tt1.item(j, k);
+                    }
                 }
-            }
 
-            delete ls_res;
+                delete ls_res;
 
-            for (int j = 0; j < A->dim(); j++)
-            {
-                double tmp = 0.0;
-                for (int k = 0; k < g1.numColumns(); k++)
+                for (int j = 0; j < A->dim(); j++)
                 {
-                    tmp += g1.item(j, k) * GG.item(j, k);
+                    double tmp = 0.0;
+                    for (int k = 0; k < g1.numColumns(); k++)
+                    {
+                        tmp += g1.item(j, k) * GG.item(j, k);
+                    }
+                    A->item(j) = std::max(0.0, ata + (Vo->item(j, i - 1) * Vo->item(j, i - 1)) - tmp);
                 }
-                A->item(j) = std::max(0.0, ata + (Vo->item(j, i - 1) * Vo->item(j, i - 1)) - tmp);
-            }
 
-            nV.setSize(i);
-            for (int j = 0; j < i; j++)
-            {
-                nV.item(j) = 0.0;
-                for (int k = 0; k < num_samples_obtained; k++)
+                nV.setSize(i);
+                for (int j = 0; j < i; j++)
                 {
-                    nV.item(j) += (V1.item(k, j) * V1.item(k, j));
+                    nV.item(j) = 0.0;
+                    for (int k = 0; k < num_samples_obtained; k++)
+                    {
+                        nV.item(j) += (V1.item(k, j) * V1.item(k, j));
+                    }
                 }
-            }
 
-            for (int j = 0; j < noM->dim(); j++)
-            {
-                noM->item(j) = 0.0;
-                for (int k = 0; k < i; k++)
+                for (int j = 0; j < noM->dim(); j++)
                 {
-                    noM->item(j) += std::log(nV.item(k) + (Vo->item(j, k) * Vo->item(j, k)));
+                    noM->item(j) = 0.0;
+                    for (int k = 0; k < i; k++)
+                    {
+                        noM->item(j) += std::log(nV.item(k) + (Vo->item(j, k) * Vo->item(j, k)));
+                    }
                 }
-            }
 
-            for (int j = 0; j < A->dim(); j++)
-            {
-                A->item(j) = std::log(fabs(A->item(j))) + std::log(b->item(j)) - noM->item(j);
-            }
-
-            delete b;
-        }
-        else
-        {
-            Matrix* curr_V1 = new Matrix(V1.getData(), num_samples_obtained, num_basis_vectors, false, true);
-            Matrix* lhs = curr_V1->transposeMult(curr_V1);
-            lhs->inverse();
-
-            delete curr_V1;
-
-            Matrix* ls_res = Vo->mult(lhs);
-            delete lhs;
-
-            nV.setSize(num_basis_vectors);
-            for (int j = 0; j < num_basis_vectors; j++)
-            {
-                nV.item(j) = 0.0;
-                for (int k = 0; k < num_samples_obtained; k++)
+                for (int j = 0; j < A->dim(); j++)
                 {
-                    nV.item(j) += (V1.item(k, j) * V1.item(k, j));
+                    A->item(j) = std::log(fabs(A->item(j))) + std::log(b->item(j)) - noM->item(j);
                 }
-            }
 
-            for (int j = 0; j < noM->dim(); j++)
+                delete b;
+            }
+            else
             {
-                noM->item(j) = 0.0;
-                for (int k = 0; k < num_basis_vectors; k++)
+                Matrix* curr_V1 = new Matrix(V1.getData(), num_samples_obtained, num_basis_vectors, false, true);
+                Matrix* lhs = curr_V1->transposeMult(curr_V1);
+                lhs->inverse();
+
+                delete curr_V1;
+
+                Matrix* ls_res = Vo->mult(lhs);
+                delete lhs;
+
+                nV.setSize(num_basis_vectors);
+                for (int j = 0; j < num_basis_vectors; j++)
                 {
-                    noM->item(j) += std::log(nV.item(k) + (Vo->item(j, k) * Vo->item(j, k)));
+                    nV.item(j) = 0.0;
+                    for (int k = 0; k < num_samples_obtained; k++)
+                    {
+                        nV.item(j) += (V1.item(k, j) * V1.item(k, j));
+                    }
                 }
-            }
 
-            for (int j = 0; j < A->dim(); j++)
-            {
-                double tmp = 0.0;
-                for (int k = 0; k < Vo->numColumns(); k++)
+                for (int j = 0; j < noM->dim(); j++)
                 {
-                    tmp += Vo->item(j, k) * ls_res->item(j, k);
+                    noM->item(j) = 0.0;
+                    for (int k = 0; k < num_basis_vectors; k++)
+                    {
+                        noM->item(j) += std::log(nV.item(k) + (Vo->item(j, k) * Vo->item(j, k)));
+                    }
                 }
-                A->item(j) = std::log(1 + tmp) - noM->item(j);
+
+                for (int j = 0; j < A->dim(); j++)
+                {
+                    double tmp = 0.0;
+                    for (int k = 0; k < Vo->numColumns(); k++)
+                    {
+                        tmp += Vo->item(j, k) * ls_res->item(j, k);
+                    }
+                    A->item(j) = std::log(1 + tmp) - noM->item(j);
+                }
+
+                delete ls_res;
             }
 
-            delete ls_res;
-        }
-
-        f_bv_max_local.row_val = -1.0;
-        for (int j = 0; j < num_rows; ++j) {
-            if (proc_f_row_to_tmp_fs_row[f_bv_max_local.proc].find(j) ==
-                    proc_f_row_to_tmp_fs_row[f_bv_max_local.proc].end())
-            {
-                double f_bv_val = A->item(j);
-                if (f_bv_val > f_bv_max_local.row_val) {
-                    f_bv_max_local.row_val = f_bv_val;
-                    f_bv_max_local.row = j;
+            f_bv_max_local.row_val = -1.0;
+            for (int j = 0; j < num_rows; ++j) {
+                if (proc_f_row_to_tmp_fs_row[f_bv_max_local.proc].find(j) ==
+                        proc_f_row_to_tmp_fs_row[f_bv_max_local.proc].end())
+                {
+                    double f_bv_val = A->item(j);
+                    if (f_bv_val > f_bv_max_local.row_val) {
+                        f_bv_max_local.row_val = f_bv_val;
+                        f_bv_max_local.row = j;
+                    }
                 }
             }
-        }
-        MPI_Allreduce(&f_bv_max_local, &f_bv_max_global, 1,
-                      MaxRowType, RowInfoOp, MPI_COMM_WORLD);
-        // Now get the first sampled row of the basis of the rhs->
-        if (f_bv_max_global.proc == myid) {
+            MPI_Allreduce(&f_bv_max_local, &f_bv_max_global, 1,
+                          MaxRowType, RowInfoOp, MPI_COMM_WORLD);
+            // Now get the first sampled row of the basis of the rhs->
+            if (f_bv_max_global.proc == myid) {
+                for (int j = 0; j < num_basis_vectors; ++j) {
+                    c[j] = Vo->item(f_bv_max_global.row, j);
+                }
+            }
+            MPI_Bcast(c.data(), num_basis_vectors, MPI_DOUBLE,
+                      f_bv_max_global.proc, MPI_COMM_WORLD);
+            // Now add the first sampled row of the basis of the RHS to tmp_fs.
             for (int j = 0; j < num_basis_vectors; ++j) {
-                c[j] = Vo->item(f_bv_max_global.row, j);
+                V1.item(num_samples_obtained, j) = c[j];
             }
+            proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
+            proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] = num_samples_obtained;
+            num_samples_obtained++;
         }
-        MPI_Bcast(c.data(), num_basis_vectors, MPI_DOUBLE,
-                  f_bv_max_global.proc, MPI_COMM_WORLD);
-        // Now add the first sampled row of the basis of the RHS to tmp_fs.
-        for (int j = 0; j < num_basis_vectors; ++j) {
-            V1.item(num_samples_obtained, j) = c[j];
-        }
-        proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
-        proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] = num_samples_obtained;
-        num_samples_obtained++;
+
+        delete A;
+        delete noM;
     }
 
     // Fill f_sampled_row, and f_sampled_rows_per_proc.  Unscramble tmp_fs into
@@ -458,8 +464,6 @@ S_OPT(const Matrix* f_basis,
     MPI_Type_free(&MaxRowType);
     MPI_Op_free(&RowInfoOp);
 
-    delete A;
-    delete noM;
     if (qr_factorize)
     {
         delete Vo;
