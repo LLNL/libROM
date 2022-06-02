@@ -403,7 +403,7 @@ S_OPT(const Matrix* f_basis,
             if (proc_f_row_to_tmp_fs_row[f_bv_max_local.proc].find(j) ==
                     proc_f_row_to_tmp_fs_row[f_bv_max_local.proc].end())
             {
-                double f_bv_val = fabs(A->item(j));
+                double f_bv_val = A->item(j);
                 if (f_bv_val > f_bv_max_local.row_val) {
                     f_bv_max_local.row_val = f_bv_val;
                     f_bv_max_local.row = j;
