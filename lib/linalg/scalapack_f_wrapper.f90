@@ -23,8 +23,6 @@ module scalapack_wrapper
 
     integer, parameter :: REAL_KIND = C_DOUBLE
 
-    integer, parameter :: LongInt = selected_int_kind (18)
-
     ! This integer variable will hold a handle to a BLACS context with all
     ! processes.
     integer :: GLOBAL_CTXT = -1
@@ -471,8 +469,7 @@ subroutine factorize(mgr) bind(C)
 
     real(REAL_KIND), pointer :: Udata(:, :), Vdata(:, :), Sdata(:), Adata(:, :)
     type(SLPK_Matrix), pointer :: A, U, V, S
-    integer :: desca(9), descu(9), descv(9)
-    integer (kind=LongInt) :: lwork
+    integer :: desca(9), descu(9), descv(9), lwork
     character :: dou, dov
     real(REAL_KIND), allocatable :: work(:)
     real(REAL_KIND) :: bestwork(1)
@@ -514,7 +511,7 @@ subroutine factorize(mgr) bind(C)
     ! The first call to pdgesvd is a workspace query.
     call pdgesvd(dou, dov, A%m, A%n, Adata, 1, 1, desca, Sdata, Udata, 1, 1, &
                & descu, Vdata, 1, 1, descv, bestwork, -1, ierr)
-    lwork = bestwork(1)
+    lwork = INT(min(real(huge(lwork)), bestwork(1)))
     allocate(work(lwork))
     call pdgesvd(dou, dov, A%m, A%n, Adata, 1, 1, desca, Sdata, Udata, 1, 1, &
                & descu, Vdata, 1, 1, descv, work, lwork, ierr)
@@ -548,8 +545,7 @@ subroutine qrfactorize(mgr) bind(C)
     integer :: mrank, ierr
 
     type(SLPK_Matrix), pointer :: A
-    integer :: desca(9), tauSize
-    integer (kind=LongInt) :: lwork
+    integer :: desca(9), lwork, tauSize
 
     real(REAL_KIND), allocatable :: work(:)
     real(REAL_KIND) :: bestwork(1)
@@ -577,7 +573,7 @@ subroutine qrfactorize(mgr) bind(C)
     call pdgeqpf(A%m, A%n, Adata, 1, 1, desca, ipiv, tau, &
          & bestwork, lwork, ierr)
 
-    lwork = bestwork(1)
+    lwork = INT(min(real(huge(lwork)), bestwork(1)))
     allocate(work(lwork))
 
     ! Now work is allocated, and factorization is done next
@@ -603,8 +599,7 @@ subroutine qaction(mgr, A, S, T) bind(C)
     type(SLPK_Matrix), pointer :: Q
     integer :: mrank, ierr
 
-    integer :: descaa(9), descaq(9)
-    integer (kind=LongInt) :: lwork
+    integer :: descaa(9), descaq(9), lwork
 
     real(REAL_KIND), allocatable :: work(:)
     real(REAL_KIND) :: bestwork(1)
@@ -626,7 +621,7 @@ subroutine qaction(mgr, A, S, T) bind(C)
     lwork = -1
     call pdormqr(achar(S), achar(T), A%m, A%n, mgr%tauSize, Qdata, 1, 1, descaq, tau, Adata, 1, 1, descaa, &
          & bestwork, lwork, ierr)
-    lwork = bestwork(1)
+    lwork = INT(min(real(huge(lwork)), bestwork(1)))
     allocate(work(lwork))
 
     ! Now work is allocated, and action is computed next
@@ -651,8 +646,7 @@ subroutine qcompute(mgr) bind(C)
     integer :: mrank, ierr
 
     type(SLPK_Matrix), pointer :: A
-    integer :: desca(9)
-    integer (kind=LongInt) :: lwork
+    integer :: desca(9), lwork
 
     real(REAL_KIND), allocatable :: work(:)
     real(REAL_KIND) :: bestwork(1)
@@ -671,7 +665,7 @@ subroutine qcompute(mgr) bind(C)
     lwork = -1
     call pdorglq(A%m, A%n, mgr%tauSize, Adata, 1, 1, desca, tau, &
          & bestwork, lwork, ierr)
-    lwork = bestwork(1)
+    lwork = INT(min(real(huge(lwork)), bestwork(1)))
     allocate(work(lwork))
 
     ! Now work is allocated, and factorization is done next
@@ -701,8 +695,7 @@ subroutine lqfactorize(mgr) bind(C)
     integer :: mrank, ierr
 
     type(SLPK_Matrix), pointer :: A
-    integer :: desca(9)
-    integer (kind=LongInt) :: lwork
+    integer :: desca(9), lwork
 
     real(REAL_KIND), allocatable :: work(:)
     real(REAL_KIND) :: bestwork(1)
@@ -726,7 +719,7 @@ subroutine lqfactorize(mgr) bind(C)
     lwork = -1
     call pdgelqf(A%m, A%n, Adata, 1, 1, desca, tau, &
          & bestwork, lwork, ierr)
-    lwork = bestwork(1)
+    lwork = INT(min(real(huge(lwork)), bestwork(1)))
     allocate(work(lwork))
 
     ! Now work is allocated, and factorization is done next
