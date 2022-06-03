@@ -327,8 +327,9 @@ TEST(S_OPTSerialTest, Test_S_OPT_QR)
     std::vector<int> f_sampled_row(num_samples, 0);
     std::vector<int> f_sampled_row_true_ans{0, 44, 46, 49, 90};
     std::vector<int> f_sampled_rows_per_proc(d_num_procs, 0);
+    std::vector<int> init_samples;
     CAROM::Matrix f_basis_sampled_inv = CAROM::Matrix(num_samples, num_basis_vectors, false);
-    CAROM::S_OPT(u, num_basis_vectors, f_sampled_row, f_sampled_rows_per_proc, f_basis_sampled_inv, d_rank, d_num_procs, num_samples, true);
+    CAROM::S_OPT(u, num_basis_vectors, f_sampled_row, f_sampled_rows_per_proc, f_basis_sampled_inv, d_rank, d_num_procs, num_samples, &init_samples, true);
 
     int curr_index = 0;
     for (int i = 1; i < f_sampled_rows_per_proc.size(); i++)
