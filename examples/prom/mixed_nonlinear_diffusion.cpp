@@ -473,6 +473,8 @@ int main(int argc, char *argv[])
     int rdim = -1;  // number of basis vectors to use
     int rrdim = -1;  // number of basis vectors to use
     int rwdim = -1;  // number of basis vectors to use
+    int nldim = -1;
+    int nsdim = -1;
 
     int precision = 16;
     cout.precision(precision);
@@ -494,6 +496,10 @@ int main(int argc, char *argv[])
                    "Basis dimension for H(div) vector finite element space.");
     args.AddOption(&rwdim, "-rwdim", "--rwdim",
                    "Basis dimension for L2 scalar finite element space.");
+    args.AddOption(&nldim, "-nldim", "--nldim",
+                   "Basis dimension for the nonlinear term.");
+    args.AddOption(&nsdim, "-nsdim", "--nsdim",
+                   "Basis dimension for the source term.");
     args.AddOption(&t_final, "-tf", "--t-final",
                    "Final time; start time is 0.");
     args.AddOption(&dt, "-dt", "--time-step",
@@ -786,15 +792,18 @@ int main(int argc, char *argv[])
 
         // Compute sample points using DEIM, for hyperreduction
 
-        // TODO: reduce this?
-        const int nldim = FR_librom->numColumns(); // rwdim;
-
-        cout << "FR dim " << FR_librom->numColumns() << endl;
+        if (nldim == -1)
+        {
+            nldim = FR_librom->numColumns();
+        }
 
         MFEM_VERIFY(FR_librom->numRows() == N1 && FR_librom->numColumns() >= nldim, "");
 
         if (FR_librom->numColumns() > nldim)
             FR_librom = GetFirstColumns(nldim, FR_librom);
+
+        if (myid == 0)
+            printf("reduced FR dim = %d\n",nldim);
 
         vector<int> num_sample_dofs_per_proc(num_procs);
 
@@ -803,6 +812,8 @@ int main(int argc, char *argv[])
 #ifdef USE_GNAT
         vector<int> sample_dofs(nsamp_R);  // Indices of the sampled rows
         CAROM::Matrix *Bsinv = new CAROM::Matrix(nsamp_R, nldim, false);
+        if (myid == 0)
+            printf("Using GNAT sampling\n");
         CAROM::GNAT(FR_librom,
                     nldim,
                     sample_dofs,
@@ -817,6 +828,8 @@ int main(int argc, char *argv[])
         vector<int> sample_dofs(nldim);  // Indices of the sampled rows
         if (use_sopt)
         {
+            if (myid == 0)
+                printf("Using S_OPT sampling\n");
             CAROM::S_OPT(FR_librom,
                          nldim,
                          sample_dofs,
@@ -827,6 +840,8 @@ int main(int argc, char *argv[])
         }
         else
         {
+            if (myid == 0)
+                printf("Using DEIM sampling\n");
             CAROM::DEIM(FR_librom,
                         nldim,
                         sample_dofs,
@@ -852,9 +867,18 @@ int main(int argc, char *argv[])
 
             // Compute sample points using DEIM
 
-            nsdim = S_librom->numColumns();
+            if (nsdim == -1)
+            {
+                nsdim = S_librom->numColumns();
+            }
 
-            cout << "S dim " << nsdim << endl;
+            MFEM_VERIFY(S_librom->numColumns() >= nsdim, "");
+
+            if (S_librom->numColumns() > nsdim)
+                S_librom = GetFirstColumns(nsdim, S_librom);
+
+            if (myid == 0)
+                printf("reduced S dim = %d\n",nsdim);
 
             // Now execute the DEIM algorithm to get the sampling information.
             nsamp_S = nsdim;
