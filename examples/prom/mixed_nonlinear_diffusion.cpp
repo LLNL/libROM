@@ -22,13 +22,23 @@
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -offline
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -merge -ns 1
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 --sopt (Try with S_OPT sampling)
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 --sopt
+//
+//               Relative l2 error of ROM solution at final timestep using DEIM sampling: 1.029894532029661e-08
+//               Elapsed time for entire simulation using DEIM sampling: 2.185692262
+//               Relative l2 error of ROM solution at final timestep using S_OPT sampling: 1.057939158608067e-08
+//               Elapsed time for entire simulation using S_OPT sampling: 3.161409845
 //
 //               Initial step test (reproductive)
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -offline -p 1
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -merge -ns 1 -p 1
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -p 1
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -p 1 --sopt (Try with S_OPT sampling)
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -p 1 --sopt
+//
+//               Relative l2 error of ROM solution at final timestep using DEIM sampling: 0.0003748510938522777
+//               Elapsed time for entire simulation using DEIM sampling: 1.239144438
+//               Relative l2 error of ROM solution at final timestep using S_OPT sampling: 0.0003700028395853732
+//               Elapsed time for entire simulation using S_OPT sampling: 1.848957043
 //
 //               Initial step parametric test (predictive)
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -offline -id 0 -sh 0.25
@@ -37,7 +47,12 @@
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -merge -ns 3
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -offline -id 3 -sh 0.3
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -sh 0.3 -id 3
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -sh 0.3 -id 3 --sopt (Try with S_OPT sampling)
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -sh 0.3 -id 3 --sopt
+//
+//               Relative l2 error of ROM solution at final timestep using DEIM sampling: 0.002639597287023164
+//               Elapsed time for entire simulation using DEIM sampling: 3.05089368
+//               Relative l2 error of ROM solution at final timestep using S_OPT sampling: 0.002633729640015132
+//               Elapsed time for entire simulation using S_OPT sampling: 21.649218315
 
 #include "mfem.hpp"
 
