@@ -470,9 +470,9 @@ int main(int argc, char *argv[])
 
     int id_param = 0;
 
-    int rdim = -1;  // number of basis vectors to use
-    int rrdim = -1;  // number of basis vectors to use
-    int rwdim = -1;  // number of basis vectors to use
+    // number of basis vectors to use
+    int rrdim = -1;
+    int rwdim = -1;
     int nldim = -1;
     int nsdim = -1;
 
