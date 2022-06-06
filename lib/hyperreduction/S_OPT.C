@@ -191,7 +191,7 @@ S_OPT(const Matrix* f_basis,
         proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] = 0;
         num_samples_obtained++;
     }
-    if (num_samples > 1 || total_num_init_samples > 0)
+    if (num_samples_obtained < num_samples)
     {
         Vector* A = new Vector(num_rows, f_basis->distributed());
         Vector* noM = new Vector(num_rows, f_basis->distributed());
