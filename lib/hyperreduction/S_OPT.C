@@ -141,8 +141,13 @@ S_OPT(const Matrix* f_basis,
     int init_sample_offset = 0;
     for (int i = 0; i < total_num_init_samples; i++)
     {
-        f_bv_max_local.row_val = 1.0;
-        f_bv_max_local.row = (*init_samples)[init_sample_offset];
+        f_bv_max_local.row_val = -1.0;
+        f_bv_max_local.proc = myid;
+        if (init_sample_offset < num_init_samples)
+        {
+            f_bv_max_local.row_val = 1.0;
+            f_bv_max_local.row = (*init_samples)[init_sample_offset];
+        }
         MPI_Allreduce(&f_bv_max_local, &f_bv_max_global, 1,
                       MaxRowType, RowInfoOp, MPI_COMM_WORLD);
         // Now get the first sampled row of the basis of the rhs->
@@ -436,6 +441,7 @@ S_OPT(const Matrix* f_basis,
             }
 
             f_bv_max_local.row_val = -1.0;
+            f_bv_max_local.proc = myid;
             for (int j = 0; j < num_rows; ++j) {
                 if (proc_f_row_to_tmp_fs_row[f_bv_max_local.proc].find(j) ==
                         proc_f_row_to_tmp_fs_row[f_bv_max_local.proc].end())
