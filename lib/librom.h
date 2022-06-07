@@ -23,7 +23,9 @@
 #include "algo/manifold_interp/MatrixInterpolator.h"
 #include "algo/manifold_interp/VectorInterpolator.h"
 #include "hyperreduction/DEIM.h"
+#include "hyperreduction/GNAT.h"
 #include "hyperreduction/QDEIM.h"
+#include "hyperreduction/S_OPT.h"
 #include "hyperreduction/STSampling.h"
 #ifdef USEMFEM
 #include "mfem/SampleMesh.hpp"
