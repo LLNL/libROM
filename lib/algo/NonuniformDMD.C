@@ -269,10 +269,8 @@ NonuniformDMD::constructNonuniformDMD(const Matrix* f_snapshots,
     d_eigs = eigenpair.eigs;
 
     // Calculate phi
-    Matrix* f_snapshots_plus_mult_d_basis_right = f_snapshots_plus->mult(d_basis_right);
-    Matrix* f_snapshots_plus_mult_d_basis_right_mult_d_S_inv = f_snapshots_plus_mult_d_basis_right->mult(d_S_inv);
-    d_phi_real = f_snapshots_plus_mult_d_basis_right_mult_d_S_inv->mult(eigenpair.ev_real);
-    d_phi_imaginary = f_snapshots_plus_mult_d_basis_right_mult_d_S_inv->mult(eigenpair.ev_imaginary);
+    d_phi_real = d_basis->mult(eigenpair.ev_real);
+    d_phi_imaginary = d_basis->mult(eigenpair.ev_imaginary);
 
     Vector* init = new Vector(f_snapshots_minus->numRows(), true);
     for (int i = 0; i < init->dim(); i++)
@@ -287,10 +285,6 @@ NonuniformDMD::constructNonuniformDMD(const Matrix* f_snapshots,
 
     delete d_basis_right;
     delete d_S_inv;
-    delete d_basis_mult_f_snapshots_plus;
-    delete d_basis_mult_f_snapshots_plus_mult_d_basis_right;
-    delete f_snapshots_plus_mult_d_basis_right;
-    delete f_snapshots_plus_mult_d_basis_right_mult_d_S_inv;
     delete f_snapshots_minus;
     delete f_snapshots_plus;
     delete eigenpair.ev_real;
