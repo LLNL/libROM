@@ -327,9 +327,9 @@ TEST(S_OPTSerialTest, Test_S_OPT_init_vector)
     std::vector<int> f_sampled_row(num_samples, 0);
     std::vector<int> f_sampled_row_true_ans{0, 44, 46, 49, 90};
     std::vector<int> f_sampled_rows_per_proc(d_num_procs, 0);
-
-    // Just the first element (90)
     std::vector<int> init_samples;
+
+    // Use just the first true sampled element as an initial sample (90)
     if (row_offset[d_rank] <= 90 && row_offset[d_rank + 1] > 90)
     {
         init_samples.push_back(90 - row_offset[d_rank]);
@@ -364,7 +364,7 @@ TEST(S_OPTSerialTest, Test_S_OPT_init_vector)
     // Allow for some error due to float rounding
     EXPECT_TRUE(l2_norm_diff < 1e-4);
 
-    // Try the first element and second element (90, 0)
+    // Add the second true sampled element as an initial sample (0)
     if (d_rank == 0)
     {
         init_samples.push_back(0);
