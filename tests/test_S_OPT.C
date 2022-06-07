@@ -249,6 +249,155 @@ TEST(S_OPTSerialTest, Test_S_OPT_less_basis_vectors)
     EXPECT_TRUE(l2_norm_diff < 1e-4);
 }
 
+TEST(S_OPTSerialTest, Test_S_OPT_init_vector)
+{
+    // Get the rank of this process, and the number of processors.
+    int mpi_init, d_rank, d_num_procs;
+    MPI_Initialized(&mpi_init);
+    if (mpi_init == 0) {
+        MPI_Init(nullptr, nullptr);
+    }
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+
+    int num_total_rows = 100;
+    int num_cols = 5;
+    int num_basis_vectors = 3;
+    int num_samples = 5;
+
+    int num_rows = num_total_rows / d_num_procs;
+    if (num_total_rows % d_num_procs > d_rank) {
+        num_rows++;
+    }
+    int *row_offset = new int[d_num_procs + 1];
+    row_offset[d_num_procs] = num_total_rows;
+    row_offset[d_rank] = num_rows;
+
+    MPI_Allgather(MPI_IN_PLACE,
+                  1,
+                  MPI_INT,
+                  row_offset,
+                  1,
+                  MPI_INT,
+                  MPI_COMM_WORLD);
+
+    for (int i = d_num_procs - 1; i >= 0; i--) {
+        row_offset[i] = row_offset[i + 1] - row_offset[i];
+    }
+
+    std::vector<double*> cols;
+    for (int i = 0; i < num_cols; i++)
+    {
+        double* tmp = new double[num_rows];
+        cols.push_back(tmp);
+    }
+
+    CAROM::CSVDatabase database;
+    database.getDoubleArray("../tests/s_opt_data/col1.csv",  cols[0], num_rows, row_offset[d_rank], 1, 1);
+    database.getDoubleArray("../tests/s_opt_data/col2.csv",  cols[1], num_rows, row_offset[d_rank], 1, 1);
+    database.getDoubleArray("../tests/s_opt_data/col3.csv",  cols[2], num_rows, row_offset[d_rank], 1, 1);
+    database.getDoubleArray("../tests/s_opt_data/col4.csv",  cols[3], num_rows, row_offset[d_rank], 1, 1);
+    database.getDoubleArray("../tests/s_opt_data/col5.csv",  cols[4], num_rows, row_offset[d_rank], 1, 1);
+
+    double* orthonormal_mat = new double[num_rows * num_cols];
+
+    // Result of S_OPT (f_basis_sampled_inv)
+    double* S_OPT_true_ans = new double[15] {
+        -1.433786,  2.925154,   2.209402,
+        -1.861405,  0.6665424, -1.247851,
+        -1.890357,  0.5250462, -1.304832,
+        -1.935721,  0.3061151, -1.365598,
+        -2.835807, -3.503679,   1.97353
+    };
+
+    int index = 0;
+    for (int i = 0; i < num_rows; i++)
+    {
+        for (int j = 0; j < num_cols; j++)
+        {
+            orthonormal_mat[index] = cols[j][i];
+            index++;
+        }
+    }
+
+    CAROM::Matrix* u = new CAROM::Matrix(orthonormal_mat, num_rows, num_cols, true);
+
+    double* S_OPT_res = NULL;
+    std::vector<int> f_sampled_row(num_samples, 0);
+    std::vector<int> f_sampled_row_true_ans{0, 44, 46, 49, 90};
+    std::vector<int> f_sampled_rows_per_proc(d_num_procs, 0);
+
+    // Just the first element (90)
+    std::vector<int> init_samples;
+    if (row_offset[d_rank] <= 90 && row_offset[d_rank + 1] > 90)
+    {
+        init_samples.push_back(90 - row_offset[d_rank]);
+    }
+
+    CAROM::Matrix f_basis_sampled_inv = CAROM::Matrix(num_samples, num_basis_vectors, false);
+    CAROM::S_OPT(u, num_basis_vectors, f_sampled_row, f_sampled_rows_per_proc, f_basis_sampled_inv, d_rank, d_num_procs, num_samples, &init_samples);
+
+    int curr_index = 0;
+    for (int i = 1; i < f_sampled_rows_per_proc.size(); i++)
+    {
+        curr_index += f_sampled_rows_per_proc[i - 1];
+        for (int j = curr_index; j < curr_index + f_sampled_rows_per_proc[i]; j++)
+        {
+            f_sampled_row[j] += row_offset[i];
+        }
+    }
+
+    for (int i = 0; i < num_basis_vectors; i++) {
+        EXPECT_EQ(f_sampled_row[i], f_sampled_row_true_ans[i]);
+    }
+
+    // Compare the norm between the S_OPT result and the true S_OPT answer
+    double l2_norm_diff = 0.0;
+    for (int i = 0; i < num_samples; i++) {
+        for (int j = 0; j < num_basis_vectors; j++) {
+            l2_norm_diff += pow(abs(S_OPT_true_ans[i * num_basis_vectors + j] - f_basis_sampled_inv.item(i, j)), 2);
+        }
+    }
+    l2_norm_diff = sqrt(l2_norm_diff);
+
+    // Allow for some error due to float rounding
+    EXPECT_TRUE(l2_norm_diff < 1e-4);
+
+    // Try the first element and second element (90, 0)
+    if (d_rank == 0)
+    {
+        init_samples.push_back(0);
+    }
+    CAROM::S_OPT(u, num_basis_vectors, f_sampled_row, f_sampled_rows_per_proc, f_basis_sampled_inv, d_rank, d_num_procs, num_samples);
+
+    curr_index = 0;
+    for (int i = 1; i < f_sampled_rows_per_proc.size(); i++)
+    {
+        curr_index += f_sampled_rows_per_proc[i - 1];
+        for (int j = curr_index; j < curr_index + f_sampled_rows_per_proc[i]; j++)
+        {
+            f_sampled_row[j] += row_offset[i];
+        }
+    }
+
+    for (int i = 0; i < num_basis_vectors; i++) {
+        EXPECT_EQ(f_sampled_row[i], f_sampled_row_true_ans[i]);
+    }
+
+    // Compare the norm between the S_OPT result and the true S_OPT answer
+    l2_norm_diff = 0.0;
+    for (int i = 0; i < num_samples; i++) {
+        for (int j = 0; j < num_basis_vectors; j++) {
+            l2_norm_diff += pow(abs(S_OPT_true_ans[i * num_basis_vectors + j] - f_basis_sampled_inv.item(i, j)), 2);
+        }
+    }
+    l2_norm_diff = sqrt(l2_norm_diff);
+
+    // Allow for some error due to float rounding
+    EXPECT_TRUE(l2_norm_diff < 1e-4);
+}
+
 TEST(S_OPTSerialTest, Test_S_OPT_QR)
 {
     // Get the rank of this process, and the number of processors.

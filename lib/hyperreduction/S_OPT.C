@@ -18,6 +18,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <climits>
 
 #include "S_OPT.h"
 
@@ -141,7 +142,7 @@ S_OPT(const Matrix* f_basis,
     int init_sample_offset = 0;
     for (int i = 0; i < total_num_init_samples; i++)
     {
-        f_bv_max_local.row_val = -1.0;
+        f_bv_max_local.row_val = -INT_MAX;
         f_bv_max_local.proc = myid;
         if (init_sample_offset < num_init_samples)
         {
@@ -167,9 +168,10 @@ S_OPT(const Matrix* f_basis,
         proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] = num_samples_obtained;
         num_samples_obtained++;
     }
+
     if (num_samples_obtained == 0)
     {
-        f_bv_max_local.row_val = -1.0;
+        f_bv_max_local.row_val = -INT_MAX;
         f_bv_max_local.proc = myid;
         for (int i = 0; i < num_rows; ++i) {
             double f_bv_val = fabs(Vo->item(i, 0));
@@ -196,6 +198,7 @@ S_OPT(const Matrix* f_basis,
         proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] = 0;
         num_samples_obtained++;
     }
+
     if (num_samples_obtained < num_samples)
     {
         Vector* A = new Vector(num_rows, f_basis->distributed());
@@ -210,7 +213,12 @@ S_OPT(const Matrix* f_basis,
         Vector ls_res_first_row(num_basis_vectors - 1, false);
         Vector nV(num_basis_vectors, false);
 
-        for (int i = 2 + total_num_init_samples; i <= num_samples; i++)
+        int start_idx = 2;
+        if (total_num_init_samples > 1)
+        {
+            start_idx += (total_num_init_samples - 1);
+        }
+        for (int i = start_idx; i <= num_samples; i++)
         {
             if (i <= num_basis_vectors)
             {
@@ -440,7 +448,7 @@ S_OPT(const Matrix* f_basis,
                 delete ls_res;
             }
 
-            f_bv_max_local.row_val = -1.0;
+            f_bv_max_local.row_val = -INT_MAX;
             f_bv_max_local.proc = myid;
             for (int j = 0; j < num_rows; ++j) {
                 if (proc_f_row_to_tmp_fs_row[f_bv_max_local.proc].find(j) ==
