@@ -115,6 +115,7 @@ DMD::DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real, Matrix* phi_i
     d_phi_real = phi_real;
     d_phi_imaginary = phi_imaginary;
     d_k = k;
+    d_dt = dt;
     d_t_offset = t_offset;
 }
 
