@@ -42,9 +42,28 @@ extern "C" {
 
 namespace CAROM {
 
+DMD::DMD(int dim)
+{
+    CAROM_VERIFY(dim > 0);
+
+    // Get the rank of this process, and the number of processors.
+    int mpi_init;
+    MPI_Initialized(&mpi_init);
+    if (mpi_init == 0) {
+        MPI_Init(nullptr, nullptr);
+    }
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+    d_dim = dim;
+    d_trained = false;
+    d_init_projected = false;
+}
+
 DMD::DMD(int dim, double dt)
 {
     CAROM_VERIFY(dim > 0);
+    CAROM_VERIFY(dt > 0.0);
 
     // Get the rank of this process, and the number of processors.
     int mpi_init;
@@ -96,7 +115,6 @@ DMD::DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real, Matrix* phi_i
     d_phi_real = phi_real;
     d_phi_imaginary = phi_imaginary;
     d_k = k;
-    d_dt = dt;
     d_t_offset = t_offset;
 }
 
@@ -105,11 +123,41 @@ void DMD::takeSample(double* u_in, double t)
     CAROM_VERIFY(u_in != 0);
     CAROM_VERIFY(t >= 0.0);
     Vector* sample = new Vector(u_in, d_dim, true);
+
+    double orig_t = t;
     if (d_snapshots.empty())
     {
         d_t_offset = t;
+        t = 0.0;
     }
+    else
+    {
+        t -= d_t_offset;
+    }
+
+    // Erase any snapshots taken at the same or later time
+    while (!d_sampled_times.empty() && d_sampled_times.back()->item(0) >= t)
+    {
+        if (d_rank == 0) std::cout << "Removing existing snapshot at time: " << d_t_offset + d_sampled_times.back()->item(0) << std::endl;
+        Vector* last_snapshot = d_snapshots.back();
+        delete last_snapshot;
+        d_snapshots.pop_back();
+        d_sampled_times.pop_back();
+    }
+
+    if (d_snapshots.empty())
+    {
+        d_t_offset = orig_t;
+        t = 0.0;
+    }
+    else
+    {
+        CAROM_VERIFY(d_sampled_times.back()->item(0) < t);
+    }
+
     d_snapshots.push_back(sample);
+    Vector* sampled_time = new Vector(&t, 1, false);
+    d_sampled_times.push_back(sampled_time);
 }
 
 void DMD::train(double energy_fraction)
@@ -135,32 +183,55 @@ void DMD::train(int k)
     delete f_snapshots;
 }
 
+std::pair<Matrix*, Matrix*>
+DMD::computePlusMinusSnapshotMatrices(const Matrix* snapshots)
+{
+    // TODO: Making two copies of the snapshot matrix has a lot of overhead.
+    //       We need to figure out a way to do submatrix multiplication and to
+    //       reimplement this algorithm using one snapshot matrix.
+    Matrix* f_snapshots_minus = new Matrix(snapshots->numRows(),
+                                           snapshots->numColumns() - 1, snapshots->distributed());
+    Matrix* f_snapshots_plus = new Matrix(snapshots->numRows(),
+                                          snapshots->numColumns() - 1, snapshots->distributed());
+
+    // Break up snapshots into snapshots_minus and snapshots_plus
+    // snapshots_minus = all columns of snapshots except last
+    // snapshots_plus = all columns of snapshots except first
+    for (int i = 0; i < snapshots->numRows(); i++)
+    {
+        for (int j = 0; j < snapshots->numColumns() - 1; j++)
+        {
+            f_snapshots_minus->item(i, j) = snapshots->item(i, j);
+            f_snapshots_plus->item(i, j) = snapshots->item(i, j + 1);
+        }
+        f_snapshots_plus->item(i, snapshots->numColumns() - 2) =
+            snapshots->item(i, snapshots->numColumns() - 1);
+    }
+
+    return std::pair<Matrix*,Matrix*>(f_snapshots_minus, f_snapshots_plus);
+}
+
+void
+DMD::computePhi(struct DMDInternal dmd_internal_obj)
+{
+    // Calculate phi
+    Matrix* f_snapshots_plus_mult_d_basis_right = dmd_internal_obj.snapshots_plus->mult(dmd_internal_obj.basis_right);
+    Matrix* f_snapshots_plus_mult_d_basis_right_mult_d_S_inv = f_snapshots_plus_mult_d_basis_right->mult(dmd_internal_obj.S_inv);
+    d_phi_real = f_snapshots_plus_mult_d_basis_right_mult_d_S_inv->mult(dmd_internal_obj.eigenpair->ev_real);
+    d_phi_imaginary = f_snapshots_plus_mult_d_basis_right_mult_d_S_inv->mult(dmd_internal_obj.eigenpair->ev_imaginary);
+
+    delete f_snapshots_plus_mult_d_basis_right;
+    delete f_snapshots_plus_mult_d_basis_right_mult_d_S_inv;
+}
+
 void
 DMD::constructDMD(const Matrix* f_snapshots,
                   int d_rank,
                   int d_num_procs)
 {
-    // TODO: Making two copies of the snapshot matrix has a lot of overhead.
-    //       We need to figure out a way to do submatrix multiplication and to
-    //       reimplement this algorithm using one snapshot matrix.
-    Matrix* f_snapshots_minus = new Matrix(f_snapshots->numRows(),
-                                           f_snapshots->numColumns() - 1, f_snapshots->distributed());
-    Matrix* f_snapshots_plus = new Matrix(f_snapshots->numRows(),
-                                          f_snapshots->numColumns() - 1, f_snapshots->distributed());
-
-    // Break up snapshots into snapshots_minus and snapshots_plus
-    // snapshots_minus = all columns of snapshots except last
-    // snapshots_plus = all columns of snapshots except first
-    for (int i = 0; i < f_snapshots->numRows(); i++)
-    {
-        for (int j = 0; j < f_snapshots->numColumns() - 1; j++)
-        {
-            f_snapshots_minus->item(i, j) = f_snapshots->item(i, j);
-            f_snapshots_plus->item(i, j) = f_snapshots->item(i, j + 1);
-        }
-        f_snapshots_plus->item(i, f_snapshots->numColumns() - 2) =
-            f_snapshots->item(i, f_snapshots->numColumns() - 1);
-    }
+    std::pair<Matrix*, Matrix*> f_snapshot_minus_plus_pair = computePlusMinusSnapshotMatrices(f_snapshots);
+    Matrix* f_snapshots_minus = f_snapshot_minus_plus_pair.first;
+    Matrix* f_snapshots_plus = f_snapshot_minus_plus_pair.second;
 
     int *row_offset = new int[d_num_procs + 1];
     row_offset[d_num_procs] = f_snapshots_minus->numDistributedRows();
@@ -271,11 +342,8 @@ DMD::constructDMD(const Matrix* f_snapshots,
     ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(d_A_tilde);
     d_eigs = eigenpair.eigs;
 
-    // Calculate phi
-    Matrix* f_snapshots_plus_mult_d_basis_right = f_snapshots_plus->mult(d_basis_right);
-    Matrix* f_snapshots_plus_mult_d_basis_right_mult_d_S_inv = f_snapshots_plus_mult_d_basis_right->mult(d_S_inv);
-    d_phi_real = f_snapshots_plus_mult_d_basis_right_mult_d_S_inv->mult(eigenpair.ev_real);
-    d_phi_imaginary = f_snapshots_plus_mult_d_basis_right_mult_d_S_inv->mult(eigenpair.ev_imaginary);
+    struct DMDInternal dmd_internal = {f_snapshots_minus, f_snapshots_plus, d_basis, d_basis_right, d_S_inv, &eigenpair};
+    computePhi(dmd_internal);
 
     Vector* init = new Vector(f_snapshots_minus->numRows(), true);
     for (int i = 0; i < init->dim(); i++)
@@ -292,15 +360,12 @@ DMD::constructDMD(const Matrix* f_snapshots,
     delete d_S_inv;
     delete d_basis_mult_f_snapshots_plus;
     delete d_basis_mult_f_snapshots_plus_mult_d_basis_right;
-    delete f_snapshots_plus_mult_d_basis_right;
-    delete f_snapshots_plus_mult_d_basis_right_mult_d_S_inv;
     delete f_snapshots_minus;
     delete f_snapshots_plus;
     delete eigenpair.ev_real;
     delete eigenpair.ev_imaginary;
     delete init;
 }
-
 
 void
 DMD::projectInitialCondition(const Vector* init)
@@ -395,11 +460,9 @@ DMD::predict(double t)
     CAROM_VERIFY(d_trained);
     CAROM_VERIFY(d_init_projected);
     CAROM_VERIFY(t >= 0.0);
-    CAROM_VERIFY(d_dt > 0.0);
 
     t -= d_t_offset;
-    double t_dt = t / d_dt;
-    std::pair<Matrix*, Matrix*> d_phi_pair = phiMultEigs(t_dt);
+    std::pair<Matrix*, Matrix*> d_phi_pair = phiMultEigs(t);
     Matrix* d_phi_mult_eigs_real = d_phi_pair.first;
     Matrix* d_phi_mult_eigs_imaginary = d_phi_pair.second;
 
@@ -415,6 +478,13 @@ DMD::predict(double t)
     return d_predicted_state_real;
 }
 
+std::complex<double>
+DMD::computeEigExp(std::complex<double> eig, double t)
+{
+    CAROM_VERIFY(d_dt > 0.0);
+    return std::pow(eig, t / d_dt);
+}
+
 std::pair<Matrix*, Matrix*>
 DMD::phiMultEigs(double t)
 {
@@ -423,7 +493,7 @@ DMD::phiMultEigs(double t)
 
     for (int i = 0; i < d_k; i++)
     {
-        std::complex<double> eig_exp = std::pow(d_eigs[i], t);
+        std::complex<double> eig_exp = computeEigExp(d_eigs[i], t);
         d_eigs_exp_real->item(i, i) = std::real(eig_exp);
         d_eigs_exp_imaginary->item(i, i) = std::imag(eig_exp);
     }

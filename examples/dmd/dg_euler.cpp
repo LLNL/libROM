@@ -4,34 +4,49 @@
 //
 // =================================================================================
 //
-// Sample runs and results for adaptive DMD:
+// Sample runs and results for adaptive and nonuniform DMD:
 //
 // Command 1:
 //   mpirun -np 8 dg_euler -p 1 -rs 1 -rp 1 -o 5 -s 6 -tf 0.1 -visit
+//   mpirun -np 8 dg_euler -p 1 -rs 1 -rp 1 -o 5 -s 6 -tf 0.1 -nonunif -visit
 //
 // Output 1:
-//   Relative error of AdaptiveDMD density (dens) at t_final: 0.1 is 0.00015279217
-//   Relative error of AdaptiveDMD x-momentum (x_mom) at t_final: 0.1 is 2.9074268e-05
-//   Relative error of AdaptiveDMD y-momentum (y_mom) at t_final: 0.1 is 8.9542312e-05
-//   Relative error of AdaptiveDMD energy (e) at t_final: 0.1 is 6.8687185e-05
+//   Relative error of AdaptiveDMD density (dens) at t_final: 0.1 is 0.00015272589
+//   Relative error of AdaptiveDMD x-momentum (x_mom) at t_final: 0.1 is 2.8719908e-05
+//   Relative error of AdaptiveDMD y-momentum (y_mom) at t_final: 0.1 is 8.9435003e-05
+//   Relative error of AdaptiveDMD energy (e) at t_final: 0.1 is 6.85403e-05
+//   Relative error of NonuniformDMD density (dens) at t_final: 0.1 is 0.00015499558
+//   Relative error of NonuniformDMD x-momentum (x_mom) at t_final: 0.1 is 4.5300074e-05
+//   Relative error of NonuniformDMD y-momentum (y_mom) at t_final: 0.1 is 0.0034796374
+//   Relative error of NonuniformDMD energy (e) at t_final: 0.1 is 7.0110651e-05
 //
 // Command 2:
-//   mpirun -np 8 dg_euler -p 2 -rs 2 -rp 1 -o 1 -s 3 -tf 0.1 -visit
+//   mpirun -np 8 dg_euler -p 2 -rs 2 -rp 1 -o 1 -s 3 -tf 0.1 -crbf 0.995 -visit
+//   mpirun -np 8 dg_euler -p 2 -rs 2 -rp 1 -o 1 -s 3 -tf 0.1 -nonunif -visit
 //
 // Output 2:
-//   Relative error of AdaptiveDMD density (dens) at t_final: 0.1 is 2.1881846e-06
-//   Relative error of AdaptiveDMD x-momentum (x_mom) at t_final: 0.1 is 4.3873307e-05
-//   Relative error of AdaptiveDMD y-momentum (y_mom) at t_final: 0.1 is 0.0026632618
-//   Relative error of AdaptiveDMD energy (e) at t_final: 0.1 is 2.3054118e-06
+//   Relative error of AdaptiveDMD density (dens) at t_final: 0.1 is 1.573349e-06
+//   Relative error of AdaptiveDMD x-momentum (x_mom) at t_final: 0.1 is 4.3846865e-05
+//   Relative error of AdaptiveDMD y-momentum (y_mom) at t_final: 0.1 is 0.0026493438
+//   Relative error of AdaptiveDMD energy (e) at t_final: 0.1 is 1.7326842e-06
+//   Relative error of NonuniformDMD density (dens) at t_final: 0.1 is 4.1676355e-07
+//   Relative error of NonuniformDMD x-momentum (x_mom) at t_final: 0.1 is 4.4263729e-05
+//   Relative error of NonuniformDMD y-momentum (y_mom) at t_final: 0.1 is 0.0017438412
+//   Relative error of NonuniformDMD energy (e) at t_final: 0.1 is 8.3869658e-07
 //
 // Command 3:
 //   mpirun -np 8 dg_euler -p 2 -rs 2 -rp 1 -o 1 -s 3 -visit
+//   mpirun -np 8 dg_euler -p 2 -rs 2 -rp 1 -o 1 -s 3 -nonunif -visit
 //
 // Output 3:
-//   Relative error of AdaptiveDMD density (dens) at t_final: 2 is 1.9677493e-05
-//   Relative error of AdaptiveDMD x-momentum (x_mom) at t_final: 2 is 0.00011781827
-//   Relative error of AdaptiveDMD y-momentum (y_mom) at t_final: 2 is 0.00017120499
-//   Relative error of AdaptiveDMD energy (e) at t_final: 2 is 1.9836223e-05
+//   Relative error of AdaptiveDMD density (dens) at t_final: 2 is 0.00022777614
+//   Relative error of AdaptiveDMD x-momentum (x_mom) at t_final: 2 is 0.00022107792
+//   Relative error of AdaptiveDMD y-momentum (y_mom) at t_final: 2 is 0.00030374609
+//   Relative error of AdaptiveDMD energy (e) at t_final: 2 is 0.0002277899
+//   Relative error of NonuniformDMD density (dens) at t_final: 0.1 is 7.9616991e-07
+//   Relative error of NonuniformDMD x-momentum (x_mom) at t_final: 0.1 is 0.00011741735
+//   Relative error of NonuniformDMD y-momentum (y_mom) at t_final: 0.1 is 0.016937741
+//   Relative error of NonuniformDMD energy (e) at t_final: 0.1 is 2.6258626e-06
 //
 // =================================================================================
 //
@@ -65,6 +80,7 @@
 
 #include "mfem.hpp"
 #include "algo/AdaptiveDMD.h"
+#include "algo/NonuniformDMD.h"
 #include "linalg/Vector.h"
 #include <cmath>
 #include <fstream>
@@ -101,11 +117,12 @@ int main(int argc, char *argv[])
     double t_final = 2.0;
     double dt = -0.01;
     double cfl = 0.3;
-    double crbf = 0.995;
+    double crbf = 0.9;
     double ef = 0.9999;
     int rdim = -1;
     bool visualization = true;
     bool visit = false;
+    bool use_nonuniform = false;
     int vis_steps = 50;
 
     int precision = 8;
@@ -142,11 +159,14 @@ int main(int argc, char *argv[])
     args.AddOption(&vis_steps, "-vs", "--visualization-steps",
                    "Visualize every n-th timestep.");
     args.AddOption(&ef, "-ef", "--energy_fraction",
-                   "Energy fraction for AdaptiveDMD.");
+                   "Energy fraction for DMD.");
     args.AddOption(&rdim, "-rdim", "--rdim",
-                   "Reduced dimension for AdaptiveDMD.");
+                   "Reduced dimension for DMD.");
     args.AddOption(&crbf, "-crbf", "--crbf",
                    "Closest RBF value.");
+    args.AddOption(&use_nonuniform, "-nonunif", "--nonunif", "-no-nonunif",
+                   "--no-nonunif",
+                   "Use NonuniformDMD.");
 
     args.Parse();
     if (!args.Good())
@@ -372,14 +392,30 @@ int main(int argc, char *argv[])
 
     dmd_training_timer.Start();
 
-    CAROM::AdaptiveDMD dmd_dens(u_block.GetBlock(0).Size(), dt, "G", "LS", crbf);
-    CAROM::AdaptiveDMD dmd_x_mom(u_block.GetBlock(1).Size(), dt, "G", "LS", crbf);
-    CAROM::AdaptiveDMD dmd_y_mom(u_block.GetBlock(2).Size(), dt, "G", "LS", crbf);
-    CAROM::AdaptiveDMD dmd_e(u_block.GetBlock(3).Size(), dt, "G", "LS", crbf);
-    dmd_dens.takeSample(u_block.GetBlock(0).GetData(), t);
-    dmd_x_mom.takeSample(u_block.GetBlock(1).GetData(), t);
-    dmd_y_mom.takeSample(u_block.GetBlock(2).GetData(), t);
-    dmd_e.takeSample(u_block.GetBlock(3).GetData(), t);
+    CAROM::DMD* dmd_dens;
+    CAROM::DMD* dmd_x_mom;
+    CAROM::DMD* dmd_y_mom;
+    CAROM::DMD* dmd_e;
+
+    if (use_nonuniform)
+    {
+        dmd_dens = new CAROM::NonuniformDMD(u_block.GetBlock(0).Size());
+        dmd_x_mom = new CAROM::NonuniformDMD(u_block.GetBlock(1).Size());
+        dmd_y_mom = new CAROM::NonuniformDMD(u_block.GetBlock(2).Size());
+        dmd_e = new CAROM::NonuniformDMD(u_block.GetBlock(3).Size());
+    }
+    else
+    {
+        dmd_dens = new CAROM::AdaptiveDMD(u_block.GetBlock(0).Size(), dt, "G", "LS", crbf);
+        dmd_x_mom = new CAROM::AdaptiveDMD(u_block.GetBlock(1).Size(), dt, "G", "LS", crbf);
+        dmd_y_mom = new CAROM::AdaptiveDMD(u_block.GetBlock(2).Size(), dt, "G", "LS", crbf);
+        dmd_e = new CAROM::AdaptiveDMD(u_block.GetBlock(3).Size(), dt, "G", "LS", crbf);
+    }
+
+    dmd_dens->takeSample(u_block.GetBlock(0).GetData(), t);
+    dmd_x_mom->takeSample(u_block.GetBlock(1).GetData(), t);
+    dmd_y_mom->takeSample(u_block.GetBlock(2).GetData(), t);
+    dmd_e->takeSample(u_block.GetBlock(3).GetData(), t);
     ts.push_back(t);
 
     dmd_training_timer.Stop();
@@ -412,10 +448,10 @@ int main(int argc, char *argv[])
 
         dmd_training_timer.Start();
 
-        dmd_dens.takeSample(u_block.GetBlock(0).GetData(), t);
-        dmd_x_mom.takeSample(u_block.GetBlock(1).GetData(), t);
-        dmd_y_mom.takeSample(u_block.GetBlock(2).GetData(), t);
-        dmd_e.takeSample(u_block.GetBlock(3).GetData(), t);
+        dmd_dens->takeSample(u_block.GetBlock(0).GetData(), t);
+        dmd_x_mom->takeSample(u_block.GetBlock(1).GetData(), t);
+        dmd_y_mom->takeSample(u_block.GetBlock(2).GetData(), t);
+        dmd_e->takeSample(u_block.GetBlock(3).GetData(), t);
         ts.push_back(t);
 
         dmd_training_timer.Stop();
@@ -480,23 +516,23 @@ int main(int argc, char *argv[])
     {
         if (mpi.WorldRank() == 0)
         {
-            std::cout << "Creating AdaptiveDMD with rdim: " << rdim << std::endl;
+            std::cout << "Creating DMD with rdim: " << rdim << std::endl;
         }
-        dmd_dens.train(rdim);
-        dmd_x_mom.train(rdim);
-        dmd_y_mom.train(rdim);
-        dmd_e.train(rdim);
+        dmd_dens->train(rdim);
+        dmd_x_mom->train(rdim);
+        dmd_y_mom->train(rdim);
+        dmd_e->train(rdim);
     }
     else if (ef != -1)
     {
         if (mpi.WorldRank() == 0)
         {
-            std::cout << "Creating AdaptiveDMD with energy fraction: " << ef << std::endl;
+            std::cout << "Creating DMD with energy fraction: " << ef << std::endl;
         }
-        dmd_dens.train(ef);
-        dmd_x_mom.train(ef);
-        dmd_y_mom.train(ef);
-        dmd_e.train(ef);
+        dmd_dens->train(ef);
+        dmd_x_mom->train(ef);
+        dmd_y_mom->train(ef);
+        dmd_e->train(ef);
     }
 
     dmd_training_timer.Stop();
@@ -515,13 +551,13 @@ int main(int argc, char *argv[])
     // 14. Predict the state at t_final using DMD.
     if (mpi.WorldRank() == 0)
     {
-        std::cout << "Predicting density, momentum, and energy using AdaptiveDMD" << std::endl;
+        std::cout << "Predicting density, momentum, and energy using DMD" << std::endl;
     }
 
-    CAROM::Vector* result_dens = dmd_dens.predict(ts[0]);
-    CAROM::Vector* result_x_mom = dmd_x_mom.predict(ts[0]);
-    CAROM::Vector* result_y_mom = dmd_y_mom.predict(ts[0]);
-    CAROM::Vector* result_e = dmd_e.predict(ts[0]);
+    CAROM::Vector* result_dens = dmd_dens->predict(ts[0]);
+    CAROM::Vector* result_x_mom = dmd_x_mom->predict(ts[0]);
+    CAROM::Vector* result_y_mom = dmd_y_mom->predict(ts[0]);
+    CAROM::Vector* result_e = dmd_e->predict(ts[0]);
     Vector initial_dmd_solution_dens(result_dens->getData(), result_dens->dim());
     Vector initial_dmd_solution_x_mom(result_x_mom->getData(), result_x_mom->dim());
     Vector initial_dmd_solution_y_mom(result_y_mom->getData(), result_y_mom->dim());
@@ -547,10 +583,10 @@ int main(int argc, char *argv[])
 
     for (int i = 1; i < ts.size(); i++)
     {
-        result_dens = dmd_dens.predict(ts[i]);
-        result_x_mom = dmd_x_mom.predict(ts[i]);
-        result_y_mom = dmd_y_mom.predict(ts[i]);
-        result_e = dmd_e.predict(ts[i]);
+        result_dens = dmd_dens->predict(ts[i]);
+        result_x_mom = dmd_x_mom->predict(ts[i]);
+        result_y_mom = dmd_y_mom->predict(ts[i]);
+        result_e = dmd_e->predict(ts[i]);
         Vector dmd_solution_dens(result_dens->getData(), result_dens->dim());
         Vector dmd_solution_x_mom(result_x_mom->getData(), result_x_mom->dim());
         Vector dmd_solution_y_mom(result_y_mom->getData(), result_y_mom->dim());
@@ -578,10 +614,10 @@ int main(int argc, char *argv[])
 
     dmd_prediction_timer.Stop();
 
-    result_dens = dmd_dens.predict(t_final);
-    result_x_mom = dmd_x_mom.predict(t_final);
-    result_y_mom = dmd_y_mom.predict(t_final);
-    result_e = dmd_e.predict(t_final);
+    result_dens = dmd_dens->predict(t_final);
+    result_x_mom = dmd_x_mom->predict(t_final);
+    result_y_mom = dmd_y_mom->predict(t_final);
+    result_e = dmd_e->predict(t_final);
 
     // 15. Calculate the relative error between the DMD final solution and the true solution.
     Vector dmd_solution_dens(result_dens->getData(), result_dens->dim());
@@ -614,13 +650,13 @@ int main(int argc, char *argv[])
 
     if (mpi.WorldRank() == 0)
     {
-        std::cout << "Relative error of AdaptiveDMD density (dens) at t_final: " << t_final << " is " << tot_diff_norm_dens / tot_true_solution_dens_norm << std::endl;
-        std::cout << "Relative error of AdaptiveDMD x-momentum (x_mom) at t_final: " << t_final << " is " << tot_diff_norm_x_mom / tot_true_solution_x_mom_norm << std::endl;
-        std::cout << "Relative error of AdaptiveDMD y-momentum (y_mom) at t_final: " << t_final << " is " << tot_diff_norm_y_mom / tot_true_solution_y_mom_norm << std::endl;
-        std::cout << "Relative error of AdaptiveDMD energy (e) at t_final: " << t_final << " is " << tot_diff_norm_e / tot_true_solution_e_norm << std::endl;
+        std::cout << "Relative error of DMD density (dens) at t_final: " << t_final << " is " << tot_diff_norm_dens / tot_true_solution_dens_norm << std::endl;
+        std::cout << "Relative error of DMD x-momentum (x_mom) at t_final: " << t_final << " is " << tot_diff_norm_x_mom / tot_true_solution_x_mom_norm << std::endl;
+        std::cout << "Relative error of DMD y-momentum (y_mom) at t_final: " << t_final << " is " << tot_diff_norm_y_mom / tot_true_solution_y_mom_norm << std::endl;
+        std::cout << "Relative error of DMD energy (e) at t_final: " << t_final << " is " << tot_diff_norm_e / tot_true_solution_e_norm << std::endl;
         printf("Elapsed time for solving FOM: %e second\n", fom_timer.RealTime());
-        printf("Elapsed time for training AdaptiveDMD: %e second\n", dmd_training_timer.RealTime());
-        printf("Elapsed time for predicting AdaptiveDMD: %e second\n", dmd_prediction_timer.RealTime());
+        printf("Elapsed time for training DMD: %e second\n", dmd_training_timer.RealTime());
+        printf("Elapsed time for predicting DMD: %e second\n", dmd_prediction_timer.RealTime());
     }
 
     // Free the used memory.
@@ -629,6 +665,10 @@ int main(int argc, char *argv[])
     delete result_x_mom;
     delete result_y_mom;
     delete result_e;
+    delete dmd_dens;
+    delete dmd_x_mom;
+    delete dmd_y_mom;
+    delete dmd_e;
 
     return 0;
 }

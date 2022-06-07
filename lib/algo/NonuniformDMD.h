@@ -8,7 +8,7 @@
  *
  *****************************************************************************/
 
-// Description: Computes the NonuniformDMD algorithm on the given snapshot matrix. The
+// Description: Computes the DMD algorithm on the given snapshot matrix. The
 //              implemented dynamic mode decomposition algorithm is derived from
 //              Tu et. al's paper "On Dynamic Mode Decomposition: Theory and
 //              Applications": https://arxiv.org/abs/1312.0041
@@ -18,18 +18,14 @@
 #ifndef included_NonuniformDMD_h
 #define included_NonuniformDMD_h
 
-#include <vector>
-#include <complex>
+#include "DMD.h"
 
 namespace CAROM {
-
-class Matrix;
-class Vector;
 
 /**
  * Class NonuniformDMD implements the NonuniformDMD algorithm on a given snapshot matrix.
  */
-class NonuniformDMD
+class NonuniformDMD : public DMD
 {
 public:
 
@@ -40,101 +36,7 @@ public:
      */
     NonuniformDMD(int dim);
 
-    /**
-     * @brief Constructor.
-     *
-     * @param[in] base_file_name The base part of the filename of the
-     *                           database to load when restarting from a save.
-     */
-    NonuniformDMD(std::string base_file_name);
-
-    /**
-     * @brief Sample the new state, u_in.
-     *
-     * @pre u_in != 0
-     * @pre t >= 0.0
-     *
-     * @param[in] u_in The new state.
-     * @param[in] t    The time of the newly sampled state.
-     */
-    virtual void takeSample(double* u_in, double t);
-
-    /**
-     * @param[in] energy_fraction The energy fraction to keep after doing SVD.
-     */
-    virtual void train(double energy_fraction);
-
-    /**
-     * @param[in] k The number of modes (eigenvalues) to keep after doing SVD.
-     */
-    virtual void train(int k);
-
-    /**
-     * @brief Predict new initial condition using d_phi.
-     *
-     * @param[in] init The initial condition.
-     */
-    void projectInitialCondition(const Vector* init);
-
-    /**
-     * @brief Predict state given a time. Uses the projected initial condition of the
-     *        training dataset (the first column).
-     *
-     * @param[in] t The time of the outputted state
-     */
-    Vector* predict(double t);
-
-    /**
-     * @brief Get the time offset contained within d_t_offset.
-     */
-    double getTimeOffset() const;
-
-    /**
-     * @brief Get the snapshot matrix contained within d_snapshots.
-     */
-    const Matrix* getSnapshotMatrix();
-
-    /**
-     * @brief Load the object state from a file.
-     *
-     * @param[in] base_file_name The base part of the filename to load the
-     *                           database from.
-     */
-    virtual void load(std::string base_file_name);
-
-    /**
-     * @brief Save the object state to a file.
-     *
-     * @param[in] base_file_name The base part of the filename to save the
-     *                           database to.
-     */
-    virtual void save(std::string base_file_name);
-
-    /**
-     * @brief Output the NonuniformDMD record in CSV files.
-     */
-    void summary(std::string base_file_name);
-
-protected:
-
-    //TODO
-    //friend NonuniformDMD* getParametricNonuniformDMD(std::vector<Vector*>& parameter_points,
-    //                             std::vector<NonuniformDMD*>& dmds,
-    //                             Vector* desired_point,
-    //                             std::string rbf,
-    //                             std::string interp_method,
-    //                             double closest_rbf_val);
-
-    /**
-     * @brief Constructor.
-     *
-     * @param[in] eigs d_eigs
-     * @param[in] phi_real d_phi_real
-     * @param[in] phi_imaginary d_phi_imaginary
-     * @param[in] k d_k
-     * @param[in] t_offset d_t_offset
-     */
-    NonuniformDMD(std::vector<std::complex<double>> eigs, Matrix* phi_real, Matrix* phi_imaginary, int k, double t_offset);
+private:
 
     /**
      * @brief Unimplemented default constructor.
@@ -155,116 +57,19 @@ protected:
         const NonuniformDMD& rhs);
 
     /**
-     * @brief Internal function to multiply d_phi with the eigenvalues.
+     * @brief Construct f_snapshots_minus and f_snapshots_plus
      */
-    std::pair<Matrix*, Matrix*> phiMultEigs(double t);
+    std::pair<Matrix*, Matrix*> computePlusMinusSnapshotMatrices(const Matrix* snapshots);
 
     /**
-     * @brief Internal function to obtain the NonuniformDMD modes.
+     * @brief Compute phi.
      */
-    void constructNonuniformDMD(const Matrix* f_snapshots,
-                      int rank,
-                      int num_procs);
+    void computePhi(struct DMDInternal dmd_internal_obj);
 
     /**
-     * @brief Get the snapshot matrix contained within d_snapshots.
+     * @brief Compute the appropriate exponential function when predicting the solution.
      */
-    const Matrix* createSnapshotMatrix(std::vector<Vector*> snapshots);
-
-    /**
-     * @brief The rank of the process this object belongs to.
-     */
-    int d_rank;
-
-    /**
-     * @brief The number of processors being run on.
-     */
-    int d_num_procs;
-
-    /**
-     * @brief The total dimension of the sample vector.
-     */
-    int d_dim;
-
-    /**
-     * @brief The time offset of the first sample.
-     */
-    double d_t_offset;
-
-    /**
-     * @brief std::vector holding the snapshots.
-     */
-    std::vector<Vector*> d_snapshots;
-
-    /**
-     * @brief std::vector holding the time instances.
-     */
-    std::vector<double> d_t;
-
-    /**
-     * @brief Whether the NonuniformDMD has been trained or not.
-     */
-    bool d_trained;
-
-    /**
-     * @brief Whether the initial condition has been projected.
-     */
-    bool d_init_projected;
-
-    /**
-     * @brief The maximum number of singular vectors.
-     */
-    int d_num_singular_vectors;
-
-    /**
-     * @brief std::vector holding the signular values.
-     */
-    std::vector<double> d_sv;
-
-    /**
-     * @brief The energy fraction used to obtain the NonuniformDMD modes.
-     */
-    double d_energy_fraction;
-
-    /**
-     * @brief The number of columns used after obtaining the SVD decomposition.
-     */
-    int d_k;
-
-    /**
-     * @brief The left singular vector basis.
-     */
-    Matrix* d_basis = NULL;
-
-    /**
-     * @brief A_tilde
-     */
-    Matrix* d_A_tilde = NULL;
-
-    /**
-     * @brief The real part of d_phi.
-     */
-    Matrix* d_phi_real = NULL;
-
-    /**
-     * @brief The imaginary part of d_phi.
-     */
-    Matrix* d_phi_imaginary = NULL;
-
-    /**
-     * @brief The real part of the projected initial condition.
-     */
-    Vector* d_projected_init_real = NULL;
-
-    /**
-     * @brief The imaginary part of the projected initial condition.
-     */
-    Vector* d_projected_init_imaginary = NULL;
-
-    /**
-     * @brief A vector holding the complex eigenvalues of the eigenmodes.
-     */
-    std::vector<std::complex<double>> d_eigs;
+    std::complex<double> computeEigExp(std::complex<double> eig, double t);
 
 };
 
