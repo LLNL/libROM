@@ -37,7 +37,7 @@ NonuniformDMD::computePlusMinusSnapshotMatrices(const Matrix* snapshots)
         for (int j = 0; j < snapshots->numColumns() - 1; j++)
         {
             f_snapshots_minus->item(i, j) = snapshots->item(i, j);
-            f_snapshots_plus->item(i, j) = (snapshots->item(i, j + 1) - snapshots->item(i, j)) / (d_sampled_times[j + 1] ->item(0) - d_sampled_times[j]->item(0));
+            f_snapshots_plus->item(i, j) = (snapshots->item(i, j + 1) - snapshots->item(i, j)) / (d_sampled_times[j + 1]->item(0) - d_sampled_times[j]->item(0));
         }
     }
 
