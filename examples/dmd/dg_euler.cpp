@@ -101,6 +101,7 @@ int main(int argc, char *argv[])
     double t_final = 2.0;
     double dt = -0.01;
     double cfl = 0.3;
+    double crbf = 0.995;
     double ef = 0.9999;
     int rdim = -1;
     bool visualization = true;
@@ -144,6 +145,8 @@ int main(int argc, char *argv[])
                    "Energy fraction for AdaptiveDMD.");
     args.AddOption(&rdim, "-rdim", "--rdim",
                    "Reduced dimension for AdaptiveDMD.");
+    args.AddOption(&crbf, "-crbf", "--crbf",
+                   "Closest RBF value.");
 
     args.Parse();
     if (!args.Good())
@@ -369,10 +372,10 @@ int main(int argc, char *argv[])
 
     dmd_training_timer.Start();
 
-    CAROM::AdaptiveDMD dmd_dens(u_block.GetBlock(0).Size(), dt);
-    CAROM::AdaptiveDMD dmd_x_mom(u_block.GetBlock(1).Size(), dt);
-    CAROM::AdaptiveDMD dmd_y_mom(u_block.GetBlock(2).Size(), dt);
-    CAROM::AdaptiveDMD dmd_e(u_block.GetBlock(3).Size(), dt);
+    CAROM::AdaptiveDMD dmd_dens(u_block.GetBlock(0).Size(), dt, "G", "LS", crbf);
+    CAROM::AdaptiveDMD dmd_x_mom(u_block.GetBlock(1).Size(), dt, "G", "LS", crbf);
+    CAROM::AdaptiveDMD dmd_y_mom(u_block.GetBlock(2).Size(), dt, "G", "LS", crbf);
+    CAROM::AdaptiveDMD dmd_e(u_block.GetBlock(3).Size(), dt, "G", "LS", crbf);
     dmd_dens.takeSample(u_block.GetBlock(0).GetData(), t);
     dmd_x_mom.takeSample(u_block.GetBlock(1).GetData(), t);
     dmd_y_mom.takeSample(u_block.GetBlock(2).GetData(), t);
