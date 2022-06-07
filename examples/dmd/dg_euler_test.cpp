@@ -66,6 +66,7 @@
 #include "mfem.hpp"
 #include "algo/NonuniformDMD.h"
 #include "linalg/Vector.h"
+#include "utils/CSVDatabase.h"
 #include <cmath>
 #include <fstream>
 #include <sstream>
@@ -497,6 +498,10 @@ int main(int argc, char *argv[])
     }
 
     dmd_training_timer.Stop();
+    dmd_dens.summary("density");
+    dmd_x_mom.summary("x-momentum");
+    dmd_y_mom.summary("y-momentum");
+    dmd_e.summary("energy");
 
     Vector true_solution_dens(u_block.GetBlock(0).Size());
     true_solution_dens = u_block.GetBlock(0).GetData();
@@ -611,6 +616,15 @@ int main(int argc, char *argv[])
 
     if (mpi.WorldRank() == 0)
     {
+        CAROM::CSVDatabase csv_db;
+        csv_db.putDoubleArray("density_final_time_solution.csv", true_solution_dens, result_dens->dim());
+        csv_db.putDoubleArray("x-momentum_final_time_solution.csv", true_solution_x_mom, result_x_mom->dim());
+        csv_db.putDoubleArray("y-momentum_final_time_solution.csv", true_solution_y_mom, result_y_mom->dim());
+        csv_db.putDoubleArray("energy_final_time_solution.csv", true_solution_e, result_e->dim());
+        csv_db.putDoubleArray("density_final_time_prediction.csv", result_dens->getData(), result_dens->dim());
+        csv_db.putDoubleArray("x-momentum_final_time_prediction.csv", result_x_mom->getData(), result_x_mom->dim());
+        csv_db.putDoubleArray("y-momentum_final_time_prediction.csv", result_y_mom->getData(), result_y_mom->dim());
+        csv_db.putDoubleArray("energy_final_time_prediction.csv", result_e->getData(), result_e->dim());
         std::cout << "Relative error of NonuniformDMD density (dens) at t_final: " << t_final << " is " << tot_diff_norm_dens / tot_true_solution_dens_norm << std::endl;
         std::cout << "Relative error of NonuniformDMD x-momentum (x_mom) at t_final: " << t_final << " is " << tot_diff_norm_x_mom / tot_true_solution_x_mom_norm << std::endl;
         std::cout << "Relative error of NonuniformDMD y-momentum (y_mom) at t_final: " << t_final << " is " << tot_diff_norm_y_mom / tot_true_solution_y_mom_norm << std::endl;

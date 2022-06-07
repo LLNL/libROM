@@ -421,6 +421,7 @@ NonuniformDMD::phiMultEigs(double t)
         std::complex<double> eig_exp = std::exp(t*d_eigs[i]);
         d_eigs_exp_real->item(i, i) = std::real(eig_exp);
         d_eigs_exp_imaginary->item(i, i) = std::imag(eig_exp);
+        std::cout << "Eigenvalue #" << i << ": " << eig_exp << std::endl;
     }
 
     Matrix* d_phi_mult_eigs_real = d_phi_real->mult(d_eigs_exp_real);
