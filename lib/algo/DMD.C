@@ -482,7 +482,6 @@ DMD::predict(double t)
 std::complex<double>
 DMD::computeEigExp(std::complex<double> eig, double t)
 {
-    CAROM_VERIFY(d_dt > 0.0);
     return std::pow(eig, t / d_dt);
 }
 
