@@ -344,7 +344,6 @@ int main(int argc, char *argv[])
         visit_dc.Save();
     }
 
-
     // Determine the minimum element size.
     double hmin;
     if (cfl > 0)
