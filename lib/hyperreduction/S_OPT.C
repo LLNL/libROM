@@ -18,7 +18,7 @@
 #include <vector>
 #include <map>
 #include <set>
-#include <climits>
+#include <cfloat>
 
 #include "S_OPT.h"
 
@@ -41,7 +41,7 @@ S_OPT(const Matrix* f_basis,
     CAROM_VERIFY(num_procs == f_sampled_rows_per_proc.size());
     // This algorithm determines the rows of f that should be sampled, the
     // processor that owns each sampled row, and fills f_basis_sampled_inv with
-    // the inverse of the sampled rows of the basis of the RHS.
+    // the inverse of the sampled rows of the basis.
 
     // Create an MPI_Datatype for the RowInfo struct.
     MPI_Datatype MaxRowType, oldtypes[2];
@@ -142,7 +142,7 @@ S_OPT(const Matrix* f_basis,
     int init_sample_offset = 0;
     for (int i = 0; i < total_num_init_samples; i++)
     {
-        f_bv_max_local.row_val = -INT_MAX;
+        f_bv_max_local.row_val = -DBL_MAX;
         f_bv_max_local.proc = myid;
         if (init_sample_offset < num_init_samples)
         {
@@ -151,7 +151,7 @@ S_OPT(const Matrix* f_basis,
         }
         MPI_Allreduce(&f_bv_max_local, &f_bv_max_global, 1,
                       MaxRowType, RowInfoOp, MPI_COMM_WORLD);
-        // Now get the first sampled row of the basis of the rhs->
+        // Now get the first sampled row of the basis
         if (f_bv_max_global.proc == myid) {
             for (int j = 0; j < num_basis_vectors; ++j) {
                 c[j] = Vo->item(f_bv_max_global.row, j);
@@ -160,7 +160,7 @@ S_OPT(const Matrix* f_basis,
         }
         MPI_Bcast(c.data(), num_basis_vectors, MPI_DOUBLE,
                   f_bv_max_global.proc, MPI_COMM_WORLD);
-        // Now add the first sampled row of the basis of the RHS to tmp_fs.
+        // Now add the first sampled row of the basis to tmp_fs.
         for (int j = 0; j < num_basis_vectors; ++j) {
             V1.item(num_samples_obtained, j) = c[j];
         }
@@ -171,7 +171,7 @@ S_OPT(const Matrix* f_basis,
 
     if (num_samples_obtained == 0)
     {
-        f_bv_max_local.row_val = -INT_MAX;
+        f_bv_max_local.row_val = -DBL_MAX;
         f_bv_max_local.proc = myid;
         for (int i = 0; i < num_rows; ++i) {
             double f_bv_val = fabs(Vo->item(i, 0));
@@ -182,7 +182,7 @@ S_OPT(const Matrix* f_basis,
         }
         MPI_Allreduce(&f_bv_max_local, &f_bv_max_global, 1,
                       MaxRowType, RowInfoOp, MPI_COMM_WORLD);
-        // Now get the first sampled row of the basis of the rhs->
+        // Now get the first sampled row of the basis
         if (f_bv_max_global.proc == myid) {
             for (int j = 0; j < num_basis_vectors; ++j) {
                 c[j] = Vo->item(f_bv_max_global.row, j);
@@ -190,7 +190,7 @@ S_OPT(const Matrix* f_basis,
         }
         MPI_Bcast(c.data(), num_basis_vectors, MPI_DOUBLE,
                   f_bv_max_global.proc, MPI_COMM_WORLD);
-        // Now add the first sampled row of the basis of the RHS to tmp_fs.
+        // Now add the first sampled row of the basis to tmp_fs.
         for (int j = 0; j < num_basis_vectors; ++j) {
             V1.item(0, j) = c[j];
         }
@@ -448,7 +448,7 @@ S_OPT(const Matrix* f_basis,
                 delete ls_res;
             }
 
-            f_bv_max_local.row_val = -INT_MAX;
+            f_bv_max_local.row_val = -DBL_MAX;
             f_bv_max_local.proc = myid;
             for (int j = 0; j < num_rows; ++j) {
                 if (proc_f_row_to_tmp_fs_row[f_bv_max_local.proc].find(j) ==
@@ -463,7 +463,7 @@ S_OPT(const Matrix* f_basis,
             }
             MPI_Allreduce(&f_bv_max_local, &f_bv_max_global, 1,
                           MaxRowType, RowInfoOp, MPI_COMM_WORLD);
-            // Now get the first sampled row of the basis of the rhs->
+            // Now get the first sampled row of the basis
             if (f_bv_max_global.proc == myid) {
                 for (int j = 0; j < num_basis_vectors; ++j) {
                     c[j] = Vo->item(f_bv_max_global.row, j);
@@ -471,7 +471,7 @@ S_OPT(const Matrix* f_basis,
             }
             MPI_Bcast(c.data(), num_basis_vectors, MPI_DOUBLE,
                       f_bv_max_global.proc, MPI_COMM_WORLD);
-            // Now add the first sampled row of the basis of the RHS to tmp_fs.
+            // Now add the first sampled row of the basis to tmp_fs.
             for (int j = 0; j < num_basis_vectors; ++j) {
                 V1.item(num_samples_obtained, j) = c[j];
             }
