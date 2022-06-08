@@ -1,52 +1,68 @@
 //                         libROM MFEM Example: DG Euler Equations (adapted from ex18p.cpp)
 //
 // Compile with: make dg_euler
-//
+
 // =================================================================================
 //
-// Sample runs and results for adaptive and nonuniform DMD:
+// Sample runs and results for adaptive DMD:
 //
 // Command 1:
 //   mpirun -np 8 dg_euler -p 1 -rs 1 -rp 1 -o 5 -s 6 -tf 0.1 -visit
-//   mpirun -np 8 dg_euler -p 1 -rs 1 -rp 1 -o 5 -s 6 -tf 0.1 -nonunif -visit
 //
 // Output 1:
-//   Relative error of AdaptiveDMD density (dens) at t_final: 0.1 is 0.00015272589
-//   Relative error of AdaptiveDMD x-momentum (x_mom) at t_final: 0.1 is 2.8719908e-05
-//   Relative error of AdaptiveDMD y-momentum (y_mom) at t_final: 0.1 is 8.9435003e-05
-//   Relative error of AdaptiveDMD energy (e) at t_final: 0.1 is 6.85403e-05
-//   Relative error of NonuniformDMD density (dens) at t_final: 0.1 is 0.00015499558
-//   Relative error of NonuniformDMD x-momentum (x_mom) at t_final: 0.1 is 4.5300074e-05
-//   Relative error of NonuniformDMD y-momentum (y_mom) at t_final: 0.1 is 0.0034796374
-//   Relative error of NonuniformDMD energy (e) at t_final: 0.1 is 7.0110651e-05
+//   Relative error of DMD density (dens) at t_final: 0.1 is 0.00015272589
+//   Relative error of DMD x-momentum (x_mom) at t_final: 0.1 is 2.8719908e-05
+//   Relative error of DMD y-momentum (y_mom) at t_final: 0.1 is 8.9435003e-05
+//   Relative error of DMD energy (e) at t_final: 0.1 is 6.85403e-05
 //
 // Command 2:
-//   mpirun -np 8 dg_euler -p 2 -rs 2 -rp 1 -o 1 -s 3 -tf 0.1 -crbf 0.995 -visit
-//   mpirun -np 8 dg_euler -p 2 -rs 2 -rp 1 -o 1 -s 3 -tf 0.1 -nonunif -visit
+//   mpirun -np 8 dg_euler -p 2 -rs 2 -rp 1 -o 1 -s 3 -tf 0.1 -visit
 //
 // Output 2:
-//   Relative error of AdaptiveDMD density (dens) at t_final: 0.1 is 1.573349e-06
-//   Relative error of AdaptiveDMD x-momentum (x_mom) at t_final: 0.1 is 4.3846865e-05
-//   Relative error of AdaptiveDMD y-momentum (y_mom) at t_final: 0.1 is 0.0026493438
-//   Relative error of AdaptiveDMD energy (e) at t_final: 0.1 is 1.7326842e-06
-//   Relative error of NonuniformDMD density (dens) at t_final: 0.1 is 4.1676355e-07
-//   Relative error of NonuniformDMD x-momentum (x_mom) at t_final: 0.1 is 4.4263729e-05
-//   Relative error of NonuniformDMD y-momentum (y_mom) at t_final: 0.1 is 0.0017438412
-//   Relative error of NonuniformDMD energy (e) at t_final: 0.1 is 8.3869658e-07
+//   Relative error of DMD density (dens) at t_final: 0.1 is 1.573349e-06
+//   Relative error of DMD x-momentum (x_mom) at t_final: 0.1 is 4.3846865e-05
+//   Relative error of DMD y-momentum (y_mom) at t_final: 0.1 is 0.0026493438
+//   Relative error of DMD energy (e) at t_final: 0.1 is 1.7326842e-06
 //
 // Command 3:
 //   mpirun -np 8 dg_euler -p 2 -rs 2 -rp 1 -o 1 -s 3 -visit
+//
+// Output 3:
+//   Relative error of DMD density (dens) at t_final: 2 is 0.00022777614
+//   Relative error of DMD x-momentum (x_mom) at t_final: 2 is 0.00022107792
+//   Relative error of DMD y-momentum (y_mom) at t_final: 2 is 0.00030374609
+//   Relative error of DMD energy (e) at t_final: 2 is 0.0002277899
+//
+// =================================================================================
+//
+// Sample runs and results for nonuniform DMD:
+//
+// Command 1:
+//   mpirun -np 8 dg_euler -p 1 -rs 1 -rp 1 -o 5 -s 6 -tf 0.1 -nonunif -visit
+//
+// Output 1:
+//   Relative error of DMD density (dens) at t_final: 0.1 is 0.00015499558
+//   Relative error of DMD x-momentum (x_mom) at t_final: 0.1 is 4.5300074e-05
+//   Relative error of DMD y-momentum (y_mom) at t_final: 0.1 is 0.0034796374
+//   Relative error of DMD energy (e) at t_final: 0.1 is 7.0110651e-05
+//
+// Command 2:
+//   mpirun -np 8 dg_euler -p 2 -rs 2 -rp 1 -o 1 -s 3 -tf 0.1 -nonunif -visit
+//
+// Output 2:
+//   Relative error of DMD density (dens) at t_final: 0.1 is 4.1676355e-07
+//   Relative error of DMD x-momentum (x_mom) at t_final: 0.1 is 4.4263729e-05
+//   Relative error of DMD y-momentum (y_mom) at t_final: 0.1 is 0.0017438412
+//   Relative error of DMD energy (e) at t_final: 0.1 is 8.3869658e-07
+//
+// Command 3:
 //   mpirun -np 8 dg_euler -p 2 -rs 2 -rp 1 -o 1 -s 3 -nonunif -visit
 //
 // Output 3:
-//   Relative error of AdaptiveDMD density (dens) at t_final: 2 is 0.00022777614
-//   Relative error of AdaptiveDMD x-momentum (x_mom) at t_final: 2 is 0.00022107792
-//   Relative error of AdaptiveDMD y-momentum (y_mom) at t_final: 2 is 0.00030374609
-//   Relative error of AdaptiveDMD energy (e) at t_final: 2 is 0.0002277899
-//   Relative error of NonuniformDMD density (dens) at t_final: 0.1 is 7.9616991e-07
-//   Relative error of NonuniformDMD x-momentum (x_mom) at t_final: 0.1 is 0.00011741735
-//   Relative error of NonuniformDMD y-momentum (y_mom) at t_final: 0.1 is 0.016937741
-//   Relative error of NonuniformDMD energy (e) at t_final: 0.1 is 2.6258626e-06
+//   Relative error of DMD density (dens) at t_final: 0.1 is 7.9616991e-07
+//   Relative error of DMD x-momentum (x_mom) at t_final: 0.1 is 0.00011741735
+//   Relative error of DMD y-momentum (y_mom) at t_final: 0.1 is 0.016937741
+//   Relative error of DMD energy (e) at t_final: 0.1 is 2.6258626e-06
 //
 // =================================================================================
 //
