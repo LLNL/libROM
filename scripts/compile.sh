@@ -14,9 +14,10 @@ ARDRA=false
 BUILD_TYPE="Optimized"
 USE_MFEM="Off"
 UPDATE_LIBS=false
+INSTALL_PYTHON=false
 
 # Get options
-while getopts "ah:dh:mh:t:uh" o;
+while getopts "ah:dh:mh:t:uh:p" o;
 do
     case "${o}" in
         a)
@@ -27,6 +28,9 @@ do
             ;;
         m)
             USE_MFEM="On"
+            ;;
+        p)
+            INSTALL_PYTHON=true
             ;;
         t)
             TOOLCHAIN_FILE=${OPTARG}
@@ -56,9 +60,11 @@ fi
 
 if [[ $ARDRA == "true" ]]; then
     mkdir -p ${REPO_PREFIX}/buildArdra
+    LIB_BUILD_DIR=${REPO_PREFIX}/buildArdra/lib
     pushd ${REPO_PREFIX}/buildArdra
 else
     mkdir -p ${REPO_PREFIX}/build
+    LIB_BUILD_DIR=${REPO_PREFIX}/build/lib
     pushd ${REPO_PREFIX}/build
 fi
 rm -rf *
@@ -96,4 +102,15 @@ elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
         -DUSE_MFEM=${USE_MFEM}
   make -j8
 fi
+
 popd
+
+if [[ $INSTALL_PYTHON == "true" ]]; then
+    cd ${REPO_PREFIX}/lib
+    ${REPO_PREFIX}/dependencies/swig/swig_install/bin/swig -I${REPO_PREFIX}/dependencies/swig/swig_install/share/swig/4.0.2 -I${REPO_PREFIX}/dependencies/swig/swig_install/share/swig/4.0.2/python -I${REPO_PREFIX}/dependencies/swig/swig_install/share/swig/4.0.2/std -c++ -python librom.i
+    mv librom_wrap.cxx $LIB_BUILD_DIR
+    mv pyROM.py $LIB_BUILD_DIR
+    cd $LIB_BUILD_DIR
+    mpic++ -O2 -fPIC -c librom_wrap.cxx -I/usr/include/python2.7 -I/usr/tce/packages/python/python-2.7.16/lib/python2.7/site-packages/mpi4py/include -I${REPO_PREFIX}/lib
+    mpic++ -shared -Wl,-rpath,$LIB_BUILD_DIR -L$LIB_BUILD_DIR librom_wrap.o -lROM -o _pyROM.so
+fi
