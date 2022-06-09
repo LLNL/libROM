@@ -36,7 +36,8 @@ void svd_init(struct SVDManager* mgr, struct SLPK_Matrix* A)
     mgr->done = 0;
 }
 
-void ls_init(struct LSManager* mgr, struct SLPK_Matrix* A, struct SLPK_Matrix* B)
+void ls_init(struct LSManager* mgr, struct SLPK_Matrix* A,
+             struct SLPK_Matrix* B)
 {
     mgr->A = A;
     mgr->B = B;

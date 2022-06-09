@@ -27,9 +27,9 @@ NonuniformDMD::computeDMDSnapshotPair(const Matrix* snapshots)
     //       We need to figure out a way to do submatrix multiplication and to
     //       reimplement this algorithm using one snapshot matrix.
     Matrix* f_snapshots_in = new Matrix(snapshots->numRows(),
-                                           snapshots->numColumns() - 1, snapshots->distributed());
+                                        snapshots->numColumns() - 1, snapshots->distributed());
     Matrix* f_snapshots_out = new Matrix(snapshots->numRows(),
-                                          snapshots->numColumns() - 1, snapshots->distributed());
+                                         snapshots->numColumns() - 1, snapshots->distributed());
 
     // Break up snapshots into snapshots_in and snapshots_out
     // snapshots_in = all columns of snapshots except last
@@ -39,7 +39,8 @@ NonuniformDMD::computeDMDSnapshotPair(const Matrix* snapshots)
         for (int j = 0; j < snapshots->numColumns() - 1; j++)
         {
             f_snapshots_in->item(i, j) = snapshots->item(i, j);
-            f_snapshots_out->item(i, j) = (snapshots->item(i, j + 1) - snapshots->item(i, j)) / (d_sampled_times[j + 1]->item(0) - d_sampled_times[j]->item(0));
+            f_snapshots_out->item(i, j) = (snapshots->item(i, j + 1) - snapshots->item(i,
+                                           j)) / (d_sampled_times[j + 1]->item(0) - d_sampled_times[j]->item(0));
         }
     }
 
@@ -50,7 +51,8 @@ void
 NonuniformDMD::computePhi(struct DMDInternal dmd_internal_obj)
 {
     d_phi_real = dmd_internal_obj.basis->mult(dmd_internal_obj.eigenpair->ev_real);
-    d_phi_imaginary = dmd_internal_obj.basis->mult(dmd_internal_obj.eigenpair->ev_imaginary);
+    d_phi_imaginary = dmd_internal_obj.basis->mult(
+                          dmd_internal_obj.eigenpair->ev_imaginary);
 }
 
 std::complex<double>

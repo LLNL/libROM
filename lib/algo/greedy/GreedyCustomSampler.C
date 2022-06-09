@@ -113,8 +113,10 @@ GreedyCustomSampler::constructParameterPoints()
     {
         for (int j = 0; j < d_parameter_points[i].dim(); j++)
         {
-            d_min_param_point.item(j) = std::min(d_min_param_point.item(j), d_parameter_points[i].item(j));
-            d_max_param_point.item(j) = std::max(d_max_param_point.item(j), d_parameter_points[i].item(j));
+            d_min_param_point.item(j) = std::min(d_min_param_point.item(j),
+                                                 d_parameter_points[i].item(j));
+            d_max_param_point.item(j) = std::max(d_max_param_point.item(j),
+                                                 d_parameter_points[i].item(j));
         }
     }
 
@@ -124,7 +126,8 @@ GreedyCustomSampler::constructParameterPoints()
 void
 GreedyCustomSampler::getNextParameterPointAfterConvergenceFailure()
 {
-    d_next_point_to_sample = getNearestNonSampledPoint(d_convergence_points[d_counter]);
+    d_next_point_to_sample = getNearestNonSampledPoint(
+                                 d_convergence_points[d_counter]);
 }
 
 GreedyCustomSampler::~GreedyCustomSampler()

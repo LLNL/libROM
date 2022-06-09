@@ -39,7 +39,8 @@ Interpolator::Interpolator(std::vector<Vector*> parameter_points,
     CAROM_VERIFY(parameter_points.size() == rotation_matrices.size());
     CAROM_VERIFY(parameter_points.size() > 1);
     CAROM_VERIFY(rbf == "G" || rbf == "IQ" || rbf == "IMQ");
-    CAROM_VERIFY(interp_method == "LS" || interp_method == "IDW" || interp_method == "LP");
+    CAROM_VERIFY(interp_method == "LS" || interp_method == "IDW"
+                 || interp_method == "LP");
     CAROM_VERIFY(closest_rbf_val >= 0.0 && closest_rbf_val <= 1.0);
 
     // Get the rank of this process, and the number of processors.
@@ -61,7 +62,8 @@ Interpolator::Interpolator(std::vector<Vector*> parameter_points,
     d_epsilon = convertClosestRBFToEpsilon(parameter_points, rbf, closest_rbf_val);
 }
 
-std::vector<double> obtainRBFToTrainingPoints(std::vector<Vector*> parameter_points,
+std::vector<double> obtainRBFToTrainingPoints(std::vector<Vector*>
+        parameter_points,
         std::string interp_method, std::string rbf, double epsilon, Vector* point)
 {
     std::vector<double> rbfs;
@@ -139,7 +141,8 @@ double rbfWeightedSum(std::vector<double>& rbf)
     return sum;
 }
 
-double obtainRBF(std::string rbf, double epsilon, Vector* point1, Vector* point2)
+double obtainRBF(std::string rbf, double epsilon, Vector* point1,
+                 Vector* point2)
 {
     Vector diff;
     point1->minus(*point2, diff);
@@ -209,7 +212,8 @@ double convertClosestRBFToEpsilon(std::vector<Vector*> parameter_points,
     return epsilon;
 }
 
-std::vector<Matrix*> obtainRotationMatrices(std::vector<Vector*> parameter_points,
+std::vector<Matrix*> obtainRotationMatrices(std::vector<Vector*>
+        parameter_points,
         std::vector<Matrix*> bases,
         int ref_point)
 {
@@ -239,7 +243,8 @@ std::vector<Matrix*> obtainRotationMatrices(std::vector<Vector*> parameter_point
         // since the ref point doesn't need to be rotated.
         if (i == ref_point)
         {
-            Matrix* identity_matrix = new Matrix(bases[i]->numColumns(), bases[i]->numColumns(), false);
+            Matrix* identity_matrix = new Matrix(bases[i]->numColumns(),
+                                                 bases[i]->numColumns(), false);
             for (int j = 0; j < identity_matrix->numColumns(); j++) {
                 identity_matrix->item(j, j) = 1.0;
             }
@@ -248,8 +253,10 @@ std::vector<Matrix*> obtainRotationMatrices(std::vector<Vector*> parameter_point
         }
 
         Matrix* basis_mult_basis = bases[i]->transposeMult(bases[ref_point]);
-        Matrix* basis = new Matrix(basis_mult_basis->numRows(), basis_mult_basis->numColumns(), false);
-        Matrix* basis_right = new Matrix(basis_mult_basis->numColumns(), basis_mult_basis->numColumns(), false);
+        Matrix* basis = new Matrix(basis_mult_basis->numRows(),
+                                   basis_mult_basis->numColumns(), false);
+        Matrix* basis_right = new Matrix(basis_mult_basis->numColumns(),
+                                         basis_mult_basis->numColumns(), false);
 
         // We need to compute the SVD of basis_mult_basis. Since it is
         // undistributed due to the transposeMult, let's use lapack's serial SVD
@@ -262,8 +269,11 @@ std::vector<Matrix*> obtainRotationMatrices(std::vector<Vector*> parameter_point
         }
 
         // Broadcast U and V which are computed only on root.
-        MPI_Bcast(basis->getData(), basis->numRows() * basis->numColumns(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
-        MPI_Bcast(basis_right->getData(), basis_right->numRows() * basis_right->numColumns(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        MPI_Bcast(basis->getData(), basis->numRows() * basis->numColumns(), MPI_DOUBLE,
+                  0, MPI_COMM_WORLD);
+        MPI_Bcast(basis_right->getData(),
+                  basis_right->numRows() * basis_right->numColumns(), MPI_DOUBLE, 0,
+                  MPI_COMM_WORLD);
 
         // Obtain the rotation matrix.
         Matrix* rotation_matrix = basis->mult(basis_right);

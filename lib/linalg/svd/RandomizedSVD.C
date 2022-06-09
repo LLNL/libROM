@@ -79,14 +79,16 @@ RandomizedSVD::computeSVD()
                                    MPI_INT,
                                    MPI_COMM_WORLD) == MPI_SUCCESS);
         for (int i = d_num_procs - 1; i >= 0; i--) {
-            snapshot_transpose_row_offset[i] = snapshot_transpose_row_offset[i + 1] - snapshot_transpose_row_offset[i];
+            snapshot_transpose_row_offset[i] = snapshot_transpose_row_offset[i + 1] -
+                                               snapshot_transpose_row_offset[i];
         }
 
         CAROM_VERIFY(snapshot_transpose_row_offset[0] == 0);
         for (int rank = 0; rank < d_num_procs; ++rank) {
             gather_block(&snapshot_matrix->item(0, 0), d_samples.get(),
                          1, snapshot_transpose_row_offset[rank] + 1,
-                         num_rows, snapshot_transpose_row_offset[rank + 1] - snapshot_transpose_row_offset[rank],
+                         num_rows, snapshot_transpose_row_offset[rank + 1] -
+                         snapshot_transpose_row_offset[rank],
                          rank);
         }
         delete [] snapshot_transpose_row_offset;
@@ -107,7 +109,8 @@ RandomizedSVD::computeSVD()
         }
     }
     else {
-        rand_mat = new Matrix(snapshot_matrix->numColumns(), d_subspace_dim, false, true);
+        rand_mat = new Matrix(snapshot_matrix->numColumns(), d_subspace_dim, false,
+                              true);
     }
 
     // Project snapshot matrix onto random subspace
@@ -122,7 +125,8 @@ RandomizedSVD::computeSVD()
     int svd_input_mat_distributed_rows = svd_input_mat->numDistributedRows();
 
     SLPK_Matrix svd_input;
-    initialize_matrix(&svd_input, svd_input_mat->numColumns(), svd_input_mat->numDistributedRows(),
+    initialize_matrix(&svd_input, svd_input_mat->numColumns(),
+                      svd_input_mat->numDistributedRows(),
                       d_npcol, d_nprow, d_blocksize, d_blocksize);
     scatter_block(&svd_input, 1, 1,
                   svd_input_mat->getData(),

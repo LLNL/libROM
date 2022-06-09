@@ -18,7 +18,8 @@ void
 RowInfoMax(RowInfo* a, RowInfo* b, int* len, MPI_Datatype* type)
 {
     for (int i = 0; i < *len; ++i) {
-        if (a[i].row_val > b[i].row_val || (a[i].row_val == b[i].row_val && a[i].proc < b[i].proc)) {
+        if (a[i].row_val > b[i].row_val || (a[i].row_val == b[i].row_val
+                                            && a[i].proc < b[i].proc)) {
             b[i].row_val = a[i].row_val;
             b[i].row = a[i].row;
             b[i].proc = a[i].proc;

@@ -74,11 +74,13 @@ void VectorInterpolator::obtainLambda()
 {
     if (d_interp_method == "LS")
     {
-        d_lambda_T = solveLinearSystem(d_parameter_points, d_gammas, d_interp_method, d_rbf, d_epsilon);
+        d_lambda_T = solveLinearSystem(d_parameter_points, d_gammas, d_interp_method,
+                                       d_rbf, d_epsilon);
     }
 }
 
-Vector* VectorInterpolator::obtainLogInterpolatedVector(std::vector<double>& rbf)
+Vector* VectorInterpolator::obtainLogInterpolatedVector(
+    std::vector<double>& rbf)
 {
     return obtainInterpolatedVector(d_gammas, d_lambda_T, d_interp_method, rbf);
 }
@@ -100,7 +102,8 @@ Vector* VectorInterpolator::interpolate(Vector* point)
             else
             {
                 // Gamma is Y - X
-                Vector* gamma = d_rotated_reduced_vectors[i]->minus(*d_rotated_reduced_vectors[d_ref_point]);
+                Vector* gamma = d_rotated_reduced_vectors[i]->minus(
+                                    *d_rotated_reduced_vectors[d_ref_point]);
                 d_gammas.push_back(gamma);
             }
         }
@@ -117,7 +120,8 @@ Vector* VectorInterpolator::interpolate(Vector* point)
     Vector* log_interpolated_vector = obtainLogInterpolatedVector(rbf);
 
     // The exp mapping is X + the interpolated gamma
-    Vector* interpolated_vector = d_rotated_reduced_vectors[d_ref_point]->plus(log_interpolated_vector);
+    Vector* interpolated_vector = d_rotated_reduced_vectors[d_ref_point]->plus(
+                                      log_interpolated_vector);
     delete log_interpolated_vector;
     return interpolated_vector;
 }
@@ -125,7 +129,8 @@ Vector* VectorInterpolator::interpolate(Vector* point)
 Vector* obtainInterpolatedVector(std::vector<Vector*> data, Matrix* f_T,
                                  std::string interp_method, std::vector<double>& rbf)
 {
-    Vector* interpolated_vector = new Vector(data[0]->dim(), data[0]->distributed());
+    Vector* interpolated_vector = new Vector(data[0]->dim(),
+            data[0]->distributed());
     if (interp_method == "LS")
     {
         for (int i = 0; i < f_T->numRows(); i++)
@@ -209,7 +214,8 @@ Matrix* solveLinearSystem(std::vector<Vector*> parameter_points,
               f_T->getData(), &gamma_size, &info);
         if (info != 0)
         {
-            std::cout << "Linear solve failed. Please choose a different epsilon value." << std::endl;
+            std::cout << "Linear solve failed. Please choose a different epsilon value." <<
+                      std::endl;
         }
         CAROM_VERIFY(info == 0);
 

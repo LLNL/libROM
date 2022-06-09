@@ -82,11 +82,14 @@ S_OPT(const Matrix* f_basis,
     MPI_Op_create((MPI_User_function*)RowInfoMax, true, &RowInfoOp);
 
     // Get the number of basis vectors and the size of each basis vector.
-    CAROM_VERIFY(0 < num_f_basis_vectors_used && num_f_basis_vectors_used <= f_basis->numColumns());
+    CAROM_VERIFY(0 < num_f_basis_vectors_used
+                 && num_f_basis_vectors_used <= f_basis->numColumns());
     const int num_basis_vectors =
         std::min(num_f_basis_vectors_used, f_basis->numColumns());
-    const int num_samples = num_samples_req > 0 ? num_samples_req : num_basis_vectors;
-    CAROM_VERIFY(num_basis_vectors <= num_samples && num_samples <= f_basis->numDistributedRows());
+    const int num_samples = num_samples_req > 0 ? num_samples_req :
+                            num_basis_vectors;
+    CAROM_VERIFY(num_basis_vectors <= num_samples
+                 && num_samples <= f_basis->numDistributedRows());
     CAROM_VERIFY(num_samples == f_sampled_row.size());
     CAROM_VERIFY(num_samples == f_basis_sampled_inv.numRows() &&
                  num_basis_vectors == f_basis_sampled_inv.numColumns());
@@ -136,7 +139,7 @@ S_OPT(const Matrix* f_basis,
     const int num_init_samples = init_samples ? init_samples->size() : 0;
     int total_num_init_samples = 0;
     MPI_Allreduce(&num_init_samples, &total_num_init_samples, 1,
-                MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+                  MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     CAROM_VERIFY(num_samples >= total_num_init_samples);
 
     int init_sample_offset = 0;
@@ -165,7 +168,8 @@ S_OPT(const Matrix* f_basis,
             V1.item(num_samples_obtained, j) = c[j];
         }
         proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
-        proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] = num_samples_obtained;
+        proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] =
+            num_samples_obtained;
         num_samples_obtained++;
     }
 
@@ -376,7 +380,8 @@ S_OPT(const Matrix* f_basis,
                     {
                         tmp += g1.item(j, k) * GG.item(j, k);
                     }
-                    A->item(j) = std::max(0.0, ata + (Vo->item(j, i - 1) * Vo->item(j, i - 1)) - tmp);
+                    A->item(j) = std::max(0.0, ata + (Vo->item(j, i - 1) * Vo->item(j,
+                                                      i - 1)) - tmp);
                 }
 
                 nV.setSize(i);
@@ -407,7 +412,8 @@ S_OPT(const Matrix* f_basis,
             }
             else
             {
-                Matrix* curr_V1 = new Matrix(V1.getData(), num_samples_obtained, num_basis_vectors, false, true);
+                Matrix* curr_V1 = new Matrix(V1.getData(), num_samples_obtained,
+                                             num_basis_vectors, false, true);
                 Matrix* lhs = curr_V1->transposeMult(curr_V1);
                 lhs->inverse();
 
@@ -476,7 +482,8 @@ S_OPT(const Matrix* f_basis,
                 V1.item(num_samples_obtained, j) = c[j];
             }
             proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
-            proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] = num_samples_obtained;
+            proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] =
+                num_samples_obtained;
             num_samples_obtained++;
         }
 

@@ -143,20 +143,23 @@ Vector::operator = (const double& a)
 }
 
 Vector&
-Vector::transform(std::function<void(const int size, double* vector)> transformer) {
+Vector::transform(std::function<void(const int size, double* vector)>
+                  transformer) {
     transformer(d_dim, d_vec);
     return *this;
 }
 
 void
-Vector::transform(Vector& result, std::function<void(const int size, double* vector)> transformer) const {
+Vector::transform(Vector& result,
+                  std::function<void(const int size, double* vector)> transformer) const {
     result.setSize(d_dim);
     result.d_distributed = d_distributed;
     transformer(d_dim, result.d_vec);
 }
 
 void
-Vector::transform(Vector*& result, std::function<void(const int size, double* vector)> transformer) const {
+Vector::transform(Vector*& result,
+                  std::function<void(const int size, double* vector)> transformer) const {
     // If the result has not been allocated then do so.  Otherwise size it
     // correctly.
     if (result == 0) {
@@ -170,7 +173,9 @@ Vector::transform(Vector*& result, std::function<void(const int size, double* ve
 }
 
 Vector&
-Vector::transform(std::function<void(const int size, double* origVector, double* resultVector)> transformer) {
+Vector::transform(
+    std::function<void(const int size, double* origVector, double* resultVector)>
+    transformer) {
     Vector* origVector = new Vector(*this);
     transformer(d_dim, origVector->d_vec, d_vec);
     delete origVector;
@@ -178,7 +183,9 @@ Vector::transform(std::function<void(const int size, double* origVector, double*
 }
 
 void
-Vector::transform(Vector& result, std::function<void(const int size, double* origVector, double* resultVector)> transformer) const {
+Vector::transform(Vector& result,
+                  std::function<void(const int size, double* origVector, double* resultVector)>
+                  transformer) const {
     Vector* origVector = new Vector(*this);
     result.setSize(d_dim);
     result.d_distributed = d_distributed;
@@ -187,7 +194,9 @@ Vector::transform(Vector& result, std::function<void(const int size, double* ori
 }
 
 void
-Vector::transform(Vector*& result, std::function<void(const int size, double* origVector, double* resultVector)> transformer) const {
+Vector::transform(Vector*& result,
+                  std::function<void(const int size, double* origVector, double* resultVector)>
+                  transformer) const {
     // If the result has not been allocated then do so.  Otherwise size it
     // correctly.
     Vector* origVector = new Vector(*this);

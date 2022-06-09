@@ -39,7 +39,8 @@ extern "C" {
     void dsyev(char*, char*, int*, double*, int*, double*, double*, int*, int*);
 
 // Compute eigenvalue and eigenvectors of real non-symmetric matrix.
-    void dgeev(char*, char*, int*, double*, int*, double*, double*, double*, int*, double*, int*, double*, int*, int*);
+    void dgeev(char*, char*, int*, double*, int*, double*, double*, double*, int*,
+               double*, int*, double*, int*, int*);
 
 // LU decomposition of a general matrix.
     void dgetrf(int*, int*, double*, int*, int*, int*);
@@ -463,7 +464,8 @@ Matrix::elementwise_mult(
     // Do the element-wise multiplication.
     for (int this_row = 0; this_row < d_num_rows; ++this_row) {
         for (int other_col = 0; other_col < d_num_cols; ++other_col) {
-            result->item(this_row, other_col) = item(this_row, other_col) * other.item(this_row, other_col);
+            result->item(this_row, other_col) = item(this_row,
+                                                other_col) * other.item(this_row, other_col);
         }
     }
 }
@@ -484,7 +486,8 @@ Matrix::elementwise_mult(
     // Do the multiplication.
     for (int this_row = 0; this_row < d_num_rows; ++this_row) {
         for (int other_col = 0; other_col < d_num_cols; ++other_col) {
-            result.item(this_row, other_col) = item(this_row, other_col) * other.item(this_row, other_col);
+            result.item(this_row, other_col) = item(this_row,
+                                                    other_col) * other.item(this_row, other_col);
         }
     }
 }
@@ -505,7 +508,8 @@ Matrix::elementwise_square(
     // Do the pointwise square.
     for (int this_row = 0; this_row < d_num_rows; ++this_row) {
         for (int this_col = 0; this_col < d_num_cols; ++this_col) {
-            result->item(this_row, this_col) = item(this_row, this_col) * item(this_row, this_col);
+            result->item(this_row, this_col) = item(this_row, this_col) * item(this_row,
+                                               this_col);
         }
     }
 }
@@ -520,7 +524,8 @@ Matrix::elementwise_square(
     // Do the pointwise square.
     for (int this_row = 0; this_row < d_num_rows; ++this_row) {
         for (int this_col = 0; this_col < d_num_cols; ++this_col) {
-            result.item(this_row, this_col) = item(this_row, this_col) * item(this_row, this_col);
+            result.item(this_row, this_col) = item(this_row, this_col) * item(this_row,
+                                              this_col);
         }
     }
 }
@@ -1091,7 +1096,8 @@ Matrix::qr_factorize() const
 
     // Obtain Q
     lqcompute(&QRmgr);
-    Matrix* qr_factorized_matrix = new Matrix(row_offset[myid + 1] - row_offset[myid],
+    Matrix* qr_factorized_matrix = new Matrix(row_offset[myid + 1] -
+            row_offset[myid],
             numColumns(), distributed());
     for (int rank = 0; rank < d_num_procs; ++rank) {
         gather_block(&qr_factorized_matrix->item(0, 0), QRmgr.A,
@@ -1273,9 +1279,11 @@ Matrix::qrcp_pivots_transpose_distributed_scalapack
     int blocksize = row_offset[d_num_procs] / d_num_procs;
     if (row_offset[d_num_procs] % d_num_procs != 0) blocksize += 1;
 
-    initialize_matrix(&slpk, d_num_cols, row_offset[d_num_procs], 1, d_num_procs, 1, blocksize);  // transposed
+    initialize_matrix(&slpk, d_num_cols, row_offset[d_num_procs], 1, d_num_procs, 1,
+                      blocksize);  // transposed
 
-    CAROM_VERIFY(d_num_cols <= pivots_requested); // Otherwise, take a submatrix for the QR (not implemented).
+    CAROM_VERIFY(d_num_cols <=
+                 pivots_requested); // Otherwise, take a submatrix for the QR (not implemented).
 
     for (int rank = 0; rank < d_num_procs; ++rank) {
         // Take the row-major data in d_mat and put it in a transposed column-major array in slpk
@@ -1293,7 +1301,8 @@ Matrix::qrcp_pivots_transpose_distributed_scalapack
     CAROM_VERIFY(0 < pivots_requested && pivots_requested <= QRmgr.ipivSize);
     CAROM_VERIFY(pivots_requested <= std::max(d_num_rows, d_num_cols));
 
-    const int scount = std::max(0, std::min(pivots_requested, row_offset[my_rank+1]) - row_offset[my_rank]);
+    const int scount = std::max(0, std::min(pivots_requested,
+                                            row_offset[my_rank+1]) - row_offset[my_rank]);
     int *mypivots = (scount > 0) ? new int[scount] : NULL;
 
     for (int i=0; i<scount; ++i)
@@ -1313,7 +1322,8 @@ Matrix::qrcp_pivots_transpose_distributed_scalapack
         CAROM_VERIFY(rdisp[d_num_procs-1] + rcount[d_num_procs-1] == pivots_requested);
     }
 
-    MPI_Gatherv(mypivots, scount, MPI_INT, row_pivot, rcount, rdisp, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Gatherv(mypivots, scount, MPI_INT, row_pivot, rcount, rdisp, MPI_INT, 0,
+                MPI_COMM_WORLD);
 
     delete [] mypivots;
 
@@ -1333,7 +1343,8 @@ Matrix::qrcp_pivots_transpose_distributed_scalapack
 
             // Note that row_pivot[i] is a global index.
             CAROM_VERIFY(row_pivot_owner[i] >= 0);
-            CAROM_VERIFY(row_offset[row_pivot_owner[i]] <= row_pivot[i] && row_pivot[i] < row_offset[row_pivot_owner[i]+1]);
+            CAROM_VERIFY(row_offset[row_pivot_owner[i]] <= row_pivot[i]
+                         && row_pivot[i] < row_offset[row_pivot_owner[i]+1]);
         }
     }
     else
@@ -2108,7 +2119,8 @@ void SerialSVD(Matrix* A,
     int iwork[8*std::min(m, n)];
     int info;
 
-    dgesdd(&jobz, &m, &n, A_copy->getData(), &lda, S->getData(), U->getData(), &ldu, V->getData(),
+    dgesdd(&jobz, &m, &n, A_copy->getData(), &lda, S->getData(), U->getData(), &ldu,
+           V->getData(),
            &ldv, work, &lwork, iwork, &info);
 
     CAROM_VERIFY(info == 0);

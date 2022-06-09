@@ -424,7 +424,8 @@ protected:
      * @return A struct holding the point and the location of the nearest local
      *         ROM or NULL if no point is required.
      */
-    struct GreedyErrorIndicatorPoint getNextConvergencePointRequiringErrorIndicator();
+    struct GreedyErrorIndicatorPoint
+    getNextConvergencePointRequiringErrorIndicator();
 
     /**
      * @brief Generate a vector of random points.
@@ -701,7 +702,8 @@ protected:
  * @return A struct holding the point and the location of the nearest local
  *         ROM or NULL if no point is required.
  */
-struct GreedyErrorIndicatorPoint createGreedyErrorIndicatorPoint(Vector* point, Vector* localROM);
+struct GreedyErrorIndicatorPoint createGreedyErrorIndicatorPoint(Vector* point,
+        Vector* localROM);
 
 /**
  * @brief Create a greedy error indicator point.
@@ -712,7 +714,8 @@ struct GreedyErrorIndicatorPoint createGreedyErrorIndicatorPoint(Vector* point, 
  * @return A struct holding the point and the location of the nearest local
  *         ROM or NULL if no point is required.
  */
-struct GreedyErrorIndicatorPoint createGreedyErrorIndicatorPoint(Vector* point, std::shared_ptr<Vector>& localROM);
+struct GreedyErrorIndicatorPoint createGreedyErrorIndicatorPoint(Vector* point,
+        std::shared_ptr<Vector>& localROM);
 
 /**
  * @brief Given a vector, find the nearest point in a domain.

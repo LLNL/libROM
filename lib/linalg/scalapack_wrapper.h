@@ -293,7 +293,8 @@ struct LSManager
 /**
  * @brief Initialize the LSManager struct with SLPK_Matrices A and B.
  */
-void ls_init(struct LSManager* mgr, struct SLPK_Matrix* A, struct SLPK_Matrix* B);
+void ls_init(struct LSManager* mgr, struct SLPK_Matrix* A,
+             struct SLPK_Matrix* B);
 
 /**
  * @brief Perform the linear solve (pdgesv) with the data contained in the LSManager.
