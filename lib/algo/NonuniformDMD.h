@@ -64,9 +64,9 @@ private:
         const NonuniformDMD& rhs);
 
     /**
-     * @brief Construct f_snapshots_minus and f_snapshots_plus
+     * @brief Returns a pair of pointers to the state and derivative snapshot matrices
      */
-    std::pair<Matrix*, Matrix*> computePlusMinusSnapshotMatrices(const Matrix* snapshots);
+    std::pair<Matrix*, Matrix*> computeDMDSnapshotPair(const Matrix* snapshots);
 
     /**
      * @brief Compute phi.

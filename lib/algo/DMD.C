@@ -185,46 +185,46 @@ void DMD::train(int k)
 }
 
 std::pair<Matrix*, Matrix*>
-DMD::computePlusMinusSnapshotMatrices(const Matrix* snapshots)
+DMD::computeDMDSnapshotPair(const Matrix* snapshots)
 {
     CAROM_VERIFY(snapshots->numColumns() > 1);
 
     // TODO: Making two copies of the snapshot matrix has a lot of overhead.
     //       We need to figure out a way to do submatrix multiplication and to
     //       reimplement this algorithm using one snapshot matrix.
-    Matrix* f_snapshots_minus = new Matrix(snapshots->numRows(),
+    Matrix* f_snapshots_in = new Matrix(snapshots->numRows(),
                                            snapshots->numColumns() - 1, snapshots->distributed());
-    Matrix* f_snapshots_plus = new Matrix(snapshots->numRows(),
+    Matrix* f_snapshots_out = new Matrix(snapshots->numRows(),
                                           snapshots->numColumns() - 1, snapshots->distributed());
 
-    // Break up snapshots into snapshots_minus and snapshots_plus
-    // snapshots_minus = all columns of snapshots except last
-    // snapshots_plus = all columns of snapshots except first
+    // Break up snapshots into snapshots_in and snapshots_out
+    // snapshots_in = all columns of snapshots except last
+    // snapshots_out = all columns of snapshots except first
     for (int i = 0; i < snapshots->numRows(); i++)
     {
         for (int j = 0; j < snapshots->numColumns() - 1; j++)
         {
-            f_snapshots_minus->item(i, j) = snapshots->item(i, j);
-            f_snapshots_plus->item(i, j) = snapshots->item(i, j + 1);
+            f_snapshots_in->item(i, j) = snapshots->item(i, j);
+            f_snapshots_out->item(i, j) = snapshots->item(i, j + 1);
         }
-        f_snapshots_plus->item(i, snapshots->numColumns() - 2) =
-            snapshots->item(i, snapshots->numColumns() - 1);
+        //f_snapshots_out->item(i, snapshots->numColumns() - 2) =
+        //    snapshots->item(i, snapshots->numColumns() - 1);
     }
 
-    return std::pair<Matrix*,Matrix*>(f_snapshots_minus, f_snapshots_plus);
+    return std::pair<Matrix*,Matrix*>(f_snapshots_in, f_snapshots_out);
 }
 
 void
 DMD::computePhi(struct DMDInternal dmd_internal_obj)
 {
     // Calculate phi
-    Matrix* f_snapshots_plus_mult_d_basis_right = dmd_internal_obj.snapshots_plus->mult(dmd_internal_obj.basis_right);
-    Matrix* f_snapshots_plus_mult_d_basis_right_mult_d_S_inv = f_snapshots_plus_mult_d_basis_right->mult(dmd_internal_obj.S_inv);
-    d_phi_real = f_snapshots_plus_mult_d_basis_right_mult_d_S_inv->mult(dmd_internal_obj.eigenpair->ev_real);
-    d_phi_imaginary = f_snapshots_plus_mult_d_basis_right_mult_d_S_inv->mult(dmd_internal_obj.eigenpair->ev_imaginary);
+    Matrix* f_snapshots_out_mult_d_basis_right = dmd_internal_obj.snapshots_out->mult(dmd_internal_obj.basis_right);
+    Matrix* f_snapshots_out_mult_d_basis_right_mult_d_S_inv = f_snapshots_out_mult_d_basis_right->mult(dmd_internal_obj.S_inv);
+    d_phi_real = f_snapshots_out_mult_d_basis_right_mult_d_S_inv->mult(dmd_internal_obj.eigenpair->ev_real);
+    d_phi_imaginary = f_snapshots_out_mult_d_basis_right_mult_d_S_inv->mult(dmd_internal_obj.eigenpair->ev_imaginary);
 
-    delete f_snapshots_plus_mult_d_basis_right;
-    delete f_snapshots_plus_mult_d_basis_right_mult_d_S_inv;
+    delete f_snapshots_out_mult_d_basis_right;
+    delete f_snapshots_out_mult_d_basis_right_mult_d_S_inv;
 }
 
 void
@@ -232,13 +232,13 @@ DMD::constructDMD(const Matrix* f_snapshots,
                   int d_rank,
                   int d_num_procs)
 {
-    std::pair<Matrix*, Matrix*> f_snapshot_minus_plus_pair = computePlusMinusSnapshotMatrices(f_snapshots);
-    Matrix* f_snapshots_minus = f_snapshot_minus_plus_pair.first;
-    Matrix* f_snapshots_plus = f_snapshot_minus_plus_pair.second;
+    std::pair<Matrix*, Matrix*> f_snapshot_pair = computeDMDSnapshotPair(f_snapshots);
+    Matrix* f_snapshots_in = f_snapshot_pair.first;
+    Matrix* f_snapshots_out = f_snapshot_pair.second;
 
     int *row_offset = new int[d_num_procs + 1];
-    row_offset[d_num_procs] = f_snapshots_minus->numDistributedRows();
-    row_offset[d_rank] = f_snapshots_minus->numRows();
+    row_offset[d_num_procs] = f_snapshots_in->numDistributedRows();
+    row_offset[d_rank] = f_snapshots_in->numRows();
 
     CAROM_VERIFY(MPI_Allgather(MPI_IN_PLACE,
                                1,
@@ -258,16 +258,16 @@ DMD::constructDMD(const Matrix* f_snapshots,
 
     SLPK_Matrix svd_input;
 
-    // Calculate svd of snapshots_minus
-    initialize_matrix(&svd_input, f_snapshots_minus->numColumns(),
-                      f_snapshots_minus->numDistributedRows(),
+    // Calculate svd of snapshots_in
+    initialize_matrix(&svd_input, f_snapshots_in->numColumns(),
+                      f_snapshots_in->numDistributedRows(),
                       1, d_num_procs, d_blocksize, d_blocksize);
 
     for (int rank = 0; rank < d_num_procs; ++rank)
     {
         scatter_block(&svd_input, 1, row_offset[rank] + 1,
-                      f_snapshots_minus->getData(),
-                      f_snapshots_minus->numColumns(),
+                      f_snapshots_in->getData(),
+                      f_snapshots_in->numColumns(),
                       row_offset[rank + 1] - row_offset[rank], rank);
     }
 
@@ -280,7 +280,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
     free_matrix_data(&svd_input);
 
     // Compute how many basis vectors we will actually use.
-    d_num_singular_vectors = std::min(f_snapshots_minus->numColumns(), f_snapshots_minus->numDistributedRows());
+    d_num_singular_vectors = std::min(f_snapshots_in->numColumns(), f_snapshots_in->numDistributedRows());
     for (int i = 0; i < d_num_singular_vectors; i++)
     {
         d_sv.push_back(d_factorizer->S[i]);
@@ -314,7 +314,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
     // Allocate the appropriate matrices and gather their elements.
     d_basis = new Matrix(f_snapshots->numRows(), d_k, f_snapshots->distributed());
     Matrix* d_S_inv = new Matrix(d_k, d_k, false);
-    Matrix* d_basis_right = new Matrix(f_snapshots_minus->numColumns(), d_k, false);
+    Matrix* d_basis_right = new Matrix(f_snapshots_in->numColumns(), d_k, false);
 
     for (int d_rank = 0; d_rank < d_num_procs; ++d_rank) {
         // V is computed in the transposed order so no reordering necessary.
@@ -327,7 +327,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
         // gather_transposed_block does the same as gather_block, but transposes
         // it; here, it is used to go from column-major to row-major order.
         gather_transposed_block(&d_basis_right->item(0, 0), d_factorizer->U, 1, 1,
-                                f_snapshots_minus->numColumns(), d_k, d_rank);
+                                f_snapshots_in->numColumns(), d_k, d_rank);
     }
 
     // Get inverse of singular values by multiplying by reciprocal.
@@ -336,22 +336,22 @@ DMD::constructDMD(const Matrix* f_snapshots,
         d_S_inv->item(i, i) = 1 / d_factorizer->S[static_cast<unsigned>(i)];
     }
 
-    // Calculate A_tilde = U_transpose * f_snapshots_plus * V * inv(S)
-    Matrix* d_basis_mult_f_snapshots_plus = d_basis->transposeMult(f_snapshots_plus);
-    Matrix* d_basis_mult_f_snapshots_plus_mult_d_basis_right = d_basis_mult_f_snapshots_plus->mult(d_basis_right);
-    d_A_tilde = d_basis_mult_f_snapshots_plus_mult_d_basis_right->mult(d_S_inv);
+    // Calculate A_tilde = U_transpose * f_snapshots_out * V * inv(S)
+    Matrix* d_basis_mult_f_snapshots_out = d_basis->transposeMult(f_snapshots_out);
+    Matrix* d_basis_mult_f_snapshots_out_mult_d_basis_right = d_basis_mult_f_snapshots_out->mult(d_basis_right);
+    d_A_tilde = d_basis_mult_f_snapshots_out_mult_d_basis_right->mult(d_S_inv);
 
     // Calculate the right eigenvalues/eigenvectors of A_tilde
     ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(d_A_tilde);
     d_eigs = eigenpair.eigs;
 
-    struct DMDInternal dmd_internal = {f_snapshots_minus, f_snapshots_plus, d_basis, d_basis_right, d_S_inv, &eigenpair};
+    struct DMDInternal dmd_internal = {f_snapshots_in, f_snapshots_out, d_basis, d_basis_right, d_S_inv, &eigenpair};
     computePhi(dmd_internal);
 
-    Vector* init = new Vector(f_snapshots_minus->numRows(), true);
+    Vector* init = new Vector(f_snapshots_in->numRows(), true);
     for (int i = 0; i < init->dim(); i++)
     {
-        init->item(i) = f_snapshots_minus->item(i, 0);
+        init->item(i) = f_snapshots_in->item(i, 0);
     }
 
     // Calculate pinv(d_phi) * initial_condition.
@@ -361,10 +361,10 @@ DMD::constructDMD(const Matrix* f_snapshots,
 
     delete d_basis_right;
     delete d_S_inv;
-    delete d_basis_mult_f_snapshots_plus;
-    delete d_basis_mult_f_snapshots_plus_mult_d_basis_right;
-    delete f_snapshots_minus;
-    delete f_snapshots_plus;
+    delete d_basis_mult_f_snapshots_out;
+    delete d_basis_mult_f_snapshots_out_mult_d_basis_right;
+    delete f_snapshots_in;
+    delete f_snapshots_out;
     delete eigenpair.ev_real;
     delete eigenpair.ev_imaginary;
     delete init;

@@ -32,8 +32,8 @@ class ComplexEigenPair;
  */
 struct DMDInternal
 {
-    Matrix* snapshots_minus;
-    Matrix* snapshots_plus;
+    Matrix* snapshots_in;
+    Matrix* snapshots_out;
     Matrix* basis;
     Matrix* basis_right;
     Matrix* S_inv;
@@ -190,9 +190,9 @@ protected:
                       int num_procs);
 
     /**
-     * @brief Construct f_snapshots_minus and f_snapshots_plus
+     * @brief Returns a pair of pointers to the minus and plus snapshot matrices
      */
-    virtual std::pair<Matrix*, Matrix*> computePlusMinusSnapshotMatrices(const Matrix* snapshots);
+    virtual std::pair<Matrix*, Matrix*> computeDMDSnapshotPair(const Matrix* snapshots);
 
     /**
      * @brief Compute phi.
