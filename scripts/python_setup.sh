@@ -22,7 +22,7 @@ mkdir -p $LIB_DIR
 
 # Install SWIG-4.0.2
 cd $LIB_DIR
-if [ ! -d "swig-4.0.2" ]; then
+if [ ! -d "swig" ]; then
     wget http://prdownloads.sourceforge.net/swig/swig-4.0.2.tar.gz
     tar -xvf swig-4.0.2.tar.gz
     mv swig-4.0.2 swig

@@ -112,6 +112,7 @@ if [[ $INSTALL_PYTHON == "true" ]]; then
     mv librom_wrap.cxx $LIB_BUILD_DIR
     mv pyROM.py $LIB_BUILD_DIR
     cd $LIB_BUILD_DIR
+
     # TODO: Untie the Python lib from LC.
     mpic++ -O2 -fPIC -DSWIG -c librom_wrap.cxx -I/usr/include/python2.7 -I/usr/tce/packages/python/python-2.7.16/lib/python2.7/site-packages/mpi4py/include -I${REPO_PREFIX}/lib
     mpic++ -shared -Wl,-rpath,$LIB_BUILD_DIR -L$LIB_BUILD_DIR librom_wrap.o -lROM -o _pyROM.so
