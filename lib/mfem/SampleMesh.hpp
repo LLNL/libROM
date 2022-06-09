@@ -168,23 +168,23 @@ private:
     ParMesh *pmesh = nullptr;
     ParMesh *sample_pmesh = nullptr;
 
-    vector<vector<set<int>>> sample_dofs_proc;
+    vector<vector<set<int> > > sample_dofs_proc;
 
     vector<int> sample_dofs;  // block true DOFs for all spaces, for all processes.
 
     vector<int> num_sample_dofs_per_proc_merged;
 
     vector<int> varSpace;
-    vector<vector<int>> sample_dofs_var;
-    vector<vector<int>> num_sample_dofs_per_proc_var;
-    vector<vector<int>> s2sp_var;
+    vector<vector<int> > sample_dofs_var;
+    vector<vector<int> > num_sample_dofs_per_proc_var;
+    vector<vector<int> > s2sp_var;
     vector<int> s2sp, st2sp;
     vector<int>
     sprows;  // Local true DOFs on the original full mesh, restricted to the sample mesh stencil.
     vector<int> all_sprows;  // sprows gathered over all processes
 
     vector<int> spaceTOS, spaceOS, spaceOSSP;
-    vector<vector<int>> spaceOSall;
+    vector<vector<int> > spaceOSall;
 
     string filename;  // For visualization output
 };
@@ -232,7 +232,7 @@ public:
 private:
     int nvar = 0;
     map<string, int> vmap;  // Variable name to index map
-    vector<vector<int>> s2sp_var;
+    vector<vector<int> > s2sp_var;
 
     int GetVariableIndex(const string variable) const;
 };

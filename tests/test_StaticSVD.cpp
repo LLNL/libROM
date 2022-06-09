@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
     const double entry = 1 / sqrt(static_cast<double>(3 * nprocs));
 
     // Columns are constructed to be orthogonal with unit norm.
-    std::vector<std::vector<double>> columns;
+    std::vector<std::vector<double> > columns;
     for (int i = 0; i < 4; ++i) {
         columns.emplace_back(12u);
         for (int j = i; j < 12; j += 4)

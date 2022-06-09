@@ -828,7 +828,7 @@ GreedySampler::printConvergenceAchieved()
         agnosticPrint(str);
 
         str = "\nSampled Parameter Points\n";
-        std::vector<std::pair<double, int>> first_dim_of_sampled_points;
+        std::vector<std::pair<double, int> > first_dim_of_sampled_points;
         for (auto itr = d_parameter_sampled_indices.begin();
                 itr != d_parameter_sampled_indices.end(); ++itr) {
             first_dim_of_sampled_points.push_back(std::make_pair(
@@ -1217,7 +1217,7 @@ GreedySampler::generateRandomPoints(int num_points)
 {
     std::vector<Vector> random_points;
 
-    std::vector<std::uniform_real_distribution<double>> unif;
+    std::vector<std::uniform_real_distribution<double> > unif;
     for (int i = 0; i < d_min_param_point.dim(); i++)
     {
         unif.push_back(std::uniform_real_distribution<double>(d_min_param_point.item(i),

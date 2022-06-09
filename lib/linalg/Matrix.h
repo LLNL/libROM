@@ -1312,7 +1312,7 @@ struct ComplexEigenPair {
     /**
      * @brief The corresponding complex eigenvalues.
      */
-    std::vector<std::complex<double>> eigs;
+    std::vector<std::complex<double> > eigs;
 };
 
 /**

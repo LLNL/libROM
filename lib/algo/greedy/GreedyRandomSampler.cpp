@@ -145,7 +145,7 @@ GreedyRandomSampler::constructParameterPoints()
     if (d_use_latin_hypercube)
     {
         std::vector<double> frequencies;
-        std::vector<std::vector<double>> point_coordinates;
+        std::vector<std::vector<double> > point_coordinates;
         std::vector<int> point_indices;
         for (int i = 0; i < d_min_param_point.dim(); i++)
         {

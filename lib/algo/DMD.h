@@ -158,7 +158,7 @@ protected:
      * @param[in] dt d_dt
      * @param[in] t_offset d_t_offset
      */
-    DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
+    DMD(std::vector<std::complex<double> > eigs, Matrix* phi_real,
         Matrix* phi_imaginary, int k, double dt, double t_offset);
 
     /**
@@ -310,7 +310,7 @@ protected:
     /**
      * @brief A vector holding the complex eigenvalues of the eigenmodes.
      */
-    std::vector<std::complex<double>> d_eigs;
+    std::vector<std::complex<double> > d_eigs;
 
 };
 

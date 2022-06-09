@@ -97,7 +97,7 @@ DMD::DMD(std::string base_file_name)
     load(base_file_name);
 }
 
-DMD::DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
+DMD::DMD(std::vector<std::complex<double> > eigs, Matrix* phi_real,
          Matrix* phi_imaginary, int k, double dt, double t_offset)
 {
     // Get the rank of this process, and the number of processors.

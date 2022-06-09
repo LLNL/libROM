@@ -142,6 +142,8 @@ Vector::operator = (const double& a)
     return *this;
 }
 
+#ifndef SWIG
+
 Vector&
 Vector::transform(std::function<void(const int size, double* vector)>
                   transformer) {
@@ -210,6 +212,8 @@ Vector::transform(Vector*& result,
     transformer(d_dim, origVector->d_vec, result->d_vec);
     delete origVector;
 }
+
+#endif
 
 double
 Vector::inner_product(

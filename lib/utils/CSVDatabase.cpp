@@ -107,7 +107,7 @@ CSVDatabase::putDoubleVector(
 void
 CSVDatabase::putComplexVector(
     const std::string& file_name,
-    const std::vector<std::complex<double>> data,
+    const std::vector<std::complex<double> > data,
     int nelements,
     int precision)
 {

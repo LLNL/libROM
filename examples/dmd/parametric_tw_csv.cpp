@@ -374,7 +374,7 @@ int main(int argc, char *argv[])
     }
 
     StopWatch dmd_training_timer, dmd_prediction_timer;
-    vector<vector<CAROM::DMD*>> dmd;
+    vector<vector<CAROM::DMD*> > dmd;
     vector<CAROM::DMD*> dmd_w;
     double* sample = new double[dim];
 

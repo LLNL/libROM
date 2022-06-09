@@ -72,7 +72,7 @@ DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
 
     // Calculate the right eigenvalues/eigenvectors of A_tilde
     ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(A_tilde);
-    std::vector<std::complex<double>> eigs = eigenpair.eigs;
+    std::vector<std::complex<double> > eigs = eigenpair.eigs;
 
     // Calculate phi (phi = W * eigenvectors)
     Matrix* phi_real = W->mult(eigenpair.ev_real);

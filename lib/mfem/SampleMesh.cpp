@@ -149,15 +149,15 @@ void GetLocalSampleMeshElements(ParMesh& pmesh, ParFiniteElementSpace& fespace, 
 }
 
 void SplitDofsIntoBlocks(const vector<int>& Ntrue, const vector<int>& dofs, const vector<int>& local_num_dofs,
-                         vector<vector<int>>& dofs_block, vector<vector<int>>& dofs_block_todofs, vector<vector<int>>& local_num_dofs_block)
+                         vector<vector<int> >& dofs_block, vector<vector<int> >& dofs_block_todofs, vector<vector<int> >& local_num_dofs_block)
 {
     const int num_procs = local_num_dofs.size();
     const int nspaces = Ntrue.size();
 
     MFEM_VERIFY(nspaces > 0 && nspaces == dofs_block.size() && nspaces == dofs_block_todofs.size() && nspaces == local_num_dofs_block.size(), "");
 
-    vector<vector<vector<int>>> procDofs_block(nspaces);
-    vector<vector<int>> allNtrue(nspaces);
+    vector<vector<vector<int> > > procDofs_block(nspaces);
+    vector<vector<int> > allNtrue(nspaces);
 
     for (int i=0; i<nspaces; ++i)
     {
@@ -689,7 +689,7 @@ void Set_s2sp(const int myid, const int num_procs, vector<int> const& spNtrue, c
 
 #ifdef FULL_DOF_STENCIL
 void Finish_s2sp_augmented(const int rank, const int nprocs, vector<ParFiniteElementSpace*> & fespace,
-                           vector<vector<int>>& dofs_block, vector<vector<int> >& dofs_sub_to_sdofs,
+                           vector<vector<int> >& dofs_block, vector<vector<int> >& dofs_sub_to_sdofs,
                            vector<vector<int> >& local_num_dofs_sub, const bool dofsTrue, vector<int> & s2sp_)
 {
     const int nspaces = fespace.size();
@@ -1041,7 +1041,7 @@ SampleMeshManager::SampleMeshManager(vector<ParFiniteElementSpace*> & fespace_, 
     const int status = MPI_Comm_split(MPI_COMM_WORLD, color, myid, &root_comm);
     MFEM_VERIFY(status == MPI_SUCCESS, "Construction of hyperreduction comm failed");
 
-    sample_dofs_proc.assign(nspaces, vector<set<int>> (nprocs));
+    sample_dofs_proc.assign(nspaces, vector<set<int> > (nprocs));
 
     finalized = false;
 }
@@ -1085,7 +1085,7 @@ void SampleMeshManager::SetSampleMaps()
 {
     num_sample_dofs_per_proc_merged.assign(nprocs, 0);
 
-    vector<vector<int>> allspaceTOS(nspaces);
+    vector<vector<int> > allspaceTOS(nspaces);
 
     for (int i=0; i<nspaces; ++i)
     {
@@ -1551,7 +1551,7 @@ void SampleMeshManager::CreateSampleMesh()
 
     delete [] offsets;
 
-    vector<vector<int>> stencil_dofs_block(nspaces);
+    vector<vector<int> > stencil_dofs_block(nspaces);
     vector<vector<int> > stencil_dofs_sub_to_stencil_dofs(nspaces);
     vector<vector<int> > local_num_stencil_dofs_sub(nspaces);
     vector<vector<int> > localStencilDofsToElem_sub(nspaces);

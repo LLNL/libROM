@@ -126,6 +126,8 @@ public:
     operator = (
         const double& a);
 
+#ifndef SWIG
+
     /**
      * @brief Transform the vector using a supplied function.
      *
@@ -206,6 +208,8 @@ public:
     transform(Vector*& result,
               std::function<void(const int size, double* origVector, double* resultVector)>
               transformer) const;
+
+#endif
 
     /**
      * @brief Sets the length of the vector and reallocates storage if
