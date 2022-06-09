@@ -1,4 +1,4 @@
-%module pyROM
+%module librom
 
 %include /usr/tce/packages/python/python-2.7.16/lib/python2.7/site-packages/mpi4py/include/mpi4py/mpi4py.i
 %mpi4py_typemap(Comm, MPI_Comm);
