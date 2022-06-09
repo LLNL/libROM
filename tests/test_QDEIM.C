@@ -63,8 +63,7 @@ TEST(QDEIMSerialTest, Test_QDEIM)
     std::vector<int> f_sampled_row_true_ans{1, 2, 4, 6, 9};
     std::vector<int> f_sampled_rows_per_proc(1, 0);
     CAROM::Matrix f_basis_sampled_inv = CAROM::Matrix(num_cols, num_cols, false);
-    CAROM::QDEIM(u, num_cols, f_sampled_row, f_sampled_rows_per_proc,
-                 f_basis_sampled_inv, 0, 1, num_cols);
+    CAROM::QDEIM(u, num_cols, f_sampled_row, f_sampled_rows_per_proc, f_basis_sampled_inv, 0, 1, num_cols);
 
     for (int i = 0; i < num_cols; i++) {
         EXPECT_EQ(f_sampled_row[i], f_sampled_row_true_ans[i]);
@@ -74,8 +73,7 @@ TEST(QDEIMSerialTest, Test_QDEIM)
     double l2_norm_diff = 0.0;
     for (int i = 0; i < num_cols; i++) {
         for (int j = 0; j < num_cols; j++) {
-            l2_norm_diff += pow(abs(QDEIM_true_ans[i * num_cols + j] - f_basis_sampled_inv(
-                                        i, j)), 2);
+            l2_norm_diff += pow(abs(QDEIM_true_ans[i * num_cols + j] - f_basis_sampled_inv(i, j)), 2);
         }
     }
     l2_norm_diff = sqrt(l2_norm_diff);
@@ -124,8 +122,7 @@ TEST(QDEIMSerialTest, Test_QDEIM_gpode_oversampling)
     std::vector<int> f_sampled_row_true_ans{0, 1, 2, 4, 5, 6, 8, 9};
     std::vector<int> f_sampled_rows_per_proc(1, 0);
     CAROM::Matrix f_basis_sampled_inv = CAROM::Matrix(num_samples, num_cols, false);
-    CAROM::QDEIM(u, num_cols, f_sampled_row, f_sampled_rows_per_proc,
-                 f_basis_sampled_inv, 0, 1, num_samples);
+    CAROM::QDEIM(u, num_cols, f_sampled_row, f_sampled_rows_per_proc, f_basis_sampled_inv, 0, 1, num_samples);
 
     for (int i = 0; i < num_samples; i++) {
         EXPECT_EQ(f_sampled_row[i], f_sampled_row_true_ans[i]);
@@ -135,8 +132,7 @@ TEST(QDEIMSerialTest, Test_QDEIM_gpode_oversampling)
     double l2_norm_diff = 0.0;
     for (int i = 0; i < num_samples; i++) {
         for (int j = 0; j < num_cols; j++) {
-            l2_norm_diff += pow(abs(QDEIM_true_ans[i * num_cols + j] - f_basis_sampled_inv(
-                                        i, j)), 2);
+            l2_norm_diff += pow(abs(QDEIM_true_ans[i * num_cols + j] - f_basis_sampled_inv(i, j)), 2);
         }
     }
     l2_norm_diff = sqrt(l2_norm_diff);

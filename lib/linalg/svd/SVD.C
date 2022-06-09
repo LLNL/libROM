@@ -31,8 +31,7 @@ SVD::SVD(
     d_debug_algorithm(options.debug_algorithm)
 {
     CAROM_VERIFY(options.dim > 0);
-    CAROM_VERIFY(options.max_time_intervals == -1
-                 || options.max_time_intervals > 0);
+    CAROM_VERIFY(options.max_time_intervals == -1 || options.max_time_intervals > 0);
     CAROM_VERIFY(options.samples_per_time_interval > 0);
 }
 

@@ -284,8 +284,7 @@ IncrementalSVD::getSingularValues()
 const Matrix*
 IncrementalSVD::getSnapshotMatrix()
 {
-    std::cout << "Getting snapshot matrix for incremental SVD not implemented" <<
-              std::endl;
+    std::cout << "Getting snapshot matrix for incremental SVD not implemented" << std::endl;
     return d_snapshots;
 }
 

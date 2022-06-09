@@ -72,14 +72,12 @@ double inflow_function(const Vector &x);
 void Compute_CtAB(const HypreParMatrix* A,
                   const CAROM::Matrix& B,  // Distributed matrix.
                   const CAROM::Matrix& C,  // Distributed matrix.
-                  CAROM::Matrix*
-                  CtAB);     // Non-distributed (local) matrix, computed identically and redundantly on every process.
+                  CAROM::Matrix* CtAB);     // Non-distributed (local) matrix, computed identically and redundantly on every process.
 
 void Compute_CtAB_vec(const HypreParMatrix* A,
                       const HypreParVector& B,  // Distributed vector.
                       const CAROM::Matrix& C,  // Distributed matrix.
-                      CAROM::Vector*
-                      CtAB_vec);     // Non-distributed (local) vector, computed identically and redundantly on every process.
+                      CAROM::Vector* CtAB_vec);     // Non-distributed (local) vector, computed identically and redundantly on every process.
 
 // Mesh bounding box
 Vector bb_min, bb_max;
@@ -123,8 +121,7 @@ public:
         delete AIR_solver;
         AIR_solver = new HypreBoomerAMG(A_s);
         AIR_solver->SetAdvectiveOptions(1, "", "FA");
-        AIR_solver->SetPrintLevel(
-            0);    // 6. Define the parallel mesh by a partitioning of the serial mesh. Refine
+        AIR_solver->SetPrintLevel(0);    // 6. Define the parallel mesh by a partitioning of the serial mesh. Refine
         //    this mesh further in parallel to increase the resolution. Once the
         //    parallel mesh is defined, the serial mesh can be deleted.
         AIR_solver->SetMaxLevels(50);
@@ -236,8 +233,7 @@ private:
     mutable Vector z;
 
 public:
-    ROM_FE_Evolution(DenseMatrix* M_, DenseMatrix* K_, Vector* b_,
-                     Vector* u_init_hat_, int num_cols);
+    ROM_FE_Evolution(DenseMatrix* M_, DenseMatrix* K_, Vector* b_, Vector* u_init_hat_, int num_cols);
 
     virtual void Mult(const Vector &x, Vector &y) const;
     virtual void ImplicitSolve(const double dt, const Vector &x, Vector &k);
@@ -397,13 +393,11 @@ int main(int argc, char *argv[])
 
     if (fom)
     {
-        MFEM_VERIFY(fom && !offline && !online
-                    && !merge, "everything must be turned off if fom is used.");
+        MFEM_VERIFY(fom && !offline && !online && !merge, "everything must be turned off if fom is used.");
     }
     else
     {
-        bool check = (offline && !merge && !online) || (!offline && merge && !online)
-                     || (!offline && !merge && online);
+        bool check = (offline && !merge && !online) || (!offline && merge && !online) || (!offline && !merge && online);
         MFEM_VERIFY(check, "only one of offline, merge, or online must be true!");
     }
 
@@ -619,8 +613,7 @@ int main(int argc, char *argv[])
         std::string postfix(mesh_file);
         postfix.erase(0, std::string("../data/").size() );
         postfix += "_o" + std::to_string(order);
-        const std::string collection_name = "dg_advection_global_rom-p-" + postfix +
-                                            ".bp";
+        const std::string collection_name = "dg_advection_global_rom-p-" + postfix + ".bp";
 
         adios2_dc = new ADIOS2DataCollection(MPI_COMM_WORLD, collection_name, pmesh);
         // output data substreams are half the number of mpi processes
@@ -704,16 +697,14 @@ int main(int argc, char *argv[])
         generator = new CAROM::BasisGenerator(*options, isIncremental, basisName);
         for (int paramID=0; paramID<nsets; ++paramID)
         {
-            std::string snapshot_filename = basisName + std::to_string(
-                                                paramID) + "_snapshot";
+            std::string snapshot_filename = basisName + std::to_string(paramID) + "_snapshot";
             generator->loadSamples(snapshot_filename,"snapshot");
         }
         generator->endSamples(); // save the merged basis file
         mergeTimer.Stop();
         if (myid == 0)
         {
-            printf("Elapsed time for merging and building ROM basis: %e second\n",
-                   mergeTimer.RealTime());
+            printf("Elapsed time for merging and building ROM basis: %e second\n", mergeTimer.RealTime());
         }
         delete generator;
         delete options;
@@ -734,8 +725,7 @@ int main(int argc, char *argv[])
         }
         numRowRB = spatialbasis->numRows();
         numColumnRB = spatialbasis->numColumns();
-        if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB,
-                                  numColumnRB);
+        if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB, numColumnRB);
 
         OperatorHandle M, K;
 
@@ -889,17 +879,13 @@ int main(int argc, char *argv[])
         Vector fom_solution(U->Size());
         ifstream solution_file;
         ostringstream solution_filename;
-        solution_filename << "dg_advection_global_rom-final." << f_factor << "." <<
-                          setfill('0') << setw(6) << myid;
+        solution_filename << "dg_advection_global_rom-final." << f_factor << "." << setfill('0') << setw(6) << myid;
         solution_file.open(solution_filename.str());
         fom_solution.Load(solution_file, U->Size());
-        const double fomNorm = sqrt(InnerProduct(MPI_COMM_WORLD, fom_solution,
-                                    fom_solution));
+        const double fomNorm = sqrt(InnerProduct(MPI_COMM_WORLD, fom_solution, fom_solution));
         fom_solution -= u_final;
-        const double diffNorm = sqrt(InnerProduct(MPI_COMM_WORLD, fom_solution,
-                                     fom_solution));
-        if (myid == 0) std::cout << "Relative l2 error of ROM solution " << diffNorm /
-                                     fomNorm << std::endl;
+        const double diffNorm = sqrt(InnerProduct(MPI_COMM_WORLD, fom_solution, fom_solution));
+        if (myid == 0) std::cout << "Relative l2 error of ROM solution " << diffNorm / fomNorm << std::endl;
 
         delete spatialbasis;
         delete M_hat_carom;
@@ -920,8 +906,7 @@ int main(int argc, char *argv[])
     {
         *u = *U;
         ostringstream sol_name;
-        sol_name << "dg_advection_global_rom-final." << f_factor << "." << setfill('0')
-                 << setw(6) << myid;
+        sol_name << "dg_advection_global_rom-final." << f_factor << "." << setfill('0') << setw(6) << myid;
         ofstream osol(sol_name.str().c_str());
         osol.precision(precision);
         Vector tv(u->ParFESpace()->GetTrueVSize());
@@ -957,8 +942,7 @@ int main(int argc, char *argv[])
 
 
 // Implementation of class ROM_FE_Evolution
-ROM_FE_Evolution::ROM_FE_Evolution(DenseMatrix* M_, DenseMatrix* K_, Vector* b_,
-                                   Vector* u_init_hat_, int num_cols)
+ROM_FE_Evolution::ROM_FE_Evolution(DenseMatrix* M_, DenseMatrix* K_, Vector* b_, Vector* u_init_hat_, int num_cols)
     : TimeDependentOperator(num_cols),
       z(num_cols)
 {
@@ -976,8 +960,7 @@ ROM_FE_Evolution::ROM_FE_Evolution(DenseMatrix* M_, DenseMatrix* K_, Vector* b_,
 //    u_t = M_hat^{-1}(K_hatu + b_hat + u_init_hat),
 // by solving associated linear system
 //    (M_hat - dt*K_hat) d = K_hat*u + b_hat + u_init_hat
-void ROM_FE_Evolution::ImplicitSolve(const double dt, const Vector &x,
-                                     Vector &k)
+void ROM_FE_Evolution::ImplicitSolve(const double dt, const Vector &x, Vector &k)
 {
     K->Mult(x, z);
     z += *b;
@@ -1236,8 +1219,7 @@ double inflow_function(const Vector &x)
 void Compute_CtAB(const HypreParMatrix* A,
                   const CAROM::Matrix& B,  // Distributed matrix.
                   const CAROM::Matrix& C,  // Distributed matrix.
-                  CAROM::Matrix*
-                  CtAB)     // Non-distributed (local) matrix, computed identically and redundantly on every process.
+                  CAROM::Matrix* CtAB)     // Non-distributed (local) matrix, computed identically and redundantly on every process.
 {
     MFEM_VERIFY(B.distributed() && C.distributed() && !CtAB->distributed(), "");
 
@@ -1271,8 +1253,7 @@ void Compute_CtAB(const HypreParMatrix* A,
 void Compute_CtAB_vec(const HypreParMatrix* A,
                       const HypreParVector& B,  // Distributed vector.
                       const CAROM::Matrix& C,  // Distributed matrix.
-                      CAROM::Vector*
-                      CtAB_vec)     // Non-distributed (local) vector, computed identically and redundantly on every process.
+                      CAROM::Vector* CtAB_vec)     // Non-distributed (local) vector, computed identically and redundantly on every process.
 {
     MFEM_VERIFY(C.distributed() && !CtAB_vec->distributed(), "");
 

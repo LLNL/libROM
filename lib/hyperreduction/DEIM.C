@@ -28,8 +28,7 @@ void
 RowInfoMax(RowInfo* a, RowInfo* b, int* len, MPI_Datatype* type)
 {
     for (int i = 0; i < *len; ++i) {
-        if (a[i].row_val > b[i].row_val || (a[i].row_val == b[i].row_val
-                                            && a[i].proc < b[i].proc)) {
+        if (a[i].row_val > b[i].row_val || (a[i].row_val == b[i].row_val && a[i].proc < b[i].proc)) {
             b[i].row_val = a[i].row_val;
             b[i].row = a[i].row;
             b[i].proc = a[i].proc;
@@ -90,13 +89,11 @@ DEIM(const Matrix* f_basis,
     MPI_Op_create((MPI_User_function*)RowInfoMax, true, &RowInfoOp);
 
     // Get the number of basis vectors and the size of each basis vector.
-    CAROM_VERIFY(0 < num_f_basis_vectors_used
-                 && num_f_basis_vectors_used <= f_basis->numColumns());
+    CAROM_VERIFY(0 < num_f_basis_vectors_used && num_f_basis_vectors_used <= f_basis->numColumns());
     int num_basis_vectors =
         std::min(num_f_basis_vectors_used, f_basis->numColumns());
     CAROM_VERIFY(num_basis_vectors == f_sampled_row.size());
-    CAROM_VERIFY(num_basis_vectors == f_basis_sampled_inv.numRows()
-                 && num_basis_vectors == f_basis_sampled_inv.numColumns());
+    CAROM_VERIFY(num_basis_vectors == f_basis_sampled_inv.numRows() && num_basis_vectors == f_basis_sampled_inv.numColumns());
     CAROM_VERIFY(!f_basis_sampled_inv.distributed());
     int basis_size = f_basis->numRows();
 

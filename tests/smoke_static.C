@@ -62,8 +62,7 @@ main(
     double vals1[6] = {2.0, 7.0, 4.0, 9.0, 18.0, 10.0};
 
     // Create first static basis generator for snapshot 1
-    CAROM::Options static_svd_options = CAROM::Options(dim,
-                                        2).setMaxBasisDimension(2);
+    CAROM::Options static_svd_options = CAROM::Options(dim, 2).setMaxBasisDimension(2);
 
     // Create an inner scope so destructors are called when out of scope
     if (true) {
@@ -94,8 +93,7 @@ main(
         // Files are closed in destructor.
     }
 
-    std::cout << "Starting to compute basis from precomputed snapshots" <<
-              std::endl;
+    std::cout << "Starting to compute basis from precomputed snapshots" << std::endl;
 
     // Create basis using 2 already computed snapshots
     std::unique_ptr<CAROM::BasisGenerator> static_basis_generator3;

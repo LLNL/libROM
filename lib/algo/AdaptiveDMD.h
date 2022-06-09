@@ -47,8 +47,7 @@ public:
      * @param[in] closest_rbf_val The RBF parameter determines the width of influence.
      *                            Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
      */
-    AdaptiveDMD(int dim, double desired_dt = -1.0, std::string rbf = "G",
-                std::string interp_method = "LS",
+    AdaptiveDMD(int dim, double desired_dt = -1.0, std::string rbf = "G", std::string interp_method = "LS",
                 double closest_rbf_val = 0.9);
 
     /**

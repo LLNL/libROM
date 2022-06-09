@@ -79,17 +79,13 @@ void GNAT(const Matrix* f_basis,
     MPI_Op_create((MPI_User_function*)RowInfoMax, true, &RowInfoOp);
 
     // Get the number of basis vectors and the size of each basis vector.
-    CAROM_VERIFY(0 < num_f_basis_vectors_used
-                 && num_f_basis_vectors_used <= f_basis->numColumns());
+    CAROM_VERIFY(0 < num_f_basis_vectors_used && num_f_basis_vectors_used <= f_basis->numColumns());
     const int num_basis_vectors =
         std::min(num_f_basis_vectors_used, f_basis->numColumns());
-    const int num_samples = num_samples_req > 0 ? num_samples_req :
-                            num_basis_vectors;
-    CAROM_VERIFY(num_basis_vectors <= num_samples
-                 && num_samples <= f_basis->numDistributedRows());
+    const int num_samples = num_samples_req > 0 ? num_samples_req : num_basis_vectors;
+    CAROM_VERIFY(num_basis_vectors <= num_samples && num_samples <= f_basis->numDistributedRows());
     CAROM_VERIFY(num_samples == f_sampled_row.size());
-    CAROM_VERIFY(num_samples == f_basis_sampled_inv.numRows()
-                 && num_basis_vectors == f_basis_sampled_inv.numColumns());
+    CAROM_VERIFY(num_samples == f_basis_sampled_inv.numRows() && num_basis_vectors == f_basis_sampled_inv.numColumns());
     CAROM_VERIFY(!f_basis_sampled_inv.distributed());
     const int basis_size = f_basis->numRows();
 
@@ -124,8 +120,7 @@ void GNAT(const Matrix* f_basis,
         std::vector<int> all_num_init_samples(num_procs);
         std::vector<int> all_init_samples(total_num_init_samples);
 
-        MPI_Allgather(&num_init_samples, 1, MPI_INT, all_num_init_samples.data(), 1,
-                      MPI_INT, MPI_COMM_WORLD);
+        MPI_Allgather(&num_init_samples, 1, MPI_INT, all_num_init_samples.data(), 1, MPI_INT, MPI_COMM_WORLD);
 
         for (int i = 0; i < myid; ++i)
         {
@@ -136,8 +131,7 @@ void GNAT(const Matrix* f_basis,
     // Figure out the 1st sampled rows of the RHS.
     RowInfo f_bv_max_local, f_bv_max_global;
 
-    const int ns0 = 0 < ns_mod_nr ? (num_samples / num_basis_vectors) + 1 :
-                    num_samples / num_basis_vectors;
+    const int ns0 = 0 < ns_mod_nr ? (num_samples / num_basis_vectors) + 1 : num_samples / num_basis_vectors;
 
     for (int k=0; k<ns0; ++k)
     {
@@ -193,8 +187,7 @@ void GNAT(const Matrix* f_basis,
 
     // Now repeat the process for the other sampled rows of the basis of the RHS.
     for (int i = 1; i < num_basis_vectors; ++i) {
-        const int nsi = i < ns_mod_nr ? (num_samples / num_basis_vectors) + 1 :
-                        num_samples / num_basis_vectors;
+        const int nsi = i < ns_mod_nr ? (num_samples / num_basis_vectors) + 1 : num_samples / num_basis_vectors;
 
         // If we currently know about S sampled rows of the basis of the RHS then
         // M contains the first i columns of those S sampled rows.
@@ -216,8 +209,7 @@ void GNAT(const Matrix* f_basis,
                 if (ns == i)
                     tmp += M.item(minv_row, minv_col)*tmp_fs.item(minv_col, i);
                 else
-                    tmp += M.item(minv_col, minv_row)*tmp_fs.item(minv_col,
-                            i);  // Transposing M^+, which is stored as its transpose.
+                    tmp += M.item(minv_col, minv_row)*tmp_fs.item(minv_col, i);  // Transposing M^+, which is stored as its transpose.
             }
             c[minv_row] = tmp;
         }
@@ -234,8 +226,7 @@ void GNAT(const Matrix* f_basis,
             if (ns + k < total_num_init_samples)
             {
                 // Take sample from init_samples on the corresponding process
-                if (ns + k >= init_sample_offset
-                        && ns + k - init_sample_offset < num_init_samples)
+                if (ns + k >= init_sample_offset && ns + k - init_sample_offset < num_init_samples)
                 {
                     f_bv_max_local.row_val = 1.0;  // arbitrary number, ensuring maximum
                     f_bv_max_local.row = (*init_samples)[ns + k - init_sample_offset];

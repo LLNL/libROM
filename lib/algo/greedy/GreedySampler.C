@@ -31,8 +31,7 @@ createGreedyErrorIndicatorPoint(Vector* point, Vector* localROM)
 }
 
 struct GreedyErrorIndicatorPoint
-createGreedyErrorIndicatorPoint(Vector* point,
-                                std::shared_ptr<Vector>& localROM)
+createGreedyErrorIndicatorPoint(Vector* point, std::shared_ptr<Vector>& localROM)
 {
     struct GreedyErrorIndicatorPoint result;
     result.point = std::shared_ptr<Vector>(point);
@@ -118,8 +117,7 @@ GreedySampler::GreedySampler(
     d_parameter_points = parameter_points;
 
     constructObject(check_local_rom, relative_error_tolerance, alpha, max_clamp,
-                    subset_size, convergence_subset_size, output_log_path, use_centroid,
-                    random_seed, debug_algorithm);
+                    subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
 }
 
 GreedySampler::GreedySampler(
@@ -150,8 +148,7 @@ GreedySampler::GreedySampler(
     d_parameter_points = parameter_points_vec;
 
     constructObject(check_local_rom, relative_error_tolerance, alpha, max_clamp,
-                    subset_size, convergence_subset_size, output_log_path, use_centroid,
-                    random_seed, debug_algorithm);
+                    subset_size, convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
 }
 
 GreedySampler::GreedySampler(
@@ -175,10 +172,8 @@ GreedySampler::GreedySampler(
     d_max_param_point = param_space_max;
     d_num_parameter_points = num_parameter_points;
 
-    constructObject(check_local_rom, relative_error_tolerance, alpha, max_clamp,
-                    subset_size,
-                    convergence_subset_size, output_log_path, use_centroid, random_seed,
-                    debug_algorithm);
+    constructObject(check_local_rom, relative_error_tolerance, alpha, max_clamp, subset_size,
+                    convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
 }
 
 GreedySampler::GreedySampler(
@@ -207,10 +202,8 @@ GreedySampler::GreedySampler(
     d_max_param_point = param_space_max_vec;
     d_num_parameter_points = num_parameter_points;
 
-    constructObject(check_local_rom, relative_error_tolerance, alpha, max_clamp,
-                    subset_size,
-                    convergence_subset_size, output_log_path, use_centroid, random_seed,
-                    debug_algorithm);
+    constructObject(check_local_rom, relative_error_tolerance, alpha, max_clamp, subset_size,
+                    convergence_subset_size, output_log_path, use_centroid, random_seed, debug_algorithm);
 }
 
 GreedySampler::GreedySampler(
@@ -249,8 +242,7 @@ GreedySampler::addDatabaseFromFile(
     {
         int temp_parameter_sampled_indices[num_parameter_sampled_indices];
         sprintf(tmp, "parameter_sampled_indices");
-        database.getIntegerArray(tmp, &temp_parameter_sampled_indices[0],
-                                 num_parameter_sampled_indices);
+        database.getIntegerArray(tmp, &temp_parameter_sampled_indices[0], num_parameter_sampled_indices);
         for (int i = 0; i < num_parameter_sampled_indices; i++)
         {
             std::string vec_path = warm_start_file_name + "_" + std::to_string(i);
@@ -304,8 +296,7 @@ GreedySampler::load(
     {
         int temp_parameter_sampled_indices[num_parameter_sampled_indices];
         sprintf(tmp, "parameter_sampled_indices");
-        database.getIntegerArray(tmp, &temp_parameter_sampled_indices[0],
-                                 num_parameter_sampled_indices);
+        database.getIntegerArray(tmp, &temp_parameter_sampled_indices[0], num_parameter_sampled_indices);
         for (int i = 0; i < num_parameter_sampled_indices; i++)
         {
             d_parameter_sampled_indices.insert(temp_parameter_sampled_indices[i]);
@@ -374,18 +365,15 @@ GreedySampler::load(
 
         sprintf(tmp, "parameter_point_random_indices");
         d_parameter_point_random_indices.resize(d_parameter_points.size());
-        database.getIntegerArray(tmp, &d_parameter_point_random_indices[0],
-                                 d_parameter_points.size());
+        database.getIntegerArray(tmp, &d_parameter_point_random_indices[0], d_parameter_points.size());
 
         sprintf(tmp, "parameter_point_errors");
         d_parameter_point_errors.resize(d_parameter_points.size());
-        database.getDoubleArray(tmp, &d_parameter_point_errors[0],
-                                d_parameter_points.size());
+        database.getDoubleArray(tmp, &d_parameter_point_errors[0], d_parameter_points.size());
 
         sprintf(tmp, "parameter_point_local_rom");
         d_parameter_point_local_rom.resize(d_parameter_points.size());
-        database.getIntegerArray(tmp, &d_parameter_point_local_rom[0],
-                                 d_parameter_points.size());
+        database.getIntegerArray(tmp, &d_parameter_point_local_rom[0], d_parameter_points.size());
 
         for (int i = 0; i < d_convergence_subset_size; i++)
         {
@@ -431,8 +419,7 @@ GreedySampler::checkParameterPointInput()
     if (d_rank == 0)
     {
         std::string str;
-        str += "Total number of sample points: " + std::to_string(
-                   d_num_parameter_points) + "\n";
+        str += "Total number of sample points: " + std::to_string(d_num_parameter_points) + "\n";
         str += "Parameter space minimum: [ ";
         for (int i = 0 ; i < d_min_param_point.dim(); i++)
         {
@@ -507,13 +494,11 @@ GreedySampler::constructObject(
     if (d_rank == 0)
     {
         std::string str;
-        str += "Relative error tolerance: " + std::to_string(d_relative_error_tol) +
-               "\n";
+        str += "Relative error tolerance: " + std::to_string(d_relative_error_tol) + "\n";
         str += "Alpha constant: " + std::to_string(d_alpha) + "\n";
         str += "Max clamp constant: " + std::to_string(d_max_clamp) + "\n";
         str += "Iteration subset size: " + std::to_string(d_subset_size) + "\n";
-        str += "Convergence subset size: " + std::to_string(d_convergence_subset_size) +
-               "\n";
+        str += "Convergence subset size: " + std::to_string(d_convergence_subset_size) + "\n";
         agnosticPrint(str);
     }
 }
@@ -609,13 +594,11 @@ GreedySampler::getNextPointRequiringRelativeError()
 
     if (d_parameter_sampled_indices.size() == 1)
     {
-        result2 = new Vector(d_parameter_points[getNearestROMIndexToParameterPoint(
-                d_next_point_to_sample, false)]);
+        result2 = new Vector(d_parameter_points[getNearestROMIndexToParameterPoint(d_next_point_to_sample, false)]);
     }
     else
     {
-        result2 = new Vector(d_parameter_points[getNearestROMIndexToParameterPoint(
-                d_next_point_to_sample, true)]);
+        result2 = new Vector(d_parameter_points[getNearestROMIndexToParameterPoint(d_next_point_to_sample, true)]);
     }
 
     return createGreedyErrorIndicatorPoint(result1, result2);
@@ -648,11 +631,8 @@ GreedySampler::getNextSubsetPointRequiringErrorIndicator()
 {
     if (d_point_requiring_error_indicator_computed)
     {
-        Vector* result1 = new Vector(
-            d_parameter_points[d_next_point_requiring_error_indicator]);
-        Vector* result2 = new Vector(
-            d_parameter_points[getNearestROMIndexToParameterPoint(
-                                   d_next_point_requiring_error_indicator, false)]);
+        Vector* result1 = new Vector(d_parameter_points[d_next_point_requiring_error_indicator]);
+        Vector* result2 = new Vector(d_parameter_points[getNearestROMIndexToParameterPoint(d_next_point_requiring_error_indicator, false)]);
         return createGreedyErrorIndicatorPoint(result1, result2);
     }
     if (d_subset_counter == d_subset_size)
@@ -665,8 +645,7 @@ GreedySampler::getNextSubsetPointRequiringErrorIndicator()
         // generate random shuffle
         if (!d_debug_algorithm)
         {
-            std::shuffle(d_parameter_point_random_indices.begin(),
-                         d_parameter_point_random_indices.end(), rng);
+            std::shuffle(d_parameter_point_random_indices.begin(), d_parameter_point_random_indices.end(), rng);
         }
         d_subset_created = true;
     }
@@ -680,20 +659,16 @@ GreedySampler::getNextSubsetPointRequiringErrorIndicator()
         {
             break;
         }
-        auto search = d_parameter_sampled_indices.find(
-                          d_parameter_point_random_indices[d_counter]);
+        auto search = d_parameter_sampled_indices.find(d_parameter_point_random_indices[d_counter]);
         if (search == d_parameter_sampled_indices.end())
         {
             d_subset_counter++;
-            double curr_error =
-                d_parameter_point_errors[d_parameter_point_random_indices[d_counter]];
+            double curr_error = d_parameter_point_errors[d_parameter_point_random_indices[d_counter]];
             if (curr_error > d_max_error)
             {
                 // if we have already computed this error indicator at the same local rom, the error indicator will not improve
                 // no need to calculate the error indicator again
-                if (d_parameter_point_local_rom[d_parameter_point_random_indices[d_counter]] ==
-                        getNearestROMIndexToParameterPoint(d_parameter_point_random_indices[d_counter],
-                                false))
+                if (d_parameter_point_local_rom[d_parameter_point_random_indices[d_counter]] == getNearestROMIndexToParameterPoint(d_parameter_point_random_indices[d_counter], false))
                 {
                     d_max_error = curr_error;
                     d_next_point_to_sample = d_parameter_point_random_indices[d_counter];
@@ -701,28 +676,21 @@ GreedySampler::getNextSubsetPointRequiringErrorIndicator()
                     {
                         std::string str;
                         str += "Error indicator at [ ";
-                        for (int i = 0 ;
-                                i < d_parameter_points[d_parameter_point_random_indices[d_counter]].dim(); i++)
+                        for (int i = 0 ; i < d_parameter_points[d_parameter_point_random_indices[d_counter]].dim(); i++)
                         {
-                            str += std::to_string(
-                                       d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i)) + " ";
+                            str += std::to_string(d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i)) + " ";
                         }
                         str += "] skipped.\n";
-                        str += "Error indicator " + std::to_string(curr_error) +
-                               " already computed at the same local ROM.\n";
+                        str += "Error indicator " + std::to_string(curr_error) + " already computed at the same local ROM.\n";
                         agnosticPrint(str);
                     }
                 }
                 else
                 {
-                    d_next_point_requiring_error_indicator =
-                        d_parameter_point_random_indices[d_counter];
+                    d_next_point_requiring_error_indicator = d_parameter_point_random_indices[d_counter];
                     d_point_requiring_error_indicator_computed = true;
-                    Vector* result1 = new Vector(
-                        d_parameter_points[d_next_point_requiring_error_indicator]);
-                    Vector* result2 = new Vector(
-                        d_parameter_points[getNearestROMIndexToParameterPoint(
-                                               d_next_point_requiring_error_indicator, false)]);
+                    Vector* result1 = new Vector(d_parameter_points[d_next_point_requiring_error_indicator]);
+                    Vector* result2 = new Vector(d_parameter_points[getNearestROMIndexToParameterPoint(d_next_point_requiring_error_indicator, false)]);
                     return createGreedyErrorIndicatorPoint(result1, result2);
                 }
             }
@@ -732,15 +700,12 @@ GreedySampler::getNextSubsetPointRequiringErrorIndicator()
                 {
                     std::string str;
                     str += "Error indicator at [ ";
-                    for (int i = 0 ;
-                            i < d_parameter_points[d_parameter_point_random_indices[d_counter]].dim(); i++)
+                    for (int i = 0 ; i < d_parameter_points[d_parameter_point_random_indices[d_counter]].dim(); i++)
                     {
-                        str += std::to_string(
-                                   d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i)) + " ";
+                        str += std::to_string(d_parameter_points[d_parameter_point_random_indices[d_counter]].item(i)) + " ";
                     }
                     str += "] skipped.\n";
-                    str += "Error indicator " + std::to_string(curr_error) +
-                           " is less than current max error " + std::to_string(d_max_error) + "\n";
+                    str += "Error indicator " + std::to_string(curr_error) + " is less than current max error " + std::to_string(d_max_error) + "\n";
                     agnosticPrint(str);
                 }
             }
@@ -773,10 +738,8 @@ GreedySampler::getNextConvergencePointRequiringErrorIndicator()
 {
     if (d_point_requiring_error_indicator_computed)
     {
-        Vector* result1 = new Vector(
-            d_convergence_points[d_next_point_requiring_error_indicator]);
-        std::shared_ptr<Vector> result2 = getNearestROM(
-                                              d_convergence_points[d_next_point_requiring_error_indicator]);
+        Vector* result1 = new Vector(d_convergence_points[d_next_point_requiring_error_indicator]);
+        std::shared_ptr<Vector> result2 = getNearestROM(d_convergence_points[d_next_point_requiring_error_indicator]);
         return createGreedyErrorIndicatorPoint(result1, result2);
     }
     if (d_counter == d_convergence_subset_size)
@@ -791,10 +754,8 @@ GreedySampler::getNextConvergencePointRequiringErrorIndicator()
     {
         d_next_point_requiring_error_indicator = d_counter;
         d_point_requiring_error_indicator_computed = true;
-        Vector* result1 = new Vector(
-            d_convergence_points[d_next_point_requiring_error_indicator]);
-        std::shared_ptr<Vector> result2 = getNearestROM(
-                                              d_convergence_points[d_next_point_requiring_error_indicator]);
+        Vector* result1 = new Vector(d_convergence_points[d_next_point_requiring_error_indicator]);
+        std::shared_ptr<Vector> result2 = getNearestROM(d_convergence_points[d_next_point_requiring_error_indicator]);
         return createGreedyErrorIndicatorPoint(result1, result2);
     }
 
@@ -829,20 +790,16 @@ GreedySampler::printConvergenceAchieved()
 
         str = "\nSampled Parameter Points\n";
         std::vector<std::pair<double, int>> first_dim_of_sampled_points;
-        for (auto itr = d_parameter_sampled_indices.begin();
-                itr != d_parameter_sampled_indices.end(); ++itr) {
-            first_dim_of_sampled_points.push_back(std::make_pair(
-                    d_parameter_points[*itr].item(0), *itr));
+        for (auto itr = d_parameter_sampled_indices.begin(); itr != d_parameter_sampled_indices.end(); ++itr) {
+            first_dim_of_sampled_points.push_back(std::make_pair(d_parameter_points[*itr].item(0), *itr));
         }
         sort(first_dim_of_sampled_points.begin(), first_dim_of_sampled_points.end());
         for (int i = 0; i < first_dim_of_sampled_points.size(); i++)
         {
             str += "[ ";
-            for (int j = 0 ;
-                    j < d_parameter_points[first_dim_of_sampled_points[i].second].dim(); j++)
+            for (int j = 0 ; j < d_parameter_points[first_dim_of_sampled_points[i].second].dim(); j++)
             {
-                str += std::to_string(
-                           d_parameter_points[first_dim_of_sampled_points[i].second].item(j)) + " ";
+                str += std::to_string(d_parameter_points[first_dim_of_sampled_points[i].second].item(j)) + " ";
             }
             str += "]\n";
         }
@@ -887,8 +844,7 @@ GreedySampler::setPointRelativeError(double error)
     {
         double max1 = d_alpha * d_error_indicator_tol;
         double min1 = d_max_clamp * d_parameter_point_errors[d_next_point_to_sample];
-        double min2 = d_relative_error_tol *
-                      d_parameter_point_errors[d_next_point_to_sample] / d_curr_relative_error;
+        double min2 = d_relative_error_tol * d_parameter_point_errors[d_next_point_to_sample] / d_curr_relative_error;
 
         if (d_curr_relative_error <= d_relative_error_tol)
         {
@@ -896,35 +852,26 @@ GreedySampler::setPointRelativeError(double error)
             {
                 std::string str;
                 str += "The relative error was smaller than the relative error tolerance. The error indicator tolerance must increase.\n";
-                str += "Alpha constant * relative error tolerance: " + std::to_string(
-                           max1) + "\n";
-                str += "The minimum value the error indicator tolerance can take is: " +
-                       std::to_string(max1) + "\n";
-                str += "Max clamp constant * current max error indicator: " + std::to_string(
-                           min1) + "\n";
-                str += "Relative error tolerance * current max error indicator / current relative error: "
-                       + std::to_string(min2) + "\n";
-                str += "The maximum value the error indicator tolerance can take is the minimum of the previous two values: "
-                       + std::to_string(std::min(min1, min2)) + "\n";
+                str += "Alpha constant * relative error tolerance: " + std::to_string(max1) + "\n";
+                str += "The minimum value the error indicator tolerance can take is: " + std::to_string(max1) + "\n";
+                str += "Max clamp constant * current max error indicator: " + std::to_string(min1) + "\n";
+                str += "Relative error tolerance * current max error indicator / current relative error: " + std::to_string(min2) + "\n";
+                str += "The maximum value the error indicator tolerance can take is the minimum of the previous two values: " + std::to_string(std::min(min1, min2)) + "\n";
                 agnosticPrint(str);
             }
             d_error_indicator_tol = std::max(max1, std::min(min1, min2));
         }
         else
         {
-            double min1 = d_relative_error_tol *
-                          d_parameter_point_errors[d_next_point_to_sample] / d_curr_relative_error;
+            double min1 = d_relative_error_tol * d_parameter_point_errors[d_next_point_to_sample] / d_curr_relative_error;
 
             if (d_rank == 0)
             {
                 std::string str;
                 str += "The relative error was larger than the relative error tolerance. The error indicator tolerance must decrease.\n";
-                str += "Current error indicator tolerance: " + std::to_string(
-                           d_error_indicator_tol) + "\n";
-                str += "Relative error tolerance * current max error indicator / current relative error: "
-                       + std::to_string(min1) + "\n";
-                str += "The minimum value the error indicator tolerance can take is: " +
-                       std::to_string(std::min(d_error_indicator_tol, min1)) + "\n";
+                str += "Current error indicator tolerance: " + std::to_string(d_error_indicator_tol) + "\n";
+                str += "Relative error tolerance * current max error indicator / current relative error: " + std::to_string(min1) + "\n";
+                str += "The minimum value the error indicator tolerance can take is: " + std::to_string(std::min(d_error_indicator_tol, min1)) + "\n";
                 agnosticPrint(str);
             }
             d_error_indicator_tol = std::min(d_error_indicator_tol, min1);
@@ -934,9 +881,7 @@ GreedySampler::setPointRelativeError(double error)
             if (old_error_indicator_tol != d_error_indicator_tol)
             {
                 std::string str;
-                str += "Error indicator tolerance was adaptively changed from " +
-                       std::to_string(old_error_indicator_tol) + " to " + std::to_string(
-                           d_error_indicator_tol) + "\n";
+                str += "Error indicator tolerance was adaptively changed from " + std::to_string(old_error_indicator_tol) + " to " + std::to_string(d_error_indicator_tol) + "\n";
                 agnosticPrint(str);
             }
         }
@@ -945,8 +890,7 @@ GreedySampler::setPointRelativeError(double error)
     d_parameter_point_errors[d_next_point_to_sample] = 0;
     d_parameter_point_local_rom[d_next_point_to_sample] = d_next_point_to_sample;
 
-    if (d_parameter_sampled_indices.size() > 1
-            && d_curr_relative_error <= d_relative_error_tol)
+    if (d_parameter_sampled_indices.size() > 1 && d_curr_relative_error <= d_relative_error_tol)
     {
         startConvergence();
     }
@@ -1006,8 +950,7 @@ GreedySampler::setPointErrorIndicator(double error, int vec_size)
 }
 
 void
-GreedySampler::printErrorIndicator(Vector errorIndicatorPoint,
-                                   double proc_errors)
+GreedySampler::printErrorIndicator(Vector errorIndicatorPoint, double proc_errors)
 {
     if (d_rank == 0)
     {
@@ -1045,8 +988,7 @@ GreedySampler::printErrorIndicatorToleranceNotMet()
     if (d_rank == 0)
     {
         std::string str;
-        str += "Error indicator tolerance " + std::to_string(d_error_indicator_tol) +
-               " not met.\n";
+        str += "Error indicator tolerance " + std::to_string(d_error_indicator_tol) + " not met.\n";
         agnosticPrint(str);
     }
 }
@@ -1056,13 +998,11 @@ GreedySampler::setSubsetErrorIndicator(double proc_errors)
 {
     if (d_check_local_rom || d_parameter_sampled_indices.size() == 1)
     {
-        auto search = d_parameter_sampled_indices.find(
-                          d_next_point_requiring_error_indicator);
+        auto search = d_parameter_sampled_indices.find(d_next_point_requiring_error_indicator);
         if (search != d_parameter_sampled_indices.end())
         {
             d_parameter_point_errors[d_next_point_requiring_error_indicator] = proc_errors;
-            d_parameter_point_local_rom[d_next_point_requiring_error_indicator] =
-                d_next_point_requiring_error_indicator;
+            d_parameter_point_local_rom[d_next_point_requiring_error_indicator] = d_next_point_requiring_error_indicator;
 
             double old_error_indicator_tol = d_error_indicator_tol;
             if (d_parameter_sampled_indices.size() == 1)
@@ -1073,22 +1013,17 @@ GreedySampler::setSubsetErrorIndicator(double proc_errors)
             {
                 std::string str;
                 str += "Local ROM error indicator computed at [ ";
-                for (int i = 0 ;
-                        i < d_parameter_points[d_next_point_requiring_error_indicator].dim(); i++)
+                for (int i = 0 ; i < d_parameter_points[d_next_point_requiring_error_indicator].dim(); i++)
                 {
-                    str += std::to_string(
-                               d_parameter_points[d_next_point_requiring_error_indicator].item(i)) + " ";
+                    str += std::to_string(d_parameter_points[d_next_point_requiring_error_indicator].item(i)) + " ";
                 }
                 str += "]\n";
-                str += "Local ROM error indicator (tolerance unchecked): " + std::to_string(
-                           proc_errors) + "\n";
+                str += "Local ROM error indicator (tolerance unchecked): " + std::to_string(proc_errors) + "\n";
                 if (old_error_indicator_tol != d_error_indicator_tol)
                 {
                     str += "Error indicator at the local ROM was higher than the previous tolerance.\n";
                     str += "The error indicator tolerance should always be at least the error indicator at the local ROM.\n";
-                    str += "Error indicator tolerance was adaptively changed from " +
-                           std::to_string(old_error_indicator_tol) + " to " + std::to_string(
-                               d_error_indicator_tol) + "\n";
+                    str += "Error indicator tolerance was adaptively changed from " + std::to_string(old_error_indicator_tol) + " to " + std::to_string(d_error_indicator_tol) + "\n";
                 }
                 agnosticPrint(str);
             }
@@ -1104,18 +1039,13 @@ GreedySampler::setSubsetErrorIndicator(double proc_errors)
         }
     }
 
-    if (proc_errors <
-            d_parameter_point_errors[d_parameter_point_random_indices[d_counter]])
+    if (proc_errors < d_parameter_point_errors[d_parameter_point_random_indices[d_counter]])
     {
-        d_parameter_point_errors[d_parameter_point_random_indices[d_counter]] =
-            proc_errors;
-        d_parameter_point_local_rom[d_parameter_point_random_indices[d_counter]] =
-            getNearestROMIndexToParameterPoint(d_parameter_point_random_indices[d_counter],
-                                               false);
+        d_parameter_point_errors[d_parameter_point_random_indices[d_counter]] = proc_errors;
+        d_parameter_point_local_rom[d_parameter_point_random_indices[d_counter]] = getNearestROMIndexToParameterPoint(d_parameter_point_random_indices[d_counter], false);
     }
 
-    printErrorIndicator(
-        d_parameter_points[d_parameter_point_random_indices[d_counter]], proc_errors);
+    printErrorIndicator(d_parameter_points[d_parameter_point_random_indices[d_counter]], proc_errors);
 
     d_point_requiring_error_indicator_computed = false;
 
@@ -1125,8 +1055,7 @@ GreedySampler::setSubsetErrorIndicator(double proc_errors)
         d_next_point_to_sample = d_parameter_point_random_indices[d_counter];
     }
 
-    if (d_subset_counter == d_subset_size
-            || d_counter == (int) d_parameter_points.size() - 1)
+    if (d_subset_counter == d_subset_size || d_counter == (int) d_parameter_points.size() - 1)
     {
         if (d_max_error < d_error_indicator_tol)
         {
@@ -1201,8 +1130,7 @@ GreedySampler::startConvergence()
     if (d_rank == 0)
     {
         std::string str;
-        str += "Error indicator tolerance " + std::to_string(d_error_indicator_tol) +
-               " met. Computing convergence.\n";
+        str += "Error indicator tolerance " + std::to_string(d_error_indicator_tol) + " met. Computing convergence.\n";
         agnosticPrint(str);
     }
 
@@ -1220,8 +1148,7 @@ GreedySampler::generateRandomPoints(int num_points)
     std::vector<std::uniform_real_distribution<double>> unif;
     for (int i = 0; i < d_min_param_point.dim(); i++)
     {
-        unif.push_back(std::uniform_real_distribution<double>(d_min_param_point.item(i),
-                       d_max_param_point.item(i)));
+        unif.push_back(std::uniform_real_distribution<double>(d_min_param_point.item(i), d_max_param_point.item(i)));
     }
 
     for (int i = 0; i < num_points; i++)
@@ -1245,8 +1172,7 @@ GreedySampler::getNearestROM(Vector point)
     double closest_dist_to_points = INT_MAX;
     int closest_point_index = -1;
 
-    for (auto itr = d_parameter_sampled_indices.begin();
-            itr != d_parameter_sampled_indices.end(); ++itr) {
+    for (auto itr = d_parameter_sampled_indices.begin(); itr != d_parameter_sampled_indices.end(); ++itr) {
         Vector diff;
         point.minus(d_parameter_points[*itr], diff);
         double dist = diff.norm();
@@ -1300,8 +1226,7 @@ GreedySampler::getNearestROMIndexToParameterPoint(int index, bool ignore_self)
     double closest_dist_to_points = INT_MAX;
     int closest_point_index = -1;
 
-    for (auto itr = d_parameter_sampled_indices.begin();
-            itr != d_parameter_sampled_indices.end(); ++itr) {
+    for (auto itr = d_parameter_sampled_indices.begin(); itr != d_parameter_sampled_indices.end(); ++itr) {
         if (index != *itr)
         {
             Vector diff;
@@ -1335,8 +1260,7 @@ std::vector<Vector>
 GreedySampler::getSampledParameterPoints()
 {
     std::vector<Vector> sampled_points;
-    for (auto itr = d_parameter_sampled_indices.begin();
-            itr != d_parameter_sampled_indices.end(); ++itr) {
+    for (auto itr = d_parameter_sampled_indices.begin(); itr != d_parameter_sampled_indices.end(); ++itr) {
         sampled_points.push_back(d_parameter_points[*itr]);
     }
     return sampled_points;
@@ -1378,10 +1302,8 @@ GreedySampler::save(std::string base_file_name)
         if (d_parameter_sampled_indices.size() > 0)
         {
             sprintf(tmp, "parameter_sampled_indices");
-            std::vector<int> d_parameter_sampled_indices_vec(
-                d_parameter_sampled_indices.begin(), d_parameter_sampled_indices.end());
-            database.putIntegerArray(tmp, &d_parameter_sampled_indices_vec[0],
-                                     d_parameter_sampled_indices.size());
+            std::vector<int> d_parameter_sampled_indices_vec(d_parameter_sampled_indices.begin(), d_parameter_sampled_indices.end());
+            database.putIntegerArray(tmp, &d_parameter_sampled_indices_vec[0], d_parameter_sampled_indices.size());
         }
 
         sprintf(tmp, "procedure_completed");
@@ -1435,14 +1357,11 @@ GreedySampler::save(std::string base_file_name)
             database.putInteger(tmp, d_random_seed);
 
             sprintf(tmp, "parameter_point_random_indices");
-            database.putIntegerArray(tmp, &d_parameter_point_random_indices[0],
-                                     d_parameter_point_random_indices.size());
+            database.putIntegerArray(tmp, &d_parameter_point_random_indices[0], d_parameter_point_random_indices.size());
             sprintf(tmp, "parameter_point_errors");
-            database.putDoubleArray(tmp, &d_parameter_point_errors[0],
-                                    d_parameter_point_errors.size());
+            database.putDoubleArray(tmp, &d_parameter_point_errors[0], d_parameter_point_errors.size());
             sprintf(tmp, "parameter_point_local_rom");
-            database.putIntegerArray(tmp, &d_parameter_point_local_rom[0],
-                                     d_parameter_point_local_rom.size());
+            database.putIntegerArray(tmp, &d_parameter_point_local_rom[0], d_parameter_point_local_rom.size());
         }
         database.close();
     }
@@ -1452,8 +1371,7 @@ GreedySampler::save(std::string base_file_name)
 bool
 GreedySampler::isComplete()
 {
-    if (!d_procedure_completed
-            && d_parameter_sampled_indices.size() == d_num_parameter_points)
+    if (!d_procedure_completed && d_parameter_sampled_indices.size() == d_num_parameter_points)
     {
         if (d_rank == 0)
         {

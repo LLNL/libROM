@@ -123,9 +123,8 @@ main(
     // incremental algorithm and the incremental sampler.
 
     CAROM::BasisGenerator inc_basis_generator(
-        CAROM::Options(dim, num_samples).setMaxBasisDimension(dim).setIncrementalSVD(
-            1.0e-6,
-            1.0e-6, 1.0e-2, 0.001, true).setDebugMode(true), true
+        CAROM::Options(dim, num_samples).setMaxBasisDimension(dim).setIncrementalSVD(1.0e-6,
+                1.0e-6, 1.0e-2, 0.001, true).setDebugMode(true), true
     );
 
     // Construct the static basis generator for the static algorithm and the

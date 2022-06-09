@@ -40,27 +40,22 @@ TEST(GreedyCustomSamplerSerialTest, Test_GreedyCustomSamplerCentroid)
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
 
     std::vector<double> paramPoints = {1.0, 3.0, 6.0};
-    CAROM::GreedyCustomSampler caromGreedySampler(paramPoints, false, 0.1, 1, 1, 2,
-            3, "", "", true, 1, true);
+    CAROM::GreedyCustomSampler caromGreedySampler(paramPoints, false, 0.1, 1, 1, 2, 3, "", "", true, 1, true);
 
-    std::shared_ptr<CAROM::Vector> nextPointToSample =
-        caromGreedySampler.getNextParameterPoint();
+    std::shared_ptr<CAROM::Vector> nextPointToSample = caromGreedySampler.getNextParameterPoint();
     EXPECT_EQ(nextPointToSample.get()->item(0), 3.0);
 
     caromGreedySampler.getNextPointRequiringRelativeError();
     caromGreedySampler.setPointRelativeError(100.0);
 
-    struct CAROM::GreedyErrorIndicatorPoint localPoint =
-        caromGreedySampler.getNextPointRequiringErrorIndicator();
+    struct CAROM::GreedyErrorIndicatorPoint localPoint = caromGreedySampler.getNextPointRequiringErrorIndicator();
     EXPECT_EQ(localPoint.point.get()->item(0), 3.0);
     caromGreedySampler.setPointErrorIndicator(1.0, 1);
 
-    struct CAROM::GreedyErrorIndicatorPoint firstPoint =
-        caromGreedySampler.getNextPointRequiringErrorIndicator();
+    struct CAROM::GreedyErrorIndicatorPoint firstPoint = caromGreedySampler.getNextPointRequiringErrorIndicator();
     EXPECT_EQ(firstPoint.point.get()->item(0), 1.0);
     caromGreedySampler.setPointErrorIndicator(100.0, 1);
-    struct CAROM::GreedyErrorIndicatorPoint secondPoint =
-        caromGreedySampler.getNextPointRequiringErrorIndicator();
+    struct CAROM::GreedyErrorIndicatorPoint secondPoint = caromGreedySampler.getNextPointRequiringErrorIndicator();
     EXPECT_EQ(secondPoint.point.get()->item(0), 6.0);
     caromGreedySampler.setPointErrorIndicator(50.0, 1);
 
@@ -80,8 +75,7 @@ TEST(GreedyCustomSamplerSerialTest, Test_GreedyCustomSamplerCentroid)
     firstPoint = caromGreedySampler.getNextPointRequiringErrorIndicator();
 }
 
-TEST(GreedyCustomSamplerSerialTest,
-     Test_GreedyCustomSamplerMultiDimensionalCentroid)
+TEST(GreedyCustomSamplerSerialTest, Test_GreedyCustomSamplerMultiDimensionalCentroid)
 {
     // Get the rank of this process, and the number of processors.
     int mpi_init, d_rank, d_num_procs;
@@ -106,30 +100,25 @@ TEST(GreedyCustomSamplerSerialTest,
     item2.item(1) = 16.0;
 
     std::vector<CAROM::Vector> paramPoints = {item0, item1, item2};
-    CAROM::GreedyCustomSampler caromGreedySampler(paramPoints, false, 0.1, 1, 1, 2,
-            3, "", "", true, 1, true);
+    CAROM::GreedyCustomSampler caromGreedySampler(paramPoints, false, 0.1, 1, 1, 2, 3, "", "", true, 1, true);
 
-    std::shared_ptr<CAROM::Vector> nextPointToSample =
-        caromGreedySampler.getNextParameterPoint();
+    std::shared_ptr<CAROM::Vector> nextPointToSample = caromGreedySampler.getNextParameterPoint();
     EXPECT_EQ(nextPointToSample.get()->item(0), 3.0);
     EXPECT_EQ(nextPointToSample.get()->item(1), 13.0);
 
     caromGreedySampler.getNextPointRequiringRelativeError();
     caromGreedySampler.setPointRelativeError(100.0);
 
-    struct CAROM::GreedyErrorIndicatorPoint localPoint =
-        caromGreedySampler.getNextPointRequiringErrorIndicator();
+    struct CAROM::GreedyErrorIndicatorPoint localPoint = caromGreedySampler.getNextPointRequiringErrorIndicator();
     EXPECT_EQ(localPoint.point.get()->item(0), 3.0);
     EXPECT_EQ(localPoint.point.get()->item(1), 13.0);
     caromGreedySampler.setPointErrorIndicator(1.0, 1);
 
-    struct CAROM::GreedyErrorIndicatorPoint firstPoint =
-        caromGreedySampler.getNextPointRequiringErrorIndicator();
+    struct CAROM::GreedyErrorIndicatorPoint firstPoint = caromGreedySampler.getNextPointRequiringErrorIndicator();
     EXPECT_EQ(firstPoint.point.get()->item(0), 1.0);
     EXPECT_EQ(firstPoint.point.get()->item(1), 11.0);
     caromGreedySampler.setPointErrorIndicator(100.0, 1);
-    struct CAROM::GreedyErrorIndicatorPoint secondPoint =
-        caromGreedySampler.getNextPointRequiringErrorIndicator();
+    struct CAROM::GreedyErrorIndicatorPoint secondPoint = caromGreedySampler.getNextPointRequiringErrorIndicator();
     EXPECT_EQ(secondPoint.point.get()->item(0), 6.0);
     EXPECT_EQ(secondPoint.point.get()->item(1), 16.0);
     caromGreedySampler.setPointErrorIndicator(50.0, 1);
@@ -165,8 +154,7 @@ TEST(GreedyCustomSamplerSerialTest, Test_GreedySaveAndLoad)
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
 
     std::vector<double> paramPoints = {1.0, 2.0, 3.0, 99.0, 100.0, 101.0};
-    CAROM::GreedyCustomSampler caromGreedySampler(paramPoints, false, 0.1, 1, 1, 3,
-            4, "", "", false, 1, true);
+    CAROM::GreedyCustomSampler caromGreedySampler(paramPoints, false, 0.1, 1, 1, 3, 4, "", "", false, 1, true);
     caromGreedySampler.save("greedy_test");
 
     CAROM::GreedyCustomSampler caromGreedySamplerLoad("greedy_test");
@@ -175,18 +163,13 @@ TEST(GreedyCustomSamplerSerialTest, Test_GreedySaveAndLoad)
     CAROM::Vector pointToFindNearestROM(1, false);
     pointToFindNearestROM.item(0) = 1.0;
 
-    std::shared_ptr<CAROM::Vector> closestROM = caromGreedySampler.getNearestROM(
-                pointToFindNearestROM);
-    std::shared_ptr<CAROM::Vector> closestROMLoad =
-        caromGreedySamplerLoad.getNearestROM(pointToFindNearestROM);
+    std::shared_ptr<CAROM::Vector> closestROM = caromGreedySampler.getNearestROM(pointToFindNearestROM);
+    std::shared_ptr<CAROM::Vector> closestROMLoad = caromGreedySamplerLoad.getNearestROM(pointToFindNearestROM);
     EXPECT_EQ(closestROM.get(), closestROMLoad.get());
 
-    std::shared_ptr<CAROM::Vector> nextPointToSample =
-        caromGreedySampler.getNextParameterPoint();
-    std::shared_ptr<CAROM::Vector> nextPointToSampleLoad =
-        caromGreedySamplerLoad.getNextParameterPoint();
-    EXPECT_EQ(nextPointToSample.get()->item(0),
-              nextPointToSampleLoad.get()->item(0));
+    std::shared_ptr<CAROM::Vector> nextPointToSample = caromGreedySampler.getNextParameterPoint();
+    std::shared_ptr<CAROM::Vector> nextPointToSampleLoad = caromGreedySamplerLoad.getNextParameterPoint();
+    EXPECT_EQ(nextPointToSample.get()->item(0), nextPointToSampleLoad.get()->item(0));
 }
 
 int main(int argc, char* argv[])

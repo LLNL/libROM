@@ -147,8 +147,7 @@ public:
     *             size and transforms the vector.
      */
     void
-    transform(Vector& result,
-              std::function<void(const int size, double* vector)> transformer) const;
+    transform(Vector& result, std::function<void(const int size, double* vector)> transformer) const;
 
     /**
      * @brief Transform a vector using a supplied function and store the
@@ -160,8 +159,7 @@ public:
      *            size and transforms the vector.
      */
     void
-    transform(Vector*& result,
-              std::function<void(const int size, double* vector)> transformer) const;
+    transform(Vector*& result, std::function<void(const int size, double* vector)> transformer) const;
 
     /**
      * @brief Transform the vector using a supplied function.
@@ -173,9 +171,7 @@ public:
      * @return The newly transformed vector.
      */
     Vector&
-    transform(
-        std::function<void(const int size, double* origVector, double* resultVector)>
-        transformer);
+    transform(std::function<void(const int size, double* origVector, double* resultVector)> transformer);
 
     /**
      * @brief Transform a vector using a supplied function and store the
@@ -188,9 +184,7 @@ public:
      *            resultVector.
      */
     void
-    transform(Vector& result,
-              std::function<void(const int size, double* origVector, double* resultVector)>
-              transformer) const;
+    transform(Vector& result, std::function<void(const int size, double* origVector, double* resultVector)> transformer) const;
 
     /**
      * @brief Transform a vector using a supplied function and store the
@@ -203,9 +197,7 @@ public:
      *            resultVector.
      */
     void
-    transform(Vector*& result,
-              std::function<void(const int size, double* origVector, double* resultVector)>
-              transformer) const;
+    transform(Vector*& result, std::function<void(const int size, double* origVector, double* resultVector)> transformer) const;
 
     /**
      * @brief Sets the length of the vector and reallocates storage if

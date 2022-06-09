@@ -85,8 +85,7 @@ TEST(DMDTest, Test_DMD)
     CAROM::Vector* result_load = dmd_load.predict(3.0);
 
     for (int i = 0; i < d_num_rows; i++) {
-        EXPECT_NEAR(result_load->item(i), prediction_baseline[row_offset[d_rank] + i],
-                    1e-3);
+        EXPECT_NEAR(result_load->item(i), prediction_baseline[row_offset[d_rank] + i], 1e-3);
     }
 }
 

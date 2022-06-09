@@ -26,8 +26,7 @@ main(
 {
     std::string uploaded_data = "snapshot";
     if (argc > 0) {
-        if (strcmp(argv[0],"b")
-                || strcmp(argv[0],"basis")) std::string uploaded_data = "basis";
+        if (strcmp(argv[0],"b") || strcmp(argv[0],"basis")) std::string uploaded_data = "basis";
     }
 
     int dim = 6;
@@ -41,18 +40,14 @@ main(
 
     if (uploaded_data == "snapshot") {
         std::cout << "Loading snapshots" << std::endl;
-        static_basis_generator->loadSamples("../../tests/load_samples_data/sample1_snapshot",
-                                            "snapshot");
-        static_basis_generator->loadSamples("../../tests/load_samples_data/sample2_snapshot",
-                                            "snapshot");
+        static_basis_generator->loadSamples("../../tests/load_samples_data/sample1_snapshot","snapshot");
+        static_basis_generator->loadSamples("../../tests/load_samples_data/sample2_snapshot","snapshot");
     }
     else if (uploaded_data == "basis") {
         std::cout << "Loading bases" << std::endl;
         // Load bases. Last input is number of bases to include (allows for truncation)
-        static_basis_generator->loadSamples("../../tests/load_samples_data/sample1_basis",
-                                            "basis",1);
-        static_basis_generator->loadSamples("../../tests/load_samples_data/sample2_basis",
-                                            "basis",1);
+        static_basis_generator->loadSamples("../../tests/load_samples_data/sample1_basis","basis",1);
+        static_basis_generator->loadSamples("../../tests/load_samples_data/sample2_basis","basis",1);
     }
 
     std::cout << "Saving data uploaded as a snapshot" << std::endl;

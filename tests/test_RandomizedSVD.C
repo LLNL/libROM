@@ -108,8 +108,7 @@ TEST(RandomizedSVDTest, Test_RandomizedSVD)
 
     for (int i = 0; i < d_num_rows * 3; i++) {
 
-        EXPECT_NEAR(abs(d_basis_vals[i]),
-                    abs(basis_true_ans[row_offset[d_rank] * 3 + i]), 1e-7);
+        EXPECT_NEAR(abs(d_basis_vals[i]), abs(basis_true_ans[row_offset[d_rank] * 3 + i]), 1e-7);
     }
 
     for (int i = 0; i < 9; i++) {
@@ -225,8 +224,7 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposed)
     }
 
     for (int i = 0; i < d_num_rows * 3; i++) {
-        EXPECT_NEAR(abs(d_basis_right_vals[i]),
-                    abs(basis_right_true_ans[row_offset[d_rank] * 3 + i]), 1e-7);
+        EXPECT_NEAR(abs(d_basis_right_vals[i]), abs(basis_right_true_ans[row_offset[d_rank] * 3 + i]), 1e-7);
     }
 
     for (int i = 0; i < 9; i++) {
@@ -316,8 +314,7 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDSmallerSubspace)
     double* d_basis_right_vals = d_basis_right->getData();
 
     for (int i = 0; i < d_num_rows * 2; i++) {
-        EXPECT_NEAR(abs(d_basis_vals[i]),
-                    abs(basis_true_ans[row_offset[d_rank] * 2 + i]), 1e-7);
+        EXPECT_NEAR(abs(d_basis_vals[i]), abs(basis_true_ans[row_offset[d_rank] * 2 + i]), 1e-7);
     }
 
     for (int i = 0; i < 4; i++) {
@@ -432,8 +429,7 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposedSmallerSubspace)
     }
 
     for (int i = 0; i < d_num_rows * 2; i++) {
-        EXPECT_NEAR(abs(d_basis_right_vals[i]),
-                    abs(basis_right_true_ans[row_offset[d_rank] * 2 + i]), 1e-7);
+        EXPECT_NEAR(abs(d_basis_right_vals[i]), abs(basis_right_true_ans[row_offset[d_rank] * 2 + i]), 1e-7);
     }
 
     for (int i = 0; i < 4; i++) {

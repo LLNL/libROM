@@ -39,8 +39,7 @@ void SampleTemporalIndices(const Matrix* s_basis,
     CAROM_VERIFY(t_basis->distributed());
 
     // Get the number of basis vectors and the size of each basis vector.
-    CAROM_VERIFY(0 < num_f_basis_vectors_used
-                 && num_f_basis_vectors_used <= s_basis->numColumns()
+    CAROM_VERIFY(0 < num_f_basis_vectors_used && num_f_basis_vectors_used <= s_basis->numColumns()
                  && num_f_basis_vectors_used <= t_basis->numColumns());
     CAROM_VERIFY(num_samples_req > 0);
     const int num_basis_vectors =
@@ -56,8 +55,7 @@ void SampleTemporalIndices(const Matrix* s_basis,
 
     // The small matrix inverted by the algorithm.  We'll allocate the largest
     // matrix we'll need and set its size at each step in the algorithm.
-    Matrix M(num_basis_vectors, num_basis_vectors,
-             false);  // TODO: is this big enough to avoid reallocations?
+    Matrix M(num_basis_vectors, num_basis_vectors, false);  // TODO: is this big enough to avoid reallocations?
 
     std::set<int> samples;  // Temporal samples, identical on all processes
 
@@ -115,8 +113,7 @@ void SampleTemporalIndices(const Matrix* s_basis,
                 for (int s = 0; s < s_size; ++s)
                 {
                     const int row = ti + (s*ns);
-                    const double phi_i_s_t = s_basis->item(s, i) * t_basis->item(t,
-                                             i);  // \phi_i(s,t)
+                    const double phi_i_s_t = s_basis->item(s, i) * t_basis->item(t, i);  // \phi_i(s,t)
 
                     for (int col = 0; col < i; ++col)
                     {
@@ -147,8 +144,7 @@ void SampleTemporalIndices(const Matrix* s_basis,
             // Now error is set.
         }
 
-        const int nsi = i < ns_mod_nr ? (num_samples / num_basis_vectors) + 1 :
-                        num_samples / num_basis_vectors;
+        const int nsi = i < ns_mod_nr ? (num_samples / num_basis_vectors) + 1 : num_samples / num_basis_vectors;
 
         for (int j=0; j<nsi; ++j)
         {
@@ -260,19 +256,15 @@ void SampleSpatialIndices(const Matrix* s_basis,
     //CAROM_VERIFY(!t_basis->distributed());
 
     // Get the number of basis vectors and the size of each basis vector.
-    CAROM_VERIFY(0 < num_f_basis_vectors_used
-                 && num_f_basis_vectors_used <= s_basis->numColumns()
+    CAROM_VERIFY(0 < num_f_basis_vectors_used && num_f_basis_vectors_used <= s_basis->numColumns()
                  && num_f_basis_vectors_used <= t_basis->numColumns());
-    CAROM_VERIFY(num_samples_req >
-                 0);  // TODO: just replace num_samples with num_samples_req
+    CAROM_VERIFY(num_samples_req > 0);  // TODO: just replace num_samples with num_samples_req
     const int num_basis_vectors =
         std::min(num_f_basis_vectors_used, s_basis->numColumns());
     //const int num_samples = num_samples_req > 0 ? num_samples_req : num_basis_vectors;
     const int num_samples = num_samples_req;
-    CAROM_VERIFY(num_basis_vectors <= num_samples
-                 && num_samples <= s_basis->numRows());
-    CAROM_VERIFY(num_samples == f_basis_sampled.numRows()
-                 && num_basis_vectors == f_basis_sampled.numColumns());
+    CAROM_VERIFY(num_basis_vectors <= num_samples && num_samples <= s_basis->numRows());
+    CAROM_VERIFY(num_samples == f_basis_sampled.numRows() && num_basis_vectors == f_basis_sampled.numColumns());
     CAROM_VERIFY(!f_basis_sampled.distributed());
     const int s_size = s_basis->numRows();
     const int t_size = t_basis->numRows();
@@ -282,14 +274,12 @@ void SampleSpatialIndices(const Matrix* s_basis,
 
     // The small matrix inverted by the algorithm.  We'll allocate the largest
     // matrix we'll need and set its size at each step in the algorithm.
-    Matrix M(num_basis_vectors, num_basis_vectors,
-             false);  // TODO: is this big enough to avoid reallocations?
+    Matrix M(num_basis_vectors, num_basis_vectors, false);  // TODO: is this big enough to avoid reallocations?
 
     // TODO: change these variable names
     std::vector<std::set<int> > proc_sampled_f_row(num_procs);
     std::vector<std::map<int, int> > proc_f_row_to_tmp_fs_row(num_procs);
-    int num_f_basis_cols =
-        f_basis_sampled.numColumns(); // TODO: just use num_basis_vectors
+    int num_f_basis_cols = f_basis_sampled.numColumns(); // TODO: just use num_basis_vectors
     Matrix tmp_fs(f_basis_sampled.numRows(),
                   num_f_basis_cols,
                   f_basis_sampled.distributed()); // TODO: should this be distributed?
@@ -391,8 +381,7 @@ void SampleSpatialIndices(const Matrix* s_basis,
                     const int t = t_samples[ti];
                     const int row = ti + (j*num_t_samples);
 
-                    const double phi_i_s_t = s_basis->item(j, i) * t_basis->item(t,
-                                             i);  // \phi_i(s,t)
+                    const double phi_i_s_t = s_basis->item(j, i) * t_basis->item(t, i);  // \phi_i(s,t)
 
                     for (int k = 0; k < i; ++k)
                         MZphi[k] += M.item(row, k) * phi_i_s_t;
@@ -419,8 +408,7 @@ void SampleSpatialIndices(const Matrix* s_basis,
             // Now error is set.
         }
 
-        const int nsi = i < ns_mod_nr ? (num_samples / num_basis_vectors) + 1 :
-                        num_samples / num_basis_vectors;
+        const int nsi = i < ns_mod_nr ? (num_samples / num_basis_vectors) + 1 : num_samples / num_basis_vectors;
 
         for (int j=0; j<nsi; ++j)
         {
@@ -525,25 +513,21 @@ void SpaceTimeSampling(const Matrix* s_basis,
     // This algorithm is sequential greedy sampling of temporal then spatial indices.
 
     // TODO: for now, we assume one temporal basis vector for each spatial basis vector. This should be generalized.
-    CAROM_VERIFY(s_basis->numColumns() == num_f_basis_vectors_used
-                 && t_basis->numColumns() == num_f_basis_vectors_used);
+    CAROM_VERIFY(s_basis->numColumns() == num_f_basis_vectors_used && t_basis->numColumns() == num_f_basis_vectors_used);
 
     // First, sample temporal indices.
     CAROM_VERIFY(t_samples.size() == num_t_samples_req);
 
-    SampleTemporalIndices(s_basis, t_basis, num_f_basis_vectors_used,
-                          t_samples.data(),
+    SampleTemporalIndices(s_basis, t_basis, num_f_basis_vectors_used, t_samples.data(),
                           myid, num_procs, num_t_samples_req, excludeFinalTime);
 
     // Second, sample spatial indices.
     //Matrix s_basis_sampled(num_s_samples_req, num_f_basis_vectors_used, false);
-    CAROM_VERIFY(s_basis_sampled.numRows() == num_s_samples_req
-                 && s_basis_sampled.numColumns() == num_f_basis_vectors_used);
+    CAROM_VERIFY(s_basis_sampled.numRows() == num_s_samples_req && s_basis_sampled.numColumns() == num_f_basis_vectors_used);
 
     //std::vector<int> s_samples(num_s_samples_req);
     //std::vector<int> s_samples_per_proc(num_procs);
-    SampleSpatialIndices(s_basis, t_basis, num_f_basis_vectors_used,
-                         num_t_samples_req,
+    SampleSpatialIndices(s_basis, t_basis, num_f_basis_vectors_used, num_t_samples_req,
                          //t_samples.data(), s_samples.data(), s_samples_per_proc.data(),
                          t_samples.data(), f_sampled_row, f_sampled_rows_per_proc,
                          s_basis_sampled, myid, num_procs, num_s_samples_req);
@@ -568,8 +552,7 @@ void GetSampledSpaceTimeBasis(std::vector<int> const& t_samples,
             const int row = ti + (si*num_t_samples);
             const int t = t_samples[ti];
             for (int j=0; j<f_basis_sampled_inv.numColumns(); ++j)
-                f_basis_sampled_inv.item(row, j) = s_basis_sampled.item(si,
-                                                   j) * t_basis->item(t, j);
+                f_basis_sampled_inv.item(row, j) = s_basis_sampled.item(si, j) * t_basis->item(t, j);
         }
     }
 
