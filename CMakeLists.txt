@@ -179,7 +179,7 @@ set(misc_example_names
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/examples/misc)
 
 foreach(name IN LISTS misc_example_names)
-  add_executable(${name} examples/misc/${name}.C)
+  add_executable(${name} examples/misc/${name}.cpp)
 
   target_link_libraries(${name}
     PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
@@ -201,7 +201,7 @@ set(regression_test_names
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests)
 
 foreach(name IN LISTS regression_test_names)
-  add_executable(${name} tests/${name}.C)
+  add_executable(${name} tests/${name}.cpp)
 
   target_link_libraries(${name}
     PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
@@ -219,13 +219,14 @@ if(GTEST_FOUND)
     DMD
     GNAT
     QDEIM
+    S_OPT
     SVD
     StaticSVD
     RandomizedSVD
     IncrementalSVD
     GreedyCustomSampler)
   foreach(stem IN LISTS unit_test_stems)
-    add_executable(test_${stem} tests/test_${stem}.C)
+    add_executable(test_${stem} tests/test_${stem}.cpp)
     target_link_libraries(test_${stem} PRIVATE ROM
       ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran GTest::GTest)
     target_include_directories(test_${stem}

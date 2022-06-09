@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2021, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -18,12 +18,16 @@
 #include "linalg/Vector.h"
 #include "algo/DMD.h"
 #include "algo/AdaptiveDMD.h"
+#include "algo/NonuniformDMD.h"
+#include "algo/ParametricDMD.h"
 #include "algo/greedy/GreedyCustomSampler.h"
 #include "algo/greedy/GreedyRandomSampler.h"
 #include "algo/manifold_interp/MatrixInterpolator.h"
 #include "algo/manifold_interp/VectorInterpolator.h"
 #include "hyperreduction/DEIM.h"
+#include "hyperreduction/GNAT.h"
 #include "hyperreduction/QDEIM.h"
+#include "hyperreduction/S_OPT.h"
 #include "hyperreduction/STSampling.h"
 #ifdef USEMFEM
 #include "mfem/SampleMesh.hpp"

@@ -34,6 +34,7 @@ set(module_list
   linalg/svd/StaticSVD
   algo/DMD
   algo/AdaptiveDMD
+  algo/NonuniformDMD
   algo/ParametricDMD
   algo/greedy/GreedyCustomSampler
   algo/greedy/GreedyRandomSampler
@@ -44,7 +45,9 @@ set(module_list
   hyperreduction/DEIM
   hyperreduction/GNAT
   hyperreduction/QDEIM
+  hyperreduction/S_OPT
   hyperreduction/STSampling
+  hyperreduction/Utilities
   utils/Database
   utils/HDFDatabase
   utils/CSVDatabase
@@ -52,7 +55,7 @@ set(module_list
   utils/ParallelBuffer)
 set(source_files)
 foreach(module IN LISTS module_list)
-  list(APPEND source_files ${module}.C)
+  list(APPEND source_files ${module}.cpp)
 endforeach(module) # IN LISTS module_list
 
 list(APPEND source_files

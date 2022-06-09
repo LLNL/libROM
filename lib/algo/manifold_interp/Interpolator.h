@@ -138,7 +138,8 @@ private:
                         influence.
  * @param[in] point The unsampled parameter point.
  */
-std::vector<double> obtainRBFToTrainingPoints(std::vector<Vector*> parameter_points,
+std::vector<double> obtainRBFToTrainingPoints(std::vector<Vector*>
+        parameter_points,
         std::string interp_method, std::string rbf, double epsilon, Vector* point);
 
 /**
@@ -157,7 +158,8 @@ double rbfWeightedSum(std::vector<double>& rbf);
  * @param[in] point1 The first point.
  * @param[in] point2 The second point.
  */
-double obtainRBF(std::string rbf, double epsilon, Vector* point1, Vector* point2);
+double obtainRBF(std::string rbf, double epsilon, Vector* point1,
+                 Vector* point2);
 
 /**
  * @brief Convert closest RBF value to an epsilon value.
@@ -167,7 +169,8 @@ double obtainRBF(std::string rbf, double epsilon, Vector* point1, Vector* point2
  * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
  *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
  */
-double convertClosestRBFToEpsilon(std::vector<Vector*> parameter_points, std::string rbf, double closest_rbf_val);
+double convertClosestRBFToEpsilon(std::vector<Vector*> parameter_points,
+                                  std::string rbf, double closest_rbf_val);
 
 /**
  * @brief Obtain the rotation matrices for all the parameter points using
@@ -179,7 +182,8 @@ double convertClosestRBFToEpsilon(std::vector<Vector*> parameter_points, std::st
  * @param[in] ref_point The index within the vector of parameter points
  *                      to the reference point
  */
-std::vector<Matrix*> obtainRotationMatrices(std::vector<Vector*> parameter_points,
+std::vector<Matrix*> obtainRotationMatrices(std::vector<Vector*>
+        parameter_points,
         std::vector<Matrix*> bases,
         int ref_point);
 

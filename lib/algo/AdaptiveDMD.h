@@ -47,19 +47,9 @@ public:
      * @param[in] closest_rbf_val The RBF parameter determines the width of influence.
      *                            Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
      */
-    AdaptiveDMD(int dim, double desired_dt = -1.0, std::string rbf = "G", std::string interp_method = "LS",
+    AdaptiveDMD(int dim, double desired_dt = -1.0, std::string rbf = "G",
+                std::string interp_method = "LS",
                 double closest_rbf_val = 0.9);
-
-    /**
-     * @brief Sample the new state, u_in.
-     *
-     * @pre u_in != 0
-     * @pre t >= 0.0
-     *
-     * @param[in] u_in The new state.
-     * @param[in] t    The time of the newly sampled state.
-     */
-    void takeSample(double* u_in, double t);
 
     /**
      * @param[in] energy_fraction The energy fraction to keep after doing SVD.
@@ -100,11 +90,6 @@ private:
     AdaptiveDMD&
     operator = (
         const AdaptiveDMD& rhs);
-
-    /**
-     * @brief The stored times of each sample.
-     */
-    std::vector<Vector*> d_sampled_times;
 
     /**
      * @brief The RBF type (gaussian, multiquadric, inverse quadratic, inverse

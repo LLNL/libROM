@@ -760,14 +760,18 @@ int main(int argc, char *argv[])
     subtract(dmd_solution_u, true_solution_u, diff_u);
 
     double tot_diff_norm_u = sqrt(InnerProduct(MPI_COMM_WORLD, diff_u, diff_u));
-    double tot_true_solution_u_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution_u, true_solution_u));
+    double tot_true_solution_u_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
+                                           true_solution_u, true_solution_u));
 
     if (myid == 0)
     {
-        std::cout << "Relative error of DMD solution (u) at t_final: " << t_final << " is " << tot_diff_norm_u / tot_true_solution_u_norm << std::endl;
+        std::cout << "Relative error of DMD solution (u) at t_final: " << t_final <<
+                  " is " << tot_diff_norm_u / tot_true_solution_u_norm << std::endl;
         printf("Elapsed time for solving FOM: %e second\n", fom_timer.RealTime());
-        printf("Elapsed time for training DMD: %e second\n", dmd_training_timer.RealTime());
-        printf("Elapsed time for predicting DMD: %e second\n", dmd_prediction_timer.RealTime());
+        printf("Elapsed time for training DMD: %e second\n",
+               dmd_training_timer.RealTime());
+        printf("Elapsed time for predicting DMD: %e second\n",
+               dmd_prediction_timer.RealTime());
     }
 
     // 16. Free the used memory.
