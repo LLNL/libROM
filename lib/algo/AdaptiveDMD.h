@@ -51,17 +51,6 @@ public:
                 double closest_rbf_val = 0.9);
 
     /**
-     * @brief Sample the new state, u_in.
-     *
-     * @pre u_in != 0
-     * @pre t >= 0.0
-     *
-     * @param[in] u_in The new state.
-     * @param[in] t    The time of the newly sampled state.
-     */
-    void takeSample(double* u_in, double t);
-
-    /**
      * @param[in] energy_fraction The energy fraction to keep after doing SVD.
      */
     void train(double energy_fraction);
@@ -100,11 +89,6 @@ private:
     AdaptiveDMD&
     operator = (
         const AdaptiveDMD& rhs);
-
-    /**
-     * @brief The stored times of each sample.
-     */
-    std::vector<Vector*> d_sampled_times;
 
     /**
      * @brief The RBF type (gaussian, multiquadric, inverse quadratic, inverse

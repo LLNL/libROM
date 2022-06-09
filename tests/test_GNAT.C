@@ -16,7 +16,7 @@
 #ifdef CAROM_HAS_GTEST
 #include<gtest/gtest.h>
 #include <mpi.h>
-#include "hyperreduction/DEIM.h"
+#include "hyperreduction/GNAT.h"
 #include "linalg/Matrix.h"
 #define _USE_MATH_DEFINES
 #include <cmath>
@@ -28,7 +28,7 @@ TEST(GoogleTestFramework, GoogleTestFrameworkFound) {
     SUCCEED();
 }
 
-TEST(GNATSerialTest, Test_GNAT_deim)
+TEST(GNATSerialTest, Test_GNAT)
 {
 
     // Orthonormal input matrix to GNAT

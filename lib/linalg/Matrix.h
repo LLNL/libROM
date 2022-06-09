@@ -491,6 +491,114 @@ public:
         int this_row,
         Vector& other) const;
 
+    /**
+     * @brief Multiplies two matrices element-wise.
+     *
+     * @pre result.distributed() == distributed()
+     * @pre distributed() == other.distributed()
+     * @pre numRows() == other.numRows()
+     * @pre numColumns() == other.numColumns()
+     *
+     * @param[in] other The Matrix to multiply with this.
+     *
+     * @return The product Matrix.
+     */
+    Matrix*
+    elementwise_mult(
+        const Matrix& other) const
+    {
+        Matrix* result = 0;
+        elementwise_mult(other, result);
+        return result;
+    }
+
+    /**
+     * @brief Multiplies two matrices element-wise and returns the product,
+     * pointer version.
+     *
+     * @pre other != 0
+     * @pre distributed() == other.distributed()
+     * @pre numRows() == other.numRows()
+     * @pre numColumns() == other.numColumns()
+     *
+     * @param[in] other The Matrix to multiply with this.
+     *
+     * @return The product Matrix.
+     */
+    Matrix*
+    elementwise_mult(
+        const Matrix* other) const
+    {
+        CAROM_VERIFY(other != 0);
+        return elementwise_mult(*other);
+    }
+
+    /**
+     * @brief Multiplies two matrices element-wise and fills result with the
+     * answer.
+     *
+     * @pre result == 0 || result->distributed() == distributed()
+     * @pre distributed() == other.distributed()
+     * @pre numRows() == other.numRows()
+     * @pre numColumns() == other.numColumns()
+     *
+     * @param[in] other The Matrix to multiply with this.
+     * @param[out] result The product Matrix.
+     */
+    void
+    elementwise_mult(
+        const Matrix& other,
+        Matrix*& result) const;
+
+    /**
+     * @brief Multiplies two matrices element-wise and fills result with the
+     * answer.
+     *
+     * @pre result == 0 || result->distributed() == distributed()
+     * @pre distributed() == other.distributed()
+     * @pre numRows() == other.numRows()
+     * @pre numColumns() == other.numColumns()
+     *
+     * @param[in] other The Matrix to multiply with this.
+     * @param[out] result The product Matrix.
+     */
+    void
+    elementwise_mult(
+        const Matrix& other,
+        Matrix& result) const;
+
+    /**
+     * @brief Square every element in the matrix.
+     *
+     * @return The product Matrix.
+     */
+    Matrix*
+    elementwise_square() const
+    {
+        Matrix* result = 0;
+        elementwise_square(result);
+        return result;
+    }
+
+    /**
+     * @brief Square every element in the matrix.
+     *
+     * @pre result == 0 || result->distributed() == distributed()
+     * @param[out] result The product Matrix.
+     */
+    void
+    elementwise_square(
+        Matrix*& result) const;
+
+    /**
+     * @brief Square every element in the matrix.
+     *
+     * @pre result == 0 || result->distributed() == distributed()
+     * @param[out] result The product Matrix.
+     */
+    void
+    elementwise_square(
+        Matrix& result) const;
 
     /**
      * @brief Computes a += this*b*c.
@@ -803,6 +911,14 @@ public:
      * full column rank.
      */
     void transposePseudoinverse();
+
+    /**
+     * @brief Computes and returns the Q of the QR factorization of this.
+     *
+     * @return The Q of the QR factorization of this.
+     */
+    Matrix*
+    qr_factorize() const;
 
     /**
      * @brief Compute the leading numColumns() column pivots from a
