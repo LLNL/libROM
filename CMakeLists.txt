@@ -219,6 +219,7 @@ if(GTEST_FOUND)
     DMD
     GNAT
     QDEIM
+    S_OPT
     SVD
     StaticSVD
     RandomizedSVD

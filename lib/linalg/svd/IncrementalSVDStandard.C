@@ -180,7 +180,7 @@ IncrementalSVDStandard::addLinearlyDependentSample(
     }
     if (fabs(checkOrthogonality(d_U)) >
             std::numeric_limits<double>::epsilon()*static_cast<double>(max_U_dim)) {
-        reOrthogonalize(d_U);
+        d_U->orthogonalize();
     }
 }
 
@@ -242,12 +242,12 @@ IncrementalSVDStandard::addNewSample(
     }
     if (fabs(checkOrthogonality(d_U)) >
             std::numeric_limits<double>::epsilon()*static_cast<double>(max_U_dim)) {
-        reOrthogonalize(d_U);
+        d_U->orthogonalize();
     }
     if (d_update_right_SV) {
         if (fabs(checkOrthogonality(d_W)) >
                 std::numeric_limits<double>::epsilon()*d_num_samples) {
-            reOrthogonalize(d_W);
+            d_W->orthogonalize();
         }
     }
 }

@@ -277,6 +277,34 @@ void wrapper_finalize();
  */
 void print_debug_info(struct SLPK_Matrix* A);
 
+/**
+ * @brief Structure managing the call to the ScaLAPACK linear solve (pdgesv).
+ *
+ * SLPK_Matrix A is the lhs.
+ * SLPK_Matrix B is the rhs. The results (x in Ax=b) will be stored in B.
+ */
+struct LSManager
+{
+    struct SLPK_Matrix* A, *B;
+    int* ipiv;
+    int ipivSize;
+};
+
+/**
+ * @brief Initialize the LSManager struct with SLPK_Matrices A and B.
+ */
+void ls_init(struct LSManager* mgr, struct SLPK_Matrix* A, struct SLPK_Matrix* B);
+
+/**
+ * @brief Perform the linear solve (pdgesv) with the data contained in the LSManager.
+ */
+void linear_solve(struct LSManager*);
+
+/**
+ * @brief Structure managing the call to the ScaLAPACK QR factorization.
+ *
+ * SLPK_Matrix A is the matrix to be factorized.
+ */
 struct QRManager
 {
     struct SLPK_Matrix* A;
@@ -286,15 +314,48 @@ struct QRManager
     int ipivSize;
 };
 
+/**
+ * @brief Initialize the QRManager struct with SLPK_Matrix A.
+ */
 void qr_init(struct QRManager* mgr, struct SLPK_Matrix* A);
 
+/**
+ * @brief Perform the QR factorization (pdgelqf) with the data contained in the QRManager.
+ *        The true Q is not returned, but Q is returned as a product of elementary
+ *        reflectors. qrcompute(struct QRManager*) must be called afterwards to
+ *        obtain Q.
+ */
 void qrfactorize(struct QRManager*);
 
+/**
+ * @brief Given the elementary reflectors stored in the QRManager, as a result of
+ *        calling qrfactorize(struct QRManager*), obtain the action of q
+ *        on SLPK_Matrix A.
+ * @param[in] A The matrix to compute q's action on.
+ * @param[in] S Which side to compute q's action on A (left or right side).
+ * @param[in] T Whether to transpose Q before computing the action.
+ */
 void qaction(struct QRManager*, struct SLPK_Matrix* A, int S, int T);
 
-void qcompute(struct QRManager*);
+/**
+ * @brief Given the elementary reflectors stored in the QRManager, as a result of
+ *        calling qrfactorize(struct QRManager*), compute the factorized Q.
+ */
+void qrcompute(struct QRManager*);
 
+/**
+ * @brief Perform the LQ factorization (pdgelqf) with the data contained in the QRManager.
+ *        The true Q is not returned, but Q is returned as a product of elementary
+ *        reflectors. lqcompute(struct QRManager*) must be called afterwards to
+ *        obtain Q.
+ */
 void lqfactorize(struct QRManager*);
+
+/**
+ * @brief Given the elementary reflectors stored in the QRManager, as a result of
+ *        calling lqfactorize(struct QRManager*), compute the factorized Q.
+ */
+void lqcompute(struct QRManager*);
 
 #ifdef __cplusplus
 }

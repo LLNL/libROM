@@ -242,17 +242,6 @@ protected:
         const Matrix* m);
 
     /**
-     * @brief Reorthogonalizes m.
-     *
-     * @pre m != 0
-     *
-     * @param[in,out] m The matrix to reorthogonalize.
-     */
-    void
-    reOrthogonalize(
-        Matrix* m);
-
-    /**
      * @brief Tolerance to determine whether or not a sample is linearly
      * dependent.
      */

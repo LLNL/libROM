@@ -36,6 +36,14 @@ void svd_init(struct SVDManager* mgr, struct SLPK_Matrix* A)
     mgr->done = 0;
 }
 
+void ls_init(struct LSManager* mgr, struct SLPK_Matrix* A, struct SLPK_Matrix* B)
+{
+    mgr->A = A;
+    mgr->B = B;
+    mgr->ipiv = NULL;
+    mgr->ipivSize = 0;
+}
+
 void qr_init(struct QRManager* mgr, struct SLPK_Matrix* A)
 {
     mgr->A = A;
@@ -64,6 +72,13 @@ void factorize_prep(struct SVDManager* mgr)
 
     if (mgr->S == NULL) {
         mgr->S = malloc(sizeof(REAL_TYPE) * SIZE);
+    }
+}
+
+void ls_prep(struct LSManager* mgr)
+{
+    if (mgr->ipiv == NULL && mgr->ipivSize > 0) {
+        mgr->ipiv = malloc(sizeof(int) * mgr->ipivSize);
     }
 }
 
@@ -134,6 +149,7 @@ static void show_info(void *ptr)
 
 void print_debug_info(struct SLPK_Matrix* A)
 {
+    print_local(A);
     ordered_dowork(show_info, A);
 }
 

@@ -22,11 +22,23 @@
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -offline
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -merge -ns 1
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 --sopt
+//
+//               Relative l2 error of ROM solution at final timestep using DEIM sampling: 1.029894532029661e-08
+//               Elapsed time for entire simulation using DEIM sampling: 2.185692262
+//               Relative l2 error of ROM solution at final timestep using S_OPT sampling: 1.057939158608067e-08
+//               Elapsed time for entire simulation using S_OPT sampling: 3.161409845
 //
 //               Initial step test (reproductive)
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -offline -p 1
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -merge -ns 1 -p 1
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -p 1
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -p 1 --sopt
+//
+//               Relative l2 error of ROM solution at final timestep using DEIM sampling: 0.0003748510938522777
+//               Elapsed time for entire simulation using DEIM sampling: 1.239144438
+//               Relative l2 error of ROM solution at final timestep using S_OPT sampling: 0.0003700028395853732
+//               Elapsed time for entire simulation using S_OPT sampling: 1.848957043
 //
 //               Initial step parametric test (predictive)
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -offline -id 0 -sh 0.25
@@ -35,6 +47,12 @@
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -merge -ns 3
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -offline -id 3 -sh 0.3
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -sh 0.3 -id 3
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -sh 0.3 -id 3 --sopt
+//
+//               Relative l2 error of ROM solution at final timestep using DEIM sampling: 0.002639597287023164
+//               Elapsed time for entire simulation using DEIM sampling: 3.05089368
+//               Relative l2 error of ROM solution at final timestep using S_OPT sampling: 0.002633729640015132
+//               Elapsed time for entire simulation using S_OPT sampling: 21.649218315
 
 #include "mfem.hpp"
 
@@ -45,6 +63,7 @@
 #include "linalg/BasisGenerator.h"
 #include "linalg/BasisReader.h"
 #include "hyperreduction/DEIM.h"
+#include "hyperreduction/S_OPT.h"
 #include "mfem/SampleMesh.hpp"
 
 
@@ -445,14 +464,17 @@ int main(int argc, char *argv[])
     bool offline = false;
     bool merge = false;
     bool online = false;
+    bool use_sopt = false;
 
     int nsets = 0;
 
     int id_param = 0;
 
-    int rdim = -1;  // number of basis vectors to use
-    int rrdim = -1;  // number of basis vectors to use
-    int rwdim = -1;  // number of basis vectors to use
+    // number of basis vectors to use
+    int rrdim = -1;
+    int rwdim = -1;
+    int nldim = -1;
+    int nsdim = -1;
 
     int precision = 16;
     cout.precision(precision);
@@ -474,6 +496,10 @@ int main(int argc, char *argv[])
                    "Basis dimension for H(div) vector finite element space.");
     args.AddOption(&rwdim, "-rwdim", "--rwdim",
                    "Basis dimension for L2 scalar finite element space.");
+    args.AddOption(&nldim, "-nldim", "--nldim",
+                   "Basis dimension for the nonlinear term.");
+    args.AddOption(&nsdim, "-nsdim", "--nsdim",
+                   "Basis dimension for the source term.");
     args.AddOption(&t_final, "-tf", "--t-final",
                    "Final time; start time is 0.");
     args.AddOption(&dt, "-dt", "--time-step",
@@ -493,6 +519,8 @@ int main(int argc, char *argv[])
                    "Enable or disable the online phase.");
     args.AddOption(&merge, "-merge", "--merge", "-no-merge", "--no-merge",
                    "Enable or disable the merge phase.");
+    args.AddOption(&use_sopt, "-sopt", "--sopt", "-no-sopt", "--no-sopt",
+                   "Use S-OPT sampling instead of DEIM for the hyperreduction.");
 
     args.Parse();
     if (!args.Good())
@@ -764,15 +792,18 @@ int main(int argc, char *argv[])
 
         // Compute sample points using DEIM, for hyperreduction
 
-        // TODO: reduce this?
-        const int nldim = FR_librom->numColumns(); // rwdim;
-
-        cout << "FR dim " << FR_librom->numColumns() << endl;
+        if (nldim == -1)
+        {
+            nldim = FR_librom->numColumns();
+        }
 
         MFEM_VERIFY(FR_librom->numRows() == N1 && FR_librom->numColumns() >= nldim, "");
 
         if (FR_librom->numColumns() > nldim)
             FR_librom = GetFirstColumns(nldim, FR_librom);
+
+        if (myid == 0)
+            printf("reduced FR dim = %d\n",nldim);
 
         vector<int> num_sample_dofs_per_proc(num_procs);
 
@@ -781,6 +812,8 @@ int main(int argc, char *argv[])
 #ifdef USE_GNAT
         vector<int> sample_dofs(nsamp_R);  // Indices of the sampled rows
         CAROM::Matrix *Bsinv = new CAROM::Matrix(nsamp_R, nldim, false);
+        if (myid == 0)
+            printf("Using GNAT sampling\n");
         CAROM::GNAT(FR_librom,
                     nldim,
                     sample_dofs,
@@ -793,13 +826,30 @@ int main(int argc, char *argv[])
         // Now execute the DEIM algorithm to get the sampling information.
         CAROM::Matrix *Bsinv = new CAROM::Matrix(nldim, nldim, false);
         vector<int> sample_dofs(nldim);  // Indices of the sampled rows
-        CAROM::DEIM(FR_librom,
-                    nldim,
-                    sample_dofs,
-                    num_sample_dofs_per_proc,
-                    *Bsinv,
-                    myid,
-                    num_procs);
+        if (use_sopt)
+        {
+            if (myid == 0)
+                printf("Using S_OPT sampling\n");
+            CAROM::S_OPT(FR_librom,
+                         nldim,
+                         sample_dofs,
+                         num_sample_dofs_per_proc,
+                         *Bsinv,
+                         myid,
+                         num_procs);
+        }
+        else
+        {
+            if (myid == 0)
+                printf("Using DEIM sampling\n");
+            CAROM::DEIM(FR_librom,
+                        nldim,
+                        sample_dofs,
+                        num_sample_dofs_per_proc,
+                        *Bsinv,
+                        myid,
+                        num_procs);
+        }
 #endif
 
         vector<int> sample_dofs_S;  // Indices of the sampled rows
@@ -817,9 +867,18 @@ int main(int argc, char *argv[])
 
             // Compute sample points using DEIM
 
-            nsdim = S_librom->numColumns();
+            if (nsdim == -1)
+            {
+                nsdim = S_librom->numColumns();
+            }
 
-            cout << "S dim " << nsdim << endl;
+            MFEM_VERIFY(S_librom->numColumns() >= nsdim, "");
+
+            if (S_librom->numColumns() > nsdim)
+                S_librom = GetFirstColumns(nsdim, S_librom);
+
+            if (myid == 0)
+                printf("reduced S dim = %d\n",nsdim);
 
             // Now execute the DEIM algorithm to get the sampling information.
             nsamp_S = nsdim;
@@ -840,13 +899,26 @@ int main(int argc, char *argv[])
 #else
             Ssinv = new CAROM::Matrix(nsdim, nsdim, false);
             sample_dofs_S.resize(nsdim);
-            CAROM::DEIM(S_librom,
-                        nsdim,
-                        sample_dofs_S,
-                        num_sample_dofs_per_proc_S,
-                        *Ssinv,
-                        myid,
-                        num_procs);
+            if (use_sopt)
+            {
+                CAROM::S_OPT(S_librom,
+                             nsdim,
+                             sample_dofs_S,
+                             num_sample_dofs_per_proc_S,
+                             *Ssinv,
+                             myid,
+                             num_procs);
+            }
+            else
+            {
+                CAROM::DEIM(S_librom,
+                            nsdim,
+                            sample_dofs_S,
+                            num_sample_dofs_per_proc_S,
+                            *Ssinv,
+                            myid,
+                            num_procs);
+            }
 #endif
         }
 
