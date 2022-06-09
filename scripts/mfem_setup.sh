@@ -88,19 +88,3 @@ else
     rm mfem
     ln -s mfem_parallel mfem
 fi
-
-# Install SWIG-4.0.2
-cd $LIB_DIR
-if [ ! -d "swig-4.0.2" ]; then
-    wget http://prdownloads.sourceforge.net/swig/swig-4.0.2.tar.gz
-    tar -xvf swig-4.0.2.tar.gz
-    mv swig-4.0.2 swig
-    cd swig
-    ./configure --prefix=$LIB_DIR/swig/swig_install
-    make
-    make install
-
-    # We have to delete these two files for some reason or else SWIG doesn't work.
-    rm swig_install/share/swig/4.0.2/std_except.i
-    rm swig_install/share/swig/4.0.2/exception.i
-fi
