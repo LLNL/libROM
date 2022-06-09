@@ -40,6 +40,7 @@ class Matrix;
  * @param[in] myid The rank of this process.
  * @param[in] num_procs The total number of processes.
  * @param[in] num_samples_req The minimum number of samples required.
+ * @param[in] init_samples Samples to initialize the S_OPT algorithm.
  * @param[in] qr_factorize Whether to factorize the incoming matrix. If true and
  *                         if the incoming matrix is a basis, the unnecessary
  *                         computation of a QR factorization will be performed.
@@ -53,6 +54,7 @@ S_OPT(const Matrix* f_basis,
       const int myid,
       const int num_procs,
       const int num_samples_req = -1,
+      std::vector<int> *init_samples=NULL,
       bool qr_factorize = false);
 
 }

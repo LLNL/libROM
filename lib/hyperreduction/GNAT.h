@@ -42,6 +42,7 @@ class Matrix;
  * @param[in] myid The rank of this process.
  * @param[in] num_procs The total number of processes.
  * @param[in] num_samples_req The minimum number of samples required.
+ * @param[in] init_samples Samples to initialize the GNAT algorithm.
  */
 void
 GNAT(const Matrix* f_basis,

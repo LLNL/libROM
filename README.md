@@ -16,7 +16,6 @@ non-intrusive black-box approaches.
 
 ## Features to be added
 
-- S-OPT: stable sampling algorithm for hyper-reduction
 - EQP: quadrature-based hyper-reduction sampling algorithm
 - Python interface
 
