@@ -421,9 +421,12 @@ int main(int argc, char *argv[])
     }
     else
     {
-        dmd_dens = new CAROM::AdaptiveDMD(u_block.GetBlock(0).Size(), dt, "G", "LS", crbf);
-        dmd_x_mom = new CAROM::AdaptiveDMD(u_block.GetBlock(1).Size(), dt, "G", "LS", crbf);
-        dmd_y_mom = new CAROM::AdaptiveDMD(u_block.GetBlock(2).Size(), dt, "G", "LS", crbf);
+        dmd_dens = new CAROM::AdaptiveDMD(u_block.GetBlock(0).Size(), dt, "G", "LS",
+                                          crbf);
+        dmd_x_mom = new CAROM::AdaptiveDMD(u_block.GetBlock(1).Size(), dt, "G", "LS",
+                                           crbf);
+        dmd_y_mom = new CAROM::AdaptiveDMD(u_block.GetBlock(2).Size(), dt, "G", "LS",
+                                           crbf);
         dmd_e = new CAROM::AdaptiveDMD(u_block.GetBlock(3).Size(), dt, "G", "LS", crbf);
     }
 
@@ -639,39 +642,52 @@ int main(int argc, char *argv[])
     Vector diff_dens(true_solution_dens.Size());
     subtract(dmd_solution_dens, true_solution_dens, diff_dens);
 
-    double tot_diff_norm_dens = sqrt(InnerProduct(MPI_COMM_WORLD, diff_dens, diff_dens));
-    double tot_true_solution_dens_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution_dens, true_solution_dens));
+    double tot_diff_norm_dens = sqrt(InnerProduct(MPI_COMM_WORLD, diff_dens,
+                                     diff_dens));
+    double tot_true_solution_dens_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
+                                         true_solution_dens, true_solution_dens));
 
     Vector dmd_solution_x_mom(result_x_mom->getData(), result_x_mom->dim());
     Vector diff_x_mom(true_solution_x_mom.Size());
     subtract(dmd_solution_x_mom, true_solution_x_mom, diff_x_mom);
 
-    double tot_diff_norm_x_mom = sqrt(InnerProduct(MPI_COMM_WORLD, diff_x_mom, diff_x_mom));
-    double tot_true_solution_x_mom_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution_x_mom, true_solution_x_mom));
+    double tot_diff_norm_x_mom = sqrt(InnerProduct(MPI_COMM_WORLD, diff_x_mom,
+                                      diff_x_mom));
+    double tot_true_solution_x_mom_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
+                                          true_solution_x_mom, true_solution_x_mom));
 
     Vector dmd_solution_y_mom(result_y_mom->getData(), result_y_mom->dim());
     Vector diff_y_mom(true_solution_y_mom.Size());
     subtract(dmd_solution_y_mom, true_solution_y_mom, diff_y_mom);
 
-    double tot_diff_norm_y_mom = sqrt(InnerProduct(MPI_COMM_WORLD, diff_y_mom, diff_y_mom));
-    double tot_true_solution_y_mom_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution_y_mom, true_solution_y_mom));
+    double tot_diff_norm_y_mom = sqrt(InnerProduct(MPI_COMM_WORLD, diff_y_mom,
+                                      diff_y_mom));
+    double tot_true_solution_y_mom_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
+                                          true_solution_y_mom, true_solution_y_mom));
 
     Vector dmd_solution_e(result_e->getData(), result_e->dim());
     Vector diff_e(true_solution_e.Size());
     subtract(dmd_solution_e, true_solution_e, diff_e);
 
     double tot_diff_norm_e = sqrt(InnerProduct(MPI_COMM_WORLD, diff_e, diff_e));
-    double tot_true_solution_e_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution_e, true_solution_e));
+    double tot_true_solution_e_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
+                                           true_solution_e, true_solution_e));
 
     if (mpi.WorldRank() == 0)
     {
-        std::cout << "Relative error of DMD density (dens) at t_final: " << t_final << " is " << tot_diff_norm_dens / tot_true_solution_dens_norm << std::endl;
-        std::cout << "Relative error of DMD x-momentum (x_mom) at t_final: " << t_final << " is " << tot_diff_norm_x_mom / tot_true_solution_x_mom_norm << std::endl;
-        std::cout << "Relative error of DMD y-momentum (y_mom) at t_final: " << t_final << " is " << tot_diff_norm_y_mom / tot_true_solution_y_mom_norm << std::endl;
-        std::cout << "Relative error of DMD energy (e) at t_final: " << t_final << " is " << tot_diff_norm_e / tot_true_solution_e_norm << std::endl;
+        std::cout << "Relative error of DMD density (dens) at t_final: " << t_final <<
+                  " is " << tot_diff_norm_dens / tot_true_solution_dens_norm << std::endl;
+        std::cout << "Relative error of DMD x-momentum (x_mom) at t_final: " << t_final
+                  << " is " << tot_diff_norm_x_mom / tot_true_solution_x_mom_norm << std::endl;
+        std::cout << "Relative error of DMD y-momentum (y_mom) at t_final: " << t_final
+                  << " is " << tot_diff_norm_y_mom / tot_true_solution_y_mom_norm << std::endl;
+        std::cout << "Relative error of DMD energy (e) at t_final: " << t_final <<
+                  " is " << tot_diff_norm_e / tot_true_solution_e_norm << std::endl;
         printf("Elapsed time for solving FOM: %e second\n", fom_timer.RealTime());
-        printf("Elapsed time for training DMD: %e second\n", dmd_training_timer.RealTime());
-        printf("Elapsed time for predicting DMD: %e second\n", dmd_prediction_timer.RealTime());
+        printf("Elapsed time for training DMD: %e second\n",
+               dmd_training_timer.RealTime());
+        printf("Elapsed time for predicting DMD: %e second\n",
+               dmd_prediction_timer.RealTime());
     }
 
     // Free the used memory.

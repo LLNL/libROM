@@ -64,7 +64,7 @@ public:
     DMD(std::string base_file_name);
 
     /**
-     * @brief Sample the new state, u_in. Any samples in d_snapshots 
+     * @brief Sample the new state, u_in. Any samples in d_snapshots
      *        taken at the same or later time will be erased.
      *
      * @pre u_in != 0
@@ -158,7 +158,8 @@ protected:
      * @param[in] dt d_dt
      * @param[in] t_offset d_t_offset
      */
-    DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real, Matrix* phi_imaginary, int k, double dt, double t_offset);
+    DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
+        Matrix* phi_imaginary, int k, double dt, double t_offset);
 
     /**
      * @brief Unimplemented default constructor.
@@ -193,7 +194,8 @@ protected:
     /**
      * @brief Returns a pair of pointers to the minus and plus snapshot matrices
      */
-    virtual std::pair<Matrix*, Matrix*> computeDMDSnapshotPair(const Matrix* snapshots);
+    virtual std::pair<Matrix*, Matrix*> computeDMDSnapshotPair(
+        const Matrix* snapshots);
 
     /**
      * @brief Compute phi.

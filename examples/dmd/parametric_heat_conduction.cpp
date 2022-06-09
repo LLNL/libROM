@@ -353,10 +353,12 @@ int main(int argc, char *argv[])
     u_gf.SetFromTrueDofs(u);
     {
         ostringstream mesh_name, sol_name;
-        mesh_name << outputPath << "/parametric_heat_conduction_" << to_string(radius) << "_"
+        mesh_name << outputPath << "/parametric_heat_conduction_" << to_string(
+                      radius) << "_"
                   << to_string(alpha) << "_" << to_string(cx) << "_" << to_string(cy)
                   << "-mesh." << setfill('0') << setw(6) << myid;
-        sol_name << outputPath << "/parametric_heat_conduction_" << to_string(radius) << "_"
+        sol_name << outputPath << "/parametric_heat_conduction_" << to_string(
+                     radius) << "_"
                  << to_string(alpha) << "_" << to_string(cx) << "_" << to_string(cy)
                  << "-init." << setfill('0') << setw(6) << myid;
         ofstream omesh(mesh_name.str().c_str());
@@ -388,7 +390,8 @@ int main(int argc, char *argv[])
         postfix.erase(0, std::string("../data/").size() );
         postfix += "_o" + std::to_string(order);
         postfix += "_solver" + std::to_string(ode_solver_type);
-        const std::string collection_name = outputPath + "/parametric_heat_conduction-p-" +
+        const std::string collection_name = outputPath +
+                                            "/parametric_heat_conduction-p-" +
                                             postfix + ".bp";
 
         adios2_dc = new ADIOS2DataCollection(MPI_COMM_WORLD, collection_name, pmesh);
@@ -509,7 +512,8 @@ int main(int argc, char *argv[])
         if (save_csv && myid == 0)
         {
             mkdir((outputPath + "/step" + to_string(ti)).c_str(), 0777);
-            csv_db.putDoubleArray(outputPath + "/step" + to_string(ti) + "/sol.csv", u.GetData(), u.Size());
+            csv_db.putDoubleArray(outputPath + "/step" + to_string(ti) + "/sol.csv",
+                                  u.GetData(), u.Size());
         }
 
         ts.push_back(t);
@@ -551,7 +555,8 @@ int main(int argc, char *argv[])
     if (save_csv && myid == 0)
     {
         csv_db.putDoubleVector(outputPath + "/tval.csv", ts, ts.size());
-        csv_db.putStringVector(outputPath + "/snap_list.csv", snap_list, snap_list.size());
+        csv_db.putStringVector(outputPath + "/snap_list.csv", snap_list,
+                               snap_list.size());
     }
 
 #ifdef MFEM_USE_ADIOS2
@@ -565,7 +570,8 @@ int main(int argc, char *argv[])
     //     using GLVis: "glvis -np <np> -m parametric_heat_conduction-mesh -g parametric_heat_conduction-final".
     {
         ostringstream sol_name;
-        sol_name << outputPath << "/parametric_heat_conduction_" << to_string(radius) << "_"
+        sol_name << outputPath << "/parametric_heat_conduction_" << to_string(
+                     radius) << "_"
                  << to_string(alpha) << "_" << to_string(cx) << "_" << to_string(cy)
                  << "-final." << setfill('0') << setw(6) << myid;
         ofstream osol(sol_name.str().c_str());
@@ -589,7 +595,8 @@ int main(int argc, char *argv[])
 
             dmd_training_timer.Stop();
 
-            dmd_u->save(outputPath + "/" + to_string(radius) + "_" + to_string(alpha) + "_" +
+            dmd_u->save(outputPath + "/" + to_string(radius) + "_" + to_string(
+                            alpha) + "_" +
                         to_string(cx) + "_" + to_string(cy));
 
             if (myid == 0)
@@ -669,7 +676,8 @@ int main(int argc, char *argv[])
             Vector initial_dmd_solution_u(result_u->getData(), result_u->dim());
             u_gf.SetFromTrueDofs(initial_dmd_solution_u);
 
-            VisItDataCollection dmd_visit_dc(outputPath + "/DMD_Parametric_Heat_Conduction_" +
+            VisItDataCollection dmd_visit_dc(outputPath + "/DMD_Parametric_Heat_Conduction_"
+                                             +
                                              to_string(radius) + "_" + to_string(alpha) + "_" +
                                              to_string(cx) + "_" + to_string(cy), pmesh);
             dmd_visit_dc.RegisterField("temperature", &u_gf);
@@ -723,7 +731,8 @@ int main(int argc, char *argv[])
             {
                 std::cout << "Relative error of DMD temperature (u) at t_final: "
                           << t_final << " is " << tot_diff_norm_u / tot_true_solution_u_norm << std::endl;
-                printf("Elapsed time for predicting DMD: %e second\n", dmd_prediction_timer.RealTime());
+                printf("Elapsed time for predicting DMD: %e second\n",
+                       dmd_prediction_timer.RealTime());
             }
 
             delete result_u;
@@ -731,7 +740,8 @@ int main(int argc, char *argv[])
 
         if (myid == 0)
         {
-            printf("Elapsed time for training DMD: %e second\n", dmd_training_timer.RealTime());
+            printf("Elapsed time for training DMD: %e second\n",
+                   dmd_training_timer.RealTime());
         }
     }
 

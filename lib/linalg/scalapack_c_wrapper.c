@@ -1,6 +1,6 @@
 /*******************************************************************************
  *
- * Copyright (c) 2013-2021, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT file for
  * details.
  *
@@ -36,7 +36,8 @@ void svd_init(struct SVDManager* mgr, struct SLPK_Matrix* A)
     mgr->done = 0;
 }
 
-void ls_init(struct LSManager* mgr, struct SLPK_Matrix* A, struct SLPK_Matrix* B)
+void ls_init(struct LSManager* mgr, struct SLPK_Matrix* A,
+             struct SLPK_Matrix* B)
 {
     mgr->A = A;
     mgr->B = B;
