@@ -126,6 +126,8 @@ public:
     operator = (
         const double& a);
 
+// SWIG can not natively handle std::function. Let's remove the transform
+// function from the Python interface of libROM for now.
 #ifndef SWIG
 
     /**
