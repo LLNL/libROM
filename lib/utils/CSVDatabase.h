@@ -205,7 +205,7 @@ public:
     getIntegerVector(
         const std::string& file_name,
         std::vector<int> &data,
-        bool append);
+        bool append = false);
 
     /**
      * @brief Reads an array of doubles associated with the supplied filename.
@@ -283,7 +283,7 @@ public:
     getDoubleVector(
         const std::string& file_name,
         std::vector<double> &data,
-        bool append);
+        bool append = false);
 
     /**
      * @brief Reads a vector of strings associated with the supplied filename.
@@ -299,7 +299,7 @@ public:
     getStringVector(
         const std::string& file_name,
         std::vector<std::string> &data,
-        bool append);
+        bool append = false);
 
     /**
      * @brief Count the number of lines of CSV database file.

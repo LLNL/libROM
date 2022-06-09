@@ -154,6 +154,7 @@ CSVDatabase::getIntegerArray(
 #endif
 
     std::ifstream d_fs(file_name.c_str());
+    CAROM_VERIFY(!d_fs.fail());
     int data_entry = 0;
     for (int i = 0; i < nelements; ++i)
     {
@@ -173,6 +174,7 @@ CSVDatabase::getIntegerVector(
     if (!append) data.clear();
 
     std::ifstream d_fs(file_name.c_str());
+    CAROM_VERIFY(!d_fs.fail());
     int data_entry;
     while (d_fs >> data_entry)
     {
@@ -193,6 +195,7 @@ CSVDatabase::getDoubleArray(
 #endif
 
     std::ifstream d_fs(file_name.c_str());
+    CAROM_VERIFY(!d_fs.fail());
     double data_entry = 0.0;
     for (int i = 0; i < nelements; ++i)
     {
@@ -221,6 +224,7 @@ CSVDatabase::getDoubleArray(
     else
     {
         std::ifstream d_fs(file_name.c_str());
+        CAROM_VERIFY(!d_fs.fail());
         int k = 0;
         double data_entry = 0.0;
         for (int i = 0; i < nelements; ++i)
@@ -251,20 +255,28 @@ CSVDatabase::getDoubleArray(
 #endif
 
     std::ifstream d_fs(file_name.c_str());
+    CAROM_VERIFY(!d_fs.fail());
     std::string line, data_entry;
     int count = 0;
+    int curr_block_remaining = block_size;
     while (count < nelements && d_fs >> line)
     {
         std::stringstream d_ss(line);
         while (std::getline(d_ss, data_entry, ','))
         {
-            if (offset-- > stride)
+            if (offset > 0)
+            {
+                offset--;
+            }
+            else
             {
                 data[count++] = std::stod(data_entry);
-            }
-            if (offset == 0)
-            {
-                offset = stride + block_size;
+                curr_block_remaining--;
+                if (curr_block_remaining == 0)
+                {
+                    offset = stride - 1;
+                    curr_block_remaining = block_size;
+                }
             }
         }
     }
@@ -281,6 +293,7 @@ CSVDatabase::getDoubleVector(
     if (!append) data.clear();
 
     std::ifstream d_fs(file_name.c_str());
+    CAROM_VERIFY(!d_fs.fail());
     double data_entry;
     while (d_fs >> data_entry)
     {
@@ -299,6 +312,7 @@ CSVDatabase::getStringVector(
     if (!append) data.clear();
 
     std::ifstream d_fs(file_name.c_str());
+    CAROM_VERIFY(!d_fs.fail());
     std::string data_entry;
     while (std::getline(d_fs, data_entry))
     {

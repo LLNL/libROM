@@ -9,13 +9,13 @@
  *****************************************************************************/
 
 #include "linalg/Matrix.h"
+#include "Utilities.h"
 #include "mpi.h"
 #include <cmath>
 #include <map>
 #include <set>
 
 #include "STSampling.h"
-#include "DEIM.h"
 
 using namespace std;
 
