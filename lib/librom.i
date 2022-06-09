@@ -19,6 +19,7 @@ namespace std {
 %pointer_functions(double, doublep);
 
 %{
+    #define SWIG_FILE_WITH_INIT
     #include "utils/CSVDatabase.h"
     #include "utils/HDFDatabase.h"
     #include "linalg/Vector.h"
@@ -34,6 +35,12 @@ namespace std {
     #include "hyperreduction/DEIM.h"
     #include "hyperreduction/QDEIM.h"
     #include "hyperreduction/STSampling.h"
+%}
+
+%include "numpy.i"
+
+%init %{
+import_array();
 %}
 
 %ignore Database;
