@@ -941,6 +941,12 @@ public:
                           int  pivots_requested) const;
 
     /**
+     * @brief Orthogonalizes the matrix.
+     */
+    void
+    orthogonalize();
+
+    /**
      * @brief Const Matrix member access. Matrix data is stored in
      * row-major format.
      *
