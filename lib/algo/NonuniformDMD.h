@@ -8,7 +8,7 @@
  *
  *****************************************************************************/
 
-// Description: Computes the DMD algorithm on the given snapshot matrix 
+// Description: Computes the modified DMD algorithm on the given snapshot matrix 
 //              with non-uniform sampling time steps. 
 //              The implemented dynamic mode decomposition algorithm is modified from
 //              Tu et. al's paper "On Dynamic Mode Decomposition: Theory and
@@ -26,7 +26,11 @@
 namespace CAROM {
 
 /**
- * Class NonuniformDMD implements the NonuniformDMD algorithm on a given snapshot matrix.
+ * Class NonuniformDMD implements the modified DMD algorithm on the 
+ * given snapshot matrix with non-uniform sampling time steps. 
+ * Instead of linearly approximating the discrete dynamics 
+ * x(t+dt) = Ax(t) in the original DMD, this algorithm approximates 
+ * the continuous dynamics linearly by dx/dt = Ax. 
  */
 class NonuniformDMD : public DMD
 {

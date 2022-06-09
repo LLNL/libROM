@@ -187,6 +187,8 @@ void DMD::train(int k)
 std::pair<Matrix*, Matrix*>
 DMD::computePlusMinusSnapshotMatrices(const Matrix* snapshots)
 {
+    CAROM_VERIFY(snapshots->numColumns() > 1);
+
     // TODO: Making two copies of the snapshot matrix has a lot of overhead.
     //       We need to figure out a way to do submatrix multiplication and to
     //       reimplement this algorithm using one snapshot matrix.
