@@ -31,48 +31,6 @@ AdaptiveDMD::AdaptiveDMD(int dim, double desired_dt, std::string rbf, std::strin
     d_closest_rbf_val = closest_rbf_val;
 }
 
-void AdaptiveDMD::takeSample(double* u_in, double t)
-{
-    CAROM_VERIFY(u_in != 0);
-    CAROM_VERIFY(t >= 0.0);
-    Vector* sample = new Vector(u_in, d_dim, true);
-
-    double orig_t = t;
-    if (d_snapshots.empty())
-    {
-        d_t_offset = t;
-        t = 0.0;
-    }
-    else
-    {
-        t -= d_t_offset;
-    }
-
-    // Erase any snapshots taken at the same or later time
-    while (!d_sampled_times.empty() && d_sampled_times.back()->item(0) >= t)
-    {
-        if (d_rank == 0) std::cout << "Removing existing snapshot at time: " << d_t_offset + d_sampled_times.back()->item(0) << std::endl;
-        Vector* last_snapshot = d_snapshots.back();
-        delete last_snapshot;
-        d_snapshots.pop_back();
-        d_sampled_times.pop_back();
-    }
-
-    if (d_snapshots.empty())
-    {
-        d_t_offset = orig_t;
-        t = 0.0;
-    }
-    else
-    {
-        CAROM_VERIFY(d_sampled_times.back()->item(0) < t);
-    }
-
-    d_snapshots.push_back(sample);
-    Vector* sampled_time = new Vector(&t, 1, false);
-    d_sampled_times.push_back(sampled_time);
-}
-
 void AdaptiveDMD::train(double energy_fraction)
 {
     const Matrix* f_snapshots = getInterpolatedSnapshots();
