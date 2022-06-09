@@ -207,8 +207,6 @@ DMD::computeDMDSnapshotPair(const Matrix* snapshots)
             f_snapshots_in->item(i, j) = snapshots->item(i, j);
             f_snapshots_out->item(i, j) = snapshots->item(i, j + 1);
         }
-        //f_snapshots_out->item(i, snapshots->numColumns() - 2) =
-        //    snapshots->item(i, snapshots->numColumns() - 1);
     }
 
     return std::pair<Matrix*,Matrix*>(f_snapshots_in, f_snapshots_out);
