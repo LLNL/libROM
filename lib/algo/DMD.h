@@ -64,7 +64,8 @@ public:
     DMD(std::string base_file_name);
 
     /**
-     * @brief Sample the new state, u_in.
+     * @brief Sample the new state, u_in. Any samples in d_snapshots 
+     *        taken at the same or later time will be erased.
      *
      * @pre u_in != 0
      * @pre t >= 0.0
