@@ -22,6 +22,7 @@
 #define included_NonuniformDMD_h
 
 #include "DMD.h"
+#include "ParametricDMD.h"
 
 namespace CAROM {
 
@@ -52,10 +53,9 @@ public:
     NonuniformDMD(std::string base_file_name);
 
 protected:
-    template <class T>
-    friend void getParametricDMD(T*& parametric_dmd,
+    friend void getParametricDMD<NonuniformDMD>(NonuniformDMD*& parametric_dmd,
                                  std::vector<Vector*>& parameter_points,
-                                 std::vector<T*>& dmds,
+                                 std::vector<NonuniformDMD*>& dmds,
                                  Vector* desired_point,
                                  std::string rbf,
                                  std::string interp_method,

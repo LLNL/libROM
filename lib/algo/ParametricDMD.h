@@ -18,8 +18,6 @@
 #ifndef included_ParametricDMD_h
 #define included_ParametricDMD_h
 
-#include "DMD.h"
-#include "NonuniformDMD.h"
 #include "manifold_interp/MatrixInterpolator.h"
 #include "linalg/Matrix.h"
 #include "linalg/Vector.h"

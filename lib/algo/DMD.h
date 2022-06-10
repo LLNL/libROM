@@ -18,6 +18,7 @@
 #ifndef included_DMD_h
 #define included_DMD_h
 
+#include "ParametricDMD.h"
 #include <vector>
 #include <complex>
 
@@ -132,10 +133,9 @@ public:
     void summary(std::string base_file_name);
 
 protected:
-    template <class T>
-    friend void getParametricDMD(T*& parametric_dmd,
+    friend void getParametricDMD<DMD>(DMD*& parametric_dmd,
                                  std::vector<Vector*>& parameter_points,
-                                 std::vector<T*>& dmds,
+                                 std::vector<DMD*>& dmds,
                                  Vector* desired_point,
                                  std::string rbf,
                                  std::string interp_method,
