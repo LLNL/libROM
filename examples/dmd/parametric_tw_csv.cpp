@@ -46,7 +46,6 @@
 #include "mfem.hpp"
 #include "algo/DMD.h"
 #include "algo/AdaptiveDMD.h"
-#include "algo/ParametricDMD.h"
 #include "linalg/Vector.h"
 #include "linalg/Matrix.h"
 #include "utils/HDFDatabase.h"

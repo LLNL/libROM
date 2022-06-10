@@ -59,7 +59,6 @@
 
 #include "mfem.hpp"
 #include "algo/DMD.h"
-#include "algo/ParametricDMD.h"
 #include "linalg/Vector.h"
 #include <cmath>
 #include <fstream>
