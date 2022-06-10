@@ -994,17 +994,12 @@ int main(int argc, char *argv[])
         }
 
         smm->ConstructSampleMesh();
-        if (myid == 0)
-            printf("123\n");
 
         w = new CAROM::Vector(rrdim + rwdim, false);
         w_W = new CAROM::Vector(rwdim, false);
 
         // Initialize w = B_W^T p.
         BW_librom->transposeMult(*p_W_librom, *w_W);
-
-        if (myid == 0)
-            printf("1234\n");
 
         for (int i=0; i<rrdim; ++i)
             (*w)(i) = 0.0;
@@ -1014,9 +1009,6 @@ int main(int argc, char *argv[])
 
         // Note that some of this could be done only on the ROM solver process, but it is tricky, since RomOperator assembles Bsp in parallel.
         wMFEM = new Vector(&((*w)(0)), rrdim + rwdim);
-
-        if (myid == 0)
-            printf("1235\n");
 
         if (myid == 0)
         {
@@ -1039,16 +1031,10 @@ int main(int argc, char *argv[])
                                                    newton_abs_tol, newton_iter, sp_p);
         }
 
-        if (myid == 0)
-            printf("1236\n");
-
         romop = new RomOperator(&oper, soper, rrdim, rwdim, nldim, smm,
                                 BR_librom, FR_librom, BW_librom,
                                 Bsinv, newton_rel_tol, newton_abs_tol, newton_iter,
                                 S_librom, Ssinv, myid, hyperreduce_source, num_samples_req != -1);
-
-                                if (myid == 0)
-                                    printf("1237\n");
 
         ode_solver.Init(*romop);
 
@@ -1066,9 +1052,6 @@ int main(int argc, char *argv[])
     oper.newtonFailure = false;
 
     solveTimer.Start();
-
-    if (myid == 0)
-        printf("1238\n");
 
     bool last_step = false;
     for (int ti = 1; !last_step; ti++)
@@ -1113,13 +1096,9 @@ int main(int argc, char *argv[])
         if (online)
         {
             if (myid == 0)
-                printf("1239\n");
-            if (myid == 0)
             {
                 ode_solver.Step(*wMFEM, t, dt);
             }
-            if (myid == 0)
-                printf("12310\n");
 
             MPI_Bcast(&t, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
         }
