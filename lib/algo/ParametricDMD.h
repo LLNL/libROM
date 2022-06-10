@@ -15,6 +15,9 @@
 //              This algorithm also works in the case that the first sample does
 //              not start from t = 0.0 by incorporating a time offset.
 
+#ifndef included_ParametricDMD_h
+#define included_ParametricDMD_h
+
 #include "DMD.h"
 #include "NonuniformDMD.h"
 #include "manifold_interp/MatrixInterpolator.h"
@@ -152,3 +155,5 @@ void getParametricDMD(T*& parametric_dmd,
 }
 
 }
+
+#endif
