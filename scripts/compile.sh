@@ -17,7 +17,7 @@ UPDATE_LIBS=false
 INSTALL_PYTHON=false
 
 # Get options
-while getopts "ah:dh:mh:t:uh:p" o;
+while getopts "ah:dh:mh:t:uh:ph" o;
 do
     case "${o}" in
         a)
