@@ -923,7 +923,6 @@ int main(int argc, char *argv[])
             {
                 nsamp_S = nsdim;
             }
-            sample_dofs_S.resize(nsamp_S);
 
             Ssinv = new CAROM::Matrix(nsamp_S, nsdim, false);
             sample_dofs_S.resize(nsamp_S);
