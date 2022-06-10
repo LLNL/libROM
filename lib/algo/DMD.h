@@ -132,9 +132,10 @@ public:
     void summary(std::string base_file_name);
 
 protected:
-
-    friend DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
-                                 std::vector<DMD*>& dmds,
+    template <class T>
+    friend void getParametricDMD(T*& parametric_dmd,
+                                 std::vector<Vector*>& parameter_points,
+                                 std::vector<T*>& dmds,
                                  Vector* desired_point,
                                  std::string rbf,
                                  std::string interp_method,
