@@ -607,7 +607,8 @@ int main(int argc, char *argv[])
                 {
                     cout << "Interpolating DMD model #" << window << endl;
                 }
-                CAROM::getParametricDMD(dmd[window][idx_dataset], par_vectors, dmd_paths, curr_par,
+                CAROM::getParametricDMD(dmd[window][idx_dataset], par_vectors, dmd_paths,
+                                        curr_par,
                                         string(rbf), string(interp_method), pdmd_closest_rbf_val);
 
                 if (myid == 0)

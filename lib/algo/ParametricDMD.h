@@ -26,6 +26,22 @@
 
 namespace CAROM {
 
+/**
+ * @brief Constructor.
+ *
+ * @param[in] parameter_points  The parameter points.
+ * @param[in] dmds              The DMD objects associated with
+ *                              each parameter point.
+ * @param[in] desired_point     The desired point to create a parametric DMD at.
+ * @param[in] rbf               The RBF type ("G" == gaussian,
+ *                              "IQ" == inverse quadratic, "IMQ" == inverse
+ *                              multiquadric)
+ * @param[in] interp_method     The interpolation method type ("LS" == linear solve,
+ *                              "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
+ * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
+ *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
+ * @param[in] reorthogonalize_W Whether to reorthogonalize the interpolated W (basis) matrix.
+ */
 template <class T>
 void getParametricDMD(T*& parametric_dmd,
                       std::vector<Vector*>& parameter_points,
@@ -92,6 +108,23 @@ void getParametricDMD(T*& parametric_dmd,
     delete eigenpair.ev_imaginary;
 }
 
+
+/**
+ * @brief Constructor.
+ *
+ * @param[in] parameter_points  The parameter points.
+ * @param[in] dmd_paths         The paths to the saved DMD objects associated with
+ *                              each parameter point.
+ * @param[in] desired_point     The desired point to create a parametric DMD at.
+ * @param[in] rbf               The RBF type ("G" == gaussian,
+ *                              "IQ" == inverse quadratic, "IMQ" == inverse
+ *                              multiquadric)
+ * @param[in] interp_method     The interpolation method type ("LS" == linear solve,
+ *                              "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
+ * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
+ *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
+ * @param[in] reorthogonalize_W Whether to reorthogonalize the interpolated W (basis) matrix.
+ */
 template <class T>
 void getParametricDMD(T*& parametric_dmd,
                       std::vector<Vector*>& parameter_points,
