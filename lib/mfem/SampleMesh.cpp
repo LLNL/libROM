@@ -328,10 +328,11 @@ void BuildSampleMesh(ParMesh& pmesh, vector<ParFiniteElementSpace*> & fespace,
 
     const int d = pmesh.Dimension();
 
-    H1_FECollection h1_coll(1,
-                            d);  // Must be first order, to get a bijection between vertices and DOF's.
-    ParFiniteElementSpace H1DummySpace(&pmesh,
-                                       &h1_coll);  // This constructor effectively sets vertex (DOF) global indices.
+    // Must be first order, to get a bijection between vertices and DOF's.
+    H1_FECollection h1_coll(1, d);
+
+    // This constructor effectively sets vertex (DOF) global indices.
+    ParFiniteElementSpace H1DummySpace(&pmesh, &h1_coll);
 
     vector<int> procNumElems(num_procs);
 
@@ -394,7 +395,7 @@ void BuildSampleMesh(ParMesh& pmesh, vector<ParFiniteElementSpace*> & fespace,
 
         pmesh.GetElementVertices(elId, elVert);
         MFEM_VERIFY(numElVert == elVert.Size(),
-                    "");  // Assuming a uniform element type in the mesh.
+            "Assuming a uniform element type in the mesh.");
         // NOTE: to be very careful, it should be verified that this is the same across all processes.
 
         Array<int> dofs;
