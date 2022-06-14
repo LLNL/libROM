@@ -107,6 +107,16 @@ public:
     double getTimeOffset() const;
 
     /**
+     * @brief Returns the number of samples taken.
+     *
+     * @return The number of samples taken.
+     */
+    int getNumSamples() const
+    {
+        return d_snapshots.size();
+    }
+
+    /**
      * @brief Get the snapshot matrix contained within d_snapshots.
      */
     const Matrix* getSnapshotMatrix();
