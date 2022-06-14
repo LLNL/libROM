@@ -35,7 +35,6 @@ set(module_list
   algo/DMD
   algo/AdaptiveDMD
   algo/NonuniformDMD
-  algo/ParametricDMD
   algo/greedy/GreedyCustomSampler
   algo/greedy/GreedyRandomSampler
   algo/greedy/GreedySampler
@@ -59,6 +58,7 @@ foreach(module IN LISTS module_list)
 endforeach(module) # IN LISTS module_list
 
 list(APPEND source_files
+  algo/ParametricDMD.h
   linalg/Options.h
   librom.h)
 

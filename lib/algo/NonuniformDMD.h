@@ -22,6 +22,7 @@
 #define included_NonuniformDMD_h
 
 #include "DMD.h"
+#include "ParametricDMD.h"
 
 namespace CAROM {
 
@@ -42,6 +43,37 @@ public:
      * @param[in] dim        The full-order state dimension.
      */
     NonuniformDMD(int dim);
+
+    /**
+     * @brief Constructor.
+     *
+     * @param[in] base_file_name The base part of the filename of the
+     *                           database to load when restarting from a save.
+     */
+    NonuniformDMD(std::string base_file_name);
+
+protected:
+    friend void getParametricDMD<NonuniformDMD>(NonuniformDMD*& parametric_dmd,
+                                 std::vector<Vector*>& parameter_points,
+                                 std::vector<NonuniformDMD*>& dmds,
+                                 Vector* desired_point,
+                                 std::string rbf,
+                                 std::string interp_method,
+                                 double closest_rbf_val,
+                                 bool reorthogonalize_W);
+
+    /**
+     * @brief Constructor.
+     *
+     * @param[in] eigs d_eigs
+     * @param[in] phi_real d_phi_real
+     * @param[in] phi_imaginary d_phi_imaginary
+     * @param[in] k d_k
+     * @param[in] dt d_dt
+     * @param[in] t_offset d_t_offset
+     */
+    NonuniformDMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
+                  Matrix* phi_imaginary, int k, double dt, double t_offset);
 
 private:
 

@@ -18,6 +18,15 @@ namespace CAROM {
 NonuniformDMD::NonuniformDMD(int dim) : DMD(dim)
 {}
 
+NonuniformDMD::NonuniformDMD(std::string base_file_name) : DMD(base_file_name)
+{}
+
+NonuniformDMD::NonuniformDMD(std::vector<std::complex<double>> eigs,
+                             Matrix* phi_real,
+                             Matrix* phi_imaginary, int k, double dt, double t_offset) : DMD(eigs,
+                                         phi_real, phi_imaginary, k, dt, t_offset)
+{}
+
 std::pair<Matrix*, Matrix*>
 NonuniformDMD::computeDMDSnapshotPair(const Matrix* snapshots)
 {

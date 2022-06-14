@@ -18,6 +18,7 @@
 #ifndef included_DMD_h
 #define included_DMD_h
 
+#include "ParametricDMD.h"
 #include <vector>
 #include <complex>
 
@@ -132,8 +133,8 @@ public:
     void summary(std::string base_file_name);
 
 protected:
-
-    friend DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
+    friend void getParametricDMD<DMD>(DMD*& parametric_dmd,
+                                 std::vector<Vector*>& parameter_points,
                                  std::vector<DMD*>& dmds,
                                  Vector* desired_point,
                                  std::string rbf,
