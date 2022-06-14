@@ -11,7 +11,7 @@ non-intrusive black-box approaches.
 - Dynamic data collection
 - Dynamic mode decomposition (DMD)
 - Data compression
-- Physics-informed Greedy algorithm
+- Physics-informed greedy algorithm
 - Projection-based hyper-reduction
 
 ## Features to be added
