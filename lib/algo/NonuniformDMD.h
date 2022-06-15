@@ -72,7 +72,7 @@ protected:
      * @param[in] dt d_dt
      * @param[in] t_offset d_t_offset
      */
-    NonuniformDMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
+    NonuniformDMD(std::vector<std::complex<double> > eigs, Matrix* phi_real,
                   Matrix* phi_imaginary, int k, double dt, double t_offset);
 
 private:

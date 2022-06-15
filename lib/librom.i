@@ -30,7 +30,7 @@ namespace std {
     #include "linalg/BasisGenerator.h"
     #include "algo/DMD.h"
     #include "algo/AdaptiveDMD.h"
-    #include "algo/ParametricDMD.h"
+    #include "algo/NonuniformDMD.h"
     #include "algo/manifold_interp/VectorInterpolator.h"
     #include "algo/manifold_interp/MatrixInterpolator.h"
     #include "hyperreduction/DEIM.h"
@@ -60,9 +60,10 @@ import_array();
 %include "linalg/Options.h"
 %include "linalg/BasisReader.h"
 %include "linalg/BasisGenerator.h"
+%include "algo/ParametricDMD.h"
 %include "algo/DMD.h"
 %include "algo/AdaptiveDMD.h"
-%include "algo/ParametricDMD.h"
+%include "algo/NonuniformDMD.h"
 %ignore Interpolator;
 %ignore convertClosestRBFToEpsilon;
 %ignore obtainRBF;
