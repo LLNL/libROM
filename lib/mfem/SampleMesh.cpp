@@ -156,8 +156,8 @@ void GetLocalSampleMeshElements(ParMesh& pmesh, ParFiniteElementSpace& fespace,
 
 void SplitDofsIntoBlocks(const vector<int>& Ntrue, const vector<int>& dofs,
                          const vector<int>& local_num_dofs,
-                         vector<vector<int>>& dofs_block, vector<vector<int>>& dofs_block_todofs,
-                         vector<vector<int>>& local_num_dofs_block)
+                         vector<vector<int> >& dofs_block, vector<vector<int> >& dofs_block_todofs,
+                         vector<vector<int> >& local_num_dofs_block)
 {
     const int num_procs = local_num_dofs.size();
     const int nspaces = Ntrue.size();
@@ -718,7 +718,7 @@ void Set_s2sp(const int myid, const int num_procs, vector<int> const& spNtrue,
 #ifdef FULL_DOF_STENCIL
 void Finish_s2sp_augmented(const int rank, const int nprocs,
                            vector<ParFiniteElementSpace*> & fespace,
-                           vector<vector<int>>& dofs_block, vector<vector<int> >& dofs_sub_to_sdofs,
+                           vector<vector<int> >& dofs_block, vector<vector<int> >& dofs_sub_to_sdofs,
                            vector<vector<int> >& local_num_dofs_sub, const bool dofsTrue,
                            vector<int> & s2sp_)
 {
