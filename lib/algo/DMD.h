@@ -53,8 +53,9 @@ public:
      *
      * @param[in] dim        The full-order state dimension.
      * @param[in] dt         The dt between samples.
+     * @param[in] mean_os_s  Use state mean as offset.
      */
-    DMD(int dim, double dt);
+    DMD(int dim, double dt, bool mean_os_s = false);
 
     /**
      * @brief Constructor.
@@ -156,8 +157,10 @@ protected:
      * @brief Constructor.
      *
      * @param[in] dim        The full-order state dimension.
+     * @param[in] mean_os_s  Use state mean as offset.
+     * @param[in] mean_os_d  Use derivative mean as offset.
      */
-    DMD(int dim);
+    DMD(int dim, bool mean_os_s = false, bool mean_os_d = false);
 
     /**
      * @brief Constructor.
@@ -257,6 +260,26 @@ protected:
      * @brief The stored times of each sample.
      */
     std::vector<Vector*> d_sampled_times;
+ 
+    /**
+     * @brief Whether to use state mean as offset.
+     */
+    bool d_mean_os_s;
+
+    /**
+     * @brief Whether to use derivative mean as offset in NonuniformDMD.
+     */
+    bool d_mean_os_d;
+
+    /**
+     * @brief Offset of order 0.
+     */
+    Vector* d_state_offset = NULL;
+
+    /**
+     * @brief Offset of order 1.
+     */
+    Vector* d_derivative_offset = NULL;
 
     /**
      * @brief Whether the DMD has been trained or not.

@@ -15,7 +15,7 @@
 
 namespace CAROM {
 
-NonuniformDMD::NonuniformDMD(int dim) : DMD(dim)
+NonuniformDMD::NonuniformDMD(int dim, bool mean_os_s, bool mean_os_d) : DMD(dim, mean_os_s, mean_os_d)
 {}
 
 NonuniformDMD::NonuniformDMD(std::string base_file_name) : DMD(base_file_name)

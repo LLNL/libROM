@@ -42,7 +42,7 @@ extern "C" {
 
 namespace CAROM {
 
-DMD::DMD(int dim)
+DMD::DMD(int dim, bool mean_s, bool mean_d)
 {
     CAROM_VERIFY(dim > 0);
 

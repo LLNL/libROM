@@ -41,8 +41,10 @@ public:
      * @brief Constructor.
      *
      * @param[in] dim        The full-order state dimension.
+     * @param[in] mean_os_s  Use state mean as offset.
+     * @param[in] mean_os_d  Use derivative mean as offset.
      */
-    NonuniformDMD(int dim);
+    NonuniformDMD(int dim, bool mean_os_s = false, bool mean_os_d = false);
 
     /**
      * @brief Constructor.
