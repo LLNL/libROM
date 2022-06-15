@@ -63,7 +63,8 @@ int main(int argc, char* argv[])
     if (argc >= 2) {
         for (int i = 1; i < argc; i++) {
             if (!strcmp(argv[i], "basis") || !strcmp(argv[i], "-b")) {
-                if (rank==0) std::cout << "Argument " << i << " identified as basis or -b" << std::endl;
+                if (rank==0) std::cout << "Argument " << i << " identified as basis or -b" <<
+                                           std::endl;
                 kind = "basis";
             }
             else if (offset_arg) {
@@ -89,10 +90,13 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    CAROM_VERIFY(!(subtract_mean && subtract_offset)); // both should not be selected
+    CAROM_VERIFY(!(subtract_mean
+                   && subtract_offset)); // both should not be selected
 
     /*-- Read dimension and count number of snapshots/bases --*/
-    if (rank==0) std::cout << "Opening files to read dimension and count number of snapshots/bases" << std::endl;
+    if (rank==0) std::cout <<
+                               "Opening files to read dimension and count number of snapshots/bases" <<
+                               std::endl;
     int dimFirst = 0;
     for (const auto& sample_name: sample_names) {
         CAROM::BasisReader reader(sample_name);
@@ -101,7 +105,8 @@ int main(int argc, char* argv[])
         snaps += reader.getNumSamples(kind, 0);
         if (dimFirst == 0) dimFirst = dim;
 
-        CAROM_VERIFY(dim == dimFirst); // ensures all files have the same dimension distribution
+        CAROM_VERIFY(dim ==
+                     dimFirst); // ensures all files have the same dimension distribution
     }
 
     CAROM_VERIFY((snaps > 0) && (dim > 0));
@@ -118,7 +123,8 @@ int main(int argc, char* argv[])
         static_basis_generator->loadSamples(sample_name, kind);
     }
 
-    if (rank==0) std::cout << "Saving data uploaded as a snapshot matrix" << std::endl;
+    if (rank==0) std::cout << "Saving data uploaded as a snapshot matrix" <<
+                               std::endl;
     static_basis_generator->writeSnapshot();
 
     if (!subtract_mean && !subtract_offset) {
@@ -131,7 +137,8 @@ int main(int argc, char* argv[])
     else {
         /*-- load data from hdf5 file to find the mean and subtract it --*/
         if (rank==0) std::cout << "Reading snapshots" << std::endl;
-        CAROM::Matrix* snapshots = (CAROM::Matrix*) static_basis_generator->getSnapshotMatrix();
+        CAROM::Matrix* snapshots = (CAROM::Matrix*)
+                                   static_basis_generator->getSnapshotMatrix();
 
         int num_rows = snapshots->numRows();
         int num_cols = snapshots->numColumns();
@@ -150,7 +157,8 @@ int main(int argc, char* argv[])
             offset.write("mean");
         }
         else if (subtract_offset) {
-            if (rank==0) std::cout << "Subtracting offset from file: " << offset_file << std::endl;
+            if (rank==0) std::cout << "Subtracting offset from file: " << offset_file <<
+                                       std::endl;
             offset.read(offset_file);
         }
 

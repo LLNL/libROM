@@ -46,7 +46,6 @@
 #include "mfem.hpp"
 #include "algo/DMD.h"
 #include "algo/AdaptiveDMD.h"
-#include "algo/ParametricDMD.h"
 #include "linalg/Vector.h"
 #include "linalg/Matrix.h"
 #include "utils/HDFDatabase.h"
@@ -607,8 +606,9 @@ int main(int argc, char *argv[])
                 {
                     cout << "Interpolating DMD model #" << window << endl;
                 }
-                dmd[window][idx_dataset] = getParametricDMD(par_vectors, dmd_paths, curr_par,
-                                           string(rbf), string(interp_method), pdmd_closest_rbf_val);
+                CAROM::getParametricDMD(dmd[window][idx_dataset], par_vectors, dmd_paths,
+                                        curr_par,
+                                        string(rbf), string(interp_method), pdmd_closest_rbf_val);
 
                 if (myid == 0)
                 {
