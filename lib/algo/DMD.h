@@ -145,22 +145,21 @@ public:
 
 protected:
     friend void getParametricDMD<DMD>(DMD*& parametric_dmd,
-                                 std::vector<Vector*>& parameter_points,
-                                 std::vector<DMD*>& dmds,
-                                 Vector* desired_point,
-                                 std::string rbf,
-                                 std::string interp_method,
-                                 double closest_rbf_val,
-                                 bool reorthogonalize_W);
+                                      std::vector<Vector*>& parameter_points,
+                                      std::vector<DMD*>& dmds,
+                                      Vector* desired_point,
+                                      std::string rbf,
+                                      std::string interp_method,
+                                      double closest_rbf_val,
+                                      bool reorthogonalize_W);
 
     /**
      * @brief Constructor.
      *
      * @param[in] dim        The full-order state dimension.
      * @param[in] mean_os_s  Use state mean as offset.
-     * @param[in] mean_os_d  Use derivative mean as offset.
      */
-    DMD(int dim, bool mean_os_s = false, bool mean_os_d = false);
+    DMD(int dim, bool mean_os_s = false);
 
     /**
      * @brief Constructor.
@@ -169,11 +168,17 @@ protected:
      * @param[in] phi_real d_phi_real
      * @param[in] phi_imaginary d_phi_imaginary
      * @param[in] k d_k
+     * @param[in] mean_os_s d_mean_os_s
+     * @param[in] mean_os_d d_mean_os_d
+     * @param[in] state_offset d_state_offset
+     * @param[in] derivative_offset d_derivative_offset
      * @param[in] dt d_dt
      * @param[in] t_offset d_t_offset
      */
     DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
-        Matrix* phi_imaginary, int k, double dt, double t_offset);
+        Matrix* phi_imaginary, int k, bool mean_os_s, bool mean_os_d,
+        Vector* state_offset, Vector* derivative_offset,
+        double dt, double t_offset);
 
     /**
      * @brief Unimplemented default constructor.
@@ -260,16 +265,16 @@ protected:
      * @brief The stored times of each sample.
      */
     std::vector<Vector*> d_sampled_times;
- 
+
     /**
      * @brief Whether to use state mean as offset.
      */
-    bool d_mean_os_s;
+    bool d_mean_os_s = false;
 
     /**
      * @brief Whether to use derivative mean as offset in NonuniformDMD.
      */
-    bool d_mean_os_d;
+    bool d_mean_os_d = false;
 
     /**
      * @brief Offset of order 0.

@@ -101,6 +101,8 @@ void getParametricDMD(T*& parametric_dmd,
     Matrix* phi_imaginary = W->mult(eigenpair.ev_imaginary);
 
     parametric_dmd = new T(eigs, phi_real, phi_imaginary, dmds[0]->d_k,
+                           dmds[0]->d_mean_os_s, dmds[0]->d_mean_os_d,
+                           dmds[0]->d_state_offset, dmds[0]->d_derivative_offset,
                            dmds[0]->d_dt, dmds[0]->d_t_offset);
 
     delete W;

@@ -15,16 +15,23 @@
 
 namespace CAROM {
 
-NonuniformDMD::NonuniformDMD(int dim, bool mean_os_s, bool mean_os_d) : DMD(dim, mean_os_s, mean_os_d)
-{}
+NonuniformDMD::NonuniformDMD(int dim, bool mean_os_s, bool mean_os_d) : DMD(dim,
+            mean_os_s)
+{
+    d_mean_os_d = mean_os_d;
+}
 
 NonuniformDMD::NonuniformDMD(std::string base_file_name) : DMD(base_file_name)
 {}
 
 NonuniformDMD::NonuniformDMD(std::vector<std::complex<double>> eigs,
                              Matrix* phi_real,
-                             Matrix* phi_imaginary, int k, double dt, double t_offset) : DMD(eigs,
-                                         phi_real, phi_imaginary, k, dt, t_offset)
+                             Matrix* phi_imaginary, int k,
+                             bool mean_os_s, bool mean_os_d,
+                             Vector* state_offset, Vector* derivative_offset,
+                             double dt, double t_offset) : DMD(eigs,
+                                         phi_real, phi_imaginary, k, mean_os_s, mean_os_d,
+                                         state_offset, derivative_offset, dt, t_offset)
 {}
 
 std::pair<Matrix*, Matrix*>

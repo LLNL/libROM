@@ -42,7 +42,7 @@ extern "C" {
 
 namespace CAROM {
 
-DMD::DMD(int dim, bool mean_s, bool mean_d)
+DMD::DMD(int dim, bool mean_os_s)
 {
     CAROM_VERIFY(dim > 0);
 
@@ -56,11 +56,12 @@ DMD::DMD(int dim, bool mean_s, bool mean_d)
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
     d_dim = dim;
+    d_mean_os_s = mean_os_s;
     d_trained = false;
     d_init_projected = false;
 }
 
-DMD::DMD(int dim, double dt)
+DMD::DMD(int dim, double dt, bool mean_os_s)
 {
     CAROM_VERIFY(dim > 0);
     CAROM_VERIFY(dt > 0.0);
@@ -76,6 +77,7 @@ DMD::DMD(int dim, double dt)
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
     d_dim = dim;
     d_dt = dt;
+    d_mean_os_s = mean_os_s;
     d_trained = false;
     d_init_projected = false;
 }
@@ -98,7 +100,9 @@ DMD::DMD(std::string base_file_name)
 }
 
 DMD::DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
-         Matrix* phi_imaginary, int k, double dt, double t_offset)
+         Matrix* phi_imaginary, int k, bool mean_os_s, bool mean_os_d,
+         Vector* state_offset, Vector* derivative_offset,
+         double dt, double t_offset)
 {
     // Get the rank of this process, and the number of processors.
     int mpi_init;
@@ -116,6 +120,10 @@ DMD::DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
     d_phi_real = phi_real;
     d_phi_imaginary = phi_imaginary;
     d_k = k;
+    d_mean_os_s = mean_os_s;
+    d_mean_os_d = mean_os_d;
+    d_state_offset = state_offset;
+    d_derivative_offset = derivative_offset;
     d_dt = dt;
     d_t_offset = t_offset;
 }
@@ -580,6 +588,15 @@ DMD::load(std::string base_file_name)
     HDFDatabase database;
     database.open(full_file_name, "r");
 
+    int bool_int_temp;
+    sprintf(tmp, "mean_os_s");
+    database.getInteger(tmp, bool_int_temp);
+    d_mean_os_s = (bool) bool_int_temp;
+
+    sprintf(tmp, "mean_os_d");
+    database.getInteger(tmp, bool_int_temp);
+    d_mean_os_d = (bool) bool_int_temp;
+
     sprintf(tmp, "dt");
     database.getDouble(tmp, d_dt);
 
@@ -649,6 +666,12 @@ DMD::save(std::string base_file_name)
         std::string full_file_name = base_file_name;
         HDFDatabase database;
         database.create(full_file_name);
+
+        sprintf(tmp, "mean_os_s");
+        database.putInteger(tmp, d_mean_os_s);
+
+        sprintf(tmp, "mean_os_d");
+        database.putInteger(tmp, d_mean_os_d);
 
         sprintf(tmp, "dt");
         database.putDouble(tmp, d_dt);
