@@ -198,8 +198,21 @@ std::pair<Matrix*, Matrix*>
 DMD::computeDMDSnapshotPair(const Matrix* snapshots)
 {
     CAROM_VERIFY(snapshots->numColumns() > 1);
-    if (d_mean_os_s) d_state_offset = new Vector(snapshots->numRows(), true);
 
+    if (d_mean_os_s)
+    {
+        d_state_offset = new Vector(snapshots->numRows(), true);
+        for (int i = 0; i < snapshots->numRows(); i++)
+        {
+            d_state_offset->item(i) = snapshots->item(i, 0);
+            for (int j = 1; j < snapshots->numColumns(); j++)
+            {
+                d_state_offset->item(i) += snapshots->item(i, j);
+            }
+            d_state_offset->item(i) /= snapshots->numColumns();
+        }
+    }
+    
     // TODO: Making two copies of the snapshot matrix has a lot of overhead.
     //       We need to figure out a way to do submatrix multiplication and to
     //       reimplement this algorithm using one snapshot matrix.
@@ -213,14 +226,16 @@ DMD::computeDMDSnapshotPair(const Matrix* snapshots)
     // snapshots_out = all columns of snapshots except first
     for (int i = 0; i < snapshots->numRows(); i++)
     {
-        if (d_mean_os_s) d_state_offset->item(i) = snapshots->item(i, 0);
         for (int j = 0; j < snapshots->numColumns() - 1; j++)
         {
             f_snapshots_in->item(i, j) = snapshots->item(i, j);
             f_snapshots_out->item(i, j) = snapshots->item(i, j + 1);
-            if (d_mean_os_s) d_state_offset->item(i) += f_snapshots_out->item(i, j);
+            if (d_mean_os_s)
+            {
+                f_snapshots_in->item(i, j) -= d_state_offset->item(i);
+                f_snapshots_out->item(i, j) -= d_state_offset->item(i);
+            }
         }
-        if (d_mean_os_s) d_state_offset->item(i) /= snapshots->numColumns();
     }
 
     return std::pair<Matrix*,Matrix*>(f_snapshots_in, f_snapshots_out);
