@@ -145,13 +145,13 @@ public:
 
 protected:
     friend void getParametricDMD<DMD>(DMD*& parametric_dmd,
-                                      std::vector<Vector*>& parameter_points,
-                                      std::vector<DMD*>& dmds,
-                                      Vector* desired_point,
-                                      std::string rbf,
-                                      std::string interp_method,
-                                      double closest_rbf_val,
-                                      bool reorthogonalize_W);
+                                 std::vector<Vector*>& parameter_points,
+                                 std::vector<DMD*>& dmds,
+                                 Vector* desired_point,
+                                 std::string rbf,
+                                 std::string interp_method,
+                                 double closest_rbf_val,
+                                 bool reorthogonalize_W);
 
     /**
      * @brief Constructor.
@@ -335,6 +335,16 @@ protected:
      * @brief The imaginary part of d_phi.
      */
     Matrix* d_phi_imaginary = NULL;
+
+    /**
+     * @brief The real part of d_phi_squared_inverse.
+     */
+    Matrix* d_phi_real_squared_inverse = NULL;
+
+    /**
+     * @brief The imaginary part of d_phi_squared_inverse.
+     */
+    Matrix* d_phi_imaginary_squared_inverse = NULL;
 
     /**
      * @brief The real part of the projected initial condition.

@@ -435,20 +435,23 @@ DMD::projectInitialCondition(const Vector* init)
     zgetrf(&mtx_size, &mtx_size, inverse_input, &mtx_size, ipiv, &info);
     zgetri(&mtx_size, inverse_input, &mtx_size, ipiv, work, &lwork, &info);
 
-    for (int i = 0; i < d_phi_real_squared->numRows(); i++)
+    d_phi_real_squared_inverse = d_phi_real_squared;
+    d_phi_imaginary_squared_inverse = d_phi_imaginary_squared;
+
+    for (int i = 0; i < d_phi_real_squared_inverse->numRows(); i++)
     {
         int k = 0;
-        for (int j = 0; j < d_phi_real_squared->numColumns() * 2; j++)
+        for (int j = 0; j < d_phi_real_squared_inverse->numColumns() * 2; j++)
         {
             if (j % 2 == 0)
             {
-                d_phi_real_squared->item(i,k) =
-                    inverse_input[d_phi_real_squared->numColumns() * 2 * i + j];
+                d_phi_real_squared_inverse->item(i,
+                                         k) = inverse_input[d_phi_real_squared_inverse->numColumns() * 2 * i + j];
             }
             else
             {
-                d_phi_imaginary_squared->item(i,k) =
-                    inverse_input[d_phi_imaginary_squared->numColumns() * 2 * i + j];
+                d_phi_imaginary_squared_inverse->item(i,
+                                              k) = inverse_input[d_phi_imaginary_squared_inverse->numColumns() * 2 * i + j];
                 k++;
             }
         }
@@ -457,20 +460,18 @@ DMD::projectInitialCondition(const Vector* init)
     Vector* rhs_real = d_phi_real->transposeMult(init);
     Vector* rhs_imaginary = d_phi_imaginary->transposeMult(init);
 
-    Vector* d_projected_init_real_1 = d_phi_real_squared->mult(rhs_real);
-    Vector* d_projected_init_real_2 = d_phi_imaginary_squared->mult(rhs_imaginary);
+    Vector* d_projected_init_real_1 = d_phi_real_squared_inverse->mult(rhs_real);
+    Vector* d_projected_init_real_2 = d_phi_real_squared_inverse->mult(rhs_imaginary);
     d_projected_init_real = d_projected_init_real_1->plus(d_projected_init_real_2);
 
-    Vector* d_projected_init_imaginary_1 = d_phi_real_squared->mult(rhs_imaginary);
-    Vector* d_projected_init_imaginary_2 = d_phi_imaginary_squared->mult(rhs_real);
+    Vector* d_projected_init_imaginary_1 = d_phi_real_squared_inverse->mult(rhs_imaginary);
+    Vector* d_projected_init_imaginary_2 = d_phi_real_squared_inverse->mult(rhs_real);
     d_projected_init_imaginary = d_projected_init_imaginary_2->minus(
                                      d_projected_init_imaginary_1);
 
-    delete d_phi_real_squared;
     delete d_phi_real_squared_2;
     delete d_projected_init_real_1;
     delete d_projected_init_real_2;
-    delete d_phi_imaginary_squared;
     delete d_phi_imaginary_squared_2;
     delete d_projected_init_imaginary_1;
     delete d_projected_init_imaginary_2;
@@ -511,7 +512,6 @@ DMD::predict(double t)
     {
         *d_predicted_state_real += *(d_derivative_offset->mult(t));
     }
-
     delete d_phi_mult_eigs_real;
     delete d_phi_mult_eigs_imaginary;
     delete d_predicted_state_real_1;
@@ -657,6 +657,14 @@ DMD::load(std::string base_file_name)
     d_phi_imaginary = new Matrix();
     d_phi_imaginary->read(full_file_name);
 
+    full_file_name = base_file_name + "_phi_real_squared_inverse";
+    d_phi_real_squared_inverse = new Matrix();
+    d_phi_real_squared_inverse->read(full_file_name);
+
+    full_file_name = base_file_name + "_phi_imaginary_squared_inverse";
+    d_phi_imaginary_squared_inverse = new Matrix();
+    d_phi_imaginary_squared_inverse->read(full_file_name);
+
     full_file_name = base_file_name + "_projected_init_real";
     d_projected_init_real = new Vector();
     d_projected_init_real->read(full_file_name);
@@ -749,6 +757,12 @@ DMD::save(std::string base_file_name)
 
     full_file_name = base_file_name + "_phi_imaginary";
     d_phi_imaginary->write(full_file_name);
+
+    full_file_name = base_file_name + "_phi_real_squared_inverse";
+    d_phi_real_squared_inverse->write(full_file_name);
+
+    full_file_name = base_file_name + "_phi_imaginary_squared_inverse";
+    d_phi_imaginary_squared_inverse->write(full_file_name);
 
     full_file_name = base_file_name + "_projected_init_real";
     d_projected_init_real->write(full_file_name);
