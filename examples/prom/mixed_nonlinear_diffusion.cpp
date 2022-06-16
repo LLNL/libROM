@@ -22,7 +22,7 @@
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -offline
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -merge -ns 1
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 --sopt
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -sopt
 //
 //               Relative l2 error of ROM solution at final timestep using DEIM sampling: 1.029894532029661e-08
 //               Elapsed time for entire simulation using DEIM sampling: 2.185692262
@@ -33,7 +33,7 @@
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -offline -p 1
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -merge -ns 1 -p 1
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -p 1
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -p 1 --sopt
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -p 1 -sopt
 //
 //               Relative l2 error of ROM solution at final timestep using DEIM sampling: 0.0003748510938522777
 //               Elapsed time for entire simulation using DEIM sampling: 1.239144438
@@ -47,7 +47,7 @@
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -merge -ns 3
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -offline -id 3 -sh 0.3
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -sh 0.3 -id 3
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -sh 0.3 -id 3 --sopt
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -sh 0.3 -id 3 -sopt
 //
 //               Relative l2 error of ROM solution at final timestep using DEIM sampling: 0.002639597287023164
 //               Elapsed time for entire simulation using DEIM sampling: 3.05089368
@@ -63,6 +63,7 @@
 #include "linalg/BasisGenerator.h"
 #include "linalg/BasisReader.h"
 #include "hyperreduction/DEIM.h"
+#include "hyperreduction/GNAT.h"
 #include "hyperreduction/S_OPT.h"
 #include "mfem/SampleMesh.hpp"
 
@@ -70,8 +71,6 @@
 typedef enum {ANALYTIC, INIT_STEP} PROBLEM;
 
 typedef enum {RSPACE, WSPACE} FESPACE;
-
-//#define USE_GNAT
 
 using namespace mfem;
 using namespace std;
@@ -254,6 +253,7 @@ private:
     int rrdim, rwdim, nldim;
     int nsamp_R, nsamp_S;
     double current_dt;
+    bool oversampling;
     NewtonSolver newton_solver;
     GMRESSolver *J_gmres;
     CAROM::Matrix *BRsp, *BWsp;
@@ -308,7 +308,7 @@ public:
                 const CAROM::Matrix *Bsinv,
                 const double newton_rel_tol, const double newton_abs_tol, const int newton_iter,
                 const CAROM::Matrix* S_, const CAROM::Matrix *Ssinv_,
-                const int myid, const bool hyperreduce_source);
+                const int myid, const bool hyperreduce_source, const bool oversampling);
 
     virtual void Mult(const Vector &y, Vector &dy_dt) const;
     void Mult_Hyperreduced(const Vector &y, Vector &dy_dt) const;
@@ -475,6 +475,7 @@ int main(int argc, char *argv[])
     bool merge = false;
     bool online = false;
     bool use_sopt = false;
+    int num_samples_req = -1;
 
     int nsets = 0;
 
@@ -533,6 +534,8 @@ int main(int argc, char *argv[])
                    "Enable or disable the merge phase.");
     args.AddOption(&use_sopt, "-sopt", "--sopt", "-no-sopt", "--no-sopt",
                    "Use S-OPT sampling instead of DEIM for the hyperreduction.");
+    args.AddOption(&num_samples_req, "-nsr", "--nsr",
+                   "number of samples we want to select for the sampling algorithm.");
 
     args.Parse();
     if (!args.Good())
@@ -832,25 +835,18 @@ int main(int argc, char *argv[])
 
         vector<int> num_sample_dofs_per_proc(num_procs);
 
-        nsamp_R = nldim;
+        if (num_samples_req != -1)
+        {
+            nsamp_R = num_samples_req;
+        }
+        else
+        {
+            nsamp_R = nldim;
+        }
 
-#ifdef USE_GNAT
-        vector<int> sample_dofs(nsamp_R);  // Indices of the sampled rows
+        // Now execute the chosen sampling algorithm to get the sampling information.
         CAROM::Matrix *Bsinv = new CAROM::Matrix(nsamp_R, nldim, false);
-        if (myid == 0)
-            printf("Using GNAT sampling\n");
-        CAROM::GNAT(FR_librom,
-                    nldim,
-                    sample_dofs,
-                    num_sample_dofs_per_proc,
-                    *Bsinv,
-                    myid,
-                    num_procs,
-                    nsamp_R);
-#else
-        // Now execute the DEIM algorithm to get the sampling information.
-        CAROM::Matrix *Bsinv = new CAROM::Matrix(nldim, nldim, false);
-        vector<int> sample_dofs(nldim);  // Indices of the sampled rows
+        vector<int> sample_dofs(nsamp_R);  // Indices of the sampled rows
         if (use_sopt)
         {
             if (myid == 0)
@@ -861,7 +857,21 @@ int main(int argc, char *argv[])
                          num_sample_dofs_per_proc,
                          *Bsinv,
                          myid,
-                         num_procs);
+                         num_procs,
+                         nsamp_R);
+        }
+        else if (nsamp_R != nldim)
+        {
+            if (myid == 0)
+                printf("Using GNAT sampling\n");
+            CAROM::GNAT(FR_librom,
+                        nldim,
+                        sample_dofs,
+                        num_sample_dofs_per_proc,
+                        *Bsinv,
+                        myid,
+                        num_procs,
+                        nsamp_R);
         }
         else
         {
@@ -875,7 +885,6 @@ int main(int argc, char *argv[])
                         myid,
                         num_procs);
         }
-#endif
 
         vector<int> sample_dofs_S;  // Indices of the sampled rows
         vector<int> num_sample_dofs_per_proc_S(num_procs);
@@ -906,24 +915,17 @@ int main(int argc, char *argv[])
                 printf("reduced S dim = %d\n",nsdim);
 
             // Now execute the DEIM algorithm to get the sampling information.
-            nsamp_S = nsdim;
-            sample_dofs_S.resize(nsamp_S);
+            if (num_samples_req != -1)
+            {
+                nsamp_S = num_samples_req;
+            }
+            else
+            {
+                nsamp_S = nsdim;
+            }
 
-#ifdef USE_GNAT
             Ssinv = new CAROM::Matrix(nsamp_S, nsdim, false);
             sample_dofs_S.resize(nsamp_S);
-
-            CAROM::GNAT(S_librom,
-                        nsdim,
-                        sample_dofs_S,
-                        num_sample_dofs_per_proc_S,
-                        *Ssinv,
-                        myid,
-                        num_procs,
-                        nsamp_S);
-#else
-            Ssinv = new CAROM::Matrix(nsdim, nsdim, false);
-            sample_dofs_S.resize(nsdim);
             if (use_sopt)
             {
                 CAROM::S_OPT(S_librom,
@@ -932,7 +934,19 @@ int main(int argc, char *argv[])
                              num_sample_dofs_per_proc_S,
                              *Ssinv,
                              myid,
-                             num_procs);
+                             num_procs,
+                             nsamp_S);
+            }
+            else if (nsamp_S != nsdim)
+            {
+                CAROM::GNAT(S_librom,
+                            nsdim,
+                            sample_dofs_S,
+                            num_sample_dofs_per_proc_S,
+                            *Ssinv,
+                            myid,
+                            num_procs,
+                            nsamp_S);
             }
             else
             {
@@ -944,7 +958,6 @@ int main(int argc, char *argv[])
                             myid,
                             num_procs);
             }
-#endif
         }
 
         // Construct sample mesh
@@ -1020,7 +1033,7 @@ int main(int argc, char *argv[])
         romop = new RomOperator(&oper, soper, rrdim, rwdim, nldim, smm,
                                 BR_librom, FR_librom, BW_librom,
                                 Bsinv, newton_rel_tol, newton_abs_tol, newton_iter,
-                                S_librom, Ssinv, myid, hyperreduce_source);
+                                S_librom, Ssinv, myid, hyperreduce_source, num_samples_req != -1);
 
         ode_solver.Init(*romop);
 
@@ -1602,7 +1615,7 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_,
                          const CAROM::Matrix *Bsinv,
                          const double newton_rel_tol, const double newton_abs_tol, const int newton_iter,
                          const CAROM::Matrix* S_, const CAROM::Matrix *Ssinv_,
-                         const int myid, const bool hyperreduce_source_)
+                         const int myid, const bool hyperreduce_source_, const bool oversampling_)
     : TimeDependentOperator(rrdim_ + rwdim_, 0.0),
       newton_solver(),
       fom(fom_), fomSp(fomSp_), BR(NULL), rrdim(rrdim_), rwdim(rwdim_), nldim(nldim_),
@@ -1615,7 +1628,7 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_,
       Vsinv(Bsinv), J(height),
       zS(std::max(nsamp_S, 1), false), zT(std::max(nsamp_S, 1), false), Ssinv(Ssinv_),
       VTCS_W(rwdim, std::max(nsamp_S, 1), false), S(S_),
-      VtzR(rrdim_, false), hyperreduce_source(hyperreduce_source_)
+      VtzR(rrdim_, false), hyperreduce_source(hyperreduce_source_), oversampling(oversampling_)
 {
     dydt_prev = 0.0;
 
@@ -1746,11 +1759,14 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
     smm->GetSampledValues("V", zR, zN);
 
     // Note that it would be better to just store VTU_R * Vsinv, but these are small matrices.
-#ifdef USE_GNAT
-    Vsinv->transposeMult(zN, zY);
-#else
-    Vsinv->mult(zN, zY);
-#endif
+    if (oversampling)
+    {
+        Vsinv->transposeMult(zN, zY);
+    }
+    else
+    {
+        Vsinv->mult(zN, zY);
+    }
 
     BR->transposeMult(yW_librom, resR_librom);
     VTU_R.multPlus(resR_librom, zY, 1.0);
@@ -1781,11 +1797,14 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
             // Select entries
             smm->GetSampledValues("S", fomSp->zW, zT);
 
-#ifdef USE_GNAT
-            Ssinv->transposeMult(zT, zS);
-#else
-            Ssinv->mult(zT, zS);
-#endif
+            if (oversampling)
+            {
+                Ssinv->transposeMult(zT, zS);
+            }
+            else
+            {
+                Ssinv->mult(zT, zS);
+            }
 
             // Multiply by the f-basis, followed by C, followed by V_W^T. This is stored in VTCS_W = V_W^T CS.
             VTCS_W.multPlus(resW_librom, zS, -1.0);
@@ -1946,11 +1965,14 @@ Operator &RomOperator::GetGradient(const Vector &p) const
 
             // Note that it would be better to just store VTU_R * Vsinv, but these are small matrices.
 
-#ifdef USE_GNAT
-            Vsinv->transposeMult(z, r);
-#else
-            Vsinv->mult(z, r);
-#endif
+            if (oversampling)
+            {
+                Vsinv->transposeMult(z, r);
+            }
+            else
+            {
+                Vsinv->mult(z, r);
+            }
 
             VTU_R.mult(r, c);
         }
