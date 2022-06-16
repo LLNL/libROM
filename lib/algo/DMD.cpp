@@ -212,7 +212,7 @@ DMD::computeDMDSnapshotPair(const Matrix* snapshots)
             d_state_offset->item(i) /= snapshots->numColumns();
         }
     }
-    
+
     // TODO: Making two copies of the snapshot matrix has a lot of overhead.
     //       We need to figure out a way to do submatrix multiplication and to
     //       reimplement this algorithm using one snapshot matrix.
@@ -460,13 +460,13 @@ DMD::projectInitialCondition(const Vector* init)
         {
             if (j % 2 == 0)
             {
-                d_phi_real_squared_inverse->item(i,
-                                         k) = inverse_input[d_phi_real_squared_inverse->numColumns() * 2 * i + j];
+                d_phi_real_squared_inverse->item(i, k) =
+                    inverse_input[d_phi_real_squared_inverse->numColumns() * 2 * i + j];
             }
             else
             {
-                d_phi_imaginary_squared_inverse->item(i,
-                                              k) = inverse_input[d_phi_imaginary_squared_inverse->numColumns() * 2 * i + j];
+                d_phi_imaginary_squared_inverse->item(i, k) =
+                    inverse_input[d_phi_imaginary_squared_inverse->numColumns() * 2 * i + j];
                 k++;
             }
         }
@@ -476,11 +476,11 @@ DMD::projectInitialCondition(const Vector* init)
     Vector* rhs_imaginary = d_phi_imaginary->transposeMult(init);
 
     Vector* d_projected_init_real_1 = d_phi_real_squared_inverse->mult(rhs_real);
-    Vector* d_projected_init_real_2 = d_phi_real_squared_inverse->mult(rhs_imaginary);
+    Vector* d_projected_init_real_2 = d_phi_imaginary_squared_inverse->mult(rhs_imaginary);
     d_projected_init_real = d_projected_init_real_1->plus(d_projected_init_real_2);
 
     Vector* d_projected_init_imaginary_1 = d_phi_real_squared_inverse->mult(rhs_imaginary);
-    Vector* d_projected_init_imaginary_2 = d_phi_real_squared_inverse->mult(rhs_real);
+    Vector* d_projected_init_imaginary_2 = d_phi_imaginary_squared_inverse->mult(rhs_real);
     d_projected_init_imaginary = d_projected_init_imaginary_2->minus(
                                      d_projected_init_imaginary_1);
 
@@ -527,7 +527,7 @@ DMD::predict(double t)
     {
         *d_predicted_state_real += *(d_derivative_offset->mult(t));
     }
-    
+
     delete d_phi_mult_eigs_real;
     delete d_phi_mult_eigs_imaginary;
     delete d_predicted_state_real_1;
