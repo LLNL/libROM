@@ -512,6 +512,7 @@ DMD::predict(double t)
     {
         *d_predicted_state_real += *(d_derivative_offset->mult(t));
     }
+    
     delete d_phi_mult_eigs_real;
     delete d_phi_mult_eigs_imaginary;
     delete d_predicted_state_real_1;
