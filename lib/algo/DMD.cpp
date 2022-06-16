@@ -651,6 +651,20 @@ DMD::load(std::string base_file_name)
     d_projected_init_imaginary = new Vector();
     d_projected_init_imaginary->read(full_file_name);
 
+    if (d_mean_os_s)
+    {
+        full_file_name = base_file_name + "_state_offset";
+        d_state_offset = new Vector();
+        d_state_offset->read(full_file_name);
+    }
+
+    if (d_mean_os_d)
+    {
+        full_file_name = base_file_name + "_derivative_offset";
+        d_derivative_offset = new Vector();
+        d_derivative_offset->read(full_file_name);
+    }
+
     MPI_Barrier(MPI_COMM_WORLD);
 }
 
@@ -727,6 +741,18 @@ DMD::save(std::string base_file_name)
 
     full_file_name = base_file_name + "_projected_init_imaginary";
     d_projected_init_imaginary->write(full_file_name);
+
+    if (d_state_offset != NULL)
+    {
+        full_file_name = base_file_name + "_state_offset";
+        d_state_offset->write(full_file_name);
+    }
+
+    if (d_derivative_offset != NULL)
+    {
+        full_file_name = base_file_name + "_derivative_offset";
+        d_derivative_offset->write(full_file_name);
+    }
 
     MPI_Barrier(MPI_COMM_WORLD);
 }
