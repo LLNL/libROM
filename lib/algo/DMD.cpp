@@ -388,7 +388,6 @@ DMD::constructDMD(const Matrix* f_snapshots,
     {
         init->item(i) = f_snapshots_in->item(i, 0);
     }
-    if (d_mean_os_s) *init -= *d_state_offset;
 
     // Calculate pinv(d_phi) * initial_condition.
     projectInitialCondition(init);
