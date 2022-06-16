@@ -198,6 +198,7 @@ std::pair<Matrix*, Matrix*>
 DMD::computeDMDSnapshotPair(const Matrix* snapshots)
 {
     CAROM_VERIFY(snapshots->numColumns() > 1);
+    if (d_mean_os_s) d_state_offset = new Vector(snapshots->numRows(), true);
 
     // TODO: Making two copies of the snapshot matrix has a lot of overhead.
     //       We need to figure out a way to do submatrix multiplication and to
@@ -212,11 +213,14 @@ DMD::computeDMDSnapshotPair(const Matrix* snapshots)
     // snapshots_out = all columns of snapshots except first
     for (int i = 0; i < snapshots->numRows(); i++)
     {
+        if (d_mean_os_s) d_state_offset->item(i) = snapshots->item(i, 0);
         for (int j = 0; j < snapshots->numColumns() - 1; j++)
         {
             f_snapshots_in->item(i, j) = snapshots->item(i, j);
             f_snapshots_out->item(i, j) = snapshots->item(i, j + 1);
+            if (d_mean_os_s) d_state_offset->item(i) += f_snapshots_out->item(i, j);
         }
+        if (d_mean_os_s) d_state_offset->item(i) /= snapshots->numColumns();
     }
 
     return std::pair<Matrix*,Matrix*>(f_snapshots_in, f_snapshots_out);
@@ -369,6 +373,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
     {
         init->item(i) = f_snapshots_in->item(i, 0);
     }
+    if (d_mean_os_s) *init -= *d_state_offset;
 
     // Calculate pinv(d_phi) * initial_condition.
     projectInitialCondition(init);
@@ -437,13 +442,13 @@ DMD::projectInitialCondition(const Vector* init)
         {
             if (j % 2 == 0)
             {
-                d_phi_real_squared->item(i,
-                                         k) = inverse_input[d_phi_real_squared->numColumns() * 2 * i + j];
+                d_phi_real_squared->item(i,k) =
+                    inverse_input[d_phi_real_squared->numColumns() * 2 * i + j];
             }
             else
             {
-                d_phi_imaginary_squared->item(i,
-                                              k) = inverse_input[d_phi_imaginary_squared->numColumns() * 2 * i + j];
+                d_phi_imaginary_squared->item(i,k) =
+                    inverse_input[d_phi_imaginary_squared->numColumns() * 2 * i + j];
                 k++;
             }
         }
@@ -497,6 +502,15 @@ DMD::predict(double t)
                                            d_projected_init_imaginary);
     Vector* d_predicted_state_real = d_predicted_state_real_1->minus(
                                          d_predicted_state_real_2);
+
+    if (d_mean_os_s)
+    {
+        *d_predicted_state_real += *d_state_offset;
+    }
+    if (d_mean_os_d)
+    {
+        *d_predicted_state_real += *(d_derivative_offset->mult(t));
+    }
 
     delete d_phi_mult_eigs_real;
     delete d_phi_mult_eigs_imaginary;
