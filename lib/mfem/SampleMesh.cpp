@@ -1416,7 +1416,6 @@ void GatherDistributedMatrixRows_aux(const CAROM::Matrix& B, const int rdim,
             }
         }
 
-
 #ifdef FULL_DOF_STENCIL
         int Bsp_row = num_sprows_true;
 #else
