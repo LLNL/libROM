@@ -42,9 +42,12 @@ extern "C" {
 
 namespace CAROM {
 
-DMD::DMD(int dim, bool mean_os_s, bool mean_os_d)
+DMD::DMD(int dim, bool init_os_s, bool init_os_d, 
+         bool mean_os_s, bool mean_os_d)
 {
     CAROM_VERIFY(dim > 0);
+    CAROM_VERIFY(!(init_os_s && mean_os_s));
+    CAROM_VERIFY(!(init_os_d && mean_os_d));
 
     // Get the rank of this process, and the number of processors.
     int mpi_init;
@@ -56,16 +59,19 @@ DMD::DMD(int dim, bool mean_os_s, bool mean_os_d)
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
     d_dim = dim;
+    d_init_os_s = init_os_s;
+    d_init_os_d = init_os_d;
     d_mean_os_s = mean_os_s;
     d_mean_os_d = mean_os_d;
     d_trained = false;
     d_init_projected = false;
 }
 
-DMD::DMD(int dim, double dt, bool mean_os_s)
+DMD::DMD(int dim, double dt, bool init_os_s, bool mean_os_s)
 {
     CAROM_VERIFY(dim > 0);
     CAROM_VERIFY(dt > 0.0);
+    CAROM_VERIFY(!(init_os_s && mean_os_s));
 
     // Get the rank of this process, and the number of processors.
     int mpi_init;
@@ -78,6 +84,7 @@ DMD::DMD(int dim, double dt, bool mean_os_s)
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
     d_dim = dim;
     d_dt = dt;
+    d_init_os_s = init_os_s;
     d_mean_os_s = mean_os_s;
     d_trained = false;
     d_init_projected = false;
@@ -101,10 +108,14 @@ DMD::DMD(std::string base_file_name)
 }
 
 DMD::DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
-         Matrix* phi_imaginary, int k, bool mean_os_s, bool mean_os_d,
+         Matrix* phi_imaginary, int k, bool init_os_s, bool init_os_d,
+         bool mean_os_s, bool mean_os_d,
          Vector* state_offset, Vector* derivative_offset,
          double dt, double t_offset)
 {
+    CAROM_VERIFY(!(init_os_s && mean_os_s));
+    CAROM_VERIFY(!(init_os_d && mean_os_d));
+
     // Get the rank of this process, and the number of processors.
     int mpi_init;
     MPI_Initialized(&mpi_init);
@@ -121,6 +132,8 @@ DMD::DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
     d_phi_real = phi_real;
     d_phi_imaginary = phi_imaginary;
     d_k = k;
+    d_init_os_s = init_os_s;
+    d_init_os_d = init_os_d;
     d_mean_os_s = mean_os_s;
     d_mean_os_d = mean_os_d;
     d_state_offset = state_offset;
@@ -200,6 +213,15 @@ DMD::computeDMDSnapshotPair(const Matrix* snapshots)
 {
     CAROM_VERIFY(snapshots->numColumns() > 1);
 
+    if (d_init_os_s)
+    {
+        d_state_offset = new Vector(snapshots->numRows(), true);
+        for (int i = 0; i < snapshots->numRows(); i++)
+        {
+            d_state_offset->item(i) = snapshots->item(i, 0);
+        }
+    }
+
     if (d_mean_os_s)
     {
         d_state_offset = new Vector(snapshots->numRows(), true);
@@ -231,7 +253,7 @@ DMD::computeDMDSnapshotPair(const Matrix* snapshots)
         {
             f_snapshots_in->item(i, j) = snapshots->item(i, j);
             f_snapshots_out->item(i, j) = snapshots->item(i, j + 1);
-            if (d_mean_os_s)
+            if (d_state_offset)
             {
                 f_snapshots_in->item(i, j) -= d_state_offset->item(i);
                 f_snapshots_out->item(i, j) -= d_state_offset->item(i);
@@ -519,11 +541,11 @@ DMD::predict(double t)
     Vector* d_predicted_state_real = d_predicted_state_real_1->minus(
                                          d_predicted_state_real_2);
 
-    if (d_mean_os_s)
+    if (d_state_offset)
     {
         *d_predicted_state_real += *d_state_offset;
     }
-    if (d_mean_os_d)
+    if (d_derivative_offset)
     {
         *d_predicted_state_real += *(d_derivative_offset->mult(t));
     }
@@ -619,6 +641,14 @@ DMD::load(std::string base_file_name)
     database.open(full_file_name, "r");
 
     int bool_int_temp;
+    sprintf(tmp, "init_os_s");
+    database.getInteger(tmp, bool_int_temp);
+    d_init_os_s = (bool) bool_int_temp;
+
+    sprintf(tmp, "init_os_d");
+    database.getInteger(tmp, bool_int_temp);
+    d_init_os_d = (bool) bool_int_temp;
+
     sprintf(tmp, "mean_os_s");
     database.getInteger(tmp, bool_int_temp);
     d_mean_os_s = (bool) bool_int_temp;
@@ -689,14 +719,14 @@ DMD::load(std::string base_file_name)
     d_projected_init_imaginary = new Vector();
     d_projected_init_imaginary->read(full_file_name);
 
-    if (d_mean_os_s)
+    if (d_init_os_s || d_mean_os_s)
     {
         full_file_name = base_file_name + "_state_offset";
         d_state_offset = new Vector();
         d_state_offset->read(full_file_name);
     }
 
-    if (d_mean_os_d)
+    if (d_init_os_d || d_mean_os_d)
     {
         full_file_name = base_file_name + "_derivative_offset";
         d_derivative_offset = new Vector();
@@ -718,6 +748,12 @@ DMD::save(std::string base_file_name)
         std::string full_file_name = base_file_name;
         HDFDatabase database;
         database.create(full_file_name);
+
+        sprintf(tmp, "init_os_s");
+        database.putInteger(tmp, d_init_os_s);
+
+        sprintf(tmp, "init_os_d");
+        database.putInteger(tmp, d_init_os_d);
 
         sprintf(tmp, "mean_os_s");
         database.putInteger(tmp, d_mean_os_s);

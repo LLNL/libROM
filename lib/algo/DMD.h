@@ -53,9 +53,10 @@ public:
      *
      * @param[in] dim        The full-order state dimension.
      * @param[in] dt         The dt between samples.
+     * @param[in] init_os_s  Use initial state as offset.
      * @param[in] mean_os_s  Use state mean as offset.
      */
-    DMD(int dim, double dt, bool mean_os_s = false);
+    DMD(int dim, double dt, bool init_os_s = false, bool mean_os_s = false);
 
     /**
      * @brief Constructor.
@@ -157,10 +158,13 @@ protected:
      * @brief Constructor.
      *
      * @param[in] dim        The full-order state dimension.
+     * @param[in] init_os_s  Use initial state as offset.
+     * @param[in] init_os_d  Use initial derivative as offset.
      * @param[in] mean_os_s  Use state mean as offset.
      * @param[in] mean_os_d  Use derivative mean as offset.
      */
-    DMD(int dim, bool mean_os_s = false, bool mean_os_d = false);
+    DMD(int dim, bool init_os_s = false, bool init_os_d = false,
+        bool mean_os_s = false, bool mean_os_d = false);
 
     /**
      * @brief Constructor.
@@ -169,6 +173,8 @@ protected:
      * @param[in] phi_real d_phi_real
      * @param[in] phi_imaginary d_phi_imaginary
      * @param[in] k d_k
+     * @param[in] init_os_s d_init_os_s
+     * @param[in] init_os_d d_init_os_d
      * @param[in] mean_os_s d_mean_os_s
      * @param[in] mean_os_d d_mean_os_d
      * @param[in] state_offset d_state_offset
@@ -177,7 +183,8 @@ protected:
      * @param[in] t_offset d_t_offset
      */
     DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
-        Matrix* phi_imaginary, int k, bool mean_os_s, bool mean_os_d,
+        Matrix* phi_imaginary, int k, bool init_os_s, bool init_os_d,
+        bool mean_os_s, bool mean_os_d,
         Vector* state_offset, Vector* derivative_offset,
         double dt, double t_offset);
 
@@ -265,6 +272,16 @@ protected:
      * @brief The stored times of each sample.
      */
     std::vector<Vector*> d_sampled_times;
+
+    /**
+     * @brief Whether to use init state as offset.
+     */
+    bool d_init_os_s = false;
+
+    /**
+     * @brief Whether to use init derivative as offset in NonuniformDMD.
+     */
+    bool d_init_os_d = false;
 
     /**
      * @brief Whether to use state mean as offset.
