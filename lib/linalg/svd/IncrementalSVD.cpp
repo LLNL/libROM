@@ -188,7 +188,6 @@ IncrementalSVD::takeSample(
     CAROM_VERIFY(u_in != 0);
     CAROM_VERIFY(time >= 0.0);
 
-
     // Check that u_in is not non-zero.
     Vector u_vec(u_in, d_dim, true);
     if (u_vec.norm() == 0.0) {
