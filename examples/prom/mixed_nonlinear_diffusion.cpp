@@ -66,7 +66,6 @@
 #include "hyperreduction/S_OPT.h"
 #include "mfem/SampleMesh.hpp"
 
-
 typedef enum {ANALYTIC, INIT_STEP} PROBLEM;
 
 typedef enum {RSPACE, WSPACE} FESPACE;
