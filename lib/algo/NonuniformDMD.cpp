@@ -16,8 +16,9 @@
 namespace CAROM {
 
 NonuniformDMD::NonuniformDMD(int dim, bool mean_os_s, bool mean_os_d) : DMD(dim,
-            mean_os_s)
+            mean_os_s, mean_os_d)
 {
+    d_mean_os_s = mean_os_s;
     d_mean_os_d = mean_os_d;
 }
 
