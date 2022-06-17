@@ -279,7 +279,6 @@ protected:
      */
     bool d_write_snapshots;
 
-
     /**
      * @brief Pointer to the abstract SVD algorithm object.
      */
