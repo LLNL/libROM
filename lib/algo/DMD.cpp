@@ -42,7 +42,7 @@ extern "C" {
 
 namespace CAROM {
 
-DMD::DMD(int dim, bool mean_os_s)
+DMD::DMD(int dim, bool mean_os_s, bool mean_os_d)
 {
     CAROM_VERIFY(dim > 0);
 
@@ -57,6 +57,7 @@ DMD::DMD(int dim, bool mean_os_s)
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
     d_dim = dim;
     d_mean_os_s = mean_os_s;
+    d_mean_os_d = mean_os_d;
     d_trained = false;
     d_init_projected = false;
 }

@@ -158,8 +158,9 @@ protected:
      *
      * @param[in] dim        The full-order state dimension.
      * @param[in] mean_os_s  Use state mean as offset.
+     * @param[in] mean_os_d  Use derivative mean as offset.
      */
-    DMD(int dim, bool mean_os_s = false);
+    DMD(int dim, bool mean_os_s = false, bool mean_os_d = false);
 
     /**
      * @brief Constructor.
@@ -188,8 +189,7 @@ protected:
     /**
      * @brief Unimplemented copy constructor.
      */
-    DMD(
-        const DMD& other);
+    DMD(const DMD& other);
 
     /**
      * @brief Unimplemented assignment operator.
