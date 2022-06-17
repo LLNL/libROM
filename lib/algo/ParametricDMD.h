@@ -111,7 +111,6 @@ void getParametricDMD(T*& parametric_dmd,
     delete eigenpair.ev_imaginary;
 }
 
-
 /**
  * @brief Constructor.
  *
