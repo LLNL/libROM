@@ -50,7 +50,6 @@ BasisWriter::BasisWriter(
     sprintf(tmp, ".%06d", rank);
     full_file_name = base_file_name + tmp;
 
-
     char tmp2[100];
     sprintf(tmp2, "_snapshot.%06d", rank);
     snap_file_name = base_file_name + tmp2;
