@@ -17,13 +17,9 @@ jobs:
       - name: Build libROM
         run: |
             mkdir ${GITHUB_WORKSPACE}/build
-            cd ${GITHUB_WORKSPACE}/build
             export CC=mpicc
             export CXX=mpicxx
-            cmake -DCMAKE_BUILD_TYPE=Debug ..
-            make
-            cmake -DCMAKE_BUILD_TYPE=Optimized ..
-            make
+            scripts/compile.sh -m
       - uses: ./.github/workflows/run_tests
   mac:
     runs-on: macos-latest
