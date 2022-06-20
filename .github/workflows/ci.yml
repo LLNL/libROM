@@ -22,7 +22,7 @@ jobs:
             scripts/compile.sh -m
       - uses: ./.github/workflows/run_tests
   mac:
-    runs-on: macos-latest
+    runs-on: macos-12
     steps:
       - name: Install Mac dependencies
         run: |
