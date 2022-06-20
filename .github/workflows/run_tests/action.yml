@@ -3,21 +3,11 @@ runs:
   steps:
     - name: Run tests
       run: |
-          cd ${GITHUB_WORKSPACE}/build
-          ./tests/test_SVD
-          ./tests/test_Vector
-          ./tests/test_Matrix
-          ./tests/test_DEIM
-          ./tests/test_GNAT
-          ./tests/test_QDEIM
-          ./tests/test_S_OPT
-          mpirun -n 4 --oversubscribe tests/test_S_OPT
-          ./tests/test_IncrementalSVD
-          ./tests/test_RandomizedSVD
-          mpirun -n 3 --oversubscribe tests/test_RandomizedSVD
-          ./tests/test_DMD
-          mpirun -n 3 --oversubscribe tests/test_DMD
-          ./tests/test_GreedyCustomSampler
-          mpirun -n 3 --oversubscribe tests/test_GreedyCustomSampler
+          cd ${GITHUB_WORKSPACE}/examples/prom
+          poisson_global_rom -offline -f 1.0 -id 0
+          poisson_global_rom -offline -f 1.1 -id 1
+          poisson_global_rom -offline -f 1.2 -id 2
+          poisson_global_rom -merge -ns 3
+          poisson_global_rom -online -f 1.15
 
       shell: bash
