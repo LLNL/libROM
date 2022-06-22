@@ -8,6 +8,8 @@
 
 
 ## Required Packages
+The following versions of packages have been verified to work. Other versions may also work.
+- Python: 3.7.10
 - TensorFlow: 2.2.0
 - Numpy: 1.17.4
 - Scipy: 1.4.1
@@ -17,6 +19,13 @@
 - Seaborn: 0.11.0
 - Pickle: 0.7.5
 
+*For LC users*:
+1. Configure the `conda` directory to the workspace:
+`conda config --add pkgs_dirs /usr/workspace/{OUN}/cache/pkgs`
+2. Create a TensorFlow (GPU-version) virtual environment: `bash setup.sh`
+3. Activate the TensorFlow virtual environment: `conda activate ~/.conda/envs/tfvenv`
+4. If TensorFlow wasn't installed successfually in Step 2, try: `conda install -y tensorflow-gpu`
+
 
 ## Examples
 Three examples are provided, including 
@@ -24,7 +33,7 @@ Three examples are provided, including
 - 2D Burgers Equation
 - Time-Dependent Radial Advection ([MFEM Example 9](https://github.com/mfem/mfem/blob/master/examples/ex9.cpp)).
 
-The Jupyter notebooks for data generation, model training and evaluation are provided in `gLaSDI/examples/`. 
+The Python scripts for data generation, model training and evaluation are provided in `gLaSDI/examples/`. 
 
 
 ## Description of Parameters:

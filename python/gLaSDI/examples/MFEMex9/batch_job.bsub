@@ -9,7 +9,4 @@
 
 eval "$(conda shell.bash hook)"
 conda activate tfvenv
-jupyter nbconvert --to script train_model.ipynb
-sed -i '/ipython/d' ./*.py
-sed -i '/plt.show()/d' ./*.py
 jsrun -r 1 python -u train_model.py

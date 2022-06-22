@@ -100,7 +100,7 @@ def residual_2Dburger(x_prev, x, params):
         print('wrong values for IC!')
     I=sp.eye(nxy,format='csr')
 
-    # full indicies, free indicies, fixed indicies
+    # full indices, free indices, fixed indices
     [xv,yv] = np.meshgrid(np.linspace(xmin,xmax,nx),np.linspace(ymin,ymax,ny),indexing='xy')
     x = xv.flatten()
     y = yv.flatten()
@@ -114,15 +114,15 @@ def residual_2Dburger(x_prev, x, params):
     y1_multi_index = (multi_index_j[-1,1:-1].flatten(),multi_index_i[-1,1:-1].flatten())
 
     dims=(ny,nx)
-    full_raveled_indicies = np.ravel_multi_index(full_multi_index,dims)
-    free_raveled_indicies = np.ravel_multi_index(free_multi_index,dims)
-    x0_raveled_indicies = np.ravel_multi_index(x0_multi_index,dims)
-    x1_raveled_indicies = np.ravel_multi_index(x1_multi_index,dims)
-    x01_raveled_indicies = np.concatenate((x0_raveled_indicies,x1_raveled_indicies))
-    y0_raveled_indicies = np.ravel_multi_index(y0_multi_index,dims)
-    y1_raveled_indicies = np.ravel_multi_index(y1_multi_index,dims)
-    y01_raveled_indicies = np.concatenate((y0_raveled_indicies,y1_raveled_indicies))
-    fixed_raveled_indicies = np.setdiff1d(full_raveled_indicies,free_raveled_indicies)
+    full_raveled_indices = np.ravel_multi_index(full_multi_index,dims)
+    free_raveled_indices = np.ravel_multi_index(free_multi_index,dims)
+    x0_raveled_indices = np.ravel_multi_index(x0_multi_index,dims)
+    x1_raveled_indices = np.ravel_multi_index(x1_multi_index,dims)
+    x01_raveled_indices = np.concatenate((x0_raveled_indices,x1_raveled_indices))
+    y0_raveled_indices = np.ravel_multi_index(y0_multi_index,dims)
+    y1_raveled_indices = np.ravel_multi_index(y1_multi_index,dims)
+    y01_raveled_indices = np.concatenate((y0_raveled_indices,y1_raveled_indices))
+    fixed_raveled_indices = np.setdiff1d(full_raveled_indices,free_raveled_indices)
 
     # boundary one-hot vector
     x0_one_hot = np.eye(nx-2)[0]
@@ -138,8 +138,8 @@ def residual_2Dburger(x_prev, x, params):
                          np.concatenate((inner_multi_index_i[0,:].flatten(),inner_multi_index_i[-1,:].flatten())))
 
     inner_dims = (ny-2,nx-2)
-    inner_x_raveled_indicies = np.ravel_multi_index(inner_x_multi_index,inner_dims)
-    inner_y_raveled_indicies = np.ravel_multi_index(inner_y_multi_index,inner_dims)
+    inner_x_raveled_indices = np.ravel_multi_index(inner_x_multi_index,inner_dims)
+    inner_y_raveled_indices = np.ravel_multi_index(inner_y_multi_index,inner_dims)
 
 
     # first order derivative
@@ -186,14 +186,14 @@ def residual_2Dburger(x_prev, x, params):
     
     
     # boundary for first order derivative term
-    Bdudx0_cur=np.kron(u0[x0_raveled_indicies],x0_one_hot)
-    Bdudy0_cur=np.kron(y0_one_hot,u0[y0_raveled_indicies])
-    Bdvdx0_cur=np.kron(v0[x0_raveled_indicies],x0_one_hot)
-    Bdvdy0_cur=np.kron(y0_one_hot,v0[y0_raveled_indicies])
-    Bdudx1_cur=np.kron(u0[x1_raveled_indicies],x1_one_hot)
-    Bdudy1_cur=np.kron(y1_one_hot,u0[y1_raveled_indicies])
-    Bdvdx1_cur=np.kron(v0[x1_raveled_indicies],x1_one_hot)
-    Bdvdy1_cur=np.kron(y1_one_hot,v0[y1_raveled_indicies])
+    Bdudx0_cur=np.kron(u0[x0_raveled_indices],x0_one_hot)
+    Bdudy0_cur=np.kron(y0_one_hot,u0[y0_raveled_indices])
+    Bdvdx0_cur=np.kron(v0[x0_raveled_indices],x0_one_hot)
+    Bdvdy0_cur=np.kron(y0_one_hot,v0[y0_raveled_indices])
+    Bdudx1_cur=np.kron(u0[x1_raveled_indices],x1_one_hot)
+    Bdudy1_cur=np.kron(y1_one_hot,u0[y1_raveled_indices])
+    Bdvdx1_cur=np.kron(v0[x1_raveled_indices],x1_one_hot)
+    Bdvdy1_cur=np.kron(y1_one_hot,v0[y1_raveled_indices])
 
     # boundary for second order derivative term
     bxu_cur=np.zeros(nxy)
@@ -201,16 +201,16 @@ def residual_2Dburger(x_prev, x, params):
     bxv_cur=np.zeros(nxy)
     byv_cur=np.zeros(nxy)
 
-    bxu_cur[inner_x_raveled_indicies]=u0[x01_raveled_indicies]
-    byu_cur[inner_y_raveled_indicies]=u0[y01_raveled_indicies]
-    bxv_cur[inner_x_raveled_indicies]=v0[x01_raveled_indicies]
-    byv_cur[inner_y_raveled_indicies]=v0[y01_raveled_indicies]
+    bxu_cur[inner_x_raveled_indices]=u0[x01_raveled_indices]
+    byu_cur[inner_y_raveled_indices]=u0[y01_raveled_indices]
+    bxv_cur[inner_x_raveled_indices]=v0[x01_raveled_indices]
+    byv_cur[inner_y_raveled_indices]=v0[y01_raveled_indices]
     
-    u_free_prev=np.copy(u_prev[free_raveled_indicies])
-    v_free_prev=np.copy(v_prev[free_raveled_indicies])
+    u_free_prev=np.copy(u_prev[free_raveled_indices])
+    v_free_prev=np.copy(v_prev[free_raveled_indices])
 
-    u_free=np.copy(u[free_raveled_indicies])
-    v_free=np.copy(v[free_raveled_indicies])
+    u_free=np.copy(u[free_raveled_indices])
+    v_free=np.copy(v[free_raveled_indices])
 
     Mu_free=Mb.dot(u_free)
     Mv_free=Mb.dot(v_free)
