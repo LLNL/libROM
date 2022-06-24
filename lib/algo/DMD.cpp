@@ -42,7 +42,7 @@ extern "C" {
 
 namespace CAROM {
 
-DMD::DMD(int dim, bool init_os_s, bool init_os_d, 
+DMD::DMD(int dim, bool init_os_s, bool init_os_d,
          bool mean_os_s, bool mean_os_d)
 {
     CAROM_VERIFY(dim > 0);
@@ -185,25 +185,25 @@ void DMD::takeSample(double* u_in, double t)
     d_sampled_times.push_back(sampled_time);
 }
 
-void DMD::train(double energy_fraction)
+void DMD::train(double energy_fraction, Matrix* W0, double linearity_tol)
 {
     const Matrix* f_snapshots = getSnapshotMatrix();
     CAROM_VERIFY(f_snapshots->numColumns() > 1);
     CAROM_VERIFY(energy_fraction > 0 && energy_fraction <= 1);
     d_energy_fraction = energy_fraction;
-    constructDMD(f_snapshots, d_rank, d_num_procs);
+    constructDMD(f_snapshots, d_rank, d_num_procs, W0, linearity_tol);
 
     delete f_snapshots;
 }
 
-void DMD::train(int k)
+void DMD::train(int k, Matrix* W0, double linearity_tol)
 {
     const Matrix* f_snapshots = getSnapshotMatrix();
     CAROM_VERIFY(f_snapshots->numColumns() > 1);
     CAROM_VERIFY(k > 0 && k <= f_snapshots->numColumns() - 1);
     d_energy_fraction = -1.0;
     d_k = k;
-    constructDMD(f_snapshots, d_rank, d_num_procs);
+    constructDMD(f_snapshots, d_rank, d_num_procs, W0, linearity_tol);
 
     delete f_snapshots;
 }
@@ -284,7 +284,9 @@ DMD::computePhi(struct DMDInternal dmd_internal_obj)
 void
 DMD::constructDMD(const Matrix* f_snapshots,
                   int d_rank,
-                  int d_num_procs)
+                  int d_num_procs,
+                  Matrix* W0,
+                  double linearity_tol)
 {
     std::pair<Matrix*, Matrix*> f_snapshot_pair = computeDMDSnapshotPair(
                 f_snapshots);
@@ -393,11 +395,97 @@ DMD::constructDMD(const Matrix* f_snapshots,
         d_S_inv->item(i, i) = 1 / d_factorizer->S[static_cast<unsigned>(i)];
     }
 
+    Matrix* Q = NULL;
+
+    // If W0 is not null, we need to ensure it is in the basis of W.
+    if (W0 != NULL)
+    {
+        CAROM_VERIFY(W0->numRows() == d_basis->numRows());
+        CAROM_VERIFY(linearity_tol >= 0.0);
+        std::vector<int> lin_independent_cols_W;
+
+        // Find which columns of d_basis are linearly independent from W0
+        for (int j = 0; j < d_basis->numColumns(); j++)
+        {
+            // l = W0' * u
+            Vector W_col(f_snapshots->numRows(), f_snapshots->distributed());
+            for (int i = 0; i < f_snapshots->numRows(); i++)
+            {
+                W_col.item(i) = d_basis->item(i, j);
+            }
+            Vector* l = W0->transposeMult(W_col);
+
+            // W0l = W0 * l
+            Vector* W0l = W0->mult(l);
+
+            // Compute k = sqrt(u.u - 2.0*l.l + basisl.basisl) which is ||u -
+            // basisl||_{2}.  This is the error in the projection of u into the
+            // reduced order space and subsequent lifting back to the full
+            // order space.
+            double k = W_col.inner_product(W_col) - 2.0*l->inner_product(l) +
+                      W0l->inner_product(W0l);
+            if (k <= 0)
+            {
+                k = 0;
+            }
+            else
+            {
+                k = sqrt(k);
+            }
+
+            // Use k to see if the vector addressed by u is linearly dependent
+            // on the left singular vectors.
+            if (k >= linearity_tol)
+            {
+                lin_independent_cols_W.push_back(j);
+            }
+            delete l;
+            delete W0l;
+        }
+
+        // Add the linearly independent columns of W to W0
+        Matrix* d_basis_new = new Matrix(f_snapshots->numRows(), W0->numColumns() + lin_independent_cols_W.size(), true);
+        for (int i = 0; i < d_basis_new->numRows(); i++)
+        {
+            for (int j = 0; j < W0->numColumns(); j++)
+            {
+                d_basis_new->item(i, j) = W0->item(i, j);
+            }
+            for (int j = 0; j < lin_independent_cols_W.size(); j++)
+            {
+                d_basis_new->item(i, j + W0->numColumns()) = d_basis->item(i, lin_independent_cols_W[j]);
+            }
+        }
+
+        // Orthogonalize the new basis.
+        d_basis_new->orthogonalize();
+
+        // Calculate Q = W* x W0;
+        Q = d_basis->mult(W0);
+
+        delete d_basis;
+        d_basis = d_basis_new;
+
+        d_k = d_basis_new->numColumns();
+        if (d_rank == 0) std::cout << "After adding W0, now using " << d_k << " basis vectors." << std::endl;
+    }
+
     // Calculate A_tilde = U_transpose * f_snapshots_out * V * inv(S)
     Matrix* d_basis_mult_f_snapshots_out = d_basis->transposeMult(f_snapshots_out);
     Matrix* d_basis_mult_f_snapshots_out_mult_d_basis_right =
         d_basis_mult_f_snapshots_out->mult(d_basis_right);
     d_A_tilde = d_basis_mult_f_snapshots_out_mult_d_basis_right->mult(d_S_inv);
+    if (Q == NULL)
+    {
+        Matrix* d_basis_mult_f_snapshots_out_mult_d_basis_right_mult_d_S_inv =
+            d_basis_mult_f_snapshots_out_mult_d_basis_right->mult(d_S_inv);
+        d_A_tilde = d_basis_mult_f_snapshots_out_mult_d_basis_right_mult_d_S_inv->mult(Q);
+        delete d_basis_mult_f_snapshots_out_mult_d_basis_right_mult_d_S_inv;
+    }
+    else
+    {
+        d_A_tilde = d_basis_mult_f_snapshots_out_mult_d_basis_right->mult(d_S_inv);
+    }
 
     // Calculate the right eigenvalues/eigenvectors of A_tilde
     ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(d_A_tilde);

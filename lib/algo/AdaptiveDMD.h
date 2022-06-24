@@ -54,12 +54,12 @@ public:
     /**
      * @param[in] energy_fraction The energy fraction to keep after doing SVD.
      */
-    void train(double energy_fraction);
+    void train(double energy_fraction, Matrix* W0 = NULL, double linearity_tol = 0.0);
 
     /**
      * @param[in] k The number of modes (eigenvalues) to keep after doing SVD.
      */
-    void train(int k);
+    void train(int k, Matrix* W0 = NULL, double linearity_tol = 0.0);
 
     /**
      * @brief Get the true dt between interpolated snapshots.
