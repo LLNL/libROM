@@ -443,7 +443,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
             delete W0l;
         }
 
-        // Add the linearly independent columns of W to W0
+        // Add the linearly independent columns of W to W0. Call this new basis W_new.
         Matrix* d_basis_new = new Matrix(f_snapshots->numRows(), W0->numColumns() + lin_independent_cols_W.size(), true);
         for (int i = 0; i < d_basis_new->numRows(); i++)
         {
@@ -457,11 +457,11 @@ DMD::constructDMD(const Matrix* f_snapshots,
             }
         }
 
-        // Orthogonalize the new basis.
+        // Orthogonalize W_new.
         d_basis_new->orthogonalize();
 
-        // Calculate Q = W* x W0;
-        Q = d_basis->transposeMult(W0);
+        // Calculate Q = W* x W_new;
+        Q = d_basis->transposeMult(d_basis_new);
 
         delete d_basis;
         d_basis = d_basis_new;
