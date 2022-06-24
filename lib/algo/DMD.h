@@ -81,12 +81,12 @@ public:
     /**
      * @param[in] energy_fraction The energy fraction to keep after doing SVD.
      */
-    virtual void train(double energy_fraction, Matrix* W0 = NULL, double linearity_tol = 0.0);
+    virtual void train(double energy_fraction, const Matrix* W0 = NULL, double linearity_tol = 0.0);
 
     /**
      * @param[in] k The number of modes (eigenvalues) to keep after doing SVD.
      */
-    virtual void train(int k, Matrix* W0 = NULL, double linearity_tol = 0.0);
+    virtual void train(int k, const Matrix* W0 = NULL, double linearity_tol = 0.0);
 
     /**
      * @brief Predict new initial condition using d_phi.
@@ -216,7 +216,7 @@ protected:
     void constructDMD(const Matrix* f_snapshots,
                       int rank,
                       int num_procs,
-                      Matrix* W0,
+                      const Matrix* W0,
                       double linearity_tol);
 
     /**

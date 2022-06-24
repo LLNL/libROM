@@ -33,7 +33,7 @@ AdaptiveDMD::AdaptiveDMD(int dim, double desired_dt, std::string rbf,
     d_closest_rbf_val = closest_rbf_val;
 }
 
-void AdaptiveDMD::train(double energy_fraction, Matrix* W0, double linearity_tol)
+void AdaptiveDMD::train(double energy_fraction, const Matrix* W0, double linearity_tol)
 {
     const Matrix* f_snapshots = getInterpolatedSnapshots();
     CAROM_VERIFY(f_snapshots->numColumns() > 1);
@@ -44,7 +44,7 @@ void AdaptiveDMD::train(double energy_fraction, Matrix* W0, double linearity_tol
     delete f_snapshots;
 }
 
-void AdaptiveDMD::train(int k, Matrix* W0, double linearity_tol)
+void AdaptiveDMD::train(int k, const Matrix* W0, double linearity_tol)
 {
     const Matrix* f_snapshots = getInterpolatedSnapshots();
     CAROM_VERIFY(f_snapshots->numColumns() > 1);
