@@ -185,7 +185,7 @@ void DMD::takeSample(double* u_in, double t)
     d_sampled_times.push_back(sampled_time);
 }
 
-void DMD::train(double energy_fraction, Matrix* W0, double linearity_tol)
+void DMD::train(double energy_fraction, const Matrix* W0, double linearity_tol)
 {
     const Matrix* f_snapshots = getSnapshotMatrix();
     CAROM_VERIFY(f_snapshots->numColumns() > 1);
@@ -196,7 +196,7 @@ void DMD::train(double energy_fraction, Matrix* W0, double linearity_tol)
     delete f_snapshots;
 }
 
-void DMD::train(int k, Matrix* W0, double linearity_tol)
+void DMD::train(int k, const Matrix* W0, double linearity_tol)
 {
     const Matrix* f_snapshots = getSnapshotMatrix();
     CAROM_VERIFY(f_snapshots->numColumns() > 1);
@@ -285,7 +285,7 @@ void
 DMD::constructDMD(const Matrix* f_snapshots,
                   int d_rank,
                   int d_num_procs,
-                  Matrix* W0,
+                  const Matrix* W0,
                   double linearity_tol)
 {
     std::pair<Matrix*, Matrix*> f_snapshot_pair = computeDMDSnapshotPair(
@@ -477,14 +477,15 @@ DMD::constructDMD(const Matrix* f_snapshots,
     d_A_tilde = d_basis_mult_f_snapshots_out_mult_d_basis_right->mult(d_S_inv);
     if (Q == NULL)
     {
-        Matrix* d_basis_mult_f_snapshots_out_mult_d_basis_right_mult_d_S_inv =
-            d_basis_mult_f_snapshots_out_mult_d_basis_right->mult(d_S_inv);
-        d_A_tilde = d_basis_mult_f_snapshots_out_mult_d_basis_right_mult_d_S_inv->mult(Q);
-        delete d_basis_mult_f_snapshots_out_mult_d_basis_right_mult_d_S_inv;
+        d_A_tilde = d_basis_mult_f_snapshots_out_mult_d_basis_right->mult(d_S_inv);
     }
     else
     {
-        d_A_tilde = d_basis_mult_f_snapshots_out_mult_d_basis_right->mult(d_S_inv);
+        Matrix* d_basis_mult_f_snapshots_out_mult_d_basis_right_mult_d_S_inv =
+            d_basis_mult_f_snapshots_out_mult_d_basis_right->mult(d_S_inv);
+        d_A_tilde = d_basis_mult_f_snapshots_out_mult_d_basis_right_mult_d_S_inv->mult(Q);
+        delete Q;
+        delete d_basis_mult_f_snapshots_out_mult_d_basis_right_mult_d_S_inv;
     }
 
     // Calculate the right eigenvalues/eigenvectors of A_tilde
