@@ -461,7 +461,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
         d_basis_new->orthogonalize();
 
         // Calculate Q = W* x W0;
-        Q = d_basis->mult(W0);
+        Q = d_basis->transposeMult(W0);
 
         delete d_basis;
         d_basis = d_basis_new;
