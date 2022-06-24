@@ -89,7 +89,9 @@ public:
     virtual void train(int k, const Matrix* W0 = NULL, double linearity_tol = 0.0);
 
     /**
-     * @brief Predict new initial condition using d_phi.
+     * @brief Project new initial condition using d_phi.
+     *        Calculate pinv(phi) x init, or more precisely,
+     *        (phi* x phi)^{-1} x phi* x init, where phi* is the conjugate transpose.
      *
      * @param[in] init The initial condition.
      */
