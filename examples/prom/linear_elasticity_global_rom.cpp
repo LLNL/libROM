@@ -175,6 +175,17 @@ int main(int argc, char* argv[])
     }
 
 
+
+    // 9. Determine the list of true (i.e. parallel conforming) essential
+    //    boundary dofs. In this example, the boundary conditions are defined by
+    //    marking only boundary attribute 1 from the mesh as essential and
+    //    converting it to a list of true dofs.
+    Array<int> ess_tdof_list, ess_bdr(pmesh->bdr_attributes.Max());
+    ess_bdr = 0;
+    ess_bdr[0] = 1;
+    fespace->GetEssentialTrueDofs(ess_bdr, ess_tdof_list);
+
+
 cout << "All good" << endl;
 
 return 0;
