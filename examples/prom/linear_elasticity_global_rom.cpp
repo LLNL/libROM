@@ -223,6 +223,24 @@ int main(int argc, char* argv[])
     ParGridFunction x(fespace);
     x = 0.0;
 
+
+
+    // 12. Set up the parallel bilinear form a(.,.) on the finite element space
+    //     corresponding to the linear elasticity integrator with piece-wise
+    //     constants coefficient lambda and mu.
+    Vector lambda(pmesh->attributes.Max());
+    lambda = 1.0;
+    lambda(0) = lambda(1) * 50;
+    PWConstCoefficient lambda_func(lambda);
+    Vector mu(pmesh->attributes.Max());
+    mu = 1.0;
+    mu(0) = mu(1) * 50;
+    PWConstCoefficient mu_func(mu);
+
+    ParBilinearForm* a = new ParBilinearForm(fespace);
+    a->AddDomainIntegrator(new ElasticityIntegrator(lambda_func, mu_func));
+
+
 cout << "All good" << endl;
 
 return 0;
