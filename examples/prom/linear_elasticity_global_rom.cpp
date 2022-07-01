@@ -260,6 +260,24 @@ int main(int argc, char* argv[])
     }
 
 
+    // 14. Define and apply a parallel PCG solver for A X = B with the BoomerAMG
+    //     preconditioner from hypre.
+    HypreBoomerAMG* amg = new HypreBoomerAMG(A);
+    if (amg_elast && !a->StaticCondensationIsEnabled())
+    {
+        amg->SetElasticityOptions(fespace);
+    }
+    else
+    {
+        amg->SetSystemsOptions(dim, reorder_space);
+    }
+    HyprePCG* pcg = new HyprePCG(A);
+    pcg->SetTol(1e-8);
+    pcg->SetMaxIter(500);
+    pcg->SetPrintLevel(2);
+    pcg->SetPreconditioner(*amg);
+    pcg->Mult(B, X);
+
 
 cout << "All good" << endl;
 
