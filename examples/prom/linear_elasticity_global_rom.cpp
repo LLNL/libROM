@@ -50,6 +50,39 @@ int main(int argc, char* argv[])
     const char* device_config = "cpu";
 
 
+    OptionsParser args(argc, argv);
+    args.AddOption(&mesh_file, "-m", "--mesh",
+        "Mesh file to use.");
+    args.AddOption(&order, "-o", "--order",
+        "Finite element order (polynomial degree).");
+    args.AddOption(&amg_elast, "-elast", "--amg-for-elasticity", "-sys",
+        "--amg-for-systems",
+        "Use the special AMG elasticity solver (GM/LN approaches), "
+        "or standard AMG for systems (unknown approach).");
+    args.AddOption(&static_cond, "-sc", "--static-condensation", "-no-sc",
+        "--no-static-condensation", "Enable static condensation.");
+    args.AddOption(&visualization, "-vis", "--visualization", "-no-vis",
+        "--no-visualization",
+        "Enable or disable GLVis visualization.");
+    args.AddOption(&reorder_space, "-nodes", "--by-nodes", "-vdim", "--by-vdim",
+        "Use byNODES ordering of vector space instead of byVDIM");
+    args.AddOption(&device_config, "-d", "--device",
+        "Device configuration string, see Device::Configure().");
+    args.Parse();
+    if (!args.Good())
+    {
+        if (myid == 0)
+        {
+            args.PrintUsage(cout);
+        }
+        return 1;
+    }
+    if (myid == 0)
+    {
+        args.PrintOptions(cout);
+    }
+
+
 cout << "All good" << endl;
 
 return 0;
