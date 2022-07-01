@@ -141,6 +141,40 @@ int main(int argc, char* argv[])
 
 
 
+    // 8. Define a parallel finite element space on the parallel mesh. Here we
+    //    use vector finite elements, i.e. dim copies of a scalar finite element
+    //    space. We use the ordering by vector dimension (the last argument of
+    //    the FiniteElementSpace constructor) which is expected in the systems
+    //    version of BoomerAMG preconditioner. For NURBS meshes, we use the
+    //    (degree elevated) NURBS space associated with the mesh nodes.
+    FiniteElementCollection* fec;
+    ParFiniteElementSpace* fespace;
+    const bool use_nodal_fespace = pmesh->NURBSext && !amg_elast;
+    if (use_nodal_fespace)
+    {
+        fec = NULL;
+        fespace = (ParFiniteElementSpace*)pmesh->GetNodes()->FESpace();
+    }
+    else
+    {
+        fec = new H1_FECollection(order, dim);
+        if (reorder_space)
+        {
+            fespace = new ParFiniteElementSpace(pmesh, fec, dim, Ordering::byNODES);
+        }
+        else
+        {
+            fespace = new ParFiniteElementSpace(pmesh, fec, dim, Ordering::byVDIM);
+        }
+    }
+    HYPRE_BigInt size = fespace->GlobalTrueVSize();
+    if (myid == 0)
+    {
+        cout << "Number of finite element unknowns: " << size << endl
+            << "Assembling: " << flush;
+    }
+
+
 cout << "All good" << endl;
 
 return 0;
