@@ -299,6 +299,28 @@ int main(int argc, char* argv[])
 
 
 
+    // 17. Save in parallel the displaced mesh and the inverted solution (which
+    //     gives the backward displacements to the original grid). This output
+    //     can be viewed later using GLVis: "glvis -np <np> -m mesh -g sol".
+    {
+        GridFunction* nodes = pmesh->GetNodes();
+        *nodes += x;
+        x *= -1;
+
+        ostringstream mesh_name, sol_name;
+        mesh_name << "mesh." << setfill('0') << setw(6) << myid;
+        sol_name << "sol." << setfill('0') << setw(6) << myid;
+
+        ofstream mesh_ofs(mesh_name.str().c_str());
+        mesh_ofs.precision(8);
+        pmesh->Print(mesh_ofs);
+
+        ofstream sol_ofs(sol_name.str().c_str());
+        sol_ofs.precision(8);
+        x.Save(sol_ofs);
+    }
+
+
 cout << "All good" << endl;
 
 return 0;
