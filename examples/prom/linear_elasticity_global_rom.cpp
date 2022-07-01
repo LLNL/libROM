@@ -82,6 +82,11 @@ int main(int argc, char* argv[])
         args.PrintOptions(cout);
     }
 
+    // 3. Enable hardware devices such as GPUs, and programming models such as
+   //    CUDA, OCCA, RAJA and OpenMP based on command line options.
+    Device device(device_config);
+    if (myid == 0) { device.Print(); }
+
 
 cout << "All good" << endl;
 
