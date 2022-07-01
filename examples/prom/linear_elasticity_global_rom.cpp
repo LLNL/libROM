@@ -104,6 +104,14 @@ int main(int argc, char* argv[])
     }
 
 
+    // 5. Select the order of the finite element discretization space. For NURBS
+    //    meshes, we increase the order by degree elevation.
+    if (mesh->NURBSext)
+    {
+        mesh->DegreeElevate(order, order);
+    }
+
+
 
 cout << "All good" << endl;
 
