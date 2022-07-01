@@ -186,6 +186,35 @@ int main(int argc, char* argv[])
     fespace->GetEssentialTrueDofs(ess_bdr, ess_tdof_list);
 
 
+
+    // 10. Set up the parallel linear form b(.) which corresponds to the
+    //     right-hand side of the FEM linear system. In this case, b_i equals the
+    //     boundary integral of f*phi_i where f represents a "pull down" force on
+    //     the Neumann part of the boundary and phi_i are the basis functions in
+    //     the finite element fespace. The force is defined by the object f, which
+    //     is a vector of Coefficient objects. The fact that f is non-zero on
+    //     boundary attribute 2 is indicated by the use of piece-wise constants
+    //     coefficient for its last component.
+    VectorArrayCoefficient f(dim);
+    for (int i = 0; i < dim - 1; i++)
+    {
+        f.Set(i, new ConstantCoefficient(0.0));
+    }
+    {
+        Vector pull_force(pmesh->bdr_attributes.Max());
+        pull_force = 0.0;
+        pull_force(1) = -1.0e-2;
+        f.Set(dim - 1, new PWConstCoefficient(pull_force));
+    }
+
+    ParLinearForm* b = new ParLinearForm(fespace);
+    b->AddBoundaryIntegrator(new VectorBoundaryLFIntegrator(f));
+    if (myid == 0)
+    {
+        cout << "r.h.s. ... " << flush;
+    }
+    b->Assemble();
+
 cout << "All good" << endl;
 
 return 0;
