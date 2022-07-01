@@ -31,4 +31,11 @@
 using namespace std;
 using namespace mfem;
 
+
+int main(int argc, char* argv[])
+{
+
 cout << "done loading mfem" << endl;
+
+return 0;
+}
