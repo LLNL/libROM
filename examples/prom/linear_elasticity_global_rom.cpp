@@ -321,6 +321,20 @@ int main(int argc, char* argv[])
     }
 
 
+    // 18. Send the above data by socket to a GLVis server.  Use the "n" and "b"
+   //     keys in GLVis to visualize the displacements.
+    if (visualization)
+    {
+        char vishost[] = "localhost";
+        int  visport = 19916;
+        socketstream sol_sock(vishost, visport);
+        sol_sock << "parallel " << num_procs << " " << myid << "\n";
+        sol_sock.precision(8);
+        sol_sock << "solution\n" << *pmesh << x << flush;
+    }
+
+
+
 cout << "All good" << endl;
 
 return 0;
