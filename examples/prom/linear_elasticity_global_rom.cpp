@@ -87,6 +87,22 @@ int main(int argc, char* argv[])
     Device device(device_config);
     if (myid == 0) { device.Print(); }
 
+    // 4. Read the (serial) mesh from the given mesh file on all processors.  We
+   //    can handle triangular, quadrilateral, tetrahedral, hexahedral, surface
+   //    and volume meshes with the same code.
+    Mesh* mesh = new Mesh(mesh_file, 1, 1);
+    int dim = mesh->Dimension();
+
+    if (mesh->attributes.Max() < 2 || mesh->bdr_attributes.Max() < 2)
+    {
+        if (myid == 0)
+            cerr << "\nInput mesh should have at least two materials and "
+            << "two boundary attributes! (See schematic in ex2.cpp)\n"
+            << endl;
+        return 3;
+    }
+
+
 
 cout << "All good" << endl;
 
