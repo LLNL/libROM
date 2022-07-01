@@ -241,6 +241,26 @@ int main(int argc, char* argv[])
     a->AddDomainIntegrator(new ElasticityIntegrator(lambda_func, mu_func));
 
 
+
+    // 13. Assemble the parallel bilinear form and the corresponding linear
+    //     system, applying any necessary transformations such as: parallel
+    //     assembly, eliminating boundary conditions, applying conforming
+    //     constraints for non-conforming AMR, static condensation, etc.
+    if (myid == 0) { cout << "matrix ... " << flush; }
+    if (static_cond) { a->EnableStaticCondensation(); }
+    a->Assemble();
+
+    HypreParMatrix A;
+    Vector B, X;
+    a->FormLinearSystem(ess_tdof_list, x, *b, A, X, B);
+    if (myid == 0)
+    {
+        cout << "done." << endl;
+        cout << "Size of linear system: " << A.GetGlobalNumRows() << endl;
+    }
+
+
+
 cout << "All good" << endl;
 
 return 0;
