@@ -285,6 +285,19 @@ int main(int argc, char* argv[])
 
 
 
+    // 16. For non-NURBS meshes, make the mesh curved based on the finite element
+    //     space. This means that we define the mesh elements through a fespace
+    //     based transformation of the reference element.  This allows us to save
+    //     the displaced mesh as a curved mesh when using high-order finite
+    //     element displacement field. We assume that the initial mesh (read from
+    //     the file) is not higher order curved mesh compared to the chosen FE
+    //     space.
+    if (!use_nodal_fespace)
+    {
+        pmesh->SetNodalFESpace(fespace);
+    }
+
+
 
 cout << "All good" << endl;
 
