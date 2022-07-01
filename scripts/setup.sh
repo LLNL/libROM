@@ -69,7 +69,7 @@ if [[ $BUILD_TYPE == "Debug" ]]; then
     if [[ $UPDATE_LIBS == "true" ]]; then
         cd mfem_debug
         git pull
-        make pdebug -j STATIC=NO SHARED=YES MFEM_USE_MPI=YES MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB"
+        make pdebug -j8 STATIC=NO SHARED=YES MFEM_USE_MPI=YES MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB"
     fi
     cd $LIB_DIR
     rm mfem
@@ -82,7 +82,7 @@ else
     if [[ $UPDATE_LIBS == "true" ]]; then
         cd mfem_parallel
         git pull
-        make parallel -j STATIC=NO SHARED=YES MFEM_USE_MPI=YES MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB"
+        make parallel -j8 STATIC=NO SHARED=YES MFEM_USE_MPI=YES MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB"
     fi
     cd $LIB_DIR
     rm mfem
