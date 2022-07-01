@@ -40,6 +40,15 @@ int main(int argc, char* argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
+    // 2. Parse command-line options.
+    const char* mesh_file = "../data/beam-tri.mesh";
+    int order = 1;
+    bool static_cond = false;
+    bool visualization = 1;
+    bool amg_elast = 0;
+    bool reorder_space = false;
+    const char* device_config = "cpu";
+
 
 cout << "All good" << endl;
 
