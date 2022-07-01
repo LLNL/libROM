@@ -215,6 +215,14 @@ int main(int argc, char* argv[])
     }
     b->Assemble();
 
+
+
+    // 11. Define the solution vector x as a parallel finite element grid
+    //     function corresponding to fespace. Initialize x with initial guess of
+    //     zero, which satisfies the boundary conditions.
+    ParGridFunction x(fespace);
+    x = 0.0;
+
 cout << "All good" << endl;
 
 return 0;
