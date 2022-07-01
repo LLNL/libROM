@@ -279,6 +279,13 @@ int main(int argc, char* argv[])
     pcg->Mult(B, X);
 
 
+    // 15. Recover the parallel grid function corresponding to X. This is the
+    //     local finite element solution on each processor.
+    a->RecoverFEMSolution(X, *b, x);
+
+
+
+
 cout << "All good" << endl;
 
 return 0;
