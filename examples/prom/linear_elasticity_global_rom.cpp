@@ -334,6 +334,17 @@ int main(int argc, char* argv[])
     }
 
 
+    // 19. Free the used memory.
+    delete pcg;
+    delete amg;
+    delete a;
+    delete b;
+    if (fec)
+    {
+        delete fespace;
+        delete fec;
+    }
+    delete pmesh;
 
 cout << "All good" << endl;
 
