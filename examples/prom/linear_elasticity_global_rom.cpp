@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
     args.AddOption(&nsets, "-ns", "--nset", "Number of parametric snapshot sets");
     args.AddOption(&static_cond, "-sc", "--static-condensation", "-no-sc",
         "--no-static-condensation", "Enable static condensation.");
-    args.AddOption(&ext_force, "-ef", "--ext-force",
+    args.AddOption(&ext_force, "-f", "--ext-force",
         "External force applied at end.");
     args.AddOption(&amg_elast, "-elast", "--amg-for-elasticity", "-sys",
         "--amg-for-systems",
@@ -439,3 +439,5 @@ cout << "All good" << endl;
 
 return 0;
 }
+
+
