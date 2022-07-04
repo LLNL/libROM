@@ -27,6 +27,8 @@
 #include "mfem.hpp"
 #include <fstream>
 #include <iostream>
+#include "linalg/BasisGenerator.h"
+#include "linalg/BasisReader.h"
 
 using namespace std;
 using namespace mfem;
