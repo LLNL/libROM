@@ -367,8 +367,47 @@ int main(int argc, char* argv[])
 
     }
 
-    // 19 - 23. The online phase
-    // TODO
+
+    // 19. The online phase
+    if (online) {
+        // 20. read the reduced basis
+        assembleTimer.Start();
+        CAROM::BasisReader reader(basisName);
+        spatialbasis = reader.getSpatialBasis(0.0);
+        numRowRB = spatialbasis->numRows();
+        numColumnRB = spatialbasis->numColumns();
+        if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB,
+            numColumnRB);
+
+        // libROM stores the matrix row-wise, so wrapping as a DenseMatrix in MFEM means it is transposed.
+        DenseMatrix* reducedBasisT = new DenseMatrix(spatialbasis->getData(),
+            numColumnRB, numRowRB);
+
+        // 21. form inverse ROM operator
+        Vector abv(numRowRB), bv(numRowRB), bv2(numRowRB);
+        Vector reducedRHS(numColumnRB), reducedSol(numColumnRB);
+        DenseMatrix invReducedA(numColumnRB);
+        for (int j = 0; j < numColumnRB; ++j) {
+            reducedBasisT->GetRow(j, bv);
+            A->Mult(bv, abv);
+            reducedRHS(j) = bv * B;
+            for (int i = 0; i < numColumnRB; ++i) {
+                reducedBasisT->GetRow(i, bv2);
+                invReducedA(i, j) = abv * bv2;
+            }
+        }
+        invReducedA.Invert();
+        assembleTimer.Stop();
+
+        // 22. solve ROM
+        solveTimer.Start();
+        invReducedA.Mult(reducedRHS, reducedSol);
+        solveTimer.Stop();
+
+        // 23. reconstruct FOM state
+        reducedBasisT->MultTranspose(reducedSol, X);
+        delete reducedBasisT;
+    }
     
 
 
