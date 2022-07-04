@@ -230,7 +230,31 @@ int main(int argc, char* argv[])
     }
 
     // 11. The merge phase
-    // TODO
+    if (merge)
+    {
+        mergeTimer.Start();
+        std::unique_ptr<CAROM::BasisGenerator> basis_generator;
+        options = new CAROM::Options(fespace->GetTrueVSize(), max_num_snapshots, 1,
+            update_right_SV);
+        generator = new CAROM::BasisGenerator(*options, isIncremental, basisName);
+        for (int paramID = 0; paramID < nsets; ++paramID)
+        {
+            std::string snapshot_filename = basisName + std::to_string(
+                paramID) + "_snapshot";
+            generator->loadSamples(snapshot_filename, "snapshot");
+        }
+        generator->endSamples(); // save the merged basis file
+        mergeTimer.Stop();
+        if (myid == 0)
+        {
+            printf("Elapsed time for merging and building ROM basis: %e second\n",
+                mergeTimer.RealTime());
+        }
+        delete generator;
+        delete options;
+        MPI_Finalize();
+        return 0;
+    }
 
 
     // 12. Set up the parallel linear form b(.) which corresponds to the
