@@ -454,7 +454,16 @@ int main(int argc, char* argv[])
 
 
     // 26. Save data in the VisIt format.
-    // TODO
+    DataCollection* dc = NULL;
+    if (visit)
+    {
+        if (offline) dc = new VisItDataCollection("Example1", &pmesh);
+        else if (online) dc = new VisItDataCollection("Example1_rom", &pmesh);
+        dc->SetPrecision(precision);
+        dc->RegisterField("solution", &x);
+        dc->Save();
+        delete dc;
+    }
 
 
 
