@@ -48,6 +48,16 @@ int main(int argc, char* argv[])
     bool amg_elast = 0;
     bool reorder_space = false;
     const char* device_config = "cpu";
+    bool visit = true;
+    bool fom = false;
+    bool offline = false;
+    bool merge = false;
+    bool online = false;
+    int precision = 8;
+    int id = 0;
+    int nsets = 0;
+    double coef = 1.0;
+    double ext_force = -1.0e-2;
 
 
     OptionsParser args(argc, argv);
@@ -55,19 +65,35 @@ int main(int argc, char* argv[])
         "Mesh file to use.");
     args.AddOption(&order, "-o", "--order",
         "Finite element order (polynomial degree).");
+    args.AddOption(&id, "-id", "--id", "Parametric id");
+    args.AddOption(&nsets, "-ns", "--nset", "Number of parametric snapshot sets");
+    args.AddOption(&static_cond, "-sc", "--static-condensation", "-no-sc",
+        "--no-static-condensation", "Enable static condensation.");
+    args.AddOption(&ext_force, "-ef", "--ext-force",
+        "External force applied at end.");
     args.AddOption(&amg_elast, "-elast", "--amg-for-elasticity", "-sys",
         "--amg-for-systems",
         "Use the special AMG elasticity solver (GM/LN approaches), "
         "or standard AMG for systems (unknown approach).");
-    args.AddOption(&static_cond, "-sc", "--static-condensation", "-no-sc",
-        "--no-static-condensation", "Enable static condensation.");
-    args.AddOption(&visualization, "-vis", "--visualization", "-no-vis",
-        "--no-visualization",
-        "Enable or disable GLVis visualization.");
     args.AddOption(&reorder_space, "-nodes", "--by-nodes", "-vdim", "--by-vdim",
         "Use byNODES ordering of vector space instead of byVDIM");
     args.AddOption(&device_config, "-d", "--device",
         "Device configuration string, see Device::Configure().");
+    args.AddOption(&visit, "-visit", "--visit-datafiles", "-no-visit",
+        "--no-visit-datafiles",
+        "Save data files for VisIt (visit.llnl.gov) visualization.");
+    args.AddOption(&visualization, "-vis", "--visualization", "-no-vis",
+        "--no-visualization",
+        "Enable or disable GLVis visualization.");
+    args.AddOption(&fom, "-fom", "--fom", "-no-fom", "--no-fom",
+        "Enable or disable the fom phase.");
+    args.AddOption(&offline, "-offline", "--offline", "-no-offline", "--no-offline",
+        "Enable or disable the offline phase.");
+    args.AddOption(&online, "-online", "--online", "-no-online", "--no-online",
+        "Enable or disable the online phase.");
+    args.AddOption(&merge, "-merge", "--merge", "-no-merge", "--no-merge",
+        "Enable or disable the merge phase.");
+
     args.Parse();
     if (!args.Good())
     {
@@ -104,15 +130,8 @@ int main(int argc, char* argv[])
     }
 
 
-    // 5. Select the order of the finite element discretization space. For NURBS
-    //    meshes, we increase the order by degree elevation.
-    if (mesh->NURBSext)
-    {
-        mesh->DegreeElevate(order, order);
-    }
 
-
-    // 6. Refine the serial mesh on all processors to increase the resolution. In
+    // 5. Refine the serial mesh on all processors to increase the resolution. In
     //    this example we do 'ref_levels' of uniform refinement. We choose
     //    'ref_levels' to be the largest number that gives a final mesh with no
     //    more than 1,000 elements.
@@ -126,7 +145,7 @@ int main(int argc, char* argv[])
     }
 
 
-    // 7. Define a parallel mesh by a partitioning of the serial mesh. Refine
+    // 6. Define a parallel mesh by a partitioning of the serial mesh. Refine
    //    this mesh further in parallel to increase the resolution. Once the
    //    parallel mesh is defined, the serial mesh can be deleted.
     ParMesh* pmesh = new ParMesh(MPI_COMM_WORLD, *mesh);
@@ -141,7 +160,7 @@ int main(int argc, char* argv[])
 
 
 
-    // 8. Define a parallel finite element space on the parallel mesh. Here we
+    // 7. Define a parallel finite element space on the parallel mesh. Here we
     //    use vector finite elements, i.e. dim copies of a scalar finite element
     //    space. We use the ordering by vector dimension (the last argument of
     //    the FiniteElementSpace constructor) which is expected in the systems
@@ -176,7 +195,7 @@ int main(int argc, char* argv[])
 
 
 
-    // 9. Determine the list of true (i.e. parallel conforming) essential
+    // 8. Determine the list of true (i.e. parallel conforming) essential
     //    boundary dofs. In this example, the boundary conditions are defined by
     //    marking only boundary attribute 1 from the mesh as essential and
     //    converting it to a list of true dofs.
@@ -187,7 +206,32 @@ int main(int argc, char* argv[])
 
 
 
-    // 10. Set up the parallel linear form b(.) which corresponds to the
+    // 9. Initiate ROM related variables
+    int max_num_snapshots = 100;
+    bool update_right_SV = false;
+    bool isIncremental = false;
+    const std::string basisName = "basis";
+    const std::string basisFileName = basisName + std::to_string(id);
+    const CAROM::Matrix* spatialbasis;
+    CAROM::Options* options;
+    CAROM::BasisGenerator* generator;
+    int numRowRB, numColumnRB;
+    StopWatch solveTimer, assembleTimer, mergeTimer;
+
+
+    // 10. Set BasisGenerator if offline
+    if (offline)
+    {
+        options = new CAROM::Options(fespace.GetTrueVSize(), max_num_snapshots, 1,
+            update_right_SV);
+        generator = new CAROM::BasisGenerator(*options, isIncremental, basisFileName);
+    }
+
+    // 11. The merge phase
+    // TODO
+
+
+    // 12. Set up the parallel linear form b(.) which corresponds to the
     //     right-hand side of the FEM linear system. In this case, b_i equals the
     //     boundary integral of f*phi_i where f represents a "pull down" force on
     //     the Neumann part of the boundary and phi_i are the basis functions in
@@ -203,7 +247,7 @@ int main(int argc, char* argv[])
     {
         Vector pull_force(pmesh->bdr_attributes.Max());
         pull_force = 0.0;
-        pull_force(1) = -1.0e-2;
+        pull_force(1) = ext_force;
         f.Set(dim - 1, new PWConstCoefficient(pull_force));
     }
 
@@ -217,7 +261,7 @@ int main(int argc, char* argv[])
 
 
 
-    // 11. Define the solution vector x as a parallel finite element grid
+    // 13. Define the solution vector x as a parallel finite element grid
     //     function corresponding to fespace. Initialize x with initial guess of
     //     zero, which satisfies the boundary conditions.
     ParGridFunction x(fespace);
@@ -225,9 +269,10 @@ int main(int argc, char* argv[])
 
 
 
-    // 12. Set up the parallel bilinear form a(.,.) on the finite element space
+    // 14. Set up the parallel bilinear form a(.,.) on the finite element space
     //     corresponding to the linear elasticity integrator with piece-wise
     //     constants coefficient lambda and mu.
+    assembleTimer.Start();
     Vector lambda(pmesh->attributes.Max());
     lambda = 1.0;
     lambda(0) = lambda(1) * 50;
@@ -242,7 +287,7 @@ int main(int argc, char* argv[])
 
 
 
-    // 13. Assemble the parallel bilinear form and the corresponding linear
+    // 15. Assemble the parallel bilinear form and the corresponding linear
     //     system, applying any necessary transformations such as: parallel
     //     assembly, eliminating boundary conditions, applying conforming
     //     constraints for non-conforming AMR, static condensation, etc.
@@ -258,28 +303,50 @@ int main(int argc, char* argv[])
         cout << "done." << endl;
         cout << "Size of linear system: " << A.GetGlobalNumRows() << endl;
     }
+    assembleTimer.Stop();
 
-
-    // 14. Define and apply a parallel PCG solver for A X = B with the BoomerAMG
-    //     preconditioner from hypre.
-    HypreBoomerAMG* amg = new HypreBoomerAMG(A);
-    if (amg_elast && !a->StaticCondensationIsEnabled())
+    // 16. The offline phase
+    if (fom || offline)
     {
-        amg->SetElasticityOptions(fespace);
+        // 17. Define and apply a parallel PCG solver for A X = B with the BoomerAMG
+        //     preconditioner from hypre.
+        HypreBoomerAMG* amg = new HypreBoomerAMG(A);
+        if (amg_elast && !a->StaticCondensationIsEnabled())
+        {
+            amg->SetElasticityOptions(fespace);
+        }
+        else
+        {
+            amg->SetSystemsOptions(dim, reorder_space);
+        }
+        HyprePCG* pcg = new HyprePCG(A);
+        pcg->SetTol(1e-8);
+        pcg->SetMaxIter(500);
+        pcg->SetPrintLevel(2);
+        pcg->SetPreconditioner(*amg);
+        solveTimer.Start();
+        pcg->Mult(B, X);
+        solveTimer.Stop();
+        delete amg;
+        delete pcg;
+
+        // 18. take and write snapshot for ROM
+        if (offline)
+        {
+            bool addSample = generator->takeSample(X.GetData(), 0.0, 0.01);
+            generator->writeSnapshot();
+            delete generator;
+            delete options;
+        }
+
     }
-    else
-    {
-        amg->SetSystemsOptions(dim, reorder_space);
-    }
-    HyprePCG* pcg = new HyprePCG(A);
-    pcg->SetTol(1e-8);
-    pcg->SetMaxIter(500);
-    pcg->SetPrintLevel(2);
-    pcg->SetPreconditioner(*amg);
-    pcg->Mult(B, X);
+
+    // 19 - 23. The online phase
+    // TODO
+    
 
 
-    // 15. Recover the parallel grid function corresponding to X. This is the
+    // 24. Recover the parallel grid function corresponding to X. This is the
     //     local finite element solution on each processor.
     a->RecoverFEMSolution(X, *b, x);
 
@@ -299,7 +366,7 @@ int main(int argc, char* argv[])
 
 
 
-    // 17. Save in parallel the displaced mesh and the inverted solution (which
+    // 25. Save in parallel the displaced mesh and the inverted solution (which
     //     gives the backward displacements to the original grid). This output
     //     can be viewed later using GLVis: "glvis -np <np> -m mesh -g sol".
     {
@@ -312,16 +379,21 @@ int main(int argc, char* argv[])
         sol_name << "sol." << setfill('0') << setw(6) << myid;
 
         ofstream mesh_ofs(mesh_name.str().c_str());
-        mesh_ofs.precision(8);
+        mesh_ofs.precision(precision);
         pmesh->Print(mesh_ofs);
 
         ofstream sol_ofs(sol_name.str().c_str());
-        sol_ofs.precision(8);
+        sol_ofs.precision(precision);
         x.Save(sol_ofs);
     }
 
 
-    // 18. Send the above data by socket to a GLVis server.  Use the "n" and "b"
+    // 26. Save data in the VisIt format.
+    // TODO
+
+
+
+    // 27. Send the above data by socket to a GLVis server.  Use the "n" and "b"
    //     keys in GLVis to visualize the displacements.
     if (visualization)
     {
@@ -329,14 +401,29 @@ int main(int argc, char* argv[])
         int  visport = 19916;
         socketstream sol_sock(vishost, visport);
         sol_sock << "parallel " << num_procs << " " << myid << "\n";
-        sol_sock.precision(8);
+        sol_sock.precision(precision);
         sol_sock << "solution\n" << *pmesh << x << flush;
     }
 
 
-    // 19. Free the used memory.
-    delete pcg;
-    delete amg;
+    // 28. print timing info
+    if (myid == 0)
+    {
+        if (fom || offline)
+        {
+            printf("Elapsed time for assembling FOM: %e second\n",
+                assembleTimer.RealTime());
+            printf("Elapsed time for solving FOM: %e second\n", solveTimer.RealTime());
+        }
+        if (online)
+        {
+            printf("Elapsed time for assembling ROM: %e second\n",
+                assembleTimer.RealTime());
+            printf("Elapsed time for solving ROM: %e second\n", solveTimer.RealTime());
+        }
+    }
+
+    // 29. Free the used memory.
     delete a;
     delete b;
     if (fec)
