@@ -224,7 +224,7 @@ int main(int argc, char* argv[])
     // 10. Set BasisGenerator if offline
     if (offline)
     {
-        options = new CAROM::Options(fespace.GetTrueVSize(), max_num_snapshots, 1,
+        options = new CAROM::Options(fespace->GetTrueVSize(), max_num_snapshots, 1,
             update_right_SV);
         generator = new CAROM::BasisGenerator(*options, isIncremental, basisFileName);
     }
