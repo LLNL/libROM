@@ -389,7 +389,7 @@ int main(int argc, char* argv[])
         DenseMatrix invReducedA(numColumnRB);
         for (int j = 0; j < numColumnRB; ++j) {
             reducedBasisT->GetRow(j, bv);
-            A->Mult(bv, abv);
+            A.Mult(bv, abv);
             reducedRHS(j) = bv * B;
             for (int i = 0; i < numColumnRB; ++i) {
                 reducedBasisT->GetRow(i, bv2);
