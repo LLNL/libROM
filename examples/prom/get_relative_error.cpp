@@ -28,8 +28,8 @@ int main(int argc, char* argv[]) {
 
 	
 
-	char** _file_name_fom;
-	char** _file_name_rom;
+	const char** _file_name_fom;
+	const char** _file_name_rom;
 
 	int d = 2;
 	int offset = 5;
@@ -169,7 +169,7 @@ double rel_error(double** fom_array, double** rom_array, int l, int d)
 	for (int i = 0; i < l; i++) {
 		for (int j = 0; j < d; j++) {
 
-			error += std::fabs(fom_array[i][j] - rom_array[i][j]) /// (std::fabs(fom_array[i][j]) + tol);
+			error += std::fabs(fom_array[i][j] - rom_array[i][j]); /// (std::fabs(fom_array[i][j]) + tol);
 		}
 	}
 
