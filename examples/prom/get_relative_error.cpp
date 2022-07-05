@@ -4,6 +4,7 @@
 //string file_name_rom = "Example_linear_elastic_rom_000000/solution.000000";
 
 #include "mfem.hpp"
+#include <optparser.hpp>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -26,10 +27,6 @@ double rel_error(double** fom_array, double** rom_array, int l, int d);
 int main(int argc, char* argv[]) {
 
 
-
-
-	
-
 	string file_name_fom;
 	string file_name_rom;
 
@@ -45,6 +42,8 @@ int main(int argc, char* argv[]) {
 	args.AddOption(&d, "-d", "--dimension",
 		"Set the dimension.");
 	args.Parse();
+
+	args.PrintOptions(cout);
 
 	// Get different file lengths and assert that they're equal
 	int l_fom = get_num_rows(file_name_fom);
