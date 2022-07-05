@@ -2,6 +2,7 @@
 // double reading from https://stackoverflow.com/questions/25444449/how-do-i-convert-a-stdstring-containing-doubles-to-a-vector-of-doubles
 //string file_name_fom = "Example_linear_elastic_000000/solution.000000";
 //string file_name_rom = "Example_linear_elastic_rom_000000/solution.000000";
+// ./get_relative_error -fp Example_linear_elastic_000000/solution.000000 -rp Example_linear_elastic_rom_000000/solution.000000
 
 #include "mfem.hpp"
 #include <iostream>
@@ -13,6 +14,7 @@
 #include <iterator>
 #include <cassert>
 #include <math.h> 
+#include <limits>
 
 using namespace std;
 using namespace mfem;
@@ -165,12 +167,14 @@ void load_data_into_array(double** array, string file_name)
 double rel_error(double** fom_array, double** rom_array, int l, int d)
 {
 	double error = 0;
-	//double tol = 1.0e0;
 
 	for (int i = 0; i < l; i++) {
 		for (int j = 0; j < d; j++) {
-
-			error += std::fabs(fom_array[i][j] - rom_array[i][j]); /// (std::fabs(fom_array[i][j]) + tol);
+			if (std::fabs(fom_array[i][j]) > std::numeric_limits<double>::epsilon())
+			{
+				error += std::fabs(fom_array[i][j] - rom_array[i][j]) / std::fabs(fom_array[i][j]);
+			}
+			
 		}
 	}
 
