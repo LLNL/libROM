@@ -28,8 +28,8 @@ int main(int argc, char* argv[]) {
 
 	
 
-	char* _file_name_fom;
-	char* _file_name_rom;
+	char** _file_name_fom;
+	char** _file_name_rom;
 
 	int d = 2;
 	int offset = 5;
