@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
         "External force applied at end.");
     args.AddOption(&E, "-E", "--youngs-modulus",
         "Youngs modulus.");
-    args.AddOption(&ext_force, "-nu", "--poissons-ratio",
+    args.AddOption(&nu, "-nu", "--poissons-ratio",
         "Poisson's ratio.");
     args.AddOption(&amg_elast, "-elast", "--amg-for-elasticity", "-sys",
         "--amg-for-systems",
