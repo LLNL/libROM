@@ -37,9 +37,9 @@ int main(int argc, char* argv[]) {
 
 
 	OptionsParser args(argc, argv);
-	args.AddOption(&_file_name_fom, "-fp", "--fom-path", 
+	args.AddOption(_file_name_fom, "-fp", "--fom-path", 
 		"Set FOM solution path.");
-	args.AddOption(&_file_name_rom, "-rp", "--rom-path", 
+	args.AddOption(_file_name_rom, "-rp", "--rom-path", 
 		"Set ROM solution path.");
 	args.AddOption(&d, "-d", "--dimension",
 		"Set the dimension.");
