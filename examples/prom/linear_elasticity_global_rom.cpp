@@ -62,6 +62,9 @@ int main(int argc, char* argv[])
     int nsets = 0;
     double coef = 1.0;
     double ext_force = -1.0e-2;
+    double E = 1.0;
+    double nu = 1.0;
+    double ext_force = -1.0e-2;
 
 
     OptionsParser args(argc, argv);
@@ -75,6 +78,10 @@ int main(int argc, char* argv[])
         "--no-static-condensation", "Enable static condensation.");
     args.AddOption(&ext_force, "-f", "--ext-force",
         "External force applied at end.");
+    args.AddOption(&E, "-E", "--youngs-modulus",
+        "Youngs modulus.");
+    args.AddOption(&ext_force, "-nu", "--poissons-ratio",
+        "Poisson's ratio.");
     args.AddOption(&amg_elast, "-elast", "--amg-for-elasticity", "-sys",
         "--amg-for-systems",
         "Use the special AMG elasticity solver (GM/LN approaches), "
@@ -302,11 +309,13 @@ int main(int argc, char* argv[])
     //     constants coefficient lambda and mu.
     assembleTimer.Start();
     Vector lambda(pmesh->attributes.Max());
-    lambda = 1.0;
+    lambda = (E * nu) /((1 + nu) * (1 - 2 * nu));
     lambda(0) = lambda(1) * 50;
     PWConstCoefficient lambda_func(lambda);
+
+
     Vector mu(pmesh->attributes.Max());
-    mu = 1.0;
+    mu = E/(2*(1 + nu));
     mu(0) = mu(1) * 50;
     PWConstCoefficient mu_func(mu);
 
