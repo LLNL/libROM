@@ -3,7 +3,7 @@
 //string file_name_fom = "Example_linear_elastic_000000/solution.000000";
 //string file_name_rom = "Example_linear_elastic_rom_000000/solution.000000";
 
-
+#include "mfem.hpp"
 #include <iostream>
 #include <fstream>
 #include <string>
