@@ -62,9 +62,8 @@ int main(int argc, char* argv[])
     int nsets = 0;
     double coef = 1.0;
     double ext_force = -1.0e-2;
-    double E = 1.0;
-    double nu = 1.0;
-    double ext_force = -1.0e-2;
+    double E = 2.5;
+    double nu = 0.25;
 
 
     OptionsParser args(argc, argv);
