@@ -427,7 +427,7 @@ int main(int argc, char* argv[])
 
 
 
-    // 16. For non-NURBS meshes, make the mesh curved based on the finite element
+    // 25. For non-NURBS meshes, make the mesh curved based on the finite element
     //     space. This means that we define the mesh elements through a fespace
     //     based transformation of the reference element.  This allows us to save
     //     the displaced mesh as a curved mesh when using high-order finite
@@ -441,7 +441,7 @@ int main(int argc, char* argv[])
 
 
 
-    // 25. Save in parallel the displaced mesh and the inverted solution (which
+    // 26. Save in parallel the displaced mesh and the inverted solution (which
     //     gives the backward displacements to the original grid). This output
     //     can be viewed later using GLVis: "glvis -np <np> -m mesh -g sol".
     {
@@ -463,7 +463,7 @@ int main(int argc, char* argv[])
     }
 
 
-    // 26. Save data in the VisIt format.
+    // 27. Save data in the VisIt format.
     DataCollection* dc = NULL;
     if (visit)
     {
@@ -477,7 +477,7 @@ int main(int argc, char* argv[])
 
 
 
-    // 27. Send the above data by socket to a GLVis server.  Use the "n" and "b"
+    // 28. Send the above data by socket to a GLVis server.  Use the "n" and "b"
    //     keys in GLVis to visualize the displacements.
     if (visualization)
     {
@@ -490,7 +490,7 @@ int main(int argc, char* argv[])
     }
 
 
-    // 28. print timing info
+    // 29. print timing info
     if (myid == 0)
     {
         if (fom || offline)
@@ -507,7 +507,7 @@ int main(int argc, char* argv[])
         }
     }
 
-    // 29. Free the used memory.
+    // 30. Free the used memory.
     delete a;
     delete b;
     if (fec)
