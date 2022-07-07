@@ -1,8 +1,17 @@
-// Tutorial from https://www.tutorialspoint.com/read-data-from-a-text-file-using-cplusplus
-// double reading from https://stackoverflow.com/questions/25444449/how-do-i-convert-a-stdstring-containing-doubles-to-a-vector-of-doubles
-//string file_name_fom = "Example_linear_elastic_000000/solution.000000";
-//string file_name_rom = "Example_linear_elastic_rom_000000/solution.000000";
-// ./get_relative_error -fp Example_linear_elastic_000000/solution.000000 -rp Example_linear_elastic_rom_000000/solution.000000
+//               libROM MFEM Example: Relative error calculation
+// 
+// Compile with: ./scripts/compile.sh -m
+//
+// Description:  This program calculates the relative error between two solutions.
+//				 The solutions are assumed to have a VisIt readable file structure.
+//				 (They are generated with the "--visit" option).
+//				 Relative error is calculated as:
+//				 sum(abs(FOM_sol - ROM_sol) / abs(FOM_sol))
+//				 In order to keep the values from blowing up, the relative error 
+//				 calculation skips entries where the abs(FOM_sol) is smaller than 
+//				 the system tolerance.
+// 
+// Usage:		 ./get_relative_error -fp Example_linear_elastic_000000/solution.000000 -rp Example_linear_elastic_rom_000000/solution.000000
 
 #include "mfem.hpp"
 #include <iostream>
@@ -19,6 +28,7 @@
 using namespace std;
 using namespace mfem;
 
+// Utility functions
 void load_data_into_array(double** array, string file_name);
 int get_num_rows(string file_name);
 double rel_error(double** fom_array, double** rom_array, int l, int d);
@@ -28,15 +38,11 @@ double rel_error(double** fom_array, double** rom_array, int l, int d);
 int main(int argc, char* argv[]) {
 
 
-	
-
+	// 1. Command line options
 	const char *_file_name_fom = "";
 	const char *_file_name_rom = "";
-
-
 	int d = 2;
 	int offset = 5;
-
 
 
 	OptionsParser args(argc, argv);
@@ -46,14 +52,18 @@ int main(int argc, char* argv[]) {
 		"Set ROM solution path.");
 	args.AddOption(&d, "-d", "--dimension",
 		"Set the dimension.");
+	args.AddOption(&offset, "-o", "--offset",
+		"Specifies length of header in solution file. Default is 5, which works with the MFEM-VisIt file system.");
 	args.Parse();
 
 	args.PrintOptions(cout);
 
+	// 2. Convert filenames to strings
 	string file_name_fom(_file_name_fom);
 	string file_name_rom(_file_name_rom);
 
-	// Get different file lengths and assert that they're equal
+
+	// 3. Get different file lengths and assert that they're equal
 	int l_fom = get_num_rows(file_name_fom);
 	l_fom = l_fom - offset;
 
@@ -63,7 +73,7 @@ int main(int argc, char* argv[]) {
 	assert(l_fom == l_rom);
 
 
-	// Allocate data array1 and 2
+	// 4. Allocate data arrays
 	double** data_array_fom;
 	data_array_fom = new double* [l_fom];
 
@@ -76,31 +86,24 @@ int main(int argc, char* argv[]) {
 	}
 
 
-	// Load data into both arrays
+	// 5. Load data into both arrays
 	load_data_into_array(data_array_fom, file_name_fom);
 	load_data_into_array(data_array_rom, file_name_rom);
 
 
-	/*
-	for (int i = 0; i < l_fom; i++) {
 
-		cout << data_array_fom[i][0] << " " << data_array_fom[i][0] << "\n";
-
-	}
-	 */
-
-	 // Compute error
+	 // 6. Compute error
 	double error = rel_error(data_array_fom, data_array_rom, l_fom, d);
 
 	cout << "Error is: " << error << "\n";
 
-	// Deallocate array
+	// 7. Deallocate array
 	for (int i = 0; i < l_fom; i++) {
 		delete[] data_array_fom[i];
 		delete[] data_array_rom[i];
 	}
 
-	// Delete array pointer
+	// 8. Delete array pointer
 	delete[] data_array_fom;
 	delete[] data_array_rom;
 
@@ -111,15 +114,22 @@ int main(int argc, char* argv[]) {
 
 int get_num_rows(string file_name)
 {
-	fstream newfile;
+	// A function to get the number of lines in the solution matrix.
+	// This is used to allocate the data arrays to be filled.
+
+
+	// Initialize variables
+	fstream readfile;
 	int ctr = 0;
-	newfile.open(file_name, ios::in); //open a file to perform read operation using file object
-	if (newfile.is_open()) {   //checking whether the file is open
+
+	// Loop through lines in file and increase counter
+	readfile.open(file_name, ios::in); 
+	if (readfile.is_open()) {   
 		string tp;
-		while (getline(newfile, tp)) {  //read data from file object and put it into string.
+		while (getline(readfile, tp)) {  
 			ctr++;
 		}
-		newfile.close();   //close the file object.
+		readfile.close();   
 	}
 
 	return ctr;
@@ -127,36 +137,34 @@ int get_num_rows(string file_name)
 
 void load_data_into_array(double** array, string file_name)
 {
-	fstream newfile;
-	newfile.open(file_name, ios::in); //open a file to perform read operation using file object
+	// Function to load data into an array
+
+	// Initialize variables
+	fstream readfile;
+	readfile.open(file_name, ios::in); 
 	const int d = 2;
 	int ctr = 0;
 	int l;
 	double d1, d2;
 
-	if (newfile.is_open()) {   //checking whether the file is open
-	//cout << "All good!\n";
+
+	// Loop through file and add data to array
+	if (readfile.is_open()) {   
 		string tp;
-		while (getline(newfile, tp)) {  //read data from file object and put it into string.
+		while (getline(readfile, tp)) {  
 
 			if (ctr > 4)
 			{
-				// create an input string stream to read from the string
 				std::istringstream stm(tp);
 				if (stm >> d1 >> d2)
 				{
 					array[ctr - 5][0] = d1;
 					array[ctr - 5][1] = d2;
 				}
-
-
 			}
-
 			ctr++;
 		}
-
-		//cout << "Length of list is: " << l;
-		newfile.close();   //close the file object.
+		readfile.close();   
 	}
 
 	return;
@@ -166,6 +174,9 @@ void load_data_into_array(double** array, string file_name)
 
 double rel_error(double** fom_array, double** rom_array, int l, int d)
 {
+	// Function that loops through the two arrays and calculates their relative
+	// error.
+
 	double error = 0;
 
 	for (int i = 0; i < l; i++) {
