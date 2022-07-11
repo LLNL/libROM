@@ -937,7 +937,7 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat, const Vector& 
       if (d_rank < n_proc) {
         double fmone = -1.0;
         pdgemv_( &notrans, &m, &n_glob, &fmone,
-                 mat_0.getData(), &ione, &ione, mat_qr_desc,
+                 mat_0_data, &ione, &ione, mat_qr_desc,
                  soln_nz_glob.getData(), &ione, &ione, vec1_desc, &ione, &fone,
                  res_glob.getData(), &ione, &ione, vec1_desc, &ione);
       }
@@ -974,6 +974,20 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat, const Vector& 
       printf("computed residual\n");
       fflush(stdout);
     }
+
+    // TODO: this is valid only in serial!
+    // Copy back from column-major arrays mat_qr_data and mat_0_data to mat_qr and mat_0.
+    for (int i=0; i<m; ++i)
+      {
+	for (int j=0; j<n_dist_loc_max; ++j)
+	  mat_qr(i,j) = mat_qr_col_major[i + (j*m)];
+      }
+
+    for (int i=0; i<m; ++i)
+      {
+	for (int j=0; j<n_dist_loc_max; ++j)
+	  mat_0(i,j) = mat_0_col_major[i + (j*m)];
+      }
 
     ++n_outer_iter;
   } // end of outer loop
