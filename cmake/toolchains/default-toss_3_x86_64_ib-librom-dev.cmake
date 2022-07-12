@@ -14,8 +14,7 @@
 set(CMAKE_C_COMPILER mpicc)
 set(CMAKE_CXX_COMPILER mpicxx)
 set(CMAKE_Fortran_COMPILER mpif90)
-set(CMAKE_Fortran_FLAGS -mcmodel=large)
-#set(BLA_VENDOR Intel10_64lp)
+set(BLA_VENDOR Intel10_64lp)
 
 execute_process(
   COMMAND "echo $(which h5diff) | sed -e s/'/bin/h5diff'//"
@@ -23,10 +22,8 @@ execute_process(
 )
 set(HDF5_ROOT ${hdf5_serial_path})
 
-#set(BLAS_ROOT /usr/tce/packages/mkl/mkl-2019.0/mkl)
-#set(LAPACK_ROOT /usr/tce/packages/mkl/mkl-2019.0/mkl)
-set(BLAS_ROOT /usr/lib/x86_64-linux-gnu/blas)
-set(LAPACK_ROOT /usr/lib/x86_64-linux-gnu/blas)
+set(BLAS_ROOT /usr/tce/packages/mkl/mkl-2019.0/mkl)
+set(LAPACK_ROOT /usr/tce/packages/mkl/mkl-2019.0/mkl)
 
 set(CMAKE_LIBRARY_ARCHITECTURE intel64)
 

@@ -133,7 +133,6 @@ if (USE_MFEM)
     dg_advection_local_rom_matrix_interp
     mixed_nonlinear_diffusion
     linear_elasticity_global_rom
-    get_relative_error
     dg_advection
     nonlinear_elasticity
     heat_conduction
@@ -142,7 +141,6 @@ if (USE_MFEM)
     local_tw_csv
     parametric_tw_csv)
   set(example_directories
-    prom
     prom
     prom
     prom
