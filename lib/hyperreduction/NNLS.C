@@ -340,9 +340,11 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat, const Vector& 
 
   Vector soln_nz_glob;
   Vector soln_nz_glob_up;
-  Matrix mat_0(m, n_dist_loc_max, dist);
-  Matrix mat_qr(m, n_dist_loc_max, dist);
-  Matrix mat_qr_temp(m, n_dist_loc_max, dist);
+
+  // The following matrices are stored in column-major format as Vectors
+  Vector mat_0_data(m * n_dist_loc_max, dist);
+  Vector mat_qr_data(m * n_dist_loc_max, dist);
+
   int mat_qr_desc[9];
   Vector tau(n_dist_loc_max, dist);
   Vector vec1;
@@ -403,8 +405,8 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat, const Vector& 
     stalledFlag = 0;
 
     // TODO: maximum norm for Vector? Local?
-    rmax = 0.0;
-    for (int i=0; i<m; ++i)
+    rmax = fabs(res_glob(0)) - rhs_halfgap_glob(0);
+    for (int i=1; i<m; ++i)
       rmax = std::max(rmax, fabs(res_glob(i)) - rhs_halfgap_glob(i));
 
     // TODO: is this just local l2 norm?
@@ -551,8 +553,8 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat, const Vector& 
         int n_orig = numroc_(&n_glob, &nb, &d_rank, &izero, &n_proc);
 	for (int i=0; i<m; ++i)
 	  {
-	    mat_0(i,n_orig) = mat(i,imax);
-	    mat_qr(i,n_orig) = mat_0(i,n_orig);
+	    mat_0_data(i + (n_orig*m)) = mat(i,imax);
+	    mat_qr_data(i + (n_orig*m)) = mat_0_data(i + (n_orig*m));
 	  }
       }
     } else {
@@ -561,11 +563,11 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat, const Vector& 
         // recieve the matrix entry
         MPI_Status mpi_stat;
         int n_orig = numroc_(&n_glob, &nb, &d_rank, &izero, &n_proc);
-        MPI_Recv(mat_0.getData() + m*n_orig, m, MPI_DOUBLE, imax_proc, 189, MPI_COMM_WORLD, &mpi_stat);
+        MPI_Recv(mat_0_data.getData() + m*n_orig, m, MPI_DOUBLE, imax_proc, 189, MPI_COMM_WORLD, &mpi_stat);
         // copy the entry to the qr matrix
         //mat_qr.col(n_orig) = mat_0.col(n_orig);
         for (int i=0; i<m; ++i)
-	  mat_qr(i,n_orig) = mat_0(i,n_orig);
+	  mat_qr_data(i + (n_orig*m)) = mat_0_data(i + (n_orig*m));
       }
       if (imax_proc == d_rank) {
         // send the partial matrix
@@ -585,28 +587,6 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat, const Vector& 
     // TODO: in parallel, is scatter_block the right function to convert row-major to column-major?
     // Note its usage in Matrix.C.
 
-    // TODO: this is valid only in serial!
-    // Convert row-major mat_qr to column-major mat_qr_col_major.
-    std::vector<double> mat_qr_col_major(m*n_dist_loc_max);
-    for (int i=0; i<m; ++i)
-      {
-	for (int j=0; j<n_dist_loc_max; ++j)
-	  mat_qr_col_major[i + (j*m)] = mat_qr(i,j);
-      }
-
-    double *mat_qr_data = mat_qr_col_major.data();
-
-    // TODO: this is valid only in serial!
-    // Convert row-major mat_0 to column-major mat_0_col_major.
-    std::vector<double> mat_0_col_major(m*n_dist_loc_max);
-    for (int i=0; i<m; ++i)
-      {
-	for (int j=0; j<n_dist_loc_max; ++j)
-	  mat_0_col_major[i + (j*m)] = mat_0(i,j);
-      }
-
-    double *mat_0_data = mat_0_col_major.data();
-
     for (iiter = 0; iiter < n_inner_; ++iiter) {
       ++n_total_inner_iter;
 
@@ -625,51 +605,49 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat, const Vector& 
           work.resize(10);
 
           pdormqr_(&lside, &trans, &m, &n_update, &i_qr_start,
-                   mat_qr_data, &ione, &ione, mat_qr_desc, tau.getData(),
-                   mat_qr_data, &ione, &i_qr_start_f, mat_qr_desc,
+                   mat_qr_data.getData(), &ione, &ione, mat_qr_desc, tau.getData(),
+                   mat_qr_data.getData(), &ione, &i_qr_start_f, mat_qr_desc,
                    work.data(), &lwork, &info);
           CAROM_VERIFY(info == 0); // Q^T A update work calculation failed
           lwork = static_cast<int>(work[0]);
           work.resize(lwork);
           pdormqr_(&lside, &trans, &m, &n_update, &i_qr_start,
-                   mat_qr_data, &ione, &ione, mat_qr_desc, tau.getData(),
-                   mat_qr_data, &ione, &i_qr_start_f, mat_qr_desc,
+                   mat_qr_data.getData(), &ione, &ione, mat_qr_desc, tau.getData(),
+                   mat_qr_data.getData(), &ione, &i_qr_start_f, mat_qr_desc,
                    work.data(), &lwork, &info);
           CAROM_VERIFY(info == 0); // Q^T A update failed
           // compute QR factorization of the submatrix
           lwork = -1;
           work.resize(10);
           pdgeqrf_(&m_update, &n_update,
-                   mat_qr_data, &i_qr_start_f, &i_qr_start_f, mat_qr_desc, tau.getData(),
+                   mat_qr_data.getData(), &i_qr_start_f, &i_qr_start_f, mat_qr_desc, tau.getData(),
                    work.data(), &lwork, &info);
           CAROM_VERIFY(info == 0); // QR update factorization work calculation
           lwork = static_cast<int>(work[0]);
           work.resize(lwork);
           pdgeqrf_(&m_update, &n_update,
-                   mat_qr_data, &i_qr_start_f, &i_qr_start_f, mat_qr_desc, tau.getData(),
+                   mat_qr_data.getData(), &i_qr_start_f, &i_qr_start_f, mat_qr_desc, tau.getData(),
                    work.data(), &lwork, &info);
           CAROM_VERIFY(info == 0); // QR update factorization failed
 
         } else {
           // copy everything to mat_qr then do full QR
           int n_loc = numroc_(&n_glob, &nb, &d_rank, &izero, &n_proc);
-          //mat_qr.cols(0,n_loc-1) = mat_0.cols(0,n_loc-1);
 	  for (int i=0; i<m; ++i)
 	    for (int j=0; j<n_loc; ++j)
-	      mat_qr_col_major[i + (j*m)] = mat_0_col_major[i + (j*m)];
-	  //mat_qr_col_major[i + (j*m)] = mat_0(i,j);
+	      mat_qr_data(i + (j*m)) = mat_0_data(i + (j*m));
 
           // compute qr factorization (first find the size of work and then perform qr)
           lwork = -1;
           work.resize(10);
           pdgeqrf_(&m, &n_glob,
-                   mat_qr_data, &ione, &ione, mat_qr_desc, tau.getData(),
+                   mat_qr_data.getData(), &ione, &ione, mat_qr_desc, tau.getData(),
                    work.data(), &lwork, &info);
           CAROM_VERIFY(info == 0); // QR factorization work calculation
           lwork = static_cast<int>(work[0]);
           work.resize(lwork);
           pdgeqrf_(&m, &n_glob,
-                   mat_qr_data, &ione, &ione, mat_qr_desc, tau.getData(),
+                   mat_qr_data.getData(), &ione, &ione, mat_qr_desc, tau.getData(),
                    work.data(), &lwork, &info);
           CAROM_VERIFY(info == 0); // QR factorization failed
         }
@@ -684,14 +662,14 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat, const Vector& 
           lwork = -1;
           work.resize(10);
           pdormqr_(&lside, &trans, &m_update, &ione, &ione,
-                   mat_qr_data, &i_qr_start_f, &i_qr_start_f, mat_qr_desc, tau.getData(),
+                   mat_qr_data.getData(), &i_qr_start_f, &i_qr_start_f, mat_qr_desc, tau.getData(),
                    qt_rhs_glob.getData(), &i_qr_start_f, &ione, vec1_desc,
                    work.data(), &lwork, &info);
           CAROM_VERIFY(info == 0); // H_last y work calculation failed
           lwork = static_cast<int>(work[0]);
           work.resize(lwork);
           pdormqr_(&lside, &trans, &m_update, &ione, &ione,
-                   mat_qr_data, &i_qr_start_f, &i_qr_start_f, mat_qr_desc, tau.getData(),
+                   mat_qr_data.getData(), &i_qr_start_f, &i_qr_start_f, mat_qr_desc, tau.getData(),
                    qt_rhs_glob.getData(), &i_qr_start_f, &ione, vec1_desc,
                    work.data(), &lwork, &info);
           CAROM_VERIFY(info == 0); // H_last y failed
@@ -701,14 +679,14 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat, const Vector& 
           lwork = -1;
           work.resize(10);
           pdormqr_(&lside, &trans, &m, &ione, &n_glob,
-                   mat_qr_data, &ione, &ione, mat_qr_desc, tau.getData(),
+                   mat_qr_data.getData(), &ione, &ione, mat_qr_desc, tau.getData(),
                    qt_rhs_glob.getData(), &ione, &ione, vec1_desc,
                    work.data(), &lwork, &info);
           CAROM_VERIFY(info == 0); // Q^T b work calculation failed
           lwork = static_cast<int>(work[0]);
           work.resize(lwork);
           pdormqr_(&lside, &trans, &m, &ione, &n_glob,
-                   mat_qr_data, &ione, &ione, mat_qr_desc, tau.getData(),
+                   mat_qr_data.getData(), &ione, &ione, mat_qr_desc, tau.getData(),
                    qt_rhs_glob.getData(), &ione, &ione, vec1_desc,
                    work.data(), &lwork, &info);
           CAROM_VERIFY(info == 0); // Q^T b failed
@@ -725,7 +703,7 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat, const Vector& 
         vec1 = qt_rhs_glob;
         pdtrsm_(&lside, &upper, &notrans, &nounit,
                 &n_glob, &ione, &fone,
-                mat_qr_data, &ione, &ione, mat_qr_desc,
+                mat_qr_data.getData(), &ione, &ione, mat_qr_desc,
                 vec1.getData(), &ione, &ione, vec1_desc);
 
         if (d_rank == 0 && verbosity_ > 2) {
@@ -878,13 +856,13 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat, const Vector& 
           int n_shift = n_glob - ind_zero_f;
           int ind_zero_p1_f = ind_zero_f + 1;
           pdgemr2d_(&m, &n_shift,
-                    mat_0_data, &ione, &ind_zero_p1_f, mat_qr_desc,
-                    mat_qr_data, &ione, &ind_zero_f, mat_qr_desc, &ictxt);
+                    mat_0_data.getData(), &ione, &ind_zero_p1_f, mat_qr_desc,
+                    mat_qr_data.getData(), &ione, &ind_zero_f, mat_qr_desc, &ictxt);
           // copy mat_qr.cols[ind_zero,n_glob-1) to mat_qr.cols[ind_zero,n_glob-1)
           char allmat = 'A';
           pdlacpy_(&allmat, &m, &n_shift,
-                   mat_qr_data, &ione, &ind_zero_f, mat_qr_desc,
-                   mat_0_data, &ione, &ind_zero_f, mat_qr_desc);
+                   mat_qr_data.getData(), &ione, &ind_zero_f, mat_qr_desc,
+                   mat_0_data.getData(), &ione, &ind_zero_f, mat_qr_desc);
         }
         blacs_freebuff_(&ictxt, &ione);
 
@@ -937,7 +915,7 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat, const Vector& 
       if (d_rank < n_proc) {
         double fmone = -1.0;
         pdgemv_( &notrans, &m, &n_glob, &fmone,
-                 mat_0_data, &ione, &ione, mat_qr_desc,
+                 mat_0_data.getData(), &ione, &ione, mat_qr_desc,
                  soln_nz_glob.getData(), &ione, &ione, vec1_desc, &ione, &fone,
                  res_glob.getData(), &ione, &ione, vec1_desc, &ione);
       }
@@ -953,13 +931,13 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat, const Vector& 
 	  qqt_rhs_glob(i) = qt_rhs_glob(i);
 
         descinit_(qqt_rhs_desc, &m, &ione, &m, &ione, &izero, &izero, &ictxt, &m, &info);
-        pdormqr_(&lside, &notrans, &m, &ione, &n_glob, mat_qr_data, &ione, &ione,
+        pdormqr_(&lside, &notrans, &m, &ione, &n_glob, mat_qr_data.getData(), &ione, &ione,
                  mat_qr_desc, tau.getData(), qqt_rhs_glob.getData(), &ione, &ione, qqt_rhs_desc,
                  work.data(), &lwork, &info);
         CAROM_VERIFY(info == 0); // Q Q^T b work calculation failed.
         lwork = static_cast<int>(work[0]);
         work.resize(lwork);
-        pdormqr_(&lside, &notrans, &m, &ione, &n_glob, mat_qr_data, &ione, &ione,
+        pdormqr_(&lside, &notrans, &m, &ione, &n_glob, mat_qr_data.getData(), &ione, &ione,
                  mat_qr_desc, tau.getData(), qqt_rhs_glob.getData(), &ione, &ione, qqt_rhs_desc,
                  work.data(), &lwork, &info);
         CAROM_VERIFY(info == 0); // Q Q^T b calculation failed.
@@ -974,20 +952,6 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat, const Vector& 
       printf("computed residual\n");
       fflush(stdout);
     }
-
-    // TODO: this is valid only in serial!
-    // Copy back from column-major arrays mat_qr_data and mat_0_data to mat_qr and mat_0.
-    for (int i=0; i<m; ++i)
-      {
-	for (int j=0; j<n_dist_loc_max; ++j)
-	  mat_qr(i,j) = mat_qr_col_major[i + (j*m)];
-      }
-
-    for (int i=0; i<m; ++i)
-      {
-	for (int j=0; j<n_dist_loc_max; ++j)
-	  mat_0(i,j) = mat_0_col_major[i + (j*m)];
-      }
 
     ++n_outer_iter;
   } // end of outer loop
