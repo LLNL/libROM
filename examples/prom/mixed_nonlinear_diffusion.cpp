@@ -869,6 +869,140 @@ const IntegrationRule* SetupEQP(const double tauNNLS, const IntegrationRule *ir0
   return ir0;
 }
 
+const CAROM::Matrix* GetSnapshotMatrix(const int dimFOM, const int nparam, const int max_num_snapshots, std::string name)
+{
+    MFEM_VERIFY(nparam > 0, "Must specify a positive number of parameter sets");
+
+    bool update_right_SV = false;
+    bool isIncremental = false;
+
+    CAROM::Options options(dimFOM, nparam * max_num_snapshots, 1, update_right_SV);
+    CAROM::BasisGenerator generator(options, isIncremental, "basis" + name);
+
+    for (int paramID=0; paramID<nparam; ++paramID)
+    {
+        std::string snapshot_filename = "basis" + std::to_string(paramID) + "_" + name + "_snapshot";
+        generator.loadSamples(snapshot_filename,"snapshot");
+    }
+
+    // TODO: this deep copy is inefficient, just to get around generator owning the matrix.
+    CAROM::Matrix *s = new CAROM::Matrix(*generator.getSnapshotMatrix());
+
+    return s;
+    //return generator.getSnapshotMatrix();  // BUG: the matrix is deleted when generator goes out of scope.
+}
+
+const IntegrationRule* SetupEQP_snapshots(const double tauNNLS, const IntegrationRule *ir0,
+					  ParFiniteElementSpace *fespace_R, ParFiniteElementSpace *fespace_W,
+					  const CAROM::Matrix* BR,
+					  const CAROM::Matrix* BR_snapshots,
+					  const CAROM::Matrix* BW_snapshots,
+					  CAROM::Vector & sol)
+{
+  const int nqe = ir0->GetNPoints();
+  const int ne = fespace_R->GetNE();
+  const int NB = BR->numColumns();
+  const int NQ = ne * nqe;
+  const int nsnap = BR_snapshots->numColumns();
+
+  MFEM_VERIFY(nsnap == BW_snapshots->numColumns(), "");
+  MFEM_VERIFY(BR->numRows() == BR_snapshots->numRows(), "");
+
+  // Compute G of size (NB * nsnap) x NQ
+  CAROM::Matrix G(NB * nsnap, NQ, false);
+
+  Vector p_i(BW_snapshots->numRows());
+  Vector v_i(BR_snapshots->numRows());
+  Vector v_j(BR->numRows());
+
+  Vector r(nqe);
+
+  for (int i=0; i<nsnap; ++i)
+    {
+      for (int j = 0; j < BW_snapshots->numRows(); ++j)
+	p_i[j] = (*BW_snapshots)(j, i);
+
+      for (int j = 0; j < BR_snapshots->numRows(); ++j)
+	v_i[j] = (*BR_snapshots)(j, i);
+
+      // Set grid function for a(p)
+      ParGridFunction p_gf(fespace_W);
+
+      p_gf.SetFromTrueDofs(p_i);
+
+      GridFunctionCoefficient p_coeff(&p_gf);
+      TransformedCoefficient a_coeff(&p_coeff, NonlinearCoefficient);
+
+      for (int j=0; j<NB; ++j)
+	{
+	  for (int k = 0; k < BR->numRows(); ++k)
+	    v_j[k] = (*BR)(k, j);
+
+	  // TODO: is it better to make the element loop the outer loop?
+	  for (int e=0; e<ne; ++e)
+	    {
+	      Array<int> vdofs;
+	      DofTransformation *doftrans = fespace_R->GetElementVDofs(e, vdofs);
+	      const FiniteElement &fe = *fespace_R->GetFE(i);
+	      ElementTransformation *eltrans = fespace_R->GetElementTransformation(i);
+
+	      ComputeElementRowOfG(ir0, vdofs, &a_coeff, p_i, v_i, v_j, fe, *eltrans, r);
+
+	      for (int m=0; m<nqe; ++m)
+		G(j + (i*NB), (e*nqe) + m) = r[m];
+	    }
+	}
+    }
+
+  Array<double> const& w_el = ir0->GetWeights();
+  MFEM_VERIFY(w_el.Size() == nqe, "");
+
+  CAROM::Vector w(ne * nqe, false);
+
+  for (int i=0; i<ne; ++i)
+    {
+      for (int j=0; j<nqe; ++j)
+	w((i*nqe) + j) = w_el[j];
+    }
+
+  //NNLS(tauNNLS, G, w, sol, 1);
+
+  {
+    CAROM::NNLSSolver nnls;
+    nnls.set_qrresidual_mode(CAROM::NNLSSolver::QRresidualMode::hybrid);
+    nnls.set_verbosity(2);
+
+    CAROM::Vector rhs_ub(G.numRows(), false);
+    G.mult(w, rhs_ub);  // rhs = Gw
+
+    CAROM::Vector rhs_lb(rhs_ub);
+
+    const double delta = 1.0e-11;
+    for (int i=0; i<rhs_ub.dim(); ++i)
+      {
+	rhs_lb(i) -= delta;
+	rhs_ub(i) += delta;
+      }
+
+    rhs_lb *= 1.0 / ((double) nnls.getNumProcs());
+    rhs_ub *= 1.0 / ((double) nnls.getNumProcs());
+
+    nnls.normalize_constraints(G, rhs_lb, rhs_ub);
+    nnls.solve_parallel_with_scalapack(G, rhs_lb, rhs_ub, sol);
+  }
+
+  int nnz = 0;
+  for (int i=0; i<sol.dim(); ++i)
+    {
+      if (sol(i) != 0.0)
+	nnz++;
+    }
+
+  cout << "Number of nonzeros in NNLS solution: " << nnz << ", out of " << sol.dim() << endl;
+
+  return ir0;
+}
+
 int main(int argc, char *argv[])
 {
     // 1. Initialize MPI.
@@ -1250,7 +1384,11 @@ int main(int argc, char *argv[])
 	  }
 
 	eqpSol = new CAROM::Vector(ir0->GetNPoints() * R_space.GetNE(), false);
-	SetupEQP(tauNNLS, ir0, &R_space, &W_space, BR_librom, BW_librom, *eqpSol);
+	//SetupEQP(tauNNLS, ir0, &R_space, &W_space, BR_librom, BW_librom, *eqpSol);
+	SetupEQP_snapshots(tauNNLS, ir0, &R_space, &W_space, BR_librom,
+			   GetSnapshotMatrix(R_space.GetTrueVSize(), nsets, max_num_snapshots, "R"),
+			   GetSnapshotMatrix(W_space.GetTrueVSize(), nsets, max_num_snapshots, "W"),
+			   *eqpSol);
 
 	// GNAT setup
         vector<int> num_sample_dofs_per_proc(num_procs);
