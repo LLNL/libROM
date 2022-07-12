@@ -22,3 +22,14 @@ build
 # Do not track docs/latex and docs/html
 docs/latex
 docs/html
+*.suo
+*.db
+*.db-shm
+*.db-wal
+*.opendb
+/.vs/ProjectSettings.json
+*.sqlite
+/.vs/VSWorkspaceState.json
+*.lock
+*.vsidx
+/.vs/CMake Overview
