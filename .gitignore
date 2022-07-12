@@ -22,5 +22,3 @@ build
 # Do not track docs/latex and docs/html
 docs/latex
 docs/html
-/.vs/libROM/v17
-/.vs
