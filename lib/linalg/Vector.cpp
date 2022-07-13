@@ -565,16 +565,16 @@ Vector::local_read(const std::string& base_file_name, int rank)
 
 double Vector::localMin(int nmax)
 {
-  const int n = nmax > 0 ? nmax : d_dim;
-  double v = d_vec[0];
+    const int n = nmax > 0 ? nmax : d_dim;
+    double v = d_vec[0];
 
-  for (int i=1; i<n; ++i)
+    for (int i=1; i<n; ++i)
     {
-      if (d_vec[i] < v)
-	v = d_vec[i];
+        if (d_vec[i] < v)
+            v = d_vec[i];
     }
 
-  return v;
+    return v;
 }
 
 int getCenterPoint(std::vector<Vector*>& points,

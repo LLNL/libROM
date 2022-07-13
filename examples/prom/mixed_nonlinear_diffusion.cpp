@@ -87,325 +87,329 @@ class RomOperator;
 // and element matrix computation from VectorFEMassIntegrator::AssembleElementMatrix.
 
 void AssembleElementMatrix_VectorFEMassIntegrator(Coefficient *Q,
-						  const FiniteElement &el,
-						  ElementTransformation &Trans,
-						  DenseMatrix &elmat)
+        const FiniteElement &el,
+        ElementTransformation &Trans,
+        DenseMatrix &elmat)
 {
-   int dof = el.GetDof();
-   int spaceDim = Trans.GetSpaceDim();
+    int dof = el.GetDof();
+    int spaceDim = Trans.GetSpaceDim();
 
-   double w;
+    double w;
 
-   DenseMatrix trial_vshape(dof, spaceDim);
+    DenseMatrix trial_vshape(dof, spaceDim);
 
-   elmat.SetSize(dof);
-   elmat = 0.0;
+    elmat.SetSize(dof);
+    elmat = 0.0;
 
-   const IntegrationRule *ir = NULL;
-   if (ir == NULL)
-   {
-      // int order = 2 * el.GetOrder();
-      int order = Trans.OrderW() + 2 * el.GetOrder();
-      ir = &IntRules.Get(el.GetGeomType(), order);
-   }
-
-   for (int i = 0; i < ir->GetNPoints(); i++)
-   {
-      const IntegrationPoint &ip = ir->IntPoint(i);
-
-      Trans.SetIntPoint(&ip);
-
-      el.CalcVShape(Trans, trial_vshape);
-
-      w = ip.weight * Trans.Weight();
-
-      if (Q)
-	{
-	  w *= Q -> Eval (Trans, ip);
-	}
-      AddMult_a_AAt (w, trial_vshape, elmat);
-   }
-}
-
-SparseMatrix* Assemble_VectorFEMassIntegrator(Coefficient *Q, ParFiniteElementSpace *fes)
-{
-  ElementTransformation *eltrans;
-  DofTransformation * doftrans;
-  Mesh *mesh = fes -> GetMesh();
-  DenseMatrix elmat;
-  int skip_zeros = 1;
-
-  SparseMatrix *mat = new SparseMatrix(fes->GetTrueVSize());
-
-  Array<int> vdofs;
-
-  for (int i = 0; i < fes -> GetNE(); i++)
+    const IntegrationRule *ir = NULL;
+    if (ir == NULL)
     {
-      doftrans = fes->GetElementVDofs(i, vdofs);
-      elmat.SetSize(0);
-      const FiniteElement &fe = *fes->GetFE(i);
-      eltrans = fes->GetElementTransformation(i);
-
-      //domain_integs[k]->AssembleElementMatrix(fe, *eltrans, elemmat);
-      AssembleElementMatrix_VectorFEMassIntegrator(Q, fe, *eltrans, elmat);
-
-      if (doftrans)
-	{
-	  MFEM_ABORT("TODO");
-	}
-
-      mat->AddSubMatrix(vdofs, vdofs, elmat, skip_zeros);
+        // int order = 2 * el.GetOrder();
+        int order = Trans.OrderW() + 2 * el.GetOrder();
+        ir = &IntRules.Get(el.GetGeomType(), order);
     }
 
-  mat->Finalize(skip_zeros);
+    for (int i = 0; i < ir->GetNPoints(); i++)
+    {
+        const IntegrationPoint &ip = ir->IntPoint(i);
 
-  return mat;
+        Trans.SetIntPoint(&ip);
+
+        el.CalcVShape(Trans, trial_vshape);
+
+        w = ip.weight * Trans.Weight();
+
+        if (Q)
+        {
+            w *= Q -> Eval (Trans, ip);
+        }
+        AddMult_a_AAt (w, trial_vshape, elmat);
+    }
+}
+
+SparseMatrix* Assemble_VectorFEMassIntegrator(Coefficient *Q,
+        ParFiniteElementSpace *fes)
+{
+    ElementTransformation *eltrans;
+    DofTransformation * doftrans;
+    Mesh *mesh = fes -> GetMesh();
+    DenseMatrix elmat;
+    int skip_zeros = 1;
+
+    SparseMatrix *mat = new SparseMatrix(fes->GetTrueVSize());
+
+    Array<int> vdofs;
+
+    for (int i = 0; i < fes -> GetNE(); i++)
+    {
+        doftrans = fes->GetElementVDofs(i, vdofs);
+        elmat.SetSize(0);
+        const FiniteElement &fe = *fes->GetFE(i);
+        eltrans = fes->GetElementTransformation(i);
+
+        //domain_integs[k]->AssembleElementMatrix(fe, *eltrans, elemmat);
+        AssembleElementMatrix_VectorFEMassIntegrator(Q, fe, *eltrans, elmat);
+
+        if (doftrans)
+        {
+            MFEM_ABORT("TODO");
+        }
+
+        mat->AddSubMatrix(vdofs, vdofs, elmat, skip_zeros);
+    }
+
+    mat->Finalize(skip_zeros);
+
+    return mat;
 }
 
 // Compute coefficients of the reduced integrator with respect to inputs Q and x
 // in VectorFEMassIntegrator_ComputeReducedEQP.
 void GetEQPCoefficients_VectorFEMassIntegrator(ParFiniteElementSpace *fesR,
-					       std::vector<double> const& rw, std::vector<int> const& qp,
-					       const IntegrationRule *ir,
-					       CAROM::Matrix const& V, Vector & res)
+        std::vector<double> const& rw, std::vector<int> const& qp,
+        const IntegrationRule *ir,
+        CAROM::Matrix const& V, Vector & res)
 {
-  const int rdim = V.numColumns();
-  MFEM_VERIFY(V.numRows() == fesR->GetTrueVSize(), "");
-  MFEM_VERIFY(rw.size() == qp.size(), "");
+    const int rdim = V.numColumns();
+    MFEM_VERIFY(V.numRows() == fesR->GetTrueVSize(), "");
+    MFEM_VERIFY(rw.size() == qp.size(), "");
 
-  const int ne = fesR->GetNE();
-  const int nqe = ir->GetWeights().Size();
+    const int ne = fesR->GetNE();
+    const int nqe = ir->GetWeights().Size();
 
-  ElementTransformation *eltrans;
-  DofTransformation * doftrans;
-  const FiniteElement *fe = NULL;
-  Array<int> vdofs;
+    ElementTransformation *eltrans;
+    DofTransformation * doftrans;
+    const FiniteElement *fe = NULL;
+    Array<int> vdofs;
 
-  DenseMatrix trial_vshape;
+    DenseMatrix trial_vshape;
 
-  Vector Vx;
-  res.SetSize(rdim * rdim * rw.size());
-  res = 0.0;
+    Vector Vx;
+    res.SetSize(rdim * rdim * rw.size());
+    res = 0.0;
 
-  int eprev = -1;
-  int dof = 0;
-  int spaceDim = 0;
+    int eprev = -1;
+    int dof = 0;
+    int spaceDim = 0;
 
-  // TODO: try to optimize this function by storing some intermediate computations?
+    // TODO: try to optimize this function by storing some intermediate computations?
 
-  for (int i=0; i<rw.size(); ++i)
+    for (int i=0; i<rw.size(); ++i)
     {
-      const int e = qp[i] / nqe;  // Element index
-      const int qpi = qp[i] - (e*nqe);  // Local (element) index of the quadrature point
-      const IntegrationPoint &ip = ir->IntPoint(qpi);
+        const int e = qp[i] / nqe;  // Element index
+        const int qpi = qp[i] -
+                        (e*nqe);  // Local (element) index of the quadrature point
+        const IntegrationPoint &ip = ir->IntPoint(qpi);
 
-      if (e != eprev)  // Update element transformation
-	{
-	  doftrans = fesR->GetElementVDofs(e, vdofs);
-	  fe = fesR->GetFE(e);
-	  eltrans = fesR->GetElementTransformation(e);
+        if (e != eprev)  // Update element transformation
+        {
+            doftrans = fesR->GetElementVDofs(e, vdofs);
+            fe = fesR->GetFE(e);
+            eltrans = fesR->GetElementTransformation(e);
 
-	  if (doftrans)
-	    {
-	      MFEM_ABORT("TODO");
-	    }
+            if (doftrans)
+            {
+                MFEM_ABORT("TODO");
+            }
 
-	  dof = fe->GetDof();
-	  spaceDim = eltrans->GetSpaceDim();
-	  trial_vshape.SetSize(dof, spaceDim);
-	  Vx.SetSize(spaceDim);
+            dof = fe->GetDof();
+            spaceDim = eltrans->GetSpaceDim();
+            trial_vshape.SetSize(dof, spaceDim);
+            Vx.SetSize(spaceDim);
 
-	  MFEM_VERIFY(vdofs.Size() == dof, "");  // TODO: remove this. It is obvious.
+            MFEM_VERIFY(vdofs.Size() == dof, "");  // TODO: remove this. It is obvious.
 
-	  eprev = e;
-	}
+            eprev = e;
+        }
 
-      // Integrate at the current point
+        // Integrate at the current point
 
-      eltrans->SetIntPoint(&ip);
-      fe->CalcVShape(*eltrans, trial_vshape);
+        eltrans->SetIntPoint(&ip);
+        fe->CalcVShape(*eltrans, trial_vshape);
 
-      double w = eltrans->Weight() * rw[i]; // using rw[i] instead of ip.weight
+        double w = eltrans->Weight() * rw[i]; // using rw[i] instead of ip.weight
 
-      // Note that the coefficient Q is omitted: w *= Q -> Eval(*eltrans, ip);
+        // Note that the coefficient Q is omitted: w *= Q -> Eval(*eltrans, ip);
 
-      for (int jx=0; jx<rdim; ++jx)
-	{
-	  // Lift Vx = V_{jx} at ip, where x = e_{jx}.
-	  Vx = 0.0;
-	  for (int k=0; k<dof; ++k)
-	    {
-	      const int dofk = (vdofs[k] >= 0) ? vdofs[k] : -1 - vdofs[k];
-	      const double Vx_k = (vdofs[k] >= 0) ? V(dofk, jx) : -V(dofk, jx);
-	      for (int j=0; j<spaceDim; ++j)
-		Vx[j] += Vx_k * trial_vshape(k, j);
-	    }
+        for (int jx=0; jx<rdim; ++jx)
+        {
+            // Lift Vx = V_{jx} at ip, where x = e_{jx}.
+            Vx = 0.0;
+            for (int k=0; k<dof; ++k)
+            {
+                const int dofk = (vdofs[k] >= 0) ? vdofs[k] : -1 - vdofs[k];
+                const double Vx_k = (vdofs[k] >= 0) ? V(dofk, jx) : -V(dofk, jx);
+                for (int j=0; j<spaceDim; ++j)
+                    Vx[j] += Vx_k * trial_vshape(k, j);
+            }
 
-	  for (int j=0; j<rdim; ++j)
-	    {
-	      double rj = 0.0;
-	      for (int k=0; k<spaceDim; ++k)
-		{
-		  double Vjk = 0.0;
-		  for (int l=0; l<dof; ++l)
-		    {
-		      const int dofl = (vdofs[l] >= 0) ? vdofs[l] : -1 - vdofs[l];
-		      const double s = (vdofs[l] >= 0) ? 1.0 : -1.0;
-		      Vjk += s * V(dofl, j) * trial_vshape(l, k);
-		    }
+            for (int j=0; j<rdim; ++j)
+            {
+                double rj = 0.0;
+                for (int k=0; k<spaceDim; ++k)
+                {
+                    double Vjk = 0.0;
+                    for (int l=0; l<dof; ++l)
+                    {
+                        const int dofl = (vdofs[l] >= 0) ? vdofs[l] : -1 - vdofs[l];
+                        const double s = (vdofs[l] >= 0) ? 1.0 : -1.0;
+                        Vjk += s * V(dofl, j) * trial_vshape(l, k);
+                    }
 
-		  rj += Vx[k] * Vjk;
-		}
+                    rj += Vx[k] * Vjk;
+                }
 
-	      res[j + (jx * rdim) + (i * rdim * rdim)] = w * rj;
-	    }
-	}
+                res[j + (jx * rdim) + (i * rdim * rdim)] = w * rj;
+            }
+        }
     }
 }
 
 void VectorFEMassIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
-					      std::vector<double> const& rw, std::vector<int> const& qp,
-					      const IntegrationRule *ir, Coefficient *Q,
-					      CAROM::Matrix const& V, CAROM::Vector const& x, Vector & res)
+        std::vector<double> const& rw, std::vector<int> const& qp,
+        const IntegrationRule *ir, Coefficient *Q,
+        CAROM::Matrix const& V, CAROM::Vector const& x, Vector & res)
 {
-  const int rdim = V.numColumns();
-  MFEM_VERIFY(rw.size() == qp.size(), "");
-  MFEM_VERIFY(x.dim() == rdim, "");
-  MFEM_VERIFY(V.numRows() == fesR->GetTrueVSize(), "");
+    const int rdim = V.numColumns();
+    MFEM_VERIFY(rw.size() == qp.size(), "");
+    MFEM_VERIFY(x.dim() == rdim, "");
+    MFEM_VERIFY(V.numRows() == fesR->GetTrueVSize(), "");
 
-  const int nqe = ir->GetWeights().Size();
+    const int nqe = ir->GetWeights().Size();
 
-  ElementTransformation *eltrans;
-  DofTransformation * doftrans;
-  const FiniteElement *fe = NULL;
-  Array<int> vdofs;
+    ElementTransformation *eltrans;
+    DofTransformation * doftrans;
+    const FiniteElement *fe = NULL;
+    Array<int> vdofs;
 
-  DenseMatrix trial_vshape;
+    DenseMatrix trial_vshape;
 
-  Vector Vx;
-  res.SetSize(rdim);
-  res = 0.0;
+    Vector Vx;
+    res.SetSize(rdim);
+    res = 0.0;
 
-  int eprev = -1;
-  int dof = 0;
-  int spaceDim = 0;
+    int eprev = -1;
+    int dof = 0;
+    int spaceDim = 0;
 
-  // TODO: try to optimize this function by storing some intermediate computations?
+    // TODO: try to optimize this function by storing some intermediate computations?
 
-  for (int i=0; i<rw.size(); ++i)
+    for (int i=0; i<rw.size(); ++i)
     {
-      const int e = qp[i] / nqe;  // Element index
-      const int qpi = qp[i] - (e*nqe);  // Local (element) index of the quadrature point
-      const IntegrationPoint &ip = ir->IntPoint(qpi);
+        const int e = qp[i] / nqe;  // Element index
+        const int qpi = qp[i] -
+                        (e*nqe);  // Local (element) index of the quadrature point
+        const IntegrationPoint &ip = ir->IntPoint(qpi);
 
-      if (e != eprev)  // Update element transformation
-	{
-	  doftrans = fesR->GetElementVDofs(e, vdofs);
-	  fe = fesR->GetFE(e);
-	  eltrans = fesR->GetElementTransformation(e);
+        if (e != eprev)  // Update element transformation
+        {
+            doftrans = fesR->GetElementVDofs(e, vdofs);
+            fe = fesR->GetFE(e);
+            eltrans = fesR->GetElementTransformation(e);
 
-	  if (doftrans)
-	    {
-	      MFEM_ABORT("TODO");
-	    }
+            if (doftrans)
+            {
+                MFEM_ABORT("TODO");
+            }
 
-	  dof = fe->GetDof();
-	  spaceDim = eltrans->GetSpaceDim();
-	  trial_vshape.SetSize(dof, spaceDim);
-	  Vx.SetSize(spaceDim);
+            dof = fe->GetDof();
+            spaceDim = eltrans->GetSpaceDim();
+            trial_vshape.SetSize(dof, spaceDim);
+            Vx.SetSize(spaceDim);
 
-	  MFEM_VERIFY(vdofs.Size() == dof, "");  // TODO: remove this. It is obvious.
+            MFEM_VERIFY(vdofs.Size() == dof, "");  // TODO: remove this. It is obvious.
 
-	  eprev = e;
-	}
+            eprev = e;
+        }
 
-      // Integrate at the current point
+        // Integrate at the current point
 
-      eltrans->SetIntPoint(&ip);
-      fe->CalcVShape(*eltrans, trial_vshape);
+        eltrans->SetIntPoint(&ip);
+        fe->CalcVShape(*eltrans, trial_vshape);
 
-      double w = eltrans->Weight() * rw[i]; // using rw[i] instead of ip.weight
+        double w = eltrans->Weight() * rw[i]; // using rw[i] instead of ip.weight
 
-      if (Q)
-	{
-	  w *= Q -> Eval(*eltrans, ip);
-	}
+        if (Q)
+        {
+            w *= Q -> Eval(*eltrans, ip);
+        }
 
-      // Lift Vx at ip.
-      Vx = 0.0;
-      for (int k=0; k<dof; ++k)
-	{
-	  const int dofk = (vdofs[k] >= 0) ? vdofs[k] : -1 - vdofs[k];
+        // Lift Vx at ip.
+        Vx = 0.0;
+        for (int k=0; k<dof; ++k)
+        {
+            const int dofk = (vdofs[k] >= 0) ? vdofs[k] : -1 - vdofs[k];
 
-	  double Vx_k = 0.0;
-	  for (int j=0; j<rdim; ++j)
-	    {
-	      Vx_k += V(dofk, j) * x(j);
-	    }
+            double Vx_k = 0.0;
+            for (int j=0; j<rdim; ++j)
+            {
+                Vx_k += V(dofk, j) * x(j);
+            }
 
-	  if (vdofs[k] < 0) Vx_k = -Vx_k;
+            if (vdofs[k] < 0) Vx_k = -Vx_k;
 
-	  for (int j=0; j<spaceDim; ++j)
-	    Vx[j] += Vx_k * trial_vshape(k, j);
-	}
+            for (int j=0; j<spaceDim; ++j)
+                Vx[j] += Vx_k * trial_vshape(k, j);
+        }
 
-      for (int j=0; j<rdim; ++j)
-	{
-	  double rj = 0.0;
-	  for (int k=0; k<spaceDim; ++k)
-	    {
-	      double Vjk = 0.0;
-	      for (int l=0; l<dof; ++l)
-		{
-		  const int dofl = (vdofs[l] >= 0) ? vdofs[l] : -1 - vdofs[l];
-		  const double s = (vdofs[l] >= 0) ? 1.0 : -1.0;
-		  Vjk += s * V(dofl, j) * trial_vshape(l, k);
-		}
+        for (int j=0; j<rdim; ++j)
+        {
+            double rj = 0.0;
+            for (int k=0; k<spaceDim; ++k)
+            {
+                double Vjk = 0.0;
+                for (int l=0; l<dof; ++l)
+                {
+                    const int dofl = (vdofs[l] >= 0) ? vdofs[l] : -1 - vdofs[l];
+                    const double s = (vdofs[l] >= 0) ? 1.0 : -1.0;
+                    Vjk += s * V(dofl, j) * trial_vshape(l, k);
+                }
 
-	      rj += Vx[k] * Vjk;
-	    }
+                rj += Vx[k] * Vjk;
+            }
 
-	  res[j] += w * rj;
-	}
+            res[j] += w * rj;
+        }
     }
 }
 
 void VectorFEMassIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fesR,
-						   std::vector<int> const& qp, const IntegrationRule *ir,
-						   Coefficient *Q,
-						   CAROM::Vector const& x, Vector const& coef, Vector & res)
+        std::vector<int> const& qp, const IntegrationRule *ir,
+        Coefficient *Q,
+        CAROM::Vector const& x, Vector const& coef, Vector & res)
 {
-  const int rdim = x.dim();
-  const int nqe = ir->GetWeights().Size();
-  ElementTransformation *eltrans;
+    const int rdim = x.dim();
+    const int nqe = ir->GetWeights().Size();
+    ElementTransformation *eltrans;
 
-  res.SetSize(rdim);
-  res = 0.0;
+    res.SetSize(rdim);
+    res = 0.0;
 
-  int eprev = -1;
+    int eprev = -1;
 
-  for (int i=0; i<qp.size(); ++i)
+    for (int i=0; i<qp.size(); ++i)
     {
-      const int e = qp[i] / nqe;  // Element index
-      const int qpi = qp[i] - (e*nqe);  // Local (element) index of the quadrature point
-      const IntegrationPoint &ip = ir->IntPoint(qpi);
+        const int e = qp[i] / nqe;  // Element index
+        const int qpi = qp[i] -
+                        (e*nqe);  // Local (element) index of the quadrature point
+        const IntegrationPoint &ip = ir->IntPoint(qpi);
 
-      if (e != eprev)  // Update element transformation
-	{
-	  eltrans = fesR->GetElementTransformation(e);
-	  eprev = e;
-	}
+        if (e != eprev)  // Update element transformation
+        {
+            eltrans = fesR->GetElementTransformation(e);
+            eprev = e;
+        }
 
-      eltrans->SetIntPoint(&ip);
-      const double q_ip = Q -> Eval(*eltrans, ip);
+        eltrans->SetIntPoint(&ip);
+        const double q_ip = Q -> Eval(*eltrans, ip);
 
-      for (int j=0; j<rdim; ++j)
-	{
-	  for (int k=0; k<rdim; ++k)
-	    {
-	      res[j] += coef[j + (k * rdim) + (i * rdim * rdim)] * q_ip * x(k);
-	    }
-	}
+        for (int j=0; j<rdim; ++j)
+        {
+            for (int k=0; k<rdim; ++k)
+            {
+                res[j] += coef[j + (k * rdim) + (i * rdim * rdim)] * q_ip * x(k);
+            }
+        }
     }
 }
 
@@ -604,13 +608,13 @@ private:
     bool hyperreduce, hyperreduce_source;
     bool sourceFOM;
 
-  mutable ParGridFunction p_gf;
-  GridFunctionCoefficient p_coeff;
-  mutable TransformedCoefficient a_coeff;
-  TransformedCoefficient aprime_coeff;
-  mutable SumCoefficient a_plus_aprime_coeff;
+    mutable ParGridFunction p_gf;
+    GridFunctionCoefficient p_coeff;
+    mutable TransformedCoefficient a_coeff;
+    TransformedCoefficient aprime_coeff;
+    mutable SumCoefficient a_plus_aprime_coeff;
 
-  CAROM::Vector *pfom_librom, *pfom_R_librom, *pfom_W_librom;
+    CAROM::Vector *pfom_librom, *pfom_R_librom, *pfom_W_librom;
     Vector *pfom;
     Vector *pfom_R;
     Vector *pfom_W;
@@ -623,13 +627,13 @@ private:
 
     void PrintFDJacobian(const Vector &p) const;
 
-  // Data for EQP
-  bool eqp = true;
-  const IntegrationRule *ir_eqp;
-  std::vector<double> eqp_rw;
-  std::vector<int> eqp_qp;
-  Vector eqp_coef;
-  const bool fastIntegration = true;
+    // Data for EQP
+    bool eqp = true;
+    const IntegrationRule *ir_eqp;
+    std::vector<double> eqp_rw;
+    std::vector<int> eqp_qp;
+    Vector eqp_coef;
+    const bool fastIntegration = true;
 
 protected:
     CAROM::Matrix* BR;
@@ -650,7 +654,7 @@ public:
                 const double newton_rel_tol, const double newton_abs_tol, const int newton_iter,
                 const CAROM::Matrix* S_, const CAROM::Matrix *Ssinv_,
                 const int myid, const bool hyperreduce_source_, const bool oversampling_,
-		CAROM::Vector *eqpSol, const IntegrationRule *ir_eqp_);
+                CAROM::Vector *eqpSol, const IntegrationRule *ir_eqp_);
 
     virtual void Mult(const Vector &y, Vector &dy_dt) const;
     void Mult_Hyperreduced(const Vector &y, Vector &dy_dt) const;
@@ -787,244 +791,249 @@ void MergeBasis(const int dimFOM, const int nparam, const int max_num_snapshots,
 }
 
 // Compute v = -M(p)^{-1} B^T p
-void ComputeDualVector(ParFiniteElementSpace *fespace_R, ParFiniteElementSpace *fespace_W,
-		       const HypreParMatrix *B, Vector const& p, Vector & v)
+void ComputeDualVector(ParFiniteElementSpace *fespace_R,
+                       ParFiniteElementSpace *fespace_W,
+                       const HypreParMatrix *B, Vector const& p, Vector & v)
 {
-  MFEM_VERIFY(v.Size() == fespace_R->GetTrueVSize(), "");
+    MFEM_VERIFY(v.Size() == fespace_R->GetTrueVSize(), "");
 
-  Vector rhs(fespace_R->GetTrueVSize());
+    Vector rhs(fespace_R->GetTrueVSize());
 
-  // Set grid function for a(p)
-  ParGridFunction p_gf(fespace_W);
+    // Set grid function for a(p)
+    ParGridFunction p_gf(fespace_W);
 
-  p_gf.SetFromTrueDofs(p);
+    p_gf.SetFromTrueDofs(p);
 
-  GridFunctionCoefficient p_coeff(&p_gf);
-  TransformedCoefficient a_coeff(&p_coeff, NonlinearCoefficient);
-  TransformedCoefficient aprime_coeff(&p_coeff, NonlinearCoefficientDerivative);
+    GridFunctionCoefficient p_coeff(&p_gf);
+    TransformedCoefficient a_coeff(&p_coeff, NonlinearCoefficient);
+    TransformedCoefficient aprime_coeff(&p_coeff, NonlinearCoefficientDerivative);
 
-  ParBilinearForm *M = new ParBilinearForm(fespace_R);
+    ParBilinearForm *M = new ParBilinearForm(fespace_R);
 
-  M->AddDomainIntegrator(new VectorFEMassIntegrator(a_coeff));
-  M->Assemble();
-  M->Finalize();
+    M->AddDomainIntegrator(new VectorFEMassIntegrator(a_coeff));
+    M->Assemble();
+    M->Finalize();
 
-  HypreParMatrix *Mmat = M->ParallelAssemble();
-  CGSolver M_solver(fespace_R->GetComm());
-  HypreSmoother M_prec;  // Preconditioner for the R mass matrix M
-  M_prec.SetType(HypreSmoother::Jacobi);
+    HypreParMatrix *Mmat = M->ParallelAssemble();
+    CGSolver M_solver(fespace_R->GetComm());
+    HypreSmoother M_prec;  // Preconditioner for the R mass matrix M
+    M_prec.SetType(HypreSmoother::Jacobi);
 
-  const double linear_solver_rel_tol = 1.0e-14;
+    const double linear_solver_rel_tol = 1.0e-14;
 
-  M_solver.iterative_mode = false;
-  M_solver.SetRelTol(linear_solver_rel_tol);
-  M_solver.SetAbsTol(0.0);
-  M_solver.SetMaxIter(1000);
-  M_solver.SetPrintLevel(-1);
-  M_solver.SetPreconditioner(M_prec);
+    M_solver.iterative_mode = false;
+    M_solver.SetRelTol(linear_solver_rel_tol);
+    M_solver.SetAbsTol(0.0);
+    M_solver.SetMaxIter(1000);
+    M_solver.SetPrintLevel(-1);
+    M_solver.SetPreconditioner(M_prec);
 
-  M_solver.SetOperator(*Mmat);
+    M_solver.SetOperator(*Mmat);
 
-  B->MultTranspose(p, rhs);
-  rhs *= -1.0;
-  M_solver.Mult(rhs, v);
+    B->MultTranspose(p, rhs);
+    rhs *= -1.0;
+    M_solver.Mult(rhs, v);
 
-  delete M;
-  delete Mmat;
-  // TODO: delete Mmat in other places?
+    delete M;
+    delete Mmat;
+    // TODO: delete Mmat in other places?
 }
 
-void SetDualVectors(ParFiniteElementSpace *fespace_R, ParFiniteElementSpace *fespace_W,
-		    const CAROM::Matrix* p, DenseMatrix & dual)
+void SetDualVectors(ParFiniteElementSpace *fespace_R,
+                    ParFiniteElementSpace *fespace_W,
+                    const CAROM::Matrix* p, DenseMatrix & dual)
 {
-  ParMixedBilinearForm *bVarf(new ParMixedBilinearForm(fespace_R, fespace_W));
-  bVarf->AddDomainIntegrator(new VectorFEDivergenceIntegrator);
-  bVarf->Assemble();
-  bVarf->Finalize();
-  HypreParMatrix *Bmat = bVarf->ParallelAssemble();
+    ParMixedBilinearForm *bVarf(new ParMixedBilinearForm(fespace_R, fespace_W));
+    bVarf->AddDomainIntegrator(new VectorFEDivergenceIntegrator);
+    bVarf->Assemble();
+    bVarf->Finalize();
+    HypreParMatrix *Bmat = bVarf->ParallelAssemble();
 
-  delete bVarf;
+    delete bVarf;
 
-  Vector dual_i;
-  Vector p_i(p->numRows());
-  for (int i=0; i<p->numColumns(); ++i)
+    Vector dual_i;
+    Vector p_i(p->numRows());
+    for (int i=0; i<p->numColumns(); ++i)
     {
-      for (int j = 0; j < p->numRows(); ++j)
-	p_i[j] = (*p)(j, i);
+        for (int j = 0; j < p->numRows(); ++j)
+            p_i[j] = (*p)(j, i);
 
-      dual.GetColumnReference(i, dual_i);
-      ComputeDualVector(fespace_R, fespace_W, Bmat, p_i, dual_i);
+        dual.GetColumnReference(i, dual_i);
+        ComputeDualVector(fespace_R, fespace_W, Bmat, p_i, dual_i);
     }
 
-  delete Bmat;
+    delete Bmat;
 }
 
 // Compute a(p) u . v at all quadrature points on the given element. Coefficient Q is a(p);
 // TODO: remove p input?
 void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const& vdofs,
-			  Coefficient *Q, Vector const& p, Vector const& u, Vector const& v,
-			  FiniteElement const& fe, ElementTransformation & Trans, Vector & r)
+                          Coefficient *Q, Vector const& p, Vector const& u, Vector const& v,
+                          FiniteElement const& fe, ElementTransformation & Trans, Vector & r)
 {
-  MFEM_VERIFY(r.Size() == ir->GetNPoints(), "");
-  int dof = fe.GetDof();
-  int spaceDim = Trans.GetSpaceDim();
+    MFEM_VERIFY(r.Size() == ir->GetNPoints(), "");
+    int dof = fe.GetDof();
+    int spaceDim = Trans.GetSpaceDim();
 
-  Vector u_i(spaceDim);
-  Vector v_i(spaceDim);
+    Vector u_i(spaceDim);
+    Vector v_i(spaceDim);
 
-  DenseMatrix trial_vshape(dof, spaceDim);
+    DenseMatrix trial_vshape(dof, spaceDim);
 
-  for (int i = 0; i < ir->GetNPoints(); i++)
+    for (int i = 0; i < ir->GetNPoints(); i++)
     {
-      const IntegrationPoint &ip = ir->IntPoint(i);
+        const IntegrationPoint &ip = ir->IntPoint(i);
 
-      Trans.SetIntPoint(&ip);
+        Trans.SetIntPoint(&ip);
 
-      fe.CalcVShape(Trans, trial_vshape);
+        fe.CalcVShape(Trans, trial_vshape);
 
-      double w = Trans.Weight();
+        double w = Trans.Weight();
 
-      u_i = 0.0;
-      v_i = 0.0;
+        u_i = 0.0;
+        v_i = 0.0;
 
-      for (int j=0; j<dof; ++j)
-	{
-	  const int dofj = (vdofs[j] >= 0) ? vdofs[j] : -1 - vdofs[j];
-	  const double s = (vdofs[j] >= 0) ? 1.0 : -1.0;
-	  for (int k=0; k<spaceDim; ++k)
-	    {
-	      u_i[k] += s * u[dofj] * trial_vshape(j, k);
-	      v_i[k] += s * v[dofj] * trial_vshape(j, k);
-	    }
-	}
+        for (int j=0; j<dof; ++j)
+        {
+            const int dofj = (vdofs[j] >= 0) ? vdofs[j] : -1 - vdofs[j];
+            const double s = (vdofs[j] >= 0) ? 1.0 : -1.0;
+            for (int k=0; k<spaceDim; ++k)
+            {
+                u_i[k] += s * u[dofj] * trial_vshape(j, k);
+                v_i[k] += s * v[dofj] * trial_vshape(j, k);
+            }
+        }
 
-      if (Q)
-	{
-	  w *= Q -> Eval (Trans, ip);
-	}
+        if (Q)
+        {
+            w *= Q -> Eval (Trans, ip);
+        }
 
-      r[i] = 0.0;
-      for (int k=0; k<spaceDim; ++k)
-	{
-	  r[i] += u_i[k] * v_i[k];
-	}
+        r[i] = 0.0;
+        for (int k=0; k<spaceDim; ++k)
+        {
+            r[i] += u_i[k] * v_i[k];
+        }
 
-      r[i] *= w;
-   }
+        r[i] *= w;
+    }
 }
 
-const IntegrationRule* SetupEQP(const double tauNNLS, const IntegrationRule *ir0,
-				ParFiniteElementSpace *fespace_R, ParFiniteElementSpace *fespace_W,
-				const CAROM::Matrix* BR, const CAROM::Matrix* BW, CAROM::Vector & sol)
+const IntegrationRule* SetupEQP(const double tauNNLS,
+                                const IntegrationRule *ir0,
+                                ParFiniteElementSpace *fespace_R, ParFiniteElementSpace *fespace_W,
+                                const CAROM::Matrix* BR, const CAROM::Matrix* BW, CAROM::Vector & sol)
 {
-  const int nqe = ir0->GetNPoints();
-  const int ne = fespace_R->GetNE();
-  const int NB = BR->numColumns();
-  const int NQ = ne * nqe;
+    const int nqe = ir0->GetNPoints();
+    const int ne = fespace_R->GetNE();
+    const int NB = BR->numColumns();
+    const int NQ = ne * nqe;
 
-  MFEM_VERIFY(NB == BW->numColumns(), "TODO: generalize this");
+    MFEM_VERIFY(NB == BW->numColumns(), "TODO: generalize this");
 
-  // Compute R vectors dual to W basis vectors
-  DenseMatrix Rdual(BR->numRows(), NB);
-  SetDualVectors(fespace_R, fespace_W, BW, Rdual);
+    // Compute R vectors dual to W basis vectors
+    DenseMatrix Rdual(BR->numRows(), NB);
+    SetDualVectors(fespace_R, fespace_W, BW, Rdual);
 
-  MFEM_VERIFY(NB == Rdual.Width(), "");
+    MFEM_VERIFY(NB == Rdual.Width(), "");
 
-  // Compute G of size NB^2 x NQ
-  CAROM::Matrix G(NB*NB, NQ, false);
+    // Compute G of size NB^2 x NQ
+    CAROM::Matrix G(NB*NB, NQ, false);
 
-  Vector Rdual_i;
-  Vector p_i(BW->numRows());
-  Vector v_j(BR->numRows());
+    Vector Rdual_i;
+    Vector p_i(BW->numRows());
+    Vector v_j(BR->numRows());
 
-  Vector r(nqe);
+    Vector r(nqe);
 
-  for (int i=0; i<NB; ++i)
+    for (int i=0; i<NB; ++i)
     {
-      for (int j = 0; j < BW->numRows(); ++j)
-	p_i[j] = (*BW)(j, i);
+        for (int j = 0; j < BW->numRows(); ++j)
+            p_i[j] = (*BW)(j, i);
 
-      // Set grid function for a(p)
-      ParGridFunction p_gf(fespace_W);
+        // Set grid function for a(p)
+        ParGridFunction p_gf(fespace_W);
 
-      p_gf.SetFromTrueDofs(p_i);
+        p_gf.SetFromTrueDofs(p_i);
 
-      GridFunctionCoefficient p_coeff(&p_gf);
-      TransformedCoefficient a_coeff(&p_coeff, NonlinearCoefficient);
+        GridFunctionCoefficient p_coeff(&p_gf);
+        TransformedCoefficient a_coeff(&p_coeff, NonlinearCoefficient);
 
-      Rdual.GetColumnReference(i, Rdual_i);
+        Rdual.GetColumnReference(i, Rdual_i);
 
-      for (int j=0; j<NB; ++j)
-	{
-	  for (int k = 0; k < BR->numRows(); ++k)
-	    v_j[k] = (*BR)(k, j);
+        for (int j=0; j<NB; ++j)
+        {
+            for (int k = 0; k < BR->numRows(); ++k)
+                v_j[k] = (*BR)(k, j);
 
-	  // TODO: is it better to make the element loop the outer loop?
-	  for (int e=0; e<ne; ++e)
-	    {
-	      Array<int> vdofs;
-	      DofTransformation *doftrans = fespace_R->GetElementVDofs(e, vdofs);
-	      const FiniteElement &fe = *fespace_R->GetFE(i);
-	      ElementTransformation *eltrans = fespace_R->GetElementTransformation(i);
+            // TODO: is it better to make the element loop the outer loop?
+            for (int e=0; e<ne; ++e)
+            {
+                Array<int> vdofs;
+                DofTransformation *doftrans = fespace_R->GetElementVDofs(e, vdofs);
+                const FiniteElement &fe = *fespace_R->GetFE(i);
+                ElementTransformation *eltrans = fespace_R->GetElementTransformation(i);
 
-	      ComputeElementRowOfG(ir0, vdofs, &a_coeff, p_i, Rdual_i, v_j, fe, *eltrans, r);
+                ComputeElementRowOfG(ir0, vdofs, &a_coeff, p_i, Rdual_i, v_j, fe, *eltrans, r);
 
-	      for (int m=0; m<nqe; ++m)
-		G(j + (i*NB), (e*nqe) + m) = r[m];
-	    }
-	}
+                for (int m=0; m<nqe; ++m)
+                    G(j + (i*NB), (e*nqe) + m) = r[m];
+            }
+        }
     }
 
-  Array<double> const& w_el = ir0->GetWeights();
-  MFEM_VERIFY(w_el.Size() == nqe, "");
+    Array<double> const& w_el = ir0->GetWeights();
+    MFEM_VERIFY(w_el.Size() == nqe, "");
 
-  CAROM::Vector w(ne * nqe, false);
+    CAROM::Vector w(ne * nqe, false);
 
-  for (int i=0; i<ne; ++i)
+    for (int i=0; i<ne; ++i)
     {
-      for (int j=0; j<nqe; ++j)
-	w((i*nqe) + j) = w_el[j];
+        for (int j=0; j<nqe; ++j)
+            w((i*nqe) + j) = w_el[j];
     }
 
-  //NNLS(tauNNLS, G, w, sol, 1);
+    //NNLS(tauNNLS, G, w, sol, 1);
 
-  {
-    CAROM::NNLSSolver nnls;
-    nnls.set_qrresidual_mode(CAROM::NNLSSolver::QRresidualMode::hybrid);
-    nnls.set_verbosity(2);
-
-    CAROM::Vector rhs_ub(G.numRows(), false);
-    G.mult(w, rhs_ub);  // rhs = Gw
-
-    CAROM::Vector rhs_lb(rhs_ub);
-
-    const double delta = 1.0e-11;
-    for (int i=0; i<rhs_ub.dim(); ++i)
-      {
-	rhs_lb(i) -= delta;
-	rhs_ub(i) += delta;
-      }
-
-    rhs_lb *= 1.0 / ((double) nnls.getNumProcs());
-    rhs_ub *= 1.0 / ((double) nnls.getNumProcs());
-
-    nnls.normalize_constraints(G, rhs_lb, rhs_ub);
-    nnls.solve_parallel_with_scalapack(G, rhs_lb, rhs_ub, sol);
-  }
-
-  int nnz = 0;
-  for (int i=0; i<sol.dim(); ++i)
     {
-      if (sol(i) != 0.0)
-	nnz++;
+        CAROM::NNLSSolver nnls;
+        nnls.set_qrresidual_mode(CAROM::NNLSSolver::QRresidualMode::hybrid);
+        nnls.set_verbosity(2);
+
+        CAROM::Vector rhs_ub(G.numRows(), false);
+        G.mult(w, rhs_ub);  // rhs = Gw
+
+        CAROM::Vector rhs_lb(rhs_ub);
+
+        const double delta = 1.0e-11;
+        for (int i=0; i<rhs_ub.dim(); ++i)
+        {
+            rhs_lb(i) -= delta;
+            rhs_ub(i) += delta;
+        }
+
+        rhs_lb *= 1.0 / ((double) nnls.getNumProcs());
+        rhs_ub *= 1.0 / ((double) nnls.getNumProcs());
+
+        nnls.normalize_constraints(G, rhs_lb, rhs_ub);
+        nnls.solve_parallel_with_scalapack(G, rhs_lb, rhs_ub, sol);
     }
 
-  cout << "Number of nonzeros in NNLS solution: " << nnz << ", out of " << sol.dim() << endl;
+    int nnz = 0;
+    for (int i=0; i<sol.dim(); ++i)
+    {
+        if (sol(i) != 0.0)
+            nnz++;
+    }
 
-  return ir0;
+    cout << "Number of nonzeros in NNLS solution: " << nnz << ", out of " <<
+         sol.dim() << endl;
+
+    return ir0;
 }
 
-const CAROM::Matrix* GetSnapshotMatrix(const int dimFOM, const int nparam, const int max_num_snapshots, std::string name)
+const CAROM::Matrix* GetSnapshotMatrix(const int dimFOM, const int nparam,
+                                       const int max_num_snapshots, std::string name)
 {
     MFEM_VERIFY(nparam > 0, "Must specify a positive number of parameter sets");
 
@@ -1036,7 +1045,8 @@ const CAROM::Matrix* GetSnapshotMatrix(const int dimFOM, const int nparam, const
 
     for (int paramID=0; paramID<nparam; ++paramID)
     {
-        std::string snapshot_filename = "basis" + std::to_string(paramID) + "_" + name + "_snapshot";
+        std::string snapshot_filename = "basis" + std::to_string(
+                                            paramID) + "_" + name + "_snapshot";
         generator.loadSamples(snapshot_filename,"snapshot");
     }
 
@@ -1047,115 +1057,117 @@ const CAROM::Matrix* GetSnapshotMatrix(const int dimFOM, const int nparam, const
     //return generator.getSnapshotMatrix();  // BUG: the matrix is deleted when generator goes out of scope.
 }
 
-const IntegrationRule* SetupEQP_snapshots(const double tauNNLS, const IntegrationRule *ir0,
-					  ParFiniteElementSpace *fespace_R, ParFiniteElementSpace *fespace_W,
-					  const CAROM::Matrix* BR,
-					  const CAROM::Matrix* BR_snapshots,
-					  const CAROM::Matrix* BW_snapshots,
-					  CAROM::Vector & sol)
+const IntegrationRule* SetupEQP_snapshots(const double tauNNLS,
+        const IntegrationRule *ir0,
+        ParFiniteElementSpace *fespace_R, ParFiniteElementSpace *fespace_W,
+        const CAROM::Matrix* BR,
+        const CAROM::Matrix* BR_snapshots,
+        const CAROM::Matrix* BW_snapshots,
+        CAROM::Vector & sol)
 {
-  const int nqe = ir0->GetNPoints();
-  const int ne = fespace_R->GetNE();
-  const int NB = BR->numColumns();
-  const int NQ = ne * nqe;
-  const int nsnap = BR_snapshots->numColumns();
+    const int nqe = ir0->GetNPoints();
+    const int ne = fespace_R->GetNE();
+    const int NB = BR->numColumns();
+    const int NQ = ne * nqe;
+    const int nsnap = BR_snapshots->numColumns();
 
-  MFEM_VERIFY(nsnap == BW_snapshots->numColumns(), "");
-  MFEM_VERIFY(BR->numRows() == BR_snapshots->numRows(), "");
+    MFEM_VERIFY(nsnap == BW_snapshots->numColumns(), "");
+    MFEM_VERIFY(BR->numRows() == BR_snapshots->numRows(), "");
 
-  // Compute G of size (NB * nsnap) x NQ
-  CAROM::Matrix G(NB * nsnap, NQ, false);
+    // Compute G of size (NB * nsnap) x NQ
+    CAROM::Matrix G(NB * nsnap, NQ, false);
 
-  Vector p_i(BW_snapshots->numRows());
-  Vector v_i(BR_snapshots->numRows());
-  Vector v_j(BR->numRows());
+    Vector p_i(BW_snapshots->numRows());
+    Vector v_i(BR_snapshots->numRows());
+    Vector v_j(BR->numRows());
 
-  Vector r(nqe);
+    Vector r(nqe);
 
-  for (int i=0; i<nsnap; ++i)
+    for (int i=0; i<nsnap; ++i)
     {
-      for (int j = 0; j < BW_snapshots->numRows(); ++j)
-	p_i[j] = (*BW_snapshots)(j, i);
+        for (int j = 0; j < BW_snapshots->numRows(); ++j)
+            p_i[j] = (*BW_snapshots)(j, i);
 
-      for (int j = 0; j < BR_snapshots->numRows(); ++j)
-	v_i[j] = (*BR_snapshots)(j, i);
+        for (int j = 0; j < BR_snapshots->numRows(); ++j)
+            v_i[j] = (*BR_snapshots)(j, i);
 
-      // Set grid function for a(p)
-      ParGridFunction p_gf(fespace_W);
+        // Set grid function for a(p)
+        ParGridFunction p_gf(fespace_W);
 
-      p_gf.SetFromTrueDofs(p_i);
+        p_gf.SetFromTrueDofs(p_i);
 
-      GridFunctionCoefficient p_coeff(&p_gf);
-      TransformedCoefficient a_coeff(&p_coeff, NonlinearCoefficient);
+        GridFunctionCoefficient p_coeff(&p_gf);
+        TransformedCoefficient a_coeff(&p_coeff, NonlinearCoefficient);
 
-      for (int j=0; j<NB; ++j)
-	{
-	  for (int k = 0; k < BR->numRows(); ++k)
-	    v_j[k] = (*BR)(k, j);
+        for (int j=0; j<NB; ++j)
+        {
+            for (int k = 0; k < BR->numRows(); ++k)
+                v_j[k] = (*BR)(k, j);
 
-	  // TODO: is it better to make the element loop the outer loop?
-	  for (int e=0; e<ne; ++e)
-	    {
-	      Array<int> vdofs;
-	      DofTransformation *doftrans = fespace_R->GetElementVDofs(e, vdofs);
-	      const FiniteElement &fe = *fespace_R->GetFE(i);
-	      ElementTransformation *eltrans = fespace_R->GetElementTransformation(i);
+            // TODO: is it better to make the element loop the outer loop?
+            for (int e=0; e<ne; ++e)
+            {
+                Array<int> vdofs;
+                DofTransformation *doftrans = fespace_R->GetElementVDofs(e, vdofs);
+                const FiniteElement &fe = *fespace_R->GetFE(i);
+                ElementTransformation *eltrans = fespace_R->GetElementTransformation(i);
 
-	      ComputeElementRowOfG(ir0, vdofs, &a_coeff, p_i, v_i, v_j, fe, *eltrans, r);
+                ComputeElementRowOfG(ir0, vdofs, &a_coeff, p_i, v_i, v_j, fe, *eltrans, r);
 
-	      for (int m=0; m<nqe; ++m)
-		G(j + (i*NB), (e*nqe) + m) = r[m];
-	    }
-	}
+                for (int m=0; m<nqe; ++m)
+                    G(j + (i*NB), (e*nqe) + m) = r[m];
+            }
+        }
     }
 
-  Array<double> const& w_el = ir0->GetWeights();
-  MFEM_VERIFY(w_el.Size() == nqe, "");
+    Array<double> const& w_el = ir0->GetWeights();
+    MFEM_VERIFY(w_el.Size() == nqe, "");
 
-  CAROM::Vector w(ne * nqe, false);
+    CAROM::Vector w(ne * nqe, false);
 
-  for (int i=0; i<ne; ++i)
+    for (int i=0; i<ne; ++i)
     {
-      for (int j=0; j<nqe; ++j)
-	w((i*nqe) + j) = w_el[j];
+        for (int j=0; j<nqe; ++j)
+            w((i*nqe) + j) = w_el[j];
     }
 
-  //NNLS(tauNNLS, G, w, sol, 1);
+    //NNLS(tauNNLS, G, w, sol, 1);
 
-  {
-    CAROM::NNLSSolver nnls;
-    nnls.set_qrresidual_mode(CAROM::NNLSSolver::QRresidualMode::hybrid);
-    nnls.set_verbosity(2);
-
-    CAROM::Vector rhs_ub(G.numRows(), false);
-    G.mult(w, rhs_ub);  // rhs = Gw
-
-    CAROM::Vector rhs_lb(rhs_ub);
-
-    const double delta = 1.0e-11;
-    for (int i=0; i<rhs_ub.dim(); ++i)
-      {
-	rhs_lb(i) -= delta;
-	rhs_ub(i) += delta;
-      }
-
-    rhs_lb *= 1.0 / ((double) nnls.getNumProcs());
-    rhs_ub *= 1.0 / ((double) nnls.getNumProcs());
-
-    nnls.normalize_constraints(G, rhs_lb, rhs_ub);
-    nnls.solve_parallel_with_scalapack(G, rhs_lb, rhs_ub, sol);
-  }
-
-  int nnz = 0;
-  for (int i=0; i<sol.dim(); ++i)
     {
-      if (sol(i) != 0.0)
-	nnz++;
+        CAROM::NNLSSolver nnls;
+        nnls.set_qrresidual_mode(CAROM::NNLSSolver::QRresidualMode::hybrid);
+        nnls.set_verbosity(2);
+
+        CAROM::Vector rhs_ub(G.numRows(), false);
+        G.mult(w, rhs_ub);  // rhs = Gw
+
+        CAROM::Vector rhs_lb(rhs_ub);
+
+        const double delta = 1.0e-11;
+        for (int i=0; i<rhs_ub.dim(); ++i)
+        {
+            rhs_lb(i) -= delta;
+            rhs_ub(i) += delta;
+        }
+
+        rhs_lb *= 1.0 / ((double) nnls.getNumProcs());
+        rhs_ub *= 1.0 / ((double) nnls.getNumProcs());
+
+        nnls.normalize_constraints(G, rhs_lb, rhs_ub);
+        nnls.solve_parallel_with_scalapack(G, rhs_lb, rhs_ub, sol);
     }
 
-  cout << "Number of nonzeros in NNLS solution: " << nnz << ", out of " << sol.dim() << endl;
+    int nnz = 0;
+    for (int i=0; i<sol.dim(); ++i)
+    {
+        if (sol(i) != 0.0)
+            nnz++;
+    }
 
-  return ir0;
+    cout << "Number of nonzeros in NNLS solution: " << nnz << ", out of " <<
+         sol.dim() << endl;
+
+    return ir0;
 }
 
 int main(int argc, char *argv[])
@@ -1554,28 +1566,28 @@ int main(int argc, char *argv[])
         if (myid == 0)
             printf("reduced FR dim = %d\n",nldim);
 
-	// TODO: make the option to do EQP or GNAT. Currently it does both.
+        // TODO: make the option to do EQP or GNAT. Currently it does both.
 
-	// EQP setup
-	const IntegrationRule *ir0 = NULL;
-	if (ir0 == NULL)
-	  {
-	    // int order = 2 * el.GetOrder();
-	    const FiniteElement &fe = *R_space.GetFE(0);
-	    ElementTransformation *eltrans = R_space.GetElementTransformation(0);
+        // EQP setup
+        const IntegrationRule *ir0 = NULL;
+        if (ir0 == NULL)
+        {
+            // int order = 2 * el.GetOrder();
+            const FiniteElement &fe = *R_space.GetFE(0);
+            ElementTransformation *eltrans = R_space.GetElementTransformation(0);
 
-	    int order = eltrans->OrderW() + 2 * fe.GetOrder();
-	    ir0 = &IntRules.Get(fe.GetGeomType(), order);
-	  }
+            int order = eltrans->OrderW() + 2 * fe.GetOrder();
+            ir0 = &IntRules.Get(fe.GetGeomType(), order);
+        }
 
-	eqpSol = new CAROM::Vector(ir0->GetNPoints() * R_space.GetNE(), false);
-	//SetupEQP(tauNNLS, ir0, &R_space, &W_space, BR_librom, BW_librom, *eqpSol);
-	SetupEQP_snapshots(tauNNLS, ir0, &R_space, &W_space, BR_librom,
-			   GetSnapshotMatrix(R_space.GetTrueVSize(), nsets, max_num_snapshots, "R"),
-			   GetSnapshotMatrix(W_space.GetTrueVSize(), nsets, max_num_snapshots, "W"),
-			   *eqpSol);
+        eqpSol = new CAROM::Vector(ir0->GetNPoints() * R_space.GetNE(), false);
+        //SetupEQP(tauNNLS, ir0, &R_space, &W_space, BR_librom, BW_librom, *eqpSol);
+        SetupEQP_snapshots(tauNNLS, ir0, &R_space, &W_space, BR_librom,
+                           GetSnapshotMatrix(R_space.GetTrueVSize(), nsets, max_num_snapshots, "R"),
+                           GetSnapshotMatrix(W_space.GetTrueVSize(), nsets, max_num_snapshots, "W"),
+                           *eqpSol);
 
-	// GNAT setup
+        // GNAT setup
         vector<int> num_sample_dofs_per_proc(num_procs);
 
         if (num_samples_req != -1)
@@ -2313,7 +2325,7 @@ void NonlinearDiffusionOperator::SetParameters(const Vector &p) const
     const double nrm3 = diff->MaxNorm();
 
     cout << "M matrix max norms: " << nrm1 << ", " << nrm2
-	 << ", diff norm " << nrm3 << endl;
+     << ", diff norm " << nrm3 << endl;
 
     delete amat;
     delete diff;
@@ -2374,7 +2386,7 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_,
                          const double newton_rel_tol, const double newton_abs_tol, const int newton_iter,
                          const CAROM::Matrix* S_, const CAROM::Matrix *Ssinv_,
                          const int myid, const bool hyperreduce_source_, const bool oversampling_,
-			 CAROM::Vector *eqpSol, const IntegrationRule *ir_eqp_)
+                         CAROM::Vector *eqpSol, const IntegrationRule *ir_eqp_)
     : TimeDependentOperator(rrdim_ + rwdim_, 0.0),
       newton_solver(),
       fom(fom_), fomSp(fomSp_), BR(NULL), rrdim(rrdim_), rwdim(rwdim_), nldim(nldim_),
@@ -2387,7 +2399,8 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_,
       Vsinv(Bsinv), J(height),
       zS(std::max(nsamp_S, 1), false), zT(std::max(nsamp_S, 1), false), Ssinv(Ssinv_),
       VTCS_W(rwdim, std::max(nsamp_S, 1), false), S(S_),
-      VtzR(rrdim_, false), hyperreduce_source(hyperreduce_source_), oversampling(oversampling_),
+      VtzR(rrdim_, false), hyperreduce_source(hyperreduce_source_),
+      oversampling(oversampling_),
       ir_eqp(ir_eqp_), p_gf(&(fom_->fespace_W)), p_coeff(&p_gf),
       a_coeff(&p_coeff, NonlinearCoefficient),
       aprime_coeff(&p_coeff, NonlinearCoefficientDerivative),
@@ -2480,36 +2493,36 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_,
         zfomW.SetSize(fom->zW.Size());
     }
     else if (eqp)
-      {
+    {
         pfom_W_librom = new CAROM::Vector(fom->zW.Size(), true);
-	pfom_W = new Vector(pfom_W_librom->getData(), fom->zW.Size());
-      }
+        pfom_W = new Vector(pfom_W_librom->getData(), fom->zW.Size());
+    }
 
     if (hyperreduce_source)
         Compute_CtAB(fom->Cmat, *S, V_W, &VTCS_W);
 
     if (eqp)
-      {
-	std::set<int> elements;
-	const int nqe = ir_eqp->GetWeights().Size();
+    {
+        std::set<int> elements;
+        const int nqe = ir_eqp->GetWeights().Size();
 
-	for (int i=0; i<eqpSol->dim(); ++i)
-	  {
-	    if ((*eqpSol)(i) > 1.0e-12)
-	      {
-		const int e = i / nqe;  // Element index
-		elements.insert(e);
-		eqp_rw.push_back((*eqpSol)(i));
-		eqp_qp.push_back(i);
-	      }
-	  }
+        for (int i=0; i<eqpSol->dim(); ++i)
+        {
+            if ((*eqpSol)(i) > 1.0e-12)
+            {
+                const int e = i / nqe;  // Element index
+                elements.insert(e);
+                eqp_rw.push_back((*eqpSol)(i));
+                eqp_qp.push_back(i);
+            }
+        }
 
-	cout << "EQP using " << elements.size () << " elements out of "
-	     << fom->fespace_R.GetNE() << endl;
+        cout << "EQP using " << elements.size () << " elements out of "
+             << fom->fespace_R.GetNE() << endl;
 
-	GetEQPCoefficients_VectorFEMassIntegrator(&fom->fespace_R, eqp_rw, eqp_qp,
-						  ir_eqp, V_R, eqp_coef);
-      }
+        GetEQPCoefficients_VectorFEMassIntegrator(&fom->fespace_R, eqp_rw, eqp_qp,
+                ir_eqp, V_R, eqp_coef);
+    }
 }
 
 RomOperator::~RomOperator()
@@ -2520,7 +2533,7 @@ RomOperator::~RomOperator()
 
 void RomOperator::Mult_EQP(const Vector &dy_dt, Vector &res) const
 {
-  // TODO: use or remove this?
+    // TODO: use or remove this?
 }
 
 void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
@@ -2546,60 +2559,60 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
     BR->transposeMult(yW_librom, resR_librom);
 
     if (eqp)
-      {
-	// Compute reduced matrix for nonlinear term V_R^T M(a(V_W yW)) V_R, which is normally FOM (as in Mult_FullOrder), but has reduced cost using EQP.
-
-	// TODO: this approach for setting the coefficient a(p) has FOM cost and needs to be reduced to just the quadrature points of interest.
-	// Set grid function for a(p)
-
-	// Lift pfom_W = V_W yW
-	V_W.mult(yW_librom, *pfom_W_librom);
-
-	p_gf.SetFromTrueDofs(*pfom_W);
-
-	Vector resEQP;
-	if (fastIntegration)
-	  VectorFEMassIntegrator_ComputeReducedEQP_Fast(&(fom->fespace_R), eqp_qp,
-							ir_eqp, &a_coeff,
-							yR_librom, eqp_coef, resEQP);
-	else
-	  VectorFEMassIntegrator_ComputeReducedEQP(&(fom->fespace_R), eqp_rw,
-						   eqp_qp, ir_eqp, &a_coeff,
-						   V_R, yR_librom, resEQP);
-
-	// NOTE: in the hyperreduction case, the residual is of dimension nldim, which is the dimension of the ROM space for the nonlinear term.
-	// In the EQP case, there is no use of a ROM space for the nonlinear term. Instead, the FOM computation of the nonlinear term
-	// is approximated by the reduced quadrature rule in the FOM space. Therefore, the residual here is of dimension rrdim.
-
-	MFEM_VERIFY(resEQP.Size() == rrdim, "");
-	for (int i=0; i<rrdim; ++i)
-	  res[i] += resEQP[i];
-      }
-    else
-      {
-    // 1. Lift p_s+ = B_s+ y
-    BRsp->mult(yR_librom, *psp_R_librom);
-    BWsp->mult(yW_librom, *psp_W_librom);
-
-    fomSp->SetParameters(*psp);
-
-    fomSp->Mmat->Mult(*psp_R, zR);  // M(a(Pst V_W yW)) Pst V_R yR
-
-    // Select entries out of zR.
-    smm->GetSampledValues("V", zR, zN);
-
-    // Note that it would be better to just store VTU_R * Vsinv, but these are small matrices.
-    if (oversampling)
     {
-        Vsinv->transposeMult(zN, zY);
+        // Compute reduced matrix for nonlinear term V_R^T M(a(V_W yW)) V_R, which is normally FOM (as in Mult_FullOrder), but has reduced cost using EQP.
+
+        // TODO: this approach for setting the coefficient a(p) has FOM cost and needs to be reduced to just the quadrature points of interest.
+        // Set grid function for a(p)
+
+        // Lift pfom_W = V_W yW
+        V_W.mult(yW_librom, *pfom_W_librom);
+
+        p_gf.SetFromTrueDofs(*pfom_W);
+
+        Vector resEQP;
+        if (fastIntegration)
+            VectorFEMassIntegrator_ComputeReducedEQP_Fast(&(fom->fespace_R), eqp_qp,
+                    ir_eqp, &a_coeff,
+                    yR_librom, eqp_coef, resEQP);
+        else
+            VectorFEMassIntegrator_ComputeReducedEQP(&(fom->fespace_R), eqp_rw,
+                    eqp_qp, ir_eqp, &a_coeff,
+                    V_R, yR_librom, resEQP);
+
+        // NOTE: in the hyperreduction case, the residual is of dimension nldim, which is the dimension of the ROM space for the nonlinear term.
+        // In the EQP case, there is no use of a ROM space for the nonlinear term. Instead, the FOM computation of the nonlinear term
+        // is approximated by the reduced quadrature rule in the FOM space. Therefore, the residual here is of dimension rrdim.
+
+        MFEM_VERIFY(resEQP.Size() == rrdim, "");
+        for (int i=0; i<rrdim; ++i)
+            res[i] += resEQP[i];
     }
     else
     {
-        Vsinv->mult(zN, zY);
-    }
+        // 1. Lift p_s+ = B_s+ y
+        BRsp->mult(yR_librom, *psp_R_librom);
+        BWsp->mult(yW_librom, *psp_W_librom);
 
-    VTU_R.multPlus(resR_librom, zY, 1.0);
-      }
+        fomSp->SetParameters(*psp);
+
+        fomSp->Mmat->Mult(*psp_R, zR);  // M(a(Pst V_W yW)) Pst V_R yR
+
+        // Select entries out of zR.
+        smm->GetSampledValues("V", zR, zN);
+
+        // Note that it would be better to just store VTU_R * Vsinv, but these are small matrices.
+        if (oversampling)
+        {
+            Vsinv->transposeMult(zN, zY);
+        }
+        else
+        {
+            Vsinv->mult(zN, zY);
+        }
+
+        VTU_R.multPlus(resR_librom, zY, 1.0);
+    }
 
     // Apply V_W^t C to fsp
 
@@ -2699,14 +2712,14 @@ void RomOperator::Mult_FullOrder(const Vector &dy_dt, Vector &res) const
 void RomOperator::Mult(const Vector &dy_dt, Vector &res) const
 {
     if (hyperreduce)
-      {
-	/*
-	if (eqp)
-	  Mult_EQP(dy_dt, res);
-	else
-	*/
-	  Mult_Hyperreduced(dy_dt, res);
-      }
+    {
+        /*
+        if (eqp)
+          Mult_EQP(dy_dt, res);
+        else
+        */
+        Mult_Hyperreduced(dy_dt, res);
+    }
     else
         Mult_FullOrder(dy_dt, res);
 }
@@ -2790,36 +2803,36 @@ Operator &RomOperator::GetGradient(const Vector &p) const
 
     for (int i=0; i<rrdim; ++i)
     {
-      if (eqp)
-	{
-	  // Compute the i-th column of V_R^T M(a'(V_W yW)) V_R, using EQP.
+        if (eqp)
+        {
+            // Compute the i-th column of V_R^T M(a'(V_W yW)) V_R, using EQP.
 
-	  // Note that a_plus_aprime_coeff is already set from the lifted V_W yW variable, in Mult().
-	  Vector resEQP;
-	  CAROM::Vector e_i(rrdim, false);
-	  e_i = 0.0;
-	  e_i(i) = 1.0;
+            // Note that a_plus_aprime_coeff is already set from the lifted V_W yW variable, in Mult().
+            Vector resEQP;
+            CAROM::Vector e_i(rrdim, false);
+            e_i = 0.0;
+            e_i(i) = 1.0;
 
-	  if (fastIntegration)
-	    VectorFEMassIntegrator_ComputeReducedEQP_Fast(&(fom->fespace_R), eqp_qp,
-							  ir_eqp, &a_plus_aprime_coeff,
-							  e_i, eqp_coef, resEQP);
-	  else
-	    VectorFEMassIntegrator_ComputeReducedEQP(&(fom->fespace_R), eqp_rw,
-						     eqp_qp, ir_eqp,
-						     &a_plus_aprime_coeff, V_R,
-						     e_i, resEQP);
+            if (fastIntegration)
+                VectorFEMassIntegrator_ComputeReducedEQP_Fast(&(fom->fespace_R), eqp_qp,
+                        ir_eqp, &a_plus_aprime_coeff,
+                        e_i, eqp_coef, resEQP);
+            else
+                VectorFEMassIntegrator_ComputeReducedEQP(&(fom->fespace_R), eqp_rw,
+                        eqp_qp, ir_eqp,
+                        &a_plus_aprime_coeff, V_R,
+                        e_i, resEQP);
 
-	  // NOTE: in the hyperreduction case, the residual is of dimension nldim, which is the dimension of the ROM space for the nonlinear term.
-	  // In the EQP case, there is no use of a ROM space for the nonlinear term. Instead, the FOM computation of the nonlinear term
-	  // is approximated by the reduced quadrature rule in the FOM space. Therefore, the residual here is of dimension rrdim.
+            // NOTE: in the hyperreduction case, the residual is of dimension nldim, which is the dimension of the ROM space for the nonlinear term.
+            // In the EQP case, there is no use of a ROM space for the nonlinear term. Instead, the FOM computation of the nonlinear term
+            // is approximated by the reduced quadrature rule in the FOM space. Therefore, the residual here is of dimension rrdim.
 
-	  MFEM_VERIFY(resEQP.Size() == rrdim, "");
+            MFEM_VERIFY(resEQP.Size() == rrdim, "");
 
-	  for (int j=0; j<rrdim; ++j)
-	    c(j) = current_dt * resEQP[j];
-	}
-      else if (hyperreduce)
+            for (int j=0; j<rrdim; ++j)
+                c(j) = current_dt * resEQP[j];
+        }
+        else if (hyperreduce)
         {
             // Compute the i-th column of M(a'(Pst V_W yW)) Pst V_R.
             for (int j=0; j<psp_R->Size(); ++j)

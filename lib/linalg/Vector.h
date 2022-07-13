@@ -750,7 +750,7 @@ public:
         return d_vec;
     }
 
-  double localMin(int nmax = 0);
+    double localMin(int nmax = 0);
 
 private:
     /**
