@@ -728,7 +728,7 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const& vdofs,
 
       fe.CalcVShape(Trans, trial_vshape);
 
-      double w = ip.weight * Trans.Weight();
+      double w = Trans.Weight();
 
       u_i = 0.0;
       v_i = 0.0;
@@ -736,10 +736,11 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const& vdofs,
       for (int j=0; j<dof; ++j)
 	{
 	  const int dofj = (vdofs[j] >= 0) ? vdofs[j] : -1 - vdofs[j];
+	  const double s = (vdofs[j] >= 0) ? 1.0 : -1.0;
 	  for (int k=0; k<spaceDim; ++k)
 	    {
-	      u_i[k] += u[dofj] * trial_vshape(j, k);
-	      v_i[k] += v[dofj] * trial_vshape(j, k);
+	      u_i[k] += s * u[dofj] * trial_vshape(j, k);
+	      v_i[k] += s * v[dofj] * trial_vshape(j, k);
 	    }
 	}
 
