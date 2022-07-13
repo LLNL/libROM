@@ -1,6 +1,6 @@
 !*******************************************************************************
 !
-! Copyright (c) 2013-2021, Lawrence Livermore National Security, LLC
+! Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
 ! and other libROM project developers. See the top-level COPYRIGHT file for
 ! details.
 !
@@ -128,6 +128,11 @@ module scalapack_wrapper
         type(C_PTR) :: A, U, S, V ! These are pointers to SLPK_Matrix in C.
         integer(C_INT) :: dou, dov, done ! Integer to avoid logical interop
     end type SVDManager
+
+    type, bind(C) :: LSManager
+        type(C_PTR) :: A, B, ipiv ! These are pointers to SLPK_Matrix in C.
+        integer(C_INT) :: ipivSize
+    end type LSManager
 
     type, bind(C) :: QRManager
         type(C_PTR) :: A, tau, ipiv ! These are pointers to SLPK_Matrix in C.
@@ -444,11 +449,11 @@ subroutine create_local_matrix(A, x, m, n, src) bind(C)
     A%ctxt = make_local_context(src)
     A%m = m; A%n = n
     A%mdata = C_NULL_PTR
+    A%mb = m; A%mm = m
+    A%nb = n; A%mn = n
+    A%nprow = 1; A%npcol = 1;
+    A%pi = 0; A%pj = 0
     if (rank .eq. src) then
-        A%mb = m; A%mm = m
-        A%nb = n; A%mn = n
-        A%nprow = 1; A%npcol = 1;
-        A%pi = 0; A%pj = 0
         A%mdata = x
     endif
 end subroutine
@@ -528,6 +533,53 @@ subroutine factorize(mgr) bind(C)
     endif
     deallocate(work)
     mgr%done = 1
+end subroutine
+
+subroutine linear_solve(mgr) bind(C)
+    use mpi
+    use ISO_FORTRAN_ENV, only: error_unit
+
+    interface
+        subroutine ls_prep(mgr) bind(C)
+            import LSManager
+            type(LSManager), intent(inout) :: mgr
+        end subroutine
+    end interface
+
+    type(LSManager), intent(inout) :: mgr
+    integer :: mrank, ierr
+
+    type(SLPK_Matrix), pointer :: A, B
+    integer :: desca(9), descb(9)
+
+    real(REAL_KIND), pointer :: Adata(:, :)
+    real(REAL_KIND), pointer :: Bdata(:, :)
+    integer(C_INT), pointer :: ipiv(:)
+
+    call MPI_Comm_rank(MPI_COMM_WORLD, mrank, ierr)
+    call c_f_pointer(mgr%A, A)
+    call descinit(desca, A%m, A%n, A%mb, A%nb, 0, 0, A%ctxt, A%mm, ierr)
+    call c_f_pointer(A%mdata, Adata, [A%mm, A%mn])
+    call c_f_pointer(mgr%B, B)
+    call descinit(descb, B%m, B%n, B%mb, B%nb, 0, 0, B%ctxt, B%mm, ierr)
+    call c_f_pointer(B%mdata, Bdata, [B%mm, B%mn])
+
+    ! TODO: isn't this just A%mn after initialize_matrix?
+    mgr%ipivSize = numroc(A%n, A%nb, A%pj, 0, A%npcol)
+
+    call ls_prep(mgr)
+
+    call c_f_pointer(mgr%ipiv, ipiv, [mgr%ipivSize])
+
+    call pdgesv(A%n, B%n, Adata, 1, 1, desca, ipiv, Bdata, 1, 1, descb, ierr)
+
+    if (mrank .eq. 0) then
+        if (ierr .lt. 0) then
+            write(error_unit, *) "LS: error: argument ", -ierr, " had an illegal value"
+        elseif (ierr .gt. 0) then
+            write(error_unit, *) "LS: error: U is singular, so the solution could not be computed"
+        endif
+    endif
 end subroutine
 
 subroutine qrfactorize(mgr) bind(C)
@@ -638,7 +690,49 @@ subroutine qaction(mgr, A, S, T) bind(C)
     deallocate(work)
 end subroutine
 
-subroutine qcompute(mgr) bind(C)
+subroutine qrcompute(mgr) bind(C)
+    use mpi
+    use ISO_FORTRAN_ENV, only: error_unit
+
+    type(QRManager), intent(inout) :: mgr
+    integer :: mrank, ierr
+
+    type(SLPK_Matrix), pointer :: A
+    integer :: desca(9), lwork
+
+    real(REAL_KIND), allocatable :: work(:)
+    real(REAL_KIND) :: bestwork(1)
+
+    real(REAL_KIND), pointer :: Adata(:, :)
+    real(REAL_KIND), pointer :: tau(:)
+
+    call MPI_Comm_rank(MPI_COMM_WORLD, mrank, ierr)
+    call c_f_pointer(mgr%A, A)
+    call descinit(desca, A%m, A%n, A%mb, A%nb, 0, 0, A%ctxt, A%mm, ierr)
+    call c_f_pointer(A%mdata, Adata, [A%mm, A%mn])
+
+    call c_f_pointer(mgr%tau, tau, [mgr%tauSize])
+
+    ! First call just sets bestwork(1) to work size
+    lwork = -1
+    call pdorgqr(A%m, A%n, mgr%tauSize, Adata, 1, 1, desca, tau, &
+         & bestwork, lwork, ierr)
+    lwork = bestwork(1)
+    allocate(work(lwork))
+
+    ! Now work is allocated, and factorization is done next
+    call pdorgqr(A%m, A%n, mgr%tauSize, Adata, 1, 1, desca, tau, work, lwork, ierr)
+    if (mrank .eq. 0) then
+        if (ierr .lt. 0) then
+            write(error_unit, *) "QR: error: argument ", -ierr, " had an illegal value"
+        elseif (ierr .gt. 0) then
+            write(error_unit, *) "QR: unknown error"
+        endif
+    endif
+    deallocate(work)
+end subroutine
+
+subroutine lqcompute(mgr) bind(C)
     use mpi
     use ISO_FORTRAN_ENV, only: error_unit
 

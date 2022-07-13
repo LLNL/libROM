@@ -2,23 +2,23 @@
 //
 // Compile with: make dg_advection
 //
-// For DMD:
-//   mpirun -np 8 dg_advection
+// =================================================================================
+//
+// Sample runs and results for DMD:
+//
+// Command 1:
+//   mpirun -np 8 dg_advection -p 0 -dt 0.01 -tf 2 -visit
+//
+// Output 1:
+//   Relative error of DMD solution (u) at t_final: 2 is 0.00031683336
+//
+// Command 2:
 //   mpirun -np 8 dg_advection -p 3 -rp 1 -dt 0.005 -tf 4 -visit
 //
-// Sample runs:
-//    mpirun -np 4 dg_advection -p 0 -dt 0.005
-//    mpirun -np 4 dg_advection -p 0 -dt 0.01
-//    mpirun -np 4 dg_advection -p 1 -dt 0.005 -tf 9
-//    mpirun -np 4 dg_advection -p 1 -rp 1 -dt 0.002 -tf 9
-//    mpirun -np 4 dg_advection -p 1 -rp 1 -dt 0.02 -s 13 -tf 9
-//    mpirun -np 4 dg_advection -p 1 -rp 1 -dt 0.004 -tf 9
-//    mpirun -np 4 dg_advection -p 1 -rp 1 -dt 0.005 -tf 9
-//    mpirun -np 4 dg_advection -p 3 -rp 2 -dt 0.0025 -tf 9 -vs 20
-//    mpirun -np 4 dg_advection -p 0 -o 2 -rp 1 -dt 0.01 -tf 8
-//    mpirun -np 4 dg_advection -p 0 -rs 2 -dt 0.005 -tf 2
-//    mpirun -np 4 dg_advection -p 0 -rs 1 -o 2 -tf 2
-//    mpirun -np 3 dg_advection -p 1 -rs 1 -rp 0 -dt 0.005 -tf 0.5
+// Output 2:
+//   Relative error of DMD solution (u) at t_final: 4 is 0.00019053762
+//
+// =================================================================================
 //
 // Description:  This example code solves the time-dependent advection equation
 //               du/dt + v.grad(u) = 0, where v is a given fluid velocity, and
@@ -571,11 +571,7 @@ int main(int argc, char *argv[])
             sout << "parallel " << num_procs << " " << myid << "\n";
             sout.precision(precision);
             sout << "solution\n" << *pmesh << *u;
-            sout << "pause\n";
             sout << flush;
-            if (mpi.Root())
-                cout << "GLVis visualization paused."
-                     << " Press space (in the GLVis window) to resume it.\n";
         }
     }
 
@@ -764,14 +760,18 @@ int main(int argc, char *argv[])
     subtract(dmd_solution_u, true_solution_u, diff_u);
 
     double tot_diff_norm_u = sqrt(InnerProduct(MPI_COMM_WORLD, diff_u, diff_u));
-    double tot_true_solution_u_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution_u, true_solution_u));
+    double tot_true_solution_u_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
+                                           true_solution_u, true_solution_u));
 
     if (myid == 0)
     {
-        std::cout << "Relative error of DMD solution (u) at t_final: " << t_final << " is " << tot_diff_norm_u / tot_true_solution_u_norm << std::endl;
+        std::cout << "Relative error of DMD solution (u) at t_final: " << t_final <<
+                  " is " << tot_diff_norm_u / tot_true_solution_u_norm << std::endl;
         printf("Elapsed time for solving FOM: %e second\n", fom_timer.RealTime());
-        printf("Elapsed time for training DMD: %e second\n", dmd_training_timer.RealTime());
-        printf("Elapsed time for predicting DMD: %e second\n", dmd_prediction_timer.RealTime());
+        printf("Elapsed time for training DMD: %e second\n",
+               dmd_training_timer.RealTime());
+        printf("Elapsed time for predicting DMD: %e second\n",
+               dmd_prediction_timer.RealTime());
     }
 
     // 16. Free the used memory.

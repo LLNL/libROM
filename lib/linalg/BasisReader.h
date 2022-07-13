@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2021, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -284,6 +284,7 @@ public:
      */
     int
     getDim(
+        const std::string kind,
         double time);
 
     /**
@@ -294,6 +295,7 @@ public:
      */
     int
     getNumSamples(
+        const std::string kind,
         double time);
 
     /**

@@ -18,6 +18,7 @@
 #ifndef included_DMD_h
 #define included_DMD_h
 
+#include "ParametricDMD.h"
 #include <vector>
 #include <complex>
 
@@ -25,6 +26,20 @@ namespace CAROM {
 
 class Matrix;
 class Vector;
+class ComplexEigenPair;
+
+/**
+ * Struct DMDInternal is a struct containing the necessary matrices to compute phi.
+ */
+struct DMDInternal
+{
+    Matrix* snapshots_in;
+    Matrix* snapshots_out;
+    Matrix* basis;
+    Matrix* basis_right;
+    Matrix* S_inv;
+    ComplexEigenPair* eigenpair;
+};
 
 /**
  * Class DMD implements the DMD algorithm on a given snapshot matrix.
@@ -50,7 +65,8 @@ public:
     DMD(std::string base_file_name);
 
     /**
-     * @brief Sample the new state, u_in.
+     * @brief Sample the new state, u_in. Any samples in d_snapshots
+     *        taken at the same or later time will be erased.
      *
      * @pre u_in != 0
      * @pre t >= 0.0
@@ -69,11 +85,6 @@ public:
      * @param[in] k The number of modes (eigenvalues) to keep after doing SVD.
      */
     virtual void train(int k);
-
-    /**
-     * @brief Output the DMD record in CSV files.
-     */
-    void summary(std::string output_path);
 
     /**
      * @brief Predict new initial condition using d_phi.
@@ -96,6 +107,16 @@ public:
     double getTimeOffset() const;
 
     /**
+     * @brief Returns the number of samples taken.
+     *
+     * @return The number of samples taken.
+     */
+    int getNumSamples() const
+    {
+        return d_snapshots.size();
+    }
+
+    /**
      * @brief Get the snapshot matrix contained within d_snapshots.
      */
     const Matrix* getSnapshotMatrix();
@@ -116,14 +137,27 @@ public:
      */
     virtual void save(std::string base_file_name);
 
-protected:
+    /**
+     * @brief Output the DMD record in CSV files.
+     */
+    void summary(std::string base_file_name);
 
-    friend DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
+protected:
+    friend void getParametricDMD<DMD>(DMD*& parametric_dmd,
+                                 std::vector<Vector*>& parameter_points,
                                  std::vector<DMD*>& dmds,
                                  Vector* desired_point,
                                  std::string rbf,
                                  std::string interp_method,
-                                 double epsilon);
+                                 double closest_rbf_val,
+                                 bool reorthogonalize_W);
+
+    /**
+     * @brief Constructor.
+     *
+     * @param[in] dim        The full-order state dimension.
+     */
+    DMD(int dim);
 
     /**
      * @brief Constructor.
@@ -135,7 +169,8 @@ protected:
      * @param[in] dt d_dt
      * @param[in] t_offset d_t_offset
      */
-    DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real, Matrix* phi_imaginary, int k, double dt, double t_offset);
+    DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
+        Matrix* phi_imaginary, int k, double dt, double t_offset);
 
     /**
      * @brief Unimplemented default constructor.
@@ -161,11 +196,27 @@ protected:
     std::pair<Matrix*, Matrix*> phiMultEigs(double t);
 
     /**
-     * @brief Internal function to obtain the DMD modes.
+     * @brief Construct the DMD object.
      */
     void constructDMD(const Matrix* f_snapshots,
                       int rank,
                       int num_procs);
+
+    /**
+     * @brief Returns a pair of pointers to the minus and plus snapshot matrices
+     */
+    virtual std::pair<Matrix*, Matrix*> computeDMDSnapshotPair(
+        const Matrix* snapshots);
+
+    /**
+     * @brief Compute phi.
+     */
+    virtual void computePhi(struct DMDInternal dmd_internal_obj);
+
+    /**
+     * @brief Compute the appropriate exponential function when predicting the solution.
+     */
+    virtual std::complex<double> computeEigExp(std::complex<double> eig, double t);
 
     /**
      * @brief Get the snapshot matrix contained within d_snapshots.
@@ -190,7 +241,7 @@ protected:
     /**
      * @brief The time step size between samples.
      */
-    double d_dt;
+    double d_dt = -1.0;
 
     /**
      * @brief The time offset of the first sample.
@@ -201,6 +252,11 @@ protected:
      * @brief std::vector holding the snapshots.
      */
     std::vector<Vector*> d_snapshots;
+
+    /**
+     * @brief The stored times of each sample.
+     */
+    std::vector<Vector*> d_sampled_times;
 
     /**
      * @brief Whether the DMD has been trained or not.

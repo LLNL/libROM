@@ -6,4 +6,11 @@ fi
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 DIR="$(dirname "$DIR")"
 
-$1 $DIR/*.C $DIR/*.h $DIR/*.hpp $DIR/*.c $DIR/*h.in $DIR/tests/*.C $DIR/examples/dmd/*.cpp $DIR/examples/dmd/*.hpp $DIR/examples/prom/*.cpp
+$1 --recursive --max-code-length=80 "$DIR/lib/*.cpp"
+$1 --recursive --max-code-length=80 "$DIR/lib/*.h"
+$1 --recursive --max-code-length=80 "$DIR/lib/*.hpp"
+$1 --recursive --max-code-length=80 "$DIR/lib/*.c"
+$1 --recursive --max-code-length=80 "$DIR/lib/*h.in"
+$1 --recursive --max-code-length=80 "$DIR/tests/*.cpp"
+$1 --recursive --max-code-length=80 "$DIR/examples/*.cpp"
+$1 --recursive --max-code-length=80 "$DIR/examples/*.hpp" 

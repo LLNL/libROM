@@ -90,9 +90,11 @@ int main(int argc, char *argv[])
     args.AddOption(&visualization, "-vis", "--visualization", "-no-vis",
                    "--no-visualization",
                    "Enable or disable GLVis visualization.");
-    args.AddOption(&build_database, "-build_database", "--build_database", "-no-build_database", "--no-build_database",
+    args.AddOption(&build_database, "-build_database", "--build_database",
+                   "-no-build_database", "--no-build_database",
                    "Enable or disable the build_database phase of the greedy algorithm.");
-    args.AddOption(&use_database, "-use_database", "--use_database", "-no-use_database", "--no-use_database",
+    args.AddOption(&use_database, "-use_database", "--use_database",
+                   "-no-use_database", "--no-use_database",
                    "Enable or disable the use_database phase of the greedy algorithm.");
     args.AddOption(&fom, "-fom", "--fom", "-no-fom", "--no-fom",
                    "Enable or disable the fom phase.");
@@ -100,12 +102,19 @@ int main(int argc, char *argv[])
                    "Enable or disable the offline phase.");
     args.AddOption(&online, "-online", "--online", "-no-online", "--no-online",
                    "Enable or disable the online phase.");
-    args.AddOption(&greedy_param_space_min, "-greedy-param-min", "--greedy-param-min", "The minimum value of the parameter point space.");
-    args.AddOption(&greedy_param_space_max, "-greedy-param-max", "--greedy-param-max", "The maximum value of the parameter point space.");
-    args.AddOption(&greedy_param_space_size, "-greedy-param-size", "--greedy-param-size", "The number of values to search in the parameter point space.");
-    args.AddOption(&greedy_relative_error_tol, "-greedyrelerrortol", "--greedyrelerrortol", "The greedy algorithm relative error tolerance.");
-    args.AddOption(&greedy_subset_size, "-greedysubsize", "--greedysubsize", "The greedy algorithm subset size.");
-    args.AddOption(&greedy_convergence_subset_size, "-greedyconvsize", "--greedyconvsize", "The greedy algorithm convergence subset size.");
+    args.AddOption(&greedy_param_space_min, "-greedy-param-min",
+                   "--greedy-param-min", "The minimum value of the parameter point space.");
+    args.AddOption(&greedy_param_space_max, "-greedy-param-max",
+                   "--greedy-param-max", "The maximum value of the parameter point space.");
+    args.AddOption(&greedy_param_space_size, "-greedy-param-size",
+                   "--greedy-param-size",
+                   "The number of values to search in the parameter point space.");
+    args.AddOption(&greedy_relative_error_tol, "-greedyrelerrortol",
+                   "--greedyrelerrortol", "The greedy algorithm relative error tolerance.");
+    args.AddOption(&greedy_subset_size, "-greedysubsize", "--greedysubsize",
+                   "The greedy algorithm subset size.");
+    args.AddOption(&greedy_convergence_subset_size, "-greedyconvsize",
+                   "--greedyconvsize", "The greedy algorithm convergence subset size.");
     args.Parse();
     if (!args.Good())
     {
@@ -121,24 +130,33 @@ int main(int argc, char *argv[])
         args.PrintOptions(cout);
     }
 
-    if (fom) MFEM_VERIFY(fom && !build_database && !use_database && !offline && !online, "everything must be turned off if fom is used.");
+    if (fom) MFEM_VERIFY(fom && !build_database && !use_database && !offline
+                             && !online, "everything must be turned off if fom is used.");
 
     CAROM::GreedySampler* greedy_sampler = NULL;
-    MFEM_VERIFY(!build_database || !use_database, "both build_database and use_database can not be used at the same time.");
+    MFEM_VERIFY(!build_database
+                || !use_database,
+                "both build_database and use_database can not be used at the same time.");
 
     // 3. Set up the ROM database for the greedy algorithm to run.
     if (build_database)
     {
-        MFEM_VERIFY(!offline && !online, "offline and online must be turned off during the build_database phase.");
-        MFEM_VERIFY(!visit && !visualization, "visit and visualization must be turned off during the build_database phase.")
+        MFEM_VERIFY(!offline
+                    && !online,
+                    "offline and online must be turned off during the build_database phase.");
+        MFEM_VERIFY(!visit
+                    && !visualization,
+                    "visit and visualization must be turned off during the build_database phase.")
         std::ifstream infile("poisson_local_rom_greedy_algorithm_data");
         if (infile.good())
         {
-            if (myid == 0) std::cout << "The database has already been built. Exiting." << std::endl;
+            if (myid == 0) std::cout << "The database has already been built. Exiting." <<
+                                         std::endl;
             return 0;
         }
         infile.close();
-        greedy_sampler = new CAROM::GreedyRandomSampler(greedy_param_space_min, greedy_param_space_max,
+        greedy_sampler = new CAROM::GreedyRandomSampler(greedy_param_space_min,
+                greedy_param_space_max,
                 greedy_param_space_size, false, greedy_relative_error_tol, 1.05,
                 2.0, greedy_subset_size, greedy_convergence_subset_size,
                 true, "poisson_local_rom_greedy_algorithm_log.txt");
@@ -146,11 +164,14 @@ int main(int argc, char *argv[])
     // 3. Or use the database set up by the greedy algorithm.
     else if (use_database)
     {
-        MFEM_VERIFY(!offline && online, "offline must be turned off and online must be turned on during the build_database phase.");
+        MFEM_VERIFY(!offline
+                    && online,
+                    "offline must be turned off and online must be turned on during the build_database phase.");
         std::ifstream infile("poisson_local_rom_greedy_algorithm_data");
         if (!infile.good())
         {
-            if (myid == 0) std::cout << "The database has not been built. Exiting." << std::endl;
+            if (myid == 0) std::cout << "The database has not been built. Exiting." <<
+                                         std::endl;
             return 0;
         }
         infile.close();
@@ -178,32 +199,40 @@ int main(int argc, char *argv[])
         {
             double local_rom_freq = 0.0;
             double curr_freq = 0.0;
-            struct CAROM::GreedyErrorIndicatorPoint pointRequiringRelativeError = greedy_sampler->getNextPointRequiringRelativeError();
+            struct CAROM::GreedyErrorIndicatorPoint pointRequiringRelativeError =
+                greedy_sampler->getNextPointRequiringRelativeError();
             CAROM::Vector* relativeErrorPointData = pointRequiringRelativeError.point.get();
-            struct CAROM::GreedyErrorIndicatorPoint pointRequiringErrorIndicator = greedy_sampler->getNextPointRequiringErrorIndicator();
-            CAROM::Vector* errorIndicatorPointData = pointRequiringErrorIndicator.point.get();
+            struct CAROM::GreedyErrorIndicatorPoint pointRequiringErrorIndicator =
+                greedy_sampler->getNextPointRequiringErrorIndicator();
+            CAROM::Vector* errorIndicatorPointData =
+                pointRequiringErrorIndicator.point.get();
 
             if (relativeErrorPointData != NULL)
             {
-                if (myid == 0) std::cout << "Calculating the relative error of the last sampled point." << std::endl;
+                if (myid == 0) std::cout <<
+                                             "Calculating the relative error of the last sampled point." << std::endl;
                 local_rom_freq = pointRequiringRelativeError.localROM.get()->item(0);
                 curr_freq = pointRequiringRelativeError.point.get()->item(0);
-                if (myid == 0) std::cout << "Using the basis obtained at the frequency: " << local_rom_freq << std::endl;
+                if (myid == 0) std::cout << "Using the basis obtained at the frequency: " <<
+                                             local_rom_freq << std::endl;
                 online = true;
                 calc_rel_error = true;
             }
             else if (errorIndicatorPointData != NULL)
             {
-                if (myid == 0) std::cout << "Calculating a error indicator at a new point." << std::endl;
+                if (myid == 0) std::cout << "Calculating a error indicator at a new point." <<
+                                             std::endl;
                 local_rom_freq = pointRequiringErrorIndicator.localROM.get()->item(0);
                 curr_freq = pointRequiringErrorIndicator.point.get()->item(0);
-                if (myid == 0) std::cout << "Using the basis obtained at the frequency: " << local_rom_freq << std::endl;
+                if (myid == 0) std::cout << "Using the basis obtained at the frequency: " <<
+                                             local_rom_freq << std::endl;
                 online = true;
                 calc_err_indicator = true;
             }
             else
             {
-                std::shared_ptr<CAROM::Vector> nextSampleParameterPoint = greedy_sampler->getNextParameterPoint();
+                std::shared_ptr<CAROM::Vector> nextSampleParameterPoint =
+                    greedy_sampler->getNextParameterPoint();
                 CAROM::Vector* samplePointData = nextSampleParameterPoint.get();
                 if (samplePointData != NULL)
                 {
@@ -225,7 +254,8 @@ int main(int argc, char *argv[])
             freq = curr_freq;
         }
 
-        if (myid == 0) std::cout << "Running loop at the frequency: " << freq << std::endl;
+        if (myid == 0) std::cout << "Running loop at the frequency: " << freq <<
+                                     std::endl;
 
         kappa = freq * M_PI;
 
@@ -333,7 +363,8 @@ int main(int argc, char *argv[])
         // 12. Set BasisGenerator if offline
         if (offline)
         {
-            options = new CAROM::Options(fespace.GetTrueVSize(), max_num_snapshots, 1, update_right_SV);
+            options = new CAROM::Options(fespace.GetTrueVSize(), max_num_snapshots, 1,
+                                         update_right_SV);
             if (myid == 0) std::cout << "Saving basis to: " << saveBasisName << std::endl;
             generator = new CAROM::BasisGenerator(*options, isIncremental, saveBasisName);
         }
@@ -426,10 +457,12 @@ int main(int argc, char *argv[])
             spatialbasis = reader.getSpatialBasis(0.0);
             numRowRB = spatialbasis->numRows();
             numColumnRB = spatialbasis->numColumns();
-            if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB, numColumnRB);
+            if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB,
+                                      numColumnRB);
 
             // libROM stores the matrix row-wise, so wrapping as a DenseMatrix in MFEM means it is transposed.
-            DenseMatrix *reducedBasisT = new DenseMatrix(spatialbasis->getData(), numColumnRB, numRowRB);
+            DenseMatrix *reducedBasisT = new DenseMatrix(spatialbasis->getData(),
+                    numColumnRB, numRowRB);
 
             // 22. form inverse ROM operator
             Vector abv(numRowRB), bv(numRowRB), bv2(numRowRB);
@@ -474,7 +507,8 @@ int main(int argc, char *argv[])
             pmesh.Print(mesh_ofs);
 
             ofstream sol_ofs(sol_name.str().c_str());
-            if (myid == 0) std::cout << "Saving solution to: " << sol_name.str() << std::endl;
+            if (myid == 0) std::cout << "Saving solution to: " << sol_name.str() <<
+                                         std::endl;
             sol_ofs.precision(precision);
             for (int i = 0; i < x.Size(); ++i)
             {
@@ -513,14 +547,16 @@ int main(int argc, char *argv[])
             Vector true_solution(X.Size());
             ifstream solution_file;
             std::string solution_filename = "Sol" + curr_basis_identifier + to_string(myid);
-            if (myid == 0) std::cout << "Comparing current run to solution at: " << solution_filename << std::endl;
+            if (myid == 0) std::cout << "Comparing current run to solution at: " <<
+                                         solution_filename << std::endl;
             solution_file.open(solution_filename);
             true_solution.Load(solution_file, X.Size());
             solution_file.close();
             Vector residual(X.Size());
             subtract(X, true_solution, residual);
             curr_error = residual.Norml2() / true_solution.Norml2();
-            if (myid == 0) std::cout << "The relative error is: " << curr_error << std::endl;
+            if (myid == 0) std::cout << "The relative error is: " << curr_error <<
+                                         std::endl;
             greedy_sampler->setPointRelativeError(curr_error);
         }
         // 29. Or calculate the error indicator as commanded by the greedy algorithm.
@@ -541,14 +577,16 @@ int main(int argc, char *argv[])
             Vector true_solution(X.Size());
             ifstream solution_file;
             std::string solution_filename = "Sol" + curr_basis_identifier + to_string(myid);
-            if (myid == 0) std::cout << "Comparing current run to solution at: " << solution_filename << std::endl;
+            if (myid == 0) std::cout << "Comparing current run to solution at: " <<
+                                         solution_filename << std::endl;
             solution_file.open(solution_filename);
             true_solution.Load(solution_file, X.Size());
             solution_file.close();
             Vector residual(X.Size());
             subtract(X, true_solution, residual);
             curr_error = residual.Norml2() / true_solution.Norml2();
-            if (myid == 0) std::cout << "The relative error is: " << curr_error << std::endl;
+            if (myid == 0) std::cout << "The relative error is: " << curr_error <<
+                                         std::endl;
 
             Vector AX(X.Size());
             A->Mult(X, AX);
@@ -563,7 +601,8 @@ int main(int argc, char *argv[])
         {
             mergeTimer.Start();
             std::unique_ptr<CAROM::BasisGenerator> basis_generator;
-            options = new CAROM::Options(fespace.GetTrueVSize(), max_num_snapshots, 1, update_right_SV);
+            options = new CAROM::Options(fespace.GetTrueVSize(), max_num_snapshots, 1,
+                                         update_right_SV);
             generator = new CAROM::BasisGenerator(*options, isIncremental, loadBasisName);
             for (int i = 0; i < basisIdentifiers.size(); ++i)
             {
@@ -574,7 +613,8 @@ int main(int argc, char *argv[])
             mergeTimer.Stop();
             if (myid == 0)
             {
-                printf("Elapsed time for merging and building ROM basis: %e second\n", mergeTimer.RealTime());
+                printf("Elapsed time for merging and building ROM basis: %e second\n",
+                       mergeTimer.RealTime());
             }
             delete generator;
             delete options;
@@ -585,12 +625,14 @@ int main(int argc, char *argv[])
         {
             if(fom || offline)
             {
-                printf("Elapsed time for assembling FOM: %e second\n", assembleTimer.RealTime());
+                printf("Elapsed time for assembling FOM: %e second\n",
+                       assembleTimer.RealTime());
                 printf("Elapsed time for solving FOM: %e second\n", solveTimer.RealTime());
             }
             if(online)
             {
-                printf("Elapsed time for assembling ROM: %e second\n", assembleTimer.RealTime());
+                printf("Elapsed time for assembling ROM: %e second\n",
+                       assembleTimer.RealTime());
                 printf("Elapsed time for solving ROM: %e second\n", solveTimer.RealTime());
             }
         }

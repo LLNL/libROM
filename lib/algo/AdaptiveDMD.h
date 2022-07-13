@@ -35,31 +35,21 @@ public:
     /**
      * @brief Constructor.
      *
-     * @param[in] dim            The full-order state dimension.
-     * @param[in] desired_dt     The constant step size for uniform interpolation of samples.
-     *                           If set equal to or below 0.0, desired_dt will be set to the median of
-     *                           the different dt's between the samples.
-     * @param[in] rbf            The RBF type ("G" == gaussian, "MQ" == multiquadric,
-     *                           "IQ" == inverse quadratic, "IMQ" == inverse
-     *                           multiquadric)
-     * @param[in] interp_method  The interpolation method type ("LS" == linear solve,
-     *                           "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
-     * @param[in] epsilon        The RBF parameter that determines the width of influence.
-     *                           If set equal to or below 0.0, epsilon will be estimated to 0.5 / desired_dt.
+     * @param[in] dim             The full-order state dimension.
+     * @param[in] desired_dt      The constant step size for uniform interpolation of samples.
+     *                            If set equal to or below 0.0, desired_dt will be set to the median of
+     *                            the different dt's between the samples.
+     * @param[in] rbf             The RBF type ("G" == gaussian,
+     *                            "IQ" == inverse quadratic, "IMQ" == inverse
+     *                            multiquadric)
+     * @param[in] interp_method   The interpolation method type ("LS" == linear solve,
+     *                            "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
+     * @param[in] closest_rbf_val The RBF parameter determines the width of influence.
+     *                            Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
      */
-    AdaptiveDMD(int dim, double desired_dt = -1.0, std::string rbf = "G", std::string interp_method = "LS",
-                double epsilon = -1.0);
-
-    /**
-     * @brief Sample the new state, u_in.
-     *
-     * @pre u_in != 0
-     * @pre t >= 0.0
-     *
-     * @param[in] u_in The new state.
-     * @param[in] t    The time of the newly sampled state.
-     */
-    void takeSample(double* u_in, double t);
+    AdaptiveDMD(int dim, double desired_dt = -1.0, std::string rbf = "G",
+                std::string interp_method = "LS",
+                double closest_rbf_val = 0.9);
 
     /**
      * @param[in] energy_fraction The energy fraction to keep after doing SVD.
@@ -102,11 +92,6 @@ private:
         const AdaptiveDMD& rhs);
 
     /**
-     * @brief The stored times of each sample.
-     */
-    std::vector<Vector*> d_sampled_times;
-
-    /**
      * @brief The RBF type (gaussian, multiquadric, inverse quadratic, inverse
      *        multiquadric)
      */
@@ -129,11 +114,9 @@ private:
     void interpolateSnapshots();
 
     /**
-     * @brief The RBF parameter that determines the width of influence.
-     *        a small epsilon: larger influential width
-     *        a large epsilon: smaller influential width
+     * @brief The RBF value of the nearest two parameter points
      */
-    double d_epsilon;
+    double d_closest_rbf_val;
 };
 
 }
