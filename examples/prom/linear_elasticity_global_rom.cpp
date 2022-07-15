@@ -1,10 +1,10 @@
-//               libROM MFEM Example: parametric ROM for linear elastic problem (adapted from ex2p.cpp)
+//               libROM MFEM Example: parametric ROM for linear elasticity problem (adapted from ex2p.cpp)
 //
 // Compile with: ./scripts/compile.sh -m
 //
 // Description:  This example code demonstrates the use of MFEM and libROM to
-//               define a simple projection-based reduced order model of a 
-//				 simple linear elasticity problem describing a multi-material 
+//               define a simple projection-based reduced order model of a
+//				 simple linear elasticity problem describing a multi-material
 //				 cantilever beam.
 //
 //               The example highlights three distinct ROM processes, i.e.,
@@ -17,14 +17,14 @@
 //               operator, solves the reduced order system, and lifts the
 //               solution to the full order space.
 //
-// Offline phase: ./linear_elasticity_global_rom -offline -id 0 -f -0.01
-//                ./linear_elasticity_global_rom -offline -id 1 -f -0.015
-//                ./linear_elasticity_global_rom -offline -id 2 -f -0.02
-// 
+// Offline phase: ./linear_elasticity_global_rom -offline -id 0 -f 0.01
+//                ./linear_elasticity_global_rom -offline -id 1 -f 0.015
+//                ./linear_elasticity_global_rom -offline -id 2 -f 0.02
+//
 //
 // Merge phase:   ./linear_elasticity_global_rom -merge -ns 3
 //
-// Online phase:  ./linear_elasticity_global_rom -offline -id 3 -f -0.012
+// Online phase:  ./linear_elasticity_global_rom -offline -id 3 -f 0.012
 
 #include "mfem.hpp"
 #include <fstream>
@@ -34,7 +34,6 @@
 
 using namespace std;
 using namespace mfem;
-
 
 int main(int argc, char* argv[])
 {
@@ -65,44 +64,43 @@ int main(int argc, char* argv[])
     double E = 2.5;
     double nu = 0.25;
 
-
     OptionsParser args(argc, argv);
     args.AddOption(&mesh_file, "-m", "--mesh",
-        "Mesh file to use.");
+                   "Mesh file to use.");
     args.AddOption(&order, "-o", "--order",
-        "Finite element order (polynomial degree).");
+                   "Finite element order (polynomial degree).");
     args.AddOption(&id, "-id", "--id", "Parametric id");
     args.AddOption(&nsets, "-ns", "--nset", "Number of parametric snapshot sets");
     args.AddOption(&static_cond, "-sc", "--static-condensation", "-no-sc",
-        "--no-static-condensation", "Enable static condensation.");
+                   "--no-static-condensation", "Enable static condensation.");
     args.AddOption(&ext_force, "-f", "--ext-force",
-        "External force applied at end.");
+                   "External force applied at end.");
     args.AddOption(&E, "-E", "--youngs-modulus",
-        "Youngs modulus.");
+                   "Youngs modulus.");
     args.AddOption(&nu, "-nu", "--poissons-ratio",
-        "Poisson's ratio.");
+                   "Poisson's ratio.");
     args.AddOption(&amg_elast, "-elast", "--amg-for-elasticity", "-sys",
-        "--amg-for-systems",
-        "Use the special AMG elasticity solver (GM/LN approaches), "
-        "or standard AMG for systems (unknown approach).");
+                   "--amg-for-systems",
+                   "Use the special AMG elasticity solver (GM/LN approaches), "
+                   "or standard AMG for systems (unknown approach).");
     args.AddOption(&reorder_space, "-nodes", "--by-nodes", "-vdim", "--by-vdim",
-        "Use byNODES ordering of vector space instead of byVDIM");
+                   "Use byNODES ordering of vector space instead of byVDIM");
     args.AddOption(&device_config, "-d", "--device",
-        "Device configuration string, see Device::Configure().");
+                   "Device configuration string, see Device::Configure().");
     args.AddOption(&visit, "-visit", "--visit-datafiles", "-no-visit",
-        "--no-visit-datafiles",
-        "Save data files for VisIt (visit.llnl.gov) visualization.");
+                   "--no-visit-datafiles",
+                   "Save data files for VisIt (visit.llnl.gov) visualization.");
     args.AddOption(&visualization, "-vis", "--visualization", "-no-vis",
-        "--no-visualization",
-        "Enable or disable GLVis visualization.");
+                   "--no-visualization",
+                   "Enable or disable GLVis visualization.");
     args.AddOption(&fom, "-fom", "--fom", "-no-fom", "--no-fom",
-        "Enable or disable the fom phase.");
+                   "Enable or disable the fom phase.");
     args.AddOption(&offline, "-offline", "--offline", "-no-offline", "--no-offline",
-        "Enable or disable the offline phase.");
+                   "Enable or disable the offline phase.");
     args.AddOption(&online, "-online", "--online", "-no-online", "--no-online",
-        "Enable or disable the online phase.");
+                   "Enable or disable the online phase.");
     args.AddOption(&merge, "-merge", "--merge", "-no-merge", "--no-merge",
-        "Enable or disable the merge phase.");
+                   "Enable or disable the merge phase.");
 
     args.Parse();
     if (!args.Good())
@@ -119,14 +117,15 @@ int main(int argc, char* argv[])
     }
 
     // 3. Enable hardware devices such as GPUs, and programming models such as
-   //    CUDA, OCCA, RAJA and OpenMP based on command line options.
+    //    CUDA, OCCA, RAJA and OpenMP based on command line options.
     Device device(device_config);
-    if (myid == 0) { device.Print(); }
-
+    if (myid == 0) {
+        device.Print();
+    }
 
     // 4. Read the (serial) mesh from the given mesh file on all processors.  We
-   //    can handle triangular, quadrilateral, tetrahedral, hexahedral, surface
-   //    and volume meshes with the same code.
+    //    can handle triangular, quadrilateral, tetrahedral, hexahedral, surface
+    //    and volume meshes with the same code.
     Mesh* mesh = new Mesh(mesh_file, 1, 1);
     int dim = mesh->Dimension();
 
@@ -134,12 +133,10 @@ int main(int argc, char* argv[])
     {
         if (myid == 0)
             cerr << "\nInput mesh should have at least two materials and "
-            << "two boundary attributes! (See schematic in ex2.cpp)\n"
-            << endl;
+                 << "two boundary attributes! (See schematic in ex2.cpp)\n"
+                 << endl;
         return 3;
     }
-
-
 
     // 5. Refine the serial mesh on all processors to increase the resolution. In
     //    this example we do 'ref_levels' of uniform refinement. We choose
@@ -154,10 +151,9 @@ int main(int argc, char* argv[])
         }
     }
 
-
     // 6. Define a parallel mesh by a partitioning of the serial mesh. Refine
-   //    this mesh further in parallel to increase the resolution. Once the
-   //    parallel mesh is defined, the serial mesh can be deleted.
+    //    this mesh further in parallel to increase the resolution. Once the
+    //    parallel mesh is defined, the serial mesh can be deleted.
     ParMesh* pmesh = new ParMesh(MPI_COMM_WORLD, *mesh);
     delete mesh;
     {
@@ -167,8 +163,6 @@ int main(int argc, char* argv[])
             pmesh->UniformRefinement();
         }
     }
-
-
 
     // 7. Define a parallel finite element space on the parallel mesh. Here we
     //    use vector finite elements, i.e. dim copies of a scalar finite element
@@ -200,10 +194,8 @@ int main(int argc, char* argv[])
     if (myid == 0)
     {
         cout << "Number of finite element unknowns: " << size << endl
-            << "Assembling: " << flush;
+             << "Assembling: " << flush;
     }
-
-
 
     // 8. Determine the list of true (i.e. parallel conforming) essential
     //    boundary dofs. In this example, the boundary conditions are defined by
@@ -213,8 +205,6 @@ int main(int argc, char* argv[])
     ess_bdr = 0;
     ess_bdr[0] = 1;
     fespace->GetEssentialTrueDofs(ess_bdr, ess_tdof_list);
-
-
 
     // 9. Initiate ROM related variables
     int max_num_snapshots = 100;
@@ -228,12 +218,11 @@ int main(int argc, char* argv[])
     int numRowRB, numColumnRB;
     StopWatch solveTimer, assembleTimer, mergeTimer;
 
-
     // 10. Set BasisGenerator if offline
     if (offline)
     {
         options = new CAROM::Options(fespace->GetTrueVSize(), max_num_snapshots, 1,
-            update_right_SV);
+                                     update_right_SV);
         generator = new CAROM::BasisGenerator(*options, isIncremental, basisFileName);
     }
 
@@ -243,12 +232,12 @@ int main(int argc, char* argv[])
         mergeTimer.Start();
         std::unique_ptr<CAROM::BasisGenerator> basis_generator;
         options = new CAROM::Options(fespace->GetTrueVSize(), max_num_snapshots, 1,
-            update_right_SV);
+                                     update_right_SV);
         generator = new CAROM::BasisGenerator(*options, isIncremental, basisName);
         for (int paramID = 0; paramID < nsets; ++paramID)
         {
             std::string snapshot_filename = basisName + std::to_string(
-                paramID) + "_snapshot";
+                                                paramID) + "_snapshot";
             generator->loadSamples(snapshot_filename, "snapshot");
         }
         generator->endSamples(); // save the merged basis file
@@ -256,14 +245,13 @@ int main(int argc, char* argv[])
         if (myid == 0)
         {
             printf("Elapsed time for merging and building ROM basis: %e second\n",
-                mergeTimer.RealTime());
+                   mergeTimer.RealTime());
         }
         delete generator;
         delete options;
         MPI_Finalize();
         return 0;
     }
-
 
     // 12. Set up the parallel linear form b(.) which corresponds to the
     //     right-hand side of the FEM linear system. In this case, b_i equals the
@@ -293,15 +281,11 @@ int main(int argc, char* argv[])
     }
     b->Assemble();
 
-
-
     // 13. Define the solution vector x as a parallel finite element grid
     //     function corresponding to fespace. Initialize x with initial guess of
     //     zero, which satisfies the boundary conditions.
     ParGridFunction x(fespace);
     x = 0.0;
-
-
 
     // 14. Set up the parallel bilinear form a(.,.) on the finite element space
     //     corresponding to the linear elasticity integrator with piece-wise
@@ -312,7 +296,6 @@ int main(int argc, char* argv[])
     lambda(0) = lambda(1) * 50;
     PWConstCoefficient lambda_func(lambda);
 
-
     Vector mu(pmesh->attributes.Max());
     mu = E/(2*(1 + nu));
     mu(0) = mu(1) * 50;
@@ -321,14 +304,16 @@ int main(int argc, char* argv[])
     ParBilinearForm* a = new ParBilinearForm(fespace);
     a->AddDomainIntegrator(new ElasticityIntegrator(lambda_func, mu_func));
 
-
-
     // 15. Assemble the parallel bilinear form and the corresponding linear
     //     system, applying any necessary transformations such as: parallel
     //     assembly, eliminating boundary conditions, applying conforming
     //     constraints for non-conforming AMR, static condensation, etc.
-    if (myid == 0) { cout << "matrix ... " << flush; }
-    if (static_cond) { a->EnableStaticCondensation(); }
+    if (myid == 0) {
+        cout << "matrix ... " << flush;
+    }
+    if (static_cond) {
+        a->EnableStaticCondensation();
+    }
     a->Assemble();
 
     HypreParMatrix A;
@@ -374,9 +359,7 @@ int main(int argc, char* argv[])
             delete generator;
             delete options;
         }
-
     }
-
 
     // 19. The online phase
     if (online) {
@@ -387,11 +370,11 @@ int main(int argc, char* argv[])
         numRowRB = spatialbasis->numRows();
         numColumnRB = spatialbasis->numColumns();
         if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB,
-            numColumnRB);
+                                  numColumnRB);
 
         // libROM stores the matrix row-wise, so wrapping as a DenseMatrix in MFEM means it is transposed.
         DenseMatrix* reducedBasisT = new DenseMatrix(spatialbasis->getData(),
-            numColumnRB, numRowRB);
+                numColumnRB, numRowRB);
 
         // 21. form inverse ROM operator
         Vector abv(numRowRB), bv(numRowRB), bv2(numRowRB);
@@ -418,14 +401,10 @@ int main(int argc, char* argv[])
         reducedBasisT->MultTranspose(reducedSol, X);
         delete reducedBasisT;
     }
-    
-
 
     // 24. Recover the parallel grid function corresponding to X. This is the
     //     local finite element solution on each processor.
     a->RecoverFEMSolution(X, *b, x);
-
-
 
     // 25. For non-NURBS meshes, make the mesh curved based on the finite element
     //     space. This means that we define the mesh elements through a fespace
@@ -438,8 +417,6 @@ int main(int argc, char* argv[])
     {
         pmesh->SetNodalFESpace(fespace);
     }
-
-
 
     // 26. Save in parallel the displaced mesh and the inverted solution (which
     //     gives the backward displacements to the original grid). This output
@@ -462,23 +439,21 @@ int main(int argc, char* argv[])
         x.Save(sol_ofs);
     }
 
-
     // 27. Save data in the VisIt format.
     DataCollection* dc = NULL;
     if (visit)
     {
         if (offline) dc = new VisItDataCollection("Example_linear_elastic", pmesh);
-        else if (online) dc = new VisItDataCollection("Example_linear_elastic_rom", pmesh);
+        else if (online) dc = new VisItDataCollection("Example_linear_elastic_rom",
+                    pmesh);
         dc->SetPrecision(precision);
         dc->RegisterField("solution", &x);
         dc->Save();
         delete dc;
     }
 
-
-
     // 28. Send the above data by socket to a GLVis server.  Use the "n" and "b"
-   //     keys in GLVis to visualize the displacements.
+    //     keys in GLVis to visualize the displacements.
     if (visualization)
     {
         char vishost[] = "localhost";
@@ -489,20 +464,19 @@ int main(int argc, char* argv[])
         sol_sock << "solution\n" << *pmesh << x << flush;
     }
 
-
     // 29. print timing info
     if (myid == 0)
     {
         if (fom || offline)
         {
             printf("Elapsed time for assembling FOM: %e second\n",
-                assembleTimer.RealTime());
+                   assembleTimer.RealTime());
             printf("Elapsed time for solving FOM: %e second\n", solveTimer.RealTime());
         }
         if (online)
         {
             printf("Elapsed time for assembling ROM: %e second\n",
-                assembleTimer.RealTime());
+                   assembleTimer.RealTime());
             printf("Elapsed time for solving ROM: %e second\n", solveTimer.RealTime());
         }
     }
@@ -517,9 +491,7 @@ int main(int argc, char* argv[])
     }
     delete pmesh;
 
-cout << "All good" << endl;
-
-return 0;
+    return 0;
 }
 
 

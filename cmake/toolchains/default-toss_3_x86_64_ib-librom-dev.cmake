@@ -24,7 +24,6 @@ set(HDF5_ROOT ${hdf5_serial_path})
 
 set(BLAS_ROOT /usr/tce/packages/mkl/mkl-2019.0/mkl)
 set(LAPACK_ROOT /usr/tce/packages/mkl/mkl-2019.0/mkl)
-
 set(CMAKE_LIBRARY_ARCHITECTURE intel64)
 
 set(MKL_MESSAGE_PASSING MPICH2)
