@@ -1627,7 +1627,8 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_,
       Vsinv(Bsinv), J(height),
       zS(std::max(nsamp_S, 1), false), zT(std::max(nsamp_S, 1), false), Ssinv(Ssinv_),
       VTCS_W(rwdim, std::max(nsamp_S, 1), false), S(S_),
-      VtzR(rrdim_, false), hyperreduce_source(hyperreduce_source_), oversampling(oversampling_)
+      VtzR(rrdim_, false), hyperreduce_source(hyperreduce_source_),
+      oversampling(oversampling_)
 {
     dydt_prev = 0.0;
 

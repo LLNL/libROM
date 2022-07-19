@@ -54,13 +54,13 @@ public:
 
 protected:
     friend void getParametricDMD<NonuniformDMD>(NonuniformDMD*& parametric_dmd,
-                                 std::vector<Vector*>& parameter_points,
-                                 std::vector<NonuniformDMD*>& dmds,
-                                 Vector* desired_point,
-                                 std::string rbf,
-                                 std::string interp_method,
-                                 double closest_rbf_val,
-                                 bool reorthogonalize_W);
+            std::vector<Vector*>& parameter_points,
+            std::vector<NonuniformDMD*>& dmds,
+            Vector* desired_point,
+            std::string rbf,
+            std::string interp_method,
+            double closest_rbf_val,
+            bool reorthogonalize_W);
 
     /**
      * @brief Constructor.
