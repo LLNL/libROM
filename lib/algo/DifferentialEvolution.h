@@ -1,8 +1,9 @@
 /******************************************************************************
  *
  * Author: Milos Stojanovic Stojke (milsto)
- * Adapted from DifferentialEvolution.h from milsto's Github repo, permission
- * granted by the MIT license: https://github.com/milsto/differential-evolution
+ * Adapted by Kevin Huynh from DifferentialEvolution.h from milsto's Github repo,
+ * https://github.com/milsto/differential-evolution, permission granted by
+ * milsto/differential-evolution's MIT license.
  *
  * SPDX-License-Identifier: (MIT)
  *
