@@ -7,18 +7,18 @@
 // In these examples, the radius of the interface between different initial temperatures, the
 // alpha coefficient, and two center location variables are modified.
 //
-// For Parametric DMD (ex. 1) (radius & cx & cy, extrapolation):
+// For Parametric DMD with differential evolution (radius & alpha & cx & cy):
 //   rm -rf parameters.txt
-// mpirun -np 8 de_parametric_heat_conduction -r 0.1 -cx 0.1 -cy 0.1 -visit -offline -rdim 16 (Create DMDs at different training points)
-// mpirun -np 8 de_parametric_heat_conduction -r 0.1 -cx 0.3 -cy 0.1 -visit -offline -rdim 16
-// mpirun -np 8 de_parametric_heat_conduction -r 0.1 -cx 0.1 -cy 0.3 -visit -offline -rdim 16
-// mpirun -np 8 de_parametric_heat_conduction -r 0.1 -cx 0.3 -cy 0.3 -visit -offline -rdim 16
-// mpirun -np 8 de_parametric_heat_conduction -r 0.3 -cx 0.1 -cy 0.1 -visit -offline -rdim 16
-// mpirun -np 8 de_parametric_heat_conduction -r 0.3 -cx 0.3 -cy 0.1 -visit -offline -rdim 16
-// mpirun -np 8 de_parametric_heat_conduction -r 0.3 -cx 0.1 -cy 0.3 -visit -offline -rdim 16
-// mpirun -np 8 de_parametric_heat_conduction -r 0.3 -cx 0.3 -cy 0.3 -visit -offline -rdim 16
-// mpirun -np 8 de_parametric_heat_conduction -r 0.2 -cx 0.2 -cy 0.2 (Compute target FOM)
-// mpirun -np 8 de_parametric_heat_conduction -r 0.2 -cx 0.2 -cy 0.2 -de (Run differential evolution to see if target FOM can be matched)
+//   mpirun -np 8 de_parametric_heat_conduction -r 0.1 -cx 0.1 -cy 0.1 -visit -offline -rdim 16 (Create DMDs at different training points)
+//   mpirun -np 8 de_parametric_heat_conduction -r 0.1 -cx 0.3 -cy 0.1 -visit -offline -rdim 16
+//   mpirun -np 8 de_parametric_heat_conduction -r 0.1 -cx 0.1 -cy 0.3 -visit -offline -rdim 16
+//   mpirun -np 8 de_parametric_heat_conduction -r 0.1 -cx 0.3 -cy 0.3 -visit -offline -rdim 16
+//   mpirun -np 8 de_parametric_heat_conduction -r 0.3 -cx 0.1 -cy 0.1 -visit -offline -rdim 16
+//   mpirun -np 8 de_parametric_heat_conduction -r 0.3 -cx 0.3 -cy 0.1 -visit -offline -rdim 16
+//   mpirun -np 8 de_parametric_heat_conduction -r 0.3 -cx 0.1 -cy 0.3 -visit -offline -rdim 16
+//   mpirun -np 8 de_parametric_heat_conduction -r 0.3 -cx 0.3 -cy 0.3 -visit -offline -rdim 16
+//   mpirun -np 8 de_parametric_heat_conduction -r 0.2 -cx 0.2 -cy 0.2 (Compute target FOM)
+//   mpirun -np 8 de_parametric_heat_conduction -r 0.2 -cx 0.2 -cy 0.2 -de (Run differential evolution to see if target FOM can be matched)
 //
 // =================================================================================
 //
@@ -127,9 +127,10 @@ int precision = 16;
 double radius = 0.5;
 double cx = 0.0;
 double cy = 0.0;
-double target_radius = 0.5;
-double target_cx = 0.0;
-double target_cy = 0.0;
+double target_radius = radius;
+double target_alpha = alpha;
+double target_cx = cx;
+double target_cy = cy;
 double de_F = 0.8;
 double de_CR = 0.9;
 
@@ -568,7 +569,7 @@ double simulation()
         if (myid == 0)
         {
             std::cout << "Rel. diff. of DMD temp. (u) at t_final at radius " << radius <<
-                      ", cx " << cx << ", cy " << cy << ": "
+                      ", alpha " << alpha << ", cx " << cx << ", cy " << cy << ": "
                       << rel_diff << std::endl;
             if (!de) printf("Elapsed time for predicting DMD: %e second\n",
                                 dmd_prediction_timer.RealTime());
@@ -610,8 +611,9 @@ public:
     double EvaluateCost(std::vector<double> inputs) const override
     {
         radius = inputs[0];
-        cx = inputs[1];
-        cy = inputs[2];
+        alpha = inputs[1];
+        cx = inputs[2];
+        cy = inputs[3];
 
         return simulation();
     }
@@ -628,6 +630,8 @@ public:
         bool first_line = true;
         double min_radius = 0.0;
         double max_radius = 0.0;
+        double min_alpha = 0.0;
+        double max_alpha = 0.0;
         double min_cx = 0.0;
         double max_cx = 0.0;
         double min_cy = 0.0;
@@ -647,6 +651,8 @@ public:
             {
                 min_radius = curr_radius;
                 max_radius = curr_radius;
+                min_alpha = curr_alpha;
+                max_alpha = curr_alpha;
                 min_cx = curr_cx;
                 max_cx = curr_cx;
                 min_cy = curr_cy;
@@ -657,6 +663,8 @@ public:
             {
                 min_radius = min(curr_radius, min_radius);
                 max_radius = max(curr_radius, max_radius);
+                min_alpha = min(curr_alpha, min_alpha);
+                max_alpha = max(curr_alpha, max_alpha);
                 min_cx = min(curr_cx, min_cx);
                 max_cx = max(curr_cx, max_cx);
                 min_cy = min(curr_cy, min_cy);
@@ -667,8 +675,9 @@ public:
 
         std::vector<Constraints> constr(NumberOfParameters());
         constr[0] = Constraints(min_radius, max_radius, true);
-        constr[1] = Constraints(min_cx, max_cx, true);
-        constr[2] = Constraints(min_cy, max_cy, true);
+        constr[1] = Constraints(min_alpha, max_alpha, true);
+        constr[2] = Constraints(min_cx, max_cx, true);
+        constr[3] = Constraints(min_cy, max_cy, true);
         return constr;
     }
 
@@ -757,13 +766,14 @@ int main(int argc, char *argv[])
     }
 
     target_radius = radius;
+    target_alpha = alpha;
     target_cx = cx;
     target_cy = cy;
 
     if (de)
     {
-        // Create relative error cost function in 3 dimensions (radius, cx, cy)
-        RelativeDifferenceCostFunction cost(3);
+        // Create relative error cost function in 4 dimensions (radius, alpha, cx, cy)
+        RelativeDifferenceCostFunction cost(4);
 
         // Create Differential Evolution optimizer with population size of 50
         CAROM::DifferentialEvolution de(cost, 50, de_F, de_CR);
