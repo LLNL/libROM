@@ -19,6 +19,7 @@
 #define included_DifferentialEvolution_h
 
 #include <vector>
+#include <functional>
 #include <random>
 #include <utility>
 #include <memory>
