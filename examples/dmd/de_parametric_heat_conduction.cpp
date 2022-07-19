@@ -603,7 +603,7 @@ double simulation()
 class RelativeDifferenceCostFunction : public CAROM::IOptimizable
 {
 public:
-    RelativeDifferenceCostFunction(unsigned int dims = 3) :
+    RelativeDifferenceCostFunction(unsigned int dims) :
         m_dim(dims)
     {
 
