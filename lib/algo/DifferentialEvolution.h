@@ -23,7 +23,6 @@
 #include <utility>
 #include <memory>
 #include <limits>
-#include "mpi.h"
 
 namespace CAROM
 {
@@ -75,16 +74,22 @@ class DifferentialEvolution
 {
 public:
     /**
-     * Construct Differential Evolution optimizer
+     * @brief Constructor.
      *
-     * \param costFunction Cost function to minimize
-     * \param populationSize Number of agents in each optimization step
-     * \param randomSeed Set random seed to a fix value to have repeatable (non stochastic) experiments
-     * \param shouldCheckConstraints Should constraints bee checked on for each new candidate.
-     * This check check may be turned off to increase performance if the cost function is defined
-     * and has no local minimum outside of the constraints.
-     * \param callback Optional callback to be called after each optimization iteration has finished.
-     * Optimization iteration is defined as processing of single population with SelectionAndCrossing method.
+     * @param[in] costFunction           Cost function to minimize
+     * @param[in] populationSize         Number of agents in each optimization step
+     * @param[in] F                      The differential weight.
+     * @param[in] CR                     The crossover probability.
+     * @param[in] randomSeed             Set random seed to a fix value to have
+     *                                   repeatable (non stochastic) experiments
+     * @param[in] shouldCheckConstraints Should constraints bee checked on for each new candidate.
+     *                                   This check may be turned off to
+     *                                   increase performance if the cost function is defined
+     *                                   and has no local minimum outside of the constraints.
+     * @param[in] callback               Optional callback to be called after each optimization
+     *                                   iteration has finished.
+     * @param[in] terminationCondition   Optional termination condition callback to be called
+     *                                   after each optimization iteration has finished.
      */
     DifferentialEvolution(const IOptimizable& costFunction,
                           unsigned int populationSize,
@@ -96,6 +101,15 @@ public:
                           std::function<bool(const DifferentialEvolution&)> terminationCondition =
                               nullptr);
 
+    /**
+     * @brief Constructor.
+     *
+     * @param[in] min_iterations         The minimum number of iterations to run.
+     *                                   Cost tolerance is not checked until then.
+     * @param[in] max_iterations         The maximum number of iterations to run.
+     * @param[in] cost_tolerance         The cost tolerance to determine convergence.
+     * @param[in] verbose                Verbosity.
+     */
     void Optimize(int min_iterations, int max_iterations, double cost_tolerance,
                   bool verbose = true);
 
