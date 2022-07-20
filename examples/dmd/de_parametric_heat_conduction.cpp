@@ -18,7 +18,7 @@
 //   mpirun -np 8 de_parametric_heat_conduction -r 0.3 -cx 0.1 -cy 0.3 -visit -offline -rdim 16
 //   mpirun -np 8 de_parametric_heat_conduction -r 0.3 -cx 0.3 -cy 0.3 -visit -offline -rdim 16
 //   mpirun -np 8 de_parametric_heat_conduction -r 0.2 -cx 0.2 -cy 0.2 (Compute target FOM)
-//   mpirun -np 8 de_parametric_heat_conduction -r 0.2 -cx 0.2 -cy 0.2 -de -de_f 0.9 -de_cr 0.9 -de_ps 50 -de_min_iter 10 -de_max_iter 100 -de_ct 0.001 (Run differential evolution to see if target FOM can be matched)
+//   mpirun -np 8 de_parametric_heat_conduction -r 0.2 -cx 0.2 -cy 0.2 -de -de_f 0.9 -de_cr 0.9 -de_ps 50 -de_min_iter 10 -de_max_iter 100 -de_ct 0.001 (Run interpolative differential evolution to see if target FOM can be matched)
 //
 // =================================================================================
 //
@@ -38,6 +38,7 @@
 #include "algo/DifferentialEvolution.h"
 #include "linalg/Vector.h"
 #include <cmath>
+#include <cfloat>
 #include <fstream>
 #include <iostream>
 #include "utils/CSVDatabase.h"
@@ -127,6 +128,14 @@ int precision = 16;
 double radius = 0.5;
 double cx = 0.0;
 double cy = 0.0;
+double de_min_radius = -DBL_MAX;
+double de_min_alpha = -DBL_MAX;
+double de_min_cx = -DBL_MAX;
+double de_min_cy = -DBL_MAX;
+double de_max_radius = DBL_MAX;
+double de_max_alpha = DBL_MAX;
+double de_max_cx = DBL_MAX;
+double de_max_cy = DBL_MAX;
 double target_radius = radius;
 double target_alpha = alpha;
 double target_cx = cx;
@@ -677,6 +686,25 @@ public:
         }
         fin.close();
 
+        if (de_min_radius != -DBL_MAX) min_radius = de_min_radius;
+        if (de_min_alpha != -DBL_MAX) min_alpha = de_min_alpha;
+        if (de_min_cx != -DBL_MAX) min_cx = de_min_cx;
+        if (de_min_cy != -DBL_MAX) min_cy = de_min_cy;
+        if (de_max_radius != DBL_MAX) max_radius = de_max_radius;
+        if (de_max_alpha != DBL_MAX) max_alpha = de_max_alpha;
+        if (de_max_cx != DBL_MAX) max_cx = de_max_cx;
+        if (de_max_cy != DBL_MAX) max_cy = de_max_cy;
+
+        MFEM_VERIFY(min_radius <= max_radius, "Radius DE range is invalid.");
+        MFEM_VERIFY(min_alpha <= max_alpha, "Alpha DE range is invalid.");
+        MFEM_VERIFY(min_cx <= max_cx, "cx DE range is invalid.");
+        MFEM_VERIFY(min_cy <= max_cy, "cy DE range is invalid.");
+
+        cout << "DE radius range is: " << min_radius << " to " << max_radius << endl;
+        cout << "DE alpha range is: " << min_alpha << " to " << max_alpha << endl;
+        cout << "DE cx range is: " << min_cx << " to " << max_cx << endl;
+        cout << "DE cy range is: " << min_cy << " to " << max_cy << endl;
+
         std::vector<Constraints> constr(NumberOfParameters());
         constr[0] = Constraints(min_radius, max_radius, true);
         constr[1] = Constraints(min_alpha, max_alpha, true);
@@ -724,6 +752,22 @@ int main(int argc, char *argv[])
                    "Center offset in the x direction.");
     args.AddOption(&cy, "-cy", "--cy",
                    "Center offset in the y direction.");
+    args.AddOption(&de_min_radius, "-de_min_r", "--de_min_radius",
+                   "DE min radius.");
+    args.AddOption(&de_max_radius, "-de_max_r", "--de_max_radius",
+                   "DE max radius.");
+    args.AddOption(&de_min_alpha, "-de_min_a", "--de_min_alpha",
+                   "DE min alpha.");
+    args.AddOption(&de_max_alpha, "-de_max_a", "--de_max_alpha",
+                   "DE max alpha.");
+    args.AddOption(&de_min_cx, "-de_min_cx", "--de_min_cx",
+                   "DE min cx.");
+    args.AddOption(&de_max_cx, "-de_max_cx", "--de_max_cx",
+                   "DE max cx.");
+    args.AddOption(&de_min_cy, "-de_min_cy", "--de_min_cy",
+                   "DE min cy.");
+    args.AddOption(&de_max_cy, "-de_max_cy", "--de_max_cy",
+                   "DE max cy.");
     args.AddOption(&de_F, "-de_f", "--de_f",
                    "DE F.");
     args.AddOption(&de_CR, "-de_cr", "--de_cr",
