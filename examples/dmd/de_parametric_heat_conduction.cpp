@@ -787,11 +787,12 @@ int main(int argc, char *argv[])
         // Create relative error cost function in 4 dimensions (radius, alpha, cx, cy)
         RelativeDifferenceCostFunction cost(4);
 
-        // Create Differential Evolution optimizer with population size of 50
+        // Create Differential Evolution optimizer with population size of de_PS
+        // differential weight of de_F, and crossover probability of de_CR
         CAROM::DifferentialEvolution de(cost, de_PS, de_F, de_CR);
 
-        // Optimize for at least 10 iterations, to a maximum of 100 iterations with verbose output.
-        // Stop early, after 10 iterations is run, if the minimum cost did not improve by 0.001
+        // Optimize for at least de_min_iter iterations, to a maximum of de_max_iter iterations with verbose output.
+        // Stop early, after de_min_iter iterations is run, if the minimum cost did not improve by de_ct
         de.Optimize(de_min_iter, de_max_iter, de_ct, true);
     }
     else
