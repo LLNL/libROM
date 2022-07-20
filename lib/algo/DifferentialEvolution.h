@@ -31,6 +31,13 @@ namespace CAROM
 class IOptimizable
 {
 public:
+    /**
+     * @brief Constructor.
+     *
+     * @param[in] lower           Lower bound for constraint
+     * @param[in] upper           Upper bound for constraint
+     * @param[in] isConstrained   Whether to check the contraints
+     */
     struct Constraints
     {
         Constraints(double lower = 0.0, double upper = 1.0,
@@ -66,9 +73,22 @@ public:
         bool isConstrained;
     };
 
+    /**
+     * @brief Evaluate the cost function with the current set of inputs.
+     */
     virtual double EvaluateCost(std::vector<double> inputs) const = 0;
+
+    /**
+     * @brief Return the number of parameters.
+     */
     virtual unsigned int NumberOfParameters() const = 0;
+
+    /**
+     * @brief Return the list of constraints.
+     */
     virtual std::vector<Constraints> GetConstraints() const = 0;
+
+
     virtual ~IOptimizable() {}
 };
 
@@ -116,47 +136,125 @@ public:
                   bool verbose = true);
 
 private:
+
+    /**
+     * @brief Check that the agent meets the constraints.
+     */
     bool CheckConstraints(std::vector<double> agent);
 
+    /**
+     * @brief Initialize the population at the first iteration.
+     */
     void InitPopulation();
 
+    /**
+     * @brief Select and cross agents during each iteration.
+     */
     void SelectionAndCrossing();
 
+    /**
+     * @brief Get current best agent.
+     */
     std::vector<double> GetBestAgent() const;
 
+    /**
+     * @brief Get current best cost.
+     */
     double GetBestCost() const;
 
+    /**
+     * @brief Get population and its associated cost.
+     */
     std::vector<std::pair<std::vector<double>, double>> GetPopulationWithCosts()
             const;
 
+    /**
+     * @brief Print population information.
+     */
     void PrintPopulation() const;
 
+    /**
+     * @brief Cost function
+     */
     const IOptimizable& m_cost;
+
+    /**
+     * @brief Population size
+     */
     unsigned int m_populationSize;
+
+    /**
+     * @brief Differential weight
+     */
     double m_F;
+
+    /**
+     * @brief Crossover probability
+     */
     double m_CR;
 
+    /**
+     * @brief Number of parameters
+     */
     unsigned int m_numberOfParameters;
 
+    /**
+     * @brief Whether to check constraints.
+     */
     bool m_shouldCheckConstraints;
 
+    /**
+     * @brief Optional callback function.
+     */
     std::function<void(const DifferentialEvolution&)> m_callback;
+
+    /**
+     * @brief Optional termination condition callback function.
+     */
     std::function<bool(const DifferentialEvolution&)> m_terminationCondition;
 
+    /**
+     * @brief Random number generator
+     */
     std::default_random_engine m_generator;
+
+    /**
+     * @brief Container holding populations
+     */
     std::vector<std::vector<double>> m_population;
 
+    /**
+     * @brief Container holding minimum cost per agent
+     */
     std::vector<double> m_minCostPerAgent;
 
+    /**
+     * @brief Container holding constraints
+     */
     std::vector<IOptimizable::Constraints> m_constraints;
 
+    /**
+     * @brief Index of the current best agent
+     */
     int m_bestAgentIndex;
+
+    /**
+     * @brief Current minimum cost
+     */
     double m_minCost;
 
+    /**
+     * @brief Lower and upper constraint limits
+     */
     static constexpr double g_defaultLowerConstraint =
         -std::numeric_limits<double>::infinity();
-    static constexpr double g_defaultUpperConstarint =
+    static constexpr double g_defaultUpperConstraint =
         std::numeric_limits<double>::infinity();
+
+    /**
+     * @brief The rank of the process this object belongs to.
+     */
+    int d_rank;
 };
 }
 

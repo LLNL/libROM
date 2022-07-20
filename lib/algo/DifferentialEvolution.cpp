@@ -13,6 +13,7 @@
 
 #include "DifferentialEvolution.h"
 #include "utils/Utilities.h"
+#include "mpi.h"
 
 #include <iostream>
 #include <iomanip>
@@ -37,6 +38,15 @@ DifferentialEvolution::DifferentialEvolution(const IOptimizable& costFunction,
     m_callback(callback),
     m_terminationCondition(terminationCondition)
 {
+    // Get the rank of this process, and the number of processors.
+    int mpi_init;
+    MPI_Initialized(&mpi_init);
+    if (mpi_init == 0) {
+        MPI_Init(nullptr, nullptr);
+    }
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
+
     m_generator.seed(randomSeed);
     CAROM_VERIFY(m_populationSize >= 4);
 
@@ -70,21 +80,21 @@ DifferentialEvolution::Optimize(int min_iterations, int max_iterations,
         prevMinCost = m_minCost;
         SelectionAndCrossing();
 
-        if (verbose)
+        if (d_rank == 0 && verbose)
         {
             std::cout << std::fixed << std::setprecision(5);
             std::cout << "Current minimal cost: " << m_minCost << "\t\t";
             std::cout << "Best agent: ";
             for (int i = 0; i < m_numberOfParameters; i++)
             {
-                std::cout<< m_population[m_bestAgentIndex][i] << " ";
+                std::cout << m_population[m_bestAgentIndex][i] << " ";
             }
             std::cout << std::endl;
         }
 
         if (i >= min_iterations && prevMinCost - m_minCost <= cost_tolerance)
         {
-            if (verbose)
+            if (d_rank == 0 && verbose)
             {
                 std::cout <<
                           "Terminated due to cost tolerance condition being met." <<
@@ -102,7 +112,7 @@ DifferentialEvolution::Optimize(int min_iterations, int max_iterations,
         {
             if (m_terminationCondition(*this))
             {
-                if (verbose)
+                if (d_rank == 0 && verbose)
                 {
                     std::cout <<
                               "Terminated due to positive evaluation of the termination condition." <<
@@ -113,7 +123,7 @@ DifferentialEvolution::Optimize(int min_iterations, int max_iterations,
         }
     }
 
-    if (verbose)
+    if (d_rank == 0 && verbose)
     {
         std::cout << "Terminated due to exceeding total number of generations." <<
                   std::endl;
@@ -154,7 +164,7 @@ DifferentialEvolution::InitPopulation()
             {
                 distribution = std::make_shared<std::uniform_real_distribution<double>>
                                (std::uniform_real_distribution<double>(g_defaultLowerConstraint,
-                                       g_defaultUpperConstarint));
+                                       g_defaultUpperConstraint));
             }
 
             agent[i] = (*distribution)(m_generator);
@@ -288,13 +298,16 @@ std::vector<std::pair<std::vector<double>, double>>
 void
 DifferentialEvolution::PrintPopulation() const
 {
-    for (auto agent : m_population)
+    if (d_rank == 0)
     {
-        for (auto& var : agent)
+        for (auto agent : m_population)
         {
-            std::cout << var << " ";
+            for (auto& var : agent)
+            {
+                std::cout << var << " ";
+            }
+            std::cout << std::endl;
         }
-        std::cout << std::endl;
     }
 }
 
