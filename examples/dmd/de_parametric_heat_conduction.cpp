@@ -1,4 +1,4 @@
-//                       libROM MFEM Example: Parametric_Heat_Conduction (adapted from ex16p.cpp)
+//                       libROM MFEM Example: Parametric_Heat_Conduction with Differential Evolution (adapted from ex16p.cpp)
 //
 // Compile with: make de_parametric_heat_conduction
 //
@@ -18,7 +18,7 @@
 //   mpirun -np 8 de_parametric_heat_conduction -r 0.3 -cx 0.1 -cy 0.3 -visit -offline -rdim 16
 //   mpirun -np 8 de_parametric_heat_conduction -r 0.3 -cx 0.3 -cy 0.3 -visit -offline -rdim 16
 //   mpirun -np 8 de_parametric_heat_conduction -r 0.2 -cx 0.2 -cy 0.2 (Compute target FOM)
-//   mpirun -np 8 de_parametric_heat_conduction -r 0.2 -cx 0.2 -cy 0.2 -de (Run differential evolution to see if target FOM can be matched)
+//   mpirun -np 8 de_parametric_heat_conduction -r 0.2 -cx 0.2 -cy 0.2 -de -de_f 0.9 -de_cr 0.9 -de_ps 50 -de_min_iter 10 -de_max_iter 100 -de_ct 0.001 (Run differential evolution to see if target FOM can be matched)
 //
 // =================================================================================
 //
@@ -133,6 +133,10 @@ double target_cx = cx;
 double target_cy = cy;
 double de_F = 0.8;
 double de_CR = 0.9;
+int de_PS = 50;
+int de_min_iter = 10;
+int de_max_iter = 100;
+double de_ct = 0.001;
 
 Vector* true_solution_u = NULL;
 double tot_true_solution_u_norm = 0.0;
@@ -720,10 +724,18 @@ int main(int argc, char *argv[])
                    "Center offset in the x direction.");
     args.AddOption(&cy, "-cy", "--cy",
                    "Center offset in the y direction.");
-    args.AddOption(&de_F, "-f", "-f",
+    args.AddOption(&de_F, "-de_f", "--de_f",
                    "DE F.");
-    args.AddOption(&de_CR, "-cr", "--cr",
+    args.AddOption(&de_CR, "-de_cr", "--de_cr",
                    "DE CR.");
+    args.AddOption(&de_PS, "-de_ps", "--de_ps",
+                   "DE Population size.");
+    args.AddOption(&de_min_iter, "-de_min_iter", "--de_min_iter",
+                   "DE Minimum number of iterations.");
+    args.AddOption(&de_max_iter, "-de_max_iter", "--de_max_iter",
+                   "DE Maximum number of iterations.");
+    args.AddOption(&de_ct, "-de_ct", "--de_ct",
+                   "DE Cost threshold.");
     args.AddOption(&closest_rbf_val, "-crv", "--crv",
                    "DMD Closest RBF Value.");
     args.AddOption(&visualization, "-vis", "--visualization", "-no-vis",
@@ -776,11 +788,11 @@ int main(int argc, char *argv[])
         RelativeDifferenceCostFunction cost(4);
 
         // Create Differential Evolution optimizer with population size of 50
-        CAROM::DifferentialEvolution de(cost, 50, de_F, de_CR);
+        CAROM::DifferentialEvolution de(cost, de_PS, de_F, de_CR);
 
         // Optimize for at least 10 iterations, to a maximum of 100 iterations with verbose output.
         // Stop early, after 10 iterations is run, if the minimum cost did not improve by 0.001
-        de.Optimize(10, 100, 0.001, true);
+        de.Optimize(de_min_iter, de_max_iter, de_ct, true);
     }
     else
     {
