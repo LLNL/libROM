@@ -16,7 +16,6 @@
 #include "mpi.h"
 
 #include <iostream>
-#include <iomanip>
 
 namespace CAROM {
 
@@ -82,7 +81,6 @@ DifferentialEvolution::Optimize(int min_iterations, int max_iterations,
 
         if (d_rank == 0 && verbose)
         {
-            std::cout << std::fixed << std::setprecision(5);
             std::cout << "Current minimal cost: " << m_minCost << "\t\t";
             std::cout << "Best agent: ";
             for (int i = 0; i < m_numberOfParameters; i++)
