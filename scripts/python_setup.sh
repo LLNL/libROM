@@ -31,9 +31,10 @@ if [ ! -d "swig" ]; then
     make
     make install
 
-    # We also need numpy.i
+    # We also need the numpy swig files
     cd swig_install/share/swig/4.0.2
     wget https://raw.githubusercontent.com/numpy/numpy/main/tools/swig/numpy.i
+    wget https://raw.githubusercontent.com/numpy/numpy/main/tools/swig/pyfragments.swg
 
     # We have to delete these two files for some reason or else SWIG doesn't work.
     rm std_except.i

@@ -61,7 +61,19 @@ import_array();
 %include "linalg/BasisReader.h"
 %include "linalg/BasisGenerator.h"
 %include "algo/ParametricDMD.h"
+%apply (double* IN_ARRAY1, int DIM1) {(double* u_in, int /*unused*/)};
+
+%ignore CAROM::DMD::takeSample;
+
 %include "algo/DMD.h"
+
+%rename("%s") CAROM::DMD::takeSample;
+
+%extend CAROM::DMD {
+    void takeSample(double* u_in, int /*unused*/, double t) {
+        $self->takeSample(u_in, t);
+    }
+}
 %include "algo/AdaptiveDMD.h"
 %include "algo/NonuniformDMD.h"
 %ignore Interpolator;
