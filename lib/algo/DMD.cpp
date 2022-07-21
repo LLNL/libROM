@@ -404,7 +404,18 @@ DMD::constructDMD(const Matrix* f_snapshots,
         CAROM_VERIFY(linearity_tol >= 0.0);
         std::vector<int> lin_independent_cols_W;
 
-        // Find which columns of d_basis are linearly independent from W0
+        // Copy W0 and orthogonalize.
+        Matrix* d_basis_init = new Matrix(f_snapshots->numRows(), W0->numColumns(), true);
+        for (int i = 0; i < d_basis_init->numRows(); i++)
+        {
+            for (int j = 0; j < W0->numColumns(); j++)
+            {
+                d_basis_init->item(i, j) = W0->item(i, j);
+            }
+        }
+        d_basis_init->orthogonalize();
+
+        // Find which columns of d_basis are linearly independent from W0 
         for (int j = 0; j < d_basis->numColumns(); j++)
         {
             // l = W0' * u
@@ -413,10 +424,10 @@ DMD::constructDMD(const Matrix* f_snapshots,
             {
                 W_col.item(i) = d_basis->item(i, j);
             }
-            Vector* l = W0->transposeMult(W_col);
+            Vector* l = d_basis_init->transposeMult(W_col);
 
             // W0l = W0 * l
-            Vector* W0l = W0->mult(l);
+            Vector* W0l = d_basis_init->mult(l);
 
             // Compute k = sqrt(u.u - 2.0*l.l + basisl.basisl) which is ||u -
             // basisl||_{2}.  This is the error in the projection of u into the
@@ -439,6 +450,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
             {
                 lin_independent_cols_W.push_back(j);
             }
+            delete d_basis_init;
             delete l;
             delete W0l;
         }
