@@ -1,6 +1,6 @@
-//                       libROM MFEM Example: Parametric_Heat_Conduction with Differential Evolution (adapted from ex16p.cpp)
+//                       libROM MFEM Example: Greedy Parametric_Heat_Conduction with Differential Evolution (adapted from ex16p.cpp)
 //
-// Compile with: make de_parametric_heat_conduction
+// Compile with: make de_parametric_heat_conduction_greedy
 //
 // =================================================================================
 //
@@ -9,16 +9,9 @@
 //
 // For Parametric DMD with differential evolution (radius & alpha & cx & cy):
 //   rm -rf parameters.txt
-//   mpirun -np 8 de_parametric_heat_conduction -r 0.1 -cx 0.1 -cy 0.1 -visit -offline -rdim 16 (Create DMDs at different training points)
-//   mpirun -np 8 de_parametric_heat_conduction -r 0.1 -cx 0.3 -cy 0.1 -visit -offline -rdim 16
-//   mpirun -np 8 de_parametric_heat_conduction -r 0.1 -cx 0.1 -cy 0.3 -visit -offline -rdim 16
-//   mpirun -np 8 de_parametric_heat_conduction -r 0.1 -cx 0.3 -cy 0.3 -visit -offline -rdim 16
-//   mpirun -np 8 de_parametric_heat_conduction -r 0.3 -cx 0.1 -cy 0.1 -visit -offline -rdim 16
-//   mpirun -np 8 de_parametric_heat_conduction -r 0.3 -cx 0.3 -cy 0.1 -visit -offline -rdim 16
-//   mpirun -np 8 de_parametric_heat_conduction -r 0.3 -cx 0.1 -cy 0.3 -visit -offline -rdim 16
-//   mpirun -np 8 de_parametric_heat_conduction -r 0.3 -cx 0.3 -cy 0.3 -visit -offline -rdim 16
-//   mpirun -np 8 de_parametric_heat_conduction -r 0.2 -cx 0.2 -cy 0.2 (Compute target FOM)
-//   mpirun -np 8 de_parametric_heat_conduction -r 0.2 -cx 0.2 -cy 0.2 -de -de_f 0.9 -de_cr 0.9 -de_ps 50 -de_min_iter 10 -de_max_iter 100 -de_ct 0.001 (Run interpolative differential evolution to see if target FOM can be matched)
+//   mpirun -np 8 de_parametric_heat_conduction_greedy -build_database -rdim 16 -greedy-param-size 5 -greedysubsize 2 -greedyconvsize 3 -greedyreldifftol 0.01 (Create DMDs in a greedy fashion at different training points)
+//   mpirun -np 8 de_parametric_heat_conduction_greedy -r 0.2 -cx 0.2 -cy 0.2 (Compute target FOM)
+//   mpirun -np 8 de_parametric_heat_conduction_greedy -r 0.2 -cx 0.2 -cy 0.2 -de -de_f 0.9 -de_cr 0.9 -de_ps 50 -de_min_iter 10 -de_max_iter 100 -de_ct 0.001 (Run interpolative differential evolution to see if target FOM can be matched)
 //
 // =================================================================================
 //
@@ -36,6 +29,7 @@
 #include "mfem.hpp"
 #include "algo/DMD.h"
 #include "algo/DifferentialEvolution.h"
+#include "algo/greedy/GreedyRandomSampler.h"
 #include "linalg/Vector.h"
 #include <cmath>
 #include <cfloat>
@@ -118,8 +112,22 @@ double kappa = 0.5;
 double closest_rbf_val = 0.9;
 int rdim = -1;
 bool offline = false;
+bool build_database = false;
+bool calc_err_indicator = false;
 bool de = false;
-bool visualization = true;
+double greedy_param_space_radius_min = 0.1;
+double greedy_param_space_radius_max = 0.3;
+double greedy_param_space_alpha_min = 0.1;
+double greedy_param_space_alpha_max = 0.1;
+double greedy_param_space_cx_min = 0.1;
+double greedy_param_space_cx_max = 0.3;
+double greedy_param_space_cy_min = 0.1;
+double greedy_param_space_cy_max = 0.3;
+int greedy_param_space_size = 8;
+double greedy_relative_diff_tol = 0.01;
+int greedy_subset_size = 2;
+int greedy_convergence_subset_size = 3;
+bool visualization = false;
 bool visit = false;
 int vis_steps = 5;
 bool adios2 = false;
@@ -146,6 +154,7 @@ int de_PS = 50;
 int de_min_iter = 10;
 int de_max_iter = 100;
 double de_ct = 0.001;
+CAROM::GreedySampler* greedy_sampler = NULL;
 
 Vector* true_solution_u = NULL;
 double tot_true_solution_u_norm = 0.0;
@@ -251,11 +260,11 @@ double simulation()
     if (!de)
     {
         ostringstream mesh_name, sol_name;
-        mesh_name << "de_parametric_heat_conduction_" << to_string(
+        mesh_name << "de_parametric_heat_conduction_greedy_" << to_string(
                       radius) << "_"
                   << to_string(alpha) << "_" << to_string(cx) << "_" << to_string(cy)
                   << "-mesh." << setfill('0') << setw(6) << myid;
-        sol_name << "de_parametric_heat_conduction_" << to_string(
+        sol_name << "de_parametric_heat_conduction_greedy_" << to_string(
                      radius) << "_"
                  << to_string(alpha) << "_" << to_string(cx) << "_" << to_string(cy)
                  << "-init." << setfill('0') << setw(6) << myid;
@@ -267,7 +276,7 @@ double simulation()
         u_gf.Save(osol);
     }
 
-    VisItDataCollection visit_dc("DE_Parametric_Heat_Conduction_" +
+    VisItDataCollection visit_dc("DE_Parametric_Heat_Conduction_Greedy_" +
                                  to_string(radius) + "_" + to_string(alpha) + "_" + to_string(cx) + "_" +
                                  to_string(cy), pmesh);
     visit_dc.RegisterField("temperature", &u_gf);
@@ -288,7 +297,7 @@ double simulation()
         postfix.erase(0, std::string("../data/").size() );
         postfix += "_o" + std::to_string(order);
         postfix += "_solver" + std::to_string(ode_solver_type);
-        const std::string collection_name = "de_parametric_heat_conduction-p-" +
+        const std::string collection_name = "de_parametric_heat_conduction_greedy-p-" +
                                             postfix + ".bp";
 
         adios2_dc = new ADIOS2DataCollection(MPI_COMM_WORLD, collection_name, pmesh);
@@ -368,6 +377,75 @@ double simulation()
     }
     else
     {
+        if (calc_err_indicator)
+        {
+            init = new CAROM::Vector(u.GetData(), u.Size(), true);
+
+            std::fstream fin("parameters.txt", std::ios_base::in);
+            double curr_param;
+            std::vector<std::string> dmd_paths;
+            std::vector<CAROM::Vector*> param_vectors;
+
+            while (fin >> curr_param)
+            {
+                double curr_radius = curr_param;
+                fin >> curr_param;
+                double curr_alpha = curr_param;
+                fin >> curr_param;
+                double curr_cx = curr_param;
+                fin >> curr_param;
+                double curr_cy = curr_param;
+
+                dmd_paths.push_back(to_string(curr_radius) + "_" +
+                                    to_string(curr_alpha) + "_" + to_string(curr_cx) + "_" +
+                                    to_string(curr_cy));
+                CAROM::Vector* param_vector = new CAROM::Vector(4, false);
+                param_vector->item(0) = curr_radius;
+                param_vector->item(1) = curr_alpha;
+                param_vector->item(2) = curr_cx;
+                param_vector->item(3) = curr_cy;
+                param_vectors.push_back(param_vector);
+            }
+            fin.close();
+
+            if (dmd_paths.size() > 1)
+            {
+                CAROM::Vector* desired_param = new CAROM::Vector(4, false);
+                desired_param->item(0) = radius;
+                desired_param->item(1) = alpha;
+                desired_param->item(2) = cx;
+                desired_param->item(3) = cy;
+
+                dmd_training_timer.Start();
+
+                CAROM::getParametricDMD(dmd_u, param_vectors, dmd_paths, desired_param,
+                                        "G", "LS", closest_rbf_val);
+
+                delete desired_param;
+            }
+            else
+            {
+                dmd_u = new CAROM::DMD(dmd_paths[0]);
+            }
+
+            dmd_u->projectInitialCondition(init);
+
+            dmd_training_timer.Stop();
+
+            t = t_final - 10.0 * dt;
+
+            CAROM::Vector* carom_tf_u_minus_some = dmd_u->predict(t);
+
+            // 15. Calculate the relative error between the DMD final solution and the true solution.
+            Vector tf_u_minus_some(carom_tf_u_minus_some->getData(),
+                                   carom_tf_u_minus_some->dim());
+
+            u = tf_u_minus_some;
+            u_gf.SetFromTrueDofs(u);
+
+            delete carom_tf_u_minus_some;
+        }
+
         bool last_step = false;
         for (int ti = 1; !last_step; ti++)
         {
@@ -438,29 +516,23 @@ double simulation()
 #endif
 
         // 12. Save the final solution in parallel. This output can be viewed later
-        //     using GLVis: "glvis -np <np> -m de_parametric_heat_conduction-mesh -g de_parametric_heat_conduction-final".
+        //     using GLVis: "glvis -np <np> -m de_parametric_heat_conduction_greedy-mesh -g de_parametric_heat_conduction_greedy-final".
         {
             ostringstream sol_name;
-            sol_name << "de_parametric_heat_conduction_" << to_string(
+            sol_name << "de_parametric_heat_conduction_greedy_" << to_string(
                          radius) << "_"
                      << to_string(alpha) << "_" << to_string(cx) << "_" << to_string(cy)
                      << "-final." << setfill('0') << setw(6) << myid;
             ofstream osol(sol_name.str().c_str());
             osol.precision(precision);
-            u_gf.Save(osol);
-            ostringstream target_name;
-            target_name << "de_parametric_heat_conduction-target." << setfill('0') << setw(
-                            6) << myid;
-            ofstream otarget(target_name.str().c_str());
-            otarget.precision(precision);
-            u.Print(otarget, 1);
+            u.Print(osol, 1);
         }
     }
 
     double rel_diff = 0.0;
 
     // 13. Calculate the DMD modes.
-    if (offline || de)
+    if (offline || de || calc_err_indicator)
     {
         if (offline)
         {
@@ -475,8 +547,7 @@ double simulation()
 
             dmd_training_timer.Stop();
 
-            dmd_u->save(to_string(radius) + "_" + to_string(
-                            alpha) + "_" +
+            dmd_u->save(to_string(radius) + "_" + to_string(alpha) + "_" +
                         to_string(cx) + "_" + to_string(cy));
 
             if (myid == 0)
@@ -538,8 +609,11 @@ double simulation()
                 ifstream solution_file;
                 ostringstream sol_name;
                 ostringstream target_name;
-                sol_name << "de_parametric_heat_conduction-target." << setfill('0') << setw(
-                             6) << myid;
+                sol_name << "de_parametric_heat_conduction_greedy_" << to_string(
+                             target_radius) << "_"
+                         << to_string(target_alpha) << "_" << to_string(target_cx) << "_" << to_string(
+                             target_cy)
+                         << "-final." << setfill('0') << setw(6) << myid;
                 solution_file.open(sol_name.str().c_str());
                 true_solution_u = new Vector(u.Size());
                 true_solution_u->Load(solution_file, u.Size());
@@ -589,6 +663,20 @@ double simulation()
         }
     }
 
+    // 29. Calculate the relative error as commanded by the greedy algorithm.
+    if (offline)
+    {
+        if (myid == 0) std::cout << "The relative error is: " << rel_diff <<
+                                     std::endl;
+        greedy_sampler->setPointRelativeError(rel_diff);
+    }
+    // 29. Or calculate the error indicator as commanded by the greedy algorithm.
+    else if (calc_err_indicator)
+    {
+        std::cout << "The error indicator is: " << rel_diff << std::endl;
+        greedy_sampler->setPointErrorIndicator(rel_diff, 1);
+    }
+
     if (!de && myid == 0)
     {
         printf("Elapsed time for solving FOM: %e second\n", fom_timer.RealTime());
@@ -597,7 +685,7 @@ double simulation()
     // 16. Free the used memory.
     delete ode_solver;
     delete pmesh;
-    if (offline)
+    if (dmd_u != NULL)
     {
         delete dmd_u;
     }
@@ -772,6 +860,39 @@ int main(int argc, char *argv[])
                    "DE Maximum number of iterations.");
     args.AddOption(&de_ct, "-de_ct", "--de_ct",
                    "DE Cost threshold.");
+    args.AddOption(&greedy_param_space_radius_min, "-greedy-param-radius-min",
+                   "--greedy-param-radius-min",
+                   "The minimum radius value of the parameter point space.");
+    args.AddOption(&greedy_param_space_radius_max, "-greedy-param-radius-max",
+                   "--greedy-param-radius-max",
+                   "The maximum radius value of the parameter point space.");
+    args.AddOption(&greedy_param_space_alpha_min, "-greedy-param-alpha-min",
+                   "--greedy-param-alpha-min",
+                   "The minimum alpha value of the parameter point space.");
+    args.AddOption(&greedy_param_space_alpha_max, "-greedy-param-alpha-max",
+                   "--greedy-param-alpha-max",
+                   "The maximum alpha value of the parameter point space.");
+    args.AddOption(&greedy_param_space_cx_min, "-greedy-param-cx-min",
+                   "--greedy-param-cx-min",
+                   "The minimum cx value of the parameter point space.");
+    args.AddOption(&greedy_param_space_cx_max, "-greedy-param-cx-max",
+                   "--greedy-param-cx-max",
+                   "The maximum cx value of the parameter point space.");
+    args.AddOption(&greedy_param_space_cy_min, "-greedy-param-cy-min",
+                   "--greedy-param-cy-min",
+                   "The minimum cy value of the parameter point space.");
+    args.AddOption(&greedy_param_space_cy_max, "-greedy-param-cy-max",
+                   "--greedy-param-cy-max",
+                   "The maximum cy value of the parameter point space.");
+    args.AddOption(&greedy_param_space_size, "-greedy-param-size",
+                   "--greedy-param-size",
+                   "The number of values to search in the parameter point space.");
+    args.AddOption(&greedy_relative_diff_tol, "-greedyreldifftol",
+                   "--greedyreldifftol", "The greedy algorithm relative diff tolerance.");
+    args.AddOption(&greedy_subset_size, "-greedysubsize", "--greedysubsize",
+                   "The greedy algorithm subset size.");
+    args.AddOption(&greedy_convergence_subset_size, "-greedyconvsize",
+                   "--greedyconvsize", "The greedy algorithm convergence subset size.");
     args.AddOption(&closest_rbf_val, "-crv", "--crv",
                    "DMD Closest RBF Value.");
     args.AddOption(&visualization, "-vis", "--visualization", "-no-vis",
@@ -784,8 +905,9 @@ int main(int argc, char *argv[])
                    "Visualize every n-th timestep.");
     args.AddOption(&rdim, "-rdim", "--rdim",
                    "Reduced dimension for DMD.");
-    args.AddOption(&offline, "-offline", "--offline", "-no-offline", "--no-offline",
-                   "Enable or disable the offline phase.");
+    args.AddOption(&build_database, "-build_database", "--build_database",
+                   "-no-build_database", "--no-build_database",
+                   "Enable or disable the build_database phase.");
     args.AddOption(&de, "-de", "--de", "-no-de", "--no-de",
                    "Enable or disable the differential evolution phase.");
     args.AddOption(&adios2, "-adios2", "--adios2-streams", "-no-adios2",
@@ -806,11 +928,38 @@ int main(int argc, char *argv[])
         args.PrintOptions(cout);
     }
 
-    MFEM_VERIFY(!(offline && de), "both offline and de can not be true!");
+    MFEM_VERIFY(!(build_database
+                  && de), "both build_database and de can not be true!");
 
-    if (offline)
+    if (build_database)
     {
         MFEM_VERIFY(rdim != -1, "rdim must be set.");
+        MFEM_VERIFY(!visit
+                    && !visualization,
+                    "visit and visualization must be turned off during the build_database phase.")
+        std::ifstream infile("de_parametric_heat_conduction_greedy_data");
+        if (infile.good())
+        {
+            if (myid == 0) std::cout << "The database has already been built. Exiting." <<
+                                         std::endl;
+            return 0;
+        }
+        infile.close();
+        CAROM::Vector greedy_param_space_min(4, false);
+        greedy_param_space_min.item(0) = greedy_param_space_radius_min;
+        greedy_param_space_min.item(1) = greedy_param_space_alpha_min;
+        greedy_param_space_min.item(2) = greedy_param_space_cx_min;
+        greedy_param_space_min.item(3) = greedy_param_space_cy_min;
+        CAROM::Vector greedy_param_space_max(4, false);
+        greedy_param_space_max.item(0) = greedy_param_space_radius_max;
+        greedy_param_space_max.item(1) = greedy_param_space_alpha_max;
+        greedy_param_space_max.item(2) = greedy_param_space_cx_max;
+        greedy_param_space_max.item(3) = greedy_param_space_cy_max;
+        greedy_sampler = new CAROM::GreedyRandomSampler(greedy_param_space_min,
+                greedy_param_space_max,
+                greedy_param_space_size, false, greedy_relative_diff_tol, 1.05,
+                2.0, greedy_subset_size, greedy_convergence_subset_size,
+                true, "de_parametric_heat_conduction_greedy_log.txt");
     }
 
     target_radius = radius;
@@ -818,25 +967,96 @@ int main(int argc, char *argv[])
     target_cx = cx;
     target_cy = cy;
 
+    vector<string> dmdIdentifiers;
+
     if (de)
     {
+        std::ifstream infile("de_parametric_heat_conduction_greedy_data");
+        if (!infile.good())
+        {
+            if (myid == 0) std::cout << "The database has not been built. Exiting." <<
+                                         std::endl;
+            return 0;
+        }
+        infile.close();
+
         // Create relative error cost function in 4 dimensions (radius, alpha, cx, cy)
         RelativeDifferenceCostFunction cost(4);
 
-        // Create Differential Evolution optimizer with population size of de_PS
+        // Create Differential Evolution optimizer with population size of de_ps
         // differential weight of de_F, and crossover probability of de_CR
         CAROM::DifferentialEvolution de(cost, de_PS, de_F, de_CR);
 
         // Optimize for at least de_min_iter iterations, to a maximum of de_max_iter iterations with verbose output.
         // Stop early, after de_min_iter iterations is run, if the minimum cost did not improve by de_ct
         de.Optimize(de_min_iter, de_max_iter, de_ct, true);
+
+        delete true_solution_u;
+    }
+    else if (build_database)
+    {
+        // The simulation is wrapped in a do-while statement so that the greedy
+        // algorithm (build_database) can run multiple simulations in succession.
+        do
+        {
+            // 4. Set the correct stage of the greedy algorithm (i.e. sampling new point,
+            //    calculating relative error of the last sampled point, or calculating
+            //    an error indicator at a new point.)
+            struct CAROM::GreedyErrorIndicatorPoint pointRequiringRelativeError =
+                greedy_sampler->getNextPointRequiringRelativeError();
+            CAROM::Vector* relativeErrorPointData = pointRequiringRelativeError.point.get();
+            struct CAROM::GreedyErrorIndicatorPoint pointRequiringErrorIndicator =
+                greedy_sampler->getNextPointRequiringErrorIndicator();
+            CAROM::Vector* errorIndicatorPointData =
+                pointRequiringErrorIndicator.point.get();
+
+            if (errorIndicatorPointData != NULL)
+            {
+                if (myid == 0) std::cout << "Calculating a error indicator at a new point." <<
+                                             std::endl;
+                radius = pointRequiringErrorIndicator.point.get()->item(0);
+                alpha = pointRequiringErrorIndicator.point.get()->item(1);
+                cx = pointRequiringErrorIndicator.point.get()->item(2);
+                cy = pointRequiringErrorIndicator.point.get()->item(3);
+                offline = false;
+                calc_err_indicator = true;
+            }
+            else
+            {
+                std::shared_ptr<CAROM::Vector> nextSampleParameterPoint =
+                    greedy_sampler->getNextParameterPoint();
+                CAROM::Vector* samplePointData = nextSampleParameterPoint.get();
+                if (samplePointData != NULL)
+                {
+                    if (myid == 0) std::cout << "Sampling a new point." << std::endl;
+                    radius = samplePointData->item(0);
+                    alpha = samplePointData->item(1);
+                    cx = samplePointData->item(2);
+                    cy = samplePointData->item(3);
+                    offline = true;
+                    calc_err_indicator = false;
+                }
+                else
+                {
+                    if (myid == 0) std::cout << "The greedy algorithm has finished." << std::endl;
+                    greedy_sampler->save("de_parametric_heat_conduction_greedy_data");
+                    build_database = false;
+                    continue;
+                }
+            }
+
+            simulation();
+
+            delete true_solution_u;
+            true_solution_u = NULL;
+        } while (build_database);
     }
     else
     {
         simulation();
-    }
 
-    delete true_solution_u;
+        delete true_solution_u;
+    }
 
     MPI_Finalize();
 
