@@ -9,6 +9,7 @@
 //
 // For Parametric DMD with differential evolution (radius & alpha & cx & cy):
 //   rm -rf parameters.txt
+//   rm -rf de_parametric_heat_conduction_greedy_*
 //   mpirun -np 8 de_parametric_heat_conduction_greedy -build_database -rdim 16 -greedy-param-size 5 -greedysubsize 2 -greedyconvsize 3 -greedyreldifftol 0.01 (Create DMDs in a greedy fashion at different training points)
 //   mpirun -np 8 de_parametric_heat_conduction_greedy -r 0.2 -cx 0.2 -cy 0.2 (Compute target FOM)
 //   mpirun -np 8 de_parametric_heat_conduction_greedy -r 0.2 -cx 0.2 -cy 0.2 -de -de_f 0.9 -de_cr 0.9 -de_ps 50 -de_min_iter 10 -de_max_iter 100 -de_ct 0.001 (Run interpolative differential evolution to see if target FOM can be matched)
