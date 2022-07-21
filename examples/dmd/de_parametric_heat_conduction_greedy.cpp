@@ -99,7 +99,6 @@ public:
 
 double InitialTemperature(const Vector &x);
 
-// 2. Parse command-line options.
 int num_procs, myid;
 const char *mesh_file = "../data/star.mesh";
 int ser_ref_levels = 2;
@@ -162,13 +161,13 @@ double tot_true_solution_u_norm = 0.0;
 
 double simulation()
 {
-    // 3. Read the serial mesh from the given mesh file on all processors. We can
+    // 6. Read the serial mesh from the given mesh file on all processors. We can
     //    handle triangular, quadrilateral, tetrahedral and hexahedral meshes
     //    with the same code.
     Mesh *mesh = new Mesh(mesh_file, 1, 1);
     int dim = mesh->Dimension();
 
-    // 4. Define the ODE solver used for time integration. Several implicit
+    // 7. Define the ODE solver used for time integration. Several implicit
     //    singly diagonal implicit Runge-Kutta (SDIRK) methods, as well as
     //    explicit Runge-Kutta methods are available.
     ODESolver *ode_solver;
@@ -216,7 +215,7 @@ double simulation()
         return 3;
     }
 
-    // 5. Refine the mesh in serial to increase the resolution. In this example
+    // 8. Refine the mesh in serial to increase the resolution. In this example
     //    we do 'ser_ref_levels' of uniform refinement, where 'ser_ref_levels' is
     //    a command-line parameter.
     for (int lev = 0; lev < ser_ref_levels; lev++)
@@ -224,7 +223,7 @@ double simulation()
         mesh->UniformRefinement();
     }
 
-    // 6. Define a parallel mesh by a partitioning of the serial mesh. Refine
+    // 9. Define a parallel mesh by a partitioning of the serial mesh. Refine
     //    this mesh further in parallel to increase the resolution. Once the
     //    parallel mesh is defined, the serial mesh can be deleted.
     ParMesh *pmesh = new ParMesh(MPI_COMM_WORLD, *mesh);
@@ -234,7 +233,7 @@ double simulation()
         pmesh->UniformRefinement();
     }
 
-    // 7. Define the vector finite element space representing the current and the
+    // 10. Define the vector finite element space representing the current and the
     //    initial temperature, u_ref.
     H1_FECollection fe_coll(order, dim);
     ParFiniteElementSpace fespace(pmesh, &fe_coll);
@@ -247,14 +246,14 @@ double simulation()
 
     ParGridFunction u_gf(&fespace);
 
-    // 8. Set the initial conditions for u. All boundaries are considered
-    //    natural.
+    // 11. Set the initial conditions for u. All boundaries are considered
+    //     natural.
     FunctionCoefficient u_0(InitialTemperature);
     u_gf.ProjectCoefficient(u_0);
     Vector u;
     u_gf.GetTrueDofs(u);
 
-    // 9. Initialize the conduction operator and the VisIt visualization.
+    // 12. Initialize the conduction operator and the VisIt visualization.
     ConductionOperator oper(fespace, alpha, kappa, u);
 
     u_gf.SetFromTrueDofs(u);
@@ -342,7 +341,7 @@ double simulation()
 
     fom_timer.Start();
 
-    // 10. Perform time-integration (looping over the time iterations, ti, with a
+    // 13. Perform time-integration (looping over the time iterations, ti, with a
     //     time-step dt).
     ode_solver->Init(oper);
     double t = 0.0;
@@ -354,11 +353,11 @@ double simulation()
 
     CAROM::DMD* dmd_u = NULL;
 
+    // 14. If in offline mode, create DMD object and take initial sample.
     if (offline)
     {
         dmd_training_timer.Start();
 
-        // 11. Create DMD object and take initial sample.
         u_gf.SetFromTrueDofs(u);
         dmd_u = new CAROM::DMD(u.Size(), dt);
         dmd_u->takeSample(u.GetData(), t);
@@ -371,6 +370,7 @@ double simulation()
         dmd_training_timer.Stop();
     }
 
+    // 14. If in de mode, save the initial vector.
     if (de)
     {
         u_gf.SetFromTrueDofs(u);
@@ -378,6 +378,8 @@ double simulation()
     }
     else
     {
+        // 14. If in calc_err_indicator mode, load the current DMD database,
+        //     and create a parametric DMD object at the current set of parameters.
         if (calc_err_indicator)
         {
             init = new CAROM::Vector(u.GetData(), u.Size(), true);
@@ -433,11 +435,13 @@ double simulation()
 
             dmd_training_timer.Stop();
 
+            // For the error indicator, load in the DMD predicted solution 10
+            // steps before t_final, then run the FOM for the last 10 steps and
+            // compare the final FOM solution to the DMD predicted solution.
             t = t_final - 10.0 * dt;
 
             CAROM::Vector* carom_tf_u_minus_some = dmd_u->predict(t);
 
-            // 15. Calculate the relative error between the DMD final solution and the true solution.
             Vector tf_u_minus_some(carom_tf_u_minus_some->getData(),
                                    carom_tf_u_minus_some->dim());
 
@@ -447,6 +451,7 @@ double simulation()
             delete carom_tf_u_minus_some;
         }
 
+        // 15. Iterate through the time loop.
         bool last_step = false;
         for (int ti = 1; !last_step; ti++)
         {
@@ -516,7 +521,7 @@ double simulation()
         }
 #endif
 
-        // 12. Save the final solution in parallel. This output can be viewed later
+        // 16. Save the final solution in parallel. This output can be viewed later
         //     using GLVis: "glvis -np <np> -m de_parametric_heat_conduction_greedy-mesh -g de_parametric_heat_conduction_greedy-final".
         {
             ostringstream sol_name;
@@ -532,9 +537,9 @@ double simulation()
 
     double rel_diff = 0.0;
 
-    // 13. Calculate the DMD modes.
     if (offline || de || calc_err_indicator)
     {
+        // 17. If in offline mode, save the DMD object.
         if (offline)
         {
             if (myid == 0)
@@ -560,6 +565,7 @@ double simulation()
             }
         }
 
+        // 18. Compare the DMD solution to the FOM solution.
         if (de)
         {
             std::fstream fin("parameters.txt", std::ios_base::in);
@@ -638,7 +644,6 @@ double simulation()
 
         CAROM::Vector* result_u = dmd_u->predict(t_final);
 
-        // 15. Calculate the relative error between the DMD final solution and the true solution.
         Vector dmd_solution_u(result_u->getData(), result_u->dim());
         Vector diff_u(true_solution_u->Size());
         subtract(dmd_solution_u, *true_solution_u, diff_u);
@@ -664,14 +669,14 @@ double simulation()
         }
     }
 
-    // 29. Calculate the relative error as commanded by the greedy algorithm.
+    // 19. Calculate the relative error as commanded by the greedy algorithm.
     if (offline)
     {
         if (myid == 0) std::cout << "The relative error is: " << rel_diff <<
                                      std::endl;
         greedy_sampler->setPointRelativeError(rel_diff);
     }
-    // 29. Or calculate the error indicator as commanded by the greedy algorithm.
+    // 20. Or calculate the error indicator as commanded by the greedy algorithm.
     else if (calc_err_indicator)
     {
         std::cout << "The error indicator is: " << rel_diff << std::endl;
@@ -683,7 +688,7 @@ double simulation()
         printf("Elapsed time for solving FOM: %e second\n", fom_timer.RealTime());
     }
 
-    // 16. Free the used memory.
+    // 21. Free the used memory.
     delete ode_solver;
     delete pmesh;
     if (dmd_u != NULL)
@@ -807,6 +812,7 @@ int main(int argc, char *argv[])
 
     cout.precision(precision);
 
+    // 2. Parse command-line options.
     OptionsParser args(argc, argv);
     args.AddOption(&mesh_file, "-m", "--mesh",
                    "Mesh file to use.");
@@ -932,6 +938,7 @@ int main(int argc, char *argv[])
     MFEM_VERIFY(!(build_database
                   && de), "both build_database and de can not be true!");
 
+    // 3. Initialize the DMD database that will be built using a greedy algorithm.
     if (build_database)
     {
         MFEM_VERIFY(rdim != -1, "rdim must be set.");
@@ -968,8 +975,8 @@ int main(int argc, char *argv[])
     target_cx = cx;
     target_cy = cy;
 
-    vector<string> dmdIdentifiers;
-
+    // 4. If in differential evolution mode, run the DE algorithm using the
+    //    stored DMD database.
     if (de)
     {
         std::ifstream infile("de_parametric_heat_conduction_greedy_data");
@@ -994,15 +1001,17 @@ int main(int argc, char *argv[])
 
         delete true_solution_u;
     }
+
+    // 4. If in build_database mode, build the database.
     else if (build_database)
     {
         // The simulation is wrapped in a do-while statement so that the greedy
         // algorithm (build_database) can run multiple simulations in succession.
         do
         {
-            // 4. Set the correct stage of the greedy algorithm (i.e. sampling new point,
-            //    calculating relative error of the last sampled point, or calculating
-            //    an error indicator at a new point.)
+            // Set the correct stage of the greedy algorithm (i.e. sampling new point,
+            // calculating relative error of the last sampled point, or calculating
+            // an error indicator at a new point.) and run the simulation.
             struct CAROM::GreedyErrorIndicatorPoint pointRequiringRelativeError =
                 greedy_sampler->getNextPointRequiringRelativeError();
             CAROM::Vector* relativeErrorPointData = pointRequiringRelativeError.point.get();
@@ -1052,6 +1061,9 @@ int main(int argc, char *argv[])
             true_solution_u = NULL;
         } while (build_database);
     }
+    // 4. Else run a single simulation with the target parameters. This is used
+    //    to obtain the target solution to compare with during the differential
+    //    evolution optimization process.
     else
     {
         simulation();
