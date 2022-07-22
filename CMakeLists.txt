@@ -137,7 +137,6 @@ if (USE_MFEM)
     heat_conduction
     parametric_heat_conduction
     de_parametric_heat_conduction_greedy
-    de_parametric_heat_conduction
     dg_euler
     local_tw_csv
     parametric_tw_csv)
@@ -147,7 +146,6 @@ if (USE_MFEM)
     prom
     prom
     prom
-    dmd
     dmd
     dmd
     dmd
