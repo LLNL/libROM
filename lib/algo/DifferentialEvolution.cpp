@@ -81,6 +81,7 @@ DifferentialEvolution::Optimize(int min_iterations, int max_iterations,
 
         if (d_rank == 0 && verbose)
         {
+            std::cout << "Iteration: " << i << "\t\t";
             std::cout << "Current minimal cost: " << m_minCost << "\t\t";
             std::cout << "Best agent: ";
             for (int i = 0; i < m_numberOfParameters; i++)
