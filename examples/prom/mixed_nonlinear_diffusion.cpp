@@ -587,11 +587,7 @@ void LinearMassIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes,
     MFEM_VERIFY(rw.size() == qp.size(), "");
     MFEM_VERIFY(V.numRows() == fes->GetTrueVSize(), "");
 
-    // TODO: eliminate this FOM operation.
     ParGridFunction f_gf(fes);
-    f_gf.ProjectCoefficient(*Q);
-    Vector sv(fes->GetTrueVSize());
-    f_gf.GetTrueDofs(sv);
 
     const int nqe = ir->GetWeights().Size();
 
@@ -625,6 +621,8 @@ void LinearMassIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes,
 
             eprev = e;
 
+            f_gf.ProjectCoefficient(*Q, vdofs);
+
             if (i == 0)
             {
                 MFEM_VERIFY(coef.Size() == rdim * rw.size() * dof, "");
@@ -639,7 +637,7 @@ void LinearMassIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes,
             for (int l=0; l<dof; ++l)
             {
                 const int dofl = (vdofs[l] >= 0) ? vdofs[l] : -1 - vdofs[l];
-                Vj += sv[dofl] * coef[l + (j * dof) + (i * rdim * dof)];
+                Vj += f_gf[dofl] * coef[l + (j * dof) + (i * rdim * dof)];
             }
 
             res(j) += Vj;
