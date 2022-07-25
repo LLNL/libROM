@@ -413,6 +413,84 @@ void VectorFEMassIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fesR,
     }
 }
 
+// Compute coefficients of the reduced integrator with respect to input Q
+// in LinearMassIntegrator_ComputeReducedEQP.
+void GetEQPCoefficients_LinearMassIntegrator(ParFiniteElementSpace *fes,
+        std::vector<double> const& rw, std::vector<int> const& qp,
+        const IntegrationRule *ir, CAROM::Matrix const& V,
+        Vector & res)
+{
+    const int rdim = V.numColumns();
+    MFEM_VERIFY(rw.size() == qp.size(), "");
+    MFEM_VERIFY(V.numRows() == fes->GetTrueVSize(), "");
+
+    const int nqe = ir->GetWeights().Size();
+
+    ElementTransformation *eltrans;
+    DofTransformation * doftrans;
+    const FiniteElement *fe = NULL;
+    Array<int> vdofs;
+
+    Vector shape;
+
+    int eprev = -1;
+    int dof = 0;
+
+    for (int i=0; i<rw.size(); ++i)
+    {
+        const int e = qp[i] / nqe;  // Element index
+        // Local (element) index of the quadrature point
+        const int qpi = qp[i] - (e*nqe);
+        const IntegrationPoint &ip = ir->IntPoint(qpi);
+
+        if (e != eprev)  // Update element transformation
+        {
+            doftrans = fes->GetElementVDofs(e, vdofs);
+            fe = fes->GetFE(e);
+            eltrans = fes->GetElementTransformation(e);
+
+            if (doftrans)
+            {
+                MFEM_ABORT("TODO");
+            }
+
+            dof = fe->GetDof();
+
+            MFEM_VERIFY(vdofs.Size() == dof, "");  // TODO: remove this. It is obvious.
+
+            shape.SetSize(dof);
+
+            eprev = e;
+
+            if (i == 0)
+            {
+                res.SetSize(rdim * rw.size() * dof);
+                res = 0.0;
+            }
+        }
+
+        // Integrate at the current point
+
+        eltrans->SetIntPoint(&ip);
+
+        fe->CalcPhysShape(*eltrans, shape);
+
+        double w = eltrans->Weight() * rw[i]; // using rw[i] instead of ip.weight
+
+        for (int j=0; j<rdim; ++j)
+        {
+            double Vj = 0.0;
+            for (int l=0; l<dof; ++l)
+            {
+                const int dofl = (vdofs[l] >= 0) ? vdofs[l] : -1 - vdofs[l];
+                const double s = (vdofs[l] >= 0) ? 1.0 : -1.0;
+                res[l + (j * dof) + (i * rdim * dof)] = w * s * V(dofl,
+                                                        j) * shape(l) * shape(l);
+            }
+        }
+    }
+}
+
 // Based on MassIntegrator::AssembleElementMatrix
 void LinearMassIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fes,
         std::vector<double> const& rw, std::vector<int> const& qp,
@@ -443,8 +521,8 @@ void LinearMassIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fes,
     int eprev = -1;
     int dof = 0;
 
-    // TODO: make an alternative version LinearMassIntegrator_ComputeReducedEQP_Fast
-    // of this function, optimized by storing some intermediate computations.
+    // Note that the alternative version LinearMassIntegrator_ComputeReducedEQP_Fast
+    // of this function is optimized by storing some intermediate computations.
 
     for (int i=0; i<rw.size(); ++i)
     {
@@ -495,6 +573,76 @@ void LinearMassIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fes,
             }
 
             res(j) += w * Vj;
+        }
+    }
+}
+
+void LinearMassIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes,
+        std::vector<double> const& rw, std::vector<int> const& qp,
+        const IntegrationRule *ir, Coefficient *Q,
+        CAROM::Matrix const& V, Vector const& coef,
+        CAROM::Vector & res)
+{
+    const int rdim = V.numColumns();
+    MFEM_VERIFY(rw.size() == qp.size(), "");
+    MFEM_VERIFY(V.numRows() == fes->GetTrueVSize(), "");
+
+    // TODO: eliminate this FOM operation.
+    ParGridFunction f_gf(fes);
+    f_gf.ProjectCoefficient(*Q);
+    Vector sv(fes->GetTrueVSize());
+    f_gf.GetTrueDofs(sv);
+
+    const int nqe = ir->GetWeights().Size();
+
+    DofTransformation * doftrans;
+    const FiniteElement *fe = NULL;
+    Array<int> vdofs;
+
+    res = 0.0;
+
+    int eprev = -1;
+    int dof = 0;
+
+    for (int i=0; i<rw.size(); ++i)
+    {
+        const int e = qp[i] / nqe;  // Element index
+        // Local (element) index of the quadrature point
+        const int qpi = qp[i] - (e*nqe);
+        const IntegrationPoint &ip = ir->IntPoint(qpi);
+
+        if (e != eprev)  // Update element transformation
+        {
+            doftrans = fes->GetElementVDofs(e, vdofs);
+            fe = fes->GetFE(e);
+
+            if (doftrans)
+            {
+                MFEM_ABORT("TODO");
+            }
+
+            dof = fe->GetDof();
+
+            eprev = e;
+
+            if (i == 0)
+            {
+                MFEM_VERIFY(coef.Size() == rdim * rw.size() * dof, "");
+            }
+        }
+
+        // Integrate at the current point
+
+        for (int j=0; j<rdim; ++j)
+        {
+            double Vj = 0.0;
+            for (int l=0; l<dof; ++l)
+            {
+                const int dofl = (vdofs[l] >= 0) ? vdofs[l] : -1 - vdofs[l];
+                Vj += sv[dofl] * coef[l + (j * dof) + (i * rdim * dof)];
+            }
+
+            res(j) += Vj;
         }
     }
 }
@@ -720,7 +868,7 @@ private:
     std::vector<int> eqp_qp;
     std::vector<double> eqp_rw_S;
     std::vector<int> eqp_qp_S;
-    Vector eqp_coef;
+    Vector eqp_coef, eqp_coef_S;
     const bool fastIntegration = true;
 
 protected:
@@ -2773,6 +2921,9 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_,
             }
         }
 
+        GetEQPCoefficients_LinearMassIntegrator(&fom->fespace_W, eqp_rw_S, eqp_qp_S,
+                                                ir_eqp, V_W, eqp_coef_S);
+
         cout << "EQP for source using " << elements_S.size () << " elements out of "
              << fom->fespace_R.GetNE() << endl;
     }
@@ -2868,8 +3019,14 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
     {
         FunctionCoefficient f(SourceFunction);
         f.SetTime(GetTime());
-        LinearMassIntegrator_ComputeReducedEQP(&(fom->fespace_W), eqp_rw_S,
-                                               eqp_qp_S, ir_eqp, &f, V_W, resW_librom);
+
+        if (fastIntegration)
+            LinearMassIntegrator_ComputeReducedEQP_Fast(&(fom->fespace_W), eqp_rw_S,
+                    eqp_qp_S, ir_eqp, &f, V_W,
+                    eqp_coef_S, resW_librom);
+        else
+            LinearMassIntegrator_ComputeReducedEQP(&(fom->fespace_W), eqp_rw_S,
+                                                   eqp_qp_S, ir_eqp, &f, V_W, resW_librom);
 
         resW_librom *= -1.0;
 
