@@ -39,7 +39,6 @@ fi
 cd $LIB_DIR
 if [ ! -d "parmetis-4.0.3" ]; then
 
-  wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
   tar -zxvf parmetis-4.0.3.tar.gz
   cd parmetis-4.0.3
   make config
@@ -69,7 +68,7 @@ if [[ $BUILD_TYPE == "Debug" ]]; then
     if [[ $UPDATE_LIBS == "true" ]]; then
         cd mfem_debug
         git pull
-        make pdebug -j STATIC=NO SHARED=YES MFEM_USE_MPI=YES MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB"
+        make pdebug -j 8 STATIC=NO SHARED=YES MFEM_USE_MPI=YES MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB"
     fi
     cd $LIB_DIR
     rm mfem
@@ -82,7 +81,7 @@ else
     if [[ $UPDATE_LIBS == "true" ]]; then
         cd mfem_parallel
         git pull
-        make parallel -j STATIC=NO SHARED=YES MFEM_USE_MPI=YES MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB"
+        make parallel -j 8 STATIC=NO SHARED=YES MFEM_USE_MPI=YES MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB"
     fi
     cd $LIB_DIR
     rm mfem

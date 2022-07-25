@@ -890,7 +890,6 @@ int main(int argc, char *argv[])
         vector<int> num_sample_dofs_per_proc_S(num_procs);
 
         vector<int> sample_dofs_withS;  // Indices of the sampled rows
-        int nsdim = 0;
         CAROM::Matrix *Ssinv = 0;
         vector<int> num_sample_dofs_per_proc_withS;
         CAROM::BasisReader *readerS = 0;
