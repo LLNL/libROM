@@ -12,15 +12,15 @@
 // a cost function without the use of gradients) is run within some parameter range and automatically
 // converges to the same parameter point where the target FOM was built.
 //
-// In this example, the optimization objective of the differential evolution algorithm is to minimize
+// In this example, the optimization objective of the differential evolution (DE) algorithm is to minimize
 // the relative difference between the final solution of the parametric DMD and the target FOM solution.
 // The relative difference is minimized by adjusting the parameter point (radius, alpha, and center
 // location) where the parametric DMD is built until some parameter point is found where the relative
 // difference is at a global minimum. DE optimizes this problem by maintaining a population of
 // candidate parameters and iteratively creating new candidate parameters by combining existing ones and
-// storing whichever parameter set's final solution has the smallest relative difference. By using
-// differential evolution, given an unknown solution and a database of local DMDs,
-// the parameters of this unknown solution can be estimated.
+// storing whichever parameter set's final solution has the smallest relative difference. Thus, given an
+// unknown solution and a database of local DMDs, DE is able to estimate the parameters of this unknown
+// solution.
 //
 // For Parametric DMD with differential evolution (radius & alpha & cx & cy):
 //   rm -rf parameters.txt
