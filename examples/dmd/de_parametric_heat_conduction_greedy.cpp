@@ -5,7 +5,19 @@
 // =================================================================================
 //
 // In these examples, the radius of the interface between different initial temperatures, the
-// alpha coefficient, and two center location variables are modified.
+// alpha coefficient, and two center location variables are modified. First, a database of local
+// DMDs is built in a greedy fashion within a certain radius, alpha, and center location parameter
+// range. Then, a target FOM is built at a certain parameter point. Finally, this parameter point
+// is treated as unknown and differential evolution (an iterative optimization algorithm that minimizes
+// a cost function without the use of gradients) is run within some parameter range and automatically
+// converges to the same parameter point where the target FOM was built.
+//
+// In this example, the optimization objective of the differential evolution algorithm is to minimize
+// the relative difference between the final solution of the parametric DMD and the target FOM solution.
+// The relative difference is minimized by adjusting the parameter point (radius, alpha, and center location)
+// where the parametric DMD is built until some parameter point is found where the relative difference is at
+// a global minimum. By using differential evolution, given an unknown solution and a database of local DMDs,
+// the parameters of this unknown solution can be estimated.
 //
 // For Parametric DMD with differential evolution (radius & alpha & cx & cy):
 //   rm -rf parameters.txt
@@ -1001,7 +1013,6 @@ int main(int argc, char *argv[])
 
         delete true_solution_u;
     }
-
     // 4. If in build_database mode, build the database.
     else if (build_database)
     {

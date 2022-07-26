@@ -84,9 +84,9 @@ DifferentialEvolution::Optimize(int min_iterations, int max_iterations,
             std::cout << "Iteration: " << i << "\t\t";
             std::cout << "Current minimal cost: " << m_minCost << "\t\t";
             std::cout << "Best agent: ";
-            for (int i = 0; i < m_numberOfParameters; i++)
+            for (int j = 0; j < m_numberOfParameters; j++)
             {
-                std::cout << m_population[m_bestAgentIndex][i] << " ";
+                std::cout << m_population[m_bestAgentIndex][j] << " ";
             }
             std::cout << std::endl;
         }
@@ -213,12 +213,12 @@ DifferentialEvolution::SelectionAndCrossing()
             z[i] = m_population[a][i] + m_F * (m_population[b][i] - m_population[c][i]);
         }
 
-        // Chose random R
+        // Choose random R
         std::uniform_real_distribution<double> distributionParam(0,
                 m_numberOfParameters);
         int R = distributionParam(m_generator);
 
-        // Chose random r for each dimension
+        // Choose random r for each dimension
         std::vector<double> r(m_numberOfParameters);
         std::uniform_real_distribution<double> distributionPerX(0, 1);
         for (auto& var : r)

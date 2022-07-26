@@ -104,7 +104,7 @@ public:
      * @param[in] CR                     The crossover probability.
      * @param[in] randomSeed             Set random seed to a fix value to have
      *                                   repeatable (non stochastic) experiments
-     * @param[in] shouldCheckConstraints Should constraints bee checked on for each new candidate.
+     * @param[in] shouldCheckConstraints Should constraints be checked on for each new candidate.
      *                                   This check may be turned off to
      *                                   increase performance if the cost function is defined
      *                                   and has no local minimum outside of the constraints.
