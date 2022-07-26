@@ -14,9 +14,12 @@
 //
 // In this example, the optimization objective of the differential evolution algorithm is to minimize
 // the relative difference between the final solution of the parametric DMD and the target FOM solution.
-// The relative difference is minimized by adjusting the parameter point (radius, alpha, and center location)
-// where the parametric DMD is built until some parameter point is found where the relative difference is at
-// a global minimum. By using differential evolution, given an unknown solution and a database of local DMDs,
+// The relative difference is minimized by adjusting the parameter point (radius, alpha, and center
+// location) where the parametric DMD is built until some parameter point is found where the relative
+// difference is at a global minimum. DE optimizes this problem by maintaining a population of
+// candidate parameters and iteratively creating new candidate parameters by combining existing ones and
+// storing whichever parameter set's final solution has the smallest relative difference. By using
+// differential evolution, given an unknown solution and a database of local DMDs,
 // the parameters of this unknown solution can be estimated.
 //
 // For Parametric DMD with differential evolution (radius & alpha & cx & cy):
@@ -798,8 +801,10 @@ public:
         MFEM_VERIFY(min_cx <= max_cx, "cx DE range is invalid.");
         MFEM_VERIFY(min_cy <= max_cy, "cy DE range is invalid.");
 
-        if (myid == 0) cout << "DE radius range is: " << min_radius << " to " << max_radius << endl;
-        if (myid == 0) cout << "DE alpha range is: " << min_alpha << " to " << max_alpha << endl;
+        if (myid == 0) cout << "DE radius range is: " << min_radius << " to " <<
+                                max_radius << endl;
+        if (myid == 0) cout << "DE alpha range is: " << min_alpha << " to " << max_alpha
+                                << endl;
         if (myid == 0) cout << "DE cx range is: " << min_cx << " to " << max_cx << endl;
         if (myid == 0) cout << "DE cy range is: " << min_cy << " to " << max_cy << endl;
 
