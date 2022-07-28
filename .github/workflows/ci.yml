@@ -19,8 +19,12 @@ jobs:
             mkdir ${GITHUB_WORKSPACE}/build
             export CC=mpicc
             export CXX=mpicxx
-            scripts/compile.sh -m -d
-            scripts/compile.sh -m
+            scripts/setup.sh
+            cd ${GITHUB_WORKSPACE}/build
+            cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_MFEM=On ..
+            make
+            cmake -DCMAKE_BUILD_TYPE=Optimized -DUSE_MFEM=On ..
+            make
       - uses: ./.github/workflows/run_tests
   mac:
     runs-on: macos-latest
@@ -39,6 +43,10 @@ jobs:
         run: |
             mkdir ${GITHUB_WORKSPACE}/build
             export FC=/usr/local/bin/gfortran-10
-            scripts/compile.sh -m -d
-            scripts/compile.sh -m
+            scripts/setup.sh
+            cd ${GITHUB_WORKSPACE}/build
+            cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_MFEM=On ..
+            make
+            cmake -DCMAKE_BUILD_TYPE=Optimized -DUSE_MFEM=On ..
+            make
       - uses: ./.github/workflows/run_tests
