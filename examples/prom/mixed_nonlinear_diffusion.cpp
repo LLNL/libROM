@@ -890,7 +890,6 @@ int main(int argc, char *argv[])
         vector<int> num_sample_dofs_per_proc_S(num_procs);
 
         vector<int> sample_dofs_withS;  // Indices of the sampled rows
-        int nsdim = 0;
         CAROM::Matrix *Ssinv = 0;
         vector<int> num_sample_dofs_per_proc_withS;
         CAROM::BasisReader *readerS = 0;
@@ -1628,7 +1627,8 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_,
       Vsinv(Bsinv), J(height),
       zS(std::max(nsamp_S, 1), false), zT(std::max(nsamp_S, 1), false), Ssinv(Ssinv_),
       VTCS_W(rwdim, std::max(nsamp_S, 1), false), S(S_),
-      VtzR(rrdim_, false), hyperreduce_source(hyperreduce_source_), oversampling(oversampling_)
+      VtzR(rrdim_, false), hyperreduce_source(hyperreduce_source_),
+      oversampling(oversampling_)
 {
     dydt_prev = 0.0;
 
