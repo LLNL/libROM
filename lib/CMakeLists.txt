@@ -35,6 +35,7 @@ set(module_list
   algo/DMD
   algo/AdaptiveDMD
   algo/NonuniformDMD
+  algo/DifferentialEvolution
   algo/greedy/GreedyCustomSampler
   algo/greedy/GreedyRandomSampler
   algo/greedy/GreedySampler
