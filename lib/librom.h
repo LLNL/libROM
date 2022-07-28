@@ -19,6 +19,7 @@
 #include "algo/DMD.h"
 #include "algo/AdaptiveDMD.h"
 #include "algo/NonuniformDMD.h"
+#include "algo/DifferentialEvolution.h"
 #include "algo/greedy/GreedyCustomSampler.h"
 #include "algo/greedy/GreedyRandomSampler.h"
 #include "algo/manifold_interp/MatrixInterpolator.h"

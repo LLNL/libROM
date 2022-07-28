@@ -234,6 +234,10 @@ CSVDatabase::getDoubleArray(
             {
                 data[k++] = data_entry;
             }
+            if (k == idx.size())
+            {
+                break;
+            }
         }
         CAROM_VERIFY(k == idx.size());
         d_fs.close();
@@ -327,6 +331,7 @@ CSVDatabase::getLineCount(
 {
     int count = 0;
     CAROM_VERIFY(!file_name.empty());
+
     std::ifstream d_fs(file_name.c_str());
     std::string data_entry;
     while (std::getline(d_fs, data_entry))

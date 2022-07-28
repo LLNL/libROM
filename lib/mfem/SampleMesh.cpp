@@ -395,7 +395,7 @@ void BuildSampleMesh(ParMesh& pmesh, vector<ParFiniteElementSpace*> & fespace,
 
         pmesh.GetElementVertices(elId, elVert);
         MFEM_VERIFY(numElVert == elVert.Size(),
-            "Assuming a uniform element type in the mesh.");
+                    "Assuming a uniform element type in the mesh.");
         // NOTE: to be very careful, it should be verified that this is the same across all processes.
 
         Array<int> dofs;
