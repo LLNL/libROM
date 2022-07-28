@@ -19,10 +19,11 @@ jobs:
             mkdir ${GITHUB_WORKSPACE}/build
             export CC=mpicc
             export CXX=mpicxx
+            scripts/compile.sh -m -d
             scripts/compile.sh -m
       - uses: ./.github/workflows/run_tests
   mac:
-    runs-on: macos-12
+    runs-on: macos-latest
     steps:
       - name: Install Mac dependencies
         run: |
@@ -38,5 +39,6 @@ jobs:
         run: |
             mkdir ${GITHUB_WORKSPACE}/build
             export FC=/usr/local/bin/gfortran-11
+            scripts/compile.sh -m -d
             scripts/compile.sh -m
       - uses: ./.github/workflows/run_tests

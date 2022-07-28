@@ -35,9 +35,28 @@ if [ ! -d "hypre" ]; then
   make -j
 fi
 
+# Install PARMETIS 4.0.3
+cd $LIB_DIR
+if [ ! -d "parmetis-4.0.3" ]; then
+
+  tar -zxvf parmetis-4.0.3.tar.gz
+  cd parmetis-4.0.3
+  make config
+  make
+  METIS_DIR=$LIB_DIR/parmetis-4.0.3
+  METIS_OPT=-I${METIS_DIR}/metis/include
+  cd ${METIS_DIR}/build
+  MACHINE_ARCH=$(ls)
+  ln -s $MACHINE_ARCH lib
+fi
+
 unset CFLAGS
 unset CPPFLAGS
 unset CXXFLAGS
+
+METIS_DIR=$LIB_DIR/parmetis-4.0.3
+METIS_OPT=-I${METIS_DIR}/metis/include
+METIS_LIB="-L${METIS_DIR}/build/lib/libparmetis -lparmetis -L${METIS_DIR}/build/lib/libmetis -lmetis"
 
 # Install MFEM
 cd $LIB_DIR
@@ -49,7 +68,7 @@ if [[ $BUILD_TYPE == "Debug" ]]; then
     if [[ $UPDATE_LIBS == "true" ]]; then
         cd mfem_debug
         git pull
-        make pdebug -j STATIC=NO SHARED=YES MFEM_USE_MPI=YES
+        make pdebug -j 8 STATIC=NO SHARED=YES MFEM_USE_MPI=YES MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB"
     fi
     cd $LIB_DIR
     rm mfem
@@ -62,7 +81,7 @@ else
     if [[ $UPDATE_LIBS == "true" ]]; then
         cd mfem_parallel
         git pull
-        make parallel -j STATIC=NO SHARED=YES MFEM_USE_MPI=YES
+        make parallel -j 8 STATIC=NO SHARED=YES MFEM_USE_MPI=YES MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB"
     fi
     cd $LIB_DIR
     rm mfem
