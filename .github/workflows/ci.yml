@@ -38,7 +38,7 @@ jobs:
       - name: Build libROM
         run: |
             mkdir ${GITHUB_WORKSPACE}/build
-            export FC=/usr/local/bin/gfortran-11
+            export FC=/usr/local/bin/gfortran-10
             scripts/compile.sh -m -d
             scripts/compile.sh -m
       - uses: ./.github/workflows/run_tests
