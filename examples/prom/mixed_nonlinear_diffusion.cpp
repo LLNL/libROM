@@ -84,6 +84,12 @@ static double diffusion_c, step_half;
 class NonlinearDiffusionOperator;
 class RomOperator;
 
+void Compute_CtAB(const HypreParMatrix* A,
+                  const CAROM::Matrix& B,
+                  const CAROM::Matrix& C,
+                  CAROM::Matrix*
+                  CtAB);
+
 // Element matrix assembly, copying element loop from BilinearForm::Assemble(int skip_zeros)
 // and element matrix computation from VectorFEMassIntegrator::AssembleElementMatrix.
 
@@ -1162,7 +1168,6 @@ void ComputeElementRowOfG_Source(const IntegrationRule *ir,
     int dof = fe.GetDof();
 
     Vector shape(dof);
-    //FunctionCoefficient fsource(SourceFunction);
 
     for (int i = 0; i < ir->GetNPoints(); i++)
     {
@@ -1176,8 +1181,6 @@ void ComputeElementRowOfG_Source(const IntegrationRule *ir,
 
         double u_i = 0.0;
         double v_i = 0.0;
-
-        //const double source = ;
 
         for (int j=0; j<dof; ++j)
         {
@@ -1331,6 +1334,7 @@ const IntegrationRule* SetupEQP_snapshots(const IntegrationRule *ir0,
         const CAROM::Matrix* BR,
         const CAROM::Matrix* BR_snapshots,
         const CAROM::Matrix* BW_snapshots,
+        const bool precondition,
         CAROM::Vector & sol)
 {
     const int nqe = ir0->GetNPoints();
@@ -1344,6 +1348,13 @@ const IntegrationRule* SetupEQP_snapshots(const IntegrationRule *ir0,
 
     // Compute G of size (NB * nsnap) x NQ
     CAROM::Matrix G(NB * nsnap, NQ, false);
+    CAROM::Vector PG(NB, false);
+
+    // For 0 <= j < NB, 0 <= i < nsnap, 0 <= e < ne, 0 <= m < nqe,
+    // G(j + (i*NB), (e*nqe) + m)
+    // is the coefficient of v_j^T M(p_i) V v_i at point m of element e,
+    // with respect to the integration rule weight at that point,
+    // where the "exact" quadrature solution is ir0->GetWeights().
 
     Vector p_i(BW_snapshots->numRows());
     Vector v_i(BR_snapshots->numRows());
@@ -1386,7 +1397,37 @@ const IntegrationRule* SetupEQP_snapshots(const IntegrationRule *ir0,
                     G(j + (i*NB), (e*nqe) + m) = r[m];
             }
         }
-    }
+
+        if (precondition)
+        {
+            // Preconditioning is done by (V^T M(p_i) V)^{-1} (of size NB x NB).
+            ParBilinearForm M(fespace_R);
+
+            M.AddDomainIntegrator(new VectorFEMassIntegrator(a_coeff));
+            M.Assemble();
+            M.Finalize();
+            HypreParMatrix *Mmat = M.ParallelAssemble();
+
+            CAROM::Matrix Mhat(NB, NB, false);
+            Compute_CtAB(Mmat, *BR, *BR, &Mhat);
+            Mhat.inverse();
+
+            for (int m=0; m<NQ; ++m)
+            {
+                for (int j=0; j<NB; ++j)
+                {
+                    PG(j) = 0.0;
+                    for (int k=0; k<NB; ++k)
+                    {
+                        PG(j) += Mhat(j,k) * G(k + (i*NB), m);
+                    }
+                }
+
+                for (int j=0; j<NB; ++j)
+                    G(j + (i*NB), m) = PG(j);
+            }
+        }
+    } // Loop (i) over snapshots
 
     Array<double> const& w_el = ir0->GetWeights();
     MFEM_VERIFY(w_el.Size() == nqe, "");
@@ -1439,6 +1480,7 @@ const IntegrationRule* SetupEQP_S_snapshots(const IntegrationRule *ir0,
         ParFiniteElementSpace *fespace_W,
         const CAROM::Matrix* BW,
         const CAROM::Matrix* BS_snapshots,
+        const bool precondition,
         CAROM::Vector & sol)
 {
     const int nqe = ir0->GetNPoints();
@@ -1485,6 +1527,41 @@ const IntegrationRule* SetupEQP_S_snapshots(const IntegrationRule *ir0,
     }
 
     // TODO: refactor, since there is a lot of repeated code.
+
+    if (precondition)
+    {
+        // Preconditioning is done by (V^T M V)^{-1} (of size NB x NB).
+        ParBilinearForm M(fespace_W);
+
+        M.AddDomainIntegrator(new MassIntegrator());
+        M.Assemble();
+        M.Finalize();
+        HypreParMatrix *Mmat = M.ParallelAssemble();
+
+        CAROM::Matrix Mhat(NB, NB, false);
+        Compute_CtAB(Mmat, *BW, *BW, &Mhat);
+        Mhat.inverse();
+
+        CAROM::Vector PG(NB, false);
+
+        for (int i=0; i<nsnap; ++i)
+        {
+            for (int m=0; m<NQ; ++m)
+            {
+                for (int j=0; j<NB; ++j)
+                {
+                    PG(j) = 0.0;
+                    for (int k=0; k<NB; ++k)
+                    {
+                        PG(j) += Mhat(j,k) * G(k + (i*NB), m);
+                    }
+                }
+
+                for (int j=0; j<NB; ++j)
+                    G(j + (i*NB), m) = PG(j);
+            }
+        }
+    }
 
     Array<double> const& w_el = ir0->GetWeights();
     MFEM_VERIFY(w_el.Size() == nqe, "");
@@ -1565,7 +1642,7 @@ int main(int argc, char *argv[])
     bool merge = false;
     bool online = false;
     bool use_sopt = false;
-    bool use_eqp = true;
+    bool use_eqp = false;
     int num_samples_req = -1;
 
     int nsets = 0;
@@ -1577,6 +1654,8 @@ int main(int argc, char *argv[])
     int rwdim = -1;
     int nldim = -1;
     int nsdim = -1;
+
+    bool preconditionNNLS = false;
 
     int precision = 16;
     cout.precision(precision);
@@ -1629,6 +1708,9 @@ int main(int argc, char *argv[])
                    "number of samples we want to select for the sampling algorithm.");
     args.AddOption(&use_eqp, "-eqp", "--eqp", "-no-eqp", "--no-eqp",
                    "Use EQP instead of DEIM for the hyperreduction.");
+    args.AddOption(&preconditionNNLS, "-preceqp", "--preceqp", "-no-preceqp",
+                   "--no-preceqp",
+                   "Precondition the NNLS system for EQP.");
 
     args.Parse();
     if (!args.Good())
@@ -1955,11 +2037,13 @@ int main(int argc, char *argv[])
             SetupEQP_snapshots(ir0, &R_space, &W_space, BR_librom,
                                GetSnapshotMatrix(R_space.GetTrueVSize(), nsets, max_num_snapshots, "R"),
                                GetSnapshotMatrix(W_space.GetTrueVSize(), nsets, max_num_snapshots, "W"),
+                               preconditionNNLS,
                                *eqpSol);
 
             eqpSol_S = new CAROM::Vector(ir0->GetNPoints() * W_space.GetNE(), false);
             SetupEQP_S_snapshots(ir0, &W_space, BW_librom,
                                  GetSnapshotMatrix(W_space.GetTrueVSize(), nsets, max_num_snapshots, "S"),
+                                 preconditionNNLS,
                                  *eqpSol_S);
         }
         else
