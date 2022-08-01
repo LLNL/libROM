@@ -387,8 +387,8 @@ double simulation()
         dmd_training_timer.Stop();
     }
 
-    // 14. If in de mode, save the initial vector.
-    if (de)
+    // 14. If in de or online mode, save the initial vector.
+    if (de || online)
     {
         u_gf.SetFromTrueDofs(u);
         init = new CAROM::Vector(u.GetData(), u.Size(), true);
@@ -535,6 +535,15 @@ double simulation()
             oper.SetParameters(u);
         }
 
+        if (!build_database && myid == 0)
+        {
+            std::ofstream outFile("ts.txt");
+            for (int i = 0; i < ts.size(); i++)
+            {
+                outFile << ts[i] << "\n";
+            }
+        }
+
 #ifdef MFEM_USE_ADIOS2
         if (adios2)
         {
@@ -557,6 +566,53 @@ double simulation()
     }
 
     double rel_diff = 0.0;
+
+    // 17. If in de or online mode, create the parametric DMD.
+    if (de || online)
+    {
+        std::fstream fin("parameters.txt", std::ios_base::in);
+        double curr_param;
+        std::vector<std::string> dmd_paths;
+        std::vector<CAROM::Vector*> param_vectors;
+
+        while (fin >> curr_param)
+        {
+            double curr_radius = curr_param;
+            fin >> curr_param;
+            double curr_alpha = curr_param;
+            fin >> curr_param;
+            double curr_cx = curr_param;
+            fin >> curr_param;
+            double curr_cy = curr_param;
+
+            dmd_paths.push_back(to_string(curr_radius) + "_" +
+                                to_string(curr_alpha) + "_" + to_string(curr_cx) + "_" +
+                                to_string(curr_cy));
+            CAROM::Vector* param_vector = new CAROM::Vector(4, false);
+            param_vector->item(0) = curr_radius;
+            param_vector->item(1) = curr_alpha;
+            param_vector->item(2) = curr_cx;
+            param_vector->item(3) = curr_cy;
+            param_vectors.push_back(param_vector);
+        }
+        fin.close();
+
+        CAROM::Vector* desired_param = new CAROM::Vector(4, false);
+        desired_param->item(0) = radius;
+        desired_param->item(1) = alpha;
+        desired_param->item(2) = cx;
+        desired_param->item(3) = cy;
+
+        dmd_training_timer.Start();
+
+        CAROM::getParametricDMD(dmd_u, param_vectors, dmd_paths, desired_param,
+                                "G", "LS", closest_rbf_val);
+
+        dmd_u->projectInitialCondition(init);
+
+        dmd_training_timer.Stop();
+        delete desired_param;
+    }
 
     if (offline || de || calc_err_indicator)
     {
@@ -589,49 +645,6 @@ double simulation()
         // 18. Compare the DMD solution to the FOM solution.
         if (de)
         {
-            std::fstream fin("parameters.txt", std::ios_base::in);
-            double curr_param;
-            std::vector<std::string> dmd_paths;
-            std::vector<CAROM::Vector*> param_vectors;
-
-            while (fin >> curr_param)
-            {
-                double curr_radius = curr_param;
-                fin >> curr_param;
-                double curr_alpha = curr_param;
-                fin >> curr_param;
-                double curr_cx = curr_param;
-                fin >> curr_param;
-                double curr_cy = curr_param;
-
-                dmd_paths.push_back(to_string(curr_radius) + "_" +
-                                    to_string(curr_alpha) + "_" + to_string(curr_cx) + "_" +
-                                    to_string(curr_cy));
-                CAROM::Vector* param_vector = new CAROM::Vector(4, false);
-                param_vector->item(0) = curr_radius;
-                param_vector->item(1) = curr_alpha;
-                param_vector->item(2) = curr_cx;
-                param_vector->item(3) = curr_cy;
-                param_vectors.push_back(param_vector);
-            }
-            fin.close();
-
-            CAROM::Vector* desired_param = new CAROM::Vector(4, false);
-            desired_param->item(0) = radius;
-            desired_param->item(1) = alpha;
-            desired_param->item(2) = cx;
-            desired_param->item(3) = cy;
-
-            dmd_training_timer.Start();
-
-            CAROM::getParametricDMD(dmd_u, param_vectors, dmd_paths, desired_param,
-                                    "G", "LS", closest_rbf_val);
-
-            dmd_u->projectInitialCondition(init);
-
-            dmd_training_timer.Stop();
-            delete desired_param;
-
             if (true_solution_u == NULL)
             {
                 ifstream solution_file;
@@ -686,6 +699,19 @@ double simulation()
     }
     else if (online)
     {
+        std::ifstream infile("ts.txt");
+
+        std::string str;
+        while (std::getline(infile, str))
+        {
+            // Line contains string of length > 0 then save it in vector
+            if(str.size() > 0)
+            {
+                ts.push_back(std::stod(str));
+            }
+        }
+        infile.close();
+
         dmd_prediction_timer.Start();
 
         // 14. Predict the state at t_final using DMD.
@@ -698,7 +724,7 @@ double simulation()
         Vector initial_dmd_solution_u(result_u->getData(), result_u->dim());
         u_gf.SetFromTrueDofs(initial_dmd_solution_u);
 
-        VisItDataCollection dmd_visit_dc(outputPath + "/DMD_DE_Parametric_Heat_Conduction_Greedy_"
+        VisItDataCollection dmd_visit_dc("DMD_DE_Parametric_Heat_Conduction_Greedy_"
                                          +
                                          to_string(radius) + "_" + to_string(alpha) + "_" +
                                          to_string(cx) + "_" + to_string(cy), pmesh);
@@ -1086,11 +1112,11 @@ int main(int argc, char *argv[])
 
         // Create Differential Evolution optimizer with population size of de_ps
         // differential weight of de_F, and crossover probability of de_CR
-        CAROM::DifferentialEvolution de(cost, de_PS, de_F, de_CR);
+        CAROM::DifferentialEvolution de_opt(cost, de_PS, de_F, de_CR);
 
         // Optimize for at least de_min_iter iterations, to a maximum of de_max_iter iterations with verbose output.
         // Stop early, after de_min_iter iterations is run, if the minimum cost did not improve by de_ct
-        std::vector<double> optimal_parameters = de.Optimize(de_min_iter, de_max_iter, de_ct, true);
+        std::vector<double> optimal_parameters = de_opt.Optimize(de_min_iter, de_max_iter, de_ct, true);
 
         radius = optimal_parameters[0];
         alpha = optimal_parameters[1];
