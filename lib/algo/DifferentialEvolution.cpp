@@ -96,7 +96,7 @@ DifferentialEvolution::Optimize(int min_iterations, int max_iterations,
 
         for (int j = 0; j < m_numberOfParameters; j++)
         {
-            optimal_parameters[j] = m_population[m_bestAgentIndex][j]
+            optimal_parameters[j] = m_population[m_bestAgentIndex][j];
         }
 
         if (i >= min_iterations && prevMinCost - m_minCost <= cost_tolerance)
