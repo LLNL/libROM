@@ -62,12 +62,15 @@ DifferentialEvolution::DifferentialEvolution(const IOptimizable& costFunction,
     m_constraints = costFunction.GetConstraints();
 }
 
-void
+std::vector<double>
 DifferentialEvolution::Optimize(int min_iterations, int max_iterations,
                                 double cost_tolerance, bool verbose)
 {
     CAROM_VERIFY(min_iterations <= max_iterations);
     CAROM_VERIFY(min_iterations >= 0 && max_iterations > 0);
+
+    std::vector<double> optimal_parameters(m_numberOfParameters);
+
     InitPopulation();
 
     double prevMinCost;
@@ -91,6 +94,11 @@ DifferentialEvolution::Optimize(int min_iterations, int max_iterations,
             std::cout << std::endl;
         }
 
+        for (int j = 0; j < m_numberOfParameters; j++)
+        {
+            optimal_parameters[j] = m_population[m_bestAgentIndex][j];
+        }
+
         if (i >= min_iterations && prevMinCost - m_minCost <= cost_tolerance)
         {
             if (d_rank == 0 && verbose)
@@ -99,7 +107,7 @@ DifferentialEvolution::Optimize(int min_iterations, int max_iterations,
                           "Terminated due to cost tolerance condition being met." <<
                           std::endl;
             }
-            return;
+            return optimal_parameters;
         }
 
         if (m_callback)
@@ -117,7 +125,7 @@ DifferentialEvolution::Optimize(int min_iterations, int max_iterations,
                               "Terminated due to positive evaluation of the termination condition." <<
                               std::endl;
                 }
-                return;
+                return optimal_parameters;
             }
         }
     }
@@ -127,6 +135,8 @@ DifferentialEvolution::Optimize(int min_iterations, int max_iterations,
         std::cout << "Terminated due to exceeding total number of generations." <<
                   std::endl;
     }
+
+    return optimal_parameters;
 }
 
 bool

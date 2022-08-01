@@ -26,8 +26,8 @@
 //   rm -rf parameters.txt
 //   rm -rf de_parametric_heat_conduction_greedy_*
 //   mpirun -np 8 de_parametric_heat_conduction_greedy -build_database -rdim 16 -greedy-param-size 5 -greedysubsize 2 -greedyconvsize 3 -greedyreldifftol 0.01 (Create DMDs in a greedy fashion at different training points)
-//   mpirun -np 8 de_parametric_heat_conduction_greedy -r 0.2 -cx 0.2 -cy 0.2 (Compute target FOM)
-//   mpirun -np 8 de_parametric_heat_conduction_greedy -r 0.2 -cx 0.2 -cy 0.2 -de -de_f 0.9 -de_cr 0.9 -de_ps 50 -de_min_iter 10 -de_max_iter 100 -de_ct 0.001 (Run interpolative differential evolution to see if target FOM can be matched)
+//   mpirun -np 8 de_parametric_heat_conduction_greedy -r 0.2 -cx 0.2 -cy 0.2 -visit (Compute target FOM)
+//   mpirun -np 8 de_parametric_heat_conduction_greedy -r 0.2 -cx 0.2 -cy 0.2 -visit -de -de_f 0.9 -de_cr 0.9 -de_ps 50 -de_min_iter 10 -de_max_iter 100 -de_ct 0.001 (Run interpolative differential evolution to see if target FOM can be matched)
 //
 // =================================================================================
 //
@@ -127,6 +127,7 @@ double kappa = 0.5;
 double closest_rbf_val = 0.9;
 int rdim = -1;
 bool offline = false;
+bool online = false;
 bool build_database = false;
 bool calc_err_indicator = false;
 bool de = false;
@@ -254,7 +255,7 @@ double simulation()
     ParFiniteElementSpace fespace(pmesh, &fe_coll);
 
     int fe_size = fespace.GlobalTrueVSize();
-    if (!de && myid == 0)
+    if (!de && !online && myid == 0)
     {
         cout << "Number of temperature unknowns: " << fe_size << endl;
     }
@@ -272,7 +273,7 @@ double simulation()
     ConductionOperator oper(fespace, alpha, kappa, u);
 
     u_gf.SetFromTrueDofs(u);
-    if (!de)
+    if (!de && !online)
     {
         ostringstream mesh_name, sol_name;
         mesh_name << "de_parametric_heat_conduction_greedy_" << to_string(
@@ -295,7 +296,7 @@ double simulation()
                                  to_string(radius) + "_" + to_string(alpha) + "_" + to_string(cx) + "_" +
                                  to_string(cy), pmesh);
     visit_dc.RegisterField("temperature", &u_gf);
-    if (visit)
+    if (!de && !online && visit)
     {
         visit_dc.SetCycle(0);
         visit_dc.SetTime(0.0);
@@ -360,6 +361,7 @@ double simulation()
     //     time-step dt).
     ode_solver->Init(oper);
     double t = 0.0;
+    vector<double> ts;
     CAROM::Vector* init = NULL;
 
     CAROM::CSVDatabase csv_db;
@@ -385,8 +387,8 @@ double simulation()
         dmd_training_timer.Stop();
     }
 
-    // 14. If in de mode, save the initial vector.
-    if (de)
+    // 14. If in de or online mode, save the initial vector.
+    if (de || online)
     {
         u_gf.SetFromTrueDofs(u);
         init = new CAROM::Vector(u.GetData(), u.Size(), true);
@@ -466,6 +468,8 @@ double simulation()
             delete carom_tf_u_minus_some;
         }
 
+        ts.push_back(t);
+
         // 15. Iterate through the time loop.
         bool last_step = false;
         for (int ti = 1; !last_step; ti++)
@@ -496,6 +500,8 @@ double simulation()
                 dmd_training_timer.Stop();
             }
 
+            ts.push_back(t);
+
             if (last_step || (ti % vis_steps) == 0)
             {
                 if (myid == 0)
@@ -510,7 +516,7 @@ double simulation()
                     sout << "solution\n" << *pmesh << u_gf << flush;
                 }
 
-                if (visit)
+                if (!de && !online && visit)
                 {
                     visit_dc.SetCycle(ti);
                     visit_dc.SetTime(t);
@@ -527,6 +533,15 @@ double simulation()
 #endif
             }
             oper.SetParameters(u);
+        }
+
+        if (!build_database && myid == 0)
+        {
+            std::ofstream outFile("ts.txt");
+            for (int i = 0; i < ts.size(); i++)
+            {
+                outFile << ts[i] << "\n";
+            }
         }
 
 #ifdef MFEM_USE_ADIOS2
@@ -551,6 +566,53 @@ double simulation()
     }
 
     double rel_diff = 0.0;
+
+    // 17. If in de or online mode, create the parametric DMD.
+    if (de || online)
+    {
+        std::fstream fin("parameters.txt", std::ios_base::in);
+        double curr_param;
+        std::vector<std::string> dmd_paths;
+        std::vector<CAROM::Vector*> param_vectors;
+
+        while (fin >> curr_param)
+        {
+            double curr_radius = curr_param;
+            fin >> curr_param;
+            double curr_alpha = curr_param;
+            fin >> curr_param;
+            double curr_cx = curr_param;
+            fin >> curr_param;
+            double curr_cy = curr_param;
+
+            dmd_paths.push_back(to_string(curr_radius) + "_" +
+                                to_string(curr_alpha) + "_" + to_string(curr_cx) + "_" +
+                                to_string(curr_cy));
+            CAROM::Vector* param_vector = new CAROM::Vector(4, false);
+            param_vector->item(0) = curr_radius;
+            param_vector->item(1) = curr_alpha;
+            param_vector->item(2) = curr_cx;
+            param_vector->item(3) = curr_cy;
+            param_vectors.push_back(param_vector);
+        }
+        fin.close();
+
+        CAROM::Vector* desired_param = new CAROM::Vector(4, false);
+        desired_param->item(0) = radius;
+        desired_param->item(1) = alpha;
+        desired_param->item(2) = cx;
+        desired_param->item(3) = cy;
+
+        dmd_training_timer.Start();
+
+        CAROM::getParametricDMD(dmd_u, param_vectors, dmd_paths, desired_param,
+                                "G", "LS", closest_rbf_val);
+
+        dmd_u->projectInitialCondition(init);
+
+        dmd_training_timer.Stop();
+        delete desired_param;
+    }
 
     if (offline || de || calc_err_indicator)
     {
@@ -583,49 +645,6 @@ double simulation()
         // 18. Compare the DMD solution to the FOM solution.
         if (de)
         {
-            std::fstream fin("parameters.txt", std::ios_base::in);
-            double curr_param;
-            std::vector<std::string> dmd_paths;
-            std::vector<CAROM::Vector*> param_vectors;
-
-            while (fin >> curr_param)
-            {
-                double curr_radius = curr_param;
-                fin >> curr_param;
-                double curr_alpha = curr_param;
-                fin >> curr_param;
-                double curr_cx = curr_param;
-                fin >> curr_param;
-                double curr_cy = curr_param;
-
-                dmd_paths.push_back(to_string(curr_radius) + "_" +
-                                    to_string(curr_alpha) + "_" + to_string(curr_cx) + "_" +
-                                    to_string(curr_cy));
-                CAROM::Vector* param_vector = new CAROM::Vector(4, false);
-                param_vector->item(0) = curr_radius;
-                param_vector->item(1) = curr_alpha;
-                param_vector->item(2) = curr_cx;
-                param_vector->item(3) = curr_cy;
-                param_vectors.push_back(param_vector);
-            }
-            fin.close();
-
-            CAROM::Vector* desired_param = new CAROM::Vector(4, false);
-            desired_param->item(0) = radius;
-            desired_param->item(1) = alpha;
-            desired_param->item(2) = cx;
-            desired_param->item(3) = cy;
-
-            dmd_training_timer.Start();
-
-            CAROM::getParametricDMD(dmd_u, param_vectors, dmd_paths, desired_param,
-                                    "G", "LS", closest_rbf_val);
-
-            dmd_u->projectInitialCondition(init);
-
-            dmd_training_timer.Stop();
-            delete desired_param;
-
             if (true_solution_u == NULL)
             {
                 ifstream solution_file;
@@ -654,9 +673,6 @@ double simulation()
                                                 *true_solution_u, *true_solution_u));
             }
         }
-
-        dmd_prediction_timer.Start();
-
         CAROM::Vector* result_u = dmd_u->predict(t_final);
 
         Vector dmd_solution_u(result_u->getData(), result_u->dim());
@@ -671,8 +687,6 @@ double simulation()
             std::cout << "Rel. diff. of DMD temp. (u) at t_final at radius " << radius <<
                       ", alpha " << alpha << ", cx " << cx << ", cy " << cy << ": "
                       << rel_diff << std::endl;
-            if (!de) printf("Elapsed time for predicting DMD: %e second\n",
-                                dmd_prediction_timer.RealTime());
         }
 
         delete result_u;
@@ -682,6 +696,94 @@ double simulation()
             printf("Elapsed time for training DMD: %e second\n",
                    dmd_training_timer.RealTime());
         }
+    }
+    else if (online)
+    {
+        std::ifstream infile("ts.txt");
+
+        std::string str;
+        while (std::getline(infile, str))
+        {
+            // Line contains string of length > 0 then save it in vector
+            if(str.size() > 0)
+            {
+                ts.push_back(std::stod(str));
+            }
+        }
+        infile.close();
+
+        dmd_prediction_timer.Start();
+
+        // 14. Predict the state at t_final using DMD.
+        if (myid == 0)
+        {
+            std::cout << "Predicting temperature using DMD at: " << ts[0] << std::endl;
+        }
+
+        CAROM::Vector* result_u = dmd_u->predict(ts[0]);
+        Vector initial_dmd_solution_u(result_u->getData(), result_u->dim());
+        u_gf.SetFromTrueDofs(initial_dmd_solution_u);
+
+        VisItDataCollection dmd_visit_dc("DMD_DE_Parametric_Heat_Conduction_Greedy_"
+                                         +
+                                         to_string(radius) + "_" + to_string(alpha) + "_" +
+                                         to_string(cx) + "_" + to_string(cy), pmesh);
+        dmd_visit_dc.RegisterField("temperature", &u_gf);
+        if (visit)
+        {
+            dmd_visit_dc.SetCycle(0);
+            dmd_visit_dc.SetTime(0.0);
+            dmd_visit_dc.Save();
+        }
+
+        delete result_u;
+
+        for (int i = 1; i < ts.size(); i++)
+        {
+            result_u = dmd_u->predict(ts[i]);
+            if (myid == 0)
+            {
+                std::cout << "Predicting temperature using DMD at: " << ts[i] << std::endl;
+            }
+
+            Vector dmd_solution_u(result_u->getData(), result_u->dim());
+            u_gf.SetFromTrueDofs(dmd_solution_u);
+
+            if (i == ts.size() - 1 || (i % vis_steps) == 0)
+            {
+                if (visit)
+                {
+                    dmd_visit_dc.SetCycle(i);
+                    dmd_visit_dc.SetTime(ts[i]);
+                    dmd_visit_dc.Save();
+                }
+            }
+
+            delete result_u;
+        }
+
+        dmd_prediction_timer.Stop();
+
+        result_u = dmd_u->predict(t_final);
+
+        // 15. Calculate the relative error between the DMD final solution and the true solution.
+        Vector dmd_solution_u(result_u->getData(), result_u->dim());
+        Vector diff_u(true_solution_u->Size());
+        subtract(dmd_solution_u, *true_solution_u, diff_u);
+
+        double tot_diff_norm_u = sqrt(InnerProduct(MPI_COMM_WORLD, diff_u, diff_u));
+        double tot_true_solution_u_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
+                                               *true_solution_u, *true_solution_u));
+
+        if (myid == 0)
+        {
+            std::cout << "Relative error of DMD temperature (u) at t_final: "
+                      << t_final << " is " << tot_diff_norm_u / tot_true_solution_u_norm << std::endl;
+            printf("Elapsed time for predicting DMD: %e second\n",
+                   dmd_prediction_timer.RealTime());
+        }
+
+        delete result_u;
     }
 
     // 19. Calculate the relative error as commanded by the greedy algorithm.
@@ -698,7 +800,7 @@ double simulation()
         greedy_sampler->setPointErrorIndicator(rel_diff, 1);
     }
 
-    if (!de && myid == 0)
+    if (!de && !online && myid == 0)
     {
         printf("Elapsed time for solving FOM: %e second\n", fom_timer.RealTime());
     }
@@ -1010,11 +1112,20 @@ int main(int argc, char *argv[])
 
         // Create Differential Evolution optimizer with population size of de_ps
         // differential weight of de_F, and crossover probability of de_CR
-        CAROM::DifferentialEvolution de(cost, de_PS, de_F, de_CR);
+        CAROM::DifferentialEvolution de_opt(cost, de_PS, de_F, de_CR);
 
         // Optimize for at least de_min_iter iterations, to a maximum of de_max_iter iterations with verbose output.
         // Stop early, after de_min_iter iterations is run, if the minimum cost did not improve by de_ct
-        de.Optimize(de_min_iter, de_max_iter, de_ct, true);
+        std::vector<double> optimal_parameters = de_opt.Optimize(de_min_iter, de_max_iter, de_ct, true);
+
+        radius = optimal_parameters[0];
+        alpha = optimal_parameters[1];
+        cx = optimal_parameters[2];
+        cy = optimal_parameters[3];
+
+        online = true;
+        de = false;
+        simulation();
 
         delete true_solution_u;
     }
