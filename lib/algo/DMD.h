@@ -109,7 +109,7 @@ public:
      *
      * @param[in] t The time of the outputted state
      */
-    Vector* predict(double t);
+    Vector* predict(double t, int power = 0);
 
     /**
      * @brief Get the time offset contained within d_t_offset.
@@ -216,7 +216,7 @@ protected:
     /**
      * @brief Internal function to multiply d_phi with the eigenvalues.
      */
-    std::pair<Matrix*, Matrix*> phiMultEigs(double t);
+    std::pair<Matrix*, Matrix*> phiMultEigs(double t, int power = 0);
 
     /**
      * @brief Construct the DMD object.

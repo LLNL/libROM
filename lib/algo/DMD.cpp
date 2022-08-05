@@ -624,14 +624,14 @@ DMD::projectInitialCondition(const Vector* init)
 }
 
 Vector*
-DMD::predict(double t)
+DMD::predict(double t, int power)
 {
     CAROM_VERIFY(d_trained);
     CAROM_VERIFY(d_init_projected);
     CAROM_VERIFY(t >= 0.0);
 
     t -= d_t_offset;
-    std::pair<Matrix*, Matrix*> d_phi_pair = phiMultEigs(t);
+    std::pair<Matrix*, Matrix*> d_phi_pair = phiMultEigs(t, power);
     Matrix* d_phi_mult_eigs_real = d_phi_pair.first;
     Matrix* d_phi_mult_eigs_imaginary = d_phi_pair.second;
 
@@ -642,13 +642,17 @@ DMD::predict(double t)
     Vector* d_predicted_state_real = d_predicted_state_real_1->minus(
                                          d_predicted_state_real_2);
 
-    if (d_state_offset)
+    if (d_state_offset && power == 0)
     {
         *d_predicted_state_real += *d_state_offset;
     }
-    if (d_derivative_offset)
+    if (d_derivative_offset && power == 0)
     {
         *d_predicted_state_real += *(d_derivative_offset->mult(t));
+    }
+    if (d_derivative_offset && power == 1)
+    {
+        *d_predicted_state_real += *d_derivative_offset;
     }
 
     delete d_phi_mult_eigs_real;
@@ -666,7 +670,7 @@ DMD::computeEigExp(std::complex<double> eig, double t)
 }
 
 std::pair<Matrix*, Matrix*>
-DMD::phiMultEigs(double t)
+DMD::phiMultEigs(double t, int power)
 {
     Matrix* d_eigs_exp_real = new Matrix(d_k, d_k, false);
     Matrix* d_eigs_exp_imaginary = new Matrix(d_k, d_k, false);
@@ -674,6 +678,10 @@ DMD::phiMultEigs(double t)
     for (int i = 0; i < d_k; i++)
     {
         std::complex<double> eig_exp = computeEigExp(d_eigs[i], t);
+        for (int k = 0; k < power; ++k)
+        {
+            eig_exp *= d_eigs[i];
+        }
         d_eigs_exp_real->item(i, i) = std::real(eig_exp);
         d_eigs_exp_imaginary->item(i, i) = std::imag(eig_exp);
     }
