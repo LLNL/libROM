@@ -70,7 +70,9 @@ public:
     /**
      * Solve the NNLS problem. Specifically, we find a vector soln, such that    rhs_lb < mat*soln < rhs_ub   is satisfied. mat should hold a column distributed matrix (each process has all rows, but a subset of cols). rhs_ub and rhs_lb are the true bounds divided by the number of processors, such that when the rhs_lb and rhs_ub are summed across all processes we get the true bounds. soln is a vector containing the solution. rhs_lb, rhs_ub and soln are all identical across all processes.
      The method by which we find the solution is the active-set method developed by Lawson and Hanson (1974) using scalapack functions to effect the multi-processor matrix operations. To decrease rounding errors in the case of very tight tolerances, we have the option to compute the residual using the QR factorization of A, by   res = b - Q*Q^T*b. This residual calculation results in less rounding error, but is more computationally expensive. To select whether to use the QR residual method or not, see set_qrresidual_mode above.*/
-    void solve_parallel_with_scalapack(const Matrix& mat, const Vector& rhs_lb,
+    void solve_parallel_with_scalapack(const Matrix& mat_orig,
+                                       const Matrix& matTrans,
+                                       const Vector& rhs_lb,
                                        const Vector& rhs_ub, Vector& soln);
 
     /**

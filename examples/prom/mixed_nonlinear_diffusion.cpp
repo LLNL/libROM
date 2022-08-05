@@ -195,8 +195,71 @@ void GetEQPCoefficients_VectorFEMassIntegrator(ParFiniteElementSpace *fesR,
     res.SetSize(rdim * rdim * rw.size());
     res = 0.0;
 
+    // For the parallel case, we must get all DOFs of V on sampled elements.
+    CAROM::Matrix Vs;
+
+    // Since V only has rows for true DOFs, we use a ParGridFunction to get all DOFs.
     int eprev = -1;
     int dof = 0;
+    int elemCount = 0;
+
+    // First, find all sampled elements.
+    for (int i=0; i<rw.size(); ++i)
+    {
+        const int e = qp[i] / nqe;  // Element index
+
+        if (e != eprev)  // Update element transformation
+        {
+            doftrans = fesR->GetElementVDofs(e, vdofs);
+            if (dof > 0)
+            {
+                MFEM_VERIFY(dof == vdofs.Size(), "All elements must have same DOF size");
+            }
+            dof = vdofs.Size();
+            eprev = e;
+            elemCount++;
+        }
+    }
+
+    // Now set Vs.
+    // TODO: can these FOM data structures and operations be avoided?
+    Vs.setSize(elemCount * dof, rdim);
+    ParGridFunction v_gf(fesR);
+    Vector vtrue(fesR->GetTrueVSize());
+
+    for (int j=0; j<rdim; ++j)
+    {
+        eprev = -1;
+        elemCount = 0;
+
+        for (int i=0; i<vtrue.Size(); ++i)
+            vtrue[i] = V(i,j);
+
+        v_gf.SetFromTrueDofs(vtrue);
+
+        for (int i=0; i<rw.size(); ++i)
+        {
+            const int e = qp[i] / nqe;  // Element index
+
+            if (e != eprev)  // Update element transformation
+            {
+                doftrans = fesR->GetElementVDofs(e, vdofs);
+
+                for (int k=0; k<dof; ++k)
+                {
+                    const int dofk = (vdofs[k] >= 0) ? vdofs[k] : -1 - vdofs[k];
+                    const double vk = (vdofs[k] >= 0) ? v_gf[dofk] : -v_gf[dofk];
+                    Vs((elemCount * dof) + k, j) = vk;
+                }
+
+                eprev = e;
+                elemCount++;
+            }
+        }
+    }
+
+    eprev = -1;
+    elemCount = 0;
     int spaceDim = 0;
 
     for (int i=0; i<rw.size(); ++i)
@@ -225,6 +288,7 @@ void GetEQPCoefficients_VectorFEMassIntegrator(ParFiniteElementSpace *fesR,
             MFEM_VERIFY(vdofs.Size() == dof, "");  // TODO: remove this. It is obvious.
 
             eprev = e;
+            elemCount++;
         }
 
         // Integrate at the current point
@@ -242,8 +306,8 @@ void GetEQPCoefficients_VectorFEMassIntegrator(ParFiniteElementSpace *fesR,
             Vx = 0.0;
             for (int k=0; k<dof; ++k)
             {
-                const int dofk = (vdofs[k] >= 0) ? vdofs[k] : -1 - vdofs[k];
-                const double Vx_k = (vdofs[k] >= 0) ? V(dofk, jx) : -V(dofk, jx);
+                const double Vx_k = Vs(((elemCount-1) * dof) + k, jx);
+
                 for (int j=0; j<spaceDim; ++j)
                     Vx[j] += Vx_k * trial_vshape(k, j);
             }
@@ -256,9 +320,7 @@ void GetEQPCoefficients_VectorFEMassIntegrator(ParFiniteElementSpace *fesR,
                     double Vjk = 0.0;
                     for (int l=0; l<dof; ++l)
                     {
-                        const int dofl = (vdofs[l] >= 0) ? vdofs[l] : -1 - vdofs[l];
-                        const double s = (vdofs[l] >= 0) ? 1.0 : -1.0;
-                        Vjk += s * V(dofl, j) * trial_vshape(l, k);
+                        Vjk += Vs(((elemCount-1) * dof) + l, j) * trial_vshape(l, k);
                     }
 
                     rj += Vx[k] * Vjk;
@@ -273,12 +335,15 @@ void GetEQPCoefficients_VectorFEMassIntegrator(ParFiniteElementSpace *fesR,
 void VectorFEMassIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
         std::vector<double> const& rw, std::vector<int> const& qp,
         const IntegrationRule *ir, Coefficient *Q,
-        CAROM::Matrix const& V, CAROM::Vector const& x, Vector & res)
+        CAROM::Matrix const& V, CAROM::Vector const& x, const int rank, Vector & res)
 {
     const int rdim = V.numColumns();
     MFEM_VERIFY(rw.size() == qp.size(), "");
     MFEM_VERIFY(x.dim() == rdim, "");
     MFEM_VERIFY(V.numRows() == fesR->GetTrueVSize(), "");
+
+    MFEM_VERIFY(rank == 0,
+                "TODO: generalize to parallel. This uses full dofs in V, which has true dofs");
 
     const int nqe = ir->GetWeights().Size();
 
@@ -426,6 +491,10 @@ void GetEQPCoefficients_LinearMassIntegrator(ParFiniteElementSpace *fes,
         const IntegrationRule *ir, CAROM::Matrix const& V,
         Vector & res)
 {
+    // Assumption: fes is an L2 space, where true DOFs and full DOFs are the same.
+    // This allows for using V(dof,j), where dof is from fes->GetElementVDofs.
+    MFEM_VERIFY(fes->GetTrueVSize() == fes->GetTrueVSize(), "");
+
     const int rdim = V.numColumns();
     MFEM_VERIFY(rw.size() == qp.size(), "");
     MFEM_VERIFY(V.numRows() == fes->GetTrueVSize(), "");
@@ -875,6 +944,8 @@ private:
     Vector eqp_coef, eqp_coef_S;
     const bool fastIntegration = true;
 
+    int rank;
+
 protected:
     CAROM::Matrix* BR;
     CAROM::Matrix* CR;
@@ -1195,9 +1266,9 @@ void ComputeElementRowOfG_Source(const IntegrationRule *ir,
 }
 
 // Compute EQP solution from constraints on basis functions.
-const IntegrationRule* SetupEQP(const IntegrationRule *ir0,
-                                ParFiniteElementSpace *fespace_R, ParFiniteElementSpace *fespace_W,
-                                const CAROM::Matrix* BR, const CAROM::Matrix* BW, CAROM::Vector & sol)
+void SetupEQP(const IntegrationRule *ir0,
+              ParFiniteElementSpace *fespace_R, ParFiniteElementSpace *fespace_W,
+              const CAROM::Matrix* BR, const CAROM::Matrix* BW, CAROM::Vector & sol)
 {
     const int nqe = ir0->GetNPoints();
     const int ne = fespace_R->GetNE();
@@ -1288,7 +1359,8 @@ const IntegrationRule* SetupEQP(const IntegrationRule *ir0,
     rhs_ub *= 1.0 / ((double) nnls.getNumProcs());
 
     nnls.normalize_constraints(G, rhs_lb, rhs_ub);
-    nnls.solve_parallel_with_scalapack(G, rhs_lb, rhs_ub, sol);
+    //nnls.solve_parallel_with_scalapack(G, rhs_lb, rhs_ub, sol);
+    MFEM_ABORT("TODO: this function is not updated yet to use Gt.");
 
     int nnz = 0;
     for (int i=0; i<sol.dim(); ++i)
@@ -1299,8 +1371,6 @@ const IntegrationRule* SetupEQP(const IntegrationRule *ir0,
 
     cout << "Number of nonzeros in NNLS solution: " << nnz << ", out of " <<
          sol.dim() << endl;
-
-    return ir0;
 }
 
 const CAROM::Matrix* GetSnapshotMatrix(const int dimFOM, const int nparam,
@@ -1329,13 +1399,13 @@ const CAROM::Matrix* GetSnapshotMatrix(const int dimFOM, const int nparam,
 }
 
 // Compute EQP solution from constraints on snapshots.
-const IntegrationRule* SetupEQP_snapshots(const IntegrationRule *ir0,
-        ParFiniteElementSpace *fespace_R, ParFiniteElementSpace *fespace_W,
-        const CAROM::Matrix* BR,
-        const CAROM::Matrix* BR_snapshots,
-        const CAROM::Matrix* BW_snapshots,
-        const bool precondition,
-        CAROM::Vector & sol)
+void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
+                        ParFiniteElementSpace *fespace_R, ParFiniteElementSpace *fespace_W,
+                        const CAROM::Matrix* BR,
+                        const CAROM::Matrix* BR_snapshots,
+                        const CAROM::Matrix* BW_snapshots,
+                        const bool precondition,
+                        CAROM::Vector & sol)
 {
     const int nqe = ir0->GetNPoints();
     const int ne = fespace_R->GetNE();
@@ -1345,6 +1415,8 @@ const IntegrationRule* SetupEQP_snapshots(const IntegrationRule *ir0,
 
     MFEM_VERIFY(nsnap == BW_snapshots->numColumns(), "");
     MFEM_VERIFY(BR->numRows() == BR_snapshots->numRows(), "");
+    MFEM_VERIFY(BR->numRows() == fespace_R->GetTrueVSize(), "");
+    MFEM_VERIFY(BW_snapshots->numRows() == fespace_W->GetTrueVSize(), "");
 
     // Compute G of size (NB * nsnap) x NQ
     CAROM::Matrix G(NB * nsnap, NQ, false);
@@ -1378,20 +1450,26 @@ const IntegrationRule* SetupEQP_snapshots(const IntegrationRule *ir0,
         GridFunctionCoefficient p_coeff(&p_gf);
         TransformedCoefficient a_coeff(&p_coeff, NonlinearCoefficient);
 
+        ParGridFunction vi_gf(fespace_R);
+        vi_gf.SetFromTrueDofs(v_i);
+
         for (int j=0; j<NB; ++j)
         {
             for (int k = 0; k < BR->numRows(); ++k)
                 v_j[k] = (*BR)(k, j);
+
+            ParGridFunction vj_gf(fespace_R);
+            vj_gf.SetFromTrueDofs(v_j);
 
             // TODO: is it better to make the element loop the outer loop?
             for (int e=0; e<ne; ++e)
             {
                 Array<int> vdofs;
                 DofTransformation *doftrans = fespace_R->GetElementVDofs(e, vdofs);
-                const FiniteElement &fe = *fespace_R->GetFE(i);
-                ElementTransformation *eltrans = fespace_R->GetElementTransformation(i);
+                const FiniteElement &fe = *fespace_R->GetFE(e);
+                ElementTransformation *eltrans = fespace_R->GetElementTransformation(e);
 
-                ComputeElementRowOfG(ir0, vdofs, &a_coeff, v_i, v_j, fe, *eltrans, r);
+                ComputeElementRowOfG(ir0, vdofs, &a_coeff, vi_gf, vj_gf, fe, *eltrans, r);
 
                 for (int m=0; m<nqe; ++m)
                     G(j + (i*NB), (e*nqe) + m) = r[m];
@@ -1429,10 +1507,25 @@ const IntegrationRule* SetupEQP_snapshots(const IntegrationRule *ir0,
         }
     } // Loop (i) over snapshots
 
+    // TODO: just use Gt instead of G?
+    CAROM::Matrix Gt(NQ, NB * nsnap, true);
+
+    double maxg = 0.0;
+
+    CAROM::NNLSSolver
+    nnls;  // TODO: move this back down. Just getting nprocs for dbg.
+
+    for (int i=0; i<NB * nsnap; ++i)
+        for (int j=0; j<NQ; ++j)
+        {
+            Gt(j,i) = G(i,j);
+            maxg = std::max(maxg, fabs(G(i,j)));
+        }
+
     Array<double> const& w_el = ir0->GetWeights();
     MFEM_VERIFY(w_el.Size() == nqe, "");
 
-    CAROM::Vector w(ne * nqe, false);
+    CAROM::Vector w(ne * nqe, true);
 
     for (int i=0; i<ne; ++i)
     {
@@ -1440,14 +1533,16 @@ const IntegrationRule* SetupEQP_snapshots(const IntegrationRule *ir0,
             w((i*nqe) + j) = w_el[j];
     }
 
-    CAROM::NNLSSolver nnls;
     nnls.set_qrresidual_mode(CAROM::NNLSSolver::QRresidualMode::hybrid);
     nnls.set_verbosity(2);
 
     CAROM::Vector rhs_ub(G.numRows(), false);
-    G.mult(w, rhs_ub);  // rhs = Gw
+    //G.mult(w, rhs_ub);  // rhs = Gw
+    // rhs = Gw. Note that by using Gt and multTranspose, we do parallel communication.
+    Gt.transposeMult(w, rhs_ub);
 
     CAROM::Vector rhs_lb(rhs_ub);
+    CAROM::Vector rhs_Gw(rhs_ub);
 
     const double delta = 1.0e-11;
     for (int i=0; i<rhs_ub.dim(); ++i)
@@ -1456,32 +1551,51 @@ const IntegrationRule* SetupEQP_snapshots(const IntegrationRule *ir0,
         rhs_ub(i) += delta;
     }
 
-    rhs_lb *= 1.0 / ((double) nnls.getNumProcs());
-    rhs_ub *= 1.0 / ((double) nnls.getNumProcs());
-
     nnls.normalize_constraints(G, rhs_lb, rhs_ub);
-    nnls.solve_parallel_with_scalapack(G, rhs_lb, rhs_ub, sol);
+    nnls.solve_parallel_with_scalapack(G, Gt, rhs_lb, rhs_ub, sol);
 
     int nnz = 0;
+    double wsum = 0.0;
     for (int i=0; i<sol.dim(); ++i)
     {
         if (sol(i) != 0.0)
+        {
             nnz++;
+            wsum += sol(i);
+        }
     }
 
-    cout << "Number of nonzeros in NNLS solution: " << nnz << ", out of " <<
+    cout << rank << ": Number of nonzeros in NNLS solution: " << nnz << ", out of "
+         <<
          sol.dim() << endl;
 
-    return ir0;
+    cout << rank << ": Number of elements " << ne << ", sum w " << wsum << endl;
+
+    MPI_Allreduce(MPI_IN_PLACE, &nnz, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+
+    if (rank == 0)
+        cout << "Global number of nonzeros in NNLS solution: " << nnz << endl;
+
+    // Check residual of NNLS solution
+    CAROM::Vector res(G.numRows(), false);
+    Gt.transposeMult(sol, res);
+
+    const double normGsol = res.norm();
+    const double normRHS = rhs_Gw.norm();
+
+    res -= rhs_Gw;
+    const double relNorm = res.norm() / std::max(normGsol, normRHS);
+    cout << rank << ": relative residual norm for NNLS solution of Gs = Gw: " <<
+         relNorm << endl;
 }
 
 // Compute EQP solution from constraints on source snapshots.
-const IntegrationRule* SetupEQP_S_snapshots(const IntegrationRule *ir0,
-        ParFiniteElementSpace *fespace_W,
-        const CAROM::Matrix* BW,
-        const CAROM::Matrix* BS_snapshots,
-        const bool precondition,
-        CAROM::Vector & sol)
+void SetupEQP_S_snapshots(const IntegrationRule *ir0, const int rank,
+                          ParFiniteElementSpace *fespace_W,
+                          const CAROM::Matrix* BW,
+                          const CAROM::Matrix* BS_snapshots,
+                          const bool precondition,
+                          CAROM::Vector & sol)
 {
     const int nqe = ir0->GetNPoints();
     const int ne = fespace_W->GetNE();
@@ -1515,8 +1629,8 @@ const IntegrationRule* SetupEQP_S_snapshots(const IntegrationRule *ir0,
             {
                 Array<int> vdofs;
                 DofTransformation *doftrans = fespace_W->GetElementVDofs(e, vdofs);
-                const FiniteElement &fe = *fespace_W->GetFE(i);
-                ElementTransformation *eltrans = fespace_W->GetElementTransformation(i);
+                const FiniteElement &fe = *fespace_W->GetFE(e);
+                ElementTransformation *eltrans = fespace_W->GetElementTransformation(e);
 
                 ComputeElementRowOfG_Source(ir0, vdofs, s_i, p_j, fe, *eltrans, r);
 
@@ -1563,10 +1677,17 @@ const IntegrationRule* SetupEQP_S_snapshots(const IntegrationRule *ir0,
         }
     }
 
+    // TODO: just use Gt instead of G?
+    CAROM::Matrix Gt(NQ, NB * nsnap, true);
+
+    for (int i=0; i<NB * nsnap; ++i)
+        for (int j=0; j<NQ; ++j)
+            Gt(j,i) = G(i,j);
+
     Array<double> const& w_el = ir0->GetWeights();
     MFEM_VERIFY(w_el.Size() == nqe, "");
 
-    CAROM::Vector w(ne * nqe, false);
+    CAROM::Vector w(ne * nqe, true);
 
     for (int i=0; i<ne; ++i)
     {
@@ -1579,8 +1700,11 @@ const IntegrationRule* SetupEQP_S_snapshots(const IntegrationRule *ir0,
     nnls.set_verbosity(2);
 
     CAROM::Vector rhs_ub(G.numRows(), false);
-    G.mult(w, rhs_ub);  // rhs = Gw
+    //G.mult(w, rhs_ub);  // rhs = Gw
+    // rhs = Gw. Note that by using Gt and multTranspose, we do parallel communication.
+    Gt.transposeMult(w, rhs_ub);
 
+    CAROM::Vector rhs_Gw(rhs_ub);
     CAROM::Vector rhs_lb(rhs_ub);
 
     const double delta = 1.0e-11;
@@ -1590,11 +1714,8 @@ const IntegrationRule* SetupEQP_S_snapshots(const IntegrationRule *ir0,
         rhs_ub(i) += delta;
     }
 
-    rhs_lb *= 1.0 / ((double) nnls.getNumProcs());
-    rhs_ub *= 1.0 / ((double) nnls.getNumProcs());
-
     nnls.normalize_constraints(G, rhs_lb, rhs_ub);
-    nnls.solve_parallel_with_scalapack(G, rhs_lb, rhs_ub, sol);
+    nnls.solve_parallel_with_scalapack(G, Gt, rhs_lb, rhs_ub, sol);
 
     int nnz = 0;
     for (int i=0; i<sol.dim(); ++i)
@@ -1603,11 +1724,26 @@ const IntegrationRule* SetupEQP_S_snapshots(const IntegrationRule *ir0,
             nnz++;
     }
 
-    cout << "Number of nonzeros in NNLS solution for source: " << nnz << ", out of "
-         <<
-         sol.dim() << endl;
+    cout << rank << ": Number of nonzeros in NNLS solution for source: " << nnz
+         << ", out of " << sol.dim() << endl;
 
-    return ir0;
+    MPI_Allreduce(MPI_IN_PLACE, &nnz, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+
+    if (rank == 0)
+        cout << "Global number of nonzeros in NNLS solution: " << nnz << endl;
+
+    // Check residual of NNLS solution
+    CAROM::Vector res(G.numRows(), false);
+    Gt.transposeMult(sol, res);
+
+    const double normGsol = res.norm();
+    const double normRHS = rhs_Gw.norm();
+
+    res -= rhs_Gw;
+    const double relNorm = res.norm() / std::max(normGsol, normRHS);
+    cout << rank <<
+         ": relative residual norm for NNLS solution of Gs = Gw for source: " << relNorm
+         << endl;
 }
 
 int main(int argc, char *argv[])
@@ -1761,6 +1897,18 @@ int main(int argc, char *argv[])
     {
         pmesh->UniformRefinement();
     }
+
+    /*
+    { // Parallel debugging: check the element order in parallel.
+      Vector center(3);
+      for (int i=0; i<pmesh->GetNE(); ++i)
+    {
+      pmesh->GetElementCenter(i, center);
+      cout << myid << ": elem " << i << " center (" << center[0] << ", "
+           << center[1] << ", " << center[2] << ")" << endl;
+    }
+    }
+    */
 
     // 7. Define the mixed finite element spaces.
 
@@ -2032,16 +2180,16 @@ int main(int argc, char *argv[])
                 ir0 = &IntRules.Get(fe.GetGeomType(), order);
             }
 
-            eqpSol = new CAROM::Vector(ir0->GetNPoints() * R_space.GetNE(), false);
+            eqpSol = new CAROM::Vector(ir0->GetNPoints() * R_space.GetNE(), true);
             //SetupEQP(ir0, &R_space, &W_space, BR_librom, BW_librom, *eqpSol);
-            SetupEQP_snapshots(ir0, &R_space, &W_space, BR_librom,
+            SetupEQP_snapshots(ir0, myid, &R_space, &W_space, BR_librom,
                                GetSnapshotMatrix(R_space.GetTrueVSize(), nsets, max_num_snapshots, "R"),
                                GetSnapshotMatrix(W_space.GetTrueVSize(), nsets, max_num_snapshots, "W"),
                                preconditionNNLS,
                                *eqpSol);
 
-            eqpSol_S = new CAROM::Vector(ir0->GetNPoints() * W_space.GetNE(), false);
-            SetupEQP_S_snapshots(ir0, &W_space, BW_librom,
+            eqpSol_S = new CAROM::Vector(ir0->GetNPoints() * W_space.GetNE(), true);
+            SetupEQP_S_snapshots(ir0, myid, &W_space, BW_librom,
                                  GetSnapshotMatrix(W_space.GetTrueVSize(), nsets, max_num_snapshots, "S"),
                                  preconditionNNLS,
                                  *eqpSol_S);
@@ -2307,7 +2455,7 @@ int main(int argc, char *argv[])
 
         if (online)
         {
-            if (myid == 0)
+            if (myid == 0 || use_eqp)
             {
                 ode_solver.Step(*wMFEM, t, dt);
             }
@@ -2864,7 +3012,7 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_,
       ir_eqp(ir_eqp_), p_gf(&(fom_->fespace_W)), p_coeff(&p_gf),
       a_coeff(&p_coeff, NonlinearCoefficient),
       aprime_coeff(&p_coeff, NonlinearCoefficientDerivative),
-      a_plus_aprime_coeff(a_coeff, aprime_coeff)
+      a_plus_aprime_coeff(a_coeff, aprime_coeff), rank(myid)
 {
     dydt_prev = 0.0;
 
@@ -2900,7 +3048,7 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_,
     // [ dt V_{R,s}^{-1} M(a'(Pst V_W yW)) Pst V_R  dt BR^T ]
     // [                 -dt BR                        CR   ]
 
-    if (myid == 0)
+    if (myid == 0 || eqp)
     {
         const double linear_solver_rel_tol = 1.0e-14;
 
@@ -2983,7 +3131,7 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_,
             }
         }
 
-        cout << "EQP using " << elements.size () << " elements out of "
+        cout << myid << ": EQP using " << elements.size () << " elements out of "
              << fom->fespace_R.GetNE() << endl;
 
         GetEQPCoefficients_VectorFEMassIntegrator(&fom->fespace_R, eqp_rw, eqp_qp,
@@ -3006,8 +3154,8 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_,
         GetEQPCoefficients_LinearMassIntegrator(&fom->fespace_W, eqp_rw_S, eqp_qp_S,
                                                 ir_eqp, V_W, eqp_coef_S);
 
-        cout << "EQP for source using " << elements_S.size () << " elements out of "
-             << fom->fespace_R.GetNE() << endl;
+        cout << myid << ": EQP for source using " << elements_S.size ()
+             << " elements out of " << fom->fespace_R.GetNE() << endl;
     }
 }
 
@@ -3059,7 +3207,12 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
         else
             VectorFEMassIntegrator_ComputeReducedEQP(&(fom->fespace_R), eqp_rw,
                     eqp_qp, ir_eqp, &a_coeff,
-                    V_R, yR_librom, resEQP);
+                    V_R, yR_librom, rank, resEQP);
+
+        Vector recv(resEQP);
+        MPI_Allreduce(resEQP.GetData(), recv.GetData(), resEQP.Size(), MPI_DOUBLE,
+                      MPI_SUM, MPI_COMM_WORLD);
+        resEQP = recv;
 
         // NOTE: in the hyperreduction case, the residual is of dimension nldim, which is the dimension of the ROM space for the nonlinear term.
         // In the EQP case, there is no use of a ROM space for the nonlinear term. Instead, the FOM computation of the nonlinear term
@@ -3109,6 +3262,11 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
         else
             LinearMassIntegrator_ComputeReducedEQP(&(fom->fespace_W), eqp_rw_S,
                                                    eqp_qp_S, ir_eqp, &f, V_W, resW_librom);
+
+        CAROM::Vector recv(resW_librom);
+        MPI_Allreduce(resW_librom.getData(), recv.getData(), resW_librom.dim(),
+                      MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        resW_librom = recv;
 
         resW_librom *= -1.0;
 
@@ -3318,7 +3476,12 @@ Operator &RomOperator::GetGradient(const Vector &p) const
                 VectorFEMassIntegrator_ComputeReducedEQP(&(fom->fespace_R), eqp_rw,
                         eqp_qp, ir_eqp,
                         &a_plus_aprime_coeff, V_R,
-                        e_i, resEQP);
+                        e_i, rank, resEQP);
+
+            Vector recv(resEQP);
+            MPI_Allreduce(resEQP.GetData(), recv.GetData(), resEQP.Size(), MPI_DOUBLE,
+                          MPI_SUM, MPI_COMM_WORLD);
+            resEQP = recv;
 
             // NOTE: in the hyperreduction case, the residual is of dimension nldim, which is the dimension of the ROM space for the nonlinear term.
             // In the EQP case, there is no use of a ROM space for the nonlinear term. Instead, the FOM computation of the nonlinear term

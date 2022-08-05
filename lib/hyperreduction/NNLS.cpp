@@ -253,33 +253,34 @@ void NNLSSolver::normalize_constraints(Matrix& mat, Vector& rhs_lb,
 
     Vector rhs_avg_glob = rhs_avg;
     Vector rhs_halfgap_glob = rhs_halfgap;
-    MPI_Allreduce(MPI_IN_PLACE, rhs_avg_glob.getData(), m, MPI_DOUBLE, MPI_SUM,
-                  MPI_COMM_WORLD);
-    MPI_Allreduce(MPI_IN_PLACE, rhs_halfgap_glob.getData(), m, MPI_DOUBLE, MPI_SUM,
-                  MPI_COMM_WORLD);
     Vector halfgap_target(m, true);
     halfgap_target = 1.0e3 * const_tol_;
 
-    const double inv_comm_size = 1.0 / ((double) d_num_procs);
-
     for (int i=0; i<m; ++i)
     {
-        double s = halfgap_target(i) / rhs_halfgap_glob(i);
+        const double s = halfgap_target(i) / rhs_halfgap_glob(i);
         for (int j=0; j<n; ++j)
         {
             mat(i,j) *= s;
         }
 
-        rhs_lb(i) = (rhs_avg(i) * s) - (halfgap_target(i) * inv_comm_size);
-        rhs_ub(i) = (rhs_avg(i) * s) + (halfgap_target(i) * inv_comm_size);
+        rhs_lb(i) = (rhs_avg(i) * s) - halfgap_target(i);
+        rhs_ub(i) = (rhs_avg(i) * s) + halfgap_target(i);
     }
 }
 
-void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat,
+// Assuming mat_orig has distributed columns, stored locally as a non-distributed matrix.
+// Taking its transpose gives a row-distributed matrix.
+// TODO: decide on mat vs. matTrans.
+void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat_orig,
+        const Matrix& matTrans,
         const Vector& rhs_lb, const Vector& rhs_ub, Vector& soln)
 {
-    int m = mat.numRows();
-    int n = mat.numColumns();
+    CAROM_VERIFY(!mat_orig.distributed());
+    CAROM_VERIFY(matTrans.distributed());
+
+    int m = mat_orig.numRows();
+    int n = mat_orig.numColumns();
     int n_tot = n;
     MPI_Allreduce(MPI_IN_PLACE, &n_tot, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
@@ -296,10 +297,6 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat,
 
     Vector rhs_avg_glob(rhs_avg);
     Vector rhs_halfgap_glob(rhs_halfgap);
-    MPI_Allreduce(MPI_IN_PLACE, rhs_avg_glob.getData(), m, MPI_DOUBLE, MPI_SUM,
-                  MPI_COMM_WORLD);
-    MPI_Allreduce(MPI_IN_PLACE, rhs_halfgap_glob.getData(), m, MPI_DOUBLE, MPI_SUM,
-                  MPI_COMM_WORLD);
 
     int izero = 0;
     int ione = 1;
@@ -309,7 +306,6 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat,
     char trans = 'T';
     char notrans = 'N';
     char layout = 'R';
-    //int n_proc = 1; //comm_size; // could restrict the number of prcessors used
 
     int n_proc = std::min(n_proc_max_for_partial_matrix_,d_num_procs);
     int nb = 3; // block column size
@@ -324,15 +320,15 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat,
         n_dist_loc_max = ((m/nb + 1)/n_proc + 1)*nb;
     }
 
-    // TODO: this works in serial only for now, because Matrix is row-distributed, whereas this code
-    // assumes column-distributed.
+    // TODO: remove dist.
     const bool dist = false;
+    const bool distT = true;
 
     std::vector<double> mu_max_array(d_num_procs);
     std::vector<unsigned int> proc_index;
     std::vector<unsigned int> nz_ind(m);
     Vector res_glob(m, dist);
-    Vector mu(n, dist);
+    Vector mu(n, distT);
     Vector mu2(n, dist);
     int n_nz_ind = 0;
     int n_glob = 0;
@@ -394,8 +390,9 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat,
     double mu_tol = 0.0;
 
     {
-        Vector tmp(n, dist);
-        mat.transposeMult(rhs_halfgap_glob, tmp);
+        Vector tmp(n, distT);
+        //mat.transposeMult(rhs_halfgap_glob, tmp);
+        matTrans.mult(rhs_halfgap_glob, tmp);
         // TODO: maximum norm for Vector? Local?
         double maxv = tmp(0);
         for (int i=1; i<n; ++i)
@@ -407,6 +404,7 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat,
     }
 
     MPI_Allreduce(MPI_IN_PLACE, &mu_tol, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+
     double mumax_glob;
     double rmax;
 
@@ -418,7 +416,7 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat,
         for (int i=1; i<m; ++i)
             rmax = std::max(rmax, fabs(res_glob(i)) - rhs_halfgap_glob(i));
 
-        // TODO: is this just local l2 norm?
+        // Since it is not a distributed vector, this norm should be identical on all ranks.
         l2_res_hist(oiter) = res_glob.norm();
 
         if (verbosity_ > 1 && d_rank == 0) {
@@ -468,7 +466,8 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat,
 
         // find the next index
         //mu = mat.t()*res_glob;
-        mat.transposeMult(res_glob, mu);
+        //mat.transposeMult(res_glob, mu);
+        matTrans.mult(res_glob, mu);
 
         for (int i = 0; i < n_nz_ind; ++i) {
             mu(nz_ind[i]) = 0.0;
@@ -498,7 +497,8 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat,
                 }
                 stalled_indices.resize(0);
 
-                mat.transposeMult(res_glob, mu);
+                //mat.transposeMult(res_glob, mu);
+                matTrans.mult(res_glob, mu);
 
                 for (int i = 0; i < n_nz_ind; ++i) {
                     mu(nz_ind[i]) = 0.0;
@@ -569,7 +569,8 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat,
                 int n_orig = numroc_(&n_glob, &nb, &d_rank, &izero, &n_proc);
                 for (int i=0; i<m; ++i)
                 {
-                    mat_0_data(i + (n_orig*m)) = mat(i,imax);
+                    //mat_0_data(i + (n_orig*m)) = mat(i,imax);
+                    mat_0_data(i + (n_orig*m)) = matTrans(imax,i);
                     mat_qr_data(i + (n_orig*m)) = mat_0_data(i + (n_orig*m));
                 }
             }
@@ -588,7 +589,7 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat,
             }
             if (imax_proc == d_rank) {
                 // send the partial matrix
-                MPI_Send(mat.getData() + m*imax, m, MPI_DOUBLE, proc_to_recv, 189,
+                MPI_Send(matTrans.getData() + m*imax, m, MPI_DOUBLE, proc_to_recv, 189,
                          MPI_COMM_WORLD);
             }
         }
