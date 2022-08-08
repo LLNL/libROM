@@ -488,7 +488,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
     Vector* init = new Vector(f_snapshots_in->numRows(), true);
     for (int i = 0; i < init->dim(); i++)
     {
-        init->item(i) = f_snapshots_in->item(i, 0);
+        init->item(i) = f_snapshots_in->item(i, 0) - d_in_offset * d_state_offset->item(i);
     }
 
     // Calculate pinv(d_phi) * initial_condition.
@@ -620,15 +620,15 @@ DMD::predict(double t, int power)
     Vector* d_predicted_state_real = d_predicted_state_real_1->minus(
                                          d_predicted_state_real_2);
 
-    if (d_state_offset && power == 0)
+    if (d_in_offset && power == 0)
     {
         *d_predicted_state_real += *d_state_offset;
     }
-    if (d_derivative_offset && power == 0)
+    if (d_out_offset && power == 0)
     {
         *d_predicted_state_real += *(d_derivative_offset->mult(t));
     }
-    if (d_derivative_offset && power == 1)
+    if (d_out_offset && power == 1)
     {
         *d_predicted_state_real += *d_derivative_offset;
     }
