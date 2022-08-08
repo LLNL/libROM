@@ -51,12 +51,11 @@ public:
     /**
      * @brief Constructor.
      *
-     * @param[in] dim        The full-order state dimension.
-     * @param[in] dt         The dt between samples.
-     * @param[in] init_os_s  Use initial state as offset.
-     * @param[in] mean_os_s  Use state mean as offset.
+     * @param[in] dim          The full-order state dimension.
+     * @param[in] dt           The dt between samples.
+     * @param[in] state_offset The state offset.
      */
-    DMD(int dim, double dt, bool init_os_s = false, bool mean_os_s = false);
+    DMD(int dim, double dt, Vector* state_offset = NULL);
 
     /**
      * @brief Constructor.
@@ -165,14 +164,12 @@ protected:
     /**
      * @brief Constructor.
      *
-     * @param[in] dim        The full-order state dimension.
-     * @param[in] init_os_s  Use initial state as offset.
-     * @param[in] init_os_d  Use initial derivative as offset.
-     * @param[in] mean_os_s  Use state mean as offset.
-     * @param[in] mean_os_d  Use derivative mean as offset.
+     * @param[in] dim               The full-order state dimension.
+     * @param[in] state_offset      The state offset.
+     * @param[in] derivative_offset The derivative offset in Nonuniform DMD.
      */
-    DMD(int dim, bool init_os_s = false, bool init_os_d = false,
-        bool mean_os_s = false, bool mean_os_d = false);
+    DMD(int dim, Vector* state_offset = NULL, 
+        Vector* derivative_offset = NULL); 
 
     /**
      * @brief Constructor.
@@ -181,18 +178,16 @@ protected:
      * @param[in] phi_real d_phi_real
      * @param[in] phi_imaginary d_phi_imaginary
      * @param[in] k d_k
-     * @param[in] init_os_s d_init_os_s
-     * @param[in] init_os_d d_init_os_d
-     * @param[in] mean_os_s d_mean_os_s
-     * @param[in] mean_os_d d_mean_os_d
+     * @param[in] in_offset d_in_offset
+     * @param[in] out_offset d_out_offset
      * @param[in] state_offset d_state_offset
      * @param[in] derivative_offset d_derivative_offset
      * @param[in] dt d_dt
      * @param[in] t_offset d_t_offset
      */
     DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
-        Matrix* phi_imaginary, int k, bool init_os_s, bool init_os_d,
-        bool mean_os_s, bool mean_os_d,
+        Matrix* phi_imaginary, int k,
+        bool in_offset, bool out_offset,
         Vector* state_offset, Vector* derivative_offset,
         double dt, double t_offset);
 
@@ -284,24 +279,14 @@ protected:
     std::vector<Vector*> d_sampled_times;
 
     /**
-     * @brief Whether to use init state as offset.
+     * @brief Whether to use state offset.
      */
-    bool d_init_os_s = false;
+    bool d_in_offset = false;
 
     /**
-     * @brief Whether to use init derivative as offset in NonuniformDMD.
+     * @brief Whether to use derivative offset in NonuniformDMD.
      */
-    bool d_init_os_d = false;
-
-    /**
-     * @brief Whether to use state mean as offset.
-     */
-    bool d_mean_os_s = false;
-
-    /**
-     * @brief Whether to use derivative mean as offset in NonuniformDMD.
-     */
-    bool d_mean_os_d = false;
+    bool d_out_offset = false;
 
     /**
      * @brief Offset of order 0.

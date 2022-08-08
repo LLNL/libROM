@@ -15,9 +15,8 @@
 
 namespace CAROM {
 
-NonuniformDMD::NonuniformDMD(int dim, bool init_os_s, bool init_os_d,
-                             bool mean_os_s, bool mean_os_d) : 
-                             DMD(dim, init_os_s, init_os_d, mean_os_s, mean_os_d)
+NonuniformDMD::NonuniformDMD(int dim, Vector* state_offset, Vector* derivative_offset) : 
+                             DMD(dim, state_offset, derivative_offset)
 {}
 
 NonuniformDMD::NonuniformDMD(std::string base_file_name) : DMD(base_file_name)
@@ -26,67 +25,17 @@ NonuniformDMD::NonuniformDMD(std::string base_file_name) : DMD(base_file_name)
 NonuniformDMD::NonuniformDMD(std::vector<std::complex<double>> eigs,
                              Matrix* phi_real,
                              Matrix* phi_imaginary, int k,
-                             bool init_os_s, bool init_os_d,
-                             bool mean_os_s, bool mean_os_d,
+                             bool in_offset, bool out_offset,
                              Vector* state_offset, Vector* derivative_offset,
                              double dt, double t_offset) : 
-                             DMD(eigs, phi_real, phi_imaginary, k, init_os_s, 
-                                 init_os_d, mean_os_s, mean_os_d, state_offset, 
-                                 derivative_offset, dt, t_offset)
+                             DMD(eigs, phi_real, phi_imaginary, k,
+                                 in_offset, out_offset, state_offset, derivative_offset, dt, t_offset)
 {}
 
 std::pair<Matrix*, Matrix*>
 NonuniformDMD::computeDMDSnapshotPair(const Matrix* snapshots)
 {
     CAROM_VERIFY(snapshots->numColumns() > 1);
-
-    if (d_init_os_s)
-    {
-        d_state_offset = new Vector(snapshots->numRows(), true);
-        for (int i = 0; i < snapshots->numRows(); i++)
-        {
-            d_state_offset->item(i) = snapshots->item(i,0);
-        }
-    }
-    
-    if (d_init_os_d)
-    {
-        d_derivative_offset = new Vector(snapshots->numRows(), true);
-        for (int i = 0; i < snapshots->numRows(); i++)
-        {
-            d_derivative_offset->item(i) = (snapshots->item(i, 1) - snapshots->item(i,0)) /
-                                            (d_sampled_times[1]->item(0) - d_sampled_times[0]->item(0));
-        }
-    }
-
-    if (d_mean_os_s)
-    {
-        d_state_offset = new Vector(snapshots->numRows(), true);
-        for (int i = 0; i < snapshots->numRows(); i++)
-        {
-            d_state_offset->item(i) = 0.0;
-            for (int j = 0; j < snapshots->numColumns() - 1; j++)
-            {
-                d_state_offset->item(i) += snapshots->item(i, j);
-            }
-            d_state_offset->item(i) /= (snapshots->numColumns() - 1);
-        }
-    }
-    
-    if (d_mean_os_d)
-    {
-        d_derivative_offset = new Vector(snapshots->numRows(), true);
-        for (int i = 0; i < snapshots->numRows(); i++)
-        {
-            d_derivative_offset->item(i) = 0.0;
-            for (int j = 0; j < snapshots->numColumns() - 1; j++)
-            {
-                d_derivative_offset->item(i) += (snapshots->item(i, j + 1) - snapshots->item(i,j)) /
-                                                (d_sampled_times[j + 1]->item(0) - d_sampled_times[j]->item(0));
-            }
-            d_derivative_offset->item(i) /= (snapshots->numColumns() - 1);
-        }
-    }
 
     // TODO: Making two copies of the snapshot matrix has a lot of overhead.
     //       We need to figure out a way to do submatrix multiplication and to
@@ -106,8 +55,8 @@ NonuniformDMD::computeDMDSnapshotPair(const Matrix* snapshots)
             f_snapshots_in->item(i, j) = snapshots->item(i, j);
             f_snapshots_out->item(i, j) = (snapshots->item(i, j + 1) - snapshots->item(i,j)) / 
                                           (d_sampled_times[j + 1]->item(0) - d_sampled_times[j]->item(0));
-            if (d_state_offset) f_snapshots_in->item(i, j) -= d_state_offset->item(i);
-            if (d_derivative_offset) f_snapshots_out->item(i, j) -= d_derivative_offset->item(i);
+            if (d_in_offset) f_snapshots_in->item(i, j) -= d_state_offset->item(i);
+            if (d_out_offset) f_snapshots_out->item(i, j) -= d_derivative_offset->item(i);
         }
     }
 

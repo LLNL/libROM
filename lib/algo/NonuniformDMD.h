@@ -2,8 +2,6 @@
  *
  * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
- * file for details.
- *
  * SPDX-License-Identifier: (Apache-2.0 OR MIT)
  *
  *****************************************************************************/
@@ -40,14 +38,11 @@ public:
     /**
      * @brief Constructor.
      *
-     * @param[in] dim        The full-order state dimension.
-     * @param[in] init_os_s  Use initial state as offset.
-     * @param[in] init_os_d  Use initial derivative as offset.
-     * @param[in] mean_os_s  Use state mean as offset.
-     * @param[in] mean_os_d  Use derivative mean as offset.
+     * @param[in] dim               The full-order state dimension.
+     * @param[in] mean_offset       The state offset.
+     * @param[in] derivative_offset The derivative offset.
      */
-    NonuniformDMD(int dim, bool init_os_s = false, bool init_os_d = false, 
-                  bool mean_os_s = false, bool mean_os_d = false);
+    NonuniformDMD(int dim, Vector* mean_offset = NULL, Vector* derivative_offset = NULL); 
 
     /**
      * @brief Constructor.
@@ -74,18 +69,16 @@ protected:
      * @param[in] phi_real d_phi_real
      * @param[in] phi_imaginary d_phi_imaginary
      * @param[in] k d_k
-     * @param[in] init_os_s d_init_os_s
-     * @param[in] init_os_d d_init_os_d
-     * @param[in] mean_os_s d_mean_os_s
-     * @param[in] mean_os_d d_mean_os_d
+     * @param[in] in_offset d_in_offset
+     * @param[in] out_offset d_out_offset
      * @param[in] state_offset d_state_offset
      * @param[in] derivative_offset d_derivative_offset
      * @param[in] dt d_dt
      * @param[in] t_offset d_t_offset
      */
     NonuniformDMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
-                  Matrix* phi_imaginary, int k, bool init_os_s, bool init_os_d,
-                  bool mean_os_s, bool mean_os_d,
+                  Matrix* phi_imaginary, int k,
+                  bool in_offset, bool out_offset,
                   Vector* state_offset, Vector* derivative_offset,
                   double dt, double t_offset);
 
