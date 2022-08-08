@@ -24,7 +24,7 @@
 //
 // Merge phase:   ./linear_elasticity_global_rom -merge -ns 3
 //
-// Online phase:  ./linear_elasticity_global_rom -offline -id 3 -f 0.012
+// Online phase:  ./linear_elasticity_global_rom -online -id 3 -f 0.012
 
 #include "mfem.hpp"
 #include <fstream>
@@ -420,15 +420,24 @@ int main(int argc, char* argv[])
 
     // 26. Save in parallel the displaced mesh and the inverted solution (which
     //     gives the backward displacements to the original grid). This output
-    //     can be viewed later using GLVis: "glvis -np <np> -m mesh -g sol".
+    //     can be viewed later using GLVis: "glvis -np <np> -m mesh_rom -g sol_rom".
+    ostringstream mesh_name, sol_name, mesh_name_fom, sol_name_fom;
+    if (fom || offline)
+    {
+        mesh_name << "mesh_fom." << setfill('0') << setw(6) << myid;
+        sol_name << "sol_fom." << setfill('0') << setw(6) << myid;
+    }
+    if (online)
+    {
+        mesh_name << "mesh_rom." << setfill('0') << setw(6) << myid;
+        sol_name << "sol_rom." << setfill('0') << setw(6) << myid;
+
+        sol_name_fom << "sol_fom." << setfill('0') << setw(6) << myid;
+    }
     {
         GridFunction* nodes = pmesh->GetNodes();
         *nodes += x;
         x *= -1;
-
-        ostringstream mesh_name, sol_name;
-        mesh_name << "mesh." << setfill('0') << setw(6) << myid;
-        sol_name << "sol." << setfill('0') << setw(6) << myid;
 
         ofstream mesh_ofs(mesh_name.str().c_str());
         mesh_ofs.precision(precision);
@@ -439,7 +448,41 @@ int main(int argc, char* argv[])
         x.Save(sol_ofs);
     }
 
-    // 27. Save data in the VisIt format.
+    // 27. Calculate the relative error of the ROM prediction compared to FOM
+    if (online)
+    {
+        // Initialize FOM solution
+        Vector x_fom(x.Size());
+
+        ifstream fom_file;
+
+        // Open and load file
+        fom_file.open(sol_name_fom.str().c_str());
+
+        x_fom.Load(fom_file, x_fom.Size());
+
+        fom_file.close();
+
+
+        Vector diff_x(x.Size());
+
+        subtract(x, x_fom, diff_x);
+
+        // Get norms
+        double tot_diff_norm_x = sqrt(InnerProduct(MPI_COMM_WORLD, diff_x, diff_x));
+
+        double tot_x_fom_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
+            x_fom, x_fom));
+
+        if (myid == 0)
+        {
+            cout << "Relative error of ROM for E = " << E << "and nu = " << nu <<
+                " is " << tot_diff_norm_x / tot_x_fom_norm << endl;
+        }
+
+    }
+
+    // 28. Save data in the VisIt format.
     DataCollection* dc = NULL;
     if (visit)
     {
@@ -452,7 +495,7 @@ int main(int argc, char* argv[])
         delete dc;
     }
 
-    // 28. Send the above data by socket to a GLVis server.  Use the "n" and "b"
+    // 29. Send the above data by socket to a GLVis server.  Use the "n" and "b"
     //     keys in GLVis to visualize the displacements.
     if (visualization)
     {
@@ -464,7 +507,7 @@ int main(int argc, char* argv[])
         sol_sock << "solution\n" << *pmesh << x << flush;
     }
 
-    // 29. print timing info
+    // 30. print timing info
     if (myid == 0)
     {
         if (fom || offline)
@@ -481,7 +524,7 @@ int main(int argc, char* argv[])
         }
     }
 
-    // 30. Free the used memory.
+    // 31. Free the used memory.
     delete a;
     delete b;
     if (fec)
@@ -493,5 +536,3 @@ int main(int argc, char* argv[])
 
     return 0;
 }
-
-
