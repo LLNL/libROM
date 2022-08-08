@@ -53,9 +53,10 @@ public:
      *
      * @param[in] dim          The full-order state dimension.
      * @param[in] dt           The dt between samples.
+     * @param[in] in_offset    Whether to use state offset.
      * @param[in] state_offset The state offset.
      */
-    DMD(int dim, double dt, Vector* state_offset = NULL);
+    DMD(int dim, double dt, bool in_offset = false, Vector* state_offset = NULL);
 
     /**
      * @brief Constructor.
@@ -165,11 +166,13 @@ protected:
      * @brief Constructor.
      *
      * @param[in] dim               The full-order state dimension.
+     * @param[in] in_offset         Whether to use state offset.
+     * @param[in] out_offset        Whether to use derivative offset.
      * @param[in] state_offset      The state offset.
      * @param[in] derivative_offset The derivative offset in Nonuniform DMD.
      */
-    DMD(int dim, Vector* state_offset = NULL, 
-        Vector* derivative_offset = NULL); 
+    DMD(int dim, bool in_offset = false, bool out_offset = false, 
+        Vector* state_offset = NULL, Vector* derivative_offset = NULL); 
 
     /**
      * @brief Constructor.

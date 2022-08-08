@@ -42,9 +42,10 @@ extern "C" {
 
 namespace CAROM {
 
-DMD::DMD(int dim, Vector* state_offset, Vector* derivative_offset)
+DMD::DMD(int dim, bool in_offset, bool out_offset, 
+         Vector* state_offset, Vector* derivative_offset)
 {
-    // Nonuniform DMD
+    // Adaptive or Nonuniform DMD
     CAROM_VERIFY(dim > 0);
 
     // Get the rank of this process, and the number of processors.
@@ -57,17 +58,20 @@ DMD::DMD(int dim, Vector* state_offset, Vector* derivative_offset)
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
     d_dim = dim;
+    d_in_offset = in_offset;
+    d_out_offset = out_offset;
     d_state_offset = state_offset;
     d_derivative_offset = derivative_offset;
-    d_in_offset = (state_offset != NULL);
-    d_out_offset = (derivative_offset != NULL);
     d_trained = false;
     d_init_projected = false;
+
+    CAROM_VERIFY(in_offset == (state_offset != NULL));
+    CAROM_VERIFY(out_offset == (derivative_offset != NULL));
 }
 
-DMD::DMD(int dim, double dt, Vector* state_offset)
+DMD::DMD(int dim, double dt, bool in_offset, Vector* state_offset)
 {
-    // Vanilla or Adaptive DMD
+    // Vanilla DMD
     CAROM_VERIFY(dim > 0);
     CAROM_VERIFY(dt > 0.0);
 
@@ -82,12 +86,14 @@ DMD::DMD(int dim, double dt, Vector* state_offset)
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
     d_dim = dim;
     d_dt = dt;
+    d_in_offset = in_offset;
+    d_out_offset = false;
     d_state_offset = state_offset;
     d_derivative_offset = NULL;
-    d_in_offset = (state_offset != NULL);
-    d_out_offset = false;
     d_trained = false;
     d_init_projected = false;
+
+    CAROM_VERIFY(in_offset == (state_offset != NULL));
 }
 
 DMD::DMD(std::string base_file_name)

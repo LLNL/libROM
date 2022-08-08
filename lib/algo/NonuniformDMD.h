@@ -39,10 +39,13 @@ public:
      * @brief Constructor.
      *
      * @param[in] dim               The full-order state dimension.
+     * @param[in] in_offset         Whether to use state offset
+     * @param[in] out_offset        Whether to use derivative offset.
      * @param[in] mean_offset       The state offset.
      * @param[in] derivative_offset The derivative offset.
      */
-    NonuniformDMD(int dim, Vector* mean_offset = NULL, Vector* derivative_offset = NULL); 
+    NonuniformDMD(int dim, bool in_offset = false, bool out_offset = false,  
+                  Vector* mean_offset = NULL, Vector* derivative_offset = NULL); 
 
     /**
      * @brief Constructor.
