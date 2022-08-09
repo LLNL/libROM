@@ -132,11 +132,11 @@ if (USE_MFEM)
     dg_advection_global_rom
     dg_advection_local_rom_matrix_interp
     mixed_nonlinear_diffusion
+    nonlinear_elasticity_global_rom
     dg_advection
     nonlinear_elasticity
     heat_conduction
     parametric_heat_conduction
-    de_parametric_heat_conduction_greedy
     dg_euler
     local_tw_csv
     parametric_tw_csv)
@@ -146,7 +146,7 @@ if (USE_MFEM)
     prom
     prom
     prom
-    dmd
+    prom
     dmd
     dmd
     dmd
