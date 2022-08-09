@@ -25,6 +25,9 @@
 // Merge phase:   ./linear_elasticity_global_rom -merge -ns 3
 //
 // Online phase:  ./linear_elasticity_global_rom -online -id 3 -f 0.012
+// 
+// NB: to evaluate relative error, call this before the online phase:
+//                ./linear_elasticity_global_rom -offline -id 4 -f 0.012
 
 #include "mfem.hpp"
 #include <fstream>
@@ -424,28 +427,30 @@ int main(int argc, char* argv[])
     ostringstream mesh_name, sol_name, mesh_name_fom, sol_name_fom;
     if (fom || offline)
     {
-        mesh_name << "mesh_fom." << setfill('0') << setw(6) << myid;
-        sol_name << "sol_fom." << setfill('0') << setw(6) << myid;
+        mesh_name << "mesh_f"<< ext_force <<"_fom." << setfill('0') << setw(6) << myid;
+        sol_name << "sol_f"<< ext_force <<"_fom." << setfill('0') << setw(6) << myid;
     }
     if (online)
     {
-        mesh_name << "mesh_rom." << setfill('0') << setw(6) << myid;
-        sol_name << "sol_rom." << setfill('0') << setw(6) << myid;
+        mesh_name << "mesh_f" << ext_force << "_rom." << setfill('0') << setw(6) << myid;
+        sol_name << "sol_f" << ext_force << "_rom." << setfill('0') << setw(6) << myid;
 
-        sol_name_fom << "sol_fom." << setfill('0') << setw(6) << myid;
+        sol_name_fom << "sol_f" << ext_force << "_fom." << setfill('0') << setw(6) << myid;
     }
+
+    GridFunction* nodes = pmesh->GetNodes();
+    *nodes += x;
+    x *= -1;
+
+    ofstream mesh_ofs(mesh_name.str().c_str());
+    mesh_ofs.precision(precision);
+    pmesh->Print(mesh_ofs);
+
+    ofstream sol_ofs(sol_name.str().c_str());
+    sol_ofs.precision(16);
+    for (int i = 0; i < x.Size(); ++i)
     {
-        GridFunction* nodes = pmesh->GetNodes();
-        *nodes += x;
-        x *= -1;
-
-        ofstream mesh_ofs(mesh_name.str().c_str());
-        mesh_ofs.precision(precision);
-        pmesh->Print(mesh_ofs);
-
-        ofstream sol_ofs(sol_name.str().c_str());
-        sol_ofs.precision(precision);
-        x.Save(sol_ofs);
+        sol_ofs << x[i] << std::endl;
     }
 
     // 27. Calculate the relative error of the ROM prediction compared to FOM
@@ -463,7 +468,6 @@ int main(int argc, char* argv[])
 
         fom_file.close();
 
-
         Vector diff_x(x.Size());
 
         subtract(x, x_fom, diff_x);
@@ -476,8 +480,8 @@ int main(int argc, char* argv[])
 
         if (myid == 0)
         {
-            cout << "Relative error of ROM for E = " << E << "and nu = " << nu <<
-                " is " << tot_diff_norm_x / tot_x_fom_norm << endl;
+            cout << "Relative error of ROM for E = " << E << " and nu = " << nu <<
+                " is: " << tot_diff_norm_x / tot_x_fom_norm << endl;
         }
 
     }
