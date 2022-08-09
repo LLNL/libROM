@@ -488,7 +488,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
     Vector* init = new Vector(f_snapshots_in->numRows(), true);
     for (int i = 0; i < init->dim(); i++)
     {
-        init->item(i) = f_snapshots_in->item(i, 0) - d_in_offset * d_state_offset->item(i);
+        init->item(i) = f_snapshots_in->item(i, 0);
     }
 
     // Calculate pinv(d_phi) * initial_condition.
