@@ -393,6 +393,8 @@ DMD::constructDMD(const Matrix* f_snapshots,
         }
         d_basis_init->orthogonalize();
 
+        Vector* l = NULL;
+        Vector* W0l = NULL;
         // Find which columns of d_basis are linearly independent from W0 
         for (int j = 0; j < d_basis->numColumns(); j++)
         {
@@ -402,10 +404,10 @@ DMD::constructDMD(const Matrix* f_snapshots,
             {
                 W_col.item(i) = d_basis->item(i, j);
             }
-            Vector* l = d_basis_init->transposeMult(W_col);
+            l = d_basis_init->transposeMult(W_col);
 
             // W0l = W0 * l
-            Vector* W0l = d_basis_init->mult(l);
+            W0l = d_basis_init->mult(l);
 
             // Compute k = sqrt(u.u - 2.0*l.l + basisl.basisl) which is ||u -
             // basisl||_{2}.  This is the error in the projection of u into the
