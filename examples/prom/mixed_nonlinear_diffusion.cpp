@@ -51,10 +51,12 @@
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -sh 0.3 -id 3 -sopt
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -sh 0.3 -id 3 -ns 3 -eqp
 //
-//               Relative l2 error of ROM solution at final timestep using DEIM sampling: 0.002639597287023164
-//               Elapsed time for entire simulation using DEIM sampling: 3.05089368
-//               Relative l2 error of ROM solution at final timestep using S_OPT sampling: 0.002633729640015132
-//               Elapsed time for entire simulation using S_OPT sampling: 21.649218315
+//               Relative l2 error of ROM solution at final timestep using DEIM sampling: 0.002636011884691709
+//               Elapsed time for time integration loop using DEIM sampling: 2.89976842
+//               Relative l2 error of ROM solution at final timestep using S_OPT sampling: 0.002636605663456216
+//               Elapsed time for time integration loop using S_OPT sampling: 2.723402257
+//               Relative l2 error of ROM solution at final timestep using EQP: 0.002635541915656281
+//               Elapsed time for time integration loop using EQP sampling: 0.920150336
 
 #include "mfem.hpp"
 
