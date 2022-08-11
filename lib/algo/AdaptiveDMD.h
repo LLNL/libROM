@@ -46,12 +46,11 @@ public:
      *                            "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
      * @param[in] closest_rbf_val The RBF parameter determines the width of influence.
      *                            Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
-     * @param[in] in_offset       Whether to use state offset.
      * @param[in] state_offset    The state offset.
      */
     AdaptiveDMD(int dim, double desired_dt = -1.0, std::string rbf = "G",
                 std::string interp_method = "LS",
-                double closest_rbf_val = 0.9, bool in_offset = false, 
+                double closest_rbf_val = 0.9,
                 Vector* state_offset = NULL);
 
     /**

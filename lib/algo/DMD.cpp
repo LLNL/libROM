@@ -15,6 +15,7 @@
 #include "linalg/Matrix.h"
 #include "linalg/Vector.h"
 #include "linalg/scalapack_wrapper.h"
+#include "utils/Utilities.h"
 #include "utils/CSVDatabase.h"
 #include "utils/HDFDatabase.h"
 #include "mpi.h"
@@ -42,8 +43,7 @@ extern "C" {
 
 namespace CAROM {
 
-DMD::DMD(int dim, bool in_offset, bool out_offset, 
-         Vector* state_offset, Vector* derivative_offset)
+DMD::DMD(int dim, Vector* state_offset)
 {
     // Adaptive or Nonuniform DMD
     CAROM_VERIFY(dim > 0);
@@ -58,18 +58,12 @@ DMD::DMD(int dim, bool in_offset, bool out_offset,
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
     d_dim = dim;
-    d_in_offset = in_offset;
-    d_out_offset = out_offset;
     d_state_offset = state_offset;
-    d_derivative_offset = derivative_offset;
     d_trained = false;
     d_init_projected = false;
-
-    CAROM_VERIFY(in_offset == (state_offset != NULL));
-    CAROM_VERIFY(out_offset == (derivative_offset != NULL));
 }
 
-DMD::DMD(int dim, double dt, bool in_offset, Vector* state_offset)
+DMD::DMD(int dim, double dt, Vector* state_offset)
 {
     // Vanilla DMD
     CAROM_VERIFY(dim > 0);
@@ -86,14 +80,9 @@ DMD::DMD(int dim, double dt, bool in_offset, Vector* state_offset)
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
     d_dim = dim;
     d_dt = dt;
-    d_in_offset = in_offset;
-    d_out_offset = false;
     d_state_offset = state_offset;
-    d_derivative_offset = NULL;
     d_trained = false;
     d_init_projected = false;
-
-    CAROM_VERIFY(in_offset == (state_offset != NULL));
 }
 
 DMD::DMD(std::string base_file_name)
@@ -115,9 +104,7 @@ DMD::DMD(std::string base_file_name)
 
 DMD::DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
          Matrix* phi_imaginary, int k,
-         bool in_offset, bool out_offset,
-         Vector* state_offset, Vector* derivative_offset,
-         double dt, double t_offset)
+         double dt, double t_offset, Vector* state_offset)
 {
     // Get the rank of this process, and the number of processors.
     int mpi_init;
@@ -135,12 +122,9 @@ DMD::DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
     d_phi_real = phi_real;
     d_phi_imaginary = phi_imaginary;
     d_k = k;
-    d_in_offset = in_offset;
-    d_out_offset = out_offset;
-    d_state_offset = state_offset;
-    d_derivative_offset = derivative_offset;
     d_dt = dt;
     d_t_offset = t_offset;
+    d_state_offset = state_offset;
 }
 
 void DMD::takeSample(double* u_in, double t)
@@ -231,7 +215,7 @@ DMD::computeDMDSnapshotPair(const Matrix* snapshots)
         {
             f_snapshots_in->item(i, j) = snapshots->item(i, j);
             f_snapshots_out->item(i, j) = snapshots->item(i, j + 1);
-            if (d_in_offset)
+            if (d_state_offset)
             {
                 f_snapshots_in->item(i, j) -= d_state_offset->item(i);
                 f_snapshots_out->item(i, j) -= d_state_offset->item(i);
@@ -611,6 +595,7 @@ DMD::predict(double t, int power)
     CAROM_VERIFY(t >= 0.0);
 
     t -= d_t_offset;
+
     std::pair<Matrix*, Matrix*> d_phi_pair = phiMultEigs(t, power);
     Matrix* d_phi_mult_eigs_real = d_phi_pair.first;
     Matrix* d_phi_mult_eigs_imaginary = d_phi_pair.second;
@@ -621,19 +606,7 @@ DMD::predict(double t, int power)
                                            d_projected_init_imaginary);
     Vector* d_predicted_state_real = d_predicted_state_real_1->minus(
                                          d_predicted_state_real_2);
-
-    if (d_in_offset && power == 0)
-    {
-        *d_predicted_state_real += *d_state_offset;
-    }
-    if (d_out_offset && power == 0)
-    {
-        *d_predicted_state_real += *(d_derivative_offset->mult(t));
-    }
-    if (d_out_offset && power == 1)
-    {
-        *d_predicted_state_real += *d_derivative_offset;
-    }
+    addOffset(d_predicted_state_real, t, power);
 
     delete d_phi_mult_eigs_real;
     delete d_phi_mult_eigs_imaginary;
@@ -641,6 +614,15 @@ DMD::predict(double t, int power)
     delete d_predicted_state_real_2;
 
     return d_predicted_state_real;
+}
+
+void
+DMD::addOffset(Vector*& result, double t, int power)
+{
+    if (d_state_offset)
+    {
+        *result += *d_state_offset;
+    }
 }
 
 std::complex<double>
@@ -729,15 +711,6 @@ DMD::load(std::string base_file_name)
     HDFDatabase database;
     database.open(full_file_name, "r");
 
-    int bool_int_temp;
-    sprintf(tmp, "in_offset");
-    database.getInteger(tmp, bool_int_temp);
-    d_in_offset = (bool) bool_int_temp;
-
-    sprintf(tmp, "out_offset");
-    database.getInteger(tmp, bool_int_temp);
-    d_out_offset = (bool) bool_int_temp;
-
     sprintf(tmp, "dt");
     database.getDouble(tmp, d_dt);
 
@@ -800,18 +773,11 @@ DMD::load(std::string base_file_name)
     d_projected_init_imaginary = new Vector();
     d_projected_init_imaginary->read(full_file_name);
 
-    if (d_in_offset)
+    full_file_name = base_file_name + "_state_offset";
+    if (Utilities::file_exist(full_file_name + ".000000"))
     {
-        full_file_name = base_file_name + "_state_offset";
         d_state_offset = new Vector();
         d_state_offset->read(full_file_name);
-    }
-
-    if (d_out_offset)
-    {
-        full_file_name = base_file_name + "_derivative_offset";
-        d_derivative_offset = new Vector();
-        d_derivative_offset->read(full_file_name);
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -829,12 +795,6 @@ DMD::save(std::string base_file_name)
         std::string full_file_name = base_file_name;
         HDFDatabase database;
         database.create(full_file_name);
-
-        sprintf(tmp, "in_offset");
-        database.putInteger(tmp, d_in_offset);
-
-        sprintf(tmp, "out_offset");
-        database.putInteger(tmp, d_out_offset);
 
         sprintf(tmp, "dt");
         database.putDouble(tmp, d_dt);
@@ -901,12 +861,6 @@ DMD::save(std::string base_file_name)
     {
         full_file_name = base_file_name + "_state_offset";
         d_state_offset->write(full_file_name);
-    }
-
-    if (d_derivative_offset != NULL)
-    {
-        full_file_name = base_file_name + "_derivative_offset";
-        d_derivative_offset->write(full_file_name);
     }
 
     MPI_Barrier(MPI_COMM_WORLD);

@@ -101,9 +101,8 @@ void getParametricDMD(T*& parametric_dmd,
     Matrix* phi_imaginary = W->mult(eigenpair.ev_imaginary);
 
     parametric_dmd = new T(eigs, phi_real, phi_imaginary, dmds[0]->d_k,
-                           dmds[0]->d_in_offset, dmds[0]->d_out_offset,
-                           dmds[0]->d_state_offset, dmds[0]->d_derivative_offset,
-                           dmds[0]->d_dt, dmds[0]->d_t_offset);
+                           dmds[0]->d_dt, dmds[0]->d_t_offset,
+                           dmds[0]->d_state_offset);
 
     delete W;
     delete A_tilde;

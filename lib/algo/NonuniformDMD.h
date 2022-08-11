@@ -39,13 +39,10 @@ public:
      * @brief Constructor.
      *
      * @param[in] dim               The full-order state dimension.
-     * @param[in] in_offset         Whether to use state offset
-     * @param[in] out_offset        Whether to use derivative offset.
-     * @param[in] state_offset       The state offset.
+     * @param[in] state_offset      The state offset.
      * @param[in] derivative_offset The derivative offset.
      */
-    NonuniformDMD(int dim, bool in_offset = false, bool out_offset = false,  
-                  Vector* state_offset = NULL, Vector* derivative_offset = NULL); 
+    NonuniformDMD(int dim, Vector* state_offset = NULL, Vector* derivative_offset = NULL); 
 
     /**
      * @brief Constructor.
@@ -72,18 +69,15 @@ protected:
      * @param[in] phi_real d_phi_real
      * @param[in] phi_imaginary d_phi_imaginary
      * @param[in] k d_k
-     * @param[in] in_offset d_in_offset
-     * @param[in] out_offset d_out_offset
-     * @param[in] state_offset d_state_offset
-     * @param[in] derivative_offset d_derivative_offset
      * @param[in] dt d_dt
      * @param[in] t_offset d_t_offset
+     * @param[in] state_offset d_state_offset
+     * @param[in] derivative_offset d_derivative_offset
      */
     NonuniformDMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
                   Matrix* phi_imaginary, int k,
-                  bool in_offset, bool out_offset,
-                  Vector* state_offset, Vector* derivative_offset,
-                  double dt, double t_offset);
+                  double dt, double t_offset,
+                  Vector* state_offset, Vector* derivative_offset);
 
 private:
 
@@ -119,6 +113,24 @@ private:
      * @brief Compute the appropriate exponential function when predicting the solution.
      */
     std::complex<double> computeEigExp(std::complex<double> eig, double t);
+
+    /**
+     * @brief Add the appropriate offset when predicting the solution.
+     */
+    void addOffset(Vector*& result, double t, int power);
+
+    /**
+     * @brief Derivative offset in snapshot.
+     */
+    Vector* d_derivative_offset = NULL;
+
+    /**
+     * @brief Save the object state to a file.
+     *
+     * @param[in] base_file_name The base part of the filename to save the
+     *                           database to.
+     */
+    void save(std::string base_file_name);
 
 };
 

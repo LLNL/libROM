@@ -21,8 +21,8 @@ namespace CAROM {
 
 AdaptiveDMD::AdaptiveDMD(int dim, double desired_dt, std::string rbf,
                          std::string interp_method,
-                         double closest_rbf_val, bool in_offset,
-                         Vector* state_offset) : DMD(dim, in_offset, false, state_offset, NULL)
+                         double closest_rbf_val,
+                         Vector* state_offset) : DMD(dim, state_offset)
 {
     CAROM_VERIFY(rbf == "G" || rbf == "IQ" || rbf == "IMQ");
     CAROM_VERIFY(interp_method == "LS" || interp_method == "IDW"

@@ -53,10 +53,9 @@ public:
      *
      * @param[in] dim          The full-order state dimension.
      * @param[in] dt           The dt between samples.
-     * @param[in] in_offset    Whether to use state offset.
      * @param[in] state_offset The state offset.
      */
-    DMD(int dim, double dt, bool in_offset = false, Vector* state_offset = NULL);
+    DMD(int dim, double dt, Vector* state_offset = NULL);
 
     /**
      * @brief Constructor.
@@ -166,13 +165,9 @@ protected:
      * @brief Constructor.
      *
      * @param[in] dim               The full-order state dimension.
-     * @param[in] in_offset         Whether to use state offset.
-     * @param[in] out_offset        Whether to use derivative offset.
      * @param[in] state_offset      The state offset.
-     * @param[in] derivative_offset The derivative offset in Nonuniform DMD.
      */
-    DMD(int dim, bool in_offset = false, bool out_offset = false, 
-        Vector* state_offset = NULL, Vector* derivative_offset = NULL); 
+    DMD(int dim, Vector* state_offset = NULL); 
 
     /**
      * @brief Constructor.
@@ -181,18 +176,13 @@ protected:
      * @param[in] phi_real d_phi_real
      * @param[in] phi_imaginary d_phi_imaginary
      * @param[in] k d_k
-     * @param[in] in_offset d_in_offset
-     * @param[in] out_offset d_out_offset
-     * @param[in] state_offset d_state_offset
-     * @param[in] derivative_offset d_derivative_offset
      * @param[in] dt d_dt
      * @param[in] t_offset d_t_offset
+     * @param[in] state_offset d_state_offset
      */
     DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
         Matrix* phi_imaginary, int k,
-        bool in_offset, bool out_offset,
-        Vector* state_offset, Vector* derivative_offset,
-        double dt, double t_offset);
+        double dt, double t_offset, Vector* state_offset);
 
     /**
      * @brief Unimplemented default constructor.
@@ -242,6 +232,11 @@ protected:
     virtual std::complex<double> computeEigExp(std::complex<double> eig, double t);
 
     /**
+     * @brief Add the appropriate offset when predicting the solution.
+     */
+    virtual void addOffset(Vector*& result, double t = 0.0, int power = 0);
+
+    /**
      * @brief Get the snapshot matrix contained within d_snapshots.
      */
     const Matrix* createSnapshotMatrix(std::vector<Vector*> snapshots);
@@ -282,24 +277,9 @@ protected:
     std::vector<Vector*> d_sampled_times;
 
     /**
-     * @brief Whether to use state offset.
-     */
-    bool d_in_offset = false;
-
-    /**
-     * @brief Whether to use derivative offset in NonuniformDMD.
-     */
-    bool d_out_offset = false;
-
-    /**
-     * @brief Offset of order 0.
+     * @brief State offset in snapshot.
      */
     Vector* d_state_offset = NULL;
-
-    /**
-     * @brief Offset of order 1.
-     */
-    Vector* d_derivative_offset = NULL;
 
     /**
      * @brief Whether the DMD has been trained or not.
