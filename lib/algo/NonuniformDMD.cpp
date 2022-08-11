@@ -93,15 +93,18 @@ NonuniformDMD::computeEigExp(std::complex<double> eig, double t)
 void
 NonuniformDMD::addOffset(Vector*& result, double t, int power)
 {
-    if (d_derivative_offset)
+    CAROM_VERIFY(power == 0 || power == 1);
+    if (power == 0)
     {
-        CAROM_VERIFY(power == 0 || power == 1);
-        if (power == 0)
+        DMD::addOffset(result); 
+        if (d_derivative_offset)
         {
-            *result += *(d_derivative_offset->mult(t));
-            DMD::addOffset(result); 
+            result->plusAx(t, *d_derivative_offset);
         }
-        else
+    }
+    else
+    {
+        if (d_derivative_offset)
         {
             *result += *d_derivative_offset;
         }
