@@ -49,6 +49,7 @@
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -offline -id 3 -sh 0.3
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -sh 0.3 -id 3
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -sh 0.3 -id 3 -sopt
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -sh 0.3 -id 3 -ns 3 -eqp
 //
 //               Relative l2 error of ROM solution at final timestep using DEIM sampling: 0.002639597287023164
 //               Elapsed time for entire simulation using DEIM sampling: 3.05089368
@@ -1401,7 +1402,7 @@ const CAROM::Matrix* GetSnapshotMatrix(const int dimFOM, const int nparam,
 // Compute EQP solution from constraints on snapshots.
 void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                         ParFiniteElementSpace *fespace_R, ParFiniteElementSpace *fespace_W,
-                        const CAROM::Matrix* BR,
+                        const int nsets, const CAROM::Matrix* BR,
                         const CAROM::Matrix* BR_snapshots,
                         const CAROM::Matrix* BW_snapshots,
                         const bool precondition,
@@ -1413,10 +1414,13 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
     const int NQ = ne * nqe;
     const int nsnap = BR_snapshots->numColumns();
 
-    MFEM_VERIFY(nsnap == BW_snapshots->numColumns(), "");
+    MFEM_VERIFY(nsnap == BW_snapshots->numColumns() ||
+                nsnap + nsets == BW_snapshots->numColumns(), "");
     MFEM_VERIFY(BR->numRows() == BR_snapshots->numRows(), "");
     MFEM_VERIFY(BR->numRows() == fespace_R->GetTrueVSize(), "");
     MFEM_VERIFY(BW_snapshots->numRows() == fespace_W->GetTrueVSize(), "");
+
+    const bool skipFirstW = (nsnap + nsets == BW_snapshots->numColumns());
 
     // Compute G of size (NB * nsnap) x NQ
     CAROM::Matrix G(NB * nsnap, NQ, false);
@@ -1434,13 +1438,24 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
 
     Vector r(nqe);
 
+    int skip = 0;
+    const int nsnapPerSet = nsnap / nsets;
+    if (skipFirstW)
+    {
+        MFEM_VERIFY(nsets * nsnapPerSet == nsnap, "");
+        skip = 1;
+    }
+
     for (int i=0; i<nsnap; ++i)
     {
         for (int j = 0; j < BW_snapshots->numRows(); ++j)
-            p_i[j] = (*BW_snapshots)(j, i);
+            p_i[j] = (*BW_snapshots)(j, i + skip);
 
         for (int j = 0; j < BR_snapshots->numRows(); ++j)
             v_i[j] = (*BR_snapshots)(j, i);
+
+        if (skipFirstW && i > 0 && i % nsnapPerSet == 0)
+            skip++;
 
         // Set grid function for a(p)
         ParGridFunction p_gf(fespace_W);
@@ -1511,10 +1526,6 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
     CAROM::Matrix Gt(NQ, NB * nsnap, true);
 
     double maxg = 0.0;
-
-    CAROM::NNLSSolver
-    nnls;  // TODO: move this back down. Just getting nprocs for dbg.
-
     for (int i=0; i<NB * nsnap; ++i)
         for (int j=0; j<NQ; ++j)
         {
@@ -1533,6 +1544,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
             w((i*nqe) + j) = w_el[j];
     }
 
+    CAROM::NNLSSolver nnls;
     nnls.set_qrresidual_mode(CAROM::NNLSSolver::QRresidualMode::hybrid);
     nnls.set_verbosity(2);
 
@@ -2182,17 +2194,20 @@ int main(int argc, char *argv[])
 
             eqpSol = new CAROM::Vector(ir0->GetNPoints() * R_space.GetNE(), true);
             //SetupEQP(ir0, &R_space, &W_space, BR_librom, BW_librom, *eqpSol);
-            SetupEQP_snapshots(ir0, myid, &R_space, &W_space, BR_librom,
+            SetupEQP_snapshots(ir0, myid, &R_space, &W_space, nsets, BR_librom,
                                GetSnapshotMatrix(R_space.GetTrueVSize(), nsets, max_num_snapshots, "R"),
                                GetSnapshotMatrix(W_space.GetTrueVSize(), nsets, max_num_snapshots, "W"),
                                preconditionNNLS,
                                *eqpSol);
 
-            eqpSol_S = new CAROM::Vector(ir0->GetNPoints() * W_space.GetNE(), true);
-            SetupEQP_S_snapshots(ir0, myid, &W_space, BW_librom,
-                                 GetSnapshotMatrix(W_space.GetTrueVSize(), nsets, max_num_snapshots, "S"),
-                                 preconditionNNLS,
-                                 *eqpSol_S);
+            if (problem == ANALYTIC)
+            {
+                eqpSol_S = new CAROM::Vector(ir0->GetNPoints() * W_space.GetNE(), true);
+                SetupEQP_S_snapshots(ir0, myid, &W_space, BW_librom,
+                                     GetSnapshotMatrix(W_space.GetTrueVSize(), nsets, max_num_snapshots, "S"),
+                                     preconditionNNLS,
+                                     *eqpSol_S);
+            }
         }
         else
         {
@@ -3137,25 +3152,28 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_,
         GetEQPCoefficients_VectorFEMassIntegrator(&fom->fespace_R, eqp_rw, eqp_qp,
                 ir_eqp, V_R, eqp_coef);
 
-        // Setup eqp for the source
-        std::set<int> elements_S;
-
-        for (int i=0; i<eqpSol_S->dim(); ++i)
+        if (problem == ANALYTIC)
         {
-            if ((*eqpSol_S)(i) > 1.0e-12)
+            // Setup eqp for the source
+            std::set<int> elements_S;
+
+            for (int i=0; i<eqpSol_S->dim(); ++i)
             {
-                const int e = i / nqe;  // Element index
-                elements_S.insert(e);
-                eqp_rw_S.push_back((*eqpSol_S)(i));
-                eqp_qp_S.push_back(i);
+                if ((*eqpSol_S)(i) > 1.0e-12)
+                {
+                    const int e = i / nqe;  // Element index
+                    elements_S.insert(e);
+                    eqp_rw_S.push_back((*eqpSol_S)(i));
+                    eqp_qp_S.push_back(i);
+                }
             }
+
+            GetEQPCoefficients_LinearMassIntegrator(&fom->fespace_W, eqp_rw_S, eqp_qp_S,
+                                                    ir_eqp, V_W, eqp_coef_S);
+
+            cout << myid << ": EQP for source using " << elements_S.size ()
+                 << " elements out of " << fom->fespace_R.GetNE() << endl;
         }
-
-        GetEQPCoefficients_LinearMassIntegrator(&fom->fespace_W, eqp_rw_S, eqp_qp_S,
-                                                ir_eqp, V_W, eqp_coef_S);
-
-        cout << myid << ": EQP for source using " << elements_S.size ()
-             << " elements out of " << fom->fespace_R.GetNE() << endl;
     }
 }
 
@@ -3252,23 +3270,30 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
 
     if (eqp)
     {
-        FunctionCoefficient f(SourceFunction);
-        f.SetTime(GetTime());
-
-        if (fastIntegration)
-            LinearMassIntegrator_ComputeReducedEQP_Fast(&(fom->fespace_W), eqp_rw_S,
-                    eqp_qp_S, ir_eqp, &f, V_W,
-                    eqp_coef_S, resW_librom);
+        if (problem == INIT_STEP)
+        {
+            resW_librom = 0.0;
+        }
         else
-            LinearMassIntegrator_ComputeReducedEQP(&(fom->fespace_W), eqp_rw_S,
-                                                   eqp_qp_S, ir_eqp, &f, V_W, resW_librom);
+        {
+            FunctionCoefficient f(SourceFunction);
+            f.SetTime(GetTime());
 
-        CAROM::Vector recv(resW_librom);
-        MPI_Allreduce(resW_librom.getData(), recv.getData(), resW_librom.dim(),
-                      MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        resW_librom = recv;
+            if (fastIntegration)
+                LinearMassIntegrator_ComputeReducedEQP_Fast(&(fom->fespace_W), eqp_rw_S,
+                        eqp_qp_S, ir_eqp, &f, V_W,
+                        eqp_coef_S, resW_librom);
+            else
+                LinearMassIntegrator_ComputeReducedEQP(&(fom->fespace_W), eqp_rw_S,
+                                                       eqp_qp_S, ir_eqp, &f, V_W, resW_librom);
 
-        resW_librom *= -1.0;
+            CAROM::Vector recv(resW_librom);
+            MPI_Allreduce(resW_librom.getData(), recv.getData(), resW_librom.dim(),
+                          MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            resW_librom = recv;
+
+            resW_librom *= -1.0;
+        }
 
         CR->multPlus(resW_librom, dyW_dt_librom, 1.0);
         BR->multPlus(resW_librom, yR_librom, -1.0);
