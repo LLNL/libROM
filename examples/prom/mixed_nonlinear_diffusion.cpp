@@ -1768,6 +1768,27 @@ void SetupEQP_S_snapshots(const IntegrationRule *ir0, const int rank,
          << endl;
 }
 
+void WriteMeshEQP(ParMesh *pmesh, const int myid, const int nqe,
+                  CAROM::Vector const& eqpSol)
+{
+    // Find the elements with quadrature points in eqpSol.
+    std::set<int> elements;
+
+    for (int i=0; i<eqpSol.dim(); ++i)
+    {
+        if (eqpSol(i) > 1.0e-12)
+        {
+            const int e = i / nqe;  // Element index
+            elements.insert(e);
+        }
+    }
+
+    // Empty sets, since EQP on samples inside elements.
+    std::set<int> faces, edges, vertices;
+    CAROM::SampleVisualization(pmesh, elements, elements, faces, edges,
+                               vertices, "EQPvis");
+}
+
 int main(int argc, char *argv[])
 {
     // 1. Initialize MPI.
@@ -1801,6 +1822,7 @@ int main(int argc, char *argv[])
     bool online = false;
     bool use_sopt = false;
     bool use_eqp = false;
+    bool writeSampleMesh = false;
     int num_samples_req = -1;
 
     int nsets = 0;
@@ -1863,12 +1885,13 @@ int main(int argc, char *argv[])
     args.AddOption(&use_sopt, "-sopt", "--sopt", "-no-sopt", "--no-sopt",
                    "Use S-OPT sampling instead of DEIM for the hyperreduction.");
     args.AddOption(&num_samples_req, "-nsr", "--nsr",
-                   "number of samples we want to select for the sampling algorithm.");
+                   "Number of samples for the sampling algorithm to select.");
     args.AddOption(&use_eqp, "-eqp", "--eqp", "-no-eqp", "--no-eqp",
                    "Use EQP instead of DEIM for the hyperreduction.");
+    args.AddOption(&writeSampleMesh, "-smesh", "--sample-mesh", "-no-smesh",
+                   "--no-sample-mesh", "Write the sample mesh to file.");
     args.AddOption(&preconditionNNLS, "-preceqp", "--preceqp", "-no-preceqp",
-                   "--no-preceqp",
-                   "Precondition the NNLS system for EQP.");
+                   "--no-preceqp", "Precondition the NNLS system for EQP.");
 
     args.Parse();
     if (!args.Good())
@@ -2210,6 +2233,8 @@ int main(int argc, char *argv[])
                                preconditionNNLS,
                                *eqpSol);
 
+            if (writeSampleMesh) WriteMeshEQP(pmesh, myid, ir0->GetNPoints(), *eqpSol);
+
             if (problem == ANALYTIC)
             {
                 eqpSol_S = new CAROM::Vector(ir0->GetNPoints() * W_space.GetNE(), true);
@@ -2354,7 +2379,10 @@ int main(int argc, char *argv[])
             fespace[0] = &R_space;
             fespace[1] = &W_space;
 
-            smm = new CAROM::SampleMeshManager(fespace);
+            if (writeSampleMesh)
+                smm = new CAROM::SampleMeshManager(fespace, "samples");
+            else
+                smm = new CAROM::SampleMeshManager(fespace);
 
             vector<int>
             sample_dofs_empty;  // Potential variable in W space has no sample DOFs.
@@ -2377,6 +2405,14 @@ int main(int argc, char *argv[])
             }
 
             smm->ConstructSampleMesh();
+
+            if (myid == 0 && writeSampleMesh)
+            {
+                ParMesh *smesh = smm->GetSampleMesh();
+                ofstream mesh_ofs("sampleMesh.mesh");
+                mesh_ofs.precision(8);
+                smesh->Print(mesh_ofs);
+            }
         }
 
         w = new CAROM::Vector(rrdim + rwdim, false);

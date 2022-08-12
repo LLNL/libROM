@@ -24,6 +24,11 @@ using namespace std;
 
 namespace CAROM {
 
+void SampleVisualization(ParMesh *pmesh, set<int> const& elems,
+                         set<int> const& intElems, set<int> const& faces,
+                         set<int> const& edges, set<int> const& vertices,
+                         string const& filename);
+
 /**
  * Class SampleMeshManager constructs and manages a sample mesh and finite element spaces on the sample mesh.
  * The spaces defined on the sample mesh are referred to as sample mesh spaces, and they generally contain

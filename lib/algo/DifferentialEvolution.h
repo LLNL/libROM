@@ -132,8 +132,8 @@ public:
      * @param[in] cost_tolerance         The cost tolerance to determine convergence.
      * @param[in] verbose                Verbosity.
      */
-    std::vector<double> Optimize(int min_iterations, int max_iterations, double cost_tolerance,
-                  bool verbose = true);
+    std::vector<double> Optimize(int min_iterations, int max_iterations,
+                                 double cost_tolerance, bool verbose = true);
 
 private:
 
