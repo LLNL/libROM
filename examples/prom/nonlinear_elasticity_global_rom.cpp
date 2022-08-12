@@ -1,6 +1,6 @@
 ﻿//               libROM MFEM Example: parametric ROM for nonlinear elasticity problem (adapted from ex10p.cpp)
 //
-// Compile with: ./scripts/compile.sh -m
+// Compile with: make nonlinear_elasticity_global_rom
 //
 // Description:  This examples solves a time dependent nonlinear elasticity
 //               problem of the form dv/dt = H(x) + S v, dx/dt = v, where H is a
@@ -13,10 +13,85 @@
 //                    (fixed)      +---------------------+
 //
 //               The example demonstrates the use of hyper reduction to solve a
-//               nonlinear elasticity problem. Time integration is done with various 
-//               explicit time integrator solvers.
+//               nonlinear elasticity problem. Time integration is done with various
+//               explicit time integrator solvers. The basis for the velocity field
+//               is either constructed using a separate velocity basis or using the
+//               displacement basis. It is possible to set the initial condition in
+//               terms of either velocity or deformation. The velocity initial condition
+//               works better when both velocity and displacement bases are used. The
+//               deformation initial condition is better when only the displacement
+//               basis is used. The input flag -sc controls the scaling of the initial
+//               condition applied. This is what parameterizes the ROM. If the scaling
+//               factor is within the range +-10%, the results are generally accurate.
 
-// Sample runs: (TO BE ADDED)
+// =================================================================================
+//
+// Sample runs and results for parametric ROM using displacement basis, velocity basis
+// and nonlinear term basis, with velocity initial condition:
+//
+// Offline phase:
+//      ./nonlinear_elasticity_global_rom --offline -dt 0.01 -tf 5.0 -s 14 -vs 100
+//      -sc 0.90 -id 0
+//
+//      ./nonlinear_elasticity_global_rom --offline -dt 0.01 -tf 5.0 -s 14 -vs 100
+//      -sc 1.10 -id 1
+//
+// Merge phase:
+//      ./nonlinear_elasticity_global_rom --merge -ns 2 -dt 0.01 -tf 5.0
+//
+// Create FOM comparison data:
+//      ./nonlinear_elasticity_global_rom --offline -dt 0.01 -tf 5.0 -s 14 -vs 100
+//      -sc 1.00 -id 2
+//
+// Online phase with full sampling:
+//      ./nonlinear_elasticity_global_rom --online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp
+//      -rvdim 37 -rxdim 9 -hdim 71 -nsr 1170 -sc 1.00
+// Output message:
+//      Elapsed time for time integration loop 14.0381
+//      Relative error of ROM position (x) at t_final: 5 is 5.86548e-06
+//      Relative error of ROM velocity (v) at t_final: 5 is 0.000727595
+//
+// Online phase with strong hyper reduction:
+//      ./nonlinear_elasticity_global_rom --online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp
+//      -rvdim 3 -rxdim 2 -hdim 4 -nsr 10 -sc 1.00
+// Output message:
+//      Elapsed time for time integration loop 1.01136
+//      Relative error of ROM position (x) at t_final: 5 is 0.0580046
+//      Relative error of ROM velocity (v) at t_final: 5 is 0.0871458
+//
+// =================================================================================
+//
+// Sample runs and results for parametric ROM using only displacement basis
+// and nonlinear term basis:
+// Offline phase:
+//      ./nonlinear_elasticity_global_rom --offline -dt 0.01 -tf 5.0 -s 14 -vs 100
+//      -sc 0.90 -xbo -def-ic -id 0
+//      ./nonlinear_elasticity_global_rom --offline -dt 0.01 -tf 5.0 -s 14 -vs 100
+//      -sc 1.10 -xbo -def-ic -id 1
+//
+// Merge phase:
+//      ./nonlinear_elasticity_global_rom --merge -ns 2 -dt 0.01 -tf 5.0
+//
+// Create FOM comparison data:
+//      ./nonlinear_elasticity_global_rom --offline -dt 0.01 -tf 5.0 -s 14 -vs 100
+//      -sc 1.00 -xbo -def-ic -id 2
+//
+// Online phase with full sampling:
+//      ./nonlinear_elasticity_global_rom --online -dt 0.01 -tf 5.0 -s 14 -vs 100
+//      -hyp -rxdim 57 -hdim 183 -nsr 1170 -sc 1.00 -xbo -def-ic
+// Output message:
+//      Elapsed time for time integration loop 18.9874
+//      Relative error of ROM position (x) at t_final: 5 is 7.47611e-05
+//      Relative error of ROM velocity (v) at t_final: 5 is 0.00501285
+//
+// Online phase with strong hyper reduction:
+//      ./nonlinear_elasticity_global_rom --online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -rxdim 2 -hdim 4 -nsr 10 -sc 1.00 -xbo -def-ic
+//      ./nonlinear_elasticity_global_rom --online -dt 0.01 -tf 5.0 -s 14 -vs 100
+//      -hyp -rxdim 2 -hdim 4 -nsr 10 -sc 1.00 -xbo -def-ic
+// Output message:
+//      Elapsed time for time integration loop 1.01136
+//      Relative error of ROM position (x) at t_final: 5 is 0.0115512
+//      Relative error of ROM velocity (v) at t_final: 5 is 0.797781
 
 #include "mfem.hpp"
 #include "linalg/Vector.h"
@@ -100,6 +175,7 @@ private:
     mutable Vector z_v;
 
     bool hyperreduce;
+    bool x_base_only;
 
     CAROM::Vector* pfom_librom,  * pfom_v_librom;
     Vector* pfom;
@@ -134,12 +210,11 @@ public:
 
     RomOperator(HyperelasticOperator* fom_,
                 HyperelasticOperator* fomSp_, const int rvdim_, const int rxdim_,
-                const int hdim_,
-                CAROM::SampleMeshManager* smm_, const Vector v0_, const Vector x0_,
-                const Vector v0_fom_,
-                const CAROM::Matrix* V_v_, const CAROM::Matrix* V_x_, const CAROM::Matrix* U_H_,
-                const CAROM::Matrix* Hsinv_,
-                const int myid, const bool oversampling_, const bool hyperreduce_);
+                const int hdim_,CAROM::SampleMeshManager* smm_, const Vector v0_,
+                const Vector x0_,const Vector v0_fom_,const CAROM::Matrix* V_v_,
+                const CAROM::Matrix* V_x_, const CAROM::Matrix* U_H_,
+                const CAROM::Matrix* Hsinv_,const int myid, const bool oversampling_,
+                const bool hyperreduce_,const bool x_base_only_);
 
     virtual void Mult(const Vector& y, Vector& dy_dt) const;
     void Mult_Hyperreduced(const Vector& y, Vector& dy_dt) const;
@@ -170,9 +245,13 @@ public:
     virtual ~ElasticEnergyCoefficient() { }
 };
 
-void InitialDeformation(const Vector& x, Vector& y);
+void InitialDeformationIC1(const Vector& x, Vector& y);
 
-void InitialVelocity(const Vector& x, Vector& v);
+void InitialVelocityIC1(const Vector& x, Vector& v);
+
+void InitialDeformationIC2(const Vector& x, Vector& y);
+
+void InitialVelocityIC2(const Vector& x, Vector& v);
 
 void visualize(ostream& out, ParMesh* mesh, ParGridFunction* deformed_nodes,
                ParGridFunction* field, const char* field_name = NULL,
@@ -289,6 +368,9 @@ void BroadcastUndistributedRomVector(CAROM::Vector* v)
     delete [] d;
 }
 
+// Scaling factor for parameterization
+double s = 1.0;
+
 int main(int argc, char* argv[])
 {
     // 1. Initialize MPI.
@@ -302,27 +384,28 @@ int main(int argc, char* argv[])
     int ser_ref_levels = 2;
     int par_ref_levels = 0;
     int order = 2;
-    int ode_solver_type = 14;
-    double t_final = 0.60; // 40.0 For debugging purposes
-    double dt = 0.03; // 0.03
+    int ode_solver_type = 14; // RK4
+    int vis_steps = 1;
+    double t_final = 15.0;
+    double dt = 0.03;
     double visc = 1e-2;
     double mu = 0.25;
     double K = 5.0;
     bool adaptive_lin_rtol = true;
     bool visualization = true;
     bool visit = false;
-    int vis_steps = 1; // Debug, for normal use it's supposed to be 1
+    bool def_ic = false;
 
     // ROM parameters
-    bool offline = false; // debug mode
+    bool offline = false;
     bool merge = false;
     bool online = false;
     bool use_sopt = false;
-    int num_samples_req = -1; // 1170 for comparison
-    bool hyperreduce = true; // debug
+    bool hyperreduce = true;
+    bool x_base_only = false;
+    int num_samples_req = -1; // 1170 for full sampling
 
     int nsets = 0;
-
     int id_param = 0;
 
     // number of basis vectors to use
@@ -386,6 +469,12 @@ int main(int argc, char* argv[])
     args.AddOption(&id_param, "-id", "--id", "Parametric index");
     args.AddOption(&hyperreduce, "-hyp", "--hyperreduce", "-no-hyp",
                    "--no-hyperreduce", "Hyper reduce nonlinear term");
+    args.AddOption(&x_base_only, "-xbo", "--xbase-only", "-no-xbo",
+                   "--not-xbase-only", "Use the displacement (X) basis to approximate velocity.");
+    args.AddOption(&def_ic, "-def-ic", "--deformation-ic", "-vel-ic",
+                   "--velocity-ic",
+                   "Use a deformation-, or velocity initial condition. Default is velocity IC.");
+    args.AddOption(&s, "-sc", "--scaling", "Scaling factor for initial condition.");
 
     args.Parse();
     if (!args.Good())
@@ -532,12 +621,31 @@ int main(int argc, char* argv[])
 
     // 8. Set the initial conditions for v_gf, x_gf and vx, and define the
     //    boundary conditions on a beam-like mesh (see description above).
-    VectorFunctionCoefficient velo(dim, InitialVelocity);
-    v_gf.ProjectCoefficient(velo);
+    VectorFunctionCoefficient* velo = 0;
+    VectorFunctionCoefficient* deform = 0;
+
+    if (def_ic)
+    {
+        velo = new VectorFunctionCoefficient(dim, InitialVelocityIC2);
+    }
+    else
+    {
+        velo = new VectorFunctionCoefficient(dim, InitialVelocityIC1);
+    }
+
+    v_gf.ProjectCoefficient(*velo);
     v_gf.SetTrueVector();
 
-    VectorFunctionCoefficient deform(dim, InitialDeformation);
-    x_gf.ProjectCoefficient(deform);
+    if (def_ic)
+    {
+        deform = new VectorFunctionCoefficient(dim, InitialDeformationIC2);
+    }
+    else
+    {
+        deform = new VectorFunctionCoefficient(dim, InitialDeformationIC1);
+    }
+
+    x_gf.ProjectCoefficient(*deform);
     x_gf.SetTrueVector();
 
     v_gf.SetFromTrueVector();
@@ -553,7 +661,6 @@ int main(int argc, char* argv[])
     // Store initial vx
     BlockVector vx0 = BlockVector(vx);
     BlockVector vx_diff = BlockVector(vx);
-    BlockVector vx_rec = BlockVector(vx);
 
     // Reduced order solution
     Vector* wMFEM = 0;
@@ -626,7 +733,6 @@ int main(int argc, char* argv[])
 
     if (myid == 0)
     {
-
         cout << "initial elastic energy (EE) = " << ee0 << endl;
         cout << "initial kinetic energy (KE) = " << ke0 << endl;
         cout << "initial   total energy (TE) = " << (ee0 + ke0) << endl;
@@ -666,8 +772,20 @@ int main(int argc, char* argv[])
     if (online)
     {
         // Read bases
-        CAROM::BasisReader readerV("basisV");
-        BV_librom = readerV.getSpatialBasis(0.0);
+        CAROM::BasisReader* readerV = 0;
+
+        if (x_base_only)
+        {
+            readerV = new
+            CAROM::BasisReader("basisX"); // The basis for v uses the x basis instead.
+            rvdim = rxdim;
+        }
+        else
+        {
+            readerV = new CAROM::BasisReader("basisV");
+        }
+
+        BV_librom = readerV->getSpatialBasis(0.0);
 
         if (rvdim == -1) // Change rvdim
             rvdim = BV_librom->numColumns();
@@ -813,11 +931,29 @@ int main(int argc, char* argv[])
                              sp_offset[0]); // Associate a new FiniteElementSpace and new true-dof data with the GridFunction.
             sp_x_gf.MakeTRef(sp_XV_space, sp_vx, sp_offset[1]);
 
-            VectorFunctionCoefficient velo(dim, InitialVelocity);
-            sp_v_gf.ProjectCoefficient(velo);
+            VectorFunctionCoefficient* velo = 0;
+            VectorFunctionCoefficient* deform = 0;
+
+            if (def_ic)
+            {
+                velo = new VectorFunctionCoefficient(dim, InitialVelocityIC2);
+            }
+            else
+            {
+                velo = new VectorFunctionCoefficient(dim, InitialVelocityIC1);
+            }
+            sp_v_gf.ProjectCoefficient(*velo);
             sp_v_gf.SetTrueVector();
-            VectorFunctionCoefficient deform(dim, InitialDeformation);
-            sp_x_gf.ProjectCoefficient(deform);
+
+            if (def_ic)
+            {
+                deform = new VectorFunctionCoefficient(dim, InitialDeformationIC2);
+            }
+            else
+            {
+                deform = new VectorFunctionCoefficient(dim, InitialDeformationIC1);
+            }
+            sp_x_gf.ProjectCoefficient(*deform);
             sp_x_gf.SetTrueVector();
 
             sp_v_gf.SetFromTrueVector();
@@ -839,9 +975,7 @@ int main(int argc, char* argv[])
                     {
                         Ess_mat(i,0) = 1;
                     }
-
                 }
-
             }
 
             // Project binary FOM list onto sampling space
@@ -881,17 +1015,15 @@ int main(int argc, char* argv[])
         }
 
         if (hyperreduce)
-        {   romop = new RomOperator(&oper, soper, rvdim, rxdim, hdim, smm,
-                                    *w_v0, *w_x0, vx0.GetBlock(0),
-                                    BV_librom, BX_librom, H_librom,
-                                    Hsinv, myid, num_samples_req != -1, hyperreduce);
+        {   romop = new RomOperator(&oper, soper, rvdim, rxdim, hdim, smm, *w_v0, *w_x0,
+                                    vx0.GetBlock(0), BV_librom, BX_librom, H_librom, Hsinv, myid,
+                                    num_samples_req != -1, hyperreduce, x_base_only);
         }
         else
         {
-            romop = new RomOperator(&oper, soper, rvdim, rxdim, hdim, smm,
-                                    vx0.GetBlock(0), vx0.GetBlock(1), vx0.GetBlock(0),
-                                    BV_librom, BX_librom, H_librom,
-                                    Hsinv, myid, num_samples_req != -1, hyperreduce);
+            romop = new RomOperator(&oper, soper, rvdim, rxdim, hdim, smm, vx0.GetBlock(0),
+                                    vx0.GetBlock(1), vx0.GetBlock(0), BV_librom, BX_librom, H_librom, Hsinv, myid,
+                                    num_samples_req != -1, hyperreduce, x_base_only);
         }
 
         // Display lifted initial energies
@@ -1059,8 +1191,8 @@ int main(int argc, char* argv[])
 
     ostringstream velo_name, pos_name;
 
-    velo_name << "velocity." << setfill('0') << setw(6) << myid;
-    pos_name << "position." << setfill('0') << setw(6) << myid;
+    velo_name << "velocity_s"<< s << "." << setfill('0') << setw(6) << myid;
+    pos_name << "position_s"<< s << "." << setfill('0') << setw(6) << myid;
 
     if (offline)
     {
@@ -1124,9 +1256,13 @@ int main(int argc, char* argv[])
     // 15. Calculate the relative error between the ROM final solution and the true solution.
     if (online)
     {
+        // Initialize displacement vector
+        Vector u_rom(x_rec->Size());
+
         // Initialize FOM solution
         Vector v_fom(v_rec->Size());
         Vector x_fom(x_rec->Size());
+        Vector u_fom(x_rec->Size());
 
         ifstream fom_v_file, fom_x_file;
 
@@ -1140,27 +1276,38 @@ int main(int argc, char* argv[])
         fom_v_file.close();
         fom_x_file.close();
 
+        // Get displacements
+        subtract(x_fom, vx0.GetBlock(1), u_fom);
+        subtract(*x_rec, vx0.GetBlock(1), u_rom);
+
         // Get difference vector
         Vector diff_v(v_rec->Size());
         Vector diff_x(x_rec->Size());
+        Vector diff_u(x_rec->Size());
 
         subtract(*v_rec, v_fom, diff_v);
         subtract(*x_rec, x_fom, diff_x);
+        subtract(u_rom, u_fom, diff_u);
 
         // Get norms
         double tot_diff_norm_v = sqrt(InnerProduct(MPI_COMM_WORLD, diff_v, diff_v));
         double tot_diff_norm_x = sqrt(InnerProduct(MPI_COMM_WORLD, diff_x, diff_x));
+        double tot_diff_norm_u = sqrt(InnerProduct(MPI_COMM_WORLD, diff_u, diff_u));
 
         double tot_v_fom_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
                                      v_fom, v_fom));
         double tot_x_fom_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
                                      x_fom, x_fom));
+        double tot_u_fom_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
+                                     u_fom, u_fom));
+
         if (myid == 0)
         {
             cout << "Relative error of ROM position (x) at t_final: " << t_final <<
                  " is " << tot_diff_norm_x / tot_x_fom_norm << endl;
             cout << "Relative error of ROM velocity (v) at t_final: " << t_final <<
                  " is " << tot_diff_norm_v / tot_v_fom_norm << endl;
+
         }
     }
 
@@ -1252,7 +1399,6 @@ HyperelasticOperator::HyperelasticOperator(ParFiniteElementSpace& f,
     S->Assemble(skip_zero_entries);
     S->Finalize(skip_zero_entries);
     S->FormSystemMatrix(ess_tdof_list, Smat);
-
 }
 
 void HyperelasticOperator::Mult(const Vector& vx, Vector& dvx_dt) const
@@ -1278,7 +1424,6 @@ void HyperelasticOperator::Mult(const Vector& vx, Vector& dvx_dt) const
     dx_dt = v;
 
     dvxdt_sp = dvx_dt;
-
 }
 
 double HyperelasticOperator::ElasticEnergy(const ParGridFunction& x) const
@@ -1320,54 +1465,49 @@ double ElasticEnergyCoefficient::Eval(ElementTransformation& T,
     return model.EvalW(J) / J.Det(); // in deformed configuration
 }
 
-void InitialDeformation(const Vector& x, Vector& y)
+void InitialDeformationIC1(const Vector &x, Vector &y)
 {
-    // set the initial configuration to be the same as the reference, stress
-    // free, configuration
     y = x;
 }
 
-/*
-void InitialVelocity(const Vector& x, Vector& v)
+void InitialVelocityIC1(const Vector& x, Vector& v)
 {
     const int dim = x.Size();
-    const double s = 0.1 / 64.;
+    const double s_eff = s / 80.0;
 
     v = 0.0;
-    v(dim - 1) = s * x(0) * x(0) * (8.0 - x(0));
-    v(0) = -s * x(0) * x(0);
-} */
+    v(dim - 1) = -s_eff * x(0);
+}
 
-// Simplified velocity
-void InitialVelocity(const Vector& x, Vector& v)
+void InitialDeformationIC2(const Vector &x, Vector &y) //See MFEM ex19
 {
+    // Set the initial configuration. Having this different from the reference
+    // configuration can help convergence
     const int dim = x.Size();
-    const double s = 0.1 / 64.;
+    const double s_eff = s;
+    y = x;
+    y(dim-1) = x(dim - 1) + 0.25*x(0) * s_eff;
+}
 
+void InitialVelocityIC2(const Vector& x, Vector& v)
+{
     v = 0.0;
-    //v(dim - 1) = s * x(0) * x(0) * (8.0 - x(0));
-    //v(0) = -s * x(0) * x(0);
-    v(dim/2 ) = -s * x(0) * x(0);
 }
 
 RomOperator::RomOperator(HyperelasticOperator* fom_,
                          HyperelasticOperator* fomSp_, const int rvdim_, const int rxdim_,
-                         const int hdim_,
-                         CAROM::SampleMeshManager* smm_, const Vector v0_, const Vector x0_,
-                         const Vector v0_fom_,
-                         const CAROM::Matrix* V_v_, const CAROM::Matrix* V_x_, const CAROM::Matrix* U_H_,
-                         const CAROM::Matrix* Hsinv_,
-                         const int myid, const bool oversampling_, const bool hyperreduce_)
-    : TimeDependentOperator(rxdim_ + rvdim_, 0.0),
-      fom(fom_), fomSp(fomSp_), rxdim(rxdim_), rvdim(rvdim_), hdim(hdim_), x0(x0_),
-      v0(v0_), v0_fom(v0_fom_),
+                         const int hdim_, CAROM::SampleMeshManager* smm_, const Vector v0_,
+                         const Vector x0_, const Vector v0_fom_, const CAROM::Matrix* V_v_,
+                         const CAROM::Matrix* V_x_, const CAROM::Matrix* U_H_,
+                         const CAROM::Matrix* Hsinv_, const int myid, const bool oversampling_,
+                         const bool hyperreduce_, const bool x_base_only_)
+    : TimeDependentOperator(rxdim_ + rvdim_, 0.0), fom(fom_), fomSp(fomSp_),
+      rxdim(rxdim_), rvdim(rvdim_), hdim(hdim_), x0(x0_), v0(v0_), v0_fom(v0_fom_),
       smm(smm_), nsamp_H(smm_->GetNumVarSamples("H")), V_x(*V_x_), V_v(*V_v_),
-      U_H(U_H_), Hsinv(Hsinv_),
-      zN(std::max(nsamp_H, 1), false), zX(std::max(nsamp_H, 1), false),
-      M_hat_solver(fom_->fespace.GetComm()),
-      oversampling(oversampling_), z(height / 2), hyperreduce(hyperreduce_)
+      U_H(U_H_), Hsinv(Hsinv_), zN(std::max(nsamp_H, 1), false), zX(std::max(nsamp_H,
+              1), false), M_hat_solver(fom_->fespace.GetComm()), oversampling(oversampling_),
+      z(height / 2), hyperreduce(hyperreduce_), x_base_only(x_base_only_)
 {
-
     if (myid == 0)
     {
         V_v_sp = new CAROM::Matrix(fomSp->Height() / 2, rvdim, false);
@@ -1375,7 +1515,15 @@ RomOperator::RomOperator(HyperelasticOperator* fom_,
     }
 
     // Gather distributed vectors
-    smm->GatherDistributedMatrixRows("V", V_v, rvdim, *V_v_sp);
+    if (x_base_only)
+    {
+        smm->GatherDistributedMatrixRows("X", V_v, rvdim, *V_v_sp);
+    }
+    else
+    {
+        smm->GatherDistributedMatrixRows("V", V_v, rvdim, *V_v_sp);
+    }
+
     smm->GatherDistributedMatrixRows("X", V_x, rxdim, *V_x_sp);
 
     // Create V_vTU_H, for hyperreduction
@@ -1470,7 +1618,6 @@ void RomOperator::Mult_Hyperreduced(const Vector& vx, Vector& dvx_dt) const
 
     // Create views to the sub-vectors v, x of vx, and dv_dt, dx_dt of dvx_dt
     Vector v(vx.GetData() + 0, rvdim);
-    //Vector x(vx.GetData() + rvdim, rxdim);
     CAROM::Vector v_librom(vx.GetData(), rvdim, false, false);
     CAROM::Vector x_librom(vx.GetData() + rvdim, rxdim, false, false);
     Vector dv_dt(dvx_dt.GetData() + 0, rvdim);
@@ -1528,7 +1675,6 @@ void RomOperator::Mult_FullOrder(const Vector& vx, Vector& dvx_dt) const
 
     // Create views to the sub-vectors v, x of vx, and dv_dt, dx_dt of dvx_dt
     Vector v(vx.GetData() + 0, rvdim);
-    //Vector x(vx.GetData() + rvdim, rxdim);
     CAROM::Vector v_librom(vx.GetData(), rvdim, false, false);
     CAROM::Vector x_librom(vx.GetData() + rvdim, rxdim, false, false);
     Vector dv_dt(dvx_dt.GetData() + 0, rvdim);
