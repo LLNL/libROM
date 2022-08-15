@@ -26,6 +26,7 @@ set(module_list
   linalg/BasisWriter
   linalg/Matrix
   linalg/Vector
+  linalg/NNLS
   linalg/svd/IncrementalSVD
   linalg/svd/IncrementalSVDFastUpdate
   linalg/svd/IncrementalSVDStandard
@@ -47,7 +48,6 @@ set(module_list
   hyperreduction/QDEIM
   hyperreduction/S_OPT
   hyperreduction/STSampling
-  hyperreduction/NNLS
   hyperreduction/Utilities
   utils/Database
   utils/HDFDatabase

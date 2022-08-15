@@ -10,7 +10,7 @@
 
 #include "mpi.h"
 #include "NNLS.h"
-#include "linalg/scalapack_wrapper.h"
+#include "scalapack_wrapper.h"
 
 #include <set>
 

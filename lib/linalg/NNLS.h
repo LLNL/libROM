@@ -14,8 +14,8 @@
 #ifndef included_NNLS_h
 #define included_NNLS_h
 
-#include "linalg/Matrix.h"
-#include "linalg/Vector.h"
+#include "Matrix.h"
+#include "Vector.h"
 
 namespace CAROM {
 

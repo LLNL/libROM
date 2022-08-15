@@ -74,10 +74,10 @@
 
 #include "linalg/BasisGenerator.h"
 #include "linalg/BasisReader.h"
+#include "linalg/NNLS.h"
 #include "hyperreduction/DEIM.h"
 #include "hyperreduction/GNAT.h"
 #include "hyperreduction/S_OPT.h"
-#include "hyperreduction/NNLS.h"
 #include "mfem/SampleMesh.hpp"
 
 
