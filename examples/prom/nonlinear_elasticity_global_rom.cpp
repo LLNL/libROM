@@ -30,68 +30,57 @@
 // and nonlinear term basis, with velocity initial condition:
 //
 // Offline phase:
-//      ./nonlinear_elasticity_global_rom --offline -dt 0.01 -tf 5.0 -s 14 -vs 100
-//      -sc 0.90 -id 0
+//      ./nonlinear_elasticity_global_rom --offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 0.90 -id 0
 //
-//      ./nonlinear_elasticity_global_rom --offline -dt 0.01 -tf 5.0 -s 14 -vs 100
-//      -sc 1.10 -id 1
+//      ./nonlinear_elasticity_global_rom --offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.10 -id 1
 //
 // Merge phase:
 //      ./nonlinear_elasticity_global_rom --merge -ns 2 -dt 0.01 -tf 5.0
 //
 // Create FOM comparison data:
-//      ./nonlinear_elasticity_global_rom --offline -dt 0.01 -tf 5.0 -s 14 -vs 100
-//      -sc 1.00 -id 2
+//      ./nonlinear_elasticity_global_rom --offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.00 -id 2
 //
 // Online phase with full sampling:
-//      ./nonlinear_elasticity_global_rom --online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp
-//      -rvdim 37 -rxdim 9 -hdim 71 -nsr 1170 -sc 1.00
+//      ./nonlinear_elasticity_global_rom --online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -rvdim 40 -rxdim 10 -hdim 71 -nsr 1170 -sc 1.00
 // Output message:
 //      Elapsed time for time integration loop 14.0381
-//      Relative error of ROM position (x) at t_final: 5 is 5.86548e-06
-//      Relative error of ROM velocity (v) at t_final: 5 is 0.000727595
+//      Relative error of ROM position (x) at t_final: 5 is 2.97882e-06
+//      Relative error of ROM velocity (v) at t_final: 5 is 0.000679751
 //
 // Online phase with strong hyper reduction:
-//      ./nonlinear_elasticity_global_rom --online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp
-//      -rvdim 3 -rxdim 2 -hdim 4 -nsr 10 -sc 1.00
+//      ./nonlinear_elasticity_global_rom --online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -rvdim 3 -rxdim 2 -hdim 4 -nsr 10 -sc 1.00
 // Output message:
 //      Elapsed time for time integration loop 1.01136
-//      Relative error of ROM position (x) at t_final: 5 is 0.0580046
-//      Relative error of ROM velocity (v) at t_final: 5 is 0.0871458
+//      Relative error of ROM position (x) at t_final: 5 is 0.0580267
+//      Relative error of ROM velocity (v) at t_final: 5 is 0.28365
 //
 // =================================================================================
 //
 // Sample runs and results for parametric ROM using only displacement basis
 // and nonlinear term basis:
 // Offline phase:
-//      ./nonlinear_elasticity_global_rom --offline -dt 0.01 -tf 5.0 -s 14 -vs 100
-//      -sc 0.90 -xbo -def-ic -id 0
-//      ./nonlinear_elasticity_global_rom --offline -dt 0.01 -tf 5.0 -s 14 -vs 100
-//      -sc 1.10 -xbo -def-ic -id 1
+//      ./nonlinear_elasticity_global_rom --offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 0.90 -xbo -def-ic -id 0
+//      ./nonlinear_elasticity_global_rom --offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.10 -xbo -def-ic -id 1
 //
 // Merge phase:
-//      ./nonlinear_elasticity_global_rom --merge -ns 2 -dt 0.01 -tf 5.0
+//      ./nonlinear_elasticity_global_rom --merge -ns 2 -dt 0.01 -tf 5.0 -xbo
 //
 // Create FOM comparison data:
-//      ./nonlinear_elasticity_global_rom --offline -dt 0.01 -tf 5.0 -s 14 -vs 100
-//      -sc 1.00 -xbo -def-ic -id 2
+//      ./nonlinear_elasticity_global_rom --offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.00 -xbo -def-ic -id 2
 //
 // Online phase with full sampling:
-//      ./nonlinear_elasticity_global_rom --online -dt 0.01 -tf 5.0 -s 14 -vs 100
-//      -hyp -rxdim 57 -hdim 183 -nsr 1170 -sc 1.00 -xbo -def-ic
+//      ./nonlinear_elasticity_global_rom --online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -rxdim 57 -hdim 183 -nsr 1170 -sc 1.00 -xbo -def-ic
 // Output message:
 //      Elapsed time for time integration loop 18.9874
-//      Relative error of ROM position (x) at t_final: 5 is 7.47611e-05
-//      Relative error of ROM velocity (v) at t_final: 5 is 0.00501285
+//      Relative error of ROM position (x) at t_final: 5 is 7.08272e-05
+//      Relative error of ROM velocity (v) at t_final: 5 is 0.00387647
 //
 // Online phase with strong hyper reduction:
 //      ./nonlinear_elasticity_global_rom --online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -rxdim 2 -hdim 4 -nsr 10 -sc 1.00 -xbo -def-ic
-//      ./nonlinear_elasticity_global_rom --online -dt 0.01 -tf 5.0 -s 14 -vs 100
-//      -hyp -rxdim 2 -hdim 4 -nsr 10 -sc 1.00 -xbo -def-ic
 // Output message:
 //      Elapsed time for time integration loop 1.01136
-//      Relative error of ROM position (x) at t_final: 5 is 0.0115512
-//      Relative error of ROM velocity (v) at t_final: 5 is 0.797781
+//      Relative error of ROM position (x) at t_final: 5 is 0.0130818
+//      Relative error of ROM velocity (v) at t_final: 5 is 0.979978
 
 #include "mfem.hpp"
 #include "linalg/Vector.h"
@@ -605,7 +594,11 @@ int main(int argc, char* argv[])
         totalTimer.Start();
 
         // Merge bases
-        MergeBasis(true_size, nsets, max_num_snapshots, "V");
+        if (x_base_only == false)
+        {
+           MergeBasis(true_size, nsets, max_num_snapshots, "V");
+        }
+
         MergeBasis(true_size, nsets, max_num_snapshots, "X");
         MergeBasis(true_size, nsets, max_num_snapshots, "H");
 
@@ -747,9 +740,12 @@ int main(int argc, char* argv[])
         CAROM::Options options(fespace.GetTrueVSize(), max_num_snapshots, 1,
                                update_right_SV);
 
+        if (x_base_only == false)
+        {
         basis_generator_v = new CAROM::BasisGenerator(options, isIncremental,
                 basisFileName + "_V");
-
+        }
+        
         basis_generator_x = new CAROM::BasisGenerator(options, isIncremental,
                 basisFileName + "_X");
 
@@ -1101,7 +1097,7 @@ int main(int argc, char* argv[])
         if (offline)
         {
 
-            if (basis_generator_v->isNextSample(t) || basis_generator_x->isNextSample(t))
+            if (  basis_generator_x->isNextSample(t) || x_base_only == false && basis_generator_v->isNextSample(t))
             {
                 dvxdt = oper.dvxdt_sp.GetData();
                 vx_diff = BlockVector(vx);
@@ -1110,7 +1106,7 @@ int main(int argc, char* argv[])
             }
 
             // Take samples
-            if (basis_generator_v->isNextSample(t))
+            if (x_base_only == false && basis_generator_v->isNextSample(t))
             {
                 basis_generator_v->takeSample(vx_diff.GetBlock(0), t, dt);
                 basis_generator_v->computeNextSampleTime(vx_diff.GetBlock(0), dvdt.GetData(),
@@ -1123,6 +1119,12 @@ int main(int argc, char* argv[])
                 basis_generator_x->takeSample(vx_diff.GetBlock(1), t, dt);
                 basis_generator_x->computeNextSampleTime(vx_diff.GetBlock(1), dxdt.GetData(),
                         t);
+
+                if (x_base_only == true)
+                {
+                    basis_generator_H->takeSample(oper.H_sp.GetData(), t, dt);
+                }
+                
 
             }
         }
@@ -1198,22 +1200,26 @@ int main(int argc, char* argv[])
     {
         // Sample final solution, to prevent extrapolation in ROM between the last sample and the end of the simulation.
         dvxdt = oper.dvxdt_sp.GetData();
+        vx_diff = BlockVector(vx);
+        vx_diff -= vx0;
 
         // Take samples
-        basis_generator_v->takeSample(vx.GetBlock(0), t, dt);
-        basis_generator_H->takeSample(oper.H_sp.GetData(), t, dt);
-
-        basis_generator_x->takeSample(vx.GetBlock(1), t, dt);
-
+        if (x_base_only == false)
+        {
+        basis_generator_v->takeSample(vx_diff.GetBlock(0), t, dt);
         basis_generator_v->writeSnapshot();
-        basis_generator_H->writeSnapshot();
-
-        basis_generator_x->writeSnapshot();
-
-        // Terminate the sampling and write out information.
         delete basis_generator_v;
-        delete basis_generator_x;
+        }
+        
+        //Ändra bug!
+        basis_generator_H->takeSample(oper.H_sp.GetData(), t, dt);
+        basis_generator_H->writeSnapshot();
         delete basis_generator_H;
+
+        basis_generator_x->takeSample(vx_diff.GetBlock(1), t, dt);
+        basis_generator_x->writeSnapshot();
+        delete basis_generator_x;
+
 
         // 14. Save the displaced mesh, the velocity and elastic energy.
         GridFunction* nodes = &x_gf;
@@ -1256,13 +1262,9 @@ int main(int argc, char* argv[])
     // 15. Calculate the relative error between the ROM final solution and the true solution.
     if (online)
     {
-        // Initialize displacement vector
-        Vector u_rom(x_rec->Size());
-
         // Initialize FOM solution
         Vector v_fom(v_rec->Size());
         Vector x_fom(x_rec->Size());
-        Vector u_fom(x_rec->Size());
 
         ifstream fom_v_file, fom_x_file;
 
@@ -1276,30 +1278,21 @@ int main(int argc, char* argv[])
         fom_v_file.close();
         fom_x_file.close();
 
-        // Get displacements
-        subtract(x_fom, vx0.GetBlock(1), u_fom);
-        subtract(*x_rec, vx0.GetBlock(1), u_rom);
-
         // Get difference vector
         Vector diff_v(v_rec->Size());
         Vector diff_x(x_rec->Size());
-        Vector diff_u(x_rec->Size());
 
         subtract(*v_rec, v_fom, diff_v);
         subtract(*x_rec, x_fom, diff_x);
-        subtract(u_rom, u_fom, diff_u);
 
         // Get norms
         double tot_diff_norm_v = sqrt(InnerProduct(MPI_COMM_WORLD, diff_v, diff_v));
         double tot_diff_norm_x = sqrt(InnerProduct(MPI_COMM_WORLD, diff_x, diff_x));
-        double tot_diff_norm_u = sqrt(InnerProduct(MPI_COMM_WORLD, diff_u, diff_u));
 
         double tot_v_fom_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
                                      v_fom, v_fom));
         double tot_x_fom_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
                                      x_fom, x_fom));
-        double tot_u_fom_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
-                                     u_fom, u_fom));
 
         if (myid == 0)
         {
@@ -1307,7 +1300,6 @@ int main(int argc, char* argv[])
                  " is " << tot_diff_norm_x / tot_x_fom_norm << endl;
             cout << "Relative error of ROM velocity (v) at t_final: " << t_final <<
                  " is " << tot_diff_norm_v / tot_v_fom_norm << endl;
-
         }
     }
 
