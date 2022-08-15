@@ -1055,8 +1055,9 @@ void ParaViewPrintAttributes(const string &fname,
 }
 
 SampleMeshManager::SampleMeshManager(vector<ParFiniteElementSpace*> & fespace_,
-                                     string visFileName) : nspaces(fespace_.size()), fespace(fespace_),
-    filename(visFileName)
+                                     string visFileName, double visScale) :
+    nspaces(fespace_.size()), fespace(fespace_), filename(visFileName),
+    elemVisScale(visScale)
 {
     MFEM_VERIFY(nspaces > 0, "Must provide at least one finite element space");
     spfespace.assign(nspaces, nullptr);
@@ -1658,14 +1659,16 @@ void SampleMeshManager::CreateSampleMesh()
 
     if (!filename.empty())
     {
-        SampleVisualization(pmesh, elems, intElems, faces, edges, vertices, filename);
+        SampleVisualization(pmesh, elems, intElems, faces, edges, vertices,
+                            filename, nullptr, elemVisScale);
     }
 }
 
 void SampleVisualization(ParMesh *pmesh, set<int> const& elems,
                          set<int> const& intElems, set<int> const& faces,
                          set<int> const& edges, set<int> const& vertices,
-                         string const& filename)
+                         string const& filename, mfem::Vector *elemCount,
+                         double elementScaling)
 {
     // Write files for global pmesh and a piecewise constant function with 1 on
     // sample mesh elements and 0 elsewhere. Note that this is a visualization of
@@ -1679,15 +1682,33 @@ void SampleVisualization(ParMesh *pmesh, set<int> const& elems,
 
     ParGridFunction marker(&pwc_space);
     marker = 0.0;
-    for (set<int>::const_iterator it = elems.begin(); it != elems.end(); ++it)
+    if (elemCount)
     {
-        Array<int> dofs;
-        pwc_space.GetElementVDofs(*it, dofs);
-
-        for (int i = 0; i < dofs.Size(); i++)
+        MFEM_VERIFY(elemCount->Size() == pmesh->GetNE(), "");
+        for (int e=0; e<pmesh->GetNE(); ++e)
         {
-            const int dof_i = dofs[i] >= 0 ? dofs[i] : -1 - dofs[i];
-            marker[dof_i] = 1;
+            Array<int> dofs;
+            pwc_space.GetElementVDofs(e, dofs);
+
+            for (int i = 0; i < dofs.Size(); i++)
+            {
+                const int dof_i = dofs[i] >= 0 ? dofs[i] : -1 - dofs[i];
+                marker[dof_i] = (*elemCount)[e];
+            }
+        }
+    }
+    else
+    {
+        for (set<int>::const_iterator it = elems.begin(); it != elems.end(); ++it)
+        {
+            Array<int> dofs;
+            pwc_space.GetElementVDofs(*it, dofs);
+
+            for (int i = 0; i < dofs.Size(); i++)
+            {
+                const int dof_i = dofs[i] >= 0 ? dofs[i] : -1 - dofs[i];
+                marker[dof_i] = elementScaling;
+            }
         }
     }
 

@@ -1773,6 +1773,8 @@ void WriteMeshEQP(ParMesh *pmesh, const int myid, const int nqe,
 {
     // Find the elements with quadrature points in eqpSol.
     std::set<int> elements;
+    Vector elemCount(pmesh->GetNE());
+    elemCount = 0.0;
 
     for (int i=0; i<eqpSol.dim(); ++i)
     {
@@ -1780,13 +1782,14 @@ void WriteMeshEQP(ParMesh *pmesh, const int myid, const int nqe,
         {
             const int e = i / nqe;  // Element index
             elements.insert(e);
+            elemCount[e] += 1.0;
         }
     }
 
     // Empty sets, since EQP on samples inside elements.
     std::set<int> faces, edges, vertices;
     CAROM::SampleVisualization(pmesh, elements, elements, faces, edges,
-                               vertices, "EQPvis");
+                               vertices, "EQPvis", &elemCount);
 }
 
 int main(int argc, char *argv[])
@@ -2212,19 +2215,19 @@ int main(int argc, char *argv[])
         CAROM::Matrix *Ssinv = NULL;
         const IntegrationRule *ir0 = NULL;
 
+        if (ir0 == NULL)
+        {
+            // int order = 2 * el.GetOrder();
+            const FiniteElement &fe = *R_space.GetFE(0);
+            ElementTransformation *eltrans = R_space.GetElementTransformation(0);
+
+            int order = eltrans->OrderW() + 2 * fe.GetOrder();
+            ir0 = &IntRules.Get(fe.GetGeomType(), order);
+        }
+
         if (use_eqp)
         {
             // EQP setup
-            if (ir0 == NULL)
-            {
-                // int order = 2 * el.GetOrder();
-                const FiniteElement &fe = *R_space.GetFE(0);
-                ElementTransformation *eltrans = R_space.GetElementTransformation(0);
-
-                int order = eltrans->OrderW() + 2 * fe.GetOrder();
-                ir0 = &IntRules.Get(fe.GetGeomType(), order);
-            }
-
             eqpSol = new CAROM::Vector(ir0->GetNPoints() * R_space.GetNE(), true);
             //SetupEQP(ir0, &R_space, &W_space, BR_librom, BW_librom, *eqpSol);
             SetupEQP_snapshots(ir0, myid, &R_space, &W_space, nsets, BR_librom,
@@ -2380,7 +2383,8 @@ int main(int argc, char *argv[])
             fespace[1] = &W_space;
 
             if (writeSampleMesh)
-                smm = new CAROM::SampleMeshManager(fespace, "samples");
+                smm = new CAROM::SampleMeshManager(fespace, "samples",
+                                                   ir0 ? ir0->GetNPoints() : 1);
             else
                 smm = new CAROM::SampleMeshManager(fespace);
 
