@@ -1432,8 +1432,8 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
 
     const bool skipFirstW = (nsnap + nsets == BW_snapshots->numColumns());
 
-    // Compute G of size (NB * nsnap) x NQ
-    CAROM::Matrix G(NB * nsnap, NQ, false);
+    // Compute G of size (NB * nsnap) x NQ, but only store its transpose Gt.
+    CAROM::Matrix Gt(NQ, NB * nsnap, true);
     CAROM::Vector PG(NB, false);
 
     // For 0 <= j < NB, 0 <= i < nsnap, 0 <= e < ne, 0 <= m < nqe,
@@ -1497,7 +1497,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                 ComputeElementRowOfG(ir0, vdofs, &a_coeff, vi_gf, vj_gf, fe, *eltrans, r);
 
                 for (int m=0; m<nqe; ++m)
-                    G(j + (i*NB), (e*nqe) + m) = r[m];
+                    Gt((e*nqe) + m, j + (i*NB)) = r[m];
             }
         }
 
@@ -1522,26 +1522,15 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                     PG(j) = 0.0;
                     for (int k=0; k<NB; ++k)
                     {
-                        PG(j) += Mhat(j,k) * G(k + (i*NB), m);
+                        PG(j) += Mhat(j,k) * Gt(m, k + (i*NB));
                     }
                 }
 
                 for (int j=0; j<NB; ++j)
-                    G(j + (i*NB), m) = PG(j);
+                    Gt(m, j + (i*NB)) = PG(j);
             }
         }
     } // Loop (i) over snapshots
-
-    // TODO: just use Gt instead of G?
-    CAROM::Matrix Gt(NQ, NB * nsnap, true);
-
-    double maxg = 0.0;
-    for (int i=0; i<NB * nsnap; ++i)
-        for (int j=0; j<NQ; ++j)
-        {
-            Gt(j,i) = G(i,j);
-            maxg = std::max(maxg, fabs(G(i,j)));
-        }
 
     Array<double> const& w_el = ir0->GetWeights();
     MFEM_VERIFY(w_el.Size() == nqe, "");
@@ -1558,7 +1547,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
     nnls.set_qrresidual_mode(CAROM::NNLSSolver::QRresidualMode::hybrid);
     nnls.set_verbosity(2);
 
-    CAROM::Vector rhs_ub(G.numRows(), false);
+    CAROM::Vector rhs_ub(Gt.numColumns(), false);
     //G.mult(w, rhs_ub);  // rhs = Gw
     // rhs = Gw. Note that by using Gt and multTranspose, we do parallel communication.
     Gt.transposeMult(w, rhs_ub);
@@ -1573,8 +1562,8 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
         rhs_ub(i) += delta;
     }
 
-    nnls.normalize_constraints(G, rhs_lb, rhs_ub);
-    nnls.solve_parallel_with_scalapack(G, Gt, rhs_lb, rhs_ub, sol);
+    nnls.normalize_constraints(Gt, rhs_lb, rhs_ub);
+    nnls.solve_parallel_with_scalapack(Gt, rhs_lb, rhs_ub, sol);
 
     int nnz = 0;
     double wsum = 0.0;
@@ -1599,7 +1588,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
         cout << "Global number of nonzeros in NNLS solution: " << nnz << endl;
 
     // Check residual of NNLS solution
-    CAROM::Vector res(G.numRows(), false);
+    CAROM::Vector res(Gt.numColumns(), false);
     Gt.transposeMult(sol, res);
 
     const double normGsol = res.norm();
@@ -1628,8 +1617,8 @@ void SetupEQP_S_snapshots(const IntegrationRule *ir0, const int rank,
 
     MFEM_VERIFY(BS_snapshots->numRows() == BW->numRows(), "");
 
-    // Compute G of size (NB * nsnap) x NQ
-    CAROM::Matrix G(NB * nsnap, NQ, false);
+    // Compute G of size (NB * nsnap) x NQ, but only store its transpose Gt.
+    CAROM::Matrix Gt(NQ, NB * nsnap, true);
 
     Vector s_i(nrows);
     Vector p_j(nrows);
@@ -1657,7 +1646,7 @@ void SetupEQP_S_snapshots(const IntegrationRule *ir0, const int rank,
                 ComputeElementRowOfG_Source(ir0, vdofs, s_i, p_j, fe, *eltrans, r);
 
                 for (int m=0; m<nqe; ++m)
-                    G(j + (i*NB), (e*nqe) + m) = r[m];
+                    Gt((e*nqe) + m, j + (i*NB)) = r[m];
             }
         }
     }
@@ -1689,22 +1678,15 @@ void SetupEQP_S_snapshots(const IntegrationRule *ir0, const int rank,
                     PG(j) = 0.0;
                     for (int k=0; k<NB; ++k)
                     {
-                        PG(j) += Mhat(j,k) * G(k + (i*NB), m);
+                        PG(j) += Mhat(j,k) * Gt(m, k + (i*NB));
                     }
                 }
 
                 for (int j=0; j<NB; ++j)
-                    G(j + (i*NB), m) = PG(j);
+                    Gt(m, j + (i*NB)) = PG(j);
             }
         }
     }
-
-    // TODO: just use Gt instead of G?
-    CAROM::Matrix Gt(NQ, NB * nsnap, true);
-
-    for (int i=0; i<NB * nsnap; ++i)
-        for (int j=0; j<NQ; ++j)
-            Gt(j,i) = G(i,j);
 
     Array<double> const& w_el = ir0->GetWeights();
     MFEM_VERIFY(w_el.Size() == nqe, "");
@@ -1721,7 +1703,7 @@ void SetupEQP_S_snapshots(const IntegrationRule *ir0, const int rank,
     nnls.set_qrresidual_mode(CAROM::NNLSSolver::QRresidualMode::hybrid);
     nnls.set_verbosity(2);
 
-    CAROM::Vector rhs_ub(G.numRows(), false);
+    CAROM::Vector rhs_ub(Gt.numColumns(), false);
     //G.mult(w, rhs_ub);  // rhs = Gw
     // rhs = Gw. Note that by using Gt and multTranspose, we do parallel communication.
     Gt.transposeMult(w, rhs_ub);
@@ -1736,8 +1718,8 @@ void SetupEQP_S_snapshots(const IntegrationRule *ir0, const int rank,
         rhs_ub(i) += delta;
     }
 
-    nnls.normalize_constraints(G, rhs_lb, rhs_ub);
-    nnls.solve_parallel_with_scalapack(G, Gt, rhs_lb, rhs_ub, sol);
+    nnls.normalize_constraints(Gt, rhs_lb, rhs_ub);
+    nnls.solve_parallel_with_scalapack(Gt, rhs_lb, rhs_ub, sol);
 
     int nnz = 0;
     for (int i=0; i<sol.dim(); ++i)
@@ -1755,7 +1737,7 @@ void SetupEQP_S_snapshots(const IntegrationRule *ir0, const int rank,
         cout << "Global number of nonzeros in NNLS solution: " << nnz << endl;
 
     // Check residual of NNLS solution
-    CAROM::Vector res(G.numRows(), false);
+    CAROM::Vector res(Gt.numColumns(), false);
     Gt.transposeMult(sol, res);
 
     const double normGsol = res.norm();
@@ -1764,8 +1746,8 @@ void SetupEQP_S_snapshots(const IntegrationRule *ir0, const int rank,
     res -= rhs_Gw;
     const double relNorm = res.norm() / std::max(normGsol, normRHS);
     cout << rank <<
-         ": relative residual norm for NNLS solution of Gs = Gw for source: " << relNorm
-         << endl;
+         ": relative residual norm for NNLS solution of Gs = Gw for source: "
+         << relNorm << endl;
 }
 
 void WriteMeshEQP(ParMesh *pmesh, const int myid, const int nqe,

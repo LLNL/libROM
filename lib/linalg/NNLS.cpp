@@ -89,12 +89,12 @@ void NNLSSolver::set_qrresidual_mode(const QRresidualMode qr_residual_mode)
     }
 }
 
-void NNLSSolver::normalize_constraints(Matrix& mat, Vector& rhs_lb,
+void NNLSSolver::normalize_constraints(Matrix& matTrans, Vector& rhs_lb,
                                        Vector& rhs_ub)
 {
     // We scale everything so that rescaled half gap is the same for all constraints
-    const unsigned int m = mat.numRows();
-    const unsigned int n = mat.numColumns();
+    const unsigned int n = matTrans.numRows();
+    const unsigned int m = matTrans.numColumns();
 
     CAROM_VERIFY(rhs_lb.dim() == m && rhs_ub.dim() == m);
 
@@ -116,7 +116,7 @@ void NNLSSolver::normalize_constraints(Matrix& mat, Vector& rhs_lb,
         const double s = halfgap_target(i) / rhs_halfgap_glob(i);
         for (int j=0; j<n; ++j)
         {
-            mat(i,j) *= s;
+            matTrans(j,i) *= s;
         }
 
         rhs_lb(i) = (rhs_avg(i) * s) - halfgap_target(i);
@@ -124,18 +124,13 @@ void NNLSSolver::normalize_constraints(Matrix& mat, Vector& rhs_lb,
     }
 }
 
-// Assuming mat_orig has distributed columns, stored locally as a non-distributed matrix.
-// Taking its transpose gives a row-distributed matrix.
-// TODO: decide on mat vs. matTrans.
-void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat_orig,
-        const Matrix& matTrans,
+void NNLSSolver::solve_parallel_with_scalapack(const Matrix& matTrans,
         const Vector& rhs_lb, const Vector& rhs_ub, Vector& soln)
 {
-    CAROM_VERIFY(!mat_orig.distributed());
     CAROM_VERIFY(matTrans.distributed());
 
-    int m = mat_orig.numRows();
-    int n = mat_orig.numColumns();
+    int n = matTrans.numRows();
+    int m = matTrans.numColumns();
     int n_tot = n;
     MPI_Allreduce(MPI_IN_PLACE, &n_tot, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
@@ -175,16 +170,12 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat_orig,
         n_dist_loc_max = ((m/nb + 1)/n_proc + 1)*nb;
     }
 
-    // TODO: remove dist.
-    const bool dist = false;
-    const bool distT = true;
-
     std::vector<double> mu_max_array(d_num_procs);
     std::vector<unsigned int> proc_index;
     std::vector<unsigned int> nz_ind(m);
-    Vector res_glob(m, dist);
-    Vector mu(n, distT);
-    Vector mu2(n, dist);
+    Vector res_glob(m, false);
+    Vector mu(n, true);
+    Vector mu2(n, false);
     int n_nz_ind = 0;
     int n_glob = 0;
     int m_update;
@@ -202,11 +193,11 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat_orig,
     Vector soln_nz_glob_up;
 
     // The following matrices are stored in column-major format as Vectors
-    Vector mat_0_data(m * n_dist_loc_max, dist);
-    Vector mat_qr_data(m * n_dist_loc_max, dist);
+    Vector mat_0_data(m * n_dist_loc_max, false);
+    Vector mat_qr_data(m * n_dist_loc_max, false);
 
     int mat_qr_desc[9];
-    Vector tau(n_dist_loc_max, dist);
+    Vector tau(n_dist_loc_max, false);
     Vector vec1;
     int vec1_desc[9];
 
@@ -245,7 +236,7 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& mat_orig,
     double mu_tol = 0.0;
 
     {
-        Vector tmp(n, distT);
+        Vector tmp(n, true);
         //mat.transposeMult(rhs_halfgap_glob, tmp);
         matTrans.mult(rhs_halfgap_glob, tmp);
         // TODO: maximum norm for Vector? Local?

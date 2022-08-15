@@ -61,9 +61,10 @@ public:
 
     /**
      * Solve the NNLS problem. Specifically, we find a vector soln, such that
-     * rhs_lb < mat*soln < rhs_ub is satisfied. mat should hold a column
+     * rhs_lb < mat*soln < rhs_ub is satisfied. The matrix should hold a column
      * distributed matrix (each process has all rows, but a subset of cols).
-     * rhs_ub and rhs_lb are the true bounds divided by the number of
+     * Since libROM only supports row distributed matrices, the transpose is
+     * input. rhs_ub and rhs_lb are the true bounds divided by the number of
      * processors, such that when the rhs_lb and rhs_ub are summed across all
      * processes we get the true bounds. soln is a vector containing the
      * solution. rhs_lb, rhs_ub and soln are all identical across all processes.
@@ -76,8 +77,7 @@ public:
      * expensive. To select whether to use the QR residual method or not, see
      * set_qrresidual_mode above.
      */
-    void solve_parallel_with_scalapack(const Matrix& mat_orig,
-                                       const Matrix& matTrans,
+    void solve_parallel_with_scalapack(const Matrix& matTrans,
                                        const Vector& rhs_lb,
                                        const Vector& rhs_ub, Vector& soln);
 
@@ -86,7 +86,7 @@ public:
      * (ie (UB - LB)/2 ) are equal. This seems to help the performance in most
      * cases.
      */
-    void normalize_constraints(Matrix& mat, Vector& rhs_lb, Vector& rhs_ub);
+    void normalize_constraints(Matrix& matTrans, Vector& rhs_lb, Vector& rhs_ub);
 
     inline int getNumProcs() const {
         return d_num_procs;
