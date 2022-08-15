@@ -45,7 +45,6 @@ namespace CAROM {
 
 DMD::DMD(int dim, Vector* state_offset)
 {
-    // Adaptive or Nonuniform DMD
     CAROM_VERIFY(dim > 0);
 
     // Get the rank of this process, and the number of processors.
@@ -65,7 +64,6 @@ DMD::DMD(int dim, Vector* state_offset)
 
 DMD::DMD(int dim, double dt, Vector* state_offset)
 {
-    // Vanilla DMD
     CAROM_VERIFY(dim > 0);
     CAROM_VERIFY(dt > 0.0);
 

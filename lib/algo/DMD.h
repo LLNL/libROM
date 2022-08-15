@@ -49,7 +49,7 @@ class DMD
 public:
 
     /**
-     * @brief Constructor.
+     * @brief Constructor. Basic DMD with uniform time step size.
      *
      * @param[in] dim          The full-order state dimension.
      * @param[in] dt           The dt between samples.
@@ -58,7 +58,7 @@ public:
     DMD(int dim, double dt, Vector* state_offset = NULL);
 
     /**
-     * @brief Constructor.
+     * @brief Constructor. DMD from saved models.
      *
      * @param[in] base_file_name The base part of the filename of the
      *                           database to load when restarting from a save.
@@ -162,7 +162,7 @@ protected:
                                       bool reorthogonalize_W);
 
     /**
-     * @brief Constructor.
+     * @brief Constructor. Variant of DMD with non-uniform time step size.
      *
      * @param[in] dim               The full-order state dimension.
      * @param[in] state_offset      The state offset.
@@ -170,7 +170,7 @@ protected:
     DMD(int dim, Vector* state_offset = NULL); 
 
     /**
-     * @brief Constructor.
+     * @brief Constructor. Specified from DMD components. 
      *
      * @param[in] eigs d_eigs
      * @param[in] phi_real d_phi_real
