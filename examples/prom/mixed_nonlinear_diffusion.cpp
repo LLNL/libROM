@@ -38,9 +38,9 @@
 //               Initial step test (reproductive)
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -offline -p 1
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -merge -ns 1 -p 1
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -nsdim 20 -p 1
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -nsdim 20 -p 1 -sopt
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -nsdim 20 -p 1 -ns 1 -eqp
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -p 1
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -p 1 -sopt
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -p 1 -ns 1 -eqp
 //
 //               Relative l2 error of ROM solution at final timestep using DEIM sampling: 0.0003712362376412496
 //               Elapsed time for time integration loop using DEIM sampling: 0.364855569
@@ -55,16 +55,16 @@
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -offline -id 2 -sh 0.35
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -merge -ns 3
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -offline -id 3 -sh 0.3
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -nldim 20 -nsdim 20 -sh 0.3 -id 3
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -nldim 20 -nsdim 20 -sh 0.3 -id 3 -sopt
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -nldim 20 -nsdim 20 -sh 0.3 -id 3 -ns 3 -eqp
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -nldim 20 -sh 0.3 -id 3
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -nldim 20 -sh 0.3 -id 3 -sopt
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -nldim 20 -sh 0.3 -id 3 -ns 3 -eqp -maxnnls 30
 //
 //               Relative l2 error of ROM solution at final timestep using DEIM sampling: 0.002681387312231006
 //               Elapsed time for time integration loop using DEIM sampling: 0.355846074
 //               Relative l2 error of ROM solution at final timestep using S_OPT sampling: 0.002701713369494112
 //               Elapsed time for time integration loop using S_OPT sampling: 0.348985935
-//               Relative l2 error of ROM solution at final timestep using EQP: 0.002635541915656281
-//               Elapsed time for time integration loop using EQP sampling: 0.942597018
+//               Relative l2 error of ROM solution at final timestep using EQP: 0.002659978000520714
+//               Elapsed time for time integration loop using EQP sampling: 0.176821221
 
 #include "mfem.hpp"
 
