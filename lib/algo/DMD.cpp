@@ -375,28 +375,28 @@ DMD::constructDMD(const Matrix* f_snapshots,
         }
         d_basis_init->orthogonalize();
 
-        Vector* l = NULL;
-        Vector* W0l = NULL;
+        Vector W_col(f_snapshots->numRows(), f_snapshots->distributed());
+        Vector l(W0->numColumns(), true);
+        Vector W0l(f_snapshots->numRows(), f_snapshots->distributed());
         // Find which columns of d_basis are linearly independent from W0 
         for (int j = 0; j < d_basis->numColumns(); j++)
         {
             // l = W0' * u
-            Vector W_col(f_snapshots->numRows(), f_snapshots->distributed());
             for (int i = 0; i < f_snapshots->numRows(); i++)
             {
                 W_col.item(i) = d_basis->item(i, j);
             }
-            l = d_basis_init->transposeMult(W_col);
+            d_basis_init->transposeMult(W_col, l);
 
             // W0l = W0 * l
-            W0l = d_basis_init->mult(l);
+            d_basis_init->mult(l, W0l);
 
             // Compute k = sqrt(u.u - 2.0*l.l + basisl.basisl) which is ||u -
             // basisl||_{2}.  This is the error in the projection of u into the
             // reduced order space and subsequent lifting back to the full
             // order space.
-            double k = W_col.inner_product(W_col) - 2.0*l->inner_product(l) +
-                      W0l->inner_product(W0l);
+            double k = W_col.inner_product(W_col) - 2.0*l.inner_product(l) +
+                      W0l.inner_product(W0l);
             if (k <= 0)
             {
                 k = 0;
@@ -412,10 +412,8 @@ DMD::constructDMD(const Matrix* f_snapshots,
             {
                 lin_independent_cols_W.push_back(j);
             }
-            delete d_basis_init;
-            delete l;
-            delete W0l;
         }
+        delete d_basis_init;
 
         // Add the linearly independent columns of W to W0. Call this new basis W_new.
         Matrix* d_basis_new = new Matrix(f_snapshots->numRows(), W0->numColumns() + lin_independent_cols_W.size(), true);
