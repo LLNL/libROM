@@ -30,7 +30,8 @@ class NNLSSolver {
 public:
     /**
     * Constructor*/
-    NNLSSolver(double const_tol=1.0e-14, int min_nnz=0, int verbosity=0,
+    NNLSSolver(double const_tol=1.0e-14, int min_nnz=0, int max_nnz=0,
+               int verbosity=0,
                double res_change_termination_tol=1.0e-4,
                double zero_tol=1.0e-14, int n_outer=100000,
                int n_inner=100000);
@@ -102,6 +103,7 @@ private:
     double const_tol_;
     int verbosity_;
     unsigned int min_nnz_; // minimum number of nonzero entries
+    unsigned int max_nnz_; // maximum number of nonzero entries
 
     /**
      * @brief Threshold on relative change in residual over 100 iterations for

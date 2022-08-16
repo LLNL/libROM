@@ -699,6 +699,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                         const CAROM::Matrix* BR_snapshots,
                         const CAROM::Matrix* BW_snapshots,
                         const bool precondition, const double nnls_tol,
+                        const int maxNNLSnnz,
                         CAROM::Vector & sol)
 {
     const int nqe = ir0->GetNPoints();
@@ -826,7 +827,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
             w((i*nqe) + j) = w_el[j];
     }
 
-    CAROM::NNLSSolver nnls(nnls_tol, 0, 2);
+    CAROM::NNLSSolver nnls(nnls_tol, 0, maxNNLSnnz, 2);
 
     CAROM::Vector rhs_ub(Gt.numColumns(), false);
     //G.mult(w, rhs_ub);  // rhs = Gw
@@ -885,6 +886,7 @@ void SetupEQP_S_snapshots(const IntegrationRule *ir0, const int rank,
                           const CAROM::Matrix* BW,
                           const CAROM::Matrix* BS_snapshots,
                           const bool precondition, const double nnls_tol,
+                          const int maxNNLSnnz,
                           CAROM::Vector & sol)
 {
     const int nqe = ir0->GetNPoints();
@@ -978,7 +980,7 @@ void SetupEQP_S_snapshots(const IntegrationRule *ir0, const int rank,
             w((i*nqe) + j) = w_el[j];
     }
 
-    CAROM::NNLSSolver nnls(nnls_tol, 0, 2);
+    CAROM::NNLSSolver nnls(nnls_tol, 0, maxNNLSnnz, 2);
 
     CAROM::Vector rhs_ub(Gt.numColumns(), false);
     //G.mult(w, rhs_ub);  // rhs = Gw

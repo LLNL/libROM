@@ -55,10 +55,12 @@ extern "C" {
                   double * Y, int * IY, int * JY, int * DESCY, int * INCY );
 }
 
-NNLSSolver::NNLSSolver(double const_tol, int min_nnz, int verbosity,
+NNLSSolver::NNLSSolver(double const_tol, int min_nnz, int max_nnz,
+                       int verbosity,
                        double res_change_termination_tol,
                        double zero_tol, int n_outer, int n_inner)
-    : const_tol_(const_tol), min_nnz_(min_nnz), verbosity_(verbosity),
+    : const_tol_(const_tol), min_nnz_(min_nnz), max_nnz_(max_nnz),
+      verbosity_(verbosity),
       res_change_termination_tol_(res_change_termination_tol),
       zero_tol_(zero_tol), n_outer_(n_outer), n_inner_(n_inner),
       n_proc_max_for_partial_matrix_(15),
@@ -133,6 +135,8 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& matTrans,
     MPI_Allreduce(MPI_IN_PLACE, &n_tot, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
     CAROM_VERIFY(rhs_lb.dim() == m && rhs_lb.dim() == m && soln.dim() == n);
+    if (max_nnz_ == 0)
+        max_nnz_ = matTrans.numDistributedRows();
 
     // prepare right hand side
     Vector rhs_avg(rhs_ub);
@@ -271,6 +275,15 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& matTrans,
         if (rmax <= const_tol_ && n_glob >= min_nnz_cap) {
             if (d_rank == 0 && verbosity_ > 1) {
                 printf("target tolerance met\n");
+                fflush(stdout);
+            }
+            exit_flag = 0;
+            break;
+        }
+
+        if (n_glob >= max_nnz_) {
+            if (d_rank == 0 && verbosity_ > 1) {
+                printf("target nnz met\n");
                 fflush(stdout);
             }
             exit_flag = 0;

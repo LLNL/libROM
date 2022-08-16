@@ -89,7 +89,7 @@ double ExactSolution(const Vector &x, const double t);
 double NonlinearCoefficient(const double p);
 double NonlinearCoefficientDerivative(const double p);
 
-#include "mixed_nonlinear_diffusion_eqp.h"
+#include "mixed_nonlinear_diffusion_eqp.hpp"
 
 typedef enum {ANALYTIC, INIT_STEP} PROBLEM;
 
@@ -600,6 +600,7 @@ int main(int argc, char *argv[])
 
     bool preconditionNNLS = false;
     double tolNNLS = 1.0e-14;
+    int maxNNLSnnz = 0;
 
     int precision = 16;
     cout.precision(precision);
@@ -658,6 +659,8 @@ int main(int argc, char *argv[])
                    "--no-preceqp", "Precondition the NNLS system for EQP.");
     args.AddOption(&tolNNLS, "-tolnnls", "--tol-nnls",
                    "Tolerance for NNLS solver.");
+    args.AddOption(&maxNNLSnnz, "-maxnnls", "--max-nnls",
+                   "Maximum nnz for NNLS");
 
     args.Parse();
     if (!args.Good())
@@ -980,8 +983,7 @@ int main(int argc, char *argv[])
             SetupEQP_snapshots(ir0, myid, &R_space, &W_space, nsets, BR_librom,
                                GetSnapshotMatrix(R_space.GetTrueVSize(), nsets, max_num_snapshots, "R"),
                                GetSnapshotMatrix(W_space.GetTrueVSize(), nsets, max_num_snapshots, "W"),
-                               preconditionNNLS, tolNNLS,
-                               *eqpSol);
+                               preconditionNNLS, tolNNLS, maxNNLSnnz, *eqpSol);
 
             if (writeSampleMesh) WriteMeshEQP(pmesh, myid, ir0->GetNPoints(), *eqpSol);
 
@@ -990,8 +992,7 @@ int main(int argc, char *argv[])
                 eqpSol_S = new CAROM::Vector(ir0->GetNPoints() * W_space.GetNE(), true);
                 SetupEQP_S_snapshots(ir0, myid, &W_space, BW_librom,
                                      GetSnapshotMatrix(W_space.GetTrueVSize(), nsets, max_num_snapshots, "S"),
-                                     preconditionNNLS, tolNNLS,
-                                     *eqpSol_S);
+                                     preconditionNNLS, tolNNLS, maxNNLSnnz, *eqpSol_S);
             }
         }
         else
