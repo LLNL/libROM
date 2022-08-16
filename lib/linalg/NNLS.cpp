@@ -55,22 +55,20 @@ extern "C" {
                   double * Y, int * IY, int * JY, int * DESCY, int * INCY );
 }
 
-NNLSSolver::NNLSSolver()
-    : n_outer_(100000),
-      n_inner_(100000),
-      zero_tol_(1e-14),
-      const_tol_(1e-14),
-      verbosity_(0),
-      min_nnz_(0),
-      res_change_termination_tol_(1e-4),
+NNLSSolver::NNLSSolver(double const_tol, int min_nnz, int verbosity,
+                       double res_change_termination_tol,
+                       double zero_tol, int n_outer, int n_inner)
+    : const_tol_(const_tol), min_nnz_(min_nnz), verbosity_(verbosity),
+      res_change_termination_tol_(res_change_termination_tol),
+      zero_tol_(zero_tol), n_outer_(n_outer), n_inner_(n_inner),
       n_proc_max_for_partial_matrix_(15),
       NNLS_qrres_on_(false),
       qr_residual_mode_(QRresidualMode::hybrid)
 {
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
-    std::cout << "NNLSSolver init on rank " << d_rank << " out of " << d_num_procs
-              << " processes" << std::endl;
+    std::cout << "NNLSSolver init on rank " << d_rank << " out of "
+              << d_num_procs << " processes" << std::endl;
 }
 
 NNLSSolver::~NNLSSolver()
@@ -262,12 +260,12 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& matTrans,
         for (int i=1; i<m; ++i)
             rmax = std::max(rmax, fabs(res_glob(i)) - rhs_halfgap_glob(i));
 
-        // Since it is not a distributed vector, this norm should be identical on all ranks.
+        // This norm of a non-distributed vector is identical on all ranks.
         l2_res_hist(oiter) = res_glob.norm();
 
         if (verbosity_ > 1 && d_rank == 0) {
-            printf("%d %d %d %d %d %.15e %.15e\n", oiter, n_total_inner_iter, m, n_tot,
-                   n_glob, rmax, l2_res_hist(oiter));
+            printf("%d %d %d %d %d %.15e %.15e\n", oiter, n_total_inner_iter,
+                   m, n_tot, n_glob, rmax, l2_res_hist(oiter));
             fflush(stdout);
         }
         if (rmax <= const_tol_ && n_glob >= min_nnz_cap) {

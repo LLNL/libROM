@@ -30,7 +30,10 @@ class NNLSSolver {
 public:
     /**
     * Constructor*/
-    NNLSSolver();
+    NNLSSolver(double const_tol=1.0e-14, int min_nnz=0, int verbosity=0,
+               double res_change_termination_tol=1.0e-4,
+               double zero_tol=1.0e-14, int n_outer=100000,
+               int n_inner=100000);
 
     /**
      * Destructor*/

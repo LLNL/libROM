@@ -1411,11 +1411,12 @@ const CAROM::Matrix* GetSnapshotMatrix(const int dimFOM, const int nparam,
 
 // Compute EQP solution from constraints on snapshots.
 void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
-                        ParFiniteElementSpace *fespace_R, ParFiniteElementSpace *fespace_W,
+                        ParFiniteElementSpace *fespace_R,
+                        ParFiniteElementSpace *fespace_W,
                         const int nsets, const CAROM::Matrix* BR,
                         const CAROM::Matrix* BR_snapshots,
                         const CAROM::Matrix* BW_snapshots,
-                        const bool precondition,
+                        const bool precondition, const double nnls_tol,
                         CAROM::Vector & sol)
 {
     const int nqe = ir0->GetNPoints();
@@ -1543,9 +1544,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
             w((i*nqe) + j) = w_el[j];
     }
 
-    CAROM::NNLSSolver nnls;
-    nnls.set_qrresidual_mode(CAROM::NNLSSolver::QRresidualMode::hybrid);
-    nnls.set_verbosity(2);
+    CAROM::NNLSSolver nnls(nnls_tol, 0, 2);
 
     CAROM::Vector rhs_ub(Gt.numColumns(), false);
     //G.mult(w, rhs_ub);  // rhs = Gw
@@ -1576,10 +1575,8 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
         }
     }
 
-    cout << rank << ": Number of nonzeros in NNLS solution: " << nnz << ", out of "
-         <<
-         sol.dim() << endl;
-
+    cout << rank << ": Number of nonzeros in NNLS solution: " << nnz
+         << ", out of " << sol.dim() << endl;
     cout << rank << ": Number of elements " << ne << ", sum w " << wsum << endl;
 
     MPI_Allreduce(MPI_IN_PLACE, &nnz, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
@@ -1605,7 +1602,7 @@ void SetupEQP_S_snapshots(const IntegrationRule *ir0, const int rank,
                           ParFiniteElementSpace *fespace_W,
                           const CAROM::Matrix* BW,
                           const CAROM::Matrix* BS_snapshots,
-                          const bool precondition,
+                          const bool precondition, const double nnls_tol,
                           CAROM::Vector & sol)
 {
     const int nqe = ir0->GetNPoints();
@@ -1699,9 +1696,7 @@ void SetupEQP_S_snapshots(const IntegrationRule *ir0, const int rank,
             w((i*nqe) + j) = w_el[j];
     }
 
-    CAROM::NNLSSolver nnls;
-    nnls.set_qrresidual_mode(CAROM::NNLSSolver::QRresidualMode::hybrid);
-    nnls.set_verbosity(2);
+    CAROM::NNLSSolver nnls(nnls_tol, 0, 2);
 
     CAROM::Vector rhs_ub(Gt.numColumns(), false);
     //G.mult(w, rhs_ub);  // rhs = Gw
@@ -1821,6 +1816,7 @@ int main(int argc, char *argv[])
     int nsdim = -1;
 
     bool preconditionNNLS = false;
+    double tolNNLS = 1.0e-14;
 
     int precision = 16;
     cout.precision(precision);
@@ -1877,6 +1873,8 @@ int main(int argc, char *argv[])
                    "--no-sample-mesh", "Write the sample mesh to file.");
     args.AddOption(&preconditionNNLS, "-preceqp", "--preceqp", "-no-preceqp",
                    "--no-preceqp", "Precondition the NNLS system for EQP.");
+    args.AddOption(&tolNNLS, "-tolnnls", "--tol-nnls",
+                   "Tolerance for NNLS solver.");
 
     args.Parse();
     if (!args.Good())
@@ -2215,7 +2213,7 @@ int main(int argc, char *argv[])
             SetupEQP_snapshots(ir0, myid, &R_space, &W_space, nsets, BR_librom,
                                GetSnapshotMatrix(R_space.GetTrueVSize(), nsets, max_num_snapshots, "R"),
                                GetSnapshotMatrix(W_space.GetTrueVSize(), nsets, max_num_snapshots, "W"),
-                               preconditionNNLS,
+                               preconditionNNLS, tolNNLS,
                                *eqpSol);
 
             if (writeSampleMesh) WriteMeshEQP(pmesh, myid, ir0->GetNPoints(), *eqpSol);
@@ -2225,7 +2223,7 @@ int main(int argc, char *argv[])
                 eqpSol_S = new CAROM::Vector(ir0->GetNPoints() * W_space.GetNE(), true);
                 SetupEQP_S_snapshots(ir0, myid, &W_space, BW_librom,
                                      GetSnapshotMatrix(W_space.GetTrueVSize(), nsets, max_num_snapshots, "S"),
-                                     preconditionNNLS,
+                                     preconditionNNLS, tolNNLS,
                                      *eqpSol_S);
             }
         }
