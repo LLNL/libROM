@@ -167,8 +167,6 @@ void GetEQPCoefficients_VectorFEMassIntegrator(ParFiniteElementSpace *fesR,
             trial_vshape.SetSize(dof, spaceDim);
             Vx.SetSize(spaceDim);
 
-            MFEM_VERIFY(vdofs.Size() == dof, "");  // TODO: remove this. It is obvious.
-
             eprev = e;
             elemCount++;
         }
@@ -269,8 +267,6 @@ void VectorFEMassIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
             spaceDim = eltrans->GetSpaceDim();
             trial_vshape.SetSize(dof, spaceDim);
             Vx.SetSize(spaceDim);
-
-            MFEM_VERIFY(vdofs.Size() == dof, "");  // TODO: remove this. It is obvious.
 
             eprev = e;
         }
@@ -413,8 +409,6 @@ void GetEQPCoefficients_LinearMassIntegrator(ParFiniteElementSpace *fes,
 
             dof = fe->GetDof();
 
-            MFEM_VERIFY(vdofs.Size() == dof, "");  // TODO: remove this. It is obvious.
-
             shape.SetSize(dof);
 
             eprev = e;
@@ -500,8 +494,6 @@ void LinearMassIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fes,
             }
 
             dof = fe->GetDof();
-
-            MFEM_VERIFY(vdofs.Size() == dof, "");  // TODO: remove this. It is obvious.
 
             shape.SetSize(dof);
 

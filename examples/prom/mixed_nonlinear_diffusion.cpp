@@ -102,7 +102,6 @@ static double diffusion_c, step_half;
 class NonlinearDiffusionOperator;
 class RomOperator;
 
-
 class NonlinearDiffusionGradientOperator : public Operator
 {
 private:
@@ -478,55 +477,6 @@ void MergeBasis(const int dimFOM, const int nparam, const int max_num_snapshots,
     BasisGeneratorFinalSummary(&generator, 0.9999, cutoff, "mergedSV_" + name);
 }
 
-// Compute v = -M(p)^{-1} B^T p
-void ComputeDualVector(ParFiniteElementSpace *fespace_R,
-                       ParFiniteElementSpace *fespace_W,
-                       const HypreParMatrix *B, Vector const& p, Vector & v)
-{
-    MFEM_VERIFY(v.Size() == fespace_R->GetTrueVSize(), "");
-
-    Vector rhs(fespace_R->GetTrueVSize());
-
-    // Set grid function for a(p)
-    ParGridFunction p_gf(fespace_W);
-
-    p_gf.SetFromTrueDofs(p);
-
-    GridFunctionCoefficient p_coeff(&p_gf);
-    TransformedCoefficient a_coeff(&p_coeff, NonlinearCoefficient);
-    TransformedCoefficient aprime_coeff(&p_coeff, NonlinearCoefficientDerivative);
-
-    ParBilinearForm *M = new ParBilinearForm(fespace_R);
-
-    M->AddDomainIntegrator(new VectorFEMassIntegrator(a_coeff));
-    M->Assemble();
-    M->Finalize();
-
-    HypreParMatrix *Mmat = M->ParallelAssemble();
-    CGSolver M_solver(fespace_R->GetComm());
-    HypreSmoother M_prec;  // Preconditioner for the R mass matrix M
-    M_prec.SetType(HypreSmoother::Jacobi);
-
-    const double linear_solver_rel_tol = 1.0e-14;
-
-    M_solver.iterative_mode = false;
-    M_solver.SetRelTol(linear_solver_rel_tol);
-    M_solver.SetAbsTol(0.0);
-    M_solver.SetMaxIter(1000);
-    M_solver.SetPrintLevel(-1);
-    M_solver.SetPreconditioner(M_prec);
-
-    M_solver.SetOperator(*Mmat);
-
-    B->MultTranspose(p, rhs);
-    rhs *= -1.0;
-    M_solver.Mult(rhs, v);
-
-    delete M;
-    delete Mmat;
-    // TODO: delete Mmat in other places?
-}
-
 const CAROM::Matrix* GetSnapshotMatrix(const int dimFOM, const int nparam,
                                        const int max_num_snapshots, std::string name)
 {
@@ -679,7 +629,7 @@ int main(int argc, char *argv[])
                        && !online) || (!offline && !merge && online);
     MFEM_VERIFY(check, "only one of offline, merge, or online must be true!");
 
-    const bool hyperreduce_source = (problem != INIT_STEP); // && !use_eqp;
+    const bool hyperreduce_source = (problem != INIT_STEP);
 
     StopWatch solveTimer, totalTimer;
     totalTimer.Start();

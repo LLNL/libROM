@@ -459,10 +459,6 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& matTrans,
             fflush(stdout);
         }
 
-        // TODO: is the ordering of Matrix::getData correct here?
-        // TODO: in parallel, is scatter_block the right function to convert row-major to column-major?
-        // Note its usage in Matrix.C.
-
         for (iiter = 0; iiter < n_inner_; ++iiter) {
             ++n_total_inner_iter;
 
