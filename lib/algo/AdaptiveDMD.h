@@ -46,20 +46,28 @@ public:
      *                            "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
      * @param[in] closest_rbf_val The RBF parameter determines the width of influence.
      *                            Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
+     * @param[in] state_offset    The state offset.
      */
     AdaptiveDMD(int dim, double desired_dt = -1.0, std::string rbf = "G",
                 std::string interp_method = "LS",
-                double closest_rbf_val = 0.9);
+                double closest_rbf_val = 0.9,
+                Vector* state_offset = NULL);
 
     /**
      * @param[in] energy_fraction The energy fraction to keep after doing SVD.
+     * @param[in] W0              The initial basis to prepend to W.
+     * @param[in] linearity_tol   The tolerance for determining whether a column
+                                  of W is linearly independent with W0.
      */
-    void train(double energy_fraction);
+    void train(double energy_fraction, const Matrix* W0 = NULL, double linearity_tol = 0.0);
 
     /**
      * @param[in] k The number of modes (eigenvalues) to keep after doing SVD.
+     * @param[in] W0              The initial basis to prepend to W.
+     * @param[in] linearity_tol   The tolerance for determining whether a column
+                                  of W is linearly independent with W0.
      */
-    void train(int k);
+    void train(int k, const Matrix* W0 = NULL, double linearity_tol = 0.0);
 
     /**
      * @brief Get the true dt between interpolated snapshots.
