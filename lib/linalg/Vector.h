@@ -750,6 +750,13 @@ public:
         return d_vec;
     }
 
+    /**
+     * @brief Compute the local minimum of this.
+     *
+     * @param[in] nmax If positive, use only the first nmax entries of this.
+     *
+     * @return The local minimum of this.
+     */
     double localMin(int nmax = 0);
 
 private:
