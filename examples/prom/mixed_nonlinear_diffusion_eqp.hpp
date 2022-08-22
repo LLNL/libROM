@@ -104,7 +104,8 @@ void GetEQPCoefficients_VectorFEMassIntegrator(ParFiniteElementSpace *fesR,
     }
 
     // Now set Vs.
-    // TODO: can these FOM data structures and operations be avoided?
+    // Note that, ideally, these FOM data structures and operations should be
+    // avoided, but this only done in setup.
     Vs.setSize(elemCount * dof, rdim);
     ParGridFunction v_gf(fesR);
     Vector vtrue(fesR->GetTrueVSize());
@@ -683,6 +684,104 @@ void ComputeElementRowOfG_Source(const IntegrationRule *ir,
     }
 }
 
+// Precondition Gt by (V^T M V)^{-1} (of size NB x NB).
+void PreconditionNNLS(ParFiniteElementSpace *fespace,
+                      BilinearFormIntegrator *massInteg,
+                      const CAROM::Matrix* B,
+                      const int snapshot,
+                      CAROM::Matrix & Gt)
+{
+    const int NB = B->numColumns();
+    const int NQ = Gt.numRows();
+    const int nsnap = Gt.numColumns() / NB;
+
+    ParBilinearForm M(fespace);
+
+    M.AddDomainIntegrator(massInteg);
+    M.Assemble();
+    M.Finalize();
+    HypreParMatrix *Mmat = M.ParallelAssemble();
+
+    CAROM::Matrix Mhat(NB, NB, false);
+    Compute_CtAB(Mmat, *B, *B, &Mhat);
+    Mhat.inverse();
+
+    CAROM::Vector PG(NB, false);
+
+    for (int i = (snapshot >= 0 ? snapshot : 0);
+            i < (snapshot >= 0 ? snapshot+1 : nsnap); ++i)
+    {
+        for (int m=0; m<NQ; ++m)
+        {
+            for (int j=0; j<NB; ++j)
+            {
+                PG(j) = 0.0;
+                for (int k=0; k<NB; ++k)
+                {
+                    PG(j) += Mhat(j,k) * Gt(m, k + (i*NB));
+                }
+            }
+
+            for (int j=0; j<NB; ++j)
+                Gt(m, j + (i*NB)) = PG(j);
+        }
+    }
+}
+
+void SolveNNLS(const int rank, const double nnls_tol, const int maxNNLSnnz,
+               CAROM::Vector const& w, CAROM::Matrix & Gt,
+               CAROM::Vector & sol)
+{
+    CAROM::NNLSSolver nnls(nnls_tol, 0, maxNNLSnnz, 2);
+
+    CAROM::Vector rhs_ub(Gt.numColumns(), false);
+    // G.mult(w, rhs_ub);  // rhs = Gw
+    // rhs = Gw. Note that by using Gt and multTranspose, we do parallel communication.
+    Gt.transposeMult(w, rhs_ub);
+
+    CAROM::Vector rhs_lb(rhs_ub);
+    CAROM::Vector rhs_Gw(rhs_ub);
+
+    const double delta = 1.0e-11;
+    for (int i=0; i<rhs_ub.dim(); ++i)
+    {
+        rhs_lb(i) -= delta;
+        rhs_ub(i) += delta;
+    }
+
+    nnls.normalize_constraints(Gt, rhs_lb, rhs_ub);
+    nnls.solve_parallel_with_scalapack(Gt, rhs_lb, rhs_ub, sol);
+
+    int nnz = 0;
+    for (int i=0; i<sol.dim(); ++i)
+    {
+        if (sol(i) != 0.0)
+        {
+            nnz++;
+        }
+    }
+
+    cout << rank << ": Number of nonzeros in NNLS solution: " << nnz
+         << ", out of " << sol.dim() << endl;
+
+    MPI_Allreduce(MPI_IN_PLACE, &nnz, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+
+    if (rank == 0)
+        cout << "Global number of nonzeros in NNLS solution: " << nnz << endl;
+
+    // Check residual of NNLS solution
+    CAROM::Vector res(Gt.numColumns(), false);
+    Gt.transposeMult(sol, res);
+
+    const double normGsol = res.norm();
+    const double normRHS = rhs_Gw.norm();
+
+    res -= rhs_Gw;
+    const double relNorm = res.norm() / std::max(normGsol, normRHS);
+    cout << rank << ": relative residual norm for NNLS solution of Gs = Gw: " <<
+         relNorm << endl;
+}
+
 // Compute EQP solution from constraints on snapshots.
 void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                         ParFiniteElementSpace *fespace_R,
@@ -710,7 +809,6 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
 
     // Compute G of size (NB * nsnap) x NQ, but only store its transpose Gt.
     CAROM::Matrix Gt(NQ, NB * nsnap, true);
-    CAROM::Vector PG(NB, false);
 
     // For 0 <= j < NB, 0 <= i < nsnap, 0 <= e < ne, 0 <= m < nqe,
     // G(j + (i*NB), (e*nqe) + m)
@@ -780,31 +878,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
         if (precondition)
         {
             // Preconditioning is done by (V^T M(p_i) V)^{-1} (of size NB x NB).
-            ParBilinearForm M(fespace_R);
-
-            M.AddDomainIntegrator(new VectorFEMassIntegrator(a_coeff));
-            M.Assemble();
-            M.Finalize();
-            HypreParMatrix *Mmat = M.ParallelAssemble();
-
-            CAROM::Matrix Mhat(NB, NB, false);
-            Compute_CtAB(Mmat, *BR, *BR, &Mhat);
-            Mhat.inverse();
-
-            for (int m=0; m<NQ; ++m)
-            {
-                for (int j=0; j<NB; ++j)
-                {
-                    PG(j) = 0.0;
-                    for (int k=0; k<NB; ++k)
-                    {
-                        PG(j) += Mhat(j,k) * Gt(m, k + (i*NB));
-                    }
-                }
-
-                for (int j=0; j<NB; ++j)
-                    Gt(m, j + (i*NB)) = PG(j);
-            }
+            PreconditionNNLS(fespace_R, new VectorFEMassIntegrator(a_coeff), BR, i, Gt);
         }
     } // Loop (i) over snapshots
 
@@ -819,57 +893,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
             w((i*nqe) + j) = w_el[j];
     }
 
-    CAROM::NNLSSolver nnls(nnls_tol, 0, maxNNLSnnz, 2);
-
-    CAROM::Vector rhs_ub(Gt.numColumns(), false);
-    //G.mult(w, rhs_ub);  // rhs = Gw
-    // rhs = Gw. Note that by using Gt and multTranspose, we do parallel communication.
-    Gt.transposeMult(w, rhs_ub);
-
-    CAROM::Vector rhs_lb(rhs_ub);
-    CAROM::Vector rhs_Gw(rhs_ub);
-
-    const double delta = 1.0e-11;
-    for (int i=0; i<rhs_ub.dim(); ++i)
-    {
-        rhs_lb(i) -= delta;
-        rhs_ub(i) += delta;
-    }
-
-    nnls.normalize_constraints(Gt, rhs_lb, rhs_ub);
-    nnls.solve_parallel_with_scalapack(Gt, rhs_lb, rhs_ub, sol);
-
-    int nnz = 0;
-    double wsum = 0.0;
-    for (int i=0; i<sol.dim(); ++i)
-    {
-        if (sol(i) != 0.0)
-        {
-            nnz++;
-            wsum += sol(i);
-        }
-    }
-
-    cout << rank << ": Number of nonzeros in NNLS solution: " << nnz
-         << ", out of " << sol.dim() << endl;
-    cout << rank << ": Number of elements " << ne << ", sum w " << wsum << endl;
-
-    MPI_Allreduce(MPI_IN_PLACE, &nnz, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-
-    if (rank == 0)
-        cout << "Global number of nonzeros in NNLS solution: " << nnz << endl;
-
-    // Check residual of NNLS solution
-    CAROM::Vector res(Gt.numColumns(), false);
-    Gt.transposeMult(sol, res);
-
-    const double normGsol = res.norm();
-    const double normRHS = rhs_Gw.norm();
-
-    res -= rhs_Gw;
-    const double relNorm = res.norm() / std::max(normGsol, normRHS);
-    cout << rank << ": relative residual norm for NNLS solution of Gs = Gw: " <<
-         relNorm << endl;
+    SolveNNLS(rank, nnls_tol, maxNNLSnnz, w, Gt, sol);
 }
 
 // Compute EQP solution from constraints on source snapshots.
@@ -924,41 +948,10 @@ void SetupEQP_S_snapshots(const IntegrationRule *ir0, const int rank,
         }
     }
 
-    // TODO: refactor, since there is a lot of repeated code.
-
     if (precondition)
     {
         // Preconditioning is done by (V^T M V)^{-1} (of size NB x NB).
-        ParBilinearForm M(fespace_W);
-
-        M.AddDomainIntegrator(new MassIntegrator());
-        M.Assemble();
-        M.Finalize();
-        HypreParMatrix *Mmat = M.ParallelAssemble();
-
-        CAROM::Matrix Mhat(NB, NB, false);
-        Compute_CtAB(Mmat, *BW, *BW, &Mhat);
-        Mhat.inverse();
-
-        CAROM::Vector PG(NB, false);
-
-        for (int i=0; i<nsnap; ++i)
-        {
-            for (int m=0; m<NQ; ++m)
-            {
-                for (int j=0; j<NB; ++j)
-                {
-                    PG(j) = 0.0;
-                    for (int k=0; k<NB; ++k)
-                    {
-                        PG(j) += Mhat(j,k) * Gt(m, k + (i*NB));
-                    }
-                }
-
-                for (int j=0; j<NB; ++j)
-                    Gt(m, j + (i*NB)) = PG(j);
-            }
-        }
+        PreconditionNNLS(fespace_W, new MassIntegrator(), BW, -1, Gt);
     }
 
     Array<double> const& w_el = ir0->GetWeights();
@@ -972,53 +965,7 @@ void SetupEQP_S_snapshots(const IntegrationRule *ir0, const int rank,
             w((i*nqe) + j) = w_el[j];
     }
 
-    CAROM::NNLSSolver nnls(nnls_tol, 0, maxNNLSnnz, 2);
-
-    CAROM::Vector rhs_ub(Gt.numColumns(), false);
-    //G.mult(w, rhs_ub);  // rhs = Gw
-    // rhs = Gw. Note that by using Gt and multTranspose, we do parallel communication.
-    Gt.transposeMult(w, rhs_ub);
-
-    CAROM::Vector rhs_Gw(rhs_ub);
-    CAROM::Vector rhs_lb(rhs_ub);
-
-    const double delta = 1.0e-11;
-    for (int i=0; i<rhs_ub.dim(); ++i)
-    {
-        rhs_lb(i) -= delta;
-        rhs_ub(i) += delta;
-    }
-
-    nnls.normalize_constraints(Gt, rhs_lb, rhs_ub);
-    nnls.solve_parallel_with_scalapack(Gt, rhs_lb, rhs_ub, sol);
-
-    int nnz = 0;
-    for (int i=0; i<sol.dim(); ++i)
-    {
-        if (sol(i) != 0.0)
-            nnz++;
-    }
-
-    cout << rank << ": Number of nonzeros in NNLS solution for source: " << nnz
-         << ", out of " << sol.dim() << endl;
-
-    MPI_Allreduce(MPI_IN_PLACE, &nnz, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-
-    if (rank == 0)
-        cout << "Global number of nonzeros in NNLS solution: " << nnz << endl;
-
-    // Check residual of NNLS solution
-    CAROM::Vector res(Gt.numColumns(), false);
-    Gt.transposeMult(sol, res);
-
-    const double normGsol = res.norm();
-    const double normRHS = rhs_Gw.norm();
-
-    res -= rhs_Gw;
-    const double relNorm = res.norm() / std::max(normGsol, normRHS);
-    cout << rank <<
-         ": relative residual norm for NNLS solution of Gs = Gw for source: "
-         << relNorm << endl;
+    SolveNNLS(rank, nnls_tol, maxNNLSnnz, w, Gt, sol);
 }
 
 void WriteMeshEQP(ParMesh *pmesh, const int myid, const int nqe,
