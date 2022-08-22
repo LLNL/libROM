@@ -241,7 +241,6 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& matTrans,
         Vector tmp(n, true);
         //mat.transposeMult(rhs_halfgap_glob, tmp);
         matTrans.mult(rhs_halfgap_glob, tmp);
-        // TODO: maximum norm for Vector? Local?
         double maxv = tmp(0);
         for (int i=1; i<n; ++i)
         {
@@ -259,7 +258,6 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& matTrans,
     for (unsigned int oiter = 0; oiter < n_outer_; ++oiter) {
         stalledFlag = 0;
 
-        // TODO: maximum norm for Vector? Local?
         rmax = fabs(res_glob(0)) - rhs_halfgap_glob(0);
         for (int i=1; i<m; ++i)
             rmax = std::max(rmax, fabs(res_glob(i)) - rhs_halfgap_glob(i));
@@ -650,10 +648,11 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& matTrans,
                         smin = soln_nz_glob(i);
                 }
 
-                //while (arma::min(soln_nz_glob.rows(0,n_glob-1)) > zero_tol_) {
                 while (smin > zero_tol_) {
-                    //this means there was a rounding error, as we should have a zero element by definition
-                    //recalcualte alpha based on the index that corresponds to the element that should be zero
+                    // This means there was a rounding error, as we should have
+                    // a zero element by definition. Recalcualte alpha based on
+                    // the index that corresponds to the element that should be
+                    // zero.
 
                     //int index_min = arma::index_min(soln_nz_glob.rows(0,n_glob-1));
                     int index_min = 0;
@@ -667,10 +666,13 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& matTrans,
                         }
                     }
 
-                    // TODO: there are many max/min computations. Refactor by implementing functions for this in Vector. Also for min/max index.
+                    // TODO: there are many max/min computations. Refactor by
+                    // implementing functions for this in Vector. Also for
+                    // min/max index.
 
-                    alpha = soln_nz_glob(index_min)/(soln_nz_glob(index_min) - soln_nz_glob_up(
-                                                         index_min));
+                    alpha = soln_nz_glob(index_min)/(soln_nz_glob(index_min)
+                                                     - soln_nz_glob_up(index_min));
+
                     // reupdate solution
                     //soln_nz_glob.rows(0,n_glob-1) += alpha*(soln_nz_glob_up.rows(0,n_glob-1) - soln_nz_glob.rows(0,n_glob-1));
                     for (int i = 1; i < n_glob; ++i)

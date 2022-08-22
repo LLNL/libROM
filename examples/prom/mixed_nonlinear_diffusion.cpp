@@ -1982,11 +1982,11 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
         // Compute reduced matrix for nonlinear term V_R^T M(a(V_W yW)) V_R, which
         // is normally FOM (as in Mult_FullOrder), but has reduced cost using EQP.
 
-        // TODO: this approach for setting the coefficient a(p) has FOM cost and
-        // needs to be reduced to just the quadrature points of interest.
         // Set grid function for a(p)
 
         // Lift pfom_W = V_W yW
+
+        // FOM version, replaced by using eqp_lifting.
         //V_W.mult(yW_librom, *pfom_W_librom);
         //p_gf.SetFromTrueDofs(*pfom_W);
 
