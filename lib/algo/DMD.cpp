@@ -490,7 +490,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
 }
 
 void
-DMD::projectInitialCondition(const Vector* init)
+DMD::projectInitialCondition(const Vector* init, double t_offset)
 {
     Matrix* d_phi_real_squared = d_phi_real->transposeMult(d_phi_real);
     Matrix* d_phi_real_squared_2 = d_phi_imaginary->transposeMult(d_phi_imaginary);
@@ -580,6 +580,10 @@ DMD::projectInitialCondition(const Vector* init)
     delete [] ipiv;
     delete [] work;
 
+    if (t_offset >= 0.0)
+    {
+        d_t_offset = t_offset;
+    }
     d_init_projected = true;
 }
 

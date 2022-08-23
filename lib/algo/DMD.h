@@ -98,9 +98,10 @@ public:
      *        Calculate pinv(phi) x init, or more precisely,
      *        (phi* x phi)^{-1} x phi* x init, where phi* is the conjugate transpose.
      *
-     * @param[in] init The initial condition.
+     * @param[in] init     The initial condition.
+     * @param[in] t_offset The initial time offset.
      */
-    void projectInitialCondition(const Vector* init);
+    void projectInitialCondition(const Vector* init, double t_offset = -1.0);
 
     /**
      * @brief Predict state given a time. Uses the projected initial condition of the
