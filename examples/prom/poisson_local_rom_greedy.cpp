@@ -520,7 +520,7 @@ int main(int argc, char *argv[])
         DataCollection *dc = NULL;
         if (visit)
         {
-            if(offline) dc = new VisItDataCollection("Example1", &pmesh);
+            if(offline || fom) dc = new VisItDataCollection("Example1", &pmesh);
             else if(online) dc = new VisItDataCollection("Example1_rom", &pmesh);
             dc->SetPrecision(precision);
             dc->RegisterField("solution", &x);

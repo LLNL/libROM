@@ -17,17 +17,17 @@
 //               operator, solves the reduced order system, and lifts the
 //               solution to the full order space.
 //
-// Offline phase: ./linear_elasticity_global_rom -offline -id 0 -f 0.01
-//                ./linear_elasticity_global_rom -offline -id 1 -f 0.015
-//                ./linear_elasticity_global_rom -offline -id 2 -f 0.02
+// Offline phase: ./linear_elasticity_global_rom -offline -id 0 -nu 0.2
+//                ./linear_elasticity_global_rom -offline -id 1 -nu 0.4
 //
 //
-// Merge phase:   ./linear_elasticity_global_rom -merge -ns 3
+// Merge phase:   ./linear_elasticity_global_rom -merge -ns 2
 //
-// Online phase:  ./linear_elasticity_global_rom -online -id 3 -f 0.012
-// 
 // NB: to evaluate relative error, call this before the online phase:
-//                ./linear_elasticity_global_rom -offline -id 4 -f 0.012
+//                ./linear_elasticity_global_rom -offline -id 2 -nu 0.3
+//
+// Online phase:  ./linear_elasticity_global_rom -online -id 3 -nu 0.3
+// 
 
 #include "mfem.hpp"
 #include <fstream>
