@@ -1,3 +1,13 @@
+/******************************************************************************
+ *
+ * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * and other libROM project developers. See the top-level COPYRIGHT
+ * file for details.
+ *
+ * SPDX-License-Identifier: (Apache-2.0 OR MIT)
+ *
+ *****************************************************************************/
+
 //               libROM MFEM Example: parametric ROM for Poisson problem (adapted from ex1p.cpp)
 //
 // Compile with: ./scripts/compile.sh -m
@@ -520,7 +530,7 @@ int main(int argc, char *argv[])
         DataCollection *dc = NULL;
         if (visit)
         {
-            if(offline) dc = new VisItDataCollection("Example1", &pmesh);
+            if(offline || fom) dc = new VisItDataCollection("Example1", &pmesh);
             else if(online) dc = new VisItDataCollection("Example1_rom", &pmesh);
             dc->SetPrecision(precision);
             dc->RegisterField("solution", &x);
