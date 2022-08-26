@@ -752,23 +752,23 @@ double simulation()
         {
             for (int i = 1; i < ts.size(); i++)
             {
-                result_u = dmd_u->predict(ts[i]);
-                if (myid == 0)
-                {
-                    std::cout << "Predicting temperature using DMD at: " << ts[i] << std::endl;
-                }
-
-                Vector dmd_solution_u(result_u->getData(), result_u->dim());
-                u_gf.SetFromTrueDofs(dmd_solution_u);
-
                 if (i == ts.size() - 1 || (i % vis_steps) == 0)
                 {
+                    result_u = dmd_u->predict(ts[i]);
+                    if (myid == 0)
+                    {
+                        std::cout << "Predicting temperature using DMD at: " << ts[i] << std::endl;
+                    }
+
+                    Vector dmd_solution_u(result_u->getData(), result_u->dim());
+                    u_gf.SetFromTrueDofs(dmd_solution_u);
+
                     dmd_visit_dc.SetCycle(i);
                     dmd_visit_dc.SetTime(ts[i]);
                     dmd_visit_dc.Save();
-                }
 
-                delete result_u;
+                    delete result_u;
+                }
             }
         }
 

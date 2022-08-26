@@ -745,17 +745,17 @@ int main(int argc, char *argv[])
     {
         for (int i = 1; i < ts.size(); i++)
         {
-            result_u = dmd_U.predict(ts[i]);
-            Vector dmd_solution_u(result_u->getData(), result_u->dim());
-            u->SetFromTrueDofs(dmd_solution_u);
-
             if (i == ts.size() - 1 || (i % vis_steps) == 0)
             {
+                result_u = dmd_U.predict(ts[i]);
+                Vector dmd_solution_u(result_u->getData(), result_u->dim());
+                u->SetFromTrueDofs(dmd_solution_u);
+
                 dmd_dc->SetCycle(i);
                 dmd_dc->SetTime(ts[i]);
                 dmd_dc->Save();
+                delete result_u;
             }
-            delete result_u;
         }
     }
 
