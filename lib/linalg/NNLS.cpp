@@ -873,7 +873,7 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& matTrans,
         }
     }
 
-    Vector soln_nz(n_nz_ind, false);
+    Vector soln_nz(std::max(n_nz_ind, 1), false);
     MPI_Scatterv(soln_nz_glob_psort.getData(), nnz_array.data(), nnz_cnt.data(),
                  MPI_DOUBLE, soln_nz.getData(), n_nz_ind, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 

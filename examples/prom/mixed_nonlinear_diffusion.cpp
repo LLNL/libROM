@@ -175,7 +175,6 @@ void NonlinearDiffusionGradientOperator::Mult(const Vector &x, Vector &y) const
 
 class NonlinearDiffusionOperator : public TimeDependentOperator
 {
-
 protected:
     friend class RomOperator;
 
@@ -206,7 +205,6 @@ protected:
     HypreSmoother C_prec; // Preconditioner for the W mass matrix C
 
     GMRESSolver *J_gmres;
-
     NewtonSolver newton_solver;
 
     NonlinearDiffusionGradientOperator *gradient;
@@ -261,8 +259,7 @@ public:
     virtual ~NonlinearDiffusionOperator();
 
     ParFiniteElementSpace &fespace_R;  // RT finite element space
-    ParFiniteElementSpace
-    &fespace_W;  // L2 discontinuous scalar finite element space
+    ParFiniteElementSpace &fespace_W;  // L2 scalar finite element space
 
     bool newtonFailure;
 };
@@ -297,7 +294,7 @@ private:
     bool hyperreduce, hyperreduce_source;
     bool sourceFOM;
 
-    mutable ParGridFunction p_gf;
+    mutable ParGridFunction p_gf, rhs_gf;
     GridFunctionCoefficient p_coeff;
     mutable TransformedCoefficient a_coeff;
     TransformedCoefficient aprime_coeff;
@@ -1259,8 +1256,8 @@ int main(int argc, char *argv[])
 
         if (myid == 0)
         {
-            cout << "step " << ti << ", t = " << t << " == " << oper.GetTime() << ", dt " <<
-                 dt << endl;
+            cout << "step " << ti << ", t = " << t << " == " << oper.GetTime()
+                 << ", dt " << dt << endl;
 
             if (online)
                 cout << "rom time " << romop->GetTime() << endl;
@@ -1750,15 +1747,15 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_,
       nsamp_R(smm_ ? smm_->GetNumVarSamples("V") : 0),
       nsamp_S(hyperreduce_source_ && smm_ ? smm_->GetNumVarSamples("S") : 0),
       V_R(*V_R_), U_R(U_R_), V_W(*V_W_), VTU_R(rrdim_, nldim_, false),
-      y0(height), dydt_prev(height), zY(nldim, false), zN(std::max(nsamp_R, 1),
-              false),
+      y0(height), dydt_prev(height), zY(nldim, false),
+      zN(std::max(nsamp_R, 1), false),
       Vsinv(Bsinv), J(height),
       zS(std::max(nsamp_S, 1), false), zT(std::max(nsamp_S, 1), false), Ssinv(Ssinv_),
       VTCS_W(rwdim, std::max(nsamp_S, 1), false), S(S_),
       VtzR(rrdim_, false), hyperreduce_source(hyperreduce_source_),
       oversampling(oversampling_), eqp(use_eqp),
-      ir_eqp(ir_eqp_), p_gf(&(fom_->fespace_W)), p_coeff(&p_gf),
-      a_coeff(&p_coeff, NonlinearCoefficient),
+      ir_eqp(ir_eqp_), p_gf(&(fom_->fespace_W)), rhs_gf(&(fom_->fespace_W)),
+      p_coeff(&p_gf), a_coeff(&p_coeff, NonlinearCoefficient),
       aprime_coeff(&p_coeff, NonlinearCoefficientDerivative),
       a_plus_aprime_coeff(a_coeff, aprime_coeff), rank(myid)
 {
@@ -1831,6 +1828,7 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_,
     }
 
     hyperreduce = true;
+    sourceFOM = false;
 
     if (!hyperreduce || sourceFOM)
     {
@@ -1985,7 +1983,6 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
         // Set grid function for a(p)
 
         // Lift pfom_W = V_W yW
-
         // FOM version, replaced by using eqp_lifting.
         //V_W.mult(yW_librom, *pfom_W_librom);
         //p_gf.SetFromTrueDofs(*pfom_W);
@@ -2061,7 +2058,8 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
             f.SetTime(GetTime());
 
             if (fastIntegration)
-                LinearMassIntegrator_ComputeReducedEQP_Fast(&(fom->fespace_W), eqp_rw_S,
+                LinearMassIntegrator_ComputeReducedEQP_Fast(&(fom->fespace_W),
+                        rhs_gf, eqp_rw_S,
                         eqp_qp_S, ir_eqp, &f, V_W,
                         eqp_coef_S, resW_librom);
             else

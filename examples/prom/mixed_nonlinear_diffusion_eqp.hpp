@@ -528,6 +528,7 @@ void LinearMassIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fes,
 }
 
 void LinearMassIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes,
+        ParGridFunction & f_gf,
         std::vector<double> const& rw, std::vector<int> const& qp,
         const IntegrationRule *ir, Coefficient *Q,
         CAROM::Matrix const& V, Vector const& coef,
@@ -536,8 +537,6 @@ void LinearMassIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes,
     const int rdim = V.numColumns();
     MFEM_VERIFY(rw.size() == qp.size(), "");
     MFEM_VERIFY(V.numRows() == fes->GetTrueVSize(), "");
-
-    ParGridFunction f_gf(fes);
 
     const int nqe = ir->GetWeights().Size();
 
