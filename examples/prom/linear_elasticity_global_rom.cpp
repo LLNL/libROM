@@ -37,7 +37,7 @@
 //                ./linear_elasticity_global_rom -offline -id 2 -nu 0.3
 //
 // Online phase:  ./linear_elasticity_global_rom -online -id 3 -nu 0.3
-// 
+//
 
 #include "mfem.hpp"
 #include <fstream>
