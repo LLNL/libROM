@@ -660,37 +660,37 @@ int main(int argc, char *argv[])
     delete result_x;
     delete result_v;
 
-    for (int i = 1; i < ts.size(); i++)
+    if (visit)
     {
-        result_x = dmd_x[curr_window]->predict(ts[i]);
-        result_v = dmd_v[curr_window]->predict(ts[i]);
-        Vector dmd_solution_x(result_x->getData(), result_x->dim());
-        Vector dmd_solution_v(result_v->getData(), result_v->dim());
-        x_gf.SetFromTrueDofs(dmd_solution_x);
-        v_gf.SetFromTrueDofs(dmd_solution_v);
-
-        if (i == ts.size() - 1 || (i % vis_steps) == 0)
+        for (int i = 1; i < ts.size(); i++)
         {
-            GridFunction *nodes = &x_gf;
-            int owns_nodes = 0;
-            pmesh->SwapNodes(nodes, owns_nodes);
-            if (visit)
+            result_x = dmd_x[curr_window]->predict(ts[i]);
+            result_v = dmd_v[curr_window]->predict(ts[i]);
+            Vector dmd_solution_x(result_x->getData(), result_x->dim());
+            Vector dmd_solution_v(result_v->getData(), result_v->dim());
+            x_gf.SetFromTrueDofs(dmd_solution_x);
+            v_gf.SetFromTrueDofs(dmd_solution_v);
+
+            if (i == ts.size() - 1 || (i % vis_steps) == 0)
             {
+                GridFunction *nodes = &x_gf;
+                int owns_nodes = 0;
+                pmesh->SwapNodes(nodes, owns_nodes);
                 dmd_dc->SetCycle(i);
                 dmd_dc->SetTime(ts[i]);
                 dmd_dc->Save();
+                pmesh->SwapNodes(nodes, owns_nodes);
             }
-            pmesh->SwapNodes(nodes, owns_nodes);
-        }
 
-        delete result_x;
-        delete result_v;
+            delete result_x;
+            delete result_v;
 
-        if (i % windowNumSamples == 0 && i < ts.size()-1)
-        {
-            delete dmd_x[curr_window];
-            delete dmd_v[curr_window];
-            curr_window++;
+            if (i % windowNumSamples == 0 && i < ts.size()-1)
+            {
+                delete dmd_x[curr_window];
+                delete dmd_v[curr_window];
+                curr_window++;
+            }
         }
     }
 
