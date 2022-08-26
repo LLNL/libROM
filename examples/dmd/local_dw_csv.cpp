@@ -33,16 +33,16 @@
 // User specify file locations and names by -list LIST_DIR -train-set TRAIN_LIST -test-set TEST_LIST -data DATA_DIR -var VAR_NAME -o OUT_DIR
 //
 // File structure:
-// 1. LIST_DIR/TRAIN_LIST.csv             -- each row specifies one training DATASET
-// 2. LIST_DIR/TEST_LIST.csv              -- each row specifies one testing DATASET
-// 3. LIST_DIR/DATASET.csv                -- each row specifies one STATE in DATASET
-// 4. DATA_DIR/dim.csv                    -- specifies the dimension of VAR_NAME
-// 5. DATA_DIR/DATASET/tval.csv           -- specifies the time instances
-// 6. DATA_DIR/DATASET/STATE/VAR_NAME.csv -- each row specifies one value of VAR_NAME of STATE
-// 7. DATA_DIR/DATASET/TEMPORAL_IDX.csv   -- (optional) specifies the first and last temporal index in DATASET
-// 8. DATA_DIR/SPATIAL_IDX.csv            -- (optional) each row specifies one spatial index of VAR_NAME
-// 9. run/OUT_DIR/INDICATOR_IDX.csv       -- (optional) each row specifies one indicator index
-// 9. run/OUT_DIR/INDICATOR_VAL.csv       -- (optional) each row specifies one indicator endpoint value
+//  1. LIST_DIR/TRAIN_LIST.csv             -- each row specifies one training DATASET
+//  2. LIST_DIR/TEST_LIST.csv              -- each row specifies one testing DATASET
+//  3. LIST_DIR/DATASET.csv                -- each row specifies one STATE in DATASET
+//  4. DATA_DIR/dim.csv                    -- specifies the dimension of VAR_NAME
+//  5. DATA_DIR/DATASET/tval.csv           -- specifies the time instances
+//  6. DATA_DIR/DATASET/STATE/VAR_NAME.csv -- each row specifies one value of VAR_NAME of STATE
+//  7. DATA_DIR/SPATIAL_IDX.csv            -- (optional) each row specifies one spatial index of VAR_NAME
+//  8. DATA_DIR/DATASET/TEMPORAL_IDX.csv   -- (optional) specifies the first and last temporal index in DATASET
+//  9. run/OUT_DIR/INDICATOR_IDX.csv       -- (optional) each row specifies one indicator index
+// 10. run/OUT_DIR/INDICATOR_VAL.csv       -- (optional) each row specifies one indicator endpoint value
 
 #include "mfem.hpp"
 #include "algo/DMD.h"
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
     double t_final = -1.0;
     double dtc = 0.0;
     double ddt = 0.0;
-    int numWindows = 0;
+    int numWindows = 1;
     int windowNumSamples = infty;
     int windowOverlapSamples = 0;
     const char *rbf = "G";
@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
     }
 
     CAROM_VERIFY((dtc > 0.0 || ddt > 0.0) && !(dtc > 0.0 && ddt > 0.0));
-    CAROM_VERIFY(numWindows == 0 || windowNumSamples == infty);
+    CAROM_VERIFY(numWindows == 1 || windowNumSamples == infty);
     CAROM_VERIFY(windowOverlapSamples < windowNumSamples);
 
     if (t_final > 0.0)
@@ -226,16 +226,22 @@ int main(int argc, char *argv[])
                      << " as indicator." << endl;
             }
         }
+        else
+        {
+            indicator_idx.clear();
+        }
     }
 
     vector<double> indicator_val;
-    if (!train || numWindows > 0)
+    if (!train || numWindows > 1)
     {
         csv_db.getDoubleVector(string(outputPath) + "/" + 
                                string(indicator_val_list) + ".csv", indicator_val, false);
         if (indicator_val.size() > 0)
         {
-            if (numWindows > 0)
+            CAROM_VERIFY(windowNumSamples == infty);
+
+            if (numWindows > 1)
             {
                 CAROM_VERIFY(numWindows == indicator_val.size() - 1);
             }
@@ -244,14 +250,11 @@ int main(int argc, char *argv[])
                 numWindows = indicator_val.size() - 1;
             }
 
-            if (indicator_idx.size() > 1)
-            {
-                CAROM_VERIFY(indicator_idx.size() == indicator_val.size());
-            }
-            else if (indicator_idx.size() == 1)
+            if (indicator_idx.size() == 1)
             {
                 indicator_idx.resize(numWindows, indicator_idx[0]);
             }
+            CAROM_VERIFY(indicator_idx.size() == indicator_val.size());
 
             if (myid == 0)
             {
@@ -292,11 +295,10 @@ int main(int argc, char *argv[])
 
         if (windowNumSamples < infty)
         {
-            numWindows = round((double) (num_train_snap-1) / (double) windowNumSamples);
+            numWindows = ceil((((double) num_train_snap) - 1.5) / (double) windowNumSamples);
         }
     }
 
-    CAROM_VERIFY(numWindows > 0);
     if (myid == 0)
     {
         if (numWindows > 1)
@@ -311,21 +313,21 @@ int main(int argc, char *argv[])
 
     vector<CAROM::DMD*> dmd;
     dmd.assign(numWindows, nullptr);
-    for (int window = 0; window < numWindows; ++window)
+    if (train)
     {
-        if (train)
+        if (ddt > 0.0)
         {
-            if (ddt > 0.0)
-            {
-                dmd[window] = new CAROM::AdaptiveDMD(dim, ddt, string(rbf),
-                                                     string(interp_method), admd_closest_rbf_val);
-            }
-            else
-            {
-                dmd[window] = new CAROM::DMD(dim, dtc);
-            }
+            dmd[0] = new CAROM::AdaptiveDMD(dim, ddt, string(rbf),
+                                                 string(interp_method), admd_closest_rbf_val);
         }
         else
+        {
+            dmd[0] = new CAROM::DMD(dim, dtc);
+        }
+    }
+    else
+    {
+        for (int window = 0; window < numWindows; ++window)
         {
             if (myid == 0)
             {
@@ -382,7 +384,10 @@ int main(int argc, char *argv[])
 
         int curr_window = 0;
         int overlap_count = 0;
+        int min_idx_snap = -1;
+        int max_idx_snap = -1; 
         double curr_indicator_val = -1.0;
+
         for (int idx_snap = snap_bound[0]; idx_snap <= snap_bound[1]; ++idx_snap)
         {
             string snap = snap_list[idx_snap]; // STATE
@@ -391,54 +396,123 @@ int main(int argc, char *argv[])
             string data_filename = string(data_dir) + "/" + par_dir + "/" + snap + "/" +
                                    variable + ".csv"; // path to VAR_NAME.csv
             csv_db.getDoubleArray(data_filename, sample, nelements, idx_state);
-            dmd[curr_window]->takeSample(sample, tval);
 
-            if (windowNumSamples < infty && idx_snap == snap_bound[0])
+            if (myid == 0)
             {
-                curr_indicator_val = (indicator_idx.size() == 0) ? tval : sample[indicator_idx[0]];
-                indicator_val.push_back(curr_indicator_val);
+                cout << "State #" << idx_snap << " - " << data_filename 
+                     << " is read." << endl;
             }
 
+            if (min_idx_snap == -1) 
+            {
+                curr_indicator_val = (indicator_idx.size() == 0) ? tval : sample[indicator_idx[0]];
+                if (indicator_val.size() > 0)
+                {
+                    if (curr_indicator_val >= indicator_val[0])
+                    {
+                        min_idx_snap = idx_snap;
+                        if (myid == 0)
+                        {
+                            cout << "State #" << idx_snap << " - " << data_filename 
+                                 << " is the beginning of window 0." << endl;
+                        }
+                    }
+                    else
+                    {
+                        if (myid == 0)
+                        {
+                            cout << "State #" << idx_snap << " - " << data_filename 
+                                 << " is omitted." << endl;
+                        }
+                        continue;
+                    }
+                }
+                else
+                {
+                    min_idx_snap = snap_bound[0];
+                    max_idx_snap = snap_bound[1];
+                    indicator_val.push_back(curr_indicator_val);
+                }
+            }
+
+            dmd[curr_window]->takeSample(sample, tval);
             if (overlap_count > 0)
             {
                 dmd[curr_window-1]->takeSample(sample, tval);
                 overlap_count -= 1;
             }
+
             if (curr_window+1 < numWindows && idx_snap+1 <= snap_bound[1])
             {
                 curr_indicator_val = (indicator_idx.size() == 0) ? tval : sample[indicator_idx[curr_window+1]];
-                cout << "State " << idx_snap << ": " << curr_indicator_val << endl;
                 bool new_window = false;
                 if (windowNumSamples < infty)
                 {
-                    new_window = (idx_snap >= snap_bound[0] + (curr_window+1)*windowNumSamples);
+                    new_window = (idx_snap >= min_idx_snap + (curr_window+1)*windowNumSamples);
+                    if (new_window)
+                    {
+                        indicator_val.push_back(curr_indicator_val);
+                    }
                 }
                 else
                 {
-                    cout << "Window " << curr_window << ": " << indicator_val[curr_window+1] << endl;
                     new_window = (curr_indicator_val >= indicator_val[curr_window+1]);
                 }
                 if (new_window)
                 {
-                    overlap_count = windowOverlapSamples;
-                    curr_window += 1;
-                    if (windowNumSamples < infty)
+                    if (myid == 0)
                     {
-                        indicator_val.push_back(curr_indicator_val);
+                        cout << "State #" << idx_snap << " - " << data_filename 
+                             << " is the end of window " << curr_window << "." << endl;
+                    }
+
+                    curr_window += 1;
+                    overlap_count = windowOverlapSamples;
+
+                    if (ddt > 0.0)
+                    {
+                        dmd[curr_window] = new CAROM::AdaptiveDMD(dim, ddt, string(rbf),
+                                                             string(interp_method), admd_closest_rbf_val);
+                    }
+                    else
+                    {
+                        dmd[curr_window] = new CAROM::DMD(dim, dtc);
                     }
                     dmd[curr_window]->takeSample(sample, tval);
                 }
             }
+
+            if (max_idx_snap == -1 && curr_window == numWindows-1)
+            {
+                curr_indicator_val = (indicator_idx.size() == 0) ? tval : sample[indicator_idx[numWindows]];
+                if (curr_indicator_val >= indicator_val[numWindows])
+                {
+                    max_idx_snap = idx_snap;
+                    if (myid == 0)
+                    {
+                        cout << "State #" << idx_snap << " - " << data_filename 
+                             << " is the end of window " << numWindows-1 << "." << endl;
+                    }
+                    break;
+                }
+            }
         }
+
+        if (indicator_idx.size() > 0)
+        {
+            numWindows = curr_window + 1;
+            dmd.resize(numWindows); 
+        }
+        CAROM_VERIFY(numWindows == curr_window + 1);
 
         if (myid == 0)
         {
-            cout << "Loaded " << num_train_snap << " samples for " << par_dir << "." <<
-                 endl;
+            cout << "Sampling on " << par_dir << " completed" << endl;
+            cout << "Samples loaded " << num_train_snap << endl;
+            cout << "Samples used " << max_idx_snap - min_idx_snap + 1 << endl;;
+            cout << "Number of windows: " << numWindows << endl;
             if (windowNumSamples < infty)
             {
-                cout << "Created new indicator range partition with " << numWindows <<
-                     " windows."  << endl;
                 csv_db.putDoubleVector(string(outputPath) + "/" + string(indicator_val_list) + ".csv", 
                                        indicator_val, numWindows);
             }
@@ -574,7 +648,8 @@ int main(int argc, char *argv[])
             snap_bound.push_back(snap_list.size()-1);
         }
 
-        int num_snap = snap_bound[1] - snap_bound[0] + 1;
+        int min_idx_snap = -1;
+        int max_idx_snap = snap_bound[1]; 
         int curr_window = 0;
         for (int idx_snap = snap_bound[0]; idx_snap <= snap_bound[1]; ++idx_snap)
         {
@@ -585,28 +660,47 @@ int main(int argc, char *argv[])
             csv_db.getDoubleArray(data_filename, sample, nelements, idx_state);
             if (myid == 0)
             {
-                cout << "State " << data_filename << " read." << endl;
+                cout << "State #" << idx_snap << " - " << data_filename 
+                     << " is read." << endl;
             }
 
             CAROM::Vector* init_cond = nullptr;
-            if (idx_snap == 0)
+            if (min_idx_snap == -1) 
             {
-                dmd_preprocess_timer.Start();
-                
-                if (myid == 0)
+                double curr_indicator_val = (indicator_idx.size() == 0) ? tval : sample[indicator_idx[0]];
+                if (curr_indicator_val >= indicator_val[0])
                 {
-                    cout << "Projecting initial condition at t = " << indicator_val[curr_window] <<
-                         " for DMD model #" << curr_window << endl;
+                    min_idx_snap = idx_snap;
+                    if (myid == 0)
+                    {
+                        cout << "State #" << idx_snap << " - " << data_filename 
+                             << " is the beginning of window 0." << endl;
+                    }
+
+                    dmd_preprocess_timer.Start();
+                    if (myid == 0)
+                    {
+                        cout << "Projecting initial condition at t = " << tval <<
+                             " for DMD model #0." << endl;
+                    }
+                    init_cond = new CAROM::Vector(dim, true);
+                    for (int i = 0; i < dim; ++i)
+                    {
+                        init_cond->item(i) = sample[i];
+                    }
+                    dmd[curr_window]->projectInitialCondition(init_cond, tval);
+                    delete init_cond;
+                    dmd_preprocess_timer.Stop();
                 }
-                init_cond = new CAROM::Vector(dim, true);
-                for (int i = 0; i < dim; ++i)
+                else
                 {
-                    init_cond->item(i) = sample[i];
+                    if (myid == 0)
+                    {
+                        cout << "State #" << idx_snap << " - " << data_filename 
+                             << " is omitted." << endl;
+                    }
+                    continue;
                 }
-                dmd[curr_window]->projectInitialCondition(init_cond, tval);
-                delete init_cond;
-                
-                dmd_preprocess_timer.Stop();
             }
 
             if (myid == 0)
@@ -618,21 +712,37 @@ int main(int argc, char *argv[])
             CAROM::Vector* result = dmd[curr_window]->predict(tval);
             dmd_prediction_timer.Stop();
 
-            if (indicator_idx.size() > 0)
+            double curr_indicator_val = (indicator_idx.size() == 0) ? tval : result->item(indicator_idx[curr_window+1]);
+
+            while (curr_window+1 < numWindows && curr_indicator_val >= indicator_val[curr_window+1])
             {
-                double t_offset = tvec[idx_snap-1];;
-                double curr_indicator_val = result->item(indicator_idx[curr_window+1]);
-                cout << "State " << idx_snap << ": " << curr_indicator_val << endl;
-                cout << "Window " << curr_window << ": " << indicator_val[curr_window+1] << endl;
-                while (curr_window+1 < numWindows && curr_indicator_val >= indicator_val[curr_window+1])
+                if (myid == 0)
                 {
-                    double t_left = t_offset;
+                    cout << "State #" << idx_snap << " - " << data_filename 
+                         << " is the end of window " << curr_window << "." << endl;
+                    cout << "Current indicator value: " << curr_indicator_val << endl;
+                    cout << "Indicator endpoint: " << indicator_val[curr_window+1] << endl;
+                }
+
+                double t_offset;
+                if (indicator_idx.size() == 0)
+                {
+                    t_offset = indicator_val[curr_window+1];
+                }
+                else
+                {
+                    if (myid == 0)
+                    {
+                        cout << "Indicator state index: " << indicator_idx[curr_window+1] << endl;
+                    }
+                    double t_left = tvec[idx_snap-1];
                     double t_right = tval;
                     for (int k = 0; k < 5; ++k)
                     {
+                        t_offset = (t_left + t_right) / 2.0;
                         init_cond = dmd[curr_window]->predict(t_offset);
                         curr_indicator_val = init_cond->item(indicator_idx[curr_window+1]);
-                        if (curr_indicator_val > indicator_val[curr_window+1])
+                        if (curr_indicator_val >= indicator_val[curr_window+1])
                         {
                             t_right = t_offset;
                         }
@@ -640,24 +750,24 @@ int main(int argc, char *argv[])
                         {
                             t_left = t_offset;
                         }
-                        t_offset = (t_left + t_right) / 2.0;
                         delete init_cond;
                     }
-                    
-                    if (myid == 0)
-                    {
-                        cout << "Projecting initial condition at t = " << t_offset <<
-                             " for DMD model #" << curr_window << endl;
-                    }
-                    init_cond = dmd[curr_window]->predict(t_offset);
-                    curr_window += 1;
-                    dmd[curr_window]->projectInitialCondition(init_cond, t_offset);
-                    delete init_cond;
-                    
-                    delete result;
-                    result = dmd[curr_window]->predict(tval);
-                    curr_indicator_val = result->item(indicator_idx[curr_window+1]);
+                    t_offset = (t_left + t_right) / 2.0;
                 }
+                    
+                if (myid == 0)
+                {
+                    cout << "Projecting initial condition at t = " << t_offset <<
+                         " for DMD model #" << curr_window << endl;
+                }
+                init_cond = dmd[curr_window]->predict(t_offset);
+                curr_window += 1;
+                dmd[curr_window]->projectInitialCondition(init_cond, t_offset);
+                delete init_cond;
+                    
+                delete result;
+                result = dmd[curr_window]->predict(tval);
+                curr_indicator_val = (indicator_idx.size() == 0) ? tval : result->item(indicator_idx[curr_window+1]);
             }
 
             // Calculate the relative error between the DMD final solution and the true solution.
@@ -694,7 +804,20 @@ int main(int argc, char *argv[])
                 }
             }
             delete result;
+
+            if (curr_window == numWindows-1 && curr_indicator_val >= indicator_val[numWindows])
+            {
+                max_idx_snap = idx_snap;
+                if (myid == 0)
+                {
+                    cout << "State #" << idx_snap << " - " << data_filename 
+                         << " is the end of window " << numWindows-1 << "." << endl;
+                }
+                break;
+            }
         }
+
+        int num_snap = max_idx_snap - min_idx_snap + 1;
         if (myid == 0 && t_final <= 0.0)
         {
             csv_db.putDoubleVector(outputPath + "/" + par_dir + "_prediction_time.csv",
@@ -704,7 +827,7 @@ int main(int argc, char *argv[])
         }
         prediction_time.clear();
         prediction_error.clear();
-        num_tests = (t_final > 0.0) ? num_tests + 1 : num_tests + num_snap;
+        num_tests += (t_final > 0.0) ? 1 : num_snap;
     }
 
     CAROM_VERIFY(num_tests > 0);
