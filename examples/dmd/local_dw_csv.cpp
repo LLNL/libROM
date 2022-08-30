@@ -100,6 +100,7 @@ int main(int argc, char *argv[])
     const char *indicator_val_list = "indicator_val";
     const char *basename = "";
     bool save_csv = false;
+    int t_offset_option = 1;
 
     OptionsParser args(argc, argv);
     args.AddOption(&train, "-train", "--train", "-no-train", "--no-train",
@@ -468,7 +469,7 @@ int main(int argc, char *argv[])
                     if (myid == 0)
                     {
                         cout << "State #" << idx_snap << " - " << data_filename 
-                             << " is the end of window " << curr_window << "." << endl;
+                             << " is the beginning of window " << curr_window+1 << "." << endl;
                     }
 
                     curr_window += 1;
@@ -733,44 +734,56 @@ int main(int argc, char *argv[])
                     {
                         cout << "Indicator state index: " << indicator_idx[curr_window+1] << endl;
                     }
-                    double t_left = tvec[idx_snap-1];
-                    double t_right = tval;
-                    t_offset = (t_left + t_right) / 2.0;
-                    for (int k = 0; k < 10; ++k)
+
+                    if (t_offset_option == -1)
                     {
+                        t_offset = tvec[idx_snap-1];
+                    }
+                    else if (t_offset_option == 1)
+                    {
+                        t_offset = tvec[idx_snap];
+                    }
+                    else
+                    {
+                        double t_left = tvec[idx_snap-1];
+                        double t_right = tval;
+                        for (int k = 0; k < 10; ++k)
+                        {
+                            t_offset = (t_left + t_right) / 2.0;
+                            init_cond = dmd[curr_window]->predict(t_offset);
+                            curr_indicator_val = init_cond->item(indicator_idx[curr_window+1]);
+                            cout << "t_offset: " << t_offset << endl;
+                            cout << "Indicator endpoint: " << indicator_val[curr_window+1] << endl;
+                            cout << "Current indicator value: " << curr_indicator_val << endl;
+                            if (curr_indicator_val >= indicator_val[curr_window+1])
+                            {
+                                t_right = t_offset;
+                            }
+                            else
+                            {
+                                t_left = t_offset;
+                            }
+                            delete init_cond;
+                        }
                         t_offset = (t_left + t_right) / 2.0;
-                        init_cond = dmd[curr_window]->predict(t_offset);
-                        curr_indicator_val = init_cond->item(indicator_idx[curr_window+1]);
-                        cout << "t_offset: " << t_offset << endl;
-                        cout << "Indicator endpoint: " << indicator_val[curr_window+1] << endl;
-                        cout << "Current indicator value: " << curr_indicator_val << endl;
-                        if (curr_indicator_val >= indicator_val[curr_window+1])
-                        {
-                            t_right = t_offset;
-                        }
-                        else
-                        {
-                            t_left = t_offset;
-                        }
-                        delete init_cond;
                     }
                 }
-                    
+
                 if (myid == 0)
                 {
                     cout << "Indicator endpoint: " << indicator_val[curr_window+1] << endl;
-                    cout << "Current indicator value: " << curr_indicator_val << endl;
+                    cout << "Projecting initial condition at t = " << t_offset
+                         << " for DMD model #" << curr_window << endl;
                     cout << "State #" << idx_snap << " - " << data_filename 
-                         << " is the end of window " << curr_window << "." << endl;
-                    cout << "Projecting initial condition at t = " << t_offset <<
-                         " for DMD model #" << curr_window << endl;
+                         << " is the beginning of window " << curr_window+1 << "." << endl;
                 }
+
                 init_cond = dmd[curr_window]->predict(t_offset);
-                curr_window += 1;
-                dmd[curr_window]->projectInitialCondition(init_cond, t_offset);
+                dmd[curr_window+1]->projectInitialCondition(init_cond, t_offset);
                 delete init_cond;
                     
                 delete result;
+                curr_window += 1;
                 result = dmd[curr_window]->predict(tval);
                 curr_indicator_val = (indicator_idx.size() == 0) ? tval : result->item(indicator_idx[curr_window+1]);
             }
