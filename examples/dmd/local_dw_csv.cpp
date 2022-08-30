@@ -411,6 +411,7 @@ int main(int argc, char *argv[])
                     if (curr_indicator_val >= indicator_val[0])
                     {
                         min_idx_snap = idx_snap;
+                        indicator_val[0] = curr_indicator_val;
                         if (myid == 0)
                         {
                             cout << "State #" << idx_snap << " - " << data_filename 
@@ -457,6 +458,10 @@ int main(int argc, char *argv[])
                 else
                 {
                     new_window = (curr_indicator_val >= indicator_val[curr_window+1]);
+                    if (new_window)
+                    {
+                        indicator_val[curr_window+1] = curr_indicator_val;
+                    }
                 }
                 if (new_window)
                 {
@@ -488,6 +493,7 @@ int main(int argc, char *argv[])
                 if (curr_indicator_val >= indicator_val[numWindows])
                 {
                     max_idx_snap = idx_snap;
+                    indicator_val[numWindows] = curr_indicator_val;
                     if (myid == 0)
                     {
                         cout << "State #" << idx_snap << " - " << data_filename 
@@ -716,14 +722,6 @@ int main(int argc, char *argv[])
 
             while (curr_window+1 < numWindows && curr_indicator_val >= indicator_val[curr_window+1])
             {
-                if (myid == 0)
-                {
-                    cout << "State #" << idx_snap << " - " << data_filename 
-                         << " is the end of window " << curr_window << "." << endl;
-                    cout << "Current indicator value: " << curr_indicator_val << endl;
-                    cout << "Indicator endpoint: " << indicator_val[curr_window+1] << endl;
-                }
-
                 double t_offset;
                 if (indicator_idx.size() == 0)
                 {
@@ -737,11 +735,15 @@ int main(int argc, char *argv[])
                     }
                     double t_left = tvec[idx_snap-1];
                     double t_right = tval;
-                    for (int k = 0; k < 5; ++k)
+                    t_offset = (t_left + t_right) / 2.0;
+                    for (int k = 0; k < 10; ++k)
                     {
                         t_offset = (t_left + t_right) / 2.0;
                         init_cond = dmd[curr_window]->predict(t_offset);
                         curr_indicator_val = init_cond->item(indicator_idx[curr_window+1]);
+                        cout << "t_offset: " << t_offset << endl;
+                        cout << "Indicator endpoint: " << indicator_val[curr_window+1] << endl;
+                        cout << "Current indicator value: " << curr_indicator_val << endl;
                         if (curr_indicator_val >= indicator_val[curr_window+1])
                         {
                             t_right = t_offset;
@@ -752,11 +754,14 @@ int main(int argc, char *argv[])
                         }
                         delete init_cond;
                     }
-                    t_offset = (t_left + t_right) / 2.0;
                 }
                     
                 if (myid == 0)
                 {
+                    cout << "Indicator endpoint: " << indicator_val[curr_window+1] << endl;
+                    cout << "Current indicator value: " << curr_indicator_val << endl;
+                    cout << "State #" << idx_snap << " - " << data_filename 
+                         << " is the end of window " << curr_window << "." << endl;
                     cout << "Projecting initial condition at t = " << t_offset <<
                          " for DMD model #" << curr_window << endl;
                 }

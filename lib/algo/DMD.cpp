@@ -582,6 +582,8 @@ DMD::projectInitialCondition(const Vector* init, double t_offset)
 
     if (t_offset >= 0.0)
     {
+        std::cout << "t_offset is updated from " << d_t_offset <<  
+                  " to " << t_offset << std::endl;
         d_t_offset = t_offset;
     }
     d_init_projected = true;
