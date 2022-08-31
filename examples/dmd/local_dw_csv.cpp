@@ -47,6 +47,7 @@
 #include "mfem.hpp"
 #include "algo/DMD.h"
 #include "algo/AdaptiveDMD.h"
+#include "algo/NonuniformDMD.h"
 #include "linalg/Vector.h"
 #include "linalg/Matrix.h"
 #include "utils/HDFDatabase.h"
@@ -165,7 +166,7 @@ int main(int argc, char *argv[])
         args.PrintOptions(cout);
     }
 
-    CAROM_VERIFY((dtc > 0.0 || ddt > 0.0) && !(dtc > 0.0 && ddt > 0.0));
+    CAROM_VERIFY(!(dtc > 0.0 && ddt > 0.0));
     CAROM_VERIFY(numWindows == 1 || windowNumSamples == infty);
     CAROM_VERIFY(windowOverlapSamples < windowNumSamples);
 
@@ -323,9 +324,13 @@ int main(int argc, char *argv[])
             dmd[0] = new CAROM::AdaptiveDMD(dim, ddt, string(rbf),
                                                  string(interp_method), admd_closest_rbf_val);
         }
-        else
+        else if (dtc > 0.0)
         {
             dmd[0] = new CAROM::DMD(dim, dtc);
+        }
+        else
+        {
+            dmd[0] = new CAROM::NonuniformDMD(dim);
         }
     }
     else
@@ -409,8 +414,10 @@ int main(int argc, char *argv[])
             if (min_idx_snap == -1) 
             {
                 curr_indicator_val = (indicator_idx.size() == 0) ? tval : sample[indicator_idx[0]];
+                cout << "A:" << indicator_val.size() << endl;
                 if (indicator_val.size() > 0)
                 {
+                    cout << "B:" << indicator_val[0] << endl;
                     if (curr_indicator_val >= indicator_val[0])
                     {
                         min_idx_snap = idx_snap;
@@ -482,9 +489,13 @@ int main(int argc, char *argv[])
                         dmd[curr_window] = new CAROM::AdaptiveDMD(dim, ddt, string(rbf),
                                                              string(interp_method), admd_closest_rbf_val);
                     }
-                    else
+                    else if (dtc > 0.0)
                     {
                         dmd[curr_window] = new CAROM::DMD(dim, dtc);
+                    }
+                    else
+                    {
+                        dmd[curr_window] = new CAROM::NonuniformDMD(dim);
                     }
                     dmd[curr_window]->takeSample(sample, tval);
                 }
