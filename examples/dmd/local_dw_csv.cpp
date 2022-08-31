@@ -87,6 +87,7 @@ int main(int argc, char *argv[])
     const char *rbf = "G";
     const char *interp_method = "LS";
     double admd_closest_rbf_val = 0.9;
+    int dw_offset_option = 0;
     double ef = 0.9999;
     int rdim = -1;
     const char *list_dir = "hc_list";
@@ -100,7 +101,6 @@ int main(int argc, char *argv[])
     const char *indicator_val_list = "indicator_val";
     const char *basename = "";
     bool save_csv = false;
-    int t_offset_option = 1;
 
     OptionsParser args(argc, argv);
     args.AddOption(&train, "-train", "--train", "-no-train", "--no-train",
@@ -123,6 +123,8 @@ int main(int argc, char *argv[])
                    "Method of interpolation. Options: \"LS\", \"IDW\", \"LP\".");
     args.AddOption(&admd_closest_rbf_val, "-acrv", "--admd-crv",
                    "Adaptive DMD closest RBF value.");
+    args.AddOption(&dw_offset_option, "-dw-offset", "--dw-offset",
+                   "Determine time offset using previous state, current state or bisection.");
     args.AddOption(&ef, "-ef", "--energy-fraction",
                    "Energy fraction for DMD.");
     args.AddOption(&rdim, "-rdim", "--rdim",
@@ -735,11 +737,11 @@ int main(int argc, char *argv[])
                         cout << "Indicator state index: " << indicator_idx[curr_window+1] << endl;
                     }
 
-                    if (t_offset_option == -1)
+                    if (dw_offset_option == -1)
                     {
                         t_offset = tvec[idx_snap-1];
                     }
-                    else if (t_offset_option == 1)
+                    else if (dw_offset_option == 1)
                     {
                         t_offset = tvec[idx_snap];
                     }
