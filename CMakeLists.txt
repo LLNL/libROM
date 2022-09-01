@@ -191,7 +191,7 @@ foreach(name IN LISTS misc_example_names)
   target_compile_features(${name} PRIVATE cxx_std_11)
 endforeach(name) # IN LISTS misc_exmaple_names
 
-set(regression_test_names
+set(unit_test_names
   smoke_test
   test_include
   uneven_dist
@@ -200,11 +200,27 @@ set(regression_test_names
   smoke_static
   load_samples)
 
+  set(regression_test_names
+      basisComparator
+      checkError
+      computeSpeedup)
+
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests)
 
-foreach(name IN LISTS regression_test_names)
-  add_executable(${name} tests/${name}.cpp)
+foreach(name IN LISTS unit_test_names)
+  add_executable(${name} unit_tests/${name}.cpp)
+  target_link_libraries(${name}
+    PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
+  target_include_directories(${name}
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+    ${MPI_C_INCLUDE_DIRS})
+  target_compile_features(${name} PRIVATE cxx_std_11)
+endforeach(name) # IN LISTS regression_test_names
 
+
+foreach(name IN LISTS regression_test_names)
+  add_executable(${name} regression_tests/${name}.cpp)
   target_link_libraries(${name}
     PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
   target_include_directories(${name}
@@ -228,7 +244,7 @@ if(GTEST_FOUND)
     IncrementalSVD
     GreedyCustomSampler)
   foreach(stem IN LISTS unit_test_stems)
-    add_executable(test_${stem} tests/test_${stem}.cpp)
+    add_executable(test_${stem} unit_tests/test_${stem}.cpp)
     target_link_libraries(test_${stem} PRIVATE ROM
       ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran GTest::GTest)
     target_include_directories(test_${stem}

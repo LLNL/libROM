@@ -26,6 +26,22 @@ jobs:
             cmake -DCMAKE_BUILD_TYPE=Optimized -DUSE_MFEM=On ..
             make
       - uses: ./.github/workflows/run_tests
+      - name: Build libROM Baseline # Defaults to the 'master' branch
+          run: |
+
+            mkdir ${GITHUB_WORKSPACE}/dependencies/build
+            cd ${GITHUB_WORKSPACE}/dependencies/build
+            git clone 
+            export CC=mpicc
+            export CXX=mpicxx
+            git clone https://github.com/LLNL/libROM.git
+            scripts/setup.sh
+            cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_MFEM=On ..
+            make
+            cmake -DCMAKE_BUILD_TYPE=Optimized -DUSE_MFEM=On ..
+            make
+      - uses: ./.github/workflows/run_tests
+          
   mac:
     runs-on: macos-latest
     steps:
@@ -45,6 +61,18 @@ jobs:
             export FC=/usr/local/bin/gfortran-10
             scripts/setup.sh
             cd ${GITHUB_WORKSPACE}/build
+            cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_MFEM=On ..
+            make
+            cmake -DCMAKE_BUILD_TYPE=Optimized -DUSE_MFEM=On ..
+            make
+      - uses: ./.github/workflows/run_tests
+      name: Build libROM Baseline
+        run: |
+            mkdir ${GITHUB_WORKSPACE}/dependencies/build
+            export FC=/usr/local/bin/gfortran-10
+            cd ${GITHUB_WORKSPACE}/dependencies/build
+            git clone https://github.com/LLNL/libROM.git
+            scripts/setup.sh
             cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_MFEM=On ..
             make
             cmake -DCMAKE_BUILD_TYPE=Optimized -DUSE_MFEM=On ..
