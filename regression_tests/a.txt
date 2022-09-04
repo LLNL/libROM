@@ -1,0 +1,12 @@
+Setting up test suite
+For detailed logs of the regression tests, please check regression_tests/results.
+My current dir = /Users/pranav/Core/ROM_dev/libROM/regression_tests
+/Users/pranav/Core/ROM_dev/libROM/dependencies already exists
+testNum = 3
+Running Poisson_Global_Regression_Test
+GITHUB_WORKSPACE=/Users/pranav/Core/ROM_dev/libROM
+PIPESTATUS[0] = 127
+Poisson_Global_Regression_Test: PASS
+dg-advection-global-offline: FAIL
+linear_elasticity_global_rom_regression_test: FAIL
+1 passed, 2 failed out of 3 tests
