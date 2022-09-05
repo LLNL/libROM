@@ -6,18 +6,19 @@ echo "Setting up test suite"
 echo "For detailed logs of the regression tests, please check regression_tests/results."
 
 export GITHUB_WORKSPACE=/Users/pranav/Core/ROM_dev/libROM
-DEPENDENCIES_DIR=${GITHUB_WORKSPACE}/dependencies
+BASELINE_DIR=${GITHUB_WORKSPACE}/baseline
 TESTS_DIR=${GITHUB_WORKSPACE}/regression_tests/tests
-BUILD_DIR=${DEPENDENCIES_DIR}/build
+BUILD_DIR=${BASELINE_DIR}/build
 MYDIR=$(pwd)
 cd $TESTS_DIR
 tests_to_execute=(*)
+scriptName="Unknown"
 echo "tests_to_execute = ${tests_to_execute}"
 #echo "My current dir = $MYDIR"
-if [ ! -d $DEPENDENCIES_DIR ]; then
-   echo "Creating $DEPENDENCIES_DIR"
-   mkdir -p $DEPENDENCIES_DIR
-   cd ${DEPENDENCIES_DIR}
+if [ ! -d $BASELINE_DIR ]; then # Clone master branch to baseline directory
+   echo "Creating $BASELINE_DIR"
+   mkdir -p $BASELINE_DIR
+   cd ${BASELINE_DIR}
    echo "Clone libROM master into dependencies"
    git clone https://github.com/LLNL/libROM.git
    cd libROM/scripts
@@ -25,36 +26,44 @@ if [ ! -d $DEPENDENCIES_DIR ]; then
    ./compile.sh -m
    echo "Compile libROM master - done"
 else
-   echo "${DEPENDENCIES_DIR} already exists"
+   echo "${BASELINE_DIR} already exists"
 fi
 cd $MYDIR
 RESULTS_DIR=$MYDIR/results
 if [ ! -d $RESULTS_DIR ]; then
     echo "Creating $RESULTS_DIR"
-    mkdir -p $RESULTS_DIR;
+    mkdir -p $RESULTS_DIR
 else
 	rm -rf $RESULTS_DIR/*
 fi
 
-testNum=${#tests_to_execute[@]}
-echo "testNum = $testNum"
+totalTests=${#tests_to_execute[@]}
+echo "Number of tests = $totalTests"
+testNum=0
 testNumPass=0
 testNumFail=0
+rm -rf ${RESULTS_DIR}/* # Remove all log files from previous run
 
 for test in ${tests_to_execute[@]}; do 
-     ./tests/$test
+     scriptName=$(basename $test)
+     echo "scriptName = $scriptName"
+     simulationLogFile="${RESULTS_DIR}/${scriptName}.log"
+     touch simulationLogFile
+     testNum=$((testNum+1))
+     ./tests/$test >> $simulationLogFile
     if [[ "${PIPESTATUS[0]}" -ne 0 ]];  
         then
           testNumFail=$((testNumFail+1))
-
+          echo "$testNum. $test: FAIL"   
         else
           testNumPass=$((testNumPass+1))
+          echo "$testNum. $test: PASS" 
+          echo 
     fi
 done
 
 
-echo "${testNumPass} passed, ${testNumFail} failed out of ${testNum} tests"
-
+echo "${testNumPass} passed, ${testNumFail} failed out of ${totalTests} tests"
 if [[ $testNumFail -ne 0 ]]; then
 	exit 1
 fi
