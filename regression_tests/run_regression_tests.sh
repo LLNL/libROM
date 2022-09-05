@@ -1,15 +1,19 @@
 #!/bin/bash
 
-tests_to_execute=("poisson_global_reg_test.sh" "dg_advection_global_rom_reg_test.sh" "linear_elasticity_global_rom_reg_test.sh")
+# tests_to_execute=("poisson_global_reg_test.sh" "dg_advection_global_rom_reg_test.sh" "linear_elasticity_global_rom_reg_test.sh")
 
 echo "Setting up test suite"
 echo "For detailed logs of the regression tests, please check regression_tests/results."
 
 export GITHUB_WORKSPACE=/Users/pranav/Core/ROM_dev/libROM
 DEPENDENCIES_DIR=${GITHUB_WORKSPACE}/dependencies
+TESTS_DIR=${GITHUB_WORKSPACE}/regression_tests/tests
 BUILD_DIR=${DEPENDENCIES_DIR}/build
 MYDIR=$(pwd)
-echo "My current dir = $MYDIR"
+cd $TESTS_DIR
+tests_to_execute=(*)
+echo "tests_to_execute = ${tests_to_execute}"
+#echo "My current dir = $MYDIR"
 if [ ! -d $DEPENDENCIES_DIR ]; then
    echo "Creating $DEPENDENCIES_DIR"
    mkdir -p $DEPENDENCIES_DIR
@@ -38,7 +42,7 @@ testNumPass=0
 testNumFail=0
 
 for test in ${tests_to_execute[@]}; do 
-     ./$test
+     ./tests/$test
     if [[ "${PIPESTATUS[0]}" -ne 0 ]];  
         then
           testNumFail=$((testNumFail+1))

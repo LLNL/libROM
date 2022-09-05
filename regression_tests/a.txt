@@ -1,12 +1,2884 @@
 Setting up test suite
 For detailed logs of the regression tests, please check regression_tests/results.
+tests_to_execute = dg_advection_global_rom_reg_test.sh
 My current dir = /Users/pranav/Core/ROM_dev/libROM/regression_tests
 /Users/pranav/Core/ROM_dev/libROM/dependencies already exists
 testNum = 3
+Options used:
+   --mesh ../data/periodic-hexagon.mesh
+   --problem 3
+   --refine-serial 2
+   --refine-parallel 0
+   --order 3
+   --id 0
+   --nset 0
+   --no-partial-assembly
+   --no-element-assembly
+   --no-full-assembly
+   --device cpu
+   --ode-solver 11
+   --t-final 10
+   --time-step 0.01
+   --f-factor 1
+   --prec-type 1
+   --visualization
+   --no-visit-datafiles
+   --no-paraview-datafiles
+   --no-adios2-streams
+   --ascii-datafiles
+   --visualization-steps 5
+   --no-fom
+   --offline
+   --no-online
+   --no-merge
+   --energy_fraction 0.9999
+   --rdim -1
+Device configuration: cpu
+Memory configuration: host-std
+Number of unknowns: 0
+Unable to connect to GLVis server at localhost:19916
+GLVis visualization disabled.
+time step: 5, time: 0.05
+time step: 10, time: 0.09999999999999999
+time step: 15, time: 0.15
+time step: 20, time: 0.2
+time step: 25, time: 0.2500000000000001
+time step: 30, time: 0.3000000000000001
+time step: 35, time: 0.3500000000000001
+time step: 40, time: 0.4000000000000002
+time step: 45, time: 0.4500000000000002
+time step: 50, time: 0.5000000000000002
+time step: 55, time: 0.5500000000000003
+time step: 60, time: 0.6000000000000003
+time step: 65, time: 0.6500000000000004
+time step: 70, time: 0.7000000000000004
+time step: 75, time: 0.7500000000000004
+time step: 80, time: 0.8000000000000005
+time step: 85, time: 0.8500000000000005
+time step: 90, time: 0.9000000000000006
+time step: 95, time: 0.9500000000000006
+time step: 100, time: 1.000000000000001
+time step: 105, time: 1.050000000000001
+time step: 110, time: 1.100000000000001
+time step: 115, time: 1.150000000000001
+time step: 120, time: 1.200000000000001
+time step: 125, time: 1.250000000000001
+time step: 130, time: 1.300000000000001
+time step: 135, time: 1.350000000000001
+time step: 140, time: 1.400000000000001
+time step: 145, time: 1.450000000000001
+time step: 150, time: 1.500000000000001
+time step: 155, time: 1.550000000000001
+time step: 160, time: 1.600000000000001
+time step: 165, time: 1.650000000000001
+time step: 170, time: 1.700000000000001
+time step: 175, time: 1.750000000000001
+time step: 180, time: 1.800000000000001
+time step: 185, time: 1.850000000000001
+time step: 190, time: 1.900000000000001
+time step: 195, time: 1.950000000000002
+time step: 200, time: 2.000000000000001
+time step: 205, time: 2.05
+time step: 210, time: 2.099999999999999
+time step: 215, time: 2.149999999999998
+time step: 220, time: 2.199999999999997
+time step: 225, time: 2.249999999999996
+time step: 230, time: 2.299999999999995
+time step: 235, time: 2.349999999999994
+time step: 240, time: 2.399999999999993
+time step: 245, time: 2.449999999999992
+time step: 250, time: 2.499999999999991
+time step: 255, time: 2.54999999999999
+time step: 260, time: 2.599999999999989
+time step: 265, time: 2.649999999999987
+time step: 270, time: 2.699999999999986
+time step: 275, time: 2.749999999999985
+time step: 280, time: 2.799999999999984
+time step: 285, time: 2.849999999999983
+time step: 290, time: 2.899999999999982
+time step: 295, time: 2.949999999999981
+time step: 300, time: 2.99999999999998
+time step: 305, time: 3.049999999999979
+time step: 310, time: 3.099999999999978
+time step: 315, time: 3.149999999999977
+time step: 320, time: 3.199999999999976
+time step: 325, time: 3.249999999999975
+time step: 330, time: 3.299999999999974
+time step: 335, time: 3.349999999999973
+time step: 340, time: 3.399999999999971
+time step: 345, time: 3.44999999999997
+time step: 350, time: 3.499999999999969
+time step: 355, time: 3.549999999999968
+time step: 360, time: 3.599999999999967
+time step: 365, time: 3.649999999999966
+time step: 370, time: 3.699999999999965
+time step: 375, time: 3.749999999999964
+time step: 380, time: 3.799999999999963
+time step: 385, time: 3.849999999999962
+time step: 390, time: 3.899999999999961
+time step: 395, time: 3.94999999999996
+time step: 400, time: 3.999999999999959
+time step: 405, time: 4.049999999999958
+time step: 410, time: 4.099999999999957
+time step: 415, time: 4.149999999999956
+time step: 420, time: 4.199999999999955
+time step: 425, time: 4.249999999999954
+time step: 430, time: 4.299999999999953
+time step: 435, time: 4.349999999999952
+time step: 440, time: 4.399999999999951
+time step: 445, time: 4.44999999999995
+time step: 450, time: 4.499999999999948
+time step: 455, time: 4.549999999999947
+time step: 460, time: 4.599999999999946
+time step: 465, time: 4.649999999999945
+time step: 470, time: 4.699999999999944
+time step: 475, time: 4.749999999999943
+time step: 480, time: 4.799999999999942
+time step: 485, time: 4.849999999999941
+time step: 490, time: 4.89999999999994
+time step: 495, time: 4.949999999999939
+time step: 500, time: 4.999999999999938
+time step: 505, time: 5.049999999999937
+time step: 510, time: 5.099999999999936
+time step: 515, time: 5.149999999999935
+time step: 520, time: 5.199999999999934
+time step: 525, time: 5.249999999999932
+time step: 530, time: 5.299999999999931
+time step: 535, time: 5.34999999999993
+time step: 540, time: 5.399999999999929
+time step: 545, time: 5.449999999999928
+time step: 550, time: 5.499999999999927
+time step: 555, time: 5.549999999999926
+time step: 560, time: 5.599999999999925
+time step: 565, time: 5.649999999999924
+time step: 570, time: 5.699999999999923
+time step: 575, time: 5.749999999999922
+time step: 580, time: 5.799999999999921
+time step: 585, time: 5.84999999999992
+time step: 590, time: 5.899999999999919
+time step: 595, time: 5.949999999999918
+time step: 600, time: 5.999999999999917
+time step: 605, time: 6.049999999999915
+time step: 610, time: 6.099999999999914
+time step: 615, time: 6.149999999999913
+time step: 620, time: 6.199999999999912
+time step: 625, time: 6.249999999999911
+time step: 630, time: 6.29999999999991
+time step: 635, time: 6.349999999999909
+time step: 640, time: 6.399999999999908
+time step: 645, time: 6.449999999999907
+time step: 650, time: 6.499999999999906
+time step: 655, time: 6.549999999999905
+time step: 660, time: 6.599999999999904
+time step: 665, time: 6.649999999999903
+time step: 670, time: 6.699999999999902
+time step: 675, time: 6.749999999999901
+time step: 680, time: 6.799999999999899
+time step: 685, time: 6.849999999999898
+time step: 690, time: 6.899999999999897
+time step: 695, time: 6.949999999999896
+time step: 700, time: 6.999999999999895
+time step: 705, time: 7.049999999999894
+time step: 710, time: 7.099999999999893
+time step: 715, time: 7.149999999999892
+time step: 720, time: 7.199999999999891
+time step: 725, time: 7.24999999999989
+time step: 730, time: 7.299999999999889
+time step: 735, time: 7.349999999999888
+time step: 740, time: 7.399999999999887
+time step: 745, time: 7.449999999999886
+time step: 750, time: 7.499999999999885
+time step: 755, time: 7.549999999999883
+time step: 760, time: 7.599999999999882
+time step: 765, time: 7.649999999999881
+time step: 770, time: 7.69999999999988
+time step: 775, time: 7.749999999999879
+time step: 780, time: 7.799999999999878
+time step: 785, time: 7.849999999999877
+time step: 790, time: 7.899999999999876
+time step: 795, time: 7.949999999999875
+time step: 800, time: 7.999999999999874
+time step: 805, time: 8.049999999999873
+time step: 810, time: 8.099999999999872
+time step: 815, time: 8.149999999999871
+time step: 820, time: 8.19999999999987
+time step: 825, time: 8.249999999999869
+time step: 830, time: 8.299999999999867
+time step: 835, time: 8.349999999999866
+time step: 840, time: 8.399999999999865
+time step: 845, time: 8.449999999999864
+time step: 850, time: 8.499999999999863
+time step: 855, time: 8.549999999999862
+time step: 860, time: 8.599999999999861
+time step: 865, time: 8.64999999999986
+time step: 870, time: 8.699999999999859
+time step: 875, time: 8.749999999999858
+time step: 880, time: 8.799999999999857
+time step: 885, time: 8.849999999999856
+time step: 890, time: 8.899999999999855
+time step: 895, time: 8.949999999999854
+time step: 900, time: 8.999999999999853
+time step: 905, time: 9.049999999999851
+time step: 910, time: 9.09999999999985
+time step: 915, time: 9.149999999999849
+time step: 920, time: 9.199999999999848
+time step: 925, time: 9.249999999999847
+time step: 930, time: 9.299999999999846
+time step: 935, time: 9.349999999999845
+time step: 940, time: 9.399999999999844
+time step: 945, time: 9.449999999999843
+time step: 950, time: 9.499999999999842
+time step: 955, time: 9.549999999999841
+time step: 960, time: 9.59999999999984
+time step: 965, time: 9.649999999999839
+time step: 970, time: 9.699999999999838
+time step: 975, time: 9.749999999999837
+time step: 980, time: 9.799999999999836
+time step: 985, time: 9.849999999999834
+time step: 990, time: 9.899999999999833
+time step: 995, time: 9.949999999999832
+time step: 1000, time: 9.999999999999831
+Creating file: basis0_snapshot.000000
+Options used:
+   --mesh ../data/periodic-hexagon.mesh
+   --problem 3
+   --refine-serial 2
+   --refine-parallel 0
+   --order 3
+   --id 1
+   --nset 0
+   --no-partial-assembly
+   --no-element-assembly
+   --no-full-assembly
+   --device cpu
+   --ode-solver 11
+   --t-final 10
+   --time-step 0.01
+   --f-factor 1.1
+   --prec-type 1
+   --visualization
+   --no-visit-datafiles
+   --no-paraview-datafiles
+   --no-adios2-streams
+   --ascii-datafiles
+   --visualization-steps 5
+   --no-fom
+   --offline
+   --no-online
+   --no-merge
+   --energy_fraction 0.9999
+   --rdim -1
+Device configuration: cpu
+Memory configuration: host-std
+Number of unknowns: 0
+Unable to connect to GLVis server at localhost:19916
+GLVis visualization disabled.
+time step: 5, time: 0.05
+time step: 10, time: 0.09999999999999999
+time step: 15, time: 0.15
+time step: 20, time: 0.2
+time step: 25, time: 0.2500000000000001
+time step: 30, time: 0.3000000000000001
+time step: 35, time: 0.3500000000000001
+time step: 40, time: 0.4000000000000002
+time step: 45, time: 0.4500000000000002
+time step: 50, time: 0.5000000000000002
+time step: 55, time: 0.5500000000000003
+time step: 60, time: 0.6000000000000003
+time step: 65, time: 0.6500000000000004
+time step: 70, time: 0.7000000000000004
+time step: 75, time: 0.7500000000000004
+time step: 80, time: 0.8000000000000005
+time step: 85, time: 0.8500000000000005
+time step: 90, time: 0.9000000000000006
+time step: 95, time: 0.9500000000000006
+time step: 100, time: 1.000000000000001
+time step: 105, time: 1.050000000000001
+time step: 110, time: 1.100000000000001
+time step: 115, time: 1.150000000000001
+time step: 120, time: 1.200000000000001
+time step: 125, time: 1.250000000000001
+time step: 130, time: 1.300000000000001
+time step: 135, time: 1.350000000000001
+time step: 140, time: 1.400000000000001
+time step: 145, time: 1.450000000000001
+time step: 150, time: 1.500000000000001
+time step: 155, time: 1.550000000000001
+time step: 160, time: 1.600000000000001
+time step: 165, time: 1.650000000000001
+time step: 170, time: 1.700000000000001
+time step: 175, time: 1.750000000000001
+time step: 180, time: 1.800000000000001
+time step: 185, time: 1.850000000000001
+time step: 190, time: 1.900000000000001
+time step: 195, time: 1.950000000000002
+time step: 200, time: 2.000000000000001
+time step: 205, time: 2.05
+time step: 210, time: 2.099999999999999
+time step: 215, time: 2.149999999999998
+time step: 220, time: 2.199999999999997
+time step: 225, time: 2.249999999999996
+time step: 230, time: 2.299999999999995
+time step: 235, time: 2.349999999999994
+time step: 240, time: 2.399999999999993
+time step: 245, time: 2.449999999999992
+time step: 250, time: 2.499999999999991
+time step: 255, time: 2.54999999999999
+time step: 260, time: 2.599999999999989
+time step: 265, time: 2.649999999999987
+time step: 270, time: 2.699999999999986
+time step: 275, time: 2.749999999999985
+time step: 280, time: 2.799999999999984
+time step: 285, time: 2.849999999999983
+time step: 290, time: 2.899999999999982
+time step: 295, time: 2.949999999999981
+time step: 300, time: 2.99999999999998
+time step: 305, time: 3.049999999999979
+time step: 310, time: 3.099999999999978
+time step: 315, time: 3.149999999999977
+time step: 320, time: 3.199999999999976
+time step: 325, time: 3.249999999999975
+time step: 330, time: 3.299999999999974
+time step: 335, time: 3.349999999999973
+time step: 340, time: 3.399999999999971
+time step: 345, time: 3.44999999999997
+time step: 350, time: 3.499999999999969
+time step: 355, time: 3.549999999999968
+time step: 360, time: 3.599999999999967
+time step: 365, time: 3.649999999999966
+time step: 370, time: 3.699999999999965
+time step: 375, time: 3.749999999999964
+time step: 380, time: 3.799999999999963
+time step: 385, time: 3.849999999999962
+time step: 390, time: 3.899999999999961
+time step: 395, time: 3.94999999999996
+time step: 400, time: 3.999999999999959
+time step: 405, time: 4.049999999999958
+time step: 410, time: 4.099999999999957
+time step: 415, time: 4.149999999999956
+time step: 420, time: 4.199999999999955
+time step: 425, time: 4.249999999999954
+time step: 430, time: 4.299999999999953
+time step: 435, time: 4.349999999999952
+time step: 440, time: 4.399999999999951
+time step: 445, time: 4.44999999999995
+time step: 450, time: 4.499999999999948
+time step: 455, time: 4.549999999999947
+time step: 460, time: 4.599999999999946
+time step: 465, time: 4.649999999999945
+time step: 470, time: 4.699999999999944
+time step: 475, time: 4.749999999999943
+time step: 480, time: 4.799999999999942
+time step: 485, time: 4.849999999999941
+time step: 490, time: 4.89999999999994
+time step: 495, time: 4.949999999999939
+time step: 500, time: 4.999999999999938
+time step: 505, time: 5.049999999999937
+time step: 510, time: 5.099999999999936
+time step: 515, time: 5.149999999999935
+time step: 520, time: 5.199999999999934
+time step: 525, time: 5.249999999999932
+time step: 530, time: 5.299999999999931
+time step: 535, time: 5.34999999999993
+time step: 540, time: 5.399999999999929
+time step: 545, time: 5.449999999999928
+time step: 550, time: 5.499999999999927
+time step: 555, time: 5.549999999999926
+time step: 560, time: 5.599999999999925
+time step: 565, time: 5.649999999999924
+time step: 570, time: 5.699999999999923
+time step: 575, time: 5.749999999999922
+time step: 580, time: 5.799999999999921
+time step: 585, time: 5.84999999999992
+time step: 590, time: 5.899999999999919
+time step: 595, time: 5.949999999999918
+time step: 600, time: 5.999999999999917
+time step: 605, time: 6.049999999999915
+time step: 610, time: 6.099999999999914
+time step: 615, time: 6.149999999999913
+time step: 620, time: 6.199999999999912
+time step: 625, time: 6.249999999999911
+time step: 630, time: 6.29999999999991
+time step: 635, time: 6.349999999999909
+time step: 640, time: 6.399999999999908
+time step: 645, time: 6.449999999999907
+time step: 650, time: 6.499999999999906
+time step: 655, time: 6.549999999999905
+time step: 660, time: 6.599999999999904
+time step: 665, time: 6.649999999999903
+time step: 670, time: 6.699999999999902
+time step: 675, time: 6.749999999999901
+time step: 680, time: 6.799999999999899
+time step: 685, time: 6.849999999999898
+time step: 690, time: 6.899999999999897
+time step: 695, time: 6.949999999999896
+time step: 700, time: 6.999999999999895
+time step: 705, time: 7.049999999999894
+time step: 710, time: 7.099999999999893
+time step: 715, time: 7.149999999999892
+time step: 720, time: 7.199999999999891
+time step: 725, time: 7.24999999999989
+time step: 730, time: 7.299999999999889
+time step: 735, time: 7.349999999999888
+time step: 740, time: 7.399999999999887
+time step: 745, time: 7.449999999999886
+time step: 750, time: 7.499999999999885
+time step: 755, time: 7.549999999999883
+time step: 760, time: 7.599999999999882
+time step: 765, time: 7.649999999999881
+time step: 770, time: 7.69999999999988
+time step: 775, time: 7.749999999999879
+time step: 780, time: 7.799999999999878
+time step: 785, time: 7.849999999999877
+time step: 790, time: 7.899999999999876
+time step: 795, time: 7.949999999999875
+time step: 800, time: 7.999999999999874
+time step: 805, time: 8.049999999999873
+time step: 810, time: 8.099999999999872
+time step: 815, time: 8.149999999999871
+time step: 820, time: 8.19999999999987
+time step: 825, time: 8.249999999999869
+time step: 830, time: 8.299999999999867
+time step: 835, time: 8.349999999999866
+time step: 840, time: 8.399999999999865
+time step: 845, time: 8.449999999999864
+time step: 850, time: 8.499999999999863
+time step: 855, time: 8.549999999999862
+time step: 860, time: 8.599999999999861
+time step: 865, time: 8.64999999999986
+time step: 870, time: 8.699999999999859
+time step: 875, time: 8.749999999999858
+time step: 880, time: 8.799999999999857
+time step: 885, time: 8.849999999999856
+time step: 890, time: 8.899999999999855
+time step: 895, time: 8.949999999999854
+time step: 900, time: 8.999999999999853
+time step: 905, time: 9.049999999999851
+time step: 910, time: 9.09999999999985
+time step: 915, time: 9.149999999999849
+time step: 920, time: 9.199999999999848
+time step: 925, time: 9.249999999999847
+time step: 930, time: 9.299999999999846
+time step: 935, time: 9.349999999999845
+time step: 940, time: 9.399999999999844
+time step: 945, time: 9.449999999999843
+time step: 950, time: 9.499999999999842
+time step: 955, time: 9.549999999999841
+time step: 960, time: 9.59999999999984
+time step: 965, time: 9.649999999999839
+time step: 970, time: 9.699999999999838
+time step: 975, time: 9.749999999999837
+time step: 980, time: 9.799999999999836
+time step: 985, time: 9.849999999999834
+time step: 990, time: 9.899999999999833
+time step: 995, time: 9.949999999999832
+time step: 1000, time: 9.999999999999831
+Creating file: basis1_snapshot.000000
+Options used:
+   --mesh ../data/periodic-hexagon.mesh
+   --problem 3
+   --refine-serial 2
+   --refine-parallel 0
+   --order 3
+   --id 2
+   --nset 0
+   --no-partial-assembly
+   --no-element-assembly
+   --no-full-assembly
+   --device cpu
+   --ode-solver 11
+   --t-final 10
+   --time-step 0.01
+   --f-factor 1.2
+   --prec-type 1
+   --visualization
+   --no-visit-datafiles
+   --no-paraview-datafiles
+   --no-adios2-streams
+   --ascii-datafiles
+   --visualization-steps 5
+   --no-fom
+   --offline
+   --no-online
+   --no-merge
+   --energy_fraction 0.9999
+   --rdim -1
+Device configuration: cpu
+Memory configuration: host-std
+Number of unknowns: 0
+Unable to connect to GLVis server at localhost:19916
+GLVis visualization disabled.
+time step: 5, time: 0.05
+time step: 10, time: 0.09999999999999999
+time step: 15, time: 0.15
+time step: 20, time: 0.2
+time step: 25, time: 0.2500000000000001
+time step: 30, time: 0.3000000000000001
+time step: 35, time: 0.3500000000000001
+time step: 40, time: 0.4000000000000002
+time step: 45, time: 0.4500000000000002
+time step: 50, time: 0.5000000000000002
+time step: 55, time: 0.5500000000000003
+time step: 60, time: 0.6000000000000003
+time step: 65, time: 0.6500000000000004
+time step: 70, time: 0.7000000000000004
+time step: 75, time: 0.7500000000000004
+time step: 80, time: 0.8000000000000005
+time step: 85, time: 0.8500000000000005
+time step: 90, time: 0.9000000000000006
+time step: 95, time: 0.9500000000000006
+time step: 100, time: 1.000000000000001
+time step: 105, time: 1.050000000000001
+time step: 110, time: 1.100000000000001
+time step: 115, time: 1.150000000000001
+time step: 120, time: 1.200000000000001
+time step: 125, time: 1.250000000000001
+time step: 130, time: 1.300000000000001
+time step: 135, time: 1.350000000000001
+time step: 140, time: 1.400000000000001
+time step: 145, time: 1.450000000000001
+time step: 150, time: 1.500000000000001
+time step: 155, time: 1.550000000000001
+time step: 160, time: 1.600000000000001
+time step: 165, time: 1.650000000000001
+time step: 170, time: 1.700000000000001
+time step: 175, time: 1.750000000000001
+time step: 180, time: 1.800000000000001
+time step: 185, time: 1.850000000000001
+time step: 190, time: 1.900000000000001
+time step: 195, time: 1.950000000000002
+time step: 200, time: 2.000000000000001
+time step: 205, time: 2.05
+time step: 210, time: 2.099999999999999
+time step: 215, time: 2.149999999999998
+time step: 220, time: 2.199999999999997
+time step: 225, time: 2.249999999999996
+time step: 230, time: 2.299999999999995
+time step: 235, time: 2.349999999999994
+time step: 240, time: 2.399999999999993
+time step: 245, time: 2.449999999999992
+time step: 250, time: 2.499999999999991
+time step: 255, time: 2.54999999999999
+time step: 260, time: 2.599999999999989
+time step: 265, time: 2.649999999999987
+time step: 270, time: 2.699999999999986
+time step: 275, time: 2.749999999999985
+time step: 280, time: 2.799999999999984
+time step: 285, time: 2.849999999999983
+time step: 290, time: 2.899999999999982
+time step: 295, time: 2.949999999999981
+time step: 300, time: 2.99999999999998
+time step: 305, time: 3.049999999999979
+time step: 310, time: 3.099999999999978
+time step: 315, time: 3.149999999999977
+time step: 320, time: 3.199999999999976
+time step: 325, time: 3.249999999999975
+time step: 330, time: 3.299999999999974
+time step: 335, time: 3.349999999999973
+time step: 340, time: 3.399999999999971
+time step: 345, time: 3.44999999999997
+time step: 350, time: 3.499999999999969
+time step: 355, time: 3.549999999999968
+time step: 360, time: 3.599999999999967
+time step: 365, time: 3.649999999999966
+time step: 370, time: 3.699999999999965
+time step: 375, time: 3.749999999999964
+time step: 380, time: 3.799999999999963
+time step: 385, time: 3.849999999999962
+time step: 390, time: 3.899999999999961
+time step: 395, time: 3.94999999999996
+time step: 400, time: 3.999999999999959
+time step: 405, time: 4.049999999999958
+time step: 410, time: 4.099999999999957
+time step: 415, time: 4.149999999999956
+time step: 420, time: 4.199999999999955
+time step: 425, time: 4.249999999999954
+time step: 430, time: 4.299999999999953
+time step: 435, time: 4.349999999999952
+time step: 440, time: 4.399999999999951
+time step: 445, time: 4.44999999999995
+time step: 450, time: 4.499999999999948
+time step: 455, time: 4.549999999999947
+time step: 460, time: 4.599999999999946
+time step: 465, time: 4.649999999999945
+time step: 470, time: 4.699999999999944
+time step: 475, time: 4.749999999999943
+time step: 480, time: 4.799999999999942
+time step: 485, time: 4.849999999999941
+time step: 490, time: 4.89999999999994
+time step: 495, time: 4.949999999999939
+time step: 500, time: 4.999999999999938
+time step: 505, time: 5.049999999999937
+time step: 510, time: 5.099999999999936
+time step: 515, time: 5.149999999999935
+time step: 520, time: 5.199999999999934
+time step: 525, time: 5.249999999999932
+time step: 530, time: 5.299999999999931
+time step: 535, time: 5.34999999999993
+time step: 540, time: 5.399999999999929
+time step: 545, time: 5.449999999999928
+time step: 550, time: 5.499999999999927
+time step: 555, time: 5.549999999999926
+time step: 560, time: 5.599999999999925
+time step: 565, time: 5.649999999999924
+time step: 570, time: 5.699999999999923
+time step: 575, time: 5.749999999999922
+time step: 580, time: 5.799999999999921
+time step: 585, time: 5.84999999999992
+time step: 590, time: 5.899999999999919
+time step: 595, time: 5.949999999999918
+time step: 600, time: 5.999999999999917
+time step: 605, time: 6.049999999999915
+time step: 610, time: 6.099999999999914
+time step: 615, time: 6.149999999999913
+time step: 620, time: 6.199999999999912
+time step: 625, time: 6.249999999999911
+time step: 630, time: 6.29999999999991
+time step: 635, time: 6.349999999999909
+time step: 640, time: 6.399999999999908
+time step: 645, time: 6.449999999999907
+time step: 650, time: 6.499999999999906
+time step: 655, time: 6.549999999999905
+time step: 660, time: 6.599999999999904
+time step: 665, time: 6.649999999999903
+time step: 670, time: 6.699999999999902
+time step: 675, time: 6.749999999999901
+time step: 680, time: 6.799999999999899
+time step: 685, time: 6.849999999999898
+time step: 690, time: 6.899999999999897
+time step: 695, time: 6.949999999999896
+time step: 700, time: 6.999999999999895
+time step: 705, time: 7.049999999999894
+time step: 710, time: 7.099999999999893
+time step: 715, time: 7.149999999999892
+time step: 720, time: 7.199999999999891
+time step: 725, time: 7.24999999999989
+time step: 730, time: 7.299999999999889
+time step: 735, time: 7.349999999999888
+time step: 740, time: 7.399999999999887
+time step: 745, time: 7.449999999999886
+time step: 750, time: 7.499999999999885
+time step: 755, time: 7.549999999999883
+time step: 760, time: 7.599999999999882
+time step: 765, time: 7.649999999999881
+time step: 770, time: 7.69999999999988
+time step: 775, time: 7.749999999999879
+time step: 780, time: 7.799999999999878
+time step: 785, time: 7.849999999999877
+time step: 790, time: 7.899999999999876
+time step: 795, time: 7.949999999999875
+time step: 800, time: 7.999999999999874
+time step: 805, time: 8.049999999999873
+time step: 810, time: 8.099999999999872
+time step: 815, time: 8.149999999999871
+time step: 820, time: 8.19999999999987
+time step: 825, time: 8.249999999999869
+time step: 830, time: 8.299999999999867
+time step: 835, time: 8.349999999999866
+time step: 840, time: 8.399999999999865
+time step: 845, time: 8.449999999999864
+time step: 850, time: 8.499999999999863
+time step: 855, time: 8.549999999999862
+time step: 860, time: 8.599999999999861
+time step: 865, time: 8.64999999999986
+time step: 870, time: 8.699999999999859
+time step: 875, time: 8.749999999999858
+time step: 880, time: 8.799999999999857
+time step: 885, time: 8.849999999999856
+time step: 890, time: 8.899999999999855
+time step: 895, time: 8.949999999999854
+time step: 900, time: 8.999999999999853
+time step: 905, time: 9.049999999999851
+time step: 910, time: 9.09999999999985
+time step: 915, time: 9.149999999999849
+time step: 920, time: 9.199999999999848
+time step: 925, time: 9.249999999999847
+time step: 930, time: 9.299999999999846
+time step: 935, time: 9.349999999999845
+time step: 940, time: 9.399999999999844
+time step: 945, time: 9.449999999999843
+time step: 950, time: 9.499999999999842
+time step: 955, time: 9.549999999999841
+time step: 960, time: 9.59999999999984
+time step: 965, time: 9.649999999999839
+time step: 970, time: 9.699999999999838
+time step: 975, time: 9.749999999999837
+time step: 980, time: 9.799999999999836
+time step: 985, time: 9.849999999999834
+time step: 990, time: 9.899999999999833
+time step: 995, time: 9.949999999999832
+time step: 1000, time: 9.999999999999831
+Creating file: basis2_snapshot.000000
+Options used:
+   --mesh ../data/periodic-hexagon.mesh
+   --problem 3
+   --refine-serial 2
+   --refine-parallel 0
+   --order 3
+   --id 0
+   --nset 3
+   --no-partial-assembly
+   --no-element-assembly
+   --no-full-assembly
+   --device cpu
+   --ode-solver 11
+   --t-final 10
+   --time-step 0.01
+   --f-factor 1
+   --prec-type 1
+   --visualization
+   --no-visit-datafiles
+   --no-paraview-datafiles
+   --no-adios2-streams
+   --ascii-datafiles
+   --visualization-steps 5
+   --no-fom
+   --no-offline
+   --no-online
+   --merge
+   --energy_fraction 0.9999
+   --rdim -1
+Device configuration: cpu
+Memory configuration: host-std
+Number of unknowns: 0
+Unable to connect to GLVis server at localhost:19916
+GLVis visualization disabled.
+Opening file: basis0_snapshot.000000
+Opening file: basis1_snapshot.000000
+Opening file: basis2_snapshot.000000
+Creating file: basis.000000
+Elapsed time for merging and building ROM basis: 7.135849e+01 second
+Options used:
+   --mesh ../data/periodic-hexagon.mesh
+   --problem 3
+   --refine-serial 2
+   --refine-parallel 0
+   --order 3
+   --id 0
+   --nset 0
+   --no-partial-assembly
+   --no-element-assembly
+   --no-full-assembly
+   --device cpu
+   --ode-solver 11
+   --t-final 10
+   --time-step 0.01
+   --f-factor 1
+   --prec-type 1
+   --visualization
+   --no-visit-datafiles
+   --no-paraview-datafiles
+   --no-adios2-streams
+   --ascii-datafiles
+   --visualization-steps 5
+   --no-fom
+   --offline
+   --no-online
+   --no-merge
+   --energy_fraction 0.9999
+   --rdim -1
+Device configuration: cpu
+Memory configuration: host-std
+Number of unknowns: 0
+Unable to connect to GLVis server at localhost:19916
+GLVis visualization disabled.
+time step: 5, time: 0.05
+time step: 10, time: 0.09999999999999999
+time step: 15, time: 0.15
+time step: 20, time: 0.2
+time step: 25, time: 0.2500000000000001
+time step: 30, time: 0.3000000000000001
+time step: 35, time: 0.3500000000000001
+time step: 40, time: 0.4000000000000002
+time step: 45, time: 0.4500000000000002
+time step: 50, time: 0.5000000000000002
+time step: 55, time: 0.5500000000000003
+time step: 60, time: 0.6000000000000003
+time step: 65, time: 0.6500000000000004
+time step: 70, time: 0.7000000000000004
+time step: 75, time: 0.7500000000000004
+time step: 80, time: 0.8000000000000005
+time step: 85, time: 0.8500000000000005
+time step: 90, time: 0.9000000000000006
+time step: 95, time: 0.9500000000000006
+time step: 100, time: 1.000000000000001
+time step: 105, time: 1.050000000000001
+time step: 110, time: 1.100000000000001
+time step: 115, time: 1.150000000000001
+time step: 120, time: 1.200000000000001
+time step: 125, time: 1.250000000000001
+time step: 130, time: 1.300000000000001
+time step: 135, time: 1.350000000000001
+time step: 140, time: 1.400000000000001
+time step: 145, time: 1.450000000000001
+time step: 150, time: 1.500000000000001
+time step: 155, time: 1.550000000000001
+time step: 160, time: 1.600000000000001
+time step: 165, time: 1.650000000000001
+time step: 170, time: 1.700000000000001
+time step: 175, time: 1.750000000000001
+time step: 180, time: 1.800000000000001
+time step: 185, time: 1.850000000000001
+time step: 190, time: 1.900000000000001
+time step: 195, time: 1.950000000000002
+time step: 200, time: 2.000000000000001
+time step: 205, time: 2.05
+time step: 210, time: 2.099999999999999
+time step: 215, time: 2.149999999999998
+time step: 220, time: 2.199999999999997
+time step: 225, time: 2.249999999999996
+time step: 230, time: 2.299999999999995
+time step: 235, time: 2.349999999999994
+time step: 240, time: 2.399999999999993
+time step: 245, time: 2.449999999999992
+time step: 250, time: 2.499999999999991
+time step: 255, time: 2.54999999999999
+time step: 260, time: 2.599999999999989
+time step: 265, time: 2.649999999999987
+time step: 270, time: 2.699999999999986
+time step: 275, time: 2.749999999999985
+time step: 280, time: 2.799999999999984
+time step: 285, time: 2.849999999999983
+time step: 290, time: 2.899999999999982
+time step: 295, time: 2.949999999999981
+time step: 300, time: 2.99999999999998
+time step: 305, time: 3.049999999999979
+time step: 310, time: 3.099999999999978
+time step: 315, time: 3.149999999999977
+time step: 320, time: 3.199999999999976
+time step: 325, time: 3.249999999999975
+time step: 330, time: 3.299999999999974
+time step: 335, time: 3.349999999999973
+time step: 340, time: 3.399999999999971
+time step: 345, time: 3.44999999999997
+time step: 350, time: 3.499999999999969
+time step: 355, time: 3.549999999999968
+time step: 360, time: 3.599999999999967
+time step: 365, time: 3.649999999999966
+time step: 370, time: 3.699999999999965
+time step: 375, time: 3.749999999999964
+time step: 380, time: 3.799999999999963
+time step: 385, time: 3.849999999999962
+time step: 390, time: 3.899999999999961
+time step: 395, time: 3.94999999999996
+time step: 400, time: 3.999999999999959
+time step: 405, time: 4.049999999999958
+time step: 410, time: 4.099999999999957
+time step: 415, time: 4.149999999999956
+time step: 420, time: 4.199999999999955
+time step: 425, time: 4.249999999999954
+time step: 430, time: 4.299999999999953
+time step: 435, time: 4.349999999999952
+time step: 440, time: 4.399999999999951
+time step: 445, time: 4.44999999999995
+time step: 450, time: 4.499999999999948
+time step: 455, time: 4.549999999999947
+time step: 460, time: 4.599999999999946
+time step: 465, time: 4.649999999999945
+time step: 470, time: 4.699999999999944
+time step: 475, time: 4.749999999999943
+time step: 480, time: 4.799999999999942
+time step: 485, time: 4.849999999999941
+time step: 490, time: 4.89999999999994
+time step: 495, time: 4.949999999999939
+time step: 500, time: 4.999999999999938
+time step: 505, time: 5.049999999999937
+time step: 510, time: 5.099999999999936
+time step: 515, time: 5.149999999999935
+time step: 520, time: 5.199999999999934
+time step: 525, time: 5.249999999999932
+time step: 530, time: 5.299999999999931
+time step: 535, time: 5.34999999999993
+time step: 540, time: 5.399999999999929
+time step: 545, time: 5.449999999999928
+time step: 550, time: 5.499999999999927
+time step: 555, time: 5.549999999999926
+time step: 560, time: 5.599999999999925
+time step: 565, time: 5.649999999999924
+time step: 570, time: 5.699999999999923
+time step: 575, time: 5.749999999999922
+time step: 580, time: 5.799999999999921
+time step: 585, time: 5.84999999999992
+time step: 590, time: 5.899999999999919
+time step: 595, time: 5.949999999999918
+time step: 600, time: 5.999999999999917
+time step: 605, time: 6.049999999999915
+time step: 610, time: 6.099999999999914
+time step: 615, time: 6.149999999999913
+time step: 620, time: 6.199999999999912
+time step: 625, time: 6.249999999999911
+time step: 630, time: 6.29999999999991
+time step: 635, time: 6.349999999999909
+time step: 640, time: 6.399999999999908
+time step: 645, time: 6.449999999999907
+time step: 650, time: 6.499999999999906
+time step: 655, time: 6.549999999999905
+time step: 660, time: 6.599999999999904
+time step: 665, time: 6.649999999999903
+time step: 670, time: 6.699999999999902
+time step: 675, time: 6.749999999999901
+time step: 680, time: 6.799999999999899
+time step: 685, time: 6.849999999999898
+time step: 690, time: 6.899999999999897
+time step: 695, time: 6.949999999999896
+time step: 700, time: 6.999999999999895
+time step: 705, time: 7.049999999999894
+time step: 710, time: 7.099999999999893
+time step: 715, time: 7.149999999999892
+time step: 720, time: 7.199999999999891
+time step: 725, time: 7.24999999999989
+time step: 730, time: 7.299999999999889
+time step: 735, time: 7.349999999999888
+time step: 740, time: 7.399999999999887
+time step: 745, time: 7.449999999999886
+time step: 750, time: 7.499999999999885
+time step: 755, time: 7.549999999999883
+time step: 760, time: 7.599999999999882
+time step: 765, time: 7.649999999999881
+time step: 770, time: 7.69999999999988
+time step: 775, time: 7.749999999999879
+time step: 780, time: 7.799999999999878
+time step: 785, time: 7.849999999999877
+time step: 790, time: 7.899999999999876
+time step: 795, time: 7.949999999999875
+time step: 800, time: 7.999999999999874
+time step: 805, time: 8.049999999999873
+time step: 810, time: 8.099999999999872
+time step: 815, time: 8.149999999999871
+time step: 820, time: 8.19999999999987
+time step: 825, time: 8.249999999999869
+time step: 830, time: 8.299999999999867
+time step: 835, time: 8.349999999999866
+time step: 840, time: 8.399999999999865
+time step: 845, time: 8.449999999999864
+time step: 850, time: 8.499999999999863
+time step: 855, time: 8.549999999999862
+time step: 860, time: 8.599999999999861
+time step: 865, time: 8.64999999999986
+time step: 870, time: 8.699999999999859
+time step: 875, time: 8.749999999999858
+time step: 880, time: 8.799999999999857
+time step: 885, time: 8.849999999999856
+time step: 890, time: 8.899999999999855
+time step: 895, time: 8.949999999999854
+time step: 900, time: 8.999999999999853
+time step: 905, time: 9.049999999999851
+time step: 910, time: 9.09999999999985
+time step: 915, time: 9.149999999999849
+time step: 920, time: 9.199999999999848
+time step: 925, time: 9.249999999999847
+time step: 930, time: 9.299999999999846
+time step: 935, time: 9.349999999999845
+time step: 940, time: 9.399999999999844
+time step: 945, time: 9.449999999999843
+time step: 950, time: 9.499999999999842
+time step: 955, time: 9.549999999999841
+time step: 960, time: 9.59999999999984
+time step: 965, time: 9.649999999999839
+time step: 970, time: 9.699999999999838
+time step: 975, time: 9.749999999999837
+time step: 980, time: 9.799999999999836
+time step: 985, time: 9.849999999999834
+time step: 990, time: 9.899999999999833
+time step: 995, time: 9.949999999999832
+time step: 1000, time: 9.999999999999831
+Creating file: basis0_snapshot.000000
+Options used:
+   --mesh ../data/periodic-hexagon.mesh
+   --problem 3
+   --refine-serial 2
+   --refine-parallel 0
+   --order 3
+   --id 1
+   --nset 0
+   --no-partial-assembly
+   --no-element-assembly
+   --no-full-assembly
+   --device cpu
+   --ode-solver 11
+   --t-final 10
+   --time-step 0.01
+   --f-factor 1.1
+   --prec-type 1
+   --visualization
+   --no-visit-datafiles
+   --no-paraview-datafiles
+   --no-adios2-streams
+   --ascii-datafiles
+   --visualization-steps 5
+   --no-fom
+   --offline
+   --no-online
+   --no-merge
+   --energy_fraction 0.9999
+   --rdim -1
+Device configuration: cpu
+Memory configuration: host-std
+Number of unknowns: 0
+Unable to connect to GLVis server at localhost:19916
+GLVis visualization disabled.
+time step: 5, time: 0.05
+time step: 10, time: 0.09999999999999999
+time step: 15, time: 0.15
+time step: 20, time: 0.2
+time step: 25, time: 0.2500000000000001
+time step: 30, time: 0.3000000000000001
+time step: 35, time: 0.3500000000000001
+time step: 40, time: 0.4000000000000002
+time step: 45, time: 0.4500000000000002
+time step: 50, time: 0.5000000000000002
+time step: 55, time: 0.5500000000000003
+time step: 60, time: 0.6000000000000003
+time step: 65, time: 0.6500000000000004
+time step: 70, time: 0.7000000000000004
+time step: 75, time: 0.7500000000000004
+time step: 80, time: 0.8000000000000005
+time step: 85, time: 0.8500000000000005
+time step: 90, time: 0.9000000000000006
+time step: 95, time: 0.9500000000000006
+time step: 100, time: 1.000000000000001
+time step: 105, time: 1.050000000000001
+time step: 110, time: 1.100000000000001
+time step: 115, time: 1.150000000000001
+time step: 120, time: 1.200000000000001
+time step: 125, time: 1.250000000000001
+time step: 130, time: 1.300000000000001
+time step: 135, time: 1.350000000000001
+time step: 140, time: 1.400000000000001
+time step: 145, time: 1.450000000000001
+time step: 150, time: 1.500000000000001
+time step: 155, time: 1.550000000000001
+time step: 160, time: 1.600000000000001
+time step: 165, time: 1.650000000000001
+time step: 170, time: 1.700000000000001
+time step: 175, time: 1.750000000000001
+time step: 180, time: 1.800000000000001
+time step: 185, time: 1.850000000000001
+time step: 190, time: 1.900000000000001
+time step: 195, time: 1.950000000000002
+time step: 200, time: 2.000000000000001
+time step: 205, time: 2.05
+time step: 210, time: 2.099999999999999
+time step: 215, time: 2.149999999999998
+time step: 220, time: 2.199999999999997
+time step: 225, time: 2.249999999999996
+time step: 230, time: 2.299999999999995
+time step: 235, time: 2.349999999999994
+time step: 240, time: 2.399999999999993
+time step: 245, time: 2.449999999999992
+time step: 250, time: 2.499999999999991
+time step: 255, time: 2.54999999999999
+time step: 260, time: 2.599999999999989
+time step: 265, time: 2.649999999999987
+time step: 270, time: 2.699999999999986
+time step: 275, time: 2.749999999999985
+time step: 280, time: 2.799999999999984
+time step: 285, time: 2.849999999999983
+time step: 290, time: 2.899999999999982
+time step: 295, time: 2.949999999999981
+time step: 300, time: 2.99999999999998
+time step: 305, time: 3.049999999999979
+time step: 310, time: 3.099999999999978
+time step: 315, time: 3.149999999999977
+time step: 320, time: 3.199999999999976
+time step: 325, time: 3.249999999999975
+time step: 330, time: 3.299999999999974
+time step: 335, time: 3.349999999999973
+time step: 340, time: 3.399999999999971
+time step: 345, time: 3.44999999999997
+time step: 350, time: 3.499999999999969
+time step: 355, time: 3.549999999999968
+time step: 360, time: 3.599999999999967
+time step: 365, time: 3.649999999999966
+time step: 370, time: 3.699999999999965
+time step: 375, time: 3.749999999999964
+time step: 380, time: 3.799999999999963
+time step: 385, time: 3.849999999999962
+time step: 390, time: 3.899999999999961
+time step: 395, time: 3.94999999999996
+time step: 400, time: 3.999999999999959
+time step: 405, time: 4.049999999999958
+time step: 410, time: 4.099999999999957
+time step: 415, time: 4.149999999999956
+time step: 420, time: 4.199999999999955
+time step: 425, time: 4.249999999999954
+time step: 430, time: 4.299999999999953
+time step: 435, time: 4.349999999999952
+time step: 440, time: 4.399999999999951
+time step: 445, time: 4.44999999999995
+time step: 450, time: 4.499999999999948
+time step: 455, time: 4.549999999999947
+time step: 460, time: 4.599999999999946
+time step: 465, time: 4.649999999999945
+time step: 470, time: 4.699999999999944
+time step: 475, time: 4.749999999999943
+time step: 480, time: 4.799999999999942
+time step: 485, time: 4.849999999999941
+time step: 490, time: 4.89999999999994
+time step: 495, time: 4.949999999999939
+time step: 500, time: 4.999999999999938
+time step: 505, time: 5.049999999999937
+time step: 510, time: 5.099999999999936
+time step: 515, time: 5.149999999999935
+time step: 520, time: 5.199999999999934
+time step: 525, time: 5.249999999999932
+time step: 530, time: 5.299999999999931
+time step: 535, time: 5.34999999999993
+time step: 540, time: 5.399999999999929
+time step: 545, time: 5.449999999999928
+time step: 550, time: 5.499999999999927
+time step: 555, time: 5.549999999999926
+time step: 560, time: 5.599999999999925
+time step: 565, time: 5.649999999999924
+time step: 570, time: 5.699999999999923
+time step: 575, time: 5.749999999999922
+time step: 580, time: 5.799999999999921
+time step: 585, time: 5.84999999999992
+time step: 590, time: 5.899999999999919
+time step: 595, time: 5.949999999999918
+time step: 600, time: 5.999999999999917
+time step: 605, time: 6.049999999999915
+time step: 610, time: 6.099999999999914
+time step: 615, time: 6.149999999999913
+time step: 620, time: 6.199999999999912
+time step: 625, time: 6.249999999999911
+time step: 630, time: 6.29999999999991
+time step: 635, time: 6.349999999999909
+time step: 640, time: 6.399999999999908
+time step: 645, time: 6.449999999999907
+time step: 650, time: 6.499999999999906
+time step: 655, time: 6.549999999999905
+time step: 660, time: 6.599999999999904
+time step: 665, time: 6.649999999999903
+time step: 670, time: 6.699999999999902
+time step: 675, time: 6.749999999999901
+time step: 680, time: 6.799999999999899
+time step: 685, time: 6.849999999999898
+time step: 690, time: 6.899999999999897
+time step: 695, time: 6.949999999999896
+time step: 700, time: 6.999999999999895
+time step: 705, time: 7.049999999999894
+time step: 710, time: 7.099999999999893
+time step: 715, time: 7.149999999999892
+time step: 720, time: 7.199999999999891
+time step: 725, time: 7.24999999999989
+time step: 730, time: 7.299999999999889
+time step: 735, time: 7.349999999999888
+time step: 740, time: 7.399999999999887
+time step: 745, time: 7.449999999999886
+time step: 750, time: 7.499999999999885
+time step: 755, time: 7.549999999999883
+time step: 760, time: 7.599999999999882
+time step: 765, time: 7.649999999999881
+time step: 770, time: 7.69999999999988
+time step: 775, time: 7.749999999999879
+time step: 780, time: 7.799999999999878
+time step: 785, time: 7.849999999999877
+time step: 790, time: 7.899999999999876
+time step: 795, time: 7.949999999999875
+time step: 800, time: 7.999999999999874
+time step: 805, time: 8.049999999999873
+time step: 810, time: 8.099999999999872
+time step: 815, time: 8.149999999999871
+time step: 820, time: 8.19999999999987
+time step: 825, time: 8.249999999999869
+time step: 830, time: 8.299999999999867
+time step: 835, time: 8.349999999999866
+time step: 840, time: 8.399999999999865
+time step: 845, time: 8.449999999999864
+time step: 850, time: 8.499999999999863
+time step: 855, time: 8.549999999999862
+time step: 860, time: 8.599999999999861
+time step: 865, time: 8.64999999999986
+time step: 870, time: 8.699999999999859
+time step: 875, time: 8.749999999999858
+time step: 880, time: 8.799999999999857
+time step: 885, time: 8.849999999999856
+time step: 890, time: 8.899999999999855
+time step: 895, time: 8.949999999999854
+time step: 900, time: 8.999999999999853
+time step: 905, time: 9.049999999999851
+time step: 910, time: 9.09999999999985
+time step: 915, time: 9.149999999999849
+time step: 920, time: 9.199999999999848
+time step: 925, time: 9.249999999999847
+time step: 930, time: 9.299999999999846
+time step: 935, time: 9.349999999999845
+time step: 940, time: 9.399999999999844
+time step: 945, time: 9.449999999999843
+time step: 950, time: 9.499999999999842
+time step: 955, time: 9.549999999999841
+time step: 960, time: 9.59999999999984
+time step: 965, time: 9.649999999999839
+time step: 970, time: 9.699999999999838
+time step: 975, time: 9.749999999999837
+time step: 980, time: 9.799999999999836
+time step: 985, time: 9.849999999999834
+time step: 990, time: 9.899999999999833
+time step: 995, time: 9.949999999999832
+time step: 1000, time: 9.999999999999831
+Creating file: basis1_snapshot.000000
+Options used:
+   --mesh ../data/periodic-hexagon.mesh
+   --problem 3
+   --refine-serial 2
+   --refine-parallel 0
+   --order 3
+   --id 2
+   --nset 0
+   --no-partial-assembly
+   --no-element-assembly
+   --no-full-assembly
+   --device cpu
+   --ode-solver 11
+   --t-final 10
+   --time-step 0.01
+   --f-factor 1.2
+   --prec-type 1
+   --visualization
+   --no-visit-datafiles
+   --no-paraview-datafiles
+   --no-adios2-streams
+   --ascii-datafiles
+   --visualization-steps 5
+   --no-fom
+   --offline
+   --no-online
+   --no-merge
+   --energy_fraction 0.9999
+   --rdim -1
+Device configuration: cpu
+Memory configuration: host-std
+Number of unknowns: 0
+Unable to connect to GLVis server at localhost:19916
+GLVis visualization disabled.
+time step: 5, time: 0.05
+time step: 10, time: 0.09999999999999999
+time step: 15, time: 0.15
+time step: 20, time: 0.2
+time step: 25, time: 0.2500000000000001
+time step: 30, time: 0.3000000000000001
+time step: 35, time: 0.3500000000000001
+time step: 40, time: 0.4000000000000002
+time step: 45, time: 0.4500000000000002
+time step: 50, time: 0.5000000000000002
+time step: 55, time: 0.5500000000000003
+time step: 60, time: 0.6000000000000003
+time step: 65, time: 0.6500000000000004
+time step: 70, time: 0.7000000000000004
+time step: 75, time: 0.7500000000000004
+time step: 80, time: 0.8000000000000005
+time step: 85, time: 0.8500000000000005
+time step: 90, time: 0.9000000000000006
+time step: 95, time: 0.9500000000000006
+time step: 100, time: 1.000000000000001
+time step: 105, time: 1.050000000000001
+time step: 110, time: 1.100000000000001
+time step: 115, time: 1.150000000000001
+time step: 120, time: 1.200000000000001
+time step: 125, time: 1.250000000000001
+time step: 130, time: 1.300000000000001
+time step: 135, time: 1.350000000000001
+time step: 140, time: 1.400000000000001
+time step: 145, time: 1.450000000000001
+time step: 150, time: 1.500000000000001
+time step: 155, time: 1.550000000000001
+time step: 160, time: 1.600000000000001
+time step: 165, time: 1.650000000000001
+time step: 170, time: 1.700000000000001
+time step: 175, time: 1.750000000000001
+time step: 180, time: 1.800000000000001
+time step: 185, time: 1.850000000000001
+time step: 190, time: 1.900000000000001
+time step: 195, time: 1.950000000000002
+time step: 200, time: 2.000000000000001
+time step: 205, time: 2.05
+time step: 210, time: 2.099999999999999
+time step: 215, time: 2.149999999999998
+time step: 220, time: 2.199999999999997
+time step: 225, time: 2.249999999999996
+time step: 230, time: 2.299999999999995
+time step: 235, time: 2.349999999999994
+time step: 240, time: 2.399999999999993
+time step: 245, time: 2.449999999999992
+time step: 250, time: 2.499999999999991
+time step: 255, time: 2.54999999999999
+time step: 260, time: 2.599999999999989
+time step: 265, time: 2.649999999999987
+time step: 270, time: 2.699999999999986
+time step: 275, time: 2.749999999999985
+time step: 280, time: 2.799999999999984
+time step: 285, time: 2.849999999999983
+time step: 290, time: 2.899999999999982
+time step: 295, time: 2.949999999999981
+time step: 300, time: 2.99999999999998
+time step: 305, time: 3.049999999999979
+time step: 310, time: 3.099999999999978
+time step: 315, time: 3.149999999999977
+time step: 320, time: 3.199999999999976
+time step: 325, time: 3.249999999999975
+time step: 330, time: 3.299999999999974
+time step: 335, time: 3.349999999999973
+time step: 340, time: 3.399999999999971
+time step: 345, time: 3.44999999999997
+time step: 350, time: 3.499999999999969
+time step: 355, time: 3.549999999999968
+time step: 360, time: 3.599999999999967
+time step: 365, time: 3.649999999999966
+time step: 370, time: 3.699999999999965
+time step: 375, time: 3.749999999999964
+time step: 380, time: 3.799999999999963
+time step: 385, time: 3.849999999999962
+time step: 390, time: 3.899999999999961
+time step: 395, time: 3.94999999999996
+time step: 400, time: 3.999999999999959
+time step: 405, time: 4.049999999999958
+time step: 410, time: 4.099999999999957
+time step: 415, time: 4.149999999999956
+time step: 420, time: 4.199999999999955
+time step: 425, time: 4.249999999999954
+time step: 430, time: 4.299999999999953
+time step: 435, time: 4.349999999999952
+time step: 440, time: 4.399999999999951
+time step: 445, time: 4.44999999999995
+time step: 450, time: 4.499999999999948
+time step: 455, time: 4.549999999999947
+time step: 460, time: 4.599999999999946
+time step: 465, time: 4.649999999999945
+time step: 470, time: 4.699999999999944
+time step: 475, time: 4.749999999999943
+time step: 480, time: 4.799999999999942
+time step: 485, time: 4.849999999999941
+time step: 490, time: 4.89999999999994
+time step: 495, time: 4.949999999999939
+time step: 500, time: 4.999999999999938
+time step: 505, time: 5.049999999999937
+time step: 510, time: 5.099999999999936
+time step: 515, time: 5.149999999999935
+time step: 520, time: 5.199999999999934
+time step: 525, time: 5.249999999999932
+time step: 530, time: 5.299999999999931
+time step: 535, time: 5.34999999999993
+time step: 540, time: 5.399999999999929
+time step: 545, time: 5.449999999999928
+time step: 550, time: 5.499999999999927
+time step: 555, time: 5.549999999999926
+time step: 560, time: 5.599999999999925
+time step: 565, time: 5.649999999999924
+time step: 570, time: 5.699999999999923
+time step: 575, time: 5.749999999999922
+time step: 580, time: 5.799999999999921
+time step: 585, time: 5.84999999999992
+time step: 590, time: 5.899999999999919
+time step: 595, time: 5.949999999999918
+time step: 600, time: 5.999999999999917
+time step: 605, time: 6.049999999999915
+time step: 610, time: 6.099999999999914
+time step: 615, time: 6.149999999999913
+time step: 620, time: 6.199999999999912
+time step: 625, time: 6.249999999999911
+time step: 630, time: 6.29999999999991
+time step: 635, time: 6.349999999999909
+time step: 640, time: 6.399999999999908
+time step: 645, time: 6.449999999999907
+time step: 650, time: 6.499999999999906
+time step: 655, time: 6.549999999999905
+time step: 660, time: 6.599999999999904
+time step: 665, time: 6.649999999999903
+time step: 670, time: 6.699999999999902
+time step: 675, time: 6.749999999999901
+time step: 680, time: 6.799999999999899
+time step: 685, time: 6.849999999999898
+time step: 690, time: 6.899999999999897
+time step: 695, time: 6.949999999999896
+time step: 700, time: 6.999999999999895
+time step: 705, time: 7.049999999999894
+time step: 710, time: 7.099999999999893
+time step: 715, time: 7.149999999999892
+time step: 720, time: 7.199999999999891
+time step: 725, time: 7.24999999999989
+time step: 730, time: 7.299999999999889
+time step: 735, time: 7.349999999999888
+time step: 740, time: 7.399999999999887
+time step: 745, time: 7.449999999999886
+time step: 750, time: 7.499999999999885
+time step: 755, time: 7.549999999999883
+time step: 760, time: 7.599999999999882
+time step: 765, time: 7.649999999999881
+time step: 770, time: 7.69999999999988
+time step: 775, time: 7.749999999999879
+time step: 780, time: 7.799999999999878
+time step: 785, time: 7.849999999999877
+time step: 790, time: 7.899999999999876
+time step: 795, time: 7.949999999999875
+time step: 800, time: 7.999999999999874
+time step: 805, time: 8.049999999999873
+time step: 810, time: 8.099999999999872
+time step: 815, time: 8.149999999999871
+time step: 820, time: 8.19999999999987
+time step: 825, time: 8.249999999999869
+time step: 830, time: 8.299999999999867
+time step: 835, time: 8.349999999999866
+time step: 840, time: 8.399999999999865
+time step: 845, time: 8.449999999999864
+time step: 850, time: 8.499999999999863
+time step: 855, time: 8.549999999999862
+time step: 860, time: 8.599999999999861
+time step: 865, time: 8.64999999999986
+time step: 870, time: 8.699999999999859
+time step: 875, time: 8.749999999999858
+time step: 880, time: 8.799999999999857
+time step: 885, time: 8.849999999999856
+time step: 890, time: 8.899999999999855
+time step: 895, time: 8.949999999999854
+time step: 900, time: 8.999999999999853
+time step: 905, time: 9.049999999999851
+time step: 910, time: 9.09999999999985
+time step: 915, time: 9.149999999999849
+time step: 920, time: 9.199999999999848
+time step: 925, time: 9.249999999999847
+time step: 930, time: 9.299999999999846
+time step: 935, time: 9.349999999999845
+time step: 940, time: 9.399999999999844
+time step: 945, time: 9.449999999999843
+time step: 950, time: 9.499999999999842
+time step: 955, time: 9.549999999999841
+time step: 960, time: 9.59999999999984
+time step: 965, time: 9.649999999999839
+time step: 970, time: 9.699999999999838
+time step: 975, time: 9.749999999999837
+time step: 980, time: 9.799999999999836
+time step: 985, time: 9.849999999999834
+time step: 990, time: 9.899999999999833
+time step: 995, time: 9.949999999999832
+time step: 1000, time: 9.999999999999831
+Creating file: basis2_snapshot.000000
+Options used:
+   --mesh ../data/periodic-hexagon.mesh
+   --problem 3
+   --refine-serial 2
+   --refine-parallel 0
+   --order 3
+   --id 0
+   --nset 3
+   --no-partial-assembly
+   --no-element-assembly
+   --no-full-assembly
+   --device cpu
+   --ode-solver 11
+   --t-final 10
+   --time-step 0.01
+   --f-factor 1
+   --prec-type 1
+   --visualization
+   --no-visit-datafiles
+   --no-paraview-datafiles
+   --no-adios2-streams
+   --ascii-datafiles
+   --visualization-steps 5
+   --no-fom
+   --no-offline
+   --no-online
+   --merge
+   --energy_fraction 0.9999
+   --rdim -1
+Device configuration: cpu
+Memory configuration: host-std
+Number of unknowns: 0
+Unable to connect to GLVis server at localhost:19916
+GLVis visualization disabled.
+Opening file: basis0_snapshot.000000
+Opening file: basis1_snapshot.000000
+Opening file: basis2_snapshot.000000
+Creating file: basis.000000
+Elapsed time for merging and building ROM basis: 7.281198e+01 second
+Opening file: /Users/pranav/Core/ROM_dev/libROM/build/examples/prom/basis.000000
+Opening file: /Users/pranav/Core/ROM_dev/libROM/dependencies/libROM/build/examples/prom/basis.000000
+Opening file: /Users/pranav/Core/ROM_dev/libROM/build/examples/prom/basis.000000
+dg-advection-global-offline: PASS
+Options used:
+   --mesh ../data/beam-tri.mesh
+   --order 1
+   --id 0
+   --nset 0
+   --no-static-condensation
+   --ext-force -0.01
+   --youngs-modulus 2.5
+   --poissons-ratio 0.2
+   --amg-for-systems
+   --by-vdim
+   --device cpu
+   --visit-datafiles
+   --visualization
+   --no-fom
+   --offline
+   --no-online
+   --no-merge
+Device configuration: cpu
+Memory configuration: host-std
+Number of finite element unknowns: 0
+Assembling: r.h.s. ... matrix ... done.
+Size of linear system: 5025111737490
+
+
+ Num MPI tasks = 1
+
+ Num OpenMP threads = 1
+
+
+BoomerAMG SETUP PARAMETERS:
+
+ Max levels = 25
+ Num levels = 6
+
+ Strength Threshold = 0.500000
+ Interpolation Truncation Factor = 0.000000
+ Maximum Row Sum Threshold for Dependency Weakening = 0.900000
+
+ Coarsening Type = HMIS 
+ measures are determined locally
+
+
+ No global partition option chosen.
+
+ Interpolation = extended+i interpolation
+
+Operator Matrix Information:
+
+             nonzero            entries/row          row sums
+lev    rows  entries sparse   min  max     avg      min         max
+======================================================================
+  0    1170    13152  0.010     6   12    11.2  -2.842e-14   1.389e+02
+  1     576     9080  0.027     7   19    15.8  -6.184e-14   1.826e+02
+  2     190     5518  0.153    15   40    29.0  -1.852e-04   2.148e+02
+  3      50      958  0.383    12   27    19.2  -1.491e-02   2.342e+02
+  4      13      107  0.633     6   13     8.2  -1.027e-04   1.395e+02
+  5       5       21  0.840     3    5     4.2  -9.240e-04   6.499e+01
+
+
+Interpolation Matrix Information:
+                    entries/row        min        max            row sums
+lev  rows x cols  min  max  avgW     weight      weight       min         max
+================================================================================
+  0  1170 x 576     0    3   1.9   2.688e-01   8.421e-01   0.000e+00   1.000e+00
+  1   576 x 190     1    4   3.7   4.522e-02   1.000e+00   6.507e-01   1.000e+00
+  2   190 x 50      1    4   2.8   1.522e-02   1.000e+00   2.557e-01   1.000e+00
+  3    50 x 13      1    2   1.6   1.008e-01   1.000e+00   1.008e-01   1.000e+00
+  4    13 x 5       1    2   1.2   1.629e-01   1.000e+00   1.629e-01   1.000e+00
+
+
+     Complexity:    grid = 1.712821
+                operator = 2.192518
+                memory = 2.488063
+
+
+
+
+BoomerAMG SOLVER PARAMETERS:
+
+  Maximum number of cycles:         1 
+  Stopping Tolerance:               0.000000e+00 
+  Cycle type (1 = V, 2 = W, etc.):  1
+
+  Relaxation Parameters:
+   Visiting Grid:                     down   up  coarse
+            Number of sweeps:            1    1     1 
+   Type 0=Jac, 3=hGS, 6=hSGS, 9=GE:      8    8     9 
+   Point types, partial sweeps (1=C, -1=F):
+                  Pre-CG relaxation (down):   0
+                   Post-CG relaxation (up):   0
+                             Coarsest grid:   0
+
+=============================================
+Setup phase times:
+=============================================
+PCG Setup:
+  wall clock time = 0.000000 seconds
+  wall MFLOPS     = 0.000000
+  cpu clock time  = 0.003823 seconds
+  cpu MFLOPS      = 0.000000
+
+<C*b,b>: 3.860821e-04
+
+
+Iters       ||r||_C     conv.rate  ||r||_C/||b||_C
+-----    ------------    ---------  ------------ 
+    1    4.278833e-02    2.177637    2.177637e+00
+    2    2.220292e-02    0.518901    1.129979e+00
+    3    9.340731e-03    0.420698    4.753801e-01
+    4    5.188338e-03    0.555453    2.640514e-01
+    5    3.880231e-03    0.747876    1.974775e-01
+    6    4.354156e-03    1.122138    2.215972e-01
+    7    2.916807e-03    0.669890    1.484458e-01
+    8    7.993125e-04    0.274037    4.067961e-02
+    9    4.205129e-04    0.526093    2.140127e-02
+   10    1.059591e-04    0.251976    5.392602e-03
+   11    2.266035e-05    0.213859    1.153259e-03
+   12    4.239102e-06    0.187071    2.157417e-04
+   13    6.305213e-07    0.148739    3.208927e-05
+   14    8.288140e-08    0.131449    4.218104e-06
+   15    1.027406e-08    0.123961    5.228804e-07
+   16    1.097131e-09    0.106786    5.583655e-08
+   17    1.340547e-10    0.122187    6.822479e-09
+
+
+=============================================
+Solve phase times:
+=============================================
+PCG Solve:
+  wall clock time = 0.020000 seconds
+  wall MFLOPS     = 0.000000
+  cpu clock time  = 0.013496 seconds
+  cpu MFLOPS      = 0.000000
+
+PCG Iterations = 17
+Final PCG Relative Residual Norm = 6.82248e-09
+Creating file: basis0_snapshot.000000
+Elapsed time for assembling FOM: 3.202833e-03 second
+Elapsed time for solving FOM: 1.887742e-02 second
+Options used:
+   --mesh ../data/beam-tri.mesh
+   --order 1
+   --id 1
+   --nset 0
+   --no-static-condensation
+   --ext-force -0.01
+   --youngs-modulus 2.5
+   --poissons-ratio 0.4
+   --amg-for-systems
+   --by-vdim
+   --device cpu
+   --visit-datafiles
+   --visualization
+   --no-fom
+   --offline
+   --no-online
+   --no-merge
+Device configuration: cpu
+Memory configuration: host-std
+Number of finite element unknowns: 0
+Assembling: r.h.s. ... matrix ... done.
+Size of linear system: 5025111737490
+
+
+ Num MPI tasks = 1
+
+ Num OpenMP threads = 1
+
+
+BoomerAMG SETUP PARAMETERS:
+
+ Max levels = 25
+ Num levels = 7
+
+ Strength Threshold = 0.500000
+ Interpolation Truncation Factor = 0.000000
+ Maximum Row Sum Threshold for Dependency Weakening = 0.900000
+
+ Coarsening Type = HMIS 
+ measures are determined locally
+
+
+ No global partition option chosen.
+
+ Interpolation = extended+i interpolation
+
+Operator Matrix Information:
+
+             nonzero            entries/row          row sums
+lev    rows  entries sparse   min  max     avg      min         max
+======================================================================
+  0    1170    13152  0.010     6   12    11.2  -6.696e+01   2.679e+02
+  1     576     9056  0.027     7   18    15.7  -1.502e+01   2.996e+02
+  2     254     5262  0.082     9   29    20.7  -1.487e+01   3.444e+02
+  3     110     1924  0.159     9   29    17.5  -2.329e+01   2.519e+02
+  4      35      485  0.396     8   21    13.9  -4.116e+00   2.669e+02
+  5      15      155  0.689     6   14    10.3  -6.063e+00   1.524e+02
+  6       7       41  0.837     4    7     5.9  -2.400e-04   1.615e+02
+
+
+Interpolation Matrix Information:
+                    entries/row        min        max            row sums
+lev  rows x cols  min  max  avgW     weight      weight       min         max
+================================================================================
+  0  1170 x 576     0    2   1.8   4.615e-01   1.000e+00   0.000e+00   1.000e+00
+  1   576 x 254     1    3   1.8   1.398e-01   1.000e+00   2.632e-01   1.000e+00
+  2   254 x 110     1    3   1.9   7.241e-02   1.000e+00   2.666e-01   1.000e+00
+  3   110 x 35      1    4   2.1   1.205e-01   1.000e+00   2.380e-01   1.000e+00
+  4    35 x 15      1    4   2.3   4.894e-02   1.000e+00   1.866e-01   1.000e+00
+  5    15 x 7       1    2   1.9   3.088e-01   6.659e-01   4.506e-01   1.000e+00
+
+
+     Complexity:    grid = 1.852137
+                operator = 2.286724
+                memory = 2.524787
+
+
+
+
+BoomerAMG SOLVER PARAMETERS:
+
+  Maximum number of cycles:         1 
+  Stopping Tolerance:               0.000000e+00 
+  Cycle type (1 = V, 2 = W, etc.):  1
+
+  Relaxation Parameters:
+   Visiting Grid:                     down   up  coarse
+            Number of sweeps:            1    1     1 
+   Type 0=Jac, 3=hGS, 6=hSGS, 9=GE:      8    8     9 
+   Point types, partial sweeps (1=C, -1=F):
+                  Pre-CG relaxation (down):   0
+                   Post-CG relaxation (up):   0
+                             Coarsest grid:   0
+
+=============================================
+Setup phase times:
+=============================================
+PCG Setup:
+  wall clock time = 0.010000 seconds
+  wall MFLOPS     = 0.000000
+  cpu clock time  = 0.002469 seconds
+  cpu MFLOPS      = 0.000000
+
+<C*b,b>: 4.729374e-04
+
+
+Iters       ||r||_C     conv.rate  ||r||_C/||b||_C
+-----    ------------    ---------  ------------ 
+    1    3.957265e-02    1.819673    1.819673e+00
+    2    1.901636e-02    0.480543    8.744310e-01
+    3    8.809153e-03    0.463241    4.050721e-01
+    4    4.293659e-03    0.487409    1.974357e-01
+    5    4.005075e-03    0.932788    1.841657e-01
+    6    3.167454e-03    0.790860    1.456493e-01
+    7    2.416173e-03    0.762812    1.111031e-01
+    8    7.409240e-04    0.306652    3.406997e-02
+    9    2.559594e-04    0.345460    1.176980e-02
+   10    1.050012e-04    0.410226    4.828278e-03
+   11    3.962195e-05    0.377348    1.821940e-03
+   12    1.116728e-05    0.281846    5.135062e-04
+   13    2.694800e-06    0.241312    1.239152e-04
+   14    5.896215e-07    0.218800    2.711262e-05
+   15    1.207732e-07    0.204832    5.553523e-06
+   16    2.474912e-08    0.204922    1.138041e-06
+   17    5.096217e-09    0.205915    2.343398e-07
+   18    9.740154e-10    0.191125    4.478824e-08
+   19    2.053141e-10    0.210791    9.440975e-09
+
+
+=============================================
+Solve phase times:
+=============================================
+PCG Solve:
+  wall clock time = 0.010000 seconds
+  wall MFLOPS     = 0.000000
+  cpu clock time  = 0.014955 seconds
+  cpu MFLOPS      = 0.000000
+
+PCG Iterations = 19
+Final PCG Relative Residual Norm = 9.44098e-09
+Creating file: basis1_snapshot.000000
+Elapsed time for assembling FOM: 2.625000e-03 second
+Elapsed time for solving FOM: 1.751829e-02 second
+Options used:
+   --mesh ../data/beam-tri.mesh
+   --order 1
+   --id 0
+   --nset 2
+   --no-static-condensation
+   --ext-force -0.01
+   --youngs-modulus 2.5
+   --poissons-ratio 0.25
+   --amg-for-systems
+   --by-vdim
+   --device cpu
+   --visit-datafiles
+   --visualization
+   --no-fom
+   --no-offline
+   --no-online
+   --merge
+Device configuration: cpu
+Memory configuration: host-std
+Number of finite element unknowns: 0
+Assembling: Opening file: basis0_snapshot.000000
+Opening file: basis1_snapshot.000000
+Creating file: basis.000000
+Elapsed time for merging and building ROM basis: 7.557334e-03 second
+Options used:
+   --mesh ../data/beam-tri.mesh
+   --order 1
+   --id 0
+   --nset 0
+   --no-static-condensation
+   --ext-force -0.01
+   --youngs-modulus 2.5
+   --poissons-ratio 0.2
+   --amg-for-systems
+   --by-vdim
+   --device cpu
+   --visit-datafiles
+   --visualization
+   --no-fom
+   --offline
+   --no-online
+   --no-merge
+Device configuration: cpu
+Memory configuration: host-std
+Number of finite element unknowns: 0
+Assembling: r.h.s. ... matrix ... done.
+Size of linear system: 5025111737490
+
+
+ Num MPI tasks = 1
+
+ Num OpenMP threads = 1
+
+
+BoomerAMG SETUP PARAMETERS:
+
+ Max levels = 25
+ Num levels = 6
+
+ Strength Threshold = 0.500000
+ Interpolation Truncation Factor = 0.000000
+ Maximum Row Sum Threshold for Dependency Weakening = 0.900000
+
+ Coarsening Type = HMIS 
+ measures are determined locally
+
+
+ No global partition option chosen.
+
+ Interpolation = extended+i interpolation
+
+Operator Matrix Information:
+
+             nonzero            entries/row          row sums
+lev    rows  entries sparse   min  max     avg      min         max
+======================================================================
+  0    1170    13152  0.010     6   12    11.2  -2.842e-14   1.389e+02
+  1     576     9080  0.027     7   19    15.8  -6.184e-14   1.826e+02
+  2     190     5518  0.153    15   40    29.0  -1.852e-04   2.148e+02
+  3      50      958  0.383    12   27    19.2  -1.491e-02   2.342e+02
+  4      13      107  0.633     6   13     8.2  -1.027e-04   1.395e+02
+  5       5       21  0.840     3    5     4.2  -9.240e-04   6.499e+01
+
+
+Interpolation Matrix Information:
+                    entries/row        min        max            row sums
+lev  rows x cols  min  max  avgW     weight      weight       min         max
+================================================================================
+  0  1170 x 576     0    3   1.9   2.688e-01   8.421e-01   0.000e+00   1.000e+00
+  1   576 x 190     1    4   3.7   4.522e-02   1.000e+00   6.507e-01   1.000e+00
+  2   190 x 50      1    4   2.8   1.522e-02   1.000e+00   2.557e-01   1.000e+00
+  3    50 x 13      1    2   1.6   1.008e-01   1.000e+00   1.008e-01   1.000e+00
+  4    13 x 5       1    2   1.2   1.629e-01   1.000e+00   1.629e-01   1.000e+00
+
+
+     Complexity:    grid = 1.712821
+                operator = 2.192518
+                memory = 2.488063
+
+
+
+
+BoomerAMG SOLVER PARAMETERS:
+
+  Maximum number of cycles:         1 
+  Stopping Tolerance:               0.000000e+00 
+  Cycle type (1 = V, 2 = W, etc.):  1
+
+  Relaxation Parameters:
+   Visiting Grid:                     down   up  coarse
+            Number of sweeps:            1    1     1 
+   Type 0=Jac, 3=hGS, 6=hSGS, 9=GE:      8    8     9 
+   Point types, partial sweeps (1=C, -1=F):
+                  Pre-CG relaxation (down):   0
+                   Post-CG relaxation (up):   0
+                             Coarsest grid:   0
+
+=============================================
+Setup phase times:
+=============================================
+PCG Setup:
+  wall clock time = 0.000000 seconds
+  wall MFLOPS     = 0.000000
+  cpu clock time  = 0.003582 seconds
+  cpu MFLOPS      = 0.000000
+
+<C*b,b>: 3.860821e-04
+
+
+Iters       ||r||_C     conv.rate  ||r||_C/||b||_C
+-----    ------------    ---------  ------------ 
+    1    4.278833e-02    2.177637    2.177637e+00
+    2    2.220292e-02    0.518901    1.129979e+00
+    3    9.340731e-03    0.420698    4.753801e-01
+    4    5.188338e-03    0.555453    2.640514e-01
+    5    3.880231e-03    0.747876    1.974775e-01
+    6    4.354156e-03    1.122138    2.215972e-01
+    7    2.916807e-03    0.669890    1.484458e-01
+    8    7.993125e-04    0.274037    4.067961e-02
+    9    4.205129e-04    0.526093    2.140127e-02
+   10    1.059591e-04    0.251976    5.392602e-03
+   11    2.266035e-05    0.213859    1.153259e-03
+   12    4.239102e-06    0.187071    2.157417e-04
+   13    6.305213e-07    0.148739    3.208927e-05
+   14    8.288140e-08    0.131449    4.218104e-06
+   15    1.027406e-08    0.123961    5.228804e-07
+   16    1.097131e-09    0.106786    5.583655e-08
+   17    1.340547e-10    0.122187    6.822479e-09
+
+
+=============================================
+Solve phase times:
+=============================================
+PCG Solve:
+  wall clock time = 0.010000 seconds
+  wall MFLOPS     = 0.000000
+  cpu clock time  = 0.013402 seconds
+  cpu MFLOPS      = 0.000000
+
+PCG Iterations = 17
+Final PCG Relative Residual Norm = 6.82248e-09
+Creating file: basis0_snapshot.000000
+Elapsed time for assembling FOM: 2.772542e-03 second
+Elapsed time for solving FOM: 1.708400e-02 second
+Options used:
+   --mesh ../data/beam-tri.mesh
+   --order 1
+   --id 1
+   --nset 0
+   --no-static-condensation
+   --ext-force -0.01
+   --youngs-modulus 2.5
+   --poissons-ratio 0.4
+   --amg-for-systems
+   --by-vdim
+   --device cpu
+   --visit-datafiles
+   --visualization
+   --no-fom
+   --offline
+   --no-online
+   --no-merge
+Device configuration: cpu
+Memory configuration: host-std
+Number of finite element unknowns: 0
+Assembling: r.h.s. ... matrix ... done.
+Size of linear system: 5025111737490
+
+
+ Num MPI tasks = 1
+
+ Num OpenMP threads = 1
+
+
+BoomerAMG SETUP PARAMETERS:
+
+ Max levels = 25
+ Num levels = 7
+
+ Strength Threshold = 0.500000
+ Interpolation Truncation Factor = 0.000000
+ Maximum Row Sum Threshold for Dependency Weakening = 0.900000
+
+ Coarsening Type = HMIS 
+ measures are determined locally
+
+
+ No global partition option chosen.
+
+ Interpolation = extended+i interpolation
+
+Operator Matrix Information:
+
+             nonzero            entries/row          row sums
+lev    rows  entries sparse   min  max     avg      min         max
+======================================================================
+  0    1170    13152  0.010     6   12    11.2  -6.696e+01   2.679e+02
+  1     576     9056  0.027     7   18    15.7  -1.502e+01   2.996e+02
+  2     254     5262  0.082     9   29    20.7  -1.487e+01   3.444e+02
+  3     110     1924  0.159     9   29    17.5  -2.329e+01   2.519e+02
+  4      35      485  0.396     8   21    13.9  -4.116e+00   2.669e+02
+  5      15      155  0.689     6   14    10.3  -6.063e+00   1.524e+02
+  6       7       41  0.837     4    7     5.9  -2.400e-04   1.615e+02
+
+
+Interpolation Matrix Information:
+                    entries/row        min        max            row sums
+lev  rows x cols  min  max  avgW     weight      weight       min         max
+================================================================================
+  0  1170 x 576     0    2   1.8   4.615e-01   1.000e+00   0.000e+00   1.000e+00
+  1   576 x 254     1    3   1.8   1.398e-01   1.000e+00   2.632e-01   1.000e+00
+  2   254 x 110     1    3   1.9   7.241e-02   1.000e+00   2.666e-01   1.000e+00
+  3   110 x 35      1    4   2.1   1.205e-01   1.000e+00   2.380e-01   1.000e+00
+  4    35 x 15      1    4   2.3   4.894e-02   1.000e+00   1.866e-01   1.000e+00
+  5    15 x 7       1    2   1.9   3.088e-01   6.659e-01   4.506e-01   1.000e+00
+
+
+     Complexity:    grid = 1.852137
+                operator = 2.286724
+                memory = 2.524787
+
+
+
+
+BoomerAMG SOLVER PARAMETERS:
+
+  Maximum number of cycles:         1 
+  Stopping Tolerance:               0.000000e+00 
+  Cycle type (1 = V, 2 = W, etc.):  1
+
+  Relaxation Parameters:
+   Visiting Grid:                     down   up  coarse
+            Number of sweeps:            1    1     1 
+   Type 0=Jac, 3=hGS, 6=hSGS, 9=GE:      8    8     9 
+   Point types, partial sweeps (1=C, -1=F):
+                  Pre-CG relaxation (down):   0
+                   Post-CG relaxation (up):   0
+                             Coarsest grid:   0
+
+=============================================
+Setup phase times:
+=============================================
+PCG Setup:
+  wall clock time = 0.000000 seconds
+  wall MFLOPS     = 0.000000
+  cpu clock time  = 0.002647 seconds
+  cpu MFLOPS      = 0.000000
+
+<C*b,b>: 4.729374e-04
+
+
+Iters       ||r||_C     conv.rate  ||r||_C/||b||_C
+-----    ------------    ---------  ------------ 
+    1    3.957265e-02    1.819673    1.819673e+00
+    2    1.901636e-02    0.480543    8.744310e-01
+    3    8.809153e-03    0.463241    4.050721e-01
+    4    4.293659e-03    0.487409    1.974357e-01
+    5    4.005075e-03    0.932788    1.841657e-01
+    6    3.167454e-03    0.790860    1.456493e-01
+    7    2.416173e-03    0.762812    1.111031e-01
+    8    7.409240e-04    0.306652    3.406997e-02
+    9    2.559594e-04    0.345460    1.176980e-02
+   10    1.050012e-04    0.410226    4.828278e-03
+   11    3.962195e-05    0.377348    1.821940e-03
+   12    1.116728e-05    0.281846    5.135062e-04
+   13    2.694800e-06    0.241312    1.239152e-04
+   14    5.896215e-07    0.218800    2.711262e-05
+   15    1.207732e-07    0.204832    5.553523e-06
+   16    2.474912e-08    0.204922    1.138041e-06
+   17    5.096217e-09    0.205915    2.343398e-07
+   18    9.740154e-10    0.191125    4.478824e-08
+   19    2.053141e-10    0.210791    9.440975e-09
+
+
+=============================================
+Solve phase times:
+=============================================
+PCG Solve:
+  wall clock time = 0.020000 seconds
+  wall MFLOPS     = 0.000000
+  cpu clock time  = 0.015352 seconds
+  cpu MFLOPS      = 0.000000
+
+PCG Iterations = 19
+Final PCG Relative Residual Norm = 9.44098e-09
+Creating file: basis1_snapshot.000000
+Elapsed time for assembling FOM: 2.776167e-03 second
+Elapsed time for solving FOM: 1.811638e-02 second
+Options used:
+   --mesh ../data/beam-tri.mesh
+   --order 1
+   --id 0
+   --nset 2
+   --no-static-condensation
+   --ext-force -0.01
+   --youngs-modulus 2.5
+   --poissons-ratio 0.25
+   --amg-for-systems
+   --by-vdim
+   --device cpu
+   --visit-datafiles
+   --visualization
+   --no-fom
+   --no-offline
+   --no-online
+   --merge
+Device configuration: cpu
+Memory configuration: host-std
+Number of finite element unknowns: 0
+Assembling: Opening file: basis0_snapshot.000000
+Opening file: basis1_snapshot.000000
+Creating file: basis.000000
+Elapsed time for merging and building ROM basis: 7.110000e-03 second
+Opening file: /Users/pranav/Core/ROM_dev/libROM/build/examples/prom/basis.000000
+Opening file: /Users/pranav/Core/ROM_dev/libROM/dependencies/libROM/build/examples/prom/basis.000000
+Opening file: /Users/pranav/Core/ROM_dev/libROM/build/examples/prom/basis.000000
+linear_elasticity_global_rom_regression_test: PASS
 Running Poisson_Global_Regression_Test
 GITHUB_WORKSPACE=/Users/pranav/Core/ROM_dev/libROM
-PIPESTATUS[0] = 127
+Options used:
+   --mesh ../data/star.mesh
+   --order 1
+   --id 0
+   --nset 0
+   --no-static-condensation
+   --no-partial-assembly
+   --frequency 1
+   --coefficient 1
+   --device cpu
+   --visit-datafiles
+   --visualization
+   --no-fom
+   --offline
+   --no-online
+   --no-merge
+Device configuration: cpu
+Memory configuration: host-std
+Number of finite element unknowns: 0
+
+
+ Num MPI tasks = 1
+
+ Num OpenMP threads = 1
+
+
+BoomerAMG SETUP PARAMETERS:
+
+ Max levels = 25
+ Num levels = 7
+
+ Strength Threshold = 0.250000
+ Interpolation Truncation Factor = 0.000000
+ Maximum Row Sum Threshold for Dependency Weakening = 0.900000
+
+ Coarsening Type = HMIS 
+
+ No. of levels of aggressive coarsening: 1
+
+ Interpolation on agg. levels= multipass interpolation
+ measures are determined locally
+
+
+ No global partition option chosen.
+
+ Interpolation = extended+i interpolation
+
+Operator Matrix Information:
+
+             nonzero            entries/row          row sums
+lev    rows  entries sparse   min  max     avg      min         max
+======================================================================
+  0   82561   739201  0.000     4   11     9.0  -1.277e-15   1.915e+00
+  1    4961    43711  0.002     4   11     8.8  -5.412e-15   5.834e+00
+  2    1634    33118  0.012     7   27    20.3  -9.361e-15   4.935e+00
+  3     529    14311  0.051    10   38    27.1  -1.064e-14   5.718e+00
+  4     133     3545  0.200    12   40    26.7  -2.072e-14   5.808e+00
+  5      23      393  0.743    12   23    17.1   3.729e-01   6.151e+00
+  6       3        9  1.000     3    3     3.0   4.090e+00   5.234e+00
+
+
+Interpolation Matrix Information:
+                    entries/row        min        max            row sums
+lev  rows x cols  min  max  avgW     weight      weight       min         max
+================================================================================
+  0 82561 x 4961    0    4   1.6   2.998e-02   1.000e+00   0.000e+00   1.000e+00
+  1  4961 x 1634    1    4   4.0   1.685e-02   5.078e-01   3.417e-01   1.000e+00
+  2  1634 x 529     1    4   3.9   1.883e-02   4.503e-01   2.070e-01   1.000e+00
+  3   529 x 133     1    4   3.9   4.353e-03   5.749e-01   1.147e-01   1.000e+00
+  4   133 x 23      0    4   3.5   2.787e-03   5.022e-01   0.000e+00   1.000e+00
+  5    23 x 3       0    3   2.2   5.960e-03   5.063e-01   0.000e+00   1.000e+00
+
+
+     Complexity:    grid = 1.088214
+                operator = 1.128635
+                memory = 1.329027
+
+
+
+
+BoomerAMG SOLVER PARAMETERS:
+
+  Maximum number of cycles:         1 
+  Stopping Tolerance:               0.000000e+00 
+  Cycle type (1 = V, 2 = W, etc.):  1
+
+  Relaxation Parameters:
+   Visiting Grid:                     down   up  coarse
+            Number of sweeps:            1    1     1 
+   Type 0=Jac, 3=hGS, 6=hSGS, 9=GE:      8    8     9 
+   Point types, partial sweeps (1=C, -1=F):
+                  Pre-CG relaxation (down):   0
+                   Post-CG relaxation (up):   0
+                             Coarsest grid:   0
+
+   Iteration :   0  (B r, r) = 0.0364394
+   Iteration :   1  (B r, r) = 0.00147823
+   Iteration :   2  (B r, r) = 2.79448e-05
+   Iteration :   3  (B r, r) = 2.65759e-06
+   Iteration :   4  (B r, r) = 3.09622e-08
+   Iteration :   5  (B r, r) = 2.48188e-09
+   Iteration :   6  (B r, r) = 1.13483e-10
+   Iteration :   7  (B r, r) = 3.5441e-12
+   Iteration :   8  (B r, r) = 1.989e-13
+   Iteration :   9  (B r, r) = 1.10308e-14
+   Iteration :  10  (B r, r) = 6.07947e-16
+   Iteration :  11  (B r, r) = 2.55589e-17
+   Iteration :  12  (B r, r) = 1.24353e-18
+   Iteration :  13  (B r, r) = 5.95759e-20
+   Iteration :  14  (B r, r) = 3.52516e-21
+   Iteration :  15  (B r, r) = 1.72711e-22
+   Iteration :  16  (B r, r) = 7.25288e-24
+   Iteration :  17  (B r, r) = 3.70519e-25
+   Iteration :  18  (B r, r) = 1.9521e-26
+Average reduction factor = 0.21174
+Creating file: basis0_snapshot.000000
+Elapsed time for assembling FOM: 4.238007e-01 second
+Elapsed time for solving FOM: 5.519684e-01 second
+Options used:
+   --mesh ../data/star.mesh
+   --order 1
+   --id 1
+   --nset 0
+   --no-static-condensation
+   --no-partial-assembly
+   --frequency 1.1
+   --coefficient 1
+   --device cpu
+   --visit-datafiles
+   --visualization
+   --no-fom
+   --offline
+   --no-online
+   --no-merge
+Device configuration: cpu
+Memory configuration: host-std
+Number of finite element unknowns: 0
+
+
+ Num MPI tasks = 1
+
+ Num OpenMP threads = 1
+
+
+BoomerAMG SETUP PARAMETERS:
+
+ Max levels = 25
+ Num levels = 7
+
+ Strength Threshold = 0.250000
+ Interpolation Truncation Factor = 0.000000
+ Maximum Row Sum Threshold for Dependency Weakening = 0.900000
+
+ Coarsening Type = HMIS 
+
+ No. of levels of aggressive coarsening: 1
+
+ Interpolation on agg. levels= multipass interpolation
+ measures are determined locally
+
+
+ No global partition option chosen.
+
+ Interpolation = extended+i interpolation
+
+Operator Matrix Information:
+
+             nonzero            entries/row          row sums
+lev    rows  entries sparse   min  max     avg      min         max
+======================================================================
+  0   82561   739201  0.000     4   11     9.0  -1.277e-15   1.915e+00
+  1    4961    43711  0.002     4   11     8.8  -5.412e-15   5.834e+00
+  2    1634    33118  0.012     7   27    20.3  -9.361e-15   4.935e+00
+  3     529    14311  0.051    10   38    27.1  -1.064e-14   5.718e+00
+  4     133     3545  0.200    12   40    26.7  -2.072e-14   5.808e+00
+  5      23      393  0.743    12   23    17.1   3.729e-01   6.151e+00
+  6       3        9  1.000     3    3     3.0   4.090e+00   5.234e+00
+
+
+Interpolation Matrix Information:
+                    entries/row        min        max            row sums
+lev  rows x cols  min  max  avgW     weight      weight       min         max
+================================================================================
+  0 82561 x 4961    0    4   1.6   2.998e-02   1.000e+00   0.000e+00   1.000e+00
+  1  4961 x 1634    1    4   4.0   1.685e-02   5.078e-01   3.417e-01   1.000e+00
+  2  1634 x 529     1    4   3.9   1.883e-02   4.503e-01   2.070e-01   1.000e+00
+  3   529 x 133     1    4   3.9   4.353e-03   5.749e-01   1.147e-01   1.000e+00
+  4   133 x 23      0    4   3.5   2.787e-03   5.022e-01   0.000e+00   1.000e+00
+  5    23 x 3       0    3   2.2   5.960e-03   5.063e-01   0.000e+00   1.000e+00
+
+
+     Complexity:    grid = 1.088214
+                operator = 1.128635
+                memory = 1.329027
+
+
+
+
+BoomerAMG SOLVER PARAMETERS:
+
+  Maximum number of cycles:         1 
+  Stopping Tolerance:               0.000000e+00 
+  Cycle type (1 = V, 2 = W, etc.):  1
+
+  Relaxation Parameters:
+   Visiting Grid:                     down   up  coarse
+            Number of sweeps:            1    1     1 
+   Type 0=Jac, 3=hGS, 6=hSGS, 9=GE:      8    8     9 
+   Point types, partial sweeps (1=C, -1=F):
+                  Pre-CG relaxation (down):   0
+                   Post-CG relaxation (up):   0
+                             Coarsest grid:   0
+
+   Iteration :   0  (B r, r) = 0.0310194
+   Iteration :   1  (B r, r) = 0.00129533
+   Iteration :   2  (B r, r) = 2.38797e-05
+   Iteration :   3  (B r, r) = 2.30782e-06
+   Iteration :   4  (B r, r) = 2.56417e-08
+   Iteration :   5  (B r, r) = 2.07533e-09
+   Iteration :   6  (B r, r) = 9.22344e-11
+   Iteration :   7  (B r, r) = 2.93173e-12
+   Iteration :   8  (B r, r) = 1.6538e-13
+   Iteration :   9  (B r, r) = 8.97487e-15
+   Iteration :  10  (B r, r) = 5.0813e-16
+   Iteration :  11  (B r, r) = 2.21154e-17
+   Iteration :  12  (B r, r) = 1.07106e-18
+   Iteration :  13  (B r, r) = 5.28334e-20
+   Iteration :  14  (B r, r) = 3.28358e-21
+   Iteration :  15  (B r, r) = 1.65389e-22
+   Iteration :  16  (B r, r) = 7.09676e-24
+   Iteration :  17  (B r, r) = 3.8008e-25
+   Iteration :  18  (B r, r) = 2.06371e-26
+Average reduction factor = 0.213018
+Creating file: basis1_snapshot.000000
+Elapsed time for assembling FOM: 4.260414e-01 second
+Elapsed time for solving FOM: 5.420195e-01 second
+Options used:
+   --mesh ../data/star.mesh
+   --order 1
+   --id 2
+   --nset 0
+   --no-static-condensation
+   --no-partial-assembly
+   --frequency 1.2
+   --coefficient 1
+   --device cpu
+   --visit-datafiles
+   --visualization
+   --no-fom
+   --offline
+   --no-online
+   --no-merge
+Device configuration: cpu
+Memory configuration: host-std
+Number of finite element unknowns: 0
+
+
+ Num MPI tasks = 1
+
+ Num OpenMP threads = 1
+
+
+BoomerAMG SETUP PARAMETERS:
+
+ Max levels = 25
+ Num levels = 7
+
+ Strength Threshold = 0.250000
+ Interpolation Truncation Factor = 0.000000
+ Maximum Row Sum Threshold for Dependency Weakening = 0.900000
+
+ Coarsening Type = HMIS 
+
+ No. of levels of aggressive coarsening: 1
+
+ Interpolation on agg. levels= multipass interpolation
+ measures are determined locally
+
+
+ No global partition option chosen.
+
+ Interpolation = extended+i interpolation
+
+Operator Matrix Information:
+
+             nonzero            entries/row          row sums
+lev    rows  entries sparse   min  max     avg      min         max
+======================================================================
+  0   82561   739201  0.000     4   11     9.0  -1.277e-15   1.915e+00
+  1    4961    43711  0.002     4   11     8.8  -5.412e-15   5.834e+00
+  2    1634    33118  0.012     7   27    20.3  -9.361e-15   4.935e+00
+  3     529    14311  0.051    10   38    27.1  -1.064e-14   5.718e+00
+  4     133     3545  0.200    12   40    26.7  -2.072e-14   5.808e+00
+  5      23      393  0.743    12   23    17.1   3.729e-01   6.151e+00
+  6       3        9  1.000     3    3     3.0   4.090e+00   5.234e+00
+
+
+Interpolation Matrix Information:
+                    entries/row        min        max            row sums
+lev  rows x cols  min  max  avgW     weight      weight       min         max
+================================================================================
+  0 82561 x 4961    0    4   1.6   2.998e-02   1.000e+00   0.000e+00   1.000e+00
+  1  4961 x 1634    1    4   4.0   1.685e-02   5.078e-01   3.417e-01   1.000e+00
+  2  1634 x 529     1    4   3.9   1.883e-02   4.503e-01   2.070e-01   1.000e+00
+  3   529 x 133     1    4   3.9   4.353e-03   5.749e-01   1.147e-01   1.000e+00
+  4   133 x 23      0    4   3.5   2.787e-03   5.022e-01   0.000e+00   1.000e+00
+  5    23 x 3       0    3   2.2   5.960e-03   5.063e-01   0.000e+00   1.000e+00
+
+
+     Complexity:    grid = 1.088214
+                operator = 1.128635
+                memory = 1.329027
+
+
+
+
+BoomerAMG SOLVER PARAMETERS:
+
+  Maximum number of cycles:         1 
+  Stopping Tolerance:               0.000000e+00 
+  Cycle type (1 = V, 2 = W, etc.):  1
+
+  Relaxation Parameters:
+   Visiting Grid:                     down   up  coarse
+            Number of sweeps:            1    1     1 
+   Type 0=Jac, 3=hGS, 6=hSGS, 9=GE:      8    8     9 
+   Point types, partial sweeps (1=C, -1=F):
+                  Pre-CG relaxation (down):   0
+                   Post-CG relaxation (up):   0
+                             Coarsest grid:   0
+
+   Iteration :   0  (B r, r) = 0.0271013
+   Iteration :   1  (B r, r) = 0.00115685
+   Iteration :   2  (B r, r) = 2.13821e-05
+   Iteration :   3  (B r, r) = 2.08337e-06
+   Iteration :   4  (B r, r) = 2.31352e-08
+   Iteration :   5  (B r, r) = 1.8883e-09
+   Iteration :   6  (B r, r) = 8.39024e-11
+   Iteration :   7  (B r, r) = 2.76446e-12
+   Iteration :   8  (B r, r) = 1.5848e-13
+   Iteration :   9  (B r, r) = 8.63488e-15
+   Iteration :  10  (B r, r) = 5.04312e-16
+   Iteration :  11  (B r, r) = 2.26447e-17
+   Iteration :  12  (B r, r) = 1.13186e-18
+   Iteration :  13  (B r, r) = 5.67077e-20
+   Iteration :  14  (B r, r) = 3.55447e-21
+   Iteration :  15  (B r, r) = 1.77547e-22
+   Iteration :  16  (B r, r) = 7.52394e-24
+   Iteration :  17  (B r, r) = 4.00859e-25
+   Iteration :  18  (B r, r) = 2.11185e-26
+Average reduction factor = 0.213956
+Creating file: basis2_snapshot.000000
+Elapsed time for assembling FOM: 4.131780e-01 second
+Elapsed time for solving FOM: 5.423265e-01 second
+Options used:
+   --mesh ../data/star.mesh
+   --order 1
+   --id 0
+   --nset 3
+   --no-static-condensation
+   --no-partial-assembly
+   --frequency 1
+   --coefficient 1
+   --device cpu
+   --visit-datafiles
+   --visualization
+   --no-fom
+   --no-offline
+   --no-online
+   --merge
+Device configuration: cpu
+Memory configuration: host-std
+Number of finite element unknowns: 0
+Opening file: basis0_snapshot.000000
+Opening file: basis1_snapshot.000000
+Opening file: basis2_snapshot.000000
+Creating file: basis.000000
+Elapsed time for merging and building ROM basis: 2.740183e-02 second
+Options used:
+   --mesh ../data/star.mesh
+   --order 1
+   --id 0
+   --nset 0
+   --no-static-condensation
+   --no-partial-assembly
+   --frequency 1
+   --coefficient 1
+   --device cpu
+   --visit-datafiles
+   --visualization
+   --no-fom
+   --offline
+   --no-online
+   --no-merge
+Device configuration: cpu
+Memory configuration: host-std
+Number of finite element unknowns: 0
+
+
+ Num MPI tasks = 1
+
+ Num OpenMP threads = 1
+
+
+BoomerAMG SETUP PARAMETERS:
+
+ Max levels = 25
+ Num levels = 7
+
+ Strength Threshold = 0.250000
+ Interpolation Truncation Factor = 0.000000
+ Maximum Row Sum Threshold for Dependency Weakening = 0.900000
+
+ Coarsening Type = HMIS 
+
+ No. of levels of aggressive coarsening: 1
+
+ Interpolation on agg. levels= multipass interpolation
+ measures are determined locally
+
+
+ No global partition option chosen.
+
+ Interpolation = extended+i interpolation
+
+Operator Matrix Information:
+
+             nonzero            entries/row          row sums
+lev    rows  entries sparse   min  max     avg      min         max
+======================================================================
+  0   82561   739201  0.000     4   11     9.0  -1.277e-15   1.915e+00
+  1    4961    43711  0.002     4   11     8.8  -5.412e-15   5.834e+00
+  2    1634    33118  0.012     7   27    20.3  -9.361e-15   4.935e+00
+  3     529    14311  0.051    10   38    27.1  -1.064e-14   5.718e+00
+  4     133     3545  0.200    12   40    26.7  -2.072e-14   5.808e+00
+  5      23      393  0.743    12   23    17.1   3.729e-01   6.151e+00
+  6       3        9  1.000     3    3     3.0   4.090e+00   5.234e+00
+
+
+Interpolation Matrix Information:
+                    entries/row        min        max            row sums
+lev  rows x cols  min  max  avgW     weight      weight       min         max
+================================================================================
+  0 82561 x 4961    0    4   1.6   2.998e-02   1.000e+00   0.000e+00   1.000e+00
+  1  4961 x 1634    1    4   4.0   1.685e-02   5.078e-01   3.417e-01   1.000e+00
+  2  1634 x 529     1    4   3.9   1.883e-02   4.503e-01   2.070e-01   1.000e+00
+  3   529 x 133     1    4   3.9   4.353e-03   5.749e-01   1.147e-01   1.000e+00
+  4   133 x 23      0    4   3.5   2.787e-03   5.022e-01   0.000e+00   1.000e+00
+  5    23 x 3       0    3   2.2   5.960e-03   5.063e-01   0.000e+00   1.000e+00
+
+
+     Complexity:    grid = 1.088214
+                operator = 1.128635
+                memory = 1.329027
+
+
+
+
+BoomerAMG SOLVER PARAMETERS:
+
+  Maximum number of cycles:         1 
+  Stopping Tolerance:               0.000000e+00 
+  Cycle type (1 = V, 2 = W, etc.):  1
+
+  Relaxation Parameters:
+   Visiting Grid:                     down   up  coarse
+            Number of sweeps:            1    1     1 
+   Type 0=Jac, 3=hGS, 6=hSGS, 9=GE:      8    8     9 
+   Point types, partial sweeps (1=C, -1=F):
+                  Pre-CG relaxation (down):   0
+                   Post-CG relaxation (up):   0
+                             Coarsest grid:   0
+
+   Iteration :   0  (B r, r) = 0.0364394
+   Iteration :   1  (B r, r) = 0.00147823
+   Iteration :   2  (B r, r) = 2.79448e-05
+   Iteration :   3  (B r, r) = 2.65759e-06
+   Iteration :   4  (B r, r) = 3.09622e-08
+   Iteration :   5  (B r, r) = 2.48188e-09
+   Iteration :   6  (B r, r) = 1.13483e-10
+   Iteration :   7  (B r, r) = 3.5441e-12
+   Iteration :   8  (B r, r) = 1.989e-13
+   Iteration :   9  (B r, r) = 1.10308e-14
+   Iteration :  10  (B r, r) = 6.07947e-16
+   Iteration :  11  (B r, r) = 2.55589e-17
+   Iteration :  12  (B r, r) = 1.24353e-18
+   Iteration :  13  (B r, r) = 5.95759e-20
+   Iteration :  14  (B r, r) = 3.52516e-21
+   Iteration :  15  (B r, r) = 1.72711e-22
+   Iteration :  16  (B r, r) = 7.25288e-24
+   Iteration :  17  (B r, r) = 3.70519e-25
+   Iteration :  18  (B r, r) = 1.9521e-26
+Average reduction factor = 0.21174
+Creating file: basis0_snapshot.000000
+Elapsed time for assembling FOM: 4.100088e-01 second
+Elapsed time for solving FOM: 5.420947e-01 second
+Options used:
+   --mesh ../data/star.mesh
+   --order 1
+   --id 1
+   --nset 0
+   --no-static-condensation
+   --no-partial-assembly
+   --frequency 1.1
+   --coefficient 1
+   --device cpu
+   --visit-datafiles
+   --visualization
+   --no-fom
+   --offline
+   --no-online
+   --no-merge
+Device configuration: cpu
+Memory configuration: host-std
+Number of finite element unknowns: 0
+
+
+ Num MPI tasks = 1
+
+ Num OpenMP threads = 1
+
+
+BoomerAMG SETUP PARAMETERS:
+
+ Max levels = 25
+ Num levels = 7
+
+ Strength Threshold = 0.250000
+ Interpolation Truncation Factor = 0.000000
+ Maximum Row Sum Threshold for Dependency Weakening = 0.900000
+
+ Coarsening Type = HMIS 
+
+ No. of levels of aggressive coarsening: 1
+
+ Interpolation on agg. levels= multipass interpolation
+ measures are determined locally
+
+
+ No global partition option chosen.
+
+ Interpolation = extended+i interpolation
+
+Operator Matrix Information:
+
+             nonzero            entries/row          row sums
+lev    rows  entries sparse   min  max     avg      min         max
+======================================================================
+  0   82561   739201  0.000     4   11     9.0  -1.277e-15   1.915e+00
+  1    4961    43711  0.002     4   11     8.8  -5.412e-15   5.834e+00
+  2    1634    33118  0.012     7   27    20.3  -9.361e-15   4.935e+00
+  3     529    14311  0.051    10   38    27.1  -1.064e-14   5.718e+00
+  4     133     3545  0.200    12   40    26.7  -2.072e-14   5.808e+00
+  5      23      393  0.743    12   23    17.1   3.729e-01   6.151e+00
+  6       3        9  1.000     3    3     3.0   4.090e+00   5.234e+00
+
+
+Interpolation Matrix Information:
+                    entries/row        min        max            row sums
+lev  rows x cols  min  max  avgW     weight      weight       min         max
+================================================================================
+  0 82561 x 4961    0    4   1.6   2.998e-02   1.000e+00   0.000e+00   1.000e+00
+  1  4961 x 1634    1    4   4.0   1.685e-02   5.078e-01   3.417e-01   1.000e+00
+  2  1634 x 529     1    4   3.9   1.883e-02   4.503e-01   2.070e-01   1.000e+00
+  3   529 x 133     1    4   3.9   4.353e-03   5.749e-01   1.147e-01   1.000e+00
+  4   133 x 23      0    4   3.5   2.787e-03   5.022e-01   0.000e+00   1.000e+00
+  5    23 x 3       0    3   2.2   5.960e-03   5.063e-01   0.000e+00   1.000e+00
+
+
+     Complexity:    grid = 1.088214
+                operator = 1.128635
+                memory = 1.329027
+
+
+
+
+BoomerAMG SOLVER PARAMETERS:
+
+  Maximum number of cycles:         1 
+  Stopping Tolerance:               0.000000e+00 
+  Cycle type (1 = V, 2 = W, etc.):  1
+
+  Relaxation Parameters:
+   Visiting Grid:                     down   up  coarse
+            Number of sweeps:            1    1     1 
+   Type 0=Jac, 3=hGS, 6=hSGS, 9=GE:      8    8     9 
+   Point types, partial sweeps (1=C, -1=F):
+                  Pre-CG relaxation (down):   0
+                   Post-CG relaxation (up):   0
+                             Coarsest grid:   0
+
+   Iteration :   0  (B r, r) = 0.0310194
+   Iteration :   1  (B r, r) = 0.00129533
+   Iteration :   2  (B r, r) = 2.38797e-05
+   Iteration :   3  (B r, r) = 2.30782e-06
+   Iteration :   4  (B r, r) = 2.56417e-08
+   Iteration :   5  (B r, r) = 2.07533e-09
+   Iteration :   6  (B r, r) = 9.22344e-11
+   Iteration :   7  (B r, r) = 2.93173e-12
+   Iteration :   8  (B r, r) = 1.6538e-13
+   Iteration :   9  (B r, r) = 8.97487e-15
+   Iteration :  10  (B r, r) = 5.0813e-16
+   Iteration :  11  (B r, r) = 2.21154e-17
+   Iteration :  12  (B r, r) = 1.07106e-18
+   Iteration :  13  (B r, r) = 5.28334e-20
+   Iteration :  14  (B r, r) = 3.28358e-21
+   Iteration :  15  (B r, r) = 1.65389e-22
+   Iteration :  16  (B r, r) = 7.09676e-24
+   Iteration :  17  (B r, r) = 3.8008e-25
+   Iteration :  18  (B r, r) = 2.06371e-26
+Average reduction factor = 0.213018
+Creating file: basis1_snapshot.000000
+Elapsed time for assembling FOM: 4.264630e-01 second
+Elapsed time for solving FOM: 5.451864e-01 second
+Options used:
+   --mesh ../data/star.mesh
+   --order 1
+   --id 2
+   --nset 0
+   --no-static-condensation
+   --no-partial-assembly
+   --frequency 1.2
+   --coefficient 1
+   --device cpu
+   --visit-datafiles
+   --visualization
+   --no-fom
+   --offline
+   --no-online
+   --no-merge
+Device configuration: cpu
+Memory configuration: host-std
+Number of finite element unknowns: 0
+
+
+ Num MPI tasks = 1
+
+ Num OpenMP threads = 1
+
+
+BoomerAMG SETUP PARAMETERS:
+
+ Max levels = 25
+ Num levels = 7
+
+ Strength Threshold = 0.250000
+ Interpolation Truncation Factor = 0.000000
+ Maximum Row Sum Threshold for Dependency Weakening = 0.900000
+
+ Coarsening Type = HMIS 
+
+ No. of levels of aggressive coarsening: 1
+
+ Interpolation on agg. levels= multipass interpolation
+ measures are determined locally
+
+
+ No global partition option chosen.
+
+ Interpolation = extended+i interpolation
+
+Operator Matrix Information:
+
+             nonzero            entries/row          row sums
+lev    rows  entries sparse   min  max     avg      min         max
+======================================================================
+  0   82561   739201  0.000     4   11     9.0  -1.277e-15   1.915e+00
+  1    4961    43711  0.002     4   11     8.8  -5.412e-15   5.834e+00
+  2    1634    33118  0.012     7   27    20.3  -9.361e-15   4.935e+00
+  3     529    14311  0.051    10   38    27.1  -1.064e-14   5.718e+00
+  4     133     3545  0.200    12   40    26.7  -2.072e-14   5.808e+00
+  5      23      393  0.743    12   23    17.1   3.729e-01   6.151e+00
+  6       3        9  1.000     3    3     3.0   4.090e+00   5.234e+00
+
+
+Interpolation Matrix Information:
+                    entries/row        min        max            row sums
+lev  rows x cols  min  max  avgW     weight      weight       min         max
+================================================================================
+  0 82561 x 4961    0    4   1.6   2.998e-02   1.000e+00   0.000e+00   1.000e+00
+  1  4961 x 1634    1    4   4.0   1.685e-02   5.078e-01   3.417e-01   1.000e+00
+  2  1634 x 529     1    4   3.9   1.883e-02   4.503e-01   2.070e-01   1.000e+00
+  3   529 x 133     1    4   3.9   4.353e-03   5.749e-01   1.147e-01   1.000e+00
+  4   133 x 23      0    4   3.5   2.787e-03   5.022e-01   0.000e+00   1.000e+00
+  5    23 x 3       0    3   2.2   5.960e-03   5.063e-01   0.000e+00   1.000e+00
+
+
+     Complexity:    grid = 1.088214
+                operator = 1.128635
+                memory = 1.329027
+
+
+
+
+BoomerAMG SOLVER PARAMETERS:
+
+  Maximum number of cycles:         1 
+  Stopping Tolerance:               0.000000e+00 
+  Cycle type (1 = V, 2 = W, etc.):  1
+
+  Relaxation Parameters:
+   Visiting Grid:                     down   up  coarse
+            Number of sweeps:            1    1     1 
+   Type 0=Jac, 3=hGS, 6=hSGS, 9=GE:      8    8     9 
+   Point types, partial sweeps (1=C, -1=F):
+                  Pre-CG relaxation (down):   0
+                   Post-CG relaxation (up):   0
+                             Coarsest grid:   0
+
+   Iteration :   0  (B r, r) = 0.0271013
+   Iteration :   1  (B r, r) = 0.00115685
+   Iteration :   2  (B r, r) = 2.13821e-05
+   Iteration :   3  (B r, r) = 2.08337e-06
+   Iteration :   4  (B r, r) = 2.31352e-08
+   Iteration :   5  (B r, r) = 1.8883e-09
+   Iteration :   6  (B r, r) = 8.39024e-11
+   Iteration :   7  (B r, r) = 2.76446e-12
+   Iteration :   8  (B r, r) = 1.5848e-13
+   Iteration :   9  (B r, r) = 8.63488e-15
+   Iteration :  10  (B r, r) = 5.04312e-16
+   Iteration :  11  (B r, r) = 2.26447e-17
+   Iteration :  12  (B r, r) = 1.13186e-18
+   Iteration :  13  (B r, r) = 5.67077e-20
+   Iteration :  14  (B r, r) = 3.55447e-21
+   Iteration :  15  (B r, r) = 1.77547e-22
+   Iteration :  16  (B r, r) = 7.52394e-24
+   Iteration :  17  (B r, r) = 4.00859e-25
+   Iteration :  18  (B r, r) = 2.11185e-26
+Average reduction factor = 0.213956
+Creating file: basis2_snapshot.000000
+Elapsed time for assembling FOM: 4.235584e-01 second
+Elapsed time for solving FOM: 5.412179e-01 second
+Options used:
+   --mesh ../data/star.mesh
+   --order 1
+   --id 0
+   --nset 3
+   --no-static-condensation
+   --no-partial-assembly
+   --frequency 1
+   --coefficient 1
+   --device cpu
+   --visit-datafiles
+   --visualization
+   --no-fom
+   --no-offline
+   --no-online
+   --merge
+Device configuration: cpu
+Memory configuration: host-std
+Number of finite element unknowns: 0
+Opening file: basis0_snapshot.000000
+Opening file: basis1_snapshot.000000
+Opening file: basis2_snapshot.000000
+Creating file: basis.000000
+Elapsed time for merging and building ROM basis: 2.769358e-02 second
+Opening file: /Users/pranav/Core/ROM_dev/libROM/build/examples/prom/basis.000000
+Opening file: /Users/pranav/Core/ROM_dev/libROM/dependencies/libROM/build/examples/prom/basis.000000
+Opening file: /Users/pranav/Core/ROM_dev/libROM/build/examples/prom/basis.000000
+PIPESTATUS[0] = 0
 Poisson_Global_Regression_Test: PASS
-dg-advection-global-offline: FAIL
-linear_elasticity_global_rom_regression_test: FAIL
-1 passed, 2 failed out of 3 tests
+3 passed, 0 failed out of 3 tests

@@ -220,7 +220,6 @@ foreach(name IN LISTS unit_test_names)
   target_compile_features(${name} PRIVATE cxx_std_11)
 endforeach(name) # IN LISTS regression_test_names
 
-
 foreach(name IN LISTS regression_test_names)
   add_executable(${name} regression_tests/${name}.cpp)
   target_link_libraries(${name}
@@ -230,6 +229,7 @@ foreach(name IN LISTS regression_test_names)
     ${MPI_C_INCLUDE_DIRS})
   target_compile_features(${name} PRIVATE cxx_std_11)
 endforeach(name) # IN LISTS regression_test_names
+
 
 if(GTEST_FOUND)
   set(unit_test_stems

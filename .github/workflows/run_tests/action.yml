@@ -20,8 +20,7 @@ runs:
           ./tests/test_GreedyCustomSampler
           mpirun -n 3 --oversubscribe tests/test_GreedyCustomSampler
           cd {GITHUB_WORKSPACE}/regression_tests
-          ./poisson_global_reg_test.sh
-          #./{GITHUB_WORKSPACE}/regression_tests/runRegressionTests.sh
+          ./{GITHUB_WORKSPACE}/regression_tests/run_regression_tests.sh
 
           
          

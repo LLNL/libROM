@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - master
+      - gitlab_actions_mfem
 jobs:
   linux:
     runs-on: ubuntu-latest
@@ -31,7 +32,6 @@ jobs:
 
             mkdir ${GITHUB_WORKSPACE}/dependencies/build
             cd ${GITHUB_WORKSPACE}/dependencies/build
-            git clone 
             export CC=mpicc
             export CXX=mpicxx
             git clone https://github.com/LLNL/libROM.git
