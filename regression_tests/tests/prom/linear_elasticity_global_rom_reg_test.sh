@@ -16,19 +16,21 @@ set_fail(){
 
 }
 
+BASELINE_DIR=$GITHUB_WORKSPACE/dependencies
+
 cd ${GITHUB_WORKSPACE}/build/examples/prom
 ./linear_elasticity_global_rom -offline -id 0 -nu 0.2
 ./linear_elasticity_global_rom -offline -id 1 -nu 0.4
 ./linear_elasticity_global_rom -merge -ns 2
 
-cd ${GITHUB_WORKSPACE}/dependencies/libROM/build/examples/prom # Baseline(master) branch libROM
+cd ${BASELINE_DIR}/libROM/build/examples/prom # Baseline(master) branch libROM
 ./linear_elasticity_global_rom -offline -id 0 -nu 0.2
 ./linear_elasticity_global_rom -offline -id 1 -nu 0.4
 ./linear_elasticity_global_rom -merge -ns 2
 
 cd ${GITHUB_WORKSPACE}/build/tests
 
-./basisComparator ${GITHUB_WORKSPACE}/build/examples/prom/basis ${GITHUB_WORKSPACE}/dependencies/libROM/build/examples/prom/basis 1e-7 1
+./basisComparator ${GITHUB_WORKSPACE}/build/examples/prom/basis ${BASELINE_DIR}/libROM/build/examples/prom/basis 1e-7 1
 
 if [[ "${PIPESTATUS[0]}" -ne 0 ]];  # Capture and output the pipe status from MPI_Abort
 then

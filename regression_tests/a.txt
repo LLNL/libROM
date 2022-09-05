@@ -1,7 +1,6 @@
 Setting up test suite
 For detailed logs of the regression tests, please check regression_tests/results.
 tests_to_execute = dg_advection_global_rom_reg_test.sh
-My current dir = /Users/pranav/Core/ROM_dev/libROM/regression_tests
 /Users/pranav/Core/ROM_dev/libROM/dependencies already exists
 testNum = 3
 Options used:
@@ -747,7 +746,7 @@ Opening file: basis0_snapshot.000000
 Opening file: basis1_snapshot.000000
 Opening file: basis2_snapshot.000000
 Creating file: basis.000000
-Elapsed time for merging and building ROM basis: 7.135849e+01 second
+Elapsed time for merging and building ROM basis: 8.885323e+01 second
 Options used:
    --mesh ../data/periodic-hexagon.mesh
    --problem 3
@@ -1491,7 +1490,7 @@ Opening file: basis0_snapshot.000000
 Opening file: basis1_snapshot.000000
 Opening file: basis2_snapshot.000000
 Creating file: basis.000000
-Elapsed time for merging and building ROM basis: 7.281198e+01 second
+Elapsed time for merging and building ROM basis: 6.874502e+01 second
 Opening file: /Users/pranav/Core/ROM_dev/libROM/build/examples/prom/basis.000000
 Opening file: /Users/pranav/Core/ROM_dev/libROM/dependencies/libROM/build/examples/prom/basis.000000
 Opening file: /Users/pranav/Core/ROM_dev/libROM/build/examples/prom/basis.000000
@@ -1595,7 +1594,7 @@ Setup phase times:
 PCG Setup:
   wall clock time = 0.000000 seconds
   wall MFLOPS     = 0.000000
-  cpu clock time  = 0.003823 seconds
+  cpu clock time  = 0.003559 seconds
   cpu MFLOPS      = 0.000000
 
 <C*b,b>: 3.860821e-04
@@ -1626,16 +1625,16 @@ Iters       ||r||_C     conv.rate  ||r||_C/||b||_C
 Solve phase times:
 =============================================
 PCG Solve:
-  wall clock time = 0.020000 seconds
+  wall clock time = 0.010000 seconds
   wall MFLOPS     = 0.000000
-  cpu clock time  = 0.013496 seconds
+  cpu clock time  = 0.013355 seconds
   cpu MFLOPS      = 0.000000
 
 PCG Iterations = 17
 Final PCG Relative Residual Norm = 6.82248e-09
 Creating file: basis0_snapshot.000000
-Elapsed time for assembling FOM: 3.202833e-03 second
-Elapsed time for solving FOM: 1.887742e-02 second
+Elapsed time for assembling FOM: 3.394417e-03 second
+Elapsed time for solving FOM: 1.808167e-02 second
 Options used:
    --mesh ../data/beam-tri.mesh
    --order 1
@@ -1735,9 +1734,9 @@ BoomerAMG SOLVER PARAMETERS:
 Setup phase times:
 =============================================
 PCG Setup:
-  wall clock time = 0.010000 seconds
+  wall clock time = 0.000000 seconds
   wall MFLOPS     = 0.000000
-  cpu clock time  = 0.002469 seconds
+  cpu clock time  = 0.002650 seconds
   cpu MFLOPS      = 0.000000
 
 <C*b,b>: 4.729374e-04
@@ -1770,16 +1769,16 @@ Iters       ||r||_C     conv.rate  ||r||_C/||b||_C
 Solve phase times:
 =============================================
 PCG Solve:
-  wall clock time = 0.010000 seconds
+  wall clock time = 0.020000 seconds
   wall MFLOPS     = 0.000000
-  cpu clock time  = 0.014955 seconds
+  cpu clock time  = 0.015318 seconds
   cpu MFLOPS      = 0.000000
 
 PCG Iterations = 19
 Final PCG Relative Residual Norm = 9.44098e-09
 Creating file: basis1_snapshot.000000
-Elapsed time for assembling FOM: 2.625000e-03 second
-Elapsed time for solving FOM: 1.751829e-02 second
+Elapsed time for assembling FOM: 2.780417e-03 second
+Elapsed time for solving FOM: 1.808800e-02 second
 Options used:
    --mesh ../data/beam-tri.mesh
    --order 1
@@ -1804,7 +1803,7 @@ Number of finite element unknowns: 0
 Assembling: Opening file: basis0_snapshot.000000
 Opening file: basis1_snapshot.000000
 Creating file: basis.000000
-Elapsed time for merging and building ROM basis: 7.557334e-03 second
+Elapsed time for merging and building ROM basis: 7.252167e-03 second
 Options used:
    --mesh ../data/beam-tri.mesh
    --order 1
@@ -1904,7 +1903,7 @@ Setup phase times:
 PCG Setup:
   wall clock time = 0.000000 seconds
   wall MFLOPS     = 0.000000
-  cpu clock time  = 0.003582 seconds
+  cpu clock time  = 0.003589 seconds
   cpu MFLOPS      = 0.000000
 
 <C*b,b>: 3.860821e-04
@@ -1935,16 +1934,16 @@ Iters       ||r||_C     conv.rate  ||r||_C/||b||_C
 Solve phase times:
 =============================================
 PCG Solve:
-  wall clock time = 0.010000 seconds
+  wall clock time = 0.020000 seconds
   wall MFLOPS     = 0.000000
-  cpu clock time  = 0.013402 seconds
+  cpu clock time  = 0.013362 seconds
   cpu MFLOPS      = 0.000000
 
 PCG Iterations = 17
 Final PCG Relative Residual Norm = 6.82248e-09
 Creating file: basis0_snapshot.000000
-Elapsed time for assembling FOM: 2.772542e-03 second
-Elapsed time for solving FOM: 1.708400e-02 second
+Elapsed time for assembling FOM: 2.790083e-03 second
+Elapsed time for solving FOM: 1.707775e-02 second
 Options used:
    --mesh ../data/beam-tri.mesh
    --order 1
@@ -2046,7 +2045,7 @@ Setup phase times:
 PCG Setup:
   wall clock time = 0.000000 seconds
   wall MFLOPS     = 0.000000
-  cpu clock time  = 0.002647 seconds
+  cpu clock time  = 0.002472 seconds
   cpu MFLOPS      = 0.000000
 
 <C*b,b>: 4.729374e-04
@@ -2081,14 +2080,14 @@ Solve phase times:
 PCG Solve:
   wall clock time = 0.020000 seconds
   wall MFLOPS     = 0.000000
-  cpu clock time  = 0.015352 seconds
+  cpu clock time  = 0.014876 seconds
   cpu MFLOPS      = 0.000000
 
 PCG Iterations = 19
 Final PCG Relative Residual Norm = 9.44098e-09
 Creating file: basis1_snapshot.000000
-Elapsed time for assembling FOM: 2.776167e-03 second
-Elapsed time for solving FOM: 1.811638e-02 second
+Elapsed time for assembling FOM: 2.621875e-03 second
+Elapsed time for solving FOM: 1.750467e-02 second
 Options used:
    --mesh ../data/beam-tri.mesh
    --order 1
@@ -2113,7 +2112,7 @@ Number of finite element unknowns: 0
 Assembling: Opening file: basis0_snapshot.000000
 Opening file: basis1_snapshot.000000
 Creating file: basis.000000
-Elapsed time for merging and building ROM basis: 7.110000e-03 second
+Elapsed time for merging and building ROM basis: 3.391113e-02 second
 Opening file: /Users/pranav/Core/ROM_dev/libROM/build/examples/prom/basis.000000
 Opening file: /Users/pranav/Core/ROM_dev/libROM/dependencies/libROM/build/examples/prom/basis.000000
 Opening file: /Users/pranav/Core/ROM_dev/libROM/build/examples/prom/basis.000000
@@ -2236,8 +2235,8 @@ BoomerAMG SOLVER PARAMETERS:
    Iteration :  18  (B r, r) = 1.9521e-26
 Average reduction factor = 0.21174
 Creating file: basis0_snapshot.000000
-Elapsed time for assembling FOM: 4.238007e-01 second
-Elapsed time for solving FOM: 5.519684e-01 second
+Elapsed time for assembling FOM: 4.290378e-01 second
+Elapsed time for solving FOM: 5.459708e-01 second
 Options used:
    --mesh ../data/star.mesh
    --order 1
@@ -2354,8 +2353,8 @@ BoomerAMG SOLVER PARAMETERS:
    Iteration :  18  (B r, r) = 2.06371e-26
 Average reduction factor = 0.213018
 Creating file: basis1_snapshot.000000
-Elapsed time for assembling FOM: 4.260414e-01 second
-Elapsed time for solving FOM: 5.420195e-01 second
+Elapsed time for assembling FOM: 3.972766e-01 second
+Elapsed time for solving FOM: 5.272021e-01 second
 Options used:
    --mesh ../data/star.mesh
    --order 1
@@ -2472,8 +2471,8 @@ BoomerAMG SOLVER PARAMETERS:
    Iteration :  18  (B r, r) = 2.11185e-26
 Average reduction factor = 0.213956
 Creating file: basis2_snapshot.000000
-Elapsed time for assembling FOM: 4.131780e-01 second
-Elapsed time for solving FOM: 5.423265e-01 second
+Elapsed time for assembling FOM: 4.293295e-01 second
+Elapsed time for solving FOM: 5.449810e-01 second
 Options used:
    --mesh ../data/star.mesh
    --order 1
@@ -2497,7 +2496,30 @@ Opening file: basis0_snapshot.000000
 Opening file: basis1_snapshot.000000
 Opening file: basis2_snapshot.000000
 Creating file: basis.000000
-Elapsed time for merging and building ROM basis: 2.740183e-02 second
+Elapsed time for merging and building ROM basis: 2.912521e-02 second
+Options used:
+   --mesh ../data/star.mesh
+   --order 1
+   --id 0
+   --nset 0
+   --no-static-condensation
+   --no-partial-assembly
+   --frequency 1.15
+   --coefficient 1
+   --device cpu
+   --visit-datafiles
+   --visualization
+   --no-fom
+   --no-offline
+   --online
+   --no-merge
+Device configuration: cpu
+Memory configuration: host-std
+Number of finite element unknowns: 0
+Opening file: basis.000000
+spatial basis dimension is 82561 x 3
+Elapsed time for assembling ROM: 4.471791e-01 second
+Elapsed time for solving ROM: 6.208000e-06 second
 Options used:
    --mesh ../data/star.mesh
    --order 1
@@ -2614,8 +2636,8 @@ BoomerAMG SOLVER PARAMETERS:
    Iteration :  18  (B r, r) = 1.9521e-26
 Average reduction factor = 0.21174
 Creating file: basis0_snapshot.000000
-Elapsed time for assembling FOM: 4.100088e-01 second
-Elapsed time for solving FOM: 5.420947e-01 second
+Elapsed time for assembling FOM: 4.168943e-01 second
+Elapsed time for solving FOM: 5.393323e-01 second
 Options used:
    --mesh ../data/star.mesh
    --order 1
@@ -2732,8 +2754,8 @@ BoomerAMG SOLVER PARAMETERS:
    Iteration :  18  (B r, r) = 2.06371e-26
 Average reduction factor = 0.213018
 Creating file: basis1_snapshot.000000
-Elapsed time for assembling FOM: 4.264630e-01 second
-Elapsed time for solving FOM: 5.451864e-01 second
+Elapsed time for assembling FOM: 4.035677e-01 second
+Elapsed time for solving FOM: 5.477524e-01 second
 Options used:
    --mesh ../data/star.mesh
    --order 1
@@ -2850,8 +2872,8 @@ BoomerAMG SOLVER PARAMETERS:
    Iteration :  18  (B r, r) = 2.11185e-26
 Average reduction factor = 0.213956
 Creating file: basis2_snapshot.000000
-Elapsed time for assembling FOM: 4.235584e-01 second
-Elapsed time for solving FOM: 5.412179e-01 second
+Elapsed time for assembling FOM: 4.200724e-01 second
+Elapsed time for solving FOM: 5.425286e-01 second
 Options used:
    --mesh ../data/star.mesh
    --order 1
@@ -2875,10 +2897,33 @@ Opening file: basis0_snapshot.000000
 Opening file: basis1_snapshot.000000
 Opening file: basis2_snapshot.000000
 Creating file: basis.000000
-Elapsed time for merging and building ROM basis: 2.769358e-02 second
+Elapsed time for merging and building ROM basis: 2.791263e-02 second
+Options used:
+   --mesh ../data/star.mesh
+   --order 1
+   --id 0
+   --nset 0
+   --no-static-condensation
+   --no-partial-assembly
+   --frequency 1.15
+   --coefficient 1
+   --device cpu
+   --visit-datafiles
+   --visualization
+   --no-fom
+   --no-offline
+   --online
+   --no-merge
+Device configuration: cpu
+Memory configuration: host-std
+Number of finite element unknowns: 0
+Opening file: basis.000000
+spatial basis dimension is 82561 x 3
+Elapsed time for assembling ROM: 4.304984e-01 second
+Elapsed time for solving ROM: 8.750000e-06 second
 Opening file: /Users/pranav/Core/ROM_dev/libROM/build/examples/prom/basis.000000
 Opening file: /Users/pranav/Core/ROM_dev/libROM/dependencies/libROM/build/examples/prom/basis.000000
 Opening file: /Users/pranav/Core/ROM_dev/libROM/build/examples/prom/basis.000000
-PIPESTATUS[0] = 0
+PIPESTATUS[0] = 134
 Poisson_Global_Regression_Test: PASS
 3 passed, 0 failed out of 3 tests

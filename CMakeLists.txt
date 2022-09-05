@@ -205,7 +205,9 @@ set(unit_test_names
   set(regression_test_names
       basisComparator
       checkError
-      computeSpeedup)
+      computeSpeedup
+      solutionComparator
+      fileComparator)
 
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests)
