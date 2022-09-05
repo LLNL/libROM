@@ -28,8 +28,7 @@ jobs:
             make
       - uses: ./.github/workflows/run_tests
       - name: Build libROM Baseline # Defaults to the 'master' branch
-          run: |
-
+        run: |
             mkdir ${GITHUB_WORKSPACE}/dependencies/build
             cd ${GITHUB_WORKSPACE}/dependencies/build
             export CC=mpicc
@@ -66,7 +65,7 @@ jobs:
             cmake -DCMAKE_BUILD_TYPE=Optimized -DUSE_MFEM=On ..
             make
       - uses: ./.github/workflows/run_tests
-      name: Build libROM Baseline
+      - name: Build libROM Baseline
         run: |
             mkdir ${GITHUB_WORKSPACE}/dependencies/build
             export FC=/usr/local/bin/gfortran-10
