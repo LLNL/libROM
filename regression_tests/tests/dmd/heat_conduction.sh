@@ -26,6 +26,8 @@ cd ${BASELINE_DIR}/libROM/build/examples/dmd # Baseline(master) branch libROM
 mpirun -np 8 heat_conduction -s 1 -a 0.0 -k 1.0 
 mpirun -np 8 heat_conduction -s 3 -a 0.5 -k 0.5 -o 4 -tf 0.7 -vs 1
 
+
+
 #cd ${GITHUB_WORKSPACE}/build/tests
 
 #./basisComparator ${GITHUB_WORKSPACE}/build/examples/prom/basis ${BASELINE_DIR}/libROM/build/examples/prom/basis 1e-7 1
