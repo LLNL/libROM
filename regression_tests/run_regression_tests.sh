@@ -6,12 +6,12 @@ echo "Setting up test suite"
 echo "For detailed logs of the regression tests, please check regression_tests/results."
 
 export GITHUB_WORKSPACE=/Users/pranav/Core/ROM_dev/libROM
+export TMPDIR=/tmp
 BASELINE_DIR=${GITHUB_WORKSPACE}/dependencies
 TESTS_DIR=${GITHUB_WORKSPACE}/regression_tests/tests
 BUILD_DIR=${BASELINE_DIR}/build
 MYDIR=$(pwd)
 scriptName="Unknown"
-echo "tests_to_execute = ${tests_to_execute}"
 #echo "My current dir = $MYDIR"
 if [ ! -d $BASELINE_DIR/libROM ]; then # Clone master branch to baseline directory
    echo "Creating $BASELINE_DIR"
@@ -36,8 +36,7 @@ else
 	rm -rf $RESULTS_DIR/*
 fi
 
-totalTests=${#tests_to_execute[@]}
-echo "Number of tests = $totalTests"
+totalTests=0
 testNum=0
 testNumPass=0
 testNumFail=0
@@ -62,12 +61,11 @@ for type_of_test in ${type_of_tests_to_execute[@]}; do
           else
             testNumPass=$((testNumPass+1))
             echo "$testNum. $test: PASS" 
-            echo 
       fi
   done
   cd ..
 done
-
+totalTests=testNum
 echo "${testNumPass} passed, ${testNumFail} failed out of ${totalTests} tests"
 if [[ $testNumFail -ne 0 ]]; then
 	exit 1

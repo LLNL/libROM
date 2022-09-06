@@ -7,9 +7,7 @@ set_pass() {
 
 
 set_fail(){
- 
-	"Poisson_Global_Regression_Test: FAIL"	
-	
+	echo "Poisson_Global_Regression_Test: FAIL"	
 }
 
 echo "Running Poisson_Global_Regression_Test"
@@ -35,7 +33,7 @@ cd ${BASELINE_DIR}/libROM/build/examples/prom # Baseline(master) branch libROM
 cd ${GITHUB_WORKSPACE}/build/tests
 
 ./basisComparator ${GITHUB_WORKSPACE}/build/examples/prom/basis ${BASELINE_DIR}/libROM/build/examples/prom/basis 1e-7 1
-./solutionComparator ${GITHUB_WORKSPACE}/build/examples/prom/sol ${BASELINE_DIR}/libROM/build/examples/prom/sol_f-0.01_fom "1.0e-5" "1" 
+./solutionComparator ${GITHUB_WORKSPACE}/build/examples/prom/sol.000000 ${BASELINE_DIR}/libROM/build/examples/prom/sol.000000 "1.0e-5" "1" 
 
 #echo "PIPESTATUS[0] = ${PIPESTATUS[0]}"
 if [[ "${PIPESTATUS[0]}" -ne 0 ]];  # Capture and output the pipe status from MPI_Abort in some way
