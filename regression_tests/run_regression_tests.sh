@@ -4,8 +4,10 @@
 
 echo "Setting up test suite"
 echo "For detailed logs of the regression tests, please check regression_tests/results."
-
-export GITHUB_WORKSPACE=/Users/pranav/Core/ROM_dev/libROM
+if [[ -z ${GITHUB_WORKSPACE} ]]; then
+  export GITHUB_WORKSPACE=$(pwd)
+fi
+echo "GITHUB_WORKSPACE = ${GITHUB_WORKSPACE}"
 export TMPDIR=/tmp
 BASELINE_DIR=${GITHUB_WORKSPACE}/dependencies
 TESTS_DIR=${GITHUB_WORKSPACE}/regression_tests/tests
@@ -54,7 +56,7 @@ for type_of_test in ${type_of_tests_to_execute[@]}; do
       touch $simulationLogFile
       testNum=$((testNum+1))
       ./$test >> $simulationLogFile
-      if [[ "${PIPESTATUS[0]}" -ne 0 ]];  
+      if [[ $? -ne 0 || "${PIPESTATUS[0]}" -ne 0 ]];  
           then
             testNumFail=$((testNumFail+1))
             echo "$testNum. $test: FAIL"   
