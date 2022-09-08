@@ -29,7 +29,7 @@ else
    echo "${BASELINE_DIR}/libROM already exists"
 fi
 cd $MYDIR
-RESULTS_DIR=$MYDIR/results
+RESULTS_DIR=$MYDIR/regression_tests/results
 if [ ! -d $RESULTS_DIR ]; then
     echo "Creating $RESULTS_DIR"
     mkdir -p $RESULTS_DIR
