@@ -94,10 +94,6 @@
 #include <memory>
 #include <cmath>
 #include <limits>
-#include <iostream>
-#include <fstream>
-
-typedef enum {FSPACE } FESPACE;
 
 using namespace std;
 using namespace mfem;
@@ -392,7 +388,7 @@ int main(int argc, char* argv[])
     bool use_sopt = false;
     bool hyperreduce = true;
     bool x_base_only = false;
-    int num_samples_req = -1; // 1170 for full sampling
+    int num_samples_req = -1; 
 
     int nsets = 0;
     int id_param = 0;
@@ -660,7 +656,6 @@ int main(int argc, char* argv[])
     CAROM::Vector* w = 0;
     CAROM::Vector* w_v = 0;
     CAROM::Vector* w_x = 0;
-
 
     // Initialize reconstructed solution
     Vector * v_rec = new Vector(v_gf.GetTrueVector());
@@ -987,7 +982,6 @@ int main(int argc, char* argv[])
                 {
                     num_ess_sp += 1;
                 }
-
             }
 
             // Initialize essential dof list in sampling space
@@ -1002,12 +996,10 @@ int main(int argc, char* argv[])
                     ess_tdof_list_sp[ctr] = i;
                     ctr += 1;
                 }
-
             }
 
             // Define operator in sample space
             soper = new HyperelasticOperator(*sp_XV_space, ess_tdof_list_sp, visc, mu, K);
-
         }
 
         if (hyperreduce)
@@ -1022,7 +1014,7 @@ int main(int argc, char* argv[])
                                     num_samples_req != -1, hyperreduce, x_base_only);
         }
 
-        // Display lifted initial energies
+        // Print lifted initial energies
         BroadcastUndistributedRomVector(w);
 
         for (int i=0; i<rvdim; ++i)
@@ -1080,16 +1072,12 @@ int main(int argc, char* argv[])
             }
 
             MPI_Bcast(&t, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
         }
         else
         {
             solveTimer.Start();
-
             ode_solver->Step(vx, t, dt_real);
-
             solveTimer.Stop();
-
         }
 
         last_step = (t >= t_final - 1e-8 * dt);
@@ -1097,12 +1085,11 @@ int main(int argc, char* argv[])
         if (offline)
         {
 
-            if (  basis_generator_x->isNextSample(t) || x_base_only == false && basis_generator_v->isNextSample(t))
+            if (basis_generator_x->isNextSample(t) || x_base_only == false && basis_generator_v->isNextSample(t))
             {
                 dvxdt = oper.dvxdt_sp.GetData();
                 vx_diff = BlockVector(vx);
                 vx_diff -= vx0;
-
             }
 
             // Take samples
@@ -1124,8 +1111,6 @@ int main(int argc, char* argv[])
                 {
                     basis_generator_H->takeSample(oper.H_sp.GetData(), t, dt);
                 }
-                
-
             }
         }
 
@@ -1211,7 +1196,6 @@ int main(int argc, char* argv[])
         delete basis_generator_v;
         }
         
-        //Ändra bug!
         basis_generator_H->takeSample(oper.H_sp.GetData(), t, dt);
         basis_generator_H->writeSnapshot();
         delete basis_generator_H;
@@ -1219,7 +1203,6 @@ int main(int argc, char* argv[])
         basis_generator_x->takeSample(vx_diff.GetBlock(1), t, dt);
         basis_generator_x->writeSnapshot();
         delete basis_generator_x;
-
 
         // 14. Save the displaced mesh, the velocity and elastic energy.
         GridFunction* nodes = &x_gf;
@@ -1312,7 +1295,7 @@ int main(int argc, char* argv[])
                             totalTimer.RealTime() << endl;
 
     MPI_Finalize();
-    return 1;
+    return 0;
 }
 
 void visualize(ostream& out, ParMesh* mesh, ParGridFunction* deformed_nodes,
