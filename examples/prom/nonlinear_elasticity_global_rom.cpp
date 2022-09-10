@@ -195,8 +195,8 @@ public:
 
     RomOperator(HyperelasticOperator* fom_,
                 HyperelasticOperator* fomSp_, const int rvdim_, const int rxdim_,
-                const int hdim_,CAROM::SampleMeshManager* smm_, const Vector v0_,
-                const Vector x0_,const Vector v0_fom_,const CAROM::Matrix* V_v_,
+                const int hdim_,CAROM::SampleMeshManager* smm_, const Vector* v0_,
+                const Vector* x0_,const Vector v0_fom_,const CAROM::Matrix* V_v_,
                 const CAROM::Matrix* V_x_, const CAROM::Matrix* U_H_,
                 const CAROM::Matrix* Hsinv_,const int myid, const bool oversampling_,
                 const bool hyperreduce_,const bool x_base_only_);
@@ -209,7 +209,9 @@ public:
                       const CAROM::Matrix& C, CAROM::Matrix* CtAB);
 
     CAROM::Matrix V_v, V_x, V_vTU_H;
-    Vector x0, v0, v0_fom;
+    const Vector* x0;
+    const Vector* v0;
+    Vector v0_fom;
 
     virtual ~RomOperator();
 };
@@ -760,6 +762,7 @@ int main(int argc, char* argv[])
     CAROM::SampleMeshManager* smm = nullptr;
 
     // 11. Initialize ROM operator
+    // I guess most of this should be done on id =0
     if (online)
     {
         // Read bases
@@ -836,6 +839,8 @@ int main(int argc, char* argv[])
         vector<int> sample_dofs(nsamp_H);
         if (use_sopt)
         {
+            if (myid == 0)
+                printf("Using S_OPT sampling\n");
             CAROM::S_OPT(H_librom,
                          hdim,
                          sample_dofs,
@@ -847,6 +852,8 @@ int main(int argc, char* argv[])
         }
         else if (nsamp_H != hdim)
         {
+            if (myid == 0)
+                printf("Using GNAT sampling\n");
             CAROM::GNAT(H_librom,
                         hdim,
                         sample_dofs,
@@ -858,6 +865,8 @@ int main(int argc, char* argv[])
         }
         else
         {
+            if (myid == 0)
+                printf("Using DEIM sampling\n");
             CAROM::DEIM(H_librom,
                         hdim,
                         sample_dofs,
@@ -901,11 +910,13 @@ int main(int argc, char* argv[])
         Vector*  w_v0 = 0;
         Vector*  w_x0 = 0;
 
+        int sp_size = 0;
+
         if (myid == 0)
         {
             sp_XV_space = smm->GetSampleFESpace(0);
 
-            int sp_size = sp_XV_space->TrueVSize();
+            sp_size = sp_XV_space->TrueVSize();
             Array<int> sp_offset(3);
             sp_offset[0] = 0;
             sp_offset[1] = sp_size;
@@ -953,64 +964,68 @@ int main(int argc, char* argv[])
             // Get initial conditions
             w_v0 = new Vector(sp_v_gf.GetTrueVector());
             w_x0 = new Vector(sp_x_gf.GetTrueVector());
+        }
 
-            // Convert essential boundary list from FOM mesh to sample mesh
-            // Create binary list where 1 means essential boundary element, 0 means nonessential.
-            CAROM::Matrix Ess_mat(true_size, 1, true);
-            for (size_t i = 0; i < true_size; i++)
+        // Convert essential boundary list from FOM mesh to sample mesh
+        // Create binary list where 1 means essential boundary element, 0 means nonessential.
+        CAROM::Matrix Ess_mat(true_size, 1, true);
+        for (size_t i = 0; i < true_size; i++)
+        {
+            Ess_mat(i,0) = 0;
+            for (size_t j = 0; j < ess_tdof_list.Size(); j++)
             {
-                Ess_mat(i,0) = 0;
-                for (size_t j = 0; j < ess_tdof_list.Size(); j++)
+                if (ess_tdof_list[j] == i )
                 {
-                    if (ess_tdof_list[j] == i )
-                    {
-                        Ess_mat(i,0) = 1;
-                    }
+                    Ess_mat(i,0) = 1;
                 }
             }
+        }
 
-            // Project binary FOM list onto sampling space
-            CAROM::Matrix Ess_mat_sp(sp_size, 1, false);
-            smm->GatherDistributedMatrixRows("X", Ess_mat, 1, Ess_mat_sp);
+        // Project binary FOM list onto sampling space
+        MPI_Bcast(&sp_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        CAROM::Matrix Ess_mat_sp(sp_size, 1, false);
+        smm->GatherDistributedMatrixRows("X", Ess_mat, 1, Ess_mat_sp);
 
-            // Count number of true elements in new matrix
-            int num_ess_sp = 0;
+        // Count number of true elements in new matrix
+        int num_ess_sp = 0;
 
-            for (size_t i = 0; i < sp_size; i++)
+        for (size_t i = 0; i < sp_size; i++)
+        {
+            if (Ess_mat_sp(i,0) == 1)
             {
-                if (Ess_mat_sp(i,0) == 1)
-                {
-                    num_ess_sp += 1;
-                }
+                num_ess_sp += 1;
             }
+        }
 
-            // Initialize essential dof list in sampling space
-            Array<int> ess_tdof_list_sp(num_ess_sp);
+        // Initialize essential dof list in sampling space
+        Array<int> ess_tdof_list_sp(num_ess_sp);
 
-            // Add indices to list
-            int ctr = 0;
-            for (size_t i = 0; i < sp_size; i++)
+        // Add indices to list
+        int ctr = 0;
+        for (size_t i = 0; i < sp_size; i++)
+        {
+            if (Ess_mat_sp(i,0) == 1)
             {
-                if (Ess_mat_sp(i,0) == 1)
-                {
-                    ess_tdof_list_sp[ctr] = i;
-                    ctr += 1;
-                }
+                ess_tdof_list_sp[ctr] = i;
+                ctr += 1;
             }
+        }
 
+        if (myid == 0)
+        {
             // Define operator in sample space
-            soper = new HyperelasticOperator(*sp_XV_space, ess_tdof_list_sp, visc, mu, K);
+                    soper = new HyperelasticOperator(*sp_XV_space, ess_tdof_list_sp, visc, mu, K);
         }
 
         if (hyperreduce)
-        {   romop = new RomOperator(&oper, soper, rvdim, rxdim, hdim, smm, *w_v0, *w_x0,
+        {   romop = new RomOperator(&oper, soper, rvdim, rxdim, hdim, smm, w_v0, w_x0,
                                     vx0.GetBlock(0), BV_librom, BX_librom, H_librom, Hsinv, myid,
                                     num_samples_req != -1, hyperreduce, x_base_only);
         }
         else
         {
-            romop = new RomOperator(&oper, soper, rvdim, rxdim, hdim, smm, vx0.GetBlock(0),
-                                    vx0.GetBlock(1), vx0.GetBlock(0), BV_librom, BX_librom, H_librom, Hsinv, myid,
+            romop = new RomOperator(&oper, soper, rvdim, rxdim, hdim, smm, &(vx0.GetBlock(0)),
+                                    &(vx0.GetBlock(1)), vx0.GetBlock(0), BV_librom, BX_librom, H_librom, Hsinv, myid,
                                     num_samples_req != -1, hyperreduce, x_base_only);
         }
 
@@ -1039,9 +1054,11 @@ int main(int argc, char* argv[])
         {
             cout << "Lifted initial energies, EE = " << ee
                  << ", KE = " << ke << ", ΔTE = " << (ee + ke) - (ee0 + ke0) << endl;
+        
         }
-
+        
         ode_solver->Init(*romop);
+        
     }
     else
     {
@@ -1118,7 +1135,6 @@ int main(int argc, char* argv[])
         {
             if (online)
             {
-
                 BroadcastUndistributedRomVector(w);
 
                 for (int i=0; i<rvdim; ++i)
@@ -1471,8 +1487,8 @@ void InitialVelocityIC2(const Vector& x, Vector& v)
 
 RomOperator::RomOperator(HyperelasticOperator* fom_,
                          HyperelasticOperator* fomSp_, const int rvdim_, const int rxdim_,
-                         const int hdim_, CAROM::SampleMeshManager* smm_, const Vector v0_,
-                         const Vector x0_, const Vector v0_fom_, const CAROM::Matrix* V_v_,
+                         const int hdim_, CAROM::SampleMeshManager* smm_, const Vector* v0_,
+                         const Vector* x0_, const Vector v0_fom_, const CAROM::Matrix* V_v_,
                          const CAROM::Matrix* V_x_, const CAROM::Matrix* U_H_,
                          const CAROM::Matrix* Hsinv_, const int myid, const bool oversampling_,
                          const bool hyperreduce_, const bool x_base_only_)
@@ -1525,8 +1541,7 @@ RomOperator::RomOperator(HyperelasticOperator* fom_,
     // Invert M_hat and store
     M_hat->inverse(*M_hat_inv);
 
-    //if (myid == 0)
-    if (hyperreduce)
+    if (myid == 0)
     {
         const int spdim = fomSp->Height();  // Reduced height
 
@@ -1605,8 +1620,8 @@ void RomOperator::Mult_Hyperreduced(const Vector& vx, Vector& dvx_dt) const
     V_v_sp->mult(v_librom, *z_v_librom);
     V_x_sp->mult(x_librom, *z_x_librom);
 
-    add(z_v, v0, *psp_v); // Store liftings
-    add(z_x, x0, *psp_x);
+    add(z_v, *v0, *psp_v); // Store liftings
+    add(z_x, *x0, *psp_x);
 
     // Hyperreduce H
     // Apply H to x to get zH
@@ -1662,8 +1677,8 @@ void RomOperator::Mult_FullOrder(const Vector& vx, Vector& dvx_dt) const
     V_x.mult(x_librom, *z_x_librom);
     V_v.mult(v_librom, *z_v_librom);
 
-    add(z_x, x0, *pfom_x); // Store liftings
-    add(z_v, v0, *pfom_v);
+    add(z_x, *x0, *pfom_x); // Store liftings
+    add(z_v, *v0, *pfom_v);
 
     // Apply H to x to get z
     fom->H->Mult(*pfom_x, *zfom_x);
