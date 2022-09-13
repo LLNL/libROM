@@ -5,16 +5,17 @@
 echo "Setting up test suite"
 echo "For detailed logs of the regression tests, please check regression_tests/results."
 if [[ -z ${GITHUB_WORKSPACE} ]]; then
-  export GITHUB_WORKSPACE=$(pwd)
+  echo "GITHUB_WORKSPACE is not set. Exiting ..."
+  exit 1
 fi
 echo "GITHUB_WORKSPACE = ${GITHUB_WORKSPACE}"
 export TMPDIR=/tmp
 BASELINE_DIR=${GITHUB_WORKSPACE}/dependencies
 TESTS_DIR=${GITHUB_WORKSPACE}/regression_tests/tests
 BUILD_DIR=${BASELINE_DIR}/build
-MYDIR=$(pwd)
+DIR=$(pwd)
 scriptName="Unknown"
-#echo "My current dir = $MYDIR"
+#echo "My current dir = $DIR"
 if [ ! -d $BASELINE_DIR/libROM ]; then # Clone master branch to baseline directory
    echo "Creating $BASELINE_DIR"
    mkdir -p $BASELINE_DIR
@@ -28,8 +29,8 @@ if [ ! -d $BASELINE_DIR/libROM ]; then # Clone master branch to baseline directo
 else
    echo "${BASELINE_DIR}/libROM already exists"
 fi
-cd $MYDIR
-RESULTS_DIR=$MYDIR/regression_tests/results
+cd $DIR
+RESULTS_DIR=$DIR/regression_tests/results
 if [ ! -d $RESULTS_DIR ]; then
     echo "Creating $RESULTS_DIR"
     mkdir -p $RESULTS_DIR
@@ -38,24 +39,30 @@ else
 	rm -rf $RESULTS_DIR/*
 fi
 
+# Get the number of processors
+NUM_PROCESSORS=$(getconf _NPROCESSORS_ONLN)
+re='^[0-9]+$'
+if ! [[ $NUM_PROCESSORS =~ $re ]] ; then
+   echo "Error: $NUM_PROCESSORS is not a number"
+   exit 1
+fi
+echo "Number of processors = $NUM_PROCESSORS"
+echo "Running regression tests"
 totalTests=0
 testNum=0
 testNumPass=0
 testNumFail=0
 cd $TESTS_DIR
 type_of_tests_to_execute=(*)
-echo "pwd = $(pwd)"
 for type_of_test in ${type_of_tests_to_execute[@]}; do
-  echo "Type of test = $type_of_test"
   cd $type_of_test
   tests_to_execute=(*)
   for test in ${tests_to_execute[@]}; do 
       scriptName=$(basename $test ".sh")
-      echo "scriptName = $scriptName"
       simulationLogFile="${RESULTS_DIR}/${scriptName}.log"
       touch $simulationLogFile
       testNum=$((testNum+1))
-      ./$test >> $simulationLogFile
+      ./$test "$NUM_PROCESSORS" >> $simulationLogFile 2>&1
       if [[ $? -ne 0 || "${PIPESTATUS[0]}" -ne 0 ]];  
           then
             testNumFail=$((testNumFail+1))

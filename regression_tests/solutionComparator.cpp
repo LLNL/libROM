@@ -2,6 +2,8 @@
 #include <string>
 #include <cmath>
 #include <iostream>
+#include <iomanip>
+using std::setprecision;
 #include "mfem.hpp"
 
 using namespace std;
@@ -53,13 +55,13 @@ void compareSolutions(string &baselineFile, string &targetFile, double errorBoun
     Vector baseline = Vector();
     Vector target = Vector();
     baseline.Load(baselineFiles, numProcessors, baselineDim);
-    cout << "Baseline File 0 = " << baselineFiles[0];
-    cout << "Baseline num processors = " << numProcessors;
-    cout << "Baseline dim 0 = " << baselineDim[0];
+    cout << "Baseline File 0 = " << baselineFiles[0] << endl;
+    cout << "Baseline num processors = " << numProcessors << endl;
+    cout << "Baseline dim 0 = " << baselineDim[0] << endl;
     target.Load(targetFiles, numProcessors, targetDim);
-    cout << "Taret File 0 = " << targetFiles[0];
-    cout << "Target num processors = " << numProcessors;
-    cout << "Target dim 0 = " << targetDim[0];
+    cout << "Target File 0 = " << targetFiles[0] << endl;
+    cout << "Target num processors = " << numProcessors << endl;
+    cout << "Target dim 0 = " << targetDim[0] << endl;
     cout << "Loaded baseline and target" << endl;
     if (baseline.Size() != target.Size()) {
         cerr << "The solution vectors are different dimensions." << endl;
@@ -67,11 +69,13 @@ void compareSolutions(string &baselineFile, string &targetFile, double errorBoun
         abort();
     }
     for (int i=0; i < baseline.Size(); i++) {
-        cout << " Baseline Element at " << i << " " << baseline.Elem(i) << endl;
+        cout << " Baseline Element at " << i << " is " << std::scientific << baseline.Elem(i) << endl;
     }
+
     for (int i=0; i < target.Size(); i++) {
-        cout << " Target Element at " << i << " " << target.Elem(i) << endl;
+        cout << " Target Element at " << i << " is " << std::scientific << target.Elem(i) << endl;
     }
+
     Vector diff = Vector(baseline.Size());
     try {
         subtract(baseline, target, diff);

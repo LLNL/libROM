@@ -1,23 +1,5 @@
-
 #!/bin/bash
-
-RESULTS_DIR=$DIR/results
-BASELINE_DIR=$GITHUB_WORKSPACE/dependencies
-
-scriptName="dg_advection_global"
-testName=""
-
-#simulationLogFile="${RESULTS_DIR}/${scriptName}-${testName}.log"
-#touch $simulationLogFile
-
-set_pass() {
-    echo "dg-advection-global-offline: PASS"		
-}
-
-set_fail(){
-	echo "dg-advection-global-offline: FAIL"
-}
-
+source $GITHUB_WORKSPACE/regression_tests/common.sh
 cd ${GITHUB_WORKSPACE}/build/examples/prom
 ./dg_advection_global_rom -offline -ff 1.0 -id 0
 ./dg_advection_global_rom -offline -ff 1.1 -id 1
@@ -33,16 +15,10 @@ cd ${BASELINE_DIR}/libROM/build/examples/prom # Baseline(master) branch libROM
 
 cd ${GITHUB_WORKSPACE}/build/tests
 
-./basisComparator ${GITHUB_WORKSPACE}/build/examples/prom/basis ${BASELINE_DIR}/libROM/build/examples/prom/basis 1e-7 1
-
-if [[ "${PIPESTATUS[0]}" -ne 0 ]];  # Capture and the pipe status from MPI_Abort to account for test failure
-then
-    set_fail
-
-else
-    set_pass
-
-fi
+./basisComparator ${GITHUB_WORKSPACE}/build/examples/prom/basis ${BASELINE_DIR}/libROM/build/examples/prom/basis "1e-7 1" "$1"
+check_fail
+./solutionComparator ${GITHUB_WORKSPACE}/build/examples/prom/dg_advection_global_rom-final.1.000000  ${BASELINE_DIR}/libROM/build/examples/prom/dg_advection_global_rom-final.1.000000 "1.0e-5" "1"
+check_fail
 
 
 
