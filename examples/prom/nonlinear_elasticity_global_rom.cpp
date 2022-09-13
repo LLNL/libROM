@@ -1181,6 +1181,10 @@ int main(int argc, char* argv[])
 
             if (visit)
             {
+                GridFunction* nodes = &x_gf;
+                int owns_nodes = 0;
+                pmesh->SwapNodes(nodes, owns_nodes);
+
                 dc->SetCycle(ti);
                 dc->SetTime(t);
                 dc->Save();
