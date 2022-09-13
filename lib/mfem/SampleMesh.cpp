@@ -1455,7 +1455,7 @@ void SampleMeshManager::CreateSampleMesh()
 {
     MFEM_VERIFY(nspaces > 0, "");
 
-    set<int> elems;
+    //set<int> elems;
     vector<vector<int> > sample_dofs_block(nspaces);  // True DOF's
     vector<vector<int> > sample_dofs_sub_to_sample_dofs(nspaces);
     vector<vector<int> > local_num_sample_dofs_sub(nspaces);
