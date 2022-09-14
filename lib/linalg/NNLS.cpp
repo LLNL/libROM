@@ -675,7 +675,7 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& matTrans,
 
                     // reupdate solution
                     //soln_nz_glob.rows(0,n_glob-1) += alpha*(soln_nz_glob_up.rows(0,n_glob-1) - soln_nz_glob.rows(0,n_glob-1));
-                    for (int i = 1; i < n_glob; ++i)
+                    for (int i = 0; i < n_glob; ++i)
                         soln_nz_glob(i) += alpha*(soln_nz_glob_up(i) - soln_nz_glob(i));
                 }
             }
