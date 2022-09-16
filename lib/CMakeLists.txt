@@ -26,6 +26,7 @@ set(module_list
   linalg/BasisWriter
   linalg/Matrix
   linalg/Vector
+  linalg/NNLS
   linalg/svd/IncrementalSVD
   linalg/svd/IncrementalSVDFastUpdate
   linalg/svd/IncrementalSVDStandard
