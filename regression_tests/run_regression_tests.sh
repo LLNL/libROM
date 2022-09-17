@@ -59,6 +59,11 @@ for type_of_test in ${type_of_tests_to_execute[@]}; do
   tests_to_execute=(*)
   for test in ${tests_to_execute[@]}; do 
       scriptName=$(basename $test ".sh")
+      # Run a specific test by specifying the test (including the .sh suffix)
+      if [[ -n "$1" && "$1" != "$test" ]]; then
+         continue
+      fi
+          
       simulationLogFile="${RESULTS_DIR}/${scriptName}.log"
       touch $simulationLogFile
       testNum=$((testNum+1))
@@ -74,7 +79,7 @@ for type_of_test in ${type_of_tests_to_execute[@]}; do
   done
   cd ..
 done
-totalTests=testNum
+totalTests=$testNum
 echo "${testNumPass} passed, ${testNumFail} failed out of ${totalTests} tests"
 if [[ $testNumFail -ne 0 ]]; then
 	exit 1

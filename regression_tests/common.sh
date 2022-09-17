@@ -3,6 +3,10 @@
 set -eo pipefail
 RESULTS_DIR=$DIR/results
 BASELINE_DIR=$GITHUB_WORKSPACE/dependencies
+EX_DMD_PATH_LOCAL=${GITHUB_WORKSPACE}/build/examples/dmd
+EX_PROM_PATH_LOCAL=${GITHUB_WORKSPACE}/build/examples/prom
+EX_DMD_PATH_BASELINE=${BASELINE_DIR}/libROM/build/examples/dmd
+EX_PROM_PATH_BASELINE=${BASELINE_DIR}/libROM/build/examples/prom
 echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
 echo "Running $0 with $1 processors"
 SCRIPT_NAME=$(basename $0 ".sh")
