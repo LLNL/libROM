@@ -143,6 +143,13 @@ Vector::operator = (const double& a)
 }
 
 Vector&
+Vector::operator *= (const double& a)
+{
+    for(int i=0; i<d_dim; ++i) d_vec[i] *= a;
+    return *this;
+}
+
+Vector&
 Vector::transform(std::function<void(const int size, double* vector)>
                   transformer) {
     transformer(d_dim, d_vec);
@@ -554,6 +561,20 @@ Vector::local_read(const std::string& base_file_name, int rank)
         d_num_procs = 1;
     }
     database.close();
+}
+
+double Vector::localMin(int nmax)
+{
+    const int n = nmax > 0 ? nmax : d_dim;
+    double v = d_vec[0];
+
+    for (int i=1; i<n; ++i)
+    {
+        if (d_vec[i] < v)
+            v = d_vec[i];
+    }
+
+    return v;
 }
 
 int getCenterPoint(std::vector<Vector*>& points,
