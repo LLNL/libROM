@@ -390,7 +390,7 @@ int main(int argc, char* argv[])
     bool use_sopt = false;
     bool hyperreduce = true;
     bool x_base_only = false;
-    int num_samples_req = -1; 
+    int num_samples_req = -1;
 
     int nsets = 0;
     int id_param = 0;
@@ -594,7 +594,7 @@ int main(int argc, char* argv[])
         // Merge bases
         if (x_base_only == false)
         {
-           MergeBasis(true_size, nsets, max_num_snapshots, "V");
+            MergeBasis(true_size, nsets, max_num_snapshots, "V");
         }
 
         MergeBasis(true_size, nsets, max_num_snapshots, "X");
@@ -739,10 +739,10 @@ int main(int argc, char* argv[])
 
         if (x_base_only == false)
         {
-        basis_generator_v = new CAROM::BasisGenerator(options, isIncremental,
-                basisFileName + "_V");
+            basis_generator_v = new CAROM::BasisGenerator(options, isIncremental,
+                    basisFileName + "_V");
         }
-        
+
         basis_generator_x = new CAROM::BasisGenerator(options, isIncremental,
                 basisFileName + "_X");
 
@@ -1014,7 +1014,7 @@ int main(int argc, char* argv[])
         if (myid == 0)
         {
             // Define operator in sample space
-                    soper = new HyperelasticOperator(*sp_XV_space, ess_tdof_list_sp, visc, mu, K);
+            soper = new HyperelasticOperator(*sp_XV_space, ess_tdof_list_sp, visc, mu, K);
         }
 
         if (hyperreduce)
@@ -1024,8 +1024,10 @@ int main(int argc, char* argv[])
         }
         else
         {
-            romop = new RomOperator(&oper, soper, rvdim, rxdim, hdim, smm, &(vx0.GetBlock(0)),
-                                    &(vx0.GetBlock(1)), vx0.GetBlock(0), BV_librom, BX_librom, H_librom, Hsinv, myid,
+            romop = new RomOperator(&oper, soper, rvdim, rxdim, hdim, smm,
+                                    &(vx0.GetBlock(0)),
+                                    &(vx0.GetBlock(1)), vx0.GetBlock(0), BV_librom, BX_librom, H_librom, Hsinv,
+                                    myid,
                                     num_samples_req != -1, hyperreduce, x_base_only);
         }
 
@@ -1054,11 +1056,11 @@ int main(int argc, char* argv[])
         {
             cout << "Lifted initial energies, EE = " << ee
                  << ", KE = " << ke << ", ΔTE = " << (ee + ke) - (ee0 + ke0) << endl;
-        
+
         }
-        
+
         ode_solver->Init(*romop);
-        
+
     }
     else
     {
@@ -1102,7 +1104,8 @@ int main(int argc, char* argv[])
         if (offline)
         {
 
-            if (basis_generator_x->isNextSample(t) || x_base_only == false && basis_generator_v->isNextSample(t))
+            if (basis_generator_x->isNextSample(t) || x_base_only == false
+                    && basis_generator_v->isNextSample(t))
             {
                 dvxdt = oper.dvxdt_sp.GetData();
                 vx_diff = BlockVector(vx);
@@ -1211,11 +1214,11 @@ int main(int argc, char* argv[])
         // Take samples
         if (x_base_only == false)
         {
-        basis_generator_v->takeSample(vx_diff.GetBlock(0), t, dt);
-        basis_generator_v->writeSnapshot();
-        delete basis_generator_v;
+            basis_generator_v->takeSample(vx_diff.GetBlock(0), t, dt);
+            basis_generator_v->writeSnapshot();
+            delete basis_generator_v;
         }
-        
+
         basis_generator_H->takeSample(oper.H_sp.GetData(), t, dt);
         basis_generator_H->writeSnapshot();
         delete basis_generator_H;
@@ -1471,7 +1474,7 @@ void InitialVelocityIC1(const Vector& x, Vector& v)
     const double s_eff = s / 80.0;
 
     v = 0.0;
-    v(dim - 1) = -s_eff * x(0);
+    v(dim - 1) = -s_eff * sin(s*x(0));
 }
 
 void InitialDeformationIC2(const Vector &x, Vector &y) //See MFEM ex19

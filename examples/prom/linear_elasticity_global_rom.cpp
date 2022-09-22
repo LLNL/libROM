@@ -25,7 +25,7 @@
 // Merge phase:   ./linear_elasticity_global_rom -merge -ns 3
 //
 // Online phase:  ./linear_elasticity_global_rom -online -id 3 -f 0.012
-// 
+//
 // NB: to evaluate relative error, call this before the online phase:
 //                ./linear_elasticity_global_rom -offline -id 4 -f 0.012
 
@@ -432,10 +432,12 @@ int main(int argc, char* argv[])
     }
     if (online)
     {
-        mesh_name << "mesh_f" << ext_force << "_rom." << setfill('0') << setw(6) << myid;
+        mesh_name << "mesh_f" << ext_force << "_rom." << setfill('0') << setw(
+                      6) << myid;
         sol_name << "sol_f" << ext_force << "_rom." << setfill('0') << setw(6) << myid;
 
-        sol_name_fom << "sol_f" << ext_force << "_fom." << setfill('0') << setw(6) << myid;
+        sol_name_fom << "sol_f" << ext_force << "_fom." << setfill('0') << setw(
+                         6) << myid;
     }
 
     GridFunction* nodes = pmesh->GetNodes();
@@ -476,12 +478,12 @@ int main(int argc, char* argv[])
         double tot_diff_norm_x = sqrt(InnerProduct(MPI_COMM_WORLD, diff_x, diff_x));
 
         double tot_x_fom_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
-            x_fom, x_fom));
+                                     x_fom, x_fom));
 
         if (myid == 0)
         {
             cout << "Relative error of ROM for E = " << E << " and nu = " << nu <<
-                " is: " << tot_diff_norm_x / tot_x_fom_norm << endl;
+                 " is: " << tot_diff_norm_x / tot_x_fom_norm << endl;
         }
 
     }
