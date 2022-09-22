@@ -13,8 +13,21 @@ export TMPDIR=/tmp
 BASELINE_DIR=${GITHUB_WORKSPACE}/dependencies
 TESTS_DIR=${GITHUB_WORKSPACE}/regression_tests/tests
 BUILD_DIR=${BASELINE_DIR}/build
+EXAMPLES_DMD_LOCAL=${GITHUB_WORKSPACE}/build/examples/dmd
+EXAMPLES_PROM_LOCAL=${GITHUB_WORKSPACE}/build/examples/prom
+EXAMPLES_DMD_BASELINE=${BASELINE_DIR}/libROM/build/examples/dmd
+EXAMPLES_PROM_BASELINE=${BASELINE_DIR}/libROM/build/examples/prom
 DIR=$(pwd)
 scriptName="Unknown"
+#clean up
+cd ${EXAMPLES_DMD_LOCAL}
+rm -rf ./*/
+cd ${EXAMPLES_PROM_LOCAL}
+rm -rf ./*/
+cd ${EXAMPLES_DMD_BASELINE}
+rm -rf ./*/
+cd ${EXAMPLES_PROM_BASELINE}
+rm -rf ./*/
 #echo "My current dir = $DIR"
 if [ ! -d $BASELINE_DIR/libROM ]; then # Clone master branch to baseline directory
    echo "Creating $BASELINE_DIR"
