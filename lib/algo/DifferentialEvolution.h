@@ -133,7 +133,8 @@ public:
      * @param[in] verbose                Verbosity.
      */
     std::vector<double> Optimize(int min_iterations, int max_iterations,
-                                 double cost_tolerance, bool verbose = true);
+                                 double cost_tolerance,
+                                 bool verbose = true);
 
 private:
 

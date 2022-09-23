@@ -442,12 +442,21 @@ int main(int argc, char* argv[])
     }
     if (online)
     {
+<<<<<<< HEAD
+        mesh_name << "mesh_f" << ext_force << "_rom." << setfill('0') << setw(
+                      6) << myid;
+        sol_name << "sol_f" << ext_force << "_rom." << setfill('0') << setw(6) << myid;
+
+        sol_name_fom << "sol_f" << ext_force << "_fom." << setfill('0') << setw(
+                         6) << myid;
+=======
         mesh_name << "mesh_f" << ext_force << "_rom." << setfill('0')
                   << setw(6) << myid;
         sol_name << "sol_f" << ext_force << "_rom." << setfill('0') << setw(6) << myid;
 
         sol_name_fom << "sol_f" << ext_force << "_fom." << setfill('0')
                      << setw(6) << myid;
+>>>>>>> master
     }
 
     GridFunction* nodes = pmesh->GetNodes();
