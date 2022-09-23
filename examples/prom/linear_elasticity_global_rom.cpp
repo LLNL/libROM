@@ -1,3 +1,13 @@
+/******************************************************************************
+ *
+ * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * and other libROM project developers. See the top-level COPYRIGHT
+ * file for details.
+ *
+ * SPDX-License-Identifier: (Apache-2.0 OR MIT)
+ *
+ *****************************************************************************/
+
 //               libROM MFEM Example: parametric ROM for linear elasticity problem (adapted from ex2p.cpp)
 //
 // Compile with: ./scripts/compile.sh -m
@@ -17,17 +27,17 @@
 //               operator, solves the reduced order system, and lifts the
 //               solution to the full order space.
 //
-// Offline phase: ./linear_elasticity_global_rom -offline -id 0 -f 0.01
-//                ./linear_elasticity_global_rom -offline -id 1 -f 0.015
-//                ./linear_elasticity_global_rom -offline -id 2 -f 0.02
+// Offline phase: ./linear_elasticity_global_rom -offline -id 0 -nu 0.2
+//                ./linear_elasticity_global_rom -offline -id 1 -nu 0.4
 //
 //
-// Merge phase:   ./linear_elasticity_global_rom -merge -ns 3
-//
-// Online phase:  ./linear_elasticity_global_rom -online -id 3 -f 0.012
+// Merge phase:   ./linear_elasticity_global_rom -merge -ns 2
 //
 // NB: to evaluate relative error, call this before the online phase:
-//                ./linear_elasticity_global_rom -offline -id 4 -f 0.012
+//                ./linear_elasticity_global_rom -offline -id 2 -nu 0.3
+//
+// Online phase:  ./linear_elasticity_global_rom -online -id 3 -nu 0.3
+//
 
 #include "mfem.hpp"
 #include <fstream>
@@ -432,12 +442,21 @@ int main(int argc, char* argv[])
     }
     if (online)
     {
+<<<<<<< HEAD
         mesh_name << "mesh_f" << ext_force << "_rom." << setfill('0') << setw(
                       6) << myid;
         sol_name << "sol_f" << ext_force << "_rom." << setfill('0') << setw(6) << myid;
 
         sol_name_fom << "sol_f" << ext_force << "_fom." << setfill('0') << setw(
                          6) << myid;
+=======
+        mesh_name << "mesh_f" << ext_force << "_rom." << setfill('0')
+                  << setw(6) << myid;
+        sol_name << "sol_f" << ext_force << "_rom." << setfill('0') << setw(6) << myid;
+
+        sol_name_fom << "sol_f" << ext_force << "_fom." << setfill('0')
+                     << setw(6) << myid;
+>>>>>>> master
     }
 
     GridFunction* nodes = pmesh->GetNodes();
