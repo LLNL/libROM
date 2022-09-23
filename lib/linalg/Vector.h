@@ -127,6 +127,18 @@ public:
         const double& a);
 
     /**
+     * @brief Scaling operator.
+     *
+     * @param[in] a The double precision number by which every
+     * Vector entry should be scaled.
+     *
+     * @return This with every element of the Vector scaled by a.
+     */
+    Vector&
+    operator *= (
+        const double& a);
+
+    /**
      * @brief Transform the vector using a supplied function.
      *
      * @param[in] transformer A transformer function which takes in as input a
@@ -737,6 +749,15 @@ public:
     {
         return d_vec;
     }
+
+    /**
+     * @brief Compute the local minimum of this.
+     *
+     * @param[in] nmax If positive, use only the first nmax entries of this.
+     *
+     * @return The local minimum of this.
+     */
+    double localMin(int nmax = 0);
 
 private:
     /**

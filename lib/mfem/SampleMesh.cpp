@@ -1055,8 +1055,9 @@ void ParaViewPrintAttributes(const string &fname,
 }
 
 SampleMeshManager::SampleMeshManager(vector<ParFiniteElementSpace*> & fespace_,
-                                     string visFileName) : nspaces(fespace_.size()), fespace(fespace_),
-    filename(visFileName)
+                                     string visFileName, double visScale) :
+    nspaces(fespace_.size()), fespace(fespace_), filename(visFileName),
+    elemVisScale(visScale)
 {
     MFEM_VERIFY(nspaces > 0, "Must provide at least one finite element space");
     spfespace.assign(nspaces, nullptr);
@@ -1524,8 +1525,8 @@ void SampleMeshManager::CreateSampleMesh()
                         sample_dofs_block, sample_dofs_sub_to_sample_dofs, local_num_sample_dofs_sub);
 
     const bool getSampledEntities = !filename.empty();
-    set<int> intElems, faces, edges,
-        vertices;  // Local mesh entities containing sampled DOFs, used only for ParaView visualization.
+    // Local mesh entities containing sampled DOFs, used only for ParaView visualization.
+    set<int> intElems, faces, edges, vertices;
 
     // Find all local elements that should be included, using all spaces.
     GetLocalSampleMeshElements(*pmesh, *fespace[0], sample_dofs_block[0],
@@ -1657,15 +1658,46 @@ void SampleMeshManager::CreateSampleMesh()
 
     if (!filename.empty())
     {
-        // Write files for global pmesh and a piecewise constant function with 1 on sample mesh elements and 0 elsewhere.
-        // Note that this is a visualization of the sample mesh elements, not the sampled DOFs. That is, it shows all elements
-        // that contain a sampled DOF, which could be at a vertex, edge, face, or volume.
+        SampleVisualization(pmesh, elems, intElems, faces, edges, vertices,
+                            filename, nullptr, elemVisScale);
+    }
+}
 
-        L2_FECollection l2_coll(1, pmesh->Dimension());  // order 1
-        ParFiniteElementSpace pwc_space(pmesh,
-                                        &l2_coll); // piecewise constant space on global mesh
-        ParGridFunction marker(&pwc_space);
-        marker = 0.0;
+void SampleVisualization(ParMesh *pmesh, set<int> const& elems,
+                         set<int> const& intElems, set<int> const& faces,
+                         set<int> const& edges, set<int> const& vertices,
+                         string const& filename, mfem::Vector *elemCount,
+                         double elementScaling)
+{
+    // Write files for global pmesh and a piecewise constant function with 1 on
+    // sample mesh elements and 0 elsewhere. Note that this is a visualization of
+    // the sample mesh elements, not the sampled DOFs. That is, it shows all
+    // elements that contain a sampled DOF, which could be at a vertex, edge,
+    // face, or volume.
+
+    // Construct a piecewise constant space on the global mesh.
+    L2_FECollection l2_coll(1, pmesh->Dimension());  // order 1
+    ParFiniteElementSpace pwc_space(pmesh, &l2_coll);
+
+    ParGridFunction marker(&pwc_space);
+    marker = 0.0;
+    if (elemCount)
+    {
+        MFEM_VERIFY(elemCount->Size() == pmesh->GetNE(), "");
+        for (int e=0; e<pmesh->GetNE(); ++e)
+        {
+            Array<int> dofs;
+            pwc_space.GetElementVDofs(e, dofs);
+
+            for (int i = 0; i < dofs.Size(); i++)
+            {
+                const int dof_i = dofs[i] >= 0 ? dofs[i] : -1 - dofs[i];
+                marker[dof_i] = (*elemCount)[e];
+            }
+        }
+    }
+    else
+    {
         for (set<int>::const_iterator it = elems.begin(); it != elems.end(); ++it)
         {
             Array<int> dofs;
@@ -1674,61 +1706,61 @@ void SampleMeshManager::CreateSampleMesh()
             for (int i = 0; i < dofs.Size(); i++)
             {
                 const int dof_i = dofs[i] >= 0 ? dofs[i] : -1 - dofs[i];
-                marker[dof_i] = 1;
+                marker[dof_i] = elementScaling;
             }
         }
-
-        VisItDataCollection visit_dc(filename, pmesh);
-        visit_dc.RegisterField("Sample Elements", &marker);
-        visit_dc.SetFormat(DataCollection::SERIAL_FORMAT);
-        visit_dc.Save();
-
-        // Write ParaView files to visualize sampled elements, edges, and vertices
-        int ne = pmesh->GetNE();
-        int nv = pmesh->GetNV();
-        int nf = pmesh->GetNFaces();
-        int nedge = pmesh->GetNEdges();
-
-        Array<int> e(ne), v(nv), f(nf), edge(nedge);
-        e = 0;
-        v = 0;
-        f = 0;
-        edge = 0;
-
-        for (set<int>::const_iterator it = intElems.begin(); it != intElems.end(); ++it)
-        {
-            e[*it] = 1;
-        }
-
-        for (set<int>::const_iterator it = faces.begin(); it != faces.end(); ++it)
-        {
-            f[*it] = 1;
-        }
-
-        for (set<int>::const_iterator it = edges.begin(); it != edges.end(); ++it)
-        {
-            edge[*it] = 1;
-        }
-
-        for (set<int>::const_iterator it = vertices.begin(); it != vertices.end(); ++it)
-        {
-            v[*it] = 1;
-        }
-
-        /*
-        for (int i=0; i<ne/2; ++i) { e[i] = 0; }
-        for (int i=0; i<nv/2; ++i) { v[i] = 0; }
-        for (int i=0; i<nf/2; ++i) { f[i] = 0; }
-        for (int i=0; i<nedge/2; ++i) { edge[i] = 0; }
-        */
-
-        ParaViewPrintAttributes(filename + "_pv", *pmesh, pmesh->Dimension(), &e, &v);
-        if (pmesh->Dimension() == 3)
-        {
-            ParaViewPrintAttributes(filename + "_pv_face", *pmesh, 2, &f, &v);
-        }
-        ParaViewPrintAttributes(filename + "_pv_edge", *pmesh, 1, &edge, &v);
     }
+
+    VisItDataCollection visit_dc(filename, pmesh);
+    visit_dc.RegisterField("Sample Elements", &marker);
+    visit_dc.SetFormat(DataCollection::SERIAL_FORMAT);
+    visit_dc.Save();
+
+    // Write ParaView files to visualize sampled elements, edges, and vertices
+    int ne = pmesh->GetNE();
+    int nv = pmesh->GetNV();
+    int nf = pmesh->GetNFaces();
+    int nedge = pmesh->GetNEdges();
+
+    Array<int> e(ne), v(nv), f(nf), edge(nedge);
+    e = 0;
+    v = 0;
+    f = 0;
+    edge = 0;
+
+    for (set<int>::const_iterator it = intElems.begin(); it != intElems.end(); ++it)
+    {
+        e[*it] = 1;
+    }
+
+    for (set<int>::const_iterator it = faces.begin(); it != faces.end(); ++it)
+    {
+        f[*it] = 1;
+    }
+
+    for (set<int>::const_iterator it = edges.begin(); it != edges.end(); ++it)
+    {
+        edge[*it] = 1;
+    }
+
+    for (set<int>::const_iterator it = vertices.begin(); it != vertices.end(); ++it)
+    {
+        v[*it] = 1;
+    }
+
+    /*
+    for (int i=0; i<ne/2; ++i) { e[i] = 0; }
+    for (int i=0; i<nv/2; ++i) { v[i] = 0; }
+    for (int i=0; i<nf/2; ++i) { f[i] = 0; }
+    for (int i=0; i<nedge/2; ++i) { edge[i] = 0; }
+    */
+
+    ParaViewPrintAttributes(filename + "_pv", *pmesh, pmesh->Dimension(), &e, &v);
+    if (pmesh->Dimension() == 3)
+    {
+        ParaViewPrintAttributes(filename + "_pv_face", *pmesh, 2, &f, &v);
+    }
+    ParaViewPrintAttributes(filename + "_pv_edge", *pmesh, 1, &edge, &v);
 }
 
 void SampleDOFSelector::ReadMapFromFile(const string variable, string file_name)
