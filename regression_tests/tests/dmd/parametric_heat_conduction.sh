@@ -3,11 +3,11 @@ source $GITHUB_WORKSPACE/regression_tests/common.sh
 
 CMDS=( 
     "rm -rf parameters.txt" 
-    "mpirun -np 8 parametric_heat_conduction -r 0.4 -visit -offline -rdim 16" 
-    "mpirun -np 8 parametric_heat_conduction -r 0.45 -visit -offline -rdim 16"
-    "mpirun -np 8 parametric_heat_conduction -r 0.55 -visit -offline -rdim 16"
-    "mpirun -np 8 parametric_heat_conduction -r 0.6 -visit -offline -rdim 16"
-    "mpirun -np 8 parametric_heat_conduction -r 0.5 -visit -online -predict"
+    "$COMMAND -np 8 parametric_heat_conduction -r 0.4 -visit -offline -rdim 16" 
+    "$COMMAND -np 8 parametric_heat_conduction -r 0.45 -visit -offline -rdim 16"
+    "$COMMAND -np 8 parametric_heat_conduction -r 0.55 -visit -offline -rdim 16"
+    "$COMMAND -np 8 parametric_heat_conduction -r 0.6 -visit -offline -rdim 16"
+    "$COMMAND -np 8 parametric_heat_conduction -r 0.5 -visit -online -predict"
 )
 TYPE="DMD"
 

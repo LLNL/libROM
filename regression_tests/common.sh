@@ -9,7 +9,7 @@ export EX_PROM_PATH_LOCAL=${EX_DIR_LOCAL}/prom
 export EX_DIR_BASELINE=${BASELINE_DIR}/libROM/build/examples
 export EX_DMD_PATH_BASELINE=${EX_DIR_BASELINE}/dmd
 export EX_PROM_PATH_BASELINE=${EX_DIR_BASELINE}/prom
-trap "move_output_files" ERR
+trap "move_output_files_after_error" ERR
 echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
 echo "Running $0 with $1 processors"
 SCRIPT_NAME=$(basename "$0" ".sh")
@@ -38,6 +38,23 @@ if [[ -z "${PROGRAM_FILES}" ]]; then
     echo "${PROGRAM_FILES[@]}"
     export PROGRAM_FILES
 fi
+# Check machine
+case "$(uname -s)" in
+    Linux*)
+		  COMMAND="srun -p pdebug"
+			MACHINE="Linux";;
+    Darwin*)
+		  COMMAND="mpirun -oversubscribe"
+			MACHINE="Darwin";;
+    *)
+			echo "The regression tests can only run on Linux and MAC."
+			exit 1
+esac
+
+move_output_files_after_error() {
+    echo "Moving output files after a trap"
+    move_output_files
+}
 
 move_output_files() {
     if [ "$TYPE" = "DMD" ]; then
@@ -47,9 +64,9 @@ move_output_files() {
         mkdir -p "${SCRIPT_NAME}_out"
         ALL_FILES=(*)
         for file in "${ALL_FILES[@]}"; do
+            f=($(basename $file))
             movable=true
             for p in "${PROGRAM_FILES[@]}"; do
-                f=($(basename $file))
                 if [[ "$f" = "$p" || "$f" = *_out* ]]; then
                     movable=false
                     break
@@ -64,9 +81,9 @@ move_output_files() {
         mkdir -p "${SCRIPT_NAME}_out"
         ALL_FILES=(*)
         for file in "${ALL_FILES[@]}"; do
+            f=($(basename $file))
             movable=true
             for p in "${PROGRAM_FILES[@]}"; do
-                f=($(basename $file))
                 if [[ "$f" = "$p" || "$f" = *_out* ]]; then
                     movable=false
                     break
@@ -81,9 +98,9 @@ move_output_files() {
         mkdir -p "${SCRIPT_NAME}_out"
         ALL_FILES=(*)
         for file in "${ALL_FILES[@]}"; do
+            f=($(basename $file))
             movable=true
             for p in "${PROGRAM_FILES[@]}"; do
-                f=($(basename $file))
                 if [[ "$f" = "$p" || "$f" = *_out* ]]; then
                     movable=false
                     break
@@ -100,9 +117,9 @@ move_output_files() {
         mkdir -p "${SCRIPT_NAME}_out"
         ALL_FILES=(*)
         for file in "${ALL_FILES[@]}"; do
+            f=($(basename $file))
             movable=true
             for p in "${PROGRAM_FILES[@]}"; do
-                f=($(basename $file))
                 if [[ "$f" = "$p" || "$f" = *_out* ]]; then
                     movable=false
                     break

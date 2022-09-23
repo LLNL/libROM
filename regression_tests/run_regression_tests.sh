@@ -20,14 +20,10 @@ EXAMPLES_PROM_BASELINE=${BASELINE_DIR}/libROM/build/examples/prom
 DIR=$(pwd)
 scriptName="Unknown"
 #clean up
-cd ${EXAMPLES_DMD_LOCAL}
-rm -rf ./*/
-cd ${EXAMPLES_PROM_LOCAL}
-rm -rf ./*/
-cd ${EXAMPLES_DMD_BASELINE}
-rm -rf ./*/
-cd ${EXAMPLES_PROM_BASELINE}
-rm -rf ./*/
+cd ${EXAMPLES_DMD_LOCAL} && rm -rf ./*/
+cd ${EXAMPLES_PROM_LOCAL} && rm -rf ./*/
+cd ${EXAMPLES_DMD_BASELINE} && rm -rf ./*/
+cd ${EXAMPLES_PROM_BASELINE} && rm -rf ./*/
 #echo "My current dir = $DIR"
 if [ ! -d $BASELINE_DIR/libROM ]; then # Clone master branch to baseline directory
    echo "Creating $BASELINE_DIR"
