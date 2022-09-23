@@ -168,7 +168,6 @@ public:
 };
 #endif
 
-
 class DG_Solver : public Solver
 {
 private:
@@ -244,7 +243,6 @@ public:
     }
 };
 
-
 /** A time-dependent operator for the right-hand side of the ODE. The DG weak
     form of du/dt = -v.grad(u) is M du/dt = K u + b, where M and K are the mass
     and advection matrices, and b describes the flow on the boundary. This can
@@ -266,7 +264,6 @@ public:
 
     virtual ~ROM_FE_Evolution();
 };
-
 
 /** A time-dependent operator for the right-hand side of the ODE. The DG weak
     form of du/dt = -v.grad(u) is M du/dt = K u + b, where M and K are the mass
@@ -293,7 +290,6 @@ public:
 
     virtual ~FE_Evolution();
 };
-
 
 int main(int argc, char *argv[])
 {
@@ -579,7 +575,6 @@ int main(int argc, char *argv[])
     b->Assemble();
     m->Finalize();
     k->Finalize(skip_zeros);
-
 
     HypreParVector *B = b->ParallelAssemble();
 
@@ -1075,7 +1070,6 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-
 // Implementation of class ROM_FE_Evolution
 ROM_FE_Evolution::ROM_FE_Evolution(DenseMatrix* M_, DenseMatrix* K_, Vector* b_,
                                    Vector* u_init_hat_, int num_cols)
@@ -1130,7 +1124,6 @@ ROM_FE_Evolution::~ROM_FE_Evolution()
     delete M_inv;
     delete A_inv;
 }
-
 
 // Implementation of class FE_Evolution
 FE_Evolution::FE_Evolution(ParBilinearForm &M_, ParBilinearForm &K_,
@@ -1201,7 +1194,6 @@ FE_Evolution::~FE_Evolution()
     delete M_prec;
     delete dg_solver;
 }
-
 
 // Velocity coefficient
 void velocity_function(const Vector &x, Vector &v)

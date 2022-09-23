@@ -248,5 +248,4 @@ private:
 
 }  // namespace CAROM
 
-
 #endif // SAMPLEMESH_H

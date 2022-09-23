@@ -1292,7 +1292,6 @@ struct EigenPair {
     std::vector<double> eigs;
 };
 
-
 /**
  * struct ComplexEigenPair is a struct to hold the real and imaginary eigenvectors
  * of a matrix along with its eigenvalues.

@@ -12,20 +12,38 @@
 
 #include "NonuniformDMD.h"
 #include "linalg/Matrix.h"
+#include "utils/Utilities.h"
 
 namespace CAROM {
 
-NonuniformDMD::NonuniformDMD(int dim) : DMD(dim)
-{}
+NonuniformDMD::NonuniformDMD(int dim, Vector* state_offset, Vector* derivative_offset) : 
+                             DMD(dim, state_offset)
+{
+    d_derivative_offset = derivative_offset;
+}
 
 NonuniformDMD::NonuniformDMD(std::string base_file_name) : DMD(base_file_name)
-{}
+{
+    CAROM_ASSERT(!base_file_name.empty());
+
+    std::string full_file_name = base_file_name + "_derivative_offset";
+    if (Utilities::file_exist(full_file_name + ".000000"))
+    {
+        d_derivative_offset = new Vector();
+        d_derivative_offset->read(full_file_name);
+    }
+}
 
 NonuniformDMD::NonuniformDMD(std::vector<std::complex<double>> eigs,
                              Matrix* phi_real,
-                             Matrix* phi_imaginary, int k, double dt, double t_offset) : DMD(eigs,
-                                         phi_real, phi_imaginary, k, dt, t_offset)
-{}
+                             Matrix* phi_imaginary, int k,
+                             double dt, double t_offset, 
+                             Vector* state_offset, Vector* derivative_offset) :
+                             DMD(eigs, phi_real, phi_imaginary, k,
+                                 dt, t_offset, state_offset)
+{
+    d_derivative_offset = derivative_offset;
+}
 
 std::pair<Matrix*, Matrix*>
 NonuniformDMD::computeDMDSnapshotPair(const Matrix* snapshots)
@@ -48,8 +66,10 @@ NonuniformDMD::computeDMDSnapshotPair(const Matrix* snapshots)
         for (int j = 0; j < snapshots->numColumns() - 1; j++)
         {
             f_snapshots_in->item(i, j) = snapshots->item(i, j);
-            f_snapshots_out->item(i, j) = (snapshots->item(i, j + 1) - snapshots->item(i,
-                                           j)) / (d_sampled_times[j + 1]->item(0) - d_sampled_times[j]->item(0));
+            f_snapshots_out->item(i, j) = (snapshots->item(i, j + 1) - snapshots->item(i,j)) / 
+                                          (d_sampled_times[j + 1]->item(0) - d_sampled_times[j]->item(0));
+            if (d_state_offset) f_snapshots_in->item(i, j) -= d_state_offset->item(i);
+            if (d_derivative_offset) f_snapshots_out->item(i, j) -= d_derivative_offset->item(i);
         }
     }
 
@@ -68,6 +88,42 @@ std::complex<double>
 NonuniformDMD::computeEigExp(std::complex<double> eig, double t)
 {
     return std::exp(t * eig);
+}
+
+void
+NonuniformDMD::addOffset(Vector*& result, double t, int power)
+{
+    CAROM_VERIFY(power == 0 || power == 1);
+    if (power == 0)
+    {
+        DMD::addOffset(result); 
+        if (d_derivative_offset)
+        {
+            result->plusAx(t, *d_derivative_offset);
+        }
+    }
+    else
+    {
+        if (d_derivative_offset)
+        {
+            *result += *d_derivative_offset;
+        }
+    }
+}
+
+void
+NonuniformDMD::save(std::string base_file_name)
+{
+    CAROM_ASSERT(!base_file_name.empty());
+    CAROM_VERIFY(d_trained);
+
+    if (d_derivative_offset != NULL)
+    {
+        std::string full_file_name = base_file_name + "_derivative_offset";
+        d_derivative_offset->write(full_file_name);
+    }
+
+    DMD::save(base_file_name);
 }
 
 }

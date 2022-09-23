@@ -329,8 +329,9 @@ subroutine release_context(A) bind(C)
 end subroutine
 
 !*******************************************************************************
-! end subroutine release_context
+! End subroutine release_context
 !*******************************************************************************
+
 
 
 
@@ -378,8 +379,11 @@ function make_local_context(src)
     call blacs_gridmap(make_local_context, usermap, 1, 1, 1)
     return
 end function
+
 !*******************************************************************************
+! End subroutine maybe_descinit and get_ptr
 !*******************************************************************************
+
 
 
 
