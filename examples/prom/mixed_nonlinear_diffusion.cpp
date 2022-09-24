@@ -75,6 +75,9 @@
 //               Elapsed time for time integration loop using S_OPT sampling: 0.348985935
 //               Relative l2 error of ROM solution at final timestep using EQP: 0.002659978000520714
 //               Elapsed time for time integration loop using EQP sampling: 0.176821221
+//
+//               Pointwise snapshots for DMD input
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -pwsnap -pwx 101 -pwy 101
 
 #include "mfem.hpp"
 
@@ -701,7 +704,9 @@ int main(int argc, char *argv[])
             snapshotSize *= dmdDim[i];
 
         pwsnap.SetSize(snapshotSize);
-        pwsnap_CAROM = new CAROM::Vector(pwsnap.GetData(), pwsnap.Size(), true, false);
+        if (myid == 0)
+            pwsnap_CAROM = new CAROM::Vector(pwsnap.GetData(), pwsnap.Size(),
+                                             true, false);
     }
 
     // 7. Define the mixed finite element spaces.
@@ -1225,10 +1230,12 @@ int main(int argc, char *argv[])
         dmd_filename << "snap_" << id_param << "_0";
 
         if (myid == 0)
+        {
             cout << "Writing DMD snapshot at step 0, time " << t
                  << ", with offline parameter index " << id_param << endl;
 
-        pwsnap_CAROM->write(dmd_filename.str());
+            pwsnap_CAROM->write(dmd_filename.str());
+        }
     }
 
     solveTimer.Start();
@@ -1408,10 +1415,12 @@ int main(int argc, char *argv[])
             dmd_filename << "snap_" << id_param << "_" << ti;
 
             if (myid == 0)
+            {
                 cout << "Writing DMD snapshot at step " << ti << ", time " << t
                      << ", with offline parameter index " << id_param << endl;
 
-            pwsnap_CAROM->write(dmd_filename.str());
+                pwsnap_CAROM->write(dmd_filename.str());
+            }
         }
     }  // timestep loop
 

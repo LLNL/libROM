@@ -35,19 +35,23 @@ void PointwiseSnapshot::SetMesh(ParMesh *pmesh)
     for (int i=0; i<spaceDim; ++i)
         h[i] = (domainMax[i] - domainMin[i]) / ((double) (dims[i] - 1));
 
-    cout << "PointwiseSnapshot on bounding box from (";
-    for (int i=0; i<spaceDim; ++i)
+    const int rank = pmesh->GetMyRank();
+    if (rank == 0)
     {
-        cout << domainMin[i];
-        if (i < spaceDim-1) cout << ", ";
+        cout << "PointwiseSnapshot on bounding box from (";
+        for (int i=0; i<spaceDim; ++i)
+        {
+            cout << domainMin[i];
+            if (i < spaceDim-1) cout << ", ";
+        }
+        cout << ") to (";
+        for (int i=0; i<spaceDim; ++i)
+        {
+            cout << domainMax[i];
+            if (i < spaceDim-1) cout << ", ";
+        }
+        cout << ")" << endl;
     }
-    cout << ") to (";
-    for (int i=0; i<spaceDim; ++i)
-    {
-        cout << domainMax[i];
-        if (i < spaceDim-1) cout << ", ";
-    }
-    cout << ")" << endl;
 
     for (int k=0; k<dims[2]; ++k)
     {
