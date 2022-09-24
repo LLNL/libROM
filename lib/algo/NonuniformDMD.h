@@ -2,7 +2,7 @@
  *
  * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
- * file for details. 
+ * file for details.
  *
  * SPDX-License-Identifier: (Apache-2.0 OR MIT)
  *
@@ -44,7 +44,8 @@ public:
      * @param[in] state_offset      The state offset.
      * @param[in] derivative_offset The derivative offset.
      */
-    NonuniformDMD(int dim, Vector* state_offset = NULL, Vector* derivative_offset = NULL); 
+    NonuniformDMD(int dim, Vector* state_offset = NULL,
+                  Vector* derivative_offset = NULL);
 
     /**
      * @brief Constructor.
