@@ -41,7 +41,7 @@ fi
 # Check machine
 case "$(uname -s)" in
     Linux*)
-		  COMMAND="srun -p pbatch -n 1"
+		  COMMAND="srun -p pbatch -n 8"
 			MACHINE="Linux";;
     Darwin*)
 		  COMMAND="mpirun -np 8"
