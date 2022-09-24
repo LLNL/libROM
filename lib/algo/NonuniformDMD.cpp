@@ -67,12 +67,12 @@ NonuniformDMD::computeDMDSnapshotPair(const Matrix* snapshots)
         for (int j = 0; j < snapshots->numColumns() - 1; j++)
         {
             f_snapshots_in->item(i, j) = snapshots->item(i, j);
-            f_snapshots_out->item(i, j) = (snapshots->item(i, j + 1) - snapshots->item(i,
-                                           j)) /
-                                          (d_sampled_times[j + 1]->item(0) - d_sampled_times[j]->item(0));
+            f_snapshots_out->item(i, j) =
+                (snapshots->item(i, j + 1) - snapshots->item(i,j)) /
+                (d_sampled_times[j + 1]->item(0) - d_sampled_times[j]->item(0));
             if (d_state_offset) f_snapshots_in->item(i, j) -= d_state_offset->item(i);
-            if (d_derivative_offset) f_snapshots_out->item(i,
-                        j) -= d_derivative_offset->item(i);
+            if (d_derivative_offset) f_snapshots_out->item(i, j)
+                -= d_derivative_offset->item(i);
         }
     }
 
