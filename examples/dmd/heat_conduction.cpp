@@ -1,3 +1,13 @@
+/******************************************************************************
+ *
+ * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * and other libROM project developers. See the top-level COPYRIGHT
+ * file for details.
+ *
+ * SPDX-License-Identifier: (Apache-2.0 OR MIT)
+ *
+ *****************************************************************************/
+
 //                       libROM MFEM Example: Heat_Conduction (adapted from ex16p.cpp)
 //
 // Compile with: make heat_conduction
@@ -19,19 +29,22 @@
 //   Relative error of DMD temperature (u) at t_final: 0.7 is 0.00082289823
 //
 // =================================================================================
-// For DMD:
-//   mpirun -np 8 heat_conduction
-//   mpirun -np 8 heat_conduction -s 3 -a 0.5 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit
 //
-// Sample runs:  mpirun -np 4 heat_conduction
-//               mpirun -np 4 heat_conduction -tf 2
-//               mpirun -np 4 heat_conduction -s 1 -a 0.0 -k 1.0
-//               mpirun -np 4 heat_conduction -s 2 -a 1.0 -k 0.0
-//               mpirun -np 8 heat_conduction -s 3 -a 0.5 -k 0.5 -o 4
-//               mpirun -np 4 heat_conduction -s 14 -dt 1.0e-4 -tf 4.0e-2 -vs 40
-//               mpirun -np 8 heat_conduction -tf 10 -dt 0.1
-//               mpirun -np 4 heat_conduction -o 4 -rs 0 -rp 0
-//               mpirun -np 4 heat_conduction -o 2 -rs 0 -rp 0
+// Sample runs and results for NonuniformDMD:
+//
+// Command 1:
+//   mpirun -np 8 heat_conduction -s 1 -a 0.0 -k 1.0 -nonunif -visit
+//
+// Output 1:
+//   Relative error of DMD temperature (u) at t_final: 0.5 is 0.00071958947
+//
+// Command 2:
+//   mpirun -np 8 heat_conduction -s 3 -a 0.5 -k 0.5 -o 4 -tf 0.7 -vs 1 -nonunif -visit
+//
+// Output 2:
+//   Relative error of DMD temperature (u) at t_final: 0.7 is 0.00013450754
+//
+// =================================================================================
 //
 // Description:  This example solves a time dependent nonlinear heat equation
 //               problem of the form du/dt = C(u), with a non-linear diffusion
@@ -46,6 +59,7 @@
 
 #include "mfem.hpp"
 #include "algo/DMD.h"
+#include "algo/NonuniformDMD.h"
 #include "linalg/Vector.h"
 #include <cmath>
 #include <fstream>
@@ -128,6 +142,7 @@ int main(int argc, char *argv[])
     bool visualization = true;
     bool visit = false;
     int vis_steps = 5;
+    bool use_nonuniform = false;
     bool adios2 = false;
 
     int precision = 8;
@@ -168,6 +183,9 @@ int main(int argc, char *argv[])
                    "Energy fraction for DMD.");
     args.AddOption(&rdim, "-rdim", "--rdim",
                    "Reduced dimension for DMD.");
+    args.AddOption(&use_nonuniform, "-nonunif", "--nonunif", "-no-nonunif",
+                   "--no-nonunif",
+                   "Use NonuniformDMD.");
     args.Parse();
     if (!args.Good())
     {
@@ -363,8 +381,17 @@ int main(int argc, char *argv[])
 
     // 11. Create DMD object and take initial sample.
     u_gf.SetFromTrueDofs(u);
-    CAROM::DMD dmd_u(u.Size(), dt);
-    dmd_u.takeSample(u.GetData(), t);
+
+    CAROM::DMD* dmd_u;
+    if (use_nonuniform)
+    {
+        dmd_u = new CAROM::NonuniformDMD(u.Size());
+    }
+    else
+    {
+        dmd_u = new CAROM::DMD(u.Size(), dt);
+    }
+    dmd_u->takeSample(u.GetData(), t);
     ts.push_back(t);
 
     dmd_training_timer.Stop();
@@ -386,7 +413,7 @@ int main(int argc, char *argv[])
         dmd_training_timer.Start();
 
         u_gf.SetFromTrueDofs(u);
-        dmd_u.takeSample(u.GetData(), t);
+        dmd_u->takeSample(u.GetData(), t);
         ts.push_back(t);
 
         dmd_training_timer.Stop();
@@ -455,7 +482,7 @@ int main(int argc, char *argv[])
         {
             std::cout << "Creating DMD with rdim: " << rdim << std::endl;
         }
-        dmd_u.train(rdim);
+        dmd_u->train(rdim);
     }
     else if (ef != -1)
     {
@@ -463,7 +490,7 @@ int main(int argc, char *argv[])
         {
             std::cout << "Creating DMD with energy fraction: " << ef << std::endl;
         }
-        dmd_u.train(ef);
+        dmd_u->train(ef);
     }
 
     dmd_training_timer.Stop();
@@ -479,7 +506,7 @@ int main(int argc, char *argv[])
         std::cout << "Predicting temperature using DMD" << std::endl;
     }
 
-    CAROM::Vector* result_u = dmd_u.predict(ts[0]);
+    CAROM::Vector* result_u = dmd_u->predict(ts[0]);
     Vector initial_dmd_solution_u(result_u->getData(), result_u->dim());
     u_gf.SetFromTrueDofs(initial_dmd_solution_u);
 
@@ -496,7 +523,7 @@ int main(int argc, char *argv[])
 
     for (int i = 1; i < ts.size(); i++)
     {
-        result_u = dmd_u.predict(ts[i]);
+        result_u = dmd_u->predict(ts[i]);
         Vector dmd_solution_u(result_u->getData(), result_u->dim());
         u_gf.SetFromTrueDofs(dmd_solution_u);
 
@@ -515,7 +542,7 @@ int main(int argc, char *argv[])
 
     dmd_prediction_timer.Stop();
 
-    result_u = dmd_u.predict(t_final);
+    result_u = dmd_u->predict(t_final);
 
     // 15. Calculate the relative error between the DMD final solution and the true solution.
     Vector dmd_solution_u(result_u->getData(), result_u->dim());
@@ -523,15 +550,19 @@ int main(int argc, char *argv[])
     subtract(dmd_solution_u, true_solution_u, diff_u);
 
     double tot_diff_norm_u = sqrt(InnerProduct(MPI_COMM_WORLD, diff_u, diff_u));
-    double tot_true_solution_u_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution_u, true_solution_u));
+    double tot_true_solution_u_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
+                                           true_solution_u, true_solution_u));
 
     if (myid == 0)
     {
 
-        std::cout << "Relative error of DMD temperature (u) at t_final: " << t_final << " is " << tot_diff_norm_u / tot_true_solution_u_norm << std::endl;
+        std::cout << "Relative error of DMD temperature (u) at t_final: " << t_final <<
+                  " is " << tot_diff_norm_u / tot_true_solution_u_norm << std::endl;
         printf("Elapsed time for solving FOM: %e second\n", fom_timer.RealTime());
-        printf("Elapsed time for training DMD: %e second\n", dmd_training_timer.RealTime());
-        printf("Elapsed time for predicting DMD: %e second\n", dmd_prediction_timer.RealTime());
+        printf("Elapsed time for training DMD: %e second\n",
+               dmd_training_timer.RealTime());
+        printf("Elapsed time for predicting DMD: %e second\n",
+               dmd_prediction_timer.RealTime());
     }
 
     // 16. Free the used memory.

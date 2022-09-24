@@ -11,12 +11,11 @@ non-intrusive black-box approaches.
 - Dynamic data collection
 - Dynamic mode decomposition (DMD)
 - Data compression
-- Physics-informed Greedy algorithm
+- Physics-informed greedy algorithm
 - Projection-based hyper-reduction
 
 ## Features to be added
 
-- S-OPT: stable sampling algorithm for hyper-reduction
 - EQP: quadrature-based hyper-reduction sampling algorithm
 - Python interface
 
@@ -118,3 +117,4 @@ LLNL-CODE-766763
 - Sean McBane (UT Austin)
 - Yeonjong Shin (KAIST)
 - Geoffrey Oxberry (LLNL)
+- Pranav Vempati (LLNL)

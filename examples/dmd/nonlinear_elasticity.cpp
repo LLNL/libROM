@@ -1,3 +1,13 @@
+/******************************************************************************
+ *
+ * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * and other libROM project developers. See the top-level COPYRIGHT
+ * file for details.
+ *
+ * SPDX-License-Identifier: (Apache-2.0 OR MIT)
+ *
+ *****************************************************************************/
+
 //                       libROM MFEM Example: Nonlinear elasticity (adapted from ex10p.cpp)
 //
 // Compile with: make nonlinear_elasticity
@@ -176,7 +186,6 @@ public:
     virtual ~ReducedSystemOperator();
 };
 
-
 /** Function representing the elastic energy density for the given hyperelastic
     model+deformation. Used in HyperelasticOperator::GetElasticEnergyDensity. */
 class ElasticEnergyCoefficient : public Coefficient
@@ -200,7 +209,6 @@ void InitialVelocity(const Vector &x, Vector &v);
 void visualize(ostream &out, ParMesh *mesh, ParGridFunction *deformed_nodes,
                ParGridFunction *field, const char *field_name = NULL,
                bool init_vis = false);
-
 
 int main(int argc, char *argv[])
 {
@@ -269,7 +277,7 @@ int main(int argc, char *argv[])
                    "Energy fraction for DMD.");
     args.AddOption(&rdim, "-rdim", "--rdim",
                    "Reduced dimension for DMD.");
-    args.AddOption(&windowNumSamples, "-nwinsamp", "--numwindowsamples", 
+    args.AddOption(&windowNumSamples, "-nwinsamp", "--numwindowsamples",
                    "Number of samples in DMD windows.");
     args.Parse();
     if (!args.Good())
@@ -505,14 +513,36 @@ int main(int argc, char *argv[])
         dmd_x[curr_window]->takeSample(x_gf.GetTrueVector(), t);
         dmd_v[curr_window]->takeSample(v_gf.GetTrueVector(), t);
 
-        if (ti % windowNumSamples == 0 && !last_step)
+        if (ti % windowNumSamples == 0)
         {
-            curr_window++;
-            dmd_x.push_back(new CAROM::DMD(x_gf.GetTrueVector().Size(), dt));
-            dmd_v.push_back(new CAROM::DMD(v_gf.GetTrueVector().Size(), dt));
+            if (rdim != -1)
+            {
+                if (myid == 0)
+                {
+                    std::cout << "Creating DMD with rdim: " << rdim << std::endl;
+                }
+                dmd_x[curr_window]->train(rdim);
+                dmd_v[curr_window]->train(rdim);
+            }
+            else if (ef != -1)
+            {
+                if (myid == 0)
+                {
+                    std::cout << "Creating DMD with energy fraction: " << ef << std::endl;
+                }
+                dmd_x[curr_window]->train(ef);
+                dmd_v[curr_window]->train(ef);
+            }
 
-            dmd_x[curr_window]->takeSample(x_gf.GetTrueVector(), t);
-            dmd_v[curr_window]->takeSample(v_gf.GetTrueVector(), t);
+            if (!last_step)
+            {
+                curr_window++;
+                dmd_x.push_back(new CAROM::DMD(x_gf.GetTrueVector().Size(), dt));
+                dmd_v.push_back(new CAROM::DMD(v_gf.GetTrueVector().Size(), dt));
+
+                dmd_x[curr_window]->takeSample(x_gf.GetTrueVector(), t);
+                dmd_v[curr_window]->takeSample(v_gf.GetTrueVector(), t);
+            }
         }
 
         ts.push_back(t);
@@ -583,35 +613,6 @@ int main(int argc, char *argv[])
     {
         std::cout << "Both rdim and ef are set. ef will be ignored." << std::endl;
     }
-
-    dmd_training_timer.Start();
-
-    if (rdim != -1)
-    {
-        if (myid == 0)
-        {
-            std::cout << "Creating DMD with rdim: " << rdim << std::endl;
-        }
-        for (int w = 0; w < dmd_x.size(); ++w)
-        {
-            dmd_x[w]->train(rdim);
-            dmd_v[w]->train(rdim);
-        }
-    }
-    else if (ef != -1)
-    {
-        if (myid == 0)
-        {
-            std::cout << "Creating DMD with energy fraction: " << ef << std::endl;
-        }
-        for (int w = 0; w < dmd_x.size(); ++w)
-        {
-            dmd_x[w]->train(ef);
-            dmd_v[w]->train(ef);
-        }
-    }
-
-    dmd_training_timer.Stop();
 
     Vector true_solution_x(x_gf.GetTrueVector().Size());
     true_solution_x = x_gf.GetTrueVector();
@@ -697,22 +698,28 @@ int main(int argc, char *argv[])
     subtract(dmd_solution_x, true_solution_x, diff_x);
 
     double tot_diff_norm_x = sqrt(InnerProduct(MPI_COMM_WORLD, diff_x, diff_x));
-    double tot_true_solution_x_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution_x, true_solution_x));
+    double tot_true_solution_x_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
+                                           true_solution_x, true_solution_x));
 
     Vector dmd_solution_v(result_v->getData(), result_v->dim());
     Vector diff_v(true_solution_v.Size());
     subtract(dmd_solution_v, true_solution_v, diff_v);
 
     double tot_diff_norm_v = sqrt(InnerProduct(MPI_COMM_WORLD, diff_v, diff_v));
-    double tot_true_solution_v_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution_v, true_solution_v));
+    double tot_true_solution_v_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
+                                           true_solution_v, true_solution_v));
 
     if (myid == 0)
     {
-        std::cout << "Relative error of DMD position (x) at t_final: " << t_final << " is " << tot_diff_norm_x / tot_true_solution_x_norm << std::endl;
-        std::cout << "Relative error of DMD velocity (v) at t_final: " << t_final << " is " << tot_diff_norm_v / tot_true_solution_v_norm << std::endl;
+        std::cout << "Relative error of DMD position (x) at t_final: " << t_final <<
+                  " is " << tot_diff_norm_x / tot_true_solution_x_norm << std::endl;
+        std::cout << "Relative error of DMD velocity (v) at t_final: " << t_final <<
+                  " is " << tot_diff_norm_v / tot_true_solution_v_norm << std::endl;
         printf("Elapsed time for solving FOM: %e second\n", fom_timer.RealTime());
-        printf("Elapsed time for training DMD: %e second\n", dmd_training_timer.RealTime());
-        printf("Elapsed time for predicting DMD: %e second\n", dmd_prediction_timer.RealTime());
+        printf("Elapsed time for training DMD: %e second\n",
+               dmd_training_timer.RealTime());
+        printf("Elapsed time for predicting DMD: %e second\n",
+               dmd_prediction_timer.RealTime());
     }
 
     // 16. Free the used memory.
@@ -763,7 +770,6 @@ void visualize(ostream &out, ParMesh *mesh, ParGridFunction *deformed_nodes,
     out << flush;
 }
 
-
 ReducedSystemOperator::ReducedSystemOperator(
     ParBilinearForm *M_, ParBilinearForm *S_, ParNonlinearForm *H_,
     const Array<int> &ess_tdof_list_)
@@ -809,7 +815,6 @@ ReducedSystemOperator::~ReducedSystemOperator()
 {
     delete Jacobian;
 }
-
 
 HyperelasticOperator::HyperelasticOperator(ParFiniteElementSpace &f,
         Array<int> &ess_bdr, double visc,
@@ -948,7 +953,6 @@ HyperelasticOperator::~HyperelasticOperator()
     delete Mmat;
 }
 
-
 double ElasticEnergyCoefficient::Eval(ElementTransformation &T,
                                       const IntegrationPoint &ip)
 {
@@ -957,7 +961,6 @@ double ElasticEnergyCoefficient::Eval(ElementTransformation &T,
     // return model.EvalW(J);  // in reference configuration
     return model.EvalW(J)/J.Det(); // in deformed configuration
 }
-
 
 void InitialDeformation(const Vector &x, Vector &y)
 {

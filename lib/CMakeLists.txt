@@ -26,6 +26,7 @@ set(module_list
   linalg/BasisWriter
   linalg/Matrix
   linalg/Vector
+  linalg/NNLS
   linalg/svd/IncrementalSVD
   linalg/svd/IncrementalSVDFastUpdate
   linalg/svd/IncrementalSVDStandard
@@ -34,7 +35,8 @@ set(module_list
   linalg/svd/StaticSVD
   algo/DMD
   algo/AdaptiveDMD
-  algo/ParametricDMD
+  algo/NonuniformDMD
+  algo/DifferentialEvolution
   algo/greedy/GreedyCustomSampler
   algo/greedy/GreedyRandomSampler
   algo/greedy/GreedySampler
@@ -44,7 +46,9 @@ set(module_list
   hyperreduction/DEIM
   hyperreduction/GNAT
   hyperreduction/QDEIM
+  hyperreduction/S_OPT
   hyperreduction/STSampling
+  hyperreduction/Utilities
   utils/Database
   utils/HDFDatabase
   utils/CSVDatabase
@@ -52,10 +56,11 @@ set(module_list
   utils/ParallelBuffer)
 set(source_files)
 foreach(module IN LISTS module_list)
-  list(APPEND source_files ${module}.C)
+  list(APPEND source_files ${module}.cpp)
 endforeach(module) # IN LISTS module_list
 
 list(APPEND source_files
+  algo/ParametricDMD.h
   linalg/Options.h
   librom.h)
 

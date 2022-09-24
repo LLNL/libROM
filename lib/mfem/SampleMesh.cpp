@@ -13,7 +13,8 @@ void FindStencilElements(const vector<int>& sample_dofs_gid,
         Array<int> dofs;
         fespace.GetElementVDofs(k, dofs);
 
-        for (vector<int>::const_iterator it = sample_dofs_gid.begin(); it != sample_dofs_gid.end(); ++it)
+        for (vector<int>::const_iterator it = sample_dofs_gid.begin();
+                it != sample_dofs_gid.end(); ++it)
         {
             for (int i = 0; i < dofs.Size(); i++)
             {
@@ -32,7 +33,8 @@ next:
     }
 }
 
-void FindSampledMeshEntities(const int type, const vector<int>& sample_dofs_gid, set<int>& entities, ParFiniteElementSpace& fespace)
+void FindSampledMeshEntities(const int type, const vector<int>& sample_dofs_gid,
+                             set<int>& entities, ParFiniteElementSpace& fespace)
 {
     int N = 0;
     switch (type)
@@ -71,7 +73,8 @@ void FindSampledMeshEntities(const int type, const vector<int>& sample_dofs_gid,
             break;
         }
 
-        for (vector<int>::const_iterator it = sample_dofs_gid.begin(); it != sample_dofs_gid.end(); ++it)
+        for (vector<int>::const_iterator it = sample_dofs_gid.begin();
+                it != sample_dofs_gid.end(); ++it)
         {
             for (int i = 0; i < dofs.Size(); i++)
             {
@@ -90,9 +93,11 @@ next:
 
 }
 
-void GetLocalSampleMeshElements(ParMesh& pmesh, ParFiniteElementSpace& fespace, const vector<int>& sample_dofs,
+void GetLocalSampleMeshElements(ParMesh& pmesh, ParFiniteElementSpace& fespace,
+                                const vector<int>& sample_dofs,
                                 const vector<int>& local_num_sample_dofs, set<int>& elems,
-                                bool getSampledEntities, set<int>& intElems, set<int>& faces, set<int>& edges, set<int>& vertices)
+                                bool getSampledEntities, set<int>& intElems, set<int>& faces, set<int>& edges,
+                                set<int>& vertices)
 {
     int myid;
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
@@ -140,7 +145,8 @@ void GetLocalSampleMeshElements(ParMesh& pmesh, ParFiniteElementSpace& fespace, 
     if (getSampledEntities)
     {
         FindSampledMeshEntities(0, sample_dofs_gid, intElems, fespace);
-        if (fespace.GetParMesh()->Dimension() == 3) FindSampledMeshEntities(1, sample_dofs_gid, faces, fespace);
+        if (fespace.GetParMesh()->Dimension() == 3) FindSampledMeshEntities(1,
+                    sample_dofs_gid, faces, fespace);
         FindSampledMeshEntities(2, sample_dofs_gid, edges, fespace);
         FindSampledMeshEntities(3, sample_dofs_gid, vertices, fespace);
     }
@@ -148,13 +154,17 @@ void GetLocalSampleMeshElements(ParMesh& pmesh, ParFiniteElementSpace& fespace, 
     delete [] offsets;
 }
 
-void SplitDofsIntoBlocks(const vector<int>& Ntrue, const vector<int>& dofs, const vector<int>& local_num_dofs,
-                         vector<vector<int>>& dofs_block, vector<vector<int>>& dofs_block_todofs, vector<vector<int>>& local_num_dofs_block)
+void SplitDofsIntoBlocks(const vector<int>& Ntrue, const vector<int>& dofs,
+                         const vector<int>& local_num_dofs,
+                         vector<vector<int>>& dofs_block, vector<vector<int>>& dofs_block_todofs,
+                         vector<vector<int>>& local_num_dofs_block)
 {
     const int num_procs = local_num_dofs.size();
     const int nspaces = Ntrue.size();
 
-    MFEM_VERIFY(nspaces > 0 && nspaces == dofs_block.size() && nspaces == dofs_block_todofs.size() && nspaces == local_num_dofs_block.size(), "");
+    MFEM_VERIFY(nspaces > 0 && nspaces == dofs_block.size()
+                && nspaces == dofs_block_todofs.size()
+                && nspaces == local_num_dofs_block.size(), "");
 
     vector<vector<vector<int>>> procDofs_block(nspaces);
     vector<vector<int>> allNtrue(nspaces);
@@ -166,7 +176,8 @@ void SplitDofsIntoBlocks(const vector<int>& Ntrue, const vector<int>& dofs, cons
         procDofs_block[i].resize(num_procs);
 
         allNtrue[i].resize(num_procs);
-        MPI_Allgather(&Ntrue[i], 1, MPI_INT, allNtrue[i].data(), 1, MPI_INT, MPI_COMM_WORLD);
+        MPI_Allgather(&Ntrue[i], 1, MPI_INT, allNtrue[i].data(), 1, MPI_INT,
+                      MPI_COMM_WORLD);
     }
 
     vector<int> spaceOS(nspaces);
@@ -223,7 +234,8 @@ void InsertElementDofs(ParFiniteElementSpace& fespace, const int elId,
 }
 
 // dofs are full dofs
-void AugmentDofListWithOwnedDofs(vector<int>& mixedDofs, vector<ParFiniteElementSpace*> & fespace)
+void AugmentDofListWithOwnedDofs(vector<int>& mixedDofs,
+                                 vector<ParFiniteElementSpace*> & fespace)
 {
     const int nspaces = fespace.size();
     vector<int> spaceOS(nspaces);
@@ -316,8 +328,11 @@ void BuildSampleMesh(ParMesh& pmesh, vector<ParFiniteElementSpace*> & fespace,
 
     const int d = pmesh.Dimension();
 
-    H1_FECollection h1_coll(1, d);  // Must be first order, to get a bijection between vertices and DOF's.
-    ParFiniteElementSpace H1DummySpace(&pmesh, &h1_coll);  // This constructor effectively sets vertex (DOF) global indices.
+    // Must be first order, to get a bijection between vertices and DOF's.
+    H1_FECollection h1_coll(1, d);
+
+    // This constructor effectively sets vertex (DOF) global indices.
+    ParFiniteElementSpace H1DummySpace(&pmesh, &h1_coll);
 
     vector<int> procNumElems(num_procs);
 
@@ -354,7 +369,8 @@ void BuildSampleMesh(ParMesh& pmesh, vector<ParFiniteElementSpace*> & fespace,
     // a map<int, int> mapping these global TDofs to local vertex ids. For each
     // unique TDof it finds, it adds a vertex to the sample mesh. Then it adds
     // each element, attribute, and connectivity.
-    vector<int> my_element_attr(2*local_num_elems);  // Stores element attribute and local index
+    vector<int> my_element_attr(
+        2*local_num_elems);  // Stores element attribute and local index
     set<int> element_dofs;
     int attr_idx = 0;
     int conn_idx = 0;
@@ -364,7 +380,8 @@ void BuildSampleMesh(ParMesh& pmesh, vector<ParFiniteElementSpace*> & fespace,
     int numElVert = elVert.Size();  // number of vertices per element
     MFEM_VERIFY(numElVert > 0, "");
 
-    vector<int> my_element_vgid(numElVert*local_num_elems);  // vertex global indices, for each element
+    vector<int> my_element_vgid(
+        numElVert*local_num_elems);  // vertex global indices, for each element
     vector<double> my_element_coords(d*numElVert*local_num_elems);
 
     for (set<int>::iterator it = elems.begin(); it != elems.end(); ++it) {
@@ -377,12 +394,14 @@ void BuildSampleMesh(ParMesh& pmesh, vector<ParFiniteElementSpace*> & fespace,
         }
 
         pmesh.GetElementVertices(elId, elVert);
-        MFEM_VERIFY(numElVert == elVert.Size(), "");  // Assuming a uniform element type in the mesh.
+        MFEM_VERIFY(numElVert == elVert.Size(),
+                    "Assuming a uniform element type in the mesh.");
         // NOTE: to be very careful, it should be verified that this is the same across all processes.
 
         Array<int> dofs;
         H1DummySpace.GetElementDofs(elId, dofs);
-        MFEM_VERIFY(numElVert == dofs.Size(), "");  // Assuming a bijection between vertices and H1 dummy space DOF's.
+        MFEM_VERIFY(numElVert == dofs.Size(),
+                    "");  // Assuming a bijection between vertices and H1 dummy space DOF's.
 
         for (int i = 0; i < numElVert; ++i) {
             my_element_vgid[conn_idx++] = H1DummySpace.GetGlobalTDofNumber(dofs[i]);
@@ -504,7 +523,8 @@ void BuildSampleMesh(ParMesh& pmesh, vector<ParFiniteElementSpace*> & fespace,
     sample_mesh->FinalizeTopology();
 }
 
-void GetLocalDofsToLocalElementMap(ParFiniteElementSpace& fespace, const vector<int>& dofs, const vector<int>& localNumDofs, const set<int>& elems,
+void GetLocalDofsToLocalElementMap(ParFiniteElementSpace& fespace,
+                                   const vector<int>& dofs, const vector<int>& localNumDofs, const set<int>& elems,
                                    vector<int>& dofToElem, vector<int>& dofToElemDof, const bool useTDof)
 {
     int myid;
@@ -538,7 +558,8 @@ void GetLocalDofsToLocalElementMap(ParFiniteElementSpace& fespace, const vector<
                 if (ltdof == dofs[myoffset + i])  // dofs contains true DOF's.
 #endif
                 {
-                    dofToElem[i] = elId;  // Possibly overwrite another element index, which is fine since we just want any element index.
+                    dofToElem[i] =
+                        elId;  // Possibly overwrite another element index, which is fine since we just want any element index.
                     dofToElemDof[i] = j;
                 }
             }
@@ -551,8 +572,10 @@ void GetLocalDofsToLocalElementMap(ParFiniteElementSpace& fespace, const vector<
     }
 }
 
-void Set_s2sp(const int myid, const int num_procs, vector<int> const& spNtrue, const int global_num_sample_dofs, const vector<int>& local_num_sample_dofs,
-              const vector<vector<int> >& local_num_sample_dofs_sub, const vector<vector<int> >& localSampleDofsToElem_sub,
+void Set_s2sp(const int myid, const int num_procs, vector<int> const& spNtrue,
+              const int global_num_sample_dofs, const vector<int>& local_num_sample_dofs,
+              const vector<vector<int> >& local_num_sample_dofs_sub,
+              const vector<vector<int> >& localSampleDofsToElem_sub,
               const vector<vector<int> >& localSampleDofsToElemDof_sub,
               const vector<vector<int> >& sample_dofs_sub_to_sample_dofs,
               const vector<map<int, int> >& elemLocalIndicesInverse,
@@ -589,13 +612,15 @@ void Set_s2sp(const int myid, const int num_procs, vector<int> const& spNtrue, c
     // Gather all the sample DOF to element and element DOF indices.
     vector<int> mySampleToElement(2*local_num_sample_dofs[myid]);
 
-    mySampleToElement.assign(mySampleToElement.size(), -1);  // Initialize with invalid values, to verify later that everything was set.
+    mySampleToElement.assign(mySampleToElement.size(),
+                             -1);  // Initialize with invalid values, to verify later that everything was set.
 
     for (int s=0; s<nspaces; ++s)  // Loop over subspaces
     {
         for (int i=0; i<local_num_sample_dofs_sub[s][myid]; ++i)
         {
-            const int sdi = sample_dofs_sub_to_sample_dofs[s][os[s] + i] - mySampleDofOffset;
+            const int sdi = sample_dofs_sub_to_sample_dofs[s][os[s] + i] -
+                            mySampleDofOffset;
             mySampleToElement[2*sdi] = localSampleDofsToElem_sub[s][i];
             mySampleToElement[(2*sdi)+1] = localSampleDofsToElemDof_sub[s][i];
         }
@@ -639,7 +664,8 @@ void Set_s2sp(const int myid, const int num_procs, vector<int> const& spNtrue, c
 
     s2sp.resize(global_num_sample_dofs);
 
-    s2sp.assign(s2sp.size(), -1);  // Initialize with invalid values, to verify later that everything was set.
+    s2sp.assign(s2sp.size(),
+                -1);  // Initialize with invalid values, to verify later that everything was set.
 
     for (int s=0; s<nspaces; ++s)
         os[s] = 0;
@@ -659,7 +685,8 @@ void Set_s2sp(const int myid, const int num_procs, vector<int> const& spNtrue, c
                     continue;
 #endif
                 const int procElementDofIndex = sampleToElement[(2*sdi)+1];
-                map<int, int>::const_iterator it = elemLocalIndicesInverse[p].find(procElementIndex);
+                map<int, int>::const_iterator it = elemLocalIndicesInverse[p].find(
+                                                       procElementIndex);
 
                 MFEM_VERIFY(it != elemLocalIndicesInverse[p].end(), "");
                 MFEM_VERIFY(it->first == procElementIndex, "");
@@ -667,7 +694,8 @@ void Set_s2sp(const int myid, const int num_procs, vector<int> const& spNtrue, c
                 const int sampleMeshElement = it->second;
                 Array<int> eldofs;
                 spfespace[s]->GetElementVDofs(sampleMeshElement, eldofs);
-                const int eldof = eldofs[procElementDofIndex] >= 0 ? eldofs[procElementDofIndex] : -1 - eldofs[procElementDofIndex];
+                const int eldof = eldofs[procElementDofIndex] >= 0 ?
+                                  eldofs[procElementDofIndex] : -1 - eldofs[procElementDofIndex];
                 s2sp[sdi] = eldof + spaceOS[s];
             }
 
@@ -688,9 +716,11 @@ void Set_s2sp(const int myid, const int num_procs, vector<int> const& spNtrue, c
 }
 
 #ifdef FULL_DOF_STENCIL
-void Finish_s2sp_augmented(const int rank, const int nprocs, vector<ParFiniteElementSpace*> & fespace,
+void Finish_s2sp_augmented(const int rank, const int nprocs,
+                           vector<ParFiniteElementSpace*> & fespace,
                            vector<vector<int>>& dofs_block, vector<vector<int> >& dofs_sub_to_sdofs,
-                           vector<vector<int> >& local_num_dofs_sub, const bool dofsTrue, vector<int> & s2sp_)
+                           vector<vector<int> >& local_num_dofs_sub, const bool dofsTrue,
+                           vector<int> & s2sp_)
 {
     const int nspaces = fespace.size();
 
@@ -715,7 +745,8 @@ void Finish_s2sp_augmented(const int rank, const int nprocs, vector<ParFiniteEle
             int sum = 0;
             for (int p=0; p<nprocs; ++p)
                 sum += local_num_dofs_sub[s][p];
-            MFEM_VERIFY(dofs_sub_to_sdofs[s].size() == sum && dofs_block[s].size() == sum, "");
+            MFEM_VERIFY(dofs_sub_to_sdofs[s].size() == sum
+                        && dofs_block[s].size() == sum, "");
         }
 
         const int ndof = local_num_dofs_sub[s][rank];
@@ -784,7 +815,8 @@ void Finish_s2sp_augmented(const int rank, const int nprocs, vector<ParFiniteEle
 
         vector<int> allgid(offsets[nprocs-1] + counts[nprocs-1]);
 
-        MPI_Gatherv(gid.data(), 2*ndof, MPI_INT, allgid.data(), counts.data(), offsets.data(), MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Gatherv(gid.data(), 2*ndof, MPI_INT, allgid.data(), counts.data(),
+                    offsets.data(), MPI_INT, 0, MPI_COMM_WORLD);
 
         if (rank == 0)
         {
@@ -1022,7 +1054,10 @@ void ParaViewPrintAttributes(const string &fname,
     out << "</VTKFile>" << endl;
 }
 
-SampleMeshManager::SampleMeshManager(vector<ParFiniteElementSpace*> & fespace_, string visFileName) : nspaces(fespace_.size()), fespace(fespace_), filename(visFileName)
+SampleMeshManager::SampleMeshManager(vector<ParFiniteElementSpace*> & fespace_,
+                                     string visFileName, double visScale) :
+    nspaces(fespace_.size()), fespace(fespace_), filename(visFileName),
+    elemVisScale(visScale)
 {
     MFEM_VERIFY(nspaces > 0, "Must provide at least one finite element space");
     spfespace.assign(nspaces, nullptr);
@@ -1031,7 +1066,8 @@ SampleMeshManager::SampleMeshManager(vector<ParFiniteElementSpace*> & fespace_, 
 
     for (int i=1; i<nspaces; ++i)
     {
-        MFEM_VERIFY(pmesh == fespace[i]->GetParMesh(), "All spaces must use the same full-order mesh");
+        MFEM_VERIFY(pmesh == fespace[i]->GetParMesh(),
+                    "All spaces must use the same full-order mesh");
     }
 
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
@@ -1039,22 +1075,27 @@ SampleMeshManager::SampleMeshManager(vector<ParFiniteElementSpace*> & fespace_, 
 
     int color = (myid != 0);
     const int status = MPI_Comm_split(MPI_COMM_WORLD, color, myid, &root_comm);
-    MFEM_VERIFY(status == MPI_SUCCESS, "Construction of hyperreduction comm failed");
+    MFEM_VERIFY(status == MPI_SUCCESS,
+                "Construction of hyperreduction comm failed");
 
     sample_dofs_proc.assign(nspaces, vector<set<int>> (nprocs));
 
     finalized = false;
 }
 
-void SampleMeshManager::RegisterSampledVariable(const string variable, const int space, vector<int> const& sample_dofs_v, vector<int> const& num_sample_dofs_per_proc)
+void SampleMeshManager::RegisterSampledVariable(const string variable,
+        const int space, vector<int> const& sample_dofs_v,
+        vector<int> const& num_sample_dofs_per_proc)
 {
-    MFEM_VERIFY(!finalized, "Cannot register a variable in a finalized SampleMeshManager");
+    MFEM_VERIFY(!finalized,
+                "Cannot register a variable in a finalized SampleMeshManager");
     MFEM_VERIFY(0 <= space && space < nspaces, "Invalid space index");
     MFEM_VERIFY(num_sample_dofs_per_proc.size() == nprocs, "");
 
     {
         auto search = vmap.find(variable);
-        MFEM_VERIFY(search == vmap.end(), "Variable " + variable + " is already registered!");
+        MFEM_VERIFY(search == vmap.end(),
+                    "Variable " + variable + " is already registered!");
     }
     vmap[variable] = nvar;
 
@@ -1090,7 +1131,8 @@ void SampleMeshManager::SetSampleMaps()
     for (int i=0; i<nspaces; ++i)
     {
         allspaceTOS[i].resize(nprocs);
-        MPI_Allgather(&spaceTOS[i], 1, MPI_INT, allspaceTOS[i].data(), 1, MPI_INT, MPI_COMM_WORLD);
+        MPI_Allgather(&spaceTOS[i], 1, MPI_INT, allspaceTOS[i].data(), 1, MPI_INT,
+                      MPI_COMM_WORLD);
     }
 
     for (int p=0; p<nprocs; ++p)
@@ -1103,7 +1145,8 @@ void SampleMeshManager::SetSampleMaps()
             const int os = allspaceTOS[i][p];
             sample_dofs_os[i] = sample_dofs.size();
 
-            for (set<int>::const_iterator it = sample_dofs_proc[i][p].begin(); it != sample_dofs_proc[i][p].end(); ++it)
+            for (set<int>::const_iterator it = sample_dofs_proc[i][p].begin();
+                    it != sample_dofs_proc[i][p].end(); ++it)
             {
                 sample_dofs.push_back(os + (*it));
             }
@@ -1129,7 +1172,8 @@ void SampleMeshManager::SetSampleMaps()
                 // Note: this has quadratic complexity and could be improved with a std::map<int, int>, but it should not be a bottleneck.
                 int k = -1;
                 int cnt = 0;
-                for (set<int>::const_iterator it = sample_dofs_proc[space][p].begin(); it != sample_dofs_proc[space][p].end(); ++it, ++cnt)
+                for (set<int>::const_iterator it = sample_dofs_proc[space][p].begin();
+                        it != sample_dofs_proc[space][p].end(); ++it, ++cnt)
                 {
                     if (*it == sample)
                     {
@@ -1150,7 +1194,8 @@ void SampleMeshManager::ConstructSampleMesh()
     MFEM_VERIFY(!finalized, "Sample mesh is already constructed");
 
     nvar = varSpace.size();
-    MFEM_VERIFY(nvar == sample_dofs_var.size() && nvar == num_sample_dofs_per_proc_var.size(), "");
+    MFEM_VERIFY(nvar == sample_dofs_var.size()
+                && nvar == num_sample_dofs_per_proc_var.size(), "");
 
     spaceOS.assign(nspaces + 1, 0);
     spaceTOS.assign(nspaces + 1, 0);
@@ -1187,7 +1232,8 @@ void SampleMeshManager::FinishSampleMaps()
         // TODO: if this is used in more than one place, then store it in the class.
         // Set spaceOSall by gathering spaceTOS from all processes, for all spaces.
         vector<int> data(nprocs * (nspaces+1));
-        MPI_Allgather(spaceTOS.data(), nspaces+1, MPI_INT, data.data(), nspaces+1, MPI_INT, MPI_COMM_WORLD);
+        MPI_Allgather(spaceTOS.data(), nspaces+1, MPI_INT, data.data(), nspaces+1,
+                      MPI_INT, MPI_COMM_WORLD);
 
         spaceOSall.assign(nspaces+1, vector<int> (nprocs, 0));
         for (int p=0; p<nprocs; ++p)
@@ -1223,7 +1269,8 @@ void SampleMeshManager::FinishSampleMaps()
         {
             for (int j=0; j<num_sample_dofs_per_proc_var[v][p]; ++j)
             {
-                MFEM_VERIFY(spaceOSall[s][p] <= sample_dofs[s2sp_var[v][os_p + j]] && sample_dofs[s2sp_var[v][os_p + j]] < spaceOSall[s+1][p], "");
+                MFEM_VERIFY(spaceOSall[s][p] <= sample_dofs[s2sp_var[v][os_p + j]]
+                            && sample_dofs[s2sp_var[v][os_p + j]] < spaceOSall[s+1][p], "");
                 const int spId = s2sp[s2sp_var[v][os_p + j]];
                 s2sp_var[v][os_p + j] = spId - spaceOSSP[s];
             }
@@ -1241,7 +1288,8 @@ int SampleMeshManager::GetNumVarSamples(const string variable) const
     return sample_dofs_var[var].size();
 }
 
-void SampleMeshManager::GetSampledValues(const string variable, mfem::Vector const& v, CAROM::Vector & s) const
+void SampleMeshManager::GetSampledValues(const string variable,
+        mfem::Vector const& v, CAROM::Vector & s) const
 {
     const int var = GetVariableIndex(variable);
     const int n = s2sp_var[var].size();
@@ -1252,7 +1300,8 @@ void SampleMeshManager::GetSampledValues(const string variable, mfem::Vector con
         s(i) = v[s2sp_var[var][i]];
 }
 
-void SampleMeshManager::WriteVariableSampleMap(const string variable, string file_name) const
+void SampleMeshManager::WriteVariableSampleMap(const string variable,
+        string file_name) const
 {
     const int var = GetVariableIndex(variable);
     ofstream file;
@@ -1368,7 +1417,6 @@ void GatherDistributedMatrixRows_aux(const CAROM::Matrix& B, const int rdim,
             }
         }
 
-
 #ifdef FULL_DOF_STENCIL
         int Bsp_row = num_sprows_true;
 #else
@@ -1383,13 +1431,15 @@ void GatherDistributedMatrixRows_aux(const CAROM::Matrix& B, const int rdim,
                 {
                     MFEM_VERIFY(0 <= st2sp[sti] - ossp && st2sp[sti] - ossp < Bsp.numRows(), "");
                     MPI_Recv(&Bsp(st2sp[sti] - ossp, 0), rdim, MPI_DOUBLE,
-                             i, offsets[i]+j, MPI_COMM_WORLD, &status);  // Note that this may redundantly overwrite some rows corresponding to shared DOF's.
+                             i, offsets[i]+j, MPI_COMM_WORLD,
+                             &status);  // Note that this may redundantly overwrite some rows corresponding to shared DOF's.
                 }
 #else
                 if (allos0[i] <= all_sprows[Bsp_row] && all_sprows[Bsp_row] < allos1[i])
                 {
                     MPI_Recv(&Bsp(st2sp[Bsp_row], 0), rdim, MPI_DOUBLE,
-                             i, offsets[i]+j, MPI_COMM_WORLD, &status);  // Note that this may redundantly overwrite some rows corresponding to shared DOF's.
+                             i, offsets[i]+j, MPI_COMM_WORLD,
+                             &status);  // Note that this may redundantly overwrite some rows corresponding to shared DOF's.
                 }
 #endif
                 ++Bsp_row;
@@ -1437,18 +1487,21 @@ void GatherDistributedMatrixRows_aux(const CAROM::Matrix& B, const int rdim,
 int SampleMeshManager::GetVariableIndex(const string variable) const
 {
     auto search = vmap.find(variable);
-    MFEM_VERIFY(search != vmap.end(), "Variable " + variable + " is not registered!");
+    MFEM_VERIFY(search != vmap.end(),
+                "Variable " + variable + " is not registered!");
     const int var = search->second;
     MFEM_VERIFY(0 <= var && var < nvar, "Invalid variable index");
     return var;
 }
 
-void SampleMeshManager::GatherDistributedMatrixRows(const string variable, CAROM::Matrix const& B, const int rdim, CAROM::Matrix& Bsp) const
+void SampleMeshManager::GatherDistributedMatrixRows(const string variable,
+        CAROM::Matrix const& B, const int rdim, CAROM::Matrix& Bsp) const
 {
     const int var = GetVariableIndex(variable);
     const int s = varSpace[var];
 
-    GatherDistributedMatrixRows_aux(B, rdim, spaceOS[s], spaceOS[s+1], spaceOSSP[s], *fespace[s], st2sp, sprows, all_sprows, Bsp);
+    GatherDistributedMatrixRows_aux(B, rdim, spaceOS[s], spaceOS[s+1], spaceOSSP[s],
+                                    *fespace[s], st2sp, sprows, all_sprows, Bsp);
 }
 
 void SampleMeshManager::CreateSampleMesh()
@@ -1472,20 +1525,28 @@ void SampleMeshManager::CreateSampleMesh()
                         sample_dofs_block, sample_dofs_sub_to_sample_dofs, local_num_sample_dofs_sub);
 
     const bool getSampledEntities = !filename.empty();
-    set<int> intElems, faces, edges, vertices;  // Local mesh entities containing sampled DOFs, used only for ParaView visualization.
+    // Local mesh entities containing sampled DOFs, used only for ParaView visualization.
+    set<int> intElems, faces, edges, vertices;
 
     // Find all local elements that should be included, using all spaces.
-    GetLocalSampleMeshElements(*pmesh, *fespace[0], sample_dofs_block[0], local_num_sample_dofs_sub[0], elems,
+    GetLocalSampleMeshElements(*pmesh, *fespace[0], sample_dofs_block[0],
+                               local_num_sample_dofs_sub[0], elems,
                                getSampledEntities, intElems, faces, edges, vertices);
-    GetLocalDofsToLocalElementMap(*fespace[0], sample_dofs_block[0], local_num_sample_dofs_sub[0], elems, localSampleDofsToElem_sub[0], localSampleDofsToElemDof_sub[0], true);
+    GetLocalDofsToLocalElementMap(*fespace[0], sample_dofs_block[0],
+                                  local_num_sample_dofs_sub[0], elems, localSampleDofsToElem_sub[0],
+                                  localSampleDofsToElemDof_sub[0], true);
     for (int i=1; i<nspaces; ++i)
     {
         set<int> elems_i;
-        set<int> intElems_i, faces_i, edges_i, vertices_i;  // Local mesh entities containing sampled DOFs, used only for ParaView visualization.
+        set<int> intElems_i, faces_i, edges_i,
+            vertices_i;  // Local mesh entities containing sampled DOFs, used only for ParaView visualization.
 
-        GetLocalSampleMeshElements(*pmesh, *fespace[i], sample_dofs_block[i], local_num_sample_dofs_sub[i], elems_i,
+        GetLocalSampleMeshElements(*pmesh, *fespace[i], sample_dofs_block[i],
+                                   local_num_sample_dofs_sub[i], elems_i,
                                    getSampledEntities, intElems_i, faces_i, edges_i, vertices_i);
-        GetLocalDofsToLocalElementMap(*fespace[i], sample_dofs_block[i], local_num_sample_dofs_sub[i], elems_i, localSampleDofsToElem_sub[i], localSampleDofsToElemDof_sub[i], true);
+        GetLocalDofsToLocalElementMap(*fespace[i], sample_dofs_block[i],
+                                      local_num_sample_dofs_sub[i], elems_i, localSampleDofsToElem_sub[i],
+                                      localSampleDofsToElemDof_sub[i], true);
 
         // Merge the elements found for all spaces.
         elems.insert(elems_i.begin(), elems_i.end());
@@ -1502,7 +1563,8 @@ void SampleMeshManager::CreateSampleMesh()
     vector<int> elemLocalIndices;
     vector<map<int, int> > elemLocalIndicesInverse;
     Mesh *sample_mesh = 0;
-    BuildSampleMesh(*pmesh, fespace, elems, sample_mesh, sprows, elemLocalIndices, elemLocalIndicesInverse);
+    BuildSampleMesh(*pmesh, fespace, elems, sample_mesh, sprows, elemLocalIndices,
+                    elemLocalIndicesInverse);
 
     MFEM_VERIFY(sample_mesh->GetNE() == elemLocalIndices.size(), "");
 
@@ -1513,18 +1575,22 @@ void SampleMeshManager::CreateSampleMesh()
 
         // Create fespaces on sample mesh
         for (int i=0; i<nspaces; ++i)
-            spfespace[i] = new ParFiniteElementSpace(sample_pmesh, fespace[i]->FEColl(), fespace[i]->GetVDim());
+            spfespace[i] = new ParFiniteElementSpace(sample_pmesh, fespace[i]->FEColl(),
+                    fespace[i]->GetVDim());
     }
 
     vector<int> spNtrue(nspaces);
     for (int i=0; i<nspaces; ++i)
         spNtrue[i] = myid == 0 ? spfespace[i]->TrueVSize() : 0;
 
-    Set_s2sp(myid, nprocs, spNtrue, sample_dofs.size(), local_num_sample_dofs, local_num_sample_dofs_sub, localSampleDofsToElem_sub,
-             localSampleDofsToElemDof_sub, sample_dofs_sub_to_sample_dofs, elemLocalIndicesInverse, spfespace, s2sp);
+    Set_s2sp(myid, nprocs, spNtrue, sample_dofs.size(), local_num_sample_dofs,
+             local_num_sample_dofs_sub, localSampleDofsToElem_sub,
+             localSampleDofsToElemDof_sub, sample_dofs_sub_to_sample_dofs,
+             elemLocalIndicesInverse, spfespace, s2sp);
 
 #ifdef FULL_DOF_STENCIL
-    Finish_s2sp_augmented(myid, nprocs, fespace, sample_dofs_block, sample_dofs_sub_to_sample_dofs, local_num_sample_dofs_sub, true, s2sp);
+    Finish_s2sp_augmented(myid, nprocs, fespace, sample_dofs_block,
+                          sample_dofs_sub_to_sample_dofs, local_num_sample_dofs_sub, true, s2sp);
 #endif
 
     // Prepare for setting st2sp
@@ -1532,14 +1598,16 @@ void SampleMeshManager::CreateSampleMesh()
     const int numStencil = sprows.size();
     vector<int> local_num_stencil_dofs(nprocs);
 
-    MPI_Allgather(&numStencil, 1, MPI_INT, &local_num_stencil_dofs[0], 1, MPI_INT, MPI_COMM_WORLD);
+    MPI_Allgather(&numStencil, 1, MPI_INT, &local_num_stencil_dofs[0], 1, MPI_INT,
+                  MPI_COMM_WORLD);
 
     int* offsets = new int [nprocs];
     offsets[0] = 0;
     for (int i = 1; i < nprocs; ++i)
         offsets[i] = offsets[i-1] + local_num_stencil_dofs[i-1];
 
-    const int total_num_stencil_dofs = offsets[nprocs-1] + local_num_stencil_dofs[nprocs-1];
+    const int total_num_stencil_dofs = offsets[nprocs-1] +
+                                       local_num_stencil_dofs[nprocs-1];
 
     all_sprows.resize(total_num_stencil_dofs);
     MPI_Allgatherv(&sprows[0], local_num_stencil_dofs[myid],
@@ -1563,34 +1631,73 @@ void SampleMeshManager::CreateSampleMesh()
         Nfull[i] = fespace[i]->GetVSize();
 
     SplitDofsIntoBlocks(Nfull, all_sprows, local_num_stencil_dofs,
-                        stencil_dofs_block, stencil_dofs_sub_to_stencil_dofs, local_num_stencil_dofs_sub);
+                        stencil_dofs_block, stencil_dofs_sub_to_stencil_dofs,
+                        local_num_stencil_dofs_sub);
 #else
     SplitDofsIntoBlocks(Ntrue, all_sprows, local_num_stencil_dofs,
-                        stencil_dofs_block, stencil_dofs_sub_to_stencil_dofs, local_num_stencil_dofs_sub);
+                        stencil_dofs_block, stencil_dofs_sub_to_stencil_dofs,
+                        local_num_stencil_dofs_sub);
 #endif
 
     for (int i=0; i<nspaces; ++i)
     {
-        GetLocalDofsToLocalElementMap(*fespace[i], stencil_dofs_block[i], local_num_stencil_dofs_sub[i], elems, localStencilDofsToElem_sub[i], localStencilDofsToElemDof_sub[i], false);
+        GetLocalDofsToLocalElementMap(*fespace[i], stencil_dofs_block[i],
+                                      local_num_stencil_dofs_sub[i], elems, localStencilDofsToElem_sub[i],
+                                      localStencilDofsToElemDof_sub[i], false);
     }
 
-    Set_s2sp(myid, nprocs, spNtrue, all_sprows.size(), local_num_stencil_dofs, local_num_stencil_dofs_sub, localStencilDofsToElem_sub,
-             localStencilDofsToElemDof_sub, stencil_dofs_sub_to_stencil_dofs, elemLocalIndicesInverse, spfespace, st2sp);
+    Set_s2sp(myid, nprocs, spNtrue, all_sprows.size(), local_num_stencil_dofs,
+             local_num_stencil_dofs_sub, localStencilDofsToElem_sub,
+             localStencilDofsToElemDof_sub, stencil_dofs_sub_to_stencil_dofs,
+             elemLocalIndicesInverse, spfespace, st2sp);
 
 #ifdef FULL_DOF_STENCIL
-    Finish_s2sp_augmented(myid, nprocs, fespace, stencil_dofs_block, stencil_dofs_sub_to_stencil_dofs, local_num_stencil_dofs_sub, false, st2sp);
+    Finish_s2sp_augmented(myid, nprocs, fespace, stencil_dofs_block,
+                          stencil_dofs_sub_to_stencil_dofs, local_num_stencil_dofs_sub, false, st2sp);
 #endif
 
     if (!filename.empty())
     {
-        // Write files for global pmesh and a piecewise constant function with 1 on sample mesh elements and 0 elsewhere.
-        // Note that this is a visualization of the sample mesh elements, not the sampled DOFs. That is, it shows all elements
-        // that contain a sampled DOF, which could be at a vertex, edge, face, or volume.
+        SampleVisualization(pmesh, elems, intElems, faces, edges, vertices,
+                            filename, nullptr, elemVisScale);
+    }
+}
 
-        L2_FECollection l2_coll(1, pmesh->Dimension());  // order 1
-        ParFiniteElementSpace pwc_space(pmesh, &l2_coll); // piecewise constant space on global mesh
-        ParGridFunction marker(&pwc_space);
-        marker = 0.0;
+void SampleVisualization(ParMesh *pmesh, set<int> const& elems,
+                         set<int> const& intElems, set<int> const& faces,
+                         set<int> const& edges, set<int> const& vertices,
+                         string const& filename, mfem::Vector *elemCount,
+                         double elementScaling)
+{
+    // Write files for global pmesh and a piecewise constant function with 1 on
+    // sample mesh elements and 0 elsewhere. Note that this is a visualization of
+    // the sample mesh elements, not the sampled DOFs. That is, it shows all
+    // elements that contain a sampled DOF, which could be at a vertex, edge,
+    // face, or volume.
+
+    // Construct a piecewise constant space on the global mesh.
+    L2_FECollection l2_coll(1, pmesh->Dimension());  // order 1
+    ParFiniteElementSpace pwc_space(pmesh, &l2_coll);
+
+    ParGridFunction marker(&pwc_space);
+    marker = 0.0;
+    if (elemCount)
+    {
+        MFEM_VERIFY(elemCount->Size() == pmesh->GetNE(), "");
+        for (int e=0; e<pmesh->GetNE(); ++e)
+        {
+            Array<int> dofs;
+            pwc_space.GetElementVDofs(e, dofs);
+
+            for (int i = 0; i < dofs.Size(); i++)
+            {
+                const int dof_i = dofs[i] >= 0 ? dofs[i] : -1 - dofs[i];
+                marker[dof_i] = (*elemCount)[e];
+            }
+        }
+    }
+    else
+    {
         for (set<int>::const_iterator it = elems.begin(); it != elems.end(); ++it)
         {
             Array<int> dofs;
@@ -1599,68 +1706,69 @@ void SampleMeshManager::CreateSampleMesh()
             for (int i = 0; i < dofs.Size(); i++)
             {
                 const int dof_i = dofs[i] >= 0 ? dofs[i] : -1 - dofs[i];
-                marker[dof_i] = 1;
+                marker[dof_i] = elementScaling;
             }
         }
-
-        VisItDataCollection visit_dc(filename, pmesh);
-        visit_dc.RegisterField("Sample Elements", &marker);
-        visit_dc.SetFormat(DataCollection::SERIAL_FORMAT);
-        visit_dc.Save();
-
-        // Write ParaView files to visualize sampled elements, edges, and vertices
-        int ne = pmesh->GetNE();
-        int nv = pmesh->GetNV();
-        int nf = pmesh->GetNFaces();
-        int nedge = pmesh->GetNEdges();
-
-        Array<int> e(ne), v(nv), f(nf), edge(nedge);
-        e = 0;
-        v = 0;
-        f = 0;
-        edge = 0;
-
-        for (set<int>::const_iterator it = intElems.begin(); it != intElems.end(); ++it)
-        {
-            e[*it] = 1;
-        }
-
-        for (set<int>::const_iterator it = faces.begin(); it != faces.end(); ++it)
-        {
-            f[*it] = 1;
-        }
-
-        for (set<int>::const_iterator it = edges.begin(); it != edges.end(); ++it)
-        {
-            edge[*it] = 1;
-        }
-
-        for (set<int>::const_iterator it = vertices.begin(); it != vertices.end(); ++it)
-        {
-            v[*it] = 1;
-        }
-
-        /*
-        for (int i=0; i<ne/2; ++i) { e[i] = 0; }
-        for (int i=0; i<nv/2; ++i) { v[i] = 0; }
-        for (int i=0; i<nf/2; ++i) { f[i] = 0; }
-        for (int i=0; i<nedge/2; ++i) { edge[i] = 0; }
-        */
-
-        ParaViewPrintAttributes(filename + "_pv", *pmesh, pmesh->Dimension(), &e, &v);
-        if (pmesh->Dimension() == 3)
-        {
-            ParaViewPrintAttributes(filename + "_pv_face", *pmesh, 2, &f, &v);
-        }
-        ParaViewPrintAttributes(filename + "_pv_edge", *pmesh, 1, &edge, &v);
     }
+
+    VisItDataCollection visit_dc(filename, pmesh);
+    visit_dc.RegisterField("Sample Elements", &marker);
+    visit_dc.SetFormat(DataCollection::SERIAL_FORMAT);
+    visit_dc.Save();
+
+    // Write ParaView files to visualize sampled elements, edges, and vertices
+    int ne = pmesh->GetNE();
+    int nv = pmesh->GetNV();
+    int nf = pmesh->GetNFaces();
+    int nedge = pmesh->GetNEdges();
+
+    Array<int> e(ne), v(nv), f(nf), edge(nedge);
+    e = 0;
+    v = 0;
+    f = 0;
+    edge = 0;
+
+    for (set<int>::const_iterator it = intElems.begin(); it != intElems.end(); ++it)
+    {
+        e[*it] = 1;
+    }
+
+    for (set<int>::const_iterator it = faces.begin(); it != faces.end(); ++it)
+    {
+        f[*it] = 1;
+    }
+
+    for (set<int>::const_iterator it = edges.begin(); it != edges.end(); ++it)
+    {
+        edge[*it] = 1;
+    }
+
+    for (set<int>::const_iterator it = vertices.begin(); it != vertices.end(); ++it)
+    {
+        v[*it] = 1;
+    }
+
+    /*
+    for (int i=0; i<ne/2; ++i) { e[i] = 0; }
+    for (int i=0; i<nv/2; ++i) { v[i] = 0; }
+    for (int i=0; i<nf/2; ++i) { f[i] = 0; }
+    for (int i=0; i<nedge/2; ++i) { edge[i] = 0; }
+    */
+
+    ParaViewPrintAttributes(filename + "_pv", *pmesh, pmesh->Dimension(), &e, &v);
+    if (pmesh->Dimension() == 3)
+    {
+        ParaViewPrintAttributes(filename + "_pv_face", *pmesh, 2, &f, &v);
+    }
+    ParaViewPrintAttributes(filename + "_pv_edge", *pmesh, 1, &edge, &v);
 }
 
 void SampleDOFSelector::ReadMapFromFile(const string variable, string file_name)
 {
     {
         auto search = vmap.find(variable);
-        MFEM_VERIFY(search == vmap.end(), "Map for variable " + variable + " is already read!");
+        MFEM_VERIFY(search == vmap.end(),
+                    "Map for variable " + variable + " is already read!");
     }
     vmap[variable] = nvar;
 
@@ -1680,13 +1788,15 @@ void SampleDOFSelector::ReadMapFromFile(const string variable, string file_name)
 int SampleDOFSelector::GetVariableIndex(const string variable) const
 {
     auto search = vmap.find(variable);
-    MFEM_VERIFY(search != vmap.end(), "Variable " + variable + " is not registered!");
+    MFEM_VERIFY(search != vmap.end(),
+                "Variable " + variable + " is not registered!");
     const int var = search->second;
     MFEM_VERIFY(0 <= var && var < nvar, "Invalid variable index");
     return var;
 }
 
-void SampleDOFSelector::GetSampledValues(const string variable, mfem::Vector const& v, CAROM::Vector & s) const
+void SampleDOFSelector::GetSampledValues(const string variable,
+        mfem::Vector const& v, CAROM::Vector & s) const
 {
     const int var = GetVariableIndex(variable);
 

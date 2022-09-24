@@ -1,3 +1,13 @@
+/******************************************************************************
+ *
+ * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * and other libROM project developers. See the top-level COPYRIGHT
+ * file for details.
+ *
+ * SPDX-License-Identifier: (Apache-2.0 OR MIT)
+ *
+ *****************************************************************************/
+
 //                       libROM MFEM Example: Parametric_Heat_Conduction (adapted from ex16p.cpp)
 //
 // Compile with: make parametric_heat_conduction
@@ -59,11 +69,18 @@
 
 #include "mfem.hpp"
 #include "algo/DMD.h"
-#include "algo/ParametricDMD.h"
 #include "linalg/Vector.h"
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include "utils/CSVDatabase.h"
+
+#ifndef _WIN32
+#include <sys/stat.h>  // mkdir
+#else
+#include <direct.h>    // _mkdir
+#define mkdir(dir, mode) _mkdir(dir)
+#endif
 
 using namespace std;
 using namespace mfem;
@@ -141,7 +158,7 @@ int main(int argc, char *argv[])
     double dt = 1.0e-2;
     double alpha = 1.0e-2;
     double kappa = 0.5;
-    double epsilon = 500.0;
+    double closest_rbf_val = 0.9;
     int rdim = -1;
     bool offline = false;
     bool online = false;
@@ -150,6 +167,8 @@ int main(int argc, char *argv[])
     bool visit = false;
     int vis_steps = 5;
     bool adios2 = false;
+    bool save_csv = false;
+    const char *basename = "";
 
     int precision = 8;
     cout.precision(precision);
@@ -175,13 +194,13 @@ int main(int argc, char *argv[])
     args.AddOption(&kappa, "-k", "--kappa",
                    "Kappa coefficient offset.");
     args.AddOption(&radius, "-r", "--radius",
-                       "Radius of the interface of initial temperature.");
+                   "Radius of the interface of initial temperature.");
     args.AddOption(&cx, "-cx", "--center_x",
-                       "Center offset in the x direction.");
+                   "Center offset in the x direction.");
     args.AddOption(&cy, "-cy", "--center_y",
-                       "Center offset in the y direction.");
-    args.AddOption(&epsilon, "-eps", "--eps",
-                   "DMD Epsilon.");
+                   "Center offset in the y direction.");
+    args.AddOption(&closest_rbf_val, "-crv", "--crv",
+                   "DMD Closest RBF Value.");
     args.AddOption(&visualization, "-vis", "--visualization", "-no-vis",
                    "--no-visualization",
                    "Enable or disable GLVis visualization.");
@@ -190,6 +209,8 @@ int main(int argc, char *argv[])
                    "Save data files for VisIt (visit.llnl.gov) visualization.");
     args.AddOption(&vis_steps, "-vs", "--visualization-steps",
                    "Visualize every n-th timestep.");
+    args.AddOption(&rdim, "-rdim", "--rdim",
+                   "Reduced dimension for DMD.");
     args.AddOption(&offline, "-offline", "--offline", "-no-offline", "--no-offline",
                    "Enable or disable the offline phase.");
     args.AddOption(&online, "-online", "--online", "-no-online", "--no-online",
@@ -199,8 +220,10 @@ int main(int argc, char *argv[])
     args.AddOption(&adios2, "-adios2", "--adios2-streams", "-no-adios2",
                    "--no-adios2-streams",
                    "Save data using adios2 streams.");
-    args.AddOption(&rdim, "-rdim", "--rdim",
-                   "Reduced dimension for DMD.");
+    args.AddOption(&save_csv, "-csv", "--csv", "-no-csv", "--no-csv",
+                   "Enable or disable MFEM result output (files in CSV format).");
+    args.AddOption(&basename, "-out", "--outputfile-name",
+                   "Name of the sub-folder to dump files within the run directory.");
     args.Parse();
     if (!args.Good())
     {
@@ -212,6 +235,26 @@ int main(int argc, char *argv[])
     if (myid == 0)
     {
         args.PrintOptions(cout);
+    }
+
+    string outputPath = ".";
+    if (save_csv)
+    {
+        outputPath = "run";
+        if (string(basename) != "") {
+            outputPath += "/" + string(basename);
+        }
+        if (myid == 0)
+        {
+            const char path_delim = '/';
+            string::size_type pos = 0;
+            do {
+                pos = outputPath.find(path_delim, pos+1);
+                string subdir = outputPath.substr(0, pos);
+                mkdir(subdir.c_str(), 0777);
+            }
+            while (pos != string::npos);
+        }
     }
 
     MFEM_VERIFY(!(offline && online), "both offline and online can not be true!");
@@ -319,12 +362,14 @@ int main(int argc, char *argv[])
     u_gf.SetFromTrueDofs(u);
     {
         ostringstream mesh_name, sol_name;
-        mesh_name << "parametric_heat_conduction_" << to_string(radius) << "_"
-            << to_string(alpha) << "_" << to_string(cx) << "_" << to_string(cy)
-            << "-mesh." << setfill('0') << setw(6) << myid;
-        sol_name << "parametric_heat_conduction_" << to_string(radius) << "_"
-            << to_string(alpha) << "_" << to_string(cx) << "_" << to_string(cy)
-            << "-init." << setfill('0') << setw(6) << myid;
+        mesh_name << outputPath << "/parametric_heat_conduction_" << to_string(
+                      radius) << "_"
+                  << to_string(alpha) << "_" << to_string(cx) << "_" << to_string(cy)
+                  << "-mesh." << setfill('0') << setw(6) << myid;
+        sol_name << outputPath << "/parametric_heat_conduction_" << to_string(
+                     radius) << "_"
+                 << to_string(alpha) << "_" << to_string(cx) << "_" << to_string(cy)
+                 << "-init." << setfill('0') << setw(6) << myid;
         ofstream omesh(mesh_name.str().c_str());
         omesh.precision(precision);
         pmesh->Print(omesh);
@@ -333,9 +378,9 @@ int main(int argc, char *argv[])
         u_gf.Save(osol);
     }
 
-    VisItDataCollection visit_dc("Parametric_Heat_Conduction_" +
-        to_string(radius) + "_" + to_string(alpha) + "_" + to_string(cx) + "_" +
-        to_string(cy), pmesh);
+    VisItDataCollection visit_dc(outputPath + "/Parametric_Heat_Conduction_" +
+                                 to_string(radius) + "_" + to_string(alpha) + "_" + to_string(cx) + "_" +
+                                 to_string(cy), pmesh);
     visit_dc.RegisterField("temperature", &u_gf);
     if (visit)
     {
@@ -354,8 +399,9 @@ int main(int argc, char *argv[])
         postfix.erase(0, std::string("../data/").size() );
         postfix += "_o" + std::to_string(order);
         postfix += "_solver" + std::to_string(ode_solver_type);
-        const std::string collection_name = "parametric_heat_conduction-p-" +
-            postfix + ".bp";
+        const std::string collection_name = outputPath +
+                                            "/parametric_heat_conduction-p-" +
+                                            postfix + ".bp";
 
         adios2_dc = new ADIOS2DataCollection(MPI_COMM_WORLD, collection_name, pmesh);
         adios2_dc->SetParameter("SubStreams", std::to_string(num_procs/2) );
@@ -405,6 +451,9 @@ int main(int argc, char *argv[])
     vector<double> ts;
     CAROM::Vector* init = NULL;
 
+    CAROM::CSVDatabase csv_db;
+    vector<string> snap_list;
+
     fom_timer.Stop();
 
     CAROM::DMD* dmd_u = NULL;
@@ -417,6 +466,7 @@ int main(int argc, char *argv[])
         u_gf.SetFromTrueDofs(u);
         dmd_u = new CAROM::DMD(u.Size(), dt);
         dmd_u->takeSample(u.GetData(), t);
+
         if (myid == 0)
         {
             std::cout << "Taking snapshot at: " << t << std::endl;
@@ -430,7 +480,14 @@ int main(int argc, char *argv[])
         init = new CAROM::Vector(u.GetData(), u.Size(), true);
     }
 
+    if (save_csv && myid == 0)
+    {
+        mkdir((outputPath + "/step0").c_str(), 0777);
+        csv_db.putDoubleArray(outputPath + "/step0/sol.csv", u.GetData(), u.Size());
+    }
+
     ts.push_back(t);
+    snap_list.push_back("step0");
 
     bool last_step = false;
     for (int ti = 1; !last_step; ti++)
@@ -452,6 +509,7 @@ int main(int argc, char *argv[])
 
             u_gf.SetFromTrueDofs(u);
             dmd_u->takeSample(u.GetData(), t);
+
             if (myid == 0)
             {
                 std::cout << "Taking snapshot at: " << t << std::endl;
@@ -460,7 +518,15 @@ int main(int argc, char *argv[])
             dmd_training_timer.Stop();
         }
 
+        if (save_csv && myid == 0)
+        {
+            mkdir((outputPath + "/step" + to_string(ti)).c_str(), 0777);
+            csv_db.putDoubleArray(outputPath + "/step" + to_string(ti) + "/sol.csv",
+                                  u.GetData(), u.Size());
+        }
+
         ts.push_back(t);
+        snap_list.push_back("step" + to_string(ti));
 
         if (last_step || (ti % vis_steps) == 0)
         {
@@ -495,6 +561,13 @@ int main(int argc, char *argv[])
         oper.SetParameters(u);
     }
 
+    if (save_csv && myid == 0)
+    {
+        csv_db.putDoubleVector(outputPath + "/tval.csv", ts, ts.size());
+        csv_db.putStringVector(outputPath + "/snap_list.csv", snap_list,
+                               snap_list.size());
+    }
+
 #ifdef MFEM_USE_ADIOS2
     if (adios2)
     {
@@ -506,9 +579,10 @@ int main(int argc, char *argv[])
     //     using GLVis: "glvis -np <np> -m parametric_heat_conduction-mesh -g parametric_heat_conduction-final".
     {
         ostringstream sol_name;
-        sol_name << "parametric_heat_conduction_" << to_string(radius) << "_"
-            << to_string(alpha) << "_" << to_string(cx) << "_" << to_string(cy)
-            << "-final." << setfill('0') << setw(6) << myid;
+        sol_name << outputPath << "/parametric_heat_conduction_" << to_string(
+                     radius) << "_"
+                 << to_string(alpha) << "_" << to_string(cx) << "_" << to_string(cy)
+                 << "-final." << setfill('0') << setw(6) << myid;
         ofstream osol(sol_name.str().c_str());
         osol.precision(precision);
         u_gf.Save(osol);
@@ -530,13 +604,17 @@ int main(int argc, char *argv[])
 
             dmd_training_timer.Stop();
 
-            dmd_u->save(to_string(radius) + "_" + to_string(alpha) + "_" +
-                to_string(cx) + "_" + to_string(cy));
+            dmd_u->save(outputPath + "/" + to_string(radius) + "_" + to_string(
+                            alpha) + "_" +
+                        to_string(cx) + "_" + to_string(cy));
 
-            std::ofstream fout;
-            fout.open("parameters.txt", std::ios::app);
-            fout << radius << " " << alpha << " " << cx << " " << cy << std::endl;
-            fout.close();
+            if (myid == 0)
+            {
+                std::ofstream fout;
+                fout.open("parameters.txt", std::ios::app);
+                fout << radius << " " << alpha << " " << cx << " " << cy << std::endl;
+                fout.close();
+            }
         }
 
         if (online)
@@ -561,9 +639,9 @@ int main(int argc, char *argv[])
                 fin >> curr_param;
                 double curr_cy = curr_param;
 
-                dmd_paths.push_back(to_string(curr_radius) + "_" +
-                    to_string(curr_alpha) + "_" + to_string(curr_cx) + "_" +
-                    to_string(curr_cy));
+                dmd_paths.push_back(outputPath + "/" + to_string(curr_radius) + "_" +
+                                    to_string(curr_alpha) + "_" + to_string(curr_cx) + "_" +
+                                    to_string(curr_cy));
                 CAROM::Vector* param_vector = new CAROM::Vector(4, false);
                 param_vector->item(0) = curr_radius;
                 param_vector->item(1) = curr_alpha;
@@ -581,12 +659,13 @@ int main(int argc, char *argv[])
 
             dmd_training_timer.Start();
 
-            dmd_u = getParametricDMD(param_vectors, dmd_paths, desired_param,
-                "G", "LS", epsilon);
+            CAROM::getParametricDMD(dmd_u, param_vectors, dmd_paths, desired_param,
+                                    "G", "LS", closest_rbf_val);
 
             dmd_u->projectInitialCondition(init);
 
             dmd_training_timer.Stop();
+            delete desired_param;
         }
 
         if (predict)
@@ -606,9 +685,10 @@ int main(int argc, char *argv[])
             Vector initial_dmd_solution_u(result_u->getData(), result_u->dim());
             u_gf.SetFromTrueDofs(initial_dmd_solution_u);
 
-            VisItDataCollection dmd_visit_dc("DMD_Parametric_Heat_Conduction_" +
-                to_string(radius) + "_" + to_string(alpha) + "_" +
-                to_string(cx) + "_" + to_string(cy), pmesh);
+            VisItDataCollection dmd_visit_dc(outputPath + "/DMD_Parametric_Heat_Conduction_"
+                                             +
+                                             to_string(radius) + "_" + to_string(alpha) + "_" +
+                                             to_string(cx) + "_" + to_string(cy), pmesh);
             dmd_visit_dc.RegisterField("temperature", &u_gf);
             if (visit)
             {
@@ -654,13 +734,14 @@ int main(int argc, char *argv[])
 
             double tot_diff_norm_u = sqrt(InnerProduct(MPI_COMM_WORLD, diff_u, diff_u));
             double tot_true_solution_u_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
-                true_solution_u, true_solution_u));
+                                                   true_solution_u, true_solution_u));
 
             if (myid == 0)
             {
                 std::cout << "Relative error of DMD temperature (u) at t_final: "
-                    << t_final << " is " << tot_diff_norm_u / tot_true_solution_u_norm << std::endl;
-                printf("Elapsed time for predicting DMD: %e second\n", dmd_prediction_timer.RealTime());
+                          << t_final << " is " << tot_diff_norm_u / tot_true_solution_u_norm << std::endl;
+                printf("Elapsed time for predicting DMD: %e second\n",
+                       dmd_prediction_timer.RealTime());
             }
 
             delete result_u;
@@ -668,7 +749,8 @@ int main(int argc, char *argv[])
 
         if (myid == 0)
         {
-            printf("Elapsed time for training DMD: %e second\n", dmd_training_timer.RealTime());
+            printf("Elapsed time for training DMD: %e second\n",
+                   dmd_training_timer.RealTime());
         }
     }
 

@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2021, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -24,6 +24,13 @@ using namespace std;
 
 namespace CAROM {
 
+void SampleVisualization(ParMesh *pmesh, set<int> const& elems,
+                         set<int> const& intElems, set<int> const& faces,
+                         set<int> const& edges, set<int> const& vertices,
+                         string const& filename,
+                         mfem::Vector *elemCount=nullptr,
+                         double elementScaling=1.0);
+
 /**
  * Class SampleMeshManager constructs and manages a sample mesh and finite element spaces on the sample mesh.
  * The spaces defined on the sample mesh are referred to as sample mesh spaces, and they generally contain
@@ -45,7 +52,8 @@ public:
      * @param[in] visFileName If non-empty, this filename is used for VisIt and ParaView output of the sample mesh
      *                        and the sampled DOFs on the full-order mesh.
      */
-    SampleMeshManager(vector<ParFiniteElementSpace*> & fespace_, string visFileName="");
+    SampleMeshManager(vector<ParFiniteElementSpace*> & fespace_,
+                      string visFileName="", double visScale=1.0);
 
     /**
      * @brief Register a variable and set its sampled DOFs.
@@ -58,7 +66,8 @@ public:
      *
      * @param[in] num_sample_dofs_per_proc Number of sampled DOFs on each MPI process (cf. DEIM function).
      */
-    void RegisterSampledVariable(const string variable, const int space, vector<int> const& sample_dofs_v, vector<int> const& num_sample_dofs_per_proc);
+    void RegisterSampledVariable(const string variable, const int space,
+                                 vector<int> const& sample_dofs_v, vector<int> const& num_sample_dofs_per_proc);
 
     /**
      * @brief Construct the sample mesh, after registering all sampled variables.
@@ -76,7 +85,8 @@ public:
      *
      * @param[out] Bsp Matrix with rows corresponding to sample mesh space DOFs, gathered only to the root process (MPI rank 0).
      */
-    void GatherDistributedMatrixRows(const string variable, CAROM::Matrix const& B, const int rdim, CAROM::Matrix& Bsp) const;
+    void GatherDistributedMatrixRows(const string variable, CAROM::Matrix const& B,
+                                     const int rdim, CAROM::Matrix& Bsp) const;
 
     /**
      * @brief Returns a sample mesh space.
@@ -117,7 +127,8 @@ public:
      *
      * @param[out] s Vector of sampled DOFs on all processes.
      */
-    void GetSampledValues(const string variable, mfem::Vector const& v, CAROM::Vector & s) const;
+    void GetSampledValues(const string variable, mfem::Vector const& v,
+                          CAROM::Vector & s) const;
 
     /**
      * @brief Writes a variable sample DOF map to file, which can be read by SampleDOFSelector::ReadMapFromFile
@@ -177,7 +188,8 @@ private:
     vector<vector<int>> num_sample_dofs_per_proc_var;
     vector<vector<int>> s2sp_var;
     vector<int> s2sp, st2sp;
-    vector<int> sprows;  // Local true DOFs on the original full mesh, restricted to the sample mesh stencil.
+    vector<int>
+    sprows;  // Local true DOFs on the original full mesh, restricted to the sample mesh stencil.
     vector<int> all_sprows;  // sprows gathered over all processes
 
     vector<int> spaceTOS, spaceOS, spaceOSSP;
@@ -186,6 +198,8 @@ private:
   set<int> elems;
 
     string filename;  // For visualization output
+
+    double elemVisScale;  // Scaling for sample element visualization
 };
 
 /**
@@ -219,7 +233,8 @@ public:
      *
      * @param[out] s Vector of sampled DOFs on all processes.
      */
-    void GetSampledValues(const string variable, mfem::Vector const& v, CAROM::Vector & s) const;
+    void GetSampledValues(const string variable, mfem::Vector const& v,
+                          CAROM::Vector & s) const;
 
     /**
      * @brief Destructor.
@@ -236,6 +251,5 @@ private:
 };
 
 }  // namespace CAROM
-
 
 #endif // SAMPLEMESH_H

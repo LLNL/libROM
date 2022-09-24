@@ -1,3 +1,13 @@
+/******************************************************************************
+ *
+ * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * and other libROM project developers. See the top-level COPYRIGHT
+ * file for details.
+ *
+ * SPDX-License-Identifier: (Apache-2.0 OR MIT)
+ *
+ *****************************************************************************/
+
 //                  libROM MFEM Example: DG Euler Equations (adapted from ex18p.cpp)
 
 #include "mfem.hpp"
@@ -55,7 +65,6 @@ public:
     double Eval(const Vector &state1, const Vector &state2,
                 const Vector &nor, Vector &flux);
 };
-
 
 // Constant (in time) mixed bilinear form multiplying the flux grid function.
 // The form is (vec(v), grad(w)) where the trial space = vector L2 space (mesh

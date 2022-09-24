@@ -132,18 +132,26 @@ if (USE_MFEM)
     dg_advection_global_rom
     dg_advection_local_rom_matrix_interp
     mixed_nonlinear_diffusion
+    nonlinear_elasticity_global_rom
+    linear_elasticity_global_rom
     dg_advection
     nonlinear_elasticity
     heat_conduction
     parametric_heat_conduction
+    de_parametric_heat_conduction_greedy
     dg_euler
-    generic_csv)
+    local_tw_csv
+    parametric_tw_csv)
   set(example_directories
     prom
     prom
     prom
     prom
     prom
+    prom
+    prom
+    dmd
+    dmd
     dmd
     dmd
     dmd
@@ -168,6 +176,7 @@ if (USE_MFEM)
     target_compile_features(${name} PRIVATE cxx_std_11)
   endforeach() # IN LISTS examples
   file(COPY examples/data DESTINATION ${CMAKE_BINARY_DIR}/examples)
+  file(COPY examples/dmd/heat_conduction_csv.sh DESTINATION ${CMAKE_BINARY_DIR}/examples/dmd)
 endif()
 
 set(misc_example_names
@@ -176,7 +185,7 @@ set(misc_example_names
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/examples/misc)
 
 foreach(name IN LISTS misc_example_names)
-  add_executable(${name} examples/misc/${name}.C)
+  add_executable(${name} examples/misc/${name}.cpp)
 
   target_link_libraries(${name}
     PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
@@ -198,7 +207,7 @@ set(regression_test_names
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests)
 
 foreach(name IN LISTS regression_test_names)
-  add_executable(${name} tests/${name}.C)
+  add_executable(${name} tests/${name}.cpp)
 
   target_link_libraries(${name}
     PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
@@ -216,13 +225,14 @@ if(GTEST_FOUND)
     DMD
     GNAT
     QDEIM
+    S_OPT
     SVD
     StaticSVD
     RandomizedSVD
     IncrementalSVD
     GreedyCustomSampler)
   foreach(stem IN LISTS unit_test_stems)
-    add_executable(test_${stem} tests/test_${stem}.C)
+    add_executable(test_${stem} tests/test_${stem}.cpp)
     target_link_libraries(test_${stem} PRIVATE ROM
       ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran GTest::GTest)
     target_include_directories(test_${stem}

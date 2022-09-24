@@ -110,7 +110,6 @@ public:
     const Matrix*
     getSnapshotMatrix() = 0;
 
-
     /**
      * @brief Returns the number of time intervals on which different sets
      * of basis vectors are defined.

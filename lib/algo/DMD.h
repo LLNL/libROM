@@ -18,6 +18,7 @@
 #ifndef included_DMD_h
 #define included_DMD_h
 
+#include "ParametricDMD.h"
 #include <vector>
 #include <complex>
 
@@ -25,6 +26,20 @@ namespace CAROM {
 
 class Matrix;
 class Vector;
+class ComplexEigenPair;
+
+/**
+ * Struct DMDInternal is a struct containing the necessary matrices to compute phi.
+ */
+struct DMDInternal
+{
+    Matrix* snapshots_in;
+    Matrix* snapshots_out;
+    Matrix* basis;
+    Matrix* basis_right;
+    Matrix* S_inv;
+    ComplexEigenPair* eigenpair;
+};
 
 /**
  * Class DMD implements the DMD algorithm on a given snapshot matrix.
@@ -34,15 +49,16 @@ class DMD
 public:
 
     /**
-     * @brief Constructor.
+     * @brief Constructor. Basic DMD with uniform time step size.
      *
-     * @param[in] dim        The full-order state dimension.
-     * @param[in] dt         The dt between samples.
+     * @param[in] dim          The full-order state dimension.
+     * @param[in] dt           The dt between samples.
+     * @param[in] state_offset The state offset.
      */
-    DMD(int dim, double dt);
+    DMD(int dim, double dt, Vector* state_offset = NULL);
 
     /**
-     * @brief Constructor.
+     * @brief Constructor. DMD from saved models.
      *
      * @param[in] base_file_name The base part of the filename of the
      *                           database to load when restarting from a save.
@@ -50,7 +66,8 @@ public:
     DMD(std::string base_file_name);
 
     /**
-     * @brief Sample the new state, u_in.
+     * @brief Sample the new state, u_in. Any samples in d_snapshots
+     *        taken at the same or later time will be erased.
      *
      * @pre u_in != 0
      * @pre t >= 0.0
@@ -62,21 +79,24 @@ public:
 
     /**
      * @param[in] energy_fraction The energy fraction to keep after doing SVD.
+     * @param[in] W0              The initial basis to prepend to W.
+     * @param[in] linearity_tol   The tolerance for determining whether a column
+                                  of W is linearly independent with W0.
      */
-    virtual void train(double energy_fraction);
+    virtual void train(double energy_fraction, const Matrix* W0 = NULL, double linearity_tol = 0.0);
 
     /**
      * @param[in] k The number of modes (eigenvalues) to keep after doing SVD.
+     * @param[in] W0              The initial basis to prepend to W.
+     * @param[in] linearity_tol   The tolerance for determining whether a column
+                                  of W is linearly independent with W0.
      */
-    virtual void train(int k);
+    virtual void train(int k, const Matrix* W0 = NULL, double linearity_tol = 0.0);
 
     /**
-     * @brief Output the DMD record in CSV files.
-     */
-    void summary(std::string output_path);
-
-    /**
-     * @brief Predict new initial condition using d_phi.
+     * @brief Project new initial condition using d_phi.
+     *        Calculate pinv(phi) x init, or more precisely,
+     *        (phi* x phi)^{-1} x phi* x init, where phi* is the conjugate transpose.
      *
      * @param[in] init The initial condition.
      */
@@ -88,12 +108,22 @@ public:
      *
      * @param[in] t The time of the outputted state
      */
-    Vector* predict(double t);
+    Vector* predict(double t, int power = 0);
 
     /**
      * @brief Get the time offset contained within d_t_offset.
      */
     double getTimeOffset() const;
+
+    /**
+     * @brief Returns the number of samples taken.
+     *
+     * @return The number of samples taken.
+     */
+    int getNumSamples() const
+    {
+        return d_snapshots.size();
+    }
 
     /**
      * @brief Get the snapshot matrix contained within d_snapshots.
@@ -116,17 +146,31 @@ public:
      */
     virtual void save(std::string base_file_name);
 
-protected:
+    /**
+     * @brief Output the DMD record in CSV files.
+     */
+    void summary(std::string base_file_name);
 
-    friend DMD* getParametricDMD(std::vector<Vector*>& parameter_points,
-                                 std::vector<DMD*>& dmds,
-                                 Vector* desired_point,
-                                 std::string rbf,
-                                 std::string interp_method,
-                                 double epsilon);
+protected:
+    friend void getParametricDMD<DMD>(DMD*& parametric_dmd,
+                                      std::vector<Vector*>& parameter_points,
+                                      std::vector<DMD*>& dmds,
+                                      Vector* desired_point,
+                                      std::string rbf,
+                                      std::string interp_method,
+                                      double closest_rbf_val,
+                                      bool reorthogonalize_W);
 
     /**
-     * @brief Constructor.
+     * @brief Constructor. Variant of DMD with non-uniform time step size.
+     *
+     * @param[in] dim               The full-order state dimension.
+     * @param[in] state_offset      The state offset.
+     */
+    DMD(int dim, Vector* state_offset = NULL); 
+
+    /**
+     * @brief Constructor. Specified from DMD components. 
      *
      * @param[in] eigs d_eigs
      * @param[in] phi_real d_phi_real
@@ -134,8 +178,11 @@ protected:
      * @param[in] k d_k
      * @param[in] dt d_dt
      * @param[in] t_offset d_t_offset
+     * @param[in] state_offset d_state_offset
      */
-    DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real, Matrix* phi_imaginary, int k, double dt, double t_offset);
+    DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
+        Matrix* phi_imaginary, int k,
+        double dt, double t_offset, Vector* state_offset);
 
     /**
      * @brief Unimplemented default constructor.
@@ -145,8 +192,7 @@ protected:
     /**
      * @brief Unimplemented copy constructor.
      */
-    DMD(
-        const DMD& other);
+    DMD(const DMD& other);
 
     /**
      * @brief Unimplemented assignment operator.
@@ -158,14 +204,37 @@ protected:
     /**
      * @brief Internal function to multiply d_phi with the eigenvalues.
      */
-    std::pair<Matrix*, Matrix*> phiMultEigs(double t);
+    std::pair<Matrix*, Matrix*> phiMultEigs(double t, int power = 0);
 
     /**
-     * @brief Internal function to obtain the DMD modes.
+     * @brief Construct the DMD object.
      */
     void constructDMD(const Matrix* f_snapshots,
                       int rank,
-                      int num_procs);
+                      int num_procs,
+                      const Matrix* W0,
+                      double linearity_tol);
+
+    /**
+     * @brief Returns a pair of pointers to the minus and plus snapshot matrices
+     */
+    virtual std::pair<Matrix*, Matrix*> computeDMDSnapshotPair(
+        const Matrix* snapshots);
+
+    /**
+     * @brief Compute phi.
+     */
+    virtual void computePhi(struct DMDInternal dmd_internal_obj);
+
+    /**
+     * @brief Compute the appropriate exponential function when predicting the solution.
+     */
+    virtual std::complex<double> computeEigExp(std::complex<double> eig, double t);
+
+    /**
+     * @brief Add the appropriate offset when predicting the solution.
+     */
+    virtual void addOffset(Vector*& result, double t = 0.0, int power = 0);
 
     /**
      * @brief Get the snapshot matrix contained within d_snapshots.
@@ -190,7 +259,7 @@ protected:
     /**
      * @brief The time step size between samples.
      */
-    double d_dt;
+    double d_dt = -1.0;
 
     /**
      * @brief The time offset of the first sample.
@@ -201,6 +270,16 @@ protected:
      * @brief std::vector holding the snapshots.
      */
     std::vector<Vector*> d_snapshots;
+
+    /**
+     * @brief The stored times of each sample.
+     */
+    std::vector<Vector*> d_sampled_times;
+
+    /**
+     * @brief State offset in snapshot.
+     */
+    Vector* d_state_offset = NULL;
 
     /**
      * @brief Whether the DMD has been trained or not.
@@ -251,6 +330,16 @@ protected:
      * @brief The imaginary part of d_phi.
      */
     Matrix* d_phi_imaginary = NULL;
+
+    /**
+     * @brief The real part of d_phi_squared_inverse.
+     */
+    Matrix* d_phi_real_squared_inverse = NULL;
+
+    /**
+     * @brief The imaginary part of d_phi_squared_inverse.
+     */
+    Matrix* d_phi_imaginary_squared_inverse = NULL;
 
     /**
      * @brief The real part of the projected initial condition.

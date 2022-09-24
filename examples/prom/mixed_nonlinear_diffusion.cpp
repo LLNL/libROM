@@ -1,3 +1,13 @@
+/******************************************************************************
+ *
+ * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * and other libROM project developers. See the top-level COPYRIGHT
+ * file for details.
+ *
+ * SPDX-License-Identifier: (Apache-2.0 OR MIT)
+ *
+ *****************************************************************************/
+
 //               libROM MFEM Example: parametric ROM for nonlinear diffusion problem
 //
 // Compile with: ./scripts/compile.sh -m
@@ -21,12 +31,33 @@
 //               Analytic test (reproductive)
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -offline
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -merge -ns 1
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -nsdim 20
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -nsdim 20 -sopt
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -nsdim 20 -ns 1 -eqp
+//
+//               Relative l2 error of ROM solution at final timestep using DEIM sampling: 1.096776797994166e-08
+//               Elapsed time for time integration loop using DEIM sampling: 0.6351594580000001
+//               Relative l2 error of ROM solution at final timestep using S_OPT sampling: 1.01945081122054e-08
+//               Elapsed time for time integration loop using S_OPT sampling: 0.6669736559999999
+//               Relative l2 error of ROM solution at final timestep using EQP: 1.46205848438194e-07
+//               Elapsed time for time integration loop using EQP: 0.431521853
+//
+//               Note that the timing of the time integration loop does not include setup,
+//               which can be greater for S_OPT and EQP than for DEIM.
 //
 //               Initial step test (reproductive)
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -offline -p 1
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -merge -ns 1 -p 1
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -p 1
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -p 1
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -p 1 -sopt
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -p 1 -ns 1 -eqp
+//
+//               Relative l2 error of ROM solution at final timestep using DEIM sampling: 0.0003712362376412496
+//               Elapsed time for time integration loop using DEIM sampling: 0.364855569
+//               Relative l2 error of ROM solution at final timestep using S_OPT sampling: 0.0003797338657417907
+//               Elapsed time for time integration loop using S_OPT sampling: 0.300462563
+//               Relative l2 error of ROM solution at final timestep using EQP sampling: 0.0003710336208386964
+//               Elapsed time for time integration loop using EQP sampling: 0.481740662
 //
 //               Initial step parametric test (predictive)
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -offline -id 0 -sh 0.25
@@ -34,7 +65,16 @@
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -offline -id 2 -sh 0.35
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -merge -ns 3
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -offline -id 3 -sh 0.3
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -sh 0.3 -id 3
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -nldim 20 -sh 0.3 -id 3
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -nldim 20 -sh 0.3 -id 3 -sopt
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -nldim 20 -sh 0.3 -id 3 -ns 3 -eqp -maxnnls 30
+//
+//               Relative l2 error of ROM solution at final timestep using DEIM sampling: 0.002681387312231006
+//               Elapsed time for time integration loop using DEIM sampling: 0.355846074
+//               Relative l2 error of ROM solution at final timestep using S_OPT sampling: 0.002701713369494112
+//               Elapsed time for time integration loop using S_OPT sampling: 0.348985935
+//               Relative l2 error of ROM solution at final timestep using EQP: 0.002659978000520714
+//               Elapsed time for time integration loop using EQP sampling: 0.176821221
 
 #include "mfem.hpp"
 
@@ -44,19 +84,27 @@
 
 #include "linalg/BasisGenerator.h"
 #include "linalg/BasisReader.h"
+#include "linalg/NNLS.h"
 #include "hyperreduction/DEIM.h"
+#include "hyperreduction/GNAT.h"
+#include "hyperreduction/S_OPT.h"
 #include "mfem/SampleMesh.hpp"
 #include "mfem/PointwiseSnapshot.hpp"
 
+using namespace mfem;
+using namespace std;
+
+double InitialTemperature(const Vector &x);
+double SourceFunction(const Vector &x, const double t);
+double ExactSolution(const Vector &x, const double t);
+double NonlinearCoefficient(const double p);
+double NonlinearCoefficientDerivative(const double p);
+
+#include "mixed_nonlinear_diffusion_eqp.hpp"
 
 typedef enum {ANALYTIC, INIT_STEP} PROBLEM;
 
 typedef enum {RSPACE, WSPACE} FESPACE;
-
-//#define USE_GNAT
-
-using namespace mfem;
-using namespace std;
 
 static bool nonlinear_problem;
 static int problem;
@@ -91,14 +139,16 @@ public:
     void Mult(const Vector &x, Vector &y) const;
 };
 
-NonlinearDiffusionGradientOperator::NonlinearDiffusionGradientOperator(const int sizeR,
-        const int sizeW)
+NonlinearDiffusionGradientOperator::NonlinearDiffusionGradientOperator(
+    const int sizeR,
+    const int sizeW)
     : Operator(sizeW), zW(sizeW), zR(sizeR), yR(sizeR), xR(sizeR),
       C_solver(NULL), M_solver(NULL), M_prime(NULL), B(NULL), dt(0.0)
 {
 }
 
-void NonlinearDiffusionGradientOperator::SetParameters(Operator *C_solver_, Operator *M_solver_,
+void NonlinearDiffusionGradientOperator::SetParameters(Operator *C_solver_,
+        Operator *M_solver_,
         Operator *M_prime_, Operator *B_, const double dt_)
 {
     C_solver = C_solver_;
@@ -136,7 +186,6 @@ void NonlinearDiffusionGradientOperator::Mult(const Vector &x, Vector &y) const
 
 class NonlinearDiffusionOperator : public TimeDependentOperator
 {
-
 protected:
     friend class RomOperator;
 
@@ -159,14 +208,14 @@ protected:
 
     double current_dt;
 
-    mutable CGSolver *M_solver;    // Krylov solver for inverting the R mass matrix M
+    mutable CGSolver
+    *M_solver;    // Krylov solver for inverting the R mass matrix M
     mutable HypreSmoother M_prec;  // Preconditioner for the R mass matrix M
 
     mutable CGSolver C_solver;    // Krylov solver for inverting the W mass matrix C
     HypreSmoother C_prec; // Preconditioner for the W mass matrix C
 
     GMRESSolver *J_gmres;
-
     NewtonSolver newton_solver;
 
     NonlinearDiffusionGradientOperator *gradient;
@@ -221,7 +270,7 @@ public:
     virtual ~NonlinearDiffusionOperator();
 
     ParFiniteElementSpace &fespace_R;  // RT finite element space
-    ParFiniteElementSpace &fespace_W;  // L2 discontinuous scalar finite element space
+    ParFiniteElementSpace &fespace_W;  // L2 scalar finite element space
 
     bool newtonFailure;
 };
@@ -232,6 +281,7 @@ private:
     int rrdim, rwdim, nldim;
     int nsamp_R, nsamp_S;
     double current_dt;
+    bool oversampling;
     NewtonSolver newton_solver;
     GMRESSolver *J_gmres;
     CAROM::Matrix *BRsp, *BWsp;
@@ -255,6 +305,12 @@ private:
     bool hyperreduce, hyperreduce_source;
     bool sourceFOM;
 
+    mutable ParGridFunction p_gf, rhs_gf;
+    GridFunctionCoefficient p_coeff;
+    mutable TransformedCoefficient a_coeff;
+    TransformedCoefficient aprime_coeff;
+    mutable SumCoefficient a_plus_aprime_coeff;
+
     CAROM::Vector *pfom_librom, *pfom_R_librom, *pfom_W_librom;
     Vector *pfom;
     Vector *pfom_R;
@@ -268,6 +324,22 @@ private:
 
     void PrintFDJacobian(const Vector &p) const;
 
+    // Data for EQP
+    bool eqp;
+    const IntegrationRule *ir_eqp;
+    std::vector<double> eqp_rw;
+    std::vector<int> eqp_qp;
+    std::vector<double> eqp_rw_S;
+    std::vector<int> eqp_qp_S;
+    Vector eqp_coef, eqp_coef_S;
+    const bool fastIntegration = true;
+
+    CAROM::Matrix eqp_lifting;
+    std::vector<int> eqp_liftDOFs;
+    mutable CAROM::Vector eqp_lifted;
+
+    int rank;
+
 protected:
     CAROM::Matrix* BR;
     CAROM::Matrix* CR;
@@ -278,14 +350,17 @@ protected:
     NonlinearDiffusionOperator *fomSp;
 
 public:
-    RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOperator *fomSp_,
+    RomOperator(NonlinearDiffusionOperator *fom_,
+                NonlinearDiffusionOperator *fomSp_,
                 const int rrdim_, const int rwdim_, const int nldim_,
                 CAROM::SampleMeshManager *smm_,
                 const CAROM::Matrix* V_R_, const CAROM::Matrix* U_R_, const CAROM::Matrix* V_W_,
                 const CAROM::Matrix *Bsinv,
                 const double newton_rel_tol, const double newton_abs_tol, const int newton_iter,
                 const CAROM::Matrix* S_, const CAROM::Matrix *Ssinv_,
-                const int myid, const bool hyperreduce_source);
+                const int myid, const bool hyperreduce_source_, const bool oversampling_,
+                const bool use_eqp, CAROM::Vector *eqpSol,
+                CAROM::Vector *eqpSol_S, const IntegrationRule *ir_eqp_);
 
     virtual void Mult(const Vector &y, Vector &dy_dt) const;
     void Mult_Hyperreduced(const Vector &y, Vector &dy_dt) const;
@@ -326,16 +401,11 @@ void BroadcastUndistributedRomVector(CAROM::Vector* v)
     delete [] d;
 }
 
-double InitialTemperature(const Vector &x);
-double SourceFunction(const Vector &x, const double t);
-double ExactSolution(const Vector &x, const double t);
-double NonlinearCoefficient(const double p);
-double NonlinearCoefficientDerivative(const double p);
-
 // TODO: move this to the library?
 CAROM::Matrix* GetFirstColumns(const int N, const CAROM::Matrix* A)
 {
-    CAROM::Matrix* S = new CAROM::Matrix(A->numRows(), std::min(N, A->numColumns()), A->distributed());
+    CAROM::Matrix* S = new CAROM::Matrix(A->numRows(), std::min(N, A->numColumns()),
+                                         A->distributed());
     for (int i=0; i<S->numRows(); ++i)
     {
         for (int j=0; j<S->numColumns(); ++j)
@@ -347,7 +417,8 @@ CAROM::Matrix* GetFirstColumns(const int N, const CAROM::Matrix* A)
 }
 
 // TODO: move this to the library?
-void BasisGeneratorFinalSummary(CAROM::BasisGenerator* bg, const double energyFraction, int & cutoff, const std::string cutoffOutputPath)
+void BasisGeneratorFinalSummary(CAROM::BasisGenerator* bg,
+                                const double energyFraction, int & cutoff, const std::string cutoffOutputPath)
 {
     const int rom_dim = bg->getSpatialBasis()->numColumns();
     const CAROM::Vector* sing_vals = bg->getSingularValues();
@@ -389,11 +460,13 @@ void BasisGeneratorFinalSummary(CAROM::BasisGenerator* bg, const double energyFr
     }
 
     if (!reached_cutoff) cutoff = sing_vals->dim();
-    outfile << "Take first " << cutoff << " of " << sing_vals->dim() << " basis vectors" << endl;
+    outfile << "Take first " << cutoff << " of " << sing_vals->dim() <<
+            " basis vectors" << endl;
     outfile.close();
 }
 
-void MergeBasis(const int dimFOM, const int nparam, const int max_num_snapshots, std::string name)
+void MergeBasis(const int dimFOM, const int nparam, const int max_num_snapshots,
+                std::string name)
 {
     MFEM_VERIFY(nparam > 0, "Must specify a positive number of parameter sets");
 
@@ -405,7 +478,8 @@ void MergeBasis(const int dimFOM, const int nparam, const int max_num_snapshots,
 
     for (int paramID=0; paramID<nparam; ++paramID)
     {
-        std::string snapshot_filename = "basis" + std::to_string(paramID) + "_" + name + "_snapshot";
+        std::string snapshot_filename = "basis" + std::to_string(
+                                            paramID) + "_" + name + "_snapshot";
         generator.loadSamples(snapshot_filename,"snapshot");
     }
 
@@ -413,6 +487,31 @@ void MergeBasis(const int dimFOM, const int nparam, const int max_num_snapshots,
 
     int cutoff = 0;
     BasisGeneratorFinalSummary(&generator, 0.9999, cutoff, "mergedSV_" + name);
+}
+
+const CAROM::Matrix* GetSnapshotMatrix(const int dimFOM, const int nparam,
+                                       const int max_num_snapshots, std::string name)
+{
+    MFEM_VERIFY(nparam > 0, "Must specify a positive number of parameter sets");
+
+    bool update_right_SV = false;
+    bool isIncremental = false;
+
+    CAROM::Options options(dimFOM, nparam * max_num_snapshots, 1, update_right_SV);
+    CAROM::BasisGenerator generator(options, isIncremental, "basis" + name);
+
+    for (int paramID=0; paramID<nparam; ++paramID)
+    {
+        std::string snapshot_filename = "basis" + std::to_string(
+                                            paramID) + "_" + name + "_snapshot";
+        generator.loadSamples(snapshot_filename,"snapshot");
+    }
+
+    // TODO: this deep copy is inefficient, just to get around generator owning the matrix.
+    CAROM::Matrix *s = new CAROM::Matrix(*generator.getSnapshotMatrix());
+
+    return s;
+    //return generator.getSnapshotMatrix();  // BUG: the matrix is deleted when generator goes out of scope.
 }
 
 int main(int argc, char *argv[])
@@ -446,6 +545,10 @@ int main(int argc, char *argv[])
     bool offline = false;
     bool merge = false;
     bool online = false;
+    bool use_sopt = false;
+    bool use_eqp = false;
+    bool writeSampleMesh = false;
+    int num_samples_req = -1;
 
     bool pointwiseSnapshots = false;
     int pwx = 0;
@@ -456,9 +559,15 @@ int main(int argc, char *argv[])
 
     int id_param = 0;
 
-    int rdim = -1;  // number of basis vectors to use
-    int rrdim = -1;  // number of basis vectors to use
-    int rwdim = -1;  // number of basis vectors to use
+    // Number of basis vectors to use
+    int rrdim = -1;
+    int rwdim = -1;
+    int nldim = -1;
+    int nsdim = -1;
+
+    bool preconditionNNLS = false;
+    double tolNNLS = 1.0e-14;
+    int maxNNLSnnz = 0;
 
     int precision = 16;
     cout.precision(precision);
@@ -474,12 +583,18 @@ int main(int argc, char *argv[])
                    "Order (degree) of the finite elements.");
     args.AddOption(&id_param, "-id", "--id", "Parametric index");
     args.AddOption(&problem, "-p", "--problem", "Problem setup to use");
-    args.AddOption(&step_half, "-sh", "--stephalf", "Initial step function half-width");
-    args.AddOption(&diffusion_c, "-dc", "--diffusion-constant", "Diffusion coefficient constant term");
+    args.AddOption(&step_half, "-sh", "--stephalf",
+                   "Initial step function half-width");
+    args.AddOption(&diffusion_c, "-dc", "--diffusion-constant",
+                   "Diffusion coefficient constant term");
     args.AddOption(&rrdim, "-rrdim", "--rrdim",
                    "Basis dimension for H(div) vector finite element space.");
     args.AddOption(&rwdim, "-rwdim", "--rwdim",
                    "Basis dimension for L2 scalar finite element space.");
+    args.AddOption(&nldim, "-nldim", "--nldim",
+                   "Basis dimension for the nonlinear term.");
+    args.AddOption(&nsdim, "-nsdim", "--nsdim",
+                   "Basis dimension for the source term.");
     args.AddOption(&t_final, "-tf", "--t-final",
                    "Final time; start time is 0.");
     args.AddOption(&dt, "-dt", "--time-step",
@@ -499,6 +614,20 @@ int main(int argc, char *argv[])
                    "Enable or disable the online phase.");
     args.AddOption(&merge, "-merge", "--merge", "-no-merge", "--no-merge",
                    "Enable or disable the merge phase.");
+    args.AddOption(&use_sopt, "-sopt", "--sopt", "-no-sopt", "--no-sopt",
+                   "Use S-OPT sampling instead of DEIM for the hyperreduction.");
+    args.AddOption(&num_samples_req, "-nsr", "--nsr",
+                   "Number of samples for the sampling algorithm to select.");
+    args.AddOption(&use_eqp, "-eqp", "--eqp", "-no-eqp", "--no-eqp",
+                   "Use EQP instead of DEIM for the hyperreduction.");
+    args.AddOption(&writeSampleMesh, "-smesh", "--sample-mesh", "-no-smesh",
+                   "--no-sample-mesh", "Write the sample mesh to file.");
+    args.AddOption(&preconditionNNLS, "-preceqp", "--preceqp", "-no-preceqp",
+                   "--no-preceqp", "Precondition the NNLS system for EQP.");
+    args.AddOption(&tolNNLS, "-tolnnls", "--tol-nnls",
+                   "Tolerance for NNLS solver.");
+    args.AddOption(&maxNNLSnnz, "-maxnnls", "--max-nnls",
+                   "Maximum nnz for NNLS");
     args.AddOption(&pointwiseSnapshots, "-pwsnap", "--pw-snap", "-no-pwsnap",
                    "--no-pw-snap", "Enable or disable writing pointwise snapshots.");
     args.AddOption(&pwx, "-pwx", "--pwx", "Number of snapshot points in x");
@@ -613,7 +742,8 @@ int main(int argc, char *argv[])
         totalTimer.Stop();
         if (myid == 0)
         {
-            printf("Elapsed time for merging and building ROM basis: %e second\n", totalTimer.RealTime());
+            printf("Elapsed time for merging and building ROM basis: %e second\n",
+                   totalTimer.RealTime());
         }
         MPI_Finalize();
         return 0;
@@ -658,7 +788,8 @@ int main(int argc, char *argv[])
     }
 
     // 9. Initialize the diffusion operator and the VisIt visualization.
-    NonlinearDiffusionOperator oper(R_space, W_space, newton_rel_tol, newton_abs_tol, newton_iter, p);  // FOM operator
+    NonlinearDiffusionOperator oper(R_space, W_space, newton_rel_tol,
+                                    newton_abs_tol, newton_iter, p);  // FOM operator
     NonlinearDiffusionOperator *soper = 0;  // Sample mesh operator
 
     if (offline)
@@ -722,22 +853,28 @@ int main(int argc, char *argv[])
         }
     }
 
-    CAROM::BasisGenerator *basis_generator_R = 0;  // For the solution component in vector H(div)
-    CAROM::BasisGenerator *basis_generator_W = 0;  // For the solution component in scalar L2
-    CAROM::BasisGenerator *basis_generator_FR = 0; // For the nonlinear term M(p)v with p in L2, v in H(div)
-    CAROM::BasisGenerator *basis_generator_S = 0;  // For the source in scalar L2
+    CAROM::BasisGenerator *basis_generator_R = 0;  // For H(div) space
+    CAROM::BasisGenerator *basis_generator_W = 0;  // For scalar L2 space
+    CAROM::BasisGenerator *basis_generator_FR = 0; // For nonlinear term M(p)v
+    CAROM::BasisGenerator *basis_generator_S = 0;  // For the source function
 
     if (offline) {
-        CAROM::Options options_R(R_space.GetTrueVSize(), max_num_snapshots, 1, update_right_SV);
-        CAROM::Options options_W(W_space.GetTrueVSize(), max_num_snapshots, 1, update_right_SV);
+        CAROM::Options options_R(R_space.GetTrueVSize(), max_num_snapshots, 1,
+                                 update_right_SV);
+        CAROM::Options options_W(W_space.GetTrueVSize(), max_num_snapshots, 1,
+                                 update_right_SV);
 
         if (hyperreduce_source)
-            basis_generator_S = new CAROM::BasisGenerator(options_W, isIncremental, basisFileName + "_S");
+            basis_generator_S = new CAROM::BasisGenerator(options_W, isIncremental,
+                    basisFileName + "_S");
 
-        basis_generator_R = new CAROM::BasisGenerator(options_R, isIncremental, basisFileName + "_R");
-        basis_generator_W = new CAROM::BasisGenerator(options_W, isIncremental, basisFileName + "_W");
+        basis_generator_R = new CAROM::BasisGenerator(options_R, isIncremental,
+                basisFileName + "_R");
+        basis_generator_W = new CAROM::BasisGenerator(options_W, isIncremental,
+                basisFileName + "_W");
 
-        basis_generator_FR = new CAROM::BasisGenerator(options_R, isIncremental, basisFileName + "_FR");
+        basis_generator_FR = new CAROM::BasisGenerator(options_R, isIncremental,
+                basisFileName + "_FR");
     }
 
     RomOperator *romop = 0;
@@ -753,6 +890,9 @@ int main(int argc, char *argv[])
 
     CAROM::SampleMeshManager *smm = nullptr;
 
+    CAROM::Vector *eqpSol = nullptr;
+    CAROM::Vector *eqpSol_S = nullptr;
+
     if (online)
     {
         CAROM::BasisReader readerR("basisR");
@@ -760,7 +900,8 @@ int main(int argc, char *argv[])
         if (rrdim == -1)
             rrdim = BR_librom->numColumns();
         else
-            BR_librom = GetFirstColumns(rrdim, BR_librom);  // TODO: reduce rrdim if too large
+            BR_librom = GetFirstColumns(rrdim,
+                                        BR_librom);  // TODO: reduce rrdim if too large
 
         MFEM_VERIFY(BR_librom->numRows() == N1, "");
 
@@ -794,120 +935,227 @@ int main(int argc, char *argv[])
 
         // Compute sample points using DEIM, for hyperreduction
 
-        // TODO: reduce this?
-        const int nldim = FR_librom->numColumns(); // rwdim;
-
-        cout << "FR dim " << FR_librom->numColumns() << endl;
+        if (nldim == -1)
+        {
+            nldim = FR_librom->numColumns();
+        }
 
         MFEM_VERIFY(FR_librom->numRows() == N1 && FR_librom->numColumns() >= nldim, "");
 
         if (FR_librom->numColumns() > nldim)
             FR_librom = GetFirstColumns(nldim, FR_librom);
 
-        vector<int> num_sample_dofs_per_proc(num_procs);
+        if (myid == 0)
+            printf("reduced FR dim = %d\n",nldim);
 
-        nsamp_R = nldim;
+        // Setup hyperreduction, using either EQP or sampled DOFs and a sample mesh.
 
-#ifdef USE_GNAT
-        vector<int> sample_dofs(nsamp_R);  // Indices of the sampled rows
-        CAROM::Matrix *Bsinv = new CAROM::Matrix(nsamp_R, nldim, false);
-        CAROM::GNAT(FR_librom,
-                    nldim,
-                    sample_dofs,
-                    num_sample_dofs_per_proc,
-                    *Bsinv,
-                    myid,
-                    num_procs,
-                    nsamp_R);
-#else
-        // Now execute the DEIM algorithm to get the sampling information.
-        CAROM::Matrix *Bsinv = new CAROM::Matrix(nldim, nldim, false);
-        vector<int> sample_dofs(nldim);  // Indices of the sampled rows
-        CAROM::DEIM(FR_librom,
-                    nldim,
-                    sample_dofs,
-                    num_sample_dofs_per_proc,
-                    *Bsinv,
-                    myid,
-                    num_procs);
-#endif
+        CAROM::BasisReader *readerS = NULL;
+        ParFiniteElementSpace *sp_R_space, *sp_W_space;
+        CAROM::Matrix *Bsinv = NULL;
+        CAROM::Matrix *Ssinv = NULL;
+        const IntegrationRule *ir0 = NULL;
 
-        vector<int> sample_dofs_S;  // Indices of the sampled rows
-        vector<int> num_sample_dofs_per_proc_S(num_procs);
-
-        vector<int> sample_dofs_withS;  // Indices of the sampled rows
-        int nsdim = 0;
-        CAROM::Matrix *Ssinv = 0;
-        vector<int> num_sample_dofs_per_proc_withS;
-        CAROM::BasisReader *readerS = 0;
-        if (hyperreduce_source)
+        if (ir0 == NULL)
         {
-            readerS = new CAROM::BasisReader("basisS");
-            S_librom = readerS->getSpatialBasis(0.0);
+            // int order = 2 * el.GetOrder();
+            const FiniteElement &fe = *R_space.GetFE(0);
+            ElementTransformation *eltrans = R_space.GetElementTransformation(0);
 
-            // Compute sample points using DEIM
-
-            nsdim = S_librom->numColumns();
-
-            cout << "S dim " << nsdim << endl;
-
-            // Now execute the DEIM algorithm to get the sampling information.
-            nsamp_S = nsdim;
-            sample_dofs_S.resize(nsamp_S);
-
-#ifdef USE_GNAT
-            Ssinv = new CAROM::Matrix(nsamp_S, nsdim, false);
-            sample_dofs_S.resize(nsamp_S);
-
-            CAROM::GNAT(S_librom,
-                        nsdim,
-                        sample_dofs_S,
-                        num_sample_dofs_per_proc_S,
-                        *Ssinv,
-                        myid,
-                        num_procs,
-                        nsamp_S);
-#else
-            Ssinv = new CAROM::Matrix(nsdim, nsdim, false);
-            sample_dofs_S.resize(nsdim);
-            CAROM::DEIM(S_librom,
-                        nsdim,
-                        sample_dofs_S,
-                        num_sample_dofs_per_proc_S,
-                        *Ssinv,
-                        myid,
-                        num_procs);
-#endif
+            int order = eltrans->OrderW() + 2 * fe.GetOrder();
+            ir0 = &IntRules.Get(fe.GetGeomType(), order);
         }
 
-        // Construct sample mesh
-
-        const int nspaces = 2;
-        std::vector<ParFiniteElementSpace*> fespace(nspaces);
-        std::vector<ParFiniteElementSpace*> spfespace(nspaces);
-        fespace[0] = &R_space;
-        fespace[1] = &W_space;
-
-        ParFiniteElementSpace *sp_R_space, *sp_W_space;
-
-        smm = new CAROM::SampleMeshManager(fespace);
-
-        vector<int> sample_dofs_empty;  // Potential variable in W space has no sample DOFs.
-        vector<int> num_sample_dofs_per_proc_empty;
-        num_sample_dofs_per_proc_empty.assign(num_procs, 0);
-        smm->RegisterSampledVariable("P", WSPACE, sample_dofs_empty, num_sample_dofs_per_proc_empty);
-
-        if (hyperreduce_source)
+        if (use_eqp)
         {
-            smm->RegisterSampledVariable("V", RSPACE, sample_dofs, num_sample_dofs_per_proc);
-            smm->RegisterSampledVariable("S", WSPACE, sample_dofs_S, num_sample_dofs_per_proc_S);
+            // EQP setup
+            eqpSol = new CAROM::Vector(ir0->GetNPoints() * R_space.GetNE(), true);
+            SetupEQP_snapshots(ir0, myid, &R_space, &W_space, nsets, BR_librom,
+                               GetSnapshotMatrix(R_space.GetTrueVSize(), nsets, max_num_snapshots, "R"),
+                               GetSnapshotMatrix(W_space.GetTrueVSize(), nsets, max_num_snapshots, "W"),
+                               preconditionNNLS, tolNNLS, maxNNLSnnz, *eqpSol);
+
+            if (writeSampleMesh) WriteMeshEQP(pmesh, myid, ir0->GetNPoints(), *eqpSol);
+
+            if (problem == ANALYTIC)
+            {
+                eqpSol_S = new CAROM::Vector(ir0->GetNPoints() * W_space.GetNE(), true);
+                SetupEQP_S_snapshots(ir0, myid, &W_space, BW_librom,
+                                     GetSnapshotMatrix(W_space.GetTrueVSize(), nsets, max_num_snapshots, "S"),
+                                     preconditionNNLS, tolNNLS, maxNNLSnnz, *eqpSol_S);
+            }
         }
         else
         {
-            smm->RegisterSampledVariable("V", RSPACE, sample_dofs, num_sample_dofs_per_proc);
-        }
+            // Setup hyperreduction using DEIM, GNAT, or S-OPT
+            vector<int> num_sample_dofs_per_proc(num_procs);
 
-        smm->ConstructSampleMesh();
+            if (num_samples_req != -1)
+            {
+                nsamp_R = num_samples_req;
+            }
+            else
+            {
+                nsamp_R = nldim;
+            }
+
+            // Now execute the chosen sampling algorithm to get the sampling information.
+            Bsinv = new CAROM::Matrix(nsamp_R, nldim, false);
+            vector<int> sample_dofs(nsamp_R);  // Indices of the sampled rows
+            if (use_sopt)
+            {
+                if (myid == 0)
+                    printf("Using S_OPT sampling\n");
+                CAROM::S_OPT(FR_librom,
+                             nldim,
+                             sample_dofs,
+                             num_sample_dofs_per_proc,
+                             *Bsinv,
+                             myid,
+                             num_procs,
+                             nsamp_R);
+            }
+            else if (nsamp_R != nldim)
+            {
+                if (myid == 0)
+                    printf("Using GNAT sampling\n");
+                CAROM::GNAT(FR_librom,
+                            nldim,
+                            sample_dofs,
+                            num_sample_dofs_per_proc,
+                            *Bsinv,
+                            myid,
+                            num_procs,
+                            nsamp_R);
+            }
+            else
+            {
+                if (myid == 0)
+                    printf("Using DEIM sampling\n");
+                CAROM::DEIM(FR_librom,
+                            nldim,
+                            sample_dofs,
+                            num_sample_dofs_per_proc,
+                            *Bsinv,
+                            myid,
+                            num_procs);
+            }
+
+            vector<int> sample_dofs_S;  // Indices of the sampled rows
+            vector<int> num_sample_dofs_per_proc_S(num_procs);
+
+            vector<int> sample_dofs_withS;  // Indices of the sampled rows
+            vector<int> num_sample_dofs_per_proc_withS;
+            if (hyperreduce_source)
+            {
+                readerS = new CAROM::BasisReader("basisS");
+                S_librom = readerS->getSpatialBasis(0.0);
+
+                // Compute sample points using DEIM
+
+                if (nsdim == -1)
+                {
+                    nsdim = S_librom->numColumns();
+                }
+
+                MFEM_VERIFY(S_librom->numColumns() >= nsdim, "");
+
+                if (S_librom->numColumns() > nsdim)
+                    S_librom = GetFirstColumns(nsdim, S_librom);
+
+                if (myid == 0)
+                    printf("reduced S dim = %d\n",nsdim);
+
+                // Now execute the DEIM algorithm to get the sampling information.
+                if (num_samples_req != -1)
+                {
+                    nsamp_S = num_samples_req;
+                }
+                else
+                {
+                    nsamp_S = nsdim;
+                }
+
+                Ssinv = new CAROM::Matrix(nsamp_S, nsdim, false);
+                sample_dofs_S.resize(nsamp_S);
+                if (use_sopt)
+                {
+                    CAROM::S_OPT(S_librom,
+                                 nsdim,
+                                 sample_dofs_S,
+                                 num_sample_dofs_per_proc_S,
+                                 *Ssinv,
+                                 myid,
+                                 num_procs,
+                                 nsamp_S);
+                }
+                else if (nsamp_S != nsdim)
+                {
+                    CAROM::GNAT(S_librom,
+                                nsdim,
+                                sample_dofs_S,
+                                num_sample_dofs_per_proc_S,
+                                *Ssinv,
+                                myid,
+                                num_procs,
+                                nsamp_S);
+                }
+                else
+                {
+                    CAROM::DEIM(S_librom,
+                                nsdim,
+                                sample_dofs_S,
+                                num_sample_dofs_per_proc_S,
+                                *Ssinv,
+                                myid,
+                                num_procs);
+                }
+            }
+
+            // Construct sample mesh
+
+            const int nspaces = 2;
+            std::vector<ParFiniteElementSpace*> fespace(nspaces);
+            std::vector<ParFiniteElementSpace*> spfespace(nspaces);
+            fespace[0] = &R_space;
+            fespace[1] = &W_space;
+
+            if (writeSampleMesh)
+                smm = new CAROM::SampleMeshManager(fespace, "samples",
+                                                   ir0 ? ir0->GetNPoints() : 1);
+            else
+                smm = new CAROM::SampleMeshManager(fespace);
+
+            vector<int>
+            sample_dofs_empty;  // Potential variable in W space has no sample DOFs.
+            vector<int> num_sample_dofs_per_proc_empty;
+            num_sample_dofs_per_proc_empty.assign(num_procs, 0);
+            smm->RegisterSampledVariable("P", WSPACE, sample_dofs_empty,
+                                         num_sample_dofs_per_proc_empty);
+
+            if (hyperreduce_source)
+            {
+                smm->RegisterSampledVariable("V", RSPACE, sample_dofs,
+                                             num_sample_dofs_per_proc);
+                smm->RegisterSampledVariable("S", WSPACE, sample_dofs_S,
+                                             num_sample_dofs_per_proc_S);
+            }
+            else
+            {
+                smm->RegisterSampledVariable("V", RSPACE, sample_dofs,
+                                             num_sample_dofs_per_proc);
+            }
+
+            smm->ConstructSampleMesh();
+
+            if (myid == 0 && writeSampleMesh)
+            {
+                ParMesh *smesh = smm->GetSampleMesh();
+                ofstream mesh_ofs("sampleMesh.mesh");
+                mesh_ofs.precision(8);
+                smesh->Print(mesh_ofs);
+            }
+        }
 
         w = new CAROM::Vector(rrdim + rwdim, false);
         w_W = new CAROM::Vector(rwdim, false);
@@ -921,10 +1169,11 @@ int main(int argc, char *argv[])
         for (int i=0; i<rwdim; ++i)
             (*w)(rrdim + i) = (*w_W)(i);
 
-        // Note that some of this could be done only on the ROM solver process, but it is tricky, since RomOperator assembles Bsp in parallel.
+        // Note that some of this could be done only on the ROM solver process,
+        // but it is tricky, since RomOperator assembles Bsp in parallel.
         wMFEM = new Vector(&((*w)(0)), rrdim + rwdim);
 
-        if (myid == 0)
+        if (myid == 0 && !use_eqp)
         {
             sp_R_space = smm->GetSampleFESpace(RSPACE);
             sp_W_space = smm->GetSampleFESpace(WSPACE);
@@ -936,17 +1185,20 @@ int main(int argc, char *argv[])
 
                 sp_p.SetSize(sp_R_space->GetTrueVSize() + sp_W_space->GetTrueVSize());
                 sp_p = 0.0;
-                sp_p_W = new Vector(sp_p.GetData() + sp_R_space->GetTrueVSize(), sp_W_space->GetTrueVSize());
+                sp_p_W = new Vector(sp_p.GetData() + sp_R_space->GetTrueVSize(),
+                                    sp_W_space->GetTrueVSize());
                 sp_p_gf->GetTrueDofs(*sp_p_W);
             }
 
-            soper = new NonlinearDiffusionOperator(*sp_R_space, *sp_W_space, newton_rel_tol, newton_abs_tol, newton_iter, sp_p);
+            soper = new NonlinearDiffusionOperator(*sp_R_space, *sp_W_space, newton_rel_tol,
+                                                   newton_abs_tol, newton_iter, sp_p);
         }
 
         romop = new RomOperator(&oper, soper, rrdim, rwdim, nldim, smm,
                                 BR_librom, FR_librom, BW_librom,
                                 Bsinv, newton_rel_tol, newton_abs_tol, newton_iter,
-                                S_librom, Ssinv, myid, hyperreduce_source);
+                                S_librom, Ssinv, myid, hyperreduce_source,
+                                num_samples_req != -1, use_eqp, eqpSol, eqpSol_S, ir0);
 
         ode_solver.Init(*romop);
 
@@ -986,7 +1238,8 @@ int main(int argc, char *argv[])
         {
             const bool sampleW = basis_generator_W->isNextSample(t);
 
-            if (sampleW && hyperreduce_source) // TODO: Instead, basis_generator_S->isNextSample(t) could be used if dS/dt were computed.
+            // TODO: Instead, basis_generator_S->isNextSample(t) could be used if dS/dt were computed.
+            if (sampleW && hyperreduce_source)
             {
                 oper.GetSource(source);
                 basis_generator_S->takeSample(source.GetData(), t, dt);
@@ -1020,7 +1273,7 @@ int main(int argc, char *argv[])
 
         if (online)
         {
-            if (myid == 0)
+            if (myid == 0 || use_eqp)
             {
                 ode_solver.Step(*wMFEM, t, dt);
             }
@@ -1040,7 +1293,8 @@ int main(int argc, char *argv[])
                 p = pprev;
                 t = tprev;
                 dt *= 0.5;
-                cout << "step " << ti << ", t = " << t << " had a Newton failure, cutting dt to " << dt << endl;
+                cout << "step " << ti << ", t = " << t <<
+                     " had a Newton failure, cutting dt to " << dt << endl;
                 lastStepChange = ti;
                 ti--;
                 continue;
@@ -1055,7 +1309,8 @@ int main(int argc, char *argv[])
 
         if (myid == 0)
         {
-            cout << "step " << ti << ", t = " << t << " == " << oper.GetTime() << ", dt " << dt << endl;
+            cout << "step " << ti << ", t = " << t << " == " << oper.GetTime()
+                 << ", dt " << dt << endl;
 
             if (online)
                 cout << "rom time " << romop->GetTime() << endl;
@@ -1084,22 +1339,30 @@ int main(int argc, char *argv[])
 
                 if (last_step)
                 {
-                    // Calculate the relative l2 error between the final ROM solution and FOM solution, using id_param for FOM solution.
+                    // Calculate the relative l2 error between the final ROM and
+                    // FOM solutions, using id_param for FOM solution.
                     Vector fom_solution(N2);
                     ifstream solution_file;
                     ostringstream solution_filename, rom_filename;
-                    solution_filename << "nldiff-fom-values-final" << id_param << "." << setfill('0') << setw(6) << myid;
-                    rom_filename << "nldiff-rom-final" << id_param << "." << setfill('0') << setw(6) << myid;
+                    solution_filename << "nldiff-fom-values-final" << id_param << "." <<
+                                      setfill('0') << setw(6) << myid;
+                    rom_filename << "nldiff-rom-final" << id_param << "." << setfill('0') << setw(
+                                     6) << myid;
 
-                    if (myid == 0) std::cout << "Comparing current run to solution at: " << solution_filename.str() << " with offline parameter index " << id_param << std::endl;
+                    if (myid == 0) std::cout << "Comparing current run to solution at: " <<
+                                                 solution_filename.str() << " with offline parameter index " << id_param <<
+                                                 std::endl;
                     solution_file.open(solution_filename.str());
                     fom_solution.Load(solution_file, N2);
                     solution_file.close();
-                    const double fomNorm = sqrt(InnerProduct(MPI_COMM_WORLD, fom_solution, fom_solution));
+                    const double fomNorm = sqrt(InnerProduct(MPI_COMM_WORLD, fom_solution,
+                                                fom_solution));
                     //const double romNorm = sqrt(InnerProduct(MPI_COMM_WORLD, *p_W, *p_W));
                     fom_solution -= *p_W;
-                    const double diffNorm = sqrt(InnerProduct(MPI_COMM_WORLD, fom_solution, fom_solution));
-                    if (myid == 0) std::cout << "Relative l2 error of ROM solution " << diffNorm / fomNorm << std::endl;
+                    const double diffNorm = sqrt(InnerProduct(MPI_COMM_WORLD, fom_solution,
+                                                 fom_solution));
+                    if (myid == 0) std::cout << "Relative l2 error of ROM solution " << diffNorm /
+                                                 fomNorm << std::endl;
 
                     ofstream osol(rom_filename.str().c_str());
                     osol.precision(precision);
@@ -1115,7 +1378,9 @@ int main(int argc, char *argv[])
                 const double l2nrm = p_gf.ComputeL2Error(coeff0);
 
                 if (myid == 0)
-                    cout << "L2 norm of exact error: " << l2err << ", FEM solution norm " << l2nrm << ", relative norm " << l2err / l2nrm << endl;
+                    cout << "L2 norm of exact error: " << l2err
+                         << ", FEM solution norm " << l2nrm
+                         << ", relative norm " << l2err / l2nrm << endl;
             }
 
             if (visualization)
@@ -1149,14 +1414,16 @@ int main(int argc, char *argv[])
     }  // timestep loop
 
     solveTimer.Stop();
-    if (myid == 0) cout << "Elapsed time for time integration loop " << solveTimer.RealTime() << endl;
+    if (myid == 0) cout << "Elapsed time for time integration loop " <<
+                            solveTimer.RealTime() << endl;
 
     if (visit)
         delete visit_dc;
 
     if (offline)
     {
-        // Sample final solution, to prevent extrapolation in ROM between the last sample and the end of the simulation.
+        // Sample final solution, to prevent extrapolation in ROM between the
+        // last sample and the end of the simulation.
 
         oper.CopyDpDt(dpdt);
 
@@ -1198,12 +1465,14 @@ int main(int argc, char *argv[])
     if (offline)
     {
         ostringstream sol_name, fomsol_name;
-        sol_name << "nldiff-final" << id_param << "." << setfill('0') << setw(6) << myid;
+        sol_name << "nldiff-final" << id_param << "." << setfill('0') << setw(
+                     6) << myid;
         ofstream osol(sol_name.str().c_str());
         osol.precision(precision);
         p_gf.Save(osol);
 
-        fomsol_name << "nldiff-fom-values-final" << id_param << "." << setfill('0') << setw(6) << myid;
+        fomsol_name << "nldiff-fom-values-final" << id_param << "." << setfill('0') <<
+                    setw(6) << myid;
         ofstream fomsol(fomsol_name.str().c_str());
         fomsol.precision(precision);
         for (int i = 0; i < N2; ++i)
@@ -1222,22 +1491,27 @@ int main(int argc, char *argv[])
     delete pwsnap_CAROM;
 
     totalTimer.Stop();
-    if (myid == 0) cout << "Elapsed time for entire simulation " << totalTimer.RealTime() << endl;
+    if (myid == 0) cout << "Elapsed time for entire simulation " <<
+                            totalTimer.RealTime() << endl;
 
     MPI_Finalize();
     return 0;
 }
 
-NonlinearDiffusionOperator::NonlinearDiffusionOperator(ParFiniteElementSpace &fR, ParFiniteElementSpace &fW,
+NonlinearDiffusionOperator::NonlinearDiffusionOperator(ParFiniteElementSpace
+        &fR, ParFiniteElementSpace &fW,
         const double rel_tol, const double abs_tol,
         const int iter, const Vector &p)
     : TimeDependentOperator(fR.GetTrueVSize() + fW.GetTrueVSize(), 0.0),
-      fespace_R(fR), fespace_W(fW), M(NULL), C(NULL), Bmat(NULL), BTmat(NULL), Mprime(NULL), current_dt(0.0),
-      newton_solver(fW.GetComm()), M_solver(NULL), C_solver(fW.GetComm()), zW(fW.GetTrueVSize()), yR(fR.GetTrueVSize()),
+      fespace_R(fR), fespace_W(fW), M(NULL), C(NULL), Bmat(NULL), BTmat(NULL),
+      Mprime(NULL), current_dt(0.0),
+      newton_solver(fW.GetComm()), M_solver(NULL), C_solver(fW.GetComm()),
+      zW(fW.GetTrueVSize()), yR(fR.GetTrueVSize()),
       zR(fR.GetTrueVSize()), p0(height), dpdt_prev(height),
       fullOp(NULL), fullGradient(NULL), fullPrec(NULL)
 {
-    gradient = new NonlinearDiffusionGradientOperator(fR.GetTrueVSize(), fW.GetTrueVSize());
+    gradient = new NonlinearDiffusionGradientOperator(fR.GetTrueVSize(),
+            fW.GetTrueVSize());
 
     linear_solver_rel_tol = 1.0e-14;
 
@@ -1301,13 +1575,15 @@ NonlinearDiffusionOperator::NonlinearDiffusionOperator(ParFiniteElementSpace &fR
     dpdt_prev = 0.0;
 }
 
-void NonlinearDiffusionOperator::SetBTV(const CAROM::Matrix *V, CAROM::Matrix *BTV) const
+void NonlinearDiffusionOperator::SetBTV(const CAROM::Matrix *V,
+                                        CAROM::Matrix *BTV) const
 {
     const int ncol = BTV->numColumns();
     const int nw = zW.Size();
     const int nr = zR.Size();
 
-    MFEM_VERIFY(V->numRows() == nw && BTV->numRows() == nr && V->numColumns() >= ncol, "");
+    MFEM_VERIFY(V->numRows() == nw && BTV->numRows() == nr
+                && V->numColumns() >= ncol, "");
 
     for (int k=0; k<ncol; ++k)
     {
@@ -1337,7 +1613,8 @@ void NonlinearDiffusionOperator::GetSource(Vector& s) const
     f_gf.GetTrueDofs(s);
 }
 
-void NonlinearDiffusionOperator::Mult_FullSystem(const Vector &dp_dt, Vector &res) const
+void NonlinearDiffusionOperator::Mult_FullSystem(const Vector &dp_dt,
+        Vector &res) const
 {
     // Compute:
     //    [   Mv + B^T p   ], with p = p0 + dt*dp_dt
@@ -1350,11 +1627,15 @@ void NonlinearDiffusionOperator::Mult_FullSystem(const Vector &dp_dt, Vector &re
 
     SetParameters(p);  // Create fullOp
 
-    fullOp->Mult(p, res);  // Sets the first block row of res. The second block row is computed below.
+    // Set the first block row of res. The second block row is computed below.
+    fullOp->Mult(p, res);
 
-    Vector p_R(p.GetData() + block_trueOffsets[0], block_trueOffsets[1]-block_trueOffsets[0]);
-    Vector pt_W(dp_dt.GetData() + block_trueOffsets[1], block_trueOffsets[2]-block_trueOffsets[1]);
-    Vector res_W(res.GetData() + block_trueOffsets[1], block_trueOffsets[2]-block_trueOffsets[1]);
+    Vector p_R(p.GetData() + block_trueOffsets[0],
+               block_trueOffsets[1]-block_trueOffsets[0]);
+    Vector pt_W(dp_dt.GetData() + block_trueOffsets[1],
+                block_trueOffsets[2]-block_trueOffsets[1]);
+    Vector res_W(res.GetData() + block_trueOffsets[1],
+                 block_trueOffsets[2]-block_trueOffsets[1]);
 
     res_W = pt_W;
     res_W.Add(-1.0, zW);  // -= f
@@ -1370,8 +1651,8 @@ void NonlinearDiffusionOperator::ImplicitSolve(const double dt,
         const Vector &p, Vector &dp_dt)
 {
     // Solve the equation:
-    //    dp_dt = C^{-1} (f - B M(p + dt dp_dt)^{-1} B^T (p + dt dp_dt)), in the Schur complement case
-    // for dp_dt
+    //    dp_dt = C^{-1} (f - B M(p + dt dp_dt)^{-1} B^T (p + dt dp_dt)),
+    // in the Schur complement case for dp_dt
 
     current_dt = dt;
     // MFEM_VERIFY(dt == current_dt, ""); // SDIRK methods use the same dt
@@ -1409,27 +1690,20 @@ void NonlinearDiffusionOperator::SetParameters(const Vector &p) const
 {
     // Set grid function for a(p)
     ParGridFunction p_gf(&fespace_W);
-    ParGridFunction a_gf(&fespace_W);
-    ParGridFunction aprime_gf(&fespace_W);
-    ParGridFunction a_plus_aprime_gf(&fespace_W);
 
     {
-        Vector p_W(p.GetData() + block_trueOffsets[1], block_trueOffsets[2]-block_trueOffsets[1]);
+        Vector p_W(p.GetData() + block_trueOffsets[1],
+                   block_trueOffsets[2]-block_trueOffsets[1]);
         p_gf.SetFromTrueDofs(p_W);
     }
 
-    for (int i = 0; i < a_gf.Size(); i++)
-    {
-        a_gf(i) = NonlinearCoefficient(p_gf(i));
-        aprime_gf(i) = NonlinearCoefficientDerivative(p_gf(i));
-        a_plus_aprime_gf(i) = a_gf(i) + aprime_gf(i);
-    }
-
-    GridFunctionCoefficient a_coeff(&a_gf);
-    GridFunctionCoefficient aprime_coeff(&aprime_gf);
-    GridFunctionCoefficient a_plus_aprime_coeff(&a_plus_aprime_gf);
+    GridFunctionCoefficient p_coeff(&p_gf);
+    TransformedCoefficient a_coeff(&p_coeff, NonlinearCoefficient);
+    TransformedCoefficient aprime_coeff(&p_coeff, NonlinearCoefficientDerivative);
+    SumCoefficient a_plus_aprime_coeff(a_coeff, aprime_coeff);
 
     delete M;
+    // TODO: delete Mmat?
     M = new ParBilinearForm(&fespace_R);
 
     M->AddDomainIntegrator(new VectorFEMassIntegrator(a_coeff));
@@ -1491,10 +1765,12 @@ NonlinearDiffusionOperator::~NonlinearDiffusionOperator()
     delete J_gmres;
 }
 
+// TODO: this should be in the library
 void Compute_CtAB(const HypreParMatrix* A,
                   const CAROM::Matrix& B,  // Distributed matrix.
                   const CAROM::Matrix& C,  // Distributed matrix.
-                  CAROM::Matrix* CtAB)     // Non-distributed (local) matrix, computed identically and redundantly on every process.
+                  CAROM::Matrix*
+                  CtAB)     // Non-distributed (local) matrix, computed identically and redundantly on every process.
 {
     MFEM_VERIFY(B.distributed() && C.distributed() && !CtAB->distributed(), "");
 
@@ -1525,28 +1801,38 @@ void Compute_CtAB(const HypreParMatrix* A,
     C.transposeMult(AB, CtAB);
 }
 
-RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOperator *fomSp_, const int rrdim_, const int rwdim_,
+RomOperator::RomOperator(NonlinearDiffusionOperator *fom_,
+                         NonlinearDiffusionOperator *fomSp_, const int rrdim_, const int rwdim_,
                          const int nldim_, CAROM::SampleMeshManager *smm_,
                          const CAROM::Matrix* V_R_, const CAROM::Matrix* U_R_, const CAROM::Matrix* V_W_,
                          const CAROM::Matrix *Bsinv,
                          const double newton_rel_tol, const double newton_abs_tol, const int newton_iter,
                          const CAROM::Matrix* S_, const CAROM::Matrix *Ssinv_,
-                         const int myid, const bool hyperreduce_source_)
+                         const int myid, const bool hyperreduce_source_,
+                         const bool oversampling_, const bool use_eqp,
+                         CAROM::Vector *eqpSol, CAROM::Vector *eqpSol_S, const IntegrationRule *ir_eqp_)
     : TimeDependentOperator(rrdim_ + rwdim_, 0.0),
       newton_solver(),
       fom(fom_), fomSp(fomSp_), BR(NULL), rrdim(rrdim_), rwdim(rwdim_), nldim(nldim_),
       smm(smm_),
-      nsamp_R(smm_->GetNumVarSamples("V")), nsamp_S(hyperreduce_source_ ? smm_->GetNumVarSamples("S") : 0),
+      nsamp_R(smm_ ? smm_->GetNumVarSamples("V") : 0),
+      nsamp_S(hyperreduce_source_ && smm_ ? smm_->GetNumVarSamples("S") : 0),
       V_R(*V_R_), U_R(U_R_), V_W(*V_W_), VTU_R(rrdim_, nldim_, false),
-      y0(height), dydt_prev(height), zY(nldim, false), zN(std::max(nsamp_R, 1), false),
+      y0(height), dydt_prev(height), zY(nldim, false),
+      zN(std::max(nsamp_R, 1), false),
       Vsinv(Bsinv), J(height),
       zS(std::max(nsamp_S, 1), false), zT(std::max(nsamp_S, 1), false), Ssinv(Ssinv_),
       VTCS_W(rwdim, std::max(nsamp_S, 1), false), S(S_),
-      VtzR(rrdim_, false), hyperreduce_source(hyperreduce_source_)
+      VtzR(rrdim_, false), hyperreduce_source(hyperreduce_source_),
+      oversampling(oversampling_), eqp(use_eqp),
+      ir_eqp(ir_eqp_), p_gf(&(fom_->fespace_W)), rhs_gf(&(fom_->fespace_W)),
+      p_coeff(&p_gf), a_coeff(&p_coeff, NonlinearCoefficient),
+      aprime_coeff(&p_coeff, NonlinearCoefficientDerivative),
+      a_plus_aprime_coeff(a_coeff, aprime_coeff), rank(myid)
 {
     dydt_prev = 0.0;
 
-    if (myid == 0)
+    if (myid == 0 && !eqp)
     {
         zR.SetSize(fomSp_->zR.Size());
         BRsp = new CAROM::Matrix(fomSp->zR.Size(), rrdim, false);
@@ -1555,8 +1841,11 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
 
     V_R.transposeMult(*U_R, VTU_R);
 
-    smm->GatherDistributedMatrixRows("V", V_R, rrdim, *BRsp);
-    smm->GatherDistributedMatrixRows("P", V_W, rwdim, *BWsp);
+    if (!eqp)
+    {
+        smm->GatherDistributedMatrixRows("V", V_R, rrdim, *BRsp);
+        smm->GatherDistributedMatrixRows("P", V_W, rwdim, *BWsp);
+    }
 
     // Compute BR = V_W^t B V_R and CR = V_W^t C V_W, and store them throughout the simulation.
 
@@ -1575,7 +1864,7 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
     // [ dt V_{R,s}^{-1} M(a'(Pst V_W yW)) Pst V_R  dt BR^T ]
     // [                 -dt BR                        CR   ]
 
-    if (myid == 0)
+    if (myid == 0 || eqp)
     {
         const double linear_solver_rel_tol = 1.0e-14;
 
@@ -1593,17 +1882,20 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
         newton_solver.SetAbsTol(newton_abs_tol);
         newton_solver.SetMaxIter(newton_iter);
 
-        const int spdim = fomSp->Height();
+        if (!eqp)
+        {
+            const int spdim = fomSp->Height();
 
-        psp_librom = new CAROM::Vector(spdim, false);
-        psp = new Vector(&((*psp_librom)(0)), spdim);
+            psp_librom = new CAROM::Vector(spdim, false);
+            psp = new Vector(&((*psp_librom)(0)), spdim);
 
-        // Define sub-vectors of psp.
-        psp_R = new Vector(psp->GetData(), fomSp->zR.Size());
-        psp_W = new Vector(psp->GetData() + fomSp->zR.Size(), fomSp->zW.Size());
+            // Define sub-vectors of psp.
+            psp_R = new Vector(psp->GetData(), fomSp->zR.Size());
+            psp_W = new Vector(psp->GetData() + fomSp->zR.Size(), fomSp->zW.Size());
 
-        psp_R_librom = new CAROM::Vector(psp_R->GetData(), psp_R->Size(), false, false);
-        psp_W_librom = new CAROM::Vector(psp_W->GetData(), psp_W->Size(), false, false);
+            psp_R_librom = new CAROM::Vector(psp_R->GetData(), psp_R->Size(), false, false);
+            psp_W_librom = new CAROM::Vector(psp_W->GetData(), psp_W->Size(), false, false);
+        }
     }
 
     hyperreduce = true;
@@ -1620,17 +1912,110 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_, NonlinearDiffusionOpe
         pfom_R = new Vector(pfom->GetData(), fom->zR.Size());
         pfom_W = new Vector(pfom->GetData() + fom->zR.Size(), fom->zW.Size());
 
-        pfom_R_librom = new CAROM::Vector(pfom_R->GetData(), pfom_R->Size(), false, false);
-        pfom_W_librom = new CAROM::Vector(pfom_W->GetData(), pfom_W->Size(), false, false);
+        pfom_R_librom = new CAROM::Vector(pfom_R->GetData(), pfom_R->Size(), true,
+                                          false);
+        pfom_W_librom = new CAROM::Vector(pfom_W->GetData(), pfom_W->Size(), true,
+                                          false);
 
         zfomR.SetSize(fom->zR.Size());
         zfomR_librom = new CAROM::Vector(zfomR.GetData(), zfomR.Size(), false, false);
 
         zfomW.SetSize(fom->zW.Size());
     }
+    else if (eqp)
+    {
+        pfom_W_librom = new CAROM::Vector(fom->zW.Size(), true);
+        pfom_W = new Vector(pfom_W_librom->getData(), fom->zW.Size());
+    }
 
-    if (hyperreduce_source)
+    if (hyperreduce_source && !eqp)
         Compute_CtAB(fom->Cmat, *S, V_W, &VTCS_W);
+
+    if (eqp)
+    {
+        std::set<int> elements;
+        const int nqe = ir_eqp->GetWeights().Size();
+
+        for (int i=0; i<eqpSol->dim(); ++i)
+        {
+            if ((*eqpSol)(i) > 1.0e-12)
+            {
+                const int e = i / nqe;  // Element index
+                elements.insert(e);
+                eqp_rw.push_back((*eqpSol)(i));
+                eqp_qp.push_back(i);
+            }
+        }
+
+        cout << myid << ": EQP using " << elements.size() << " elements out of "
+             << fom->fespace_R.GetNE() << endl;
+
+        GetEQPCoefficients_VectorFEMassIntegrator(&fom->fespace_R, eqp_rw, eqp_qp,
+                ir_eqp, V_R, eqp_coef);
+
+        if (problem == ANALYTIC)
+        {
+            // Setup eqp for the source
+            std::set<int> elements_S;
+
+            for (int i=0; i<eqpSol_S->dim(); ++i)
+            {
+                if ((*eqpSol_S)(i) > 1.0e-12)
+                {
+                    const int e = i / nqe;  // Element index
+                    elements_S.insert(e);
+                    eqp_rw_S.push_back((*eqpSol_S)(i));
+                    eqp_qp_S.push_back(i);
+                }
+            }
+
+            GetEQPCoefficients_LinearMassIntegrator(&fom->fespace_W, eqp_rw_S, eqp_qp_S,
+                                                    ir_eqp, V_W, eqp_coef_S);
+
+            cout << myid << ": EQP for source using " << elements_S.size()
+                 << " elements out of " << fom->fespace_R.GetNE() << endl;
+
+            elements.insert(elements_S.begin(), elements_S.end());
+        }
+
+        // Set the matrix of the linear map from the ROM W space to all DOFs on
+        // sampled elements.
+        Array<int> vdofs;
+        int numSampledDofs = 0;
+        for (auto e : elements)
+        {
+            fom_->fespace_W.GetElementVDofs(e, vdofs);
+            numSampledDofs += vdofs.Size();
+        }
+
+        eqp_lifting.setSize(numSampledDofs, rwdim);
+        eqp_liftDOFs.resize(numSampledDofs);
+        eqp_lifted.setSize(numSampledDofs);
+
+        int cnt = 0;
+        for (auto e : elements)
+        {
+            fom_->fespace_W.GetElementVDofs(e, vdofs);
+            for (int i=0; i<vdofs.Size(); ++i, ++cnt)
+                eqp_liftDOFs[cnt] = vdofs[i];
+        }
+        MFEM_VERIFY(cnt == numSampledDofs, "");
+
+        CAROM::Vector ej(rwdim, false);
+
+        for (int j=0; j<rwdim; ++j)
+        {
+            ej = 0.0;
+            ej(j) = 1.0;
+            V_W.mult(ej, *pfom_W_librom);
+            p_gf.SetFromTrueDofs(*pfom_W);
+
+            for (int i=0; i<numSampledDofs; ++i)
+            {
+                eqp_lifting(i,j) = (*pfom_W)[eqp_liftDOFs[i]];
+            }
+        }
+    }
 }
 
 RomOperator::~RomOperator()
@@ -1659,30 +2044,111 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
 
     CAROM::Vector dyW_dt_librom(dy_dt.GetData() + rrdim, rwdim, false, false);
 
-    // 1. Lift p_s+ = B_s+ y
-    BRsp->mult(yR_librom, *psp_R_librom);
-    BWsp->mult(yW_librom, *psp_W_librom);
-
-    fomSp->SetParameters(*psp);
-
-    fomSp->Mmat->Mult(*psp_R, zR);  // M(a(Pst V_W yW)) Pst V_R yR
-
-    // Select entries out of zR.
-    smm->GetSampledValues("V", zR, zN);
-
-    // Note that it would be better to just store VTU_R * Vsinv, but these are small matrices.
-#ifdef USE_GNAT
-    Vsinv->transposeMult(zN, zY);
-#else
-    Vsinv->mult(zN, zY);
-#endif
-
     BR->transposeMult(yW_librom, resR_librom);
-    VTU_R.multPlus(resR_librom, zY, 1.0);
+
+    if (eqp)
+    {
+        // Compute reduced matrix for nonlinear term V_R^T M(a(V_W yW)) V_R, which
+        // is normally FOM (as in Mult_FullOrder), but has reduced cost using EQP.
+
+        // Set grid function for a(p)
+
+        // Lift pfom_W = V_W yW
+        // FOM version, replaced by using eqp_lifting.
+        //V_W.mult(yW_librom, *pfom_W_librom);
+        //p_gf.SetFromTrueDofs(*pfom_W);
+
+        eqp_lifting.mult(yW_librom, eqp_lifted);
+
+        for (int i=0; i<eqp_liftDOFs.size(); ++i)
+            p_gf[eqp_liftDOFs[i]] = eqp_lifted(i);
+
+        Vector resEQP;
+        if (fastIntegration)
+            VectorFEMassIntegrator_ComputeReducedEQP_Fast(&(fom->fespace_R), eqp_qp,
+                    ir_eqp, &a_coeff,
+                    yR_librom, eqp_coef, resEQP);
+        else
+            VectorFEMassIntegrator_ComputeReducedEQP(&(fom->fespace_R), eqp_rw,
+                    eqp_qp, ir_eqp, &a_coeff,
+                    V_R, yR_librom, rank, resEQP);
+
+        Vector recv(resEQP);
+        MPI_Allreduce(resEQP.GetData(), recv.GetData(), resEQP.Size(), MPI_DOUBLE,
+                      MPI_SUM, MPI_COMM_WORLD);
+        resEQP = recv;
+
+        // NOTE: in the hyperreduction case, the residual is of dimension nldim,
+        // which is the dimension of the ROM space for the nonlinear term.
+        // In the EQP case, there is no use of a ROM space for the nonlinear
+        // term. Instead, the FOM computation of the nonlinear term is
+        // approximated by the reduced quadrature rule in the FOM space.
+        // Therefore, the residual here is of dimension rrdim.
+
+        MFEM_VERIFY(resEQP.Size() == rrdim, "");
+        for (int i=0; i<rrdim; ++i)
+            res[i] += resEQP[i];
+    }
+    else
+    {
+        // 1. Lift p_s+ = B_s+ y
+        BRsp->mult(yR_librom, *psp_R_librom);
+        BWsp->mult(yW_librom, *psp_W_librom);
+
+        fomSp->SetParameters(*psp);
+
+        fomSp->Mmat->Mult(*psp_R, zR);  // M(a(Pst V_W yW)) Pst V_R yR
+
+        // Select entries out of zR.
+        smm->GetSampledValues("V", zR, zN);
+
+        // Note that it would be better to just store VTU_R * Vsinv, but these are small matrices.
+        if (oversampling)
+        {
+            Vsinv->transposeMult(zN, zY);
+        }
+        else
+        {
+            Vsinv->mult(zN, zY);
+        }
+
+        VTU_R.multPlus(resR_librom, zY, 1.0);
+    }
 
     // Apply V_W^t C to fsp
 
-    if (sourceFOM)
+    if (eqp)
+    {
+        if (problem == INIT_STEP)
+        {
+            resW_librom = 0.0;
+        }
+        else
+        {
+            FunctionCoefficient f(SourceFunction);
+            f.SetTime(GetTime());
+
+            if (fastIntegration)
+                LinearMassIntegrator_ComputeReducedEQP_Fast(&(fom->fespace_W),
+                        rhs_gf, eqp_rw_S,
+                        eqp_qp_S, ir_eqp, &f, V_W,
+                        eqp_coef_S, resW_librom);
+            else
+                LinearMassIntegrator_ComputeReducedEQP(&(fom->fespace_W), eqp_rw_S,
+                                                       eqp_qp_S, ir_eqp, &f, V_W, resW_librom);
+
+            CAROM::Vector recv(resW_librom);
+            MPI_Allreduce(resW_librom.getData(), recv.getData(), resW_librom.dim(),
+                          MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            resW_librom = recv;
+
+            resW_librom *= -1.0;
+        }
+
+        CR->multPlus(resW_librom, dyW_dt_librom, 1.0);
+        BR->multPlus(resW_librom, yR_librom, -1.0);
+    }
+    else if (sourceFOM)
     {
         fom->GetSource(zfomW);
         zfomW.Neg();
@@ -1706,11 +2172,14 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
             // Select entries
             smm->GetSampledValues("S", fomSp->zW, zT);
 
-#ifdef USE_GNAT
-            Ssinv->transposeMult(zT, zS);
-#else
-            Ssinv->mult(zT, zS);
-#endif
+            if (oversampling)
+            {
+                Ssinv->transposeMult(zT, zS);
+            }
+            else
+            {
+                Ssinv->mult(zT, zS);
+            }
 
             // Multiply by the f-basis, followed by C, followed by V_W^T. This is stored in VTCS_W = V_W^T CS.
             VTCS_W.multPlus(resW_librom, zS, -1.0);
@@ -1775,7 +2244,9 @@ void RomOperator::Mult_FullOrder(const Vector &dy_dt, Vector &res) const
 void RomOperator::Mult(const Vector &dy_dt, Vector &res) const
 {
     if (hyperreduce)
+    {
         Mult_Hyperreduced(dy_dt, res);
+    }
     else
         Mult_FullOrder(dy_dt, res);
 }
@@ -1785,8 +2256,11 @@ void RomOperator::ImplicitSolve(const double dt, const Vector &y, Vector &dy_dt)
     y0 = y;
 
     current_dt = dt;
-    fomSp->SetTime(GetTime());
-    fomSp->current_dt = dt;
+    if (!eqp)
+    {
+        fomSp->SetTime(GetTime());
+        fomSp->current_dt = dt;
+    }
 
     if (!hyperreduce || sourceFOM)
     {
@@ -1855,11 +2329,48 @@ Operator &RomOperator::GetGradient(const Vector &p) const
 
     CAROM::Vector r(nldim, false);
     CAROM::Vector c(rrdim, false);
-    CAROM::Vector z(nsamp_R, false);
+    CAROM::Vector z(std::max(nsamp_R, 1), false);
 
     for (int i=0; i<rrdim; ++i)
     {
-        if (hyperreduce)
+        if (eqp)
+        {
+            // Compute the i-th column of V_R^T M(a'(V_W yW)) V_R, using EQP.
+
+            // Note that a_plus_aprime_coeff is already set from the lifted V_W yW variable, in Mult().
+            Vector resEQP;
+            CAROM::Vector e_i(rrdim, false);
+            e_i = 0.0;
+            e_i(i) = 1.0;
+
+            if (fastIntegration)
+                VectorFEMassIntegrator_ComputeReducedEQP_Fast(&(fom->fespace_R), eqp_qp,
+                        ir_eqp, &a_plus_aprime_coeff,
+                        e_i, eqp_coef, resEQP);
+            else
+                VectorFEMassIntegrator_ComputeReducedEQP(&(fom->fespace_R), eqp_rw,
+                        eqp_qp, ir_eqp,
+                        &a_plus_aprime_coeff, V_R,
+                        e_i, rank, resEQP);
+
+            Vector recv(resEQP);
+            MPI_Allreduce(resEQP.GetData(), recv.GetData(), resEQP.Size(), MPI_DOUBLE,
+                          MPI_SUM, MPI_COMM_WORLD);
+            resEQP = recv;
+
+            // NOTE: in the hyperreduction case, the residual is of dimension
+            // nldim, which is the dimension of the ROM space for the nonlinear term.
+            // In the EQP case, there is no use of a ROM space for the nonlinear term.
+            // Instead, the FOM computation of the nonlinear term is approximated
+            // by the reduced quadrature rule in the FOM space. Therefore, the
+            // residual here is of dimension rrdim.
+
+            MFEM_VERIFY(resEQP.Size() == rrdim, "");
+
+            for (int j=0; j<rrdim; ++j)
+                c(j) = current_dt * resEQP[j];
+        }
+        else if (hyperreduce)
         {
             // Compute the i-th column of M(a'(Pst V_W yW)) Pst V_R.
             for (int j=0; j<psp_R->Size(); ++j)
@@ -1871,11 +2382,14 @@ Operator &RomOperator::GetGradient(const Vector &p) const
 
             // Note that it would be better to just store VTU_R * Vsinv, but these are small matrices.
 
-#ifdef USE_GNAT
-            Vsinv->transposeMult(z, r);
-#else
-            Vsinv->mult(z, r);
-#endif
+            if (oversampling)
+            {
+                Vsinv->transposeMult(z, r);
+            }
+            else
+            {
+                Vsinv->mult(z, r);
+            }
 
             VTU_R.mult(r, c);
         }
@@ -1889,8 +2403,9 @@ Operator &RomOperator::GetGradient(const Vector &p) const
             V_R.transposeMult(*zfomR_librom, c);  // V_R^T M(a'(V_W yW)) V_R(:,i)
         }
 
+        // This already includes a factor of current_dt, from Mprimemat.
         for (int j=0; j<rrdim; ++j)
-            J(j, i) = c(j);  // This already includes a factor of current_dt, from Mprimemat.
+            J(j, i) = c(j);
 
         for (int j=0; j<rwdim; ++j)
         {
@@ -1924,7 +2439,8 @@ double InitialTemperature(const Vector &x)
 {
     if (problem == INIT_STEP)
     {
-        if (0.5 - step_half < x[0] && x[0] < 0.5 + step_half && 0.5 - step_half < x[1] && x[1] < 0.5 + step_half)
+        if (0.5 - step_half < x[0] && x[0] < 0.5 + step_half && 0.5 - step_half < x[1]
+                && x[1] < 0.5 + step_half)
             return 1.0;
         else
             return 0.0;
@@ -1994,7 +2510,8 @@ double SourceFunction_cpu(const Vector &x, const double t)
 
     const double a = diffusion_c + (sx * sy * st);
 
-    return (4.0 * pi * ct * sx * sy) + (st * 4.0 * pi * pi * ((cx*sy*cx*sy*st/a) + (2.0*sx*sy) + (sx*cy*sx*cy*st/a)) / a);
+    return (4.0 * pi * ct * sx * sy) + (st * 4.0 * pi * pi * ((cx*sy*cx*sy*st/a) +
+                                        (2.0*sx*sy) + (sx*cy*sx*cy*st/a)) / a);
 }
 
 double SourceFunction(const Vector &x, const double t)

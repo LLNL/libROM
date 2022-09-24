@@ -1,3 +1,13 @@
+/******************************************************************************
+ *
+ * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * and other libROM project developers. See the top-level COPYRIGHT
+ * file for details.
+ *
+ * SPDX-License-Identifier: (Apache-2.0 OR MIT)
+ *
+ *****************************************************************************/
+
 //                       libROM MFEM Example: DG Advection (adapted from ex9p.cpp)
 //
 // Compile with: make dg_advection
@@ -119,7 +129,6 @@ public:
 };
 #endif
 
-
 class DG_Solver : public Solver
 {
 private:
@@ -195,7 +204,6 @@ public:
     }
 };
 
-
 /** A time-dependent operator for the right-hand side of the ODE. The DG weak
     form of du/dt = -v.grad(u) is M du/dt = K u + b, where M and K are the mass
     and advection matrices, and b describes the flow on the boundary. This can
@@ -221,7 +229,6 @@ public:
 
     virtual ~FE_Evolution();
 };
-
 
 int main(int argc, char *argv[])
 {
@@ -464,7 +471,6 @@ int main(int argc, char *argv[])
     b->Assemble();
     m->Finalize();
     k->Finalize(skip_zeros);
-
 
     HypreParVector *B = b->ParallelAssemble();
 
@@ -760,14 +766,18 @@ int main(int argc, char *argv[])
     subtract(dmd_solution_u, true_solution_u, diff_u);
 
     double tot_diff_norm_u = sqrt(InnerProduct(MPI_COMM_WORLD, diff_u, diff_u));
-    double tot_true_solution_u_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution_u, true_solution_u));
+    double tot_true_solution_u_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
+                                           true_solution_u, true_solution_u));
 
     if (myid == 0)
     {
-        std::cout << "Relative error of DMD solution (u) at t_final: " << t_final << " is " << tot_diff_norm_u / tot_true_solution_u_norm << std::endl;
+        std::cout << "Relative error of DMD solution (u) at t_final: " << t_final <<
+                  " is " << tot_diff_norm_u / tot_true_solution_u_norm << std::endl;
         printf("Elapsed time for solving FOM: %e second\n", fom_timer.RealTime());
-        printf("Elapsed time for training DMD: %e second\n", dmd_training_timer.RealTime());
-        printf("Elapsed time for predicting DMD: %e second\n", dmd_prediction_timer.RealTime());
+        printf("Elapsed time for training DMD: %e second\n",
+               dmd_training_timer.RealTime());
+        printf("Elapsed time for predicting DMD: %e second\n",
+               dmd_prediction_timer.RealTime());
     }
 
     // 16. Free the used memory.
@@ -793,7 +803,6 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-
 
 // Implementation of class FE_Evolution
 FE_Evolution::FE_Evolution(ParBilinearForm &M_, ParBilinearForm &K_,
@@ -864,7 +873,6 @@ FE_Evolution::~FE_Evolution()
     delete M_prec;
     delete dg_solver;
 }
-
 
 // Velocity coefficient
 void velocity_function(const Vector &x, Vector &v)
