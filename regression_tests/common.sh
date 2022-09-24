@@ -41,10 +41,10 @@ fi
 # Check machine
 case "$(uname -s)" in
     Linux*)
-		  COMMAND="srun -p pdebug"
+		  COMMAND="srun -p pbatch -n 1"
 			MACHINE="Linux";;
     Darwin*)
-		  COMMAND="mpirun -oversubscribe"
+		  COMMAND="mpirun -np 8"
 			MACHINE="Darwin";;
     *)
 			echo "The regression tests can only run on Linux and MAC."

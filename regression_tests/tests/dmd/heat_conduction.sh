@@ -2,7 +2,7 @@
 source $GITHUB_WORKSPACE/regression_tests/common.sh
 
 CMDS=( 
-    "$COMMAND -np 8 heat_conduction -s 1 -a 0.0 -k 1.0" 
+    "$COMMAND heat_conduction -s 1 -a 0.0 -k 1.0" 
 )
 TYPE="DMD"
 cd ${EX_DMD_PATH_LOCAL}
