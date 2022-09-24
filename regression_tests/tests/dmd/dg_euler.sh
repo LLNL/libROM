@@ -19,13 +19,13 @@ echo "Running solution comparator for $0 with $1 processors"
 ./solutionComparator "${EX_DMD_PATH_LOCAL}/vortex-0-final.000000" "${EX_DMD_PATH_BASELINE}/vortex-0-final.000000" "1.0e-5" "8"
 check_fail
 
-./solutionComparator "${EX_DMD_PATH_LOCAL}/vortex-1-final.000000" "${EX_DMD_PATH_BASELINE}/vortex-1-final.000000" "1.0e-5" "$1"
+./solutionComparator "${EX_DMD_PATH_LOCAL}/vortex-1-final.000000" "${EX_DMD_PATH_BASELINE}/vortex-1-final.000000" "1.0e-5" "8"
 check_fail
 
-./solutionComparator "${EX_DMD_PATH_LOCAL}/vortex-2-final.000000" "${EX_DMD_PATH_BASELINE}/vortex-2-final.000000" "1.0e-5" "$1"
+./solutionComparator "${EX_DMD_PATH_LOCAL}/vortex-2-final.000000" "${EX_DMD_PATH_BASELINE}/vortex-2-final.000000" "1.0e-5" "8"
 check_fail
 
-./solutionComparator "${EX_DMD_PATH_LOCAL}/vortex-3-final.000000" "${EX_DMD_PATH_BASELINE}/vortex-3-final.000000" "1.0e-5" "$1"
+./solutionComparator "${EX_DMD_PATH_LOCAL}/vortex-3-final.000000" "${EX_DMD_PATH_BASELINE}/vortex-3-final.000000" "1.0e-5" "8"
 check_fail
 
 move_output_files
