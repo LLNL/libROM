@@ -66,12 +66,12 @@ Utilities::processorToString(
     return os.str();
 }
 
-bool 
+bool
 Utilities::file_exist(
     const std::string& filename)
 {
-    struct stat buffer;   
-    return (stat(filename.c_str(), &buffer) == 0); 
+    struct stat buffer;
+    return (stat(filename.c_str(), &buffer) == 0);
 }
 
 }
