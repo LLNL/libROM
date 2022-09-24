@@ -23,7 +23,7 @@ namespace CAROM {
 class PointwiseSnapshot
 {
 public:
-  PointwiseSnapshot(const int sdim, int *dims_);
+  PointwiseSnapshot(const int sdim, const int *dims_);
 
   void SetMesh(ParMesh *pmesh);
   void GetSnapshot(ParGridFunction const& f, mfem::Vector & s);
@@ -31,14 +31,14 @@ public:
   ~PointwiseSnapshot();
 
 private:
-  FindPointsGSLIB *finder{nullptr};
+  FindPointsGSLIB *finder;
 
   int npoints;
   int dims[3];
   const int spaceDim;
 
-  Vector domainMin, domainMax;
-  Vector xyz;
+  mfem::Vector domainMin, domainMax;
+  mfem::Vector xyz;
 };
 
 }

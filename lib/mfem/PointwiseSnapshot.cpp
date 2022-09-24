@@ -2,10 +2,10 @@
 
 namespace CAROM {
 
-PointwiseSnapshot::PointwiseSnapshot(const int sdim, int *dims_)
-  : finder(nullptr), spaceDim(sdim), domainMin(3), domainMax(3)
+PointwiseSnapshot::PointwiseSnapshot(const int sdim, const int *dims_)
+  : finder(nullptr), spaceDim(sdim)//, domainMin(3), domainMax(3)
 {
-  MFEM_VERIFY(0 < sdim && sdim < 4, "");
+  MFEM_VERIFY(1 < sdim && sdim < 4, "");
 
   npoints = 1;
   for (int i=0; i<spaceDim; ++i)
@@ -18,31 +18,7 @@ PointwiseSnapshot::PointwiseSnapshot(const int sdim, int *dims_)
     dims[i] = 1;
 
   xyz.SetSize(npoints * spaceDim);
-
-  double h[3] = {0.0, 0.0, 0.0};
-  for (int i=0; i<spaceDim; ++i)
-    h[i] = (domainMax[i] - domainMin[i]) / ((double) (dims[i] - 1));
-
-  for (int k=0; k<dims[2]; ++k)
-    {
-      const double pz = domainMin[2] + k*h[2];
-      const int osk = k*dims[0]*dims[1];
-
-      for (int j=0; j<dims[1]; ++j)
-	{
-	  const double py = domainMin[1] + j*h[1];
-	  const int osj = (j*dims[0]) + osk;
-
-	  for (int i=0; i<dims[0]; ++i)
-	    {
-	      const double px = domainMin[0] + i*h[0];
-	      const int os = spaceDim * (i + osj);
-	      xyz[os] = px;
-	      if (spaceDim > 1) xyz[os + 1] = py;
-	      if (spaceDim > 2) xyz[os + 2] = pz;
-	    }
-	}
-    }
+  xyz = 0.0;
 }
 
 void PointwiseSnapshot::SetMesh(ParMesh *pmesh)
@@ -55,11 +31,49 @@ void PointwiseSnapshot::SetMesh(ParMesh *pmesh)
 
   pmesh->GetBoundingBox(domainMin, domainMax, 0);
 
+  double h[3] = {0.0, 0.0, 0.0};
+  for (int i=0; i<spaceDim; ++i)
+    h[i] = (domainMax[i] - domainMin[i]) / ((double) (dims[i] - 1));
+
+  cout << "PointwiseSnapshot on bounding box from (";
+  for (int i=0; i<spaceDim; ++i)
+    {
+      cout << domainMin[i];
+      if (i < spaceDim-1) cout << ", ";
+    }
+  cout << ") to (";
+  for (int i=0; i<spaceDim; ++i)
+    {
+      cout << domainMax[i];
+      if (i < spaceDim-1) cout << ", ";
+    }
+  cout << ")" << endl;
+
+  for (int k=0; k<dims[2]; ++k)
+    {
+      const double pz = spaceDim > 2 ? domainMin[2] + k*h[2] : 0.0;
+      const int osk = k*dims[0]*dims[1];
+
+      for (int j=0; j<dims[1]; ++j)
+	{
+	  const double py = domainMin[1] + j*h[1];
+	  const int osj = (j*dims[0]) + osk;
+
+	  for (int i=0; i<dims[0]; ++i)
+	    {
+	      const double px = domainMin[0] + i*h[0];
+	      xyz[i + osj] = px;
+	      if (spaceDim > 1) xyz[npoints + i + osj] = py;
+	      if (spaceDim > 2) xyz[2*npoints + i + osj] = pz;
+	    }
+	}
+    }
+
   finder = new FindPointsGSLIB(MPI_COMM_WORLD);
   finder->Setup(*pmesh);
 }
 
-void PointwiseSnapshot::GetSnapshot(ParGridFunction const& f, Vector & s)
+void PointwiseSnapshot::GetSnapshot(ParGridFunction const& f, mfem::Vector & s)
 {
   const int vdim = f.FESpace()->GetVDim();
   s.SetSize(npoints * vdim);

@@ -46,6 +46,7 @@
 #include "linalg/BasisReader.h"
 #include "hyperreduction/DEIM.h"
 #include "mfem/SampleMesh.hpp"
+#include "mfem/PointwiseSnapshot.hpp"
 
 
 typedef enum {ANALYTIC, INIT_STEP} PROBLEM;
@@ -446,6 +447,11 @@ int main(int argc, char *argv[])
     bool merge = false;
     bool online = false;
 
+    bool pointwiseSnapshots = false;
+    int pwx = 0;
+    int pwy = 0;
+    int pwz = 0;
+
     int nsets = 0;
 
     int id_param = 0;
@@ -493,6 +499,11 @@ int main(int argc, char *argv[])
                    "Enable or disable the online phase.");
     args.AddOption(&merge, "-merge", "--merge", "-no-merge", "--no-merge",
                    "Enable or disable the merge phase.");
+    args.AddOption(&pointwiseSnapshots, "-pwsnap", "--pw-snap", "-no-pwsnap",
+                   "--no-pw-snap", "Enable or disable writing pointwise snapshots.");
+    args.AddOption(&pwx, "-pwx", "--pwx", "Number of snapshot points in x");
+    args.AddOption(&pwy, "-pwy", "--pwy", "Number of snapshot points in y");
+    args.AddOption(&pwz, "-pwz", "--pwz", "Number of snapshot points in z");
 
     args.Parse();
     if (!args.Good())
@@ -507,8 +518,8 @@ int main(int argc, char *argv[])
         args.PrintOptions(cout);
     }
 
-    const bool check = (offline && !merge && !online) || (!offline && merge && !online) || (!offline && !merge && online);
-    MFEM_VERIFY(check, "only one of offline, merge, or online must be true!");
+    const int check = (int) pointwiseSnapshots + (int) offline + (int) merge + (int) online;
+    MFEM_VERIFY(check == 1, "Only one of offline, merge, online, or pwsnap must be true!");
 
     const bool hyperreduce_source = (problem != INIT_STEP);
 
@@ -542,6 +553,25 @@ int main(int argc, char *argv[])
     {
         pmesh->UniformRefinement();
     }
+
+    CAROM::PointwiseSnapshot *pws = nullptr;
+    Vector pwsnap;
+    CAROM::Vector *pwsnap_CAROM = nullptr;
+
+    if (pointwiseSnapshots)
+      {
+	pmesh->EnsureNodes();
+	const int dmdDim[3] = {pwx, pwy, pwz};
+	pws = new CAROM::PointwiseSnapshot(dim, dmdDim);
+	pws->SetMesh(pmesh);
+
+	int snapshotSize = dmdDim[0];
+	for (int i=1; i<dim; ++i)
+	  snapshotSize *= dmdDim[i];
+
+	pwsnap.SetSize(snapshotSize);
+	pwsnap_CAROM = new CAROM::Vector(pwsnap.GetData(), pwsnap.Size(), true, false);
+      }
 
     // 7. Define the mixed finite element spaces.
 
@@ -933,6 +963,20 @@ int main(int argc, char *argv[])
 
     oper.newtonFailure = false;
 
+    if (pointwiseSnapshots)
+      {
+	pws->GetSnapshot(p_gf, pwsnap);
+
+	ostringstream dmd_filename;
+	dmd_filename << "snap_" << id_param << "_0";
+
+	if (myid == 0)
+	  cout << "Writing DMD snapshot at step 0, time " << t
+	       << ", with offline parameter index " << id_param << endl;
+
+	pwsnap_CAROM->write(dmd_filename.str());
+      }
+
     solveTimer.Start();
 
     bool last_step = false;
@@ -1087,6 +1131,21 @@ int main(int argc, char *argv[])
                 visit_dc->Save();
             }
         }
+
+	if (pointwiseSnapshots)
+	  {
+	    p_gf.SetFromTrueDofs(*p_W);
+	    pws->GetSnapshot(p_gf, pwsnap);
+
+	    ostringstream dmd_filename;
+	    dmd_filename << "snap_" << id_param << "_" << ti;
+
+	    if (myid == 0)
+	      cout << "Writing DMD snapshot at step " << ti << ", time " << t
+		   << ", with offline parameter index " << id_param << endl;
+
+	    pwsnap_CAROM->write(dmd_filename.str());
+	  }
     }  // timestep loop
 
     solveTimer.Stop();
@@ -1158,6 +1217,9 @@ int main(int argc, char *argv[])
     delete romop;
 
     delete p_W;
+
+    delete pws;
+    delete pwsnap_CAROM;
 
     totalTimer.Stop();
     if (myid == 0) cout << "Elapsed time for entire simulation " << totalTimer.RealTime() << endl;

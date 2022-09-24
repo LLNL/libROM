@@ -61,6 +61,8 @@ list(APPEND source_files
 
 if (USE_MFEM)
     list(APPEND source_files
+      mfem/PointwiseSnapshot.hpp
+      mfem/PointwiseSnapshot.cpp
       mfem/SampleMesh.hpp
       mfem/SampleMesh.cpp)
 endif()
