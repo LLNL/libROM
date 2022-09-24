@@ -16,8 +16,9 @@
 
 namespace CAROM {
 
-NonuniformDMD::NonuniformDMD(int dim, Vector* state_offset, Vector* derivative_offset) : 
-                             DMD(dim, state_offset)
+NonuniformDMD::NonuniformDMD(int dim, Vector* state_offset,
+                             Vector* derivative_offset) :
+    DMD(dim, state_offset)
 {
     d_derivative_offset = derivative_offset;
 }
@@ -37,10 +38,10 @@ NonuniformDMD::NonuniformDMD(std::string base_file_name) : DMD(base_file_name)
 NonuniformDMD::NonuniformDMD(std::vector<std::complex<double>> eigs,
                              Matrix* phi_real,
                              Matrix* phi_imaginary, int k,
-                             double dt, double t_offset, 
+                             double dt, double t_offset,
                              Vector* state_offset, Vector* derivative_offset) :
-                             DMD(eigs, phi_real, phi_imaginary, k,
-                                 dt, t_offset, state_offset)
+    DMD(eigs, phi_real, phi_imaginary, k,
+        dt, t_offset, state_offset)
 {
     d_derivative_offset = derivative_offset;
 }
@@ -66,10 +67,12 @@ NonuniformDMD::computeDMDSnapshotPair(const Matrix* snapshots)
         for (int j = 0; j < snapshots->numColumns() - 1; j++)
         {
             f_snapshots_in->item(i, j) = snapshots->item(i, j);
-            f_snapshots_out->item(i, j) = (snapshots->item(i, j + 1) - snapshots->item(i,j)) / 
-                                          (d_sampled_times[j + 1]->item(0) - d_sampled_times[j]->item(0));
+            f_snapshots_out->item(i, j) =
+                (snapshots->item(i, j + 1) - snapshots->item(i,j)) /
+                (d_sampled_times[j + 1]->item(0) - d_sampled_times[j]->item(0));
             if (d_state_offset) f_snapshots_in->item(i, j) -= d_state_offset->item(i);
-            if (d_derivative_offset) f_snapshots_out->item(i, j) -= d_derivative_offset->item(i);
+            if (d_derivative_offset) f_snapshots_out->item(i, j)
+                -= d_derivative_offset->item(i);
         }
     }
 
@@ -96,7 +99,7 @@ NonuniformDMD::addOffset(Vector*& result, double t, int power)
     CAROM_VERIFY(power == 0 || power == 1);
     if (power == 0)
     {
-        DMD::addOffset(result); 
+        DMD::addOffset(result);
         if (d_derivative_offset)
         {
             result->plusAx(t, *d_derivative_offset);

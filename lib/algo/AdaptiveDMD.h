@@ -59,7 +59,8 @@ public:
      * @param[in] linearity_tol   The tolerance for determining whether a column
                                   of W is linearly independent with W0.
      */
-    void train(double energy_fraction, const Matrix* W0 = NULL, double linearity_tol = 0.0);
+    void train(double energy_fraction, const Matrix* W0 = NULL,
+               double linearity_tol = 0.0);
 
     /**
      * @param[in] k The number of modes (eigenvalues) to keep after doing SVD.

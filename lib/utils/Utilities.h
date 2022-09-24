@@ -114,11 +114,11 @@ struct Utilities
         int processorID);
 
     /**
-     * @brief Verifies if a file exists. 
+     * @brief Verifies if a file exists.
      *
      * @param[in] filename Name of the file to be verified.
      *
-     * @return true if the file exists. 
+     * @return true if the file exists.
      */
     static bool
     file_exist(
