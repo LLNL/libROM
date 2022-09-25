@@ -39,17 +39,15 @@ if [[ -z "${PROGRAM_FILES}" ]]; then
     export PROGRAM_FILES
 fi
 # Check machine
-case "$(uname -s)" in
-    Linux*)
-		  COMMAND="srun -p pbatch -n 8"
-			MACHINE="Linux";;
-    Darwin*)
-		  COMMAND="mpirun -np 8"
-			MACHINE="Darwin";;
-    *)
-			echo "The regression tests can only run on Linux and MAC."
-			exit 1
-esac
+echo "OS: $MACHINE"
+if [[ $MACHINE = "Linux" ]]; then
+	COMMAND="srun -p pbatch -n 8"
+elif [[ $MACHINE = "Darwin" ]]; then
+	COMMAND="mpirun -np 8"
+else
+    echo "Bad OS: $MACHINE"
+    exit 1
+fi
 
 move_output_files_after_error() {
     echo "Moving output files after a trap"

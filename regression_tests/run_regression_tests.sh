@@ -5,10 +5,12 @@
 #SBATCH -p pbatch
 #SBATCH -o sbatch.log
 #SBATCH --open-mode truncate
+# On Linx:
+# sbatch -N 1 -t 1:00:00 -p pbatch -o sbatch.log --open-mode truncate ./regression_tests/run_regression_tests.sh
+# On Mac:
+# ./regression_tests/run_regression_tests.sh
 
-echo "Setting up test suite"
-echo "For detailed logs of the regression tests, please check regression_tests/results."
-echo "PWD=$PWD"
+#echo "PWD=$PWD"
 if [[ -z ${GITHUB_WORKSPACE} ]]; then
 # Set GITHUB_WORKSPACE variable
   if [[ -f "$PWD/run_regression_tests.sh" ]]; then
@@ -21,12 +23,48 @@ if [[ -z ${GITHUB_WORKSPACE} ]]; then
   fi
 fi
 
-echo "GITHUB_WORKSPACE = ${GITHUB_WORKSPACE}"
+case "$(uname -s)" in
+    Linux*)
+			MACHINE="Linux";;
+    Darwin*)
+			MACHINE="Darwin";;
+    *)
+			echo "The regression tests can only run on Linux and MAC."
+			exit 1
+esac
+echo "MACHINE = $MACHINE"
+export MACHINE
+# echo "GITHUB_WORKSPACE = ${GITHUB_WORKSPACE}"
 
-if [[ -z ${GITHUB_WORKSPACE} ]]; then
-    echo "Run tests from the libROM or libROM/regression_tests directory"
-    exit
-fi
+# Get options
+while getopts ":i:e:" o;
+do
+	case "${o}" in
+		i)
+			i=${OPTARG}
+      ;;
+    *)
+      echo "Usage:"
+      if [[ $MACHINE = "Linux" ]]; then
+          echo "To run all tests:"
+          echo "sbatch -N 1 -t 1:00:00 -p pbatch -o sbatch.log --open-mode truncate ./regression_tests/run_regression_tests.sh"
+          echo "To run one test (example)"
+          echo "sbatch -N 1 -t 1:00:00 -p pbatch -o sbatch.log --open-mode truncate ./regression_tests/run_regression_tests.sh -i dg_advection"
+      elif [[ $MACHINE = "Darwin" ]]; then
+        echo "./regression_tests/run_regression_tests.sh"
+        echo "Example: To run a single test:"
+        echo "./regression_tests/run_regression_tests.sh -i dg_advection"
+      fi
+      echo "For more details, refer to REGRESSIONTEST.md"
+			exit 1
+      ;;
+    esac
+done
+shift $((OPTIND-1))
+
+echo "Setting up test suite"
+echo "For detailed logs of the regression tests, please check regression_tests/results."
+
 export GITHUB_WORKSPACE
 export TMPDIR=/tmp
 BASELINE_DIR=${GITHUB_WORKSPACE}/dependencies
@@ -45,7 +83,7 @@ cd ${EXAMPLES_DMD_BASELINE} && rm -rf ./*/
 cd ${EXAMPLES_PROM_BASELINE} && rm -rf ./*/
 #echo "My current dir = $DIR"
 if [ ! -d $BASELINE_DIR/libROM ]; then # Clone master branch to baseline directory
-   echo "Creating $BASELINE_DIR"
+   #echo "Creating $BASELINE_DIR"
    mkdir -p $BASELINE_DIR
    cd ${BASELINE_DIR}
    echo "Clone libROM master into baseline"
@@ -54,6 +92,10 @@ if [ ! -d $BASELINE_DIR/libROM ]; then # Clone master branch to baseline directo
    echo "Compile libROM master"
    ./compile.sh -m
    echo "Compile libROM master - done"
+    if [[ "$?" -ne 0 ]]; then
+       echo "Compilation failed"
+       exit 1
+    fi
 else
    echo "${BASELINE_DIR}/libROM already exists"
 fi
@@ -74,21 +116,28 @@ if ! [[ $NUM_PROCESSORS =~ $re ]] ; then
    echo "Error: $NUM_PROCESSORS is not a number"
    exit 1
 fi
-echo "Number of processors = $NUM_PROCESSORS"
-echo "Running regression tests"
+# echo "Number of processors = $NUM_PROCESSORS"
 totalTests=0
 testNum=0
 testNumPass=0
 testNumFail=0
 cd $TESTS_DIR
 type_of_tests_to_execute=(*)
+if [[ -z $i ]]; then
+    echo "Running all regression tests"
+else 
+    echo "Running only $i"
+fi
 for type_of_test in ${type_of_tests_to_execute[@]}; do
   cd $type_of_test
-  tests_to_execute=(*)
-  for test in ${tests_to_execute[@]}; do 
+  all_tests=(*)
+  #echo "Tests to execute = ${all_tests}"
+  #echo "i = $i"
+  for test in ${all_tests[@]}; do 
       scriptName=$(basename $test ".sh")
-      # Run a specific test by specifying the test (including the .sh suffix)
-      if [[ -n "$1" && "$1" != "$test" ]]; then
+      # Run a specific test by specifying the test (without the .sh suffix)
+      if [[ -n $i && ! "$i" =~ "$scriptName" ]]; then
+         # echo "Skipping $scriptName"
          continue
       fi
           
