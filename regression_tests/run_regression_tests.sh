@@ -1,14 +1,33 @@
 #!/bin/bash
-
-# tests_to_execute=("poisson_global_reg_test.sh" "dg_advection_global_rom_reg_test.sh" "linear_elasticity_global_rom_reg_test.sh")
+# If using sbatch, set the following flags
+#SBATCH -N 1
+#SBATCH -t 1:00:00
+#SBATCH -p pbatch
+#SBATCH -o sbatch.log
+#SBATCH --open-mode truncate
 
 echo "Setting up test suite"
 echo "For detailed logs of the regression tests, please check regression_tests/results."
+echo "PWD=$PWD"
 if [[ -z ${GITHUB_WORKSPACE} ]]; then
-  echo "GITHUB_WORKSPACE is not set. Exiting ..."
-  exit 1
+# Set GITHUB_WORKSPACE variable
+  if [[ -f "$PWD/run_regression_tests.sh" ]]; then
+    GITHUB_WORKSPACE=$(cd .. && pwd)
+  elif [[ -f "$PWD/regression_tests/run_regression_tests.sh" ]]; then
+    GITHUB_WORKSPACE=$PWD
+  else
+    echo "Run tests from the libROM or libROM/regression_tests directory"
+    exit
+  fi
 fi
+
 echo "GITHUB_WORKSPACE = ${GITHUB_WORKSPACE}"
+
+if [[ -z ${GITHUB_WORKSPACE} ]]; then
+    echo "Run tests from the libROM or libROM/regression_tests directory"
+    exit
+fi
+export GITHUB_WORKSPACE
 export TMPDIR=/tmp
 BASELINE_DIR=${GITHUB_WORKSPACE}/dependencies
 TESTS_DIR=${GITHUB_WORKSPACE}/regression_tests/tests
@@ -17,7 +36,7 @@ EXAMPLES_DMD_LOCAL=${GITHUB_WORKSPACE}/build/examples/dmd
 EXAMPLES_PROM_LOCAL=${GITHUB_WORKSPACE}/build/examples/prom
 EXAMPLES_DMD_BASELINE=${BASELINE_DIR}/libROM/build/examples/dmd
 EXAMPLES_PROM_BASELINE=${BASELINE_DIR}/libROM/build/examples/prom
-DIR=$(pwd)
+DIR=$GITHUB_WORKSPACE
 scriptName="Unknown"
 #clean up
 cd ${EXAMPLES_DMD_LOCAL} && rm -rf ./*/
@@ -93,11 +112,3 @@ echo "${testNumPass} passed, ${testNumFail} failed out of ${totalTests} tests"
 if [[ $testNumFail -ne 0 ]]; then
 	exit 1
 fi
-
-
-
-
-
-
-
-
