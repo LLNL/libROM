@@ -21,6 +21,8 @@ How to run the tests on MAC
 
 Here are some example runs and results:
 
+LC Run: sbatch -N 1 -t 1:00:00 -p pbatch -o sbatch.log  --open-mode truncate regression_tests/run_regression_tests.sh
+
 ./run_regression_tests.sh -> Run all tests.
 
 ./run_regression_tests.sh -i dg_advection -> Run only dg_advection.sh
