@@ -687,7 +687,15 @@ int main(int argc, char *argv[])
     {
         pmesh->UniformRefinement();
     }
+    #ifndef MFEM_USE_GSLIB
+    if(pointwiseSnapshots){
+        cout << "Aborting gslib" << endl;
+        MFEM_ABORT("Pointwise snapshots require building with gslib");
+    }
+    #endif
 
+    #ifdef MFEM_USE_GSLIB
+    cout << "MFEM_USE_GSLIB enabled" << endl;
     CAROM::PointwiseSnapshot *pws = nullptr;
     Vector pwsnap;
     CAROM::Vector *pwsnap_CAROM = nullptr;
@@ -708,6 +716,8 @@ int main(int argc, char *argv[])
             pwsnap_CAROM = new CAROM::Vector(pwsnap.GetData(), pwsnap.Size(),
                                              true, false);
     }
+    #endif
+    
 
     // 7. Define the mixed finite element spaces.
 
@@ -1221,7 +1231,8 @@ int main(int argc, char *argv[])
     ConstantCoefficient coeff0(0.0);
 
     oper.newtonFailure = false;
-
+    
+    #ifdef MFEM_USE_GSLIB
     if (pointwiseSnapshots)
     {
         pws->GetSnapshot(p_gf, pwsnap);
@@ -1237,6 +1248,7 @@ int main(int argc, char *argv[])
             pwsnap_CAROM->write(dmd_filename.str());
         }
     }
+    #endif
 
     solveTimer.Start();
 
@@ -1405,7 +1417,7 @@ int main(int argc, char *argv[])
                 visit_dc->Save();
             }
         }
-
+        #ifdef MFEM_USE_GSLIB
         if (pointwiseSnapshots)
         {
             p_gf.SetFromTrueDofs(*p_W);
@@ -1422,6 +1434,7 @@ int main(int argc, char *argv[])
                 pwsnap_CAROM->write(dmd_filename.str());
             }
         }
+        #endif
     }  // timestep loop
 
     solveTimer.Stop();
@@ -1497,9 +1510,10 @@ int main(int argc, char *argv[])
     delete romop;
 
     delete p_W;
-
+    #ifdef MFEM_USE_GSLIB
     delete pws;
     delete pwsnap_CAROM;
+    #endif
 
     totalTimer.Stop();
     if (myid == 0) cout << "Elapsed time for entire simulation " <<

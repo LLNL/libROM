@@ -8,6 +8,8 @@
  *
  *****************************************************************************/
 
+
+#ifdef MFEM_USE_GSLIB
 #ifndef POINTWISE_SNAPSHOT
 #define POINTWISE_SNAPSHOT
 
@@ -44,3 +46,4 @@ private:
 }
 
 #endif // POINTWISE_SNAPSHOT
+#endif // MFEM_USE_GSLIB
