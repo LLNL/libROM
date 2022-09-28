@@ -33,7 +33,7 @@ typedef struct
 
 /**
  * @brief The function to use as an MPI_Op in the reduction to determine the row
- *         and processor owning the row of the absolute maximum of a basis vector.
+ *        and processor owning the row of the absolute maximum of a basis vector.
  */
 void RowInfoMax(RowInfo* a, RowInfo* b, int* len, MPI_Datatype* type);
 

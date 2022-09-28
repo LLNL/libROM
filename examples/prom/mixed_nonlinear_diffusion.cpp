@@ -1704,42 +1704,6 @@ NonlinearDiffusionOperator::~NonlinearDiffusionOperator()
     delete J_gmres;
 }
 
-// TODO: this should be in the library
-void Compute_CtAB(const HypreParMatrix* A,
-                  const CAROM::Matrix& B,  // Distributed matrix.
-                  const CAROM::Matrix& C,  // Distributed matrix.
-                  CAROM::Matrix*
-                  CtAB)     // Non-distributed (local) matrix, computed identically and redundantly on every process.
-{
-    MFEM_VERIFY(B.distributed() && C.distributed() && !CtAB->distributed(), "");
-
-    int num_procs;
-    MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
-
-    const int num_rows = B.numRows();
-    const int num_cols = B.numColumns();
-    const int num_rows_A = A->GetNumRows();
-
-    MFEM_VERIFY(C.numRows() == num_rows_A, "");
-
-    Vector Bvec(num_rows);
-    Vector ABvec(num_rows_A);
-
-    CAROM::Matrix AB(num_rows_A, num_cols, true);
-
-    for (int i = 0; i < num_cols; ++i) {
-        for (int j = 0; j < num_rows; ++j) {
-            Bvec[j] = B(j, i);
-        }
-        A->Mult(Bvec, ABvec);
-        for (int j = 0; j < num_rows_A; ++j) {
-            AB(j, i) = ABvec[j];
-        }
-    }
-
-    C.transposeMult(AB, CtAB);
-}
-
 RomOperator::RomOperator(NonlinearDiffusionOperator *fom_,
                          NonlinearDiffusionOperator *fomSp_, const int rrdim_, const int rwdim_,
                          const int nldim_, CAROM::SampleMeshManager *smm_,
@@ -1790,8 +1754,8 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_,
 
     BR = new CAROM::Matrix(rwdim, rrdim, false);
     CR = new CAROM::Matrix(rwdim, rwdim, false);
-    Compute_CtAB(fom->Bmat, V_R, V_W, BR);
-    Compute_CtAB(fom->Cmat, V_W, V_W, CR);
+    ComputeCtAB(*fom->Bmat, V_R, V_W, *BR);
+    ComputeCtAB(*fom->Cmat, V_W, V_W, *CR);
 
     // The ROM residual is
     // [ V_{R,s}^{-1} M(a(Pst V_W p)) Pst V_R v + V_R^t B^T V_W p ]
@@ -1868,7 +1832,7 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_,
     }
 
     if (hyperreduce_source && !eqp)
-        Compute_CtAB(fom->Cmat, *S, V_W, &VTCS_W);
+        ComputeCtAB(*fom->Cmat, *S, V_W, VTCS_W);
 
     if (eqp)
     {

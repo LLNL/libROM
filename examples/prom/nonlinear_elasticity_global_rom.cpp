@@ -90,6 +90,7 @@
 #include "hyperreduction/GNAT.h"
 #include "hyperreduction/S_OPT.h"
 #include "mfem/SampleMesh.hpp"
+#include "mfem/Utilities.hpp"
 
 #include <memory>
 #include <cmath>
@@ -204,9 +205,6 @@ public:
     virtual void Mult(const Vector& y, Vector& dy_dt) const;
     void Mult_Hyperreduced(const Vector& y, Vector& dy_dt) const;
     void Mult_FullOrder(const Vector& y, Vector& dy_dt) const;
-
-    void Compute_CtAB(const HypreParMatrix* A, const CAROM::Matrix& B,
-                      const CAROM::Matrix& C, CAROM::Matrix* CtAB);
 
     CAROM::Matrix V_v, V_x, V_vTU_H;
     const Vector* x0;
@@ -1536,14 +1534,14 @@ RomOperator::RomOperator(HyperelasticOperator* fom_,
     M_hat_inv = new CAROM::Matrix(rvdim, rvdim, false);
 
     // Create S_hat
-    Compute_CtAB(&(fom->Smat), V_v, V_v, S_hat);
+    ComputeCtAB(fom->Smat, V_v, V_v, *S_hat);
 
     // Apply S_hat to the initial velocity and store
     fom->Smat.Mult(v0_fom, *S_hat_v0_temp);
     V_v.transposeMult(*S_hat_v0_temp_librom, S_hat_v0);
 
     // Create M_hat
-    Compute_CtAB(fom->Mmat, V_v, V_v, M_hat);
+    ComputeCtAB(*fom->Mmat, V_v, V_v, *M_hat);
 
     // Invert M_hat and store
     M_hat->inverse(*M_hat_inv);
@@ -1714,39 +1712,4 @@ void RomOperator::Mult(const Vector& vx, Vector& dvx_dt) const
         Mult_Hyperreduced(vx, dvx_dt);
     else
         Mult_FullOrder(vx, dvx_dt);
-}
-
-void RomOperator::Compute_CtAB(const HypreParMatrix* A,
-                               const CAROM::Matrix& B,  // Distributed matrix.
-                               const CAROM::Matrix& C,  // Distributed matrix.
-                               CAROM::Matrix*
-                               CtAB)     // Non-distributed (local) matrix, computed identically and redundantly on every process.
-{
-    MFEM_VERIFY(B.distributed() && C.distributed() && !CtAB->distributed(), "");
-
-    int num_procs;
-    MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
-
-    const int num_rows = B.numRows();
-    const int num_cols = B.numColumns();
-    const int num_rows_A = A->GetNumRows();
-
-    MFEM_VERIFY(C.numRows() == num_rows_A, "");
-
-    Vector Bvec(num_rows);
-    Vector ABvec(num_rows_A);
-
-    CAROM::Matrix AB(num_rows_A, num_cols, true);
-
-    for (int i = 0; i < num_cols; ++i) {
-        for (int j = 0; j < num_rows; ++j) {
-            Bvec[j] = B(j, i);
-        }
-        A->Mult(Bvec, ABvec);
-        for (int j = 0; j < num_rows_A; ++j) {
-            AB(j, i) = ABvec[j];
-        }
-    }
-
-    C.transposeMult(AB, CtAB);
 }
