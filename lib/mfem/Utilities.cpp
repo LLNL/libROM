@@ -20,9 +20,6 @@ void ComputeCtAB(const HypreParMatrix& A,
     MFEM_VERIFY(B.distributed() && C.distributed() && !CtAB.distributed(),
                 "In ComputeCtAB, B and C must be distributed, but not CtAB.");
 
-    int num_procs;
-    MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
-
     const int num_rows = B.numRows();
     const int num_cols = B.numColumns();
     const int num_rows_A = A.GetNumRows();
@@ -55,18 +52,14 @@ void ComputeCtAB_vec(const HypreParMatrix& A,
     MFEM_VERIFY(C.distributed() && !CtAB_vec.distributed(),
                 "In ComputeCtAB_vec, C must be distributed, but not CtAB_vec");
 
-    int num_procs;
-    MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
-
     MFEM_VERIFY(C.numRows() == A.GetNumRows(), "");
     MFEM_VERIFY(B.GlobalSize() == A.GetGlobalNumRows(), "");
 
     HypreParVector* AB = new HypreParVector(B);
     A.Mult(B, *AB);
 
-    mfem::Vector b_vec = *AB->GlobalVector();
-    CAROM::Vector b_carom(b_vec.GetData(), b_vec.Size(), true);
-    C.transposeMult(b_carom, CtAB_vec);
+    CAROM::Vector AB_carom(AB->GetData(), AB->Size(), true);
+    C.transposeMult(AB_carom, CtAB_vec);
 }
 
 } // end namespace CAROM
