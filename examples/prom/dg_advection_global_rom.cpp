@@ -14,6 +14,7 @@
 //
 // For ROM (reproductive case):
 //    dg_advection_global_rom -offline
+//    dg_advection_global_rom -merge -ns 1
 //    dg_advection_global_rom -online
 //
 // For ROM (global rom):
@@ -22,6 +23,8 @@
 //                dg_advection_global_rom -offline -ff 1.2 -id 2
 //
 // Merge phase:   dg_advection_global_rom -merge -ns 3
+//
+// FOM solution:  dg_advection_global_rom -fom -ff 1.15
 //
 // Online phase:  dg_advection_global_rom -online -ff 1.15
 //
