@@ -15,6 +15,8 @@ BUILD_TYPE="Optimized"
 USE_MFEM="Off"
 UPDATE_LIBS=false
 USE_GSLIB="Off"
+unset MFEM_USE_GSLIB
+
 
 # Get options
 while getopts "ah:dh:gh:mh:t:uh" o;
@@ -28,6 +30,7 @@ do
             ;;
         g)
             USE_GSLIB="On"
+            MFEM_USE_GSLIB=1
             ;;
         m)
             USE_MFEM="On"
@@ -57,6 +60,7 @@ if [[ $USE_GSLIB == "On" ]] && [[ $USE_MFEM == "Off" ]]; then
 	exit 1
 fi
 export USE_GSLIB
+export MFEM_USE_GSLIB
 
 REPO_PREFIX=$(git rev-parse --show-toplevel)
 

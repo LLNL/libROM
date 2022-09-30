@@ -688,6 +688,7 @@ int main(int argc, char *argv[])
         pmesh->UniformRefinement();
     }
     #ifndef MFEM_USE_GSLIB
+    #warning No MFEM Use Gslib in mixed_non_linear_diffusion
     if(pointwiseSnapshots){
         cout << "Aborting gslib" << endl;
         MFEM_ABORT("Pointwise snapshots require building with gslib");
@@ -695,6 +696,7 @@ int main(int argc, char *argv[])
     #endif
 
     #ifdef MFEM_USE_GSLIB
+    #warning MFEM GSLIB defined in mixed_non_linear diffusion
     cout << "MFEM_USE_GSLIB enabled" << endl;
     CAROM::PointwiseSnapshot *pws = nullptr;
     Vector pwsnap;

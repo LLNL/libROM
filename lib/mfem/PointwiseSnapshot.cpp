@@ -1,5 +1,9 @@
+#ifndef MFEM_USE_GSLIB
+#warning Ouch GSLIB flag not set in PointwiseSnapshot.cpp 
+#define MFEM_USE_GSLIB
+#endif
 #ifdef MFEM_USE_GSLIB
-
+#warning MFEM_USE_GSLIB defined in Pointwisesnapshot cpp!
 #include "PointwiseSnapshot.hpp"
 
 

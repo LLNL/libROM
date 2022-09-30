@@ -10,11 +10,12 @@
 
 
 #ifdef MFEM_USE_GSLIB
+#warning MFEM USe GSLIB in PontwiseSnapshot
 #ifndef POINTWISE_SNAPSHOT
 #define POINTWISE_SNAPSHOT
 
 #include "mfem.hpp"
-//#include "gslib.hpp"
+// #include "gslib.hpp"
 
 using namespace mfem;
 using namespace std;
