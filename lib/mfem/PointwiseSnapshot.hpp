@@ -16,7 +16,7 @@
 
 using namespace mfem;
 using namespace std;
-
+#ifdef MFEM_USE_GSLIB
 
 namespace CAROM {
 
@@ -42,5 +42,6 @@ private:
 };
 
 }
+#endif // MFEM_USE_GSLIB
 
 #endif // POINTWISE_SNAPSHOT

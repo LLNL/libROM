@@ -14,9 +14,11 @@ ARDRA=false
 BUILD_TYPE="Optimized"
 USE_MFEM="Off"
 UPDATE_LIBS=false
+MFEM_USE_GSLIB="Off"
+
 
 # Get options
-while getopts "ah:dh:mh:t:uh" o;
+while getopts "ah:dh:gh:mh:t:uh" o;
 do
     case "${o}" in
         a)
@@ -24,6 +26,9 @@ do
             ;;
         d)
             BUILD_TYPE="Debug"
+            ;;
+        g)
+            MFEM_USE_GSLIB="On"
             ;;
         m)
             USE_MFEM="On"
@@ -44,9 +49,15 @@ shift $((OPTIND-1))
 
 # If both include and exclude are set, fail
 if [[ -n "${TOOLCHAIN_FILE}" ]] && [[ $ARDRA == "true" ]]; then
-    echo "Choose only Ardra or add your own toolchain file, not both."
-		exit 1
+     echo "Choose only Ardra or add your own toolchain file, not both."
+	 exit 1
 fi
+
+if [[ $MFEM_USE_GSLIB == "On" ]] && [[ $USE_MFEM == "Off" ]]; then
+    echo "gslib can only be used with mfem"
+	exit 1
+fi
+export MFEM_USE_GSLIB
 
 REPO_PREFIX=$(git rev-parse --show-toplevel)
 
@@ -82,7 +93,8 @@ if [ "$(uname)" == "Darwin" ]; then
   brew list cmake > /dev/null || brew install cmake
   cmake ${REPO_PREFIX} \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-        -DUSE_MFEM=${USE_MFEM}
+        -DUSE_MFEM=${USE_MFEM} \
+        -DMFEM_USE_GSLIB=${MFEM_USE_GSLIB}
   make
 elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
   if [[ $ARDRA == "true" ]]; then
@@ -93,7 +105,8 @@ elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
   cmake ${REPO_PREFIX} \
         -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-        -DUSE_MFEM=${USE_MFEM}
+        -DUSE_MFEM=${USE_MFEM} \
+        -DMFEM_USE_GSLIB=${MFEM_USE_GSLIB}
   make -j8
 fi
 popd
