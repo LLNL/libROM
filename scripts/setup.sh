@@ -37,7 +37,6 @@ fi
 
 # Install GSLIB
 cd $LIB_DIR
-echo "MFEM_USE_GSLIB = $MFEM_USE_GSLIB"
 if [ $MFEM_USE_GSLIB == "On" ]; then
    MG=YES
 else

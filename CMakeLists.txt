@@ -167,9 +167,6 @@ if (USE_MFEM)
     list(GET examples ${val} name)
     list(GET example_directories ${val} example_dir)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/examples/${example_dir})
-    if(MFEM_USE_GSLIB)
-      add_compile_definitions(MFEM_USE_GSLIB)
-    endif()
     add_executable(${name} examples/${example_dir}/${name}.cpp)
 
     target_link_libraries(${name}

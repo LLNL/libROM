@@ -79,14 +79,7 @@
 //               Pointwise snapshots for DMD input
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -pwsnap -pwx 101 -pwy 101
 
-#ifdef MFEM_USE_GSLIB
-#warning MFEM_USE_GSLIB is set in mixed_non_linear_diffusion
-#else
-#warning MFEM_USE_GSLIB is NOT set in mixed_non_linear_diffusion
-#endif
-
 #include "mfem.hpp"
-
 #include <fstream>
 #include <iostream>
 #include <algorithm>
