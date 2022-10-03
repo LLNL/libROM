@@ -687,12 +687,13 @@ int main(int argc, char *argv[])
         pmesh->UniformRefinement();
     }
 
-    #ifndef MFEM_USE_GSLIB
+#ifndef MFEM_USE_GSLIB
     if (pointwiseSnapshots) {
         cout << "To use pointwise snapshots, compile with -mg option" << endl;
-        MFEM_ABORT("Pointwise snapshots aren't available, since the compilation is done without the -mg option");
+        MFEM_ABORT("Pointwise snapshots aren't available, since the "
+                   "compilation is done without the -mg option");
     }
-    #else
+#else
     CAROM::PointwiseSnapshot *pws = nullptr;
     Vector pwsnap;
     CAROM::Vector *pwsnap_CAROM = nullptr;
@@ -713,7 +714,7 @@ int main(int argc, char *argv[])
             pwsnap_CAROM = new CAROM::Vector(pwsnap.GetData(), pwsnap.Size(),
                                              true, false);
     }
-    #endif
+#endif
 
     // 7. Define the mixed finite element spaces.
 
@@ -1228,7 +1229,7 @@ int main(int argc, char *argv[])
 
     oper.newtonFailure = false;
 
-    #ifdef MFEM_USE_GSLIB
+#ifdef MFEM_USE_GSLIB
     if (pointwiseSnapshots)
     {
         pws->GetSnapshot(p_gf, pwsnap);
@@ -1244,7 +1245,7 @@ int main(int argc, char *argv[])
             pwsnap_CAROM->write(dmd_filename.str());
         }
     }
-    #endif
+#endif
 
     solveTimer.Start();
 
@@ -1413,7 +1414,7 @@ int main(int argc, char *argv[])
                 visit_dc->Save();
             }
         }
-        #ifdef MFEM_USE_GSLIB
+#ifdef MFEM_USE_GSLIB
         if (pointwiseSnapshots)
         {
             p_gf.SetFromTrueDofs(*p_W);
@@ -1430,7 +1431,7 @@ int main(int argc, char *argv[])
                 pwsnap_CAROM->write(dmd_filename.str());
             }
         }
-        #endif
+#endif
     }  // timestep loop
 
     solveTimer.Stop();
@@ -1507,10 +1508,10 @@ int main(int argc, char *argv[])
 
     delete p_W;
 
-    #ifdef MFEM_USE_GSLIB
+#ifdef MFEM_USE_GSLIB
     delete pws;
     delete pwsnap_CAROM;
-    #endif
+#endif
 
     totalTimer.Stop();
     if (myid == 0) cout << "Elapsed time for entire simulation " <<
