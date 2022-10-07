@@ -141,7 +141,8 @@ if (USE_MFEM)
     dg_euler
     local_tw_csv
     local_dw_csv
-    parametric_tw_csv)
+    parametric_tw_csv
+    parametric_dw_csv)
   set(example_directories
     prom
     prom
@@ -149,6 +150,7 @@ if (USE_MFEM)
     prom
     prom
     prom
+    dmd
     dmd
     dmd
     dmd
