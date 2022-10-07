@@ -643,8 +643,6 @@ int main(int argc, char *argv[])
         int num_tests = 0;
         vector<double> prediction_time, prediction_error;
 
-        dmd_prediction_timer.Start();
-
         for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
         {
             string par_dir = par_dir_list[idx_dataset];
@@ -709,8 +707,12 @@ int main(int argc, char *argv[])
                         cout << "Predicting DMD solution at t = " << t_final << " using DMD model #" <<
                              curr_window << endl;
                     }
+
+                    dmd_prediction_timer.Start();
                     CAROM::Vector* result = dmd[idx_dataset][curr_window]->predict(
                                                 t_final - offset_indicator * tvec[snap_bound[0]]);
+                    dmd_prediction_timer.Stop();
+
                     if (myid == 0)
                     {
                         csv_db.putDoubleArray(outputPath + "/" + par_dir + "_final_time_prediction.csv",
@@ -731,8 +733,11 @@ int main(int argc, char *argv[])
                         cout << "Predicting DMD solution #" << idx_snap << " at t = " << tval <<
                              " using DMD model #" << curr_window << endl;
                     }
+
+                    dmd_prediction_timer.Start();
                     CAROM::Vector* result = dmd[idx_dataset][curr_window]->predict(
                                                 tval - offset_indicator * tvec[snap_bound[0]]);
+                    dmd_prediction_timer.Stop();
 
                     // Calculate the relative error between the DMD final solution and the true solution.
                     Vector dmd_solution(result->getData(), result->dim());
@@ -782,7 +787,6 @@ int main(int argc, char *argv[])
             num_tests = (t_final > 0.0) ? num_tests + 1 : num_tests + num_snap;
         }
 
-        dmd_prediction_timer.Stop();
         CAROM_VERIFY(num_tests > 0);
 
         if (myid == 0)
