@@ -375,38 +375,35 @@ int main(int argc, char *argv[])
 
     StopWatch dmd_training_timer, dmd_prediction_timer;
     vector<vector<CAROM::DMD*>> dmd;
-    vector<CAROM::DMD*> dmd_w;
+    vector<CAROM::DMD*> dmd_curr_par;
     double* sample = new double[dim];
 
     if (offline)
     {
         dmd_training_timer.Start();
 
-        for (int window = 0; window < numWindows; ++window)
+        for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
         {
-            dmd_w.assign(npar, nullptr);
-            for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
+            dmd_curr_par.assign(npar, nullptr);
+            for (int window = 0; window < numWindows; ++window)
             {
                 if (ddt > 0.0)
                 {
-                    dmd_w[idx_dataset] = new CAROM::AdaptiveDMD(dim, ddt, string(rbf),
+                    dmd_curr_par[window] = new CAROM::AdaptiveDMD(dim, ddt, string(rbf),
                             string(interp_method), admd_closest_rbf_val);
                 }
                 else if (dtc > 0.0)
                 {
-                    dmd_w[idx_dataset] = new CAROM::DMD(dim, dtc);
+                    dmd_curr_par[window] = new CAROM::DMD(dim, dtc);
                 }
                 else
                 {
-                    dmd_w[idx_dataset] = new CAROM::NonuniformDMD(dim);
+                    dmd_curr_par[window] = new CAROM::NonuniformDMD(dim);
                 }
             }
-            dmd.push_back(dmd_w);
-            dmd_w.clear();
-        }
+            dmd.push_back(dmd_curr_par);
+            dmd_curr_par.clear();
 
-        for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
-        {
             string par_dir = par_dir_list[idx_dataset];
             if (myid == 0)
             {
@@ -450,11 +447,11 @@ int main(int argc, char *argv[])
                 string data_filename = string(data_dir) + "/" + par_dir + "/" + snap + "/" +
                                        variable + ".csv"; // path to VAR_NAME.csv
                 csv_db.getDoubleArray(data_filename, sample, nelements, idx_state);
-                dmd[curr_window][idx_dataset]->takeSample(sample,
+                dmd[idx_dataset][curr_window]->takeSample(sample,
                         tval - offset_indicator * tvec[snap_bound[0]]);
                 if (overlap_count > 0)
                 {
-                    dmd[curr_window-1][idx_dataset]->takeSample(sample,
+                    dmd[idx_dataset][curr_window-1]->takeSample(sample,
                             tval - offset_indicator * tvec[snap_bound[0]]);
                     overlap_count -= 1;
                 }
@@ -466,7 +463,7 @@ int main(int argc, char *argv[])
                 {
                     overlap_count = windowOverlapSamples;
                     curr_window += 1;
-                    dmd[curr_window][idx_dataset]->takeSample(sample,
+                    dmd[idx_dataset][curr_window]->takeSample(sample,
                             tval - offset_indicator * tvec[snap_bound[0]]);
                 }
             }
@@ -485,7 +482,7 @@ int main(int argc, char *argv[])
                     {
                         cout << "Creating DMD model #" << window << " with rdim: " << rdim << endl;
                     }
-                    dmd[window][idx_dataset]->train(rdim);
+                    dmd[idx_dataset][window]->train(rdim);
                 }
                 else if (ef != -1)
                 {
@@ -494,7 +491,7 @@ int main(int argc, char *argv[])
                         cout << "Creating DMD model #" << window << " with energy fraction: " << ef <<
                              endl;
                     }
-                    dmd[window][idx_dataset]->train(ef);
+                    dmd[idx_dataset][window]->train(ef);
                 }
                 if (window > 0 && predict)
                 {
@@ -503,16 +500,16 @@ int main(int argc, char *argv[])
                         cout << "Projecting initial condition at t = " << indicator_val[window] +
                              offset_indicator * tvec[snap_bound[0]] << " for DMD model #" << window << endl;
                     }
-                    CAROM::Vector* init_cond = dmd[window-1][idx_dataset]->predict(
+                    CAROM::Vector* init_cond = dmd[idx_dataset][window-1]->predict(
                                                    indicator_val[window]);
-                    dmd[window][idx_dataset]->projectInitialCondition(init_cond);
+                    dmd[idx_dataset][window]->projectInitialCondition(init_cond);
                     delete init_cond;
                 }
-                dmd[window][idx_dataset]->save(outputPath + "/window" + to_string(
+                dmd[idx_dataset][window]->save(outputPath + "/window" + to_string(
                                                    window) + "_par" + to_string(idx_dataset));
                 if (myid == 0)
                 {
-                    dmd[window][idx_dataset]->summary(outputPath + "/window" + to_string(
+                    dmd[idx_dataset][window]->summary(outputPath + "/window" + to_string(
                                                           window) + "_par" + to_string(idx_dataset));
                 }
             } // escape for-loop over window
@@ -535,8 +532,8 @@ int main(int argc, char *argv[])
 
         csv_db.getStringVector(string(list_dir) + "/" + test_list + ".csv",
                                testing_par_list, false);
-        dmd_w.assign(npar, nullptr);
-        dmd.assign(numWindows, dmd_w);
+        dmd_curr_par.assign(npar, nullptr);
+        dmd.assign(numWindows, dmd_curr_par);
 
         int num_tests = 0;
         vector<double> prediction_time, prediction_error;
@@ -611,7 +608,7 @@ int main(int argc, char *argv[])
                 {
                     cout << "Interpolating DMD model #" << window << endl;
                 }
-                CAROM::getParametricDMD(dmd[window][idx_dataset], par_vectors, dmd_paths,
+                CAROM::getParametricDMD(dmd[idx_dataset][window], par_vectors, dmd_paths,
                                         curr_par,
                                         string(rbf), string(interp_method), pdmd_closest_rbf_val);
 
@@ -631,9 +628,9 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
-                    init_cond = dmd[window-1][idx_dataset]->predict(indicator_val[window]);
+                    init_cond = dmd[idx_dataset][window-1]->predict(indicator_val[window]);
                 }
-                dmd[window][idx_dataset]->projectInitialCondition(init_cond);
+                dmd[idx_dataset][window]->projectInitialCondition(init_cond);
                 delete init_cond;
             } // escape for-loop over window
 
@@ -712,7 +709,7 @@ int main(int argc, char *argv[])
                         cout << "Predicting DMD solution at t = " << t_final << " using DMD model #" <<
                              curr_window << endl;
                     }
-                    CAROM::Vector* result = dmd[curr_window][idx_dataset]->predict(
+                    CAROM::Vector* result = dmd[idx_dataset][curr_window]->predict(
                                                 t_final - offset_indicator * tvec[snap_bound[0]]);
                     if (myid == 0)
                     {
@@ -734,7 +731,7 @@ int main(int argc, char *argv[])
                         cout << "Predicting DMD solution #" << idx_snap << " at t = " << tval <<
                              " using DMD model #" << curr_window << endl;
                     }
-                    CAROM::Vector* result = dmd[curr_window][idx_dataset]->predict(
+                    CAROM::Vector* result = dmd[idx_dataset][curr_window]->predict(
                                                 tval - offset_indicator * tvec[snap_bound[0]]);
 
                     // Calculate the relative error between the DMD final solution and the true solution.
@@ -801,11 +798,11 @@ int main(int argc, char *argv[])
 
     delete[] sample;
     delete curr_par;
-    for (int window = 0; window < numWindows; ++window)
+    for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
     {
-        for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
+        for (int window = 0; window < numWindows; ++window)
         {
-            delete dmd[window][idx_dataset];
+            delete dmd[idx_dataset][window];
         }
     }
 
