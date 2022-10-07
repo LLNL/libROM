@@ -373,7 +373,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    StopWatch dmd_training_timer, dmd_prediction_timer;
+    StopWatch dmd_training_timer, dmd_preprocess_timer, dmd_prediction_timer;
     vector<vector<CAROM::DMD*>> dmd;
     vector<CAROM::DMD*> dmd_curr_par;
     double* sample = new double[dim];
@@ -523,7 +523,7 @@ int main(int argc, char *argv[])
     {
         par_dir_list.clear();
 
-        dmd_training_timer.Start();
+        dmd_preprocess_timer.Start();
         npar = csv_db.getLineCount(string(list_dir) + "/" + test_list + ".csv");
         if (myid == 0)
         {
@@ -635,7 +635,7 @@ int main(int argc, char *argv[])
             } // escape for-loop over window
 
         } // escape for-loop over idx_dataset
-        dmd_training_timer.Stop();
+        dmd_preprocess_timer.Stop();
     } // escape if-statement of online
 
     if (online || predict)
@@ -789,6 +789,8 @@ int main(int argc, char *argv[])
         {
             printf("Elapsed time for training DMD: %e second\n",
                    dmd_training_timer.RealTime());
+            printf("Elapsed time for preprocessing DMD: %e second\n",
+                   dmd_preprocess_timer.RealTime());
             printf("Total elapsed time for predicting DMD: %e second\n",
                    dmd_prediction_timer.RealTime());
             printf("Average elapsed time for predicting DMD: %e second\n",
