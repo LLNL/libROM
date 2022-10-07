@@ -384,7 +384,7 @@ int main(int argc, char *argv[])
 
         for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
         {
-            dmd_curr_par.assign(npar, nullptr);
+            dmd_curr_par.assign(numWindows, nullptr);
             for (int window = 0; window < numWindows; ++window)
             {
                 if (ddt > 0.0)
