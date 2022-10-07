@@ -91,7 +91,6 @@ int main(int argc, char *argv[])
     const char *interp_method = "LS";
     double admd_closest_rbf_val = 0.9;
     double pdmd_closest_rbf_val = 0.9;
-    int dw_offset_option = 0;
     double ef = 0.9999;
     int rdim = -1;
     const char *list_dir = "hc_list";
@@ -103,6 +102,7 @@ int main(int argc, char *argv[])
     const char *spatial_idx_list = "spatial_idx";
     const char *indicator_idx_list = "";
     const char *indicator_val_list = "indicator_val";
+    const char *window_endpoint_option = "right";
     const char *basename = "";
     bool save_csv = false;
 
@@ -133,8 +133,6 @@ int main(int argc, char *argv[])
                    "Adaptive DMD closest RBF value.");
     args.AddOption(&pdmd_closest_rbf_val, "-pcrv", "--pdmd-crv",
                    "Parametric DMD closest RBF value.");
-    args.AddOption(&dw_offset_option, "-dw-offset", "--dw-offset",
-                   "Determine time offset using previous state, current state or bisection.");
     args.AddOption(&ef, "-ef", "--energy-fraction",
                    "Energy fraction for DMD.");
     args.AddOption(&rdim, "-rdim", "--rdim",
@@ -157,6 +155,8 @@ int main(int argc, char *argv[])
                    "Name of the file specifying indicator indices.");
     args.AddOption(&indicator_val_list, "-idc-val", "--indicator-value",
                    "Name of the file specifying indicator values.");
+    args.AddOption(&window_endpoint_option, "-wep", "--wep",
+                   "Determine window endpoint using previous state, current state or bisection.");
     args.AddOption(&basename, "-o", "--outputfile-name",
                    "Name of the sub-folder to dump files within the run directory.");
     args.AddOption(&save_csv, "-csv", "--csv", "-no-csv", "--no-csv",
@@ -772,20 +772,13 @@ int main(int argc, char *argv[])
                         {
                             cout << "Indicator state index: " << indicator_idx[curr_window+1] << endl;
                         }
-    
-                        if (dw_offset_option == -1)
-                        {
-                            t_offset = tvec[idx_snap-1];
-                        }
-                        else if (dw_offset_option == 1)
-                        {
-                            t_offset = tvec[idx_snap];
-                        }
-                        else
+
+                        if (string(window_endpoint_option) == "bisection")
                         {
                             double t_left = tvec[idx_snap-1];
                             double t_right = tval;
-                            for (int k = 0; k < 10; ++k)
+
+                            for (int k = 0; k < 5; ++k)
                             {
                                 t_offset = (t_left + t_right) / 2.0;
                                 init_cond = dmd[idx_dataset][curr_window]->predict(t_offset);
@@ -804,6 +797,20 @@ int main(int argc, char *argv[])
                                 delete init_cond;
                             }
                             t_offset = (t_left + t_right) / 2.0;
+                        }
+                        else if (string(window_endpoint_option) == "left")
+                        {
+                            t_offset = tvec[idx_snap-1];
+                        }
+                        else if (string(window_endpoint_option) == "right")
+                        {
+                            t_offset = tvec[idx_snap];
+                        }
+                        else
+                        {
+                            cout << "Invalid window endpoint option." << endl;
+                            cout << "Using current time as window endpoint." << endl;
+                            t_offset = tvec[idx_snap];
                         }
                     }
 
