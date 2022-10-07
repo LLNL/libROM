@@ -414,10 +414,8 @@ int main(int argc, char *argv[])
             if (min_idx_snap == -1) 
             {
                 curr_indicator_val = (indicator_idx.size() == 0) ? tval : sample[indicator_idx[0]];
-                cout << "A:" << indicator_val.size() << endl;
                 if (indicator_val.size() > 0)
                 {
-                    cout << "B:" << indicator_val[0] << endl;
                     if (curr_indicator_val >= indicator_val[0])
                     {
                         min_idx_snap = idx_snap;

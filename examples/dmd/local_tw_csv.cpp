@@ -46,6 +46,7 @@
 #include "mfem.hpp"
 #include "algo/DMD.h"
 #include "algo/AdaptiveDMD.h"
+#include "algo/NonuniformDMD.h"
 #include "linalg/Vector.h"
 #include "linalg/Matrix.h"
 #include "utils/HDFDatabase.h"
@@ -155,7 +156,7 @@ int main(int argc, char *argv[])
         args.PrintOptions(cout);
     }
 
-    CAROM_VERIFY((dtc > 0.0 || ddt > 0.0) && !(dtc > 0.0 && ddt > 0.0));
+    CAROM_VERIFY(!(dtc > 0.0 && ddt > 0.0));
 
     if (t_final > 0.0)
     {
@@ -276,21 +277,25 @@ int main(int argc, char *argv[])
 
     vector<CAROM::DMD*> dmd;
     dmd.assign(numWindows, nullptr);
-    for (int window = 0; window < numWindows; ++window)
+    if (train)
     {
-        if (train)
+        if (ddt > 0.0)
         {
-            if (ddt > 0.0)
-            {
-                dmd[window] = new CAROM::AdaptiveDMD(dim, ddt, string(rbf),
-                                                     string(interp_method), admd_closest_rbf_val);
-            }
-            else
-            {
-                dmd[window] = new CAROM::DMD(dim, dtc);
-            }
+            dmd[0] = new CAROM::AdaptiveDMD(dim, ddt, string(rbf),
+                                                 string(interp_method), admd_closest_rbf_val);
+        }
+        else if (dtc > 0.0)
+        {
+            dmd[0] = new CAROM::DMD(dim, dtc);
         }
         else
+        {
+            dmd[0] = new CAROM::NonuniformDMD(dim);
+        }
+    }
+    else
+    {
+        for (int window = 0; window < numWindows; ++window)
         {
             if (myid == 0)
             {

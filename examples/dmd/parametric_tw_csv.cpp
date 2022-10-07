@@ -46,6 +46,7 @@
 #include "mfem.hpp"
 #include "algo/DMD.h"
 #include "algo/AdaptiveDMD.h"
+#include "algo/NonuniformDMD.h"
 #include "linalg/Vector.h"
 #include "linalg/Matrix.h"
 #include "utils/HDFDatabase.h"
@@ -169,7 +170,7 @@ int main(int argc, char *argv[])
     }
 
     CAROM_VERIFY(!(offline && online) && (offline || online));
-    CAROM_VERIFY((dtc > 0.0 || ddt > 0.0) && !(dtc > 0.0 && ddt > 0.0));
+    CAROM_VERIFY(!(dtc > 0.0 && ddt > 0.0));
     double dt_est = max(ddt, dtc);
 
     if (t_final > 0.0)
@@ -391,9 +392,13 @@ int main(int argc, char *argv[])
                     dmd_w[idx_dataset] = new CAROM::AdaptiveDMD(dim, ddt, string(rbf),
                             string(interp_method), admd_closest_rbf_val);
                 }
-                else
+                else if (dtc > 0.0)
                 {
                     dmd_w[idx_dataset] = new CAROM::DMD(dim, dtc);
+                }
+                else
+                {
+                    dmd_w[idx_dataset] = new CAROM::NonuniformDMD(dim);
                 }
             }
             dmd.push_back(dmd_w);
