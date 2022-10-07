@@ -532,7 +532,7 @@ int main(int argc, char *argv[])
 
         csv_db.getStringVector(string(list_dir) + "/" + test_list + ".csv",
                                testing_par_list, false);
-        dmd_curr_par.assign(npar, nullptr);
+        dmd_curr_par.assign(numWindows, nullptr);
         dmd.assign(numWindows, dmd_curr_par);
 
         int num_tests = 0;
