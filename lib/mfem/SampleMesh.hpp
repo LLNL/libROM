@@ -151,10 +151,6 @@ public:
      */
     void WriteVariableSampleMap(const string variable, string file_name) const;
 
-    set<int>* GetSampleElements() {
-        return &elems;
-    }
-
     /**
      * @brief Destructor.
     */
@@ -213,8 +209,6 @@ private:
     string filename;  // For visualization output
 
     double elemVisScale;  // Scaling for sample element visualization
-
-    set<int> elems;
 };
 
 /**
