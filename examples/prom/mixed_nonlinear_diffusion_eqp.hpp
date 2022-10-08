@@ -1,13 +1,19 @@
+/******************************************************************************
+ *
+ * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * and other libROM project developers. See the top-level COPYRIGHT
+ * file for details.
+ *
+ * SPDX-License-Identifier: (Apache-2.0 OR MIT)
+ *
+ *****************************************************************************/
+
 // Functions used by mixed_nonlinear_diffusion.cpp with EQP.
+
+#include "mfem/Utilities.hpp"
 
 using namespace mfem;
 using namespace std;
-
-void Compute_CtAB(const HypreParMatrix* A,
-                  const CAROM::Matrix& B,
-                  const CAROM::Matrix& C,
-                  CAROM::Matrix*
-                  CtAB);
 
 // Element matrix assembly, copying element loop from BilinearForm::Assemble(int skip_zeros)
 // and element matrix computation from VectorFEMassIntegrator::AssembleElementMatrix.
@@ -702,7 +708,7 @@ void PreconditionNNLS(ParFiniteElementSpace *fespace,
     HypreParMatrix *Mmat = M.ParallelAssemble();
 
     CAROM::Matrix Mhat(NB, NB, false);
-    Compute_CtAB(Mmat, *B, *B, &Mhat);
+    ComputeCtAB(*Mmat, *B, *B, Mhat);
     Mhat.inverse();
 
     CAROM::Vector PG(NB, false);
