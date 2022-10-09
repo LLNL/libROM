@@ -130,6 +130,17 @@ public:
     void GetSampledValues(const string variable, mfem::Vector const& v,
                           CAROM::Vector & s) const;
 
+
+    /**
+     * @brief Returns a set of indices of local FOM mesh elements corresponding
+     *        to sample elements.
+     *
+     * @return Pointer to a set of local FOM mesh element indices.
+     */
+    set<int>* GetSampleElements() {
+        return &elems;
+    }
+
     /**
      * @brief Writes a variable sample DOF map to file, which can be read by SampleDOFSelector::ReadMapFromFile
      *        in order to use SampleDOFSelector::GetSampledValues when this SampleMeshManager object is not available.
@@ -139,10 +150,6 @@ public:
      * @param[in] file_name Name of the output file.
      */
     void WriteVariableSampleMap(const string variable, string file_name) const;
-
-    set<int>* GetSampleElements() {
-        return &elems;
-    }
 
     /**
      * @brief Destructor.
@@ -239,8 +246,8 @@ public:
                           CAROM::Vector & s) const;
 
     /**
-     * @brief Destructor.
-    */
+       * @brief Destructor.
+      */
     ~SampleDOFSelector()
     { }
 
