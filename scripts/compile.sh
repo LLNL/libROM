@@ -16,6 +16,22 @@ USE_MFEM="Off"
 UPDATE_LIBS=false
 MFEM_USE_GSLIB="Off"
 
+cleanup_dependencies() {
+    pushd .
+    cd "$HOME_DIR"
+    rm ./build/CMakeCache.txt
+    pushd dependencies || exit 1
+    mydirs=(*)
+    for dir in "${mydirs[@]}" ; do
+    if [[ ! $dir =~ "parmetis" ]]; then
+        echo "Deleting $dir"
+        rm -rf $dir
+    fi
+    done
+    popd
+    popd
+}
+
 
 # Get options
 while getopts "ah:dh:gh:mh:t:uh" o;
@@ -47,6 +63,16 @@ do
 done
 shift $((OPTIND-1))
 
+CURR_DIR=$(pwd)
+if [[ -d "dependencies" ]]; then
+    HOME_DIR=CURR_DIR
+elif [[ -f "compile.sh" ]]; then
+    HOME_DIR=..
+else
+    echo "You can only run compile.sh from either the libROM or the scripts directory"
+    exit
+fi
+echo "HOME_DIR = ${HOME_DIR}"
 # If both include and exclude are set, fail
 if [[ -n "${TOOLCHAIN_FILE}" ]] && [[ $ARDRA == "true" ]]; then
      echo "Choose only Ardra or add your own toolchain file, not both."
@@ -56,6 +82,10 @@ fi
 if [[ $MFEM_USE_GSLIB == "On" ]] && [[ $USE_MFEM == "Off" ]]; then
     echo "gslib can only be used with mfem"
 	exit 1
+fi
+
+if [[ $MFEM_USE_GSLIB == "On" ]]; then
+   cleanup_dependencies
 fi
 export MFEM_USE_GSLIB
 
