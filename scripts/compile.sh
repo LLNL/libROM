@@ -63,16 +63,15 @@ do
 done
 shift $((OPTIND-1))
 
-CURR_DIR=$(pwd)
+CURR_DIR=$(pwd) 
 if [[ -d "dependencies" ]]; then
-    HOME_DIR=CURR_DIR
+    HOME_DIR=$CURR_DIR
 elif [[ -f "compile.sh" ]]; then
     HOME_DIR=..
 else
     echo "You can only run compile.sh from either the libROM or the scripts directory"
     exit
 fi
-echo "HOME_DIR = ${HOME_DIR}"
 # If both include and exclude are set, fail
 if [[ -n "${TOOLCHAIN_FILE}" ]] && [[ $ARDRA == "true" ]]; then
      echo "Choose only Ardra or add your own toolchain file, not both."
