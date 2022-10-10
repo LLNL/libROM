@@ -24,6 +24,13 @@ using namespace std;
 
 namespace CAROM {
 
+void SampleVisualization(ParMesh *pmesh, set<int> const& elems,
+                         set<int> const& intElems, set<int> const& faces,
+                         set<int> const& edges, set<int> const& vertices,
+                         string const& filename,
+                         mfem::Vector *elemCount=nullptr,
+                         double elementScaling=1.0);
+
 /**
  * Class SampleMeshManager constructs and manages a sample mesh and finite element spaces on the sample mesh.
  * The spaces defined on the sample mesh are referred to as sample mesh spaces, and they generally contain
@@ -46,7 +53,7 @@ public:
      *                        and the sampled DOFs on the full-order mesh.
      */
     SampleMeshManager(vector<ParFiniteElementSpace*> & fespace_,
-                      string visFileName="");
+                      string visFileName="", double visScale=1.0);
 
     /**
      * @brief Register a variable and set its sampled DOFs.
@@ -123,6 +130,17 @@ public:
     void GetSampledValues(const string variable, mfem::Vector const& v,
                           CAROM::Vector & s) const;
 
+
+    /**
+     * @brief Returns a set of indices of local FOM mesh elements corresponding
+     *        to sample elements.
+     *
+     * @return Pointer to a set of local FOM mesh element indices.
+     */
+    set<int>* GetSampleElements() {
+        return &elems;
+    }
+
     /**
      * @brief Writes a variable sample DOF map to file, which can be read by SampleDOFSelector::ReadMapFromFile
      *        in order to use SampleDOFSelector::GetSampledValues when this SampleMeshManager object is not available.
@@ -187,6 +205,10 @@ private:
     vector<vector<int>> spaceOSall;
 
     string filename;  // For visualization output
+
+    double elemVisScale;  // Scaling for sample element visualization
+
+    set<int> elems;
 };
 
 /**
@@ -224,8 +246,8 @@ public:
                           CAROM::Vector & s) const;
 
     /**
-     * @brief Destructor.
-    */
+       * @brief Destructor.
+      */
     ~SampleDOFSelector()
     { }
 

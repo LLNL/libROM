@@ -83,7 +83,8 @@ public:
      * @param[in] linearity_tol   The tolerance for determining whether a column
                                   of W is linearly independent with W0.
      */
-    virtual void train(double energy_fraction, const Matrix* W0 = NULL, double linearity_tol = 0.0);
+    virtual void train(double energy_fraction, const Matrix* W0 = NULL,
+                       double linearity_tol = 0.0);
 
     /**
      * @param[in] k The number of modes (eigenvalues) to keep after doing SVD.
@@ -168,10 +169,10 @@ protected:
      * @param[in] dim               The full-order state dimension.
      * @param[in] state_offset      The state offset.
      */
-    DMD(int dim, Vector* state_offset = NULL); 
+    DMD(int dim, Vector* state_offset = NULL);
 
     /**
-     * @brief Constructor. Specified from DMD components. 
+     * @brief Constructor. Specified from DMD components.
      *
      * @param[in] eigs d_eigs
      * @param[in] phi_real d_phi_real

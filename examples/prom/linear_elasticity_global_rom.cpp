@@ -1,3 +1,13 @@
+/******************************************************************************
+ *
+ * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * and other libROM project developers. See the top-level COPYRIGHT
+ * file for details.
+ *
+ * SPDX-License-Identifier: (Apache-2.0 OR MIT)
+ *
+ *****************************************************************************/
+
 //               libROM MFEM Example: parametric ROM for linear elasticity problem (adapted from ex2p.cpp)
 //
 // Compile with: ./scripts/compile.sh -m
@@ -17,17 +27,17 @@
 //               operator, solves the reduced order system, and lifts the
 //               solution to the full order space.
 //
-// Offline phase: ./linear_elasticity_global_rom -offline -id 0 -f 0.01
-//                ./linear_elasticity_global_rom -offline -id 1 -f 0.015
-//                ./linear_elasticity_global_rom -offline -id 2 -f 0.02
+// Offline phase: ./linear_elasticity_global_rom -offline -id 0 -nu 0.2
+//                ./linear_elasticity_global_rom -offline -id 1 -nu 0.4
 //
 //
-// Merge phase:   ./linear_elasticity_global_rom -merge -ns 3
+// Merge phase:   ./linear_elasticity_global_rom -merge -ns 2
 //
-// Online phase:  ./linear_elasticity_global_rom -online -id 3 -f 0.012
-// 
 // NB: to evaluate relative error, call this before the online phase:
-//                ./linear_elasticity_global_rom -offline -id 4 -f 0.012
+//                ./linear_elasticity_global_rom -offline -id 2 -nu 0.3
+//
+// Online phase:  ./linear_elasticity_global_rom -online -id 3 -nu 0.3
+//
 
 #include "mfem.hpp"
 #include <fstream>
@@ -432,10 +442,12 @@ int main(int argc, char* argv[])
     }
     if (online)
     {
-        mesh_name << "mesh_f" << ext_force << "_rom." << setfill('0') << setw(6) << myid;
+        mesh_name << "mesh_f" << ext_force << "_rom." << setfill('0')
+                  << setw(6) << myid;
         sol_name << "sol_f" << ext_force << "_rom." << setfill('0') << setw(6) << myid;
 
-        sol_name_fom << "sol_f" << ext_force << "_fom." << setfill('0') << setw(6) << myid;
+        sol_name_fom << "sol_f" << ext_force << "_fom." << setfill('0')
+                     << setw(6) << myid;
     }
 
     GridFunction* nodes = pmesh->GetNodes();
@@ -476,12 +488,12 @@ int main(int argc, char* argv[])
         double tot_diff_norm_x = sqrt(InnerProduct(MPI_COMM_WORLD, diff_x, diff_x));
 
         double tot_x_fom_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
-            x_fom, x_fom));
+                                     x_fom, x_fom));
 
         if (myid == 0)
         {
             cout << "Relative error of ROM for E = " << E << " and nu = " << nu <<
-                " is: " << tot_diff_norm_x / tot_x_fom_norm << endl;
+                 " is: " << tot_diff_norm_x / tot_x_fom_norm << endl;
         }
 
     }

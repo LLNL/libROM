@@ -365,7 +365,8 @@ DMD::constructDMD(const Matrix* f_snapshots,
         std::vector<int> lin_independent_cols_W;
 
         // Copy W0 and orthogonalize.
-        Matrix* d_basis_init = new Matrix(f_snapshots->numRows(), W0->numColumns(), true);
+        Matrix* d_basis_init = new Matrix(f_snapshots->numRows(), W0->numColumns(),
+                                          true);
         for (int i = 0; i < d_basis_init->numRows(); i++)
         {
             for (int j = 0; j < W0->numColumns(); j++)
@@ -378,7 +379,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
         Vector W_col(f_snapshots->numRows(), f_snapshots->distributed());
         Vector l(W0->numColumns(), true);
         Vector W0l(f_snapshots->numRows(), f_snapshots->distributed());
-        // Find which columns of d_basis are linearly independent from W0 
+        // Find which columns of d_basis are linearly independent from W0
         for (int j = 0; j < d_basis->numColumns(); j++)
         {
             // l = W0' * u
@@ -396,7 +397,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
             // reduced order space and subsequent lifting back to the full
             // order space.
             double k = W_col.inner_product(W_col) - 2.0*l.inner_product(l) +
-                      W0l.inner_product(W0l);
+                       W0l.inner_product(W0l);
             if (k <= 0)
             {
                 k = 0;
@@ -416,7 +417,8 @@ DMD::constructDMD(const Matrix* f_snapshots,
         delete d_basis_init;
 
         // Add the linearly independent columns of W to W0. Call this new basis W_new.
-        Matrix* d_basis_new = new Matrix(f_snapshots->numRows(), W0->numColumns() + lin_independent_cols_W.size(), true);
+        Matrix* d_basis_new = new Matrix(f_snapshots->numRows(),
+                                         W0->numColumns() + lin_independent_cols_W.size(), true);
         for (int i = 0; i < d_basis_new->numRows(); i++)
         {
             for (int j = 0; j < W0->numColumns(); j++)
@@ -425,7 +427,8 @@ DMD::constructDMD(const Matrix* f_snapshots,
             }
             for (int j = 0; j < lin_independent_cols_W.size(); j++)
             {
-                d_basis_new->item(i, j + W0->numColumns()) = d_basis->item(i, lin_independent_cols_W[j]);
+                d_basis_new->item(i, j + W0->numColumns()) = d_basis->item(i,
+                        lin_independent_cols_W[j]);
             }
         }
 
@@ -439,7 +442,8 @@ DMD::constructDMD(const Matrix* f_snapshots,
         d_basis = d_basis_new;
 
         d_k = d_basis_new->numColumns();
-        if (d_rank == 0) std::cout << "After adding W0, now using " << d_k << " basis vectors." << std::endl;
+        if (d_rank == 0) std::cout << "After adding W0, now using " << d_k <<
+                                       " basis vectors." << std::endl;
     }
 
     // Calculate A_tilde = U_transpose * f_snapshots_out * V * inv(S)
@@ -455,7 +459,8 @@ DMD::constructDMD(const Matrix* f_snapshots,
     {
         Matrix* d_basis_mult_f_snapshots_out_mult_d_basis_right_mult_d_S_inv =
             d_basis_mult_f_snapshots_out_mult_d_basis_right->mult(d_S_inv);
-        d_A_tilde = d_basis_mult_f_snapshots_out_mult_d_basis_right_mult_d_S_inv->mult(Q);
+        d_A_tilde = d_basis_mult_f_snapshots_out_mult_d_basis_right_mult_d_S_inv->mult(
+                        Q);
         delete Q;
         delete d_basis_mult_f_snapshots_out_mult_d_basis_right_mult_d_S_inv;
     }
@@ -559,11 +564,14 @@ DMD::projectInitialCondition(const Vector* init, double t_offset)
     Vector* rhs_imaginary = d_phi_imaginary->transposeMult(init);
 
     Vector* d_projected_init_real_1 = d_phi_real_squared_inverse->mult(rhs_real);
-    Vector* d_projected_init_real_2 = d_phi_imaginary_squared_inverse->mult(rhs_imaginary);
+    Vector* d_projected_init_real_2 = d_phi_imaginary_squared_inverse->mult(
+                                          rhs_imaginary);
     d_projected_init_real = d_projected_init_real_1->plus(d_projected_init_real_2);
 
-    Vector* d_projected_init_imaginary_1 = d_phi_real_squared_inverse->mult(rhs_imaginary);
-    Vector* d_projected_init_imaginary_2 = d_phi_imaginary_squared_inverse->mult(rhs_real);
+    Vector* d_projected_init_imaginary_1 = d_phi_real_squared_inverse->mult(
+            rhs_imaginary);
+    Vector* d_projected_init_imaginary_2 = d_phi_imaginary_squared_inverse->mult(
+            rhs_real);
     d_projected_init_imaginary = d_projected_init_imaginary_2->minus(
                                      d_projected_init_imaginary_1);
 

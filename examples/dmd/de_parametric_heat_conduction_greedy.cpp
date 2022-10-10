@@ -1,3 +1,13 @@
+/******************************************************************************
+ *
+ * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * and other libROM project developers. See the top-level COPYRIGHT
+ * file for details.
+ *
+ * SPDX-License-Identifier: (Apache-2.0 OR MIT)
+ *
+ *****************************************************************************/
+
 //                       libROM MFEM Example: Greedy Parametric_Heat_Conduction with Differential Evolution (adapted from ex16p.cpp)
 //
 // Compile with: make de_parametric_heat_conduction_greedy
@@ -1116,7 +1126,8 @@ int main(int argc, char *argv[])
 
         // Optimize for at least de_min_iter iterations, to a maximum of de_max_iter iterations with verbose output.
         // Stop early, after de_min_iter iterations is run, if the minimum cost did not improve by de_ct
-        std::vector<double> optimal_parameters = de_opt.Optimize(de_min_iter, de_max_iter, de_ct, true);
+        std::vector<double> optimal_parameters = de_opt.Optimize(de_min_iter,
+                de_max_iter, de_ct, true);
 
         radius = optimal_parameters[0];
         alpha = optimal_parameters[1];
