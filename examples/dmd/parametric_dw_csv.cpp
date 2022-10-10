@@ -383,6 +383,12 @@ int main(int argc, char *argv[])
 
         for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
         {
+            string par_dir = par_dir_list[idx_dataset];
+            if (myid == 0)
+            {
+                cout << "Loading samples for " << par_dir << " to train DMD." << endl;
+            }
+
             dmd_curr_par.assign(numWindows, nullptr);
             for (int window = 0; window < numWindows; ++window)
             {
@@ -403,11 +409,6 @@ int main(int argc, char *argv[])
             dmd.push_back(dmd_curr_par);
             dmd_curr_par.clear();
 
-            string par_dir = par_dir_list[idx_dataset];
-            if (myid == 0)
-            {
-                cout << "Loading samples for " << par_dir << " to train DMD." << endl;
-            }
             vector<string> snap_list;
             csv_db.getStringVector(string(list_dir) + "/" + par_dir + ".csv", snap_list,
                                    false);
@@ -547,6 +548,13 @@ int main(int argc, char *argv[])
                     }
                 }
             }
+
+            if (idx_dataset == 0 || indicator_idx.size() > 0)
+            {
+                numWindows = curr_window + 1;
+                dmd[idx_dataset].resize(numWindows); 
+            }
+            CAROM_VERIFY(numWindows == curr_window + 1);
 
             if (myid == 0)
             {
