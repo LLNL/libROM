@@ -23,10 +23,10 @@ cleanup_dependencies() {
     pushd dependencies || exit 1
     mydirs=(*)
     for dir in "${mydirs[@]}" ; do
-    if [[ ! $dir =~ "parmetis" ]]; then
-        echo "Deleting $dir"
-        rm -rf $dir
-    fi
+        if [[ $dir =~ "mfem" ]]; then
+            echo "Deleting $dir"
+            rm -rf $dir
+        fi
     done
     popd
     popd
@@ -83,7 +83,7 @@ if [[ $MFEM_USE_GSLIB == "On" ]] && [[ $USE_MFEM == "Off" ]]; then
 	exit 1
 fi
 
-if [[ $MFEM_USE_GSLIB == "On" ]]; then
+if [[ $MFEM_USE_GSLIB == "On" ]] && [[ ! -d "$HOME_DIR/dependencies/gslib" ]]; then
    cleanup_dependencies
 fi
 export MFEM_USE_GSLIB
