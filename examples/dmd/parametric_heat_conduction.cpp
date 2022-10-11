@@ -54,6 +54,9 @@
 //   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.7 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit -offline -rdim 20
 //   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.6 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit -online -predict
 //
+// Pointwise snapshots for DMD input:
+//   mpirun -np 1 parametric_heat_conduction -m ../../../examples/data/inline-quad.mesh -pwsnap -pwx 101 -pwy 101
+//
 // =================================================================================
 //
 // Description:  This example solves a time dependent nonlinear heat equation
@@ -74,6 +77,7 @@
 #include <fstream>
 #include <iostream>
 #include "utils/CSVDatabase.h"
+#include "mfem/PointwiseSnapshot.hpp"
 
 #ifndef _WIN32
 #include <sys/stat.h>  // mkdir
@@ -170,6 +174,11 @@ int main(int argc, char *argv[])
     bool save_csv = false;
     const char *basename = "";
 
+    bool pointwiseSnapshots = false;
+    int pwx = 0;
+    int pwy = 0;
+    int pwz = 0;
+
     int precision = 8;
     cout.precision(precision);
 
@@ -224,6 +233,12 @@ int main(int argc, char *argv[])
                    "Enable or disable MFEM result output (files in CSV format).");
     args.AddOption(&basename, "-out", "--outputfile-name",
                    "Name of the sub-folder to dump files within the run directory.");
+    args.AddOption(&pointwiseSnapshots, "-pwsnap", "--pw-snap", "-no-pwsnap",
+                   "--no-pw-snap", "Enable or disable writing pointwise snapshots.");
+    args.AddOption(&pwx, "-pwx", "--pwx", "Number of snapshot points in x");
+    args.AddOption(&pwy, "-pwy", "--pwy", "Number of snapshot points in y");
+    args.AddOption(&pwz, "-pwz", "--pwz", "Number of snapshot points in z");
+
     args.Parse();
     if (!args.Good())
     {
@@ -257,7 +272,9 @@ int main(int argc, char *argv[])
         }
     }
 
-    MFEM_VERIFY(!(offline && online), "both offline and online can not be true!");
+    const int check = (int) pointwiseSnapshots + (int) offline + (int) online;
+    MFEM_VERIFY(check == 1,
+                "Only one of offline, online, or pwsnap must be true!");
 
     if (offline)
     {
@@ -335,6 +352,35 @@ int main(int argc, char *argv[])
     {
         pmesh->UniformRefinement();
     }
+
+#ifndef MFEM_USE_GSLIB
+    if (pointwiseSnapshots) {
+        cout << "To use pointwise snapshots, compile with -mg option" << endl;
+        MFEM_ABORT("Pointwise snapshots aren't available, since the "
+                   "compilation is done without the -mg option");
+    }
+#else
+    CAROM::PointwiseSnapshot *pws = nullptr;
+    Vector pwsnap;
+    CAROM::Vector *pwsnap_CAROM = nullptr;
+
+    if (pointwiseSnapshots)
+    {
+        pmesh->EnsureNodes();
+        const int dmdDim[3] = {pwx, pwy, pwz};
+        pws = new CAROM::PointwiseSnapshot(dim, dmdDim);
+        pws->SetMesh(pmesh);
+
+        int snapshotSize = dmdDim[0];
+        for (int i=1; i<dim; ++i)
+            snapshotSize *= dmdDim[i];
+
+        pwsnap.SetSize(snapshotSize);
+        if (myid == 0)
+            pwsnap_CAROM = new CAROM::Vector(pwsnap.GetData(), pwsnap.Size(),
+                                             true, false);
+    }
+#endif
 
     // 7. Define the vector finite element space representing the current and the
     //    initial temperature, u_ref.
@@ -439,6 +485,22 @@ int main(int argc, char *argv[])
             sout << flush;
         }
     }
+
+#ifdef MFEM_USE_GSLIB
+    if (pointwiseSnapshots)
+    {
+        pws->GetSnapshot(u_gf, pwsnap);
+
+        ostringstream dmd_filename;
+        dmd_filename << "snap_" << to_string(radius) << "_" << to_string(alpha)
+                     << "_" << to_string(cx) << "_" << to_string(cy) << "_0";
+        if (myid == 0)
+        {
+            cout << "Writing DMD snapshot at step 0, time 0.0" << endl;
+            pwsnap_CAROM->write(dmd_filename.str());
+        }
+    }
+#endif
 
     StopWatch fom_timer, dmd_training_timer, dmd_prediction_timer;
 
@@ -558,6 +620,23 @@ int main(int argc, char *argv[])
             }
 #endif
         }
+
+#ifdef MFEM_USE_GSLIB
+        if (pointwiseSnapshots)
+        {
+            pws->GetSnapshot(u_gf, pwsnap);
+
+            ostringstream dmd_filename;
+            dmd_filename << "snap_" << to_string(radius) << "_" << to_string(alpha)
+                         << "_" << to_string(cx) << "_" << to_string(cy) << "_" << ti;
+            if (myid == 0)
+            {
+                cout << "Writing DMD snapshot at step " << ti << ", time " << t << endl;
+                pwsnap_CAROM->write(dmd_filename.str());
+            }
+        }
+#endif
+
         oper.SetParameters(u);
     }
 
@@ -766,6 +845,11 @@ int main(int argc, char *argv[])
     {
         delete dmd_u;
     }
+
+#ifdef MFEM_USE_GSLIB
+    delete pws;
+    delete pwsnap_CAROM;
+#endif
 
     MPI_Finalize();
 

@@ -34,6 +34,7 @@ set(libROM_CMAKE_MODULE_PATH ${libROM_CMAKE_PATH}/modules)
 list(APPEND CMAKE_MODULE_PATH ${libROM_CMAKE_MODULE_PATH})
 
 option(USE_MFEM "Build libROM with MFEM" OFF)
+option(MFEM_USE_GSLIB "Build libROM with MFEM using GSLIB" OFF)
 option(BUILD_STATIC "Build libROM as a static library" OFF)
 
 ## Set a bunch of variables to generate a configure header
