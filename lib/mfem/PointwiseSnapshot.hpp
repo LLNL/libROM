@@ -12,7 +12,6 @@
 #define POINTWISE_SNAPSHOT
 
 #include "mfem.hpp"
-//#include "gslib.hpp"
 
 using namespace mfem;
 using namespace std;
