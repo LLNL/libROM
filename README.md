@@ -13,10 +13,12 @@ non-intrusive black-box approaches.
 - Data compression
 - Physics-informed greedy algorithm
 - Projection-based hyper-reduction
+- EQP: quadrature-based hyper-reduction sampling algorithm
+- SOPT: Column orthogonality and determinant-driven hyper-reduction sampling algorithm 
+- gLaSDI (python): greedy latent space dynamics identification
 
 ## Features to be added
 
-- EQP: quadrature-based hyper-reduction sampling algorithm
 - Python interface
 
 # Installation
@@ -31,6 +33,7 @@ Compilation options:
 - -a: Compile a special build for the LLNL codebase: Ardra
 - -d: Compile in debug mode.
 - -m: Compile with MFEM (required to run the libROM examples)
+- -mg: Compile with MFEM and gslib
 - -t: Use your own cmake/toolchain
 - -u: Update all of libROM's dependencies.
 
@@ -111,10 +114,13 @@ LLNL-CODE-766763
 - William Fries (University of Arizona)
 - Debojyoti Ghosh (LLNL)
 - Xiaolong He (UC San Diego)
+- Adrian Humphry (University of Toronto)
 - Kevin Huynh (LLNL)
 - Tanya Kostova-Vassilevska (LLNL)
+- Minji Kim (University of North Carolina, Chapel Hill)
 - Jessica Lauzon (Stanford)
 - Sean McBane (UT Austin)
 - Yeonjong Shin (KAIST)
 - Geoffrey Oxberry (LLNL)
 - Pranav Vempati (LLNL)
+- Masayuki Yano (University of Toronto)
