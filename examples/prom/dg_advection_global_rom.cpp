@@ -678,7 +678,7 @@ int main(int argc, char *argv[])
     CAROM::Vector *b_hat_carom, *u_init_hat_carom;
     Vector *b_hat, *u_init_hat;
 
-    Vector u_init(*U->GlobalVector());
+    Vector u_init(*U);
     Vector *u_in;
 
     // 10. Set BasisGenerator if offline
@@ -686,7 +686,7 @@ int main(int argc, char *argv[])
     {
         options = new CAROM::Options(U->Size(), max_num_snapshots, 1, update_right_SV);
         generator = new CAROM::BasisGenerator(*options, isIncremental, basisFileName);
-        Vector u_curr(*U->GlobalVector());
+        Vector u_curr(*U);
         Vector u_centered(U->Size());
         subtract(u_curr, u_init, u_centered);
         bool addSample = generator->takeSample(u_centered.GetData(), t, dt);
@@ -766,7 +766,7 @@ int main(int argc, char *argv[])
         K_hat->Set(1, K_hat_carom->getData());
         K_hat->Transpose();
 
-        Vector b_vec = *B->GlobalVector();
+        Vector b_vec = *B;
         CAROM::Vector b_carom(b_vec.GetData(), b_vec.Size(), true);
         b_hat_carom = spatialbasis->transposeMult(&b_carom);
         b_hat = new Vector(b_hat_carom->getData(), b_hat_carom->dim());
@@ -820,7 +820,7 @@ int main(int argc, char *argv[])
         // 18. take and write snapshot for ROM
         if (offline)
         {
-            Vector u_curr(*U->GlobalVector());
+            Vector u_curr(*U);
             Vector u_centered(U->Size());
             subtract(u_curr, u_init, u_centered);
             bool addSample = generator->takeSample(u_centered.GetData(), t, dt);
