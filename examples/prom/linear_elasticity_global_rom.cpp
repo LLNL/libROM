@@ -30,7 +30,6 @@
 // Offline phase: ./linear_elasticity_global_rom -offline -id 0 -nu 0.2
 //                ./linear_elasticity_global_rom -offline -id 1 -nu 0.4
 //
-//
 // Merge phase:   ./linear_elasticity_global_rom -merge -ns 2
 //
 // NB: to evaluate relative error, call this before the online phase:
@@ -44,6 +43,7 @@
 #include <iostream>
 #include "linalg/BasisGenerator.h"
 #include "linalg/BasisReader.h"
+#include "mfem/Utilities.hpp"
 
 using namespace std;
 using namespace mfem;
@@ -225,7 +225,6 @@ int main(int argc, char* argv[])
     bool isIncremental = false;
     const std::string basisName = "basis";
     const std::string basisFileName = basisName + std::to_string(id);
-    const CAROM::Matrix* spatialbasis;
     CAROM::Options* options;
     CAROM::BasisGenerator* generator;
     int numRowRB, numColumnRB;
@@ -379,40 +378,32 @@ int main(int argc, char* argv[])
         // 20. read the reduced basis
         assembleTimer.Start();
         CAROM::BasisReader reader(basisName);
-        spatialbasis = reader.getSpatialBasis(0.0);
+        const CAROM::Matrix* spatialbasis = reader.getSpatialBasis(0.0);
         numRowRB = spatialbasis->numRows();
         numColumnRB = spatialbasis->numColumns();
-        if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB,
-                                  numColumnRB);
-
-        // libROM stores the matrix row-wise, so wrapping as a DenseMatrix in MFEM means it is transposed.
-        DenseMatrix* reducedBasisT = new DenseMatrix(spatialbasis->getData(),
-                numColumnRB, numRowRB);
+        printf("On rank %d, spatial basis dimension is %d x %d\n", myid,
+               numRowRB, numColumnRB);
 
         // 21. form inverse ROM operator
-        Vector abv(numRowRB), bv(numRowRB), bv2(numRowRB);
-        Vector reducedRHS(numColumnRB), reducedSol(numColumnRB);
-        DenseMatrix invReducedA(numColumnRB);
-        for (int j = 0; j < numColumnRB; ++j) {
-            reducedBasisT->GetRow(j, bv);
-            A.Mult(bv, abv);
-            reducedRHS(j) = bv * B;
-            for (int i = 0; i < numColumnRB; ++i) {
-                reducedBasisT->GetRow(i, bv2);
-                invReducedA(i, j) = abv * bv2;
-            }
-        }
-        invReducedA.Invert();
+        CAROM::Matrix reducedA(numColumnRB, numColumnRB, false);
+        ComputeCtAB(A, *spatialbasis, *spatialbasis, reducedA);
+        reducedA.inverse();
+
+        CAROM::Vector B_carom(B.GetData(), B.Size(), true, false);
+        CAROM::Vector X_carom(X.GetData(), X.Size(), true, false);
+        CAROM::Vector *reducedRHS = spatialbasis->transposeMult(&B_carom);
+        CAROM::Vector reducedSol(numColumnRB, false);
+
         assembleTimer.Stop();
 
         // 22. solve ROM
         solveTimer.Start();
-        invReducedA.Mult(reducedRHS, reducedSol);
+        reducedA.mult(*reducedRHS, reducedSol);
         solveTimer.Stop();
 
         // 23. reconstruct FOM state
-        reducedBasisT->MultTranspose(reducedSol, X);
-        delete reducedBasisT;
+        spatialbasis->mult(reducedSol, X_carom);
+        delete spatialbasis;
     }
 
     // 24. Recover the parallel grid function corresponding to X. This is the
