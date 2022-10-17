@@ -115,6 +115,18 @@ NonuniformDMD::addOffset(Vector*& result, double t, int power)
 }
 
 void
+NonuniformDMD::load(std::string base_file_name)
+{
+    CAROM_ASSERT(!base_file_name.empty());
+
+    std::string full_file_name = base_file_name + "_derivative_offset";
+    d_derivative_offset = new Vector();
+    d_derivative_offset->read(full_file_name);
+
+    DMD::load(base_file_name);
+}
+
+void
 NonuniformDMD::save(std::string base_file_name)
 {
     CAROM_ASSERT(!base_file_name.empty());
