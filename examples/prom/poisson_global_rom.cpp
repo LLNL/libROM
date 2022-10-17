@@ -33,6 +33,9 @@
 //
 // Merge phase:   poisson_global_rom -merge -ns 3
 //
+// FOM run for error calculation:
+//                poisson_global_rom -fom -f 1.15
+//
 // Online phase:  poisson_global_rom -online -f 1.15
 
 #include "mfem.hpp"
@@ -40,6 +43,7 @@
 #include <iostream>
 #include "linalg/BasisGenerator.h"
 #include "linalg/BasisReader.h"
+#include "mfem/Utilities.hpp"
 
 using namespace std;
 using namespace mfem;
@@ -298,7 +302,7 @@ int main(int argc, char *argv[])
     }
     a.Assemble();
 
-    OperatorPtr A;
+    HypreParMatrix A;
     Vector B, X;
     a.FormLinearSystem(ess_tdof_list, x, *b, A, X, B);
     assembleTimer.Stop();
@@ -326,7 +330,7 @@ int main(int argc, char *argv[])
         if (prec) {
             cg.SetPreconditioner(*prec);
         }
-        cg.SetOperator(*A);
+        cg.SetOperator(A);
         solveTimer.Start();
         cg.Mult(B, X);
         solveTimer.Stop();
@@ -358,36 +362,75 @@ int main(int argc, char *argv[])
                 numColumnRB, numRowRB);
 
         // 21. form inverse ROM operator
-        Vector abv(numRowRB), bv(numRowRB), bv2(numRowRB);
-        Vector reducedRHS(numColumnRB), reducedSol(numColumnRB);
-        DenseMatrix invReducedA(numColumnRB);
-        for(int j=0; j < numColumnRB; ++j) {
-            reducedBasisT->GetRow(j, bv);
-            A->Mult(bv, abv);
-            reducedRHS(j) = bv*B;
-            for(int i=0; i<numColumnRB; ++i) {
-                reducedBasisT->GetRow(i, bv2);
-                invReducedA(i,j) = abv*bv2;
-            }
-        }
-        invReducedA.Invert();
+        CAROM::Matrix invReducedA(numColumnRB, numColumnRB, false);
+        ComputeCtAB(A, *spatialbasis, *spatialbasis, invReducedA);
+        invReducedA.inverse();
+
+        CAROM::Vector B_carom(B.GetData(), B.Size(), true, false);
+        CAROM::Vector X_carom(X.GetData(), X.Size(), true, false);
+        CAROM::Vector *reducedRHS = spatialbasis->transposeMult(&B_carom);
+        CAROM::Vector reducedSol(numColumnRB, false);
         assembleTimer.Stop();
 
         // 22. solve ROM
         solveTimer.Start();
-        invReducedA.Mult(reducedRHS, reducedSol);
+        invReducedA.mult(*reducedRHS, reducedSol);
         solveTimer.Stop();
 
         // 23. reconstruct FOM state
-        reducedBasisT->MultTranspose(reducedSol,X);
-        delete reducedBasisT;
+        spatialbasis->mult(reducedSol, X_carom);
+        delete spatialbasis;
+        delete reducedRHS;
     }
 
     // 24. Recover the parallel grid function corresponding to X. This is the
     //     local finite element solution on each processor.
     a.RecoverFEMSolution(X, *b, x);
 
-    // 25. Save the refined mesh and the solution in parallel. This output can
+    // 25. Calculate the relative error of the ROM prediction compared to FOM
+    ostringstream sol_dofs_name, sol_dofs_name_fom;
+    if (fom || offline)
+    {
+        sol_dofs_name << "sol_dofs_fom." << setfill('0') << setw(6) << myid;
+    }
+    if (online)
+    {
+        sol_dofs_name << "sol_dofs." << setfill('0') << setw(6) << myid;
+        sol_dofs_name_fom << "sol_dofs_fom." << setfill('0') << setw(6) << myid;
+    }
+
+    if (online)
+    {
+        // Initialize FOM solution
+        Vector x_fom(x.Size());
+
+        ifstream fom_file;
+
+        // Open and load file
+        fom_file.open(sol_dofs_name_fom.str().c_str());
+
+        x_fom.Load(fom_file, x_fom.Size());
+
+        fom_file.close();
+
+        Vector diff_x(x.Size());
+
+        subtract(x, x_fom, diff_x);
+
+        // Get norms
+        double tot_diff_norm = sqrt(InnerProduct(MPI_COMM_WORLD, diff_x, diff_x));
+
+        double tot_fom_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
+                                                x_fom, x_fom));
+
+        if (myid == 0)
+        {
+            cout << "Relative error of ROM solution = "
+                 << tot_diff_norm / tot_fom_norm << endl;
+        }
+    }
+
+    // 26. Save the refined mesh and the solution in parallel. This output can
     //     be viewed later using GLVis: "glvis -np <np> -m mesh -g sol".
     {
         ostringstream mesh_name, sol_name;
@@ -401,21 +444,29 @@ int main(int argc, char *argv[])
         ofstream sol_ofs(sol_name.str().c_str());
         sol_ofs.precision(precision);
         x.Save(sol_ofs);
+
+        ofstream sol_dofs_ofs(sol_dofs_name.str().c_str());
+        sol_dofs_ofs.precision(16);
+        for (int i = 0; i < x.Size(); ++i)
+        {
+            sol_dofs_ofs << x[i] << std::endl;
+        }
     }
 
-    // 26. Save data in the VisIt format.
+    // 27. Save data in the VisIt format.
     DataCollection *dc = NULL;
     if (visit)
     {
-        if(offline) dc = new VisItDataCollection("Example1", &pmesh);
-        else if(online) dc = new VisItDataCollection("Example1_rom", &pmesh);
+        if (offline) dc = new VisItDataCollection("Example1", &pmesh);
+        else if (fom) dc = new VisItDataCollection("Example1_fom", &pmesh);
+        else if (online) dc = new VisItDataCollection("Example1_rom", &pmesh);
         dc->SetPrecision(precision);
         dc->RegisterField("solution", &x);
         dc->Save();
         delete dc;
     }
 
-    // 27. Send the solution by socket to a GLVis server.
+    // 28. Send the solution by socket to a GLVis server.
     if (visualization)
     {
         char vishost[] = "localhost";
@@ -426,7 +477,7 @@ int main(int argc, char *argv[])
         sol_sock << "solution\n" << pmesh << x << flush;
     }
 
-    // 28. print timing info
+    // 29. print timing info
     if (myid == 0)
     {
         if(fom || offline)
@@ -443,7 +494,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    // 29. Free the used memory.
+    // 30. Free the used memory.
     if (delete_fec)
     {
         delete fec;
@@ -453,7 +504,7 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-// 30. define spatially varying righthand side function
+// 31. define spatially varying righthand side function
 double rhs(const Vector &x)
 {
     if (dim == 3)

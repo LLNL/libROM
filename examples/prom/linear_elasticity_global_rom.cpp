@@ -385,9 +385,9 @@ int main(int argc, char* argv[])
                numRowRB, numColumnRB);
 
         // 21. form inverse ROM operator
-        CAROM::Matrix reducedA(numColumnRB, numColumnRB, false);
-        ComputeCtAB(A, *spatialbasis, *spatialbasis, reducedA);
-        reducedA.inverse();
+        CAROM::Matrix invReducedA(numColumnRB, numColumnRB, false);
+        ComputeCtAB(A, *spatialbasis, *spatialbasis, invReducedA);
+        invReducedA.inverse();
 
         CAROM::Vector B_carom(B.GetData(), B.Size(), true, false);
         CAROM::Vector X_carom(X.GetData(), X.Size(), true, false);
@@ -398,12 +398,13 @@ int main(int argc, char* argv[])
 
         // 22. solve ROM
         solveTimer.Start();
-        reducedA.mult(*reducedRHS, reducedSol);
+        invReducedA.mult(*reducedRHS, reducedSol);
         solveTimer.Stop();
 
         // 23. reconstruct FOM state
         spatialbasis->mult(reducedSol, X_carom);
         delete spatialbasis;
+        delete reducedRHS;
     }
 
     // 24. Recover the parallel grid function corresponding to X. This is the
@@ -428,8 +429,9 @@ int main(int argc, char* argv[])
     ostringstream mesh_name, sol_name, mesh_name_fom, sol_name_fom;
     if (fom || offline)
     {
-        mesh_name << "mesh_f"<< ext_force <<"_fom." << setfill('0') << setw(6) << myid;
-        sol_name << "sol_f"<< ext_force <<"_fom." << setfill('0') << setw(6) << myid;
+        mesh_name << "mesh_f" << ext_force << "_fom." << setfill('0')
+                  << setw(6) << myid;
+        sol_name << "sol_f" << ext_force << "_fom." << setfill('0') << setw(6) << myid;
     }
     if (online)
     {
@@ -486,7 +488,6 @@ int main(int argc, char* argv[])
             cout << "Relative error of ROM for E = " << E << " and nu = " << nu <<
                  " is: " << tot_diff_norm_x / tot_x_fom_norm << endl;
         }
-
     }
 
     // 28. Save data in the VisIt format.
