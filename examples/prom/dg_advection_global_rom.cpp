@@ -575,17 +575,18 @@ int main(int argc, char *argv[])
     DataCollection *dc = NULL;
     if (visit)
     {
+        const std::string visitSuffix = online ? "_rom" : "_fom";
         if (binary)
         {
 #ifdef MFEM_USE_SIDRE
-            dc = new SidreDataCollection("DG_Advection", pmesh);
+            dc = new SidreDataCollection("DG_Advection" + visitSuffix, pmesh);
 #else
             MFEM_ABORT("Must build with MFEM_USE_SIDRE=YES for binary output.");
 #endif
         }
         else
         {
-            dc = new VisItDataCollection("DG_Advection", pmesh);
+            dc = new VisItDataCollection("DG_Advection" + visitSuffix, pmesh);
             dc->SetPrecision(precision);
             // To save the mesh using MFEM's parallel mesh format:
             // dc->SetFormat(DataCollection::PARALLEL_FORMAT);
@@ -599,7 +600,8 @@ int main(int argc, char *argv[])
     ParaViewDataCollection *pd = NULL;
     if (paraview)
     {
-        pd = new ParaViewDataCollection("DG_Advection", pmesh);
+        const std::string suffix = online ? "_rom" : "_fom";
+        pd = new ParaViewDataCollection("DG_Advection" + suffix, pmesh);
         pd->SetPrefixPath("ParaView");
         pd->RegisterField("solution", u);
         pd->SetLevelsOfDetail(order);
@@ -682,7 +684,7 @@ int main(int argc, char *argv[])
     Vector *b_hat, *u_init_hat;
 
     Vector u_init(*U);
-    Vector *u_in;
+    Vector *u_hat;
 
     // 10. Set BasisGenerator if offline
     if (offline)
@@ -778,8 +780,8 @@ int main(int argc, char *argv[])
         ComputeCtAB_vec(K_mat, *U, *spatialbasis, *u_init_hat_carom);
         u_init_hat = new Vector(u_init_hat_carom->getData(), u_init_hat_carom->dim());
 
-        u_in = new Vector(numColumnRB);
-        *u_in = 0.0;
+        u_hat = new Vector(numColumnRB);
+        *u_hat = 0.0;
     }
 
     TimeDependentOperator* adv;
@@ -809,7 +811,7 @@ int main(int argc, char *argv[])
         double dt_real = min(dt, t_final - t);
         if (online)
         {
-            ode_solver->Step(*u_in, t, dt_real);
+            ode_solver->Step(*u_hat, t, dt_real);
         }
         else
         {
@@ -848,6 +850,19 @@ int main(int argc, char *argv[])
 
             if (visit)
             {
+                if (online)
+                {
+                    if (mpi.Root())
+                        cout << "WARNING: FOM lifting for visualization is slow." << endl;
+
+                    CAROM::Vector u_hat_final_carom(u_hat->GetData(), u_hat->Size(), false);
+                    CAROM::Vector* u_final_carom = spatialbasis->mult(u_hat_final_carom);
+                    Vector u_final(u_final_carom->getData(), u_final_carom->dim());
+                    u_final += u_init;
+                    u->SetFromTrueDofs(u_final);
+                    delete u_final_carom;
+                }
+
                 dc->SetCycle(ti);
                 dc->SetTime(t);
                 dc->Save();
@@ -881,7 +896,7 @@ int main(int argc, char *argv[])
 
     if (online)
     {
-        CAROM::Vector u_hat_final_carom(u_in->GetData(), u_in->Size(), false);
+        CAROM::Vector u_hat_final_carom(u_hat->GetData(), u_hat->Size(), false);
         CAROM::Vector* u_final_carom = spatialbasis->mult(u_hat_final_carom);
         Vector u_final(u_final_carom->getData(), u_final_carom->dim());
         u_final += u_init;
@@ -910,7 +925,7 @@ int main(int argc, char *argv[])
         delete u_init_hat_carom;
         delete b_hat;
         delete u_init_hat;
-        delete u_in;
+        delete u_hat;
         delete u_final_carom;
     }
 
