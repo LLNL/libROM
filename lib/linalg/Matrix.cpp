@@ -192,7 +192,6 @@ Matrix::operator -= (
     return *this;
 }
 
-
 bool
 Matrix::balanced() const
 {
@@ -440,7 +439,6 @@ Matrix::pointwise_mult(
         other.item(entry) *= item(this_row, entry);
     }
 }
-
 
 void
 Matrix::elementwise_mult(

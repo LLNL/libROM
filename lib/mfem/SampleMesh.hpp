@@ -130,6 +130,17 @@ public:
     void GetSampledValues(const string variable, mfem::Vector const& v,
                           CAROM::Vector & s) const;
 
+
+    /**
+     * @brief Returns a set of indices of local FOM mesh elements corresponding
+     *        to sample elements.
+     *
+     * @return Pointer to a set of local FOM mesh element indices.
+     */
+    set<int>* GetSampleElements() {
+        return &elems;
+    }
+
     /**
      * @brief Writes a variable sample DOF map to file, which can be read by SampleDOFSelector::ReadMapFromFile
      *        in order to use SampleDOFSelector::GetSampledValues when this SampleMeshManager object is not available.
@@ -193,6 +204,8 @@ private:
     vector<int> spaceTOS, spaceOS, spaceOSSP;
     vector<vector<int>> spaceOSall;
 
+    set<int> elems;
+
     string filename;  // For visualization output
 
     double elemVisScale;  // Scaling for sample element visualization
@@ -233,8 +246,8 @@ public:
                           CAROM::Vector & s) const;
 
     /**
-     * @brief Destructor.
-    */
+       * @brief Destructor.
+      */
     ~SampleDOFSelector()
     { }
 
@@ -247,6 +260,5 @@ private:
 };
 
 }  // namespace CAROM
-
 
 #endif // SAMPLEMESH_H

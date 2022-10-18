@@ -34,6 +34,7 @@ set(libROM_CMAKE_MODULE_PATH ${libROM_CMAKE_PATH}/modules)
 list(APPEND CMAKE_MODULE_PATH ${libROM_CMAKE_MODULE_PATH})
 
 option(USE_MFEM "Build libROM with MFEM" OFF)
+option(MFEM_USE_GSLIB "Build libROM with MFEM using GSLIB" OFF)
 option(BUILD_STATIC "Build libROM as a static library" OFF)
 
 ## Set a bunch of variables to generate a configure header
@@ -132,6 +133,7 @@ if (USE_MFEM)
     dg_advection_global_rom
     dg_advection_local_rom_matrix_interp
     mixed_nonlinear_diffusion
+    nonlinear_elasticity_global_rom
     linear_elasticity_global_rom
     dg_advection
     nonlinear_elasticity
@@ -142,6 +144,7 @@ if (USE_MFEM)
     local_tw_csv
     parametric_tw_csv)
   set(example_directories
+    prom
     prom
     prom
     prom

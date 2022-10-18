@@ -35,7 +35,6 @@
 //
 // Online phase:  poisson_global_rom -online -f 1.15
 
-
 #include "mfem.hpp"
 #include <fstream>
 #include <iostream>

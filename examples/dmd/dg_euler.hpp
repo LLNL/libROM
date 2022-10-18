@@ -66,7 +66,6 @@ public:
                 const Vector &nor, Vector &flux);
 };
 
-
 // Constant (in time) mixed bilinear form multiplying the flux grid function.
 // The form is (vec(v), grad(w)) where the trial space = vector L2 space (mesh
 // dim) and test space = scalar L2 space.

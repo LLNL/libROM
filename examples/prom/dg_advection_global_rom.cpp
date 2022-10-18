@@ -14,6 +14,7 @@
 //
 // For ROM (reproductive case):
 //    dg_advection_global_rom -offline
+//    dg_advection_global_rom -merge -ns 1
 //    dg_advection_global_rom -online
 //
 // For ROM (global rom):
@@ -22,6 +23,8 @@
 //                dg_advection_global_rom -offline -ff 1.2 -id 2
 //
 // Merge phase:   dg_advection_global_rom -merge -ns 3
+//
+// FOM solution:  dg_advection_global_rom -fom -ff 1.15
 //
 // Online phase:  dg_advection_global_rom -online -ff 1.15
 //
@@ -57,6 +60,7 @@
 #include "linalg/Vector.h"
 #include "linalg/BasisGenerator.h"
 #include "linalg/BasisReader.h"
+#include "mfem/Utilities.hpp"
 #include <cmath>
 #include <set>
 #include <fstream>
@@ -78,18 +82,6 @@ double u0_function(const Vector &x);
 
 // Inflow boundary condition
 double inflow_function(const Vector &x);
-
-void Compute_CtAB(const HypreParMatrix* A,
-                  const CAROM::Matrix& B,  // Distributed matrix.
-                  const CAROM::Matrix& C,  // Distributed matrix.
-                  CAROM::Matrix*
-                  CtAB);     // Non-distributed (local) matrix, computed identically and redundantly on every process.
-
-void Compute_CtAB_vec(const HypreParMatrix* A,
-                      const HypreParVector& B,  // Distributed vector.
-                      const CAROM::Matrix& C,  // Distributed matrix.
-                      CAROM::Vector*
-                      CtAB_vec);     // Non-distributed (local) vector, computed identically and redundantly on every process.
 
 // Mesh bounding box
 Vector bb_min, bb_max;
@@ -155,7 +147,6 @@ public:
     }
 };
 #endif
-
 
 class DG_Solver : public Solver
 {
@@ -232,7 +223,6 @@ public:
     }
 };
 
-
 /** A time-dependent operator for the right-hand side of the ODE. The DG weak
     form of du/dt = -v.grad(u) is M du/dt = K u + b, where M and K are the mass
     and advection matrices, and b describes the flow on the boundary. This can
@@ -254,7 +244,6 @@ public:
 
     virtual ~ROM_FE_Evolution();
 };
-
 
 /** A time-dependent operator for the right-hand side of the ODE. The DG weak
     form of du/dt = -v.grad(u) is M du/dt = K u + b, where M and K are the mass
@@ -281,7 +270,6 @@ public:
 
     virtual ~FE_Evolution();
 };
-
 
 int main(int argc, char *argv[])
 {
@@ -312,7 +300,7 @@ int main(int argc, char *argv[])
     bool offline = false;
     bool merge = false;
     bool online = false;
-    bool visualization = true;
+    bool visualization = false;
     bool visit = false;
     bool paraview = false;
     bool adios2 = false;
@@ -558,7 +546,6 @@ int main(int argc, char *argv[])
     m->Finalize();
     k->Finalize(skip_zeros);
 
-
     HypreParVector *B = b->ParallelAssemble();
 
     // 9. Define the initial conditions, save the corresponding grid function to
@@ -764,7 +751,7 @@ int main(int argc, char *argv[])
         HypreParMatrix &K_mat = *K.As<HypreParMatrix>();
 
         M_hat_carom = new CAROM::Matrix(numRowRB, numColumnRB, false);
-        Compute_CtAB(&M_mat, *spatialbasis, *spatialbasis, M_hat_carom);
+        ComputeCtAB(M_mat, *spatialbasis, *spatialbasis, *M_hat_carom);
 
         // libROM stores the matrix row-wise, so wrapping as a DenseMatrix in MFEM means it is transposed.
         M_hat = new DenseMatrix(numColumnRB, numColumnRB);
@@ -772,7 +759,7 @@ int main(int argc, char *argv[])
         M_hat->Transpose();
 
         K_hat_carom = new CAROM::Matrix(numRowRB, numColumnRB, false);
-        Compute_CtAB(&K_mat, *spatialbasis, *spatialbasis, K_hat_carom);
+        ComputeCtAB(K_mat, *spatialbasis, *spatialbasis, *K_hat_carom);
 
         // libROM stores the matrix row-wise, so wrapping as a DenseMatrix in MFEM means it is transposed.
         K_hat = new DenseMatrix(numColumnRB, numColumnRB);
@@ -785,7 +772,7 @@ int main(int argc, char *argv[])
         b_hat = new Vector(b_hat_carom->getData(), b_hat_carom->dim());
 
         u_init_hat_carom = new CAROM::Vector(numColumnRB, false);
-        Compute_CtAB_vec(&K_mat, *U, *spatialbasis, u_init_hat_carom);
+        ComputeCtAB_vec(K_mat, *U, *spatialbasis, *u_init_hat_carom);
         u_init_hat = new Vector(u_init_hat_carom->getData(), u_init_hat_carom->dim());
 
         u_in = new Vector(numColumnRB);
@@ -965,7 +952,6 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-
 // Implementation of class ROM_FE_Evolution
 ROM_FE_Evolution::ROM_FE_Evolution(DenseMatrix* M_, DenseMatrix* K_, Vector* b_,
                                    Vector* u_init_hat_, int num_cols)
@@ -1020,7 +1006,6 @@ ROM_FE_Evolution::~ROM_FE_Evolution()
     delete M_inv;
     delete A_inv;
 }
-
 
 // Implementation of class FE_Evolution
 FE_Evolution::FE_Evolution(ParBilinearForm &M_, ParBilinearForm &K_,
@@ -1091,7 +1076,6 @@ FE_Evolution::~FE_Evolution()
     delete M_prec;
     delete dg_solver;
 }
-
 
 // Velocity coefficient
 void velocity_function(const Vector &x, Vector &v)
@@ -1241,61 +1225,4 @@ double inflow_function(const Vector &x)
         return 0.0;
     }
     return 0.0;
-}
-
-void Compute_CtAB(const HypreParMatrix* A,
-                  const CAROM::Matrix& B,  // Distributed matrix.
-                  const CAROM::Matrix& C,  // Distributed matrix.
-                  CAROM::Matrix*
-                  CtAB)     // Non-distributed (local) matrix, computed identically and redundantly on every process.
-{
-    MFEM_VERIFY(B.distributed() && C.distributed() && !CtAB->distributed(), "");
-
-    int num_procs;
-    MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
-
-    const int num_rows = B.numRows();
-    const int num_cols = B.numColumns();
-    const int num_rows_A = A->GetNumRows();
-
-    MFEM_VERIFY(C.numRows() == num_rows_A, "");
-
-    Vector Bvec(num_rows);
-    Vector ABvec(num_rows_A);
-
-    CAROM::Matrix AB(num_rows_A, num_cols, true);
-
-    for (int i = 0; i < num_cols; ++i) {
-        for (int j = 0; j < num_rows; ++j) {
-            Bvec[j] = B(j, i);
-        }
-        A->Mult(Bvec, ABvec);
-        for (int j = 0; j < num_rows_A; ++j) {
-            AB(j, i) = ABvec[j];
-        }
-    }
-
-    C.transposeMult(AB, CtAB);
-}
-
-void Compute_CtAB_vec(const HypreParMatrix* A,
-                      const HypreParVector& B,  // Distributed vector.
-                      const CAROM::Matrix& C,  // Distributed matrix.
-                      CAROM::Vector*
-                      CtAB_vec)     // Non-distributed (local) vector, computed identically and redundantly on every process.
-{
-    MFEM_VERIFY(C.distributed() && !CtAB_vec->distributed(), "");
-
-    int num_procs;
-    MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
-
-    MFEM_VERIFY(C.numRows() == A->GetNumRows(), "");
-    MFEM_VERIFY(B.GlobalSize() == A->GetGlobalNumRows(), "");
-
-    HypreParVector* AB = new HypreParVector(B);
-    A->Mult(B, *AB);
-
-    Vector b_vec = *AB->GlobalVector();
-    CAROM::Vector b_carom(b_vec.GetData(), b_vec.Size(), true);
-    C.transposeMult(b_carom, CtAB_vec);
 }
