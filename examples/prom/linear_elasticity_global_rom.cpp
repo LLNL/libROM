@@ -37,6 +37,8 @@
 //
 // Online phase:  ./linear_elasticity_global_rom -online -id 3 -nu 0.3
 //
+// This example runs in parallel with MPI, by using the same number of MPI ranks
+// in all phases (offline, merge, online).
 
 #include "mfem.hpp"
 #include <fstream>

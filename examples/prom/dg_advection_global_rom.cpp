@@ -55,6 +55,9 @@
 //               with VisIt (visit.llnl.gov) and ParaView (paraview.org), as
 //               well as the optional saving with ADIOS2 (adios2.readthedocs.io)
 //               are also illustrated.
+//
+// This example runs in parallel with MPI, by using the same number of MPI ranks
+// in all phases (offline, merge, fom, online).
 
 #include "mfem.hpp"
 #include "linalg/Vector.h"

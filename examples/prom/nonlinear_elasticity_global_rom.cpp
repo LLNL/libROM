@@ -81,6 +81,9 @@
 //      Elapsed time for time integration loop 1.01136
 //      Relative error of ROM position (x) at t_final: 5 is 0.0130818
 //      Relative error of ROM velocity (v) at t_final: 5 is 0.979978
+//
+// This example runs in parallel with MPI, by using the same number of MPI ranks
+// in all phases (offline, merge, online).
 
 #include "mfem.hpp"
 #include "linalg/Vector.h"
