@@ -788,6 +788,12 @@ DMD::load(std::string base_file_name)
 }
 
 void
+DMD::load(const char* base_file_name)
+{
+    load(std::string(base_file_name));
+}
+
+void
 DMD::save(std::string base_file_name)
 {
     CAROM_ASSERT(!base_file_name.empty());
@@ -868,6 +874,12 @@ DMD::save(std::string base_file_name)
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
+}
+
+void
+DMD::save(const char* base_file_name)
+{
+    save(std::string(base_file_name));
 }
 
 void
