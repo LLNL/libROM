@@ -82,6 +82,24 @@ cd ${EXAMPLES_PROM_LOCAL} && rm -rf ./*/
 cd ${EXAMPLES_DMD_BASELINE} && rm -rf ./*/
 cd ${EXAMPLES_PROM_BASELINE} && rm -rf ./*/
 #echo "My current dir = $DIR"
+# Compile current branch if it isn't already compiled
+# (assuming the branch isn't compiled if mfem doesn't exist)
+if [ ! -d "$GITHUB_WORKSPACE/dependencies/mfem" ]; then
+   cd ${GITHUB_WORKSPACE}
+   echo "Compile libROM from the current branch"
+   ./scripts/compile.sh -m
+      echo "Compile libROM of current branch - done"
+    if [[ "$?" -ne 0 ]]; then
+       echo "Compilation failed for the current branch"
+       exit 1
+    fi
+else
+   echo "${GITHUB_WORKSPACE}/dependencies/libROM already exists"
+fi
+
+# Compile master branch if it isn't already compiled
+# (assuming that the master branch isn't compiled if libROM isn't found in the dependencies)
+
 if [ ! -d $BASELINE_DIR/libROM ]; then # Clone master branch to baseline directory
    #echo "Creating $BASELINE_DIR"
    mkdir -p $BASELINE_DIR
@@ -93,7 +111,7 @@ if [ ! -d $BASELINE_DIR/libROM ]; then # Clone master branch to baseline directo
    ./compile.sh -m
    echo "Compile libROM master - done"
     if [[ "$?" -ne 0 ]]; then
-       echo "Compilation failed"
+       echo "Compilation failed for libROM master"
        exit 1
     fi
 else
