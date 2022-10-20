@@ -146,7 +146,7 @@ set_fail(){
 }
 
 check_fail(){
-    if [[ "$?" -ne 0 || "${PIPESTATUS[0]}" -ne 0 ]];  # Capture and output the pipe status from MPI_Abort in some way
+    if [[ "$?" -ne 0 || "${PIPESTATUS[0]}" -ne 0 ]];  # Capture the pipe status from MPI_Abort 
     then
         set_fail
     else

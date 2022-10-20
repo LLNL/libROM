@@ -124,7 +124,7 @@ testNumFail=0
 cd $TESTS_DIR
 type_of_tests_to_execute=(*)
 if [[ -z $i ]]; then
-    echo "Running all regression tests"
+    echo "Running all regression tests except non_linear_elasticity"
 else 
     echo "Running only $i"
 fi
@@ -136,8 +136,12 @@ for type_of_test in ${type_of_tests_to_execute[@]}; do
   for test in ${all_tests[@]}; do 
       scriptName=$(basename $test ".sh")
       # Run a specific test by specifying the test (without the .sh suffix)
-      if [[ -n $i && ! "$i" =~ "$scriptName" ]]; then
+      if [[ -n $i && ! "$i" == "$scriptName" ]]; then
          # echo "Skipping $scriptName"
+         continue
+      fi
+
+      if [[ "$scriptName" == "nonlinear_elasticity" ]]; then
          continue
       fi
           
