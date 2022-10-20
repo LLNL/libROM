@@ -7,7 +7,7 @@ The usage instructions are output for any bad invocation. Currently, there is on
 How to run the tests on LC
 
 1. Make sure your user branch is up-to-date with any recent libROM commits and do a git merge if necessary. Otherwise, your tests will most likely fail.
-2. sbatch tests/run_regression_tests.sh (if in the base directory) or sbatch run_regression_tests.sh (if in the tests directory). The baseline branch will be git cloned and rebuilt each time the script is called. The different tests will automatically run in parallel (can not be turned off). Look below for test options.
+2. sbatch regression_tests/run_regression_tests.sh (if in the base directory) or sbatch run_regression_tests.sh (if in the tests directory). The baseline branch will be git cloned and rebuilt each time the script is called. The different tests will automatically run in parallel (can not be turned off). Look below for test options.
 3. The slurm output file will be stored in sbatch.log in the directory you ran the previous command from. View this file for the general output of the regression tests. 
 4. Test commands/logs are stored in regression_tests/results.
 5. To find the particular error and where it occurred, scroll to the bottom of each test file. 
