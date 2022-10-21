@@ -4,6 +4,8 @@ The script will git clone the master branch into dependencies/libROM and run the
 
 The usage instructions are output for any bad invocation. Currently, there is only the include, option. Include is used if a user only wants to run some tests.
 
+Note that the tests will compile libROM with MFEM if the library has not been built at the time of execution of the regression tests. 
+
 How to run the tests on LC
 
 1. Make sure your user branch is up-to-date with any recent libROM commits and do a git merge if necessary. Otherwise, your tests will most likely fail.
