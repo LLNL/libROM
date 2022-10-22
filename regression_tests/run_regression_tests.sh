@@ -159,7 +159,7 @@ for type_of_test in ${type_of_tests_to_execute[@]}; do
          continue
       fi
 
-      if [[ "$scriptName" == "nonlinear_elasticity" ]]; then
+      if [[ "$scriptName" == "nonlinear_elasticity" ]] || [[ "$scriptName" == "de_parametric_heat_conduction_greedy" ]] ; then
          continue
       fi
           
