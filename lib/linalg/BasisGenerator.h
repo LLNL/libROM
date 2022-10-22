@@ -128,6 +128,8 @@ public:
     {
         if (d_basis_writer) {
             d_basis_writer->writeBasis(kind);
+            delete d_basis_writer;
+            d_basis_writer = nullptr;
         }
     }
 
@@ -139,6 +141,8 @@ public:
     {
         if (d_basis_writer) {
             d_basis_writer->writeBasis("snapshot");
+            delete d_basis_writer;
+            d_basis_writer = nullptr;
         }
     }
 
