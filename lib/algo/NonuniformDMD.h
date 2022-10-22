@@ -55,6 +55,22 @@ public:
      */
     NonuniformDMD(std::string base_file_name);
 
+    /**
+     * @brief Load the object state to a file.
+     *
+     * @param[in] base_file_name The base part of the filename to load the
+     *                           database to.
+     */
+    void load(std::string base_file_name) override;
+
+    /**
+     * @brief Save the object state to a file.
+     *
+     * @param[in] base_file_name The base part of the filename to save the
+     *                           database to.
+     */
+    void save(std::string base_file_name) override;
+
 protected:
     friend void getParametricDMD<NonuniformDMD>(NonuniformDMD*& parametric_dmd,
             std::vector<Vector*>& parameter_points,
@@ -126,14 +142,6 @@ private:
      * @brief Derivative offset in snapshot.
      */
     Vector* d_derivative_offset = NULL;
-
-    /**
-     * @brief Save the object state to a file.
-     *
-     * @param[in] base_file_name The base part of the filename to save the
-     *                           database to.
-     */
-    void save(std::string base_file_name);
 
 };
 

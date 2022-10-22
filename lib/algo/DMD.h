@@ -140,12 +140,28 @@ public:
     virtual void load(std::string base_file_name);
 
     /**
+     * @brief Load the object state from a file.
+     *
+     * @param[in] base_file_name The base part of the filename to load the
+     *                           database from.
+     */
+    void load(const char* base_file_name);
+
+    /**
      * @brief Save the object state to a file.
      *
      * @param[in] base_file_name The base part of the filename to save the
      *                           database to.
      */
     virtual void save(std::string base_file_name);
+
+    /**
+     * @brief Save the object state to a file.
+     *
+     * @param[in] base_file_name The base part of the filename to save the
+     *                           database to.
+     */
+    void save(const char* base_file_name);
 
     /**
      * @brief Output the DMD record in CSV files.
