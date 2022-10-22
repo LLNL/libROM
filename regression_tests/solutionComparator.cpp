@@ -2,8 +2,6 @@
 #include <string>
 #include <cmath>
 #include <iostream>
-#include <iomanip>
-using std::setprecision;
 #include "mfem.hpp"
 
 using namespace std;
@@ -27,7 +25,7 @@ void compareSolutions(string &baselineFile, string &targetFile, double errorBoun
     istream** targetFiles = new istream*[numProcessors];
     std::filebuf* baselinefb = new filebuf[numProcessors];
     std::filebuf* targetfb = new filebuf[numProcessors];
-    cout << "Starting solution comparator" << endl;
+
     for (int i = 0; i < numProcessors; i++) {
         if (i > 0) {
             baselineFile.back() = '0' + i;
@@ -55,25 +53,12 @@ void compareSolutions(string &baselineFile, string &targetFile, double errorBoun
     Vector baseline = Vector();
     Vector target = Vector();
     baseline.Load(baselineFiles, numProcessors, baselineDim);
-    cout << "Baseline File 0 = " << baselineFiles[0] << endl;
-    cout << "Baseline num processors = " << numProcessors << endl;
-    cout << "Baseline dim 0 = " << baselineDim[0] << endl;
     target.Load(targetFiles, numProcessors, targetDim);
-    cout << "Target File 0 = " << targetFiles[0] << endl;
-    cout << "Target num processors = " << numProcessors << endl;
-    cout << "Target dim 0 = " << targetDim[0] << endl;
-    cout << "Loaded baseline and target" << endl;
+
     if (baseline.Size() != target.Size()) {
         cerr << "The solution vectors are different dimensions." << endl;
         cerr << "Baseline dim: " << baseline.Size() << ", Target dim: " << target.Size() << endl;
         abort();
-    }
-    for (int i=0; i < baseline.Size(); i++) {
-        cout << " Baseline Element at " << i << " is " << std::scientific << baseline.Elem(i) << endl;
-    }
-
-    for (int i=0; i < target.Size(); i++) {
-        cout << " Target Element at " << i << " is " << std::scientific << target.Elem(i) << endl;
     }
 
     Vector diff = Vector(baseline.Size());
@@ -89,7 +74,6 @@ between the solution vectors." << endl;
     double diffNormL2 = diff.Norml2();
     double error;
     if (baselineNormL2 == 0.0) {
-        cout << "Baseline NormL2 is zero" << endl;
         error = diffNormL2;
     }
     else {
@@ -102,9 +86,6 @@ between the solution vectors." << endl;
         cerr << "error = " << error << endl;
         cerr << "Error bound: " << errorBound << " was surpassed for the l2 norm of the difference of the solutions." << endl;
         abort();
-    }
-    else {
-        cerr << "Test passed, error = " << error << ", errorBound = " << errorBound << endl;
     }
 }
 
