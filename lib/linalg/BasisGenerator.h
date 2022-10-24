@@ -131,6 +131,11 @@ public:
             delete d_basis_writer;
             d_basis_writer = nullptr;
         }
+        else
+        {
+            std::cout << "WARNING: file has already been written by endSamples"
+                      << std::endl;
+        }
     }
 
     /**
@@ -139,11 +144,7 @@ public:
     void
     writeSnapshot()
     {
-        if (d_basis_writer) {
-            d_basis_writer->writeBasis("snapshot");
-            delete d_basis_writer;
-            d_basis_writer = nullptr;
-        }
+        endSamples("snapshot");
     }
 
     /**
