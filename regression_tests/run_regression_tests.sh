@@ -115,7 +115,8 @@ if [ ! -d $BASELINE_DIR/libROM ]; then # Clone master branch to baseline directo
        exit 1
     fi
 else
-   echo "${BASELINE_DIR}/libROM already exists"
+   echo "${BASELINE_DIR}/libROM master already exists"
+   cd
 fi
 cd $DIR
 RESULTS_DIR=$DIR/regression_tests/results
@@ -155,11 +156,11 @@ for type_of_test in ${type_of_tests_to_execute[@]}; do
       scriptName=$(basename $test ".sh")
       # Run a specific test by specifying the test (without the .sh suffix)
       if [[ -n $i && ! "$i" == "$scriptName" ]]; then
-         # echo "Skipping $scriptName"
          continue
       fi
 
-      if [[ "$scriptName" == "nonlinear_elasticity" ]] || [[ "$scriptName" == "de_parametric_heat_conduction_greedy" ]] ; then
+      if [[ "$scriptName" == "nonlinear_elasticity" ]] ; then
+         #echo "Skipping $scriptName"
          continue
       fi
           
@@ -183,3 +184,4 @@ echo "${testNumPass} passed, ${testNumFail} failed out of ${totalTests} tests"
 if [[ $testNumFail -ne 0 ]]; then
 	exit 1
 fi
+unset GITHUB_WORKSPACE
