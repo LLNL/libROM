@@ -68,7 +68,7 @@ public:
     /**
      * @brief Set the offset of a certain order.
      */
-    virtual void setOffset(Vector* state_offset, int order); 
+    virtual void setOffset(Vector* offset_vector, int order); 
 
     /**
      * @brief Sample the new state, u_in. Any samples in d_snapshots

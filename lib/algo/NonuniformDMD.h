@@ -58,7 +58,7 @@ public:
     /**
      * @brief Set the offset of a certain order.
      */
-    void setOffset(Vector* state_offset, int order) override; 
+    void setOffset(Vector* offset_vector, int order) override; 
 
     /**
      * @brief Load the object state to a file.
