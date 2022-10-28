@@ -59,7 +59,7 @@ DMD::DMD(int dim, Vector* state_offset)
     d_dim = dim;
     d_trained = false;
     d_init_projected = false;
-    setStateOffset(state_offset);
+    setOffset(state_offset, 0);
 }
 
 DMD::DMD(int dim, double dt, Vector* state_offset)
@@ -80,7 +80,7 @@ DMD::DMD(int dim, double dt, Vector* state_offset)
     d_dt = dt;
     d_trained = false;
     d_init_projected = false;
-    setStateOffset(state_offset);
+    setOffset(state_offset, 0);
 }
 
 DMD::DMD(std::string base_file_name)
@@ -122,13 +122,15 @@ DMD::DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
     d_k = k;
     d_dt = dt;
     d_t_offset = t_offset;
-    setStateOffset(state_offset);
+    setOffset(state_offset, 0);
 }
 
-void
-DMD::setStateOffset(Vector* state_offset)
+void DMD::setOffset(Vector* offset_vector, int order)
 {
-    d_state_offset = state_offset;
+    if (order == 0)
+    {
+        d_state_offset = offset_vector;
+    }
 }
 
 void DMD::takeSample(double* u_in, double t)
