@@ -57,9 +57,9 @@ DMD::DMD(int dim, Vector* state_offset)
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
     d_dim = dim;
-    d_state_offset = state_offset;
     d_trained = false;
     d_init_projected = false;
+    setStateOffset(state_offset);
 }
 
 DMD::DMD(int dim, double dt, Vector* state_offset)
@@ -78,9 +78,9 @@ DMD::DMD(int dim, double dt, Vector* state_offset)
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
     d_dim = dim;
     d_dt = dt;
-    d_state_offset = state_offset;
     d_trained = false;
     d_init_projected = false;
+    setStateOffset(state_offset);
 }
 
 DMD::DMD(std::string base_file_name)
@@ -122,6 +122,12 @@ DMD::DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
     d_k = k;
     d_dt = dt;
     d_t_offset = t_offset;
+    setStateOffset(state_offset);
+}
+
+void
+DMD::setStateOffset(Vector* state_offset)
+{
     d_state_offset = state_offset;
 }
 

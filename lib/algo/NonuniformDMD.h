@@ -56,6 +56,11 @@ public:
     NonuniformDMD(std::string base_file_name);
 
     /**
+     * @brief Set the derivative offset.
+     */
+    void setDerivativeOffset(Vector* derivative_offset); 
+
+    /**
      * @brief Load the object state to a file.
      *
      * @param[in] base_file_name The base part of the filename to load the

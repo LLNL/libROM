@@ -66,6 +66,11 @@ public:
     DMD(std::string base_file_name);
 
     /**
+     * @brief Set the state offset.
+     */
+    void setStateOffset(Vector* state_offset); 
+
+    /**
      * @brief Sample the new state, u_in. Any samples in d_snapshots
      *        taken at the same or later time will be erased.
      *

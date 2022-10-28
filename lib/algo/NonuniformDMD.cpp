@@ -20,7 +20,7 @@ NonuniformDMD::NonuniformDMD(int dim, Vector* state_offset,
                              Vector* derivative_offset) :
     DMD(dim, state_offset)
 {
-    d_derivative_offset = derivative_offset;
+    setDerivativeOffset(derivative_offset);
 }
 
 NonuniformDMD::NonuniformDMD(std::string base_file_name) : DMD(base_file_name)
@@ -42,6 +42,12 @@ NonuniformDMD::NonuniformDMD(std::vector<std::complex<double>> eigs,
                              Vector* state_offset, Vector* derivative_offset) :
     DMD(eigs, phi_real, phi_imaginary, k,
         dt, t_offset, state_offset)
+{
+    setDerivativeOffset(derivative_offset);
+}
+
+void
+NonuniformDMD::setDerivativeOffset(Vector* derivative_offset)
 {
     d_derivative_offset = derivative_offset;
 }
