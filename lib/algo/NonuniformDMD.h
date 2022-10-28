@@ -131,7 +131,7 @@ private:
     /**
      * @brief Compute phi.
      */
-    void computePhi(struct DMDInternal dmd_internal_obj) override;
+    void computePhi(DMDInternal dmd_internal_obj) override;
 
     /**
      * @brief Compute the appropriate exponential function when predicting the solution.

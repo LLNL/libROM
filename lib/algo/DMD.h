@@ -246,7 +246,7 @@ protected:
     /**
      * @brief Compute phi.
      */
-    virtual void computePhi(struct DMDInternal dmd_internal_obj);
+    virtual void computePhi(DMDInternal dmd_internal_obj);
 
     /**
      * @brief Compute the appropriate exponential function when predicting the solution.
