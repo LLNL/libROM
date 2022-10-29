@@ -66,6 +66,11 @@ public:
     DMD(std::string base_file_name);
 
     /**
+     * @brief Set the offset of a certain order.
+     */
+    virtual void setOffset(Vector* offset_vector, int order); 
+
+    /**
      * @brief Sample the new state, u_in. Any samples in d_snapshots
      *        taken at the same or later time will be erased.
      *
@@ -241,7 +246,7 @@ protected:
     /**
      * @brief Compute phi.
      */
-    virtual void computePhi(struct DMDInternal dmd_internal_obj);
+    virtual void computePhi(DMDInternal dmd_internal_obj);
 
     /**
      * @brief Compute the appropriate exponential function when predicting the solution.

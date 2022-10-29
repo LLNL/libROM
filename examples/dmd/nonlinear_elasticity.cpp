@@ -513,7 +513,7 @@ int main(int argc, char *argv[])
         dmd_x[curr_window]->takeSample(x_gf.GetTrueVector(), t);
         dmd_v[curr_window]->takeSample(v_gf.GetTrueVector(), t);
 
-        if (ti % windowNumSamples == 0)
+        if (last_step || (ti % windowNumSamples) == 0)
         {
             if (rdim != -1)
             {
