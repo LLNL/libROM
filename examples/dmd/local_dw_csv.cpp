@@ -560,6 +560,7 @@ int main(int argc, char *argv[])
             for (int window = 0; window < numWindows; ++window)
             {
                 admd = dynamic_cast<CAROM::AdaptiveDMD*> (dmd[window]);
+                CAROM_VERIFY(admd);
                 double t_init = dmd[window]->getTimeOffset();
 
                 dtc = admd->getTrueDt();
