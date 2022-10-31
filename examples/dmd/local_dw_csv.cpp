@@ -14,20 +14,6 @@
 //
 // =================================================================================
 //
-// Local serial DMD command:
-//   mpirun -np 8 local_dw_csv -o local_csv_serial -rdim 16 -dtc 0.01
-//
-// Final-time prediction error (Last line in run/local_csv_serial/hc_par5_prediction_error.csv):
-//   0.0004063242226265
-//
-// Local time windowing DMD command:
-//   mpirun -np 8 local_dw_csv -o local_csv_tw -rdim 16 -nwinsamp 25 -dtc 0.01
-//
-// Final-time prediction error (Last line in run/local_csv_tw/hc_par5_prediction_error.csv):
-//   0.0002458808673544
-//
-// =================================================================================
-//
 // Description: Local solution manifold decomposition DMD on general CSV datasets.
 //
 // User specify file locations and names by -list LIST_DIR -train-set TRAIN_LIST -test-set TEST_LIST -data DATA_DIR -var VAR_NAME -o OUT_DIR
