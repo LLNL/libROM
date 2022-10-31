@@ -233,11 +233,11 @@ int main(int argc, char *argv[])
     vector<string> training_par_list;
     if (train)
     {
-        npar = csv_db.getLineCount(string(list_dir) + "/" + train_list + ".csv");
-        CAROM_VERIFY(npar == 1);
-
         csv_db.getStringVector(string(list_dir) + "/" + train_list + ".csv",
                                training_par_list, false);
+        npar = training_par_list.size(); 
+        CAROM_VERIFY(npar == 1);
+
         stringstream par_ss(training_par_list[0]); // training DATASET
         string par_dir;
         getline(par_ss, par_dir, ',');
@@ -494,9 +494,9 @@ int main(int argc, char *argv[])
     }
 
     vector<string> testing_par_list;
-    npar = csv_db.getLineCount(string(list_dir) + "/" + test_list + ".csv");
     csv_db.getStringVector(string(list_dir) + "/" + test_list + ".csv",
                            testing_par_list, false);
+    npar = testing_par_list.size();
 
     int num_tests = 0;
     vector<double> prediction_time, prediction_error;

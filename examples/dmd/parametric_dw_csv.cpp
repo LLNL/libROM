@@ -276,15 +276,15 @@ int main(int argc, char *argv[])
     vector<int> num_train_snap; // DATASET size
     vector<double> indicator_init, indicator_last; // DATASET indicator range
 
-    int npar = csv_db.getLineCount(string(list_dir) + "/" + train_list + ".csv");
+    csv_db.getStringVector(string(list_dir) + "/" + train_list + ".csv",
+                           training_par_list, false);
+    int npar = training_par_list.size();
     CAROM_VERIFY(npar > 1);
     if (myid == 0)
     {
         cout << "Loading " << npar << " training datasets." << endl;
     }
 
-    csv_db.getStringVector(string(list_dir) + "/" + train_list + ".csv",
-                           training_par_list, false);
     int dpar = -1;
 
     for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
@@ -595,15 +595,15 @@ int main(int argc, char *argv[])
         par_dir_list.clear();
 
         dmd_preprocess_timer.Start();
-        npar = csv_db.getLineCount(string(list_dir) + "/" + test_list + ".csv");
+        csv_db.getStringVector(string(list_dir) + "/" + test_list + ".csv",
+                               testing_par_list, false);
+        npar = testing_par_list.size();
         CAROM(npar > 1);
         if (myid == 0)
         {
             cout << "Loading " << npar << " testing datasets." << endl;
         }
 
-        csv_db.getStringVector(string(list_dir) + "/" + test_list + ".csv",
-                               testing_par_list, false);
         dmd_curr_par.assign(numWindows, nullptr);
         dmd.assign(numWindows, dmd_curr_par);
 
