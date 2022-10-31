@@ -345,6 +345,7 @@ int main(int argc, char *argv[])
         vector<string> snap_list;
         csv_db.getStringVector(string(list_dir) + "/" + par_dir + ".csv", snap_list,
                                false);
+        CAROM_VERIFY(snap_list.size() > 0);
 
         if (myid == 0)
         {
@@ -626,6 +627,7 @@ int main(int argc, char *argv[])
         vector<string> snap_list;
         csv_db.getStringVector(string(list_dir) + "/" + par_dir + ".csv", snap_list,
                                false);
+        CAROM_VERIFY(snap_list.size() > 0);
 
         vector<double> tvec;
         csv_db.getDoubleVector(string(data_dir) + "/" + par_dir + "/tval.csv", tvec,

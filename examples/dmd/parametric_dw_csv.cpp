@@ -318,6 +318,7 @@ int main(int argc, char *argv[])
         vector<string> snap_list;
         csv_db.getStringVector(string(list_dir) + "/" + par_dir + ".csv", snap_list,
                                false);
+        CAROM_VERIFY(snap_list.size() > 0);
 
         vector<int> snap_bound;
         csv_db.getIntegerVector(string(data_dir) + "/" + par_dir + "/" +
@@ -398,6 +399,7 @@ int main(int argc, char *argv[])
             vector<string> snap_list;
             csv_db.getStringVector(string(list_dir) + "/" + par_dir + ".csv", snap_list,
                                    false);
+            CAROM_VERIFY(snap_list.size() > 0);
 
             vector<double> tvec;
             csv_db.getDoubleVector(string(data_dir) + "/" + par_dir + "/tval.csv", tvec,
@@ -594,6 +596,7 @@ int main(int argc, char *argv[])
 
         dmd_preprocess_timer.Start();
         npar = csv_db.getLineCount(string(list_dir) + "/" + test_list + ".csv");
+        CAROM(npar > 1);
         if (myid == 0)
         {
             cout << "Loading " << npar << " testing datasets." << endl;
@@ -661,6 +664,7 @@ int main(int argc, char *argv[])
             vector<string> snap_list;
             csv_db.getStringVector(string(list_dir) + "/" + par_dir + ".csv", snap_list,
                                    false);
+            CAROM_VERIFY(snap_list.size() > 0);
 
             vector<double> tvec;
             csv_db.getDoubleVector(string(data_dir) + "/" + par_dir + "/tval.csv", tvec,
