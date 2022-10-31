@@ -10,7 +10,7 @@
 
 // Compile with: make parametric_tw_csv
 //
-// Generate CSV databse on heat conduction with: heat_conduction_csv.sh
+// Generate CSV database on heat conduction with: heat_conduction_csv.sh
 //
 // =================================================================================
 //
