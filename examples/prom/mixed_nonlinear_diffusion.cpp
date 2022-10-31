@@ -75,9 +75,11 @@
 //               Elapsed time for time integration loop using S_OPT sampling: 0.348985935
 //               Relative l2 error of ROM solution at final timestep using EQP: 0.002659978000520714
 //               Elapsed time for time integration loop using EQP sampling: 0.176821221
+//
+//               Pointwise snapshots for DMD input
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -pwsnap -pwx 101 -pwy 101
 
 #include "mfem.hpp"
-
 #include <fstream>
 #include <iostream>
 #include <algorithm>
@@ -89,6 +91,7 @@
 #include "hyperreduction/GNAT.h"
 #include "hyperreduction/S_OPT.h"
 #include "mfem/SampleMesh.hpp"
+#include "mfem/PointwiseSnapshot.hpp"
 
 using namespace mfem;
 using namespace std;
@@ -549,6 +552,11 @@ int main(int argc, char *argv[])
     bool writeSampleMesh = false;
     int num_samples_req = -1;
 
+    bool pointwiseSnapshots = false;
+    int pwx = 0;
+    int pwy = 0;
+    int pwz = 0;
+
     int nsets = 0;
 
     int id_param = 0;
@@ -622,6 +630,11 @@ int main(int argc, char *argv[])
                    "Tolerance for NNLS solver.");
     args.AddOption(&maxNNLSnnz, "-maxnnls", "--max-nnls",
                    "Maximum nnz for NNLS");
+    args.AddOption(&pointwiseSnapshots, "-pwsnap", "--pw-snap", "-no-pwsnap",
+                   "--no-pw-snap", "Enable or disable writing pointwise snapshots.");
+    args.AddOption(&pwx, "-pwx", "--pwx", "Number of snapshot points in x");
+    args.AddOption(&pwy, "-pwy", "--pwy", "Number of snapshot points in y");
+    args.AddOption(&pwz, "-pwz", "--pwz", "Number of snapshot points in z");
 
     args.Parse();
     if (!args.Good())
@@ -636,9 +649,10 @@ int main(int argc, char *argv[])
         args.PrintOptions(cout);
     }
 
-    const bool check = (offline && !merge && !online) || (!offline && merge
-                       && !online) || (!offline && !merge && online);
-    MFEM_VERIFY(check, "only one of offline, merge, or online must be true!");
+    const int check = (int) pointwiseSnapshots + (int) offline + (int) merge +
+                      (int) online;
+    MFEM_VERIFY(check == 1,
+                "Only one of offline, merge, online, or pwsnap must be true!");
 
     const bool hyperreduce_source = (problem != INIT_STEP);
 
@@ -672,6 +686,35 @@ int main(int argc, char *argv[])
     {
         pmesh->UniformRefinement();
     }
+
+#ifndef MFEM_USE_GSLIB
+    if (pointwiseSnapshots) {
+        cout << "To use pointwise snapshots, compile with -mg option" << endl;
+        MFEM_ABORT("Pointwise snapshots aren't available, since the "
+                   "compilation is done without the -mg option");
+    }
+#else
+    CAROM::PointwiseSnapshot *pws = nullptr;
+    Vector pwsnap;
+    CAROM::Vector *pwsnap_CAROM = nullptr;
+
+    if (pointwiseSnapshots)
+    {
+        pmesh->EnsureNodes();
+        const int dmdDim[3] = {pwx, pwy, pwz};
+        pws = new CAROM::PointwiseSnapshot(dim, dmdDim);
+        pws->SetMesh(pmesh);
+
+        int snapshotSize = dmdDim[0];
+        for (int i=1; i<dim; ++i)
+            snapshotSize *= dmdDim[i];
+
+        pwsnap.SetSize(snapshotSize);
+        if (myid == 0)
+            pwsnap_CAROM = new CAROM::Vector(pwsnap.GetData(), pwsnap.Size(),
+                                             true, false);
+    }
+#endif
 
     // 7. Define the mixed finite element spaces.
 
@@ -1186,6 +1229,24 @@ int main(int argc, char *argv[])
 
     oper.newtonFailure = false;
 
+#ifdef MFEM_USE_GSLIB
+    if (pointwiseSnapshots)
+    {
+        pws->GetSnapshot(p_gf, pwsnap);
+
+        ostringstream dmd_filename;
+        dmd_filename << "snap_" << id_param << "_0";
+
+        if (myid == 0)
+        {
+            cout << "Writing DMD snapshot at step 0, time " << t
+                 << ", with offline parameter index " << id_param << endl;
+
+            pwsnap_CAROM->write(dmd_filename.str());
+        }
+    }
+#endif
+
     solveTimer.Start();
 
     bool last_step = false;
@@ -1353,6 +1414,24 @@ int main(int argc, char *argv[])
                 visit_dc->Save();
             }
         }
+#ifdef MFEM_USE_GSLIB
+        if (pointwiseSnapshots)
+        {
+            p_gf.SetFromTrueDofs(*p_W);
+            pws->GetSnapshot(p_gf, pwsnap);
+
+            ostringstream dmd_filename;
+            dmd_filename << "snap_" << id_param << "_" << ti;
+
+            if (myid == 0)
+            {
+                cout << "Writing DMD snapshot at step " << ti << ", time " << t
+                     << ", with offline parameter index " << id_param << endl;
+
+                pwsnap_CAROM->write(dmd_filename.str());
+            }
+        }
+#endif
     }  // timestep loop
 
     solveTimer.Stop();
@@ -1428,6 +1507,11 @@ int main(int argc, char *argv[])
     delete romop;
 
     delete p_W;
+
+#ifdef MFEM_USE_GSLIB
+    delete pws;
+    delete pwsnap_CAROM;
+#endif
 
     totalTimer.Stop();
     if (myid == 0) cout << "Elapsed time for entire simulation " <<

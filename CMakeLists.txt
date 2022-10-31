@@ -34,7 +34,9 @@ set(libROM_CMAKE_MODULE_PATH ${libROM_CMAKE_PATH}/modules)
 list(APPEND CMAKE_MODULE_PATH ${libROM_CMAKE_MODULE_PATH})
 
 option(USE_MFEM "Build libROM with MFEM" OFF)
+option(MFEM_USE_GSLIB "Build libROM with MFEM using GSLIB" OFF)
 option(BUILD_STATIC "Build libROM as a static library" OFF)
+option(ENABLE_EXAMPLES "Build examples and regression tests" ON)
 
 ## Set a bunch of variables to generate a configure header
 # Enable assertion checking if debug symbols generated
@@ -110,13 +112,13 @@ find_package(Doxygen 1.8.5)
 find_package(GTest 1.6.0)
 
 if (USE_MFEM)
-    find_library(MFEM mfem "${CMAKE_SOURCE_DIR}/dependencies/mfem")
-    find_library(HYPRE HYPRE "${CMAKE_SOURCE_DIR}/dependencies/hypre/src/hypre/lib")
-    find_library(PARMETIS parmetis "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/build/lib/libparmetis")
-    find_library(METIS metis "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/build/lib/libmetis")
-    find_path(MFEM_INCLUDES mfem.hpp "${CMAKE_SOURCE_DIR}/dependencies/mfem")
-    find_path(HYPRE_INCLUDES HYPRE.h "${CMAKE_SOURCE_DIR}/dependencies/hypre/src/hypre/include")
-    find_path(PARMETIS_INCLUDES metis.h "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/metis/include")
+    find_library(MFEM mfem "${CMAKE_SOURCE_DIR}/dependencies/mfem" "${MFEM_DIR}/lib")
+    find_library(HYPRE HYPRE "${CMAKE_SOURCE_DIR}/dependencies/hypre/src/hypre/lib" "${HYPRE_DIR}/lib")
+    find_library(PARMETIS parmetis "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/build/lib/libparmetis" "${PARMETIS_DIR}/lib")
+    find_library(METIS metis "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/build/lib/libmetis" "${METIS_DIR}/lib")
+    find_path(MFEM_INCLUDES mfem.hpp "${CMAKE_SOURCE_DIR}/dependencies/mfem" "${MFEM_DIR}/include")
+    find_path(HYPRE_INCLUDES HYPRE.h "${CMAKE_SOURCE_DIR}/dependencies/hypre/src/hypre/include" "${HYPRE_DIR}/include")
+    find_path(PARMETIS_INCLUDES metis.h "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/metis/include" "${PARMETIS_DIR}/metis/include")
 endif()
 
 add_subdirectory(lib)
@@ -125,52 +127,72 @@ add_subdirectory(lib)
 # enumerating individual compiler features for simplicity
 target_compile_features(ROM PRIVATE cxx_std_11)
 
-if (USE_MFEM)
-  set(examples
-    poisson_global_rom
-    poisson_local_rom_greedy
-    dg_advection_global_rom
-    dg_advection_local_rom_matrix_interp
-    mixed_nonlinear_diffusion
-    nonlinear_elasticity_global_rom
-    linear_elasticity_global_rom
-    dg_advection
-    nonlinear_elasticity
-    heat_conduction
-    parametric_heat_conduction
-    de_parametric_heat_conduction_greedy
-    dg_euler
-    local_tw_csv
-    local_dw_csv
-    parametric_tw_csv
-    parametric_dw_csv)
-  set(example_directories
-    prom
-    prom
-    prom
-    prom
-    prom
-    prom
-    prom
-    dmd
-    dmd
-    dmd
-    dmd
-    dmd
-    dmd
-    dmd
-    dmd
-    dmd
-    dmd)
+if (ENABLE_EXAMPLES)
+  if (USE_MFEM)
+    set(examples
+      poisson_global_rom
+      poisson_local_rom_greedy
+      dg_advection_global_rom
+      dg_advection_local_rom_matrix_interp
+      mixed_nonlinear_diffusion
+      nonlinear_elasticity_global_rom
+      linear_elasticity_global_rom
+      dg_advection
+      nonlinear_elasticity
+      heat_conduction
+      parametric_heat_conduction
+      de_parametric_heat_conduction_greedy
+      dg_euler
+      local_tw_csv
+      local_dw_csv
+      parametric_tw_csv
+      parametric_dw_csv)
+    set(example_directories
+      prom
+      prom
+      prom
+      prom
+      prom
+      prom
+      prom
+      dmd
+      dmd
+      dmd
+      dmd
+      dmd
+      dmd
+      dmd
+      dmd
+      dmd
+      dmd)
 
-  list(LENGTH examples len1)
-  math(EXPR len2 "${len1} - 1")
+    list(LENGTH examples len1)
+    math(EXPR len2 "${len1} - 1")
 
-  foreach(val RANGE ${len2})
-    list(GET examples ${val} name)
-    list(GET example_directories ${val} example_dir)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/examples/${example_dir})
-    add_executable(${name} examples/${example_dir}/${name}.cpp)
+    foreach(val RANGE ${len2})
+      list(GET examples ${val} name)
+      list(GET example_directories ${val} example_dir)
+      set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/examples/${example_dir})
+      add_executable(${name} examples/${example_dir}/${name}.cpp)
+
+      target_link_libraries(${name}
+        PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
+      target_include_directories(${name}
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+        ${MPI_C_INCLUDE_DIRS})
+      target_compile_features(${name} PRIVATE cxx_std_11)
+    endforeach() # IN LISTS examples
+    file(COPY examples/data DESTINATION ${CMAKE_BINARY_DIR}/examples)
+    file(COPY examples/dmd/heat_conduction_csv.sh DESTINATION ${CMAKE_BINARY_DIR}/examples/dmd)
+  endif()
+
+  set(misc_example_names
+    combine_samples)
+
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/examples/misc)
+
+  foreach(name IN LISTS misc_example_names)
+    add_executable(${name} examples/misc/${name}.cpp)
 
     target_link_libraries(${name}
       PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
@@ -178,48 +200,30 @@ if (USE_MFEM)
       PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
       ${MPI_C_INCLUDE_DIRS})
     target_compile_features(${name} PRIVATE cxx_std_11)
-  endforeach() # IN LISTS examples
-  file(COPY examples/data DESTINATION ${CMAKE_BINARY_DIR}/examples)
-  file(COPY examples/dmd/heat_conduction_csv.sh DESTINATION ${CMAKE_BINARY_DIR}/examples/dmd)
-endif()
+  endforeach(name) # IN LISTS misc_exmaple_names
 
-set(misc_example_names
-  combine_samples)
+  set(regression_test_names
+    smoke_test
+    test_include
+    uneven_dist
+    weak_scaling
+    random_test
+    smoke_static
+    load_samples)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/examples/misc)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests)
 
-foreach(name IN LISTS misc_example_names)
-  add_executable(${name} examples/misc/${name}.cpp)
+  foreach(name IN LISTS regression_test_names)
+    add_executable(${name} tests/${name}.cpp)
 
-  target_link_libraries(${name}
-    PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
-  target_include_directories(${name}
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-    ${MPI_C_INCLUDE_DIRS})
-  target_compile_features(${name} PRIVATE cxx_std_11)
-endforeach(name) # IN LISTS misc_exmaple_names
-
-set(regression_test_names
-  smoke_test
-  test_include
-  uneven_dist
-  weak_scaling
-  random_test
-  smoke_static
-  load_samples)
-
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests)
-
-foreach(name IN LISTS regression_test_names)
-  add_executable(${name} tests/${name}.cpp)
-
-  target_link_libraries(${name}
-    PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
-  target_include_directories(${name}
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-    ${MPI_C_INCLUDE_DIRS})
-  target_compile_features(${name} PRIVATE cxx_std_11)
-endforeach(name) # IN LISTS regression_test_names
+    target_link_libraries(${name}
+      PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
+    target_include_directories(${name}
+      PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+      ${MPI_C_INCLUDE_DIRS})
+    target_compile_features(${name} PRIVATE cxx_std_11)
+  endforeach(name) # IN LISTS regression_test_names
+endif(ENABLE_EXAMPLES)
 
 if(GTEST_FOUND)
   set(unit_test_stems

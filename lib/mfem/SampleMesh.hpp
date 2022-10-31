@@ -204,11 +204,11 @@ private:
     vector<int> spaceTOS, spaceOS, spaceOSSP;
     vector<vector<int>> spaceOSall;
 
+    set<int> elems;
+
     string filename;  // For visualization output
 
     double elemVisScale;  // Scaling for sample element visualization
-
-    set<int> elems;
 };
 
 /**

@@ -57,9 +57,9 @@ DMD::DMD(int dim, Vector* state_offset)
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
     d_dim = dim;
-    d_state_offset = state_offset;
     d_trained = false;
     d_init_projected = false;
+    setOffset(state_offset, 0);
 }
 
 DMD::DMD(int dim, double dt, Vector* state_offset)
@@ -78,9 +78,9 @@ DMD::DMD(int dim, double dt, Vector* state_offset)
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
     d_dim = dim;
     d_dt = dt;
-    d_state_offset = state_offset;
     d_trained = false;
     d_init_projected = false;
+    setOffset(state_offset, 0);
 }
 
 DMD::DMD(std::string base_file_name)
@@ -122,7 +122,15 @@ DMD::DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
     d_k = k;
     d_dt = dt;
     d_t_offset = t_offset;
-    d_state_offset = state_offset;
+    setOffset(state_offset, 0);
+}
+
+void DMD::setOffset(Vector* offset_vector, int order)
+{
+    if (order == 0)
+    {
+        d_state_offset = offset_vector;
+    }
 }
 
 void DMD::takeSample(double* u_in, double t)
@@ -794,6 +802,12 @@ DMD::load(std::string base_file_name)
 }
 
 void
+DMD::load(const char* base_file_name)
+{
+    load(std::string(base_file_name));
+}
+
+void
 DMD::save(std::string base_file_name)
 {
     CAROM_ASSERT(!base_file_name.empty());
@@ -874,6 +888,12 @@ DMD::save(std::string base_file_name)
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
+}
+
+void
+DMD::save(const char* base_file_name)
+{
+    save(std::string(base_file_name));
 }
 
 void
