@@ -15,15 +15,13 @@
 // =================================================================================
 //
 // Local serial DMD command:
-//   mpirun -np 8 local_tw_csv -o local_csv_serial -rdim 16 -dtc 0.01 -offline
-//   mpirun -np 8 local_tw_csv -o local_csv_serial -rdim 16 -dtc 0.01 -online
+//   mpirun -np 8 local_tw_csv -o local_csv_serial -rdim 16 -dtc 0.01
 //
 // Final-time prediction error (Last line in run/local_csv_serial/hc_par5_prediction_error.csv):
 //   0.0004063242226265
 //
 // Local time windowing DMD command:
-//   mpirun -np 8 local_tw_csv -o local_csv_tw -rdim 16 -nwinsamp 25 -dtc 0.01 -offline
-//   mpirun -np 8 local_tw_csv -o local_csv_tw -rdim 16 -nwinsamp 25 -dtc 0.01 -online
+//   mpirun -np 8 local_tw_csv -o local_csv_tw -rdim 16 -nwinsamp 25 -dtc 0.01
 //
 // Final-time prediction error (Last line in run/local_csv_tw/hc_par5_prediction_error.csv):
 //   0.0002458808673544
