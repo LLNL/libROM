@@ -15,13 +15,15 @@
 // =================================================================================
 //
 // Parametric serial DMD command:
-//   mpirun -np 8 parametric_tw_csv -o parametric_csv_serial -rdim 16 -dtc 0.01
+//   mpirun -np 8 parametric_tw_csv -o parametric_csv_serial -rdim 16 -dtc 0.01 -offline
+//   mpirun -np 8 parametric_tw_csv -o parametric_csv_serial -rdim 16 -dtc 0.01 -online
 //
 // Final-time prediction error (Last line in run/parametric_csv_serial/hc_par5_prediction_error.csv):
 //   0.0012598331433506
 //
 // Parametric time windowing DMD command:
-//   mpirun -np 8 parametric_tw_csv -o parametric_csv_tw -rdim 16 -nwinsamp 25 -dtc 0.01
+//   mpirun -np 8 parametric_tw_csv -o parametric_csv_tw -rdim 16 -nwinsamp 25 -dtc 0.01 -offline
+//   mpirun -np 8 parametric_tw_csv -o parametric_csv_tw -rdim 16 -nwinsamp 25 -dtc 0.01 -online
 //
 // Final-time prediction error (Last line in run/parametric_csv_tw/hc_par5_prediction_error.csv):
 //   0.0007348122935743
