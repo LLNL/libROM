@@ -277,25 +277,25 @@ int main(int argc, char *argv[])
 
     vector<CAROM::DMD*> dmd;
     dmd.assign(numWindows, nullptr);
-    if (train)
+    for (int window = 0; window < numWindows; ++window)
     {
-        if (ddt > 0.0)
+        if (train)
         {
-            dmd[0] = new CAROM::AdaptiveDMD(dim, ddt, string(rbf),
+            if (ddt > 0.0)
+            {
+                dmd[window] = new CAROM::AdaptiveDMD(dim, ddt, string(rbf),
                                                  string(interp_method), admd_closest_rbf_val);
-        }
-        else if (dtc > 0.0)
-        {
-            dmd[0] = new CAROM::DMD(dim, dtc);
+            }
+            else if (dtc > 0.0)
+            {
+                dmd[window] = new CAROM::DMD(dim, dtc);
+            }
+            else
+            {
+                dmd[window] = new CAROM::NonuniformDMD(dim);
+            }
         }
         else
-        {
-            dmd[0] = new CAROM::NonuniformDMD(dim);
-        }
-    }
-    else
-    {
-        for (int window = 0; window < numWindows; ++window)
         {
             if (myid == 0)
             {
