@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
     {
         csv_db.getStringVector(string(list_dir) + "/" + train_list + ".csv",
                                training_par_list, false);
-        npar = training_par_list.size(); 
+        npar = training_par_list.size();
         CAROM_VERIFY(npar == 1);
 
         stringstream par_ss(training_par_list[0]); // training DATASET
@@ -284,7 +284,7 @@ int main(int argc, char *argv[])
             if (ddt > 0.0)
             {
                 dmd[window] = new CAROM::AdaptiveDMD(dim, ddt, string(rbf),
-                                                 string(interp_method), admd_closest_rbf_val);
+                                                     string(interp_method), admd_closest_rbf_val);
             }
             else if (dtc > 0.0)
             {
