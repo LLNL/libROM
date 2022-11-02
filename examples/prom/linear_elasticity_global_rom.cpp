@@ -30,7 +30,6 @@
 // Offline phase: ./linear_elasticity_global_rom -offline -id 0 -nu 0.2
 //                ./linear_elasticity_global_rom -offline -id 1 -nu 0.4
 //
-//
 // Merge phase:   ./linear_elasticity_global_rom -merge -ns 2
 //
 // NB: to evaluate relative error, call this before the online phase:
@@ -38,12 +37,15 @@
 //
 // Online phase:  ./linear_elasticity_global_rom -online -id 3 -nu 0.3
 //
+// This example runs in parallel with MPI, by using the same number of MPI ranks
+// in all phases (offline, merge, online).
 
 #include "mfem.hpp"
 #include <fstream>
 #include <iostream>
 #include "linalg/BasisGenerator.h"
 #include "linalg/BasisReader.h"
+#include "mfem/Utilities.hpp"
 
 using namespace std;
 using namespace mfem;
@@ -225,7 +227,6 @@ int main(int argc, char* argv[])
     bool isIncremental = false;
     const std::string basisName = "basis";
     const std::string basisFileName = basisName + std::to_string(id);
-    const CAROM::Matrix* spatialbasis;
     CAROM::Options* options;
     CAROM::BasisGenerator* generator;
     int numRowRB, numColumnRB;
@@ -379,40 +380,33 @@ int main(int argc, char* argv[])
         // 20. read the reduced basis
         assembleTimer.Start();
         CAROM::BasisReader reader(basisName);
-        spatialbasis = reader.getSpatialBasis(0.0);
+        const CAROM::Matrix* spatialbasis = reader.getSpatialBasis(0.0);
         numRowRB = spatialbasis->numRows();
         numColumnRB = spatialbasis->numColumns();
-        if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB,
-                                  numColumnRB);
-
-        // libROM stores the matrix row-wise, so wrapping as a DenseMatrix in MFEM means it is transposed.
-        DenseMatrix* reducedBasisT = new DenseMatrix(spatialbasis->getData(),
-                numColumnRB, numRowRB);
+        printf("On rank %d, spatial basis dimension is %d x %d\n", myid,
+               numRowRB, numColumnRB);
 
         // 21. form inverse ROM operator
-        Vector abv(numRowRB), bv(numRowRB), bv2(numRowRB);
-        Vector reducedRHS(numColumnRB), reducedSol(numColumnRB);
-        DenseMatrix invReducedA(numColumnRB);
-        for (int j = 0; j < numColumnRB; ++j) {
-            reducedBasisT->GetRow(j, bv);
-            A.Mult(bv, abv);
-            reducedRHS(j) = bv * B;
-            for (int i = 0; i < numColumnRB; ++i) {
-                reducedBasisT->GetRow(i, bv2);
-                invReducedA(i, j) = abv * bv2;
-            }
-        }
-        invReducedA.Invert();
+        CAROM::Matrix invReducedA(numColumnRB, numColumnRB, false);
+        ComputeCtAB(A, *spatialbasis, *spatialbasis, invReducedA);
+        invReducedA.inverse();
+
+        CAROM::Vector B_carom(B.GetData(), B.Size(), true, false);
+        CAROM::Vector X_carom(X.GetData(), X.Size(), true, false);
+        CAROM::Vector *reducedRHS = spatialbasis->transposeMult(&B_carom);
+        CAROM::Vector reducedSol(numColumnRB, false);
+
         assembleTimer.Stop();
 
         // 22. solve ROM
         solveTimer.Start();
-        invReducedA.Mult(reducedRHS, reducedSol);
+        invReducedA.mult(*reducedRHS, reducedSol);
         solveTimer.Stop();
 
         // 23. reconstruct FOM state
-        reducedBasisT->MultTranspose(reducedSol, X);
-        delete reducedBasisT;
+        spatialbasis->mult(reducedSol, X_carom);
+        delete spatialbasis;
+        delete reducedRHS;
     }
 
     // 24. Recover the parallel grid function corresponding to X. This is the
@@ -437,8 +431,9 @@ int main(int argc, char* argv[])
     ostringstream mesh_name, sol_name, mesh_name_fom, sol_name_fom;
     if (fom || offline)
     {
-        mesh_name << "mesh_f"<< ext_force <<"_fom." << setfill('0') << setw(6) << myid;
-        sol_name << "sol_f"<< ext_force <<"_fom." << setfill('0') << setw(6) << myid;
+        mesh_name << "mesh_f" << ext_force << "_fom." << setfill('0')
+                  << setw(6) << myid;
+        sol_name << "sol_f" << ext_force << "_fom." << setfill('0') << setw(6) << myid;
     }
     if (online)
     {
@@ -495,7 +490,6 @@ int main(int argc, char* argv[])
             cout << "Relative error of ROM for E = " << E << " and nu = " << nu <<
                  " is: " << tot_diff_norm_x / tot_x_fom_norm << endl;
         }
-
     }
 
     // 28. Save data in the VisIt format.
