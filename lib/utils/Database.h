@@ -14,6 +14,7 @@
 #define included_Database_h
 
 #include <string>
+#include <vector>
 
 namespace CAROM {
 
@@ -133,6 +134,14 @@ public:
         const double* const data,
         int nelements) = 0;
 
+    virtual
+    void
+    putDoubleVector(
+        const std::string& file_name,
+        const std::vector<double>& data,
+        int nelements,
+        int precision = 6) = 0;
+
     /**
      * @brief Reads an integer associated with the supplied key from the
      *        currently open database file.
@@ -179,6 +188,8 @@ public:
         getDoubleArray(key, &data, 1);
     }
 
+    virtual int getDoubleArraySize(const std::string& key) = 0;
+
     /**
      * @brief Reads an array of doubles associated with the supplied key
      *        from the currently open database file.
@@ -194,6 +205,14 @@ public:
         const std::string& key,
         double* data,
         int nelements) = 0;
+
+    virtual
+    void
+    getDoubleArray(
+        const std::string& file_name,
+        double* data,
+        int nelements,
+        std::vector<int> idx) = 0;
 
     /**
      * @brief Reads an array of doubles associated with the supplied key

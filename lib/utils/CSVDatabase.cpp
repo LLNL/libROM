@@ -87,7 +87,7 @@ CSVDatabase::putDoubleArray(
 void
 CSVDatabase::putDoubleVector(
     const std::string& file_name,
-    const std::vector<double> data,
+    const std::vector<double>& data,
     int nelements,
     int precision)
 {
@@ -154,6 +154,8 @@ CSVDatabase::getIntegerArray(
 #endif
 
     std::ifstream d_fs(file_name.c_str());
+    if (d_fs.fail())
+        return;
     CAROM_VERIFY(!d_fs.fail());
     int data_entry = 0;
     for (int i = 0; i < nelements; ++i)

@@ -77,6 +77,7 @@
 #include <fstream>
 #include <iostream>
 #include "utils/CSVDatabase.h"
+#include "utils/HDFDatabase.h"
 #include "mfem/PointwiseSnapshot.hpp"
 
 #ifndef _WIN32
@@ -172,6 +173,7 @@ int main(int argc, char *argv[])
     int vis_steps = 5;
     bool adios2 = false;
     bool save_csv = false;
+    bool csvFormat = true;
     const char *basename = "";
 
     bool pointwiseSnapshots = false;
@@ -230,6 +232,8 @@ int main(int argc, char *argv[])
                    "--no-adios2-streams",
                    "Save data using adios2 streams.");
     args.AddOption(&save_csv, "-csv", "--csv", "-no-csv", "--no-csv",
+                   "Enable or disable MFEM result output (files in CSV format).");
+    args.AddOption(&csvFormat, "-csvf", "--csvf", "-no-csvf", "--no-csvf",
                    "Enable or disable MFEM result output (files in CSV format).");
     args.AddOption(&basename, "-out", "--outputfile-name",
                    "Name of the sub-folder to dump files within the run directory.");
@@ -513,8 +517,13 @@ int main(int argc, char *argv[])
     vector<double> ts;
     CAROM::Vector* init = NULL;
 
-    CAROM::CSVDatabase csv_db;
-    vector<string> snap_list;
+    CAROM::Database *db = NULL;
+    if (csvFormat)
+        db = new CAROM::CSVDatabase();
+    else
+        db = new CAROM::HDFDatabase();
+
+    vector<int> snap_list;
 
     fom_timer.Stop();
 
@@ -544,12 +553,20 @@ int main(int argc, char *argv[])
 
     if (save_csv && myid == 0)
     {
-        mkdir((outputPath + "/step0").c_str(), 0777);
-        csv_db.putDoubleArray(outputPath + "/step0/sol.csv", u.GetData(), u.Size());
+        if (csvFormat)
+        {
+            mkdir((outputPath + "/step0").c_str(), 0777);
+            db->putDoubleArray(outputPath + "/step0/sol.csv", u.GetData(), u.Size());
+        }
+        else
+        {
+            db->create(outputPath + "/dmd.hdf");
+            db->putDoubleArray("step0sol", u.GetData(), u.Size());
+        }
     }
 
     ts.push_back(t);
-    snap_list.push_back("step0");
+    snap_list.push_back(0);
 
     bool last_step = false;
     for (int ti = 1; !last_step; ti++)
@@ -582,13 +599,19 @@ int main(int argc, char *argv[])
 
         if (save_csv && myid == 0)
         {
-            mkdir((outputPath + "/step" + to_string(ti)).c_str(), 0777);
-            csv_db.putDoubleArray(outputPath + "/step" + to_string(ti) + "/sol.csv",
-                                  u.GetData(), u.Size());
+            if (csvFormat)
+            {
+                mkdir((outputPath + "/step" + to_string(ti)).c_str(), 0777);
+                db->putDoubleArray(outputPath + "/step" + to_string(ti) + "/sol.csv",
+                                   u.GetData(), u.Size());
+            }
+            else
+                db->putDoubleArray("step" + to_string(ti) + "sol",
+                                   u.GetData(), u.Size());
         }
 
         ts.push_back(t);
-        snap_list.push_back("step" + to_string(ti));
+        snap_list.push_back(ti);
 
         if (last_step || (ti % vis_steps) == 0)
         {
@@ -642,9 +665,21 @@ int main(int argc, char *argv[])
 
     if (save_csv && myid == 0)
     {
-        csv_db.putDoubleVector(outputPath + "/tval.csv", ts, ts.size());
-        csv_db.putStringVector(outputPath + "/snap_list.csv", snap_list,
-                               snap_list.size());
+        if (csvFormat)
+        {
+            db->putDoubleVector(outputPath + "/tval.csv", ts, ts.size());
+            db->putInteger(outputPath + "/numsnap", snap_list.size());
+            db->putIntegerArray(outputPath + "/snap_list.csv", snap_list.data(),
+                                snap_list.size());
+        }
+        else
+        {
+            db->putDoubleVector("tval", ts, ts.size());
+            db->putInteger("numsnap", snap_list.size());
+            db->putInteger("snap_bound_size", 0);
+            db->putIntegerArray("snap_list", snap_list.data(),
+                                snap_list.size());
+        }
     }
 
 #ifdef MFEM_USE_ADIOS2

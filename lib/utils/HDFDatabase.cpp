@@ -210,11 +210,23 @@ HDFDatabase::putDoubleArray(
 }
 
 void
+HDFDatabase::putDoubleVector(
+    const std::string& key,
+    const std::vector<double>& data,
+    int nelements,
+    int precision)
+{
+    putDoubleArray(key, data.data(), nelements);
+}
+
+void
 HDFDatabase::getIntegerArray(
     const std::string& key,
     int* data,
     int nelements)
 {
+    if (nelements == 0) return;
+
     CAROM_VERIFY(!key.empty());
 #ifndef DEBUG_CHECK_ASSERTIONS
     CAROM_NULL_USE(nelements);
@@ -249,12 +261,42 @@ HDFDatabase::getIntegerArray(
 #endif
 }
 
+int HDFDatabase::getDoubleArraySize(const std::string& key)
+{
+    CAROM_VERIFY(!key.empty());
+
+#if (H5_VERS_MAJOR > 1) || ((H5_VERS_MAJOR == 1) && (H5_VERS_MINOR > 6))
+    hid_t dset = H5Dopen(d_group_id, key.c_str(), H5P_DEFAULT);
+#else
+    hid_t dset = H5Dopen(d_group_id, key.c_str());
+#endif
+    CAROM_VERIFY(dset >= 0);
+
+    hid_t dspace = H5Dget_space(dset);
+    CAROM_VERIFY(dspace >= 0);
+
+    hsize_t nsel = H5Sget_select_npoints(dspace);
+
+    herr_t errf = H5Sclose(dspace);
+    CAROM_VERIFY(errf >= 0);
+
+    errf = H5Dclose(dset);
+    CAROM_VERIFY(errf >= 0);
+#ifndef DEBUG_CHECK_ASSERTIONS
+    CAROM_NULL_USE(errf);
+#endif
+
+    return static_cast<int>(nsel);
+}
+
 void
 HDFDatabase::getDoubleArray(
     const std::string& key,
     double* data,
     int nelements)
 {
+    if (nelements == 0) return;
+
     CAROM_VERIFY(!key.empty());
 #ifndef DEBUG_CHECK_ASSERTIONS
     CAROM_NULL_USE(nelements);
@@ -287,6 +329,37 @@ HDFDatabase::getDoubleArray(
 #ifndef DEBUG_CHECK_ASSERTIONS
     CAROM_NULL_USE(errf);
 #endif
+}
+
+void
+HDFDatabase::getDoubleArray(
+    const std::string& key,
+    double* data,
+    int nelements,
+    std::vector<int> idx)
+{
+    if (idx.size() == 0)
+    {
+        getDoubleArray(key, data, nelements);
+    }
+    else
+    {
+        std::vector<double> alldata(nelements);
+        getDoubleArray(key, alldata.data(), nelements);
+        int k = 0;
+        for (int i = 0; i < nelements; ++i)
+        {
+            if (idx[k] == i)
+            {
+                data[k++] = alldata[i];
+            }
+            if (k == idx.size())
+            {
+                break;
+            }
+        }
+        CAROM_VERIFY(k == idx.size());
+    }
 }
 
 void

@@ -16,7 +16,6 @@
 #include "Database.h"
 #include <string>
 #include <fstream>
-#include <vector>
 #include <complex>
 
 namespace CAROM {
@@ -129,7 +128,7 @@ public:
     void
     putDoubleVector(
         const std::string& file_name,
-        const std::vector<double> data,
+        const std::vector<double>& data,
         int nelements,
         int precision = 6);
 
@@ -206,6 +205,11 @@ public:
         const std::string& file_name,
         std::vector<int> &data,
         bool append = false);
+
+    virtual int getDoubleArraySize(const std::string& key)
+    {
+        return -1;
+    }
 
     /**
      * @brief Reads an array of doubles associated with the supplied filename.

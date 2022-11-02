@@ -111,6 +111,14 @@ public:
         const double* const data,
         int nelements);
 
+    virtual
+    void
+    putDoubleVector(
+        const std::string& file_name,
+        const std::vector<double>& data,
+        int nelements,
+        int precision = 6);
+
     /**
      * @brief Reads an array of integers associated with the supplied key
      * from the currently open HDF5 database file.
@@ -130,6 +138,8 @@ public:
         int* data,
         int nelements);
 
+    virtual int getDoubleArraySize(const std::string& key);
+
     /**
      * @brief Reads an array of doubles associated with the supplied key
      * from the currently open HDF5 database file.
@@ -148,6 +158,14 @@ public:
         const std::string& key,
         double* data,
         int nelements);
+
+    virtual
+    void
+    getDoubleArray(
+        const std::string& file_name,
+        double* data,
+        int nelements,
+        std::vector<int> idx);
 
     /**
      * @brief Reads an array of doubles associated with the supplied key
