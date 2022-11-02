@@ -58,7 +58,7 @@ public:
     /**
      * @brief Set the offset of a certain order.
      */
-    void setOffset(Vector* offset_vector, int order) override; 
+    void setOffset(Vector* offset_vector, int order) override;
 
     /**
      * @brief Load the object state to a file.
@@ -126,7 +126,8 @@ private:
     /**
      * @brief Returns a pair of pointers to the state and derivative snapshot matrices
      */
-    std::pair<Matrix*, Matrix*> computeDMDSnapshotPair(const Matrix* snapshots) override;
+    std::pair<Matrix*, Matrix*> computeDMDSnapshotPair(const Matrix* snapshots)
+    override;
 
     /**
      * @brief Compute phi.

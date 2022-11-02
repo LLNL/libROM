@@ -174,7 +174,6 @@ CSVDatabase::getIntegerVector(
     if (!append) data.clear();
 
     std::ifstream d_fs(file_name.c_str());
-    CAROM_VERIFY(!d_fs.fail());
     int data_entry;
     while (d_fs >> data_entry)
     {
@@ -297,7 +296,6 @@ CSVDatabase::getDoubleVector(
     if (!append) data.clear();
 
     std::ifstream d_fs(file_name.c_str());
-    CAROM_VERIFY(!d_fs.fail());
     double data_entry;
     while (d_fs >> data_entry)
     {
@@ -316,7 +314,6 @@ CSVDatabase::getStringVector(
     if (!append) data.clear();
 
     std::ifstream d_fs(file_name.c_str());
-    CAROM_VERIFY(!d_fs.fail());
     std::string data_entry;
     while (std::getline(d_fs, data_entry))
     {
