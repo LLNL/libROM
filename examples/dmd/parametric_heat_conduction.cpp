@@ -273,7 +273,7 @@ int main(int argc, char *argv[])
     }
 
     const int check = (int) pointwiseSnapshots + (int) offline + (int) online;
-    MFEM_VERIFY(check == 1,
+    MFEM_VERIFY(check == 1 || save_csv,
                 "Only one of offline, online, or pwsnap must be true!");
 
     if (offline)

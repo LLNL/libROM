@@ -66,6 +66,11 @@ public:
     DMD(std::string base_file_name);
 
     /**
+     * @brief Set the offset of a certain order.
+     */
+    virtual void setOffset(Vector* offset_vector, int order);
+
+    /**
      * @brief Sample the new state, u_in. Any samples in d_snapshots
      *        taken at the same or later time will be erased.
      *
@@ -99,9 +104,10 @@ public:
      *        Calculate pinv(phi) x init, or more precisely,
      *        (phi* x phi)^{-1} x phi* x init, where phi* is the conjugate transpose.
      *
-     * @param[in] init The initial condition.
+     * @param[in] init     The initial condition.
+     * @param[in] t_offset The initial time offset.
      */
-    void projectInitialCondition(const Vector* init);
+    void projectInitialCondition(const Vector* init, double t_offset = -1.0);
 
     /**
      * @brief Predict state given a time. Uses the projected initial condition of the
@@ -140,12 +146,28 @@ public:
     virtual void load(std::string base_file_name);
 
     /**
+     * @brief Load the object state from a file.
+     *
+     * @param[in] base_file_name The base part of the filename to load the
+     *                           database from.
+     */
+    void load(const char* base_file_name);
+
+    /**
      * @brief Save the object state to a file.
      *
      * @param[in] base_file_name The base part of the filename to save the
      *                           database to.
      */
     virtual void save(std::string base_file_name);
+
+    /**
+     * @brief Save the object state to a file.
+     *
+     * @param[in] base_file_name The base part of the filename to save the
+     *                           database to.
+     */
+    void save(const char* base_file_name);
 
     /**
      * @brief Output the DMD record in CSV files.
@@ -225,7 +247,7 @@ protected:
     /**
      * @brief Compute phi.
      */
-    virtual void computePhi(struct DMDInternal dmd_internal_obj);
+    virtual void computePhi(DMDInternal dmd_internal_obj);
 
     /**
      * @brief Compute the appropriate exponential function when predicting the solution.
