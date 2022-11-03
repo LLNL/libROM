@@ -439,8 +439,7 @@ int main(int argc, char *argv[])
                 db->getDoubleArray(data_filename, sample, nelements, idx_state);
             }
             else
-                db->getDoubleArray("step" + to_string(snap_index_list[idx_snap]) + "sol",
-                                   sample, nelements, idx_state);
+                db->getDoubleArray(snap + "sol", sample, nelements, idx_state);
 
             dmd[curr_window]->takeSample(sample, tval);
             if (overlap_count > 0)
@@ -645,17 +644,18 @@ int main(int argc, char *argv[])
         {
             string snap = "step" + to_string(snap_index_list[idx_snap]); // STATE
             double tval = tvec[idx_snap];
-            string data_filename = string(data_dir) + "/" + par_dir + "/" + snap + "/" +
-                                   variable + ".csv"; // path to VAR_NAME.csv
             if (csvFormat)
+            {
+                string data_filename = string(data_dir) + "/" + par_dir + "/" + snap +
+                                       "/" + variable + ".csv"; // path to VAR_NAME.csv
                 db->getDoubleArray(data_filename, sample, nelements, idx_state);
+            }
             else
-                db->getDoubleArray("step" + to_string(snap_index_list[idx_snap]) + "sol",
-                                   sample, nelements, idx_state);
+                db->getDoubleArray(snap + "sol", sample, nelements, idx_state);
 
             if (myid == 0)
             {
-                cout << "State " << data_filename << " read." << endl;
+                cout << "State " << snap << " read." << endl;
             }
 
             if (idx_snap == 0)
