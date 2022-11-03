@@ -212,7 +212,7 @@ public:
         const std::string& file_name,
         double* data,
         int nelements,
-        std::vector<int> idx) = 0;
+        const std::vector<int>& idx) = 0;
 
     /**
      * @brief Reads an array of doubles associated with the supplied key

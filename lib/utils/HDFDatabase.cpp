@@ -336,7 +336,7 @@ HDFDatabase::getDoubleArray(
     const std::string& key,
     double* data,
     int nelements,
-    std::vector<int> idx)
+    const std::vector<int>& idx)
 {
     if (idx.size() == 0)
     {

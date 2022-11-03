@@ -165,7 +165,7 @@ public:
         const std::string& file_name,
         double* data,
         int nelements,
-        std::vector<int> idx);
+        const std::vector<int>& idx);
 
     /**
      * @brief Reads an array of doubles associated with the supplied key

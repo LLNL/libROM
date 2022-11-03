@@ -149,7 +149,7 @@ public:
     void
     putComplexVector(
         const std::string& file_name,
-        const std::vector<std::complex<double>> data,
+        const std::vector<std::complex<double>>& data,
         int nelements,
         int precision = 6);
 
@@ -169,7 +169,7 @@ public:
     void
     putStringVector(
         const std::string& file_name,
-        const std::vector<std::string> data,
+        const std::vector<std::string>& data,
         int nelements);
 
     /**
@@ -249,7 +249,7 @@ public:
         const std::string& file_name,
         double* data,
         int nelements,
-        std::vector<int> idx);
+        const std::vector<int>& idx);
 
     /**
      * @brief Reads an array of doubles associated with the supplied filename.
