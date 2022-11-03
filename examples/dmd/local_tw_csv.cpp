@@ -214,8 +214,8 @@ int main(int argc, char *argv[])
     CAROM_VERIFY(nelements > 0);
     if (myid == 0)
     {
-        cout << "Variable " << var_name << " has dimension " << nelements << "." <<
-             endl;
+        cout << "Variable " << var_name << " has dimension " << nelements
+             << "." << endl;
     }
 
     int dim = nelements;
@@ -300,9 +300,7 @@ int main(int argc, char *argv[])
             if (csvFormat)
                 num_train_snap = csv_db.getLineCount(string(list_dir) + "/" + par_dir + ".csv");
             else
-            {
                 db->getInteger("numsnap", num_train_snap);
-            }
         }
 
         if (!csvFormat)
