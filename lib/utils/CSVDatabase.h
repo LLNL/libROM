@@ -208,7 +208,9 @@ public:
 
     virtual int getDoubleArraySize(const std::string& key)
     {
-        return -1;
+        std::vector<double> tmp;
+        getDoubleVector(key, tmp);
+        return tmp.size();
     }
 
     /**

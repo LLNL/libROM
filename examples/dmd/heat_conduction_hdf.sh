@@ -8,11 +8,11 @@
 
 rm -rf parameters.txt hc_list hc_data run/hc_data
 
-./parametric_heat_conduction -r 0.40 -csv -no-csvf -out hc_data/hc_par1 -no-vis > hc_par1.log
-./parametric_heat_conduction -r 0.45 -csv -no-csvf -out hc_data/hc_par2 -no-vis > hc_par2.log
-./parametric_heat_conduction -r 0.55 -csv -no-csvf -out hc_data/hc_par3 -no-vis > hc_par3.log
-./parametric_heat_conduction -r 0.60 -csv -no-csvf -out hc_data/hc_par4 -no-vis > hc_par4.log
-./parametric_heat_conduction -r 0.50 -csv -no-csvf -out hc_data/hc_par5 -no-vis > hc_par5.log
+./parametric_heat_conduction -r 0.40 -save -hdf -out hc_data/hc_par1 -no-vis > hc_par1.log
+./parametric_heat_conduction -r 0.45 -save -hdf -out hc_data/hc_par2 -no-vis > hc_par2.log
+./parametric_heat_conduction -r 0.55 -save -hdf -out hc_data/hc_par3 -no-vis > hc_par3.log
+./parametric_heat_conduction -r 0.60 -save -hdf -out hc_data/hc_par4 -no-vis > hc_par4.log
+./parametric_heat_conduction -r 0.50 -save -hdf -out hc_data/hc_par5 -no-vis > hc_par5.log
 
 mkdir hc_list
 mv -f run/hc_data .

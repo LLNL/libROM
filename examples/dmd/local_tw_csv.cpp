@@ -16,12 +16,14 @@
 //
 // Local serial DMD command:
 //   mpirun -np 8 local_tw_csv -o local_csv_serial -rdim 16 -dtc 0.01
+//   mpirun -np 8 local_tw_csv -o local_csv_serial -rdim 16 -dtc 0.01 -hdf
 //
 // Final-time prediction error (Last line in run/local_csv_serial/hc_par5_prediction_error.csv):
 //   0.0004063242226265
 //
 // Local time windowing DMD command:
 //   mpirun -np 8 local_tw_csv -o local_csv_tw -rdim 16 -nwinsamp 25 -dtc 0.01
+//   mpirun -np 8 local_tw_csv -o local_csv_tw -nwinsamp 25 -dtc 0.01 -hdf
 //
 // Final-time prediction error (Last line in run/local_csv_tw/hc_par5_prediction_error.csv):
 //   0.0002458808673544
@@ -141,10 +143,10 @@ int main(int argc, char *argv[])
                    "Name of the file indicating spatial indices.");
     args.AddOption(&basename, "-o", "--outputfile-name",
                    "Name of the sub-folder to dump files within the run directory.");
-    args.AddOption(&save_csv, "-csv", "--csv", "-no-csv", "--no-csv",
+    args.AddOption(&save_csv, "-save", "--save", "-no-save", "--no-save",
                    "Enable or disable prediction result output (files in CSV format).");
-    args.AddOption(&csvFormat, "-csvf", "--csvf", "-no-csvf", "--no-csvf",
-                   "Enable or disable prediction result output (files in CSV format).");
+    args.AddOption(&csvFormat, "-csv", "--csv", "-hdf", "--hdf",
+                   "Use CSV or HDF format for input files.");
     args.Parse();
     if (!args.Good())
     {
@@ -184,8 +186,13 @@ int main(int argc, char *argv[])
 
     CAROM::CSVDatabase csv_db;
     CAROM::Database *db = NULL;
+    string prefix = "";
+    string suffix = "";
     if (csvFormat)
+    {
         db = new CAROM::CSVDatabase();
+        suffix = ".csv";
+    }
     else
     {
         db = new CAROM::HDFDatabase();
@@ -275,16 +282,10 @@ int main(int argc, char *argv[])
 
         db->getInteger("snap_bound_size", snap_bound_size);
 
-        vector<int> snap_bound;
-        snap_bound.resize(snap_bound_size);
-        if (csvFormat)
-            db->getIntegerArray(string(data_dir) + "/" + par_dir + "/" +
-                                temporal_idx_list + ".csv", snap_bound.data(), snap_bound_size);
-        else
-        {
-            db->getIntegerArray(temporal_idx_list, snap_bound.data(), snap_bound_size);
-
-        }
+        vector<int> snap_bound(snap_bound_size);
+        if (csvFormat) prefix = string(data_dir) + "/" + par_dir + "/";
+        db->getIntegerArray(prefix + temporal_idx_list + suffix,
+                            snap_bound.data(), snap_bound_size);
 
         if (snap_bound.size() > 0)
         {
@@ -400,22 +401,16 @@ int main(int argc, char *argv[])
         }
 
         vector<double> tvec(numsnap);
-        if (csvFormat)
-            db->getDoubleArray(string(data_dir) + "/" + par_dir + "/tval.csv", tvec.data(),
-                               numsnap);
-        else
-            db->getDoubleArray("tval", tvec.data(), numsnap);
+        if (csvFormat) prefix = string(data_dir) + "/" + par_dir + "/";
+        db->getDoubleArray(prefix + "tval" + suffix, tvec.data(), numsnap);
 
         CAROM_VERIFY(tvec.size() == snap_list.size());
 
         int snap_bound_size = 0;
         db->getInteger("snap_bound_size", snap_bound_size);
         vector<int> snap_bound(snap_bound_size);
-        if (csvFormat)
-            db->getIntegerArray(string(data_dir) + "/" + par_dir + "/" +
-                                temporal_idx_list + ".csv", snap_bound.data(), snap_bound_size);
-        else
-            db->getIntegerArray("temporal_idx_list", snap_bound.data(), snap_bound_size);
+        db->getIntegerArray(prefix + temporal_idx_list + suffix,
+                            snap_bound.data(), snap_bound_size);
 
         if (snap_bound.size() > 0)
         {
@@ -495,14 +490,8 @@ int main(int argc, char *argv[])
             {
                 cout << "Created new indicator range partition with " << numWindows <<
                      " windows."  << endl;
-                if (csvFormat)
-                    db->putDoubleVector(string(outputPath) + "/indicator_val.csv", indicator_val,
-                                        numWindows);
-                else
-                {
-                    csv_db.putDoubleVector(string(outputPath) + "/indicator_val.csv", indicator_val,
-                                           numWindows);
-                }
+                csv_db.putDoubleVector(string(outputPath) + "/indicator_val.csv", indicator_val,
+                                       numWindows);
             }
         }
 
@@ -582,16 +571,9 @@ int main(int argc, char *argv[])
                 }
                 if (myid == 0)
                 {
-                    if (csvFormat)
-                        db->putDoubleVector(outputPath + "/window" + to_string(
-                                                window) + "_interp_error.csv",
-                                            interp_error, f_snapshots->numColumns(), 16);
-                    else
-                    {
-                        csv_db.putDoubleVector(outputPath + "/window" + to_string(
-                                                   window) + "_interp_error.csv",
-                                               interp_error, f_snapshots->numColumns(), 16);
-                    }
+                    csv_db.putDoubleVector(outputPath + "/window" + to_string(
+                                               window) + "_interp_error.csv",
+                                           interp_error, f_snapshots->numColumns(), 16);
                 }
                 interp_error.clear();
             }
@@ -644,22 +626,17 @@ int main(int argc, char *argv[])
         for (int i=0; i<numsnap; ++i)
             snap_list[i] = "step" + to_string(snap_index_list[i]);
 
+        if (csvFormat) prefix = string(data_dir) + "/" + par_dir + "/";
+
         vector<double> tvec(numsnap);
-        if (csvFormat)
-            db->getDoubleArray(string(data_dir) + "/" + par_dir + "/tval.csv", tvec.data(),
-                               numsnap);
-        else
-            db->getDoubleArray("tval", tvec.data(), numsnap);
+        db->getDoubleArray(prefix + "tval" + suffix, tvec.data(), numsnap);
         CAROM_VERIFY(tvec.size() == snap_list.size());
 
         int snap_bound_size = 0;
         db->getInteger("snap_bound_size", snap_bound_size);
         vector<int> snap_bound(snap_bound_size);
-        if (csvFormat)
-            db->getIntegerArray(string(data_dir) + "/" + par_dir + "/" +
-                                temporal_idx_list + ".csv", snap_bound.data(), snap_bound_size);
-        else
-            db->getIntegerArray("temporal_idx_list", snap_bound.data(), snap_bound_size);
+        db->getIntegerArray(prefix + temporal_idx_list + suffix,
+                            snap_bound.data(), snap_bound_size);
 
         if (snap_bound.size() > 0)
         {
@@ -743,12 +720,8 @@ int main(int argc, char *argv[])
                 dmd_prediction_timer.Stop();
                 if (myid == 0)
                 {
-                    if (csvFormat)
-                        db->putDoubleArray(outputPath + "/" + par_dir + "_final_time_prediction.csv",
-                                           result->getData(), dim);
-                    else
-                        csv_db.putDoubleArray(outputPath + "/" + par_dir + "_final_time_prediction.csv",
-                                              result->getData(), dim);
+                    csv_db.putDoubleArray(outputPath + "/" + par_dir + "_final_time_prediction.csv",
+                                          result->getData(), dim);
                 }
                 idx_snap = snap_bound[1]+1; // escape for-loop over idx_snap
                 delete result;
@@ -792,25 +765,12 @@ int main(int argc, char *argv[])
                          << endl;
                     if (save_csv)
                     {
-                        if (csvFormat)
-                        {
-                            db->putDoubleArray(outputPath + "/" + par_dir + "_" + snap +
-                                               "_prediction.csv", result->getData(), dim);
-                        }
-                        else
-                        {
-                            csv_db.putDoubleArray(outputPath + "/" + par_dir + "_" + snap +
-                                                  "_prediction.csv", result->getData(), dim);
-                        }
-
+                        csv_db.putDoubleArray(outputPath + "/" + par_dir + "_" + snap +
+                                              "_prediction.csv", result->getData(), dim);
                         if (dim < nelements)
                         {
-                            if (csvFormat)
-                                db->putDoubleArray(outputPath + "/" + par_dir + "_" + snap + "_state.csv",
-                                                   sample, dim);
-                            else
-                                csv_db.putDoubleArray(outputPath + "/" + par_dir + "_" + snap + "_state.csv",
-                                                      sample, dim);
+                            csv_db.putDoubleArray(outputPath + "/" + par_dir + "_" + snap + "_state.csv",
+                                                  sample, dim);
                         }
                     }
                 }

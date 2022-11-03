@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
     bool visit = false;
     int vis_steps = 5;
     bool adios2 = false;
-    bool save_csv = false;
+    bool save_dofs = false;
     bool csvFormat = true;
     const char *basename = "";
 
@@ -231,10 +231,10 @@ int main(int argc, char *argv[])
     args.AddOption(&adios2, "-adios2", "--adios2-streams", "-no-adios2",
                    "--no-adios2-streams",
                    "Save data using adios2 streams.");
-    args.AddOption(&save_csv, "-csv", "--csv", "-no-csv", "--no-csv",
-                   "Enable or disable MFEM result output (files in CSV format).");
-    args.AddOption(&csvFormat, "-csvf", "--csvf", "-no-csvf", "--no-csvf",
-                   "Enable or disable MFEM result output (files in CSV format).");
+    args.AddOption(&save_dofs, "-save", "--save", "-no-save", "--no-save",
+                   "Enable or disable MFEM DOF solution snapshot files).");
+    args.AddOption(&csvFormat, "-csv", "--csv", "-hdf", "--hdf",
+                   "Use CSV or HDF format for files output by -save option.");
     args.AddOption(&basename, "-out", "--outputfile-name",
                    "Name of the sub-folder to dump files within the run directory.");
     args.AddOption(&pointwiseSnapshots, "-pwsnap", "--pw-snap", "-no-pwsnap",
@@ -257,7 +257,7 @@ int main(int argc, char *argv[])
     }
 
     string outputPath = ".";
-    if (save_csv)
+    if (save_dofs)
     {
         outputPath = "run";
         if (string(basename) != "") {
@@ -276,9 +276,10 @@ int main(int argc, char *argv[])
         }
     }
 
-    const int check = (int) pointwiseSnapshots + (int) offline + (int) online;
-    MFEM_VERIFY(check == 1 || save_csv,
-                "Only one of offline, online, or pwsnap must be true!");
+    const int check = (int) pointwiseSnapshots + (int) offline + (int) online
+                      + (int) save_dofs;
+    MFEM_VERIFY(check == 1,
+                "Only one of offline, online, save, or pwsnap must be true!");
 
     if (offline)
     {
@@ -551,7 +552,7 @@ int main(int argc, char *argv[])
         init = new CAROM::Vector(u.GetData(), u.Size(), true);
     }
 
-    if (save_csv && myid == 0)
+    if (save_dofs && myid == 0)
     {
         if (csvFormat)
         {
@@ -597,7 +598,7 @@ int main(int argc, char *argv[])
             dmd_training_timer.Stop();
         }
 
-        if (save_csv && myid == 0)
+        if (save_dofs && myid == 0)
         {
             if (csvFormat)
             {
@@ -663,7 +664,7 @@ int main(int argc, char *argv[])
         oper.SetParameters(u);
     }
 
-    if (save_csv && myid == 0)
+    if (save_dofs && myid == 0)
     {
         if (csvFormat)
         {

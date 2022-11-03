@@ -184,6 +184,7 @@ if (ENABLE_EXAMPLES)
     endforeach() # IN LISTS examples
     file(COPY examples/data DESTINATION ${CMAKE_BINARY_DIR}/examples)
     file(COPY examples/dmd/heat_conduction_csv.sh DESTINATION ${CMAKE_BINARY_DIR}/examples/dmd)
+    file(COPY examples/dmd/heat_conduction_hdf.sh DESTINATION ${CMAKE_BINARY_DIR}/examples/dmd)
   endif()
 
   set(misc_example_names
