@@ -10,18 +10,19 @@
 
 // Compile with: make parametric_tw_csv
 //
-// Generate CSV database on heat conduction with: heat_conduction_csv.sh
+// Generate CSV or HDF database on heat conduction with either
+// heat_conduction_csv.sh or heat_conduction_hdf.sh (HDF is more efficient).
 //
 // =================================================================================
 //
-// Parametric serial DMD command:
+// Parametric serial DMD command (for HDF version, append -hdf):
 //   mpirun -np 8 parametric_tw_csv -o parametric_csv_serial -rdim 16 -dtc 0.01 -offline
 //   mpirun -np 8 parametric_tw_csv -o parametric_csv_serial -rdim 16 -dtc 0.01 -online
 //
 // Final-time prediction error (Last line in run/parametric_csv_serial/hc_par5_prediction_error.csv):
 //   0.0012598331433506
 //
-// Parametric time windowing DMD command:
+// Parametric time windowing DMD command (for HDF version, append -hdf):
 //   mpirun -np 8 parametric_tw_csv -o parametric_csv_tw -rdim 16 -nwinsamp 25 -dtc 0.01 -offline
 //   mpirun -np 8 parametric_tw_csv -o parametric_csv_tw -rdim 16 -nwinsamp 25 -dtc 0.01 -online
 //
@@ -286,6 +287,7 @@ int main(int argc, char *argv[])
     }
 
     int dpar = -1;
+    const int ospar = csvFormat ? 2 : 1;
 
     for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
     {
@@ -297,7 +299,7 @@ int main(int argc, char *argv[])
             par_info.push_back(par_entry);
         }
 
-        dpar = par_info.size() - 2;
+        dpar = par_info.size() - ospar;
         CAROM::Vector* curr_par = new CAROM::Vector(dpar, false);
 
         if (idx_dataset == 0)
@@ -310,7 +312,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            CAROM_VERIFY(dpar == par_info.size() - 2);
+            CAROM_VERIFY(dpar == par_info.size() - ospar);
         }
 
         string par_dir = par_info[0];
@@ -334,7 +336,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            db->open(string(data_dir) + "/" + par_dir + "/dmd.hdf", "wr");
+            db->open(string(data_dir) + "/" + par_dir + "/dmd.hdf", "r");
             db->getInteger("numsnap", numsnap);
         }
 
@@ -372,7 +374,7 @@ int main(int argc, char *argv[])
 
         for (int par_order = 0; par_order < dpar; ++par_order)
         {
-            curr_par->item(par_order) = stod(par_info[par_order+2]);
+            curr_par->item(par_order) = stod(par_info[par_order+ospar]);
         }
         par_vectors.push_back(curr_par);
 
@@ -637,7 +639,7 @@ int main(int argc, char *argv[])
                 par_info.push_back(par_entry);
             }
 
-            CAROM_VERIFY(dpar == par_info.size() - 2);
+            CAROM_VERIFY(dpar == par_info.size() - ospar);
 
             string par_dir = par_info[0];
             string numsnap_str = par_info[1];
@@ -653,7 +655,7 @@ int main(int argc, char *argv[])
                 db->getInteger(string(list_dir) + "/" + numsnap_str, numsnap);
             else
             {
-                db->open(string(data_dir) + "/" + par_dir + "/dmd.hdf", "wr");
+                db->open(string(data_dir) + "/" + par_dir + "/dmd.hdf", "r");
                 db->getInteger("numsnap", numsnap);
             }
             CAROM_VERIFY(numsnap > 0);
@@ -669,7 +671,7 @@ int main(int argc, char *argv[])
 
             for (int par_order = 0; par_order < dpar; ++par_order)
             {
-                curr_par->item(par_order) = stod(par_info[par_order+2]);
+                curr_par->item(par_order) = stod(par_info[par_order+ospar]);
             }
 
             vector<double> tvec(numsnap);
@@ -770,7 +772,7 @@ int main(int argc, char *argv[])
                 db->getInteger(string(list_dir) + "/" + par_ns_list[idx_dataset], numsnap);
             else
             {
-                db->open(string(data_dir) + "/" + par_dir + "/dmd.hdf", "wr");
+                db->open(string(data_dir) + "/" + par_dir + "/dmd.hdf", "r");
                 db->getInteger("numsnap", numsnap);
             }
             CAROM_VERIFY(numsnap > 0);
