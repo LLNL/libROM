@@ -134,8 +134,11 @@ NonuniformDMD::load(std::string base_file_name)
     CAROM_ASSERT(!base_file_name.empty());
 
     std::string full_file_name = base_file_name + "_derivative_offset";
-    d_derivative_offset = new Vector();
-    d_derivative_offset->read(full_file_name);
+    if (Utilities::file_exist(full_file_name + ".000000"))
+    {
+        d_derivative_offset = new Vector();
+        d_derivative_offset->read(full_file_name);
+    }
 
     DMD::load(base_file_name);
 }

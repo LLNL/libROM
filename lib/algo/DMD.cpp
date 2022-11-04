@@ -798,6 +798,9 @@ DMD::load(std::string base_file_name)
         d_state_offset->read(full_file_name);
     }
 
+    d_init_projected = true;
+    d_trained = true;
+
     MPI_Barrier(MPI_COMM_WORLD);
 }
 
