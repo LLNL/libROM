@@ -23,11 +23,11 @@
 //   0.0012598331433506
 //
 // Parametric time windowing DMD command (for HDF version, append -hdf):
-//   mpirun -np 8 parametric_tw_csv -o parametric_csv_tw -rdim 16 -nwinsamp 25 -dtc 0.01 -offline
-//   mpirun -np 8 parametric_tw_csv -o parametric_csv_tw -rdim 16 -nwinsamp 25 -dtc 0.01 -online
+//   mpirun -np 8 parametric_tw_csv -o parametric_csv_tw -nwinsamp 25 -dtc 0.01 -offline
+//   mpirun -np 8 parametric_tw_csv -o parametric_csv_tw -nwinsamp 25 -dtc 0.01 -online
 //
 // Final-time prediction error (Last line in run/parametric_csv_tw/hc_par5_prediction_error.csv):
-//   0.0007348122935743
+//   0.0006507358659606
 //
 // =================================================================================
 //
@@ -396,8 +396,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        if (!csvFormat)
-            db->close();
+        db->close();
     }
 
     CAROM_VERIFY(windowOverlapSamples < windowNumSamples);
@@ -601,8 +600,7 @@ int main(int argc, char *argv[])
                 }
             } // escape for-loop over window
 
-            if (!csvFormat)
-                db->close();
+            db->close();
         } // escape for-loop over idx_dataset
         dmd_training_timer.Stop();
     } // escape if-statement of offline
@@ -749,8 +747,7 @@ int main(int argc, char *argv[])
                 delete init_cond;
             } // escape for-loop over window
 
-            if (!csvFormat)
-                db->close();
+            db->close();
         } // escape for-loop over idx_dataset
         dmd_preprocess_timer.Stop();
     } // escape if-statement of online
@@ -925,8 +922,7 @@ int main(int argc, char *argv[])
             prediction_error.clear();
             num_tests = (t_final > 0.0) ? num_tests + 1 : num_tests + num_snap;
 
-            if (!csvFormat)
-                db->close();
+            db->close();
         }
 
         CAROM_VERIFY(num_tests > 0);

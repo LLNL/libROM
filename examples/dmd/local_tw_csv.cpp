@@ -303,8 +303,7 @@ int main(int argc, char *argv[])
                 db->getInteger("numsnap", num_train_snap);
         }
 
-        if (!csvFormat)
-            db->close();
+        db->close();
 
         CAROM_VERIFY(windowOverlapSamples < windowNumSamples);
         numWindows = (windowNumSamples < infty) ? round((double) (num_train_snap-1) /
@@ -365,7 +364,6 @@ int main(int argc, char *argv[])
         string par_dir, numsnap_str;
         getline(par_ss, par_dir, ',');
 
-        vector<int> snap_index_list;
         int numsnap = 0;
         if (csvFormat)
         {
@@ -374,12 +372,12 @@ int main(int argc, char *argv[])
         }
         else
         {
-            db->open(string(data_dir) + "/" + par_dir + "/dmd.hdf", "wr");
+            db->open(string(data_dir) + "/" + par_dir + "/dmd.hdf", "r");
             db->getInteger("numsnap", numsnap);
         }
 
         CAROM_VERIFY(numsnap > 0);
-        snap_index_list.resize(numsnap);
+        vector<int> snap_index_list(numsnap);
         if (csvFormat)
             db->getIntegerArray(string(list_dir) + "/" + par_dir + ".csv",
                                 snap_index_list.data(),
@@ -568,8 +566,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        if (!csvFormat)
-            db->close();
+        db->close();
     }
 
     vector<string> testing_par_list;
@@ -590,18 +587,18 @@ int main(int argc, char *argv[])
         {
             cout << "Predicting solution for " << par_dir << " using DMD." << endl;
         }
-        vector<int> snap_index_list;
+
         int numsnap = 0;
         if (csvFormat)
             db->getInteger(string(list_dir) + "/" + numsnap_str, numsnap);
         else
         {
-            db->open(string(data_dir) + "/" + par_dir + "/dmd.hdf", "wr");
+            db->open(string(data_dir) + "/" + par_dir + "/dmd.hdf", "r");
             db->getInteger("numsnap", numsnap);
         }
-        CAROM_VERIFY(numsnap > 0);
-        snap_index_list.resize(numsnap);
 
+        CAROM_VERIFY(numsnap > 0);
+        vector<int> snap_index_list(numsnap);
         if (csvFormat)
             db->getIntegerArray(string(list_dir) + "/" + par_dir + ".csv",
                                 snap_index_list.data(),
@@ -773,8 +770,7 @@ int main(int argc, char *argv[])
         prediction_error.clear();
         num_tests = (t_final > 0.0) ? num_tests + 1 : num_tests + num_snap;
 
-        if (!csvFormat)
-            db->close();
+        db->close();
     }
 
     CAROM_VERIFY(num_tests > 0);
