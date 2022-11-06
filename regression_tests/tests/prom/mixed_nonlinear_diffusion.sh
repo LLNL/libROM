@@ -14,17 +14,21 @@ run_cmds
 
 cd ${GITHUB_WORKSPACE}/build/tests
 
-./basisComparator ${EX_PROM_PATH_LOCAL}/basisR ${EX_PROM_PATH_BASELINE}/basisR 1e-7 1
-check_fail
+if [[ ! -z test_offline ]]; then
+    ./basisComparator ${EX_PROM_PATH_LOCAL}/basisR ${EX_PROM_PATH_BASELINE}/basisR 1e-7 1
+    check_fail
 
-./basisComparator ${EX_PROM_PATH_LOCAL}/basisFR ${EX_PROM_PATH_BASELINE}/basisFR 1e-7 1
-check_fail
+    ./basisComparator ${EX_PROM_PATH_LOCAL}/basisFR ${EX_PROM_PATH_BASELINE}/basisFR 1e-7 1
+    check_fail
 
-./basisComparator ${EX_PROM_PATH_LOCAL}/basisW ${EX_PROM_PATH_BASELINE}/basisW 1e-7 1
-check_fail
 
-./basisComparator ${EX_PROM_PATH_LOCAL}/basisS ${EX_PROM_PATH_BASELINE}/basisS 1e-7 1
-check_fail
+    ./basisComparator ${EX_PROM_PATH_LOCAL}/basisW ${EX_PROM_PATH_BASELINE}/basisW 1e-7 1
+    check_fail
+
+    ./basisComparator ${EX_PROM_PATH_LOCAL}/basisS ${EX_PROM_PATH_BASELINE}/basisS 1e-7 1
+    check_fail
+
+fi
 
 ./solutionComparator ${EX_PROM_PATH_LOCAL}/nldiff-final0.000000 ${EX_PROM_PATH_BASELINE}/nldiff-final0.000000 "1.0e-5" "1" 
 check_fail

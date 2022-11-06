@@ -45,7 +45,10 @@ move_output_files() {
         echo "Removing ${SCRIPT_NAME}_out in ${path}"
         rm -rf "${SCRIPT_NAME}_out"
         mkdir "${SCRIPT_NAME}_out"
+        IFS=$'\n'
         MOVABLE_FILES=$(find . -maxdepth 1 ! -perm 755)
+        unset $IFS
+        
         for file in "${MOVABLE_FILES[@]}"; do
             echo "file = $file"
             re='_out'
@@ -64,6 +67,11 @@ run_cmds() {
         eval "$cmd"
     done
 }
+
+#run_test() {
+
+#}
+
 set_pass() {
 	echo "$SCRIPT_NAME: PASS"		
 }

@@ -19,8 +19,10 @@ run_cmds
 
 cd ${GITHUB_WORKSPACE}/build/tests
 
-./basisComparator ${EX_PROM_PATH_LOCAL}/basis ${EX_PROM_PATH_BASELINE}/basis "1e-7" "1"
-check_fail
+if [[! -z test_offline ]]; then
+    ./basisComparator ${EX_PROM_PATH_LOCAL}/basis ${EX_PROM_PATH_BASELINE}/basis "1e-7" "1"
+    check_fail
+fi
 ./solutionComparator ${EX_PROM_PATH_LOCAL}/sol.000000 ${EX_PROM_PATH_BASELINE}/sol.000000 "1.0e-5" "1" 
 check_fail
 

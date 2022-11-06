@@ -36,12 +36,19 @@ echo "MACHINE = $MACHINE"
 export MACHINE
 # echo "GITHUB_WORKSPACE = ${GITHUB_WORKSPACE}"
 
+if [[ ! -z test_offline ]]; then
+  unset test_offline
+fi
+
 # Get options
-while getopts ":i:e:" o;
+while getopts ":i:e:x" o;
 do
 	case "${o}" in
 		i)
 			i=${OPTARG}
+      ;;
+    x)
+      test_offline=true
       ;;
     *)
       echo "Usage:"
