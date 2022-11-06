@@ -45,20 +45,7 @@ move_output_files() {
         echo "Removing ${SCRIPT_NAME}_out in ${path}"
         rm -rf "${SCRIPT_NAME}_out"
         mkdir "${SCRIPT_NAME}_out"
-        IFS=$'\n'
-        MOVABLE_FILES=$(find . -maxdepth 1 ! -perm 755)
-        unset $IFS
-        
-        for file in "${MOVABLE_FILES[@]}"; do
-            echo "file = $file"
-            re='_out'
-            if [[ "${file}" =~ _out ]]; then
-               echo "Skipping $file"
-               continue
-            fi
-            echo "Moving $file to out directory"
-            mv $file ${SCRIPT_NAME}_out
-        done
+        $(find . -maxdepth 1  -not -name "*_out" -not -name "." ! -perm 755 -exec mv {} "${SCRIPT_NAME}_out" \;)
     done
 }
 
