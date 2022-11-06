@@ -42,10 +42,10 @@ move_output_files() {
             continue
         fi
         cd "${path}"
-        echo "Removing ${SCRIPT_NAME}_out in ${path}"
         rm -rf "${SCRIPT_NAME}_out"
         mkdir "${SCRIPT_NAME}_out"
-        $(find . -maxdepth 1  -not -name "*_out" -not -name "." ! -perm 755 -exec mv {} "${SCRIPT_NAME}_out" \;)
+        $(find . -maxdepth 1  -not -name "*_out" -not -name "." ! -perm -700 -exec mv {} "${SCRIPT_NAME}_out" \;)
+        $(find . -maxdepth 1  -type d -not -name "*_out" -not -name "." -exec mv {} "${SCRIPT_NAME}_out" \;)
     done
 }
 
@@ -55,9 +55,56 @@ run_cmds() {
     done
 }
 
-#run_test() {
+run_tests() {
+    # Run commands from the local directory
+    if [[ $TYPE == "DMD" ]]; then
+        cd  ${EX_DMD_PATH_LOCAL}
+    elif [[ $TYPE == "PROM" ]]; then
+        cd ${EX_PROM_PATH_LOCAL}
+    else
+        echo "Unrecognized TYPE is ${TYPE}"
+    fi
+    run_cmds
 
-#}
+    # Run commands from the baseline directory
+    if [[ $TYPE == "DMD" ]]; then
+        cd  ${EX_DMD_PATH_BASELINE}
+    elif [[ $TYPE == "PROM" ]]; then
+        cd ${EX_PROM_PATH_BASELINE}
+    else
+        echo "Unrecognized TYPE is ${TYPE}"
+    fi
+    run_cmds
+
+    # Compare results between the two
+    files_to_compare=(*)
+    cd ${GITHUB_WORKSPACE}/build/tests
+    for f in "${files_to_compare[@]}"; do
+        echo "f = $f"
+        if [[ $f =~ basis && -n $test_offline ]]; then
+            if [[ $TYPE == "DMD" ]]; then
+                ./basisComparator ${EX_DMD_PATH_LOCAL}/$f ${EX_DMD_PATH_BASELINE}/$f 1e-7 1
+            elif [[ $TYPE == "PROM" ]]; then
+                ./basisComparator ${EX_PROM_PATH_LOCAL}/$f ${EX_PROM_PATH_BASELINE}/$f 1e-7 1
+            else
+                continue
+            fi
+            check_fail 
+        elif [[ $f =~ final || "$f" == "sol"*".000000" || "$f" == "Sol0"  ]]; then
+            if [[ $TYPE == "DMD" && "$f" == *".000000" ]]; then
+                echo "Running sol dmd"
+                ./solutionComparator "${EX_DMD_PATH_LOCAL}/${f}"  "${EX_DMD_PATH_BASELINE}/${f}" "1.0e-5" "8"
+            elif [[ $TYPE == "PROM" ]]; then
+                echo "Running sol prom"
+                ./solutionComparator ${EX_PROM_PATH_LOCAL}/$f  ${EX_PROM_PATH_BASELINE}/$f "1.0e-5" "1"
+            else
+                continue
+            fi
+            check_fail
+        fi
+    done
+    move_output_files
+}
 
 set_pass() {
 	echo "$SCRIPT_NAME: PASS"		

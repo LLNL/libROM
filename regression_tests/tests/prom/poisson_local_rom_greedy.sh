@@ -7,18 +7,20 @@ CMDS=(
     "./poisson_local_rom_greedy -use_database -online -f 1.15" 
 )
 TYPE="PROM"
-cd  ${EX_PROM_PATH_LOCAL}
-run_cmds
+run_tests
 
-cd ${EX_PROM_PATH_BASELINE} # Baseline(master) branch libROM
-run_cmds
+#cd  ${EX_PROM_PATH_LOCAL}
+#run_cmds
 
-cd ${GITHUB_WORKSPACE}/build/tests
+#cd ${EX_PROM_PATH_BASELINE} # Baseline(master) branch libROM
+#run_cmds
 
-./solutionComparator ${EX_PROM_PATH_LOCAL}/Sol0 ${EX_PROM_PATH_BASELINE}/Sol0 "1.0e-5" "1" 
-check_fail
+#cd ${GITHUB_WORKSPACE}/build/tests
 
-move_output_files
+#./solutionComparator ${EX_PROM_PATH_LOCAL}/Sol0 ${EX_PROM_PATH_BASELINE}/Sol0 "1.0e-5" "1" 
+#check_fail
+
+#move_output_files
 
 
 
