@@ -21,5 +21,5 @@ run_cmds
 
 cd ${GITHUB_WORKSPACE}/build/tests
 ./solutionComparator ${EX_DMD_PATH_LOCAL}/$latest_file ${EX_DMD_PATH_BASELINE}/$latest_file "1.0e-5" "8"
-
+check_fail
 move_output_files
