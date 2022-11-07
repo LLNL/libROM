@@ -56,6 +56,11 @@ public:
     NonuniformDMD(std::string base_file_name);
 
     /**
+     * @brief Set the offset of a certain order.
+     */
+    void setOffset(Vector* offset_vector, int order) override;
+
+    /**
      * @brief Load the object state to a file.
      *
      * @param[in] base_file_name The base part of the filename to load the
@@ -121,22 +126,23 @@ private:
     /**
      * @brief Returns a pair of pointers to the state and derivative snapshot matrices
      */
-    std::pair<Matrix*, Matrix*> computeDMDSnapshotPair(const Matrix* snapshots);
+    std::pair<Matrix*, Matrix*> computeDMDSnapshotPair(const Matrix* snapshots)
+    override;
 
     /**
      * @brief Compute phi.
      */
-    void computePhi(struct DMDInternal dmd_internal_obj);
+    void computePhi(DMDInternal dmd_internal_obj) override;
 
     /**
      * @brief Compute the appropriate exponential function when predicting the solution.
      */
-    std::complex<double> computeEigExp(std::complex<double> eig, double t);
+    std::complex<double> computeEigExp(std::complex<double> eig, double t) override;
 
     /**
      * @brief Add the appropriate offset when predicting the solution.
      */
-    void addOffset(Vector*& result, double t, int power);
+    void addOffset(Vector*& result, double t, int power) override;
 
     /**
      * @brief Derivative offset in snapshot.

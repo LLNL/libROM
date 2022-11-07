@@ -57,9 +57,9 @@ DMD::DMD(int dim, Vector* state_offset)
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
     d_dim = dim;
-    d_state_offset = state_offset;
     d_trained = false;
     d_init_projected = false;
+    setOffset(state_offset, 0);
 }
 
 DMD::DMD(int dim, double dt, Vector* state_offset)
@@ -78,9 +78,9 @@ DMD::DMD(int dim, double dt, Vector* state_offset)
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
     d_dim = dim;
     d_dt = dt;
-    d_state_offset = state_offset;
     d_trained = false;
     d_init_projected = false;
+    setOffset(state_offset, 0);
 }
 
 DMD::DMD(std::string base_file_name)
@@ -122,7 +122,15 @@ DMD::DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
     d_k = k;
     d_dt = dt;
     d_t_offset = t_offset;
-    d_state_offset = state_offset;
+    setOffset(state_offset, 0);
+}
+
+void DMD::setOffset(Vector* offset_vector, int order)
+{
+    if (order == 0)
+    {
+        d_state_offset = offset_vector;
+    }
 }
 
 void DMD::takeSample(double* u_in, double t)
@@ -495,7 +503,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
 }
 
 void
-DMD::projectInitialCondition(const Vector* init)
+DMD::projectInitialCondition(const Vector* init, double t_offset)
 {
     Matrix* d_phi_real_squared = d_phi_real->transposeMult(d_phi_real);
     Matrix* d_phi_real_squared_2 = d_phi_imaginary->transposeMult(d_phi_imaginary);
@@ -588,6 +596,12 @@ DMD::projectInitialCondition(const Vector* init)
     delete [] ipiv;
     delete [] work;
 
+    if (t_offset >= 0.0)
+    {
+        std::cout << "t_offset is updated from " << d_t_offset <<
+                  " to " << t_offset << std::endl;
+        d_t_offset = t_offset;
+    }
     d_init_projected = true;
 }
 

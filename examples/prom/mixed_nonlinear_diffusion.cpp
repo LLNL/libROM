@@ -78,6 +78,9 @@
 //
 //               Pointwise snapshots for DMD input
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -pwsnap -pwx 101 -pwy 101
+//
+// This example runs in parallel with MPI, by using the same number of MPI ranks
+// in all phases (offline, merge, online).
 
 #include "mfem.hpp"
 #include <fstream>

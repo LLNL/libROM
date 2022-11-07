@@ -31,6 +31,9 @@
 // build_database phase: poisson_local_rom_greedy -build_database -greedy-param-min 0.5 -greedy-param-max 1.5 -greedy-param-size 15 -greedysubsize 4 -greedyconvsize 6 -greedyrelerrortol 0.01
 // use_database phase:   poisson_local_rom_greedy -fom -f X.XX (create a new solution to compare with. Set X.XX to your desired frequency.)
 // use_database phase:   poisson_local_rom_greedy -use_database -online -f X.XX (use the database to compute at f X.XX while comparing to the true offline solution at f X.XX)
+//
+// This example runs in parallel with MPI, by using the same number of MPI ranks
+// in all phases (build_database, fom, online).
 
 #include "mfem.hpp"
 #include <fstream>
@@ -39,6 +42,7 @@
 #include "algo/greedy/GreedyRandomSampler.h"
 #include "linalg/BasisGenerator.h"
 #include "linalg/BasisReader.h"
+#include "mfem/Utilities.hpp"
 
 using namespace std;
 using namespace mfem;
@@ -160,8 +164,8 @@ int main(int argc, char *argv[])
         std::ifstream infile("poisson_local_rom_greedy_algorithm_data");
         if (infile.good())
         {
-            if (myid == 0) std::cout << "The database has already been built. Exiting." <<
-                                         std::endl;
+            if (myid == 0) cout << "The database has already been built."
+                                    << "Exiting." << endl;
             return 0;
         }
         infile.close();
@@ -180,15 +184,14 @@ int main(int argc, char *argv[])
         std::ifstream infile("poisson_local_rom_greedy_algorithm_data");
         if (!infile.good())
         {
-            if (myid == 0) std::cout << "The database has not been built. Exiting." <<
-                                         std::endl;
+            if (myid == 0) cout << "The database has not been built. Exiting."
+                                    << endl;
             return 0;
         }
         infile.close();
     }
 
     vector<string> basisIdentifiers;
-
     // The simulation is wrapped in a do-while statement so that the greedy
     // algorithm (build_database) can run multiple simulations in succession.
     do
@@ -219,23 +222,25 @@ int main(int argc, char *argv[])
 
             if (relativeErrorPointData != NULL)
             {
-                if (myid == 0) std::cout <<
-                                             "Calculating the relative error of the last sampled point." << std::endl;
+                if (myid == 0) cout << "Calculating the relative error of "
+                                        << "the last sampled point." << endl;
+
                 local_rom_freq = pointRequiringRelativeError.localROM.get()->item(0);
                 curr_freq = pointRequiringRelativeError.point.get()->item(0);
-                if (myid == 0) std::cout << "Using the basis obtained at the frequency: " <<
-                                             local_rom_freq << std::endl;
+                if (myid == 0) cout << "Using the basis obtained at the frequency: " <<
+                                        local_rom_freq << endl;
                 online = true;
                 calc_rel_error = true;
             }
             else if (errorIndicatorPointData != NULL)
             {
-                if (myid == 0) std::cout << "Calculating a error indicator at a new point." <<
-                                             std::endl;
+                if (myid == 0) cout << "Calculating an error indicator at "
+                                        << "a new point." << endl;
+
                 local_rom_freq = pointRequiringErrorIndicator.localROM.get()->item(0);
                 curr_freq = pointRequiringErrorIndicator.point.get()->item(0);
-                if (myid == 0) std::cout << "Using the basis obtained at the frequency: " <<
-                                             local_rom_freq << std::endl;
+                if (myid == 0) cout << "Using the basis obtained at the frequency: "
+                                        << local_rom_freq << endl;
                 online = true;
                 calc_err_indicator = true;
             }
@@ -246,14 +251,14 @@ int main(int argc, char *argv[])
                 CAROM::Vector* samplePointData = nextSampleParameterPoint.get();
                 if (samplePointData != NULL)
                 {
-                    if (myid == 0) std::cout << "Sampling a new point." << std::endl;
+                    if (myid == 0) cout << "Sampling a new point." << endl;
                     local_rom_freq = samplePointData->item(0);
                     curr_freq = samplePointData->item(0);
                     offline = true;
                 }
                 else
                 {
-                    if (myid == 0) std::cout << "The greedy algorithm has finished." << std::endl;
+                    if (myid == 0) cout << "The greedy algorithm has finished." << endl;
                     greedy_sampler->save("poisson_local_rom_greedy_algorithm_data");
                     build_database = false;
                     continue;
@@ -264,8 +269,7 @@ int main(int argc, char *argv[])
             freq = curr_freq;
         }
 
-        if (myid == 0) std::cout << "Running loop at the frequency: " << freq <<
-                                     std::endl;
+        if (myid == 0) cout << "Running loop at frequency: " << freq << endl;
 
         kappa = freq * M_PI;
 
@@ -294,7 +298,6 @@ int main(int argc, char *argv[])
                 mesh.UniformRefinement();
             }
         }
-
         // 8. Define a parallel mesh by a partitioning of the serial mesh. Refine
         //    this mesh further in parallel to increase the resolution. Once the
         //    parallel mesh is defined, the serial mesh can be deleted.
@@ -333,10 +336,10 @@ int main(int argc, char *argv[])
             delete_fec = true;
         }
         ParFiniteElementSpace fespace(&pmesh, fec);
-        HYPRE_Int size = fespace.GlobalTrueVSize();
+        HYPRE_Int globalSize = fespace.GlobalTrueVSize();
         if (myid == 0)
         {
-            cout << "Number of finite element unknowns: " << size << endl;
+            cout << "Number of finite element unknowns: " << globalSize << endl;
         }
 
         // 10. Determine the list of true (i.e. parallel conforming) essential
@@ -375,7 +378,7 @@ int main(int argc, char *argv[])
         {
             options = new CAROM::Options(fespace.GetTrueVSize(), max_num_snapshots, 1,
                                          update_right_SV);
-            if (myid == 0) std::cout << "Saving basis to: " << saveBasisName << std::endl;
+            if (myid == 0) cout << "Saving basis to: " << saveBasisName << endl;
             generator = new CAROM::BasisGenerator(*options, isIncremental, saveBasisName);
         }
 
@@ -414,7 +417,7 @@ int main(int argc, char *argv[])
         }
         a.Assemble();
 
-        OperatorPtr A;
+        HypreParMatrix A;
         Vector B, X;
         a.FormLinearSystem(ess_tdof_list, x, *b, A, X, B);
         assembleTimer.Stop();
@@ -442,7 +445,7 @@ int main(int argc, char *argv[])
             if (prec) {
                 cg.SetPreconditioner(*prec);
             }
-            cg.SetOperator(*A);
+            cg.SetOperator(A);
             solveTimer.Start();
             cg.Mult(B, X);
             solveTimer.Stop();
@@ -470,34 +473,26 @@ int main(int argc, char *argv[])
             if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB,
                                       numColumnRB);
 
-            // libROM stores the matrix row-wise, so wrapping as a DenseMatrix in MFEM means it is transposed.
-            DenseMatrix *reducedBasisT = new DenseMatrix(spatialbasis->getData(),
-                    numColumnRB, numRowRB);
-
             // 22. form inverse ROM operator
-            Vector abv(numRowRB), bv(numRowRB), bv2(numRowRB);
-            Vector reducedRHS(numColumnRB), reducedSol(numColumnRB);
-            DenseMatrix invReducedA(numColumnRB);
-            for(int j=0; j < numColumnRB; ++j) {
-                reducedBasisT->GetRow(j, bv);
-                A->Mult(bv, abv);
-                reducedRHS(j) = bv*B;
-                for(int i=0; i<numColumnRB; ++i) {
-                    reducedBasisT->GetRow(i, bv2);
-                    invReducedA(i,j) = abv*bv2;
-                }
-            }
-            invReducedA.Invert();
+            CAROM::Matrix invReducedA(numColumnRB, numColumnRB, false);
+            ComputeCtAB(A, *spatialbasis, *spatialbasis, invReducedA);
+            invReducedA.inverse();
+
+            CAROM::Vector B_carom(B.GetData(), B.Size(), true, false);
+            CAROM::Vector X_carom(X.GetData(), X.Size(), true, false);
+            CAROM::Vector *reducedRHS = spatialbasis->transposeMult(&B_carom);
+            CAROM::Vector reducedSol(numColumnRB, false);
             assembleTimer.Stop();
 
             // 23. solve ROM
             solveTimer.Start();
-            invReducedA.Mult(reducedRHS, reducedSol);
+            invReducedA.mult(*reducedRHS, reducedSol);
             solveTimer.Stop();
 
             // 24. reconstruct FOM state
-            reducedBasisT->MultTranspose(reducedSol,X);
-            delete reducedBasisT;
+            spatialbasis->mult(reducedSol, X_carom);
+            delete spatialbasis;
+            delete reducedRHS;
         }
 
         // 25. Recover the parallel grid function corresponding to X. This is the
@@ -517,12 +512,12 @@ int main(int argc, char *argv[])
             pmesh.Print(mesh_ofs);
 
             ofstream sol_ofs(sol_name.str().c_str());
-            if (myid == 0) std::cout << "Saving solution to: " << sol_name.str() <<
-                                         std::endl;
+            if (myid == 0) cout << "Saving solution to: " << sol_name.str() << endl;
+
             sol_ofs.precision(precision);
-            for (int i = 0; i < x.Size(); ++i)
+            for (int i = 0; i < X.Size(); ++i)
             {
-                sol_ofs << x[i] << std::endl;
+                sol_ofs << X[i] << endl;
             }
         }
 
@@ -557,27 +552,34 @@ int main(int argc, char *argv[])
             Vector true_solution(X.Size());
             ifstream solution_file;
             std::string solution_filename = "Sol" + curr_basis_identifier + to_string(myid);
-            if (myid == 0) std::cout << "Comparing current run to solution at: " <<
-                                         solution_filename << std::endl;
+            if (myid == 0) cout << "Comparing current run to solution at: "
+                                    << solution_filename << endl;
             solution_file.open(solution_filename);
             true_solution.Load(solution_file, X.Size());
             solution_file.close();
             Vector residual(X.Size());
             subtract(X, true_solution, residual);
-            curr_error = residual.Norml2() / true_solution.Norml2();
-            if (myid == 0) std::cout << "The relative error is: " << curr_error <<
-                                         std::endl;
+
+            const double abs_error = sqrt(InnerProduct(MPI_COMM_WORLD, residual, residual));
+            const double sol_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution,
+                                         true_solution));
+
+            curr_error = abs_error / sol_norm;
+            if (myid == 0) cout << "The relative error is: " << curr_error << endl;
+
             greedy_sampler->setPointRelativeError(curr_error);
         }
         // 29. Or calculate the error indicator as commanded by the greedy algorithm.
         else if (calc_err_indicator)
         {
             Vector AX(X.Size());
-            A->Mult(X, AX);
+            A.Mult(X, AX);
             Vector residual(X.Size());
             subtract(B, AX, residual);
-            curr_error = residual.Norml2();
-            std::cout << "The error indicator is: " << curr_error << std::endl;
+
+            curr_error = sqrt(InnerProduct(MPI_COMM_WORLD, residual, residual));
+            if (myid == 0) cout << "The error indicator is: "
+                                    << curr_error << endl;
             greedy_sampler->setPointErrorIndicator(curr_error, 1);
         }
         // 29. Or if not using the greedy algorithm, output the relative error
@@ -587,22 +589,27 @@ int main(int argc, char *argv[])
             Vector true_solution(X.Size());
             ifstream solution_file;
             std::string solution_filename = "Sol" + curr_basis_identifier + to_string(myid);
-            if (myid == 0) std::cout << "Comparing current run to solution at: " <<
-                                         solution_filename << std::endl;
+            if (myid == 0) cout << "Comparing current run to solution at: "
+                                    << solution_filename << endl;
             solution_file.open(solution_filename);
             true_solution.Load(solution_file, X.Size());
             solution_file.close();
             Vector residual(X.Size());
             subtract(X, true_solution, residual);
-            curr_error = residual.Norml2() / true_solution.Norml2();
-            if (myid == 0) std::cout << "The relative error is: " << curr_error <<
-                                         std::endl;
+
+            const double abs_error = sqrt(InnerProduct(MPI_COMM_WORLD, residual, residual));
+            const double sol_norm = sqrt(InnerProduct(MPI_COMM_WORLD, true_solution,
+                                         true_solution));
+
+            curr_error = abs_error / sol_norm;
+            if (myid == 0) cout << "The relative error is: " << curr_error << endl;
 
             Vector AX(X.Size());
-            A->Mult(X, AX);
+            A.Mult(X, AX);
             subtract(B, AX, residual);
-            curr_error = residual.Norml2();
-            std::cout << "The error indicator is: " << curr_error << std::endl;
+            curr_error = sqrt(InnerProduct(MPI_COMM_WORLD, residual, residual));
+            if (myid == 0) cout << "The error indicator is: "
+                                    << curr_error << endl;
         }
 
         // 30. If calculating the relative error, or after we sampled our first point,
@@ -652,8 +659,6 @@ int main(int argc, char *argv[])
         {
             delete fec;
         }
-
-        std::cout << std::endl;
     } while(build_database);
     MPI_Finalize();
 
