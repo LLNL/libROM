@@ -15,6 +15,16 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/modules)
 
 set(libROM_VERSION ${PACKAGE_VERSION})
 
+# MPI needs to link against MPI::C MPI::CXX or MPI::Fortran
+enable_language(C)
+enable_language(CXX)
+enable_language(Fortran)
+find_dependency(MPI)
+find_dependency(HDF5)
+find_dependency(BLAS)
+find_dependency(LAPACK)
+find_dependency(ZLIB)
+
 set(LIBROM_USE_MFEM @LIBROM_USE_MFEM@)
 if(LIBROM_USE_MFEM)
   find_dependency(MFEM)
