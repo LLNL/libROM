@@ -303,7 +303,7 @@ set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME Development)
 
 # Install the library
 install(TARGETS ROM
-  EXPORT ${PROJECT_NAME_UC}Targets
+  EXPORT libROMTargets
   DESTINATION ${INSTALL_LIB_DIR})
 
 # Install the headers
@@ -367,7 +367,7 @@ install(FILES
   DESTINATION ${INSTALL_CMAKE_DIR})
 
 # Install the export set for use with the install-tree
-install(EXPORT ${PROJECT_NAME_UC}Targets
+install(EXPORT libROMTargets
     NAMESPACE libROM::
     DESTINATION ${INSTALL_CMAKE_DIR})
 
