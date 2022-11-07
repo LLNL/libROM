@@ -90,7 +90,7 @@ run_tests() {
                 continue
             fi
             check_fail 
-        elif [[ $f =~ final || "$f" == "sol"*".000000" || "$f" == "Sol0"  ]]; then
+        elif [[ $f =~ final || "$f" == "sol"*".000000" && "$f" != "sol_dofs"* || "$f" == "Sol0"  ]]; then
             if [[ $TYPE == "DMD" && "$f" == *".000000" ]]; then
                 echo "Running sol dmd"
                 ./solutionComparator "${EX_DMD_PATH_LOCAL}/${f}"  "${EX_DMD_PATH_BASELINE}/${f}" "1.0e-5" "8"
