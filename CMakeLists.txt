@@ -314,15 +314,15 @@ endforeach()
 install(FILES ${PROJECT_BINARY_DIR}/lib/CAROM_config.h
   DESTINATION ${INSTALL_INCLUDE_DIR}/librom/)
 
-foreach(Folder algo algo/greedy algo/manifold_interp hyperreduction linalg linalg/svd utils)
+foreach(Folder algo hyperreduction linalg utils)
   install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/${Folder}
-    DESTINATION ${INSTALL_INCLUDE_DIR}/librom/${Folder}
+    DESTINATION ${INSTALL_INCLUDE_DIR}/librom/
     FILES_MATCHING PATTERN "*.h")
 endforeach()
 
 if (LIBROM_USE_MFEM)
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib/mfem
-    DESTINATION ${INSTALL_INCLUDE_DIR}/librom/mfem
+    DESTINATION ${INSTALL_INCLUDE_DIR}/librom/
     FILES_MATCHING PATTERN "*.hpp")
 endif()
 
