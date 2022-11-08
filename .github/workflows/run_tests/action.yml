@@ -4,21 +4,21 @@ runs:
     - name: Run tests
       run: |
           cd ${GITHUB_WORKSPACE}/build
-          ./unit_tests/test_SVD
-          ./unit_tests/test_Vector
-          ./unit_tests/test_Matrix
-          ./unit_tests/test_DEIM
-          ./unit_tests/test_GNAT
-          ./unit_tests/test_QDEIM
-          ./unit_tests/test_S_OPT
-          mpirun -n 4 --oversubscribe unit_tests/test_S_OPT
-          ./unit_tests/test_IncrementalSVD
-          ./unit_tests/test_RandomizedSVD
-          mpirun -n 3 --oversubscribe unit_tests/test_RandomizedSVD
-          ./unit_tests/test_DMD
-          mpirun -n 3 --oversubscribe unit_tests/test_DMD
-          ./unit_tests/test_GreedyCustomSampler
-          mpirun -n 3 --oversubscribe unit_tests/test_GreedyCustomSampler
+          ./tests/test_SVD
+          ./tests/test_Vector
+          ./tests/test_Matrix
+          ./tests/test_DEIM
+          ./tests/test_GNAT
+          ./tests/test_QDEIM
+          ./tests/test_S_OPT
+          mpirun -n 4 --oversubscribe tests/test_S_OPT
+          ./tests/test_IncrementalSVD
+          ./tests/test_RandomizedSVD
+          mpirun -n 3 --oversubscribe tests/test_RandomizedSVD
+          ./tests/test_DMD
+          mpirun -n 3 --oversubscribe tests/test_DMD
+          ./tests/test_GreedyCustomSampler
+          mpirun -n 3 --oversubscribe tests/test_GreedyCustomSampler
           cd {GITHUB_WORKSPACE}/regression_tests
           ./{GITHUB_WORKSPACE}/regression_tests/run_regression_tests.sh
 
