@@ -87,7 +87,7 @@ CSVDatabase::putDoubleArray(
 void
 CSVDatabase::putDoubleVector(
     const std::string& file_name,
-    const std::vector<double> data,
+    const std::vector<double>& data,
     int nelements,
     int precision)
 {
@@ -107,7 +107,7 @@ CSVDatabase::putDoubleVector(
 void
 CSVDatabase::putComplexVector(
     const std::string& file_name,
-    const std::vector<std::complex<double>> data,
+    const std::vector<std::complex<double>>& data,
     int nelements,
     int precision)
 {
@@ -127,7 +127,7 @@ CSVDatabase::putComplexVector(
 void
 CSVDatabase::putStringVector(
     const std::string& file_name,
-    const std::vector<std::string> data,
+    const std::vector<std::string>& data,
     int nelements)
 {
     CAROM_VERIFY(!file_name.empty());
@@ -154,6 +154,8 @@ CSVDatabase::getIntegerArray(
 #endif
 
     std::ifstream d_fs(file_name.c_str());
+    if (d_fs.fail())
+        return;
     CAROM_VERIFY(!d_fs.fail());
     int data_entry = 0;
     for (int i = 0; i < nelements; ++i)
@@ -209,7 +211,7 @@ CSVDatabase::getDoubleArray(
     const std::string& file_name,
     double* data,
     int nelements,
-    std::vector<int> idx)
+    const std::vector<int>& idx)
 {
     CAROM_VERIFY(!file_name.empty());
 #ifndef DEBUG_CHECK_ASSERTIONS
