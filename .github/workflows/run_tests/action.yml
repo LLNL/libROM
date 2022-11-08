@@ -17,8 +17,8 @@ runs:
           mpirun -n 3 --oversubscribe tests/test_DMD
           ./tests/test_GreedyCustomSampler
           mpirun -n 3 --oversubscribe tests/test_GreedyCustomSampler
-          cd {GITHUB_WORKSPACE}/regression_tests
-          ./{GITHUB_WORKSPACE}/regression_tests/run_regression_tests.sh
+           cd ${GITHUB_WORKSPACE}
+          ./regression_tests/run_regression_tests.sh
 
           
          
