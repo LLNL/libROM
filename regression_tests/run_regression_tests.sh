@@ -71,7 +71,7 @@ shift $((OPTIND-1))
 
 echo "Setting up test suite"
 echo "For detailed logs of the regression tests, please check regression_tests/results."
-
+echo "GITHUB_WORKSPACE = $GITHUB_WORKSPACE"
 export GITHUB_WORKSPACE
 export TMPDIR=/tmp
 BASELINE_DIR=${GITHUB_WORKSPACE}/dependencies
