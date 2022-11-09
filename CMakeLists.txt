@@ -300,7 +300,7 @@ set(INSTALL_CMAKE_DIR lib/cmake/librom
 # https://github.com/LLNL/libROM/issues/156
 target_include_directories(ROM
   INTERFACE
-    $<INSTALL_INTERFACE:${INSTALL_INCLUDE_DIR}/libROM>)
+    $<INSTALL_INTERFACE:${INSTALL_INCLUDE_DIR}/librom>)
 
 set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME Development)
 
