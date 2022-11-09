@@ -20,6 +20,20 @@ jobs:
             mkdir ${GITHUB_WORKSPACE}/build
             export CC=mpicc
             export CXX=mpicxx
+            scripts/setup.sh
+            cd ${GITHUB_WORKSPACE}/build
+            cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_MFEM=On ..
+            make
+            cmake -DCMAKE_BUILD_TYPE=Optimized -DUSE_MFEM=On ..
+            make
+      - name: Build baseline libROM
+        run: |
+            cd ${GITHUB_WORKSPACE}/dependencies
+            git clone https://github.com/LLNL/libROM.git
+            cd libROM
+            export CC=mpicc
+            export CXX=mpicxx
+            scripts/setup.sh
             cd ${GITHUB_WORKSPACE}/build
             cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_MFEM=On ..
             make
