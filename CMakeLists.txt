@@ -295,9 +295,12 @@ set(INSTALL_LIB_DIR lib
 set(INSTALL_CMAKE_DIR lib/cmake/librom
   CACHE PATH "Relative path for installing cmake config files.")
 
+# The "INSTALL_INTERFACE" folder shall be
+# $<INSTALL_INTERFACE:${INSTALL_INCLUDE_DIR} after fixing
+# https://github.com/LLNL/libROM/issues/156
 target_include_directories(ROM
   INTERFACE
-    $<INSTALL_INTERFACE:${INSTALL_INCLUDE_DIR}>)
+    $<INSTALL_INTERFACE:${INSTALL_INCLUDE_DIR}/libROM>)
 
 set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME Development)
 
