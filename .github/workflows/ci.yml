@@ -34,7 +34,7 @@ jobs:
             export CC=mpicc
             export CXX=mpicxx
             scripts/setup.sh
-            cd ${GITHUB_WORKSPACE}/dependencies/libROM/build
+            cd build
             cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_MFEM=On ..
             make
             cmake -DCMAKE_BUILD_TYPE=Optimized -DUSE_MFEM=On ..
