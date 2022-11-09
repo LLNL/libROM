@@ -164,11 +164,6 @@ int main(int argc, char *argv[])
     CAROM_VERIFY(!(offline && online) && (offline || online));
     CAROM_VERIFY(!(dtc > 0.0 && ddt > 0.0));
     CAROM_VERIFY(numWindows == 1 || windowNumSamples == infty);
-    //if (numWindows > 1 && windowNumSamples < infty)
-    //{
-    //    windowOverlapSamples += windowNumSamples;
-    //    windowNumSamples = infty;
-    //}
     CAROM_VERIFY(windowOverlapSamples < windowNumSamples);
     double dt_est = max(ddt, dtc);
 
