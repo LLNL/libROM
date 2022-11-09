@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - master
+      - gitlab_actions_mfem
 jobs:
   linux:
     runs-on: ubuntu-latest
@@ -17,12 +18,13 @@ jobs:
       - name: Build libROM
         run: |
             mkdir ${GITHUB_WORKSPACE}/build
-            cd ${GITHUB_WORKSPACE}/build
             export CC=mpicc
             export CXX=mpicxx
-            cmake -DCMAKE_BUILD_TYPE=Debug ..
+            scripts/setup.sh
+            cd ${GITHUB_WORKSPACE}/build
+            cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_MFEM=On ..
             make
-            cmake -DCMAKE_BUILD_TYPE=Optimized ..
+            cmake -DCMAKE_BUILD_TYPE=Optimized -DUSE_MFEM=On ..
             make
       - uses: ./.github/workflows/run_tests
   mac:
