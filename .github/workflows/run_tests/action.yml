@@ -19,8 +19,12 @@ runs:
           mpirun -n 3 --oversubscribe tests/test_GreedyCustomSampler
            cd ${GITHUB_WORKSPACE}
           ./regression_tests/run_regression_tests.sh
-
-          
+          echo "Printing dg_advection log"
+          cat regression_tests/results/dg_advection.log
+          echo "Printing dg_euler log"
+          cat regession_tests/results/dg_euler.log
+          echo "Printing parametric_heat_conduction log"
+          cat regression_tests/results/parametric_heat_conduction.log
          
 
       shell: bash
