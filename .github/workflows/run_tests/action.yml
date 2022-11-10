@@ -10,6 +10,8 @@ runs:
           ./tests/test_DEIM
           ./tests/test_GNAT
           ./tests/test_QDEIM
+          ./tests/test_S_OPT
+           mpirun -n 3 --oversubscribe tests/test_S_OPT
           ./tests/test_IncrementalSVD
           ./tests/test_RandomizedSVD
           mpirun -n 3 --oversubscribe tests/test_RandomizedSVD
