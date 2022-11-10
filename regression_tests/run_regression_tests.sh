@@ -189,6 +189,10 @@ done
 totalTests=$testNum
 echo "${testNumPass} passed, ${testNumFail} failed out of ${totalTests} tests"
 
+
+num_cores=cat /proc/cpuinfo | grep 'core id'
+echo "Number of cores on Ubuntu: "
+
 cd ${GITHUB_WORKSPACE}
 echo "------------------  PRINTING DG_ADVECTION LOG -----------------"
 cat regression_tests/results/dg_advection.log
