@@ -186,4 +186,8 @@ echo "${testNumPass} passed, ${testNumFail} failed out of ${totalTests} tests"
 if [[ $testNumFail -ne 0 ]]; then
 	exit 1
 fi
+cd ${GITHUB_WORKSPACE}
+echo "------------------  PRINTING DG_ADVECTION LOG -----------------"
+cat regression_tests/results/dg_advection.log
+
 unset GITHUB_WORKSPACE
