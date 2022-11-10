@@ -96,7 +96,7 @@ run_tests() {
             if [[ $TYPE == "DMD" && "$f" == *".000000" ]]; then
                 echo "Running sol dmd"
                 ./solutionComparator "${EX_DMD_PATH_LOCAL}/${f}"  "${EX_DMD_PATH_BASELINE}/${f}" "1.0e-5" "8"
-            elif [[ $TYPE == "DMD" && "$f" == *".000000" && "$MACHINE" == "GitHub" ]]; then
+            elif [[ $TYPE == "DMD" && "$f" == *".000000" && $MACHINE = "GitHub" ]]; then
                 echo "Running sol dmd on Ubuntu"
                 ./solutionComparator "${EX_DMD_PATH_LOCAL}/${f}"  "${EX_DMD_PATH_BASELINE}/${f}" "1.0e-5" "2"
             elif [[ $TYPE == "PROM" ]]; then
