@@ -427,7 +427,7 @@ int main(int argc, char *argv[])
             }
 
             int curr_window = 0;
-            int overlap_count = 0;
+            vector<int> overlap_count;
             int min_idx_snap = -1;
             int max_idx_snap = -1;
             double curr_indicator_val = -1.0;
@@ -481,10 +481,17 @@ int main(int argc, char *argv[])
                 }
 
                 dmd[idx_dataset][curr_window]->takeSample(sample, tval);
-                if (overlap_count > 0)
+                for (int window = curr_window-1; window >= 0; --window) 
                 {
-                    dmd[idx_dataset][curr_window-1]->takeSample(sample, tval);
-                    overlap_count -= 1;
+                    if (overlap_count[window] > 0)
+                    {
+                        dmd[idx_dataset][window]->takeSample(sample, tval);
+                        overlap_count[window] -= 1;
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
 
                 if (curr_window+1 < numWindows && idx_snap+1 <= snap_bound[1])
@@ -516,8 +523,8 @@ int main(int argc, char *argv[])
                                  << " is the beginning of window " << curr_window+1 << "." << endl;
                         }
 
+                        overlap_count.push_back(windowOverlapSamples + max(0, rdim+1 - dmd[idx_dataset][curr_window]->getNumSamples()));
                         curr_window += 1;
-                        overlap_count = windowOverlapSamples;
                         dmd[idx_dataset][curr_window]->takeSample(sample, tval);
                     }
                 }
@@ -528,14 +535,17 @@ int main(int argc, char *argv[])
                                          sample[indicator_idx[numWindows]];
                     if (curr_indicator_val >= indicator_val[numWindows])
                     {
-                        max_idx_snap = idx_snap;
                         indicator_val[numWindows] = curr_indicator_val;
-                        if (myid == 0)
+                        if (dmd[idx_dataset][numWindows-1]->getNumSamples() >= rdim+1)
                         {
-                            cout << "State #" << idx_snap << " - " << data_filename
-                                 << " is the end of window " << numWindows-1 << "." << endl;
+                            max_idx_snap = idx_snap;
+                            if (myid == 0)
+                            {
+                                cout << "State #" << idx_snap << " - " << data_filename
+                                     << " is the end of window " << numWindows-1 << "." << endl;
+                            }
+                            break;
                         }
-                        break;
                     }
                 }
             }
