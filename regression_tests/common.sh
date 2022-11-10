@@ -19,7 +19,7 @@ NP=$(($1))
 echo "OS: $MACHINE"
 if [[ $MACHINE = "Linux" ]]; then
 	COMMAND="srun -p pbatch -n 8"
-elif [[ $MACHINE = "Darwin" ]]; then
+elif [[ $MACHINE = "Darwin" || $MACHINE = "GitHub" ]]; then
 	COMMAND="mpirun -np 8"
 else
     echo "Bad OS: $MACHINE"

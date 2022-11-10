@@ -22,16 +22,20 @@ if [[ -z ${GITHUB_WORKSPACE} ]]; then
     exit
   fi
 fi
-
-case "$(uname -s)" in
-    Linux*)
-			MACHINE="Linux";;
-    Darwin*)
-			MACHINE="Darwin";;
-    *)
-			echo "The regression tests can only run on Linux and MAC."
-			exit 1
-esac
+this_os=$(uname -a)
+if [[ $this_os =~ Ubuntu ]]; then
+    MACHINE="GitHub"
+else
+    case "$(uname -s)" in
+        Linux*)
+          MACHINE="Linux";;
+        Darwin*)
+          MACHINE="Darwin";;
+        *)
+          echo "The regression tests can only run on Linux and MAC."
+          exit 1
+    esac
+fi
 echo "MACHINE = $MACHINE"
 export MACHINE
 # echo "GITHUB_WORKSPACE = ${GITHUB_WORKSPACE}"
