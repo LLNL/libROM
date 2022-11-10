@@ -23,6 +23,7 @@ if [[ -z ${GITHUB_WORKSPACE} ]]; then
   fi
 fi
 this_os=$(uname -a)
+echo "Uname -a result: $this_os"
 if [[ $this_os =~ Ubuntu ]]; then
     MACHINE="GitHub"
 else
