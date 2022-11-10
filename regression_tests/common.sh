@@ -22,7 +22,7 @@ if [[ $MACHINE = "Linux" ]]; then
 elif [[ $MACHINE = "Darwin" ]]; then
 	COMMAND="mpirun -np 8"
 elif [[ $MACHINE = "GitHub" ]]; then
-	COMMAND="mpirun -np 8 -oversubscribe"
+	COMMAND="mpirun -np 2"
 else
     echo "Bad OS: $MACHINE"
     exit 1
@@ -96,6 +96,9 @@ run_tests() {
             if [[ $TYPE == "DMD" && "$f" == *".000000" ]]; then
                 echo "Running sol dmd"
                 ./solutionComparator "${EX_DMD_PATH_LOCAL}/${f}"  "${EX_DMD_PATH_BASELINE}/${f}" "1.0e-5" "8"
+            elif [[ $TYPE == "DMD" && "$f" == *".000000" && "$MACHINE" == "GitHub" ]]; then
+                echo "Running sol dmd on Ubuntu"
+                ./solutionComparator "${EX_DMD_PATH_LOCAL}/${f}"  "${EX_DMD_PATH_BASELINE}/${f}" "1.0e-5" "2"
             elif [[ $TYPE == "PROM" ]]; then
                 echo "Running sol prom"
                 ./solutionComparator ${EX_PROM_PATH_LOCAL}/$f  ${EX_PROM_PATH_BASELINE}/$f "1.0e-5" "1"
