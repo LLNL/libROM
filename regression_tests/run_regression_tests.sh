@@ -193,6 +193,11 @@ echo "${testNumPass} passed, ${testNumFail} failed out of ${totalTests} tests"
 cd ${GITHUB_WORKSPACE}
 echo "------------------  PRINTING DG_ADVECTION LOG -----------------"
 cat regression_tests/results/dg_advection.log
+echo "------------------  PRINTING DG_ADVECTION LOCAL SOLUTION -----------------"
+cat build/examples/dmd/dg_advection-final.000000
+
+echo "------------------  PRINTING DG_ADVECTION BASELINE SOLUTION -----------------"
+cat dependencies/libROM/build/examples/dmd/dg_advection-final.000000
 
 echo "------------------  PRINTING DG_EULER LOG -----------------"
 cat regression_tests/results/dg_euler.log
@@ -205,6 +210,7 @@ cat regression_tests/results/nonlinear_elasticity.log
 
 echo "------------------  PRINTING PARAMETRIC_HEAT_CONDUCTION LOG -----------------"
 cat regression_tests/results/parametric_heat_conduction.log
+
 
 #echo "------------------  PRINTING DG_ADVECTION_GLOBAL_ROM LOG -----------------"
 #cat regression_tests/results/dg_advection_global_rom.log
