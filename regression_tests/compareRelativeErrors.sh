@@ -3,7 +3,16 @@ set -eo pipefail
 compareErrors() {
     echo "Comparing relative errors"
     pushd ${GITHUB_WORKSPACE}/regression_tests/results
+    line=$(egrep "Relative error | Relative l2 error " ${scriptName}.log)
+    if [[ -z $line ]]; then
+        echo "Couldn't find any lines containing Relative error in $scriptName"
+        exit 1
+    fi
     lin=$(egrep "Relative error | Relative l2 error " ${scriptName}.log | awk '{ print $NF }')
+    if [[ -z $lin ]]; then
+        echo "Couldn't find any lines containing Relative error"
+        exit 1
+    fi
     num_fields=$(echo $lin | awk '{ print NF }')
     echo "lin = $lin"
     echo "num_fields = $num_fields"
@@ -15,10 +24,10 @@ compareErrors() {
     fi
     set_size=$(echo "$num_fields / 2" | bc)
     echo "set_size = $set_size"
-    for (( i=1; i <= $set_size; i++ )); do
-        err_local=$(echo $lin | awk -v N=$i '{ print $N }')
+    for (( j=1; j <= $set_size; j++ )); do
+        err_local=$(echo $lin | awk -v N=$j '{ print $N }')
         err_local=$(echo $err_local|sed 's/e/*10^/g')
-        idx=$i+set_size
+        idx=$j+set_size
         err_baseline=$(echo $lin | awk -v N=$idx '{ print $N }')
         err_baseline=$(echo $err_baseline|sed 's/e/*10^/g')
         echo "err_local=$err_local"
@@ -34,5 +43,3 @@ compareErrors() {
     done
     popd
 }
-
-#compareErrors

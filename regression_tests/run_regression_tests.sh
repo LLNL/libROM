@@ -166,11 +166,13 @@ for type_of_test in ${type_of_tests_to_execute[@]}; do
   #echo "i = $i"
   for test in ${all_tests[@]}; do 
       scriptName=$(basename $test ".sh")
+      echo "About to run $scriptName"
       # Run a specific test by specifying the test (without the .sh suffix)
       if [[ -n $i && ! "$i" == "$scriptName" ]]; then
+         echo "Skipping $i"
          continue
       fi
-          
+      echo "Running $scriptName"     
       simulationLogFile="${RESULTS_DIR}/${scriptName}.log"
       touch $simulationLogFile
       testNum=$((testNum+1))
@@ -234,10 +236,8 @@ cd ${GITHUB_WORKSPACE}
 
 #echo "------------------  PRINTING POISSON_LOCAL_ROM_GREEDY LOG -----------------"
 #cat regression_tests/results/poisson_local_rom_greedy.log
-
-
+unset GITHUB_WORKSPACE
 if [[ $testNumFail -ne 0 ]]; then
+  echo "Some tests failed"
 	exit 1
 fi
-
-unset GITHUB_WORKSPACE
