@@ -6,7 +6,7 @@ compareErrors() {
     if [[ $type_of_test == 'dmd' ]]; then
        lin=$(grep "Relative error " ${scriptName}.log | awk '{ print $NF }')
     elif [[ $type_of_test == 'prom' ]]; then
-        lin=$(grep "Relative l2 error " ${scriptName}.log | awk '{ print $NF }')
+        lin=$(grep -E "Relative l2 error | Relative error of ROM | The relative error is " ${scriptName}.log | awk '{ print $NF }')
     else
         echo "Neither prom nor dmd"
         exit 1
