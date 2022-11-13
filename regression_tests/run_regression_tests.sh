@@ -166,6 +166,7 @@ for type_of_test in ${type_of_tests_to_execute[@]}; do
   #echo "i = $i"
   for test in ${all_tests[@]}; do 
       scriptName=$(basename $test ".sh")
+      echo "Running test, scriptName is: $scriptName"
       # Run a specific test by specifying the test (without the .sh suffix)
       if [[ -n $i && ! "$i" == "$scriptName" ]]; then
          continue
