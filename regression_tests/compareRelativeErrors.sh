@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eo pipefail
 compareErrors() {
-    pushd ${GITHUB_WORKSPACE}/regression_tests/results >/dev/null
+    pushd ${GITHUB_WORKSPACE}/regression_tests/results > /dev/null
     if [[ $type_of_test == 'dmd' ]]; then
        lin=$(grep "Relative error " ${scriptName}.log | awk '{ print $NF }')
     elif [[ $type_of_test == 'prom' ]]; then
@@ -42,5 +42,5 @@ compareErrors() {
             exit 1
         fi
     done
-    popd
+    popd > /dev/null
 }
