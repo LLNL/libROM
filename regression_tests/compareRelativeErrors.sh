@@ -3,14 +3,16 @@ set -eo pipefail
 compareErrors() {
     echo "Comparing relative errors"
     pushd ${GITHUB_WORKSPACE}/regression_tests/results
-    line=$(egrep "Relative error | Relative l2 error " ${scriptName}.log)
-    if [[ -z $line ]]; then
-        echo "Couldn't find any lines containing Relative error in $scriptName"
+    if [[ $type_of_test == 'dmd' ]]; then
+       lin=$(grep "Relative error " ${scriptName}.log | awk '{ print $NF }')
+    elif [[ $type_of_test == 'prom' ]]; then
+        lin=$(grep "Relative l2 error " ${scriptName}.log | awk '{ print $NF }')
+    else
+        echo "Neither prom nor dmd"
         exit 1
     fi
-    lin=$(egrep "Relative error | Relative l2 error " ${scriptName}.log | awk '{ print $NF }')
     if [[ -z $lin ]]; then
-        echo "Couldn't find any lines containing Relative error"
+        echo "Couldn't find any lines containing Relative error in $scriptName"
         exit 1
     fi
     num_fields=$(echo $lin | awk '{ print NF }')
