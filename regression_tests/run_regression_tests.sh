@@ -166,13 +166,10 @@ for type_of_test in ${type_of_tests_to_execute[@]}; do
   #echo "i = $i"
   for test in ${all_tests[@]}; do 
       scriptName=$(basename $test ".sh")
-      echo "About to run $scriptName"
       # Run a specific test by specifying the test (without the .sh suffix)
       if [[ -n $i && ! "$i" == "$scriptName" ]]; then
-         echo "Skipping $i"
          continue
-      fi
-      echo "Running $scriptName"     
+      fi   
       simulationLogFile="${RESULTS_DIR}/${scriptName}.log"
       touch $simulationLogFile
       testNum=$((testNum+1))
