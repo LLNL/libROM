@@ -9,24 +9,7 @@ CMDS=(
 )
 TYPE="PROM"
 run_tests
-#cd ${EX_PROM_PATH_LOCAL}
-#run_cmds
 
-#cd ${EX_PROM_PATH_BASELINE} # Baseline(master) branch libROM
-#run_cmds
-
-#cd ${GITHUB_WORKSPACE}/build/tests
-
-#./basisComparator ${EX_PROM_PATH_LOCAL}/basisH ${EX_PROM_PATH_BASELINE}/basisH 1e-7 1
-#check_fail
-
-#./basisComparator ${EX_PROM_PATH_LOCAL}/basisV ${EX_PROM_PATH_BASELINE}/basisV 1e-7 1
-#check_fail
-
-#./basisComparator ${EX_PROM_PATH_LOCAL}/basisX ${EX_PROM_PATH_BASELINE}/basisX 1e-7 1
-#check_fail
-
-#move_output_files
 
 
 

@@ -9,7 +9,6 @@
 # sbatch -N 1 -t 1:00:00 -p pbatch -o sbatch.log --open-mode truncate ./regression_tests/run_regression_tests.sh
 # On Mac:
 # ./regression_tests/run_regression_tests.sh
-
 #echo "PWD=$PWD"
 if [[ -z ${GITHUB_WORKSPACE} ]]; then
 # Set GITHUB_WORKSPACE variable
@@ -22,6 +21,7 @@ if [[ -z ${GITHUB_WORKSPACE} ]]; then
     exit
   fi
 fi
+source $GITHUB_WORKSPACE/regression_tests/compareRelativeErrors.sh
 this_os=$(uname -a)
 echo "Uname -a result: $this_os"
 if [[ $this_os =~ Ubuntu ]]; then
@@ -175,6 +175,7 @@ for type_of_test in ${type_of_tests_to_execute[@]}; do
       touch $simulationLogFile
       testNum=$((testNum+1))
       ./$test "$NUM_PROCESSORS" >> $simulationLogFile 2>&1
+      compareErrors
       if [[ $? -ne 0 || "${PIPESTATUS[0]}" -ne 0 ]];  
           then
             testNumFail=$((testNumFail+1))
@@ -187,29 +188,33 @@ for type_of_test in ${type_of_tests_to_execute[@]}; do
   cd ..
 done
 totalTests=$testNum
+if [[ -z $totalTests ]]; then
+    echo "No tests matched"
+    exit 1
+fi
 echo "${testNumPass} passed, ${testNumFail} failed out of ${totalTests} tests"
 
 
 cd ${GITHUB_WORKSPACE}
-echo "------------------  PRINTING DG_ADVECTION LOG -----------------"
-cat regression_tests/results/dg_advection.log
-echo "------------------  PRINTING DG_ADVECTION LOCAL SOLUTION -----------------"
-cat build/examples/dmd/dg_advection-final.000000
+#echo "------------------  PRINTING DG_ADVECTION LOG -----------------"
+#cat regression_tests/results/dg_advection.log
+#echo "------------------  PRINTING DG_ADVECTION LOCAL SOLUTION -----------------"
+#cat build/examples/dmd/dg_advection-final.000000
 
-echo "------------------  PRINTING DG_ADVECTION BASELINE SOLUTION -----------------"
-cat dependencies/libROM/build/examples/dmd/dg_advection-final.000000
+#echo "------------------  PRINTING DG_ADVECTION BASELINE SOLUTION -----------------"
+#cat dependencies/libROM/build/examples/dmd/dg_advection-final.000000
 
-echo "------------------  PRINTING DG_EULER LOG -----------------"
-cat regression_tests/results/dg_euler.log
+#echo "------------------  PRINTING DG_EULER LOG -----------------"
+#cat regression_tests/results/dg_euler.log
 
-echo "------------------  PRINTING HEAT_CONDUCTION LOG -----------------"
-cat regression_tests/results/heat_conduction.log
+#echo "------------------  PRINTING HEAT_CONDUCTION LOG -----------------"
+#cat regression_tests/results/heat_conduction.log
 
-echo "------------------  PRINTING NONLINEAR_ELASTICITY LOG -----------------"
-cat regression_tests/results/nonlinear_elasticity.log
+#echo "------------------  PRINTING NONLINEAR_ELASTICITY LOG -----------------"
+#cat regression_tests/results/nonlinear_elasticity.log
 
-echo "------------------  PRINTING PARAMETRIC_HEAT_CONDUCTION LOG -----------------"
-cat regression_tests/results/parametric_heat_conduction.log
+#echo "------------------  PRINTING PARAMETRIC_HEAT_CONDUCTION LOG -----------------"
+#cat regression_tests/results/parametric_heat_conduction.log
 
 
 #echo "------------------  PRINTING DG_ADVECTION_GLOBAL_ROM LOG -----------------"

@@ -229,7 +229,7 @@ foreach(name IN LISTS unit_test_names)
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
     ${MPI_C_INCLUDE_DIRS})
   target_compile_features(${name} PRIVATE cxx_std_11)
-endforeach(name) # IN LISTS regression_test_names
+endforeach(name) # IN LISTS unit_test_names
 
 foreach(name IN LISTS regression_test_names)
   add_executable(${name} regression_tests/${name}.cpp)

@@ -83,7 +83,7 @@ run_tests() {
     cd ${GITHUB_WORKSPACE}/build/tests
     for f in "${files_to_compare[@]}"; do
         echo "f = $f"
-        if [[ $f =~ basis && -n $test_offline ]]; then
+        if [[ $f =~ basis && -n $test_offline ]]; then # Do not compare offline results(bases) by default
             if [[ $TYPE == "DMD" ]]; then
                 ./basisComparator ${EX_DMD_PATH_LOCAL}/$f ${EX_DMD_PATH_BASELINE}/$f 1e-7 1
             elif [[ $TYPE == "PROM" ]]; then
@@ -97,11 +97,10 @@ run_tests() {
             if [[ $TYPE == "DMD" && "$f" == *".000000" && $MACHINE = "GitHub" ]]; then
                 echo "Running sol dmd on Ubuntu(GitHub Actions)"
                 ./solutionComparator "${EX_DMD_PATH_LOCAL}/${f}"  "${EX_DMD_PATH_BASELINE}/${f}" "1.0e-5" "2"
-            
+                
             elif [[ $TYPE == "DMD" && "$f" == *".000000" ]]; then
                 echo "Running sol dmd"
                 ./solutionComparator "${EX_DMD_PATH_LOCAL}/${f}"  "${EX_DMD_PATH_BASELINE}/${f}" "1.0e-5" "8"
-    
             elif [[ $TYPE == "PROM" ]]; then
                 echo "Running sol prom"
                 ./solutionComparator ${EX_PROM_PATH_LOCAL}/$f  ${EX_PROM_PATH_BASELINE}/$f "1.0e-5" "1"
