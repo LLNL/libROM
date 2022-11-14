@@ -155,7 +155,7 @@ testNumFail=0
 cd $TESTS_DIR
 type_of_tests_to_execute=(*)
 if [[ -z $i ]]; then
-    echo "Running all regression tests except de_parametric_heat_conduction_greedy"
+    echo "Running all regression tests except dg_advection_global_rom"
 else 
     echo "Running only $i"
 fi
@@ -172,7 +172,7 @@ for type_of_test in ${type_of_tests_to_execute[@]}; do
          continue
       fi   
 
-      if [[ "$scriptName" == "de_parametric_heat_conduction_greedy" ]] ; then
+      if [[ "$scriptName" == "dg_advection_global_rom" ]] ; then
          echo "Skipping $scriptName"
          continue
       fi
