@@ -92,6 +92,7 @@ run_tests() {
     for f in "${files_to_compare[@]}"; do
        # echo "f = $f"
         if [[ $f =~ basis && -n $test_offline ]]; then # Do not compare offline results(bases) by default
+            echo "Found basis file"
             if [[ $TYPE == "DMD" ]]; then
                  echo "Running basis comparator, DMD"
                 ./basisComparator ${EX_DMD_PATH_LOCAL}/$f ${EX_DMD_PATH_BASELINE}/$f 1e-7 1
