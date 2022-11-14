@@ -21,7 +21,7 @@ if [[ -z ${GITHUB_WORKSPACE} ]]; then
     exit
   fi
 fi
-source $GITHUB_WORKSPACE/regression_tests/compareRelativeErrors.sh
+#source $GITHUB_WORKSPACE/regression_tests/compareRelativeErrors.sh
 this_os=$(uname -a)
 echo "Uname -a result: $this_os"
 if [[ $this_os =~ Ubuntu ]]; then
@@ -39,7 +39,7 @@ else
 fi
 echo "MACHINE = $MACHINE"
 export MACHINE
-# echo "GITHUB_WORKSPACE = ${GITHUB_WORKSPACE}"
+echo "GITHUB_WORKSPACE = ${GITHUB_WORKSPACE}"
 
 if [[ ! -z test_offline ]]; then
   unset test_offline
@@ -180,6 +180,8 @@ for type_of_test in ${type_of_tests_to_execute[@]}; do
       touch $simulationLogFile
       testNum=$((testNum+1))
       echo "Created simulation log file: $simulationLogFile"
+      echo "PWD = $PWD"
+      echo "test = $test"
       ./$test "$NUM_PROCESSORS" >> $simulationLogFile 2>&1
       echo "Test $scriptName ran"
       #compareErrors
