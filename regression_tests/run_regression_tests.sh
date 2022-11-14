@@ -181,7 +181,7 @@ for type_of_test in ${type_of_tests_to_execute[@]}; do
       testNum=$((testNum+1))
       echo "Created simulation log file: $simulationLogFile"
       ./$test "$NUM_PROCESSORS" >> $simulationLogFile 2>&1
-      #compareErrors
+      compareErrors
       if [[ $? -ne 0 || "${PIPESTATUS[0]}" -ne 0 ]];  
           then
             testNumFail=$((testNumFail+1))
