@@ -155,7 +155,7 @@ testNumFail=0
 cd $TESTS_DIR
 type_of_tests_to_execute=(*)
 if [[ -z $i ]]; then
-    echo "Running all regression tests except dg_advection_global_rom"
+    echo "Running all regression tests"
 else 
     echo "Running only $i"
 fi
@@ -171,14 +171,9 @@ for type_of_test in ${type_of_tests_to_execute[@]}; do
       if [[ -n $i && ! "$i" == "$scriptName" ]]; then
          continue
       fi   
-
-      if [[ "$scriptName" == "dg_advection_global_rom" ]] ; then
-         echo "Skipping $scriptName"
-         continue
-      fi
       simulationLogFile="${RESULTS_DIR}/${scriptName}.log"
       touch $simulationLogFile
-      testNum=$((testNum+1))
+      testNum=$((testNum+1)) 
       echo "Created simulation log file: $simulationLogFile"
       echo "PWD = $PWD"
       echo "test = $test"

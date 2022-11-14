@@ -68,7 +68,7 @@ run_tests() {
         echo "Going to DMD"
         cd  ${EX_DMD_PATH_LOCAL}
     elif [[ $TYPE == "PROM" ]]; then
-        cd "Entering PROM directory"
+        echo "Entering PROM directory"
         cd ${EX_PROM_PATH_LOCAL}
     else
         echo "Unrecognized TYPE is ${TYPE}"
