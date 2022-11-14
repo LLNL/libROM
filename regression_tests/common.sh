@@ -23,6 +23,7 @@ elif [[ $MACHINE = "Darwin" ]]; then
 	COMMAND="mpirun -np 8"
 elif [[ $MACHINE = "GitHub" ]]; then
 	COMMAND="mpirun -np 2"
+    echo "Running on GitHub Actions"
 else
     echo "Bad OS: $MACHINE"
     exit 1
@@ -60,8 +61,10 @@ run_cmds() {
 run_tests() {
     # Run commands from the local directory
     if [[ $TYPE == "DMD" ]]; then
+        echo "Going to DMD"
         cd  ${EX_DMD_PATH_LOCAL}
     elif [[ $TYPE == "PROM" ]]; then
+        cd "Entering PROM directory"
         cd ${EX_PROM_PATH_LOCAL}
     else
         echo "Unrecognized TYPE is ${TYPE}"
@@ -80,13 +83,16 @@ run_tests() {
 
     # Compare results between the two
     files_to_compare=(*)
+    echo "About to run comparisons in common.sh"
     cd ${GITHUB_WORKSPACE}/build/tests
     for f in "${files_to_compare[@]}"; do
         echo "f = $f"
         if [[ $f =~ basis && -n $test_offline ]]; then # Do not compare offline results(bases) by default
             if [[ $TYPE == "DMD" ]]; then
+                 echo "Running basis comparator, DMD"
                 ./basisComparator ${EX_DMD_PATH_LOCAL}/$f ${EX_DMD_PATH_BASELINE}/$f 1e-7 1
             elif [[ $TYPE == "PROM" ]]; then
+                 echo "Running basis comparator, PROM"
                 ./basisComparator ${EX_PROM_PATH_LOCAL}/$f ${EX_PROM_PATH_BASELINE}/$f 1e-7 1
             else
                 continue
@@ -110,6 +116,7 @@ run_tests() {
             check_fail
         fi
     done
+    echo "In common.sh, about to move output files"
     move_output_files
 }
 
