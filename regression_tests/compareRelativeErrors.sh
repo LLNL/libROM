@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eo pipefail
+#set -eo pipefail
 compareErrors() {
     pushd ${GITHUB_WORKSPACE}/regression_tests/results > /dev/null
     if [[ $type_of_test == 'dmd' ]]; then

@@ -21,7 +21,7 @@ if [[ -z ${GITHUB_WORKSPACE} ]]; then
     exit
   fi
 fi
-#source $GITHUB_WORKSPACE/regression_tests/compareRelativeErrors.sh
+source $GITHUB_WORKSPACE/regression_tests/compareRelativeErrors.sh
 this_os=$(uname -a)
 echo "Uname -a result: $this_os"
 if [[ $this_os =~ Ubuntu ]]; then
