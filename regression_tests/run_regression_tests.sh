@@ -179,6 +179,7 @@ for type_of_test in ${type_of_tests_to_execute[@]}; do
       echo "test = $test"
       ./$test "$NUM_PROCESSORS" >> $simulationLogFile 2>&1
       echo "Test $scriptName ran"
+      cat $simulationLogFile
       compareErrors
       if [[ $? -ne 0 || "${PIPESTATUS[0]}" -ne 0 ]];  
           then
