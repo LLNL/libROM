@@ -40,7 +40,7 @@ void compareSolutions(string &baselineFile, string &targetFile, double errorBoun
             baselineFile.back() = '0' + i;
             targetFile.back() = '0' + i;
         }
-        cout << "Opening file: " << baselineFile << endl;
+        cout << "Solution Comparator is Opening file: " << baselineFile << endl;
         if (baselinefb[i].open(baselineFile, ios::in)) {
             baselineFiles[i] = new istream(&baselinefb[i]);
             baselineDim[i] = getDimensions(baselineFile);
@@ -49,7 +49,7 @@ void compareSolutions(string &baselineFile, string &targetFile, double errorBoun
             cerr << "Something went wrong with opening the following file. Most likely it doesn't exist: " << baselineFile << endl;
             abort();
         }
-        cout << "Opening file: " << targetFile << endl;
+        cout << "Solution Comparator is Opening file: " << targetFile << endl;
         if (targetfb[i].open(targetFile, ios::in)) {
             targetFiles[i] = new istream(&targetfb[i]);
             targetDim[i] = getDimensions(targetFile);
