@@ -55,6 +55,7 @@ do
     x)
       test_offline=true
       echo "In run_regression_tests.sh: test_offline flag set"
+      export test_offline
       ;;
     *)
       echo "Usage:"
