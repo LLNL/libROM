@@ -200,38 +200,38 @@ echo "${testNumPass} passed, ${testNumFail} failed out of ${totalTests} tests"
 
 
 cd ${GITHUB_WORKSPACE}
-echo "------------------  PRINTING DG_ADVECTION LOG -----------------"
-cat regression_tests/results/dg_advection.log
+#echo "------------------  PRINTING DG_ADVECTION LOG -----------------"
+#cat regression_tests/results/dg_advection.log
 
-echo "------------------  PRINTING DG_EULER LOG -----------------"
-cat regression_tests/results/dg_euler.log
+#echo "------------------  PRINTING DG_EULER LOG -----------------"
+#cat regression_tests/results/dg_euler.log
 
-echo "------------------  PRINTING HEAT_CONDUCTION LOG -----------------"
-cat regression_tests/results/heat_conduction.log
+#echo "------------------  PRINTING HEAT_CONDUCTION LOG -----------------"
+#cat regression_tests/results/heat_conduction.log
 
-echo "------------------  PRINTING NONLINEAR_ELASTICITY LOG -----------------"
-cat regression_tests/results/nonlinear_elasticity.log
+#echo "------------------  PRINTING NONLINEAR_ELASTICITY LOG -----------------"
+#cat regression_tests/results/nonlinear_elasticity.log
 
-echo "------------------  PRINTING PARAMETRIC_HEAT_CONDUCTION LOG -----------------"
-cat regression_tests/results/parametric_heat_conduction.log
+#echo "------------------  PRINTING PARAMETRIC_HEAT_CONDUCTION LOG -----------------"
+#cat regression_tests/results/parametric_heat_conduction.log
 
-echo "------------------  PRINTING DG_ADVECTION_GLOBAL_ROM LOG -----------------"
-cat regression_tests/results/dg_advection_global_rom.log
+#echo "------------------  PRINTING DG_ADVECTION_GLOBAL_ROM LOG -----------------"
+#at regression_tests/results/dg_advection_global_rom.log
 
-echo "------------------  PRINTING DG_ADVECTION_LOCAL_ROM_MATRIX_INTERP LOG -----------------"
-cat regression_tests/results/dg_advection_local_rom_matrix_interp.log
+#echo "------------------  PRINTING DG_ADVECTION_LOCAL_ROM_MATRIX_INTERP LOG -----------------"
+#cat regression_tests/results/dg_advection_local_rom_matrix_interp.log
 
-echo "------------------  PRINTING LINEAR_ELASTICITY_GLOBAL_ROM LOG -----------------"
-cat regression_tests/results/linear_elasticity_global_rom.log
+#echo "------------------  PRINTING LINEAR_ELASTICITY_GLOBAL_ROM LOG -----------------"
+#cat regression_tests/results/linear_elasticity_global_rom.log
 
-echo "------------------  PRINTING MIXED_NONLINEAR_DIFFUSION LOG -----------------"
-cat regression_tests/results/mixed_nonlinear_diffusion.log
+#echo "------------------  PRINTING MIXED_NONLINEAR_DIFFUSION LOG -----------------"
+#cat regression_tests/results/mixed_nonlinear_diffusion.log
 
-echo "------------------  PRINTING NONLINEAR_ELASTICITY_GLOBAL_ROM LOG -----------------"
-cat regression_tests/results/nonlinear_elasticity_global_rom.log
+#echo "------------------  PRINTING NONLINEAR_ELASTICITY_GLOBAL_ROM LOG -----------------"
+#cat regression_tests/results/nonlinear_elasticity_global_rom.log
 
-echo "------------------  PRINTING POISSON_LOCAL_ROM_GREEDY LOG -----------------"
-cat regression_tests/results/poisson_local_rom_greedy.log
+#echo "------------------  PRINTING POISSON_LOCAL_ROM_GREEDY LOG -----------------"
+#cat regression_tests/results/poisson_local_rom_greedy.log
 unset GITHUB_WORKSPACE
 if [[ $testNumFail -ne 0 ]]; then
   echo "Some tests failed"
