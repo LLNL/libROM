@@ -14,7 +14,7 @@ TYPE="DMD"
 cd ${EX_DMD_PATH_LOCAL}
 run_cmds
 latest_file=$(ls -Art de_parametric_heat_conduction_greedy*final*|tail -n 1)
-echo "Latest file = $latest_file"
+#echo "Latest file = $latest_file"
 
 cd ${EX_DMD_PATH_BASELINE} 
 run_cmds

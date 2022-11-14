@@ -23,7 +23,7 @@ if [[ -z ${GITHUB_WORKSPACE} ]]; then
 fi
 source $GITHUB_WORKSPACE/regression_tests/compareRelativeErrors.sh
 this_os=$(uname -a)
-echo "Uname -a result: $this_os"
+#echo "Uname -a result: $this_os"
 if [[ $this_os =~ Ubuntu ]]; then
     MACHINE="GitHub"
 else
@@ -37,9 +37,9 @@ else
           exit 1
     esac
 fi
-echo "MACHINE = $MACHINE"
+#echo "MACHINE = $MACHINE"
 export MACHINE
-echo "GITHUB_WORKSPACE = ${GITHUB_WORKSPACE}"
+#echo "GITHUB_WORKSPACE = ${GITHUB_WORKSPACE}"
 
 if [[ ! -z test_offline ]]; then
   unset test_offline
@@ -76,7 +76,7 @@ shift $((OPTIND-1))
 
 echo "Setting up test suite"
 echo "For detailed logs of the regression tests, please check regression_tests/results."
-echo "GITHUB_WORKSPACE = $GITHUB_WORKSPACE"
+#echo "GITHUB_WORKSPACE = $GITHUB_WORKSPACE"
 export GITHUB_WORKSPACE
 export TMPDIR=/tmp
 BASELINE_DIR=${GITHUB_WORKSPACE}/dependencies
@@ -166,7 +166,7 @@ for type_of_test in ${type_of_tests_to_execute[@]}; do
   #echo "i = $i"
   for test in ${all_tests[@]}; do 
       scriptName=$(basename $test ".sh")
-      echo "In run_regression_tests, running test: $scriptName"
+      #echo "In run_regression_tests, running test: $scriptName"
       # Run a specific test by specifying the test (without the .sh suffix)
       if [[ -n $i && ! "$i" == "$scriptName" ]]; then
          continue
@@ -174,12 +174,12 @@ for type_of_test in ${type_of_tests_to_execute[@]}; do
       simulationLogFile="${RESULTS_DIR}/${scriptName}.log"
       touch $simulationLogFile
       testNum=$((testNum+1)) 
-      echo "Created simulation log file: $simulationLogFile"
-      echo "PWD = $PWD"
-      echo "test = $test"
+      #echo "Created simulation log file: $simulationLogFile"
+      #echo "PWD = $PWD"
+      #echo "test = $test"
       ./$test "$NUM_PROCESSORS" >> $simulationLogFile 2>&1
-      echo "Test $scriptName ran"
-      cat $simulationLogFile
+     # echo "Test $scriptName ran"
+      #cat $simulationLogFile
       compareErrors
       if [[ $? -ne 0 || "${PIPESTATUS[0]}" -ne 0 ]];  
           then

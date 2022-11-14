@@ -10,7 +10,7 @@ export EX_DIR_BASELINE=${BASELINE_DIR}/libROM/build/examples
 export EX_DMD_PATH_BASELINE=${EX_DIR_BASELINE}/dmd
 export EX_PROM_PATH_BASELINE=${EX_DIR_BASELINE}/prom
 export TYPE
-trap "move_output_files_after_error" ERR
+trap "move_output_files_after_error" ERR # Ensures that output files are moved in the event of an error
 echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
 echo "Running $0 with $1 processors"
 SCRIPT_NAME=$(basename "$0" ".sh")
@@ -90,7 +90,7 @@ run_tests() {
     echo "About to run comparisons in common.sh"
     cd ${GITHUB_WORKSPACE}/build/tests
     for f in "${files_to_compare[@]}"; do
-        echo "f = $f"
+       # echo "f = $f"
         if [[ $f =~ basis && -n $test_offline ]]; then # Do not compare offline results(bases) by default
             if [[ $TYPE == "DMD" ]]; then
                  echo "Running basis comparator, DMD"
@@ -120,7 +120,7 @@ run_tests() {
             check_fail
         fi
     done
-    echo "In common.sh, ran tests, about to move output files"
+   #echo "In common.sh, ran tests, about to move output files"
     move_output_files
 }
 
