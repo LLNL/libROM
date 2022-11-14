@@ -181,7 +181,8 @@ for type_of_test in ${type_of_tests_to_execute[@]}; do
       testNum=$((testNum+1))
       echo "Created simulation log file: $simulationLogFile"
       ./$test "$NUM_PROCESSORS" >> $simulationLogFile 2>&1
-      compareErrors
+      echo "Test $scriptName ran"
+      #compareErrors
       if [[ $? -ne 0 || "${PIPESTATUS[0]}" -ne 0 ]];  
           then
             testNumFail=$((testNumFail+1))
@@ -194,7 +195,7 @@ for type_of_test in ${type_of_tests_to_execute[@]}; do
   cd ..
 done
 totalTests=$testNum
-if [[ -z $totalTests ]]; then
+if [[ $totalTests == 0 ]]; then
     echo "No tests matched"
     exit 1
 fi

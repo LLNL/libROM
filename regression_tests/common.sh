@@ -35,6 +35,7 @@ move_output_files_after_error() {
 }
 
 move_output_files() {
+    echo "Moving output files"
     EX_PATHS=("${EX_DMD_PATH_LOCAL}" "${EX_DMD_PATH_BASELINE}" "${EX_PROM_PATH_LOCAL}" "${EX_PROM_PATH_BASELINE}")
     echo "TYPE = $TYPE"
     echo "SCRIPT_NAME = $SCRIPT_NAME"
@@ -53,12 +54,15 @@ move_output_files() {
 }
 
 run_cmds() {
+    echo "Running commands"
     for cmd in "${CMDS[@]}"; do
         eval "$cmd"
     done
+    echo "Ran commands"
 }
 
 run_tests() {
+    echo "Running tests"
     # Run commands from the local directory
     if [[ $TYPE == "DMD" ]]; then
         echo "Going to DMD"
@@ -116,7 +120,7 @@ run_tests() {
             check_fail
         fi
     done
-    echo "In common.sh, about to move output files"
+    echo "In common.sh, ran tests, about to move output files"
     move_output_files
 }
 
