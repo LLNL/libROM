@@ -10,6 +10,7 @@ export EX_DIR_BASELINE=${BASELINE_DIR}/libROM/build/examples
 export EX_DMD_PATH_BASELINE=${EX_DIR_BASELINE}/dmd
 export EX_PROM_PATH_BASELINE=${EX_DIR_BASELINE}/prom
 export TYPE
+echo "In common.sh, test_offline is: $test_offline"
 trap "move_output_files_after_error" ERR # Ensures that output files are moved in the event of an error
 echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
 echo "Running $0 with $1 processors"
