@@ -91,7 +91,7 @@ run_tests() {
     echo "About to run comparisons in common.sh"
     cd ${GITHUB_WORKSPACE}/build/tests
     for f in "${files_to_compare[@]}"; do
-       # echo "f = $f"
+        echo "f = $f"
         if [[ $f =~ basis && -n $test_offline ]]; then # Do not compare offline results(bases) by default
             echo "Found basis file"
             if [[ $TYPE == "DMD" ]]; then
