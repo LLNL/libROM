@@ -9,7 +9,7 @@ These data and examples are built using MFEM and derived from their examples
 - DG Euler
 - Heat Conduction
 - Parametric Heat Conduction
-- DE(Differential Evolution) Parametric Heat Conduction 
+- DE (Differential Evolution) Parametric Heat Conduction 
 - Nonlinear Elasticity
 
 ## Projection-based Reduced Order Models (PROM)
