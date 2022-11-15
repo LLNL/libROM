@@ -98,11 +98,13 @@ int main(int argc, char *argv[])
     int rdim = -1;
     const char *list_dir = "hc_list";
     const char *data_dir = "hc_data";
+    const char *sim_name = "sim";
     const char *var_name = "sol";
     const char *train_list = "hc_train_parametric";
     const char *test_list = "hc_test";
     const char *temporal_idx_list = "temporal_idx";
     const char *spatial_idx_list = "spatial_idx";
+    const char *hdf_name = "dmd.hdf";
     const char *basename = "";
     bool save_csv = false;
     bool csvFormat = true;
@@ -145,6 +147,10 @@ int main(int argc, char *argv[])
                    "Location of training and testing data list.");
     args.AddOption(&data_dir, "-data", "--data-directory",
                    "Location of training and testing data.");
+    args.AddOption(&hdf_name, "-hdffile", "--hdf-file",
+                   "Name of HDF file for training and testing data.");
+    args.AddOption(&sim_name, "-sim", "--sim-name",
+                   "Name of simulation.");
     args.AddOption(&var_name, "-var", "--variable-name",
                    "Name of variable.");
     args.AddOption(&train_list, "-train-set", "--training-set-name",
@@ -221,7 +227,7 @@ int main(int argc, char *argv[])
         db->getIntegerArray(string(data_dir) + "/dim.csv", &nelements, 1);
     else
     {
-        db->open(string(data_dir) + "/hc_par1/dmd.hdf", "r");
+	db->open(string(data_dir) + "/" + sim_name + "0/" + hdf_name, "r");
         nelements = db->getDoubleArraySize("step0sol");
         db->close();
     }
@@ -287,7 +293,7 @@ int main(int argc, char *argv[])
     }
 
     int dpar = -1;
-    const int ospar = csvFormat ? 2 : 1;
+    const int ospar = csvFormat ? 2 : 1;  // CSV version has numsnap, HDF does not.
 
     for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
     {
@@ -322,7 +328,7 @@ int main(int argc, char *argv[])
 
         if (!csvFormat)
         {
-            db->open(string(data_dir) + "/" + par_dir + "/dmd.hdf", "r");
+            db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
         }
 
         int snap_bound_size = 0;
@@ -336,7 +342,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            db->open(string(data_dir) + "/" + par_dir + "/dmd.hdf", "r");
+            db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
             db->getInteger("numsnap", numsnap);
         }
 
@@ -478,7 +484,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-                db->open(string(data_dir) + "/" + par_dir + "/dmd.hdf", "r");
+                db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
                 db->getInteger("numsnap", numsnap);
             }
 
@@ -653,7 +659,7 @@ int main(int argc, char *argv[])
                 db->getInteger(string(list_dir) + "/" + numsnap_str, numsnap);
             else
             {
-                db->open(string(data_dir) + "/" + par_dir + "/dmd.hdf", "r");
+                db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
                 db->getInteger("numsnap", numsnap);
             }
             CAROM_VERIFY(numsnap > 0);
@@ -769,7 +775,7 @@ int main(int argc, char *argv[])
                 db->getInteger(string(list_dir) + "/" + par_ns_list[idx_dataset], numsnap);
             else
             {
-                db->open(string(data_dir) + "/" + par_dir + "/dmd.hdf", "r");
+                db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
                 db->getInteger("numsnap", numsnap);
             }
             CAROM_VERIFY(numsnap > 0);
