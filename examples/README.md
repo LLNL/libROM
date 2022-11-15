@@ -8,6 +8,8 @@ These data and examples are built using MFEM and derived from their examples
 - DG Advection
 - DG Euler
 - Heat Conduction
+- Parametric Heat Conduction
+- DE(Differential Evolution) Parametric Heat Conduction 
 - Nonlinear Elasticity
 
 ## Projection-based Reduced Order Models (PROM)
@@ -15,6 +17,7 @@ These data and examples are built using MFEM and derived from their examples
 - DG Advection (Global ROM)
 - DG Advection (Local ROM with matrix interpolation)
 - Linear Elasticity
+- Nonlinear Elasticity(Global ROM)
 - Mixed Linear Diffusion (Global ROM)
 - Poisson (Global ROM)
 - Poisson (Local ROM using the greedy algorithm)
