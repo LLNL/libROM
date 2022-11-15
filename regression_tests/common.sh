@@ -92,7 +92,7 @@ run_tests() {
     cd ${GITHUB_WORKSPACE}/build/tests
     for f in "${files_to_compare[@]}"; do
         echo "f = $f"
-        if [[ $f =~ basis && -n $test_offline ]]; then # Do not compare offline results(bases) by default
+        if [[ ! $f =~ snapshot && $f =~ basis && -n $test_offline ]]; then # Do not compare offline results(bases) by default
             fn="${f%.*}"
             echo "f = $f"
             echo "fn" $fn
