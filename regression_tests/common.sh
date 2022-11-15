@@ -99,10 +99,10 @@ run_tests() {
             echo "Found basis file"
             if [[ $TYPE == "DMD" ]]; then
                  echo "Running basis comparator, DMD"
-                ./basisComparator ${EX_DMD_PATH_LOCAL}/$f ${EX_DMD_PATH_BASELINE}/$fn 1e-7 1
+                ./basisComparator ${EX_DMD_PATH_LOCAL}/$fn ${EX_DMD_PATH_BASELINE}/$fn 1e-7 1
             elif [[ $TYPE == "PROM" ]]; then
                  echo "Running basis comparator, PROM"
-                ./basisComparator ${EX_PROM_PATH_LOCAL}/$f ${EX_PROM_PATH_BASELINE}/$fn 1e-7 1
+                ./basisComparator ${EX_PROM_PATH_LOCAL}/$fn ${EX_PROM_PATH_BASELINE}/$fn 1e-7 1
             else
                 continue
             fi
