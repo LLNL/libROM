@@ -93,7 +93,7 @@ run_tests() {
     for f in "${files_to_compare[@]}"; do
         echo "f = $f"
         if [[ $f =~ basis && -n $test_offline ]]; then # Do not compare offline results(bases) by default
-            fn=$f%.*
+            fn="${f%.*}"
             echo "f = $f"
             echo "fn" $fn
             echo "Found basis file"
