@@ -11,7 +11,7 @@ export EX_DMD_PATH_BASELINE=${EX_DIR_BASELINE}/dmd
 export EX_PROM_PATH_BASELINE=${EX_DIR_BASELINE}/prom
 export TYPE
 echo "In common.sh, test_offline is: $test_offline"
-trap "move_output_files_after_error" ERR # Ensures that output files are moved in the event of an error
+trap "move_output_files_after_error" 1 2 3 6 # Ensures that output files are moved in the event of SIGHUP, SIGINT, SIGQUIT, SIGABRT
 echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
 echo "Running $0 with $1 processors"
 SCRIPT_NAME=$(basename "$0" ".sh")

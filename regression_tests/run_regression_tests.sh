@@ -23,7 +23,6 @@ if [[ -z ${GITHUB_WORKSPACE} ]]; then
 fi
 source $GITHUB_WORKSPACE/regression_tests/compareRelativeErrors.sh
 this_os=$(uname -a)
-#echo "Uname -a result: $this_os"
 if [[ $this_os =~ Ubuntu ]]; then
     MACHINE="GitHub"
 else
@@ -93,7 +92,7 @@ cd ${EXAMPLES_DMD_LOCAL} && rm -rf ./*/ && rm -rf *0*
 cd ${EXAMPLES_PROM_LOCAL} && rm -rf ./*/ && rm -rf *0*
 cd ${EXAMPLES_DMD_BASELINE} && rm -rf ./*/ && rm -rf *0*
 cd ${EXAMPLES_PROM_BASELINE} && rm -rf ./*/ && rm -rf *0*
-#echo "My current dir = $DIR"
+
 # Compile current branch if it isn't already compiled
 # (assuming the branch isn't compiled if mfem doesn't exist)
 if [ ! -d "$GITHUB_WORKSPACE/dependencies/mfem" ]; then
@@ -106,30 +105,42 @@ if [ ! -d "$GITHUB_WORKSPACE/dependencies/mfem" ]; then
        exit 1
     fi
 else
-   echo "${GITHUB_WORKSPACE}/dependencies/libROM/mfem already exists"
+   echo "${GITHUB_WORKSPACE}/dependencies/libROM/mfem exists; not recompiling the local branch"
 fi
 
 # Compile master branch if it isn't already compiled
 # (assuming that the master branch isn't compiled if libROM isn't found in the dependencies)
-
+recompile=0
 if [ ! -d $BASELINE_DIR/libROM ]; then # Clone master branch to baseline directory
    #echo "Creating $BASELINE_DIR"
    mkdir -p $BASELINE_DIR
    cd ${BASELINE_DIR}
    echo "Clone libROM master into baseline"
    git clone https://github.com/LLNL/libROM.git
-   cd libROM/scripts
-   echo "Compile libROM master"
+   recompile=1
+else
+   echo "The baseline branch ${BASELINE_DIR}/libROM exists"
+   num_changes=$(git log HEAD..origin/master|wc -l)
+   nc=$(( $num_changes ))
+   if [[ $nc != 0 ]]; then
+      echo "There are changes between the baseline origin/master and the HEAD: pulling and recompiling"
+      git reset --hard origin/master
+      git pull
+      recompile=1
+   fi
+fi
+
+if [[ $recompile == 1 ]]; then
+   cd ${BASELINE_DIR}/libROM/scripts
+   echo "Compiling baseline libROM master"
    ./compile.sh -m
-   echo "Compile libROM master - done"
+   echo "Compile baseline libROM master - done"
     if [[ "$?" -ne 0 ]]; then
-       echo "Compilation failed for libROM master"
+       echo "Compilation failed for baseline libROM master"
        exit 1
     fi
-else
-   echo "${BASELINE_DIR}/libROM already exists"
-   cd
 fi
+   
 cd $DIR
 RESULTS_DIR=$DIR/regression_tests/results
 if [ ! -d $RESULTS_DIR ]; then
@@ -166,7 +177,6 @@ for type_of_test in ${type_of_tests_to_execute[@]}; do
   #echo "i = $i"
   for test in ${all_tests[@]}; do 
       scriptName=$(basename $test ".sh")
-      #echo "In run_regression_tests, running test: $scriptName"
       # Run a specific test by specifying the test (without the .sh suffix)
       if [[ -n $i && ! "$i" == "$scriptName" ]]; then
          continue
@@ -174,11 +184,7 @@ for type_of_test in ${type_of_tests_to_execute[@]}; do
       simulationLogFile="${RESULTS_DIR}/${scriptName}.log"
       touch $simulationLogFile
       testNum=$((testNum+1)) 
-      #echo "Created simulation log file: $simulationLogFile"
-      #echo "PWD = $PWD"
-      #echo "test = $test"
       ./$test "$NUM_PROCESSORS" >> $simulationLogFile 2>&1
-     # echo "Test $scriptName ran"
       #cat $simulationLogFile
       compareErrors
       if [[ $? -ne 0 || "${PIPESTATUS[0]}" -ne 0 ]];  
