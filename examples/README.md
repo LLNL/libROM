@@ -18,6 +18,6 @@ These data and examples are built using MFEM and derived from their examples
 - DG Advection (Local ROM with matrix interpolation)
 - Linear Elasticity
 - Nonlinear Elasticity(Global ROM)
-- Mixed Linear Diffusion (Global ROM)
+- Mixed Nonlinear Diffusion (Global ROM)
 - Poisson (Global ROM)
 - Poisson (Local ROM using the greedy algorithm)
