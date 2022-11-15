@@ -40,7 +40,6 @@ void compareSolutions(string &baselineFile, string &targetFile, double errorBoun
             baselineFile.back() = '0' + i;
             targetFile.back() = '0' + i;
         }
-        cout << "Solution Comparator is Opening file: " << baselineFile << endl;
         if (baselinefb[i].open(baselineFile, ios::in)) {
             baselineFiles[i] = new istream(&baselinefb[i]);
             baselineDim[i] = getDimensions(baselineFile);

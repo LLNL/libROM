@@ -9,7 +9,7 @@
 # sbatch -N 1 -t 1:00:00 -p pbatch -o sbatch.log --open-mode truncate ./regression_tests/run_regression_tests.sh
 # On Mac:
 # ./regression_tests/run_regression_tests.sh
-#echo "PWD=$PWD"
+
 if [[ -z ${GITHUB_WORKSPACE} ]]; then
 # Set GITHUB_WORKSPACE variable
   if [[ -f "$PWD/run_regression_tests.sh" ]]; then
@@ -36,9 +36,7 @@ else
           exit 1
     esac
 fi
-#echo "MACHINE = $MACHINE"
 export MACHINE
-#echo "GITHUB_WORKSPACE = ${GITHUB_WORKSPACE}"
 
 unset test_offline
 
@@ -51,7 +49,6 @@ do
       ;;
     x)
       test_offline=true 
-      echo "In run_regression_tests.sh: test_offline flag set"
       export test_offline
       ;;
     *)
@@ -75,7 +72,6 @@ shift $((OPTIND-1))
 
 echo "Setting up test suite"
 echo "For detailed logs of the regression tests, please check regression_tests/results."
-#echo "GITHUB_WORKSPACE = $GITHUB_WORKSPACE"
 export GITHUB_WORKSPACE
 export TMPDIR=/tmp
 BASELINE_DIR=${GITHUB_WORKSPACE}/dependencies
@@ -112,7 +108,6 @@ fi
 # (assuming that the master branch isn't compiled if libROM isn't found in the dependencies)
 recompile=0
 if [ ! -d $BASELINE_DIR/libROM ]; then # Clone master branch to baseline directory
-   #echo "Creating $BASELINE_DIR"
    mkdir -p $BASELINE_DIR
    cd ${BASELINE_DIR}
    echo "Clone libROM master into baseline"
@@ -158,7 +153,6 @@ if ! [[ $NUM_PROCESSORS =~ $re ]] ; then
    echo "Error: $NUM_PROCESSORS is not a number"
    exit 1
 fi
-# echo "Number of processors = $NUM_PROCESSORS"
 totalTests=0
 testNum=0
 testNumPass=0
@@ -173,8 +167,6 @@ fi
 for type_of_test in ${type_of_tests_to_execute[@]}; do
   cd $type_of_test
   all_tests=(*)
-  #echo "Tests to execute = ${all_tests}"
-  #echo "i = $i"
   for test in ${all_tests[@]}; do 
       scriptName=$(basename $test ".sh")
       # Run a specific test by specifying the test (without the .sh suffix)
@@ -207,38 +199,7 @@ echo "${testNumPass} passed, ${testNumFail} failed out of ${totalTests} tests"
 
 
 cd ${GITHUB_WORKSPACE}
-#echo "------------------  PRINTING DG_ADVECTION LOG -----------------"
-#cat regression_tests/results/dg_advection.log
 
-#echo "------------------  PRINTING DG_EULER LOG -----------------"
-#cat regression_tests/results/dg_euler.log
-
-#echo "------------------  PRINTING HEAT_CONDUCTION LOG -----------------"
-#cat regression_tests/results/heat_conduction.log
-
-#echo "------------------  PRINTING NONLINEAR_ELASTICITY LOG -----------------"
-#cat regression_tests/results/nonlinear_elasticity.log
-
-#echo "------------------  PRINTING PARAMETRIC_HEAT_CONDUCTION LOG -----------------"
-#cat regression_tests/results/parametric_heat_conduction.log
-
-#echo "------------------  PRINTING DG_ADVECTION_GLOBAL_ROM LOG -----------------"
-#at regression_tests/results/dg_advection_global_rom.log
-
-#echo "------------------  PRINTING DG_ADVECTION_LOCAL_ROM_MATRIX_INTERP LOG -----------------"
-#cat regression_tests/results/dg_advection_local_rom_matrix_interp.log
-
-#echo "------------------  PRINTING LINEAR_ELASTICITY_GLOBAL_ROM LOG -----------------"
-#cat regression_tests/results/linear_elasticity_global_rom.log
-
-#echo "------------------  PRINTING MIXED_NONLINEAR_DIFFUSION LOG -----------------"
-#cat regression_tests/results/mixed_nonlinear_diffusion.log
-
-#echo "------------------  PRINTING NONLINEAR_ELASTICITY_GLOBAL_ROM LOG -----------------"
-#cat regression_tests/results/nonlinear_elasticity_global_rom.log
-
-#echo "------------------  PRINTING POISSON_LOCAL_ROM_GREEDY LOG -----------------"
-#cat regression_tests/results/poisson_local_rom_greedy.log
 unset GITHUB_WORKSPACE
 if [[ $testNumFail -ne 0 ]]; then
   echo "Some tests failed"
