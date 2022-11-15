@@ -41,9 +41,7 @@ fi
 export MACHINE
 #echo "GITHUB_WORKSPACE = ${GITHUB_WORKSPACE}"
 
-if [[ ! -z test_offline ]]; then
-  unset test_offline
-fi
+unset test_offline
 
 # Get options
 while getopts ":i:e:x" o;
@@ -91,10 +89,10 @@ EXAMPLES_PROM_BASELINE=${BASELINE_DIR}/libROM/build/examples/prom
 DIR=$GITHUB_WORKSPACE
 scriptName="Unknown"
 #clean up
-cd ${EXAMPLES_DMD_LOCAL} && rm -rf ./*/
-cd ${EXAMPLES_PROM_LOCAL} && rm -rf ./*/
-cd ${EXAMPLES_DMD_BASELINE} && rm -rf ./*/
-cd ${EXAMPLES_PROM_BASELINE} && rm -rf ./*/
+cd ${EXAMPLES_DMD_LOCAL} && rm -rf ./*/ && rm -rf *0*
+cd ${EXAMPLES_PROM_LOCAL} && rm -rf ./*/ && rm -rf *0*
+cd ${EXAMPLES_DMD_BASELINE} && rm -rf ./*/ && rm -rf *0*
+cd ${EXAMPLES_PROM_BASELINE} && rm -rf ./*/ && rm -rf *0*
 #echo "My current dir = $DIR"
 # Compile current branch if it isn't already compiled
 # (assuming the branch isn't compiled if mfem doesn't exist)
