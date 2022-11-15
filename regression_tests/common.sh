@@ -35,7 +35,7 @@ move_output_files_after_error() {
     move_output_files
 }
 
-move_output_files() {
+move_output_files() { 
     echo "Moving output files"
     EX_PATHS=("${EX_DMD_PATH_LOCAL}" "${EX_DMD_PATH_BASELINE}" "${EX_PROM_PATH_LOCAL}" "${EX_PROM_PATH_BASELINE}")
     echo "TYPE = $TYPE"
@@ -93,13 +93,16 @@ run_tests() {
     for f in "${files_to_compare[@]}"; do
         echo "f = $f"
         if [[ $f =~ basis && -n $test_offline ]]; then # Do not compare offline results(bases) by default
+            fn=$f%.*
+            echo "f = $f"
+            echo "fn" $fn
             echo "Found basis file"
             if [[ $TYPE == "DMD" ]]; then
                  echo "Running basis comparator, DMD"
-                ./basisComparator ${EX_DMD_PATH_LOCAL}/$f ${EX_DMD_PATH_BASELINE}/$f 1e-7 1
+                ./basisComparator ${EX_DMD_PATH_LOCAL}/$f ${EX_DMD_PATH_BASELINE}/$fn 1e-7 1
             elif [[ $TYPE == "PROM" ]]; then
                  echo "Running basis comparator, PROM"
-                ./basisComparator ${EX_PROM_PATH_LOCAL}/$f ${EX_PROM_PATH_BASELINE}/$f 1e-7 1
+                ./basisComparator ${EX_PROM_PATH_LOCAL}/$f ${EX_PROM_PATH_BASELINE}/$fn 1e-7 1
             else
                 continue
             fi

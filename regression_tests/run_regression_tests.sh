@@ -108,7 +108,7 @@ if [ ! -d "$GITHUB_WORKSPACE/dependencies/mfem" ]; then
        exit 1
     fi
 else
-   echo "${GITHUB_WORKSPACE}/dependencies/libROM already exists"
+   echo "${GITHUB_WORKSPACE}/dependencies/libROM/mfem already exists"
 fi
 
 # Compile master branch if it isn't already compiled
@@ -129,7 +129,7 @@ if [ ! -d $BASELINE_DIR/libROM ]; then # Clone master branch to baseline directo
        exit 1
     fi
 else
-   echo "${BASELINE_DIR}/libROM master already exists"
+   echo "${BASELINE_DIR}/libROM already exists"
    cd
 fi
 cd $DIR
