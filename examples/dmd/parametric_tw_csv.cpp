@@ -96,12 +96,12 @@ int main(int argc, char *argv[])
     double pdmd_closest_rbf_val = 0.9;
     double ef = 0.9999;
     int rdim = -1;
-    const char *list_dir = "hc_list";
-    const char *data_dir = "hc_data";
+    const char *list_dir = "dmd_list";
+    const char *data_dir = "dmd_data";
     const char *sim_name = "sim";
     const char *var_name = "sol";
-    const char *train_list = "hc_train_parametric";
-    const char *test_list = "hc_test";
+    const char *train_list = "dmd_train_parametric";
+    const char *test_list = "dmd_test";
     const char *temporal_idx_list = "temporal_idx";
     const char *spatial_idx_list = "spatial_idx";
     const char *hdf_name = "dmd.hdf";
