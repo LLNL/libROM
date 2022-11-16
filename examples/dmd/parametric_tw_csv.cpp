@@ -227,7 +227,7 @@ int main(int argc, char *argv[])
         db->getIntegerArray(string(data_dir) + "/dim.csv", &nelements, 1);
     else
     {
-	db->open(string(data_dir) + "/" + sim_name + "0/" + hdf_name, "r");
+        db->open(string(data_dir) + "/" + sim_name + "0/" + hdf_name, "r");
         nelements = db->getDoubleArraySize("step0sol");
         db->close();
     }
@@ -235,8 +235,8 @@ int main(int argc, char *argv[])
     CAROM_VERIFY(nelements > 0);
     if (myid == 0)
     {
-        cout << "Variable " << var_name << " has dimension " << nelements << "." <<
-             endl;
+        cout << "Variable " << var_name << " has dimension " << nelements
+             << "." << endl;
     }
 
     int dim = nelements;
@@ -248,16 +248,16 @@ int main(int argc, char *argv[])
         dim = idx_state.size();
         if (myid == 0)
         {
-            cout << "Restricting on " << dim << " entries out of " << nelements << "." <<
-                 endl;
+            cout << "Restricting on " << dim << " entries out of " << nelements
+                 << "." << endl;
         }
     }
 
     vector<double> indicator_val;
     if (online || numWindows > 0)
     {
-        csv_db.getDoubleVector(string(outputPath) + "/indicator_val.csv", indicator_val,
-                               false);
+        csv_db.getDoubleVector(string(outputPath) + "/indicator_val.csv",
+                               indicator_val, false);
         if (indicator_val.size() > 0)
         {
             if (numWindows > 0)
@@ -270,8 +270,8 @@ int main(int argc, char *argv[])
             }
             if (myid == 0)
             {
-                cout << "Read indicator range partition with " << numWindows << " windows." <<
-                     endl;
+                cout << "Read indicator range partition with " << numWindows
+                     << " windows." << endl;
             }
         }
     }
@@ -351,11 +351,9 @@ int main(int argc, char *argv[])
         vector<int> snap_index_list(numsnap);
         if (csvFormat)
             db->getIntegerArray(string(list_dir) + "/" + par_dir + ".csv",
-                                snap_index_list.data(),
-                                numsnap);
+                                snap_index_list.data(), numsnap);
         else
-            db->getIntegerArray("snap_list", snap_index_list.data(),
-                                numsnap);
+            db->getIntegerArray("snap_list", snap_index_list.data(), numsnap);
 
         vector<int> snap_bound(snap_bound_size);
         if (csvFormat) prefix = string(data_dir) + "/" + par_dir + "/";
@@ -367,8 +365,8 @@ int main(int argc, char *argv[])
             snap_bound[1] -= 1;
             if (myid == 0)
             {
-                cout << "Restricting on snapshot #" << snap_bound[0] << " to #" << snap_bound[1]
-                     << "." << endl;
+                cout << "Restricting on snapshot #" << snap_bound[0] << " to #"
+                     << snap_bound[1] << "." << endl;
             }
         }
         else
@@ -420,10 +418,10 @@ int main(int argc, char *argv[])
         }
         if (myid == 0)
         {
-            cout << "Created new indicator range partition with " << numWindows <<
-                 " windows." << endl;
-            csv_db.putDoubleVector(string(outputPath) + "/indicator_val.csv", indicator_val,
-                                   numWindows);
+            cout << "Created new indicator range partition with " << numWindows
+                 << " windows." << endl;
+            csv_db.putDoubleVector(string(outputPath) + "/indicator_val.csv",
+                                   indicator_val, numWindows);
         }
     }
 
@@ -513,8 +511,8 @@ int main(int argc, char *argv[])
                 CAROM_VERIFY(snap_bound.size() == 2);
                 if (myid == 0)
                 {
-                    cout << "Restricting on snapshot #" << snap_bound[0] << " to #" << snap_bound[1]
-                         << "." << endl;
+                    cout << "Restricting on snapshot #" << snap_bound[0]
+                         << " to #" << snap_bound[1] << "." << endl;
                 }
             }
             else
@@ -548,8 +546,9 @@ int main(int argc, char *argv[])
                     overlap_count -= 1;
                 }
                 // a rough estimate to correct the precision of the indicator range partition
-                double indicator_snap = tval - offset_indicator * tvec[snap_bound[0]] + dt_est /
-                                        100.0;
+                double indicator_snap = tval - offset_indicator * tvec[snap_bound[0]]
+                                        + dt_est / 100.0;
+
                 if (curr_window+1 < numWindows && idx_snap+1 <= snap_bound[1]
                         && indicator_snap > indicator_val[curr_window+1])
                 {
@@ -562,8 +561,8 @@ int main(int argc, char *argv[])
 
             if (myid == 0)
             {
-                cout << "Loaded " << num_train_snap[idx_dataset] << " samples for " << par_dir
-                     << "." << endl;
+                cout << "Loaded " << num_train_snap[idx_dataset]
+                     << " samples for " << par_dir << "." << endl;
             }
 
             for (int window = 0; window < numWindows; ++window)
@@ -580,8 +579,8 @@ int main(int argc, char *argv[])
                 {
                     if (myid == 0)
                     {
-                        cout << "Creating DMD model #" << window << " with energy fraction: " << ef <<
-                             endl;
+                        cout << "Creating DMD model #" << window
+                             << " with energy fraction: " << ef << endl;
                     }
                     dmd[idx_dataset][window]->train(ef);
                 }
@@ -589,8 +588,9 @@ int main(int argc, char *argv[])
                 {
                     if (myid == 0)
                     {
-                        cout << "Projecting initial condition at t = " << indicator_val[window] +
-                             offset_indicator * tvec[snap_bound[0]] << " for DMD model #" << window << endl;
+                        cout << "Projecting initial condition at t = "
+                             << indicator_val[window] + offset_indicator * tvec[snap_bound[0]]
+                             << " for DMD model #" << window << endl;
                     }
                     CAROM::Vector* init_cond = dmd[idx_dataset][window-1]->predict(
                                                    indicator_val[window]);
@@ -601,8 +601,9 @@ int main(int argc, char *argv[])
                                                    window) + "_par" + to_string(idx_dataset));
                 if (myid == 0)
                 {
-                    dmd[idx_dataset][window]->summary(outputPath + "/window" + to_string(
-                                                          window) + "_par" + to_string(idx_dataset));
+                    dmd[idx_dataset][window]->summary(outputPath + "/window"
+                                                      + to_string(window) + "_par"
+                                                      + to_string(idx_dataset));
                 }
             } // escape for-loop over window
 
@@ -694,8 +695,8 @@ int main(int argc, char *argv[])
                 CAROM_VERIFY(snap_bound.size() == 2);
                 if (myid == 0)
                 {
-                    cout << "Restricting on snapshot #" << snap_bound[0] << " to " << snap_bound[1]
-                         << "." << endl;
+                    cout << "Restricting on snapshot #" << snap_bound[0]
+                         << " to " << snap_bound[1] << "." << endl;
                 }
             }
             else
@@ -719,22 +720,23 @@ int main(int argc, char *argv[])
                 std::vector<std::string> dmd_paths;
                 for (int idx_trainset = 0; idx_trainset < par_vectors.size(); ++idx_trainset)
                 {
-                    dmd_paths.push_back(outputPath + "/window" + to_string(window) + "_par" +
-                                        to_string(idx_trainset));
+                    dmd_paths.push_back(outputPath + "/window" + to_string(window)
+                                        + "_par" + to_string(idx_trainset));
                 }
 
                 if (myid == 0)
                 {
                     cout << "Interpolating DMD model #" << window << endl;
                 }
-                CAROM::getParametricDMD(dmd[idx_dataset][window], par_vectors, dmd_paths,
-                                        curr_par,
-                                        string(rbf), string(interp_method), pdmd_closest_rbf_val);
+                CAROM::getParametricDMD(dmd[idx_dataset][window], par_vectors,
+                                        dmd_paths, curr_par, string(rbf),
+                                        string(interp_method), pdmd_closest_rbf_val);
 
                 if (myid == 0)
                 {
-                    cout << "Projecting initial condition at t = " << indicator_val[window] +
-                         offset_indicator * tvec[snap_bound[0]] << " for DMD model #" << window << endl;
+                    cout << "Projecting initial condition at t = "
+                         << indicator_val[window] + offset_indicator * tvec[snap_bound[0]]
+                         << " for DMD model #" << window << endl;
                 }
                 CAROM::Vector* init_cond = nullptr;
                 if (window == 0)
@@ -805,8 +807,8 @@ int main(int argc, char *argv[])
                 CAROM_VERIFY(snap_bound.size() == 2);
                 if (myid == 0)
                 {
-                    cout << "Restricting on snapshot #" << snap_bound[0] << " to " << snap_bound[1]
-                         << "." << endl;
+                    cout << "Restricting on snapshot #" << snap_bound[0]
+                         << " to " << snap_bound[1] << "." << endl;
                 }
             }
             else
@@ -838,16 +840,16 @@ int main(int argc, char *argv[])
                 if (t_final > 0.0) // Actual prediction without true solution for comparison
                 {
                     num_tests += 1;
-                    while (curr_window+1 < numWindows
-                            && t_final - offset_indicator * tvec[snap_bound[0]] > indicator_val[curr_window
-                                    +1])
+                    while (curr_window+1 < numWindows &&
+                            t_final - offset_indicator * tvec[snap_bound[0]] >
+                            indicator_val[curr_window+1])
                     {
                         curr_window += 1;
                     }
                     if (myid == 0)
                     {
-                        cout << "Predicting DMD solution at t = " << t_final << " using DMD model #" <<
-                             curr_window << endl;
+                        cout << "Predicting DMD solution at t = " << t_final
+                             << " using DMD model #" << curr_window << endl;
                     }
 
                     dmd_prediction_timer.Start();
@@ -857,7 +859,8 @@ int main(int argc, char *argv[])
 
                     if (myid == 0)
                     {
-                        csv_db.putDoubleArray(outputPath + "/" + par_dir + "_final_time_prediction.csv",
+                        csv_db.putDoubleArray(outputPath + "/" + par_dir +
+                                              "_final_time_prediction.csv",
                                               result->getData(), dim);
                     }
                     idx_snap = snap_bound[1]+1; // escape for-loop over idx_snap
@@ -865,15 +868,17 @@ int main(int argc, char *argv[])
                 }
                 else // Verify DMD prediction results against dataset
                 {
-                    while (curr_window+1 < numWindows
-                            && tval - offset_indicator * tvec[snap_bound[0]] > indicator_val[curr_window+1])
+                    while (curr_window+1 < numWindows &&
+                            tval - offset_indicator * tvec[snap_bound[0]] >
+                            indicator_val[curr_window+1])
                     {
                         curr_window += 1;
                     }
                     if (myid == 0)
                     {
-                        cout << "Predicting DMD solution #" << idx_snap << " at t = " << tval <<
-                             " using DMD model #" << curr_window << endl;
+                        cout << "Predicting DMD solution #" << idx_snap
+                             << " at t = " << tval << " using DMD model #"
+                             << curr_window << endl;
                     }
 
                     dmd_prediction_timer.Start();
@@ -897,20 +902,20 @@ int main(int argc, char *argv[])
 
                     if (myid == 0)
                     {
-                        cout << "Norm of true solution at t = " << tval << " is " <<
-                             tot_true_solution_norm << endl;
-                        cout << "Absolute error of DMD solution at t = " << tval << " is " <<
-                             tot_diff_norm << endl;
-                        cout << "Relative error of DMD solution at t = " << tval << " is " << rel_error
-                             << endl;
+                        cout << "Norm of true solution at t = " << tval
+                             << " is " << tot_true_solution_norm << endl;
+                        cout << "Absolute error of DMD solution at t = " << tval
+                             << " is " << tot_diff_norm << endl;
+                        cout << "Relative error of DMD solution at t = " << tval
+                             << " is " << rel_error << endl;
                         if (save_csv)
                         {
                             csv_db.putDoubleArray(outputPath + "/" + par_dir + "_" + snap +
                                                   "_prediction.csv", result->getData(), dim);
                             if (dim < nelements)
                             {
-                                csv_db.putDoubleArray(outputPath + "/" + par_dir + "_" + snap + "_state.csv",
-                                                      sample, dim);
+                                csv_db.putDoubleArray(outputPath + "/" + par_dir + "_"
+                                                      + snap + "_state.csv", sample, dim);
                             }
                         }
                     }
