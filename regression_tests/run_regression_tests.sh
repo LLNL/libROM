@@ -212,6 +212,5 @@ cd ${GITHUB_WORKSPACE}
 
 unset GITHUB_WORKSPACE
 if [[ $testNumFail -ne 0 ]]; then
-  echo "Some tests failed"
 	exit 1
 fi
