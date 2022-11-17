@@ -6,17 +6,20 @@ compareErrors() {
     elif [[ $type_of_test == 'prom' ]]; then
         lin=$(grep -e "Relative l2 error" -e "Relative error of ROM" -e "The relative error is" ${scriptName}.log | awk '{ print $NF }')
     else
-        echo "Neither prom nor dmd"
+        echo "Neither prom nor dmd" >>$simulationLogFile
+        popd > /dev/null
         return 1
     fi
     if [[ -z $lin ]]; then
-        echo "Couldn't find any lines containing Relative error in $scriptName"
+        echo "Couldn't find any lines containing Relative error in $scriptName" >>$simulationLogFile
+        popd > /dev/null
         return 1
     fi
     num_fields=$(echo $lin | awk '{ print NF }')
     remainder=$(($num_fields%2))
     if [[ $remainder != 0 ]]; then
-        echo "Even instances of the Relative error are expected, found $num_fields instances"
+        echo "Even instances of the Relative error are expected, found $num_fields instances" >>$simulationLogFile
+        popd > /dev/null
         return 1
     fi
     # Pairwise comparison of the relative errors between the local and baseline runs
@@ -32,7 +35,8 @@ compareErrors() {
         err_baseline=$(echo "$rel_error_tol * $err_baseline" | bc -l)
         too_large_error=$(echo "$err_local > $err_baseline" | bc -l )
         if [[ $too_large_error != 0 ]]; then
-            echo "err_local > err_baseline : err_local = $err_local, err_baseline = $err_baseline"
+            echo "err_local > err_baseline : err_local = $err_local, err_baseline = $err_baseline" >>$simulationLogFile
+            popd > /dev/null
             return 1
         fi
     done
