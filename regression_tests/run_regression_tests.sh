@@ -178,12 +178,22 @@ for type_of_test in ${type_of_tests_to_execute[@]}; do
       testNum=$((testNum+1)) 
       ./$test "$NUM_PROCESSORS" >> $simulationLogFile 2>&1
       #cat $simulationLogFile
-      compareErrors
+      failed=0
       if [[ $? -ne 0 || "${PIPESTATUS[0]}" -ne 0 ]];  
+          then
+              failed=1  
+          else
+              compareErrors 
+              if [[ $? -ne 0 || "${PIPESTATUS[0]}" -ne 0 ]];  then
+                 failed=1
+              fi
+      fi
+      if [[ $failed != 0 ]];  
           then
             testNumFail=$((testNumFail+1))
             echo "$testNum. $test: FAIL"   
           else
+
             testNumPass=$((testNumPass+1))
             echo "$testNum. $test: PASS" 
       fi
