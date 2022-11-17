@@ -5,7 +5,7 @@
 #SBATCH -p pbatch
 #SBATCH -o sbatch.log
 #SBATCH --open-mode truncate
-# On Linx:
+# On Linux:
 # sbatch -N 1 -t 1:00:00 -p pbatch -o sbatch.log --open-mode truncate ./regression_tests/run_regression_tests.sh
 # On Mac:
 # ./regression_tests/run_regression_tests.sh
