@@ -481,7 +481,7 @@ int main(int argc, char *argv[])
                 }
 
                 dmd[idx_dataset][curr_window]->takeSample(sample, tval);
-                for (int window = curr_window-1; window >= 0; --window) 
+                for (int window = curr_window-1; window >= 0; --window)
                 {
                     if (overlap_count[window] > 0)
                     {
@@ -520,10 +520,14 @@ int main(int argc, char *argv[])
                         if (myid == 0)
                         {
                             cout << "State #" << idx_snap << " - " << data_filename
-                                 << " is the beginning of window " << curr_window+1 << "." << endl;
+                                 << " is the beginning of window " << curr_window+1
+                                 << "." << endl;
                         }
 
-                        overlap_count.push_back(windowOverlapSamples + max(0, rdim+1 - dmd[idx_dataset][curr_window]->getNumSamples()));
+                        int ns = dmd[idx_dataset][curr_window]->getNumSamples();
+                        overlap_count.push_back(windowOverlapSamples +
+                                                max(0, rdim+1 - ns));
+
                         curr_window += 1;
                         dmd[idx_dataset][curr_window]->takeSample(sample, tval);
                     }
