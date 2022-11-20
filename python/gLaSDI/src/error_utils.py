@@ -237,7 +237,7 @@ def residual_2Dburger(x_prev, x, params):
 def residual_MFEMex16(params):  
     """
     This function calculates the residual error of the 
-    radial advection problem (MFEM example 9).
+    heat conduction problem (MFEM example 16).
     The initial condition is parameterized by w0 and h0.
     Their values are stored in `params['pde']['param']`
     """
