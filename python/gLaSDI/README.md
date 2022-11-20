@@ -85,5 +85,5 @@ The Python scripts for data generation, model training and evaluation are provid
 - `pde` - dict, stores the parameters related to the PDE
 
 
-## Questions/Comments
-Questions and comments should be directed to xih251@eng.uscd.edu
+## Cite
+He, X., Choi, Y., Fries, W. D., Belof, J., & Chen, J. S. (2022). gLaSDI: Parametric Physics-informed Greedy Latent Space Dynamics Identification. arXiv preprint arXiv:2204.12005.
