@@ -234,7 +234,13 @@ def residual_2Dburger(x_prev, x, params):
     return np.linalg.norm(r_u)+np.linalg.norm(r_v)
 
 
-def residual_MFEMex16(params):    
+def residual_MFEMex16(params):  
+    """
+    This function calculates the residual error of the 
+    radial advection problem (MFEM example 9).
+    The initial condition is parameterized by w0 and h0.
+    Their values are stored in `params['pde']['param']`
+    """
     subprocess.call([params['pde']['exe_file'],
                      '-m', params['pde']['m_file'],
                      '-uf', params['pde']['u_file'],
@@ -244,8 +250,8 @@ def residual_MFEMex16(params):
                      '-s', str(params['pde']['ODEsolver']),
                      '-tf', str(params['pde']['tstop']),
                      '-dt', str(params['pde']['dt']),
-                     '-h0', str(params['pde']['height']),
-                     '-w0', str(params['pde']['width']),
+                     '-w0', str(params['pde']['param'][0]),
+                     '-h0', str(params['pde']['param'][1]),
                      '-x1', str(params['pde']['x1']),
                      '-x2', str(params['pde']['x2']),
                      '-res_ns', str(params['pde']['res_ns']),
@@ -257,7 +263,13 @@ def residual_MFEMex16(params):
     return res
     
     
-def residual_MFEMex9(params):    
+def residual_MFEMex9(params):
+    """
+    This function calculates the residual error of the 
+    radial advection problem (MFEM example 9).
+    The initial condition is parameterized by w1 and w2.
+    Their values are stored in `params['pde']['param']`
+    """
     subprocess.call([params['pde']['exe_file'],
                      '-m', params['pde']['m_file'],
                      '-uf', params['pde']['u_file'],
@@ -267,8 +279,8 @@ def residual_MFEMex9(params):
                      '-o', str(params['pde']['order']),
                      '-tf', str(params['pde']['tstop']),
                      '-dt', str(params['pde']['dt']),
-                     '-w1', str(params['pde']['w1']),
-                     '-w2', str(params['pde']['w2']),
+                     '-w1', str(params['pde']['param'][0]),
+                     '-w2', str(params['pde']['param'][1]),
                      '-res_ns', str(params['pde']['res_ns']),
                      '-Mmax_iter', str(params['pde']['Mmax_iter']),
                      '-no-vis',
