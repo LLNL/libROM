@@ -183,8 +183,6 @@ params['pde']['rl'] = 4
 params['pde']['order'] = 1
 params['pde']['tstop'] = tstop
 params['pde']['dt'] = dt
-params['pde']['w1'] = p1_train[0]
-params['pde']['w2'] = p2_train[0]
 params['pde']['res_ns'] = 0.1 # percentage of time steps for residual evaluation
 params['pde']['Mmax_iter'] = 20 # max iterations in Tsolver
 
