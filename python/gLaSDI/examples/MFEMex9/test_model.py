@@ -218,6 +218,7 @@ for i,a in enumerate(p1_test):
                         / np.linalg.norm(test_data['data'][0]['x'], axis=1)*100).max()
         
         # residual norm
+        params['pde']['param'] = [a, w] # the parameter values of the testing case
         res_norm[i,j] = err_indicator(u_sim, params, err_type=params['err_type'])
         count += 1
 
