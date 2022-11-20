@@ -105,7 +105,7 @@ def train_network(training_data, params):
                 max_err_idx_param.append([])
                 sindy_idx.append(sindy_idx_tmp)
                 
-            for i in range(params['update_epoch']): # loop over epochs
+            for i in range(min(params['update_epoch'],params['max_epochs'])): # loop over epochs
                 for j in range(params['epoch_size']//params['batch_size']): # loop over batches
                     batch_idxs = np.arange(j*params['batch_size'], (j+1)*params['batch_size'])
                     train_dict = create_feed_dictionary(training_data, params, idxs=batch_idxs)
