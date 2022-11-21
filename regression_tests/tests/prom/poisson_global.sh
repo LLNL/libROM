@@ -6,6 +6,7 @@ CMDS=(
     "./poisson_global_rom -offline -f 1.1 -id 1" 
     "./poisson_global_rom -offline -f 1.2 -id 2" 
     "./poisson_global_rom -merge -ns 3" 
+    "./poisson_global_rom -fom -f 1.15"
     "./poisson_global_rom -online -f 1.15"
 )
 TYPE="PROM"
