@@ -589,14 +589,10 @@ def max_err_heatmap(max_err, sindy_idx, params, p1_test, p2_test, data_path, idx
         fmt1 = 'd'
     ax = fig.add_subplot(111)
     cbar_ax = fig.add_axes([0.99, 0.19, 0.02, 0.7])
-    if label == 'Residual Norm':
-        vmax = params['tol']*scale
-    else:
-        vmax = max_err.max()*scale
     sns.heatmap(max_err*scale, ax=ax, square=True, 
                 xticklabels=p2_test, yticklabels=p1_test, 
                 annot=True, annot_kws={'size':fontsize}, fmt=fmt1, 
-                cbar_ax=cbar_ax, cbar=True, cmap='vlag', robust=True, vmin=0, vmax=vmax)
+                cbar_ax=cbar_ax, cbar=True, cmap='vlag', robust=True, vmin=0, vmax=max_err.max()*scale)
         
     for i in rect2:
         ax.add_patch(i)
