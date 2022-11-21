@@ -115,9 +115,13 @@ if [ ! -d $BASELINE_DIR/libROM ]; then # Clone master branch to baseline directo
    recompile=1
 else
    echo "The baseline branch ${BASELINE_DIR}/libROM exists"
-   num_changes=$(git log HEAD..origin/master|wc -l)
+   num_changes_remote=$(git log HEAD..origin/master|wc -l)
+   num_changes = $(git diff|wc -l)
    nc=$(( $num_changes ))
-   if [[ $nc != 0 ]]; then
+   echo "num chnages to baseline locally = $nc"
+   ncr=$(( $num_changes_remote ))
+   echo "num changes to baseline in remote = $ncr"
+   if [[ $nc != 0 || $ncr != 0 ]]; then
       echo "There are changes between the baseline origin/master and the HEAD: pulling and recompiling"
       git reset --hard origin/master
       git pull
