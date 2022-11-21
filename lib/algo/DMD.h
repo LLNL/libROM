@@ -137,6 +137,8 @@ public:
      */
     const Matrix* getSnapshotMatrix();
 
+    void saveSnapshots(const char* base_file_name);
+
     /**
      * @brief Load the object state from a file.
      *

@@ -720,6 +720,17 @@ DMD::createSnapshotMatrix(std::vector<Vector*> snapshots)
 }
 
 void
+DMD::saveSnapshots(const char* base_file_name)
+{
+    for (int i{}; i < d_snapshots.size(); ++i)
+    {
+        std::string full_file_name = std::string(base_file_name) 
+            + "_snapshot_" + std::to_string(i);
+        d_snapshots[i]->write(full_file_name);
+    }
+}
+
+void
 DMD::load(std::string base_file_name)
 {
     CAROM_ASSERT(!base_file_name.empty());
