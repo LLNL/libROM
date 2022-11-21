@@ -80,25 +80,20 @@ run_tests() {
         if [[ ! $f =~ snapshot && $f =~ basis && -n $test_offline ]]; then # Do not compare offline results(bases) by default. Do not compare sampled snapshots
             fn="${f%.*}"
             if [[ $TYPE == "DMD" ]]; then
-                ./basisComparator ${EX_DMD_PATH_LOCAL}/$fn ${EX_DMD_PATH_BASELINE}/$fn 1e-7 1
+                ./basisComparator "${EX_DMD_PATH_BASELINE}/$fn" "${EX_DMD_PATH_LOCAL}/$fn" 1e-7 1
             elif [[ $TYPE == "PROM" ]]; then
-                ./basisComparator ${EX_PROM_PATH_LOCAL}/$fn ${EX_PROM_PATH_BASELINE}/$fn 1e-7 1
+                ./basisComparator "${EX_PROM_PATH_BASELINE}/$fn" "${EX_PROM_PATH_LOCAL}/$fn" 1e-7 1
             else
                 continue
             fi
             check_fail 
         elif [[ $f =~ final || "$f" == "sol"*".000000" && "$f" != "sol_dofs"* || "$f" == "Sol0"  ]]; then
-            
             if [[ $TYPE == "DMD" && "$f" == *".000000" && $MACHINE = "GitHub" ]]; then
-       
-                ./solutionComparator "${EX_DMD_PATH_LOCAL}/${f}"  "${EX_DMD_PATH_BASELINE}/${f}" "1.0e-5" "2"
-                
+                ./solutionComparator "${EX_DMD_PATH_BASELINE}/${f}"  "${EX_DMD_PATH_LOCAL}/${f}" "1.0e-5" "2"             
             elif [[ $TYPE == "DMD" && "$f" == *".000000" ]]; then
-
-                ./solutionComparator "${EX_DMD_PATH_LOCAL}/${f}"  "${EX_DMD_PATH_BASELINE}/${f}" "1.0e-5" "8"
+                ./solutionComparator  "${EX_DMD_PATH_BASELINE}/${f}" "${EX_DMD_PATH_LOCAL}/${f}" "1.0e-5" "8"
             elif [[ $TYPE == "PROM" ]]; then
-      
-                ./solutionComparator ${EX_PROM_PATH_LOCAL}/$f  ${EX_PROM_PATH_BASELINE}/$f "1.0e-5" "1"
+                ./solutionComparator "${EX_PROM_PATH_BASELINE}/$f"  "${EX_PROM_PATH_LOCAL}/$f" "1.0e-5" "1"
             else
                 continue
             fi
