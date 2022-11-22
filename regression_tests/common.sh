@@ -10,7 +10,7 @@ export EX_DIR_BASELINE=${BASELINE_DIR}/libROM/build/examples
 export EX_DMD_PATH_BASELINE=${EX_DIR_BASELINE}/dmd
 export EX_PROM_PATH_BASELINE=${EX_DIR_BASELINE}/prom
 export TYPE
-trap "move_output_files_after_error" 1 2 3 6 # Ensures that output files are moved in the event of SIGHUP, SIGINT, SIGQUIT, SIGABRT
+trap "move_output_files_after_error" EXIT
 SCRIPT_NAME=$(basename "$0" ".sh")
 NP=$(($1))
 # Check machine
@@ -27,7 +27,11 @@ else
 fi
 
 move_output_files_after_error() {
+    if [[ "$?" -eq 0 ]]; then
+        return
+    fi
     move_output_files
+    exit 1
 }
 
 move_output_files() { 

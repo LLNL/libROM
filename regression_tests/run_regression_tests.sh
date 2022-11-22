@@ -177,9 +177,8 @@ for type_of_test in ${type_of_tests_to_execute[@]}; do
       simulationLogFile="${RESULTS_DIR}/${scriptName}.log"
       touch $simulationLogFile
       testNum=$((testNum+1)) 
-      ./$test "$NUM_PROCESSORS" >> $simulationLogFile 2>&1
-      #cat $simulationLogFile
       failed=0
+      ./$test "$NUM_PROCESSORS" >> $simulationLogFile 2>&1
       if [[ $? -ne 0 || "${PIPESTATUS[0]}" -ne 0 ]];  
           then
               failed=1  
