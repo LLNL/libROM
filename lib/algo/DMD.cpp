@@ -731,6 +731,34 @@ DMD::saveSnapshots(const char* base_file_name)
 }
 
 void
+DMD::loadSnapshots(const char* base_file_name, int n_snapshots)
+{
+    for (auto& snapshot : d_snapshots)
+    {
+        delete snapshot;
+    }
+    d_snapshots.clear();
+    if (n_snapshots < std::numeric_limits<int>::max())
+    {
+        d_snapshots.reserve(n_snapshots);
+    }
+    for (int i{}; i < n_snapshots; ++i)
+    {
+        std::string full_file_name = std::string(base_file_name) 
+            + "_snapshot_" + std::to_string(i);
+        if (Utilities::file_exist(full_file_name + ".000000"))
+        {
+            d_snapshots.push_back(new Vector());
+            d_snapshots.back()->read(full_file_name);
+        }
+        else
+        {
+            break;
+        }
+    }
+}
+
+void
 DMD::load(std::string base_file_name)
 {
     CAROM_ASSERT(!base_file_name.empty());

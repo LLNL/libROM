@@ -19,6 +19,7 @@
 #define included_DMD_h
 
 #include "ParametricDMD.h"
+#include <limits>
 #include <vector>
 #include <complex>
 
@@ -64,6 +65,12 @@ public:
      *                           database to load when restarting from a save.
      */
     DMD(std::string base_file_name);
+
+    /**
+     * @brief Destroy the DMD object (and call derived class destructors)
+     * 
+     */
+    virtual ~DMD() = default;
 
     /**
      * @brief Set the offset of a certain order.
@@ -137,7 +144,18 @@ public:
      */
     const Matrix* getSnapshotMatrix();
 
-    void saveSnapshots(const char* base_file_name);
+    /**
+     * @brief Save the snapshot vectors in d_snapshots to disk.
+     */
+    virtual void saveSnapshots(const char* base_file_name);
+
+    /**
+     * @brief Load snapshot vectors to d_snapshots.  Erases existing snapshot vectors.
+     */
+    virtual void loadSnapshots(
+        const char* base_file_name, 
+        int n_snapshots = std::numeric_limits<int>::max()
+    );
 
     /**
      * @brief Load the object state from a file.
