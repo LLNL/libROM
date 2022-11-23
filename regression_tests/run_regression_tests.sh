@@ -40,7 +40,7 @@ export MACHINE
 
 unset test_offline
 
-# Get options
+# Get and parse options
 while getopts ":i:e:x" o;
 do
 	case "${o}" in
@@ -101,7 +101,7 @@ if [ ! -d "$GITHUB_WORKSPACE/dependencies/mfem" ]; then
        exit 1
     fi
 else
-   echo "${GITHUB_WORKSPACE}/dependencies/libROM/mfem exists; not recompiling the local branch"
+   echo "The local branch already exists - not recompiling"
 fi
 
 # Compile master branch if it isn't already compiled
@@ -117,9 +117,8 @@ else
    echo "The baseline branch ${BASELINE_DIR}/libROM exists"
    num_changes=$(git rev-list HEAD...origin/master --count)
    nc=$(( $num_changes ))
-   echo "num changes to baseline  = $nc"
    if [[ $nc != 0 ]]; then
-      echo "There are changes between the baseline origin/master and the HEAD: pulling and recompiling"
+      echo "There are changes between origin/master and the local master branch: pulling and recompiling"
       git reset --hard origin/master
       git pull
       recompile=1
@@ -128,11 +127,11 @@ fi
 
 if [[ $recompile == 1 ]]; then
    cd ${BASELINE_DIR}/libROM/scripts
-   echo "Compiling baseline libROM master"
+   echo "Compiling baseline libROM"
    ./compile.sh -m
-   echo "Compile baseline libROM master - done"
+   echo "Compile baseline libROM - done"
     if [[ "$?" -ne 0 ]]; then
-       echo "Compilation failed for baseline libROM master"
+       echo "Compilation failed for baseline libROM"
        exit 1
     fi
 fi
