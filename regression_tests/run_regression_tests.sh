@@ -196,6 +196,7 @@ for type_of_test in ${type_of_tests_to_execute[@]}; do
             testNumPass=$((testNumPass+1))
             echo "$testNum. $test: PASS" 
       fi
+      cat $simulationLogFile
   done
   cd ..
 done
