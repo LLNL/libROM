@@ -377,6 +377,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
         gather_transposed_block(&d_basis_right->item(0, 0), d_factorizer->U, 1, 1,
                                 f_snapshots_in->numColumns(), d_k, d_rank);
     }
+    delete[] row_offset;
 
     // Get inverse of singular values by multiplying by reciprocal.
     for (int i = 0; i < d_k; ++i)
@@ -473,13 +474,13 @@ DMD::constructDMD(const Matrix* f_snapshots,
         d_k = d_basis_new->numColumns();
         if (d_rank == 0) std::cout << "After adding W0, now using " << d_k <<
                                        " basis vectors." << std::endl;
+        delete d_basis_new;
     }
 
     // Calculate A_tilde = U_transpose * f_snapshots_out * V * inv(S)
     Matrix* d_basis_mult_f_snapshots_out = d_basis->transposeMult(f_snapshots_out);
     Matrix* d_basis_mult_f_snapshots_out_mult_d_basis_right =
         d_basis_mult_f_snapshots_out->mult(d_basis_right);
-    d_A_tilde = d_basis_mult_f_snapshots_out_mult_d_basis_right->mult(d_S_inv);
     if (Q == NULL)
     {
         d_A_tilde = d_basis_mult_f_snapshots_out_mult_d_basis_right->mult(d_S_inv);
