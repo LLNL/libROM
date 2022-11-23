@@ -125,6 +125,54 @@ DMD::DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
     setOffset(state_offset, 0);
 }
 
+DMD::~DMD()
+{
+    for (auto snapshot : d_snapshots)
+    {
+        delete snapshot;
+    }
+    for (auto sampled_time : d_sampled_times)
+    {
+        delete sampled_time;
+    }
+    if (d_state_offset != nullptr)
+    {
+        delete d_state_offset;
+    }
+    if (d_basis != nullptr)
+    {
+        delete d_basis;
+    }
+    if (d_A_tilde != nullptr)
+    {
+        delete d_A_tilde;
+    }
+    if (d_phi_real != nullptr)
+    {
+        delete d_phi_real;
+    }
+    if (d_phi_imaginary != nullptr)
+    {
+        delete d_phi_imaginary;
+    }
+    if (d_phi_real_squared_inverse != nullptr)
+    {
+        delete d_phi_real_squared_inverse;
+    }
+    if (d_phi_imaginary_squared_inverse != nullptr)
+    {
+        delete d_phi_imaginary_squared_inverse;
+    }
+    if (d_projected_init_real != nullptr)
+    {
+        delete d_projected_init_real;
+    }
+    if (d_projected_init_imaginary != nullptr)
+    {
+        delete d_projected_init_imaginary;
+    }
+}
+
 void DMD::setOffset(Vector* offset_vector, int order)
 {
     if (order == 0)

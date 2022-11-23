@@ -34,6 +34,14 @@ AdaptiveDMD::AdaptiveDMD(int dim, double desired_dt, std::string rbf,
     d_closest_rbf_val = closest_rbf_val;
 }
 
+AdaptiveDMD::~AdaptiveDMD()
+{
+    for (auto interp_snapshot : d_interp_snapshots)
+    {
+        delete interp_snapshot;
+    }
+}
+
 void AdaptiveDMD::train(double energy_fraction, const Matrix* W0,
                         double linearity_tol)
 {

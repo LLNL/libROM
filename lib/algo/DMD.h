@@ -66,6 +66,11 @@ public:
     DMD(std::string base_file_name);
 
     /**
+     * @brief Destroy the DMD object
+     */
+    virtual ~DMD();
+
+    /**
      * @brief Set the offset of a certain order.
      */
     virtual void setOffset(Vector* offset_vector, int order);
