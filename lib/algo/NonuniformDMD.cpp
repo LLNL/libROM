@@ -50,10 +50,7 @@ NonuniformDMD::NonuniformDMD(std::vector<std::complex<double>> eigs,
 
 NonuniformDMD::~NonuniformDMD()
 {
-    if (d_derivative_offset != nullptr)
-    {
-        delete d_derivative_offset;
-    }
+    delete d_derivative_offset;
 }
 
 void NonuniformDMD::setOffset(Vector* offset_vector, int order)
