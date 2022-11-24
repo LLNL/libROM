@@ -56,6 +56,11 @@ public:
     NonuniformDMD(std::string base_file_name);
 
     /**
+     * @brief Destroy the NonuniformDMD object
+     */
+    ~NonuniformDMD();
+
+    /**
      * @brief Set the offset of a certain order.
      */
     void setOffset(Vector* offset_vector, int order) override;
