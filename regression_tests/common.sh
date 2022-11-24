@@ -20,7 +20,7 @@ if [[ $MACHINE = "Linux" ]]; then
 elif [[ $MACHINE = "Darwin" ]]; then
 	COMMAND="mpirun -np 8"
 elif [[ $MACHINE = "GitHub" ]]; then
-	COMMAND="mpirun -np 8"
+	COMMAND="mpirun -np 8 -oversubscribe"
 else
     echo "Bad OS: $MACHINE"
     exit 1
