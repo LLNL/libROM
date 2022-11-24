@@ -18,6 +18,6 @@ runs:
           ./tests/test_GreedyCustomSampler
           mpirun -n 3 --oversubscribe tests/test_GreedyCustomSampler
            cd ${GITHUB_WORKSPACE}
-          ./regression_tests/run_regression_tests.sh -i de_parametric_heat_conduction_greedy
+          ./regression_tests/run_regression_tests.sh -i dg_advection
          
       shell: bash
