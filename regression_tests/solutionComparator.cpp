@@ -80,6 +80,12 @@ between the solution vectors." << endl;
     }
     double baselineNormL2 = baseline.Norml2();
     double diffNormL2 = diff.Norml2();
+    if(std::isnan(baselineNormL2)){
+        std::cout << "baselineNormL2 is NaN" << std::endl;
+    }
+    if(std::isnan(diffNormL2)){
+        std::cout << "diffNormL2 is Nan" << std::endl;
+    }
     double error;
     if (baselineNormL2 == 0.0) {
         error = diffNormL2;
@@ -89,6 +95,7 @@ between the solution vectors." << endl;
     }
 
     // Test whether l2 norm is smaller than error bound
+
     if (error > errorBound) {
         cerr << "baselineNormL2 = " << baselineNormL2 << ", diffNormL2 = " << diffNormL2 << endl;
         cerr << "error = " << error << endl;
