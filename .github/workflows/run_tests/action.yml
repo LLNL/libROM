@@ -18,6 +18,6 @@ runs:
           ./tests/test_GreedyCustomSampler
           mpirun -n 3 --oversubscribe tests/test_GreedyCustomSampler
            cd ${GITHUB_WORKSPACE}
-          ./regression_tests/run_regression_tests.sh -i dg_euler
+          ./regression_tests/run_regression_tests.sh 
          
       shell: bash
