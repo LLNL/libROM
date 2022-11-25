@@ -2,7 +2,7 @@
 source $GITHUB_WORKSPACE/regression_tests/common.sh
 
 CMDS=( 
-    "$COMMAND dg_advection -p 0 -dt 0.01 -tf 2" 
+    "$COMMAND ./dg_advection -p 0 -dt 0.01 -tf 2" 
 )
 TYPE="DMD"
 run_tests
