@@ -91,7 +91,6 @@ between the solution vectors." << endl;
     double error;
     if (baselineNormL2 == 0.0) {
         error = diffNormL2;
-        abort();
     }
     else {
         error = diffNormL2 / baselineNormL2;
