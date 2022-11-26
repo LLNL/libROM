@@ -1,3 +1,5 @@
+
+
 /******************************************************************************
  *
  * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
@@ -73,15 +75,15 @@ TEST(S_OPTSerialTest, Test_S_OPT)
     }
 
     CAROM::CSVDatabase database;
-    database.getDoubleArray("../tests/s_opt_data/col1.csv",  cols[0], num_rows,
+    database.getDoubleArray("../unit_tests/s_opt_data/col1.csv",  cols[0], num_rows,
                             row_offset[d_rank], 1, 1);
-    database.getDoubleArray("../tests/s_opt_data/col2.csv",  cols[1], num_rows,
+    database.getDoubleArray("../unit_tests/s_opt_data/col2.csv",  cols[1], num_rows,
                             row_offset[d_rank], 1, 1);
-    database.getDoubleArray("../tests/s_opt_data/col3.csv",  cols[2], num_rows,
+    database.getDoubleArray("../unit_tests/s_opt_data/col3.csv",  cols[2], num_rows,
                             row_offset[d_rank], 1, 1);
-    database.getDoubleArray("../tests/s_opt_data/col4.csv",  cols[3], num_rows,
+    database.getDoubleArray("../unit_tests/s_opt_data/col4.csv",  cols[3], num_rows,
                             row_offset[d_rank], 1, 1);
-    database.getDoubleArray("../tests/s_opt_data/col5.csv",  cols[4], num_rows,
+    database.getDoubleArray("../unit_tests/s_opt_data/col5.csv",  cols[4], num_rows,
                             row_offset[d_rank], 1, 1);
 
     double* orthonormal_mat = new double[num_rows * num_cols];
@@ -309,15 +311,15 @@ TEST(S_OPTSerialTest, Test_S_OPT_init_vector)
     }
 
     CAROM::CSVDatabase database;
-    database.getDoubleArray("../tests/s_opt_data/col1.csv",  cols[0], num_rows,
+    database.getDoubleArray("../unit_tests/s_opt_data/col1.csv",  cols[0], num_rows,
                             row_offset[d_rank], 1, 1);
-    database.getDoubleArray("../tests/s_opt_data/col2.csv",  cols[1], num_rows,
+    database.getDoubleArray("../unit_tests/s_opt_data/col2.csv",  cols[1], num_rows,
                             row_offset[d_rank], 1, 1);
-    database.getDoubleArray("../tests/s_opt_data/col3.csv",  cols[2], num_rows,
+    database.getDoubleArray("../unit_tests/s_opt_data/col3.csv",  cols[2], num_rows,
                             row_offset[d_rank], 1, 1);
-    database.getDoubleArray("../tests/s_opt_data/col4.csv",  cols[3], num_rows,
+    database.getDoubleArray("../unit_tests/s_opt_data/col4.csv",  cols[3], num_rows,
                             row_offset[d_rank], 1, 1);
-    database.getDoubleArray("../tests/s_opt_data/col5.csv",  cols[4], num_rows,
+    database.getDoubleArray("../unit_tests/s_opt_data/col5.csv",  cols[4], num_rows,
                             row_offset[d_rank], 1, 1);
 
     double* orthonormal_mat = new double[num_rows * num_cols];
@@ -468,15 +470,15 @@ TEST(S_OPTSerialTest, Test_S_OPT_QR)
     }
 
     CAROM::CSVDatabase database;
-    database.getDoubleArray("../tests/s_opt_data/col1.csv",  cols[0], num_rows,
+    database.getDoubleArray("../unit_tests/s_opt_data/col1.csv",  cols[0], num_rows,
                             row_offset[d_rank], 1, 1);
-    database.getDoubleArray("../tests/s_opt_data/col2.csv",  cols[1], num_rows,
+    database.getDoubleArray("../unit_tests/s_opt_data/col2.csv",  cols[1], num_rows,
                             row_offset[d_rank], 1, 1);
-    database.getDoubleArray("../tests/s_opt_data/col3.csv",  cols[2], num_rows,
+    database.getDoubleArray("../unit_tests/s_opt_data/col3.csv",  cols[2], num_rows,
                             row_offset[d_rank], 1, 1);
-    database.getDoubleArray("../tests/s_opt_data/col4.csv",  cols[3], num_rows,
+    database.getDoubleArray("../unit_tests/s_opt_data/col4.csv",  cols[3], num_rows,
                             row_offset[d_rank], 1, 1);
-    database.getDoubleArray("../tests/s_opt_data/col5.csv",  cols[4], num_rows,
+    database.getDoubleArray("../unit_tests/s_opt_data/col5.csv",  cols[4], num_rows,
                             row_offset[d_rank], 1, 1);
 
     double* orthonormal_mat = new double[num_rows * num_cols];
