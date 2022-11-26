@@ -88,20 +88,26 @@ run_tests() {
         if [[ $f =~ final || "$f" == "sol"*".000000" && "$f" != "sol_dofs"* || "$f" == "Sol0"  ]]; then
             if [[ $TYPE == "DMD" && "$f" == *".0000"* && $MACHINE = "GitHub" ]]; then
                 echo "Using 1 rank for DMD Tests on GitHub Actions"
-                cp "${EX_DMD_PATH_BASELINE}/${f}" "${EX_DMD_PATH_BASELINE}/${f}-orig"
-                cp "${EX_DMD_PATH_LOCAL}/${f}" "${EX_DMD_PATH_LOCAL}/${f}-orig"
-                sed -i '1,'"$OFFSET"'d' "${EX_DMD_PATH_BASELINE}/${f}"
-                sed -i '1,'"$OFFSET"'d' "${EX_DMD_PATH_LOCAL}/${f}"          
+                if [[ -n $OFFSET ]]; then
+                    cp "${EX_DMD_PATH_BASELINE}/${f}" "${EX_DMD_PATH_BASELINE}/${f}-orig"
+                    cp "${EX_DMD_PATH_LOCAL}/${f}" "${EX_DMD_PATH_LOCAL}/${f}-orig"
+                    sed -i '1,'"$OFFSET"'d' "${EX_DMD_PATH_BASELINE}/${f}"
+                    sed -i '1,'"$OFFSET"'d' "${EX_DMD_PATH_LOCAL}/${f}"
+                fi          
             elif [[ $TYPE == "DMD" && "$f" == *".0000"* ]]; then
-                cp "${EX_DMD_PATH_BASELINE}/${f}" "${EX_DMD_PATH_BASELINE}/${f}-orig"
-                cp "${EX_DMD_PATH_LOCAL}/${f}" "${EX_DMD_PATH_LOCAL}/${f}-orig"
-                sed -i '1,'"$OFFSET"'d' "${EX_DMD_PATH_BASELINE}/${f}"
-                sed -i '1,'"$OFFSET"'d' "${EX_DMD_PATH_LOCAL}/${f}"
+                if [[ -n $OFFSET ]]; then
+                    cp "${EX_DMD_PATH_BASELINE}/${f}" "${EX_DMD_PATH_BASELINE}/${f}-orig"
+                    cp "${EX_DMD_PATH_LOCAL}/${f}" "${EX_DMD_PATH_LOCAL}/${f}-orig"
+                    sed -i '1,'"$OFFSET"'d' "${EX_DMD_PATH_BASELINE}/${f}"
+                    sed -i '1,'"$OFFSET"'d' "${EX_DMD_PATH_LOCAL}/${f}"
+                fi
             elif [[ $TYPE == "PROM" ]]; then
-                cp "${EX_PROM_PATH_BASELINE}/${f}" "${EX_PROM_PATH_BASELINE}/${f}-orig"
-                cp "${EX_PROM_PATH_LOCAL}/${f}" "${EX_PROM_PATH_LOCAL}/${f}-orig"
-                sed -i '1,'"$OFFSET"'d' "${EX_PROM_PATH_BASELINE}/${f}"
-                sed -i '1,'"$OFFSET"'d' "${EX_PROM_PATH_LOCAL}/${f}"
+                if [[ -n $OFFSET ]]; then
+                    cp "${EX_PROM_PATH_BASELINE}/${f}" "${EX_PROM_PATH_BASELINE}/${f}-orig"
+                    cp "${EX_PROM_PATH_LOCAL}/${f}" "${EX_PROM_PATH_LOCAL}/${f}-orig"
+                    sed -i '1,'"$OFFSET"'d' "${EX_PROM_PATH_BASELINE}/${f}"
+                    sed -i '1,'"$OFFSET"'d' "${EX_PROM_PATH_LOCAL}/${f}"
+                fi
             else
                 continue
             fi
