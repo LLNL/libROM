@@ -95,25 +95,31 @@ run_tests() {
             fi
             check_fail 
         elif [[ $f =~ final || "$f" == "sol"*".000000" && "$f" != "sol_dofs"* || "$f" == "Sol0"  ]]; then
-            if [[ $TYPE == "DMD" && "$f" == *".000000" && $MACHINE = "GitHub" ]]; then
+            if [[ $TYPE == "DMD" && "$f" == *".0000"* && $MACHINE = "GitHub" ]]; then
                 echo "Using 1 rank for DMD Tests on GitHub Actions"
                 cp "${EX_DMD_PATH_BASELINE}/${f}" "${EX_DMD_PATH_BASELINE}/${f}-orig"
                 cp "${EX_DMD_PATH_LOCAL}/${f}" "${EX_DMD_PATH_LOCAL}/${f}-orig"
                 sed -i '1,'"$OFFSET"'d' "${EX_DMD_PATH_BASELINE}/${f}"
                 sed -i '1,'"$OFFSET"'d' "${EX_DMD_PATH_LOCAL}/${f}"
-                ./solutionComparator "${EX_DMD_PATH_BASELINE}/${f}"  "${EX_DMD_PATH_LOCAL}/${f}" "1.0e-5" "$NUM_PROCESSES" "$OFFSET"            
-            elif [[ $TYPE == "DMD" && "$f" == *".000000" ]]; then
+                if [[ "$f" == *".000000" ]]; then
+                    ./solutionComparator "${EX_DMD_PATH_BASELINE}/${f}"  "${EX_DMD_PATH_LOCAL}/${f}" "1.0e-5" "$NUM_PROCESSES" "$OFFSET"
+                fi            
+            elif [[ $TYPE == "DMD" && "$f" == *".0000"* ]]; then
                 cp "${EX_DMD_PATH_BASELINE}/${f}" "${EX_DMD_PATH_BASELINE}/${f}-orig"
                 cp "${EX_DMD_PATH_LOCAL}/${f}" "${EX_DMD_PATH_LOCAL}/${f}-orig"
                 sed -i '1,'"$OFFSET"'d' "${EX_DMD_PATH_BASELINE}/${f}"
                 sed -i '1,'"$OFFSET"'d' "${EX_DMD_PATH_LOCAL}/${f}"
-                ./solutionComparator  "${EX_DMD_PATH_BASELINE}/${f}" "${EX_DMD_PATH_LOCAL}/${f}" "1.0e-5" "$NUM_PROCESSES" "$OFFSET"
+                if [[ "$f" == *".000000" ]]; then
+                    ./solutionComparator  "${EX_DMD_PATH_BASELINE}/${f}" "${EX_DMD_PATH_LOCAL}/${f}" "1.0e-5" "$NUM_PROCESSES" "$OFFSET"
+                fi
             elif [[ $TYPE == "PROM" ]]; then
                 cp "${EX_PROM_PATH_BASELINE}/${f}" "${EX_PROM_PATH_BASELINE}/${f}-orig"
                 cp "${EX_PROM_PATH_LOCAL}/${f}" "${EX_PROM_PATH_LOCAL}/${f}-orig"
                 sed -i '1,'"$OFFSET"'d' "${EX_PROM_PATH_BASELINE}/${f}"
                 sed -i '1,'"$OFFSET"'d' "${EX_PROM_PATH_LOCAL}/${f}"
-                ./solutionComparator "${EX_PROM_PATH_BASELINE}/$f"  "${EX_PROM_PATH_LOCAL}/$f" "1.0e-5" "1" "$OFFSET"
+                if [[ "$f" == *".000000" ]]; then
+                    ./solutionComparator "${EX_PROM_PATH_BASELINE}/$f"  "${EX_PROM_PATH_LOCAL}/$f" "1.0e-5" "1" "$OFFSET"
+                fi
             else
                 continue
             fi
