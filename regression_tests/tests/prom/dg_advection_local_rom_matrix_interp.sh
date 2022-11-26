@@ -7,6 +7,7 @@ CMDS=(
     "./dg_advection_local_rom_matrix_interp -online"
 )
 TYPE="PROM"
+OFFSET=0
 run_tests
 
 

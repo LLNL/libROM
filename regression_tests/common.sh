@@ -10,11 +10,11 @@ export EX_DIR_BASELINE=${BASELINE_DIR}/libROM/build/examples
 export EX_DMD_PATH_BASELINE=${EX_DIR_BASELINE}/dmd
 export EX_PROM_PATH_BASELINE=${EX_DIR_BASELINE}/prom
 export TYPE
+export OFFSET=5 # Number of header lines
 trap "move_output_files_after_error" EXIT
 SCRIPT_NAME=$(basename "$0" ".sh")
 NP=$(($1))
 NUM_PROCESSES=4
-OFFSET=5 # Number of header lines
 # Check machine
 echo "OS: $MACHINE"
 if [[ $MACHINE = "Linux" ]]; then

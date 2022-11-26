@@ -6,6 +6,7 @@ CMDS=(
     "./mixed_nonlinear_diffusion -online -tf 0.01"
 )
 TYPE="PROM"
+OFFSET=5
 run_tests
 
  

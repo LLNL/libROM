@@ -9,4 +9,5 @@ CMDS=(
     "./linear_elasticity_global_rom -online -id 3 -nu 0.3"
 )
 TYPE="PROM"
+OFFSET=0
 run_tests

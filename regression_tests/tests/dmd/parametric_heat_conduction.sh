@@ -10,4 +10,5 @@ CMDS=(
     "$COMMAND ./parametric_heat_conduction -r 0.5 -online -predict"
 )
 TYPE="DMD"
+OFFSET=5
 run_tests

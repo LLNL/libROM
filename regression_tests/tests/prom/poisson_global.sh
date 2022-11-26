@@ -10,6 +10,7 @@ CMDS=(
     "./poisson_global_rom -online -f 1.15"
 )
 TYPE="PROM"
+OFFSET=5
 run_tests
 
 

@@ -10,6 +10,7 @@ CMDS=(
     "./dg_advection_global_rom -online -ff 1.2"
 )
 TYPE="PROM"
+OFFSET=0
 run_tests
 
 
