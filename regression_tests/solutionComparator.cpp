@@ -88,6 +88,7 @@ between the solution vectors." << endl;
         std::cerr << "baselineNormL2 is NaN" << std::endl;
         if(std::isnan(diffNormL2)){
             std::cerr << "diffNormL2 is NaN" << std::endl;
+        }
         abort();
     }
     if(std::isnan(diffNormL2)){
