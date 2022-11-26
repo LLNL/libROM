@@ -7,6 +7,7 @@ CMDS=(
     "./poisson_local_rom_greedy -use_database -online -f 1.15" 
 )
 TYPE="PROM"
+OFFSET=0
 run_tests
 
 

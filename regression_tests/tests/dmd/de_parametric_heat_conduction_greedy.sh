@@ -10,6 +10,7 @@ CMDS=(
     "$COMMAND ./de_parametric_heat_conduction_greedy -r 0.2 -cx 0.2 -cy 0.2"
     "$COMMAND ./de_parametric_heat_conduction_greedy -r 0.2 -cx 0.2 -cy 0.2 -de -de_f 0.9 -de_cr 0.9 -de_ps 50 -de_min_iter 10 -de_max_iter 100 -de_ct 0.001 "
 )
+OFFSET=0
 TYPE="DMD"
 cd ${EX_DMD_PATH_LOCAL}
 run_cmds
