@@ -80,7 +80,7 @@ between the solution vectors." << endl;
     }
      
      cout << "Printing baseline vector" << endl;
-     baseline.Print();
+     baseline.Print(std::cout, 8);
 
     double baselineNormL2 = baseline.Norml2();
     double diffNormL2 = diff.Norml2();
