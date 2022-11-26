@@ -78,10 +78,10 @@ void compareSolutions(string &baselineFile, string &targetFile, double errorBoun
 between the solution vectors." << endl;
         abort();
     }
-    int aa=0;
-    for (auto x: baseline) {
-        cout << "baseline [" << aa << "] = " << x << endl;
-        aa++;
+    int x=0;
+    for (auto aa = baseline.begin(); aa != baseline.end(); aa++) {
+        cout << "baseline [" << x << "] = " << aa << endl;
+        x++;
     }
 
     double baselineNormL2 = baseline.Norml2();
