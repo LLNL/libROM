@@ -27,13 +27,19 @@ int getDimensions(string &filePath) {
     return count;
 }
 
-void compareSolutions(string &baselineFile, string &targetFile, double errorBound, int numProcessors) {
+void compareSolutions(string &baselineFile, string &targetFile, double errorBound, int numProcessors, int offset) {
     int* baselineDim = new int[numProcessors];
     istream** baselineFiles = new istream*[numProcessors];
     int* targetDim = new int[numProcessors];
     istream** targetFiles = new istream*[numProcessors];
     std::filebuf* baselinefb = new filebuf[numProcessors];
     std::filebuf* targetfb = new filebuf[numProcessors];
+
+    Vector* baselineFragments = new Vector[numProcessors];
+    Vector* targetFragments = new Vector[numProcessors];
+
+    int baselineSize = 0;
+    int targetSize = 0;
 
     for (int i = 0; i < numProcessors; i++) {
         if (i > 0) {
@@ -43,6 +49,8 @@ void compareSolutions(string &baselineFile, string &targetFile, double errorBoun
         if (baselinefb[i].open(baselineFile, ios::in)) {
             baselineFiles[i] = new istream(&baselinefb[i]);
             baselineDim[i] = getDimensions(baselineFile);
+            baselineFragments[i].Load(*baselineFiles[i], baselineDim[i]);
+            baselineSize += baselineDim[i] - offset;
         }
         else {
             cerr << "Something went wrong with opening the following file. Most likely it doesn't exist: " << baselineFile << endl;
@@ -52,16 +60,36 @@ void compareSolutions(string &baselineFile, string &targetFile, double errorBoun
         if (targetfb[i].open(targetFile, ios::in)) {
             targetFiles[i] = new istream(&targetfb[i]);
             targetDim[i] = getDimensions(targetFile);
+            targetFragments[i].Load(*targetFiles[i], targetDim[i]);
+            targetSize += targetDim[i] - offset;
         }
         else {
             cerr << "Something went wrong with opening the following file. Most likely it doesn't exist: " << targetFile << endl;
             abort();
         }
     }
-    Vector baseline = Vector();
-    Vector target = Vector();
-    baseline.Load(baselineFiles, numProcessors, baselineDim);
-    target.Load(targetFiles, numProcessors, targetDim);
+
+    Vector baseline = Vector(baselineSize);
+    Vector target = Vector(targetSize);
+    int baselinePos = 0;
+    int targetPos = 0;
+
+    for (int i=0; i<numProcessors; i++) {
+        for (int j=0; j<baselineDim[i]; j++) {
+            if (j < offset) {
+                continue;
+            }
+            baseline[baselinePos++] = baselineFragments[i][j];
+        }
+        for (int j=0; j<targetDim[i]; j++) {
+            if (j < offset) {
+                continue;
+            }
+            target[baselinePos++] = targetFragments[i][j];
+        }
+    }
+    //baseline.Load(baselineFiles, numProcessors, baselineDim);
+    //target.Load(targetFiles, numProcessors, targetDim);
 
     if (baseline.Size() != target.Size()) {
         cerr << "The solution vectors are different dimensions." << endl;
@@ -118,7 +146,8 @@ int main(int argc, char *argv[]) {
     string targetPath((string) argv[2]);
     double errorBound = stod(argv[3]);
     int numProcessors = stoi(argv[4]);
+    int offset = stoi(argv[5]); // How many lines in the file are header lines
 
-    compareSolutions(baselinePath, targetPath, errorBound, numProcessors);
+    compareSolutions(baselinePath, targetPath, errorBound, numProcessors, offset);
     return 0;
 }

@@ -16,7 +16,7 @@ NP=$(($1))
 # Check machine
 echo "OS: $MACHINE"
 if [[ $MACHINE = "Linux" ]]; then
-	COMMAND="srun -p pbatch -n 1"
+	COMMAND="srun -p pbatch -n 8"
 elif [[ $MACHINE = "Darwin" ]]; then
 	COMMAND="mpirun -np 8"
 elif [[ $MACHINE = "GitHub" ]]; then
@@ -94,11 +94,11 @@ run_tests() {
         elif [[ $f =~ final || "$f" == "sol"*".000000" && "$f" != "sol_dofs"* || "$f" == "Sol0"  ]]; then
             if [[ $TYPE == "DMD" && "$f" == *".000000" && $MACHINE = "GitHub" ]]; then
                 echo "Using 1 rank for DMD Tests on GitHub Actions"
-                ./solutionComparator "${EX_DMD_PATH_BASELINE}/${f}"  "${EX_DMD_PATH_LOCAL}/${f}" "1.0e-5" "1"             
+                ./solutionComparator "${EX_DMD_PATH_BASELINE}/${f}"  "${EX_DMD_PATH_LOCAL}/${f}" "1.0e-5" "1" "5"            
             elif [[ $TYPE == "DMD" && "$f" == *".000000" ]]; then
-                ./solutionComparator  "${EX_DMD_PATH_BASELINE}/${f}" "${EX_DMD_PATH_LOCAL}/${f}" "1.0e-5" "1"
+                ./solutionComparator  "${EX_DMD_PATH_BASELINE}/${f}" "${EX_DMD_PATH_LOCAL}/${f}" "1.0e-5" "8" "5"
             elif [[ $TYPE == "PROM" ]]; then
-                ./solutionComparator "${EX_PROM_PATH_BASELINE}/$f"  "${EX_PROM_PATH_LOCAL}/$f" "1.0e-5" "1"
+                ./solutionComparator "${EX_PROM_PATH_BASELINE}/$f"  "${EX_PROM_PATH_LOCAL}/$f" "1.0e-5" "1" "5"
             else
                 continue
             fi
