@@ -78,10 +78,18 @@ void compareSolutions(string &baselineFile, string &targetFile, double errorBoun
 between the solution vectors." << endl;
         abort();
     }
+    int aa=0;
+    for (auto x: baseline) {
+        cout << "baseline [" << aa << "] = " << x << endl;
+        aa++;
+    }
+
     double baselineNormL2 = baseline.Norml2();
     double diffNormL2 = diff.Norml2();
     if(std::isnan(baselineNormL2)){
         std::cerr << "baselineNormL2 is NaN" << std::endl;
+        if(std::isnan(diffNormL2)){
+            std::cerr << "diffNormL2 is NaN" << std::endl;
         abort();
     }
     if(std::isnan(diffNormL2)){
