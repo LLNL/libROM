@@ -13,13 +13,16 @@ export TYPE
 trap "move_output_files_after_error" EXIT
 SCRIPT_NAME=$(basename "$0" ".sh")
 NP=$(($1))
+NUM_PROCESSES=4
+OFFSET=5 # Number of header lines
 # Check machine
 echo "OS: $MACHINE"
 if [[ $MACHINE = "Linux" ]]; then
-	COMMAND="srun -p pbatch -n 8"
+	COMMAND="srun -p pbatch -n $NUM_PROCESSES"
 elif [[ $MACHINE = "Darwin" ]]; then
-	COMMAND="mpirun -np 8"
+	COMMAND="mpirun -np $NUM_PROCESSES"
 elif [[ $MACHINE = "GitHub" ]]; then
+    NUM_PROCESSES=1
 	COMMAND=""
 else
     echo "Bad OS: $MACHINE"
@@ -94,11 +97,23 @@ run_tests() {
         elif [[ $f =~ final || "$f" == "sol"*".000000" && "$f" != "sol_dofs"* || "$f" == "Sol0"  ]]; then
             if [[ $TYPE == "DMD" && "$f" == *".000000" && $MACHINE = "GitHub" ]]; then
                 echo "Using 1 rank for DMD Tests on GitHub Actions"
-                ./solutionComparator "${EX_DMD_PATH_BASELINE}/${f}"  "${EX_DMD_PATH_LOCAL}/${f}" "1.0e-5" "1" "5"            
+                cp "${EX_DMD_PATH_BASELINE}/${f}" "${EX_DMD_PATH_BASELINE}/${f}-orig"
+                cp "${EX_DMD_PATH_LOCAL}/${f}" "${EX_DMD_PATH_LOCAL}/${f}-orig"
+                sed -i '1,'"$OFFSET"'d' "${EX_DMD_PATH_BASELINE}/${f}"
+                sed -i '1,'"$OFFSET"'d' "${EX_DMD_PATH_LOCAL}/${f}"
+                ./solutionComparator "${EX_DMD_PATH_BASELINE}/${f}"  "${EX_DMD_PATH_LOCAL}/${f}" "1.0e-5" "$NUM_PROCESSES" "$OFFSET"            
             elif [[ $TYPE == "DMD" && "$f" == *".000000" ]]; then
-                ./solutionComparator  "${EX_DMD_PATH_BASELINE}/${f}" "${EX_DMD_PATH_LOCAL}/${f}" "1.0e-5" "8" "5"
+                cp "${EX_DMD_PATH_BASELINE}/${f}" "${EX_DMD_PATH_BASELINE}/${f}-orig"
+                cp "${EX_DMD_PATH_LOCAL}/${f}" "${EX_DMD_PATH_LOCAL}/${f}-orig"
+                sed -i '1,'"$OFFSET"'d' "${EX_DMD_PATH_BASELINE}/${f}"
+                sed -i '1,'"$OFFSET"'d' "${EX_DMD_PATH_LOCAL}/${f}"
+                ./solutionComparator  "${EX_DMD_PATH_BASELINE}/${f}" "${EX_DMD_PATH_LOCAL}/${f}" "1.0e-5" "$NUM_PROCESSES" "$OFFSET"
             elif [[ $TYPE == "PROM" ]]; then
-                ./solutionComparator "${EX_PROM_PATH_BASELINE}/$f"  "${EX_PROM_PATH_LOCAL}/$f" "1.0e-5" "1" "5"
+                cp "${EX_PROM_PATH_BASELINE}/${f}" "${EX_PROM_PATH_BASELINE}/${f}-orig"
+                cp "${EX_PROM_PATH_LOCAL}/${f}" "${EX_PROM_PATH_LOCAL}/${f}-orig"
+                sed -i '1,'"$OFFSET"'d' "${EX_PROM_PATH_BASELINE}/${f}"
+                sed -i '1,'"$OFFSET"'d' "${EX_PROM_PATH_LOCAL}/${f}"
+                ./solutionComparator "${EX_PROM_PATH_BASELINE}/$f"  "${EX_PROM_PATH_LOCAL}/$f" "1.0e-5" "1" "$OFFSET"
             else
                 continue
             fi
