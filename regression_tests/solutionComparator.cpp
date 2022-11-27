@@ -93,6 +93,13 @@ between the solution vectors." << endl;
         abort();
     }
 
+    if(std::isnan(diffNormL2)){
+        std::cout << "NaN caught!" << std::endl;
+        abort();
+    }
+
+    
+
     // Test whether l2 norm is smaller than error bound
     if (error > errorBound) {
         cerr << "baselineNormL2 = " << baselineNormL2 << ", diffNormL2 = " << diffNormL2 << endl;
