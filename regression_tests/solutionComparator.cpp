@@ -80,6 +80,18 @@ between the solution vectors." << endl;
     }
     double baselineNormL2 = baseline.Norml2();
     double diffNormL2 = diff.Norml2();
+    // Check for NaN
+    if(std::isnan(baselineNormL2)){
+        std::cerr << "baselineNormL2 is NaN" << std::endl;
+        if(std::isnan(diffNormL2)){
+            std::cerr << "diffNormL2 is NaN" << std::endl;
+        }
+        abort();
+    }
+    if(std::isnan(diffNormL2)){
+        std::cerr << "diffNormL2 is NaN" << std::endl;
+        abort();
+    }
     double error;
     if (baselineNormL2 == 0.0) {
         error = diffNormL2;
