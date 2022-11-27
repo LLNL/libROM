@@ -88,6 +88,8 @@ between the solution vectors." << endl;
         error = diffNormL2 / baselineNormL2;
     }
 
+    std::cout << "Solution Comparator is running " << std::endl;
+
     if(std::isnan(baselineNormL2)){
         std::cout << "NaN caught!" << std::endl;
         abort();
