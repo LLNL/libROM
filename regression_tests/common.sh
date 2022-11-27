@@ -128,12 +128,15 @@ run_tests() {
             fi
             check_fail 
         elif [[ $f =~ final || "$f" == "sol"*".000000" && "$f" != "sol_dofs"* || "$f" == "Sol0"  ]]; then
+            echo "f=$f"
             if [[ $TYPE == "DMD" && "$f" == *".000000" && $MACHINE = "GitHub" ]]; then
                 echo "Using 1 rank for DMD Tests on GitHub Actions"
                 ./solutionComparator "${EX_DMD_PATH_BASELINE}/${f}"  "${EX_DMD_PATH_LOCAL}/${f}" "1.0e-5" "$NUM_PROCESSES"            
             elif [[ $TYPE == "DMD" && "$f" == *".000000" ]]; then
+                echo "Solution comparator for DMD"
                 ./solutionComparator  "${EX_DMD_PATH_BASELINE}/${f}" "${EX_DMD_PATH_LOCAL}/${f}" "1.0e-5" "$NUM_PROCESSES" 
             elif [[ $TYPE == "PROM" ]]; then
+                 echo "Solution comparator for PROM"
                 ./solutionComparator "${EX_PROM_PATH_BASELINE}/$f"  "${EX_PROM_PATH_LOCAL}/$f" "1.0e-5" "1" 
             else
                 continue
@@ -156,6 +159,7 @@ set_fail(){
 check_fail(){
     if [[ "$?" -ne 0 || "${PIPESTATUS[0]}" -ne 0 ]];  # Capture the pipe status from MPI_Abort 
     then
+        echo "Return=$?"
         set_fail
     else
         set_pass

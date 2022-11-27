@@ -1,6 +1,6 @@
 #!/bin/bash
 compareErrors() {
-    echo "Comparing relative errors"
+    echo "Comparing relative errors" >>$simulationLogFile
     pushd ${GITHUB_WORKSPACE}/regression_tests/results > /dev/null
     if [[ $type_of_test == 'dmd' ]]; then
        lin=$(grep "Relative error " ${scriptName}.log | awk '{ print $NF }')
@@ -41,6 +41,6 @@ compareErrors() {
             return 1
         fi
     done
-    echo "Compare relative errors passed"
+    echo "Compare relative errors passed" >>$simulationLogFile
     popd > /dev/null
 }
