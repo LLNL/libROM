@@ -98,7 +98,8 @@ between the solution vectors." << endl;
         abort();
     }
 
-    
+    std::cout << "Printing baseline vector" << std::endl;
+    baseline.Print();
 
     // Test whether l2 norm is smaller than error bound
     if (error > errorBound) {
