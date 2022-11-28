@@ -41,6 +41,7 @@ DMDData::DMDData(
             break;
         case hdf5:
             d_db = std::make_unique<HDFDatabase>();
+            d_db->create(d_output_path + "/dmd.hdf");
             break;
     }
 }

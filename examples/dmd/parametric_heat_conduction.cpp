@@ -527,12 +527,6 @@ int main(int argc, char *argv[])
     vector<double> ts;
     CAROM::Vector* init = NULL;
 
-    CAROM::Database *db = NULL;
-    if (csvFormat)
-        db = new CAROM::CSVDatabase();
-    else
-        db = new CAROM::HDFDatabase();
-
     vector<int> snap_list;
 
     fom_timer.Stop();
