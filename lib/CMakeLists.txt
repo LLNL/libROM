@@ -52,6 +52,7 @@ set(module_list
   utils/Database
   utils/HDFDatabase
   utils/CSVDatabase
+  utils/DMDData
   utils/Utilities
   utils/ParallelBuffer)
 set(source_files)
