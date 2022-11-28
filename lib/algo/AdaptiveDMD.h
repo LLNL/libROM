@@ -52,6 +52,11 @@ public:
                 std::string interp_method = "LS",
                 double closest_rbf_val = 0.9,
                 Vector* state_offset = NULL);
+    
+    /**
+     * @brief Destroy the AdaptiveDMD object
+     */
+    ~AdaptiveDMD();
 
     /**
      * @param[in] energy_fraction The energy fraction to keep after doing SVD.

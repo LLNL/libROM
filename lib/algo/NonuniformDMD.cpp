@@ -48,6 +48,11 @@ NonuniformDMD::NonuniformDMD(std::vector<std::complex<double>> eigs,
     setOffset(derivative_offset, 1);
 }
 
+NonuniformDMD::~NonuniformDMD()
+{
+    delete d_derivative_offset;
+}
+
 void NonuniformDMD::setOffset(Vector* offset_vector, int order)
 {
     if (order == 0)
