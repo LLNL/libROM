@@ -38,10 +38,11 @@ DMDData::DMDData(
     {
         case csv:
             d_db = std::make_unique<CSVDatabase>();
+            mkdir(output_path, 0777);
             break;
         case hdf5:
             d_db = std::make_unique<HDFDatabase>();
-            d_db->create(d_output_path + "/dmd.hdf");
+            d_db->create(d_output_path + ".hdf");
             break;
     }
 }
