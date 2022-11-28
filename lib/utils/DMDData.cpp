@@ -31,16 +31,16 @@ DMDData::DMDData(
     const char* output_path,
     DataFormat data_format
 )
-:   output_path_ { output_path },
-    data_format_ { data_format }
+:   d_output_path { output_path },
+    d_data_format { data_format }
 {
     switch (data_format)
     {
         case csv:
-            db_ = std::make_unique<CSVDatabase>();
+            d_db = std::make_unique<CSVDatabase>();
             break;
         case hdf5:
-            db_ = std::make_unique<HDFDatabase>();
+            d_db = std::make_unique<HDFDatabase>();
             break;
     }
 }
@@ -60,28 +60,28 @@ DMDData::~DMDData()
 {
     std::string output_prefix;
     std::string output_postfix;
-    if (data_format_ == csv)
+    if (d_data_format == csv)
     {
-        output_prefix = output_path_ + "/";
+        output_prefix = d_output_path + "/";
         output_postfix = ".csv";
     }
-    db_->putDoubleVector(output_prefix + "tval" + output_postfix, t_vals_, 
-        t_vals_.size());
-    db_->putInteger(output_prefix + "numsnap", steps_.size());
-    if (data_format_ == hdf5)
+    d_db->putDoubleVector(output_prefix + "tval" + output_postfix, d_t_vals, 
+        d_t_vals.size());
+    d_db->putInteger(output_prefix + "numsnap", d_steps.size());
+    if (d_data_format == hdf5)
     {
-        db_->putInteger("snap_bound_size", 0);
+        d_db->putInteger("snap_bound_size", 0);
     }
-    db_->putIntegerArray(output_prefix + "snap_list" + output_postfix, 
-        steps_.data(), steps_.size());
+    d_db->putIntegerArray(output_prefix + "snap_list" + output_postfix, 
+        d_steps.data(), d_steps.size());
 }
 
 void DMDData::addSnapshot(double t, int step, const double *data, int size)
 {
     std::string output_file;
-    if (data_format_ == csv)
+    if (d_data_format == csv)
     {
-        output_file = output_path_ + "/step" + std::to_string(step);
+        output_file = d_output_path + "/step" + std::to_string(step);
         mkdir(output_file.c_str(), 0777);
         output_file = output_file + "/sol.csv";
     }
@@ -89,18 +89,18 @@ void DMDData::addSnapshot(double t, int step, const double *data, int size)
     {
         output_file = "step" + std::to_string(step) + "sol";
     }
-    db_->putDoubleArray(output_file, data, size);
-    t_vals_.push_back(t);
-    steps_.push_back(step);
+    d_db->putDoubleArray(output_file, data, size);
+    d_t_vals.push_back(t);
+    d_steps.push_back(step);
 }
 
 void DMDData::moveData(DMDData&& other)
 {
-    output_path_ = std::move(other.output_path_);
-    data_format_ = other.data_format_;
-    db_ = std::move(other.db_);
-    t_vals_ = std::move(other.t_vals_);
-    steps_ = std::move(other.steps_);
+    d_output_path = std::move(other.d_output_path);
+    d_data_format = other.d_data_format;
+    d_db = std::move(other.d_db);
+    d_t_vals = std::move(other.d_t_vals);
+    d_steps = std::move(other.d_steps);
 }
 
 }

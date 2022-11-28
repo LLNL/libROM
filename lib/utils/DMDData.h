@@ -93,11 +93,30 @@ private:
      */
     void moveData(DMDData&& other);
 
-    std::string output_path_;
-    DataFormat data_format_;
-    std::unique_ptr<CAROM::Database> db_;
-    std::vector<double> t_vals_;
-    std::vector<int> steps_;
+    /**
+     * @brief Relative path to store CSV output data
+     */
+    std::string d_output_path;
+
+    /**
+     * @brief Specifies HDF5 or CSV output
+     */
+    DataFormat d_data_format;
+
+    /**
+     * @brief Data writing object (base class object)
+     */
+    std::unique_ptr<CAROM::Database> d_db;
+
+    /**
+     * @brief Output times
+     */
+    std::vector<double> d_t_vals;
+
+    /**
+     * @brief Output steps
+     */
+    std::vector<int> d_steps;
 
 };
 
