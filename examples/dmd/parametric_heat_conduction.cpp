@@ -78,6 +78,7 @@
 #include <iostream>
 #include "utils/CSVDatabase.h"
 #include "utils/HDFDatabase.h"
+#include "utils/DMDData.h"
 #include "mfem/PointwiseSnapshot.hpp"
 
 #ifndef _WIN32
@@ -257,6 +258,8 @@ int main(int argc, char *argv[])
     }
 
     string outputPath = ".";
+
+    std::unique_ptr<CAROM::DMDData> dof_writer = nullptr;
     if (save_dofs)
     {
         outputPath = "run";
@@ -274,6 +277,12 @@ int main(int argc, char *argv[])
             }
             while (pos != string::npos);
         }
+        CAROM::DMDData::DataFormat dataFormat = CAROM::DMDData::hdf5;
+        if (csvFormat)
+        {
+            dataFormat = CAROM::DMDData::csv;
+        }
+        dof_writer = std::make_unique<CAROM::DMDData>(outputPath.c_str(), dataFormat);
     }
 
     const int check = (int) pointwiseSnapshots + (int) offline + (int) online
@@ -554,16 +563,7 @@ int main(int argc, char *argv[])
 
     if (save_dofs && myid == 0)
     {
-        if (csvFormat)
-        {
-            mkdir((outputPath + "/step0").c_str(), 0777);
-            db->putDoubleArray(outputPath + "/step0/sol.csv", u.GetData(), u.Size());
-        }
-        else
-        {
-            db->create(outputPath + "/dmd.hdf");
-            db->putDoubleArray("step0sol", u.GetData(), u.Size());
-        }
+        dof_writer->addSnapshot(t, 0, u.GetData(), u.Size());
     }
 
     ts.push_back(t);
@@ -600,15 +600,7 @@ int main(int argc, char *argv[])
 
         if (save_dofs && myid == 0)
         {
-            if (csvFormat)
-            {
-                mkdir((outputPath + "/step" + to_string(ti)).c_str(), 0777);
-                db->putDoubleArray(outputPath + "/step" + to_string(ti) + "/sol.csv",
-                                   u.GetData(), u.Size());
-            }
-            else
-                db->putDoubleArray("step" + to_string(ti) + "sol",
-                                   u.GetData(), u.Size());
+            dof_writer->addSnapshot(t, ti, u.GetData(), u.Size());
         }
 
         ts.push_back(t);
@@ -662,25 +654,6 @@ int main(int argc, char *argv[])
 #endif
 
         oper.SetParameters(u);
-    }
-
-    if (save_dofs && myid == 0)
-    {
-        if (csvFormat)
-        {
-            db->putDoubleVector(outputPath + "/tval.csv", ts, ts.size());
-            db->putInteger(outputPath + "/numsnap", snap_list.size());
-            db->putIntegerArray(outputPath + "/snap_list.csv", snap_list.data(),
-                                snap_list.size());
-        }
-        else
-        {
-            db->putDoubleVector("tval", ts, ts.size());
-            db->putInteger("numsnap", snap_list.size());
-            db->putInteger("snap_bound_size", 0);
-            db->putIntegerArray("snap_list", snap_list.data(),
-                                snap_list.size());
-        }
     }
 
 #ifdef MFEM_USE_ADIOS2
