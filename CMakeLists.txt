@@ -33,9 +33,25 @@ set(libROM_CMAKE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 set(libROM_CMAKE_MODULE_PATH ${libROM_CMAKE_PATH}/modules)
 list(APPEND CMAKE_MODULE_PATH ${libROM_CMAKE_MODULE_PATH})
 
-option(USE_MFEM "Build libROM with MFEM" OFF)
-option(MFEM_USE_GSLIB "Build libROM with MFEM using GSLIB" OFF)
-option(BUILD_STATIC "Build libROM as a static library" OFF)
+# Load libROM CMake utilities.
+include(libROMCmakeUtilities)
+
+# Get some version-related names
+string(TOUPPER "${PROJECT_NAME}" PROJECT_NAME_UC)
+librom_version_to_int(${${PROJECT_NAME}_VERSION} ${PROJECT_NAME_UC}_VERSION)
+set(${PROJECT_NAME_UC}_VERSION_STRING ${${PROJECT_NAME}_VERSION})
+if (EXISTS ${PROJECT_SOURCE_DIR}/.git)
+   execute_process(
+     COMMAND git describe --all --long --abbrev=40 --dirty --always
+     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+     OUTPUT_VARIABLE ${PROJECT_NAME_UC}_GIT_STRING
+     ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+endif()
+if (NOT ${PROJECT_NAME_UC}_GIT_STRING)
+   set(${PROJECT_NAME_UC}_GIT_STRING "(unknown)")
+endif()
+
+option(LIBROM_USE_MFEM "Build libROM with MFEM" OFF)
 option(ENABLE_EXAMPLES "Build examples and regression tests" ON)
 
 ## Set a bunch of variables to generate a configure header
@@ -111,14 +127,18 @@ find_package(Doxygen 1.8.5)
 
 find_package(GTest 1.6.0)
 
-if (USE_MFEM)
-    find_library(MFEM mfem "${CMAKE_SOURCE_DIR}/dependencies/mfem" "${MFEM_DIR}/lib")
-    find_library(HYPRE HYPRE "${CMAKE_SOURCE_DIR}/dependencies/hypre/src/hypre/lib" "${HYPRE_DIR}/lib")
-    find_library(PARMETIS parmetis "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/build/lib/libparmetis" "${PARMETIS_DIR}/lib")
-    find_library(METIS metis "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/build/lib/libmetis" "${METIS_DIR}/lib")
-    find_path(MFEM_INCLUDES mfem.hpp "${CMAKE_SOURCE_DIR}/dependencies/mfem" "${MFEM_DIR}/include")
-    find_path(HYPRE_INCLUDES HYPRE.h "${CMAKE_SOURCE_DIR}/dependencies/hypre/src/hypre/include" "${HYPRE_DIR}/include")
-    find_path(PARMETIS_INCLUDES metis.h "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/metis/include" "${PARMETIS_DIR}/metis/include")
+set(DEPS HDF5::HDF5 BLAS::BLAS LAPACK::LAPACK
+    MPI::MPI_C MPI::MPI_CXX MPI::MPI_Fortran ZLIB::ZLIB)
+
+if (LIBROM_USE_MFEM)
+    find_package(MFEM 4.5.0 REQUIRED)
+    if (NOT ${MFEM_USE_MPI})
+        message(FATAL_ERROR, "MFEM does not have MPI support")
+    endif()
+    if (NOT ${MFEM_USE_MUMPS})
+        message(FATAL_ERROR, "MFEM does not have MUMPS support")
+    endif()
+    list(APPEND DEPS MFEM::mfem)
 endif()
 
 add_subdirectory(lib)
@@ -128,7 +148,7 @@ add_subdirectory(lib)
 target_compile_features(ROM PRIVATE cxx_std_11)
 
 if (ENABLE_EXAMPLES)
-  if (USE_MFEM)
+  if (LIBROM_USE_MFEM)
     set(examples
       poisson_global_rom
       poisson_local_rom_greedy
@@ -175,11 +195,9 @@ if (ENABLE_EXAMPLES)
       set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/examples/${example_dir})
       add_executable(${name} examples/${example_dir}/${name}.cpp)
 
-      target_link_libraries(${name}
-        PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
+      target_link_libraries(${name} PRIVATE ROM)
       target_include_directories(${name}
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-        ${MPI_C_INCLUDE_DIRS})
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/lib)
       target_compile_features(${name} PRIVATE cxx_std_11)
     endforeach() # IN LISTS examples
     file(COPY examples/data DESTINATION ${CMAKE_BINARY_DIR}/examples)
@@ -195,11 +213,9 @@ if (ENABLE_EXAMPLES)
   foreach(name IN LISTS misc_example_names)
     add_executable(${name} examples/misc/${name}.cpp)
 
-    target_link_libraries(${name}
-      PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
+    target_link_libraries(${name} PRIVATE ROM)
     target_include_directories(${name}
-      PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-      ${MPI_C_INCLUDE_DIRS})
+      PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/lib)
     target_compile_features(${name} PRIVATE cxx_std_11)
   endforeach(name) # IN LISTS misc_exmaple_names
 
@@ -217,11 +233,9 @@ if (ENABLE_EXAMPLES)
   foreach(name IN LISTS regression_test_names)
     add_executable(${name} tests/${name}.cpp)
 
-    target_link_libraries(${name}
-      PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
+    target_link_libraries(${name} PRIVATE ROM)
     target_include_directories(${name}
-      PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-      ${MPI_C_INCLUDE_DIRS})
+      PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/lib)
     target_compile_features(${name} PRIVATE cxx_std_11)
   endforeach(name) # IN LISTS regression_test_names
 endif(ENABLE_EXAMPLES)
@@ -242,11 +256,9 @@ if(GTEST_FOUND)
     GreedyCustomSampler)
   foreach(stem IN LISTS unit_test_stems)
     add_executable(test_${stem} tests/test_${stem}.cpp)
-    target_link_libraries(test_${stem} PRIVATE ROM
-      ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran GTest::GTest)
+    target_link_libraries(test_${stem} PRIVATE ROM ${DEPS} GTest::GTest)
     target_include_directories(test_${stem}
-      PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-      ${MPI_C_INCLUDE_DIRS})
+      PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/lib)
     target_compile_features(test_${stem} PRIVATE cxx_std_11)
     target_compile_definitions(test_${stem} PRIVATE CAROM_HAS_GTEST)
   endforeach(stem) # IN LISTS unit_test_stems
@@ -275,3 +287,99 @@ if(DOXYGEN_FOUND)
   add_dependencies(doxygen_tagfile documentation)
 
 endif(DOXYGEN_FOUND)
+
+#-------------------------------------------------------------------------------
+# Installation
+#-------------------------------------------------------------------------------
+
+message(STATUS "CMAKE_INSTALL_PREFIX = ${CMAKE_INSTALL_PREFIX}")
+set(INSTALL_INCLUDE_DIR include
+  CACHE PATH "Relative path for installing header files.")
+set(INSTALL_LIB_DIR lib
+  CACHE PATH "Relative path for installing the library.")
+set(INSTALL_CMAKE_DIR lib/cmake/librom
+  CACHE PATH "Relative path for installing cmake config files.")
+
+# The "INSTALL_INTERFACE" folder shall be
+# $<INSTALL_INTERFACE:${INSTALL_INCLUDE_DIR} after fixing
+# https://github.com/LLNL/libROM/issues/156
+target_include_directories(ROM
+  INTERFACE
+    $<INSTALL_INTERFACE:${INSTALL_INCLUDE_DIR}/librom>)
+
+set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME Development)
+
+# Install the library
+install(TARGETS ROM
+  EXPORT libROMTargets
+  DESTINATION ${INSTALL_LIB_DIR})
+
+# Install the headers
+foreach(Header librom.h FCMangle.h)
+  install(FILES ${CMAKE_SOURCE_DIR}/lib/${Header}
+    DESTINATION ${INSTALL_INCLUDE_DIR}/librom/)
+endforeach()
+install(FILES ${PROJECT_BINARY_DIR}/lib/CAROM_config.h
+  DESTINATION ${INSTALL_INCLUDE_DIR}/librom/)
+
+foreach(Folder algo hyperreduction linalg utils)
+  install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/${Folder}
+    DESTINATION ${INSTALL_INCLUDE_DIR}/librom/
+    FILES_MATCHING PATTERN "*.h")
+endforeach()
+
+if (LIBROM_USE_MFEM)
+  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib/mfem
+    DESTINATION ${INSTALL_INCLUDE_DIR}/librom/
+    FILES_MATCHING PATTERN "*.hpp")
+endif()
+
+# Package the whole thing up nicely
+include(CMakePackageConfigHelpers)
+
+# Add all targets to the build-tree export set
+export(TARGETS ROM
+  FILE "${PROJECT_BINARY_DIR}/libROMTargets.cmake")
+
+# Export the package for use from the build-tree (this registers the build-tree
+# with the CMake user package registry.)
+# TODO: How do we register the install-tree? Replacing the build-tree?
+export(PACKAGE ${PROJECT_NAME})
+
+# This is the build-tree version
+set(INCLUDE_INSTALL_DIRS ${PROJECT_BINARY_DIR})
+set(LIB_INSTALL_DIR ${PROJECT_BINARY_DIR})
+configure_package_config_file(cmake/libROMConfig.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/libROMConfig.cmake
+  INSTALL_DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
+  PATH_VARS INCLUDE_INSTALL_DIRS LIB_INSTALL_DIR)
+
+# This is the version that will be installed
+set(INCLUDE_INSTALL_DIRS ${INSTALL_INCLUDE_DIR})
+set(LIB_INSTALL_DIR ${INSTALL_LIB_DIR})
+configure_package_config_file(cmake/libROMConfig.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/libROMConfig.cmake
+  INSTALL_DESTINATION ${INSTALL_CMAKE_DIR}
+  PATH_VARS INCLUDE_INSTALL_DIRS LIB_INSTALL_DIR)
+
+# Write the version file (same for build and install tree)
+write_basic_package_version_file(
+  ${CMAKE_CURRENT_BINARY_DIR}/libROMConfigVersion.cmake
+  VERSION ${${PROJECT_NAME}_VERSION}
+  COMPATIBILITY SameMajorVersion )
+
+# Install the config files
+install(FILES
+  ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/libROMConfig.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/libROMConfigVersion.cmake
+  DESTINATION ${INSTALL_CMAKE_DIR})
+
+# Install the export set for use with the install-tree
+install(EXPORT libROMTargets
+    NAMESPACE libROM::
+    DESTINATION ${INSTALL_CMAKE_DIR})
+
+# Install the modules directory, so it can be used to find the dependencies
+install(DIRECTORY config/cmake/modules
+  DESTINATION ${INSTALL_CMAKE_DIR}
+  FILES_MATCHING PATTERN "*.cmake")

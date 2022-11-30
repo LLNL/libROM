@@ -1,0 +1,48 @@
+# Copyright (c) 2010-2022, Lawrence Livermore National Security, LLC. Produced
+# at the Lawrence Livermore National Laboratory. All Rights reserved. See files
+# LICENSE and NOTICE for details. LLNL-CODE-806117.
+#
+# This file is part of the libROM library. For more information and source code
+# availability visit https://mfem.org.
+#
+# libROM is free software; you can redistribute it and/or modify it under the
+# terms of the BSD-3 license. We welcome feedback and contributions, see file
+# CONTRIBUTING.md for details.
+
+include(CMakeFindDependencyMacro)
+include(${CMAKE_CURRENT_LIST_DIR}/libROMConfigVersion.cmake)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/modules)
+
+set(libROM_VERSION ${PACKAGE_VERSION})
+
+# MPI needs to link against MPI::C MPI::CXX or MPI::Fortran
+enable_language(C)
+enable_language(CXX)
+enable_language(Fortran)
+find_dependency(MPI)
+find_dependency(HDF5)
+find_dependency(BLAS)
+find_dependency(LAPACK)
+find_dependency(ZLIB)
+
+set(LIBROM_USE_MFEM @LIBROM_USE_MFEM@)
+if(LIBROM_USE_MFEM)
+  find_dependency(MFEM)
+endif()
+
+@PACKAGE_INIT@
+
+set(libROM_INCLUDE_DIRS "@PACKAGE_INCLUDE_INSTALL_DIRS@")
+foreach (dir ${libROM_INCLUDE_DIRS})
+  set_and_check(libROM_INCLUDE_DIR "${dir}")
+endforeach (dir "${libROM_INCLUDE_DIRS}")
+
+set_and_check(libROM_LIBRARY_DIR "@PACKAGE_LIB_INSTALL_DIR@")
+
+check_required_components(libROM)
+
+if (NOT TARGET librom)
+  include(${CMAKE_CURRENT_LIST_DIR}/libROMTargets.cmake)
+endif (NOT TARGET librom)
+
+set(libROM_LIBRARIES librom)
