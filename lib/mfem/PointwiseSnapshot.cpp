@@ -76,6 +76,7 @@ void PointwiseSnapshot::SetMesh(ParMesh *pmesh)
 
     finder = new FindPointsGSLIB(MPI_COMM_WORLD);
     finder->Setup(*pmesh);
+    finder->SetL2AvgType(FindPointsGSLIB::AvgType::NONE);
 }
 
 void PointwiseSnapshot::GetSnapshot(ParGridFunction const& f, mfem::Vector & s)
