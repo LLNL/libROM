@@ -137,6 +137,11 @@ public:
         return d_snapshots.size();
     }
 
+    int getDimension() const
+    {
+        return d_k;
+    }
+
     /**
      * @brief Get the snapshot matrix contained within d_snapshots.
      */

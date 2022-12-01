@@ -108,6 +108,9 @@ int main(int argc, char *argv[])
     const char *basename = "";
     bool save_csv = false;
     bool csvFormat = true;
+    bool useWindowDims = false;
+    int subsample = 0;
+    int eval_subsample = 0;
 
     OptionsParser args(argc, argv);
     args.AddOption(&offline, "-offline", "--offline", "-no-offline", "--no-offline",
@@ -167,6 +170,12 @@ int main(int argc, char *argv[])
                    "Enable or disable prediction result output (files in CSV format).");
     args.AddOption(&csvFormat, "-csv", "--csv", "-hdf", "--hdf",
                    "Use CSV or HDF format for input files.");
+    args.AddOption(&useWindowDims, "-wdim", "--wdim", "-no-wdim", "--no-wdim",
+                   "Use DMD dimensions for each window, input from a CSV file.");
+    args.AddOption(&subsample, "-subs", "--subsample",
+                   "Subsampling factor for training snapshots.");
+    args.AddOption(&eval_subsample, "-esubs", "--eval_subsample",
+                   "Subsampling factor for evaluation.");
     args.Parse();
     if (!args.Good())
     {
@@ -280,7 +289,7 @@ int main(int argc, char *argv[])
     vector<string> par_dir_list; // DATASET name
     vector<string> par_ns_list; // numsnap parameter names
     vector<CAROM::Vector*> par_vectors; // DATASET param
-    vector<int> num_train_snap; // DATASET size
+
     vector<double> indicator_init, indicator_last; // DATASET indicator range
 
     csv_db.getStringVector(string(list_dir) + "/" + train_list + ".csv",
@@ -374,7 +383,6 @@ int main(int argc, char *argv[])
             snap_bound.push_back(0);
             snap_bound.push_back(snap_index_list.size()-1);
         }
-        num_train_snap.push_back(snap_bound[1] - snap_bound[0] + 1);
 
         for (int par_order = 0; par_order < dpar; ++par_order)
         {
@@ -438,6 +446,13 @@ int main(int argc, char *argv[])
         }
     }
 
+    vector<int> windowDim;
+    if (useWindowDims)
+    {
+        csv_db.getIntegerVector("run/maxDim.csv", windowDim);
+        CAROM_VERIFY(windowDim.size() == numWindows);
+    }
+
     StopWatch dmd_training_timer, dmd_preprocess_timer, dmd_prediction_timer;
     vector<vector<CAROM::DMD*>> dmd;
     vector<CAROM::DMD*> dmd_curr_par;
@@ -446,6 +461,11 @@ int main(int argc, char *argv[])
     if (offline)
     {
         dmd_training_timer.Start();
+
+        vector<int> maxDim;
+        maxDim.assign(numWindows, 0);
+        vector<int> minSamp;
+        minSamp.assign(numWindows, -1);
 
         for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
         {
@@ -525,6 +545,10 @@ int main(int argc, char *argv[])
             int overlap_count = 0;
             for (int idx_snap = snap_bound[0]; idx_snap <= snap_bound[1]; ++idx_snap)
             {
+                if (subsample > 1 && (idx_snap % subsample != 0)
+                        && idx_snap > snap_bound[0] && idx_snap < snap_bound[1])
+                    continue;
+
                 string snap = "step" + to_string(snap_index_list[idx_snap]); // STATE
                 double tval = tvec[idx_snap];
 
@@ -561,12 +585,15 @@ int main(int argc, char *argv[])
 
             if (myid == 0)
             {
-                cout << "Loaded " << num_train_snap[idx_dataset]
+                cout << "Loaded " << snap_bound[1] - snap_bound[0] + 1
                      << " samples for " << par_dir << "." << endl;
             }
 
             for (int window = 0; window < numWindows; ++window)
             {
+                if (useWindowDims)
+                    rdim = windowDim[window];
+
                 if (rdim != -1)
                 {
                     if (myid == 0)
@@ -604,12 +631,30 @@ int main(int argc, char *argv[])
                     dmd[idx_dataset][window]->summary(outputPath + "/window"
                                                       + to_string(window) + "_par"
                                                       + to_string(idx_dataset));
+
+                    cout << "Window " << window << ", DMD " << idx_dataset << " dim "
+                         << dmd[idx_dataset][window]->getDimension() << endl;
+
+                    const int dim_w = std::min(dmd[idx_dataset][window]->getDimension(),
+                                               dmd[idx_dataset][window]->getNumSamples()-1);
+                    maxDim[window] = std::max(maxDim[window], dim_w);
+
+                    if (minSamp[window] < 0 ||
+                            dmd[idx_dataset][window]->getNumSamples() < minSamp[window])
+                        minSamp[window] = dmd[idx_dataset][window]->getNumSamples();
                 }
             } // escape for-loop over window
 
             db->close();
         } // escape for-loop over idx_dataset
         dmd_training_timer.Stop();
+
+        // Limit maxDim by minSamp-1
+        for (int window = 0; window < numWindows; ++window)
+            maxDim[window] = std::min(maxDim[window], minSamp[window]-1);
+
+        // Write maxDim to a CSV file
+        csv_db.putIntegerArray("run/maxDim.csv", maxDim.data(), numWindows);
     } // escape if-statement of offline
 
     CAROM::Vector* curr_par = new CAROM::Vector(dpar, false);
@@ -821,6 +866,10 @@ int main(int argc, char *argv[])
             int curr_window = 0;
             for (int idx_snap = snap_bound[0]; idx_snap <= snap_bound[1]; ++idx_snap)
             {
+                if (eval_subsample > 1 && (idx_snap % eval_subsample != 0)
+                        && idx_snap > snap_bound[0] && idx_snap < snap_bound[1])
+                    continue;
+
                 string snap = "step" + to_string(snap_index_list[idx_snap]); // STATE
                 double tval = tvec[idx_snap];
                 if (csvFormat)
