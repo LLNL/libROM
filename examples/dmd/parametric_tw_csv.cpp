@@ -16,17 +16,17 @@
 // =================================================================================
 //
 // Parametric serial DMD command (for HDF version, append -hdf):
-//   mpirun -np 8 parametric_tw_csv -o parametric_csv_serial -rdim 16 -dtc 0.01 -offline
-//   mpirun -np 8 parametric_tw_csv -o parametric_csv_serial -rdim 16 -dtc 0.01 -online
+//   mpirun -np 8 parametric_tw_csv -o hc_parametric_serial -rdim 16 -dtc 0.01 -offline
+//   mpirun -np 8 parametric_tw_csv -o hc_parametric_serial -rdim 16 -dtc 0.01 -online
 //
-// Final-time prediction error (Last line in run/parametric_csv_serial/hc_par5_prediction_error.csv):
+// Final-time prediction error (Last line in run/hc_parametric_serial/dmd_par5_prediction_error.csv):
 //   0.0012598331433506
 //
 // Parametric time windowing DMD command (for HDF version, append -hdf):
-//   mpirun -np 8 parametric_tw_csv -o parametric_csv_tw -nwinsamp 25 -dtc 0.01 -offline
-//   mpirun -np 8 parametric_tw_csv -o parametric_csv_tw -nwinsamp 25 -dtc 0.01 -online
+//   mpirun -np 8 parametric_tw_csv -o hc_parametric_tw -nwinsamp 25 -dtc 0.01 -offline
+//   mpirun -np 8 parametric_tw_csv -o hc_parametric_tw -nwinsamp 25 -dtc 0.01 -online
 //
-// Final-time prediction error (Last line in run/parametric_csv_tw/hc_par5_prediction_error.csv):
+// Final-time prediction error (Last line in run/hc_parametric_tw/dmd_par5_prediction_error.csv):
 //   0.0006507358659606
 //
 // =================================================================================
@@ -278,7 +278,6 @@ int main(int argc, char *argv[])
 
     vector<string> training_par_list, testing_par_list; // DATASET info
     vector<string> par_dir_list; // DATASET name
-    vector<string> par_ns_list; // numsnap parameter names
     vector<CAROM::Vector*> par_vectors; // DATASET param
     vector<int> num_train_snap; // DATASET size
     vector<double> indicator_init, indicator_last; // DATASET indicator range
@@ -293,8 +292,6 @@ int main(int argc, char *argv[])
     }
 
     int dpar = -1;
-    const int ospar = csvFormat ? 2 : 1;  // CSV version has numsnap, HDF does not.
-
     for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
     {
         stringstream par_ss(training_par_list[idx_dataset]); // training DATASET
@@ -305,7 +302,7 @@ int main(int argc, char *argv[])
             par_info.push_back(par_entry);
         }
 
-        dpar = par_info.size() - ospar;
+        dpar = par_info.size() - 1;
         CAROM::Vector* curr_par = new CAROM::Vector(dpar, false);
 
         if (idx_dataset == 0)
@@ -318,13 +315,11 @@ int main(int argc, char *argv[])
         }
         else
         {
-            CAROM_VERIFY(dpar == par_info.size() - ospar);
+            CAROM_VERIFY(dpar == par_info.size() - 1);
         }
 
         string par_dir = par_info[0];
-        string numsnap_str = par_info[1];
         par_dir_list.push_back(par_dir);
-        par_ns_list.push_back(numsnap_str);
 
         if (!csvFormat)
         {
@@ -337,8 +332,7 @@ int main(int argc, char *argv[])
         int numsnap = 0;
         if (csvFormat)
         {
-            getline(par_ss, numsnap_str, ',');
-            db->getInteger(string(list_dir) + "/" + numsnap_str, numsnap);
+            numsnap = csv_db.getLineCount(string(list_dir) + "/" + par_dir + ".csv");
         }
         else
         {
@@ -378,7 +372,7 @@ int main(int argc, char *argv[])
 
         for (int par_order = 0; par_order < dpar; ++par_order)
         {
-            curr_par->item(par_order) = stod(par_info[par_order+ospar]);
+            curr_par->item(par_order) = stod(par_info[par_order+1]);
         }
         par_vectors.push_back(curr_par);
 
@@ -478,7 +472,7 @@ int main(int argc, char *argv[])
             int numsnap = 0;
             if (csvFormat)
             {
-                db->getInteger(string(list_dir) + "/" + par_ns_list[idx_dataset], numsnap);
+                numsnap = csv_db.getLineCount(string(list_dir) + "/" + par_dir + ".csv");
             }
             else
             {
@@ -617,7 +611,6 @@ int main(int argc, char *argv[])
     if (online)
     {
         par_dir_list.clear();
-        par_ns_list.clear();
 
         dmd_preprocess_timer.Start();
         csv_db.getStringVector(string(list_dir) + "/" + test_list + ".csv",
@@ -644,12 +637,10 @@ int main(int argc, char *argv[])
                 par_info.push_back(par_entry);
             }
 
-            CAROM_VERIFY(dpar == par_info.size() - ospar);
+            CAROM_VERIFY(dpar == par_info.size() - 1);
 
             string par_dir = par_info[0];
-            string numsnap_str = par_info[1];
             par_dir_list.push_back(par_dir);
-            par_ns_list.push_back(numsnap_str);
             if (myid == 0)
             {
                 cout << "Interpolating DMD models for dataset " << par_dir << endl;
@@ -657,7 +648,9 @@ int main(int argc, char *argv[])
 
             int numsnap = 0;
             if (csvFormat)
-                db->getInteger(string(list_dir) + "/" + numsnap_str, numsnap);
+            {
+                numsnap = csv_db.getLineCount(string(list_dir) + "/" + par_dir + ".csv");
+            }
             else
             {
                 db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
@@ -676,7 +669,7 @@ int main(int argc, char *argv[])
 
             for (int par_order = 0; par_order < dpar; ++par_order)
             {
-                curr_par->item(par_order) = stod(par_info[par_order+ospar]);
+                curr_par->item(par_order) = stod(par_info[par_order+1]);
             }
 
             vector<double> tvec(numsnap);
@@ -774,7 +767,9 @@ int main(int argc, char *argv[])
             }
             int numsnap = 0;
             if (csvFormat)
-                db->getInteger(string(list_dir) + "/" + par_ns_list[idx_dataset], numsnap);
+            {
+                numsnap = csv_db.getLineCount(string(list_dir) + "/" + par_dir + ".csv");
+            }
             else
             {
                 db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
@@ -784,12 +779,16 @@ int main(int argc, char *argv[])
             vector<int> snap_index_list(numsnap);
 
             if (csvFormat)
+            {
                 db->getIntegerArray(string(list_dir) + "/" + par_dir + ".csv",
                                     snap_index_list.data(),
                                     numsnap);
+            }
             else
+            {
                 db->getIntegerArray("snap_list", snap_index_list.data(),
                                     numsnap);
+            }
 
             vector<double> tvec(numsnap);
             db->getDoubleArray(prefix + "tval" + suffix, tvec.data(), numsnap);

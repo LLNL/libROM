@@ -16,17 +16,17 @@
 // =================================================================================
 //
 // Local serial DMD command for CSV or HDF:
-//   mpirun -np 8 local_tw_csv -o local_csv_serial -rdim 16 -dtc 0.01 -csv
-//   mpirun -np 8 local_tw_csv -o local_csv_serial -rdim 16 -dtc 0.01 -hdf
+//   mpirun -np 8 local_tw_csv -o hc_local_serial -rdim 16 -dtc 0.01 -csv
+//   mpirun -np 8 local_tw_csv -o hc_local_serial -rdim 16 -dtc 0.01 -hdf
 //
-// Final-time prediction error (last line in run/local_csv_serial/hc_par5_prediction_error.csv):
+// Final-time prediction error (last line in run/hc_local_serial/dmd_par5_prediction_error.csv):
 //   0.0004063242226265
 //
 // Local time windowing DMD command for CSV or HDF:
-//   mpirun -np 8 local_tw_csv -o local_csv_tw -rdim 16 -nwinsamp 25 -dtc 0.01 -csv
-//   mpirun -np 8 local_tw_csv -o local_csv_tw -nwinsamp 25 -dtc 0.01 -hdf
+//   mpirun -np 8 local_tw_csv -o hc_local_tw -rdim 16 -nwinsamp 25 -dtc 0.01 -csv
+//   mpirun -np 8 local_tw_csv -o hc_local_tw -nwinsamp 25 -dtc 0.01 -hdf
 //
-// Final-time prediction error (last line in run/local_csv_tw/hc_par5_prediction_error.csv):
+// Final-time prediction error (last line in run/hc_local_tw/dmd_par5_prediction_error.csv):
 //   0.0002458808673544
 //
 // =================================================================================
@@ -209,7 +209,9 @@ int main(int argc, char *argv[])
     int nelements = 0;
 
     if (csvFormat)
+    {
         db->getIntegerArray(string(data_dir) + "/dim.csv", &nelements, 1);
+    }
     else
     {
         db->open(string(data_dir) + "/" + sim_name + "0/" + hdf_name, "r");
@@ -304,9 +306,13 @@ int main(int argc, char *argv[])
         else
         {
             if (csvFormat)
+            {
                 num_train_snap = csv_db.getLineCount(string(list_dir) + "/" + par_dir + ".csv");
+            }
             else
+            {
                 db->getInteger("numsnap", num_train_snap);
+            }
         }
 
         db->close();
@@ -367,14 +373,13 @@ int main(int argc, char *argv[])
         dmd_training_timer.Start();
 
         stringstream par_ss(training_par_list[0]); // training DATASET
-        string par_dir, numsnap_str;
+        string par_dir;
         getline(par_ss, par_dir, ',');
 
         int numsnap = 0;
         if (csvFormat)
         {
-            getline(par_ss, numsnap_str, ',');
-            db->getInteger(string(list_dir) + "/" + numsnap_str, numsnap);
+            numsnap = csv_db.getLineCount(string(list_dir) + "/" + par_dir + ".csv");
         }
         else
         {
@@ -385,12 +390,16 @@ int main(int argc, char *argv[])
         CAROM_VERIFY(numsnap > 0);
         vector<int> snap_index_list(numsnap);
         if (csvFormat)
+        {
             db->getIntegerArray(string(list_dir) + "/" + par_dir + ".csv",
                                 snap_index_list.data(),
                                 numsnap);
+        }
         else
+        {
             db->getIntegerArray("snap_list", snap_index_list.data(),
                                 numsnap);
+        }
 
         if (myid == 0)
         {
@@ -579,6 +588,7 @@ int main(int argc, char *argv[])
     csv_db.getStringVector(string(list_dir) + "/" + test_list + ".csv",
                            testing_par_list, false);
     npar = testing_par_list.size();
+    CAROM_VERIFY(npar > 0);
 
     int num_tests = 0;
     vector<double> prediction_time, prediction_error;
@@ -586,9 +596,9 @@ int main(int argc, char *argv[])
     for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
     {
         stringstream par_ss(testing_par_list[idx_dataset]); // testing DATASET
-        string par_dir, numsnap_str;
+        string par_dir;
         getline(par_ss, par_dir, ',');
-        getline(par_ss, numsnap_str, ',');
+
         if (myid == 0)
         {
             cout << "Predicting solution for " << par_dir << " using DMD." << endl;
@@ -596,7 +606,9 @@ int main(int argc, char *argv[])
 
         int numsnap = 0;
         if (csvFormat)
-            db->getInteger(string(list_dir) + "/" + numsnap_str, numsnap);
+        {
+            numsnap = csv_db.getLineCount(string(list_dir) + "/" + par_dir + ".csv");
+        }
         else
         {
             db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
@@ -606,12 +618,16 @@ int main(int argc, char *argv[])
         CAROM_VERIFY(numsnap > 0);
         vector<int> snap_index_list(numsnap);
         if (csvFormat)
+        {
             db->getIntegerArray(string(list_dir) + "/" + par_dir + ".csv",
                                 snap_index_list.data(),
                                 numsnap);
+        }
         else
+        {
             db->getIntegerArray("snap_list", snap_index_list.data(),
                                 numsnap);
+        }
 
         if (csvFormat) prefix = string(data_dir) + "/" + par_dir + "/";
 

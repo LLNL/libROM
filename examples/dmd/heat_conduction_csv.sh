@@ -25,15 +25,9 @@ mv dmd_data/dmd_par3/snap_list.csv dmd_list/dmd_par3.csv
 mv dmd_data/dmd_par4/snap_list.csv dmd_list/dmd_par4.csv
 mv dmd_data/dmd_par5/snap_list.csv dmd_list/dmd_par5.csv
 
-mv dmd_data/dmd_par1/numsnap dmd_list/numsnap1
-mv dmd_data/dmd_par2/numsnap dmd_list/numsnap2
-mv dmd_data/dmd_par3/numsnap dmd_list/numsnap3
-mv dmd_data/dmd_par4/numsnap dmd_list/numsnap4
-mv dmd_data/dmd_par5/numsnap dmd_list/numsnap5
-
-echo "dmd_par1,numsnap1,0.40,0.01,0,0"  > dmd_list/dmd_train_parametric.csv
-echo "dmd_par2,numsnap2,0.45,0.01,0,0" >> dmd_list/dmd_train_parametric.csv
-echo "dmd_par3,numsnap3,0.55,0.01,0,0" >> dmd_list/dmd_train_parametric.csv
-echo "dmd_par4,numsnap4,0.60,0.01,0,0" >> dmd_list/dmd_train_parametric.csv
-echo "dmd_par5,numsnap5,0.50,0.01,0,0"  > dmd_list/dmd_train_local.csv
-echo "dmd_par5,numsnap5,0.50,0.01,0,0"  > dmd_list/dmd_test.csv
+echo "dmd_par1,0.40,0.01,0,0"  > dmd_list/dmd_train_parametric.csv
+echo "dmd_par2,0.45,0.01,0,0" >> dmd_list/dmd_train_parametric.csv
+echo "dmd_par3,0.55,0.01,0,0" >> dmd_list/dmd_train_parametric.csv
+echo "dmd_par4,0.60,0.01,0,0" >> dmd_list/dmd_train_parametric.csv
+echo "dmd_par5,0.50,0.01,0,0"  > dmd_list/dmd_train_local.csv
+echo "dmd_par5,0.50,0.01,0,0"  > dmd_list/dmd_test.csv
