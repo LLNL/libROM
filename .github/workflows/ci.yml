@@ -54,7 +54,7 @@ jobs:
         run: |
             brew install gcc
             gcc --version
-            ls /usr/local/lib/gcc
+            ls /usr/local/lib/gcc/12
             ln /usr/local/lib/gcc/12/libquadmath.0.dylib /usr/local/gfortran/lib/libquadmath.0.dylib
             brew install open-mpi
             brew install openblas
