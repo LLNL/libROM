@@ -52,7 +52,7 @@ jobs:
     steps:
       - name: Install Mac dependencies
         run: |
-            brew install gcc@10
+            brew install gcc
             brew install open-mpi
             brew install openblas
             brew install lapack
