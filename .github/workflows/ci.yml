@@ -53,6 +53,7 @@ jobs:
       - name: Install Mac dependencies
         run: |
             brew install gcc
+            gcc --version
             ln /usr/local/lib/gcc/12/libquadmath.0.dylib /usr/local/gfortran/lib/libquadmath.0.dylib
             brew install open-mpi
             brew install openblas
