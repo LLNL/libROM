@@ -69,10 +69,8 @@ jobs:
             export FC=/usr/local/bin/gfortran-12
             mkdir ${GITHUB_WORKSPACE}/build
             cd ${GITHUB_WORKSPACE}/build
-            mkdir -p  ${GITHUB_WORKSPACE}/build/lib
-            cp /usr/local/lib/gcc/12/libquadmath.0.dylib ${GITHUB_WORKSPACE}/build/lib/libquadmath.0.dylib
-            cmake -DCMAKE_BUILD_TYPE=Debug ..
+            cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_MFEM=On ..
             make
-            cmake -DCMAKE_BUILD_TYPE=Optimized ..
+            cmake -DCMAKE_BUILD_TYPE=Optimized -DUSE_MFEM=On ..
             make
       - uses: ./.github/workflows/run_tests
