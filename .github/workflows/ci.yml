@@ -56,8 +56,6 @@ jobs:
             gcc --version
             ls /usr/local/lib/gcc/12
             otool -D /usr/local/lib/gcc/12/libquadmath.0.dylib
-            mkdir -p /usr/local/gfortran/lib
-            ln /usr/local/lib/gcc/12/libquadmath.0.dylib /usr/local/gfortran/lib/libquadmath.0.dylib
             brew install open-mpi
             brew install openblas
             brew install lapack
@@ -71,6 +69,8 @@ jobs:
             export FC=/usr/local/bin/gfortran-12
             mkdir ${GITHUB_WORKSPACE}/build
             cd ${GITHUB_WORKSPACE}/build
+            mkdir -p  ${GITHUB_WORKSPACE}/build/lib
+            cp /usr/local/lib/gcc/12/libquadmath.0.dylib ${GITHUB_WORKSPACE}/build/lib/libquadmath.0.dylib
             cmake -DCMAKE_BUILD_TYPE=Debug ..
             make
             cmake -DCMAKE_BUILD_TYPE=Optimized ..
