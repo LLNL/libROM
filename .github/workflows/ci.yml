@@ -52,10 +52,9 @@ jobs:
     steps:
       - name: Install Mac dependencies
         run: |
-            brew install gcc
             gcc --version
             ls /usr/local/lib/gcc/12
-            ln /usr/local/lib/gcc/12/libquadmath.0.dylib ${GITHUB_WORKSPACE}/lib/libquadmath.0.dylib
+            ln -s /usr/local/lib/gcc/12/libquadmath.0.dylib ${GITHUB_WORKSPACE}/lib/libquadmath.0.dylib
             brew install open-mpi
             brew install openblas
             brew install lapack
