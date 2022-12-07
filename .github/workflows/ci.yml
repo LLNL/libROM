@@ -69,8 +69,8 @@ jobs:
             export FC=/usr/local/bin/gfortran-12
             mkdir ${GITHUB_WORKSPACE}/build
             cd ${GITHUB_WORKSPACE}/build
-            cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_MFEM=On ..
+            cmake -DCMAKE_BUILD_TYPE=Debug ..
             make
-            cmake -DCMAKE_BUILD_TYPE=Optimized -DUSE_MFEM=On ..
+            cmake -DCMAKE_BUILD_TYPE=Optimized  ..
             make
       - uses: ./.github/workflows/run_tests
