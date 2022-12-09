@@ -16,15 +16,15 @@
 // =================================================================================
 //
 // Parametric serial DMD command (for HDF version, append -hdf):
-//   mpirun -np 8 parametric_tw_csv -o hc_parametric_serial -rdim 16 -dtc 0.01 -offline -snap-pfx step
-//   mpirun -np 8 parametric_tw_csv -o hc_parametric_serial -rdim 16 -dtc 0.01 -online -snap-pfx step
+//   mpirun -np 8 parametric_tw_csv -o hc_parametric_serial -rdim 16 -dtc 0.01 -offline
+//   mpirun -np 8 parametric_tw_csv -o hc_parametric_serial -rdim 16 -dtc 0.01 -online
 //
 // Final-time prediction error (Last line in run/hc_parametric_serial/dmd_par5_prediction_error.csv):
 //   0.0012598331433506
 //
 // Parametric time windowing DMD command (for HDF version, append -hdf):
-//   mpirun -np 8 parametric_tw_csv -o hc_parametric_tw -nwinsamp 25 -dtc 0.01 -offline -snap-pfx step
-//   mpirun -np 8 parametric_tw_csv -o hc_parametric_tw -nwinsamp 25 -dtc 0.01 -online -snap-pfx step
+//   mpirun -np 8 parametric_tw_csv -o hc_parametric_tw -nwinsamp 25 -dtc 0.01 -offline
+//   mpirun -np 8 parametric_tw_csv -o hc_parametric_tw -nwinsamp 25 -dtc 0.01 -online
 //
 // Final-time prediction error (Last line in run/hc_parametric_tw/dmd_par5_prediction_error.csv):
 //   0.0006507358659606
@@ -38,7 +38,7 @@
 // File structure:
 // 1. LIST_DIR/TRAIN_LIST.csv             -- each row specifies one training DATASET
 // 2. LIST_DIR/TEST_LIST.csv              -- each row specifies one testing DATASET
-// 3. LIST_DIR/DATASET.csv                -- each row specifies one STATE in DATASET
+// 3. LIST_DIR/DATASET.csv                -- each row specifies the suffix of one STATE in DATASET
 // 4. DATA_DIR/dim.csv                    -- specifies the dimension of VAR_NAME
 // 5. DATA_DIR/DATASET/tval.csv           -- specifies the time instances
 // 6. DATA_DIR/DATASET/STATE/VAR_NAME.csv -- each row specifies one value of VAR_NAME of STATE
@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
     const char *temporal_idx_list = "temporal_idx";
     const char *spatial_idx_list = "spatial_idx";
     const char *hdf_name = "dmd.hdf";
-    const char *snap_pfx = "";
+    const char *snap_pfx = "step";
     const char *basename = "";
     bool save_csv = false;
     bool csvFormat = true;
@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
                    "Name of the training datasets within the list directory.");
     args.AddOption(&test_list, "-test-set", "--testing-set-name",
                    "Name of the testing datasets within the list directory.");
-    args.AddOption(&temporal_idx_list, "-t-idx", "--temporal0index",
+    args.AddOption(&temporal_idx_list, "-t-idx", "--temporal-index",
                    "Name of the file indicating bound of temporal indices.");
     args.AddOption(&spatial_idx_list, "-x-idx", "--spatial-index",
                    "Name of the file indicating spatial indices.");
