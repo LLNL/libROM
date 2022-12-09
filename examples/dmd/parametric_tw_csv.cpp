@@ -16,15 +16,15 @@
 // =================================================================================
 //
 // Parametric serial DMD command (for HDF version, append -hdf):
-//   mpirun -np 8 parametric_tw_csv -o hc_parametric_serial -rdim 16 -dtc 0.01 -offline
-//   mpirun -np 8 parametric_tw_csv -o hc_parametric_serial -rdim 16 -dtc 0.01 -online
+//   mpirun -np 8 parametric_tw_csv -o hc_parametric_serial -rdim 16 -dtc 0.01 -offline -snap-pfx step
+//   mpirun -np 8 parametric_tw_csv -o hc_parametric_serial -rdim 16 -dtc 0.01 -online -snap-pfx step
 //
 // Final-time prediction error (Last line in run/hc_parametric_serial/dmd_par5_prediction_error.csv):
 //   0.0012598331433506
 //
 // Parametric time windowing DMD command (for HDF version, append -hdf):
-//   mpirun -np 8 parametric_tw_csv -o hc_parametric_tw -nwinsamp 25 -dtc 0.01 -offline
-//   mpirun -np 8 parametric_tw_csv -o hc_parametric_tw -nwinsamp 25 -dtc 0.01 -online
+//   mpirun -np 8 parametric_tw_csv -o hc_parametric_tw -nwinsamp 25 -dtc 0.01 -offline -snap-pfx step
+//   mpirun -np 8 parametric_tw_csv -o hc_parametric_tw -nwinsamp 25 -dtc 0.01 -online -snap-pfx step
 //
 // Final-time prediction error (Last line in run/hc_parametric_tw/dmd_par5_prediction_error.csv):
 //   0.0006507358659606
@@ -105,6 +105,7 @@ int main(int argc, char *argv[])
     const char *temporal_idx_list = "temporal_idx";
     const char *spatial_idx_list = "spatial_idx";
     const char *hdf_name = "dmd.hdf";
+    const char *snap_pfx = "";
     const char *basename = "";
     bool save_csv = false;
     bool csvFormat = true;
@@ -161,6 +162,8 @@ int main(int argc, char *argv[])
                    "Name of the file indicating bound of temporal indices.");
     args.AddOption(&spatial_idx_list, "-x-idx", "--spatial-index",
                    "Name of the file indicating spatial indices.");
+    args.AddOption(&snap_pfx, "-snap-pfx", "--snapshot-prefix",
+                   "Prefix of snapshots.");
     args.AddOption(&basename, "-o", "--outputfile-name",
                    "Name of the sub-folder to dump files within the run directory.");
     args.AddOption(&save_csv, "-save", "--save", "-no-save", "--no-save",
@@ -327,27 +330,41 @@ int main(int argc, char *argv[])
         }
 
         int snap_bound_size = 0;
-        db->getInteger("snap_bound_size", snap_bound_size);
-
-        int numsnap = 0;
         if (csvFormat)
         {
-            numsnap = csv_db.getLineCount(string(list_dir) + "/" + par_dir + ".csv");
+            prefix = string(data_dir) + "/" + par_dir + "/";
+            snap_bound_size = csv_db.getLineCount(prefix + temporal_idx_list + suffix);
         }
         else
         {
             db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
-            db->getInteger("numsnap", numsnap);
+            db->getInteger("snap_bound_size", snap_bound_size);
         }
 
-        CAROM_VERIFY(numsnap > 0);
-
-        vector<int> snap_index_list(numsnap);
+        int num_snap_orig = 0;
         if (csvFormat)
-            db->getIntegerArray(string(list_dir) + "/" + par_dir + ".csv",
-                                snap_index_list.data(), numsnap);
+        {
+            num_snap_orig = csv_db.getLineCount(string(list_dir) + "/" + par_dir + ".csv");
+        }
         else
-            db->getIntegerArray("snap_list", snap_index_list.data(), numsnap);
+        {
+            db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
+            db->getInteger("numsnap", num_snap_orig);
+        }
+
+        CAROM_VERIFY(num_snap_orig > 0);
+        vector<string> snap_list(num_snap_orig);
+        vector<int> snap_index_list(num_snap_orig);
+        if (csvFormat)
+        {
+            csv_db.getStringVector(string(list_dir) + "/" + par_dir + ".csv", snap_list,
+                               false);
+        }
+        else
+        {
+            db->getIntegerArray("snap_list", snap_index_list.data(),
+                                num_snap_orig);
+        }
 
         vector<int> snap_bound(snap_bound_size);
         if (csvFormat) prefix = string(data_dir) + "/" + par_dir + "/";
@@ -366,7 +383,7 @@ int main(int argc, char *argv[])
         else
         {
             snap_bound.push_back(0);
-            snap_bound.push_back(snap_index_list.size()-1);
+            snap_bound.push_back(num_snap_orig-1);
         }
         num_train_snap.push_back(snap_bound[1] - snap_bound[0] + 1);
 
@@ -378,9 +395,9 @@ int main(int argc, char *argv[])
 
         if (offline)
         {
-            vector<double> tvec(numsnap);
+            vector<double> tvec(num_snap_orig);
             if (csvFormat) prefix = string(data_dir) + "/" + par_dir + "/";
-            db->getDoubleArray(prefix + "tval" + suffix, tvec.data(), numsnap);
+            db->getDoubleArray(prefix + "tval" + suffix, tvec.data(), num_snap_orig);
 
             if (offset_indicator)
             {
@@ -469,31 +486,46 @@ int main(int argc, char *argv[])
             dmd.push_back(dmd_curr_par);
             dmd_curr_par.clear();
 
-            int numsnap = 0;
+            int num_snap_orig = 0;
             if (csvFormat)
             {
-                numsnap = csv_db.getLineCount(string(list_dir) + "/" + par_dir + ".csv");
+                num_snap_orig = csv_db.getLineCount(string(list_dir) + "/" + par_dir + ".csv");
             }
             else
             {
                 db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
-                db->getInteger("numsnap", numsnap);
+                db->getInteger("numsnap", num_snap_orig);
             }
 
-            CAROM_VERIFY(numsnap > 0);
-
-            vector<int> snap_index_list(numsnap);
+            CAROM_VERIFY(num_snap_orig > 0);
+            vector<string> snap_list(num_snap_orig);
+            vector<int> snap_index_list(num_snap_orig);
             if (csvFormat)
-                db->getIntegerArray(string(list_dir) + "/" + par_dir + ".csv",
-                                    snap_index_list.data(), numsnap);
+            {
+                csv_db.getStringVector(string(list_dir) + "/" + par_dir + ".csv", snap_list,
+                                       false);
+            }
             else
-                db->getIntegerArray("snap_list", snap_index_list.data(), numsnap);
+            {
+                db->getIntegerArray("snap_list", snap_index_list.data(),
+                                    num_snap_orig);
+            }
 
-            vector<double> tvec(numsnap);
-            db->getDoubleArray(prefix + "tval" + suffix, tvec.data(), numsnap);
+            vector<double> tvec(num_snap_orig);
+            db->getDoubleArray(prefix + "tval" + suffix, tvec.data(), num_snap_orig);
 
             int snap_bound_size = 0;
-            db->getInteger("snap_bound_size", snap_bound_size);
+            if (csvFormat)
+            {
+                prefix = string(data_dir) + "/" + par_dir + "/";
+                snap_bound_size = csv_db.getLineCount(prefix + temporal_idx_list + suffix);
+            }
+            else
+            {
+                db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
+                db->getInteger("snap_bound_size", snap_bound_size);
+            }
+
             vector<int> snap_bound(snap_bound_size);
             db->getIntegerArray(prefix + temporal_idx_list + suffix,
                                 snap_bound.data(), snap_bound_size);
@@ -512,24 +544,27 @@ int main(int argc, char *argv[])
             else
             {
                 snap_bound.push_back(0);
-                snap_bound.push_back(snap_index_list.size()-1);
+                snap_bound.push_back(num_snap_orig-1);
             }
 
             int curr_window = 0;
             int overlap_count = 0;
             for (int idx_snap = snap_bound[0]; idx_snap <= snap_bound[1]; ++idx_snap)
             {
-                string snap = "step" + to_string(snap_index_list[idx_snap]); // STATE
+                string snap = snap_pfx;
                 double tval = tvec[idx_snap];
-
                 if (csvFormat)
                 {
+                    snap += snap_list[idx_snap]; // STATE
                     string data_filename = string(data_dir) + "/" + par_dir + "/" + snap +
                                            "/" + variable + ".csv"; // path to VAR_NAME.csv
                     db->getDoubleArray(data_filename, sample, nelements, idx_state);
                 }
                 else
+                { 
+                    snap += to_string(snap_index_list[idx_snap]); // STATE
                     db->getDoubleArray(snap + "sol", sample, nelements, idx_state);
+                }
 
                 dmd[idx_dataset][curr_window]->takeSample(sample,
                         tval - offset_indicator * tvec[snap_bound[0]]);
@@ -646,37 +681,51 @@ int main(int argc, char *argv[])
                 cout << "Interpolating DMD models for dataset " << par_dir << endl;
             }
 
-            int numsnap = 0;
+            int num_snap_orig = 0;
             if (csvFormat)
             {
-                numsnap = csv_db.getLineCount(string(list_dir) + "/" + par_dir + ".csv");
+                num_snap_orig = csv_db.getLineCount(string(list_dir) + "/" + par_dir + ".csv");
             }
             else
             {
                 db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
-                db->getInteger("numsnap", numsnap);
+                db->getInteger("numsnap", num_snap_orig);
             }
-            CAROM_VERIFY(numsnap > 0);
 
-            vector<int> snap_index_list(numsnap);
+            CAROM_VERIFY(num_snap_orig > 0);
+            vector<string> snap_list(num_snap_orig);
+            vector<int> snap_index_list(num_snap_orig);
             if (csvFormat)
-                db->getIntegerArray(string(list_dir) + "/" + par_dir + ".csv",
-                                    snap_index_list.data(),
-                                    numsnap);
+            {
+                csv_db.getStringVector(string(list_dir) + "/" + par_dir + ".csv", snap_list,
+                                       false);
+            }
             else
+            {
                 db->getIntegerArray("snap_list", snap_index_list.data(),
-                                    numsnap);
+                                    num_snap_orig);
+            }
 
             for (int par_order = 0; par_order < dpar; ++par_order)
             {
                 curr_par->item(par_order) = stod(par_info[par_order+1]);
             }
 
-            vector<double> tvec(numsnap);
-            db->getDoubleArray(prefix + "tval" + suffix, tvec.data(), numsnap);
+            vector<double> tvec(num_snap_orig);
+            db->getDoubleArray(prefix + "tval" + suffix, tvec.data(), num_snap_orig);
 
             int snap_bound_size = 0;
-            db->getInteger("snap_bound_size", snap_bound_size);
+            if (csvFormat)
+            {
+                prefix = string(data_dir) + "/" + par_dir + "/";
+                snap_bound_size = csv_db.getLineCount(prefix + temporal_idx_list + suffix);
+            }
+            else
+            {
+                db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
+                db->getInteger("snap_bound_size", snap_bound_size);
+            }
+
             vector<int> snap_bound(snap_bound_size);
             db->getIntegerArray(prefix + temporal_idx_list + suffix,
                                 snap_bound.data(), snap_bound_size);
@@ -695,18 +744,22 @@ int main(int argc, char *argv[])
             else
             {
                 snap_bound.push_back(0);
-                snap_bound.push_back(snap_index_list.size()-1);
+                snap_bound.push_back(num_snap_orig-1);
             }
 
-            string snap = "step" + to_string(snap_index_list[snap_bound[0]]); // STATE
+            string snap = snap_pfx;
             if (csvFormat)
             {
+                snap += snap_list[snap_bound[0]]; // STATE
                 string data_filename = string(data_dir) + "/" + par_dir + "/" + snap +
                                        "/" + variable + ".csv"; // path to VAR_NAME.csv
                 db->getDoubleArray(data_filename, sample, nelements, idx_state);
             }
             else
+            {
+                snap += to_string(snap_index_list[snap_bound[0]]); // STATE
                 db->getDoubleArray(snap + "sol", sample, nelements, idx_state);
+            }
 
             for (int window = 0; window < numWindows; ++window)
             {
@@ -765,36 +818,45 @@ int main(int argc, char *argv[])
             {
                 cout << "Predicting solution for " << par_dir << " using DMD." << endl;
             }
-            int numsnap = 0;
+            int num_snap_orig = 0;
             if (csvFormat)
             {
-                numsnap = csv_db.getLineCount(string(list_dir) + "/" + par_dir + ".csv");
+                num_snap_orig = csv_db.getLineCount(string(list_dir) + "/" + par_dir + ".csv");
             }
             else
             {
                 db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
-                db->getInteger("numsnap", numsnap);
+                db->getInteger("numsnap", num_snap_orig);
             }
-            CAROM_VERIFY(numsnap > 0);
-            vector<int> snap_index_list(numsnap);
-
+            CAROM_VERIFY(num_snap_orig > 0);
+            vector<string> snap_list(num_snap_orig);
+            vector<int> snap_index_list(num_snap_orig);
             if (csvFormat)
             {
-                db->getIntegerArray(string(list_dir) + "/" + par_dir + ".csv",
-                                    snap_index_list.data(),
-                                    numsnap);
+                csv_db.getStringVector(string(list_dir) + "/" + par_dir + ".csv", snap_list,
+                                       false);
             }
             else
             {
                 db->getIntegerArray("snap_list", snap_index_list.data(),
-                                    numsnap);
+                                    num_snap_orig);
             }
 
-            vector<double> tvec(numsnap);
-            db->getDoubleArray(prefix + "tval" + suffix, tvec.data(), numsnap);
+            vector<double> tvec(num_snap_orig);
+            db->getDoubleArray(prefix + "tval" + suffix, tvec.data(), num_snap_orig);
 
             int snap_bound_size = 0;
-            db->getInteger("snap_bound_size", snap_bound_size);
+            if (csvFormat)
+            {
+                prefix = string(data_dir) + "/" + par_dir + "/";
+                snap_bound_size = csv_db.getLineCount(prefix + temporal_idx_list + suffix);
+            }
+            else
+            {
+                db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
+                db->getInteger("snap_bound_size", snap_bound_size);
+            }
+
             vector<int> snap_bound(snap_bound_size);
             db->getIntegerArray(prefix + temporal_idx_list + suffix,
                                 snap_bound.data(), snap_bound_size);
@@ -813,23 +875,27 @@ int main(int argc, char *argv[])
             else
             {
                 snap_bound.push_back(0);
-                snap_bound.push_back(snap_index_list.size()-1);
+                snap_bound.push_back(num_snap_orig-1);
             }
 
             int num_snap = snap_bound[1] - snap_bound[0] + 1;
             int curr_window = 0;
             for (int idx_snap = snap_bound[0]; idx_snap <= snap_bound[1]; ++idx_snap)
             {
-                string snap = "step" + to_string(snap_index_list[idx_snap]); // STATE
+                string snap = snap_pfx;
                 double tval = tvec[idx_snap];
                 if (csvFormat)
                 {
+                    snap += snap_list[idx_snap]; // STATE
                     string data_filename = string(data_dir) + "/" + par_dir + "/" + snap +
                                            "/" + variable + ".csv"; // path to VAR_NAME.csv
                     db->getDoubleArray(data_filename, sample, nelements, idx_state);
                 }
                 else
+                { 
+                    snap += to_string(snap_index_list[idx_snap]); // STATE
                     db->getDoubleArray(snap + "sol", sample, nelements, idx_state);
+                }
 
                 if (myid == 0)
                 {
