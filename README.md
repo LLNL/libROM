@@ -6,6 +6,8 @@
 simulation methods from the intrusive projection-based reduced order models to
 non-intrusive black-box approaches.
 
+Test LGTM CI
+
 ## Features
 
 - Dynamic data collection
