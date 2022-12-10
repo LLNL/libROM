@@ -358,7 +358,7 @@ int main(int argc, char *argv[])
         if (csvFormat)
         {
             csv_db.getStringVector(string(list_dir) + "/" + par_dir + ".csv", snap_list,
-                               false);
+                                   false);
         }
         else
         {
@@ -561,7 +561,7 @@ int main(int argc, char *argv[])
                     db->getDoubleArray(data_filename, sample, nelements, idx_state);
                 }
                 else
-                { 
+                {
                     snap += to_string(snap_index_list[idx_snap]); // STATE
                     db->getDoubleArray(snap + "sol", sample, nelements, idx_state);
                 }
@@ -892,7 +892,7 @@ int main(int argc, char *argv[])
                     db->getDoubleArray(data_filename, sample, nelements, idx_state);
                 }
                 else
-                { 
+                {
                     snap += to_string(snap_index_list[idx_snap]); // STATE
                     db->getDoubleArray(snap + "sol", sample, nelements, idx_state);
                 }

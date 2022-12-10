@@ -289,7 +289,8 @@ int main(int argc, char *argv[])
 
         if (csvFormat)
         {
-            num_train_snap_orig = csv_db.getLineCount(string(list_dir) + "/" + training_par_dir + ".csv");
+            num_train_snap_orig = csv_db.getLineCount(string(list_dir) + "/" +
+                                  training_par_dir + ".csv");
         }
         else
         {
@@ -397,7 +398,7 @@ int main(int argc, char *argv[])
         if (csvFormat)
         {
             csv_db.getStringVector(string(list_dir) + "/" + par_dir + ".csv", snap_list,
-                               false);
+                                   false);
         }
         else
         {
@@ -416,7 +417,8 @@ int main(int argc, char *argv[])
 
         int curr_window = 0;
         int overlap_count = 0;
-        for (int idx_snap = training_snap_bound[0]; idx_snap <= training_snap_bound[1]; ++idx_snap)
+        for (int idx_snap = training_snap_bound[0]; idx_snap <= training_snap_bound[1];
+                ++idx_snap)
         {
             string snap = snap_pfx;
             double tval = tvec[idx_snap];
@@ -450,7 +452,8 @@ int main(int argc, char *argv[])
                 bool new_window = false;
                 if (windowNumSamples < infty)
                 {
-                    new_window = (idx_snap >= training_snap_bound[0] + (curr_window+1)*windowNumSamples);
+                    new_window = (idx_snap >= training_snap_bound[0] + (curr_window+1)
+                                  *windowNumSamples);
                 }
                 else
                 {
@@ -606,7 +609,7 @@ int main(int argc, char *argv[])
         if (csvFormat)
         {
             csv_db.getStringVector(string(list_dir) + "/" + par_dir + ".csv", snap_list,
-                               false);
+                                   false);
         }
         else
         {
