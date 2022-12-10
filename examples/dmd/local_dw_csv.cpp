@@ -787,7 +787,7 @@ int main(int argc, char *argv[])
                 {
                     cout << "Indicator endpoint: " << indicator_val[curr_window+1] << endl;
                     cout << "Projecting initial condition at t = " << t_offset
-                         << " for DMD model #" << curr_window << endl;
+                         << " for DMD model #" << curr_window+1 << endl;
                     cout << "State #" << idx_snap << " - " << data_filename
                          << " is the beginning of window " << curr_window+1 << "." << endl;
                 }
