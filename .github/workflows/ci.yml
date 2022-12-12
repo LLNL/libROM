@@ -1,10 +1,9 @@
 name: CI
 on: 
   pull_request:
+    types: [opened, labeled, synchronize]
     branches:
       - master
-  label:
-    types: [created]
 jobs:
   linux:
     runs-on: ubuntu-latest
@@ -37,13 +36,11 @@ jobs:
             cd ${GITHUB_WORKSPACE}/dependencies
             git clone https://github.com/LLNL/libROM.git
             cd libROM
-            echo "Before creating build, current directory is: $PWD"
             mkdir build
             export CC=mpicc
             export CXX=mpicxx
             scripts/setup.sh
             cd build
-            echo "After moving into build, current directory is: $PWD"
             cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_MFEM=On ..
             make
             cmake -DCMAKE_BUILD_TYPE=Optimized -DUSE_MFEM=On ..
