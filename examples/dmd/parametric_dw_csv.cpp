@@ -279,7 +279,7 @@ int main(int argc, char *argv[])
     csv_db.getStringVector(string(list_dir) + "/" + train_list + ".csv",
                            training_par_list, false);
     int npar = training_par_list.size();
-    CAROM_VERIFY(npar > 1);
+    CAROM_VERIFY(npar > 0);
     if (myid == 0)
     {
         cout << "Loading " << npar << " training datasets." << endl;
@@ -837,7 +837,7 @@ int main(int argc, char *argv[])
                     {
                         cout << "Indicator endpoint: " << indicator_val[curr_window+1] << endl;
                         cout << "Projecting initial condition at t = " << t_offset
-                             << " for DMD model #" << curr_window << endl;
+                             << " for DMD model #" << curr_window+1 << endl;
                         cout << "State #" << idx_snap << " - " << data_filename
                              << " is the beginning of window " << curr_window+1 << "." << endl;
                     }
