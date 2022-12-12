@@ -279,7 +279,7 @@ int main(int argc, char *argv[])
     csv_db.getStringVector(string(list_dir) + "/" + train_list + ".csv",
                            training_par_list, false);
     int npar = training_par_list.size();
-    CAROM_VERIFY(npar > 1);
+    CAROM_VERIFY(npar > 0);
     if (myid == 0)
     {
         cout << "Loading " << npar << " training datasets." << endl;
