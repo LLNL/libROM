@@ -60,22 +60,25 @@ DMDData& DMDData::operator=(DMDData&& rhs)
 
 DMDData::~DMDData()
 {
-    std::string output_prefix;
-    std::string output_postfix;
-    if (d_data_format == csv)
+    if (!d_steps.empty())
     {
-        output_prefix = d_output_path + "/";
-        output_postfix = ".csv";
+        std::string output_prefix;
+        std::string output_postfix;
+        if (d_data_format == csv)
+        {
+            output_prefix = d_output_path + "/";
+            output_postfix = ".csv";
+        }
+        d_db->putDoubleVector(output_prefix + "tval" + output_postfix, d_t_vals, 
+            d_t_vals.size());
+        d_db->putInteger(output_prefix + "numsnap", d_steps.size());
+        if (d_data_format == hdf5)
+        {
+            d_db->putInteger("snap_bound_size", 0);
+        }
+        d_db->putIntegerArray(output_prefix + "snap_list" + output_postfix, 
+            d_steps.data(), d_steps.size());
     }
-    d_db->putDoubleVector(output_prefix + "tval" + output_postfix, d_t_vals, 
-        d_t_vals.size());
-    d_db->putInteger(output_prefix + "numsnap", d_steps.size());
-    if (d_data_format == hdf5)
-    {
-        d_db->putInteger("snap_bound_size", 0);
-    }
-    d_db->putIntegerArray(output_prefix + "snap_list" + output_postfix, 
-        d_steps.data(), d_steps.size());
 }
 
 void DMDData::addSnapshot(double t, int step, const double *data, int size)
