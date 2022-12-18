@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
     const char *test_list = "dmd_test";
     const char *temporal_idx_list = "temporal_idx";
     const char *spatial_idx_list = "spatial_idx";
-    const char *hdf_name = "dmd.hdf";
+    const char *hdf_name = "dmd";
     const char *basename = "";
     bool save_csv = false;
     bool csvFormat = true;
@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
     args.AddOption(&data_dir, "-data", "--data-directory",
                    "Location of training and testing data.");
     args.AddOption(&hdf_name, "-hdffile", "--hdf-file",
-                   "Name of HDF file for training and testing data.");
+                   "Base of name of HDF file for training and testing data.");
     args.AddOption(&sim_name, "-sim", "--sim-name",
                    "Name of simulation.");
     args.AddOption(&var_name, "-var", "--variable-name",
@@ -189,6 +189,8 @@ int main(int argc, char *argv[])
     {
         args.PrintOptions(cout);
     }
+
+    string hdf_filename = hdf_name + to_string(myid) + ".hdf";
 
     CAROM_VERIFY(!(offline && online) && (offline || online));
     CAROM_VERIFY(!(dtc > 0.0 && ddt > 0.0));
@@ -236,7 +238,7 @@ int main(int argc, char *argv[])
         db->getIntegerArray(string(data_dir) + "/dim.csv", &nelements, 1);
     else
     {
-        db->open(string(data_dir) + "/" + sim_name + "0/" + hdf_name, "r");
+        db->open(string(data_dir) + "/" + sim_name + "0/" + hdf_filename, "r");
         nelements = db->getDoubleArraySize("step0sol");
         db->close();
     }
@@ -295,7 +297,6 @@ int main(int argc, char *argv[])
     csv_db.getStringVector(string(list_dir) + "/" + train_list + ".csv",
                            training_par_list, false);
     int npar = training_par_list.size();
-    CAROM_VERIFY(npar > 1);
     if (myid == 0)
     {
         cout << "Loading " << npar << " training datasets." << endl;
@@ -337,7 +338,7 @@ int main(int argc, char *argv[])
 
         if (!csvFormat)
         {
-            db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
+            db->open(string(data_dir) + "/" + par_dir + "/" + hdf_filename, "r");
         }
 
         int snap_bound_size = 0;
@@ -351,7 +352,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
+            db->open(string(data_dir) + "/" + par_dir + "/" + hdf_filename, "r");
             db->getInteger("numsnap", numsnap);
         }
 
@@ -502,7 +503,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-                db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
+                db->open(string(data_dir) + "/" + par_dir + "/" + hdf_filename, "r");
                 db->getInteger("numsnap", numsnap);
             }
 
@@ -634,15 +635,15 @@ int main(int argc, char *argv[])
 
                     cout << "Window " << window << ", DMD " << idx_dataset << " dim "
                          << dmd[idx_dataset][window]->getDimension() << endl;
-
-                    const int dim_w = std::min(dmd[idx_dataset][window]->getDimension(),
-                                               dmd[idx_dataset][window]->getNumSamples()-1);
-                    maxDim[window] = std::max(maxDim[window], dim_w);
-
-                    if (minSamp[window] < 0 ||
-                            dmd[idx_dataset][window]->getNumSamples() < minSamp[window])
-                        minSamp[window] = dmd[idx_dataset][window]->getNumSamples();
                 }
+
+                const int dim_w = std::min(dmd[idx_dataset][window]->getDimension(),
+                                           dmd[idx_dataset][window]->getNumSamples()-1);
+                maxDim[window] = std::max(maxDim[window], dim_w);
+
+                if (minSamp[window] < 0 ||
+                        dmd[idx_dataset][window]->getNumSamples() < minSamp[window])
+                    minSamp[window] = dmd[idx_dataset][window]->getNumSamples();
             } // escape for-loop over window
 
             db->close();
@@ -654,7 +655,8 @@ int main(int argc, char *argv[])
             maxDim[window] = std::min(maxDim[window], minSamp[window]-1);
 
         // Write maxDim to a CSV file
-        csv_db.putIntegerArray("run/maxDim.csv", maxDim.data(), numWindows);
+        if (myid == 0) csv_db.putIntegerArray("run/maxDim.csv", maxDim.data(),
+                                                  numWindows);
     } // escape if-statement of offline
 
     CAROM::Vector* curr_par = new CAROM::Vector(dpar, false);
@@ -705,7 +707,7 @@ int main(int argc, char *argv[])
                 db->getInteger(string(list_dir) + "/" + numsnap_str, numsnap);
             else
             {
-                db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
+                db->open(string(data_dir) + "/" + par_dir + "/" + hdf_filename, "r");
                 db->getInteger("numsnap", numsnap);
             }
             CAROM_VERIFY(numsnap > 0);
@@ -769,13 +771,25 @@ int main(int argc, char *argv[])
                                         + "_par" + to_string(idx_trainset));
                 }
 
-                if (myid == 0)
+                if (par_vectors.size() > 1)
                 {
-                    cout << "Interpolating DMD model #" << window << endl;
+                    if (myid == 0)
+                    {
+                        cout << "Interpolating DMD model #" << window << endl;
+                    }
+
+                    CAROM::getParametricDMD(dmd[idx_dataset][window], par_vectors,
+                                            dmd_paths, curr_par, string(rbf),
+                                            string(interp_method), pdmd_closest_rbf_val);
                 }
-                CAROM::getParametricDMD(dmd[idx_dataset][window], par_vectors,
-                                        dmd_paths, curr_par, string(rbf),
-                                        string(interp_method), pdmd_closest_rbf_val);
+                else if (par_vectors.size() == 1 && dmd_paths.size() == 1)
+                {
+                    if (myid == 0)
+                    {
+                        cout << "Loading local DMD model #" << window << endl;
+                    }
+                    dmd[idx_dataset][window] = new CAROM::DMD(dmd_paths[0]);
+                }
 
                 if (myid == 0)
                 {
@@ -822,7 +836,7 @@ int main(int argc, char *argv[])
                 db->getInteger(string(list_dir) + "/" + par_ns_list[idx_dataset], numsnap);
             else
             {
-                db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
+                db->open(string(data_dir) + "/" + par_dir + "/" + hdf_filename, "r");
                 db->getInteger("numsnap", numsnap);
             }
             CAROM_VERIFY(numsnap > 0);
@@ -957,6 +971,7 @@ int main(int argc, char *argv[])
                              << " is " << tot_diff_norm << endl;
                         cout << "Relative error of DMD solution at t = " << tval
                              << " is " << rel_error << endl;
+
                         if (save_csv)
                         {
                             csv_db.putDoubleArray(outputPath + "/" + par_dir + "_" + snap +
