@@ -40,9 +40,12 @@ public:
     /**
      * @brief Constructor.
      *
-     * @param[in] dim        The full-order state dimension.
+     * @param[in] dim               The full-order state dimension.
+     * @param[in] state_offset      The state offset.
+     * @param[in] derivative_offset The derivative offset.
      */
-    NonuniformDMD(int dim);
+    NonuniformDMD(int dim, Vector* state_offset = NULL,
+                  Vector* derivative_offset = NULL);
 
     /**
      * @brief Constructor.
@@ -51,6 +54,32 @@ public:
      *                           database to load when restarting from a save.
      */
     NonuniformDMD(std::string base_file_name);
+
+    /**
+     * @brief Destroy the NonuniformDMD object
+     */
+    ~NonuniformDMD();
+
+    /**
+     * @brief Set the offset of a certain order.
+     */
+    void setOffset(Vector* offset_vector, int order) override;
+
+    /**
+     * @brief Load the object state to a file.
+     *
+     * @param[in] base_file_name The base part of the filename to load the
+     *                           database to.
+     */
+    void load(std::string base_file_name) override;
+
+    /**
+     * @brief Save the object state to a file.
+     *
+     * @param[in] base_file_name The base part of the filename to save the
+     *                           database to.
+     */
+    void save(std::string base_file_name) override;
 
 protected:
     friend void getParametricDMD<NonuniformDMD>(NonuniformDMD*& parametric_dmd,
@@ -71,9 +100,13 @@ protected:
      * @param[in] k d_k
      * @param[in] dt d_dt
      * @param[in] t_offset d_t_offset
+     * @param[in] state_offset d_state_offset
+     * @param[in] derivative_offset d_derivative_offset
      */
     NonuniformDMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
-                  Matrix* phi_imaginary, int k, double dt, double t_offset);
+                  Matrix* phi_imaginary, int k,
+                  double dt, double t_offset,
+                  Vector* state_offset, Vector* derivative_offset);
 
 private:
 
@@ -98,17 +131,28 @@ private:
     /**
      * @brief Returns a pair of pointers to the state and derivative snapshot matrices
      */
-    std::pair<Matrix*, Matrix*> computeDMDSnapshotPair(const Matrix* snapshots);
+    std::pair<Matrix*, Matrix*> computeDMDSnapshotPair(const Matrix* snapshots)
+    override;
 
     /**
      * @brief Compute phi.
      */
-    void computePhi(struct DMDInternal dmd_internal_obj);
+    void computePhi(DMDInternal dmd_internal_obj) override;
 
     /**
      * @brief Compute the appropriate exponential function when predicting the solution.
      */
-    std::complex<double> computeEigExp(std::complex<double> eig, double t);
+    std::complex<double> computeEigExp(std::complex<double> eig, double t) override;
+
+    /**
+     * @brief Add the appropriate offset when predicting the solution.
+     */
+    void addOffset(Vector*& result, double t, int power) override;
+
+    /**
+     * @brief Derivative offset in snapshot.
+     */
+    Vector* d_derivative_offset = NULL;
 
 };
 

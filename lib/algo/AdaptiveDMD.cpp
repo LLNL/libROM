@@ -21,7 +21,8 @@ namespace CAROM {
 
 AdaptiveDMD::AdaptiveDMD(int dim, double desired_dt, std::string rbf,
                          std::string interp_method,
-                         double closest_rbf_val) : DMD(dim, desired_dt)
+                         double closest_rbf_val,
+                         Vector* state_offset) : DMD(dim, state_offset)
 {
     CAROM_VERIFY(rbf == "G" || rbf == "IQ" || rbf == "IMQ");
     CAROM_VERIFY(interp_method == "LS" || interp_method == "IDW"
@@ -33,25 +34,34 @@ AdaptiveDMD::AdaptiveDMD(int dim, double desired_dt, std::string rbf,
     d_closest_rbf_val = closest_rbf_val;
 }
 
-void AdaptiveDMD::train(double energy_fraction)
+AdaptiveDMD::~AdaptiveDMD()
+{
+    for (auto interp_snapshot : d_interp_snapshots)
+    {
+        delete interp_snapshot;
+    }
+}
+
+void AdaptiveDMD::train(double energy_fraction, const Matrix* W0,
+                        double linearity_tol)
 {
     const Matrix* f_snapshots = getInterpolatedSnapshots();
     CAROM_VERIFY(f_snapshots->numColumns() > 1);
     CAROM_VERIFY(energy_fraction > 0 && energy_fraction <= 1);
     d_energy_fraction = energy_fraction;
-    constructDMD(f_snapshots, d_rank, d_num_procs);
+    constructDMD(f_snapshots, d_rank, d_num_procs, W0, linearity_tol);
 
     delete f_snapshots;
 }
 
-void AdaptiveDMD::train(int k)
+void AdaptiveDMD::train(int k, const Matrix* W0, double linearity_tol)
 {
     const Matrix* f_snapshots = getInterpolatedSnapshots();
     CAROM_VERIFY(f_snapshots->numColumns() > 1);
     CAROM_VERIFY(k > 0 && k <= f_snapshots->numColumns() - 1);
     d_energy_fraction = -1.0;
     d_k = k;
-    constructDMD(f_snapshots, d_rank, d_num_procs);
+    constructDMD(f_snapshots, d_rank, d_num_procs, W0, linearity_tol);
 
     delete f_snapshots;
 }

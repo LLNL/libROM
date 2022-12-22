@@ -76,6 +76,10 @@ mpicxx myapp.cpp -I/path/to/libROM/lib -Wl,-rpath,/path/to/libROM/build/lib -L/p
 ```
 
 
+# libROM CI
+
+libROM leverages GitHub Actions for CI. The CI currently applies only to commits to pull requests.  Unit tests run for all PR commits. Upon the addition of the `LGTM` label, both the unit tests and regression tests run. While the `LGTM` label is still present, all subsequent commits run both unit tests and regression tests. 
+
 # License
 
 libROM is distributed under the terms of both the MIT license and the

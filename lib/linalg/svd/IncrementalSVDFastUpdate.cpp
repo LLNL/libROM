@@ -340,7 +340,6 @@ IncrementalSVDFastUpdate::addNewSample(
     ++d_num_samples;
     ++d_num_rows_of_W;
 
-
     // Reorthogonalize if necessary.
     long int max_U_dim;
     if (d_num_samples > d_total_dim) {

@@ -54,6 +54,9 @@
 //   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.7 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit -offline -rdim 20
 //   mpirun -np 8 parametric_heat_conduction -s 3 -a 0.6 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit -online -predict
 //
+// Pointwise snapshots for DMD input:
+//   mpirun -np 1 parametric_heat_conduction -m ../../../examples/data/inline-quad.mesh -pwsnap -pwx 101 -pwy 101
+//
 // =================================================================================
 //
 // Description:  This example solves a time dependent nonlinear heat equation
@@ -74,6 +77,8 @@
 #include <fstream>
 #include <iostream>
 #include "utils/CSVDatabase.h"
+#include "utils/HDFDatabase.h"
+#include "mfem/PointwiseSnapshot.hpp"
 
 #ifndef _WIN32
 #include <sys/stat.h>  // mkdir
@@ -167,8 +172,14 @@ int main(int argc, char *argv[])
     bool visit = false;
     int vis_steps = 5;
     bool adios2 = false;
-    bool save_csv = false;
+    bool save_dofs = false;
+    bool csvFormat = true;
     const char *basename = "";
+
+    bool pointwiseSnapshots = false;
+    int pwx = 0;
+    int pwy = 0;
+    int pwz = 0;
 
     int precision = 8;
     cout.precision(precision);
@@ -220,10 +231,18 @@ int main(int argc, char *argv[])
     args.AddOption(&adios2, "-adios2", "--adios2-streams", "-no-adios2",
                    "--no-adios2-streams",
                    "Save data using adios2 streams.");
-    args.AddOption(&save_csv, "-csv", "--csv", "-no-csv", "--no-csv",
-                   "Enable or disable MFEM result output (files in CSV format).");
+    args.AddOption(&save_dofs, "-save", "--save", "-no-save", "--no-save",
+                   "Enable or disable MFEM DOF solution snapshot files).");
+    args.AddOption(&csvFormat, "-csv", "--csv", "-hdf", "--hdf",
+                   "Use CSV or HDF format for files output by -save option.");
     args.AddOption(&basename, "-out", "--outputfile-name",
                    "Name of the sub-folder to dump files within the run directory.");
+    args.AddOption(&pointwiseSnapshots, "-pwsnap", "--pw-snap", "-no-pwsnap",
+                   "--no-pw-snap", "Enable or disable writing pointwise snapshots.");
+    args.AddOption(&pwx, "-pwx", "--pwx", "Number of snapshot points in x");
+    args.AddOption(&pwy, "-pwy", "--pwy", "Number of snapshot points in y");
+    args.AddOption(&pwz, "-pwz", "--pwz", "Number of snapshot points in z");
+
     args.Parse();
     if (!args.Good())
     {
@@ -238,7 +257,7 @@ int main(int argc, char *argv[])
     }
 
     string outputPath = ".";
-    if (save_csv)
+    if (save_dofs)
     {
         outputPath = "run";
         if (string(basename) != "") {
@@ -257,7 +276,10 @@ int main(int argc, char *argv[])
         }
     }
 
-    MFEM_VERIFY(!(offline && online), "both offline and online can not be true!");
+    const int check = (int) pointwiseSnapshots + (int) offline + (int) online
+                      + (int) save_dofs;
+    MFEM_VERIFY(check == 1,
+                "Only one of offline, online, save, or pwsnap must be true!");
 
     if (offline)
     {
@@ -335,6 +357,35 @@ int main(int argc, char *argv[])
     {
         pmesh->UniformRefinement();
     }
+
+#ifndef MFEM_USE_GSLIB
+    if (pointwiseSnapshots) {
+        cout << "To use pointwise snapshots, compile with -mg option" << endl;
+        MFEM_ABORT("Pointwise snapshots aren't available, since the "
+                   "compilation is done without the -mg option");
+    }
+#else
+    CAROM::PointwiseSnapshot *pws = nullptr;
+    Vector pwsnap;
+    CAROM::Vector *pwsnap_CAROM = nullptr;
+
+    if (pointwiseSnapshots)
+    {
+        pmesh->EnsureNodes();
+        const int dmdDim[3] = {pwx, pwy, pwz};
+        pws = new CAROM::PointwiseSnapshot(dim, dmdDim);
+        pws->SetMesh(pmesh);
+
+        int snapshotSize = dmdDim[0];
+        for (int i=1; i<dim; ++i)
+            snapshotSize *= dmdDim[i];
+
+        pwsnap.SetSize(snapshotSize);
+        if (myid == 0)
+            pwsnap_CAROM = new CAROM::Vector(pwsnap.GetData(), pwsnap.Size(),
+                                             true, false);
+    }
+#endif
 
     // 7. Define the vector finite element space representing the current and the
     //    initial temperature, u_ref.
@@ -440,6 +491,22 @@ int main(int argc, char *argv[])
         }
     }
 
+#ifdef MFEM_USE_GSLIB
+    if (pointwiseSnapshots)
+    {
+        pws->GetSnapshot(u_gf, pwsnap);
+
+        ostringstream dmd_filename;
+        dmd_filename << "snap_" << to_string(radius) << "_" << to_string(alpha)
+                     << "_" << to_string(cx) << "_" << to_string(cy) << "_0";
+        if (myid == 0)
+        {
+            cout << "Writing DMD snapshot at step 0, time 0.0" << endl;
+            pwsnap_CAROM->write(dmd_filename.str());
+        }
+    }
+#endif
+
     StopWatch fom_timer, dmd_training_timer, dmd_prediction_timer;
 
     fom_timer.Start();
@@ -451,8 +518,13 @@ int main(int argc, char *argv[])
     vector<double> ts;
     CAROM::Vector* init = NULL;
 
-    CAROM::CSVDatabase csv_db;
-    vector<string> snap_list;
+    CAROM::Database *db = NULL;
+    if (csvFormat)
+        db = new CAROM::CSVDatabase();
+    else
+        db = new CAROM::HDFDatabase();
+
+    vector<int> snap_list;
 
     fom_timer.Stop();
 
@@ -480,14 +552,22 @@ int main(int argc, char *argv[])
         init = new CAROM::Vector(u.GetData(), u.Size(), true);
     }
 
-    if (save_csv && myid == 0)
+    if (save_dofs && myid == 0)
     {
-        mkdir((outputPath + "/step0").c_str(), 0777);
-        csv_db.putDoubleArray(outputPath + "/step0/sol.csv", u.GetData(), u.Size());
+        if (csvFormat)
+        {
+            mkdir((outputPath + "/step0").c_str(), 0777);
+            db->putDoubleArray(outputPath + "/step0/sol.csv", u.GetData(), u.Size());
+        }
+        else
+        {
+            db->create(outputPath + "/dmd.hdf");
+            db->putDoubleArray("step0sol", u.GetData(), u.Size());
+        }
     }
 
     ts.push_back(t);
-    snap_list.push_back("step0");
+    snap_list.push_back(0);
 
     bool last_step = false;
     for (int ti = 1; !last_step; ti++)
@@ -518,15 +598,21 @@ int main(int argc, char *argv[])
             dmd_training_timer.Stop();
         }
 
-        if (save_csv && myid == 0)
+        if (save_dofs && myid == 0)
         {
-            mkdir((outputPath + "/step" + to_string(ti)).c_str(), 0777);
-            csv_db.putDoubleArray(outputPath + "/step" + to_string(ti) + "/sol.csv",
-                                  u.GetData(), u.Size());
+            if (csvFormat)
+            {
+                mkdir((outputPath + "/step" + to_string(ti)).c_str(), 0777);
+                db->putDoubleArray(outputPath + "/step" + to_string(ti) + "/sol.csv",
+                                   u.GetData(), u.Size());
+            }
+            else
+                db->putDoubleArray("step" + to_string(ti) + "sol",
+                                   u.GetData(), u.Size());
         }
 
         ts.push_back(t);
-        snap_list.push_back("step" + to_string(ti));
+        snap_list.push_back(ti);
 
         if (last_step || (ti % vis_steps) == 0)
         {
@@ -558,14 +644,43 @@ int main(int argc, char *argv[])
             }
 #endif
         }
+
+#ifdef MFEM_USE_GSLIB
+        if (pointwiseSnapshots)
+        {
+            pws->GetSnapshot(u_gf, pwsnap);
+
+            ostringstream dmd_filename;
+            dmd_filename << "snap_" << to_string(radius) << "_" << to_string(alpha)
+                         << "_" << to_string(cx) << "_" << to_string(cy) << "_" << ti;
+            if (myid == 0)
+            {
+                cout << "Writing DMD snapshot at step " << ti << ", time " << t << endl;
+                pwsnap_CAROM->write(dmd_filename.str());
+            }
+        }
+#endif
+
         oper.SetParameters(u);
     }
 
-    if (save_csv && myid == 0)
+    if (save_dofs && myid == 0)
     {
-        csv_db.putDoubleVector(outputPath + "/tval.csv", ts, ts.size());
-        csv_db.putStringVector(outputPath + "/snap_list.csv", snap_list,
-                               snap_list.size());
+        if (csvFormat)
+        {
+            db->putDoubleVector(outputPath + "/tval.csv", ts, ts.size());
+            db->putInteger(outputPath + "/numsnap", snap_list.size());
+            db->putIntegerArray(outputPath + "/snap_list.csv", snap_list.data(),
+                                snap_list.size());
+        }
+        else
+        {
+            db->putDoubleVector("tval", ts, ts.size());
+            db->putInteger("numsnap", snap_list.size());
+            db->putInteger("snap_bound_size", 0);
+            db->putIntegerArray("snap_list", snap_list.data(),
+                                snap_list.size());
+        }
     }
 
 #ifdef MFEM_USE_ADIOS2
@@ -766,6 +881,11 @@ int main(int argc, char *argv[])
     {
         delete dmd_u;
     }
+
+#ifdef MFEM_USE_GSLIB
+    delete pws;
+    delete pwsnap_CAROM;
+#endif
 
     MPI_Finalize();
 

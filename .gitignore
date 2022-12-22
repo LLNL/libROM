@@ -22,3 +22,6 @@ build
 # Do not track docs/latex and docs/html
 docs/latex
 docs/html
+
+# Do not track results
+regression_tests/results

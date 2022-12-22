@@ -16,7 +16,6 @@
 #include "Database.h"
 #include <string>
 #include <fstream>
-#include <vector>
 #include <complex>
 
 namespace CAROM {
@@ -129,7 +128,7 @@ public:
     void
     putDoubleVector(
         const std::string& file_name,
-        const std::vector<double> data,
+        const std::vector<double>& data,
         int nelements,
         int precision = 6);
 
@@ -150,7 +149,7 @@ public:
     void
     putComplexVector(
         const std::string& file_name,
-        const std::vector<std::complex<double>> data,
+        const std::vector<std::complex<double>>& data,
         int nelements,
         int precision = 6);
 
@@ -170,7 +169,7 @@ public:
     void
     putStringVector(
         const std::string& file_name,
-        const std::vector<std::string> data,
+        const std::vector<std::string>& data,
         int nelements);
 
     /**
@@ -206,6 +205,13 @@ public:
         const std::string& file_name,
         std::vector<int> &data,
         bool append = false);
+
+    virtual int getDoubleArraySize(const std::string& key)
+    {
+        std::vector<double> tmp;
+        getDoubleVector(key, tmp);
+        return tmp.size();
+    }
 
     /**
      * @brief Reads an array of doubles associated with the supplied filename.
@@ -243,7 +249,7 @@ public:
         const std::string& file_name,
         double* data,
         int nelements,
-        std::vector<int> idx);
+        const std::vector<int>& idx);
 
     /**
      * @brief Reads an array of doubles associated with the supplied filename.

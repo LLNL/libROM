@@ -17,6 +17,7 @@
 
 #include <iomanip>
 #include <stdlib.h>
+#include <sys/stat.h>
 
 namespace CAROM {
 
@@ -63,6 +64,14 @@ Utilities::processorToString(
     os << std::flush;
 
     return os.str();
+}
+
+bool
+Utilities::file_exist(
+    const std::string& filename)
+{
+    struct stat buffer;
+    return (stat(filename.c_str(), &buffer) == 0);
 }
 
 }

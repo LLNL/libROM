@@ -186,7 +186,6 @@ public:
     virtual ~ReducedSystemOperator();
 };
 
-
 /** Function representing the elastic energy density for the given hyperelastic
     model+deformation. Used in HyperelasticOperator::GetElasticEnergyDensity. */
 class ElasticEnergyCoefficient : public Coefficient
@@ -210,7 +209,6 @@ void InitialVelocity(const Vector &x, Vector &v);
 void visualize(ostream &out, ParMesh *mesh, ParGridFunction *deformed_nodes,
                ParGridFunction *field, const char *field_name = NULL,
                bool init_vis = false);
-
 
 int main(int argc, char *argv[])
 {
@@ -515,7 +513,7 @@ int main(int argc, char *argv[])
         dmd_x[curr_window]->takeSample(x_gf.GetTrueVector(), t);
         dmd_v[curr_window]->takeSample(v_gf.GetTrueVector(), t);
 
-        if (ti % windowNumSamples == 0)
+        if (last_step || (ti % windowNumSamples) == 0)
         {
             if (rdim != -1)
             {
@@ -615,11 +613,6 @@ int main(int argc, char *argv[])
     {
         std::cout << "Both rdim and ef are set. ef will be ignored." << std::endl;
     }
-
-    dmd_training_timer.Start();
-
-
-    dmd_training_timer.Stop();
 
     Vector true_solution_x(x_gf.GetTrueVector().Size());
     true_solution_x = x_gf.GetTrueVector();
@@ -777,7 +770,6 @@ void visualize(ostream &out, ParMesh *mesh, ParGridFunction *deformed_nodes,
     out << flush;
 }
 
-
 ReducedSystemOperator::ReducedSystemOperator(
     ParBilinearForm *M_, ParBilinearForm *S_, ParNonlinearForm *H_,
     const Array<int> &ess_tdof_list_)
@@ -823,7 +815,6 @@ ReducedSystemOperator::~ReducedSystemOperator()
 {
     delete Jacobian;
 }
-
 
 HyperelasticOperator::HyperelasticOperator(ParFiniteElementSpace &f,
         Array<int> &ess_bdr, double visc,
@@ -962,7 +953,6 @@ HyperelasticOperator::~HyperelasticOperator()
     delete Mmat;
 }
 
-
 double ElasticEnergyCoefficient::Eval(ElementTransformation &T,
                                       const IntegrationPoint &ip)
 {
@@ -971,7 +961,6 @@ double ElasticEnergyCoefficient::Eval(ElementTransformation &T,
     // return model.EvalW(J);  // in reference configuration
     return model.EvalW(J)/J.Det(); // in deformed configuration
 }
-
 
 void InitialDeformation(const Vector &x, Vector &y)
 {
