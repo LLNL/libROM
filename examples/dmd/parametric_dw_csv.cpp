@@ -658,8 +658,7 @@ int main(int argc, char *argv[])
 
         for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
         {
-            string par_dir = par_dir_list[idx_dataset];
-            stringstream par_ss(par_dir); // testing DATASET
+            stringstream par_ss(testing_par_list[idx_dataset]); // testing DATASET
             vector<string> par_info;
             string par_entry;
             while (getline(par_ss, par_entry, ','))
