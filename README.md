@@ -13,10 +13,10 @@ non-intrusive black-box approaches.
 - Data compression
 - Physics-informed greedy algorithm
 - Projection-based hyper-reduction
+- EQP: quadrature-based hyper-reduction sampling algorithm
 
 ## Features to be added
 
-- EQP: quadrature-based hyper-reduction sampling algorithm
 - Python interface
 
 # Installation
@@ -115,6 +115,7 @@ LLNL-CODE-766763
 - William Fries (University of Arizona)
 - Debojyoti Ghosh (LLNL)
 - Xiaolong He (UC San Diego)
+- Adrian Humphry (University of Toronto)
 - Kevin Huynh (LLNL)
 - Tanya Kostova-Vassilevska (LLNL)
 - Jessica Lauzon (Stanford)
@@ -122,3 +123,4 @@ LLNL-CODE-766763
 - Yeonjong Shin (KAIST)
 - Geoffrey Oxberry (LLNL)
 - Pranav Vempati (LLNL)
+- Masayuki Yano (University of Toronto)
