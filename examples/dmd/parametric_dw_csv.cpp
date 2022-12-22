@@ -616,7 +616,7 @@ int main(int argc, char *argv[])
         csv_db.getStringVector(string(list_dir) + "/" + test_list + ".csv",
                                testing_par_list, false);
         npar = testing_par_list.size();
-        CAROM_VERIFY(npar > 1);
+        CAROM_VERIFY(npar > 0);
         if (myid == 0)
         {
             cout << "Loading " << npar << " testing datasets." << endl;
