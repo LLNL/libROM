@@ -619,6 +619,12 @@ int main(int argc, char *argv[])
 
             string par_dir = par_info[0];
             par_dir_list.push_back(par_dir);
+
+            for (int par_order = 0; par_order < dpar; ++par_order)
+            {
+                curr_par->item(par_order) = stod(par_info[par_order+1]);
+            }
+
             if (myid == 0)
             {
                 cout << "Interpolating DMD models for dataset " << par_dir << endl;
