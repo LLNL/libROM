@@ -660,11 +660,11 @@ int main(int argc, char *argv[])
     delete result_x;
     delete result_v;
 
-    if (visit)
+    for (int i = 1; i < ts.size(); i++)
     {
-        for (int i = 1; i < ts.size(); i++)
-        {
-            if (i == ts.size() - 1 || (i % vis_steps) == 0)
+        if (i == ts.size() - 1 || (i % vis_steps) == 0)
+        {   
+            if(visit)
             {
                 result_x = dmd_x[curr_window]->predict(ts[i]);
                 result_v = dmd_v[curr_window]->predict(ts[i]);
@@ -683,13 +683,13 @@ int main(int argc, char *argv[])
 
                 delete result_x;
                 delete result_v;
+            }
 
-                if (i % windowNumSamples == 0 && i < ts.size()-1)
-                {
-                    delete dmd_x[curr_window];
-                    delete dmd_v[curr_window];
-                    curr_window++;
-                }
+            if (i % windowNumSamples == 0 && i < ts.size()-1)
+            {
+                delete dmd_x[curr_window];
+                delete dmd_v[curr_window];
+                curr_window++;
             }
         }
     }
