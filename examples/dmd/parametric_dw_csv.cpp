@@ -263,8 +263,8 @@ int main(int argc, char *argv[])
     }
 
     vector<string> training_par_list, testing_par_list; // DATASET info
+    vector<CAROM::Vector*> training_par_vectors, testing_par_vectors; // DATASET param
     vector<string> par_dir_list; // DATASET name
-    vector<CAROM::Vector*> par_vectors; // DATASET param
     vector<int> num_train_snap; // DATASET size
     vector<double> indicator_init, indicator_last; // DATASET indicator range
     vector<CAROM::Vector*> training_twep; // DATASET temporal endpoint
@@ -279,7 +279,6 @@ int main(int argc, char *argv[])
     }
 
     int dpar = -1;
-    CAROM::Vector* twep = new CAROM::Vector(indicator_val.size(), false);
 
     for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
     {
@@ -338,7 +337,7 @@ int main(int argc, char *argv[])
         {
             curr_par->item(par_order) = stod(par_info[par_order+1]);
         }
-        par_vectors.push_back(curr_par);
+        training_par_vectors.push_back(curr_par);
     }
 
     if (myid == 0)
@@ -425,6 +424,7 @@ int main(int argc, char *argv[])
             int min_idx_snap = -1;
             int max_idx_snap = -1;
             double curr_indicator_val = -1.0;
+            CAROM::Vector* twep = new CAROM::Vector(indicator_val.size(), false);
             for (int idx_snap = snap_bound[0]; idx_snap <= snap_bound[1]; ++idx_snap)
             {
                 string snap = snap_list[idx_snap]; // STATE
@@ -527,7 +527,7 @@ int main(int argc, char *argv[])
                             if (myid == 0)
                             {
                                 cout << "State #" << idx_snap << " - " << data_filename
-                                     << " is the end of window " << numWindows-1 << "." << endl;
+                                     << " is the end of window " << numWindows << "." << endl;
                             }
                             break;
                         }
@@ -535,14 +535,9 @@ int main(int argc, char *argv[])
                 }
             }
 
-            if ((idx_dataset == 0 || indicator_idx.size() > 0) && numWindows != curr_window+1)
-            {
-                cout << "Reset number of windows from " << numWindows << " to " << curr_window+1 << endl;
-                numWindows = curr_window + 1;
-                dmd[idx_dataset].resize(numWindows);
-            }
+            CAROM_VERIFY(numWindows == curr_window+1);
             training_twep.push_back(twep);
-            // TODO: Write the temporal endpoints
+            csv_db.putDoubleArray(outputPath + "/" + par_dir + "_twep.csv", twep->getData(), numWindows+1);
 
             if (myid == 0)
             {
@@ -583,11 +578,15 @@ int main(int argc, char *argv[])
         dmd_training_timer.Stop();
     } // escape if-statement of offline
 
-    CAROM::Vector* curr_par = new CAROM::Vector(dpar, false);
-
     if (online)
     {
-        // TODO: Read the temporal endpoints
+        for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
+        {
+            string par_dir = par_dir_list[idx_dataset]; // training DATASET
+            CAROM::Vector* twep = new CAROM::Vector(numWindows+1, false);
+            csv_db.getDoubleArray(outputPath + "/" + par_dir + "_twep.csv", twep->getData(), numWindows+1);
+            training_twep.push_back(twep);
+        }
         par_dir_list.clear();
 
         dmd_preprocess_timer.Start();
@@ -620,10 +619,12 @@ int main(int argc, char *argv[])
             string par_dir = par_info[0];
             par_dir_list.push_back(par_dir);
 
+            CAROM::Vector* curr_par = new CAROM::Vector(dpar, false);
             for (int par_order = 0; par_order < dpar; ++par_order)
             {
                 curr_par->item(par_order) = stod(par_info[par_order+1]);
             }
+            testing_par_vectors.push_back(curr_par);
 
             if (myid == 0)
             {
@@ -633,7 +634,7 @@ int main(int argc, char *argv[])
             for (int window = 0; window < numWindows; ++window)
             {
                 std::vector<std::string> dmd_paths;
-                for (int idx_trainset = 0; idx_trainset < par_vectors.size(); ++idx_trainset)
+                for (int idx_trainset = 0; idx_trainset < training_par_vectors.size(); ++idx_trainset)
                 {
                     dmd_paths.push_back(outputPath + "/window" + to_string(window) + "_par" +
                                         to_string(idx_trainset));
@@ -643,13 +644,17 @@ int main(int argc, char *argv[])
                 {
                     cout << "Interpolating DMD model #" << window << endl;
                 }
-                CAROM::getParametricDMD(dmd[idx_dataset][window], par_vectors, dmd_paths,
+                CAROM::getParametricDMD(dmd[idx_dataset][window], training_par_vectors, dmd_paths,
                                         curr_par,
                                         string(rbf), string(interp_method), pdmd_closest_rbf_val);
             } // escape for-loop over window
         } // escape for-loop over idx_dataset
         dmd_preprocess_timer.Stop();
     } // escape if-statement of online
+    else
+    {
+        testing_par_vectors = training_par_vectors;
+    }
 
     if (online || predict)
     {
@@ -658,23 +663,8 @@ int main(int argc, char *argv[])
 
         for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
         {
-            stringstream par_ss(testing_par_list[idx_dataset]); // testing DATASET
-            vector<string> par_info;
-            string par_entry;
-            while (getline(par_ss, par_entry, ','))
-            {
-                par_info.push_back(par_entry);
-            }
-
-            CAROM_VERIFY(dpar == par_info.size() - 1);
-
-            string par_dir = par_info[0];
-            par_dir_list.push_back(par_dir);
-
-            for (int par_order = 0; par_order < dpar; ++par_order)
-            {
-                curr_par->item(par_order) = stod(par_info[par_order+1]);
-            }
+            string par_dir = par_dir_list[idx_dataset];
+            CAROM::Vector* curr_par = testing_par_vectors[idx_dataset];
 
             if (myid == 0)
             {
@@ -710,7 +700,8 @@ int main(int argc, char *argv[])
                 snap_bound.push_back(snap_list.size()-1);
             }
 
-            getInterpolatedTimeWindows(twep, par_vectors, training_twep, curr_par, 
+            CAROM::Vector* twep;
+            getInterpolatedTimeWindows(twep, training_par_vectors, training_twep, curr_par, 
                                               string(rbf), pdmd_closest_rbf_val); // Always use IDW
 
             int min_idx_snap = -1;
@@ -865,7 +856,7 @@ int main(int argc, char *argv[])
                     if (myid == 0)
                     {
                         cout << "State #" << idx_snap << " - " << data_filename
-                             << " is the end of window " << numWindows-1 << "." << endl;
+                             << " is the end of window " << numWindows << "." << endl;
                     }
                     break;
                 }
@@ -882,6 +873,7 @@ int main(int argc, char *argv[])
             prediction_time.clear();
             prediction_error.clear();
             num_tests += (t_final > 0.0) ? 1 : num_snap;
+            delete twep;
         }
 
         CAROM_VERIFY(num_tests > 0);
@@ -901,10 +893,14 @@ int main(int argc, char *argv[])
 
 
     delete[] sample;
-    delete twep;
-    delete curr_par;
+    for (int idx_dataset = 0; idx_dataset < training_twep.size(); ++idx_dataset)
+    {
+        delete training_twep[idx_dataset];
+    }
+
     for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
     {
+        delete testing_par_vectors[idx_dataset];
         for (int window = 0; window < numWindows; ++window)
         {
             delete dmd[idx_dataset][window];
@@ -921,6 +917,8 @@ void getInterpolatedTimeWindows(CAROM::Vector*& online_twep,
                                   std::string rbf = "G",
                                   double closest_rbf_val = 0.9)
 {
+    cout << "Parameter size = " << parameter_points.size() << endl; // TODO
+    cout << "Time window sequence size = " << offline_twep.size() << endl; // TODO
     CAROM_VERIFY(parameter_points.size() == offline_twep.size());
     CAROM_VERIFY(offline_twep.size() > 1);
 
