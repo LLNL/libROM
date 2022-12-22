@@ -659,6 +659,24 @@ int main(int argc, char *argv[])
         for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
         {
             string par_dir = par_dir_list[idx_dataset];
+            stringstream par_ss(par_dir); // testing DATASET
+            vector<string> par_info;
+            string par_entry;
+            while (getline(par_ss, par_entry, ','))
+            {
+                par_info.push_back(par_entry);
+            }
+
+            CAROM_VERIFY(dpar == par_info.size() - 1);
+
+            string par_dir = par_info[0];
+            par_dir_list.push_back(par_dir);
+
+            for (int par_order = 0; par_order < dpar; ++par_order)
+            {
+                curr_par->item(par_order) = stod(par_info[par_order+1]);
+            }
+
             if (myid == 0)
             {
                 cout << "Predicting solution for " << par_dir << " using DMD." << endl;
