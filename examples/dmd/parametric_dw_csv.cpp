@@ -58,7 +58,6 @@ void getInterpolatedTimeWindows(CAROM::Vector*& online_twep,
                                   std::vector<CAROM::Vector*>& offline_twep,
                                   CAROM::Vector* desired_point,
                                   std::string rbf,
-                                  std::string interp_method,
                                   double closest_rbf_val);
 
 int main(int argc, char *argv[])
@@ -451,7 +450,7 @@ int main(int argc, char *argv[])
                         {
                             min_idx_snap = idx_snap;
                             twep->item(0) = tval;
-                            cout << "Time = " << tval << endl; // TODO
+                            cout << "Recorded 0-th endpoint = " << twep->item(0) << endl; // TODO
                             if (myid == 0)
                             {
                                 cout << "State #" << idx_snap << " - " << data_filename
@@ -497,7 +496,7 @@ int main(int argc, char *argv[])
                     if (curr_indicator_val >= indicator_val[curr_window+1])
                     {
                         twep->item(curr_window+1) = tval;
-                        cout << "Time = " << tval << endl; // TODO
+                        cout << "Recorded " << curr_window+1 << "-th endpoint = " << twep->item(curr_window+1) << endl; // TODO
                         if (myid == 0)
                         {
                             cout << "State #" << idx_snap << " - " << data_filename
@@ -521,7 +520,7 @@ int main(int argc, char *argv[])
                     if (curr_indicator_val >= indicator_val[numWindows])
                     {
                         twep->item(numWindows) = tval;
-                        cout << "Time = " << tval << endl; // TODO
+                        cout << "Recorded " << numWindows << "-th endpoint = " << twep->item(numWindows) << endl; // TODO
                         if (dmd[idx_dataset][numWindows-1]->getNumSamples() >= rdim+1)
                         {
                             max_idx_snap = idx_snap;
@@ -543,6 +542,7 @@ int main(int argc, char *argv[])
                 dmd[idx_dataset].resize(numWindows);
             }
             training_twep.push_back(twep);
+            // TODO: Write the temporal endpoints
 
             if (myid == 0)
             {
@@ -688,7 +688,7 @@ int main(int argc, char *argv[])
             }
 
             getInterpolatedTimeWindows(twep, par_vectors, training_twep, curr_par, 
-                                              string(rbf), string(interp_method), pdmd_closest_rbf_val);
+                                              string(rbf), pdmd_closest_rbf_val); // Always use IDW
 
             int min_idx_snap = -1;
             int max_idx_snap = snap_bound[1];
@@ -711,7 +711,8 @@ int main(int argc, char *argv[])
                 {
                     if (tval >= twep->item(0))
                     {
-                        cout << "0: Time = " << twep->item(0) << endl;
+                        cout << "Time = " << tval << endl; // TODO
+                        cout << "Interpolated 0-th endpoint = " << twep->item(0) << endl;
                         min_idx_snap = idx_snap;
                         if (myid == 0)
                         {
@@ -757,6 +758,8 @@ int main(int argc, char *argv[])
                 while (curr_window+1 < numWindows
                         && tval >= twep->item(curr_window+1))
                 {
+                    cout << "Time = " << tval << endl; // TODO
+                    cout << "Interpolated " << curr_window+1 << "-th endpoint = " << twep->item(curr_window+1) << endl;
                     double t_offset;
                     if (myid == 0)
                     {
@@ -833,6 +836,8 @@ int main(int argc, char *argv[])
                 if (curr_window == numWindows-1
                         && tval >= twep->item(numWindows))
                 {
+                    cout << "Time = " << tval << endl; // TODO
+                    cout << "Interpolated " << numWindows << "-th endpoint = " << twep->item(numWindows) << endl;
                     max_idx_snap = idx_snap;
                     if (myid == 0)
                     {
@@ -891,20 +896,15 @@ void getInterpolatedTimeWindows(CAROM::Vector*& online_twep,
                                   std::vector<CAROM::Vector*>& offline_twep,
                                   CAROM::Vector* desired_point,
                                   std::string rbf = "G",
-                                  std::string interp_method = "LS",
                                   double closest_rbf_val = 0.9)
 {
     CAROM_VERIFY(parameter_points.size() == offline_twep.size());
     CAROM_VERIFY(offline_twep.size() > 1);
 
     double epsilon = convertClosestRBFToEpsilon(parameter_points, rbf, closest_rbf_val);
-    std::vector<double> rbf_val = obtainRBFToTrainingPoints(parameter_points, interp_method, rbf, epsilon, desired_point);
+    std::vector<double> rbf_val = obtainRBFToTrainingPoints(parameter_points, "IDW", rbf, epsilon, desired_point);
 
     CAROM::Matrix* f_T = NULL;
-    if (interp_method == "LS")
-    {
-        f_T = solveLinearSystem(parameter_points, offline_twep, interp_method, rbf, epsilon);
-    }
 
-    online_twep = obtainInterpolatedVector(offline_twep, f_T, interp_method, rbf_val);
+    online_twep = obtainInterpolatedVector(offline_twep, f_T, "IDW", rbf_val);
 }
