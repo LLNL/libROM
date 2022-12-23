@@ -730,8 +730,8 @@ int main(int argc, char *argv[])
                         min_idx_snap = idx_snap;
                         if (myid == 0)
                         {
-                            cout << "Interpolated endpoint #" << curr_window+1
-                                 << " = " << twep->item(curr_window+1) << endl;
+                            cout << "Interpolated endpoint #0"
+                                 << " = " << twep->item(0) << endl;
                             cout << "State #" << idx_snap << " - " << data_filename
                                  << " is the beginning of window 0." << endl;
                         }
