@@ -1,0 +1,11 @@
+## Some copyright problably goes here
+## Some licence should problably go here
+
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@_Exports.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/rkcommon_macros.cmake")
+
+check_required_components("@PROJECT_NAME@")
+
+# Maybe some extra stuff of dependencies should go here? HDF5 MPI etc.

@@ -119,12 +119,64 @@ target_link_libraries(ROM
   ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} ${MFEM} ${HYPRE} ${PARMETIS} ${METIS}
   PRIVATE ${ZLIB_LIBRARIES} ZLIB::ZLIB)
 
-target_include_directories(ROM PUBLIC
-  ${CMAKE_CURRENT_SOURCE_DIR}
+
+target_include_directories(ROM 
+  PUBLIC
   ${MFEM_INCLUDES}
   ${HYPRE_INCLUDES}
   ${PARMETIS_INCLUDES}
   ${HDF5_C_INCLUDE_DIRS}
   ${MPI_C_INCLUDE_DIRS}
   ${MFEM_C_INCLUDE_DIRS}
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}> # Same as below with installation of headers
+  PRIVATE 
+  ${CMAKE_CURRENT_SOURCE_DIR})
+  
+
+  
+
+
+# Install library + targets
+
+# Set version information
+set_target_properties(ROM
+    PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})
+
+# the library itself (in this case the .so or .a file)
+# ${CMAKE_INSTALL_LIBDIR} and ${CMAKE_INSTALL_BINDIR} include ${CMAKE_INSTALL_PREFIX} uppon installation
+install(TARGETS ROM
+  EXPORT ROM_Exports
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    NAMELINK_SKIP
+  # on Windows put the dlls into bin --> Do we need these?
+#  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  # ... and the import lib into the devel package
+#  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+# Target information about that artefact
+install(EXPORT ROM_Exports
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libROM
+#  NAMESPACE rkcommon::
+)
+
+# What does this do? Repeat of earlier?!? Do we need this?
+install(TARGETS ROM
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+#    NAMELINK_ONLY
+#  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+#  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+# Install headers
+# This is not standard but works for here.
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
+  FILES_MATCHING
+  PATTERN *.h
+  PATTERN *.inl
+  PATTERN *.hpp
+  PATTERN *.ih
+)
+  
