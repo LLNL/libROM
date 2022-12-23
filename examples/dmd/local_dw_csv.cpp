@@ -617,6 +617,7 @@ int main(int argc, char *argv[])
     csv_db.getStringVector(string(list_dir) + "/" + test_list + ".csv",
                            testing_par_list, false);
     npar = testing_par_list.size();
+    CAROM_VERIFY(npar > 0);
 
     int num_tests = 0;
     vector<double> prediction_time, prediction_error;
