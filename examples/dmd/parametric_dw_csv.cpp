@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
     args.AddOption(&indicator_val_list, "-idc-val", "--indicator-value",
                    "Name of the file specifying indicator values.");
     args.AddOption(&window_endpoint_option, "-wep", "--wep",
-                   "Determine window endpoint using previous state, current state or bisection.");
+                   "Determine exact window endpoint using previous state or current state.");
     args.AddOption(&basename, "-o", "--outputfile-name",
                    "Name of the sub-folder to dump files within the run directory.");
     args.AddOption(&save_csv, "-csv", "--csv", "-no-csv", "--no-csv",
