@@ -51,6 +51,8 @@ public:
      *
      * @param[in] visFileName If non-empty, this filename is used for VisIt and ParaView output of the sample mesh
      *                        and the sampled DOFs on the full-order mesh.
+     *
+     * @param[in] visScale    Constant value for indicating the sample mesh elements in visualization.
      */
     SampleMeshManager(vector<ParFiniteElementSpace*> & fespace_,
                       string visFileName="", double visScale=1.0);

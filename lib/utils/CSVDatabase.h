@@ -206,10 +206,21 @@ public:
         std::vector<int> &data,
         bool append = false);
 
-    virtual int getDoubleArraySize(const std::string& key)
+    /**
+     * @brief Count the number of elements in
+     * an array of doubles associated with the supplied filename.
+     *
+     * @pre !file_name.empty()
+     *
+     * @param[in] file_name The filename associated with the array of values to be
+     *                read.
+     */
+    virtual
+    int
+    getDoubleArraySize(const std::string& file_name)
     {
         std::vector<double> tmp;
-        getDoubleVector(key, tmp);
+        getDoubleVector(file_name, tmp);
         return tmp.size();
     }
 

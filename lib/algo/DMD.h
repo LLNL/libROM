@@ -33,11 +33,34 @@ class ComplexEigenPair;
  */
 struct DMDInternal
 {
+    /**
+     * @brief The snapshot vectors of input.
+     */
     Matrix* snapshots_in;
+
+    /**
+     * @brief The snapshot vectors of output.
+     */
     Matrix* snapshots_out;
+
+    /**
+     * @brief The left singular vector basis.
+     */
     Matrix* basis;
+
+    /**
+     * @brief The right singular vector basis.
+     */
     Matrix* basis_right;
+
+    /**
+     * @brief The inverse of singular values.
+     */
     Matrix* S_inv;
+
+    /**
+     * @brief The resultant DMD eigenvalues and eigenvectors.
+     */
     ComplexEigenPair* eigenpair;
 };
 
@@ -97,7 +120,7 @@ public:
                        double linearity_tol = 0.0);
 
     /**
-     * @param[in] k The number of modes (eigenvalues) to keep after doing SVD.
+     * @param[in] k               The number of modes to keep after doing SVD.
      * @param[in] W0              The initial basis to prepend to W.
      * @param[in] linearity_tol   The tolerance for determining whether a column
                                   of W is linearly independent with W0.
@@ -118,9 +141,10 @@ public:
      * @brief Predict state given a time. Uses the projected initial condition of the
      *        training dataset (the first column).
      *
-     * @param[in] t The time of the outputted state
+     * @param[in] t   The time of the output state
+     * @param[in] deg The deriative degree of the output state
      */
-    Vector* predict(double t, int power = 0);
+    Vector* predict(double t, int deg = 0);
 
     /**
      * @brief Get the time offset contained within d_t_offset.
@@ -180,6 +204,24 @@ public:
     void summary(std::string base_file_name);
 
 protected:
+    /**
+     * @brief Obtain DMD model interpolant at desired parameter point by
+     *        interpolation of DMD models from training parameter points.
+     *
+     * @param[in] parametric_dmd    The interpolant DMD model at the desired point.
+     * @param[in] parameter_points  The training parameter points.
+     * @param[in] dmds              The DMD objects associated with
+     *                              each training parameter point.
+     * @param[in] desired_point     The desired point to create a parametric DMD at.
+     * @param[in] rbf               The RBF type ("G" == gaussian,
+     *                              "IQ" == inverse quadratic, "IMQ" == inverse
+     *                              multiquadric)
+     * @param[in] interp_method     The interpolation method type ("LS" == linear solve,
+     *                              "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
+     * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
+     *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
+     * @param[in] reorthogonalize_W Whether to reorthogonalize the interpolated W (basis) matrix.
+     */
     friend void getParametricDMD<DMD>(DMD*& parametric_dmd,
                                       std::vector<Vector*>& parameter_points,
                                       std::vector<DMD*>& dmds,
@@ -232,7 +274,7 @@ protected:
     /**
      * @brief Internal function to multiply d_phi with the eigenvalues.
      */
-    std::pair<Matrix*, Matrix*> phiMultEigs(double t, int power = 0);
+    std::pair<Matrix*, Matrix*> phiMultEigs(double t, int deg = 0);
 
     /**
      * @brief Construct the DMD object.
@@ -262,7 +304,7 @@ protected:
     /**
      * @brief Add the appropriate offset when predicting the solution.
      */
-    virtual void addOffset(Vector*& result, double t = 0.0, int power = 0);
+    virtual void addOffset(Vector*& result, double t = 0.0, int deg = 0);
 
     /**
      * @brief Get the snapshot matrix contained within d_snapshots.
