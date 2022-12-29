@@ -44,7 +44,7 @@ public:
          *
          * @param[in] lower           Lower bound for constraint
          * @param[in] upper           Upper bound for constraint
-         * @param[in] isConstrained   Whether to check the contraints
+         * @param[in] isConstrained   Whether to check the constraints
          */
         Constraints(double lower = 0.0, double upper = 1.0,
                     bool isConstrained = false) :

@@ -123,15 +123,13 @@ public:
      *                written.
      * @param[in] data The vector of double values to be written.
      * @param[in] nelements The number of doubles in the vector.
-     * @param[in] precision The precision of values to be written.
      */
     virtual
     void
     putDoubleVector(
         const std::string& key,
         const std::vector<double>& data,
-        int nelements,
-        int precision = 6);
+        int nelements);
 
     /**
      * @brief Reads an array of integers associated with the supplied key
@@ -153,14 +151,12 @@ public:
         int nelements);
 
     /**
-     * @brief Count the number of elements in
-     * an array of doubles associated with the supplied key
-     * from the currently open HDF5 database file.
+     * @brief Count the number of elements in an array of doubles associated 
+     * with the supplied key from the currently open HDF5 database file.
      *
      * @pre !key.empty()
      *
-     * @param[in] key The key associated with the array of values to be
-     *                read.
+     * @param[in] key The key associated with the array of values to be read.
      */
     virtual
     int

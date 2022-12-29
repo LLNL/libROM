@@ -213,8 +213,7 @@ void
 HDFDatabase::putDoubleVector(
     const std::string& key,
     const std::vector<double>& data,
-    int nelements,
-    int precision)
+    int nelements)
 {
     putDoubleArray(key, data.data(), nelements);
 }

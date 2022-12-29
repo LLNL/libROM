@@ -142,7 +142,7 @@ public:
      *        training dataset (the first column).
      *
      * @param[in] t   The time of the output state
-     * @param[in] deg The deriative degree of the output state
+     * @param[in] deg The derivative degree of the output state
      */
     Vector* predict(double t, int deg = 0);
 

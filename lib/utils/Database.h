@@ -142,15 +142,13 @@ public:
      *                written.
      * @param[in] data The vector of double values to be written.
      * @param[in] nelements The number of doubles in the vector.
-     * @param[in] precision The precision of values to be written.
      */
     virtual
     void
     putDoubleVector(
         const std::string& key,
         const std::vector<double>& data,
-        int nelements,
-        int precision = 6) = 0;
+        int nelements) = 0;
 
     /**
      * @brief Reads an integer associated with the supplied key from the

@@ -90,7 +90,7 @@ protected:
      * @param[in] parameter_points  The training parameter points.
      * @param[in] dmds              The DMD objects associated with
      *                              each training parameter point.
-     * @param[in] desired_point     The desired point to create a parametric DMD at.
+     * @param[in] desired_point     The desired point at which to create a parametric DMD.
      * @param[in] rbf               The RBF type ("G" == gaussian,
      *                              "IQ" == inverse quadratic, "IMQ" == inverse
      *                              multiquadric)

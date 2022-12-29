@@ -94,7 +94,7 @@ public:
 
 
     /**
-     * Return the number of proecessors.
+     * Return the number of processors.
      */
     inline int getNumProcs() const {
         return d_num_procs;
