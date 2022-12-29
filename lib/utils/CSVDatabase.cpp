@@ -54,7 +54,7 @@ CSVDatabase::putIntegerArray(
     int nelements)
 {
     CAROM_VERIFY(!file_name.empty());
-    CAROM_VERIFY(data != 0);
+    CAROM_VERIFY(data != nullptr);
     CAROM_VERIFY(nelements > 0);
 
     std::ofstream d_fs(file_name.c_str());
@@ -72,11 +72,11 @@ CSVDatabase::putDoubleArray(
     int nelements)
 {
     CAROM_VERIFY(!file_name.empty());
-    CAROM_VERIFY(data != 0);
+    CAROM_VERIFY(data != nullptr);
     CAROM_VERIFY(nelements > 0);
 
     std::ofstream d_fs(file_name.c_str());
-    d_fs << std::setprecision(10) << std::fixed;
+    d_fs << std::setprecision(16) << std::fixed;
     for (int i = 0; i < nelements; ++i)
     {
         d_fs << data[i] << std::endl;
@@ -95,7 +95,7 @@ CSVDatabase::putDoubleVector(
     CAROM_VERIFY(data.size() == nelements);
 
     std::ofstream d_fs(file_name.c_str());
-    d_fs << std::setprecision(10) << std::fixed;
+    d_fs << std::setprecision(16) << std::fixed;
     for (int i = 0; i < nelements; ++i)
     {
         d_fs << data[i] << std::endl;
@@ -114,7 +114,7 @@ CSVDatabase::putComplexVector(
     CAROM_VERIFY(data.size() == nelements);
 
     std::ofstream d_fs(file_name.c_str());
-    d_fs << std::setprecision(10) << std::fixed;
+    d_fs << std::setprecision(16) << std::fixed;
     for (int i = 0; i < nelements; ++i)
     {
         d_fs << std::real(data[i]) << "," << std::imag(data[i]) << std::endl;
@@ -130,7 +130,7 @@ CSVDatabase::putStringVector(
 {
     CAROM_VERIFY(!file_name.empty());
     CAROM_VERIFY(nelements > 0);
-    CAROM_ASSERT(data != 0);
+    CAROM_ASSERT(data != nullptr);
 
     std::ofstream d_fs(file_name.c_str());
     for (int i = 0; i < nelements; ++i)

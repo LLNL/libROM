@@ -231,7 +231,7 @@ public:
      * from the currently open database file.
      *
      * @pre !key.empty()
-     * @pre data != 0 || nelements == 0
+     * @pre data != nullptr || nelements == 0
      *
      * @param[in] key The key associated with the array of values to be
      *                read.

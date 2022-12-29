@@ -76,7 +76,7 @@ public:
      * the currently open HDF5 database file.
      *
      * @pre !key.empty()
-     * @pre data != 0
+     * @pre data != nullptr
      * @pre nelements > 0
      *
      * @param[in] key The key associated with the array of values to be
@@ -96,7 +96,7 @@ public:
      * the currently open HDF5 database file.
      *
      * @pre !key.empty()
-     * @pre data != 0
+     * @pre data != nullptr
      * @pre nelements > 0
      *
      * @param[in] key The key associated with the array of values to be
@@ -116,7 +116,7 @@ public:
      * the currently open HDF5 database file.
      *
      * @pre !key.empty()
-     * @pre data != 0
+     * @pre data != nullptr
      * @pre nelements > 0
      *
      * @param[in] key The key associated with the vector of values to be
@@ -136,7 +136,7 @@ public:
      * from the currently open HDF5 database file.
      *
      * @pre !key.empty()
-     * @pre data != 0 || nelements == 0
+     * @pre data != nullptr || nelements == 0
      *
      * @param[in] key The key associated with the array of values to be
      *                read.
@@ -167,7 +167,7 @@ public:
      * from the currently open HDF5 database file.
      *
      * @pre !key.empty()
-     * @pre data != 0 || nelements == 0
+     * @pre data != nullptr || nelements == 0
      *
      * @param[in] key The key associated with the array of values to be
      *                read.
@@ -186,7 +186,7 @@ public:
      * from the currently open HDF5 database file.
      *
      * @pre !key.empty()
-     * @pre data != 0 || nelements == 0
+     * @pre data != nullptr || nelements == 0
      *
      * @param[in] key The key associated with the array of values to be
      *                read.
@@ -207,7 +207,7 @@ public:
      * from the currently open HDF5 database file.
      *
      * @pre !key.empty()
-     * @pre data != 0 || nelements == 0
+     * @pre data != nullptr || nelements == 0
      *
      * @param[in] key The key associated with the array of values to be
      *                read.

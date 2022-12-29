@@ -76,7 +76,7 @@ public:
      * @brief Writes an array of integers associated with the supplied filename.
      *
      * @pre !file_name.empty()
-     * @pre data != 0
+     * @pre data != nullptr
      * @pre nelements > 0
      *
      * @param[in] file_name The filename associated with the array of values to be
@@ -95,7 +95,7 @@ public:
      * @brief Writes an array of doubles associated with the supplied filename.
      *
      * @pre !file_name.empty()
-     * @pre data != 0
+     * @pre data != nullptr
      * @pre nelements > 0
      *
      * @param[in] file_name The filename associated with the array of values to be
@@ -115,7 +115,7 @@ public:
      * the currently open CSV database file.
      *
      * @pre !file_name.empty()
-     * @pre data != 0
+     * @pre data != nullptr
      * @pre nelements > 0
      *
      * @param[in] file_name The filename associated with the vector of values to be
@@ -134,7 +134,7 @@ public:
      * @brief Writes a vector of complex doubles associated with the supplied filename.
      *
      * @pre !file_name.empty()
-     * @pre data != 0
+     * @pre data != nullptr
      * @pre nelements > 0
      *
      * @param[in] file_name The filename associated with the vector of values to be
@@ -153,7 +153,7 @@ public:
      * @brief Writes a vector of strings associated with the supplied filename.
      *
      * @pre !file_name.empty()
-     * @pre data != 0
+     * @pre data != nullptr
      * @pre nelements > 0
      *
      * @param[in] file_name The filename associated with the vector of values to be
@@ -172,7 +172,7 @@ public:
      * @brief Reads an array of integers associated with the supplied filename.
      *
      * @pre !file_name.empty()
-     * @pre data != 0 || nelements == 0
+     * @pre data != nullptr || nelements == 0
      *
      * @param[in] file_name The filename associated with the array of values to be
      *                read.
@@ -224,7 +224,7 @@ public:
      * @brief Reads an array of doubles associated with the supplied filename.
      *
      * @pre !file_name.empty()
-     * @pre data != 0 || nelements == 0
+     * @pre data != nullptr || nelements == 0
      *
      * @param[in] file_name The filename associated with the array of values to be
      *                read.
@@ -242,7 +242,7 @@ public:
      * @brief Reads a sub-array of doubles associated with the supplied filename.
      *
      * @pre !file_name.empty()
-     * @pre data != 0 || nelements == 0
+     * @pre data != nullptr || nelements == 0
      *
      * @param[in] file_name The filename associated with the array of values to be
      *                read.
@@ -262,7 +262,7 @@ public:
      * @brief Reads an array of doubles associated with the supplied filename.
      *
      * @pre !file_name.empty()
-     * @pre data != 0 || nelements == 0
+     * @pre data != nullptr || nelements == 0
      *
      * @param[in] file_name The filename associated with the array of values to be
      *                read.
