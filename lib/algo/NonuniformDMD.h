@@ -82,6 +82,24 @@ public:
     void save(std::string base_file_name) override;
 
 protected:
+    /**
+     * @brief Obtain DMD model interpolant at desired parameter point by
+     *        interpolation of DMD models from training parameter points.
+     *
+     * @param[in] parametric_dmd    The interpolant DMD model at the desired point.
+     * @param[in] parameter_points  The training parameter points.
+     * @param[in] dmds              The DMD objects associated with
+     *                              each training parameter point.
+     * @param[in] desired_point     The desired point at which to create a parametric DMD.
+     * @param[in] rbf               The RBF type ("G" == gaussian,
+     *                              "IQ" == inverse quadratic, "IMQ" == inverse
+     *                              multiquadric)
+     * @param[in] interp_method     The interpolation method type ("LS" == linear solve,
+     *                              "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
+     * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
+     *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
+     * @param[in] reorthogonalize_W Whether to reorthogonalize the interpolated W (basis) matrix.
+     */
     friend void getParametricDMD<NonuniformDMD>(NonuniformDMD*& parametric_dmd,
             std::vector<Vector*>& parameter_points,
             std::vector<NonuniformDMD*>& dmds,
@@ -147,7 +165,7 @@ private:
     /**
      * @brief Add the appropriate offset when predicting the solution.
      */
-    void addOffset(Vector*& result, double t, int power) override;
+    void addOffset(Vector*& result, double t, int deg) override;
 
     /**
      * @brief Derivative offset in snapshot.
