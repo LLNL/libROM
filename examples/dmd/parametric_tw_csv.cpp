@@ -104,11 +104,12 @@ int main(int argc, char *argv[])
     const char *test_list = "dmd_test";
     const char *temporal_idx_list = "temporal_idx";
     const char *spatial_idx_list = "spatial_idx";
-    const char *hdf_name = "dmd";
+    const char *hdf_name = "dmd.hdf";
     const char *basename = "";
     bool save_csv = false;
     bool csvFormat = true;
     bool useWindowDims = false;
+    bool inputPartitioned = false;
     int subsample = 0;
     int eval_subsample = 0;
 
@@ -172,6 +173,9 @@ int main(int argc, char *argv[])
                    "Use CSV or HDF format for input files.");
     args.AddOption(&useWindowDims, "-wdim", "--wdim", "-no-wdim", "--no-wdim",
                    "Use DMD dimensions for each window, input from a CSV file.");
+    args.AddOption(&inputPartitioned, "-inpar", "--input-partitioned", "-no-inpar",
+                   "--no-input-partitioned",
+                   "Input HDF files are partitioned with respect to MPI rank (CSV not supported yet).");
     args.AddOption(&subsample, "-subs", "--subsample",
                    "Subsampling factor for training snapshots.");
     args.AddOption(&eval_subsample, "-esubs", "--eval_subsample",
@@ -190,7 +194,15 @@ int main(int argc, char *argv[])
         args.PrintOptions(cout);
     }
 
-    string hdf_filename = hdf_name + to_string(myid) + ".hdf";
+    string hdf_filename;
+    if (inputPartitioned)
+    {
+        hdf_filename = hdf_name + to_string(myid) + ".hdf";
+    }
+    else
+    {
+        hdf_filename = hdf_name;
+    }
 
     CAROM_VERIFY(!(offline && online) && (offline || online));
     CAROM_VERIFY(!(dtc > 0.0 && ddt > 0.0));
@@ -603,7 +615,7 @@ int main(int argc, char *argv[])
                     }
                     dmd[idx_dataset][window]->train(rdim);
                 }
-                else if (ef != -1)
+                else if (ef > 0.0)
                 {
                     if (myid == 0)
                     {
@@ -625,12 +637,20 @@ int main(int argc, char *argv[])
                     dmd[idx_dataset][window]->projectInitialCondition(init_cond);
                     delete init_cond;
                 }
+
+                // Make a directory for this window, only on the first parameter.
+                if (idx_dataset == 0)
+                {
+                    string outWindow = outputPath + "/window" + to_string(window);
+                    mkdir(outWindow.c_str(), 0777);
+                }
+
                 dmd[idx_dataset][window]->save(outputPath + "/window" + to_string(
-                                                   window) + "_par" + to_string(idx_dataset));
+                                                   window) + "/par" + to_string(idx_dataset));
                 if (myid == 0)
                 {
                     dmd[idx_dataset][window]->summary(outputPath + "/window"
-                                                      + to_string(window) + "_par"
+                                                      + to_string(window) + "/par"
                                                       + to_string(idx_dataset));
 
                     cout << "Window " << window << ", DMD " << idx_dataset << " dim "
@@ -647,6 +667,15 @@ int main(int argc, char *argv[])
             } // escape for-loop over window
 
             db->close();
+
+            if (!online && !predict)
+            {
+                for (int window = 0; window < numWindows; ++window)
+                {
+                    delete dmd[idx_dataset][window];
+                    dmd[idx_dataset][window] = nullptr;
+                }
+            }
         } // escape for-loop over idx_dataset
         dmd_training_timer.Stop();
 
@@ -768,7 +797,7 @@ int main(int argc, char *argv[])
                 for (int idx_trainset = 0; idx_trainset < par_vectors.size(); ++idx_trainset)
                 {
                     dmd_paths.push_back(outputPath + "/window" + to_string(window)
-                                        + "_par" + to_string(idx_trainset));
+                                        + "/par" + to_string(idx_trainset));
                 }
 
                 if (par_vectors.size() > 1)
