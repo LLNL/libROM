@@ -146,7 +146,7 @@ set_target_properties(ROM
 # the library itself (in this case the .so or .a file)
 # ${CMAKE_INSTALL_LIBDIR} and ${CMAKE_INSTALL_BINDIR} include ${CMAKE_INSTALL_PREFIX} uppon installation
 install(TARGETS ROM
-  EXPORT ROM_Exports
+  EXPORT libROM_Exports
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     NAMELINK_SKIP
   # on Windows put the dlls into bin --> Do we need these?
@@ -156,7 +156,7 @@ install(TARGETS ROM
 )
 
 # Target information about that artefact
-install(EXPORT ROM_Exports
+install(EXPORT libROM_Exports
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libROM
 #  NAMESPACE rkcommon::
 )

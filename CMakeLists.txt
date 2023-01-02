@@ -317,9 +317,5 @@ install(FILES
   #cmake/FindTBB.cmake
   #cmake/rkcommon_macros.cmake
 DESTINATION
-  ${CMAKE_INSTALL_LIBDIR}/cmake/rkcommon-${PROJECT_VERSION}
+  ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
 )
-
-
-
-
