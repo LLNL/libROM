@@ -134,9 +134,6 @@ target_include_directories(ROM
   ${CMAKE_CURRENT_SOURCE_DIR})
   
 
-  
-
-
 # Install library + targets
 
 # Set version information
@@ -148,31 +145,16 @@ set_target_properties(ROM
 install(TARGETS ROM
   EXPORT libROM_Exports
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    NAMELINK_SKIP
-  # on Windows put the dlls into bin --> Do we need these?
-#  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-  # ... and the import lib into the devel package
-#  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
 # Target information about that artefact
 install(EXPORT libROM_Exports
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libROM
-#  NAMESPACE rkcommon::
-)
-
-# What does this do? Repeat of earlier?!? Do we need this?
-install(TARGETS ROM
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-#    NAMELINK_ONLY
-#  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-#  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
 # Install headers
-# This is not standard but works for here.
 install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING
   PATTERN *.h
   PATTERN *.inl

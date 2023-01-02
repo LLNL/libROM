@@ -296,6 +296,11 @@ endif(DOXYGEN_FOUND)
 
 ## Configure CMake find_package() config files ##
 
+# Default option
+if (NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "release")
+endif()
+
 include(CMakePackageConfigHelpers)
 
 configure_package_config_file(
@@ -314,8 +319,10 @@ write_basic_package_version_file(
 install(FILES
   ${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
   ${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-  #cmake/FindTBB.cmake
-  #cmake/rkcommon_macros.cmake
 DESTINATION
   ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
 )
+
+
+
+
