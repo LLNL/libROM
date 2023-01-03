@@ -203,42 +203,47 @@ if (ENABLE_EXAMPLES)
     target_compile_features(${name} PRIVATE cxx_std_11)
   endforeach(name) # IN LISTS misc_exmaple_names
 
-set(unit_test_names
-  smoke_test
-  test_include
-  uneven_dist
-  weak_scaling
-  random_test
-  smoke_static
-  load_samples)
+  set(unit_test_names
+    smoke_test
+    test_include
+    uneven_dist
+    weak_scaling
+    random_test
+    smoke_static
+    load_samples)
+    
+  if (USE_MFEM)
+    set(regression_test_names
+      basisComparator
+      checkError
+      computeSpeedup
+      solutionComparator
+      fileComparator)
+  endif()
 
-set(regression_test_names
-  basisComparator
-  checkError
-  computeSpeedup
-  solutionComparator
-  fileComparator)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests)
 
-foreach(name IN LISTS unit_test_names)
-  add_executable(${name} unit_tests/${name}.cpp)
-  target_link_libraries(${name}
-    PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
-  target_include_directories(${name}
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-    ${MPI_C_INCLUDE_DIRS})
-  target_compile_features(${name} PRIVATE cxx_std_11)
-endforeach(name) # IN LISTS unit_test_names
+  foreach(name IN LISTS unit_test_names)
+    add_executable(${name} unit_tests/${name}.cpp)
+    target_link_libraries(${name}
+      PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
+    target_include_directories(${name}
+      PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+      ${MPI_C_INCLUDE_DIRS})
+    target_compile_features(${name} PRIVATE cxx_std_11)
+  endforeach(name) # IN LISTS unit_test_names
 
-foreach(name IN LISTS regression_test_names)
-  add_executable(${name} regression_tests/${name}.cpp)
-  target_link_libraries(${name}
-    PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
-  target_include_directories(${name}
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-    ${MPI_C_INCLUDE_DIRS})
-  target_compile_features(${name} PRIVATE cxx_std_11)
-endforeach(name) # IN LISTS regression_test_names
+  if (USE_MFEM)
+    foreach(name IN LISTS regression_test_names)
+      add_executable(${name} regression_tests/${name}.cpp)
+      target_link_libraries(${name}
+        PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
+      target_include_directories(${name}
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+        ${MPI_C_INCLUDE_DIRS})
+      target_compile_features(${name} PRIVATE cxx_std_11)
+    endforeach(name) # IN LISTS regression_test_names
+  endif()
 endif(ENABLE_EXAMPLES)
 
 

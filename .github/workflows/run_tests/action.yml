@@ -1,7 +1,7 @@
 runs:
   using: "composite"
   steps:
-    - name: Run tests
+    - name: Run unit tests
       run: |
           cd ${GITHUB_WORKSPACE}/build
           ./tests/test_SVD
@@ -19,6 +19,12 @@ runs:
           mpirun -n 3 --oversubscribe tests/test_DMD
           ./tests/test_GreedyCustomSampler
           mpirun -n 3 --oversubscribe tests/test_GreedyCustomSampler
+
+      shell: bash
+      
+    - name: Run regression tests
+      if: ${{ github.event.label.name == 'LGTM' || contains(github.event.pull_request.labels.*.name, 'LGTM') }}
+      run: |
           cd ${GITHUB_WORKSPACE}
           ./regression_tests/run_regression_tests.sh
          

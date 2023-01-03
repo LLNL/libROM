@@ -92,6 +92,10 @@ public:
      */
     void normalize_constraints(Matrix& matTrans, Vector& rhs_lb, Vector& rhs_ub);
 
+
+    /**
+     * Return the number of processors.
+     */
     inline int getNumProcs() const {
         return d_num_procs;
     };
