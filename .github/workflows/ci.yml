@@ -55,7 +55,8 @@ jobs:
             gcc --version
             ls /usr/local/lib/gcc/12
             otool -l /usr/local/lib/gcc/12/libquadmath.0.dylib | grep LC_RPATH
-            install_name_tool -add_rpath /usr/local/lib/gcc/12
+            cd /usr/local/lib/gcc/12
+            install_name_tool -add_rpath @executable_path/. libquadmath.0.dylib
             brew install open-mpi
             brew install openblas
             brew install lapack
