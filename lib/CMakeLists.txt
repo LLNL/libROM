@@ -119,8 +119,7 @@ target_link_libraries(ROM
   ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} ${MFEM} ${HYPRE} ${PARMETIS} ${METIS}
   PRIVATE ${ZLIB_LIBRARIES} ZLIB::ZLIB)
 
-
-target_include_directories(ROM 
+target_include_directories(ROM
   PUBLIC
   ${MFEM_INCLUDES}
   ${HYPRE_INCLUDES}
@@ -129,10 +128,9 @@ target_include_directories(ROM
   ${MPI_C_INCLUDE_DIRS}
   ${MFEM_C_INCLUDE_DIRS}
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}> # Same as below with installation of headers
-  PRIVATE 
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}> # Same as below with installation of headers
+  PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR})
-  
 
 # Install library + targets
 
@@ -143,12 +141,12 @@ set_target_properties(ROM
 # the library itself (in this case the .so or .a file)
 # ${CMAKE_INSTALL_LIBDIR} and ${CMAKE_INSTALL_BINDIR} include ${CMAKE_INSTALL_PREFIX} uppon installation
 install(TARGETS ROM
-  EXPORT libROM_Exports
+  EXPORT libROM_Targets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
 # Target information about that artefact
-install(EXPORT libROM_Exports
+install(EXPORT libROM_Targets
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libROM
 )
 
@@ -161,4 +159,3 @@ install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/
   PATTERN *.hpp
   PATTERN *.ih
 )
-  

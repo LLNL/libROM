@@ -298,7 +298,7 @@ endif(DOXYGEN_FOUND)
 
 # Default option
 if (NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "release")
+  set(CMAKE_BUILD_TYPE "Release")
 endif()
 
 include(CMakePackageConfigHelpers)
@@ -322,7 +322,3 @@ install(FILES
 DESTINATION
   ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
 )
-
-
-
-
