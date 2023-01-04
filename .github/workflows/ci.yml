@@ -55,6 +55,7 @@ jobs:
             gcc --version
             ls /usr/local/lib/gcc/12
             otool -l /usr/local/lib/gcc/12/libquadmath.0.dylib
+            cd /usr/local/lib/gcc/12
             install_name_tool -add_rpath /usr/local/lib/gcc/12 libquadmath.0.dylib
             otool -l /usr/local/lib/gcc/12/libquadmath.0.dylib
             brew install open-mpi
