@@ -54,8 +54,8 @@ jobs:
             uname -a
             gcc --version
             ls /usr/local/lib/gcc/12
-            install_name_tool -id "@rpath/libtest.dylib" libtest.dylib
             otool -l /usr/local/lib/gcc/12/libquadmath.0.dylib | grep -A2 LC_RPATH
+            install_name_tool -id "@rpath/libquadmath.0.dylib" libquadmath.0.dylib
             brew install open-mpi
             brew install openblas
             brew install lapack
