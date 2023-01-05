@@ -54,8 +54,6 @@ jobs:
             uname -a
             gcc --version
             ls /usr/local/lib/gcc/12
-            echo "otool for libquadmath"
-            otool -l /usr/local/lib/gcc/12/libquadmath.0.dylib
             cd /usr/local/lib/gcc/12
             install_name_tool -add_rpath /usr/local/lib/gcc/12 libquadmath.0.dylib
             echo "otool for libquadmath after adding rpath"
