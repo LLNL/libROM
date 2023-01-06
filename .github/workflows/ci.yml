@@ -15,7 +15,7 @@ jobs:
 
       - name: Install Linux dependencies
         run: |
-            sudo apt-get install libmpich-dev libblas-dev liblapack-dev libscalapack-mpi-dev libhdf5-serial-dev
+            sudo apt-get install --fix-missing libmpich-dev libblas-dev liblapack-dev libscalapack-mpi-dev libhdf5-serial-dev
       - name: Check out libROM
         uses: actions/checkout@v2
       - uses: ./.github/workflows/checkout_repo
