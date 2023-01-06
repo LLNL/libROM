@@ -15,6 +15,7 @@ jobs:
 
       - name: Install Linux dependencies
         run: |
+            sudo apt update
             sudo apt-get install libmpich-dev libblas-dev liblapack-dev libscalapack-mpi-dev libhdf5-serial-dev
       - name: Check out libROM
         uses: actions/checkout@v2
