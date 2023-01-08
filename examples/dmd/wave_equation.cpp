@@ -1,5 +1,6 @@
-/*
-* Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+/******************************************************************************
+*
+* Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
 * and other libROM project developers. See the top-level COPYRIGHT
 * file for details.
 *
@@ -23,6 +24,7 @@
 // Elapsed time for solving FOM: 3.122185e+00 second
 // Elapsed time for training DMD: 6.904051e-01 second
 // Elapsed time for predicting DMD: 2.496171e-03 second
+//
 // =================================================================================
 //
 //
@@ -334,7 +336,6 @@ int main(int argc, char *argv[])
     case 14:
         ode_solver = new FoxGoodwinSolver();
         break;
-
     default:
         cout << "Unknown ODE solver type: " << ode_solver_type << '\n';
         delete mesh;
@@ -513,7 +514,6 @@ int main(int argc, char *argv[])
             }
         }
         oper.SetParameters(u);
-
     }
 
     // 9. Save the final solution. This output can be viewed later using GLVis:
@@ -525,8 +525,8 @@ int main(int argc, char *argv[])
         dudt_gf.Save(osol);
     }
 
-    dmd_prediction_timer.Start();
     // 10. Predict the state at t_final using DMD.
+    dmd_prediction_timer.Start();
     cout << "Predicting temperature using DMD" << endl;
     CAROM::Vector* result_u = nullptr;
     VisItDataCollection dmd_visit_dc("DMD_Wave_Equation", mesh);
@@ -539,9 +539,7 @@ int main(int argc, char *argv[])
         dmd_visit_dc.SetCycle(0);
         dmd_visit_dc.SetTime(0.0);
         dmd_visit_dc.Save();
-        if (result_u) {
-            delete result_u;
-        }
+        delete result_u;
     }
 
     for (int i = 1; i < ts.size(); i++)
@@ -570,7 +568,6 @@ int main(int argc, char *argv[])
     result_u = dmd_u[curr_window]->predict(t_final);
 
     // 11. Calculate the relative error between the DMD final solution and the true solution.
-
     Vector dmd_solution_u(result_u->getData(), result_u->dim());
     Vector diff_u(u.Size());
     subtract(dmd_solution_u, u, diff_u);

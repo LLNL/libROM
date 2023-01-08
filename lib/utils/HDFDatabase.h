@@ -151,7 +151,7 @@ public:
         int nelements);
 
     /**
-     * @brief Count the number of elements in an array of doubles associated 
+     * @brief Count the number of elements in an array of doubles associated
      * with the supplied key from the currently open HDF5 database file.
      *
      * @pre !key.empty()
