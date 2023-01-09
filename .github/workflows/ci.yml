@@ -61,6 +61,8 @@ jobs:
             file /usr/local/lib/gcc/12/libquadmath.0.dylib
             echo "otool for libquadmath after adding rpath"
             otool -l /usr/local/lib/gcc/12/libquadmath.0.dylib | grep -A2 LC_RPATH
+            mkdir -p ${GITHUB_WORKSPACE}/build/lib
+            cp /usr/local/lib/gcc/12/libquadmath.0.dylib ${GITHUB_WORKSPACE}/build/lib
             brew install open-mpi
             brew install openblas
             brew install lapack
@@ -72,7 +74,7 @@ jobs:
       - name: Build libROM
         run: |
             export FC=/usr/local/bin/gfortran-12
-            mkdir ${GITHUB_WORKSPACE}/build
+            mkdir -p ${GITHUB_WORKSPACE}/build
             cd ${GITHUB_WORKSPACE}/build
             cmake -DCMAKE_BUILD_TYPE=Debug ..
             make
