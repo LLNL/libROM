@@ -58,7 +58,7 @@ jobs:
             ls /usr/local/lib/gcc/12
             cd /usr/local/lib/gcc/12
             install_name_tool -delete_rpath @loader_path libquadmath.0.dylib
-            install_name_tool -add_rpath /usr/local/lib/gcc/12 libquadmath.0.dylib
+            install_name_tool -add_rpath /usr/local/lib/gcc/12 ${GITHUB_WORKSPACE}/build/examples/misc/combine_samples
             echo "otool for libquadmath after adding rpath"
             otool -l /usr/local/lib/gcc/12/libquadmath.0.dylib | grep -A2 LC_RPATH
             brew install open-mpi
