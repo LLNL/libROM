@@ -59,7 +59,6 @@ jobs:
             cd /usr/local/lib/gcc/12
             echo "Architecture that libquadmath.0.dylib is compiled for: "
             file /usr/local/lib/gcc/12/libquadmath.0.dylib
-            echo "otool for libquadmath after adding rpath"
             otool -l /usr/local/lib/gcc/12/libquadmath.0.dylib | grep -A2 LC_RPATH
             mkdir -p ${GITHUB_WORKSPACE}/build/lib
             cp /usr/local/lib/gcc/12/libquadmath.0.dylib ${GITHUB_WORKSPACE}/build/lib
