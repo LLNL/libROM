@@ -140,6 +140,12 @@ set_target_properties(ROM
 
 # the library itself (in this case the .so or .a file)
 # ${CMAKE_INSTALL_LIBDIR} and ${CMAKE_INSTALL_BINDIR} include ${CMAKE_INSTALL_PREFIX} uppon installation
+
+# Default option
+if (NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "Release")
+endif()
+
 install(TARGETS ROM
   EXPORT libROM_Targets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
