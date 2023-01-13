@@ -132,14 +132,13 @@ target_include_directories(ROM
   PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR})
 
-# Install library + targets
 
+#-------------------------------------------------------------------------------
+# Installation
+#-------------------------------------------------------------------------------
 # Set version information
 set_target_properties(ROM
     PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})
-
-# the library itself (in this case the .so or .a file)
-# ${CMAKE_INSTALL_LIBDIR} and ${CMAKE_INSTALL_BINDIR} include ${CMAKE_INSTALL_PREFIX} uppon installation
 
 # Default option
 if (NOT CMAKE_BUILD_TYPE)

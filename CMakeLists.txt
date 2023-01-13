@@ -294,7 +294,10 @@ if(DOXYGEN_FOUND)
 
 endif(DOXYGEN_FOUND)
 
-## Configure CMake find_package() config files ##
+#-------------------------------------------------------------------------------
+# Installation
+# Configure CMake find_package() config files 
+#-------------------------------------------------------------------------------
 
 # Default option
 if (NOT CMAKE_BUILD_TYPE)
@@ -303,11 +306,16 @@ endif()
 
 include(CMakePackageConfigHelpers)
 
+# Extract the enabled languages required to use ROM
+get_property(ROM_ENABLED_LANGUAGES GLOBAL PROPERTY ENABLED_LANGUAGES)
+
 configure_package_config_file(
   "${PROJECT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in"
   "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
 INSTALL_DESTINATION
   ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+PATH_VARS
+  ROM_ENABLED_LANGUAGES
 )
 
 write_basic_package_version_file(
