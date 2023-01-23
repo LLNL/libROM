@@ -656,7 +656,7 @@ int main(int argc, char *argv[])
     for (int i = 1; i < ts.size(); i++)
     {
         if (i == ts.size() - 1 || (i % vis_steps) == 0)
-        {   
+        {
             if(visit)
             {
                 result_x = dmd_x[curr_window]->predict(ts[i]);
