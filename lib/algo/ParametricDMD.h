@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -8,12 +8,14 @@
  *
  *****************************************************************************/
 
-// Description: Computes the ParametricDMD algorithm on the given snapshot matrix. The
-//              implemented dynamic mode decomposition algorithm is derived from
+// Description: Computes the ParametricDMD algorithm to obtain DMD model interpolant
+//              at desired parameter point by interpolation of DMD models at training parameter points.
+//              The implemented dynamic mode decomposition algorithm is derived from
 //              Tu et. al's paper "On Dynamic Mode Decomposition: Theory and
 //              Applications": https://arxiv.org/abs/1312.0041
-//              This algorithm also works in the case that the first sample does
-//              not start from t = 0.0 by incorporating a time offset.
+//              The interpolation algorithm was adapted from "Gradient-based
+//              Constrained Optimization Using a Database of Linear Reduced-Order Models"
+//              by Y. Choi et al.
 
 #ifndef included_ParametricDMD_h
 #define included_ParametricDMD_h
@@ -30,10 +32,11 @@ namespace CAROM {
 /**
  * @brief Constructor.
  *
- * @param[in] parameter_points  The parameter points.
+ * @param[in] parametric_dmd    The interpolant DMD model at the desired point.
+ * @param[in] parameter_points  The training parameter points.
  * @param[in] dmds              The DMD objects associated with
- *                              each parameter point.
- * @param[in] desired_point     The desired point to create a parametric DMD at.
+ *                              each training parameter point.
+ * @param[in] desired_point     The desired point at which to create a parametric DMD.
  * @param[in] rbf               The RBF type ("G" == gaussian,
  *                              "IQ" == inverse quadratic, "IMQ" == inverse
  *                              multiquadric)
@@ -116,7 +119,7 @@ void getParametricDMD(T*& parametric_dmd,
  * @param[in] parameter_points  The parameter points.
  * @param[in] dmd_paths         The paths to the saved DMD objects associated with
  *                              each parameter point.
- * @param[in] desired_point     The desired point to create a parametric DMD at.
+ * @param[in] desired_point     The desired point at which to create a parametric DMD.
  * @param[in] rbf               The RBF type ("G" == gaussian,
  *                              "IQ" == inverse quadratic, "IMQ" == inverse
  *                              multiquadric)

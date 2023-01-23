@@ -1,6 +1,6 @@
 ###############################################################################
 #
-#  Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+#  Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
 #  and other libROM project developers. See the top-level COPYRIGHT
 #  file for details.
 #
@@ -140,6 +140,7 @@ if (ENABLE_EXAMPLES)
       dg_advection
       nonlinear_elasticity
       heat_conduction
+      wave_equation
       parametric_heat_conduction
       de_parametric_heat_conduction_greedy
       dg_euler
@@ -155,6 +156,7 @@ if (ENABLE_EXAMPLES)
       prom
       prom
       prom
+      dmd
       dmd
       dmd
       dmd

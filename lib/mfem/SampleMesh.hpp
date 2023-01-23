@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -51,6 +51,8 @@ public:
      *
      * @param[in] visFileName If non-empty, this filename is used for VisIt and ParaView output of the sample mesh
      *                        and the sampled DOFs on the full-order mesh.
+     *
+     * @param[in] visScale    Constant value for indicating the sample mesh elements in visualization.
      */
     SampleMeshManager(vector<ParFiniteElementSpace*> & fespace_,
                       string visFileName="", double visScale=1.0);

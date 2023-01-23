@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -651,6 +651,8 @@ int main(int argc, char *argv[])
         csv_db.getStringVector(string(list_dir) + "/" + test_list + ".csv",
                                testing_par_list, false);
         npar = testing_par_list.size();
+        CAROM_VERIFY(npar > 0);
+
         if (myid == 0)
         {
             cout << "Loading " << npar << " testing datasets." << endl;
@@ -992,7 +994,7 @@ int main(int argc, char *argv[])
                 csv_db.putDoubleVector(outputPath + "/" + par_dir + "_prediction_time.csv",
                                        prediction_time, num_snap);
                 csv_db.putDoubleVector(outputPath + "/" + par_dir + "_prediction_error.csv",
-                                       prediction_error, num_snap, 16);
+                                       prediction_error, num_snap);
             }
             prediction_time.clear();
             prediction_error.clear();

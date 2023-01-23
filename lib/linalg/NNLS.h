@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -92,6 +92,10 @@ public:
      */
     void normalize_constraints(Matrix& matTrans, Vector& rhs_lb, Vector& rhs_ub);
 
+
+    /**
+     * Return the number of processors.
+     */
     inline int getNumProcs() const {
         return d_num_procs;
     };

@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -628,7 +628,7 @@ DMD::projectInitialCondition(const Vector* init, double t_offset)
 }
 
 Vector*
-DMD::predict(double t, int power)
+DMD::predict(double t, int deg)
 {
     CAROM_VERIFY(d_trained);
     CAROM_VERIFY(d_init_projected);
@@ -636,7 +636,7 @@ DMD::predict(double t, int power)
 
     t -= d_t_offset;
 
-    std::pair<Matrix*, Matrix*> d_phi_pair = phiMultEigs(t, power);
+    std::pair<Matrix*, Matrix*> d_phi_pair = phiMultEigs(t, deg);
     Matrix* d_phi_mult_eigs_real = d_phi_pair.first;
     Matrix* d_phi_mult_eigs_imaginary = d_phi_pair.second;
 
@@ -646,7 +646,7 @@ DMD::predict(double t, int power)
                                            d_projected_init_imaginary);
     Vector* d_predicted_state_real = d_predicted_state_real_1->minus(
                                          d_predicted_state_real_2);
-    addOffset(d_predicted_state_real, t, power);
+    addOffset(d_predicted_state_real, t, deg);
 
     delete d_phi_mult_eigs_real;
     delete d_phi_mult_eigs_imaginary;
@@ -657,7 +657,7 @@ DMD::predict(double t, int power)
 }
 
 void
-DMD::addOffset(Vector*& result, double t, int power)
+DMD::addOffset(Vector*& result, double t, int deg)
 {
     if (d_state_offset)
     {
@@ -672,7 +672,7 @@ DMD::computeEigExp(std::complex<double> eig, double t)
 }
 
 std::pair<Matrix*, Matrix*>
-DMD::phiMultEigs(double t, int power)
+DMD::phiMultEigs(double t, int deg)
 {
     Matrix* d_eigs_exp_real = new Matrix(d_k, d_k, false);
     Matrix* d_eigs_exp_imaginary = new Matrix(d_k, d_k, false);
@@ -680,7 +680,7 @@ DMD::phiMultEigs(double t, int power)
     for (int i = 0; i < d_k; i++)
     {
         std::complex<double> eig_exp = computeEigExp(d_eigs[i], t);
-        for (int k = 0; k < power; ++k)
+        for (int k = 0; k < deg; ++k)
         {
             eig_exp *= d_eigs[i];
         }
@@ -929,9 +929,9 @@ DMD::summary(std::string base_file_name)
         CSVDatabase* csv_db(new CSVDatabase);
 
         csv_db->putDoubleVector(base_file_name + "_singular_value.csv", d_sv,
-                                d_num_singular_vectors, 16);
+                                d_num_singular_vectors);
         csv_db->putComplexVector(base_file_name + "_eigenvalue.csv", d_eigs,
-                                 d_eigs.size(), 16);
+                                 d_eigs.size());
 
         delete csv_db;
     }
