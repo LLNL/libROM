@@ -70,6 +70,15 @@ VectorInterpolator::VectorInterpolator(std::vector<Vector*> parameter_points,
     }
 }
 
+VectorInterpolator::~VectorInterpolator()
+{
+    for (auto v : d_rotated_reduced_vectors)
+        delete v;
+
+    for (auto v : d_gammas)
+        delete v;
+}
+
 void VectorInterpolator::obtainLambda()
 {
     if (d_interp_method == "LS")

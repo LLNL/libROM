@@ -55,6 +55,8 @@ protected:
                  std::string interp_method,
                  double closest_rbf_val = 0.9);
 
+    ~Interpolator();
+
     /**
      * @brief The rank of the process this object belongs to.
      */

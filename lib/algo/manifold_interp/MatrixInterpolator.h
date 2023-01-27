@@ -66,6 +66,8 @@ public:
                        std::string interp_method = "LS",
                        double closest_rbf_val = 0.9);
 
+    ~MatrixInterpolator();
+
     /**
      * @brief Obtain the interpolated reduced matrix of the unsampled parameter point.
      *
@@ -142,6 +144,8 @@ private:
      */
     std::vector<Matrix*> d_rotated_reduced_matrices;
 
+    std::vector<bool> d_rotated_reduced_matrices_owned;
+
     /**
      * @brief The reduced elements in tangential space.
      */
@@ -150,7 +154,7 @@ private:
     /**
      * @brief The reduced matrix of the reference point to the half power.
      */
-    Matrix* d_x_half_power;
+    Matrix* d_x_half_power = nullptr;
 };
 
 }

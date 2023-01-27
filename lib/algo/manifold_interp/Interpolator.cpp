@@ -62,6 +62,11 @@ Interpolator::Interpolator(std::vector<Vector*> parameter_points,
     d_epsilon = convertClosestRBFToEpsilon(parameter_points, rbf, closest_rbf_val);
 }
 
+Interpolator::~Interpolator()
+{
+    delete d_lambda_T;
+}
+
 std::vector<double> obtainRBFToTrainingPoints(std::vector<Vector*>
         parameter_points,
         std::string interp_method, std::string rbf, double epsilon, Vector* point)

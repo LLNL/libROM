@@ -1,8 +1,8 @@
 #!/bin/bash
 # If using sbatch, set the following flags
-#SBATCH -N 1
+#SBATCH -N 1 -n 4
 #SBATCH -t 1:00:00
-#SBATCH -p pbatch
+#SBATCH -p pdebug
 #SBATCH -o sbatch.log
 #SBATCH --open-mode truncate
 # On Linux:
