@@ -73,8 +73,8 @@ void getParametricDMD(T*& parametric_dmd,
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    std::vector<Matrix*> bases;
-    std::vector<Matrix*> A_tildes;
+    std::vector<CAROM::Matrix*> bases;
+    std::vector<CAROM::Matrix*> A_tildes;
     for (int i = 0; i < dmds.size(); i++)
     {
         bases.push_back(dmds[i]->d_basis);
@@ -88,20 +88,21 @@ void getParametricDMD(T*& parametric_dmd,
 
     CAROM::MatrixInterpolator basis_interpolator(parameter_points,
             rotation_matrices, bases, ref_point, "B", rbf, interp_method, closest_rbf_val);
-    Matrix* W = basis_interpolator.interpolate(desired_point, reorthogonalize_W);
+    CAROM::Matrix* W = basis_interpolator.interpolate(desired_point,
+                       reorthogonalize_W);
 
     CAROM::MatrixInterpolator A_tilde_interpolator(parameter_points,
             rotation_matrices, A_tildes, ref_point, "R", rbf, interp_method,
             closest_rbf_val);
-    Matrix* A_tilde = A_tilde_interpolator.interpolate(desired_point);
+    CAROM::Matrix* A_tilde = A_tilde_interpolator.interpolate(desired_point);
 
     // Calculate the right eigenvalues/eigenvectors of A_tilde
     ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(A_tilde);
     std::vector<std::complex<double>> eigs = eigenpair.eigs;
 
     // Calculate phi (phi = W * eigenvectors)
-    Matrix* phi_real = W->mult(eigenpair.ev_real);
-    Matrix* phi_imaginary = W->mult(eigenpair.ev_imaginary);
+    CAROM::Matrix* phi_real = W->mult(eigenpair.ev_real);
+    CAROM::Matrix* phi_imaginary = W->mult(eigenpair.ev_imaginary);
 
     parametric_dmd = new T(eigs, phi_real, phi_imaginary, dmds[0]->d_k,
                            dmds[0]->d_dt, dmds[0]->d_t_offset,
@@ -111,6 +112,9 @@ void getParametricDMD(T*& parametric_dmd,
     delete A_tilde;
     delete eigenpair.ev_real;
     delete eigenpair.ev_imaginary;
+
+    for (auto m : rotation_matrices)
+        delete m;
 }
 
 /**

@@ -59,6 +59,8 @@ public:
                        std::string interp_method = "LS",
                        double closest_rbf_val = 0.9);
 
+    ~VectorInterpolator();
+
     /**
      * @brief Obtain the interpolated reduced vector of the unsampled parameter point.
      *

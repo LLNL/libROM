@@ -474,7 +474,6 @@ DMD::constructDMD(const Matrix* f_snapshots,
         d_k = d_basis_new->numColumns();
         if (d_rank == 0) std::cout << "After adding W0, now using " << d_k <<
                                        " basis vectors." << std::endl;
-        delete d_basis_new;
     }
 
     // Calculate A_tilde = U_transpose * f_snapshots_out * V * inv(S)
