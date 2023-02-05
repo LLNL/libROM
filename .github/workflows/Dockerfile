@@ -137,4 +137,5 @@ ENV HYPRE_DIR=$LIB_DIR/hypre/src/hypre
 ENV PARMETIS_DIR=$LIB_DIR/parmetis-4.0.3/build/lib/libparmetis
 ENV METIS_DIR=$LIB_DIR/parmetis-4.0.3/build/lib/libmetis
 
-WORKDIR /home
+#WORKDIR /home
+#RUN useradd -u 1000 -m test

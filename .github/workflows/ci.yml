@@ -1,5 +1,5 @@
 name: CI
-on: 
+on:
   pull_request:
     types: [opened, labeled, synchronize]
     branches:
@@ -7,29 +7,26 @@ on:
 jobs:
   linux:
     runs-on: ubuntu-latest
+    container:
+      image: dreamer2368/librom_env:latest
+      options: --user 1001 --privileged
+      volumes:
+        - /mnt:/mnt
     steps:
       - name: Set Swap Space
         uses: pierotofy/set-swap-space@master
-        with: 
+        with:
           swap-size-gb: 10
-
-      - name: Install Linux dependencies
-        run: |
-            sudo apt update
-            sudo apt-get install libmpich-dev libblas-dev liblapack-dev libscalapack-mpi-dev libhdf5-serial-dev
       - name: Check out libROM
-        uses: actions/checkout@v2
-      - uses: ./.github/workflows/checkout_repo
+        uses: actions/checkout@v3
       - name: Build libROM
         run: |
             mkdir ${GITHUB_WORKSPACE}/build
-            export CC=mpicc
-            export CXX=mpicxx
-            scripts/setup.sh
             cd ${GITHUB_WORKSPACE}/build
-            cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_MFEM=On ..
+            pwd
+            cmake .. -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=Debug -DUSE_MFEM=${USE_MFEM} -DMFEM_USE_GSLIB=${MFEM_USE_GSLIB}
             make
-            cmake -DCMAKE_BUILD_TYPE=Optimized -DUSE_MFEM=On ..
+            cmake .. -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=Optimized -DUSE_MFEM=${USE_MFEM} -DMFEM_USE_GSLIB=${MFEM_USE_GSLIB}
             make
       - name: Build baseline libROM
         if: ${{ github.event.label.name == 'LGTM' || contains(github.event.pull_request.labels.*.name, 'LGTM') }}
@@ -38,13 +35,11 @@ jobs:
             git clone https://github.com/LLNL/libROM.git
             cd libROM
             mkdir build
-            export CC=mpicc
-            export CXX=mpicxx
-            scripts/setup.sh
             cd build
-            cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_MFEM=On ..
+            pwd
+            cmake .. -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=Debug -DUSE_MFEM=${USE_MFEM} -DMFEM_USE_GSLIB=${MFEM_USE_GSLIB}
             make
-            cmake -DCMAKE_BUILD_TYPE=Optimized -DUSE_MFEM=On ..
+            cmake .. -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=Optimized -DUSE_MFEM=${USE_MFEM} -DMFEM_USE_GSLIB=${MFEM_USE_GSLIB}
             make
       - uses: ./.github/workflows/run_tests
   mac:
