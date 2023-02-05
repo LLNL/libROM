@@ -1,20 +1,15 @@
-FROM ubuntu:18.04
+FROM ubuntu:22.04
 
-ENV USERNAME=env
+ENV ENVDIR=env
 
 # install sudo
 RUN apt-get -yq update && apt-get -yq install sudo
 
-# create and switch to a user
-RUN echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-RUN useradd --no-log-init --home-dir /home/$USERNAME --create-home --shell /bin/bash $USERNAME
-RUN adduser $USERNAME sudo
-USER $USERNAME
-WORKDIR /home/$USERNAME
+WORKDIR /$ENVDIR
 
 # install packages
 RUN sudo apt-get install -yq git
-RUN sudo apt-get install --no-install-recommends -yq make gcc gfortran libssl-dev
+RUN sudo apt-get install --no-install-recommends -yq make gcc gfortran libssl-dev cmake
 RUN sudo apt-get install -yq libopenblas-dev libmpich-dev libblas-dev liblapack-dev libscalapack-mpi-dev libhdf5-serial-dev
 RUN sudo apt-get install -yq vim
 RUN sudo apt-get install -yq git-lfs
@@ -24,10 +19,9 @@ RUN sudo apt-get install -yq wget
 RUN sudo apt-get clean -q
 
 # download dependencies
-ENV LIB_DIR=/home/$USERNAME/dependencies
+ENV LIB_DIR=/$ENVDIR/dependencies
 WORKDIR $LIB_DIR
 
-RUN wget https://github.com/Kitware/CMake/releases/download/v3.13.0/cmake-3.13.0.tar.gz
 #RUN wget -O mfem-4.5.tar.gz https://github.com/mfem/mfem/archive/refs/tags/v4.5.tar.gz
 RUN wget -O hypre-2.20.0.tar.gz https://github.com/hypre-space/hypre/archive/refs/tags/v2.20.0.tar.gz
 RUN wget -O parmetis-4.0.3.tar.gz http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
@@ -35,13 +29,6 @@ RUN wget -O gslib-1.0.7.tar.gz https://github.com/gslib/gslib/archive/v1.0.7.tar
 #RUN wget -O glvis-4.2.tar.gz https://github.com/GLVis/glvis/archive/refs/tags/v4.2.tar.gz
 #RUN wget -O metis-4.0.3.tar.gz https://github.com/mfem/tpls/raw/gh-pages/metis-4.0.3.tar.gz
 
-# install cmake-3.13.0
-RUN tar -zxvf cmake-3.13.0.tar.gz
-WORKDIR ./cmake-3.13.0
-RUN ./bootstrap
-RUN make
-RUN sudo make install
-WORKDIR $LIB_DIR
 
 ENV CFLAGS="-fPIC"
 ENV CPPFLAGS="-fPIC"
@@ -113,6 +100,17 @@ RUN ln -s ./ include
 WORKDIR $LIB_DIR
 RUN ln -s mfem_parallel mfem
 
+# install googletest
+WORKDIR $LIB_DIR
+RUN git clone https://github.com/google/googletest
+WORKDIR ./googletest
+# Last release that supports c++11
+RUN git checkout tags/release-1.12.1 -b v1.12.1
+WORKDIR ./build
+RUN cmake ..
+RUN make
+RUN sudo make install
+
 # clean up
 WORKDIR $LIB_DIR
 RUN rm *.tar.gz
@@ -121,7 +119,7 @@ RUN rm *.tar.gz
 RUN echo 'set(CMAKE_C_COMPILER mpicc)\n\
 set(CMAKE_CXX_COMPILER mpicxx)\n\
 set(CMAKE_Fortran_COMPILER mpif90)\n\
-set(LIB_DIR /home/env/dependencies)\n\
+set(LIB_DIR /env/dependencies)\n\
 set(MFEM_DIR ${LIB_DIR}/mfem)\n\
 set(HYPRE_DIR ${LIB_DIR}/hypre/src/hypre)\n\
 set(PARMETIS_DIR ${LIB_DIR}/parmetis-4.0.3/build/lib/libparmetis)\n\
@@ -137,5 +135,10 @@ ENV HYPRE_DIR=$LIB_DIR/hypre/src/hypre
 ENV PARMETIS_DIR=$LIB_DIR/parmetis-4.0.3/build/lib/libparmetis
 ENV METIS_DIR=$LIB_DIR/parmetis-4.0.3/build/lib/libmetis
 
-#WORKDIR /home
-#RUN useradd -u 1000 -m test
+# create and switch to a user
+ENV USERNAME=test
+RUN echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+RUN useradd --no-log-init -u 1001 --create-home --shell /bin/bash $USERNAME
+RUN adduser $USERNAME sudo
+USER $USERNAME
+WORKDIR /home/$USERNAME

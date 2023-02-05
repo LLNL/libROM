@@ -4,9 +4,6 @@ runs:
     - name: Run unit tests
       run: |
           cd ${GITHUB_WORKSPACE}/build
-          pwd
-          ls
-          ls ./tests/
           ./tests/test_SVD
           ./tests/test_Vector
           ./tests/test_Matrix
