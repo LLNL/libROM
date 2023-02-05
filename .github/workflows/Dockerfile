@@ -28,7 +28,7 @@ ENV LIB_DIR=/home/$USERNAME/dependencies
 WORKDIR $LIB_DIR
 
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.13.0/cmake-3.13.0.tar.gz
-RUN wget -O mfem-4.5.tar.gz https://github.com/mfem/mfem/archive/refs/tags/v4.5.tar.gz
+#RUN wget -O mfem-4.5.tar.gz https://github.com/mfem/mfem/archive/refs/tags/v4.5.tar.gz
 RUN wget -O hypre-2.20.0.tar.gz https://github.com/hypre-space/hypre/archive/refs/tags/v2.20.0.tar.gz
 RUN wget -O parmetis-4.0.3.tar.gz http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
 RUN wget -O gslib-1.0.7.tar.gz https://github.com/gslib/gslib/archive/v1.0.7.tar.gz
@@ -99,10 +99,12 @@ ENV CXXFLAGS=
 WORKDIR $LIB_DIR
 
 # install mfem
-#RUN git clone https://github.com/mfem/mfem.git mfem_parallel
-RUN tar -zxvf mfem-4.5.tar.gz
-RUN mv mfem-4.5 mfem_parallel
+RUN git clone https://github.com/mfem/mfem.git mfem_parallel
 WORKDIR ./mfem_parallel
+# Latest verified commit on Feb 1, 2023
+RUN git checkout 64e61fdc3e58338f2235e36fc9ad0c3770ffa299
+#RUN tar -zxvf mfem-4.5.tar.gz
+#RUN mv mfem-4.5 mfem_parallel
 #RUN git pull
 #RUN make serial -j 4
 RUN make parallel -j 4 STATIC=NO SHARED=YES MFEM_USE_MPI=YES MFEM_USE_GSLIB=${MG} MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB"
