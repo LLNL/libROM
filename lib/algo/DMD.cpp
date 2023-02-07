@@ -259,7 +259,7 @@ void
 DMD::computePhi(struct DMDInternal dmd_internal_obj)
 {
     // Calculate phi
-    if (d_alt_basis_output)
+    if (d_alt_output_basis)
     {
         Matrix* f_snapshots_out_mult_d_basis_right =
             dmd_internal_obj.snapshots_out->mult(dmd_internal_obj.basis_right);
