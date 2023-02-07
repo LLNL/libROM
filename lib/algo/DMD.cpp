@@ -276,7 +276,8 @@ DMD::computePhi(struct DMDInternal dmd_internal_obj)
     else
     {
         d_phi_real = dmd_internal_obj.basis->mult(dmd_internal_obj.eigenpair->ev_real);
-        d_phi_imaginary = dmd_internal_obj.basis->mult(dmd_internal_obj.eigenpair->ev_imaginary);
+        d_phi_imaginary = dmd_internal_obj.basis->mult(
+                              dmd_internal_obj.eigenpair->ev_imaginary);
     }
 }
 

@@ -16,7 +16,7 @@
 
 namespace CAROM {
 
-NonuniformDMD::NonuniformDMD(int dim, 
+NonuniformDMD::NonuniformDMD(int dim,
                              bool alt_output_basis,
                              Vector* state_offset,
                              Vector* derivative_offset) :

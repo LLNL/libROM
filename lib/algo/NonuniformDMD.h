@@ -45,7 +45,7 @@ public:
      * @param[in] state_offset      The state offset.
      * @param[in] derivative_offset The derivative offset.
      */
-    NonuniformDMD(int dim, 
+    NonuniformDMD(int dim,
                   bool alt_output_basis = NULL,
                   Vector* state_offset = NULL,
                   Vector* derivative_offset = NULL);
