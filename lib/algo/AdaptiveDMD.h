@@ -46,7 +46,7 @@ public:
      *                             "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
      * @param[in] closest_rbf_val  The RBF parameter determines the width of influence.
      *                             Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
-     * @param[in] alt_output_basis Whether to the alternative basis for output, i.e. phi = U^(+)*V*Omega^(-1)*X.
+     * @param[in] alt_output_basis Whether to use the alternative basis for output, i.e. phi = U^(+)*V*Omega^(-1)*X.
      * @param[in] state_offset     The state offset.
      */
     AdaptiveDMD(int dim, double desired_dt = -1.0, std::string rbf = "G",

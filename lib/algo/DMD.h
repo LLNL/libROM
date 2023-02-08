@@ -76,7 +76,7 @@ public:
      *
      * @param[in] dim              The full-order state dimension.
      * @param[in] dt               The dt between samples.
-     * @param[in] alt_output_basis Whether to the alternative basis for output, i.e. phi = U^(+)*V*Omega^(-1)*X.
+     * @param[in] alt_output_basis Whether to use the alternative basis for output, i.e. phi = U^(+)*V*Omega^(-1)*X.
      * @param[in] state_offset     The state offset.
      */
     DMD(int dim, double dt, bool alt_output_basis = false,
@@ -237,7 +237,7 @@ protected:
      * @brief Constructor. Variant of DMD with non-uniform time step size.
      *
      * @param[in] dim               The full-order state dimension.
-     * @param[in] alt_output_basis  Whether to the alternative basis for output, i.e. phi = U^(+)*V*Omega^(-1)*X.
+     * @param[in] alt_output_basis  Whether to use the alternative basis for output, i.e. phi = U^(+)*V*Omega^(-1)*X.
      * @param[in] state_offset      The state offset.
      */
     DMD(int dim, bool alt_output_basis = false, Vector* state_offset = NULL);
