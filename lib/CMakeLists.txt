@@ -64,7 +64,7 @@ list(APPEND source_files
   linalg/Options.h
   librom.h)
 
-if (USE_MFEM)
+if (USE_MFEM OR USE_EXTERNAL_MFEM)
     list(APPEND source_files
       mfem/PointwiseSnapshot.hpp
       mfem/PointwiseSnapshot.cpp

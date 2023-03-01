@@ -36,9 +36,12 @@ set(libROM_CMAKE_MODULE_PATH ${libROM_CMAKE_PATH}/modules)
 list(APPEND CMAKE_MODULE_PATH ${libROM_CMAKE_MODULE_PATH})
 
 option(USE_MFEM "Build libROM with MFEM" OFF)
+option(USE_EXTERNAL_MFEM "Build libROM with external MFEM specified in -DMFEM_DIR" OFF)
+
 option(MFEM_USE_GSLIB "Build libROM with MFEM using GSLIB" OFF)
 option(BUILD_STATIC "Build libROM as a static library" OFF)
 option(ENABLE_EXAMPLES "Build examples and regression tests" ON)
+option(ENABLE_TESTING "Enable GTest testing" ON)
 
 ## Set a bunch of variables to generate a configure header
 # Enable assertion checking if debug symbols generated
@@ -112,6 +115,11 @@ find_package(ZLIB 1.2.3 REQUIRED)
 find_package(Doxygen 1.8.5)
 
 find_package(GTest 1.6.0)
+
+if (USE_EXTERNAL_MFEM)
+    find_library(MFEM mfem  "${MFEM_DIR}/lib")
+    find_path(MFEM_INCLUDES mfem.hpp "${MFEM_DIR}/include")
+endif()
 
 if (USE_MFEM)
     find_library(MFEM mfem "${CMAKE_SOURCE_DIR}/dependencies/mfem" "${MFEM_DIR}/lib")
@@ -205,71 +213,71 @@ if (ENABLE_EXAMPLES)
     target_compile_features(${name} PRIVATE cxx_std_11)
   endforeach(name) # IN LISTS misc_exmaple_names
 
-set(unit_test_names
-  smoke_test
-  test_include
-  uneven_dist
-  weak_scaling
-  random_test
-  smoke_static
-  load_samples)
+  set(unit_test_names
+    smoke_test
+    test_include
+    uneven_dist
+    weak_scaling
+    random_test
+    smoke_static
+    load_samples)
 
-set(regression_test_names
-  basisComparator
-  checkError
-  computeSpeedup
-  solutionComparator
-  fileComparator)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests)
+  set(regression_test_names
+    basisComparator
+    checkError
+    computeSpeedup
+    solutionComparator
+    fileComparator)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests)
 
-foreach(name IN LISTS unit_test_names)
-  add_executable(${name} unit_tests/${name}.cpp)
-  target_link_libraries(${name}
-    PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
-  target_include_directories(${name}
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-    ${MPI_C_INCLUDE_DIRS})
-  target_compile_features(${name} PRIVATE cxx_std_11)
-endforeach(name) # IN LISTS unit_test_names
-
-foreach(name IN LISTS regression_test_names)
-  add_executable(${name} regression_tests/${name}.cpp)
-  target_link_libraries(${name}
-    PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
-  target_include_directories(${name}
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-    ${MPI_C_INCLUDE_DIRS})
-  target_compile_features(${name} PRIVATE cxx_std_11)
-endforeach(name) # IN LISTS regression_test_names
-endif(ENABLE_EXAMPLES)
-
-
-if(GTEST_FOUND)
-  set(unit_test_stems
-    Vector
-    Matrix
-    DEIM
-    DMD
-    GNAT
-    QDEIM
-    S_OPT
-    SVD
-    StaticSVD
-    RandomizedSVD
-    IncrementalSVD
-    GreedyCustomSampler)
-  foreach(stem IN LISTS unit_test_stems)
-    add_executable(test_${stem} unit_tests/test_${stem}.cpp)
-    target_link_libraries(test_${stem} PRIVATE ROM
-      ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran GTest::GTest)
-    target_include_directories(test_${stem}
+  foreach(name IN LISTS unit_test_names)
+    add_executable(${name} unit_tests/${name}.cpp)
+    target_link_libraries(${name}
+      PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
+    target_include_directories(${name}
       PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
       ${MPI_C_INCLUDE_DIRS})
-    target_compile_features(test_${stem} PRIVATE cxx_std_11)
-    target_compile_definitions(test_${stem} PRIVATE CAROM_HAS_GTEST)
-  endforeach(stem) # IN LISTS unit_test_stems
-endif(GTEST_FOUND)
+    target_compile_features(${name} PRIVATE cxx_std_11)
+  endforeach(name) # IN LISTS unit_test_names
 
+  foreach(name IN LISTS regression_test_names)
+    add_executable(${name} regression_tests/${name}.cpp)
+    target_link_libraries(${name}
+      PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
+    target_include_directories(${name}
+      PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+      ${MPI_C_INCLUDE_DIRS})
+    target_compile_features(${name} PRIVATE cxx_std_11)
+  endforeach(name) # IN LISTS regression_test_names
+endif(ENABLE_EXAMPLES)
+
+if(ENABLE_TESTING)
+  if(GTEST_FOUND)
+    set(unit_test_stems
+      Vector
+      Matrix
+      DEIM
+      DMD
+      GNAT
+      QDEIM
+      S_OPT
+      SVD
+      StaticSVD
+      RandomizedSVD
+      IncrementalSVD
+      GreedyCustomSampler)
+    foreach(stem IN LISTS unit_test_stems)
+      add_executable(test_${stem} unit_tests/test_${stem}.cpp)
+      target_link_libraries(test_${stem} PRIVATE ROM
+        ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran GTest::GTest)
+      target_include_directories(test_${stem}
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+        ${MPI_C_INCLUDE_DIRS})
+      target_compile_features(test_${stem} PRIVATE cxx_std_11)
+      target_compile_definitions(test_${stem} PRIVATE CAROM_HAS_GTEST)
+    endforeach(stem) # IN LISTS unit_test_stems
+  endif(GTEST_FOUND)
+endif(ENABLE_TESTING)
 # NOTE(goxberry@gmail.com, oxberry1@llnl.gov): This code snippet
 # builds the Doxygen documentation, but outputs said documentation to
 # ${CMAKE_CURRENT_SOURCE_DIR}/docs)...
