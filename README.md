@@ -1,4 +1,4 @@
-![libROM Logo](https://www.librom.net/img/logo-libROM2.png)
+![libROM Logo](https://www.librom.net/img/logo-300.png)
 
 # Introduction
 
