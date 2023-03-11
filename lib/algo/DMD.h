@@ -79,7 +79,7 @@ public:
      * @param[in] alt_output_basis Whether to use the alternative basis for output, i.e. phi = U^(+)*V*Omega^(-1)*X.
      * @param[in] state_offset     The state offset.
      */
-    DMD(int dim, double dt, bool alt_output_basis = false,
+    DMD(int dim, double dt, bool alt_output_basis = true,
         Vector* state_offset = NULL);
 
     /**
