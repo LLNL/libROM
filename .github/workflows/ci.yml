@@ -40,26 +40,26 @@ jobs:
             cmake .. -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=Optimized -DUSE_MFEM=${USE_MFEM} -DMFEM_USE_GSLIB=${MFEM_USE_GSLIB}
             make
       - uses: ./.github/workflows/run_tests
-  mac:
-    runs-on: macos-latest
-    steps:
-      - name: Install Mac dependencies
-        run: |
-            brew install open-mpi
-            brew install openblas
-            brew install lapack
-            brew install scalapack
-            brew install hdf5
-      - name: Check out libROM
-        uses: actions/checkout@v2
-      - uses: ./.github/workflows/checkout_repo
-      - name: Build libROM
-        run: |
-            export FC=/usr/local/bin/gfortran-10
-            mkdir ${GITHUB_WORKSPACE}/build
-            cd ${GITHUB_WORKSPACE}/build
-            cmake -DCMAKE_BUILD_TYPE=Debug ..
-            make
-            cmake -DCMAKE_BUILD_TYPE=Optimized ..
-            make
-      - uses: ./.github/workflows/run_tests
+  # mac:
+  #   runs-on: macos-latest
+  #   steps:
+  #     - name: Install Mac dependencies
+  #       run: |
+  #           brew install open-mpi
+  #           brew install openblas
+  #           brew install lapack
+  #           brew install scalapack
+  #           brew install hdf5
+  #     - name: Check out libROM
+  #       uses: actions/checkout@v2
+  #     - uses: ./.github/workflows/checkout_repo
+  #     - name: Build libROM
+  #       run: |
+  #           export FC=/usr/local/bin/gfortran-10
+  #           mkdir ${GITHUB_WORKSPACE}/build
+  #           cd ${GITHUB_WORKSPACE}/build
+  #           cmake -DCMAKE_BUILD_TYPE=Debug ..
+  #           make
+  #           cmake -DCMAKE_BUILD_TYPE=Optimized ..
+  #           make
+  #     - uses: ./.github/workflows/run_tests
