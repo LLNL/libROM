@@ -17,10 +17,10 @@
 namespace CAROM {
 
 NonuniformDMD::NonuniformDMD(int dim,
+                             bool alt_output_basis,
                              Vector* state_offset,
-                             Vector* derivative_offset,
-                             bool alt_output_basis) :
-    DMD(dim, state_offset, alt_output_basis)
+                             Vector* derivative_offset) :
+    DMD(dim, alt_output_basis, state_offset)
 {
     // stateOffset is set by DMD::setOffset in the constructor
     setOffset(derivative_offset, 1);

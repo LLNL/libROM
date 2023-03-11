@@ -41,14 +41,14 @@ public:
      * @brief Constructor.
      *
      * @param[in] dim               The full-order state dimension.
+     * @param[in] alt_output_basis  Whether to use the alternative basis for output, i.e. phi = U^(+)*V*Omega^(-1)*X.
      * @param[in] state_offset      The state offset.
      * @param[in] derivative_offset The derivative offset.
-     * @param[in] alt_output_basis  Whether to use the alternative basis for output, i.e. phi = U^(+)*V*Omega^(-1)*X.
      */
     NonuniformDMD(int dim,
+                  bool alt_output_basis = false,
                   Vector* state_offset = NULL,
-                  Vector* derivative_offset = NULL,
-                  bool alt_output_basis = false);
+                  Vector* derivative_offset = NULL);
 
     /**
      * @brief Constructor.

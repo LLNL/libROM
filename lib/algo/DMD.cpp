@@ -43,7 +43,7 @@ extern "C" {
 
 namespace CAROM {
 
-DMD::DMD(int dim, Vector* state_offset, bool alt_output_basis)
+DMD::DMD(int dim, bool alt_output_basis, Vector* state_offset)
 {
     CAROM_VERIFY(dim > 0);
 
@@ -63,7 +63,7 @@ DMD::DMD(int dim, Vector* state_offset, bool alt_output_basis)
     setOffset(state_offset, 0);
 }
 
-DMD::DMD(int dim, double dt, Vector* state_offset, bool alt_output_basis)
+DMD::DMD(int dim, double dt, bool alt_output_basis, Vector* state_offset)
 {
     CAROM_VERIFY(dim > 0);
     CAROM_VERIFY(dt > 0.0);
