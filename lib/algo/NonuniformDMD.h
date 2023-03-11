@@ -48,7 +48,7 @@ public:
     NonuniformDMD(int dim,
                   Vector* state_offset = NULL,
                   Vector* derivative_offset = NULL,
-                  bool alt_output_basis = true);
+                  bool alt_output_basis = false);
 
     /**
      * @brief Constructor.
