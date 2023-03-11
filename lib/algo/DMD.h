@@ -80,7 +80,7 @@ public:
      * @param[in] alt_output_basis Whether to use the alternative basis for output, i.e. phi = U^(+)*V*Omega^(-1)*X.
      */
     DMD(int dim, double dt, Vector* state_offset = NULL, 
-        bool alt_output_basis = false);
+        bool alt_output_basis = true);
 
     /**
      * @brief Constructor. DMD from saved models.

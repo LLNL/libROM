@@ -53,7 +53,7 @@ public:
                 std::string interp_method = "LS",
                 double closest_rbf_val = 0.9,
                 Vector* state_offset = NULL,
-                bool alt_output_basis = false);
+                bool alt_output_basis = true);
 
     /**
      * @brief Destroy the AdaptiveDMD object
