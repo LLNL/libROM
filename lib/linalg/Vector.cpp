@@ -473,7 +473,7 @@ Vector::write(const std::string& base_file_name)
 }
 
 void
-Vector::print(const char * prefix)
+Vector::print(const char * prefix) const
 {
     int my_rank;
     const bool success = MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
