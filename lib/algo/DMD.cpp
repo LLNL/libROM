@@ -43,7 +43,7 @@ extern "C" {
 
 namespace CAROM {
 
-DMD::DMD(int dim, Vector* state_offset)
+DMD::DMD(int dim, bool alt_output_basis, Vector* state_offset)
 {
     CAROM_VERIFY(dim > 0);
 
@@ -59,10 +59,11 @@ DMD::DMD(int dim, Vector* state_offset)
     d_dim = dim;
     d_trained = false;
     d_init_projected = false;
+    d_alt_output_basis = alt_output_basis;
     setOffset(state_offset, 0);
 }
 
-DMD::DMD(int dim, double dt, Vector* state_offset)
+DMD::DMD(int dim, double dt, bool alt_output_basis, Vector* state_offset)
 {
     CAROM_VERIFY(dim > 0);
     CAROM_VERIFY(dt > 0.0);
@@ -80,6 +81,7 @@ DMD::DMD(int dim, double dt, Vector* state_offset)
     d_dt = dt;
     d_trained = false;
     d_init_projected = false;
+    d_alt_output_basis = alt_output_basis;
     setOffset(state_offset, 0);
 }
 
@@ -257,17 +259,26 @@ void
 DMD::computePhi(struct DMDInternal dmd_internal_obj)
 {
     // Calculate phi
-    Matrix* f_snapshots_out_mult_d_basis_right =
-        dmd_internal_obj.snapshots_out->mult(dmd_internal_obj.basis_right);
-    Matrix* f_snapshots_out_mult_d_basis_right_mult_d_S_inv =
-        f_snapshots_out_mult_d_basis_right->mult(dmd_internal_obj.S_inv);
-    d_phi_real = f_snapshots_out_mult_d_basis_right_mult_d_S_inv->mult(
-                     dmd_internal_obj.eigenpair->ev_real);
-    d_phi_imaginary = f_snapshots_out_mult_d_basis_right_mult_d_S_inv->mult(
-                          dmd_internal_obj.eigenpair->ev_imaginary);
+    if (d_alt_output_basis)
+    {
+        Matrix* f_snapshots_out_mult_d_basis_right =
+            dmd_internal_obj.snapshots_out->mult(dmd_internal_obj.basis_right);
+        Matrix* f_snapshots_out_mult_d_basis_right_mult_d_S_inv =
+            f_snapshots_out_mult_d_basis_right->mult(dmd_internal_obj.S_inv);
+        d_phi_real = f_snapshots_out_mult_d_basis_right_mult_d_S_inv->mult(
+                         dmd_internal_obj.eigenpair->ev_real);
+        d_phi_imaginary = f_snapshots_out_mult_d_basis_right_mult_d_S_inv->mult(
+                              dmd_internal_obj.eigenpair->ev_imaginary);
 
-    delete f_snapshots_out_mult_d_basis_right;
-    delete f_snapshots_out_mult_d_basis_right_mult_d_S_inv;
+        delete f_snapshots_out_mult_d_basis_right;
+        delete f_snapshots_out_mult_d_basis_right_mult_d_S_inv;
+    }
+    else
+    {
+        d_phi_real = dmd_internal_obj.basis->mult(dmd_internal_obj.eigenpair->ev_real);
+        d_phi_imaginary = dmd_internal_obj.basis->mult(
+                              dmd_internal_obj.eigenpair->ev_imaginary);
+    }
 }
 
 void
