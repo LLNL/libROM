@@ -40,13 +40,17 @@ public:
      *                             If set equal to or below 0.0, desired_dt will be set to the median of
      *                             the different dt's between the samples.
      * @param[in] rbf              The RBF type ("G" == gaussian,
-     *                             "IQ" == inverse quadratic, "IMQ" == inverse
-     *                             multiquadric)
-     * @param[in] interp_method    The interpolation method type ("LS" == linear solve,
-     *                             "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
+     *                             "IQ" == inverse quadratic, 
+     *                             "IMQ" == inverse multiquadric)
+     * @param[in] interp_method    The interpolation method type 
+     *                             ("LS" == linear solve,
+     *                             "IDW" == inverse distance weighting, 
+     *                             "LP" == lagrangian polynomials)
      * @param[in] closest_rbf_val  The RBF parameter determines the width of influence.
-     *                             Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
-     * @param[in] alt_output_basis Whether to use the alternative basis for output, i.e. phi = U^(+)*V*Omega^(-1)*X.
+     *                             Set the RBF value of the nearest two parameter points 
+     *                             to a value between 0.0 to 1.0.
+     * @param[in] alt_output_basis Whether to use the alternative basis for 
+     *                             output, i.e. phi = U^(+)*V*Omega^(-1)*X.
      * @param[in] state_offset     The state offset.
      */
     AdaptiveDMD(int dim, double desired_dt = -1.0, std::string rbf = "G",

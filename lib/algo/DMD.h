@@ -76,7 +76,8 @@ public:
      *
      * @param[in] dim              The full-order state dimension.
      * @param[in] dt               The dt between samples.
-     * @param[in] alt_output_basis Whether to use the alternative basis for output, i.e. phi = U^(+)*V*Omega^(-1)*X.
+     * @param[in] alt_output_basis Whether to use the alternative basis for  
+     *                             output, i.e. phi = U^(+)*V*Omega^(-1)*X.
      * @param[in] state_offset     The state offset.
      */
     DMD(int dim, double dt, bool alt_output_basis = false,
@@ -216,10 +217,12 @@ protected:
      *                              each training parameter point.
      * @param[in] desired_point     The desired point at which to create a parametric DMD.
      * @param[in] rbf               The RBF type ("G" == gaussian,
-     *                              "IQ" == inverse quadratic, "IMQ" == inverse
-     *                              multiquadric)
-     * @param[in] interp_method     The interpolation method type ("LS" == linear solve,
-     *                              "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
+     *                              "IQ" == inverse quadratic, 
+     *                              "IMQ" == inverse multiquadric)
+     * @param[in] interp_method     The interpolation method type 
+     *                              ("LS" == linear solve,
+     *                              "IDW" == inverse distance weighting, 
+     *                              "LP" == lagrangian polynomials)
      * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
      *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
      * @param[in] reorthogonalize_W Whether to reorthogonalize the interpolated W (basis) matrix.
@@ -237,7 +240,8 @@ protected:
      * @brief Constructor. Variant of DMD with non-uniform time step size.
      *
      * @param[in] dim               The full-order state dimension.
-     * @param[in] alt_output_basis  Whether to use the alternative basis for output, i.e. phi = U^(+)*V*Omega^(-1)*X.
+     * @param[in] alt_output_basis  Whether to use the alternative basis for 
+     *                              output, i.e. phi = U^(+)*V*Omega^(-1)*X.
      * @param[in] state_offset      The state offset.
      */
     DMD(int dim, bool alt_output_basis = false, Vector* state_offset = NULL);
