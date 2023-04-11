@@ -132,6 +132,7 @@ BasisGenerator::takeSample(
     // Check that u_in is not non-zero.
     Vector u_vec(u_in, getDim(), true);
     if (u_vec.norm() == 0.0) {
+        printf("BasisGenerator::takeSample - trivial samples are not allowed!\n");
         return false;
     }
 
