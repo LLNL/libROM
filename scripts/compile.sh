@@ -129,7 +129,7 @@ elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
   if [[ $ARDRA == "true" ]]; then
       TOOLCHAIN_FILE=${REPO_PREFIX}/cmake/toolchains/ic18-toss_3_x86_64_ib-ardra.cmake
   elif [[ -z ${TOOLCHAIN_FILE} ]]; then
-      TOOLCHAIN_FILE=${REPO_PREFIX}/cmake/toolchains/default-toss_3_x86_64_ib-librom-dev.cmake
+      TOOLCHAIN_FILE=${REPO_PREFIX}/cmake/toolchains/default-toss_4_x86_64_ib-librom-dev.cmake
   fi
   cmake ${REPO_PREFIX} \
         -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} \
