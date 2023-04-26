@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -58,6 +58,8 @@ public:
                        std::string rbf = "G",
                        std::string interp_method = "LS",
                        double closest_rbf_val = 0.9);
+
+    ~VectorInterpolator();
 
     /**
      * @brief Obtain the interpolated reduced vector of the unsampled parameter point.

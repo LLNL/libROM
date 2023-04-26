@@ -1,4 +1,4 @@
-![libROM Logo](https://www.librom.net/img/logo-libROM2.png)
+![libROM Logo](https://www.librom.net/img/logo-300.png)
 
 # Introduction
 
@@ -13,10 +13,10 @@ non-intrusive black-box approaches.
 - Data compression
 - Physics-informed greedy algorithm
 - Projection-based hyper-reduction
+- EQP: quadrature-based hyper-reduction sampling algorithm
 
 ## Features to be added
 
-- EQP: quadrature-based hyper-reduction sampling algorithm
 - Python interface
 
 # Installation
@@ -76,6 +76,10 @@ mpicxx myapp.cpp -I/path/to/libROM/lib -Wl,-rpath,/path/to/libROM/build/lib -L/p
 ```
 
 
+# libROM CI
+
+libROM leverages GitHub Actions for CI. The CI currently applies only to commits to pull requests.  Unit tests run for all PR commits. Upon the addition of the `LGTM` label, both the unit tests and regression tests run. While the `LGTM` label is still present, all subsequent commits run both unit tests and regression tests. 
+
 # License
 
 libROM is distributed under the terms of both the MIT license and the
@@ -111,6 +115,7 @@ LLNL-CODE-766763
 - William Fries (University of Arizona)
 - Debojyoti Ghosh (LLNL)
 - Xiaolong He (UC San Diego)
+- Adrian Humphry (University of Toronto)
 - Kevin Huynh (LLNL)
 - Tanya Kostova-Vassilevska (LLNL)
 - Jessica Lauzon (Stanford)
@@ -118,3 +123,4 @@ LLNL-CODE-766763
 - Yeonjong Shin (KAIST)
 - Geoffrey Oxberry (LLNL)
 - Pranav Vempati (LLNL)
+- Masayuki Yano (University of Toronto)

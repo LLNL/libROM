@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -22,7 +22,9 @@ namespace CAROM {
 AdaptiveDMD::AdaptiveDMD(int dim, double desired_dt, std::string rbf,
                          std::string interp_method,
                          double closest_rbf_val,
-                         Vector* state_offset) : DMD(dim, state_offset)
+                         bool alt_output_basis,
+                         Vector* state_offset) :
+    DMD(dim, alt_output_basis, state_offset)
 {
     CAROM_VERIFY(rbf == "G" || rbf == "IQ" || rbf == "IMQ");
     CAROM_VERIFY(interp_method == "LS" || interp_method == "IDW"

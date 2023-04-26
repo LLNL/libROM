@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -76,7 +76,7 @@ public:
      * @brief Writes an array of integers associated with the supplied filename.
      *
      * @pre !file_name.empty()
-     * @pre data != 0
+     * @pre data != nullptr
      * @pre nelements > 0
      *
      * @param[in] file_name The filename associated with the array of values to be
@@ -95,7 +95,7 @@ public:
      * @brief Writes an array of doubles associated with the supplied filename.
      *
      * @pre !file_name.empty()
-     * @pre data != 0
+     * @pre data != nullptr
      * @pre nelements > 0
      *
      * @param[in] file_name The filename associated with the array of values to be
@@ -115,49 +115,45 @@ public:
      * the currently open CSV database file.
      *
      * @pre !file_name.empty()
-     * @pre data != 0
+     * @pre data != nullptr
      * @pre nelements > 0
      *
      * @param[in] file_name The filename associated with the vector of values to be
      *                written.
      * @param[in] data The vector of double values to be written.
      * @param[in] nelements The number of doubles in the vector.
-     * @param[in] precision The precision of values to be written.
      */
     virtual
     void
     putDoubleVector(
         const std::string& file_name,
         const std::vector<double>& data,
-        int nelements,
-        int precision = 6);
+        int nelements);
 
     /**
      * @brief Writes a vector of complex doubles associated with the supplied filename.
      *
      * @pre !file_name.empty()
-     * @pre data != 0
+     * @pre data != nullptr
      * @pre nelements > 0
      *
      * @param[in] file_name The filename associated with the vector of values to be
      *                written.
      * @param[in] data The vector of complex double values to be written.
      * @param[in] nelements The number of complex doubles in the vector.
-     * @param[in] precision The precision of values to be written.
      */
     virtual
     void
     putComplexVector(
         const std::string& file_name,
         const std::vector<std::complex<double>>& data,
-        int nelements,
-        int precision = 6);
+        int nelements);
 
     /**
      * @brief Writes a vector of strings associated with the supplied filename.
      *
      * @pre !file_name.empty()
-     * @pre data != 0
+     * @pre data != nullptr
      * @pre nelements > 0
      *
      * @param[in] file_name The filename associated with the vector of values to be
@@ -176,7 +172,7 @@ public:
      * @brief Reads an array of integers associated with the supplied filename.
      *
      * @pre !file_name.empty()
-     * @pre data != 0 || nelements == 0
+     * @pre data != nullptr || nelements == 0
      *
      * @param[in] file_name The filename associated with the array of values to be
      *                read.
@@ -206,10 +202,21 @@ public:
         std::vector<int> &data,
         bool append = false);
 
-    virtual int getDoubleArraySize(const std::string& key)
+    /**
+     * @brief Count the number of elements in
+     * an array of doubles associated with the supplied filename.
+     *
+     * @pre !file_name.empty()
+     *
+     * @param[in] file_name The filename associated with the array of values to be
+     *                read.
+     */
+    virtual
+    int
+    getDoubleArraySize(const std::string& file_name)
     {
         std::vector<double> tmp;
-        getDoubleVector(key, tmp);
+        getDoubleVector(file_name, tmp);
         return tmp.size();
     }
 
@@ -217,7 +224,7 @@ public:
      * @brief Reads an array of doubles associated with the supplied filename.
      *
      * @pre !file_name.empty()
-     * @pre data != 0 || nelements == 0
+     * @pre data != nullptr || nelements == 0
      *
      * @param[in] file_name The filename associated with the array of values to be
      *                read.
@@ -235,7 +242,7 @@ public:
      * @brief Reads a sub-array of doubles associated with the supplied filename.
      *
      * @pre !file_name.empty()
-     * @pre data != 0 || nelements == 0
+     * @pre data != nullptr || nelements == 0
      *
      * @param[in] file_name The filename associated with the array of values to be
      *                read.
@@ -255,7 +262,7 @@ public:
      * @brief Reads an array of doubles associated with the supplied filename.
      *
      * @pre !file_name.empty()
-     * @pre data != 0 || nelements == 0
+     * @pre data != nullptr || nelements == 0
      *
      * @param[in] file_name The filename associated with the array of values to be
      *                read.

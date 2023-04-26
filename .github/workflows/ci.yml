@@ -1,15 +1,21 @@
 name: CI
-on:
-  push:
+on: 
   pull_request:
+    types: [opened, labeled, synchronize]
     branches:
       - master
 jobs:
   linux:
     runs-on: ubuntu-latest
     steps:
+      - name: Set Swap Space
+        uses: pierotofy/set-swap-space@master
+        with: 
+          swap-size-gb: 10
+
       - name: Install Linux dependencies
         run: |
+            sudo apt update
             sudo apt-get install libmpich-dev libblas-dev liblapack-dev libscalapack-mpi-dev libhdf5-serial-dev
       - name: Check out libROM
         uses: actions/checkout@v2
@@ -17,12 +23,28 @@ jobs:
       - name: Build libROM
         run: |
             mkdir ${GITHUB_WORKSPACE}/build
-            cd ${GITHUB_WORKSPACE}/build
             export CC=mpicc
             export CXX=mpicxx
-            cmake -DCMAKE_BUILD_TYPE=Debug ..
+            scripts/setup.sh
+            cd ${GITHUB_WORKSPACE}/build
+            cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_MFEM=On ..
             make
-            cmake -DCMAKE_BUILD_TYPE=Optimized ..
+            cmake -DCMAKE_BUILD_TYPE=Optimized -DUSE_MFEM=On ..
+            make
+      - name: Build baseline libROM
+        if: ${{ github.event.label.name == 'LGTM' || contains(github.event.pull_request.labels.*.name, 'LGTM') }}
+        run: |
+            cd ${GITHUB_WORKSPACE}/dependencies
+            git clone https://github.com/LLNL/libROM.git
+            cd libROM
+            mkdir build
+            export CC=mpicc
+            export CXX=mpicxx
+            scripts/setup.sh
+            cd build
+            cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_MFEM=On ..
+            make
+            cmake -DCMAKE_BUILD_TYPE=Optimized -DUSE_MFEM=On ..
             make
       - uses: ./.github/workflows/run_tests
   mac:

@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -132,6 +132,7 @@ BasisGenerator::takeSample(
     // Check that u_in is not non-zero.
     Vector u_vec(u_in, getDim(), true);
     if (u_vec.norm() == 0.0) {
+        printf("WARNING: BasisGenerator::takeSample skipped trivial sample at time %.4E\n", time);
         return false;
     }
 

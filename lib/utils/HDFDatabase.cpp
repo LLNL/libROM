@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -112,7 +112,7 @@ HDFDatabase::putIntegerArray(
     int nelements)
 {
     CAROM_VERIFY(!key.empty());
-    CAROM_VERIFY(data != 0);
+    CAROM_VERIFY(data != nullptr);
     CAROM_VERIFY(nelements > 0);
 
     hsize_t dim[] = { static_cast<hsize_t>(nelements) };
@@ -164,7 +164,7 @@ HDFDatabase::putDoubleArray(
     int nelements)
 {
     CAROM_VERIFY(!key.empty());
-    CAROM_VERIFY(data != 0);
+    CAROM_VERIFY(data != nullptr);
     CAROM_VERIFY(nelements > 0);
 
     hsize_t dim[] = { static_cast<hsize_t>(nelements) };
@@ -213,8 +213,7 @@ void
 HDFDatabase::putDoubleVector(
     const std::string& key,
     const std::vector<double>& data,
-    int nelements,
-    int precision)
+    int nelements)
 {
     putDoubleArray(key, data.data(), nelements);
 }

@@ -28,18 +28,24 @@
 
 namespace CAROM
 {
+/**
+ * Class IOptimizable is a simple interface for defining the constrained optimization problem.
+ */
 class IOptimizable
 {
 public:
     /**
-     * @brief Constructor.
-     *
-     * @param[in] lower           Lower bound for constraint
-     * @param[in] upper           Upper bound for constraint
-     * @param[in] isConstrained   Whether to check the contraints
+     * @brief Constraints to be fulfilled by the variable candidates.
      */
     struct Constraints
     {
+        /**
+         * @brief Constructor.
+         *
+         * @param[in] lower           Lower bound for constraint
+         * @param[in] upper           Upper bound for constraint
+         * @param[in] isConstrained   Whether to check the constraints
+         */
         Constraints(double lower = 0.0, double upper = 1.0,
                     bool isConstrained = false) :
             lower(lower),
@@ -49,6 +55,9 @@ public:
 
         }
 
+        /**
+         * @brief Check whether the current variable candidate fulfills the constraints.
+         */
         bool Check(double candidate)
         {
             if (isConstrained)
@@ -68,8 +77,19 @@ public:
             }
         }
 
+        /**
+         * @brief Lower bound for constraint
+         */
         double lower;
+
+        /**
+         * @brief Upper bound for constraint
+         */
         double upper;
+
+        /**
+         * @brief Whether to check the constraints
+         */
         bool isConstrained;
     };
 
@@ -88,10 +108,15 @@ public:
      */
     virtual std::vector<Constraints> GetConstraints() const = 0;
 
-
+    /**
+     * @brief Destructor.
+     */
     virtual ~IOptimizable() {}
 };
 
+/**
+ * Class DifferentialEvolution is a general purpose black box optimizer for the class IOptimizable.
+ */
 class DifferentialEvolution
 {
 public:

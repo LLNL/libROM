@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -54,6 +54,8 @@ protected:
                  std::string rbf,
                  std::string interp_method,
                  double closest_rbf_val = 0.9);
+
+    ~Interpolator();
 
     /**
      * @brief The rank of the process this object belongs to.
