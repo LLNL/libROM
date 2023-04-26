@@ -107,6 +107,7 @@ int main(int argc, char *argv[])
     const char *hdf_name = "dmd.hdf";
     const char *basename = "";
     bool save_csv = false;
+    bool save_hdf = false;
     bool csvFormat = true;
     bool useWindowDims = false;
     bool inputPartitioned = false;
@@ -169,6 +170,8 @@ int main(int argc, char *argv[])
                    "Name of the sub-folder to dump files within the run directory.");
     args.AddOption(&save_csv, "-save", "--save", "-no-save", "--no-save",
                    "Enable or disable prediction result output (files in CSV format).");
+    args.AddOption(&save_hdf, "-save-hdf", "--save-hdf", "-no-save-hdf", "--no-save-hdf",
+                   "Enable or disable prediction result output (files in HDF format).");
     args.AddOption(&csvFormat, "-csv", "--csv", "-hdf", "--hdf",
                    "Use CSV or HDF format for input files.");
     args.AddOption(&useWindowDims, "-wdim", "--wdim", "-no-wdim", "--no-wdim",
@@ -231,6 +234,7 @@ int main(int argc, char *argv[])
 
     CAROM::CSVDatabase csv_db;
     CAROM::Database *db = NULL;
+    CAROM::HDFDatabase *hdf_db = NULL;
     string prefix = "";
     string suffix = "";
     if (csvFormat)
@@ -242,6 +246,12 @@ int main(int argc, char *argv[])
     {
         db = new CAROM::HDFDatabase();
     }
+
+    if (save_hdf)
+      {
+	hdf_db = new CAROM::HDFDatabase();
+	hdf_db->create("prediction" + to_string(myid) + ".hdf");
+      }
 
     string variable = string(var_name);
     int nelements = 0;
@@ -840,7 +850,31 @@ int main(int argc, char *argv[])
                     init_cond = dmd[idx_dataset][window-1]->predict(indicator_val[window]);
                 }
                 dmd[idx_dataset][window]->projectInitialCondition(init_cond);
+
+		const double norm_init_cond = init_cond->norm();
+		if (myid == 0)
+		  {
+		    cout << "Initial condition norm " << norm_init_cond
+			 << " for parameter " << idx_dataset << ", window "
+			 << window - 1 << endl;
+		  }
+
                 delete init_cond;
+
+		if (window > 0 && indicator_val[window] < t_final)
+		  {
+		    // To save memory, delete dmd[idx_dataset][window] for windows
+		    // not containing t_final.
+		    if (myid == 0)
+		      {
+			cout << "Deleting DMD for parameter " << idx_dataset << ", window "
+			     << window - 1 << endl;
+		      }
+
+		    delete dmd[idx_dataset][window-1];
+		    dmd[idx_dataset][window-1] = nullptr;
+		  }
+
             } // escape for-loop over window
 
             db->close();
@@ -955,6 +989,12 @@ int main(int argc, char *argv[])
                                               "_final_time_prediction.csv",
                                               result->getData(), dim);
                     }
+
+		    if (save_hdf)
+		      {
+			hdf_db->putDoubleArray(snap, result->getData(), dim);
+		      }
+
                     idx_snap = snap_bound[1]+1; // escape for-loop over idx_snap
                     delete result;
                 }
@@ -1001,6 +1041,13 @@ int main(int argc, char *argv[])
                         cout << "Relative error of DMD solution at t = " << tval
                              << " is " << rel_error << endl;
 
+			if (idx_snap == snap_bound[1])  // Final step
+			  {
+			    std::ofstream ofs ("log.txt", std::ofstream::app);
+			    ofs << windowNumSamples << "," << subsample << "," << rel_error << endl;
+			    ofs.close();
+			  }
+
                         if (save_csv)
                         {
                             csv_db.putDoubleArray(outputPath + "/" + par_dir + "_" + snap +
@@ -1012,6 +1059,12 @@ int main(int argc, char *argv[])
                             }
                         }
                     }
+
+		    if (save_hdf)
+		      {
+			hdf_db->putDoubleArray(snap, result->getData(), dim);
+		      }
+
                     delete result;
                 }
             }
@@ -1042,7 +1095,13 @@ int main(int argc, char *argv[])
             printf("Average elapsed time for predicting DMD: %e second\n",
                    dmd_prediction_timer.RealTime() / num_tests);
         }
-    }
+    } // escape case (online || predict)
+
+    if (save_hdf)
+      {
+	hdf_db->close();
+	delete hdf_db;
+      }
 
     delete[] sample;
     delete curr_par;
