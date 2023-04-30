@@ -52,6 +52,16 @@ jobs:
     steps:
       - name: Install Mac dependencies
         run: |
+            uname -a
+            gcc --version
+            echo "Listing contents of /usr/local/lib/gcc/12"
+            ls /usr/local/lib/gcc/12
+            cd /usr/local/lib/gcc/12
+            echo "Architecture that libquadmath.0.dylib is compiled for: "
+            file /usr/local/lib/gcc/12/libquadmath.0.dylib
+            otool -l /usr/local/lib/gcc/12/libquadmath.0.dylib | grep -A2 LC_RPATH
+            mkdir -p ${GITHUB_WORKSPACE}/build/lib
+            cp /usr/local/lib/gcc/12/libquadmath.0.dylib ${GITHUB_WORKSPACE}/build/lib
             brew install open-mpi
             brew install openblas
             brew install lapack
@@ -62,11 +72,11 @@ jobs:
       - uses: ./.github/workflows/checkout_repo
       - name: Build libROM
         run: |
-            export FC=/usr/local/bin/gfortran-10
-            mkdir ${GITHUB_WORKSPACE}/build
+            export FC=/usr/local/bin/gfortran-12
+            mkdir -p ${GITHUB_WORKSPACE}/build
             cd ${GITHUB_WORKSPACE}/build
             cmake -DCMAKE_BUILD_TYPE=Debug ..
             make
-            cmake -DCMAKE_BUILD_TYPE=Optimized ..
+            cmake -DCMAKE_BUILD_TYPE=Optimized  ..
             make
       - uses: ./.github/workflows/run_tests
