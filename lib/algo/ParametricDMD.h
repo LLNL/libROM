@@ -94,7 +94,7 @@ void getParametricDMD(T*& parametric_dmd,
                        reorthogonalize_W);
 
     CAROM::MatrixInterpolator A_tilde_interpolator(parameter_points,
-            rotation_matrices, A_tildes, ref_point, "NS", rbf, interp_method,
+            rotation_matrices, A_tildes, ref_point, "R", rbf, interp_method,
             closest_rbf_val);
     CAROM::Matrix* A_tilde = A_tilde_interpolator.interpolate(desired_point);
 
