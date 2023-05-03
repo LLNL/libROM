@@ -60,8 +60,6 @@ jobs:
       - name: Check out libROM
         uses: actions/checkout@v2
       - uses: ./.github/workflows/checkout_repo
-      - name: Find libquadmath
-        run: sudo find / -name libquadmath*
       - name: Build libROM
         run: |
             export FC=/usr/local/bin/gfortran-11
