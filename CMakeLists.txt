@@ -1,6 +1,6 @@
 ###############################################################################
 #
-#  Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+#  Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
 #  and other libROM project developers. See the top-level COPYRIGHT
 #  file for details.
 #
@@ -140,6 +140,7 @@ if (ENABLE_EXAMPLES)
       dg_advection
       nonlinear_elasticity
       heat_conduction
+      wave_equation
       parametric_heat_conduction
       de_parametric_heat_conduction_greedy
       dg_euler
@@ -155,6 +156,7 @@ if (ENABLE_EXAMPLES)
       prom
       prom
       prom
+      dmd
       dmd
       dmd
       dmd
@@ -203,7 +205,7 @@ if (ENABLE_EXAMPLES)
     target_compile_features(${name} PRIVATE cxx_std_11)
   endforeach(name) # IN LISTS misc_exmaple_names
 
-  set(regression_test_names
+  set(unit_test_names
     smoke_test
     test_include
     uneven_dist
@@ -211,20 +213,41 @@ if (ENABLE_EXAMPLES)
     random_test
     smoke_static
     load_samples)
+    
+  if (USE_MFEM)
+    set(regression_test_names
+      basisComparator
+      checkError
+      computeSpeedup
+      solutionComparator
+      fileComparator)
+  endif()
 
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests)
 
-  foreach(name IN LISTS regression_test_names)
-    add_executable(${name} tests/${name}.cpp)
-
+  foreach(name IN LISTS unit_test_names)
+    add_executable(${name} unit_tests/${name}.cpp)
     target_link_libraries(${name}
       PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
     target_include_directories(${name}
       PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
       ${MPI_C_INCLUDE_DIRS})
     target_compile_features(${name} PRIVATE cxx_std_11)
-  endforeach(name) # IN LISTS regression_test_names
+  endforeach(name) # IN LISTS unit_test_names
+
+  if (USE_MFEM)
+    foreach(name IN LISTS regression_test_names)
+      add_executable(${name} regression_tests/${name}.cpp)
+      target_link_libraries(${name}
+        PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
+      target_include_directories(${name}
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+        ${MPI_C_INCLUDE_DIRS})
+      target_compile_features(${name} PRIVATE cxx_std_11)
+    endforeach(name) # IN LISTS regression_test_names
+  endif()
 endif(ENABLE_EXAMPLES)
+
 
 if(GTEST_FOUND)
   set(unit_test_stems
@@ -241,7 +264,7 @@ if(GTEST_FOUND)
     IncrementalSVD
     GreedyCustomSampler)
   foreach(stem IN LISTS unit_test_stems)
-    add_executable(test_${stem} tests/test_${stem}.cpp)
+    add_executable(test_${stem} unit_tests/test_${stem}.cpp)
     target_link_libraries(test_${stem} PRIVATE ROM
       ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran GTest::GTest)
     target_include_directories(test_${stem}
