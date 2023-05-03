@@ -24,7 +24,11 @@ WORKDIR $LIB_DIR
 
 #RUN wget -O mfem-4.5.tar.gz https://github.com/mfem/mfem/archive/refs/tags/v4.5.tar.gz
 RUN wget -O hypre-2.20.0.tar.gz https://github.com/hypre-space/hypre/archive/refs/tags/v2.20.0.tar.gz
-RUN wget -O parmetis-4.0.3.tar.gz http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
+
+# Instead of the original parmetis link (which is often unavailable), use the link to librom master branch:
+# RUN wget -O parmetis-4.0.3.tar.gz http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
+RUN wget -O parmetis-4.0.3.tar.gz https://github.com/LLNL/libROM/raw/master/dependencies/parmetis-4.0.3.tar.gz
+
 RUN wget -O gslib-1.0.7.tar.gz https://github.com/gslib/gslib/archive/v1.0.7.tar.gz
 #RUN wget -O glvis-4.2.tar.gz https://github.com/GLVis/glvis/archive/refs/tags/v4.2.tar.gz
 #RUN wget -O metis-4.0.3.tar.gz https://github.com/mfem/tpls/raw/gh-pages/metis-4.0.3.tar.gz
@@ -88,8 +92,8 @@ WORKDIR $LIB_DIR
 # install mfem
 RUN git clone https://github.com/mfem/mfem.git mfem_parallel
 WORKDIR ./mfem_parallel
-# Latest verified commit on Feb 1, 2023
-RUN git checkout 64e61fdc3e58338f2235e36fc9ad0c3770ffa299
+# Latest verified commit on May 2, 2023
+RUN git checkout e5231334e6a8175b4f404b877f590b73dee2dedc
 #RUN tar -zxvf mfem-4.5.tar.gz
 #RUN mv mfem-4.5 mfem_parallel
 #RUN git pull
