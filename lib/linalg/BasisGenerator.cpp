@@ -132,7 +132,8 @@ BasisGenerator::takeSample(
     // Check that u_in is not non-zero.
     Vector u_vec(u_in, getDim(), true);
     if (u_vec.norm() == 0.0) {
-        printf("WARNING: BasisGenerator::takeSample skipped trivial sample at time %.4E\n", time);
+        printf("WARNING: BasisGenerator::takeSample skipped trivial sample at time %.4E\n",
+               time);
         return false;
     }
 

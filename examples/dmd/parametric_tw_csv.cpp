@@ -13,23 +13,23 @@
 // Generate CSV or HDF database on heat conduction with either
 // heat_conduction_csv.sh or heat_conduction_hdf.sh (HDF is more efficient).
 //
-// =================================================================================
+// =============================================================================
 //
 // Parametric serial DMD command (for HDF version, append -hdf):
-//   mpirun -np 8 parametric_tw_csv -o hc_parametric_serial -rdim 16 -dtc 0.01 -offline
-//   mpirun -np 8 parametric_tw_csv -o hc_parametric_serial -rdim 16 -dtc 0.01 -online
+//   parametric_tw_csv -o hc_parametric_serial -rdim 16 -dtc 0.01 -offline
+//   parametric_tw_csv -o hc_parametric_serial -rdim 16 -dtc 0.01 -online
 //
 // Final-time prediction error (Last line in run/hc_parametric_serial/dmd_par5_prediction_error.csv):
 //   0.0012598331433506
 //
 // Parametric time windowing DMD command (for HDF version, append -hdf):
-//   mpirun -np 8 parametric_tw_csv -o hc_parametric_tw -nwinsamp 25 -dtc 0.01 -offline
-//   mpirun -np 8 parametric_tw_csv -o hc_parametric_tw -nwinsamp 25 -dtc 0.01 -online
+//   parametric_tw_csv -o hc_parametric_tw -nwinsamp 25 -dtc 0.01 -offline
+//   parametric_tw_csv -o hc_parametric_tw -nwinsamp 25 -dtc 0.01 -online
 //
 // Final-time prediction error (Last line in run/hc_parametric_tw/dmd_par5_prediction_error.csv):
 //   0.0006507358659606
 //
-// =================================================================================
+// =============================================================================
 //
 // Description: Parametric time windowing DMD on general CSV datasets.
 //
@@ -68,6 +68,25 @@
 using namespace std;
 using namespace mfem;
 
+
+string GetFilenameHDF(const char *data_dir, const char *sim_name,
+                      string const& par_dir, const char *hdf_name,
+                      const int myid, const int mode)
+{
+    switch(mode) {
+    case 1:
+        cout << string(data_dir) + "/" + sim_name + par_dir + "_" + to_string(
+                 myid) + ".hdf" << endl;
+        return string(data_dir) + "/" + sim_name + par_dir + "_"
+               + to_string(myid) + ".hdf";
+    default:
+        cout << string(data_dir) + "/" + sim_name + "/" + string(hdf_name) + "_"
+             + par_dir + "_" + to_string(myid) + ".hdf" << endl;
+        return string(data_dir) + "/" + sim_name + par_dir + "/" + string(hdf_name)
+               + "_" + to_string(myid) + ".hdf";
+    }
+}
+
 int main(int argc, char *argv[])
 {
     const int infty = numeric_limits<int>::max();
@@ -104,16 +123,16 @@ int main(int argc, char *argv[])
     const char *test_list = "dmd_test";
     const char *temporal_idx_list = "temporal_idx";
     const char *spatial_idx_list = "spatial_idx";
-    const char *hdf_name = "dmd.hdf";
+    const char *hdf_name = "dmd";
     const char *snap_pfx = "step";
     const char *basename = "";
     bool save_csv = false;
     bool save_hdf = false;
     bool csvFormat = true;
     bool useWindowDims = false;
-    bool inputPartitioned = false;
     int subsample = 0;
     int eval_subsample = 0;
+    int fileNameMode = 0;  // Mode for HDF filenames
 
     OptionsParser args(argc, argv);
     args.AddOption(&offline, "-offline", "--offline", "-no-offline", "--no-offline",
@@ -173,19 +192,19 @@ int main(int argc, char *argv[])
                    "Name of the sub-folder to dump files within the run directory.");
     args.AddOption(&save_csv, "-save", "--save", "-no-save", "--no-save",
                    "Enable or disable prediction result output (files in CSV format).");
-    args.AddOption(&save_hdf, "-save-hdf", "--save-hdf", "-no-save-hdf", "--no-save-hdf",
+    args.AddOption(&save_hdf, "-save-hdf", "--save-hdf", "-no-save-hdf",
+                   "--no-save-hdf",
                    "Enable or disable prediction result output (files in HDF format).");
     args.AddOption(&csvFormat, "-csv", "--csv", "-hdf", "--hdf",
                    "Use CSV or HDF format for input files.");
     args.AddOption(&useWindowDims, "-wdim", "--wdim", "-no-wdim", "--no-wdim",
                    "Use DMD dimensions for each window, input from a CSV file.");
-    args.AddOption(&inputPartitioned, "-inpar", "--input-partitioned", "-no-inpar",
-                   "--no-input-partitioned",
-                   "Input HDF files are partitioned with respect to MPI rank (CSV not supported yet).");
     args.AddOption(&subsample, "-subs", "--subsample",
                    "Subsampling factor for training snapshots.");
     args.AddOption(&eval_subsample, "-esubs", "--eval_subsample",
                    "Subsampling factor for evaluation.");
+    args.AddOption(&fileNameMode, "-hdfmode", "--hdfmodefilename",
+                   "HDF filename mode.");
     args.Parse();
     if (!args.Good())
     {
@@ -198,16 +217,6 @@ int main(int argc, char *argv[])
     if (mpi.Root())
     {
         args.PrintOptions(cout);
-    }
-
-    string hdf_filename;
-    if (inputPartitioned)
-    {
-        hdf_filename = hdf_name + to_string(myid) + ".hdf";
-    }
-    else
-    {
-        hdf_filename = hdf_name;
     }
 
     CAROM_VERIFY(!(offline && online) && (offline || online));
@@ -251,10 +260,10 @@ int main(int argc, char *argv[])
     }
 
     if (save_hdf)
-      {
-	hdf_db = new CAROM::HDFDatabase();
-	hdf_db->create("prediction" + to_string(myid) + ".hdf");
-      }
+    {
+        hdf_db = new CAROM::HDFDatabase();
+        hdf_db->create("prediction" + to_string(myid) + ".hdf");
+    }
 
     string variable = string(var_name);
     int nelements = 0;
@@ -263,7 +272,8 @@ int main(int argc, char *argv[])
         db->getIntegerArray(string(data_dir) + "/dim.csv", &nelements, 1);
     else
     {
-        db->open(string(data_dir) + "/" + sim_name + "0/" + hdf_filename, "r");
+        db->open(GetFilenameHDF(data_dir, sim_name, "0", hdf_name,
+                                myid, fileNameMode), "r");
         nelements = db->getDoubleArraySize("step0sol");
         db->close();
     }
@@ -359,7 +369,8 @@ int main(int argc, char *argv[])
 
         if (!csvFormat)
         {
-            db->open(string(data_dir) + "/" + par_dir + "/" + hdf_filename, "r");
+            db->open(GetFilenameHDF(data_dir, sim_name, par_dir, hdf_name,
+                                    myid, fileNameMode), "r");
         }
 
         int snap_bound_size = 0;
@@ -370,7 +381,8 @@ int main(int argc, char *argv[])
         }
         else
         {
-            db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
+            db->open(GetFilenameHDF(data_dir, sim_name, par_dir, hdf_name,
+                                    myid, fileNameMode), "r");
             db->getInteger("snap_bound_size", snap_bound_size);
         }
 
@@ -381,7 +393,8 @@ int main(int argc, char *argv[])
         }
         else
         {
-            db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
+            db->open(GetFilenameHDF(data_dir, sim_name, par_dir, hdf_name,
+                                    myid, fileNameMode), "r");
             db->getInteger("numsnap", num_snap_orig);
         }
 
@@ -390,8 +403,8 @@ int main(int argc, char *argv[])
         vector<int> snap_index_list(num_snap_orig);
         if (csvFormat)
         {
-            csv_db.getStringVector(string(list_dir) + "/" + par_dir + ".csv", snap_list,
-                                   false);
+            csv_db.getStringVector(string(list_dir) + "/" + par_dir + ".csv",
+                                   snap_list, false);
         }
         else
         {
@@ -520,7 +533,7 @@ int main(int argc, char *argv[])
                 }
                 else if (dtc > 0.0)
                 {
-                    dmd_curr_par[window] = new CAROM::DMD(dim, dtc);
+                    dmd_curr_par[window] = new CAROM::DMD(dim, dtc, true);
                 }
                 else
                 {
@@ -537,7 +550,8 @@ int main(int argc, char *argv[])
             }
             else
             {
-                db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
+                db->open(GetFilenameHDF(data_dir, sim_name, par_dir, hdf_name,
+                                        myid, fileNameMode), "r");
                 db->getInteger("numsnap", num_snap_orig);
             }
 
@@ -566,7 +580,8 @@ int main(int argc, char *argv[])
             }
             else
             {
-                db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
+                db->open(GetFilenameHDF(data_dir, sim_name, par_dir, hdf_name,
+                                        myid, fileNameMode), "r");
                 db->getInteger("snap_bound_size", snap_bound_size);
             }
 
@@ -685,8 +700,10 @@ int main(int argc, char *argv[])
                     mkdir(outWindow.c_str(), 0777);
                 }
 
-                dmd[idx_dataset][window]->save(outputPath + "/window" + to_string(
-                                                   window) + "/par" + to_string(idx_dataset));
+                dmd[idx_dataset][window]->save(outputPath + "/window"
+                                               + to_string(window) + "/par"
+                                               + to_string(idx_dataset));
+
                 if (myid == 0)
                 {
                     dmd[idx_dataset][window]->summary(outputPath + "/window"
@@ -777,7 +794,8 @@ int main(int argc, char *argv[])
             }
             else
             {
-                db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
+                db->open(GetFilenameHDF(data_dir, sim_name, par_dir, hdf_name,
+                                        myid, fileNameMode), "r");
                 db->getInteger("numsnap", num_snap_orig);
             }
 
@@ -811,7 +829,8 @@ int main(int argc, char *argv[])
             }
             else
             {
-                db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
+                db->open(GetFilenameHDF(data_dir, sim_name, par_dir, hdf_name,
+                                        myid, fileNameMode), "r");
                 db->getInteger("snap_bound_size", snap_bound_size);
             }
 
@@ -900,29 +919,29 @@ int main(int argc, char *argv[])
                 }
                 dmd[idx_dataset][window]->projectInitialCondition(init_cond);
 
-		const double norm_init_cond = init_cond->norm();
-		if (myid == 0)
-		  {
-		    cout << "Initial condition norm " << norm_init_cond
-			 << " for parameter " << idx_dataset << ", window "
-			 << window - 1 << endl;
-		  }
+                const double norm_init_cond = init_cond->norm();
+                if (myid == 0)
+                {
+                    cout << "Initial condition norm " << norm_init_cond
+                         << " for parameter " << idx_dataset << ", window "
+                         << window - 1 << endl;
+                }
 
                 delete init_cond;
 
-		if (window > 0 && indicator_val[window] < t_final)
-		  {
-		    // To save memory, delete dmd[idx_dataset][window] for windows
-		    // not containing t_final.
-		    if (myid == 0)
-		      {
-			cout << "Deleting DMD for parameter " << idx_dataset << ", window "
-			     << window - 1 << endl;
-		      }
+                if (window > 0 && indicator_val[window] < t_final)
+                {
+                    // To save memory, delete dmd[idx_dataset][window] for windows
+                    // not containing t_final.
+                    if (myid == 0)
+                    {
+                        cout << "Deleting DMD for parameter " << idx_dataset << ", window "
+                             << window - 1 << endl;
+                    }
 
-		    delete dmd[idx_dataset][window-1];
-		    dmd[idx_dataset][window-1] = nullptr;
-		  }
+                    delete dmd[idx_dataset][window-1];
+                    dmd[idx_dataset][window-1] = nullptr;
+                }
 
             } // escape for-loop over window
 
@@ -950,7 +969,8 @@ int main(int argc, char *argv[])
             }
             else
             {
-                db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
+                db->open(GetFilenameHDF(data_dir, sim_name, par_dir, hdf_name,
+                                        myid, fileNameMode), "r");
                 db->getInteger("numsnap", num_snap_orig);
             }
             CAROM_VERIFY(num_snap_orig > 0);
@@ -978,7 +998,8 @@ int main(int argc, char *argv[])
             }
             else
             {
-                db->open(string(data_dir) + "/" + par_dir + "/" + hdf_name, "r");
+                db->open(GetFilenameHDF(data_dir, sim_name, par_dir, hdf_name,
+                                        myid, fileNameMode), "r");
                 db->getInteger("snap_bound_size", snap_bound_size);
             }
 
@@ -1058,10 +1079,10 @@ int main(int argc, char *argv[])
                                               result->getData(), dim);
                     }
 
-		    if (save_hdf)
-		      {
-			hdf_db->putDoubleArray(snap, result->getData(), dim);
-		      }
+                    if (save_hdf)
+                    {
+                        hdf_db->putDoubleArray(snap, result->getData(), dim);
+                    }
 
                     idx_snap = snap_bound[1]+1; // escape for-loop over idx_snap
                     delete result;
@@ -1109,12 +1130,12 @@ int main(int argc, char *argv[])
                         cout << "Relative error of DMD solution at t = " << tval
                              << " is " << rel_error << endl;
 
-			if (idx_snap == snap_bound[1])  // Final step
-			  {
-			    std::ofstream ofs ("log.txt", std::ofstream::app);
-			    ofs << windowNumSamples << "," << subsample << "," << rel_error << endl;
-			    ofs.close();
-			  }
+                        if (idx_snap == snap_bound[1])  // Final step
+                        {
+                            std::ofstream ofs ("log.txt", std::ofstream::app);
+                            ofs << windowNumSamples << "," << subsample << "," << rel_error << endl;
+                            ofs.close();
+                        }
 
                         if (save_csv)
                         {
@@ -1128,10 +1149,10 @@ int main(int argc, char *argv[])
                         }
                     }
 
-		    if (save_hdf)
-		      {
-			hdf_db->putDoubleArray(snap, result->getData(), dim);
-		      }
+                    if (save_hdf)
+                    {
+                        hdf_db->putDoubleArray(snap, result->getData(), dim);
+                    }
 
                     delete result;
                 }
@@ -1166,10 +1187,10 @@ int main(int argc, char *argv[])
     } // escape case (online || predict)
 
     if (save_hdf)
-      {
-	hdf_db->close();
-	delete hdf_db;
-      }
+    {
+        hdf_db->close();
+        delete hdf_db;
+    }
 
     delete[] sample;
     delete curr_par;
