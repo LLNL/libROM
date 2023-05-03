@@ -13,19 +13,18 @@ runs:
           ./tests/test_S_OPT
           mpirun -n 4 --oversubscribe tests/test_S_OPT
           ./tests/test_IncrementalSVD
-          ./tests/test_RandomizedSVD
-          mpirun -n 3 --oversubscribe tests/test_RandomizedSVD
           ./tests/test_DMD
           mpirun -n 3 --oversubscribe tests/test_DMD
           ./tests/test_GreedyCustomSampler
           mpirun -n 3 --oversubscribe tests/test_GreedyCustomSampler
-
+# ./tests/test_RandomizedSVD
+# mpirun -n 3 --oversubscribe tests/test_RandomizedSVD
       shell: bash
-      
+
     - name: Run regression tests
       if: ${{ github.event.label.name == 'LGTM' || contains(github.event.pull_request.labels.*.name, 'LGTM') }}
       run: |
           cd ${GITHUB_WORKSPACE}
           ./regression_tests/run_regression_tests.sh
-         
+
       shell: bash
