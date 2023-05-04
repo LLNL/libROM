@@ -44,7 +44,7 @@ public:
      * @param[in] ref_point         The index within the vector of parameter points
      *                              to the reference point
      * @param[in] rbf               The RBF type ("G" == gaussian,
-     *                              "IQ" == inverse quadratic, 
+     *                              "IQ" == inverse quadratic,
      *                              "IMQ" == inverse multiquadric)
      * @param[in] interp_method     The interpolation method type
      *                              ("LS" == linear solve,
