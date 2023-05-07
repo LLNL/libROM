@@ -715,7 +715,7 @@ public:
      * @param[in] prefix The name of the prefix of the file name.
      *
      */
-    void print(const char * prefix);
+    void print(const char * prefix) const;
 
     /**
      * @brief write Vector into (a) HDF file(s).
