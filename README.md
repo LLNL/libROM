@@ -4,7 +4,11 @@
 
 [libROM](https://www.librom.net) is a free, lightweight, scalable C++ library for data-driven physical
 simulation methods from the intrusive projection-based reduced order models to
-non-intrusive black-box approaches.
+non-intrusive black-box approaches. 
+
+The best starting point for new users interested in libROM's features 
+is to review the examples at https://www.librom.net/examples.html. 
+The code documentation is available at https://librom.readthedocs.io/en/latest/index.html. 
 
 ## Features
 
@@ -38,7 +42,7 @@ Compilation options:
 
 There is a Spack package for libROM; however, the version it installs
 is the latest public release. See the [spack
-documentation](http://spack.readthedocs.io/en/latest/index.html) for
+documentation](https://spack.readthedocs.io/en/latest/index.html) for
 details on how to use Spack.
 
 To install libROM with default options using spack.
@@ -111,6 +115,7 @@ LLNL-CODE-766763
 - Siu Wun Cheung (LLNL)
 - Eric Chin (LLNL)
 - Youngsoo Choi (LLNL)
+- Seung Whan Chung (LLNL)
 - Dylan Copeland (LLNL)
 - William Fries (University of Arizona)
 - Debojyoti Ghosh (LLNL)
