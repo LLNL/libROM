@@ -1041,6 +1041,47 @@ Matrix::calculateNumDistributedRows() {
 }
 
 Matrix*
+Matrix::row_normalize() const
+{
+  
+    int nrow = numRows();
+    Matrix* normalized_matrix = new Matrix(nrow, numColumns()+1, distributed());
+    for (int i = 0; i < nrow; i++)
+    {
+        double kii = (double)numColumns();
+        double scaled_norm = 0.0;
+        double rowmax = fabs(item(i,0));
+	double scaled_item;
+	int exponent; 
+	for( int j = 1; j < numColumns(); j++ )
+	{
+	   if(fabs(item(i,j))>rowmax){
+		rowmax = fabs(item(i,j));
+	   }	 
+	} 
+       if(rowmax > 1e-8){
+	  scaled_item = std::frexp(rowmax, &exponent);
+	  //We use the ldexp function to multiply each component by 2^-exponent.
+	  for( int j = 0; j < numColumns(); j++ )
+          {
+	    scaled_item = std::ldexp(item(i,j), -exponent); 
+            scaled_norm += (scaled_item) * (scaled_item);
+          }
+          kii =sqrt(kii/scaled_norm);
+          for (int j = 0; j < numColumns(); j++ )
+          {
+            normalized_matrix->item(i, j) = kii * (std::ldexp(item(i,j), -exponent));
+          }
+	}else{ kii=0.0;}
+	// We computed the weights for kii using the scaled norm
+	// Thus the true weight should be kii*2^scale. 
+	normalized_matrix->item(i,numColumns()) = std::ldexp(kii, -exponent) ;
+    }
+    return normalized_matrix;
+
+}
+
+Matrix*
 Matrix::qr_factorize() const
 {
     int myid;

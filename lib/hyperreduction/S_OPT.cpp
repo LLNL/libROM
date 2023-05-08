@@ -12,6 +12,7 @@
 // basis to be sampled for the interpolation of the basis.
 
 #include "linalg/Matrix.h"
+#include "linalg/Vector.h"
 #include "Utilities.h"
 #include "mpi.h"
 #include <cmath>
@@ -32,8 +33,10 @@ S_OPT(const Matrix* f_basis,
       std::vector<int>& f_sampled_row,
       std::vector<int>& f_sampled_rows_per_proc,
       Matrix& f_basis_sampled_inv,
+      Vector& K,
       const int myid,
       const int num_procs,
+      bool precond,
       const int num_samples_req,
       std::vector<int>* init_samples,
       bool qr_factorize)
@@ -89,7 +92,7 @@ S_OPT(const Matrix* f_basis,
     const int num_samples = num_samples_req > 0 ? num_samples_req :
                             num_basis_vectors;
     CAROM_VERIFY(num_basis_vectors <= num_samples
-                 && num_samples <= f_basis->numDistributedRows());
+                && num_samples <= f_basis->numDistributedRows());
     CAROM_VERIFY(num_samples == f_sampled_row.size());
     CAROM_VERIFY(num_samples == f_basis_sampled_inv.numRows() &&
                  num_basis_vectors == f_basis_sampled_inv.numColumns());
@@ -109,22 +112,33 @@ S_OPT(const Matrix* f_basis,
         f_basis_truncated = f_basis;
     }
 
-    const Matrix* Vo = NULL;
+    const Matrix* Voo = NULL;
 
     // Use the QR factorization of the input matrix, if requested
     if (qr_factorize)
     {
-        Vo = f_basis_truncated->qr_factorize();
+        Voo = f_basis_truncated->qr_factorize();
     }
     else
     {
-        Vo = f_basis_truncated;
+        Voo = f_basis_truncated;
     }
+//(1-1)
+    CAROM::Matrix* Kf = NULL;
+    const CAROM::Matrix* Vo = NULL;
+    if(precond)
+    {
+	Kf = Voo->row_normalize();
+    	Vo = Kf -> getFirstNColumns(num_basis_vectors);
+    }else{
+	Vo = Voo;	
+    }
+    Vector KK(num_samples,false); 
 
     int num_samples_obtained = 0;
-
     // Scratch space used throughout the algorithm.
-    std::vector<double> c(num_basis_vectors);
+//(2-1)
+    std::vector<double> c(num_basis_vectors+1);
 
     vector<set<int> > proc_sampled_f_row(num_procs);
     vector<map<int, int> > proc_f_row_to_tmp_fs_row(num_procs);
@@ -159,14 +173,18 @@ S_OPT(const Matrix* f_basis,
             for (int j = 0; j < num_basis_vectors; ++j) {
                 c[j] = Vo->item(f_bv_max_global.row, j);
             }
+//(2-2)
+	    c[num_basis_vectors] = Kf->item(f_bv_max_global.row, num_basis_vectors);
             init_sample_offset++;
         }
-        MPI_Bcast(c.data(), num_basis_vectors, MPI_DOUBLE,
+        MPI_Bcast(c.data(), num_basis_vectors+2, MPI_DOUBLE,
                   f_bv_max_global.proc, MPI_COMM_WORLD);
         // Now add the first sampled row of the basis to tmp_fs.
         for (int j = 0; j < num_basis_vectors; ++j) {
             V1.item(num_samples_obtained, j) = c[j];
         }
+//(2-3)
+	KK.item(num_samples_obtained) = c[num_basis_vectors];
         proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
         proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] =
             num_samples_obtained;
@@ -191,6 +209,8 @@ S_OPT(const Matrix* f_basis,
             for (int j = 0; j < num_basis_vectors; ++j) {
                 c[j] = Vo->item(f_bv_max_global.row, j);
             }
+//(3-1)
+	    c[num_basis_vectors] = Kf->item(f_bv_max_global.row, num_basis_vectors);
         }
         MPI_Bcast(c.data(), num_basis_vectors, MPI_DOUBLE,
                   f_bv_max_global.proc, MPI_COMM_WORLD);
@@ -198,23 +218,18 @@ S_OPT(const Matrix* f_basis,
         for (int j = 0; j < num_basis_vectors; ++j) {
             V1.item(0, j) = c[j];
         }
+//(3-2)
+	KK.item(0) = c[num_basis_vectors];
         proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
         proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] = 0;
         num_samples_obtained++;
     }
-
     if (num_samples_obtained < num_samples)
     {
         Vector* A = new Vector(num_rows, f_basis->distributed());
         Vector* noM = new Vector(num_rows, f_basis->distributed());
 
         Matrix A0(num_basis_vectors - 1, num_basis_vectors - 1, false);
-        Matrix V1_last_col(num_basis_vectors - 1, 1, false);
-        Matrix tt(num_rows, num_basis_vectors - 1, f_basis->distributed());
-        Matrix tt1(num_rows, num_basis_vectors - 1, f_basis->distributed());
-        Matrix g1(tt.numRows(), tt.numColumns(), f_basis->distributed());
-        Matrix GG(tt1.numRows(), tt1.numColumns(), f_basis->distributed());
-        Vector ls_res_first_row(num_basis_vectors - 1, false);
         Vector nV(num_basis_vectors, false);
 
         int start_idx = 2;
@@ -226,6 +241,12 @@ S_OPT(const Matrix* f_basis,
         {
             if (i <= num_basis_vectors)
             {
+        	Matrix V1_last_col(num_basis_vectors - 1, 1, false);
+        	Matrix tt(num_rows, num_basis_vectors - 1, f_basis->distributed());
+        	Matrix tt1(num_rows, num_basis_vectors - 1, f_basis->distributed());
+        	Matrix g1(tt.numRows(), tt.numColumns(), f_basis->distributed());
+        	Matrix GG(tt1.numRows(), tt1.numColumns(), f_basis->distributed());
+        	Vector ls_res_first_row(num_basis_vectors - 1, false);
                 A0.setSize(i - 1, i - 1);
                 V1_last_col.setSize(i - 1, 1);
                 for (int j = 0; j < num_samples_obtained; j++)
@@ -409,8 +430,7 @@ S_OPT(const Matrix* f_basis,
                 }
 
                 delete b;
-            }
-            else
+            }  else
             {
                 Matrix* curr_V1 = new Matrix(V1.getData(), num_samples_obtained,
                                              num_basis_vectors, false, true);
@@ -474,13 +494,17 @@ S_OPT(const Matrix* f_basis,
                 for (int j = 0; j < num_basis_vectors; ++j) {
                     c[j] = Vo->item(f_bv_max_global.row, j);
                 }
+//(4-1)
+		c[num_basis_vectors] = Kf->item(f_bv_max_global.row, num_basis_vectors);
             }
-            MPI_Bcast(c.data(), num_basis_vectors, MPI_DOUBLE,
+            MPI_Bcast(c.data(), num_basis_vectors+2, MPI_DOUBLE,
                       f_bv_max_global.proc, MPI_COMM_WORLD);
             // Now add the first sampled row of the basis to tmp_fs.
             for (int j = 0; j < num_basis_vectors; ++j) {
                 V1.item(num_samples_obtained, j) = c[j];
             }
+//(4-2)
+	    KK.item(num_samples_obtained) = c[num_basis_vectors];
             proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
             proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] =
                 num_samples_obtained;
@@ -504,26 +528,60 @@ S_OPT(const Matrix* f_basis,
             int this_f_row = *j;
             f_sampled_row[idx] = this_f_row;
             int tmp_fs_row = this_proc_f_row_to_tmp_fs_row[this_f_row];
-            for (int col = 0; col < num_f_basis_cols; ++col) {
-                f_basis_sampled_inv.item(idx, col) = V1.item(tmp_fs_row, col);
-            }
+	    for (int col = 0; col < num_f_basis_cols; ++col) {
+    		  f_basis_sampled_inv.item(idx, col) = V1.item(tmp_fs_row, col);
+	    }
+//(5-1)	   
+            if(precond) K.item(idx) = KK.item(tmp_fs_row);
             ++idx;
         }
     }
-
+//Temporary codes for printing results: should be erased 
+    if(num_basis_vectors <= num_samples){
+        for(int i=0; i<num_samples;i++){
+      		for(int j=0; j<num_basis_vectors; j++){
+       		//printf("%f\t",f_basis_sampled_inv.item(i,j));
+     		}
+      		//printf("\n");
+    	}
+   	Matrix* U = NULL;
+  	Matrix V(num_basis_vectors,num_basis_vectors,false);
+    	Vector sigma(num_basis_vectors, false);
+    	SerialSVD(&f_basis_sampled_inv, U, &sigma, &V);
+    	delete U;
+    	double sigma_end = 0.0;
+	for(int j = num_basis_vectors-1; j>=0; j--){
+	    	if(sigma.item(j) > 1e-8) {
+			sigma_end = sigma.item(j);
+			break;
+	    	}
+	}
+	printf("conditionNum:%f -%f:%f\n", sigma.item(0)/sigma_end,sigma.item(0), sigma_end);
+  	printf("%d\t",f_basis_sampled_inv.numColumns());
+  	printf("%d\t",f_basis_sampled_inv.numRows());
+    }
+    if(precond){
+      for(int i=0; i<num_samples; i++){
+    	printf("k%f\t",K.item(i));
+      }
+      printf("\n");
+    }
     CAROM_ASSERT(num_samples == idx);
 
     // Now invert f_basis_sampled_inv, storing its transpose.
+//(5-2)
     f_basis_sampled_inv.transposePseudoinverse();
 
     // Free the MPI_Datatype and MPI_Op.
     MPI_Type_free(&MaxRowType);
     MPI_Op_free(&RowInfoOp);
 
-    if (qr_factorize)
+    if (precond)
     {
-        delete Vo;
+	delete Vo;
+        delete Kf;
     }
+    if (qr_factorize) delete Voo;
     if (num_basis_vectors < f_basis->numColumns())
     {
         delete f_basis_truncated;

@@ -19,6 +19,7 @@
 namespace CAROM {
 
 class Matrix;
+class Vector;
 
 /**
  * @brief Computes the S_OPT algorithm on the given basis.
@@ -37,8 +38,10 @@ class Matrix;
  * @param[out] f_sampled_rows_per_proc The number of sampled rows for each
  *                                     processor.
  * @param[out] f_basis_sampled_inv The inverse of the sampled basis of the RHS.
+ * @param[out] K scaled weights when preconditioning is used. 
  * @param[in] myid The rank of this process.
  * @param[in] num_procs The total number of processes.
+ * @param[in] precond Boolean value indicating if preconditnioning is used.
  * @param[in] num_samples_req The minimum number of samples required.
  * @param[in] init_samples Samples to initialize the S_OPT algorithm.
  * @param[in] qr_factorize Whether to factorize the incoming matrix. If true and
@@ -51,8 +54,10 @@ S_OPT(const Matrix* f_basis,
       std::vector<int>& f_sampled_row,
       std::vector<int>& f_sampled_rows_per_proc,
       Matrix& f_basis_sampled_inv,
+      Vector& K,
       const int myid,
       const int num_procs,
+      bool precond=false,
       const int num_samples_req = -1,
       std::vector<int> *init_samples=NULL,
       bool qr_factorize = false);
