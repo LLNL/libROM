@@ -4,11 +4,12 @@
 
 [libROM](https://www.librom.net) is a free, lightweight, scalable C++ library for data-driven physical
 simulation methods from the intrusive projection-based reduced order models to
-non-intrusive black-box approaches. 
+non-intrusive black-box approaches.
 
 The best starting point for new users interested in libROM's features 
-is to review the examples at https://www.librom.net/examples.html. 
-The code documentation is available at https://librom.readthedocs.io/en/latest/index.html. 
+is to review the [examples](https://www.librom.net/examples.html). 
+The [code documentation](https://librom.readthedocs.io/en/latest/index.html) 
+provides more details about libROMs' classes and functions. 
 
 ## Features
 
