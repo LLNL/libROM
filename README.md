@@ -116,7 +116,7 @@ LLNL-CODE-766763
 - Siu Wun Cheung (LLNL)
 - Eric Chin (LLNL)
 - Youngsoo Choi (LLNL)
-- Seung Whan Chung (LLNL)
+- "Kevin" Seung Whan Chung (LLNL)
 - Dylan Copeland (LLNL)
 - William Fries (University of Arizona)
 - Debojyoti Ghosh (LLNL)
