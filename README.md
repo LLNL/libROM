@@ -9,7 +9,7 @@ non-intrusive black-box approaches.
 The best starting point for new users interested in libROM's features 
 is to review the [examples](https://www.librom.net/examples.html). 
 The [code documentation](https://librom.readthedocs.io/en/latest/index.html) 
-provides more details about libROMs' classes and functions. 
+provides more details about libROM's classes and functions. 
 
 ## Features
 
