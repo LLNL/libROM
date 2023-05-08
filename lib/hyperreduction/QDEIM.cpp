@@ -12,6 +12,7 @@
 // rhs to be sampled for the interpolation of the rhs.
 
 #include "linalg/Matrix.h"
+#include "linalg/Vector.h"
 #include "mpi.h"
 #include <cmath>
 
@@ -27,9 +28,11 @@ QDEIM(const Matrix* f_basis,
       std::vector<int>& f_sampled_row,
       std::vector<int>& f_sampled_rows_per_proc,
       Matrix& f_basis_sampled_inv,
+      Vector& K,
       const int myid,
       const int num_procs,
-      const int num_samples_req)
+      const int num_samples_req,
+      bool precond)
 {
     CAROM_VERIFY(num_procs == f_sampled_rows_per_proc.size());
 
@@ -49,16 +52,28 @@ QDEIM(const Matrix* f_basis,
     // QR will determine (numCol) pivots, which will define the first (numCol) samples.
     const int numCol = f_basis->numColumns();
     const int num_samples_req_QR = numCol;
-
+//(1-1)
     std::vector<double> sampled_row_data;
-    if (myid == 0) sampled_row_data.resize(num_samples_req * numCol);
-
+    std::vector<double> sampled_K_data;
+    if (myid == 0) {
+	sampled_row_data.resize(num_samples_req * numCol);
+	sampled_K_data.resize(num_samples_req);
+    }
     std::vector<int> f_sampled_row_owner((myid == 0
                                           && f_basis->distributed()) ? num_samples_req : 0);
+//(1-2) construct fo and replace f_basis with fo.
+    const Matrix* fo = NULL;
+    CAROM::Matrix* Kf = NULL;
+    if(precond){
+        Kf = f_basis->row_normalize();
+        fo = Kf -> getFirstNColumns(numCol);
+    }else{
+        fo = f_basis;
+    }
 
     // QDEIM computes selection/interpolation indices by taking a
     // column-pivoted QR-decomposition of the transpose of its input matrix.
-    f_basis->qrcp_pivots_transpose(f_sampled_row.data(),
+    fo->qrcp_pivots_transpose(f_sampled_row.data(),
                                    f_sampled_row_owner.data(),
                                    num_samples_req_QR);
 
@@ -121,9 +136,10 @@ QDEIM(const Matrix* f_basis,
 
         int count = 0;
         MPI_Scatter(ns.data(), 1, MPI_INT, &count, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
+//(2-1)
         std::vector<int> my_sampled_rows(count);
         std::vector<double> my_sampled_row_data(count*numCol);
+	std::vector<double> my_K_data(count);
 
         MPI_Scatterv(all_sampled_rows.data(), ns.data(), disp.data(), MPI_INT,
                      my_sampled_rows.data(), count, MPI_INT, 0, MPI_COMM_WORLD);
@@ -150,9 +166,17 @@ QDEIM(const Matrix* f_basis,
                          && my_sampled_rows[i] < row_offset[myid] + f_basis->numRows());
             const int row = my_sampled_rows[i] - row_offset[myid];
             os = i*numCol;
-            for (int j=0; j<numCol; ++j)
-                my_sampled_row_data[os + j] = f_basis->item(row, j);
+//(2-2) fo       
+	    for (int j=0; j<numCol; ++j)
+                my_sampled_row_data[os + j] = fo->item(row, j);
+            if(precond) my_K_data[i] = Kf -> item(row, numCol);
         }
+//(2-3)
+	if(precond){
+            MPI_Gatherv(my_K_data.data(), count, MPI_DOUBLE,
+                            sampled_K_data.data(),
+                            ns.data(), disp.data(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	}
 
         if (myid == 0)
         {
@@ -245,8 +269,9 @@ QDEIM(const Matrix* f_basis,
             // Broadcast the small n-by-n undistributed matrix V which is computed only on root.
             MPI_Bcast(V.getData(), n*n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
+//(2-4)
             // Set Ubt = U * V = (V' * U')'
-            Matrix *Ubt = f_basis->mult(V);  // distributed
+            Matrix *Ubt = fo->mult(V);  // distributed
 
             CAROM_VERIFY(Ubt->distributed() && Ubt->numRows() == f_basis->numRows()
                          && Ubt->numColumns() == n);
@@ -323,9 +348,10 @@ QDEIM(const Matrix* f_basis,
             const int tagSendRecv = 111;
             if (sample > -1)
             {
+//(3-1) fo
                 CAROM_VERIFY(sample >= row_offset[myid]);
-                MPI_Send(f_basis->getData() + ((sample - row_offset[myid]) * numCol),
-                         numCol, MPI_DOUBLE, 0, tagSendRecv, MPI_COMM_WORLD);
+                MPI_Send(fo->getData() + ((sample - row_offset[myid]) * numCol), numCol,
+                         MPI_DOUBLE, 0, tagSendRecv, MPI_COMM_WORLD);
             }
 
             if (myid == 0)
@@ -334,7 +360,18 @@ QDEIM(const Matrix* f_basis,
                 MPI_Recv(sampled_row_data.data() + (s*numCol), numCol, MPI_DOUBLE,
                          owner, tagSendRecv, MPI_COMM_WORLD, &status);
             }
-
+//(3-2)
+	    if ( precond && sample > -1)
+            {
+                MPI_Send(Kf->getData()+ ((sample - row_offset[myid])*(numCol+1) + numCol), 1,
+                         MPI_DOUBLE, 0, tagSendRecv, MPI_COMM_WORLD);
+            }
+            if (precond && myid == 0)
+            {
+                MPI_Status status2;
+                MPI_Recv(sampled_K_data.data() + (s), 1, MPI_DOUBLE, owner,
+                         tagSendRecv, MPI_COMM_WORLD, &status2);
+            }
             delete Ubt;
         }  // loop s over samples
 
@@ -389,7 +426,8 @@ QDEIM(const Matrix* f_basis,
                     {
                         f_basis_sampled_inv.item(s, j) = sampled_row_data[(ig*numCol) + j];
                     }
-
+//(4-1)
+		    if(precond) K.item(s) = sampled_K_data[ig];
                     sortedRow[s] = f_sampled_row[ig];
                 }
             }
@@ -406,10 +444,13 @@ QDEIM(const Matrix* f_basis,
     {
         // With the known interpolation (sample) indices, copy over the
         // rows of the sampled basis
+//(4-2)        
         for (int i = 0; i < num_samples_req_QR; i++) {
             for (int j = 0; j < numCol; j++) {
-                f_basis_sampled_inv.item(i, j) = f_basis->item(f_sampled_row[i], j);
+                f_basis_sampled_inv.item(i, j) = fo->item(f_sampled_row[i], j);
             }
+	    if(precond) K.item(i) = Kf->item(f_sampled_row[i],numCol);
+	
         }
 
         f_sampled_rows_per_proc[0] = numCol;
@@ -422,8 +463,25 @@ QDEIM(const Matrix* f_basis,
     }
 
     // Now invert f_basis_sampled_inv, storing its transpose.
-    if (myid == 0)  // Matrix is valid only on root process
+    if (myid == 0){  // Matrix is valid only on root process
         f_basis_sampled_inv.transposePseudoinverse();
+//Temporary codes for printing results
+	Matrix* U = NULL;
+	Matrix V(numCol,numCol,false);
+        Vector sigma(numCol, false);
+        SerialSVD(&f_basis_sampled_inv, U, &sigma, &V);
+	delete U;
+	double sigma_end = 0.0;
+	for(int j = numCol-1; j>=0; j--){
+	    if(sigma.item(j) >1e-8) {
+		sigma_end = sigma.item(j);
+		break;
+	    }
+	}
+	printf("conditionNum:%f -%f:%f\n", sigma.item(0)/sigma_end,sigma.item(0), sigma_end);
+    }
+    if(precond) delete fo;
+    if(precond) delete Kf;
 } // end void QDEIM
 
 } // end namespace CAROM

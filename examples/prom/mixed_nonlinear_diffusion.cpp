@@ -303,9 +303,12 @@ private:
     mutable CAROM::Vector zY;
     mutable CAROM::Vector zN;
     const CAROM::Matrix *Vsinv;
-
+//edited
+    const CAROM::Vector *KK;
+    bool precondCLS;
     // Data for source function
     const CAROM::Matrix *Ssinv;
+    const CAROM::Vector *KS;
     mutable CAROM::Vector zS;
     mutable CAROM::Vector zT;
     const CAROM::Matrix *S;
@@ -360,15 +363,16 @@ protected:
     NonlinearDiffusionOperator *fomSp;
 
 public:
+//edited
     RomOperator(NonlinearDiffusionOperator *fom_,
                 NonlinearDiffusionOperator *fomSp_,
                 const int rrdim_, const int rwdim_, const int nldim_,
                 CAROM::SampleMeshManager *smm_,
                 const CAROM::Matrix* V_R_, const CAROM::Matrix* U_R_, const CAROM::Matrix* V_W_,
-                const CAROM::Matrix *Bsinv,
+                const CAROM::Matrix *Bsinv, const CAROM::Vector *KK_,
                 const double newton_rel_tol, const double newton_abs_tol, const int newton_iter,
-                const CAROM::Matrix* S_, const CAROM::Matrix *Ssinv_,
-                const int myid, const bool hyperreduce_source_, const bool oversampling_,
+                const CAROM::Matrix* S_, const CAROM::Matrix *Ssinv_, const CAROM::Vector *KS_,
+                const int myid, const bool hyperreduce_source_, const bool oversampling_, const bool precondCLS_,
                 const bool use_eqp, CAROM::Vector *eqpSol,
                 CAROM::Vector *eqpSol_S, const IntegrationRule *ir_eqp_);
 
@@ -556,6 +560,8 @@ int main(int argc, char *argv[])
     bool merge = false;
     bool online = false;
     const char *samplingType = "deim";
+//edited
+    bool precondCLS = false;
     bool use_eqp = false;
     bool writeSampleMesh = false;
     int num_samples_req = -1;
@@ -626,6 +632,9 @@ int main(int argc, char *argv[])
                    "Enable or disable the merge phase.");
     args.AddOption(&samplingType, "-hrtype", "--hrsamplingtype",
                    "Sampling type for hyperreduction.");
+//edited
+    args.AddOption(&precondCLS, "-precls", "--precls", "-no-precls", "--no-precls",
+                   "Precondition the hyper-reduction based on the Christoffel function weight.");
     args.AddOption(&num_samples_req, "-nsr", "--nsr",
                    "Number of samples for the sampling algorithm to select.");
     args.AddOption(&use_eqp, "-eqp", "--eqp", "-no-eqp", "--no-eqp",
@@ -974,6 +983,8 @@ int main(int argc, char *argv[])
         ParFiniteElementSpace *sp_R_space, *sp_W_space;
         CAROM::Matrix *Bsinv = NULL;
         CAROM::Matrix *Ssinv = NULL;
+	CAROM::Vector *KK = NULL;
+	CAROM::Vector *KS = NULL;
         const IntegrationRule *ir0 = NULL;
 
         if (ir0 == NULL)
@@ -1019,18 +1030,19 @@ int main(int argc, char *argv[])
             {
                 nsamp_R = nldim;
             }
-
+//edited
             // Now execute the chosen sampling algorithm to get the sampling information.
             Bsinv = new CAROM::Matrix(nsamp_R, nldim, false);
+	    KK = precondCLS? new CAROM::Vector(Bsinv->numRows(),false) : NULL;
             vector<int> sample_dofs(nsamp_R);  // Indices of the sampled rows
 
             hr.ComputeSamples(FR_librom,
                               nldim,
                               sample_dofs,
                               num_sample_dofs_per_proc,
-                              *Bsinv,
+                              *Bsinv, *KK,
                               myid,
-                              num_procs,
+                              num_procs,precondCLS,
                               nsamp_R);
 
             vector<int> sample_dofs_S;  // Indices of the sampled rows
@@ -1065,8 +1077,9 @@ int main(int argc, char *argv[])
                 {
                     nsamp_S = nsdim;
                 }
-
+//edited
                 Ssinv = new CAROM::Matrix(nsamp_S, nsdim, false);
+		KS = precondCLS? new CAROM::Vector(Ssinv->numRows(),false) : NULL;
                 sample_dofs_S.resize(nsamp_S);
 
 
@@ -1074,9 +1087,9 @@ int main(int argc, char *argv[])
                                   nsdim,
                                   sample_dofs_S,
                                   num_sample_dofs_per_proc_S,
-                                  *Ssinv,
+                                  *Ssinv, *KS,
                                   myid,
-                                  num_procs,
+                                  num_procs, precondCLS,
                                   nsamp_S);
             }
 
@@ -1161,12 +1174,12 @@ int main(int argc, char *argv[])
             soper = new NonlinearDiffusionOperator(*sp_R_space, *sp_W_space, newton_rel_tol,
                                                    newton_abs_tol, newton_iter, sp_p);
         }
-
+//edited
         romop = new RomOperator(&oper, soper, rrdim, rwdim, nldim, smm,
                                 BR_librom, FR_librom, BW_librom,
-                                Bsinv, newton_rel_tol, newton_abs_tol, newton_iter,
-                                S_librom, Ssinv, myid, hyperreduce_source,
-                                num_samples_req != -1, use_eqp, eqpSol, eqpSol_S, ir0);
+                                Bsinv, KK, newton_rel_tol, newton_abs_tol, newton_iter,
+                                S_librom, Ssinv, KS, myid, hyperreduce_source,
+                                num_samples_req != -1, precondCLS, use_eqp, eqpSol, eqpSol_S, ir0);
 
         ode_solver.Init(*romop);
 
@@ -1741,16 +1754,16 @@ NonlinearDiffusionOperator::~NonlinearDiffusionOperator()
     delete Bmat;
     delete J_gmres;
 }
-
+//edited
 RomOperator::RomOperator(NonlinearDiffusionOperator *fom_,
                          NonlinearDiffusionOperator *fomSp_, const int rrdim_, const int rwdim_,
                          const int nldim_, CAROM::SampleMeshManager *smm_,
                          const CAROM::Matrix* V_R_, const CAROM::Matrix* U_R_, const CAROM::Matrix* V_W_,
-                         const CAROM::Matrix *Bsinv,
+                         const CAROM::Matrix *Bsinv, const CAROM::Vector *KK_,
                          const double newton_rel_tol, const double newton_abs_tol, const int newton_iter,
-                         const CAROM::Matrix* S_, const CAROM::Matrix *Ssinv_,
+                         const CAROM::Matrix* S_, const CAROM::Matrix *Ssinv_, const CAROM::Vector *KS_,
                          const int myid, const bool hyperreduce_source_,
-                         const bool oversampling_, const bool use_eqp,
+                         const bool oversampling_, const bool precondCLS_, const bool use_eqp,
                          CAROM::Vector *eqpSol, CAROM::Vector *eqpSol_S, const IntegrationRule *ir_eqp_)
     : TimeDependentOperator(rrdim_ + rwdim_, 0.0),
       newton_solver(),
@@ -1761,11 +1774,11 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_,
       V_R(*V_R_), U_R(U_R_), V_W(*V_W_), VTU_R(rrdim_, nldim_, false),
       y0(height), dydt_prev(height), zY(nldim, false),
       zN(std::max(nsamp_R, 1), false),
-      Vsinv(Bsinv), J(height),
-      zS(std::max(nsamp_S, 1), false), zT(std::max(nsamp_S, 1), false), Ssinv(Ssinv_),
+      Vsinv(Bsinv), KK(KK_), J(height),
+      zS(std::max(nsamp_S, 1), false), zT(std::max(nsamp_S, 1), false), Ssinv(Ssinv_), KS(KS_),
       VTCS_W(rwdim, std::max(nsamp_S, 1), false), S(S_),
       VtzR(rrdim_, false), hyperreduce_source(hyperreduce_source_),
-      oversampling(oversampling_), eqp(use_eqp),
+      oversampling(oversampling_), precondCLS(precondCLS_), eqp(use_eqp),
       ir_eqp(ir_eqp_), p_gf(&(fom_->fespace_W)), rhs_gf(&(fom_->fespace_W)),
       p_coeff(&p_gf), a_coeff(&p_coeff, NonlinearCoefficient),
       aprime_coeff(&p_coeff, NonlinearCoefficientDerivative),
@@ -2042,7 +2055,12 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
 
         // Select entries out of zR.
         smm->GetSampledValues("V", zR, zN);
-
+//edited
+	if (precondCLS){
+     	    for(int i=0; i< Vsinv->numRows(); i++){
+	    	zN.item(i) =zN.item(i) * KK->item(i);
+	    }
+   	}
         // Note that it would be better to just store VTU_R * Vsinv, but these are small matrices.
         if (oversampling)
         {
@@ -2112,7 +2130,12 @@ void RomOperator::Mult_Hyperreduced(const Vector &dy_dt, Vector &res) const
         {
             // Select entries
             smm->GetSampledValues("S", fomSp->zW, zT);
-
+//edited
+	    if (precondCLS){
+     	        for(int i=0; i< Ssinv->numRows(); i++){
+	     	  zT.item(i) *=  KS->item(i);
+		}
+   	    }
             if (oversampling)
             {
                 Ssinv->transposeMult(zT, zS);

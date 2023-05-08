@@ -175,12 +175,16 @@ private:
     Vector *psp_x;
     Vector *psp_v;
     Vector *Vx_temp;
+//edited
+    bool precondCLS;
     mutable Vector zH;
     mutable CAROM::Vector zX;
     mutable Vector zX_MFEM;
     mutable CAROM::Vector zN;
     const CAROM::Matrix *Hsinv;
     mutable CAROM::Vector *z_librom;
+//edited
+    const CAROM::Vector* KK;
     mutable Vector z;
     mutable Vector z_x;
     mutable Vector z_v;
@@ -240,12 +244,13 @@ protected:
 public:
     HyperelasticOperator *fom;
 
+//edited
     RomOperator(HyperelasticOperator *fom_,
                 HyperelasticOperator *fomSp_, const int rvdim_, const int rxdim_,
                 const int hdim_, CAROM::SampleMeshManager *smm_, const Vector *v0_,
                 const Vector *x0_, const Vector v0_fom_, const CAROM::Matrix *V_v_,
                 const CAROM::Matrix *V_x_, const CAROM::Matrix *U_H_,
-                const CAROM::Matrix *Hsinv_, const int myid, const bool oversampling_,
+                const CAROM::Matrix *Hsinv_, const CAROM::Vector* KK_, const int myid, const bool oversampling_, const bool precondCLS_,
                 const bool hyperreduce_, const bool x_base_only_, const bool use_eqp,
                 CAROM::Vector *eqpSol,
                 const IntegrationRule *ir_eqp_, NeoHookeanModel *model_);
@@ -254,7 +259,6 @@ public:
     void Mult_Hyperreduced(const Vector &y, Vector &dy_dt) const;
     void Mult_FullOrder(const Vector &y, Vector &dy_dt) const;
     void SetEQP(CAROM::Vector *eqpSol);
-
     CAROM::Matrix V_v, V_x, V_vTU_H;
     const Vector *x0;
     const Vector *v0;
@@ -480,6 +484,8 @@ int main(int argc, char *argv[])
     int num_samples_req = -1;
     const char *samplingType = "gnat";
 
+//edited
+    bool precondCLS = false;
     int nsets = 0;
     int id_param = 0;
 
@@ -543,6 +549,9 @@ int main(int argc, char *argv[])
                    "Enable or disable the merge phase.");
     args.AddOption(&samplingType, "-hrtype", "--hrsamplingtype",
                    "Sampling type for hyperreduction.");
+    args.AddOption(&precondCLS, "-precls", "--precls", "-no-precls", "--no-precls",
+                   "Precondition the hyper-reduction based on the Christoffel function weight.");
+
     args.AddOption(&num_samples_req, "-nsr", "--nsr",
                    "number of samples we want to select for the sampling algorithm.");
     args.AddOption(&rxdim, "-rxdim", "--rxdim",
@@ -866,11 +875,12 @@ int main(int argc, char *argv[])
 
     RomOperator *romop = 0;
 
+//edited
     const CAROM::Matrix *BV_librom = 0;
     const CAROM::Matrix *BX_librom = 0;
     const CAROM::Matrix *H_librom = 0;
     const CAROM::Matrix *Hsinv = 0;
-
+    const CAROM::Vector* KK= 0;
     int nsamp_H = -1;
 
     CAROM::SampleMeshManager *smm = nullptr;
@@ -989,8 +999,10 @@ int main(int argc, char *argv[])
                 nsamp_H = hdim;
             }
 
+//edited
             Hsinv->setSize(nsamp_H, hdim);
             vector<int> sample_dofs(nsamp_H);
+            CAROM::Vector* KK = precondCLS? new CAROM::Vector(nsamp_H, false) : NULL;
 
             // Setup hyperreduction using DEIM, GNAT, or S-OPT
             CAROM::Hyperreduction hr(samplingType);
@@ -998,9 +1010,9 @@ int main(int argc, char *argv[])
                               hdim,
                               sample_dofs,
                               num_sample_dofs_per_proc,
-                              *Hsinv,
+                              *Hsinv, *KK,
                               myid,
-                              num_procs,
+                              num_procs, precondCLS,
                               nsamp_H);
 
             // Construct sample mesh
@@ -1155,19 +1167,20 @@ int main(int argc, char *argv[])
             }
         }
 
+//edited
         if (!use_eqp)
         {
             romop = new RomOperator(&oper, soper, rvdim, rxdim, hdim, smm, w_v0, w_x0,
-                                    vx0.GetBlock(0), BV_librom, BX_librom, H_librom, Hsinv, myid,
-                                    num_samples_req != -1, hyperreduce, x_base_only, use_eqp, eqpSol, ir0, model);
+                                    vx0.GetBlock(0), BV_librom, BX_librom, H_librom, Hsinv, KK, myid,
+                                    num_samples_req != -1, precondCLS, hyperreduce, x_base_only, use_eqp, eqpSol, ir0, model);
         }
         else
         {
             romop = new RomOperator(&oper, soper, rvdim, rxdim, hdim, smm,
                                     &(vx0.GetBlock(0)),
-                                    &(vx0.GetBlock(1)), vx0.GetBlock(0), BV_librom, BX_librom, H_librom, Hsinv,
+                                    &(vx0.GetBlock(1)), vx0.GetBlock(0), BV_librom, BX_librom, H_librom, Hsinv,KK,
                                     myid,
-                                    num_samples_req != -1, hyperreduce, x_base_only, use_eqp, eqpSol, ir0, model);
+                                    num_samples_req != -1, precondCLS, hyperreduce, x_base_only, use_eqp, eqpSol, ir0, model);
         }
 
         // Print lifted initial energies
@@ -1653,18 +1666,19 @@ void InitialVelocityIC2(const Vector &x, Vector &v)
     v = 0.0;
 }
 
+//edited
 RomOperator::RomOperator(HyperelasticOperator *fom_,
                          HyperelasticOperator *fomSp_, const int rvdim_, const int rxdim_,
                          const int hdim_, CAROM::SampleMeshManager *smm_, const Vector *v0_,
                          const Vector *x0_, const Vector v0_fom_, const CAROM::Matrix *V_v_,
                          const CAROM::Matrix *V_x_, const CAROM::Matrix *U_H_,
-                         const CAROM::Matrix *Hsinv_, const int myid, const bool oversampling_,
+                         const CAROM::Matrix *Hsinv_, const CAROM::Vector* KK_, const int myid, const bool oversampling_, const bool precondCLS_,
                          const bool hyperreduce_, const bool x_base_only_, const bool use_eqp,
                          CAROM::Vector *eqpSol, const IntegrationRule *ir_eqp_, NeoHookeanModel *model_)
     : TimeDependentOperator(rxdim_ + rvdim_, 0.0), fom(fom_), fomSp(fomSp_),
       rxdim(rxdim_), rvdim(rvdim_), hdim(hdim_), x0(x0_), v0(v0_), v0_fom(v0_fom_),
-      smm(smm_), V_x(*V_x_), V_v(*V_v_), U_H(U_H_), Hsinv(Hsinv_),
-      M_hat_solver(fom_->fespace.GetComm()), oversampling(oversampling_),
+      smm(smm_), V_x(*V_x_), V_v(*V_v_), U_H(U_H_), Hsinv(Hsinv_), KK(KK_),
+      M_hat_solver(fom_->fespace.GetComm()), oversampling(oversampling_), precondCLS(precondCLS_),
       z(height / 2), hyperreduce(hyperreduce_), x_base_only(x_base_only_),
       eqp(use_eqp),
       ir_eqp(ir_eqp_), model(model_), rank(myid)
@@ -1934,6 +1948,12 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
 
         // Sample the values from zH
         smm->GetSampledValues("H", zH, zN);
+//edited
+        if (precondCLS){
+            for(int i=0; i< Hsinv->numRows(); i++){
+	        zN.item(i) *= KK->item(i);
+    	    }
+        }
 
         // Apply inverse H-basis
         if (oversampling)

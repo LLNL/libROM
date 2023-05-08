@@ -913,6 +913,14 @@ public:
     void transposePseudoinverse();
 
     /**
+     * @brief Computes and returns the row normalized matrix, including additional columns that store the scaled weights and corresponding scale for each row.
+     *
+     * @return The normalized matrix with additional columns that contain scaled weights and the respective scale.
+     */
+    Matrix*
+    row_normalize() const;
+
+    /**
      * @brief Computes and returns the Q of the QR factorization of this.
      *
      * @return The Q of the QR factorization of this.
