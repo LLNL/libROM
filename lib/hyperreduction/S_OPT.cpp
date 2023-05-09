@@ -177,7 +177,7 @@ S_OPT(const Matrix* f_basis,
 	    c[num_basis_vectors] = Kf->item(f_bv_max_global.row, num_basis_vectors);
             init_sample_offset++;
         }
-        MPI_Bcast(c.data(), num_basis_vectors+2, MPI_DOUBLE,
+        MPI_Bcast(c.data(), num_basis_vectors+1, MPI_DOUBLE,
                   f_bv_max_global.proc, MPI_COMM_WORLD);
         // Now add the first sampled row of the basis to tmp_fs.
         for (int j = 0; j < num_basis_vectors; ++j) {
@@ -212,7 +212,7 @@ S_OPT(const Matrix* f_basis,
 //(3-1)
 	    c[num_basis_vectors] = Kf->item(f_bv_max_global.row, num_basis_vectors);
         }
-        MPI_Bcast(c.data(), num_basis_vectors, MPI_DOUBLE,
+        MPI_Bcast(c.data(), num_basis_vectors+1, MPI_DOUBLE,
                   f_bv_max_global.proc, MPI_COMM_WORLD);
         // Now add the first sampled row of the basis to tmp_fs.
         for (int j = 0; j < num_basis_vectors; ++j) {
@@ -497,7 +497,7 @@ S_OPT(const Matrix* f_basis,
 //(4-1)
 		c[num_basis_vectors] = Kf->item(f_bv_max_global.row, num_basis_vectors);
             }
-            MPI_Bcast(c.data(), num_basis_vectors+2, MPI_DOUBLE,
+            MPI_Bcast(c.data(), num_basis_vectors+1, MPI_DOUBLE,
                       f_bv_max_global.proc, MPI_COMM_WORLD);
             // Now add the first sampled row of the basis to tmp_fs.
             for (int j = 0; j < num_basis_vectors; ++j) {
