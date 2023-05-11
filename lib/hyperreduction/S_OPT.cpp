@@ -125,10 +125,10 @@ S_OPT(const Matrix* f_basis,
     }
 //(1-1)
     CAROM::Matrix* Kf = NULL;
-    const CAROM::Matrix* Vo = NULL;
+    const Matrix* Vo = NULL;
+    Kf = Voo->row_normalize();
     if(precond)
     {
-	Kf = Voo->row_normalize();
     	Vo = Kf -> getFirstNColumns(num_basis_vectors);
     }else{
 	Vo = Voo;	
@@ -579,8 +579,8 @@ S_OPT(const Matrix* f_basis,
     if (precond)
     {
 	delete Vo;
-        delete Kf;
     }
+    delete Kf;
     if (qr_factorize) delete Voo;
     if (num_basis_vectors < f_basis->numColumns())
     {
