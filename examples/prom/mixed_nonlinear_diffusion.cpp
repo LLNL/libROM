@@ -1041,8 +1041,8 @@ int main(int argc, char *argv[])
                              num_sample_dofs_per_proc,
                              *Bsinv, *KK,
                              myid,
-                             num_procs,precondCLS,
-                             nsamp_R);
+                             num_procs,
+                             nsamp_R, precondCLS);
             }
             else if (nsamp_R != nldim)
             {
@@ -1116,8 +1116,8 @@ int main(int argc, char *argv[])
                                  num_sample_dofs_per_proc_S,
                                  *Ssinv, *KS,
                                  myid,
-                                 num_procs, precondCLS,
-                                 nsamp_S);
+                                 num_procs,
+                                 nsamp_S, precondCLS);
                 }
                 else if (nsamp_S != nsdim)
                 {

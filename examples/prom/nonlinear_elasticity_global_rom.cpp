@@ -858,8 +858,8 @@ int main(int argc, char* argv[])
                          num_sample_dofs_per_proc,
                          *Hsinv, *KK,
                          myid,
-                         num_procs, precondCLS,
-                         nsamp_H);
+                         num_procs,
+                         nsamp_H,precondCLS);
         }
         else if (nsamp_H != hdim)
         {
