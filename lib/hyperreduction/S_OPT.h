@@ -38,7 +38,7 @@ class Vector;
  * @param[out] f_sampled_rows_per_proc The number of sampled rows for each
  *                                     processor.
  * @param[out] f_basis_sampled_inv The inverse of the sampled basis of the RHS.
- * @param[out] K scaled weights when preconditioning is used. 
+ * @param[out] K A vector that stores the diagonal elements of a preconditioning matrix. 
  * @param[in] myid The rank of this process.
  * @param[in] num_procs The total number of processes.
  * @param[in] num_samples_req The minimum number of samples required.
