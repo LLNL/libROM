@@ -47,8 +47,8 @@ class Vector;
  * @param[out] K scaled weights when preconditioning is used. 
  * @param[in] myid The rank of this process.
  * @param[in] num_procs The total number of processes.
- * @param[in] precond Boolean value indicating if preconditnioning is used.
  * @param[in] num_samples_req The minimum number of samples required.
+ * @param[in] precond Boolean value indicating if preconditnioning is used.
  */
 void
 QDEIM(const Matrix* f_basis,
