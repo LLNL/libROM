@@ -361,6 +361,7 @@ QDEIM(const Matrix* f_basis,
                          owner, tagSendRecv, MPI_COMM_WORLD, &status);
             }
 //(3-2)
+	    
 	    if ( precond && sample > -1)
             {
                 MPI_Send(Kf->getData()+ ((sample - row_offset[myid])*(numCol+1) + numCol), 1,
@@ -465,6 +466,7 @@ QDEIM(const Matrix* f_basis,
     // Now invert f_basis_sampled_inv, storing its transpose.
     if (myid == 0){  // Matrix is valid only on root process
 //Temporary codes for printing results
+
 	Matrix* U = NULL;
 	Matrix V(numCol,numCol,false);
         Vector sigma(numCol, false);
@@ -480,8 +482,6 @@ QDEIM(const Matrix* f_basis,
 	printf("conditionNum:%f -%f:%f\n", sigma.item(0)/sigma_end,sigma.item(0), sigma_end);
         f_basis_sampled_inv.transposePseudoinverse();
     }
-    if(precond) delete fo;
-    if(precond) delete Kf;
 } // end void QDEIM
 
 } // end namespace CAROM
