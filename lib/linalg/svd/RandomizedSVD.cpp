@@ -104,7 +104,7 @@ RandomizedSVD::computeSVD()
         rand_mat = new Matrix(snapshot_matrix->numColumns(), d_subspace_dim, false);
         for (int i = 0; i < snapshot_matrix->numColumns(); i++) {
             for (int j = 0; j < d_subspace_dim; j++) {
-                rand_mat->item(i, j) = 1;
+                rand_mat->item(i, j) = (i == j);
             }
         }
     }
