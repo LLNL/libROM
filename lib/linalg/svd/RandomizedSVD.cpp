@@ -97,7 +97,7 @@ RandomizedSVD::computeSVD()
     int snapshot_matrix_distributed_rows = std::max(num_rows, num_cols);
 
     // Create a random matrix of smaller dimension to project the snapshot matrix
-    // If debug mode is turned on, just set rand_mat as a matrix of 1's
+    // If debug mode is turned on, just set rand_mat as an identity matrix of smaller size
     // for reproducibility
     Matrix* rand_mat;
     if (d_debug_algorithm) {
