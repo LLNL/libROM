@@ -6,6 +6,11 @@
 simulation methods from the intrusive projection-based reduced order models to
 non-intrusive black-box approaches.
 
+The best starting point for new users interested in libROM's features 
+is to review the [examples](https://www.librom.net/examples.html). 
+The [code documentation](https://librom.readthedocs.io/en/latest/index.html) 
+provides more details about libROM's classes and functions. 
+
 ## Features
 
 - Dynamic data collection
@@ -38,7 +43,7 @@ Compilation options:
 
 There is a Spack package for libROM; however, the version it installs
 is the latest public release. See the [spack
-documentation](http://spack.readthedocs.io/en/latest/index.html) for
+documentation](https://spack.readthedocs.io/en/latest/index.html) for
 details on how to use Spack.
 
 To install libROM with default options using spack.
@@ -111,6 +116,7 @@ LLNL-CODE-766763
 - Siu Wun Cheung (LLNL)
 - Eric Chin (LLNL)
 - Youngsoo Choi (LLNL)
+- "Kevin" Seung Whan Chung (LLNL)
 - Dylan Copeland (LLNL)
 - William Fries (University of Arizona)
 - Debojyoti Ghosh (LLNL)
