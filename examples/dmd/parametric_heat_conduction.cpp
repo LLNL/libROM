@@ -561,7 +561,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            db->create(outputPath + "/dmd.hdf");
+            db->create(outputPath + "/dmd_0.hdf");
             db->putDoubleArray("step0sol", u.GetData(), u.Size());
         }
     }

@@ -532,6 +532,8 @@ DMD::constructDMD(const Matrix* f_snapshots,
     delete eigenpair.ev_real;
     delete eigenpair.ev_imaginary;
     delete init;
+
+    release_context(&svd_input);
 }
 
 void

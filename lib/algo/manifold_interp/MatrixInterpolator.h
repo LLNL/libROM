@@ -45,9 +45,9 @@ public:
      *                              each parameter point.
      * @param[in] ref_point         The index within the vector of parameter points
      *                              to the reference point
-     * @param[in] matrix_type       The type of matrix (R = real, 
+     * @param[in] matrix_type       The type of matrix (R = real,
      *                              B = basis [also real, but Steifel in specific]
-     *                              NS = nonsingular, 
+     *                              NS = nonsingular,
      *                              SPD = symmetric positive-definite)
      * @param[in] rbf               The RBF type ("G" == gaussian,
      *                              "IQ" == inverse quadratic,
