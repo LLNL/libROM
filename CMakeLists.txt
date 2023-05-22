@@ -37,7 +37,7 @@ option(USE_MFEM "Build libROM with MFEM" OFF)
 option(MFEM_USE_GSLIB "Build libROM with MFEM using GSLIB" OFF)
 option(BUILD_STATIC "Build libROM as a static library" OFF)
 option(ENABLE_EXAMPLES "Build examples and regression tests" ON)
-option(MFEM_NAVIER "Build example with mfem miniapp navier-stokes solver" OFF)
+option(MFEM_NAVIER "Build example with mfem miniapp navier-stokes solver" ON)
 
 ## Set a bunch of variables to generate a configure header
 # Enable assertion checking if debug symbols generated
