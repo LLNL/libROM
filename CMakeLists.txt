@@ -37,6 +37,7 @@ option(USE_MFEM "Build libROM with MFEM" OFF)
 option(MFEM_USE_GSLIB "Build libROM with MFEM using GSLIB" OFF)
 option(BUILD_STATIC "Build libROM as a static library" OFF)
 option(ENABLE_EXAMPLES "Build examples and regression tests" ON)
+option(MFEM_NAVIER "Build example with mfem miniapp navier-stokes solver" OFF)
 
 ## Set a bunch of variables to generate a configure header
 # Enable assertion checking if debug symbols generated
@@ -167,6 +168,31 @@ if (ENABLE_EXAMPLES)
       dmd
       dmd
       dmd)
+
+    if (MFEM_NAVIER)
+      set(navier_dmd_obj_SOURCES
+      examples/navier_dmd/navier_solver.hpp
+      examples/navier_dmd/navier_solver.cpp
+      )
+      add_library(navier_dmd_obj OBJECT ${navier_dmd_obj_SOURCES})
+      target_link_libraries(navier_dmd_obj
+        PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
+      target_include_directories(navier_dmd_obj
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+        ${MPI_C_INCLUDE_DIRS})
+      target_compile_features(navier_dmd_obj PRIVATE cxx_std_11)
+
+      set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/examples/navier_dmd)
+      add_executable(navier_cht examples/navier_dmd/navier_cht.cpp)
+      target_link_libraries(navier_cht
+        PRIVATE ROM navier_dmd_obj ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
+      target_include_directories(navier_cht
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+        ${MPI_C_INCLUDE_DIRS})
+
+      file(COPY examples/navier_dmd/fluid-cht.mesh DESTINATION ${CMAKE_BINARY_DIR}/examples/navier_dmd)
+      file(COPY examples/navier_dmd/solid-cht.mesh DESTINATION ${CMAKE_BINARY_DIR}/examples/navier_dmd)
+    endif()
 
     list(LENGTH examples len1)
     math(EXPR len2 "${len1} - 1")
