@@ -183,12 +183,14 @@ if (ENABLE_EXAMPLES)
       target_compile_features(navier_dmd_obj PRIVATE cxx_std_11)
 
       set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/examples/navier_dmd)
-      add_executable(navier_cht examples/navier_dmd/navier_cht.cpp)
-      target_link_libraries(navier_cht
-        PRIVATE ROM navier_dmd_obj ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
-      target_include_directories(navier_cht
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-        ${MPI_C_INCLUDE_DIRS})
+      if (MFEM_USE_GSLIB)
+        add_executable(navier_cht examples/navier_dmd/navier_cht.cpp)
+        target_link_libraries(navier_cht
+          PRIVATE ROM navier_dmd_obj ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
+        target_include_directories(navier_cht
+          PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+          ${MPI_C_INCLUDE_DIRS})
+      endif()
 
       file(COPY examples/navier_dmd/fluid-cht.mesh DESTINATION ${CMAKE_BINARY_DIR}/examples/navier_dmd)
       file(COPY examples/navier_dmd/solid-cht.mesh DESTINATION ${CMAKE_BINARY_DIR}/examples/navier_dmd)
