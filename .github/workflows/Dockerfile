@@ -139,6 +139,23 @@ ENV HYPRE_DIR=$LIB_DIR/hypre/src/hypre
 ENV PARMETIS_DIR=$LIB_DIR/parmetis-4.0.3/build/lib/libparmetis
 ENV METIS_DIR=$LIB_DIR/parmetis-4.0.3/build/lib/libmetis
 
+# install python
+RUN sudo apt-get update
+RUN sudo apt-get install -yq python3
+RUN sudo apt-get install -yq python3-dev
+RUN sudo apt-get install -yq python3-pip
+
+RUN echo "numpy" >> requirements.txt
+RUN echo "scipy" >> requirements.txt
+RUN echo "argparse" >> requirements.txt
+RUN echo "tables" >> requirements.txt
+RUN echo "PyYAML" >> requirements.txt
+RUN echo "h5py" >> requirements.txt
+RUN echo "pybind11" >> requirements.txt
+RUN echo "pytest" >> requirements.txt
+RUN sudo pip3 install --upgrade pip
+RUN sudo pip3 install -r ./requirements.txt
+
 # create and switch to a user
 ENV USERNAME=test
 RUN echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
