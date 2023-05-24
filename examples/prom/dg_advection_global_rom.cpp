@@ -821,7 +821,7 @@ int main(int argc, char *argv[])
         {
             ode_solver->Step(*U, t, dt_real);
         }
-        solveTimer.Start();
+        solveTimer.Stop();
 
         ti++;
         done = (t >= t_final - 1e-8*dt);
