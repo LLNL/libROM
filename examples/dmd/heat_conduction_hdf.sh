@@ -2,7 +2,7 @@
 
 #SBATCH -N 1
 #SBATCH -t 0:05:00
-#SBATCH -p pbatch
+#SBATCH -p pdebug
 #SBATCH -o sbatch.log
 #SBATCH --open-mode truncate
 
@@ -17,9 +17,9 @@ rm -rf parameters.txt dmd_list dmd_data run/dmd_data
 mkdir dmd_list
 mv -f run/dmd_data .
 
-echo "sim0,0.40,0.01,0,0"  > dmd_list/dmd_train_parametric.csv
-echo "sim1,0.45,0.01,0,0" >> dmd_list/dmd_train_parametric.csv
-echo "sim2,0.55,0.01,0,0" >> dmd_list/dmd_train_parametric.csv
-echo "sim3,0.60,0.01,0,0" >> dmd_list/dmd_train_parametric.csv
-echo "sim4,0.50,0.01,0,0"  > dmd_list/dmd_train_local.csv
-echo "sim4,0.50,0.01,0,0"  > dmd_list/dmd_test.csv
+echo "0,0.40,0.01,0,0"  > dmd_list/dmd_train_parametric.csv
+echo "1,0.45,0.01,0,0" >> dmd_list/dmd_train_parametric.csv
+echo "2,0.55,0.01,0,0" >> dmd_list/dmd_train_parametric.csv
+echo "3,0.60,0.01,0,0" >> dmd_list/dmd_train_parametric.csv
+echo "4,0.50,0.01,0,0"  > dmd_list/dmd_train_local.csv
+echo "4,0.50,0.01,0,0"  > dmd_list/dmd_test.csv

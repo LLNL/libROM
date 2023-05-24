@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -473,7 +473,7 @@ Vector::write(const std::string& base_file_name)
 }
 
 void
-Vector::print(const char * prefix)
+Vector::print(const char * prefix) const
 {
     int my_rank;
     const bool success = MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);

@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -64,6 +64,7 @@ MatrixInterpolator::MatrixInterpolator(std::vector<Vector*> parameter_points,
         if (i == d_ref_point)
         {
             d_rotated_reduced_matrices.push_back(reduced_matrices[i]);
+            d_rotated_reduced_matrices_owned.push_back(false);
         }
         else
         {
@@ -79,8 +80,27 @@ MatrixInterpolator::MatrixInterpolator(std::vector<Vector*> parameter_points,
                 delete Q_tA;
                 d_rotated_reduced_matrices.push_back(Q_tAQ);
             }
+
+            d_rotated_reduced_matrices_owned.push_back(true);
         }
     }
+}
+
+MatrixInterpolator::~MatrixInterpolator()
+{
+    CAROM_VERIFY(d_rotated_reduced_matrices.size() ==
+                 d_rotated_reduced_matrices_owned.size());
+
+    for (int i=0; i<d_rotated_reduced_matrices.size(); ++i)
+    {
+        if (d_rotated_reduced_matrices_owned[i])
+            delete d_rotated_reduced_matrices[i];
+    }
+
+    for (auto matrix : d_gammas)
+        delete matrix;
+
+    delete d_x_half_power;
 }
 
 Matrix* MatrixInterpolator::interpolate(Vector* point, bool orthogonalize)

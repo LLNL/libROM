@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -43,7 +43,7 @@ extern "C" {
 
 namespace CAROM {
 
-DMD::DMD(int dim, Vector* state_offset)
+DMD::DMD(int dim, bool alt_output_basis, Vector* state_offset)
 {
     CAROM_VERIFY(dim > 0);
 
@@ -59,10 +59,11 @@ DMD::DMD(int dim, Vector* state_offset)
     d_dim = dim;
     d_trained = false;
     d_init_projected = false;
+    d_alt_output_basis = alt_output_basis;
     setOffset(state_offset, 0);
 }
 
-DMD::DMD(int dim, double dt, Vector* state_offset)
+DMD::DMD(int dim, double dt, bool alt_output_basis, Vector* state_offset)
 {
     CAROM_VERIFY(dim > 0);
     CAROM_VERIFY(dt > 0.0);
@@ -80,6 +81,7 @@ DMD::DMD(int dim, double dt, Vector* state_offset)
     d_dt = dt;
     d_trained = false;
     d_init_projected = false;
+    d_alt_output_basis = alt_output_basis;
     setOffset(state_offset, 0);
 }
 
@@ -257,17 +259,26 @@ void
 DMD::computePhi(struct DMDInternal dmd_internal_obj)
 {
     // Calculate phi
-    Matrix* f_snapshots_out_mult_d_basis_right =
-        dmd_internal_obj.snapshots_out->mult(dmd_internal_obj.basis_right);
-    Matrix* f_snapshots_out_mult_d_basis_right_mult_d_S_inv =
-        f_snapshots_out_mult_d_basis_right->mult(dmd_internal_obj.S_inv);
-    d_phi_real = f_snapshots_out_mult_d_basis_right_mult_d_S_inv->mult(
-                     dmd_internal_obj.eigenpair->ev_real);
-    d_phi_imaginary = f_snapshots_out_mult_d_basis_right_mult_d_S_inv->mult(
-                          dmd_internal_obj.eigenpair->ev_imaginary);
+    if (d_alt_output_basis)
+    {
+        Matrix* f_snapshots_out_mult_d_basis_right =
+            dmd_internal_obj.snapshots_out->mult(dmd_internal_obj.basis_right);
+        Matrix* f_snapshots_out_mult_d_basis_right_mult_d_S_inv =
+            f_snapshots_out_mult_d_basis_right->mult(dmd_internal_obj.S_inv);
+        d_phi_real = f_snapshots_out_mult_d_basis_right_mult_d_S_inv->mult(
+                         dmd_internal_obj.eigenpair->ev_real);
+        d_phi_imaginary = f_snapshots_out_mult_d_basis_right_mult_d_S_inv->mult(
+                              dmd_internal_obj.eigenpair->ev_imaginary);
 
-    delete f_snapshots_out_mult_d_basis_right;
-    delete f_snapshots_out_mult_d_basis_right_mult_d_S_inv;
+        delete f_snapshots_out_mult_d_basis_right;
+        delete f_snapshots_out_mult_d_basis_right_mult_d_S_inv;
+    }
+    else
+    {
+        d_phi_real = dmd_internal_obj.basis->mult(dmd_internal_obj.eigenpair->ev_real);
+        d_phi_imaginary = dmd_internal_obj.basis->mult(
+                              dmd_internal_obj.eigenpair->ev_imaginary);
+    }
 }
 
 void
@@ -474,7 +485,6 @@ DMD::constructDMD(const Matrix* f_snapshots,
         d_k = d_basis_new->numColumns();
         if (d_rank == 0) std::cout << "After adding W0, now using " << d_k <<
                                        " basis vectors." << std::endl;
-        delete d_basis_new;
     }
 
     // Calculate A_tilde = U_transpose * f_snapshots_out * V * inv(S)
@@ -522,6 +532,8 @@ DMD::constructDMD(const Matrix* f_snapshots,
     delete eigenpair.ev_real;
     delete eigenpair.ev_imaginary;
     delete init;
+
+    release_context(&svd_input);
 }
 
 void
@@ -628,7 +640,7 @@ DMD::projectInitialCondition(const Vector* init, double t_offset)
 }
 
 Vector*
-DMD::predict(double t, int power)
+DMD::predict(double t, int deg)
 {
     CAROM_VERIFY(d_trained);
     CAROM_VERIFY(d_init_projected);
@@ -636,7 +648,7 @@ DMD::predict(double t, int power)
 
     t -= d_t_offset;
 
-    std::pair<Matrix*, Matrix*> d_phi_pair = phiMultEigs(t, power);
+    std::pair<Matrix*, Matrix*> d_phi_pair = phiMultEigs(t, deg);
     Matrix* d_phi_mult_eigs_real = d_phi_pair.first;
     Matrix* d_phi_mult_eigs_imaginary = d_phi_pair.second;
 
@@ -646,7 +658,7 @@ DMD::predict(double t, int power)
                                            d_projected_init_imaginary);
     Vector* d_predicted_state_real = d_predicted_state_real_1->minus(
                                          d_predicted_state_real_2);
-    addOffset(d_predicted_state_real, t, power);
+    addOffset(d_predicted_state_real, t, deg);
 
     delete d_phi_mult_eigs_real;
     delete d_phi_mult_eigs_imaginary;
@@ -657,7 +669,7 @@ DMD::predict(double t, int power)
 }
 
 void
-DMD::addOffset(Vector*& result, double t, int power)
+DMD::addOffset(Vector*& result, double t, int deg)
 {
     if (d_state_offset)
     {
@@ -672,7 +684,7 @@ DMD::computeEigExp(std::complex<double> eig, double t)
 }
 
 std::pair<Matrix*, Matrix*>
-DMD::phiMultEigs(double t, int power)
+DMD::phiMultEigs(double t, int deg)
 {
     Matrix* d_eigs_exp_real = new Matrix(d_k, d_k, false);
     Matrix* d_eigs_exp_imaginary = new Matrix(d_k, d_k, false);
@@ -680,7 +692,7 @@ DMD::phiMultEigs(double t, int power)
     for (int i = 0; i < d_k; i++)
     {
         std::complex<double> eig_exp = computeEigExp(d_eigs[i], t);
-        for (int k = 0; k < power; ++k)
+        for (int k = 0; k < deg; ++k)
         {
             eig_exp *= d_eigs[i];
         }
@@ -929,9 +941,9 @@ DMD::summary(std::string base_file_name)
         CSVDatabase* csv_db(new CSVDatabase);
 
         csv_db->putDoubleVector(base_file_name + "_singular_value.csv", d_sv,
-                                d_num_singular_vectors, 16);
+                                d_num_singular_vectors);
         csv_db->putComplexVector(base_file_name + "_eigenvalue.csv", d_eigs,
-                                 d_eigs.size(), 16);
+                                 d_eigs.size());
 
         delete csv_db;
     }

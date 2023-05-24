@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -68,6 +68,15 @@ VectorInterpolator::VectorInterpolator(std::vector<Vector*> parameter_points,
             d_rotated_reduced_vectors.push_back(Q_tA);
         }
     }
+}
+
+VectorInterpolator::~VectorInterpolator()
+{
+    for (auto v : d_rotated_reduced_vectors)
+        delete v;
+
+    for (auto v : d_gammas)
+        delete v;
 }
 
 void VectorInterpolator::obtainLambda()

@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -715,7 +715,7 @@ public:
      * @param[in] prefix The name of the prefix of the file name.
      *
      */
-    void print(const char * prefix);
+    void print(const char * prefix) const;
 
     /**
      * @brief write Vector into (a) HDF file(s).

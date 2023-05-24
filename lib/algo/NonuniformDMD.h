@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -41,10 +41,14 @@ public:
      * @brief Constructor.
      *
      * @param[in] dim               The full-order state dimension.
+     * @param[in] alt_output_basis  Whether to use the alternative basis for
+     *                              output, i.e. phi = U^(+)*V*Omega^(-1)*X.
      * @param[in] state_offset      The state offset.
      * @param[in] derivative_offset The derivative offset.
      */
-    NonuniformDMD(int dim, Vector* state_offset = NULL,
+    NonuniformDMD(int dim,
+                  bool alt_output_basis = false,
+                  Vector* state_offset = NULL,
                   Vector* derivative_offset = NULL);
 
     /**
@@ -82,6 +86,26 @@ public:
     void save(std::string base_file_name) override;
 
 protected:
+    /**
+     * @brief Obtain DMD model interpolant at desired parameter point by
+     *        interpolation of DMD models from training parameter points.
+     *
+     * @param[in] parametric_dmd    The interpolant DMD model at the desired point.
+     * @param[in] parameter_points  The training parameter points.
+     * @param[in] dmds              The DMD objects associated with
+     *                              each training parameter point.
+     * @param[in] desired_point     The desired point at which to create a parametric DMD.
+     * @param[in] rbf               The RBF type ("G" == gaussian,
+     *                              "IQ" == inverse quadratic,
+     *                              "IMQ" == inverse multiquadric)
+     * @param[in] interp_method     The interpolation method type
+     *                              ("LS" == linear solve,
+     *                              "IDW" == inverse distance weighting,
+     *                              "LP" == lagrangian polynomials)
+     * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
+     *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
+     * @param[in] reorthogonalize_W Whether to reorthogonalize the interpolated W (basis) matrix.
+     */
     friend void getParametricDMD<NonuniformDMD>(NonuniformDMD*& parametric_dmd,
             std::vector<Vector*>& parameter_points,
             std::vector<NonuniformDMD*>& dmds,
@@ -147,7 +171,7 @@ private:
     /**
      * @brief Add the appropriate offset when predicting the solution.
      */
-    void addOffset(Vector*& result, double t, int power) override;
+    void addOffset(Vector*& result, double t, int deg) override;
 
     /**
      * @brief Derivative offset in snapshot.

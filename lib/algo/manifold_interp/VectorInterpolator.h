@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -44,10 +44,12 @@ public:
      * @param[in] ref_point         The index within the vector of parameter points
      *                              to the reference point
      * @param[in] rbf               The RBF type ("G" == gaussian,
-     *                             "IQ" == inverse quadratic, "IMQ" == inverse
-     *                              multiquadric)
-     * @param[in] interp_method     The interpolation method type ("LS" == linear solve,
-     *                             "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
+     *                              "IQ" == inverse quadratic,
+     *                              "IMQ" == inverse multiquadric)
+     * @param[in] interp_method     The interpolation method type
+     *                              ("LS" == linear solve,
+     *                              "IDW" == inverse distance weighting,
+     *                              "LP" == lagrangian polynomials)
      * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
      *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
      */
@@ -58,6 +60,8 @@ public:
                        std::string rbf = "G",
                        std::string interp_method = "LS",
                        double closest_rbf_val = 0.9);
+
+    ~VectorInterpolator();
 
     /**
      * @brief Obtain the interpolated reduced vector of the unsampled parameter point.

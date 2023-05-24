@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -16,9 +16,11 @@
 
 namespace CAROM {
 
-NonuniformDMD::NonuniformDMD(int dim, Vector* state_offset,
+NonuniformDMD::NonuniformDMD(int dim,
+                             bool alt_output_basis,
+                             Vector* state_offset,
                              Vector* derivative_offset) :
-    DMD(dim, state_offset)
+    DMD(dim, alt_output_basis, state_offset)
 {
     // stateOffset is set by DMD::setOffset in the constructor
     setOffset(derivative_offset, 1);
@@ -113,10 +115,10 @@ NonuniformDMD::computeEigExp(std::complex<double> eig, double t)
 }
 
 void
-NonuniformDMD::addOffset(Vector*& result, double t, int power)
+NonuniformDMD::addOffset(Vector*& result, double t, int deg)
 {
-    CAROM_VERIFY(power == 0 || power == 1);
-    if (power == 0)
+    CAROM_VERIFY(deg == 0 || deg == 1);
+    if (deg == 0)
     {
         DMD::addOffset(result);
         if (d_derivative_offset)

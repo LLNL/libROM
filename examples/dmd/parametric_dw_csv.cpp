@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -34,6 +34,7 @@
 #include "algo/DMD.h"
 #include "algo/AdaptiveDMD.h"
 #include "algo/NonuniformDMD.h"
+#include "algo/manifold_interp/VectorInterpolator.h"
 #include "linalg/Vector.h"
 #include "linalg/Matrix.h"
 #include "utils/HDFDatabase.h"
@@ -51,6 +52,13 @@
 
 using namespace std;
 using namespace mfem;
+
+void getInterpolatedTimeWindows(CAROM::Vector*& testing_twep,
+                                std::vector<CAROM::Vector*>& parameter_points,
+                                std::vector<CAROM::Vector*>& training_twep,
+                                CAROM::Vector* desired_point,
+                                std::string rbf,
+                                double closest_rbf_val);
 
 int main(int argc, char *argv[])
 {
@@ -71,7 +79,6 @@ int main(int argc, char *argv[])
     double dtc = 0.0;
     double ddt = 0.0;
     int numWindows = 1;
-    int windowNumSamples = infty;
     int windowOverlapSamples = 0;
     const char *rbf = "G";
     const char *interp_method = "LS";
@@ -107,8 +114,6 @@ int main(int argc, char *argv[])
                    "Desired Time step.");
     args.AddOption(&numWindows, "-nwin", "--numwindows",
                    "Number of DMD windows.");
-    args.AddOption(&windowNumSamples, "-nwinsamp", "--numwindowsamples",
-                   "Number of samples in DMD windows.");
     args.AddOption(&windowOverlapSamples, "-nwinover", "--numwindowoverlap",
                    "Number of samples for DMD window overlap.");
     args.AddOption(&rbf, "-rbf", "--radial-basis-function",
@@ -142,7 +147,7 @@ int main(int argc, char *argv[])
     args.AddOption(&indicator_val_list, "-idc-val", "--indicator-value",
                    "Name of the file specifying indicator values.");
     args.AddOption(&window_endpoint_option, "-wep", "--wep",
-                   "Determine window endpoint using previous state, current state or bisection.");
+                   "Determine exact window endpoint using previous state or current state.");
     args.AddOption(&basename, "-o", "--outputfile-name",
                    "Name of the sub-folder to dump files within the run directory.");
     args.AddOption(&save_csv, "-csv", "--csv", "-no-csv", "--no-csv",
@@ -163,8 +168,6 @@ int main(int argc, char *argv[])
 
     CAROM_VERIFY(!(offline && online) && (offline || online));
     CAROM_VERIFY(!(dtc > 0.0 && ddt > 0.0));
-    CAROM_VERIFY(numWindows == 1 || windowNumSamples == infty);
-    CAROM_VERIFY(windowOverlapSamples < windowNumSamples);
     double dt_est = max(ddt, dtc);
 
     if (t_final > 0.0)
@@ -227,54 +230,45 @@ int main(int argc, char *argv[])
                      << " as indicator." << endl;
             }
         }
-        else
-        {
-            indicator_idx.clear();
-        }
     }
 
     vector<double> indicator_val;
-    if (online || numWindows > 1)
+    csv_db.getDoubleVector(string(outputPath) + "/" +
+                           string(indicator_val_list) + ".csv", indicator_val, false);
+    CAROM_VERIFY(indicator_val.size() > 0);
+
+    if (numWindows != indicator_val.size() - 1)
     {
-        csv_db.getDoubleVector(string(outputPath) + "/" +
-                               string(indicator_val_list) + ".csv", indicator_val, false);
-        if (indicator_val.size() > 0)
+        numWindows = indicator_val.size() - 1;
+        if (myid == 0)
         {
-            CAROM_VERIFY(windowNumSamples == infty);
-
-            if (numWindows > 1)
-            {
-                CAROM_VERIFY(numWindows == indicator_val.size() - 1);
-            }
-            else
-            {
-                numWindows = indicator_val.size() - 1;
-            }
-
-            if (indicator_idx.size() == 1)
-            {
-                indicator_idx.resize(numWindows, indicator_idx[0]);
-            }
-            CAROM_VERIFY(indicator_idx.size() == indicator_val.size());
-
-            if (myid == 0)
-            {
-                cout << "Read indicator range partition with " << numWindows << " windows." <<
-                     endl;
-            }
-        }
-        else
-        {
-            cout << "Time windowing is not supported in this script yet." << endl;
-            CAROM_VERIFY(false);
+            cout << "Resetting numWindows to " << numWindows << "." << endl;
         }
     }
 
+    if (indicator_idx.size() == 1)
+    {
+        indicator_idx.resize(numWindows, indicator_idx[0]);
+    }
+    else if (indicator_idx.size() == 0)
+    {
+        indicator_idx.resize(numWindows, -1);
+    }
+    CAROM_VERIFY(indicator_idx.size() == indicator_val.size());
+
+    if (myid == 0)
+    {
+        cout << "Read indicator range partition with " << numWindows << " windows." <<
+             endl;
+    }
+
     vector<string> training_par_list, testing_par_list; // DATASET info
+    vector<CAROM::Vector*> training_par_vectors,
+           testing_par_vectors; // DATASET param
     vector<string> par_dir_list; // DATASET name
-    vector<CAROM::Vector*> par_vectors; // DATASET param
     vector<int> num_train_snap; // DATASET size
     vector<double> indicator_init, indicator_last; // DATASET indicator range
+    vector<CAROM::Vector*> training_twep; // DATASET temporal endpoint
 
     csv_db.getStringVector(string(list_dir) + "/" + train_list + ".csv",
                            training_par_list, false);
@@ -344,7 +338,7 @@ int main(int argc, char *argv[])
         {
             curr_par->item(par_order) = stod(par_info[par_order+1]);
         }
-        par_vectors.push_back(curr_par);
+        training_par_vectors.push_back(curr_par);
     }
 
     if (myid == 0)
@@ -431,6 +425,7 @@ int main(int argc, char *argv[])
             int min_idx_snap = -1;
             int max_idx_snap = -1;
             double curr_indicator_val = -1.0;
+            CAROM::Vector* twep = new CAROM::Vector(indicator_val.size(), false);
             for (int idx_snap = snap_bound[0]; idx_snap <= snap_bound[1]; ++idx_snap)
             {
                 string snap = snap_list[idx_snap]; // STATE
@@ -448,14 +443,14 @@ int main(int argc, char *argv[])
 
                 if (min_idx_snap == -1)
                 {
-                    curr_indicator_val = (indicator_idx.size() == 0) ? tval :
+                    curr_indicator_val = (indicator_idx[0] < 0) ? tval :
                                          sample[indicator_idx[0]];
                     if (indicator_val.size() > 0)
                     {
                         if (curr_indicator_val >= indicator_val[0])
                         {
                             min_idx_snap = idx_snap;
-                            indicator_val[0] = curr_indicator_val;
+                            twep->item(0) = tval;
                             if (myid == 0)
                             {
                                 cout << "State #" << idx_snap << " - " << data_filename
@@ -496,27 +491,11 @@ int main(int argc, char *argv[])
 
                 if (curr_window+1 < numWindows && idx_snap+1 <= snap_bound[1])
                 {
-                    curr_indicator_val = (indicator_idx.size() == 0) ? tval :
+                    curr_indicator_val = (indicator_idx[curr_window+1] < 0) ? tval :
                                          sample[indicator_idx[curr_window+1]];
-                    bool new_window = false;
-                    if (windowNumSamples < infty)
+                    if (curr_indicator_val >= indicator_val[curr_window+1])
                     {
-                        new_window = (idx_snap >= min_idx_snap + (curr_window+1)*windowNumSamples);
-                        if (new_window)
-                        {
-                            indicator_val.push_back(curr_indicator_val);
-                        }
-                    }
-                    else
-                    {
-                        new_window = (curr_indicator_val >= indicator_val[curr_window+1]);
-                        if (new_window)
-                        {
-                            indicator_val[curr_window+1] = curr_indicator_val;
-                        }
-                    }
-                    if (new_window)
-                    {
+                        twep->item(curr_window+1) = tval;
                         if (myid == 0)
                         {
                             cout << "State #" << idx_snap << " - " << data_filename
@@ -535,18 +514,18 @@ int main(int argc, char *argv[])
 
                 if (max_idx_snap == -1 && curr_window == numWindows-1)
                 {
-                    curr_indicator_val = (indicator_idx.size() == 0) ? tval :
+                    curr_indicator_val = (indicator_idx[numWindows] < 0) ? tval :
                                          sample[indicator_idx[numWindows]];
                     if (curr_indicator_val >= indicator_val[numWindows])
                     {
-                        indicator_val[numWindows] = curr_indicator_val;
+                        twep->item(numWindows) = tval;
                         if (dmd[idx_dataset][numWindows-1]->getNumSamples() >= rdim+1)
                         {
                             max_idx_snap = idx_snap;
                             if (myid == 0)
                             {
                                 cout << "State #" << idx_snap << " - " << data_filename
-                                     << " is the end of window " << numWindows-1 << "." << endl;
+                                     << " is the end of window " << numWindows << "." << endl;
                             }
                             break;
                         }
@@ -554,12 +533,10 @@ int main(int argc, char *argv[])
                 }
             }
 
-            if (idx_dataset == 0 || indicator_idx.size() > 0)
-            {
-                numWindows = curr_window + 1;
-                dmd[idx_dataset].resize(numWindows);
-            }
-            CAROM_VERIFY(numWindows == curr_window + 1);
+            CAROM_VERIFY(numWindows == curr_window+1);
+            training_twep.push_back(twep);
+            csv_db.putDoubleArray(outputPath + "/" + par_dir + "_twep.csv", twep->getData(),
+                                  numWindows+1);
 
             if (myid == 0)
             {
@@ -567,12 +544,6 @@ int main(int argc, char *argv[])
                 cout << "Samples loaded " << num_train_snap[idx_dataset] << endl;
                 cout << "Samples used " << max_idx_snap - min_idx_snap + 1 << endl;;
                 cout << "Number of windows: " << numWindows << endl;
-                if (windowNumSamples < infty)
-                {
-                    csv_db.putDoubleVector(string(outputPath) + "/" + string(
-                                               indicator_val_list) + ".csv",
-                                           indicator_val, numWindows);
-                }
             }
 
             for (int window = 0; window < numWindows; ++window)
@@ -606,17 +577,23 @@ int main(int argc, char *argv[])
         dmd_training_timer.Stop();
     } // escape if-statement of offline
 
-    CAROM::Vector* curr_par = new CAROM::Vector(dpar, false);
-
     if (online)
     {
+        for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
+        {
+            string par_dir = par_dir_list[idx_dataset]; // training DATASET
+            CAROM::Vector* twep = new CAROM::Vector(numWindows+1, false);
+            csv_db.getDoubleArray(outputPath + "/" + par_dir + "_twep.csv", twep->getData(),
+                                  numWindows+1);
+            training_twep.push_back(twep);
+        }
         par_dir_list.clear();
 
         dmd_preprocess_timer.Start();
         csv_db.getStringVector(string(list_dir) + "/" + test_list + ".csv",
                                testing_par_list, false);
         npar = testing_par_list.size();
-        CAROM_VERIFY(npar > 1);
+        CAROM_VERIFY(npar > 0);
         if (myid == 0)
         {
             cout << "Loading " << npar << " testing datasets." << endl;
@@ -641,6 +618,14 @@ int main(int argc, char *argv[])
 
             string par_dir = par_info[0];
             par_dir_list.push_back(par_dir);
+
+            CAROM::Vector* curr_par = new CAROM::Vector(dpar, false);
+            for (int par_order = 0; par_order < dpar; ++par_order)
+            {
+                curr_par->item(par_order) = stod(par_info[par_order+1]);
+            }
+            testing_par_vectors.push_back(curr_par);
+
             if (myid == 0)
             {
                 cout << "Interpolating DMD models for dataset " << par_dir << endl;
@@ -649,7 +634,8 @@ int main(int argc, char *argv[])
             for (int window = 0; window < numWindows; ++window)
             {
                 std::vector<std::string> dmd_paths;
-                for (int idx_trainset = 0; idx_trainset < par_vectors.size(); ++idx_trainset)
+                for (int idx_trainset = 0; idx_trainset < training_par_vectors.size();
+                        ++idx_trainset)
                 {
                     dmd_paths.push_back(outputPath + "/window" + to_string(window) + "_par" +
                                         to_string(idx_trainset));
@@ -659,13 +645,18 @@ int main(int argc, char *argv[])
                 {
                     cout << "Interpolating DMD model #" << window << endl;
                 }
-                CAROM::getParametricDMD(dmd[idx_dataset][window], par_vectors, dmd_paths,
+                CAROM::getParametricDMD(dmd[idx_dataset][window], training_par_vectors,
+                                        dmd_paths,
                                         curr_par,
                                         string(rbf), string(interp_method), pdmd_closest_rbf_val);
             } // escape for-loop over window
         } // escape for-loop over idx_dataset
         dmd_preprocess_timer.Stop();
     } // escape if-statement of online
+    else
+    {
+        testing_par_vectors = training_par_vectors;
+    }
 
     if (online || predict)
     {
@@ -675,6 +666,8 @@ int main(int argc, char *argv[])
         for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
         {
             string par_dir = par_dir_list[idx_dataset];
+            CAROM::Vector* curr_par = testing_par_vectors[idx_dataset];
+
             if (myid == 0)
             {
                 cout << "Predicting solution for " << par_dir << " using DMD." << endl;
@@ -709,6 +702,10 @@ int main(int argc, char *argv[])
                 snap_bound.push_back(snap_list.size()-1);
             }
 
+            CAROM::Vector* twep;
+            getInterpolatedTimeWindows(twep, training_par_vectors, training_twep, curr_par,
+                                       string(rbf), pdmd_closest_rbf_val); // Always use IDW
+
             int min_idx_snap = -1;
             int max_idx_snap = snap_bound[1];
             int curr_window = 0;
@@ -728,13 +725,13 @@ int main(int argc, char *argv[])
                 CAROM::Vector* init_cond = nullptr;
                 if (min_idx_snap == -1)
                 {
-                    double curr_indicator_val = (indicator_idx.size() == 0) ? tval :
-                                                sample[indicator_idx[0]];
-                    if (curr_indicator_val >= indicator_val[0])
+                    if (tval >= twep->item(0))
                     {
                         min_idx_snap = idx_snap;
                         if (myid == 0)
                         {
+                            cout << "Interpolated endpoint #0"
+                                 << " = " << twep->item(0) << endl;
                             cout << "State #" << idx_snap << " - " << data_filename
                                  << " is the beginning of window 0." << endl;
                         }
@@ -774,68 +771,34 @@ int main(int argc, char *argv[])
                 CAROM::Vector* result = dmd[idx_dataset][curr_window]->predict(tval);
                 dmd_prediction_timer.Stop();
 
-                double curr_indicator_val = (indicator_idx.size() == 0) ? tval : result->item(
-                                                indicator_idx[curr_window+1]);
-
                 while (curr_window+1 < numWindows
-                        && curr_indicator_val >= indicator_val[curr_window+1])
+                        && tval >= twep->item(curr_window+1))
                 {
                     double t_offset;
-                    if (indicator_idx.size() == 0)
+                    if (myid == 0)
                     {
-                        t_offset = indicator_val[curr_window+1];
+                        cout << "Interpolated endpoint #" << curr_window+1 << " = " << twep->item(
+                                 curr_window+1) << endl;
+                        cout << "Indicator state index: " << indicator_idx[curr_window+1] << endl;
+                    }
+
+                    if (string(window_endpoint_option) == "left")
+                    {
+                        t_offset = tvec[idx_snap-1];
+                    }
+                    else if (string(window_endpoint_option) == "right")
+                    {
+                        t_offset = tvec[idx_snap];
                     }
                     else
                     {
-                        if (myid == 0)
-                        {
-                            cout << "Indicator state index: " << indicator_idx[curr_window+1] << endl;
-                        }
-
-                        if (string(window_endpoint_option) == "bisection")
-                        {
-                            double t_left = tvec[idx_snap-1];
-                            double t_right = tval;
-
-                            for (int k = 0; k < 5; ++k)
-                            {
-                                t_offset = (t_left + t_right) / 2.0;
-                                init_cond = dmd[idx_dataset][curr_window]->predict(t_offset);
-                                curr_indicator_val = init_cond->item(indicator_idx[curr_window+1]);
-                                cout << "t_offset: " << t_offset << endl;
-                                cout << "Indicator endpoint: " << indicator_val[curr_window+1] << endl;
-                                cout << "Current indicator value: " << curr_indicator_val << endl;
-                                if (curr_indicator_val >= indicator_val[curr_window+1])
-                                {
-                                    t_right = t_offset;
-                                }
-                                else
-                                {
-                                    t_left = t_offset;
-                                }
-                                delete init_cond;
-                            }
-                            t_offset = (t_left + t_right) / 2.0;
-                        }
-                        else if (string(window_endpoint_option) == "left")
-                        {
-                            t_offset = tvec[idx_snap-1];
-                        }
-                        else if (string(window_endpoint_option) == "right")
-                        {
-                            t_offset = tvec[idx_snap];
-                        }
-                        else
-                        {
-                            cout << "Invalid window endpoint option." << endl;
-                            cout << "Using current time as window endpoint." << endl;
-                            t_offset = tvec[idx_snap];
-                        }
+                        cout << "Invalid window endpoint option." << endl;
+                        cout << "Using current time as window endpoint." << endl;
+                        t_offset = tvec[idx_snap];
                     }
 
                     if (myid == 0)
                     {
-                        cout << "Indicator endpoint: " << indicator_val[curr_window+1] << endl;
                         cout << "Projecting initial condition at t = " << t_offset
                              << " for DMD model #" << curr_window+1 << endl;
                         cout << "State #" << idx_snap << " - " << data_filename
@@ -849,8 +812,6 @@ int main(int argc, char *argv[])
                     delete result;
                     curr_window += 1;
                     result = dmd[idx_dataset][curr_window]->predict(tval);
-                    curr_indicator_val = (indicator_idx.size() == 0) ? tval : result->item(
-                                             indicator_idx[curr_window+1]);
                 }
 
                 // Calculate the relative error between the DMD final solution and the true solution.
@@ -889,13 +850,15 @@ int main(int argc, char *argv[])
                 delete result;
 
                 if (curr_window == numWindows-1
-                        && curr_indicator_val >= indicator_val[numWindows])
+                        && tval >= twep->item(numWindows))
                 {
+                    cout << "Interpolated endpoint #" << numWindows << " = " << twep->item(
+                             numWindows) << endl;
                     max_idx_snap = idx_snap;
                     if (myid == 0)
                     {
                         cout << "State #" << idx_snap << " - " << data_filename
-                             << " is the end of window " << numWindows-1 << "." << endl;
+                             << " is the end of window " << numWindows << "." << endl;
                     }
                     break;
                 }
@@ -907,11 +870,12 @@ int main(int argc, char *argv[])
                 csv_db.putDoubleVector(outputPath + "/" + par_dir + "_prediction_time.csv",
                                        prediction_time, num_snap);
                 csv_db.putDoubleVector(outputPath + "/" + par_dir + "_prediction_error.csv",
-                                       prediction_error, num_snap, 16);
+                                       prediction_error, num_snap);
             }
             prediction_time.clear();
             prediction_error.clear();
             num_tests += (t_final > 0.0) ? 1 : num_snap;
+            delete twep;
         }
 
         CAROM_VERIFY(num_tests > 0);
@@ -931,9 +895,14 @@ int main(int argc, char *argv[])
 
 
     delete[] sample;
-    delete curr_par;
+    for (int idx_dataset = 0; idx_dataset < training_twep.size(); ++idx_dataset)
+    {
+        delete training_twep[idx_dataset];
+    }
+
     for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
     {
+        delete testing_par_vectors[idx_dataset];
         for (int window = 0; window < numWindows; ++window)
         {
             delete dmd[idx_dataset][window];
@@ -941,4 +910,24 @@ int main(int argc, char *argv[])
     }
 
     return 0;
+}
+
+void getInterpolatedTimeWindows(CAROM::Vector*& testing_twep,
+                                std::vector<CAROM::Vector*>& parameter_points,
+                                std::vector<CAROM::Vector*>& training_twep,
+                                CAROM::Vector* desired_point,
+                                std::string rbf = "G",
+                                double closest_rbf_val = 0.9)
+{
+    CAROM_VERIFY(parameter_points.size() == training_twep.size());
+    CAROM_VERIFY(training_twep.size() > 1);
+
+    double epsilon = convertClosestRBFToEpsilon(parameter_points, rbf,
+                     closest_rbf_val);
+    std::vector<double> rbf_val = obtainRBFToTrainingPoints(parameter_points, "IDW",
+                                  rbf, epsilon, desired_point);
+
+    CAROM::Matrix* f_T = NULL;
+
+    testing_twep = obtainInterpolatedVector(training_twep, f_T, "IDW", rbf_val);
 }

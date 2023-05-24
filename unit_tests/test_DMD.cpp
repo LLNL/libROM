@@ -2,7 +2,7 @@
 
 /******************************************************************************
  *
- * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -66,7 +66,7 @@ TEST(DMDTest, Test_DMD)
     double* sample1 = new double[5] {0.5377, 1.8339, -2.2588, 0.8622, 0.3188};
     double* sample2 = new double[5] {-1.3077, -0.4336, 0.3426, 3.5784, 2.7694};
     double* sample3 = new double[5] {-1.3499, 3.0349, 0.7254, -0.0631, 0.7147};
-    double* prediction_baseline = new double[5] {-0.0847, 0.0805, 0.0338, 0.1146, 0.1125};
+    double* prediction_baseline = new double[5] {-0.4344, -0.0974, 0.0542, 1.2544, 0.9610};
 
     CAROM::DMD dmd(d_num_rows, 1.0);
     dmd.takeSample(&sample1[row_offset[d_rank]], 0.0);

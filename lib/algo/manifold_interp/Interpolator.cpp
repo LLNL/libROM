@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -60,6 +60,11 @@ Interpolator::Interpolator(std::vector<Vector*> parameter_points,
     d_rbf = rbf;
     d_interp_method = interp_method;
     d_epsilon = convertClosestRBFToEpsilon(parameter_points, rbf, closest_rbf_val);
+}
+
+Interpolator::~Interpolator()
+{
+    delete d_lambda_T;
 }
 
 std::vector<double> obtainRBFToTrainingPoints(std::vector<Vector*>

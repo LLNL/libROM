@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -8,12 +8,14 @@
  *
  *****************************************************************************/
 
-// Description: Computes the ParametricDMD algorithm on the given snapshot matrix. The
-//              implemented dynamic mode decomposition algorithm is derived from
+// Description: Computes the ParametricDMD algorithm to obtain DMD model interpolant
+//              at desired parameter point by interpolation of DMD models at training parameter points.
+//              The implemented dynamic mode decomposition algorithm is derived from
 //              Tu et. al's paper "On Dynamic Mode Decomposition: Theory and
 //              Applications": https://arxiv.org/abs/1312.0041
-//              This algorithm also works in the case that the first sample does
-//              not start from t = 0.0 by incorporating a time offset.
+//              The interpolation algorithm was adapted from "Gradient-based
+//              Constrained Optimization Using a Database of Linear Reduced-Order Models"
+//              by Y. Choi et al.
 
 #ifndef included_ParametricDMD_h
 #define included_ParametricDMD_h
@@ -30,15 +32,18 @@ namespace CAROM {
 /**
  * @brief Constructor.
  *
- * @param[in] parameter_points  The parameter points.
+ * @param[in] parametric_dmd    The interpolant DMD model at the desired point.
+ * @param[in] parameter_points  The training parameter points.
  * @param[in] dmds              The DMD objects associated with
- *                              each parameter point.
- * @param[in] desired_point     The desired point to create a parametric DMD at.
+ *                              each training parameter point.
+ * @param[in] desired_point     The desired point at which to create a parametric DMD.
  * @param[in] rbf               The RBF type ("G" == gaussian,
- *                              "IQ" == inverse quadratic, "IMQ" == inverse
- *                              multiquadric)
- * @param[in] interp_method     The interpolation method type ("LS" == linear solve,
- *                              "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
+ *                              "IQ" == inverse quadratic,
+ *                              "IMQ" == inverse multiquadric)
+ * @param[in] interp_method     The interpolation method type
+ *                              ("LS" == linear solve,
+ *                              "IDW" == inverse distance weighting,
+ *                              "LP" == lagrangian polynomials)
  * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
  *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
  * @param[in] reorthogonalize_W Whether to reorthogonalize the interpolated W (basis) matrix.
@@ -70,8 +75,8 @@ void getParametricDMD(T*& parametric_dmd,
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    std::vector<Matrix*> bases;
-    std::vector<Matrix*> A_tildes;
+    std::vector<CAROM::Matrix*> bases;
+    std::vector<CAROM::Matrix*> A_tildes;
     for (int i = 0; i < dmds.size(); i++)
     {
         bases.push_back(dmds[i]->d_basis);
@@ -85,20 +90,21 @@ void getParametricDMD(T*& parametric_dmd,
 
     CAROM::MatrixInterpolator basis_interpolator(parameter_points,
             rotation_matrices, bases, ref_point, "B", rbf, interp_method, closest_rbf_val);
-    Matrix* W = basis_interpolator.interpolate(desired_point, reorthogonalize_W);
+    CAROM::Matrix* W = basis_interpolator.interpolate(desired_point,
+                       reorthogonalize_W);
 
     CAROM::MatrixInterpolator A_tilde_interpolator(parameter_points,
             rotation_matrices, A_tildes, ref_point, "R", rbf, interp_method,
             closest_rbf_val);
-    Matrix* A_tilde = A_tilde_interpolator.interpolate(desired_point);
+    CAROM::Matrix* A_tilde = A_tilde_interpolator.interpolate(desired_point);
 
     // Calculate the right eigenvalues/eigenvectors of A_tilde
     ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(A_tilde);
     std::vector<std::complex<double>> eigs = eigenpair.eigs;
 
     // Calculate phi (phi = W * eigenvectors)
-    Matrix* phi_real = W->mult(eigenpair.ev_real);
-    Matrix* phi_imaginary = W->mult(eigenpair.ev_imaginary);
+    CAROM::Matrix* phi_real = W->mult(eigenpair.ev_real);
+    CAROM::Matrix* phi_imaginary = W->mult(eigenpair.ev_imaginary);
 
     parametric_dmd = new T(eigs, phi_real, phi_imaginary, dmds[0]->d_k,
                            dmds[0]->d_dt, dmds[0]->d_t_offset,
@@ -108,6 +114,9 @@ void getParametricDMD(T*& parametric_dmd,
     delete A_tilde;
     delete eigenpair.ev_real;
     delete eigenpair.ev_imaginary;
+
+    for (auto m : rotation_matrices)
+        delete m;
 }
 
 /**
@@ -116,12 +125,14 @@ void getParametricDMD(T*& parametric_dmd,
  * @param[in] parameter_points  The parameter points.
  * @param[in] dmd_paths         The paths to the saved DMD objects associated with
  *                              each parameter point.
- * @param[in] desired_point     The desired point to create a parametric DMD at.
+ * @param[in] desired_point     The desired point at which to create a parametric DMD.
  * @param[in] rbf               The RBF type ("G" == gaussian,
- *                              "IQ" == inverse quadratic, "IMQ" == inverse
- *                              multiquadric)
- * @param[in] interp_method     The interpolation method type ("LS" == linear solve,
- *                              "IDW" == inverse distance weighting, "LP" == lagrangian polynomials)
+ *                              "IQ" == inverse quadratic,
+ *                              "IMQ" == inverse multiquadric)
+ * @param[in] interp_method     The interpolation method type
+ *                              ("LS" == linear solve,
+ *                              "IDW" == inverse distance weighting,
+ *                              "LP" == lagrangian polynomials)
  * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
  *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
  * @param[in] reorthogonalize_W Whether to reorthogonalize the interpolated W (basis) matrix.

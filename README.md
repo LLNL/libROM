@@ -1,10 +1,15 @@
-![libROM Logo](https://www.librom.net/img/logo-libROM2.png)
+![libROM Logo](https://www.librom.net/img/logo-300.png)
 
 # Introduction
 
 [libROM](https://www.librom.net) is a free, lightweight, scalable C++ library for data-driven physical
 simulation methods from the intrusive projection-based reduced order models to
 non-intrusive black-box approaches.
+
+The best starting point for new users interested in libROM's features 
+is to review the [examples](https://www.librom.net/examples.html). 
+The [code documentation](https://librom.readthedocs.io/en/latest/index.html) 
+provides more details about libROM's classes and functions. 
 
 ## Features
 
@@ -13,10 +18,10 @@ non-intrusive black-box approaches.
 - Data compression
 - Physics-informed greedy algorithm
 - Projection-based hyper-reduction
+- EQP: quadrature-based hyper-reduction sampling algorithm
 
 ## Features to be added
 
-- EQP: quadrature-based hyper-reduction sampling algorithm
 - Python interface
 
 # Installation
@@ -38,7 +43,7 @@ Compilation options:
 
 There is a Spack package for libROM; however, the version it installs
 is the latest public release. See the [spack
-documentation](http://spack.readthedocs.io/en/latest/index.html) for
+documentation](https://spack.readthedocs.io/en/latest/index.html) for
 details on how to use Spack.
 
 To install libROM with default options using spack.
@@ -111,10 +116,12 @@ LLNL-CODE-766763
 - Siu Wun Cheung (LLNL)
 - Eric Chin (LLNL)
 - Youngsoo Choi (LLNL)
+- "Kevin" Seung Whan Chung (LLNL)
 - Dylan Copeland (LLNL)
 - William Fries (University of Arizona)
 - Debojyoti Ghosh (LLNL)
 - Xiaolong He (UC San Diego)
+- Adrian Humphry (University of Toronto)
 - Kevin Huynh (LLNL)
 - Tanya Kostova-Vassilevska (LLNL)
 - Jessica Lauzon (Stanford)
@@ -122,3 +129,4 @@ LLNL-CODE-766763
 - Yeonjong Shin (KAIST)
 - Geoffrey Oxberry (LLNL)
 - Pranav Vempati (LLNL)
+- Masayuki Yano (University of Toronto)

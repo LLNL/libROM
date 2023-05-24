@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -33,11 +33,34 @@ class ComplexEigenPair;
  */
 struct DMDInternal
 {
+    /**
+     * @brief The snapshot vectors of input.
+     */
     Matrix* snapshots_in;
+
+    /**
+     * @brief The snapshot vectors of output.
+     */
     Matrix* snapshots_out;
+
+    /**
+     * @brief The left singular vector basis.
+     */
     Matrix* basis;
+
+    /**
+     * @brief The right singular vector basis.
+     */
     Matrix* basis_right;
+
+    /**
+     * @brief The inverse of singular values.
+     */
     Matrix* S_inv;
+
+    /**
+     * @brief The resultant DMD eigenvalues and eigenvectors.
+     */
     ComplexEigenPair* eigenpair;
 };
 
@@ -51,11 +74,14 @@ public:
     /**
      * @brief Constructor. Basic DMD with uniform time step size.
      *
-     * @param[in] dim          The full-order state dimension.
-     * @param[in] dt           The dt between samples.
-     * @param[in] state_offset The state offset.
+     * @param[in] dim              The full-order state dimension.
+     * @param[in] dt               The dt between samples.
+     * @param[in] alt_output_basis Whether to use the alternative basis for
+     *                             output, i.e. phi = U^(+)*V*Omega^(-1)*X.
+     * @param[in] state_offset     The state offset.
      */
-    DMD(int dim, double dt, Vector* state_offset = NULL);
+    DMD(int dim, double dt, bool alt_output_basis = false,
+        Vector* state_offset = NULL);
 
     /**
      * @brief Constructor. DMD from saved models.
@@ -97,7 +123,7 @@ public:
                        double linearity_tol = 0.0);
 
     /**
-     * @param[in] k The number of modes (eigenvalues) to keep after doing SVD.
+     * @param[in] k               The number of modes to keep after doing SVD.
      * @param[in] W0              The initial basis to prepend to W.
      * @param[in] linearity_tol   The tolerance for determining whether a column
                                   of W is linearly independent with W0.
@@ -118,9 +144,10 @@ public:
      * @brief Predict state given a time. Uses the projected initial condition of the
      *        training dataset (the first column).
      *
-     * @param[in] t The time of the outputted state
+     * @param[in] t   The time of the output state
+     * @param[in] deg The derivative degree of the output state
      */
-    Vector* predict(double t, int power = 0);
+    Vector* predict(double t, int deg = 0);
 
     /**
      * @brief Get the time offset contained within d_t_offset.
@@ -135,6 +162,11 @@ public:
     int getNumSamples() const
     {
         return d_snapshots.size();
+    }
+
+    int getDimension() const
+    {
+        return d_k;
     }
 
     /**
@@ -180,6 +212,26 @@ public:
     void summary(std::string base_file_name);
 
 protected:
+    /**
+     * @brief Obtain DMD model interpolant at desired parameter point by
+     *        interpolation of DMD models from training parameter points.
+     *
+     * @param[in] parametric_dmd    The interpolant DMD model at the desired point.
+     * @param[in] parameter_points  The training parameter points.
+     * @param[in] dmds              The DMD objects associated with
+     *                              each training parameter point.
+     * @param[in] desired_point     The desired point at which to create a parametric DMD.
+     * @param[in] rbf               The RBF type ("G" == gaussian,
+     *                              "IQ" == inverse quadratic,
+     *                              "IMQ" == inverse multiquadric)
+     * @param[in] interp_method     The interpolation method type
+     *                              ("LS" == linear solve,
+     *                              "IDW" == inverse distance weighting,
+     *                              "LP" == lagrangian polynomials)
+     * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
+     *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
+     * @param[in] reorthogonalize_W Whether to reorthogonalize the interpolated W (basis) matrix.
+     */
     friend void getParametricDMD<DMD>(DMD*& parametric_dmd,
                                       std::vector<Vector*>& parameter_points,
                                       std::vector<DMD*>& dmds,
@@ -193,9 +245,11 @@ protected:
      * @brief Constructor. Variant of DMD with non-uniform time step size.
      *
      * @param[in] dim               The full-order state dimension.
+     * @param[in] alt_output_basis  Whether to use the alternative basis for
+     *                              output, i.e. phi = U^(+)*V*Omega^(-1)*X.
      * @param[in] state_offset      The state offset.
      */
-    DMD(int dim, Vector* state_offset = NULL);
+    DMD(int dim, bool alt_output_basis = false, Vector* state_offset = NULL);
 
     /**
      * @brief Constructor. Specified from DMD components.
@@ -232,7 +286,7 @@ protected:
     /**
      * @brief Internal function to multiply d_phi with the eigenvalues.
      */
-    std::pair<Matrix*, Matrix*> phiMultEigs(double t, int power = 0);
+    std::pair<Matrix*, Matrix*> phiMultEigs(double t, int deg = 0);
 
     /**
      * @brief Construct the DMD object.
@@ -262,7 +316,7 @@ protected:
     /**
      * @brief Add the appropriate offset when predicting the solution.
      */
-    virtual void addOffset(Vector*& result, double t = 0.0, int power = 0);
+    virtual void addOffset(Vector*& result, double t = 0.0, int deg = 0);
 
     /**
      * @brief Get the snapshot matrix contained within d_snapshots.
@@ -343,6 +397,11 @@ protected:
      * @brief The left singular vector basis.
      */
     Matrix* d_basis = NULL;
+
+    /**
+     * @brief Whether to use the alternative basis for output, i.e. phi = U^(+)*V*Omega^(-1)*X.
+     */
+    bool d_alt_output_basis = false;
 
     /**
      * @brief A_tilde

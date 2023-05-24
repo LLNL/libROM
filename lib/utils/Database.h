@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -134,13 +134,21 @@ public:
         const double* const data,
         int nelements) = 0;
 
+    /**
+     * @brief Writes a vector of doubles associated with the supplied key to
+     *        the currently open database file.
+     *
+     * @param[in] key The key associated with the vector of values to be
+     *                written.
+     * @param[in] data The vector of double values to be written.
+     * @param[in] nelements The number of doubles in the vector.
+     */
     virtual
     void
     putDoubleVector(
-        const std::string& file_name,
+        const std::string& key,
         const std::vector<double>& data,
-        int nelements,
-        int precision = 6) = 0;
+        int nelements) = 0;
 
     /**
      * @brief Reads an integer associated with the supplied key from the
@@ -188,7 +196,19 @@ public:
         getDoubleArray(key, &data, 1);
     }
 
-    virtual int getDoubleArraySize(const std::string& key) = 0;
+    /**
+     * @brief Count the number of elements in
+     * an array of doubles associated with the supplied key
+     * from the currently open database file.
+     *
+     * @pre !key.empty()
+     *
+     * @param[in] key The key associated with the array of values to be
+     *                read.
+     */
+    virtual
+    int
+    getDoubleArraySize(const std::string& key) = 0;
 
     /**
      * @brief Reads an array of doubles associated with the supplied key
@@ -206,10 +226,23 @@ public:
         double* data,
         int nelements) = 0;
 
+    /**
+     * @brief Reads a sub-array of doubles associated with the supplied key
+     * from the currently open database file.
+     *
+     * @pre !key.empty()
+     * @pre data != nullptr || nelements == 0
+     *
+     * @param[in] key The key associated with the array of values to be
+     *                read.
+     * @param[out] data The allocated sub-array of double values to be read.
+     * @param[in] nelements The number of doubles in the full array.
+     * @param[in] idx The set of indices in the sub-array.
+     */
     virtual
     void
     getDoubleArray(
-        const std::string& file_name,
+        const std::string& key,
         double* data,
         int nelements,
         const std::vector<int>& idx) = 0;

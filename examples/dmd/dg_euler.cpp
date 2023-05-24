@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -608,36 +608,35 @@ int main(int argc, char *argv[])
     delete result_x_mom;
     delete result_y_mom;
     delete result_e;
-
-    for (int i = 1; i < ts.size(); i++)
+    if (visit)
     {
-        result_dens = dmd_dens->predict(ts[i]);
-        result_x_mom = dmd_x_mom->predict(ts[i]);
-        result_y_mom = dmd_y_mom->predict(ts[i]);
-        result_e = dmd_e->predict(ts[i]);
-        Vector dmd_solution_dens(result_dens->getData(), result_dens->dim());
-        Vector dmd_solution_x_mom(result_x_mom->getData(), result_x_mom->dim());
-        Vector dmd_solution_y_mom(result_y_mom->getData(), result_y_mom->dim());
-        Vector dmd_solution_e(result_e->getData(), result_e->dim());
-        u_block.GetBlock(0) = dmd_solution_dens;
-        u_block.GetBlock(1) = dmd_solution_x_mom;
-        u_block.GetBlock(2) = dmd_solution_y_mom;
-        u_block.GetBlock(3) = dmd_solution_e;
-
-        if (i == ts.size() - 1 || (i % vis_steps) == 0)
+        for (int i = 1; i < ts.size(); i++)
         {
-            if (visit)
+            if (i == ts.size() - 1 || (i % vis_steps) == 0)
             {
+                result_dens = dmd_dens->predict(ts[i]);
+                result_x_mom = dmd_x_mom->predict(ts[i]);
+                result_y_mom = dmd_y_mom->predict(ts[i]);
+                result_e = dmd_e->predict(ts[i]);
+                Vector dmd_solution_dens(result_dens->getData(), result_dens->dim());
+                Vector dmd_solution_x_mom(result_x_mom->getData(), result_x_mom->dim());
+                Vector dmd_solution_y_mom(result_y_mom->getData(), result_y_mom->dim());
+                Vector dmd_solution_e(result_e->getData(), result_e->dim());
+                u_block.GetBlock(0) = dmd_solution_dens;
+                u_block.GetBlock(1) = dmd_solution_x_mom;
+                u_block.GetBlock(2) = dmd_solution_y_mom;
+                u_block.GetBlock(3) = dmd_solution_e;
+
                 dmd_visit_dc.SetCycle(i);
                 dmd_visit_dc.SetTime(ts[i]);
                 dmd_visit_dc.Save();
+
+                delete result_dens;
+                delete result_x_mom;
+                delete result_y_mom;
+                delete result_e;
             }
         }
-
-        delete result_dens;
-        delete result_x_mom;
-        delete result_y_mom;
-        delete result_e;
     }
 
     dmd_prediction_timer.Stop();
