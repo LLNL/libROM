@@ -511,7 +511,9 @@ int main(int argc, char *argv[])
     VectorFunctionCoefficient velocity(dim, velocity_function);
     FunctionCoefficient inflow(inflow_function);
     FunctionCoefficient u0(u0_function);
+    StopWatch solveTimer, assembleTimer, mergeTimer;
 
+    assembleTimer.Start();
     ParBilinearForm *m = new ParBilinearForm(fes);
     ParBilinearForm *k = new ParBilinearForm(fes);
     if (pa)
@@ -557,6 +559,8 @@ int main(int argc, char *argv[])
     ParGridFunction *u = new ParGridFunction(fes);
     u->ProjectCoefficient(u0);
     HypreParVector *U = u->GetTrueDofs();
+
+    assembleTimer.Stop();
 
     {
         ostringstream mesh_name, sol_name;
@@ -665,7 +669,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    StopWatch fom_timer, mergeTimer;
     double t = 0.0;
 
     int max_num_snapshots = 100000;
@@ -725,6 +728,7 @@ int main(int argc, char *argv[])
 
     if (online)
     {
+        assembleTimer.Start();
         CAROM::BasisReader reader(basisName);
         if (rdim != -1)
         {
@@ -782,6 +786,7 @@ int main(int argc, char *argv[])
 
         u_hat = new Vector(numColumnRB);
         *u_hat = 0.0;
+        assembleTimer.Stop();
     }
 
     TimeDependentOperator* adv;
@@ -805,10 +810,9 @@ int main(int argc, char *argv[])
     bool done = false;
     for (int ti = 0; !done; )
     {
-
-        fom_timer.Start();
-
         double dt_real = min(dt, t_final - t);
+
+        solveTimer.Start();
         if (online)
         {
             ode_solver->Step(*u_hat, t, dt_real);
@@ -817,10 +821,10 @@ int main(int argc, char *argv[])
         {
             ode_solver->Step(*U, t, dt_real);
         }
+        solveTimer.Start();
+
         ti++;
         done = (t >= t_final - 1e-8*dt);
-
-        fom_timer.Stop();
 
         // 18. take and write snapshot for ROM
         if (offline)
@@ -946,6 +950,23 @@ int main(int argc, char *argv[])
             osol << tv[i] << std::endl;
 
         osol.close();
+    }
+
+    // 13. print timing info
+    if (myid == 0)
+    {
+        if (fom || offline)
+        {
+            printf("Elapsed time for assembling FOM: %e second\n",
+                   assembleTimer.RealTime());
+            printf("Elapsed time for solving FOM: %e second\n", solveTimer.RealTime());
+        }
+        if (online)
+        {
+            printf("Elapsed time for assembling ROM: %e second\n",
+                   assembleTimer.RealTime());
+            printf("Elapsed time for solving ROM: %e second\n", solveTimer.RealTime());
+        }
     }
 
     // 16. Free the used memory.
