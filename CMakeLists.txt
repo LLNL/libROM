@@ -140,9 +140,10 @@ if (ENABLE_EXAMPLES)
       dg_advection
       nonlinear_elasticity
       heat_conduction
-      wave_equation
+      heat_conduction_dmdc
       parametric_heat_conduction
       de_parametric_heat_conduction_greedy
+      wave_equation
       dg_euler
       local_tw_csv
       local_dw_csv
@@ -156,6 +157,7 @@ if (ENABLE_EXAMPLES)
       prom
       prom
       prom
+      dmd
       dmd
       dmd
       dmd
