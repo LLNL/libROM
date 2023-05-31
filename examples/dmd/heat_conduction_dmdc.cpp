@@ -130,6 +130,8 @@ public:
     ConductionOperator(ParFiniteElementSpace &f, double alpha, double kappa,
                        const Vector &u);
 
+    void GetSource(Vector& s) const;
+
     virtual void Mult(const Vector &u, Vector &du_dt) const;
     /** Solve the Backward-Euler equation: k = f(u + dt*k, t), for the unknown k.
         This is the only requirement for high-order SDIRK implicit integration.*/
