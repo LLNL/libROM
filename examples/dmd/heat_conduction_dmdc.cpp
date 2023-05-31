@@ -14,7 +14,7 @@
 //
 // =================================================================================
 //
-// In these examples, the radius of the interface between different initial temperatures, the
+// In these examples, the radius of the interface between different source functions, the
 // alpha coefficient, and two center location variables are modified.
 //
 // For Parametric DMD (ex. 1) (radius, interpolation):
@@ -61,7 +61,7 @@
 //
 // Description:  This example solves a time dependent nonlinear heat equation
 //               problem of the form du/dt = C(u), with a non-linear diffusion
-//               operator C(u) = \nabla \cdot (\kappa + \alpha u) \nabla u.
+//               operator C(u) = s + \nabla \cdot (\kappa + \alpha u) \nabla u.
 //
 //               The example demonstrates the use of nonlinear operators (the
 //               class ConductionOperator defining C(u)), as well as their
@@ -92,10 +92,10 @@ using namespace mfem;
 
 /** After spatial discretization, the conduction model can be written as:
  *
- *     du/dt = M^{-1}(f-Ku)
+ *     du/dt = M^{-1}(b-Ku)
  *
  *  where u is the vector representing the temperature, 
- *  M is the mass matrix, f is the external source,
+ *  M is the mass matrix, b is the load vector,
  *  and K is the diffusion operator with diffusivity depending on u:
  *  (\kappa + \alpha u).
  *
@@ -124,7 +124,7 @@ protected:
     double alpha, kappa;
 
     mutable Vector z; // auxiliary vector
-    mutable Vector zf; // auxiliary vector
+    mutable Vector b; // auxiliary vector
 
 public:
     ConductionOperator(ParFiniteElementSpace &f, double alpha, double kappa,
@@ -907,7 +907,7 @@ ConductionOperator::ConductionOperator(ParFiniteElementSpace &f, double al,
                                        double kap, const Vector &u)
     : TimeDependentOperator(f.GetTrueVSize(), 0.0), fespace(f), M(NULL), K(NULL),
       T(NULL), current_dt(0.0),
-      M_solver(f.GetComm()), T_solver(f.GetComm()), z(height), zf(height)
+      M_solver(f.GetComm()), T_solver(f.GetComm()), z(height), b(height)
 {
     const double rel_tol = 1e-8;
 
@@ -938,15 +938,15 @@ ConductionOperator::ConductionOperator(ParFiniteElementSpace &f, double al,
     SetParameters(u);
 }
 
-void ConductionOperator::GetSource(Vector& s) const
+void ConductionOperator::GetSource(Vector& s_v) const
 {
     // Set grid function for f
-    ParGridFunction f_gf(&fespace);
+    ParGridFunction s_gf(&fespace);
 
-    FunctionCoefficient f(SourceFunction);
-    f.SetTime(GetTime());
-    f_gf.ProjectCoefficient(f);
-    f_gf.GetTrueDofs(s);
+    FunctionCoefficient s(SourceFunction);
+    s.SetTime(GetTime());
+    s_gf.ProjectCoefficient(s);
+    s_gf.GetTrueDofs(s_v);
 }
 
 void ConductionOperator::Mult(const Vector &u, Vector &du_dt) const
@@ -955,17 +955,17 @@ void ConductionOperator::Mult(const Vector &u, Vector &du_dt) const
     //    du_dt = M^{-1}*[f-K(u)]
     // for du_dt
 
-    GetSource(zf);
+    GetSource(b);
     Kmat.Mult(u, z);
-    zf.Add(-1.0, z);
-    M_solver.Mult(zf, du_dt);
+    b.Add(-1.0, z);
+    M_solver.Mult(b, du_dt);
 }
 
 void ConductionOperator::ImplicitSolve(const double dt,
                                        const Vector &u, Vector &du_dt)
 {
     // Solve the equation:
-    //    du_dt = M^{-1}*[-K(u + dt*du_dt)]
+    //    du_dt = M^{-1}*[f-K(u + dt*du_dt)]
     // for du_dt
     if (!T)
     {
@@ -975,10 +975,10 @@ void ConductionOperator::ImplicitSolve(const double dt,
     }
     MFEM_VERIFY(dt == current_dt, ""); // SDIRK methods use the same dt
 
-    GetSource(zf);
+    GetSource(b);
     Kmat.Mult(u, z);
-    zf.Add(-1.0, z);
-    T_solver.Mult(zf, du_dt);
+    b.Add(-1.0, z);
+    T_solver.Mult(b, du_dt);
 }
 
 void ConductionOperator::SetParameters(const Vector &u)
