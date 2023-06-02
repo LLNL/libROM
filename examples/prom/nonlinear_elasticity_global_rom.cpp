@@ -1764,8 +1764,10 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
     Vector dx_dt(dvx_dt.GetData() + rvdim, rxdim);
     CAROM::Vector dv_dt_librom(dv_dt.GetData(), rvdim, false, false);
     CAROM::Vector dx_dt_librom(dx_dt.GetData(), rxdim, false, false);
-
-    // Lift the x-, and v-vectors
+    if (eqp)
+    {}
+    else
+    {// Lift the x-, and v-vectors
     // I.e. perform v = v0 + V_v v^, where v^ is the input
     V_v_sp->mult(v_librom, *z_v_librom);
     V_x_sp->mult(x_librom, *z_x_librom);
@@ -1791,7 +1793,7 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
     }
 
     // Multiply by V_v^T * U_H
-    V_vTU_H.mult(zX, z_librom);
+    V_vTU_H.mult(zX, z_librom);}
 
     if (fomSp->viscosity != 0.0)
     {
