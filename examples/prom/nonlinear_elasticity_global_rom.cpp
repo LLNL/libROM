@@ -1094,10 +1094,11 @@ int main(int argc, char* argv[])
             soper = new HyperelasticOperator(*sp_XV_space, ess_tdof_list_sp, visc, mu, K);
         }
 
-        if (hyperreduce)
-        {   romop = new RomOperator(&oper, soper, rvdim, rxdim, hdim, smm, w_v0, w_x0,
+        if (hyperreduce) // TODO: ask about whether this is needed.
+        {   
+            romop = new RomOperator(&oper, soper, rvdim, rxdim, hdim, smm, w_v0, w_x0,
                                     vx0.GetBlock(0), BV_librom, BX_librom, H_librom, Hsinv, myid,
-                                    num_samples_req != -1, hyperreduce, x_base_only);
+                                    num_samples_req != -1, hyperreduce, x_base_only, use_eqp, eqpSol, ir0);
         }
         else
         {
@@ -1105,7 +1106,7 @@ int main(int argc, char* argv[])
                                     &(vx0.GetBlock(0)),
                                     &(vx0.GetBlock(1)), vx0.GetBlock(0), BV_librom, BX_librom, H_librom, Hsinv,
                                     myid,
-                                    num_samples_req != -1, hyperreduce, x_base_only);
+                                    num_samples_req != -1, hyperreduce, x_base_only, use_eqp, eqpSol, ir0);
         }
 
         // Print lifted initial energies
@@ -1160,7 +1161,7 @@ int main(int argc, char* argv[])
 
         if (online)
         {
-            if (myid == 0)
+            if (myid == 0|| use_eqp)
             {
                 solveTimer.Start();
                 ode_solver->Step(*wMFEM, t, dt_real);
