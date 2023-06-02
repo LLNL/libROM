@@ -191,6 +191,20 @@ private:
     CAROM::Vector* z_v_librom;
     CAROM::Vector* z_x_librom;
 
+    // Data for EQP
+    bool eqp;
+    const IntegrationRule *ir_eqp;
+    std::vector<double> eqp_rw;
+    std::vector<int> eqp_qp;
+    Vector eqp_coef;
+    // const bool fastIntegration = true; //TODO: implement fast integration
+
+    CAROM::Matrix eqp_lifting;
+    std::vector<int> eqp_liftDOFs;
+    mutable CAROM::Vector eqp_lifted;
+
+    int rank;
+
 protected:
     CAROM::Matrix* S_hat;
     CAROM::Vector* S_hat_v0;
@@ -215,7 +229,8 @@ public:
                 const Vector* x0_,const Vector v0_fom_,const CAROM::Matrix* V_v_,
                 const CAROM::Matrix* V_x_, const CAROM::Matrix* U_H_,
                 const CAROM::Matrix* Hsinv_,const int myid, const bool oversampling_,
-                const bool hyperreduce_,const bool x_base_only_);
+                const bool hyperreduce_,const bool x_base_only_, const bool use_eqp, CAROM::Vector *eqpSol,
+                const IntegrationRule *ir_eqp_);
 
     virtual void Mult(const Vector& y, Vector& dy_dt) const;
     void Mult_Hyperreduced(const Vector& y, Vector& dy_dt) const;
@@ -347,6 +362,32 @@ void MergeBasis(const int dimFOM, const int nparam, const int max_num_snapshots,
                                "mergedSV_" + name + ".txt");
 }
 
+
+const CAROM::Matrix* GetSnapshotMatrix(const int dimFOM, const int nparam,
+                                       const int max_num_snapshots, std::string name)
+{
+    MFEM_VERIFY(nparam > 0, "Must specify a positive number of parameter sets");
+
+    bool update_right_SV = false;
+    bool isIncremental = false;
+
+    CAROM::Options options(dimFOM, nparam * max_num_snapshots, 1, update_right_SV);
+    CAROM::BasisGenerator generator(options, isIncremental, "basis" + name);
+
+    for (int paramID=0; paramID<nparam; ++paramID)
+    {
+        std::string snapshot_filename = "basis" + std::to_string(
+                                            paramID) + "_" + name + "_snapshot";
+        generator.loadSamples(snapshot_filename,"snapshot");
+    }
+
+    // TODO: this deep copy is inefficient, just to get around generator owning the matrix.
+    CAROM::Matrix *s = new CAROM::Matrix(*generator.getSnapshotMatrix());
+
+    return s;
+    //return generator.getSnapshotMatrix();  // BUG: the matrix is deleted when generator goes out of scope.
+}
+
 // TODO: remove this by making online computation serial?
 void BroadcastUndistributedRomVector(CAROM::Vector* v)
 {
@@ -401,6 +442,8 @@ int main(int argc, char* argv[])
     bool offline = false;
     bool merge = false;
     bool online = false;
+    bool use_eqp = false;
+    bool writeSampleMesh = false;
     bool hyperreduce = true;
     bool x_base_only = false;
     int num_samples_req = -1;
@@ -413,6 +456,10 @@ int main(int argc, char* argv[])
     int rxdim = -1;
     int rvdim = -1;
     int hdim = -1;
+
+    bool preconditionNNLS = false;
+    double tolNNLS = 1.0e-14;
+    int maxNNLSnnz = 0;
 
     OptionsParser args(argc, argv);
     args.AddOption(&mesh_file, "-m", "--mesh",
@@ -476,6 +523,16 @@ int main(int argc, char* argv[])
                    "--velocity-ic",
                    "Use a deformation-, or velocity initial condition. Default is velocity IC.");
     args.AddOption(&s, "-sc", "--scaling", "Scaling factor for initial condition.");
+    args.AddOption(&use_eqp, "-eqp", "--eqp", "-no-eqp", "--no-eqp",
+                   "Use EQP instead of DEIM for the hyperreduction.");
+    args.AddOption(&writeSampleMesh, "-smesh", "--sample-mesh", "-no-smesh",
+                   "--no-sample-mesh", "Write the sample mesh to file.");
+    args.AddOption(&preconditionNNLS, "-preceqp", "--preceqp", "-no-preceqp",
+                   "--no-preceqp", "Precondition the NNLS system for EQP.");
+    args.AddOption(&tolNNLS, "-tolnnls", "--tol-nnls",
+                   "Tolerance for NNLS solver.");
+    args.AddOption(&maxNNLSnnz, "-maxnnls", "--max-nnls",
+                   "Maximum nnz for NNLS");
 
     args.Parse();
     if (!args.Good())
@@ -774,6 +831,9 @@ int main(int argc, char* argv[])
     int nsamp_H = -1;
 
     CAROM::SampleMeshManager* smm = nullptr;
+
+    CAROM::Vector *eqpSol = nullptr;
+    CAROM::Vector *eqpSol_S = nullptr;
 
     // 11. Initialize ROM operator
     // I guess most of this should be done on id =0
