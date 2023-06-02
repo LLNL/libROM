@@ -898,6 +898,26 @@ int main(int argc, char* argv[])
         if (myid == 0)
             printf("reduced H dim = %d\n", hdim);
 
+        // Setup hyperreduction, using either EQP or sampled DOFs and a sample mesh.
+
+        /* TODO:Change after check
+        CAROM::BasisReader *readerS = NULL;
+        ParFiniteElementSpace *sp_R_space, *sp_W_space;
+        CAROM::Matrix *Bsinv = NULL;
+        CAROM::Matrix *Ssinv = NULL;
+        */
+        const IntegrationRule *ir0 = NULL;
+
+        if (ir0 == NULL)
+        {
+            // int order = 2 * el.GetOrder();
+            const FiniteElement &fe = *fespace.GetFE(0);
+            ElementTransformation *eltrans = fespace.GetElementTransformation(0);
+
+            int order = eltrans->OrderW() + 2 * fe.GetOrder();
+            ir0 = &IntRules.Get(fe.GetGeomType(), order);
+        }
+
         vector<int> num_sample_dofs_per_proc(num_procs);
 
         if (num_samples_req != -1)
