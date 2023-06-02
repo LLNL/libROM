@@ -1040,52 +1040,55 @@ int main(int argc, char* argv[])
             w_x0 = new Vector(sp_x_gf.GetTrueVector());
         }
 
-        // Convert essential boundary list from FOM mesh to sample mesh
-        // Create binary list where 1 means essential boundary element, 0 means nonessential.
-        CAROM::Matrix Ess_mat(true_size, 1, true);
-        for (size_t i = 0; i < true_size; i++)
+        if (!use_eqp)
         {
-            Ess_mat(i,0) = 0;
-            for (size_t j = 0; j < ess_tdof_list.Size(); j++)
+            // Convert essential boundary list from FOM mesh to sample mesh
+            // Create binary list where 1 means essential boundary element, 0 means nonessential.
+            CAROM::Matrix Ess_mat(true_size, 1, true);
+            for (size_t i = 0; i < true_size; i++)
             {
-                if (ess_tdof_list[j] == i )
+                Ess_mat(i,0) = 0;
+                for (size_t j = 0; j < ess_tdof_list.Size(); j++)
                 {
-                    Ess_mat(i,0) = 1;
+                    if (ess_tdof_list[j] == i )
+                    {
+                        Ess_mat(i,0) = 1;
+                    }
+                }
+            }
+
+            // Project binary FOM list onto sampling space
+            MPI_Bcast(&sp_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
+            CAROM::Matrix Ess_mat_sp(sp_size, 1, false);
+            smm->GatherDistributedMatrixRows("X", Ess_mat, 1, Ess_mat_sp);
+
+            // Count number of true elements in new matrix
+            int num_ess_sp = 0;
+
+            for (size_t i = 0; i < sp_size; i++)
+            {
+                if (Ess_mat_sp(i,0) == 1)
+                {
+                    num_ess_sp += 1;
+                }
+            }
+
+            // Initialize essential dof list in sampling space
+            Array<int> ess_tdof_list_sp(num_ess_sp);
+
+            // Add indices to list
+            int ctr = 0;
+            for (size_t i = 0; i < sp_size; i++)
+            {
+                if (Ess_mat_sp(i,0) == 1)
+                {
+                    ess_tdof_list_sp[ctr] = i;
+                    ctr += 1;
                 }
             }
         }
 
-        // Project binary FOM list onto sampling space
-        MPI_Bcast(&sp_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        CAROM::Matrix Ess_mat_sp(sp_size, 1, false);
-        smm->GatherDistributedMatrixRows("X", Ess_mat, 1, Ess_mat_sp);
-
-        // Count number of true elements in new matrix
-        int num_ess_sp = 0;
-
-        for (size_t i = 0; i < sp_size; i++)
-        {
-            if (Ess_mat_sp(i,0) == 1)
-            {
-                num_ess_sp += 1;
-            }
-        }
-
-        // Initialize essential dof list in sampling space
-        Array<int> ess_tdof_list_sp(num_ess_sp);
-
-        // Add indices to list
-        int ctr = 0;
-        for (size_t i = 0; i < sp_size; i++)
-        {
-            if (Ess_mat_sp(i,0) == 1)
-            {
-                ess_tdof_list_sp[ctr] = i;
-                ctr += 1;
-            }
-        }
-
-        if (myid == 0)
+        if (myid == 0 && !use_eqp)
         {
             // Define operator in sample space
             soper = new HyperelasticOperator(*sp_XV_space, ess_tdof_list_sp, visc, mu, K);
