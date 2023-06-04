@@ -1764,36 +1764,68 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
     Vector dx_dt(dvx_dt.GetData() + rvdim, rxdim);
     CAROM::Vector dv_dt_librom(dv_dt.GetData(), rvdim, false, false);
     CAROM::Vector dx_dt_librom(dx_dt.GetData(), rxdim, false, false);
-    if (eqp)
-    {}
-    else
-    {// Lift the x-, and v-vectors
+    // Lift v-vector
     // I.e. perform v = v0 + V_v v^, where v^ is the input
     V_v_sp->mult(v_librom, *z_v_librom);
-    V_x_sp->mult(x_librom, *z_x_librom);
 
-    add(z_v, *v0, *psp_v); // Store liftings
-    add(z_x, *x0, *psp_x);
+    // Store lifting
+    add(z_v, *v0, *psp_v);
 
-    // Hyperreduce H
-    // Apply H to x to get zH
-    fomSp->H->Mult(*psp_x, zH);
-
-    // Sample the values from zH
-    smm->GetSampledValues("H", zH, zN);
-
-    // Apply inverse H-basis
-    if (oversampling)
+    if (eqp)
     {
-        Hsinv->transposeMult(zN, zX);
+        Vector resEQP;
+        if (fastIntegration)
+            VectorFEMassIntegrator_ComputeReducedEQP_Fast(&(fom->fespace_R), eqp_qp,
+                                                          ir_eqp, &a_coeff,
+                                                          x_librom, eqp_coef, resEQP);
+        else
+            VectorFEMassIntegrator_ComputeReducedEQP(&(fom->fespace_R), eqp_rw,
+                                                     eqp_qp, ir_eqp, &a_coeff,
+                                                     V_x, x_librom, rank, resEQP);
+
+        Vector recv(resEQP);
+        MPI_Allreduce(resEQP.GetData(), recv.GetData(), resEQP.Size(), MPI_DOUBLE,
+                      MPI_SUM, MPI_COMM_WORLD);
+        resEQP = recv;
+
+        // NOTE: in the hyperreduction case, the residual is of dimension nldim,
+        // which is the dimension of the ROM space for the nonlinear term.
+        // In the EQP case, there is no use of a ROM space for the nonlinear
+        // term. Instead, the FOM computation of the nonlinear term is
+        // approximated by the reduced quadrature rule in the FOM space.
+        // Therefore, the residual here is of dimension rrdim.
+
+        MFEM_VERIFY(resEQP.Size() == rrdim, "");
+        for (int i = 0; i < rrdim; ++i)
+            z_librom[i] += resEQP[i];
     }
     else
-    {
-        Hsinv->mult(zN, zX);
-    }
+    { // Lift the x-vector
+        V_x_sp->mult(x_librom, *z_x_librom);
 
-    // Multiply by V_v^T * U_H
-    V_vTU_H.mult(zX, z_librom);}
+        // Store lifting
+        add(z_x, *x0, *psp_x);
+
+        // Hyperreduce H
+        // Apply H to x to get zH
+        fomSp->H->Mult(*psp_x, zH);
+
+        // Sample the values from zH
+        smm->GetSampledValues("H", zH, zN);
+
+        // Apply inverse H-basis
+        if (oversampling)
+        {
+            Hsinv->transposeMult(zN, zX);
+        }
+        else
+        {
+            Hsinv->mult(zN, zX);
+        }
+
+        // Multiply by V_v^T * U_H
+        V_vTU_H.mult(zX, z_librom);
+    }
 
     if (fomSp->viscosity != 0.0)
     {
