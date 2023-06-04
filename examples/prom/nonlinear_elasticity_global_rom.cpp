@@ -1764,24 +1764,21 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
     Vector dx_dt(dvx_dt.GetData() + rvdim, rxdim);
     CAROM::Vector dv_dt_librom(dv_dt.GetData(), rvdim, false, false);
     CAROM::Vector dx_dt_librom(dx_dt.GetData(), rxdim, false, false);
-    // Lift v-vector
-    // I.e. perform v = v0 + V_v v^, where v^ is the input
-    V_v_sp->mult(v_librom, *z_v_librom);
-
-    // Store lifting
-    add(z_v, *v0, *psp_v);
 
     if (eqp)
-    {
+    {   // Lift v-vector and save
+        V_v.mult(v_librom, *z_v_librom);
+        V_x->transposeMult(*z_v_librom, dx_dt_librom);
+
         Vector resEQP;
         if (fastIntegration)
-            VectorFEMassIntegrator_ComputeReducedEQP_Fast(&(fom->fespace_R), eqp_qp,
-                                                          ir_eqp, &a_coeff,
-                                                          x_librom, eqp_coef, resEQP);
+            HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(&(fom->fespace_R), eqp_qp,
+                                                             ir_eqp, &a_coeff,
+                                                             x_librom, eqp_coef, resEQP);
         else
-            VectorFEMassIntegrator_ComputeReducedEQP(&(fom->fespace_R), eqp_rw,
-                                                     eqp_qp, ir_eqp, &a_coeff,
-                                                     V_x, x_librom, rank, resEQP);
+            HyperelasticNLFIntegrator_ComputeReducedEQP(&(fom->fespace_R), eqp_rw,
+                                                        eqp_qp, ir_eqp, &a_coeff,
+                                                        V_x, x_librom, rank, resEQP);
 
         Vector recv(resEQP);
         MPI_Allreduce(resEQP.GetData(), recv.GetData(), resEQP.Size(), MPI_DOUBLE,
@@ -1800,10 +1797,13 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
             z_librom[i] += resEQP[i];
     }
     else
-    { // Lift the x-vector
+    { // Lift x- and v-vector
+        // I.e. perform v = v0 + V_v v^, where v^ is the input
+        V_v_sp->mult(v_librom, *z_v_librom);
         V_x_sp->mult(x_librom, *z_x_librom);
 
-        // Store lifting
+        // Store liftings
+        add(z_v, *v0, *psp_v);
         add(z_x, *x0, *psp_x);
 
         // Hyperreduce H
@@ -1825,6 +1825,9 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
 
         // Multiply by V_v^T * U_H
         V_vTU_H.mult(zX, z_librom);
+
+        // store dx_dt
+        V_x_sp->transposeMult(*psp_v_librom, dx_dt_librom);
     }
 
     if (fomSp->viscosity != 0.0)
@@ -1838,7 +1841,6 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
     M_hat_inv->mult(*z_librom,
                     dv_dt_librom); // to invert reduced mass matrix operator.
 
-    V_x_sp->transposeMult(*psp_v_librom, dx_dt_librom);
 }
 
 void RomOperator::Mult_FullOrder(const Vector &vx, Vector &dvx_dt) const
