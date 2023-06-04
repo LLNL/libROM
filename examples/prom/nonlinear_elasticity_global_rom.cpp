@@ -199,10 +199,6 @@ private:
     Vector eqp_coef;
     // const bool fastIntegration = true; //TODO: implement fast integration
 
-    CAROM::Matrix eqp_lifting;
-    std::vector<int> eqp_liftDOFs;
-    mutable CAROM::Vector eqp_lifted;
-
     int rank;
 
 protected:
@@ -1655,7 +1651,7 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
     }
 
     const int fdim = fom->Height(); // Unreduced height
-    if (!hyperreduce)
+    if (!hyperreduce || eqp)
     {
         z.SetSize(fdim / 2);
         z_v.SetSize(fdim / 2);
@@ -1678,11 +1674,9 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
         pfom_v_librom = new CAROM::Vector(pfom_v->GetData(), pfom_v->Size(), true,
                                           false);
     }
-    else if (eqp)
-    {
-        pfom_v_librom = new CAROM::Vector(fdim / 2, true);
-        pfom_v = new Vector(pfom_v_librom->getData(), fdim / 2);
 
+    if (eqp)
+    {
         std::set<int> elements;
         const int nqe = ir_eqp->GetWeights().Size();
 
@@ -1698,49 +1692,10 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
         }
 
         cout << myid << ": EQP using " << elements.size() << " elements out of "
-             << fom->fespace_R.GetNE() << endl;
+             << fom->fespace.GetNE() << endl;
 
         // TODO: implement the one below
         GetEQPCoefficients_HyperelasticNLFIntegrator();
-
-        // TODO: Understand this
-        // Set the matrix of the linear map from the ROM W space to all DOFs on
-        // sampled elements.
-        Array<int> vdofs;
-        int numSampledDofs = 0;
-        for (auto e : elements)
-        {
-            fom_->fespace_W.GetElementVDofs(e, vdofs);
-            numSampledDofs += vdofs.Size();
-        }
-
-        eqp_lifting.setSize(numSampledDofs, rwdim);
-        eqp_liftDOFs.resize(numSampledDofs);
-        eqp_lifted.setSize(numSampledDofs);
-
-        int cnt = 0;
-        for (auto e : elements)
-        {
-            fom_->fespace_W.GetElementVDofs(e, vdofs);
-            for (int i = 0; i < vdofs.Size(); ++i, ++cnt)
-                eqp_liftDOFs[cnt] = vdofs[i];
-        }
-        MFEM_VERIFY(cnt == numSampledDofs, "");
-
-        CAROM::Vector ej(rwdim, false);
-
-        for (int j = 0; j < rwdim; ++j)
-        {
-            ej = 0.0;
-            ej(j) = 1.0;
-            V_W.mult(ej, *pfom_W_librom);
-            p_gf.SetFromTrueDofs(*pfom_W);
-
-            for (int i = 0; i < numSampledDofs; ++i)
-            {
-                eqp_lifting(i, j) = (*pfom_W)[eqp_liftDOFs[i]];
-            }
-        }
     }
 }
 
@@ -1772,11 +1727,11 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
 
         Vector resEQP;
         if (fastIntegration)
-            HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(&(fom->fespace_R), eqp_qp,
+            HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(&(fom->fespace), eqp_qp,
                                                              ir_eqp, &a_coeff,
                                                              x_librom, eqp_coef, resEQP);
         else
-            HyperelasticNLFIntegrator_ComputeReducedEQP(&(fom->fespace_R), eqp_rw,
+            HyperelasticNLFIntegrator_ComputeReducedEQP(&(fom->fespace), eqp_rw,
                                                         eqp_qp, ir_eqp, &a_coeff,
                                                         V_x, x_librom, rank, resEQP);
 
