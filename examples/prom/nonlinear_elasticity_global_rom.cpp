@@ -1727,9 +1727,10 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
 
         Vector resEQP;
         if (fastIntegration)
-            HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(&(fom->fespace), eqp_qp,
+            //TODO
+           /*  HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(&(fom->fespace), eqp_qp,
                                                              ir_eqp, &a_coeff,
-                                                             x_librom, eqp_coef, resEQP);
+                                                             x_librom, eqp_coef, resEQP); */
         else
             HyperelasticNLFIntegrator_ComputeReducedEQP(&(fom->fespace), eqp_rw,
                                                         eqp_qp, ir_eqp, &a_coeff,
