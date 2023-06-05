@@ -150,6 +150,7 @@ double radius = 0.5;
 double cx = 0.0;
 double cy = 0.0;
 double t_end = 0.1;
+double dt = 1.0e-2;
 double amp = 1.0;
 
 int main(int argc, char *argv[])
@@ -167,7 +168,6 @@ int main(int argc, char *argv[])
     int order = 2;
     int ode_solver_type = 3;
     double t_final = 0.5;
-    double dt = 1.0e-2;
     double alpha = 1.0e-2;
     double kappa = 0.5;
     double closest_rbf_val = 0.9;
@@ -1021,8 +1021,8 @@ double SourceFunction(const Vector &x, const double t)
     c.Elem(0) = cx;
     c.Elem(1) = cy;
     y -= c;
-    if (y.Norml2() < radius && t < t_end)
+    if (y.Norml2() < radius)
     {
-        return amp;
+        return amp / (1.0 + exp(0.5*(t-t_end)/dt));
     }
 }
