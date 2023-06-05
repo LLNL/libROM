@@ -1758,10 +1758,10 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
         // In the EQP case, there is no use of a ROM space for the nonlinear
         // term. Instead, the FOM computation of the nonlinear term is
         // approximated by the reduced quadrature rule in the FOM space.
-        // Therefore, the residual here is of dimension rrdim.
+        // Therefore, the residual here is of dimension rxdim.
 
-        MFEM_VERIFY(resEQP.Size() == rrdim, "");
-        for (int i = 0; i < rrdim; ++i)
+        MFEM_VERIFY(resEQP.Size() == rxdim, "");
+        for (int i = 0; i < rxdim; ++i)
             z_librom[i] += resEQP[i];
     }
     else
