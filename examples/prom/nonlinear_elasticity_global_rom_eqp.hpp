@@ -405,13 +405,12 @@ void SolveNNLS(const int rank, const double nnls_tol, const int maxNNLSnnz,
     cout << rank << ": relative residual norm for NNLS solution of Gs = Gw: " << relNorm << endl;
 }
 
+
 // Compute EQP solution from constraints on snapshots.
 void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                         ParFiniteElementSpace *fespace_R,
-                        ParFiniteElementSpace *fespace_W,
                         const int nsets, const CAROM::Matrix *BR,
                         const CAROM::Matrix *BR_snapshots,
-                        const CAROM::Matrix *BW_snapshots,
                         const bool precondition, const double nnls_tol,
                         const int maxNNLSnnz,
                         CAROM::Vector &sol)
@@ -422,14 +421,13 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
     const int NQ = ne * nqe;
     const int nsnap = BR_snapshots->numColumns();
 
-    MFEM_VERIFY(nsnap == BW_snapshots->numColumns() ||
-                    nsnap + nsets == BW_snapshots->numColumns(),
+    MFEM_VERIFY(nsnap == BR_snapshots->numColumns() ||
+                    nsnap + nsets == BR_snapshots->numColumns(),
                 "");
     MFEM_VERIFY(BR->numRows() == BR_snapshots->numRows(), "");
     MFEM_VERIFY(BR->numRows() == fespace_R->GetTrueVSize(), "");
-    MFEM_VERIFY(BW_snapshots->numRows() == fespace_W->GetTrueVSize(), "");
 
-    const bool skipFirstW = (nsnap + nsets == BW_snapshots->numColumns());
+    const bool skipFirstW = (nsnap + nsets == BR_snapshots->numColumns());
 
     // Compute G of size (NB * nsnap) x NQ, but only store its transpose Gt.
     CAROM::Matrix Gt(NQ, NB * nsnap, true);
@@ -440,7 +438,6 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
     // with respect to the integration rule weight at that point,
     // where the "exact" quadrature solution is ir0->GetWeights().
 
-    Vector p_i(BW_snapshots->numRows());
     Vector v_i(BR_snapshots->numRows());
     Vector v_j(BR->numRows());
 
@@ -456,9 +453,6 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
 
     for (int i = 0; i < nsnap; ++i)
     {
-        for (int j = 0; j < BW_snapshots->numRows(); ++j)
-            p_i[j] = (*BW_snapshots)(j, i + skip);
-
         for (int j = 0; j < BR_snapshots->numRows(); ++j)
             v_i[j] = (*BR_snapshots)(j, i);
 
@@ -466,9 +460,9 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
             skip++;
 
         // Set grid function for a(p)
-        ParGridFunction p_gf(fespace_W);
+        ParGridFunction p_gf(fespace_R);
 
-        p_gf.SetFromTrueDofs(p_i);
+        p_gf.SetFromTrueDofs(v_i);
 
         GridFunctionCoefficient p_coeff(&p_gf);
         TransformedCoefficient a_coeff(&p_coeff, NonlinearCoefficient);

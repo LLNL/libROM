@@ -912,7 +912,7 @@ int main(int argc, char *argv[])
         {
             // EQP setup
             eqpSol = new CAROM::Vector(ir0->GetNPoints() * fespace.GetNE(), true);
-            SetupEQP_snapshots(ir0, myid, &fespace, &W_space, nsets, BR_librom,
+            SetupEQP_snapshots(ir0, myid, &fespace, nsets, H_librom,
                                GetSnapshotMatrix(fespace.GetTrueVSize(), nsets, max_num_snapshots, "H"),
                                preconditionNNLS, tolNNLS, maxNNLSnnz, *eqpSol);
 
