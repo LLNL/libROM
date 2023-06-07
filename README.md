@@ -80,6 +80,35 @@ For example,
 mpicxx myapp.cpp -I/path/to/libROM/lib -Wl,-rpath,/path/to/libROM/build/lib -L/path/to/libROM/build/lib -lROM -o myapp.out
 ```
 
+# Using Docker container
+
+Docker container [`librom_env`](https://hub.docker.com/repository/docker/dreamer2368/librom_env/general) provides a containerized environment with all the prerequisites for libROM. In order to compile and use libROM in the Docker container, follow these steps:
+
+- Pull `librom_env`, with [Docker Desktop](https://www.docker.com/) installed and running
+```
+docker pull dreamer2368/librom_env:latest
+```
+- Clone libROM repository
+```
+git clone https://github.com/LLNL/libROM.git
+```
+- Launch the Docker container with the cloned repository
+```
+docker run -it --volume ./libROM:/home/test/libROM dreamer2368/librom_env:latest
+```
+- This will lead to a terminal with the cloned repository at `~/libROM`. Compile libROM with the pre-set environment variables
+```
+mkdir build
+cd build
+cmake ~/libROM -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DUSE_MFEM=${USE_MFEM} -DMFEM_USE_GSLIB=${MFEM_USE_GSLIB}
+make -j 4
+```
+
+Some notes about using the Docker container:
+- Any change within the container will not be saved, except those happening in the mounted directory `./libROM`.
+- Any change in `/home/test/libROM` in the container is instantaneously reflected into the actual directory `./libROM`, and vice versa.
+- For the details about the preset environment variables, see the Docker repository [`librom_env`](https://hub.docker.com/repository/docker/dreamer2368/librom_env/general).
+
 
 # libROM CI
 
