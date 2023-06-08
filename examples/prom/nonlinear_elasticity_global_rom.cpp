@@ -912,11 +912,12 @@ int main(int argc, char *argv[])
 
         if (use_eqp)
         {
+            NeoHookeanmodel = new NeoHookeanModel(mu, K);
             // EQP setup
             eqpSol = new CAROM::Vector(ir0->GetNPoints() * fespace.GetNE(), true);
             SetupEQP_snapshots(ir0, myid, &fespace, nsets, H_librom,
                                GetSnapshotMatrix(fespace.GetTrueVSize(), nsets, max_num_snapshots, "H"),
-                               preconditionNNLS, tolNNLS, maxNNLSnnz, *eqpSol);
+                               preconditionNNLS, tolNNLS, maxNNLSnnz, model, *eqpSol);
 
             if (writeSampleMesh)
                 WriteMeshEQP(pmesh, myid, ir0->GetNPoints(), *eqpSol);
@@ -1736,11 +1737,8 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
 
         Vector resEQP;
         if (fastIntegration)
-            //TODO
             {
-           /*  HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(&(fom->fespace), eqp_qp,
-                                                             ir_eqp, &a_coeff,
-                                                             x_librom, eqp_coef, resEQP); */
+           MFEM_ABORT("TODO");
             }
 
         else

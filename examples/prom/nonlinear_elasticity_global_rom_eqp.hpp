@@ -65,7 +65,7 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
                                                   const IntegrationRule *ir,
                                                   CAROM::Matrix const &V, Vector &res)
 {
-     const int rdim = V.numColumns();
+    const int rdim = V.numColumns();
     MFEM_VERIFY(V.numRows() == fesR->GetTrueVSize(), "");
     MFEM_VERIFY(rw.size() == qp.size(), "");
 
@@ -73,7 +73,7 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
     const int nqe = ir->GetWeights().Size();
 
     ElementTransformation *eltrans;
-    DofTransformation * doftrans;
+    DofTransformation *doftrans;
     const FiniteElement *fe = NULL;
     Array<int> vdofs;
 
@@ -92,11 +92,11 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
     int elemCount = 0;
 
     // First, find all sampled elements.
-    for (int i=0; i<rw.size(); ++i)
+    for (int i = 0; i < rw.size(); ++i)
     {
-        const int e = qp[i] / nqe;  // Element index
+        const int e = qp[i] / nqe; // Element index
 
-        if (e != eprev)  // Update element transformation
+        if (e != eprev) // Update element transformation
         {
             doftrans = fesR->GetElementVDofs(e, vdofs);
             if (dof > 0)
@@ -115,7 +115,6 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
     Vs.setSize(elemCount * dof, rdim);
     ParGridFunction v_gf(fesR);
     Vector vtrue(fesR->GetTrueVSize());
-
 }
 
 void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
@@ -123,7 +122,6 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
                                                  const IntegrationRule *ir, Coefficient *Q,
                                                  CAROM::Matrix const &V, CAROM::Vector const &x, const int rank, Vector &res)
 {
-
 
     const int rdim = V.numColumns();
     MFEM_VERIFY(V.numRows() == fesR->GetTrueVSize(), "");
@@ -133,7 +131,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
     const int nqe = ir->GetWeights().Size();
 
     ElementTransformation *eltrans;
-    DofTransformation * doftrans;
+    DofTransformation *doftrans;
     const FiniteElement *fe = NULL;
     Array<int> vdofs;
 
@@ -152,11 +150,11 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
     int elemCount = 0;
 
     // First, find all sampled elements.
-    for (int i=0; i<rw.size(); ++i)
+    for (int i = 0; i < rw.size(); ++i)
     {
-        const int e = qp[i] / nqe;  // Element index
+        const int e = qp[i] / nqe; // Element index
 
-        if (e != eprev)  // Update element transformation
+        if (e != eprev) // Update element transformation
         {
             doftrans = fesR->GetElementVDofs(e, vdofs);
             if (dof > 0)
@@ -176,25 +174,25 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
     ParGridFunction v_gf(fesR);
     Vector vtrue(fesR->GetTrueVSize());
 
-    for (int j=0; j<rdim; ++j)
+    for (int j = 0; j < rdim; ++j)
     {
         eprev = -1;
         elemCount = 0;
 
-        for (int i=0; i<vtrue.Size(); ++i)
-            vtrue[i] = V(i,j);
+        for (int i = 0; i < vtrue.Size(); ++i)
+            vtrue[i] = V(i, j);
 
         v_gf.SetFromTrueDofs(vtrue);
 
-        for (int i=0; i<rw.size(); ++i)
+        for (int i = 0; i < rw.size(); ++i)
         {
-            const int e = qp[i] / nqe;  // Element index
+            const int e = qp[i] / nqe; // Element index
 
-            if (e != eprev)  // Update element transformation
+            if (e != eprev) // Update element transformation
             {
                 doftrans = fesR->GetElementVDofs(e, vdofs);
 
-                for (int k=0; k<dof; ++k)
+                for (int k = 0; k < dof; ++k)
                 {
                     const int dofk = (vdofs[k] >= 0) ? vdofs[k] : -1 - vdofs[k];
                     const double vk = (vdofs[k] >= 0) ? v_gf[dofk] : -v_gf[dofk];
@@ -211,14 +209,14 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
     elemCount = 0;
     int spaceDim = 0;
 
-    for (int i=0; i<rw.size(); ++i)
+    for (int i = 0; i < rw.size(); ++i)
     {
-        const int e = qp[i] / nqe;  // Element index
+        const int e = qp[i] / nqe; // Element index
         // Local (element) index of the quadrature point
-        const int qpi = qp[i] - (e*nqe);
+        const int qpi = qp[i] - (e * nqe);
         const IntegrationPoint &ip = ir->IntPoint(qpi);
 
-        if (e != eprev)  // Update element transformation
+        if (e != eprev) // Update element transformation
         {
             doftrans = fesR->GetElementVDofs(e, vdofs);
             fe = fesR->GetFE(e);
@@ -256,27 +254,27 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
 
         P *= ip.weight * Ttr.Weight(); */
 
-        for (int jx=0; jx<rdim; ++jx)
+        for (int jx = 0; jx < rdim; ++jx)
         {
             // Lift Vx = V_{jx} at ip, where x = e_{jx}.
             Vx = 0.0;
-            for (int k=0; k<dof; ++k)
+            for (int k = 0; k < dof; ++k)
             {
-                const double Vx_k = Vs(((elemCount-1) * dof) + k, jx);
+                const double Vx_k = Vs(((elemCount - 1) * dof) + k, jx);
 
-                for (int j=0; j<spaceDim; ++j)
+                for (int j = 0; j < spaceDim; ++j)
                     Vx[j] += Vx_k * trial_vshape(k, j);
             }
 
-            for (int j=0; j<rdim; ++j)
+            for (int j = 0; j < rdim; ++j)
             {
                 double rj = 0.0;
-                for (int k=0; k<spaceDim; ++k)
+                for (int k = 0; k < spaceDim; ++k)
                 {
                     double Vjk = 0.0;
-                    for (int l=0; l<dof; ++l)
+                    for (int l = 0; l < dof; ++l)
                     {
-                        Vjk += Vs(((elemCount-1) * dof) + l, j) * trial_vshape(l, k);
+                        Vjk += Vs(((elemCount - 1) * dof) + l, j) * trial_vshape(l, k);
                     }
 
                     rj += Vx[k] * Vjk;
@@ -286,7 +284,6 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
             }
         }
     }
-
 }
 
 /* TODO if time...
@@ -299,13 +296,13 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes
 }
 */
 
-// Compute a(p) u . v at all quadrature points on the given element. Coefficient Q is a(p).
 void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
-                          Coefficient *Q, Vector const &u, Vector const &v,
+                          Vector const &h, Vector const &v, const Vector &elfun, // Q is elfun == h? or elfun == u?
+                          NeoHookeanmodel model,
                           FiniteElement const &fe, ElementTransformation &Trans, Vector &r)
 {
     MFEM_VERIFY(r.Size() == ir->GetNPoints(), "");
-    int dof = fe.GetDof();
+    int dof = fe.GetDof(); // Get number of dofs in element
     int spaceDim = Trans.GetSpaceDim();
 
     Vector u_i(spaceDim);
@@ -313,42 +310,72 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
 
     DenseMatrix trial_vshape(dof, spaceDim);
 
+    // Initialize nonlinear operator matrices (there is probably a better way)
+    int dim = el.GetDim();
+    DenseMatrix DSh(dof, dim);
+    DenseMatrix DS(dof, dim);
+    DenseMatrix Jrt(dim);
+    DenseMatrix Jpt(dim);
+    DenseMatrix P(dim);
+    DenseMatrix PMatI;
+    PMatI.UseExternalData(elfun.GetData(), dof, dim);
+    // PMatO.SetSize(dof, dim); // Q: should this be here?
+
+    // For each integration point
     for (int i = 0; i < ir->GetNPoints(); i++)
     {
+        // Get integration point
         const IntegrationPoint &ip = ir->IntPoint(i);
 
+        // Set integration point in the element transformation
         Trans.SetIntPoint(&ip);
 
-        fe.CalcVShape(Trans, trial_vshape);
+        // Evaluate the element shape functions at the integration point
+        fe.CalcVShape(Trans, trial_vshape); // Q: Should this actually be CalcDShape?
 
-        double w = Trans.Weight();
+        // Get the transformation weight
+        double t = Trans.Weight();
 
-        u_i = 0.0;
+        // Initialize h_i and v_i
+        h_i = 0.0;
         v_i = 0.0;
 
+        // For every dof in element
         for (int j = 0; j < dof; ++j)
         {
+            // Q: Why can vdofs[j] < 0 be true?
             const int dofj = (vdofs[j] >= 0) ? vdofs[j] : -1 - vdofs[j];
             const double s = (vdofs[j] >= 0) ? 1.0 : -1.0;
+
+            // Calculate h_i = B_e * h_e, where h_e are the samples
+            // for this snapshot at this element dofs
+            // Also calculate v_i = B_e * v_e
             for (int k = 0; k < spaceDim; ++k)
             {
-                u_i[k] += s * u[dofj] * trial_vshape(j, k);
+                h_i[k] += s * h[dofj] * trial_vshape(j, k);
                 v_i[k] += s * v[dofj] * trial_vshape(j, k);
             }
         }
+        
+        // Compute action of nonlinear operator
+        CalcInverse(Trans.Jacobian(), Jrt);
+        fe.CalcDShape(ip, DSh);
+        Mult(DSh, Jrt, DS);
+        MultAtB(PMatI, DS, Jpt);
+        model->EvalP(Jpt, P);
 
-        if (Q)
-        {
-            w *= Q->Eval(Trans, ip);
-        }
+        // AddMultABt(DS, P, PMatO); //Q: Should this be here?
 
         r[i] = 0.0;
-        for (int k = 0; k < spaceDim; ++k)
-        {
-            r[i] += u_i[k] * v_i[k];
-        }
 
-        r[i] *= w;
+        // Calculate r[i] = v_i^T * P * h_i
+        // P is a 2x2 matrix
+        // Perform the vector-matrix-vector multiplication: a^T * B * c
+        Vector temp(2);
+        P.Mult(h_i, temp);
+        double result = v_i * temp;
+        // Scale by element transformation
+        r[i] *= t;
     }
 }
 
@@ -405,29 +432,28 @@ void SolveNNLS(const int rank, const double nnls_tol, const int maxNNLSnnz,
     cout << rank << ": relative residual norm for NNLS solution of Gs = Gw: " << relNorm << endl;
 }
 
-
 // Compute EQP solution from constraints on snapshots.
 void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
-                        ParFiniteElementSpace *fespace_R,
-                        const int nsets, const CAROM::Matrix *BR,
-                        const CAROM::Matrix *BR_snapshots,
+                        ParFiniteElementSpace *fespace_H,
+                        const int nsets, const CAROM::Matrix *BH,
+                        const CAROM::Matrix *BH_snapshots,
                         const bool precondition, const double nnls_tol,
-                        const int maxNNLSnnz,
+                        const int maxNNLSnnz, NeoHookeanmodel model,
                         CAROM::Vector &sol)
 {
     const int nqe = ir0->GetNPoints();
-    const int ne = fespace_R->GetNE();
-    const int NB = BR->numColumns();
+    const int ne = fespace_H->GetNE();
+    const int NB = BH->numColumns();
     const int NQ = ne * nqe;
-    const int nsnap = BR_snapshots->numColumns();
+    const int nsnap = BH_snapshots->numColumns();
 
-    MFEM_VERIFY(nsnap == BR_snapshots->numColumns() ||
-                    nsnap + nsets == BR_snapshots->numColumns(),
+    MFEM_VERIFY(nsnap == BH_snapshots->numColumns() ||
+                    nsnap + nsets == BH_snapshots->numColumns(), // Q: nsets?
                 "");
-    MFEM_VERIFY(BR->numRows() == BR_snapshots->numRows(), "");
-    MFEM_VERIFY(BR->numRows() == fespace_R->GetTrueVSize(), "");
+    MFEM_VERIFY(BH->numRows() == BH_snapshots->numRows(), "");
+    MFEM_VERIFY(BH->numRows() == fespace_H->GetTrueVSize(), "");
 
-    const bool skipFirstW = (nsnap + nsets == BR_snapshots->numColumns());
+    const bool skipFirstW = (nsnap + nsets == BH_snapshots->numColumns());
 
     // Compute G of size (NB * nsnap) x NQ, but only store its transpose Gt.
     CAROM::Matrix Gt(NQ, NB * nsnap, true);
@@ -438,8 +464,8 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
     // with respect to the integration rule weight at that point,
     // where the "exact" quadrature solution is ir0->GetWeights().
 
-    Vector v_i(BR_snapshots->numRows());
-    Vector v_j(BR->numRows());
+    Vector h_i(BH_snapshots->numRows());
+    Vector v_j(BH->numRows());
 
     Vector r(nqe);
 
@@ -451,42 +477,44 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
         skip = 1;
     }
 
+    // For every snapshot
     for (int i = 0; i < nsnap; ++i)
     {
-        for (int j = 0; j < BR_snapshots->numRows(); ++j)
-            v_i[j] = (*BR_snapshots)(j, i);
+        // Set the sampled dofs from the snapshot matrix
+        for (int j = 0; j < BH_snapshots->numRows(); ++j)
+            h_i[j] = (*BH_snapshots)(j, i);
 
+        // Q: Not sure what this does
         if (skipFirstW && i > 0 && i % nsnapPerSet == 0)
             skip++;
 
-        // Set grid function for a(p)
-        ParGridFunction p_gf(fespace_R);
+        // Set grid function for h_i
+        ParGridFunction hi_gf(fespace_H);
+        hi_gf.SetFromTrueDofs(h_i);
 
-        p_gf.SetFromTrueDofs(v_i);
-
-        GridFunctionCoefficient p_coeff(&p_gf);
-        TransformedCoefficient a_coeff(&p_coeff, NonlinearCoefficient);
-
-        ParGridFunction vi_gf(fespace_R);
-        vi_gf.SetFromTrueDofs(v_i);
-
+        // For each basis vector
         for (int j = 0; j < NB; ++j)
         {
-            for (int k = 0; k < BR->numRows(); ++k)
-                v_j[k] = (*BR)(k, j);
+            // Get basis vector
+            for (int k = 0; k < BH->numRows(); ++k)
+                v_j[k] = (*BH)(k, j);
 
-            ParGridFunction vj_gf(fespace_R);
+            // Set grid function for basis vector
+            ParGridFunction vj_gf(fespace_H);
             vj_gf.SetFromTrueDofs(v_j);
 
             // TODO: is it better to make the element loop the outer loop?
+            // For each element
             for (int e = 0; e < ne; ++e)
             {
+                // Get element and its dofs and transformation.
                 Array<int> vdofs;
-                DofTransformation *doftrans = fespace_R->GetElementVDofs(e, vdofs);
-                const FiniteElement &fe = *fespace_R->GetFE(e);
-                ElementTransformation *eltrans = fespace_R->GetElementTransformation(e);
+                DofTransformation *doftrans = fespace_H->GetElementVDofs(e, vdofs);
+                const FiniteElement &fe = *fespace_H->GetFE(e);
+                ElementTransformation *eltrans = fespace_H->GetElementTransformation(e);
 
-                ComputeElementRowOfG(ir0, vdofs, &a_coeff, vi_gf, vj_gf, fe, *eltrans, r);
+                // Compute the row of G corresponding to element e, store in r
+                ComputeElementRowOfG(ir0, vdofs, &a_coeff, hi_gf, vj_gf, model, fe, *eltrans, r);
 
                 for (int m = 0; m < nqe; ++m)
                     Gt((e * nqe) + m, j + (i * NB)) = r[m];
@@ -495,7 +523,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
 
         if (precondition)
         {
-            // TODO
+            MFEM_ABORT("TODO");
         }
     } // Loop (i) over snapshots
 
