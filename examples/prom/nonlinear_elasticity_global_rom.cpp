@@ -103,6 +103,7 @@
 #include "linalg/Vector.h"
 #include "linalg/BasisGenerator.h"
 #include "linalg/BasisReader.h"
+#include "linalg/NNLS.h"
 #include "hyperreduction/Hyperreduction.h"
 #include "mfem/SampleMesh.hpp"
 #include "mfem/Utilities.hpp"
@@ -912,12 +913,12 @@ int main(int argc, char *argv[])
 
         if (use_eqp)
         {
-            NeoHookeanmodel = new NeoHookeanModel(mu, K);
+            NeoHookeanModel* neo_model = new NeoHookeanModel(mu, K);
             // EQP setup
             eqpSol = new CAROM::Vector(ir0->GetNPoints() * fespace.GetNE(), true);
             SetupEQP_snapshots(ir0, myid, &fespace, nsets, H_librom,
                                GetSnapshotMatrix(fespace.GetTrueVSize(), nsets, max_num_snapshots, "H"),
-                               preconditionNNLS, tolNNLS, maxNNLSnnz, model, *eqpSol);
+                               preconditionNNLS, tolNNLS, maxNNLSnnz, neo_model, *eqpSol);
 
             if (writeSampleMesh)
                 WriteMeshEQP(pmesh, myid, ir0->GetNPoints(), *eqpSol);
@@ -984,6 +985,7 @@ int main(int argc, char *argv[])
         Vector *w_x0 = 0;
 
         int sp_size = 0;
+        Array<int> ess_tdof_list_sp; // Initialize sample essential boundary conditions
 
         if (myid == 0 && !use_eqp)
         {
@@ -1072,8 +1074,8 @@ int main(int argc, char *argv[])
                 }
             }
 
-            // Initialize essential dof list in sampling space
-            Array<int> ess_tdof_list_sp(num_ess_sp);
+            // Set essential dof list in sampling space size
+            ess_tdof_list_sp.SetSize(num_ess_sp);
 
             // Add indices to list
             int ctr = 0;
@@ -1096,7 +1098,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-                soper = new HyperelasticOperator(*fespace, ess_tdof_list, visc, mu, K);
+                soper = new HyperelasticOperator(fespace, ess_tdof_list, visc, mu, K);
             }
         }
 
@@ -1143,6 +1145,7 @@ int main(int argc, char *argv[])
         }
 
         ode_solver->Init(*romop);
+
     }
     else
     {
@@ -1705,7 +1708,7 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
              << fom->fespace.GetNE() << endl;
 
         // TODO: implement the one below
-        GetEQPCoefficients_HyperelasticNLFIntegrator();
+        GetEQPCoefficients_HyperelasticNLFIntegrator(&(fom->fespace), eqp_rw, eqp_qp, ir_eqp, *U_H, eqp_coef);
     }
 }
 
@@ -1743,7 +1746,7 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
 
         else
             HyperelasticNLFIntegrator_ComputeReducedEQP(&(fom->fespace), eqp_rw,
-                                                        eqp_qp, ir_eqp, &a_coeff,
+                                                        eqp_qp, ir_eqp,
                                                         V_x, x_librom, rank, resEQP);
 
         Vector recv(resEQP);
@@ -1760,7 +1763,7 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
 
         MFEM_VERIFY(resEQP.Size() == rxdim, "");
         for (int i = 0; i < rxdim; ++i)
-            z_librom[i] += resEQP[i];
+            z[i] += resEQP[i];
     }
     else
     { // Lift x- and v-vector

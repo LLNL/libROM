@@ -9,8 +9,8 @@
  *****************************************************************************/
 
 // Functions used by mixed_nonlinear_diffusion.cpp with EQP.
-
 #include "mfem/Utilities.hpp"
+//#include "fem/nonlininteg.hpp"
 
 using namespace mfem;
 using namespace std;
@@ -25,10 +25,13 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
     MFEM_ABORT("TODO")
 }
 
+ 
 void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
                                                  std::vector<double> const &rw, std::vector<int> const &qp,
-                                                 const IntegrationRule *ir, Coefficient *Q,
+                                                 const IntegrationRule *ir,
                                                  CAROM::Matrix const &V, CAROM::Vector const &x, const int rank, Vector &res)
+{MFEM_ABORT("TODO");}
+/*
 {
     const int rdim = V.numColumns();
     MFEM_VERIFY(rw.size() == qp.size(), "");
@@ -84,7 +87,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
             Vj.SetSize(spaceDim);
 
             // Initialize nonlinear operator matrices (there is probably a better way)
-            int dim = fe.GetDim();
+            int dim = fe->GetDim();
             DenseMatrix DSh(dof, dim);
             DenseMatrix DS(dof, dim);
             DenseMatrix Jrt(dim);
@@ -104,7 +107,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
         double w = eltrans->Weight() * rw[i]; // using rw[i] instead of ip.weight
 
         // Compute action of nonlinear operator
-        CalcInverse(eltrans.Jacobian(), Jrt);
+        CalcInverse(eltrans->Jacobian(), Jrt);
         fe.CalcDShape(ip, DSh);
         Mult(DSh, Jrt, DS);
         MultAtB(PMatI, DS, Jpt);
@@ -158,7 +161,8 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
         }
     }
 }
-
+*/
+/* 
 void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
                                                  std::vector<double> const &rw, std::vector<int> const &qp,
                                                  const IntegrationRule *ir, Coefficient *Q,
@@ -337,6 +341,8 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
     }
 }
 
+*/
+
 /* TODO if time...
 void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fesR,
         std::vector<int> const& qp, const IntegrationRule *ir,
@@ -348,29 +354,29 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes
 */
 
 void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
-                          Vector const &h, Vector const &v, const Vector &elfun, // Q is elfun == h? or elfun == u?
-                          NeoHookeanmodel model,
+                          Vector const &h, Vector const &v,
+                          NeoHookeanModel *model,
                           FiniteElement const &fe, ElementTransformation &Trans, Vector &r)
 {
     MFEM_VERIFY(r.Size() == ir->GetNPoints(), "");
     int dof = fe.GetDof(); // Get number of dofs in element
     int spaceDim = Trans.GetSpaceDim();
 
-    Vector u_i(spaceDim);
+    Vector h_i(spaceDim);
     Vector v_i(spaceDim);
 
     DenseMatrix trial_vshape(dof, spaceDim);
 
     // Initialize nonlinear operator matrices (there is probably a better way)
-    int dim = el.GetDim();
+    int dim = fe.GetDim();
     DenseMatrix DSh(dof, dim);
     DenseMatrix DS(dof, dim);
     DenseMatrix Jrt(dim);
     DenseMatrix Jpt(dim);
     DenseMatrix P(dim);
-    DenseMatrix PMatI;
-    PMatI.UseExternalData(elfun.GetData(), dof, dim);
-    // PMatO.SetSize(dof, dim); // Q: should this be here?
+    DenseMatrix PMatI(dof, dim); // Extract element dofs
+    DenseMatrix PMatO(dof, dim);
+    Vector el_vect(dof * dim);
 
     // For each integration point
     for (int i = 0; i < ir->GetNPoints(); i++)
@@ -382,7 +388,7 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
         Trans.SetIntPoint(&ip);
 
         // Evaluate the element shape functions at the integration point
-        fe.CalcVShape(Trans, trial_vshape); // Q: Should this actually be CalcDShape?
+        fe.CalcVShape(Trans, trial_vshape); 
 
         // Get the transformation weight
         double t = Trans.Weight();
@@ -403,10 +409,11 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
             // Also calculate v_i = B_e * v_e
             for (int k = 0; k < spaceDim; ++k)
             {
-                h_i[k] += s * h[dofj] * trial_vshape(j, k);
+                //h_i[k] += s * h[dofj] * trial_vshape(j, k);
                 v_i[k] += s * v[dofj] * trial_vshape(j, k);
+                // PMatI[j, k] = s * h[dofj];
             }
-        }
+        } 
 
         // Compute action of nonlinear operator
         CalcInverse(Trans.Jacobian(), Jrt);
@@ -414,16 +421,13 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
         Mult(DSh, Jrt, DS);
         MultAtB(PMatI, DS, Jpt);
         model->EvalP(Jpt, P);
-
-        // AddMultABt(DS, P, PMatO); //Q: Should this be here?
+        AddMultABt(DS, P, PMatO);
 
         r[i] = 0.0;
 
-        // Calculate r[i] = v_i^T * P * h_i
+        // Calculate r[i] = v_i^T * el_vect 
         // Perform the vector-matrix-vector multiplication: a^T * B * c
-        Vector temp(dim);
-        P.Mult(h_i, temp);
-        r[i] += v_i * temp;
+        r[i] += v_i * el_vect;
         // Scale by element transformation
         r[i] *= t;
     }
@@ -488,7 +492,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                         const int nsets, const CAROM::Matrix *BH,
                         const CAROM::Matrix *BH_snapshots,
                         const bool precondition, const double nnls_tol,
-                        const int maxNNLSnnz, NeoHookeanmodel model,
+                        const int maxNNLSnnz, NeoHookeanModel *model,
                         CAROM::Vector &sol)
 {
     const int nqe = ir0->GetNPoints();
@@ -564,7 +568,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                 ElementTransformation *eltrans = fespace_H->GetElementTransformation(e);
 
                 // Compute the row of G corresponding to element e, store in r
-                ComputeElementRowOfG(ir0, vdofs, &a_coeff, hi_gf, vj_gf, model, fe, *eltrans, r);
+                ComputeElementRowOfG(ir0, vdofs, hi_gf, vj_gf, model, fe, *eltrans, r);
 
                 for (int m = 0; m < nqe; ++m)
                     Gt((e * nqe) + m, j + (i * NB)) = r[m];
