@@ -52,7 +52,7 @@ jobs:
         run: |
           echo "#!/bin/bash" > ${{env.DOCKERPATH}}/motd.sh
           echo "echo --------------------------" >> ${{env.DOCKERPATH}}/motd.sh
-          echo "echo TPS/CI Development Container"  >> ${{env.DOCKERPATH}}/motd.sh
+          echo "echo librom_env/CI Development Container"  >> ${{env.DOCKERPATH}}/motd.sh
           echo "echo \"Revision: `echo ${GITHUB_SHA} | cut -c1-8`\"" >> ${{env.DOCKERPATH}}/motd.sh
           echo "echo --------------------------" >> ${{env.DOCKERPATH}}/motd.sh
           chmod 755 ${{env.DOCKERPATH}}/motd.sh
