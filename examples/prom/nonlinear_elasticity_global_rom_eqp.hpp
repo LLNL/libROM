@@ -10,7 +10,7 @@
 
 // Functions used by mixed_nonlinear_diffusion.cpp with EQP.
 #include "mfem/Utilities.hpp"
-//#include "fem/nonlininteg.hpp"
+// #include "fem/nonlininteg.hpp"
 
 using namespace mfem;
 using namespace std;
@@ -25,12 +25,13 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
     MFEM_ABORT("TODO")
 }
 
- 
 void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
                                                  std::vector<double> const &rw, std::vector<int> const &qp,
                                                  const IntegrationRule *ir,
                                                  CAROM::Matrix const &V, CAROM::Vector const &x, const int rank, Vector &res)
-{MFEM_ABORT("TODO");}
+{
+    MFEM_ABORT("TODO");
+}
 /*
 {
     const int rdim = V.numColumns();
@@ -138,7 +139,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
         {
             double Vjk = 0.0;
             for (int l = 0; l < dof; ++l)
-            {   
+            {
                 // Q: Should these ones be the same?
                 const int dofl = (vdofs[l] >= 0) ? vdofs[l] : -1 - vdofs[l];
                 const double s = (vdofs[l] >= 0) ? 1.0 : -1.0;
@@ -162,7 +163,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
     }
 }
 */
-/* 
+/*
 void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
                                                  std::vector<double> const &rw, std::vector<int> const &qp,
                                                  const IntegrationRule *ir, Coefficient *Q,
@@ -355,7 +356,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes
 
 void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
                           Vector const &h, Vector const &v,
-                          NeoHookeanModel *model,
+                          NeoHookeanModel *model, Vector elfun,
                           FiniteElement const &fe, ElementTransformation &Trans, Vector &r)
 {
     MFEM_VERIFY(r.Size() == ir->GetNPoints(), "");
@@ -374,7 +375,8 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
     DenseMatrix Jrt(dim);
     DenseMatrix Jpt(dim);
     DenseMatrix P(dim);
-    DenseMatrix PMatI(dof, dim); // Extract element dofs
+    DenseMatrix PMatI; // Extract element dofs
+    PMatI.UseExternalData(elfun.GetData(), dof, dim);
     DenseMatrix PMatO(dof, dim);
     Vector el_vect(dof * dim);
 
@@ -388,7 +390,7 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
         Trans.SetIntPoint(&ip);
 
         // Evaluate the element shape functions at the integration point
-        fe.CalcVShape(Trans, trial_vshape); 
+        fe.CalcVShape(Trans, trial_vshape);
 
         // Get the transformation weight
         double t = Trans.Weight();
@@ -409,11 +411,11 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
             // Also calculate v_i = B_e * v_e
             for (int k = 0; k < spaceDim; ++k)
             {
-                //h_i[k] += s * h[dofj] * trial_vshape(j, k);
+                // h_i[k] += s * h[dofj] * trial_vshape(j, k);
                 v_i[k] += s * v[dofj] * trial_vshape(j, k);
                 // PMatI[j, k] = s * h[dofj];
             }
-        } 
+        }
 
         // Compute action of nonlinear operator
         CalcInverse(Trans.Jacobian(), Jrt);
@@ -425,7 +427,7 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
 
         r[i] = 0.0;
 
-        // Calculate r[i] = v_i^T * el_vect 
+        // Calculate r[i] = v_i^T * el_vect
         // Perform the vector-matrix-vector multiplication: a^T * B * c
         r[i] += v_i * el_vect;
         // Scale by element transformation
@@ -531,12 +533,31 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
         skip = 1;
     }
 
+    // Get prolongation matrix
+    const Operator* P = fespace_H->GetProlongationMatrix();
+
     // For every snapshot
     for (int i = 0; i < nsnap; ++i)
     {
         // Set the sampled dofs from the snapshot matrix
         for (int j = 0; j < BH_snapshots->numRows(); ++j)
             h_i[j] = (*BH_snapshots)(j, i);
+
+        // Get prolongated dofs
+        // See: https://docs.mfem.org/html/nonlinearform_8cpp_source.html#l00131
+        Vector ph_i;
+        Vector elfun;
+        if (P)
+        {
+            ph_i.SetSize(P->Height());
+            P->Mult(h_i, ph_i);
+        }
+        else
+        {
+            ph_i.SetSize(h_i.Size());
+            for (int j = 0; j < h_i.Size(); ++j)
+                ph_i[j] = h_i[j];
+        }
 
         // Q: Not sure what this does
         if (skipFirstW && i > 0 && i % nsnapPerSet == 0)
@@ -566,9 +587,10 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                 DofTransformation *doftrans = fespace_H->GetElementVDofs(e, vdofs);
                 const FiniteElement &fe = *fespace_H->GetFE(e);
                 ElementTransformation *eltrans = fespace_H->GetElementTransformation(e);
+                ph_i.GetSubVector(vdofs, elfun);
 
                 // Compute the row of G corresponding to element e, store in r
-                ComputeElementRowOfG(ir0, vdofs, hi_gf, vj_gf, model, fe, *eltrans, r);
+                ComputeElementRowOfG(ir0, vdofs, hi_gf, vj_gf, model, elfun, fe, *eltrans, r);
 
                 for (int m = 0; m < nqe; ++m)
                     Gt((e * nqe) + m, j + (i * NB)) = r[m];
