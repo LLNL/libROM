@@ -435,7 +435,7 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
         Trans.SetIntPoint(&ip);
 
         // Evaluate the element shape functions at the integration point
-        fe.CalcVShape(Trans, trial_vshape);
+        //fe.CalcVShape(Trans, trial_vshape);
 
         // Get the transformation weight
         double t = Trans.Weight();
@@ -457,7 +457,7 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
             for (int k = 0; k < spaceDim; ++k)
             {
                 // h_i[k] += s * h[dofj] * trial_vshape(j, k);
-                v_i[k] += s * v[dofj] * trial_vshape(j, k);
+                v_i[k] += s * v[dofj] // * trial_vshape(j, k);
                 // PMatI[j, k] = s * h[dofj];
             }
         }
