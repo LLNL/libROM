@@ -1,11 +1,18 @@
 name: docker-image
 on:
   workflow_call:
-    secrets:
-      DOCKERHUB_USERNAME:
-        required: true
-      DOCKERHUB_TOKEN:
-        required: true
+    # secrets:
+    #   DOCKERHUB_USERNAME:
+    #     required: true
+    #   DOCKERHUB_TOKEN:
+    #     required: true
+
+env:
+  REGISTRY: ghcr.io
+  # github.repository as <account>/<repo>
+  IMAGE_NAME: libROM/librom_env
+  DOCKERPATH: docker
+
 jobs:
   docker-ci:
     runs-on: ubuntu-latest
@@ -27,24 +34,31 @@ jobs:
         run: |
           echo "CI container needs rebuilding..."
           echo "CI_NEEDS_REBUILD=true" >> $GITHUB_ENV
-      - name: Docker Image - Set up QEMU
-        if: env.CI_NEEDS_REBUILD
-        uses: docker/setup-qemu-action@v2
-      - name: Docker Image - Setup Buildx
-        if: env.CI_NEEDS_REBUILD
-        uses: docker/setup-buildx-action@v2
-      - name: Docker Image - Dockerhub login
+      # - name: Docker Image - Set up QEMU
+      #   if: env.CI_NEEDS_REBUILD
+      #   uses: docker/setup-qemu-action@v2
+      # - name: Docker Image - Setup Buildx
+      #   if: env.CI_NEEDS_REBUILD
+      #   uses: docker/setup-buildx-action@v2
+      - name: Log into registry ${{ env.REGISTRY }}
         if: env.CI_NEEDS_REBUILD
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Docker Image - Dockerhub login
+      #   if: env.CI_NEEDS_REBUILD
+      #   uses: docker/login-action@v2
+      #   with:
+      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         if: env.CI_NEEDS_REBUILD
         uses: docker/metadata-action@v4
         with:
-          images: dreamer2368/librom_env
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: type=sha
           flavor: latest=true
       - name: Build Container motd
