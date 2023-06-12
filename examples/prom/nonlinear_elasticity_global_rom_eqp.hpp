@@ -419,10 +419,10 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
     Vector el_vect(dof * dim);
 
     // Get nonlinear operator model
-    //NonlinearForm *nl_H = oper.H;
+    NonlinearForm *nl_H = oper.H;
     //DomainNonlinearForm *dnf = nl_H->GetDNF();
     //NonlinearFormIntegrator* dnf = (*(nl_H->GetDNFI()))[0];
-    NonlinearFormIntegrator* dnf = (*oper.H->GetDNFI())[0];
+    NonlinearFormIntegrator* dnf = (*(nl_H->GetDNFI()))[0];
 
     // For each integration point
     for (int i = 0; i < ir->GetNPoints(); i++)
