@@ -52,7 +52,6 @@ public:
     virtual ~HyperelasticOperator();
 };
 
-
 // Compute coefficients of the reduced integrator with respect to inputs Q and x
 // in HyperelasticNLFIntegrator_ComputeReducedEQP.
 void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
@@ -419,11 +418,12 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
     Vector el_vect(dof * dim);
 
     // Get nonlinear operator model
-    NonlinearForm nl_H = *oper.H;
-    //DomainNonlinearForm *dnf = nl_H->GetDNF();
-    //NonlinearFormIntegrator* dnf = (*(nl_H->GetDNFI()))[0];
-    Array<NonlinearFormIntegrator*>* dnfis = nl_H.GetDNFI();
-    NonlinearFormIntegrator* dnf = (*(dnfis))[0];
+    NonlinearForm nl_H;
+    nl_H = *oper.H;
+    // DomainNonlinearForm *dnf = nl_H->GetDNF();
+    // NonlinearFormIntegrator* dnf = (*(nl_H->GetDNFI()))[0];
+    Array<NonlinearFormIntegrator *> *dnfis = nl_H.GetDNFI();
+    NonlinearFormIntegrator *dnf = (*(dnfis))[0];
 
     // For each integration point
     for (int i = 0; i < ir->GetNPoints(); i++)
@@ -435,7 +435,7 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
         Trans.SetIntPoint(&ip);
 
         // Evaluate the element shape functions at the integration point
-        //fe.CalcVShape(Trans, trial_vshape);
+        // fe.CalcVShape(Trans, trial_vshape);
 
         // Get the transformation weight
         double t = Trans.Weight();
@@ -462,14 +462,12 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
             }
         }
 
-        
-
         // Compute action of nonlinear operator
         CalcInverse(Trans.Jacobian(), Jrt);
         fe.CalcDShape(ip, DSh);
         Mult(DSh, Jrt, DS);
         MultAtB(PMatI, DS, Jpt);
-        model->EvalP(Jpt, P); 
+        model->EvalP(Jpt, P);
         AddMultABt(DS, P, PMatO);
 
         r[i] = 0.0;
@@ -493,10 +491,7 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
         error += el_vect[i] * ip.weight - el_vect_test[i];
     }
 
-
-            cout << "Element vector error = " << error << endl;
-
-
+    cout << "Element vector error = " << error << endl;
 }
 
 void SolveNNLS(const int rank, const double nnls_tol, const int maxNNLSnnz,
@@ -598,7 +593,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
     }
 
     // Get prolongation matrix
-    const Operator* P = fespace_H->GetProlongationMatrix();
+    const Operator *P = fespace_H->GetProlongationMatrix();
 
     // For every snapshot
     for (int i = 0; i < nsnap; ++i)
@@ -655,14 +650,12 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
 
                 // Compute the row of G corresponding to element e, store in r
                 // Create vector r_test which will be compared to the nonlinear hyperelastic operator
-                
+
                 ComputeElementRowOfG(ir0, vdofs, hi_gf, vj_gf, oper, model, elfun, fe, *eltrans, r);
 
                 for (int m = 0; m < nqe; ++m)
                     Gt((e * nqe) + m, j + (i * NB)) = r[m];
             }
-
-
         }
 
         if (precondition)
