@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [docker-image]
     container:
-      image: ghcr.io/llnl/libROM/librom_env:latest
+      image: ghcr.io/llnl/librom/librom_env:latest
       options: --user 1001 --privileged
       volumes:
         - /mnt:/mnt
