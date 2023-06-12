@@ -419,9 +419,10 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
     Vector el_vect(dof * dim);
 
     // Get nonlinear operator model
-    NonlinearForm *nl_H = oper.H;
+    //NonlinearForm *nl_H = oper.H;
     //DomainNonlinearForm *dnf = nl_H->GetDNF();
-    NonlinearFormIntegrator* dnf = (*(nl_H->GetDNFI()))[0];
+    //NonlinearFormIntegrator* dnf = (*(nl_H->GetDNFI()))[0];
+    NonlinearFormIntegrator* dnf = (*oper.H->GetDNFI())[0];
 
     // For each integration point
     for (int i = 0; i < ir->GetNPoints(); i++)
@@ -467,7 +468,7 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
         fe.CalcDShape(ip, DSh);
         Mult(DSh, Jrt, DS);
         MultAtB(PMatI, DS, Jpt);
-        model->EvalP(Jpt, P); //Problem with dynamic casting...
+        model->EvalP(Jpt, P); 
         AddMultABt(DS, P, PMatO);
 
         r[i] = 0.0;
