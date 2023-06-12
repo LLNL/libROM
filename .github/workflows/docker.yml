@@ -10,7 +10,7 @@ on:
 env:
   REGISTRY: ghcr.io
   # github.repository as <account>/<repo>
-  IMAGE_NAME: libROM/librom_env
+  IMAGE_NAME: LLNL/libROM/librom_env
   DOCKERPATH: docker
 
 jobs:
