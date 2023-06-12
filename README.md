@@ -107,8 +107,26 @@ make -j 4
 Some notes about using the Docker container:
 - Any change within the container will not be saved, except those happening in the mounted directory `./libROM`.
 - Any change in `/home/test/libROM` in the container is instantaneously reflected into the actual directory `./libROM`, and vice versa.
-- For the details about the preset environment variables, see the previous Dockerhub repository [`librom_env`](https://hub.docker.com/repository/docker/dreamer2368/librom_env/general). (Will be added to README in future)
 
+## Some details
+
+- Machine architecture: `Linux-x86_64`
+- From: ubuntu:22.04
+- Dependencies:
+  - `cmake-3.22.1`
+  - `hypre-2.20.0`
+  - `parmetis-4.0.3`
+  - `gslib-1.0.7`
+  - `mfem`: latest verified [commit](https://github.com/mfem/mfem/commit/64e61fdc3e58338f2235e36fc9ad0c3770ffa299) on Feb 01, 2023
+  - `googletest-v1.12.1`: the last release that supports c++11
+- Environmental variables preset for libROM cmake:
+  - `TOOLCHAIN_FILE=/env/dependencies/librom_env.cmake`
+  - `BUILD_TYPE=Optimized`
+  - `USE_MFEM=On`
+  - `MFEM_USE_GSLIB=On`
+- Miscellaneous packages
+  - Debugging tools: `valgrind`, `lldb`, `gdb`
+  - Python packages: `numpy`, `scipy`, `argparse`, `tables`, `PyYAML`, `h5py`, `pybind11`, `pytest`, `mpi4py` 
 
 # libROM CI
 
