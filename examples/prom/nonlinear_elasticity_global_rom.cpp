@@ -119,7 +119,7 @@ using namespace mfem;
 
 class ReducedSystemOperator;
 
-class HyperelasticOperator : public TimeDependentOperator
+/* class HyperelasticOperator : public TimeDependentOperator
 {
 
 protected:
@@ -154,7 +154,7 @@ public:
     HypreParMatrix Smat;
 
     virtual ~HyperelasticOperator();
-};
+}; */
 
 class RomOperator : public TimeDependentOperator
 {
@@ -913,12 +913,11 @@ int main(int argc, char *argv[])
 
         if (use_eqp)
         {
-            NeoHookeanModel* neo_model = new NeoHookeanModel(mu, K);
             // EQP setup
             eqpSol = new CAROM::Vector(ir0->GetNPoints() * fespace.GetNE(), true);
             SetupEQP_snapshots(ir0, myid, &fespace, nsets, H_librom,
                                GetSnapshotMatrix(fespace.GetTrueVSize(), nsets, max_num_snapshots, "H"),
-                               preconditionNNLS, tolNNLS, maxNNLSnnz, neo_model, *eqpSol);
+                               preconditionNNLS, tolNNLS, maxNNLSnnz, oper, *eqpSol);
 
             if (writeSampleMesh)
                 WriteMeshEQP(pmesh, myid, ir0->GetNPoints(), *eqpSol);

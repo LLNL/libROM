@@ -15,6 +15,44 @@
 using namespace mfem;
 using namespace std;
 
+class HyperelasticOperator : public TimeDependentOperator
+{
+
+protected:
+    ParBilinearForm *M, *S;
+
+    CGSolver M_solver;    // Krylov solver for inverting the mass matrix M
+    HypreSmoother M_prec; // Preconditioner for the mass matrix M
+
+public:
+    HyperelasticOperator(ParFiniteElementSpace &f, Array<int> &ess_tdof_list_,
+                         double visc, double mu, double K);
+
+    /// Compute the right-hand side of the ODE system.
+    virtual void Mult(const Vector &vx, Vector &dvx_dt) const;
+
+    double ElasticEnergy(const ParGridFunction &x) const;
+    double KineticEnergy(const ParGridFunction &v) const;
+    void GetElasticEnergyDensity(const ParGridFunction &x,
+                                 ParGridFunction &w) const;
+
+    mutable Vector H_sp;
+    mutable Vector dvxdt_sp;
+
+    ParFiniteElementSpace &fespace;
+    double viscosity;
+    Array<int> ess_tdof_list;
+    ParNonlinearForm *H;
+    HyperelasticModel *model;
+    mutable Vector z;     // auxiliary vector
+    mutable Vector z2;    // auxiliary vector
+    HypreParMatrix *Mmat; // Mass matrix from ParallelAssemble()
+    HypreParMatrix Smat;
+
+    virtual ~HyperelasticOperator();
+};
+
+
 // Compute coefficients of the reduced integrator with respect to inputs Q and x
 // in HyperelasticNLFIntegrator_ComputeReducedEQP.
 void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
@@ -356,7 +394,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes
 
 void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
                           Vector const &h, Vector const &v,
-                          NeoHookeanModel *model, Vector elfun,
+                          HyperelasticOperator oper, Vector elfun,
                           FiniteElement const &fe, ElementTransformation &Trans, Vector &r)
 {
     MFEM_VERIFY(r.Size() == ir->GetNPoints(), "");
@@ -379,6 +417,13 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
     PMatI.UseExternalData(elfun.GetData(), dof, dim);
     DenseMatrix PMatO(dof, dim);
     Vector el_vect(dof * dim);
+
+    // Get nonlinear operator model
+    NonlinearForm *nl_H = oper.H;
+    //DomainNonlinearForm *dnf = nl_H->GetDNF();
+    NonlinearFormIntegrator* dnf = (*(nl_H->GetDNFI()))[0];
+    NeoHookeanModel *model = dynamic_cast<NeoHookeanModel*>(dnf);
+
 
     // For each integration point
     for (int i = 0; i < ir->GetNPoints(); i++)
@@ -417,6 +462,8 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
             }
         }
 
+        
+
         // Compute action of nonlinear operator
         CalcInverse(Trans.Jacobian(), Jrt);
         fe.CalcDShape(ip, DSh);
@@ -429,10 +476,27 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
 
         // Calculate r[i] = v_i^T * el_vect
         // Perform the vector-matrix-vector multiplication: a^T * B * c
-        r[i] += v_i * el_vect;
+        r[i] += v_i * el_vect; // Elvect is added to in every iteration...
         // Scale by element transformation
         r[i] *= t;
     }
+
+    // Error compared to FOM operator
+    Vector el_vect_test(dof * dim);
+    double error = 0.0;
+    dnf->AssembleElementVector(fe, Trans, elfun, el_vect_test);
+    // For each integration point
+    for (int i = 0; i < ir->GetNPoints(); i++)
+    {
+        // Get integration point
+        const IntegrationPoint &ip = ir->IntPoint(i);
+        error += el_vect[i] * ip.weight - el_vect_test[i];
+    }
+
+
+            cout << "Element vector error = " << error << endl;
+
+
 }
 
 void SolveNNLS(const int rank, const double nnls_tol, const int maxNNLSnnz,
@@ -494,7 +558,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                         const int nsets, const CAROM::Matrix *BH,
                         const CAROM::Matrix *BH_snapshots,
                         const bool precondition, const double nnls_tol,
-                        const int maxNNLSnnz, NeoHookeanModel *model,
+                        const int maxNNLSnnz, HyperelasticOperator oper,
                         CAROM::Vector &sol)
 {
     const int nqe = ir0->GetNPoints();
@@ -590,7 +654,9 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                 ph_i.GetSubVector(vdofs, elfun);
 
                 // Compute the row of G corresponding to element e, store in r
-                ComputeElementRowOfG(ir0, vdofs, hi_gf, vj_gf, model, elfun, fe, *eltrans, r);
+                // Create vector r_test which will be compared to the nonlinear hyperelastic operator
+                
+                ComputeElementRowOfG(ir0, vdofs, hi_gf, vj_gf, oper, elfun, fe, *eltrans, r);
 
                 for (int m = 0; m < nqe; ++m)
                     Gt((e * nqe) + m, j + (i * NB)) = r[m];
