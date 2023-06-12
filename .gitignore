@@ -28,3 +28,8 @@ docs/html
 
 # Do not track results
 regression_tests/results
+init_bash.sh
+.gitignore
+.vscode/settings.json
+.vscode/libROM.code-workspace
+init_bash_debug_arm.sh
