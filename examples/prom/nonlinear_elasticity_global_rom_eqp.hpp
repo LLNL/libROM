@@ -422,7 +422,7 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
     NonlinearForm nl_H = *oper.H;
     //DomainNonlinearForm *dnf = nl_H->GetDNF();
     //NonlinearFormIntegrator* dnf = (*(nl_H->GetDNFI()))[0];
-    Array<NonlinearFormIntegrator*>* dnfis = nl_H->GetDNFI();
+    Array<NonlinearFormIntegrator*>* dnfis = nl_H.GetDNFI();
     NonlinearFormIntegrator* dnf = (*(dnfis))[0];
 
     // For each integration point
@@ -656,7 +656,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                 // Compute the row of G corresponding to element e, store in r
                 // Create vector r_test which will be compared to the nonlinear hyperelastic operator
                 
-                ComputeElementRowOfG(ir0, vdofs, hi_gf, vj_gf, oper, model, elfun, fe, *eltrans, r, el_vect);
+                ComputeElementRowOfG(ir0, vdofs, hi_gf, vj_gf, oper, model, elfun, fe, *eltrans, r);
 
                 for (int m = 0; m < nqe; ++m)
                     Gt((e * nqe) + m, j + (i * NB)) = r[m];
