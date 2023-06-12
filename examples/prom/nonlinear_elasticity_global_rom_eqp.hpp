@@ -52,7 +52,6 @@ public:
     virtual ~HyperelasticOperator();
 };
 
-
 // Compute coefficients of the reduced integrator with respect to inputs Q and x
 // in HyperelasticNLFIntegrator_ComputeReducedEQP.
 void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
@@ -394,7 +393,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes
 
 void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
                           Vector const &h, Vector const &v,
-                          HyperelasticOperator oper, NeoHookeanModel *model, Vector elfun,
+                          HyperelasticOperator oper, NeoHookeanModel *model, Vector elfun, Vector elvect,
                           FiniteElement const &fe, ElementTransformation &Trans, Vector &r)
 {
     MFEM_VERIFY(r.Size() == ir->GetNPoints(), "");
@@ -415,15 +414,16 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
     DenseMatrix P(dim);
     DenseMatrix PMatI; // Extract element dofs
     PMatI.UseExternalData(elfun.GetData(), dof, dim);
-    DenseMatrix PMatO(dof, dim);
-    Vector el_vect(dof * dim);
+    DenseMatrix PMatO;
+    elvect.SetSize(dof * dim);
+    PMatO.UseExternalData(elvect.GetData(), dof, dim);
 
     // Get nonlinear operator model
-    ParNonlinearForm *nl_H = oper.H;
-    //DomainNonlinearForm *dnf = nl_H->GetDNF();
-    //NonlinearFormIntegrator* dnf = (*(nl_H->GetDNFI()))[0];
-    Array<NonlinearFormIntegrator*>* dnfis = nl_H->GetDNFI();
-    NonlinearFormIntegrator* dnf = (*(dnfis))[0];
+    // ParNonlinearForm *nl_H = oper.H;
+    // DomainNonlinearForm *dnf = nl_H->GetDNF();
+    // NonlinearFormIntegrator* dnf = (*(nl_H->GetDNFI()))[0];
+    // Array<NonlinearFormIntegrator*>* dnfis = nl_H->GetDNFI();
+    // NonlinearFormIntegrator* dnf = (*(dnfis))[0];
 
     // For each integration point
     for (int i = 0; i < ir->GetNPoints(); i++)
@@ -435,7 +435,7 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
         Trans.SetIntPoint(&ip);
 
         // Evaluate the element shape functions at the integration point
-        //fe.CalcVShape(Trans, trial_vshape);
+        // fe.CalcVShape(Trans, trial_vshape);
 
         // Get the transformation weight
         double t = Trans.Weight();
@@ -457,46 +457,40 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
             for (int k = 0; k < spaceDim; ++k)
             {
                 // h_i[k] += s * h[dofj] * trial_vshape(j, k);
-                v_i[k] += s * v[dofj]; // * trial_vshape(j, k);
+                v_i[k] += s * v[dofj]; // * trial_vshape(j, k); // TODO why no v_shape?
                 // PMatI[j, k] = s * h[dofj];
             }
         }
-
-        
 
         // Compute action of nonlinear operator
         CalcInverse(Trans.Jacobian(), Jrt);
         fe.CalcDShape(ip, DSh);
         Mult(DSh, Jrt, DS);
         MultAtB(PMatI, DS, Jpt);
-        model->EvalP(Jpt, P); 
+        model->EvalP(Jpt, P);
+        P *= ip.weight * t; // TEST Scale by integration point weight
         AddMultABt(DS, P, PMatO);
 
         r[i] = 0.0;
 
-        // Calculate r[i] = v_i^T * el_vect
+        // Calculate r[i] = v_i^T * elvect
         // Perform the vector-matrix-vector multiplication: a^T * B * c
-        r[i] += v_i * el_vect; // Elvect is added to in every iteration...
-        // Scale by element transformation
-        r[i] *= t;
+        r[i] += v_i * elvect; // Elvect is added to in every iteration...
     }
 
     // Error compared to FOM operator
-    Vector el_vect_test(dof * dim);
-    double error = 0.0;
-    dnf->AssembleElementVector(fe, Trans, elfun, el_vect_test);
+    // Vector el_vect_test(dof * dim);
+    // double error = 0.0;
+    // dnf->AssembleElementVector(fe, Trans, elfun, el_vect_test);
     // For each integration point
-    for (int i = 0; i < ir->GetNPoints(); i++)
-    {
-        // Get integration point
-        const IntegrationPoint &ip = ir->IntPoint(i);
-        error += el_vect[i] * ip.weight - el_vect_test[i];
-    }
+    /*  for (int i = 0; i < ir->GetNPoints(); i++)
+     {
+         // Get integration point
+         const IntegrationPoint &ip = ir->IntPoint(i);
+         error += elvect[i] * ip.weight - el_vect_test[i];
+     } */
 
-
-            cout << "Element vector error = " << error << endl;
-
-
+    // cout << "Element vector error = " << error << endl;
 }
 
 void SolveNNLS(const int rank, const double nnls_tol, const int maxNNLSnnz,
@@ -598,7 +592,12 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
     }
 
     // Get prolongation matrix
-    const Operator* P = fespace_H->GetProlongationMatrix();
+    Vector aux1, aux2;
+    const Operator *P = fespace_H->GetProlongationMatrix();
+    if (P)
+    {
+        aux2.SetSize(P->Height());
+    }
 
     // For every snapshot
     for (int i = 0; i < nsnap; ++i)
@@ -606,6 +605,15 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
         // Set the sampled dofs from the snapshot matrix
         for (int j = 0; j < BH_snapshots->numRows(); ++j)
             h_i[j] = (*BH_snapshots)(j, i);
+
+        // TEST initialize y and py
+        Vector y(h_i);
+        Vector y_true(h_i);
+        Vector &py = P ? aux2 : y;
+        py = 0.0;
+
+        // TEST initialize element vector
+        Vector elvect;
 
         // Get prolongated dofs
         // See: https://docs.mfem.org/html/nonlinearform_8cpp_source.html#l00131
@@ -652,15 +660,58 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                 const FiniteElement &fe = *fespace_H->GetFE(e);
                 ElementTransformation *eltrans = fespace_H->GetElementTransformation(e);
                 ph_i.GetSubVector(vdofs, elfun);
-
+                if (doftrans)
+                {
+                    doftrans->InvTransformPrimal(elfun);
+                }
                 // Compute the row of G corresponding to element e, store in r
                 // Create vector r_test which will be compared to the nonlinear hyperelastic operator
-                
-                ComputeElementRowOfG(ir0, vdofs, hi_gf, vj_gf, oper, model, elfun, fe, *eltrans, r);
+
+                ComputeElementRowOfG(ir0, vdofs, hi_gf, vj_gf, oper, model, elfun, elvect, fe, *eltrans, r);
+
+                if (doftrans)
+                {
+                    doftrans->TransformDual(elvect);
+                }
+                if (e == 0)
+                {
+                    py.AddElementVector(vdofs, elvect);
+                }
 
                 for (int m = 0; m < nqe; ++m)
                     Gt((e * nqe) + m, j + (i * NB)) = r[m];
             }
+            /* if (Serial())
+            {
+                MFEM_ABORT("öh no!")
+                if (cP)
+                {
+                    cP->MultTranspose(py, y);
+                }
+
+                for (int i = 0; i < ess_tdof_list.Size(); i++)
+                {
+                    y(ess_tdof_list[i]) = 0.0;
+                }
+            // y(ess_tdof_list[i]) = x(ess_tdof_list[i]);
+        }*/
+
+            P->MultTranspose(aux2, y);
+
+            const int N = oper.ess_tdof_list.Size();
+            const auto idx = oper.ess_tdof_list.Read();
+            auto Y_RW = y.ReadWrite();
+            MFEM_FORALL(i, N, Y_RW[idx[i]] = 0.0; );
+            double error = 0.0;
+
+            oper.H->Mult(h_i, y_true);
+
+            for (int ii = 0; ii < y.Size(); ii++)
+            {
+                error += abs(y[ii] - y_true[ii]);
+            }
+
+            cout << "Element vector error = " << error << endl;
         }
 
         if (precondition)
