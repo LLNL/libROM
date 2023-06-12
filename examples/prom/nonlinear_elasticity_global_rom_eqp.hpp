@@ -419,11 +419,11 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
     Vector el_vect(dof * dim);
 
     // Get nonlinear operator model
-    NonlinearForm nl_H = *oper.H;
+    NonlinearForm *nl_H = oper.H;
     //DomainNonlinearForm *dnf = nl_H->GetDNF();
     //NonlinearFormIntegrator* dnf = (*(nl_H->GetDNFI()))[0];
-    Array<NonlinearFormIntegrator*>* dnfis = nl_H.GetDNFI();
-    NonlinearFormIntegrator* dnf = (*(dnfis))[0];
+    Array<NonlinearFormIntegrator*>* dnfis = nl_H->GetDNFI();
+    NonlinearFormIntegrator* dnf = (*(dnfis)[0];
 
     // For each integration point
     for (int i = 0; i < ir->GetNPoints(); i++)
@@ -661,8 +661,6 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                 for (int m = 0; m < nqe; ++m)
                     Gt((e * nqe) + m, j + (i * NB)) = r[m];
             }
-
-
         }
 
         if (precondition)
