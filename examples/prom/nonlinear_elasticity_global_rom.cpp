@@ -739,6 +739,7 @@ int main(int argc, char *argv[])
     // 9. Initialize the hyperelastic operator, the GLVis visualization and print
     //    the initial energies.
     HyperelasticOperator oper(fespace, ess_tdof_list, visc, mu, K);
+    NeoHookeanModel* model = new NeoHookeanModel(mu, K);
     HyperelasticOperator *soper = 0;
 
     // Fill dvdt and dxdt
@@ -917,7 +918,7 @@ int main(int argc, char *argv[])
             eqpSol = new CAROM::Vector(ir0->GetNPoints() * fespace.GetNE(), true);
             SetupEQP_snapshots(ir0, myid, &fespace, nsets, H_librom,
                                GetSnapshotMatrix(fespace.GetTrueVSize(), nsets, max_num_snapshots, "H"),
-                               preconditionNNLS, tolNNLS, maxNNLSnnz, oper, *eqpSol);
+                               preconditionNNLS, tolNNLS, maxNNLSnnz, oper, model, *eqpSol);
 
             if (writeSampleMesh)
                 WriteMeshEQP(pmesh, myid, ir0->GetNPoints(), *eqpSol);

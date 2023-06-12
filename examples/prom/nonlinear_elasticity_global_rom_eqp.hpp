@@ -394,7 +394,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes
 
 void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
                           Vector const &h, Vector const &v,
-                          HyperelasticOperator oper, Vector elfun,
+                          HyperelasticOperator oper, NeoHookeanModel *model, Vector elfun,
                           FiniteElement const &fe, ElementTransformation &Trans, Vector &r)
 {
     MFEM_VERIFY(r.Size() == ir->GetNPoints(), "");
@@ -422,8 +422,6 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
     NonlinearForm *nl_H = oper.H;
     //DomainNonlinearForm *dnf = nl_H->GetDNF();
     NonlinearFormIntegrator* dnf = (*(nl_H->GetDNFI()))[0];
-    NeoHookeanModel *model = dynamic_cast<NeoHookeanModel*>(dnf);
-
 
     // For each integration point
     for (int i = 0; i < ir->GetNPoints(); i++)
@@ -469,7 +467,7 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
         fe.CalcDShape(ip, DSh);
         Mult(DSh, Jrt, DS);
         MultAtB(PMatI, DS, Jpt);
-        model->EvalP(Jpt, P);
+        model->EvalP(Jpt, P); //Problem with dynamic casting...
         AddMultABt(DS, P, PMatO);
 
         r[i] = 0.0;
@@ -558,7 +556,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                         const int nsets, const CAROM::Matrix *BH,
                         const CAROM::Matrix *BH_snapshots,
                         const bool precondition, const double nnls_tol,
-                        const int maxNNLSnnz, HyperelasticOperator oper,
+                        const int maxNNLSnnz, HyperelasticOperator oper, NeoHookeanModel *model,
                         CAROM::Vector &sol)
 {
     const int nqe = ir0->GetNPoints();
@@ -656,7 +654,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                 // Compute the row of G corresponding to element e, store in r
                 // Create vector r_test which will be compared to the nonlinear hyperelastic operator
                 
-                ComputeElementRowOfG(ir0, vdofs, hi_gf, vj_gf, oper, elfun, fe, *eltrans, r);
+                ComputeElementRowOfG(ir0, vdofs, hi_gf, vj_gf, oper, model, elfun, fe, *eltrans, r);
 
                 for (int m = 0; m < nqe; ++m)
                     Gt((e * nqe) + m, j + (i * NB)) = r[m];
