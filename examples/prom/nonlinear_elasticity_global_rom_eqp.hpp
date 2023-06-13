@@ -415,11 +415,8 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
     DenseMatrix PMatI; // Extract element dofs
     PMatI.UseExternalData(elfun.GetData(), dof, dim);
     DenseMatrix PMatO;
-    cout << "A, elvect size = " << elvect.Size() << endl;
     elvect.SetSize(dof * dim);
     PMatO.UseExternalData(elvect.GetData(), dof, dim);
-
-    cout << "B, elvect size = " << elvect.Size() << endl;
 
     // Get nonlinear operator model
     // ParNonlinearForm *nl_H = oper.H;
@@ -481,7 +478,6 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
         r[i] += v_i * elvect; // Elvect is added to in every iteration...
     }
 
-    cout << "C, elvect size = " << elvect.Size() << endl;
     // Error compared to FOM operator
     // Vector el_vect_test(dof * dim);
     // double error = 0.0;
@@ -678,11 +674,8 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                     cout << "doftrans is true " << endl;
                     doftrans->TransformDual(elvect);
                 }
-                if (e == 0)
-                {
-                    cout << "D, elvect size = " << elvect.Size() << endl;
-                    py.AddElementVector(vdofs, elvect);
-                }
+
+                py.AddElementVector(vdofs, elvect);
 
                 for (int m = 0; m < nqe; ++m)
                     Gt((e * nqe) + m, j + (i * NB)) = r[m];
@@ -701,25 +694,27 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                 }
             // y(ess_tdof_list[i]) = x(ess_tdof_list[i]);
         }*/
+            if (j== 1 && i == 1)
+                {
+                    P->MultTranspose(aux2, y);
 
-            P->MultTranspose(aux2, y);
+                    const int N = oper.ess_tdof_list.Size();
+                    const auto idx = oper.ess_tdof_list.Read();
+                    // auto Y_RW = y.ReadWrite();
+                    // MFEM_FORALL(i, N, Y_RW[idx[i]] = 0.0; );
+                    for (int ii = 0; ii < N; ++ii)
+                        y[idx[ii]] = 0.0;
+                    double error = 0.0;
 
-            const int N = oper.ess_tdof_list.Size();
-            const auto idx = oper.ess_tdof_list.Read();
-            // auto Y_RW = y.ReadWrite();
-            // MFEM_FORALL(i, N, Y_RW[idx[i]] = 0.0; );
-            for (int ii = 0; ii < N; ++ii)
-                y[idx[ii]] = 0.0;
-            double error = 0.0;
+                    oper.H->Mult(h_i, y_true);
 
-            oper.H->Mult(h_i, y_true);
+                    for (int ii = 0; ii < y.Size(); ii++)
+                    {
+                        error += abs(y[ii] - y_true[ii]);
+                    }
 
-            for (int ii = 0; ii < y.Size(); ii++)
-            {
-                error += abs(y[ii] - y_true[ii]);
-            }
-
-            cout << "Element vector error = " << error << endl;
+                    cout << "Element vector error = " << error << endl;
+                }
         }
 
         if (precondition)
