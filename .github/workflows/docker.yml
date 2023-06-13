@@ -1,0 +1,63 @@
+name: docker-image
+on:
+  workflow_call:
+
+env:
+  REGISTRY: ghcr.io
+  # github.repository as <account>/<repo>
+  IMAGE_NAME: LLNL/libROM/librom_env
+  DOCKERPATH: docker
+
+jobs:
+  docker-ci:
+    runs-on: ubuntu-latest
+    name: "docker env"
+    env:
+      DOCKERPATH: docker
+    steps:
+      - name: test command
+        run: echo "docker-ci command"
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: Ana06/get-changed-files@v2.2.0       
+        id: files
+      - name: DockerPATH configuration
+        run: echo "DOCKERPATH=$DOCKERPATH"
+      - name: DockerPATH - check if files in docker path changed
+        if: contains(steps.files.outputs.all,env.DOCKERPATH) || contains(steps.files.outputs.all,'docker.yml')
+        run: |
+          echo "CI container needs rebuilding..."
+          echo "CI_NEEDS_REBUILD=true" >> $GITHUB_ENV
+      - name: Log into registry ${{ env.REGISTRY }}
+        if: env.CI_NEEDS_REBUILD
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        if: env.CI_NEEDS_REBUILD
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: type=sha
+          flavor: latest=true
+      - name: Build Container motd
+        if: env.CI_NEEDS_REBUILD
+        run: |
+          echo "#!/bin/bash" > ${{env.DOCKERPATH}}/motd.sh
+          echo "echo --------------------------" >> ${{env.DOCKERPATH}}/motd.sh
+          echo "echo librom_env/CI Development Container"  >> ${{env.DOCKERPATH}}/motd.sh
+          echo "echo \"Revision: `echo ${GITHUB_SHA} | cut -c1-8`\"" >> ${{env.DOCKERPATH}}/motd.sh
+          echo "echo --------------------------" >> ${{env.DOCKERPATH}}/motd.sh
+          chmod 755 ${{env.DOCKERPATH}}/motd.sh
+          cat ${{env.DOCKERPATH}}/motd.sh
+      - name: Docker Image - Build and push
+        if: env.CI_NEEDS_REBUILD
+        uses: docker/build-push-action@v3
+        with:
+          push: true
+          context: ${{ env.DOCKERPATH }}
+          tags: ${{ steps.meta.outputs.tags }}

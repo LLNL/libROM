@@ -153,8 +153,12 @@ RUN echo "PyYAML" >> requirements.txt
 RUN echo "h5py" >> requirements.txt
 RUN echo "pybind11" >> requirements.txt
 RUN echo "pytest" >> requirements.txt
+RUN echo "mpi4py" >> requirements.txt
 RUN sudo pip3 install --upgrade pip
 RUN sudo pip3 install -r ./requirements.txt
+
+# install lldb and gdb for debugging
+RUN sudo apt-get install -yq lldb gdb
 
 # create and switch to a user
 ENV USERNAME=test
