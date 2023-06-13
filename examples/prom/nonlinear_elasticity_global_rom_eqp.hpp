@@ -700,8 +700,10 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
 
             const int N = oper.ess_tdof_list.Size();
             const auto idx = oper.ess_tdof_list.Read();
-            auto Y_RW = y.ReadWrite();
-            MFEM_FORALL(i, N, Y_RW[idx[i]] = 0.0; );
+            // auto Y_RW = y.ReadWrite();
+            // MFEM_FORALL(i, N, Y_RW[idx[i]] = 0.0; );
+            for (int ii = 0; ii < N; ++ii)
+                y[idx[ii]] = 0.0;
             double error = 0.0;
 
             oper.H->Mult(h_i, y_true);
