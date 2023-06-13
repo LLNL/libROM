@@ -418,13 +418,6 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
     elvect.SetSize(dof * dim);
     PMatO.UseExternalData(elvect.GetData(), dof, dim);
 
-    // Get nonlinear operator model
-    // ParNonlinearForm *nl_H = oper.H;
-    // DomainNonlinearForm *dnf = nl_H->GetDNF();
-    // NonlinearFormIntegrator* dnf = (*(nl_H->GetDNFI()))[0];
-    // Array<NonlinearFormIntegrator*>* dnfis = nl_H->GetDNFI();
-    // NonlinearFormIntegrator* dnf = (*(dnfis))[0];
-
     elvect = 0.0;
     model->SetTransformation(Trans);
 
@@ -438,7 +431,7 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
         Trans.SetIntPoint(&ip);
 
         // Evaluate the element shape functions at the integration point
-        // fe.CalcVShape(Trans, trial_vshape);
+        // fe.CalcVShape(Trans, trial_vshape); // Not implemented
 
         // Get the transformation weight
         double t = Trans.Weight();
@@ -446,24 +439,6 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
         // Initialize h_i and v_i
         h_i = 0.0;
         v_i = 0.0;
-
-        // For every dof in element
-        for (int j = 0; j < dof; ++j)
-        {
-            // Q: Why can vdofs[j] < 0 be true?
-            const int dofj = (vdofs[j] >= 0) ? vdofs[j] : -1 - vdofs[j];
-            const double s = (vdofs[j] >= 0) ? 1.0 : -1.0;
-
-            // Calculate h_i = B_e * h_e, where h_e are the samples
-            // for this snapshot at this element dofs
-            // Also calculate v_i = B_e * v_e
-            for (int k = 0; k < spaceDim; ++k)
-            {
-                // h_i[k] += s * h[dofj] * trial_vshape(j, k);
-                v_i[k] += s * v[dofj]; // * trial_vshape(j, k); // TODO why no v_shape?
-                // PMatI[j, k] = s * h[dofj];
-            }
-        }
 
         // Compute action of nonlinear operator
         CalcInverse(Trans.Jacobian(), Jrt);
@@ -476,24 +451,23 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
 
         r[i] = 0.0;
 
+        // For every dof in element
+        for (int j = 0; j < dof; ++j)
+        {
+            const int dofj = (vdofs[j] >= 0) ? vdofs[j] : -1 - vdofs[j];
+            const double s = (vdofs[j] >= 0) ? 1.0 : -1.0;
+
+            // Also Calculate v_i = B_e * v_e
+            for (int k = 0; k < spaceDim; ++k)
+            {
+                v_i[k] += s * v[dofj]; // * trial_vshape(j, k); // TODO why no v_shape?
+            }
+        }
+
         // Calculate r[i] = v_i^T * elvect
         // Perform the vector-matrix-vector multiplication: a^T * B * c
         r[i] += v_i * elvect; // Elvect is added to in every iteration...
     }
-
-    // Error compared to FOM operator
-    // Vector el_vect_test(dof * dim);
-    // double error = 0.0;
-    // dnf->AssembleElementVector(fe, Trans, elfun, el_vect_test);
-    // For each integration point
-    /*  for (int i = 0; i < ir->GetNPoints(); i++)
-     {
-         // Get integration point
-         const IntegrationPoint &ip = ir->IntPoint(i);
-         error += elvect[i] * ip.weight - el_vect_test[i];
-     } */
-
-    // cout << "Element vector error = " << error << endl;
 }
 
 void SolveNNLS(const int rank, const double nnls_tol, const int maxNNLSnnz,
@@ -601,6 +575,10 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
     {
         aux2.SetSize(P->Height());
     }
+    else
+    {
+        MFEM_ABORT("P is null, generalize to serial case")
+    }
 
     // For every snapshot
     for (int i = 0; i < nsnap; ++i)
@@ -612,29 +590,18 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
         // TEST initialize y and py
         Vector y(h_i);
         Vector y_true(h_i);
-        Vector &py = P ? aux2 : y;
-        py = 0.0;
+        Vector &py = aux2;
 
         // TEST initialize element vector
         Vector elvect;
 
         // Get prolongated dofs
-        // See: https://docs.mfem.org/html/nonlinearform_8cpp_source.html#l00131
         Vector ph_i;
         Vector elfun;
-        if (P)
-        {
-            ph_i.SetSize(P->Height());
-            P->Mult(h_i, ph_i);
-        }
-        else
-        {
-            ph_i.SetSize(h_i.Size());
-            for (int j = 0; j < h_i.Size(); ++j)
-                ph_i[j] = h_i[j];
-        }
 
-        // Q: Not sure what this does
+        ph_i.SetSize(P->Height());
+        P->Mult(h_i, ph_i);
+
         if (skipFirstW && i > 0 && i % nsnapPerSet == 0)
             skip++;
 
@@ -645,6 +612,8 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
         // For each basis vector
         for (int j = 0; j < NB; ++j)
         {
+            py = 0.0;
+            
             // Get basis vector
             for (int k = 0; k < BH->numRows(); ++k)
                 v_j[k] = (*BH)(k, j);
@@ -665,59 +634,39 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                 ph_i.GetSubVector(vdofs, elfun);
                 if (doftrans)
                 {
-                    doftrans->InvTransformPrimal(elfun);
+                    MFEM_ABORT("Doftrans is true, make corresponding edits")
                 }
                 // Compute the row of G corresponding to element e, store in r
                 // Create vector r_test which will be compared to the nonlinear hyperelastic operator
 
                 ComputeElementRowOfG(ir0, vdofs, hi_gf, vj_gf, oper, model, elfun, elvect, fe, *eltrans, r);
 
-                if (doftrans)
-                {
-                    cout << "doftrans is true " << endl;
-                    doftrans->TransformDual(elvect);
-                }
-
                 py.AddElementVector(vdofs, elvect);
 
                 for (int m = 0; m < nqe; ++m)
                     Gt((e * nqe) + m, j + (i * NB)) = r[m];
             }
-            /* if (Serial())
+
+            if (j == 0 && i == 0)
             {
-                MFEM_ABORT("öh no!")
-                if (cP)
+                P->MultTranspose(aux2, y);
+
+                const int N = oper.ess_tdof_list.Size();
+                const auto idx = oper.ess_tdof_list.Read();
+                for (int ii = 0; ii < N; ++ii)
+                    y[idx[ii]] = 0.0;
+                double error = 0.0;
+
+                oper.H->Mult(h_i, y_true);
+
+                for (int ii = 0; ii < y.Size(); ii++)
                 {
-                    cP->MultTranspose(py, y);
+                    cout << "y[ii] = " << y[ii] << ", y_true[ii] = " << y_true[ii] << endl;
+                    error += abs(y[ii] - y_true[ii]);
                 }
 
-                for (int i = 0; i < ess_tdof_list.Size(); i++)
-                {
-                    y(ess_tdof_list[i]) = 0.0;
-                }
-            // y(ess_tdof_list[i]) = x(ess_tdof_list[i]);
-        }*/
-            if (j== 0 && i == 0)
-                {
-                    P->MultTranspose(aux2, y);
-
-                    const int N = oper.ess_tdof_list.Size();
-                    const auto idx = oper.ess_tdof_list.Read();
-                    // auto Y_RW = y.ReadWrite();
-                    // MFEM_FORALL(i, N, Y_RW[idx[i]] = 0.0; );
-                    for (int ii = 0; ii < N; ++ii)
-                        y[idx[ii]] = 0.0;
-                    double error = 0.0;
-
-                    oper.H->Mult(h_i, y_true);
-
-                    for (int ii = 0; ii < y.Size(); ii++)
-                    {   cout << "y[ii] = " << y[ii] << ", y_true[ii] = " << y_true[ii] << endl;
-                        error += abs(y[ii] - y_true[ii]);
-                    }
-
-                    cout << "Element vector error = " << error << endl;
-                }
+                cout << "Element vector error = " << error << endl;
+            }
         }
 
         if (precondition)
