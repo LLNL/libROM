@@ -442,6 +442,7 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
         {
             r[i] += ve_j[k] * elvect[k];
         }
+        cout << "r[i] = " << r[i];
     }
 }
 
@@ -622,6 +623,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
         for (int j = 0; j < nqe; ++j)
             w((i * nqe) + j) = w_el[j];
     }
+    bool stop = true;
 
     SolveNNLS(rank, nnls_tol, maxNNLSnnz, w, Gt, sol);
 }
