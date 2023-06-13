@@ -393,7 +393,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes
 
 void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
                           Vector const &h, Vector const &v,
-                          HyperelasticOperator const &oper, NeoHookeanModel const *model, Vector const &elfun, Vector &elvect,
+                          HyperelasticOperator const &oper, NeoHookeanModel *model, Vector const &elfun, Vector &elvect,
                           FiniteElement const &fe, ElementTransformation &Trans, Vector &r)
 {
     MFEM_VERIFY(r.Size() == ir->GetNPoints(), "");
@@ -424,6 +424,9 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
     // NonlinearFormIntegrator* dnf = (*(nl_H->GetDNFI()))[0];
     // Array<NonlinearFormIntegrator*>* dnfis = nl_H->GetDNFI();
     // NonlinearFormIntegrator* dnf = (*(dnfis))[0];
+
+    elvect = 0.0;
+    model->SetTransformation(Trans);
 
     // For each integration point
     for (int i = 0; i < ir->GetNPoints(); i++)
@@ -709,7 +712,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                     oper.H->Mult(h_i, y_true);
 
                     for (int ii = 0; ii < y.Size(); ii++)
-                    {   cout << "y[ii] = " << y[ii] << "y_true[ii] = " << y_true[ii] << endl;
+                    {   cout << "y[ii] = " << y[ii] << ", y_true[ii] = " << y_true[ii] << endl;
                         error += abs(y[ii] - y_true[ii]);
                     }
 

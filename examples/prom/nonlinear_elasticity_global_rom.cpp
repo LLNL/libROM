@@ -906,10 +906,10 @@ int main(int argc, char *argv[])
         {
             // int order = 2 * el.GetOrder();
             const FiniteElement &fe = *fespace.GetFE(0);
-            ElementTransformation *eltrans = fespace.GetElementTransformation(0);
+            //ElementTransformation *eltrans = fespace.GetElementTransformation(0);
 
-            int order = eltrans->OrderW() + 2 * fe.GetOrder();
-            ir0 = &IntRules.Get(fe.GetGeomType(), order);
+            //int order = eltrans->OrderW() + 2 * fe.GetOrder();
+            ir0 = &(IntRules.Get(fe.GetGeomType(), 2*fe.GetOrder() + 3));
         }
 
         if (use_eqp)
