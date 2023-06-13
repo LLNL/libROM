@@ -393,7 +393,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes
 
 void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
                           Vector const &h, Vector const &v,
-                          HyperelasticOperator oper, NeoHookeanModel *model, Vector elfun, Vector elvect,
+                          HyperelasticOperator const oper, NeoHookeanModel const *model, Vector const elfun, Vector elvect,
                           FiniteElement const &fe, ElementTransformation &Trans, Vector &r)
 {
     MFEM_VERIFY(r.Size() == ir->GetNPoints(), "");
@@ -415,8 +415,11 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
     DenseMatrix PMatI; // Extract element dofs
     PMatI.UseExternalData(elfun.GetData(), dof, dim);
     DenseMatrix PMatO;
+    cout << "B, elvect size = " << elvect.Size() << endl;
     elvect.SetSize(dof * dim);
     PMatO.UseExternalData(elvect.GetData(), dof, dim);
+
+    cout << "A, elvect size = " << elvect.Size() << endl;
 
     // Get nonlinear operator model
     // ParNonlinearForm *nl_H = oper.H;
@@ -478,6 +481,7 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
         r[i] += v_i * elvect; // Elvect is added to in every iteration...
     }
 
+    cout << "C, elvect size = " << elvect.Size() << endl;
     // Error compared to FOM operator
     // Vector el_vect_test(dof * dim);
     // double error = 0.0;
@@ -671,10 +675,12 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
 
                 if (doftrans)
                 {
+                    cout << "doftrans is true " << endl;
                     doftrans->TransformDual(elvect);
                 }
                 if (e == 0)
                 {
+                    cout << "D, elvect size = " << elvect.Size() << endl;
                     py.AddElementVector(vdofs, elvect);
                 }
 
