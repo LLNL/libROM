@@ -697,7 +697,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                 }
             // y(ess_tdof_list[i]) = x(ess_tdof_list[i]);
         }*/
-            if (j== 1 && i == 1)
+            if (j== 0 && i == 0)
                 {
                     P->MultTranspose(aux2, y);
 
@@ -712,8 +712,8 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                     oper.H->Mult(h_i, y_true);
 
                     for (int ii = 0; ii < y.Size(); ii++)
-                    {   cout << "y[ii] = " << y[ii]/2 << ", y_true[ii] = " << y_true[ii] << endl;
-                        error += abs(y[ii]/2 - y_true[ii]);
+                    {   cout << "y[ii] = " << y[ii] << ", y_true[ii] = " << y_true[ii] << endl;
+                        error += abs(y[ii] - y_true[ii]);
                     }
 
                     cout << "Element vector error = " << error << endl;
