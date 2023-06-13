@@ -82,11 +82,11 @@ mpicxx myapp.cpp -I/path/to/libROM/lib -Wl,-rpath,/path/to/libROM/build/lib -L/p
 
 # Using Docker container
 
-Docker container [`librom_env`](https://ghcr.io/libROM/librom_env) provides a containerized environment with all the prerequisites for libROM. In order to compile and use libROM in the Docker container, follow these steps:
+Docker container [`librom_env`](https://ghcr.io/LLNL/libROM/librom_env) provides a containerized environment with all the prerequisites for libROM. In order to compile and use libROM in the Docker container, follow these steps:
 
 - Pull `librom_env`, with [Docker Desktop](https://www.docker.com/) installed and running
 ```
-docker pull dreamer2368/librom_env:latest
+docker pull ghcr.io/llnl/librom/librom_env:latest
 ```
 - Clone libROM repository
 ```
@@ -117,7 +117,7 @@ Some notes about using the Docker container:
   - `hypre-2.20.0`
   - `parmetis-4.0.3`
   - `gslib-1.0.7`
-  - `mfem`: latest verified [commit](https://github.com/mfem/mfem/commit/64e61fdc3e58338f2235e36fc9ad0c3770ffa299) on Feb 01, 2023
+  - `mfem`: latest verified [commit](https://github.com/mfem/mfem/commit/e5231334e6a8175b4f404b877f590b73dee2dedc) on May 02, 2023
   - `googletest-v1.12.1`: the last release that supports c++11
 - Environmental variables preset for libROM cmake:
   - `TOOLCHAIN_FILE=/env/dependencies/librom_env.cmake`
