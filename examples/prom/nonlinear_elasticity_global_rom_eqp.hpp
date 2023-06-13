@@ -442,7 +442,7 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
         {
             r[i] += ve_j[k] * elvect[k];
         }
-        cout << "r[i] = " << r[i];
+        cout << "r[i] = " << r[i] << endl;
     }
 }
 
