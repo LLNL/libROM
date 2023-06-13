@@ -712,8 +712,8 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                     oper.H->Mult(h_i, y_true);
 
                     for (int ii = 0; ii < y.Size(); ii++)
-                    {   cout << "y[ii] = " << y[ii] << ", y_true[ii] = " << y_true[ii] << endl;
-                        error += abs(y[ii] - y_true[ii]);
+                    {   cout << "y[ii] = " << y[ii]/2 << ", y_true[ii] = " << y_true[ii] << endl;
+                        error += abs(y[ii]/2 - y_true[ii]);
                     }
 
                     cout << "Element vector error = " << error << endl;
