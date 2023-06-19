@@ -200,7 +200,7 @@ private:
     std::vector<double> eqp_rw;
     std::vector<int> eqp_qp;
     Vector eqp_coef;
-    const bool fastIntegration = false; //TODO: implement fast integration
+    const bool fastIntegration = false; // TODO: implement fast integration
 
     int rank;
 
@@ -739,7 +739,7 @@ int main(int argc, char *argv[])
     // 9. Initialize the hyperelastic operator, the GLVis visualization and print
     //    the initial energies.
     HyperelasticOperator oper(fespace, ess_tdof_list, visc, mu, K);
-    NeoHookeanModel* model = new NeoHookeanModel(mu, K);
+    NeoHookeanModel *model = new NeoHookeanModel(mu, K);
     HyperelasticOperator *soper = 0;
 
     // Fill dvdt and dxdt
@@ -904,12 +904,8 @@ int main(int argc, char *argv[])
 
         if (ir0 == NULL)
         {
-            // int order = 2 * el.GetOrder();
             const FiniteElement &fe = *fespace.GetFE(0);
-            //ElementTransformation *eltrans = fespace.GetElementTransformation(0);
-
-            //int order = eltrans->OrderW() + 2 * fe.GetOrder();
-            ir0 = &(IntRules.Get(fe.GetGeomType(), 2*fe.GetOrder() + 3));
+            ir0 = &(IntRules.Get(fe.GetGeomType(), 2 * fe.GetOrder() + 3));
         }
 
         if (use_eqp)
@@ -918,7 +914,7 @@ int main(int argc, char *argv[])
             eqpSol = new CAROM::Vector(ir0->GetNPoints() * fespace.GetNE(), true);
             SetupEQP_snapshots(ir0, myid, &fespace, nsets, H_librom,
                                GetSnapshotMatrix(fespace.GetTrueVSize(), nsets, max_num_snapshots, "H"),
-                               preconditionNNLS, tolNNLS, maxNNLSnnz, oper, model, *eqpSol);
+                               preconditionNNLS, tolNNLS, maxNNLSnnz, model, *eqpSol);
 
             if (writeSampleMesh)
                 WriteMeshEQP(pmesh, myid, ir0->GetNPoints(), *eqpSol);
@@ -1145,7 +1141,6 @@ int main(int argc, char *argv[])
         }
 
         ode_solver->Init(*romop);
-
     }
     else
     {
@@ -1585,14 +1580,18 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
                          CAROM::Vector *eqpSol, const IntegrationRule *ir_eqp_)
     : TimeDependentOperator(rxdim_ + rvdim_, 0.0), fom(fom_), fomSp(fomSp_),
       rxdim(rxdim_), rvdim(rvdim_), hdim(hdim_), x0(x0_), v0(v0_), v0_fom(v0_fom_),
-      smm(smm_), nsamp_H(smm_->GetNumVarSamples("H")), V_x(*V_x_), V_v(*V_v_),
-      U_H(U_H_), Hsinv(Hsinv_), zN(std::max(nsamp_H, 1), false), zX(std::max(nsamp_H,
-                                                                             1),
-                                                                    false),
+      smm(smm_), V_x(*V_x_), V_v(*V_v_), U_H(U_H_), Hsinv(Hsinv_),
       M_hat_solver(fom_->fespace.GetComm()), oversampling(oversampling_),
       z(height / 2), hyperreduce(hyperreduce_), x_base_only(x_base_only_), eqp(use_eqp),
       ir_eqp(ir_eqp_)
 {
+    if (!eqp)
+    {
+        nsamp_H = smm_->GetNumVarSamples("H");
+        zN = CAROM::Vector(std::max(nsamp_H, 1), false);
+        zX = CAROM::Vector(std::max(nsamp_H, 1), false);
+    }
+
     if (myid == 0 && !eqp)
     {
         V_v_sp = new CAROM::Matrix(fomSp->Height() / 2, rvdim, false);
@@ -1613,7 +1612,6 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
 
         smm->GatherDistributedMatrixRows("X", V_x, rxdim, *V_x_sp);
     }
-
     // Create V_vTU_H, for hyperreduction
     V_v.transposeMult(*U_H, V_vTU_H);
 
@@ -1627,13 +1625,11 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
 
     // Create S_hat
     ComputeCtAB(fom->Smat, V_v, V_v, *S_hat);
-
     // Apply S_hat to the initial velocity and store
     fom->Smat.Mult(v0_fom, *S_hat_v0_temp);
     V_v.transposeMult(*S_hat_v0_temp_librom, S_hat_v0);
-
     // Create M_hat
-    ComputeCtAB(*fom->Mmat, V_v, V_v, *M_hat);
+    ComputeCtAB(*(fom->Mmat), V_v, V_v, *M_hat);
 
     // Invert M_hat and store
     M_hat->inverse(*M_hat_inv);
@@ -1734,7 +1730,7 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
     CAROM::Vector dx_dt_librom(dx_dt.GetData(), rxdim, false, false);
 
     if (eqp)
-    {   // Lift v-vector and save
+    { // Lift v-vector and save
         V_v.mult(v_librom, *z_v_librom);
         V_x.transposeMult(*z_v_librom, dx_dt_librom);
 
@@ -1809,7 +1805,6 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
     z.Neg(); // z = -z
     M_hat_inv->mult(*z_librom,
                     dv_dt_librom); // to invert reduced mass matrix operator.
-
 }
 
 void RomOperator::Mult_FullOrder(const Vector &vx, Vector &dvx_dt) const

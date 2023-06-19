@@ -505,7 +505,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                         const int nsets, const CAROM::Matrix *BH,
                         const CAROM::Matrix *BH_snapshots,
                         const bool precondition, const double nnls_tol,
-                        const int maxNNLSnnz, HyperelasticOperator oper, NeoHookeanModel *model,
+                        const int maxNNLSnnz, NeoHookeanModel *model,
                         CAROM::Vector &sol)
 {
     const int nqe = ir0->GetNPoints();
