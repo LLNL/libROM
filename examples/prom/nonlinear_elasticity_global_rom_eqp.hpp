@@ -467,7 +467,7 @@ void SolveNNLS(const int rank, const double nnls_tol, const int maxNNLSnnz,
         rhs_ub(i) += delta;
     }
 
-    nnls.normalize_constraints(Gt, rhs_lb, rhs_ub);
+    // nnls.normalize_constraints(Gt, rhs_lb, rhs_ub);
     nnls.solve_parallel_with_scalapack(Gt, rhs_lb, rhs_ub, sol);
 
     int nnz = 0;
