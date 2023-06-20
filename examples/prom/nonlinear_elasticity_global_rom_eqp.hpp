@@ -94,7 +94,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
     const Operator *P = fesR->GetProlongationMatrix();
 
     // Vectors to be prolongated
-    CAROM::Vector* Vx_librom = new CAROM::Vector(fomdim, false);
+    CAROM::Vector* Vx_librom = new CAROM::Vector(fomdim, true);
     Vector *Vx = new Vector(&((*Vx_librom)(0)), fomdim);
     Vector vj(fomdim);
 

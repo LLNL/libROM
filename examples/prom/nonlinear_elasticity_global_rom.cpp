@@ -171,6 +171,7 @@ private:
     Vector *psp_v;
     mutable Vector zH;
     mutable CAROM::Vector zX;
+    mutable Vector zX_MFEM;
     mutable CAROM::Vector zN;
     const CAROM::Matrix *Hsinv;
     mutable CAROM::Vector *z_librom;
@@ -205,6 +206,8 @@ private:
     int rank;
 
     NeoHookeanModel *model;
+
+    
 
 protected:
     CAROM::Matrix *S_hat;
@@ -1091,8 +1094,8 @@ int main(int argc, char *argv[])
         {
             if (!use_eqp)
             {
-            // Define operator in sample space
-            soper = new HyperelasticOperator(*sp_XV_space, ess_tdof_list_sp, visc, mu, K);
+                // Define operator in sample space
+                soper = new HyperelasticOperator(*sp_XV_space, ess_tdof_list_sp, visc, mu, K);
             }
             else
             {
@@ -1636,33 +1639,45 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
     // Invert M_hat and store
     M_hat->inverse(*M_hat_inv);
 
-    if (myid == 0 && !eqp)
+    if (myid == 0 && hyperreduce)
     {
         const int spdim = fomSp->Height(); // Reduced height
 
-        zH.SetSize(spdim / 2); // Samples of H
 
         // Allocate auxillary vectors
         z.SetSize(spdim / 2);
         z_v.SetSize(spdim / 2);
         z_x.SetSize(spdim / 2);
-        z_librom = new CAROM::Vector(z.GetData(), z.Size(), false, false);
-        z_v_librom = new CAROM::Vector(z_v.GetData(), z_v.Size(), false, false);
-        z_x_librom = new CAROM::Vector(z_x.GetData(), z_x.Size(), false, false);
+        if (!eqp)
+        {
+        zH.SetSize(spdim / 2); // Samples of H
+            z_librom = new CAROM::Vector(z.GetData(), z.Size(), false, false);
+            z_v_librom = new CAROM::Vector(z_v.GetData(), z_v.Size(), false, false);
+            z_x_librom = new CAROM::Vector(z_x.GetData(), z_x.Size(), false, false);
 
-        // This is for saving the recreated predictions
-        psp_librom = new CAROM::Vector(spdim, false);
-        psp = new Vector(&((*psp_librom)(0)), spdim);
+            // This is for saving the recreated predictions
+            psp_librom = new CAROM::Vector(spdim, false);
+            psp = new Vector(&((*psp_librom)(0)), spdim);
 
-        // Define sub-vectors of psp.
-        psp_x = new Vector(psp->GetData(), spdim / 2);
-        psp_v = new Vector(psp->GetData() + spdim / 2, spdim / 2);
+            // Define sub-vectors of psp.
+            psp_x = new Vector(psp->GetData(), spdim / 2);
+            psp_v = new Vector(psp->GetData() + spdim / 2, spdim / 2);
 
-        psp_v_librom = new CAROM::Vector(psp_v->GetData(), psp_v->Size(), false, false);
+            psp_v_librom = new CAROM::Vector(psp_v->GetData(), psp_v->Size(), false, false);
+        }
+        else
+        {
+            zX = CAROM::Vector(U_H->numColumns(), false);
+            zX_MFEM = Vector(&((zX)(0)), U_H->numColumns());
+            z_librom = new CAROM::Vector(z.GetData(), z.Size(), false, false);
+            z_v_librom = new CAROM::Vector(z_v.GetData(), z_v.Size(), true, false);
+            z_x_librom = new CAROM::Vector(z_x.GetData(), z_x.Size(), true, false);
+
+        }
     }
 
     const int fdim = fom->Height(); // Unreduced height
-    if (!hyperreduce || eqp)
+    if (!hyperreduce)
     {
         z.SetSize(fdim / 2);
         z_v.SetSize(fdim / 2);
@@ -1706,7 +1721,7 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
              << fom->fespace.GetNE() << endl;
 
         // TODO: implement the one below
-        //GetEQPCoefficients_HyperelasticNLFIntegrator(&(fom->fespace), eqp_rw, eqp_qp, ir_eqp, *U_H, eqp_coef);
+        // GetEQPCoefficients_HyperelasticNLFIntegrator(&(fom->fespace), eqp_rw, eqp_qp, ir_eqp, *U_H, eqp_coef);
     }
 }
 
@@ -1735,18 +1750,15 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
     { // Lift v-vector and save
         V_v.mult(v_librom, *z_v_librom);
         V_x.transposeMult(*z_v_librom, dx_dt_librom);
-
         Vector resEQP;
         if (fastIntegration)
-            {
-           MFEM_ABORT("TODO");
-            }
-
+        {
+            MFEM_ABORT("TODO");
+        }
         else
             HyperelasticNLFIntegrator_ComputeReducedEQP(&(fom->fespace), eqp_rw,
                                                         eqp_qp, ir_eqp, model,
                                                         V_x, x_librom, rank, resEQP);
-
         Vector recv(resEQP);
         MPI_Allreduce(resEQP.GetData(), recv.GetData(), resEQP.Size(), MPI_DOUBLE,
                       MPI_SUM, MPI_COMM_WORLD);
@@ -1761,7 +1773,8 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
 
         MFEM_VERIFY(resEQP.Size() == rxdim, "");
         for (int i = 0; i < rxdim; ++i)
-            z[i] += resEQP[i];
+            zX_MFEM[i] += resEQP[i];
+        V_vTU_H.mult(zX, z_librom);
     }
     else
     { // Lift x- and v-vector
@@ -1796,7 +1809,6 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
         // store dx_dt
         V_x_sp->transposeMult(*psp_v_librom, dx_dt_librom);
     }
-
     if (fomSp->viscosity != 0.0)
     {
         // Apply S^, the reduced S operator, to v
