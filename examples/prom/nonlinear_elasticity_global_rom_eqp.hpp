@@ -64,12 +64,12 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
 
 void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
                                                  std::vector<double> const &rw, std::vector<int> const &qp,
-                                                 const IntegrationRule *ir, NeoHookeanModel *model,
+                                                 const IntegrationRule *ir, NeoHookeanModel *model, const Vector *x0, 
                                                  CAROM::Matrix const &V, CAROM::Vector const &x, const int rank, Vector &res)
 {
     const int rdim = V.numColumns();
     const int fomdim = V.numRows();
-    MFEM_VERIFY(rw.size() == qp.size(), ""); 
+    MFEM_VERIFY(rw.size() == qp.size(), "");
     MFEM_VERIFY(x.dim() == rdim, "");
     MFEM_VERIFY(V.numRows() == fesR->GetTrueVSize(), "");
 
@@ -94,8 +94,9 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
     const Operator *P = fesR->GetProlongationMatrix();
 
     // Vectors to be prolongated
-    CAROM::Vector* Vx_librom = new CAROM::Vector(fomdim, true);
-    Vector *Vx = new Vector(&((*Vx_librom)(0)), fomdim);
+    CAROM::Vector *Vx_librom_temp = new CAROM::Vector(fomdim, true);
+    Vector *Vx_temp = new Vector(&((*Vx_librom_temp)(0)), fomdim);
+    Vector Vx(fomdim);
     Vector vj(fomdim);
 
     // Prolongated vectors
@@ -106,9 +107,10 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
     Vector Vx_e;
     Vector vj_e;
 
-    // Lift x and prolongate result
-    V.mult(x, Vx_librom);
-    P->Mult(*Vx, p_Vx);
+    // Lift x, add x0 and prolongate result
+    V.mult(x, Vx_librom_temp);
+    add(*Vx_temp, *x0, Vx);
+    P->Mult(Vx, p_Vx);
 
     // For every basis vector
     for (int j = 0; j < rdim; ++j)
@@ -119,6 +121,8 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
             vj[k] = V(k, j);
         P->Mult(vj, p_vj);
         res[j] = 0.0;
+
+        eprev = -1;
 
         // For every quadrature weight
         for (int i = 0; i < rw.size(); ++i) // NOTE: i < 9
@@ -145,8 +149,10 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
                 // Get element vectors
                 p_Vx.GetSubVector(vdofs, Vx_e);
                 p_vj.GetSubVector(vdofs, vj_e);
-
                 eprev = e;
+
+                
+
             }
 
             // Integration at ip
@@ -156,19 +162,18 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
             DenseMatrix DS(dof, dim);
             DenseMatrix Jrt(dim);
             DenseMatrix Jpt(dim);
-            DenseMatrix P(dim);
+            DenseMatrix P_f(dim);
             DenseMatrix PMatI; // Extract element dofs
             PMatI.UseExternalData(Vx_e.GetData(), dof, dim);
             DenseMatrix PMatO;
             Vector elvect(dof * dim);
             PMatO.UseExternalData(elvect.GetData(), dof, dim);
 
-            model->SetTransformation(*eltrans);
-
             elvect = 0.0;
 
             // Set integration point in the element transformation
             eltrans->SetIntPoint(&ip);
+            model->SetTransformation(*eltrans);
 
             // Get the transformation weight
             double t = eltrans->Weight();
@@ -178,9 +183,9 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
             fe->CalcDShape(ip, DSh);
             Mult(DSh, Jrt, DS);
             MultAtB(PMatI, DS, Jpt);
-            model->EvalP(Jpt, P);
-            P *= (t * rw[i]); // NB: Not by ip.weight
-            AddMultABt(DS, P, PMatO);
+            model->EvalP(Jpt, P_f);
+            P_f *= (t * rw[i]); // NB: Not by ip.weight
+            AddMultABt(DS, P_f, PMatO);
 
             // Calculate r[i] = ve_j^T * elvect
             for (int k = 0; k < elvect.Size(); k++)
