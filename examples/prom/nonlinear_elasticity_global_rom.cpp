@@ -204,6 +204,8 @@ private:
 
     int rank;
 
+    NeoHookeanModel *model;
+
 protected:
     CAROM::Matrix *S_hat;
     CAROM::Vector *S_hat_v0;
@@ -229,7 +231,7 @@ public:
                 const CAROM::Matrix *V_x_, const CAROM::Matrix *U_H_,
                 const CAROM::Matrix *Hsinv_, const int myid, const bool oversampling_,
                 const bool hyperreduce_, const bool x_base_only_, const bool use_eqp, CAROM::Vector *eqpSol,
-                const IntegrationRule *ir_eqp_);
+                const IntegrationRule *ir_eqp_, NeoHookeanModel *model_);
 
     virtual void Mult(const Vector &y, Vector &dy_dt) const;
     void Mult_Hyperreduced(const Vector &y, Vector &dy_dt) const;
@@ -1102,7 +1104,7 @@ int main(int argc, char *argv[])
         {
             romop = new RomOperator(&oper, soper, rvdim, rxdim, hdim, smm, w_v0, w_x0,
                                     vx0.GetBlock(0), BV_librom, BX_librom, H_librom, Hsinv, myid,
-                                    num_samples_req != -1, hyperreduce, x_base_only, use_eqp, eqpSol, ir0);
+                                    num_samples_req != -1, hyperreduce, x_base_only, use_eqp, eqpSol, ir0, model);
         }
         else
         {
@@ -1110,7 +1112,7 @@ int main(int argc, char *argv[])
                                     &(vx0.GetBlock(0)),
                                     &(vx0.GetBlock(1)), vx0.GetBlock(0), BV_librom, BX_librom, H_librom, Hsinv,
                                     myid,
-                                    num_samples_req != -1, hyperreduce, x_base_only, use_eqp, eqpSol, ir0);
+                                    num_samples_req != -1, hyperreduce, x_base_only, use_eqp, eqpSol, ir0, model);
         }
 
         // Print lifted initial energies
@@ -1577,13 +1579,13 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
                          const CAROM::Matrix *V_x_, const CAROM::Matrix *U_H_,
                          const CAROM::Matrix *Hsinv_, const int myid, const bool oversampling_,
                          const bool hyperreduce_, const bool x_base_only_, const bool use_eqp,
-                         CAROM::Vector *eqpSol, const IntegrationRule *ir_eqp_)
+                         CAROM::Vector *eqpSol, const IntegrationRule *ir_eqp_, NeoHookeanModel *model_)
     : TimeDependentOperator(rxdim_ + rvdim_, 0.0), fom(fom_), fomSp(fomSp_),
       rxdim(rxdim_), rvdim(rvdim_), hdim(hdim_), x0(x0_), v0(v0_), v0_fom(v0_fom_),
       smm(smm_), V_x(*V_x_), V_v(*V_v_), U_H(U_H_), Hsinv(Hsinv_),
       M_hat_solver(fom_->fespace.GetComm()), oversampling(oversampling_),
       z(height / 2), hyperreduce(hyperreduce_), x_base_only(x_base_only_), eqp(use_eqp),
-      ir_eqp(ir_eqp_)
+      ir_eqp(ir_eqp_), model(model_)
 {
     if (!eqp)
     {
@@ -1704,7 +1706,7 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
              << fom->fespace.GetNE() << endl;
 
         // TODO: implement the one below
-        GetEQPCoefficients_HyperelasticNLFIntegrator(&(fom->fespace), eqp_rw, eqp_qp, ir_eqp, *U_H, eqp_coef);
+        //GetEQPCoefficients_HyperelasticNLFIntegrator(&(fom->fespace), eqp_rw, eqp_qp, ir_eqp, *U_H, eqp_coef);
     }
 }
 
@@ -1742,7 +1744,7 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
 
         else
             HyperelasticNLFIntegrator_ComputeReducedEQP(&(fom->fespace), eqp_rw,
-                                                        eqp_qp, ir_eqp,
+                                                        eqp_qp, ir_eqp, model,
                                                         V_x, x_librom, rank, resEQP);
 
         Vector recv(resEQP);

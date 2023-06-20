@@ -59,20 +59,17 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
                                                   const IntegrationRule *ir,
                                                   CAROM::Matrix const &V, Vector &res)
 {
-    MFEM_ABORT("TODO")
+    MFEM_ABORT("TODO");
 }
 
 void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
                                                  std::vector<double> const &rw, std::vector<int> const &qp,
-                                                 const IntegrationRule *ir,
+                                                 const IntegrationRule *ir, NeoHookeanModel *model,
                                                  CAROM::Matrix const &V, CAROM::Vector const &x, const int rank, Vector &res)
 {
-    MFEM_ABORT("TODO");
-}
-/*
-{
     const int rdim = V.numColumns();
-    MFEM_VERIFY(rw.size() == qp.size(), "");
+    const int fomdim = V.numRows();
+    MFEM_VERIFY(rw.size() == qp.size(), ""); 
     MFEM_VERIFY(x.dim() == rdim, "");
     MFEM_VERIFY(V.numRows() == fesR->GetTrueVSize(), "");
 
@@ -86,300 +83,113 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
     const FiniteElement *fe = NULL;
     Array<int> vdofs;
 
-    DenseMatrix trial_vshape;
-
-    Vector Vx;
-    Vector Vj;
     res.SetSize(rdim);
     res = 0.0;
 
     int eprev = -1;
     int dof = 0;
-    int spaceDim = 0;
+    int dim = 0;
 
-    // Note that the alternative version VectorFEMassIntegrator_ComputeReducedEQP_Fast
-    // of this function is optimized by storing some intermediate computations.
+    // Get prolongation matrix
+    const Operator *P = fesR->GetProlongationMatrix();
 
-    for (int i = 0; i < rw.size(); ++i)
-    {
-        const int e = qp[i] / nqe; // Element index
-        // Local (element) index of the quadrature point
-        const int qpi = qp[i] - (e * nqe);
-        const IntegrationPoint &ip = ir->IntPoint(qpi);
+    // Vectors to be prolongated
+    CAROM::Vector* Vx_librom = new CAROM::Vector(fomdim, false);
+    Vector *Vx = new Vector(&((*Vx_librom)(0)), fomdim);
+    Vector vj(fomdim);
 
-        if (e != eprev) // Update element transformation
-        {
-            doftrans = fesR->GetElementVDofs(e, vdofs);
-            fe = fesR->GetFE(e);
-            eltrans = fesR->GetElementTransformation(e);
+    // Prolongated vectors
+    Vector p_Vx(P->Height());
+    Vector p_vj(P->Height());
 
-            if (doftrans)
-            {
-                MFEM_ABORT("TODO");
-            }
+    // Element vectors
+    Vector Vx_e;
+    Vector vj_e;
 
-            dof = fe->GetDof();
-            spaceDim = eltrans->GetSpaceDim();
-            trial_vshape.SetSize(dof, spaceDim);
-            Vx.SetSize(spaceDim);
-            Vj.SetSize(spaceDim);
+    // Lift x and prolongate result
+    V.mult(x, Vx_librom);
+    P->Mult(*Vx, p_Vx);
 
-            // Initialize nonlinear operator matrices (there is probably a better way)
-            int dim = fe->GetDim();
-            DenseMatrix DSh(dof, dim);
-            DenseMatrix DS(dof, dim);
-            DenseMatrix Jrt(dim);
-            DenseMatrix Jpt(dim);
-            DenseMatrix P(dim);
-            DenseMatrix PMatI;
-            PMatI.UseExternalData(elfun.GetData(), dof, dim); // Q: How to replace?
-            // PMatO.SetSize(dof, dim); // Q: should this be here?
-
-            eprev = e;
-        }
-
-        // Integrate at the current point
-        eltrans->SetIntPoint(&ip);
-        fe->CalcVShape(*eltrans, trial_vshape);
-
-        double w = eltrans->Weight() * rw[i]; // using rw[i] instead of ip.weight
-
-        // Compute action of nonlinear operator
-        CalcInverse(eltrans->Jacobian(), Jrt);
-        fe.CalcDShape(ip, DSh);
-        Mult(DSh, Jrt, DS);
-        MultAtB(PMatI, DS, Jpt);
-        model->EvalP(Jpt, P);
-        // AddMultABt(DS, P, PMatO); //Q: Should this be here?
-
-        // Lift Vx at ip.
-        Vx = 0.0;
-        for (int k = 0; k < dof; ++k)
-        {
-            const int dofk = (vdofs[k] >= 0) ? vdofs[k] : -1 - vdofs[k];
-
-            double Vx_k = 0.0;
-            for (int j = 0; j < rdim; ++j)
-            {
-                Vx_k += V(dofk, j) * x(j);
-            }
-
-            if (vdofs[k] < 0) // Q:why this?
-                Vx_k = -Vx_k;
-
-            for (int j = 0; j < spaceDim; ++j)
-                Vx[j] += Vx_k * trial_vshape(k, j);
-        }
-
-        Vj = 0.0;
-        for (int k = 0; k < spaceDim; ++k)
-        {
-            double Vjk = 0.0;
-            for (int l = 0; l < dof; ++l)
-            {
-                // Q: Should these ones be the same?
-                const int dofl = (vdofs[l] >= 0) ? vdofs[l] : -1 - vdofs[l];
-                const double s = (vdofs[l] >= 0) ? 1.0 : -1.0;
-                Vjk += s * V(dofl, j) * trial_vshape(l, k);
-            }
-
-            Vj[k] = Vjk;
-        }
-
-        // Calculate r[i] = Vj^T * P * Vx
-        // Perform the vector-matrix-vector multiplication: a^T * B * c
-        Vector temp(dim);
-        P.Mult(Vx, temp);
-        w *= Vj * temp;
-
-        // Perform final scaling
-        for (int j = 0; j < rdim; ++j)
-        {
-            res[j] += w
-        }
-    }
-}
-*/
-/*
-void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
-                                                 std::vector<double> const &rw, std::vector<int> const &qp,
-                                                 const IntegrationRule *ir, Coefficient *Q,
-                                                 CAROM::Matrix const &V, CAROM::Vector const &x, const int rank, Vector &res)
-{
-
-    const int rdim = V.numColumns();
-    MFEM_VERIFY(V.numRows() == fesR->GetTrueVSize(), "");
-    MFEM_VERIFY(rw.size() == qp.size(), "");
-
-    const int ne = fesR->GetNE();
-    const int nqe = ir->GetWeights().Size();
-
-    ElementTransformation *eltrans;
-    DofTransformation *doftrans;
-    const FiniteElement *fe = NULL;
-    Array<int> vdofs;
-
-    DenseMatrix trial_vshape;
-
-    Vector Vx;
-    res.SetSize(rdim * rdim * rw.size());
-    res = 0.0;
-
-    // For the parallel case, we must get all DOFs of V on sampled elements.
-    CAROM::Matrix Vs;
-
-    // Since V only has rows for true DOFs, we use a ParGridFunction to get all DOFs.
-    int eprev = -1;
-    int dof = 0;
-    int elemCount = 0;
-
-    // First, find all sampled elements.
-    for (int i = 0; i < rw.size(); ++i)
-    {
-        const int e = qp[i] / nqe; // Element index
-
-        if (e != eprev) // Update element transformation
-        {
-            doftrans = fesR->GetElementVDofs(e, vdofs);
-            if (dof > 0)
-            {
-                MFEM_VERIFY(dof == vdofs.Size(), "All elements must have same DOF size");
-            }
-            dof = vdofs.Size();
-            eprev = e;
-            elemCount++;
-        }
-    }
-
-    // Now set Vs.
-    // Note that, ideally, these FOM data structures and operations should be
-    // avoided, but this only done in setup.
-    Vs.setSize(elemCount * dof, rdim);
-    ParGridFunction v_gf(fesR);
-    Vector vtrue(fesR->GetTrueVSize());
-
+    // For every basis vector
     for (int j = 0; j < rdim; ++j)
+
     {
-        eprev = -1;
-        elemCount = 0;
+        // Get basis vector and prolongate
+        for (int k = 0; k < V.numRows(); ++k)
+            vj[k] = V(k, j);
+        P->Mult(vj, p_vj);
+        res[j] = 0.0;
 
-        for (int i = 0; i < vtrue.Size(); ++i)
-            vtrue[i] = V(i, j);
-
-        v_gf.SetFromTrueDofs(vtrue);
-
-        for (int i = 0; i < rw.size(); ++i)
+        // For every quadrature weight
+        for (int i = 0; i < rw.size(); ++i) // NOTE: i < 9
         {
             const int e = qp[i] / nqe; // Element index
+            // Local (element) index of the quadrature point
+            const int qpi = qp[i] - (e * nqe);
+            const IntegrationPoint &ip = ir->IntPoint(qpi);
 
             if (e != eprev) // Update element transformation
             {
                 doftrans = fesR->GetElementVDofs(e, vdofs);
+                fe = fesR->GetFE(e);
+                eltrans = fesR->GetElementTransformation(e);
 
-                for (int k = 0; k < dof; ++k)
-                { // Q: Why this code?
-                    const int dofk = (vdofs[k] >= 0) ? vdofs[k] : -1 - vdofs[k];
-                    const double vk = (vdofs[k] >= 0) ? v_gf[dofk] : -v_gf[dofk];
-                    Vs((elemCount * dof) + k, j) = vk;
+                dof = fe->GetDof(); // Get number of dofs in element
+                dim = fe->GetDim();
+
+                if (doftrans)
+                {
+                    MFEM_ABORT("TODO");
                 }
 
+                // Get element vectors
+                p_Vx.GetSubVector(vdofs, Vx_e);
+                p_vj.GetSubVector(vdofs, vj_e);
+
                 eprev = e;
-                elemCount++;
-            }
-        }
-    }
-
-    eprev = -1;
-    elemCount = 0;
-    int spaceDim = 0;
-
-    for (int i = 0; i < rw.size(); ++i)
-    {
-        const int e = qp[i] / nqe; // Element index
-        // Local (element) index of the quadrature point
-        const int qpi = qp[i] - (e * nqe);
-        const IntegrationPoint &ip = ir->IntPoint(qpi);
-
-        if (e != eprev) // Update element transformation
-        {
-            doftrans = fesR->GetElementVDofs(e, vdofs);
-            fe = fesR->GetFE(e);
-            eltrans = fesR->GetElementTransformation(e);
-
-            if (doftrans)
-            {
-                MFEM_ABORT("TODO");
             }
 
-            dof = fe->GetDof();
-            spaceDim = eltrans->GetSpaceDim();
-            trial_vshape.SetSize(dof, spaceDim);
-            Vx.SetSize(spaceDim);
+            // Integration at ip
 
             // Initialize nonlinear operator matrices (there is probably a better way)
-            int dim = el.GetDim();
             DenseMatrix DSh(dof, dim);
             DenseMatrix DS(dof, dim);
             DenseMatrix Jrt(dim);
             DenseMatrix Jpt(dim);
             DenseMatrix P(dim);
-            DenseMatrix PMatI;
-            PMatI.UseExternalData(elfun.GetData(), dof, dim); // Q: How to replace?
-            // PMatO.SetSize(dof, dim); // Q: should this be here?
+            DenseMatrix PMatI; // Extract element dofs
+            PMatI.UseExternalData(Vx_e.GetData(), dof, dim);
+            DenseMatrix PMatO;
+            Vector elvect(dof * dim);
+            PMatO.UseExternalData(elvect.GetData(), dof, dim);
 
-            eprev = e;
-            elemCount++;
-        }
+            model->SetTransformation(*eltrans);
 
-        // Integrate at the current point
+            elvect = 0.0;
 
-        eltrans->SetIntPoint(&ip);
-        fe->CalcVShape(*eltrans, trial_vshape);
+            // Set integration point in the element transformation
+            eltrans->SetIntPoint(&ip);
 
-        double w = eltrans->Weight() * rw[i]; // using rw[i] instead of ip.weight
+            // Get the transformation weight
+            double t = eltrans->Weight();
 
-        // Compute action of nonlinear operator
-        CalcInverse(eltrans.Jacobian(), Jrt);
-        fe.CalcDShape(ip, DSh);
-        Mult(DSh, Jrt, DS);
-        MultAtB(PMatI, DS, Jpt);
-        model->EvalP(Jpt, P);
+            // Compute action of nonlinear operator
+            CalcInverse(eltrans->Jacobian(), Jrt);
+            fe->CalcDShape(ip, DSh);
+            Mult(DSh, Jrt, DS);
+            MultAtB(PMatI, DS, Jpt);
+            model->EvalP(Jpt, P);
+            P *= (t * rw[i]); // NB: Not by ip.weight
+            AddMultABt(DS, P, PMatO);
 
-        // AddMultABt(DS, P, PMatO); //Q: Should this be here?
-
-        for (int jx = 0; jx < rdim; ++jx)
-        {
-            // Lift Vx = V_{jx} at ip, where x = e_{jx}.
-            Vx = 0.0;
-            for (int k = 0; k < dof; ++k)
+            // Calculate r[i] = ve_j^T * elvect
+            for (int k = 0; k < elvect.Size(); k++)
             {
-                const double Vx_k = Vs(((elemCount - 1) * dof) + k, jx);
-
-                for (int j = 0; j < spaceDim; ++j)
-                    Vx[j] += Vx_k * trial_vshape(k, j);
-            }
-
-            for (int j = 0; j < rdim; ++j)
-            {
-                double rj = 0.0;
-                for (int k = 0; k < spaceDim; ++k)
-                {
-                    double Vjk = 0.0;
-                    for (int l = 0; l < dof; ++l)
-                    {
-                        Vjk += Vs(((elemCount - 1) * dof) + l, j) * trial_vshape(l, k);
-                    }
-
-                    rj += Vx[k] * Vjk;
-                }
-
-                res[j + (jx * rdim) + (i * rdim * rdim)] = w * rj;
+                res[j] += vj_e[k] * elvect[k];
             }
         }
     }
 }
-
-*/
 
 /* TODO if time...
 void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fesR,
@@ -442,7 +252,6 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
         {
             r[i] += ve_j[k] * elvect[k];
         }
-
     }
 }
 
