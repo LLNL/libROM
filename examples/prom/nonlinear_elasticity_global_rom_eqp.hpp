@@ -65,13 +65,14 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
 void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
                                                  std::vector<double> const &rw, std::vector<int> const &qp,
                                                  const IntegrationRule *ir, NeoHookeanModel *model, const Vector *x0, 
-                                                 CAROM::Matrix const &V, CAROM::Vector const &x, const int rank, Vector &res)
+                                                 CAROM::Matrix const &V_x,CAROM::Matrix const &V_v, CAROM::Vector const &x, const int rank, Vector &res)
 {
-    const int rdim = V.numColumns();
-    const int fomdim = V.numRows();
+    const int rxdim = V_x.numColumns();
+    const int rvdim = V_v.numColumns();
+    const int fomdim = V_v.numRows();
     MFEM_VERIFY(rw.size() == qp.size(), "");
-    MFEM_VERIFY(x.dim() == rdim, "");
-    MFEM_VERIFY(V.numRows() == fesR->GetTrueVSize(), "");
+    MFEM_VERIFY(x.dim() == rxdim, "");
+    MFEM_VERIFY(V_x.numRows() == fesR->GetTrueVSize(), "");
 
     MFEM_VERIFY(rank == 0,
                 "TODO: generalize to parallel. This uses full dofs in V, which has true dofs");
@@ -83,7 +84,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
     const FiniteElement *fe = NULL;
     Array<int> vdofs;
 
-    res.SetSize(rdim);
+    res.SetSize(rxdim);
     res = 0.0;
 
     int eprev = -1;
@@ -108,17 +109,17 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
     Vector vj_e;
 
     // Lift x, add x0 and prolongate result
-    V.mult(x, Vx_librom_temp);
+    V_x.mult(x, Vx_librom_temp);
     add(*Vx_temp, *x0, Vx);
     P->Mult(Vx, p_Vx);
 
     // For every basis vector
-    for (int j = 0; j < rdim; ++j)
+    for (int j = 0; j < rvdim; ++j)
 
     {
         // Get basis vector and prolongate
-        for (int k = 0; k < V.numRows(); ++k)
-            vj[k] = V(k, j);
+        for (int k = 0; k < V_v.numRows(); ++k)
+            vj[k] = V_v(k, j);
         P->Mult(vj, p_vj);
         res[j] = 0.0;
 
