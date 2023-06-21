@@ -1586,7 +1586,7 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
       smm(smm_), V_x(*V_x_), V_v(*V_v_), U_H(U_H_), Hsinv(Hsinv_),
       M_hat_solver(fom_->fespace.GetComm()), oversampling(oversampling_),
       z(height / 2), hyperreduce(hyperreduce_), x_base_only(x_base_only_), eqp(use_eqp),
-      ir_eqp(ir_eqp_), model(model_)
+      ir_eqp(ir_eqp_), model(model_), rank(myid)
 {
     if (!eqp)
     {
