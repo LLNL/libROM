@@ -1614,9 +1614,9 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
         }
 
         smm->GatherDistributedMatrixRows("X", V_x, rxdim, *V_x_sp);
+        // Create V_vTU_H, for hyperreduction
+        V_v.transposeMult(*U_H, V_vTU_H);
     }
-    // Create V_vTU_H, for hyperreduction
-    V_v.transposeMult(*U_H, V_vTU_H);
 
     S_hat = new CAROM::Matrix(rvdim, rvdim, false);
     S_hat_v0 = new CAROM::Vector(rvdim, false);
@@ -1639,14 +1639,14 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
 
     if (myid == 0 && hyperreduce)
     {
-        const int spdim = fomSp->Height(); // Reduced height
-
-        // Allocate auxillary vectors
-        z.SetSize(spdim / 2);
-        z_v.SetSize(spdim / 2);
-        z_x.SetSize(spdim / 2);
         if (!eqp)
         {
+            const int spdim = fomSp->Height(); // Reduced height
+
+            // Allocate auxillary vectors
+            z.SetSize(spdim / 2);
+            z_v.SetSize(spdim / 2);
+            z_x.SetSize(spdim / 2);
             zH.SetSize(spdim / 2); // Samples of H
             z_librom = new CAROM::Vector(z.GetData(), z.Size(), false, false);
             z_v_librom = new CAROM::Vector(z_v.GetData(), z_v.Size(), false, false);
@@ -1666,24 +1666,16 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
         {
             z.SetSize(rvdim);
             z_librom = new CAROM::Vector(z.GetData(), z.Size(), false, false);
-            z_v_librom = new CAROM::Vector(z_v.GetData(), z_v.Size(), true, false);
+            
         }
     }
 
     const int fdim = fom->Height(); // Unreduced height
-    if (!hyperreduce)
+    if (!hyperreduce || (eqp && myid == 0))
     {
-        z.SetSize(fdim / 2);
-        z_v.SetSize(fdim / 2);
-        z_x.SetSize(fdim / 2);
-        z_librom = new CAROM::Vector(z.GetData(), z.Size(), false, false);
-        z_v_librom = new CAROM::Vector(z_v.GetData(), z_v.Size(), true, false);
-        z_x_librom = new CAROM::Vector(z_x.GetData(), z_x.Size(), true, false);
-
         // This is for saving the recreated predictions
         pfom_librom = new CAROM::Vector(fdim, false);
         pfom = new Vector(&((*pfom_librom)(0)), fdim);
-
         // Define sub-vectors of pfom.
         pfom_x = new Vector(pfom->GetData(), fdim / 2);
         pfom_v = new Vector(pfom->GetData() + fdim / 2, fdim / 2);
@@ -1693,6 +1685,22 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
 
         pfom_v_librom = new CAROM::Vector(pfom_v->GetData(), pfom_v->Size(), true,
                                           false);
+
+        // Auxiliary vectors
+        z_v.SetSize(fdim / 2);
+        z_v_librom = new CAROM::Vector(z_v.GetData(), z_v.Size(), true, false);
+
+    }
+
+    if (!hyperreduce)
+    {
+        z.SetSize(fdim / 2);
+        
+        z_x.SetSize(fdim / 2);
+        z_librom = new CAROM::Vector(z.GetData(), z.Size(), false, false);
+        
+        z_x_librom = new CAROM::Vector(z_x.GetData(), z_x.Size(), true, false);
+
     }
 
     if (eqp)
@@ -1743,7 +1751,8 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
     if (eqp)
     { // Lift v-vector and save
         V_v.mult(v_librom, *z_v_librom);
-        V_x.transposeMult(*z_v_librom, dx_dt_librom);
+        add(z_v, *v0, *pfom_v);
+        V_x.transposeMult(*pfom_v_librom, dx_dt_librom);
         Vector resEQP;
         if (fastIntegration)
         {
@@ -1764,7 +1773,7 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
         // term. Instead, the FOM computation of the nonlinear term is
         // approximated by the reduced quadrature rule in the FOM space.
         // Therefore, the residual here is of dimension rxdim.
-
+        z=0.0;
         MFEM_VERIFY(resEQP.Size() == rxdim, "");
         for (int i = 0; i < rxdim; ++i)
             z[i] += resEQP[i];
@@ -1802,6 +1811,7 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
         // store dx_dt
         V_x_sp->transposeMult(*psp_v_librom, dx_dt_librom);
     }
+
     if (fomSp->viscosity != 0.0)
     {
         // Apply S^, the reduced S operator, to v
