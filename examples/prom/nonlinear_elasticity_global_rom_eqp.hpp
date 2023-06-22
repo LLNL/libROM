@@ -130,7 +130,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
         {
             const int e = qp[i] / nqe; // Element index
             // Local (element) index of the quadrature point
-            const int qpi = qp[i] - (e * nqe);
+            const int qpi = qp[i] - (e * nqe);  
             const IntegrationPoint &ip = ir->IntPoint(qpi);
 
             if (e != eprev) // Update element transformation
@@ -151,8 +151,6 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
                 p_Vx.GetSubVector(vdofs, Vx_e);
                 p_vj.GetSubVector(vdofs, vj_e);
                 eprev = e;
-
-                
 
             }
 
@@ -185,7 +183,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
             Mult(DSh, Jrt, DS);
             MultAtB(PMatI, DS, Jpt);
             model->EvalP(Jpt, P_f);
-            P_f *= (t * rw[i]); // NB: Not by ip.weight
+            P_f *= (t * rw[i]); // NB: Not by ip.weight //Or is it rw[qpi]?
             AddMultABt(DS, P_f, PMatO);
 
             // Calculate r[i] = ve_j^T * elvect
@@ -316,26 +314,26 @@ void SolveNNLS(const int rank, const double nnls_tol, const int maxNNLSnnz,
 
 // Compute EQP solution from constraints on snapshots.
 void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
-                        ParFiniteElementSpace *fespace_H,
-                        const int nsets, const CAROM::Matrix *BH,
-                        const CAROM::Matrix *BH_snapshots,
+                        ParFiniteElementSpace *fespace_X,
+                        const int nsets, const CAROM::Matrix *BV,
+                        const CAROM::Matrix *BX_snapshots,
                         const bool precondition, const double nnls_tol,
                         const int maxNNLSnnz, NeoHookeanModel *model,
                         CAROM::Vector &sol)
 {
     const int nqe = ir0->GetNPoints();
-    const int ne = fespace_H->GetNE();
-    const int NB = BH->numColumns();
+    const int ne = fespace_X->GetNE();
+    const int NB = BV->numColumns();
     const int NQ = ne * nqe;
-    const int nsnap = BH_snapshots->numColumns();
+    const int nsnap = BX_snapshots->numColumns();
 
-    MFEM_VERIFY(nsnap == BH_snapshots->numColumns() ||
-                    nsnap + nsets == BH_snapshots->numColumns(), // Q: nsets?
+    MFEM_VERIFY(nsnap == BX_snapshots->numColumns() ||
+                    nsnap + nsets == BX_snapshots->numColumns(), // Q: nsets?
                 "");
-    MFEM_VERIFY(BH->numRows() == BH_snapshots->numRows(), "");
-    MFEM_VERIFY(BH->numRows() == fespace_H->GetTrueVSize(), "");
+    MFEM_VERIFY(BV->numRows() == BX_snapshots->numRows(), "");
+    MFEM_VERIFY(BV->numRows() == fespace_X->GetTrueVSize(), "");
 
-    const bool skipFirstW = (nsnap + nsets == BH_snapshots->numColumns());
+    const bool skipFirstW = (nsnap + nsets == BX_snapshots->numColumns());
 
     // Compute G of size (NB * nsnap) x NQ, but only store its transpose Gt.
     CAROM::Matrix Gt(NQ, NB * nsnap, true);
@@ -346,8 +344,8 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
     // with respect to the integration rule weight at that point,
     // where the "exact" quadrature solution is ir0->GetWeights().
 
-    Vector h_i(BH_snapshots->numRows());
-    Vector v_j(BH->numRows());
+    Vector x_i(BX_snapshots->numRows());
+    Vector v_j(BV->numRows());
 
     Vector r(nqe);
 
@@ -360,7 +358,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
     }
 
     // Get prolongation matrix
-    const Operator *P = fespace_H->GetProlongationMatrix();
+    const Operator *P = fespace_X->GetProlongationMatrix();
     if (!P)
     {
         MFEM_ABORT("P is null, generalize to serial case")
@@ -370,15 +368,15 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
     for (int i = 0; i < nsnap; ++i)
     {
         // Set the sampled dofs from the snapshot matrix
-        for (int j = 0; j < BH_snapshots->numRows(); ++j)
-            h_i[j] = (*BH_snapshots)(j, i);
+        for (int j = 0; j < BX_snapshots->numRows(); ++j)
+            x_i[j] = (*BX_snapshots)(j, i);
 
         // Get prolongated dofs
-        Vector ph_i;
+        Vector px_i;
         Vector elfun;
 
-        ph_i.SetSize(P->Height());
-        P->Mult(h_i, ph_i);
+        px_i.SetSize(P->Height());
+        P->Mult(x_i, px_i);
 
         if (skipFirstW && i > 0 && i % nsnapPerSet == 0)
             skip++;
@@ -388,8 +386,8 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
         {
 
             // Get basis vector
-            for (int k = 0; k < BH->numRows(); ++k)
-                v_j[k] = (*BH)(k, j);
+            for (int k = 0; k < BV->numRows(); ++k)
+                v_j[k] = (*BV)(k, j);
 
             // Get prolongated dofs
             Vector pv_j;
@@ -404,10 +402,10 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
             {
                 // Get element and its dofs and transformation.
                 Array<int> vdofs;
-                DofTransformation *doftrans = fespace_H->GetElementVDofs(e, vdofs);
-                const FiniteElement &fe = *fespace_H->GetFE(e);
-                ElementTransformation *eltrans = fespace_H->GetElementTransformation(e);
-                ph_i.GetSubVector(vdofs, elfun);
+                DofTransformation *doftrans = fespace_X->GetElementVDofs(e, vdofs);
+                const FiniteElement &fe = *fespace_X->GetFE(e);
+                ElementTransformation *eltrans = fespace_X->GetElementTransformation(e);
+                px_i.GetSubVector(vdofs, elfun);
                 pv_j.GetSubVector(vdofs, ve_j);
                 if (doftrans)
                 {
