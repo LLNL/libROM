@@ -538,6 +538,8 @@ int main(int argc, char *argv[])
                    "Tolerance for NNLS solver.");
     args.AddOption(&maxNNLSnnz, "-maxnnls", "--max-nnls",
                    "Maximum nnz for NNLS");
+    args.AddOption(&n_windows, "-ntw", "--n-time-windows",
+                   "Number of time windows. Default is 0");
 
     args.Parse();
     if (!args.Good())
@@ -919,7 +921,6 @@ int main(int argc, char *argv[])
         }
 
         // Timewindowing setup for EQP
-        n_windows = 25; // TODO add command line option
         int n_step = int(t_final / dt);
 
         if (n_windows > 1)
