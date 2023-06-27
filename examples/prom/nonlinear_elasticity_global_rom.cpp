@@ -237,6 +237,7 @@ public:
     virtual void Mult(const Vector &y, Vector &dy_dt) const;
     void Mult_Hyperreduced(const Vector &y, Vector &dy_dt) const;
     void Mult_FullOrder(const Vector &y, Vector &dy_dt) const;
+    void SetEQP(CAROM::Vector *eqpSol);
 
     CAROM::Matrix V_v, V_x, V_vTU_H;
     const Vector *x0;
@@ -461,6 +462,9 @@ int main(int argc, char *argv[])
     bool preconditionNNLS = false;
     double tolNNLS = 1.0e-14;
     int maxNNLSnnz = 0;
+
+    // for time windows
+    int n_windows = 0;
 
     OptionsParser args(argc, argv);
     args.AddOption(&mesh_file, "-m", "--mesh",
@@ -837,6 +841,9 @@ int main(int argc, char *argv[])
     CAROM::Vector *eqpSol = nullptr;
     CAROM::Vector *eqpSol_S = nullptr;
 
+    CAROM::Vector *window_ids = nullptr;
+    CAROM::Vector *load_eqpsol = new CAROM::Vector(1, false); // Will be resized later
+
     // 11. Initialize ROM operator
     // I guess most of this should be done on id =0
     if (online)
@@ -911,13 +918,23 @@ int main(int argc, char *argv[])
             ir0 = &(IntRules.Get(fe.GetGeomType(), 2 * fe.GetOrder() + 3));
         }
 
+        // Timewindowing setup for EQP
+        n_windows = 25; // TODO add command line option
+        int n_step = int(t_final / dt);
+
+        if (n_windows > 1)
+        {
+            window_ids = new CAROM::Vector(n_windows + 1, false);
+            get_window_ids(n_step, n_windows, window_ids);
+        }
+
         if (use_eqp)
         {
             // EQP setup
             eqpSol = new CAROM::Vector(ir0->GetNPoints() * fespace.GetNE(), true);
             SetupEQP_snapshots(ir0, myid, &fespace, nsets, BV_librom,
                                GetSnapshotMatrix(fespace.GetTrueVSize(), nsets, max_num_snapshots, "X"),
-                               preconditionNNLS, tolNNLS, maxNNLSnnz, model, *eqpSol);
+                               preconditionNNLS, tolNNLS, maxNNLSnnz, model, *eqpSol, window_ids);
 
             if (writeSampleMesh)
                 WriteMeshEQP(pmesh, myid, ir0->GetNPoints(), *eqpSol);
@@ -1160,6 +1177,9 @@ int main(int argc, char *argv[])
     oper.SetTime(t);
 
     bool last_step = false;
+
+    int current_window = 0;
+
     for (int ti = 1; !last_step; ti++)
     {
         double dt_real = min(dt, t_final - t);
@@ -1168,6 +1188,15 @@ int main(int argc, char *argv[])
         {
             if (myid == 0)
             {
+                if (use_eqp && window_ids && current_window < n_windows && ti == window_ids->item(current_window))
+                {
+                    // Load eqp and reinitialize romoperator
+                    cout << "Time window start at" << ti << endl;
+                    get_EQPsol(current_window, load_eqpsol);
+                    romop->SetEQP(load_eqpsol);
+                    ode_solver->Init(*romop);
+                    current_window += 1;
+                }
                 solveTimer.Start();
                 ode_solver->Step(*wMFEM, t, dt_real);
                 solveTimer.Stop();
@@ -1666,7 +1695,6 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
         {
             z.SetSize(rvdim);
             z_librom = new CAROM::Vector(z.GetData(), z.Size(), false, false);
-            
         }
     }
 
@@ -1689,18 +1717,16 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
         // Auxiliary vectors
         z_v.SetSize(fdim / 2);
         z_v_librom = new CAROM::Vector(z_v.GetData(), z_v.Size(), true, false);
-
     }
 
     if (!hyperreduce)
     {
         z.SetSize(fdim / 2);
-        
+
         z_x.SetSize(fdim / 2);
         z_librom = new CAROM::Vector(z.GetData(), z.Size(), false, false);
-        
-        z_x_librom = new CAROM::Vector(z_x.GetData(), z_x.Size(), true, false);
 
+        z_x_librom = new CAROM::Vector(z_x.GetData(), z_x.Size(), true, false);
     }
 
     if (eqp)
@@ -1773,7 +1799,7 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
         // term. Instead, the FOM computation of the nonlinear term is
         // approximated by the reduced quadrature rule in the FOM space.
         // Therefore, the residual here is of dimension rxdim.
-        z=0.0;
+        z = 0.0;
         MFEM_VERIFY(resEQP.Size() == rxdim, "");
         for (int i = 0; i < rxdim; ++i)
             z[i] += resEQP[i];
@@ -1870,4 +1896,29 @@ void RomOperator::Mult(const Vector &vx, Vector &dvx_dt) const
         Mult_Hyperreduced(vx, dvx_dt);
     else
         Mult_FullOrder(vx, dvx_dt);
+}
+
+void RomOperator::SetEQP(CAROM::Vector *eqpSol)
+{
+    std::set<int> elements;
+    const int nqe = ir_eqp->GetWeights().Size();
+    eqp_rw.clear();
+    eqp_qp.clear();
+
+    for (int i = 0; i < eqpSol->dim(); ++i)
+    {
+        if ((*eqpSol)(i) > 1.0e-12)
+        {
+            const int e = i / nqe; // Element index
+            elements.insert(e);
+            eqp_rw.push_back((*eqpSol)(i));
+            eqp_qp.push_back(i);
+        }
+    }
+
+    cout << rank << ": EQP using " << elements.size() << " elements out of "
+         << fom->fespace.GetNE() << endl;
+
+    // TODO: implement the one below
+    // GetEQPCoefficients_HyperelasticNLFIntegrator(&(fom->fespace), eqp_rw, eqp_qp, ir_eqp, *U_H, eqp_coef);
 }

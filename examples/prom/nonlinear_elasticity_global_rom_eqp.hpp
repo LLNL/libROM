@@ -11,7 +11,7 @@
 // Functions used by mixed_nonlinear_diffusion.cpp with EQP.
 #include "mfem/Utilities.hpp"
 // #include "fem/nonlininteg.hpp"
-
+#include <cmath>
 using namespace mfem;
 using namespace std;
 
@@ -64,7 +64,7 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
 
 void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
                                                  std::vector<double> const &rw, std::vector<int> const &qp,
-                                                 const IntegrationRule *ir, NeoHookeanModel *model, const Vector *x0, 
+                                                 const IntegrationRule *ir, NeoHookeanModel *model, const Vector *x0,
                                                  CAROM::Matrix const &V_x, CAROM::Matrix const &V_v, CAROM::Vector const &x, const int rank, Vector &res)
 {
     const int rxdim = V_x.numColumns();
@@ -130,7 +130,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
         {
             const int e = qp[i] / nqe; // Element index
             // Local (element) index of the quadrature point
-            const int qpi = qp[i] - (e * nqe);  
+            const int qpi = qp[i] - (e * nqe);
             const IntegrationPoint &ip = ir->IntPoint(qpi);
 
             if (e != eprev) // Update element transformation
@@ -151,7 +151,6 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
                 p_Vx.GetSubVector(vdofs, Vx_e);
                 p_vj.GetSubVector(vdofs, vj_e);
                 eprev = e;
-
             }
 
             // Integration at ip
@@ -204,6 +203,25 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes
 
 }
 */
+
+bool fileExists(const std::string& filename)
+{
+    std::ifstream file(filename);
+    return file.good();
+}
+
+void save_CAROM_Vector(const CAROM::Vector& vector, const std::string& filename) {
+    std::ofstream file(filename);
+    if (file.is_open()) {
+        for (int i = 0; i < vector.dim(); ++i) {
+            file << vector(i) << "\n";
+        }
+        file.close();
+        std::cout << "Vector saved as " << filename << " successfully." << std::endl;
+    } else {
+        std::cerr << "Error: Unable to open file " << filename << " for writing." << std::endl;
+    }
+}
 
 void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
                           Vector const &ve_j, NeoHookeanModel *model, Vector const &elfun,
@@ -319,7 +337,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                         const CAROM::Matrix *BX_snapshots,
                         const bool precondition, const double nnls_tol,
                         const int maxNNLSnnz, NeoHookeanModel *model,
-                        CAROM::Vector &sol)
+                        CAROM::Vector &sol, CAROM::Vector *window_ids)
 {
     const int nqe = ir0->GetNPoints();
     const int ne = fespace_X->GetNE();
@@ -337,6 +355,18 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
 
     // Compute G of size (NB * nsnap) x NQ, but only store its transpose Gt.
     CAROM::Matrix Gt(NQ, NB * nsnap, true);
+    int current_size = 0;
+    int i_start = 0;
+    int outer_loop_length = 0;
+    if (!window_ids)
+    {
+        current_size = nsnap;
+        outer_loop_length = 1;
+    }
+    else
+    {
+        outer_loop_length = window_ids->dim() - 1;
+    }
 
     // For 0 <= j < NB, 0 <= i < nsnap, 0 <= e < ne, 0 <= m < nqe,
     // G(j + (i*NB), (e*nqe) + m)
@@ -364,81 +394,96 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
         MFEM_ABORT("P is null, generalize to serial case")
     }
 
-    // For every snapshot
-    for (int i = 0; i < nsnap; ++i)
+    // Outer loop for time windowing
+    for (int oi = 0; oi < outer_loop_length; ++oi)
     {
-        // Set the sampled dofs from the snapshot matrix
-        for (int j = 0; j < BX_snapshots->numRows(); ++j)
-            x_i[j] = (*BX_snapshots)(j, i);
-
-        // Get prolongated dofs
-        Vector px_i;
-        Vector elfun;
-
-        px_i.SetSize(P->Height());
-        P->Mult(x_i, px_i);
-
-        if (skipFirstW && i > 0 && i % nsnapPerSet == 0)
-            skip++;
-
-        // For each basis vector
-        for (int j = 0; j < NB; ++j)
+        if (window_ids)
         {
+            i_start = window_ids->item(oi);
+            current_size = window_ids->item(oi + 1) - window_ids->item(oi) + 1;
+            cout << "i_start = " << i_start << endl;
+            Gt.setSize(NQ, NB * current_size);
+        }
 
-            // Get basis vector
-            for (int k = 0; k < BV->numRows(); ++k)
-                v_j[k] = (*BV)(k, j);
+        // For every snapshot in batch
+        for (int i = i_start; i < current_size; ++i)
+        {
+            // Set the sampled dofs from the snapshot matrix
+            for (int j = 0; j < BX_snapshots->numRows(); ++j)
+                x_i[j] = (*BX_snapshots)(j, i);
 
             // Get prolongated dofs
-            Vector pv_j;
-            Vector ve_j;
+            Vector px_i;
+            Vector elfun;
 
-            pv_j.SetSize(P->Height());
-            P->Mult(v_j, pv_j);
+            px_i.SetSize(P->Height());
+            P->Mult(x_i, px_i);
 
-            // TODO: is it better to make the element loop the outer loop?
-            // For each element
-            for (int e = 0; e < ne; ++e)
+            if (skipFirstW && i > 0 && i % nsnapPerSet == 0)
+                skip++;
+
+            // For each basis vector
+            for (int j = 0; j < NB; ++j)
             {
-                // Get element and its dofs and transformation.
-                Array<int> vdofs;
-                DofTransformation *doftrans = fespace_X->GetElementVDofs(e, vdofs);
-                const FiniteElement &fe = *fespace_X->GetFE(e);
-                ElementTransformation *eltrans = fespace_X->GetElementTransformation(e);
-                px_i.GetSubVector(vdofs, elfun);
-                pv_j.GetSubVector(vdofs, ve_j);
-                if (doftrans)
+
+                // Get basis vector
+                for (int k = 0; k < BV->numRows(); ++k)
+                    v_j[k] = (*BV)(k, j);
+
+                // Get prolongated dofs
+                Vector pv_j;
+                Vector ve_j;
+
+                pv_j.SetSize(P->Height());
+                P->Mult(v_j, pv_j);
+
+                // TODO: is it better to make the element loop the outer loop?
+                // For each element
+                for (int e = 0; e < ne; ++e)
                 {
-                    MFEM_ABORT("Doftrans is true, make corresponding edits")
+                    // Get element and its dofs and transformation.
+                    Array<int> vdofs;
+                    DofTransformation *doftrans = fespace_X->GetElementVDofs(e, vdofs);
+                    const FiniteElement &fe = *fespace_X->GetFE(e);
+                    ElementTransformation *eltrans = fespace_X->GetElementTransformation(e);
+                    px_i.GetSubVector(vdofs, elfun);
+                    pv_j.GetSubVector(vdofs, ve_j);
+                    if (doftrans)
+                    {
+                        MFEM_ABORT("Doftrans is true, make corresponding edits")
+                    }
+
+                    // Compute the row of G corresponding to element e, store in r
+                    ComputeElementRowOfG(ir0, vdofs, ve_j, model, elfun, fe, *eltrans, r);
+
+                    for (int m = 0; m < nqe; ++m)
+                        Gt((e * nqe) + m, j + (i * NB)) = r[m];
                 }
-
-                // Compute the row of G corresponding to element e, store in r
-                ComputeElementRowOfG(ir0, vdofs, ve_j, model, elfun, fe, *eltrans, r);
-
-                for (int m = 0; m < nqe; ++m)
-                    Gt((e * nqe) + m, j + (i * NB)) = r[m];
             }
-        }
 
-        if (precondition)
+            if (precondition)
+            {
+                MFEM_ABORT("TODO");
+            }
+        } // Loop (i) over snapshots
+
+        Array<double> const &w_el = ir0->GetWeights();
+        MFEM_VERIFY(w_el.Size() == nqe, "");
+
+        CAROM::Vector w(ne * nqe, true);
+
+        for (int i = 0; i < ne; ++i)
         {
-            MFEM_ABORT("TODO");
+            for (int j = 0; j < nqe; ++j)
+                w((i * nqe) + j) = w_el[j];
         }
-    } // Loop (i) over snapshots
-
-    Array<double> const &w_el = ir0->GetWeights();
-    MFEM_VERIFY(w_el.Size() == nqe, "");
-
-    CAROM::Vector w(ne * nqe, true);
-
-    for (int i = 0; i < ne; ++i)
-    {
-        for (int j = 0; j < nqe; ++j)
-            w((i * nqe) + j) = w_el[j];
+        
+        SolveNNLS(rank, nnls_tol, maxNNLSnnz, w, Gt, sol);
+        if (window_ids)
+        {
+        save_CAROM_Vector(sol, "sol_" + std::to_string(oi) + ".csv"); 
+        }
     }
-    bool stop = true;
-
-    SolveNNLS(rank, nnls_tol, maxNNLSnnz, w, Gt, sol);
 }
 
 void WriteMeshEQP(ParMesh *pmesh, const int myid, const int nqe,
@@ -463,4 +508,76 @@ void WriteMeshEQP(ParMesh *pmesh, const int myid, const int nqe,
     std::set<int> faces, edges, vertices;
     CAROM::SampleVisualization(pmesh, elements, elements, faces, edges,
                                vertices, "EQPvis", &elemCount);
+}
+
+// Function to compute the indices at which to switch time windows
+void get_window_ids(int n_step, int n_window, CAROM::Vector* ids)
+{
+    int window_size = std::round(n_step / n_window);
+
+    int res = n_step - (n_window * (window_size - 1) + 1);
+    int res_up = res - n_window;
+    int ctr = -1;
+
+    for (int i = 1; i <= n_window + 1; ++i)
+    {
+        ids->item(i - 1) = (i - 1) * window_size + 1 - (i - 1);
+        if (res_up > 0)
+        {
+            if (i <= res - res_up)
+            {
+                ctr += 1;
+            }
+            if (i > 2 && i <= res_up + 1)
+            {
+                ctr += 1;
+            }
+        }
+        else
+        {
+            if (i <= res + 1)
+            {
+                ctr += 1;
+            }
+        }
+        ids->item(i - 1) += ctr;
+    }
+}
+
+void load_CAROM_vector(const std::string& filename, CAROM::Vector& vector)
+{
+    std::ifstream file(filename);
+    std::string line;
+    std::vector<double> data;
+
+    while (std::getline(file, line))
+    {
+        std::stringstream ss(line);
+        std::string value;
+
+        while (std::getline(ss, value, ','))
+        {
+            data.push_back(std::stod(value));
+        }
+    }
+
+    // Set the size of the vector
+    int size = data.size();
+    vector.setSize(size);
+
+    // Copy the data into the vector
+    for (int i = 0; i < size; ++i)
+    {
+        vector(i) = data[i];
+    }
+}
+
+void get_EQPsol(const int current_window, CAROM::Vector* load_eqpsol)
+{
+    string filename = "sol_" + std::to_string(current_window) + ".csv";
+    if (fileExists(filename))
+    {
+        load_CAROM_vector(filename, *load_eqpsol);
+    }
+
 }
