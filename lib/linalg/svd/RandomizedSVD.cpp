@@ -15,6 +15,7 @@
 
 #include "mpi.h"
 #include "linalg/scalapack_wrapper.h"
+#include "utils/mpi_utils.h"
 
 #include <limits.h>
 #include <algorithm>
@@ -62,8 +63,11 @@ RandomizedSVD::computeSVD()
     else {
         int num_transposed_rows;
         std::vector<int> snapshot_transpose_row_offset;
-        split_dimension(num_cols, num_transposed_rows,
-                        snapshot_transpose_row_offset);
+        num_transposed_rows = split_dimension(num_cols, MPI_COMM_WORLD);
+        int num_cols_check = get_global_offsets(num_transposed_rows,
+                                                snapshot_transpose_row_offset,
+                                                MPI_COMM_WORLD);
+        CAROM_VERIFY(num_cols == num_cols_check);
 
         snapshot_matrix = new Matrix(num_transposed_rows,
                                      num_rows, true);
@@ -207,25 +211,6 @@ RandomizedSVD::computeSVD()
         }
     }
 
-}
-
-void
-RandomizedSVD::split_dimension(const int &dim, int &local_dim, std::vector<int> &offsets)
-{
-    local_dim = dim / d_num_procs;
-    if (dim % d_num_procs > d_rank)
-        local_dim++;
-
-    offsets.resize(d_num_procs + 1);
-    offsets[d_num_procs] = dim;
-    offsets[d_rank] = local_dim;
-    CAROM_VERIFY(MPI_Allgather(MPI_IN_PLACE, 1, MPI_INT,
-                               &offsets[0], 1, MPI_INT,
-                               MPI_COMM_WORLD) == MPI_SUCCESS);
-    for (int i = d_num_procs - 1; i >= 0; i--)
-        offsets[i] = offsets[i + 1] - offsets[i];
-
-    CAROM_VERIFY(offsets[0] == 0);
 }
 
 }
