@@ -61,6 +61,13 @@
 //      Relative error of ROM position (x) at t_final: 5 is 0.00188458
 //      Relative error of ROM velocity (v) at t_final: 5 is 0.978726
 //
+// Online phase with EQP hyper-reduction
+//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -eqp -ns 2 -ntw 50  -rvdim 40 -rxdim 10 -hdim 1  -sc 1.00
+// Output message:
+//      Elapsed time for time integration loop 82.0641
+//      Relative error of ROM position (x) at t_final: 5 is 0.000893109
+//      Relative error of ROM velocity (v) at t_final: 5 is 0.741266
+//
 // =================================================================================
 //
 // Sample runs and results for parametric ROM using only displacement basis
@@ -96,6 +103,25 @@
 //      Relative error of ROM position (x) at t_final: 5 is 0.0108709
 //      Relative error of ROM velocity (v) at t_final: 5 is 1.30704
 //
+// Online phase with strong hyper reduction, using QDEIM:
+//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype qdeim -rxdim 2 -hdim 4 -nsr 10 -sc 1.0 -xbo -def-ic
+// Output message:
+//      Elapsed time for time integration loop 0.10806
+//      Relative error of ROM position (x) at t_final: 5 is 0.0108709
+//      Relative error of ROM velocity (v) at t_final: 5 is 1.30704
+//
+// Online phase with strong hyper reduction, using QDEIM:
+//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype qdeim -rxdim 2 -hdim 4 -nsr 10 -sc 1.0 -xbo -def-ic
+// Output message:
+//      Elapsed time for time integration loop 0.10806
+//      Relative error of ROM position (x) at t_final: 5 is 0.0108709
+//      Relative error of ROM velocity (v) at t_final: 5 is 1.30704
+//
+// Online phase with EQP hyper reduction:
+//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -eqp -ns 2 -rxdim 2 -hdim 1 -ntw 25 -sc 1.00 -xbo -def-ic
+// Elapsed time for time integration loop 0.766614
+//      Relative error of ROM position (x) at t_final: 5 is 0.0161132
+//      Relative error of ROM velocity (v) at t_final: 5 is 0.775545
 // This example runs in parallel with MPI, by using the same number of MPI ranks
 // in all phases (offline, merge, online).
 
