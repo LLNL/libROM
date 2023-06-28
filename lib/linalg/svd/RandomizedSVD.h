@@ -71,6 +71,13 @@ private:
     computeSVD();
 
     /**
+     * @brief Split a dimension into the number of processes.
+     *        Process-specific dimension is stored in local_dim.
+     *        int[d_num_procs+1] offsets stores the integer offsets.
+     */
+    void split_dimension(const int &dim, int &local_dim, std::vector<int> &offsets);
+
+    /**
      * @brief The number of dimensions of the randomized subspace the
      * snapshot matrix will be projected to.
      */

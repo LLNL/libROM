@@ -60,30 +60,14 @@ RandomizedSVD::computeSVD()
         }
     }
     else {
-        int num_transposed_rows = num_cols / d_num_procs;
-        if (num_cols % d_num_procs > d_rank) {
-            num_transposed_rows++;
-        }
+        int num_transposed_rows;
+        std::vector<int> snapshot_transpose_row_offset;
+        split_dimension(num_cols, num_transposed_rows,
+                        snapshot_transpose_row_offset);
 
         snapshot_matrix = new Matrix(num_transposed_rows,
                                      num_rows, true);
 
-        int *snapshot_transpose_row_offset = new int[d_num_procs + 1];
-        snapshot_transpose_row_offset[d_num_procs] = num_cols;
-        snapshot_transpose_row_offset[d_rank] = num_transposed_rows;
-        CAROM_VERIFY(MPI_Allgather(MPI_IN_PLACE,
-                                   1,
-                                   MPI_INT,
-                                   snapshot_transpose_row_offset,
-                                   1,
-                                   MPI_INT,
-                                   MPI_COMM_WORLD) == MPI_SUCCESS);
-        for (int i = d_num_procs - 1; i >= 0; i--) {
-            snapshot_transpose_row_offset[i] = snapshot_transpose_row_offset[i + 1] -
-                                               snapshot_transpose_row_offset[i];
-        }
-
-        CAROM_VERIFY(snapshot_transpose_row_offset[0] == 0);
         for (int rank = 0; rank < d_num_procs; ++rank) {
             gather_block(&snapshot_matrix->item(0, 0), d_samples.get(),
                          1, snapshot_transpose_row_offset[rank] + 1,
@@ -91,7 +75,6 @@ RandomizedSVD::computeSVD()
                          snapshot_transpose_row_offset[rank],
                          rank);
         }
-        delete [] snapshot_transpose_row_offset;
     }
 
     int snapshot_matrix_distributed_rows = std::max(num_rows, num_cols);
@@ -163,15 +146,15 @@ RandomizedSVD::computeSVD()
     ncolumns = std::min(ncolumns, d_subspace_dim);
 
     // Allocate the appropriate matrices and gather their elements.
-    d_basis = new Matrix(svd_input_mat_distributed_rows, ncolumns, false);
     d_S = new Vector(ncolumns, false);
     {
         CAROM_VERIFY(ncolumns >= 0);
         unsigned nc = static_cast<unsigned>(ncolumns);
         memset(&d_S->item(0), 0, nc*sizeof(double));
     }
-    d_basis_right = new Matrix(ncolumns, d_subspace_dim, false);
 
+    d_basis = new Matrix(svd_input_mat_distributed_rows, ncolumns, false);
+    d_basis_right = new Matrix(d_subspace_dim, ncolumns, false);
     // Since the input to the SVD was transposed, U and V are switched.
     for (int rank = 0; rank < d_num_procs; ++rank) {
         // V is computed in the transposed order so no reordering necessary.
@@ -224,6 +207,25 @@ RandomizedSVD::computeSVD()
         }
     }
 
+}
+
+void
+RandomizedSVD::split_dimension(const int &dim, int &local_dim, std::vector<int> &offsets)
+{
+    local_dim = dim / d_num_procs;
+    if (dim % d_num_procs > d_rank)
+        local_dim++;
+
+    offsets.resize(d_num_procs + 1);
+    offsets[d_num_procs] = dim;
+    offsets[d_rank] = local_dim;
+    CAROM_VERIFY(MPI_Allgather(MPI_IN_PLACE, 1, MPI_INT,
+                               &offsets[0], 1, MPI_INT,
+                               MPI_COMM_WORLD) == MPI_SUCCESS);
+    for (int i = d_num_procs - 1; i >= 0; i--)
+        offsets[i] = offsets[i + 1] - offsets[i];
+
+    CAROM_VERIFY(offsets[0] == 0);
 }
 
 }
