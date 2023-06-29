@@ -145,43 +145,6 @@ using namespace mfem;
 
 class ReducedSystemOperator;
 
-/* class HyperelasticOperator : public TimeDependentOperator
-{
-
-protected:
-    ParBilinearForm *M, *S;
-
-    CGSolver M_solver;    // Krylov solver for inverting the mass matrix M
-    HypreSmoother M_prec; // Preconditioner for the mass matrix M
-
-public:
-    HyperelasticOperator(ParFiniteElementSpace &f, Array<int> &ess_tdof_list_,
-                         double visc, double mu, double K);
-
-    /// Compute the right-hand side of the ODE system.
-    virtual void Mult(const Vector &vx, Vector &dvx_dt) const;
-
-    double ElasticEnergy(const ParGridFunction &x) const;
-    double KineticEnergy(const ParGridFunction &v) const;
-    void GetElasticEnergyDensity(const ParGridFunction &x,
-                                 ParGridFunction &w) const;
-
-    mutable Vector H_sp;
-    mutable Vector dvxdt_sp;
-
-    ParFiniteElementSpace &fespace;
-    double viscosity;
-    Array<int> ess_tdof_list;
-    ParNonlinearForm *H;
-    HyperelasticModel *model;
-    mutable Vector z;     // auxiliary vector
-    mutable Vector z2;    // auxiliary vector
-    HypreParMatrix *Mmat; // Mass matrix from ParallelAssemble()
-    HypreParMatrix Smat;
-
-    virtual ~HyperelasticOperator();
-}; */
-
 class RomOperator : public TimeDependentOperator
 {
 private:
@@ -489,7 +452,7 @@ int main(int argc, char *argv[])
     double tolNNLS = 1.0e-14;
     int maxNNLSnnz = 0;
 
-    // for time windows
+    // Number of time windows
     int n_windows = 0;
 
     OptionsParser args(argc, argv);
@@ -1217,7 +1180,7 @@ int main(int argc, char *argv[])
             {
                 if (use_eqp && window_ids && current_window < n_windows && ti == window_ids->item(current_window))
                 {
-                    // Load eqp and reinitialize romoperator
+                    // Load eqp and reinitialize ROM operator
                     cout << "Time window start at" << ti << endl;
                     get_EQPsol(current_window, load_eqpsol);
                     romop->SetEQP(load_eqpsol);

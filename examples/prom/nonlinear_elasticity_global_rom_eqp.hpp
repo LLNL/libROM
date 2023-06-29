@@ -155,7 +155,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
 
             // Integration at ip
 
-            // Initialize nonlinear operator matrices (there is probably a better way)
+            // Initialize nonlinear operator matrices (this could be optimized)
             DenseMatrix DSh(dof, dim);
             DenseMatrix DS(dof, dim);
             DenseMatrix Jrt(dim);
@@ -182,7 +182,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
             Mult(DSh, Jrt, DS);
             MultAtB(PMatI, DS, Jpt);
             model->EvalP(Jpt, P_f);
-            P_f *= (t * rw[i]); // NB: Not by ip.weight //Or is it rw[qpi]?
+            P_f *= (t * rw[i]); // NB: Not by ip.weight
             AddMultABt(DS, P_f, PMatO);
 
             // Calculate r[i] = ve_j^T * elvect
@@ -194,31 +194,34 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
     }
 }
 
-/* TODO if time...
 void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fesR,
-        std::vector<int> const& qp, const IntegrationRule *ir,
-        Coefficient *Q, CAROM::Vector const& x,
-        Vector const& coef, Vector & res)
+                                                      std::vector<int> const &qp, const IntegrationRule *ir,
+                                                      Coefficient *Q, CAROM::Vector const &x,
+                                                      Vector const &coef, Vector &res)
 {
-
+    MFEM_ABORT("TODO")
 }
-*/
 
-bool fileExists(const std::string& filename)
+bool fileExists(const std::string &filename)
 {
     std::ifstream file(filename);
     return file.good();
 }
 
-void save_CAROM_Vector(const CAROM::Vector& vector, const std::string& filename) {
+void save_CAROM_Vector(const CAROM::Vector &vector, const std::string &filename)
+{
     std::ofstream file(filename);
-    if (file.is_open()) {
-        for (int i = 0; i < vector.dim(); ++i) {
+    if (file.is_open())
+    {
+        for (int i = 0; i < vector.dim(); ++i)
+        {
             file << vector(i) << "\n";
         }
         file.close();
         std::cout << "Vector saved as " << filename << " successfully." << std::endl;
-    } else {
+    }
+    else
+    {
         std::cerr << "Error: Unable to open file " << filename << " for writing." << std::endl;
     }
 }
@@ -477,11 +480,11 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
             for (int j = 0; j < nqe; ++j)
                 w((i * nqe) + j) = w_el[j];
         }
-        
+
         SolveNNLS(rank, nnls_tol, maxNNLSnnz, w, Gt, sol);
         if (window_ids)
         {
-        save_CAROM_Vector(sol, "sol_" + std::to_string(oi) + ".csv"); 
+            save_CAROM_Vector(sol, "sol_" + std::to_string(oi) + ".csv");
         }
     }
 }
@@ -511,7 +514,7 @@ void WriteMeshEQP(ParMesh *pmesh, const int myid, const int nqe,
 }
 
 // Function to compute the indices at which to switch time windows
-void get_window_ids(int n_step, int n_window, CAROM::Vector* ids)
+void get_window_ids(int n_step, int n_window, CAROM::Vector *ids)
 {
     int window_size = std::round(n_step / n_window);
 
@@ -544,7 +547,7 @@ void get_window_ids(int n_step, int n_window, CAROM::Vector* ids)
     }
 }
 
-void load_CAROM_vector(const std::string& filename, CAROM::Vector& vector)
+void load_CAROM_vector(const std::string &filename, CAROM::Vector &vector)
 {
     std::ifstream file(filename);
     std::string line;
@@ -572,12 +575,11 @@ void load_CAROM_vector(const std::string& filename, CAROM::Vector& vector)
     }
 }
 
-void get_EQPsol(const int current_window, CAROM::Vector* load_eqpsol)
+void get_EQPsol(const int current_window, CAROM::Vector *load_eqpsol)
 {
     string filename = "sol_" + std::to_string(current_window) + ".csv";
     if (fileExists(filename))
     {
         load_CAROM_vector(filename, *load_eqpsol);
     }
-
 }
