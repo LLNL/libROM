@@ -19,6 +19,7 @@
 #include<gtest/gtest.h>
 #include <mpi.h>
 #include "linalg/BasisGenerator.h"
+#include "utils/mpi_utils.h"
 #define _USE_MATH_DEFINES
 #include <cmath>
 
@@ -135,6 +136,7 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposed)
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
 
     int num_total_rows = 3;
+    int num_samples = 5;
     int d_num_rows = num_total_rows / d_num_procs;
     if (num_total_rows % d_num_procs > d_rank) {
         d_num_rows++;
@@ -155,11 +157,11 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposed)
         row_offset[i] = row_offset[i + 1] - row_offset[i];
     }
 
-    double* sample1 = new double[5] {0.5377, -1.3077, -1.3499};
-    double* sample2 = new double[5] {1.8339, -0.4336, 3.0349};
-    double* sample3 = new double[5] {-2.2588, 0.3426, 0.7254};
-    double* sample4 = new double[5] {0.8622, 3.5784, -0.0631};
-    double* sample5 = new double[5] {0.3188, 2.7694, 0.7147};
+    double* sample1 = new double[3] {0.5377, -1.3077, -1.3499};
+    double* sample2 = new double[3] {1.8339, -0.4336, 3.0349};
+    double* sample3 = new double[3] {-2.2588, 0.3426, 0.7254};
+    double* sample4 = new double[3] {0.8622, 3.5784, -0.0631};
+    double* sample5 = new double[3] {0.3188, 2.7694, 0.7147};
 
     double* basis_right_true_ans = new double[15] {
         3.08158946098238906153E-01,	    -9.49897947980619661301E-02,	-4.50691774108525788911E-01,	
@@ -194,43 +196,22 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposed)
     const CAROM::Matrix* d_basis_right = sampler.getTemporalBasis();
     const CAROM::Vector* sv = sampler.getSingularValues();
 
-    num_total_rows = 5;
-    d_num_rows = num_total_rows / d_num_procs;
-    if (num_total_rows % d_num_procs > d_rank) {
-        d_num_rows++;
-    }
-
-    row_offset[d_num_procs] = num_total_rows;
-    row_offset[d_rank] = d_num_rows;
-
-    EXPECT_EQ(d_basis_right->numRows(), d_num_rows);
+    EXPECT_EQ(d_basis_right->numRows(), num_samples);
     EXPECT_EQ(d_basis_right->numColumns(), 3);
-    EXPECT_EQ(d_basis->numRows(), 3);
+    EXPECT_EQ(d_basis->numRows(), d_num_rows);
     EXPECT_EQ(d_basis->numColumns(), 3);
     EXPECT_EQ(sv->dim(), 3);
 
     double* d_basis_vals = d_basis->getData();
     double* d_basis_right_vals = d_basis_right->getData();
 
-    MPI_Allgather(MPI_IN_PLACE,
-                  1,
-                  MPI_INT,
-                  row_offset,
-                  1,
-                  MPI_INT,
-                  MPI_COMM_WORLD);
-
-    for (int i = d_num_procs - 1; i >= 0; i--) {
-        row_offset[i] = row_offset[i + 1] - row_offset[i];
+    for (int i = 0; i < num_samples * 3; i++) {
+        EXPECT_NEAR(abs(d_basis_right_vals[i]),
+                    abs(basis_right_true_ans[i]), 1e-7);
     }
 
     for (int i = 0; i < d_num_rows * 3; i++) {
-        EXPECT_NEAR(abs(d_basis_right_vals[i]),
-                    abs(basis_right_true_ans[row_offset[d_rank] * 3 + i]), 1e-7);
-    }
-
-    for (int i = 0; i < 9; i++) {
-        EXPECT_NEAR(abs(d_basis_vals[i]), abs(basis_true_ans[i]), 1e-7);
+        EXPECT_NEAR(abs(d_basis_vals[i]), abs(basis_true_ans[row_offset[d_rank] * 3 + i]), 1e-7);
     }
 
     for (int i = 0; i < 3; i++) {
@@ -343,25 +324,11 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposedSmallerSubspace)
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
 
     int num_total_rows = 3;
-    int d_num_rows = num_total_rows / d_num_procs;
-    if (num_total_rows % d_num_procs > d_rank) {
-        d_num_rows++;
-    }
-    int *row_offset = new int[d_num_procs + 1];
-    row_offset[d_num_procs] = num_total_rows;
-    row_offset[d_rank] = d_num_rows;
-
-    MPI_Allgather(MPI_IN_PLACE,
-                  1,
-                  MPI_INT,
-                  row_offset,
-                  1,
-                  MPI_INT,
-                  MPI_COMM_WORLD);
-
-    for (int i = d_num_procs - 1; i >= 0; i--) {
-        row_offset[i] = row_offset[i + 1] - row_offset[i];
-    }
+    int num_samples = 5;
+    int reduced_rows = 2;
+    int d_num_rows = CAROM::split_dimension(num_total_rows, MPI_COMM_WORLD);
+    std::vector<int> row_offset;
+    int dummy = CAROM::get_global_offsets(d_num_rows, row_offset, MPI_COMM_WORLD);
 
     double* sample1 = new double[5] {0.5377, -1.3077, -1.3499};
     double* sample2 = new double[5] {1.8339, -0.4336, 3.0349};
@@ -389,7 +356,7 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposedSmallerSubspace)
     CAROM::Options randomized_svd_options = CAROM::Options(d_num_rows, 5, 1);
     randomized_svd_options.setMaxBasisDimension(num_total_rows);
     randomized_svd_options.setDebugMode(true);
-    randomized_svd_options.setRandomizedSVD(true, 2);
+    randomized_svd_options.setRandomizedSVD(true, reduced_rows);
     CAROM::BasisGenerator sampler(randomized_svd_options, false);
     sampler.takeSample(&sample1[row_offset[d_rank]], 0, 0);
     sampler.takeSample(&sample2[row_offset[d_rank]], 0, 0);
@@ -401,46 +368,28 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposedSmallerSubspace)
     const CAROM::Matrix* d_basis_right = sampler.getTemporalBasis();
     const CAROM::Vector* sv = sampler.getSingularValues();
 
-    num_total_rows = 5;
-    d_num_rows = num_total_rows / d_num_procs;
-    if (num_total_rows % d_num_procs > d_rank) {
-        d_num_rows++;
-    }
+    d_num_rows = CAROM::split_dimension(reduced_rows, MPI_COMM_WORLD);
+    int reduced_rows_check = CAROM::get_global_offsets(d_num_rows, row_offset, MPI_COMM_WORLD);
 
-    row_offset[d_num_procs] = num_total_rows;
-    row_offset[d_rank] = d_num_rows;
-
-    EXPECT_EQ(d_basis_right->numRows(), d_num_rows);
-    EXPECT_EQ(d_basis_right->numColumns(), 2);
-    EXPECT_EQ(d_basis->numRows(), 2);
-    EXPECT_EQ(d_basis->numColumns(), 2);
-    EXPECT_EQ(sv->dim(), 2);
+    EXPECT_EQ(d_basis_right->numRows(), num_samples);
+    EXPECT_EQ(d_basis_right->numColumns(), reduced_rows);
+    EXPECT_EQ(d_basis->numRows(), d_num_rows);
+    EXPECT_EQ(d_basis->numColumns(), reduced_rows);
+    EXPECT_EQ(sv->dim(), reduced_rows);
 
     double* d_basis_vals = d_basis->getData();
     double* d_basis_right_vals = d_basis_right->getData();
 
-    MPI_Allgather(MPI_IN_PLACE,
-                  1,
-                  MPI_INT,
-                  row_offset,
-                  1,
-                  MPI_INT,
-                  MPI_COMM_WORLD);
-
-    for (int i = d_num_procs - 1; i >= 0; i--) {
-        row_offset[i] = row_offset[i + 1] - row_offset[i];
-    }
-
-    for (int i = 0; i < d_num_rows * 2; i++) {
+    for (int i = 0; i < num_samples * reduced_rows; i++) {
         EXPECT_NEAR(abs(d_basis_right_vals[i]),
-                    abs(basis_right_true_ans[row_offset[d_rank] * 2 + i]), 1e-7);
+                    abs(basis_right_true_ans[i]), 1e-7);
     }
 
-    for (int i = 0; i < 4; i++) {
-        EXPECT_NEAR(abs(d_basis_vals[i]), abs(basis_true_ans[i]), 1e-7);
+    for (int i = 0; i < d_num_rows * reduced_rows; i++) {
+        EXPECT_NEAR(abs(d_basis_vals[i]), abs(basis_true_ans[row_offset[d_rank] * reduced_rows + i]), 1e-7);
     }
 
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < reduced_rows; i++) {
         EXPECT_NEAR(sv->item(i), sv_true_ans[i], 1e-7);
     }
 }

@@ -1042,8 +1042,9 @@ Matrix::distribute(const int &local_num_rows)
     int local_offset = row_offsets[d_rank] * d_num_cols;
     const int new_size = local_num_rows * d_num_cols;
 
-    double *d_new_mat = new double [new_size] {0.0};
-    memcpy(d_new_mat, &d_mat[local_offset], 8 * new_size);
+    double *d_new_mat = new double [new_size];
+    if (new_size > 0)   
+        memcpy(d_new_mat, &d_mat[local_offset], 8 * new_size);
     
     delete [] d_mat;
     d_mat = d_new_mat;

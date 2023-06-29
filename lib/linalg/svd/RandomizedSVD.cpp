@@ -39,8 +39,8 @@ RandomizedSVD::computeSVD()
     d_samples->n = d_num_samples;
     delete_factorizer();
 
-    int num_rows = d_total_dim;
-    int num_cols = d_num_samples;
+    const int num_rows = d_total_dim;
+    const int num_cols = d_num_samples;
     if (d_subspace_dim < 1 || d_subspace_dim > std::min(num_rows, num_cols)) {
         d_subspace_dim = std::min(num_rows, num_cols);
     }
@@ -184,6 +184,14 @@ RandomizedSVD::computeSVD()
         Matrix* temp = d_basis;
         d_basis = d_basis_right;
         d_basis_right = temp;
+
+        int local_rows = -1;
+        if (d_basis->numRows() == d_total_dim)
+            local_rows = d_dim;
+        else
+            local_rows = split_dimension(d_basis->numRows());
+        d_basis->distribute(local_rows);
+        d_basis_right->gather();
     }
 
     d_this_interval_basis_current = true;
