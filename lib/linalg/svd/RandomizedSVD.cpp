@@ -188,8 +188,11 @@ RandomizedSVD::computeSVD()
         int local_rows = -1;
         if (d_basis->numRows() == d_total_dim)
             local_rows = d_dim;
-        else
+        else {
+            printf("WARNING: RandomizedSVD::d_basis has a subspace dimension %d, different from sample dimension %d\n",
+                   d_basis->numRows(), num_rows);
             local_rows = split_dimension(d_basis->numRows());
+        }
         d_basis->distribute(local_rows);
         d_basis_right->gather();
     }
