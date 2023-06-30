@@ -57,9 +57,81 @@ public:
 void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
                                                   std::vector<double> const &rw, std::vector<int> const &qp,
                                                   const IntegrationRule *ir,
-                                                  CAROM::Matrix const &V, Vector &res)
+                                                  CAROM::Matrix const &V, Vector &coef)
 {
-    MFEM_ABORT("TODO");
+    const int rvdim = V_v.numColumns();
+    const int fomdim = V_v.numRows();
+    MFEM_VERIFY(rw.size() == qp.size(), "");
+    MFEM_VERIFY(fomdim == fesR->GetTrueVSize(), "");
+
+    MFEM_VERIFY(rank == 0,
+                "TODO: generalize to parallel. This uses full dofs in V, which has true dofs");
+
+    const int nqe = ir->GetWeights().Size();
+
+    DofTransformation *doftrans;
+    Array<int> vdofs;
+
+    int eprev = -1;
+    int dof = 0;
+    int dim = 0;
+
+    // Get prolongation matrix
+    const Operator *P = fesR->GetProlongationMatrix();
+
+    // Vector to be prolongated
+    Vector vj(fomdim);
+
+    // Prolongated vector
+    Vector p_vj(P->Height());
+
+    // Element vector
+    Vector vj_e;
+    // Get the element vector size
+    doftrans = fesR->GetElementVDofs(0, vdofs);
+    elvect_size = vdofs.size();
+
+    // Coefficient vector
+    coef.SetSize(elvect_size * rw.size() * rvdim);
+    coef = 0.0;
+
+    // For every basis vector
+    for (int j = 0; j < rvdim; ++j)
+
+    {
+        // Get basis vector and prolongate
+        for (int k = 0; k < V_v.numRows(); ++k)
+            vj[k] = V_v(k, j);
+        P->Mult(vj, p_vj);
+
+        eprev = -1;
+
+        // For every quadrature weight
+        for (int i = 0; i < rw.size(); ++i) // NOTE: i < 9
+        {
+            const int e = qp[i] / nqe; // Element index
+
+            if (e != eprev) // Update element transformation
+            {
+                doftrans = fesR->GetElementVDofs(e, vdofs);
+
+                if (doftrans)
+                {
+                    MFEM_ABORT("TODO");
+                }
+
+                // Get element vectors
+                p_vj.GetSubVector(vdofs, vj_e);
+                eprev = e;
+            }
+
+            // Calculate r[i] = ve_j^T * elvect
+            for (int k = 0; k < elvect_size; k++)
+            {
+                coef[k + (i * elvect_size) + (j * elvect_size * rw.size())] = vj_e[k]
+            }
+        }
+    }
 }
 
 void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
@@ -196,10 +268,127 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
 
 void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fesR,
                                                       std::vector<int> const &qp, const IntegrationRule *ir,
-                                                      Coefficient *Q, CAROM::Vector const &x,
+                                                      CAROM::Vector const &x, CAROM::Matrix const &V_x,
                                                       Vector const &coef, Vector &res)
 {
-    MFEM_ABORT("TODO")
+    
+    const int rxdim = V_x.numColumns();
+    const int fomdim = V_x.numRows();
+    MFEM_VERIFY(rw.size() == qp.size(), "");
+    MFEM_VERIFY(x.dim() == rxdim, "");
+    MFEM_VERIFY(V_x.numRows() == fesR->GetTrueVSize(), "");
+
+    MFEM_VERIFY(rank == 0,
+                "TODO: generalize to parallel. This uses full dofs in V, which has true dofs");
+
+    const int nqe = ir->GetWeights().Size();
+
+    ElementTransformation *eltrans;
+    DofTransformation *doftrans;
+    const FiniteElement *fe = NULL;
+    Array<int> vdofs;
+
+    res.SetSize(rxdim);
+    res = 0.0;
+
+    int eprev = -1;
+    int dof = 0;
+    int dim = 0;
+
+    // Get prolongation matrix
+    const Operator *P = fesR->GetProlongationMatrix();
+
+    // Vectors to be prolongated
+    CAROM::Vector *Vx_librom_temp = new CAROM::Vector(fomdim, true);
+    Vector *Vx_temp = new Vector(&((*Vx_librom_temp)(0)), fomdim);
+    Vector Vx(fomdim);
+
+    // Prolongated vectors
+    Vector p_Vx(P->Height());
+
+    // Element vectors
+    Vector Vx_e;
+
+    // Lift x, add x0 and prolongate result
+    V_x.mult(x, Vx_librom_temp);
+    add(*Vx_temp, *x0, Vx);
+    P->Mult(Vx, p_Vx);
+
+    // For every basis vector
+    for (int j = 0; j < rvdim; ++j)
+
+    {
+        res[j] = 0.0;
+
+        eprev = -1;
+
+        // For every quadrature weight
+        for (int i = 0; i < rw.size(); ++i) // NOTE: i < 9
+        {
+            const int e = qp[i] / nqe; // Element index
+            // Local (element) index of the quadrature point
+            const int qpi = qp[i] - (e * nqe);
+            const IntegrationPoint &ip = ir->IntPoint(qpi);
+
+            if (e != eprev) // Update element transformation
+            {
+                doftrans = fesR->GetElementVDofs(e, vdofs);
+                fe = fesR->GetFE(e);
+                eltrans = fesR->GetElementTransformation(e);
+
+                dof = fe->GetDof(); // Get number of dofs in element
+                dim = fe->GetDim();
+
+                if (doftrans)
+                {
+                    MFEM_ABORT("TODO");
+                }
+
+                // Get element vectors
+                p_Vx.GetSubVector(vdofs, Vx_e);
+                eprev = e;
+            }
+
+            // Integration at ip
+
+            // Initialize nonlinear operator matrices (this could be optimized)
+            DenseMatrix DSh(dof, dim);
+            DenseMatrix DS(dof, dim);
+            DenseMatrix Jrt(dim);
+            DenseMatrix Jpt(dim);
+            DenseMatrix P_f(dim);
+            DenseMatrix PMatI; // Extract element dofs
+            PMatI.UseExternalData(Vx_e.GetData(), dof, dim);
+            DenseMatrix PMatO;
+            Vector elvect(dof * dim);
+            PMatO.UseExternalData(elvect.GetData(), dof, dim);
+
+            elvect = 0.0;
+
+            // Set integration point in the element transformation
+            eltrans->SetIntPoint(&ip);
+            model->SetTransformation(*eltrans);
+
+            // Get the transformation weight
+            double t = eltrans->Weight();
+
+            // Compute action of nonlinear operator
+            CalcInverse(eltrans->Jacobian(), Jrt); // TODO: incorporate in coefficient calculation
+            fe->CalcDShape(ip, DSh); // TODO: incorporate in coefficient calculation
+            Mult(DSh, Jrt, DS); // TODO: incorporate in coefficient calculation
+            MultAtB(PMatI, DS, Jpt);
+            model->EvalP(Jpt, P_f);
+            P_f *= (t * rw[i]); // NB: Not by ip.weight
+            AddMultABt(DS, P_f, PMatO);
+
+            // Calculate r[i] = ve_j^T * elvect
+            // coef is size len(vdofs) * rvdim * rw.size
+            for (int k = 0; k < elvect.Size(); k++)
+            {
+                res[j] += coef[k + (i * rw.size()) + (j * rw.size() * rvdim)] * elvect[k];
+            }
+        }
+    }
 }
 
 bool fileExists(const std::string &filename)
