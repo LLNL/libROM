@@ -57,7 +57,7 @@ public:
 void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
                                                   std::vector<double> const &rw, std::vector<int> const &qp,
                                                   const IntegrationRule *ir,
-                                                  CAROM::Matrix const &V, Vector &coef)
+                                                  CAROM::Matrix const &V_v, Vector &coef)
 {
     const int rvdim = V_v.numColumns();
     const int fomdim = V_v.numRows();
@@ -267,9 +267,9 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
 }
 
 void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fesR,
-                                                      std::vector<int> const &qp, const IntegrationRule *ir,
-                                                      CAROM::Vector const &x, CAROM::Matrix const &V_x,
-                                                      Vector const &coef, Vector &res)
+                                                      std::vector<int> const &qp, const IntegrationRule *ir, NeoHookeanModel *model,
+                                                      const Vector *x0, CAROM::Matrix const &V_x, CAROM::Vector const &x, 
+                                                      Vector const &coef, const int rank, Vector &res)
 {
     
     const int rxdim = V_x.numColumns();
