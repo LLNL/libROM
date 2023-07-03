@@ -190,6 +190,7 @@ private:
     std::vector<double> eqp_rw;
     std::vector<int> eqp_qp;
     Vector eqp_coef;
+    Vector eqp_DS_coef;
     const bool fastIntegration = true;
 
     int rank;
@@ -1739,7 +1740,7 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
              << fom->fespace.GetNE() << endl;
 
         GetEQPCoefficients_HyperelasticNLFIntegrator(&(fom->fespace), eqp_rw, eqp_qp,
-                                                     ir_eqp, model, V_v, rank, eqp_coef);
+                                                     ir_eqp, model, V_v, rank, eqp_coef, eqp_DS_coef);
     }
 }
 
@@ -1775,7 +1776,7 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
             HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(&(fom->fespace),eqp_rw,
                                                              eqp_qp, ir_eqp, model,
                                                              x0, V_x, V_v, x_librom,
-                                                             eqp_coef, rank, resEQP);
+                                                             eqp_coef, eqp_DS_coef, rank, resEQP);
         }
         else
             HyperelasticNLFIntegrator_ComputeReducedEQP(&(fom->fespace), eqp_rw,
@@ -1913,5 +1914,5 @@ void RomOperator::SetEQP(CAROM::Vector *eqpSol)
          << fom->fespace.GetNE() << endl;
 
     GetEQPCoefficients_HyperelasticNLFIntegrator(&(fom->fespace), eqp_rw, eqp_qp,
-                                                 ir_eqp, model, V_v, rank, eqp_coef);
+                                                 ir_eqp, model, V_v, rank, eqp_coef, eqp_DS_coef);
 }

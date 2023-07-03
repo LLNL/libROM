@@ -57,7 +57,7 @@ public:
 void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
                                                   std::vector<double> const &rw, std::vector<int> const &qp,
                                                   const IntegrationRule *ir, NeoHookeanModel *model,
-                                                  CAROM::Matrix const &V_v, const int rank, Vector &coef)
+                                                  CAROM::Matrix const &V_v, const int rank, Vector &coef, Vector &DS_coef)
 {
     const int rvdim = V_v.numColumns();
     const int fomdim = V_v.numRows();
@@ -95,6 +95,17 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
     // Coefficient vector
     coef.SetSize(elvect_size * rw.size() * rvdim);
     coef = 0.0;
+
+    // Vector for storing DS
+    const FiniteElement *fe = fesR->GetFE(0);
+    dof = fe->GetDof();
+    dim = fe->GetDim();
+    DenseMatrix DSh(dof, dim);
+    DenseMatrix DS(dof, dim);
+    DenseMatrix Jrt(dim);
+    DS_coef.SetSize(dof * dim * rw.size() * rvdim);
+    DS_coef = 0.0;
+    int index = 0;
 
     // For every basis vector
     for (int j = 0; j < rvdim; ++j)
@@ -138,6 +149,19 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
             for (int k = 0; k < elvect_size; k++)
             {
                 coef[k + (i * elvect_size) + (j * rw.size() * elvect_size)] = vj_e[k] * rw[i] * t;
+            }
+
+            // Calculate DS and store
+            CalcInverse(eltrans->Jacobian(), Jrt);
+            fe->CalcDShape(ip, DSh);
+            Mult(DSh, Jrt, DS);
+            for (int ii = 0; ii < dof; ++ii)
+            {
+                for (int jj = 0; jj < dim; ++jj)
+                {
+                    index = jj + ii * dim;
+                    DS_coef[index + (i * dof*dim) + (j * rw.size() * dof*dim)] = DS.Elem(ii,jj);
+                }
             }
         }
     }
@@ -282,7 +306,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
 void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fesR,
                                                       std::vector<double> const &rw, std::vector<int> const &qp, const IntegrationRule *ir, NeoHookeanModel *model,
                                                       const Vector *x0, CAROM::Matrix const &V_x, CAROM::Matrix const &V_v, CAROM::Vector const &x,
-                                                      Vector const &coef, const int rank, Vector &res)
+                                                      Vector const &coef, Vector const &DS_coef, const int rank, Vector &res)
 {
 
     const int rxdim = V_x.numColumns();
@@ -332,9 +356,8 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes
     fe = fesR->GetFE(0);
     dof = fe->GetDof();
     dim = fe->GetDim();
-    DenseMatrix DSh(dof, dim);
+    int index = 0;
     DenseMatrix DS(dof, dim);
-    DenseMatrix Jrt(dim);
     DenseMatrix Jpt(dim);
     DenseMatrix P_f(dim);
     DenseMatrix PMatI; // Extract element dofs
@@ -384,18 +407,17 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes
             eltrans->SetIntPoint(&ip);
             model->SetTransformation(*eltrans);
 
-            // Get the transformation weight
-            // double t = eltrans->Weight();
-            // t = 1.0; //Hack
-
-            // Compute action of nonlinear operator
-            CalcInverse(eltrans->Jacobian(), Jrt); // TODO: incorporate in coefficient calculation, if it makes sense
-            fe->CalcDShape(ip, DSh);               // TODO: incorporate in coefficient calculation, if it makes sense
-            Mult(DSh, Jrt, DS);                    // TODO: incorporate in coefficient calculation, if it makes sense
+            for (int ii = 0; ii < dof; ++ii)
+            {
+                for (int jj = 0; jj < dim; ++jj)
+                {
+                    index = jj + ii * dim;
+                    DS.Elem(ii,jj) = DS_coef[index + (i * elvect.Size()) + (j * qp.size() * elvect.Size())];
+                }
+            }
 
             MultAtB(PMatI, DS, Jpt);
             model->EvalP(Jpt, P_f);
-            // P_f *= (t * rw[i]); // NB: Not by ip.weight
             AddMultABt(DS, P_f, PMatO);
 
             // Calculate r[i] = ve_j^T * elvect
