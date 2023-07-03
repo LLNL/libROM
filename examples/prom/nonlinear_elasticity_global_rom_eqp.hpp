@@ -56,8 +56,8 @@ public:
 // in HyperelasticNLFIntegrator_ComputeReducedEQP.
 void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
                                                   std::vector<double> const &rw, std::vector<int> const &qp,
-                                                  const IntegrationRule *ir,
-                                                  CAROM::Matrix const &V_v, Vector &coef)
+                                                  const IntegrationRule *ir, NeoHookeanModel *model,
+                                                  CAROM::Matrix const &V_v, const int rank, Vector &coef)
 {
     const int rvdim = V_v.numColumns();
     const int fomdim = V_v.numRows();
@@ -70,6 +70,7 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
     const int nqe = ir->GetWeights().Size();
 
     DofTransformation *doftrans;
+    ElementTransformation *eltrans;
     Array<int> vdofs;
 
     int eprev = -1;
@@ -89,7 +90,7 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
     Vector vj_e;
     // Get the element vector size
     doftrans = fesR->GetElementVDofs(0, vdofs);
-    elvect_size = vdofs.size();
+    int elvect_size = vdofs.Size();
 
     // Coefficient vector
     coef.SetSize(elvect_size * rw.size() * rvdim);
@@ -97,7 +98,6 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
 
     // For every basis vector
     for (int j = 0; j < rvdim; ++j)
-
     {
         // Get basis vector and prolongate
         for (int k = 0; k < V_v.numRows(); ++k)
@@ -110,10 +110,14 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
         for (int i = 0; i < rw.size(); ++i) // NOTE: i < 9
         {
             const int e = qp[i] / nqe; // Element index
+            // Local (element) index of the quadrature point
+            const int qpi = qp[i] - (e * nqe);
+            const IntegrationPoint &ip = ir->IntPoint(qpi);
 
             if (e != eprev) // Update element transformation
             {
                 doftrans = fesR->GetElementVDofs(e, vdofs);
+                eltrans = fesR->GetElementTransformation(e);
 
                 if (doftrans)
                 {
@@ -125,10 +129,15 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
                 eprev = e;
             }
 
+            // Set integration point in the element transformation
+            eltrans->SetIntPoint(&ip);
+            model->SetTransformation(*eltrans);
+            // Get the transformation weight
+            double t = eltrans->Weight();
             // Calculate r[i] = ve_j^T * elvect
             for (int k = 0; k < elvect_size; k++)
             {
-                coef[k + (i * elvect_size) + (j * elvect_size * rw.size())] = vj_e[k]
+                coef[k + (i * elvect_size) + (j * elvect_size * rw.size())] = vj_e[k] * rw[i] * t;
             }
         }
     }
@@ -185,6 +194,21 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
     add(*Vx_temp, *x0, Vx);
     P->Mult(Vx, p_Vx);
 
+    // Initialize nonlinear operator storage
+    // Assuming all elements have the same dim and n_dof
+    fe = fesR->GetFE(0);
+    dof = fe->GetDof(); 
+    dim = fe->GetDim();
+    DenseMatrix DSh(dof, dim);
+    DenseMatrix DS(dof, dim);
+    DenseMatrix Jrt(dim);
+    DenseMatrix Jpt(dim);
+    DenseMatrix P_f(dim);
+    DenseMatrix PMatI; // Extract element dofs
+    DenseMatrix PMatO;
+    Vector elvect(dof * dim);
+    PMatO.UseExternalData(elvect.GetData(), dof, dim);
+
     // For every basis vector
     for (int j = 0; j < rvdim; ++j)
 
@@ -226,18 +250,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
             }
 
             // Integration at ip
-
-            // Initialize nonlinear operator matrices (this could be optimized)
-            DenseMatrix DSh(dof, dim);
-            DenseMatrix DS(dof, dim);
-            DenseMatrix Jrt(dim);
-            DenseMatrix Jpt(dim);
-            DenseMatrix P_f(dim);
-            DenseMatrix PMatI; // Extract element dofs
             PMatI.UseExternalData(Vx_e.GetData(), dof, dim);
-            DenseMatrix PMatO;
-            Vector elvect(dof * dim);
-            PMatO.UseExternalData(elvect.GetData(), dof, dim);
 
             elvect = 0.0;
 
@@ -267,14 +280,14 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
 }
 
 void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fesR,
-                                                      std::vector<int> const &qp, const IntegrationRule *ir, NeoHookeanModel *model,
-                                                      const Vector *x0, CAROM::Matrix const &V_x, CAROM::Vector const &x, 
+                                                      std::vector<double> const &rw, std::vector<int> const &qp, const IntegrationRule *ir, NeoHookeanModel *model,
+                                                      const Vector *x0, CAROM::Matrix const &V_x, CAROM::Matrix const &V_v, CAROM::Vector const &x,
                                                       Vector const &coef, const int rank, Vector &res)
 {
-    
+
     const int rxdim = V_x.numColumns();
+    const int rvdim = V_v.numColumns();
     const int fomdim = V_x.numRows();
-    MFEM_VERIFY(rw.size() == qp.size(), "");
     MFEM_VERIFY(x.dim() == rxdim, "");
     MFEM_VERIFY(V_x.numRows() == fesR->GetTrueVSize(), "");
 
@@ -314,16 +327,30 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes
     add(*Vx_temp, *x0, Vx);
     P->Mult(Vx, p_Vx);
 
+    // Initialize nonlinear operator storage
+    // Assuming all elements have the same dim and n_dof
+    fe = fesR->GetFE(0);
+    dof = fe->GetDof(); 
+    dim = fe->GetDim();
+    DenseMatrix DSh(dof, dim);
+    DenseMatrix DS(dof, dim);
+    DenseMatrix Jrt(dim);
+    DenseMatrix Jpt(dim);
+    DenseMatrix P_f(dim);
+    DenseMatrix PMatI; // Extract element dofs
+    DenseMatrix PMatO;
+    Vector elvect(dof * dim);
+    PMatO.UseExternalData(elvect.GetData(), dof, dim);
+
     // For every basis vector
     for (int j = 0; j < rvdim; ++j)
 
     {
-        res[j] = 0.0;
 
         eprev = -1;
 
         // For every quadrature weight
-        for (int i = 0; i < rw.size(); ++i) // NOTE: i < 9
+        for (int i = 0; i < qp.size(); ++i) // NOTE: i < 9
         {
             const int e = qp[i] / nqe; // Element index
             // Local (element) index of the quadrature point
@@ -350,42 +377,32 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes
             }
 
             // Integration at ip
-
-            // Initialize nonlinear operator matrices (this could be optimized)
-            DenseMatrix DSh(dof, dim);
-            DenseMatrix DS(dof, dim);
-            DenseMatrix Jrt(dim);
-            DenseMatrix Jpt(dim);
-            DenseMatrix P_f(dim);
-            DenseMatrix PMatI; // Extract element dofs
-            PMatI.UseExternalData(Vx_e.GetData(), dof, dim);
-            DenseMatrix PMatO;
-            Vector elvect(dof * dim);
-            PMatO.UseExternalData(elvect.GetData(), dof, dim);
-
             elvect = 0.0;
+            PMatI.UseExternalData(Vx_e.GetData(), dof, dim);
 
             // Set integration point in the element transformation
             eltrans->SetIntPoint(&ip);
             model->SetTransformation(*eltrans);
 
             // Get the transformation weight
-            double t = eltrans->Weight();
+            // double t = eltrans->Weight();
+            // t = 1.0; //Hack
 
             // Compute action of nonlinear operator
-            CalcInverse(eltrans->Jacobian(), Jrt); // TODO: incorporate in coefficient calculation
-            fe->CalcDShape(ip, DSh); // TODO: incorporate in coefficient calculation
-            Mult(DSh, Jrt, DS); // TODO: incorporate in coefficient calculation
+            CalcInverse(eltrans->Jacobian(), Jrt); // TODO: incorporate in coefficient calculation, if it makes sense
+            fe->CalcDShape(ip, DSh);               // TODO: incorporate in coefficient calculation, if it makes sense
+            Mult(DSh, Jrt, DS);                    // TODO: incorporate in coefficient calculation, if it makes sense
+
             MultAtB(PMatI, DS, Jpt);
             model->EvalP(Jpt, P_f);
-            P_f *= (t * rw[i]); // NB: Not by ip.weight
+            // P_f *= (t * rw[i]); // NB: Not by ip.weight
             AddMultABt(DS, P_f, PMatO);
 
             // Calculate r[i] = ve_j^T * elvect
             // coef is size len(vdofs) * rvdim * rw.size
             for (int k = 0; k < elvect.Size(); k++)
             {
-                res[j] += coef[k + (i * rw.size()) + (j * rw.size() * rvdim)] * elvect[k];
+                res[j] += coef[k + (i * qp.size()) + (j * qp.size() * rvdim)] * elvect[k];
             }
         }
     }
