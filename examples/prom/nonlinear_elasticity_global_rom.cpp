@@ -190,7 +190,7 @@ private:
     std::vector<double> eqp_rw;
     std::vector<int> eqp_qp;
     Vector eqp_coef;
-    const bool fastIntegration = false;
+    const bool fastIntegration = true;
 
     int rank;
 

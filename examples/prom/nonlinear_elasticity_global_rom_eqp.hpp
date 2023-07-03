@@ -137,7 +137,7 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
             // Calculate r[i] = ve_j^T * elvect
             for (int k = 0; k < elvect_size; k++)
             {
-                coef[k + (i * elvect_size) + (j * elvect_size * rw.size())] = vj_e[k] * rw[i] * t;
+                coef[k + (i * elvect_size) + (j * rw.size() * elvect_size)] = vj_e[k] * rw[i] * t;
             }
         }
     }
@@ -197,7 +197,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
     // Initialize nonlinear operator storage
     // Assuming all elements have the same dim and n_dof
     fe = fesR->GetFE(0);
-    dof = fe->GetDof(); 
+    dof = fe->GetDof();
     dim = fe->GetDim();
     DenseMatrix DSh(dof, dim);
     DenseMatrix DS(dof, dim);
@@ -330,7 +330,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes
     // Initialize nonlinear operator storage
     // Assuming all elements have the same dim and n_dof
     fe = fesR->GetFE(0);
-    dof = fe->GetDof(); 
+    dof = fe->GetDof();
     dim = fe->GetDim();
     DenseMatrix DSh(dof, dim);
     DenseMatrix DS(dof, dim);
@@ -402,7 +402,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes
             // coef is size len(vdofs) * rvdim * rw.size
             for (int k = 0; k < elvect.Size(); k++)
             {
-                res[j] += coef[k + (i * qp.size()) + (j * qp.size() * rvdim)] * elvect[k];
+                res[j] += coef[k + (i * elvect.Size()) + (j * qp.size() * elvect.Size())] * elvect[k];
             }
         }
     }
