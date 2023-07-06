@@ -9,6 +9,7 @@
  *****************************************************************************/
 
 #ifdef CAROM_HAS_GTEST
+
 #include<gtest/gtest.h>
 #include "linalg/scalapack_wrapper.h"
 #include "linalg/BasisGenerator.h"
@@ -17,8 +18,8 @@
 #include <cstdio>
 #include <cstring> // for memcpy
 #include <random>
-
 #include "mpi.h"
+#include "utils/mpi_utils.h"
 
 /**
  * Simple smoke test to make sure Google Test is properly linked
@@ -129,21 +130,9 @@ TEST(StaticSVDTest, Test_SLPKTranspose)
     if (num_total_rows % d_num_procs > d_rank) {
         d_num_rows++;
     }
-    int *row_offset = new int[d_num_procs + 1];
-    row_offset[d_num_procs] = num_total_rows;
-    row_offset[d_rank] = d_num_rows;
-
-    MPI_Allgather(MPI_IN_PLACE,
-                  1,
-                  MPI_INT,
-                  row_offset,
-                  1,
-                  MPI_INT,
-                  MPI_COMM_WORLD);
-
-    for (int i = d_num_procs - 1; i >= 0; i--) {
-        row_offset[i] = row_offset[i + 1] - row_offset[i];
-    }
+    std::vector<int> row_offset(d_num_procs + 1);
+    const int total_rows = CAROM::get_global_offsets(d_num_rows, row_offset, MPI_COMM_WORLD);
+    EXPECT_EQ(total_rows, num_total_rows);
 
     double* samples = new double[15] {0.5377, -1.3077, -1.3499,
                                       1.8339, -0.4336, 3.0349,
@@ -183,7 +172,7 @@ TEST(StaticSVDTest, Test_SLPKTranspose)
         }
     }
 
-    /* TODO: Try doing this more intelligently and see if it makes a difference */
+    /* NOTE: copied from StaticSVD::StaticSVD */
     int d_nprow = d_num_procs;
     int d_npcol = 1;
     int d_blocksize = d_total_dim / d_nprow;

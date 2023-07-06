@@ -328,7 +328,7 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposedSmallerSubspace)
     constexpr int reduced_rows = 2;
     int d_num_rows = CAROM::split_dimension(num_total_rows, MPI_COMM_WORLD);
     std::vector<int> row_offset;
-    int dummy = CAROM::get_global_offsets(d_num_rows, row_offset, MPI_COMM_WORLD);
+    CAROM::get_global_offsets(d_num_rows, row_offset, MPI_COMM_WORLD);
 
     double* sample1 = new double[5] {0.5377, -1.3077, -1.3499};
     double* sample2 = new double[5] {1.8339, -0.4336, 3.0349};
