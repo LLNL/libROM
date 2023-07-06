@@ -1063,7 +1063,7 @@ Matrix::gather()
     CAROM_VERIFY(d_owns_data);
 
     std::vector<int> row_offsets;
-    int num_total_rows = get_global_offsets(d_num_rows, row_offsets, MPI_COMM_WORLD);
+    const int num_total_rows = get_global_offsets(d_num_rows, row_offsets, MPI_COMM_WORLD);
     CAROM_VERIFY(num_total_rows == d_num_distributed_rows);
     const int new_size = d_num_distributed_rows * d_num_cols;
 
@@ -1072,7 +1072,7 @@ Matrix::gather()
     for (int k = 0; k < row_offsets.size() - 1; k++)
     {
         data_offsets[k] = row_offsets[k] * d_num_cols;
-        data_cnts[k] = d_num_rows * d_num_cols;
+        data_cnts[k] = (row_offsets[k+1] - row_offsets[k]) * d_num_cols;
     }
 
     double *d_new_mat = new double [new_size] {0.0};

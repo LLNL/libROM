@@ -61,10 +61,9 @@ RandomizedSVD::computeSVD()
         }
     }
     else {
-        int num_transposed_rows;
         std::vector<int> snapshot_transpose_row_offset;
-        num_transposed_rows = split_dimension(num_cols, MPI_COMM_WORLD);
-        int num_cols_check = get_global_offsets(num_transposed_rows,
+        const int num_transposed_rows = split_dimension(num_cols, MPI_COMM_WORLD);
+        const int num_cols_check = get_global_offsets(num_transposed_rows,
                                                 snapshot_transpose_row_offset,
                                                 MPI_COMM_WORLD);
         CAROM_VERIFY(num_cols == num_cols_check);

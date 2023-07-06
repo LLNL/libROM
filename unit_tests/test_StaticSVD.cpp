@@ -123,8 +123,8 @@ TEST(StaticSVDTest, Test_SLPKTranspose)
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
 
-    int num_total_rows = 3;
-    int num_total_cols = 5;
+    constexpr int num_total_rows = 3;
+    constexpr int num_total_cols = 5;
     int d_num_rows = num_total_rows / d_num_procs;
     if (num_total_rows % d_num_procs > d_rank) {
         d_num_rows++;
@@ -204,10 +204,7 @@ TEST(StaticSVDTest, Test_SLPKTranspose)
         }
     }
     printf("original\n");
-    MPI_Barrier(MPI_COMM_WORLD);
     print_debug_info(d_samples);
-
-    MPI_Barrier(MPI_COMM_WORLD);
 
     int d_blocksize_tr = num_total_cols / d_nprow;
     if (num_total_cols % d_nprow != 0) {
@@ -225,7 +222,6 @@ TEST(StaticSVDTest, Test_SLPKTranspose)
     }
 
     printf("transposed\n");
-    MPI_Barrier(MPI_COMM_WORLD);
 
     print_debug_info(transpose);
 
@@ -235,9 +231,7 @@ TEST(StaticSVDTest, Test_SLPKTranspose)
     factorize(d_factorizer);
 
     print_debug_info(d_factorizer->U);
-    MPI_Barrier(MPI_COMM_WORLD);
     print_debug_info(d_factorizer->V);
-    MPI_Barrier(MPI_COMM_WORLD);
 
     int ncolumns = num_total_rows;
     CAROM::Matrix *d_basis = new CAROM::Matrix(d_dims[d_rank], ncolumns, true);
@@ -258,7 +252,6 @@ TEST(StaticSVDTest, Test_SLPKTranspose)
     free_matrix_data(d_samples);
     free_matrix_data(transpose);
     delete d_samples, transpose;
-    MPI_Barrier(MPI_COMM_WORLD);
 }
 
 TEST(StaticSVDTest, Test_StaticSVDClass)
@@ -273,7 +266,7 @@ TEST(StaticSVDTest, Test_StaticSVDClass)
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
 
-    int num_total_rows = 5;
+    constexpr int num_total_rows = 5;
     int d_num_rows = num_total_rows / d_num_procs;
     if (num_total_rows % d_num_procs > d_rank) {
         d_num_rows++;
@@ -329,23 +322,6 @@ TEST(StaticSVDTest, Test_StaticSVDClass)
     const CAROM::Matrix* d_basis_right = sampler.getTemporalBasis();
     const CAROM::Vector* sv = sampler.getSingularValues();
 
-// printf("basis: (%dx%d)\n", d_basis->numRows(), d_basis->numColumns());
-// for (int i = 0; i < d_basis->numRows(); i++)
-// {
-//     for (int j = 0; j < d_basis->numColumns(); j++)
-//         printf("%.3E\t", d_basis->item(i,j));
-//     printf("\n");
-// }
-// printf("\n");
-// printf("basis_right: (%dx%d)\n", d_basis_right->numRows(), d_basis_right->numColumns());
-// for (int i = 0; i < d_basis_right->numRows(); i++)
-// {
-//     for (int j = 0; j < d_basis_right->numColumns(); j++)
-//         printf("%.3E\t", d_basis_right->item(i,j));
-//     printf("\n");
-// }
-// printf("\n");
-
     EXPECT_EQ(d_basis->numRows(), d_num_rows);
     EXPECT_EQ(d_basis->numColumns(), 3);
     EXPECT_EQ(d_basis_right->numRows(), 3);
@@ -381,8 +357,8 @@ TEST(StaticSVDTest, Test_StaticSVDTranspose)
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
 
-    int num_total_rows = 3;
-    int num_total_cols = 5;
+    constexpr int num_total_rows = 3;
+    constexpr int num_total_cols = 5;
     int d_num_rows = num_total_rows / d_num_procs;
     if (num_total_rows % d_num_procs > d_rank) {
         d_num_rows++;
@@ -441,23 +417,6 @@ TEST(StaticSVDTest, Test_StaticSVDTranspose)
     const CAROM::Matrix* d_basis = sampler.getSpatialBasis();
     const CAROM::Matrix* d_basis_right = sampler.getTemporalBasis();
     const CAROM::Vector* sv = sampler.getSingularValues();
-
-// printf("basis: (%dx%d)\n", d_basis->numRows(), d_basis->numColumns());
-// for (int i = 0; i < d_basis->numRows(); i++)
-// {
-//     for (int j = 0; j < d_basis->numColumns(); j++)
-//         printf("%.3E\t", d_basis->item(i,j));
-//     printf("\n");
-// }
-// printf("\n");
-// printf("basis_right: (%dx%d)\n", d_basis_right->numRows(), d_basis_right->numColumns());
-// for (int i = 0; i < d_basis_right->numRows(); i++)
-// {
-//     for (int j = 0; j < d_basis_right->numColumns(); j++)
-//         printf("%.3E\t", d_basis_right->item(i,j));
-//     printf("\n");
-// }
-// printf("\n");
 
     EXPECT_EQ(d_basis_right->numRows(), num_total_cols);
     EXPECT_EQ(d_basis_right->numColumns(), 3);

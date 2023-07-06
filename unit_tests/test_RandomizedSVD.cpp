@@ -42,7 +42,7 @@ TEST(RandomizedSVDTest, Test_RandomizedSVD)
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
 
-    int num_total_rows = 5;
+    constexpr int num_total_rows = 5;
     int d_num_rows = num_total_rows / d_num_procs;
     if (num_total_rows % d_num_procs > d_rank) {
         d_num_rows++;
@@ -135,8 +135,8 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposed)
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
 
-    int num_total_rows = 3;
-    int num_samples = 5;
+    constexpr int num_total_rows = 3;
+    constexpr int num_samples = 5;
     int d_num_rows = num_total_rows / d_num_procs;
     if (num_total_rows % d_num_procs > d_rank) {
         d_num_rows++;
@@ -232,7 +232,7 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDSmallerSubspace)
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
 
-    int num_total_rows = 5;
+    constexpr int num_total_rows = 5;
     int d_num_rows = num_total_rows / d_num_procs;
     if (num_total_rows % d_num_procs > d_rank) {
         d_num_rows++;
@@ -323,9 +323,9 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposedSmallerSubspace)
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
 
-    int num_total_rows = 3;
-    int num_samples = 5;
-    int reduced_rows = 2;
+    constexpr int num_total_rows = 3;
+    constexpr int num_samples = 5;
+    constexpr int reduced_rows = 2;
     int d_num_rows = CAROM::split_dimension(num_total_rows, MPI_COMM_WORLD);
     std::vector<int> row_offset;
     int dummy = CAROM::get_global_offsets(d_num_rows, row_offset, MPI_COMM_WORLD);

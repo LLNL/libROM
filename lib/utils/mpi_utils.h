@@ -23,24 +23,24 @@ namespace CAROM {
  * @brief Distribute the global size dim into MPI processes as equally as possible.
  * 
  * @param[in] dim          Input global size.
- * @param[in] comm         MPI communicator. == MPI_COMM_WORLD by default.
+ * @param[in] comm         MPI communicator. default value MPI_COMM_WORLD.
  * @param[out] local_dim   Local size assigned to the current MPI process.
  */
 int
-split_dimension(const int &dim, const MPI_Comm &comm=MPI_COMM_WORLD);
+split_dimension(const int dim, const MPI_Comm &comm=MPI_COMM_WORLD);
 
 /**
  * @brief Save integer offsets for each MPI rank under MPI communicator comm,
  *        where each rank as the size of local_dim.
  *        the sum of local_dim over all MPI processes is returned as the total dimension.
  * 
- * @param[in] local_dim     Local dimension for each MPI rank
- * @param[in] offsets       Global integer offsets split by local_dim
- * @param[in] comm          MPI communicator. == MPI_COMM_WORLD by default.
+ * @param[in] local_dim     Input local dimension specified for each MPI rank.
+ * @param[in] offsets       Resulting global integer offsets split by local_dim.
+ * @param[in] comm          MPI communicator. default value MPI_COMM_WORLD.
  * @param[out] dim          Global dimension as the sum of all local_dim.
  */
 int
-get_global_offsets(const int &local_dim, std::vector<int> &offsets, const MPI_Comm &comm=MPI_COMM_WORLD);
+get_global_offsets(const int local_dim, std::vector<int> &offsets, const MPI_Comm &comm=MPI_COMM_WORLD);
 
 }
 

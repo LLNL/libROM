@@ -82,7 +82,7 @@ mpicxx myapp.cpp -I/path/to/libROM/lib -Wl,-rpath,/path/to/libROM/build/lib -L/p
 
 # Using Docker container
 
-Docker container [`librom_env`](https://ghcr.io/llnl/librom/librom_env) provides a containerized environment with all the prerequisites for libROM. For the instruction on how to use it, check out [the wiki page](https://github.com/LLNL/libROM/wiki/Using-Docker-container).
+Docker container [`librom_env`](https://ghcr.io/llnl/librom/librom_env) provides a containerized environment with all the prerequisites for libROM. For instruction on how to use it, check out [the wiki page](https://github.com/LLNL/libROM/wiki/Using-Docker-container).
 
 # libROM CI
 
