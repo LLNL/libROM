@@ -38,7 +38,8 @@ split_dimension(const int dim, const MPI_Comm &comm)
 }
 
 int
-get_global_offsets(const int local_dim, std::vector<int> &offsets, const MPI_Comm &comm)
+get_global_offsets(const int local_dim, std::vector<int> &offsets,
+                   const MPI_Comm &comm)
 {
     int mpi_init;
     MPI_Initialized(&mpi_init);

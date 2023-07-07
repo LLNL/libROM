@@ -1037,15 +1037,16 @@ Matrix::distribute(const int &local_num_rows)
     CAROM_VERIFY(d_owns_data);
 
     std::vector<int> row_offsets;
-    int num_total_rows = get_global_offsets(local_num_rows, row_offsets, MPI_COMM_WORLD);
+    int num_total_rows = get_global_offsets(local_num_rows, row_offsets,
+                                            MPI_COMM_WORLD);
     CAROM_VERIFY(num_total_rows == d_num_rows);
     int local_offset = row_offsets[d_rank] * d_num_cols;
     const int new_size = local_num_rows * d_num_cols;
 
     double *d_new_mat = new double [new_size];
-    if (new_size > 0)   
+    if (new_size > 0)
         memcpy(d_new_mat, &d_mat[local_offset], 8 * new_size);
-    
+
     delete [] d_mat;
     d_mat = d_new_mat;
     d_alloc_size = new_size;
@@ -1063,7 +1064,8 @@ Matrix::gather()
     CAROM_VERIFY(d_owns_data);
 
     std::vector<int> row_offsets;
-    const int num_total_rows = get_global_offsets(d_num_rows, row_offsets, MPI_COMM_WORLD);
+    const int num_total_rows = get_global_offsets(d_num_rows, row_offsets,
+                               MPI_COMM_WORLD);
     CAROM_VERIFY(num_total_rows == d_num_distributed_rows);
     const int new_size = d_num_distributed_rows * d_num_cols;
 

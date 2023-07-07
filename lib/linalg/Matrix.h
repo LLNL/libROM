@@ -1067,10 +1067,10 @@ public:
      * @brief Distribute this matrix rows among MPI processes,
      * based on the specified local number of rows.
      * This becomes distributed after this function is executed.
-     * 
+     *
      * @pre !distributed()
      * @pre d_owns_data
-     * 
+     *
      * @param[in] local_num_rows number of rows for local MPI rank.
      */
     void distribute(const int &local_num_rows);
@@ -1078,7 +1078,7 @@ public:
     /**
      * @brief Gather all the distributed rows among MPI processes.
      * This becomes not distributed after this function is executed.
-     * 
+     *
      * @pre distributed()
      * @pre d_owns_data
      */

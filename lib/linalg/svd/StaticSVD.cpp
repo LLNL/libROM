@@ -272,15 +272,16 @@ StaticSVD::computeSVD()
         }
 
         initialize_matrix(snapshot_matrix, d_num_samples, d_total_dim,
-                      d_nprow, d_npcol, d_blocksize_tr, d_blocksize_tr);
+                          d_nprow, d_npcol, d_blocksize_tr, d_blocksize_tr);
 
         for (int rank = 0; rank < d_num_procs; ++rank) {
-            transpose_submatrix(snapshot_matrix, 1, d_istarts[static_cast<unsigned>(rank)]+1,
+            transpose_submatrix(snapshot_matrix, 1,
+                                d_istarts[static_cast<unsigned>(rank)]+1,
                                 d_samples.get(), d_istarts[static_cast<unsigned>(rank)]+1, 1,
                                 d_dims[static_cast<unsigned>(rank)], d_num_samples);
         }
     }
-    else{
+    else {
         // use d_samples if sample size <= dimension.
         snapshot_matrix = d_samples.get();
     }
@@ -324,14 +325,14 @@ StaticSVD::computeSVD()
         if (transpose) {
             // V is computed in the transposed order so no reordering necessary.
             gather_block(&d_basis->item(0, 0), d_factorizer->V,
-                        1, d_istarts[static_cast<unsigned>(rank)]+1,
-                        ncolumns, d_dims[static_cast<unsigned>(rank)], rank);
+                         1, d_istarts[static_cast<unsigned>(rank)]+1,
+                         ncolumns, d_dims[static_cast<unsigned>(rank)], rank);
 
             // gather_transposed_block does the same as gather_block, but transposes
             // it; here, it is used to go from column-major to row-major order.
             gather_transposed_block(&d_basis_right->item(0, 0), d_factorizer->U,
                                     1, 1, d_num_samples, ncolumns, rank);
-            
+
         }
         else {
             // gather_transposed_block does the same as gather_block, but transposes
@@ -342,7 +343,7 @@ StaticSVD::computeSVD()
                                     ncolumns, rank);
             // V is computed in the transposed order so no reordering necessary.
             gather_block(&d_basis_right->item(0, 0), d_factorizer->V, 1, 1,
-                        ncolumns, d_num_samples, rank);
+                         ncolumns, d_num_samples, rank);
         }
     }
     for (int i = 0; i < ncolumns; ++i)
