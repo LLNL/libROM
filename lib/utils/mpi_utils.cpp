@@ -48,20 +48,17 @@ get_global_offsets(const int local_dim, std::vector<int> &offsets, const MPI_Com
     MPI_Comm_rank(comm, &d_rank);
     MPI_Comm_size(comm, &d_num_procs);
 
-    int dim = local_dim;
-    CAROM_VERIFY(MPI_Allreduce(MPI_IN_PLACE,
-                                &dim,
-                                1,
-                                MPI_INT,
-                                MPI_SUM,
-                                comm) == MPI_SUCCESS);
-
     offsets.resize(d_num_procs + 1);
-    offsets[d_num_procs] = dim;
     offsets[d_rank] = local_dim;
     CAROM_VERIFY(MPI_Allgather(MPI_IN_PLACE, 1, MPI_INT,
                                &offsets[0], 1, MPI_INT,
                                comm) == MPI_SUCCESS);
+
+    int dim = 0;
+    for (int i = 0; i < d_num_procs; i++)
+        dim += offsets[i];
+    offsets[d_num_procs] = dim;
+
     for (int i = d_num_procs - 1; i >= 0; i--)
         offsets[i] = offsets[i + 1] - offsets[i];
 

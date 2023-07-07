@@ -126,10 +126,7 @@ TEST(StaticSVDTest, Test_SLPKTranspose)
 
     constexpr int num_total_rows = 3;
     constexpr int num_total_cols = 5;
-    int d_num_rows = num_total_rows / d_num_procs;
-    if (num_total_rows % d_num_procs > d_rank) {
-        d_num_rows++;
-    }
+    int d_num_rows = CAROM::split_dimension(num_total_rows, MPI_COMM_WORLD);
     std::vector<int> row_offset(d_num_procs + 1);
     const int total_rows = CAROM::get_global_offsets(d_num_rows, row_offset, MPI_COMM_WORLD);
     EXPECT_EQ(total_rows, num_total_rows);
@@ -256,10 +253,7 @@ TEST(StaticSVDTest, Test_StaticSVDClass)
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
 
     constexpr int num_total_rows = 5;
-    int d_num_rows = num_total_rows / d_num_procs;
-    if (num_total_rows % d_num_procs > d_rank) {
-        d_num_rows++;
-    }
+    int d_num_rows = CAROM::split_dimension(num_total_rows, MPI_COMM_WORLD);
     std::vector<int> row_offset(d_num_procs + 1);
     const int total_rows = CAROM::get_global_offsets(d_num_rows, row_offset, MPI_COMM_WORLD);
     EXPECT_EQ(total_rows, num_total_rows);
@@ -336,10 +330,7 @@ TEST(StaticSVDTest, Test_StaticSVDTranspose)
 
     constexpr int num_total_rows = 3;
     constexpr int num_total_cols = 5;
-    int d_num_rows = num_total_rows / d_num_procs;
-    if (num_total_rows % d_num_procs > d_rank) {
-        d_num_rows++;
-    }
+    int d_num_rows = CAROM::split_dimension(num_total_rows, MPI_COMM_WORLD);
     std::vector<int> row_offset(d_num_procs + 1);
     const int total_rows = CAROM::get_global_offsets(d_num_rows, row_offset, MPI_COMM_WORLD);
     EXPECT_EQ(total_rows, num_total_rows);
