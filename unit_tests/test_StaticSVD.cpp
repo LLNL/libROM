@@ -260,21 +260,9 @@ TEST(StaticSVDTest, Test_StaticSVDClass)
     if (num_total_rows % d_num_procs > d_rank) {
         d_num_rows++;
     }
-    int *row_offset = new int[d_num_procs + 1];
-    row_offset[d_num_procs] = num_total_rows;
-    row_offset[d_rank] = d_num_rows;
-
-    MPI_Allgather(MPI_IN_PLACE,
-                  1,
-                  MPI_INT,
-                  row_offset,
-                  1,
-                  MPI_INT,
-                  MPI_COMM_WORLD);
-
-    for (int i = d_num_procs - 1; i >= 0; i--) {
-        row_offset[i] = row_offset[i + 1] - row_offset[i];
-    }
+    std::vector<int> row_offset(d_num_procs + 1);
+    const int total_rows = CAROM::get_global_offsets(d_num_rows, row_offset, MPI_COMM_WORLD);
+    EXPECT_EQ(total_rows, num_total_rows);
 
     double* sample1 = new double[5] {0.5377, 1.8339, -2.2588, 0.8622, 0.3188};
     double* sample2 = new double[5] {-1.3077, -0.4336, 0.3426, 3.5784, 2.7694};
@@ -352,21 +340,9 @@ TEST(StaticSVDTest, Test_StaticSVDTranspose)
     if (num_total_rows % d_num_procs > d_rank) {
         d_num_rows++;
     }
-    int *row_offset = new int[d_num_procs + 1];
-    row_offset[d_num_procs] = num_total_rows;
-    row_offset[d_rank] = d_num_rows;
-
-    MPI_Allgather(MPI_IN_PLACE,
-                  1,
-                  MPI_INT,
-                  row_offset,
-                  1,
-                  MPI_INT,
-                  MPI_COMM_WORLD);
-
-    for (int i = d_num_procs - 1; i >= 0; i--) {
-        row_offset[i] = row_offset[i + 1] - row_offset[i];
-    }
+    std::vector<int> row_offset(d_num_procs + 1);
+    const int total_rows = CAROM::get_global_offsets(d_num_rows, row_offset, MPI_COMM_WORLD);
+    EXPECT_EQ(total_rows, num_total_rows);
 
     double* sample1 = new double[5] {0.5377, -1.3077, -1.3499};
     double* sample2 = new double[5] {1.8339, -0.4336, 3.0349};
