@@ -22,6 +22,8 @@ jobs:
           access_token: ${{ github.token }}
       - name: Check out libROM
         uses: actions/checkout@v3
+      - name: Artistic Style version (for information)
+        run: astyle --version
       - name: Check Stylization
         run: |
             cd ${GITHUB_WORKSPACE}/scripts

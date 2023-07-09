@@ -1,3 +1,4 @@
+#!/bin/bash
 if [ "$1" == "" ] || [ $# -gt 2 ]; then
     echo "Usage: ./stylize.sh [-f] /path/to/astyle/executable"
     echo "Checks if stylization is required."
