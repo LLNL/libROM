@@ -60,6 +60,7 @@
 #include "mfem.hpp"
 #include "algo/DMD.h"
 #include "algo/NonuniformDMD.h"
+#include "algo/IncrementalDMD.h"
 #include "linalg/Vector.h"
 #include <cmath>
 #include <fstream>
@@ -114,7 +115,7 @@ public:
     /// Update the diffusion BilinearForm K using the given true-dof vector `u`.
     void SetParameters(const Vector &u);
     
-    Vector Residual(const double dt, const Vector &u0, const Vector &u1);
+    Vector Residual(const double dt, const Vector u0, const Vector u1);
 
     virtual ~ConductionOperator();
 };
@@ -150,6 +151,8 @@ int main(int argc, char *argv[])
     double tol_cg = 1e-12; // tolerance for CG solver
     double tol_dmd = 1e-2; // tolerance for DMD accuracy
     double tol_dep = 1e-6; // tolerance for linear dependence
+    
+    bool use_incremental = false; // use incremental SVD
 
     int precision = 8;
     cout.precision(precision);
@@ -196,6 +199,10 @@ int main(int argc, char *argv[])
     args.AddOption(&tol_cg, "-tolcg", "--tolcg", "CG tolerance.");
     args.AddOption(&tol_dmd, "-toldmd", "--toldmd", "DMD accuracy.");
     args.AddOption(&tol_dep, "-toldep", "--toldep", "Linear dependence of snapshots.");
+    
+    args.AddOption(&use_incremental, "-inc", "--inc", 
+		    		     "-noinc", "--noinc",
+				     "Incremental SVD.");
     
     args.Parse();
     if (!args.Good())
@@ -394,17 +401,31 @@ int main(int argc, char *argv[])
     u_gf.SetFromTrueDofs(u);
 
     CAROM::DMD* dmd_u;
-    if (use_nonuniform)
+    if (use_incremental)
+    {
+	CAROM::Options svd_options(u.Size(), 100, -1, true);
+	svd_options.setIncrementalSVD(1e-6, dt, 1e-6, 10.0, true);
+	svd_options.setMaxBasisDimension(100);
+	svd_options.setStateIO(false, false);
+	svd_options.setDebugMode(false);
+	std::string svd_base_file_name = "";
+	dmd_u = new CAROM::IncrementalDMD(u.Size(), dt,
+					  svd_options,
+					  svd_base_file_name,
+					  false);
+    }
+    else if (use_nonuniform)
     {
         dmd_u = new CAROM::NonuniformDMD(u.Size());
     }
     else
     {
-        dmd_u = new CAROM::DMD(u.Size(), dt);
+    	dmd_u = new CAROM::DMD(u.Size(), dt);
     }
+
     dmd_u->takeSample(u.GetData(), t);
     ts.push_back(t);
-
+  
     dmd_training_timer.Stop();
 
     // 13. Time intergration with on-the-fly DMD construction.
@@ -416,8 +437,7 @@ int main(int argc, char *argv[])
     bool dmd_trained = false;
     bool last_step = false;
     double res, err_proj_norm;
-    Vector u_dmd(u.Size());
-    Vector res_vec, err_proj;
+    Vector u_dmd(u.Size()), res_vec(u.Size());
     
     for (int ti = 1; !last_step; ti++)
     {
@@ -437,7 +457,8 @@ int main(int argc, char *argv[])
 		std::cout << "DMD exists: make prediction" << std::endl;
 	    }
 	    
-	    CAROM::Vector* u_pre = new CAROM::Vector(u.GetData(), u.Size(), true); // previous solution
+	    CAROM::Vector* u_pre = new CAROM::Vector(u.GetData(), u.Size(),
+			    			     true, true); // previous solution
     	    dmd_u->projectInitialCondition(u_pre); // offset to u_pre
 
 	    u_dmd = dmd_u->predict(dt)->getData(); // copy data to MFEM::Vector
@@ -468,21 +489,24 @@ int main(int argc, char *argv[])
 		ode_solver->Step(u, t, dt);
 		fom_timer.Stop();
 	    }
-
-	    // Check the linear dependence of the new snapshot
-	    CAROM::Vector* u_new = new CAROM::Vector(u.GetData(), u.Size(), true);
-	    dmd_u->projectInitialCondition(u_new);
-
-	    Vector u_new_proj(dmd_u->predict(0.0)->getData(), u.Size()); // projection
-	    err_proj = u;
-	    err_proj -= u_new_proj; // error = u - proj(u)
-	    err_proj_norm = err_proj.Norml2() / u.Norml2(); // relative norm
-	    std::cout << "Projection error: " << err_proj_norm << std::endl;
 	    
-	    // Increment no. of modes if solution is inaccurate and
-	    // the new snapshot is linearly independent
-	    if (res > tol_dmd && err_proj_norm > tol_dep){
-		rdim += 1;
+	    if (!use_incremental){ 
+	    	// Check the linear dependence of the new snapshot
+	    	CAROM::Vector* u_new = new CAROM::Vector(u.GetData(), u.Size(),
+				    			 true, false);
+	    	dmd_u->projectInitialCondition(u_pre);
+	
+	    	Vector u_new_proj(dmd_u->predict(0.0)->getData(), u.Size()); // projection
+	    	Vector err_proj(u_pre->getData(), u.Size());
+	    	err_proj -= u_new_proj; // error = u - proj(u)
+	    	err_proj_norm = err_proj.Norml2();// / u.Norml2(); // relative norm
+	    	std::cout << "Projection error: " << err_proj_norm << std::endl;
+	    	
+	    	// Increment no. of modes if solution is inaccurate and
+	    	// the new snapshot is linearly independent
+	    	if (res > tol_dmd && err_proj_norm > tol_dep){
+		    rdim += 1;
+	    	}
 	    }
 
 	}
@@ -512,7 +536,11 @@ int main(int argc, char *argv[])
                 {
                     std::cout << "Creating DMD with rdim: " << rdim << std::endl;
                 }
-                dmd_u->train(rdim);
+                StopWatch train_timer;
+		train_timer.Start();
+		dmd_u->train(rdim);
+		train_timer.Stop();
+		std::cout << "Time train:" << train_timer.RealTime() << std::endl;
 		dmd_trained = true;
 	    }
          }
@@ -522,10 +550,10 @@ int main(int argc, char *argv[])
             {
                 std::cout << "Creating DMD with energy fraction: " << ef << std::endl;
             }
-            dmd_u->train(ef);
+            dmd_u->train(ef); // energy fraction not implemented in incrementalDMD
 	    dmd_trained = true;
         }
-
+	
         dmd_training_timer.Stop();
 	
 	// Visualize solutions
@@ -571,6 +599,8 @@ int main(int argc, char *argv[])
     }
 #endif
 
+    std::cout << "Total training time:" << dmd_training_timer.RealTime() << std::endl;
+
     // 12. Save the final solution in parallel. This output can be viewed later
     //     using GLVis: "glvis -np <np> -m heat_conduction-mesh -g heat_conduction-final".
     {
@@ -606,7 +636,7 @@ ConductionOperator::ConductionOperator(ParFiniteElementSpace &f, double al,
     M_solver.iterative_mode = false;
     M_solver.SetRelTol(rel_tol);
     M_solver.SetAbsTol(0.0);
-    M_solver.SetMaxIter(100);
+    M_solver.SetMaxIter(1000);
     M_solver.SetPrintLevel(0);
     M_prec.SetType(HypreSmoother::Jacobi);
     M_solver.SetPreconditioner(M_prec);
@@ -618,7 +648,7 @@ ConductionOperator::ConductionOperator(ParFiniteElementSpace &f, double al,
     T_solver.iterative_mode = false;
     T_solver.SetRelTol(rel_tol);
     T_solver.SetAbsTol(0.0);
-    T_solver.SetMaxIter(100);
+    T_solver.SetMaxIter(1000);
     T_solver.SetPrintLevel(0);
     T_solver.SetPreconditioner(T_prec);
 
@@ -675,7 +705,7 @@ void ConductionOperator::SetParameters(const Vector &u)
 }
 
 Vector ConductionOperator::Residual(const double dt,
-				    const Vector &u0, const Vector &u1)
+				    const Vector u0, const Vector u1)
 {
     //
     // Compute res(u0, u1) = [(M+dt*K(u0))*u1 - M*u0] / dt / norm(K*u0)
