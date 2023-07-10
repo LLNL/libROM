@@ -32,6 +32,15 @@ public:
      */
     ~IncrementalSVDFastUpdate();
 
+    /**
+     * @brief Returns the basis vectors for the current time interval as a
+     *        Matrix.
+     *
+     * @return The basis vectors for the current time interval.
+     */
+    const Matrix*
+    getSpatialBasis() override;
+
 private:
     friend class BasisGenerator;
 
@@ -82,6 +91,20 @@ private:
     buildInitialSVD(
         double* u,
         double time);
+
+    /**
+     * @brief Adds the new sampled the state vector, u, to the system.
+     *
+     * @pre u != 0
+     *
+     * @param[in] u The new state.
+     * @param[in] add_without_increase If true, addLinearlyDependent is invoked.
+     *
+     * @return True if building the incremental SVD was successful.
+     */
+    bool
+    buildIncrementalSVD(
+        double* u, bool add_without_increase = false) override;
 
     /**
      * @brief Computes the current basis vectors.

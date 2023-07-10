@@ -86,6 +86,18 @@ IncrementalSVDFastUpdate::~IncrementalSVDFastUpdate()
     }
 }
 
+const Matrix*
+IncrementalSVDFastUpdate::getSpatialBasis()
+{
+    // For fast update, we choose to compute the basis
+    // only when we try to get its value. Therefore,
+    // computeBasis() is called inside getSpatialBasis().
+    computeBasis(); // WARNING: this is costly
+
+    CAROM_ASSERT(d_basis != 0);
+    return d_basis;
+}
+
 void
 IncrementalSVDFastUpdate::buildInitialSVD(
     double* u,
@@ -136,9 +148,111 @@ IncrementalSVDFastUpdate::buildInitialSVD(
     d_num_samples = 1;
     d_num_rows_of_W = 1;
 
-    // Compute the basis vectors for this time interval.
-    computeBasis();
+}
 
+bool
+IncrementalSVDFastUpdate::buildIncrementalSVD(
+    double* u, bool add_without_increase)
+{
+    CAROM_VERIFY(u != 0);
+
+    // Compute the projection error
+    // (accurate down to the machine precision)
+    Vector u_vec(u, d_dim, true);
+    Vector e_proj(u, d_dim, true);
+    e_proj -= *(d_U->mult(d_U->transposeMult(e_proj))); // Gram-Schmidt
+    e_proj -= *(d_U->mult(d_U->transposeMult(e_proj))); // Re-orthogonalization
+
+    double k = e_proj.inner_product(e_proj);
+    if (k <= 0) {
+        if(d_rank == 0) printf("linearly dependent sample!\n");
+        k = 0;
+    }
+    else {
+        k = sqrt(k);
+    }
+
+    // Use k to see if the vector addressed by u is linearly dependent
+    // on the left singular vectors.
+    bool linearly_dependent_sample;
+    if ( k < d_linearity_tol ) {
+        if(d_rank == 0) {
+            std::cout << "linearly dependent sample! k = " << k << "\n";
+            std::cout << "d_linearity_tol = " << d_linearity_tol << "\n";
+        }
+        k = 0;
+        linearly_dependent_sample = true;
+    } else if ( d_num_samples >= d_max_basis_dimension || add_without_increase ) {
+        k = 0;
+        linearly_dependent_sample = true;
+    }
+    // Check to see if the "number of samples" (in IncrementalSVD and
+    // its subclasses, d_num_samples appears to be equal to the number
+    // of columns of the left singular vectors) is greater than or equal
+    // to the dimension of snapshot vectors. If so, then the vector
+    // addressed by the pointer u must be linearly dependent on the left
+    // singular vectors.
+    else if (d_num_samples >= d_total_dim) {
+        linearly_dependent_sample = true;
+    }
+    else {
+        linearly_dependent_sample = false;
+    }
+
+    // Create Q.
+    double* Q;
+    Vector* U_mult_u = new Vector(d_U->transposeMult(u_vec)->getData(),
+                                  d_num_samples,
+                                  false);
+    Vector* l = d_Up->transposeMult(U_mult_u);
+    constructQ(Q, l, k);
+    delete U_mult_u, l;
+
+    // Now get the singular value decomposition of Q.
+    Matrix* A;
+    Matrix* W;
+    Matrix* sigma;
+    bool result = svd(Q, A, sigma, W);
+
+    // Done with Q.
+    delete [] Q;
+
+    // If the svd was successful then add the sample.  Otherwise clean up and
+    // return.
+    if (result) {
+
+        // We need to add the sample if it is not linearly dependent or if it is
+        // linearly dependent and we are not skipping linearly dependent samples.
+        if ((linearly_dependent_sample && !d_skip_linearly_dependent) ) {
+            // This sample is linearly dependent and we are not skipping linearly
+            // dependent samples.
+            if(d_rank == 0) std::cout << "adding linearly dependent sample!\n";
+            addLinearlyDependentSample(A, W, sigma);
+            delete sigma;
+        }
+        else if (!linearly_dependent_sample) {
+            // This sample is not linearly dependent.
+
+            // Compute j
+            Vector* j = new Vector(e_proj.getData(), d_dim, false);
+            for (int i = 0; i < d_dim; ++i) {
+                j->item(i) /= k;
+            }
+
+            // addNewSample will assign sigma to d_S hence it should not be
+            // deleted upon return.
+            addNewSample(j, A, W, sigma);
+            delete j;
+        }
+        delete A;
+        delete W;
+    }
+    else {
+        delete A;
+        delete W;
+        delete sigma;
+    }
+    return result;
 }
 
 void
@@ -193,6 +307,7 @@ IncrementalSVDFastUpdate::computeBasis()
     }
 
     // Reorthogonalize if necessary.
+    // (not likely to be called anymore but left for safety)
     if (fabs(checkOrthogonality(d_basis)) >
             std::numeric_limits<double>::epsilon()*static_cast<double>(d_num_samples)) {
         d_basis->orthogonalize();
@@ -347,6 +462,22 @@ IncrementalSVDFastUpdate::addNewSample(
     }
     else {
         max_U_dim = d_total_dim;
+    }
+    if (fabs(checkOrthogonality(d_Up)) >
+            std::numeric_limits<double>::epsilon()*static_cast<double>(max_U_dim)) {
+        d_Up->orthogonalize();
+    }
+    if (fabs(checkOrthogonality(d_U)) >
+            std::numeric_limits<double>::epsilon()*static_cast<double>(max_U_dim)) {
+        d_U->orthogonalize(); // Will not be called, but just in case
+    }
+
+    if(d_update_right_SV)
+    {
+        if (fabs(checkOrthogonality(d_W)) >
+                std::numeric_limits<double>::epsilon()*d_num_samples) {
+            d_W->orthogonalize();
+        }
     }
 
 }

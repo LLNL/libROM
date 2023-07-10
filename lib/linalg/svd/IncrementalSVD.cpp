@@ -301,12 +301,13 @@ IncrementalSVD::buildIncrementalSVD(
     // basisl = basis * l
     Vector* basisl = d_basis->mult(l);
 
-    // Compute k = sqrt(u.u - 2.0*l.l + basisl.basisl) which is ||u -
-    // basisl||_{2}.  This is the error in the projection of u into the
-    // reduced order space and subsequent lifting back to the full
-    // order space.
-    double k = u_vec.inner_product(u_vec) - 2.0*l->inner_product(l) +
-               basisl->inner_product(basisl);
+    // Computing as k = sqrt(u.u - 2.0*l.l + basisl.basisl)
+    // results in catastrophic cancellation, and must be avoided.
+    // Instead we compute as k = sqrt((u-basisl).(u-basisl)).
+    Vector* e_proj = u_vec.minus(basisl);
+    double k = e_proj->inner_product(e_proj);
+    delete e_proj;
+
     if (k <= 0) {
         if(d_rank == 0) printf("linearly dependent sample!\n");
         k = 0;
