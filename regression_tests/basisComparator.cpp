@@ -36,10 +36,10 @@ void compareBasis(string &baselineFile, string &targetFile, double errorBound,
     vector<double> reducedDiffVecNormL2;
 
     CAROM::BasisReader baselineReader(baselineFile);
-    CAROM::Matrix *baselineBasis = (CAROM::Matrix*) baselineReader.getSpatialBasis(
-                                       0.0);
-    CAROM::Vector *baselineSV = (CAROM::Vector*) baselineReader.getSingularValues(
-                                    0.0);
+    CAROM::Matrix *baselineBasis =
+        (CAROM::Matrix*) baselineReader.getSpatialBasis(0.0);
+    CAROM::Vector *baselineSV =
+        (CAROM::Vector*) baselineReader.getSingularValues(0.0);
     CAROM::BasisReader targetReader(targetFile);
     CAROM::Matrix *targetBasis = (CAROM::Matrix*) targetReader.getSpatialBasis(0.0);
     CAROM::BasisReader diffReader(baselineFile);
@@ -54,20 +54,21 @@ void compareBasis(string &baselineFile, string &targetFile, double errorBound,
     // Test basis matrices have the same dimensions
     if (baselineNumRows != targetNumRows) {
         cerr << "The number of rows of the two basis matrices \
-are not equal in the following files: " << baselineFile << " and " << targetFile
-             << endl;
+            are not equal in the following files: " << baselineFile
+             << " and " << targetFile << endl;
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
     if (baselineNumColumns != targetNumColumns) {
         cerr << "The number of columns of the two basis matrices \
-are not equal in the following file: " << baselineFile << " and " << targetFile
-             << endl;
+            are not equal in the following file: " << baselineFile
+             << " and " << targetFile << endl;
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
     if (baselineSV->dim() != baselineNumColumns)
     {
         cerr << "The number of singular values does not equal the \
-number of basis vectors in the following file: " << baselineFile << endl;
+            number of basis vectors in the following file: " << baselineFile
+             << endl;
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
@@ -81,8 +82,8 @@ number of basis vectors in the following file: " << baselineFile << endl;
     }
     catch (const exception& e) {
         cerr << "Something went wrong when calculating the difference \
-between the basis matrices in the following files: " << baselineFile << " and "
-             << targetFile << endl;
+            between the basis matrices in the following files: " << baselineFile
+             << " and " << targetFile << endl;
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 

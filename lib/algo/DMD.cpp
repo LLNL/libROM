@@ -547,8 +547,9 @@ DMD::projectInitialCondition(const Vector* init, double t_offset)
     Matrix* d_phi_imaginary_squared_2 = d_phi_imaginary->transposeMult(d_phi_real);
     *d_phi_imaginary_squared -= *d_phi_imaginary_squared_2;
 
-    double* inverse_input = new double[d_phi_real_squared->numRows() *
-                                                                     d_phi_real_squared->numColumns() * 2];
+    const int dprs_row = d_phi_real_squared->numRows();
+    const int dprs_col = d_phi_real_squared->numColumns();
+    double* inverse_input = new double[dprs_row * dprs_col * 2];
     for (int i = 0; i < d_phi_real_squared->numRows(); i++)
     {
         int k = 0;
