@@ -15,6 +15,7 @@
 
 #include "mpi.h"
 #include "linalg/scalapack_wrapper.h"
+#include "utils/mpi_utils.h"
 
 #include <limits.h>
 #include <algorithm>
@@ -38,8 +39,8 @@ RandomizedSVD::computeSVD()
     d_samples->n = d_num_samples;
     delete_factorizer();
 
-    int num_rows = d_total_dim;
-    int num_cols = d_num_samples;
+    const int num_rows = d_total_dim;
+    const int num_cols = d_num_samples;
     if (d_subspace_dim < 1 || d_subspace_dim > std::min(num_rows, num_cols)) {
         d_subspace_dim = std::min(num_rows, num_cols);
     }
@@ -60,30 +61,16 @@ RandomizedSVD::computeSVD()
         }
     }
     else {
-        int num_transposed_rows = num_cols / d_num_procs;
-        if (num_cols % d_num_procs > d_rank) {
-            num_transposed_rows++;
-        }
+        std::vector<int> snapshot_transpose_row_offset;
+        const int num_transposed_rows = split_dimension(num_cols, MPI_COMM_WORLD);
+        const int num_cols_check = get_global_offsets(num_transposed_rows,
+                                   snapshot_transpose_row_offset,
+                                   MPI_COMM_WORLD);
+        CAROM_VERIFY(num_cols == num_cols_check);
 
         snapshot_matrix = new Matrix(num_transposed_rows,
                                      num_rows, true);
 
-        int *snapshot_transpose_row_offset = new int[d_num_procs + 1];
-        snapshot_transpose_row_offset[d_num_procs] = num_cols;
-        snapshot_transpose_row_offset[d_rank] = num_transposed_rows;
-        CAROM_VERIFY(MPI_Allgather(MPI_IN_PLACE,
-                                   1,
-                                   MPI_INT,
-                                   snapshot_transpose_row_offset,
-                                   1,
-                                   MPI_INT,
-                                   MPI_COMM_WORLD) == MPI_SUCCESS);
-        for (int i = d_num_procs - 1; i >= 0; i--) {
-            snapshot_transpose_row_offset[i] = snapshot_transpose_row_offset[i + 1] -
-                                               snapshot_transpose_row_offset[i];
-        }
-
-        CAROM_VERIFY(snapshot_transpose_row_offset[0] == 0);
         for (int rank = 0; rank < d_num_procs; ++rank) {
             gather_block(&snapshot_matrix->item(0, 0), d_samples.get(),
                          1, snapshot_transpose_row_offset[rank] + 1,
@@ -91,7 +78,6 @@ RandomizedSVD::computeSVD()
                          snapshot_transpose_row_offset[rank],
                          rank);
         }
-        delete [] snapshot_transpose_row_offset;
     }
 
     int snapshot_matrix_distributed_rows = std::max(num_rows, num_cols);
@@ -163,15 +149,15 @@ RandomizedSVD::computeSVD()
     ncolumns = std::min(ncolumns, d_subspace_dim);
 
     // Allocate the appropriate matrices and gather their elements.
-    d_basis = new Matrix(svd_input_mat_distributed_rows, ncolumns, false);
     d_S = new Vector(ncolumns, false);
     {
         CAROM_VERIFY(ncolumns >= 0);
         unsigned nc = static_cast<unsigned>(ncolumns);
         memset(&d_S->item(0), 0, nc*sizeof(double));
     }
-    d_basis_right = new Matrix(ncolumns, d_subspace_dim, false);
 
+    d_basis = new Matrix(svd_input_mat_distributed_rows, ncolumns, false);
+    d_basis_right = new Matrix(d_subspace_dim, ncolumns, false);
     // Since the input to the SVD was transposed, U and V are switched.
     for (int rank = 0; rank < d_num_procs; ++rank) {
         // V is computed in the transposed order so no reordering necessary.
@@ -197,6 +183,17 @@ RandomizedSVD::computeSVD()
         Matrix* temp = d_basis;
         d_basis = d_basis_right;
         d_basis_right = temp;
+
+        int local_rows = -1;
+        if (d_basis->numRows() == d_total_dim)
+            local_rows = d_dim;
+        else {
+            printf("WARNING: RandomizedSVD::d_basis has a subspace dimension %d, different from sample dimension %d\n",
+                   d_basis->numRows(), num_rows);
+            local_rows = split_dimension(d_basis->numRows());
+        }
+        d_basis->distribute(local_rows);
+        d_basis_right->gather();
     }
 
     d_this_interval_basis_current = true;

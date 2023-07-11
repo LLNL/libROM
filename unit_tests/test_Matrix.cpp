@@ -17,6 +17,7 @@
 #include<gtest/gtest.h>
 #include <mpi.h>
 #include "linalg/Matrix.h"
+#include "utils/mpi_utils.h"
 
 /**
  * Simple smoke test to make sure Google Test is properly linked
@@ -986,12 +987,12 @@ TEST(MatrixSerialTest, Test_qrcp_pivots_transpose)
     // All row pivot owners should be on the current rank;
     // all row pivots should be less than the size of the matrix
     int is_mpi_initialized, is_mpi_finalized;
-    CAROM_ASSERT(MPI_Initialized(&is_mpi_initialized) == MPI_SUCCESS);
-    CAROM_ASSERT(MPI_Finalized(&is_mpi_finalized) == MPI_SUCCESS);
+    MPI_Initialized(&is_mpi_initialized);
+    MPI_Finalized(&is_mpi_finalized);
+    const MPI_Comm my_comm = MPI_COMM_WORLD;
     int my_rank = 0;
     if(is_mpi_initialized && !is_mpi_finalized) {
-        const MPI_Comm my_comm = MPI_COMM_WORLD;
-        CAROM_ASSERT(MPI_Comm_rank(my_comm, &my_rank) == MPI_SUCCESS);
+        MPI_Comm_rank(my_comm, &my_rank);
     }
 
     for (int i = 0; i < row_pivots_requested; i++) {
@@ -1405,10 +1406,51 @@ TEST(IdentityMatrixFactorySerialTest, Test_3vector)
     EXPECT_DOUBLE_EQ(identityMatrix(2, 2), 1.0);
 }
 
+TEST(MatrixParallelTest, Test_distribute_and_gather)
+{
+    int is_mpi_initialized, is_mpi_finalized;
+    MPI_Initialized(&is_mpi_initialized);
+    MPI_Finalized(&is_mpi_finalized);
+    if (!is_mpi_initialized) return;
+
+    const MPI_Comm my_comm = MPI_COMM_WORLD;
+    int my_rank = -1, num_procs = -1;
+    MPI_Comm_size(my_comm, &num_procs);
+    MPI_Comm_rank(my_comm, &my_rank);
+
+    int total_rows = 5;
+    CAROM::Matrix answer(total_rows, total_rows, false);
+    EXPECT_FALSE(answer.distributed());
+    for (int i = 0; i < total_rows; i++)
+        for (int j = 0; j < total_rows; j++)
+            answer.item(i, j) = static_cast<double> (i * j);
+
+    int local_rows = CAROM::split_dimension(total_rows, MPI_COMM_WORLD);
+    std::vector<int> row_offsets;
+    int total_rows_check = CAROM::get_global_offsets(local_rows, row_offsets, MPI_COMM_WORLD);
+    EXPECT_EQ(total_rows, total_rows_check);
+
+    CAROM::Matrix test(answer);
+    test.distribute(local_rows);
+    for (int local_i = 0, global_i = row_offsets[my_rank]; local_i < local_rows; local_i++, global_i++)
+        for (int j = 0; j < answer.numColumns(); j++)
+            EXPECT_DOUBLE_EQ(test.item(local_i, j), answer.item(global_i, j));
+
+    test.gather();
+    for (int i = 0; i < total_rows; i++)
+        for (int j = 0; j < total_rows; j++)
+            EXPECT_DOUBLE_EQ(test.item(i, j), answer.item(i, j));
+
+}
+
+
 int main(int argc, char* argv[])
 {
     ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    MPI_Init(&argc, &argv);
+    int result = RUN_ALL_TESTS();
+    MPI_Finalize();
+    return result;
 }
 #else // #ifndef CAROM_HAS_GTEST
 int main()

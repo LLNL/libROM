@@ -82,51 +82,7 @@ mpicxx myapp.cpp -I/path/to/libROM/lib -Wl,-rpath,/path/to/libROM/build/lib -L/p
 
 # Using Docker container
 
-Docker container [`librom_env`](https://ghcr.io/LLNL/libROM/librom_env) provides a containerized environment with all the prerequisites for libROM. In order to compile and use libROM in the Docker container, follow these steps:
-
-- Pull `librom_env`, with [Docker Desktop](https://www.docker.com/) installed and running
-```
-docker pull ghcr.io/llnl/librom/librom_env:latest
-```
-- Clone libROM repository
-```
-git clone https://github.com/LLNL/libROM.git
-```
-- Launch the Docker container with the cloned repository
-```
-docker run -it --volume ./libROM:/home/test/libROM dreamer2368/librom_env:latest
-```
-- This will lead to a terminal with the cloned repository mounted at `~/libROM`. Compile libROM with the pre-set environment variables
-```
-mkdir build
-cd build
-cmake ~/libROM -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DUSE_MFEM=${USE_MFEM} -DMFEM_USE_GSLIB=${MFEM_USE_GSLIB}
-make -j 4
-```
-
-Some notes about using the Docker container:
-- Any change within the container will not be saved, except those happening in the mounted directory `./libROM`.
-- Any change in `/home/test/libROM` in the container is instantaneously reflected into the actual directory `./libROM`, and vice versa.
-
-## Some details
-
-- Machine architecture: `Linux-x86_64`
-- From: ubuntu:22.04
-- Dependencies:
-  - `cmake-3.22.1`
-  - `hypre-2.20.0`
-  - `parmetis-4.0.3`
-  - `gslib-1.0.7`
-  - `mfem`: latest verified [commit](https://github.com/mfem/mfem/commit/e5231334e6a8175b4f404b877f590b73dee2dedc) on May 02, 2023
-  - `googletest-v1.12.1`: the last release that supports c++11
-- Environmental variables preset for libROM cmake:
-  - `TOOLCHAIN_FILE=/env/dependencies/librom_env.cmake`
-  - `BUILD_TYPE=Optimized`
-  - `USE_MFEM=On`
-  - `MFEM_USE_GSLIB=On`
-- Miscellaneous packages
-  - Debugging tools: `valgrind`, `lldb`, `gdb`
-  - Python packages: `numpy`, `scipy`, `argparse`, `tables`, `PyYAML`, `h5py`, `pybind11`, `pytest`, `mpi4py` 
+Docker container [`librom_env`](https://ghcr.io/llnl/librom/librom_env) provides a containerized environment with all the prerequisites for libROM. For instruction on how to use it, check out [the wiki page](https://github.com/LLNL/libROM/wiki/Using-Docker-container).
 
 # libROM CI
 

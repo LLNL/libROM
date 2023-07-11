@@ -15,6 +15,7 @@ RUN sudo apt-get install -yq vim
 RUN sudo apt-get install -yq git-lfs
 RUN sudo apt-get install -yq valgrind
 RUN sudo apt-get install -yq wget
+RUN sudo apt-get install -yq astyle
 
 RUN sudo apt-get clean -q
 

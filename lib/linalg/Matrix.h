@@ -1063,6 +1063,27 @@ public:
         return d_mat;
     }
 
+    /**
+     * @brief Distribute this matrix rows among MPI processes,
+     * based on the specified local number of rows.
+     * This becomes distributed after this function is executed.
+     *
+     * @pre !distributed()
+     * @pre d_owns_data
+     *
+     * @param[in] local_num_rows number of rows for local MPI rank.
+     */
+    void distribute(const int &local_num_rows);
+
+    /**
+     * @brief Gather all the distributed rows among MPI processes.
+     * This becomes not distributed after this function is executed.
+     *
+     * @pre distributed()
+     * @pre d_owns_data
+     */
+    void gather();
+
 private:
     /**
      * @brief Compute number of rows across all processors.
@@ -1214,6 +1235,11 @@ private:
      * @brief The number of processors being run on.
      */
     int d_num_procs;
+
+    /**
+     * @brief The current MPI rank. If MPI is not initialized, equal to 0.
+     */
+    int d_rank;
 
     /**
      * @brief If true, this object owns its underlying data, d_mat, and
