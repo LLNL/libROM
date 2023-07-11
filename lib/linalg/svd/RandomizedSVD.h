@@ -26,7 +26,7 @@ namespace CAROM {
 
 /**
  * Class RandomizedSVD implements the Randomized SVD algorithm introduced in
- *    Halko, Nathan, Per-Gunnar Martinsson, and Joel A. Tropp.
+ *    Nathan Halko, Per-Gunnar Martinsson, and Joel A. Tropp.
  *    "Finding structure with randomness: Probabilistic algorithms for constructing approximate matrix decompositions."
  *    SIAM review 53.2 (2011): 217-288.
  */
