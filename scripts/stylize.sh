@@ -50,17 +50,18 @@ FILELIST=("lib/*.cpp"
           "examples/*.cpp"
           "examples/*.hpp")
 
-ASTYLE_COMMAND="$ASTYLE_BIN --recursive --max-code-length=80"
+ASTYLE_COMMAND="$ASTYLE_BIN --recursive --project=../.astylerc"
 
 result=false
 for files in ${FILELIST[@]}
 do
+    echo $files
     if $ASTYLE_COMMAND "$DIR/$files" | grep "Formatted"; then
         result=true
     fi
 done
 
-if [ $result = true ]; then
+if [ $enforce != true ] && [ $result = true ]; then
     echo "Files need stylization!"
     echo "Please run stylization before merging the pull-request."
     echo "    1. Install $ASTYLE_VER"
