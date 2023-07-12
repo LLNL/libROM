@@ -265,13 +265,16 @@ void
 IncrementalSVDBrand::updateSpatialBasis()
 {
     d_basis = d_U->mult(d_Up);
-    
+
     // remove the smallest singular value if it is smaller than d_singular_value_tol
     if ( (d_singular_value_tol != 0.0) &&
             (d_S->item(d_num_samples-1) < d_singular_value_tol) &&
             (d_num_samples != 1) ) {
 
-        if (d_rank == 0) std::cout << "removing a small singular value!\n";
+        if (d_rank == 0) {
+            std::cout <<
+                      "removing a spatial basis corresponding to the small singular value!\n";
+        }
 
         Matrix* d_basis_new = new Matrix(d_dim, d_num_samples-1,
                                          d_basis->distributed());
@@ -296,41 +299,35 @@ IncrementalSVDBrand::updateSpatialBasis()
 void
 IncrementalSVDBrand::updateTemporalBasis()
 {
-    if(d_update_right_SV)
-    {
-        delete d_basis_right;
-        d_basis_right = new Matrix(*d_W);
-    }
+    delete d_basis_right;
+    d_basis_right = new Matrix(*d_W);
 
     // remove the smallest singular value if it is smaller than d_singular_value_tol
     if ( (d_singular_value_tol != 0.0) &&
             (d_S->item(d_num_samples-1) < d_singular_value_tol) &&
             (d_num_samples != 1) ) {
 
-        if (d_rank == 0) std::cout << "removing a small singular value!\n";
-
-        if (d_update_right_SV)
-        {
-            Matrix* d_basis_right_new = new Matrix(d_num_rows_of_W, d_num_samples-1,
-                                                   d_basis_right->distributed());
-            for (int row = 0; row < d_num_rows_of_W; ++row) {
-                for (int col = 0; col < d_num_samples-1; ++col) {
-                    d_basis_right_new->item(row, col) = d_basis_right->item(row,col);
-                }
-            }
-            delete d_basis_right;
-            d_basis_right = d_basis_right_new;
+        if (d_rank == 0) {
+            std::cout <<
+                      "removing a temporal basis corresponding to the small singular value!\n";
         }
+
+        Matrix* d_basis_right_new = new Matrix(d_num_rows_of_W, d_num_samples-1,
+                                               d_basis_right->distributed());
+        for (int row = 0; row < d_num_rows_of_W; ++row) {
+            for (int col = 0; col < d_num_samples-1; ++col) {
+                d_basis_right_new->item(row, col) = d_basis_right->item(row,col);
+            }
+        }
+        delete d_basis_right;
+        d_basis_right = d_basis_right_new;
     }
 
     // Reorthogonalize if necessary.
     // (not likely to be called anymore but left for safety)
-    if(d_update_right_SV)
-    {
-        if (fabs(checkOrthogonality(d_basis_right)) >
-                std::numeric_limits<double>::epsilon()*d_num_samples) {
-            d_basis_right->orthogonalize();
-        }
+    if (fabs(checkOrthogonality(d_basis_right)) >
+            std::numeric_limits<double>::epsilon()*d_num_samples) {
+        d_basis_right->orthogonalize();
     }
 
 }
@@ -349,14 +346,17 @@ IncrementalSVDBrand::computeBasis()
     }
 
     updateSpatialBasis();
-    updateTemporalBasis();
+    if (d_update_right_SV)
+    {
+        updateTemporalBasis();
+    }
 
     // remove the smallest singular value if it is smaller than d_singular_value_tol
     if ( (d_singular_value_tol != 0.0) &&
             (d_S->item(d_num_samples-1) < d_singular_value_tol) &&
             (d_num_samples != 1) ) {
-        
-	--d_num_samples;
+
+        --d_num_samples;
     }
 }
 

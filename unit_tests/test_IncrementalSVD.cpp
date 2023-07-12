@@ -17,7 +17,6 @@
 #include<gtest/gtest.h>
 #include <mpi.h>
 #include "linalg/svd/IncrementalSVD.h"
-#include "linalg/BasisGenerator.h"
 
 /**
  * Simple smoke test to make sure Google Test is properly linked
@@ -136,42 +135,6 @@ TEST(IncrementalSVDSerialTest, Test_getSingularValues)
     for (int i = 0; i < svd.getDim(); i++)
     {
         EXPECT_DOUBLE_EQ(S->item(i), 1);
-    }
-}
-
-TEST(IncrementalSVDSerialTest, Test_FastUpdate)
-{
-    int dim = 5;
-    bool fast_update = true;
-    CAROM::Options incremental_svd_options = CAROM::Options(dim, dim)
-	    .setMaxBasisDimension(dim)
-            .setIncrementalSVD(1e-1, 1e-1, 1e-1, 1e-1, fast_update);
-
-    CAROM::BasisGenerator bg(
-        incremental_svd_options,
-	true,
-        "irrelevant.txt");
-
-    for (int i = 0; i < dim; i++)
-    {
-	// Unit vector
-	double u_in[dim] = { 0.0 };
-	u_in[i] = 1.0;
-	// Append the unit vector to the IncrementalSVDFastUpdate object
-	bg.takeSample(u_in, 0.0, 1e-1, false);
-    }
-
-    const CAROM::Matrix *B = bg.getSpatialBasis(); // Basis
-    const CAROM::Vector *S = bg.getSingularValues(); // Singular values
-    for (int i = 0; i < dim; i++)
-    {
-	for (int j = 0; j < i; j++)
-	{
-	    EXPECT_DOUBLE_EQ(B->item(i, j), 0);
-	    EXPECT_DOUBLE_EQ(B->item(j, i), 0);
-	}
-	EXPECT_DOUBLE_EQ(B->item(i, i), 1);
-	EXPECT_DOUBLE_EQ(S->item(i), 1);
     }
 }
 
