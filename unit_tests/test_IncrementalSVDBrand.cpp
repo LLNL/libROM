@@ -25,7 +25,7 @@ TEST(GoogleTestFramework, GoogleTestFrameworkFound) {
     SUCCEED();
 }
 
-TEST(IncrementalSVDBrandSerialTest, Test_IncrementalSVDBrand)
+TEST(IncrementalSVDBrandTest, Test_IncrementalSVDBrand)
 {
     // Get the rank of this process, and the number of processors.
     int mpi_init, d_rank, d_num_procs;
@@ -96,9 +96,9 @@ TEST(IncrementalSVDBrandSerialTest, Test_IncrementalSVDBrand)
         incremental_svd_options,
 	true,
         "irrelevant.txt");
-    sampler.takeSample(sample1, 0, 1e-1);
-    sampler.takeSample(sample2, 0, 1e-1);
-    sampler.takeSample(sample3, 0, 1e-1);
+    sampler.takeSample(&sample1[row_offset[d_rank]], 0, 1e-1);
+    sampler.takeSample(&sample2[row_offset[d_rank]], 0, 1e-1);
+    sampler.takeSample(&sample3[row_offset[d_rank]], 0, 1e-1);
 
     const CAROM::Matrix* d_basis = sampler.getSpatialBasis();
     const CAROM::Matrix* d_basis_right = sampler.getTemporalBasis();
@@ -132,7 +132,10 @@ TEST(IncrementalSVDBrandSerialTest, Test_IncrementalSVDBrand)
 int main(int argc, char* argv[])
 {
     ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    MPI_Init(&argc, &argv);
+    int result = RUN_ALL_TESTS();
+    MPI_Finalize();
+    return result;
 }
 #else // #ifndef CAROM_HAS_GTEST
 int main()
