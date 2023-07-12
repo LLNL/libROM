@@ -141,6 +141,7 @@ if (ENABLE_EXAMPLES)
       nonlinear_elasticity
       heat_conduction
       heat_conduction_dmdc
+      otf_heat_conduction
       parametric_heat_conduction
       de_parametric_heat_conduction_greedy
       wave_equation
@@ -157,6 +158,7 @@ if (ENABLE_EXAMPLES)
       prom
       prom
       prom
+      dmd
       dmd
       dmd
       dmd

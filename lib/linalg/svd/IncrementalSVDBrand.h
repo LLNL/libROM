@@ -9,10 +9,10 @@
  *****************************************************************************/
 
 // Description: The concrete implementation of the incremental SVD algorithm
-//              using Matthew Brand's "fast update" method.
+//              using Matthew Brand's (exact) "fast update" method.
 
-#ifndef included_IncrementalSVDFastUpdate_h
-#define included_IncrementalSVDFastUpdate_h
+#ifndef included_IncrementalSVDBrand_h
+#define included_IncrementalSVDBrand_h
 
 #include "IncrementalSVD.h"
 #include "linalg/Options.h"
@@ -20,17 +20,35 @@
 namespace CAROM {
 
 /**
- * Class IncrementalSVDFastUpdate implements Brand's fast update incremental SVD
+ * Class IncrementalSVDBrand implements Brand's fast update incremental SVD
  * algorithm by implementing the pure virtual methods of the IncrementalSVD
  * base class.
  */
-class IncrementalSVDFastUpdate : public IncrementalSVD
+class IncrementalSVDBrand : public IncrementalSVD
 {
 public:
     /**
      * @brief Destructor.
      */
-    ~IncrementalSVDFastUpdate();
+    ~IncrementalSVDBrand();
+
+    /**
+     * @brief Returns the basis vectors for the current time interval as a
+     *        Matrix.
+     *
+     * @return The basis vectors for the current time interval.
+     */
+    const Matrix*
+    getSpatialBasis() override;
+
+    /**
+     * @brief Returns the temporal basis vectors for the current time interval
+     *        as a Matrix.
+     *
+     * @return The temporal basis vectors for the current time interval.
+     */
+    const Matrix*
+    getTemporalBasis() override;
 
 private:
     friend class BasisGenerator;
@@ -46,27 +64,27 @@ private:
      *                            name.
      * @see Options
      */
-    IncrementalSVDFastUpdate(
+    IncrementalSVDBrand(
         Options options,
         const std::string& basis_file_name);
 
     /**
      * @brief Unimplemented default constructor.
      */
-    IncrementalSVDFastUpdate();
+    IncrementalSVDBrand();
 
     /**
      * @brief Unimplemented copy constructor.
      */
-    IncrementalSVDFastUpdate(
-        const IncrementalSVDFastUpdate& other);
+    IncrementalSVDBrand(
+        const IncrementalSVDBrand& other);
 
     /**
      * @brief Unimplemented assignment operator.
      */
-    IncrementalSVDFastUpdate&
+    IncrementalSVDBrand&
     operator = (
-        const IncrementalSVDFastUpdate& rhs);
+        const IncrementalSVDBrand& rhs);
 
     /**
      * @brief Constructs the first SVD.
@@ -82,6 +100,32 @@ private:
     buildInitialSVD(
         double* u,
         double time);
+
+    /**
+     * @brief Adds the new sampled the state vector, u, to the system.
+     *
+     * @pre u != 0
+     *
+     * @param[in] u The new state.
+     * @param[in] add_without_increase If true, addLinearlyDependent is invoked.
+     *
+     * @return True if building the incremental SVD was successful.
+     */
+    bool
+    buildIncrementalSVD(
+        double* u, bool add_without_increase = false) override;
+
+    /**
+     * @brief Update the current spatial basis vectors.
+     */
+    void
+    updateSpatialBasis();
+
+    /**
+     * @brief Update the current temporal basis vectors.
+     */
+    void
+    updateTemporalBasis();
 
     /**
      * @brief Computes the current basis vectors.
