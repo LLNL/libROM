@@ -31,13 +31,16 @@
 //
 // Offline phase:
 //      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 0.9 -id 0
+//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 0.9 -id 0
 //
+//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.1 -id 1
 //      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.1 -id 1
 //
 // Merge phase:
 //      ./nonlinear_elasticity_global_rom -merge -ns 2 -dt 0.01 -tf 5.0
 //
 // Create FOM comparison data:
+//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.0 -id 2
 //      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.0 -id 2
 //
 // Online phase with full sampling:
@@ -75,11 +78,14 @@
 // Offline phase:
 //      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 0.9 -xbo -def-ic -id 0
 //      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.1 -xbo -def-ic -id 1
+//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 0.9 -xbo -def-ic -id 0
+//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.1 -xbo -def-ic -id 1
 //
 // Merge phase:
 //      ./nonlinear_elasticity_global_rom -merge -ns 2 -dt 0.01 -tf 5.0 -xbo
 //
 // Create FOM comparison data:
+//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.0 -xbo -def-ic -id 2
 //      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.0 -xbo -def-ic -id 2
 //
 // Online phase with full sampling:
