@@ -91,6 +91,7 @@
 #include "linalg/BasisReader.h"
 #include "linalg/NNLS.h"
 #include "hyperreduction/DEIM.h"
+#include "hyperreduction/QDEIM.h"
 #include "hyperreduction/GNAT.h"
 #include "hyperreduction/S_OPT.h"
 #include "mfem/SampleMesh.hpp"
@@ -550,6 +551,7 @@ int main(int argc, char *argv[])
     bool offline = false;
     bool merge = false;
     bool online = false;
+    bool use_qdeim = false;
     bool use_sopt = false;
     bool use_eqp = false;
     bool writeSampleMesh = false;
@@ -619,6 +621,8 @@ int main(int argc, char *argv[])
                    "Enable or disable the online phase.");
     args.AddOption(&merge, "-merge", "--merge", "-no-merge", "--no-merge",
                    "Enable or disable the merge phase.");
+    args.AddOption(&use_qdeim, "-qdeim", "--qdeim", "-no-qdeim", "--no-qdeim",
+                   "Use Q-DEIM sampling instead of DEIM for the hyperreduction.");
     args.AddOption(&use_sopt, "-sopt", "--sopt", "-no-sopt", "--no-sopt",
                    "Use S-OPT sampling instead of DEIM for the hyperreduction.");
     args.AddOption(&num_samples_req, "-nsr", "--nsr",
@@ -1032,6 +1036,19 @@ int main(int argc, char *argv[])
                              num_procs,
                              nsamp_R);
             }
+            else if (use_qdeim)
+            {
+                if (myid == 0)
+                    printf("Using QDEIM sampling\n");
+                CAROM::QDEIM(FR_librom,
+                             nldim,
+                             sample_dofs,
+                             num_sample_dofs_per_proc,
+                             *Bsinv,
+                             myid,
+                             num_procs,
+                             nsamp_R);
+            }
             else if (nsamp_R != nldim)
             {
                 if (myid == 0)
@@ -1098,6 +1115,17 @@ int main(int argc, char *argv[])
                 if (use_sopt)
                 {
                     CAROM::S_OPT(S_librom,
+                                 nsdim,
+                                 sample_dofs_S,
+                                 num_sample_dofs_per_proc_S,
+                                 *Ssinv,
+                                 myid,
+                                 num_procs,
+                                 nsamp_S);
+                }
+                else if (use_qdeim)
+                {
+                    CAROM::QDEIM(S_librom,
                                  nsdim,
                                  sample_dofs_S,
                                  num_sample_dofs_per_proc_S,

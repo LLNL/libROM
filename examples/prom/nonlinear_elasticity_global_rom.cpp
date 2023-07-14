@@ -30,25 +30,25 @@
 // and nonlinear term basis, with velocity initial condition:
 //
 // Offline phase:
-//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 0.90 -id 0
+//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 0.9 -id 0
 //
-//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.10 -id 1
+//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.1 -id 1
 //
 // Merge phase:
 //      ./nonlinear_elasticity_global_rom -merge -ns 2 -dt 0.01 -tf 5.0
 //
 // Create FOM comparison data:
-//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.00 -id 2
+//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.0 -id 2
 //
 // Online phase with full sampling:
-//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -rvdim 40 -rxdim 10 -hdim 71 -nsr 1170 -sc 1.00
+//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -rvdim 40 -rxdim 10 -hdim 71 -nsr 1170 -sc 1.0
 // Output message:
 //      Elapsed time for time integration loop 1.80759
 //      Relative error of ROM position (x) at t_final: 5 is 0.000231698
 //      Relative error of ROM velocity (v) at t_final: 5 is 0.466941
 //
 // Online phase with strong hyper-reduction:
-//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -rvdim 40 -rxdim 10 -hdim 71 -nsr 100 -sc 1.00
+//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -rvdim 40 -rxdim 10 -hdim 71 -nsr 100 -sc 1.0
 // Output message:
 //      Elapsed time for time integration loop 1.08048
 //      Relative error of ROM position (x) at t_final: 5 is 0.00209877
@@ -59,24 +59,24 @@
 // Sample runs and results for parametric ROM using only displacement basis
 // and nonlinear term basis:
 // Offline phase:
-//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 0.90 -xbo -def-ic -id 0
-//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.10 -xbo -def-ic -id 1
+//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 0.9 -xbo -def-ic -id 0
+//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.1 -xbo -def-ic -id 1
 //
 // Merge phase:
 //      ./nonlinear_elasticity_global_rom -merge -ns 2 -dt 0.01 -tf 5.0 -xbo
 //
 // Create FOM comparison data:
-//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.00 -xbo -def-ic -id 2
+//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.0 -xbo -def-ic -id 2
 //
 // Online phase with full sampling:
-//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -rxdim 57 -hdim 183 -nsr 1170 -sc 1.00 -xbo -def-ic
+//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -rxdim 57 -hdim 183 -nsr 1170 -sc 1.0 -xbo -def-ic
 // Output message:
 //      Elapsed time for time integration loop 18.9874
 //      Relative error of ROM position (x) at t_final: 5 is 7.08272e-05
 //      Relative error of ROM velocity (v) at t_final: 5 is 0.00387647
 //
 // Online phase with strong hyper reduction:
-//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -rxdim 2 -hdim 4 -nsr 10 -sc 1.00 -xbo -def-ic
+//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -rxdim 2 -hdim 4 -nsr 10 -sc 1.0 -xbo -def-ic
 // Output message:
 //      Elapsed time for time integration loop 1.01136
 //      Relative error of ROM position (x) at t_final: 5 is 0.0130818
@@ -90,6 +90,7 @@
 #include "linalg/BasisGenerator.h"
 #include "linalg/BasisReader.h"
 #include "hyperreduction/DEIM.h"
+#include "hyperreduction/QDEIM.h"
 #include "hyperreduction/GNAT.h"
 #include "hyperreduction/S_OPT.h"
 #include "mfem/SampleMesh.hpp"
@@ -388,6 +389,7 @@ int main(int argc, char* argv[])
     bool offline = false;
     bool merge = false;
     bool online = false;
+    bool use_qdeim = false;
     bool use_sopt = false;
     bool hyperreduce = true;
     bool x_base_only = false;
@@ -444,6 +446,8 @@ int main(int argc, char* argv[])
                    "Enable or disable the online phase.");
     args.AddOption(&merge, "-merge", "--merge", "-no-merge", "--no-merge",
                    "Enable or disable the merge phase.");
+    args.AddOption(&use_qdeim, "-qdeim", "--qdeim", "-no-qdeim", "--no-qdeim",
+                   "Use QDEIM sampling instead of DEIM for the hyperreduction.");
     args.AddOption(&use_sopt, "-sopt", "--sopt", "-no-sopt", "--no-sopt",
                    "Use S-OPT sampling instead of DEIM for the hyperreduction.");
     args.AddOption(&num_samples_req, "-nsr", "--nsr",
@@ -843,6 +847,19 @@ int main(int argc, char* argv[])
             if (myid == 0)
                 printf("Using S_OPT sampling\n");
             CAROM::S_OPT(H_librom,
+                         hdim,
+                         sample_dofs,
+                         num_sample_dofs_per_proc,
+                         *Hsinv,
+                         myid,
+                         num_procs,
+                         nsamp_H);
+        }
+        else if (use_qdeim)
+        {
+            if (myid == 0)
+                printf("Using QDEIM sampling\n");
+            CAROM::QDEIM(H_librom,
                          hdim,
                          sample_dofs,
                          num_sample_dofs_per_proc,
