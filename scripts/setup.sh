@@ -24,6 +24,17 @@ export CFLAGS="-fPIC"
 export CPPFLAGS="-fPIC"
 export CXXFLAGS="-fPIC"
 
+# Install ScaLAPACK if library is not located
+cd $LIB_DIR
+SCALAPACK_PATH=$(whereis libscalapack | awk '{print $2}')
+if [ -z "$SCALAPACK_PATH" ]; then
+    echo "ScaLAPACK is needed!"
+    tar -zxvf scalapack-2.2.0.tar.gz
+    cp SLmake.inc scalapack-2.2.0/
+    cd scalapack-2.2.0/
+    make
+fi
+
 # Install HYPRE
 cd $LIB_DIR
 if [ ! -d "hypre" ]; then

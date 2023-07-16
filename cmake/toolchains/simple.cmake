@@ -1,0 +1,9 @@
+set(CMAKE_C_COMPILER mpicc)
+set(CMAKE_CXX_COMPILER mpicxx)
+set(CMAKE_Fortran_COMPILER mpif90)
+
+# Use environment variables.
+set(MFEM_DIR $ENV{MFEM_DIR})
+set(HYPRE_DIR $ENV{HYPRE_DIR})
+set(PARMETIS_DIR $ENV{PARMETIS_DIR})
+set(METIS_DIR $ENV{METIS_DIR})
