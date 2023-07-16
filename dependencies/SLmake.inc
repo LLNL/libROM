@@ -26,6 +26,11 @@ CDEFS         = -DAdd_
 #  The fortran and C compilers, loaders, and their flags
 #
 
+# LIBROM instruction: copy this file to scalapack-2.2.0 directory and type make.
+
+# -fallow-argument-mismatch is needed to compile some legacy fortran code that does not conform to modern gnu compiler standard.
+# -fPIC is needed to build the static scalapack library.
+
 FC            = mpif90
 CC            = mpicc 
 NOOPT         = -O0 -fallow-argument-mismatch -fPIC
