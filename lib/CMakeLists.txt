@@ -97,7 +97,10 @@ if (BLAS_LIBRARIES MATCHES ".*mkl.*")
     target_include_directories(ROM PUBLIC ${MKL_INCLUDE_DIRS})
   endif()
 else() # BLAS or LAPACK isn't MKL
-  find_package(ScaLAPACK REQUIRED HINTS "${CMAKE_SOURCE_DIR}/dependencies/scalapack-2.2.0")
+  find_package(ScaLAPACK)
+  if (NOT ScaLAPACK_FOUND)
+    find_package(ScaLAPACK REQUIRED HINTS "${CMAKE_SOURCE_DIR}/dependencies/scalapack-2.2.0")
+  endif()
   target_link_libraries(ROM PUBLIC ${ScaLAPACK_LIBRARIES})
 endif()
 
