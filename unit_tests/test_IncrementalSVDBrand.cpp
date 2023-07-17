@@ -89,8 +89,8 @@ TEST(IncrementalSVDBrandTest, Test_IncrementalSVDBrand)
 			       1e-1,
 			       1e-1,
 			       fast_update,
-			       false,
-			       fast_update_brand);
+			       fast_update_brand,
+			       false);
 
     CAROM::BasisGenerator sampler(
         incremental_svd_options,
