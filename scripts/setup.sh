@@ -28,11 +28,15 @@ export CXXFLAGS="-fPIC"
 cd $LIB_DIR
 SCALAPACK_PATH=$(whereis libscalapack | awk '{print $2}')
 if [ -z "$SCALAPACK_PATH" ]; then
+  if [ -f "scalapack-2.2.0/libscalapack.a" ]; then
+    echo "Using dependencies/scalapack-2.2.0/libscalapack.a"
+  else
     echo "ScaLAPACK is needed!"
     tar -zxvf scalapack-2.2.0.tar.gz
     cp SLmake.inc scalapack-2.2.0/
     cd scalapack-2.2.0/
     make
+  fi
 fi
 
 # Install HYPRE
