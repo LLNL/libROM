@@ -146,8 +146,8 @@ public:
         double sampling_tol_,
         double max_time_between_samples_,
         bool fast_update_ = false,
-        bool skip_linearly_dependent_ = false,
-        bool fast_update_brand_ = false
+        bool fast_update_brand_ = false,
+        bool skip_linearly_dependent_ = false
     )
     {
         linearity_tol = linearity_tol_;
