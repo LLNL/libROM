@@ -901,7 +901,7 @@ int main(int argc, char *argv[])
         // Setup hyperreduction, using either EQP or sampled DOFs and a sample mesh.
 
         ParFiniteElementSpace *sp_XV_space;
-        CAROM::Matrix *Hsinv = NULL;
+        CAROM::Matrix *Hsinv = new CAROM::Matrix(hdim, hdim, false); // Gets resized before use.
         const IntegrationRule *ir0 = NULL;
 
         if (ir0 == NULL)
@@ -1100,6 +1100,7 @@ int main(int argc, char *argv[])
         {
             if (!use_eqp)
             {
+                
                 // Define operator in sample space
                 soper = new HyperelasticOperator(*sp_XV_space, ess_tdof_list_sp, visc, mu, K);
             }
@@ -1799,7 +1800,8 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
             z[i] += resEQP[i];
     }
     else
-    { // Lift x- and v-vector
+    { 
+        // Lift x- and v-vector
         // I.e. perform v = v0 + V_v v^, where v^ is the input
         V_v_sp->mult(v_librom, *z_v_librom);
         V_x_sp->mult(x_librom, *z_x_librom);
