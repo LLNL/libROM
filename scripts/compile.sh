@@ -88,7 +88,8 @@ if [[ $MFEM_USE_GSLIB == "On" ]] && [[ ! -d "$HOME_DIR/dependencies/gslib" ]]; t
 fi
 export MFEM_USE_GSLIB
 
-REPO_PREFIX=$(git rev-parse --show-toplevel)
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+REPO_PREFIX=$( dirname $SCRIPT_DIR )
 
 if [[ $USE_MFEM == "On" ]]; then
     . ${REPO_PREFIX}/scripts/setup.sh
