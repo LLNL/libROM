@@ -98,7 +98,15 @@ if (BLAS_LIBRARIES MATCHES ".*mkl.*")
     target_include_directories(ROM PUBLIC ${MKL_INCLUDE_DIRS})
   endif()
 else() # BLAS or LAPACK isn't MKL
-  find_package(ScaLAPACK REQUIRED)
+  find_package(ScaLAPACK)
+  if (NOT ScaLAPACK_FOUND)
+    # Attempt to use manually-built scalapack in dependencies.
+    # CMake files in scalapack directory disrupts find_package using PATHS/HINTS.
+    # Here we prepend environment PATH variable.
+    # This changed PATH variable applies only to this libROM compilation.
+    set(ENV{PATH} "${CMAKE_SOURCE_DIR}/dependencies/scalapack-2.2.0:$ENV{PATH}")
+    find_package(ScaLAPACK REQUIRED)
+  endif()
   target_link_libraries(ROM PUBLIC ${ScaLAPACK_LIBRARIES})
 endif()
 
