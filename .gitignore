@@ -33,3 +33,6 @@ init_bash.sh
 .vscode/settings.json
 .vscode/libROM.code-workspace
 init_bash_debug_arm.sh
+
+# Don't track .txt files
+*.txt
