@@ -30,11 +30,14 @@ IncrementalDMD::IncrementalDMD(int dim,
     bg = new BasisGenerator(svd_options,
 		    	    true,
 		    	    svd_base_file_name);
+    svd = new IncrementalSVDBrand(svd_options,
+		    		  svd_base_file_name);
 }
 
 IncrementalDMD::~IncrementalDMD()
 {
     delete bg;
+    delete svd;
 }
 
 void
@@ -52,6 +55,41 @@ IncrementalDMD::save(std::string base_file_name)
     CAROM_VERIFY(d_trained);
 
     DMD::save(base_file_name);
+}
+
+Vector*
+IncrementalDMD::predict_dt(Vector* u)
+{
+    IncrementalDMDInternal mats = svd->getAllMatrices();
+    Matrix* Up_new;
+    Matrix* U_new;
+    if (mats.Up->numColumns() == mats.Uq->numRows()) {
+	// Liearly dependent sample
+	Up_new = mats.Up->mult(mats.Uq);
+	U_new = mats.U;
+    }
+    else {
+	// Linearly independent sample
+	int r = mats.Up->numColumns();
+	Up_new = new Matrix(r+1, r+1, false);
+	for (int i = 0; i < r; i++) {
+	    for (int j = 0; j < r; j++) {
+		Up_new->item(i, j) = mats.Up->item(i, j);
+	    }
+	}
+	Up_new->item(r, r) = 1;
+	Up_new = Up_new->mult(mats.Uq);
+	U_new = new Matrix(d_dim, r+1, true);
+	for (int i = 0; i < d_dim; i++) {
+	    for (int j = 0; j < r; j++) {
+		U_new->item(i, j) = mats.U->item(i, j);
+	    }
+	    U_new->item(i, r) = mats.p->item(i);
+	}
+    }
+    Vector* u_proj = Up_new->transposeMult(U_new->transposeMult(u));
+    Vector* pred = U_new->mult(Up_new->mult(d_A_tilde->mult(u_proj)));
+    return pred;
 }
 
 void
@@ -72,6 +110,9 @@ IncrementalDMD::updateDMD(const Matrix* f_snapshots)
     std::pair<Matrix*, Matrix*> f_snapshot_pair = computeDMDSnapshotPair(f_snapshots);
     Matrix* f_snapshots_in = f_snapshot_pair.first;
     Matrix* f_snapshots_out = f_snapshot_pair.second;
+    //std::cout << f_snapshots->numRows() << " x " << f_snapshots->numColumns() << std::endl;
+    //Matrix* f_snapshots_in = f_snapshots->getFirstNColumns(f_snapshots->numColumns()-1);
+    //Matrix* f_snapshots_out = f_snapshots->getLastNColumns(f_snapshots->numColumns()-1);
     
     /* Incremental SVD
      * 
@@ -82,166 +123,145 @@ IncrementalDMD::updateDMD(const Matrix* f_snapshots)
      *
     */
     double* u_in = f_snapshots_in->getColumn(f_snapshots_in->numColumns()-1)
-	    			 ->getData();
+    	    			 ->getData();
 
     StopWatch svd_timer, rest_timer;
 
     svd_timer.Start();
-    bg->takeSample(u_in, 0, d_dt, false); // what if norm(u_in) < eps at init?
+
+    int num_samples_pre = svd->getNumSamples();
+    svd->takeSample(u_in, 0, false); // what if norm(u_in) < eps at init?
+    int num_samples = svd->getNumSamples();
+    if (num_samples > num_samples_pre)
+    {
+	if (num_samples == 1)
+	{
+	    Matrix* d_basis = new Matrix(*(svd->getSpatialBasis()));
+	    Matrix* d_basis_right = new Matrix(*(svd->getTemporalBasis()));
+	    Vector* d_sv = new Vector(*(svd->getSingularValues()));
+	    Matrix* d_S_inv = new Matrix(1, 1, false);
+	    d_S_inv->item(0, 0) = 1 / d_sv->item(0);
+	    d_A_tilde = d_basis->transposeMult(
+			    f_snapshots_out->mult(
+				d_basis_right->mult(d_S_inv)));
+	    delete d_basis, d_basis_right, d_sv, d_S_inv;
+	}
+	else
+	{
+	    std::cout << "Added linearly independent sample" << std::endl;
+	    IncrementalDMDInternal mats = svd->getAllMatrices();
+	    std::cout << "num_samples: " << num_samples << std::endl;
+	    std::cout << "U: " << mats.U->numRows() << " X " << mats.U->numColumns() << std::endl;
+	    std::cout << "Up: " << mats.Up->numRows() << " X " << mats.Up->numColumns() << std::endl;
+	    std::cout << "W: " << mats.W->numRows() << " X " << mats.W->numColumns() << std::endl;
+	    std::cout << "Uq: " << mats.Uq->numRows() << " X " << mats.Uq->numColumns() << std::endl;
+	    std::cout << "Wq: " << mats.Wq->numRows() << " X " << mats.Wq->numColumns() << std::endl;
+	    std::cout << "Sq_inv: " << mats.Sq_inv->numRows() << " X " << mats.Sq_inv->numColumns() << std::endl;
+	    
+	    Matrix* d_A_tilde_tmp = new Matrix(num_samples, num_samples, false);
+	    Vector* u_new = f_snapshots_out->getColumn(f_snapshots_out->numColumns()-1);
+	    Vector* U_mult_u = mats.U->transposeMult(u_new);
+	    Vector* f_mult_p = f_snapshots_out->getFirstNColumns(
+			    			  f_snapshots_out->numColumns()-1)
+		    			      ->transposeMult(mats.p);
+	    for (int i = 0; i < num_samples-1; i++) {
+		for (int j = 0; j < num_samples-1; j++) {
+		    d_A_tilde_tmp->item(i, j) = d_A_tilde->item(i, j) * mats.s->item(j);
+		}
+		d_A_tilde_tmp->item(i, num_samples-1) = mats.Up->transposeMult(U_mult_u)->item(i);
+	    }
+	    for (int j = 0; j < num_samples-1; j++) {
+		d_A_tilde_tmp->item(num_samples-1, j) = mats.W->transposeMult(f_mult_p)->item(j);
+	    }
+	    d_A_tilde_tmp->item(num_samples-1, num_samples-1) = mats.p->inner_product(u_new);
+	    
+	    Matrix* d_A_tilde_new = mats.Uq->transposeMult(
+			    	d_A_tilde_tmp->mult(
+				    mats.Wq->mult(mats.Sq_inv)));
+	    
+	    delete d_A_tilde;
+	    d_A_tilde = d_A_tilde_new;
+
+	    delete u_new, d_A_tilde_tmp;
+	}
+    }
+    else
+    {
+	std::cout << "Added linearly dependent sample" << std::endl;
+	IncrementalDMDInternal mats = svd->getAllMatrices();
+	
+	std::cout << "num_samples: " << num_samples << std::endl;
+	    std::cout << "U: " << mats.U->numRows() << " X " << mats.U->numColumns() << std::endl;
+	    std::cout << "Up: " << mats.Up->numRows() << " X " << mats.Up->numColumns() << std::endl;
+	    std::cout << "W: " << mats.W->numRows() << " X " << mats.W->numColumns() << std::endl;
+	    std::cout << "Uq: " << mats.Uq->numRows() << " X " << mats.Uq->numColumns() << std::endl;
+	    std::cout << "Wq: " << mats.Wq->numRows() << " X " << mats.Wq->numColumns() << std::endl;
+	    std::cout << "Sq_inv: " << mats.Sq_inv->numRows() << " X " << mats.Sq_inv->numColumns() << std::endl;
+
+	Matrix* d_A_tilde_tmp = new Matrix(num_samples, num_samples+1, false);
+	Vector* u_new = f_snapshots_out->getColumn(f_snapshots_out->numColumns()-1);
+	Vector* U_mult_u = mats.U->transposeMult(u_new);
+	for (int i = 0; i < num_samples; i++) {
+	    for (int j = 0; j < num_samples; j++) {
+		d_A_tilde_tmp->item(i, j) = d_A_tilde->item(i, j) * mats.s->item(j);
+	    }
+	    d_A_tilde_tmp->item(i, num_samples) = mats.Up->transposeMult(U_mult_u)->item(i);
+	}
+	Matrix* d_A_tilde_new = mats.Uq->transposeMult(
+			    d_A_tilde_tmp->mult(
+				mats.Wq->mult(mats.Sq_inv)));
+	delete d_A_tilde;
+	d_A_tilde = d_A_tilde_new;
+
+	delete u_new, d_A_tilde_tmp;
+    }
+
     svd_timer.Stop();
     std::cout << "Time svd:" << svd_timer.RealTime() << std::endl;
 
-    rest_timer.Start();
-    bg->computeBasis();
-    // Copy pointers from IncrementalSVD to DMD
-    d_k = bg->getSingularValues()->dim(); // no. of singular values
-    
-    if (d_trained){ delete d_basis; } 
-    Matrix* d_basis = new Matrix(*(bg->getSpatialBasis())); // left singular vectors
-    std::vector<double> vec_values(bg->getSingularValues()->getData(),
-		    		   bg->getSingularValues()->getData() + d_k);
-    d_sv = vec_values; // singular values
-    Matrix* d_basis_right = new Matrix(*(bg->getTemporalBasis())); // right singular vectors
-    Matrix* d_S_inv = new Matrix(d_k, d_k, false);
+    delete f_snapshots_in;
+    delete f_snapshots_out;
+
+    return;
 
     /*
-     * Distributed vectors: skip for now
+    rest_timer.Start();
+    //bg->computeBasis();
+    // Copy pointers from IncrementalSVD to DMD
+    d_k = svd->getSingularValues()->dim(); // no. of singular values
     
-    for (int d_rank = 0; d_rank < d_num_procs; ++d_rank) {
-        // V is computed in the transposed order so no reordering necessary.
-        gather_block(&d_basis->item(0, 0), d_factorizer->V,
-                     1, row_offset[static_cast<unsigned>(d_rank)]+1,
-                     d_k, row_offset[static_cast<unsigned>(d_rank) + 1] -
-                     row_offset[static_cast<unsigned>(d_rank)],
-                     d_rank);
-
-        // gather_transposed_block does the same as gather_block, but transposes
-        // it; here, it is used to go from column-major to row-major order.
-        gather_transposed_block(&d_basis_right->item(0, 0), d_factorizer->U, 1, 1,
-                                f_snapshots_in->numColumns(), d_k, d_rank);
-    }
-    delete[] row_offset;
-
-    */
+    //d_U = bg->d_U;
+    //Matrix* d_Up = bg->getUp();
+    
+    if (d_trained){ delete d_basis; } 
+    Matrix* d_basis = new Matrix(*(svd->getSpatialBasis())); // left singular vectors
+    Vector* d_sv = new Vector(*(svd->getSingularValues())); // singular values
+    Matrix* d_basis_right = new Matrix(*(svd->getTemporalBasis())); // right singular vectors
+    Matrix* d_S_inv = new Matrix(d_k, d_k, false);
 
     // Get inverse of singular values by multiplying by reciprocal.
     for (int i = 0; i < d_k; ++i)
     {
-        d_S_inv->item(i, i) = 1 / d_sv[i];
+        d_S_inv->item(i, i) = 1 / d_sv->item(i);
     }
-
-    Matrix* Q = NULL;
-
-    /* Initial basis (W0): neglect for now
-     *
-    // If W0 is not null, we need to ensure it is in the basis of W.
-    if (W0 != NULL)
-    {
-        CAROM_VERIFY(W0->numRows() == d_basis->numRows());
-        CAROM_VERIFY(linearity_tol >= 0.0);
-        std::vector<int> lin_independent_cols_W;
-
-        // Copy W0 and orthogonalize.
-        Matrix* d_basis_init = new Matrix(f_snapshots->numRows(), W0->numColumns(),
-                                          true);
-        for (int i = 0; i < d_basis_init->numRows(); i++)
-        {
-            for (int j = 0; j < W0->numColumns(); j++)
-            {
-                d_basis_init->item(i, j) = W0->item(i, j);
-            }
-        }
-        d_basis_init->orthogonalize();
-
-        Vector W_col(f_snapshots->numRows(), f_snapshots->distributed());
-        Vector l(W0->numColumns(), true);
-        Vector W0l(f_snapshots->numRows(), f_snapshots->distributed());
-        // Find which columns of d_basis are linearly independent from W0
-        for (int j = 0; j < d_basis->numColumns(); j++)
-        {
-            // l = W0' * u
-            for (int i = 0; i < f_snapshots->numRows(); i++)
-            {
-                W_col.item(i) = d_basis->item(i, j);
-            }
-            d_basis_init->transposeMult(W_col, l);
-
-            // W0l = W0 * l
-            d_basis_init->mult(l, W0l);
-
-            // Compute k = sqrt(u.u - 2.0*l.l + basisl.basisl) which is ||u -
-            // basisl||_{2}.  This is the error in the projection of u into the
-            // reduced order space and subsequent lifting back to the full
-            // order space.
-            double k = W_col.inner_product(W_col) - 2.0*l.inner_product(l) +
-                       W0l.inner_product(W0l);
-            if (k <= 0)
-            {
-                k = 0;
-            }
-            else
-            {
-         u.GetData       k = sqrt(k);
-            }
-
-            // Use k to see if the vector addressed by u is linearly dependent
-            // on the left singular vectors.
-            if (k >= linearity_tol)
-            {
-                lin_independent_cols_W.push_back(j);
-            }
-        }
-        delete d_basis_init;
-
-        // Add the linearly independent columns of W to W0. Call this new basis W_new.
-        Matrix* d_basis_new = new Matrix(f_snapshots->numRows(),
-                                         W0->numColumns() + lin_independent_cols_W.size(), true);
-        for (int i = 0; i < d_basis_new->numRows(); i++)
-        {
-            for (int j = 0; j < W0->numColumns(); j++)
-            {
-                d_basis_new->item(i, j) = W0->item(i, j);
-            }
-            for (int j = 0; j < lin_independent_cols_W.size(); j++)
-            {
-                d_basis_new->item(i, j + W0->numColumns()) = d_basis->item(i,
-                        lin_independent_cols_W[j]);
-            }
-        }
-
-        // Orthogonalize W_new.
-        d_basis_new->orthogonalize();
-
-        // Calculate Q = W* x W_new;
-        Q = d_basis->transposeMult(d_basis_new);
-
-        delete d_basis;
-        d_basis = d_basis_new;
-
-        d_k = d_basis_new->numColumns();
-        if (d_rank == 0) std::cout << "After adding W0, now using " << d_k <<
-                                       " basis vectors." << std::endl;
-    }
-
-    */
 
     // Calculate A_tilde = U_transpose * f_snapshots_out * V * inv(S)
     Matrix* d_basis_mult_f_snapshots_out = d_basis->transposeMult(f_snapshots_out);
     Matrix* d_basis_mult_f_snapshots_out_mult_d_basis_right =
         d_basis_mult_f_snapshots_out->mult(d_basis_right);
-    if (Q == NULL)
-    {
-        d_A_tilde = d_basis_mult_f_snapshots_out_mult_d_basis_right->mult(d_S_inv);
+    Matrix* d_A_tilde_exact = d_basis_mult_f_snapshots_out_mult_d_basis_right->mult(d_S_inv);
+
+    double A_normF = 0.0;
+    for (int i = 0; i < d_A_tilde_exact->numRows(); i++) {
+	for (int j = 0; j < d_A_tilde_exact->numColumns(); j++) {
+	    double diff = d_A_tilde->item(i, j) - d_A_tilde_exact->item(i, j);
+	    A_normF += diff * diff;
+	}
     }
-    else
-    {
-        Matrix* d_basis_mult_f_snapshots_out_mult_d_basis_right_mult_d_S_inv =
-            d_basis_mult_f_snapshots_out_mult_d_basis_right->mult(d_S_inv);
-        d_A_tilde = d_basis_mult_f_snapshots_out_mult_d_basis_right_mult_d_S_inv->mult(
-                        Q);
-        delete Q;
-        delete d_basis_mult_f_snapshots_out_mult_d_basis_right_mult_d_S_inv;
-    }
+    std::cout << "Frobenius norm of A_tilde diff: " << sqrt(A_normF) << std::endl;
+
+    delete d_A_tilde;
+    d_A_tilde = new Matrix(*d_A_tilde_exact);
 
     // Calculate the right eigenvalues/eigenvectors of A_tilde
     ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(d_A_tilde);
@@ -274,6 +294,7 @@ IncrementalDMD::updateDMD(const Matrix* f_snapshots)
     rest_timer.Stop();
     std::cout << "Time rest:" << rest_timer.RealTime() << std::endl;
 
+    */
 }
 
 }

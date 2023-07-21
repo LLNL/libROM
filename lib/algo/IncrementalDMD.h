@@ -21,6 +21,7 @@
 
 #include "DMD.h"
 #include "linalg/BasisGenerator.h"
+#include "linalg/svd/IncrementalSVDBrand.h"
 
 namespace CAROM {
 
@@ -83,12 +84,18 @@ public:
                const Matrix* W0 = NULL,
 	       double linearity_tol = 0.0) override;
 
+    /**
+     * @brief Make a prediction for just one dt.
+     */
+    Vector* predict_dt(Vector* u) override;
+
 
 protected:
 
     void updateDMD(const Matrix* f_snapshots);
     
     BasisGenerator* bg = NULL;
+    IncrementalSVDBrand* svd = NULL;
 
 private:
 

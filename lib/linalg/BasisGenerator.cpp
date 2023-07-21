@@ -19,6 +19,7 @@
 #include "svd/RandomizedSVD.h"
 #include "svd/IncrementalSVDStandard.h"
 #include "svd/IncrementalSVDFastUpdate.h"
+#include "svd/IncrementalSVDBrand.h"
 
 namespace CAROM {
 
@@ -65,7 +66,13 @@ BasisGenerator::BasisGenerator(
         d_dt = options.initial_dt;
         d_next_sample_time = 0.0;
 
-        if (options.fast_update) {
+        if (options.fast_update_brand) {
+            d_svd.reset(
+                new IncrementalSVDBrand(
+                    options,
+                    basis_file_name));
+        }
+        else if (options.fast_update) {
             d_svd.reset(
                 new IncrementalSVDFastUpdate(
                     options,

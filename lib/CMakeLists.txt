@@ -30,6 +30,7 @@ set(module_list
   linalg/svd/IncrementalSVD
   linalg/svd/IncrementalSVDFastUpdate
   linalg/svd/IncrementalSVDStandard
+  linalg/svd/IncrementalSVDBrand
   linalg/svd/RandomizedSVD
   linalg/svd/SVD
   linalg/svd/StaticSVD

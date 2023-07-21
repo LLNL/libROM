@@ -197,6 +197,7 @@ void DMD::takeSample(double* u_in, double t)
     d_snapshots.push_back(sample);
     Vector* sampled_time = new Vector(&t, 1, false);
     d_sampled_times.push_back(sampled_time);
+
 }
 
 void DMD::train(double energy_fraction, const Matrix* W0, double linearity_tol)
@@ -275,6 +276,8 @@ DMD::computePhi(struct DMDInternal dmd_internal_obj)
     }
     else
     {
+	delete d_phi_real;
+	delete d_phi_imaginary;
         d_phi_real = dmd_internal_obj.basis->mult(dmd_internal_obj.eigenpair->ev_real);
         d_phi_imaginary = dmd_internal_obj.basis->mult(
                               dmd_internal_obj.eigenpair->ev_imaginary);
@@ -371,6 +374,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
                                    d_num_singular_vectors << "." << std::endl;
 
     // Allocate the appropriate matrices and gather their elements.
+    delete d_basis;
     d_basis = new Matrix(f_snapshots->numRows(), d_k, f_snapshots->distributed());
     Matrix* d_S_inv = new Matrix(d_k, d_k, false);
     Matrix* d_basis_right = new Matrix(f_snapshots_in->numColumns(), d_k, false);
@@ -491,6 +495,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
     Matrix* d_basis_mult_f_snapshots_out = d_basis->transposeMult(f_snapshots_out);
     Matrix* d_basis_mult_f_snapshots_out_mult_d_basis_right =
         d_basis_mult_f_snapshots_out->mult(d_basis_right);
+    delete d_A_tilde;
     if (Q == NULL)
     {
         d_A_tilde = d_basis_mult_f_snapshots_out_mult_d_basis_right->mult(d_S_inv);
@@ -533,7 +538,13 @@ DMD::constructDMD(const Matrix* f_snapshots,
     delete eigenpair.ev_imaginary;
     delete init;
 
-    release_context(&svd_input);
+    free_matrix_data(d_factorizer->U);
+    free_matrix_data(d_factorizer->V);
+    free(d_factorizer->S);
+    //release_context(d_factorizer->U);
+    //release_context(d_factorizer->V);
+
+    //release_context(&svd_input);
 }
 
 void
@@ -608,18 +619,22 @@ DMD::projectInitialCondition(const Vector* init, double t_offset)
     Vector* d_projected_init_real_1 = d_phi_real_squared_inverse->mult(rhs_real);
     Vector* d_projected_init_real_2 = d_phi_imaginary_squared_inverse->mult(
                                           rhs_imaginary);
+    delete d_projected_init_real;
     d_projected_init_real = d_projected_init_real_1->plus(d_projected_init_real_2);
 
     Vector* d_projected_init_imaginary_1 = d_phi_real_squared_inverse->mult(
             rhs_imaginary);
     Vector* d_projected_init_imaginary_2 = d_phi_imaginary_squared_inverse->mult(
             rhs_real);
+    delete d_projected_init_imaginary;
     d_projected_init_imaginary = d_projected_init_imaginary_2->minus(
                                      d_projected_init_imaginary_1);
 
+    delete d_phi_real_squared;
     delete d_phi_real_squared_2;
     delete d_projected_init_real_1;
     delete d_projected_init_real_2;
+    delete d_phi_imaginary_squared;
     delete d_phi_imaginary_squared_2;
     delete d_projected_init_imaginary_1;
     delete d_projected_init_imaginary_2;

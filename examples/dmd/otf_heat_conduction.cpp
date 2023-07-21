@@ -115,7 +115,7 @@ public:
     /// Update the diffusion BilinearForm K using the given true-dof vector `u`.
     void SetParameters(const Vector &u);
     
-    Vector Residual(const double dt, const Vector u0, const Vector u1);
+    Vector* Residual(const double dt, const Vector u0, const Vector u1);
 
     virtual ~ConductionOperator();
 };
@@ -404,7 +404,7 @@ int main(int argc, char *argv[])
     if (use_incremental)
     {
 	CAROM::Options svd_options(u.Size(), 100, -1, true);
-	svd_options.setIncrementalSVD(1e-6, dt, 1e-6, 10.0, true);
+	svd_options.setIncrementalSVD(1e-12, dt, 1e-6, 10.0, true, false, true);
 	svd_options.setMaxBasisDimension(100);
 	svd_options.setStateIO(false, false);
 	svd_options.setDebugMode(false);
@@ -437,10 +437,14 @@ int main(int argc, char *argv[])
     bool dmd_trained = false;
     bool last_step = false;
     double res, err_proj_norm;
-    Vector u_dmd(u.Size()), res_vec(u.Size());
+    Vector u_dmd(u.Size());
+    Vector* res_vec = NULL;
     
     for (int ti = 1; !last_step; ti++)
     {
+	StopWatch total_timer;
+	total_timer.Start();
+
 	std::cout << "\nIteration " << ti << std::endl;
 	
 	if (t + dt >= t_final - dt/2)
@@ -459,13 +463,19 @@ int main(int argc, char *argv[])
 	    
 	    CAROM::Vector* u_pre = new CAROM::Vector(u.GetData(), u.Size(),
 			    			     true, true); // previous solution
-    	    dmd_u->projectInitialCondition(u_pre); // offset to u_pre
-
-	    u_dmd = dmd_u->predict(dt)->getData(); // copy data to MFEM::Vector
-	    
+    	    if (use_incremental) {
+	        u_dmd = dmd_u->predict_dt(u_pre)->getData();
+	    }
+	    else {
+		dmd_u->projectInitialCondition(u_pre); // offset to u_pre
+		CAROM::Vector* u_dmd_pred = dmd_u->predict(dt);
+		u_dmd = u_dmd_pred->getData(); // copy data to MFEM::Vector
+		delete u_dmd_pred;
+	    }
 	    res_vec = oper.Residual(dt, u, u_dmd);
-	    res = res_vec.Norml2(); // Residual (L2) - distributed?
-	    
+	    res = res_vec->Norml2(); // Residual (L2) - distributed?
+	    delete res_vec;
+
 	    if (myid == 0){
 		std::cout << "Relative residual of DMD solution is: " << res << std::endl;
 	    }
@@ -495,19 +505,25 @@ int main(int argc, char *argv[])
 	    	CAROM::Vector* u_new = new CAROM::Vector(u.GetData(), u.Size(),
 				    			 true, false);
 	    	dmd_u->projectInitialCondition(u_pre);
-	
-	    	Vector u_new_proj(dmd_u->predict(0.0)->getData(), u.Size()); // projection
+		
+		CAROM::Vector* u_dmd_pred_0 = dmd_u->predict(0.0);
+	    	Vector u_new_proj(u_dmd_pred_0->getData(), u.Size()); // projection
 	    	Vector err_proj(u_pre->getData(), u.Size());
 	    	err_proj -= u_new_proj; // error = u - proj(u)
 	    	err_proj_norm = err_proj.Norml2();// / u.Norml2(); // relative norm
 	    	std::cout << "Projection error: " << err_proj_norm << std::endl;
+		delete u_dmd_pred_0;
 	    	
 	    	// Increment no. of modes if solution is inaccurate and
 	    	// the new snapshot is linearly independent
 	    	if (res > tol_dmd && err_proj_norm > tol_dep){
 		    rdim += 1;
 	    	}
+
+		delete u_new;
 	    }
+
+	    delete u_pre;
 
 	}
 	else // No constructed DMD: FOM solve
@@ -520,42 +536,30 @@ int main(int argc, char *argv[])
 	    ode_solver->Step(u, t, dt);
 	    fom_timer.Stop();
 	}
-	
+
 	// Append new snapshot
 	dmd_u->takeSample(u.GetData(), t);
 	ts.push_back(t);
-
+	
 	// DMD training
         dmd_training_timer.Start();
     
-        if (rdim != -1)
-        {
-	    if (dmd_u->getNumSamples() > rdim)
-	    {
-                if (myid == 0)
-                {
-                    std::cout << "Creating DMD with rdim: " << rdim << std::endl;
-                }
-                StopWatch train_timer;
-		train_timer.Start();
-		dmd_u->train(rdim);
-		train_timer.Stop();
-		std::cout << "Time train:" << train_timer.RealTime() << std::endl;
-		dmd_trained = true;
-	    }
-         }
-        else if (ef != -1)
-        {
+	if (dmd_u->getNumSamples() > rdim)
+	{
             if (myid == 0)
             {
-                std::cout << "Creating DMD with energy fraction: " << ef << std::endl;
+                std::cout << "Creating DMD with rdim: " << rdim << std::endl;
             }
-            dmd_u->train(ef); // energy fraction not implemented in incrementalDMD
+            StopWatch train_timer;
+	    train_timer.Start();
+	    dmd_u->train(rdim);
+	    train_timer.Stop();
+	    if (myid == 0) { std::cout << "Time train:" << train_timer.RealTime() << std::endl; }
 	    dmd_trained = true;
-        }
+	}
 	
         dmd_training_timer.Stop();
-	
+
 	// Visualize solutions
         u_gf.SetFromTrueDofs(u);
         
@@ -590,6 +594,9 @@ int main(int argc, char *argv[])
 #endif
         }
         oper.SetParameters(u);
+
+	total_timer.Stop();
+	std::cout << "Time total:" << total_timer.RealTime() << std::endl;
     }
 
 #ifdef MFEM_USE_ADIOS2
@@ -704,15 +711,15 @@ void ConductionOperator::SetParameters(const Vector &u)
     T = NULL; // re-compute T on the next ImplicitSolve
 }
 
-Vector ConductionOperator::Residual(const double dt,
+Vector* ConductionOperator::Residual(const double dt,
 				    const Vector u0, const Vector u1)
 {
     //
     // Compute res(u0, u1) = [(M+dt*K(u0))*u1 - M*u0] / dt / norm(K*u0)
     //
     T = Add(1.0, Mmat, dt, Kmat); // T=M+dt*K
-    Vector res(u1.Size());
-    T->Mult(u1, res); // (M+dt*K)*u^n
+    Vector* res = new Vector(u1.Size());
+    T->Mult(u1, *res); // (M+dt*K)*u^n
     Kmat.Mult(u0, z); // z=K*u^{n-1}
     
     double norm = z.Norml2()*dt; // norm(dt*K*u^{n-1}): supports parallel run?
@@ -720,8 +727,8 @@ Vector ConductionOperator::Residual(const double dt,
     delete T;
     T = NULL;
     
-    res -= z;
-    res /= norm;
+    *res -= z;
+    *res /= norm;
     return res;
 }
 

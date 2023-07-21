@@ -47,6 +47,7 @@ class Matrix;
 class BasisGenerator
 {
 public:
+    friend class IncrementalDMD;
     /**
      * @brief Constructor.
      *

@@ -283,6 +283,8 @@ public:
     */
    void SetFilterAlpha(double a) { filter_alpha = a; }
 
+   const int GetNumDofs() { return vfes->GetTrueVSize() + pfes->GetTrueVSize(); }
+
 protected:
    /// Print information about the Navier version.
    void PrintInfo();
