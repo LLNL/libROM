@@ -10,6 +10,9 @@ check_result () {
   fi
 }
 
+# Take the first argument as option for installing ScaLAPACK.
+INSTALL_SCALAPACK=$1
+
 # Check whether Homebrew or wget is installed
 if [ "$(uname)" == "Darwin" ]; then
   which -s brew > /dev/null
@@ -34,10 +37,9 @@ export CFLAGS="-fPIC"
 export CPPFLAGS="-fPIC"
 export CXXFLAGS="-fPIC"
 
-# Install ScaLAPACK if library is not located
+# Install ScaLAPACK if specified.
 cd $LIB_DIR
-SCALAPACK_PATH=$(whereis libscalapack | awk '{print $2}')
-if [ -z "$SCALAPACK_PATH" ]; then
+if [[ $INSTALL_SCALAPACK == "true" ]]; then
   if [ -f "scalapack-2.2.0/libscalapack.a" ]; then
     echo "Using dependencies/scalapack-2.2.0/libscalapack.a"
   else
