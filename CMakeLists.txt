@@ -264,6 +264,7 @@ if(GTEST_FOUND)
     StaticSVD
     RandomizedSVD
     IncrementalSVD
+    IncrementalSVDBrand
     GreedyCustomSampler)
   foreach(stem IN LISTS unit_test_stems)
     add_executable(test_${stem} unit_tests/test_${stem}.cpp)
