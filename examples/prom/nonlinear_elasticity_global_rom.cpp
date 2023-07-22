@@ -1788,9 +1788,6 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
 
     if (eqp)
     { // Lift v-vector and save
-        // V_v.mult(v_librom, *z_v_librom);
-        // add(z_v, *v0, *pfom_v);
-        // V_x.transposeMult(*pfom_v_librom, dx_dt_librom);
 
         V_xTV_v->mult(v_librom, *pfom_v_librom);
         pfom_v_librom->plus(*V_xTv_0, dx_dt_librom);
@@ -1827,12 +1824,7 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
         // Lift x- and v-vector
         // I.e. perform v = v0 + V_v v^, where v^ is the input
         V_xTV_v_sp->mult(v_librom, *z_v_librom);
-        z_v_librom->plus(*V_xTv_0_sp, dx_dt_librom);
-
-        // store dx_dt
-        //V_v_sp->mult(v_librom, *z_v_librom);
-        //add(z_v, *v0, *psp_v);
-        //V_x_sp->transposeMult(*psp_v_librom, dx_dt_librom);
+        z_v_librom->plus(*V_xTv_0_sp, dx_dt_librom); // Store dx/dt
 
         V_x_sp->mult(x_librom, *z_x_librom);
 
@@ -1887,10 +1879,6 @@ void RomOperator::Mult_FullOrder(const Vector &vx, Vector &dvx_dt) const
 
     // Lift the x-, and v-vectors
     // I.e. perform v = v0 + V_v v^, where v^ is the input
-
-    //V_v.mult(v_librom, *z_v_librom);
-    //add(z_v, *v0, *pfom_v);
-    //V_x.transposeMult(*pfom_v_librom, dx_dt_librom);
 
     V_xTV_v->mult(v_librom, *pfom_v_librom);
     pfom_v_librom->plus(*V_xTv_0, dx_dt_librom);
