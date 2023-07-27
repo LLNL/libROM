@@ -311,6 +311,9 @@ void BasisGeneratorFinalSummary(CAROM::BasisGenerator* bg,
     ofstream outfile(cutoffOutputPath);
 
     double partialSum = 0.0;
+    stringstream prec;
+        int ctr = 1;
+        char buffer[100];
     for (int sv = 0; sv < sing_vals->dim(); ++sv)
     {
         partialSum += (*sing_vals)(sv);
@@ -318,7 +321,14 @@ void BasisGeneratorFinalSummary(CAROM::BasisGenerator* bg,
         {
             if (partialSum / sum > energy_fractions[i])
             {
-                outfile << "For energy fraction: " << energy_fractions[i] << ", take first "
+                // Format string
+                prec.str(std::string());
+                prec << "%." << ctr << "f";
+                sprintf(buffer, prec.str().c_str(), energy_fractions[i]);   
+                ctr++;
+
+                // Output string
+                outfile << "For energy fraction: " << string(buffer) << ", take first "
                         << sv + 1 << " of " << sing_vals->dim() << " basis vectors" << endl;
                 energy_fractions.pop_back();
             }
@@ -1902,8 +1912,6 @@ void RomOperator::Mult_FullOrder(const Vector &vx, Vector &dvx_dt) const
     z.Neg(); // z = -z
     M_hat_inv->mult(*z_librom,
                     dv_dt_librom); // to invert reduced mass matrix operator.
-
-    
 }
 
 void RomOperator::Mult(const Vector &vx, Vector &dvx_dt) const
