@@ -15,9 +15,12 @@
 #include "utils/HDFDatabase.h"
 
 #include "mpi.h"
+#include "mfem.hpp"
 
 #include <cmath>
 #include <limits>
+
+using namespace mfem;
 
 namespace CAROM {
 
@@ -116,17 +119,55 @@ IncrementalSVDBrand::getTemporalBasis()
 void
 IncrementalSVDBrand::updateAllMatrices()
 {
-    delete mats.U, mats.Up, mats.s, mats.W,
-	   mats.Uq, mats.Sq_inv, mats.Wq;
+    delete mats.U;
+    delete mats.Up;
+    delete mats.s;
+    delete mats.W;
+    delete mats.Uq;
+    delete mats.Sq_inv;
+    delete mats.Wq;
+    delete mats.p;
+    
     // Copy all the matrices and vectors
-    mats.U = new Matrix(*d_U);
-    mats.Up = new Matrix(*d_Up);
-    mats.s = new Vector(*d_S);
-    mats.W = new Matrix(*d_W);
-    mats.Uq = new Matrix(*d_Uq);
-    mats.Sq_inv = new Matrix(*d_Sq_inv);
-    mats.Wq = new Matrix(*d_Wq);
-    mats.p = new Vector(*d_p);
+    mats.U = new Matrix(d_U->getData(),
+		    	d_U->numRows(),
+			d_U->numColumns(),
+			d_U->distributed(),
+			true);
+    mats.Up = new Matrix(d_Up->getData(),
+    			 d_Up->numRows(),
+    			 d_Up->numColumns(),
+    			 d_Up->distributed(),
+    			 true);
+    mats.s = new Vector(d_S->getData(),
+		    	d_S->dim(),
+			d_S->distributed(),
+			true);
+    mats.W = new Matrix(d_W->getData(),
+    			d_W->numRows(),
+    			d_W->numColumns(),
+    			d_W->distributed(),
+    			true);
+    mats.Uq = new Matrix(d_Uq->getData(),
+		    	 d_Uq->numRows(),
+			 d_Uq->numColumns(),
+			 d_Uq->distributed(),
+			 true);
+    mats.Sq_inv = new Matrix(d_Sq_inv->getData(),
+    			     d_Sq_inv->numRows(),
+    			     d_Sq_inv->numColumns(),
+    			     d_Sq_inv->distributed(),
+    			     true);
+    mats.Wq = new Matrix(d_Wq->getData(),
+		    	 d_Wq->numRows(),
+			 d_Wq->numColumns(),
+			 d_Wq->distributed(),
+			 true);
+    mats.p = new Vector(d_p->getData(),
+    			d_p->dim(),
+    			d_p->distributed(),
+    			true);
+
 }
 
 void
@@ -200,12 +241,30 @@ IncrementalSVDBrand::buildIncrementalSVD(
 {
     CAROM_VERIFY(u != 0);
 
+    StopWatch timer1, timer2, timer3;
+
     // Compute the projection error
     // (accurate down to the machine precision)
     Vector u_vec(u, d_dim, true);
     Vector e_proj(u, d_dim, true);
-    e_proj -= *(d_U->mult(d_U->transposeMult(e_proj))); // Gram-Schmidt
-    e_proj -= *(d_U->mult(d_U->transposeMult(e_proj))); // Re-orthogonalization
+
+    timer1.Start();
+    Vector* UTe = d_U->transposeMult(e_proj);
+    timer1.Stop();
+    Vector* UUTe = d_U->mult(UTe);
+    e_proj -= *UUTe; // Gram-Schmidt
+   
+    delete UTe;
+    delete UUTe;
+
+    timer2.Start();
+    UTe = d_U->transposeMult(e_proj);
+    timer2.Stop();
+    UUTe = d_U->mult(UTe);
+    e_proj -= *UUTe; // Re-orthogonalization
+
+    delete UTe;
+    delete UUTe;
 
     double k = e_proj.inner_product(e_proj);
     if (k <= 0) {
@@ -245,12 +304,18 @@ IncrementalSVDBrand::buildIncrementalSVD(
 
     // Create Q.
     double* Q;
-    Vector* U_mult_u = new Vector(d_U->transposeMult(u_vec)->getData(),
-                                  d_num_samples,
-                                  false);
-    Vector* l = d_Up->transposeMult(U_mult_u);
+    timer3.Start();
+    Vector* UTu = d_U->transposeMult(u_vec);
+    timer3.Stop();
+    if (d_rank == 0) {
+	std::cout << "[Non-struct matvec] Timer1: " << timer1.RealTime()
+		  << ", Timer2: " << timer2.RealTime()
+		  << ", Timer3: " << timer3.RealTime() << std::endl;
+    }
+    Vector* l = d_Up->transposeMult(UTu);
     constructQ(Q, l, k);
-    delete U_mult_u, l;
+    delete l;
+    delete UTu;
 
     // Now get the singular value decomposition of Q.
     Matrix* A;
@@ -273,7 +338,10 @@ IncrementalSVDBrand::buildIncrementalSVD(
             if(d_rank == 0) std::cout << "adding linearly dependent sample!\n";
 
 	    // Update IncrementalDMDInternal members
-	    delete d_Uq, d_Wq, d_Sq_inv, d_p;
+	    delete d_Uq;
+	    delete d_Wq;
+	    delete d_Sq_inv;
+	    delete d_p;
 	    d_Uq = new Matrix(d_num_samples, d_num_samples, false);
 	    d_Wq = new Matrix(d_num_samples+1, d_num_samples, false);
 	    d_Sq_inv = new Matrix(d_num_samples, d_num_samples, false);
@@ -308,9 +376,20 @@ IncrementalSVDBrand::buildIncrementalSVD(
             // deleted upon return.
 	    
 	    // Update IncrementalDMDInternal members
-	    delete d_Uq, d_Wq, d_Sq_inv, d_p; 
-	    d_Uq = new Matrix(*A);
-	    d_Wq = new Matrix(*W);
+	    delete d_Uq;
+	    delete d_Wq;
+	    delete d_Sq_inv;
+	    delete d_p; 
+	    d_Uq = new Matrix(A->getData(),
+			      A->numRows(),
+			      A->numColumns(),
+			      A->distributed(),
+			      true);
+	    d_Wq = new Matrix(W->getData(),
+			      W->numRows(),
+			      W->numColumns(),
+			      W->distributed(),
+			      true);
 	    d_Sq_inv = new Matrix(d_num_samples+1, d_num_samples+1, false);
 	    for (int i = 0; i < d_num_samples+1; i++) {
 		d_Sq_inv->item(i, i) = 1 / sigma->item(i, i);
@@ -324,6 +403,7 @@ IncrementalSVDBrand::buildIncrementalSVD(
             addNewSample(j, A, W, sigma);
 	    
 	    delete j;
+	    delete sigma;
         }
         delete A;
         delete W;
@@ -333,6 +413,7 @@ IncrementalSVDBrand::buildIncrementalSVD(
         delete W;
         delete sigma;
     }
+
     return result;
 }
 

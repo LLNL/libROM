@@ -14,6 +14,7 @@
 #include "navier_solver.hpp"
 #include <fstream>
 #include "algo/DMD.h"
+#include "algo/IncrementalDMD.h"
 
 using namespace mfem;
 using namespace navier;
@@ -22,7 +23,7 @@ struct s_NavierContext
 {
    int order = 4;
    double kin_vis = 0.01;
-   double t_final = 20.0;
+   double t_final = 1.0;
    double dt = 1e-2;
 } ctx;
 
@@ -58,6 +59,8 @@ int main(int argc, char *argv[])
 {
    Mpi::Init(argc, argv);
    Hypre::Init();
+   int myid;
+   MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
    int serial_refinements = 2;
 
@@ -127,8 +130,32 @@ int main(int argc, char *argv[])
    for (int i = 0; i < ndof_p; i++) {
       up->Elem(ndof_u+i) = p->Elem(i);
    }
-   CAROM::DMD* dmd_uvp = new CAROM::DMD(ndof, dt);
-   dmd_uvp->takeSample(up->GetData(), t);
+   delete u;
+   delete p;
+
+   CAROM::DMD* dmd_up;
+    if (true)
+    {
+	CAROM::Options svd_options(ndof, 5000, -1, true);
+	svd_options.setIncrementalSVD(1e-6, dt, 1e-6, 10.0, true, false, true);
+	svd_options.setMaxBasisDimension(5000);
+	svd_options.setStateIO(false, false);
+	svd_options.setDebugMode(false);
+	std::string svd_base_file_name = "";
+	dmd_up = new CAROM::IncrementalDMD(ndof, dt,
+					  svd_options,
+					  svd_base_file_name,
+					  false);
+    }
+    else
+    {
+    	dmd_up = new CAROM::DMD(ndof, dt);
+    }
+    dmd_up->takeSample(up->GetData(), t);
+
+    bool dmd_trained = false;
+    Vector up_dmd(ndof);
+    CAROM::Vector* up_dmd_carom = NULL;
 
    // FOM solve
    for (int step = 0; !last_step; ++step)
@@ -138,7 +165,65 @@ int main(int argc, char *argv[])
          last_step = true;
       }
 
-      flowsolver.Step(t, dt, step);
+      // ROM solve
+	if (dmd_trained)
+	{
+	    if (myid == 0){
+		std::cout << "DMD exists: make prediction" << std::endl;
+	    }
+	    
+	    CAROM::Vector* up_pre = new CAROM::Vector(up->GetData(), ndof,
+			    			     true, true); // previous solution
+    	    if (true) {
+		up_dmd_carom = dmd_up->predict_dt(up_pre);
+	        up_dmd = up_dmd_carom->getData();
+	    }
+	    
+	    if (true) // DMD prediction is accurate
+	    {
+		if (myid == 0){
+		    std::cout << "DMD prediction accurate: use it" << std::endl;
+		}
+
+		up = &up_dmd; // use DMD solution as new snapshot
+		t += dt;
+	    }
+	    else // FOM solve
+	    {
+		if (myid == 0){
+		    std::cout << "DMD prediction not accurate: call FOM" << std::endl;
+		}
+
+      		flowsolver.Step(t, dt, step);
+	    	u = u_gf->GetTrueDofs();
+	        p = p_gf->GetTrueDofs();
+      		for (int i = 0; i < u->Size(); i++) {
+         	    up->Elem(i) = u->Elem(i);
+      		}
+      		for (int i = 0; i < p->Size(); i++) {
+         	    up->Elem(u->Size()+i) = p->Elem(i);
+      		}
+      		delete u;
+      		delete p;
+	    }
+	    
+	    delete up_pre;
+
+	}
+
+	else {
+      	    flowsolver.Step(t, dt, step);
+	    u = u_gf->GetTrueDofs();
+            p = p_gf->GetTrueDofs();
+            for (int i = 0; i < u->Size(); i++) {
+         	up->Elem(i) = u->Elem(i);
+             }
+      	     for (int i = 0; i < p->Size(); i++) {
+         	up->Elem(u->Size()+i) = p->Elem(i);
+      	      }
+      	     delete u;
+            delete p;
+	}
 
       if (step % 10 == 0)
       {
@@ -154,20 +239,21 @@ int main(int argc, char *argv[])
          fflush(stdout);
       }
       
-      u = u_gf->GetTrueDofs();
-      p = p_gf->GetTrueDofs();
-      for (int i = 0; i < u->Size(); i++) {
-         up->Elem(i) = u->Elem(i);
-      }
-      for (int i = 0; i < p->Size(); i++) {
-         up->Elem(u->Size()+i) = p->Elem(i);
-      }
-      dmd_uvp->takeSample(up->GetData(), t);
+      dmd_up->takeSample(up->GetData(), t);
+      dmd_up->train(1);
+
+      delete up_dmd_carom;
 
    }
 
+   delete pmesh;
+   delete up;
+   delete dmd_up;
+
+   return 0;
+
    // Train DMD
-   dmd_uvp->train(0.999);
+   //dmd_up->train(0.999);
 
    t = 0.0;
    last_step = false;
@@ -192,6 +278,9 @@ int main(int argc, char *argv[])
    pvdc_dmd.RegisterField("vorticity", &w_dmd);
    pvdc_dmd.Save();
 
+   up_dmd_carom = new CAROM::Vector(up->GetData(), ndof, true, true);
+   dmd_up->projectInitialCondition(up_dmd_carom, 0);
+
    // DMD prediction
    for (int step = 0; !last_step; ++step)
    {
@@ -202,7 +291,7 @@ int main(int argc, char *argv[])
 
       t += dt;
       
-      CAROM::Vector* sol_dmd = dmd_uvp->predict(t);
+      CAROM::Vector* sol_dmd = dmd_up->predict(t);
       
       for (int i = 0; i < ndof_u; i++) {
 	  u->Elem(i) = sol_dmd->item(i);

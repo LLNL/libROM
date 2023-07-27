@@ -89,6 +89,11 @@ IncrementalDMD::predict_dt(Vector* u)
     }
     Vector* u_proj = Up_new->transposeMult(U_new->transposeMult(u));
     Vector* pred = U_new->mult(Up_new->mult(d_A_tilde->mult(u_proj)));
+    
+    delete u_proj;
+    delete Up_new;
+    delete U_new;
+
     return pred;
 }
 
@@ -127,10 +132,15 @@ IncrementalDMD::updateDMD(const Matrix* f_snapshots)
 
     StopWatch svd_timer, rest_timer;
 
+    StopWatch timer1, timer2;
+
     svd_timer.Start();
 
     int num_samples_pre = svd->getNumSamples();
+    timer2.Start();
     svd->takeSample(u_in, 0, false); // what if norm(u_in) < eps at init?
+    delete[] u_in;
+    timer2.Stop();
     int num_samples = svd->getNumSamples();
     if (num_samples > num_samples_pre)
     {
@@ -141,86 +151,127 @@ IncrementalDMD::updateDMD(const Matrix* f_snapshots)
 	    Vector* d_sv = new Vector(*(svd->getSingularValues()));
 	    Matrix* d_S_inv = new Matrix(1, 1, false);
 	    d_S_inv->item(0, 0) = 1 / d_sv->item(0);
-	    d_A_tilde = d_basis->transposeMult(
-			    f_snapshots_out->mult(
-				d_basis_right->mult(d_S_inv)));
-	    delete d_basis, d_basis_right, d_sv, d_S_inv;
+
+	    Matrix* br_Sinv = d_basis_right->mult(d_S_inv);
+	    Matrix* f_br_Sinv = f_snapshots_out->mult(br_Sinv);
+	    
+	    d_A_tilde = d_basis->transposeMult(f_br_Sinv);
+
+	    delete br_Sinv;
+	    delete f_br_Sinv;
+
+	    delete d_basis;
+	    delete d_basis_right;
+	    delete d_sv;
+	    delete d_S_inv;
 	}
 	else
 	{
-	    std::cout << "Added linearly independent sample" << std::endl;
+	    if (d_rank == 0) {
+	    	std::cout << "Added linearly independent sample" << std::endl;
+	    }
 	    IncrementalDMDInternal mats = svd->getAllMatrices();
-	    std::cout << "num_samples: " << num_samples << std::endl;
-	    std::cout << "U: " << mats.U->numRows() << " X " << mats.U->numColumns() << std::endl;
-	    std::cout << "Up: " << mats.Up->numRows() << " X " << mats.Up->numColumns() << std::endl;
-	    std::cout << "W: " << mats.W->numRows() << " X " << mats.W->numColumns() << std::endl;
-	    std::cout << "Uq: " << mats.Uq->numRows() << " X " << mats.Uq->numColumns() << std::endl;
-	    std::cout << "Wq: " << mats.Wq->numRows() << " X " << mats.Wq->numColumns() << std::endl;
-	    std::cout << "Sq_inv: " << mats.Sq_inv->numRows() << " X " << mats.Sq_inv->numColumns() << std::endl;
-	    
+	   
 	    Matrix* d_A_tilde_tmp = new Matrix(num_samples, num_samples, false);
 	    Vector* u_new = f_snapshots_out->getColumn(f_snapshots_out->numColumns()-1);
-	    Vector* U_mult_u = mats.U->transposeMult(u_new);
-	    Vector* f_mult_p = f_snapshots_out->getFirstNColumns(
-			    			  f_snapshots_out->numColumns()-1)
-		    			      ->transposeMult(mats.p);
+
+	    timer1.Start();
+	    Vector* UTu = mats.U->transposeMult(u_new);
+	    timer1.Stop();
+
+	    Matrix* f_cropped = f_snapshots_out->getFirstNColumns(
+			    			 f_snapshots_out->numColumns()-1);
+	    Vector* fTp = f_cropped->transposeMult(mats.p);
+
+	    Vector* UpTUTu = mats.Up->transposeMult(UTu);
+	    Vector* WTfTp = mats.W->transposeMult(fTp);
 	    for (int i = 0; i < num_samples-1; i++) {
 		for (int j = 0; j < num_samples-1; j++) {
 		    d_A_tilde_tmp->item(i, j) = d_A_tilde->item(i, j) * mats.s->item(j);
 		}
-		d_A_tilde_tmp->item(i, num_samples-1) = mats.Up->transposeMult(U_mult_u)->item(i);
+		d_A_tilde_tmp->item(i, num_samples-1) = UpTUTu->item(i);
 	    }
 	    for (int j = 0; j < num_samples-1; j++) {
-		d_A_tilde_tmp->item(num_samples-1, j) = mats.W->transposeMult(f_mult_p)->item(j);
+		d_A_tilde_tmp->item(num_samples-1, j) = WTfTp->item(j);
 	    }
 	    d_A_tilde_tmp->item(num_samples-1, num_samples-1) = mats.p->inner_product(u_new);
+	   
+	    Matrix* WSinv = mats.Wq->mult(mats.Sq_inv);
+	    Matrix* AWSinv = d_A_tilde_tmp->mult(WSinv);
+
+	    Matrix* d_A_tilde_new = mats.Uq->transposeMult(AWSinv);
 	    
-	    Matrix* d_A_tilde_new = mats.Uq->transposeMult(
-			    	d_A_tilde_tmp->mult(
-				    mats.Wq->mult(mats.Sq_inv)));
-	    
+	    delete UTu;
+	    delete f_cropped;
+	    delete fTp;
+	    delete UpTUTu;
+	    delete WSinv;
+	    delete AWSinv;
+
 	    delete d_A_tilde;
 	    d_A_tilde = d_A_tilde_new;
 
-	    delete u_new, d_A_tilde_tmp;
+	    delete u_new;
+	    delete d_A_tilde_tmp;
 	}
     }
     else
     {
-	std::cout << "Added linearly dependent sample" << std::endl;
+	if (d_rank == 0) {
+	    std::cout << "Added linearly dependent sample" << std::endl;
+	}
 	IncrementalDMDInternal mats = svd->getAllMatrices();
 	
-	std::cout << "num_samples: " << num_samples << std::endl;
-	    std::cout << "U: " << mats.U->numRows() << " X " << mats.U->numColumns() << std::endl;
-	    std::cout << "Up: " << mats.Up->numRows() << " X " << mats.Up->numColumns() << std::endl;
-	    std::cout << "W: " << mats.W->numRows() << " X " << mats.W->numColumns() << std::endl;
-	    std::cout << "Uq: " << mats.Uq->numRows() << " X " << mats.Uq->numColumns() << std::endl;
-	    std::cout << "Wq: " << mats.Wq->numRows() << " X " << mats.Wq->numColumns() << std::endl;
-	    std::cout << "Sq_inv: " << mats.Sq_inv->numRows() << " X " << mats.Sq_inv->numColumns() << std::endl;
-
 	Matrix* d_A_tilde_tmp = new Matrix(num_samples, num_samples+1, false);
 	Vector* u_new = f_snapshots_out->getColumn(f_snapshots_out->numColumns()-1);
-	Vector* U_mult_u = mats.U->transposeMult(u_new);
+
+	timer1.Start();
+	Vector* UTu = new Vector(num_samples, false);
+	mats.U->transposeMult(*u_new, UTu);
+	timer1.Stop();
+
+	Vector* UpTUTu = mats.Up->transposeMult(UTu);
+
 	for (int i = 0; i < num_samples; i++) {
 	    for (int j = 0; j < num_samples; j++) {
 		d_A_tilde_tmp->item(i, j) = d_A_tilde->item(i, j) * mats.s->item(j);
 	    }
-	    d_A_tilde_tmp->item(i, num_samples) = mats.Up->transposeMult(U_mult_u)->item(i);
+	    d_A_tilde_tmp->item(i, num_samples) = UpTUTu->item(i);
 	}
-	Matrix* d_A_tilde_new = mats.Uq->transposeMult(
-			    d_A_tilde_tmp->mult(
-				mats.Wq->mult(mats.Sq_inv)));
+
+	Matrix* WSinv = mats.Wq->mult(mats.Sq_inv);
+	Matrix* AWSinv = d_A_tilde_tmp->mult(WSinv);
+
+	Matrix* d_A_tilde_new = mats.Uq->transposeMult(AWSinv);
+	
+	delete UTu;
+	delete UpTUTu;
+	delete WSinv;
+	delete AWSinv;
+
 	delete d_A_tilde;
 	d_A_tilde = d_A_tilde_new;
 
-	delete u_new, d_A_tilde_tmp;
+	delete u_new;
+	delete d_A_tilde_tmp;
+    }
+
+    if (d_rank == 0) {
+    	std::cout << "Using " << num_samples << " basis vectors out of "
+		  << f_snapshots_out->numColumns() << " snapshots" << std::endl;
     }
 
     svd_timer.Stop();
-    std::cout << "Time svd:" << svd_timer.RealTime() << std::endl;
+    if ( d_rank == 0 ) {
+        std::cout << "Time svd:" << svd_timer.RealTime() << std::endl;
+        std::cout << "Timer1:" << timer1.RealTime() << std::endl;
+        std::cout << "Timer2:" << timer2.RealTime() << std::endl;
+    }
 
     delete f_snapshots_in;
     delete f_snapshots_out;
+
+    d_trained = true;
 
     return;
 

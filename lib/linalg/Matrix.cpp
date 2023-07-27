@@ -14,6 +14,8 @@
 
 #include "Matrix.h"
 #include "utils/HDFDatabase.h"
+#include "utils/mpi_utils.h"
+#include "mfem.hpp"
 
 #include "mpi.h"
 #include <string.h>
@@ -57,6 +59,8 @@ extern "C" {
                 double*, int*, int*, int*);
 }
 
+using namespace mfem;
+
 namespace CAROM {
 
 Matrix::Matrix() :
@@ -82,9 +86,11 @@ Matrix::Matrix(
     MPI_Initialized(&mpi_init);
     if (mpi_init) {
         MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+        MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     }
     else {
         d_num_procs = 1;
+        d_rank = 0;
     }
     setSize(num_rows, num_cols);
     if (randomized) {
@@ -116,9 +122,11 @@ Matrix::Matrix(
     MPI_Initialized(&mpi_init);
     if (mpi_init) {
         MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+        MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     }
     else {
         d_num_procs = 1;
+        d_rank = 0;
     }
     if (copy_data) {
         setSize(num_rows, num_cols);
@@ -146,9 +154,11 @@ Matrix::Matrix(
     MPI_Initialized(&mpi_init);
     if (mpi_init) {
         MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+        MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     }
     else {
         d_num_procs = 1;
+        d_rank = 0;
     }
     setSize(other.d_num_rows, other.d_num_cols);
     memcpy(d_mat, other.d_mat, d_alloc_size*sizeof(double));
@@ -585,6 +595,7 @@ Matrix::transposeMult(
                       MPI_SUM,
                       MPI_COMM_WORLD);
     }
+
 }
 
 void
@@ -629,6 +640,8 @@ Matrix::transposeMult(
     CAROM_VERIFY(distributed() == other.distributed());
     CAROM_VERIFY(numRows() == other.dim());
 
+    StopWatch timer1, timer2, timer3;
+
     // If the result has not been allocated then do so.  Otherwise size it
     // correctly.
     if (result == 0) {
@@ -638,6 +651,7 @@ Matrix::transposeMult(
         result->setSize(d_num_cols);
     }
 
+    timer1.Start();
     // Do the multiplication.
     for (int this_col = 0; this_col < d_num_cols; ++this_col) {
         double result_val = 0.0;
@@ -646,13 +660,36 @@ Matrix::transposeMult(
         }
         result->item(this_col) = result_val;
     }
+    timer1.Stop();
     if (d_distributed && d_num_procs > 1) {
+	/*
         MPI_Allreduce(MPI_IN_PLACE,
-                      &result->item(0),
+		      &result->item(0),
                       d_num_cols,
                       MPI_DOUBLE,
                       MPI_SUM,
                       MPI_COMM_WORLD);
+	*/
+	timer2.Start();
+	MPI_Request request;
+	MPI_Iallreduce(MPI_IN_PLACE,
+		       &result->item(0),
+		       d_num_cols,
+		       MPI_DOUBLE,
+		       MPI_SUM,
+		       MPI_COMM_WORLD,
+		       &request);
+	timer2.Stop();
+	timer3.Start();
+	MPI_Wait(&request, MPI_STATUS_IGNORE);
+	timer3.Stop();
+    }
+    if (d_distributed ) {
+	std::cout << "Size: " << d_num_cols
+		  << ", Matvec: " << timer1.RealTime()
+		  << ", Iallreduce: " << timer2.RealTime()
+		  << ", Wait: " << timer3.RealTime()
+		  << std::endl;
     }
 }
 
@@ -1021,6 +1058,68 @@ Matrix::local_read(const std::string& base_file_name, int rank)
     database.getDoubleArray(tmp, d_mat, d_alloc_size);
     d_owns_data = true;
     database.close();
+}
+
+void
+Matrix::distribute(const int &local_num_rows)
+{
+    CAROM_VERIFY(!distributed());
+    CAROM_VERIFY(d_owns_data);
+
+    std::vector<int> row_offsets;
+    int num_total_rows = get_global_offsets(local_num_rows, row_offsets,
+                                            MPI_COMM_WORLD);
+    CAROM_VERIFY(num_total_rows == d_num_rows);
+    int local_offset = row_offsets[d_rank] * d_num_cols;
+    const int new_size = local_num_rows * d_num_cols;
+
+    double *d_new_mat = new double [new_size];
+    if (new_size > 0)
+        memcpy(d_new_mat, &d_mat[local_offset], 8 * new_size);
+
+    delete [] d_mat;
+    d_mat = d_new_mat;
+    d_alloc_size = new_size;
+
+    d_num_distributed_rows = d_num_rows;
+    d_num_rows = local_num_rows;
+
+    d_distributed = true;
+}
+
+void
+Matrix::gather()
+{
+    CAROM_VERIFY(distributed());
+    CAROM_VERIFY(d_owns_data);
+
+    std::vector<int> row_offsets;
+    const int num_total_rows = get_global_offsets(d_num_rows, row_offsets,
+                               MPI_COMM_WORLD);
+    CAROM_VERIFY(num_total_rows == d_num_distributed_rows);
+    const int new_size = d_num_distributed_rows * d_num_cols;
+
+    int *data_offsets = new int[row_offsets.size() - 1];
+    int *data_cnts = new int[row_offsets.size() - 1];
+    for (int k = 0; k < row_offsets.size() - 1; k++)
+    {
+        data_offsets[k] = row_offsets[k] * d_num_cols;
+        data_cnts[k] = (row_offsets[k+1] - row_offsets[k]) * d_num_cols;
+    }
+
+    double *d_new_mat = new double [new_size] {0.0};
+    CAROM_VERIFY(MPI_Allgatherv(d_mat, d_alloc_size, MPI_DOUBLE,
+                                d_new_mat, data_cnts, data_offsets, MPI_DOUBLE,
+                                MPI_COMM_WORLD) == MPI_SUCCESS);
+
+    delete [] d_mat;
+    delete [] data_offsets, data_cnts;
+    d_mat = d_new_mat;
+    d_alloc_size = new_size;
+
+    d_num_rows = d_num_distributed_rows;
+
+    d_distributed = false;
 }
 
 void

@@ -55,7 +55,8 @@ set(module_list
   utils/HDFDatabase
   utils/CSVDatabase
   utils/Utilities
-  utils/ParallelBuffer)
+  utils/ParallelBuffer
+  utils/mpi_utils)
 set(source_files)
 foreach(module IN LISTS module_list)
   list(APPEND source_files ${module}.cpp)

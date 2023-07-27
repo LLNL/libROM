@@ -426,7 +426,7 @@ int main(int argc, char *argv[])
     dmd_u->takeSample(u.GetData(), t);
     ts.push_back(t);
   
-    dmd_training_timer.Stop();
+    //dmd_training_timer.Stop();
 
     // 13. Time intergration with on-the-fly DMD construction.
     if (myid == 0 && rdim != -1 && ef != -1)
@@ -437,6 +437,7 @@ int main(int argc, char *argv[])
     bool dmd_trained = false;
     bool last_step = false;
     double res, err_proj_norm;
+    double u_norm;
     Vector u_dmd(u.Size());
     Vector* res_vec = NULL;
     
@@ -452,7 +453,15 @@ int main(int argc, char *argv[])
 	    last_step = true;
 	}
 
-	std::cout << "Norm u: " << u.Norml2() << std::endl;
+	u_norm = u.Norml2()*u.Norml2();
+	MPI_Allreduce(MPI_IN_PLACE,
+		      &u_norm,
+		      1,
+		      MPI_DOUBLE,
+		      MPI_SUM,
+		      MPI_COMM_WORLD);
+
+	std::cout << "Norm u: " << sqrt(u_norm) << std::endl;
 	
 	// ROM solve
 	if (dmd_trained)
@@ -473,8 +482,14 @@ int main(int argc, char *argv[])
 		delete u_dmd_pred;
 	    }
 	    res_vec = oper.Residual(dt, u, u_dmd);
-	    res = res_vec->Norml2(); // Residual (L2) - distributed?
+	    res = res_vec->Norml2()*res_vec->Norml2(); // Residual (L2): not distributed
 	    delete res_vec;
+	    MPI_Allreduce(MPI_IN_PLACE,
+			  &res,
+			  1,
+			  MPI_DOUBLE,
+			  MPI_SUM,
+			  MPI_COMM_WORLD);
 
 	    if (myid == 0){
 		std::cout << "Relative residual of DMD solution is: " << res << std::endl;
@@ -558,7 +573,6 @@ int main(int argc, char *argv[])
 	    dmd_trained = true;
 	}
 	
-        dmd_training_timer.Stop();
 
 	// Visualize solutions
         u_gf.SetFromTrueDofs(u);
@@ -606,7 +620,10 @@ int main(int argc, char *argv[])
     }
 #endif
 
-    std::cout << "Total training time:" << dmd_training_timer.RealTime() << std::endl;
+    dmd_training_timer.Stop();
+    if (myid == 0) {
+    	std::cout << "Total training time:" << dmd_training_timer.RealTime() << std::endl;
+    }
 
     // 12. Save the final solution in parallel. This output can be viewed later
     //     using GLVis: "glvis -np <np> -m heat_conduction-mesh -g heat_conduction-final".
@@ -722,14 +739,22 @@ Vector* ConductionOperator::Residual(const double dt,
     T->Mult(u1, *res); // (M+dt*K)*u^n
     Kmat.Mult(u0, z); // z=K*u^{n-1}
     
-    double norm = z.Norml2()*dt; // norm(dt*K*u^{n-1}): supports parallel run?
+    double norm = z.Norml2()*z.Norml2(); // norm(dt*K*u^{n-1}): local
+    MPI_Allreduce(MPI_IN_PLACE,
+		  &norm,
+		  1,
+		  MPI_DOUBLE,
+		  MPI_SUM,
+		  MPI_COMM_WORLD);
+    norm = sqrt(norm) * dt;
     Mmat.Mult(u0, z); // z=M*u^{n-1}
     delete T;
     T = NULL;
     
     *res -= z;
     *res /= norm;
-    return res;
+    
+    return res; // local
 }
 
 ConductionOperator::~ConductionOperator()
