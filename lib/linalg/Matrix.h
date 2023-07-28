@@ -957,7 +957,7 @@ public:
      */
     void
     rescale_cols_max();
-    
+
     /**
      * @brief Const Matrix member access. Matrix data is stored in
      * row-major format.

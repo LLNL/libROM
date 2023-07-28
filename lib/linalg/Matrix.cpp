@@ -1832,62 +1832,56 @@ Matrix::orthogonalize()
     }
 }
 
-void 
+void
 Matrix::rescale_rows_max()
 {
-	// Rescale every matrix row by its maximum absolute value.
-	for (int i = 0; i < d_num_rows; i++)
-	{
-		// Find the row's max absolute value.
-		double local_max = fabs(item(i, 0));
-		for (int j = 1; j < d_num_cols; j++)
-		{
-			if (fabs(item(i, j)) > local_max)
-				local_max = fabs(item(i, j));
-		}
+    // Rescale every matrix row by its maximum absolute value.
+    for (int i = 0; i < d_num_rows; i++)
+    {
+        // Find the row's max absolute value.
+        double row_max = fabs(item(i, 0));
+        for (int j = 1; j < d_num_cols; j++)
+        {
+            if (fabs(item(i, j)) > row_max)
+                row_max = fabs(item(i, j));
+        }
 
-		// Get the max of all processes, if applicable.
-		double global_max = local_max;
-		if (d_num_procs > 1)
-			MPI_Allreduce(&local_max, &global_max, 1, MPI_DOUBLE, MPI_MAX,
-					MPI_COMM_WORLD);
-
-		// Rescale every row entry, if max nonzero.
-		if (global_max > 1.0e-14)
-		{
-			for (int j = 0; j < d_num_cols; j++)
-				item(i, j) /= global_max;
-		}
-	}
+        // Rescale every row entry, if max nonzero.
+        if (row_max > 1.0e-14)
+        {
+            for (int j = 0; j < d_num_cols; j++)
+                item(i, j) /= row_max;
+        }
+    }
 }
 
-void 
+void
 Matrix::rescale_cols_max()
 {
-	// Rescale every matrix column by its maximum absolute value.
-	for (int j = 0; j < d_num_cols; j++)
-	{
-		// Find the column's max absolute value.
-		double local_max = fabs(item(0, j));
-		for (int i = 1; i < d_num_rows; i++)
-		{
-			if (fabs(item(i, j)) > local_max)
-				local_max = fabs(item(i, j));
-		}
+    // Rescale every matrix column by its maximum absolute value.
+    for (int j = 0; j < d_num_cols; j++)
+    {
+        // Find the column's max absolute value.
+        double local_max = fabs(item(0, j));
+        for (int i = 1; i < d_num_rows; i++)
+        {
+            if (fabs(item(i, j)) > local_max)
+                local_max = fabs(item(i, j));
+        }
 
-		// Get the max of all processes, if applicable.
-		double global_max = local_max;
-		if (d_num_procs > 1)
-			MPI_Allreduce(&local_max, &global_max, 1, MPI_DOUBLE, MPI_MAX,
-					MPI_COMM_WORLD);
+        // Get the max of all processes, if applicable.
+        double global_max = local_max;
+        if (d_num_procs > 1)
+            MPI_Allreduce(&local_max, &global_max, 1, MPI_DOUBLE, MPI_MAX,
+                          MPI_COMM_WORLD);
 
-		// Rescale every column entry, if max nonzero.
-		if (global_max > 1.0e-14)
-		{
-			for (int i = 0; i < d_num_rows; i++)
-				item(i, j) /= global_max;
-		}
-	}
+        // Rescale every column entry, if max nonzero.
+        if (global_max > 1.0e-14)
+        {
+            for (int i = 0; i < d_num_rows; i++)
+                item(i, j) /= global_max;
+        }
+    }
 }
 
 Matrix outerProduct(const Vector &v, const Vector &w)
