@@ -1836,6 +1836,10 @@ void
 Matrix::rescale_rows_max()
 {
     // Rescale every matrix row by its maximum absolute value.
+    // In the Matrix class, columns are distributed row wise, but rows are
+    // not disctributed; namely, each process acts on a number of full rows.
+    // Therefore, no MPI communication is needed.
+
     for (int i = 0; i < d_num_rows; i++)
     {
         // Find the row's max absolute value.
@@ -1859,27 +1863,42 @@ void
 Matrix::rescale_cols_max()
 {
     // Rescale every matrix column by its maximum absolute value.
+    // Matrix columns are distributed row wise, so MPI communication is needed
+    // to get the maximum of each column across all processes.
+
+    // Find each column's max absolute value in the current process.
+    double local_max[d_num_cols];
     for (int j = 0; j < d_num_cols; j++)
     {
-        // Find the column's max absolute value.
-        double local_max = fabs(item(0, j));
+        local_max[j] = fabs(item(0, j));
         for (int i = 1; i < d_num_rows; i++)
         {
-            if (fabs(item(i, j)) > local_max)
-                local_max = fabs(item(i, j));
+            if (fabs(item(i, j)) > local_max[j])
+                local_max[j] = fabs(item(i, j));
         }
+    }
 
-        // Get the max of all processes, if applicable.
-        double global_max = local_max;
-        if (d_num_procs > 1)
-            MPI_Allreduce(&local_max, &global_max, 1, MPI_DOUBLE, MPI_MAX,
-                          MPI_COMM_WORLD);
+    // Get the max across all processes, if applicable.
+    double global_max[d_num_cols];
+    if (d_num_procs > 1)
+    {
+        MPI_Allreduce(&local_max, &global_max, d_num_cols, MPI_DOUBLE, MPI_MAX,
+                      MPI_COMM_WORLD);
+    }
+    else
+    {
+        for (int i = 0; i < d_num_cols; i++)
+            global_max[i] = local_max[i];
+    }
 
-        // Rescale every column entry, if max nonzero.
-        if (global_max > 1.0e-14)
+    // Rescale each column's entries, if max nonzero.
+    for (int j = 0; j < d_num_cols; j++)
+    {
+        if (global_max[j] > 1.0e-14)
         {
+            double tmp = 1.0 / global_max[j];
             for (int i = 0; i < d_num_rows; i++)
-                item(i, j) /= global_max;
+                item(i, j) *= tmp;
         }
     }
 }
