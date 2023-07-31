@@ -1837,7 +1837,7 @@ Matrix::rescale_rows_max()
 {
     // Rescale every matrix row by its maximum absolute value.
     // In the Matrix class, columns are distributed row wise, but rows are
-    // not disctributed; namely, each process acts on a number of full rows.
+    // not distributed; namely, each process acts on a number of full rows.
     // Therefore, no MPI communication is needed.
 
     for (int i = 0; i < d_num_rows; i++)
