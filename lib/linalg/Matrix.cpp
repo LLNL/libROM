@@ -1832,6 +1832,77 @@ Matrix::orthogonalize()
     }
 }
 
+void
+Matrix::rescale_rows_max()
+{
+    // Rescale every matrix row by its maximum absolute value.
+    // In the Matrix class, columns are distributed row wise, but rows are
+    // not distributed; namely, each process acts on a number of full rows.
+    // Therefore, no MPI communication is needed.
+
+    for (int i = 0; i < d_num_rows; i++)
+    {
+        // Find the row's max absolute value.
+        double row_max = fabs(item(i, 0));
+        for (int j = 1; j < d_num_cols; j++)
+        {
+            if (fabs(item(i, j)) > row_max)
+                row_max = fabs(item(i, j));
+        }
+
+        // Rescale every row entry, if max nonzero.
+        if (row_max > 1.0e-14)
+        {
+            for (int j = 0; j < d_num_cols; j++)
+                item(i, j) /= row_max;
+        }
+    }
+}
+
+void
+Matrix::rescale_cols_max()
+{
+    // Rescale every matrix column by its maximum absolute value.
+    // Matrix columns are distributed row wise, so MPI communication is needed
+    // to get the maximum of each column across all processes.
+
+    // Find each column's max absolute value in the current process.
+    double local_max[d_num_cols];
+    for (int j = 0; j < d_num_cols; j++)
+    {
+        local_max[j] = fabs(item(0, j));
+        for (int i = 1; i < d_num_rows; i++)
+        {
+            if (fabs(item(i, j)) > local_max[j])
+                local_max[j] = fabs(item(i, j));
+        }
+    }
+
+    // Get the max across all processes, if applicable.
+    double global_max[d_num_cols];
+    if (d_num_procs > 1)
+    {
+        MPI_Allreduce(&local_max, &global_max, d_num_cols, MPI_DOUBLE, MPI_MAX,
+                      MPI_COMM_WORLD);
+    }
+    else
+    {
+        for (int i = 0; i < d_num_cols; i++)
+            global_max[i] = local_max[i];
+    }
+
+    // Rescale each column's entries, if max nonzero.
+    for (int j = 0; j < d_num_cols; j++)
+    {
+        if (global_max[j] > 1.0e-14)
+        {
+            double tmp = 1.0 / global_max[j];
+            for (int i = 0; i < d_num_rows; i++)
+                item(i, j) *= tmp;
+        }
+    }
+}
+
 Matrix outerProduct(const Vector &v, const Vector &w)
 {
     /*
