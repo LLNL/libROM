@@ -29,11 +29,14 @@ project(libROM
   HOMEPAGE_URL "https://github.com/LLNL/libROM"
   LANGUAGES C CXX Fortran)
 
+include(GNUInstallDirs)
+
 set(libROM_CMAKE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 set(libROM_CMAKE_MODULE_PATH ${libROM_CMAKE_PATH}/modules)
 list(APPEND CMAKE_MODULE_PATH ${libROM_CMAKE_MODULE_PATH})
 
 option(USE_MFEM "Build libROM with MFEM" OFF)
+option(USE_EXTERNAL_MFEM "Build libROM with external MFEM specified in -DMFEM_DIR" OFF)
 option(MFEM_USE_GSLIB "Build libROM with MFEM using GSLIB" OFF)
 option(BUILD_STATIC "Build libROM as a static library" OFF)
 option(ENABLE_EXAMPLES "Build examples and regression tests" ON)
@@ -110,6 +113,11 @@ find_package(ZLIB 1.2.3 REQUIRED)
 find_package(Doxygen 1.8.5)
 
 find_package(GTest 1.6.0)
+
+if (USE_EXTERNAL_MFEM)
+    find_library(MFEM mfem  "${MFEM_DIR}/lib")
+    find_path(MFEM_INCLUDES mfem.hpp "${MFEM_DIR}/include")
+endif()
 
 if (USE_MFEM)
     find_library(MFEM mfem "${CMAKE_SOURCE_DIR}/dependencies/mfem" "${MFEM_DIR}/lib")
@@ -301,3 +309,41 @@ if(DOXYGEN_FOUND)
   add_dependencies(doxygen_tagfile documentation)
 
 endif(DOXYGEN_FOUND)
+
+#-------------------------------------------------------------------------------
+# Installation
+# Configure CMake find_package() config files
+#-------------------------------------------------------------------------------
+
+# Default option
+if (NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "Release")
+endif()
+
+include(CMakePackageConfigHelpers)
+
+# Extract the enabled languages required to use ROM
+get_property(ROM_ENABLED_LANGUAGES GLOBAL PROPERTY ENABLED_LANGUAGES)
+
+configure_package_config_file(
+  "${PROJECT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in"
+  "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+INSTALL_DESTINATION
+  ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+PATH_VARS
+  ROM_ENABLED_LANGUAGES
+)
+
+write_basic_package_version_file(
+  "${PROJECT_NAME}ConfigVersion.cmake"
+  VERSION ${PROJECT_VERSION}
+  COMPATIBILITY SameMajorVersion
+)
+
+install(FILES
+  ${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+  ${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+DESTINATION
+  ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+)
+
