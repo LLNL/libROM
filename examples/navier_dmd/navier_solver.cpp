@@ -69,6 +69,7 @@ NavierSolver::NavierSolver(ParMesh *mesh, int order, double kin_vis)
    resu.SetSize(vfes_truevsize);
 
    tmp1.SetSize(vfes_truevsize);
+   tmp2.SetSize(pfes_truevsize);
 
    pn.SetSize(pfes_truevsize);
    pn = 0.0;
@@ -968,6 +969,112 @@ double NavierSolver::ComputeCFL(ParGridFunction &u, double dt)
                  pmesh_u->GetComm());
 
    return cflmax_global;
+}
+
+void NavierSolver::Residual(double &time, double dt, int current_step,
+                            Vector u, Vector p,
+                            Vector &res_u)
+{
+   SetTimeIntegrationCoefficients(current_step);
+
+   // Set current time for velocity Dirichlet boundary conditions.
+   for (auto &vel_dbc : vel_dbcs)
+   {
+      vel_dbc.coeff->SetTime(time + dt);
+   }
+
+   // Set current time for pressure Dirichlet boundary conditions.
+   for (auto &pres_dbc : pres_dbcs)
+   {
+      pres_dbc.coeff->SetTime(time + dt);
+   }
+
+   H_bdfcoeff.constant = bd0 / dt;
+   H_form->Update();
+   H_form->Assemble();
+   H_form->FormSystemMatrix(vel_ess_tdof, H);
+
+   // Extrapolated f^{n+1}.
+   for (auto &accel_term : accel_terms)
+   {
+      accel_term.coeff->SetTime(time + dt);
+   }
+
+   f_form->Assemble();
+   f_form->ParallelAssemble(fn);
+
+   // Nonlinear extrapolated terms.
+   N->Mult(un, Nun);
+   N->Mult(unm1, Nunm1);
+   N->Mult(unm2, Nunm2);
+
+   {
+      const auto d_Nun = Nun.Read();
+      const auto d_Nunm1 = Nunm1.Read();
+      const auto d_Nunm2 = Nunm2.Read();
+      auto d_Fext = Fext.Write();
+      const auto ab1_ = ab1;
+      const auto ab2_ = ab2;
+      const auto ab3_ = ab3;
+      mfem::forall(Fext.Size(), [=] MFEM_HOST_DEVICE (int i)
+      {
+         d_Fext[i] = ab1_ * d_Nun[i] +
+                     ab2_ * d_Nunm1[i] +
+                     ab3_ * d_Nunm2[i];
+      });
+   }
+
+   Fext.Add(1.0, fn);
+
+   // Compute BDF terms.
+   {
+      const double bd1idt = -bd1 / dt;
+      const double bd2idt = -bd2 / dt;
+      const double bd3idt = -bd3 / dt;
+      const auto d_un = un.Read();
+      const auto d_unm1 = unm1.Read();
+      const auto d_unm2 = unm2.Read();
+      auto d_Fext = tmp1.ReadWrite();
+      mfem::forall(tmp1.Size(), [=] MFEM_HOST_DEVICE (int i)
+      {
+         d_Fext[i]  = bd1idt * d_un[i] +
+                      bd2idt * d_unm1[i] +
+                      bd3idt * d_unm2[i];
+      });
+   }
+
+   Mv->Mult(tmp1, tmp1);
+   Fext.Add(1.0, tmp1);
+
+   // Project velocity: resu = -G*p + M*Fext
+   G->Mult(p, resu);
+   resu.Neg();
+   resu.Add(1.0, Fext);
+
+   for (auto &vel_dbc : vel_dbcs)
+   {
+      un_next_gf.ProjectBdrCoefficient(*vel_dbc.coeff, vel_dbc.attr);
+   }
+
+   vfes->GetRestrictionMatrix()->MultTranspose(resu, resu_gf);
+
+   Vector X2, B2;
+   if (partial_assembly)
+   {
+      auto *HC = H.As<ConstrainedOperator>();
+      EliminateRHS(*H_form, *HC, vel_ess_tdof, un_next_gf, resu_gf, X2, B2, 1);
+   }
+   else
+   {
+      H_form->FormLinearSystem(vel_ess_tdof, un_next_gf, resu_gf, H, X2, B2, 1);
+   }
+   
+   // resu -= H*u
+   H->Mult(u, tmp1);
+   B2.Add(-1.0, tmp1); // residual of velocity
+
+   res_u = B2;
+
 }
 
 void NavierSolver::AddVelDirichletBC(VectorCoefficient *coeff, Array<int> &attr)

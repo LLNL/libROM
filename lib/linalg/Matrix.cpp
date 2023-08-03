@@ -15,7 +15,6 @@
 #include "Matrix.h"
 #include "utils/HDFDatabase.h"
 #include "utils/mpi_utils.h"
-#include "mfem.hpp"
 
 #include "mpi.h"
 #include <string.h>
@@ -58,8 +57,6 @@ extern "C" {
                 double*, double*, int*, double*, int*,
                 double*, int*, int*, int*);
 }
-
-using namespace mfem;
 
 namespace CAROM {
 
@@ -595,7 +592,6 @@ Matrix::transposeMult(
                       MPI_SUM,
                       MPI_COMM_WORLD);
     }
-
 }
 
 void
@@ -640,8 +636,6 @@ Matrix::transposeMult(
     CAROM_VERIFY(distributed() == other.distributed());
     CAROM_VERIFY(numRows() == other.dim());
 
-    StopWatch timer1, timer2, timer3;
-
     // If the result has not been allocated then do so.  Otherwise size it
     // correctly.
     if (result == 0) {
@@ -651,7 +645,6 @@ Matrix::transposeMult(
         result->setSize(d_num_cols);
     }
 
-    timer1.Start();
     // Do the multiplication.
     for (int this_col = 0; this_col < d_num_cols; ++this_col) {
         double result_val = 0.0;
@@ -660,36 +653,13 @@ Matrix::transposeMult(
         }
         result->item(this_col) = result_val;
     }
-    timer1.Stop();
     if (d_distributed && d_num_procs > 1) {
-	/*
         MPI_Allreduce(MPI_IN_PLACE,
-		      &result->item(0),
+                      &result->item(0),
                       d_num_cols,
                       MPI_DOUBLE,
                       MPI_SUM,
                       MPI_COMM_WORLD);
-	*/
-	timer2.Start();
-	MPI_Request request;
-	MPI_Iallreduce(MPI_IN_PLACE,
-		       &result->item(0),
-		       d_num_cols,
-		       MPI_DOUBLE,
-		       MPI_SUM,
-		       MPI_COMM_WORLD,
-		       &request);
-	timer2.Stop();
-	timer3.Start();
-	MPI_Wait(&request, MPI_STATUS_IGNORE);
-	timer3.Stop();
-    }
-    if (d_distributed ) {
-	std::cout << "Size: " << d_num_cols
-		  << ", Matvec: " << timer1.RealTime()
-		  << ", Iallreduce: " << timer2.RealTime()
-		  << ", Wait: " << timer3.RealTime()
-		  << std::endl;
     }
 }
 

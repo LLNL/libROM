@@ -23,7 +23,7 @@ struct s_NavierContext
 {
    int order = 4;
    double kin_vis = 0.01;
-   double t_final = 1.0;
+   double t_final = 20.0;
    double dt = 1e-2;
 } ctx;
 
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
    int myid;
    MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
-   int serial_refinements = 2;
+   int serial_refinements = 4;
 
    Mesh *mesh = new Mesh("fluid-cht.mesh");
 
@@ -156,10 +156,23 @@ int main(int argc, char *argv[])
     bool dmd_trained = false;
     Vector up_dmd(ndof);
     CAROM::Vector* up_dmd_carom = NULL;
+    Vector res_u(ndof_u);
+    Vector* u_fom = NULL;
+    Vector* p_fom = NULL;
+    Vector u_dmd(ndof_u);
+    Vector p_dmd(ndof_p);
+    Vector e_u(ndof_u);
+    Vector e_p(ndof_p);
+    double res_u_sq, u_sq, p_sq, e_u_sq, e_p_sq;
+    double cfl;
+
+    StopWatch timer, timer1, timer2, timer3;
 
    // FOM solve
    for (int step = 0; !last_step; ++step)
    {
+       timer.Clear();
+       timer.Start();
       if (t + dt >= t_final - dt / 2)
       {
          last_step = true;
@@ -168,18 +181,77 @@ int main(int argc, char *argv[])
       // ROM solve
 	if (dmd_trained)
 	{
-	    if (myid == 0){
-		std::cout << "DMD exists: make prediction" << std::endl;
+        /*
+        // FOM solution (provisional)
+        flowsolver.Step(t, dt, step, true);
+        u_fom = flowsolver.GetProvisionalVelocity()->GetTrueDofs();
+	    p_fom = p_gf->GetTrueDofs();
+
+        flowsolver.Residual(t, dt, step, *u_fom, *p_fom, res_u);
+
+        res_u_sq = res_u.Norml2() * res_u.Norml2();
+        u_sq = u_fom->Norml2() * u_fom->Norml2();
+
+        MPI_Allreduce(MPI_IN_PLACE, &res_u_sq, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(MPI_IN_PLACE, &u_sq, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        
+        if (myid == 0) {
+            std::cout << "Residual(u_fom): " << sqrt(res_u_sq)/sqrt(u_sq) << std::endl;
+        }
+
+        */
+
+        timer1.Clear();
+        timer1.Start();
+        if (myid == 0){
+		    std::cout << "DMD exists: make prediction" << std::endl;
 	    }
-	    
+	   
 	    CAROM::Vector* up_pre = new CAROM::Vector(up->GetData(), ndof,
 			    			     true, true); // previous solution
-    	    if (true) {
 		up_dmd_carom = dmd_up->predict_dt(up_pre);
-	        up_dmd = up_dmd_carom->getData();
-	    }
-	    
-	    if (true) // DMD prediction is accurate
+	    up_dmd = up_dmd_carom->getData();
+
+        for (int i = 0; i < ndof_u; i++) {
+            u_dmd.Elem(i) = up_dmd.Elem(i);
+        }
+        for (int i = 0; i < ndof_p; i++) {
+            p_dmd.Elem(i) = up_dmd.Elem(ndof_u+i);
+        }
+        timer1.Stop();
+
+        timer2.Clear();
+        timer2.Start();
+        flowsolver.Residual(t, dt, step, u_dmd, p_dmd, res_u);
+
+        res_u_sq = res_u.Norml2() * res_u.Norml2();
+        u_sq = u_dmd.Norml2() * u_dmd.Norml2();
+
+        /*
+        e_u = u_dmd;
+        e_p = p_dmd;
+        e_u -= *u_fom;
+        e_p -= *p_fom;
+        e_u_sq = e_u.Norml2() * e_u.Norml2();
+        e_p_sq = e_p.Norml2() * e_p.Norml2();
+        */
+
+        MPI_Allreduce(MPI_IN_PLACE, &res_u_sq, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(MPI_IN_PLACE, &u_sq, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        //MPI_Allreduce(MPI_IN_PLACE, &e_u_sq, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        //MPI_Allreduce(MPI_IN_PLACE, &e_p_sq, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
+        if (myid == 0) {
+            std::cout << "Residual(u_dmd): " << sqrt(res_u_sq)/sqrt(u_sq) << std::endl; 
+                      //<< " Error(u_dmd): " << sqrt(e_u_sq)/sqrt(u_sq) << std::endl;
+        }
+
+        //delete u_fom;
+        //delete p_fom;
+
+        timer2.Stop();
+    
+	    if (sqrt(res_u_sq)/sqrt(u_sq) < 1e-3) // DMD prediction is accurate
 	    {
 		if (myid == 0){
 		    std::cout << "DMD prediction accurate: use it" << std::endl;
@@ -206,13 +278,18 @@ int main(int argc, char *argv[])
       		delete u;
       		delete p;
 	    }
-	    
-	    delete up_pre;
-
+        
+        delete up_pre;
+        delete up_dmd_carom;
+    
 	}
 
 	else {
       	    flowsolver.Step(t, dt, step);
+            cfl = flowsolver.ComputeCFL(*u_gf, dt);
+            if (Mpi::Root()) {
+                std::cout << "CFL: " << cfl << std::endl;
+            }
 	    u = u_gf->GetTrueDofs();
             p = p_gf->GetTrueDofs();
             for (int i = 0; i < u->Size(); i++) {
@@ -227,6 +304,16 @@ int main(int argc, char *argv[])
 
       if (step % 10 == 0)
       {
+         u = new Vector(ndof_u);
+         p = new Vector(ndof_p);
+         for (int i = 0; i < u->Size(); i++) {
+             u->Elem(i) = up->Elem(i);
+         }
+         for (int i = 0; i < p->Size(); i++) {
+             p->Elem(i) = up->Elem(u->Size()+i);
+         }
+         u_gf->SetFromTrueDofs(*u);
+         p_gf->SetFromTrueDofs(*p);
          pvdc.SetCycle(step);
          pvdc.SetTime(t);
          pvdc.Save();
@@ -238,11 +325,26 @@ int main(int argc, char *argv[])
          printf("%.5E %.5E\n", t, dt);
          fflush(stdout);
       }
-      
+    
+      timer3.Clear();
+      timer3.Start();
+
       dmd_up->takeSample(up->GetData(), t);
       dmd_up->train(1);
+      dmd_trained = true;
 
-      delete up_dmd_carom;
+      timer3.Stop();
+
+      if (myid == 0) {
+          std::cout << " Predict: " << timer1.RealTime()
+                    << " Residual: " << timer2.RealTime()
+                    << " Train: " << timer3.RealTime() << std::endl;
+      }
+
+      timer.Stop();
+      if (myid == 0) {
+          std::cout << "Time per iter: " << timer.RealTime() << std::endl;
+      }
 
    }
 
@@ -252,69 +354,4 @@ int main(int argc, char *argv[])
 
    return 0;
 
-   // Train DMD
-   //dmd_up->train(0.999);
-
-   t = 0.0;
-   last_step = false;
-
-   // Set the initial condition.
-   u_ic->ProjectCoefficient(u_excoeff);
-
-   ParGridFunction *u_dmd = flowsolver.GetCurrentVelocity();
-   ParGridFunction *p_dmd = flowsolver.GetCurrentPressure();
-
-   ParGridFunction w_dmd(*u_dmd);
-   flowsolver.ComputeCurl2D(*u_dmd, w_dmd);
-
-   ParaViewDataCollection pvdc_dmd("cht_dmd", pmesh);
-   pvdc_dmd.SetDataFormat(VTKFormat::BINARY32);
-   pvdc_dmd.SetHighOrderOutput(true);
-   pvdc_dmd.SetLevelsOfDetail(ctx.order);
-   pvdc_dmd.SetCycle(0);
-   pvdc_dmd.SetTime(t);
-   pvdc_dmd.RegisterField("velocity", u_dmd);
-   pvdc_dmd.RegisterField("pressure", p_dmd);
-   pvdc_dmd.RegisterField("vorticity", &w_dmd);
-   pvdc_dmd.Save();
-
-   up_dmd_carom = new CAROM::Vector(up->GetData(), ndof, true, true);
-   dmd_up->projectInitialCondition(up_dmd_carom, 0);
-
-   // DMD prediction
-   for (int step = 0; !last_step; ++step)
-   {
-      if (t + dt >= t_final - dt / 2)
-      {
-         last_step = true;
-      }
-
-      t += dt;
-      
-      CAROM::Vector* sol_dmd = dmd_up->predict(t);
-      
-      for (int i = 0; i < ndof_u; i++) {
-	  u->Elem(i) = sol_dmd->item(i);
-      }
-      for (int i = 0; i < ndof_p; i++) {
-	  p->Elem(i) = sol_dmd->item(ndof_u+i);
-      }
-      u_dmd->SetFromTrueDofs(*u);
-      p_dmd->SetFromTrueDofs(*p);
-
-      if (step % 10 == 0)
-      {
-         flowsolver.ComputeCurl2D(*u_dmd, w_dmd);
-         pvdc_dmd.SetCycle(step);
-         pvdc_dmd.SetTime(t);
-         pvdc_dmd.Save();
-      }
-
-   }
-
-   flowsolver.PrintTimingData();
-
-   delete pmesh;
-
-   return 0;
 }

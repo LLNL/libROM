@@ -15,12 +15,9 @@
 #include "utils/HDFDatabase.h"
 
 #include "mpi.h"
-#include "mfem.hpp"
 
 #include <cmath>
 #include <limits>
-
-using namespace mfem;
 
 namespace CAROM {
 
@@ -127,7 +124,15 @@ IncrementalSVDBrand::updateAllMatrices()
     delete mats.Sq_inv;
     delete mats.Wq;
     delete mats.p;
-    
+    mats.U = 0;
+    mats.Up = 0;
+    mats.s = 0;
+    mats.W = 0;
+    mats.Uq = 0;
+    mats.Sq_inv = 0;
+    mats.Wq = 0;
+    mats.p = 0;
+
     // Copy all the matrices and vectors
     mats.U = new Matrix(d_U->getData(),
 		    	d_U->numRows(),
@@ -241,25 +246,19 @@ IncrementalSVDBrand::buildIncrementalSVD(
 {
     CAROM_VERIFY(u != 0);
 
-    StopWatch timer1, timer2, timer3;
-
     // Compute the projection error
     // (accurate down to the machine precision)
     Vector u_vec(u, d_dim, true);
     Vector e_proj(u, d_dim, true);
 
-    timer1.Start();
     Vector* UTe = d_U->transposeMult(e_proj);
-    timer1.Stop();
     Vector* UUTe = d_U->mult(UTe);
     e_proj -= *UUTe; // Gram-Schmidt
    
     delete UTe;
     delete UUTe;
 
-    timer2.Start();
     UTe = d_U->transposeMult(e_proj);
-    timer2.Stop();
     UUTe = d_U->mult(UTe);
     e_proj -= *UUTe; // Re-orthogonalization
 
@@ -304,14 +303,7 @@ IncrementalSVDBrand::buildIncrementalSVD(
 
     // Create Q.
     double* Q;
-    timer3.Start();
     Vector* UTu = d_U->transposeMult(u_vec);
-    timer3.Stop();
-    if (d_rank == 0) {
-	std::cout << "[Non-struct matvec] Timer1: " << timer1.RealTime()
-		  << ", Timer2: " << timer2.RealTime()
-		  << ", Timer3: " << timer3.RealTime() << std::endl;
-    }
     Vector* l = d_Up->transposeMult(UTu);
     constructQ(Q, l, k);
     delete l;

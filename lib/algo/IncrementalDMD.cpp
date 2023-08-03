@@ -10,10 +10,11 @@
 
 // Description: Implementation of the nonuniform DMD algorithm.
 
-#include "mfem.hpp"
 #include "IncrementalDMD.h"
 #include "linalg/Matrix.h"
 #include "utils/Utilities.h"
+
+#include "mfem.hpp"
 
 using namespace mfem;
 
@@ -61,12 +62,12 @@ Vector*
 IncrementalDMD::predict_dt(Vector* u)
 {
     IncrementalDMDInternal mats = svd->getAllMatrices();
-    Matrix* Up_new;
-    Matrix* U_new;
+    Matrix* Up_new = NULL;
+    Matrix* U_new = NULL;
     if (mats.Up->numColumns() == mats.Uq->numRows()) {
 	// Liearly dependent sample
 	Up_new = mats.Up->mult(mats.Uq);
-	U_new = mats.U;
+    U_new = new Matrix(*mats.U);
     }
     else {
 	// Linearly independent sample
@@ -87,6 +88,7 @@ IncrementalDMD::predict_dt(Vector* u)
 	    U_new->item(i, r) = mats.p->item(i);
 	}
     }
+    // MEMORY LEAK: FIX IT
     Vector* u_proj = Up_new->transposeMult(U_new->transposeMult(u));
     Vector* pred = U_new->mult(Up_new->mult(d_A_tilde->mult(u_proj)));
     
@@ -100,9 +102,9 @@ IncrementalDMD::predict_dt(Vector* u)
 void
 IncrementalDMD::train(int k, const Matrix* W0, double linearity_tol)
 {
-    const Matrix* f_snapshots = getSnapshotMatrix();
-    CAROM_VERIFY(f_snapshots->numColumns() > 1);
-    CAROM_VERIFY(k > 0 && k <= f_snapshots->numColumns() - 1);
+    const Matrix* f_snapshots = NULL;
+    //CAROM_VERIFY(f_snapshots->numColumns() > 1);
+    //CAROM_VERIFY(k > 0 && k <= f_snapshots->numColumns() - 1);
     d_energy_fraction = -1.0;
     d_k = k;
     updateDMD(f_snapshots);
@@ -112,9 +114,6 @@ IncrementalDMD::train(int k, const Matrix* W0, double linearity_tol)
 void
 IncrementalDMD::updateDMD(const Matrix* f_snapshots)
 {
-    std::pair<Matrix*, Matrix*> f_snapshot_pair = computeDMDSnapshotPair(f_snapshots);
-    Matrix* f_snapshots_in = f_snapshot_pair.first;
-    Matrix* f_snapshots_out = f_snapshot_pair.second;
     //std::cout << f_snapshots->numRows() << " x " << f_snapshots->numColumns() << std::endl;
     //Matrix* f_snapshots_in = f_snapshots->getFirstNColumns(f_snapshots->numColumns()-1);
     //Matrix* f_snapshots_out = f_snapshots->getLastNColumns(f_snapshots->numColumns()-1);
@@ -127,20 +126,12 @@ IncrementalDMD::updateDMD(const Matrix* f_snapshots)
      * (3) Rank-1 update
      *
     */
-    double* u_in = f_snapshots_in->getColumn(f_snapshots_in->numColumns()-1)
-    	    			 ->getData();
-
-    StopWatch svd_timer, rest_timer;
-
-    StopWatch timer1, timer2;
-
-    svd_timer.Start();
+    int num_snapshots = d_snapshots.size();
+    double* u_in = d_snapshots[num_snapshots-2]->getData();
 
     int num_samples_pre = svd->getNumSamples();
-    timer2.Start();
     svd->takeSample(u_in, 0, false); // what if norm(u_in) < eps at init?
-    delete[] u_in;
-    timer2.Stop();
+    
     int num_samples = svd->getNumSamples();
     if (num_samples > num_samples_pre)
     {
@@ -152,6 +143,8 @@ IncrementalDMD::updateDMD(const Matrix* f_snapshots)
 	    Matrix* d_S_inv = new Matrix(1, 1, false);
 	    d_S_inv->item(0, 0) = 1 / d_sv->item(0);
 
+        Matrix* f_snapshots_out = new Matrix(d_snapshots.back()->getData(),
+                                             d_dim, 1, true);
 	    Matrix* br_Sinv = d_basis_right->mult(d_S_inv);
 	    Matrix* f_br_Sinv = f_snapshots_out->mult(br_Sinv);
 	    
@@ -159,6 +152,7 @@ IncrementalDMD::updateDMD(const Matrix* f_snapshots)
 
 	    delete br_Sinv;
 	    delete f_br_Sinv;
+        delete f_snapshots_out;
 
 	    delete d_basis;
 	    delete d_basis_right;
@@ -171,17 +165,16 @@ IncrementalDMD::updateDMD(const Matrix* f_snapshots)
 	    	std::cout << "Added linearly independent sample" << std::endl;
 	    }
 	    IncrementalDMDInternal mats = svd->getAllMatrices();
-	   
+	  
 	    Matrix* d_A_tilde_tmp = new Matrix(num_samples, num_samples, false);
-	    Vector* u_new = f_snapshots_out->getColumn(f_snapshots_out->numColumns()-1);
+	    Vector* u_new = new Vector(d_snapshots[num_snapshots-1]->getData(),
+                                   d_dim, true);
 
-	    timer1.Start();
 	    Vector* UTu = mats.U->transposeMult(u_new);
-	    timer1.Stop();
-
-	    Matrix* f_cropped = f_snapshots_out->getFirstNColumns(
-			    			 f_snapshots_out->numColumns()-1);
-	    Vector* fTp = f_cropped->transposeMult(mats.p);
+        Vector* fTp = new Vector(num_snapshots-2, false);
+        for (int i = 0; i < num_snapshots-2; i++) {
+            fTp->item(i) = d_snapshots[i+1]->inner_product(mats.p);
+        }
 
 	    Vector* UpTUTu = mats.Up->transposeMult(UTu);
 	    Vector* WTfTp = mats.W->transposeMult(fTp);
@@ -202,7 +195,6 @@ IncrementalDMD::updateDMD(const Matrix* f_snapshots)
 	    Matrix* d_A_tilde_new = mats.Uq->transposeMult(AWSinv);
 	    
 	    delete UTu;
-	    delete f_cropped;
 	    delete fTp;
 	    delete UpTUTu;
 	    delete WSinv;
@@ -223,12 +215,11 @@ IncrementalDMD::updateDMD(const Matrix* f_snapshots)
 	IncrementalDMDInternal mats = svd->getAllMatrices();
 	
 	Matrix* d_A_tilde_tmp = new Matrix(num_samples, num_samples+1, false);
-	Vector* u_new = f_snapshots_out->getColumn(f_snapshots_out->numColumns()-1);
+	Vector* u_new = new Vector(d_snapshots[num_snapshots-1]->getData(),
+                               d_dim, true);
 
-	timer1.Start();
 	Vector* UTu = new Vector(num_samples, false);
 	mats.U->transposeMult(*u_new, UTu);
-	timer1.Stop();
 
 	Vector* UpTUTu = mats.Up->transposeMult(UTu);
 
@@ -258,94 +249,18 @@ IncrementalDMD::updateDMD(const Matrix* f_snapshots)
 
     if (d_rank == 0) {
     	std::cout << "Using " << num_samples << " basis vectors out of "
-		  << f_snapshots_out->numColumns() << " snapshots" << std::endl;
+		  << num_snapshots << " snapshots" << std::endl;
     }
 
     svd_timer.Stop();
     if ( d_rank == 0 ) {
-        std::cout << "Time svd:" << svd_timer.RealTime() << std::endl;
-        std::cout << "Timer1:" << timer1.RealTime() << std::endl;
-        std::cout << "Timer2:" << timer2.RealTime() << std::endl;
+        std::cout << "Time svd: " << svd_timer.RealTime() << std::endl;
     }
-
-    delete f_snapshots_in;
-    delete f_snapshots_out;
 
     d_trained = true;
 
     return;
 
-    /*
-    rest_timer.Start();
-    //bg->computeBasis();
-    // Copy pointers from IncrementalSVD to DMD
-    d_k = svd->getSingularValues()->dim(); // no. of singular values
-    
-    //d_U = bg->d_U;
-    //Matrix* d_Up = bg->getUp();
-    
-    if (d_trained){ delete d_basis; } 
-    Matrix* d_basis = new Matrix(*(svd->getSpatialBasis())); // left singular vectors
-    Vector* d_sv = new Vector(*(svd->getSingularValues())); // singular values
-    Matrix* d_basis_right = new Matrix(*(svd->getTemporalBasis())); // right singular vectors
-    Matrix* d_S_inv = new Matrix(d_k, d_k, false);
-
-    // Get inverse of singular values by multiplying by reciprocal.
-    for (int i = 0; i < d_k; ++i)
-    {
-        d_S_inv->item(i, i) = 1 / d_sv->item(i);
-    }
-
-    // Calculate A_tilde = U_transpose * f_snapshots_out * V * inv(S)
-    Matrix* d_basis_mult_f_snapshots_out = d_basis->transposeMult(f_snapshots_out);
-    Matrix* d_basis_mult_f_snapshots_out_mult_d_basis_right =
-        d_basis_mult_f_snapshots_out->mult(d_basis_right);
-    Matrix* d_A_tilde_exact = d_basis_mult_f_snapshots_out_mult_d_basis_right->mult(d_S_inv);
-
-    double A_normF = 0.0;
-    for (int i = 0; i < d_A_tilde_exact->numRows(); i++) {
-	for (int j = 0; j < d_A_tilde_exact->numColumns(); j++) {
-	    double diff = d_A_tilde->item(i, j) - d_A_tilde_exact->item(i, j);
-	    A_normF += diff * diff;
-	}
-    }
-    std::cout << "Frobenius norm of A_tilde diff: " << sqrt(A_normF) << std::endl;
-
-    delete d_A_tilde;
-    d_A_tilde = new Matrix(*d_A_tilde_exact);
-
-    // Calculate the right eigenvalues/eigenvectors of A_tilde
-    ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(d_A_tilde);
-    d_eigs = eigenpair.eigs;
-
-    struct DMDInternal dmd_internal = {f_snapshots_in, f_snapshots_out, d_basis, d_basis_right, d_S_inv, &eigenpair};
-    computePhi(dmd_internal);
-
-    Vector* init = new Vector(f_snapshots_in->numRows(), true);
-    for (int i = 0; i < init->dim(); i++)
-    {
-        init->item(i) = f_snapshots_in->item(i, 0);
-    }
-
-    // Calculate pinv(d_phi) * initial_condition.
-    projectInitialCondition(init);
-
-    d_trained = true;
-
-    delete d_basis_right;
-    delete d_S_inv;
-    delete d_basis_mult_f_snapshots_out;
-    delete d_basis_mult_f_snapshots_out_mult_d_basis_right;
-    delete f_snapshots_in;
-    delete f_snapshots_out;
-    delete eigenpair.ev_real;
-    delete eigenpair.ev_imaginary;
-    delete init;
-
-    rest_timer.Stop();
-    std::cout << "Time rest:" << rest_timer.RealTime() << std::endl;
-
-    */
 }
 
 }

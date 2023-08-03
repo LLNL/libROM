@@ -283,7 +283,13 @@ public:
     */
    void SetFilterAlpha(double a) { filter_alpha = a; }
 
-   const int GetNumDofs() { return vfes->GetTrueVSize() + pfes->GetTrueVSize(); }
+   // Get the total number of DOFs
+   int GetNumDofs() { return vfes->GetTrueVSize() + pfes->GetTrueVSize(); }
+
+   // Compute the residual-based local truncation error
+   // given the predictions u and p
+   void Residual(double &time, double dt, int cur_step,
+                 Vector u, Vector p, Vector &res_u);
 
 protected:
    /// Print information about the Navier version.
@@ -395,6 +401,7 @@ protected:
    Vector tmp1;
 
    Vector pn, resp, FText_bdr, g_bdr;
+   Vector tmp2;
 
    ParGridFunction un_gf, un_next_gf, curlu_gf, curlcurlu_gf, Lext_gf, FText_gf,
                    resu_gf;
