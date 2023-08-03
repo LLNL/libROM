@@ -252,11 +252,6 @@ IncrementalDMD::updateDMD(const Matrix* f_snapshots)
 		  << num_snapshots << " snapshots" << std::endl;
     }
 
-    svd_timer.Stop();
-    if ( d_rank == 0 ) {
-        std::cout << "Time svd: " << svd_timer.RealTime() << std::endl;
-    }
-
     d_trained = true;
 
     return;
