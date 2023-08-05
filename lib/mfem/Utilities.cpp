@@ -44,6 +44,38 @@ void ComputeCtAB(const HypreParMatrix& A,
     C.transposeMult(AB, CtAB);
 }
 
+// serial mfem Operator version
+void ComputeCtAB(const Operator& A,
+                 const CAROM::Matrix& B,  // Non-Distributed matrix
+                 const CAROM::Matrix& C,  // Non-Distributed matrix
+                 CAROM::Matrix& CtAB)     // Non-distributed (local) matrix
+{
+   CAROM_VERIFY(!B.distributed() && !C.distributed() && !CtAB.distributed());
+
+   const int num_rows = B.numRows();
+   const int num_cols = B.numColumns();
+   const int num_rows_A = A.NumRows();
+
+   CAROM_VERIFY(C.numRows() == num_rows_A);
+
+   mfem::Vector Bvec(num_rows);
+   mfem::Vector ABvec(num_rows_A);
+
+   CAROM::Matrix AB(num_rows_A, num_cols, true);
+
+   for (int i = 0; i < num_cols; ++i) {
+      for (int j = 0; j < num_rows; ++j) {
+         Bvec[j] = B(j, i);
+      }
+      A.Mult(Bvec, ABvec);
+      for (int j = 0; j < num_rows_A; ++j) {
+         AB(j, i) = ABvec[j];
+      }
+   }
+
+   C.transposeMult(AB, CtAB);
+}
+
 void ComputeCtAB_vec(const HypreParMatrix& A,
                      const HypreParVector& B, // Distributed vector
                      const CAROM::Matrix& C,  // Distributed matrix

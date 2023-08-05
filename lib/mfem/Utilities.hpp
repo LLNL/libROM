@@ -38,6 +38,24 @@ void ComputeCtAB(const HypreParMatrix& A,
                  CAROM::Matrix& CtAB);
 
 /**
+ * @brief This function computes a reduced, non-distributed matrix C^t AB
+ *        for a serial MFEM Operator object A.
+ *
+ * @param[in] A The non-distributed Operator (an MFEM class) A in C^t AB.
+ *
+ * @param[in] B The non-distributed Matrix B in C^t AB.
+ *
+ * @param[in] C The non-distributed Matrix C in C^t AB.
+ *
+ * @param[out] CtAB The non-distributed Matrix C^t AB.
+ *
+ */
+void ComputeCtAB(const Operator& A,
+                 const CAROM::Matrix& B,
+                 const CAROM::Matrix& C,
+                 CAROM::Matrix& CtAB);
+
+/**
  * @brief This function computes a reduced, non-distributed vector C^t AB stored
  *        identically (redundantly) on every process.
  *
