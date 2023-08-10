@@ -18,7 +18,8 @@
 
 using namespace std;
 
-void compareBasis(string &baselineFile, string &targetFile, double errorBound, int numProcessors) {
+void compareBasis(string &baselineFile, string &targetFile, double errorBound,
+                  int numProcessors) {
 
     MPI_Init(NULL, NULL);
     // Get the number of processes
@@ -35,8 +36,10 @@ void compareBasis(string &baselineFile, string &targetFile, double errorBound, i
     vector<double> reducedDiffVecNormL2;
 
     CAROM::BasisReader baselineReader(baselineFile);
-    CAROM::Matrix *baselineBasis = (CAROM::Matrix*) baselineReader.getSpatialBasis(0.0);
-    CAROM::Vector *baselineSV = (CAROM::Vector*) baselineReader.getSingularValues(0.0);
+    CAROM::Matrix *baselineBasis =
+        (CAROM::Matrix*) baselineReader.getSpatialBasis(0.0);
+    CAROM::Vector *baselineSV =
+        (CAROM::Vector*) baselineReader.getSingularValues(0.0);
     CAROM::BasisReader targetReader(targetFile);
     CAROM::Matrix *targetBasis = (CAROM::Matrix*) targetReader.getSpatialBasis(0.0);
     CAROM::BasisReader diffReader(baselineFile);
@@ -51,18 +54,21 @@ void compareBasis(string &baselineFile, string &targetFile, double errorBound, i
     // Test basis matrices have the same dimensions
     if (baselineNumRows != targetNumRows) {
         cerr << "The number of rows of the two basis matrices \
-are not equal in the following files: " << baselineFile << " and " << targetFile << endl;
+            are not equal in the following files: " << baselineFile
+             << " and " << targetFile << endl;
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
     if (baselineNumColumns != targetNumColumns) {
         cerr << "The number of columns of the two basis matrices \
-are not equal in the following file: " << baselineFile << " and " << targetFile << endl;
+            are not equal in the following file: " << baselineFile
+             << " and " << targetFile << endl;
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
     if (baselineSV->dim() != baselineNumColumns)
     {
         cerr << "The number of singular values does not equal the \
-number of basis vectors in the following file: " << baselineFile << endl;
+            number of basis vectors in the following file: " << baselineFile
+             << endl;
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
@@ -76,7 +82,8 @@ number of basis vectors in the following file: " << baselineFile << endl;
     }
     catch (const exception& e) {
         cerr << "Something went wrong when calculating the difference \
-between the basis matrices in the following files: " << baselineFile << " and " << targetFile << endl;
+            between the basis matrices in the following files: " << baselineFile
+             << " and " << targetFile << endl;
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
@@ -88,8 +95,10 @@ between the basis matrices in the following files: " << baselineFile << " and " 
         }
     }
 
-    MPI_Reduce(vecNormL2.data(), reducedVecNormL2.data(), baselineNumColumns, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-    MPI_Reduce(diffVecNormL2.data(), reducedDiffVecNormL2.data(), baselineNumColumns, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Reduce(vecNormL2.data(), reducedVecNormL2.data(), baselineNumColumns,
+               MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Reduce(diffVecNormL2.data(), reducedDiffVecNormL2.data(),
+               baselineNumColumns, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
     if (rank == 0) {
         double baselineNormL2 = 0.0;
@@ -113,9 +122,12 @@ between the basis matrices in the following files: " << baselineFile << " and " 
 
         // Test whether l2 norm is smaller than error bound
         if (error > errorBound) {
-            cerr << "baselineNormL2 = " << baselineNormL2 << ", diffNormL2 = " << diffNormL2 << endl;
+            cerr << "baselineNormL2 = " << baselineNormL2 << ", diffNormL2 = " << diffNormL2
+                 << endl;
             cerr << "error = " << error << endl;
-            cerr << "Error bound: " << errorBound << " was surpassed for the l2 norm of the difference of the basis matrices." << endl;
+            cerr << "Error bound: " << errorBound <<
+                 " was surpassed for the l2 norm of the difference of the basis matrices." <<
+                 endl;
             MPI_Abort(MPI_COMM_WORLD, 1);
         }
     }

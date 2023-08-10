@@ -22,6 +22,9 @@ runs:
           mpirun -n 3 --oversubscribe tests/test_RandomizedSVD
           ./tests/test_StaticSVD
           mpirun -n 3 --oversubscribe tests/test_StaticSVD
+          ./tests/test_IncrementalSVDBrand
+          mpirun -n 3 --oversubscribe tests/test_IncrementalSVDBrand
+          
       shell: bash
 
     - name: Run regression tests

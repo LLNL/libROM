@@ -16,7 +16,8 @@
 
 using namespace std;
 
-void compareFiles(ifstream &baselineFile, ifstream &targetFile, double errorBound) {
+void compareFiles(ifstream &baselineFile, ifstream &targetFile,
+                  double errorBound) {
     string baselineLine, targetLine;
     double baselineNum, targetNum;
     int fileLine = 1;
@@ -27,7 +28,8 @@ void compareFiles(ifstream &baselineFile, ifstream &targetFile, double errorBoun
         getline(baselineFile, baselineLine);
         getline(targetFile, targetLine);
         if (baselineLine == "" || targetLine == "") {
-            assert(baselineLine == targetLine || !(cerr << "The files are not the same length." << endl));
+            assert(baselineLine == targetLine
+                   || !(cerr << "The files are not the same length." << endl));
             break;
         }
 
@@ -50,12 +52,14 @@ void compareFiles(ifstream &baselineFile, ifstream &targetFile, double errorBoun
         if (error > errorBound) {
             cerr << "baseline = " << baselineNum << ", diff = " << diff << endl;
             cerr << "error = " << error << endl;
-            cerr << "Error bound: " << errorBound << " was surpassed on line: " << fileLine << endl;
+            cerr << "Error bound: " << errorBound << " was surpassed on line: " << fileLine
+                 << endl;
             abort();
         }
         fileLine++;
     }
-    assert(targetFile.eof() || !(cerr << "The files are not the same length." << endl));
+    assert(targetFile.eof()
+           || !(cerr << "The files are not the same length." << endl));
 }
 
 int main(int argc, char *argv[]) {
