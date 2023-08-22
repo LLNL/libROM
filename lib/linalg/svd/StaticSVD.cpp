@@ -309,6 +309,7 @@ StaticSVD::computeSVD()
         hard_cutoff = d_max_basis_dimension;
     }
     int ncolumns = hard_cutoff < sigma_cutoff ? hard_cutoff : sigma_cutoff;
+    if (transpose) ncolumns = (ncolumns > d_total_dim) ? d_total_dim : ncolumns;
     CAROM_VERIFY(ncolumns >= 0);
 
     // Allocate the appropriate matrices and gather their elements.

@@ -72,9 +72,9 @@ TEST(IncrementalSVDBrandTest, Test_IncrementalSVDBrand)
 
     double* basis_right_true_ans = new double[9] {
         -1.78651649346571794741E-01,     5.44387957786310106023E-01,      -8.19588518467042281834E-01,
-        -9.49719639253861602768E-01,     -3.13100149275943651084E-01,     -9.50441422536040881122E-04,
-        -2.57130696341890396805E-01,     7.78209514167382598870E-01,      5.72951792961765460355E-01
-    };
+            -9.49719639253861602768E-01,     -3.13100149275943651084E-01,     -9.50441422536040881122E-04,
+            -2.57130696341890396805E-01,     7.78209514167382598870E-01,      5.72951792961765460355E-01
+        };
 
     double* sv_true_ans = new double[3] {
         4.84486375065219387892E+00,      3.66719976398777269821E+00,      2.69114625366671811335E+00
@@ -83,18 +83,18 @@ TEST(IncrementalSVDBrandTest, Test_IncrementalSVDBrand)
     bool fast_update = true;
     bool fast_update_brand = true;
     CAROM::Options incremental_svd_options = CAROM::Options(d_num_rows, 3, -1, true)
-	    .setMaxBasisDimension(num_total_rows)
+            .setMaxBasisDimension(num_total_rows)
             .setIncrementalSVD(1e-1,
-			       1e-1,
-			       1e-1,
-			       1e-1,
-			       fast_update,
-			       fast_update_brand,
-			       false);
+                               1e-1,
+                               1e-1,
+                               1e-1,
+                               fast_update,
+                               fast_update_brand,
+                               false);
 
     CAROM::BasisGenerator sampler(
         incremental_svd_options,
-	true,
+        true,
         "irrelevant.txt");
     sampler.takeSample(&sample1[row_offset[d_rank]], 0, 1e-1);
     sampler.takeSample(&sample2[row_offset[d_rank]], 0, 1e-1);
