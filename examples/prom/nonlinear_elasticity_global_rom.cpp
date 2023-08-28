@@ -1432,6 +1432,7 @@ int main(int argc, char *argv[])
     // 16. Free the used memory.
     delete ode_solver;
     delete pmesh;
+    delete romop;
 
     totalTimer.Stop();
     if (myid == 0)
