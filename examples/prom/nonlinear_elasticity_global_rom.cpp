@@ -2073,7 +2073,7 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
 
 void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
                                                  std::vector<double> const &rw, std::vector<int> const &qp,
-                                                 const IntegrationRule *ir, NeoHookeanModel *model, const Vector *x0, 
+                                                 const IntegrationRule *ir, NeoHookeanModel *model, const Vector *x0,
                                                  CAROM::Matrix const &V_x, CAROM::Matrix const &V_v, CAROM::Vector const &x, CAROM::Vector *Vx_librom_temp, Vector *Vx_temp,
                                                  const int rank, Vector &res)
 
@@ -2145,9 +2145,9 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
         for (int k = 0; k < V_v.numRows(); ++k)
             vj[k] = V_v(k, j);
         P->Mult(vj, p_vj);
-        res[j] = 0.0;
 
         eprev = -1;
+        double temp = 0.0;
 
         // For every quadrature weight
         for (int i = 0; i < rw.size(); ++i) // NOTE: i < 9
@@ -2201,9 +2201,10 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
             // Calculate r[i] = ve_j^T * elvect
             for (int k = 0; k < elvect.Size(); k++)
             {
-                res[j] += vj_e[k] * elvect[k];
+                temp += vj_e[k] * elvect[k];
             }
         }
+        res[j] = temp; // This line causes segfault after error calculation
     }
 }
 
@@ -2271,8 +2272,8 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes
     for (int j = 0; j < rvdim; ++j)
 
     {
-
         eprev = -1;
+        double temp = 0.0;
 
         // For every quadrature weight
         for (int i = 0; i < qp.size(); ++i) // NOTE: i < 9
@@ -2324,11 +2325,13 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes
 
             // Calculate r[i] = ve_j^T * elvect
             // coef is size len(vdofs) * rvdim * rw.size
+
             for (int k = 0; k < elvect.Size(); k++)
             {
-                res[j] += coef[k + (i * elvect.Size()) + (j * qp.size() * elvect.Size())] * elvect[k];
+                temp += coef[k + (i * elvect.Size()) + (j * qp.size() * elvect.Size())] * elvect[k];
             }
         }
+        res[j] = temp; // This line causes segfault after error calculation
     }
 }
 
