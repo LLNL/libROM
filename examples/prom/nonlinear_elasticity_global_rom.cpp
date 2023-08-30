@@ -1804,7 +1804,6 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
 
     if (eqp)
     { // Lift v-vector and save
-
         V_xTV_v->mult(v_librom, *pfom_v_librom);
         pfom_v_librom->plus(*V_xTv_0, dx_dt_librom);
         Vector resEQP;
@@ -1832,8 +1831,8 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
         // approximated by the reduced quadrature rule in the FOM space.
         // Therefore, the residual here is of dimension rxdim.
         z = 0.0;
-        MFEM_VERIFY(resEQP.Size() == rxdim, "");
-        for (int i = 0; i < rxdim; ++i)
+        MFEM_VERIFY(resEQP.Size() == rvdim, "");
+        for (int i = 0; i < rvdim; ++i)
             z[i] += resEQP[i];
     }
     else
@@ -2095,7 +2094,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
     const FiniteElement *fe = NULL;
     Array<int> vdofs;
 
-    res.SetSize(rxdim);
+    res.SetSize(rvdim);
     res = 0.0;
 
     int eprev = -1;
@@ -2204,7 +2203,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
                 temp += vj_e[k] * elvect[k];
             }
         }
-        res[j] = temp; // This line causes segfault after error calculation
+        res[j] = temp;
     }
 }
 
@@ -2230,7 +2229,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes
     const FiniteElement *fe = NULL;
     Array<int> vdofs;
 
-    res.SetSize(rxdim);
+    res.SetSize(rvdim);
     res = 0.0;
 
     int eprev = -1;
@@ -2269,8 +2268,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes
     PMatO.UseExternalData(elvect.GetData(), dof, dim);
 
     // For every basis vector
-    for (int j = 0; j < rvdim; ++j)
-
+    for (int j = 0; j < rvdim; ++j) 
     {
         eprev = -1;
         double temp = 0.0;
@@ -2331,7 +2329,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes
                 temp += coef[k + (i * elvect.Size()) + (j * qp.size() * elvect.Size())] * elvect[k];
             }
         }
-        res[j] = temp; // This line causes segfault after error calculation
+        res[j] = temp;
     }
 }
 
