@@ -1427,12 +1427,14 @@ TEST(MatrixParallelTest, Test_distribute_and_gather)
 
     int local_rows = CAROM::split_dimension(total_rows, MPI_COMM_WORLD);
     std::vector<int> row_offsets;
-    int total_rows_check = CAROM::get_global_offsets(local_rows, row_offsets, MPI_COMM_WORLD);
+    int total_rows_check =
+        CAROM::get_global_offsets(local_rows, row_offsets, MPI_COMM_WORLD);
     EXPECT_EQ(total_rows, total_rows_check);
 
     CAROM::Matrix test(answer);
     test.distribute(local_rows);
-    for (int local_i = 0, global_i = row_offsets[my_rank]; local_i < local_rows; local_i++, global_i++)
+    for (int local_i = 0, global_i = row_offsets[my_rank]; local_i < local_rows;
+            local_i++, global_i++)
         for (int j = 0; j < answer.numColumns(); j++)
             EXPECT_DOUBLE_EQ(test.item(local_i, j), answer.item(global_i, j));
 

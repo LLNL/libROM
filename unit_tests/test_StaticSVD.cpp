@@ -128,28 +128,30 @@ TEST(StaticSVDTest, Test_SLPKTranspose)
     constexpr int num_total_cols = 5;
     int d_num_rows = CAROM::split_dimension(num_total_rows, MPI_COMM_WORLD);
     std::vector<int> row_offset(d_num_procs + 1);
-    const int total_rows = CAROM::get_global_offsets(d_num_rows, row_offset, MPI_COMM_WORLD);
+    const int total_rows = CAROM::get_global_offsets(d_num_rows, row_offset,
+                           MPI_COMM_WORLD);
     EXPECT_EQ(total_rows, num_total_rows);
 
     double* samples = new double[15] {0.5377, -1.3077, -1.3499,
                                       1.8339, -0.4336, 3.0349,
                                       -2.2588, 0.3426, 0.7254,
                                       0.8622, 3.5784, -0.0631,
-                                      0.3188, 2.7694, 0.7147};
+                                      0.3188, 2.7694, 0.7147
+                                     };
 
     double* basis_right_true_ans = new double[15] {
-        3.08158946098238906153E-01,	    -9.49897947980619661301E-02,	-4.50691774108525788911E-01,	
-        -1.43697905723455976457E-01,	9.53289043424090820622E-01,	    8.77767692937209131898E-02,	
-        -2.23655845793717528158E-02,	-2.10628953513210204207E-01,	8.42235962392685943989E-01,	
-        -7.29903965154318323805E-01,	-1.90917141788945754488E-01,	-2.77280930877637610266E-01,	
-        -5.92561353877168350834E-01,	-3.74570084880578441089E-02,	5.40928141934190823137E-02,	
+        3.08158946098238906153E-01,	    -9.49897947980619661301E-02,	-4.50691774108525788911E-01,
+        -1.43697905723455976457E-01,	9.53289043424090820622E-01,	    8.77767692937209131898E-02,
+        -2.23655845793717528158E-02,	-2.10628953513210204207E-01,	8.42235962392685943989E-01,
+        -7.29903965154318323805E-01,	-1.90917141788945754488E-01,	-2.77280930877637610266E-01,
+        -5.92561353877168350834E-01,	-3.74570084880578441089E-02,	5.40928141934190823137E-02,
     };
 
     double* basis_true_ans = new double[9] {
-        -1.78651649346571794741E-01,	5.44387957786310106023E-01,	    -8.19588518467042281834E-01,	
-        -9.49719639253861602768E-01,	-3.13100149275943651084E-01,	-9.50441422536040881122E-04,	
-        -2.57130696341890396805E-01,	7.78209514167382598870E-01,	    5.72951792961765460355E-01,
-    };
+        -1.78651649346571794741E-01,	5.44387957786310106023E-01,	    -8.19588518467042281834E-01,
+            -9.49719639253861602768E-01,	-3.13100149275943651084E-01,	-9.50441422536040881122E-04,
+            -2.57130696341890396805E-01,	7.78209514167382598870E-01,	    5.72951792961765460355E-01,
+        };
 
     double* sv_true_ans = new double[3] {
         4.84486375065219387892E+00,     3.66719976398777269821E+00,     2.69114625366671811335E+00,
@@ -158,7 +160,8 @@ TEST(StaticSVDTest, Test_SLPKTranspose)
     SLPK_Matrix *d_samples = new SLPK_Matrix;
     std::vector<int> d_dims;
     d_dims.resize(static_cast<unsigned>(d_num_procs));
-    MPI_Allgather(&d_num_rows, 1, MPI_INT, d_dims.data(), 1, MPI_INT, MPI_COMM_WORLD);
+    MPI_Allgather(&d_num_rows, 1, MPI_INT, d_dims.data(), 1, MPI_INT,
+                  MPI_COMM_WORLD);
     int d_total_dim = 0;
     std::vector<int> d_istarts(static_cast<unsigned>(d_num_procs), 0);
 
@@ -185,8 +188,8 @@ TEST(StaticSVDTest, Test_SLPKTranspose)
         const double *u_in = &samples[3*s];
         for (int rank = 0; rank < d_num_procs; ++rank) {
             scatter_block(d_samples, d_istarts[static_cast<unsigned>(rank)]+1,
-                        s+1, u_in, d_dims[static_cast<unsigned>(rank)],
-                        1, rank);
+                          s+1, u_in, d_dims[static_cast<unsigned>(rank)],
+                          1, rank);
         }
     }
     printf("original\n");
@@ -221,7 +224,8 @@ TEST(StaticSVDTest, Test_SLPKTranspose)
 
     int ncolumns = num_total_rows;
     CAROM::Matrix *d_basis = new CAROM::Matrix(d_dims[d_rank], ncolumns, true);
-    CAROM::Matrix *d_basis_right = new CAROM::Matrix(ncolumns, num_total_cols, false);
+    CAROM::Matrix *d_basis_right = new CAROM::Matrix(ncolumns, num_total_cols,
+            false);
 
     for (int rank = 0; rank < d_num_procs; ++rank) {
         // gather_transposed_block does the same as gather_block, but transposes
@@ -230,8 +234,8 @@ TEST(StaticSVDTest, Test_SLPKTranspose)
                                 1, 1, num_total_cols, ncolumns, rank);
         // V is computed in the transposed order so no reordering necessary.
         gather_block(&d_basis->item(0, 0), d_factorizer->V,
-                    1, d_istarts[static_cast<unsigned>(rank)]+1,
-                    ncolumns, d_dims[static_cast<unsigned>(rank)], rank);
+                     1, d_istarts[static_cast<unsigned>(rank)]+1,
+                     ncolumns, d_dims[static_cast<unsigned>(rank)], rank);
     }
 
     delete d_basis, d_basis_right;
@@ -255,7 +259,8 @@ TEST(StaticSVDTest, Test_StaticSVDClass)
     constexpr int num_total_rows = 5;
     int d_num_rows = CAROM::split_dimension(num_total_rows, MPI_COMM_WORLD);
     std::vector<int> row_offset(d_num_procs + 1);
-    const int total_rows = CAROM::get_global_offsets(d_num_rows, row_offset, MPI_COMM_WORLD);
+    const int total_rows = CAROM::get_global_offsets(d_num_rows, row_offset,
+                           MPI_COMM_WORLD);
     EXPECT_EQ(total_rows, num_total_rows);
 
     double* sample1 = new double[5] {0.5377, 1.8339, -2.2588, 0.8622, 0.3188};
@@ -272,9 +277,9 @@ TEST(StaticSVDTest, Test_StaticSVDClass)
 
     double* basis_right_true_ans = new double[9] {
         -1.78651649346571794741E-01,     5.44387957786310106023E-01,      -8.19588518467042281834E-01,
-        -9.49719639253861602768E-01,     -3.13100149275943651084E-01,     -9.50441422536040881122E-04,
-        -2.57130696341890396805E-01,     7.78209514167382598870E-01,      5.72951792961765460355E-01
-    };
+            -9.49719639253861602768E-01,     -3.13100149275943651084E-01,     -9.50441422536040881122E-04,
+            -2.57130696341890396805E-01,     7.78209514167382598870E-01,      5.72951792961765460355E-01
+        };
 
     double* sv_true_ans = new double[3] {
         4.84486375065219387892E+00,      3.66719976398777269821E+00,      2.69114625366671811335E+00
@@ -332,7 +337,8 @@ TEST(StaticSVDTest, Test_StaticSVDTranspose)
     constexpr int num_total_cols = 5;
     int d_num_rows = CAROM::split_dimension(num_total_rows, MPI_COMM_WORLD);
     std::vector<int> row_offset(d_num_procs + 1);
-    const int total_rows = CAROM::get_global_offsets(d_num_rows, row_offset, MPI_COMM_WORLD);
+    const int total_rows = CAROM::get_global_offsets(d_num_rows, row_offset,
+                           MPI_COMM_WORLD);
     EXPECT_EQ(total_rows, num_total_rows);
 
     double* sample1 = new double[5] {0.5377, -1.3077, -1.3499};
@@ -342,18 +348,18 @@ TEST(StaticSVDTest, Test_StaticSVDTranspose)
     double* sample5 = new double[5] {0.3188, 2.7694, 0.7147};
 
     double* basis_right_true_ans = new double[15] {
-        3.08158946098238906153E-01,	    -9.49897947980619661301E-02,	-4.50691774108525788911E-01,	
-        -1.43697905723455976457E-01,	9.53289043424090820622E-01,	    8.77767692937209131898E-02,	
-        -2.23655845793717528158E-02,	-2.10628953513210204207E-01,	8.42235962392685943989E-01,	
-        -7.29903965154318323805E-01,	-1.90917141788945754488E-01,	-2.77280930877637610266E-01,	
-        -5.92561353877168350834E-01,	-3.74570084880578441089E-02,	5.40928141934190823137E-02,	
+        3.08158946098238906153E-01,	    -9.49897947980619661301E-02,	-4.50691774108525788911E-01,
+        -1.43697905723455976457E-01,	9.53289043424090820622E-01,	    8.77767692937209131898E-02,
+        -2.23655845793717528158E-02,	-2.10628953513210204207E-01,	8.42235962392685943989E-01,
+        -7.29903965154318323805E-01,	-1.90917141788945754488E-01,	-2.77280930877637610266E-01,
+        -5.92561353877168350834E-01,	-3.74570084880578441089E-02,	5.40928141934190823137E-02,
     };
 
     double* basis_true_ans = new double[9] {
-        -1.78651649346571794741E-01,	5.44387957786310106023E-01,	    -8.19588518467042281834E-01,	
-        -9.49719639253861602768E-01,	-3.13100149275943651084E-01,	-9.50441422536040881122E-04,	
-        -2.57130696341890396805E-01,	7.78209514167382598870E-01,	    5.72951792961765460355E-01,
-    };
+        -1.78651649346571794741E-01,	5.44387957786310106023E-01,	    -8.19588518467042281834E-01,
+            -9.49719639253861602768E-01,	-3.13100149275943651084E-01,	-9.50441422536040881122E-04,
+            -2.57130696341890396805E-01,	7.78209514167382598870E-01,	    5.72951792961765460355E-01,
+        };
 
     double* sv_true_ans = new double[3] {
         4.84486375065219387892E+00,     3.66719976398777269821E+00,     2.69114625366671811335E+00,
