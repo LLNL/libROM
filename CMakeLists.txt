@@ -36,10 +36,18 @@ set(libROM_CMAKE_MODULE_PATH ${libROM_CMAKE_PATH}/modules)
 list(APPEND CMAKE_MODULE_PATH ${libROM_CMAKE_MODULE_PATH})
 
 option(USE_MFEM "Build libROM with MFEM" OFF)
-option(USE_EXTERNAL_MFEM "Build libROM with external MFEM specified in -DMFEM_DIR" OFF)
 option(MFEM_USE_GSLIB "Build libROM with MFEM using GSLIB" OFF)
 option(BUILD_STATIC "Build libROM as a static library" OFF)
 option(ENABLE_EXAMPLES "Build examples and regression tests" ON)
+
+# Check if external MFEM dir is defined in cmake option "-DMFEM_DIR"
+if(MFEM_DIR STREQUAL "")
+  set(USE_EXTERNAL_MFEM OFF)
+else()
+  set(USE_EXTERNAL_MFEM ON)
+endif()
+message("---------MFEM_DIR=${MFEM_DIR}")
+message("---------USE_EXTERNAL_MFEM=${USE_EXTERNAL_MFEM}")
 
 ## Set a bunch of variables to generate a configure header
 # Enable assertion checking if debug symbols generated
