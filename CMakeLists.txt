@@ -40,14 +40,12 @@ option(MFEM_USE_GSLIB "Build libROM with MFEM using GSLIB" OFF)
 option(BUILD_STATIC "Build libROM as a static library" OFF)
 option(ENABLE_EXAMPLES "Build examples and regression tests" ON)
 
-# Check if external MFEM dir is defined in cmake option "-DMFEM_DIR"
+# Check if external MFEM directory is defined in cmake option "-DMFEM_DIR"
 if(MFEM_DIR STREQUAL "")
   set(USE_EXTERNAL_MFEM OFF)
 else()
   set(USE_EXTERNAL_MFEM ON)
 endif()
-message("---------MFEM_DIR=${MFEM_DIR}")
-message("---------USE_EXTERNAL_MFEM=${USE_EXTERNAL_MFEM}")
 
 ## Set a bunch of variables to generate a configure header
 # Enable assertion checking if debug symbols generated
@@ -125,9 +123,7 @@ find_package(GTest 1.6.0)
 if (USE_EXTERNAL_MFEM)
     find_library(MFEM mfem  "${MFEM_DIR}/lib")
     find_path(MFEM_INCLUDES mfem.hpp "${MFEM_DIR}/include")
-endif()
-
-if (USE_MFEM)
+elseif (USE_MFEM)
     find_library(MFEM mfem "${CMAKE_SOURCE_DIR}/dependencies/mfem" "${MFEM_DIR}/lib")
     find_library(HYPRE HYPRE "${CMAKE_SOURCE_DIR}/dependencies/hypre/src/hypre/lib" "${HYPRE_DIR}/lib")
     find_library(PARMETIS parmetis "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/build/lib/libparmetis" "${PARMETIS_DIR}/lib")
