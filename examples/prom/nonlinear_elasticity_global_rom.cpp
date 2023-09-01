@@ -2523,7 +2523,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
         {
             // Set the sampled dofs from the snapshot matrix
             for (int j = 0; j < BX_snapshots->numRows(); ++j)
-                x_i[j] = (*BX_snapshots)(j, i);
+                x_i[j] = (*BX_snapshots)(j, i) + x0[j];
 
             // Get prolongated dofs
             Vector px_i;
