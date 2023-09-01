@@ -2467,6 +2467,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
     CAROM::Matrix Gt(NQ, NB * nsnap, true);
     int current_size = 0;
     int i_start = 0;
+    int i_end = 0;
     int outer_loop_length = 0;
     if (!window_ids)
     {
@@ -2504,20 +2505,22 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
         MFEM_ABORT("P is null, generalize to serial case")
     }
 
+
     // Outer loop for time windowing
     for (int oi = 0; oi < outer_loop_length; ++oi)
     {
         if (window_ids)
         {
-            i_start = window_ids->item(oi);
-            current_size = window_ids->item(oi + 1) - window_ids->item(oi) + 1;
+            i_start = window_ids->item(oi) - 1;
+            i_end = window_ids->item(oi + 1) - 1;
+            current_size = i_end - i_start;
             cout << "i_start = " << i_start << endl;
             cout << "Number of NNLS equations: " << NB * current_size << endl;
             Gt.setSize(NQ, NB * current_size);
         }
 
         // For every snapshot in batch
-        for (int i = i_start; i < current_size; ++i)
+        for (int i = i_start; i < i_end; ++i)
         {
             // Set the sampled dofs from the snapshot matrix
             for (int j = 0; j < BX_snapshots->numRows(); ++j)
@@ -2654,6 +2657,7 @@ void get_window_ids(int n_step, int n_window, CAROM::Vector *ids)
         }
         ids->item(i - 1) += ctr;
     }
+    ids->item(n_window ) = n_step + 1;
 }
 
 bool fileExists(const std::string &filename)
