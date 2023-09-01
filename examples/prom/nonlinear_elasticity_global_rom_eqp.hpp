@@ -85,7 +85,7 @@ void SolveNNLS(const int rank, const double nnls_tol, const int maxNNLSnnz,
 void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                         ParFiniteElementSpace *fespace_X,
                         const int nsets, const CAROM::Matrix *BV,
-                        const CAROM::Matrix *BX_snapshots,
+                        const CAROM::Matrix *BX_snapshots, const Vector x0,
                         const bool precondition, const double nnls_tol,
                         const int maxNNLSnnz, NeoHookeanModel *model,
                         CAROM::Vector &sol, CAROM::Vector *window_ids);

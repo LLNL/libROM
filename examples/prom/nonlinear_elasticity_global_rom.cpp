@@ -945,7 +945,7 @@ int main(int argc, char *argv[])
             // EQP setup
             eqpSol = new CAROM::Vector(ir0->GetNPoints() * fespace.GetNE(), true);
             SetupEQP_snapshots(ir0, myid, &fespace, nsets, BV_librom,
-                               GetSnapshotMatrix(fespace.GetTrueVSize(), nsets, max_num_snapshots, "X"),
+                               GetSnapshotMatrix(fespace.GetTrueVSize(), nsets, max_num_snapshots, "X"), vx0.GetBlock(0),
                                preconditionNNLS, tolNNLS, maxNNLSnnz, model, *eqpSol, window_ids);
 
             if (writeSampleMesh)
@@ -1204,7 +1204,7 @@ int main(int argc, char *argv[])
                 if (use_eqp && window_ids && current_window < n_windows && ti == window_ids->item(current_window))
                 {
                     // Load eqp and reinitialize ROM operator
-                    cout << "Time window start at" << ti << endl;
+                    cout << "Time window start at " << ti << endl;
                     get_EQPsol(current_window, load_eqpsol);
                     romop->SetEQP(load_eqpsol);
                     ode_solver->Init(*romop);
@@ -2444,7 +2444,7 @@ void SolveNNLS(const int rank, const double nnls_tol, const int maxNNLSnnz,
 void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                         ParFiniteElementSpace *fespace_X,
                         const int nsets, const CAROM::Matrix *BV,
-                        const CAROM::Matrix *BX_snapshots,
+                        const CAROM::Matrix *BX_snapshots, const Vector x0,
                         const bool precondition, const double nnls_tol,
                         const int maxNNLSnnz, NeoHookeanModel *model,
                         CAROM::Vector &sol, CAROM::Vector *window_ids)
@@ -2504,7 +2504,6 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
     {
         MFEM_ABORT("P is null, generalize to serial case")
     }
-
 
     // Outer loop for time windowing
     for (int oi = 0; oi < outer_loop_length; ++oi)
@@ -2657,7 +2656,7 @@ void get_window_ids(int n_step, int n_window, CAROM::Vector *ids)
         }
         ids->item(i - 1) += ctr;
     }
-    ids->item(n_window ) = n_step + 1;
+    ids->item(n_window) = n_step + 1;
 }
 
 bool fileExists(const std::string &filename)
