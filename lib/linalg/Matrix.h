@@ -946,6 +946,18 @@ public:
     void
     orthogonalize();
 
+	/**
+     * @brief Rescale every matrix row by its maximum absolute value.
+     */
+    void
+    rescale_rows_max();
+
+    /**
+     * @brief Rescale every matrix column by its maximum absolute value.
+     */
+    void
+    rescale_cols_max();
+
     /**
      * @brief Rescale every matrix row by its maximum absolute value.
      */
