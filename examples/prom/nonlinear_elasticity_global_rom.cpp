@@ -2580,6 +2580,9 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
             }
         } // Loop (i) over snapshots
 
+		// Rescale every Gt column (NNLS equation) by its max absolute value.
+		Gt.rescale_cols_max();
+
         Array<double> const &w_el = ir0->GetWeights();
         MFEM_VERIFY(w_el.Size() == nqe, "");
 
