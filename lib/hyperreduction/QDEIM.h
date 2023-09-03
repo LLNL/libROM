@@ -44,11 +44,11 @@ class Vector;
  * @param[out] f_sampled_rows_per_proc The number of sampled rows for each
  *                                     processor.
  * @param[out] f_basis_sampled_inv The inverse of the sampled basis of the RHS.
- * @param[out] K A vector that stores the diagonal elements of a preconditioning matrix. 
  * @param[in] myid The rank of this process.
  * @param[in] num_procs The total number of processes.
  * @param[in] num_samples_req The minimum number of samples required.
  * @param[in] precond Boolean value indicating if preconditnioning is used.
+ * @param[out] K A vector that stores the diagonal elements of a preconditioning matrix. 
  */
 void
 QDEIM(const Matrix* f_basis,
@@ -56,11 +56,11 @@ QDEIM(const Matrix* f_basis,
       std::vector<int>& f_sampled_row,
       std::vector<int>& f_sampled_rows_per_proc,
       Matrix& f_basis_sampled_inv,
-      Vector& K,
       const int myid,
       const int num_procs,
       const int num_samples_req,
-      bool precond=false);
+      bool precond=false,
+      Vector* K=nullptr);
 }
 
 #endif

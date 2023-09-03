@@ -1033,7 +1033,7 @@ int main(int argc, char *argv[])
 //edited
             // Now execute the chosen sampling algorithm to get the sampling information.
             Bsinv = new CAROM::Matrix(nsamp_R, nldim, false);
-	    KK = precondCLS? new CAROM::Vector(Bsinv->numRows(),false) : NULL;
+	    KK = precondCLS? new CAROM::Vector(Bsinv->numRows(),false) : nullptr;
             vector<int> sample_dofs(nsamp_R);  // Indices of the sampled rows
 
             hr.ComputeSamples(FR_librom,
@@ -1079,7 +1079,7 @@ int main(int argc, char *argv[])
                 }
 //edited
                 Ssinv = new CAROM::Matrix(nsamp_S, nsdim, false);
-		KS = precondCLS? new CAROM::Vector(Ssinv->numRows(),false) : NULL;
+		KS = precondCLS? new CAROM::Vector(Ssinv->numRows(),false) : nullptr;
                 sample_dofs_S.resize(nsamp_S);
 
 

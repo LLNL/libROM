@@ -33,11 +33,11 @@ S_OPT(const Matrix* f_basis,
       std::vector<int>& f_sampled_row,
       std::vector<int>& f_sampled_rows_per_proc,
       Matrix& f_basis_sampled_inv,
-      Vector& K,
       const int myid,
       const int num_procs,
       const int num_samples_req,
       bool precond,
+      Vector* K,
       std::vector<int>* init_samples,
       bool qr_factorize)
 {
@@ -125,15 +125,15 @@ S_OPT(const Matrix* f_basis,
     }
 //(1-1)
     CAROM::Matrix* Kf = NULL;
-    const Matrix* Vo = NULL;
-    Kf = Voo->row_normalize();
+    const CAROM::Matrix* Vo = NULL;
     if(precond)
     {
+	Kf = Voo->row_normalize();
     	Vo = Kf -> getFirstNColumns(num_basis_vectors);
     }else{
 	Vo = Voo;	
     }
-    Vector KK(num_samples,false); 
+    Vector Kii(num_samples,false); 
 
     int num_samples_obtained = 0;
     // Scratch space used throughout the algorithm.
@@ -184,7 +184,7 @@ S_OPT(const Matrix* f_basis,
             V1.item(num_samples_obtained, j) = c[j];
         }
 //(2-3)
-	KK.item(num_samples_obtained) = c[num_basis_vectors];
+	Kii.item(num_samples_obtained) = c[num_basis_vectors];
         proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
         proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] =
             num_samples_obtained;
@@ -219,7 +219,7 @@ S_OPT(const Matrix* f_basis,
             V1.item(0, j) = c[j];
         }
 //(3-2)
-	KK.item(0) = c[num_basis_vectors];
+	Kii.item(0) = c[num_basis_vectors];
         proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
         proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] = 0;
         num_samples_obtained++;
@@ -504,7 +504,7 @@ S_OPT(const Matrix* f_basis,
                 V1.item(num_samples_obtained, j) = c[j];
             }
 //(4-2)
-	    KK.item(num_samples_obtained) = c[num_basis_vectors];
+	    Kii.item(num_samples_obtained) = c[num_basis_vectors];
             proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
             proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] =
                 num_samples_obtained;
@@ -532,7 +532,7 @@ S_OPT(const Matrix* f_basis,
     		  f_basis_sampled_inv.item(idx, col) = V1.item(tmp_fs_row, col);
 	    }
 //(5-1)	   
-            if(precond) K.item(idx) = KK.item(tmp_fs_row);
+            if(precond) K->item(idx) = Kii.item(tmp_fs_row);
             ++idx;
         }
     }
@@ -562,7 +562,7 @@ S_OPT(const Matrix* f_basis,
     }
     if(precond){
       for(int i=0; i<num_samples; i++){
-    	printf("k%f\t",K.item(i));
+    	printf("k%f\t",K->item(i));
       }
       printf("\n");
     }
@@ -579,8 +579,8 @@ S_OPT(const Matrix* f_basis,
     if (precond)
     {
 	delete Vo;
+        delete Kf;
     }
-    delete Kf;
     if (qr_factorize) delete Voo;
     if (num_basis_vectors < f_basis->numColumns())
     {
