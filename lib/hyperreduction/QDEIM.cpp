@@ -482,6 +482,10 @@ QDEIM(const Matrix* f_basis,
 	printf("conditionNum:%f -%f:%f\n", sigma.item(0)/sigma_end,sigma.item(0), sigma_end);
         f_basis_sampled_inv.transposePseudoinverse();
     }
+    if(precond){
+	delete fo;
+	delete Kf;
+    }
 } // end void QDEIM
 
 } // end namespace CAROM

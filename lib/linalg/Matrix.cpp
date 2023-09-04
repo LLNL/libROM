@@ -1140,7 +1140,7 @@ Matrix::row_normalize() const
 		rowmax = fabs(item(i,j));
 	   }	 
 	} 
-       //if(rowmax > 1e-8){
+       if(rowmax > 1.0e-8){
 	  scaled_item = std::frexp(rowmax, &exponent);
 	  //We use the ldexp function to multiply each component by 2^-exponent.
 	  for( int j = 0; j < numColumns(); j++ )
@@ -1156,7 +1156,13 @@ Matrix::row_normalize() const
 	  // We computed the weights for kii using the scaled norm
 	  // Thus the true weight should be kii*2^scale. 
 	  normalized_matrix->item(i,numColumns()) = std::ldexp(kii, -exponent) ;
-	//}else{ kii=0.0;}
+	}else{
+  	  for (int j = 0; j < numColumns(); j++ )
+          {
+            normalized_matrix->item(i, j) = item(i,j);
+          }
+	  normalized_matrix->item(i,numColumns()) = 1.0;
+	}
     }
     return normalized_matrix;
 

@@ -444,7 +444,7 @@ void BasisGeneratorFinalSummary(CAROM::BasisGenerator* bg,
         sum += (*sing_vals)(sv);
     }
 
-    vector<double> energy_fractions = {0.9999, 0.999, 0.99, 0.9};
+    vector<double> energy_fractions = {0.9999999, 0.999999, 0.99999, 0.9999, 0.999, 0.99, 0.9};
     bool reached_cutoff = false;
 
     ofstream outfile(cutoffOutputPath);

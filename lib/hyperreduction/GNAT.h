@@ -42,6 +42,8 @@ class Matrix;
  * @param[in] myid The rank of this process.
  * @param[in] num_procs The total number of processes.
  * @param[in] num_samples_req The minimum number of samples required.
+ * @param[in] precond Boolean value indicating if preconditnioning is used.
+ * @param[out] K A vector that stores the diagonal elements of a preconditioning matrix. 
  * @param[in] init_samples Samples to initialize the GNAT algorithm.
  */
 void
@@ -53,6 +55,8 @@ GNAT(const Matrix* f_basis,
      const int myid,
      const int num_procs,
      const int num_samples_req = -1,
+     bool precond=false,
+     Vector* K=nullptr,
      std::vector<int> *init_samples=NULL);
 
 }

@@ -126,9 +126,9 @@ S_OPT(const Matrix* f_basis,
 //(1-1)
     CAROM::Matrix* Kf = NULL;
     const Matrix* Vo = NULL;
-    Kf = Voo->row_normalize();
     if(precond)
     {
+        Kf = Voo->row_normalize();
     	Vo = Kf -> getFirstNColumns(num_basis_vectors);
     }else{
 	Vo = Voo;	
@@ -174,7 +174,7 @@ S_OPT(const Matrix* f_basis,
                 c[j] = Vo->item(f_bv_max_global.row, j);
             }
 //(2-2)
-	    c[num_basis_vectors] = Kf->item(f_bv_max_global.row, num_basis_vectors);
+	    if(precond) c[num_basis_vectors] = Kf->item(f_bv_max_global.row, num_basis_vectors);
             init_sample_offset++;
         }
         MPI_Bcast(c.data(), num_basis_vectors+1, MPI_DOUBLE,
@@ -184,7 +184,7 @@ S_OPT(const Matrix* f_basis,
             V1.item(num_samples_obtained, j) = c[j];
         }
 //(2-3)
-	Kii.item(num_samples_obtained) = c[num_basis_vectors];
+	if(precond) Kii.item(num_samples_obtained) = c[num_basis_vectors];
         proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
         proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] =
             num_samples_obtained;
@@ -210,7 +210,7 @@ S_OPT(const Matrix* f_basis,
                 c[j] = Vo->item(f_bv_max_global.row, j);
             }
 //(3-1)
-	    c[num_basis_vectors] = Kf->item(f_bv_max_global.row, num_basis_vectors);
+	    if(precond) c[num_basis_vectors] = Kf->item(f_bv_max_global.row, num_basis_vectors);
         }
         MPI_Bcast(c.data(), num_basis_vectors+1, MPI_DOUBLE,
                   f_bv_max_global.proc, MPI_COMM_WORLD);
@@ -219,7 +219,7 @@ S_OPT(const Matrix* f_basis,
             V1.item(0, j) = c[j];
         }
 //(3-2)
-	Kii.item(0) = c[num_basis_vectors];
+	if(precond) Kii.item(0) = c[num_basis_vectors];
         proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
         proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] = 0;
         num_samples_obtained++;
@@ -495,7 +495,7 @@ S_OPT(const Matrix* f_basis,
                     c[j] = Vo->item(f_bv_max_global.row, j);
                 }
 //(4-1)
-		c[num_basis_vectors] = Kf->item(f_bv_max_global.row, num_basis_vectors);
+		if(precond) c[num_basis_vectors] = Kf->item(f_bv_max_global.row, num_basis_vectors);
             }
             MPI_Bcast(c.data(), num_basis_vectors+1, MPI_DOUBLE,
                       f_bv_max_global.proc, MPI_COMM_WORLD);
@@ -504,7 +504,7 @@ S_OPT(const Matrix* f_basis,
                 V1.item(num_samples_obtained, j) = c[j];
             }
 //(4-2)
-	    Kii.item(num_samples_obtained) = c[num_basis_vectors];
+	    if(precond) Kii.item(num_samples_obtained) = c[num_basis_vectors];
             proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
             proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] =
                 num_samples_obtained;
@@ -579,8 +579,8 @@ S_OPT(const Matrix* f_basis,
     if (precond)
     {
 	delete Vo;
+	delete Kf;
     }
-    delete Kf;
     if (qr_factorize) delete Voo;
     if (num_basis_vectors < f_basis->numColumns())
     {

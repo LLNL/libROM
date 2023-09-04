@@ -32,6 +32,8 @@ void GNAT(const Matrix* f_basis,
           const int myid,
           const int num_procs,
           const int num_samples_req,
+	  bool precond,
+	  Vector* K,
           std::vector<int> *init_samples)
 {
     CAROM_VERIFY(num_procs == f_sampled_rows_per_proc.size());
@@ -97,20 +99,31 @@ void GNAT(const Matrix* f_basis,
     const int ns_mod_nr = num_samples % num_basis_vectors;
     int ns = 0;
 
-    // The small matrix inverted by the algorithm. We allocate the largest
-    // size needed and set the size at each step in the algorithm.
+//(1)
+    const Matrix* fo = NULL;
+    CAROM::Matrix* Kf = NULL;
+    const int numCol = f_basis->numColumns(); 
+    if(precond){
+        Kf = f_basis->row_normalize();
+        fo = Kf -> getFirstNColumns(numCol);
+    }else{
+        fo = f_basis;
+    }
+    // The small matrix inverted by the algorithm.  We'll allocate the largest
+    // matrix we'll need and set its size at each step in the algorithm.
     Matrix M(num_samples, std::max(num_basis_vectors-1, 1), false);
 
     // Scratch space used throughout the algorithm.
     double* c = new double [num_basis_vectors];
-    double* sampled_row = new double [num_basis_vectors];
-
+    double* sampled_row = new double [num_basis_vectors+1];
     std::vector<std::set<int> > proc_sampled_f_row(num_procs);
     std::vector<std::map<int, int> > proc_f_row_to_tmp_fs_row(num_procs);
     int num_f_basis_cols = f_basis_sampled_inv.numColumns();
     Matrix tmp_fs(f_basis_sampled_inv.numRows(),
                   num_f_basis_cols,
                   f_basis_sampled_inv.distributed());
+//(1-2)
+    Vector tmp_Ks(f_basis_sampled_inv.numRows(),f_basis_sampled_inv.distributed());
 
     // Gather information about initial samples given as input.
     const int num_init_samples = init_samples ? init_samples->size() : 0;
@@ -162,7 +175,7 @@ void GNAT(const Matrix* f_basis,
                 std::set<int>::const_iterator found = proc_sampled_f_row[myid].find(i);
                 if (found == proc_sampled_f_row[myid].end()) // not found
                 {
-                    double f_bv_val = fabs(f_basis->item(i, 0));
+                    double f_bv_val = fabs(fo->item(i, 0));
                     if (f_bv_val > f_bv_max_local.row_val) {
                         f_bv_max_local.row_val = f_bv_val;
                         f_bv_max_local.row = i;
@@ -177,15 +190,18 @@ void GNAT(const Matrix* f_basis,
         // Now get the first sampled row of the basis of the RHS.
         if (f_bv_max_global.proc == myid) {
             for (int j = 0; j < num_basis_vectors; ++j) {
-                sampled_row[j] = f_basis->item(f_bv_max_global.row, j);
+                sampled_row[j] = fo->item(f_bv_max_global.row, j);
             }
+//(2-1)
+ 	    if(precond) sampled_row[num_basis_vectors] = Kf->item(f_bv_max_global.row,numCol);
         }
-        MPI_Bcast(sampled_row, num_basis_vectors, MPI_DOUBLE,
+        MPI_Bcast(sampled_row, num_basis_vectors+1, MPI_DOUBLE,
                   f_bv_max_global.proc, MPI_COMM_WORLD);
         // Now add the first sampled row of the basis of the RHS to tmp_fs.
         for (int j = 0; j < num_basis_vectors; ++j) {
             tmp_fs.item(k, j) = sampled_row[j];
         }
+	if(precond) tmp_Ks.item(k) = sampled_row[num_basis_vectors];
         proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
         proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] = k;
     }
@@ -256,9 +272,9 @@ void GNAT(const Matrix* f_basis,
                     {
                         double tmp = 0.0;
                         for (int F_col = 0; F_col < i; ++F_col) {
-                            tmp += f_basis->item(F_row, F_col)*c[F_col];
+                            tmp += fo->item(F_row, F_col)*c[F_col];
                         }
-                        const double r_val = fabs(f_basis->item(F_row, i) - tmp);
+                        const double r_val = fabs(fo->item(F_row, i) - tmp);
 
                         if (r_val > f_bv_max_local.row_val) {
                             f_bv_max_local.row_val = r_val;
@@ -270,19 +286,21 @@ void GNAT(const Matrix* f_basis,
 
             MPI_Allreduce(&f_bv_max_local, &f_bv_max_global, 1,
                           MaxRowType, RowInfoOp, MPI_COMM_WORLD);
-
+//(2-2)
             // Now get the next sampled row of the basis of f.
             if (f_bv_max_global.proc == myid) {
                 for (int j = 0; j < num_basis_vectors; ++j) {
                     sampled_row[j] = f_basis->item(f_bv_max_global.row, j);
                 }
+		if(precond) sampled_row[num_basis_vectors] = Kf->item(f_bv_max_global.row,numCol);
             }
-            MPI_Bcast(sampled_row, num_basis_vectors, MPI_DOUBLE,
+            MPI_Bcast(sampled_row, num_basis_vectors+1, MPI_DOUBLE,
                       f_bv_max_global.proc, MPI_COMM_WORLD);
             // Now add the ith sampled row of the basis of the RHS to tmp_fs.
             for (int j = 0; j < num_basis_vectors; ++j) {
                 tmp_fs.item(ns+k, j) = sampled_row[j];
             }
+	    if(precond) tmp_Ks.item(ns+k) = sampled_row[num_basis_vectors];
             proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
             proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] = ns+k;
         }
@@ -308,10 +326,35 @@ void GNAT(const Matrix* f_basis,
             for (int col = 0; col < num_f_basis_cols; ++col) {
                 f_basis_sampled_inv.item(idx, col) = tmp_fs.item(tmp_fs_row, col);
             }
+//(3)
+	    if(precond) K->item(idx) = tmp_Ks.item(tmp_fs_row);
             ++idx;
         }
     }
-
+//Temporary codes for printing results: should be erased 
+    if(num_basis_vectors <= num_samples){
+   	Matrix* U = NULL;
+  	Matrix V(num_basis_vectors,num_basis_vectors,false);
+    	Vector sigma(num_basis_vectors, false);
+    	SerialSVD(&f_basis_sampled_inv, U, &sigma, &V);
+    	delete U;
+    	double sigma_end = 0.0;
+	for(int j = num_basis_vectors-1; j>=0; j--){
+	    	if(sigma.item(j) > 1e-8) {
+			sigma_end = sigma.item(j);
+			break;
+	    	}
+	}
+	printf("conditionNum:%f -%f:%f\n", sigma.item(0)/sigma_end,sigma.item(0), sigma_end);
+  	printf("%d\t",f_basis_sampled_inv.numColumns());
+  	printf("%d\t",f_basis_sampled_inv.numRows());
+    }
+    if(precond){
+      for(int i=0; i<num_samples; i++){
+    	printf("k%f\t",K->item(i));
+      }
+      printf("\n");
+    }
     CAROM_ASSERT(num_samples == idx);
 
     // Now invert f_basis_sampled_inv, storing its transpose.
@@ -323,6 +366,10 @@ void GNAT(const Matrix* f_basis,
 
     delete [] c;
     delete [] sampled_row;
+    if(precond) {
+	delete fo;
+	delete Kf;
+    }	
 }
 
 }
