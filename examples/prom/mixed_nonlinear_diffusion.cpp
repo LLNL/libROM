@@ -31,8 +31,9 @@
 //               Analytic test (reproductive)
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -offline
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -merge -ns 1
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -nsdim 20
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -nsdim 20 -sopt
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -nsdim 20 -hrtype deim
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -nsdim 20 -hrtype qdeim
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -nsdim 20 -hrtype sopt
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -nsdim 20 -ns 1 -eqp
 //
 //               Relative l2 error of ROM solution at final timestep using DEIM sampling: 1.096776797994166e-08
@@ -48,8 +49,8 @@
 //               Initial step test (reproductive)
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -offline -p 1
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -merge -ns 1 -p 1
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -p 1
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -p 1 -sopt
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -p 1 -hrtype deim
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -p 1 -hrtype sopt
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -p 1 -ns 1 -eqp
 //
 //               Relative l2 error of ROM solution at final timestep using DEIM sampling: 0.0003712362376412496
@@ -65,8 +66,8 @@
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -offline -id 2 -sh 0.35
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -merge -ns 3
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -offline -id 3 -sh 0.3
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -nldim 20 -sh 0.3 -id 3
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -nldim 20 -sh 0.3 -id 3 -sopt
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -nldim 20 -sh 0.3 -id 3 -hrtype deim
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -nldim 20 -sh 0.3 -id 3 -hrtype sopt
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -nldim 20 -sh 0.3 -id 3 -ns 3 -eqp -maxnnls 30
 //
 //               Relative l2 error of ROM solution at final timestep using DEIM sampling: 0.002681387312231006
@@ -90,10 +91,7 @@
 #include "linalg/BasisGenerator.h"
 #include "linalg/BasisReader.h"
 #include "linalg/NNLS.h"
-#include "hyperreduction/DEIM.h"
-#include "hyperreduction/QDEIM.h"
-#include "hyperreduction/GNAT.h"
-#include "hyperreduction/S_OPT.h"
+#include "hyperreduction/Hyperreduction.h"
 #include "mfem/SampleMesh.hpp"
 #include "mfem/PointwiseSnapshot.hpp"
 
@@ -551,8 +549,7 @@ int main(int argc, char *argv[])
     bool offline = false;
     bool merge = false;
     bool online = false;
-    bool use_qdeim = false;
-    bool use_sopt = false;
+    const char *samplingType = "deim";
     bool use_eqp = false;
     bool writeSampleMesh = false;
     int num_samples_req = -1;
@@ -621,10 +618,8 @@ int main(int argc, char *argv[])
                    "Enable or disable the online phase.");
     args.AddOption(&merge, "-merge", "--merge", "-no-merge", "--no-merge",
                    "Enable or disable the merge phase.");
-    args.AddOption(&use_qdeim, "-qdeim", "--qdeim", "-no-qdeim", "--no-qdeim",
-                   "Use Q-DEIM sampling instead of DEIM for the hyperreduction.");
-    args.AddOption(&use_sopt, "-sopt", "--sopt", "-no-sopt", "--no-sopt",
-                   "Use S-OPT sampling instead of DEIM for the hyperreduction.");
+    args.AddOption(&samplingType, "-hrtype", "--hrsamplingtype",
+                   "Sampling type for hyperreduction.");
     args.AddOption(&num_samples_req, "-nsr", "--nsr",
                    "Number of samples for the sampling algorithm to select.");
     args.AddOption(&use_eqp, "-eqp", "--eqp", "-no-eqp", "--no-eqp",
@@ -954,8 +949,6 @@ int main(int argc, char *argv[])
         CAROM::BasisReader readerFR("basisFR");
         FR_librom = readerFR.getSpatialBasis(0.0);
 
-        // Compute sample points using DEIM, for hyperreduction
-
         if (nldim == -1)
         {
             nldim = FR_librom->numColumns();
@@ -1009,6 +1002,7 @@ int main(int argc, char *argv[])
         else
         {
             // Setup hyperreduction using DEIM, GNAT, or S-OPT
+            CAROM::Hyperreduction hr(samplingType);
             vector<int> num_sample_dofs_per_proc(num_procs);
 
             if (num_samples_req != -1)
@@ -1023,57 +1017,15 @@ int main(int argc, char *argv[])
             // Now execute the chosen sampling algorithm to get the sampling information.
             Bsinv = new CAROM::Matrix(nsamp_R, nldim, false);
             vector<int> sample_dofs(nsamp_R);  // Indices of the sampled rows
-            if (use_sopt)
-            {
-                if (myid == 0)
-                    printf("Using S_OPT sampling\n");
-                CAROM::S_OPT(FR_librom,
-                             nldim,
-                             sample_dofs,
-                             num_sample_dofs_per_proc,
-                             *Bsinv,
-                             myid,
-                             num_procs,
-                             nsamp_R);
-            }
-            else if (use_qdeim)
-            {
-                if (myid == 0)
-                    printf("Using QDEIM sampling\n");
-                CAROM::QDEIM(FR_librom,
-                             nldim,
-                             sample_dofs,
-                             num_sample_dofs_per_proc,
-                             *Bsinv,
-                             myid,
-                             num_procs,
-                             nsamp_R);
-            }
-            else if (nsamp_R != nldim)
-            {
-                if (myid == 0)
-                    printf("Using GNAT sampling\n");
-                CAROM::GNAT(FR_librom,
-                            nldim,
-                            sample_dofs,
-                            num_sample_dofs_per_proc,
-                            *Bsinv,
-                            myid,
-                            num_procs,
-                            nsamp_R);
-            }
-            else
-            {
-                if (myid == 0)
-                    printf("Using DEIM sampling\n");
-                CAROM::DEIM(FR_librom,
-                            nldim,
-                            sample_dofs,
-                            num_sample_dofs_per_proc,
-                            *Bsinv,
-                            myid,
-                            num_procs);
-            }
+
+            hr.ComputeSamples(FR_librom,
+                              nldim,
+                              sample_dofs,
+                              num_sample_dofs_per_proc,
+                              *Bsinv,
+                              myid,
+                              num_procs,
+                              nsamp_R);
 
             vector<int> sample_dofs_S;  // Indices of the sampled rows
             vector<int> num_sample_dofs_per_proc_S(num_procs);
@@ -1084,8 +1036,6 @@ int main(int argc, char *argv[])
             {
                 readerS = new CAROM::BasisReader("basisS");
                 S_librom = readerS->getSpatialBasis(0.0);
-
-                // Compute sample points using DEIM
 
                 if (nsdim == -1)
                 {
@@ -1100,7 +1050,7 @@ int main(int argc, char *argv[])
                 if (myid == 0)
                     printf("reduced S dim = %d\n",nsdim);
 
-                // Now execute the DEIM algorithm to get the sampling information.
+                // Now use a hyperreduction method to compute samples.
                 if (num_samples_req != -1)
                 {
                     nsamp_S = num_samples_req;
@@ -1112,49 +1062,16 @@ int main(int argc, char *argv[])
 
                 Ssinv = new CAROM::Matrix(nsamp_S, nsdim, false);
                 sample_dofs_S.resize(nsamp_S);
-                if (use_sopt)
-                {
-                    CAROM::S_OPT(S_librom,
-                                 nsdim,
-                                 sample_dofs_S,
-                                 num_sample_dofs_per_proc_S,
-                                 *Ssinv,
-                                 myid,
-                                 num_procs,
-                                 nsamp_S);
-                }
-                else if (use_qdeim)
-                {
-                    CAROM::QDEIM(S_librom,
-                                 nsdim,
-                                 sample_dofs_S,
-                                 num_sample_dofs_per_proc_S,
-                                 *Ssinv,
-                                 myid,
-                                 num_procs,
-                                 nsamp_S);
-                }
-                else if (nsamp_S != nsdim)
-                {
-                    CAROM::GNAT(S_librom,
-                                nsdim,
-                                sample_dofs_S,
-                                num_sample_dofs_per_proc_S,
-                                *Ssinv,
-                                myid,
-                                num_procs,
-                                nsamp_S);
-                }
-                else
-                {
-                    CAROM::DEIM(S_librom,
-                                nsdim,
-                                sample_dofs_S,
-                                num_sample_dofs_per_proc_S,
-                                *Ssinv,
-                                myid,
-                                num_procs);
-                }
+
+
+                hr.ComputeSamples(S_librom,
+                                  nsdim,
+                                  sample_dofs_S,
+                                  num_sample_dofs_per_proc_S,
+                                  *Ssinv,
+                                  myid,
+                                  num_procs,
+                                  nsamp_S);
             }
 
             // Construct sample mesh

@@ -50,6 +50,7 @@ set(module_list
   hyperreduction/S_OPT
   hyperreduction/STSampling
   hyperreduction/Utilities
+  hyperreduction/Hyperreduction
   utils/Database
   utils/HDFDatabase
   utils/CSVDatabase

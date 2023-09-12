@@ -17,8 +17,6 @@
 
 namespace CAROM {
 
-#ifndef DOXYGEN_IGNORE
-
 /**
  * @brief Struct to hold the local maximum absolute value of a basis vector,
  *        the row it is in, and the processor that owns it. We will reduce this
@@ -36,8 +34,6 @@ typedef struct
  *        and processor owning the row of the absolute maximum of a basis vector.
  */
 void RowInfoMax(RowInfo* a, RowInfo* b, int* len, MPI_Datatype* type);
-
-#endif /* DOXYGEN_IGNORE */
 
 }
 

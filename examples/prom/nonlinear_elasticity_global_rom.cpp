@@ -89,10 +89,7 @@
 #include "linalg/Vector.h"
 #include "linalg/BasisGenerator.h"
 #include "linalg/BasisReader.h"
-#include "hyperreduction/DEIM.h"
-#include "hyperreduction/QDEIM.h"
-#include "hyperreduction/GNAT.h"
-#include "hyperreduction/S_OPT.h"
+#include "hyperreduction/Hyperreduction.h"
 #include "mfem/SampleMesh.hpp"
 #include "mfem/Utilities.hpp"
 
@@ -167,7 +164,7 @@ private:
     bool hyperreduce;
     bool x_base_only;
 
-    CAROM::Vector* pfom_librom,  * pfom_v_librom;
+    CAROM::Vector *pfom_librom, *pfom_v_librom;
     Vector* pfom;
     Vector* pfom_x;
     Vector* pfom_v;
@@ -263,7 +260,8 @@ CAROM::Matrix* GetFirstColumns(const int N, const CAROM::Matrix* A)
 
 // TODO: move this to the library?
 void BasisGeneratorFinalSummary(CAROM::BasisGenerator* bg,
-                                const double energyFraction, int& cutoff, const std::string cutoffOutputPath)
+                                const double energyFraction, int& cutoff,
+				const std::string cutoffOutputPath)
 {
     const int rom_dim = bg->getSpatialBasis()->numColumns();
     const CAROM::Vector* sing_vals = bg->getSingularValues();
@@ -389,16 +387,15 @@ int main(int argc, char* argv[])
     bool offline = false;
     bool merge = false;
     bool online = false;
-    bool use_qdeim = false;
-    bool use_sopt = false;
     bool hyperreduce = true;
     bool x_base_only = false;
     int num_samples_req = -1;
+    const char *samplingType = "gnat";
 
     int nsets = 0;
     int id_param = 0;
 
-    // number of basis vectors to use
+    // Number of basis vectors to use
     int rxdim = -1;
     int rvdim = -1;
     int hdim = -1;
@@ -446,10 +443,8 @@ int main(int argc, char* argv[])
                    "Enable or disable the online phase.");
     args.AddOption(&merge, "-merge", "--merge", "-no-merge", "--no-merge",
                    "Enable or disable the merge phase.");
-    args.AddOption(&use_qdeim, "-qdeim", "--qdeim", "-no-qdeim", "--no-qdeim",
-                   "Use QDEIM sampling instead of DEIM for the hyperreduction.");
-    args.AddOption(&use_sopt, "-sopt", "--sopt", "-no-sopt", "--no-sopt",
-                   "Use S-OPT sampling instead of DEIM for the hyperreduction.");
+    args.AddOption(&samplingType, "-hrtype", "--hrsamplingtype",
+                   "Sampling type for hyperreduction.");
     args.AddOption(&num_samples_req, "-nsr", "--nsr",
                    "number of samples we want to select for the sampling algorithm.");
     args.AddOption(&rxdim, "-rxdim", "--rxdim",
@@ -573,8 +568,8 @@ int main(int argc, char* argv[])
 
     BlockVector vx(true_offset);
     ParGridFunction v_gf, x_gf;
-    v_gf.MakeTRef(&fespace, vx,
-                  true_offset[0]); // Associate a new FiniteElementSpace and new true-dof data with the GridFunction.
+    // Associate a FiniteElementSpace and true-dof data with the GridFunctions.
+    v_gf.MakeTRef(&fespace, vx, true_offset[0]);
     x_gf.MakeTRef(&fespace, vx, true_offset[1]);
 
     ParGridFunction x_ref(&fespace);
@@ -692,7 +687,7 @@ int main(int argc, char* argv[])
         vis_v.precision(8);
         visualize(vis_v, pmesh, &x_gf, &v_gf, "Velocity", true);
         // Make sure all ranks have sent their 'v' solution before initiating
-        // another set of GLVis connections (one from each rank):
+        // another set of GLVis connections (one from each rank)
         MPI_Barrier(pmesh->GetComm());
         vis_w.open(vishost, visport);
         if (vis_w)
@@ -842,57 +837,17 @@ int main(int argc, char* argv[])
 
         CAROM::Matrix* Hsinv = new CAROM::Matrix(nsamp_H, hdim, false);
         vector<int> sample_dofs(nsamp_H);
-        if (use_sopt)
-        {
-            if (myid == 0)
-                printf("Using S_OPT sampling\n");
-            CAROM::S_OPT(H_librom,
-                         hdim,
-                         sample_dofs,
-                         num_sample_dofs_per_proc,
-                         *Hsinv,
-                         myid,
-                         num_procs,
-                         nsamp_H);
-        }
-        else if (use_qdeim)
-        {
-            if (myid == 0)
-                printf("Using QDEIM sampling\n");
-            CAROM::QDEIM(H_librom,
-                         hdim,
-                         sample_dofs,
-                         num_sample_dofs_per_proc,
-                         *Hsinv,
-                         myid,
-                         num_procs,
-                         nsamp_H);
-        }
-        else if (nsamp_H != hdim)
-        {
-            if (myid == 0)
-                printf("Using GNAT sampling\n");
-            CAROM::GNAT(H_librom,
-                        hdim,
-                        sample_dofs,
-                        num_sample_dofs_per_proc,
-                        *Hsinv,
-                        myid,
-                        num_procs,
-                        nsamp_H);
-        }
-        else
-        {
-            if (myid == 0)
-                printf("Using DEIM sampling\n");
-            CAROM::DEIM(H_librom,
-                        hdim,
-                        sample_dofs,
-                        num_sample_dofs_per_proc,
-                        *Hsinv,
-                        myid,
-                        num_procs);
-        }
+
+	// Setup hyperreduction using DEIM, GNAT, or S-OPT
+	CAROM::Hyperreduction hr(samplingType);
+	hr.ComputeSamples(H_librom,
+			  hdim,
+			  sample_dofs,
+			  num_sample_dofs_per_proc,
+			  *Hsinv,
+			  myid,
+			  num_procs,
+			  nsamp_H);
 
         // Construct sample mesh
         const int nspaces = 1;
@@ -921,7 +876,8 @@ int main(int argc, char* argv[])
         w_x = new CAROM::Vector(rxdim, false);
         *w = 0.0;
 
-        // Note that some of this could be done only on the ROM solver process, but it is tricky, since RomOperator assembles Bsp in parallel.
+        // Note that some of this could be done only on the ROM solver process,
+	// but it is tricky, since RomOperator assembles Bsp in parallel.
         wMFEM = new Vector(&((*w)(0)), rxdim + rvdim);
 
         // Initial conditions
@@ -947,8 +903,8 @@ int main(int argc, char* argv[])
             // 12. Set the initial conditions for v_gf, x_gf and vx, and define the
             //    boundary conditions on a beam-like mesh (see description above).
 
-            sp_v_gf.MakeTRef(sp_XV_space, sp_vx,
-                             sp_offset[0]); // Associate a new FiniteElementSpace and new true-dof data with the GridFunction.
+	    // Associate a FiniteElementSpace and true-dof data with the GridFunctions.
+            sp_v_gf.MakeTRef(sp_XV_space, sp_vx, sp_offset[0]);
             sp_x_gf.MakeTRef(sp_XV_space, sp_vx, sp_offset[1]);
 
             VectorFunctionCoefficient* velo = 0;
@@ -1134,16 +1090,16 @@ int main(int argc, char* argv[])
             if (x_base_only == false && basis_generator_v->isNextSample(t))
             {
                 basis_generator_v->takeSample(vx_diff.GetBlock(0), t, dt);
-                basis_generator_v->computeNextSampleTime(vx_diff.GetBlock(0), dvdt.GetData(),
-                        t);
+                basis_generator_v->computeNextSampleTime(vx_diff.GetBlock(0),
+							 dvdt.GetData(), t);
                 basis_generator_H->takeSample(oper.H_sp.GetData(), t, dt);
             }
 
             if (basis_generator_x->isNextSample(t))
             {
                 basis_generator_x->takeSample(vx_diff.GetBlock(1), t, dt);
-                basis_generator_x->computeNextSampleTime(vx_diff.GetBlock(1), dxdt.GetData(),
-                        t);
+                basis_generator_x->computeNextSampleTime(vx_diff.GetBlock(1),
+							 dxdt.GetData(), t);
 
                 if (x_base_only == true)
                 {
@@ -1224,7 +1180,8 @@ int main(int argc, char* argv[])
 
     if (offline)
     {
-        // Sample final solution, to prevent extrapolation in ROM between the last sample and the end of the simulation.
+        // Sample final solution, to prevent extrapolation in ROM between the
+      // last sample and the end of the simulation.
         dvxdt = oper.dvxdt_sp.GetData();
         vx_diff = BlockVector(vx);
         vx_diff -= vx0;
@@ -1320,10 +1277,10 @@ int main(int argc, char* argv[])
 
         if (myid == 0)
         {
-            cout << "Relative error of ROM position (x) at t_final: " << t_final <<
-                 " is " << tot_diff_norm_x / tot_x_fom_norm << endl;
-            cout << "Relative error of ROM velocity (v) at t_final: " << t_final <<
-                 " is " << tot_diff_norm_v / tot_v_fom_norm << endl;
+            cout << "Relative error of ROM position (x) at t_final: " << t_final
+                 << " is " << tot_diff_norm_x / tot_x_fom_norm << endl;
+            cout << "Relative error of ROM velocity (v) at t_final: " << t_final
+                 << " is " << tot_diff_norm_v / tot_v_fom_norm << endl;
         }
     }
 
