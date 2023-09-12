@@ -126,7 +126,7 @@ void GNAT(const Matrix* f_basis,
         std::vector<int> all_init_samples(total_num_init_samples);
 
         MPI_Allgather(&num_init_samples, 1, MPI_INT, all_num_init_samples.data(),
-		      1, MPI_INT, MPI_COMM_WORLD);
+                      1, MPI_INT, MPI_COMM_WORLD);
 
         for (int i = 0; i < myid; ++i)
         {
@@ -215,14 +215,14 @@ void GNAT(const Matrix* f_basis,
             double tmp = 0.0;
             for (int minv_col = 0; minv_col < ns; ++minv_col) {
                 if (ns == i)
-		  {
+                {
                     tmp += M.item(minv_row, minv_col)*tmp_fs.item(minv_col, i);
-		  }
+                }
                 else
-		  {
-		    // Transposing M^+, which is stored as its transpose.
+                {
+                    // Transposing M^+, which is stored as its transpose.
                     tmp += M.item(minv_col, minv_row)*tmp_fs.item(minv_col, i);
-		  }
+                }
             }
             c[minv_row] = tmp;
         }

@@ -381,7 +381,7 @@ S_OPT(const Matrix* f_basis,
                         tmp += g1.item(j, k) * GG.item(j, k);
                     }
                     A->item(j) = std::max(0.0, ata +
-					  (Vo->item(j, i - 1) * Vo->item(j, i - 1)) - tmp);
+                                          (Vo->item(j, i - 1) * Vo->item(j, i - 1)) - tmp);
                 }
 
                 nV.setSize(i);

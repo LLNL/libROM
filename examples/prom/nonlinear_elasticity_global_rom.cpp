@@ -261,7 +261,7 @@ CAROM::Matrix* GetFirstColumns(const int N, const CAROM::Matrix* A)
 // TODO: move this to the library?
 void BasisGeneratorFinalSummary(CAROM::BasisGenerator* bg,
                                 const double energyFraction, int& cutoff,
-				const std::string cutoffOutputPath)
+                                const std::string cutoffOutputPath)
 {
     const int rom_dim = bg->getSpatialBasis()->numColumns();
     const CAROM::Vector* sing_vals = bg->getSingularValues();
@@ -838,16 +838,16 @@ int main(int argc, char* argv[])
         CAROM::Matrix* Hsinv = new CAROM::Matrix(nsamp_H, hdim, false);
         vector<int> sample_dofs(nsamp_H);
 
-	// Setup hyperreduction using DEIM, GNAT, or S-OPT
-	CAROM::Hyperreduction hr(samplingType);
-	hr.ComputeSamples(H_librom,
-			  hdim,
-			  sample_dofs,
-			  num_sample_dofs_per_proc,
-			  *Hsinv,
-			  myid,
-			  num_procs,
-			  nsamp_H);
+        // Setup hyperreduction using DEIM, GNAT, or S-OPT
+        CAROM::Hyperreduction hr(samplingType);
+        hr.ComputeSamples(H_librom,
+                          hdim,
+                          sample_dofs,
+                          num_sample_dofs_per_proc,
+                          *Hsinv,
+                          myid,
+                          num_procs,
+                          nsamp_H);
 
         // Construct sample mesh
         const int nspaces = 1;
@@ -877,7 +877,7 @@ int main(int argc, char* argv[])
         *w = 0.0;
 
         // Note that some of this could be done only on the ROM solver process,
-	// but it is tricky, since RomOperator assembles Bsp in parallel.
+        // but it is tricky, since RomOperator assembles Bsp in parallel.
         wMFEM = new Vector(&((*w)(0)), rxdim + rvdim);
 
         // Initial conditions
@@ -903,7 +903,7 @@ int main(int argc, char* argv[])
             // 12. Set the initial conditions for v_gf, x_gf and vx, and define the
             //    boundary conditions on a beam-like mesh (see description above).
 
-	    // Associate a FiniteElementSpace and true-dof data with the GridFunctions.
+            // Associate a FiniteElementSpace and true-dof data with the GridFunctions.
             sp_v_gf.MakeTRef(sp_XV_space, sp_vx, sp_offset[0]);
             sp_x_gf.MakeTRef(sp_XV_space, sp_vx, sp_offset[1]);
 
@@ -1091,7 +1091,7 @@ int main(int argc, char* argv[])
             {
                 basis_generator_v->takeSample(vx_diff.GetBlock(0), t, dt);
                 basis_generator_v->computeNextSampleTime(vx_diff.GetBlock(0),
-							 dvdt.GetData(), t);
+                        dvdt.GetData(), t);
                 basis_generator_H->takeSample(oper.H_sp.GetData(), t, dt);
             }
 
@@ -1099,7 +1099,7 @@ int main(int argc, char* argv[])
             {
                 basis_generator_x->takeSample(vx_diff.GetBlock(1), t, dt);
                 basis_generator_x->computeNextSampleTime(vx_diff.GetBlock(1),
-							 dxdt.GetData(), t);
+                        dxdt.GetData(), t);
 
                 if (x_base_only == true)
                 {
@@ -1181,7 +1181,7 @@ int main(int argc, char* argv[])
     if (offline)
     {
         // Sample final solution, to prevent extrapolation in ROM between the
-      // last sample and the end of the simulation.
+        // last sample and the end of the simulation.
         dvxdt = oper.dvxdt_sp.GetData();
         vx_diff = BlockVector(vx);
         vx_diff -= vx0;
