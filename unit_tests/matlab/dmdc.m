@@ -6,43 +6,42 @@ function dmdc(X, Y, r, t, dt, varargin)
 %            dt: delta time
 %             B: (optional) known control matrix
 
-    X1 = X(:,1:end-1);
-    X2 = X(:,2:end);
+    X_in = X(:,1:end-1);
+    X_out = X(:,2:end);
     b0 = X(:,1);
 
     if nargin == 6 % known control matrix
         B = varargin{1};
-        X2 = X2 - B*Y;
+        X_out = X_out - B*Y;
     else
-        X1 = [X1; Y];
+        X_in = [X_in; Y];
     end
 
-    [U, S, V] = svd(X1, 'econ');
+    [U, S, V] = svd(X_in, 'econ');
     U = U(:,1:r);
     S = S(1:r,1:r);
     V = V(:,1:r);
 
+    m = size(X,1);
+    U1 = U(1:m,:);
     if nargin == 6
-        Atilde = U'*X2*V*inv(S);
-        %[W,eigs] = eig(Atilde);
-        %Phi = X2*V*inv(S)*W;
-        Btilde = U'*B;
+        U_out = U1;
+        Atilde = U_out'*X_out*V*inv(S);
+        [W,ev] = eig(Atilde);
+        Phi = X_out*V*inv(S)*W;
+        Btilde = U_out'*B;
     else
-        m = size(X,1);
-        U1 = U(m,:);
+        [U_out, ~, ~] = svd(X_out, 'econ');
+        U_out = U_out(:,1:r);
+        Atilde = U_out'*X_out*V*inv(S)*U1'*U_out;
+        [W,ev] = eig(Atilde);
+        Phi = X_out*V*inv(S)*U1'*U_out*W;
         U2 = U(m+1:end,:);
-        Atilde = U'*X2*V*inv(S)*U1'*U;
-        %[W,eigs] = eig(Atilde);
-        %Phi = X2*V*inv(S)*U1'*U*W;
-        Btilde = U'*X2*V*inv(S)*U2';
+        Btilde = U_out'*X_out*V*inv(S)*U2';
     end
 
-    pred = U1'*b0;
-    n = size(X1);
-    for k = 1:n
-        pred = Atilde * pred + Btilde * Y(:,k);
-    end
-    pred = U1*pred;
+    n = size(X_out,2);
+    pred = U_out*W*sum((diag(ev).^(n:-1:0)).*(W\[U_out'*b0, Btilde*Y]),2);
+
     norm(real(pred-X(:,end)))/norm(real(X(:,end)))
-
 end
