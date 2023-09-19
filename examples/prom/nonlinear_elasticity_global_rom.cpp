@@ -2473,6 +2473,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
     {
         current_size = nsnap;
         outer_loop_length = 1;
+        i_end = nsnap;
     }
     else
     {
