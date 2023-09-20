@@ -1510,6 +1510,9 @@ RomOperator::RomOperator(HyperelasticOperator* fom_,
     M_hat = new CAROM::Matrix(rvdim, rvdim, false);
     M_hat_inv = new CAROM::Matrix(rvdim, rvdim, false);
 
+    // Set the max iterations for the mass matrix solver
+    M_hat_solver.SetMaxIter(1000);
+
     // Create S_hat
     ComputeCtAB(fom->Smat, V_v, V_v, *S_hat);
 
