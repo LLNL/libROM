@@ -1355,7 +1355,7 @@ HyperelasticOperator::HyperelasticOperator(ParFiniteElementSpace& f,
     M_solver.iterative_mode = false;
     M_solver.SetRelTol(rel_tol);
     M_solver.SetAbsTol(0.0);
-    M_solver.SetMaxIter(30);
+    M_solver.SetMaxIter(1000);
     M_solver.SetPrintLevel(0);
     M_prec.SetType(HypreSmoother::Jacobi);
     M_solver.SetPreconditioner(M_prec);
@@ -1509,6 +1509,9 @@ RomOperator::RomOperator(HyperelasticOperator* fom_,
             S_hat_v0_temp->Size(), true, false);
     M_hat = new CAROM::Matrix(rvdim, rvdim, false);
     M_hat_inv = new CAROM::Matrix(rvdim, rvdim, false);
+
+    // Set the max iterations for the mass matrix solver
+    M_hat_solver->SetMaxIter(1000);
 
     // Create S_hat
     ComputeCtAB(fom->Smat, V_v, V_v, *S_hat);
