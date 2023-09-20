@@ -1355,7 +1355,7 @@ HyperelasticOperator::HyperelasticOperator(ParFiniteElementSpace& f,
     M_solver.iterative_mode = false;
     M_solver.SetRelTol(rel_tol);
     M_solver.SetAbsTol(0.0);
-    M_solver.SetMaxIter(30);
+    M_solver.SetMaxIter(1000);
     M_solver.SetPrintLevel(0);
     M_prec.SetType(HypreSmoother::Jacobi);
     M_solver.SetPreconditioner(M_prec);
