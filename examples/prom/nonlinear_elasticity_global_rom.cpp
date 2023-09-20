@@ -41,14 +41,14 @@
 //      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.0 -id 2
 //
 // Online phase with full sampling:
-//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -rvdim 40 -rxdim 10 -hdim 71 -nsr 1170 -sc 1.0
+//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype gnat -rvdim 40 -rxdim 10 -hdim 71 -nsr 1170 -sc 1.0
 // Output message:
 //      Elapsed time for time integration loop 1.80759
 //      Relative error of ROM position (x) at t_final: 5 is 0.000231698
 //      Relative error of ROM velocity (v) at t_final: 5 is 0.466941
 //
 // Online phase with strong hyper-reduction:
-//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -rvdim 40 -rxdim 10 -hdim 71 -nsr 100 -sc 1.0
+//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype gnat -rvdim 40 -rxdim 10 -hdim 71 -nsr 100 -sc 1.0
 // Output message:
 //      Elapsed time for time integration loop 1.08048
 //      Relative error of ROM position (x) at t_final: 5 is 0.00209877
@@ -69,14 +69,14 @@
 //      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.0 -xbo -def-ic -id 2
 //
 // Online phase with full sampling:
-//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -rxdim 57 -hdim 183 -nsr 1170 -sc 1.0 -xbo -def-ic
+//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype gnat -rxdim 57 -hdim 183 -nsr 1170 -sc 1.0 -xbo -def-ic
 // Output message:
 //      Elapsed time for time integration loop 18.9874
 //      Relative error of ROM position (x) at t_final: 5 is 7.08272e-05
 //      Relative error of ROM velocity (v) at t_final: 5 is 0.00387647
 //
 // Online phase with strong hyper reduction:
-//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -rxdim 2 -hdim 4 -nsr 10 -sc 1.0 -xbo -def-ic
+//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype gnat -rxdim 2 -hdim 4 -nsr 10 -sc 1.0 -xbo -def-ic
 // Output message:
 //      Elapsed time for time integration loop 1.01136
 //      Relative error of ROM position (x) at t_final: 5 is 0.0130818
