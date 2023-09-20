@@ -24,7 +24,7 @@ ENV LIB_DIR=/$ENVDIR/dependencies
 WORKDIR $LIB_DIR
 
 #RUN wget -O mfem-4.5.tar.gz https://github.com/mfem/mfem/archive/refs/tags/v4.5.tar.gz
-RUN wget -O hypre-2.20.0.tar.gz https://github.com/hypre-space/hypre/archive/refs/tags/v2.20.0.tar.gz
+RUN wget -O hypre-2.28.0.tar.gz https://github.com/hypre-space/hypre/archive/v2.28.0.tar.gz
 
 # Instead of the original parmetis link (which is often unavailable), use the link to librom master branch:
 # RUN wget -O parmetis-4.0.3.tar.gz http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
@@ -40,8 +40,8 @@ ENV CPPFLAGS="-fPIC"
 ENV CXXFLAGS="-fPIC"
 
 # install hypre
-RUN tar -zxvf hypre-2.20.0.tar.gz
-RUN mv hypre-2.20.0 hypre
+RUN tar -zxvf hypre-2.28.0.tar.gz
+RUN mv hypre-2.28.0 hypre
 WORKDIR ./hypre/src/
 RUN ./configure --disable-fortran
 RUN make -j

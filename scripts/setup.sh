@@ -55,9 +55,9 @@ fi
 # Install HYPRE
 cd $LIB_DIR
 if [ ! -d "hypre" ]; then
-  wget https://github.com/hypre-space/hypre/archive/refs/tags/v2.20.0.tar.gz
-  tar -zxvf v2.20.0.tar.gz
-  mv hypre-2.20.0 hypre
+  wget https://github.com/hypre-space/hypre/archive/v2.28.0.tar.gz
+  tar -zxvf v2.28.0.tar.gz
+  mv hypre-2.28.0 hypre
   cd hypre/src
   ./configure --disable-fortran
   make -j
