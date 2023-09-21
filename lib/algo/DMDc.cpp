@@ -102,8 +102,8 @@ DMDc::DMDc(std::string base_file_name)
 }
 
 DMDc::DMDc(std::vector<std::complex<double>> eigs, Matrix* phi_real,
-         Matrix* phi_imaginary, Matrix* B_tilde, int k,
-         double dt, double t_offset, Vector* state_offset)
+           Matrix* phi_imaginary, Matrix* B_tilde, int k,
+           double dt, double t_offset, Vector* state_offset)
 {
     // Get the rank of this process, and the number of processors.
     int mpi_init;
@@ -234,7 +234,8 @@ void DMDc::train(int k, const Matrix* B)
 }
 
 std::pair<Matrix*, Matrix*>
-DMDc::computeDMDSnapshotPair(const Matrix* snapshots, const Matrix* controls, const Matrix* B)
+DMDc::computeDMDSnapshotPair(const Matrix* snapshots, const Matrix* controls,
+                             const Matrix* B)
 {
     CAROM_VERIFY(snapshots->numColumns() > 1);
     CAROM_VERIFY(controls->numColumns() == snapshots->numColumns()-1);
@@ -289,10 +290,10 @@ DMDc::computeDMDSnapshotPair(const Matrix* snapshots, const Matrix* controls, co
 
 void
 DMDc::constructDMDc(const Matrix* f_snapshots,
-                  const Matrix* f_controls,
-                  int d_rank,
-                  int d_num_procs,
-                  const Matrix* B)
+                    const Matrix* f_controls,
+                    int d_rank,
+                    int d_num_procs,
+                    const Matrix* B)
 {
     std::pair<Matrix*, Matrix*> f_snapshot_pair = computeDMDSnapshotPair(
                 f_snapshots, f_controls, B);
@@ -378,7 +379,8 @@ DMDc::constructDMDc(const Matrix* f_snapshots,
                                    d_num_singular_vectors << " for input." << std::endl;
 
     // Allocate the appropriate matrices and gather their elements.
-    Matrix* d_basis_in = new Matrix(f_snapshots_in->numRows(), d_k_in, f_snapshots_in->distributed());
+    Matrix* d_basis_in = new Matrix(f_snapshots_in->numRows(), d_k_in,
+                                    f_snapshots_in->distributed());
     Matrix* d_S_inv = new Matrix(d_k_in, d_k_in, false);
     Matrix* d_basis_right = new Matrix(f_snapshots_in->numColumns(), d_k_in, false);
 
@@ -482,7 +484,8 @@ DMDc::constructDMDc(const Matrix* f_snapshots,
                                        d_num_singular_vectors << " for output." << std::endl;
 
         // Allocate the appropriate matrices and gather their elements.
-        d_basis = new Matrix(f_snapshots_out->numRows(), d_k, f_snapshots_out->distributed());
+        d_basis = new Matrix(f_snapshots_out->numRows(), d_k,
+                             f_snapshots_out->distributed());
     }
     else
     {
@@ -492,18 +495,19 @@ DMDc::constructDMDc(const Matrix* f_snapshots,
 
     delete[] row_offset;
 
-    // Calculate A_tilde and B_tilde_transpose 
+    // Calculate A_tilde and B_tilde_transpose
     Matrix* d_basis_mult_f_snapshots_out = d_basis->transposeMult(f_snapshots_out);
     Matrix* d_basis_mult_f_snapshots_out_mult_d_basis_right =
         d_basis_mult_f_snapshots_out->mult(d_basis_right);
-    Matrix* d_A_tilde_orig = d_basis_mult_f_snapshots_out_mult_d_basis_right->mult(d_S_inv);
+    Matrix* d_A_tilde_orig = d_basis_mult_f_snapshots_out_mult_d_basis_right->mult(
+                                 d_S_inv);
 
     if (B == NULL)
     {
         Matrix* d_basis_in_state = new Matrix(f_snapshots->numRows(),
-                                        d_k_in, f_snapshots->distributed());
+                                              d_k_in, f_snapshots->distributed());
         Matrix* d_basis_in_control = new Matrix(f_controls->numRows(),
-                                        d_k_in, f_controls->distributed());
+                                                d_k_in, f_controls->distributed());
         for (int j = 0; j < d_k_in; j++)
         {
             for (int i = 0; i < f_snapshots->numRows(); i++)
@@ -512,7 +516,8 @@ DMDc::constructDMDc(const Matrix* f_snapshots,
             }
             for (int i = 0; i < f_controls->numRows(); i++)
             {
-                d_basis_in_control->item(i, j) = d_basis_in->item(f_snapshots->numRows() + i, j);
+                d_basis_in_control->item(i, j) = d_basis_in->item(f_snapshots->numRows() + i,
+                                                 j);
             }
         }
         Matrix* d_basis_state_rot = d_basis_in_state->transposeMult(d_basis);
@@ -545,7 +550,7 @@ DMDc::constructDMDc(const Matrix* f_snapshots,
 
     // Calculate the projection initial_condition onto column space of d_basis.
     project(init, f_controls);
-    
+
     d_trained = true;
 
     delete d_basis_right;
@@ -656,13 +661,13 @@ DMDc::project(const Vector* init, const Matrix* controls, double t_offset)
 
     d_projected_controls_real = d_phi_real_squared_inverse->mult(controls_real);
     Matrix* d_projected_controls_real_2 = d_phi_imaginary_squared_inverse->mult(
-                                          controls_imaginary);
+            controls_imaginary);
     d_projected_controls_real += d_projected_controls_real_2;
 
     d_projected_controls_imaginary = d_phi_imaginary_squared_inverse->mult(
-                                     controls_real);
+                                         controls_real);
     Matrix* d_projected_controls_imaginary_2 = d_phi_real_squared_inverse->mult(
-                                               controls_imaginary);
+                controls_imaginary);
     d_projected_controls_imaginary -= d_projected_controls_imaginary_2;
 
 
@@ -695,7 +700,7 @@ DMDc::project(const Vector* init, const Matrix* controls, double t_offset)
 Vector*
 DMDc::predict(double t, const Matrix* controls, int deg)
 {
-    // TODO: 
+    // TODO:
     CAROM_VERIFY(d_trained);
     CAROM_VERIFY(d_init_projected);
     CAROM_VERIFY(t >= 0.0);
@@ -723,7 +728,8 @@ DMDc::predict(double t, const Matrix* controls, int deg)
     delete d_predicted_state_real_2;
 
     Vector* f_control_real = new Vector(d_basis->numRows(), d_basis->distributed());
-    Vector* f_control_imaginary = new Vector(d_basis->numRows(), d_basis->distributed());
+    Vector* f_control_imaginary = new Vector(d_basis->numRows(),
+            d_basis->distributed());
     for (int k = 0; k < n; k++)
     {
         t -= d_dt;

@@ -94,7 +94,7 @@ using namespace mfem;
  *
  *     du/dt = M^{-1}(b-Ku)
  *
- *  where u is the vector representing the temperature, 
+ *  where u is the vector representing the temperature,
  *  M is the mass matrix, b is the load vector,
  *  and K is the diffusion operator with diffusivity depending on u:
  *  (\kappa + \alpha u).

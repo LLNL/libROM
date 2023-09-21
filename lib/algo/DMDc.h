@@ -95,7 +95,8 @@ public:
      * @param[in] controls The controls.
      * @param[in] t_offset The initial time offset.
      */
-    void project(const Vector* init, const Matrix* controls, double t_offset = -1.0);
+    void project(const Vector* init, const Matrix* controls,
+                 double t_offset = -1.0);
 
     /**
      * @brief Predict state given a time. Uses the projected initial condition of the
@@ -190,13 +191,13 @@ protected:
      * @param[in] reorthogonalize_W Whether to reorthogonalize the interpolated W (basis) matrix.
      */
     friend void getParametricDMDc<DMDc>(DMDc*& parametric_dmd,
-                                      std::vector<Vector*>& parameter_points,
-                                      std::vector<DMDc*>& dmds,
-                                      Vector* desired_point,
-                                      std::string rbf,
-                                      std::string interp_method,
-                                      double closest_rbf_val,
-                                      bool reorthogonalize_W);
+                                        std::vector<Vector*>& parameter_points,
+                                        std::vector<DMDc*>& dmds,
+                                        Vector* desired_point,
+                                        std::string rbf,
+                                        std::string interp_method,
+                                        double closest_rbf_val,
+                                        bool reorthogonalize_W);
 
     /**
      * @brief Constructor. Variant of DMDc with non-uniform time step size.
@@ -212,15 +213,15 @@ protected:
      * @param[in] eigs d_eigs
      * @param[in] phi_real d_phi_real
      * @param[in] phi_imaginary d_phi_imaginary
-     * @param[in] B_tilde_transpose d_B_tilde_transpose 
+     * @param[in] B_tilde_transpose d_B_tilde_transpose
      * @param[in] k d_k
      * @param[in] dt d_dt
      * @param[in] t_offset d_t_offset
      * @param[in] state_offset d_state_offset
      */
     DMDc(std::vector<std::complex<double>> eigs, Matrix* phi_real,
-        Matrix* phi_imaginary, Matrix* B_tilde_transpose, int k,
-        double dt, double t_offset, Vector* state_offset);
+         Matrix* phi_imaginary, Matrix* B_tilde_transpose, int k,
+         double dt, double t_offset, Vector* state_offset);
 
     /**
      * @brief Unimplemented default constructor.
@@ -248,10 +249,10 @@ protected:
      * @brief Construct the DMDc object.
      */
     void constructDMDc(const Matrix* f_snapshots,
-                      const Matrix* f_controls,
-                      int rank,
-                      int num_procs,
-                      const Matrix* B);
+                       const Matrix* f_controls,
+                       int rank,
+                       int num_procs,
+                       const Matrix* B);
 
     /**
      * @brief Returns a pair of pointers to the minus and plus snapshot matrices
