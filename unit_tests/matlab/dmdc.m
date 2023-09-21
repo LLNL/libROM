@@ -10,11 +10,11 @@ function dmdc(X, Y, r, t, dt, varargin)
     X_out = X(:,2:end);
     b0 = X(:,1);
 
-    if nargin == 6 % known control matrix
+    if nargin == 5
+        X_in = [X_in; Y];
+    else
         B = varargin{1};
         X_out = X_out - B*Y;
-    else
-        X_in = [X_in; Y];
     end
 
     [U, S, V] = svd(X_in, 'econ');
@@ -24,20 +24,22 @@ function dmdc(X, Y, r, t, dt, varargin)
 
     m = size(X,1);
     U1 = U(1:m,:);
-    if nargin == 6
+    if nargin == 5
+        U2 = U(m+1:end,:);
+        r_out = r-1;
+        [U_out, ~, ~] = svd(X_out, 'econ');
+        U_out = U_out(:,1:r_out);
+        Atilde = U_out'*X_out*V*inv(S)*U1'*U_out;
+        Btilde = U_out'*X_out*V*inv(S)*U2';
+        [W,ev] = eig(Atilde);
+        %Phi = X_out*V*inv(S)*U1'*U_out*W;
+    else
+        r_out = r;
         U_out = U1;
         Atilde = U_out'*X_out*V*inv(S);
-        [W,ev] = eig(Atilde);
-        Phi = X_out*V*inv(S)*W;
         Btilde = U_out'*B;
-    else
-        [U_out, ~, ~] = svd(X_out, 'econ');
-        U_out = U_out(:,1:r);
-        Atilde = U_out'*X_out*V*inv(S)*U1'*U_out;
         [W,ev] = eig(Atilde);
-        Phi = X_out*V*inv(S)*U1'*U_out*W;
-        U2 = U(m+1:end,:);
-        Btilde = U_out'*X_out*V*inv(S)*U2';
+        %Phi = X_out*V*inv(S)*W;
     end
 
     n = size(X_out,2);
