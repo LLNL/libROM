@@ -398,7 +398,7 @@ protected:
 
    Vector fn, un, un_next, unm1, unm2, Nun, Nunm1, Nunm2, Fext, FText, Lext,
           resu;
-   Vector tmp1;
+   Vector tmp1, tmp0;
 
    Vector pn, resp, FText_bdr, g_bdr;
    Vector tmp2;

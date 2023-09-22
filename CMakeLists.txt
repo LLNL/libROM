@@ -193,24 +193,34 @@ if (ENABLE_EXAMPLES)
           PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
           ${MPI_C_INCLUDE_DIRS})
  
-	add_executable(otf_navier_shear examples/navier_dmd/otf_navier_shear.cpp)
-        target_link_libraries(otf_navier_shear
+	add_executable(otf_navier_2dfoc examples/navier_dmd/otf_navier_2dfoc.cpp)
+        target_link_libraries(otf_navier_2dfoc
           PRIVATE ROM navier_dmd_obj ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
-        target_include_directories(otf_navier_shear
+        target_include_directories(otf_navier_2dfoc
           PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
           ${MPI_C_INCLUDE_DIRS})
      
-  	add_executable(navier_3dfoc examples/navier_dmd/navier_3dfoc.cpp)
-        target_link_libraries(navier_3dfoc
+  	add_executable(navier_2dfoc examples/navier_dmd/navier_2dfoc.cpp)
+        target_link_libraries(navier_2dfoc
           PRIVATE ROM navier_dmd_obj ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
-        target_include_directories(navier_3dfoc
+        target_include_directories(navier_2dfoc
           PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
           ${MPI_C_INCLUDE_DIRS})
+  
+  	add_executable(otf_navier_cht examples/navier_dmd/otf_navier_cht.cpp)
+        target_link_libraries(otf_navier_cht
+          PRIVATE ROM navier_dmd_obj ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
+        target_include_directories(otf_navier_cht
+          PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+          ${MPI_C_INCLUDE_DIRS})
+
     endif()
 
       file(COPY examples/navier_dmd/fluid-cht.mesh DESTINATION ${CMAKE_BINARY_DIR}/examples/navier_dmd)
       file(COPY examples/navier_dmd/solid-cht.mesh DESTINATION ${CMAKE_BINARY_DIR}/examples/navier_dmd)
       file(COPY examples/navier_dmd/box-cylinder.mesh DESTINATION ${CMAKE_BINARY_DIR}/examples/navier_dmd)
+      file(COPY examples/navier_dmd/square-circle.msh DESTINATION ${CMAKE_BINARY_DIR}/examples/navier_dmd)
+      file(COPY examples/navier_dmd/square-disc.mesh DESTINATION ${CMAKE_BINARY_DIR}/examples/navier_dmd)
     endif()
 
     list(LENGTH examples len1)

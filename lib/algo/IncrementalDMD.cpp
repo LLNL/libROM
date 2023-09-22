@@ -129,9 +129,14 @@ IncrementalDMD::updateDMD(const Matrix* f_snapshots)
     int num_snapshots = d_snapshots.size();
     double* u_in = d_snapshots[num_snapshots-2]->getData();
 
+    StopWatch timer1, timer2;
+    
+    timer1.Start();
     int num_samples_pre = svd->getNumSamples();
     svd->takeSample(u_in, 0, false); // what if norm(u_in) < eps at init?
-    
+    timer1.Stop();
+
+    timer2.Start();
     int num_samples = svd->getNumSamples();
     if (num_samples > num_samples_pre)
     {
@@ -246,10 +251,13 @@ IncrementalDMD::updateDMD(const Matrix* f_snapshots)
 	delete u_new;
 	delete d_A_tilde_tmp;
     }
+    timer2.Stop();
 
     if (d_rank == 0) {
     	std::cout << "Using " << num_samples << " basis vectors out of "
 		  << num_snapshots << " snapshots" << std::endl;
+	std::cout << "Time(SVD): " << timer1.RealTime()
+		  << ", Time(DMD): " << timer2.RealTime() << std::endl;
     }
 
     d_trained = true;

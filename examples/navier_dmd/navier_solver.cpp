@@ -68,6 +68,7 @@ NavierSolver::NavierSolver(ParMesh *mesh, int order, double kin_vis)
    Lext.SetSize(vfes_truevsize);
    resu.SetSize(vfes_truevsize);
 
+   tmp0.SetSize(vfes_truevsize);
    tmp1.SetSize(vfes_truevsize);
    tmp2.SetSize(pfes_truevsize);
 
@@ -975,6 +976,7 @@ void NavierSolver::Residual(double &time, double dt, int current_step,
                             Vector u, Vector p,
                             Vector &res_u)
 {
+
    SetTimeIntegrationCoefficients(current_step);
 
    // Set current time for velocity Dirichlet boundary conditions.
@@ -1043,14 +1045,97 @@ void NavierSolver::Residual(double &time, double dt, int current_step,
       });
    }
 
-   Mv->Mult(tmp1, tmp1);
-   Fext.Add(1.0, tmp1);
+   Mv->Mult(tmp1, tmp0);
+   Fext.Add(1.0, tmp0);
+
+   /*
+   // New code start
+   SetTimeIntegrationCoefficients(current_step);
+
+   // Set current time for velocity Dirichlet boundary conditions.
+   for (auto &vel_dbc : vel_dbcs)
+   {
+      vel_dbc.coeff->SetTime(time + dt);
+   }
+
+   // Set current time for pressure Dirichlet boundary conditions.
+   for (auto &pres_dbc : pres_dbcs)
+   {
+      pres_dbc.coeff->SetTime(time + dt);
+   }
+
+   H_bdfcoeff.constant = bd0 / dt;
+   H_form->Update();
+   H_form->Assemble();
+   H_form->FormSystemMatrix(vel_ess_tdof, H);
+
+   // Extrapolated f^{n+1}.
+   for (auto &accel_term : accel_terms)
+   {
+      accel_term.coeff->SetTime(time + dt);
+   }
+
+   f_form->Assemble();
+   f_form->ParallelAssemble(fn);
+
+   // Nonlinear extrapolated terms.
+   sw_extrap.Start();
+
+   N->Mult(un, Nun);
+   N->Mult(unm1, Nunm1);
+   N->Mult(unm2, Nunm2);
+
+   {
+      const auto d_Nun = Nun.Read();
+      const auto d_Nunm1 = Nunm1.Read();
+      const auto d_Nunm2 = Nunm2.Read();
+      auto d_Fext = Fext.Write();
+      const auto ab1_ = ab1;
+      const auto ab2_ = ab2;
+      const auto ab3_ = ab3;
+      mfem::forall(Fext.Size(), [=] MFEM_HOST_DEVICE (int i)
+      {
+         d_Fext[i] = ab1_ * d_Nun[i] +
+                     ab2_ * d_Nunm1[i] +
+                     ab3_ * d_Nunm2[i];
+      });
+   }
+
+   Fext.Add(1.0, fn);
+
+   // Fext = M^{-1} (F(u^{n}) + f^{n+1})
+   MvInv->Mult(Fext, tmp1);
+   iter_mvsolve = MvInv->GetNumIterations();
+   res_mvsolve = MvInv->GetFinalNorm();
+   Fext.Set(1.0, tmp1);
+
+   // Compute BDF terms.
+   {
+      const double bd1idt = -bd1 / dt;
+      const double bd2idt = -bd2 / dt;
+      const double bd3idt = -bd3 / dt;
+      const auto d_un = un.Read();
+      const auto d_unm1 = unm1.Read();
+      const auto d_unm2 = unm2.Read();
+      auto d_Fext = Fext.ReadWrite();
+      mfem::forall(Fext.Size(), [=] MFEM_HOST_DEVICE (int i)
+      {
+         d_Fext[i] += bd1idt * d_un[i] +
+                      bd2idt * d_unm1[i] +
+                      bd3idt * d_unm2[i];
+      });
+   }
+   */
+   // New code end
 
    // Project velocity: resu = -G*p + M*Fext
+   //G->Mult(pn, resu);
    G->Mult(p, resu);
    resu.Neg();
+   //Mv->Mult(Fext, tmp1);
+   //resu.Add(1.0, tmp1);
    resu.Add(1.0, Fext);
-
+  
    for (auto &vel_dbc : vel_dbcs)
    {
       un_next_gf.ProjectBdrCoefficient(*vel_dbc.coeff, vel_dbc.attr);
