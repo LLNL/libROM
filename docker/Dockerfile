@@ -93,8 +93,8 @@ WORKDIR $LIB_DIR
 # install mfem
 RUN git clone https://github.com/mfem/mfem.git mfem_parallel
 WORKDIR ./mfem_parallel
-# Latest verified commit on May 2, 2023
-RUN git checkout e5231334e6a8175b4f404b877f590b73dee2dedc
+# v4.5.2-dev commit. This is the mfem version used by PyMFEM v4.5.2.0.
+RUN git checkout 00b2a0705f647e17a1d4ffcb289adca503f28d42
 #RUN tar -zxvf mfem-4.5.tar.gz
 #RUN mv mfem-4.5 mfem_parallel
 #RUN git pull
