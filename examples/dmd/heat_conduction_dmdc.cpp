@@ -17,7 +17,7 @@
 // In these examples, the radius of the interface between different source functions, the
 // alpha coefficient, and two center location variables are modified.
 //
-// For Parametric DMD (ex. 1) (radius, interpolation):
+// For Parametric DMDc (ex. 1) (radius, interpolation):
 //   rm -rf parameters.txt
 //   mpirun -np 8 heat_conduction_dmdc -r 0.4 -visit -offline -rdim 16
 //   mpirun -np 8 heat_conduction_dmdc -r 0.45 -visit -offline -rdim 16
@@ -25,7 +25,7 @@
 //   mpirun -np 8 heat_conduction_dmdc -r 0.6 -visit -offline -rdim 16
 //   mpirun -np 8 heat_conduction_dmdc -r 0.5 -visit -online -predict
 //
-// For Parametric DMD (ex. 2) (radius & cx & cy, extrapolation):
+// For Parametric DMDc (ex. 2) (radius & cx & cy, extrapolation):
 //   rm -rf parameters.txt
 //   mpirun -np 8 heat_conduction_dmdc -r 0.1 -visit -offline -rdim 16
 //   mpirun -np 8 heat_conduction_dmdc -r 0.2 -visit -offline -rdim 16
@@ -38,7 +38,7 @@
 //   mpirun -np 8 heat_conduction_dmdc -r 0.5 -cx 0.5 -cy 0.5 -visit -online -predict
 //   (now performs well)
 //
-// For Parametric DMD (ex. 3) (alpha, interpolation):
+// For Parametric DMDc (ex. 3) (alpha, interpolation):
 //   rm -rf parameters.txt
 //   mpirun -np 8 heat_conduction_dmdc -a 0.1 -visit -offline -rdim 16
 //   mpirun -np 8 heat_conduction_dmdc -a 0.15 -visit -offline -rdim 16
@@ -46,7 +46,7 @@
 //   mpirun -np 8 heat_conduction_dmdc -a 0.3 -visit -offline -rdim 16
 //   mpirun -np 8 heat_conduction_dmdc -a 0.2 -visit -online -predict
 //
-// For Parametric DMD (ex. 4) (alpha, interpolation):
+// For Parametric DMDc (ex. 4) (alpha, interpolation):
 //   rm -rf parameters.txt
 //   mpirun -np 8 heat_conduction_dmdc -s 3 -a 0.5 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit -offline -rdim 20
 //   mpirun -np 8 heat_conduction_dmdc -s 3 -a 0.55 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit -offline -rdim 20
@@ -54,7 +54,7 @@
 //   mpirun -np 8 heat_conduction_dmdc -s 3 -a 0.7 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit -offline -rdim 20
 //   mpirun -np 8 heat_conduction_dmdc -s 3 -a 0.6 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit -online -predict
 //
-// Pointwise snapshots for DMD input:
+// Pointwise snapshots for DMDc input:
 //   mpirun -np 1 heat_conduction_dmdc -m ../../../examples/data/inline-quad.mesh -pwsnap -pwx 101 -pwy 101
 //
 // =================================================================================
@@ -71,7 +71,7 @@
 //               with ADIOS2 (adios2.readthedocs.io) is also illustrated.
 
 #include "mfem.hpp"
-#include "algo/DMD.h"
+#include "algo/DMDc.h"
 #include "linalg/Vector.h"
 #include <cmath>
 #include <fstream>
@@ -146,12 +146,11 @@ public:
 double InitialTemperature(const Vector &x);
 double SourceFunction(const Vector &x, const double t);
 
-double radius = 0.5;
-double cx = 0.0;
-double cy = 0.0;
-double t_end = 0.1;
+double amp_in = 2.0;
+double t_end_in = 0.1;
+double amp_out = 1.0;
+double t_end_out = 0.3;
 double dt = 1.0e-2;
-double amp = 1.0;
 
 int main(int argc, char *argv[])
 {
@@ -162,7 +161,7 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
     // 2. Parse command-line options.
-    const char *mesh_file = "../data/star.mesh";
+    const char *mesh_file = "../data/square01-quad.mesh";
     int ser_ref_levels = 2;
     int par_ref_levels = 1;
     int order = 2;
@@ -211,18 +210,16 @@ int main(int argc, char *argv[])
                    "Alpha coefficient.");
     args.AddOption(&kappa, "-k", "--kappa",
                    "Kappa coefficient offset.");
-    args.AddOption(&radius, "-r", "--radius",
-                   "Radius of the radial source location.");
-    args.AddOption(&cx, "-cx", "--center_x",
-                   "Center offset in the x direction.");
-    args.AddOption(&cy, "-cy", "--center_y",
-                   "Center offset in the y direction.");
-    args.AddOption(&t_end, "-te", "--t_end",
-                   "End time of the source.");
-    args.AddOption(&amp, "-amp", "--amplitude",
-                   "Amplitude of the source.");
+    args.AddOption(&amp_in, "-amp-in", "--amplitude-inlet",
+                   "Amplitude of the inlet source.");
+    args.AddOption(&t_end_in, "-te-in", "--t-end-in",
+                   "End time of the inlet source.");
+    args.AddOption(&amp_out, "-amp-out", "--amplitude-outlet",
+                   "Amplitude of the outlet source.");
+    args.AddOption(&t_end_out, "-te-out", "--t-end-out",
+                   "End time of the outlet source.");
     args.AddOption(&closest_rbf_val, "-crv", "--crv",
-                   "DMD Closest RBF Value.");
+                   "DMDc Closest RBF Value.");
     args.AddOption(&visualization, "-vis", "--visualization", "-no-vis",
                    "--no-visualization",
                    "Enable or disable GLVis visualization.");
@@ -232,13 +229,13 @@ int main(int argc, char *argv[])
     args.AddOption(&vis_steps, "-vs", "--visualization-steps",
                    "Visualize every n-th timestep.");
     args.AddOption(&rdim, "-rdim", "--rdim",
-                   "Reduced dimension for DMD.");
+                   "Reduced dimension for DMDc.");
     args.AddOption(&offline, "-offline", "--offline", "-no-offline", "--no-offline",
                    "Enable or disable the offline phase.");
     args.AddOption(&online, "-online", "--online", "-no-online", "--no-online",
                    "Enable or disable the online phase.");
     args.AddOption(&predict, "-predict", "--predict", "-no-predict", "--no-predict",
-                   "Enable or disable DMD prediction.");
+                   "Enable or disable DMDc prediction.");
     args.AddOption(&adios2, "-adios2", "--adios2-streams", "-no-adios2",
                    "--no-adios2-streams",
                    "Save data using adios2 streams.");
@@ -512,7 +509,7 @@ int main(int argc, char *argv[])
                      << "_" << to_string(cx) << "_" << to_string(cy) << "_0";
         if (myid == 0)
         {
-            cout << "Writing DMD snapshot at step 0, time 0.0" << endl;
+            cout << "Writing DMDc snapshot at step 0, time 0.0" << endl;
             pwsnap_CAROM->write(dmd_filename.str());
         }
     }
@@ -539,15 +536,15 @@ int main(int argc, char *argv[])
 
     fom_timer.Stop();
 
-    CAROM::DMD* dmd_u = NULL;
+    CAROM::DMDc* dmd_u = NULL;
 
     if (offline)
     {
         dmd_training_timer.Start();
 
-        // 11. Create DMD object and take initial sample.
+        // 11. Create DMDc object and take initial sample.
         u_gf.SetFromTrueDofs(u);
-        dmd_u = new CAROM::DMD(u.Size(), dt);
+        dmd_u = new CAROM::DMDc(u.Size(), dt);
         dmd_u->takeSample(u.GetData(), t);
 
         if (myid == 0)
@@ -666,7 +663,7 @@ int main(int argc, char *argv[])
                          << "_" << to_string(cx) << "_" << to_string(cy) << "_" << ti;
             if (myid == 0)
             {
-                cout << "Writing DMD snapshot at step " << ti << ", time " << t << endl;
+                cout << "Writing DMDc snapshot at step " << ti << ", time " << t << endl;
                 pwsnap_CAROM->write(dmd_filename.str());
             }
         }
@@ -714,14 +711,14 @@ int main(int argc, char *argv[])
         u_gf.Save(osol);
     }
 
-    // 13. Calculate the DMD modes.
+    // 13. Calculate the DMDc modes.
     if (offline || online)
     {
         if (offline)
         {
             if (myid == 0)
             {
-                std::cout << "Creating DMD with rdim: " << rdim << std::endl;
+                std::cout << "Creating DMDc with rdim: " << rdim << std::endl;
             }
 
             dmd_training_timer.Start();
@@ -747,7 +744,7 @@ int main(int argc, char *argv[])
         {
             if (myid == 0)
             {
-                std::cout << "Creating DMD using the rdim of the offline phase" << std::endl;
+                std::cout << "Creating DMDc using the rdim of the offline phase" << std::endl;
             }
 
             std::fstream fin("parameters.txt", std::ios_base::in);
@@ -785,7 +782,7 @@ int main(int argc, char *argv[])
 
             dmd_training_timer.Start();
 
-            CAROM::getParametricDMD(dmd_u, param_vectors, dmd_paths, desired_param,
+            CAROM::getParametricDMDc(dmd_u, param_vectors, dmd_paths, desired_param,
                                     "G", "LS", closest_rbf_val);
 
             dmd_u->projectInitialCondition(init);
@@ -801,17 +798,17 @@ int main(int argc, char *argv[])
 
             dmd_prediction_timer.Start();
 
-            // 14. Predict the state at t_final using DMD.
+            // 14. Predict the state at t_final using DMDc.
             if (myid == 0)
             {
-                std::cout << "Predicting temperature using DMD at: " << ts[0] << std::endl;
+                std::cout << "Predicting temperature using DMDc at: " << ts[0] << std::endl;
             }
 
             CAROM::Vector* result_u = dmd_u->predict(ts[0]);
             Vector initial_dmd_solution_u(result_u->getData(), result_u->dim());
             u_gf.SetFromTrueDofs(initial_dmd_solution_u);
 
-            VisItDataCollection dmd_visit_dc(outputPath + "/DMD_Parametric_Heat_Conduction_"
+            VisItDataCollection dmd_visit_dc(outputPath + "/DMDc_Parametric_Heat_Conduction_"
                                              +
                                              to_string(radius) + "_" + to_string(alpha) + "_" +
                                              to_string(cx) + "_" + to_string(cy), pmesh);
@@ -834,7 +831,7 @@ int main(int argc, char *argv[])
                         result_u = dmd_u->predict(ts[i]);
                         if (myid == 0)
                         {
-                            std::cout << "Predicting temperature using DMD at: " << ts[i] << std::endl;
+                            std::cout << "Predicting temperature using DMDc at: " << ts[i] << std::endl;
                         }
 
                         Vector dmd_solution_u(result_u->getData(), result_u->dim());
@@ -853,7 +850,7 @@ int main(int argc, char *argv[])
 
             result_u = dmd_u->predict(t_final);
 
-            // 15. Calculate the relative error between the DMD final solution and the true solution.
+            // 15. Calculate the relative error between the DMDc final solution and the true solution.
             Vector dmd_solution_u(result_u->getData(), result_u->dim());
             Vector diff_u(true_solution_u.Size());
             subtract(dmd_solution_u, true_solution_u, diff_u);
@@ -864,9 +861,9 @@ int main(int argc, char *argv[])
 
             if (myid == 0)
             {
-                std::cout << "Relative error of DMD temperature (u) at t_final: "
+                std::cout << "Relative error of DMDc temperature (u) at t_final: "
                           << t_final << " is " << tot_diff_norm_u / tot_true_solution_u_norm << std::endl;
-                printf("Elapsed time for predicting DMD: %e second\n",
+                printf("Elapsed time for predicting DMDc: %e second\n",
                        dmd_prediction_timer.RealTime());
             }
 
@@ -875,7 +872,7 @@ int main(int argc, char *argv[])
 
         if (myid == 0)
         {
-            printf("Elapsed time for training DMD: %e second\n",
+            printf("Elapsed time for training DMDc: %e second\n",
                    dmd_training_timer.RealTime());
         }
     }
@@ -1014,15 +1011,31 @@ double InitialTemperature(const Vector &x)
     return 1.0;
 }
 
+double TimeWindowFunction(const double t, const double t_begin, const double t_end)
+{
+    return 0.5 * (tanh((t - t_begin) / (5*dt)) - tanh((t - t_end) / (5*dt)));
+}
+
+double Amplitude(const double t, const int index)
+{
+    if (index == 0)
+    {
+        return amp_in * TimeWindowFucntion(t, 0.0, t_end_in);
+    }
+    else
+    {
+        return amp_out * TimeWindowFucntion(t, 0.0, t_end_out);
+    }
+} 
+
 double SourceFunction(const Vector &x, const double t)
 {
     Vector y(x);
     Vector c(2);
-    c.Elem(0) = cx;
-    c.Elem(1) = cy;
+    c.Elem(0) = 0.5;
+    c.Elem(1) = 0.5;
     y -= c;
-    if (y.Norml2() < radius)
-    {
-        return amp / (1.0 + exp(0.5*(t-t_end)/dt));
-    }
+    double r1 = x.Norml2() / 0.01;
+    double r2 = y.Norml2() / 0.01;
+    return Amplitude(t, 0) * exp(-0.5*r1*r1) - Amplitude(t, 1) * exp(-0.5*r2*r2);
 }
