@@ -783,7 +783,7 @@ int main(int argc, char *argv[])
             dmd_training_timer.Start();
 
             CAROM::getParametricDMDc(dmd_u, param_vectors, dmd_paths, desired_param,
-                                    "G", "LS", closest_rbf_val);
+                                     "G", "LS", closest_rbf_val);
 
             dmd_u->projectInitialCondition(init);
 
@@ -808,7 +808,8 @@ int main(int argc, char *argv[])
             Vector initial_dmd_solution_u(result_u->getData(), result_u->dim());
             u_gf.SetFromTrueDofs(initial_dmd_solution_u);
 
-            VisItDataCollection dmd_visit_dc(outputPath + "/DMDc_Parametric_Heat_Conduction_"
+            VisItDataCollection dmd_visit_dc(outputPath +
+                                             "/DMDc_Parametric_Heat_Conduction_"
                                              +
                                              to_string(radius) + "_" + to_string(alpha) + "_" +
                                              to_string(cx) + "_" + to_string(cy), pmesh);
@@ -1011,7 +1012,8 @@ double InitialTemperature(const Vector &x)
     return 1.0;
 }
 
-double TimeWindowFunction(const double t, const double t_begin, const double t_end)
+double TimeWindowFunction(const double t, const double t_begin,
+                          const double t_end)
 {
     return 0.5 * (tanh((t - t_begin) / (5*dt)) - tanh((t - t_end) / (5*dt)));
 }
@@ -1026,7 +1028,7 @@ double Amplitude(const double t, const int index)
     {
         return amp_out * TimeWindowFucntion(t, 0.0, t_end_out);
     }
-} 
+}
 
 double SourceFunction(const Vector &x, const double t)
 {
