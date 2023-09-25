@@ -581,6 +581,9 @@ DMDc::project(const Vector* init, const Matrix* controls, double t_offset)
     Matrix* d_phi_imaginary_squared_2 = d_phi_imaginary->transposeMult(d_phi_real);
     *d_phi_imaginary_squared -= *d_phi_imaginary_squared_2;
 
+    delete d_phi_real_squared_2;
+    delete d_phi_imaginary_squared_2;
+
     const int dprs_row = d_phi_real_squared->numRows();
     const int dprs_col = d_phi_real_squared->numColumns();
     double* inverse_input = new double[dprs_row * dprs_col * 2];
@@ -653,6 +656,13 @@ DMDc::project(const Vector* init, const Matrix* controls, double t_offset)
     d_projected_init_imaginary = d_projected_init_imaginary_2->minus(
                                      d_projected_init_imaginary_1);
 
+    delete init_real;
+    delete init_imaginary;
+    delete d_projected_init_real_1;
+    delete d_projected_init_real_2;
+    delete d_projected_init_imaginary_1;
+    delete d_projected_init_imaginary_2;
+
     // Controls
     Matrix* B_tilde_f = d_B_tilde_transpose->transposeMult(controls);
     Matrix* UBf = d_basis->mult(B_tilde_f);
@@ -670,15 +680,6 @@ DMDc::project(const Vector* init, const Matrix* controls, double t_offset)
                 controls_imaginary);
     d_projected_controls_imaginary -= d_projected_controls_imaginary_2;
 
-
-    delete d_phi_real_squared_2;
-    delete d_phi_imaginary_squared_2;
-    delete init_real;
-    delete init_imaginary;
-    delete d_projected_init_real_1;
-    delete d_projected_init_real_2;
-    delete d_projected_init_imaginary_1;
-    delete d_projected_init_imaginary_2;
     delete controls_real;
     delete controls_imaginary;
     delete d_projected_controls_real_2;
