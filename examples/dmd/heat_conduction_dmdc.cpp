@@ -1022,11 +1022,11 @@ double Amplitude(const double t, const int index)
 {
     if (index == 0)
     {
-        return amp_in * TimeWindowFucntion(t, 0.0, t_end_in);
+        return amp_in * TimeWindowFunction(t, 0.0, t_end_in);
     }
     else
     {
-        return amp_out * TimeWindowFucntion(t, 0.0, t_end_out);
+        return amp_out * TimeWindowFunction(t, 0.0, t_end_out);
     }
 }
 
