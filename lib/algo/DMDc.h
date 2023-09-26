@@ -8,10 +8,10 @@
  *
  *****************************************************************************/
 
-// Description: Computes the DMDc algorithm on the given snapshot matrix. The
-//              implemented dynamic mode decomposition algorithm is derived from
-//              Tu et. al's paper "On Dynamic Mode Decomposition: Theory and
-//              Applications": https://arxiv.org/abs/1312.0041
+// Description: Computes the DMDc algorithm on the given snapshot matrix and control matrix. The
+//              implemented dynamic mode decomposition with control algorithm is derived from
+//              Proctor et. al's paper "Dynamic mode decomposition with control": 
+//              https://arxiv.org/abs/1409.6358
 //              This algorithm also works in the case that the first sample does
 //              not start from t = 0.0 by incorporating a time offset.
 
@@ -103,9 +103,8 @@ public:
      *        training dataset (the first column).
      *
      * @param[in] t   The time of the output state
-     * @param[in] deg The derivative degree of the output state
      */
-    Vector* predict(double t, int deg = 0);
+    Vector* predict(double t);
 
     /**
      * @brief Get the time offset contained within d_t_offset.
@@ -213,14 +212,14 @@ protected:
      * @param[in] eigs d_eigs
      * @param[in] phi_real d_phi_real
      * @param[in] phi_imaginary d_phi_imaginary
-     * @param[in] B_tilde_transpose d_B_tilde_transpose
+     * @param[in] B_tilde d_B_tilde
      * @param[in] k d_k
      * @param[in] dt d_dt
      * @param[in] t_offset d_t_offset
      * @param[in] state_offset d_state_offset
      */
     DMDc(std::vector<std::complex<double>> eigs, Matrix* phi_real,
-         Matrix* phi_imaginary, Matrix* B_tilde_transpose, int k,
+         Matrix* phi_imaginary, Matrix* B_tilde, int k,
          double dt, double t_offset, Vector* state_offset);
 
     /**
@@ -243,7 +242,7 @@ protected:
     /**
      * @brief Internal function to multiply d_phi with the eigenvalues.
      */
-    std::pair<Matrix*, Matrix*> phiMultEigs(double t, int deg = 0);
+    std::pair<Matrix*, Matrix*> phiMultEigs(double t);
 
     /**
      * @brief Construct the DMDc object.
@@ -258,7 +257,7 @@ protected:
      * @brief Returns a pair of pointers to the minus and plus snapshot matrices
      */
     virtual std::pair<Matrix*, Matrix*> computeDMDcSnapshotPair(
-        const Matrix* snapshots);
+        const Matrix* snapshots, const Matrix* controls, const Matrix* B);
 
     /**
      * @brief Compute the appropriate exponential function when predicting the solution.
@@ -268,7 +267,7 @@ protected:
     /**
      * @brief Add the appropriate offset when predicting the solution.
      */
-    virtual void addOffset(Vector*& result, double t = 0.0, int deg = 0);
+    virtual void addOffset(Vector*& result, double t = 0.0);
 
     /**
      * @brief Get the snapshot matrix contained within d_snapshots.
@@ -361,9 +360,9 @@ protected:
     Matrix* d_A_tilde = NULL;
 
     /**
-     * @brief B_tilde_transpose
+     * @brief B_tilde
      */
-    Matrix* d_B_tilde_transpose = NULL;
+    Matrix* d_B_tilde = NULL;
 
     /**
      * @brief The real part of d_phi.

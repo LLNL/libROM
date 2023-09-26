@@ -346,7 +346,7 @@ int main(int argc, char *argv[])
     ode_solver->Init(oper);
     double t = 0.0;
     vector<double> ts;
-    double* f[2];
+    double f[2];
     fom_timer.Stop();
 
     dmd_training_timer.Start();
