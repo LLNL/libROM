@@ -27,7 +27,6 @@
 
 #include "mfem.hpp"
 #include "algo/DMDc.h"
-#include "algo/NonuniformDMDc.h"
 #include "linalg/Vector.h"
 #include <cmath>
 #include <fstream>

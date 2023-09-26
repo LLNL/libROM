@@ -190,14 +190,14 @@ protected:
      *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
      * @param[in] reorthogonalize_W Whether to reorthogonalize the interpolated W (basis) matrix.
      */
-    friend void getParametricDMDc<DMDc>(DMDc*& parametric_dmd,
-                                        std::vector<Vector*>& parameter_points,
-                                        std::vector<DMDc*>& dmds,
-                                        Vector* desired_point,
-                                        std::string rbf,
-                                        std::string interp_method,
-                                        double closest_rbf_val,
-                                        bool reorthogonalize_W);
+    //friend void getParametricDMDc<DMDc>(DMDc*& parametric_dmd,
+    //                                    std::vector<Vector*>& parameter_points,
+    //                                    std::vector<DMDc*>& dmds,
+    //                                    Vector* desired_point,
+    //                                    std::string rbf,
+    //                                    std::string interp_method,
+    //                                    double closest_rbf_val,
+    //                                    bool reorthogonalize_W);
 
     /**
      * @brief Constructor. Variant of DMDc with non-uniform time step size.
