@@ -493,7 +493,7 @@ DMDc::constructDMDc(const Matrix* f_snapshots,
                          d_k, row_offset[static_cast<unsigned>(d_rank) + 1] -
                          row_offset[static_cast<unsigned>(d_rank)],
                          d_rank);
-         }
+        }
     }
     else
     {
@@ -515,7 +515,7 @@ DMDc::constructDMDc(const Matrix* f_snapshots,
         Matrix* d_basis_in_state = new Matrix(f_snapshots->numRows(),
                                               d_k_in, f_snapshots->distributed());
         Matrix* d_basis_in_control_transpose = new Matrix(d_k_in, f_controls->numRows(),
-                                                          false);
+                false);
         for (int j = 0; j < d_k_in; j++)
         {
             for (int i = 0; i < f_snapshots->numRows(); i++)
@@ -524,8 +524,9 @@ DMDc::constructDMDc(const Matrix* f_snapshots,
             }
             for (int i = 0; i < f_controls->numRows(); i++)
             {
-                d_basis_in_control_transpose->item(j, i) = d_basis_in->item(f_snapshots->numRows() + i,
-                                                 j);
+                d_basis_in_control_transpose->item(j,
+                                                   i) = d_basis_in->item(f_snapshots->numRows() + i,
+                                                           j);
             }
         }
         Matrix* d_basis_state_rot = d_basis_in_state->transposeMult(d_basis);

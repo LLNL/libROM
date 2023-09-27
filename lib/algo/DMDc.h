@@ -74,7 +74,7 @@ public:
      * @param[in] f_in      The control.
      * @param[in] last_step Whether it is the last step.
      */
-    virtual void takeSample(double* u_in, double t, double* f_in, 
+    virtual void takeSample(double* u_in, double t, double* f_in,
                             bool last_step = false);
 
     /**
