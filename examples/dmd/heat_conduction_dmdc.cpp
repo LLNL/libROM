@@ -8,9 +8,25 @@
  *
  *****************************************************************************/
 
-//                       libROM MFEM Example: Heat_Conduction (adapted from ex16p.cpp)
+//      libROM MFEM Example: DMDc for Heat_Conduction (adapted from ex16p.cpp)
 //
 // Compile with: make heat_conduction_dmdc
+// 
+// =================================================================================
+//
+// Sample runs and results for DMD:
+//
+// Command 1:
+//   mpirun -np 8 heat_conduction_dmdc -s 1 -a 0.0 -k 1.0 -visit
+//
+// Output 1:
+//   Relative error of DMD temperature (u) at t_final: 0.5 is 0.0021716499
+//
+// Command 2:
+//   mpirun -np 8 heat_conduction_dmdc -s 3 -a 0.5 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit
+//
+// Output 2:
+//   Relative error of DMD temperature (u) at t_final: 0.7 is 0.0017729558
 //
 // =================================================================================
 //
