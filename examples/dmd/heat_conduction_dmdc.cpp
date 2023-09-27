@@ -11,7 +11,7 @@
 //      libROM MFEM Example: DMDc for Heat_Conduction (adapted from ex16p.cpp)
 //
 // Compile with: make heat_conduction_dmdc
-// 
+//
 // =================================================================================
 //
 // Sample runs and results for DMD:
