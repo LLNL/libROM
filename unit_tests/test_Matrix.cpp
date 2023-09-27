@@ -511,6 +511,61 @@ TEST(MatrixSerialTest, Test_Matrix_orthogonalize2)
                 "(i, j) = (" << i << ", " << j << ")";
 }
 
+TEST(MatrixSerialTest, Test_Matrix_orthogonalize_last)
+{
+    // Matrix data to orthonormalize.
+    double d_mat[16] = {1.0, 0.0, 0.0, 1.3,
+                        0.0, 1.0, 0.0, 4.7,
+                        0.0, 0.0, 1.0, 2.5,
+                        0.0, 0.0, 0.0, 7.3};
+
+    // Target matrix data.
+    double d_mat2[16] = {1.0, 0.0, 0.0, 0.0,
+                         0.0, 1.0, 0.0, 0.0,
+                         0.0, 0.0, 1.0, 0.0,
+                         0.0, 0.0, 0.0, 1.0};
+
+    CAROM::Matrix matrix(d_mat, 4, 4, false);
+    CAROM::Matrix target(d_mat2, 4, 4, false);
+
+    double abs_error = 1.0e-15; // absolute error threshold
+
+    matrix.orthogonalize_last();
+
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 4; j++)
+            EXPECT_NEAR(matrix.item(i, j), target.item(i, j), abs_error) << 
+                "(i, j) = (" << i << ", " << j << ")";
+}
+
+TEST(MatrixSerialTest, Test_Matrix_orthogonalize_last2)
+{
+    // Matrix data to orthonormalize.
+    double d_mat[16] = {1.0, 0.0, 3.8, 1.3,
+                        0.0, 1.0, 5.6, 4.7,
+                        0.0, 0.0, 9.8, 2.5,
+                        0.0, 0.0, 0.0, 7.3};
+
+    // Target matrix data.
+    double d_mat2[16] = {1.0, 0.0, 0.0, 0.0,
+                         0.0, 1.0, 0.0, 0.0,
+                         0.0, 0.0, 1.0, 0.0,
+                         0.0, 0.0, 0.0, 1.0};
+
+    CAROM::Matrix matrix(d_mat, 4, 4, false);
+    CAROM::Matrix target(d_mat2, 4, 4, false);
+
+    double abs_error = 1.0e-15; // absolute error threshold
+
+    matrix.orthogonalize_last(3);
+    matrix.orthogonalize_last(4);
+
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 4; j++)
+            EXPECT_NEAR(matrix.item(i, j), target.item(i, j), abs_error) << 
+                "(i, j) = (" << i << ", " << j << ")";
+}
+
 TEST(MatrixSerialTest, Test_pMatrix_mult_reference)
 {
     /**

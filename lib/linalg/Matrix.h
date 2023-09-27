@@ -947,6 +947,19 @@ public:
     orthogonalize();
 
     /**
+     * @brief Orthonormalizes the matrix's last column, assuming the previous
+	 * columns are already orthonormal.
+	 * 
+	 * By default, the function considers the whole matrix.
+	 * If input parameter ncols < d_num_cols, then a subset of the matrix
+	 * is considered. 
+	 * This allows one to reorthonormalize the matrix every time a new column
+	 * is added, assuming the previous columns have remained unchanged.
+     */
+	void
+	orthogonalize_last(int ncols = -1);
+
+    /**
      * @brief Rescale every matrix row by its maximum absolute value.
      */
     void

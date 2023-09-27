@@ -1840,6 +1840,60 @@ Matrix::orthogonalize()
 }
 
 void
+Matrix::orthogonalize_last(int ncols)
+{
+    if (ncols == -1) ncols = d_num_cols;
+    CAROM_ASSERT((ncols > 0) && (ncols <= d_num_cols));
+    
+    const int last_col = ncols - 1; // index of column to be orthonormalized
+    double tmp;
+
+    // Orthogonalize the column.
+    for (int col = 0; col < last_col; ++col)
+    {
+        double factor = 0.0;
+        tmp = 0.0;
+
+        for (int i = 0; i < d_num_rows; ++i)
+            tmp += item(i, col) * item(i, last_col);
+
+        if (d_num_procs > 1)
+        {
+            MPI_Allreduce(&tmp, &factor, 1, MPI_DOUBLE, MPI_SUM,
+                          MPI_COMM_WORLD);
+        }
+        else
+        {
+            factor = tmp;
+        }
+        for (int i = 0; i < d_num_rows; ++i)
+            item(i, last_col) -= factor * item(i, col);
+    }
+
+    // Normalize the column.
+    double norm = 0.0;
+    tmp = 0.0;
+
+    for (int i = 0; i < d_num_rows; ++i)
+        tmp += item(i, last_col) * item(i, last_col);
+
+    if (d_num_procs > 1)
+    {
+        MPI_Allreduce(&tmp, &norm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    }
+    else
+    {
+        norm = tmp;
+    }
+    if (norm > 1.0e-15)
+    {
+        norm = 1.0 / sqrt(norm);
+        for (int i = 0; i < d_num_rows; ++i)
+            item(i, last_col) *= norm;
+    }
+}
+
+void
 Matrix::rescale_rows_max()
 {
     // Rescale every matrix row by its maximum absolute value.
