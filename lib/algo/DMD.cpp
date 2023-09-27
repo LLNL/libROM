@@ -195,6 +195,7 @@ void DMD::takeSample(double* u_in, double t)
     }
 
     d_snapshots.push_back(sample);
+
     Vector* sampled_time = new Vector(&t, 1, false);
     d_sampled_times.push_back(sampled_time);
 }

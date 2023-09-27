@@ -60,7 +60,7 @@ DMDc::DMDc(int dim, Vector* state_offset)
     d_dim = dim;
     d_trained = false;
     d_init_projected = false;
-    setOffset(state_offset, 0);
+    setOffset(state_offset);
 }
 
 DMDc::DMDc(int dim, double dt, Vector* state_offset)
@@ -81,7 +81,7 @@ DMDc::DMDc(int dim, double dt, Vector* state_offset)
     d_dt = dt;
     d_trained = false;
     d_init_projected = false;
-    setOffset(state_offset, 0);
+    setOffset(state_offset);
 }
 
 DMDc::DMDc(std::string base_file_name)
@@ -124,7 +124,7 @@ DMDc::DMDc(std::vector<std::complex<double>> eigs, Matrix* phi_real,
     d_k = k;
     d_dt = dt;
     d_t_offset = t_offset;
-    setOffset(state_offset, 0);
+    setOffset(state_offset);
 }
 
 DMDc::~DMDc()
@@ -149,15 +149,12 @@ DMDc::~DMDc()
     delete d_projected_init_imaginary;
 }
 
-void DMDc::setOffset(Vector* offset_vector, int order)
+void DMDc::setOffset(Vector* offset_vector)
 {
-    if (order == 0)
-    {
-        d_state_offset = offset_vector;
-    }
+    d_state_offset = offset_vector;
 }
 
-void DMDc::takeSample(double* u_in, double t, double* f_in)
+void DMDc::takeSample(double* u_in, double t, double* f_in, bool last_step)
 {
     CAROM_VERIFY(u_in != 0);
     CAROM_VERIFY(t >= 0.0);
@@ -195,13 +192,14 @@ void DMDc::takeSample(double* u_in, double t, double* f_in)
     {
         CAROM_VERIFY(d_sampled_times.back()->item(0) < t);
     }
-
     d_snapshots.push_back(sample);
-    if (f_in)
+
+    if (!last_step)
     {
-        Vector* control = new Vector(f_in, d_dim, true);
+        Vector* control = new Vector(f_in, d_dim, false);
         d_controls.push_back(control);
     }
+
     Vector* sampled_time = new Vector(&t, 1, false);
     d_sampled_times.push_back(sampled_time);
 }
@@ -277,9 +275,6 @@ DMDc::computeDMDcSnapshotPair(const Matrix* snapshots, const Matrix* controls,
         }
         else
         {
-            //Matrix* Bf = new Matrix(snapshots->numRows(),
-            //                        snapshots->numColumns() - 1, snapshots->distributed());
-            //B->mult(controls, Bf);
             Matrix* Bf = B->mult(controls);
             *f_snapshots_out -= *Bf;
             delete Bf;
@@ -287,6 +282,16 @@ DMDc::computeDMDcSnapshotPair(const Matrix* snapshots, const Matrix* controls,
     }
 
     return std::pair<Matrix*,Matrix*>(f_snapshots_in, f_snapshots_out);
+}
+
+
+void
+DMDc::computePhi(struct DMDInternal dmd_internal_obj)
+{
+    // Calculate phi
+    d_phi_real = dmd_internal_obj.basis->mult(dmd_internal_obj.eigenpair->ev_real);
+    d_phi_imaginary = dmd_internal_obj.basis->mult(
+                          dmd_internal_obj.eigenpair->ev_imaginary);
 }
 
 void
@@ -487,6 +492,14 @@ DMDc::constructDMDc(const Matrix* f_snapshots,
         // Allocate the appropriate matrices and gather their elements.
         d_basis = new Matrix(f_snapshots_out->numRows(), d_k,
                              f_snapshots_out->distributed());
+        for (int d_rank = 0; d_rank < d_num_procs; ++d_rank) {
+            // V is computed in the transposed order so no reordering necessary.
+            gather_block(&d_basis->item(0, 0), d_factorizer_out->V,
+                         1, row_offset[static_cast<unsigned>(d_rank)]+1,
+                         d_k, row_offset[static_cast<unsigned>(d_rank) + 1] -
+                         row_offset[static_cast<unsigned>(d_rank)],
+                         d_rank);
+         }
     }
     else
     {
@@ -507,8 +520,8 @@ DMDc::constructDMDc(const Matrix* f_snapshots,
     {
         Matrix* d_basis_in_state = new Matrix(f_snapshots->numRows(),
                                               d_k_in, f_snapshots->distributed());
-        Matrix* d_basis_in_control = new Matrix(f_controls->numRows(),
-                                                d_k_in, f_controls->distributed());
+        Matrix* d_basis_in_control_transpose = new Matrix(d_k_in, f_controls->numRows(),
+                                                          false);
         for (int j = 0; j < d_k_in; j++)
         {
             for (int i = 0; i < f_snapshots->numRows(); i++)
@@ -517,15 +530,20 @@ DMDc::constructDMDc(const Matrix* f_snapshots,
             }
             for (int i = 0; i < f_controls->numRows(); i++)
             {
-                d_basis_in_control->item(i, j) = d_basis_in->item(f_snapshots->numRows() + i,
+                d_basis_in_control_transpose->item(j, i) = d_basis_in->item(f_snapshots->numRows() + i,
                                                  j);
             }
         }
         Matrix* d_basis_state_rot = d_basis_in_state->transposeMult(d_basis);
         d_A_tilde = d_A_tilde_orig->mult(d_basis_state_rot);
-        d_B_tilde = d_A_tilde_orig->mult(d_basis_in_control);
+        d_B_tilde = d_A_tilde_orig->mult(d_basis_in_control_transpose);
+        for (int j = 0; j < d_k_in; j++)
+        {
+            std::cout << j << ": A = " << d_A_tilde->item(j,j) << std::endl;
+            std::cout << j << ": B = " << d_B_tilde->item(j,0) << std::endl;
+        }
         delete d_basis_in_state;
-        delete d_basis_in_control;
+        delete d_basis_in_control_transpose;
         delete d_basis_state_rot;
     }
     else
@@ -538,12 +556,13 @@ DMDc::constructDMDc(const Matrix* f_snapshots,
     ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(d_A_tilde);
     d_eigs = eigenpair.eigs;
 
-    //struct DMDInternal dmd_internal = {f_snapshots_in, f_snapshots_out, d_basis, d_basis_right, d_S_inv, &eigenpair};
-    //DMD::computePhi(dmd_internal);
-    d_phi_real = d_basis->transposeMult(eigenpair.ev_real);
-    d_phi_imaginary = d_basis->transposeMult(eigenpair.ev_imaginary);
+    struct DMDInternal dmd_internal = {f_snapshots_in, f_snapshots_out, d_basis, d_basis_right, d_S_inv, &eigenpair};
+    computePhi(dmd_internal);
 
-    Vector* init = new Vector(f_snapshots_in->numRows(), true);
+    //d_phi_real = d_basis->mult(eigenpair.ev_real);
+    //d_phi_imaginary = d_basis->mult(eigenpair.ev_imaginary);
+
+    Vector* init = new Vector(d_basis->numRows(), true);
     for (int i = 0; i < init->dim(); i++)
     {
         init->item(i) = f_snapshots_in->item(i, 0);
@@ -689,8 +708,8 @@ DMDc::project(const Vector* init, const Matrix* controls, double t_offset)
 
     if (t_offset >= 0.0)
     {
-        std::cout << "t_offset is updated from " << d_t_offset <<
-                  " to " << t_offset << std::endl;
+        std::cout << "t_offset is updated from " << d_t_offset
+                  << " to " << t_offset << std::endl;
         d_t_offset = t_offset;
     }
     d_init_projected = true;
@@ -705,8 +724,8 @@ DMDc::predict(double t)
 
     t -= d_t_offset;
 
-    int n = d_projected_controls_real->numColumns();
-    CAROM_VERIFY(abs(t - n*d_dt) < 1E-3 * d_dt);
+    int n = round(t / d_dt);
+    //int n = min(round(t / d_dt), d_projected_controls_real->numColumns());
 
     std::pair<Matrix*, Matrix*> d_phi_pair = phiMultEigs(t);
     Matrix* d_phi_mult_eigs_real = d_phi_pair.first;
@@ -718,16 +737,15 @@ DMDc::predict(double t)
                                            d_projected_init_imaginary);
     Vector* d_predicted_state_real = d_predicted_state_real_1->minus(
                                          d_predicted_state_real_2);
-    addOffset(d_predicted_state_real, t);
+    addOffset(d_predicted_state_real);
 
     delete d_phi_mult_eigs_real;
     delete d_phi_mult_eigs_imaginary;
     delete d_predicted_state_real_1;
     delete d_predicted_state_real_2;
 
-    Vector* f_control_real = new Vector(d_basis->numRows(), d_basis->distributed());
-    Vector* f_control_imaginary = new Vector(d_basis->numRows(),
-            d_basis->distributed());
+    Vector* f_control_real = new Vector(d_basis->numRows(), false);
+    Vector* f_control_imaginary = new Vector(d_basis->numRows(), false);
     for (int k = 0; k < n; k++)
     {
         t -= d_dt;
@@ -756,7 +774,7 @@ DMDc::predict(double t)
 }
 
 void
-DMDc::addOffset(Vector*& result, double t)
+DMDc::addOffset(Vector*& result)
 {
     if (d_state_offset)
     {
@@ -767,6 +785,7 @@ DMDc::addOffset(Vector*& result, double t)
 std::complex<double>
 DMDc::computeEigExp(std::complex<double> eig, double t)
 {
+    std::cout << "Line 777: power = " << t << "/" << d_dt << " = " << t / d_dt << std::endl;
     return std::pow(eig, t / d_dt);
 }
 
@@ -781,6 +800,10 @@ DMDc::phiMultEigs(double t)
         std::complex<double> eig_exp = computeEigExp(d_eigs[i], t);
         d_eigs_exp_real->item(i, i) = std::real(eig_exp);
         d_eigs_exp_imaginary->item(i, i) = std::imag(eig_exp);
+        std::cout << "Line 788: " << i << "-th eigenvalue: ";
+        std::cout << d_eigs[i] << ", ";
+        std::cout << d_eigs_exp_real->item(i,i) << ", ";
+        std::cout << d_eigs_exp_imaginary->item(i,i) << std::endl;
     }
 
     Matrix* d_phi_mult_eigs_real = d_phi_real->mult(d_eigs_exp_real);

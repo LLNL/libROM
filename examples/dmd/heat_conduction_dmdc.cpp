@@ -90,9 +90,9 @@ double TimeWindowFunction(const double t, const double t_begin,
 double Amplitude(const double t, const int index);
 double SourceFunction(const Vector &x, const double t);
 
-double amp_in = 2.0;
+double amp_in = 0.2;
 double t_end_in = 0.1;
-double amp_out = 1.0;
+double amp_out = 0.1;
 double t_end_out = 0.3;
 double dt = 1.0e-2;
 
@@ -143,6 +143,14 @@ int main(int argc, char *argv[])
                    "Alpha coefficient.");
     args.AddOption(&kappa, "-k", "--kappa",
                    "Kappa coefficient offset.");
+    args.AddOption(&amp_in, "-amp-in", "--amplitude-in",
+                   "Amplitude of inlet source at (0,0).");
+    args.AddOption(&amp_out, "-amp-out", "--amplitude-out",
+                   "Amplitude of outlet source at (0.5,0.5).");
+    args.AddOption(&t_end_in, "-t-end-in", "--t-end-in",
+                   "End time of inlet source at (0,0).");
+    args.AddOption(&t_end_out, "-t-end-out", "--t-end-out",
+                   "End time of outlet source at (0.5,0.5).");
     args.AddOption(&visualization, "-vis", "--visualization", "-no-vis",
                    "--no-visualization",
                    "Enable or disable GLVis visualization.");
@@ -358,7 +366,7 @@ int main(int argc, char *argv[])
 
     CAROM::DMDc* dmd_u;
     dmd_u = new CAROM::DMDc(u.Size(), dt);
-    dmd_u->takeSample(u.GetData(), t, f);
+    dmd_u->takeSample(u.GetData(), t, f, false);
     ts.push_back(t);
 
     dmd_training_timer.Stop();
@@ -379,10 +387,10 @@ int main(int argc, char *argv[])
 
         dmd_training_timer.Start();
 
+        u_gf.SetFromTrueDofs(u);
         f[0] = Amplitude(t, 0);
         f[1] = Amplitude(t, 1);
-        u_gf.SetFromTrueDofs(u);
-        dmd_u->takeSample(u.GetData(), t, f);
+        dmd_u->takeSample(u.GetData(), t, f, last_step);
         ts.push_back(t);
 
         dmd_training_timer.Stop();
@@ -521,6 +529,8 @@ int main(int argc, char *argv[])
     double tot_diff_norm_u = sqrt(InnerProduct(MPI_COMM_WORLD, diff_u, diff_u));
     double tot_true_solution_u_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
                                            true_solution_u, true_solution_u));
+    cout << tot_diff_norm_u << endl;
+    cout << tot_true_solution_u_norm << endl;
 
     if (myid == 0)
     {

@@ -26,6 +26,7 @@ namespace CAROM {
 
 class Matrix;
 class Vector;
+class ComplexEigenPair;
 
 /**
  * Class DMDc implements the DMDc algorithm on a given snapshot matrix.
@@ -57,9 +58,9 @@ public:
     virtual ~DMDc();
 
     /**
-     * @brief Set the offset of a certain order.
+     * @brief Set the state offset.
      */
-    virtual void setOffset(Vector* offset_vector, int order);
+    virtual void setOffset(Vector* offset_vector);
 
     /**
      * @brief Sample the new state, u_in. Any samples in d_snapshots
@@ -68,11 +69,13 @@ public:
      * @pre u_in != 0
      * @pre t >= 0.0
      *
-     * @param[in] u_in The new state.
-     * @param[in] t    The time of the newly sampled state.
-     * @param[in] f_in The control.
+     * @param[in] u_in      The new state.
+     * @param[in] t         The time of the newly sampled state.
+     * @param[in] f_in      The control.
+     * @param[in] last_step Whether it is the last step.
      */
-    virtual void takeSample(double* u_in, double t, double* f_in = NULL);
+    virtual void takeSample(double* u_in, double t, double* f_in, 
+                            bool last_step = false);
 
     /**
      * @param[in] energy_fraction The energy fraction to keep after doing SVD.
@@ -260,14 +263,19 @@ protected:
         const Matrix* snapshots, const Matrix* controls, const Matrix* B);
 
     /**
+     * @brief Compute phi.
+     */
+    virtual void computePhi(DMDInternal dmd_internal_obj);
+
+    /**
      * @brief Compute the appropriate exponential function when predicting the solution.
      */
     virtual std::complex<double> computeEigExp(std::complex<double> eig, double t);
 
     /**
-     * @brief Add the appropriate offset when predicting the solution.
+     * @brief Add the state offset when predicting the solution.
      */
-    virtual void addOffset(Vector*& result, double t = 0.0);
+    virtual void addOffset(Vector*& result);
 
     /**
      * @brief Get the snapshot matrix contained within d_snapshots.
