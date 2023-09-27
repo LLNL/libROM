@@ -1818,7 +1818,7 @@ Matrix::orthogonalize()
         // Normalize the column.
         double norm = 0.0;
         tmp = 0.0;
-        
+
         for (int i = 0; i < d_num_rows; ++i)
             tmp += item(i, work) * item(i, work);
 
@@ -1844,7 +1844,7 @@ Matrix::orthogonalize_last(int ncols)
 {
     if (ncols == -1) ncols = d_num_cols;
     CAROM_ASSERT((ncols > 0) && (ncols <= d_num_cols));
-    
+
     const int last_col = ncols - 1; // index of column to be orthonormalized
     double tmp;
 
