@@ -233,7 +233,7 @@ void DMDc::train(int k, const Matrix* B)
 
 std::pair<Matrix*, Matrix*>
 DMDc::computeDMDcSnapshotPair(const Matrix* snapshots, const Matrix* controls,
-                             const Matrix* B)
+                              const Matrix* B)
 {
     CAROM_VERIFY(snapshots->numColumns() > 1);
     CAROM_VERIFY(controls->numColumns() == snapshots->numColumns()-1);
