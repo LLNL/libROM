@@ -1790,44 +1790,51 @@ const
 void
 Matrix::orthogonalize()
 {
-    for (int work = 1; work < d_num_cols; ++work) {
+    for (int work = 0; work < d_num_cols; ++work)
+    {
+        // Orthogonalize the column.
         double tmp;
-        for (int col = 0; col < work; ++col) {
+        for (int col = 0; col < work; ++col)
+        {
             double factor = 0.0;
             tmp = 0.0;
-            for (int i = 0; i < d_num_rows; ++i) {
-                tmp += item(i, col)*item(i, work);
-            }
-            if (d_num_procs > 1) {
-                MPI_Allreduce(&tmp,
-                              &factor,
-                              1,
-                              MPI_DOUBLE,
-                              MPI_SUM,
+
+            for (int i = 0; i < d_num_rows; ++i)
+                tmp += item(i, col) * item(i, work);
+
+            if (d_num_procs > 1)
+            {
+                MPI_Allreduce(&tmp, &factor, 1, MPI_DOUBLE, MPI_SUM,
                               MPI_COMM_WORLD);
             }
-            else {
+            else
+            {
                 factor = tmp;
             }
-
-            for (int i = 0; i < d_num_rows; ++i) {
-                item(i, work) -= factor*item(i, col);
-            }
+            for (int i = 0; i < d_num_rows; ++i)
+                item(i, work) -= factor * item(i, col);
         }
+
+        // Normalize the column.
         double norm = 0.0;
         tmp = 0.0;
-        for (int i = 0; i < d_num_rows; ++i) {
-            tmp += item(i, work)*item(i, work);
-        }
-        if (d_num_procs > 1) {
+        
+        for (int i = 0; i < d_num_rows; ++i)
+            tmp += item(i, work) * item(i, work);
+
+        if (d_num_procs > 1)
+        {
             MPI_Allreduce(&tmp, &norm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         }
-        else {
+        else
+        {
             norm = tmp;
         }
-        norm = sqrt(norm);
-        for (int i = 0; i < d_num_rows; ++i) {
-            item(i, work) /= norm;
+        if (norm > 1.0e-15)
+        {
+            norm = 1.0 / sqrt(norm);
+            for (int i = 0; i < d_num_rows; ++i)
+                item(i, work) *= norm;
         }
     }
 }
