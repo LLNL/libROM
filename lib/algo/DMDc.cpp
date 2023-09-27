@@ -44,9 +44,10 @@ extern "C" {
 
 namespace CAROM {
 
-DMDc::DMDc(int dim, Vector* state_offset)
+DMDc::DMDc(int dim, int dim_c, Vector* state_offset)
 {
     CAROM_VERIFY(dim > 0);
+    CAROM_VERIFY(dim_c > 0);
 
     // Get the rank of this process, and the number of processors.
     int mpi_init;
@@ -58,14 +59,16 @@ DMDc::DMDc(int dim, Vector* state_offset)
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
     d_dim = dim;
+    d_dim_c = dim_c;
     d_trained = false;
     d_init_projected = false;
     setOffset(state_offset);
 }
 
-DMDc::DMDc(int dim, double dt, Vector* state_offset)
+DMDc::DMDc(int dim, int dim_c, double dt, Vector* state_offset)
 {
     CAROM_VERIFY(dim > 0);
+    CAROM_VERIFY(dim_c > 0);
     CAROM_VERIFY(dt > 0.0);
 
     // Get the rank of this process, and the number of processors.
@@ -78,6 +81,7 @@ DMDc::DMDc(int dim, double dt, Vector* state_offset)
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
     d_dim = dim;
+    d_dim_c = dim_c;
     d_dt = dt;
     d_trained = false;
     d_init_projected = false;
@@ -196,7 +200,7 @@ void DMDc::takeSample(double* u_in, double t, double* f_in, bool last_step)
 
     if (!last_step)
     {
-        Vector* control = new Vector(f_in, d_dim, false);
+        Vector* control = new Vector(f_in, d_dim_c, false);
         d_controls.push_back(control);
     }
 
@@ -282,16 +286,6 @@ DMDc::computeDMDcSnapshotPair(const Matrix* snapshots, const Matrix* controls,
     }
 
     return std::pair<Matrix*,Matrix*>(f_snapshots_in, f_snapshots_out);
-}
-
-
-void
-DMDc::computePhi(struct DMDInternal dmd_internal_obj)
-{
-    // Calculate phi
-    d_phi_real = dmd_internal_obj.basis->mult(dmd_internal_obj.eigenpair->ev_real);
-    d_phi_imaginary = dmd_internal_obj.basis->mult(
-                          dmd_internal_obj.eigenpair->ev_imaginary);
 }
 
 void
@@ -537,11 +531,6 @@ DMDc::constructDMDc(const Matrix* f_snapshots,
         Matrix* d_basis_state_rot = d_basis_in_state->transposeMult(d_basis);
         d_A_tilde = d_A_tilde_orig->mult(d_basis_state_rot);
         d_B_tilde = d_A_tilde_orig->mult(d_basis_in_control_transpose);
-        for (int j = 0; j < d_k_in; j++)
-        {
-            std::cout << j << ": A = " << d_A_tilde->item(j,j) << std::endl;
-            std::cout << j << ": B = " << d_B_tilde->item(j,0) << std::endl;
-        }
         delete d_basis_in_state;
         delete d_basis_in_control_transpose;
         delete d_basis_state_rot;
@@ -556,11 +545,11 @@ DMDc::constructDMDc(const Matrix* f_snapshots,
     ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(d_A_tilde);
     d_eigs = eigenpair.eigs;
 
-    struct DMDInternal dmd_internal = {f_snapshots_in, f_snapshots_out, d_basis, d_basis_right, d_S_inv, &eigenpair};
-    computePhi(dmd_internal);
+    //struct DMDInternal dmd_internal = {f_snapshots_in, f_snapshots_out, d_basis, d_basis_right, d_S_inv, &eigenpair};
+    //computePhi(dmd_internal);
 
-    //d_phi_real = d_basis->mult(eigenpair.ev_real);
-    //d_phi_imaginary = d_basis->mult(eigenpair.ev_imaginary);
+    d_phi_real = d_basis->mult(eigenpair.ev_real);
+    d_phi_imaginary = d_basis->mult(eigenpair.ev_imaginary);
 
     Vector* init = new Vector(d_basis->numRows(), true);
     for (int i = 0; i < init->dim(); i++)
@@ -785,7 +774,6 @@ DMDc::addOffset(Vector*& result)
 std::complex<double>
 DMDc::computeEigExp(std::complex<double> eig, double t)
 {
-    std::cout << "Line 777: power = " << t << "/" << d_dt << " = " << t / d_dt << std::endl;
     return std::pow(eig, t / d_dt);
 }
 
@@ -800,10 +788,6 @@ DMDc::phiMultEigs(double t)
         std::complex<double> eig_exp = computeEigExp(d_eigs[i], t);
         d_eigs_exp_real->item(i, i) = std::real(eig_exp);
         d_eigs_exp_imaginary->item(i, i) = std::imag(eig_exp);
-        std::cout << "Line 788: " << i << "-th eigenvalue: ";
-        std::cout << d_eigs[i] << ", ";
-        std::cout << d_eigs_exp_real->item(i,i) << ", ";
-        std::cout << d_eigs_exp_imaginary->item(i,i) << std::endl;
     }
 
     Matrix* d_phi_mult_eigs_real = d_phi_real->mult(d_eigs_exp_real);

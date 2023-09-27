@@ -18,7 +18,6 @@
 #ifndef included_DMDc_h
 #define included_DMDc_h
 
-#include "ParametricDMD.h"
 #include <vector>
 #include <complex>
 
@@ -39,10 +38,11 @@ public:
      * @brief Constructor. Basic DMDc with uniform time step size.
      *
      * @param[in] dim              The full-order state dimension.
+     * @param[in] dim_c            The control dimension.
      * @param[in] dt               The dt between samples.
      * @param[in] state_offset     The state offset.
      */
-    DMDc(int dim, double dt, Vector* state_offset = NULL);
+    DMDc(int dim, int dim_c, double dt, Vector* state_offset = NULL);
 
     /**
      * @brief Constructor. DMDc from saved models.
@@ -173,41 +173,13 @@ public:
 
 protected:
     /**
-     * @brief Obtain DMDc model interpolant at desired parameter point by
-     *        interpolation of DMDc models from training parameter points.
-     *
-     * @param[in] parametric_dmd    The interpolant DMDc model at the desired point.
-     * @param[in] parameter_points  The training parameter points.
-     * @param[in] dmds              The DMDc objects associated with
-     *                              each training parameter point.
-     * @param[in] desired_point     The desired point at which to create a parametric DMDc.
-     * @param[in] rbf               The RBF type ("G" == gaussian,
-     *                              "IQ" == inverse quadratic,
-     *                              "IMQ" == inverse multiquadric)
-     * @param[in] interp_method     The interpolation method type
-     *                              ("LS" == linear solve,
-     *                              "IDW" == inverse distance weighting,
-     *                              "LP" == lagrangian polynomials)
-     * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
-     *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
-     * @param[in] reorthogonalize_W Whether to reorthogonalize the interpolated W (basis) matrix.
-     */
-    //friend void getParametricDMDc<DMDc>(DMDc*& parametric_dmd,
-    //                                    std::vector<Vector*>& parameter_points,
-    //                                    std::vector<DMDc*>& dmds,
-    //                                    Vector* desired_point,
-    //                                    std::string rbf,
-    //                                    std::string interp_method,
-    //                                    double closest_rbf_val,
-    //                                    bool reorthogonalize_W);
-
-    /**
      * @brief Constructor. Variant of DMDc with non-uniform time step size.
      *
      * @param[in] dim               The full-order state dimension.
+     * @param[in] dim_c             The control dimension.
      * @param[in] state_offset      The state offset.
      */
-    DMDc(int dim, Vector* state_offset = NULL);
+    DMDc(int dim, int dim_c, Vector* state_offset = NULL);
 
     /**
      * @brief Constructor. Specified from DMDc components.
@@ -263,11 +235,6 @@ protected:
         const Matrix* snapshots, const Matrix* controls, const Matrix* B);
 
     /**
-     * @brief Compute phi.
-     */
-    virtual void computePhi(DMDInternal dmd_internal_obj);
-
-    /**
      * @brief Compute the appropriate exponential function when predicting the solution.
      */
     virtual std::complex<double> computeEigExp(std::complex<double> eig, double t);
@@ -296,6 +263,11 @@ protected:
      * @brief The total dimension of the sample vector.
      */
     int d_dim;
+
+    /**
+     * @brief The total dimension of the control vector.
+     */
+    int d_dim_c;
 
     /**
      * @brief The time step size between samples.

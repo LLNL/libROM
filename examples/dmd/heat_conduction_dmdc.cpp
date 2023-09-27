@@ -365,7 +365,7 @@ int main(int argc, char *argv[])
     f[1] = Amplitude(t, 1);
 
     CAROM::DMDc* dmd_u;
-    dmd_u = new CAROM::DMDc(u.Size(), dt);
+    dmd_u = new CAROM::DMDc(u.Size(), 2, dt);
     dmd_u->takeSample(u.GetData(), t, f, false);
     ts.push_back(t);
 
@@ -529,8 +529,6 @@ int main(int argc, char *argv[])
     double tot_diff_norm_u = sqrt(InnerProduct(MPI_COMM_WORLD, diff_u, diff_u));
     double tot_true_solution_u_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
                                            true_solution_u, true_solution_u));
-    cout << tot_diff_norm_u << endl;
-    cout << tot_true_solution_u_norm << endl;
 
     if (myid == 0)
     {
