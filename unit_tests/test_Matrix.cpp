@@ -566,6 +566,34 @@ TEST(MatrixSerialTest, Test_Matrix_orthogonalize_last2)
                 "(i, j) = (" << i << ", " << j << ")";
 }
 
+TEST(MatrixSerialTest, Test_Matrix_orthogonalize_last3)
+{
+    // Matrix data to orthonormalize.
+    double d_mat[16] = {3.5, 7.1, 0.0, 0.0,
+                        0.0, 1.9, 8.3, 0.0,
+                        0.0, 0.0, 5.7, 4.6,
+                        0.0, 0.0, 0.0, 3.2};
+
+    // Target matrix data.
+    double d_mat2[16] = {1.0, 0.0, 0.0, 0.0,
+                         0.0, 1.0, 0.0, 0.0,
+                         0.0, 0.0, 1.0, 0.0,
+                         0.0, 0.0, 0.0, 1.0};
+
+    CAROM::Matrix matrix(d_mat, 4, 4, false);
+    CAROM::Matrix target(d_mat2, 4, 4, false);
+
+    for (int i = 0; i < 4; i++)
+        matrix.orthogonalize_last(i+1);
+
+    double abs_error = 1.0e-15; // absolute error threshold
+
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 4; j++)
+            EXPECT_NEAR(matrix.item(i, j), target.item(i, j), abs_error) << 
+                "(i, j) = (" << i << ", " << j << ")";
+}
+
 TEST(MatrixSerialTest, Test_pMatrix_mult_reference)
 {
     /**
