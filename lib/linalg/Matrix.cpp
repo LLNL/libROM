@@ -1802,7 +1802,7 @@ Matrix::orthogonalize()
             for (int i = 0; i < d_num_rows; ++i)
                 tmp += item(i, col) * item(i, work);
 
-            if (d_num_procs > 1)
+            if (d_distributed && d_num_procs > 1)
             {
                 MPI_Allreduce(&tmp, &factor, 1, MPI_DOUBLE, MPI_SUM,
                               MPI_COMM_WORLD);
@@ -1822,7 +1822,7 @@ Matrix::orthogonalize()
         for (int i = 0; i < d_num_rows; ++i)
             tmp += item(i, work) * item(i, work);
 
-        if (d_num_procs > 1)
+        if (d_distributed && d_num_procs > 1)
         {
             MPI_Allreduce(&tmp, &norm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         }
@@ -1857,7 +1857,7 @@ Matrix::orthogonalize_last(int ncols)
         for (int i = 0; i < d_num_rows; ++i)
             tmp += item(i, col) * item(i, last_col);
 
-        if (d_num_procs > 1)
+        if (d_distributed && d_num_procs > 1)
         {
             MPI_Allreduce(&tmp, &factor, 1, MPI_DOUBLE, MPI_SUM,
                           MPI_COMM_WORLD);
@@ -1877,7 +1877,7 @@ Matrix::orthogonalize_last(int ncols)
     for (int i = 0; i < d_num_rows; ++i)
         tmp += item(i, last_col) * item(i, last_col);
 
-    if (d_num_procs > 1)
+    if (d_distributed && d_num_procs > 1)
     {
         MPI_Allreduce(&tmp, &norm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     }
