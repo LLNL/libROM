@@ -341,6 +341,64 @@ TEST(MatrixSerialTest, Test_get_first_n_columns)
     EXPECT_DOUBLE_EQ(truncated_matrix->item(3, 1), 13.0);
 }
 
+TEST(MatrixSerialTest, Test_Matrix_rescale_rows_max)
+{
+    // Matrix data to rescale.
+    double d_mat[12] = { 3.0,  5.0,  0.0,
+                         -3.0, -2.0, -1.0,
+                         -1.0,  3.0, -2.0,
+                         2.0, -2.5,  0.5
+                       };
+
+    // Target matrix data.
+    double d_mat2[12] = {     0.6,  1.0,  0.0,
+                              -1.0, -2.0/3.0, -1.0/3.0,
+                              -1.0/3.0, 1.0, -2.0/3.0,
+                              2.0/2.5, -1.0, 0.5/2.5
+                        };
+
+    CAROM::Matrix matrix(d_mat, 4, 3, false);
+    CAROM::Matrix target(d_mat2, 4, 3, false);
+
+    double abs_error = 1.0e-15; // absolute error threshold
+
+    matrix.rescale_rows_max();
+
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 3; j++)
+            EXPECT_NEAR(matrix.item(i, j), target.item(i, j), abs_error) <<
+                    "(i, j) = (" << i << ", " << j << ")";
+}
+
+TEST(MatrixSerialTest, Test_Matrix_rescale_rows_max2)
+{
+    // Matrix data to rescale.
+    double d_mat[12] = { 0.0,  -1.0e-16,  1.0e-15,
+                         -3.0, -2.0, -1.0,
+                         -1.0,  3.0, -2.0,
+                         2.0, -2.5,  0.5
+                       };
+
+    // Target matrix data.
+    double d_mat2[12] = {     0.0,  -1.0e-16,  1.0e-15,
+                              -1.0, -2.0/3.0, -1.0/3.0,
+                              -1.0/3.0, 1.0, -2.0/3.0,
+                              2.0/2.5, -1.0, 0.5/2.5
+                        };
+
+    CAROM::Matrix matrix(d_mat, 4, 3, false);
+    CAROM::Matrix target(d_mat2, 4, 3, false);
+
+    double abs_error = 1.0e-15; // absolute error threshold
+
+    matrix.rescale_rows_max();
+
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 3; j++)
+            EXPECT_NEAR(matrix.item(i, j), target.item(i, j), abs_error) <<
+                    "(i, j) = (" << i << ", " << j << ")";
+}
+
 TEST(MatrixSerialTest, Test_Matrix_rescale_cols_max)
 {
     // Matrix data to rescale.
