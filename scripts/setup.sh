@@ -55,9 +55,11 @@ fi
 # Install HYPRE
 cd $LIB_DIR
 if [ ! -d "hypre" ]; then
-  wget https://github.com/hypre-space/hypre/archive/refs/tags/v2.20.0.tar.gz
-  tar -zxvf v2.20.0.tar.gz
-  mv hypre-2.20.0 hypre
+  # NOTE(kevin): This is the hypre version used by PyMFEM v4.5.2.0.
+  # This version matching is required to support pylibROM-PyMFEM interface.
+  wget https://github.com/hypre-space/hypre/archive/v2.28.0.tar.gz
+  tar -zxvf v2.28.0.tar.gz
+  mv hypre-2.28.0 hypre
   cd hypre/src
   ./configure --disable-fortran
   make -j
@@ -130,7 +132,9 @@ else
     fi
     if [[ $UPDATE_LIBS == "true" ]]; then
         cd mfem_parallel
-        git pull
+        # NOTE(kevin): v4.5.2-dev commit. This is the mfem version used by PyMFEM v4.5.2.0.
+        # This version matching is required to support pylibROM-PyMFEM interface.
+        git checkout 00b2a0705f647e17a1d4ffcb289adca503f28d42
         make parallel -j 8 STATIC=NO SHARED=YES MFEM_USE_MPI=YES MFEM_USE_GSLIB=${MG} MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB"
         check_result $? mfem-parallel-installation
     fi
