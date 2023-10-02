@@ -10,14 +10,21 @@
 
 //                       libROM MFEM Example: DG Advection (adapted from ex9p.cpp)
 //
+// =================================================================================
+//
 // Compile with: make dg_advection_global_rom
 //
-// For ROM (reproductive case):
+// Sample runs and results for reproductive case:
 //    dg_advection_global_rom -offline
 //    dg_advection_global_rom -merge -ns 1
 //    dg_advection_global_rom -online
 //
-// For ROM (global rom):
+// Output:
+//  Relative l2 error of ROM solution 0.0005641839849343575
+// 
+// =================================================================================
+//
+// Sample runs and results for global ROM:
 // Offline phase: dg_advection_global_rom -offline -ff 1.0 -id 0
 //                dg_advection_global_rom -offline -ff 1.1 -id 1
 //                dg_advection_global_rom -offline -ff 1.2 -id 2
@@ -28,19 +35,10 @@
 //
 // Online phase:  dg_advection_global_rom -online -ff 1.15
 //
-// Sample runs:
-//    mpirun -np 4 dg_advection_global_rom -p 0 -dt 0.005
-//    mpirun -np 4 dg_advection_global_rom -p 0 -dt 0.01
-//    mpirun -np 4 dg_advection_global_rom -p 1 -dt 0.005 -tf 9
-//    mpirun -np 4 dg_advection_global_rom -p 1 -rp 1 -dt 0.002 -tf 9
-//    mpirun -np 4 dg_advection_global_rom -p 1 -rp 1 -dt 0.02 -s 13 -tf 9
-//    mpirun -np 4 dg_advection_global_rom -p 1 -rp 1 -dt 0.004 -tf 9
-//    mpirun -np 4 dg_advection_global_rom -p 1 -rp 1 -dt 0.005 -tf 9
-//    mpirun -np 4 dg_advection_global_rom -p 3 -rp 2 -dt 0.0025 -tf 9 -vs 20
-//    mpirun -np 4 dg_advection_global_rom -p 0 -o 2 -rp 1 -dt 0.01 -tf 8
-//    mpirun -np 4 dg_advection_global_rom -p 0 -rs 2 -dt 0.005 -tf 2
-//    mpirun -np 4 dg_advection_global_rom -p 0 -rs 1 -o 2 -tf 2
-//    mpirun -np 3 dg_advection_global_rom -p 1 -rs 1 -rp 0 -dt 0.005 -tf 0.5
+// Output:
+//   Relative l2 error of ROM solution 0.0004333183604809453
+//
+// =================================================================================
 //
 // Description:  This example code solves the time-dependent advection equation
 //               du/dt + v.grad(u) = 0, where v is a given fluid velocity, and
@@ -128,10 +126,7 @@ public:
         delete AIR_solver;
         AIR_solver = new HypreBoomerAMG(A_s);
         AIR_solver->SetAdvectiveOptions(1, "", "FA");
-        AIR_solver->SetPrintLevel(
-            0);    // 6. Define the parallel mesh by a partitioning of the serial mesh. Refine
-        //    this mesh further in parallel to increase the resolution. Once the
-        //    parallel mesh is defined, the serial mesh can be deleted.
+        AIR_solver->SetPrintLevel(0);
         AIR_solver->SetMaxLevels(50);
     }
 
@@ -464,9 +459,6 @@ int main(int argc, char *argv[])
         {
             cout << "Unknown ODE solver type: " << ode_solver_type << '\n';
         }
-        delete mesh;    // 6. Define the parallel mesh by a partitioning of the serial mesh. Refine
-        //    this mesh further in parallel to increase the resolution. Once the
-        //    parallel mesh is defined, the serial mesh can be deleted.
         return 3;
     }
 
