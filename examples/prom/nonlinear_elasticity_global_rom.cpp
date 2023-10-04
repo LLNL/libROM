@@ -1669,7 +1669,7 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
                                              S_hat_v0_temp->Size(), true, false);
     M_hat = new CAROM::Matrix(rvdim, rvdim, false);
     M_hat_inv = new CAROM::Matrix(rvdim, rvdim, false);
-    
+
     // Set the max iterations for the mass matrix solver
     M_hat_solver.SetMaxIter(1000);
 
@@ -2009,65 +2009,63 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
     DenseMatrix DSh(dof, dim);
     DenseMatrix DS(dof, dim);
     DenseMatrix Jrt(dim);
-    DS_coef.SetSize(dof * dim * rw.size() * rvdim);
+    DS_coef.SetSize(dof * dim * rw.size());
     DS_coef = 0.0;
     int index = 0;
-
-    // For every basis vector
-    for (int j = 0; j < rvdim; ++j)
+    eprev = -1;
+    // For every quadrature weight
+    for (int i = 0; i < rw.size(); ++i) // NOTE: i < 9
     {
-        // Get basis vector and prolongate
-        for (int k = 0; k < V_v.numRows(); ++k)
-            vj[k] = V_v(k, j);
-        P->Mult(vj, p_vj);
+        const int e = qp[i] / nqe; // Element index
+        // Local (element) index of the quadrature point
+        const int qpi = qp[i] - (e * nqe);
+        const IntegrationPoint &ip = ir->IntPoint(qpi);
 
-        eprev = -1;
-
-        // For every quadrature weight
-        for (int i = 0; i < rw.size(); ++i) // NOTE: i < 9
+        if (e != eprev) // Update element transformation
         {
-            const int e = qp[i] / nqe; // Element index
-            // Local (element) index of the quadrature point
-            const int qpi = qp[i] - (e * nqe);
-            const IntegrationPoint &ip = ir->IntPoint(qpi);
+            doftrans = fesR->GetElementVDofs(e, vdofs);
+            eltrans = fesR->GetElementTransformation(e);
 
-            if (e != eprev) // Update element transformation
+            if (doftrans)
             {
-                doftrans = fesR->GetElementVDofs(e, vdofs);
-                eltrans = fesR->GetElementTransformation(e);
-
-                if (doftrans)
-                {
-                    MFEM_ABORT("TODO");
-                }
-
-                // Get element vectors
-                p_vj.GetSubVector(vdofs, vj_e);
-                eprev = e;
+                MFEM_ABORT("TODO");
             }
+            eprev = e;
+        }
 
-            // Set integration point in the element transformation
-            eltrans->SetIntPoint(&ip);
-            model->SetTransformation(*eltrans);
-            // Get the transformation weight
-            double t = eltrans->Weight();
+        // Set integration point in the element transformation
+        eltrans->SetIntPoint(&ip);
+        model->SetTransformation(*eltrans);
+        // Get the transformation weight
+        double t = eltrans->Weight();
+
+        // Calculate DS and store
+        CalcInverse(eltrans->Jacobian(), Jrt);
+        fe->CalcDShape(ip, DSh);
+        Mult(DSh, Jrt, DS);
+        for (int ii = 0; ii < dof; ++ii)
+        {
+            for (int jj = 0; jj < dim; ++jj)
+            {
+                index = jj + ii * dim;
+                DS_coef[index + (i * dof * dim)] = DS.Elem(ii, jj);
+            }
+        }
+        // For every basis vector
+        for (int j = 0; j < rvdim; ++j)
+        {
+            // Get basis vector and prolongate
+            for (int k = 0; k < V_v.numRows(); ++k)
+                vj[k] = V_v(k, j);
+            P->Mult(vj, p_vj);
+
+            // Get element vectors
+            p_vj.GetSubVector(vdofs, vj_e);
+
             // Calculate r[i] = ve_j^T * elvect
             for (int k = 0; k < elvect_size; k++)
             {
                 coef[k + (i * elvect_size) + (j * rw.size() * elvect_size)] = vj_e[k] * rw[i] * t;
-            }
-
-            // Calculate DS and store
-            CalcInverse(eltrans->Jacobian(), Jrt);
-            fe->CalcDShape(ip, DSh);
-            Mult(DSh, Jrt, DS);
-            for (int ii = 0; ii < dof; ++ii)
-            {
-                for (int jj = 0; jj < dim; ++jj)
-                {
-                    index = jj + ii * dim;
-                    DS_coef[index + (i * dof * dim) + (j * rw.size() * dof * dim)] = DS.Elem(ii, jj);
-                }
             }
         }
     }
@@ -2139,74 +2137,74 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
     Vector elvect(dof * dim);
     PMatO.UseExternalData(elvect.GetData(), dof, dim);
 
-    // For every basis vector
-    for (int j = 0; j < rvdim; ++j)
-
+    eprev = -1;
+    // For every quadrature weight
+    for (int i = 0; i < rw.size(); ++i) // NOTE: i < 9
     {
-        // Get basis vector and prolongate
-        for (int k = 0; k < V_v.numRows(); ++k)
-            vj[k] = V_v(k, j);
-        P->Mult(vj, p_vj);
+        const int e = qp[i] / nqe; // Element index
+        // Local (element) index of the quadrature point
+        const int qpi = qp[i] - (e * nqe);
+        const IntegrationPoint &ip = ir->IntPoint(qpi);
 
-        eprev = -1;
-        double temp = 0.0;
-
-        // For every quadrature weight
-        for (int i = 0; i < rw.size(); ++i) // NOTE: i < 9
+        if (e != eprev) // Update element transformation
         {
-            const int e = qp[i] / nqe; // Element index
-            // Local (element) index of the quadrature point
-            const int qpi = qp[i] - (e * nqe);
-            const IntegrationPoint &ip = ir->IntPoint(qpi);
+            doftrans = fesR->GetElementVDofs(e, vdofs);
+            fe = fesR->GetFE(e);
+            eltrans = fesR->GetElementTransformation(e);
 
-            if (e != eprev) // Update element transformation
+            dof = fe->GetDof(); // Get number of dofs in element
+            dim = fe->GetDim();
+
+            if (doftrans)
             {
-                doftrans = fesR->GetElementVDofs(e, vdofs);
-                fe = fesR->GetFE(e);
-                eltrans = fesR->GetElementTransformation(e);
-
-                dof = fe->GetDof(); // Get number of dofs in element
-                dim = fe->GetDim();
-
-                if (doftrans)
-                {
-                    MFEM_ABORT("TODO");
-                }
-
-                // Get element vectors
-                p_Vx.GetSubVector(vdofs, Vx_e);
-                p_vj.GetSubVector(vdofs, vj_e);
-                eprev = e;
+                MFEM_ABORT("TODO");
             }
 
-            // Integration at ip
-            PMatI.UseExternalData(Vx_e.GetData(), dof, dim);
+            // Get element vectors
+            p_Vx.GetSubVector(vdofs, Vx_e);
+            eprev = e;
+        }
 
-            elvect = 0.0;
+        // Integration at ip
+        PMatI.UseExternalData(Vx_e.GetData(), dof, dim);
 
-            // Set integration point in the element transformation
-            eltrans->SetIntPoint(&ip);
-            model->SetTransformation(*eltrans);
+        elvect = 0.0;
 
-            // Get the transformation weight
-            double t = eltrans->Weight();
+        // Set integration point in the element transformation
+        eltrans->SetIntPoint(&ip);
+        model->SetTransformation(*eltrans);
 
-            // Compute action of nonlinear operator
-            CalcInverse(eltrans->Jacobian(), Jrt);
-            fe->CalcDShape(ip, DSh);
-            Mult(DSh, Jrt, DS);
-            MultAtB(PMatI, DS, Jpt);
-            model->EvalP(Jpt, P_f);
-            P_f *= (t * rw[i]); // NB: Not by ip.weight
-            AddMultABt(DS, P_f, PMatO);
+        // Get the transformation weight
+        double t = eltrans->Weight();
+
+        // Compute action of nonlinear operator
+        CalcInverse(eltrans->Jacobian(), Jrt);
+        fe->CalcDShape(ip, DSh);
+        Mult(DSh, Jrt, DS);
+        MultAtB(PMatI, DS, Jpt);
+        model->EvalP(Jpt, P_f);
+        P_f *= (t * rw[i]); // NB: Not by ip.weight
+        AddMultABt(DS, P_f, PMatO);
+
+        // For every basis vector
+        for (int j = 0; j < rvdim; ++j)
+        {
+            // Get basis vector and prolongate
+            for (int k = 0; k < V_v.numRows(); ++k)
+                vj[k] = V_v(k, j);
+            P->Mult(vj, p_vj);
+
+            p_vj.GetSubVector(vdofs, vj_e);
+
+            double temp = 0.0;
 
             // Calculate r[i] = ve_j^T * elvect
             for (int k = 0; k < elvect.Size(); k++)
             {
                 temp += vj_e[k] * elvect[k];
             }
+            res[j] += temp;
         }
-        res[j] = temp;
     }
 }
 
@@ -2270,69 +2268,68 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes
     Vector elvect(dof * dim);
     PMatO.UseExternalData(elvect.GetData(), dof, dim);
 
-    // For every basis vector
-    for (int j = 0; j < rvdim; ++j) 
+    eprev = -1;
+    double temp = 0.0;
+
+    // For every quadrature weight
+    for (int i = 0; i < qp.size(); ++i) // NOTE: i < 9
     {
-        eprev = -1;
-        double temp = 0.0;
+        const int e = qp[i] / nqe; // Element index
+        // Local (element) index of the quadrature point
+        const int qpi = qp[i] - (e * nqe);
+        const IntegrationPoint &ip = ir->IntPoint(qpi);
 
-        // For every quadrature weight
-        for (int i = 0; i < qp.size(); ++i) // NOTE: i < 9
+        if (e != eprev) // Update element transformation
         {
-            const int e = qp[i] / nqe; // Element index
-            // Local (element) index of the quadrature point
-            const int qpi = qp[i] - (e * nqe);
-            const IntegrationPoint &ip = ir->IntPoint(qpi);
+            doftrans = fesR->GetElementVDofs(e, vdofs);
+            fe = fesR->GetFE(e);
+            eltrans = fesR->GetElementTransformation(e);
 
-            if (e != eprev) // Update element transformation
+            dof = fe->GetDof(); // Get number of dofs in element
+            dim = fe->GetDim();
+
+            if (doftrans)
             {
-                doftrans = fesR->GetElementVDofs(e, vdofs);
-                fe = fesR->GetFE(e);
-                eltrans = fesR->GetElementTransformation(e);
-
-                dof = fe->GetDof(); // Get number of dofs in element
-                dim = fe->GetDim();
-
-                if (doftrans)
-                {
-                    MFEM_ABORT("TODO");
-                }
-
-                // Get element vectors
-                p_Vx.GetSubVector(vdofs, Vx_e);
-                eprev = e;
+                MFEM_ABORT("TODO");
             }
 
-            // Integration at ip
-            elvect = 0.0;
-            PMatI.UseExternalData(Vx_e.GetData(), dof, dim);
+            // Get element vectors
+            p_Vx.GetSubVector(vdofs, Vx_e);
+            eprev = e;
+        }
 
-            // Set integration point in the element transformation
-            eltrans->SetIntPoint(&ip);
-            model->SetTransformation(*eltrans);
+        // Integration at ip
+        elvect = 0.0;
+        PMatI.UseExternalData(Vx_e.GetData(), dof, dim);
 
-            for (int ii = 0; ii < dof; ++ii)
+        // Set integration point in the element transformation
+        eltrans->SetIntPoint(&ip);
+        model->SetTransformation(*eltrans);
+
+        for (int ii = 0; ii < dof; ++ii)
+        {
+            for (int jj = 0; jj < dim; ++jj)
             {
-                for (int jj = 0; jj < dim; ++jj)
-                {
-                    index = jj + ii * dim;
-                    DS.Elem(ii, jj) = DS_coef[index + (i * elvect.Size()) + (j * qp.size() * elvect.Size())];
-                }
+                index = jj + ii * dim;
+                DS.Elem(ii, jj) = DS_coef[index + (i * elvect.Size())];
             }
+        }
 
-            MultAtB(PMatI, DS, Jpt);
-            model->EvalP(Jpt, P_f);
-            AddMultABt(DS, P_f, PMatO);
+        MultAtB(PMatI, DS, Jpt);
+        model->EvalP(Jpt, P_f);
+        AddMultABt(DS, P_f, PMatO);
 
-            // Calculate r[i] = ve_j^T * elvect
-            // coef is size len(vdofs) * rvdim * rw.size
-
+        // Calculate r[i] = ve_j^T * elvect
+        // coef is size len(vdofs) * rvdim * rw.size
+        // For every basis vector TODO: This should not be dependent on j
+        for (int j = 0; j < rvdim; ++j)
+        {
             for (int k = 0; k < elvect.Size(); k++)
             {
                 temp += coef[k + (i * elvect.Size()) + (j * qp.size() * elvect.Size())] * elvect[k];
             }
+            res[j] += temp;
         }
-        res[j] = temp;
     }
 }
 
@@ -2539,37 +2536,36 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
             if (skipFirstW && i > 0 && i % nsnapPerSet == 0)
                 skip++;
 
-            // For each basis vector
-            for (int j = 0; j < NB; ++j)
+            // TODO: is it better to make the element loop the outer loop?
+            // For each element
+            for (int e = 0; e < ne; ++e)
             {
+                // Get element and its dofs and transformation.
+                Array<int> vdofs;
+                DofTransformation *doftrans = fespace_X->GetElementVDofs(e, vdofs);
+                const FiniteElement &fe = *fespace_X->GetFE(e);
+                ElementTransformation *eltrans = fespace_X->GetElementTransformation(e);
+                px_i.GetSubVector(vdofs, elfun);
 
-                // Get basis vector
-                for (int k = 0; k < BV->numRows(); ++k)
-                    v_j[k] = (*BV)(k, j);
-
-                // Get prolongated dofs
-                Vector pv_j;
-                Vector ve_j;
-
-                pv_j.SetSize(P->Height());
-                P->Mult(v_j, pv_j);
-
-                // TODO: is it better to make the element loop the outer loop?
-                // For each element
-                for (int e = 0; e < ne; ++e)
+                if (doftrans)
                 {
-                    // Get element and its dofs and transformation.
-                    Array<int> vdofs;
-                    DofTransformation *doftrans = fespace_X->GetElementVDofs(e, vdofs);
-                    const FiniteElement &fe = *fespace_X->GetFE(e);
-                    ElementTransformation *eltrans = fespace_X->GetElementTransformation(e);
-                    px_i.GetSubVector(vdofs, elfun);
-                    pv_j.GetSubVector(vdofs, ve_j);
-                    if (doftrans)
-                    {
-                        MFEM_ABORT("Doftrans is true, make corresponding edits")
-                    }
+                    MFEM_ABORT("Doftrans is true, make corresponding edits")
+                }
 
+                // For each basis vector
+                for (int j = 0; j < NB; ++j)
+                {
+                    // Get basis vector
+                    for (int k = 0; k < BV->numRows(); ++k)
+                        v_j[k] = (*BV)(k, j);
+
+                    // Get prolongated dofs
+                    Vector pv_j;
+                    Vector ve_j;
+
+                    pv_j.SetSize(P->Height());
+                    P->Mult(v_j, pv_j);
+                    pv_j.GetSubVector(vdofs, ve_j);
                     // Compute the row of G corresponding to element e, store in r
                     ComputeElementRowOfG(ir0, vdofs, ve_j, model, elfun, fe, *eltrans, r);
 
@@ -2584,8 +2580,8 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
             }
         } // Loop (i) over snapshots
 
-		// Rescale every Gt column (NNLS equation) by its max absolute value.
-		Gt.rescale_cols_max();
+        // Rescale every Gt column (NNLS equation) by its max absolute value.
+        Gt.rescale_cols_max();
 
         Array<double> const &w_el = ir0->GetWeights();
         MFEM_VERIFY(w_el.Size() == nqe, "");
