@@ -2138,6 +2138,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
     PMatO.UseExternalData(elvect.GetData(), dof, dim);
 
     eprev = -1;
+    double temp = 0.0;
     // For every quadrature weight
     for (int i = 0; i < rw.size(); ++i) // NOTE: i < 9
     {
@@ -2185,7 +2186,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
         model->EvalP(Jpt, P_f);
         P_f *= (t * rw[i]); // NB: Not by ip.weight
         AddMultABt(DS, P_f, PMatO);
-
+        
         // For every basis vector
         for (int j = 0; j < rvdim; ++j)
         {
@@ -2196,7 +2197,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
 
             p_vj.GetSubVector(vdofs, vj_e);
 
-            double temp = 0.0;
+            temp = 0.0;
 
             // Calculate r[i] = ve_j^T * elvect
             for (int k = 0; k < elvect.Size(); k++)
@@ -2322,6 +2323,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes
         // Calculate r[i] = ve_j^T * elvect
         // coef is size len(vdofs) * rvdim * rw.size
         // For every basis vector TODO: This should not be dependent on j
+        temp = 0.0;
         for (int j = 0; j < rvdim; ++j)
         {
             for (int k = 0; k < elvect.Size(); k++)
