@@ -2186,7 +2186,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
         model->EvalP(Jpt, P_f);
         P_f *= (t * rw[i]); // NB: Not by ip.weight
         AddMultABt(DS, P_f, PMatO);
-        
+
         // For every basis vector
         for (int j = 0; j < rvdim; ++j)
         {
@@ -2323,9 +2323,9 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes
         // Calculate r[i] = ve_j^T * elvect
         // coef is size len(vdofs) * rvdim * rw.size
         // For every basis vector TODO: This should not be dependent on j
-        temp = 0.0;
         for (int j = 0; j < rvdim; ++j)
         {
+            temp = 0.0;
             for (int k = 0; k < elvect.Size(); k++)
             {
                 temp += coef[k + (i * elvect.Size()) + (j * qp.size() * elvect.Size())] * elvect[k];
