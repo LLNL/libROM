@@ -1140,7 +1140,7 @@ Matrix::row_normalize() const
 		rowmax = fabs(item(i,j));
 	   }	 
 	} 
-       if(rowmax > 1.0e-8){
+       if(rowmax > 1.0e-12){
 	  scaled_item = std::frexp(rowmax, &exponent);
 	  //We use the ldexp function to multiply each component by 2^-exponent.
 	  for( int j = 0; j < numColumns(); j++ )
