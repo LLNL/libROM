@@ -41,13 +41,20 @@ option(BUILD_STATIC "Build libROM as a static library" OFF)
 option(ENABLE_EXAMPLES "Build examples and regression tests" ON)
 
 # Check if external MFEM directory is defined in cmake option "-DMFEM_DIR"
-if(MFEM_DIR STREQUAL "")
+#if(MFEM_DIR STREQUAL "")
+#  set(USE_EXTERNAL_MFEM OFF)
+#else()
+#  set(USE_EXTERNAL_MFEM ON)
+#endif()
+
+#set(USE_EXTERNAL_MFEM OFF)
+
+string(COMPARE EQUAL "${MFEM_DIR}" "" result)
+if(result)
   set(USE_EXTERNAL_MFEM OFF)
 else()
   set(USE_EXTERNAL_MFEM ON)
 endif()
-
-set(USE_EXTERNAL_MFEM OFF)
 
 ## Set a bunch of variables to generate a configure header
 # Enable assertion checking if debug symbols generated
