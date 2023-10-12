@@ -75,8 +75,7 @@ ENV METIS_OPT=-I${METIS_DIR}/metis/include
 WORKDIR ${METIS_DIR}/build
 # Currently docker cannot save command results to environment variables.
 # These variables are for libROM build.
-ENV MACHINE_ARCH=Linux-x86_64
-RUN ln -s $MACHINE_ARCH lib
+RUN arch=$(uname -m) && ln -s Linux-${arch} lib
 WORKDIR ${METIS_DIR}/build/lib/libparmetis
 RUN ln -s ./ lib
 RUN ln -s ${METIS_DIR}/metis metis
