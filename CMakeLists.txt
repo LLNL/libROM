@@ -31,6 +31,19 @@ project(libROM
 
 include(GNUInstallDirs)
 
+
+string(COMPARE EQUAL "${MFEM_DIR}" "" result)
+message(---- MFEM_DIR = "${MFEM_DIR}")
+message(---- result   = "${result}")
+if(result)
+  set(USE_EXTERNAL_MFEM OFF)
+  message(---- NOT Using external MFEM)
+else()
+  set(USE_EXTERNAL_MFEM ON)
+  message(---- Using external MFEM)
+endif()
+
+
 set(libROM_CMAKE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 set(libROM_CMAKE_MODULE_PATH ${libROM_CMAKE_PATH}/modules)
 list(APPEND CMAKE_MODULE_PATH ${libROM_CMAKE_MODULE_PATH})
@@ -49,16 +62,7 @@ option(ENABLE_EXAMPLES "Build examples and regression tests" ON)
 
 #set(USE_EXTERNAL_MFEM OFF)
 
-string(COMPARE EQUAL "${MFEM_DIR}" "" result)
-message(---- MFEM_DIR = "${MFEM_DIR}")
-message(---- result   = "${result}")
-if(result)
-  set(USE_EXTERNAL_MFEM OFF)
-  message(---- NOT Using external MFEM)
-else()
-  set(USE_EXTERNAL_MFEM ON)
-  message(---- Using external MFEM)
-endif()
+
 
 ## Set a bunch of variables to generate a configure header
 # Enable assertion checking if debug symbols generated
