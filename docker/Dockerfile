@@ -125,6 +125,7 @@ set(CMAKE_CXX_COMPILER mpicxx)\n\
 set(CMAKE_Fortran_COMPILER mpif90)\n\
 set(LIB_DIR /env/dependencies)\n\
 set(MFEM_DIR ${LIB_DIR}/mfem)\n\
+set(MFEM_INCLUDES ${MFEM_DIR})\n\
 set(HYPRE_DIR ${LIB_DIR}/hypre/src/hypre)\n\
 set(PARMETIS_DIR ${LIB_DIR}/parmetis-4.0.3/build/lib/libparmetis)\n\
 set(METIS_DIR ${LIB_DIR}/parmetis-4.0.3/build/lib/libmetis)' > ./librom_env.cmake
@@ -136,6 +137,7 @@ ENV USE_MFEM=On
 ENV MFEM_USE_GSLIB=On
 ENV MFEM_DIR=$LIB_DIR/mfem
 ENV HYPRE_DIR=$LIB_DIR/hypre/src/hypre
+ENV MFEM_INCLUDES=${MFEM_DIR}
 ENV PARMETIS_DIR=$LIB_DIR/parmetis-4.0.3/build/lib/libparmetis
 ENV METIS_DIR=$LIB_DIR/parmetis-4.0.3/build/lib/libmetis
 
