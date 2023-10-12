@@ -53,9 +53,11 @@ string(COMPARE EQUAL "${MFEM_DIR}" "" result)
 message(---- MFEM_DIR = "${MFEM_DIR}")
 message(---- result   = "${result}")
 if(result)
-  set(USE_EXTERNAL_MFEM ON)
-else()
   set(USE_EXTERNAL_MFEM OFF)
+  message(---- NOT Using external MFEM)
+else()
+  set(USE_EXTERNAL_MFEM ON)
+  message(---- Using external MFEM)
 endif()
 
 ## Set a bunch of variables to generate a configure header
