@@ -137,20 +137,40 @@ find_package(Doxygen 1.8.5)
 
 find_package(GTest 1.6.0)
 
-if (USE_EXTERNAL_MFEM)
-    message(--------- USING option 2)
-    find_library(MFEM mfem  "${MFEM_DIR}/lib")
-    find_path(MFEM_INCLUDES mfem.hpp "${MFEM_DIR}/include")
-elseif (USE_MFEM)
-    message(--------- USING option 1)
-    find_library(MFEM mfem "${CMAKE_SOURCE_DIR}/dependencies/mfem" "${MFEM_DIR}/lib")
-    find_library(HYPRE HYPRE "${CMAKE_SOURCE_DIR}/dependencies/hypre/src/hypre/lib" "${HYPRE_DIR}/lib")
-    find_library(PARMETIS parmetis "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/build/lib/libparmetis" "${PARMETIS_DIR}/lib")
-    find_library(METIS metis "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/build/lib/libmetis" "${METIS_DIR}/lib")
-    find_path(MFEM_INCLUDES mfem.hpp "${CMAKE_SOURCE_DIR}/dependencies/mfem" "${MFEM_DIR}/include")
-    find_path(HYPRE_INCLUDES HYPRE.h "${CMAKE_SOURCE_DIR}/dependencies/hypre/src/hypre/include" "${HYPRE_DIR}/include")
-    find_path(PARMETIS_INCLUDES metis.h "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/metis/include" "${PARMETIS_DIR}/metis/include")
-endif()
+#if (USE_EXTERNAL_MFEM)
+#    message(--------- USING option 2)
+#    find_library(MFEM mfem  "${MFEM_DIR}/lib")
+#    find_path(MFEM_INCLUDES mfem.hpp "${MFEM_DIR}/include")
+#elseif (USE_MFEM)
+#    message(--------- USING option 1)
+#    find_library(MFEM mfem "${CMAKE_SOURCE_DIR}/dependencies/mfem" "${MFEM_DIR}/lib")
+#    find_library(HYPRE HYPRE "${CMAKE_SOURCE_DIR}/dependencies/hypre/src/hypre/lib" "${HYPRE_DIR}/lib")
+#    find_library(PARMETIS parmetis "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/build/lib/libparmetis" "${PARMETIS_DIR}/lib")
+#    find_library(METIS metis "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/build/lib/libmetis" "${METIS_DIR}/lib")
+#    find_path(MFEM_INCLUDES mfem.hpp "${CMAKE_SOURCE_DIR}/dependencies/mfem" "${MFEM_DIR}/include")
+#    find_path(HYPRE_INCLUDES HYPRE.h "${CMAKE_SOURCE_DIR}/dependencies/hypre/src/hypre/include" "${HYPRE_DIR}/include")
+#    find_path(PARMETIS_INCLUDES metis.h "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/metis/include" "${PARMETIS_DIR}/metis/include")
+#endif()
+
+#if (USE_EXTERNAL_MFEM)
+#    message(--------- USING option 2)
+#    find_library(MFEM mfem  "${MFEM_DIR}/lib")
+#    find_path(MFEM_INCLUDES mfem.hpp "${MFEM_DIR}/include")
+
+#    message(--------- USING option 1)
+    find_library(MFEM mfem "${MFEM_DIR}/lib" "${CMAKE_SOURCE_DIR}/dependencies/mfem")
+    find_path(MFEM_INCLUDES mfem.hpp "${MFEM_DIR}/include" "${CMAKE_SOURCE_DIR}/dependencies/mfem")
+
+    find_library(HYPRE HYPRE "${HYPRE_DIR}/lib" "${CMAKE_SOURCE_DIR}/dependencies/hypre/src/hypre/lib")
+    find_path(HYPRE_INCLUDES HYPRE.h "${HYPRE_DIR}/include" "${CMAKE_SOURCE_DIR}/dependencies/hypre/src/hypre/include")
+    
+    find_library(METIS metis "${METIS_DIR}/lib" "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/build/lib/libmetis")
+    
+    find_library(PARMETIS parmetis "${PARMETIS_DIR}/lib" "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/build/lib/libparmetis")
+    find_path(PARMETIS_INCLUDES metis.h "${PARMETIS_DIR}/metis/include" "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/metis/include")    
+    
+#endif()
+
 
 add_subdirectory(lib)
 
