@@ -160,17 +160,22 @@ find_package(GTest 1.6.0)
 #    message(--------- USING option 1)
     find_library(MFEM mfem "${MFEM_DIR}/lib" "${CMAKE_SOURCE_DIR}/dependencies/mfem")
     find_path(MFEM_INCLUDES mfem.hpp "${MFEM_DIR}/include" "${CMAKE_SOURCE_DIR}/dependencies/mfem")
+    message("Found MFEM in ${MFEM}")
+    message("Found MFEM_INCLUDES in ${MFEM_INCLUDES}")
 
     find_library(HYPRE HYPRE "${HYPRE_DIR}/lib" "${CMAKE_SOURCE_DIR}/dependencies/hypre/src/hypre/lib")
     find_path(HYPRE_INCLUDES HYPRE.h "${HYPRE_DIR}/include" "${CMAKE_SOURCE_DIR}/dependencies/hypre/src/hypre/include")
+    message("Found HYPRE in ${HYPRE}")
+    message("Found HYPRE_INCLUDES in ${HYPRE_INCLUDES}")
     
     find_library(METIS metis "${METIS_DIR}/lib" "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/build/lib/libmetis")
+    message("Found METIS in ${METIS}")
     
     find_library(PARMETIS parmetis "${PARMETIS_DIR}/lib" "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/build/lib/libparmetis")
-    find_path(PARMETIS_INCLUDES metis.h "${PARMETIS_DIR}/metis/include" "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/metis/include")    
-    
+    find_path(PARMETIS_INCLUDES metis.h "${PARMETIS_DIR}/metis/include" "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/metis/include")
+    message("Found PARMETIS in ${PARMETIS}")
+    message("Found PARMETIS_INCLUDES in ${PARMETIS_INCLUDES}")  
 #endif()
-
 
 add_subdirectory(lib)
 
