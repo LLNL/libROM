@@ -47,6 +47,8 @@ else()
   set(USE_EXTERNAL_MFEM ON)
 endif()
 
+set(USE_EXTERNAL_MFEM OFF)
+
 ## Set a bunch of variables to generate a configure header
 # Enable assertion checking if debug symbols generated
 if((CMAKE_BUILD_TYPE STREQUAL "Debug") OR
