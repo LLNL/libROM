@@ -106,6 +106,7 @@ double TimeWindowFunction(const double t, const double t_begin,
 double Amplitude(const double t, const int index);
 double SourceFunction(const Vector &x, const double t);
 
+Vector bb_min, bb_max; // Mesh bounding box
 double amp_in = 0.2;
 double t_end_in = 0.1;
 double amp_out = 0.1;
@@ -208,6 +209,8 @@ int main(int argc, char *argv[])
         mesh = new Mesh(mesh_file, 1, 1);
     }
     int dim = mesh->Dimension();
+
+    mesh->GetBoundingBox(bb_min, bb_max, max(order, 1));
 
     // 4. Define the ODE solver used for time integration. Several implicit
     //    singly diagonal implicit Runge-Kutta (SDIRK) methods, as well as
@@ -698,13 +701,17 @@ double Amplitude(const double t, const int index)
 }
 
 double SourceFunction(const Vector &x, const double t)
-{
-    Vector y(x);
-    Vector c(2);
-    c.Elem(0) = 0.5;
-    c.Elem(1) = 0.5;
-    y -= c;
-    double r1 = x.Norml2() / 0.01;
-    double r2 = y.Norml2() / 0.01;
-    return Amplitude(t, 0) * exp(-0.5*r1*r1) - Amplitude(t, 1) * exp(-0.5*r2*r2);
+{ 
+    // map to the reference [-1,1] domain
+    Vector X(x.Size()), Y(x.Size());
+    for (int i = 0; i < x.Size(); i++)
+    {
+        double center = (bb_min[i] + bb_max[i]) * 0.5;
+        X(i) = 2 * (x(i) - center) / (bb_max[i] - bb_min[i]);
+        Y(i) = X(i) - 0.5;
+    }
+
+    double r1 = X.Norml2() / 0.01;
+    double r2 = Y.Norml2() / 0.01;
+    return Amplitude(t,0) * exp(-0.5*r1*r1) - Amplitude(t,1) * exp(-0.5*r2*r2);
 }
