@@ -701,7 +701,7 @@ double Amplitude(const double t, const int index)
 }
 
 double SourceFunction(const Vector &x, const double t)
-{ 
+{
     // map to the reference [-1,1] domain
     Vector X(x.Size()), Y(x.Size());
     for (int i = 0; i < x.Size(); i++)
