@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
     // 2. Parse command-line options.
-    const char *mesh_file = "../data/square01-quad.mesh";
+    const char *mesh_file = "";
     int ser_ref_levels = 2;
     int par_ref_levels = 1;
     int order = 2;
@@ -198,7 +198,15 @@ int main(int argc, char *argv[])
     // 3. Read the serial mesh from the given mesh file on all processors. We can
     //    handle triangular, quadrilateral, tetrahedral and hexahedral meshes
     //    with the same code.
-    Mesh *mesh = new Mesh(mesh_file, 1, 1);
+    Mesh *mesh;
+    if (mesh_file == "")
+    {
+        mesh = new Mesh(Mesh::MakeCartesian2D(2, 2, Element::QUADRILATERAL));
+    }
+    else
+    {
+        mesh = new Mesh(mesh_file, 1, 1);
+    }
     int dim = mesh->Dimension();
 
     // 4. Define the ODE solver used for time integration. Several implicit
