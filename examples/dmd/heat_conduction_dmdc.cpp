@@ -14,7 +14,7 @@
 //
 // =================================================================================
 //
-// Sample runs and results for DMD:
+// Sample runs and results for DMDc:
 //
 // Command 1:
 //   mpirun -np 8 heat_conduction_dmdc -s 1 -a 0.0 -k 1.0 -visit
@@ -31,8 +31,12 @@
 // =================================================================================
 //
 // Description:  This example solves a time dependent nonlinear heat equation
-//               problem of the form du/dt = C(u), with a non-linear diffusion
-//               operator C(u) = \nabla \cdot (\kappa + \alpha u) \nabla u.
+//               problem of the form du/dt = C(u) + s, with a non-linear diffusion
+//               operator C(u) = \nabla \cdot (\kappa + \alpha u) \nabla u 
+//               and time-varying external inlet and outlet source. 
+//               The inlet and the outlet is located at (0,0) and (0.5,0.5) 
+//               in the reference domain [-1,1]^d, where the shut down time and 
+//               the amplitude of the sources are the control variables.
 //
 //               The example demonstrates the use of nonlinear operators (the
 //               class ConductionOperator defining C(u)), as well as their

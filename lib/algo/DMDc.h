@@ -12,8 +12,6 @@
 //              implemented dynamic mode decomposition with control algorithm is derived from
 //              Proctor et. al's paper "Dynamic mode decomposition with control":
 //              https://arxiv.org/abs/1409.6358
-//              This algorithm also works in the case that the first sample does
-//              not start from t = 0.0 by incorporating a time offset.
 
 #ifndef included_DMDc_h
 #define included_DMDc_h
