@@ -22,7 +22,7 @@ void ComputeCtAB(const HypreParMatrix& A,
 
     const int num_rows = B.numRows();
     const int num_cols = B.numColumns();
-    const int num_rows_A = A.GetNumRows();
+    const int num_rows_A = A.NumRows();
 
     MFEM_VERIFY(C.numRows() == num_rows_A, "");
 
@@ -52,7 +52,7 @@ void ComputeCtAB_vec(const HypreParMatrix& A,
     MFEM_VERIFY(C.distributed() && !CtAB_vec.distributed(),
                 "In ComputeCtAB_vec, C must be distributed, but not CtAB_vec");
 
-    MFEM_VERIFY(C.numRows() == A.GetNumRows(), "");
+    MFEM_VERIFY(C.numRows() == A.NumRows(), "");
     MFEM_VERIFY(B.GlobalSize() == A.GetGlobalNumRows(), "");
 
     HypreParVector* AB = new HypreParVector(B);
