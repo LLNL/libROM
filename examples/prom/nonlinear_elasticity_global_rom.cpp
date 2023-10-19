@@ -47,12 +47,19 @@
 //      Relative error of ROM position (x) at t_final: 5 is 0.000231698
 //      Relative error of ROM velocity (v) at t_final: 5 is 0.466941
 //
-// Online phase with strong hyper-reduction:
+// Online phase with strong hyper-reduction, using GNAT (over-sampled DEIM):
 //      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype gnat -rvdim 40 -rxdim 10 -hdim 71 -nsr 100 -sc 1.0
 // Output message:
-//      Elapsed time for time integration loop 1.08048
+//      Elapsed time for time integration loop 1.0111
 //      Relative error of ROM position (x) at t_final: 5 is 0.00209877
 //      Relative error of ROM velocity (v) at t_final: 5 is 1.39472
+//
+// Online phase with strong hyper-reduction, using QDEIM:
+//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype qdeim -rvdim 40 -rxdim 10 -hdim 71 -nsr 100 -sc 1.0
+// Output message:
+//      Elapsed time for time integration loop 1.02559
+//      Relative error of ROM position (x) at t_final: 5 is 0.00188458
+//      Relative error of ROM velocity (v) at t_final: 5 is 0.978726
 //
 // =================================================================================
 //
@@ -75,12 +82,19 @@
 //      Relative error of ROM position (x) at t_final: 5 is 7.08272e-05
 //      Relative error of ROM velocity (v) at t_final: 5 is 0.00387647
 //
-// Online phase with strong hyper reduction:
+// Online phase with strong hyper reduction, using GNAT (over-sampled DEIM):
 //      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype gnat -rxdim 2 -hdim 4 -nsr 10 -sc 1.0 -xbo -def-ic
 // Output message:
-//      Elapsed time for time integration loop 1.01136
+//      Elapsed time for time integration loop 0.120194
 //      Relative error of ROM position (x) at t_final: 5 is 0.0130818
 //      Relative error of ROM velocity (v) at t_final: 5 is 0.979978
+//
+// Online phase with strong hyper reduction, using QDEIM:
+//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype qdeim -rxdim 2 -hdim 4 -nsr 10 -sc 1.0 -xbo -def-ic
+// Output message:
+//      Elapsed time for time integration loop 0.10806
+//      Relative error of ROM position (x) at t_final: 5 is 0.0108709
+//      Relative error of ROM velocity (v) at t_final: 5 is 1.30704
 //
 // This example runs in parallel with MPI, by using the same number of MPI ranks
 // in all phases (offline, merge, online).
