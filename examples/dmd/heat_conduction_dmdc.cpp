@@ -32,10 +32,10 @@
 //
 // Description:  This example solves a time dependent nonlinear heat equation
 //               problem of the form du/dt = C(u) + s, with a non-linear diffusion
-//               operator C(u) = \nabla \cdot (\kappa + \alpha u) \nabla u 
-//               and time-varying external inlet and outlet source. 
-//               The inlet and the outlet is located at (0,0) and (0.5,0.5) 
-//               in the reference domain [-1,1]^d, where the shut down time and 
+//               operator C(u) = \nabla \cdot (\kappa + \alpha u) \nabla u
+//               and time-varying external inlet and outlet source.
+//               The inlet and the outlet is located at (0,0) and (0.5,0.5)
+//               in the reference domain [-1,1]^d, where the shut down time and
 //               the amplitude of the sources are the control variables.
 //
 //               The example demonstrates the use of nonlinear operators (the
