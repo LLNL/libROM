@@ -55,22 +55,26 @@ public:
 // Compute coefficients of the reduced integrator with respect to inputs Q and x
 // in HyperelasticNLFIntegrator_ComputeReducedEQP.
 void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
-                                                  std::vector<double> const &rw, std::vector<int> const &qp,
-                                                  const IntegrationRule *ir, NeoHookeanModel *model,
-                                                  CAROM::Matrix const &V_v, const int rank, Vector &coef, Vector &DS_coef);
+        std::vector<double> const &rw, std::vector<int> const &qp,
+        const IntegrationRule *ir, NeoHookeanModel *model,
+        CAROM::Matrix const &V_v, const int rank, Vector &coef, Vector &DS_coef);
 
 // Perform hyperreduction with EQP
 void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
-                                                 std::vector<double> const &rw, std::vector<int> const &qp,
-                                                 const IntegrationRule *ir, NeoHookeanModel *model, const Vector *x0,
-                                                 CAROM::Matrix const &V_x, CAROM::Matrix const &V_v, CAROM::Vector const &x, CAROM::Vector *Vx_librom_temp, Vector *Vx_temp,
-                                                 const int rank, Vector &res);
+        std::vector<double> const &rw, std::vector<int> const &qp,
+        const IntegrationRule *ir, NeoHookeanModel *model, const Vector *x0,
+        CAROM::Matrix const &V_x, CAROM::Matrix const &V_v, CAROM::Vector const &x,
+        CAROM::Vector *Vx_librom_temp, Vector *Vx_temp,
+        const int rank, Vector &res);
 
 // Optimized EQP hyperreduction routine with preallocated arrays
-void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fesR,
-                                                      std::vector<double> const &rw, std::vector<int> const &qp, const IntegrationRule *ir, NeoHookeanModel *model,
-                                                      const Vector *x0, CAROM::Matrix const &V_x, CAROM::Matrix const &V_v, CAROM::Vector const &x, CAROM::Vector *Vx_librom_temp, Vector *Vx_temp,
-                                                      Vector const &coef, Vector const &DS_coef, const int rank, Vector &res);
+void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace
+        *fesR,
+        std::vector<double> const &rw, std::vector<int> const &qp,
+        const IntegrationRule *ir, NeoHookeanModel *model,
+        const Vector *x0, CAROM::Matrix const &V_x, CAROM::Matrix const &V_v,
+        CAROM::Vector const &x, CAROM::Vector *Vx_librom_temp, Vector *Vx_temp,
+        Vector const &coef, Vector const &DS_coef, const int rank, Vector &res);
 
 // Compute a row in the G matrix which corresponds to a given FE element
 void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
@@ -100,7 +104,8 @@ void get_window_ids(int n_step, int n_window, CAROM::Vector *ids);
 bool fileExists(const std::string &filename);
 
 // Helper function to save a CAROM vector to an external file
-void save_CAROM_Vector(const CAROM::Vector &vector, const std::string &filename);
+void save_CAROM_Vector(const CAROM::Vector &vector,
+                       const std::string &filename);
 
 // Helper function to load a CAROM vector from an external file
 void load_CAROM_vector(const std::string &filename, CAROM::Vector &vector);
