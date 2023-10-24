@@ -920,7 +920,6 @@ int main(int argc, char *argv[])
             printf("reduced H dim = %d\n", hdim);
 
         // Setup hyperreduction, using either EQP or sampled DOFs and a sample mesh.
-
         ParFiniteElementSpace *sp_XV_space;
         CAROM::Matrix *Hsinv = new CAROM::Matrix(hdim, hdim, false); // Gets resized before use.
         const IntegrationRule *ir0 = NULL;
@@ -1121,7 +1120,6 @@ int main(int argc, char *argv[])
         {
             if (!use_eqp)
             {
-
                 // Define operator in sample space
                 soper = new HyperelasticOperator(*sp_XV_space, ess_tdof_list_sp, visc, mu, K);
             }
@@ -1131,7 +1129,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        if (!use_eqp) // TODO: ask about whether this is needed.
+        if (!use_eqp)
         {
             romop = new RomOperator(&oper, soper, rvdim, rxdim, hdim, smm, w_v0, w_x0,
                                     vx0.GetBlock(0), BV_librom, BX_librom, H_librom, Hsinv, myid,
@@ -1228,7 +1226,6 @@ int main(int argc, char *argv[])
 
         if (offline)
         {
-
             if (basis_generator_x->isNextSample(t) || x_base_only == false && basis_generator_v->isNextSample(t))
             {
                 dvxdt = oper.dvxdt_sp.GetData();
@@ -2028,7 +2025,7 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
 
             if (doftrans)
             {
-                MFEM_ABORT("TODO");
+                MFEM_ABORT("TODO: Implementation for when `doftrans` is not NULL");
             }
             eprev = e;
         }
@@ -2062,7 +2059,7 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
             // Get element vectors
             p_vj.GetSubVector(vdofs, vj_e);
 
-            // Calculate r[i] = ve_j^T * elvect
+            // Calculate coeff
             for (int k = 0; k < elvect_size; k++)
             {
                 coef[k + (i * elvect_size) + (j * rw.size() * elvect_size)] = vj_e[k] * rw[i] * t;
@@ -2158,7 +2155,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
 
             if (doftrans)
             {
-                MFEM_ABORT("TODO");
+                MFEM_ABORT("TODO: Implementation for when `doftrans` is not NULL");
             }
 
             // Get element vectors
@@ -2214,7 +2211,6 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes
                                                       const Vector *x0, CAROM::Matrix const &V_x, CAROM::Matrix const &V_v, CAROM::Vector const &x, CAROM::Vector *Vx_librom_temp, Vector *Vx_temp,
                                                       Vector const &coef, Vector const &DS_coef, const int rank, Vector &res)
 {
-
     const int rxdim = V_x.numColumns();
     const int rvdim = V_v.numColumns();
     const int fomdim = V_x.numRows();
@@ -2291,7 +2287,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes
 
             if (doftrans)
             {
-                MFEM_ABORT("TODO");
+                MFEM_ABORT("TODO: Implementation for when `doftrans` is not NULL");
             }
 
             // Get element vectors
@@ -2322,7 +2318,6 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace *fes
 
         // Calculate r[i] = ve_j^T * elvect
         // coef is size len(vdofs) * rvdim * rw.size
-        // For every basis vector TODO: This should not be dependent on j
         for (int j = 0; j < rvdim; ++j)
         {
             temp = 0.0;
@@ -2578,7 +2573,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
 
             if (precondition)
             {
-                MFEM_ABORT("TODO");
+                MFEM_ABORT("TODO: Implement preconditioned NNLS for this example");
             }
         } // Loop (i) over snapshots
 
