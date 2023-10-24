@@ -31,14 +31,12 @@
 //
 // Offline phase:
 //      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 0.9 -id 0
-//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 0.9 -id 0
 //      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.1 -id 1
 //
 // Merge phase:
 //      ./nonlinear_elasticity_global_rom -merge -ns 2 -dt 0.01 -tf 5.0
 //
 // Create FOM comparison data:
-//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.0 -id 2
 //      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.0 -id 2
 //
 // Online phase with full sampling:
@@ -76,14 +74,11 @@
 // Offline phase:
 //      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 0.9 -xbo -def-ic -id 0
 //      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.1 -xbo -def-ic -id 1
-//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 0.9 -xbo -def-ic -id 0
-//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.1 -xbo -def-ic -id 1
 //
 // Merge phase:
 //      ./nonlinear_elasticity_global_rom -merge -ns 2 -dt 0.01 -tf 5.0 -xbo
 //
 // Create FOM comparison data:
-//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.0 -xbo -def-ic -id 2
 //      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.0 -xbo -def-ic -id 2
 //
 // Online phase with full sampling:
@@ -99,20 +94,6 @@
 //      Elapsed time for time integration loop 0.120194
 //      Relative error of ROM position (x) at t_final: 5 is 0.0130818
 //      Relative error of ROM velocity (v) at t_final: 5 is 0.979978
-//
-// Online phase with strong hyper reduction, using QDEIM:
-//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype qdeim -rxdim 2 -hdim 4 -nsr 10 -sc 1.0 -xbo -def-ic
-// Output message:
-//      Elapsed time for time integration loop 0.10806
-//      Relative error of ROM position (x) at t_final: 5 is 0.0108709
-//      Relative error of ROM velocity (v) at t_final: 5 is 1.30704
-//
-// Online phase with strong hyper reduction, using QDEIM:
-//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype qdeim -rxdim 2 -hdim 4 -nsr 10 -sc 1.0 -xbo -def-ic
-// Output message:
-//      Elapsed time for time integration loop 0.10806
-//      Relative error of ROM position (x) at t_final: 5 is 0.0108709
-//      Relative error of ROM velocity (v) at t_final: 5 is 1.30704
 //
 // Online phase with strong hyper reduction, using QDEIM:
 //      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype qdeim -rxdim 2 -hdim 4 -nsr 10 -sc 1.0 -xbo -def-ic
