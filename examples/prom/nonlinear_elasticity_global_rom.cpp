@@ -738,9 +738,9 @@ int main(int argc, char *argv[])
     Vector *x_rec = new Vector(x_gf.GetTrueVector());
 
     CAROM::Vector *v_rec_librom = new CAROM::Vector(v_rec->GetData(), v_rec->Size(),
-        true, false);
+            true, false);
     CAROM::Vector *x_rec_librom = new CAROM::Vector(x_rec->GetData(), x_rec->Size(),
-        true, false);
+            true, false);
 
     // 9. Initialize the hyperelastic operator, the GLVis visualization and print
     //    the initial energies.
@@ -816,14 +816,14 @@ int main(int argc, char *argv[])
         if (x_base_only == false)
         {
             basis_generator_v = new CAROM::BasisGenerator(options, isIncremental,
-                basisFileName + "_V");
+                    basisFileName + "_V");
         }
 
         basis_generator_x = new CAROM::BasisGenerator(options, isIncremental,
-            basisFileName + "_X");
+                basisFileName + "_X");
 
         basis_generator_H = new CAROM::BasisGenerator(options, isIncremental,
-            basisFileName + "_H");
+                basisFileName + "_H");
     }
 
     RomOperator *romop = 0;
@@ -842,7 +842,7 @@ int main(int argc, char *argv[])
 
     CAROM::Vector *window_ids = nullptr;
     CAROM::Vector *load_eqpsol = new CAROM::Vector(1,
-        false); // Will be resized later
+            false); // Will be resized later
 
     // 11. Initialize ROM operator
     // I guess most of this should be done on id =0
@@ -910,7 +910,7 @@ int main(int argc, char *argv[])
         // Setup hyperreduction, using either EQP or sampled DOFs and a sample mesh.
         ParFiniteElementSpace *sp_XV_space;
         CAROM::Matrix *Hsinv = new CAROM::Matrix(hdim, hdim,
-            false); // Gets resized before use.
+                false); // Gets resized before use.
         const IntegrationRule *ir0 = NULL;
 
         if (ir0 == NULL)
@@ -1657,7 +1657,7 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
     S_hat_v0 = new CAROM::Vector(rvdim, false);
     S_hat_v0_temp = new Vector(v0_fom.Size());
     S_hat_v0_temp_librom = new CAROM::Vector(S_hat_v0_temp->GetData(),
-        S_hat_v0_temp->Size(), true, false);
+            S_hat_v0_temp->Size(), true, false);
     M_hat = new CAROM::Matrix(rvdim, rvdim, false);
     M_hat_inv = new CAROM::Matrix(rvdim, rvdim, false);
 
@@ -2057,7 +2057,7 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
             for (int k = 0; k < elvect_size; k++)
             {
                 coef[k + (i * elvect_size) + (j * rw.size() * elvect_size)] = vj_e[k] * rw[i] *
-                    t;
+                        t;
             }
         }
     }
