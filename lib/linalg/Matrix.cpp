@@ -1880,7 +1880,7 @@ Matrix::rescale_cols_max()
 
     // Get the max across all processes, if applicable.
     double global_max[d_num_cols];
-    if (d_num_procs > 1)
+    if (d_distributed && d_num_procs > 1)
     {
         MPI_Allreduce(&local_max, &global_max, d_num_cols, MPI_DOUBLE, MPI_MAX,
                       MPI_COMM_WORLD);
