@@ -941,23 +941,33 @@ public:
                           int  pivots_requested) const;
 
     /**
-     * @brief Orthogonalizes the matrix.
+     * @brief Orthonormalizes the matrix.
+     *
+     * If the norm of a matrix column is below the value of zero_tol then it
+     * is considered to be zero, and we do not divide by it.
+     * Therefore, that column is considered to be zero and is not normalized.
+     * By default, zero_tol = 1.0e-15.
      */
     void
-    orthogonalize();
+    orthogonalize(double zero_tol = 1.0e-15);
 
     /**
      * @brief Orthonormalizes the matrix's last column, assuming the previous
      * columns are already orthonormal.
      *
-     * By default, the function considers the whole matrix.
-     * If input parameter ncols < d_num_cols, then a subset of the matrix
+     * By default, ncols == -1, and the function considers the whole matrix.
+     * If ncols != -1 and ncols < d_num_cols, then a subset of the matrix
      * is considered.
      * This allows one to reorthonormalize the matrix every time a new column
      * is added, assuming the previous columns have remained unchanged.
+     *
+     * If the norm of a matrix column is below the value of zero_tol then it
+     * is considered to be zero, and we do not divide by it.
+     * Therefore, that column is considered to be zero and is not normalized.
+     * By default, zero_tol = 1.0e-15.
      */
     void
-    orthogonalize_last(int ncols = -1);
+    orthogonalize_last(int ncols = -1, double zero_tol = 1.0e-15);
 
     /**
      * @brief Rescale every matrix row by its maximum absolute value.
