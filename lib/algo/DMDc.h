@@ -76,14 +76,28 @@ public:
                             bool last_step = false);
 
     /**
+     * @brief Train the DMDc model with energy fraction criterion.
+     *        The control matrix B may be available and used in training. 
+     *        It is yet to be implemented and requires  
+     *        consideration in sparse matrix multiplication in general. 
+     *        (See Section III.B. in https://arxiv.org/pdf/1409.6358.pdf)
+     *        In default, the control matrix is unknown, with B = NULL.
+     *
      * @param[in] energy_fraction The energy fraction to keep after doing SVD.
-     * @param[in] B               The control matrix B.
+     * @param[in] B               (Optional) The control matrix B.
      */
     virtual void train(double energy_fraction, const Matrix* B = NULL);
 
     /**
+     * @brief Train the DMDc model with specified reduced dimension.
+     *        The control matrix B may be available and used in training. 
+     *        It is yet to be implemented and requires  
+     *        consideration in sparse matrix multiplication in general. 
+     *        (See Section III.B. in https://arxiv.org/pdf/1409.6358.pdf)
+     *        In default, the control matrix is unknown, with B = NULL.
+     *
      * @param[in] k               The number of modes to keep after doing SVD.
-     * @param[in] B               The control matrix B.
+     * @param[in] B               (Optional) The control matrix B.
      */
     virtual void train(int k, const Matrix* B = NULL);
 
