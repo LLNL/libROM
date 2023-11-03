@@ -119,7 +119,7 @@ public:
      * @param[in] energy_fraction The energy fraction to keep after doing SVD.
      * @param[in] W0              The initial basis to prepend to W.
      * @param[in] linearity_tol   The tolerance for determining whether a column
-                                  of W is linearly independent with W0.
+     *                            of W is linearly independent with W0.
      */
     virtual void train(double energy_fraction, const Matrix* W0 = NULL,
                        double linearity_tol = 0.0);
@@ -130,7 +130,7 @@ public:
      * @param[in] k               The number of modes to keep after doing SVD.
      * @param[in] W0              The initial basis to prepend to W.
      * @param[in] linearity_tol   The tolerance for determining whether a column
-                                  of W is linearly independent with W0.
+     *                            of W is linearly independent with W0.
      */
     virtual void train(int k, const Matrix* W0 = NULL, double linearity_tol = 0.0);
 
