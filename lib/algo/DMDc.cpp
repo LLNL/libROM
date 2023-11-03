@@ -143,7 +143,6 @@ DMDc::~DMDc()
     }
     delete d_state_offset;
     delete d_basis;
-    delete d_basis_in;
     delete d_A_tilde;
     delete d_B_tilde;
     delete d_phi_real;

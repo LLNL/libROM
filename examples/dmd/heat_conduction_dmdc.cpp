@@ -20,13 +20,13 @@
 //   mpirun -np 8 heat_conduction_dmdc -s 1 -a 0.0 -k 1.0 -visit
 //
 // Output 1:
-//   Relative error of DMD temperature (u) at t_final: 0.5 is 0.0021716499
+//   Relative error of DMDc temperature (u) at t_final: 0.5 is 0.0019511173
 //
 // Command 2:
-//   mpirun -np 8 heat_conduction_dmdc -s 3 -a 0.5 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit
+//   mpirun -np 8 heat_conduction_dmdc -s 1 -a 0.5 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit
 //
 // Output 2:
-//   Relative error of DMD temperature (u) at t_final: 0.7 is 0.0017729558
+//   Relative error of DMDc temperature (u) at t_final: 0.7 is 0.00087525972
 //
 // =================================================================================
 //
@@ -73,6 +73,7 @@ protected:
 
     ParBilinearForm *M;
     ParBilinearForm *K;
+    ParLinearForm *B;
 
     HypreParMatrix Mmat;
     HypreParMatrix Kmat;
@@ -85,18 +86,23 @@ protected:
     CGSolver T_solver;    // Implicit solver for T = M + dt K
     HypreSmoother T_prec; // Preconditioner for the implicit solver
 
-    double alpha, kappa;
+    FunctionCoefficient &src_func; // Source function coefficient
+    double alpha, kappa; // Nonlinear parameters
 
     mutable Vector z; // auxiliary vector
+    HypreParVector *b; // source vector
 
 public:
-    ConductionOperator(ParFiniteElementSpace &f, double alpha, double kappa,
-                       const Vector &u);
+    ConductionOperator(ParFiniteElementSpace &f, FunctionCoefficient &s, 
+                       double alpha, double kappa, const Vector &u);
 
     virtual void Mult(const Vector &u, Vector &du_dt) const;
     /** Solve the Backward-Euler equation: k = f(u + dt*k, t), for the unknown k.
         This is the only requirement for high-order SDIRK implicit integration.*/
     virtual void ImplicitSolve(const double dt, const Vector &u, Vector &k);
+
+    /// Update the diffusion BilinearForm K using the given true-dof vector `u`.
+    void SetSourceTime(const double t);
 
     /// Update the diffusion BilinearForm K using the given true-dof vector `u`.
     void SetParameters(const Vector &u);
@@ -108,7 +114,7 @@ double InitialTemperature(const Vector &x);
 double TimeWindowFunction(const double t, const double t_begin,
                           const double t_end);
 double Amplitude(const double t, const int index);
-double SourceFunction(const Vector &x, const double t);
+double SourceFunction(const Vector &x, double t);
 
 Vector bb_min, bb_max; // Mesh bounding box
 double amp_in = 0.2;
@@ -130,7 +136,7 @@ int main(int argc, char *argv[])
     int ser_ref_levels = 2;
     int par_ref_levels = 1;
     int order = 2;
-    int ode_solver_type = 3;
+    int ode_solver_type = 1;
     double t_final = 0.5;
     double alpha = 1.0e-2;
     double kappa = 0.5;
@@ -220,43 +226,55 @@ int main(int argc, char *argv[])
     //    singly diagonal implicit Runge-Kutta (SDIRK) methods, as well as
     //    explicit Runge-Kutta methods are available.
     ODESolver *ode_solver;
+    bool explicit_solver;
     switch (ode_solver_type)
     {
     // Implicit L-stable methods
     case 1:
         ode_solver = new BackwardEulerSolver;
+        explicit_solver = false;
         break;
     case 2:
         ode_solver = new SDIRK23Solver(2);
+        explicit_solver = false;
         break;
     case 3:
         ode_solver = new SDIRK33Solver;
+        explicit_solver = false;
         break;
     // Explicit methods
     case 11:
         ode_solver = new ForwardEulerSolver;
+        explicit_solver = true;
         break;
     case 12:
         ode_solver = new RK2Solver(0.5);
+        explicit_solver = true;
         break; // midpoint method
     case 13:
         ode_solver = new RK3SSPSolver;
+        explicit_solver = true;
         break;
     case 14:
         ode_solver = new RK4Solver;
+        explicit_solver = true;
         break;
     case 15:
         ode_solver = new GeneralizedAlphaSolver(0.5);
+        explicit_solver = true;
         break;
     // Implicit A-stable methods (not L-stable)
     case 22:
         ode_solver = new ImplicitMidpointSolver;
+        explicit_solver = false;
         break;
     case 23:
         ode_solver = new SDIRK23Solver;
+        explicit_solver = false;
         break;
     case 24:
         ode_solver = new SDIRK34Solver;
+        explicit_solver = false;
         break;
     default:
         cout << "Unknown ODE solver type: " << ode_solver_type << '\n';
@@ -303,7 +321,8 @@ int main(int argc, char *argv[])
     u_gf.GetTrueDofs(u);
 
     // 9. Initialize the conduction operator and the VisIt visualization.
-    ConductionOperator oper(fespace, alpha, kappa, u);
+    FunctionCoefficient s(SourceFunction);
+    ConductionOperator oper(fespace, s, alpha, kappa, u);
 
     u_gf.SetFromTrueDofs(u);
     {
@@ -412,6 +431,15 @@ int main(int argc, char *argv[])
             last_step = true;
         }
 
+        // Assuming Euler method is used
+        if (explicit_solver)
+        {
+            oper.SetSourceTime(t);
+        }
+        else
+        {
+            oper.SetSourceTime(t + dt);
+        }
         ode_solver->Step(u, t, dt);
 
         fom_timer.Stop();
@@ -583,10 +611,10 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-ConductionOperator::ConductionOperator(ParFiniteElementSpace &f, double al,
-                                       double kap, const Vector &u)
-    : TimeDependentOperator(f.GetTrueVSize(), 0.0), fespace(f), M(NULL), K(NULL),
-      T(NULL), current_dt(0.0),
+ConductionOperator::ConductionOperator(ParFiniteElementSpace &f, FunctionCoefficient &s, 
+                                       double al, double kap, const Vector &u)
+    : TimeDependentOperator(f.GetTrueVSize(), 0.0), fespace(f), src_func(s), 
+      M(NULL), K(NULL), T(NULL), current_dt(0.0),
       M_solver(f.GetComm()), T_solver(f.GetComm()), z(height)
 {
     const double rel_tol = 1e-8;
@@ -616,6 +644,9 @@ ConductionOperator::ConductionOperator(ParFiniteElementSpace &f, double al,
     T_solver.SetPreconditioner(T_prec);
 
     SetParameters(u);
+ 
+    B = new ParLinearForm(&fespace);
+    B->AddDomainIntegrator(new DomainLFIntegrator(src_func));
 }
 
 void ConductionOperator::Mult(const Vector &u, Vector &du_dt) const
@@ -625,6 +656,7 @@ void ConductionOperator::Mult(const Vector &u, Vector &du_dt) const
     // for du_dt
     Kmat.Mult(u, z);
     z.Neg(); // z = -z
+    z += *b;
     M_solver.Mult(z, du_dt);
 }
 
@@ -643,7 +675,15 @@ void ConductionOperator::ImplicitSolve(const double dt,
     MFEM_VERIFY(dt == current_dt, ""); // SDIRK methods use the same dt
     Kmat.Mult(u, z);
     z.Neg();
+    z += *b;
     T_solver.Mult(z, du_dt);
+}
+
+void ConductionOperator::SetSourceTime(double t)
+{
+    src_func.SetTime(t);
+    B->Assemble();
+    b = B->ParallelAssemble();
 }
 
 void ConductionOperator::SetParameters(const Vector &u)
@@ -672,6 +712,7 @@ ConductionOperator::~ConductionOperator()
     delete T;
     delete M;
     delete K;
+    delete B;
 }
 
 double InitialTemperature(const Vector &x)
@@ -704,7 +745,7 @@ double Amplitude(const double t, const int index)
     }
 }
 
-double SourceFunction(const Vector &x, const double t)
+double SourceFunction(const Vector &x, double t)
 {
     // map to the reference [-1,1] domain
     Vector X(x.Size()), Y(x.Size());
