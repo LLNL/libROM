@@ -137,6 +137,7 @@ if (ENABLE_EXAMPLES)
       mixed_nonlinear_diffusion
       nonlinear_elasticity_global_rom
       linear_elasticity_global_rom
+      maxwell_global_rom
       dg_advection
       nonlinear_elasticity
       heat_conduction
@@ -149,6 +150,7 @@ if (ENABLE_EXAMPLES)
       parametric_tw_csv
       parametric_dw_csv)
     set(example_directories
+      prom
       prom
       prom
       prom
