@@ -93,7 +93,7 @@ protected:
     HypreParVector *b; // source vector
 
 public:
-    ConductionOperator(ParFiniteElementSpace &f, FunctionCoefficient &s, 
+    ConductionOperator(ParFiniteElementSpace &f, FunctionCoefficient &s,
                        double alpha, double kappa, const Vector &u);
 
     virtual void Mult(const Vector &u, Vector &du_dt) const;
@@ -611,9 +611,10 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-ConductionOperator::ConductionOperator(ParFiniteElementSpace &f, FunctionCoefficient &s, 
+ConductionOperator::ConductionOperator(ParFiniteElementSpace &f,
+                                       FunctionCoefficient &s,
                                        double al, double kap, const Vector &u)
-    : TimeDependentOperator(f.GetTrueVSize(), 0.0), fespace(f), src_func(s), 
+    : TimeDependentOperator(f.GetTrueVSize(), 0.0), fespace(f), src_func(s),
       M(NULL), K(NULL), T(NULL), current_dt(0.0),
       M_solver(f.GetComm()), T_solver(f.GetComm()), z(height)
 {
@@ -644,7 +645,7 @@ ConductionOperator::ConductionOperator(ParFiniteElementSpace &f, FunctionCoeffic
     T_solver.SetPreconditioner(T_prec);
 
     SetParameters(u);
- 
+
     B = new ParLinearForm(&fespace);
     B->AddDomainIntegrator(new DomainLFIntegrator(src_func));
 }
