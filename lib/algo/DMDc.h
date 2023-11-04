@@ -77,9 +77,9 @@ public:
 
     /**
      * @brief Train the DMDc model with energy fraction criterion.
-     *        The control matrix B may be available and used in training. 
-     *        It is yet to be implemented and requires  
-     *        consideration in sparse matrix multiplication in general. 
+     *        The control matrix B may be available and used in training.
+     *        It is yet to be implemented and requires
+     *        consideration in sparse matrix multiplication in general.
      *        (See Section III.B. in https://arxiv.org/pdf/1409.6358.pdf)
      *        In default, the control matrix is unknown, with B = NULL.
      *
@@ -90,9 +90,9 @@ public:
 
     /**
      * @brief Train the DMDc model with specified reduced dimension.
-     *        The control matrix B may be available and used in training. 
-     *        It is yet to be implemented and requires  
-     *        consideration in sparse matrix multiplication in general. 
+     *        The control matrix B may be available and used in training.
+     *        It is yet to be implemented and requires
+     *        consideration in sparse matrix multiplication in general.
      *        (See Section III.B. in https://arxiv.org/pdf/1409.6358.pdf)
      *        In default, the control matrix is unknown, with B = NULL.
      *
