@@ -110,6 +110,8 @@ private:
      */
     std::vector<Vector*> d_rotated_reduced_vectors;
 
+    std::vector<bool> d_rotated_reduced_vectors_owned;
+
     /**
      * @brief The reduced elements in tangential space.
      */

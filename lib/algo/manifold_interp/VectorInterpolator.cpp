@@ -61,19 +61,29 @@ VectorInterpolator::VectorInterpolator(std::vector<Vector*> parameter_points,
         if (i == d_ref_point)
         {
             d_rotated_reduced_vectors.push_back(reduced_vectors[i]);
+            d_rotated_reduced_vectors_owned.push_back(false);
         }
         else
         {
             Vector* Q_tA = rotation_matrices[i]->transposeMult(reduced_vectors[i]);
             d_rotated_reduced_vectors.push_back(Q_tA);
+            d_rotated_reduced_vectors_owned.push_back(true);
         }
     }
 }
 
 VectorInterpolator::~VectorInterpolator()
 {
-    for (auto v : d_rotated_reduced_vectors)
-        delete v;
+    CAROM_VERIFY(d_rotated_reduced_vectors.size() ==
+                 d_rotated_reduced_vectors_owned.size());
+
+    for (int i = 0; i < d_rotated_reduced_vectors.size(); i++)
+    {
+        if (d_rotated_reduced_vectors_owned[i])
+        {
+            delete d_rotated_reduced_vectors[i];
+        }
+    }
 
     for (auto v : d_gammas)
         delete v;
