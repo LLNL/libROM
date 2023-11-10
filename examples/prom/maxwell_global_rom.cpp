@@ -453,15 +453,22 @@ int main(int argc, char *argv[])
         ofstream sol_ofs(sol_name.str().c_str());
         sol_ofs.precision(8);
         x.Save(sol_ofs);
+        
+        ofstream sol_dofs_ofs(sol_dofs_name.str().c_str());
+        sol_dofs_ofs.precision(16);
+        for (int i = 0; i < x.Size(); ++i)
+        {
+            sol_dofs_ofs << x[i] << std::endl;
+        }
     }
 
     // 28. Save data in the VisIt format.
     DataCollection *dc = NULL;
     if (visit)
     {
-        if (offline) dc = new VisItDataCollection("Example3", pmesh);
-        else if (fom) dc = new VisItDataCollection("Example3_fom", pmesh);
-        else if (online) dc = new VisItDataCollection("Example3_rom", pmesh);
+        if (offline) dc = new VisItDataCollection("maxwell", pmesh);
+        else if (fom) dc = new VisItDataCollection("maxwell_fom", pmesh);
+        else if (online) dc = new VisItDataCollection("maxwell_rom", pmesh);
         dc->SetPrecision(precision);
         dc->RegisterField("solution", &x);
         dc->Save();
