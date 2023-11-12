@@ -8,9 +8,10 @@
  *
  *****************************************************************************/
 
-// Description: Implementation of the DMD algorithm.
+// Description: Implementation of the DMDc algorithm.
 
 #include "DMD.h"
+#include "DMDc.h"
 
 #include "linalg/Matrix.h"
 #include "linalg/Vector.h"
@@ -43,9 +44,10 @@ extern "C" {
 
 namespace CAROM {
 
-DMD::DMD(int dim, bool alt_output_basis, Vector* state_offset)
+DMDc::DMDc(int dim, int dim_c, Vector* state_offset)
 {
     CAROM_VERIFY(dim > 0);
+    CAROM_VERIFY(dim_c > 0);
 
     // Get the rank of this process, and the number of processors.
     int mpi_init;
@@ -57,15 +59,16 @@ DMD::DMD(int dim, bool alt_output_basis, Vector* state_offset)
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
     d_dim = dim;
+    d_dim_c = dim_c;
     d_trained = false;
     d_init_projected = false;
-    d_alt_output_basis = alt_output_basis;
-    setOffset(state_offset, 0);
+    setOffset(state_offset);
 }
 
-DMD::DMD(int dim, double dt, bool alt_output_basis, Vector* state_offset)
+DMDc::DMDc(int dim, int dim_c, double dt, Vector* state_offset)
 {
     CAROM_VERIFY(dim > 0);
+    CAROM_VERIFY(dim_c > 0);
     CAROM_VERIFY(dt > 0.0);
 
     // Get the rank of this process, and the number of processors.
@@ -78,14 +81,14 @@ DMD::DMD(int dim, double dt, bool alt_output_basis, Vector* state_offset)
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
     d_dim = dim;
+    d_dim_c = dim_c;
     d_dt = dt;
     d_trained = false;
     d_init_projected = false;
-    d_alt_output_basis = alt_output_basis;
-    setOffset(state_offset, 0);
+    setOffset(state_offset);
 }
 
-DMD::DMD(std::string base_file_name)
+DMDc::DMDc(std::string base_file_name)
 {
     // Get the rank of this process, and the number of processors.
     int mpi_init;
@@ -102,9 +105,9 @@ DMD::DMD(std::string base_file_name)
     load(base_file_name);
 }
 
-DMD::DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
-         Matrix* phi_imaginary, int k,
-         double dt, double t_offset, Vector* state_offset)
+DMDc::DMDc(std::vector<std::complex<double>> eigs, Matrix* phi_real,
+           Matrix* phi_imaginary, Matrix* B_tilde, int k,
+           double dt, double t_offset, Vector* state_offset)
 {
     // Get the rank of this process, and the number of processors.
     int mpi_init;
@@ -121,13 +124,14 @@ DMD::DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
     d_eigs = eigs;
     d_phi_real = phi_real;
     d_phi_imaginary = phi_imaginary;
+    d_B_tilde = B_tilde;
     d_k = k;
     d_dt = dt;
     d_t_offset = t_offset;
-    setOffset(state_offset, 0);
+    setOffset(state_offset);
 }
 
-DMD::~DMD()
+DMDc::~DMDc()
 {
     for (auto snapshot : d_snapshots)
     {
@@ -140,6 +144,7 @@ DMD::~DMD()
     delete d_state_offset;
     delete d_basis;
     delete d_A_tilde;
+    delete d_B_tilde;
     delete d_phi_real;
     delete d_phi_imaginary;
     delete d_phi_real_squared_inverse;
@@ -148,15 +153,12 @@ DMD::~DMD()
     delete d_projected_init_imaginary;
 }
 
-void DMD::setOffset(Vector* offset_vector, int order)
+void DMDc::setOffset(Vector* offset_vector)
 {
-    if (order == 0)
-    {
-        d_state_offset = offset_vector;
-    }
+    d_state_offset = offset_vector;
 }
 
-void DMD::takeSample(double* u_in, double t)
+void DMDc::takeSample(double* u_in, double t, double* f_in, bool last_step)
 {
     CAROM_VERIFY(u_in != 0);
     CAROM_VERIFY(t >= 0.0);
@@ -181,6 +183,7 @@ void DMD::takeSample(double* u_in, double t)
         Vector* last_snapshot = d_snapshots.back();
         delete last_snapshot;
         d_snapshots.pop_back();
+        d_controls.pop_back();
         d_sampled_times.pop_back();
     }
 
@@ -193,45 +196,57 @@ void DMD::takeSample(double* u_in, double t)
     {
         CAROM_VERIFY(d_sampled_times.back()->item(0) < t);
     }
-
     d_snapshots.push_back(sample);
+
+    if (!last_step)
+    {
+        Vector* control = new Vector(f_in, d_dim_c, false);
+        d_controls.push_back(control);
+    }
 
     Vector* sampled_time = new Vector(&t, 1, false);
     d_sampled_times.push_back(sampled_time);
 }
 
-void DMD::train(double energy_fraction, const Matrix* W0, double linearity_tol)
+void DMDc::train(double energy_fraction, const Matrix* B)
 {
     const Matrix* f_snapshots = getSnapshotMatrix();
+    const Matrix* f_controls = createSnapshotMatrix(d_controls);
     CAROM_VERIFY(f_snapshots->numColumns() > 1);
+    CAROM_VERIFY(f_controls->numColumns() == f_snapshots->numColumns() - 1);
     CAROM_VERIFY(energy_fraction > 0 && energy_fraction <= 1);
     d_energy_fraction = energy_fraction;
-    constructDMD(f_snapshots, d_rank, d_num_procs, W0, linearity_tol);
+    constructDMDc(f_snapshots, f_controls, d_rank, d_num_procs, B);
 
     delete f_snapshots;
 }
 
-void DMD::train(int k, const Matrix* W0, double linearity_tol)
+void DMDc::train(int k, const Matrix* B)
 {
     const Matrix* f_snapshots = getSnapshotMatrix();
+    const Matrix* f_controls = createSnapshotMatrix(d_controls);
     CAROM_VERIFY(f_snapshots->numColumns() > 1);
+    CAROM_VERIFY(f_controls->numColumns() == f_snapshots->numColumns() - 1);
     CAROM_VERIFY(k > 0 && k <= f_snapshots->numColumns() - 1);
     d_energy_fraction = -1.0;
     d_k = k;
-    constructDMD(f_snapshots, d_rank, d_num_procs, W0, linearity_tol);
+    constructDMDc(f_snapshots, f_controls, d_rank, d_num_procs, B);
 
     delete f_snapshots;
 }
 
 std::pair<Matrix*, Matrix*>
-DMD::computeDMDSnapshotPair(const Matrix* snapshots)
+DMDc::computeDMDcSnapshotPair(const Matrix* snapshots, const Matrix* controls,
+                              const Matrix* B)
 {
     CAROM_VERIFY(snapshots->numColumns() > 1);
+    CAROM_VERIFY(controls->numColumns() == snapshots->numColumns()-1);
 
     // TODO: Making two copies of the snapshot matrix has a lot of overhead.
     //       We need to figure out a way to do submatrix multiplication and to
     //       reimplement this algorithm using one snapshot matrix.
-    Matrix* f_snapshots_in = new Matrix(snapshots->numRows(),
+    int input_control_dim = (B == NULL) ? controls->numRows() : 0;
+    Matrix* f_snapshots_in = new Matrix(snapshots->numRows() + input_control_dim,
                                         snapshots->numColumns() - 1, snapshots->distributed());
     Matrix* f_snapshots_out = new Matrix(snapshots->numRows(),
                                          snapshots->numColumns() - 1, snapshots->distributed());
@@ -253,44 +268,35 @@ DMD::computeDMDSnapshotPair(const Matrix* snapshots)
         }
     }
 
+    for (int i = 0; i < controls->numRows(); i++)
+    {
+        if (B == NULL)
+        {
+            for (int j = 0; j < snapshots->numColumns() - 1; j++)
+            {
+                f_snapshots_in->item(snapshots->numRows() + i, j) = controls->item(i, j);
+            }
+        }
+        else
+        {
+            Matrix* Bf = B->mult(controls);
+            *f_snapshots_out -= *Bf;
+            delete Bf;
+        }
+    }
+
     return std::pair<Matrix*,Matrix*>(f_snapshots_in, f_snapshots_out);
 }
 
 void
-DMD::computePhi(struct DMDInternal dmd_internal_obj)
+DMDc::constructDMDc(const Matrix* f_snapshots,
+                    const Matrix* f_controls,
+                    int d_rank,
+                    int d_num_procs,
+                    const Matrix* B)
 {
-    // Calculate phi
-    if (d_alt_output_basis)
-    {
-        Matrix* f_snapshots_out_mult_d_basis_right =
-            dmd_internal_obj.snapshots_out->mult(dmd_internal_obj.basis_right);
-        Matrix* f_snapshots_out_mult_d_basis_right_mult_d_S_inv =
-            f_snapshots_out_mult_d_basis_right->mult(dmd_internal_obj.S_inv);
-        d_phi_real = f_snapshots_out_mult_d_basis_right_mult_d_S_inv->mult(
-                         dmd_internal_obj.eigenpair->ev_real);
-        d_phi_imaginary = f_snapshots_out_mult_d_basis_right_mult_d_S_inv->mult(
-                              dmd_internal_obj.eigenpair->ev_imaginary);
-
-        delete f_snapshots_out_mult_d_basis_right;
-        delete f_snapshots_out_mult_d_basis_right_mult_d_S_inv;
-    }
-    else
-    {
-        d_phi_real = dmd_internal_obj.basis->mult(dmd_internal_obj.eigenpair->ev_real);
-        d_phi_imaginary = dmd_internal_obj.basis->mult(
-                              dmd_internal_obj.eigenpair->ev_imaginary);
-    }
-}
-
-void
-DMD::constructDMD(const Matrix* f_snapshots,
-                  int d_rank,
-                  int d_num_procs,
-                  const Matrix* W0,
-                  double linearity_tol)
-{
-    std::pair<Matrix*, Matrix*> f_snapshot_pair = computeDMDSnapshotPair(
-                f_snapshots);
+    std::pair<Matrix*, Matrix*> f_snapshot_pair = computeDMDcSnapshotPair(
+                f_snapshots, f_controls, B);
     Matrix* f_snapshots_in = f_snapshot_pair.first;
     Matrix* f_snapshots_out = f_snapshot_pair.second;
 
@@ -329,12 +335,12 @@ DMD::constructDMD(const Matrix* f_snapshots,
                       row_offset[rank + 1] - row_offset[rank], rank);
     }
 
-    std::unique_ptr<SVDManager> d_factorizer(new SVDManager);
+    std::unique_ptr<SVDManager> d_factorizer_in(new SVDManager);
 
     // This block does the actual ScaLAPACK call to do the factorization.
-    svd_init(d_factorizer.get(), &svd_input);
-    d_factorizer->dov = 1;
-    factorize(d_factorizer.get());
+    svd_init(d_factorizer_in.get(), &svd_input);
+    d_factorizer_in->dov = 1;
+    factorize(d_factorizer_in.get());
     free_matrix_data(&svd_input);
 
     // Compute how many basis vectors we will actually use.
@@ -342,185 +348,218 @@ DMD::constructDMD(const Matrix* f_snapshots,
                                       f_snapshots_in->numDistributedRows());
     for (int i = 0; i < d_num_singular_vectors; i++)
     {
-        d_sv.push_back(d_factorizer->S[i]);
+        d_sv.push_back(d_factorizer_in->S[i]);
     }
 
+    int d_k_in;
     if (d_energy_fraction != -1.0)
     {
-        d_k = d_num_singular_vectors;
+        d_k_in = d_num_singular_vectors;
         if (d_energy_fraction < 1.0)
         {
             double total_energy = 0.0;
             for (int i = 0; i < d_num_singular_vectors; i++)
             {
-                total_energy += d_factorizer->S[i];
+                total_energy += d_factorizer_in->S[i];
             }
             double current_energy = 0.0;
             for (int i = 0; i < d_num_singular_vectors; i++)
             {
-                current_energy += d_factorizer->S[i];
+                current_energy += d_factorizer_in->S[i];
                 if (current_energy / total_energy >= d_energy_fraction)
                 {
-                    d_k = i + 1;
+                    d_k_in = i + 1;
                     break;
                 }
             }
         }
     }
 
-    if (d_rank == 0) std::cout << "Using " << d_k << " basis vectors out of " <<
-                                   d_num_singular_vectors << "." << std::endl;
+    if (d_rank == 0) std::cout << "Using " << d_k_in << " basis vectors out of " <<
+                                   d_num_singular_vectors << " for input." << std::endl;
 
     // Allocate the appropriate matrices and gather their elements.
-    d_basis = new Matrix(f_snapshots->numRows(), d_k, f_snapshots->distributed());
-    Matrix* d_S_inv = new Matrix(d_k, d_k, false);
-    Matrix* d_basis_right = new Matrix(f_snapshots_in->numColumns(), d_k, false);
+    Matrix* d_basis_in = new Matrix(f_snapshots_in->numRows(), d_k_in,
+                                    f_snapshots_in->distributed());
+    Matrix* d_S_inv = new Matrix(d_k_in, d_k_in, false);
+    Matrix* d_basis_right = new Matrix(f_snapshots_in->numColumns(), d_k_in, false);
 
     for (int d_rank = 0; d_rank < d_num_procs; ++d_rank) {
         // V is computed in the transposed order so no reordering necessary.
-        gather_block(&d_basis->item(0, 0), d_factorizer->V,
+        gather_block(&d_basis_in->item(0, 0), d_factorizer_in->V,
                      1, row_offset[static_cast<unsigned>(d_rank)]+1,
-                     d_k, row_offset[static_cast<unsigned>(d_rank) + 1] -
+                     d_k_in, row_offset[static_cast<unsigned>(d_rank) + 1] -
                      row_offset[static_cast<unsigned>(d_rank)],
                      d_rank);
 
         // gather_transposed_block does the same as gather_block, but transposes
         // it; here, it is used to go from column-major to row-major order.
-        gather_transposed_block(&d_basis_right->item(0, 0), d_factorizer->U, 1, 1,
-                                f_snapshots_in->numColumns(), d_k, d_rank);
+        gather_transposed_block(&d_basis_right->item(0, 0), d_factorizer_in->U, 1, 1,
+                                f_snapshots_in->numColumns(), d_k_in, d_rank);
     }
-    delete[] row_offset;
 
     // Get inverse of singular values by multiplying by reciprocal.
-    for (int i = 0; i < d_k; ++i)
+    for (int i = 0; i < d_k_in; ++i)
     {
-        d_S_inv->item(i, i) = 1 / d_factorizer->S[static_cast<unsigned>(i)];
+        d_S_inv->item(i, i) = 1 / d_factorizer_in->S[static_cast<unsigned>(i)];
     }
 
-    Matrix* Q = NULL;
-
-    // If W0 is not null, we need to ensure it is in the basis of W.
-    if (W0 != NULL)
+    if (B == NULL)
     {
-        CAROM_VERIFY(W0->numRows() == d_basis->numRows());
-        CAROM_VERIFY(linearity_tol >= 0.0);
-        std::vector<int> lin_independent_cols_W;
+        // SVD on outputs
+        row_offset[d_num_procs] = f_snapshots_out->numDistributedRows();
+        row_offset[d_rank] = f_snapshots_out->numRows();
 
-        // Copy W0 and orthogonalize.
-        Matrix* d_basis_init = new Matrix(f_snapshots->numRows(), W0->numColumns(),
-                                          true);
-        for (int i = 0; i < d_basis_init->numRows(); i++)
-        {
-            for (int j = 0; j < W0->numColumns(); j++)
-            {
-                d_basis_init->item(i, j) = W0->item(i, j);
-            }
-        }
-        d_basis_init->orthogonalize();
-
-        Vector W_col(f_snapshots->numRows(), f_snapshots->distributed());
-        Vector l(W0->numColumns(), true);
-        Vector W0l(f_snapshots->numRows(), f_snapshots->distributed());
-        // Find which columns of d_basis are linearly independent from W0
-        for (int j = 0; j < d_basis->numColumns(); j++)
-        {
-            // l = W0' * u
-            for (int i = 0; i < f_snapshots->numRows(); i++)
-            {
-                W_col.item(i) = d_basis->item(i, j);
-            }
-            d_basis_init->transposeMult(W_col, l);
-
-            // W0l = W0 * l
-            d_basis_init->mult(l, W0l);
-
-            // Compute k = sqrt(u.u - 2.0*l.l + basisl.basisl) which is ||u -
-            // basisl||_{2}.  This is the error in the projection of u into the
-            // reduced order space and subsequent lifting back to the full
-            // order space.
-            double k = W_col.inner_product(W_col) - 2.0*l.inner_product(l) +
-                       W0l.inner_product(W0l);
-            if (k <= 0)
-            {
-                k = 0;
-            }
-            else
-            {
-                k = sqrt(k);
-            }
-
-            // Use k to see if the vector addressed by u is linearly dependent
-            // on the left singular vectors.
-            if (k >= linearity_tol)
-            {
-                lin_independent_cols_W.push_back(j);
-            }
-        }
-        delete d_basis_init;
-
-        // Add the linearly independent columns of W to W0. Call this new basis W_new.
-        Matrix* d_basis_new = new Matrix(f_snapshots->numRows(),
-                                         W0->numColumns() + lin_independent_cols_W.size(), true);
-        for (int i = 0; i < d_basis_new->numRows(); i++)
-        {
-            for (int j = 0; j < W0->numColumns(); j++)
-            {
-                d_basis_new->item(i, j) = W0->item(i, j);
-            }
-            for (int j = 0; j < lin_independent_cols_W.size(); j++)
-            {
-                d_basis_new->item(i, j + W0->numColumns()) = d_basis->item(i,
-                        lin_independent_cols_W[j]);
-            }
+        CAROM_VERIFY(MPI_Allgather(MPI_IN_PLACE,
+                                   1,
+                                   MPI_INT,
+                                   row_offset,
+                                   1,
+                                   MPI_INT,
+                                   MPI_COMM_WORLD) == MPI_SUCCESS);
+        for (int i = d_num_procs - 1; i >= 0; i--) {
+            row_offset[i] = row_offset[i + 1] - row_offset[i];
         }
 
-        // Orthogonalize W_new.
-        d_basis_new->orthogonalize();
+        CAROM_VERIFY(row_offset[0] == 0);
 
-        // Calculate Q = W* x W_new;
-        Q = d_basis->transposeMult(d_basis_new);
+        int d_blocksize = row_offset[d_num_procs] / d_num_procs;
+        if (row_offset[d_num_procs] % d_num_procs != 0) d_blocksize += 1;
 
-        delete d_basis;
-        d_basis = d_basis_new;
+        SLPK_Matrix svd_output;
 
-        d_k = d_basis_new->numColumns();
-        if (d_rank == 0) std::cout << "After adding W0, now using " << d_k <<
-                                       " basis vectors." << std::endl;
-    }
+        // Calculate svd of snapshots_out
+        initialize_matrix(&svd_output, f_snapshots_out->numColumns(),
+                          f_snapshots_out->numDistributedRows(),
+                          1, d_num_procs, d_blocksize, d_blocksize);
 
-    // Calculate A_tilde = U_transpose * f_snapshots_out * V * inv(S)
-    Matrix* d_basis_mult_f_snapshots_out = d_basis->transposeMult(f_snapshots_out);
-    Matrix* d_basis_mult_f_snapshots_out_mult_d_basis_right =
-        d_basis_mult_f_snapshots_out->mult(d_basis_right);
-    if (Q == NULL)
-    {
-        d_A_tilde = d_basis_mult_f_snapshots_out_mult_d_basis_right->mult(d_S_inv);
+        for (int rank = 0; rank < d_num_procs; ++rank)
+        {
+            scatter_block(&svd_output, 1, row_offset[rank] + 1,
+                          f_snapshots_out->getData(),
+                          f_snapshots_out->numColumns(),
+                          row_offset[rank + 1] - row_offset[rank], rank);
+        }
+
+        std::unique_ptr<SVDManager> d_factorizer_out(new SVDManager);
+
+        // This block does the actual ScaLAPACK call to do the factorization.
+        svd_init(d_factorizer_out.get(), &svd_output);
+        d_factorizer_out->dov = 1;
+        factorize(d_factorizer_out.get());
+        free_matrix_data(&svd_output);
+
+        // Compute how many basis vectors we will actually use.
+        d_num_singular_vectors = std::min(f_snapshots_out->numColumns(),
+                                          f_snapshots_out->numDistributedRows());
+        for (int i = 0; i < d_num_singular_vectors; i++)
+        {
+            d_sv.push_back(d_factorizer_out->S[i]);
+        }
+
+        if (d_energy_fraction != -1.0)
+        {
+            d_k = d_num_singular_vectors;
+            if (d_energy_fraction < 1.0)
+            {
+                double total_energy = 0.0;
+                for (int i = 0; i < d_num_singular_vectors; i++)
+                {
+                    total_energy += d_factorizer_out->S[i];
+                }
+                double current_energy = 0.0;
+                for (int i = 0; i < d_num_singular_vectors; i++)
+                {
+                    current_energy += d_factorizer_out->S[i];
+                    if (current_energy / total_energy >= d_energy_fraction)
+                    {
+                        d_k = i + 1;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (d_rank == 0) std::cout << "Using " << d_k << " basis vectors out of " <<
+                                       d_num_singular_vectors << " for output." << std::endl;
+
+        // Allocate the appropriate matrices and gather their elements.
+        d_basis = new Matrix(f_snapshots_out->numRows(), d_k,
+                             f_snapshots_out->distributed());
+        for (int d_rank = 0; d_rank < d_num_procs; ++d_rank) {
+            // V is computed in the transposed order so no reordering necessary.
+            gather_block(&d_basis->item(0, 0), d_factorizer_out->V,
+                         1, row_offset[static_cast<unsigned>(d_rank)]+1,
+                         d_k, row_offset[static_cast<unsigned>(d_rank) + 1] -
+                         row_offset[static_cast<unsigned>(d_rank)],
+                         d_rank);
+        }
     }
     else
     {
-        Matrix* d_basis_mult_f_snapshots_out_mult_d_basis_right_mult_d_S_inv =
-            d_basis_mult_f_snapshots_out_mult_d_basis_right->mult(d_S_inv);
-        d_A_tilde = d_basis_mult_f_snapshots_out_mult_d_basis_right_mult_d_S_inv->mult(
-                        Q);
-        delete Q;
-        delete d_basis_mult_f_snapshots_out_mult_d_basis_right_mult_d_S_inv;
+        d_basis = d_basis_in;
+        d_k = d_k_in;
+    }
+
+    delete[] row_offset;
+
+    // Calculate A_tilde and B_tilde
+    Matrix* d_basis_mult_f_snapshots_out = d_basis->transposeMult(f_snapshots_out);
+    Matrix* d_basis_mult_f_snapshots_out_mult_d_basis_right =
+        d_basis_mult_f_snapshots_out->mult(d_basis_right);
+    Matrix* d_A_tilde_orig = d_basis_mult_f_snapshots_out_mult_d_basis_right->mult(
+                                 d_S_inv);
+
+    if (B == NULL)
+    {
+        Matrix* d_basis_in_state = new Matrix(f_snapshots->numRows(),
+                                              d_k_in, f_snapshots->distributed());
+        Matrix* d_basis_in_control_transpose = new Matrix(d_k_in, f_controls->numRows(),
+                false);
+        for (int j = 0; j < d_k_in; j++)
+        {
+            for (int i = 0; i < f_snapshots->numRows(); i++)
+            {
+                d_basis_in_state->item(i, j) = d_basis_in->item(i, j);
+            }
+            for (int i = 0; i < f_controls->numRows(); i++)
+            {
+                d_basis_in_control_transpose->item(j,
+                                                   i) = d_basis_in->item(f_snapshots->numRows() + i,
+                                                           j);
+            }
+        }
+        Matrix* d_basis_state_rot = d_basis_in_state->transposeMult(d_basis);
+        d_A_tilde = d_A_tilde_orig->mult(d_basis_state_rot);
+        d_B_tilde = d_A_tilde_orig->mult(d_basis_in_control_transpose);
+        delete d_basis_in_state;
+        delete d_basis_in_control_transpose;
+        delete d_basis_state_rot;
+    }
+    else
+    {
+        d_A_tilde = d_A_tilde_orig;
+        d_B_tilde = d_basis->transposeMult(B);
     }
 
     // Calculate the right eigenvalues/eigenvectors of A_tilde
     ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(d_A_tilde);
     d_eigs = eigenpair.eigs;
 
-    struct DMDInternal dmd_internal = {f_snapshots_in, f_snapshots_out, d_basis, d_basis_right, d_S_inv, &eigenpair};
-    computePhi(dmd_internal);
+    //struct DMDInternal dmd_internal = {f_snapshots_in, f_snapshots_out, d_basis, d_basis_right, d_S_inv, &eigenpair};
+    //computePhi(dmd_internal);
 
-    Vector* init = new Vector(f_snapshots_in->numRows(), true);
+    d_phi_real = d_basis->mult(eigenpair.ev_real);
+    d_phi_imaginary = d_basis->mult(eigenpair.ev_imaginary);
+
+    Vector* init = new Vector(d_basis->numRows(), true);
     for (int i = 0; i < init->dim(); i++)
     {
         init->item(i) = f_snapshots_in->item(i, 0);
     }
 
-    // Calculate pinv(d_phi) * initial_condition.
-    projectInitialCondition(init);
+    // Calculate the projection initial_condition onto column space of d_basis.
+    project(init, f_controls);
 
     d_trained = true;
 
@@ -528,6 +567,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
     delete d_S_inv;
     delete d_basis_mult_f_snapshots_out;
     delete d_basis_mult_f_snapshots_out_mult_d_basis_right;
+    delete d_A_tilde_orig;
     delete f_snapshots_in;
     delete f_snapshots_out;
     delete eigenpair.ev_real;
@@ -538,7 +578,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
 }
 
 void
-DMD::projectInitialCondition(const Vector* init, double t_offset)
+DMDc::project(const Vector* init, const Matrix* controls, double t_offset)
 {
     Matrix* d_phi_real_squared = d_phi_real->transposeMult(d_phi_real);
     Matrix* d_phi_real_squared_2 = d_phi_imaginary->transposeMult(d_phi_imaginary);
@@ -547,6 +587,9 @@ DMD::projectInitialCondition(const Vector* init, double t_offset)
     Matrix* d_phi_imaginary_squared = d_phi_real->transposeMult(d_phi_imaginary);
     Matrix* d_phi_imaginary_squared_2 = d_phi_imaginary->transposeMult(d_phi_real);
     *d_phi_imaginary_squared -= *d_phi_imaginary_squared_2;
+
+    delete d_phi_real_squared_2;
+    delete d_phi_imaginary_squared_2;
 
     const int dprs_row = d_phi_real_squared->numRows();
     const int dprs_col = d_phi_real_squared->numColumns();
@@ -604,29 +647,50 @@ DMD::projectInitialCondition(const Vector* init, double t_offset)
         }
     }
 
-    Vector* rhs_real = d_phi_real->transposeMult(init);
-    Vector* rhs_imaginary = d_phi_imaginary->transposeMult(init);
+    // Initial condition
+    Vector* init_real = d_phi_real->transposeMult(init);
+    Vector* init_imaginary = d_phi_imaginary->transposeMult(init);
 
-    Vector* d_projected_init_real_1 = d_phi_real_squared_inverse->mult(rhs_real);
+    Vector* d_projected_init_real_1 = d_phi_real_squared_inverse->mult(init_real);
     Vector* d_projected_init_real_2 = d_phi_imaginary_squared_inverse->mult(
-                                          rhs_imaginary);
+                                          init_imaginary);
     d_projected_init_real = d_projected_init_real_1->plus(d_projected_init_real_2);
 
     Vector* d_projected_init_imaginary_1 = d_phi_real_squared_inverse->mult(
-            rhs_imaginary);
+            init_imaginary);
     Vector* d_projected_init_imaginary_2 = d_phi_imaginary_squared_inverse->mult(
-            rhs_real);
+            init_real);
     d_projected_init_imaginary = d_projected_init_imaginary_2->minus(
                                      d_projected_init_imaginary_1);
 
-    delete d_phi_real_squared_2;
+    delete init_real;
+    delete init_imaginary;
     delete d_projected_init_real_1;
     delete d_projected_init_real_2;
-    delete d_phi_imaginary_squared_2;
     delete d_projected_init_imaginary_1;
     delete d_projected_init_imaginary_2;
-    delete rhs_real;
-    delete rhs_imaginary;
+
+    // Controls
+    Matrix* B_tilde_f = d_B_tilde->mult(controls);
+    Matrix* UBf = d_basis->mult(B_tilde_f);
+    Matrix* controls_real = d_phi_real->transposeMult(UBf);
+    Matrix* controls_imaginary = d_phi_imaginary->transposeMult(UBf);
+
+    d_projected_controls_real = d_phi_real_squared_inverse->mult(controls_real);
+    Matrix* d_projected_controls_real_2 = d_phi_imaginary_squared_inverse->mult(
+            controls_imaginary);
+    *d_projected_controls_real += *d_projected_controls_real_2;
+
+    d_projected_controls_imaginary = d_phi_imaginary_squared_inverse->mult(
+                                         controls_real);
+    Matrix* d_projected_controls_imaginary_2 = d_phi_real_squared_inverse->mult(
+                controls_imaginary);
+    *d_projected_controls_imaginary -= *d_projected_controls_imaginary_2;
+
+    delete controls_real;
+    delete controls_imaginary;
+    delete d_projected_controls_real_2;
+    delete d_projected_controls_imaginary_2;
 
     delete [] inverse_input;
     delete [] ipiv;
@@ -634,15 +698,15 @@ DMD::projectInitialCondition(const Vector* init, double t_offset)
 
     if (t_offset >= 0.0)
     {
-        std::cout << "t_offset is updated from " << d_t_offset <<
-                  " to " << t_offset << std::endl;
+        std::cout << "t_offset is updated from " << d_t_offset
+                  << " to " << t_offset << std::endl;
         d_t_offset = t_offset;
     }
     d_init_projected = true;
 }
 
 Vector*
-DMD::predict(double t, int deg)
+DMDc::predict(double t)
 {
     CAROM_VERIFY(d_trained);
     CAROM_VERIFY(d_init_projected);
@@ -650,7 +714,10 @@ DMD::predict(double t, int deg)
 
     t -= d_t_offset;
 
-    std::pair<Matrix*, Matrix*> d_phi_pair = phiMultEigs(t, deg);
+    int n = round(t / d_dt);
+    //int n = min(round(t / d_dt), d_projected_controls_real->numColumns());
+
+    std::pair<Matrix*, Matrix*> d_phi_pair = phiMultEigs(t);
     Matrix* d_phi_mult_eigs_real = d_phi_pair.first;
     Matrix* d_phi_mult_eigs_imaginary = d_phi_pair.second;
 
@@ -660,18 +727,44 @@ DMD::predict(double t, int deg)
                                            d_projected_init_imaginary);
     Vector* d_predicted_state_real = d_predicted_state_real_1->minus(
                                          d_predicted_state_real_2);
-    addOffset(d_predicted_state_real, t, deg);
+    addOffset(d_predicted_state_real);
 
     delete d_phi_mult_eigs_real;
     delete d_phi_mult_eigs_imaginary;
     delete d_predicted_state_real_1;
     delete d_predicted_state_real_2;
 
+    Vector* f_control_real = new Vector(d_basis->numRows(), false);
+    Vector* f_control_imaginary = new Vector(d_basis->numRows(), false);
+    for (int k = 0; k < n; k++)
+    {
+        t -= d_dt;
+        std::pair<Matrix*, Matrix*> d_phi_pair = phiMultEigs(t);
+        d_phi_mult_eigs_real = d_phi_pair.first;
+        d_phi_mult_eigs_imaginary = d_phi_pair.second;
+
+        d_projected_controls_real->getColumn(k, *f_control_real);
+        d_projected_controls_imaginary->getColumn(k, *f_control_imaginary);
+        d_predicted_state_real_1 = d_phi_mult_eigs_real->mult(
+                                       f_control_real);
+        d_predicted_state_real_2 = d_phi_mult_eigs_imaginary->mult(
+                                       f_control_imaginary);
+        *d_predicted_state_real += *d_predicted_state_real_1;
+        *d_predicted_state_real -= *d_predicted_state_real_2;
+
+        delete d_phi_mult_eigs_real;
+        delete d_phi_mult_eigs_imaginary;
+        delete d_predicted_state_real_1;
+        delete d_predicted_state_real_2;
+    }
+
+    delete f_control_real;
+    delete f_control_imaginary;
     return d_predicted_state_real;
 }
 
 void
-DMD::addOffset(Vector*& result, double t, int deg)
+DMDc::addOffset(Vector*& result)
 {
     if (d_state_offset)
     {
@@ -680,13 +773,13 @@ DMD::addOffset(Vector*& result, double t, int deg)
 }
 
 std::complex<double>
-DMD::computeEigExp(std::complex<double> eig, double t)
+DMDc::computeEigExp(std::complex<double> eig, double t)
 {
     return std::pow(eig, t / d_dt);
 }
 
 std::pair<Matrix*, Matrix*>
-DMD::phiMultEigs(double t, int deg)
+DMDc::phiMultEigs(double t)
 {
     Matrix* d_eigs_exp_real = new Matrix(d_k, d_k, false);
     Matrix* d_eigs_exp_imaginary = new Matrix(d_k, d_k, false);
@@ -694,10 +787,6 @@ DMD::phiMultEigs(double t, int deg)
     for (int i = 0; i < d_k; i++)
     {
         std::complex<double> eig_exp = computeEigExp(d_eigs[i], t);
-        for (int k = 0; k < deg; ++k)
-        {
-            eig_exp *= d_eigs[i];
-        }
         d_eigs_exp_real->item(i, i) = std::real(eig_exp);
         d_eigs_exp_imaginary->item(i, i) = std::imag(eig_exp);
     }
@@ -719,19 +808,19 @@ DMD::phiMultEigs(double t, int deg)
 }
 
 double
-DMD::getTimeOffset() const
+DMDc::getTimeOffset() const
 {
     return d_t_offset;
 }
 
 const Matrix*
-DMD::getSnapshotMatrix()
+DMDc::getSnapshotMatrix()
 {
     return createSnapshotMatrix(d_snapshots);
 }
 
 const Matrix*
-DMD::createSnapshotMatrix(std::vector<Vector*> snapshots)
+DMDc::createSnapshotMatrix(std::vector<Vector*> snapshots)
 {
     CAROM_VERIFY(snapshots.size() > 0);
     CAROM_VERIFY(snapshots[0]->dim() > 0);
@@ -756,7 +845,7 @@ DMD::createSnapshotMatrix(std::vector<Vector*> snapshots)
 }
 
 void
-DMD::load(std::string base_file_name)
+DMDc::load(std::string base_file_name)
 {
     CAROM_ASSERT(!base_file_name.empty());
 
@@ -803,6 +892,10 @@ DMD::load(std::string base_file_name)
     d_A_tilde = new Matrix();
     d_A_tilde->read(full_file_name);
 
+    full_file_name = base_file_name + "_B_tilde";
+    d_B_tilde = new Matrix();
+    d_B_tilde->read(full_file_name);
+
     full_file_name = base_file_name + "_phi_real";
     d_phi_real = new Matrix();
     d_phi_real->read(full_file_name);
@@ -841,13 +934,13 @@ DMD::load(std::string base_file_name)
 }
 
 void
-DMD::load(const char* base_file_name)
+DMDc::load(const char* base_file_name)
 {
     load(std::string(base_file_name));
 }
 
 void
-DMD::save(std::string base_file_name)
+DMDc::save(std::string base_file_name)
 {
     CAROM_ASSERT(!base_file_name.empty());
     CAROM_VERIFY(d_trained);
@@ -902,6 +995,12 @@ DMD::save(std::string base_file_name)
         d_A_tilde->write(full_file_name);
     }
 
+    if (d_B_tilde != NULL)
+    {
+        full_file_name = base_file_name + "_B_tilde";
+        d_B_tilde->write(full_file_name);
+    }
+
     full_file_name = base_file_name + "_phi_real";
     d_phi_real->write(full_file_name);
 
@@ -930,13 +1029,13 @@ DMD::save(std::string base_file_name)
 }
 
 void
-DMD::save(const char* base_file_name)
+DMDc::save(const char* base_file_name)
 {
     save(std::string(base_file_name));
 }
 
 void
-DMD::summary(std::string base_file_name)
+DMDc::summary(std::string base_file_name)
 {
     if (d_rank == 0)
     {

@@ -35,6 +35,7 @@ set(module_list
   linalg/svd/SVD
   linalg/svd/StaticSVD
   algo/DMD
+  algo/DMDc
   algo/AdaptiveDMD
   algo/NonuniformDMD
   algo/DifferentialEvolution
