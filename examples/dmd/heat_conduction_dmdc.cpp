@@ -20,13 +20,13 @@
 //   mpirun -np 8 heat_conduction_dmdc -s 1 -a 0.0 -k 1.0 -visit
 //
 // Output 1:
-//   Relative error of DMDc temperature (u) at t_final: 0.5 is 0.0019511173
+//   Relative error of DMDc temperature (u) at t_final: 0.5 is 0.0021705658
 //
 // Command 2:
 //   mpirun -np 8 heat_conduction_dmdc -s 1 -a 0.5 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit
 //
 // Output 2:
-//   Relative error of DMDc temperature (u) at t_final: 0.7 is 0.00087525972
+//   Relative error of DMDc temperature (u) at t_final: 0.7 is 0.00099736216
 //
 // =================================================================================
 //
