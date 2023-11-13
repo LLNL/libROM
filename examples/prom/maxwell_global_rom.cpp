@@ -365,10 +365,6 @@ int main(int argc, char *argv[])
         if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB,
                                   numColumnRB);
 
-        // libROM stores the matrix row-wise, so wrapping as a DenseMatrix in MFEM means it is transposed.
-        DenseMatrix *reducedBasisT = new DenseMatrix(spatialbasis->getData(),
-                numColumnRB, numRowRB);
-
         // 21. form inverse ROM operator
         CAROM::Matrix invReducedA(numColumnRB, numColumnRB, false);
         ComputeCtAB( *A.As<HypreParMatrix>(), *spatialbasis, *spatialbasis,
@@ -453,7 +449,7 @@ int main(int argc, char *argv[])
         ofstream sol_ofs(sol_name.str().c_str());
         sol_ofs.precision(8);
         x.Save(sol_ofs);
-        
+
         ofstream sol_dofs_ofs(sol_dofs_name.str().c_str());
         sol_dofs_ofs.precision(16);
         for (int i = 0; i < x.Size(); ++i)
