@@ -527,7 +527,9 @@ int main(int argc, char *argv[])
     VectorFunctionCoefficient velocity(dim, velocity_function);
     FunctionCoefficient inflow(inflow_function);
     FunctionCoefficient u0(u0_function);
+    StopWatch fom_timer, assemble_timer;
 
+    assemble_timer.Start();
     ParBilinearForm *m = new ParBilinearForm(fes);
     ParBilinearForm *k = new ParBilinearForm(fes);
     if (pa)
@@ -573,6 +575,8 @@ int main(int argc, char *argv[])
     ParGridFunction *u = new ParGridFunction(fes);
     u->ProjectCoefficient(u0);
     HypreParVector *U = u->GetTrueDofs();
+
+    assemble_timer.Stop();
 
     {
         ostringstream mesh_name, sol_name;
@@ -681,9 +685,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    StopWatch fom_timer;
     double t = 0.0;
-
     int max_num_snapshots = t_final / dt + 1;
     bool update_right_SV = false;
     bool isIncremental = false;
@@ -714,6 +716,8 @@ int main(int argc, char *argv[])
 
     if (online)
     {
+        assemble_timer.Start();
+
         if (!online_interp)
         {
             CAROM::BasisReader reader(basisName);
@@ -884,6 +888,8 @@ int main(int argc, char *argv[])
 
         u_in = new Vector(numColumnRB);
         *u_in = 0.0;
+
+        assemble_timer.Stop();
     }
 
     TimeDependentOperator* adv;
@@ -1035,6 +1041,23 @@ int main(int argc, char *argv[])
             osol << tv[i] << std::endl;
 
         osol.close();
+    }
+
+    // 13. print timing info
+    if (myid == 0)
+    {
+        if (fom || offline)
+        {
+            printf("Elapsed time for assembling FOM: %e second\n",
+                   assemble_timer.RealTime());
+            printf("Elapsed time for solving FOM: %e second\n", fom_timer.RealTime());
+        }
+        if (online)
+        {
+            printf("Elapsed time for assembling ROM: %e second\n",
+                   assemble_timer.RealTime());
+            printf("Elapsed time for solving ROM: %e second\n", fom_timer.RealTime());
+        }
     }
 
     // 16. Free the used memory.
