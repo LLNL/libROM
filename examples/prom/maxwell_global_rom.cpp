@@ -42,6 +42,8 @@
 //
 // Online phase:  maxwell_global_rom -online -f 1.15
 //
+// This example runs in parallel with MPI, by using the same number of MPI ranks
+// in all phases (offline, merge, fom, online).
 
 #include "mfem.hpp"
 #include <fstream>
