@@ -11,24 +11,34 @@
 
 //                       libROM MFEM Example: DG Advection (adapted from ex9p.cpp)
 //
-// Compile with: make dg_advection
+// Compile with: make de_dg_advection_greedy
 //
 // =================================================================================
 //
 // Sample runs and results for DMD:
 //
-// Command 1:
-//   mpirun -np 8 dg_advection -p 0 -dt 0.01 -tf 2 -visit
+// Command 1:  Build DMD database
+//   de_dg_advection_greedy -p 3 -rp 1 -dt 0.005 -tf 1.0 -build_database -rdim 16 
+//   -greedyreldifftol 0.00000001 -greedy-param-f-factor-max 2. -greedy-param-f-factor-min 1. 
+//   -greedy-param-size 20 -greedysubsize 5 -greedyconvsize 8
 //
 // Output 1:
-//   Relative error of DMD solution (u) at t_final: 2 is 0.00031683336
+//   The greedy algorithm has finished.
 //
-// Command 2:
-//   mpirun -np 8 dg_advection -p 3 -rp 1 -dt 0.005 -tf 4 -visit
+// Command 2: Forward run at target f-factor
+//   de_dg_advection_greedy -p 3 -rp 1 -dt 0.005 -tf 1.0 -run_dmd -ff 1.6
 //
 // Output 2:
-//   Relative error of DMD solution (u) at t_final: 4 is 0.00019053762
+//   Relative error of DMD temperature (u) at t_final: 1 is 0.0006565966583426298
 //
+// Command 3: Run differential evolution search for target f-factor
+//   de_dg_advection_greedy -p 3 -rp 1 -dt 0.005 -tf 1.0 -de -ff 1.6 -de_min_ff 1.0 
+//   -de_max_ff 2.0 -de_f 0.9 -de_cr 0.9 -de_ps 50 -de_min_iter 1 -de_max_iter 100 
+//   -de_ct 0.001
+//
+// Output 3:
+//  Iteration: 1            Current minimal cost: 0.004666763171916453              Best agent: 1.597618121565086 
+//  Terminated due to cost tolerance condition being met
 // =================================================================================
 //
 // Description:  This example code solves the time-dependent advection equation
@@ -599,9 +609,7 @@ double simulation()
 
         CAROM::Vector* desired_param = new CAROM::Vector(1, false);
         desired_param->item(0) = f_factor;
-        
-        if(!myid) std::cout << "building parametric DMD at " << desired_param->item(0) << std::endl;
-        
+                
         dmd_training_timer.Start();
 
         CAROM::getParametricDMD(dmd_U, param_vectors, dmd_paths, desired_param,
@@ -621,27 +629,15 @@ double simulation()
             ostringstream target_name;
             sol_name << "dg_advection_greedy" << to_string(
                             target_f_factor) << "-final." << setfill('0') << setw(6) << myid;
-            
-            if(!myid) std::cout << "attempting to load file: " << sol_name.str().c_str() << std::endl;
-            
+                        
             solution_file.open(sol_name.str().c_str());
 
-            if(solution_file.good())
-            {
-                if(!myid) std::cout << "successfully lodaed file." << std::endl;
-            }
-            else 
-            {
-                if(!myid) std::cout << "Failed to load file." << std::endl;
-            }
-            
             true_solution_u = new Vector(U->Size());
             true_solution_u->Load(solution_file, U->Size());
             solution_file.close();
             tot_true_solution_u_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
                                             *true_solution_u, *true_solution_u));
         }
-        if(!myid) std::cout << "Norm of target solution at f_factor: " << target_f_factor << " is " << tot_true_solution_u_norm << std::endl;
 
         CAROM::Vector* result_U = dmd_U->predict(t_final);
 
@@ -716,8 +712,6 @@ double simulation()
             
             CAROM::Vector* desired_param = new CAROM::Vector(1, false);
             desired_param->item(0) = f_factor;
-
-            if(!myid) std::cout << "desired f_factor for parametric dmd for error indicator is " << f_factor << std::endl;
 
             dmd_training_timer.Start();
 
@@ -1287,9 +1281,8 @@ int main(int argc, char *argv[])
     {
         target_f_factor = f_factor;
 
-        if(!myid) std::cout << "Performing initial test run at target_f_factor " << target_f_factor << std::endl;
         simulation();
-        if(!myid) std::cout << "Proceeding to optimization" << std::endl;
+
         // Create relative error cost function in 4 dimensions (radius, alpha, cx, cy)
         RelativeDifferenceCostFunction cost(1);
 
