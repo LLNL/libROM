@@ -9,7 +9,7 @@
  *
  *****************************************************************************/
 
-//                       libROM MFEM Example: DG Advection (adapted from ex9p.cpp)
+//                       libROM MFEM Example: DE DG Advection Greedy (adapted from ex9p.cpp)
 //
 // Compile with: make de_dg_advection_greedy
 //
@@ -18,8 +18,8 @@
 // Sample runs and results for DMD:
 //
 // Command 1:  Build DMD database
-//   de_dg_advection_greedy -p 3 -rp 1 -dt 0.005 -tf 1.0 -build_database -rdim 16 
-//   -greedyreldifftol 0.00000001 -greedy-param-f-factor-max 2. -greedy-param-f-factor-min 1. 
+//   de_dg_advection_greedy -p 3 -rp 1 -dt 0.005 -tf 1.0 -build_database -rdim 16
+//   -greedyreldifftol 0.00000001 -greedy-param-f-factor-max 2. -greedy-param-f-factor-min 1.
 //   -greedy-param-size 20 -greedysubsize 5 -greedyconvsize 8
 //
 // Output 1:
@@ -32,12 +32,12 @@
 //   Relative error of DMD temperature (u) at t_final: 1 is 0.0006565966583426298
 //
 // Command 3: Run differential evolution search for target f-factor
-//   de_dg_advection_greedy -p 3 -rp 1 -dt 0.005 -tf 1.0 -de -ff 1.6 -de_min_ff 1.0 
-//   -de_max_ff 2.0 -de_f 0.9 -de_cr 0.9 -de_ps 50 -de_min_iter 1 -de_max_iter 100 
+//   de_dg_advection_greedy -p 3 -rp 1 -dt 0.005 -tf 1.0 -de -ff 1.6 -de_min_ff 1.0
+//   -de_max_ff 2.0 -de_f 0.9 -de_cr 0.9 -de_ps 50 -de_min_iter 1 -de_max_iter 100
 //   -de_ct 0.001
 //
 // Output 3:
-//  Iteration: 1            Current minimal cost: 0.004666763171916453              Best agent: 1.597618121565086 
+//  Iteration: 1            Current minimal cost: 0.004666763171916453              Best agent: 1.597618121565086
 //  Terminated due to cost tolerance condition being met
 // =================================================================================
 //
@@ -305,9 +305,9 @@ Vector* true_solution_u = NULL;
 double tot_true_solution_u_norm = 0.0;
 
 #if MFEM_HYPRE_VERSION >= 21800
-    PrecType prec_type = PrecType::AIR;
+PrecType prec_type = PrecType::AIR;
 #else
-    PrecType prec_type = PrecType::ILU;
+PrecType prec_type = PrecType::ILU;
 #endif
 
 
@@ -582,7 +582,7 @@ double simulation()
         u_gf->SetFromTrueDofs(*U);
         init = new CAROM::Vector(U->GetData(), U->Size(), true);
 
-        ts.push_back(t);   
+        ts.push_back(t);
 
         double rel_diff = 0.;
 
@@ -596,7 +596,7 @@ double simulation()
         while (fin >> curr_param)
         {
             double curr_f_factor = curr_param;
-        //    fin >> curr_param; // Pretty sure I don't need this.  Same as before.
+            //    fin >> curr_param; // Pretty sure I don't need this.  Same as before.
 
             dmd_paths.push_back(to_string(curr_f_factor));
             CAROM::Vector* param_vector = new CAROM::Vector(1, false);
@@ -609,7 +609,7 @@ double simulation()
 
         CAROM::Vector* desired_param = new CAROM::Vector(1, false);
         desired_param->item(0) = f_factor;
-                
+
         dmd_training_timer.Start();
 
         CAROM::getParametricDMD(dmd_U, param_vectors, dmd_paths, desired_param,
@@ -628,8 +628,8 @@ double simulation()
             ostringstream sol_name;
             ostringstream target_name;
             sol_name << "dg_advection_greedy" << to_string(
-                            target_f_factor) << "-final." << setfill('0') << setw(6) << myid;
-                        
+                         target_f_factor) << "-final." << setfill('0') << setw(6) << myid;
+
             solution_file.open(sol_name.str().c_str());
 
             true_solution_u = new Vector(U->Size());
@@ -643,22 +643,23 @@ double simulation()
 
 
         // 21. Calculate the relative error between the DMD final solution and the true solution.
-        Vector dmd_solution_U(result_U->getData(), result_U->dim()); // Potential Problem
+        Vector dmd_solution_U(result_U->getData(),
+                              result_U->dim()); // Potential Problem
         Vector diff_u(true_solution_u->Size());
         subtract(dmd_solution_U, *true_solution_u, diff_u);
 
         double tot_diff_norm_u = sqrt(InnerProduct(MPI_COMM_WORLD, diff_u, diff_u));
         double tot_true_solution_u_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
-                                                *true_solution_u, *true_solution_u));
+                                               *true_solution_u, *true_solution_u));
 
         rel_diff = tot_diff_norm_u / tot_true_solution_u_norm;
 
         if (myid == 0)
         {
             std::cout << "Relative error of DMD temperature (u) at t_final: "
-                        << t_final << " and f_factor: " << f_factor << " is " << rel_diff << std::endl;
+                      << t_final << " and f_factor: " << f_factor << " is " << rel_diff << std::endl;
             printf("Elapsed time for predicting DMD: %e second\n",
-                    dmd_prediction_timer.RealTime());
+                   dmd_prediction_timer.RealTime());
         }
 
         delete result_U;
@@ -670,7 +671,7 @@ double simulation()
     if(offline)
     {
         dmd_training_timer.Start();
-    
+
         dmd_U = new CAROM::DMD(U->Size(), dt);
         dmd_U->takeSample(U->GetData(), t);
         ts.push_back(t);
@@ -678,7 +679,7 @@ double simulation()
         {
             std::cout << "Taking snapshot at: " << t << std::endl;
         }
-    
+
         dmd_training_timer.Stop();
     }
 
@@ -697,19 +698,19 @@ double simulation()
         std::vector<CAROM::Vector*> param_vectors;
 
         while (fin >> curr_param)
-        {    
-            double curr_f_factor = curr_param; 
+        {
+            double curr_f_factor = curr_param;
             //If you need / want more parameters, look at "de_parametric_heat_condtuction_greedy.cpp:421
 
             dmd_paths.push_back(to_string(curr_f_factor));
             CAROM::Vector* param_vector = new CAROM::Vector(1, false);
             param_vector->item(0) = curr_f_factor;
             param_vectors.push_back(param_vector);
-        }    
+        }
         fin.close();
-        if (dmd_paths.size() > 1) 
-        {    
-            
+        if (dmd_paths.size() > 1)
+        {
+
             CAROM::Vector* desired_param = new CAROM::Vector(1, false);
             desired_param->item(0) = f_factor;
 
@@ -726,13 +727,13 @@ double simulation()
         }
 
         dmd_U->projectInitialCondition(init);
-        
+
         dmd_training_timer.Stop();
 
         // For the error indicator, load in the DMD predicted solution 10
         // steps before t_final, then run the FOM for the last 10 steps and
         // compare the final FOM solution to the DMD predicted solutioni
-        
+
         // THIS IS LIKE COMPUTING A RESIDUAL.
         t = t_final - 10.*dt;
 
@@ -743,15 +744,15 @@ double simulation()
         {
             (*U)[i] = (*carom_tf_u_minus_some)(i);
         }
-        
+
         u_gf->SetFromTrueDofs(*U); // potentially some pointer problems here.
 
         delete carom_tf_u_minus_some;
     }
 
-    ts.push_back(t);   
-    
-    // 16. Iterate through the time loop.    
+    ts.push_back(t);
+
+    // 16. Iterate through the time loop.
     bool done = false;
     for (int ti = 0; !done; )
     {
@@ -765,9 +766,9 @@ double simulation()
         fom_timer.Stop();
 
         if (offline)
-        {            
+        {
             dmd_training_timer.Start();
-            
+
             u_gf->SetFromTrueDofs(*U);
             dmd_U->takeSample(U->GetData(),t); // Potential problem
 
@@ -790,7 +791,7 @@ double simulation()
 
             // 11. Extract the parallel grid function corresponding to the finite
             //     element approximation U (the local solution on each processor).
-            
+
             *u_gf = *U;
 
             if (visualization)
@@ -826,13 +827,13 @@ double simulation()
     }
 
     if (!build_database && myid == 0)
-    {    
+    {
         std::ofstream outFile("ts.txt");
-        for (int i = 0; i < ts.size(); i++) 
-        {    
+        for (int i = 0; i < ts.size(); i++)
+        {
             outFile << ts[i] << "\n";
-        }    
-    }    
+        }
+    }
 
 
     // 17. Save the final solution in parallel. This output can be viewed later
@@ -842,7 +843,8 @@ double simulation()
         //u_gf->SetFromTrueDofs(*U);
         Vector u_print(U->GetData(), U->Size());
         ostringstream sol_name;
-        sol_name << "dg_advection_greedy" << to_string(f_factor)  << "-final." << setfill('0') << setw(6) << myid;
+        sol_name << "dg_advection_greedy" << to_string(f_factor)  << "-final." <<
+                 setfill('0') << setw(6) << myid;
         ofstream osol(sol_name.str().c_str());
         osol.precision(precision);
         //u_gf->Save(osol);
@@ -863,7 +865,7 @@ double simulation()
         while (fin >> curr_param)
         {
             double curr_f_factor = curr_param;
-        //    fin >> curr_param; // Pretty sure I don't need this.  Same as before.
+            //    fin >> curr_param; // Pretty sure I don't need this.  Same as before.
 
             dmd_paths.push_back(to_string(curr_f_factor));
             CAROM::Vector* param_vector = new CAROM::Vector(1, false);
@@ -874,7 +876,7 @@ double simulation()
 
         CAROM::Vector* desired_param = new CAROM::Vector(1, false);
         desired_param->item(0) = f_factor;
-        
+
         dmd_training_timer.Start();
 
         CAROM::getParametricDMD(dmd_U, param_vectors, dmd_paths, desired_param,
@@ -927,7 +929,8 @@ double simulation()
         CAROM::Vector* result_U = dmd_U->predict(t_final);
 
 
-        Vector dmd_solution_U(result_U->getData(), result_U->dim()); // Potential Problem
+        Vector dmd_solution_U(result_U->getData(),
+                              result_U->dim()); // Potential Problem
         Vector diff_u(true_solution_u->Size());
         subtract(dmd_solution_U, *true_solution_u, diff_u);
 
@@ -938,7 +941,8 @@ double simulation()
 
         if (myid == 0)
         {
-            std::cout << "Rel. diff. of DMD temp. (u) at t_final at f_factor " << f_factor << ": "
+            std::cout << "Rel. diff. of DMD temp. (u) at t_final at f_factor " << f_factor
+                      << ": "
                       << rel_diff << std::endl;
         }
 
@@ -1012,7 +1016,7 @@ double simulation()
                     delete result_U;
                 }
             }
-        } 
+        }
 
         dmd_prediction_timer.Stop(); */
 
@@ -1030,7 +1034,8 @@ double simulation()
 
 
         // 21. Calculate the relative error between the DMD final solution and the true solution.
-        Vector dmd_solution_U(result_U->getData(), result_U->dim()); // Potential Problem
+        Vector dmd_solution_U(result_U->getData(),
+                              result_U->dim()); // Potential Problem
         Vector diff_u(true_solution_u->Size());
         subtract(dmd_solution_U, *true_solution_u, diff_u);
 
@@ -1050,7 +1055,8 @@ double simulation()
         {
             std::ofstream fout;
             fout.open("error-output.txt", std::ios::app);
-            fout << to_string(f_factor) << " : " << tot_diff_norm_u / tot_true_solution_u_norm << std::endl;
+            fout << to_string(f_factor) << " : " << tot_diff_norm_u /
+                 tot_true_solution_u_norm << std::endl;
             fout.close();
         }
 
@@ -1084,7 +1090,7 @@ double simulation()
     }
 
     return rel_diff;
-}        
+}
 
 class RelativeDifferenceCostFunction : public CAROM::IOptimizable
 {
@@ -1097,7 +1103,7 @@ public:
     double EvaluateCost(std::vector<double> inputs) const override
     {
         f_factor = inputs[0];
-  
+
         return simulation();
     }
 
@@ -1113,12 +1119,12 @@ public:
         bool first_line = true;
         double min_f_factor = 0.0;
         double max_f_factor = 0.0;
-        
+
 
         while (fin >> curr_param)
         {
             double curr_f_factor = curr_param;
-         
+
             if (first_line)
             {
                 min_f_factor = curr_f_factor;
@@ -1135,12 +1141,12 @@ public:
 
         if (de_min_f_factor != -DBL_MAX) min_f_factor = de_min_f_factor;
         if (de_max_f_factor != DBL_MAX) max_f_factor = de_max_f_factor;
-        
+
         MFEM_VERIFY(min_f_factor <= max_f_factor, "Radius DE range is invalid.");
-        
+
         if (myid == 0) cout << "DE f_factor range is: " << min_f_factor << " to " <<
                                 max_f_factor << endl;
-        
+
         std::vector<Constraints> constr(NumberOfParameters());
         constr[0] = Constraints(min_f_factor, max_f_factor, true);
         return constr;
@@ -1209,10 +1215,10 @@ int main(int argc, char *argv[])
     args.AddOption(&ef, "-ef", "--energy_fraction",
                    "Energy fraction for DMD.");
     args.AddOption(&rdim, "-rdim", "--rdim",
-                   "Reduced dimension for DMD.");           
+                   "Reduced dimension for DMD.");
     args.AddOption(&run_dmd, "-run_dmd", "--run_dmd",
                    "-no-run_dmd", "--no-run_dmd",
-                   "Enable or disable the run_dmd phase.");                                                      
+                   "Enable or disable the run_dmd phase.");
 // libROM parameterization parameters.
     args.AddOption(&f_factor, "-ff", "--f-factor",
                    "Frequency scalar factor.");
@@ -1240,7 +1246,7 @@ int main(int argc, char *argv[])
 // Differential Evolution Parameters
     args.AddOption(&de, "-de", "--de",
                    "-no-de", "--no-de",
-                   "Enable or disable the differential evolution phase.");  
+                   "Enable or disable the differential evolution phase.");
     args.AddOption(&de_min_f_factor, "-de_min_ff", "--de_min_f-factor",
                    "DE min f-factor");
     args.AddOption(&de_max_f_factor, "-de_max_ff", "--de_max_f-factor",
@@ -1296,7 +1302,7 @@ int main(int argc, char *argv[])
                 de_max_iter, de_ct, true);
 
         f_factor = optimal_parameters[0];
-        
+
         simulation();
 
         delete true_solution_u;
