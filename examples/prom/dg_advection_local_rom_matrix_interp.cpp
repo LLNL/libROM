@@ -809,14 +809,11 @@ int main(int argc, char *argv[])
             std::vector<CAROM::Matrix*> M_hats;
             std::vector<CAROM::Vector*> b_hats;
             std::vector<CAROM::Vector*> u_init_hats;
-            std::ofstream fout;
-            fout.open("frequencies.txt");
             for(auto it = frequencies.begin(); it != frequencies.end(); it++)
             {
                 CAROM::Vector* point = new CAROM::Vector(1, false);
                 point->item(0) = *it;
                 parameter_points.push_back(point);
-                fout << *it << std::endl;
 
                 std::string parametricBasisName = "basis_" + std::to_string(*it);
                 CAROM::BasisReader reader(parametricBasisName);
@@ -843,7 +840,6 @@ int main(int argc, char *argv[])
                 parametricuinithat->read("u_init_hat_" + std::to_string(*it));
                 u_init_hats.push_back(parametricuinithat);
             }
-            fout.close();
             if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB,
                                       numColumnRB);
 
