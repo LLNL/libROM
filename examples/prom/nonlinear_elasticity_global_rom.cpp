@@ -128,7 +128,6 @@ using namespace mfem;
 
 #include "nonlinear_elasticity_global_rom_eqp.hpp"
 
-
 class RomOperator : public TimeDependentOperator
 {
 private:
@@ -2594,7 +2593,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
         SolveNNLS(rank, nnls_tol, maxNNLSnnz, w, Gt, sol);
         if (window_ids)
         {
-            save_CAROM_Vector(sol, "sol_" + std::to_string(oi) + ".csv");
+            sol.write("sol_" + std::to_string(oi));
         }
     }
 }
@@ -2665,58 +2664,11 @@ bool fileExists(const std::string &filename)
     return file.good();
 }
 
-void save_CAROM_Vector(const CAROM::Vector &vector, const std::string &filename)
-{
-    std::ofstream file(filename);
-    if (file.is_open())
-    {
-        for (int i = 0; i < vector.dim(); ++i)
-        {
-            file << vector(i) << "\n";
-        }
-        file.close();
-        std::cout << "Vector saved as " << filename << " successfully." << std::endl;
-    }
-    else
-    {
-        std::cerr << "Error: Unable to open file " << filename << " for writing." <<
-                  std::endl;
-    }
-}
-
-void load_CAROM_vector(const std::string &filename, CAROM::Vector &vector)
-{
-    std::ifstream file(filename);
-    std::string line;
-    std::vector<double> data;
-
-    while (std::getline(file, line))
-    {
-        std::stringstream ss(line);
-        std::string value;
-
-        while (std::getline(ss, value, ','))
-        {
-            data.push_back(std::stod(value));
-        }
-    }
-
-    // Set the size of the vector
-    int size = data.size();
-    vector.setSize(size);
-
-    // Copy the data into the vector
-    for (int i = 0; i < size; ++i)
-    {
-        vector(i) = data[i];
-    }
-}
-
 void get_EQPsol(const int current_window, CAROM::Vector *load_eqpsol)
 {
-    string filename = "sol_" + std::to_string(current_window) + ".csv";
+    string filename = "sol_" + std::to_string(current_window);
     if (fileExists(filename))
     {
-        load_CAROM_vector(filename, *load_eqpsol);
+        load_eqpsol.read(filename);
     }
 }
