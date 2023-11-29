@@ -2027,7 +2027,7 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
         eltrans->SetIntPoint(&ip);
         model->SetTransformation(*eltrans);
         // Get the transformation weight
-        double t = eltrans->Weight();
+        const double t = eltrans->Weight();
 
         // Calculate DS and store
         CalcInverse(eltrans->Jacobian(), Jrt);
@@ -2334,8 +2334,8 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
                           FiniteElement const &fe, ElementTransformation &Trans, Vector &r)
 {
     MFEM_VERIFY(r.Size() == ir->GetNPoints(), "");
-    int dof = fe.GetDof(); // Get number of dofs in element
-    int dim = fe.GetDim();
+    const int dof = fe.GetDof(); // Get number of dofs in element
+    const int dim = fe.GetDim();
 
     // Initialize nonlinear operator matrices (there is probably a better way)
     DenseMatrix DSh(dof, dim);
