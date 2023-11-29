@@ -1423,6 +1423,16 @@ int main(int argc, char *argv[])
     delete romop;
     delete soper;
 
+    delete BV_librom;
+    delete BX_librom;
+    delete H_librom;
+    delete Hsinv;
+    delete smm;
+    delete eqpSol;
+    delete eqpSol_S;
+    delete window_ids;
+    delete load_eqpsol;
+
     totalTimer.Stop();
     if (myid == 0)
         cout << "Elapsed time for entire simulation " << totalTimer.RealTime() << endl;
@@ -2242,6 +2252,8 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace
     Vector Vx_e;
 
     // Lift x, add x0 and prolongate result
+    // NB: We are lifting x to the FOM space.
+    // This could be further optimized by using a reduced mesh consisting of only the elements containing EQP points.
     V_x.mult(x, Vx_librom_temp);
     add(*Vx_temp, *x0, Vx);
     P->Mult(Vx, p_Vx);
