@@ -128,7 +128,6 @@ using namespace mfem;
 
 #include "nonlinear_elasticity_global_rom_eqp.hpp"
 
-class ReducedSystemOperator;
 
 class RomOperator : public TimeDependentOperator
 {
