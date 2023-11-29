@@ -61,7 +61,7 @@
 //      Relative error of ROM velocity (v) at t_final: 5 is 0.978726
 //
 // Online phase with EQP hyper-reduction
-//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -eqp -ns 2 -ntw 50  -rvdim 40 -rxdim 10 -hdim 1  -sc 1.00
+//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -eqp -ns 2 -ntw 50 -rvdim 40 -rxdim 10 -hdim 1 -sc 1.00
 // Output message:
 //      Elapsed time for time integration loop 82.0641
 //      Relative error of ROM position (x) at t_final: 5 is 0.000893109
@@ -2004,7 +2004,7 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
     int index = 0;
     eprev = -1;
     // For every quadrature weight
-    for (int i = 0; i < rw.size(); ++i) // NOTE: i < 9
+    for (int i = 0; i < rw.size(); ++i)
     {
         const int e = qp[i] / nqe; // Element index
         // Local (element) index of the quadrature point
