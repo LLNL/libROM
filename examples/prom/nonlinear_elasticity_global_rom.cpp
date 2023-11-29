@@ -1086,7 +1086,7 @@ int main(int argc, char *argv[])
             {
                 if (Ess_mat_sp(i, 0) == 1)
                 {
-                    num_ess_sp += 1;
+                    num_ess_sp++;
                 }
             }
 
@@ -1100,7 +1100,7 @@ int main(int argc, char *argv[])
                 if (Ess_mat_sp(i, 0) == 1)
                 {
                     ess_tdof_list_sp[ctr] = i;
-                    ctr += 1;
+                    ctr++;
                 }
             }
         }
@@ -2640,18 +2640,18 @@ void get_window_ids(int n_step, int n_window, CAROM::Vector *ids)
         {
             if (i <= res - res_up)
             {
-                ctr += 1;
+                ctr++;
             }
             if (i > 2 && i <= res_up + 1)
             {
-                ctr += 1;
+                ctr++;
             }
         }
         else
         {
             if (i <= res + 1)
             {
-                ctr += 1;
+                ctr++;
             }
         }
         ids->item(i - 1) += ctr;
