@@ -10,7 +10,6 @@
 
 // Functions used by nonlinear_elastic_global_rom.cpp with EQP.
 #include "mfem/Utilities.hpp"
-// #include "fem/nonlininteg.hpp"
 #include <cmath>
 using namespace mfem;
 using namespace std;

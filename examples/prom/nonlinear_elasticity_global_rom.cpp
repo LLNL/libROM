@@ -2451,7 +2451,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
     const int nsnap = BX_snapshots->numColumns();
 
     MFEM_VERIFY(nsnap == BX_snapshots->numColumns() ||
-                nsnap + nsets == BX_snapshots->numColumns(), // Q: nsets?
+                nsnap + nsets == BX_snapshots->numColumns(), 
                 "");
     MFEM_VERIFY(BV->numRows() == BX_snapshots->numRows(), "");
     MFEM_VERIFY(BV->numRows() == fespace_X->GetTrueVSize(), "");
@@ -2502,6 +2502,8 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
     }
 
     // Outer loop for time windowing
+    // NB: Currently time windowing is done using the same velocity basis for every time window.
+    // A possible next step is to also do time windowing on the velocity basis, which should lead to smaller EQP systems.
     for (int oi = 0; oi < outer_loop_length; ++oi)
     {
         if (window_ids)
