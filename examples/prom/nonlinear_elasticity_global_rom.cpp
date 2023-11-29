@@ -2375,20 +2375,6 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
                           ElemMatrices &em)
 {
     MFEM_VERIFY(r.Size() == ir->GetNPoints(), "");
-    /* const int dof = fe.GetDof(); // Get number of dofs in element
-    const int dim = fe.GetDim(); */
-
-    // Initialize nonlinear operator matrices (there is probably a better way)
-    /* DenseMatrix DSh(dof, dim);
-    DenseMatrix DS(dof, dim);
-    DenseMatrix Jrt(dim);
-    DenseMatrix Jpt(dim);
-    DenseMatrix P(dim);
-    DenseMatrix PMatI; // Extract element dofs
-    PMatI.UseExternalData(elfun.GetData(), dof, dim);
-    DenseMatrix PMatO;
-    Vector elvect(dof * dim);
-    PMatO.UseExternalData(elvect.GetData(), dof, dim); */
 
 em.PMatI.UseExternalData(elfun.GetData(), dof, dim);
     model->SetTransformation(Trans);
@@ -2560,6 +2546,13 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
             Gt.setSize(NQ, NB * current_size);
         }
 
+
+                // Assuming dof and dim are constant, initialize element matrices once
+        const FiniteElement &fe1 = *fespace_X->GetFE(0);
+                    const int dof = fe1.GetDof();
+                    const int dim = fe1.GetDim();
+                    ElemMatrices em(dof, dim);
+
         // For every snapshot in batch
         for (int i = i_start; i < i_end; ++i)
         {
@@ -2585,6 +2578,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                 Array<int> vdofs;
                 DofTransformation *doftrans = fespace_X->GetElementVDofs(e, vdofs);
                 const FiniteElement &fe = *fespace_X->GetFE(e);
+                
                 ElementTransformation *eltrans = fespace_X->GetElementTransformation(e);
                 px_i.GetSubVector(vdofs, elfun);
 
@@ -2608,9 +2602,6 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                     P->Mult(v_j, pv_j);
                     pv_j.GetSubVector(vdofs, ve_j);
                     // Compute the row of G corresponding to element e, store in r
-                    const int dof = fe.GetDof(); // Get number of dofs in element
-                    const int dim = fe.GetDim();
-                    ElemMatrices em(dof, dim);
                     ComputeElementRowOfG(ir0, vdofs, ve_j, model, elfun, fe, *eltrans, r, dof, dim, em);
 
                     for (int m = 0; m < nqe; ++m)
