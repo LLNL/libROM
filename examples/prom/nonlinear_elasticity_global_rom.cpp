@@ -1197,7 +1197,7 @@ int main(int argc, char *argv[])
                     get_EQPsol(current_window, load_eqpsol);
                     romop->SetEQP(load_eqpsol);
                     ode_solver->Init(*romop);
-                    current_window += 1;
+                    current_window++;
                 }
                 solveTimer.Start();
                 ode_solver->Step(*wMFEM, t, dt_real);
