@@ -38,34 +38,36 @@
 //
 // Create FOM comparison data:
 //      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.0 -id 2
+// Output message:
+//      Elapsed time for time integration loop 10.6499
 //
 // Online phase with full sampling:
 //      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype gnat -rvdim 40 -rxdim 10 -hdim 71 -nsr 1170 -sc 1.0
 // Output message:
-//      Elapsed time for time integration loop 1.80759
+//      Elapsed time for time integration loop 9.76384
 //      Relative error of ROM position (x) at t_final: 5 is 0.000231698
 //      Relative error of ROM velocity (v) at t_final: 5 is 0.466941
 //
 // Online phase with strong hyper-reduction, using GNAT (over-sampled DEIM):
 //      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype gnat -rvdim 40 -rxdim 10 -hdim 71 -nsr 100 -sc 1.0
 // Output message:
-//      Elapsed time for time integration loop 1.0111
+//      Elapsed time for time integration loop 5.50959
 //      Relative error of ROM position (x) at t_final: 5 is 0.00209877
 //      Relative error of ROM velocity (v) at t_final: 5 is 1.39472
 //
 // Online phase with strong hyper-reduction, using QDEIM:
 //      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype qdeim -rvdim 40 -rxdim 10 -hdim 71 -nsr 100 -sc 1.0
 // Output message:
-//      Elapsed time for time integration loop 1.02559
+//      Elapsed time for time integration loop 5.65571
 //      Relative error of ROM position (x) at t_final: 5 is 0.00188458
 //      Relative error of ROM velocity (v) at t_final: 5 is 0.978726
 //
 // Online phase with EQP hyper-reduction
-//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -eqp -ns 2 -ntw 50 -rvdim 40 -rxdim 10 -hdim 1 -sc 1.00
+//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -eqp -ns 2 -ntw 50 -rvdim 40 -rxdim 10 -hdim 1 -sc 1.0
 // Output message:
-//      Elapsed time for time integration loop 82.0641
-//      Relative error of ROM position (x) at t_final: 5 is 0.000893109
-//      Relative error of ROM velocity (v) at t_final: 5 is 0.741266
+//      Elapsed time for time integration loop 0.248581
+//      Relative error of ROM position (x) at t_final: 5 is 0.0034452
+//      Relative error of ROM velocity (v) at t_final: 5 is 1.55409
 //
 // =================================================================================
 //
@@ -80,6 +82,8 @@
 //
 // Create FOM comparison data:
 //      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.0 -xbo -def-ic -id 2
+// Output message:
+//      Elapsed time for time integration loop 11.0755
 //
 // Online phase with full sampling:
 //      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype gnat -rxdim 57 -hdim 183 -nsr 1170 -sc 1.0 -xbo -def-ic
@@ -104,9 +108,9 @@
 //
 // Online phase with EQP hyper reduction:
 //      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -eqp -ns 2 -rxdim 2 -hdim 1 -ntw 25 -sc 1.00 -xbo -def-ic
-// Elapsed time for time integration loop 0.766614
-//      Relative error of ROM position (x) at t_final: 5 is 0.0161132
-//      Relative error of ROM velocity (v) at t_final: 5 is 0.775545
+// Elapsed time for time integration loop 0.0496174
+//      Relative error of ROM position (x) at t_final: 5 is 0.0248637
+//      Relative error of ROM velocity (v) at t_final: 5 is 1
 // This example runs in parallel with MPI, by using the same number of MPI ranks
 // in all phases (offline, merge, online).
 
@@ -896,7 +900,7 @@ int main(int argc, char *argv[])
         {
             hdim = H_librom->numColumns();
         }
-
+        CAROM::Matrix* Hsinv = new CAROM::Matrix(hdim, hdim, false);
         MFEM_VERIFY(H_librom->numColumns() >= hdim, "");
 
         if (H_librom->numColumns() > hdim)
@@ -949,7 +953,7 @@ int main(int argc, char *argv[])
                 nsamp_H = hdim;
             }
 
-            CAROM::Matrix* Hsinv = new CAROM::Matrix(nsamp_H, hdim, false);
+            Hsinv->setSize(nsamp_H, hdim);
             vector<int> sample_dofs(nsamp_H);
 
             // Setup hyperreduction using DEIM, GNAT, or S-OPT
@@ -2681,6 +2685,6 @@ void get_EQPsol(const int current_window, CAROM::Vector *load_eqpsol)
     string filename = "sol_" + std::to_string(current_window);
     if (fileExists(filename))
     {
-        load_eqpsol.read(filename);
+        load_eqpsol->read(filename);
     }
 }
