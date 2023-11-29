@@ -908,8 +908,6 @@ int main(int argc, char *argv[])
 
         // Setup hyperreduction, using either EQP or sampled DOFs and a sample mesh.
         ParFiniteElementSpace *sp_XV_space;
-        CAROM::Matrix *Hsinv = new CAROM::Matrix(hdim, hdim,
-                false); // Gets resized before use.
         const IntegrationRule *ir0 = NULL;
 
         if (ir0 == NULL)
