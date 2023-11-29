@@ -247,6 +247,32 @@ public:
     virtual double Eval(ElementTransformation &T, const IntegrationPoint &ip);
     virtual ~ElasticEnergyCoefficient() {}
 };
+struct ElemMatrices {
+    DenseMatrix DSh;
+    DenseMatrix DS;
+    DenseMatrix Jrt;
+    DenseMatrix Jpt;
+    DenseMatrix P;
+    DenseMatrix PMatI;
+    DenseMatrix PMatO;
+    Vector elvect;
+    // Constructor for matrices struct
+    ElemMatrices(int dof, int dim) :
+        DSh(dof, dim),
+        DS(dof, dim),
+        Jrt(dim),
+        Jpt(dim),
+        P(dim),
+        PMatI(), 
+        PMatO(),
+        elvect(dof * dim)
+    {
+        // Set dimensions for PMatI and PMatO
+        //PMatI.UseExternalData(elfun.GetData(), dof, dim);
+        PMatO.UseExternalData(elvect.GetData(), dof, dim);
+    }
+
+};
 
 void InitialDeformationIC1(const Vector &x, Vector &y);
 
@@ -1957,6 +1983,7 @@ void RomOperator::SetEQP(CAROM::Vector *eqpSol)
             ir_eqp, model, V_v, rank, eqp_coef, eqp_DS_coef);
 }
 
+
 // Functions for EQP functionality
 
 // Compute coefficients of the reduced integrator with respect to inputs Q and x
@@ -2344,14 +2371,15 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace
 
 void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
                           Vector const &ve_j, NeoHookeanModel *model, Vector const &elfun,
-                          FiniteElement const &fe, ElementTransformation &Trans, Vector &r)
+                          FiniteElement const &fe, ElementTransformation &Trans, Vector &r, const int dof, const int dim,
+                          ElemMatrices &em)
 {
     MFEM_VERIFY(r.Size() == ir->GetNPoints(), "");
-    const int dof = fe.GetDof(); // Get number of dofs in element
-    const int dim = fe.GetDim();
+    /* const int dof = fe.GetDof(); // Get number of dofs in element
+    const int dim = fe.GetDim(); */
 
     // Initialize nonlinear operator matrices (there is probably a better way)
-    DenseMatrix DSh(dof, dim);
+    /* DenseMatrix DSh(dof, dim);
     DenseMatrix DS(dof, dim);
     DenseMatrix Jrt(dim);
     DenseMatrix Jpt(dim);
@@ -2360,14 +2388,15 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
     PMatI.UseExternalData(elfun.GetData(), dof, dim);
     DenseMatrix PMatO;
     Vector elvect(dof * dim);
-    PMatO.UseExternalData(elvect.GetData(), dof, dim);
+    PMatO.UseExternalData(elvect.GetData(), dof, dim); */
 
+em.PMatI.UseExternalData(elfun.GetData(), dof, dim);
     model->SetTransformation(Trans);
 
     // For each integration point
     for (int i = 0; i < ir->GetNPoints(); i++)
     {
-        elvect = 0.0;
+        em.elvect = 0.0;
         // Get integration point
         const IntegrationPoint &ip = ir->IntPoint(i);
 
@@ -2378,20 +2407,20 @@ void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
         double t = Trans.Weight();
 
         // Compute action of nonlinear operator
-        CalcInverse(Trans.Jacobian(), Jrt);
-        fe.CalcDShape(ip, DSh);
-        Mult(DSh, Jrt, DS);
-        MultAtB(PMatI, DS, Jpt);
-        model->EvalP(Jpt, P);
-        P *= t; // NB: Not by ip.weight
-        AddMultABt(DS, P, PMatO);
+        CalcInverse(Trans.Jacobian(), em.Jrt);
+        fe.CalcDShape(ip, em.DSh);
+        Mult(em.DSh, em.Jrt, em.DS);
+        MultAtB(em.PMatI, em.DS, em.Jpt);
+        model->EvalP(em.Jpt, em.P);
+        em.P *= t; // NB: Not by ip.weight
+        AddMultABt(em.DS, em.P, em.PMatO);
 
         r[i] = 0.0;
 
         // Calculate r[i] = ve_j^T * elvect
-        for (int k = 0; k < elvect.Size(); k++)
+        for (int k = 0; k < em.elvect.Size(); k++)
         {
-            r[i] += ve_j[k] * elvect[k];
+            r[i] += ve_j[k] * em.elvect[k];
         }
     }
 }
@@ -2579,7 +2608,10 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                     P->Mult(v_j, pv_j);
                     pv_j.GetSubVector(vdofs, ve_j);
                     // Compute the row of G corresponding to element e, store in r
-                    ComputeElementRowOfG(ir0, vdofs, ve_j, model, elfun, fe, *eltrans, r);
+                    const int dof = fe.GetDof(); // Get number of dofs in element
+                    const int dim = fe.GetDim();
+                    ElemMatrices em(dof, dim);
+                    ComputeElementRowOfG(ir0, vdofs, ve_j, model, elfun, fe, *eltrans, r, dof, dim, em);
 
                     for (int m = 0; m < nqe; ++m)
                         Gt((e * nqe) + m, j + (i * NB)) = r[m];
