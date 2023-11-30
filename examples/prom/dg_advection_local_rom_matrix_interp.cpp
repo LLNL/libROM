@@ -1042,18 +1042,11 @@ int main(int argc, char *argv[])
     // 13. print timing info
     if (myid == 0)
     {
-        if (fom || offline)
-        {
-            printf("Elapsed time for assembling FOM: %e second\n",
-                   assemble_timer.RealTime());
-            printf("Elapsed time for solving FOM: %e second\n", fom_timer.RealTime());
-        }
-        if (online)
-        {
-            printf("Elapsed time for assembling ROM: %e second\n",
-                   assemble_timer.RealTime());
-            printf("Elapsed time for solving ROM: %e second\n", fom_timer.RealTime());
-        }
+        const std::string type = online ? "ROM" : "FOM";
+        std::cout << "Elapsed time for assembling " << type << ": " << std::scientific
+                  << std::setprecision(8) << assemble_timer.RealTime() << " second\n";
+        std::cout << "Elapsed time for solving " << type << ": " << std::scientific <<
+                  std::setprecision(8) << fom_timer.RealTime() << " second\n";
     }
 
     // 16. Free the used memory.
