@@ -59,6 +59,7 @@ struct ElemMatrices
     DenseMatrix Jrt;
     DenseMatrix Jpt;
     DenseMatrix P;
+    DenseMatrix P_f;
     DenseMatrix PMatI;
     DenseMatrix PMatO;
     Vector elvect;
@@ -68,6 +69,7 @@ struct ElemMatrices
                                      Jrt(dim),
                                      Jpt(dim),
                                      P(dim),
+                                     P_f(dim),
                                      PMatI(),
                                      PMatO(),
                                      elvect(dof * dim)
@@ -99,7 +101,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace
         const IntegrationRule *ir, NeoHookeanModel *model,
         const Vector *x0, CAROM::Matrix const &V_x, CAROM::Matrix const &V_v,
         CAROM::Vector const &x, CAROM::Vector *Vx_librom_temp, Vector *Vx_temp,
-        Vector const &coef, Vector const &DS_coef, const int rank, Vector &res);
+        Vector const &coef, Vector const &DS_coef, const int rank, Vector &res, ElemMatrices *em);
 
 // Compute a row in the G matrix which corresponds to a given FE element
 void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,

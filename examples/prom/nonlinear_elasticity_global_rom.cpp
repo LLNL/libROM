@@ -1821,7 +1821,7 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
             HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(&(fom->fespace), eqp_rw,
                     eqp_qp, ir_eqp, model,
                     x0, V_x, V_v, x_librom, Vx_librom_temp, Vx_temp,
-                    eqp_coef, eqp_DS_coef, rank, resEQP);
+                    eqp_coef, eqp_DS_coef, rank, resEQP, em);
         }
         else
             HyperelasticNLFIntegrator_ComputeReducedEQP(&(fom->fespace), eqp_rw,
@@ -2221,7 +2221,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace
         const IntegrationRule *ir, NeoHookeanModel *model,
         const Vector *x0, CAROM::Matrix const &V_x, CAROM::Matrix const &V_v,
         CAROM::Vector const &x, CAROM::Vector *Vx_librom_temp, Vector *Vx_temp,
-        Vector const &coef, Vector const &DS_coef, const int rank, Vector &res)
+        Vector const &coef, Vector const &DS_coef, const int rank, Vector &res, ElemMatrices *em)
 {
     const int rxdim = V_x.numColumns();
     const int rvdim = V_v.numColumns();
@@ -2271,13 +2271,6 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace
     dof = fe->GetDof();
     dim = fe->GetDim();
     int index = 0;
-    DenseMatrix DS(dof, dim);
-    DenseMatrix Jpt(dim);
-    DenseMatrix P_f(dim);
-    DenseMatrix PMatI; // Extract element dofs
-    DenseMatrix PMatO;
-    Vector elvect(dof * dim);
-    PMatO.UseExternalData(elvect.GetData(), dof, dim);
 
     eprev = -1;
     double temp = 0.0;
@@ -2310,35 +2303,37 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace
         }
 
         // Integration at ip
-        elvect = 0.0;
-        PMatI.UseExternalData(Vx_e.GetData(), dof, dim);
+        em->elvect = 0.0;
+        em->PMatI.UseExternalData(Vx_e.GetData(), dof, dim);
 
         // Set integration point in the element transformation
         eltrans->SetIntPoint(&ip);
         model->SetTransformation(*eltrans);
 
+        const int elvec_size = em->elvect.Size();
         for (int ii = 0; ii < dof; ++ii)
         {
             for (int jj = 0; jj < dim; ++jj)
             {
                 index = jj + ii * dim;
-                DS.Elem(ii, jj) = DS_coef[index + (i * elvect.Size())];
+                em->DS.Elem(ii, jj) = DS_coef[index + (i * elvec_size)];
             }
         }
 
-        MultAtB(PMatI, DS, Jpt);
-        model->EvalP(Jpt, P_f);
-        AddMultABt(DS, P_f, PMatO);
+        MultAtB(em->PMatI, em->DS, em->Jpt);
+        model->EvalP(em->Jpt, em->P_f);
+        AddMultABt(em->DS, em->P_f, em->PMatO);
 
         // Calculate r[i] = ve_j^T * elvect
         // coef is size len(vdofs) * rvdim * rw.size
+        const int qp_size = qp.size();
         for (int j = 0; j < rvdim; ++j)
         {
             temp = 0.0;
-            for (int k = 0; k < elvect.Size(); k++)
+            for (int k = 0; k < elvec_size; k++)
             {
-                temp += coef[k + (i * elvect.Size()) + (j * qp.size() * elvect.Size())] *
-                        elvect[k];
+                temp += coef[k + (i * elvec_size) + (j * qp_size * elvec_size)] *
+                        em->elvect[k];
             }
             res[j] += temp;
         }
