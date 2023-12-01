@@ -186,6 +186,7 @@ private:
     Vector eqp_coef;
     Vector eqp_DS_coef;
     const bool fastIntegration = true;
+    ElemMatrices *em;
 
     int rank;
 
@@ -246,32 +247,6 @@ public:
         : model(m), x(x_) {}
     virtual double Eval(ElementTransformation &T, const IntegrationPoint &ip);
     virtual ~ElasticEnergyCoefficient() {}
-};
-struct ElemMatrices {
-    DenseMatrix DSh;
-    DenseMatrix DS;
-    DenseMatrix Jrt;
-    DenseMatrix Jpt;
-    DenseMatrix P;
-    DenseMatrix PMatI;
-    DenseMatrix PMatO;
-    Vector elvect;
-    // Constructor for matrices struct
-    ElemMatrices(int dof, int dim) :
-        DSh(dof, dim),
-        DS(dof, dim),
-        Jrt(dim),
-        Jpt(dim),
-        P(dim),
-        PMatI(), 
-        PMatO(),
-        elvect(dof * dim)
-    {
-        // Set dimensions for PMatI and PMatO
-        //PMatI.UseExternalData(elfun.GetData(), dof, dim);
-        PMatO.UseExternalData(elvect.GetData(), dof, dim);
-    }
-
 };
 
 void InitialDeformationIC1(const Vector &x, Vector &y);
@@ -1805,9 +1780,13 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
 
         cout << myid << ": EQP using " << elements.size() << " elements out of "
              << fom->fespace.GetNE() << endl;
+        const FiniteElement &fe1 = *(fom->fespace).GetFE(0);
+                    const int dof = fe1.GetDof();
+                    const int dim = fe1.GetDim();
+                    em = new ElemMatrices(dof,dim);
 
         GetEQPCoefficients_HyperelasticNLFIntegrator(&(fom->fespace), eqp_rw, eqp_qp,
-                ir_eqp, model, V_v, rank, eqp_coef, eqp_DS_coef);
+                ir_eqp, model, V_v, rank, eqp_coef, eqp_DS_coef, em);
     }
 }
 
@@ -1980,7 +1959,7 @@ void RomOperator::SetEQP(CAROM::Vector *eqpSol)
          << fom->fespace.GetNE() << endl;
 
     GetEQPCoefficients_HyperelasticNLFIntegrator(&(fom->fespace), eqp_rw, eqp_qp,
-            ir_eqp, model, V_v, rank, eqp_coef, eqp_DS_coef);
+            ir_eqp, model, V_v, rank, eqp_coef, eqp_DS_coef, em);
 }
 
 
@@ -1991,7 +1970,7 @@ void RomOperator::SetEQP(CAROM::Vector *eqpSol)
 void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
         std::vector<double> const &rw, std::vector<int> const &qp,
         const IntegrationRule *ir, NeoHookeanModel *model,
-        CAROM::Matrix const &V_v, const int rank, Vector &coef, Vector &DS_coef)
+        CAROM::Matrix const &V_v, const int rank, Vector &coef, Vector &DS_coef, ElemMatrices *em)
 {
     const int rvdim = V_v.numColumns();
     const int fomdim = V_v.numRows();
@@ -2034,9 +2013,6 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
     const FiniteElement *fe = fesR->GetFE(0);
     dof = fe->GetDof();
     dim = fe->GetDim();
-    DenseMatrix DSh(dof, dim);
-    DenseMatrix DS(dof, dim);
-    DenseMatrix Jrt(dim);
     DS_coef.SetSize(dof * dim * rw.size());
     DS_coef = 0.0;
     int index = 0;
@@ -2068,15 +2044,15 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
         const double t = eltrans->Weight();
 
         // Calculate DS and store
-        CalcInverse(eltrans->Jacobian(), Jrt);
-        fe->CalcDShape(ip, DSh);
-        Mult(DSh, Jrt, DS);
+        CalcInverse(eltrans->Jacobian(), em->Jrt);
+        fe->CalcDShape(ip, em->DSh);
+        Mult(em->DSh, em->Jrt, em->DS);
         for (int ii = 0; ii < dof; ++ii)
         {
             for (int jj = 0; jj < dim; ++jj)
             {
                 index = jj + ii * dim;
-                DS_coef[index + (i * dof * dim)] = DS.Elem(ii, jj);
+                DS_coef[index + (i * dof * dim)] = em->DS.Elem(ii, jj);
             }
         }
         // For every basis vector

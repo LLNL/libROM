@@ -51,12 +51,38 @@ public:
     virtual ~HyperelasticOperator();
 };
 
+
+struct ElemMatrices
+{
+    DenseMatrix DSh;
+    DenseMatrix DS;
+    DenseMatrix Jrt;
+    DenseMatrix Jpt;
+    DenseMatrix P;
+    DenseMatrix PMatI;
+    DenseMatrix PMatO;
+    Vector elvect;
+    // Constructor for matrices struct
+    ElemMatrices(int dof, int dim) : DSh(dof, dim),
+                                     DS(dof, dim),
+                                     Jrt(dim),
+                                     Jpt(dim),
+                                     P(dim),
+                                     PMatI(),
+                                     PMatO(),
+                                     elvect(dof * dim)
+    {
+        // Set dimensions for PMatI and PMatO
+        PMatO.UseExternalData(elvect.GetData(), dof, dim);
+    }
+};
+
 // Compute coefficients of the reduced integrator with respect to inputs Q and x
 // in HyperelasticNLFIntegrator_ComputeReducedEQP.
 void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
         std::vector<double> const &rw, std::vector<int> const &qp,
         const IntegrationRule *ir, NeoHookeanModel *model,
-        CAROM::Matrix const &V_v, const int rank, Vector &coef, Vector &DS_coef);
+        CAROM::Matrix const &V_v, const int rank, Vector &coef, Vector &DS_coef, ElemMatrices *em);
 
 // Perform hyperreduction with EQP
 void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
@@ -78,7 +104,8 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace
 // Compute a row in the G matrix which corresponds to a given FE element
 void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
                           Vector const &ve_j, NeoHookeanModel *model, Vector const &elfun,
-                          FiniteElement const &fe, ElementTransformation &Trans, Vector &r);
+                          FiniteElement const &fe, ElementTransformation &Trans, Vector &r, const int dof, const int dim,
+                                                      ElemMatrices &em);
 
 void SolveNNLS(const int rank, const double nnls_tol, const int maxNNLSnnz,
                CAROM::Vector const &w, CAROM::Matrix &Gt,
@@ -101,13 +128,6 @@ void get_window_ids(int n_step, int n_window, CAROM::Vector *ids);
 
 // Helper function to check if a file exists
 bool fileExists(const std::string &filename);
-
-// Helper function to save a CAROM vector to an external file
-void save_CAROM_Vector(const CAROM::Vector &vector,
-                       const std::string &filename);
-
-// Helper function to load a CAROM vector from an external file
-void load_CAROM_vector(const std::string &filename, CAROM::Vector &vector);
 
 // Load a EQP solution
 void get_EQPsol(const int current_window, CAROM::Vector *load_eqpsol);
