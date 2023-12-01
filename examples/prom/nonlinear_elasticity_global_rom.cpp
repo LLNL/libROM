@@ -2147,7 +2147,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
     eprev = -1;
     double temp = 0.0;
     // For every quadrature weight
-    for (int i = 0; i < rw.size(); ++i) // NOTE: i < 9
+    for (int i = 0; i < rw.size(); ++i)
     {
         const int e = qp[i] / nqe; // Element index
         // Local (element) index of the quadrature point
