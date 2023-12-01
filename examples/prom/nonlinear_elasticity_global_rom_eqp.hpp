@@ -92,7 +92,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
         const IntegrationRule *ir, NeoHookeanModel *model, const Vector *x0,
         CAROM::Matrix const &V_x, CAROM::Matrix const &V_v, CAROM::Vector const &x,
         CAROM::Vector *Vx_librom_temp, Vector *Vx_temp,
-        const int rank, Vector &res);
+        const int rank, Vector &res, ElemMatrices *em);
 
 // Optimized EQP hyperreduction routine with preallocated arrays
 void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace

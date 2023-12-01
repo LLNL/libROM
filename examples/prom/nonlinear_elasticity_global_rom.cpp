@@ -189,7 +189,7 @@ private:
     ElemMatrices *em;
 
     int rank;
-
+    
     NeoHookeanModel *model;
 
 protected:
@@ -1827,7 +1827,7 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
             HyperelasticNLFIntegrator_ComputeReducedEQP(&(fom->fespace), eqp_rw,
                     eqp_qp, ir_eqp, model, x0,
                     V_x, V_v, x_librom, Vx_librom_temp, Vx_temp,
-                    rank, resEQP);
+                    rank, resEQP, em);
         Vector recv(resEQP);
         MPI_Allreduce(resEQP.GetData(), recv.GetData(), resEQP.Size(), MPI_DOUBLE,
                       MPI_SUM, MPI_COMM_WORLD);
@@ -2081,7 +2081,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
         const IntegrationRule *ir, NeoHookeanModel *model, const Vector *x0,
         CAROM::Matrix const &V_x, CAROM::Matrix const &V_v, CAROM::Vector const &x,
         CAROM::Vector *Vx_librom_temp, Vector *Vx_temp,
-        const int rank, Vector &res)
+        const int rank, Vector &res, ElemMatrices *em)
 
 {
     const int rxdim = V_x.numColumns();
@@ -2133,7 +2133,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
     fe = fesR->GetFE(0);
     dof = fe->GetDof();
     dim = fe->GetDim();
-    DenseMatrix DSh(dof, dim);
+/*     DenseMatrix DSh(dof, dim);
     DenseMatrix DS(dof, dim);
     DenseMatrix Jrt(dim);
     DenseMatrix Jpt(dim);
@@ -2141,7 +2141,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
     DenseMatrix PMatI; // Extract element dofs
     DenseMatrix PMatO;
     Vector elvect(dof * dim);
-    PMatO.UseExternalData(elvect.GetData(), dof, dim);
+    PMatO.UseExternalData(elvect.GetData(), dof, dim); */
 
     eprev = -1;
     double temp = 0.0;
@@ -2173,9 +2173,9 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
         }
 
         // Integration at ip
-        PMatI.UseExternalData(Vx_e.GetData(), dof, dim);
+        em->PMatI.UseExternalData(Vx_e.GetData(), dof, dim);
 
-        elvect = 0.0;
+        em->elvect = 0.0;
 
         // Set integration point in the element transformation
         eltrans->SetIntPoint(&ip);
@@ -2185,13 +2185,13 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
         double t = eltrans->Weight();
 
         // Compute action of nonlinear operator
-        CalcInverse(eltrans->Jacobian(), Jrt);
-        fe->CalcDShape(ip, DSh);
-        Mult(DSh, Jrt, DS);
-        MultAtB(PMatI, DS, Jpt);
-        model->EvalP(Jpt, P_f);
-        P_f *= (t * rw[i]); // NB: Not by ip.weight
-        AddMultABt(DS, P_f, PMatO);
+        CalcInverse(eltrans->Jacobian(), em->Jrt);
+        fe->CalcDShape(ip, em->DSh);
+        Mult(em->DSh, em->Jrt, em->DS);
+        MultAtB(em->PMatI, em->DS, em->Jpt);
+        model->EvalP(em->Jpt, em->P_f);
+        em->P_f *= (t * rw[i]); // NB: Not by ip.weight
+        AddMultABt(em->DS, em->P_f, em->PMatO);
 
         // For every basis vector
         for (int j = 0; j < rvdim; ++j)
@@ -2206,9 +2206,9 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
             temp = 0.0;
 
             // Calculate r[i] = ve_j^T * elvect
-            for (int k = 0; k < elvect.Size(); k++)
+            for (int k = 0; k < em->elvect.Size(); k++)
             {
-                temp += vj_e[k] * elvect[k];
+                temp += vj_e[k] * em->elvect[k];
             }
             res[j] += temp;
         }
