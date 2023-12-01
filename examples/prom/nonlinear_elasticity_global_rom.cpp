@@ -65,9 +65,9 @@
 // Online phase with EQP hyper-reduction
 //      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -eqp -ns 2 -ntw 50 -rvdim 40 -rxdim 10 -hdim 1 -sc 1.0
 // Output message:
-//      Elapsed time for time integration loop 0.248581
-//      Relative error of ROM position (x) at t_final: 5 is 0.0034452
-//      Relative error of ROM velocity (v) at t_final: 5 is 1.55409
+//      Elapsed time for time integration loop 5.50702
+//      Relative error of ROM position (x) at t_final: 5 is 0.000498426
+//      Relative error of ROM velocity (v) at t_final: 5 is 1.64583
 //
 // =================================================================================
 //
@@ -108,9 +108,9 @@
 //
 // Online phase with EQP hyper reduction:
 //      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -eqp -ns 2 -rxdim 2 -hdim 1 -ntw 25 -sc 1.00 -xbo -def-ic
-// Elapsed time for time integration loop 0.0638885
-//      Relative error of ROM position (x) at t_final: 5 is 0.0248637
-//      Relative error of ROM velocity (v) at t_final: 5 is 1
+// Elapsed time for time integration loop 0.202143
+//      Relative error of ROM position (x) at t_final: 5 is 0.0189361
+//      Relative error of ROM velocity (v) at t_final: 5 is 0.830724
 // This example runs in parallel with MPI, by using the same number of MPI ranks
 // in all phases (offline, merge, online).
 
@@ -2677,8 +2677,10 @@ bool fileExists(const std::string &filename)
 void get_EQPsol(const int current_window, CAROM::Vector *load_eqpsol)
 {
     string filename = "sol_" + std::to_string(current_window);
-    if (fileExists(filename))
+    if (fileExists(filename+".000000"))
     {
+        std::cout << "The length of the vector is: " << load_eqpsol->dim() << std::endl;
         load_eqpsol->read(filename);
     }
+    
 }
