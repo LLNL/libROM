@@ -2134,15 +2134,6 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
     fe = fesR->GetFE(0);
     dof = fe->GetDof();
     dim = fe->GetDim();
-    /*     DenseMatrix DSh(dof, dim);
-        DenseMatrix DS(dof, dim);
-        DenseMatrix Jrt(dim);
-        DenseMatrix Jpt(dim);
-        DenseMatrix P_f(dim);
-        DenseMatrix PMatI; // Extract element dofs
-        DenseMatrix PMatO;
-        Vector elvect(dof * dim);
-        PMatO.UseExternalData(elvect.GetData(), dof, dim); */
 
     eprev = -1;
     double temp = 0.0;
