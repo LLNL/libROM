@@ -189,7 +189,7 @@ private:
     ElemMatrices *em;
 
     int rank;
-    
+
     NeoHookeanModel *model;
 
 protected:
@@ -1781,9 +1781,9 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
         cout << myid << ": EQP using " << elements.size() << " elements out of "
              << fom->fespace.GetNE() << endl;
         const FiniteElement &fe1 = *(fom->fespace).GetFE(0);
-                    const int dof = fe1.GetDof();
-                    const int dim = fe1.GetDim();
-                    em = new ElemMatrices(dof,dim);
+        const int dof = fe1.GetDof();
+        const int dim = fe1.GetDim();
+        em = new ElemMatrices(dof,dim);
 
         GetEQPCoefficients_HyperelasticNLFIntegrator(&(fom->fespace), eqp_rw, eqp_qp,
                 ir_eqp, model, V_v, rank, eqp_coef, eqp_DS_coef, em);
@@ -1970,7 +1970,8 @@ void RomOperator::SetEQP(CAROM::Vector *eqpSol)
 void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
         std::vector<double> const &rw, std::vector<int> const &qp,
         const IntegrationRule *ir, NeoHookeanModel *model,
-        CAROM::Matrix const &V_v, const int rank, Vector &coef, Vector &DS_coef, ElemMatrices *em)
+        CAROM::Matrix const &V_v, const int rank, Vector &coef, Vector &DS_coef,
+        ElemMatrices *em)
 {
     const int rvdim = V_v.numColumns();
     const int fomdim = V_v.numRows();
@@ -2133,15 +2134,15 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
     fe = fesR->GetFE(0);
     dof = fe->GetDof();
     dim = fe->GetDim();
-/*     DenseMatrix DSh(dof, dim);
-    DenseMatrix DS(dof, dim);
-    DenseMatrix Jrt(dim);
-    DenseMatrix Jpt(dim);
-    DenseMatrix P_f(dim);
-    DenseMatrix PMatI; // Extract element dofs
-    DenseMatrix PMatO;
-    Vector elvect(dof * dim);
-    PMatO.UseExternalData(elvect.GetData(), dof, dim); */
+    /*     DenseMatrix DSh(dof, dim);
+        DenseMatrix DS(dof, dim);
+        DenseMatrix Jrt(dim);
+        DenseMatrix Jpt(dim);
+        DenseMatrix P_f(dim);
+        DenseMatrix PMatI; // Extract element dofs
+        DenseMatrix PMatO;
+        Vector elvect(dof * dim);
+        PMatO.UseExternalData(elvect.GetData(), dof, dim); */
 
     eprev = -1;
     double temp = 0.0;
@@ -2221,7 +2222,8 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace
         const IntegrationRule *ir, NeoHookeanModel *model,
         const Vector *x0, CAROM::Matrix const &V_x, CAROM::Matrix const &V_v,
         CAROM::Vector const &x, CAROM::Vector *Vx_librom_temp, Vector *Vx_temp,
-        Vector const &coef, Vector const &DS_coef, const int rank, Vector &res, ElemMatrices *em)
+        Vector const &coef, Vector const &DS_coef, const int rank, Vector &res,
+        ElemMatrices *em)
 {
     const int rxdim = V_x.numColumns();
     const int rvdim = V_v.numColumns();
@@ -2342,12 +2344,13 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace
 
 void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
                           Vector const &ve_j, NeoHookeanModel *model, Vector const &elfun,
-                          FiniteElement const &fe, ElementTransformation &Trans, Vector &r, const int dof, const int dim,
+                          FiniteElement const &fe, ElementTransformation &Trans, Vector &r, const int dof,
+                          const int dim,
                           ElemMatrices &em)
 {
     MFEM_VERIFY(r.Size() == ir->GetNPoints(), "");
 
-em.PMatI.UseExternalData(elfun.GetData(), dof, dim);
+    em.PMatI.UseExternalData(elfun.GetData(), dof, dim);
     model->SetTransformation(Trans);
 
     // For each integration point
@@ -2452,7 +2455,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
     const int nsnap = BX_snapshots->numColumns();
 
     MFEM_VERIFY(nsnap == BX_snapshots->numColumns() ||
-                nsnap + nsets == BX_snapshots->numColumns(), 
+                nsnap + nsets == BX_snapshots->numColumns(),
                 "");
     MFEM_VERIFY(BV->numRows() == BX_snapshots->numRows(), "");
     MFEM_VERIFY(BV->numRows() == fespace_X->GetTrueVSize(), "");
@@ -2518,11 +2521,11 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
         }
 
 
-                // Assuming dof and dim are constant, initialize element matrices once
+        // Assuming dof and dim are constant, initialize element matrices once
         const FiniteElement &fe1 = *fespace_X->GetFE(0);
-                    const int dof = fe1.GetDof();
-                    const int dim = fe1.GetDim();
-                    ElemMatrices em(dof, dim);
+        const int dof = fe1.GetDof();
+        const int dim = fe1.GetDim();
+        ElemMatrices em(dof, dim);
 
         // For every snapshot in batch
         for (int i = i_start; i < i_end; ++i)
@@ -2549,7 +2552,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                 Array<int> vdofs;
                 DofTransformation *doftrans = fespace_X->GetElementVDofs(e, vdofs);
                 const FiniteElement &fe = *fespace_X->GetFE(e);
-                
+
                 ElementTransformation *eltrans = fespace_X->GetElementTransformation(e);
                 px_i.GetSubVector(vdofs, elfun);
 
@@ -2573,7 +2576,8 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                     P->Mult(v_j, pv_j);
                     pv_j.GetSubVector(vdofs, ve_j);
                     // Compute the row of G corresponding to element e, store in r
-                    ComputeElementRowOfG(ir0, vdofs, ve_j, model, elfun, fe, *eltrans, r, dof, dim, em);
+                    ComputeElementRowOfG(ir0, vdofs, ve_j, model, elfun, fe, *eltrans, r, dof, dim,
+                                         em);
 
                     for (int m = 0; m < nqe; ++m)
                         Gt((e * nqe) + m, j + (i * NB)) = r[m];
@@ -2682,5 +2686,5 @@ void get_EQPsol(const int current_window, CAROM::Vector *load_eqpsol)
         std::cout << "The length of the vector is: " << load_eqpsol->dim() << std::endl;
         load_eqpsol->read(filename);
     }
-    
+
 }

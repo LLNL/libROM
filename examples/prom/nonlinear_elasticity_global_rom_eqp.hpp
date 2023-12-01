@@ -65,14 +65,14 @@ struct ElemMatrices
     Vector elvect;
     // Constructor for matrices struct
     ElemMatrices(int dof, int dim) : DSh(dof, dim),
-                                     DS(dof, dim),
-                                     Jrt(dim),
-                                     Jpt(dim),
-                                     P(dim),
-                                     P_f(dim),
-                                     PMatI(),
-                                     PMatO(),
-                                     elvect(dof * dim)
+        DS(dof, dim),
+        Jrt(dim),
+        Jpt(dim),
+        P(dim),
+        P_f(dim),
+        PMatI(),
+        PMatO(),
+        elvect(dof * dim)
     {
         // Set dimensions for PMatI and PMatO
         PMatO.UseExternalData(elvect.GetData(), dof, dim);
@@ -84,7 +84,8 @@ struct ElemMatrices
 void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
         std::vector<double> const &rw, std::vector<int> const &qp,
         const IntegrationRule *ir, NeoHookeanModel *model,
-        CAROM::Matrix const &V_v, const int rank, Vector &coef, Vector &DS_coef, ElemMatrices *em);
+        CAROM::Matrix const &V_v, const int rank, Vector &coef, Vector &DS_coef,
+        ElemMatrices *em);
 
 // Perform hyperreduction with EQP
 void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
@@ -101,13 +102,15 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace
         const IntegrationRule *ir, NeoHookeanModel *model,
         const Vector *x0, CAROM::Matrix const &V_x, CAROM::Matrix const &V_v,
         CAROM::Vector const &x, CAROM::Vector *Vx_librom_temp, Vector *Vx_temp,
-        Vector const &coef, Vector const &DS_coef, const int rank, Vector &res, ElemMatrices *em);
+        Vector const &coef, Vector const &DS_coef, const int rank, Vector &res,
+        ElemMatrices *em);
 
 // Compute a row in the G matrix which corresponds to a given FE element
 void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
                           Vector const &ve_j, NeoHookeanModel *model, Vector const &elfun,
-                          FiniteElement const &fe, ElementTransformation &Trans, Vector &r, const int dof, const int dim,
-                                                      ElemMatrices &em);
+                          FiniteElement const &fe, ElementTransformation &Trans, Vector &r, const int dof,
+                          const int dim,
+                          ElemMatrices &em);
 
 void SolveNNLS(const int rank, const double nnls_tol, const int maxNNLSnnz,
                CAROM::Vector const &w, CAROM::Matrix &Gt,
