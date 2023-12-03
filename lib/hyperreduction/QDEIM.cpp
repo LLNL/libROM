@@ -37,8 +37,8 @@ QDEIM(const Matrix* f_basis,
     // processor that owns each sampled row, and fills f_basis_sampled_inv with the
     // sampled rows of the basis of the RHS.
 
-    CAROM_VERIFY(num_f_basis_vectors_used ==
-                 f_basis->numColumns());  // The QR implementation uses the entire matrix.
+    // The QR implementation uses the entire matrix.
+    CAROM_VERIFY(num_f_basis_vectors_used == f_basis->numColumns());
     CAROM_VERIFY(f_basis->numColumns() <= num_samples_req
                  && num_samples_req <= f_basis->numDistributedRows());
     CAROM_VERIFY(num_samples_req == f_basis_sampled_inv.numRows()
@@ -99,7 +99,8 @@ QDEIM(const Matrix* f_basis,
                 ns[owner]++;
             }
 
-            // Reorder f_sampled_row and f_sampled_row_owner to match the order of f_basis_sampled_inv
+            // Reorder f_sampled_row and f_sampled_row_owner to match the order
+            // of f_basis_sampled_inv
             for (int i=0; i<num_samples_req_QR; ++i)
                 f_sampled_row[i] = all_sampled_rows[i];
 
@@ -204,6 +205,10 @@ QDEIM(const Matrix* f_basis,
         int n = numCol;
         Matrix V(n, n, false);
 
+        // At this point, only the first (numCol) entries of f_sampled_row and
+        // rows of sampled_row_data are set by QR. Now set the remaining
+        // (num_samples_req - numCol) samples by GappyPOD+E.
+
         for (int s = numCol; s < num_samples_req; ++s)  // Determine sample s
         {
             int m = s;
@@ -211,8 +216,6 @@ QDEIM(const Matrix* f_basis,
             double g = 0.0;
             if (myid == 0)
             {
-                // At this point, only the first (numCol) entries of f_sampled_row and rows of sampled_row_data are set by QR.
-                // Now set the remaining (num_samples_req - numCol) samples by GappyPOD+E.
                 Matrix A(m, n, false);
 
                 // Compute SVD of the first s rows of sampled_row_data locally on root
@@ -230,12 +233,10 @@ QDEIM(const Matrix* f_basis,
                 SerialSVD(&A, U, &sigma, &V);
                 delete U;
 
-                g = (sigma.getData()[n-2] * sigma.getData()[n-2]) - (sigma.getData()[n-1] *
-                        sigma.getData()[n-1]);
+                g = (sigma.getData()[n-2] * sigma.getData()[n-2]) -
+                    (sigma.getData()[n-1] * sigma.getData()[n-1]);
 
                 // Note that V stores the right singular vectors row-wise
-
-                // Set Ubt = U * V = (V' * U')'
                 V.transpose();
             }
 
@@ -244,6 +245,7 @@ QDEIM(const Matrix* f_basis,
             // Broadcast the small n-by-n undistributed matrix V which is computed only on root.
             MPI_Bcast(V.getData(), n*n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
+            // Set Ubt = U * V = (V' * U')'
             Matrix *Ubt = f_basis->mult(V);  // distributed
 
             CAROM_VERIFY(Ubt->distributed() && Ubt->numRows() == f_basis->numRows()
@@ -254,9 +256,9 @@ QDEIM(const Matrix* f_basis,
             for (int i=0; i<nf; ++i)
             {
                 r[i] = g;
+                // column sums of Ub.^2, which are row sums of Ubt.^2
                 for (int j=0; j<n; ++j)
-                    r[i] += Ubt->item(i, j) * Ubt->item(i,
-                                                        j);  // column sums of Ub.^2, which are row sums of Ubt.^2
+                    r[i] += Ubt->item(i, j) * Ubt->item(i,j);
 
                 r[i] -= sqrt((r[i] * r[i]) - (4.0 * g * Ubt->item(i, n-1) * Ubt->item(i, n-1)));
             }
@@ -311,8 +313,9 @@ QDEIM(const Matrix* f_basis,
                 globalSamples.insert(f_sampled_row[s]);
             }
 
-            // Send one row of f_basis, corresponding to sample s, to root process for f_basis_sampled_inv.
-            // First, scatter from root to tell the owning process the sample index.
+            // Send one row of f_basis, corresponding to sample s, to the root
+            // process for f_basis_sampled_inv. First, scatter from root to tell
+            // the owning process the sample index.
 
             int sample = -1;
             MPI_Scatter(ns.data(), 1, MPI_INT, &sample, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -321,22 +324,22 @@ QDEIM(const Matrix* f_basis,
             if (sample > -1)
             {
                 CAROM_VERIFY(sample >= row_offset[myid]);
-                MPI_Send(f_basis->getData() + ((sample - row_offset[myid]) * numCol), numCol,
-                         MPI_DOUBLE, 0, tagSendRecv, MPI_COMM_WORLD);
+                MPI_Send(f_basis->getData() + ((sample - row_offset[myid]) * numCol),
+                         numCol, MPI_DOUBLE, 0, tagSendRecv, MPI_COMM_WORLD);
             }
 
             if (myid == 0)
             {
                 MPI_Status status;
-                MPI_Recv(sampled_row_data.data() + (s*numCol), numCol, MPI_DOUBLE, owner,
-                         tagSendRecv, MPI_COMM_WORLD, &status);
+                MPI_Recv(sampled_row_data.data() + (s*numCol), numCol, MPI_DOUBLE,
+                         owner, tagSendRecv, MPI_COMM_WORLD, &status);
             }
 
             delete Ubt;
         }  // loop s over samples
 
-        // Subtract row_offset to convert f_sampled_row from global to local indices
-        // Also, reorder f_sampled_row by process
+        // Subtract row_offset to convert f_sampled_row from global to local indices.
+        // Also, reorder f_sampled_row by process.
         if (myid == 0)
         {
             ns[0] = 0;
@@ -414,8 +417,8 @@ QDEIM(const Matrix* f_basis,
 
     if (!f_basis->distributed())
     {
-        CAROM_VERIFY(numCol ==
-                     num_samples_req);  // GappyPOD+E not implemented for oversampling if not distributed
+        // GappyPOD+E not implemented for oversampling if not distributed
+        CAROM_VERIFY(numCol == num_samples_req);
     }
 
     // Now invert f_basis_sampled_inv, storing its transpose.

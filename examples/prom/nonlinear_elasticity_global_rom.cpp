@@ -30,57 +30,71 @@
 // and nonlinear term basis, with velocity initial condition:
 //
 // Offline phase:
-//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 0.90 -id 0
+//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 0.9 -id 0
 //
-//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.10 -id 1
+//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.1 -id 1
 //
 // Merge phase:
 //      ./nonlinear_elasticity_global_rom -merge -ns 2 -dt 0.01 -tf 5.0
 //
 // Create FOM comparison data:
-//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.00 -id 2
+//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.0 -id 2
 //
 // Online phase with full sampling:
-//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -rvdim 40 -rxdim 10 -hdim 71 -nsr 1170 -sc 1.00
+//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype gnat -rvdim 40 -rxdim 10 -hdim 71 -nsr 1170 -sc 1.0
 // Output message:
 //      Elapsed time for time integration loop 1.80759
 //      Relative error of ROM position (x) at t_final: 5 is 0.000231698
 //      Relative error of ROM velocity (v) at t_final: 5 is 0.466941
 //
-// Online phase with strong hyper-reduction:
-//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -rvdim 40 -rxdim 10 -hdim 71 -nsr 100 -sc 1.00
+// Online phase with strong hyper-reduction, using GNAT (over-sampled DEIM):
+//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype gnat -rvdim 40 -rxdim 10 -hdim 71 -nsr 100 -sc 1.0
 // Output message:
-//      Elapsed time for time integration loop 1.08048
+//      Elapsed time for time integration loop 1.0111
 //      Relative error of ROM position (x) at t_final: 5 is 0.00209877
 //      Relative error of ROM velocity (v) at t_final: 5 is 1.39472
+//
+// Online phase with strong hyper-reduction, using QDEIM:
+//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype qdeim -rvdim 40 -rxdim 10 -hdim 71 -nsr 100 -sc 1.0
+// Output message:
+//      Elapsed time for time integration loop 1.02559
+//      Relative error of ROM position (x) at t_final: 5 is 0.00188458
+//      Relative error of ROM velocity (v) at t_final: 5 is 0.978726
 //
 // =================================================================================
 //
 // Sample runs and results for parametric ROM using only displacement basis
 // and nonlinear term basis:
 // Offline phase:
-//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 0.90 -xbo -def-ic -id 0
-//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.10 -xbo -def-ic -id 1
+//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 0.9 -xbo -def-ic -id 0
+//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.1 -xbo -def-ic -id 1
 //
 // Merge phase:
 //      ./nonlinear_elasticity_global_rom -merge -ns 2 -dt 0.01 -tf 5.0 -xbo
 //
 // Create FOM comparison data:
-//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.00 -xbo -def-ic -id 2
+//      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.0 -xbo -def-ic -id 2
 //
 // Online phase with full sampling:
-//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -rxdim 57 -hdim 183 -nsr 1170 -sc 1.00 -xbo -def-ic
+//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype gnat -rxdim 57 -hdim 183 -nsr 1170 -sc 1.0 -xbo -def-ic
 // Output message:
 //      Elapsed time for time integration loop 18.9874
 //      Relative error of ROM position (x) at t_final: 5 is 7.08272e-05
 //      Relative error of ROM velocity (v) at t_final: 5 is 0.00387647
 //
-// Online phase with strong hyper reduction:
-//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -rxdim 2 -hdim 4 -nsr 10 -sc 1.00 -xbo -def-ic
+// Online phase with strong hyper reduction, using GNAT (over-sampled DEIM):
+//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype gnat -rxdim 2 -hdim 4 -nsr 10 -sc 1.0 -xbo -def-ic
 // Output message:
-//      Elapsed time for time integration loop 1.01136
+//      Elapsed time for time integration loop 0.120194
 //      Relative error of ROM position (x) at t_final: 5 is 0.0130818
 //      Relative error of ROM velocity (v) at t_final: 5 is 0.979978
+//
+// Online phase with strong hyper reduction, using QDEIM:
+//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype qdeim -rxdim 2 -hdim 4 -nsr 10 -sc 1.0 -xbo -def-ic
+// Output message:
+//      Elapsed time for time integration loop 0.10806
+//      Relative error of ROM position (x) at t_final: 5 is 0.0108709
+//      Relative error of ROM velocity (v) at t_final: 5 is 1.30704
 //
 // This example runs in parallel with MPI, by using the same number of MPI ranks
 // in all phases (offline, merge, online).
@@ -89,9 +103,7 @@
 #include "linalg/Vector.h"
 #include "linalg/BasisGenerator.h"
 #include "linalg/BasisReader.h"
-#include "hyperreduction/DEIM.h"
-#include "hyperreduction/GNAT.h"
-#include "hyperreduction/S_OPT.h"
+#include "hyperreduction/Hyperreduction.h"
 #include "mfem/SampleMesh.hpp"
 #include "mfem/Utilities.hpp"
 
@@ -166,7 +178,7 @@ private:
     bool hyperreduce;
     bool x_base_only;
 
-    CAROM::Vector* pfom_librom,  * pfom_v_librom;
+    CAROM::Vector *pfom_librom, *pfom_v_librom;
     Vector* pfom;
     Vector* pfom_x;
     Vector* pfom_v;
@@ -262,7 +274,8 @@ CAROM::Matrix* GetFirstColumns(const int N, const CAROM::Matrix* A)
 
 // TODO: move this to the library?
 void BasisGeneratorFinalSummary(CAROM::BasisGenerator* bg,
-                                const double energyFraction, int& cutoff, const std::string cutoffOutputPath)
+                                const double energyFraction, int& cutoff,
+                                const std::string cutoffOutputPath)
 {
     const int rom_dim = bg->getSpatialBasis()->numColumns();
     const CAROM::Vector* sing_vals = bg->getSingularValues();
@@ -388,15 +401,15 @@ int main(int argc, char* argv[])
     bool offline = false;
     bool merge = false;
     bool online = false;
-    bool use_sopt = false;
     bool hyperreduce = true;
     bool x_base_only = false;
     int num_samples_req = -1;
+    const char *samplingType = "gnat";
 
     int nsets = 0;
     int id_param = 0;
 
-    // number of basis vectors to use
+    // Number of basis vectors to use
     int rxdim = -1;
     int rvdim = -1;
     int hdim = -1;
@@ -444,8 +457,8 @@ int main(int argc, char* argv[])
                    "Enable or disable the online phase.");
     args.AddOption(&merge, "-merge", "--merge", "-no-merge", "--no-merge",
                    "Enable or disable the merge phase.");
-    args.AddOption(&use_sopt, "-sopt", "--sopt", "-no-sopt", "--no-sopt",
-                   "Use S-OPT sampling instead of DEIM for the hyperreduction.");
+    args.AddOption(&samplingType, "-hrtype", "--hrsamplingtype",
+                   "Sampling type for hyperreduction.");
     args.AddOption(&num_samples_req, "-nsr", "--nsr",
                    "number of samples we want to select for the sampling algorithm.");
     args.AddOption(&rxdim, "-rxdim", "--rxdim",
@@ -569,8 +582,8 @@ int main(int argc, char* argv[])
 
     BlockVector vx(true_offset);
     ParGridFunction v_gf, x_gf;
-    v_gf.MakeTRef(&fespace, vx,
-                  true_offset[0]); // Associate a new FiniteElementSpace and new true-dof data with the GridFunction.
+    // Associate a FiniteElementSpace and true-dof data with the GridFunctions.
+    v_gf.MakeTRef(&fespace, vx, true_offset[0]);
     x_gf.MakeTRef(&fespace, vx, true_offset[1]);
 
     ParGridFunction x_ref(&fespace);
@@ -688,7 +701,7 @@ int main(int argc, char* argv[])
         vis_v.precision(8);
         visualize(vis_v, pmesh, &x_gf, &v_gf, "Velocity", true);
         // Make sure all ranks have sent their 'v' solution before initiating
-        // another set of GLVis connections (one from each rank):
+        // another set of GLVis connections (one from each rank)
         MPI_Barrier(pmesh->GetComm());
         vis_w.open(vishost, visport);
         if (vis_w)
@@ -838,44 +851,17 @@ int main(int argc, char* argv[])
 
         CAROM::Matrix* Hsinv = new CAROM::Matrix(nsamp_H, hdim, false);
         vector<int> sample_dofs(nsamp_H);
-        if (use_sopt)
-        {
-            if (myid == 0)
-                printf("Using S_OPT sampling\n");
-            CAROM::S_OPT(H_librom,
-                         hdim,
-                         sample_dofs,
-                         num_sample_dofs_per_proc,
-                         *Hsinv,
-                         myid,
-                         num_procs,
-                         nsamp_H);
-        }
-        else if (nsamp_H != hdim)
-        {
-            if (myid == 0)
-                printf("Using GNAT sampling\n");
-            CAROM::GNAT(H_librom,
-                        hdim,
-                        sample_dofs,
-                        num_sample_dofs_per_proc,
-                        *Hsinv,
-                        myid,
-                        num_procs,
-                        nsamp_H);
-        }
-        else
-        {
-            if (myid == 0)
-                printf("Using DEIM sampling\n");
-            CAROM::DEIM(H_librom,
-                        hdim,
-                        sample_dofs,
-                        num_sample_dofs_per_proc,
-                        *Hsinv,
-                        myid,
-                        num_procs);
-        }
+
+        // Setup hyperreduction using DEIM, GNAT, or S-OPT
+        CAROM::Hyperreduction hr(samplingType);
+        hr.ComputeSamples(H_librom,
+                          hdim,
+                          sample_dofs,
+                          num_sample_dofs_per_proc,
+                          *Hsinv,
+                          myid,
+                          num_procs,
+                          nsamp_H);
 
         // Construct sample mesh
         const int nspaces = 1;
@@ -904,7 +890,8 @@ int main(int argc, char* argv[])
         w_x = new CAROM::Vector(rxdim, false);
         *w = 0.0;
 
-        // Note that some of this could be done only on the ROM solver process, but it is tricky, since RomOperator assembles Bsp in parallel.
+        // Note that some of this could be done only on the ROM solver process,
+        // but it is tricky, since RomOperator assembles Bsp in parallel.
         wMFEM = new Vector(&((*w)(0)), rxdim + rvdim);
 
         // Initial conditions
@@ -930,8 +917,8 @@ int main(int argc, char* argv[])
             // 12. Set the initial conditions for v_gf, x_gf and vx, and define the
             //    boundary conditions on a beam-like mesh (see description above).
 
-            sp_v_gf.MakeTRef(sp_XV_space, sp_vx,
-                             sp_offset[0]); // Associate a new FiniteElementSpace and new true-dof data with the GridFunction.
+            // Associate a FiniteElementSpace and true-dof data with the GridFunctions.
+            sp_v_gf.MakeTRef(sp_XV_space, sp_vx, sp_offset[0]);
             sp_x_gf.MakeTRef(sp_XV_space, sp_vx, sp_offset[1]);
 
             VectorFunctionCoefficient* velo = 0;
@@ -1117,16 +1104,16 @@ int main(int argc, char* argv[])
             if (x_base_only == false && basis_generator_v->isNextSample(t))
             {
                 basis_generator_v->takeSample(vx_diff.GetBlock(0), t, dt);
-                basis_generator_v->computeNextSampleTime(vx_diff.GetBlock(0), dvdt.GetData(),
-                        t);
+                basis_generator_v->computeNextSampleTime(vx_diff.GetBlock(0),
+                        dvdt.GetData(), t);
                 basis_generator_H->takeSample(oper.H_sp.GetData(), t, dt);
             }
 
             if (basis_generator_x->isNextSample(t))
             {
                 basis_generator_x->takeSample(vx_diff.GetBlock(1), t, dt);
-                basis_generator_x->computeNextSampleTime(vx_diff.GetBlock(1), dxdt.GetData(),
-                        t);
+                basis_generator_x->computeNextSampleTime(vx_diff.GetBlock(1),
+                        dxdt.GetData(), t);
 
                 if (x_base_only == true)
                 {
@@ -1207,7 +1194,8 @@ int main(int argc, char* argv[])
 
     if (offline)
     {
-        // Sample final solution, to prevent extrapolation in ROM between the last sample and the end of the simulation.
+        // Sample final solution, to prevent extrapolation in ROM between the
+        // last sample and the end of the simulation.
         dvxdt = oper.dvxdt_sp.GetData();
         vx_diff = BlockVector(vx);
         vx_diff -= vx0;
@@ -1303,10 +1291,10 @@ int main(int argc, char* argv[])
 
         if (myid == 0)
         {
-            cout << "Relative error of ROM position (x) at t_final: " << t_final <<
-                 " is " << tot_diff_norm_x / tot_x_fom_norm << endl;
-            cout << "Relative error of ROM velocity (v) at t_final: " << t_final <<
-                 " is " << tot_diff_norm_v / tot_v_fom_norm << endl;
+            cout << "Relative error of ROM position (x) at t_final: " << t_final
+                 << " is " << tot_diff_norm_x / tot_x_fom_norm << endl;
+            cout << "Relative error of ROM velocity (v) at t_final: " << t_final
+                 << " is " << tot_diff_norm_v / tot_v_fom_norm << endl;
         }
     }
 

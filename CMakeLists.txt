@@ -137,9 +137,11 @@ if (ENABLE_EXAMPLES)
       mixed_nonlinear_diffusion
       nonlinear_elasticity_global_rom
       linear_elasticity_global_rom
+      maxwell_global_rom
       dg_advection
       nonlinear_elasticity
       heat_conduction
+      heat_conduction_dmdc
       parametric_heat_conduction
       de_parametric_heat_conduction_greedy
       wave_equation
@@ -156,6 +158,8 @@ if (ENABLE_EXAMPLES)
       prom
       prom
       prom
+      prom
+      dmd
       dmd
       dmd
       dmd

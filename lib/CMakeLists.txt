@@ -35,6 +35,7 @@ set(module_list
   linalg/svd/SVD
   linalg/svd/StaticSVD
   algo/DMD
+  algo/DMDc
   algo/AdaptiveDMD
   algo/NonuniformDMD
   algo/DifferentialEvolution
@@ -50,6 +51,7 @@ set(module_list
   hyperreduction/S_OPT
   hyperreduction/STSampling
   hyperreduction/Utilities
+  hyperreduction/Hyperreduction
   utils/Database
   utils/HDFDatabase
   utils/CSVDatabase

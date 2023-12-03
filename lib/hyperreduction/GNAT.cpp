@@ -97,8 +97,8 @@ void GNAT(const Matrix* f_basis,
     const int ns_mod_nr = num_samples % num_basis_vectors;
     int ns = 0;
 
-    // The small matrix inverted by the algorithm.  We'll allocate the largest
-    // matrix we'll need and set its size at each step in the algorithm.
+    // The small matrix inverted by the algorithm. We allocate the largest
+    // size needed and set the size at each step in the algorithm.
     Matrix M(num_samples, std::max(num_basis_vectors-1, 1), false);
 
     // Scratch space used throughout the algorithm.
@@ -125,8 +125,8 @@ void GNAT(const Matrix* f_basis,
         std::vector<int> all_num_init_samples(num_procs);
         std::vector<int> all_init_samples(total_num_init_samples);
 
-        MPI_Allgather(&num_init_samples, 1, MPI_INT, all_num_init_samples.data(), 1,
-                      MPI_INT, MPI_COMM_WORLD);
+        MPI_Allgather(&num_init_samples, 1, MPI_INT, all_num_init_samples.data(),
+                      1, MPI_INT, MPI_COMM_WORLD);
 
         for (int i = 0; i < myid; ++i)
         {
@@ -134,7 +134,7 @@ void GNAT(const Matrix* f_basis,
         }
     }
 
-    // Figure out the 1st sampled rows of the RHS.
+    // Figure out the first sampled rows of the RHS.
     RowInfo f_bv_max_local, f_bv_max_global;
 
     const int ns0 = 0 < ns_mod_nr ? (num_samples / num_basis_vectors) + 1 :
@@ -215,10 +215,14 @@ void GNAT(const Matrix* f_basis,
             double tmp = 0.0;
             for (int minv_col = 0; minv_col < ns; ++minv_col) {
                 if (ns == i)
+                {
                     tmp += M.item(minv_row, minv_col)*tmp_fs.item(minv_col, i);
+                }
                 else
-                    tmp += M.item(minv_col, minv_row)*tmp_fs.item(minv_col,
-                            i);  // Transposing M^+, which is stored as its transpose.
+                {
+                    // Transposing M^+, which is stored as its transpose.
+                    tmp += M.item(minv_col, minv_row)*tmp_fs.item(minv_col, i);
+                }
             }
             c[minv_row] = tmp;
         }
@@ -288,7 +292,7 @@ void GNAT(const Matrix* f_basis,
 
     CAROM_ASSERT(num_samples == ns);
 
-    // Fill f_sampled_row, and f_sampled_rows_per_proc.  Unscramble tmp_fs into
+    // Fill f_sampled_row, and f_sampled_rows_per_proc. Unscramble tmp_fs into
     // f_basis_sampled_inv.
     int idx = 0;
     for (int i = 0; i < num_procs; ++i) {
