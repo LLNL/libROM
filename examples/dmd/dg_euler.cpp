@@ -574,9 +574,7 @@ int main(int argc, char *argv[])
     Vector true_solution_e(u_block.GetBlock(3).Size());
     true_solution_e = u_block.GetBlock(3).GetData();
 
-    dmd_prediction_timer.Start();
-
-    // 14. Predict the state at t_final using DMD.
+    // 14. Predict using DMD.
     if (mpi.WorldRank() == 0)
     {
         std::cout << "Predicting density, momentum, and energy using DMD" << std::endl;
@@ -639,12 +637,12 @@ int main(int argc, char *argv[])
         }
     }
 
-    dmd_prediction_timer.Stop();
-
+    dmd_prediction_timer.Start();
     result_dens = dmd_dens->predict(t_final);
     result_x_mom = dmd_x_mom->predict(t_final);
     result_y_mom = dmd_y_mom->predict(t_final);
     result_e = dmd_e->predict(t_final);
+    dmd_prediction_timer.Stop();
 
     // 15. Calculate the relative error between the DMD final solution and the true solution.
     Vector dmd_solution_dens(result_dens->getData(), result_dens->dim());
