@@ -21,7 +21,7 @@
 //
 // Output:
 //  Relative l2 error of ROM solution 0.0005641839849343575
-// 
+//
 // =================================================================================
 //
 // Sample runs and results for global ROM:

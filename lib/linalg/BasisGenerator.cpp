@@ -310,7 +310,7 @@ BasisGenerator::resetDt(
     }
 }
 
-void 
+void
 BasisGenerator::FinalSummary(
     const double energyFraction,
     int & cutoff,
