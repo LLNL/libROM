@@ -310,6 +310,57 @@ BasisGenerator::resetDt(
     }
 }
 
+void 
+BasisGenerator::FinalSummary(
+    const double energyFraction,
+    int & cutoff,
+    const std::string cutoffOutputPath,
+    const int first_sv)
+{
+    const int rom_dim = getSpatialBasis()->numColumns();
+    const Vector* sing_vals = getSingularValues();
+
+    CAROM_VERIFY(rom_dim <= sing_vals->dim());
+
+    double sum = 0.0;
+    for (int sv = first_sv; sv < sing_vals->dim(); ++sv) {
+        sum += (*sing_vals)(sv);
+    }
+
+    std::vector<double> energy_fractions = {0.99999999, 0.9999999, 0.999999, 0.99999, 0.9999, 0.999, 0.99, 0.9};
+    cutoff = first_sv;
+    bool reached_cutoff = false;
+    double partialSum = 0.0;
+
+    std::ofstream outfile(cutoffOutputPath);
+    for (int sv = first_sv; sv < sing_vals->dim(); ++sv) {
+        partialSum += (*sing_vals)(sv);
+        for (int i = energy_fractions.size() - 1; i >= 0; i--)
+        {
+            if (partialSum / sum > energy_fractions[i])
+            {
+                outfile << "For energy fraction: " << energy_fractions[i] << ", take first "
+                        << sv+1 << " of " << sing_vals->dim() << " basis vectors" << std::endl;
+                energy_fractions.pop_back();
+            }
+            else
+            {
+                break;
+            }
+        }
+        if (!reached_cutoff && partialSum / sum > energyFraction)
+        {
+            cutoff = sv+1;
+            reached_cutoff = true;
+        }
+    }
+
+    if (!reached_cutoff) cutoff = sing_vals->dim();
+    outfile << "For energy fraction: " << energyFraction << ", take first "
+            << cutoff << " of " << sing_vals->dim() << " basis vectors" << std::endl;
+    outfile.close();
+}
+
 BasisGenerator::~BasisGenerator()
 {
     if (d_basis_writer) {

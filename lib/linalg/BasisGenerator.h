@@ -23,6 +23,7 @@
 #include "mpi.h"
 
 #include <cmath>
+#include <fstream>
 
 /* Use C++11 built-in shared pointers if available; else fallback to Boost. */
 #if __cplusplus >= 201103L
@@ -262,6 +263,20 @@ public:
     {
         return d_svd->getNumSamples();
     }
+
+    /**
+     * @brief Prints the summary of recommended numbers of basis vectors. 
+     *
+     * @param[in] energyFraction   Energy Fraction.
+     * @param[in] cutoff           Number of basis vectors selected.
+     * @param[in] cutoffOutputPath Path of the summary file.
+     * @param[in] first_sv         First singular vector in the calculaton of energy.
+     */
+    void FinalSummary(
+        const double energyFraction,
+        int & cutoff, 
+        const std::string cutoffOutputPath, 
+        const int first_sv = 0);
 
 protected:
     /**

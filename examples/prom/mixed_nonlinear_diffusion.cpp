@@ -427,54 +427,6 @@ CAROM::Matrix* GetFirstColumns(const int N, const CAROM::Matrix* A)
 }
 
 // TODO: move this to the library?
-void BasisGeneratorFinalSummary(CAROM::BasisGenerator* bg,
-                                const double energyFraction, int & cutoff, const std::string cutoffOutputPath)
-{
-    const int rom_dim = bg->getSpatialBasis()->numColumns();
-    const CAROM::Vector* sing_vals = bg->getSingularValues();
-
-    MFEM_VERIFY(rom_dim <= sing_vals->dim(), "");
-
-    double sum = 0.0;
-    for (int sv = 0; sv < sing_vals->dim(); ++sv) {
-        sum += (*sing_vals)(sv);
-    }
-
-    vector<double> energy_fractions = {0.9999, 0.999, 0.99, 0.9};
-    bool reached_cutoff = false;
-
-    ofstream outfile(cutoffOutputPath);
-
-    double partialSum = 0.0;
-    for (int sv = 0; sv < sing_vals->dim(); ++sv) {
-        partialSum += (*sing_vals)(sv);
-        for (int i = energy_fractions.size() - 1; i >= 0; i--)
-        {
-            if (partialSum / sum > energy_fractions[i])
-            {
-                outfile << "For energy fraction: " << energy_fractions[i] << ", take first "
-                        << sv+1 << " of " << sing_vals->dim() << " basis vectors" << endl;
-                energy_fractions.pop_back();
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        if (!reached_cutoff && partialSum / sum > energyFraction)
-        {
-            cutoff = sv+1;
-            reached_cutoff = true;
-        }
-    }
-
-    if (!reached_cutoff) cutoff = sing_vals->dim();
-    outfile << "Take first " << cutoff << " of " << sing_vals->dim() <<
-            " basis vectors" << endl;
-    outfile.close();
-}
-
 void MergeBasis(const int dimFOM, const int nparam, const int max_num_snapshots,
                 std::string name)
 {
@@ -496,9 +448,10 @@ void MergeBasis(const int dimFOM, const int nparam, const int max_num_snapshots,
     generator.endSamples(); // save the merged basis file
 
     int cutoff = 0;
-    BasisGeneratorFinalSummary(&generator, 0.9999, cutoff, "mergedSV_" + name);
+    generator.FinalSummary(0.9999, cutoff, "mergedSV_" + name);
 }
 
+// TODO: move this to the library?
 const CAROM::Matrix* GetSnapshotMatrix(const int dimFOM, const int nparam,
                                        const int max_num_snapshots, std::string name)
 {
