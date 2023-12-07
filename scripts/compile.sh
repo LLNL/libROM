@@ -77,6 +77,9 @@ do
 done
 shift $((OPTIND-1))
 
+export CC=${CC:="mpicc"}
+export CXX=${CXX:="mpicxx"}
+
 CURR_DIR=$(pwd) 
 if [[ -d "dependencies" ]]; then
     HOME_DIR=$CURR_DIR
