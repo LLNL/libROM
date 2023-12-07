@@ -294,7 +294,7 @@ void MergeBasis(const int dimFOM, const int nparam, const int max_num_snapshots,
     generator.endSamples(); // save the merged basis file
 
     int cutoff = 0;
-    generator.FinalSummary(0.9999999, cutoff, "mergedSV_" + name + ".txt");
+    generator.finalSummary(0.9999999, cutoff, "mergedSV_" + name + ".txt");
 }
 
 // TODO: remove this by making online computation serial?

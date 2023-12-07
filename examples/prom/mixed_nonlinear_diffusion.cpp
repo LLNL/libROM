@@ -448,7 +448,7 @@ void MergeBasis(const int dimFOM, const int nparam, const int max_num_snapshots,
     generator.endSamples(); // save the merged basis file
 
     int cutoff = 0;
-    generator.FinalSummary(0.9999, cutoff, "mergedSV_" + name);
+    generator.finalSummary(0.9999, cutoff, "mergedSV_" + name);
 }
 
 // TODO: move this to the library?

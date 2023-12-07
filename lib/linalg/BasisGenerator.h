@@ -272,10 +272,10 @@ public:
      * @param[in] cutoffOutputPath Path of the summary file.
      * @param[in] first_sv         First singular vector in the calculaton of energy.
      */
-    void FinalSummary(
+    void finalSummary(
         const double energyFraction,
         int & cutoff, 
-        const std::string cutoffOutputPath, 
+        const std::string cutoffOutputPath = "bg_summary.txt", 
         const int first_sv = 0);
 
 protected:

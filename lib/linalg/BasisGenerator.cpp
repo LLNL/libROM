@@ -21,6 +21,8 @@
 #include "svd/IncrementalSVDFastUpdate.h"
 #include "svd/IncrementalSVDBrand.h"
 
+#include <iomanip>
+
 namespace CAROM {
 
 BasisGenerator::BasisGenerator(
@@ -311,7 +313,7 @@ BasisGenerator::resetDt(
 }
 
 void
-BasisGenerator::FinalSummary(
+BasisGenerator::finalSummary(
     const double energyFraction,
     int & cutoff,
     const std::string cutoffOutputPath,
@@ -327,21 +329,31 @@ BasisGenerator::FinalSummary(
         sum += (*sing_vals)(sv);
     }
 
-    std::vector<double> energy_fractions = {0.99999999, 0.9999999, 0.999999, 0.99999, 0.9999, 0.999, 0.99, 0.9};
+    int p = std::floor(-std::log10(1.0 - energyFraction));
+    std::vector<double> energy_fractions(p);
+
+    for (int i = 0; i < p; ++i) {
+        energy_fractions[i] = 1 - std::pow(10, -1 - i);
+    }
+
     cutoff = first_sv;
     bool reached_cutoff = false;
     double partialSum = 0.0;
+    int count = 0;
 
     std::ofstream outfile(cutoffOutputPath);
+
     for (int sv = first_sv; sv < sing_vals->dim(); ++sv) {
         partialSum += (*sing_vals)(sv);
-        for (int i = energy_fractions.size() - 1; i >= 0; i--)
+        for (int i = count; i < p; ++i)
         {
-            if (partialSum / sum > energy_fractions[i])
+            if (partialSum / sum > 1.0 - std::pow(10, -1 - i))
             {
-                outfile << "For energy fraction: " << energy_fractions[i] << ", take first "
-                        << sv+1 << " of " << sing_vals->dim() << " basis vectors" << std::endl;
-                energy_fractions.pop_back();
+                outfile << "For energy fraction: 0.";
+                for (int j = 0; j < i+1; ++j) outfile << "9";
+                outfile << ", take first " << sv+1 << " of " << sing_vals->dim() <<
+                        " basis vectors" << std::endl;
+                count += 1;
             }
             else
             {
@@ -356,6 +368,7 @@ BasisGenerator::FinalSummary(
     }
 
     if (!reached_cutoff) cutoff = sing_vals->dim();
+    outfile << std::fixed << std::setprecision(p+1);
     outfile << "For energy fraction: " << energyFraction << ", take first "
             << cutoff << " of " << sing_vals->dim() << " basis vectors" << std::endl;
     outfile.close();

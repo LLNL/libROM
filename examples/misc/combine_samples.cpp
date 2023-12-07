@@ -127,12 +127,14 @@ int main(int argc, char* argv[])
                                std::endl;
     static_basis_generator->writeSnapshot();
 
+    int rdim;
     if (!subtract_mean && !subtract_offset) {
         /*-- Compute SVD and save file --*/
         if (rank==0) std::cout << "Computing SVD" << std::endl;
         int rom_dim = static_basis_generator->getSpatialBasis()->numColumns();
         if (rank==0) std::cout << "U ROM Dimension: " << rom_dim << std::endl;
         static_basis_generator->endSamples();
+        static_basis_generator->finalSummary(0.99999999, rdim);
     }
     else {
         /*-- load data from hdf5 file to find the mean and subtract it --*/
@@ -188,6 +190,7 @@ int main(int argc, char* argv[])
         int rom_dim = static_basis_generator2->getSpatialBasis()->numColumns();
         if (rank==0) std::cout << "U ROM Dimension: " << rom_dim << std::endl;
         static_basis_generator2->endSamples();
+        static_basis_generator2->finalSummary(0.99999999, rdim);
 
         static_basis_generator2 = nullptr;
     }
