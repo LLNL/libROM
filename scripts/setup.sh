@@ -88,9 +88,9 @@ if [ ! -d "parmetis-4.0.3" ]; then
 
   tar -zxvf parmetis-4.0.3.tar.gz
   cd parmetis-4.0.3
-  make config
+  make config shared=1
   check_result $? parmetis-config
-  make
+  make -j 8
   check_result $? parmetis-installation
   METIS_DIR=$LIB_DIR/parmetis-4.0.3
   METIS_OPT=-I${METIS_DIR}/metis/include
