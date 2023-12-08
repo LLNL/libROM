@@ -69,6 +69,13 @@
 //      Relative error of ROM position (x) at t_final: 5 is 0.000498426
 //      Relative error of ROM velocity (v) at t_final: 5 is 1.64583
 //
+// Online phase with EQP hyper-reduction and subsampling of snapshots
+//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -eqp -ns 2 -ntw 50 -rvdim 40 -rxdim 10 -hdim 1 -sc 1.0 -sbs 10
+// Output message:
+//      Elapsed time for time integration loop 0.614632
+//      Relative error of ROM position (x) at t_final: 5 is 0.00247479
+//      Relative error of ROM velocity (v) at t_final: 5 is 1.33349
+//
 // =================================================================================
 //
 // Sample runs and results for parametric ROM using only displacement basis
@@ -465,6 +472,9 @@ int main(int argc, char *argv[])
     // Number of time windows
     int n_windows = 0;
 
+    // Subsampling steps
+    int snap_step = 1;
+
     OptionsParser args(argc, argv);
     args.AddOption(&mesh_file, "-m", "--mesh",
                    "Mesh file to use.");
@@ -539,6 +549,8 @@ int main(int argc, char *argv[])
                    "Maximum nnz for NNLS");
     args.AddOption(&n_windows, "-ntw", "--n-time-windows",
                    "Number of time windows. Default is 0");
+    args.AddOption(&snap_step, "-sbs", "--subsampling-step",
+                   "Subsamble every n-th snapshot. Default is 1, meaning no subsampling");
 
     args.Parse();
     if (!args.Good())
@@ -936,7 +948,7 @@ int main(int argc, char *argv[])
             SetupEQP_snapshots(ir0, myid, &fespace, nsets, BV_librom,
                                GetSnapshotMatrix(fespace.GetTrueVSize(), nsets, max_num_snapshots, "X"),
                                vx0.GetBlock(0),
-                               preconditionNNLS, tolNNLS, maxNNLSnnz, model, *eqpSol, window_ids);
+                               preconditionNNLS, tolNNLS, maxNNLSnnz, model, *eqpSol, window_ids, snap_step);
 
             if (writeSampleMesh)
                 WriteMeshEQP(pmesh, myid, ir0->GetNPoints(), *eqpSol);
@@ -2430,6 +2442,17 @@ void SolveNNLS(const int rank, const double nnls_tol, const int maxNNLSnnz,
          relNorm << endl;
 }
 
+int getSteps(const int nsnap, const int snap_step)
+{   if (nsnap % snap_step != 0.0)
+    {
+        return int(nsnap / snap_step) + 1;
+    }
+    else
+    {
+        return nsnap / snap_step;
+    }
+}
+
 // Compute EQP solution from constraints on snapshots.
 void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                         ParFiniteElementSpace *fespace_X,
@@ -2437,7 +2460,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                         const CAROM::Matrix *BX_snapshots, const Vector x0,
                         const bool precondition, const double nnls_tol,
                         const int maxNNLSnnz, NeoHookeanModel *model,
-                        CAROM::Vector &sol, CAROM::Vector *window_ids)
+                        CAROM::Vector &sol, CAROM::Vector *window_ids, const int snap_step)
 {
     const int nqe = ir0->GetNPoints();
     const int ne = fespace_X->GetNE();
@@ -2454,7 +2477,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
     const bool skipFirstW = (nsnap + nsets == BX_snapshots->numColumns());
 
     // Compute G of size (NB * nsnap) x NQ, but only store its transpose Gt.
-    CAROM::Matrix Gt(NQ, NB * nsnap, true);
+    CAROM::Matrix Gt(NQ, NB * getSteps(nsnap, snap_step), true);
     int current_size = 0;
     int i_start = 0;
     int i_end = 0;
@@ -2508,9 +2531,8 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
             current_size = i_end - i_start;
             cout << "i_start = " << i_start << endl;
             cout << "Number of NNLS equations: " << NB * current_size << endl;
-            Gt.setSize(NQ, NB * current_size);
+            Gt.setSize(NQ, NB * getSteps(current_size, snap_step));
         }
-
 
         // Assuming dof and dim are constant, initialize element matrices once
         const FiniteElement &fe1 = *fespace_X->GetFE(0);
@@ -2519,7 +2541,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
         ElemMatrices em(dof, dim);
 
         // For every snapshot in batch
-        for (int i = i_start; i < i_end; ++i)
+        for (int i = i_start; i < i_end; i += snap_step)
         {
             // Set the sampled dofs from the snapshot matrix
             for (int j = 0; j < BX_snapshots->numRows(); ++j)

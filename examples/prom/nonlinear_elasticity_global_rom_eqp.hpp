@@ -123,7 +123,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                         const CAROM::Matrix *BX_snapshots, const Vector x0,
                         const bool precondition, const double nnls_tol,
                         const int maxNNLSnnz, NeoHookeanModel *model,
-                        CAROM::Vector &sol, CAROM::Vector *window_ids);
+                        CAROM::Vector &sol, CAROM::Vector *window_ids, const int snap_step);
 
 void WriteMeshEQP(ParMesh *pmesh, const int myid, const int nqe,
                   CAROM::Vector const &eqpSol);
