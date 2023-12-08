@@ -68,6 +68,7 @@
 //      Elapsed time for time integration loop 5.50702
 //      Relative error of ROM position (x) at t_final: 5 is 0.000498426
 //      Relative error of ROM velocity (v) at t_final: 5 is 1.64583
+//      Elapsed time for entire simulation xxx
 //
 // Online phase with EQP hyper-reduction and subsampling of snapshots
 //      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -eqp -ns 2 -ntw 50 -rvdim 40 -rxdim 10 -hdim 1 -sc 1.0 -sbs 10
@@ -75,6 +76,7 @@
 //      Elapsed time for time integration loop 0.614632
 //      Relative error of ROM position (x) at t_final: 5 is 0.00247479
 //      Relative error of ROM velocity (v) at t_final: 5 is 1.33349
+//      Elapsed time for entire simulation 11.2825
 //
 // =================================================================================
 //
