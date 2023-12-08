@@ -39,36 +39,40 @@
 // Create FOM comparison data:
 //      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.0 -id 2
 // Output message:
-//      Elapsed time for time integration loop 10.6499
+//      Elapsed time for time integration loop 9.17153
+//      Elapsed time for entire simulation 10.0001
 //
 // Online phase with full sampling:
 //      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype gnat -rvdim 40 -rxdim 10 -hdim 71 -nsr 1170 -sc 1.0
 // Output message:
-//      Elapsed time for time integration loop 9.76384
+//      Elapsed time for time integration loop 7.03877
 //      Relative error of ROM position (x) at t_final: 5 is 0.000231698
 //      Relative error of ROM velocity (v) at t_final: 5 is 0.466941
+//      Elapsed time for entire simulation 8.98334
 //
 // Online phase with strong hyper-reduction, using GNAT (over-sampled DEIM):
 //      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype gnat -rvdim 40 -rxdim 10 -hdim 71 -nsr 100 -sc 1.0
 // Output message:
-//      Elapsed time for time integration loop 5.50959
+//      Elapsed time for time integration loop 4.18114
 //      Relative error of ROM position (x) at t_final: 5 is 0.00209877
 //      Relative error of ROM velocity (v) at t_final: 5 is 1.39472
+//      Elapsed time for entire simulation 4.52802
 //
 // Online phase with strong hyper-reduction, using QDEIM:
 //      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype qdeim -rvdim 40 -rxdim 10 -hdim 71 -nsr 100 -sc 1.0
 // Output message:
-//      Elapsed time for time integration loop 5.65571
+//      Elapsed time for time integration loop 4.2972
 //      Relative error of ROM position (x) at t_final: 5 is 0.00188458
 //      Relative error of ROM velocity (v) at t_final: 5 is 0.978726
+//      Elapsed time for entire simulation 5.33154
 //
 // Online phase with EQP hyper-reduction
 //      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -eqp -ns 2 -ntw 50 -rvdim 40 -rxdim 10 -hdim 1 -sc 1.0
 // Output message:
-//      Elapsed time for time integration loop 5.50702
-//      Relative error of ROM position (x) at t_final: 5 is 0.000498426
-//      Relative error of ROM velocity (v) at t_final: 5 is 1.64583
-//      Elapsed time for entire simulation xxx
+//      Elapsed time for time integration loop 2.70006
+//      Relative error of ROM position (x) at t_final: 5 is 0.00169666
+//      Relative error of ROM velocity (v) at t_final: 5 is 17.71
+//      Elapsed time for entire simulation 831.216
 //
 // Online phase with EQP hyper-reduction and subsampling of snapshots
 //      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -eqp -ns 2 -ntw 50 -rvdim 40 -rxdim 10 -hdim 1 -sc 1.0 -sbs 10
@@ -92,34 +96,47 @@
 // Create FOM comparison data:
 //      ./nonlinear_elasticity_global_rom -offline -dt 0.01 -tf 5.0 -s 14 -vs 100 -sc 1.0 -xbo -def-ic -id 2
 // Output message:
-//      Elapsed time for time integration loop 11.0755
+//      Elapsed time for time integration loop 9.61062
+//      Elapsed time for entire simulation 10.3806
 //
 // Online phase with full sampling:
 //      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype gnat -rxdim 57 -hdim 183 -nsr 1170 -sc 1.0 -xbo -def-ic
 // Output message:
-//      Elapsed time for time integration loop 12.814
+//      Elapsed time for time integration loop 8.43858
 //      Relative error of ROM position (x) at t_final: 5 is 7.08272e-05
 //      Relative error of ROM velocity (v) at t_final: 5 is 0.00387647
+//      Elapsed time for entire simulation 24.7245
 //
 // Online phase with strong hyper reduction, using GNAT (over-sampled DEIM):
 //      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype gnat -rxdim 2 -hdim 4 -nsr 10 -sc 1.0 -xbo -def-ic
 // Output message:
-//      Elapsed time for time integration loop 0.651751
+//      Elapsed time for time integration loop 0.507339
 //      Relative error of ROM position (x) at t_final: 5 is 0.0130818
 //      Relative error of ROM velocity (v) at t_final: 5 is 0.979978
+//      Elapsed time for entire simulation 0.583618
 //
 // Online phase with strong hyper reduction, using QDEIM:
 //      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -hyp -hrtype qdeim -rxdim 2 -hdim 4 -nsr 10 -sc 1.0 -xbo -def-ic
 // Output message:
-//      Elapsed time for time integration loop 0.655331
-//      Relative error of ROM position (x) at t_final: 5 is 0.0108709
-//      Relative error of ROM velocity (v) at t_final: 5 is 1.30704
+//      Elapsed time for time integration loop 0.504657
+//      Relative error of ROM position (x) at t_final: 5 is 0.00883079
+//      Relative error of ROM velocity (v) at t_final: 5 is 1.26721
+//      Elapsed time for entire simulation 0.581446
 //
 // Online phase with EQP hyper reduction:
 //      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -eqp -ns 2 -rxdim 2 -hdim 1 -ntw 25 -sc 1.00 -xbo -def-ic
-// Elapsed time for time integration loop 0.202143
+// Elapsed time for time integration loop 0.184455
 //      Relative error of ROM position (x) at t_final: 5 is 0.0189361
 //      Relative error of ROM velocity (v) at t_final: 5 is 0.830724
+//      Elapsed time for entire simulation 5.05504
+//
+// Online phase with EQP hyper reduction and subsampling of snapshots:
+//      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -eqp -ns 2 -rxdim 2 -hdim 1 -ntw 25 -sc 1.00 -xbo -def-ic -sbs 10
+// Elapsed time for time integration loop 0.0882588
+//      Relative error of ROM position (x) at t_final: 5 is 0.0243952
+//      Relative error of ROM velocity (v) at t_final: 5 is 0.986434
+//      Elapsed time for entire simulation 0.868528
+//
 // This example runs in parallel with MPI, by using the same number of MPI ranks
 // in all phases (offline, merge, online).
 
