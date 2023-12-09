@@ -28,8 +28,3 @@ docs/html
 
 # Do not track results
 regression_tests/results
-.gitignore
-
-
-# astyle
-astyle
