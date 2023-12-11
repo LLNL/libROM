@@ -8,7 +8,7 @@
  *
  *****************************************************************************/
 
-//               libROM MFEM Example: parametric local ROM for Maxwell equation (adapted from ex3p.cpp)
+//               libROM MFEM Example: differential evolution for Maxwell equation (adapted from ex3p.cpp)
 //
 // Description:  This example code uses MFEM and librom to define a projection-based
 //               reduced-order model for a simple electromagnetic diffusion
@@ -19,23 +19,32 @@
 //               of the vector field E is assumed to be a sin wave, with frequency
 //               controlled by the parameter kappa.
 //
-//               The example highlights the greedy algorithm. The build_database phase
-//               builds a global ROM database using different frequncies and a latin-hypercube
-//               sampling procedure. The use_database phase uses the global ROM database,
-//               builds the ROM operator, solves thereduced order system, and
-//               lifts the solution to the full order space.
+//               The objective of this example is to first build a local
+//               projection-based ROM using a greedy algorithm to sample the
+//               (1D) parameter space for kappa. After building the database, we use
+//               our ROM with the differential evolution (DE) algorithm. Given a
+//               vector field E, applying the DE algorithm with our ROM allows us to
+//               search the parameter space to find a value of kappa most closely
+//               matches the given vector field E.
 //
-// build_database phase: maxwell_local_rom_greedy -build_database -greedy-param-min 1.0 -greedy-param-max 1.2 -greedy-param-size 5 -greedysubsize 2 -greedyconvsize 3 -greedyrelerrortol 0.01
-// use_database phase:   maxwell_local_rom_greedy -fom -f 1.15 (create a new solution to compare with)
-// use_database phase:   maxwell_local_rom_greedy -use_database -online -f 1.15 (use the database to compute at f 1.15 while comparing to the true offline solution at f 1.15)
+//               The build_database phase builds a global ROM database using different
+//               frequncies and a latin-hypercube sampling procedure.
+//
+//               The objective of the differential evolution (DE) algorithm
+//
+//               After building the database, we then apply the differential evolution algorithm. We first choose a value of kappa, and then we use the diffrential evolution algorithm with the database to approximate the value of the kappa in the corresponding vector field E.
+//
+// build_database phase: mpirun -np 8 de_parametric_maxwell_greedy -build_database -greedy-param-min 1.0 -greedy-param-max 1.2 -greedy-param-size 5 -greedysubsize 2 -greedyconvsize 3 -greedyrelerrortol 0.00001
+// FOM phase:            mpirun -np 8 de_parametric_maxwell_greedy -fom -f 1.15 (create a new solution to compare with)
+// DE phase:             mpirun -np 8 de_parametric_maxwell_greedy -f 1.15 -visit -de -de_f 0.9 -de_cr 0.9 -de_ps 50 -de_min_iter 10 -de_max_iter 100 -de_ct 0.001 (Run interpolative differential evolution to see if target FOM can be matched)
 //
 // Larger example:
-// build_database phase: maxwell_local_rom_greedy -build_database -greedy-param-min 0.5 -greedy-param-max 1.5 -greedy-param-size 15 -greedysubsize 4 -greedyconvsize 6 -greedyrelerrortol 0.01
-// use_database phase:   maxwell_local_rom_greedy -fom -f X.XX (create a new solution to compare with. Set X.XX to your desired frequency.)
-// use_database phase:   maxwell_local_rom_greedy -use_database -online -f X.XX (use the database to compute at f X.XX while comparing to the true offline solution at f X.XX)
+// build_database phase: mpirun -np 8 de_parametric_maxwell_greedy -build_database -greedy-param-min 0.5 -greedy-param-max 1.5 -greedy-param-size 15 -greedysubsize 4 -greedyconvsize 6 -greedyrelerrortol 0.00001
+// FOM phase:            mpirun -np 8 de_parametric_maxwell_greedy -fom -f 1.X.XX (create a new solution to compare with, set X.XX to desired frequency)
+// DE phase:             mpirun -np 8 de_parametric_maxwell_greedy  -f X.XX -visit -de -de_f 0.9 -de_cr 0.9 -de_ps 50 -de_min_iter 10 -de_max_iter 100 -de_ct 0.001 (Run interpolative differential evolution to see if target FOM can be matched)
 //
 // This example runs in parallel with MPI, by using the same number of MPI ranks
-// in all phases (build_database, fom, online).
+// in all phases (build_database, fom, de).
 
 #include "mfem.hpp"
 #include <fstream>
@@ -79,27 +88,37 @@ bool visualization = false;
 bool visit = false;
 bool fom = false;
 bool offline = false;
-bool merge = false;
+//bool merge = false;
 bool online = false;
 int precision = 8;
 double coef = 1.0;
+
+// Greedy algorithm variables
 bool build_database = false;
-bool use_database = false; // this is probably replaced by DE
+bool use_database = false;
 double greedy_param_space_min = 1.0;
 double greedy_param_space_max = 1.2;
 int greedy_param_space_size = 5;
 double greedy_relative_error_tol = 0.01;
 int greedy_subset_size = 2;
 int greedy_convergence_subset_size = 3;
-
-double closest_rbf_val = 0.9;
-int rdim = -1;
-bool calc_err_indicator = false;
-bool de = false;
-//double greedy_relative_diff_tol = 0.01;
+double local_rom_freq = 0.0;
+double curr_freq = 0.0;
+vector<string> basisIdentifiers;
+CAROM::GreedySampler* greedy_sampler = NULL;
+bool calc_rel_error;
+std::string curr_basis_identifier;
 const char *baseoutputname = "";
-//double freq = 1;
+bool calc_err_indicator = false;
 
+//double closest_rbf_val = 0.9;
+//int rdim = -1;
+//bool calc_err_indicator = false;
+//bool de = false;
+//const char *baseoutputname = "";
+
+// DE variables
+bool de = false;
 double de_min_freq= -DBL_MAX;
 double de_max_freq = DBL_MAX;
 double target_freq = freq;
@@ -113,56 +132,9 @@ double de_ct = 0.001;
 bool useAmgX = false;
 #endif
 
-double local_rom_freq = 0.0;
-double curr_freq = 0.0;
-
-int loopcount = 1;
-
-vector<string> basisIdentifiers;
-
-CAROM::GreedySampler* greedy_sampler = NULL;
-
-//bool calc_rel_error = false;
-//bool calc_rel_error = false;
-bool calc_rel_error;
-
-
-//bool calc_err_indicator = false;
-//std::string curr_basis_identifier = "";
-//std::string curr_basis_identifier = "";
-std::string curr_basis_identifier;
-
-
-
-// 11. Initiate ROM related variables
-//bool calc_rel_error = false;
-//bool calc_err_indicator = false;
-//std::string curr_basis_identifier = "";
-//
-//int max_num_snapshots = 100;
-//bool update_right_SV = false;
-//bool isIncremental = false;
-//const std::string saveBasisName = "basis" + curr_basis_identifier;
-//std::string loadBasisName = "basis";
-
 // Define the process for solving Maxwell equation. We will repeatedly call this later
 double simulation()
 {
-//    curr_basis_identifier = "" + "_" + to_string(freq);
-//    cout << "curr_basis_dentifier " << curr_basis_identifier << endl;
-//    cout << "curr_freq " << freq << endl;
-
-
-//    bool calc_rel_error = false;
-//    bool calc_err_indicator = false;
-//    std::string curr_basis_identifier = "";
-
-//    int max_num_snapshots = 100;
-//    bool update_right_SV = false;
-//    bool isIncremental = false;
-//    const std::string saveBasisName = "basis" + curr_basis_identifier;
-//    std::string loadBasisName = "basis";
-
     if (myid == 0) cout << "Running loop at frequency: " << freq << endl;
 
     kappa = freq * M_PI;
@@ -245,8 +217,6 @@ double simulation()
         loadBasisName += "_greedy";
     }
 
-//    const std::string basisName = "basis";
-//    const std::string basisFileName = basisName + std::to_string(id);
     const CAROM::Matrix* spatialbasis;
     CAROM::Options* options;
     CAROM::BasisGenerator *generator;
@@ -427,9 +397,9 @@ double simulation()
     DataCollection *dc = NULL;
     if (visit)
     {
-        if (offline) dc = new VisItDataCollection("maxwell_local", pmesh);
-        else if (fom) dc = new VisItDataCollection("maxwell_local_fom", pmesh);
-        else if (online) dc = new VisItDataCollection("maxwell_local_rom", pmesh);
+        if (offline) dc = new VisItDataCollection("de_maxwell_local", pmesh);
+        else if (fom) dc = new VisItDataCollection("de_maxwell_local_fom", pmesh);
+        else if (online) dc = new VisItDataCollection("de_maxwell_local_rom", pmesh);
         dc->SetPrecision(precision);
         dc->RegisterField("solution", &x);
         dc->Save();
@@ -488,7 +458,6 @@ double simulation()
     else if (calc_err_indicator && !de)
     {
         Vector AX(X.Size());
-//            A.Mult(X, AX);
         A.As<HypreParMatrix>()->Mult(X, AX);
         Vector residual(X.Size());
         subtract(B, AX, residual);
@@ -521,20 +490,18 @@ double simulation()
         if (myid == 0) cout << "The relative error is: " << curr_error << endl;
 
         Vector AX(X.Size());
-//            A.Mult(X, AX);
         A.As<HypreParMatrix>()->Mult(X, AX);
         subtract(B, AX, residual);
         curr_error = sqrt(InnerProduct(MPI_COMM_WORLD, residual, residual));
         if (myid == 0) cout << "The error indicator is: "
                                 << curr_error << endl;
     }
-    if (de)
+    // 29d. If using DE, just calculate error. Prints less info than other options
+    else if (de)
     {
         Vector true_solution(X.Size());
         ifstream solution_file;
         std::string solution_filename = "Sol" + curr_basis_identifier + to_string(myid);
-//        if (myid == 0) cout << "Comparing current run to solution at: "
-//                                << solution_filename << endl;
         solution_file.open(solution_filename);
         true_solution.Load(solution_file, X.Size());
         solution_file.close();
@@ -603,6 +570,7 @@ double simulation()
     return curr_error;
 }
 
+// Define class for relative difference function, used for DE algorithm
 class RelativeDifferenceCostFunction : public CAROM::IOptimizable
 {
 public:
@@ -616,8 +584,6 @@ public:
         freq = inputs[0];
 
         return simulation();
-
-//        return simulation(freq,curr_basis_identifier, build_database, calc_rel_error, calc_err_indicator,basisIdentifiers);
     }
 
     unsigned int NumberOfParameters() const override
@@ -678,9 +644,6 @@ int main(int argc, char *argv[])
     myid = Mpi::WorldRank();
     Hypre::Init();
 
-//    merge = false;
-
-
     OptionsParser args(argc, argv);
     args.AddOption(&mesh_file, "-m", "--mesh",
                    "Mesh file to use.");
@@ -711,10 +674,6 @@ int main(int argc, char *argv[])
                    "Enable or disable the offline phase.");
     args.AddOption(&online, "-online", "--online", "-no-online", "--no-online",
                    "Enable or disable the online phase.");
-//    args.AddOption(&merge, "-merge", "--merge", "-no-merge", "--no-merge",
-//                   "Enable or disable the merge phase.");
-//    args.AddOption(&id, "-id", "--id", "Parametric id");
-//    args.AddOption(&nsets, "-ns", "--nset", "Number of parametric snapshot sets");
     args.AddOption(&build_database, "-build_database", "--build_database",
                    "-no-build_database", "--no-build_database",
                    "Enable or disable the build_database phase of the greedy algorithm.");
@@ -771,16 +730,9 @@ int main(int argc, char *argv[])
         args.PrintOptions(cout);
     }
 
-//    if (fom)
-//    {
-//        MFEM_VERIFY(fom && !offline && !online
-//                    && !merge, "everything must be turned off if fom is used.");
-//    }
-
     MFEM_VERIFY(!(build_database
                   && de), "both build_database and de can not be true!");
 
-//    CAROM::GreedySampler* greedy_sampler = NULL;
     MFEM_VERIFY(!build_database
                 || !use_database,
                 "both build_database and use_database can not be used at the same time.");
@@ -803,7 +755,6 @@ int main(int argc, char *argv[])
         MFEM_VERIFY(!visit
                     && !visualization,
                     "visit and visualization must be turned off during the build_database phase.")
-        // std::ifstream infile("maxwell_local_rom_greedy_algorithm_data");
         std::ifstream infile("de_parametric_maxwell_greedy_algorithm_data");
         if (infile.good())
         {
@@ -818,13 +769,6 @@ int main(int argc, char *argv[])
                 2.0, greedy_subset_size, greedy_convergence_subset_size,
                 true, "de_parametric_maxwell_greedy_log.txt");
     }
-
-//    if (de)
-//    {
-//        target_freq = freq;
-//    }
-
-//    target_kappa = kappa;
 
     // 3b. Or use the database set up by the greedy algorithm.
     else if (use_database)
@@ -851,8 +795,6 @@ int main(int argc, char *argv[])
                 true, "de_parametric_maxwell_greedy_log.txt");
     }
 
-
-//    vector<string> basisIdentifiers;
     // The simulation is wrapped in a do-while statement so that the greedy
     // algorithm (build_database) can run multiple simulations in succession.
     if (build_database)
@@ -917,7 +859,6 @@ int main(int argc, char *argv[])
                     local_rom_freq = samplePointData->item(0);
                     curr_freq = samplePointData->item(0);
                     offline = true;
-//                    calc_err_indicator = false;
                 }
                 else
                 {
@@ -929,19 +870,9 @@ int main(int argc, char *argv[])
             }
             // 4b. Set the correct frequency as commanded by the greedy algorithm.
             curr_basis_identifier += "_" + to_string(curr_freq);
-//            cout << "curr_basis_dentifier " << curr_basis_identifier << endl;
-//            cout << "curr_freq " << curr_freq << endl;
             freq = curr_freq;
 
             simulation();
-//            simulation(freq,curr_basis_identifier, build_database, calc_rel_error, calc_err_indicator,basisIdentifiers);
-
-//            delete true_solution_E;
-//            true_solution_E = NULL;
-//
-//            loopcount = loopcount + 1;
-//            cout << "Loopcount " << loopcount << endl;
-
         } while(build_database);
 
     }
@@ -949,19 +880,11 @@ int main(int argc, char *argv[])
     if (fom)
     {
         simulation();
-//        simulation(freq,curr_basis_identifier, build_database, calc_rel_error, calc_err_indicator,basisIdentifiers);
-
-//        cout << "basisIdentifiers:" << basisIdentifiers;
-//        delete true_solution_E;
     }
 
     if (use_database)
     {
         simulation();
-//        simulation(freq,curr_basis_identifier, build_database, calc_rel_error, calc_err_indicator,basisIdentifiers);
-
-//        cout << "basisIdentifiers:" << basisIdentifiers;
-//        delete true_solution_E;
     }
 
 //     4?  If in differential evolution mode, run the DE algorithm using the
@@ -995,8 +918,6 @@ int main(int argc, char *argv[])
         online = true;
         de = false;
         simulation();
-
-//        delete true_solution;
     }
 
     MPI_Finalize();
