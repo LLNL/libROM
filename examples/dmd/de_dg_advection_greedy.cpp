@@ -976,7 +976,7 @@ double simulation()
         {
             std::cout << "Predicting solution using DMD at: " << ts[0] << std::endl;
         }
-
+*/
         CAROM::Vector* result_U = dmd_U->predict(ts[0]);
         Vector initial_dmd_solution_U(result_U->getData(), result_U->dim());  // Potential Problem
         u_gf->SetFromTrueDofs(initial_dmd_solution_U);
@@ -1018,7 +1018,7 @@ double simulation()
             }
         }
 
-        dmd_prediction_timer.Stop(); */
+        dmd_prediction_timer.Stop(); 
 
         if (true_solution_u == NULL)
         {
@@ -1030,8 +1030,8 @@ double simulation()
 
         }
 
-        CAROM::Vector* result_U = dmd_U->predict(t_final);
-
+        //CAROM::Vector* result_U = dmd_U->predict(t_final);
+        result_U = dmd_U->predict(t_final);
 
         // 21. Calculate the relative error between the DMD final solution and the true solution.
         Vector dmd_solution_U(result_U->getData(),
