@@ -976,9 +976,10 @@ double simulation()
         {
             std::cout << "Predicting solution using DMD at: " << ts[0] << std::endl;
         }
-*/
+        */
         CAROM::Vector* result_U = dmd_U->predict(ts[0]);
-        Vector initial_dmd_solution_U(result_U->getData(), result_U->dim());  // Potential Problem
+        Vector initial_dmd_solution_U(result_U->getData(),
+                                      result_U->dim());  // Potential Problem
         u_gf->SetFromTrueDofs(initial_dmd_solution_U);
 
         VisItDataCollection dmd_visit_dc("DMD_DG_Advection_Greedy_"
@@ -1006,7 +1007,8 @@ double simulation()
                         std::cout << "Predicting temperature using DMD at: " << ts[i] << std::endl;
                     }
 
-                    Vector dmd_solution_U(result_U->getData(), result_U->dim());  // Potential problem
+                    Vector dmd_solution_U(result_U->getData(),
+                                          result_U->dim());  // Potential problem
                     u_gf->SetFromTrueDofs(dmd_solution_U);
 
                     dmd_visit_dc.SetCycle(i);
@@ -1018,7 +1020,7 @@ double simulation()
             }
         }
 
-        dmd_prediction_timer.Stop(); 
+        dmd_prediction_timer.Stop();
 
         if (true_solution_u == NULL)
         {
