@@ -157,7 +157,8 @@ int main(int argc, char *argv[])
 
     if (fom)
     {
-        MFEM_VERIFY(fom && !offline && !online, "everything must be turned off if fom is used.");
+        MFEM_VERIFY(fom && !offline
+                    && !online, "everything must be turned off if fom is used.");
     }
 
     CAROM::GreedySampler* greedy_sampler = NULL;
