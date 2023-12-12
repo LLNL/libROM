@@ -76,12 +76,8 @@ int main(int argc, char *argv[])
     bool visit = false;
     bool fom = false;
     bool offline = false;
-    bool merge = false;
     bool online = false;
     int precision = 8;
-//    int id = 0;
-//    int nsets = 0;
-    double coef = 1.0;
     bool build_database = false;
     bool use_database = false;
     double greedy_param_space_min = 1.0;
@@ -125,10 +121,6 @@ int main(int argc, char *argv[])
                    "Enable or disable the offline phase.");
     args.AddOption(&online, "-online", "--online", "-no-online", "--no-online",
                    "Enable or disable the online phase.");
-    args.AddOption(&merge, "-merge", "--merge", "-no-merge", "--no-merge",
-                   "Enable or disable the merge phase.");
-//    args.AddOption(&id, "-id", "--id", "Parametric id");
-//    args.AddOption(&nsets, "-ns", "--nset", "Number of parametric snapshot sets");
     args.AddOption(&build_database, "-build_database", "--build_database",
                    "-no-build_database", "--no-build_database",
                    "Enable or disable the build_database phase of the greedy algorithm.");
@@ -165,8 +157,7 @@ int main(int argc, char *argv[])
 
     if (fom)
     {
-        MFEM_VERIFY(fom && !offline && !online
-                    && !merge, "everything must be turned off if fom is used.");
+        MFEM_VERIFY(fom && !offline && !online, "everything must be turned off if fom is used.");
     }
 
     CAROM::GreedySampler* greedy_sampler = NULL;
@@ -372,8 +363,6 @@ int main(int argc, char *argv[])
             loadBasisName += "_greedy";
         }
 
-//    const std::string basisName = "basis";
-//    const std::string basisFileName = basisName + std::to_string(id);
         const CAROM::Matrix* spatialbasis;
         CAROM::Options* options;
         CAROM::BasisGenerator *generator;
@@ -599,7 +588,6 @@ int main(int argc, char *argv[])
         else if (calc_err_indicator)
         {
             Vector AX(X.Size());
-//            A.Mult(X, AX);
             A.As<HypreParMatrix>()->Mult(X, AX);
             Vector residual(X.Size());
             subtract(B, AX, residual);
@@ -632,7 +620,6 @@ int main(int argc, char *argv[])
             if (myid == 0) cout << "The relative error is: " << curr_error << endl;
 
             Vector AX(X.Size());
-//            A.Mult(X, AX);
             A.As<HypreParMatrix>()->Mult(X, AX);
             subtract(B, AX, residual);
             curr_error = sqrt(InnerProduct(MPI_COMM_WORLD, residual, residual));
