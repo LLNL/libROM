@@ -30,7 +30,7 @@
 //               The build_database phase builds a ROM database using different
 //               frequncies and a latin-hypercube sampling procedure. The fom phase
 //               solves the full-order model for visualization and comparison.
-//               The de phase applies the differential evolution algorithm.xsxs
+//               The de phase applies the differential evolution algorithm.
 //
 // Example commands:
 // build_database phase: mpirun -np 8 de_parametric_maxwell_greedy -build_database -greedy-param-min 1.0 -greedy-param-max 1.2 -greedy-param-size 5 -greedysubsize 2 -greedyconvsize 3 -greedyrelerrortol 0.01
