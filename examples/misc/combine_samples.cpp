@@ -53,15 +53,19 @@ int main(int argc, char* argv[])
     std::vector<std::string> sample_names;
     int snaps = 0;
     int dim   = 0;
+    int col_min = 1;
+    int col_max = 1e9;
     bool subtract_mean = false;
     bool subtract_offset = false;
+    std::string generator_filename = "total";
     std::string kind = "snapshot";
     std::string offset_file;
 
     bool offset_arg = false;
 
     if (argc >= 2) {
-        for (int i = 1; i < argc; i++) {
+        int i = 1;
+        while (i < argc) {
             if (!strcmp(argv[i], "basis") || !strcmp(argv[i], "-b")) {
                 if (rank==0) std::cout << "Argument " << i << " identified as basis or -b" <<
                                            std::endl;
@@ -80,9 +84,25 @@ int main(int argc, char* argv[])
                 if (rank==0) std::cout << "Will subtract mean" << std::endl;
                 subtract_mean = true;
             }
+            else if (!strcmp(argv[i], "file") || !strcmp(argv[i], "-f")) {
+                i += 1;
+                generator_filename = argv[i];
+                if (rank==0) std::cout << "Output prefix = " << generator_filename << std::endl;
+            }
+            else if (!strcmp(argv[i], "col_min") || !strcmp(argv[i], "-cmin")) {
+                i += 1;
+                col_min = std::stoi(argv[i]);
+                if (rank==0) std::cout << "First column to read = " << col_min << std::endl;
+            }
+            else if (!strcmp(argv[i], "col_max") || !strcmp(argv[i], "-cmax")) {
+                i += 1;
+                col_max = std::stoi(argv[i]);
+                if (rank==0) std::cout << "Last column to read = " << col_max << std::endl;
+            }
             else {
                 sample_names.push_back(argv[i]);
             }
+            i += 1;
         }
     }
     else {
@@ -112,7 +132,6 @@ int main(int argc, char* argv[])
     CAROM_VERIFY((snaps > 0) && (dim > 0));
 
     /*-- Load data from input files --*/
-    std::string generator_filename = "total";
     std::unique_ptr<CAROM::BasisGenerator> static_basis_generator;
     static_basis_generator.reset(new CAROM::BasisGenerator(
                                      CAROM::Options(dim, snaps).setMaxBasisDimension(snaps), false,
@@ -120,7 +139,7 @@ int main(int argc, char* argv[])
 
     if (rank==0) std::cout << "Loading data from " << kind << std::endl;
     for(const auto& sample_name: sample_names) {
-        static_basis_generator->loadSamples(sample_name, kind);
+        static_basis_generator->loadSampleRange(sample_name, kind, col_min, col_max);
     }
 
     if (rank==0) std::cout << "Saving data uploaded as a snapshot matrix" <<
@@ -134,7 +153,7 @@ int main(int argc, char* argv[])
         int rom_dim = static_basis_generator->getSpatialBasis()->numColumns();
         if (rank==0) std::cout << "U ROM Dimension: " << rom_dim << std::endl;
         static_basis_generator->endSamples();
-        static_basis_generator->finalSummary(0.99999999, rdim);
+        if (rank==0) static_basis_generator->finalSummary(0.99999999, rdim);
     }
     else {
         /*-- load data from hdf5 file to find the mean and subtract it --*/
@@ -190,7 +209,7 @@ int main(int argc, char* argv[])
         int rom_dim = static_basis_generator2->getSpatialBasis()->numColumns();
         if (rank==0) std::cout << "U ROM Dimension: " << rom_dim << std::endl;
         static_basis_generator2->endSamples();
-        static_basis_generator2->finalSummary(0.99999999, rdim);
+        if (rank==0) static_basis_generator2->finalSummary(0.99999999, rdim);
 
         static_basis_generator2 = nullptr;
     }

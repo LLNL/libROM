@@ -163,9 +163,10 @@ BasisGenerator::takeSample(
 }
 
 void
-BasisGenerator::loadSamples(const std::string& base_file_name,
+BasisGenerator::loadSampleRange(const std::string& base_file_name,
                             const std::string& kind,
-                            int cut_off,
+                            int col_min,
+                            int col_max,
                             Database::formats db_format)
 {
     CAROM_ASSERT(!base_file_name.empty());
@@ -188,10 +189,12 @@ BasisGenerator::loadSamples(const std::string& base_file_name,
 
     int num_rows = mat->numRows();
     int num_cols = mat->numColumns();
-    int max_cols = num_cols;
-    if (cut_off < num_cols) max_cols = cut_off;
+    if (col_min < 1) col_min = 1;
+    if (col_max > num_cols) col_max = num_cols;
 
-    for (int j = 0; j < max_cols; j++) {
+    CAROM_VERIFY(col_max >= col_min);
+
+    for (int j = col_min-1; j < col_max; j++) {
         double* u_in = new double[num_rows];
         for (int i = 0; i < num_rows; i++) {
             if (kind == "basis") {
@@ -204,6 +207,15 @@ BasisGenerator::loadSamples(const std::string& base_file_name,
         d_svd->takeSample(u_in, time, false);
         delete[] u_in;
     }
+}
+
+void
+BasisGenerator::loadSamples(const std::string& base_file_name,
+                            const std::string& kind,
+                            int cutoff,
+                            Database::formats db_format)
+{
+    loadSampleRange(base_file_name, kind, 1, cutoff, db_format);
 }
 
 double
@@ -341,7 +353,13 @@ BasisGenerator::finalSummary(
     double partialSum = 0.0;
     int count = 0;
 
-    std::ofstream outfile(cutoffOutputPath);
+    std::ostream* output_stream;
+
+    if (!cutoffOutputPath.empty()) {
+        output_stream = new std::ofstream(cutoffOutputPath);
+    } else {
+        output_stream = &std::cout;
+    }
 
     for (int sv = first_sv; sv < sing_vals->dim(); ++sv) {
         partialSum += (*sing_vals)(sv);
@@ -349,10 +367,10 @@ BasisGenerator::finalSummary(
         {
             if (partialSum / sum > 1.0 - std::pow(10, -1 - i))
             {
-                outfile << "For energy fraction: 0.";
-                for (int j = 0; j < i+1; ++j) outfile << "9";
-                outfile << ", take first " << sv+1 << " of " << sing_vals->dim() <<
-                        " basis vectors" << std::endl;
+                *output_stream << "For energy fraction: 0.";
+                for (int j = 0; j < i+1; ++j) *output_stream << "9";
+                *output_stream << ", take first " << sv+1 << " of " 
+                               << sing_vals->dim() << " basis vectors" << std::endl;
                 count += 1;
             }
             else
@@ -368,10 +386,14 @@ BasisGenerator::finalSummary(
     }
 
     if (!reached_cutoff) cutoff = sing_vals->dim();
-    outfile << std::fixed << std::setprecision(p+1);
-    outfile << "For energy fraction: " << energyFraction << ", take first "
+    *output_stream << std::fixed << std::setprecision(p+1);
+    *output_stream << "For energy fraction: " << energyFraction << ", take first "
             << cutoff << " of " << sing_vals->dim() << " basis vectors" << std::endl;
-    outfile.close();
+
+    if (!cutoffOutputPath.empty()) {
+        static_cast<std::ofstream*>(output_stream)->close();
+        delete output_stream;
+    }
 }
 
 BasisGenerator::~BasisGenerator()
