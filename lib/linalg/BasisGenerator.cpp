@@ -164,10 +164,10 @@ BasisGenerator::takeSample(
 
 void
 BasisGenerator::loadSampleRange(const std::string& base_file_name,
-                            const std::string& kind,
-                            int col_min,
-                            int col_max,
-                            Database::formats db_format)
+                                const std::string& kind,
+                                int col_min,
+                                int col_max,
+                                Database::formats db_format)
 {
     CAROM_ASSERT(!base_file_name.empty());
     CAROM_VERIFY(kind == "basis" || kind == "snapshot");
@@ -369,7 +369,7 @@ BasisGenerator::finalSummary(
             {
                 *output_stream << "For energy fraction: 0.";
                 for (int j = 0; j < i+1; ++j) *output_stream << "9";
-                *output_stream << ", take first " << sv+1 << " of " 
+                *output_stream << ", take first " << sv+1 << " of "
                                << sing_vals->dim() << " basis vectors" << std::endl;
                 count += 1;
             }
@@ -388,7 +388,7 @@ BasisGenerator::finalSummary(
     if (!reached_cutoff) cutoff = sing_vals->dim();
     *output_stream << std::fixed << std::setprecision(p+1);
     *output_stream << "For energy fraction: " << energyFraction << ", take first "
-            << cutoff << " of " << sing_vals->dim() << " basis vectors" << std::endl;
+                   << cutoff << " of " << sing_vals->dim() << " basis vectors" << std::endl;
 
     if (!cutoffOutputPath.empty()) {
         static_cast<std::ofstream*>(output_stream)->close();
