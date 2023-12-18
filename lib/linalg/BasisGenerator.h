@@ -157,10 +157,10 @@ public:
      */
     void
     loadSampleRange(const std::string& base_file_name,
-                     const std::string& kind  = "basis",
-                     int col_min = 1,
-                     int col_max = 1e9,
-                     Database::formats db_format = Database::HDF5);
+                    const std::string& kind  = "basis",
+                    int col_min = 1,
+                    int col_max = 1e9,
+                    Database::formats db_format = Database::HDF5);
 
     /**
      * @brief Load previously saved sample (basis or state).
