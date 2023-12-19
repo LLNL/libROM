@@ -943,13 +943,19 @@ public:
     /**
      * @brief Orthonormalizes the matrix.
      *
+     * The method uses the modified Gram-Schmidt algorithm.
+     *
+     * If double_pass == true, then each column is orthogonalized twice to
+     * limit loss of orthogonality due to numerical errors.
+     * By default, double_pass == false.
+     *
      * If the norm of a matrix column is below the value of zero_tol then it
      * is considered to be zero, and we do not divide by it.
      * Therefore, that column is considered to be zero and is not normalized.
      * By default, zero_tol == 1.0e-15.
      */
     void
-    orthogonalize(double zero_tol = 1.0e-15);
+    orthogonalize(bool double_pass = false, double zero_tol = 1.0e-15);
 
     /**
      * @brief Orthonormalizes the matrix's last column, assuming the previous
