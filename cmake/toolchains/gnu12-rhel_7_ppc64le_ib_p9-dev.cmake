@@ -24,4 +24,8 @@ set(SCALAPACKDIR /usr/tcetmp/packages/lapack/lapack-3.11.0-gcc-11.2.1/)
 
 set(CMAKE_EXE_LINKER_FLAGS_INIT "-lblas -llapack")
 
+# Set flags to tune for the POWER9 architecture
+set(CMAKE_C_FLAGS_INIT "-mcpu=powerpc64le -mtune=powerpc64le")
+set(CMAKE_CXX_FLAGS_INIT "-mcpu=powerpc64le -mtune=powerpc64le")
+
 set(CMAKE_LIBRARY_ARCHITECTURE ppc64le)
