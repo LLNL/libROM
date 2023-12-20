@@ -883,11 +883,14 @@ void Finish_s2sp_augmented(const int rank, const int nprocs,
             {
                 if (s2sp_[i] == -1)
                     s2sp_[i] = s2sp[i];
-
-                MFEM_VERIFY(s2sp_[i] >= 0 && s2sp_[i] == s2sp[i], "");
+		else
+		  MFEM_VERIFY(s2sp_[i] == s2sp[i], "Consistency check");
             }
         }
     }
+
+    for (int i=0; i<s2sp_.size(); ++i)
+      MFEM_VERIFY(s2sp_[i] >= 0 && s2sp_[i] == s2sp[i], "");
 }
 #endif
 
