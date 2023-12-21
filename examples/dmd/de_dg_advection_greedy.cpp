@@ -1,4 +1,3 @@
-
 /******************************************************************************
  *
  * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
@@ -15,7 +14,8 @@
 //
 // =================================================================================
 //
-// Sample runs and results for DMD:
+// Sample runs and results for DMD (It is possible to run these in parallel,
+//   though you should use the same number of ranks for each subsequent run.):
 //
 // Command 1:  Build DMD database
 //   de_dg_advection_greedy -p 3 -rp 1 -dt 0.005 -tf 1.0 -build_database -rdim 16
@@ -44,6 +44,10 @@
 // Description:  This example code solves the time-dependent advection equation
 //               du/dt + v.grad(u) = 0, where v is a given fluid velocity, and
 //               u0(x)=u(0,x) is a given initial condition.
+//
+//               This problem is parameterized by its initial condition.  Specifically,
+//               The initial condition is given as:
+//                      u0 = sin(pi*f_factor*X(0))*sin(pi*f_factor*X(1));
 //
 //               The example demonstrates the use of Discontinuous Galerkin (DG)
 //               bilinear forms in MFEM (face integrators), the use of implicit
@@ -596,7 +600,6 @@ double simulation()
         while (fin >> curr_param)
         {
             double curr_f_factor = curr_param;
-            //    fin >> curr_param; // Pretty sure I don't need this.  Same as before.
 
             dmd_paths.push_back(to_string(curr_f_factor));
             CAROM::Vector* param_vector = new CAROM::Vector(1, false);
@@ -604,8 +607,6 @@ double simulation()
             param_vectors.push_back(param_vector);
         }
         fin.close();
-
-
 
         CAROM::Vector* desired_param = new CAROM::Vector(1, false);
         desired_param->item(0) = f_factor;
@@ -839,16 +840,12 @@ double simulation()
     // 17. Save the final solution in parallel. This output can be viewed later
     //     using GLVis: "glvis -np <np> -m dg_advection-mesh -g dg_advection-final".
     {
-        //*u_gf = *U;
-        //u_gf->SetFromTrueDofs(*U);
         Vector u_print(U->GetData(), U->Size());
         ostringstream sol_name;
         sol_name << "dg_advection_greedy" << to_string(f_factor)  << "-final." <<
                  setfill('0') << setw(6) << myid;
         ofstream osol(sol_name.str().c_str());
         osol.precision(precision);
-        //u_gf->Save(osol);
-        //u_gf->Print(osol,1);
         u_print.Print(osol,1);
     }
 
@@ -956,27 +953,6 @@ double simulation()
     }
     else if (online)
     {
-        /* std::ifstream infile("ts.txt");
-
-        std::string str;
-        while (std::getline(infile, str))
-        {
-            // Line contains string of length > 0 then save it in vector
-            if(str.size() > 0)
-            {
-                ts.push_back(std::stod(str));
-            }
-        }
-        infile.close();
-
-        dmd_prediction_timer.Start();
-
-        // 20. Predict the state at t_final using DMD.
-        if (myid == 0)
-        {
-            std::cout << "Predicting solution using DMD at: " << ts[0] << std::endl;
-        }
-        */
         CAROM::Vector* result_U = dmd_U->predict(ts[0]);
         Vector initial_dmd_solution_U(result_U->getData(),
                                       result_U->dim());  // Potential Problem
@@ -1163,7 +1139,7 @@ int main(int argc, char *argv[])
 
     cout.precision(precision);
     // 2. Parse command-line options.
-// MFEM parameters.
+    // MFEM parameters.
     OptionsParser args(argc, argv);
     args.AddOption(&mesh_file, "-m", "--mesh",
                    "Mesh file to use.");
@@ -1213,7 +1189,7 @@ int main(int argc, char *argv[])
                    "Use binary (Sidre) or ascii format for VisIt data files.");
     args.AddOption(&vis_steps, "-vs", "--visualization-steps",
                    "Visualize every n-th timestep.");
-// libROM DMD parameters.
+    // libROM DMD parameters.
     args.AddOption(&ef, "-ef", "--energy_fraction",
                    "Energy fraction for DMD.");
     args.AddOption(&rdim, "-rdim", "--rdim",
@@ -1221,10 +1197,10 @@ int main(int argc, char *argv[])
     args.AddOption(&run_dmd, "-run_dmd", "--run_dmd",
                    "-no-run_dmd", "--no-run_dmd",
                    "Enable or disable the run_dmd phase.");
-// libROM parameterization parameters.
+    // libROM parameterization parameters.
     args.AddOption(&f_factor, "-ff", "--f-factor",
                    "Frequency scalar factor.");
-// libROM greedy parameters.
+    // libROM greedy parameters.
     args.AddOption(&build_database, "-build_database", "--build_database",
                    "-no-build_database", "--no-build_database",
                    "Enable or disable the build_database phase.");
@@ -1245,7 +1221,7 @@ int main(int argc, char *argv[])
                    "The greedy algorithm subset size.");
     args.AddOption(&greedy_convergence_subset_size, "-greedyconvsize",
                    "--greedyconvsize", "The greedy algorithm convergence subset size.");
-// Differential Evolution Parameters
+    // Differential Evolution Parameters
     args.AddOption(&de, "-de", "--de",
                    "-no-de", "--no-de",
                    "Enable or disable the differential evolution phase.");
