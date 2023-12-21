@@ -247,7 +247,6 @@ int main(int argc, char *argv[])
     if (merge)
     {
         mergeTimer.Start();
-        std::unique_ptr<CAROM::BasisGenerator> basis_generator;
         options = new CAROM::Options(fespace.GetTrueVSize(), max_num_snapshots, 1,
                                      update_right_SV);
         generator = new CAROM::BasisGenerator(*options, isIncremental, basisName);
