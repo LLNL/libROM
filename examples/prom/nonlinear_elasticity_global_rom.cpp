@@ -77,10 +77,10 @@
 // Online phase with EQP hyper-reduction and subsampling of snapshots
 //      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -eqp -ns 2 -ntw 50 -rvdim 40 -rxdim 10 -hdim 1 -sc 1.0 -sbs 10
 // Output message:
-//      Elapsed time for time integration loop 0.614632
+//      Elapsed time for time integration loop 0.552546
 //      Relative error of ROM position (x) at t_final: 5 is 0.00247479
 //      Relative error of ROM velocity (v) at t_final: 5 is 1.33349
-//      Elapsed time for entire simulation 11.2825
+//      Elapsed time for entire simulation 11.469
 //
 // =================================================================================
 //
@@ -125,17 +125,17 @@
 //
 // Online phase with EQP hyper reduction:
 //      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -eqp -ns 2 -rxdim 2 -hdim 1 -ntw 25 -sc 1.00 -xbo -def-ic
-// Elapsed time for time integration loop 0.184455
+// Elapsed time for time integration loop 0.144368
 //      Relative error of ROM position (x) at t_final: 5 is 0.0189361
 //      Relative error of ROM velocity (v) at t_final: 5 is 0.830724
-//      Elapsed time for entire simulation 5.05504
+//      Elapsed time for entire simulation 4.97996
 //
 // Online phase with EQP hyper reduction and subsampling of snapshots:
 //      ./nonlinear_elasticity_global_rom -online -dt 0.01 -tf 5.0 -s 14 -vs 100 -eqp -ns 2 -rxdim 2 -hdim 1 -ntw 25 -sc 1.00 -xbo -def-ic -sbs 10
-// Elapsed time for time integration loop 0.0882588
+// Elapsed time for time integration loop 0.0141128
 //      Relative error of ROM position (x) at t_final: 5 is 0.0243952
 //      Relative error of ROM velocity (v) at t_final: 5 is 0.986434
-//      Elapsed time for entire simulation 0.868528
+//      Elapsed time for entire simulation 0.782108
 //
 // This example runs in parallel with MPI, by using the same number of MPI ranks
 // in all phases (offline, merge, online).
@@ -192,12 +192,12 @@ private:
     bool x_base_only;
 
     CAROM::Vector *pfom_librom, *pfom_v_librom;
-    Vector* pfom;
-    Vector* pfom_x;
-    Vector* pfom_v;
-    mutable Vector* zfom_x;
-    mutable Vector* zfom_v;
-    CAROM::Vector* zfom_x_librom;
+    Vector *pfom;
+    Vector *pfom_x;
+    Vector *pfom_v;
+    mutable Vector *zfom_x;
+    mutable Vector *zfom_v;
+    CAROM::Vector *zfom_x_librom;
 
     CAROM::SampleMeshManager *smm;
 
@@ -213,6 +213,10 @@ private:
     Vector eqp_DS_coef;
     const bool fastIntegration = true;
     ElemMatrices *em;
+
+    CAROM::Matrix eqp_lifting;
+    std::vector<int> eqp_liftDOFs;
+    mutable CAROM::Vector eqp_lifted;
 
     int rank;
 
@@ -303,8 +307,8 @@ CAROM::Matrix *GetFirstColumns(const int N, const CAROM::Matrix *A)
 }
 
 // TODO: move this to the library?
-void BasisGeneratorFinalSummary(CAROM::BasisGenerator* bg,
-                                const double energyFraction, int& cutoff,
+void BasisGeneratorFinalSummary(CAROM::BasisGenerator *bg,
+                                const double energyFraction, int &cutoff,
                                 const std::string cutoffOutputPath)
 {
     const int rom_dim = bg->getSpatialBasis()->numColumns();
@@ -360,8 +364,7 @@ void BasisGeneratorFinalSummary(CAROM::BasisGenerator* bg,
 
     if (!reached_cutoff)
         cutoff = sing_vals->dim();
-    outfile << "Take first " << cutoff << " of " << sing_vals->dim() <<
-            " basis vectors" << endl;
+    outfile << "Take first " << cutoff << " of " << sing_vals->dim() << " basis vectors" << endl;
     outfile.close();
 }
 
@@ -378,8 +381,7 @@ void MergeBasis(const int dimFOM, const int nparam, const int max_num_snapshots,
 
     for (int paramID = 0; paramID < nparam; ++paramID)
     {
-        std::string snapshot_filename = "basis" + std::to_string(
-                                            paramID) + "_" + name + "_snapshot";
+        std::string snapshot_filename = "basis" + std::to_string(paramID) + "_" + name + "_snapshot";
         generator.loadSamples(snapshot_filename, "snapshot");
     }
 
@@ -403,8 +405,7 @@ const CAROM::Matrix *GetSnapshotMatrix(const int dimFOM, const int nparam,
 
     for (int paramID = 0; paramID < nparam; ++paramID)
     {
-        std::string snapshot_filename = "basis" + std::to_string(
-                                            paramID) + "_" + name + "_snapshot";
+        std::string snapshot_filename = "basis" + std::to_string(paramID) + "_" + name + "_snapshot";
         generator.loadSamples(snapshot_filename, "snapshot");
     }
 
@@ -586,8 +587,7 @@ int main(int argc, char *argv[])
         args.PrintOptions(cout);
     }
 
-    const bool check = (offline && !merge && !online) || (!offline && merge
-                       && !online) || (!offline && !merge && online);
+    const bool check = (offline && !merge && !online) || (!offline && merge && !online) || (!offline && !merge && online);
     MFEM_VERIFY(check, "only one of offline, merge, or online must be true!");
 
     StopWatch solveTimer, totalTimer;
@@ -772,9 +772,9 @@ int main(int argc, char *argv[])
     Vector *x_rec = new Vector(x_gf.GetTrueVector());
 
     CAROM::Vector *v_rec_librom = new CAROM::Vector(v_rec->GetData(), v_rec->Size(),
-            true, false);
+                                                    true, false);
     CAROM::Vector *x_rec_librom = new CAROM::Vector(x_rec->GetData(), x_rec->Size(),
-            true, false);
+                                                    true, false);
 
     // 9. Initialize the hyperelastic operator, the GLVis visualization and print
     //    the initial energies.
@@ -850,14 +850,14 @@ int main(int argc, char *argv[])
         if (x_base_only == false)
         {
             basis_generator_v = new CAROM::BasisGenerator(options, isIncremental,
-                    basisFileName + "_V");
+                                                          basisFileName + "_V");
         }
 
         basis_generator_x = new CAROM::BasisGenerator(options, isIncremental,
-                basisFileName + "_X");
+                                                      basisFileName + "_X");
 
         basis_generator_H = new CAROM::BasisGenerator(options, isIncremental,
-                basisFileName + "_H");
+                                                      basisFileName + "_H");
     }
 
     RomOperator *romop = 0;
@@ -876,7 +876,7 @@ int main(int argc, char *argv[])
 
     CAROM::Vector *window_ids = nullptr;
     CAROM::Vector *load_eqpsol = new CAROM::Vector(1,
-            false); // Will be resized later
+                                                   false); // Will be resized later
 
     // 11. Initialize ROM operator
     // I guess most of this should be done on id =0
@@ -887,8 +887,7 @@ int main(int argc, char *argv[])
 
         if (x_base_only)
         {
-            readerV = new
-            CAROM::BasisReader("basisX"); // The basis for v uses the x basis instead.
+            readerV = new CAROM::BasisReader("basisX"); // The basis for v uses the x basis instead.
             rvdim = rxdim;
         }
         else
@@ -932,7 +931,7 @@ int main(int argc, char *argv[])
         {
             hdim = H_librom->numColumns();
         }
-        CAROM::Matrix* Hsinv = new CAROM::Matrix(hdim, hdim, false);
+        CAROM::Matrix *Hsinv = new CAROM::Matrix(hdim, hdim, false);
         MFEM_VERIFY(H_librom->numColumns() >= hdim, "");
 
         if (H_librom->numColumns() > hdim)
@@ -1221,8 +1220,7 @@ int main(int argc, char *argv[])
         {
             if (myid == 0)
             {
-                if (use_eqp && window_ids && current_window < n_windows
-                        && ti == window_ids->item(current_window))
+                if (use_eqp && window_ids && current_window < n_windows && ti == window_ids->item(current_window))
                 {
                     // Load eqp and reinitialize ROM operator
                     cout << "Time window start at " << ti << endl;
@@ -1249,8 +1247,7 @@ int main(int argc, char *argv[])
 
         if (offline)
         {
-            if (basis_generator_x->isNextSample(t) || x_base_only == false
-                    && basis_generator_v->isNextSample(t))
+            if (basis_generator_x->isNextSample(t) || x_base_only == false && basis_generator_v->isNextSample(t))
             {
                 dvxdt = oper.dvxdt_sp.GetData();
                 vx_diff = BlockVector(vx);
@@ -1262,7 +1259,7 @@ int main(int argc, char *argv[])
             {
                 basis_generator_v->takeSample(vx_diff.GetBlock(0), t, dt);
                 basis_generator_v->computeNextSampleTime(vx_diff.GetBlock(0),
-                        dvdt.GetData(), t);
+                                                         dvdt.GetData(), t);
                 basis_generator_H->takeSample(oper.H_sp.GetData(), t, dt);
             }
 
@@ -1270,7 +1267,7 @@ int main(int argc, char *argv[])
             {
                 basis_generator_x->takeSample(vx_diff.GetBlock(1), t, dt);
                 basis_generator_x->computeNextSampleTime(vx_diff.GetBlock(1),
-                        dxdt.GetData(), t);
+                                                         dxdt.GetData(), t);
 
                 if (x_base_only == true)
                 {
@@ -1340,8 +1337,7 @@ int main(int argc, char *argv[])
     } // timestep loop
 
     if (myid == 0)
-        cout << "Elapsed time for time integration loop " << solveTimer.RealTime() <<
-             endl;
+        cout << "Elapsed time for time integration loop " << solveTimer.RealTime() << endl;
 
     ostringstream velo_name, pos_name;
 
@@ -1440,9 +1436,9 @@ int main(int argc, char *argv[])
         double tot_diff_norm_x = sqrt(InnerProduct(MPI_COMM_WORLD, diff_x, diff_x));
 
         double tot_v_fom_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
-                                     v_fom, v_fom));
+                                                  v_fom, v_fom));
         double tot_x_fom_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
-                                     x_fom, x_fom));
+                                                  x_fom, x_fom));
 
         if (myid == 0)
         {
@@ -1512,8 +1508,8 @@ void visualize(ostream &out, ParMesh *mesh, ParGridFunction *deformed_nodes,
 }
 
 HyperelasticOperator::HyperelasticOperator(ParFiniteElementSpace &f,
-        Array<int> &ess_tdof_list_, double visc,
-        double mu, double K)
+                                           Array<int> &ess_tdof_list_, double visc,
+                                           double mu, double K)
     : TimeDependentOperator(2 * f.TrueVSize(), 0.0), fespace(f),
       ess_tdof_list(ess_tdof_list_),
       M(NULL), S(NULL), H(NULL),
@@ -1699,7 +1695,7 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
     S_hat_v0 = new CAROM::Vector(rvdim, false);
     S_hat_v0_temp = new Vector(v0_fom.Size());
     S_hat_v0_temp_librom = new CAROM::Vector(S_hat_v0_temp->GetData(),
-            S_hat_v0_temp->Size(), true, false);
+                                             S_hat_v0_temp->Size(), true, false);
     M_hat = new CAROM::Matrix(rvdim, rvdim, false);
     M_hat_inv = new CAROM::Matrix(rvdim, rvdim, false);
 
@@ -1814,10 +1810,48 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
         const FiniteElement &fe1 = *(fom->fespace).GetFE(0);
         const int dof = fe1.GetDof();
         const int dim = fe1.GetDim();
-        em = new ElemMatrices(dof,dim);
+        em = new ElemMatrices(dof, dim);
 
         GetEQPCoefficients_HyperelasticNLFIntegrator(&(fom->fespace), eqp_rw, eqp_qp,
-                ir_eqp, model, V_v, rank, eqp_coef, eqp_DS_coef, em);
+                                                     ir_eqp, model, V_v, rank, eqp_coef, eqp_DS_coef, em);
+
+        // Set the matrix of the linear map from the ROM X space to all DOFs on
+        // sampled elements.
+        Array<int> vdofs;
+        int numSampledDofs = 0;
+        for (auto e : elements)
+        {
+            fom->fespace.GetElementVDofs(e, vdofs);
+            numSampledDofs += vdofs.Size();
+        }
+
+        eqp_lifting.setSize(numSampledDofs, rxdim);
+        eqp_liftDOFs.resize(numSampledDofs);
+        eqp_lifted.setSize(numSampledDofs);
+
+        int cnt = 0;
+        for (auto e : elements)
+        {
+            fom->fespace.GetElementVDofs(e, vdofs);
+            for (int i = 0; i < vdofs.Size(); ++i, ++cnt)
+                eqp_liftDOFs[cnt] = vdofs[i]; // eqp_liftDOFs maps an index of eqp_lifted to the FOM dof index
+        }
+
+        MFEM_VERIFY(cnt == numSampledDofs, "");
+
+        CAROM::Vector ej(rxdim, false);
+
+        for (int j = 0; j < rxdim; ++j)
+        {
+            ej = 0.0;
+            ej(j) = 1.0;
+            V_x.mult(ej, *zfom_x_librom);
+
+            for (int i = 0; i < numSampledDofs; ++i)
+            {
+                eqp_lifting(i, j) = (*zfom_x)[eqp_liftDOFs[i]];
+            }
+        }
     }
 }
 
@@ -1843,22 +1877,23 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
     CAROM::Vector dx_dt_librom(dx_dt.GetData(), rxdim, false, false);
 
     if (eqp)
-    {   // Lift v-vector and save
+    { // Lift v-vector and save
         V_xTV_v->mult(v_librom, *pfom_v_librom);
         pfom_v_librom->plus(*V_xTv_0, dx_dt_librom);
         Vector resEQP;
         if (fastIntegration)
         {
             HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(&(fom->fespace), eqp_rw,
-                    eqp_qp, ir_eqp, model,
-                    x0, V_x, V_v, x_librom, Vx_librom_temp, Vx_temp,
-                    eqp_coef, eqp_DS_coef, rank, resEQP, em);
+                                                             eqp_qp, ir_eqp, model,
+                                                             x0, V_x, V_v, x_librom, Vx_librom_temp, Vx_temp,
+                                                             eqp_coef, eqp_DS_coef, rank, resEQP, em, eqp_lifting, eqp_liftDOFs,
+                                                             eqp_lifted);
         }
         else
             HyperelasticNLFIntegrator_ComputeReducedEQP(&(fom->fespace), eqp_rw,
-                    eqp_qp, ir_eqp, model, x0,
-                    V_x, V_v, x_librom, Vx_librom_temp, Vx_temp,
-                    rank, resEQP, em);
+                                                        eqp_qp, ir_eqp, model, x0,
+                                                        V_x, V_v, x_librom, Vx_librom_temp, Vx_temp,
+                                                        rank, resEQP, em);
         Vector recv(resEQP);
         MPI_Allreduce(resEQP.GetData(), recv.GetData(), resEQP.Size(), MPI_DOUBLE,
                       MPI_SUM, MPI_COMM_WORLD);
@@ -1990,19 +2025,56 @@ void RomOperator::SetEQP(CAROM::Vector *eqpSol)
          << fom->fespace.GetNE() << endl;
 
     GetEQPCoefficients_HyperelasticNLFIntegrator(&(fom->fespace), eqp_rw, eqp_qp,
-            ir_eqp, model, V_v, rank, eqp_coef, eqp_DS_coef, em);
-}
+                                                 ir_eqp, model, V_v, rank, eqp_coef, eqp_DS_coef, em);
 
+    // Set the matrix of the linear map from the ROM X space to all DOFs on
+    // sampled elements.
+    Array<int> vdofs;
+    int numSampledDofs = 0;
+    for (auto e : elements)
+    {
+        fom->fespace.GetElementVDofs(e, vdofs);
+        numSampledDofs += vdofs.Size();
+    }
+
+    eqp_lifting.setSize(numSampledDofs, rxdim);
+    eqp_liftDOFs.resize(numSampledDofs);
+    eqp_lifted.setSize(numSampledDofs);
+
+    int cnt = 0;
+    for (auto e : elements)
+    {
+        fom->fespace.GetElementVDofs(e, vdofs);
+        for (int i = 0; i < vdofs.Size(); ++i, ++cnt)
+            eqp_liftDOFs[cnt] = vdofs[i]; // eqp_liftDOFs maps an index of eqp_lifted to the FOM dof index
+    }
+
+    MFEM_VERIFY(cnt == numSampledDofs, "");
+
+    CAROM::Vector ej(rxdim, false);
+
+    for (int j = 0; j < rxdim; ++j)
+    {
+        ej = 0.0;
+        ej(j) = 1.0;
+        V_x.mult(ej, *zfom_x_librom);
+
+        for (int i = 0; i < numSampledDofs; ++i)
+        {
+            eqp_lifting(i, j) = (*zfom_x)[eqp_liftDOFs[i]];
+        }
+    }
+}
 
 // Functions for EQP functionality
 
 // Compute coefficients of the reduced integrator with respect to inputs Q and x
 // in HyperelasticNLFIntegrator_ComputeReducedEQP.
 void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
-        std::vector<double> const &rw, std::vector<int> const &qp,
-        const IntegrationRule *ir, NeoHookeanModel *model,
-        CAROM::Matrix const &V_v, const int rank, Vector &coef, Vector &DS_coef,
-        ElemMatrices *em)
+                                                  std::vector<double> const &rw, std::vector<int> const &qp,
+                                                  const IntegrationRule *ir, NeoHookeanModel *model,
+                                                  CAROM::Matrix const &V_v, const int rank, Vector &coef, Vector &DS_coef,
+                                                  ElemMatrices *em)
 {
     const int rvdim = V_v.numColumns();
     const int fomdim = V_v.numRows();
@@ -2102,18 +2174,18 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
             for (int k = 0; k < elvect_size; k++)
             {
                 coef[k + (i * elvect_size) + (j * rw.size() * elvect_size)] = vj_e[k] * rw[i] *
-                        t;
+                                                                              t;
             }
         }
     }
 }
 
 void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
-        std::vector<double> const &rw, std::vector<int> const &qp,
-        const IntegrationRule *ir, NeoHookeanModel *model, const Vector *x0,
-        CAROM::Matrix const &V_x, CAROM::Matrix const &V_v, CAROM::Vector const &x,
-        CAROM::Vector *Vx_librom_temp, Vector *Vx_temp,
-        const int rank, Vector &res, ElemMatrices *em)
+                                                 std::vector<double> const &rw, std::vector<int> const &qp,
+                                                 const IntegrationRule *ir, NeoHookeanModel *model, const Vector *x0,
+                                                 CAROM::Matrix const &V_x, CAROM::Matrix const &V_v, CAROM::Vector const &x,
+                                                 CAROM::Vector *Vx_librom_temp, Vector *Vx_temp,
+                                                 const int rank, Vector &res, ElemMatrices *em)
 
 {
     const int rxdim = V_x.numColumns();
@@ -2239,13 +2311,14 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
 }
 
 void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace
-        *fesR,
-        std::vector<double> const &rw, std::vector<int> const &qp,
-        const IntegrationRule *ir, NeoHookeanModel *model,
-        const Vector *x0, CAROM::Matrix const &V_x, CAROM::Matrix const &V_v,
-        CAROM::Vector const &x, CAROM::Vector *Vx_librom_temp, Vector *Vx_temp,
-        Vector const &coef, Vector const &DS_coef, const int rank, Vector &res,
-        ElemMatrices *em)
+                                                          *fesR,
+                                                      std::vector<double> const &rw, std::vector<int> const &qp,
+                                                      const IntegrationRule *ir, NeoHookeanModel *model,
+                                                      const Vector *x0, CAROM::Matrix const &V_x, CAROM::Matrix const &V_v,
+                                                      CAROM::Vector const &x, CAROM::Vector *Vx_librom_temp, Vector *Vx_temp,
+                                                      Vector const &coef, Vector const &DS_coef, const int rank, Vector &res,
+                                                      ElemMatrices *em, const CAROM::Matrix eqp_lifting, const std::vector<int> eqp_liftDOFs,
+                                                      CAROM::Vector eqp_lifted)
 {
     const int rxdim = V_x.numColumns();
     const int rvdim = V_v.numColumns();
@@ -2271,23 +2344,27 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace
     int dim = 0;
 
     // Get prolongation matrix
-    const Operator *P = fesR->GetProlongationMatrix();
+    //const Operator *P = fesR->GetProlongationMatrix();
 
     // Vectors to be prolongated
-    Vector Vx(fomdim);
+    //Vector Vx(fomdim);
 
     // Prolongated vectors
-    Vector p_Vx(P->Height());
+    //Vector p_Vx(P->Height());
 
     // Element vectors
     Vector Vx_e;
 
     // Lift x, add x0 and prolongate result
-    // NB: We are lifting x to the FOM space.
-    // This could be further optimized by using a reduced mesh consisting of only the elements containing EQP points.
-    V_x.mult(x, Vx_librom_temp);
-    add(*Vx_temp, *x0, Vx);
-    P->Mult(Vx, p_Vx);
+    //V_x.mult(x, Vx_librom_temp);
+    eqp_lifting.mult(x, eqp_lifted);
+
+    //add(*Vx_temp, *x0, Vx);
+    for (int i = 0; i < eqp_liftDOFs.size(); ++i)
+        eqp_lifted(i) += x0->Elem(eqp_liftDOFs[i]);
+
+    // P is not necessary because one processor only
+    //P->Mult(Vx, p_Vx);
 
     // Initialize nonlinear operator storage
     // Assuming all elements have the same dim and n_dof
@@ -2298,9 +2375,10 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace
 
     eprev = -1;
     double temp = 0.0;
+    int eqp_ctr = 0;
 
     // For every quadrature weight
-    for (int i = 0; i < qp.size(); ++i) // NOTE: i < 9
+    for (int i = 0; i < qp.size(); ++i)
     {
         const int e = qp[i] / nqe; // Element index
         // Local (element) index of the quadrature point
@@ -2315,6 +2393,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace
 
             dof = fe->GetDof(); // Get number of dofs in element
             dim = fe->GetDim();
+            Vx_e.SetSize(dof * dim);
 
             if (doftrans)
             {
@@ -2322,7 +2401,22 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace
             }
 
             // Get element vectors
-            p_Vx.GetSubVector(vdofs, Vx_e);
+            //p_Vx.GetSubVector(vdofs, Vx_e);
+            //cout << "vdofs length = " << vdofs.Size() << endl;
+            for (int i = 0; i < dof * dim; ++i)
+            {
+                /* if (eqp_ctr ==1)
+                {
+                cout << "V_xe_i: " << Vx_e.Elem(i) << " eqp_lifted(eqp_ctr * dof + i): " << eqp_lifted(eqp_ctr * dof* dim + i) << endl;
+
+                } */
+                Vx_e.Elem(i) = eqp_lifted(eqp_ctr * dof * dim + i);
+                
+            }
+/* if (eqp_ctr ==1)
+           { MFEM_ABORT("wrong");} */
+            eqp_ctr++;
+
             eprev = e;
         }
 
@@ -2457,12 +2551,12 @@ void SolveNNLS(const int rank, const double nnls_tol, const int maxNNLSnnz,
 
     res -= rhs_Gw;
     const double relNorm = res.norm() / std::max(normGsol, normRHS);
-    cout << rank << ": relative residual norm for NNLS solution of Gs = Gw: " <<
-         relNorm << endl;
+    cout << rank << ": relative residual norm for NNLS solution of Gs = Gw: " << relNorm << endl;
 }
 
 int getSteps(const int nsnap, const int snap_step)
-{   if (nsnap % snap_step != 0.0)
+{
+    if (nsnap % snap_step != 0.0)
     {
         return int(nsnap / snap_step) + 1;
     }
@@ -2488,7 +2582,7 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
     const int nsnap = BX_snapshots->numColumns();
 
     MFEM_VERIFY(nsnap == BX_snapshots->numColumns() ||
-                nsnap + nsets == BX_snapshots->numColumns(),
+                    nsnap + nsets == BX_snapshots->numColumns(),
                 "");
     MFEM_VERIFY(BV->numRows() == BX_snapshots->numRows(), "");
     MFEM_VERIFY(BV->numRows() == fespace_X->GetTrueVSize(), "");
@@ -2713,10 +2807,9 @@ bool fileExists(const std::string &filename)
 void get_EQPsol(const int current_window, CAROM::Vector *load_eqpsol)
 {
     string filename = "sol_" + std::to_string(current_window);
-    if (fileExists(filename+".000000"))
+    if (fileExists(filename + ".000000"))
     {
         std::cout << "The length of the vector is: " << load_eqpsol->dim() << std::endl;
         load_eqpsol->read(filename);
     }
-
 }

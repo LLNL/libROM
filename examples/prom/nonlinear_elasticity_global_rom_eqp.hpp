@@ -103,7 +103,8 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace
         const Vector *x0, CAROM::Matrix const &V_x, CAROM::Matrix const &V_v,
         CAROM::Vector const &x, CAROM::Vector *Vx_librom_temp, Vector *Vx_temp,
         Vector const &coef, Vector const &DS_coef, const int rank, Vector &res,
-        ElemMatrices *em);
+        ElemMatrices *em, const CAROM::Matrix eqp_lifting, const std::vector<int> eqp_liftDOFs,
+    CAROM::Vector eqp_lifted);
 
 // Compute a row in the G matrix which corresponds to a given FE element
 void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
