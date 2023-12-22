@@ -1897,10 +1897,8 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
                     em, eqp_lifting, eqp_liftDOFs, eqp_lifted);
         }
         else
-            HyperelasticNLFIntegrator_ComputeReducedEQP(&(fom->fespace), eqp_rw,
-                    eqp_qp, ir_eqp, model, x0,
-                    V_x, V_v, x_librom, Vx_librom_temp, Vx_temp,
-                    rank, resEQP, em, eqp_lifting, eqp_liftDOFs,
+            HyperelasticNLFIntegrator_ComputeReducedEQP(&(fom->fespace), eqp_rw, eqp_qp,
+                    ir_eqp, model, x0, V_v, x_librom, rank, resEQP, em, eqp_lifting, eqp_liftDOFs,
                     eqp_lifted);
         Vector recv(resEQP);
         MPI_Allreduce(resEQP.GetData(), recv.GetData(), resEQP.Size(), MPI_DOUBLE,
@@ -2192,17 +2190,14 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
 void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
         std::vector<double> const &rw, std::vector<int> const &qp,
         const IntegrationRule *ir, NeoHookeanModel *model, const Vector *x0,
-        CAROM::Matrix const &V_x, CAROM::Matrix const &V_v, CAROM::Vector const &x,
-        CAROM::Vector *Vx_librom_temp, Vector *Vx_temp,
-        const int rank, Vector &res, ElemMatrices *em)
+        CAROM::Matrix const &V_v, CAROM::Vector const &x, const int rank, Vector &res,
+        ElemMatrices *em, const CAROM::Matrix eqp_lifting,
+        const std::vector<int> eqp_liftDOFs,CAROM::Vector eqp_lifted)
 
 {
-    const int rxdim = V_x.numColumns();
     const int rvdim = V_v.numColumns();
     const int fomdim = V_v.numRows();
     MFEM_VERIFY(rw.size() == qp.size(), "");
-    MFEM_VERIFY(x.dim() == rxdim, "");
-    MFEM_VERIFY(V_x.numRows() == fesR->GetTrueVSize(), "");
 
     MFEM_VERIFY(rank == 0,
                 "TODO: generalize to parallel. This uses full dofs in V, which has true dofs");
@@ -2221,34 +2216,29 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
     int dof = 0;
     int dim = 0;
 
-    // Get prolongation matrix
-    const Operator *P = fesR->GetProlongationMatrix();
-
-    // Vectors to be prolongated
-    Vector Vx(fomdim);
+    // Basis vector
     Vector vj(fomdim);
-
-    // Prolongated vectors
-    Vector p_Vx(P->Height());
-    Vector p_vj(P->Height());
 
     // Element vectors
     Vector Vx_e;
     Vector vj_e;
 
-    // Lift x, add x0 and prolongate result
-    V_x.mult(x, Vx_librom_temp);
-    add(*Vx_temp, *x0, Vx);
-    P->Mult(Vx, p_Vx);
+    // Lift x, add x0
+    eqp_lifting.mult(x, eqp_lifted);
+
+    for (int i = 0; i < eqp_liftDOFs.size(); ++i)
+        eqp_lifted(i) += x0->Elem(eqp_liftDOFs[i]);
 
     // Initialize nonlinear operator storage
     // Assuming all elements have the same dim and n_dof
     fe = fesR->GetFE(0);
     dof = fe->GetDof();
     dim = fe->GetDim();
+    Vx_e.SetSize(dof * dim);
 
     eprev = -1;
     double temp = 0.0;
+    int eqp_ctr = 0;
     // For every quadrature weight
     for (int i = 0; i < rw.size(); ++i)
     {
@@ -2272,7 +2262,11 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
             }
 
             // Get element vectors
-            p_Vx.GetSubVector(vdofs, Vx_e);
+            for (int i = 0; i < dof * dim; ++i)
+            {
+                Vx_e.Elem(i) = eqp_lifted(eqp_ctr * dof * dim + i);
+            }
+            eqp_ctr++;
             eprev = e;
         }
 
@@ -2303,9 +2297,8 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
             // Get basis vector and prolongate
             for (int k = 0; k < V_v.numRows(); ++k)
                 vj[k] = V_v(k, j);
-            P->Mult(vj, p_vj);
 
-            p_vj.GetSubVector(vdofs, vj_e);
+            vj.GetSubVector(vdofs, vj_e);
 
             temp = 0.0;
 
@@ -2328,7 +2321,6 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace
         ElemMatrices *em, const CAROM::Matrix eqp_lifting,
         const std::vector<int> eqp_liftDOFs,CAROM::Vector eqp_lifted)
 {
-    const int rvdim = V_v.numColumns();
 
     MFEM_VERIFY(rank == 0,
                 "TODO: generalize to parallel. This uses full dofs in X, which has true dofs");
@@ -2361,6 +2353,7 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace
     fe = fesR->GetFE(0);
     dof = fe->GetDof();
     dim = fe->GetDim();
+    Vx_e.SetSize(dof * dim);
     int index = 0;
 
     eprev = -1;
@@ -2383,7 +2376,6 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace
 
             dof = fe->GetDof(); // Get number of dofs in element
             dim = fe->GetDim();
-            Vx_e.SetSize(dof * dim);
 
             if (doftrans)
             {

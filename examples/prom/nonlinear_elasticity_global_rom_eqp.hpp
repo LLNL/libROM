@@ -91,9 +91,9 @@ void GetEQPCoefficients_HyperelasticNLFIntegrator(ParFiniteElementSpace *fesR,
 void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
         std::vector<double> const &rw, std::vector<int> const &qp,
         const IntegrationRule *ir, NeoHookeanModel *model, const Vector *x0,
-        CAROM::Matrix const &V_x, CAROM::Matrix const &V_v, CAROM::Vector const &x,
-        CAROM::Vector *Vx_librom_temp, Vector *Vx_temp,
-        const int rank, Vector &res, ElemMatrices *em);
+        CAROM::Matrix const &V_v, CAROM::Vector const &x, const int rank, Vector &res,
+        ElemMatrices *em, const CAROM::Matrix eqp_lifting,
+        const std::vector<int> eqp_liftDOFs,CAROM::Vector eqp_lifted);
 
 // Optimized EQP hyperreduction routine with preallocated arrays
 void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace
