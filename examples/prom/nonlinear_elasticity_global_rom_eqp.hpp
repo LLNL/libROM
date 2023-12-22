@@ -97,14 +97,12 @@ void HyperelasticNLFIntegrator_ComputeReducedEQP(ParFiniteElementSpace *fesR,
 
 // Optimized EQP hyperreduction routine with preallocated arrays
 void HyperelasticNLFIntegrator_ComputeReducedEQP_Fast(ParFiniteElementSpace
-        *fesR,
-        std::vector<double> const &rw, std::vector<int> const &qp,
-        const IntegrationRule *ir, NeoHookeanModel *model,
-        const Vector *x0, CAROM::Matrix const &V_x, CAROM::Matrix const &V_v,
-        CAROM::Vector const &x, CAROM::Vector *Vx_librom_temp, Vector *Vx_temp,
-        Vector const &coef, Vector const &DS_coef, const int rank, Vector &res,
-        ElemMatrices *em, const CAROM::Matrix eqp_lifting, const std::vector<int> eqp_liftDOFs,
-    CAROM::Vector eqp_lifted);
+        *fesR,std::vector<double> const &rw, std::vector<int> const &qp,
+        const IntegrationRule *ir, NeoHookeanModel *model, const Vector *x0,
+        const int rvdim, CAROM::Vector const &x, Vector const &coef,
+        Vector const &DS_coef, const int rank, Vector &res, ElemMatrices *em,
+        const CAROM::Matrix eqp_lifting, const std::vector<int> eqp_liftDOFs,
+        CAROM::Vector eqp_lifted);
 
 // Compute a row in the G matrix which corresponds to a given FE element
 void ComputeElementRowOfG(const IntegrationRule *ir, Array<int> const &vdofs,
