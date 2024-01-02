@@ -26,12 +26,12 @@
 //               lifts the solution to the full order space.
 //
 // build_database phase: maxwell_local_rom_greedy -build_database -greedy-param-min 1.0 -greedy-param-max 1.2 -greedy-param-size 5 -greedysubsize 2 -greedyconvsize 3 -greedyrelerrortol 0.01
-// use_database phase:   maxwell_local_rom_greedy -fom -f 1.15 (create a new solution to compare with)
+// FOM phase:            maxwell_local_rom_greedy -fom -f 1.15 (create a new solution to compare with)
 // use_database phase:   maxwell_local_rom_greedy -use_database -online -f 1.15 (use the database to compute at f 1.15 while comparing to the true offline solution at f 1.15)
 //
 // Larger example:
 // build_database phase: maxwell_local_rom_greedy -build_database -greedy-param-min 0.5 -greedy-param-max 1.5 -greedy-param-size 15 -greedysubsize 4 -greedyconvsize 6 -greedyrelerrortol 0.01
-// use_database phase:   maxwell_local_rom_greedy -fom -f X.XX (create a new solution to compare with. Set X.XX to your desired frequency.)
+// FOM phase:            maxwell_local_rom_greedy -fom -f X.XX (create a new solution to compare with. Set X.XX to your desired frequency.)
 // use_database phase:   maxwell_local_rom_greedy -use_database -online -f X.XX (use the database to compute at f X.XX while comparing to the true offline solution at f X.XX)
 //
 // This example runs in parallel with MPI, by using the same number of MPI ranks
