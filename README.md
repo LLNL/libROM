@@ -114,6 +114,7 @@ LLNL-CODE-766763
 
 # Authors
 - Robert W. Anderson (LLNL)
+- William Anderson (LLNL)
 - William Arrighi (LLNL)
 - Kyle Chand (LLNL)
 - Siu Wun Cheung (LLNL)
@@ -126,10 +127,12 @@ LLNL-CODE-766763
 - Xiaolong He (UC San Diego)
 - Adrian Humphry (University of Toronto)
 - Kevin Huynh (LLNL)
+- Coleman Kendrick (LLNL)
 - Tanya Kostova-Vassilevska (LLNL)
 - Jessica Lauzon (Stanford)
 - Sean McBane (UT Austin)
-- Yeonjong Shin (KAIST)
 - Geoffrey Oxberry (LLNL)
+- Yeonjong Shin (KAIST)
+- Paul Tranquilli (LLNL)
 - Pranav Vempati (LLNL)
 - Masayuki Yano (University of Toronto)
