@@ -20,7 +20,7 @@
 //               controlled by the parameter kappa.
 //
 //               The example highlights the greedy algorithm. The build_database phase
-//               builds a global ROM database using different frequncies and a latin-hypercube
+//               builds a global ROM database using different frequencies and a latin-hypercube
 //               sampling procedure. The use_database phase uses the global ROM database,
 //               builds the ROM operator, solves thereduced order system, and
 //               lifts the solution to the full order space.
@@ -158,7 +158,8 @@ int main(int argc, char *argv[])
     if (fom)
     {
         MFEM_VERIFY(fom && !offline
-                    && !online, "everything must be turned off if fom is used.");
+                    && !online,
+                    "The FOM phase cannot be run with the offline or online ROM phase.");
     }
 
     CAROM::GreedySampler* greedy_sampler = NULL;
@@ -280,7 +281,7 @@ int main(int argc, char *argv[])
                     continue;
                 }
             }
-            // 4b. Set the correct frequency as commanded by the greedy algorithm.
+            // 4b. Set the frequency as commanded by the greedy algorithm.
             curr_basis_identifier += "_" + to_string(curr_freq);
             freq = curr_freq;
         }
@@ -680,6 +681,9 @@ int main(int argc, char *argv[])
         delete pmesh;
 
     } while(build_database);
+
+    delete greedy_sampler;
+
     MPI_Finalize();
 
     return 0;
