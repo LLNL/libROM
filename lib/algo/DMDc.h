@@ -16,6 +16,7 @@
 #ifndef included_DMDc_h
 #define included_DMDc_h
 
+#include "ParametricDMDc.h"
 #include <vector>
 #include <complex>
 
@@ -184,6 +185,34 @@ public:
     void summary(std::string base_file_name);
 
 protected:
+    /**
+     * @brief Obtain DMD model interpolant at desired parameter point by
+     *        interpolation of DMD models from training parameter points.
+     *
+     * @param[in] parametric_dmdc    The interpolant DMD model at the desired point.
+     * @param[in] parameter_points  The training parameter points.
+     * @param[in] dmdcs              The DMD objects associated with
+     *                              each training parameter point.
+     * @param[in] desired_point     The desired point at which to create a parametric DMD.
+     * @param[in] rbf               The RBF type ("G" == gaussian,
+     *                              "IQ" == inverse quadratic,
+     *                              "IMQ" == inverse multiquadric)
+     * @param[in] interp_method     The interpolation method type
+     *                              ("LS" == linear solve,
+     *                              "IDW" == inverse distance weighting,
+     *                              "LP" == lagrangian polynomials)
+     * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
+     *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
+     * @param[in] reorthogonalize_W Whether to reorthogonalize the interpolated W (basis) matrix.
+     */
+    friend void getParametricDMDc<DMDc>(DMDc*& parametric_dmdc,
+                                      std::vector<Vector*>& parameter_points,
+                                      std::vector<DMDc*>& dmdcs,
+                                      Vector* desired_point,
+                                      std::string rbf,
+                                      std::string interp_method,
+                                      double closest_rbf_val,
+                                      bool reorthogonalize_W);
     /**
      * @brief Constructor. Variant of DMDc with non-uniform time step size.
      *

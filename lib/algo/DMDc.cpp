@@ -351,7 +351,7 @@ DMDc::constructDMDc(const Matrix* f_snapshots,
         d_sv.push_back(d_factorizer_in->S[i]);
     }
 
-    int d_k_in;
+    int d_k_in = d_k;
     if (d_energy_fraction != -1.0)
     {
         d_k_in = d_num_singular_vectors;
