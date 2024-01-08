@@ -22,7 +22,7 @@
 //               The example highlights the greedy algorithm. The build_database phase
 //               builds a global ROM database using different frequencies and a latin-hypercube
 //               sampling procedure. The use_database phase uses the global ROM database,
-//               builds the ROM operator, solves thereduced order system, and
+//               builds the ROM operator, solves the reduced order system, and
 //               lifts the solution to the full order space.
 //
 // build_database phase: maxwell_local_rom_greedy -build_database -greedy-param-min 1.0 -greedy-param-max 1.2 -greedy-param-size 5 -greedysubsize 2 -greedyconvsize 3 -greedyrelerrortol 0.01
