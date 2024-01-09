@@ -476,7 +476,7 @@ TEST(MatrixSerialTest, Test_Matrix_orthogonalize)
     CAROM::Matrix matrix(d_mat, 4, 4, false);
     CAROM::Matrix target(d_mat2, 4, 4, false);
 
-    double abs_error = 1.0e-15; // absolute error threshold
+    constexpr double abs_error = 1.0e-15; // absolute error threshold
 
     matrix.orthogonalize();
 
@@ -505,7 +505,7 @@ TEST(MatrixSerialTest, Test_Matrix_orthogonalize2)
     CAROM::Matrix matrix(d_mat, 4, 4, false);
     CAROM::Matrix target(d_mat2, 4, 4, false);
 
-    double abs_error = 1.0e-15; // absolute error threshold
+    constexpr double abs_error = 1.0e-15; // absolute error threshold
 
     matrix.orthogonalize(true);
 
@@ -534,7 +534,7 @@ TEST(MatrixSerialTest, Test_Matrix_orthogonalize3)
     CAROM::Matrix matrix(d_mat, 4, 4, false);
     CAROM::Matrix target(d_mat2, 4, 4, false);
 
-    double abs_error = 1.0e-15; // absolute error threshold
+    constexpr double abs_error = 1.0e-15; // absolute error threshold
 
     matrix.orthogonalize();
 
@@ -563,7 +563,7 @@ TEST(MatrixSerialTest, Test_Matrix_orthogonalize4)
     CAROM::Matrix matrix(d_mat, 4, 4, false);
     CAROM::Matrix target(d_mat2, 4, 4, false);
 
-    double abs_error = 1.0e-15; // absolute error threshold
+    constexpr double abs_error = 1.0e-15; // absolute error threshold
 
     matrix.orthogonalize(true);
 
@@ -592,7 +592,7 @@ TEST(MatrixSerialTest, Test_Matrix_orthogonalize_last)
     CAROM::Matrix matrix(d_mat, 4, 4, false);
     CAROM::Matrix target(d_mat2, 4, 4, false);
 
-    double abs_error = 1.0e-15; // absolute error threshold
+    constexpr double abs_error = 1.0e-15; // absolute error threshold
 
     matrix.orthogonalize_last();
 
@@ -621,7 +621,7 @@ TEST(MatrixSerialTest, Test_Matrix_orthogonalize_last2)
     CAROM::Matrix matrix(d_mat, 4, 4, false);
     CAROM::Matrix target(d_mat2, 4, 4, false);
 
-    double abs_error = 1.0e-15; // absolute error threshold
+    constexpr double abs_error = 1.0e-15; // absolute error threshold
 
     matrix.orthogonalize_last(-1, true);
 
@@ -650,7 +650,7 @@ TEST(MatrixSerialTest, Test_Matrix_orthogonalize_last3)
     CAROM::Matrix matrix(d_mat, 4, 4, false);
     CAROM::Matrix target(d_mat2, 4, 4, false);
 
-    double abs_error = 1.0e-15; // absolute error threshold
+    constexpr double abs_error = 1.0e-15; // absolute error threshold
 
     matrix.orthogonalize_last(3);
     matrix.orthogonalize_last(4);
@@ -680,7 +680,7 @@ TEST(MatrixSerialTest, Test_Matrix_orthogonalize_last4)
     CAROM::Matrix matrix(d_mat, 4, 4, false);
     CAROM::Matrix target(d_mat2, 4, 4, false);
 
-    double abs_error = 1.0e-15; // absolute error threshold
+    constexpr double abs_error = 1.0e-15; // absolute error threshold
 
     matrix.orthogonalize_last(3, true);
     matrix.orthogonalize_last(4, true);
@@ -713,7 +713,7 @@ TEST(MatrixSerialTest, Test_Matrix_orthogonalize_last5)
     for (int i = 0; i < 4; i++)
         matrix.orthogonalize_last(i+1);
 
-    double abs_error = 1.0e-15; // absolute error threshold
+    constexpr double abs_error = 1.0e-15; // absolute error threshold
 
     for (int i = 0; i < 4; i++)
         for (int j = 0; j < 4; j++)
@@ -743,7 +743,7 @@ TEST(MatrixSerialTest, Test_Matrix_orthogonalize_last6)
     for (int i = 0; i < 4; i++)
         matrix.orthogonalize_last(i+1, true);
 
-    double abs_error = 1.0e-15; // absolute error threshold
+    constexpr double abs_error = 1.0e-15; // absolute error threshold
 
     for (int i = 0; i < 4; i++)
         for (int j = 0; j < 4; j++)
