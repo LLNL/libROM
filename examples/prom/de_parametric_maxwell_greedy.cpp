@@ -110,7 +110,6 @@ vector<string> basisIdentifiers;
 CAROM::GreedySampler* greedy_sampler = NULL;
 bool calc_rel_error;
 std::string curr_basis_identifier;
-const char *baseoutputname = "";
 bool calc_err_indicator = false;
 
 // DE variables
@@ -708,8 +707,6 @@ int main(int argc, char *argv[])
                    "DE Cost threshold.");
     args.AddOption(&de, "-de", "--de", "-no-de", "--no-de",
                    "Enable or disable the differential evolution phase.");
-    args.AddOption(&baseoutputname, "-out", "--outputfile-name",
-                   "Name of the sub-folder to dump files within the run directory.");
 
     args.Parse();
     if (!args.Good())
