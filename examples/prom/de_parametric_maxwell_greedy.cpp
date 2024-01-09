@@ -875,8 +875,8 @@ int main(int argc, char *argv[])
     {
         simulation();
     }
-//     5.  If in differential evolution mode, run the DE algorithm using the
-//        greedy database.
+    // 5.  If in differential evolution mode, run the DE algorithm using the
+    //     greedy database.
     else if (de)
     {
         target_freq = freq;
