@@ -16,7 +16,9 @@
 //               order definite equation -grad(alpha div F) + beta F = f with
 //               boundary condition F dot n = <given normal field>.
 //               Here, we use a given exact solution F and compute the corresponding
-//               r.h.s. f. We discretize with Raviart-Thomas finite elements.
+//               r.h.s. f. In this example, the ROM parameter is a scalar frequency
+//               used in defining the exact solution F and corresponding source function f.
+//               We discretize with Raviart-Thomas finite elements.
 //
 //               The example highlights three distinct ROM processes, i.e.,
 //               offline, merge, and online. The offline phase runs the full
@@ -216,10 +218,8 @@ int main(int argc, char *argv[])
     bool isIncremental = false;
     const std::string basisName = "basis";
     const std::string basisFileName = basisName + std::to_string(id);
-    const CAROM::Matrix* spatialbasis;
     CAROM::Options* options;
     CAROM::BasisGenerator *generator;
-    int numRowRB, numColumnRB;
     StopWatch solveTimer, assembleTimer, mergeTimer;
 
     // 10. Set BasisGenerator if offline
@@ -234,7 +234,6 @@ int main(int argc, char *argv[])
     if (merge)
     {
         mergeTimer.Start();
-        std::unique_ptr<CAROM::BasisGenerator> basis_generator;
         options = new CAROM::Options(fespace.GetTrueVSize(), max_num_snapshots, 1,
                                      update_right_SV);
         generator = new CAROM::BasisGenerator(*options, isIncremental, basisName);
@@ -342,10 +341,10 @@ int main(int argc, char *argv[])
         {
             ParFiniteElementSpace *prec_fespace =
                 (a.StaticCondensationIsEnabled() ? a.SCParFESpace() : &fespace);
-            if (dim == 2)   {
+            if (dim == 2) {
                 prec = new HypreAMS(*A.As<HypreParMatrix>(), prec_fespace);
             }
-            else            {
+            else {
                 prec = new HypreADS(*A.As<HypreParMatrix>(), prec_fespace);
             }
         }
@@ -371,9 +370,9 @@ int main(int argc, char *argv[])
         // 20. read the reduced basis
         assembleTimer.Start();
         CAROM::BasisReader reader(basisName);
-        spatialbasis = reader.getSpatialBasis(0.0);
-        numRowRB = spatialbasis->numRows();
-        numColumnRB = spatialbasis->numColumns();
+        const CAROM::Matrix* spatialbasis = reader.getSpatialBasis(0.0);
+        const int numRowRB = spatialbasis->numRows();
+        const int numColumnRB = spatialbasis->numColumns();
         if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB,
                                   numColumnRB);
 
@@ -408,7 +407,8 @@ int main(int argc, char *argv[])
         double error = x.ComputeL2Error(F);
         if (myid == 0)
         {
-            cout << "\n|| F_h - F ||_{L^2} = " << error << '\n' << endl;
+            cout << "\nAbsolute error in L^2 norm with respect to the exact solution:\n || F_h - F ||_{L^2} = "
+                 << error << '\n' << endl;
         }
     }
 
