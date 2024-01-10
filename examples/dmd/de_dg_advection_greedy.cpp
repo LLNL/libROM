@@ -276,6 +276,10 @@ int vis_steps = 5;
 // libROM DMD variables
 int rdim = -1;
 bool run_dmd = false;
+const char *temp_output_dir = "./de_advection_greedy";
+const char *temp_input_dir = "./de_advection_greedy";
+std::string output_dir;
+std::string input_dir;
 // libROM parameterization variables
 double f_factor = 1.;
 // libROM greedy variables
@@ -460,11 +464,14 @@ double simulation()
     u_gf->ProjectCoefficient(u0);
     HypreParVector *U = u_gf->GetTrueDofs();
 
+
     if (!online)
     {
         ostringstream mesh_name, sol_name;
-        mesh_name << "dg_advection-mesh." << setfill('0') << setw(6) << myid;
-        sol_name << "dg_advection-init." << setfill('0') << setw(6) << myid;
+        mesh_name << output_dir << "/dg_advection-mesh." << setfill('0') << setw(
+                      6) << myid;
+        sol_name << output_dir << "/dg_advection-init." << setfill('0') << setw(
+                     6) << myid;
         ofstream omesh(mesh_name.str().c_str());
         omesh.precision(precision);
         pmesh->Print(omesh);
@@ -591,8 +598,7 @@ double simulation()
         double rel_diff = 0.;
 
         //18. Create the parametric DMD.
-
-        std::fstream fin("parameters.txt", std::ios_base::in);
+        std::fstream fin(input_dir + "/parameters.txt", std::ios_base::in);
         double curr_param;
         std::vector<std::string> dmd_paths;
         std::vector<CAROM::Vector*> param_vectors;
@@ -601,7 +607,8 @@ double simulation()
         {
             double curr_f_factor = curr_param;
 
-            dmd_paths.push_back(to_string(curr_f_factor));
+            // INPUT / OUTPUT potential issue
+            dmd_paths.push_back(input_dir + "/" + to_string(curr_f_factor));
             CAROM::Vector* param_vector = new CAROM::Vector(1, false);
             param_vector->item(0) = curr_f_factor;
             param_vectors.push_back(param_vector);
@@ -628,7 +635,7 @@ double simulation()
             ifstream solution_file;
             ostringstream sol_name;
             ostringstream target_name;
-            sol_name << "dg_advection_greedy" << to_string(
+            sol_name << input_dir << "/dg_advection_greedy" << to_string(
                          target_f_factor) << "-final." << setfill('0') << setw(6) << myid;
 
             solution_file.open(sol_name.str().c_str());
@@ -645,7 +652,7 @@ double simulation()
 
         // 21. Calculate the relative error between the DMD final solution and the true solution.
         Vector dmd_solution_U(result_U->getData(),
-                              result_U->dim()); // Potential Problem
+                              result_U->dim());
         Vector diff_u(true_solution_u->Size());
         subtract(dmd_solution_U, *true_solution_u, diff_u);
 
@@ -692,8 +699,7 @@ double simulation()
 
     if (calc_err_indicator)
     {
-
-        std::fstream fin("parameters.txt", std::ios_base::in);
+        std::fstream fin(input_dir+"/parameters.txt", std::ios_base::in);
         double curr_param;
         std::vector<std::string> dmd_paths;
         std::vector<CAROM::Vector*> param_vectors;
@@ -703,7 +709,8 @@ double simulation()
             double curr_f_factor = curr_param;
             //If you need / want more parameters, look at "de_parametric_heat_condtuction_greedy.cpp:421
 
-            dmd_paths.push_back(to_string(curr_f_factor));
+            // INPUT / OUTPUT issue.
+            dmd_paths.push_back(input_dir + "/" + to_string(curr_f_factor));
             CAROM::Vector* param_vector = new CAROM::Vector(1, false);
             param_vector->item(0) = curr_f_factor;
             param_vectors.push_back(param_vector);
@@ -740,13 +747,13 @@ double simulation()
 
         CAROM::Vector* carom_tf_u_minus_some = dmd_U->predict(t);
 
-        //U->SetData(carom_tf_u_minus_some->getData());
+
         for(int i = 0; i < carom_tf_u_minus_some->dim(); i++)
         {
             (*U)[i] = (*carom_tf_u_minus_some)(i);
         }
 
-        u_gf->SetFromTrueDofs(*U); // potentially some pointer problems here.
+        u_gf->SetFromTrueDofs(*U);
 
         delete carom_tf_u_minus_some;
     }
@@ -771,7 +778,7 @@ double simulation()
             dmd_training_timer.Start();
 
             u_gf->SetFromTrueDofs(*U);
-            dmd_U->takeSample(U->GetData(),t); // Potential problem
+            dmd_U->takeSample(U->GetData(),t);
 
             if (myid == 0 && ti % vis_steps == 0)
             {
@@ -829,7 +836,7 @@ double simulation()
 
     if (!build_database && myid == 0)
     {
-        std::ofstream outFile("ts.txt");
+        std::ofstream outFile(output_dir + "/ts.txt");
         for (int i = 0; i < ts.size(); i++)
         {
             outFile << ts[i] << "\n";
@@ -842,7 +849,8 @@ double simulation()
     {
         Vector u_print(U->GetData(), U->Size());
         ostringstream sol_name;
-        sol_name << "dg_advection_greedy" << to_string(f_factor)  << "-final." <<
+        sol_name << output_dir << "/dg_advection_greedy" << to_string(
+                     f_factor)  << "-final." <<
                  setfill('0') << setw(6) << myid;
         ofstream osol(sol_name.str().c_str());
         osol.precision(precision);
@@ -854,7 +862,7 @@ double simulation()
     // 18. If in online mode, create the parametric DMD.
     if (online)
     {
-        std::fstream fin("parameters.txt", std::ios_base::in);
+        std::fstream fin(input_dir+"/parameters.txt", std::ios_base::in);
         double curr_param;
         std::vector<std::string> dmd_paths;
         std::vector<CAROM::Vector*> param_vectors;
@@ -862,9 +870,8 @@ double simulation()
         while (fin >> curr_param)
         {
             double curr_f_factor = curr_param;
-            //    fin >> curr_param; // Pretty sure I don't need this.  Same as before.
 
-            dmd_paths.push_back(to_string(curr_f_factor));
+            dmd_paths.push_back(input_dir + "/" + to_string(curr_f_factor));
             CAROM::Vector* param_vector = new CAROM::Vector(1, false);
             param_vector->item(0) = curr_f_factor;
             param_vectors.push_back(param_vector);
@@ -902,12 +909,12 @@ double simulation()
 
             dmd_training_timer.Stop();
 
-            dmd_U->save(to_string(f_factor));
+            dmd_U->save(output_dir + "/" + to_string(f_factor));
 
             if (myid == 0)
             {
                 std::ofstream fout;
-                fout.open("parameters.txt", std::ios::app);
+                fout.open(output_dir+"/parameters.txt", std::ios::app);
                 fout << to_string(f_factor) << std::endl;
                 fout.close();
             }
@@ -927,7 +934,7 @@ double simulation()
 
 
         Vector dmd_solution_U(result_U->getData(),
-                              result_U->dim()); // Potential Problem
+                              result_U->dim());
         Vector diff_u(true_solution_u->Size());
         subtract(dmd_solution_U, *true_solution_u, diff_u);
 
@@ -953,9 +960,10 @@ double simulation()
     }
     else if (online)
     {
+        dmd_prediction_timer.Start();
         CAROM::Vector* result_U = dmd_U->predict(ts[0]);
         Vector initial_dmd_solution_U(result_U->getData(),
-                                      result_U->dim());  // Potential Problem
+                                      result_U->dim());
         u_gf->SetFromTrueDofs(initial_dmd_solution_U);
 
         VisItDataCollection dmd_visit_dc("DMD_DG_Advection_Greedy_"
@@ -984,7 +992,7 @@ double simulation()
                     }
 
                     Vector dmd_solution_U(result_U->getData(),
-                                          result_U->dim());  // Potential problem
+                                          result_U->dim());
                     u_gf->SetFromTrueDofs(dmd_solution_U);
 
                     dmd_visit_dc.SetCycle(i);
@@ -1008,12 +1016,11 @@ double simulation()
 
         }
 
-        //CAROM::Vector* result_U = dmd_U->predict(t_final);
         result_U = dmd_U->predict(t_final);
 
         // 21. Calculate the relative error between the DMD final solution and the true solution.
         Vector dmd_solution_U(result_U->getData(),
-                              result_U->dim()); // Potential Problem
+                              result_U->dim());
         Vector diff_u(true_solution_u->Size());
         subtract(dmd_solution_U, *true_solution_u, diff_u);
 
@@ -1032,7 +1039,7 @@ double simulation()
         if (myid == 0)
         {
             std::ofstream fout;
-            fout.open("error-output.txt", std::ios::app);
+            fout.open(output_dir+"/error-output.txt", std::ios::app);
             fout << to_string(f_factor) << " : " << tot_diff_norm_u /
                  tot_true_solution_u_norm << std::endl;
             fout.close();
@@ -1092,7 +1099,7 @@ public:
 
     std::vector<Constraints> GetConstraints() const override
     {
-        std::fstream fin("parameters.txt", std::ios_base::in);
+        std::fstream fin(input_dir + "/parameters.txt", std::ios_base::in);
         double curr_param;
         bool first_line = true;
         double min_f_factor = 0.0;
@@ -1197,6 +1204,10 @@ int main(int argc, char *argv[])
     args.AddOption(&run_dmd, "-run_dmd", "--run_dmd",
                    "-no-run_dmd", "--no-run_dmd",
                    "Enable or disable the run_dmd phase.");
+    args.AddOption(&temp_output_dir, "-out", "--outputfile-name",
+                   "Name of the sub-folder to dump files within the current directory.");
+    args.AddOption(&temp_input_dir, "-in", "--outputfile-name",
+                   "Name of the sub-folder to load files within the current directory.");
     // libROM parameterization parameters.
     args.AddOption(&f_factor, "-ff", "--f-factor",
                    "Frequency scalar factor.");
@@ -1260,6 +1271,9 @@ int main(int argc, char *argv[])
         device.Print();
     }
 
+    input_dir = temp_input_dir;
+    output_dir = temp_output_dir;
+
     // 3. Initialize the DMD database that will be built using a greedy algorithm.
     if(de)
     {
@@ -1295,7 +1309,7 @@ int main(int argc, char *argv[])
         MFEM_VERIFY(!visit
                     && !visualization,
                     "visit and visualization must be turned off during the build_database phase.")
-        std::ifstream infile("dg_advection_greedy_data");
+        std::ifstream infile(input_dir+"/dg_advection_greedy_parametric_data");
         if (infile.good())
         {
             if (myid == 0) std::cout << "The database has already been built. Exiting." <<
@@ -1328,7 +1342,6 @@ int main(int argc, char *argv[])
             // an error indicator at a new point.) and run the simulation.
             struct CAROM::GreedyErrorIndicatorPoint pointRequiringRelativeError =
                 greedy_sampler->getNextPointRequiringRelativeError();
-            CAROM::Vector* relativeErrorPointData = pointRequiringRelativeError.point.get();
             struct CAROM::GreedyErrorIndicatorPoint pointRequiringErrorIndicator =
                 greedy_sampler->getNextPointRequiringErrorIndicator();
             CAROM::Vector* errorIndicatorPointData =
@@ -1357,7 +1370,7 @@ int main(int argc, char *argv[])
                 else
                 {
                     if (myid == 0) std::cout << "The greedy algorithm has finished." << std::endl;
-                    greedy_sampler->save("dg_advection_greedy_parametric_data");
+                    greedy_sampler->save(output_dir + "/dg_advection_greedy_parametric_data");
                     build_database = false;
                     continue;
                 }
