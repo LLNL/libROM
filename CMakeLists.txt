@@ -141,7 +141,6 @@ if (ENABLE_EXAMPLES)
       de_parametric_maxwell_greedy
       maxwell_local_rom_greedy     
       grad_div_global_rom
-      master
       dg_advection
       nonlinear_elasticity
       heat_conduction
