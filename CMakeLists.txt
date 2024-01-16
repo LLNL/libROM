@@ -164,6 +164,7 @@ if (ENABLE_EXAMPLES)
       prom
       prom
       prom
+      prom
       dmd
       dmd
       dmd
