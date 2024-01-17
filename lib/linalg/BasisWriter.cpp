@@ -80,7 +80,8 @@ BasisWriter::writeBasis(const std::string& kind)
     sprintf(tmp, "time_%06d", d_num_intervals_written);
 
     if (kind == "basis") {
-        if (fileExists(full_file_name))
+        bool file_exists = fileExists(full_file_name);
+        if (file_exists)
             d_database->open(full_file_name, "wr");
         else
             d_database->create(full_file_name);
