@@ -178,12 +178,9 @@ double simulation()
     FiniteElementCollection *fec = new ND_FECollection(order, dim);
     ParFiniteElementSpace *fespace = new ParFiniteElementSpace(pmesh, fec);
     HYPRE_BigInt size = fespace->GlobalTrueVSize();
-    if (!de)
+    if (!de && myid == 0)
     {
-        if (myid == 0)
-        {
-            cout << "Number of finite element unknowns: " << size << endl;
-        }
+        cout << "Number of finite element unknowns: " << size << endl;
     }
 
     // 10. Determine the list of true (i.e. parallel conforming) essential
@@ -333,10 +330,9 @@ double simulation()
         numRowRB = spatialbasis->numRows();
         numColumnRB = spatialbasis->numColumns();
 
-        if (!de)
+        if (!de && myid == 0)
         {
-            if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB,
-                                      numColumnRB);
+            printf("spatial basis dimension is %d x %d\n", numRowRB, numColumnRB);
         }
 
         // 22. form inverse ROM operator
@@ -435,11 +431,7 @@ double simulation()
         curr_error = abs_error / sol_norm;
         if (myid == 0) cout << "The relative error is: " << curr_error << endl;
 
-        out << "here1" << endl;
-
         greedy_sampler->setPointRelativeError(curr_error);
-
-        out << "here2" << endl;
 
         if (myid == 0)
         {
@@ -787,8 +779,6 @@ int main(int argc, char *argv[])
                 true, "de_parametric_maxwell_greedy_log.txt");
     }
 
-    // The simulation is wrapped in a do-while statement so that the greedy
-    // algorithm (build_database) can run multiple simulations in succession.
     if (build_database)
     {
         // The simulation is wrapped in a do-while statement so that the greedy
@@ -805,7 +795,7 @@ int main(int argc, char *argv[])
 
             // 4a. Set the correct stage of the greedy algorithm (i.e. sampling new point,
             //    calculating relative error of the last sampled point, or calculating
-            //    an error indicator at a new point.)
+            //    an error indicator at a new point).
 
             local_rom_freq = 0.0;
             curr_freq = 0.0;
@@ -932,7 +922,7 @@ void E_exact(const Vector &x, Vector &E)
     }
 }
 
-// 34. define spatially varying righthand side function
+// 34. define spatially varying RHS function
 void f_exact(const Vector &x, Vector &f)
 {
     if (dim == 3)
