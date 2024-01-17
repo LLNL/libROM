@@ -68,6 +68,7 @@
 #include <cfloat>
 #include <fstream>
 #include <iostream>
+#include <filesystem>
 #include "utils/CSVDatabase.h"
 
 
@@ -645,7 +646,9 @@ double simulation()
                                             *true_solution_u, *true_solution_u));
         }
 
+        dmd_prediction_timer.Start();
         CAROM::Vector* result_U = dmd_U->predict(t_final);
+        dmd_prediction_timer.Stop();
 
 
         // 21. Calculate the relative error between the DMD final solution and the true solution.
@@ -1268,6 +1271,7 @@ int main(int argc, char *argv[])
     }
 
     io_dir = temp_io_dir;
+    std::filesystem::create_directory(io_dir);
 
     // 3. Initialize the DMD database that will be built using a greedy algorithm.
     if(de)
