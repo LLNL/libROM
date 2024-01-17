@@ -201,12 +201,16 @@ void DMDc::takeSample(double* u_in, double t, double* f_in, bool last_step)
     if (!last_step)
     {
         Vector* control = new Vector(f_in, d_dim_c, false);
+//        std::cout << "dimc: " << d_dim_c << std::endl;
+//        std::cout << "control type: " << typeid(control).name() << std::endl;
+//        std::cout << "d_control type: " << typeid(d_controls).name() << std::endl;
         d_controls.push_back(control);
     }
 
     Vector* sampled_time = new Vector(&t, 1, false);
     d_sampled_times.push_back(sampled_time);
 }
+
 
 void DMDc::train(double energy_fraction, const Matrix* B)
 {
@@ -756,6 +760,12 @@ DMDc::predict(double t)
         delete d_phi_mult_eigs_imaginary;
         delete d_predicted_state_real_1;
         delete d_predicted_state_real_2;
+//        std::cout << "num Atilde rows: " << d_A_tilde->numRows() << std::endl;
+//        std::cout << "num Atilde cols: " << d_A_tilde->numColumns() << std::endl;
+//        std::cout << "num btilde rows: " << d_B_tilde->numRows() << std::endl;
+//        std::cout << "num btilde cols: " << d_B_tilde->numColumns() << std::endl;
+//        std::cout << "num basis rows: " << d_basis->numRows() << std::endl;
+//        std::cout << "num basis cols: " << d_basis->numColumns() << std::endl;
     }
 
     delete f_control_real;
