@@ -48,7 +48,6 @@ BasisReader::BasisReader(
         d_database = new CSVDatabase();
     }
 
-    std::cout << "Opening file: " << full_file_name << std::endl;
     d_database->open(full_file_name, "r");
 
     int num_time_intervals;

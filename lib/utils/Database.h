@@ -18,6 +18,8 @@
 
 namespace CAROM {
 
+bool fileExists(const std::string& name);
+
 /**
  * Class Database is an abstract base class that provides basic ability to
  * write to and read from a file.  It's capabilities are limited to what the
@@ -47,7 +49,7 @@ public:
     virtual
     bool
     create(
-        const std::string& file_name) = 0;
+        const std::string& file_name);
 
     /**
      * @brief Opens an existing database file with the supplied name.
@@ -61,7 +63,7 @@ public:
     bool
     open(
         const std::string& file_name,
-        const std::string& type) = 0;
+        const std::string& type);
 
     /**
      * @brief Closes the currently open database file.

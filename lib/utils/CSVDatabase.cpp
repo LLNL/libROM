@@ -30,6 +30,7 @@ bool
 CSVDatabase::create(
     const std::string& file_name)
 {
+    Database::create(file_name);
     return true;
 }
 
@@ -38,6 +39,7 @@ CSVDatabase::open(
     const std::string& file_name,
     const std::string& type)
 {
+    Database::open(file_name, type);
     return true;
 }
 

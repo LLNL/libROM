@@ -53,20 +53,19 @@ BasisWriter::BasisWriter(
     char tmp2[100];
     sprintf(tmp2, "_snapshot.%06d", rank);
     snap_file_name = base_file_name + tmp2;
+
+    // create and open snapshot/basis database
+    // TODO(kevin): can it be CSV at all? we might want to remove if statement here.
+    if (db_format_ == Database::HDF5) {
+        d_snap_database = new HDFDatabase();
+        d_database = new HDFDatabase();
+    }
 }
 
 BasisWriter::~BasisWriter()
 {
-    if (d_database) {
-        d_database->putInteger("num_time_intervals", d_num_intervals_written);
-        d_database->close();
-        delete d_database;
-    }
-    if (d_snap_database) {
-        d_snap_database->putInteger("num_time_intervals", d_num_intervals_written);
-        d_snap_database->close();
-        delete d_snap_database;
-    }
+    if (d_database) delete d_database;
+    if (d_snap_database) delete d_snap_database;
 }
 
 void
@@ -81,13 +80,10 @@ BasisWriter::writeBasis(const std::string& kind)
     sprintf(tmp, "time_%06d", d_num_intervals_written);
 
     if (kind == "basis") {
-
-        // create and open basis database
-        if (db_format_ == Database::HDF5) {
-            d_database = new HDFDatabase();
-        }
-        std::cout << "Creating file: " << full_file_name << std::endl;
-        d_database->create(full_file_name);
+        if (fileExists(full_file_name))
+            d_database->open(full_file_name, "wr");
+        else
+            d_database->create(full_file_name);
 
         d_database->putDouble(tmp, time_interval_start_time);
 
@@ -122,15 +118,15 @@ BasisWriter::writeBasis(const std::string& kind)
 
         ++d_num_intervals_written;
 
+        d_database->putInteger("num_time_intervals", d_num_intervals_written);
+        d_database->close();
     }
 
     if (kind == "snapshot") {
-        // create and open snapshot database
-        if (db_format_ == Database::HDF5) {
-            d_snap_database = new HDFDatabase();
-        }
-        std::cout << "Creating file: " << snap_file_name << std::endl;
-        d_snap_database->create(snap_file_name);
+        if (fileExists(snap_file_name))
+            d_snap_database->open(snap_file_name, "wr");
+        else
+            d_snap_database->create(snap_file_name);
 
         d_snap_database->putDouble(tmp, time_interval_start_time);
 
@@ -143,6 +139,9 @@ BasisWriter::writeBasis(const std::string& kind)
         d_snap_database->putInteger(tmp, num_cols);
         sprintf(tmp, "snapshot_matrix_%06d", d_num_intervals_written);
         d_snap_database->putDoubleArray(tmp, &snapshots->item(0,0), num_rows*num_cols);
+
+        d_snap_database->putInteger("num_time_intervals", d_num_intervals_written);
+        d_snap_database->close();
     }
 
 }

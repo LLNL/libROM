@@ -44,6 +44,8 @@ bool
 HDFDatabase::create(
     const std::string& file_name)
 {
+    Database::create(file_name);
+
     CAROM_VERIFY(!file_name.empty());
     hid_t file_id = H5Fcreate(file_name.c_str(),
                               H5F_ACC_TRUNC,
@@ -63,6 +65,8 @@ HDFDatabase::open(
     const std::string& file_name,
     const std::string& type)
 {
+    Database::open(file_name, type);
+
     CAROM_VERIFY(!file_name.empty());
     CAROM_VERIFY(type == "r" || type == "wr");
     hid_t file_id;

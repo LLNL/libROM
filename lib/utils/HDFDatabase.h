@@ -46,7 +46,7 @@ public:
     virtual
     bool
     create(
-        const std::string& file_name);
+        const std::string& file_name) override;
 
     /**
      * @brief Opens an existing HDF5 database file with the supplied name.
@@ -60,7 +60,7 @@ public:
     bool
     open(
         const std::string& file_name,
-        const std::string& type);
+        const std::string& type) override;
 
     /**
      * @brief Closes the currently open HDF5 database file.
