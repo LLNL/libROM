@@ -206,13 +206,13 @@ protected:
      * @param[in] reorthogonalize_W Whether to reorthogonalize the interpolated W (basis) matrix.
      */
     friend void getParametricDMDc<DMDc>(DMDc*& parametric_dmdc,
-                                      std::vector<Vector*>& parameter_points,
-                                      std::vector<DMDc*>& dmdcs,
-                                      Vector* desired_point,
-                                      std::string rbf,
-                                      std::string interp_method,
-                                      double closest_rbf_val,
-                                      bool reorthogonalize_W);
+                                        std::vector<Vector*>& parameter_points,
+                                        std::vector<DMDc*>& dmdcs,
+                                        Vector* desired_point,
+                                        std::string rbf,
+                                        std::string interp_method,
+                                        double closest_rbf_val,
+                                        bool reorthogonalize_W);
     /**
      * @brief Constructor. Variant of DMDc with non-uniform time step size.
      *

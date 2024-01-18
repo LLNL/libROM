@@ -138,8 +138,9 @@ createControlMatrix(std::vector<CAROM::Vector*> snapshots)
         CAROM_VERIFY(snapshots[i]->distributed() == snapshots[i + 1]->distributed());
     }
 
-    CAROM::Matrix* snapshot_mat = new CAROM::Matrix(snapshots[0]->dim(), snapshots.size(),
-                                      snapshots[0]->distributed());
+    CAROM::Matrix* snapshot_mat = new CAROM::Matrix(snapshots[0]->dim(),
+            snapshots.size(),
+            snapshots[0]->distributed());
 
     for (int i = 0; i < snapshots[0]->dim(); i++)
     {
@@ -526,19 +527,19 @@ int main(int argc, char *argv[])
 //    dmd_training_timer.Start();
 
     CAROM::DMDc* dmd_u = NULL;
-    
-    
+
+
     f[0] = Amplitude(t, 0);
     f[1] = Amplitude(t, 1);
     int dim_c = 2;
-    
+
     std::vector<CAROM::Vector*> d_controls;
 //    CAROM::Vector* d_controls;
 //    Vector* control = new Vector(f, dim_c, false);
     CAROM::Vector* control = new CAROM::Vector(f, dim_c, false);
 //    const std::vector control = new Vector(f, dim_c);
     d_controls.push_back(control);
-    
+
 //    std::cout << "actual control type: " << typeid(control).name() << std::endl;
 //    std::cout << "actual d_control type: " << typeid(d_controls).name() << std::endl;
 
@@ -606,8 +607,8 @@ int main(int argc, char *argv[])
         ode_solver->Step(u, t, dt);
 
         fom_timer.Stop();
-        
-        
+
+
         f[0] = Amplitude(t, 0);
         f[1] = Amplitude(t, 1);
         if (offline)
@@ -790,14 +791,14 @@ int main(int argc, char *argv[])
                 double curr_kappa = curr_param;
 
                 dmdc_paths.push_back(outputPath + "/" + to_string(curr_alpha) + "_" + to_string(
-                                        curr_kappa) );
+                                         curr_kappa) );
                 CAROM::Vector* param_vector = new CAROM::Vector(2, false);
                 param_vector->item(0) = curr_alpha;
                 param_vector->item(1) = curr_kappa;
                 param_vectors.push_back(param_vector);
             }
             fin.close();
-            
+
 //            int np = 5;
 //            string temp;
 //
@@ -823,10 +824,10 @@ int main(int argc, char *argv[])
 
             std::cout << "here1" << std::endl;
             CAROM::getParametricDMDc(dmd_u, param_vectors, dmdc_paths, desired_param,
-                                    "G", "LS", closest_rbf_val);
+                                     "G", "LS", closest_rbf_val);
             std::cout << "here4" << std::endl;
-            
-            
+
+
             const CAROM::Matrix* f_controls = createControlMatrix(d_controls);
             std::cout << "here5" << std::endl;
             dmd_u->project(init,f_controls);

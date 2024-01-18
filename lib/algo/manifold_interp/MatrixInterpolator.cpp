@@ -75,8 +75,11 @@ MatrixInterpolator::MatrixInterpolator(std::vector<Vector*> parameter_points,
             }
             else
             {
+                std::cout << "hereinterp1" << std::endl;
                 Matrix* Q_tA = rotation_matrices[i]->transposeMult(reduced_matrices[i]);
+                std::cout << "hereinterp2" << std::endl;
                 Matrix* Q_tAQ = Q_tA->mult(rotation_matrices[i]);
+                std::cout << "hereinterp3" << std::endl;
                 delete Q_tA;
                 d_rotated_reduced_matrices.push_back(Q_tAQ);
             }
