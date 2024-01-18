@@ -48,7 +48,7 @@ if read_the_docs_build:
 # -- Project information -----------------------------------------------------
 
 project = 'libROM'
-copyright = '2023, Lawrence Livermore National Security, LLNS'
+copyright = '2024, Lawrence Livermore National Security, LLNS'
 author = 'Lawrence Livermore National Security, LLNS'
 
 # The short X.Y version
