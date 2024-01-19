@@ -68,7 +68,7 @@
 #include <cfloat>
 #include <fstream>
 #include <iostream>
-#include <filesystem>
+#include <sys/stat.h>
 #include "utils/CSVDatabase.h"
 
 
@@ -1271,7 +1271,7 @@ int main(int argc, char *argv[])
     }
 
     io_dir = temp_io_dir;
-    std::filesystem::create_directory(io_dir);
+    mkdir(io_dir.c_str(), 0777);
 
     // 3. Initialize the DMD database that will be built using a greedy algorithm.
     if(de)
