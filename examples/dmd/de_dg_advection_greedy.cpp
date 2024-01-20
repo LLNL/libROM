@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2024, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -708,9 +708,6 @@ double simulation()
         while (fin >> curr_param)
         {
             double curr_f_factor = curr_param;
-            //If you need / want more parameters, look at "de_parametric_heat_condtuction_greedy.cpp:421
-
-            // INPUT / OUTPUT issue.
             dmd_paths.push_back(io_dir + "/" + to_string(curr_f_factor));
             CAROM::Vector* param_vector = new CAROM::Vector(1, false);
             param_vector->item(0) = curr_f_factor;
@@ -1287,8 +1284,9 @@ int main(int argc, char *argv[])
         // differential weight of de_F, and crossover probability of de_CR
         CAROM::DifferentialEvolution de_opt(cost, de_PS, de_F, de_CR);
 
-        // Optimize for at least de_min_iter iterations, to a maximum of de_max_iter iterations with verbose output.
-        // Stop early, after de_min_iter iterations is run, if the minimum cost did not improve by de_ct
+        // Optimize for at least de_min_iter iterations, to a maximum of de_max_iter iterations
+        // with verbose output. Stop early, after de_min_iter iterations is run, if the minimum
+        // cost did not improve by de_ct
         std::vector<double> optimal_parameters = de_opt.Optimize(de_min_iter,
                 de_max_iter, de_ct, true);
 
@@ -1313,6 +1311,8 @@ int main(int argc, char *argv[])
         {
             if (myid == 0) std::cout << "The database has already been built. Exiting." <<
                                          std::endl;
+
+            MPI_Finalize();
             return 0;
         }
         infile.close();
