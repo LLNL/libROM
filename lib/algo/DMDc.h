@@ -233,10 +233,11 @@ protected:
      * @param[in] dt d_dt
      * @param[in] t_offset d_t_offset
      * @param[in] state_offset d_state_offset
+     * @param[in] basis d_basis
      */
     DMDc(std::vector<std::complex<double>> eigs, Matrix* phi_real,
          Matrix* phi_imaginary, Matrix* B_tilde, int k,
-         double dt, double t_offset, Vector* state_offset);
+         double dt, double t_offset, Vector* state_offset, Matrix* basis);
 
     /**
      * @brief Unimplemented default constructor.
