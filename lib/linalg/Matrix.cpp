@@ -317,10 +317,6 @@ Matrix::mult(
 {
     CAROM_VERIFY(result == 0 || result->distributed() == distributed());
     CAROM_VERIFY(!other.distributed());
-    std::cout << "num first rows: " << numRows() << std::endl;
-    std::cout << "num first cols: " << numColumns() << std::endl;
-    std::cout << "num 2nd rows: " << other.numRows() << std::endl;
-    std::cout << "num 2nd cols: " << other.numColumns() << std::endl;
     CAROM_VERIFY(numColumns() == other.numRows());
 
     // If the result has not been allocated then do so.  Otherwise size it

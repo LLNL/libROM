@@ -110,39 +110,15 @@ void getParametricDMDc(T*& parametric_dmdc,
     CAROM::Matrix* W = basis_interpolator.interpolate(desired_point,
                        reorthogonalize_W);
 
-    std::cout << "here2" << std::endl;
     CAROM::MatrixInterpolator A_tilde_interpolator(parameter_points,
             rotation_matrices, A_tildes, ref_point, "R", rbf, interp_method,
             closest_rbf_val);
     CAROM::Matrix* A_tilde = A_tilde_interpolator.interpolate(desired_point);
-    std::cout << "here3" << std::endl;
-
-//    std::cout << "num Atilde rows: " << dmdcs[0]->d_A_tilde->numRows() << std::endl;
-//    std::cout << "num Atilde cols: " << dmdcs[0]->d_A_tilde->numColumns() <<
-//              std::endl;
-//    std::cout << "num btilde rows: " << dmdcs[0]->d_B_tilde->numRows() << std::endl;
-//    std::cout << "num btilde cols: " << dmdcs[0]->d_B_tilde->numColumns() <<
-//              std::endl;
-//    std::cout << "num basis rows: " << dmdcs[0]->d_basis->numRows() << std::endl;
-//    std::cout << "num basis cols: " << dmdcs[0]->d_basis->numColumns() << std::endl;
-//    std::cout << "num rot rows: " << rotation_matrices[0]->numRows() << std::endl;
-//    std::cout << "num rot cols: " << rotation_matrices[0]->numColumns() <<
-//              std::endl;
-
-    // if i flip roles of B-tilde and rot_mat, dimmensions match up
-//    CAROM::MatrixInterpolator B_tilde_interpolator(parameter_points,
-//                                                   B_tildes, rotation_matrices, ref_point, "R", rbf, interp_method,
-//                                                   closest_rbf_val);
 
     CAROM::MatrixInterpolator B_tilde_interpolator(parameter_points,
             rotation_matrices, B_tildes, ref_point, "NR", rbf, interp_method,
             closest_rbf_val);
-
-    std::cout << "here3b" << std::endl;
     CAROM::Matrix* B_tilde = B_tilde_interpolator.interpolate(desired_point);
-    std::cout << "here3c" << std::endl;
-    
-//    CAROM::Matrix* d_basis = rotation_matrices[ref_point];
 
     // Calculate the right eigenvalues/eigenvectors of A_tilde
     ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(A_tilde);
@@ -155,12 +131,6 @@ void getParametricDMDc(T*& parametric_dmdc,
     parametric_dmdc = new T(eigs, phi_real, phi_imaginary, B_tilde,
                             dmdcs[0]->d_k,dmdcs[0]->d_dt,
                             dmdcs[0]->d_t_offset, dmdcs[0]->d_state_offset, dmdcs[0]->d_basis);
-
-    //    CAROM::Matrix* d_B_tilde = NULL; //
-    //    parametric_dmdc = new T(eigs, phi_real, phi_imaginary, d_B_tilde,
-    //                            dmdcs[0]->d_k,dmdcs[0]->d_dt,
-    //                            dmdcs[0]->d_t_offset, dmdcs[0]->d_state_offset);
-
 
     delete W;
     delete A_tilde;
