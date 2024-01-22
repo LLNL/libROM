@@ -564,9 +564,7 @@ DMDc::constructDMDc(const Matrix* f_snapshots,
     }
 
     // Calculate the projection initial_condition onto column space of d_basis.
-    std::cout << "hereproj" << std::endl;
     project(init, f_controls);
-    std::cout << "hereproj2" << std::endl;
 
 
     d_trained = true;
@@ -588,16 +586,13 @@ DMDc::constructDMDc(const Matrix* f_snapshots,
 void
 DMDc::project(const Vector* init, const Matrix* controls, double t_offset)
 {
-    std::cout << "i1" << std::endl;
     Matrix* d_phi_real_squared = d_phi_real->transposeMult(d_phi_real);
     Matrix* d_phi_real_squared_2 = d_phi_imaginary->transposeMult(d_phi_imaginary);
     *d_phi_real_squared += *d_phi_real_squared_2;
-    std::cout << "i2" << std::endl;
 
     Matrix* d_phi_imaginary_squared = d_phi_real->transposeMult(d_phi_imaginary);
     Matrix* d_phi_imaginary_squared_2 = d_phi_imaginary->transposeMult(d_phi_real);
     *d_phi_imaginary_squared -= *d_phi_imaginary_squared_2;
-    std::cout << "i3" << std::endl;
 
     delete d_phi_real_squared_2;
     delete d_phi_imaginary_squared_2;
@@ -681,22 +676,12 @@ DMDc::project(const Vector* init, const Matrix* controls, double t_offset)
     delete d_projected_init_imaginary_1;
     delete d_projected_init_imaginary_2;
     
-    std::cout << "i4" << std::endl;
     
     // Controls
     Matrix* B_tilde_f = d_B_tilde->mult(controls);
-    std::cout << "i5" << std::endl;
-    std::cout << "num cont rows: " << B_tilde_f->numRows() << std::endl;
-    std::cout << "num cont cols: " << B_tilde_f->numColumns() << std::endl;
-    std::cout << "num phi rows: " << d_basis->numRows() << std::endl;
-    std::cout << "num phi cols: " << d_basis->numColumns() << std::endl;
     Matrix* UBf = d_basis->mult(B_tilde_f);
-    std::cout << "i6" << std::endl;
     Matrix* controls_real = d_phi_real->transposeMult(UBf);
-    std::cout << "i7" << std::endl;
     Matrix* controls_imaginary = d_phi_imaginary->transposeMult(UBf);
-    
-    std::cout << "i8" << std::endl;
     
     d_projected_controls_real = d_phi_real_squared_inverse->mult(controls_real);
     Matrix* d_projected_controls_real_2 = d_phi_imaginary_squared_inverse->mult(

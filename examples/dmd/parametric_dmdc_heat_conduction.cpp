@@ -621,7 +621,7 @@ int main(int argc, char *argv[])
 
             if (myid == 0)
             {
-                std::cout << "Taking snapshot at: " << t << std::endl;
+                std::cout << "Taking snapshot at: t = " << t << std::endl;
             }
 
             dmd_training_timer.Stop();
@@ -654,6 +654,7 @@ int main(int argc, char *argv[])
             if (myid == 0)
             {
                 cout << "step " << ti << ", t = " << t << endl;
+//                std::cout << "Taking snapshot at: t = " << t << std::endl;
             }
 
             u_gf.SetFromTrueDofs(u);
@@ -822,16 +823,12 @@ int main(int argc, char *argv[])
 
             dmd_training_timer.Start();
 
-            std::cout << "here1" << std::endl;
             CAROM::getParametricDMDc(dmd_u, param_vectors, dmdc_paths, desired_param,
                                      "G", "LS", closest_rbf_val);
-            std::cout << "here4" << std::endl;
 
 
             const CAROM::Matrix* f_controls = createControlMatrix(d_controls);
-            std::cout << "here5" << std::endl;
             dmd_u->project(init,f_controls);
-            std::cout << "here6" << std::endl;
 //            dmd_u->projectInitialCondition(init)
 
             dmd_training_timer.Stop();
