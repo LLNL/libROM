@@ -54,7 +54,7 @@ MatrixInterpolator::MatrixInterpolator(std::vector<Vector*> parameter_points,
 {
     CAROM_VERIFY(reduced_matrices.size() == rotation_matrices.size());
     CAROM_VERIFY(matrix_type == "SPD" || matrix_type == "NS" || matrix_type == "R"
-                 || matrix_type == "B");
+                 || matrix_type == "B"  || matrix_type == "NR");
     d_matrix_type = matrix_type;
 
     // Rotate the reduced matrices
@@ -73,13 +73,15 @@ MatrixInterpolator::MatrixInterpolator(std::vector<Vector*> parameter_points,
                 Matrix* AQ = reduced_matrices[i]->mult(rotation_matrices[i]);
                 d_rotated_reduced_matrices.push_back(AQ);
             }
+            else if (d_matrix_type == "NR")
+            {
+                Matrix* Q_tA = rotation_matrices[i]->transposeMult(reduced_matrices[i]);
+                d_rotated_reduced_matrices.push_back(Q_tA);
+            }
             else
             {
-                std::cout << "hereinterp1" << std::endl;
                 Matrix* Q_tA = rotation_matrices[i]->transposeMult(reduced_matrices[i]);
-                std::cout << "hereinterp2" << std::endl;
                 Matrix* Q_tAQ = Q_tA->mult(rotation_matrices[i]);
-                std::cout << "hereinterp3" << std::endl;
                 delete Q_tA;
                 d_rotated_reduced_matrices.push_back(Q_tAQ);
             }
