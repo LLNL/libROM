@@ -146,6 +146,7 @@ if (ENABLE_EXAMPLES)
       heat_conduction_dmdc
       parametric_heat_conduction
       de_parametric_heat_conduction_greedy
+      de_dg_advection_greedy
       wave_equation
       dg_euler
       local_tw_csv
@@ -163,6 +164,7 @@ if (ENABLE_EXAMPLES)
       prom
       prom
       prom
+      dmd
       dmd
       dmd
       dmd
