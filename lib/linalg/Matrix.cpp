@@ -1788,25 +1788,32 @@ const
 }
 
 void
-Matrix::orthogonalize(double zero_tol)
+Matrix::orthogonalize(bool double_pass, double zero_tol)
 {
+    int const num_passes = double_pass ? 2 : 1;
+
     for (int work = 0; work < d_num_cols; ++work)
     {
-        // Orthogonalize the column.
-        for (int col = 0; col < work; ++col)
+        // Orthogonalize the column (twice if double_pass == true).
+        for (int k = 0; k < num_passes; k++)
         {
-            double factor = 0.0;
-
-            for (int i = 0; i < d_num_rows; ++i)
-                factor += item(i, col) * item(i, work);
-
-            if (d_distributed && d_num_procs > 1)
+            for (int col = 0; col < work; ++col)
             {
-                CAROM_VERIFY( MPI_Allreduce(MPI_IN_PLACE, &factor, 1,
-                                            MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD) == MPI_SUCCESS );
+                double factor = 0.0;
+
+                for (int i = 0; i < d_num_rows; ++i)
+                    factor += item(i, col) * item(i, work);
+
+                if (d_distributed && d_num_procs > 1)
+                {
+                    CAROM_VERIFY( MPI_Allreduce(MPI_IN_PLACE, &factor, 1,
+                                                MPI_DOUBLE, MPI_SUM,
+                                                MPI_COMM_WORLD)
+                                  == MPI_SUCCESS );
+                }
+                for (int i = 0; i < d_num_rows; ++i)
+                    item(i, work) -= factor * item(i, col);
             }
-            for (int i = 0; i < d_num_rows; ++i)
-                item(i, work) -= factor * item(i, col);
         }
 
         // Normalize the column.
@@ -1818,7 +1825,8 @@ Matrix::orthogonalize(double zero_tol)
         if (d_distributed && d_num_procs > 1)
         {
             CAROM_VERIFY( MPI_Allreduce(MPI_IN_PLACE, &norm, 1, MPI_DOUBLE,
-                                        MPI_SUM, MPI_COMM_WORLD) == MPI_SUCCESS );
+                                        MPI_SUM, MPI_COMM_WORLD)
+                          == MPI_SUCCESS );
         }
         if (norm > zero_tol)
         {
@@ -1830,28 +1838,34 @@ Matrix::orthogonalize(double zero_tol)
 }
 
 void
-Matrix::orthogonalize_last(int ncols, double zero_tol)
+Matrix::orthogonalize_last(int ncols, bool double_pass, double zero_tol)
 {
     if (ncols == -1) ncols = d_num_cols;
     CAROM_VERIFY((ncols > 0) && (ncols <= d_num_cols));
 
     const int last_col = ncols - 1; // index of column to be orthonormalized
 
-    // Orthogonalize the column.
-    for (int col = 0; col < last_col; ++col)
+    int const num_passes = double_pass ? 2 : 1;
+
+    // Orthogonalize the column (twice if double_pass == true).
+    for (int k = 0; k < num_passes; k++)
     {
-        double factor = 0.0;
-
-        for (int i = 0; i < d_num_rows; ++i)
-            factor += item(i, col) * item(i, last_col);
-
-        if (d_distributed && d_num_procs > 1)
+        for (int col = 0; col < last_col; ++col)
         {
-            CAROM_VERIFY( MPI_Allreduce(MPI_IN_PLACE, &factor, 1, MPI_DOUBLE,
-                                        MPI_SUM, MPI_COMM_WORLD) == MPI_SUCCESS );
+            double factor = 0.0;
+
+            for (int i = 0; i < d_num_rows; ++i)
+                factor += item(i, col) * item(i, last_col);
+
+            if (d_distributed && d_num_procs > 1)
+            {
+                CAROM_VERIFY( MPI_Allreduce(MPI_IN_PLACE, &factor, 1, MPI_DOUBLE,
+                                            MPI_SUM, MPI_COMM_WORLD)
+                              == MPI_SUCCESS );
+            }
+            for (int i = 0; i < d_num_rows; ++i)
+                item(i, last_col) -= factor * item(i, col);
         }
-        for (int i = 0; i < d_num_rows; ++i)
-            item(i, last_col) -= factor * item(i, col);
     }
 
     // Normalize the column.
