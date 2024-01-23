@@ -462,6 +462,86 @@ subroutine create_local_matrix(A, x, m, n, src) bind(C)
     endif
 end subroutine
 
+subroutine correct_svd_workarray_size(A, desca, descu, descv, dou, dov, work)
+    use mpi
+
+    type(SLPK_Matrix), pointer, intent(in) :: A
+    integer, intent(in) :: desca(9), descu(9), descv(9)
+    character, intent(in) :: dou, dov
+    real(REAL_KIND), allocatable, intent(inout) :: work(:)
+
+    integer, parameter :: CTXT_=2, MB_=5, NB_=6, RSRC_=7, CSRC_=8
+
+    integer :: mrank, ierr
+    integer :: mb, nb, mp, nq, mp0, nq0, myprow, mypcol, nprow, npcol, nprowc, npcolc, nprowr, npcolr,  &
+               myprowc, mypcolc, myprowr, mypcolr, nru, ncvt, sizet, sizep, sizeq, sizeb, contextc,     &
+               contextr, nprocs, wantu, wantvt
+    real(REAL_KIND) :: watobd, wbdtosvd, wpdlange, wpdgebrd, wdbdsqr, wpdormbrqln, wpdormbrprt, lwmin
+
+    call MPI_Comm_rank(MPI_COMM_WORLD, mrank, ierr)
+
+    call blacs_gridinfo(desca(CTXT_), nprow, npcol, myprow, mypcol)
+
+    sizet = MIN(A%m, A%n)
+    sizeb = MAX(A%m, A%n)
+    nprocs = nprow * npcol
+
+    if (dou == 'V') then
+        wantu = 1
+    else
+        wantu = 0
+    end if
+    if (dov == 'V') then
+        wantvt = 1
+    else
+        wantvt = 0
+    end if
+
+    call blacs_get(desca(CTXT_), 10, contextc)
+    call blacs_gridinit(contextc, 'R', nprocs, 1)
+    call blacs_gridinfo(contextc, nprowc, npcolc, myprowc, mypcolc)
+    call blacs_get(desca(CTXT_), 10, contextr)
+    call blacs_gridinit(contextr, 'R', 1, nprocs)
+    call blacs_gridinfo(contextr, nprowr, npcolr, myprowr, mypcolr)
+
+    nru = numroc(A%m, 1, myprowc, 0, nprocs)
+    ncvt = numroc(A%n, 1, mypcolr, 0, nprocs)
+
+    nb = desca(NB_)
+    mb = desca(MB_)
+
+    mp = numroc(A%m, mb, myprow, desca(RSRC_), nprow)
+    nq = numroc(A%n, nb, mypcol, desca(CSRC_), npcol)
+
+    if (wantvt .eq. 1) then
+        sizep = numroc(sizet, descv(MB_), myprow, descv(RSRC_), nprow)
+    else
+        sizep = 0
+    end if
+    if (wantu .eq. 1) then
+        sizeq = numroc(sizet, descu(NB_), mypcol, descu(CSRC_), npcol)
+    else
+        sizeq = 0
+    end if
+    wpdlange = mp
+    wpdgebrd = 1.0 * nb * (mp + nq + 1) + nq
+    watobd = MAX(wpdlange, wpdgebrd)
+
+    wdbdsqr = max(1.0, 4.0 * sizet)
+    wpdormbrqln = MAX((1.0 * nb * (nb-1)) / 2.0, 1.0 * (sizeq + mp) * nb) + 1.0 * nb * nb
+    wpdormbrprt = MAX((1.0 * mb * (mb-1)) / 2.0, 1.0 * (sizep + nq) * mb) + 1.0 * mb * mb
+    wbdtosvd = 1.0 * sizet * (wantu * nru + wantvt * ncvt) + max(wdbdsqr, max(wantu * wpdormbrqln, wantvt * wpdormbrprt))
+    lwmin = 1.0 + 6.0 * sizeb + MAX(watobd, wbdtosvd)
+
+    if (size(work) < lwmin) then
+        print *, 'SVD Warning: MPI_COMM_WORLD rank ', mrank, ' work array size is smaller than needed.', &
+                 'Probably an integer overflow happened in scalapack pdgesvd.'
+        deallocate(work)
+        allocate(work(int(lwmin + 1, selected_int_kind(16))))
+    end if
+
+end subroutine
+
 subroutine factorize(mgr) bind(C)
     use mpi
     use ISO_FORTRAN_ENV, only: error_unit
@@ -496,6 +576,7 @@ subroutine factorize(mgr) bind(C)
         write(error_unit, *) "Rank ", mrank, ": This process not associated &
                              &with A, but we assume all processes hold part of A"
     endif
+
     call descinit(desca, A%m, A%n, A%mb, A%nb, 0, 0, A%ctxt, A%mm, ierr)
     call c_f_pointer(A%mdata, Adata, [A%mm, A%mn])
 
@@ -520,8 +601,11 @@ subroutine factorize(mgr) bind(C)
     ! The first call to pdgesvd is a workspace query.
     call pdgesvd(dou, dov, A%m, A%n, Adata, 1, 1, desca, Sdata, Udata, 1, 1, &
                & descu, Vdata, 1, 1, descv, bestwork, -1, ierr)
+
     lwork = bestwork(1)
     allocate(work(lwork))
+    call correct_svd_workarray_size(A, desca, descu, descv, dou, dov, work)
+
     call pdgesvd(dou, dov, A%m, A%n, Adata, 1, 1, desca, Sdata, Udata, 1, 1, &
                & descu, Vdata, 1, 1, descv, work, lwork, ierr)
 
