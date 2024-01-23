@@ -534,8 +534,9 @@ subroutine correct_svd_workarray_size(A, desca, descu, descv, dou, dov, work)
     lwmin = 1.0 + 6.0 * sizeb + MAX(watobd, wbdtosvd)
 
     if (size(work) < lwmin) then
-        print *, 'SVD Warning: MPI_COMM_WORLD rank ', mrank, ' work array size is smaller than needed.', &
-                 'Probably an integer overflow happened in scalapack pdgesvd.'
+        write(*, *) 'MPI_COMM_WORLD rank: ', mrank, ' size(work): ', size(work), ' lwmin: ', lwmin
+        write(*, *) 'SVD Warning: work array size is smaller than needed. ',        &
+                    'Probably an integer overflow happened in scalapack pdgesvd.'
         deallocate(work)
         allocate(work(int(lwmin + 1, selected_int_kind(16))))
     end if
