@@ -58,7 +58,7 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
-
+#include "algo/ParametricDMDc.h"
 #include "utils/CSVDatabase.h"
 #include "utils/HDFDatabase.h"
 
@@ -197,6 +197,8 @@ int main(int argc, char *argv[])
     bool save_dofs = false;
     bool csvFormat = true;
     const char *basename = "";
+    
+    CAROM::Matrix* projcont;
 
     int precision = 8;
     cout.precision(precision);
@@ -798,8 +800,8 @@ int main(int argc, char *argv[])
             CAROM::Vector* desired_param = new CAROM::Vector(4, false);
             desired_param->item(0) = alpha;
             desired_param->item(1) = kappa;
-            desired_param->item(1) = amp_in;
-            desired_param->item(1) = amp_out;
+            desired_param->item(2) = amp_in;
+            desired_param->item(3) = amp_out;
 
             dmd_training_timer.Start();
 
@@ -808,8 +810,8 @@ int main(int argc, char *argv[])
                                      "G", "LS", closest_rbf_val);
 
 
-            const CAROM::Matrix* f_controls = createControlMatrix(d_controls);
-            dmd_u->project(init,f_controls);
+//            const CAROM::Matrix* f_controls = createControlMatrix(d_controls);
+            dmd_u->project(init,projcont);
 
             dmd_training_timer.Stop();
             delete desired_param;
@@ -1058,3 +1060,17 @@ double SourceFunction(const Vector &x, double t)
     double r2 = Y.Norml2() / 0.01;
     return Amplitude(t,0) * exp(-0.5*r1*r1) - Amplitude(t,1) * exp(-0.5*r2*r2);
 }
+
+template <class T>
+CAROM::Matrix* interpcontrols(T*& parametric_dmd,
+                      std::vector<Vector*>& parameter_points,
+                      std::vector<std::string>& dmd_paths,
+                      Vector* desired_point,
+                      std::string rbf = "G",
+                      std::string interp_method = "LS",
+                      double closest_rbf_val = 0.9,
+                      bool reorthogonalize_W = false)
+{
+    
+}
+
