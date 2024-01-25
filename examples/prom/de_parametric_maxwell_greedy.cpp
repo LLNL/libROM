@@ -33,6 +33,9 @@
 //               The de phase applies the differential evolution algorithm.
 //
 // Example commands:
+// Before running the simulations below, make sure to delete the parameters file with "rm -r parameters.txt"
+//
+// Small example:
 // build_database phase: mpirun -np 8 de_parametric_maxwell_greedy -build_database -greedy-param-min 1.0 -greedy-param-max 1.2 -greedy-param-size 5 -greedysubsize 2 -greedyconvsize 3 -greedyrelerrortol 0.01
 // FOM phase:            mpirun -np 8 de_parametric_maxwell_greedy -visit -fom -f 1.15 (create a new solution to compare with)
 // DE phase:             mpirun -np 8 de_parametric_maxwell_greedy -f 1.15 -visit -de -de_f 0.9 -de_cr 0.9 -de_ps 50 -de_min_iter 10 -de_max_iter 100 -de_ct 0.001 -de_min_freq 1.0 -de_max_freq 1.2 (Run interpolative differential evolution to see if target FOM can be matched. -visit outputs visualization for the vector field E with lowest relative error)
@@ -772,15 +775,6 @@ int main(int argc, char *argv[])
 
     if (build_database)
     {
-        greedy_sampler = new CAROM::GreedyRandomSampler(greedy_param_space_min,
-                greedy_param_space_max,
-                greedy_param_space_size, false, greedy_relative_error_tol, 1.05,
-                2.0, greedy_subset_size, greedy_convergence_subset_size,
-                true, "de_parametric_maxwell_greedy_log.txt");
-    }
-
-    if (build_database)
-    {
         // The simulation is wrapped in a do-while statement so that the greedy
         // algorithm (build_database) can run multiple simulations in succession.
         do
@@ -897,6 +891,8 @@ int main(int argc, char *argv[])
         de = false;
         simulation();
     }
+
+    delete greedy_sampler;
 
     MPI_Finalize();
 
