@@ -675,14 +675,14 @@ DMDc::project(const Vector* init, const Matrix* controls, double t_offset)
     delete d_projected_init_real_2;
     delete d_projected_init_imaginary_1;
     delete d_projected_init_imaginary_2;
-    
-    
+
+
     // Controls
     Matrix* B_tilde_f = d_B_tilde->mult(controls);
     Matrix* UBf = d_basis->mult(B_tilde_f);
     Matrix* controls_real = d_phi_real->transposeMult(UBf);
     Matrix* controls_imaginary = d_phi_imaginary->transposeMult(UBf);
-    
+
     d_projected_controls_real = d_phi_real_squared_inverse->mult(controls_real);
     Matrix* d_projected_controls_real_2 = d_phi_imaginary_squared_inverse->mult(
             controls_imaginary);
@@ -763,12 +763,6 @@ DMDc::predict(double t)
         delete d_phi_mult_eigs_imaginary;
         delete d_predicted_state_real_1;
         delete d_predicted_state_real_2;
-//        std::cout << "num Atilde rows: " << d_A_tilde->numRows() << std::endl;
-//        std::cout << "num Atilde cols: " << d_A_tilde->numColumns() << std::endl;
-//        std::cout << "num btilde rows: " << d_B_tilde->numRows() << std::endl;
-//        std::cout << "num btilde cols: " << d_B_tilde->numColumns() << std::endl;
-//        std::cout << "num basis rows: " << d_basis->numRows() << std::endl;
-//        std::cout << "num basis cols: " << d_basis->numColumns() << std::endl;
     }
 
     delete f_control_real;
