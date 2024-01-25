@@ -138,6 +138,7 @@ if (ENABLE_EXAMPLES)
       nonlinear_elasticity_global_rom
       linear_elasticity_global_rom
       maxwell_global_rom
+      de_parametric_maxwell_greedy
       maxwell_local_rom_greedy     
       grad_div_global_rom
       dg_advection
@@ -154,6 +155,7 @@ if (ENABLE_EXAMPLES)
       parametric_tw_csv
       parametric_dw_csv)
     set(example_directories
+      prom
       prom
       prom
       prom
