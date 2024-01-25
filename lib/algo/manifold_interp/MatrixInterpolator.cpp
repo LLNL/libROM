@@ -88,7 +88,7 @@ MatrixInterpolator::MatrixInterpolator(std::vector<Vector*> parameter_points,
             }
             else
             {
-                d_rotated_reduced_matrices.push_back(rotation_matrices[i]);
+                d_rotated_reduced_matrices.push_back(reduced_matrices[i]);
             }
 
             d_rotated_reduced_matrices_owned.push_back(true);
@@ -541,7 +541,6 @@ Matrix* MatrixInterpolator::interpolateMatrix(Vector* point)
                 d_gammas.push_back(gamma);
             }
         }
-
         // Obtain lambda for the P interpolation matrix
         obtainLambda();
     }
