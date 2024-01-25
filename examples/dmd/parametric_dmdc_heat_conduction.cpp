@@ -183,7 +183,6 @@ int main(int argc, char *argv[])
     double t_final = 0.5;
     double alpha = 1.0e-2;
     double kappa = 0.5;
-//    double ef = 0.9999;
     double ef = -1;
     int rdim = -1;
     bool visualization = true;
@@ -245,7 +244,6 @@ int main(int argc, char *argv[])
                    "Energy fraction for DMDc.");
     args.AddOption(&rdim, "-rdim", "--rdim",
                    "Reduced dimension for DMDc.");
-
     args.AddOption(&offline, "-offline", "--offline", "-no-offline", "--no-offline",
                    "Enable or disable the offline phase.");
     args.AddOption(&online, "-online", "--online", "-no-online", "--no-online",
@@ -416,10 +414,12 @@ int main(int argc, char *argv[])
     {
         ostringstream mesh_name, sol_name;
         mesh_name << outputPath << "/parametric_dmdc_heat_conduction_" << to_string(
-                      alpha) << "_" << to_string(kappa) << "-mesh." << setfill('0') << setw(
+                      alpha) << "_" << to_string(kappa) << "_" << to_string(amp_in) << "_" <<
+                  to_string(amp_out) << "-mesh." << setfill('0') << setw(
                       6) << myid;
         sol_name << outputPath << "/parametric_dmdc_heat_conduction_" << to_string(
-                     alpha) << "_" << to_string(kappa) <<  "-init." << setfill('0') << setw(
+                     alpha) << "_" << to_string(kappa) << "_" << to_string(amp_in) << "_" <<
+                 to_string(amp_out) <<  "-init." << setfill('0') << setw(
                      6) << myid;
         ofstream omesh(mesh_name.str().c_str());
         omesh.precision(precision);
@@ -428,22 +428,10 @@ int main(int argc, char *argv[])
         osol.precision(precision);
         u_gf.Save(osol);
     }
-//    {
-//        ostringstream mesh_name, sol_name;
-//        mesh_name << "heat_conduction_dmdc-mesh." << setfill('0') << setw(6) << myid;
-//        sol_name << "heat_conduction_dmdc-init." << setfill('0') << setw(6) << myid;
-//        ofstream omesh(mesh_name.str().c_str());
-//        omesh.precision(precision);
-//        pmesh->Print(omesh);
-//        ofstream osol(sol_name.str().c_str());
-//        osol.precision(precision);
-//        u_gf.Save(osol);
-//    }
 
-
-//    VisItDataCollection visit_dc("Heat_Conduction", pmesh);
     VisItDataCollection visit_dc(outputPath + "/parametric_dmdc_Heat_Conduction_" +
-                                 to_string(alpha) + "_" + to_string(kappa), pmesh);
+                                 to_string(alpha) + "_" + to_string(kappa) + "_" + to_string(
+                                     amp_in) + "_" + to_string(amp_out), pmesh);
     visit_dc.RegisterField("temperature", &u_gf);
     if (visit)
     {
@@ -534,14 +522,8 @@ int main(int argc, char *argv[])
     int dim_c = 2;
 
     std::vector<CAROM::Vector*> d_controls;
-//    CAROM::Vector* d_controls;
-//    Vector* control = new Vector(f, dim_c, false);
     CAROM::Vector* control = new CAROM::Vector(f, dim_c, false);
-//    const std::vector control = new Vector(f, dim_c);
     d_controls.push_back(control);
-
-//    std::cout << "actual control type: " << typeid(control).name() << std::endl;
-//    std::cout << "actual d_control type: " << typeid(d_controls).name() << std::endl;
 
     if (offline)
     {
@@ -714,7 +696,8 @@ int main(int argc, char *argv[])
     {
         ostringstream sol_name;
         sol_name << outputPath << "parametric_dmdc_Heat_Conduction" << to_string(
-                     alpha) << "_" << to_string(kappa) << "-final." << setfill('0') << setw(
+                     alpha) << "_" << to_string(kappa) << "_" << to_string(amp_in) << "_" <<
+                 to_string(amp_out) << "-final." << setfill('0') << setw(
                      6) << myid;
         ofstream osol(sol_name.str().c_str());
         osol.precision(precision);
@@ -732,13 +715,6 @@ int main(int argc, char *argv[])
     {
         if (offline)
         {
-            if (myid == 0 && rdim != -1 && ef != -1)
-            {
-                std::cout << "Both rdim and ef are set. ef will be ignored." << std::endl;
-            }
-
-            dmd_training_timer.Start();
-
             if (rdim != -1)
             {
                 if (myid == 0)
@@ -749,27 +725,27 @@ int main(int argc, char *argv[])
                 dmd_u->train(rdim);
 
             }
-            else if (ef != -1)
-            {
-                if (myid == 0)
-                {
-                    std::cout << "Creating DMDc with energy fraction: " << ef << std::endl;
-                }
-                dmd_u->train(ef);
-            }
 
             dmd_training_timer.Stop();
 
             dmd_u->save(outputPath + "/" + to_string(alpha) + "_" + to_string(
-                            kappa));
+                            kappa) + "_" + to_string(amp_in) + "_" + to_string(amp_out));
 
             if (myid == 0)
             {
                 std::ofstream fout;
                 fout.open("parameters.txt", std::ios::app);
-                fout << alpha << " " << kappa << std::endl;
+                fout << alpha << " " << kappa << " " << amp_in << " " << amp_out << std::endl;
                 fout.close();
             }
+
+            const CAROM::Matrix* control_mat = createControlMatrix(d_controls);
+
+            std::string full_file_name;
+
+            full_file_name = to_string(alpha) + "_" + to_string(
+                                 kappa) + "_" + to_string(amp_in) + "_" + to_string(amp_out) + "_control";
+            control_mat->write(full_file_name);
         }
 
 //         probably will need to change a lot here
@@ -783,6 +759,8 @@ int main(int argc, char *argv[])
             std::fstream fin("parameters.txt", std::ios_base::in);
             double curr_param;
             std::vector<std::string> dmdc_paths;
+//            std::vector<std::string> control_paths;
+            std::vector<CAROM::Matrix*> controls;
             std::vector<CAROM::Vector*> param_vectors;
 
             while (fin >> curr_param)
@@ -790,46 +768,48 @@ int main(int argc, char *argv[])
                 double curr_alpha = curr_param;
                 fin >> curr_param;
                 double curr_kappa = curr_param;
+                fin >> curr_param;
+                double curr_amp_in = curr_param;
+                fin >> curr_param;
+                double curr_amp_out = curr_param;
 
                 dmdc_paths.push_back(outputPath + "/" + to_string(curr_alpha) + "_" + to_string(
-                                         curr_kappa) );
-                CAROM::Vector* param_vector = new CAROM::Vector(2, false);
+                                         curr_kappa) + "_" + to_string(curr_amp_in) + "_" + to_string(curr_amp_out) );
+
+//                control_paths.push_back(outputPath + "/" + to_string(curr_alpha) + "_" +
+//                                        to_string(
+//                                            curr_kappa) + "_" + to_string(curr_amp_in) + "_" + to_string(
+//                                            curr_amp_out) + "_control" );
+                CAROM::Matrix* control = new CAROM::Matrix();
+                control->read(outputPath + "/" + to_string(curr_alpha) + "_" + to_string(
+                                  curr_kappa) + "_" + to_string(curr_amp_in) + "_" + to_string(
+                                  curr_amp_out) + "_control");
+                controls.push_back(control);
+
+                CAROM::Vector* param_vector = new CAROM::Vector(4, false);
                 param_vector->item(0) = curr_alpha;
                 param_vector->item(1) = curr_kappa;
+                param_vector->item(2) = curr_amp_in;
+                param_vector->item(3) = curr_amp_out;
                 param_vectors.push_back(param_vector);
             }
             fin.close();
 
-//            int np = 5;
-//            string temp;
-//
-//                 scanf("%d", &np);
-//                 vector <int> money;
-//                 vector <string> names;
-//                 cin.ignore();
-//                    for(int i = 0; i< np; i++){
-//                      getline(cin, temp);
-//                      names.push_back(temp);
-//                      cout << dmdc_paths[i] << endl;
-//                   }
-//
-//            for (int i = 0; i< 10; i++) {
-//                std::cout << "d_control dim =  " << d_controls[i]->dim() << std::endl;
-//            }
-
-            CAROM::Vector* desired_param = new CAROM::Vector(2, false);
+            CAROM::Vector* desired_param = new CAROM::Vector(4, false);
             desired_param->item(0) = alpha;
             desired_param->item(1) = kappa;
+            desired_param->item(1) = amp_in;
+            desired_param->item(1) = amp_out;
 
             dmd_training_timer.Start();
 
-            CAROM::getParametricDMDc(dmd_u, param_vectors, dmdc_paths, desired_param,
+            CAROM::getParametricDMDc(dmd_u, param_vectors, dmdc_paths, controls,
+                                     desired_param,
                                      "G", "LS", closest_rbf_val);
 
 
             const CAROM::Matrix* f_controls = createControlMatrix(d_controls);
             dmd_u->project(init,f_controls);
-//            dmd_u->projectInitialCondition(init)
 
             dmd_training_timer.Stop();
             delete desired_param;

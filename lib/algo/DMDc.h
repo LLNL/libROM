@@ -193,6 +193,8 @@ protected:
      * @param[in] parameter_points  The training parameter points.
      * @param[in] dmdcs              The DMD objects associated with
      *                              each training parameter point.
+     * @param[in] controls              The controls objects associated with
+     *                              each training parameter point.
      * @param[in] desired_point     The desired point at which to create a parametric DMD.
      * @param[in] rbf               The RBF type ("G" == gaussian,
      *                              "IQ" == inverse quadratic,
@@ -208,6 +210,7 @@ protected:
     friend void getParametricDMDc<DMDc>(DMDc*& parametric_dmdc,
                                         std::vector<Vector*>& parameter_points,
                                         std::vector<DMDc*>& dmdcs,
+                                        std::vector<Matrix*>& controls,
                                         Vector* desired_point,
                                         std::string rbf,
                                         std::string interp_method,
