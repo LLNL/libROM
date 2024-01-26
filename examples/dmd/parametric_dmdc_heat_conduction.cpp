@@ -183,8 +183,7 @@ int main(int argc, char *argv[])
     double t_final = 0.5;
     double alpha = 1.0e-2;
     double kappa = 0.5;
-    double ef = -1;
-    int rdim = -1;
+    int rdim = 6;
     bool visualization = true;
     bool visit = false;
     int vis_steps = 5;
@@ -198,7 +197,7 @@ int main(int argc, char *argv[])
     bool csvFormat = true;
     const char *basename = "";
     
-    CAROM::Matrix* projcont;
+
 
     int precision = 8;
     cout.precision(precision);
@@ -242,8 +241,6 @@ int main(int argc, char *argv[])
     args.AddOption(&adios2, "-adios2", "--adios2-streams", "-no-adios2",
                    "--no-adios2-streams",
                    "Save data using adios2 streams.");
-    args.AddOption(&ef, "-ef", "--energy_fraction",
-                   "Energy fraction for DMDc.");
     args.AddOption(&rdim, "-rdim", "--rdim",
                    "Reduced dimension for DMDc.");
     args.AddOption(&offline, "-offline", "--offline", "-no-offline", "--no-offline",
@@ -811,7 +808,7 @@ int main(int argc, char *argv[])
 
 
 //            const CAROM::Matrix* f_controls = createControlMatrix(d_controls);
-            dmd_u->project(init,projcont);
+            dmd_u->project(init,controls[0]);
 
             dmd_training_timer.Stop();
             delete desired_param;
