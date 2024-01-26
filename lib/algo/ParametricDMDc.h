@@ -26,7 +26,6 @@
 #include "mpi.h"
 
 #include <complex>
-extern CAROM::Matrix* projcont;
 
 namespace CAROM {
 
@@ -111,7 +110,7 @@ void getParametricDMDc(T*& parametric_dmdc,
             rotation_matrices, controls, ref_point, "R", rbf, interp_method,
             closest_rbf_val);
 
-    CAROM::Matrix* projcont = control_interpolator.interpolate(desired_point);
+    controls[0] = control_interpolator.interpolate(desired_point);
 
 
     // Calculate the right eigenvalues/eigenvectors of A_tilde
@@ -158,7 +157,7 @@ template <class T>
 void getParametricDMDc(T*& parametric_dmdc,
                        std::vector<Vector*>& parameter_points,
                        std::vector<std::string>& dmdc_paths,
-                       std::vector<Matrix*> controls,
+                       std::vector<Matrix*>& controls,
                        Vector* desired_point,
                        std::string rbf = "G",
                        std::string interp_method = "LS",
