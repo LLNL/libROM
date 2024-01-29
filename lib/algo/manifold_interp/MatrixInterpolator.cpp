@@ -68,7 +68,7 @@ MatrixInterpolator::MatrixInterpolator(std::vector<Vector*> parameter_points,
         }
         else
         {
-            if (reduced_matrices[i]->numRows() == rotation_matrices[i]->numColumns()
+            if (reduced_matrices[i]->numRows() == rotation_matrices[i]->numRows()
                     && reduced_matrices[i]->numColumns() == rotation_matrices[i]->numRows())
             {
                 Matrix* Q_tA = rotation_matrices[i]->transposeMult(reduced_matrices[i]);
@@ -76,7 +76,7 @@ MatrixInterpolator::MatrixInterpolator(std::vector<Vector*> parameter_points,
                 delete Q_tA;
                 d_rotated_reduced_matrices.push_back(Q_tAQ);
             }
-            else if (reduced_matrices[i]->numRows() == rotation_matrices[i]->numColumns())
+            else if (reduced_matrices[i]->numRows() == rotation_matrices[i]->numRows())
             {
                 Matrix* Q_tA = rotation_matrices[i]->transposeMult(reduced_matrices[i]);
                 d_rotated_reduced_matrices.push_back(Q_tA);
