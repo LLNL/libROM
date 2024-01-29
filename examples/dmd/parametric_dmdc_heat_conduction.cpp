@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2024, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -8,40 +8,64 @@
  *
  *****************************************************************************/
 
-//      libROM MFEM Example: DMDc for Heat_Conduction (adapted from ex16p.cpp)
+//      libROM MFEM Example: Parametric DMDc for Heat_Conduction (adapted from ex16p.cpp)
 //
-// Compile with: make heat_conduction_dmdc
+// Compile with: make parametric_dmdc_heat_conduction
 //
 // =================================================================================
 //
 // Sample runs and results for DMDc:
 //
-// Command 1:
-//  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 -offline --kappa 0.3 -rdim 6
-//  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 -offline --kappa 0.35 -rdim 6
-//  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 -offline --kappa 0.45 -rdim 6
+//  Example change parameter in state vector:
 //  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 -offline --kappa 0.5 -rdim 6
+//  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 -offline --kappa 0.75 -rdim 6
+//  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 -offline --kappa 1.25 -rdim 6
+//  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 -offline --kappa 1.5 -rdim 6
 //
-//  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 --kappa 0.4 -online -predict
-
-// Output 1:
-//   Relative error of DMDc temperature (u) at t_final: 0.5 is 0.0021705658
+//  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 --kappa 1 -online -predict -visit
 //
-// Command 2:
-//   mpirun -np 8 heat_conduction_dmdc -s 1 -a 0.5 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit
+//  Output:
+//  Relative error of DMDc temperature (u) at t_final: 0.5 is 0.0025944158
+//  Elapsed time for solving FOM: 1.006058e+00 second
+//  Elapsed time for training DMDc: 7.535820e-01 second
+//  Elapsed time for predicting DMDc: 3.593333e-03 second
 //
-// Output 2:
-//   Relative error of DMDc temperature (u) at t_final: 0.7 is 0.00099736216
+//  Example change parameter in control vector:
+//  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 -offline --kappa 1 -amp-in 0.2 -rdim 6
+//  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 -offline --kappa 1 -amp-in 0.25 -rdim 6
+//  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 -offline --kappa 1 -amp-in 0.35 -rdim 6
+//  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 -offline --kappa 1 -amp-in 0.4 -rdim 6
+//
+//  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 --kappa 1 -amp-in 0.2 -online -predict -visit
+//
+//  Output:
+//  Relative error of DMDc temperature (u) at t_final: 0.5 is 0.0025568431
+//  Elapsed time for solving FOM: 1.018688e+00 second
+//  Elapsed time for training DMDc: 7.361933e-01 second
+//  Elapsed time for predicting DMDc: 3.384167e-03 second
+//
 //
 // =================================================================================
 //
-// Description:  This example solves a time dependent nonlinear heat equation
-//               problem of the form du/dt = C(u) + s, with a non-linear diffusion
-//               operator C(u) = \nabla \cdot (\kappa + \alpha u) \nabla u
-//               and time-varying external inlet and outlet source.
-//               The inlet and the outlet is located at (0,0) and (0.5,0.5)
-//               in the reference domain [-1,1]^d, where the shut down time and
-//               the amplitude of the sources are the control variables.
+// Description:  This example applies parametric DMDc to a time-dependent nonlinear
+//               heat equation problem of the form du/dt = C(u) + f. We use a
+//               nonlinear diffusion operator of the form
+//               C(u) = \nabla \cdot (\kappa + \alpha u) \nabla u. We also assume
+//               time-varying external inlet and outlet sources which are
+//               respectively located at (0,0) and (0.5,0.5) in the reference
+//               domain [-1,1]^d. The sources have constant strengths given by
+//               amp-in and amp-out.
+
+//               In this example, we can vary parameters in both the diffusion
+//               operator (kappa and alpha), and the control (amp-in and amp-out).
+//               In the offline stage, we first choose a set of training parameters
+//               and build individual DMDc's for each realization of the training
+//               parameters. After building the DMDc's, we then move to the online
+//               and predict phases. For a new set of parameter realizations, we
+//               build a new DMDc by interpolating the matrices Atilde, Btilde, and
+//               the controls from our training parameters. We then make predictions
+//               with our new DMDc and compare the speed and accuracy of our ROM
+//               with the full-order model.
 //
 //               The example demonstrates the use of nonlinear operators (the
 //               class ConductionOperator defining C(u)), as well as their
