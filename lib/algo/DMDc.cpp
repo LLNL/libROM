@@ -108,7 +108,7 @@ DMDc::DMDc(std::string base_file_name)
 DMDc::DMDc(std::vector<std::complex<double>> eigs, Matrix* phi_real,
            Matrix* phi_imaginary, Matrix* B_tilde, int k,
            double dt, double t_offset, Vector* state_offset,Matrix* basis)
-{   std::cout << "this happens: " << std::endl;
+{
     // Get the rank of this process, and the number of processors.
     int mpi_init;
     MPI_Initialized(&mpi_init);
@@ -202,9 +202,6 @@ void DMDc::takeSample(double* u_in, double t, double* f_in, bool last_step)
     if (!last_step)
     {
         Vector* control = new Vector(f_in, d_dim_c, false);
-//        std::cout << "dimc: " << d_dim_c << std::endl;
-//        std::cout << "control type: " << typeid(control).name() << std::endl;
-//        std::cout << "d_control type: " << typeid(d_controls).name() << std::endl;
         d_controls.push_back(control);
     }
 
@@ -675,7 +672,6 @@ DMDc::project(const Vector* init, const Matrix* controls, double t_offset)
     delete d_projected_init_real_2;
     delete d_projected_init_imaginary_1;
     delete d_projected_init_imaginary_2;
-
 
     // Controls
     Matrix* B_tilde_f = d_B_tilde->mult(controls);

@@ -52,9 +52,7 @@
 
 #include "mfem.hpp"
 #include "algo/DMDc.h"
-//#include "algo/DMD.h"
 #include "linalg/Vector.h"
-//#include "linalg/Matrix.h"
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -511,16 +509,13 @@ int main(int argc, char *argv[])
 
     fom_timer.Stop();
 
-//    dmd_training_timer.Start();
 
     CAROM::DMDc* dmd_u = NULL;
-
-
     f[0] = Amplitude(t, 0);
     f[1] = Amplitude(t, 1);
-    int dim_c = 2;
 
-    std::vector<CAROM::Vector*> d_controls;
+    int dim_c = 2; // control dim
+    std::vector<CAROM::Vector*> d_controls; // vector to store controls
     CAROM::Vector* control = new CAROM::Vector(f, dim_c, false);
     d_controls.push_back(control);
 
@@ -535,10 +530,8 @@ int main(int argc, char *argv[])
 
         std::cout << "t =  " << t << std::endl;
 
-//        CAROM::DMDc* dmd_u; //redefined this on 494
         dmd_u = new CAROM::DMDc(u.Size(), 2, dt);
         dmd_u->takeSample(u.GetData(), t, f, false);
-//        ts.push_back(t);
 
         dmd_training_timer.Stop();
     }
@@ -598,7 +591,6 @@ int main(int argc, char *argv[])
 
             u_gf.SetFromTrueDofs(u);
             dmd_u->takeSample(u.GetData(), t, f, last_step);
-//            ts.push_back(t);
 
             if (myid == 0)
             {
@@ -626,7 +618,6 @@ int main(int argc, char *argv[])
         if (!last_step)
         {
             CAROM::Vector* control = new CAROM::Vector(f, dim_c, false);
-//            std::cout << "dimcon =  " << control->dim() << std::endl;
             d_controls.push_back(control);
         }
 
@@ -635,7 +626,6 @@ int main(int argc, char *argv[])
             if (myid == 0)
             {
                 cout << "step " << ti << ", t = " << t << endl;
-//                std::cout << "Taking snapshot at: t = " << t << std::endl;
             }
 
             u_gf.SetFromTrueDofs(u);
@@ -701,29 +691,20 @@ int main(int argc, char *argv[])
         ofstream osol(sol_name.str().c_str());
         osol.precision(precision);
         u_gf.Save(osol);
-//        ostringstream sol_name;
-//        sol_name << "heat_conduction_dmdc-final." << setfill('0') << setw(6) << myid;
-//        ofstream osol(sol_name.str().c_str());
-//        osol.precision(precision);
-//        u_gf.Save(osol);
     }
 
     // 13. Calculate the DMDc modes.
-    // pretty sure it is easier to get rid of EF because each snapshot must have same rdim
     if (offline || online)
     {
         if (offline)
         {
-            if (rdim != -1)
+
+            if (myid == 0)
             {
-                if (myid == 0)
-                {
-                    std::cout << "Creating DMDc with rdim: " << rdim << std::endl;
-                }
-
-                dmd_u->train(rdim);
-
+                std::cout << "Creating DMDc with rdim: " << rdim << std::endl;
             }
+
+            dmd_u->train(rdim);
 
             dmd_training_timer.Stop();
 
@@ -742,12 +723,12 @@ int main(int argc, char *argv[])
 
             std::string full_file_name;
 
-            full_file_name = to_string(alpha) + "_" + to_string(
-                                 kappa) + "_" + to_string(amp_in) + "_" + to_string(amp_out) + "_control";
+            full_file_name = to_string(alpha) + "_" + to_string( kappa) + "_" + to_string(
+                                 amp_in) + "_" + to_string(amp_out) + "_control";
             control_mat->write(full_file_name);
         }
 
-//         probably will need to change a lot here
+
         if (online)
         {
             if (myid == 0)
@@ -758,7 +739,6 @@ int main(int argc, char *argv[])
             std::fstream fin("parameters.txt", std::ios_base::in);
             double curr_param;
             std::vector<std::string> dmdc_paths;
-//            std::vector<std::string> control_paths;
             std::vector<CAROM::Matrix*> controls;
             std::vector<CAROM::Vector*> param_vectors;
 
@@ -775,15 +755,11 @@ int main(int argc, char *argv[])
                 dmdc_paths.push_back(outputPath + "/" + to_string(curr_alpha) + "_" + to_string(
                                          curr_kappa) + "_" + to_string(curr_amp_in) + "_" + to_string(curr_amp_out) );
 
-//                control_paths.push_back(outputPath + "/" + to_string(curr_alpha) + "_" +
-//                                        to_string(
-//                                            curr_kappa) + "_" + to_string(curr_amp_in) + "_" + to_string(
-//                                            curr_amp_out) + "_control" );
-                CAROM::Matrix* control = new CAROM::Matrix();
-                control->read(outputPath + "/" + to_string(curr_alpha) + "_" + to_string(
-                                  curr_kappa) + "_" + to_string(curr_amp_in) + "_" + to_string(
-                                  curr_amp_out) + "_control");
-                controls.push_back(control);
+                CAROM::Matrix* curr_control = new CAROM::Matrix();
+                curr_control->read(outputPath + "/" + to_string(curr_alpha) + "_" + to_string(
+                                       curr_kappa) + "_" + to_string(curr_amp_in) + "_" + to_string(
+                                       curr_amp_out) + "_control");
+                controls.push_back(curr_control);
 
                 CAROM::Vector* param_vector = new CAROM::Vector(4, false);
                 param_vector->item(0) = curr_alpha;
@@ -802,16 +778,12 @@ int main(int argc, char *argv[])
 
             dmd_training_timer.Start();
 
-//            CAROM::Matrix* projcont = CAROM::getParametricDMDc(dmd_u, param_vectors, dmdc_paths, controls,desired_param, "G", "LS", closest_rbf_val);
 
             CAROM::Matrix* controls_interpolated = new CAROM::Matrix();
+
             CAROM::getParametricDMDc(dmd_u, param_vectors, dmdc_paths, controls,
                                      controls_interpolated, desired_param, "G", "LS", closest_rbf_val);
-//just make projcont another variable and pass through/change in parametricdmdc with &. this way dont need to change function from void
 
-
-//            const CAROM::Matrix* f_controls = createControlMatrix(d_controls);
-//            dmd_u->project(init,projcont);
             dmd_u->project(init,controls_interpolated);
 
 
@@ -901,7 +873,7 @@ int main(int argc, char *argv[])
     // 16. Free the used memory.
     delete ode_solver;
     delete pmesh;
-//    delete result_u;
+
     if (offline)
     {
         delete dmd_u;
