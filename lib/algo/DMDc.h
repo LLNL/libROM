@@ -193,9 +193,8 @@ protected:
      * @param[in] parameter_points  The training parameter points.
      * @param[in] dmdcs              The DMD objects associated with
      *                              each training parameter point.
-     * @param[in] controls              The controls objects associated with
-     *                              each training parameter point.
-     * @param[in] controls_interpolated              interpolated controls
+     * @param[in] controls     The matrices of controls from previous runs which we use to interpolate.
+     * @param[in] controls_interpolated    The interpolated controls.
      * @param[in] desired_point     The desired point at which to create a parametric DMD.
      * @param[in] rbf               The RBF type ("G" == gaussian,
      *                              "IQ" == inverse quadratic,
@@ -218,7 +217,7 @@ protected:
                                         std::string interp_method,
                                         double closest_rbf_val,
                                         bool reorthogonalize_W);
-   
+
     /**
      * @brief Constructor. Variant of DMDc with non-uniform time step size.
      *
