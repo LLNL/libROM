@@ -196,7 +196,7 @@ int main(int argc, char *argv[])
     bool save_dofs = false;
     bool csvFormat = true;
     const char *basename = "";
-    
+
 
 
     int precision = 8;
@@ -802,13 +802,18 @@ int main(int argc, char *argv[])
 
             dmd_training_timer.Start();
 
+//            CAROM::Matrix* projcont = CAROM::getParametricDMDc(dmd_u, param_vectors, dmdc_paths, controls,desired_param, "G", "LS", closest_rbf_val);
+
+            CAROM::Matrix* controls_interpolated = new CAROM::Matrix();
             CAROM::getParametricDMDc(dmd_u, param_vectors, dmdc_paths, controls,
-                                     desired_param,
-                                     "G", "LS", closest_rbf_val);
+                                     controls_interpolated, desired_param, "G", "LS", closest_rbf_val);
+//just make projcont another variable and pass through/change in parametricdmdc with &. this way dont need to change function from void
 
 
 //            const CAROM::Matrix* f_controls = createControlMatrix(d_controls);
-            dmd_u->project(init,controls[0]);
+//            dmd_u->project(init,projcont);
+            dmd_u->project(init,controls_interpolated);
+
 
             dmd_training_timer.Stop();
             delete desired_param;
@@ -1058,16 +1063,4 @@ double SourceFunction(const Vector &x, double t)
     return Amplitude(t,0) * exp(-0.5*r1*r1) - Amplitude(t,1) * exp(-0.5*r2*r2);
 }
 
-template <class T>
-CAROM::Matrix* interpcontrols(T*& parametric_dmd,
-                      std::vector<Vector*>& parameter_points,
-                      std::vector<std::string>& dmd_paths,
-                      Vector* desired_point,
-                      std::string rbf = "G",
-                      std::string interp_method = "LS",
-                      double closest_rbf_val = 0.9,
-                      bool reorthogonalize_W = false)
-{
-    
-}
 

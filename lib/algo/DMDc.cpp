@@ -108,7 +108,7 @@ DMDc::DMDc(std::string base_file_name)
 DMDc::DMDc(std::vector<std::complex<double>> eigs, Matrix* phi_real,
            Matrix* phi_imaginary, Matrix* B_tilde, int k,
            double dt, double t_offset, Vector* state_offset,Matrix* basis)
-{
+{   std::cout << "this happens: " << std::endl;
     // Get the rank of this process, and the number of processors.
     int mpi_init;
     MPI_Initialized(&mpi_init);

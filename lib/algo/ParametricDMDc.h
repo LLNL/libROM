@@ -36,6 +36,8 @@ namespace CAROM {
  * @param[in] parameter_points  The training parameter points.
  * @param[in] dmdcs              The DMDc objects associated with
  *                              each training parameter point.
+ * @param[in] controls     The matrix of controls.
+ * @param[in] controls_interpolated              interpolated controls
  * @param[in] desired_point     The desired point at which to create a parametric DMDc.
  * @param[in] rbf               The RBF type ("G" == gaussian,
  *                              "IQ" == inverse quadratic,
@@ -52,7 +54,8 @@ template <class T>
 void getParametricDMDc(T*& parametric_dmdc,
                        std::vector<Vector*>& parameter_points,
                        std::vector<T*>& dmdcs,
-                       std::vector<Matrix*>& controls,
+                       std::vector<Matrix*> controls,
+                       Matrix*& controls_interpolated,
                        Vector* desired_point,
                        std::string rbf = "G",
                        std::string interp_method = "LS",
@@ -105,12 +108,14 @@ void getParametricDMDc(T*& parametric_dmdc,
             rotation_matrices, B_tildes, ref_point, "R", rbf, interp_method,
             closest_rbf_val);
     CAROM::Matrix* B_tilde = B_tilde_interpolator.interpolate(desired_point);
-    
+
     CAROM::MatrixInterpolator control_interpolator(parameter_points,
             rotation_matrices, controls, ref_point, "R", rbf, interp_method,
             closest_rbf_val);
 
-    controls[0] = control_interpolator.interpolate(desired_point);
+//    CAROM::Matrix* projcont = control_interpolator.interpolate(/*desired_point*/);
+    controls_interpolated = control_interpolator.interpolate(desired_point);
+
 
 
     // Calculate the right eigenvalues/eigenvectors of A_tilde
@@ -133,6 +138,8 @@ void getParametricDMDc(T*& parametric_dmdc,
 
     for (auto m : rotation_matrices)
         delete m;
+
+//    return projcont;
 }
 
 /**
@@ -142,6 +149,8 @@ void getParametricDMDc(T*& parametric_dmdc,
  * @param[in] dmdc_paths         The paths to the saved DMD objects associated with
  *                              each parameter point.
  * @param[in] desired_point     The desired point at which to create a parametric DMD.
+ * @param[in] controls     The matrix of controls.
+ * @param[in] controls_interpolated              interpolated controls
  * @param[in] rbf               The RBF type ("G" == gaussian,
  *                              "IQ" == inverse quadratic,
  *                              "IMQ" == inverse multiquadric)
@@ -157,7 +166,8 @@ template <class T>
 void getParametricDMDc(T*& parametric_dmdc,
                        std::vector<Vector*>& parameter_points,
                        std::vector<std::string>& dmdc_paths,
-                       std::vector<Matrix*>& controls,
+                       std::vector<Matrix*> controls,
+                       Matrix*& controls_interpolated,
                        Vector* desired_point,
                        std::string rbf = "G",
                        std::string interp_method = "LS",
@@ -172,9 +182,11 @@ void getParametricDMDc(T*& parametric_dmdc,
     }
 
     getParametricDMDc(parametric_dmdc, parameter_points, dmdcs, controls,
+                      controls_interpolated,
                       desired_point,
                       rbf, interp_method, closest_rbf_val,
                       reorthogonalize_W);
+    
     for (int i = 0; i < dmdcs.size(); i++)
     {
         delete dmdcs[i];
