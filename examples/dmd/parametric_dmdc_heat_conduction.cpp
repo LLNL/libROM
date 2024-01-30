@@ -16,7 +16,7 @@
 //
 // Sample runs and results for DMDc:
 //
-//  Example change parameter in state vector:
+//  Example changing parameter in state vector:
 //  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 -offline --kappa 0.5 -rdim 6
 //  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 -offline --kappa 0.75 -rdim 6
 //  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 -offline --kappa 1.25 -rdim 6
@@ -30,19 +30,19 @@
 //  Elapsed time for training DMDc: 7.535820e-01 second
 //  Elapsed time for predicting DMDc: 3.593333e-03 second
 //
-//  Example change parameter in control vector:
+//  Example changing parameter in control vector:
 //  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 -offline --kappa 1 -amp-in 0.2 -rdim 6
 //  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 -offline --kappa 1 -amp-in 0.25 -rdim 6
 //  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 -offline --kappa 1 -amp-in 0.35 -rdim 6
 //  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 -offline --kappa 1 -amp-in 0.4 -rdim 6
 //
-//  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 --kappa 1 -amp-in 0.2 -online -predict -visit
+//  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 --kappa 1 -amp-in 0.3 -online -predict -visit
 //
 //  Output:
-//  Relative error of DMDc temperature (u) at t_final: 0.5 is 0.0025568431
-//  Elapsed time for solving FOM: 1.018688e+00 second
-//  Elapsed time for training DMDc: 7.361933e-01 second
-//  Elapsed time for predicting DMDc: 3.384167e-03 second
+//  Relative error of DMDc temperature (u) at t_final: 0.5 is 0.0028885833
+//  Elapsed time for solving FOM: 1.134632e+00 second
+//  Elapsed time for training DMDc: 7.583933e-01 second
+//  Elapsed time for predicting DMDc: 4.359250e-03 second
 //
 //
 // =================================================================================
