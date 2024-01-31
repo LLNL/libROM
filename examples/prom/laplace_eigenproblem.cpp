@@ -1,0 +1,526 @@
+/******************************************************************************
+ *
+ * Copyright (c) 2013-2024, Lawrence Livermore National Security, LLC
+ * and other libROM project developers. See the top-level COPYRIGHT
+ * file for details.
+ *
+ * SPDX-License-Identifier: (Apache-2.0 OR MIT)
+ *
+ *****************************************************************************/
+
+//                       libROM MFEM Example: Laplace Eigenproblem (adapted from ex11p.cpp)
+//
+// Compile with: make heat_conduction
+//
+// =================================================================================
+//
+// Description:  This example solves a time dependent nonlinear heat equation
+//               problem of the form du/dt = C(u), with a non-linear diffusion
+//               operator C(u) = \nabla \cdot (\kappa + \alpha u) \nabla u.
+//
+//               The example demonstrates the use of nonlinear operators (the
+//               class ConductionOperator defining C(u)), as well as their
+//               implicit time integration. Note that implementing the method
+//               ConductionOperator::ImplicitSolve is the only requirement for
+//               high-order implicit (SDIRK) time integration. Optional saving
+//               with ADIOS2 (adios2.readthedocs.io) is also illustrated.
+
+#include "mfem.hpp"
+#include "linalg/BasisGenerator.h"
+#include "linalg/BasisReader.h"
+#include "linalg/Vector.h"
+#include "mfem/Utilities.hpp"
+#include <cmath>
+#include <fstream>
+#include <iostream>
+
+using namespace std;
+using namespace mfem;
+
+double v_initial(const Vector &x);
+double kappa;
+
+int main(int argc, char *argv[])
+{
+    // 1. Initialize MPI.
+    int num_procs, myid;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+
+    // 2. Parse command-line options.
+    const char *mesh_file = "../data/star.mesh";
+    int ser_ref_levels = 2;
+    int par_ref_levels = 1;
+    int order = 1;
+    int nev = 5;
+    int seed = 75;
+    bool slu_solver = false;
+    bool sp_solver = false;
+    bool cpardiso_solver = false;
+
+    double alpha = 1.0;
+    bool visualization = true;
+    bool visit = false;
+    int vis_steps = 5;
+    bool fom = false;
+    bool offline = false;
+    bool merge = false;
+    bool online = false;
+    int id = 0;
+    int nsets = 0;
+
+    int precision = 8;
+    cout.precision(precision);
+
+    OptionsParser args(argc, argv);
+    args.AddOption(&mesh_file, "-m", "--mesh",
+                   "Mesh file to use.");
+    args.AddOption(&ser_ref_levels, "-rs", "--refine-serial",
+                   "Number of times to refine the mesh uniformly in serial.");
+    args.AddOption(&par_ref_levels, "-rp", "--refine-parallel",
+                   "Number of times to refine the mesh uniformly in parallel.");
+    args.AddOption(&order, "-o", "--order",
+                   "Order (degree) of the finite elements.");
+    args.AddOption(&nev, "-n", "--num-eigs",
+                   "Number of desired eigenmodes.");
+    args.AddOption(&seed, "-s", "--seed",
+                   "Random seed used to initialize LOBPCG.");
+    args.AddOption(&alpha, "-a", "--alpha",
+                   "Alpha coefficient.");
+    args.AddOption(&id, "-id", "--id", "Parametric id");
+    args.AddOption(&nsets, "-ns", "--nset", "Number of parametric snapshot sets");
+    args.AddOption(&visualization, "-vis", "--visualization", "-no-vis",
+                   "--no-visualization",
+                   "Enable or disable GLVis visualization.");
+    args.AddOption(&visit, "-visit", "--visit-datafiles", "-no-visit",
+                   "--no-visit-datafiles",
+                   "Save data files for VisIt (visit.llnl.gov) visualization.");
+    args.AddOption(&vis_steps, "-vs", "--visualization-steps",
+                   "Visualize every n-th timestep.");
+    args.AddOption(&fom, "-fom", "--fom", "-no-fom", "--no-fom",
+                   "Enable or disable the fom phase.");
+    args.AddOption(&offline, "-offline", "--offline", "-no-offline", "--no-offline",
+                   "Enable or disable the offline phase.");
+    args.AddOption(&online, "-online", "--online", "-no-online", "--no-online",
+                   "Enable or disable the online phase.");
+    args.AddOption(&merge, "-merge", "--merge", "-no-merge", "--no-merge",
+                   "Enable or disable the merge phase.");
+    args.Parse();
+    if (!args.Good())
+    {
+        args.PrintUsage(cout);
+        MPI_Finalize();
+        return 1;
+    }
+
+    if (myid == 0)
+    {
+        args.PrintOptions(cout);
+    }
+
+    kappa = alpha * M_PI;
+
+    if (fom)
+    {
+        MFEM_VERIFY(fom && !offline && !online
+                    && !merge, "everything must be turned off if fom is used.");
+    }
+    else
+    {
+        bool check = (offline && !merge && !online) || (!offline && merge && !online)
+                     || (!offline && !merge && online);
+        MFEM_VERIFY(check, "only one of offline, merge, or online must be true!");
+    }
+
+    // 3. Read the serial mesh from the given mesh file on all processors. We can
+    //    handle triangular, quadrilateral, tetrahedral and hexahedral meshes
+    //    with the same code.
+    Mesh *mesh = new Mesh(mesh_file, 1, 1);
+    int dim = mesh->Dimension();
+
+    // 4. Refine the mesh in serial to increase the resolution. In this example
+    //    we do 'ser_ref_levels' of uniform refinement, where 'ser_ref_levels' is
+    //    a command-line parameter.
+    for (int lev = 0; lev < ser_ref_levels; lev++)
+    {
+        mesh->UniformRefinement();
+    }
+
+    // 5. Define a parallel mesh by a partitioning of the serial mesh. Refine
+    //    this mesh further in parallel to increase the resolution. Once the
+    //    parallel mesh is defined, the serial mesh can be deleted.
+    ParMesh *pmesh = new ParMesh(MPI_COMM_WORLD, *mesh);
+    delete mesh;
+    for (int lev = 0; lev < par_ref_levels; lev++)
+    {
+        pmesh->UniformRefinement();
+    }
+
+    // 6. Define a parallel finite element space on the parallel mesh. Here we
+    //    use continuous Lagrange finite elements of the specified order. If
+    //    order < 1, we instead use an isoparametric/isogeometric space.
+    FiniteElementCollection *fec;
+    if (order > 0)
+    {
+        fec = new H1_FECollection(order, dim);
+    }
+    else if (pmesh->GetNodes())
+    {
+        fec = pmesh->GetNodes()->OwnFEC();
+    }
+    else
+    {
+        fec = new H1_FECollection(order = 1, dim);
+    }
+    ParFiniteElementSpace *fespace = new ParFiniteElementSpace(pmesh, fec);
+    HYPRE_BigInt size = fespace->GlobalTrueVSize();
+    if (myid == 0)
+    {
+        cout << "Number of unknowns: " << size << endl;
+    }
+
+    // 7. Initiate ROM related variables
+    int max_num_snapshots = 100;
+    bool update_right_SV = false;
+    bool isIncremental = false;
+    const std::string basisName = "basis";
+    const std::string basisFileName = basisName + std::to_string(id);
+    CAROM::Options* options;
+    CAROM::BasisGenerator *generator;
+    StopWatch solveTimer, assembleTimer, mergeTimer;
+
+    // 8. Set BasisGenerator if offline
+    if (offline)
+    {
+        options = new CAROM::Options(fespace->GetTrueVSize(), nev, nev,
+                                     update_right_SV);
+        generator = new CAROM::BasisGenerator(*options, isIncremental, basisFileName);
+    }
+
+    // 9. The merge phase
+    if (merge)
+    {
+        mergeTimer.Start();
+        options = new CAROM::Options(fespace->GetTrueVSize(), max_num_snapshots, nev,
+                                     update_right_SV);
+        generator = new CAROM::BasisGenerator(*options, isIncremental, basisName);
+        for (int paramID=0; paramID<nsets; ++paramID)
+        {
+            std::string snapshot_filename = basisName + std::to_string(
+                                                paramID) + "_snapshot";
+            generator->loadSamples(snapshot_filename, "snapshot");
+        }
+        generator->endSamples(); // save the merged basis file
+        mergeTimer.Stop();
+        if (myid == 0)
+        {
+            printf("Elapsed time for merging and building ROM basis: %e second\n",
+                   mergeTimer.RealTime());
+        }
+        delete generator;
+        delete options;
+        MPI_Finalize();
+        return 0;
+    }
+
+    // 10. Set up the parallel bilinear forms a(.,.) and m(.,.) on the finite
+    //     element space. The first corresponds to the Laplacian operator -Delta,
+    //     while the second is a simple mass matrix needed on the right hand side
+    //     of the generalized eigenvalue problem below. The boundary conditions
+    //     are implemented by elimination with special values on the diagonal to
+    //     shift the Dirichlet eigenvalues out of the computational range. After
+    //     serial and parallel assembly we extract the corresponding parallel
+    //     matrices A and M.
+    ConstantCoefficient one(1.0);
+
+    ParGridFunction u_gf(fespace);
+    FunctionCoefficient u_0(v_initial);
+    u_gf.ProjectCoefficient(u_0);
+
+    Vector u;
+    u_gf.GetTrueDofs(u);
+
+    Array<int> ess_bdr;
+    if (pmesh->bdr_attributes.Size())
+    {
+        ess_bdr.SetSize(pmesh->bdr_attributes.Max());
+        ess_bdr = 1;
+    }
+
+    ParBilinearForm *a = new ParBilinearForm(fespace);
+    a->AddDomainIntegrator(new DiffusionIntegrator(u_0));
+    if (pmesh->bdr_attributes.Size() == 0)
+    {
+        // Add a mass term if the mesh has no boundary, e.g. periodic mesh or
+        // closed surface.
+        a->AddDomainIntegrator(new MassIntegrator(one));
+    }
+    a->Assemble();
+    a->EliminateEssentialBCDiag(ess_bdr, 1.0);
+    a->Finalize();
+
+    ParBilinearForm *m = new ParBilinearForm(fespace);
+    m->AddDomainIntegrator(new MassIntegrator(one));
+    m->Assemble();
+    // shift the eigenvalue corresponding to eliminated dofs to a large value
+    m->EliminateEssentialBCDiag(ess_bdr, numeric_limits<double>::min());
+    m->Finalize();
+
+    HypreParMatrix *A = a->ParallelAssemble();
+    HypreParMatrix *M = m->ParallelAssemble();
+
+    delete a;
+    delete m;
+
+    ParGridFunction x(fespace);
+    HypreLOBPCG *lobpcg;
+    Array<double> eigenvalues;
+    DenseMatrix evect;
+
+    // 11. The offline phase
+    if(fom || offline)
+    {
+        // 12. Define and configure the LOBPCG eigensolver and the BoomerAMG
+        //     preconditioner for A to be used within the solver. Set the matrices
+        //     which define the generalized eigenproblem A x = lambda M x.
+        Solver * precond = NULL;
+        if (!slu_solver && !sp_solver && !cpardiso_solver)
+        {
+            HypreBoomerAMG * amg = new HypreBoomerAMG(*A);
+            amg->SetPrintLevel(1);
+            precond = amg;
+        }
+        else
+        {
+            // TODO: preconditioners using MFEM_SUPERLU, STRUMPACK, CPARDISO
+        }
+        lobpcg = new HypreLOBPCG(MPI_COMM_WORLD);
+        lobpcg->SetNumModes(nev);
+        lobpcg->SetRandomSeed(seed);
+        lobpcg->SetPreconditioner(*precond);
+        lobpcg->SetMaxIter(200);
+        lobpcg->SetTol(1e-8);
+        lobpcg->SetPrecondUsageMode(1);
+        lobpcg->SetPrintLevel(1);
+        lobpcg->SetMassMatrix(*M);
+        lobpcg->SetOperator(*A);
+
+        // 13. Compute the eigenmodes and extract the array of eigenvalues. Define a
+        //     parallel grid function to represent each of the eigenmodes returned by
+        //     the solver.
+        solveTimer.Start();
+        lobpcg->Solve();
+        solveTimer.Stop();
+        lobpcg->GetEigenvalues(eigenvalues);
+
+        // 14. take and write snapshots for ROM
+        if (offline)
+        {
+            for (int i=0; i<nev; i++)
+            {
+                if (myid == 0)
+                {
+                    std::cout << " Sampling eigenvalue " << i << ": " << eigenvalues[i] << "\n";
+                }
+                x = lobpcg->GetEigenvector(i);
+                generator->takeSample(x.GetData(), (double)i, 0.01);
+            }
+            generator->writeSnapshot();
+
+            delete generator;
+            delete options;
+        }
+
+        delete precond;
+    }
+
+    // 15. The online phase
+    if (online) {
+        // 16. read the reduced basis
+        assembleTimer.Start();
+        CAROM::BasisReader reader(basisName);
+
+        Vector ev;
+        const CAROM::Matrix* spatialbasis = reader.getSpatialBasis(0.0);
+        const int numRowRB = spatialbasis->numRows();
+        const int numColumnRB = spatialbasis->numColumns();
+        if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB,
+                                  numColumnRB);
+
+        // 17. form ROM operator
+        CAROM::Matrix invReducedA;
+        ComputeCtAB(*A, *spatialbasis, *spatialbasis, invReducedA);
+        DenseMatrix *A_mat = new DenseMatrix(invReducedA.numRows(),
+                                             invReducedA.numColumns());
+        A_mat->Set(1, invReducedA.getData());
+
+        CAROM::Matrix invReducedM;
+        ComputeCtAB(*M, *spatialbasis, *spatialbasis, invReducedM);
+        DenseMatrix *M_mat = new DenseMatrix(invReducedM.numRows(),
+                                             invReducedM.numColumns());
+        M_mat->Set(1, invReducedM.getData());
+
+        assembleTimer.Stop();
+
+        // 18. solve ROM
+        solveTimer.Start();
+        // (Q^T A Q) c = \lamba (Q^T M Q) c
+        A_mat->Eigenvalues(*M_mat, ev, evect);
+        solveTimer.Stop();
+
+        if (myid == 0)
+        {
+            eigenvalues = Array<double>(ev.GetData(), ev.Size());
+            for (int i = 0; i < ev.Size(); i++)
+            {
+                std::cout << "Eigenvalue " << i << ": = " << eigenvalues[i] << "\n";
+            }
+        }
+
+        delete spatialbasis;
+
+        delete A_mat;
+        delete M_mat;
+    }
+
+    // 19. Save the refined mesh and the modes in parallel. This output can be
+    //     viewed later using GLVis: "glvis -np <np> -m mesh -g mode".
+    {
+        ostringstream mesh_name, mode_name;
+        mesh_name << "laplace_eigenproblem-mesh." << setfill('0') << setw(6) << myid;
+
+        ofstream mesh_ofs(mesh_name.str().c_str());
+        mesh_ofs.precision(8);
+        pmesh->Print(mesh_ofs);
+
+        for (int i=0; i<nev; i++)
+        {
+            if (fom || offline) {
+                // convert eigenvector from HypreParVector to ParGridFunction
+                x = lobpcg->GetEigenvector(i);
+            } else {
+                // for online, eigenvectors are stored in evect matrix
+                Vector ev;
+                evect.GetRow(i, ev);
+                x = ev;
+            }
+
+            mode_name << "mode_" << setfill('0') << setw(2) << i << "."
+                      << setfill('0') << setw(6) << myid;
+
+            ofstream mode_ofs(mode_name.str().c_str());
+            mode_ofs.precision(8);
+            x.Save(mode_ofs);
+            mode_name.str("");
+        }
+    }
+
+    VisItDataCollection visit_dc("LaplaceEigenproblem", pmesh);
+    if (visit)
+    {
+        visit_dc.RegisterField("v", &u_gf);
+        for (int i=0; i<nev; i++)
+        {
+            if (fom || offline) {
+                // convert eigenvector from HypreParVector to ParGridFunction
+                x = lobpcg->GetEigenvector(i);
+            } else {
+                // for online, eigenvectors are stored in evect matrix
+                Vector ev;
+                evect.GetRow(i, ev);
+                x = ev;
+            }
+            visit_dc.RegisterField("x" + std::to_string(i), &x);
+        }
+        visit_dc.SetCycle(0);
+        visit_dc.SetTime(0.0);
+        visit_dc.Save();
+    }
+
+    socketstream sout;
+    if (visualization)
+    {
+        char vishost[] = "localhost";
+        int  visport   = 19916;
+        sout.open(vishost, visport);
+        sout << "parallel " << num_procs << " " << myid << endl;
+        int good = sout.good(), all_good;
+        MPI_Allreduce(&good, &all_good, 1, MPI_INT, MPI_MIN, pmesh->GetComm());
+        if (!all_good)
+        {
+            sout.close();
+            visualization = false;
+            if (myid == 0)
+            {
+                cout << "Unable to connect to GLVis server at "
+                     << vishost << ':' << visport << endl;
+                cout << "GLVis visualization disabled.\n";
+            }
+        }
+        else
+        {
+            for (int i=0; i<nev; i++)
+            {
+                if ( myid == 0 )
+                {
+                    cout << "Eigenmode " << i+1 << '/' << nev
+                         << ", Lambda = " << eigenvalues[i] << endl;
+                }
+
+                if (fom || offline) {
+                    // convert eigenvector from HypreParVector to ParGridFunction
+                    x = lobpcg->GetEigenvector(i);
+                } else {
+                    // for online, eigenvectors are stored in evect matrix
+                    Vector ev;
+                    evect.GetRow(i, ev);
+                    x = ev;
+                }
+
+                sout << "parallel " << num_procs << " " << myid << "\n"
+                     << "solution\n" << *pmesh << x << flush
+                     << "window_title 'Eigenmode " << i+1 << '/' << nev
+                     << ", Lambda = " << eigenvalues[i] << "'" << endl;
+
+                char c;
+                if (myid == 0)
+                {
+                    cout << "press (q)uit or (c)ontinue --> " << flush;
+                    cin >> c;
+                }
+                MPI_Bcast(&c, 1, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+                if (c != 'c')
+                {
+                    break;
+                }
+            }
+            sout.close();
+        }
+    }
+
+    // 20. Free the used memory.
+    if (fom || offline)
+    {
+        delete lobpcg;
+    }
+    delete M;
+    delete A;
+
+    delete fespace;
+    if (order > 0)
+    {
+        delete fec;
+    }
+    delete pmesh;
+
+    MPI_Finalize();
+
+    return 0;
+}
+
+double v_initial(const Vector &x)
+{
+    return 1.0 + cos(kappa*x(1))*sin(kappa*x(0));
+}
