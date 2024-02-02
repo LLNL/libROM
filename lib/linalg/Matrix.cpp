@@ -755,7 +755,11 @@ Matrix::inverse(
     }
     // Now call lapack to do the inversion.
     dgetrf(&mtx_size, &mtx_size, result->d_mat, &mtx_size, ipiv, &info);
+    CAROM_VERIFY(info == 0);
+
     dgetri(&mtx_size, result->d_mat, &mtx_size, ipiv, work, &lwork, &info);
+    CAROM_VERIFY(info == 0);
+
     // Result now has the inverse in a column major representation.  Put it
     // into row major order.
     for (int row = 0; row < mtx_size; ++row) {
@@ -798,7 +802,11 @@ Matrix::inverse(
     }
     // Now call lapack to do the inversion.
     dgetrf(&mtx_size, &mtx_size, result.d_mat, &mtx_size, ipiv, &info);
+    CAROM_VERIFY(info == 0);
+
     dgetri(&mtx_size, result.d_mat, &mtx_size, ipiv, work, &lwork, &info);
+    CAROM_VERIFY(info == 0);
+
     // Result now has the inverse in a column major representation.  Put it
     // into row major order.
     for (int row = 0; row < mtx_size; ++row) {
@@ -852,7 +860,11 @@ Matrix::inverse()
     }
     // Now call lapack to do the inversion.
     dgetrf(&mtx_size, &mtx_size, d_mat, &mtx_size, ipiv, &info);
+    CAROM_VERIFY(info == 0);
+
     dgetri(&mtx_size, d_mat, &mtx_size, ipiv, work, &lwork, &info);
+    CAROM_VERIFY(info == 0);
+
     // This now has its inverse in a column major representation.  Put it into
     // row major representation.
     for (int row = 0; row < mtx_size; ++row) {
