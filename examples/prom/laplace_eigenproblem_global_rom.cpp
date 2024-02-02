@@ -313,7 +313,7 @@ int main(int argc, char *argv[])
         lobpcg->SetMaxIter(200);
         lobpcg->SetTol(1e-8);
         lobpcg->SetPrecondUsageMode(1);
-        lobpcg->SetPrintLevel(1);
+        lobpcg->SetPrintLevel(0);
         lobpcg->SetMassMatrix(*M);
         lobpcg->SetOperator(*A);
 
@@ -326,19 +326,22 @@ int main(int argc, char *argv[])
         lobpcg->GetEigenvalues(eigenvalues);
 
         // 14. take and write snapshots for ROM
-        if (offline)
+        for (int i = 0; i < nev; i++)
         {
-            for (int i=0; i<nev; i++)
+            if (myid == 0)
             {
-                if (myid == 0)
-                {
-                    std::cout << " Sampling eigenvalue " << i << ": " << eigenvalues[i] << "\n";
-                }
+                std::cout << " Eigenvalue " << i << ": " << eigenvalues[i] << "\n";
+            }
+            if (offline)
+            {
                 x = lobpcg->GetEigenvector(i);
                 generator->takeSample(x.GetData(), (double)i, 0.01);
             }
-            generator->writeSnapshot();
+        }
 
+        if (offline)
+        {
+            generator->writeSnapshot();
             delete generator;
             delete options;
         }
@@ -383,7 +386,7 @@ int main(int argc, char *argv[])
         if (myid == 0)
         {
             eigenvalues = Array<double>(ev.GetData(), ev.Size());
-            for (int i = 0; i < ev.Size(); i++)
+            for (int i = 0; i < nev; i++)
             {
                 std::cout << "Eigenvalue " << i << ": = " << eigenvalues[i] << "\n";
             }
@@ -393,6 +396,41 @@ int main(int argc, char *argv[])
 
         delete A_mat;
         delete M_mat;
+    }
+
+    ostringstream sol_ev_name, sol_ev_name_fom;
+    if (fom || offline)
+    {
+        sol_ev_name << "sol_eigenvalues_fom." << setfill('0') << setw(6) << myid;
+    }
+    if (online)
+    {
+        sol_ev_name << "sol_eigenvalues." << setfill('0') << setw(6) << myid;
+        sol_ev_name_fom << "sol_eigenvalues_fom." << setfill('0') << setw(6) << myid;
+    }
+
+    if (online)
+    {
+        // Initialize FOM solution
+        Vector ev_fom(nev);
+
+        ifstream fom_file;
+        fom_file.open(sol_ev_name_fom.str().c_str());
+        ev_fom.Load(fom_file, ev_fom.Size());
+        fom_file.close();
+
+        Vector diff_ev(nev);
+        for (int i = 0; i < nev; i++)
+        {
+            diff_ev[i] = ev_fom[i] - eigenvalues[i];
+            double ev_diff_norm = sqrt(diff_ev[i] * diff_ev[i]);
+            double ev_fom_norm = sqrt(ev_fom[i] * ev_fom[i]);
+            if (myid == 0)
+            {
+                std::cout << "Relative error of ROM solution for eigenvalue " << i << " = " <<
+                          ev_diff_norm / ev_fom_norm << std::endl;
+            }
+        }
     }
 
     // 19. Save the refined mesh and the modes in parallel. This output can be
@@ -424,6 +462,13 @@ int main(int argc, char *argv[])
             mode_ofs.precision(8);
             x.Save(mode_ofs);
             mode_name.str("");
+        }
+
+        ofstream sol_ev_ofs(sol_ev_name.str().c_str());
+        sol_ev_ofs.precision(16);
+        for (int i = 0; i < nev; ++i)
+        {
+            sol_ev_ofs << eigenvalues[i] << std::endl;
         }
     }
 
