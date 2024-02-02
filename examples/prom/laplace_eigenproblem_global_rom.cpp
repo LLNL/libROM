@@ -10,20 +10,31 @@
 
 //                       libROM MFEM Example: Laplace Eigenproblem (adapted from ex11p.cpp)
 //
-// Compile with: make heat_conduction
-//
 // =================================================================================
 //
-// Description:  This example solves a time dependent nonlinear heat equation
-//               problem of the form du/dt = C(u), with a non-linear diffusion
-//               operator C(u) = \nabla \cdot (\kappa + \alpha u) \nabla u.
+// Description:  This example code demonstrates the use of MFEM and libROM to
+//               define a simple projection-based reduced order model of the
+//               eigenvalue problem -Delta ((1 + alpha v) u) = lambda u with homogeneous
+//               Dirichlet boundary conditions where alpha is a scalar ROM parameter
+//               controlling the frequency of v.
 //
-//               The example demonstrates the use of nonlinear operators (the
-//               class ConductionOperator defining C(u)), as well as their
-//               implicit time integration. Note that implementing the method
-//               ConductionOperator::ImplicitSolve is the only requirement for
-//               high-order implicit (SDIRK) time integration. Optional saving
-//               with ADIOS2 (adios2.readthedocs.io) is also illustrated.
+//               We compute a number of the lowest eigenmodes by discretizing
+//               the Laplacian and Mass operators using a FE space of the
+//               specified order, or an isoparametric/isogeometric space if
+//               order < 1 (quadratic for quadratic curvilinear mesh, NURBS for
+//               NURBS mesh, etc.)
+//
+// Offline phase: laplace_eigenproblem_global_rom -offline -id 0 -a 0.8
+//                laplace_eigenproblem_global_rom -offline -id 1 -a 0.9
+//                laplace_eigenproblem_global_rom -offline -id 2 -a 1.1
+//                laplace_eigenproblem_global_rom -offline -id 3 -a 1.2
+//
+// Merge phase:   laplace_eigenproblem_global_rom -merge -ns 4
+//
+// FOM run (for error calculation):
+//                laplace_eigenproblem_global_rom -fom -f 1.0
+//
+// Online phase:  laplace_eigenproblem_global_rom -online -f 1.0
 
 #include "mfem.hpp"
 #include "linalg/BasisGenerator.h"
