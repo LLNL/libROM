@@ -48,8 +48,11 @@
 using namespace std;
 using namespace mfem;
 
-double v_initial(const Vector &x);
+double Conductivity(const Vector &x);
+double Potential(const Vector &x);
+int problem = 1;
 double kappa;
+Vector bb_min, bb_max;
 
 int main(int argc, char *argv[])
 {
@@ -89,6 +92,8 @@ int main(int argc, char *argv[])
     OptionsParser args(argc, argv);
     args.AddOption(&mesh_file, "-m", "--mesh",
                    "Mesh file to use.");
+    args.AddOption(&problem, "-p", "--problem",
+                   "Problem setup to use. See options in Conductivity and Potential functions.");
     args.AddOption(&ser_ref_levels, "-rs", "--refine-serial",
                    "Number of times to refine the mesh uniformly in serial.");
     args.AddOption(&par_ref_levels, "-rp", "--refine-parallel",
@@ -251,12 +256,8 @@ int main(int argc, char *argv[])
     //     matrices A and M.
     ConstantCoefficient one(1.0);
 
-    ParGridFunction u_gf(fespace);
-    FunctionCoefficient u_0(v_initial);
-    u_gf.ProjectCoefficient(u_0);
-
-    Vector u;
-    u_gf.GetTrueDofs(u);
+    FunctionCoefficient kappa_0(Conductivity);
+    FunctionCoefficient v_0(Potential);
 
     Array<int> ess_bdr;
     if (pmesh->bdr_attributes.Size())
@@ -266,13 +267,8 @@ int main(int argc, char *argv[])
     }
 
     ParBilinearForm *a = new ParBilinearForm(fespace);
-    a->AddDomainIntegrator(new DiffusionIntegrator(u_0));
-    if (pmesh->bdr_attributes.Size() == 0)
-    {
-        // Add a mass term if the mesh has no boundary, e.g. periodic mesh or
-        // closed surface.
-        a->AddDomainIntegrator(new MassIntegrator(one));
-    }
+    a->AddDomainIntegrator(new DiffusionIntegrator(kappa_0));
+    a->AddDomainIntegrator(new MassIntegrator(v_0));
     a->Assemble();
     a->EliminateEssentialBCDiag(ess_bdr, 1.0);
     a->Finalize();
@@ -490,7 +486,6 @@ int main(int argc, char *argv[])
     VisItDataCollection visit_dc("LaplaceEigenproblem", pmesh);
     if (visit)
     {
-        visit_dc.RegisterField("v", &u_gf);
         for (int i = 0; i < nev && i < eigenvalues.Size(); i++)
         {
             if (fom || offline) {
@@ -591,7 +586,50 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-double v_initial(const Vector &x)
+double Conductivity(const Vector &x)
 {
-    return 1.0 + cos(kappa*x(1))*sin(kappa*x(0));
+    int dim = x.Size();
+
+    switch (problem)
+    {
+    case 1:
+        return 1.0;
+    case 2:
+        return 1.0 + cos(kappa * x(1)) * sin(kappa * x(0));
+    case 3:
+    case 4:
+    case 5:
+        return 1.0;
+    }
+    return 0.0;
+}
+
+double Potential(const Vector &x)
+{
+    int dim = x.Size();
+
+    // map x to the reference [-1,1] domain
+    Vector X(dim);
+    for (int i = 0; i < dim; i++)
+    {
+        double center = (bb_min[i] + bb_max[i]) * 0.5;
+        X(i) = 2 * (x(i) - center) / (bb_max[i] - bb_min[i]);
+    }
+
+    Vector center(dim);
+    center = kappa;
+
+    switch (problem)
+    {
+    case 1:
+    case 2:
+        return 0.0;
+    case 3:
+        return 1.0;
+    case 4:
+        return std::exp(X.DistanceSquaredTo(center) / 0.01);
+    case 5:
+        return -std::exp(X.DistanceSquaredTo(center) / 0.01);
+    }
+    return 0.0;
 }
