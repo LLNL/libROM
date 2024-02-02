@@ -80,6 +80,8 @@ int main(int argc, char *argv[])
     bool online = false;
     int id = 0;
     int nsets = 0;
+    double ef = 0.9999;
+    int rdim = -1;
 
     int precision = 8;
     cout.precision(precision);
@@ -117,6 +119,10 @@ int main(int argc, char *argv[])
                    "Enable or disable the online phase.");
     args.AddOption(&merge, "-merge", "--merge", "-no-merge", "--no-merge",
                    "Enable or disable the merge phase.");
+    args.AddOption(&ef, "-ef", "--energy_fraction",
+                   "Energy fraction.");
+    args.AddOption(&rdim, "-rdim", "--rdim",
+                   "Reduced dimension.");
     args.Parse();
     if (!args.Good())
     {
@@ -356,7 +362,16 @@ int main(int argc, char *argv[])
         CAROM::BasisReader reader(basisName);
 
         Vector ev;
-        const CAROM::Matrix* spatialbasis = reader.getSpatialBasis(0.0);
+        const CAROM::Matrix *spatialbasis;
+        if (rdim != -1)
+        {
+            spatialbasis = reader.getSpatialBasis(0.0, rdim);
+        }
+        else
+        {
+            spatialbasis = reader.getSpatialBasis(0.0, ef);
+        }
+
         const int numRowRB = spatialbasis->numRows();
         const int numColumnRB = spatialbasis->numColumns();
         if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB,
@@ -386,7 +401,7 @@ int main(int argc, char *argv[])
         if (myid == 0)
         {
             eigenvalues = Array<double>(ev.GetData(), ev.Size());
-            for (int i = 0; i < nev; i++)
+            for (int i = 0; i < ev.Size() && i < nev; i++)
             {
                 std::cout << "Eigenvalue " << i << ": = " << eigenvalues[i] << "\n";
             }
@@ -420,7 +435,7 @@ int main(int argc, char *argv[])
         fom_file.close();
 
         Vector diff_ev(nev);
-        for (int i = 0; i < nev; i++)
+        for (int i = 0; i < eigenvalues.Size() && i < nev; i++)
         {
             diff_ev[i] = ev_fom[i] - eigenvalues[i];
             double ev_diff_norm = sqrt(diff_ev[i] * diff_ev[i]);
@@ -443,7 +458,7 @@ int main(int argc, char *argv[])
         mesh_ofs.precision(8);
         pmesh->Print(mesh_ofs);
 
-        for (int i=0; i<nev; i++)
+        for (int i=0; i < nev && i < eigenvalues.Size(); i++)
         {
             if (fom || offline) {
                 // convert eigenvector from HypreParVector to ParGridFunction
@@ -466,7 +481,7 @@ int main(int argc, char *argv[])
 
         ofstream sol_ev_ofs(sol_ev_name.str().c_str());
         sol_ev_ofs.precision(16);
-        for (int i = 0; i < nev; ++i)
+        for (int i = 0; i < nev && i < eigenvalues.Size(); ++i)
         {
             sol_ev_ofs << eigenvalues[i] << std::endl;
         }
@@ -476,7 +491,7 @@ int main(int argc, char *argv[])
     if (visit)
     {
         visit_dc.RegisterField("v", &u_gf);
-        for (int i=0; i<nev; i++)
+        for (int i = 0; i < nev && i < eigenvalues.Size(); i++)
         {
             if (fom || offline) {
                 // convert eigenvector from HypreParVector to ParGridFunction
@@ -516,7 +531,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            for (int i=0; i<nev; i++)
+            for (int i = 0; i < nev && i < eigenvalues.Size(); i++)
             {
                 if ( myid == 0 )
                 {
