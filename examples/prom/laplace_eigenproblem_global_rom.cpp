@@ -168,6 +168,7 @@ int main(int argc, char *argv[])
     {
         mesh->UniformRefinement();
     }
+    mesh->GetBoundingBox(bb_min, bb_max, max(order, 1));
 
     // 5. Define a parallel mesh by a partitioning of the serial mesh. Refine
     //    this mesh further in parallel to increase the resolution. Once the
@@ -612,12 +613,12 @@ double Potential(const Vector &x)
     Vector X(dim);
     for (int i = 0; i < dim; i++)
     {
-        double center = (bb_min[i] + bb_max[i]) * 0.5;
-        X(i) = 2 * (x(i) - center) / (bb_max[i] - bb_min[i]);
+        double mesh_center = (bb_min[i] + bb_max[i]) * 0.5;
+        X(i) = 2.0 * (x(i) - mesh_center) / (bb_max[i] - bb_min[i]);
     }
 
-    Vector center(dim);
-    center = kappa;
+    Vector center(dim); // center of gaussian for problem 4 and 5
+    center = kappa / M_PI;
 
     switch (problem)
     {
