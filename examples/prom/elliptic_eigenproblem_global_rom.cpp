@@ -8,7 +8,7 @@
  *
  *****************************************************************************/
 
-//                       libROM MFEM Example: Laplace Eigenproblem (adapted from ex11p.cpp)
+//                       libROM MFEM Example: Elliptic Eigenproblem (adapted from ex11p.cpp)
 //
 // =================================================================================
 //
@@ -24,17 +24,17 @@
 //               order < 1 (quadratic for quadratic curvilinear mesh, NURBS for
 //               NURBS mesh, etc.)
 //
-// Offline phase: laplace_eigenproblem_global_rom -offline -id 0 -a 0.8
-//                laplace_eigenproblem_global_rom -offline -id 1 -a 0.9
-//                laplace_eigenproblem_global_rom -offline -id 2 -a 1.1
-//                laplace_eigenproblem_global_rom -offline -id 3 -a 1.2
+// Offline phase: elliptic_eigenproblem_global_rom -offline -p 2 -id 0 -a 0.8
+//                elliptic_eigenproblem_global_rom -offline -p 2 -id 1 -a 0.9
+//                elliptic_eigenproblem_global_rom -offline -p 2 -id 2 -a 1.1
+//                elliptic_eigenproblem_global_rom -offline -p 2 -id 3 -a 1.2
 //
-// Merge phase:   laplace_eigenproblem_global_rom -merge -ns 4
+// Merge phase:   elliptic_eigenproblem_global_rom -merge -p 2 -ns 4
 //
 // FOM run (for error calculation):
-//                laplace_eigenproblem_global_rom -fom -f 1.0
+//                elliptic_eigenproblem_global_rom -fom -p 2 -f 1.0
 //
-// Online phase:  laplace_eigenproblem_global_rom -online -f 1.0
+// Online phase:  elliptic_eigenproblem_global_rom -online -p 2 -f 1.0
 
 #include "mfem.hpp"
 #include "linalg/BasisGenerator.h"
@@ -449,7 +449,7 @@ int main(int argc, char *argv[])
     //     viewed later using GLVis: "glvis -np <np> -m mesh -g mode".
     {
         ostringstream mesh_name, mode_name;
-        mesh_name << "laplace_eigenproblem-mesh." << setfill('0') << setw(6) << myid;
+        mesh_name << "elliptic_eigenproblem-mesh." << setfill('0') << setw(6) << myid;
 
         ofstream mesh_ofs(mesh_name.str().c_str());
         mesh_ofs.precision(8);
@@ -484,7 +484,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    VisItDataCollection visit_dc("LaplaceEigenproblem", pmesh);
+    VisItDataCollection visit_dc("EllipticEigenproblem", pmesh);
     if (visit)
     {
         std::vector<ParGridFunction*> visit_evs;
