@@ -634,9 +634,9 @@ double Potential(const Vector &x)
     case 3:
         return 1.0;
     case 4:
-        return std::exp(X.DistanceSquaredTo(center) / 0.01);
+        return std::exp(-X.DistanceSquaredTo(center) / 0.01);
     case 5:
-        return -std::exp(X.DistanceSquaredTo(center) / 0.01);
+        return -std::exp(-X.DistanceSquaredTo(center) / 0.01);
     }
     return 0.0;
 }
