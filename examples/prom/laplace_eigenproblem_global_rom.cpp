@@ -487,6 +487,7 @@ int main(int argc, char *argv[])
     VisItDataCollection visit_dc("LaplaceEigenproblem", pmesh);
     if (visit)
     {
+        std::vector<ParGridFunction*> visit_evs;
         for (int i = 0; i < nev && i < eigenvalues.Size(); i++)
         {
             if (fom || offline) {
@@ -498,11 +499,16 @@ int main(int argc, char *argv[])
                 evect.GetRow(i, ev);
                 x = ev;
             }
-            visit_dc.RegisterField("x" + std::to_string(i), &x);
+            visit_evs.push_back(new ParGridFunction(x));
+            visit_dc.RegisterField("x" + std::to_string(i), visit_evs.back());
         }
         visit_dc.SetCycle(0);
         visit_dc.SetTime(0.0);
         visit_dc.Save();
+        for (size_t i = 0; i < visit_evs.size(); i++)
+        {
+            delete visit_evs[i];
+        }
     }
 
     socketstream sout;
