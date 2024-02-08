@@ -260,6 +260,13 @@ int main(int argc, char *argv[])
     FunctionCoefficient kappa_0(Conductivity);
     FunctionCoefficient v_0(Potential);
 
+    // Project initial conductivity and potential to visualize initial condition
+    ParGridFunction c_gf(fespace);
+    c_gf.ProjectCoefficient(kappa_0);
+
+    ParGridFunction p_gf(fespace);
+    p_gf.ProjectCoefficient(v_0);
+
     Array<int> ess_bdr;
     if (pmesh->bdr_attributes.Size())
     {
@@ -487,6 +494,8 @@ int main(int argc, char *argv[])
     VisItDataCollection visit_dc("EllipticEigenproblem", pmesh);
     if (visit)
     {
+        visit_dc.RegisterField("InitialConductivity", &c_gf);
+        visit_dc.RegisterField("InitialPotential", &p_gf);
         std::vector<ParGridFunction*> visit_evs;
         for (int i = 0; i < nev && i < eigenvalues.Size(); i++)
         {
@@ -617,14 +626,14 @@ double Potential(const Vector &x)
 
     // map x to the reference [-1,1] domain
     Vector X(dim);
+    Vector center(dim); // center of gaussian for problem 4 and 5
+    center = kappa / M_PI;
     for (int i = 0; i < dim; i++)
     {
         double mesh_center = (bb_min[i] + bb_max[i]) * 0.5;
         X(i) = 2.0 * (x(i) - mesh_center) / (bb_max[i] - bb_min[i]);
+        center(i) = 2.0 * (center(i) - mesh_center) / (bb_max[i] - bb_min[i]);
     }
-
-    Vector center(dim); // center of gaussian for problem 4 and 5
-    center = kappa / M_PI;
 
     switch (problem)
     {
