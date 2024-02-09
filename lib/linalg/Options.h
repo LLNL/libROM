@@ -50,7 +50,15 @@ public:
         samples_per_time_interval(samples_per_time_interval_),
         max_time_intervals(max_time_intervals_),
         update_right_SV(update_right_SV_),
-        write_snapshots(write_snapshots_) {};
+        write_snapshots(write_snapshots_)
+    {
+        if (max_time_intervals > 1)
+        {
+            printf("time interval is obsolete and will be removed in the future. Set max_time_intervals=%d to 1 or -1!\n",
+                    max_time_intervals);
+        }
+        CAROM_VERIFY(max_time_intervals <= 1);
+    };
 
     /**
      * @brief Sets the maximum basis dimension of the SVD algorithm.
