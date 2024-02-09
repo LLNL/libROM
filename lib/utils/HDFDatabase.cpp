@@ -124,31 +124,21 @@ HDFDatabase::putIntegerArray(
     hid_t space = H5Screate_simple(1, dim, 0);
     CAROM_VERIFY(space >= 0);
 
-    const bool key_exists = (H5Lexists(d_group_id, key.c_str(), H5P_DEFAULT) > 0);
-    hid_t dataset;
-    if (key_exists)
-    {
-        std::cout << "HDF5Database: overwriting dataset " << key << std::endl;
-        dataset = H5Dopen(d_group_id, key.c_str(), H5P_DEFAULT);
-    }
-    else
-    {
 #if (H5_VERS_MAJOR > 1) || ((H5_VERS_MAJOR == 1) && (H5_VERS_MINOR > 6))
-        dataset = H5Dcreate(d_group_id,
-                            key.c_str(),
-                            H5T_STD_I32BE,
-                            space,
-                            H5P_DEFAULT,
-                            H5P_DEFAULT,
-                            H5P_DEFAULT);
+    hid_t dataset = H5Dcreate(d_group_id,
+                              key.c_str(),
+                              H5T_STD_I32BE,
+                              space,
+                              H5P_DEFAULT,
+                              H5P_DEFAULT,
+                              H5P_DEFAULT);
 #else
-        dataset = H5Dcreate(d_group_id,
-                            key.c_str(),
-                            H5T_STD_I32BE,
-                            space,
-                            H5P_DEFAULT);
+    hid_t dataset = H5Dcreate(d_group_id,
+                              key.c_str(),
+                              H5T_STD_I32BE,
+                              space,
+                              H5P_DEFAULT);
 #endif
-    }
     CAROM_VERIFY(dataset >= 0);
 
     herr_t errf = H5Dwrite(dataset,
