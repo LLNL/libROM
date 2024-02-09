@@ -14,6 +14,8 @@
 #ifndef included_Options_h
 #define included_Options_h
 
+#include "utils/Utilities.h"
+
 namespace CAROM {
 
 /**
@@ -55,7 +57,7 @@ public:
         if (max_time_intervals > 1)
         {
             printf("time interval is obsolete and will be removed in the future. Set max_time_intervals=%d to 1 or -1!\n",
-                    max_time_intervals);
+                   max_time_intervals);
         }
         CAROM_VERIFY(max_time_intervals <= 1);
     };
