@@ -81,10 +81,7 @@ BasisWriter::writeBasis(const std::string& kind)
 
     if (kind == "basis") {
         bool file_exists = fileExists(full_file_name);
-        if (file_exists)
-            d_database->open(full_file_name, "wr");
-        else
-            d_database->create(full_file_name);
+        d_database->create(full_file_name);
 
         d_database->putDouble(tmp, time_interval_start_time);
 
@@ -124,10 +121,7 @@ BasisWriter::writeBasis(const std::string& kind)
     }
 
     if (kind == "snapshot") {
-        if (fileExists(snap_file_name))
-            d_snap_database->open(snap_file_name, "wr");
-        else
-            d_snap_database->create(snap_file_name);
+        d_snap_database->create(snap_file_name);
 
         d_snap_database->putDouble(tmp, time_interval_start_time);
 
