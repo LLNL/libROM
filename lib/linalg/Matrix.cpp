@@ -1120,11 +1120,11 @@ Matrix::calculateNumDistributedRows() {
         d_num_distributed_rows = d_num_rows;
     }
 }
-
+/*
 Matrix*
 Matrix::row_normalize() const
 {
-  
+
     int nrow = numRows();
     Matrix* normalized_matrix = new Matrix(nrow, numColumns()+1, distributed());
     for (int i = 0; i < nrow; i++)
@@ -1132,20 +1132,20 @@ Matrix::row_normalize() const
         double kii = (double)numColumns();
         double scaled_norm = 0.0;
         double rowmax = fabs(item(i,0));
-	double scaled_item;
-	int exponent; 
-	for( int j = 1; j < numColumns(); j++ )
-	{
-	   if(fabs(item(i,j))>rowmax){
-		rowmax = fabs(item(i,j));
-	   }	 
-	} 
-       if(rowmax > 1.0e-12){
-	  scaled_item = std::frexp(rowmax, &exponent);
-	  //We use the ldexp function to multiply each component by 2^-exponent.
-	  for( int j = 0; j < numColumns(); j++ )
+        double scaled_item;
+        int exponent;
+        for( int j = 1; j < numColumns(); j++ )
+        {
+           if(fabs(item(i,j))>rowmax){
+                rowmax = fabs(item(i,j));
+           }
+        }
+       if(rowmax > 1.0/(double)numDistributedRows() ){
+          scaled_item = std::frexp(rowmax, &exponent);
+          //We use the ldexp function to multiply each component by 2^-exponent.
+          for( int j = 0; j < numColumns(); j++ )
           {
-	    scaled_item = std::ldexp(item(i,j), -exponent); 
+            scaled_item = std::ldexp(item(i,j), -exponent);
             scaled_norm += (scaled_item) * (scaled_item);
           }
           kii =sqrt(kii/scaled_norm);
@@ -1153,16 +1153,54 @@ Matrix::row_normalize() const
           {
             normalized_matrix->item(i, j) = kii * (std::ldexp(item(i,j), -exponent));
           }
-	  // We computed the weights for kii using the scaled norm
-	  // Thus the true weight should be kii*2^scale. 
-	  normalized_matrix->item(i,numColumns()) = std::ldexp(kii, -exponent) ;
-	}else{
-  	  for (int j = 0; j < numColumns(); j++ )
+          // We computed the weights for kii using the scaled norm
+          // Thus the true weight should be kii*2^scale.
+          normalized_matrix->item(i,numColumns()) = std::ldexp(kii, -exponent) ;
+        }else{
+          for (int j = 0; j < numColumns(); j++ )
           {
             normalized_matrix->item(i, j) = item(i,j);
           }
-	  normalized_matrix->item(i,numColumns()) = 1.0;
-	}
+          normalized_matrix->item(i,numColumns()) = 1.0;
+        }
+    }
+    return normalized_matrix;
+
+}
+*/
+Matrix*
+Matrix::row_normalize() const
+{
+  
+    int nrow = numRows();
+    double threshold = 1.0/numDistributedRows();
+//    std::cout << "threshold :" << threshold << std::endl; 
+//    std::cout << "matrix col :" << numColumns() << std::endl; 
+    Matrix* normalized_matrix = new Matrix(nrow, numColumns()+1, distributed());
+    for (int i = 0; i < nrow; i++)
+    {
+        double rowmax = fabs(item(i,0));
+	double norm = 0.0;
+	double kii=1.0;
+	for( int j = 1; j < numColumns(); j++ )
+	{
+	    if(fabs(item(i,j))>rowmax){
+		rowmax = fabs(item(i,j));
+	    }	 
+	} 
+        if(rowmax > threshold ){
+	    for( int j = 0; j < numColumns(); j++ )
+            {
+		norm += item(i,j) * item(i,j);  
+            }
+            kii =sqrt((double)numColumns()/norm);
+        }
+        for (int j = 0; j < numColumns(); j++ )
+        { 
+            normalized_matrix->item(i, j) = kii * item(i,j);
+        }
+//	std::cout << "kii for row" << i << ":" << kii << std::endl; 
+        normalized_matrix->item(i,numColumns()) = kii ;
     }
     return normalized_matrix;
 

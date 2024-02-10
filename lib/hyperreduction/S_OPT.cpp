@@ -134,7 +134,6 @@ S_OPT(const Matrix* f_basis,
 	Vo = Voo;	
     }
     Vector Kii(num_samples,false); 
-
     int num_samples_obtained = 0;
     // Scratch space used throughout the algorithm.
 //(2-1)

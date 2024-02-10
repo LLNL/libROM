@@ -1040,10 +1040,10 @@ int main(int argc, char *argv[])
                               nldim,
                               sample_dofs,
                               num_sample_dofs_per_proc,
-                              *Bsinv, *KK,
+                              *Bsinv, 
                               myid,
-                              num_procs,precondCLS,
-                              nsamp_R);
+                              num_procs,
+                              nsamp_R, precondCLS, KK);
 
             vector<int> sample_dofs_S;  // Indices of the sampled rows
             vector<int> num_sample_dofs_per_proc_S(num_procs);
@@ -1087,10 +1087,10 @@ int main(int argc, char *argv[])
                                   nsdim,
                                   sample_dofs_S,
                                   num_sample_dofs_per_proc_S,
-                                  *Ssinv, *KS,
+                                  *Ssinv, 
                                   myid,
-                                  num_procs, precondCLS,
-                                  nsamp_S);
+                                  num_procs, 
+                                  nsamp_S, precondCLS, KS);
             }
 
             // Construct sample mesh

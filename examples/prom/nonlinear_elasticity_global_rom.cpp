@@ -1003,17 +1003,17 @@ int main(int argc, char *argv[])
             Hsinv->setSize(nsamp_H, hdim);
             vector<int> sample_dofs(nsamp_H);
             CAROM::Vector* KK = precondCLS? new CAROM::Vector(nsamp_H, false) : NULL;
-
+	    std::cout << "nsampH" << nsamp_H << std::endl; 
             // Setup hyperreduction using DEIM, GNAT, or S-OPT
             CAROM::Hyperreduction hr(samplingType);
             hr.ComputeSamples(H_librom,
                               hdim,
                               sample_dofs,
                               num_sample_dofs_per_proc,
-                              *Hsinv, *KK,
+                              *Hsinv, 
                               myid,
-                              num_procs, precondCLS,
-                              nsamp_H);
+                              num_procs,
+                              nsamp_H,precondCLS, KK);
 
             // Construct sample mesh
             const int nspaces = 1;

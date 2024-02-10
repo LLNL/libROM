@@ -15,6 +15,7 @@
 #include "S_OPT.h"
 
 #include "linalg/Matrix.h"
+#include "linalg/Vector.h"
 #include "utils/Utilities.h"
 
 namespace CAROM {
@@ -35,7 +36,9 @@ void Hyperreduction::ComputeSamples(const Matrix* f_basis,
                                     int myid,
                                     int num_procs,
                                     const int num_samples_req,
-                                    std::vector<int> *init_samples,
+				    bool precond,
+				    Vector* K,
+				    std::vector<int> *init_samples,
                                     bool qr_factorize)
 {
     switch (samplingType)
@@ -57,6 +60,7 @@ void Hyperreduction::ComputeSamples(const Matrix* f_basis,
              f_basis_sampled_inv,
              myid, num_procs,
              num_samples_req,
+	     precond, K,
              init_samples);
         return;
     case qdeim:
@@ -66,7 +70,7 @@ void Hyperreduction::ComputeSamples(const Matrix* f_basis,
               f_sampled_rows_per_proc,
               f_basis_sampled_inv,
               myid, num_procs,
-              num_samples_req);
+              num_samples_req, precond, K);
         return;
     case sopt:
         S_OPT(f_basis,
@@ -76,6 +80,7 @@ void Hyperreduction::ComputeSamples(const Matrix* f_basis,
               f_basis_sampled_inv,
               myid, num_procs,
               num_samples_req,
+	      precond, K,
               init_samples,
               qr_factorize);
         return;

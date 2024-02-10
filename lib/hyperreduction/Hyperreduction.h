@@ -38,6 +38,7 @@ static std::unordered_map<std::string, SamplingType> SamplingTypeMap =
 };
 
 class Matrix;
+class Vector;
 
 class Hyperreduction
 {
@@ -62,7 +63,9 @@ public:
                         int myid,
                         int num_procs,
                         const int num_samples_req = -1,
-                        std::vector<int> *init_samples=NULL,
+			bool precond=false,
+			Vector* K=nullptr,
+			std::vector<int> *init_samples=NULL,
                         bool qr_factorize = false);
 
 private:
