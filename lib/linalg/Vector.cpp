@@ -15,8 +15,6 @@
 #include "Vector.h"
 #include "utils/HDFDatabase.h"
 
-#include "mpi.h"
-
 #include <cmath>
 #include <string.h>
 
@@ -26,23 +24,26 @@ Vector::Vector() :
     d_vec(NULL),
     d_alloc_size(0),
     d_distributed(false),
-    d_owns_data(true)
+    d_owns_data(true),
+    d_comm(MPI_COMM_WORLD)
 {}
 
 Vector::Vector(
     int dim,
-    bool distributed) :
+    bool distributed,
+    MPI_Comm comm) :
     d_vec(NULL),
     d_alloc_size(0),
     d_distributed(distributed),
-    d_owns_data(true)
+    d_owns_data(true),
+    d_comm(comm)
 {
     CAROM_VERIFY(dim > 0);
     setSize(dim);
     int mpi_init;
     MPI_Initialized(&mpi_init);
     if (mpi_init) {
-        MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+        MPI_Comm_size(d_comm, &d_num_procs);
     }
     else {
         d_num_procs = 1;
@@ -53,11 +54,13 @@ Vector::Vector(
     double* vec,
     int dim,
     bool distributed,
-    bool copy_data) :
+    bool copy_data,
+    MPI_Comm comm) :
     d_vec(NULL),
     d_alloc_size(0),
     d_distributed(distributed),
-    d_owns_data(copy_data)
+    d_owns_data(copy_data),
+    d_comm(comm)
 {
     CAROM_VERIFY(vec != 0);
     CAROM_VERIFY(dim > 0);
@@ -73,7 +76,7 @@ Vector::Vector(
     int mpi_init;
     MPI_Initialized(&mpi_init);
     if (mpi_init) {
-        MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+        MPI_Comm_size(d_comm, &d_num_procs);
     }
     else {
         d_num_procs = 1;
@@ -85,13 +88,14 @@ Vector::Vector(
     d_vec(NULL),
     d_alloc_size(0),
     d_distributed(other.d_distributed),
-    d_owns_data(true)
+    d_owns_data(true),
+    d_comm(other.getComm())
 {
     setSize(other.d_dim);
     int mpi_init;
     MPI_Initialized(&mpi_init);
     if (mpi_init) {
-        MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+        MPI_Comm_size(d_comm, &d_num_procs);
     }
     else {
         d_num_procs = 1;
@@ -224,13 +228,14 @@ Vector::inner_product(
 {
     CAROM_VERIFY(dim() == other.dim());
     CAROM_ASSERT(distributed() == other.distributed());
+    CAROM_ASSERT(d_comm == other.getComm());
     double ip;
     double local_ip = 0.0;
     for (int i = 0; i < d_dim; ++i) {
         local_ip += d_vec[i]*other.d_vec[i];
     }
     if (d_num_procs > 1 && d_distributed) {
-        MPI_Allreduce(&local_ip, &ip, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&local_ip, &ip, 1, MPI_DOUBLE, MPI_SUM, d_comm);
     }
     else {
         ip = local_ip;
@@ -451,7 +456,7 @@ Vector::write(const std::string& base_file_name)
     MPI_Initialized(&mpi_init);
     int rank;
     if (mpi_init) {
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_rank(d_comm, &rank);
     }
     else {
         rank = 0;
@@ -476,7 +481,7 @@ void
 Vector::print(const char * prefix) const
 {
     int my_rank;
-    const bool success = MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+    const bool success = MPI_Comm_rank(d_comm, &my_rank);
     CAROM_ASSERT(success);
 
     std::string filename_str = prefix + std::to_string(my_rank);
@@ -497,7 +502,7 @@ Vector::read(const std::string& base_file_name)
     MPI_Initialized(&mpi_init);
     int rank;
     if (mpi_init) {
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_rank(d_comm, &rank);
     }
     else {
         rank = 0;
@@ -521,7 +526,7 @@ Vector::read(const std::string& base_file_name)
     database.getDoubleArray(tmp, d_vec, d_alloc_size);
     d_owns_data = true;
     if (mpi_init) {
-        MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+        MPI_Comm_size(d_comm, &d_num_procs);
     }
     else {
         d_num_procs = 1;
@@ -555,7 +560,7 @@ Vector::local_read(const std::string& base_file_name, int rank)
     database.getDoubleArray(tmp, d_vec, d_alloc_size);
     d_owns_data = true;
     if (mpi_init) {
-        MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+        MPI_Comm_size(d_comm, &d_num_procs);
     }
     else {
         d_num_procs = 1;
