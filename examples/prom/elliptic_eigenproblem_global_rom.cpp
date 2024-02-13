@@ -161,7 +161,8 @@ int main(int argc, char *argv[])
     Mesh *mesh;
     if (mesh_file == "")
     {
-        mesh = new Mesh(Mesh::MakeCartesian2D(2, 2, Element::QUADRILATERAL));
+        mesh = new Mesh(Mesh::MakeCartesian2D(2, 2, Element::QUADRILATERAL, false,
+                                              100.0, 100.0));
     }
     else
     {
@@ -633,16 +634,29 @@ double Potential(const Vector &x)
 {
     int dim = x.Size();
 
-    // map x to the reference [-1,1] domain
     Vector X(dim);
     Vector center(dim); // center of gaussian for problem 4 and 5
     center = kappa / M_PI;
+
+    Vector neg_center(center);
+    neg_center.Neg();
+
+    // map x to the reference [-1,1] domain
     for (int i = 0; i < dim; i++)
     {
-        double mesh_center = (bb_min[i] + bb_max[i]) * 0.5;
-        X(i) = 2.0 * (x(i) - mesh_center) / (bb_max[i] - bb_min[i]);
-        center(i) = 2.0 * (center(i) - mesh_center) / (bb_max[i] - bb_min[i]);
+        X(i) = bb_min[i] + (bb_max[i] - bb_min[i]) * ((x(i) - bb_min[i]) /
+                (bb_max[i] - bb_min[i]));
+
+        // map alpha parameter from [-1,1] to the mesh bounding box (controls the center for problems 4 and 5)
+        center(i) = bb_min[i] + (center(i) + 1.0) * ((bb_max[i] - bb_min[i]) * 0.5);
+        neg_center(i) = bb_min[i] + (neg_center(i) + 1.0) * ((bb_max[i] - bb_min[i]) *
+                        0.5);
     }
+
+    // amplitude of gaussians for problems 4-6
+    const double D = 1.0;
+    // width of gaussians for problems 4-6
+    const double c = 10.0;
 
     switch (problem)
     {
@@ -652,14 +666,12 @@ double Potential(const Vector &x)
     case 3:
         return 1.0;
     case 4:
+        return D * std::exp(-X.DistanceSquaredTo(center) / c);
     case 5:
-        return -std::exp(-X.DistanceSquaredTo(center) / 0.01);
+        return -D * std::exp(-X.DistanceSquaredTo(center) / c);
     case 6:
-        const double D = 1.0;
-        Vector neg_center(center);
-        neg_center.Neg();
-        return -D * (std::exp(-X.DistanceSquaredTo(center) / 0.01) + std::exp(
-                         -X.DistanceSquaredTo(neg_center) / 0.01));
+        return -D * (std::exp(-X.DistanceSquaredTo(center) / c) + std::exp(
+                         -X.DistanceSquaredTo(neg_center) / c));
     }
     return 0.0;
 }
