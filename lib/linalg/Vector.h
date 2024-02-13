@@ -764,7 +764,9 @@ public:
      */
     double localMin(int nmax = 0);
 
-    const MPI_Comm getComm() const { return d_comm; }
+    const MPI_Comm getComm() const {
+        return d_comm;
+    }
 
 private:
     /**
