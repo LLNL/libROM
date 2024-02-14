@@ -20,12 +20,12 @@
 
 namespace CAROM {
 
-Vector::Vector() :
+Vector::Vector(MPI_Comm comm) :
     d_vec(NULL),
     d_alloc_size(0),
     d_distributed(false),
     d_owns_data(true),
-    d_comm(MPI_COMM_WORLD)
+    d_comm(comm)
 {}
 
 Vector::Vector(
@@ -116,6 +116,7 @@ Vector::operator = (
 {
     d_distributed = rhs.d_distributed;
     d_num_procs = rhs.d_num_procs;
+    d_comm = rhs.getComm();
     setSize(rhs.d_dim);
     memcpy(d_vec, rhs.d_vec, d_dim*sizeof(double));
     return *this;
@@ -126,6 +127,7 @@ Vector::operator += (
     const Vector& rhs)
 {
     CAROM_VERIFY(d_dim == rhs.d_dim);
+    CAROM_VERIFY(d_comm == rhs.getComm());
     for(int i=0; i<d_dim; ++i) d_vec[i] += rhs.d_vec[i];
     return *this;
 }
@@ -135,6 +137,7 @@ Vector::operator -= (
     const Vector& rhs)
 {
     CAROM_VERIFY(d_dim == rhs.d_dim);
+    CAROM_VERIFY(d_comm == rhs.getComm());
     for(int i=0; i<d_dim; ++i) d_vec[i] -= rhs.d_vec[i];
     return *this;
 }
@@ -163,6 +166,7 @@ Vector::transform(std::function<void(const int size, double* vector)>
 void
 Vector::transform(Vector& result,
                   std::function<void(const int size, double* vector)> transformer) const {
+    CAROM_VERIFY(d_comm == result.getComm());
     result.setSize(d_dim);
     result.d_distributed = d_distributed;
     transformer(d_dim, result.d_vec);
@@ -171,6 +175,8 @@ Vector::transform(Vector& result,
 void
 Vector::transform(Vector*& result,
                   std::function<void(const int size, double* vector)> transformer) const {
+    CAROM_ASSERT(result == 0 || result->getComm() == d_comm);
+
     // If the result has not been allocated then do so.  Otherwise size it
     // correctly.
     if (result == 0) {
@@ -197,6 +203,8 @@ void
 Vector::transform(Vector& result,
                   std::function<void(const int size, double* origVector, double* resultVector)>
                   transformer) const {
+    CAROM_VERIFY(d_comm == result.getComm());
+
     Vector* origVector = new Vector(*this);
     result.setSize(d_dim);
     result.d_distributed = d_distributed;
@@ -208,6 +216,8 @@ void
 Vector::transform(Vector*& result,
                   std::function<void(const int size, double* origVector, double* resultVector)>
                   transformer) const {
+    CAROM_ASSERT(result == 0 || result->getComm() == d_comm);
+
     // If the result has not been allocated then do so.  Otherwise size it
     // correctly.
     Vector* origVector = new Vector(*this);
@@ -273,7 +283,9 @@ Vector::plus(
     Vector*& result) const
 {
     CAROM_ASSERT(result == 0 || result->distributed() == distributed());
+    CAROM_ASSERT(result == 0 || result->getComm() == d_comm);
     CAROM_ASSERT(distributed() == other.distributed());
+    CAROM_ASSERT(d_comm == other.getComm());
     CAROM_VERIFY(dim() == other.dim());
 
     // If the result has not been allocated then do so.  Otherwise size it
@@ -297,7 +309,9 @@ Vector::plus(
     Vector& result) const
 {
     CAROM_ASSERT(result.distributed() == distributed());
+    CAROM_ASSERT(result.getComm() == d_comm);
     CAROM_ASSERT(distributed() == other.distributed());
+    CAROM_ASSERT(d_comm == other.getComm());
     CAROM_VERIFY(dim() == other.dim());
 
     // Size result correctly.
@@ -316,7 +330,9 @@ Vector::plusAx(
     Vector*& result) const
 {
     CAROM_ASSERT(result == 0 || result->distributed() == distributed());
+    CAROM_ASSERT(result == 0 || result->getComm() == d_comm);
     CAROM_ASSERT(distributed() == other.distributed());
+    CAROM_ASSERT(d_comm == other.getComm());
     CAROM_VERIFY(dim() == other.dim());
 
     // If the result has not been allocated then do so.  Otherwise size it
@@ -341,7 +357,9 @@ Vector::plusAx(
     Vector& result) const
 {
     CAROM_ASSERT(result.distributed() == distributed());
+    CAROM_ASSERT(result.getComm() == d_comm);
     CAROM_ASSERT(distributed() == other.distributed());
+    CAROM_ASSERT(d_comm == other.getComm());
     CAROM_VERIFY(dim() == other.dim());
 
     // Size result correctly.
@@ -359,6 +377,7 @@ Vector::plusEqAx(
     const Vector& other)
 {
     CAROM_ASSERT(distributed() == other.distributed());
+    CAROM_ASSERT(d_comm == other.getComm());
     CAROM_VERIFY(dim() == other.dim());
 
     // Do the addition.
@@ -373,7 +392,9 @@ Vector::minus(
     Vector*& result) const
 {
     CAROM_ASSERT(result == 0 || result->distributed() == distributed());
+    CAROM_ASSERT(result == 0 || result->getComm() == d_comm);
     CAROM_ASSERT(distributed() == other.distributed());
+    CAROM_ASSERT(d_comm == other.getComm());
     CAROM_VERIFY(dim() == other.dim());
 
     // If the result has not been allocated then do so.  Otherwise size it
@@ -397,7 +418,9 @@ Vector::minus(
     Vector& result) const
 {
     CAROM_ASSERT(result.distributed() == distributed());
+    CAROM_ASSERT(result.getComm() == d_comm);
     CAROM_ASSERT(distributed() == other.distributed());
+    CAROM_ASSERT(d_comm == other.getComm());
     CAROM_VERIFY(dim() == other.dim());
 
     // Size result correctly.
@@ -415,6 +438,7 @@ Vector::mult(
     Vector*& result) const
 {
     CAROM_ASSERT(result == 0 || result->distributed() == distributed());
+    CAROM_ASSERT(result == 0 || result->getComm() == d_comm);
 
     // If the result has not been allocated then do so.  Otherwise size it
     // correctly.
@@ -437,6 +461,7 @@ Vector::mult(
     Vector& result) const
 {
     CAROM_ASSERT(result.distributed() == distributed());
+    CAROM_ASSERT(result.getComm() == d_comm);
 
     // Size result correctly.
     result.setSize(d_dim);
@@ -599,7 +624,7 @@ int getCenterPoint(std::vector<Vector*>& points,
 
         double min_dist_to_centroid;
         for (int i = 0; i < points.size(); i++) {
-            Vector diff;
+            Vector diff(points[0]->getComm());
             centroid.minus(*points[i], diff);
             double dist_to_centroid = diff.norm();
             if (i == 0 || dist_to_centroid < min_dist_to_centroid)
@@ -617,7 +642,7 @@ int getCenterPoint(std::vector<Vector*>& points,
         std::vector<double> dist_to_points(points.size(), 0);
         for (int i = 0; i < points.size(); i++) {
             for (int j = i + 1; j < points.size(); j++) {
-                Vector diff;
+                Vector diff(points[0]->getComm());
                 points[i]->minus(*points[j], diff);
                 double dist = diff.norm();
                 dist_to_points[i] += dist;
@@ -655,7 +680,7 @@ int getClosestPoint(std::vector<Vector*>& points,
     int closest_point = 0;
     double closest_dist_to_test_point = INT_MAX;
     for (int i = 0; i < points.size(); i++) {
-        Vector diff;
+        Vector diff(points[0]->getComm());
         test_point->minus(*points[i], diff);
         double dist = diff.norm();
         if (dist < closest_dist_to_test_point)

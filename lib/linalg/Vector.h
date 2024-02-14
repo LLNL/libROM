@@ -30,7 +30,12 @@ namespace CAROM {
 class Vector
 {
 public:
-    Vector();
+    /**
+     * @brief Constructor creating a Vector with uninitialized values and size.
+     * 
+     * @param[in] comm MPI communicator of the processors that own this Vector.
+     */
+    Vector(MPI_Comm comm = MPI_COMM_WORLD);
 
     /**
      * @brief Constructor creating a Vector with uninitialized values.
@@ -764,6 +769,9 @@ public:
      */
     double localMin(int nmax = 0);
 
+    /**
+     * @brief Get MPI communicator of this Vector.
+     */
     const MPI_Comm getComm() const {
         return d_comm;
     }
