@@ -640,6 +640,8 @@ double Conductivity(const Vector &x)
     case 5:
     case 6:
     case 7:
+    case 8:
+    case 9:
         return 1.0;
     }
     return 0.0;
@@ -669,9 +671,28 @@ double Potential(const Vector &x)
     }
 
     // amplitude of gaussians for problems 4-6
-    const double D = 1.0;
+    const double D = 100.0;
     // width of gaussians for problems 4-6
-    const double c = 10.0;
+    const double c = 0.05;
+
+    const double min_d = 2.0 * sqrt(2.0);
+
+    auto check_domain = [&](const Vector &t, const double limit) {
+        // helper function to check if t is within limit percentage relative to the center of the mesh
+        for (int i = 0; i < dim; i++)
+        {
+            double domain_limit = limit * (bb_max[i] - bb_min[i]);
+            double mesh_center = 0.5 * (bb_max[i] + bb_min[i]);
+
+            // check that t is within the limit relative to the center of the mesh
+            if (t(i) - mesh_center > 0.5 * domain_limit)
+            {
+                std::cerr << "Error: value of t exceeds domain limit: t = " << t(
+                              i) << ", limit = " << 0.5 * domain_limit << "\n";
+                exit(-1);
+            }
+        }
+    };
 
     switch (problem)
     {
@@ -704,6 +725,43 @@ double Potential(const Vector &x)
         }
         return -D * (std::exp(-X.DistanceSquaredTo(center) / c) + std::exp(
                          -X.DistanceSquaredTo(neg_center) / c));
+    case 8:
+        // Similar to case 6, but t is restricted to inner 20% of the domain
+        //  in this case, the radius of the gaussian is (0.05*min_d)^2 where
+        //  min_d is the lower bound of the atom distance over time
+
+        // verify t is within inner 20% of domain (centered around mesh origin)
+        check_domain(center, 0.2);
+
+        return -D * (std::exp(-X.DistanceSquaredTo(center) / std::pow(c * min_d,
+                              2)) + std::exp(
+                         -X.DistanceSquaredTo(neg_center) / std::pow(c * min_d, 2)));
+    case 9:
+        // Similar to case 7, but t is restricted to inner 20% of the domain and t is defined as:
+        //  t = (1.5 + 0.5*cos(2*k), 1.5 + 0.5*sin(2*k)) where k = alpha * PI, alpha is the input parameter given with the -a option.
+        //  The radius of the gaussian follows case 8: (0.05*min_d)^2
+
+        center = 0.15;
+        center(0) += 0.05 * cos(2.0*kappa);
+        center(1) += 0.05 * sin(2.0*kappa);
+
+        neg_center = center;
+        neg_center.Neg();
+
+        for (int i = 0; i < dim; i++)
+        {
+            // map alpha parameter from [-1,1] to the mesh bounding box (controls the center for problems 4 and 5)
+            center(i) = bb_min[i] + (center(i) + 1.0) * ((bb_max[i] - bb_min[i]) * 0.5);
+            neg_center(i) = bb_min[i] + (neg_center(i) + 1.0) * ((bb_max[i] - bb_min[i]) *
+                            0.5);
+        }
+
+        // verify t is within inner 20% of domain (centered around mesh origin)
+        check_domain(center, 0.2);
+
+        return -D * (std::exp(-X.DistanceSquaredTo(center) / std::pow(c * min_d,
+                              2)) + std::exp(
+                         -X.DistanceSquaredTo(neg_center) / std::pow(c * min_d, 2)));
     }
     return 0.0;
 }
