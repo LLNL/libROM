@@ -18,6 +18,7 @@
 #include "utils/Utilities.h"
 #include <vector>
 #include <functional>
+#include "mpi.h"
 
 namespace CAROM {
 
@@ -29,7 +30,12 @@ namespace CAROM {
 class Vector
 {
 public:
-    Vector();
+    /**
+     * @brief Constructor creating a Vector with uninitialized values and size.
+     *
+     * @param[in] comm MPI communicator of the processors that own this Vector.
+     */
+    Vector(MPI_Comm comm = MPI_COMM_WORLD);
 
     /**
      * @brief Constructor creating a Vector with uninitialized values.
@@ -41,10 +47,12 @@ public:
      *                the Vector on this processor.
      * @param[in] distributed If true the dimensions of the Vector are spread
      *                        over all processors.
+     * @param[in] comm MPI communicator of the processors that own this Vector.
      */
     Vector(
         int dim,
-        bool distributed);
+        bool distributed,
+        MPI_Comm comm = MPI_COMM_WORLD);
 
     /**
      * @brief Constructor in which the Vector is given its initial values.
@@ -61,12 +69,14 @@ public:
      * @param[in] copy_data If true the vector allocates its own storage and
      *                      copies the contents of vec into its own storage.
      *                      Otherwise it uses vec as its storage.
+     * @param[in] comm MPI communicator of the processors that own this Vector.
      */
     Vector(
         double* vec,
         int dim,
         bool distributed,
-        bool copy_data = true);
+        bool copy_data = true,
+        MPI_Comm comm = MPI_COMM_WORLD);
 
     /**
      * @brief Copy constructor.
@@ -759,6 +769,13 @@ public:
      */
     double localMin(int nmax = 0);
 
+    /**
+     * @brief Get MPI communicator of this Vector.
+     */
+    const MPI_Comm getComm() const {
+        return d_comm;
+    }
+
 private:
     /**
      * @brief The storage for the Vector's values on this processor.
@@ -797,6 +814,12 @@ private:
      * If d_owns_data is false, then the object may not reallocate d_vec.
      */
     bool d_owns_data;
+
+    /**
+     * @brief MPI communicator of the processors that own this Vector.
+     * Cannot change once initialized.
+     */
+    const MPI_Comm d_comm;
 };
 
 /**

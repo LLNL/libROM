@@ -262,10 +262,9 @@ StaticSVD::computeSVD()
     // transpose matrix if sample size > dimension.
     bool transpose = d_total_dim < d_num_samples;
 
+    snapshot_matrix = new SLPK_Matrix;
     if (transpose) {
         // create a transposed matrix if sample size > dimension.
-        snapshot_matrix = new SLPK_Matrix;
-
         int d_blocksize_tr = d_num_samples / d_nprow;
         if (d_num_samples % d_nprow != 0) {
             d_blocksize_tr += 1;
@@ -282,8 +281,12 @@ StaticSVD::computeSVD()
         }
     }
     else {
-        // use d_samples if sample size <= dimension.
-        snapshot_matrix = d_samples.get();
+        // copy d_samples if sample size <= dimension.
+        // SVD operation does not preserve the original snapshot matrix.
+        initialize_matrix(snapshot_matrix, d_total_dim, d_num_samples,
+                          d_nprow, d_npcol, d_blocksize, d_blocksize);
+        copy_matrix(snapshot_matrix, 1, 1, d_samples.get(), 1, 1, d_total_dim,
+                    d_num_samples);
     }
 
     // This block does the actual ScaLAPACK call to do the factorization.
@@ -372,11 +375,9 @@ StaticSVD::computeSVD()
         }
     }
 
-    if (transpose) {
-        // Delete the transposed snapshot matrix.
-        free_matrix_data(snapshot_matrix);
-        delete snapshot_matrix;
-    }
+    // Delete the snapshot matrix.
+    free_matrix_data(snapshot_matrix);
+    delete snapshot_matrix;
 }
 
 void
