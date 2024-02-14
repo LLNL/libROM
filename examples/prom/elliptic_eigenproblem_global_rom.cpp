@@ -658,18 +658,6 @@ double Potential(const Vector &x)
     Vector neg_center(center);
     neg_center.Neg();
 
-    // map x to the reference [-1,1] domain
-    for (int i = 0; i < dim; i++)
-    {
-        X(i) = bb_min[i] + (bb_max[i] - bb_min[i]) * ((x(i) - bb_min[i]) /
-                (bb_max[i] - bb_min[i]));
-
-        // map alpha parameter from [-1,1] to the mesh bounding box (controls the center for problems 4 and 5)
-        center(i) = bb_min[i] + (center(i) + 1.0) * ((bb_max[i] - bb_min[i]) * 0.5);
-        neg_center(i) = bb_min[i] + (neg_center(i) + 1.0) * ((bb_max[i] - bb_min[i]) *
-                        0.5);
-    }
-
     // amplitude of gaussians for problems 4-6
     const double D = 100.0;
     // width of gaussians for problems 4-6
@@ -693,6 +681,28 @@ double Potential(const Vector &x)
             }
         }
     };
+
+    auto map_fraction_to_mesh = [](const double &bb_min, const double &bb_max,
+    const double &fraction) -> double {
+        // helper function to map a fractional value from [-1, 1] to [bb_min, bb_max]
+        CAROM_VERIFY(fraction <= 1.0 && fraction >= -1.0);
+        return bb_min + (fraction + 1.0) * ((bb_max - bb_min) * 0.5);
+    };
+
+    auto map_mesh_to_fraction = [](const double &bb_min, const double &bb_max,
+    const double &value) -> double {
+        // helper function to map a value from the mesh range [bb_min, bb_max] to [-1, 1]
+        CAROM_VERIFY(value <= bb_max && value >= bb_min);
+        return -1.0 + (value - bb_min) * ((2.0) / (bb_max - bb_min));
+    };
+
+    X = x;
+    for (int i = 0; i < dim; i++)
+    {
+        // map alpha parameter from [-1,1] to the mesh bounding box (controls the center for problems 4 and 5)
+        center(i) = map_fraction_to_mesh(bb_min[i], bb_max[i], center(i));
+        neg_center(i) = map_fraction_to_mesh(bb_min[i], bb_max[i], neg_center(i));
+    }
 
     switch (problem)
     {
@@ -719,9 +729,8 @@ double Potential(const Vector &x)
         for (int i = 0; i < dim; i++)
         {
             // map alpha parameter from [-1,1] to the mesh bounding box (controls the center for problems 4 and 5)
-            center(i) = bb_min[i] + (center(i) + 1.0) * ((bb_max[i] - bb_min[i]) * 0.5);
-            neg_center(i) = bb_min[i] + (neg_center(i) + 1.0) * ((bb_max[i] - bb_min[i]) *
-                            0.5);
+            center(i) = map_fraction_to_mesh(bb_min[i], bb_max[i], center(i));
+            neg_center(i) = map_fraction_to_mesh(bb_min[i], bb_max[i], neg_center(i));
         }
         return -D * (std::exp(-X.DistanceSquaredTo(center) / c) + std::exp(
                          -X.DistanceSquaredTo(neg_center) / c));
@@ -751,9 +760,8 @@ double Potential(const Vector &x)
         for (int i = 0; i < dim; i++)
         {
             // map alpha parameter from [-1,1] to the mesh bounding box (controls the center for problems 4 and 5)
-            center(i) = bb_min[i] + (center(i) + 1.0) * ((bb_max[i] - bb_min[i]) * 0.5);
-            neg_center(i) = bb_min[i] + (neg_center(i) + 1.0) * ((bb_max[i] - bb_min[i]) *
-                            0.5);
+            center(i) = map_fraction_to_mesh(bb_min[i], bb_max[i], center(i));
+            neg_center(i) = map_fraction_to_mesh(bb_min[i], bb_max[i], neg_center(i));
         }
 
         // verify t is within inner 20% of domain (centered around mesh origin)
