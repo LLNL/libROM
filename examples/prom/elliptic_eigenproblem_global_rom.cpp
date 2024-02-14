@@ -750,9 +750,14 @@ double Potential(const Vector &x)
         //  t = (1.5 + 0.5*cos(2*k), 1.5 + 0.5*sin(2*k)) where k = alpha * PI, alpha is the input parameter given with the -a option.
         //  The radius of the gaussian follows case 8: (0.05*min_d)^2
 
-        center = 0.15;
-        center(0) += 0.05 * cos(2.0*kappa);
-        center(1) += 0.05 * sin(2.0*kappa);
+        // Sets the center to vary around +/- 1.5 (absolute location on the mesh)
+        center = 1.5;
+        center(0) += 0.5 * cos(2.0*kappa);
+        center(1) += 0.5 * sin(2.0*kappa);
+
+        // map the absolute location back to a fraction of the mesh domain
+        center(0) = map_mesh_to_fraction(bb_min[0], bb_max[0], center(0));
+        center(1) = map_mesh_to_fraction(bb_min[1], bb_max[1], center(1));
 
         neg_center = center;
         neg_center.Neg();
