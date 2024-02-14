@@ -625,6 +625,7 @@ double Conductivity(const Vector &x)
     case 4:
     case 5:
     case 6:
+    case 7:
         return 1.0;
     }
     return 0.0;
@@ -670,6 +671,26 @@ double Potential(const Vector &x)
     case 5:
         return -D * std::exp(-X.DistanceSquaredTo(center) / c);
     case 6:
+        return -D * (std::exp(-X.DistanceSquaredTo(center) / c) + std::exp(
+                         -X.DistanceSquaredTo(neg_center) / c));
+    case 7:
+        center = 0.25;
+        center(0) += 0.05 * cos(2.0*kappa);
+        center(1) += 0.05 * sin(2.0*kappa);
+
+        neg_center = center;
+        neg_center.Neg();
+
+        center.Print();
+        neg_center.Print();
+
+        for (int i = 0; i < dim; i++)
+        {
+            // map alpha parameter from [-1,1] to the mesh bounding box (controls the center for problems 4 and 5)
+            center(i) = bb_min[i] + (center(i) + 1.0) * ((bb_max[i] - bb_min[i]) * 0.5);
+            neg_center(i) = bb_min[i] + (neg_center(i) + 1.0) * ((bb_max[i] - bb_min[i]) *
+                            0.5);
+        }
         return -D * (std::exp(-X.DistanceSquaredTo(center) / c) + std::exp(
                          -X.DistanceSquaredTo(neg_center) / c));
     }
