@@ -114,9 +114,9 @@ Vector&
 Vector::operator = (
     const Vector& rhs)
 {
+    CAROM_VERIFY(d_comm == rhs.getComm());
     d_distributed = rhs.d_distributed;
     d_num_procs = rhs.d_num_procs;
-    d_comm = rhs.getComm();
     setSize(rhs.d_dim);
     memcpy(d_vec, rhs.d_vec, d_dim*sizeof(double));
     return *this;

@@ -32,7 +32,7 @@ class Vector
 public:
     /**
      * @brief Constructor creating a Vector with uninitialized values and size.
-     * 
+     *
      * @param[in] comm MPI communicator of the processors that own this Vector.
      */
     Vector(MPI_Comm comm = MPI_COMM_WORLD);
@@ -817,8 +817,9 @@ private:
 
     /**
      * @brief MPI communicator of the processors that own this Vector.
+     * Cannot change once initialized.
      */
-    MPI_Comm d_comm;
+    const MPI_Comm d_comm;
 };
 
 /**
