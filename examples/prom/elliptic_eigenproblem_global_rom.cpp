@@ -161,8 +161,22 @@ int main(int argc, char *argv[])
     Mesh *mesh;
     if (mesh_file == "")
     {
+        double x_max = 20.0;
+        double y_max = 20.0;
         mesh = new Mesh(Mesh::MakeCartesian2D(2, 2, Element::QUADRILATERAL, false,
-                                              100.0, 100.0));
+                                              x_max, y_max));
+        mesh->GetBoundingBox(bb_min, bb_max, max(order, 1));
+
+        // shift mesh around origin (from [0, bb_max] -> [-bb_max/2, bb_max/2])
+        auto *mesh_transform = +[](const Vector &v_orig, Vector &v_new) -> void {
+            v_new = v_orig;
+            // shift mesh vertices by (bb_max[i] / 2)
+            v_new(0) -= 0.5*bb_max[0];
+            v_new(1) -= 0.5*bb_max[1];
+        };
+
+        // performs the transform - bb_min/bb_max are updated again below
+        mesh->Transform(mesh_transform);
     }
     else
     {
@@ -680,9 +694,6 @@ double Potential(const Vector &x)
 
         neg_center = center;
         neg_center.Neg();
-
-        center.Print();
-        neg_center.Print();
 
         for (int i = 0; i < dim; i++)
         {
