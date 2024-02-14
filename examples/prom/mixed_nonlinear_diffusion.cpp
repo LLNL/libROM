@@ -2345,7 +2345,11 @@ Operator &RomOperator::GetGradient(const Vector &p) const
             smm->GetSampledValues("V", zR, z);
 
             // Note that it would be better to just store VTU_R * Vsinv, but these are small matrices.
-
+	    if (precondCLS){
+                for(int i=0; i< Vsinv->numRows(); i++){
+                    z.item(i) =z.item(i) * KK->item(i);
+                }
+            }
             if (oversampling)
             {
                 Vsinv->transposeMult(z, r);

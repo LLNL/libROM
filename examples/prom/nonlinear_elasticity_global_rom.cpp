@@ -184,7 +184,7 @@ private:
     const CAROM::Matrix *Hsinv;
     mutable CAROM::Vector *z_librom;
 //edited
-    const CAROM::Vector* KK;
+    const CAROM::Vector *KK;
     mutable Vector z;
     mutable Vector z_x;
     mutable Vector z_v;
@@ -250,8 +250,8 @@ public:
                 const int hdim_, CAROM::SampleMeshManager *smm_, const Vector *v0_,
                 const Vector *x0_, const Vector v0_fom_, const CAROM::Matrix *V_v_,
                 const CAROM::Matrix *V_x_, const CAROM::Matrix *U_H_,
-                const CAROM::Matrix *Hsinv_, const CAROM::Vector* KK_, const int myid, const bool oversampling_, const bool precondCLS_,
-                const bool hyperreduce_, const bool x_base_only_, const bool use_eqp,
+                const CAROM::Matrix *Hsinv_, const CAROM::Vector *KK_, const int myid, const bool oversampling_, 
+                const bool hyperreduce_, const bool precondCLS_, const bool x_base_only_, const bool use_eqp,
                 CAROM::Vector *eqpSol,
                 const IntegrationRule *ir_eqp_, NeoHookeanModel *model_);
 
@@ -880,7 +880,7 @@ int main(int argc, char *argv[])
     const CAROM::Matrix *BX_librom = 0;
     const CAROM::Matrix *H_librom = 0;
     const CAROM::Matrix *Hsinv = 0;
-    const CAROM::Vector* KK= 0;
+    const CAROM::Vector *KK= 0;
     int nsamp_H = -1;
 
     CAROM::SampleMeshManager *smm = nullptr;
@@ -946,7 +946,9 @@ int main(int argc, char *argv[])
         {
             hdim = H_librom->numColumns();
         }
+	//edited
         CAROM::Matrix *Hsinv = new CAROM::Matrix(hdim, hdim, false);
+        CAROM::Vector *KK = precondCLS? new CAROM::Vector(hdim, false) : NULL;
         MFEM_VERIFY(H_librom->numColumns() >= hdim, "");
 
         if (H_librom->numColumns() > hdim)
@@ -1001,9 +1003,8 @@ int main(int argc, char *argv[])
 
 //edited
             Hsinv->setSize(nsamp_H, hdim);
+            if(precondCLS) KK->setSize(nsamp_H);
             vector<int> sample_dofs(nsamp_H);
-            CAROM::Vector* KK = precondCLS? new CAROM::Vector(nsamp_H, false) : NULL;
-	    std::cout << "nsampH" << nsamp_H << std::endl; 
             // Setup hyperreduction using DEIM, GNAT, or S-OPT
             CAROM::Hyperreduction hr(samplingType);
             hr.ComputeSamples(H_librom,
@@ -1014,8 +1015,7 @@ int main(int argc, char *argv[])
                               myid,
                               num_procs,
                               nsamp_H,precondCLS, KK);
-
-            // Construct sample mesh
+	    // Construct sample mesh
             const int nspaces = 1;
             std::vector<ParFiniteElementSpace *> spfespace(nspaces);
             spfespace[0] = &fespace;
@@ -1172,7 +1172,7 @@ int main(int argc, char *argv[])
         {
             romop = new RomOperator(&oper, soper, rvdim, rxdim, hdim, smm, w_v0, w_x0,
                                     vx0.GetBlock(0), BV_librom, BX_librom, H_librom, Hsinv, KK, myid,
-                                    num_samples_req != -1, precondCLS, hyperreduce, x_base_only, use_eqp, eqpSol, ir0, model);
+                                    num_samples_req != -1, hyperreduce, precondCLS, x_base_only, use_eqp, eqpSol, ir0, model);
         }
         else
         {
@@ -1180,7 +1180,7 @@ int main(int argc, char *argv[])
                                     &(vx0.GetBlock(0)),
                                     &(vx0.GetBlock(1)), vx0.GetBlock(0), BV_librom, BX_librom, H_librom, Hsinv,KK,
                                     myid,
-                                    num_samples_req != -1, precondCLS, hyperreduce, x_base_only, use_eqp, eqpSol, ir0, model);
+                                    num_samples_req != -1, hyperreduce, precondCLS, x_base_only, use_eqp, eqpSol, ir0, model);
         }
 
         // Print lifted initial energies
@@ -1480,6 +1480,7 @@ int main(int argc, char *argv[])
     delete BX_librom;
     delete H_librom;
     delete Hsinv;
+    delete KK;
     delete smm;
     delete eqpSol;
     delete eqpSol_S;
@@ -1672,14 +1673,14 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
                          const int hdim_, CAROM::SampleMeshManager *smm_, const Vector *v0_,
                          const Vector *x0_, const Vector v0_fom_, const CAROM::Matrix *V_v_,
                          const CAROM::Matrix *V_x_, const CAROM::Matrix *U_H_,
-                         const CAROM::Matrix *Hsinv_, const CAROM::Vector* KK_, const int myid, const bool oversampling_, const bool precondCLS_,
-                         const bool hyperreduce_, const bool x_base_only_, const bool use_eqp,
+                         const CAROM::Matrix *Hsinv_, const CAROM::Vector *KK_, const int myid, const bool oversampling_, 
+                         const bool hyperreduce_, const bool precondCLS_, const bool x_base_only_, const bool use_eqp,
                          CAROM::Vector *eqpSol, const IntegrationRule *ir_eqp_, NeoHookeanModel *model_)
     : TimeDependentOperator(rxdim_ + rvdim_, 0.0), fom(fom_), fomSp(fomSp_),
       rxdim(rxdim_), rvdim(rvdim_), hdim(hdim_), x0(x0_), v0(v0_), v0_fom(v0_fom_),
       smm(smm_), V_x(*V_x_), V_v(*V_v_), U_H(U_H_), Hsinv(Hsinv_), KK(KK_),
-      M_hat_solver(fom_->fespace.GetComm()), oversampling(oversampling_), precondCLS(precondCLS_),
-      z(height / 2), hyperreduce(hyperreduce_), x_base_only(x_base_only_),
+      M_hat_solver(fom_->fespace.GetComm()), oversampling(oversampling_), 
+      z(height / 2), hyperreduce(hyperreduce_), precondCLS(precondCLS_), x_base_only(x_base_only_),
       eqp(use_eqp),
       ir_eqp(ir_eqp_), model(model_), rank(myid)
 {
@@ -1889,7 +1890,6 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
 {
     // Check that the sizes match
     MFEM_VERIFY(vx.Size() == rvdim + rxdim && dvx_dt.Size() == rvdim + rxdim, "");
-
     // Create views to the sub-vectors v, x of vx, and dv_dt, dx_dt of dvx_dt
     Vector v(vx.GetData() + 0, rvdim);
     CAROM::Vector v_librom(vx.GetData(), rvdim, false, false);
@@ -1951,6 +1951,7 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
 //edited
         if (precondCLS){
             for(int i=0; i< Hsinv->numRows(); i++){
+		printf("k%f\t", KK->item(i)); 
 	        zN.item(i) *= KK->item(i);
     	    }
         }
