@@ -52,7 +52,8 @@ public:
         int num_rows,
         int num_cols,
         bool distributed,
-        bool randomized = false);
+        bool randomized = false,
+        MPI_Comm comm = MPI_COMM_WORLD);
 
     /** Constructor creating a Matrix with uninitialized values.
      *
@@ -77,7 +78,8 @@ public:
         int num_rows,
         int num_cols,
         bool distributed,
-        bool copy_data = true);
+        bool copy_data = true,
+        MPI_Comm comm = MPI_COMM_WORLD);
 
     /**
      * @brief Copy constructor.
@@ -1119,6 +1121,13 @@ public:
      */
     void gather();
 
+    /**
+     * @brief Get MPI communicator of this Matrix.
+     */
+    const MPI_Comm getComm() const {
+        return d_comm;
+    }
+
 private:
     /**
      * @brief Compute number of rows across all processors.
@@ -1283,6 +1292,12 @@ private:
      * If d_owns_data is false, then the object may not reallocate d_mat.
      */
     bool d_owns_data;
+
+    /**
+     * @brief MPI communicator of the processors that own this Vector.
+     * Cannot change once initialized.
+     */
+    const MPI_Comm d_comm;
 };
 
 /**
