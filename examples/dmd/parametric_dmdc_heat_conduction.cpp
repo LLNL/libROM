@@ -450,7 +450,8 @@ int main(int argc, char *argv[])
         u_gf.Save(osol);
     }
 
-    VisItDataCollection visit_dc(outputPath + "/parametric_dmdc_Heat_Conduction_FOM_" +
+    VisItDataCollection visit_dc(outputPath +
+                                 "/parametric_dmdc_Heat_Conduction_FOM_" +
                                  to_string(alpha) + "_" + to_string(kappa) + "_" + to_string(
                                      amp_in) + "_" + to_string(amp_out), pmesh);
     visit_dc.RegisterField("temperature", &u_gf);
