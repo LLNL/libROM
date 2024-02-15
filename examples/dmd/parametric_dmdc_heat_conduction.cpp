@@ -31,18 +31,18 @@
 //  Elapsed time for predicting DMDc: 3.593333e-03 second
 //
 //  Example changing parameter in control vector:
-//  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 -offline --kappa 1 -amp-in 0.2 -rdim 6
-//  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 -offline --kappa 1 -amp-in 0.25 -rdim 6
-//  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 -offline --kappa 1 -amp-in 0.35 -rdim 6
-//  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 -offline --kappa 1 -amp-in 0.4 -rdim 6
+//  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 -offline -amp-in 1 -rdim 6
+//  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 -offline -amp-in 2 -rdim 6
+//  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 -offline -amp-in 4 -rdim 6
+//  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 -offline -amp-in 5 -rdim 6
 //
-//  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 --kappa 1 -amp-in 0.3 -online -predict -visit
+//  mpirun -np 8 parametric_dmdc_heat_conduction -s 1 -amp-in 3 -online -predict -visit
 //
 //  Output:
 //  Relative error of DMDc temperature (u) at t_final: 0.5 is 0.0028885833
-//  Elapsed time for solving FOM: 1.134632e+00 second
-//  Elapsed time for training DMDc: 7.583933e-01 second
-//  Elapsed time for predicting DMDc: 4.359250e-03 second
+//  Elapsed time for solving FOM: 9.007740e-01 second
+//  Elapsed time for training DMDc: 7.236116e-01 second
+//  Elapsed time for predicting DMDc: 5.489291e-03 second
 //
 //
 // =================================================================================
@@ -450,7 +450,7 @@ int main(int argc, char *argv[])
         u_gf.Save(osol);
     }
 
-    VisItDataCollection visit_dc(outputPath + "/parametric_dmdc_Heat_Conduction_" +
+    VisItDataCollection visit_dc(outputPath + "/parametric_dmdc_Heat_Conduction_FOM_" +
                                  to_string(alpha) + "_" + to_string(kappa) + "_" + to_string(
                                      amp_in) + "_" + to_string(amp_out), pmesh);
     visit_dc.RegisterField("temperature", &u_gf);
@@ -832,7 +832,7 @@ int main(int argc, char *argv[])
             Vector initial_dmd_solution_u(result_u->getData(), result_u->dim());
             u_gf.SetFromTrueDofs(initial_dmd_solution_u);
 
-            VisItDataCollection dmd_visit_dc("parametric_dmdc_Heat_Conduction", pmesh);
+            VisItDataCollection dmd_visit_dc("parametric_dmdc_Heat_Conduction_ROM", pmesh);
             dmd_visit_dc.RegisterField("temperature", &u_gf);
 
             if (visit)
