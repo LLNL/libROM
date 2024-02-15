@@ -164,11 +164,11 @@ public:
     void
     increaseTimeInterval()
     {
-        CAROM_ERROR("SVD::increaseTimeInterval- Time interval is obsolete and will be removed in the future. You received this error presumably because the number of samples reached its limit.\n");
         int num_time_intervals =
             static_cast<int>(d_time_interval_start_times.size());
-        CAROM_VERIFY(d_max_time_intervals == -1 ||
-                     num_time_intervals < d_max_time_intervals);
+        CAROM_VERIFY(d_max_time_intervals == 1);
+        if (num_time_intervals > 0)
+            CAROM_ERROR("SVD::increaseTimeInterval- Time interval is obsolete and will be removed in the future. You received this error presumably because the number of samples reached its limit.\n");
         d_time_interval_start_times.resize(
             static_cast<unsigned>(num_time_intervals) + 1);
     }
