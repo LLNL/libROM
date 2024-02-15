@@ -434,6 +434,18 @@ int main(int argc, char *argv[])
             }
         }
 
+        DenseMatrix tmp(evect);
+        evect = DenseMatrix(nev, numRowRB);
+        for (int i = 0; i < ev.Size() && i < nev; i++)
+        {
+            Vector evector;
+            tmp.GetRow(i, evector);
+            CAROM::Vector evector_carom(evector.GetData(), evector.Size(), false, false);
+            CAROM::Vector *ev_carom = spatialbasis->mult(evector_carom);
+            evect.SetRow(i, ev_carom->getData());
+            delete ev_carom;
+        }
+
         delete spatialbasis;
 
         delete A_mat;
@@ -449,6 +461,61 @@ int main(int argc, char *argv[])
     {
         sol_ev_name << "sol_eigenvalues." << setfill('0') << setw(6) << myid;
         sol_ev_name_fom << "sol_eigenvalues_fom." << setfill('0') << setw(6) << myid;
+    }
+
+    // 19. Save the refined mesh and the modes in parallel. This output can be
+    //     viewed later using GLVis: "glvis -np <np> -m mesh -g mode".
+    {
+        ostringstream mesh_name, mode_name;
+        mesh_name << "elliptic_eigenproblem-mesh." << setfill('0') << setw(6) << myid;
+
+        ofstream mesh_ofs(mesh_name.str().c_str());
+        mesh_ofs.precision(8);
+        pmesh->Print(mesh_ofs);
+
+        std::string mode_prefix = "mode_";
+        if (online)
+        {
+            mode_prefix += "rom_";
+        } else if (fom)
+        {
+            mode_prefix += "fom_";
+        }
+
+        for (int i=0; i < nev && i < eigenvalues.Size(); i++)
+        {
+            if (fom || offline) {
+                // convert eigenvector from HypreParVector to ParGridFunction
+                x = lobpcg->GetEigenvector(i);
+            } else {
+                // for online, eigenvectors are stored in evect matrix
+                Vector ev;
+                evect.GetRow(i, ev);
+                x = ev;
+            }
+
+            mode_name << mode_prefix << setfill('0') << setw(2) << i << "."
+                      << setfill('0') << setw(6) << myid;
+
+            ofstream mode_ofs(mode_name.str().c_str());
+            mode_ofs.precision(16);
+
+            // TODO: issue using .Load() function if file written with .Save()?
+            //x.Save(mode_ofs);
+            for (int j = 0; j < x.Size(); j++)
+            {
+                mode_ofs << x[j] << "\n";
+            }
+            mode_ofs.close();
+            mode_name.str("");
+        }
+
+        ofstream sol_ev_ofs(sol_ev_name.str().c_str());
+        sol_ev_ofs.precision(16);
+        for (int i = 0; i < nev && i < eigenvalues.Size(); ++i)
+        {
+            sol_ev_ofs << eigenvalues[i] << std::endl;
+        }
     }
 
     if (online)
@@ -473,44 +540,37 @@ int main(int argc, char *argv[])
                           ev_diff_norm / ev_fom_norm << std::endl;
             }
         }
-    }
 
-    // 19. Save the refined mesh and the modes in parallel. This output can be
-    //     viewed later using GLVis: "glvis -np <np> -m mesh -g mode".
-    {
-        ostringstream mesh_name, mode_name;
-        mesh_name << "elliptic_eigenproblem-mesh." << setfill('0') << setw(6) << myid;
-
-        ofstream mesh_ofs(mesh_name.str().c_str());
-        mesh_ofs.precision(8);
-        pmesh->Print(mesh_ofs);
-
-        for (int i=0; i < nev && i < eigenvalues.Size(); i++)
+        // Calculate errors of eigenvectors
+        ostringstream mode_name, mode_name_fom;
+        Vector mode_rom(evect.NumCols());
+        Vector mode_fom(evect.NumCols());
+        for (int i = 0; i < eigenvalues.Size() && i < nev; i++)
         {
-            if (fom || offline) {
-                // convert eigenvector from HypreParVector to ParGridFunction
-                x = lobpcg->GetEigenvector(i);
-            } else {
-                // for online, eigenvectors are stored in evect matrix
-                Vector ev;
-                evect.GetRow(i, ev);
-                x = ev;
-            }
-
-            mode_name << "mode_" << setfill('0') << setw(2) << i << "."
+            mode_name << "mode_rom_" << setfill('0') << setw(2) << i << "."
                       << setfill('0') << setw(6) << myid;
+            mode_name_fom << "mode_fom_" << setfill('0') << setw(2) << i << "."
+                          << setfill('0') << setw(6) << myid;
 
-            ofstream mode_ofs(mode_name.str().c_str());
-            mode_ofs.precision(8);
-            x.Save(mode_ofs);
+            ifstream mode_rom_ifs(mode_name.str().c_str());
+            mode_rom_ifs.precision(16);
+            mode_rom.Load(mode_rom_ifs, evect.NumCols());
+            mode_rom_ifs.close();
+
+            ifstream mode_fom_ifs(mode_name_fom.str().c_str());
+            mode_fom_ifs.precision(16);
+            mode_fom.Load(mode_fom_ifs, evect.NumCols());
+            mode_fom_ifs.close();
+
+            const double fomNorm = sqrt(InnerProduct(mode_fom, mode_fom));
+            mode_fom -= mode_rom;
+            const double diffNorm = sqrt(InnerProduct(mode_fom, mode_fom));
+            if (myid == 0) std::cout << "Relative l2 error of ROM eigenvector " << i <<
+                                         " = " << diffNorm /
+                                         fomNorm << std::endl;
+
             mode_name.str("");
-        }
-
-        ofstream sol_ev_ofs(sol_ev_name.str().c_str());
-        sol_ev_ofs.precision(16);
-        for (int i = 0; i < nev && i < eigenvalues.Size(); ++i)
-        {
-            sol_ev_ofs << eigenvalues[i] << std::endl;
+            mode_name_fom.str("");
         }
     }
 
