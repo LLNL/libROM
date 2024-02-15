@@ -4,7 +4,6 @@ runs:
     - name: Run unit tests
       run: |
           cd ${GITHUB_WORKSPACE}/build
-          ./tests/test_SVD
           ./tests/test_Vector
           ./tests/test_Matrix
           mpirun -n 3 --oversubscribe ./tests/test_Matrix

@@ -44,7 +44,7 @@ public:
      */
     Options(int dim_,
             int samples_per_time_interval_,
-            int max_time_intervals_ = -1,
+            int max_time_intervals_ = 1,
             bool update_right_SV_ = false,
             bool write_snapshots_ = false
            ): dim(dim_),
@@ -56,10 +56,10 @@ public:
     {
         if (max_time_intervals > 1)
         {
-            printf("time interval is obsolete and will be removed in the future. Set max_time_intervals=%d to 1 or -1!\n",
+            printf("time interval is obsolete and will be removed in the future. Set max_time_intervals=%d to 1!\n",
                    max_time_intervals);
         }
-        CAROM_VERIFY(max_time_intervals <= 1);
+        CAROM_VERIFY(max_time_intervals == 1);
     };
 
     /**
