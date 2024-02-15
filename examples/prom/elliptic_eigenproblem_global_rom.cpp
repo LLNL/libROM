@@ -278,6 +278,7 @@ int main(int argc, char *argv[])
     //     shift the Dirichlet eigenvalues out of the computational range. After
     //     serial and parallel assembly we extract the corresponding parallel
     //     matrices A and M.
+    assembleTimer.Start();
     ConstantCoefficient one(1.0);
 
     FunctionCoefficient kappa_0(Conductivity);
@@ -313,6 +314,8 @@ int main(int argc, char *argv[])
 
     HypreParMatrix *A = a->ParallelAssemble();
     HypreParMatrix *M = m->ParallelAssemble();
+
+    assembleTimer.Stop();
 
     delete a;
     delete m;
@@ -665,7 +668,24 @@ int main(int argc, char *argv[])
         }
     }
 
-    // 20. Free the used memory.
+    // 20. print timing info
+    if (myid == 0)
+    {
+        if(fom || offline)
+        {
+            printf("Elapsed time for assembling FOM: %e second\n",
+                   assembleTimer.RealTime());
+            printf("Elapsed time for solving FOM: %e second\n", solveTimer.RealTime());
+        }
+        if(online)
+        {
+            printf("Elapsed time for assembling ROM: %e second\n",
+                   assembleTimer.RealTime());
+            printf("Elapsed time for solving ROM: %e second\n", solveTimer.RealTime());
+        }
+    }
+
+    // 21. Free the used memory.
     if (fom || offline)
     {
         delete lobpcg;
@@ -733,7 +753,7 @@ double Potential(const Vector &x)
             double mesh_center = 0.5 * (bb_max[i] + bb_min[i]);
 
             // check that t is within the limit relative to the center of the mesh
-            if (t(i) - mesh_center > 0.5 * domain_limit)
+            if ((t(i) - mesh_center) - (0.5 * domain_limit) > 1.0e-14)
             {
                 std::cerr << "Error: value of t exceeds domain limit: t = " << t(
                               i) << ", limit = " << 0.5 * domain_limit << "\n";
