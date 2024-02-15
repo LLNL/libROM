@@ -38,7 +38,8 @@ StaticSVD::StaticSVD(
     d_samples(new SLPK_Matrix), d_factorizer(new SVDManager),
     d_this_interval_basis_current(false),
     d_max_basis_dimension(options.max_basis_dimension),
-    d_singular_value_tol(options.singular_value_tol)
+    d_singular_value_tol(options.singular_value_tol),
+    d_preserve_snapshot(options.static_svd_preserve_snapshot)
 {
     // Get the rank of this process, and the number of processors.
     int mpi_init;
@@ -234,6 +235,8 @@ StaticSVD::getSingularValues()
 const Matrix*
 StaticSVD::getSnapshotMatrix()
 {
+    if ((!d_preserve_snapshot) && (thisIntervalBasisCurrent()) && (d_basis != 0))
+        CAROM_ERROR("StaticSVD: snapshot matrix is modified after computeSVD. To preserve the snapshots, set Options::static_svd_preserve_snapshot to be true!\n");
 
     if (d_snapshots) delete d_snapshots;
     d_snapshots = new Matrix(d_dim, d_num_samples, false);
@@ -262,9 +265,9 @@ StaticSVD::computeSVD()
     // transpose matrix if sample size > dimension.
     bool transpose = d_total_dim < d_num_samples;
 
-    snapshot_matrix = new SLPK_Matrix;
     if (transpose) {
         // create a transposed matrix if sample size > dimension.
+        snapshot_matrix = new SLPK_Matrix;
         int d_blocksize_tr = d_num_samples / d_nprow;
         if (d_num_samples % d_nprow != 0) {
             d_blocksize_tr += 1;
@@ -281,12 +284,19 @@ StaticSVD::computeSVD()
         }
     }
     else {
-        // copy d_samples if sample size <= dimension.
+        // use d_samples if sample size <= dimension.
         // SVD operation does not preserve the original snapshot matrix.
-        initialize_matrix(snapshot_matrix, d_total_dim, d_num_samples,
-                          d_nprow, d_npcol, d_blocksize, d_blocksize);
-        copy_matrix(snapshot_matrix, 1, 1, d_samples.get(), 1, 1, d_total_dim,
-                    d_num_samples);
+        if (d_preserve_snapshot)
+        {
+            snapshot_matrix = new SLPK_Matrix;
+            initialize_matrix(snapshot_matrix, d_total_dim, d_num_samples,
+                              d_nprow, d_npcol, d_blocksize, d_blocksize);
+            copy_matrix(snapshot_matrix, 1, 1, d_samples.get(), 1, 1, d_total_dim,
+                        d_num_samples);
+        }
+        else
+            // use the original snapshot matrix, which will be modified.
+            snapshot_matrix = d_samples.get();
     }
 
     // This block does the actual ScaLAPACK call to do the factorization.
@@ -376,8 +386,11 @@ StaticSVD::computeSVD()
     }
 
     // Delete the snapshot matrix.
-    free_matrix_data(snapshot_matrix);
-    delete snapshot_matrix;
+    if ((transpose) || (d_preserve_snapshot))
+    {
+        free_matrix_data(snapshot_matrix);
+        delete snapshot_matrix;
+    }
 }
 
 void

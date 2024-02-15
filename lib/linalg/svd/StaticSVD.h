@@ -244,6 +244,11 @@ private:
     StaticSVD&
     operator = (
         const StaticSVD& rhs);
+
+    /**
+     * @brief option to preserve snapshot in computeSVD.
+     */
+    bool d_preserve_snapshot;
 };
 
 }
