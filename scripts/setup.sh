@@ -33,9 +33,9 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 LIB_DIR=$SCRIPT_DIR/../dependencies
 mkdir -p $LIB_DIR
 
-export CFLAGS="-fPIC"
-export CPPFLAGS="-fPIC"
-export CXXFLAGS="-fPIC"
+export CFLAGS="-fPIC ${CFLAGS}"
+export CPPFLAGS="-fPIC ${CPPFLAGS}"
+export CXXFLAGS="-fPIC ${CXXFLAGS}"
 
 # Install ScaLAPACK if specified.
 cd $LIB_DIR
@@ -88,9 +88,9 @@ if [ ! -d "parmetis-4.0.3" ]; then
 
   tar -zxvf parmetis-4.0.3.tar.gz
   cd parmetis-4.0.3
-  make config
+  make config shared=1
   check_result $? parmetis-config
-  make
+  make -j 8
   check_result $? parmetis-installation
   METIS_DIR=$LIB_DIR/parmetis-4.0.3
   METIS_OPT=-I${METIS_DIR}/metis/include
@@ -100,9 +100,6 @@ if [ ! -d "parmetis-4.0.3" ]; then
   check_result $? parmetis-link
 fi
 
-unset CFLAGS
-unset CPPFLAGS
-unset CXXFLAGS
 
 METIS_DIR=$LIB_DIR/parmetis-4.0.3
 METIS_OPT=-I${METIS_DIR}/metis/include

@@ -2,7 +2,7 @@
 
 ###############################################################################
 #
-#  Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
+#  Copyright (c) 2013-2024, Lawrence Livermore National Security, LLC
 #  and other libROM project developers. See the top-level COPYRIGHT
 #  file for details.
 #
@@ -76,6 +76,9 @@ do
     esac
 done
 shift $((OPTIND-1))
+
+export CC=${CC:="mpicc"}
+export CXX=${CXX:="mpicxx"}
 
 CURR_DIR=$(pwd) 
 if [[ -d "dependencies" ]]; then

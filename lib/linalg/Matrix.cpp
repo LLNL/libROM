@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2024, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -755,7 +755,11 @@ Matrix::inverse(
     }
     // Now call lapack to do the inversion.
     dgetrf(&mtx_size, &mtx_size, result->d_mat, &mtx_size, ipiv, &info);
+    CAROM_VERIFY(info == 0);
+
     dgetri(&mtx_size, result->d_mat, &mtx_size, ipiv, work, &lwork, &info);
+    CAROM_VERIFY(info == 0);
+
     // Result now has the inverse in a column major representation.  Put it
     // into row major order.
     for (int row = 0; row < mtx_size; ++row) {
@@ -798,7 +802,11 @@ Matrix::inverse(
     }
     // Now call lapack to do the inversion.
     dgetrf(&mtx_size, &mtx_size, result.d_mat, &mtx_size, ipiv, &info);
+    CAROM_VERIFY(info == 0);
+
     dgetri(&mtx_size, result.d_mat, &mtx_size, ipiv, work, &lwork, &info);
+    CAROM_VERIFY(info == 0);
+
     // Result now has the inverse in a column major representation.  Put it
     // into row major order.
     for (int row = 0; row < mtx_size; ++row) {
@@ -852,7 +860,11 @@ Matrix::inverse()
     }
     // Now call lapack to do the inversion.
     dgetrf(&mtx_size, &mtx_size, d_mat, &mtx_size, ipiv, &info);
+    CAROM_VERIFY(info == 0);
+
     dgetri(&mtx_size, d_mat, &mtx_size, ipiv, work, &lwork, &info);
+    CAROM_VERIFY(info == 0);
+
     // This now has its inverse in a column major representation.  Put it into
     // row major representation.
     for (int row = 0; row < mtx_size; ++row) {
@@ -1788,47 +1800,102 @@ const
 }
 
 void
-Matrix::orthogonalize()
+Matrix::orthogonalize(bool double_pass, double zero_tol)
 {
-    for (int work = 1; work < d_num_cols; ++work) {
-        double tmp;
-        for (int col = 0; col < work; ++col) {
-            double factor = 0.0;
-            tmp = 0.0;
-            for (int i = 0; i < d_num_rows; ++i) {
-                tmp += item(i, col)*item(i, work);
-            }
-            if (d_num_procs > 1) {
-                MPI_Allreduce(&tmp,
-                              &factor,
-                              1,
-                              MPI_DOUBLE,
-                              MPI_SUM,
-                              MPI_COMM_WORLD);
-            }
-            else {
-                factor = tmp;
-            }
+    int const num_passes = double_pass ? 2 : 1;
 
-            for (int i = 0; i < d_num_rows; ++i) {
-                item(i, work) -= factor*item(i, col);
+    for (int work = 0; work < d_num_cols; ++work)
+    {
+        // Orthogonalize the column (twice if double_pass == true).
+        for (int k = 0; k < num_passes; k++)
+        {
+            for (int col = 0; col < work; ++col)
+            {
+                double factor = 0.0;
+
+                for (int i = 0; i < d_num_rows; ++i)
+                    factor += item(i, col) * item(i, work);
+
+                if (d_distributed && d_num_procs > 1)
+                {
+                    CAROM_VERIFY( MPI_Allreduce(MPI_IN_PLACE, &factor, 1,
+                                                MPI_DOUBLE, MPI_SUM,
+                                                MPI_COMM_WORLD)
+                                  == MPI_SUCCESS );
+                }
+                for (int i = 0; i < d_num_rows; ++i)
+                    item(i, work) -= factor * item(i, col);
             }
         }
+
+        // Normalize the column.
         double norm = 0.0;
-        tmp = 0.0;
-        for (int i = 0; i < d_num_rows; ++i) {
-            tmp += item(i, work)*item(i, work);
+
+        for (int i = 0; i < d_num_rows; ++i)
+            norm += item(i, work) * item(i, work);
+
+        if (d_distributed && d_num_procs > 1)
+        {
+            CAROM_VERIFY( MPI_Allreduce(MPI_IN_PLACE, &norm, 1, MPI_DOUBLE,
+                                        MPI_SUM, MPI_COMM_WORLD)
+                          == MPI_SUCCESS );
         }
-        if (d_num_procs > 1) {
-            MPI_Allreduce(&tmp, &norm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        if (norm > zero_tol)
+        {
+            norm = 1.0 / sqrt(norm);
+            for (int i = 0; i < d_num_rows; ++i)
+                item(i, work) *= norm;
         }
-        else {
-            norm = tmp;
+    }
+}
+
+void
+Matrix::orthogonalize_last(int ncols, bool double_pass, double zero_tol)
+{
+    if (ncols == -1) ncols = d_num_cols;
+    CAROM_VERIFY((ncols > 0) && (ncols <= d_num_cols));
+
+    const int last_col = ncols - 1; // index of column to be orthonormalized
+
+    int const num_passes = double_pass ? 2 : 1;
+
+    // Orthogonalize the column (twice if double_pass == true).
+    for (int k = 0; k < num_passes; k++)
+    {
+        for (int col = 0; col < last_col; ++col)
+        {
+            double factor = 0.0;
+
+            for (int i = 0; i < d_num_rows; ++i)
+                factor += item(i, col) * item(i, last_col);
+
+            if (d_distributed && d_num_procs > 1)
+            {
+                CAROM_VERIFY( MPI_Allreduce(MPI_IN_PLACE, &factor, 1, MPI_DOUBLE,
+                                            MPI_SUM, MPI_COMM_WORLD)
+                              == MPI_SUCCESS );
+            }
+            for (int i = 0; i < d_num_rows; ++i)
+                item(i, last_col) -= factor * item(i, col);
         }
-        norm = sqrt(norm);
-        for (int i = 0; i < d_num_rows; ++i) {
-            item(i, work) /= norm;
-        }
+    }
+
+    // Normalize the column.
+    double norm = 0.0;
+
+    for (int i = 0; i < d_num_rows; ++i)
+        norm += item(i, last_col) * item(i, last_col);
+
+    if (d_distributed && d_num_procs > 1)
+    {
+        CAROM_VERIFY( MPI_Allreduce(MPI_IN_PLACE, &norm, 1, MPI_DOUBLE,
+                                    MPI_SUM, MPI_COMM_WORLD) == MPI_SUCCESS );
+    }
+    if (norm > zero_tol)
+    {
+        norm = 1.0 / sqrt(norm);
+        for (int i = 0; i < d_num_rows; ++i)
+            item(i, last_col) *= norm;
     }
 }
 

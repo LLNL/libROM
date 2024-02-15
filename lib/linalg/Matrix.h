@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2024, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -941,10 +941,44 @@ public:
                           int  pivots_requested) const;
 
     /**
-     * @brief Orthogonalizes the matrix.
+     * @brief Orthonormalizes the matrix.
+     *
+     * The method uses the modified Gram-Schmidt algorithm.
+     *
+     * If double_pass == true, then each column is orthogonalized twice to
+     * limit loss of orthogonality due to numerical errors.
+     * By default, double_pass == false.
+     *
+     * If the norm of a matrix column is below the value of zero_tol then it
+     * is considered to be zero, and we do not divide by it.
+     * Therefore, that column is considered to be zero and is not normalized.
+     * By default, zero_tol == 1.0e-15.
      */
     void
-    orthogonalize();
+    orthogonalize(bool double_pass = false, double zero_tol = 1.0e-15);
+
+    /**
+     * @brief Orthonormalizes the matrix's last column, assuming the previous
+     * columns are already orthonormal.
+     *
+     * By default, ncols == -1, and the function considers the whole matrix.
+     * If ncols != -1 and ncols < d_num_cols, then a subset of the matrix
+     * is considered.
+     * This allows one to reorthonormalize the matrix every time a new column
+     * is added, assuming the previous columns have remained unchanged.
+     *
+     * If double_pass == true, then the column is orthogonalized twice to
+     * limit loss of orthogonality due to numerical errors.
+     * By default, double_pass == false.
+     *
+     * If the norm of a matrix column is below the value of zero_tol then it
+     * is considered to be zero, and we do not divide by it.
+     * Therefore, that column is considered to be zero and is not normalized.
+     * By default, zero_tol == 1.0e-15.
+     */
+    void
+    orthogonalize_last(int ncols = -1, bool double_pass = false,
+                       double zero_tol = 1.0e-15);
 
     /**
      * @brief Rescale every matrix row by its maximum absolute value.

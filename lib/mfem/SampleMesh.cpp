@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2024, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -29,7 +29,6 @@ void FindStencilElements(const vector<int>& sample_dofs_gid,
             for (int i = 0; i < dofs.Size(); i++)
             {
                 const int dof_i = dofs[i] >= 0 ? dofs[i] : -1 - dofs[i];
-                //int ltdof = fespace.GetLocalTDofNumber(dof_i);
                 int global_dof = fespace.GetGlobalTDofNumber(dof_i);
                 if (global_dof == *it)
                 {
@@ -115,7 +114,6 @@ void GetLocalSampleMeshElements(ParMesh& pmesh, ParFiniteElementSpace& fespace,
 
     // Construct the map of local true dofs to global true dofs.
     map<int, int> ltdof2gtdof;
-    //const int ndofs = fespace.GetNDofs();
     const int ndofs = fespace.GetVSize();
     for (int i = 0; i < fespace.GetVSize(); ++i) {
         int ltdof = fespace.GetLocalTDofNumber(i);
@@ -390,8 +388,8 @@ void BuildSampleMesh(ParMesh& pmesh, vector<ParFiniteElementSpace*> & fespace,
     int numElVert = elVert.Size();  // number of vertices per element
     MFEM_VERIFY(numElVert > 0, "");
 
-    vector<int> my_element_vgid(
-        numElVert*local_num_elems);  // vertex global indices, for each element
+    // vertex global indices, for each element
+    vector<int> my_element_vgid(numElVert*local_num_elems);
     vector<double> my_element_coords(d*numElVert*local_num_elems);
 
     for (set<int>::iterator it = elems.begin(); it != elems.end(); ++it) {
@@ -411,7 +409,7 @@ void BuildSampleMesh(ParMesh& pmesh, vector<ParFiniteElementSpace*> & fespace,
         Array<int> dofs;
         H1DummySpace.GetElementDofs(elId, dofs);
         MFEM_VERIFY(numElVert == dofs.Size(),
-                    "");  // Assuming a bijection between vertices and H1 dummy space DOF's.
+                    "Assuming a bijection between vertices and H1 dummy space DOF's");
 
         for (int i = 0; i < numElVert; ++i) {
             my_element_vgid[conn_idx++] = H1DummySpace.GetGlobalTDofNumber(dofs[i]);
@@ -464,10 +462,10 @@ void BuildSampleMesh(ParMesh& pmesh, vector<ParFiniteElementSpace*> & fespace,
     delete [] cts;
     delete [] offsets;
 
-    // element_vgid holds vertices as global ids.  Vertices may be shared
+    // element_vgid holds vertices as global ids. Vertices may be shared
     // between elements so we don't know the number of unique vertices in the
-    // sample mesh.  Find all the unique vertices and construct the map of
-    // global dof ids to local dof ids (vertices).  Keep track of the number of
+    // sample mesh. Find all the unique vertices and construct the map of
+    // global dof ids to local dof ids (vertices). Keep track of the number of
     // unique vertices.
     set<int> unique_gdofs;
     map<int, int> unique_gdofs_first_appearance;
@@ -534,8 +532,12 @@ void BuildSampleMesh(ParMesh& pmesh, vector<ParFiniteElementSpace*> & fespace,
 }
 
 void GetLocalDofsToLocalElementMap(ParFiniteElementSpace& fespace,
-                                   const vector<int>& dofs, const vector<int>& localNumDofs, const set<int>& elems,
-                                   vector<int>& dofToElem, vector<int>& dofToElemDof, const bool useTDof)
+                                   const vector<int>& dofs,
+                                   const vector<int>& localNumDofs,
+                                   const set<int>& elems,
+                                   vector<int>& dofToElem,
+                                   vector<int>& dofToElemDof,
+                                   const bool useTDof)
 {
     int myid;
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
@@ -568,8 +570,9 @@ void GetLocalDofsToLocalElementMap(ParFiniteElementSpace& fespace,
                 if (ltdof == dofs[myoffset + i])  // dofs contains true DOF's.
 #endif
                 {
-                    dofToElem[i] =
-                        elId;  // Possibly overwrite another element index, which is fine since we just want any element index.
+                    // Possibly overwrite another element index, which is fine
+                    // since we just want any element index.
+                    dofToElem[i] = elId;
                     dofToElemDof[i] = j;
                 }
             }
@@ -622,8 +625,8 @@ void Set_s2sp(const int myid, const int num_procs, vector<int> const& spNtrue,
     // Gather all the sample DOF to element and element DOF indices.
     vector<int> mySampleToElement(2*local_num_sample_dofs[myid]);
 
-    mySampleToElement.assign(mySampleToElement.size(),
-                             -1);  // Initialize with invalid values, to verify later that everything was set.
+    // Initialize with invalid values, to verify later that everything was set.
+    mySampleToElement.assign(mySampleToElement.size(), -1);
 
     for (int s=0; s<nspaces; ++s)  // Loop over subspaces
     {
@@ -673,9 +676,8 @@ void Set_s2sp(const int myid, const int num_procs, vector<int> const& spNtrue,
         spaceOS[i] = spaceOS[i-1] + spfespace[i-1]->GetVSize();
 
     s2sp.resize(global_num_sample_dofs);
-
-    s2sp.assign(s2sp.size(),
-                -1);  // Initialize with invalid values, to verify later that everything was set.
+    // Initialize with invalid values, to verify later that everything was set.
+    s2sp.assign(s2sp.size(), -1);
 
     for (int s=0; s<nspaces; ++s)
         os[s] = 0;
@@ -852,8 +854,6 @@ void Finish_s2sp_augmented(const int rank, const int nprocs,
                             MFEM_VERIFY(it->second == sp, "");
                         }
                     }
-
-                    //gid[(2*i) + 1] = s2sp[dofs_sub_to_sdofs[s][os + i]];
                 }
             }
 
@@ -863,7 +863,6 @@ void Finish_s2sp_augmented(const int rank, const int nprocs,
                 for (int i=0; i<local_num_dofs_sub[s][p]; ++i)
                 {
                     const int g = allgid[offsets[p] + (2*i)];
-                    //const int sp = allgid[offsets[p] + (2*i) + 1];  ?? //why isn't this used? because it already set gi2sp, which is now used.
 
                     map<int, int>::const_iterator it = gi2sp.find(g);
                     MFEM_VERIFY(it != gi2sp.end() && it->first == g, "");
@@ -883,11 +882,14 @@ void Finish_s2sp_augmented(const int rank, const int nprocs,
             {
                 if (s2sp_[i] == -1)
                     s2sp_[i] = s2sp[i];
-
-                MFEM_VERIFY(s2sp_[i] >= 0 && s2sp_[i] == s2sp[i], "");
+                else
+                    MFEM_VERIFY(s2sp_[i] == s2sp[i], "Consistency check");
             }
         }
     }
+
+    for (int i=0; i<s2sp_.size(); ++i)
+        MFEM_VERIFY(s2sp_[i] >= 0 && s2sp_[i] == s2sp[i], "");
 }
 #endif
 
@@ -1162,7 +1164,8 @@ void SampleMeshManager::SetSampleMaps()
             }
         }
 
-        // For each variable v and each of the num_sample_dofs_per_proc[v][p] samples, set s2sp_var[v][] to be its index in sample_dofs
+        // For each variable v and each of the num_sample_dofs_per_proc[v][p]
+        // samples, set s2sp_var[v][] to be its index in sample_dofs.
         s2sp_var.resize(nvar);
         for (int v=0; v<nvar; ++v)
         {
@@ -1179,7 +1182,8 @@ void SampleMeshManager::SetSampleMaps()
             {
                 const int sample = sample_dofs_var[v][os + j];
 
-                // Note: this has quadratic complexity and could be improved with a std::map<int, int>, but it should not be a bottleneck.
+                // Note: this has quadratic complexity and could be improved
+                // with a std::map<int, int>, but it should not be a bottleneck.
                 int k = -1;
                 int cnt = 0;
                 for (set<int>::const_iterator it = sample_dofs_proc[space][p].begin();
@@ -1440,16 +1444,16 @@ void GatherDistributedMatrixRows_aux(const CAROM::Matrix& B, const int rdim,
                 if (allos0[i] <= all_sprows[sti] && all_sprows[sti] < allos1[i])
                 {
                     MFEM_VERIFY(0 <= st2sp[sti] - ossp && st2sp[sti] - ossp < Bsp.numRows(), "");
+                    // Note that this may redundantly overwrite some rows corresponding to shared DOF's.
                     MPI_Recv(&Bsp(st2sp[sti] - ossp, 0), rdim, MPI_DOUBLE,
-                             i, offsets[i]+j, MPI_COMM_WORLD,
-                             &status);  // Note that this may redundantly overwrite some rows corresponding to shared DOF's.
+                             i, offsets[i]+j, MPI_COMM_WORLD, &status);
                 }
 #else
                 if (allos0[i] <= all_sprows[Bsp_row] && all_sprows[Bsp_row] < allos1[i])
                 {
+                    // Note that this may redundantly overwrite some rows corresponding to shared DOF's.
                     MPI_Recv(&Bsp(st2sp[Bsp_row], 0), rdim, MPI_DOUBLE,
-                             i, offsets[i]+j, MPI_COMM_WORLD,
-                             &status);  // Note that this may redundantly overwrite some rows corresponding to shared DOF's.
+                             i, offsets[i]+j, MPI_COMM_WORLD, &status);
                 }
 #endif
                 ++Bsp_row;
@@ -1623,8 +1627,8 @@ void SampleMeshManager::CreateSampleMesh()
                    MPI_INT, &all_sprows[0], &local_num_stencil_dofs[0],
                    offsets, MPI_INT, MPI_COMM_WORLD);
 
-    // Note that all_stencil_dofs may contain DOF's on different processes that are identical (shared DOF's), which is fine
-    // (see comments in Set_s2sp).
+    // Note that all_stencil_dofs may contain DOF's on different processes that
+    // are identical (shared DOF's), which is fine (see comments in Set_s2sp).
 
     delete [] offsets;
 

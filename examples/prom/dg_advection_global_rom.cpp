@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2024, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -696,7 +696,6 @@ int main(int argc, char *argv[])
     if (merge)
     {
         mergeTimer.Start();
-        std::unique_ptr<CAROM::BasisGenerator> basis_generator;
         options = new CAROM::Options(U->Size(), max_num_snapshots, 1, update_right_SV);
         generator = new CAROM::BasisGenerator(*options, isIncremental, basisName);
         for (int paramID=0; paramID<nsets; ++paramID)
