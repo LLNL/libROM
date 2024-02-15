@@ -34,13 +34,13 @@ TEST(NNLS, solve_nnls_with_parallel)
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    const int nrow = 12;
-    const int ncol = 18;
+    const int nrow = 300;
+    const int ncol = 1000;
     const int ncol_local = CAROM::split_dimension(ncol);
     std::vector<int> row_offset(nproc + 1);
     const int total_cols = CAROM::get_global_offsets(ncol_local, row_offset,
                            MPI_COMM_WORLD);
-    const double rel_tol = 0.3;
+    const double rel_tol = 0.05;
     const double nnls_tol = 1.0e-11;
 
     std::default_random_engine generator;
@@ -112,11 +112,15 @@ TEST(NNLS, solve_nnls_with_parallel)
     std::cout << rank << ": relative residual norm for NNLS solution of Gs = Gw: "
               << relNorm << std::endl;
 
+    double max_error = 0.0;
     for (int k = 0; k < res.dim(); k++)
     {
+        max_error = std::max(max_error, abs(res(k) / rhs(k)));
         // printf("rank %d, error(%d): %.3e\n", rank, k, abs(res(k) / rhs(k)));
         EXPECT_TRUE(abs(res(k)) < rel_tol * abs(rhs(k)) + nnls_tol);
     }
+    if (rank == 0)
+        printf("maximum error: %.5e\n", max_error);
 }
 
 int main(int argc, char* argv[])
