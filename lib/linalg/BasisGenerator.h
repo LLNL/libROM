@@ -144,7 +144,7 @@ public:
     }
 
     /**
-     * @brief Load previously saved sample (basis or state) 
+     * @brief Load previously saved sample (basis or state)
      *        within a column range.
      *
      * @param[in] base_file_name The base part of the name of the files
@@ -284,7 +284,7 @@ public:
     }
 
     /**
-     * @brief Prints the summary of recommended numbers of basis vectors. 
+     * @brief Prints the summary of recommended numbers of basis vectors.
      *
      * @param[in] energyFraction   Energy Fraction.
      * @param[in] cutoff           Number of basis vectors selected.
@@ -293,8 +293,8 @@ public:
      */
     void finalSummary(
         const double energyFraction,
-        int & cutoff, 
-        const std::string cutoffOutputPath = "", 
+        int & cutoff,
+        const std::string cutoffOutputPath = "",
         const int first_sv = 0);
 
 protected:
