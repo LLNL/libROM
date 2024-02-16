@@ -56,8 +56,8 @@ public:
     {
         if (max_time_intervals > 1)
         {
-            printf("time interval is obsolete and will be removed in the future. Set max_time_intervals=%d to 1!\n",
-                   max_time_intervals);
+            printf("time interval is obsolete and will be removed in the future."
+                   " Set max_time_intervals=%d to 1!\n", max_time_intervals);
         }
         CAROM_VERIFY(max_time_intervals == 1);
     };

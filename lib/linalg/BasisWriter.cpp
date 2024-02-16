@@ -55,17 +55,15 @@ BasisWriter::BasisWriter(
     snap_file_name = base_file_name + tmp2;
 
     // create and open snapshot/basis database
-    // TODO(kevin): can it be CSV at all? we might want to remove if statement here.
-    if (db_format_ == Database::HDF5) {
-        d_snap_database = new HDFDatabase();
-        d_database = new HDFDatabase();
-    }
+    CAROM_VERIFY(db_format_ == Database::HDF5);
+    d_snap_database = new HDFDatabase();
+    d_database = new HDFDatabase();
 }
 
 BasisWriter::~BasisWriter()
 {
-    if (d_database) delete d_database;
-    if (d_snap_database) delete d_snap_database;
+    delete d_database;
+    delete d_snap_database;
 }
 
 void
@@ -80,7 +78,6 @@ BasisWriter::writeBasis(const std::string& kind)
     sprintf(tmp, "time_%06d", d_num_intervals_written);
 
     if (kind == "basis") {
-        bool file_exists = fileExists(full_file_name);
         d_database->create(full_file_name);
 
         d_database->putDouble(tmp, time_interval_start_time);
@@ -116,6 +113,7 @@ BasisWriter::writeBasis(const std::string& kind)
 
         ++d_num_intervals_written;
 
+        CAROM_VERIFY(d_num_intervals_written == 1);
         d_database->putInteger("num_time_intervals", d_num_intervals_written);
         d_database->close();
     }
@@ -135,6 +133,10 @@ BasisWriter::writeBasis(const std::string& kind)
         sprintf(tmp, "snapshot_matrix_%06d", d_num_intervals_written);
         d_snap_database->putDoubleArray(tmp, &snapshots->item(0,0), num_rows*num_cols);
 
+        // NOTE(kevin): number of interval will be removed in future.
+        //              Until then, we keep the current practice of
+        //              un-increased number of interval, that is 0.
+        CAROM_VERIFY(d_num_intervals_written == 0);
         d_snap_database->putInteger("num_time_intervals", d_num_intervals_written);
         d_snap_database->close();
     }
