@@ -21,6 +21,8 @@
 #include <random>
 #include "mpi.h"
 #include "utils/mpi_utils.h"
+#include <chrono>
+using namespace std::chrono;
 
 /**
  * Simple smoke test to make sure Google Test is properly linked
@@ -65,7 +67,7 @@ TEST(HDF5, Test_parallel_writing)
      * Create the dataspace for the dataset.
      */
     const int dim_rank = 1;
-    const int nelements = 100000;
+    const int nelements = 10000000;
     hsize_t dim_global[dim_rank] = { static_cast<hsize_t>(nelements) };
     hid_t filespace = H5Screate_simple(dim_rank, dim_global, NULL);
 
@@ -118,8 +120,14 @@ TEST(HDF5, Test_parallel_writing)
     /*
      * Write the data collectively.
      */
+    MPI_Barrier(MPI_COMM_WORLD);
+    const auto start = steady_clock::now();
     errf = H5Dwrite(dset_id, H5T_NATIVE_INT, memspace, filespace, plist_id, data);
     CAROM_VERIFY(errf >= 0);
+    MPI_Barrier(MPI_COMM_WORLD);
+    const auto stop = steady_clock::now();
+    const auto duration = duration_cast<milliseconds>(stop-start);
+    printf("rank: %d, duration: %dms\n", rank, duration);
 
     /*
      * Close/release resources.
