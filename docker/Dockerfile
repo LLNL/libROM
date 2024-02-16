@@ -10,7 +10,7 @@ WORKDIR /$ENVDIR
 # install packages
 RUN sudo apt-get install -yq git
 RUN sudo apt-get install --no-install-recommends -yq make gcc gfortran libssl-dev cmake
-RUN sudo apt-get install -yq libopenblas-dev libmpich-dev libblas-dev liblapack-dev libscalapack-mpi-dev libhdf5-serial-dev
+RUN sudo apt-get install -yq libopenblas-dev libmpich-dev libblas-dev liblapack-dev libscalapack-mpi-dev libhdf5-mpi-dev
 RUN sudo apt-get install -yq vim
 RUN sudo apt-get install -yq git-lfs
 RUN sudo apt-get install -yq valgrind
