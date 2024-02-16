@@ -100,6 +100,7 @@ int main(int argc, char *argv[])
     const char *test_list = "dmd_test";
     const char *temporal_idx_list = "temporal_idx";
     const char *spatial_idx_list = "spatial_idx";
+    const char *window_file = "dmd_windows";
     const char *hdf_name = "dmd.hdf";
     const char *snap_pfx = "step";
     const char *basename = "";
@@ -149,6 +150,8 @@ int main(int argc, char *argv[])
                    "Name of the file indicating bound of temporal indices.");
     args.AddOption(&spatial_idx_list, "-x-idx", "--spatial-index",
                    "Name of the file indicating spatial indices.");
+    args.AddOption(&window_file, "-window-set", "--window-set-name",
+                   "Name of the file containing a rdim/ef list for each window within the list directory.");
     args.AddOption(&snap_pfx, "-snap-pfx", "--snapshot-prefix",
                    "Prefix of snapshots.");
     args.AddOption(&basename, "-o", "--outputfile-name",
@@ -206,6 +209,48 @@ int main(int argc, char *argv[])
     else
     {
         db = new CAROM::HDFDatabase();
+    }
+
+    // Load window RDIM/EF file if given
+    vector<string> window_str_list;
+    vector<double> window_list;
+    bool use_rdim_windows = false;
+    csv_db.getStringVector(string(list_dir) + "/" + string(window_file) + ".csv",
+                           window_str_list, false);
+    if (window_str_list.size() > 0)
+    {
+        if (numWindows > 0)
+        {
+            CAROM_VERIFY(numWindows == window_str_list.size() - 1);
+        }
+
+        if (window_str_list[0] == "RDIM")
+        {
+            use_rdim_windows = true;
+        }
+
+        CAROM_VERIFY(window_str_list[0] == "RDIM" || window_str_list[0] == "EF");
+
+        for (int i = 1; i < window_str_list.size(); i++)
+        {
+            std::string tmp;
+            std::stringstream window_ss(window_str_list[i]);
+            getline(window_ss, tmp, ',');
+            getline(window_ss, tmp, ',');
+            window_list.push_back(stod(tmp));
+        }
+
+        numWindows = window_list.size();
+
+        if (myid == 0)
+        {
+            std::cout << "Read window file with " << window_list.size() << " windows:\n";
+            for (int i = 0; i < window_list.size(); i++)
+            {
+                std::cout << "  Window " << i << ": " << (use_rdim_windows ? "RDIM = " :
+                          "EF = ") << window_list[i] << "\n";
+            }
+        }
     }
 
     string variable = string(var_name);
@@ -337,6 +382,10 @@ int main(int argc, char *argv[])
         CAROM_VERIFY(windowOverlapSamples < windowNumSamples);
         numWindows = (windowNumSamples < infty) ? round((double) (num_train_snap-1) /
                      (double) windowNumSamples) : 1;
+        if (window_list.size() > 0)
+        {
+            CAROM_VERIFY(numWindows == window_list.size());
+        }
     }
 
     CAROM_VERIFY(numWindows > 0);
@@ -487,22 +536,26 @@ int main(int argc, char *argv[])
 
         for (int window = 0; window < numWindows; ++window)
         {
-            if (rdim != -1)
+            if (rdim != -1 || use_rdim_windows)
             {
+                int window_rdim = use_rdim_windows ? window_list[window] : rdim;
                 if (myid == 0)
                 {
-                    cout << "Creating DMD model #" << window << " with rdim: " << rdim << endl;
+                    cout << "Creating DMD model #" << window << " with rdim: " << window_rdim <<
+                         endl;
                 }
-                dmd[window]->train(rdim);
+                CAROM_VERIFY(window_rdim <= windowNumSamples);
+                dmd[window]->train(window_rdim);
             }
-            else if (ef != -1)
+            else if (ef != -1 || window_list.size() > 0)
             {
+                double window_ef = window_list.size() > 0 ? window_list[window] : ef;
                 if (myid == 0)
                 {
                     cout << "Creating DMD model #" << window << " with energy fraction: "
-                         << ef << endl;
+                         << window_ef << endl;
                 }
-                dmd[window]->train(ef);
+                dmd[window]->train(window_ef);
             }
             dmd[window]->save(outputPath + "/window" + to_string(window));
             if (myid == 0)
