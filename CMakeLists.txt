@@ -265,6 +265,7 @@ if(GTEST_FOUND)
   set(unit_test_stems
     Vector
     Matrix
+    HDFDatabase
     DEIM
     DMD
     GNAT
