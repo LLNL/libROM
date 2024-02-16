@@ -293,12 +293,9 @@ int main(int argc, char *argv[])
     vector<double> indicator_val;
     if (!train || numWindows > 0)
     {
-        int indicator_val_size = 0;
-        db->getInteger("indicator_val_size", indicator_val_size);
-        indicator_val.resize(indicator_val_size);
-        db->getDoubleArray(string(outputPath) + "/indicator_val.csv",
-                           indicator_val.data(),
-                           indicator_val_size);
+        csv_db.getDoubleVector(string(outputPath) + "/indicator_val.csv", indicator_val,
+                               false);
+
         if (indicator_val.size() > 0)
         {
             if (numWindows > 0)
