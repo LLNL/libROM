@@ -37,6 +37,22 @@ TEST(HDF5, Test_parallel_writing)
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+    const int dim_rank = 2;
+    const int nrow = 10000, ncol = 400;
+    const int nrow_local = CAROM::split_dimension(nrow, MPI_COMM_WORLD);
+    std::vector<int> offsets;
+    int dummy = CAROM::get_global_offsets(nrow_local, offsets, MPI_COMM_WORLD);
+
+    /*
+     * Initialize data buffer
+     */
+    int data[nrow_local * ncol];
+    for (int d = 0; d < nrow_local * ncol; d++)
+        data[d] = d + offsets[rank] * ncol;
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    const auto start = steady_clock::now();
+
     hid_t plist_id;
     hid_t file_id;
     herr_t errf = 0;
@@ -66,9 +82,7 @@ TEST(HDF5, Test_parallel_writing)
     /*
      * Create the dataspace for the dataset.
      */
-    const int dim_rank = 1;
-    const int nelements = 10000000;
-    hsize_t dim_global[dim_rank] = { static_cast<hsize_t>(nelements) };
+    hsize_t dim_global[dim_rank] = { static_cast<hsize_t>(nrow), static_cast<hsize_t>(ncol) };
     hid_t filespace = H5Screate_simple(dim_rank, dim_global, NULL);
 
     /*
@@ -82,17 +96,13 @@ TEST(HDF5, Test_parallel_writing)
      * Each process defines dataset in memory and writes it to the hyperslab
      * in the file.
      */
-    const int nelem_local = CAROM::split_dimension(nelements, MPI_COMM_WORLD);
-    std::vector<int> offsets;
-    int dummy = CAROM::get_global_offsets(nelem_local, offsets, MPI_COMM_WORLD);
-
     /* hyperslab selection parameters */
     hsize_t count[dim_rank];            
     hsize_t offset[dim_rank];
-    count[0]  = nelem_local;
-    // count[1]  = dimsf[1];
+    count[0]  = nrow_local;
+    count[1]  = ncol;
     offset[0] = offsets[rank];
-    // offset[1] = 0;
+    offset[1] = 0;
     hid_t memspace  = H5Screate_simple(dim_rank, count, NULL);
 
     /*
@@ -100,16 +110,6 @@ TEST(HDF5, Test_parallel_writing)
      */
     filespace = H5Dget_space(dset_id);
     H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offset, NULL, count, NULL);
-
-    /*
-     * Initialize data buffer
-     */
-    int data[nelem_local];
-    for (int d = 0; d < nelem_local; d++)
-        data[d] = d + offsets[rank];
-
-    hid_t space = H5Screate_simple(1, dim_global, 0);
-    CAROM_VERIFY(space >= 0);
 
     /*
      * Create property list for collective dataset write.
@@ -120,14 +120,8 @@ TEST(HDF5, Test_parallel_writing)
     /*
      * Write the data collectively.
      */
-    MPI_Barrier(MPI_COMM_WORLD);
-    const auto start = steady_clock::now();
     errf = H5Dwrite(dset_id, H5T_NATIVE_INT, memspace, filespace, plist_id, data);
     CAROM_VERIFY(errf >= 0);
-    MPI_Barrier(MPI_COMM_WORLD);
-    const auto stop = steady_clock::now();
-    const auto duration = duration_cast<milliseconds>(stop-start);
-    printf("rank: %d, duration: %dms\n", rank, duration);
 
     /*
      * Close/release resources.
@@ -137,6 +131,11 @@ TEST(HDF5, Test_parallel_writing)
     H5Sclose(memspace);
     H5Pclose(plist_id);
     H5Fclose(file_id);
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    const auto stop = steady_clock::now();
+    const auto duration = duration_cast<milliseconds>(stop-start);
+    printf("rank: %d, duration: %dms\n", rank, duration);
 }
 
 int main(int argc, char* argv[])
