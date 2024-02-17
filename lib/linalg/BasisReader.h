@@ -58,10 +58,9 @@ public:
      * @brief Returns true if the basis vectors at requested time are
      * different from the last requested basis vectors.
      *
-     * @pre 0 < numTimeIntervals()
-     * @pre 0 <= time
-     *
      * @param[in] time Time at which we are interested in the basis vectors.
+     *                 NOTE: this argument is obsolete and remains only for backward compatibility.
+     *                 Will be removed in future.
      *
      * @return True if the basis vectors at the requested time are different
      *         from the last requested basis vectors.
@@ -70,24 +69,7 @@ public:
     isNewBasis(
         double time)
     {
-        CAROM_VERIFY(0 < numTimeIntervals());
-        CAROM_VERIFY(0 <= time);
-        bool result = false;
-        if (d_last_basis_idx == -1) {
-            result = true;
-        }
-        else {
-            int num_time_intervals = numTimeIntervals();
-            int i;
-            for (i = 0; i < num_time_intervals-1; ++i) {
-                if (d_time_interval_start_times[i] <= time &&
-                        time < d_time_interval_start_times[i+1]) {
-                    break;
-                }
-            }
-            result = i != d_last_basis_idx;
-        }
-        return result;
+        return (d_last_basis_idx == -1);
     }
 
     /**
@@ -95,10 +77,9 @@ public:
      * @brief Returns the spatial basis vectors for the requested time as a
      *        Matrix.
      *
-     * @pre 0 < numTimeIntervals()
-     * @pre 0 <= time
-     *
      * @param[in] time Time for which we want the basis vectors.
+     *                 NOTE: this argument is obsolete and remains only for backward compatibility.
+     *                 Will be removed in future.
      *
      * @return The spatial basis vectors for the requested time.
      */
@@ -111,11 +92,11 @@ public:
      * @brief Returns the first n spatial basis vectors for the requested time
      *        as a Matrix.
      *
-     * @pre 0 < numTimeIntervals()
-     * @pre 0 <= time
      * @pre 0 < n <= numColumns()
      *
      * @param[in] time Time for which we want the basis vectors.
+     *                 NOTE: this argument is obsolete and remains only for backward compatibility.
+     *                 Will be removed in future.
      * @param[in] n    The number of spatial basis vectors desired.
      *
      * @return The spatial basis vectors for the requested time.
@@ -130,12 +111,12 @@ public:
      * @brief Returns spatial basis vectors from start_col to end_col for the
      *        requested time as a Matrix.
      *
-     * @pre 0 < numTimeIntervals()
-     * @pre 0 <= time
      * @pre 0 < start_col <= numColumns()
      * @pre start_col <= end_col <= numColumns()
      *
      * @param[in] time         Time for which we want the basis vectors.
+     *                 NOTE: this argument is obsolete and remains only for backward compatibility.
+     *                 Will be removed in future.
      * @param[in] start_col    The starting column desired.
      * @param[in] end_col      The starting column desired.
      *
@@ -152,11 +133,11 @@ public:
      * @brief Returns the first n spatial basis vectors for the requested time
      *        as a Matrix that capture the given energy fraction.
      *
-     * @pre 0 < numTimeIntervals()
-     * @pre 0 <= time
      * @pre 0 <= ef <= 1.0
      *
      * @param[in] time Time for which we want the basis vectors.
+     *                 NOTE: this argument is obsolete and remains only for backward compatibility.
+     *                 Will be removed in future.
      * @param[in] ef   The desired energy fraction.
      *
      * @return The spatial basis vectors for the requested time.
@@ -171,10 +152,9 @@ public:
      * @brief Returns the temporal basis vectors for the requested time as
      *        a Matrix.
      *
-     * @pre 0 < numTimeIntervals()
-     * @pre 0 <= time
-     *
      * @param[in] time Time for which we want the basis vectors.
+     *                 NOTE: this argument is obsolete and remains only for backward compatibility.
+     *                 Will be removed in future.
      *
      * @return The temporal basis vectors for the requested time.
      */
@@ -187,11 +167,11 @@ public:
      * @brief Returns the first n temporal basis vectors for the requested time
      *        as a Matrix.
      *
-     * @pre 0 < numTimeIntervals()
-     * @pre 0 <= time
      * @pre 0 < n <= numColumns()
      *
      * @param[in] time Time for which we want the basis vectors.
+     *                 NOTE: this argument is obsolete and remains only for backward compatibility.
+     *                 Will be removed in future.
      * @param[in] n    The number of temporal basis vectors desired.
      *
      * @return The temporal basis vectors for the requested time.
@@ -206,12 +186,12 @@ public:
      * @brief Returns temporal basis vectors from start_col to end_col for the
      *        requested time as a Matrix.
      *
-     * @pre 0 < numTimeIntervals()
-     * @pre 0 <= time
      * @pre 0 < start_col <= numColumns()
      * @pre start_col <= end_col <= numColumns()
      *
      * @param[in] time         Time for which we want the basis vectors.
+     *                         NOTE: this argument is obsolete and remains only for backward compatibility.
+     *                         Will be removed in future.
      * @param[in] start_col    The starting column desired.
      * @param[in] end_col      The starting column desired.
      *
@@ -228,11 +208,11 @@ public:
      * @brief Returns the first n temporal basis vectors for the requested time
      *        as a Matrix that capture the given energy fraction.
      *
-     * @pre 0 < numTimeIntervals()
-     * @pre 0 <= time
      * @pre 0 <= ef <= 1.0
      *
      * @param[in] time Time for which we want the basis vectors.
+     *                 NOTE: this argument is obsolete and remains only for backward compatibility.
+     *                 Will be removed in future.
      * @param[in] ef   The desired energy fraction.
      *
      * @return The temporal basis vectors for the requested time.
@@ -246,27 +226,44 @@ public:
      *
      * @brief Returns the singular values for the requested time.
      *
-     * @pre 0 < numTimeIntervals()
-     * @pre 0 <= time
+     * @param[in] time Time for which we want the basis vectors.
+     *                 NOTE: this argument is obsolete and remains only for backward compatibility.
+     *                 Will be removed in future.
+     *
+     * @return The temporal basis vectors for the requested time.
+     */
+    Vector*
+    getSingularValues();
+
+    /**
+     *
+     * @brief Returns the singular values for the requested time.
+     *        NOTE: this function is obsolete and remains only for backward compatibility.
+     *        Will be removed in future.
      *
      * @param[in] time Time for which we want the basis vectors.
+     *                 NOTE: this argument is obsolete and remains only for backward compatibility.
+     *                 Will be removed in future.
      *
      * @return The temporal basis vectors for the requested time.
      */
     Vector*
     getSingularValues(
-        double time);
+        double time)
+    {
+        return getSingularValues();
+    }
 
     /**
      *
      * @brief Returns the largest singular values for the requested time
      *        that capture the given energy fraction.
      *
-     * @pre 0 < numTimeIntervals()
-     * @pre 0 <= time
      * @pre 0 <= ef <= 1.0
      *
      * @param[in] time Time for which we want the basis vectors.
+     *                 NOTE: this argument is obsolete and remains only for backward compatibility.
+     *                 Will be removed in future.
      * @param[in] ef   The desired energy fraction.
      *
      * @return The temporal basis vectors for the requested time.
@@ -284,8 +281,23 @@ public:
      */
     int
     getDim(
+        const std::string kind);
+
+    /**
+     *
+     * @brief Returns the dimension of the system on this processor.
+     *        NOTE: this function is obsolete and remains only for backward compatibility.
+     *        Will be removed in future.
+     *
+     * @return The dimension of the system on this processor.
+     */
+    int
+    getDim(
         const std::string kind,
-        double time);
+        double time)
+    {
+        return getDim(kind);
+    }
 
     /**
      *
@@ -295,17 +307,32 @@ public:
      */
     int
     getNumSamples(
+        const std::string kind);
+
+    /**
+     *
+     * @brief Returns the number of samples (columns) in file.
+     *        NOTE: this function is obsolete and remains only for backward compatibility.
+     *        Will be removed in future.
+     *
+     * @return The number of samples in file.
+     */
+    int
+    getNumSamples(
         const std::string kind,
-        double time);
+        double time)
+    {
+        return getNumSamples(kind);
+    }
 
     /**
      *
      * @brief Returns the snapshot matrix for the requested time.
      *
-     * @pre 0 < numTimeIntervals()
-     * @pre 0 <= time
      *
      * @param[in] time Time for which we want the basis vectors.
+     *                 NOTE: this argument is obsolete and remains only for backward compatibility.
+     *                 Will be removed in future.
      *
      * @return The snapshot matrix for the requested time.
      */
@@ -317,11 +344,11 @@ public:
      *
      * @brief Returns the first n columns of the snapshot matrix for the requested time.
      *
-     * @pre 0 < numTimeIntervals()
-     * @pre 0 <= time
      * @pre 0 < n <= numColumns()
      *
      * @param[in] time Time for which we want the basis vectors.
+     *                 NOTE: this argument is obsolete and remains only for backward compatibility.
+     *                 Will be removed in future.
      * @param[in] n    The number of basis vectors desired.
      *
      * @return The snapshot matrix for the requested time.
@@ -335,12 +362,12 @@ public:
      *
      * @brief Returns the snapshot matrix from start_col to end_col for the requested time.
      *
-     * @pre 0 < numTimeIntervals()
-     * @pre 0 <= time
      * @pre 0 < start_col <= numColumns()
      * @pre start_col <= end_col <= numColumns()
      *
      * @param[in] time Time for which we want the basis vectors.
+     *                 NOTE: this argument is obsolete and remains only for backward compatibility.
+     *                 Will be removed in future.
      * @param[in] start_col    The starting column desired.
      * @param[in] end_col      The starting column desired.
      *
@@ -370,22 +397,6 @@ private:
     BasisReader&
     operator = (
         const BasisReader& rhs);
-
-    /**
-     * @brief Number of time intervals.
-     *
-     * @return The number of time intervals.
-     */
-    int
-    numTimeIntervals()
-    {
-        return static_cast<int>(d_time_interval_start_times.size());
-    }
-
-    /**
-     * @brief The start time of each time interval.
-     */
-    std::vector<double> d_time_interval_start_times;
 
     /**
      * @brief The database being read from.
