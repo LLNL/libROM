@@ -80,7 +80,7 @@ BasisReader::getSpatialBasis(
     double time,
     int n)
 {
-    return getSpatialBasis(1, n);
+    return getSpatialBasis(time, 1, n);
 }
 
 Matrix*
@@ -136,7 +136,7 @@ BasisReader::getSpatialBasis(
     }
 
     delete sv;
-    return getSpatialBasis(num_used_singular_values);
+    return getSpatialBasis(time, num_used_singular_values);
 }
 
 Matrix*
@@ -163,7 +163,7 @@ BasisReader::getTemporalBasis(
     double time,
     int n)
 {
-    return getTemporalBasis(1, n);
+    return getTemporalBasis(time, 1, n);
 }
 
 Matrix*
@@ -219,7 +219,7 @@ BasisReader::getTemporalBasis(
     }
 
     delete sv;
-    return getTemporalBasis(num_used_singular_values);
+    return getTemporalBasis(time, num_used_singular_values);
 }
 
 Vector*
@@ -348,7 +348,7 @@ BasisReader::getSnapshotMatrix(
     double time,
     int n)
 {
-    return getSnapshotMatrix(1, n);
+    return getSnapshotMatrix(time, 1, n);
 }
 
 Matrix*
