@@ -14,6 +14,7 @@
 #define included_HDFDatabase_h
 
 #include "Database.h"
+#include "Utilities.h"
 #include "hdf5.h"
 #include <string>
 
@@ -61,6 +62,59 @@ public:
     open(
         const std::string& file_name,
         const std::string& type) override;
+
+    /**
+     * @brief Creates a new HDF5 database file with the supplied name,
+     *        extending it with 6 digits indicating the process rank.
+     *
+     * @param[in] file_name Name of HDF5 database file to create.
+     * @param[in] comm      MPI communicator to obtain the process rank.
+     *
+     * @return True if file create was successful.
+     */
+    virtual bool
+    create_parallel(
+        const std::string& file_name,
+        const MPI_Comm comm) override
+    {
+        CAROM_VERIFY(!file_name.empty());
+        MPI_Comm_rank(comm, &d_rank);
+
+        std::string ext_filename(file_name);
+        char tmp[10];
+        sprintf(tmp, ".%06d", d_rank);
+        ext_filename += tmp;
+
+        return create(ext_filename);
+    }
+
+    /**
+     * @brief Opens an existing HDF5 database file with the supplied name,
+     *        extending it with 6 digits indicating the process rank.
+     *
+     * @param[in] file_name Name of existing HDF5 database file to open.
+     * @param[in] type      Read/write type ("r"/"wr")
+     * @param[in] comm      MPI communicator to obtain the process rank.
+     *
+     * @return True if file open was successful.
+     */
+    virtual
+    bool
+    open_parallel(
+        const std::string& file_name,
+        const std::string& type,
+        const MPI_Comm comm) override
+    {
+        CAROM_VERIFY(!file_name.empty());
+        MPI_Comm_rank(comm, &d_rank);
+
+        std::string ext_filename(file_name);
+        char tmp[10];
+        sprintf(tmp, ".%06d", d_rank);
+        ext_filename += tmp;
+
+        return open(ext_filename, type);
+    }
 
     /**
      * @brief Closes the currently open HDF5 database file.
@@ -312,7 +366,13 @@ private:
     /**
      * @brief The key representing an integer array.
      * */
-    static const int KEY_INT_ARRAY;
+    static const int KEY_INT_ARRAY;   
+
+    /**
+     * @brief MPI process rank.
+     *        Used only when d_parallel is true.
+     */
+    int d_rank;
 };
 
 }

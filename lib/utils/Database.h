@@ -15,6 +15,7 @@
 
 #include <string>
 #include <vector>
+#include "mpi.h"
 
 namespace CAROM {
 
@@ -52,6 +53,23 @@ public:
         const std::string& file_name);
 
     /**
+     * @brief Creates a new database file with the supplied name, with parallel I/O support.
+     *        Supported only for HDF5 format.
+     *        For HDFDatabase, the function is equivalent to create,
+     *        only extending the file name with 6 digits indicating processor rank.
+     *        For HDFDatabaseMPIO, the file is created with MPI I/O file access property.
+     *
+     * @param[in] file_name Name of database file to create.
+     *
+     * @return True if file create was successful.
+     */
+    virtual
+    bool
+    create_parallel(
+        const std::string& file_name,
+        const MPI_Comm comm) = 0;
+
+    /**
      * @brief Opens an existing database file with the supplied name.
      *
      * @param[in] file_name Name of existing database file to open.
@@ -64,6 +82,25 @@ public:
     open(
         const std::string& file_name,
         const std::string& type);
+
+    /**
+     * @brief Opens an existing database file with the supplied name, with parallel I/O support.
+     *        Supported only for HDF5 format.
+     *        For HDFDatabase, the function is equivalent to open,
+     *        only extending the file name with 6 digits indicating processor rank.
+     *        For HDFDatabaseMPIO, the file is opened with MPI I/O file access property.
+     *
+     * @param[in] file_name Name of existing database file to open.
+     * @param[in] type Read/write type ("r"/"wr")
+     *
+     * @return True if file open was successful.
+     */
+    virtual
+    bool
+    open_parallel(
+        const std::string& file_name,
+        const std::string& type,
+        const MPI_Comm comm) = 0;
 
     /**
      * @brief Closes the currently open database file.

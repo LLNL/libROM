@@ -14,6 +14,7 @@
 #define included_CSVDatabase_h
 
 #include "Database.h"
+#include "Utilities.h"
 #include <string>
 #include <fstream>
 #include <complex>
@@ -39,25 +40,27 @@ public:
 
     /**
      * @brief Creates a new CSV database file with the supplied name.
+     *        NOTE: CSVDatabase does not actually create a file with this.
+     *        This function will only print out the file_name.
      *
      * @param[in] file_name Name of CSV database file to create.
      *
      * @return True if file create was successful.
      */
-    virtual
     bool
     create(
         const std::string& file_name) override;
 
     /**
      * @brief Opens an existing CSV database file with the supplied name.
+     *        NOTE: CSVDatabase does not actually open a file with this.
+     *        This function will only print out the file_name.
      *
      * @param[in] file_name Name of existing CSV database file to open.
      * @param[in] type Read/write type ("r"/"wr")
      *
      * @return True if file open was successful.
      */
-    virtual
     bool
     open(
         const std::string& file_name,
@@ -68,7 +71,6 @@ public:
      *
      * @return True if the file close was successful.
      */
-    virtual
     bool
     close();
 
@@ -84,7 +86,6 @@ public:
      * @param[in] data The array of integer values to be written.
      * @param[in] nelements The number of integers in the array.
      */
-    virtual
     void
     putIntegerArray(
         const std::string& file_name,
@@ -103,7 +104,6 @@ public:
      * @param[in] data The array of double values to be written.
      * @param[in] nelements The number of doubles in the array.
      */
-    virtual
     void
     putDoubleArray(
         const std::string& file_name,
@@ -123,7 +123,6 @@ public:
      * @param[in] data The vector of double values to be written.
      * @param[in] nelements The number of doubles in the vector.
      */
-    virtual
     void
     putDoubleVector(
         const std::string& file_name,
@@ -142,7 +141,6 @@ public:
      * @param[in] data The vector of complex double values to be written.
      * @param[in] nelements The number of complex doubles in the vector.
      */
-    virtual
     void
     putComplexVector(
         const std::string& file_name,
@@ -161,7 +159,6 @@ public:
      * @param[in] data The vector of strings to be written.
      * @param[in] nelements The number of strings in the vector.
      */
-    virtual
     void
     putStringVector(
         const std::string& file_name,
@@ -179,7 +176,6 @@ public:
      * @param[out] data The allocated array of integer values to be read.
      * @param[in] nelements The number of integers in the array.
      */
-    virtual
     void
     getIntegerArray(
         const std::string& file_name,
@@ -211,7 +207,6 @@ public:
      * @param[in] file_name The filename associated with the array of values to be
      *                read.
      */
-    virtual
     int
     getDoubleArraySize(const std::string& file_name)
     {
@@ -231,7 +226,6 @@ public:
      * @param[out] data The allocated array of double values to be read.
      * @param[in] nelements The number of doubles in the array.
      */
-    virtual
     void
     getDoubleArray(
         const std::string& file_name,
@@ -250,7 +244,6 @@ public:
      * @param[in] nelements The number of doubles in the full array.
      * @param[in] idx The set of indices in the sub-array.
      */
-    virtual
     void
     getDoubleArray(
         const std::string& file_name,
@@ -272,7 +265,6 @@ public:
      * @param[in] block_size The block size to read from the CSV dataset.
      * @param[in] stride The stride to read from the CSV dataset.
      */
-    virtual
     void
     getDoubleArray(
         const std::string& file_name,
@@ -325,6 +317,42 @@ public:
     int
     getLineCount(
         const std::string& file_name);
+
+    /**
+     * @brief Unsupported parallel I/O function.
+     *
+     * @param[in] file_name Base Name of CSV database file to create.
+     * @param[in] comm      MPI communicator to get the rank.
+     *
+     * @return True if file create was successful.
+     */
+    bool
+    create_parallel(
+        const std::string& file_name,
+        const MPI_Comm comm)
+    {
+        CAROM_ERROR("CSVDatabase does not support parallel I/O!\n");
+        return false;
+    }
+
+    /**
+     * @brief Unsupported parallel I/O function.
+     *
+     * @param[in] file_name Name of existing CSV database file to open.
+     * @param[in] type      Read/write type ("r"/"wr")
+     * @param[in] comm      MPI communicator to get the rank.
+     *
+     * @return True if file open was successful.
+     */
+    bool
+    open_parallel(
+        const std::string& file_name,
+        const std::string& type,
+        const MPI_Comm comm)
+    {
+        CAROM_ERROR("CSVDatabase does not support parallel I/O!\n");
+        return false;
+    }
 
 private:
     /**

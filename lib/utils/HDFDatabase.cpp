@@ -11,7 +11,6 @@
 // Description: The concrete database implementation using HDF5.
 
 #include "HDFDatabase.h"
-#include "Utilities.h"
 #include <iostream>
 
 namespace CAROM {
