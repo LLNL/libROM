@@ -97,7 +97,9 @@ public:
     Matrix*
     getSpatialBasis(
         double time)
-    { return getSpatialBasis(); }
+    {
+        return getSpatialBasis();
+    }
 
     /**
      *
@@ -185,7 +187,9 @@ public:
     Matrix*
     getTemporalBasis(
         double time)
-    { return getTemporalBasis(); }
+    {
+        return getTemporalBasis();
+    }
 
     /**
      *
@@ -374,7 +378,9 @@ public:
     Matrix*
     getSnapshotMatrix(
         double time)
-    { return getSnapshotMatrix(); }
+    {
+        return getSnapshotMatrix();
+    }
 
     /**
      *
