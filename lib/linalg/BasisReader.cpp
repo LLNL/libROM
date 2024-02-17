@@ -40,14 +40,14 @@ BasisReader::BasisReader(
         rank = 0;
     }
 
+    // Enforce hdf data format.
+    CAROM_VERIFY(db_format != Database::CSV);
+
     char tmp[100];
     sprintf(tmp, ".%06d", rank);
     full_file_name = base_file_name + tmp;
     if (db_format == Database::HDF5) {
         d_database = new HDFDatabase();
-    }
-    else if (db_format == Database::CSV) {
-        d_database = new CSVDatabase();
     }
 
     d_database->open(full_file_name, "r");
