@@ -366,7 +366,7 @@ private:
     /**
      * @brief The key representing an integer array.
      * */
-    static const int KEY_INT_ARRAY;   
+    static const int KEY_INT_ARRAY;
 
     /**
      * @brief MPI process rank.

@@ -310,7 +310,7 @@ private:
 
     /**
      * @brief Dimension of the basis on this processor.
-     * 
+     *
      * If negative, use the dimension from the rank-specific local file.
      */
     const int d_dim;

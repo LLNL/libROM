@@ -56,7 +56,7 @@ TEST(HDF5, Test_parallel_writing)
     hid_t plist_id;
     hid_t file_id;
     herr_t errf = 0;
- 
+
     /*
      * Set up file access property list with parallel I/O access
      */
@@ -72,7 +72,7 @@ TEST(HDF5, Test_parallel_writing)
      */
     H5Pset_all_coll_metadata_ops(plist_id, true);
     H5Pset_coll_metadata_write(plist_id, true);
-    
+
     /*
      * Create a new file collectively and release property list identifier.
      */
@@ -89,7 +89,8 @@ TEST(HDF5, Test_parallel_writing)
      * Create the dataset with default properties and close filespace.
      */
     hid_t dset_id =
-        H5Dcreate(file_id, "test-int", H5T_NATIVE_INT, filespace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        H5Dcreate(file_id, "test-int", H5T_NATIVE_INT, filespace, H5P_DEFAULT,
+                  H5P_DEFAULT, H5P_DEFAULT);
     H5Sclose(filespace);
 
     /*
@@ -97,7 +98,7 @@ TEST(HDF5, Test_parallel_writing)
      * in the file.
      */
     /* hyperslab selection parameters */
-    hsize_t count[dim_rank];            
+    hsize_t count[dim_rank];
     hsize_t offset[dim_rank];
     count[0]  = nrow_local;
     count[1]  = ncol;
@@ -161,7 +162,7 @@ TEST(HDF5, Test_parallel_reading)
     hid_t plist_id;
     hid_t file_id;
     herr_t errf = 0;
-    
+
     /*
      * Set up file access property list with parallel I/O access
      */
@@ -177,7 +178,7 @@ TEST(HDF5, Test_parallel_reading)
      */
     H5Pset_all_coll_metadata_ops(plist_id, true);
     H5Pset_coll_metadata_write(plist_id, true);
-    
+
     /*
      * Open a new file collectively and release property list identifier.
      */
@@ -209,7 +210,7 @@ TEST(HDF5, Test_parallel_reading)
      * in the file.
      */
     /* hyperslab selection parameters */
-    hsize_t count[dim_rank];            
+    hsize_t count[dim_rank];
     hsize_t offset[dim_rank];
     count[0]  = nrow_local;
     count[1]  = ncol;
