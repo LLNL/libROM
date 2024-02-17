@@ -142,7 +142,7 @@ protected:
     /**
      * @brief Dimension of the system.
      */
-    int d_dim;
+    const int d_dim;
 
     /**
      * @brief Number of samples stored for the current time interval.

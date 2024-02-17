@@ -28,6 +28,7 @@ BasisGenerator::BasisGenerator(
     bool incremental,
     const std::string& basis_file_name,
     Database::formats file_format) :
+    d_dim(options.dim),
     d_incremental(incremental),
     d_basis_writer(0),
     d_basis_reader(0),

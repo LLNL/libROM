@@ -288,7 +288,7 @@ private:
     int
     getDim()
     {
-        return d_svd->getDim();
+        return d_dim;
     }
 
     /**
@@ -342,6 +342,13 @@ private:
      * @brief The number of processors being run on.
      */
     int d_num_procs;
+
+    /**
+     * @brief Dimension of the system on this processor.
+     * 
+     * Equivalent to d_svd->getDim().
+     */
+    const int d_dim;
 };
 
 }

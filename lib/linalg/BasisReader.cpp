@@ -21,7 +21,9 @@ namespace CAROM {
 
 BasisReader::BasisReader(
     const std::string& base_file_name,
-    Database::formats db_format) :
+    Database::formats db_format,
+    const int dim) :
+    d_dim(dim),
     d_last_basis_idx(-1),
     full_file_name(""),
     base_file_name_(base_file_name)

@@ -44,10 +44,13 @@ public:
      * @param[in] db_format Format of the file to read.
      *                      One of the implemented file formats defined in
      *                      Database.
+     * @param[in] dim Dimension of the basis that will be read from a file.
+     *                If negative, will use the dimension from the rank-specific local file.
      */
     BasisReader(
         const std::string& base_file_name,
-        Database::formats db_format = Database::HDF5);
+        Database::formats db_format = Database::HDF5,
+        const int dim = -1);
 
     /**
      * @brief Destructor.
@@ -304,6 +307,13 @@ private:
      * @brief The last time at which basis vectors were requested.
      */
     int d_last_basis_idx;
+
+    /**
+     * @brief Dimension of the basis on this processor.
+     * 
+     * If negative, use the dimension from the rank-specific local file.
+     */
+    const int d_dim;
 };
 
 }
