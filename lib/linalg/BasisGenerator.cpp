@@ -135,6 +135,7 @@ BasisGenerator::takeSample(
 {
     CAROM_VERIFY(u_in != 0);
     CAROM_VERIFY(time >= 0);
+    CAROM_VERIFY(d_svd->getNumSamples() < d_svd->getMaxNumSamples());
 
     // Check that u_in is not non-zero.
     Vector u_vec(u_in, getDim(), true);
@@ -144,20 +145,7 @@ BasisGenerator::takeSample(
         return false;
     }
 
-    if (getNumBasisTimeIntervals() > 0 &&
-            d_svd->isNewTimeInterval()) {
-        resetDt(dt);
-        if (d_basis_writer) {
-            if (d_write_snapshots) {
-                writeSnapshot();
-            }
-            else {
-                d_basis_writer->writeBasis("basis");
-            }
-        }
-    }
-
-    return d_svd->takeSample(u_in, time, add_without_increase);
+    return d_svd->takeSample(u_in, add_without_increase);
 }
 
 void
@@ -199,7 +187,7 @@ BasisGenerator::loadSamples(const std::string& base_file_name,
                 u_in[i] = mat->item(i,j);
             }
         }
-        d_svd->takeSample(u_in, time, false);
+        d_svd->takeSample(u_in, false);
         delete[] u_in;
     }
 }

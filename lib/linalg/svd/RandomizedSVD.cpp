@@ -196,7 +196,7 @@ RandomizedSVD::computeSVD()
         d_basis_right->gather();
     }
 
-    d_this_interval_basis_current = true;
+    d_basis_is_current = true;
     delete Q;
     release_context(&svd_input);
 

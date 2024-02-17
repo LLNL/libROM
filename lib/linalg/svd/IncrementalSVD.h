@@ -52,10 +52,8 @@ public:
      * @brief Sample new state, u_in, at the given time.
      *
      * @pre u_in != 0
-     * @pre time >= 0.0
      *
      * @param[in] u_in The state at the specified time.
-     * @param[in] time The simulation time for the state.
      * @param[in] add_without_increase If true, addLinearlyDependent is invoked.
      *
      * @return True if the sampling was successful.
@@ -64,7 +62,6 @@ public:
     bool
     takeSample(
         double* u_in,
-        double time,
         bool add_without_increase = false);
 
     /**
@@ -118,8 +115,7 @@ protected:
     virtual
     void
     buildInitialSVD(
-        double* u,
-        double time) = 0;
+        double* u) = 0;
 
     /**
      * @brief Adds the new sampled the state vector, u, to the system.

@@ -223,37 +223,6 @@ public:
     }
 
     /**
-     * @brief Returns the number of time intervals on which different sets of
-     * basis vectors are defined.
-     *
-     * @return The number of time intervals on which there are basis vectors.
-     */
-    int
-    getNumBasisTimeIntervals() const
-    {
-        return d_svd->getNumBasisTimeIntervals();
-    }
-
-    /**
-     * @brief Returns the start time for the requested time interval.
-     *
-     * @pre 0 <= which_interval
-     * @pre which_interval < getNumBasisTimeIntervals()
-     *
-     * @param[in] which_interval Time interval whose start time is needed.
-     *
-     * @return The start time for the requested time interval.
-     */
-    double
-    getBasisIntervalStartTime(
-        int which_interval) const
-    {
-        CAROM_VERIFY(0 <= which_interval);
-        CAROM_VERIFY(which_interval < getNumBasisTimeIntervals());
-        return d_svd->getBasisIntervalStartTime(which_interval);
-    }
-
-    /**
      * @brief Returns the number of samples taken.
      *
      * @return The number of samples taken.

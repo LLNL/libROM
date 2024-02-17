@@ -98,8 +98,7 @@ private:
     virtual
     void
     buildInitialSVD(
-        double* u,
-        double time);
+        double* u);
 
     /**
      * @brief Adds the new sampled the state vector, u, to the system.

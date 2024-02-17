@@ -270,7 +270,6 @@ if(GTEST_FOUND)
     GNAT
     QDEIM
     S_OPT
-    SVD
     StaticSVD
     RandomizedSVD
     IncrementalSVD

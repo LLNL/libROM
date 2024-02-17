@@ -93,12 +93,6 @@ IncrementalSVD::IncrementalSVD(
         d_state_database = new HDFDatabase();
         bool is_good = d_state_database->open(d_state_file_name, "r");
         if (is_good) {
-            // Read time interval start time.
-            double time;
-            d_state_database->getDouble("time", time);
-            d_time_interval_start_times.resize(1);
-            d_time_interval_start_times[0] = time;
-
             // Read d_U.
             int num_rows;
             d_state_database->getInteger("U_num_rows", num_rows);
@@ -144,10 +138,7 @@ IncrementalSVD::~IncrementalSVD()
     //
     // If there are multiple time intervals then saving and restoring the state
     // does not make sense as there is not one, all encompassing, basis.
-    if (d_save_state && d_time_interval_start_times.size() == 1) {
-        // Save the time interval start time.
-        d_state_database->putDouble("time", d_time_interval_start_times[0]);
-
+    if (d_save_state && (!isNewSample())) {
         // Save d_U.
         int num_rows = d_U->numRows();
         d_state_database->putInteger("U_num_rows", num_rows);
@@ -182,11 +173,9 @@ IncrementalSVD::~IncrementalSVD()
 bool
 IncrementalSVD::takeSample(
     double* u_in,
-    double time,
     bool add_without_increase)
 {
     CAROM_VERIFY(u_in != 0);
-    CAROM_VERIFY(time >= 0.0);
 
     // Check that u_in is not non-zero.
     Vector u_vec(u_in, d_dim, true);
@@ -197,8 +186,8 @@ IncrementalSVD::takeSample(
     // If this is the first SVD then build it.  Otherwise add this sample to the
     // system.
     bool result = true;
-    if (isNewTimeInterval()) {
-        buildInitialSVD(u_in, time);
+    if (isNewSample()) {
+        buildInitialSVD(u_in);
     }
     else {
         result = buildIncrementalSVD(u_in,add_without_increase);
