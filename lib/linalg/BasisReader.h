@@ -74,8 +74,19 @@ public:
 
     /**
      *
+     * @brief Returns the spatial basis vectors as a Matrix.
+     *
+     * @return The spatial basis vectors.
+     */
+    Matrix*
+    getSpatialBasis();
+
+    /**
+     *
      * @brief Returns the spatial basis vectors for the requested time as a
      *        Matrix.
+     *        NOTE: this function is obsolete and remains only for backward compatibility.
+     *        Will be removed in future.
      *
      * @param[in] time Time for which we want the basis vectors.
      *                 NOTE: this argument is obsolete and remains only for backward compatibility.
@@ -85,7 +96,8 @@ public:
      */
     Matrix*
     getSpatialBasis(
-        double time);
+        double time)
+    { return getSpatialBasis(); }
 
     /**
      *
@@ -152,6 +164,18 @@ public:
      * @brief Returns the temporal basis vectors for the requested time as
      *        a Matrix.
      *
+     * @return The temporal basis vectors for the requested time.
+     */
+    Matrix*
+    getTemporalBasis();
+
+    /**
+     *
+     * @brief Returns the temporal basis vectors for the requested time as
+     *        a Matrix.
+     *        NOTE: this function is obsolete and remains only for backward compatibility.
+     *        Will be removed in future.
+     *
      * @param[in] time Time for which we want the basis vectors.
      *                 NOTE: this argument is obsolete and remains only for backward compatibility.
      *                 Will be removed in future.
@@ -160,7 +184,8 @@ public:
      */
     Matrix*
     getTemporalBasis(
-        double time);
+        double time)
+    { return getTemporalBasis(); }
 
     /**
      *
@@ -329,6 +354,16 @@ public:
      *
      * @brief Returns the snapshot matrix for the requested time.
      *
+     * @return The snapshot matrix for the requested time.
+     */
+    Matrix*
+    getSnapshotMatrix();
+
+    /**
+     *
+     * @brief Returns the snapshot matrix for the requested time.
+     *        NOTE: this function is obsolete and remains only for backward compatibility.
+     *        Will be removed in future.
      *
      * @param[in] time Time for which we want the basis vectors.
      *                 NOTE: this argument is obsolete and remains only for backward compatibility.
@@ -338,7 +373,8 @@ public:
      */
     Matrix*
     getSnapshotMatrix(
-        double time);
+        double time)
+    { return getSnapshotMatrix(); }
 
     /**
      *

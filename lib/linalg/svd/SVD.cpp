@@ -19,7 +19,7 @@ SVD::SVD(
     Options options) :
     d_dim(options.dim),
     d_num_samples(0),
-    d_max_num_samples(options.samples_per_time_interval),
+    d_max_num_samples(options.max_num_samples),
     d_basis(NULL),
     d_basis_right(NULL),
     d_U(NULL),
@@ -29,7 +29,7 @@ SVD::SVD(
     d_debug_algorithm(options.debug_algorithm)
 {
     CAROM_VERIFY(options.dim > 0);
-    CAROM_VERIFY(options.samples_per_time_interval > 0);
+    CAROM_VERIFY(options.max_num_samples > 0);
 }
 
 SVD::~SVD()

@@ -30,11 +30,11 @@ public:
      * @brief Constructor.
      *
      * @pre dim_ > 0
-     * @pre samples_per_time_interval_ > 0
+     * @pre max_num_samples_ > 0
      * @pre max_time_intervals == -1 || max_time_intervals > 0
      *
      * @param[in] dim_ The dimension of the system on this processor.
-     * @param[in] samples_per_time_interval_ The maximum number of samples in
+     * @param[in] max_num_samples_ The maximum number of samples in
      *                                      each time interval.
      * @param[in] max_time_intervals_ The maximum number of time intervals.
      * @param[in] update_right_SV_ Whether to update the right SV or not.
@@ -43,13 +43,13 @@ public:
      *
      */
     Options(int dim_,
-            int samples_per_time_interval_,
+            int max_num_samples_,
             int max_time_intervals_ = 1,
             bool update_right_SV_ = false,
             bool write_snapshots_ = false
            ): dim(dim_),
-        max_basis_dimension(samples_per_time_interval_),
-        samples_per_time_interval(samples_per_time_interval_),
+        max_basis_dimension(max_num_samples_),
+        max_num_samples(max_num_samples_),
         max_time_intervals(max_time_intervals_),
         update_right_SV(update_right_SV_),
         write_snapshots(write_snapshots_)
@@ -226,12 +226,13 @@ public:
     int dim = -1;
 
     /**
-     * @brief The number of samples per time interval.
+     * @brief The maximum number of samples.
      */
-    int samples_per_time_interval = -1;
+    int max_num_samples = -1;
 
     /**
      * @brief The maximum number of time intervals.
+     *        NOTE: this variable is obsolte and will be removed in future.
      */
     int max_time_intervals = -1;
 

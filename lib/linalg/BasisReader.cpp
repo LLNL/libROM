@@ -58,8 +58,7 @@ BasisReader::~BasisReader()
 }
 
 Matrix*
-BasisReader::getSpatialBasis(
-    double time)
+BasisReader::getSpatialBasis()
 {
     d_last_basis_idx = 0;
     int num_rows = getDim("basis");
@@ -140,8 +139,7 @@ BasisReader::getSpatialBasis(
 }
 
 Matrix*
-BasisReader::getTemporalBasis(
-    double time)
+BasisReader::getTemporalBasis()
 {
     d_last_basis_idx = 0;
     int num_rows = getDim("temporal_basis");
@@ -325,12 +323,11 @@ BasisReader::getNumSamples(
 }
 
 Matrix*
-BasisReader::getSnapshotMatrix(
-    double time)
+BasisReader::getSnapshotMatrix()
 {
     d_last_basis_idx = 0;
-    int num_rows = getDim("snapshot",time);
-    int num_cols = getNumSamples("snapshot",time);
+    int num_rows = getDim("snapshot");
+    int num_cols = getNumSamples("snapshot");
 
     char tmp[100];
     Matrix* snapshots = new Matrix(num_rows, num_cols, false);
