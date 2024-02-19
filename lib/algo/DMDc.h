@@ -238,11 +238,11 @@ protected:
      * @param[in] dt d_dt
      * @param[in] t_offset d_t_offset
      * @param[in] state_offset d_state_offset
-     * @param[in] basis d_basis
+     * @param[in] basis d_basis, set by DMDc class for offline stages. When interpolating a new DMDc, we enter the interpolated basis explicitly
      */
     DMDc(std::vector<std::complex<double>> eigs, Matrix* phi_real,
          Matrix* phi_imaginary, Matrix* B_tilde, int k,
-         double dt, double t_offset, Vector* state_offset, Matrix* basis);
+         double dt, double t_offset, Vector* state_offset, Matrix* basis = nullptr);
 
     /**
      * @brief Unimplemented default constructor.
