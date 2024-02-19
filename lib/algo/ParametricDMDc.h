@@ -127,9 +127,7 @@ void getParametricDMDc(T*& parametric_dmdc,
                             dmdcs[0]->d_k,dmdcs[0]->d_dt,
                             dmdcs[0]->d_t_offset, dmdcs[0]->d_state_offset, W);
 
-//    delete W;
     delete A_tilde;
-//    delete B_tilde;
     delete eigenpair.ev_real;
     delete eigenpair.ev_imaginary;
 
