@@ -219,8 +219,6 @@ int main(int argc, char *argv[])
     bool csvFormat = true;
     const char *basename = "";
 
-
-
     int precision = 8;
     cout.precision(precision);
 
