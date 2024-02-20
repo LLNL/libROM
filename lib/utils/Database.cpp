@@ -35,6 +35,7 @@ bool
 Database::create(const std::string& file_name)
 {
     std::cout << "Creating file: " << file_name << std::endl;
+    return true;
 }
 
 bool
@@ -43,6 +44,7 @@ Database::open(
     const std::string& type)
 {
     std::cout << "Opening file: " << file_name << std::endl;
+    return true;
 }
 
 }

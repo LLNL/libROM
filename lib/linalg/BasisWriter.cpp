@@ -45,13 +45,14 @@ BasisWriter::BasisWriter(
         rank = 0;
     }
 
-    char tmp[100];
-    sprintf(tmp, ".%06d", rank);
-    full_file_name = base_file_name + tmp;
+    // char tmp[100];
+    // sprintf(tmp, ".%06d", rank);
+    // full_file_name = base_file_name + tmp;
+    full_file_name = base_file_name;
 
-    char tmp2[100];
-    sprintf(tmp2, "_snapshot.%06d", rank);
-    snap_file_name = base_file_name + tmp2;
+    // char tmp2[100];
+    // sprintf(tmp2, "_snapshot.%06d", rank);
+    snap_file_name = base_file_name + "_snapshot";
 
     // create and open snapshot/basis database
     CAROM_VERIFY(db_format_ == Database::HDF5);
@@ -75,7 +76,7 @@ BasisWriter::writeBasis(const std::string& kind)
     // This remains only for backward compatibility purpose.
 
     if (kind == "basis") {
-        d_database->create(full_file_name);
+        d_database->create_parallel(full_file_name, MPI_COMM_WORLD);
 
         const Matrix* basis = d_basis_generator->getSpatialBasis();
         int num_rows = basis->numRows();
@@ -85,7 +86,7 @@ BasisWriter::writeBasis(const std::string& kind)
         sprintf(tmp, "spatial_basis_num_cols_000000");
         d_database->putInteger(tmp, num_cols);
         sprintf(tmp, "spatial_basis_000000");
-        d_database->putDoubleArray(tmp, &basis->item(0, 0), num_rows*num_cols);
+        d_database->putDoubleArray_parallel(tmp, &basis->item(0, 0), num_rows*num_cols);
 
         if(d_basis_generator->updateRightSV()) {
             const Matrix* tbasis = d_basis_generator->getTemporalBasis();
@@ -96,7 +97,7 @@ BasisWriter::writeBasis(const std::string& kind)
             sprintf(tmp, "temporal_basis_num_cols_000000");
             d_database->putInteger(tmp, num_cols);
             sprintf(tmp, "temporal_basis_000000");
-            d_database->putDoubleArray(tmp, &tbasis->item(0, 0), num_rows*num_cols);
+            d_database->putDoubleArray_parallel(tmp, &tbasis->item(0, 0), num_rows*num_cols);
         }
 
         const Vector* sv = d_basis_generator->getSingularValues();
@@ -104,13 +105,13 @@ BasisWriter::writeBasis(const std::string& kind)
         sprintf(tmp, "singular_value_size_000000");
         d_database->putInteger(tmp, sv_dim);
         sprintf(tmp, "singular_value_000000");
-        d_database->putDoubleArray(tmp, &sv->item(0), sv_dim);
+        d_database->putDoubleArray_parallel(tmp, &sv->item(0), sv_dim);
 
         d_database->close();
     }
 
     if (kind == "snapshot") {
-        d_snap_database->create(snap_file_name);
+        d_snap_database->create_parallel(snap_file_name, MPI_COMM_WORLD);
 
         const Matrix* snapshots = d_basis_generator->getSnapshotMatrix();
         int num_rows = snapshots->numRows(); // d_dim
@@ -120,7 +121,7 @@ BasisWriter::writeBasis(const std::string& kind)
         sprintf(tmp, "snapshot_matrix_num_cols_000000");
         d_snap_database->putInteger(tmp, num_cols);
         sprintf(tmp, "snapshot_matrix_000000");
-        d_snap_database->putDoubleArray(tmp, &snapshots->item(0,0), num_rows*num_cols);
+        d_snap_database->putDoubleArray_parallel(tmp, &snapshots->item(0,0), num_rows*num_cols);
 
         d_snap_database->close();
     }

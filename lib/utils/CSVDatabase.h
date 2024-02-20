@@ -14,7 +14,6 @@
 #define included_CSVDatabase_h
 
 #include "Database.h"
-#include "Utilities.h"
 #include <string>
 #include <fstream>
 #include <complex>
@@ -317,42 +316,6 @@ public:
     int
     getLineCount(
         const std::string& file_name);
-
-    /**
-     * @brief Unsupported parallel I/O function.
-     *
-     * @param[in] file_name Base Name of CSV database file to create.
-     * @param[in] comm      MPI communicator to get the rank.
-     *
-     * @return True if file create was successful.
-     */
-    bool
-    create_parallel(
-        const std::string& file_name,
-        const MPI_Comm comm)
-    {
-        CAROM_ERROR("CSVDatabase does not support parallel I/O!\n");
-        return false;
-    }
-
-    /**
-     * @brief Unsupported parallel I/O function.
-     *
-     * @param[in] file_name Name of existing CSV database file to open.
-     * @param[in] type      Read/write type ("r"/"wr")
-     * @param[in] comm      MPI communicator to get the rank.
-     *
-     * @return True if file open was successful.
-     */
-    bool
-    open_parallel(
-        const std::string& file_name,
-        const std::string& type,
-        const MPI_Comm comm)
-    {
-        CAROM_ERROR("CSVDatabase does not support parallel I/O!\n");
-        return false;
-    }
 
 private:
     /**

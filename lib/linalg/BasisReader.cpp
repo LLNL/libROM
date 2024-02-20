@@ -43,14 +43,12 @@ BasisReader::BasisReader(
     // Enforce hdf data format.
     CAROM_VERIFY(db_format != Database::CSV);
 
-    char tmp[100];
-    sprintf(tmp, ".%06d", rank);
-    full_file_name = base_file_name + tmp;
+    full_file_name = base_file_name;
     if (db_format == Database::HDF5) {
         d_database = new HDFDatabase();
     }
 
-    d_database->open(full_file_name, "r");
+    d_database->open_parallel(full_file_name, "r", MPI_COMM_WORLD);
 }
 
 BasisReader::~BasisReader()
@@ -70,9 +68,9 @@ BasisReader::getSpatialBasis()
 
     // This 0 index is the remainder from time interval concept.
     // This remains only for backward compatibility purpose.
-    d_database->getDoubleArray("spatial_basis_000000",
-                               &spatial_basis_vectors->item(0, 0),
-                               num_rows*num_cols);
+    d_database->getDoubleArray_parallel("spatial_basis_000000",
+                                        &spatial_basis_vectors->item(0, 0),
+                                        num_rows*num_cols);
     return spatial_basis_vectors;
 }
 
@@ -101,12 +99,12 @@ BasisReader::getSpatialBasis(
     // This 0 index is the remainder from time interval concept.
     // This remains only for backward compatibility purpose.
     sprintf(tmp, "spatial_basis_000000");
-    d_database->getDoubleArray(tmp,
-                               &spatial_basis_vectors->item(0, 0),
-                               num_rows*num_cols_to_read,
-                               start_col - 1,
-                               num_cols_to_read,
-                               num_cols);
+    d_database->getDoubleArray_parallel(tmp,
+                                        &spatial_basis_vectors->item(0, 0),
+                                        num_rows*num_cols_to_read,
+                                        start_col - 1,
+                                        num_cols_to_read,
+                                        num_cols);
     return spatial_basis_vectors;
 }
 
@@ -149,9 +147,9 @@ BasisReader::getTemporalBasis()
     // This 0 index is the remainder from time interval concept.
     // This remains only for backward compatibility purpose.
     sprintf(tmp, "temporal_basis_000000");
-    d_database->getDoubleArray(tmp,
-                               &temporal_basis_vectors->item(0, 0),
-                               num_rows*num_cols);
+    d_database->getDoubleArray_parallel(tmp,
+                                        &temporal_basis_vectors->item(0, 0),
+                                        num_rows*num_cols);
     return temporal_basis_vectors;
 }
 
@@ -180,12 +178,12 @@ BasisReader::getTemporalBasis(
     // This 0 index is the remainder from time interval concept.
     // This remains only for backward compatibility purpose.
     sprintf(tmp, "temporal_basis_000000");
-    d_database->getDoubleArray(tmp,
-                               &temporal_basis_vectors->item(0, 0),
-                               num_rows*num_cols_to_read,
-                               start_col - 1,
-                               num_cols_to_read,
-                               num_cols);
+    d_database->getDoubleArray_parallel(tmp,
+                                        &temporal_basis_vectors->item(0, 0),
+                                        num_rows*num_cols_to_read,
+                                        start_col - 1,
+                                        num_cols_to_read,
+                                        num_cols);
     return temporal_basis_vectors;
 }
 
@@ -329,9 +327,9 @@ BasisReader::getSnapshotMatrix()
     // This 0 index is the remainder from time interval concept.
     // This remains only for backward compatibility purpose.
     sprintf(tmp, "snapshot_matrix_000000");
-    d_database->getDoubleArray(tmp,
-                               &snapshots->item(0, 0),
-                               num_rows*num_cols);
+    d_database->getDoubleArray_parallel(tmp,
+                                        &snapshots->item(0, 0),
+                                        num_rows*num_cols);
     return snapshots;
 }
 
@@ -360,12 +358,12 @@ BasisReader::getSnapshotMatrix(
     // This 0 index is the remainder from time interval concept.
     // This remains only for backward compatibility purpose.
     sprintf(tmp, "snapshot_matrix_000000");
-    d_database->getDoubleArray(tmp,
-                               &snapshots->item(0, 0),
-                               num_rows*num_cols_to_read,
-                               start_col - 1,
-                               num_cols_to_read,
-                               num_cols);
+    d_database->getDoubleArray_parallel(tmp,
+                                        &snapshots->item(0, 0),
+                                        num_rows*num_cols_to_read,
+                                        start_col - 1,
+                                        num_cols_to_read,
+                                        num_cols);
     return snapshots;
 }
 }

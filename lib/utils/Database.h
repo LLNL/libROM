@@ -13,6 +13,7 @@
 #ifndef included_Database_h
 #define included_Database_h
 
+#include "Utilities.h"
 #include <string>
 #include <vector>
 #include "mpi.h"
@@ -53,23 +54,6 @@ public:
         const std::string& file_name);
 
     /**
-     * @brief Creates a new database file with the supplied name, with parallel I/O support.
-     *        Supported only for HDF5 format.
-     *        For HDFDatabase, the function is equivalent to create,
-     *        only extending the file name with 6 digits indicating processor rank.
-     *        For HDFDatabaseMPIO, the file is created with MPI I/O file access property.
-     *
-     * @param[in] file_name Name of database file to create.
-     *
-     * @return True if file create was successful.
-     */
-    virtual
-    bool
-    create_parallel(
-        const std::string& file_name,
-        const MPI_Comm comm) = 0;
-
-    /**
      * @brief Opens an existing database file with the supplied name.
      *
      * @param[in] file_name Name of existing database file to open.
@@ -82,25 +66,6 @@ public:
     open(
         const std::string& file_name,
         const std::string& type);
-
-    /**
-     * @brief Opens an existing database file with the supplied name, with parallel I/O support.
-     *        Supported only for HDF5 format.
-     *        For HDFDatabase, the function is equivalent to open,
-     *        only extending the file name with 6 digits indicating processor rank.
-     *        For HDFDatabaseMPIO, the file is opened with MPI I/O file access property.
-     *
-     * @param[in] file_name Name of existing database file to open.
-     * @param[in] type Read/write type ("r"/"wr")
-     *
-     * @return True if file open was successful.
-     */
-    virtual
-    bool
-    open_parallel(
-        const std::string& file_name,
-        const std::string& type,
-        const MPI_Comm comm) = 0;
 
     /**
      * @brief Closes the currently open database file.
@@ -314,8 +279,130 @@ public:
      */
     enum formats {
         HDF5,
-        CSV
+        CSV,
+        HDF5_MPIO
     };
+
+    /**
+     * @brief Creates a new database file with the supplied name, with parallel I/O support.
+     *        Supported only for HDF5 format.
+     *        For HDFDatabase, the function is equivalent to create,
+     *        only extending the file name with 6 digits indicating processor rank.
+     *        For HDFDatabaseMPIO, the file is created with MPI I/O file access property.
+     *
+     * @param[in] file_name Base Name of CSV database file to create.
+     * @param[in] comm      MPI communicator to get the rank.
+     *
+     * @return True if file create was successful.
+     */
+    virtual
+    bool
+    create_parallel(
+        const std::string& file_name,
+        const MPI_Comm comm)
+    {
+        CAROM_ERROR("Abstract method Database::create_parallel!\n");
+        return false;
+    }
+
+    /**
+     * @brief Opens an existing database file with the supplied name, with parallel I/O support.
+     *        Supported only for HDF5 format.
+     *        For HDFDatabase, the function is equivalent to open,
+     *        only extending the file name with 6 digits indicating processor rank.
+     *        For HDFDatabaseMPIO, the file is opened with MPI I/O file access property.
+     *
+     * @param[in] file_name Name of existing CSV database file to open.
+     * @param[in] type      Read/write type ("r"/"wr")
+     * @param[in] comm      MPI communicator to get the rank.
+     *
+     * @return True if file open was successful.
+     */
+    virtual
+    bool
+    open_parallel(
+        const std::string& file_name,
+        const std::string& type,
+        const MPI_Comm comm)
+    {
+        CAROM_ERROR("Abstract method Database::open_parallel!\n");
+        return false;
+    }
+
+    /**
+     * @brief Writes a distributed array of doubles associated with the supplied key to
+     *        the currently open database file.
+     *        Supported only for HDF5 format.
+     *        For HDFDatabase, the function is equivalent to putDoubleArray,
+     *        writing the local array per each process.
+     *        For HDFDatabaseMPIO, the global array is written into a single file via MPI I/O.
+     *
+     * @param[in] key The key associated with the array of values to be
+     *                written.
+     * @param[in] data The array of double values to be written.
+     * @param[in] nelements The number of doubles in the array.
+     */
+    virtual
+    void
+    putDoubleArray_parallel(
+        const std::string& key,
+        const double* const data,
+        int nelements)
+    {
+        CAROM_ERROR("Abstract method Database::putDoubleArray_parallel!\n");
+    }
+
+    /**
+     * @brief Reads a distributed array of doubles associated with the supplied key
+     *        from the currently open database file.
+     *        Supported only for HDF5 format.
+     *        For HDFDatabase, the function is equivalent to getDoubleArray,
+     *        reading the local array from a local file per each process.
+     *        For HDFDatabaseMPIO, the local array is read from a single file via MPI I/O.
+     *
+     * @param[in] key The key associated with the array of values to be
+     *                read.
+     * @param[out] data The allocated array of double values to be read.
+     * @param[in] nelements The number of doubles in the array.
+     */
+    virtual
+    void
+    getDoubleArray_parallel(
+        const std::string& key,
+        double* data,
+        int nelements)
+    {
+        CAROM_ERROR("Abstract method Database::getDoubleArray_parallel!\n");
+    }
+
+    /**
+     * @brief Reads a distributed array of doubles associated with the supplied key
+     *        from the currently open database file.
+     *        Supported only for HDF5 format.
+     *        For HDFDatabase, the function is equivalent to getDoubleArray,
+     *        reading the local array from a local file per each process.
+     *        For HDFDatabaseMPIO, the local array is read from a single file via MPI I/O.
+     *
+     * @param[in] key The key associated with the array of values to be
+     *                read.
+     * @param[out] data The allocated array of double values to be read.
+     * @param[in] nelements The number of doubles in the array.
+     * @param[in] offset The initial offset in the array.
+     * @param[in] block_size The block size to read from the HDF5 dataset.
+     * @param[in] stride The stride to read from the HDF5 dataset.
+     */
+    virtual
+    void
+    getDoubleArray_parallel(
+        const std::string& key,
+        double* data,
+        int nelements,
+        int offset,
+        int block_size,
+        int stride)
+    {
+        CAROM_ERROR("Abstract method Database::getDoubleArray_parallel!\n");
+    }
 
 private:
     /**

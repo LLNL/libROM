@@ -11,8 +11,7 @@
 #ifdef CAROM_HAS_GTEST
 
 #include<gtest/gtest.h>
-#include "linalg/Matrix.h"
-#include "linalg/Vector.h"
+#include "linalg/BasisGenerator.h"
 #include "utils/HDFDatabase.h"
 #include <algorithm>
 #include <cmath>
@@ -511,6 +510,75 @@ TEST(HDF5, Test_selective_parallel_reading)
 
     for (int d = 0; d < nrow_local * ncol; d++)
         EXPECT_TRUE(data[d] == d + offsets[rank] * ncol);
+}
+
+TEST(BasisGeneratorIO, HDFDatabase)
+{
+    // Get the rank of this process, and the number of processors.
+    int mpi_init, d_rank, d_num_procs;
+    MPI_Initialized(&mpi_init);
+    if (mpi_init == 0) {
+        MPI_Init(nullptr, nullptr);
+    }
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+
+    const int nrow = 100, ncol = 10;
+    int nrow_local = CAROM::split_dimension(nrow, MPI_COMM_WORLD);
+    std::vector<int> row_offset(d_num_procs + 1);
+    const int dummy = CAROM::get_global_offsets(nrow_local, row_offset,
+                                                MPI_COMM_WORLD);
+    EXPECT_EQ(nrow, dummy);
+
+    std::default_random_engine generator;
+    generator.seed(
+        1234); // fix the seed to keep the same result for different nproc.
+    std::uniform_real_distribution<> uniform_distribution(0.0, 1.0);
+    std::normal_distribution<double> normal_distribution(0.0, 1.0);
+
+    // distribute from a global matrix to keep the same system for different nproc.
+    CAROM::Matrix snapshots(nrow, ncol, false);
+    for (int i = 0; i < nrow; i++)
+        for (int j = 0; j < ncol; j++)
+            snapshots(i, j) = normal_distribution(generator);
+    snapshots.distribute(nrow_local);
+
+    CAROM::Options svd_options = CAROM::Options(nrow_local, ncol, 1);
+    svd_options.setMaxBasisDimension(nrow);
+    svd_options.setRandomizedSVD(false);
+    CAROM::BasisGenerator sampler(svd_options, false, "test_basis");
+    CAROM::Vector sample(nrow_local, true);
+    for (int s = 0; s < ncol; s++)
+    {
+        for (int d = 0; d < nrow_local; d++)
+            sample(d) = snapshots(d, s);
+
+        sampler.takeSample(sample.getData(), 0, 0);
+    }
+    sampler.endSamples();
+    sampler.writeSnapshot();
+
+    const CAROM::Matrix *spatial_basis = sampler.getSpatialBasis();
+    const CAROM::Matrix *snapshot = sampler.getSnapshotMatrix();
+
+    CAROM::BasisReader basis_reader("test_basis");
+    const CAROM::Matrix *spatial_basis1 = basis_reader.getSpatialBasis();
+
+    EXPECT_EQ(spatial_basis->numRows(), spatial_basis1->numRows());
+    EXPECT_EQ(spatial_basis->numColumns(), spatial_basis1->numColumns());
+    for (int i = 0; i < spatial_basis->numRows(); i++)
+        for (int j = 0; j < spatial_basis->numColumns(); j++)
+            EXPECT_NEAR((*spatial_basis)(i, j), (*spatial_basis1)(i, j), 1.0e-15);
+
+    CAROM::BasisReader snapshot_reader("test_basis_snapshot");
+    const CAROM::Matrix *snapshot1 = snapshot_reader.getSnapshotMatrix();
+
+    EXPECT_EQ(snapshot->numRows(), snapshot1->numRows());
+    EXPECT_EQ(snapshot->numColumns(), snapshot1->numColumns());
+    for (int i = 0; i < snapshot->numRows(); i++)
+        for (int j = 0; j < snapshot->numColumns(); j++)
+            EXPECT_NEAR((*snapshot)(i, j), (*snapshot1)(i, j), 1.0e-15);
 }
 
 int main(int argc, char* argv[])
