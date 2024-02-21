@@ -335,15 +335,13 @@ BasisReader::getSnapshotMatrix()
 
 Matrix*
 BasisReader::getSnapshotMatrix(
-    double time,
     int n)
 {
-    return getSnapshotMatrix(time, 1, n);
+    return getSnapshotMatrix(1, n);
 }
 
 Matrix*
 BasisReader::getSnapshotMatrix(
-    double time,
     int start_col,
     int end_col)
 {

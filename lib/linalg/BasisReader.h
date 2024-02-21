@@ -218,22 +218,6 @@ public:
 
     /**
      *
-     * @brief Returns the dimension of the system on this processor.
-     *        NOTE: this function is obsolete and remains only for backward compatibility.
-     *        Will be removed in future.
-     *
-     * @return The dimension of the system on this processor.
-     */
-    int
-    getDim(
-        const std::string kind,
-        double time)
-    {
-        return getDim(kind);
-    }
-
-    /**
-     *
      * @brief Returns the number of samples (columns) in file.
      *
      * @return The number of samples in file.
@@ -241,22 +225,6 @@ public:
     int
     getNumSamples(
         const std::string kind);
-
-    /**
-     *
-     * @brief Returns the number of samples (columns) in file.
-     *        NOTE: this function is obsolete and remains only for backward compatibility.
-     *        Will be removed in future.
-     *
-     * @return The number of samples in file.
-     */
-    int
-    getNumSamples(
-        const std::string kind,
-        double time)
-    {
-        return getNumSamples(kind);
-    }
 
     /**
      *
@@ -269,39 +237,16 @@ public:
 
     /**
      *
-     * @brief Returns the snapshot matrix for the requested time.
-     *        NOTE: this function is obsolete and remains only for backward compatibility.
-     *        Will be removed in future.
-     *
-     * @param[in] time Time for which we want the basis vectors.
-     *                 NOTE: this argument is obsolete and remains only for backward compatibility.
-     *                 Will be removed in future.
-     *
-     * @return The snapshot matrix for the requested time.
-     */
-    Matrix*
-    getSnapshotMatrix(
-        double time)
-    {
-        return getSnapshotMatrix();
-    }
-
-    /**
-     *
      * @brief Returns the first n columns of the snapshot matrix for the requested time.
      *
      * @pre 0 < n <= numColumns()
      *
-     * @param[in] time Time for which we want the basis vectors.
-     *                 NOTE: this argument is obsolete and remains only for backward compatibility.
-     *                 Will be removed in future.
      * @param[in] n    The number of basis vectors desired.
      *
      * @return The snapshot matrix for the requested time.
      */
     Matrix*
     getSnapshotMatrix(
-        double time,
         int n);
 
     /**
@@ -311,9 +256,6 @@ public:
      * @pre 0 < start_col <= numColumns()
      * @pre start_col <= end_col <= numColumns()
      *
-     * @param[in] time Time for which we want the basis vectors.
-     *                 NOTE: this argument is obsolete and remains only for backward compatibility.
-     *                 Will be removed in future.
      * @param[in] start_col    The starting column desired.
      * @param[in] end_col      The starting column desired.
      *
@@ -321,7 +263,6 @@ public:
      */
     Matrix*
     getSnapshotMatrix(
-        double time,
         int start_col,
         int end_col);
 

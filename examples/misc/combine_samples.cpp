@@ -101,8 +101,8 @@ int main(int argc, char* argv[])
     for (const auto& sample_name: sample_names) {
         CAROM::BasisReader reader(sample_name);
 
-        dim    = reader.getDim(kind, 0);
-        snaps += reader.getNumSamples(kind, 0);
+        dim    = reader.getDim(kind);
+        snaps += reader.getNumSamples(kind);
         if (dimFirst == 0) dimFirst = dim;
 
         CAROM_VERIFY(dim ==
