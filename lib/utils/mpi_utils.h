@@ -43,6 +43,15 @@ int
 get_global_offsets(const int local_dim, std::vector<int> &offsets,
                    const MPI_Comm &comm=MPI_COMM_WORLD);
 
+/**
+ * @brief Check if an integer is equal over all MPI processes.
+ *
+ * @param[in] x             Input integer value to test equality.
+ * @param[in] comm          MPI communicator. default value MPI_COMM_WORLD.
+ */
+bool
+is_same(int x, const MPI_Comm &comm=MPI_COMM_WORLD);
+
 }
 
 #endif

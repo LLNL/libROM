@@ -54,6 +54,7 @@ set(module_list
   hyperreduction/Hyperreduction
   utils/Database
   utils/HDFDatabase
+  utils/HDFDatabaseMPIO
   utils/CSVDatabase
   utils/Utilities
   utils/ParallelBuffer

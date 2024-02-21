@@ -350,19 +350,7 @@ public:
         getDoubleArray(key, data, nelements, offset, block_size, stride);
     }
 
-private:
-    /**
-     * @brief Unimplemented copy constructor.
-     */
-    HDFDatabase(
-        const HDFDatabase& other);
-
-    /**
-     * @brief Unimplemented assignment operator.
-     */
-    HDFDatabase&
-    operator = (
-        const HDFDatabase& rhs);
+protected:
 
     /**
      * @brief Returns true if the specified key represents an integer entry.
@@ -396,6 +384,7 @@ private:
      * @param[in] type_key The attribute to be written.
      * @param[in] dataset_id ID of the dataset key will be written to.
      */
+    virtual
     void
     writeAttribute(
         int type_key,
@@ -442,6 +431,20 @@ private:
      *        Used only when d_parallel is true.
      */
     int d_rank;
+
+private:
+    /**
+     * @brief Unimplemented copy constructor.
+     */
+    HDFDatabase(
+        const HDFDatabase& other);
+
+    /**
+     * @brief Unimplemented assignment operator.
+     */
+    HDFDatabase&
+    operator = (
+        const HDFDatabase& rhs);
 };
 
 }
