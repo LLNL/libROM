@@ -554,7 +554,7 @@ TEST(BasisGeneratorIO, HDFDatabase)
         for (int d = 0; d < nrow_local; d++)
             sample(d) = snapshots(d, s);
 
-        sampler.takeSample(sample.getData(), 0, 0);
+        sampler.takeSample(sample.getData());
     }
     sampler.endSamples();
     sampler.writeSnapshot();
