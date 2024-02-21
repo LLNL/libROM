@@ -180,7 +180,7 @@ int main(int argc, char* argv[])
         CAROM::Vector snap_cur(num_rows, true);
         for (int col = 0; col < num_cols; col++) {
             snap_cur = *snapshots->getColumn(col);
-            static_basis_generator2->takeSample(snap_cur.getData(), 0.0, false);
+            static_basis_generator2->takeSample(snap_cur.getData(), false);
         }
 
         /*-- Compute SVD and save file --*/

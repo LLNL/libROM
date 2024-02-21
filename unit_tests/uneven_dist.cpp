@@ -136,7 +136,7 @@ main(
 
     // Take the first sample.
     if (inc_basis_generator.isNextSample(0.0)) {
-        status = inc_basis_generator.takeSample(&vals0[offset], 0.0, 0.11);
+        status = inc_basis_generator.takeSample(&vals0[offset]);
         if (status) {
             inc_basis_generator.computeNextSampleTime(&vals0[offset],
                     &vals0[offset],
@@ -146,7 +146,7 @@ main(
 
     // Take the second sample.
     if (status && inc_basis_generator.isNextSample(0.11)) {
-        status = inc_basis_generator.takeSample(&vals1[offset], 0.11, 0.11);
+        status = inc_basis_generator.takeSample(&vals1[offset]);
         if (status) {
             inc_basis_generator.computeNextSampleTime(&vals1[offset],
                     &vals1[offset],

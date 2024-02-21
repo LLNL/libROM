@@ -711,7 +711,7 @@ int main(int argc, char *argv[])
         Vector u_curr(*U);
         Vector u_centered(U->Size());
         subtract(u_curr, u_init, u_centered);
-        bool addSample = generator->takeSample(u_centered.GetData(), t, dt);
+        bool addSample = generator->takeSample(u_centered.GetData());
     }
 
     if (online)
@@ -932,7 +932,7 @@ int main(int argc, char *argv[])
             Vector u_curr(*U);
             Vector u_centered(U->Size());
             subtract(u_curr, u_init, u_centered);
-            bool addSample = generator->takeSample(u_centered.GetData(), t, dt);
+            bool addSample = generator->takeSample(u_centered.GetData());
         }
 
         if (done || ti % vis_steps == 0)

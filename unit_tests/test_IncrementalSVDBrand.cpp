@@ -96,9 +96,9 @@ TEST(IncrementalSVDBrandTest, Test_IncrementalSVDBrand)
         incremental_svd_options,
         true,
         "irrelevant.txt");
-    sampler.takeSample(&sample1[row_offset[d_rank]], 0, 1e-1);
-    sampler.takeSample(&sample2[row_offset[d_rank]], 0, 1e-1);
-    sampler.takeSample(&sample3[row_offset[d_rank]], 0, 1e-1);
+    sampler.takeSample(&sample1[row_offset[d_rank]]);
+    sampler.takeSample(&sample2[row_offset[d_rank]]);
+    sampler.takeSample(&sample3[row_offset[d_rank]]);
 
     const CAROM::Matrix* d_basis = sampler.getSpatialBasis();
     const CAROM::Matrix* d_basis_right = sampler.getTemporalBasis();

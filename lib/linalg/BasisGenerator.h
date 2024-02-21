@@ -102,8 +102,6 @@ public:
      * @pre time >= 0.0
      *
      * @param[in] u_in The state at the specified time.
-     * @param[in] time The simulation time for the state.
-     * @param[in] dt The current simulation dt.
      * @param[in] add_without_increase If true, the addLinearlyDependent is
      *                                 invoked. This only applies to incremental
      *                                 SVD.
@@ -113,8 +111,6 @@ public:
     bool
     takeSample(
         double* u_in,
-        double time,
-        double dt,
         bool add_without_increase = false);
 
     /**

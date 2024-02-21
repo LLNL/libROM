@@ -697,7 +697,7 @@ int main(int argc, char *argv[])
         Vector u_curr(*U);
         Vector u_centered(U->Size());
         subtract(u_curr, u_init, u_centered);
-        bool addSample = generator->takeSample(u_centered.GetData(), t, dt);
+        bool addSample = generator->takeSample(u_centered.GetData());
     }
 
     // 11. The merge phase
@@ -831,7 +831,7 @@ int main(int argc, char *argv[])
             Vector u_curr(*U);
             Vector u_centered(U->Size());
             subtract(u_curr, u_init, u_centered);
-            bool addSample = generator->takeSample(u_centered.GetData(), t, dt);
+            bool addSample = generator->takeSample(u_centered.GetData());
         }
 
         if (done || ti % vis_steps == 0)

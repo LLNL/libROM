@@ -1214,7 +1214,7 @@ int main(int argc, char *argv[])
             if (sampleW && hyperreduce_source)
             {
                 oper.GetSource(source);
-                basis_generator_S->takeSample(source.GetData(), t, dt);
+                basis_generator_S->takeSample(source.GetData());
                 // TODO: dfdt? In this example, one can implement the exact formula.
                 //   In general, one can use finite differences in time (dpdt is computed that way).
                 //basis_generator_S->computeNextSampleTime(p.GetData(), dfdt.GetData(), t);
@@ -1224,21 +1224,21 @@ int main(int argc, char *argv[])
             {
                 oper.CopyDpDt(dpdt);
 
-                basis_generator_R->takeSample(p.GetData(), t, dt);
+                basis_generator_R->takeSample(p.GetData());
                 basis_generator_R->computeNextSampleTime(p.GetData(), dpdt.GetData(), t);
 
                 Vector p_R(p.GetData(), N1);
                 Vector Mp(N1);
                 oper.SetParameters(p);
                 oper.Mult_Mmat(p_R, Mp);
-                basis_generator_FR->takeSample(Mp.GetData(), t, dt);
+                basis_generator_FR->takeSample(Mp.GetData());
             }
 
             if (sampleW)
             {
                 oper.CopyDpDt_W(dpdt);
 
-                basis_generator_W->takeSample(p_W->GetData(), t, dt);
+                basis_generator_W->takeSample(p_W->GetData());
                 basis_generator_W->computeNextSampleTime(p_W->GetData(), dpdt.GetData(), t);
             }
         }
@@ -1403,13 +1403,13 @@ int main(int argc, char *argv[])
         oper.CopyDpDt(dpdt);
 
         // R space
-        basis_generator_R->takeSample(p.GetData(), t, dt);
+        basis_generator_R->takeSample(p.GetData());
 
         Vector p_R(p.GetData(), N1);
         Vector Mp(N1);
         oper.SetParameters(p);
         oper.Mult_Mmat(p_R, Mp);
-        basis_generator_FR->takeSample(Mp.GetData(), t, dt);
+        basis_generator_FR->takeSample(Mp.GetData());
 
         // Terminate the sampling and write out information.
         basis_generator_R->writeSnapshot();
@@ -1418,14 +1418,14 @@ int main(int argc, char *argv[])
         // W space
 
         // TODO: why call computeNextSampleTime if you just do takeSample on every step anyway?
-        basis_generator_W->takeSample(p_W->GetData(), t, dt);
+        basis_generator_W->takeSample(p_W->GetData());
         basis_generator_W->writeSnapshot();
 
         oper.GetSource(source);
 
         if (hyperreduce_source)
         {
-            basis_generator_S->takeSample(source.GetData(), t, dt);
+            basis_generator_S->takeSample(source.GetData());
             basis_generator_S->writeSnapshot();
         }
 

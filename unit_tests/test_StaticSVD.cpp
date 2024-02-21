@@ -78,7 +78,7 @@ TEST(StaticSVDTest, Test_StaticSVD)
             std::vector<double> similar(columns[j]);
             for (unsigned i = 0; i < 12; ++i)
                 similar[i] *= sigmas[j];
-            sampler.takeSample(similar.data(), 0, 0);
+            sampler.takeSample(similar.data());
         }
 
         auto distU = sampler.getSpatialBasis();
@@ -290,9 +290,9 @@ TEST(StaticSVDTest, Test_StaticSVDClass)
     svd_options.setDebugMode(true);
     svd_options.setRandomizedSVD(false);
     CAROM::BasisGenerator sampler(svd_options, false);
-    sampler.takeSample(&sample1[row_offset[d_rank]], 0, 0);
-    sampler.takeSample(&sample2[row_offset[d_rank]], 0, 0);
-    sampler.takeSample(&sample3[row_offset[d_rank]], 0, 0);
+    sampler.takeSample(&sample1[row_offset[d_rank]]);
+    sampler.takeSample(&sample2[row_offset[d_rank]]);
+    sampler.takeSample(&sample3[row_offset[d_rank]]);
 
     const CAROM::Matrix* d_basis = sampler.getSpatialBasis();
     const CAROM::Matrix* d_basis_right = sampler.getTemporalBasis();
@@ -370,11 +370,11 @@ TEST(StaticSVDTest, Test_StaticSVDTranspose)
     svd_options.setDebugMode(true);
     svd_options.setRandomizedSVD(false);
     CAROM::BasisGenerator sampler(svd_options, false);
-    sampler.takeSample(&sample1[row_offset[d_rank]], 0, 0);
-    sampler.takeSample(&sample2[row_offset[d_rank]], 0, 0);
-    sampler.takeSample(&sample3[row_offset[d_rank]], 0, 0);
-    sampler.takeSample(&sample4[row_offset[d_rank]], 0, 0);
-    sampler.takeSample(&sample5[row_offset[d_rank]], 0, 0);
+    sampler.takeSample(&sample1[row_offset[d_rank]]);
+    sampler.takeSample(&sample2[row_offset[d_rank]]);
+    sampler.takeSample(&sample3[row_offset[d_rank]]);
+    sampler.takeSample(&sample4[row_offset[d_rank]]);
+    sampler.takeSample(&sample5[row_offset[d_rank]]);
 
     const CAROM::Matrix* d_basis = sampler.getSpatialBasis();
     const CAROM::Matrix* d_basis_right = sampler.getTemporalBasis();
