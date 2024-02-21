@@ -218,6 +218,8 @@ int main(int argc, char *argv[])
     bool save_dofs = false;
     bool csvFormat = true;
     const char *basename = "";
+    const char *temp_io_dir = "./outputs_parametric_dmdc_heat_conduction";
+    std::string io_dir;
 
     int precision = 8;
     cout.precision(precision);
@@ -277,6 +279,8 @@ int main(int argc, char *argv[])
                    "Use CSV or HDF format for files output by -save option.");
     args.AddOption(&basename, "-out", "--outputfile-name",
                    "Name of the sub-folder to dump files within the run directory.");
+    args.AddOption(&temp_io_dir, "-io", "--io-dir-name",
+                   "Name of the sub-folder to load/dump input/output files within the current directory.");
 
     args.Parse();
     if (!args.Good())
@@ -290,6 +294,9 @@ int main(int argc, char *argv[])
     {
         args.PrintOptions(cout);
     }
+
+    io_dir = temp_io_dir;
+    mkdir(io_dir.c_str(), 0777);
 
     string outputPath = ".";
     if (save_dofs)
@@ -432,11 +439,11 @@ int main(int argc, char *argv[])
     u_gf.SetFromTrueDofs(u);
     {
         ostringstream mesh_name, sol_name;
-        mesh_name << outputPath << "/parametric_dmdc_heat_conduction_" << to_string(
+        mesh_name << io_dir << "/parametric_dmdc_heat_conduction_" << to_string(
                       alpha) << "_" << to_string(kappa) << "_" << to_string(amp_in) << "_" <<
                   to_string(amp_out) << "-mesh." << setfill('0') << setw(
                       6) << myid;
-        sol_name << outputPath << "/parametric_dmdc_heat_conduction_" << to_string(
+        sol_name << io_dir << "/parametric_dmdc_heat_conduction_" << to_string(
                      alpha) << "_" << to_string(kappa) << "_" << to_string(amp_in) << "_" <<
                  to_string(amp_out) <<  "-init." << setfill('0') << setw(
                      6) << myid;
@@ -448,7 +455,7 @@ int main(int argc, char *argv[])
         u_gf.Save(osol);
     }
 
-    VisItDataCollection visit_dc(outputPath +
+    VisItDataCollection visit_dc(io_dir +
                                  "/parametric_dmdc_Heat_Conduction_FOM_" +
                                  to_string(alpha) + "_" + to_string(kappa) + "_" + to_string(
                                      amp_in) + "_" + to_string(amp_out), pmesh);
@@ -707,7 +714,7 @@ int main(int argc, char *argv[])
     //     using GLVis: "glvis -np <np> -m heat_conduction_dmdc-mesh -g heat_conduction_dmdc-final".
     {
         ostringstream sol_name;
-        sol_name << outputPath << "parametric_dmdc_Heat_Conduction" << to_string(
+        sol_name << io_dir << "/parametric_dmdc_Heat_Conduction_" << to_string(
                      alpha) << "_" << to_string(kappa) << "_" << to_string(amp_in) << "_" <<
                  to_string(amp_out) << "-final." << setfill('0') << setw(
                      6) << myid;
@@ -731,13 +738,13 @@ int main(int argc, char *argv[])
 
             dmd_training_timer.Stop();
 
-            dmd_u->save(outputPath + "/" + to_string(alpha) + "_" + to_string(
+            dmd_u->save(io_dir + "/" + to_string(alpha) + "_" + to_string(
                             kappa) + "_" + to_string(amp_in) + "_" + to_string(amp_out));
 
             if (myid == 0)
             {
                 std::ofstream fout;
-                fout.open("parameters.txt", std::ios::app);
+                fout.open(io_dir + "/parameters.txt", std::ios::app);
                 fout << alpha << " " << kappa << " " << amp_in << " " << amp_out << std::endl;
                 fout.close();
             }
@@ -746,7 +753,8 @@ int main(int argc, char *argv[])
 
             std::string full_file_name;
 
-            full_file_name = to_string(alpha) + "_" + to_string( kappa) + "_" + to_string(
+            full_file_name = io_dir + "/" + to_string(alpha) + "_" + to_string(
+                                 kappa) + "_" + to_string(
                                  amp_in) + "_" + to_string(amp_out) + "_control";
             control_mat->write(full_file_name);
         }
@@ -759,7 +767,7 @@ int main(int argc, char *argv[])
                 std::cout << "Creating DMD using the rdim of the offline phase" << std::endl;
             }
 
-            std::fstream fin("parameters.txt", std::ios_base::in);
+            std::fstream fin(io_dir + "/parameters.txt", std::ios_base::in);
             double curr_param;
             std::vector<std::string> dmdc_paths;
             std::vector<CAROM::Matrix*> controls;
@@ -775,11 +783,11 @@ int main(int argc, char *argv[])
                 fin >> curr_param;
                 double curr_amp_out = curr_param;
 
-                dmdc_paths.push_back(outputPath + "/" + to_string(curr_alpha) + "_" + to_string(
+                dmdc_paths.push_back(io_dir + "/" + to_string(curr_alpha) + "_" + to_string(
                                          curr_kappa) + "_" + to_string(curr_amp_in) + "_" + to_string(curr_amp_out) );
 
                 CAROM::Matrix* curr_control = new CAROM::Matrix();
-                curr_control->read(outputPath + "/" + to_string(curr_alpha) + "_" + to_string(
+                curr_control->read(io_dir + "/" + to_string(curr_alpha) + "_" + to_string(
                                        curr_kappa) + "_" + to_string(curr_amp_in) + "_" + to_string(
                                        curr_amp_out) + "_control");
                 controls.push_back(curr_control);
@@ -831,7 +839,10 @@ int main(int argc, char *argv[])
             Vector initial_dmd_solution_u(result_u->getData(), result_u->dim());
             u_gf.SetFromTrueDofs(initial_dmd_solution_u);
 
-            VisItDataCollection dmd_visit_dc("parametric_dmdc_Heat_Conduction_ROM", pmesh);
+            dmd_prediction_timer.Stop();
+
+            VisItDataCollection dmd_visit_dc(io_dir +
+                                             "/parametric_dmdc_Heat_Conduction_ROM", pmesh);
             dmd_visit_dc.RegisterField("temperature", &u_gf);
 
             if (visit)
@@ -861,8 +872,6 @@ int main(int argc, char *argv[])
                     }
                 }
             }
-
-            dmd_prediction_timer.Stop();
 
             result_u = dmd_u->predict(t_final);
 
