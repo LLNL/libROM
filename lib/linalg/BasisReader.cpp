@@ -237,7 +237,6 @@ BasisReader::getSingularValues()
 
 Vector*
 BasisReader::getSingularValues(
-    double time,
     double ef)
 {
     Vector* sv = getSingularValues();

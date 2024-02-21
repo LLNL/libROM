@@ -193,40 +193,17 @@ public:
 
     /**
      *
-     * @brief Returns the singular values for the requested time.
-     *        NOTE: this function is obsolete and remains only for backward compatibility.
-     *        Will be removed in future.
-     *
-     * @param[in] time Time for which we want the basis vectors.
-     *                 NOTE: this argument is obsolete and remains only for backward compatibility.
-     *                 Will be removed in future.
-     *
-     * @return The temporal basis vectors for the requested time.
-     */
-    Vector*
-    getSingularValues(
-        double time)
-    {
-        return getSingularValues();
-    }
-
-    /**
-     *
      * @brief Returns the largest singular values for the requested time
      *        that capture the given energy fraction.
      *
      * @pre 0 <= ef <= 1.0
      *
-     * @param[in] time Time for which we want the basis vectors.
-     *                 NOTE: this argument is obsolete and remains only for backward compatibility.
-     *                 Will be removed in future.
      * @param[in] ef   The desired energy fraction.
      *
      * @return The temporal basis vectors for the requested time.
      */
     Vector*
     getSingularValues(
-        double time,
         double ef);
 
     /**
