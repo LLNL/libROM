@@ -353,7 +353,7 @@ int main(int argc, char *argv[])
         // 20. read the reduced basis
         assembleTimer.Start();
         CAROM::BasisReader reader(basisName);
-        spatialbasis = reader.getSpatialBasis(0.0);
+        spatialbasis = reader.getSpatialBasis();
         numRowRB = spatialbasis->numRows();
         numColumnRB = spatialbasis->numColumns();
         if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB,

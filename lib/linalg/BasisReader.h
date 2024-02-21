@@ -58,16 +58,11 @@ public:
      * @brief Returns true if the basis vectors at requested time are
      * different from the last requested basis vectors.
      *
-     * @param[in] time Time at which we are interested in the basis vectors.
-     *                 NOTE: this argument is obsolete and remains only for backward compatibility.
-     *                 Will be removed in future.
-     *
      * @return True if the basis vectors at the requested time are different
      *         from the last requested basis vectors.
      */
     bool
-    isNewBasis(
-        double time)
+    isNewBasis()
     {
         return (d_last_basis_idx == -1);
     }
@@ -83,41 +78,17 @@ public:
 
     /**
      *
-     * @brief Returns the spatial basis vectors for the requested time as a
-     *        Matrix.
-     *        NOTE: this function is obsolete and remains only for backward compatibility.
-     *        Will be removed in future.
-     *
-     * @param[in] time Time for which we want the basis vectors.
-     *                 NOTE: this argument is obsolete and remains only for backward compatibility.
-     *                 Will be removed in future.
-     *
-     * @return The spatial basis vectors for the requested time.
-     */
-    Matrix*
-    getSpatialBasis(
-        double time)
-    {
-        return getSpatialBasis();
-    }
-
-    /**
-     *
      * @brief Returns the first n spatial basis vectors for the requested time
      *        as a Matrix.
      *
      * @pre 0 < n <= numColumns()
      *
-     * @param[in] time Time for which we want the basis vectors.
-     *                 NOTE: this argument is obsolete and remains only for backward compatibility.
-     *                 Will be removed in future.
      * @param[in] n    The number of spatial basis vectors desired.
      *
      * @return The spatial basis vectors for the requested time.
      */
     Matrix*
     getSpatialBasis(
-        double time,
         int n);
 
     /**
@@ -128,9 +99,6 @@ public:
      * @pre 0 < start_col <= numColumns()
      * @pre start_col <= end_col <= numColumns()
      *
-     * @param[in] time         Time for which we want the basis vectors.
-     *                 NOTE: this argument is obsolete and remains only for backward compatibility.
-     *                 Will be removed in future.
      * @param[in] start_col    The starting column desired.
      * @param[in] end_col      The starting column desired.
      *
@@ -138,7 +106,6 @@ public:
      */
     Matrix*
     getSpatialBasis(
-        double time,
         int start_col,
         int end_col);
 
@@ -149,16 +116,12 @@ public:
      *
      * @pre 0 <= ef <= 1.0
      *
-     * @param[in] time Time for which we want the basis vectors.
-     *                 NOTE: this argument is obsolete and remains only for backward compatibility.
-     *                 Will be removed in future.
      * @param[in] ef   The desired energy fraction.
      *
      * @return The spatial basis vectors for the requested time.
      */
     Matrix*
     getSpatialBasis(
-        double time,
         double ef);
 
     /**

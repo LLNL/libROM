@@ -900,7 +900,7 @@ int main(int argc, char *argv[])
             readerV = new CAROM::BasisReader("basisV");
         }
 
-        BV_librom = readerV->getSpatialBasis(0.0);
+        BV_librom = readerV->getSpatialBasis();
 
         if (rvdim == -1) // Change rvdim
             rvdim = BV_librom->numColumns();
@@ -914,7 +914,7 @@ int main(int argc, char *argv[])
             printf("reduced V dim = %d\n", rvdim);
 
         CAROM::BasisReader readerX("basisX");
-        BX_librom = readerX.getSpatialBasis(0.0);
+        BX_librom = readerX.getSpatialBasis();
 
         if (rxdim == -1) // Change rxdim
             rxdim = BX_librom->numColumns();
@@ -929,7 +929,7 @@ int main(int argc, char *argv[])
 
         // Hyper reduce H
         CAROM::BasisReader readerH("basisH");
-        H_librom = readerH.getSpatialBasis(0.0);
+        H_librom = readerH.getSpatialBasis();
 
         // Compute sample points
         if (hdim == -1)

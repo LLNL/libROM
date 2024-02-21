@@ -76,15 +76,13 @@ BasisReader::getSpatialBasis()
 
 Matrix*
 BasisReader::getSpatialBasis(
-    double time,
     int n)
 {
-    return getSpatialBasis(time, 1, n);
+    return getSpatialBasis(1, n);
 }
 
 Matrix*
 BasisReader::getSpatialBasis(
-    double time,
     int start_col,
     int end_col)
 {
@@ -112,7 +110,6 @@ BasisReader::getSpatialBasis(
 
 Matrix*
 BasisReader::getSpatialBasis(
-    double time,
     double ef)
 {
     Vector* sv = getSingularValues();
@@ -135,7 +132,7 @@ BasisReader::getSpatialBasis(
     }
 
     delete sv;
-    return getSpatialBasis(time, num_used_singular_values);
+    return getSpatialBasis(num_used_singular_values);
 }
 
 Matrix*

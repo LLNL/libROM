@@ -329,7 +329,7 @@ double simulation()
         // 21. read the reduced basis
         assembleTimer.Start();
         CAROM::BasisReader reader(loadBasisName);
-        spatialbasis = reader.getSpatialBasis(0.0);
+        spatialbasis = reader.getSpatialBasis();
         numRowRB = spatialbasis->numRows();
         numColumnRB = spatialbasis->numColumns();
 

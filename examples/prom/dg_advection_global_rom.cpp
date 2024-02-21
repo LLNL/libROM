@@ -731,11 +731,11 @@ int main(int argc, char *argv[])
         CAROM::BasisReader reader(basisName);
         if (rdim != -1)
         {
-            spatialbasis = reader.getSpatialBasis(0.0, rdim);
+            spatialbasis = reader.getSpatialBasis(rdim);
         }
         else
         {
-            spatialbasis = reader.getSpatialBasis(0.0, ef);
+            spatialbasis = reader.getSpatialBasis(ef);
         }
         numRowRB = spatialbasis->numRows();
         numColumnRB = spatialbasis->numColumns();

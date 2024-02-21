@@ -723,11 +723,11 @@ int main(int argc, char *argv[])
             CAROM::BasisReader reader(basisName);
             if (rdim != -1)
             {
-                spatialbasis = reader.getSpatialBasis(0.0, rdim);
+                spatialbasis = reader.getSpatialBasis(rdim);
             }
             else
             {
-                spatialbasis = reader.getSpatialBasis(0.0, ef);
+                spatialbasis = reader.getSpatialBasis(ef);
             }
             numRowRB = spatialbasis->numRows();
             numColumnRB = spatialbasis->numColumns();
@@ -819,7 +819,7 @@ int main(int argc, char *argv[])
                 CAROM::BasisReader reader(parametricBasisName);
 
                 MFEM_VERIFY(rdim != -1, "rdim must be used for interpolation.");
-                CAROM::Matrix* parametricSpatialBasis = reader.getSpatialBasis(0.0, rdim);
+                CAROM::Matrix* parametricSpatialBasis = reader.getSpatialBasis(rdim);
                 numRowRB = parametricSpatialBasis->numRows();
                 numColumnRB = parametricSpatialBasis->numColumns();
                 bases.push_back(parametricSpatialBasis);
