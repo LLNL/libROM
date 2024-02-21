@@ -358,7 +358,7 @@ int main(int argc, char *argv[])
         // 18. take and write snapshot for ROM
         if (offline)
         {
-            generator->takeSample(X.GetData(), 0.0, 0.01);
+            generator->takeSample(X.GetData());
             generator->writeSnapshot();
             delete generator;
             delete options;

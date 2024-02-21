@@ -316,7 +316,7 @@ double simulation()
         // 19. take and write snapshot for ROM
         if (offline)
         {
-            bool addSample = generator->takeSample(X.GetData(), 0.0, 0.01);
+            bool addSample = generator->takeSample(X.GetData());
             generator->writeSnapshot();
             basisIdentifiers.push_back(saveBasisName);
             delete generator;

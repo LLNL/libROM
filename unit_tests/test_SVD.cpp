@@ -212,20 +212,6 @@ TEST(SVDSerialTest, Test_getBasisIntervalStartTime)
     EXPECT_DOUBLE_EQ(svd.getBasisIntervalStartTime(2), 2);
 }
 
-
-TEST(SVDSerialTest, Test_increaseTimeInterval)
-{
-    FakeSVD svd(CAROM::Options(5, 2, 2));
-
-    ASSERT_NO_THROW(svd.takeSample(NULL, 0, true));
-    ASSERT_NO_THROW(svd.takeSample(NULL, 0.5, true));
-    ASSERT_NO_THROW(svd.takeSample(NULL, 1, true));
-    ASSERT_NO_THROW(svd.takeSample(NULL, 1.5, true));
-
-    /* The maximum number of time intervals is surpassed */
-    EXPECT_DEATH(svd.takeSample(NULL, 2, true), ".*");
-}
-
 int main(int argc, char* argv[])
 {
     ::testing::InitGoogleTest(&argc, argv);
