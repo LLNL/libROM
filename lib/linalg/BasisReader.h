@@ -136,41 +136,17 @@ public:
 
     /**
      *
-     * @brief Returns the temporal basis vectors for the requested time as
-     *        a Matrix.
-     *        NOTE: this function is obsolete and remains only for backward compatibility.
-     *        Will be removed in future.
-     *
-     * @param[in] time Time for which we want the basis vectors.
-     *                 NOTE: this argument is obsolete and remains only for backward compatibility.
-     *                 Will be removed in future.
-     *
-     * @return The temporal basis vectors for the requested time.
-     */
-    Matrix*
-    getTemporalBasis(
-        double time)
-    {
-        return getTemporalBasis();
-    }
-
-    /**
-     *
      * @brief Returns the first n temporal basis vectors for the requested time
      *        as a Matrix.
      *
      * @pre 0 < n <= numColumns()
      *
-     * @param[in] time Time for which we want the basis vectors.
-     *                 NOTE: this argument is obsolete and remains only for backward compatibility.
-     *                 Will be removed in future.
      * @param[in] n    The number of temporal basis vectors desired.
      *
      * @return The temporal basis vectors for the requested time.
      */
     Matrix*
     getTemporalBasis(
-        double time,
         int n);
 
     /**
@@ -181,9 +157,6 @@ public:
      * @pre 0 < start_col <= numColumns()
      * @pre start_col <= end_col <= numColumns()
      *
-     * @param[in] time         Time for which we want the basis vectors.
-     *                         NOTE: this argument is obsolete and remains only for backward compatibility.
-     *                         Will be removed in future.
      * @param[in] start_col    The starting column desired.
      * @param[in] end_col      The starting column desired.
      *
@@ -191,7 +164,6 @@ public:
      */
     Matrix*
     getTemporalBasis(
-        double time,
         int start_col,
         int end_col);
 
@@ -202,25 +174,17 @@ public:
      *
      * @pre 0 <= ef <= 1.0
      *
-     * @param[in] time Time for which we want the basis vectors.
-     *                 NOTE: this argument is obsolete and remains only for backward compatibility.
-     *                 Will be removed in future.
      * @param[in] ef   The desired energy fraction.
      *
      * @return The temporal basis vectors for the requested time.
      */
     Matrix*
     getTemporalBasis(
-        double time,
         double ef);
 
     /**
      *
      * @brief Returns the singular values for the requested time.
-     *
-     * @param[in] time Time for which we want the basis vectors.
-     *                 NOTE: this argument is obsolete and remains only for backward compatibility.
-     *                 Will be removed in future.
      *
      * @return The temporal basis vectors for the requested time.
      */

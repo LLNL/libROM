@@ -155,15 +155,13 @@ BasisReader::getTemporalBasis()
 
 Matrix*
 BasisReader::getTemporalBasis(
-    double time,
     int n)
 {
-    return getTemporalBasis(time, 1, n);
+    return getTemporalBasis(1, n);
 }
 
 Matrix*
 BasisReader::getTemporalBasis(
-    double time,
     int start_col,
     int end_col)
 {
@@ -191,7 +189,6 @@ BasisReader::getTemporalBasis(
 
 Matrix*
 BasisReader::getTemporalBasis(
-    double time,
     double ef)
 {
     Vector* sv = getSingularValues();
@@ -214,7 +211,7 @@ BasisReader::getTemporalBasis(
     }
 
     delete sv;
-    return getTemporalBasis(time, num_used_singular_values);
+    return getTemporalBasis(num_used_singular_values);
 }
 
 Vector*
