@@ -1120,7 +1120,7 @@ Matrix::calculateNumDistributedRows() {
         d_num_distributed_rows = d_num_rows;
     }
 }
-/*
+
 Matrix*
 Matrix::row_normalize() const
 {
@@ -1140,7 +1140,7 @@ Matrix::row_normalize() const
                 rowmax = fabs(item(i,j));
            }
         }
-       if(rowmax > 1.0/(double)numDistributedRows() ){
+       if(rowmax > 2.5e-16 ){
           scaled_item = std::frexp(rowmax, &exponent);
           //We use the ldexp function to multiply each component by 2^-exponent.
           for( int j = 0; j < numColumns(); j++ )
@@ -1167,15 +1167,15 @@ Matrix::row_normalize() const
     return normalized_matrix;
 
 }
-*/
+/*
 Matrix*
 Matrix::row_normalize() const
 {
   
     int nrow = numRows();
-    double threshold = 1.0/numDistributedRows();
-//    std::cout << "threshold :" << threshold << std::endl; 
-//    std::cout << "matrix col :" << numColumns() << std::endl; 
+    double threshold = 1.0/(numDistributedRows()*numDistributedRows());
+    std::cout << "threshold :" << threshold << std::endl; 
+    std::cout << "matrix row :" << numDistributedRows() << std::endl; 
     Matrix* normalized_matrix = new Matrix(nrow, numColumns()+1, distributed());
     for (int i = 0; i < nrow; i++)
     {
@@ -1188,6 +1188,7 @@ Matrix::row_normalize() const
 		rowmax = fabs(item(i,j));
 	    }	 
 	} 
+	std::cout << "rowmax for row" << i << ":" << rowmax << std::endl; 
         if(rowmax > threshold ){
 	    for( int j = 0; j < numColumns(); j++ )
             {
@@ -1199,13 +1200,14 @@ Matrix::row_normalize() const
         { 
             normalized_matrix->item(i, j) = kii * item(i,j);
         }
-//	std::cout << "kii for row" << i << ":" << kii << std::endl; 
+	std::cout << "kii for row" << i << ":" << kii << std::endl; 
+	std::cout << "norm for numcol" << numColumns() << ":" << norm << std::endl; 
         normalized_matrix->item(i,numColumns()) = kii ;
     }
     return normalized_matrix;
 
 }
-
+*/
 Matrix*
 Matrix::qr_factorize() const
 {
