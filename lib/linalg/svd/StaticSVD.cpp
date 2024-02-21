@@ -221,7 +221,7 @@ StaticSVD::getSnapshotMatrix()
                     " To preserve the snapshots, set Options::static_svd_preserve_snapshot to be true!\n");
 
     if (d_snapshots) delete d_snapshots;
-    d_snapshots = new Matrix(d_dim, d_num_samples, false);
+    d_snapshots = new Matrix(d_dim, d_num_samples, true);
 
     for (int rank = 0; rank < d_num_procs; ++rank) {
         int nrows = d_dims[static_cast<unsigned>(rank)];

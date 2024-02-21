@@ -23,6 +23,9 @@
 #include <chrono>
 using namespace std::chrono;
 
+static const int nrow = 100, ncol = 40;
+static const double threshold = 1.0e-13;
+
 /**
  * Simple smoke test to make sure Google Test is properly linked
  */
@@ -37,7 +40,6 @@ TEST(HDF5, Test_parallel_writing)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     const int dim_rank = 2;
-    const int nrow = 1000, ncol = 400;
     const int nrow_local = CAROM::split_dimension(nrow, MPI_COMM_WORLD);
     std::vector<int> offsets;
     int dummy = CAROM::get_global_offsets(nrow_local, offsets, MPI_COMM_WORLD);
@@ -124,6 +126,21 @@ TEST(HDF5, Test_parallel_writing)
     CAROM_VERIFY(errf >= 0);
 
     /*
+     * Write a integer scalar attribute
+     */
+    // Only last process attribute writes the attribute.
+    const int test_attr = rank + 1234;
+    hid_t attr_id = H5Screate(H5S_SCALAR);
+    hid_t attr = H5Acreate(dset_id, "test_attr", H5T_NATIVE_INT,
+                           attr_id, H5P_DEFAULT, H5P_DEFAULT);
+
+    // if (rank == 1)
+    errf = H5Awrite(attr, H5T_NATIVE_INT, &test_attr);
+    errf = H5Aclose(attr);
+    errf = H5Sclose(attr_id);
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    /*
      * Close/release resources.
      */
     H5Dclose(dset_id);
@@ -145,7 +162,6 @@ TEST(HDF5, Test_parallel_reading)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     const int dim_rank = 2;
-    const int nrow = 1000, ncol = 400;
     const int nrow_local = CAROM::split_dimension(nrow, MPI_COMM_WORLD);
     std::vector<int> offsets;
     int dummy = CAROM::get_global_offsets(nrow_local, offsets, MPI_COMM_WORLD);
@@ -236,6 +252,17 @@ TEST(HDF5, Test_parallel_reading)
     CAROM_VERIFY(errf >= 0);
 
     /*
+     * Write a integer scalar attribute
+     */
+    int test_attr = -1;
+    hid_t attr = H5Aopen_name(dset_id, "test_attr");
+    errf = H5Aread(attr, H5T_NATIVE_INT, &test_attr);
+    // MPI_Barrier(MPI_COMM_WORLD);
+    errf = H5Aclose(attr);
+    if (rank == 0)
+        EXPECT_EQ(test_attr, nproc - 1 + 1234);
+
+    /*
      * Close/release resources.
      */
     H5Dclose(dset_id);
@@ -271,7 +298,6 @@ TEST(HDF5, Test_selective_parallel_writing)
     MPI_Comm_create(MPI_COMM_WORLD, io_grp, &io_comm);
 
     const int dim_rank = 2;
-    const int nrow = 10, ncol = 4;
     int nrow_local = 0;
     if (rank < ioproc)
         nrow_local = CAROM::split_dimension(nrow, io_comm);
@@ -398,7 +424,6 @@ TEST(HDF5, Test_selective_parallel_reading)
     MPI_Comm_create(MPI_COMM_WORLD, io_grp, &io_comm);
 
     const int dim_rank = 2;
-    const int nrow = 10, ncol = 4;
     int nrow_local = 0;
     if (rank < ioproc)
         nrow_local = CAROM::split_dimension(nrow, io_comm);
@@ -524,11 +549,10 @@ TEST(BasisGeneratorIO, HDFDatabase)
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
 
-    const int nrow = 100, ncol = 10;
     int nrow_local = CAROM::split_dimension(nrow, MPI_COMM_WORLD);
     std::vector<int> row_offset(d_num_procs + 1);
     const int dummy = CAROM::get_global_offsets(nrow_local, row_offset,
-                                                MPI_COMM_WORLD);
+                      MPI_COMM_WORLD);
     EXPECT_EQ(nrow, dummy);
 
     std::default_random_engine generator;
@@ -547,6 +571,7 @@ TEST(BasisGeneratorIO, HDFDatabase)
     CAROM::Options svd_options = CAROM::Options(nrow_local, ncol, 1);
     svd_options.setMaxBasisDimension(nrow);
     svd_options.setRandomizedSVD(false);
+    svd_options.setDebugMode(true);
     CAROM::BasisGenerator sampler(svd_options, false, "test_basis");
     CAROM::Vector sample(nrow_local, true);
     for (int s = 0; s < ncol; s++)
@@ -556,11 +581,12 @@ TEST(BasisGeneratorIO, HDFDatabase)
 
         sampler.takeSample(sample.getData());
     }
-    sampler.endSamples();
-    sampler.writeSnapshot();
 
-    const CAROM::Matrix *spatial_basis = sampler.getSpatialBasis();
+    sampler.writeSnapshot();
     const CAROM::Matrix *snapshot = sampler.getSnapshotMatrix();
+
+    sampler.endSamples();
+    const CAROM::Matrix *spatial_basis = sampler.getSpatialBasis();
 
     CAROM::BasisReader basis_reader("test_basis");
     const CAROM::Matrix *spatial_basis1 = basis_reader.getSpatialBasis();
@@ -569,7 +595,7 @@ TEST(BasisGeneratorIO, HDFDatabase)
     EXPECT_EQ(spatial_basis->numColumns(), spatial_basis1->numColumns());
     for (int i = 0; i < spatial_basis->numRows(); i++)
         for (int j = 0; j < spatial_basis->numColumns(); j++)
-            EXPECT_NEAR((*spatial_basis)(i, j), (*spatial_basis1)(i, j), 1.0e-15);
+            EXPECT_NEAR((*spatial_basis)(i, j), (*spatial_basis1)(i, j), threshold);
 
     CAROM::BasisReader snapshot_reader("test_basis_snapshot");
     const CAROM::Matrix *snapshot1 = snapshot_reader.getSnapshotMatrix();
@@ -578,7 +604,114 @@ TEST(BasisGeneratorIO, HDFDatabase)
     EXPECT_EQ(snapshot->numColumns(), snapshot1->numColumns());
     for (int i = 0; i < snapshot->numRows(); i++)
         for (int j = 0; j < snapshot->numColumns(); j++)
-            EXPECT_NEAR((*snapshot)(i, j), (*snapshot1)(i, j), 1.0e-15);
+            EXPECT_NEAR((*snapshot)(i, j), (*snapshot1)(i, j), threshold);
+}
+
+TEST(BasisGeneratorIO, Base_MPIO_combination)
+{
+    // Get the rank of this process, and the number of processors.
+    int mpi_init, d_rank, d_num_procs;
+    MPI_Initialized(&mpi_init);
+    if (mpi_init == 0) {
+        MPI_Init(nullptr, nullptr);
+    }
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+
+    int nrow_local = CAROM::split_dimension(nrow, MPI_COMM_WORLD);
+    std::vector<int> row_offset(d_num_procs + 1);
+    const int dummy = CAROM::get_global_offsets(nrow_local, row_offset,
+                      MPI_COMM_WORLD);
+    EXPECT_EQ(nrow, dummy);
+
+    std::string base_name = "test_basis";
+    std::string mpio_name = "test_mpio";
+    CAROM::Options svd_options = CAROM::Options(nrow_local, ncol, 1);
+    svd_options.setMaxBasisDimension(nrow);
+    svd_options.setRandomizedSVD(false);
+    svd_options.setDebugMode(true);
+    CAROM::BasisGenerator sampler(svd_options, false, mpio_name,
+                                  CAROM::Database::HDF5_MPIO);
+
+    sampler.loadSamples(base_name + "_snapshot", "snapshot", 1e9,
+                        CAROM::Database::HDF5);
+    sampler.writeSnapshot();
+    const CAROM::Matrix *snapshot = sampler.getSnapshotMatrix();
+
+    CAROM::BasisReader snapshot_reader("test_basis_snapshot");
+    const CAROM::Matrix *snapshot1 = snapshot_reader.getSnapshotMatrix();
+
+    EXPECT_EQ(snapshot->numRows(), snapshot1->numRows());
+    EXPECT_EQ(snapshot->numColumns(), snapshot1->numColumns());
+    for (int i = 0; i < snapshot->numRows(); i++)
+        for (int j = 0; j < snapshot->numColumns(); j++)
+            EXPECT_NEAR((*snapshot)(i, j), (*snapshot1)(i, j), threshold);
+
+    sampler.endSamples();
+    const CAROM::Matrix *spatial_basis = sampler.getSpatialBasis();
+
+    CAROM::BasisReader basis_reader("test_basis");
+    const CAROM::Matrix *spatial_basis1 = basis_reader.getSpatialBasis();
+
+    EXPECT_EQ(spatial_basis->numRows(), spatial_basis1->numRows());
+    EXPECT_EQ(spatial_basis->numColumns(), spatial_basis1->numColumns());
+    for (int i = 0; i < spatial_basis->numRows(); i++)
+        for (int j = 0; j < spatial_basis->numColumns(); j++)
+            EXPECT_NEAR((*spatial_basis)(i, j), (*spatial_basis1)(i, j), threshold);
+}
+
+TEST(BasisGeneratorIO, MPIO_Base_combination)
+{
+    // Get the rank of this process, and the number of processors.
+    int mpi_init, d_rank, d_num_procs;
+    MPI_Initialized(&mpi_init);
+    if (mpi_init == 0) {
+        MPI_Init(nullptr, nullptr);
+    }
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+
+    int nrow_local = CAROM::split_dimension(nrow, MPI_COMM_WORLD);
+    std::vector<int> row_offset(d_num_procs + 1);
+    const int dummy = CAROM::get_global_offsets(nrow_local, row_offset,
+                      MPI_COMM_WORLD);
+    EXPECT_EQ(nrow, dummy);
+
+    std::string test_name = "test_basis2";
+    std::string mpio_name = "test_mpio";
+    CAROM::Options svd_options = CAROM::Options(nrow_local, ncol, 1);
+    svd_options.setMaxBasisDimension(nrow);
+    svd_options.setRandomizedSVD(false);
+    svd_options.setDebugMode(true);
+    CAROM::BasisGenerator sampler(svd_options, false, test_name,
+                                  CAROM::Database::HDF5);
+
+    sampler.loadSamples(mpio_name + "_snapshot", "snapshot", 1e9,
+                        CAROM::Database::HDF5_MPIO);
+    const CAROM::Matrix *snapshot = sampler.getSnapshotMatrix();
+
+    CAROM::BasisReader snapshot_reader("test_basis_snapshot");
+    const CAROM::Matrix *snapshot1 = snapshot_reader.getSnapshotMatrix();
+
+    EXPECT_EQ(snapshot->numRows(), snapshot1->numRows());
+    EXPECT_EQ(snapshot->numColumns(), snapshot1->numColumns());
+    for (int i = 0; i < snapshot->numRows(); i++)
+        for (int j = 0; j < snapshot->numColumns(); j++)
+            EXPECT_NEAR((*snapshot)(i, j), (*snapshot1)(i, j), threshold);
+
+    sampler.endSamples();
+    const CAROM::Matrix *spatial_basis = sampler.getSpatialBasis();
+
+    CAROM::BasisReader basis_reader("test_basis");
+    const CAROM::Matrix *spatial_basis1 = basis_reader.getSpatialBasis();
+
+    EXPECT_EQ(spatial_basis->numRows(), spatial_basis1->numRows());
+    EXPECT_EQ(spatial_basis->numColumns(), spatial_basis1->numColumns());
+    for (int i = 0; i < spatial_basis->numRows(); i++)
+        for (int j = 0; j < spatial_basis->numColumns(); j++)
+            EXPECT_NEAR((*spatial_basis)(i, j), (*spatial_basis1)(i, j), threshold);
 }
 
 int main(int argc, char* argv[])

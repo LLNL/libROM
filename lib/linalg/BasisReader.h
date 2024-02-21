@@ -213,6 +213,11 @@ public:
      *
      * @brief Returns the dimension of the system on this processor.
      *
+     * @param[in] kind  The target matrix of which dimension (row) is returned.
+     *                  "basis" - local dimension of spatial basis
+     *                  "snapshot" - local dimension of snapshot matrix
+     *                  "temporal_basis" - global dimension of temporal basis
+     *
      * @return The dimension of the system on this processor.
      */
     int
@@ -294,6 +299,11 @@ private:
     Database* d_database;
 
     /**
+     * @brief The database being read from.
+     */
+    Database::formats d_format;
+
+    /**
      * @brief Base file name stored for consistency between reading and writing.
      */
     std::string base_file_name_;
@@ -314,6 +324,13 @@ private:
      * If negative, use the dimension from the rank-specific local file.
      */
     const int d_dim;
+
+    /**
+     * @brief Dimension of the basis on this processor.
+     *
+     * If negative, use the dimension from the rank-specific local file.
+     */
+    int d_global_dim;
 };
 
 }

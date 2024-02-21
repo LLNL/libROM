@@ -73,7 +73,7 @@ public:
         const std::string& file_name,
         const std::string& type,
         const MPI_Comm comm) override;
-    
+
     /**
      * @brief Opens an existing HDF5 database file with the supplied name.
      *
@@ -218,9 +218,8 @@ public:
         int* data,
         int nelements) override
     {
-        if (d_rank != 0)
-            nelements = 0;
-        getIntegerArray_parallel(key, data, nelements);
+        int read_size = (d_rank == 0) ? nelements : 0;
+        getIntegerArray_parallel(key, data, read_size);
 
         MPI_Bcast(data, nelements, MPI_INT, 0, MPI_COMM_WORLD);
     }
@@ -262,9 +261,8 @@ public:
         double* data,
         int nelements) override
     {
-        if (d_rank != 0)
-            nelements = 0;
-        getDoubleArray_parallel(key, data, nelements);
+        int read_size = (d_rank == 0) ? nelements : 0;
+        getDoubleArray_parallel(key, data, read_size);
 
         MPI_Bcast(data, nelements, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     }
@@ -310,9 +308,8 @@ public:
         int nelements,
         const std::vector<int>& idx) override
     {
-        if (d_rank != 0)
-            nelements = 0;
-        getDoubleArray_parallel(key, data, nelements, idx);
+        int read_size = (d_rank == 0) ? nelements : 0;
+        getDoubleArray_parallel(key, data, read_size, idx);
 
         MPI_Bcast(data, nelements, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     }
@@ -366,9 +363,8 @@ public:
         int block_size,
         int stride) override
     {
-        if (d_rank != 0)
-            nelements = 0;
-        getDoubleArray_parallel(key, data, nelements, offset, block_size, stride);
+        int read_size = (d_rank == 0) ? nelements : 0;
+        getDoubleArray_parallel(key, data, read_size, offset, block_size, stride);
 
         MPI_Bcast(data, nelements, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     }

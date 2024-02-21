@@ -514,7 +514,7 @@ HDFDatabaseMPIO::getDoubleArray_parallel(
     hsize_t num_local_blocks = nelem_local / block_size_global;
     std::vector<int> global_offsets;
     int nelements = CAROM::get_global_offsets(num_local_blocks * stride_global,
-                                              global_offsets, d_comm);
+                    global_offsets, d_comm);
 
     CAROM_VERIFY(!key.empty());
 #ifndef DEBUG_CHECK_ASSERTIONS

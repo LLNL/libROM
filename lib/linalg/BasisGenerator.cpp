@@ -168,7 +168,7 @@ BasisGenerator::loadSamples(const std::string& base_file_name,
 
     if (d_basis_reader) delete d_basis_reader;
 
-    d_basis_reader = new BasisReader(base_file_name, db_format);
+    d_basis_reader = new BasisReader(base_file_name, db_format, d_dim);
     const Matrix* mat;
     const Vector* singular_vals;
 

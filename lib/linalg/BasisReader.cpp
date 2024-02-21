@@ -12,10 +12,11 @@
 
 #include "BasisReader.h"
 #include "utils/HDFDatabase.h"
-#include "utils/CSVDatabase.h"
+#include "utils/HDFDatabaseMPIO.h"
 #include "Matrix.h"
 #include "Vector.h"
 #include "mpi.h"
+#include "utils/mpi_utils.h"
 
 namespace CAROM {
 
@@ -26,7 +27,8 @@ BasisReader::BasisReader(
     d_dim(dim),
     d_last_basis_idx(-1),
     full_file_name(""),
-    base_file_name_(base_file_name)
+    base_file_name_(base_file_name),
+    d_format(db_format)
 {
     CAROM_ASSERT(!base_file_name.empty());
 
@@ -40,13 +42,27 @@ BasisReader::BasisReader(
         rank = 0;
     }
 
-    // Enforce hdf data format.
-    CAROM_VERIFY(db_format != Database::CSV);
-
     full_file_name = base_file_name;
-    if (db_format == Database::HDF5) {
+
+    // Enforce hdf data format.
+    if (d_format == Database::HDF5)
+    {
         d_database = new HDFDatabase();
     }
+    else if (d_format == Database::HDF5_MPIO)
+    {
+        /*
+            For MPIO case, local dimension needs to be specified.
+            We allow 0 local dimension. (global dimension still needs to be positive)
+        */
+        std::vector<int> tmp;
+        d_global_dim = get_global_offsets(d_dim, tmp, MPI_COMM_WORLD);
+        CAROM_VERIFY(d_dim >= 0);
+        CAROM_VERIFY(d_global_dim > 0);
+        d_database = new HDFDatabaseMPIO();
+    }
+    else
+        CAROM_ERROR("BasisWriter only supports HDF5/HDF5_MPIO data format!\n");
 
     d_database->open_parallel(full_file_name, "r", MPI_COMM_WORLD);
 }
@@ -289,7 +305,18 @@ BasisReader::getDim(
                 "temporal_basis_num_rows_000000");
 
     d_database->getInteger(tmp, num_rows);
-    return num_rows;
+    /* only basis and snapshot are stored as distributed matrices */
+    if ((kind != "temporal_basis") && (d_format == Database::HDF5_MPIO))
+    {
+        /*
+            for MPIO database, return specified local dimension.
+            only checks the global dimension match.
+        */
+        CAROM_VERIFY(d_global_dim == num_rows);
+        return d_dim;
+    }
+    else
+        return num_rows;
 }
 
 int
