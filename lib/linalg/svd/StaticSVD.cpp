@@ -236,7 +236,8 @@ const Matrix*
 StaticSVD::getSnapshotMatrix()
 {
     if ((!d_preserve_snapshot) && (thisIntervalBasisCurrent()) && (d_basis != 0))
-        CAROM_ERROR("StaticSVD: snapshot matrix is modified after computeSVD. To preserve the snapshots, set Options::static_svd_preserve_snapshot to be true!\n");
+        CAROM_ERROR("StaticSVD: snapshot matrix is modified after computeSVD."
+                    " To preserve the snapshots, set Options::static_svd_preserve_snapshot to be true!\n");
 
     if (d_snapshots) delete d_snapshots;
     d_snapshots = new Matrix(d_dim, d_num_samples, false);
