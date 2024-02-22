@@ -23,7 +23,7 @@
 #include <chrono>
 using namespace std::chrono;
 
-static const int nrow = 100, ncol = 40;
+static const int nrow = 123, ncol = 21;
 static const double threshold = 1.0e-13;
 
 /**
@@ -77,7 +77,7 @@ TEST(HDF5, Test_parallel_writing)
     /*
      * Create a new file collectively and release property list identifier.
      */
-    file_id = H5Fcreate("test.h5", H5F_ACC_TRUNC, H5P_DEFAULT, plist_id);
+    file_id = H5Fcreate("test1.h5", H5F_ACC_TRUNC, H5P_DEFAULT, plist_id);
     H5Pclose(plist_id);
 
     /*
@@ -128,8 +128,9 @@ TEST(HDF5, Test_parallel_writing)
     /*
      * Write a integer scalar attribute
      */
-    // Only last process attribute writes the attribute.
-    const int test_attr = rank + 1234;
+    // Only one process attribute writes the attribute.
+    // Make sure all processes have the same value.
+    const int test_attr = 1234;
     hid_t attr_id = H5Screate(H5S_SCALAR);
     hid_t attr = H5Acreate(dset_id, "test_attr", H5T_NATIVE_INT,
                            attr_id, H5P_DEFAULT, H5P_DEFAULT);
@@ -197,7 +198,7 @@ TEST(HDF5, Test_parallel_reading)
     /*
      * Open a new file collectively and release property list identifier.
      */
-    file_id = H5Fopen("test.h5", H5F_ACC_RDONLY, plist_id);
+    file_id = H5Fopen("test1.h5", H5F_ACC_RDONLY, plist_id);
     H5Pclose(plist_id);
 
     /*
@@ -260,7 +261,7 @@ TEST(HDF5, Test_parallel_reading)
     // MPI_Barrier(MPI_COMM_WORLD);
     errf = H5Aclose(attr);
     if (rank == 0)
-        EXPECT_EQ(test_attr, nproc - 1 + 1234);
+        EXPECT_EQ(test_attr, 1234);
 
     /*
      * Close/release resources.
@@ -762,6 +763,87 @@ TEST(BasisReaderIO, partial_getSpatialBasis)
 
     delete spatial_basis;
     delete spatial_basis1;
+}
+
+TEST(BasisGeneratorIO, Scaling_test)
+{
+    int nproc, rank;
+    MPI_Comm_size(MPI_COMM_WORLD, &nproc);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    const int scale_nrow = 500, scale_ncol = 100;
+    int nrow_local = CAROM::split_dimension(scale_nrow, MPI_COMM_WORLD);
+    std::vector<int> row_offset(nproc + 1);
+    const int dummy = CAROM::get_global_offsets(nrow_local, row_offset,
+                      MPI_COMM_WORLD);
+    EXPECT_EQ(scale_nrow, dummy);
+
+    std::default_random_engine generator;
+    generator.seed(
+        1234); // fix the seed to keep the same result for different nproc.
+    std::uniform_real_distribution<> uniform_distribution(0.0, 1.0);
+    std::normal_distribution<double> normal_distribution(0.0, 1.0);
+
+    // distribute from a global matrix to keep the same system for different nproc.
+    CAROM::Matrix snapshots(scale_nrow, scale_ncol, false);
+    for (int i = 0; i < scale_nrow; i++)
+        for (int j = 0; j < scale_ncol; j++)
+            snapshots(i, j) = normal_distribution(generator);
+    snapshots.distribute(nrow_local);
+
+    CAROM::Options svd_options = CAROM::Options(nrow_local, scale_ncol, 1);
+    svd_options.setMaxBasisDimension(scale_nrow);
+    svd_options.setRandomizedSVD(false);
+
+    CAROM::BasisGenerator base_sampler(svd_options, false, "base");
+    CAROM::BasisGenerator mpio_sampler(svd_options, false, "mpio",
+                                       CAROM::Database::HDF5_MPIO);
+
+    CAROM::Vector sample(nrow_local, true);
+    for (int s = 0; s < scale_ncol; s++)
+    {
+        for (int d = 0; d < nrow_local; d++)
+            sample(d) = snapshots(d, s);
+
+        base_sampler.takeSample(sample.getData());
+        mpio_sampler.takeSample(sample.getData());
+    }
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    auto start = steady_clock::now();
+    base_sampler.writeSnapshot();
+    MPI_Barrier(MPI_COMM_WORLD);
+    auto stop = steady_clock::now();
+    auto duration = duration_cast<milliseconds>(stop-start);
+    if (rank == 0)
+        printf("Base writeSnapshot- duration: %dms\n", duration);
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    start = steady_clock::now();
+    mpio_sampler.writeSnapshot();
+    MPI_Barrier(MPI_COMM_WORLD);
+    stop = steady_clock::now();
+    duration = duration_cast<milliseconds>(stop-start);
+    if (rank == 0)
+        printf("MPIO writeSnapshot- duration: %dms\n", duration);
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    start = steady_clock::now();
+    base_sampler.endSamples();
+    MPI_Barrier(MPI_COMM_WORLD);
+    stop = steady_clock::now();
+    duration = duration_cast<milliseconds>(stop-start);
+    if (rank == 0)
+        printf("Base endSamples- duration: %dms\n", duration);
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    start = steady_clock::now();
+    mpio_sampler.endSamples();
+    MPI_Barrier(MPI_COMM_WORLD);
+    stop = steady_clock::now();
+    duration = duration_cast<milliseconds>(stop-start);
+    if (rank == 0)
+        printf("MPIO endSamples- duration: %dms\n", duration);
 }
 
 int main(int argc, char* argv[])
