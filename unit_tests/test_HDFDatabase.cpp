@@ -714,6 +714,56 @@ TEST(BasisGeneratorIO, MPIO_Base_combination)
             EXPECT_NEAR((*spatial_basis)(i, j), (*spatial_basis1)(i, j), threshold);
 }
 
+TEST(BasisReaderIO, partial_getSpatialBasis)
+{
+    // Get the rank of this process, and the number of processors.
+    int mpi_init, d_rank, d_num_procs;
+    MPI_Initialized(&mpi_init);
+    if (mpi_init == 0) {
+        MPI_Init(nullptr, nullptr);
+    }
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+
+    int nrow_local = CAROM::split_dimension(nrow, MPI_COMM_WORLD);
+    std::vector<int> row_offset(d_num_procs + 1);
+    const int dummy = CAROM::get_global_offsets(nrow_local, row_offset,
+                      MPI_COMM_WORLD);
+    EXPECT_EQ(nrow, dummy);
+
+    std::string base_name = "test_basis";
+    std::string mpio_name = "test_mpio";
+
+    CAROM::BasisReader basis_reader("test_basis");
+    const CAROM::Matrix *spatial_basis = basis_reader.getSpatialBasis();
+
+    CAROM::BasisReader basis_reader1("test_mpio", CAROM::Database::HDF5_MPIO,
+                                     nrow_local);
+    const CAROM::Matrix *spatial_basis1 = basis_reader1.getSpatialBasis();
+
+    EXPECT_EQ(spatial_basis->numRows(), spatial_basis1->numRows());
+    EXPECT_EQ(spatial_basis->numColumns(), spatial_basis1->numColumns());
+    for (int i = 0; i < spatial_basis->numRows(); i++)
+        for (int j = 0; j < spatial_basis->numColumns(); j++)
+            EXPECT_NEAR((*spatial_basis)(i, j), (*spatial_basis1)(i, j), threshold);
+
+    delete spatial_basis;
+    delete spatial_basis1;
+    const int col1 = 3, col2 = 7;
+    spatial_basis = basis_reader.getSpatialBasis(col1, col2);
+    spatial_basis1 = basis_reader1.getSpatialBasis(col1, col2);
+
+    EXPECT_EQ(spatial_basis->numRows(), spatial_basis1->numRows());
+    EXPECT_EQ(spatial_basis->numColumns(), spatial_basis1->numColumns());
+    for (int i = 0; i < spatial_basis->numRows(); i++)
+        for (int j = 0; j < spatial_basis->numColumns(); j++)
+            EXPECT_NEAR((*spatial_basis)(i, j), (*spatial_basis1)(i, j), threshold);
+
+    delete spatial_basis;
+    delete spatial_basis1;
+}
+
 int main(int argc, char* argv[])
 {
     ::testing::InitGoogleTest(&argc, argv);
