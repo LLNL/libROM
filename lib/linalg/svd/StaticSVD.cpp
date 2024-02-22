@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2024, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -253,10 +253,42 @@ StaticSVD::getSnapshotMatrix()
 void
 StaticSVD::computeSVD()
 {
-    // This block does the actual ScaLAPACK call to do the factorization.
+    // pointer for snapshot matrix or its transpose.
+    SLPK_Matrix *snapshot_matrix = NULL;
+
+    // Finalizes the column size of d_samples.
     d_samples->n = d_num_samples;
+
+    // transpose matrix if sample size > dimension.
+    bool transpose = d_total_dim < d_num_samples;
+
+    if (transpose) {
+        // create a transposed matrix if sample size > dimension.
+        snapshot_matrix = new SLPK_Matrix;
+
+        int d_blocksize_tr = d_num_samples / d_nprow;
+        if (d_num_samples % d_nprow != 0) {
+            d_blocksize_tr += 1;
+        }
+
+        initialize_matrix(snapshot_matrix, d_num_samples, d_total_dim,
+                          d_nprow, d_npcol, d_blocksize_tr, d_blocksize_tr);
+
+        for (int rank = 0; rank < d_num_procs; ++rank) {
+            transpose_submatrix(snapshot_matrix, 1,
+                                d_istarts[static_cast<unsigned>(rank)]+1,
+                                d_samples.get(), d_istarts[static_cast<unsigned>(rank)]+1, 1,
+                                d_dims[static_cast<unsigned>(rank)], d_num_samples);
+        }
+    }
+    else {
+        // use d_samples if sample size <= dimension.
+        snapshot_matrix = d_samples.get();
+    }
+
+    // This block does the actual ScaLAPACK call to do the factorization.
     delete_factorizer();
-    svd_init(d_factorizer.get(), d_samples.get());
+    svd_init(d_factorizer.get(), snapshot_matrix);
     d_factorizer->dov = 1;
     factorize(d_factorizer.get());
 
@@ -277,10 +309,10 @@ StaticSVD::computeSVD()
         hard_cutoff = d_max_basis_dimension;
     }
     int ncolumns = hard_cutoff < sigma_cutoff ? hard_cutoff : sigma_cutoff;
+    if (transpose) ncolumns = (ncolumns > d_total_dim) ? d_total_dim : ncolumns;
     CAROM_VERIFY(ncolumns >= 0);
 
     // Allocate the appropriate matrices and gather their elements.
-    d_basis = new Matrix(d_dim, ncolumns, true);
     d_S = new Vector(ncolumns, false);
     {
         CAROM_VERIFY(ncolumns >= 0);
@@ -288,17 +320,32 @@ StaticSVD::computeSVD()
         memset(&d_S->item(0), 0, nc*sizeof(double));
     }
 
-    d_basis_right = new Matrix(ncolumns, d_num_samples, false);
+    d_basis = new Matrix(d_dim, ncolumns, true);
+    d_basis_right = new Matrix(d_num_samples, ncolumns, false);
     for (int rank = 0; rank < d_num_procs; ++rank) {
-        // gather_transposed_block does the same as gather_block, but transposes
-        // it; here, it is used to go from column-major to row-major order.
-        gather_transposed_block(&d_basis->item(0, 0), d_factorizer->U,
-                                d_istarts[static_cast<unsigned>(rank)]+1,
-                                1, d_dims[static_cast<unsigned>(rank)],
-                                ncolumns, rank);
-        // V is computed in the transposed order so no reordering necessary.
-        gather_block(&d_basis_right->item(0, 0), d_factorizer->V, 1, 1,
-                     ncolumns, d_num_samples, rank);
+        if (transpose) {
+            // V is computed in the transposed order so no reordering necessary.
+            gather_block(&d_basis->item(0, 0), d_factorizer->V,
+                         1, d_istarts[static_cast<unsigned>(rank)]+1,
+                         ncolumns, d_dims[static_cast<unsigned>(rank)], rank);
+
+            // gather_transposed_block does the same as gather_block, but transposes
+            // it; here, it is used to go from column-major to row-major order.
+            gather_transposed_block(&d_basis_right->item(0, 0), d_factorizer->U,
+                                    1, 1, d_num_samples, ncolumns, rank);
+
+        }
+        else {
+            // gather_transposed_block does the same as gather_block, but transposes
+            // it; here, it is used to go from column-major to row-major order.
+            gather_transposed_block(&d_basis->item(0, 0), d_factorizer->U,
+                                    d_istarts[static_cast<unsigned>(rank)]+1,
+                                    1, d_dims[static_cast<unsigned>(rank)],
+                                    ncolumns, rank);
+            // V is computed in the transposed order so no reordering necessary.
+            gather_block(&d_basis_right->item(0, 0), d_factorizer->V, 1, 1,
+                         ncolumns, d_num_samples, rank);
+        }
     }
     for (int i = 0; i < ncolumns; ++i)
         d_S->item(i) = d_factorizer->S[static_cast<unsigned>(i)];
@@ -323,6 +370,12 @@ StaticSVD::computeSVD()
                 printf("%8.4E  ", d_factorizer->S[i]);
             printf("\n");
         }
+    }
+
+    if (transpose) {
+        // Delete the transposed snapshot matrix.
+        free_matrix_data(snapshot_matrix);
+        delete snapshot_matrix;
     }
 }
 

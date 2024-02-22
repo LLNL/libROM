@@ -33,14 +33,22 @@ if read_the_docs_build:
     from subprocess import call
     call('cd ../.. ; doxygen docs/Doxyfile', shell=True)
 
-    html_extra_path = ['../build/html']
+    # Move doxygen documentation to a subfolder
+    call('mkdir ../build/temp', shell=True)
+    call('mkdir ../build/temp/doxygen', shell=True)
+    call('mv ../build/html/* ../build/temp/doxygen', shell=True)
 
+    # Copy doxygen subfolder to root
+    html_extra_path = ['../build/temp']
 
+    # The subfolder is copied to the root after the build completes in
+    # the .readthedocs.yaml file
+    
 
 # -- Project information -----------------------------------------------------
 
 project = 'libROM'
-copyright = '2023, Lawrence Livermore National Security, LLNS'
+copyright = '2024, Lawrence Livermore National Security, LLNS'
 author = 'Lawrence Livermore National Security, LLNS'
 
 # The short X.Y version

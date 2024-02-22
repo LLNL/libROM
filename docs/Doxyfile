@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2024, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory
 # Written by William Arrighi wjarrighi@llnl.gov
 # CODE-686965
@@ -1119,7 +1119,7 @@ USE_MDFILE_AS_MAINPAGE = README.md
 # also VERBATIM_HEADERS is set to NO.
 # The default value is: NO.
 
-SOURCE_BROWSER         = NO
+SOURCE_BROWSER         = YES
 
 # Setting the INLINE_SOURCES tag to YES will include the body of functions,
 # classes and enums directly into the documentation.

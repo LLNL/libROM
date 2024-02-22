@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2024, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -31,16 +31,19 @@
 //               Analytic test (reproductive)
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -offline
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -merge -ns 1
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -nsdim 20
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -nsdim 20 -sopt
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -nsdim 20 -hrtype deim
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -nsdim 20 -hrtype qdeim
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -nsdim 20 -hrtype sopt
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -nsdim 20 -ns 1 -eqp
 //
 //               Relative l2 error of ROM solution at final timestep using DEIM sampling: 1.096776797994166e-08
-//               Elapsed time for time integration loop using DEIM sampling: 0.6351594580000001
+//               Elapsed time for time integration loop using DEIM sampling: 0.5686423310000001
+//               Relative l2 error of ROM solution at final timestep using QDEIM sampling: 1.227055339859034e-08
+//               Elapsed time for time integration loop using QDEIM sampling: 0.575228571
 //               Relative l2 error of ROM solution at final timestep using S_OPT sampling: 1.01945081122054e-08
-//               Elapsed time for time integration loop using S_OPT sampling: 0.6669736559999999
-//               Relative l2 error of ROM solution at final timestep using EQP: 1.46205848438194e-07
-//               Elapsed time for time integration loop using EQP: 0.431521853
+//               Elapsed time for time integration loop using S_OPT sampling: 0.5311964850000001
+//               Relative l2 error of ROM solution at final timestep using EQP: 1.052559143494963e-08
+//               Elapsed time for time integration loop using EQP: 0.346165296
 //
 //               Note that the timing of the time integration loop does not include setup,
 //               which can be greater for S_OPT and EQP than for DEIM.
@@ -48,16 +51,18 @@
 //               Initial step test (reproductive)
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -offline -p 1
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -merge -ns 1 -p 1
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -p 1
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -p 1 -sopt
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -p 1 -hrtype deim
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -p 1 -hrtype sopt
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -online -rrdim 8 -rwdim 8 -nldim 20 -p 1 -ns 1 -eqp
 //
 //               Relative l2 error of ROM solution at final timestep using DEIM sampling: 0.0003712362376412496
-//               Elapsed time for time integration loop using DEIM sampling: 0.364855569
+//               Elapsed time for time integration loop using DEIM sampling: 0.339288686
+//               Relative l2 error of ROM solution at final timestep using QDEIM sampling: 0.000375066186385267
+//               Elapsed time for time integration loop using QDEIM sampling: 0.32320409
 //               Relative l2 error of ROM solution at final timestep using S_OPT sampling: 0.0003797338657417907
-//               Elapsed time for time integration loop using S_OPT sampling: 0.300462563
-//               Relative l2 error of ROM solution at final timestep using EQP sampling: 0.0003710336208386964
-//               Elapsed time for time integration loop using EQP sampling: 0.481740662
+//               Elapsed time for time integration loop using S_OPT sampling: 0.32422266
+//               Relative l2 error of ROM solution at final timestep using EQP sampling: 0.0003709977143117392
+//               Elapsed time for time integration loop using EQP sampling: 0.457011311
 //
 //               Initial step parametric test (predictive)
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -offline -id 0 -sh 0.25
@@ -65,16 +70,18 @@
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -offline -id 2 -sh 0.35
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -merge -ns 3
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -offline -id 3 -sh 0.3
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -nldim 20 -sh 0.3 -id 3
-//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -nldim 20 -sh 0.3 -id 3 -sopt
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -nldim 20 -sh 0.3 -id 3 -hrtype deim
+//               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -nldim 20 -sh 0.3 -id 3 -hrtype sopt
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -p 1 -online -rrdim 8 -rwdim 8 -nldim 20 -sh 0.3 -id 3 -ns 3 -eqp -maxnnls 30
 //
 //               Relative l2 error of ROM solution at final timestep using DEIM sampling: 0.002681387312231006
-//               Elapsed time for time integration loop using DEIM sampling: 0.355846074
+//               Elapsed time for time integration loop using DEIM sampling: 0.359206509
+//               Relative l2 error of ROM solution at final timestep using QDEIM sampling: 0.00266355670204476
+//               Elapsed time for time integration loop using QDEIM sampling: 0.309432016
 //               Relative l2 error of ROM solution at final timestep using S_OPT sampling: 0.002701713369494112
-//               Elapsed time for time integration loop using S_OPT sampling: 0.348985935
+//               Elapsed time for time integration loop using S_OPT sampling: 0.41139788
 //               Relative l2 error of ROM solution at final timestep using EQP: 0.002659978000520714
-//               Elapsed time for time integration loop using EQP sampling: 0.176821221
+//               Elapsed time for time integration loop using EQP sampling: 0.164961644
 //
 //               Pointwise snapshots for DMD input
 //               mpirun -n 1 ./mixed_nonlinear_diffusion -pwsnap -pwx 101 -pwy 101
@@ -90,9 +97,7 @@
 #include "linalg/BasisGenerator.h"
 #include "linalg/BasisReader.h"
 #include "linalg/NNLS.h"
-#include "hyperreduction/DEIM.h"
-#include "hyperreduction/GNAT.h"
-#include "hyperreduction/S_OPT.h"
+#include "hyperreduction/Hyperreduction.h"
 #include "mfem/SampleMesh.hpp"
 #include "mfem/PointwiseSnapshot.hpp"
 
@@ -550,7 +555,7 @@ int main(int argc, char *argv[])
     bool offline = false;
     bool merge = false;
     bool online = false;
-    bool use_sopt = false;
+    const char *samplingType = "deim";
     bool use_eqp = false;
     bool writeSampleMesh = false;
     int num_samples_req = -1;
@@ -619,8 +624,8 @@ int main(int argc, char *argv[])
                    "Enable or disable the online phase.");
     args.AddOption(&merge, "-merge", "--merge", "-no-merge", "--no-merge",
                    "Enable or disable the merge phase.");
-    args.AddOption(&use_sopt, "-sopt", "--sopt", "-no-sopt", "--no-sopt",
-                   "Use S-OPT sampling instead of DEIM for the hyperreduction.");
+    args.AddOption(&samplingType, "-hrtype", "--hrsamplingtype",
+                   "Sampling type for hyperreduction.");
     args.AddOption(&num_samples_req, "-nsr", "--nsr",
                    "Number of samples for the sampling algorithm to select.");
     args.AddOption(&use_eqp, "-eqp", "--eqp", "-no-eqp", "--no-eqp",
@@ -950,8 +955,6 @@ int main(int argc, char *argv[])
         CAROM::BasisReader readerFR("basisFR");
         FR_librom = readerFR.getSpatialBasis(0.0);
 
-        // Compute sample points using DEIM, for hyperreduction
-
         if (nldim == -1)
         {
             nldim = FR_librom->numColumns();
@@ -1005,6 +1008,7 @@ int main(int argc, char *argv[])
         else
         {
             // Setup hyperreduction using DEIM, GNAT, or S-OPT
+            CAROM::Hyperreduction hr(samplingType);
             vector<int> num_sample_dofs_per_proc(num_procs);
 
             if (num_samples_req != -1)
@@ -1019,44 +1023,15 @@ int main(int argc, char *argv[])
             // Now execute the chosen sampling algorithm to get the sampling information.
             Bsinv = new CAROM::Matrix(nsamp_R, nldim, false);
             vector<int> sample_dofs(nsamp_R);  // Indices of the sampled rows
-            if (use_sopt)
-            {
-                if (myid == 0)
-                    printf("Using S_OPT sampling\n");
-                CAROM::S_OPT(FR_librom,
-                             nldim,
-                             sample_dofs,
-                             num_sample_dofs_per_proc,
-                             *Bsinv,
-                             myid,
-                             num_procs,
-                             nsamp_R);
-            }
-            else if (nsamp_R != nldim)
-            {
-                if (myid == 0)
-                    printf("Using GNAT sampling\n");
-                CAROM::GNAT(FR_librom,
-                            nldim,
-                            sample_dofs,
-                            num_sample_dofs_per_proc,
-                            *Bsinv,
-                            myid,
-                            num_procs,
-                            nsamp_R);
-            }
-            else
-            {
-                if (myid == 0)
-                    printf("Using DEIM sampling\n");
-                CAROM::DEIM(FR_librom,
-                            nldim,
-                            sample_dofs,
-                            num_sample_dofs_per_proc,
-                            *Bsinv,
-                            myid,
-                            num_procs);
-            }
+
+            hr.ComputeSamples(FR_librom,
+                              nldim,
+                              sample_dofs,
+                              num_sample_dofs_per_proc,
+                              *Bsinv,
+                              myid,
+                              num_procs,
+                              nsamp_R);
 
             vector<int> sample_dofs_S;  // Indices of the sampled rows
             vector<int> num_sample_dofs_per_proc_S(num_procs);
@@ -1067,8 +1042,6 @@ int main(int argc, char *argv[])
             {
                 readerS = new CAROM::BasisReader("basisS");
                 S_librom = readerS->getSpatialBasis(0.0);
-
-                // Compute sample points using DEIM
 
                 if (nsdim == -1)
                 {
@@ -1083,7 +1056,7 @@ int main(int argc, char *argv[])
                 if (myid == 0)
                     printf("reduced S dim = %d\n",nsdim);
 
-                // Now execute the DEIM algorithm to get the sampling information.
+                // Now use a hyperreduction method to compute samples.
                 if (num_samples_req != -1)
                 {
                     nsamp_S = num_samples_req;
@@ -1095,38 +1068,16 @@ int main(int argc, char *argv[])
 
                 Ssinv = new CAROM::Matrix(nsamp_S, nsdim, false);
                 sample_dofs_S.resize(nsamp_S);
-                if (use_sopt)
-                {
-                    CAROM::S_OPT(S_librom,
-                                 nsdim,
-                                 sample_dofs_S,
-                                 num_sample_dofs_per_proc_S,
-                                 *Ssinv,
-                                 myid,
-                                 num_procs,
-                                 nsamp_S);
-                }
-                else if (nsamp_S != nsdim)
-                {
-                    CAROM::GNAT(S_librom,
-                                nsdim,
-                                sample_dofs_S,
-                                num_sample_dofs_per_proc_S,
-                                *Ssinv,
-                                myid,
-                                num_procs,
-                                nsamp_S);
-                }
-                else
-                {
-                    CAROM::DEIM(S_librom,
-                                nsdim,
-                                sample_dofs_S,
-                                num_sample_dofs_per_proc_S,
-                                *Ssinv,
-                                myid,
-                                num_procs);
-                }
+
+
+                hr.ComputeSamples(S_librom,
+                                  nsdim,
+                                  sample_dofs_S,
+                                  num_sample_dofs_per_proc_S,
+                                  *Ssinv,
+                                  myid,
+                                  num_procs,
+                                  nsamp_S);
             }
 
             // Construct sample mesh

@@ -39,6 +39,12 @@ Compilation options:
 - -t: Use your own cmake/toolchain
 - -u: Update all of libROM's dependencies.
 
+## Compiling on LC Machines
+
+libROM provides several CMake toolchains which can be used to compile on LLNL LC machines. 
+For more information on installing and using libROM on specific LC machines, 
+refer to [this wiki page](https://github.com/LLNL/libROM/wiki/Compiling-on-LC-Machines).
+
 # Installing via Spack
 
 There is a Spack package for libROM; however, the version it installs
@@ -80,6 +86,9 @@ For example,
 mpicxx myapp.cpp -I/path/to/libROM/lib -Wl,-rpath,/path/to/libROM/build/lib -L/path/to/libROM/build/lib -lROM -o myapp.out
 ```
 
+# Using Docker container
+
+Docker container [`librom_env`](https://ghcr.io/llnl/librom/librom_env) provides a containerized environment with all the prerequisites for libROM. For instruction on how to use it, check out [the wiki page](https://github.com/LLNL/libROM/wiki/Using-Docker-container).
 
 # libROM CI
 
@@ -111,6 +120,7 @@ LLNL-CODE-766763
 
 # Authors
 - Robert W. Anderson (LLNL)
+- William Anderson (LLNL)
 - William Arrighi (LLNL)
 - Kyle Chand (LLNL)
 - Siu Wun Cheung (LLNL)
@@ -123,10 +133,12 @@ LLNL-CODE-766763
 - Xiaolong He (UC San Diego)
 - Adrian Humphry (University of Toronto)
 - Kevin Huynh (LLNL)
+- Coleman Kendrick (LLNL)
 - Tanya Kostova-Vassilevska (LLNL)
 - Jessica Lauzon (Stanford)
 - Sean McBane (UT Austin)
-- Yeonjong Shin (KAIST)
 - Geoffrey Oxberry (LLNL)
+- Yeonjong Shin (KAIST)
+- Paul Tranquilli (LLNL)
 - Pranav Vempati (LLNL)
 - Masayuki Yano (University of Toronto)

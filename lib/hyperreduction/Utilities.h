@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2024, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -16,8 +16,6 @@
 #include "mpi.h"
 
 namespace CAROM {
-
-#ifndef DOXYGEN_IGNORE
 
 /**
  * @brief Struct to hold the local maximum absolute value of a basis vector,
@@ -36,8 +34,6 @@ typedef struct
  *        and processor owning the row of the absolute maximum of a basis vector.
  */
 void RowInfoMax(RowInfo* a, RowInfo* b, int* len, MPI_Datatype* type);
-
-#endif /* DOXYGEN_IGNORE */
 
 }
 

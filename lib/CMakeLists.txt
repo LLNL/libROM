@@ -1,6 +1,6 @@
 ###############################################################################
 #
-#  Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
+#  Copyright (c) 2013-2024, Lawrence Livermore National Security, LLC
 #  and other libROM project developers. See the top-level COPYRIGHT
 #  file for details.
 #
@@ -30,10 +30,12 @@ set(module_list
   linalg/svd/IncrementalSVD
   linalg/svd/IncrementalSVDFastUpdate
   linalg/svd/IncrementalSVDStandard
+  linalg/svd/IncrementalSVDBrand
   linalg/svd/RandomizedSVD
   linalg/svd/SVD
   linalg/svd/StaticSVD
   algo/DMD
+  algo/DMDc
   algo/AdaptiveDMD
   algo/NonuniformDMD
   algo/DifferentialEvolution
@@ -49,11 +51,13 @@ set(module_list
   hyperreduction/S_OPT
   hyperreduction/STSampling
   hyperreduction/Utilities
+  hyperreduction/Hyperreduction
   utils/Database
   utils/HDFDatabase
   utils/CSVDatabase
   utils/Utilities
-  utils/ParallelBuffer)
+  utils/ParallelBuffer
+  utils/mpi_utils)
 set(source_files)
 foreach(module IN LISTS module_list)
   list(APPEND source_files ${module}.cpp)
@@ -96,7 +100,15 @@ if (BLAS_LIBRARIES MATCHES ".*mkl.*")
     target_include_directories(ROM PUBLIC ${MKL_INCLUDE_DIRS})
   endif()
 else() # BLAS or LAPACK isn't MKL
-  find_package(ScaLAPACK REQUIRED)
+  find_package(ScaLAPACK)
+  if (NOT ScaLAPACK_FOUND)
+    # Attempt to use manually-built scalapack in dependencies.
+    # CMake files in scalapack directory disrupts find_package using PATHS/HINTS.
+    # Here we prepend environment PATH variable.
+    # This changed PATH variable applies only to this libROM compilation.
+    set(ENV{PATH} "${CMAKE_SOURCE_DIR}/dependencies/scalapack-2.2.0:$ENV{PATH}")
+    find_package(ScaLAPACK REQUIRED)
+  endif()
   target_link_libraries(ROM PUBLIC ${ScaLAPACK_LIBRARIES})
 endif()
 

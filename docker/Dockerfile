@@ -15,6 +15,7 @@ RUN sudo apt-get install -yq vim
 RUN sudo apt-get install -yq git-lfs
 RUN sudo apt-get install -yq valgrind
 RUN sudo apt-get install -yq wget
+RUN sudo apt-get install -yq astyle
 
 RUN sudo apt-get clean -q
 
@@ -23,7 +24,7 @@ ENV LIB_DIR=/$ENVDIR/dependencies
 WORKDIR $LIB_DIR
 
 #RUN wget -O mfem-4.5.tar.gz https://github.com/mfem/mfem/archive/refs/tags/v4.5.tar.gz
-RUN wget -O hypre-2.20.0.tar.gz https://github.com/hypre-space/hypre/archive/refs/tags/v2.20.0.tar.gz
+RUN wget -O hypre-2.28.0.tar.gz https://github.com/hypre-space/hypre/archive/v2.28.0.tar.gz
 
 # Instead of the original parmetis link (which is often unavailable), use the link to librom master branch:
 # RUN wget -O parmetis-4.0.3.tar.gz http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
@@ -39,8 +40,8 @@ ENV CPPFLAGS="-fPIC"
 ENV CXXFLAGS="-fPIC"
 
 # install hypre
-RUN tar -zxvf hypre-2.20.0.tar.gz
-RUN mv hypre-2.20.0 hypre
+RUN tar -zxvf hypre-2.28.0.tar.gz
+RUN mv hypre-2.28.0 hypre
 WORKDIR ./hypre/src/
 RUN ./configure --disable-fortran
 RUN make -j
@@ -74,8 +75,7 @@ ENV METIS_OPT=-I${METIS_DIR}/metis/include
 WORKDIR ${METIS_DIR}/build
 # Currently docker cannot save command results to environment variables.
 # These variables are for libROM build.
-ENV MACHINE_ARCH=Linux-x86_64
-RUN ln -s $MACHINE_ARCH lib
+RUN arch=$(uname -m) && ln -s Linux-${arch} lib
 WORKDIR ${METIS_DIR}/build/lib/libparmetis
 RUN ln -s ./ lib
 RUN ln -s ${METIS_DIR}/metis metis
@@ -92,8 +92,8 @@ WORKDIR $LIB_DIR
 # install mfem
 RUN git clone https://github.com/mfem/mfem.git mfem_parallel
 WORKDIR ./mfem_parallel
-# Latest verified commit on May 2, 2023
-RUN git checkout e5231334e6a8175b4f404b877f590b73dee2dedc
+# v4.5.2-dev commit. This is the mfem version used by PyMFEM v4.5.2.0.
+RUN git checkout 00b2a0705f647e17a1d4ffcb289adca503f28d42
 #RUN tar -zxvf mfem-4.5.tar.gz
 #RUN mv mfem-4.5 mfem_parallel
 #RUN git pull
@@ -125,6 +125,7 @@ set(CMAKE_CXX_COMPILER mpicxx)\n\
 set(CMAKE_Fortran_COMPILER mpif90)\n\
 set(LIB_DIR /env/dependencies)\n\
 set(MFEM_DIR ${LIB_DIR}/mfem)\n\
+set(MFEM_INCLUDES ${MFEM_DIR})\n\
 set(HYPRE_DIR ${LIB_DIR}/hypre/src/hypre)\n\
 set(PARMETIS_DIR ${LIB_DIR}/parmetis-4.0.3/build/lib/libparmetis)\n\
 set(METIS_DIR ${LIB_DIR}/parmetis-4.0.3/build/lib/libmetis)' > ./librom_env.cmake
@@ -136,8 +137,30 @@ ENV USE_MFEM=On
 ENV MFEM_USE_GSLIB=On
 ENV MFEM_DIR=$LIB_DIR/mfem
 ENV HYPRE_DIR=$LIB_DIR/hypre/src/hypre
+ENV MFEM_INCLUDES=${MFEM_DIR}
 ENV PARMETIS_DIR=$LIB_DIR/parmetis-4.0.3/build/lib/libparmetis
 ENV METIS_DIR=$LIB_DIR/parmetis-4.0.3/build/lib/libmetis
+
+# install python
+RUN sudo apt-get update
+RUN sudo apt-get install -yq python3
+RUN sudo apt-get install -yq python3-dev
+RUN sudo apt-get install -yq python3-pip
+
+RUN echo "numpy" >> requirements.txt
+RUN echo "scipy" >> requirements.txt
+RUN echo "argparse" >> requirements.txt
+RUN echo "tables" >> requirements.txt
+RUN echo "PyYAML" >> requirements.txt
+RUN echo "h5py" >> requirements.txt
+RUN echo "pybind11" >> requirements.txt
+RUN echo "pytest" >> requirements.txt
+RUN echo "mpi4py" >> requirements.txt
+RUN sudo pip3 install --upgrade pip
+RUN sudo pip3 install -r ./requirements.txt
+
+# install lldb and gdb for debugging
+RUN sudo apt-get install -yq lldb gdb
 
 # create and switch to a user
 ENV USERNAME=test

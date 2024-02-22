@@ -6,11 +6,11 @@
 # - HDF5 1.14.0
 
 # Use MPI compiler wrappers because it simplifies detection of MPI
-set(CMAKE_C_COMPILER /usr/tce/packages/mvapich2/mvapich2-2.3.6-gcc-12.1.1/bin/mpicc)
-set(CMAKE_CXX_COMPILER /usr/tce/packages/mvapich2/mvapich2-2.3.6-gcc-12.1.1/bin/mpicxx)
-set(CMAKE_Fortran_COMPILER /usr/tce/packages/mvapich2/mvapich2-2.3.6-gcc-12.1.1/bin/mpif90)
+set(CMAKE_C_COMPILER /usr/tce/packages/mvapich2/mvapich2-2.3.7-gcc-12.1.1/bin/mpicc)
+set(CMAKE_CXX_COMPILER /usr/tce/packages/mvapich2/mvapich2-2.3.7-gcc-12.1.1/bin/mpicxx)
+set(CMAKE_Fortran_COMPILER /usr/tce/packages/mvapich2/mvapich2-2.3.7-gcc-12.1.1/bin/mpif90)
 set(BLA_VENDOR Intel10_64lp)
-set(HDF5_ROOT /usr/tce/packages/hdf5/hdf5-1.14.0-mvapich2-2.3.6-gcc-12.1.1)
+set(HDF5_ROOT /usr/tce/packages/hdf5/hdf5-1.14.0-mvapich2-2.3.7-gcc-12.1.1)
 
 set(BLAS_ROOT /usr/tce/packages/mkl/mkl-2022.1.0)
 set(LAPACK_ROOT /usr/tce/packages/mkl/mkl-2022.1.0)

@@ -7,6 +7,7 @@ runs:
           ./tests/test_SVD
           ./tests/test_Vector
           ./tests/test_Matrix
+          mpirun -n 3 --oversubscribe ./tests/test_Matrix
           ./tests/test_DEIM
           ./tests/test_GNAT
           ./tests/test_QDEIM
@@ -19,6 +20,11 @@ runs:
           mpirun -n 3 --oversubscribe tests/test_GreedyCustomSampler
           ./tests/test_RandomizedSVD
           mpirun -n 3 --oversubscribe tests/test_RandomizedSVD
+          ./tests/test_StaticSVD
+          mpirun -n 3 --oversubscribe tests/test_StaticSVD
+          ./tests/test_IncrementalSVDBrand
+          mpirun -n 3 --oversubscribe tests/test_IncrementalSVDBrand
+          
       shell: bash
 
     - name: Run regression tests

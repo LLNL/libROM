@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2024, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -114,19 +114,23 @@ public:
     virtual void takeSample(double* u_in, double t);
 
     /**
+     * @brief Train the DMD model with energy fraction criterion.
+     *
      * @param[in] energy_fraction The energy fraction to keep after doing SVD.
      * @param[in] W0              The initial basis to prepend to W.
      * @param[in] linearity_tol   The tolerance for determining whether a column
-                                  of W is linearly independent with W0.
+     *                            of W is linearly independent with W0.
      */
     virtual void train(double energy_fraction, const Matrix* W0 = NULL,
                        double linearity_tol = 0.0);
 
     /**
+     * @brief Train the DMD model with specified reduced dimension.
+     *
      * @param[in] k               The number of modes to keep after doing SVD.
      * @param[in] W0              The initial basis to prepend to W.
      * @param[in] linearity_tol   The tolerance for determining whether a column
-                                  of W is linearly independent with W0.
+     *                            of W is linearly independent with W0.
      */
     virtual void train(int k, const Matrix* W0 = NULL, double linearity_tol = 0.0);
 

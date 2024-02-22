@@ -3,7 +3,7 @@
 #SBATCH -N 1 -n 4
 #SBATCH -t 1:00:00
 #SBATCH -p pdebug
-#SBATCH -o sbatch.log
+#SBATCH -o regression_tests_summary.log
 #SBATCH --open-mode truncate
 # On Linux:
 # sbatch ./regression_tests/run_regression_tests.sh

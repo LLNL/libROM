@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2024, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -14,6 +14,7 @@
 
 #include "Matrix.h"
 #include "utils/HDFDatabase.h"
+#include "utils/mpi_utils.h"
 
 #include "mpi.h"
 #include <string.h>
@@ -82,9 +83,11 @@ Matrix::Matrix(
     MPI_Initialized(&mpi_init);
     if (mpi_init) {
         MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+        MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     }
     else {
         d_num_procs = 1;
+        d_rank = 0;
     }
     setSize(num_rows, num_cols);
     if (randomized) {
@@ -116,9 +119,11 @@ Matrix::Matrix(
     MPI_Initialized(&mpi_init);
     if (mpi_init) {
         MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+        MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     }
     else {
         d_num_procs = 1;
+        d_rank = 0;
     }
     if (copy_data) {
         setSize(num_rows, num_cols);
@@ -146,9 +151,11 @@ Matrix::Matrix(
     MPI_Initialized(&mpi_init);
     if (mpi_init) {
         MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+        MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     }
     else {
         d_num_procs = 1;
+        d_rank = 0;
     }
     setSize(other.d_num_rows, other.d_num_cols);
     memcpy(d_mat, other.d_mat, d_alloc_size*sizeof(double));
@@ -748,7 +755,11 @@ Matrix::inverse(
     }
     // Now call lapack to do the inversion.
     dgetrf(&mtx_size, &mtx_size, result->d_mat, &mtx_size, ipiv, &info);
+    CAROM_VERIFY(info == 0);
+
     dgetri(&mtx_size, result->d_mat, &mtx_size, ipiv, work, &lwork, &info);
+    CAROM_VERIFY(info == 0);
+
     // Result now has the inverse in a column major representation.  Put it
     // into row major order.
     for (int row = 0; row < mtx_size; ++row) {
@@ -791,7 +802,11 @@ Matrix::inverse(
     }
     // Now call lapack to do the inversion.
     dgetrf(&mtx_size, &mtx_size, result.d_mat, &mtx_size, ipiv, &info);
+    CAROM_VERIFY(info == 0);
+
     dgetri(&mtx_size, result.d_mat, &mtx_size, ipiv, work, &lwork, &info);
+    CAROM_VERIFY(info == 0);
+
     // Result now has the inverse in a column major representation.  Put it
     // into row major order.
     for (int row = 0; row < mtx_size; ++row) {
@@ -845,7 +860,11 @@ Matrix::inverse()
     }
     // Now call lapack to do the inversion.
     dgetrf(&mtx_size, &mtx_size, d_mat, &mtx_size, ipiv, &info);
+    CAROM_VERIFY(info == 0);
+
     dgetri(&mtx_size, d_mat, &mtx_size, ipiv, work, &lwork, &info);
+    CAROM_VERIFY(info == 0);
+
     // This now has its inverse in a column major representation.  Put it into
     // row major representation.
     for (int row = 0; row < mtx_size; ++row) {
@@ -1021,6 +1040,68 @@ Matrix::local_read(const std::string& base_file_name, int rank)
     database.getDoubleArray(tmp, d_mat, d_alloc_size);
     d_owns_data = true;
     database.close();
+}
+
+void
+Matrix::distribute(const int &local_num_rows)
+{
+    CAROM_VERIFY(!distributed());
+    CAROM_VERIFY(d_owns_data);
+
+    std::vector<int> row_offsets;
+    int num_total_rows = get_global_offsets(local_num_rows, row_offsets,
+                                            MPI_COMM_WORLD);
+    CAROM_VERIFY(num_total_rows == d_num_rows);
+    int local_offset = row_offsets[d_rank] * d_num_cols;
+    const int new_size = local_num_rows * d_num_cols;
+
+    double *d_new_mat = new double [new_size];
+    if (new_size > 0)
+        memcpy(d_new_mat, &d_mat[local_offset], 8 * new_size);
+
+    delete [] d_mat;
+    d_mat = d_new_mat;
+    d_alloc_size = new_size;
+
+    d_num_distributed_rows = d_num_rows;
+    d_num_rows = local_num_rows;
+
+    d_distributed = true;
+}
+
+void
+Matrix::gather()
+{
+    CAROM_VERIFY(distributed());
+    CAROM_VERIFY(d_owns_data);
+
+    std::vector<int> row_offsets;
+    const int num_total_rows = get_global_offsets(d_num_rows, row_offsets,
+                               MPI_COMM_WORLD);
+    CAROM_VERIFY(num_total_rows == d_num_distributed_rows);
+    const int new_size = d_num_distributed_rows * d_num_cols;
+
+    int *data_offsets = new int[row_offsets.size() - 1];
+    int *data_cnts = new int[row_offsets.size() - 1];
+    for (int k = 0; k < row_offsets.size() - 1; k++)
+    {
+        data_offsets[k] = row_offsets[k] * d_num_cols;
+        data_cnts[k] = (row_offsets[k+1] - row_offsets[k]) * d_num_cols;
+    }
+
+    double *d_new_mat = new double [new_size] {0.0};
+    CAROM_VERIFY(MPI_Allgatherv(d_mat, d_alloc_size, MPI_DOUBLE,
+                                d_new_mat, data_cnts, data_offsets, MPI_DOUBLE,
+                                MPI_COMM_WORLD) == MPI_SUCCESS);
+
+    delete [] d_mat;
+    delete [] data_offsets, data_cnts;
+    d_mat = d_new_mat;
+    d_alloc_size = new_size;
+
+    d_num_rows = d_num_distributed_rows;
+
+    d_distributed = false;
 }
 
 void
@@ -1719,46 +1800,172 @@ const
 }
 
 void
-Matrix::orthogonalize()
+Matrix::orthogonalize(bool double_pass, double zero_tol)
 {
-    for (int work = 1; work < d_num_cols; ++work) {
-        double tmp;
-        for (int col = 0; col < work; ++col) {
-            double factor = 0.0;
-            tmp = 0.0;
-            for (int i = 0; i < d_num_rows; ++i) {
-                tmp += item(i, col)*item(i, work);
-            }
-            if (d_num_procs > 1) {
-                MPI_Allreduce(&tmp,
-                              &factor,
-                              1,
-                              MPI_DOUBLE,
-                              MPI_SUM,
-                              MPI_COMM_WORLD);
-            }
-            else {
-                factor = tmp;
-            }
+    int const num_passes = double_pass ? 2 : 1;
 
-            for (int i = 0; i < d_num_rows; ++i) {
-                item(i, work) -= factor*item(i, col);
+    for (int work = 0; work < d_num_cols; ++work)
+    {
+        // Orthogonalize the column (twice if double_pass == true).
+        for (int k = 0; k < num_passes; k++)
+        {
+            for (int col = 0; col < work; ++col)
+            {
+                double factor = 0.0;
+
+                for (int i = 0; i < d_num_rows; ++i)
+                    factor += item(i, col) * item(i, work);
+
+                if (d_distributed && d_num_procs > 1)
+                {
+                    CAROM_VERIFY( MPI_Allreduce(MPI_IN_PLACE, &factor, 1,
+                                                MPI_DOUBLE, MPI_SUM,
+                                                MPI_COMM_WORLD)
+                                  == MPI_SUCCESS );
+                }
+                for (int i = 0; i < d_num_rows; ++i)
+                    item(i, work) -= factor * item(i, col);
             }
         }
+
+        // Normalize the column.
         double norm = 0.0;
-        tmp = 0.0;
-        for (int i = 0; i < d_num_rows; ++i) {
-            tmp += item(i, work)*item(i, work);
+
+        for (int i = 0; i < d_num_rows; ++i)
+            norm += item(i, work) * item(i, work);
+
+        if (d_distributed && d_num_procs > 1)
+        {
+            CAROM_VERIFY( MPI_Allreduce(MPI_IN_PLACE, &norm, 1, MPI_DOUBLE,
+                                        MPI_SUM, MPI_COMM_WORLD)
+                          == MPI_SUCCESS );
         }
-        if (d_num_procs > 1) {
-            MPI_Allreduce(&tmp, &norm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        if (norm > zero_tol)
+        {
+            norm = 1.0 / sqrt(norm);
+            for (int i = 0; i < d_num_rows; ++i)
+                item(i, work) *= norm;
         }
-        else {
-            norm = tmp;
+    }
+}
+
+void
+Matrix::orthogonalize_last(int ncols, bool double_pass, double zero_tol)
+{
+    if (ncols == -1) ncols = d_num_cols;
+    CAROM_VERIFY((ncols > 0) && (ncols <= d_num_cols));
+
+    const int last_col = ncols - 1; // index of column to be orthonormalized
+
+    int const num_passes = double_pass ? 2 : 1;
+
+    // Orthogonalize the column (twice if double_pass == true).
+    for (int k = 0; k < num_passes; k++)
+    {
+        for (int col = 0; col < last_col; ++col)
+        {
+            double factor = 0.0;
+
+            for (int i = 0; i < d_num_rows; ++i)
+                factor += item(i, col) * item(i, last_col);
+
+            if (d_distributed && d_num_procs > 1)
+            {
+                CAROM_VERIFY( MPI_Allreduce(MPI_IN_PLACE, &factor, 1, MPI_DOUBLE,
+                                            MPI_SUM, MPI_COMM_WORLD)
+                              == MPI_SUCCESS );
+            }
+            for (int i = 0; i < d_num_rows; ++i)
+                item(i, last_col) -= factor * item(i, col);
         }
-        norm = sqrt(norm);
-        for (int i = 0; i < d_num_rows; ++i) {
-            item(i, work) /= norm;
+    }
+
+    // Normalize the column.
+    double norm = 0.0;
+
+    for (int i = 0; i < d_num_rows; ++i)
+        norm += item(i, last_col) * item(i, last_col);
+
+    if (d_distributed && d_num_procs > 1)
+    {
+        CAROM_VERIFY( MPI_Allreduce(MPI_IN_PLACE, &norm, 1, MPI_DOUBLE,
+                                    MPI_SUM, MPI_COMM_WORLD) == MPI_SUCCESS );
+    }
+    if (norm > zero_tol)
+    {
+        norm = 1.0 / sqrt(norm);
+        for (int i = 0; i < d_num_rows; ++i)
+            item(i, last_col) *= norm;
+    }
+}
+
+void
+Matrix::rescale_rows_max()
+{
+    // Rescale every matrix row by its maximum absolute value.
+    // In the Matrix class, columns are distributed row wise, but rows are
+    // not distributed; namely, each process acts on a number of full rows.
+    // Therefore, no MPI communication is needed.
+
+    for (int i = 0; i < d_num_rows; i++)
+    {
+        // Find the row's max absolute value.
+        double row_max = fabs(item(i, 0));
+        for (int j = 1; j < d_num_cols; j++)
+        {
+            if (fabs(item(i, j)) > row_max)
+                row_max = fabs(item(i, j));
+        }
+
+        // Rescale every row entry, if max nonzero.
+        if (row_max > 1.0e-14)
+        {
+            for (int j = 0; j < d_num_cols; j++)
+                item(i, j) /= row_max;
+        }
+    }
+}
+
+void
+Matrix::rescale_cols_max()
+{
+    // Rescale every matrix column by its maximum absolute value.
+    // Matrix columns are distributed row wise, so MPI communication is needed
+    // to get the maximum of each column across all processes.
+
+    // Find each column's max absolute value in the current process.
+    double local_max[d_num_cols];
+    for (int j = 0; j < d_num_cols; j++)
+    {
+        local_max[j] = fabs(item(0, j));
+        for (int i = 1; i < d_num_rows; i++)
+        {
+            if (fabs(item(i, j)) > local_max[j])
+                local_max[j] = fabs(item(i, j));
+        }
+    }
+
+    // Get the max across all processes, if applicable.
+    double global_max[d_num_cols];
+    if (d_distributed && d_num_procs > 1)
+    {
+        MPI_Allreduce(&local_max, &global_max, d_num_cols, MPI_DOUBLE, MPI_MAX,
+                      MPI_COMM_WORLD);
+    }
+    else
+    {
+        for (int i = 0; i < d_num_cols; i++)
+            global_max[i] = local_max[i];
+    }
+
+    // Rescale each column's entries, if max nonzero.
+    for (int j = 0; j < d_num_cols; j++)
+    {
+        if (global_max[j] > 1.0e-14)
+        {
+            double tmp = 1.0 / global_max[j];
+            for (int i = 0; i < d_num_rows; i++)
+                item(i, j) *= tmp;
         }
     }
 }

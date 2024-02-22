@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2024, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -380,8 +380,8 @@ S_OPT(const Matrix* f_basis,
                     {
                         tmp += g1.item(j, k) * GG.item(j, k);
                     }
-                    A->item(j) = std::max(0.0, ata + (Vo->item(j, i - 1) * Vo->item(j,
-                                                      i - 1)) - tmp);
+                    A->item(j) = std::max(0.0, ata +
+                                          (Vo->item(j, i - 1) * Vo->item(j, i - 1)) - tmp);
                 }
 
                 nV.setSize(i);
@@ -491,7 +491,7 @@ S_OPT(const Matrix* f_basis,
         delete noM;
     }
 
-    // Fill f_sampled_row, and f_sampled_rows_per_proc.  Unscramble tmp_fs into
+    // Fill f_sampled_row, and f_sampled_rows_per_proc. Unscramble tmp_fs into
     // f_basis_sampled_inv.
     int idx = 0;
     for (int i = 0; i < num_procs; ++i) {

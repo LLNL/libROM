@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2024, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -109,6 +109,8 @@ private:
      * @brief The reduced vectors with compatible coordinates.
      */
     std::vector<Vector*> d_rotated_reduced_vectors;
+
+    std::vector<bool> d_rotated_reduced_vectors_owned;
 
     /**
      * @brief The reduced elements in tangential space.

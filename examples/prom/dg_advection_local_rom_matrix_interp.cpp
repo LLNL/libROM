@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2024, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -32,7 +32,7 @@
 //    dg_advection_local_rom_matrix_interp -interp_prep -ff 1.08 -rdim 40
 //    dg_advection_local_rom_matrix_interp -fom -ff 1.05
 //    dg_advection_local_rom_matrix_interp -online_interp -ff 1.05 -rdim 40 (interpolate using a linear solve)
-//    dg_advection_local_rom_matrix_interp -online_interp -ff 1.05 -rdim 40 -im "LP" (interpolate using lagragian polynomials)
+//    dg_advection_local_rom_matrix_interp -online_interp -ff 1.05 -rdim 40 -im "LP" (interpolate using lagrangian polynomials)
 //    dg_advection_local_rom_matrix_interp -online_interp -ff 1.05 -rdim 40 -im "IDW" (interpolate using inverse distance weighting)
 //
 // Sample runs:
@@ -527,7 +527,9 @@ int main(int argc, char *argv[])
     VectorFunctionCoefficient velocity(dim, velocity_function);
     FunctionCoefficient inflow(inflow_function);
     FunctionCoefficient u0(u0_function);
+    StopWatch fom_timer, assemble_timer;
 
+    assemble_timer.Start();
     ParBilinearForm *m = new ParBilinearForm(fes);
     ParBilinearForm *k = new ParBilinearForm(fes);
     if (pa)
@@ -573,6 +575,8 @@ int main(int argc, char *argv[])
     ParGridFunction *u = new ParGridFunction(fes);
     u->ProjectCoefficient(u0);
     HypreParVector *U = u->GetTrueDofs();
+
+    assemble_timer.Stop();
 
     {
         ostringstream mesh_name, sol_name;
@@ -681,9 +685,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    StopWatch fom_timer;
     double t = 0.0;
-
     int max_num_snapshots = t_final / dt + 1;
     bool update_right_SV = false;
     bool isIncremental = false;
@@ -714,6 +716,8 @@ int main(int argc, char *argv[])
 
     if (online)
     {
+        assemble_timer.Start();
+
         if (!online_interp)
         {
             CAROM::BasisReader reader(basisName);
@@ -805,14 +809,11 @@ int main(int argc, char *argv[])
             std::vector<CAROM::Matrix*> M_hats;
             std::vector<CAROM::Vector*> b_hats;
             std::vector<CAROM::Vector*> u_init_hats;
-            std::ofstream fout;
-            fout.open("frequencies.txt");
             for(auto it = frequencies.begin(); it != frequencies.end(); it++)
             {
                 CAROM::Vector* point = new CAROM::Vector(1, false);
                 point->item(0) = *it;
                 parameter_points.push_back(point);
-                fout << *it << std::endl;
 
                 std::string parametricBasisName = "basis_" + std::to_string(*it);
                 CAROM::BasisReader reader(parametricBasisName);
@@ -839,7 +840,6 @@ int main(int argc, char *argv[])
                 parametricuinithat->read("u_init_hat_" + std::to_string(*it));
                 u_init_hats.push_back(parametricuinithat);
             }
-            fout.close();
             if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB,
                                       numColumnRB);
 
@@ -884,6 +884,8 @@ int main(int argc, char *argv[])
 
         u_in = new Vector(numColumnRB);
         *u_in = 0.0;
+
+        assemble_timer.Stop();
     }
 
     TimeDependentOperator* adv;
@@ -1035,6 +1037,16 @@ int main(int argc, char *argv[])
             osol << tv[i] << std::endl;
 
         osol.close();
+    }
+
+    // 13. print timing info
+    if (myid == 0)
+    {
+        const std::string type = online ? "ROM" : "FOM";
+        std::cout << "Elapsed time for assembling " << type << ": " << std::scientific
+                  << std::setprecision(8) << assemble_timer.RealTime() << " second\n";
+        std::cout << "Elapsed time for solving " << type << ": " << std::scientific <<
+                  std::setprecision(8) << fom_timer.RealTime() << " second\n";
     }
 
     // 16. Free the used memory.

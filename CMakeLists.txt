@@ -1,6 +1,6 @@
 ###############################################################################
 #
-#  Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
+#  Copyright (c) 2013-2024, Lawrence Livermore National Security, LLC
 #  and other libROM project developers. See the top-level COPYRIGHT
 #  file for details.
 #
@@ -147,12 +147,18 @@ if (ENABLE_EXAMPLES)
       mixed_nonlinear_diffusion
       nonlinear_elasticity_global_rom
       linear_elasticity_global_rom
+      maxwell_global_rom
+      de_parametric_maxwell_greedy
+      maxwell_local_rom_greedy     
+      grad_div_global_rom
       dg_advection
       nonlinear_elasticity
       heat_conduction
-      wave_equation
+      heat_conduction_dmdc
       parametric_heat_conduction
       de_parametric_heat_conduction_greedy
+      de_dg_advection_greedy
+      wave_equation
       dg_euler
       local_tw_csv
       local_dw_csv
@@ -166,6 +172,12 @@ if (ENABLE_EXAMPLES)
       prom
       prom
       prom
+      prom
+      prom
+      prom
+      prom
+      dmd
+      dmd
       dmd
       dmd
       dmd
@@ -272,6 +284,7 @@ if(GTEST_FOUND)
     StaticSVD
     RandomizedSVD
     IncrementalSVD
+    IncrementalSVDBrand
     GreedyCustomSampler)
   foreach(stem IN LISTS unit_test_stems)
     add_executable(test_${stem} unit_tests/test_${stem}.cpp)

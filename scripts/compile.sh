@@ -2,18 +2,29 @@
 
 ###############################################################################
 #
-#  Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
+#  Copyright (c) 2013-2024, Lawrence Livermore National Security, LLC
 #  and other libROM project developers. See the top-level COPYRIGHT
 #  file for details.
 #
 #  SPDX-License-Identifier: (Apache-2.0 OR MIT)
 #
 ###############################################################################
+check_result () {
+  # $1: Result output of the previous command ($?)
+  # $2: Name of the previous command
+  if [ $1 -eq 0 ]; then
+      echo "$2 succeeded"
+  else
+      echo "$2 failed"
+      exit -1
+  fi
+}
 
 ARDRA=false
 BUILD_TYPE="Optimized"
 USE_MFEM="Off"
 UPDATE_LIBS=false
+INSTALL_SCALAPACK=false
 MFEM_USE_GSLIB="Off"
 
 cleanup_dependencies() {
@@ -34,7 +45,7 @@ cleanup_dependencies() {
 
 
 # Get options
-while getopts "ah:dh:gh:mh:t:uh" o;
+while getopts "ah:dh:gh:mh:t:uh:sh" o;
 do
     case "${o}" in
         a)
@@ -55,6 +66,9 @@ do
         u)
             UPDATE_LIBS=true
             ;;
+        s)
+            INSTALL_SCALAPACK=true
+            ;;
     *)
             echo "Unknown option."
             exit 1
@@ -62,6 +76,9 @@ do
     esac
 done
 shift $((OPTIND-1))
+
+export CC=${CC:="mpicc"}
+export CXX=${CXX:="mpicxx"}
 
 CURR_DIR=$(pwd) 
 if [[ -d "dependencies" ]]; then
@@ -88,10 +105,12 @@ if [[ $MFEM_USE_GSLIB == "On" ]] && [[ ! -d "$HOME_DIR/dependencies/gslib" ]]; t
 fi
 export MFEM_USE_GSLIB
 
-REPO_PREFIX=$(git rev-parse --show-toplevel)
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+REPO_PREFIX=$( dirname $SCRIPT_DIR )
 
 if [[ $USE_MFEM == "On" ]]; then
-    . ${REPO_PREFIX}/scripts/setup.sh
+    . ${REPO_PREFIX}/scripts/setup.sh ${INSTALL_SCALAPACK}
+    check_result $? scripts-setup
 fi
 
 if [[ $ARDRA == "true" ]]; then
@@ -124,7 +143,9 @@ if [ "$(uname)" == "Darwin" ]; then
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -DUSE_MFEM=${USE_MFEM} \
         -DMFEM_USE_GSLIB=${MFEM_USE_GSLIB}
+  check_result $? librom-config
   make
+  check_result $? librom-build
 elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
   if [[ $ARDRA == "true" ]]; then
       TOOLCHAIN_FILE=${REPO_PREFIX}/cmake/toolchains/ic18-toss_3_x86_64_ib-ardra.cmake
@@ -136,6 +157,8 @@ elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -DUSE_MFEM=${USE_MFEM} \
         -DMFEM_USE_GSLIB=${MFEM_USE_GSLIB}
+  check_result $? librom-config
   make -j8
+  check_result $? librom-build
 fi
 popd

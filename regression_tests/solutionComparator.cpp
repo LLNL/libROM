@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2024, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -27,7 +27,8 @@ int getDimensions(string &filePath) {
     return count;
 }
 
-void compareSolutions(string &baselineFile, string &targetFile, double errorBound, int numProcessors) {
+void compareSolutions(string &baselineFile, string &targetFile,
+                      double errorBound, int numProcessors) {
     int* baselineDim = new int[numProcessors];
     istream** baselineFiles = new istream*[numProcessors];
     int* targetDim = new int[numProcessors];
@@ -45,7 +46,8 @@ void compareSolutions(string &baselineFile, string &targetFile, double errorBoun
             baselineDim[i] = getDimensions(baselineFile);
         }
         else {
-            cerr << "Something went wrong with opening the following file. Most likely it doesn't exist: " << baselineFile << endl;
+            cerr << "Something went wrong with opening the following file. Most likely it doesn't exist: "
+                 << baselineFile << endl;
             abort();
         }
         cout << "Solution Comparator is Opening file: " << targetFile << endl;
@@ -54,7 +56,8 @@ void compareSolutions(string &baselineFile, string &targetFile, double errorBoun
             targetDim[i] = getDimensions(targetFile);
         }
         else {
-            cerr << "Something went wrong with opening the following file. Most likely it doesn't exist: " << targetFile << endl;
+            cerr << "Something went wrong with opening the following file. Most likely it doesn't exist: "
+                 << targetFile << endl;
             abort();
         }
     }
@@ -65,7 +68,8 @@ void compareSolutions(string &baselineFile, string &targetFile, double errorBoun
 
     if (baseline.Size() != target.Size()) {
         cerr << "The solution vectors are different dimensions." << endl;
-        cerr << "Baseline dim: " << baseline.Size() << ", Target dim: " << target.Size() << endl;
+        cerr << "Baseline dim: " << baseline.Size() << ", Target dim: " << target.Size()
+             << endl;
         abort();
     }
 
@@ -81,14 +85,14 @@ between the solution vectors." << endl;
     double baselineNormL2 = baseline.Norml2();
     double diffNormL2 = diff.Norml2();
     // Check for NaN
-    if(std::isnan(baselineNormL2)){
+    if(std::isnan(baselineNormL2)) {
         std::cerr << "baselineNormL2 is NaN" << std::endl;
-        if(std::isnan(diffNormL2)){
+        if(std::isnan(diffNormL2)) {
             std::cerr << "diffNormL2 is NaN" << std::endl;
         }
         abort();
     }
-    if(std::isnan(diffNormL2)){
+    if(std::isnan(diffNormL2)) {
         std::cerr << "diffNormL2 is NaN" << std::endl;
         abort();
     }
@@ -101,12 +105,12 @@ between the solution vectors." << endl;
     }
 
 
-    if(std::isnan(baselineNormL2)){
+    if(std::isnan(baselineNormL2)) {
         std::cout << "baselineNormL2 is NaN" << std::endl;
         abort();
     }
 
-    if(std::isnan(diffNormL2)){
+    if(std::isnan(diffNormL2)) {
         std::cout << "diffNormL2 is NaN" << std::endl;
         abort();
     }
@@ -114,9 +118,11 @@ between the solution vectors." << endl;
 
     // Test whether l2 norm is smaller than error bound
     if (error > errorBound) {
-        cerr << "baselineNormL2 = " << baselineNormL2 << ", diffNormL2 = " << diffNormL2 << endl;
+        cerr << "baselineNormL2 = " << baselineNormL2 << ", diffNormL2 = " << diffNormL2
+             << endl;
         cerr << "error = " << error << endl;
-        cerr << "Error bound: " << errorBound << " was surpassed for the l2 norm of the difference of the solutions." << endl;
+        cerr << "Error bound: " << errorBound <<
+             " was surpassed for the l2 norm of the difference of the solutions." << endl;
         abort();
     }
 }

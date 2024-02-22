@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2024, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -146,6 +146,7 @@ public:
         double sampling_tol_,
         double max_time_between_samples_,
         bool fast_update_ = false,
+        bool fast_update_brand_ = false,
         bool skip_linearly_dependent_ = false
     )
     {
@@ -154,6 +155,7 @@ public:
         sampling_tol = sampling_tol_;
         max_time_between_samples = max_time_between_samples_;
         fast_update = fast_update_;
+        fast_update_brand = fast_update_brand_;
         skip_linearly_dependent = skip_linearly_dependent_;
         return *this;
     }
@@ -298,6 +300,12 @@ public:
      *        incremental SVD algorithm.
      */
     bool fast_update = false;
+
+    /**
+     * @brief If true use the exact Brand's algorithm for the
+     *        incremental SVD.
+     */
+    bool fast_update_brand = false;
 
     /**
      * @brief If true skip linearly dependent samples of the
