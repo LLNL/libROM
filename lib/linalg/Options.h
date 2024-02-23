@@ -345,6 +345,11 @@ public:
      *        incremental SVD algorithm.
      */
     double max_sampling_time_step_scale = 5.0;
+
+    /**
+     * @brief Option to preserve snapshot in StaticSVD::computeSVD.
+     */
+    bool static_svd_preserve_snapshot = false;
 };
 
 }
