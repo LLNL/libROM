@@ -108,19 +108,6 @@ public:
     getSnapshotMatrix() = 0;
 
     /**
-     * @brief Returns true if the next sample will result in a new time
-     * interval.
-     *
-     * @return True if the next sample results in the creation of a new time
-     *         interval.
-     */
-    bool
-    isNewSample() const
-    {
-        return (d_num_samples == 0);
-    }
-
-    /**
      * @brief Get the number of samples taken.
      *
      */
@@ -139,6 +126,19 @@ public:
     }
 
 protected:
+    /**
+     * @brief Returns true if the next sample will result in a new time
+     * interval.
+     *
+     * @return True if the next sample results in the creation of a new time
+     *         interval.
+     */
+    bool
+    isFirstSample() const
+    {
+        return (d_num_samples == 0);
+    }
+
     /**
      * @brief Dimension of the system.
      */

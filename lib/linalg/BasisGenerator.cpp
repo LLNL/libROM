@@ -148,7 +148,7 @@ BasisGenerator::takeSample(
         resetDt(dt) was never used in takeSample,
         and options.initial_dt is used for incremental svd.
     */
-    // if (d_svd->isNewSample())
+    // if (d_svd->isFirstSample())
     //     resetDt(dt);
 
     return d_svd->takeSample(u_in, add_without_increase);

@@ -113,7 +113,7 @@ StaticSVD::takeSample(
         return false;
     }
 
-    if (isNewSample()) {
+    if (isFirstSample()) {
         // We have a new time interval.
         delete_factorizer();
         d_num_samples = 0;

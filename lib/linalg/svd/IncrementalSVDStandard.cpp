@@ -52,7 +52,7 @@ IncrementalSVDStandard::~IncrementalSVDStandard()
     //
     // If there are multiple time intervals then saving and restoring the state
     // does not make sense as there is not one, all encompassing, basis.
-    if (d_save_state && (!isNewSample())) {
+    if (d_save_state && (!isFirstSample())) {
         // Create state database file.
         d_state_database = new HDFDatabase();
         d_state_database->create(d_state_file_name);
