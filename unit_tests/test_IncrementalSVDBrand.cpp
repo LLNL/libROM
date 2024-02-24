@@ -82,7 +82,7 @@ TEST(IncrementalSVDBrandTest, Test_IncrementalSVDBrand)
 
     bool fast_update = true;
     bool fast_update_brand = true;
-    CAROM::Options incremental_svd_options = CAROM::Options(d_num_rows, 3, 1, true)
+    CAROM::Options incremental_svd_options = CAROM::Options(d_num_rows, 3, true)
             .setMaxBasisDimension(num_total_rows)
             .setIncrementalSVD(1e-1,
                                1e-1,

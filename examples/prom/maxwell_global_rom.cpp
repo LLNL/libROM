@@ -229,7 +229,7 @@ int main(int argc, char *argv[])
     // 10. Set BasisGenerator if offline
     if (offline)
     {
-        options = new CAROM::Options(fespace->GetTrueVSize(), max_num_snapshots, 1,
+        options = new CAROM::Options(fespace->GetTrueVSize(), max_num_snapshots,
                                      update_right_SV);
         generator = new CAROM::BasisGenerator(*options, isIncremental, basisFileName);
     }
@@ -238,7 +238,7 @@ int main(int argc, char *argv[])
     if (merge)
     {
         mergeTimer.Start();
-        options = new CAROM::Options(fespace->GetTrueVSize(), max_num_snapshots, 1,
+        options = new CAROM::Options(fespace->GetTrueVSize(), max_num_snapshots,
                                      update_right_SV);
         generator = new CAROM::BasisGenerator(*options, isIncremental, basisName);
         for (int paramID=0; paramID<nsets; ++paramID)

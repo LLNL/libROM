@@ -69,7 +69,7 @@ TEST(RandomizedSVDTest, Test_RandomizedSVD)
         4.84486375065219387892E+00,      3.66719976398777269821E+00,      2.69114625366671811335E+00
     };
 
-    CAROM::Options randomized_svd_options = CAROM::Options(d_num_rows, 3, 1);
+    CAROM::Options randomized_svd_options = CAROM::Options(d_num_rows, 3);
     randomized_svd_options.setMaxBasisDimension(num_total_rows);
     randomized_svd_options.setDebugMode(true);
     randomized_svd_options.setRandomizedSVD(true);
@@ -149,7 +149,7 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposed)
         4.84486375065219387892E+00,     3.66719976398777269821E+00,     2.69114625366671811335E+00,
     };
 
-    CAROM::Options randomized_svd_options = CAROM::Options(d_num_rows, 5, 1);
+    CAROM::Options randomized_svd_options = CAROM::Options(d_num_rows, 5);
     randomized_svd_options.setMaxBasisDimension(num_total_rows);
     randomized_svd_options.setDebugMode(true);
     randomized_svd_options.setRandomizedSVD(true);
@@ -227,7 +227,7 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDSmallerSubspace)
         4.80607940538476441361E+00,	    3.21443716375044896694E+00,
     };
 
-    CAROM::Options randomized_svd_options = CAROM::Options(d_num_rows, 3, 1);
+    CAROM::Options randomized_svd_options = CAROM::Options(d_num_rows, 3);
     randomized_svd_options.setMaxBasisDimension(num_total_rows);
     randomized_svd_options.setDebugMode(true);
     randomized_svd_options.setRandomizedSVD(true, 2);
@@ -306,7 +306,7 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposedSmallerSubspace)
         4.80607940538476441361E+00,	    3.21443716375044896694E+00,
     };
 
-    CAROM::Options randomized_svd_options = CAROM::Options(d_num_rows, 5, 1);
+    CAROM::Options randomized_svd_options = CAROM::Options(d_num_rows, 5);
     randomized_svd_options.setMaxBasisDimension(num_total_rows);
     randomized_svd_options.setDebugMode(true);
     randomized_svd_options.setRandomizedSVD(true, reduced_rows);

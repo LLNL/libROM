@@ -36,8 +36,6 @@ BasisGenerator::BasisGenerator(
     CAROM_VERIFY(options.dim > 0);
     CAROM_VERIFY(options.max_num_samples > 0);
     CAROM_VERIFY(options.singular_value_tol >= 0);
-    CAROM_VERIFY(options.max_time_intervals == -1
-                 || options.max_time_intervals > 0);
     CAROM_VERIFY(options.max_basis_dimension > 0);
     if (incremental)
     {
