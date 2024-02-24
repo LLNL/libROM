@@ -118,7 +118,8 @@ public:
 
     /**
      * @brief Get the maximum number of samples that can be taken.
-     *
+     *        SVD class will return an error if the number of samples exceed the maximum.
+     * 
      */
     int getMaxNumSamples() const
     {
