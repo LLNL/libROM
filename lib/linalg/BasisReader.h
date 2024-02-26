@@ -55,17 +55,6 @@ public:
     ~BasisReader();
 
     /**
-     * @brief Returns true if this already loaded either a snapshot or basis file.
-     *
-     * @return True if either a snapshot or basis file is already loaded.
-     */
-    bool
-    isFileLoaded()
-    {
-        return d_file_loaded;
-    }
-
-    /**
      *
      * @brief Returns the spatial basis vectors as a Matrix.
      *
@@ -297,11 +286,6 @@ private:
      * @brief Full file name of database including rank.
      */
     std::string full_file_name;
-
-    /**
-     * @brief Whether or not a file is loaded.
-     */
-    bool d_file_loaded;
 };
 
 }
