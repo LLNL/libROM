@@ -31,7 +31,7 @@ runs:
           cp ${GITHUB_WORKSPACE}/scripts/data/update_basis_format.py ./
           python3 update_basis_format.py test_basis.000000
           python3 update_basis_format.py test_basis_snapshot.000000
-          ./tests/test_basis_conversion
+          ./test_basis_conversion
       shell: bash
 
     - name: Run regression tests
