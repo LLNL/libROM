@@ -209,7 +209,6 @@ void DMDc::takeSample(double* u_in, double t, double* f_in, bool last_step)
     d_sampled_times.push_back(sampled_time);
 }
 
-
 void DMDc::train(double energy_fraction, const Matrix* B)
 {
     const Matrix* f_snapshots = getSnapshotMatrix();
@@ -404,6 +403,13 @@ DMDc::constructDMDc(const Matrix* f_snapshots,
     for (int i = 0; i < d_k_in; ++i)
     {
         d_S_inv->item(i, i) = 1 / d_factorizer_in->S[static_cast<unsigned>(i)];
+    }
+
+    // Make sure the basis is freed since we are setting it with DMDc class instead
+    // of manually setting the basis when interpolating
+    if (d_basis)
+    {
+        delete d_basis;
     }
 
     if (B == NULL)

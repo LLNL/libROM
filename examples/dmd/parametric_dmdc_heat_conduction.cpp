@@ -820,6 +820,10 @@ int main(int argc, char *argv[])
 
             dmd_training_timer.Stop();
             delete desired_param;
+            delete controls_interpolated;
+            for (auto m : param_vectors)
+                delete m;
+
         }
 
         if (predict)
@@ -905,11 +909,7 @@ int main(int argc, char *argv[])
     // 16. Free the used memory.
     delete ode_solver;
     delete pmesh;
-
-    if (offline)
-    {
-        delete dmd_u;
-    }
+    delete dmd_u;
 
     MPI_Finalize();
 
