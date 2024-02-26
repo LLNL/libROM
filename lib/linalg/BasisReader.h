@@ -55,16 +55,14 @@ public:
     ~BasisReader();
 
     /**
-     * @brief Returns true if the basis vectors at requested time are
-     * different from the last requested basis vectors.
+     * @brief Returns true if this already loaded either a snapshot or basis file.
      *
-     * @return True if the basis vectors at the requested time are different
-     *         from the last requested basis vectors.
+     * @return True if either a snapshot or basis file is already loaded.
      */
     bool
-    isNewBasis()
+    isFileLoaded()
     {
-        return (d_last_basis_idx == -1);
+        return d_file_loaded;
     }
 
     /**
@@ -301,9 +299,9 @@ private:
     std::string full_file_name;
 
     /**
-     * @brief The last time at which basis vectors were requested.
+     * @brief Whether or not a file is loaded.
      */
-    int d_last_basis_idx;
+    bool d_file_loaded;
 };
 
 }

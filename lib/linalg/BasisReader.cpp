@@ -22,7 +22,7 @@ namespace CAROM {
 BasisReader::BasisReader(
     const std::string& base_file_name,
     Database::formats db_format) :
-    d_last_basis_idx(-1),
+    d_file_loaded(false),
     full_file_name(""),
     base_file_name_(base_file_name)
 {
@@ -60,7 +60,7 @@ BasisReader::~BasisReader()
 Matrix*
 BasisReader::getSpatialBasis()
 {
-    d_last_basis_idx = 0;
+    d_file_loaded = true;
     int num_rows = getDim("basis");
     int num_cols = getNumSamples("basis");
 
@@ -84,7 +84,7 @@ BasisReader::getSpatialBasis(
     int start_col,
     int end_col)
 {
-    d_last_basis_idx = 0;
+    d_file_loaded = true;
     int num_rows = getDim("basis");
     int num_cols = getNumSamples("basis");
 
@@ -134,7 +134,7 @@ BasisReader::getSpatialBasis(
 Matrix*
 BasisReader::getTemporalBasis()
 {
-    d_last_basis_idx = 0;
+    d_file_loaded = true;
     int num_rows = getDim("temporal_basis");
     int num_cols = getNumSamples("temporal_basis");
 
@@ -159,7 +159,7 @@ BasisReader::getTemporalBasis(
     int start_col,
     int end_col)
 {
-    d_last_basis_idx = 0;
+    d_file_loaded = true;
     int num_rows = getDim("temporal_basis");
     int num_cols = getNumSamples("temporal_basis");
 
@@ -209,7 +209,7 @@ BasisReader::getTemporalBasis(
 Vector*
 BasisReader::getSingularValues()
 {
-    d_last_basis_idx = 0;
+    d_file_loaded = true;
     char tmp[100];
     int size;
     sprintf(tmp, "singular_value_size");
@@ -265,7 +265,7 @@ BasisReader::getDim(
                  (kind == "snapshot") ||
                  (kind == "temporal_basis"));
 
-    d_last_basis_idx = 0;
+    d_file_loaded = true;
     char tmp[100];
     int num_rows;
 
@@ -286,7 +286,7 @@ BasisReader::getNumSamples(
                  (kind == "snapshot") ||
                  (kind == "temporal_basis"));
 
-    d_last_basis_idx = 0;
+    d_file_loaded = true;
     char tmp[100];
     int num_cols;
 
@@ -302,7 +302,7 @@ BasisReader::getNumSamples(
 Matrix*
 BasisReader::getSnapshotMatrix()
 {
-    d_last_basis_idx = 0;
+    d_file_loaded = true;
     int num_rows = getDim("snapshot");
     int num_cols = getNumSamples("snapshot");
 
@@ -327,7 +327,7 @@ BasisReader::getSnapshotMatrix(
     int start_col,
     int end_col)
 {
-    d_last_basis_idx = 0;
+    d_file_loaded = true;
     int num_rows = getDim("snapshot");
     int num_cols = getNumSamples("snapshot");
 
