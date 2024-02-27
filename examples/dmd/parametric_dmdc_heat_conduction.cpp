@@ -878,7 +878,7 @@ int main(int argc, char *argv[])
                     }
                 }
             }
-            
+
             dmd_prediction_timer.Stop();
 
             result_u = dmd_u->predict(t_final);
