@@ -819,11 +819,13 @@ int main(int argc, char *argv[])
 
 
             dmd_training_timer.Stop();
+
             delete desired_param;
             delete controls_interpolated;
             for (auto m : param_vectors)
                 delete m;
-
+            for (auto m : controls)
+                delete m;
         }
 
         if (predict)
@@ -843,10 +845,10 @@ int main(int argc, char *argv[])
             Vector initial_dmd_solution_u(result_u->getData(), result_u->dim());
             u_gf.SetFromTrueDofs(initial_dmd_solution_u);
 
-            dmd_prediction_timer.Stop();
-
             VisItDataCollection dmd_visit_dc(io_dir +
-                                             "/parametric_dmdc_Heat_Conduction_ROM", pmesh);
+                                             "/parametric_dmdc_Heat_Conduction_ROM_" +
+                                             to_string(alpha) + "_" + to_string(kappa) + "_" + to_string(
+                                                 amp_in) + "_" + to_string(amp_out), pmesh);
             dmd_visit_dc.RegisterField("temperature", &u_gf);
 
             if (visit)
@@ -876,6 +878,8 @@ int main(int argc, char *argv[])
                     }
                 }
             }
+            
+            dmd_prediction_timer.Stop();
 
             result_u = dmd_u->predict(t_final);
 
