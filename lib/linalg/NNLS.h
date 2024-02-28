@@ -20,6 +20,16 @@
 namespace CAROM {
 
 /**
+ * @brief Termination criterion for NNLS solver:
+ *        LINF: L-infinity norm (maximum value) of the residual
+ *        L2: L2 norm of the residual
+ */
+enum NNLS_termination {
+    LINF,
+    L2
+};
+
+/**
  * \class NNLSSolver
  * Class for solving non-negative least-squares problems, cf. T. Chapman et al,
  * "Accelerated mesh sampling for the hyper reduction of nonlinear computational
@@ -34,7 +44,8 @@ public:
                int verbosity=0,
                double res_change_termination_tol=1.0e-4,
                double zero_tol=1.0e-14, int n_outer=100000,
-               int n_inner=100000);
+               int n_inner=100000,
+               const NNLS_termination criterion=NNLS_termination::LINF);
 
     /**
      * Destructor*/
@@ -115,12 +126,6 @@ private:
      */
     double res_change_termination_tol_;
 
-    /**
-     * @brief Maximum number of processors used in the partial matrix containing
-     * only the nonzero quadrature points.
-     */
-    int n_proc_max_for_partial_matrix_;
-
     bool normalize_const_;
     bool QR_reduce_const_;
     bool NNLS_qrres_on_;
@@ -128,6 +133,8 @@ private:
 
     int d_num_procs;
     int d_rank;
+
+    NNLS_termination d_criterion;
 };
 
 }

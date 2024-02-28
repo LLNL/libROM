@@ -58,14 +58,15 @@ extern "C" {
 NNLSSolver::NNLSSolver(double const_tol, int min_nnz, int max_nnz,
                        int verbosity,
                        double res_change_termination_tol,
-                       double zero_tol, int n_outer, int n_inner)
+                       double zero_tol, int n_outer, int n_inner,
+                       const NNLS_termination criterion)
     : const_tol_(const_tol), min_nnz_(min_nnz), max_nnz_(max_nnz),
       verbosity_(verbosity),
       res_change_termination_tol_(res_change_termination_tol),
       zero_tol_(zero_tol), n_outer_(n_outer), n_inner_(n_inner),
-      n_proc_max_for_partial_matrix_(15),
       NNLS_qrres_on_(false),
-      qr_residual_mode_(QRresidualMode::hybrid)
+      qr_residual_mode_(QRresidualMode::hybrid),
+      d_criterion(criterion)
 {
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
@@ -147,6 +148,13 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& matTrans,
     rhs_halfgap -= rhs_lb;
     rhs_halfgap *= 0.5;
 
+    double l2norm_threshold;
+    if (d_criterion == NNLS_termination::L2) {
+        l2norm_threshold = rhs_halfgap.norm();
+        if (d_rank == 0 && verbosity_ > 1)
+            printf("L2 norm threshold: %.5e\n", l2norm_threshold);
+    }   
+
     Vector rhs_avg_glob(rhs_avg);
     Vector rhs_halfgap_glob(rhs_halfgap);
 
@@ -159,7 +167,7 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& matTrans,
     char notrans = 'N';
     char layout = 'R';
 
-    int n_proc = std::min(n_proc_max_for_partial_matrix_,d_num_procs);
+    int n_proc = d_num_procs;
     int nb = 3; // block column size
 
     // initialize blacs process grid
@@ -168,8 +176,8 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& matTrans,
 
     int n_dist_loc_max = 0; // maximum number of columns in distributed matrix
     if (d_rank < n_proc) {
-        // m is the maximum number of columns in the global matrix
-        n_dist_loc_max = ((m/nb + 1)/n_proc + 1)*nb;
+        // n_tot is the maximum number of columns in the global (not transposed) matrix
+        n_dist_loc_max = ((n_tot/nb + 1)/n_proc + 1)*nb;
     }
 
     std::vector<double> mu_max_array(d_num_procs);
@@ -254,6 +262,7 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& matTrans,
 
     double mumax_glob;
     double rmax;
+    bool tolerance_met;
 
     for (unsigned int oiter = 0; oiter < n_outer_; ++oiter) {
         stalledFlag = 0;
@@ -265,12 +274,17 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& matTrans,
         // This norm of a non-distributed vector is identical on all ranks.
         l2_res_hist(oiter) = res_glob.norm();
 
+        if (d_criterion == NNLS_termination::LINF)
+            tolerance_met = (rmax <= const_tol_);
+        else if (d_criterion == NNLS_termination::L2)
+            tolerance_met = (l2_res_hist(oiter) <= l2norm_threshold);
+
         if (verbosity_ > 1 && d_rank == 0) {
             printf("%d %d %d %d %d %.15e %.15e\n", oiter, n_total_inner_iter,
                    m, n_tot, n_glob, rmax, l2_res_hist(oiter));
             fflush(stdout);
         }
-        if (rmax <= const_tol_ && n_glob >= min_nnz_cap) {
+        if (tolerance_met && n_glob >= min_nnz_cap) {
             if (d_rank == 0 && verbosity_ > 1) {
                 printf("target tolerance met\n");
                 fflush(stdout);
