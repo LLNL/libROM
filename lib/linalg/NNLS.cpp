@@ -153,7 +153,7 @@ void NNLSSolver::solve_parallel_with_scalapack(const Matrix& matTrans,
         l2norm_threshold = rhs_halfgap.norm();
         if (d_rank == 0 && verbosity_ > 1)
             printf("L2 norm threshold: %.5e\n", l2norm_threshold);
-    }   
+    }
 
     Vector rhs_avg_glob(rhs_avg);
     Vector rhs_halfgap_glob(rhs_halfgap);

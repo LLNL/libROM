@@ -176,7 +176,8 @@ TEST(NNLS, solve_with_L2)
         rhs_ub(i) += delta;
     }
 
-    CAROM::NNLSSolver nnls(nnls_tol, 0, 0, 2, 1.0e-4, 1.0e-14, 100000, 100000, CAROM::NNLS_termination::L2);
+    CAROM::NNLSSolver nnls(nnls_tol, 0, 0, 2, 1.0e-4, 1.0e-14, 100000, 100000,
+                           CAROM::NNLS_termination::L2);
     nnls.solve_parallel_with_scalapack(Gt, rhs_lb, rhs_ub, rom_sol);
 
     int nnz = 0;
