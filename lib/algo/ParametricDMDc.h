@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2024, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -8,14 +8,14 @@
  *
  *****************************************************************************/
 
-// Description: Computes the ParametricDMD algorithm to obtain DMD model interpolant
-//              at desired parameter point by interpolation of DMD models at training parameter points.
+// Description: Computes the ParametricDMDc algorithm to obtain DMDc model interpolant
+//              at desired parameter point by interpolation of DMDc models at training parameter points.
 //              The implemented dynamic mode decomposition algorithm is derived from
 //              Tu et. al's paper "On Dynamic Mode Decomposition: Theory and
 //              Applications": https://arxiv.org/abs/1312.0041
 //              The interpolation algorithm was adapted from "Gradient-based
 //              Constrained Optimization Using a Database of Linear Reduced-Order Models"
-//              by Y. Choi et al.
+//              by Y. Choi et al. We extend this algorithm to DMDc.
 
 #ifndef included_ParametricDMDc_h
 #define included_ParametricDMDc_h
