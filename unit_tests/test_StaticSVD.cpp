@@ -285,7 +285,7 @@ TEST(StaticSVDTest, Test_StaticSVDClass)
         4.84486375065219387892E+00,      3.66719976398777269821E+00,      2.69114625366671811335E+00
     };
 
-    CAROM::Options svd_options = CAROM::Options(d_num_rows, 3, 1);
+    CAROM::Options svd_options = CAROM::Options(d_num_rows, 3);
     svd_options.setMaxBasisDimension(num_total_rows);
     svd_options.setDebugMode(true);
     svd_options.setRandomizedSVD(false);
@@ -365,7 +365,7 @@ TEST(StaticSVDTest, Test_StaticSVDTranspose)
         4.84486375065219387892E+00,     3.66719976398777269821E+00,     2.69114625366671811335E+00,
     };
 
-    CAROM::Options svd_options = CAROM::Options(d_num_rows, num_total_cols, 1);
+    CAROM::Options svd_options = CAROM::Options(d_num_rows, num_total_cols);
     svd_options.setMaxBasisDimension(num_total_rows);
     svd_options.setDebugMode(true);
     svd_options.setRandomizedSVD(false);

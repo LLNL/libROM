@@ -138,7 +138,7 @@ IncrementalSVD::~IncrementalSVD()
     //
     // If there are multiple time intervals then saving and restoring the state
     // does not make sense as there is not one, all encompassing, basis.
-    if (d_save_state && (!isNewSample())) {
+    if (d_save_state && (!isFirstSample())) {
         // Save d_U.
         int num_rows = d_U->numRows();
         d_state_database->putInteger("U_num_rows", num_rows);
@@ -186,7 +186,7 @@ IncrementalSVD::takeSample(
     // If this is the first SVD then build it.  Otherwise add this sample to the
     // system.
     bool result = true;
-    if (isNewSample()) {
+    if (isFirstSample()) {
         buildInitialSVD(u_in);
     }
     else {

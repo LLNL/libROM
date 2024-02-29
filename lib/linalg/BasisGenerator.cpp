@@ -37,8 +37,6 @@ BasisGenerator::BasisGenerator(
     CAROM_VERIFY(options.dim > 0);
     CAROM_VERIFY(options.max_num_samples > 0);
     CAROM_VERIFY(options.singular_value_tol >= 0);
-    CAROM_VERIFY(options.max_time_intervals == -1
-                 || options.max_time_intervals > 0);
     CAROM_VERIFY(options.max_basis_dimension > 0);
     if (incremental)
     {
@@ -141,18 +139,6 @@ BasisGenerator::takeSample(
         printf("WARNING: BasisGenerator::takeSample skipped trivial sample.\n");
         return false;
     }
-
-    /*
-        Note for previous implementation:
-        Previously with multiple time interval,
-        there was an input argument (double dt),
-        which is only used to reset d_dt for new time interval.
-        Assuming only single interval is used in practice,
-        resetDt(dt) was never used in takeSample,
-        and options.initial_dt is used for incremental svd.
-    */
-    // if (d_svd->isNewSample())
-    //     resetDt(dt);
 
     return d_svd->takeSample(u_in, add_without_increase);
 }

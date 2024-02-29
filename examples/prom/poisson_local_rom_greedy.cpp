@@ -376,7 +376,7 @@ int main(int argc, char *argv[])
         // 12. Set BasisGenerator if offline
         if (offline)
         {
-            options = new CAROM::Options(fespace.GetTrueVSize(), max_num_snapshots, 1,
+            options = new CAROM::Options(fespace.GetTrueVSize(), max_num_snapshots,
                                          update_right_SV);
             if (myid == 0) cout << "Saving basis to: " << saveBasisName << endl;
             generator = new CAROM::BasisGenerator(*options, isIncremental, saveBasisName);
@@ -617,7 +617,7 @@ int main(int argc, char *argv[])
         if (calc_rel_error || (offline && basisIdentifiers.size() == 1))
         {
             mergeTimer.Start();
-            options = new CAROM::Options(fespace.GetTrueVSize(), max_num_snapshots, 1,
+            options = new CAROM::Options(fespace.GetTrueVSize(), max_num_snapshots,
                                          update_right_SV);
             generator = new CAROM::BasisGenerator(*options, isIncremental, loadBasisName);
             for (int i = 0; i < basisIdentifiers.size(); ++i)

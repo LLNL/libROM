@@ -706,7 +706,7 @@ int main(int argc, char *argv[])
     // 10. Set BasisGenerator if offline
     if (offline)
     {
-        options = new CAROM::Options(U->Size(), max_num_snapshots, 1, update_right_SV);
+        options = new CAROM::Options(U->Size(), max_num_snapshots, update_right_SV);
         generator = new CAROM::BasisGenerator(*options, isIncremental, basisName);
         Vector u_curr(*U);
         Vector u_centered(U->Size());

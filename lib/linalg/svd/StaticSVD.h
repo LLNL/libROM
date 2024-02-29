@@ -118,11 +118,9 @@ protected:
     computeSVD();
 
     /**
-     * @brief Checks if the basis vectors for this time interval are up to
-     *        date.
+     * @brief Checks if the basis vectors are computed from the current snapshot.
      *
-     * @return True if the basis vectors for this time interval are up to
-     *         date.
+     * @return True if the basis vectors are computed from the current snapshot.
      */
     bool
     isBasisCurrent()

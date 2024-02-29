@@ -58,19 +58,6 @@ public:
     ~BasisReader();
 
     /**
-     * @brief Returns true if the basis vectors at requested time are
-     * different from the last requested basis vectors.
-     *
-     * @return True if the basis vectors at the requested time are different
-     *         from the last requested basis vectors.
-     */
-    bool
-    isNewBasis()
-    {
-        return (d_last_basis_idx == -1);
-    }
-
-    /**
      *
      * @brief Returns the spatial basis vectors as a Matrix.
      *
@@ -312,11 +299,6 @@ private:
      * @brief Full file name of database including rank.
      */
     std::string full_file_name;
-
-    /**
-     * @brief The last time at which basis vectors were requested.
-     */
-    int d_last_basis_idx;
 
     /**
      * @brief Dimension of the basis on this processor.

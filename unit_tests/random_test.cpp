@@ -132,7 +132,7 @@ main(
     // static sampler.
 
     CAROM::BasisGenerator static_basis_generator(
-        CAROM::Options(dim, num_samples, -1, true), false
+        CAROM::Options(dim, num_samples, true), false
     );
 
     // Initialize random number generator.

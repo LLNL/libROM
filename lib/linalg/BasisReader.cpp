@@ -25,7 +25,6 @@ BasisReader::BasisReader(
     Database::formats db_format,
     const int dim) :
     d_dim(dim),
-    d_last_basis_idx(-1),
     full_file_name(""),
     base_file_name_(base_file_name),
     d_format(db_format)
@@ -76,15 +75,12 @@ BasisReader::~BasisReader()
 Matrix*
 BasisReader::getSpatialBasis()
 {
-    d_last_basis_idx = 0;
     int num_rows = getDim("basis");
     int num_cols = getNumSamples("basis");
 
     Matrix* spatial_basis_vectors = new Matrix(num_rows, num_cols, true);
 
-    // This 0 index is the remainder from time interval concept.
-    // This remains only for backward compatibility purpose.
-    d_database->getDoubleArray_parallel("spatial_basis_000000",
+    d_database->getDoubleArray_parallel("spatial_basis",
                                         &spatial_basis_vectors->item(0, 0),
                                         num_rows*num_cols);
     return spatial_basis_vectors;
@@ -102,7 +98,6 @@ BasisReader::getSpatialBasis(
     int start_col,
     int end_col)
 {
-    d_last_basis_idx = 0;
     int num_rows = getDim("basis");
     int num_cols = getNumSamples("basis");
 
@@ -112,9 +107,7 @@ BasisReader::getSpatialBasis(
     int num_cols_to_read = end_col - start_col + 1;
 
     Matrix* spatial_basis_vectors = new Matrix(num_rows, num_cols_to_read, true);
-    // This 0 index is the remainder from time interval concept.
-    // This remains only for backward compatibility purpose.
-    sprintf(tmp, "spatial_basis_000000");
+    sprintf(tmp, "spatial_basis");
     d_database->getDoubleArray_parallel(tmp,
                                         &spatial_basis_vectors->item(0, 0),
                                         num_rows*num_cols_to_read,
@@ -154,18 +147,15 @@ BasisReader::getSpatialBasis(
 Matrix*
 BasisReader::getTemporalBasis()
 {
-    d_last_basis_idx = 0;
     int num_rows = getDim("temporal_basis");
     int num_cols = getNumSamples("temporal_basis");
 
     char tmp[100];
-    Matrix* temporal_basis_vectors = new Matrix(num_rows, num_cols, true);
-    // This 0 index is the remainder from time interval concept.
-    // This remains only for backward compatibility purpose.
-    sprintf(tmp, "temporal_basis_000000");
-    d_database->getDoubleArray_parallel(tmp,
-                                        &temporal_basis_vectors->item(0, 0),
-                                        num_rows*num_cols);
+    Matrix* temporal_basis_vectors = new Matrix(num_rows, num_cols, false);
+    sprintf(tmp, "temporal_basis");
+    d_database->getDoubleArray(tmp,
+                               &temporal_basis_vectors->item(0, 0),
+                               num_rows*num_cols);
     return temporal_basis_vectors;
 }
 
@@ -181,7 +171,6 @@ BasisReader::getTemporalBasis(
     int start_col,
     int end_col)
 {
-    d_last_basis_idx = 0;
     int num_rows = getDim("temporal_basis");
     int num_cols = getNumSamples("temporal_basis");
 
@@ -190,16 +179,14 @@ BasisReader::getTemporalBasis(
     CAROM_VERIFY(start_col <= end_col && end_col <= num_cols);
     int num_cols_to_read = end_col - start_col + 1;
 
-    Matrix* temporal_basis_vectors = new Matrix(num_rows, num_cols_to_read, true);
-    // This 0 index is the remainder from time interval concept.
-    // This remains only for backward compatibility purpose.
-    sprintf(tmp, "temporal_basis_000000");
-    d_database->getDoubleArray_parallel(tmp,
-                                        &temporal_basis_vectors->item(0, 0),
-                                        num_rows*num_cols_to_read,
-                                        start_col - 1,
-                                        num_cols_to_read,
-                                        num_cols);
+    Matrix* temporal_basis_vectors = new Matrix(num_rows, num_cols_to_read, false);
+    sprintf(tmp, "temporal_basis");
+    d_database->getDoubleArray(tmp,
+                               &temporal_basis_vectors->item(0, 0),
+                               num_rows*num_cols_to_read,
+                               start_col - 1,
+                               num_cols_to_read,
+                               num_cols);
     return temporal_basis_vectors;
 }
 
@@ -233,18 +220,13 @@ BasisReader::getTemporalBasis(
 Vector*
 BasisReader::getSingularValues()
 {
-    d_last_basis_idx = 0;
     char tmp[100];
     int size;
-    // This 0 index is the remainder from time interval concept.
-    // This remains only for backward compatibility purpose.
-    sprintf(tmp, "singular_value_size_000000");
+    sprintf(tmp, "singular_value_size");
     d_database->getInteger(tmp, size);
 
     Vector* singular_values = new Vector(size, false);
-    // This 0 index is the remainder from time interval concept.
-    // This remains only for backward compatibility purpose.
-    sprintf(tmp, "singular_value_000000");
+    sprintf(tmp, "singular_value");
     d_database->getDoubleArray(tmp,
                                &singular_values->item(0),
                                size);
@@ -293,16 +275,13 @@ BasisReader::getDim(
                  (kind == "snapshot") ||
                  (kind == "temporal_basis"));
 
-    d_last_basis_idx = 0;
     char tmp[100];
     int num_rows;
 
-    // This 0 index is the remainder from time interval concept.
-    // This remains only for backward compatibility purpose.
-    if (kind == "basis") sprintf(tmp, "spatial_basis_num_rows_000000");
-    else if (kind == "snapshot") sprintf(tmp, "snapshot_matrix_num_rows_000000");
+    if (kind == "basis") sprintf(tmp, "spatial_basis_num_rows");
+    else if (kind == "snapshot") sprintf(tmp, "snapshot_matrix_num_rows");
     else if (kind == "temporal_basis") sprintf(tmp,
-                "temporal_basis_num_rows_000000");
+                "temporal_basis_num_rows");
 
     d_database->getInteger(tmp, num_rows);
     /* only basis and snapshot are stored as distributed matrices */
@@ -327,16 +306,13 @@ BasisReader::getNumSamples(
                  (kind == "snapshot") ||
                  (kind == "temporal_basis"));
 
-    d_last_basis_idx = 0;
     char tmp[100];
     int num_cols;
 
-    // This 0 index is the remainder from time interval concept.
-    // This remains only for backward compatibility purpose.
-    if (kind == "basis") sprintf(tmp, "spatial_basis_num_cols_000000");
-    else if (kind == "snapshot") sprintf(tmp, "snapshot_matrix_num_cols_000000");
+    if (kind == "basis") sprintf(tmp, "spatial_basis_num_cols");
+    else if (kind == "snapshot") sprintf(tmp, "snapshot_matrix_num_cols");
     else if (kind == "temporal_basis") sprintf(tmp,
-                "temporal_basis_num_cols_000000");
+                "temporal_basis_num_cols");
 
     d_database->getInteger(tmp, num_cols);
     return num_cols;
@@ -345,15 +321,12 @@ BasisReader::getNumSamples(
 Matrix*
 BasisReader::getSnapshotMatrix()
 {
-    d_last_basis_idx = 0;
     int num_rows = getDim("snapshot");
     int num_cols = getNumSamples("snapshot");
 
     char tmp[100];
-    Matrix* snapshots = new Matrix(num_rows, num_cols, false);
-    // This 0 index is the remainder from time interval concept.
-    // This remains only for backward compatibility purpose.
-    sprintf(tmp, "snapshot_matrix_000000");
+    Matrix* snapshots = new Matrix(num_rows, num_cols, true);
+    sprintf(tmp, "snapshot_matrix");
     d_database->getDoubleArray_parallel(tmp,
                                         &snapshots->item(0, 0),
                                         num_rows*num_cols);
@@ -372,7 +345,6 @@ BasisReader::getSnapshotMatrix(
     int start_col,
     int end_col)
 {
-    d_last_basis_idx = 0;
     int num_rows = getDim("snapshot");
     int num_cols = getNumSamples("snapshot");
 
@@ -381,10 +353,8 @@ BasisReader::getSnapshotMatrix(
     int num_cols_to_read = end_col - start_col + 1;
 
     char tmp[100];
-    Matrix* snapshots = new Matrix(num_rows, num_cols_to_read, false);
-    // This 0 index is the remainder from time interval concept.
-    // This remains only for backward compatibility purpose.
-    sprintf(tmp, "snapshot_matrix_000000");
+    Matrix* snapshots = new Matrix(num_rows, num_cols_to_read, true);
+    sprintf(tmp, "snapshot_matrix");
     d_database->getDoubleArray_parallel(tmp,
                                         &snapshots->item(0, 0),
                                         num_rows*num_cols_to_read,

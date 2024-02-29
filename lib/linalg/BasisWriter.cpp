@@ -82,8 +82,6 @@ BasisWriter::writeBasis(const std::string& kind)
     CAROM_ASSERT(kind == "basis" || kind == "snapshot");
 
     char tmp[100];
-    // This 0 index is the remainder from time interval concept.
-    // This remains only for backward compatibility purpose.
 
     if (kind == "basis") {
         d_database->create_parallel(full_file_name, MPI_COMM_WORLD);
@@ -95,12 +93,12 @@ BasisWriter::writeBasis(const std::string& kind)
         int nrows_infile = num_rows;
         if (db_format_ == Database::HDF5_MPIO)
             MPI_Allreduce(MPI_IN_PLACE, &nrows_infile, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-        sprintf(tmp, "spatial_basis_num_rows_000000");
+        sprintf(tmp, "spatial_basis_num_rows");
         d_database->putInteger(tmp, nrows_infile);
         int num_cols = basis->numColumns();
-        sprintf(tmp, "spatial_basis_num_cols_000000");
+        sprintf(tmp, "spatial_basis_num_cols");
         d_database->putInteger(tmp, num_cols);
-        sprintf(tmp, "spatial_basis_000000");
+        sprintf(tmp, "spatial_basis");
         d_database->putDoubleArray_parallel(tmp, &basis->item(0, 0), num_rows*num_cols);
 
         if(d_basis_generator->updateRightSV()) {
@@ -108,12 +106,12 @@ BasisWriter::writeBasis(const std::string& kind)
             /* temporal basis is always not distributed */
             CAROM_VERIFY(!tbasis->distributed());
             num_rows = tbasis->numRows();
-            sprintf(tmp, "temporal_basis_num_rows_000000");
+            sprintf(tmp, "temporal_basis_num_rows");
             d_database->putInteger(tmp, num_rows);
             num_cols = tbasis->numColumns();
-            sprintf(tmp, "temporal_basis_num_cols_000000");
+            sprintf(tmp, "temporal_basis_num_cols");
             d_database->putInteger(tmp, num_cols);
-            sprintf(tmp, "temporal_basis_000000");
+            sprintf(tmp, "temporal_basis");
             d_database->putDoubleArray(tmp, &tbasis->item(0, 0), num_rows*num_cols);
         }
 
@@ -121,9 +119,9 @@ BasisWriter::writeBasis(const std::string& kind)
         /* singular is always not distributed */
         CAROM_VERIFY(!sv->distributed());
         int sv_dim = sv->dim();
-        sprintf(tmp, "singular_value_size_000000");
+        sprintf(tmp, "singular_value_size");
         d_database->putInteger(tmp, sv_dim);
-        sprintf(tmp, "singular_value_000000");
+        sprintf(tmp, "singular_value");
         d_database->putDoubleArray(tmp, &sv->item(0), sv_dim);
 
         d_database->close();
@@ -139,12 +137,12 @@ BasisWriter::writeBasis(const std::string& kind)
         int nrows_infile = num_rows;
         if (db_format_ == Database::HDF5_MPIO)
             MPI_Allreduce(MPI_IN_PLACE, &nrows_infile, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-        sprintf(tmp, "snapshot_matrix_num_rows_000000");
+        sprintf(tmp, "snapshot_matrix_num_rows");
         d_snap_database->putInteger(tmp, nrows_infile);
         int num_cols = snapshots->numColumns(); // d_num_samples
-        sprintf(tmp, "snapshot_matrix_num_cols_000000");
+        sprintf(tmp, "snapshot_matrix_num_cols");
         d_snap_database->putInteger(tmp, num_cols);
-        sprintf(tmp, "snapshot_matrix_000000");
+        sprintf(tmp, "snapshot_matrix");
         d_snap_database->putDoubleArray_parallel(tmp, &snapshots->item(0,0),
                 num_rows*num_cols);
 

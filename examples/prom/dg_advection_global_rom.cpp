@@ -692,7 +692,7 @@ int main(int argc, char *argv[])
     // 10. Set BasisGenerator if offline
     if (offline)
     {
-        options = new CAROM::Options(U->Size(), max_num_snapshots, 1, update_right_SV);
+        options = new CAROM::Options(U->Size(), max_num_snapshots, update_right_SV);
         generator = new CAROM::BasisGenerator(*options, isIncremental, basisFileName);
         Vector u_curr(*U);
         Vector u_centered(U->Size());
@@ -704,7 +704,7 @@ int main(int argc, char *argv[])
     if (merge)
     {
         mergeTimer.Start();
-        options = new CAROM::Options(U->Size(), max_num_snapshots, 1, update_right_SV);
+        options = new CAROM::Options(U->Size(), max_num_snapshots, update_right_SV);
         generator = new CAROM::BasisGenerator(*options, isIncremental, basisName);
         for (int paramID=0; paramID<nsets; ++paramID)
         {

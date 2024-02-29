@@ -107,10 +107,8 @@ protected:
      * @brief Constructs the first SVD.
      *
      * @pre u != 0
-     * @pre time >= 0.0
      *
      * @param[in] u The first state.
-     * @param[in] time The simulation time for the first state.
      */
     virtual
     void
