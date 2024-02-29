@@ -215,8 +215,11 @@ public:
      * @param[out] data The allocated array of double values to be read.
      * @param[in] nelements The number of doubles in the array.
      * @param[in] offset The initial offset in the array.
+     *                   Typically, this is a column index of the matrix data.
      * @param[in] block_size The block size to read from the HDF5 dataset.
+     *                       Typically, this is a number of columns of the matrix data.
      * @param[in] stride The stride to read from the HDF5 dataset.
+     *                   Typically, this is the total number of columns of the matrix data.
      */
     virtual
     void

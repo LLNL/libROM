@@ -35,6 +35,7 @@ HDFDatabaseMPIO::create_parallel(
     else
         d_rank = 0;
 
+    /* Create a single file with a name compatible to HDFDatabase. */
     std::string file_name_ext(file_name + ".000000");
     if (d_rank == 0)
         Database::create(file_name_ext);

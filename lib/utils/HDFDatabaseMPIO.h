@@ -35,7 +35,8 @@ public:
     ~HDFDatabaseMPIO() {}
 
     /**
-     * @brief Creates a new HDF5 database file with the supplied name.
+     * @brief Creates a new HDF5 database file for distributed data
+     *        with the supplied name.
      *
      * @param[in] file_name Name of HDF5 database file to create.
      *
@@ -47,7 +48,9 @@ public:
         const MPI_Comm comm) override;
 
     /**
-     * @brief Creates a new HDF5 database file with the supplied name.
+     * @brief Creates a new HDF5 database file for non-distributed data
+     *        with the supplied name.
+     *        For HDFDatabaseMPIO, the behavior is equilvalent to create_parallel.
      *
      * @param[in] file_name Name of HDF5 database file to create.
      *
@@ -61,7 +64,8 @@ public:
     }
 
     /**
-     * @brief Opens an existing HDF5 database file with the supplied name.
+     * @brief Opens an existing HDF5 database file for distributed data
+     *        with the supplied name.
      *
      * @param[in] file_name Name of existing HDF5 database file to open.
      * @param[in] type Read/write type ("r"/"wr")
@@ -75,7 +79,9 @@ public:
         const MPI_Comm comm) override;
 
     /**
-     * @brief Opens an existing HDF5 database file with the supplied name.
+     * @brief Opens an existing HDF5 database file for non-distributed data
+     *        with the supplied name.
+     *        For HDFDatabaseMPIO, the behavior is equilvalent to open_parallel.
      *
      * @param[in] file_name Name of existing HDF5 database file to open.
      * @param[in] type Read/write type ("r"/"wr")
@@ -91,8 +97,9 @@ public:
     }
 
     /**
-     * @brief Writes a distributed array of integers associated with the supplied key to
-     * the currently open HDF5 database file.
+     * @brief Writes a distributed array of integers
+     *        associated with the supplied key
+     *        to the currently open HDF5 database file.
      *
      * @pre !key.empty()
      * @pre data != nullptr
@@ -137,8 +144,9 @@ public:
     }
 
     /**
-     * @brief Writes an array of doubles associated with the supplied key to
-     * the currently open HDF5 database file.
+     * @brief Writes a distributed array of doubles
+     *        associated with the supplied key to
+     *        the currently open HDF5 database file.
      *
      * @pre !key.empty()
      * @pre data != nullptr
@@ -158,8 +166,9 @@ public:
         int nelem_local);
 
     /**
-     * @brief Writes an array of doubles associated with the supplied key to
-     * the currently open HDF5 database file.
+     * @brief Writes an array of doubles in the root rank
+     *        associated with the supplied key to
+     *        the currently open HDF5 database file.
      *
      * @pre !key.empty()
      * @pre data != nullptr
@@ -182,8 +191,9 @@ public:
     }
 
     /**
-     * @brief Reads a distributed array of integers associated with the supplied key
-     * from the currently open HDF5 database file.
+     * @brief Reads a distributed array of integers
+     *        associated with the supplied key
+     *        from the currently open HDF5 database file.
      *
      * @pre !key.empty()
      * @pre data != nullptr || nelements == 0
@@ -203,6 +213,7 @@ public:
     /**
      * @brief Reads an array of integers associated with the supplied key
      * from the currently open HDF5 database file.
+     * All processes share the same non-distributed integer array.
      *
      * @pre !key.empty()
      * @pre data != nullptr || nelements == 0
@@ -225,7 +236,8 @@ public:
     }
 
     /**
-     * @brief Reads an array of doubles associated with the supplied key
+     * @brief Reads a distributed array of doubles
+     * associated with the supplied key
      * from the currently open HDF5 database file.
      *
      * @pre !key.empty()
@@ -246,6 +258,7 @@ public:
     /**
      * @brief Reads an array of doubles associated with the supplied key
      * from the currently open HDF5 database file.
+     * All processes share the same non-distributed double array.
      *
      * @pre !key.empty()
      * @pre data != nullptr || nelements == 0
@@ -268,7 +281,8 @@ public:
     }
 
     /**
-     * @brief Reads a sub-array of doubles associated with the supplied key
+     * @brief Reads a distributed sub-array of doubles
+     * associated with the supplied key
      * from the currently open HDF5 database file.
      *
      * @pre !key.empty()
@@ -291,6 +305,7 @@ public:
     /**
      * @brief Reads a sub-array of doubles associated with the supplied key
      * from the currently open HDF5 database file.
+     * All processes share the same non-distributed double array.
      *
      * @pre !key.empty()
      * @pre data != nullptr || nelements == 0
@@ -315,19 +330,24 @@ public:
     }
 
     /**
-     * @brief Reads an array of doubles associated with the supplied key
+     * @brief Reads a distributed array of doubles
+     * associated with the supplied key
      * from the currently open HDF5 database file.
      *
      * @pre !key.empty()
      * @pre data != nullptr || nelements == 0
+     * @pre block_offset_global + block_size_global <= stride_global
      *
      * @param[in] key The key associated with the array of values to be
      *                read.
      * @param[out] data The allocated array of double values to be read.
-     * @param[in] nelements The number of doubles in the array.
-     * @param[in] offset The initial offset in the array.
-     * @param[in] block_size The block size to read from the HDF5 dataset.
-     * @param[in] stride The stride to read from the HDF5 dataset.
+     * @param[in] nelem_local The number of doubles in the array at the local process.
+     * @param[in] block_offset_global The initial offset in the global array.
+     *                                Typically, this is a global column index of the matrix data.
+     * @param[in] block_size_global The total block size to read from the HDF5 dataset.
+     *                                Typically, this is a number of columns (in global) of the matrix data.
+     * @param[in] stride_global The global stride to read from the HDF5 dataset.
+     *                          Typically, this is the total number of columns of the matrix data.
      */
     virtual
     void
@@ -342,6 +362,7 @@ public:
     /**
      * @brief Reads an array of doubles associated with the supplied key
      * from the currently open HDF5 database file.
+     * All processes share the same non-distributed double array.
      *
      * @pre !key.empty()
      * @pre data != nullptr || nelements == 0
