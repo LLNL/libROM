@@ -132,7 +132,7 @@ main(
     // static sampler.
 
     CAROM::BasisGenerator static_basis_generator(
-        CAROM::Options(dim, num_samples, -1, true), false
+        CAROM::Options(dim, num_samples, true), false
     );
 
     // Initialize random number generator.
@@ -190,7 +190,7 @@ main(
     bool status = true;
     for (int i = 0; i < num_samples; ++i) {
         if (inc_basis_generator.isNextSample(0.01*i)) {
-            status = inc_basis_generator.takeSample(M[i], 0.01*i, 0.01);
+            status = inc_basis_generator.takeSample(M[i]);
             if (!status) {
                 break;
             }
@@ -198,7 +198,7 @@ main(
         }
         if (i < num_lin_indep_samples &&
                 static_basis_generator.isNextSample(0.01*i)) {
-            status = static_basis_generator.takeSample(M[i], 0.01*i, 0.01);
+            status = static_basis_generator.takeSample(M[i]);
             if (!status) {
                 break;
             }

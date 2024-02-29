@@ -34,10 +34,8 @@ BasisGenerator::BasisGenerator(
     d_write_snapshots(options.write_snapshots)
 {
     CAROM_VERIFY(options.dim > 0);
-    CAROM_VERIFY(options.samples_per_time_interval > 0);
+    CAROM_VERIFY(options.max_num_samples > 0);
     CAROM_VERIFY(options.singular_value_tol >= 0);
-    CAROM_VERIFY(options.max_time_intervals == -1
-                 || options.max_time_intervals > 0);
     CAROM_VERIFY(options.max_basis_dimension > 0);
     if (incremental)
     {
@@ -129,35 +127,19 @@ BasisGenerator::isNextSample(
 bool
 BasisGenerator::takeSample(
     double* u_in,
-    double time,
-    double dt,
     bool add_without_increase)
 {
     CAROM_VERIFY(u_in != 0);
-    CAROM_VERIFY(time >= 0);
+    CAROM_VERIFY(d_svd->getNumSamples() < d_svd->getMaxNumSamples());
 
     // Check that u_in is not non-zero.
     Vector u_vec(u_in, getDim(), true);
     if (u_vec.norm() == 0.0) {
-        printf("WARNING: BasisGenerator::takeSample skipped trivial sample at time %.4E\n",
-               time);
+        printf("WARNING: BasisGenerator::takeSample skipped trivial sample.\n");
         return false;
     }
 
-    if (getNumBasisTimeIntervals() > 0 &&
-            d_svd->isNewTimeInterval()) {
-        resetDt(dt);
-        if (d_basis_writer) {
-            if (d_write_snapshots) {
-                writeSnapshot();
-            }
-            else {
-                d_basis_writer->writeBasis("basis");
-            }
-        }
-    }
-
-    return d_svd->takeSample(u_in, time, add_without_increase);
+    return d_svd->takeSample(u_in, add_without_increase);
 }
 
 void
@@ -172,16 +154,15 @@ BasisGenerator::loadSamples(const std::string& base_file_name,
     if (d_basis_reader) delete d_basis_reader;
 
     d_basis_reader = new BasisReader(base_file_name, db_format);
-    double time = 0.0;
     const Matrix* mat;
     const Vector* singular_vals;
 
     if (kind == "basis") {
-        mat = d_basis_reader->getSpatialBasis(time);
-        singular_vals = d_basis_reader->getSingularValues(time);
+        mat = d_basis_reader->getSpatialBasis();
+        singular_vals = d_basis_reader->getSingularValues();
     }
     else if (kind == "snapshot") {
-        mat = d_basis_reader->getSnapshotMatrix(time);
+        mat = d_basis_reader->getSnapshotMatrix();
     }
 
     int num_rows = mat->numRows();
@@ -199,7 +180,7 @@ BasisGenerator::loadSamples(const std::string& base_file_name,
                 u_in[i] = mat->item(i,j);
             }
         }
-        d_svd->takeSample(u_in, time, false);
+        d_svd->takeSample(u_in, false);
         delete[] u_in;
     }
 }

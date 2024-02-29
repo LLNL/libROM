@@ -229,7 +229,7 @@ int main(int argc, char *argv[])
     // 10. Set BasisGenerator if offline
     if (offline)
     {
-        options = new CAROM::Options(fespace->GetTrueVSize(), max_num_snapshots, 1,
+        options = new CAROM::Options(fespace->GetTrueVSize(), max_num_snapshots,
                                      update_right_SV);
         generator = new CAROM::BasisGenerator(*options, isIncremental, basisFileName);
     }
@@ -238,7 +238,7 @@ int main(int argc, char *argv[])
     if (merge)
     {
         mergeTimer.Start();
-        options = new CAROM::Options(fespace->GetTrueVSize(), max_num_snapshots, 1,
+        options = new CAROM::Options(fespace->GetTrueVSize(), max_num_snapshots,
                                      update_right_SV);
         generator = new CAROM::BasisGenerator(*options, isIncremental, basisName);
         for (int paramID=0; paramID<nsets; ++paramID)
@@ -348,7 +348,7 @@ int main(int argc, char *argv[])
         // 18. take and write snapshot for ROM
         if (offline)
         {
-            bool addSample = generator->takeSample(X.GetData(), 0.0, 0.01);
+            bool addSample = generator->takeSample(X.GetData());
             generator->writeSnapshot();
             delete generator;
             delete options;
@@ -360,7 +360,7 @@ int main(int argc, char *argv[])
         // 20. read the reduced basis
         assembleTimer.Start();
         CAROM::BasisReader reader(basisName);
-        spatialbasis = reader.getSpatialBasis(0.0);
+        spatialbasis = reader.getSpatialBasis();
         numRowRB = spatialbasis->numRows();
         numColumnRB = spatialbasis->numColumns();
         if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB,

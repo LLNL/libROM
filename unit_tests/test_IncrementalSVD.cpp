@@ -69,8 +69,7 @@ public:
     }
 
     void buildInitialSVD
-    (__attribute__((unused)) double* u,
-     __attribute__((unused)) double time)
+    (__attribute__((unused)) double* u)
     {
         /* Do nothing */
     }

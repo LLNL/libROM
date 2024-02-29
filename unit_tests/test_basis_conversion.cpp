@@ -8,15 +8,18 @@
  *
  *****************************************************************************/
 
-// Description: This source file is a test runner that uses the Google Test
-// Framework to run unit tests on the CAROM::IncrementalSVD class.
-
-#include <iostream>
-
 #ifdef CAROM_HAS_GTEST
+
 #include<gtest/gtest.h>
-#include <mpi.h>
-#include "linalg/BasisGenerator.h"
+#include "linalg/BasisReader.h"
+#include "linalg/Matrix.h"
+#include <algorithm>
+#include <cmath>
+#include <cstdio>
+#include <cstring> // for memcpy
+#include <random>
+#include "mpi.h"
+#include "utils/mpi_utils.h"
 
 /**
  * Simple smoke test to make sure Google Test is properly linked
@@ -25,7 +28,7 @@ TEST(GoogleTestFramework, GoogleTestFrameworkFound) {
     SUCCEED();
 }
 
-TEST(IncrementalSVDBrandTest, Test_IncrementalSVDBrand)
+TEST(StaticSVDTest, Test_StaticSVDClass)
 {
     // Get the rank of this process, and the number of processors.
     int mpi_init, d_rank, d_num_procs;
@@ -37,26 +40,16 @@ TEST(IncrementalSVDBrandTest, Test_IncrementalSVDBrand)
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
 
-    int num_total_rows = 5;
-    int d_num_rows = num_total_rows / d_num_procs;
-    if (num_total_rows % d_num_procs > d_rank) {
-        d_num_rows++;
-    }
-    int *row_offset = new int[d_num_procs + 1];
-    row_offset[d_num_procs] = num_total_rows;
-    row_offset[d_rank] = d_num_rows;
+    // This test is designed only for single process.
+    EXPECT_EQ(d_num_procs, 1);
 
-    MPI_Allgather(MPI_IN_PLACE,
-                  1,
-                  MPI_INT,
-                  row_offset,
-                  1,
-                  MPI_INT,
-                  MPI_COMM_WORLD);
-
-    for (int i = d_num_procs - 1; i >= 0; i--) {
-        row_offset[i] = row_offset[i + 1] - row_offset[i];
-    }
+    /* This snapshot/basis is from test_StaticSVD */
+    constexpr int num_total_rows = 5;
+    int d_num_rows = CAROM::split_dimension(num_total_rows, MPI_COMM_WORLD);
+    std::vector<int> row_offset(d_num_procs + 1);
+    const int total_rows = CAROM::get_global_offsets(d_num_rows, row_offset,
+                           MPI_COMM_WORLD);
+    EXPECT_EQ(total_rows, num_total_rows);
 
     double* sample1 = new double[5] {0.5377, 1.8339, -2.2588, 0.8622, 0.3188};
     double* sample2 = new double[5] {-1.3077, -0.4336, 0.3426, 3.5784, 2.7694};
@@ -80,29 +73,12 @@ TEST(IncrementalSVDBrandTest, Test_IncrementalSVDBrand)
         4.84486375065219387892E+00,      3.66719976398777269821E+00,      2.69114625366671811335E+00
     };
 
-    bool fast_update = true;
-    bool fast_update_brand = true;
-    CAROM::Options incremental_svd_options = CAROM::Options(d_num_rows, 3, true)
-            .setMaxBasisDimension(num_total_rows)
-            .setIncrementalSVD(1e-1,
-                               1e-1,
-                               1e-1,
-                               1e-1,
-                               fast_update,
-                               fast_update_brand,
-                               false);
-
-    CAROM::BasisGenerator sampler(
-        incremental_svd_options,
-        true,
-        "irrelevant.txt");
-    sampler.takeSample(&sample1[row_offset[d_rank]]);
-    sampler.takeSample(&sample2[row_offset[d_rank]]);
-    sampler.takeSample(&sample3[row_offset[d_rank]]);
-
-    const CAROM::Matrix* d_basis = sampler.getSpatialBasis();
-    const CAROM::Matrix* d_basis_right = sampler.getTemporalBasis();
-    const CAROM::Vector* sv = sampler.getSingularValues();
+    CAROM::BasisReader basis("test_basis");
+    CAROM::BasisReader snapshot("test_basis_snapshot");
+    const CAROM::Matrix* d_snapshot = snapshot.getSnapshotMatrix();
+    const CAROM::Matrix* d_basis = basis.getSpatialBasis();
+    const CAROM::Matrix* d_basis_right = basis.getTemporalBasis();
+    const CAROM::Vector* sv = basis.getSingularValues();
 
     EXPECT_EQ(d_basis->numRows(), d_num_rows);
     EXPECT_EQ(d_basis->numColumns(), 3);
@@ -112,7 +88,6 @@ TEST(IncrementalSVDBrandTest, Test_IncrementalSVDBrand)
 
     double* d_basis_vals = d_basis->getData();
     double* d_basis_right_vals = d_basis_right->getData();
-
 
     for (int i = 0; i < d_num_rows * 3; i++) {
         EXPECT_NEAR(abs(d_basis_vals[i]),
@@ -126,7 +101,6 @@ TEST(IncrementalSVDBrandTest, Test_IncrementalSVDBrand)
     for (int i = 0; i < 3; i++) {
         EXPECT_NEAR(sv->item(i), sv_true_ans[i], 1e-7);
     }
-
 }
 
 int main(int argc, char* argv[])
@@ -137,11 +111,14 @@ int main(int argc, char* argv[])
     MPI_Finalize();
     return result;
 }
+
 #else // #ifndef CAROM_HAS_GTEST
+
 int main()
 {
     std::cout << "libROM was compiled without Google Test support, so unit "
               << "tests have been disabled. To enable unit tests, compile "
               << "libROM with Google Test support." << std::endl;
 }
+
 #endif // #endif CAROM_HAS_GTEST

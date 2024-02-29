@@ -4,7 +4,6 @@ runs:
     - name: Run unit tests
       run: |
           cd ${GITHUB_WORKSPACE}/build
-          ./tests/test_SVD
           ./tests/test_Vector
           ./tests/test_Matrix
           mpirun -n 3 --oversubscribe ./tests/test_Matrix
@@ -24,7 +23,15 @@ runs:
           mpirun -n 3 --oversubscribe tests/test_StaticSVD
           ./tests/test_IncrementalSVDBrand
           mpirun -n 3 --oversubscribe tests/test_IncrementalSVDBrand
-          
+      shell: bash
+    - name: Basis dataset update test
+      run: |
+          cd ${GITHUB_WORKSPACE}/build/tests
+          cp ${GITHUB_WORKSPACE}/unit_tests/baselines/basis_conversion/* ./
+          cp ${GITHUB_WORKSPACE}/scripts/data/update_basis_format.py ./
+          python3 update_basis_format.py test_basis.000000
+          python3 update_basis_format.py test_basis_snapshot.000000
+          ./test_basis_conversion
       shell: bash
 
     - name: Run regression tests

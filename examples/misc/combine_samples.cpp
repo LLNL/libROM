@@ -101,8 +101,8 @@ int main(int argc, char* argv[])
     for (const auto& sample_name: sample_names) {
         CAROM::BasisReader reader(sample_name);
 
-        dim    = reader.getDim(kind, 0);
-        snaps += reader.getNumSamples(kind, 0);
+        dim    = reader.getDim(kind);
+        snaps += reader.getNumSamples(kind);
         if (dimFirst == 0) dimFirst = dim;
 
         CAROM_VERIFY(dim ==
@@ -180,7 +180,7 @@ int main(int argc, char* argv[])
         CAROM::Vector snap_cur(num_rows, true);
         for (int col = 0; col < num_cols; col++) {
             snap_cur = *snapshots->getColumn(col);
-            static_basis_generator2->takeSample(snap_cur.getData(), 0.0, false);
+            static_basis_generator2->takeSample(snap_cur.getData(), false);
         }
 
         /*-- Compute SVD and save file --*/

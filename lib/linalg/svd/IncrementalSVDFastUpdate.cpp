@@ -65,7 +65,7 @@ IncrementalSVDFastUpdate::~IncrementalSVDFastUpdate()
     //
     // If there are multiple time intervals then saving and restoring the state
     // does not make sense as there is not one, all encompassing, basis.
-    if (d_save_state && d_time_interval_start_times.size() == 1) {
+    if (d_save_state && (!isFirstSample())) {
         // Create state database file.
         d_state_database = new HDFDatabase();
         d_state_database->create(d_state_file_name);
@@ -88,27 +88,9 @@ IncrementalSVDFastUpdate::~IncrementalSVDFastUpdate()
 
 void
 IncrementalSVDFastUpdate::buildInitialSVD(
-    double* u,
-    double time)
+    double* u)
 {
     CAROM_VERIFY(u != 0);
-    CAROM_VERIFY(time >= 0.0);
-
-    // We have a new time interval.
-
-    // If this is not the first time interval then delete d_basis, d_U, d_Up,
-    // and d_S of the just completed time interval.
-    int num_time_intervals =
-        static_cast<int>(d_time_interval_start_times.size());
-    if (num_time_intervals > 0) {
-        delete d_basis;
-        delete d_U;
-        delete d_Up;
-        delete d_S;
-        delete d_W;
-    }
-    increaseTimeInterval();
-    d_time_interval_start_times[num_time_intervals] = time;
 
     // Build d_S for this new time interval.
     d_S = new Vector(1, false);

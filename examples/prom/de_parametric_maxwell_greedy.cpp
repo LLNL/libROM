@@ -221,7 +221,7 @@ double simulation()
     // 12. Set BasisGenerator if offline
     if (offline)
     {
-        options = new CAROM::Options(fespace->GetTrueVSize(), max_num_snapshots, 1,
+        options = new CAROM::Options(fespace->GetTrueVSize(), max_num_snapshots,
                                      update_right_SV);
         if (myid == 0) cout << "Saving basis to: " << saveBasisName << endl;
         generator = new CAROM::BasisGenerator(*options, isIncremental, saveBasisName);
@@ -316,7 +316,7 @@ double simulation()
         // 19. take and write snapshot for ROM
         if (offline)
         {
-            bool addSample = generator->takeSample(X.GetData(), 0.0, 0.01);
+            bool addSample = generator->takeSample(X.GetData());
             generator->writeSnapshot();
             basisIdentifiers.push_back(saveBasisName);
             delete generator;
@@ -329,7 +329,7 @@ double simulation()
         // 21. read the reduced basis
         assembleTimer.Start();
         CAROM::BasisReader reader(loadBasisName);
-        spatialbasis = reader.getSpatialBasis(0.0);
+        spatialbasis = reader.getSpatialBasis();
         numRowRB = spatialbasis->numRows();
         numColumnRB = spatialbasis->numColumns();
 
@@ -513,7 +513,7 @@ double simulation()
     {
         mergeTimer.Start();
         std::unique_ptr<CAROM::BasisGenerator> basis_generator;
-        options = new CAROM::Options(fespace->GetTrueVSize(), max_num_snapshots, 1,
+        options = new CAROM::Options(fespace->GetTrueVSize(), max_num_snapshots,
                                      update_right_SV);
         generator = new CAROM::BasisGenerator(*options, isIncremental, loadBasisName);
         for (int i = 0; i < basisIdentifiers.size(); ++i)

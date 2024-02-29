@@ -900,7 +900,7 @@ int main(int argc, char *argv[])
             readerV = new CAROM::BasisReader("basisV");
         }
 
-        BV_librom = readerV->getSpatialBasis(0.0);
+        BV_librom = readerV->getSpatialBasis();
 
         if (rvdim == -1) // Change rvdim
             rvdim = BV_librom->numColumns();
@@ -914,7 +914,7 @@ int main(int argc, char *argv[])
             printf("reduced V dim = %d\n", rvdim);
 
         CAROM::BasisReader readerX("basisX");
-        BX_librom = readerX.getSpatialBasis(0.0);
+        BX_librom = readerX.getSpatialBasis();
 
         if (rxdim == -1) // Change rxdim
             rxdim = BX_librom->numColumns();
@@ -929,7 +929,7 @@ int main(int argc, char *argv[])
 
         // Hyper reduce H
         CAROM::BasisReader readerH("basisH");
-        H_librom = readerH.getSpatialBasis(0.0);
+        H_librom = readerH.getSpatialBasis();
 
         // Compute sample points
         if (hdim == -1)
@@ -1262,23 +1262,25 @@ int main(int argc, char *argv[])
             }
 
             // Take samples
+            // NOTE(kevin): I don't know why this example checks next sample time.
+            // IncrementalSVD is never turned on in this example and isNextSample is always true.
             if (x_base_only == false && basis_generator_v->isNextSample(t))
             {
-                basis_generator_v->takeSample(vx_diff.GetBlock(0), t, dt);
+                basis_generator_v->takeSample(vx_diff.GetBlock(0));
                 basis_generator_v->computeNextSampleTime(vx_diff.GetBlock(0),
                         dvdt.GetData(), t);
-                basis_generator_H->takeSample(oper.H_sp.GetData(), t, dt);
+                basis_generator_H->takeSample(oper.H_sp.GetData());
             }
 
             if (basis_generator_x->isNextSample(t))
             {
-                basis_generator_x->takeSample(vx_diff.GetBlock(1), t, dt);
+                basis_generator_x->takeSample(vx_diff.GetBlock(1));
                 basis_generator_x->computeNextSampleTime(vx_diff.GetBlock(1),
                         dxdt.GetData(), t);
 
                 if (x_base_only == true)
                 {
-                    basis_generator_H->takeSample(oper.H_sp.GetData(), t, dt);
+                    basis_generator_H->takeSample(oper.H_sp.GetData());
                 }
             }
         }
@@ -1363,16 +1365,16 @@ int main(int argc, char *argv[])
         // Take samples
         if (x_base_only == false)
         {
-            basis_generator_v->takeSample(vx_diff.GetBlock(0), t, dt);
+            basis_generator_v->takeSample(vx_diff.GetBlock(0));
             basis_generator_v->writeSnapshot();
             delete basis_generator_v;
         }
 
-        basis_generator_H->takeSample(oper.H_sp.GetData(), t, dt);
+        basis_generator_H->takeSample(oper.H_sp.GetData());
         basis_generator_H->writeSnapshot();
         delete basis_generator_H;
 
-        basis_generator_x->takeSample(vx_diff.GetBlock(1), t, dt);
+        basis_generator_x->takeSample(vx_diff.GetBlock(1));
         basis_generator_x->writeSnapshot();
         delete basis_generator_x;
 
