@@ -47,10 +47,8 @@ public:
      * @brief Collect the new sample, u_in at supplied time.
      *
      * @pre u_in != 0
-     * @pre time >= 0.0
      *
      * @param[in] u_in The new sample.
-     * @param[in] time The simulation time of the new sample.
      * @param[in] add_without_increase If true, the addLinearlyDependent is invoked.
      *                                 This only applies to incremental SVD.
      *
@@ -60,7 +58,6 @@ public:
     bool
     takeSample(
         double* u_in,
-        double time,
         bool add_without_increase) = 0;
 
     /**
@@ -111,68 +108,6 @@ public:
     getSnapshotMatrix() = 0;
 
     /**
-     * @brief Returns the number of time intervals on which different sets
-     * of basis vectors are defined.
-     *
-     * @return The number of time intervals on which there are basis vectors.
-     */
-    int
-    getNumBasisTimeIntervals() const
-    {
-        return static_cast<int>(d_time_interval_start_times.size());
-    }
-
-    /**
-     * @brief Returns the start time for the requested time interval.
-     *
-     * @pre 0 <= which_interval
-     * @pre which_interval < getNumBasisTimeIntervals()
-     *
-     * @param[in] which_interval The time interval of interest.
-     *
-     * @return The start time for the requested time interval.
-     */
-    double
-    getBasisIntervalStartTime(
-        int which_interval) const
-    {
-        CAROM_VERIFY(0 <= which_interval);
-        CAROM_VERIFY(which_interval < getNumBasisTimeIntervals());
-
-        std::size_t i = static_cast<std::size_t>(which_interval);
-        return d_time_interval_start_times[i];
-    }
-
-    /**
-     * @brief Returns true if the next sample will result in a new time
-     * interval.
-     *
-     * @return True if the next sample results in the creation of a new time
-     *         interval.
-     */
-    bool
-    isNewTimeInterval() const
-    {
-        return (d_num_samples == 0) ||
-               (d_num_samples >= d_samples_per_time_interval);
-    }
-
-    /**
-     * @brief Increase the number of time intervals by one
-     *
-     */
-    void
-    increaseTimeInterval()
-    {
-        int num_time_intervals =
-            static_cast<int>(d_time_interval_start_times.size());
-        CAROM_VERIFY(d_max_time_intervals == -1 ||
-                     num_time_intervals < d_max_time_intervals);
-        d_time_interval_start_times.resize(
-            static_cast<unsigned>(num_time_intervals) + 1);
-    }
-
-    /**
      * @brief Get the number of samples taken.
      *
      */
@@ -181,7 +116,30 @@ public:
         return d_num_samples;
     }
 
+    /**
+     * @brief Get the maximum number of samples that can be taken.
+     *        SVD class will return an error if the number of samples exceeds the maximum.
+     *
+     */
+    int getMaxNumSamples() const
+    {
+        return d_max_num_samples;
+    }
+
 protected:
+    /**
+     * @brief Returns true if the next sample will result in a new time
+     * interval.
+     *
+     * @return True if the next sample results in the creation of a new time
+     *         interval.
+     */
+    bool
+    isFirstSample() const
+    {
+        return (d_num_samples == 0);
+    }
+
     /**
      * @brief Dimension of the system.
      */
@@ -198,15 +156,9 @@ protected:
     int d_num_rows_of_W;
 
     /**
-     * @brief The maximum number of samples to be collected for a time
-     * interval.
+     * @brief The maximum number of samples.
      */
-    const int d_samples_per_time_interval;
-
-    /**
-     * @brief The maximum number of time intervals.
-     */
-    const int d_max_time_intervals;
+    const int d_max_num_samples;
 
     /**
      * @brief The globalized basis vectors for the current time interval.
@@ -255,11 +207,6 @@ protected:
      * vectors.
      */
     Matrix* d_snapshots;
-
-    /**
-     * @brief The simulation time at which each time interval starts.
-     */
-    std::vector<double> d_time_interval_start_times;
 
     /**
      * @brief Flag to indicate if results of algorithm should be printed for

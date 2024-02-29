@@ -76,7 +76,7 @@ main(
     int samples_taken = 0;
     for (int i = 0; i < num_samples; ++i) {
         if (basis_generator.isNextSample(0.01*i)) {
-            status = basis_generator.takeSample(M[i], 0.01*i, 0.01);
+            status = basis_generator.takeSample(M[i]);
             if (!status) {
                 break;
             }

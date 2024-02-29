@@ -73,7 +73,7 @@ main(
 
     // Take the first sample.
     if (inc_basis_generator.isNextSample(0.0)) {
-        status = inc_basis_generator.takeSample(&vals0[dim*rank], 0.0, 0.11);
+        status = inc_basis_generator.takeSample(&vals0[dim*rank]);
         if (status) {
             inc_basis_generator.computeNextSampleTime(&vals0[dim*rank],
                     &vals0[dim*rank],
@@ -83,7 +83,7 @@ main(
 
     // Take the second sample.
     if (status && inc_basis_generator.isNextSample(0.11)) {
-        status = inc_basis_generator.takeSample(&vals1[dim*rank], 0.11, 0.11);
+        status = inc_basis_generator.takeSample(&vals1[dim*rank]);
         if (status) {
             inc_basis_generator.computeNextSampleTime(&vals1[dim*rank],
                     &vals1[dim*rank],

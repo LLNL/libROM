@@ -36,9 +36,10 @@ StaticSVD::StaticSVD(
     Options options) :
     SVD(options),
     d_samples(new SLPK_Matrix), d_factorizer(new SVDManager),
-    d_this_interval_basis_current(false),
+    d_basis_is_current(false),
     d_max_basis_dimension(options.max_basis_dimension),
-    d_singular_value_tol(options.singular_value_tol)
+    d_singular_value_tol(options.singular_value_tol),
+    d_preserve_snapshot(options.static_svd_preserve_snapshot)
 {
     // Get the rank of this process, and the number of processors.
     int mpi_init;
@@ -59,7 +60,7 @@ StaticSVD::StaticSVD(
         d_blocksize += 1;
     }
 
-    initialize_matrix(d_samples.get(), d_total_dim, d_samples_per_time_interval,
+    initialize_matrix(d_samples.get(), d_total_dim, d_max_num_samples,
                       d_nprow, d_npcol, d_blocksize, d_blocksize);  // TODO: should nb = 1?
     d_factorizer->A = nullptr;
 }
@@ -99,12 +100,12 @@ void StaticSVD::delete_factorizer()
 bool
 StaticSVD::takeSample(
     double* u_in,
-    double time,
     bool add_without_increase)
 {
     CAROM_VERIFY(u_in != 0);
-    CAROM_VERIFY(time >= 0.0);
     CAROM_NULL_USE(add_without_increase);
+    CAROM_VERIFY(0 <= d_num_samples);
+    CAROM_VERIFY(d_num_samples < d_max_num_samples);
 
     // Check the u_in is not non-zero.
     Vector u_vec(u_in, d_dim, true);
@@ -112,33 +113,13 @@ StaticSVD::takeSample(
         return false;
     }
 
-    if (isNewTimeInterval()) {
-        // We have a new time interval.
+    if (isFirstSample()) {
         delete_factorizer();
-        int num_time_intervals =
-            static_cast<int>(d_time_interval_start_times.size());
-        if (num_time_intervals > 0) {
-            delete d_basis;
-            d_basis = nullptr;
-            delete d_basis_right;
-            d_basis_right = nullptr;
-            delete d_U;
-            d_U = nullptr;
-            delete d_S;
-            d_S = nullptr;
-            delete d_W;
-            d_W = nullptr;
-            delete d_snapshots;
-            d_snapshots = nullptr;
-        }
         d_num_samples = 0;
-        increaseTimeInterval();
-        d_time_interval_start_times[static_cast<unsigned>(num_time_intervals)] =
-            time;
         d_basis = nullptr;
         d_basis_right = nullptr;
         // Set the N in the global matrix so BLACS won't complain.
-        d_samples->n = d_samples_per_time_interval;
+        d_samples->n = d_max_num_samples;
     }
     broadcast_sample(u_in);
     ++d_num_samples;
@@ -152,7 +133,7 @@ StaticSVD::takeSample(
     //                           firstrow, 1, nrows,
     //                           d_num_samples, rank);
     // }
-    d_this_interval_basis_current = false;
+    d_basis_is_current = false;
     return true;
 }
 
@@ -161,7 +142,7 @@ StaticSVD::getSpatialBasis()
 {
     // If this basis is for the last time interval then it may not be up to date
     // so recompute it.
-    if (!thisIntervalBasisCurrent()) {
+    if (!isBasisCurrent()) {
         delete d_basis;
         d_basis = nullptr;
         delete d_basis_right;
@@ -177,7 +158,7 @@ StaticSVD::getSpatialBasis()
     else {
         CAROM_ASSERT(d_basis != 0);
     }
-    CAROM_ASSERT(thisIntervalBasisCurrent());
+    CAROM_ASSERT(isBasisCurrent());
     return d_basis;
 }
 
@@ -186,7 +167,7 @@ StaticSVD::getTemporalBasis()
 {
     // If this basis is for the last time interval then it may not be up to date
     // so recompute it.
-    if (!thisIntervalBasisCurrent()) {
+    if (!isBasisCurrent()) {
         delete d_basis;
         d_basis = nullptr;
         delete d_basis_right;
@@ -202,7 +183,7 @@ StaticSVD::getTemporalBasis()
     else {
         CAROM_ASSERT(d_basis_right != 0);
     }
-    CAROM_ASSERT(thisIntervalBasisCurrent());
+    CAROM_ASSERT(isBasisCurrent());
     return d_basis_right;
 }
 
@@ -211,7 +192,7 @@ StaticSVD::getSingularValues()
 {
     // If these singular values are for the last time interval then they may not
     // be up to date so recompute them.
-    if (!thisIntervalBasisCurrent()) {
+    if (!isBasisCurrent()) {
         delete d_basis;
         d_basis = nullptr;
         delete d_basis_right;
@@ -227,13 +208,16 @@ StaticSVD::getSingularValues()
     else {
         CAROM_ASSERT(d_S != 0);
     }
-    CAROM_ASSERT(thisIntervalBasisCurrent());
+    CAROM_ASSERT(isBasisCurrent());
     return d_S;
 }
 
 const Matrix*
 StaticSVD::getSnapshotMatrix()
 {
+    if ((!d_preserve_snapshot) && (isBasisCurrent()) && (d_basis != 0))
+        CAROM_ERROR("StaticSVD: snapshot matrix is modified after computeSVD."
+                    " To preserve the snapshots, set Options::static_svd_preserve_snapshot to be true!\n");
 
     if (d_snapshots) delete d_snapshots;
     d_snapshots = new Matrix(d_dim, d_num_samples, false);
@@ -265,7 +249,6 @@ StaticSVD::computeSVD()
     if (transpose) {
         // create a transposed matrix if sample size > dimension.
         snapshot_matrix = new SLPK_Matrix;
-
         int d_blocksize_tr = d_num_samples / d_nprow;
         if (d_num_samples % d_nprow != 0) {
             d_blocksize_tr += 1;
@@ -283,7 +266,18 @@ StaticSVD::computeSVD()
     }
     else {
         // use d_samples if sample size <= dimension.
-        snapshot_matrix = d_samples.get();
+        // SVD operation does not preserve the original snapshot matrix.
+        if (d_preserve_snapshot)
+        {
+            snapshot_matrix = new SLPK_Matrix;
+            initialize_matrix(snapshot_matrix, d_total_dim, d_num_samples,
+                              d_nprow, d_npcol, d_blocksize, d_blocksize);
+            copy_matrix(snapshot_matrix, 1, 1, d_samples.get(), 1, 1, d_total_dim,
+                        d_num_samples);
+        }
+        else
+            // use the original snapshot matrix, which will be modified.
+            snapshot_matrix = d_samples.get();
     }
 
     // This block does the actual ScaLAPACK call to do the factorization.
@@ -349,7 +343,7 @@ StaticSVD::computeSVD()
     }
     for (int i = 0; i < ncolumns; ++i)
         d_S->item(i) = d_factorizer->S[static_cast<unsigned>(i)];
-    d_this_interval_basis_current = true;
+    d_basis_is_current = true;
 
     if (d_debug_algorithm) {
         if (d_rank == 0) {
@@ -372,8 +366,9 @@ StaticSVD::computeSVD()
         }
     }
 
-    if (transpose) {
-        // Delete the transposed snapshot matrix.
+    // Delete the snapshot matrix.
+    if ((transpose) || (d_preserve_snapshot))
+    {
         free_matrix_data(snapshot_matrix);
         delete snapshot_matrix;
     }

@@ -74,7 +74,7 @@ main(
                                          "static_smoke1"));
 
         // Take the first sample.
-        static_basis_generator->takeSample(&vals0[dim*rank],0,0.1);
+        static_basis_generator->takeSample(&vals0[dim*rank]);
         std::cout << "Writing sample 1" << std::endl;
         static_basis_generator->writeSnapshot();
         static_basis_generator->endSamples();
@@ -87,7 +87,7 @@ main(
                                           "static_smoke2"));
 
         // Take the second sample.
-        static_basis_generator2->takeSample(&vals1[dim*rank],0,0.1);
+        static_basis_generator2->takeSample(&vals1[dim*rank]);
         static_basis_generator2->writeSnapshot(); // "_snapshot" will be added to the base file name
         static_basis_generator2->endSamples();
 
@@ -120,8 +120,8 @@ main(
                                       static_svd_options, false,
                                       "static_smoke_check"));
 
-    static_basis_generator4->takeSample(&vals0[dim*rank],0,0.1);
-    static_basis_generator4->takeSample(&vals1[dim*rank],0,0.1);
+    static_basis_generator4->takeSample(&vals0[dim*rank]);
+    static_basis_generator4->takeSample(&vals1[dim*rank]);
 
     static_basis_generator4->endSamples();
     static_basis_generator4 = nullptr;

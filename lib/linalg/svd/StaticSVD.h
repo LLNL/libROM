@@ -41,10 +41,8 @@ public:
      * @brief Collect the new sample, u_in at the supplied time.
      *
      * @pre u_in != 0
-     * @pre time >= 0.0
      *
      * @param[in] u_in The new sample.
-     * @param[in] time The simulation time of the new sample.
      * @param[in] add_without_increase If true, then addLinearlyDependent will be invoked
      *
      * @return True if the sampling was successful.
@@ -53,7 +51,6 @@ public:
     bool
     takeSample(
         double* u_in,
-        double time,
         bool add_without_increase = false);
 
     /**
@@ -121,16 +118,14 @@ protected:
     computeSVD();
 
     /**
-     * @brief Checks if the basis vectors for this time interval are up to
-     *        date.
+     * @brief Checks if the basis vectors are computed from the current snapshot.
      *
-     * @return True if the basis vectors for this time interval are up to
-     *         date.
+     * @return True if the basis vectors are computed from the current snapshot.
      */
     bool
-    thisIntervalBasisCurrent()
+    isBasisCurrent()
     {
-        return d_this_interval_basis_current;
+        return d_basis_is_current;
     }
 
     /**
@@ -147,7 +142,7 @@ protected:
      * @brief Flag to indicate if the basis vectors for the current time
      *        interval are up to date.
      */
-    bool d_this_interval_basis_current;
+    bool d_basis_is_current;
 
     /**
      * @brief The rank of the process this object belongs to.
@@ -244,6 +239,11 @@ private:
     StaticSVD&
     operator = (
         const StaticSVD& rhs);
+
+    /**
+     * @brief option to preserve snapshot in computeSVD.
+     */
+    bool d_preserve_snapshot;
 };
 
 }

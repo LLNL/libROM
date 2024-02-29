@@ -37,13 +37,13 @@ void compareBasis(string &baselineFile, string &targetFile, double errorBound,
 
     CAROM::BasisReader baselineReader(baselineFile);
     CAROM::Matrix *baselineBasis =
-        (CAROM::Matrix*) baselineReader.getSpatialBasis(0.0);
+        (CAROM::Matrix*) baselineReader.getSpatialBasis();
     CAROM::Vector *baselineSV =
-        (CAROM::Vector*) baselineReader.getSingularValues(0.0);
+        (CAROM::Vector*) baselineReader.getSingularValues();
     CAROM::BasisReader targetReader(targetFile);
-    CAROM::Matrix *targetBasis = (CAROM::Matrix*) targetReader.getSpatialBasis(0.0);
+    CAROM::Matrix *targetBasis = (CAROM::Matrix*) targetReader.getSpatialBasis();
     CAROM::BasisReader diffReader(baselineFile);
-    CAROM::Matrix *diffBasis = (CAROM::Matrix*) diffReader.getSpatialBasis(0.0);
+    CAROM::Matrix *diffBasis = (CAROM::Matrix*) diffReader.getSpatialBasis();
 
     // Get basis dimensions
     int baselineNumRows = baselineBasis->numRows();

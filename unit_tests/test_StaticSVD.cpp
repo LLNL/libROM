@@ -78,7 +78,7 @@ TEST(StaticSVDTest, Test_StaticSVD)
             std::vector<double> similar(columns[j]);
             for (unsigned i = 0; i < 12; ++i)
                 similar[i] *= sigmas[j];
-            sampler.takeSample(similar.data(), 0, 0);
+            sampler.takeSample(similar.data());
         }
 
         auto distU = sampler.getSpatialBasis();
@@ -285,14 +285,14 @@ TEST(StaticSVDTest, Test_StaticSVDClass)
         4.84486375065219387892E+00,      3.66719976398777269821E+00,      2.69114625366671811335E+00
     };
 
-    CAROM::Options svd_options = CAROM::Options(d_num_rows, 3, 1);
+    CAROM::Options svd_options = CAROM::Options(d_num_rows, 3);
     svd_options.setMaxBasisDimension(num_total_rows);
     svd_options.setDebugMode(true);
     svd_options.setRandomizedSVD(false);
     CAROM::BasisGenerator sampler(svd_options, false);
-    sampler.takeSample(&sample1[row_offset[d_rank]], 0, 0);
-    sampler.takeSample(&sample2[row_offset[d_rank]], 0, 0);
-    sampler.takeSample(&sample3[row_offset[d_rank]], 0, 0);
+    sampler.takeSample(&sample1[row_offset[d_rank]]);
+    sampler.takeSample(&sample2[row_offset[d_rank]]);
+    sampler.takeSample(&sample3[row_offset[d_rank]]);
 
     const CAROM::Matrix* d_basis = sampler.getSpatialBasis();
     const CAROM::Matrix* d_basis_right = sampler.getTemporalBasis();
@@ -365,16 +365,16 @@ TEST(StaticSVDTest, Test_StaticSVDTranspose)
         4.84486375065219387892E+00,     3.66719976398777269821E+00,     2.69114625366671811335E+00,
     };
 
-    CAROM::Options svd_options = CAROM::Options(d_num_rows, num_total_cols, 1);
+    CAROM::Options svd_options = CAROM::Options(d_num_rows, num_total_cols);
     svd_options.setMaxBasisDimension(num_total_rows);
     svd_options.setDebugMode(true);
     svd_options.setRandomizedSVD(false);
     CAROM::BasisGenerator sampler(svd_options, false);
-    sampler.takeSample(&sample1[row_offset[d_rank]], 0, 0);
-    sampler.takeSample(&sample2[row_offset[d_rank]], 0, 0);
-    sampler.takeSample(&sample3[row_offset[d_rank]], 0, 0);
-    sampler.takeSample(&sample4[row_offset[d_rank]], 0, 0);
-    sampler.takeSample(&sample5[row_offset[d_rank]], 0, 0);
+    sampler.takeSample(&sample1[row_offset[d_rank]]);
+    sampler.takeSample(&sample2[row_offset[d_rank]]);
+    sampler.takeSample(&sample3[row_offset[d_rank]]);
+    sampler.takeSample(&sample4[row_offset[d_rank]]);
+    sampler.takeSample(&sample5[row_offset[d_rank]]);
 
     const CAROM::Matrix* d_basis = sampler.getSpatialBasis();
     const CAROM::Matrix* d_basis_right = sampler.getTemporalBasis();

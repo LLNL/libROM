@@ -19,21 +19,17 @@ SVD::SVD(
     Options options) :
     d_dim(options.dim),
     d_num_samples(0),
-    d_samples_per_time_interval(options.samples_per_time_interval),
-    d_max_time_intervals(options.max_time_intervals),
+    d_max_num_samples(options.max_num_samples),
     d_basis(NULL),
     d_basis_right(NULL),
     d_U(NULL),
     d_W(NULL),
     d_S(NULL),
     d_snapshots(NULL),
-    d_time_interval_start_times(0),
     d_debug_algorithm(options.debug_algorithm)
 {
     CAROM_VERIFY(options.dim > 0);
-    CAROM_VERIFY(options.max_time_intervals == -1
-                 || options.max_time_intervals > 0);
-    CAROM_VERIFY(options.samples_per_time_interval > 0);
+    CAROM_VERIFY(options.max_num_samples > 0);
 }
 
 SVD::~SVD()

@@ -99,12 +99,6 @@ private:
      */
     std::string full_file_name;
     std::string snap_file_name;
-
-    /**
-     * @brief Number of time intervals for which basis vectors have been
-     * written.
-     */
-    int d_num_intervals_written;
 };
 
 }
