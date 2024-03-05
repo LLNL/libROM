@@ -68,6 +68,7 @@ NNLSSolver::NNLSSolver(double const_tol, int min_nnz, int max_nnz,
       qr_residual_mode_(QRresidualMode::hybrid),
       d_criterion(criterion)
 {
+    CAROM_VERIFY((d_criterion == NNLS_termination::L2) || (d_criterion == NNLS_termination::LINF));
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
     std::cout << "NNLSSolver init on rank " << d_rank << " out of "
