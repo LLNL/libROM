@@ -34,14 +34,15 @@ TEST(NNLS, solve_with_LINF)
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    const int nrow = 300;
-    const int ncol = 1000;
+    const int nrow = 50;
+    const int ncol = 200;
     const int ncol_local = CAROM::split_dimension(ncol);
     std::vector<int> row_offset(nproc + 1);
     const int total_cols = CAROM::get_global_offsets(ncol_local, row_offset,
                            MPI_COMM_WORLD);
     const double rel_tol = 0.05;
     const double nnls_tol = 1.0e-11;
+    const int true_nnz = 44;
 
     std::default_random_engine generator;
     generator.seed(
@@ -99,6 +100,7 @@ TEST(NNLS, solve_with_LINF)
 
     if (rank == 0)
         std::cout << "Global number of nonzeros in NNLS solution: " << nnz << std::endl;
+    EXPECT_EQ(nnz, true_nnz);
 
     // Check residual of NNLS solution
     CAROM::Vector res(Gt.numColumns(), false);
@@ -130,14 +132,15 @@ TEST(NNLS, solve_with_L2)
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    const int nrow = 300;
-    const int ncol = 1000;
+    const int nrow = 30;
+    const int ncol = 100;
     const int ncol_local = CAROM::split_dimension(ncol);
     std::vector<int> row_offset(nproc + 1);
     const int total_cols = CAROM::get_global_offsets(ncol_local, row_offset,
                            MPI_COMM_WORLD);
     const double rel_tol = 0.05;
     const double nnls_tol = 1.0e-11;
+    const int true_nnz = 21;
 
     std::default_random_engine generator;
     generator.seed(
@@ -196,6 +199,7 @@ TEST(NNLS, solve_with_L2)
 
     if (rank == 0)
         std::cout << "Global number of nonzeros in NNLS solution: " << nnz << std::endl;
+    EXPECT_EQ(nnz, true_nnz);
 
     // Check residual of NNLS solution
     CAROM::Vector res(Gt.numColumns(), false);

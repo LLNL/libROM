@@ -24,7 +24,7 @@ namespace CAROM {
  *        LINF: L-infinity norm (maximum value) of the residual
  *        L2: L2 norm of the residual
  */
-enum NNLS_termination {
+enum class NNLS_termination {
     LINF,
     L2
 };
