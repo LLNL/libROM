@@ -85,6 +85,7 @@ int main(int argc, char *argv[])
     int nsets = 0;
     double ef = 0.9999;
     int rdim = -1;
+    int verbose_level = 0;
 
     int precision = 8;
     cout.precision(precision);
@@ -128,6 +129,8 @@ int main(int argc, char *argv[])
                    "Energy fraction.");
     args.AddOption(&rdim, "-rdim", "--rdim",
                    "Reduced dimension.");
+    args.AddOption(&verbose_level, "-v", "--verbose",
+                   "Set the verbosity level of the LOBPCG solver and preconditioner. 0 is off.");
     args.Parse();
     if (!args.Good())
     {
@@ -335,7 +338,7 @@ int main(int argc, char *argv[])
         if (!slu_solver && !sp_solver && !cpardiso_solver)
         {
             HypreBoomerAMG * amg = new HypreBoomerAMG(*A);
-            amg->SetPrintLevel(1);
+            amg->SetPrintLevel(verbose_level);
             precond = amg;
         }
         else
@@ -349,7 +352,7 @@ int main(int argc, char *argv[])
         lobpcg->SetMaxIter(200);
         lobpcg->SetTol(1e-8);
         lobpcg->SetPrecondUsageMode(1);
-        lobpcg->SetPrintLevel(0);
+        lobpcg->SetPrintLevel(verbose_level);
         lobpcg->SetMassMatrix(*M);
         lobpcg->SetOperator(*A);
 
