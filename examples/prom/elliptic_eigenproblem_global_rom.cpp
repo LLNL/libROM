@@ -371,7 +371,7 @@ int main(int argc, char *argv[])
             if (offline)
             {
                 x = lobpcg->GetEigenvector(i);
-                generator->takeSample(x.GetData(), (double)i, 0.01);
+                generator->takeSample(x.GetData());
             }
         }
 
