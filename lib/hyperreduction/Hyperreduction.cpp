@@ -39,7 +39,8 @@ void Hyperreduction::ComputeSamples(const Matrix* f_basis,
 				    bool precond,
 				    Vector* K,
 				    std::vector<int> *init_samples,
-                                    bool qr_factorize)
+                                    bool qr_factorize,
+				    bool init_trunc)
 {
     switch (samplingType)
     {
@@ -50,7 +51,8 @@ void Hyperreduction::ComputeSamples(const Matrix* f_basis,
              f_sampled_row,
              f_sampled_rows_per_proc,
              f_basis_sampled_inv,
-             myid, num_procs);
+             myid, num_procs,
+	     precond,K);
         return;
     case gnat:
         GNAT(f_basis,
@@ -82,7 +84,8 @@ void Hyperreduction::ComputeSamples(const Matrix* f_basis,
               num_samples_req,
 	      precond, K,
               init_samples,
-              qr_factorize);
+              qr_factorize,
+	      init_trunc);
         return;
     default:
         CAROM_ERROR("Sampling type not supported");

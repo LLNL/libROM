@@ -47,6 +47,7 @@ class Vector;
  * @param[in] qr_factorize Whether to factorize the incoming matrix. If true and
  *                         if the incoming matrix is a basis, the unnecessary
  *                         computation of a QR factorization will be performed.
+ * @param[in] init_trunc Whether to initialize via truncation.
  */
 void
 S_OPT(const Matrix* f_basis,
@@ -60,7 +61,8 @@ S_OPT(const Matrix* f_basis,
       bool precond=false,
       Vector* K=nullptr,
       std::vector<int> *init_samples=NULL,
-      bool qr_factorize = false);
+      bool qr_factorize = false,
+      bool init_trunc = false);
 
 }
 

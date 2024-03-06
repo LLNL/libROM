@@ -66,7 +66,8 @@ public:
 			bool precond=false,
 			Vector* K=nullptr,
 			std::vector<int> *init_samples=NULL,
-                        bool qr_factorize = false);
+                        bool qr_factorize = false,
+			bool init_trunc = false);
 
 private:
     SamplingType samplingType;

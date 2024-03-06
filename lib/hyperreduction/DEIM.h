@@ -19,7 +19,7 @@
 namespace CAROM {
 
 class Matrix;
-
+class Vector;
 /**
  * @brief Computes the DEIM algorithm on the given basis.
  *
@@ -39,6 +39,8 @@ class Matrix;
  * @param[out] f_basis_sampled_inv The inverse of the sampled basis of the RHS.
  * @param[in] myid The rank of this process.
  * @param[in] num_procs The total number of processes.
+ * @param[in] precond Boolean value indicating if preconditnioning is used.
+ * @param[out] K A vector that stores the diagonal elements of a preconditioning matrix.
  */
 void
 DEIM(const Matrix* f_basis,
@@ -47,7 +49,9 @@ DEIM(const Matrix* f_basis,
      std::vector<int>& f_sampled_rows_per_proc,
      Matrix& f_basis_sampled_inv,
      int myid,
-     int num_procs);
+     int num_procs,
+     bool precond=false,
+     Vector* K=nullptr);
 
 }
 

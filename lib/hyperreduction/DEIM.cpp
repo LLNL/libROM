@@ -12,13 +12,14 @@
 // rhs to be sampled for the interpolation of the rhs.
 
 #include "linalg/Matrix.h"
+#include "linalg/Vector.h"
 #include "Utilities.h"
 #include "mpi.h"
 #include <cmath>
 #include <vector>
 #include <map>
 #include <set>
-
+#include <cfloat>
 #include "DEIM.h"
 
 using namespace std;
@@ -32,7 +33,9 @@ DEIM(const Matrix* f_basis,
      std::vector<int>& f_sampled_rows_per_proc,
      Matrix& f_basis_sampled_inv,
      int myid,
-     int num_procs)
+     int num_procs,
+     bool precond,
+     Vector* K)
 {
     CAROM_VERIFY(num_procs == f_sampled_rows_per_proc.size());
     // This algorithm determines the rows of f that should be sampled, the
@@ -87,13 +90,26 @@ DEIM(const Matrix* f_basis,
                  && num_basis_vectors == f_basis_sampled_inv.numColumns());
     CAROM_VERIFY(!f_basis_sampled_inv.distributed());
     int basis_size = f_basis->numRows();
+//(1-1)
+    CAROM::Matrix* Kf = NULL;
+    const Matrix* Vo = NULL;
+    if(precond)
+    {
+        Kf = f_basis->row_normalize();
+        Vo = Kf -> getFirstNColumns(num_basis_vectors);
+    }else{
+        Vo = f_basis;
+    }
+    int num_samples= num_basis_vectors;
+    Vector Kii(num_samples,false);
 
     // The small matrix inverted by the algorithm.  We'll allocate the largest
     // matrix we'll need and set its size at each step in the algorithm.
     Matrix M(num_basis_vectors, num_basis_vectors, false);
 
     // Scratch space used throughout the algorithm.
-    double* c = new double [num_basis_vectors];
+//(1-2)
+    double* c = new double [num_basis_vectors+1];
 
     vector<set<int> > proc_sampled_f_row(num_procs);
     vector<map<int, int> > proc_f_row_to_tmp_fs_row(num_procs);
@@ -108,6 +124,9 @@ DEIM(const Matrix* f_basis,
     f_bv_max_local.proc = myid;
     for (int i = 0; i < basis_size; ++i) {
         double f_bv_val = fabs(f_basis->item(i, 0));
+//(2-1)
+	if(precond) f_bv_val = -Kf->item(i,num_basis_vectors);
+        if(f_bv_val==-1.0) f_bv_val = -DBL_MAX;
         if (f_bv_val > f_bv_max_local.row_val) {
             f_bv_max_local.row_val = f_bv_val;
             f_bv_max_local.row = i;
@@ -118,16 +137,20 @@ DEIM(const Matrix* f_basis,
 
     // Now get the first sampled row of the basis of the RHS.
     if (f_bv_max_global.proc == myid) {
+	//(3-1)Vo
         for (int j = 0; j < num_basis_vectors; ++j) {
-            c[j] = f_basis->item(f_bv_max_global.row, j);
+            c[j] = Vo->item(f_bv_max_global.row, j);
         }
+        if(precond) c[num_basis_vectors] = Kf->item(f_bv_max_global.row, num_basis_vectors);
     }
-    MPI_Bcast(c, num_basis_vectors, MPI_DOUBLE,
+    MPI_Bcast(c, num_basis_vectors+1, MPI_DOUBLE,
               f_bv_max_global.proc, MPI_COMM_WORLD);
     // Now add the first sampled row of the basis of the RHS to tmp_fs.
     for (int j = 0; j < num_basis_vectors; ++j) {
         tmp_fs.item(0, j) = c[j];
     }
+//(3-2)
+    if(precond) Kii.item(0) = c[num_basis_vectors];    
     proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
     proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] = 0;
 
@@ -164,10 +187,11 @@ DEIM(const Matrix* f_basis,
         f_bv_max_local.proc = myid;
         for (int F_row = 0; F_row < basis_size; ++F_row) {
             double tmp = 0.0;
+//(4-1)	    
             for (int F_col = 0; F_col < i; ++F_col) {
-                tmp += f_basis->item(F_row, F_col)*c[F_col];
+                tmp += Vo->item(F_row, F_col)*c[F_col];
             }
-            double r_val = fabs(f_basis->item(F_row, i) - tmp);
+            double r_val = fabs(Vo->item(F_row, i) - tmp);
             if (r_val > f_bv_max_local.row_val) {
                 f_bv_max_local.row_val = r_val;
                 f_bv_max_local.row = F_row;
@@ -178,16 +202,20 @@ DEIM(const Matrix* f_basis,
 
         // Now get the next sampled row of the basis of f.
         if (f_bv_max_global.proc == myid) {
+//(4-2)	    
             for (int j = 0; j < num_basis_vectors; ++j) {
-                c[j] = f_basis->item(f_bv_max_global.row, j);
+                c[j] = Vo->item(f_bv_max_global.row, j);
             }
+	    if(precond) c[num_basis_vectors] = Kf->item(f_bv_max_global.row, num_basis_vectors);
         }
-        MPI_Bcast(c, num_basis_vectors, MPI_DOUBLE,
+        MPI_Bcast(c, num_basis_vectors+1, MPI_DOUBLE,
                   f_bv_max_global.proc, MPI_COMM_WORLD);
         // Now add the ith sampled row of the basis of the RHS to tmp_fs.
         for (int j = 0; j < num_basis_vectors; ++j) {
             tmp_fs.item(i, j) = c[j];
         }
+//(4-3)
+	if(precond) Kii.item(i) = c[num_basis_vectors];
         proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
         proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] = i;
     }
@@ -208,9 +236,42 @@ DEIM(const Matrix* f_basis,
             for (int col = 0; col < num_f_basis_cols; ++col) {
                 f_basis_sampled_inv.item(idx, col) = tmp_fs.item(tmp_fs_row, col);
             }
+//(5-1)    
+            if(precond) K->item(idx) = Kii.item(tmp_fs_row);	    
             ++idx;
         }
     }
+//Temporary codes for printing results: should be erased 
+    if(num_basis_vectors <= num_samples){
+        for(int i=0; i<num_samples;i++){
+                for(int j=0; j<num_basis_vectors; j++){
+                //printf("%f\t",f_basis_sampled_inv.item(i,j));
+                }
+                //printf("\n");
+        }
+        Matrix* U = NULL;
+        Matrix V(num_basis_vectors,num_basis_vectors,false);
+        Vector sigma(num_basis_vectors, false);
+        SerialSVD(&f_basis_sampled_inv, U, &sigma, &V);
+        delete U;
+        double sigma_end = 0.0;
+        for(int j = num_basis_vectors-1; j>=0; j--){
+                if(sigma.item(j) > 1e-8) {
+                        sigma_end = sigma.item(j);
+                        break;
+                }
+        }
+        printf("conditionNum:%f -%f:%f\n", sigma.item(0)/sigma_end,sigma.item(0), sigma_end);
+        printf("%d\t",f_basis_sampled_inv.numColumns());
+        printf("%d\t",f_basis_sampled_inv.numRows());
+    }
+    if(precond){
+      for(int i=0; i<num_samples; i++){
+        printf("k%f\t",K->item(i));
+      }
+      printf("\n");
+    }
+    CAROM_ASSERT(num_samples == idx);
 
     // Now invert f_basis_sampled_inv.
     f_basis_sampled_inv.inverse();
@@ -218,7 +279,11 @@ DEIM(const Matrix* f_basis,
     // Free the MPI_Datatype and MPI_Op.
     MPI_Type_free(&MaxRowType);
     MPI_Op_free(&RowInfoOp);
-
+    if (precond)
+    {
+        delete Vo;
+        delete Kf;
+    }
     delete [] c;
 }
 

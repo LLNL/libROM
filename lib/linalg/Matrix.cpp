@@ -1124,15 +1124,21 @@ Matrix::calculateNumDistributedRows() {
 Matrix*
 Matrix::row_normalize() const
 {
-
+    double check = 0.0;
     int nrow = numRows();
+    int threshold; 
+    std::frexp(1/(numDistributedRows()*numDistributedRows()),&threshold);
+    std::cout << "threshold :" << threshold << std::endl; 
+    std::cout << "numDRow :" << 1/(numDistributedRows()*numDistributedRows()) << std::endl; 
+    std::cout << "numDRow :" << numDistributedRows() << std::endl; 
     Matrix* normalized_matrix = new Matrix(nrow, numColumns()+1, distributed());
     for (int i = 0; i < nrow; i++)
     {
         double kii = (double)numColumns();
         double scaled_norm = 0.0;
         double rowmax = fabs(item(i,0));
-        double scaled_item;
+        check += item(i,1) * item(i,1) ;
+	double scaled_item;
         int exponent;
         for( int j = 1; j < numColumns(); j++ )
         {
@@ -1140,7 +1146,7 @@ Matrix::row_normalize() const
                 rowmax = fabs(item(i,j));
            }
         }
-       if(rowmax > 2.5e-16 ){
+       if(rowmax > 0.0 ){
           scaled_item = std::frexp(rowmax, &exponent);
           //We use the ldexp function to multiply each component by 2^-exponent.
           for( int j = 0; j < numColumns(); j++ )
@@ -1149,6 +1155,7 @@ Matrix::row_normalize() const
             scaled_norm += (scaled_item) * (scaled_item);
           }
           kii =sqrt(kii/scaled_norm);
+	  if(exponent < threshold) exponent = threshold;
           for (int j = 0; j < numColumns(); j++ )
           {
             normalized_matrix->item(i, j) = kii * (std::ldexp(item(i,j), -exponent));
@@ -1164,6 +1171,7 @@ Matrix::row_normalize() const
           normalized_matrix->item(i,numColumns()) = 1.0;
         }
     }
+    std::cout << "column 11 inner product :" << check << std::endl; 
     return normalized_matrix;
 
 }

@@ -39,7 +39,8 @@ S_OPT(const Matrix* f_basis,
       bool precond,
       Vector* K,
       std::vector<int>* init_samples,
-      bool qr_factorize)
+      bool qr_factorize,
+      bool init_trunc)
 {
     CAROM_VERIFY(num_procs == f_sampled_rows_per_proc.size());
     // This algorithm determines the rows of f that should be sampled, the
@@ -195,7 +196,10 @@ S_OPT(const Matrix* f_basis,
         f_bv_max_local.row_val = -DBL_MAX;
         f_bv_max_local.proc = myid;
         for (int i = 0; i < num_rows; ++i) {
+//(2-4)
             double f_bv_val = fabs(Vo->item(i, 0));
+//if(precond) f_bv_val = -Kf->item(i,num_basis_vectors);
+//	    if(f_bv_val==-1.0) f_bv_val = -DBL_MAX; 
             if (f_bv_val > f_bv_max_local.row_val) {
                 f_bv_max_local.row_val = f_bv_val;
                 f_bv_max_local.row = i;
@@ -240,6 +244,46 @@ S_OPT(const Matrix* f_basis,
         {
             if (i <= num_basis_vectors)
             {
+		printf("init_trunc %d",init_trunc);
+		if(!init_trunc)
+		{
+		A0.setSize( num_basis_vectors,i-1);
+                for (int j = 0; j < num_basis_vectors; j++)
+                {
+                    for (int k = 0; k < num_samples_obtained; k++)
+                    {
+                        A0.item(j,k) = V1.item(k,j);
+                    }
+                }
+
+                Matrix* lhs = A0.transposeMult(A0);
+                lhs->inverse();
+                Matrix* rhs = Vo->mult(A0);
+
+                Matrix* ls_res = rhs->mult(lhs);
+                delete lhs;
+
+
+                for (int j = 0; j < A->dim(); j++)
+                {
+                    double tmp = 0.0;
+                    for (int k = 0; k < Vo->numColumns(); k++)
+                    {
+                        tmp += Vo->item(j, k) * Vo->item(j, k);
+                    }
+                    double tmp2 = 0.0;
+                    for (int k = 0; k < rhs->numColumns(); k++)
+                    {
+                        tmp2 += rhs->item(j, k) * ls_res->item(j, k);
+                    }
+                    A->item(j) = tmp - tmp2;
+                }
+
+                delete rhs;
+                delete ls_res;
+		}
+		else
+		{	
         	Matrix V1_last_col(num_basis_vectors - 1, 1, false);
         	Matrix tt(num_rows, num_basis_vectors - 1, f_basis->distributed());
         	Matrix tt1(num_rows, num_basis_vectors - 1, f_basis->distributed());
@@ -429,6 +473,7 @@ S_OPT(const Matrix* f_basis,
                 }
 
                 delete b;
+		}
             }  else
             {
                 Matrix* curr_V1 = new Matrix(V1.getData(), num_samples_obtained,
