@@ -147,11 +147,11 @@ public:
      *        within a column range.
      *
      * @param[in] base_file_name The base part of the name of the files
-     *                           holding the basis / snapshot vectors.
+     *                           holding the basis/snapshot vectors.
      * @param[in] kind A string equal to "basis" or "snapshot", representing
      *                 which kind of data to load.
-     * @param[in] col_min The first basis or snapshot to read.
-     * @param[in] col_max The last basis or snapshot to read.
+     * @param[in] col_min The first basis/snapshot vector to read.
+     * @param[in] col_max The last basis/snapshot vector to read.
      * @param[in] db_format Format of the file to read.
      */
     void
@@ -165,10 +165,10 @@ public:
      * @brief Load previously saved sample (basis or state).
      *
      * @param[in] base_file_name The base part of the name of the files
-     *                           holding the basis / snapshot vectors.
+     *                           holding the basis/snapshot vectors.
      * @param[in] kind A string equal to "basis" or "snapshot", representing
      *                 which kind of data to load.
-     * @param[in] cutoff The maximum number of bases or snapshots to read.
+     * @param[in] cutoff The maximum number of basis/snapshot vectors to read.
      * @param[in] db_format Format of the file to read.
      */
     void
