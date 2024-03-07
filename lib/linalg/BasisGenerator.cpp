@@ -22,6 +22,7 @@
 #include "svd/IncrementalSVDBrand.h"
 
 #include <iomanip>
+#include <fstream>
 
 namespace CAROM {
 
@@ -189,12 +190,12 @@ BasisGenerator::loadSampleRange(const std::string& base_file_name,
 
     int num_rows = mat->numRows();
     int num_cols = mat->numColumns();
-    if (col_min < 1) col_min = 1;
-    if (col_max > num_cols) col_max = num_cols;
+    if (col_min < 0) col_min = 0;
+    if (col_max > num_cols-1) col_max = num_cols-1;
 
     CAROM_VERIFY(col_max >= col_min);
 
-    for (int j = col_min-1; j < col_max; j++) {
+    for (int j = col_min; j <= col_max; j++) {
         double* u_in = new double[num_rows];
         for (int i = 0; i < num_rows; i++) {
             if (kind == "basis") {
@@ -215,7 +216,7 @@ BasisGenerator::loadSamples(const std::string& base_file_name,
                             int cutoff,
                             Database::formats db_format)
 {
-    loadSampleRange(base_file_name, kind, 1, cutoff, db_format);
+    loadSampleRange(base_file_name, kind, 0, cutoff-1, db_format);
 }
 
 double

@@ -139,7 +139,7 @@ int main(int argc, char* argv[])
 
     if (rank==0) std::cout << "Loading data from " << kind << std::endl;
     for(const auto& sample_name: sample_names) {
-        static_basis_generator->loadSampleRange(sample_name, kind, col_min, col_max);
+        static_basis_generator->loadSampleRange(sample_name, kind, col_min-1, col_max-1);
     }
 
     if (rank==0) std::cout << "Saving data uploaded as a snapshot matrix" <<

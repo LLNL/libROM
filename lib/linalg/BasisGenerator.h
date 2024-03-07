@@ -23,7 +23,6 @@
 #include "mpi.h"
 
 #include <cmath>
-#include <fstream>
 
 /* Use C++11 built-in shared pointers if available; else fallback to Boost. */
 #if __cplusplus >= 201103L
@@ -158,7 +157,7 @@ public:
     void
     loadSampleRange(const std::string& base_file_name,
                     const std::string& kind  = "basis",
-                    int col_min = 1,
+                    int col_min = 0,
                     int col_max = 1e9,
                     Database::formats db_format = Database::HDF5);
 
