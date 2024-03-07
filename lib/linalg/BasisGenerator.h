@@ -294,7 +294,7 @@ public:
     void finalSummary(
         const double energyFractionThreshold,
         int & cutoff,
-        const std::string cutoffOutputPath = "",
+        const std::string & cutoffOutputPath = "",
         const int first_sv = 0);
 
 protected:

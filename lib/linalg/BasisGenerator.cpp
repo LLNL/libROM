@@ -329,7 +329,7 @@ void
 BasisGenerator::finalSummary(
     const double energyFractionThreshold,
     int & cutoff,
-    const std::string cutoffOutputPath,
+    const std::string & cutoffOutputPath,
     const int first_sv)
 {
     const int rom_dim = getSpatialBasis()->numColumns();
