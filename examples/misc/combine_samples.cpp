@@ -153,7 +153,7 @@ int main(int argc, char* argv[])
         int rom_dim = static_basis_generator->getSpatialBasis()->numColumns();
         if (rank==0) std::cout << "U ROM Dimension: " << rom_dim << std::endl;
         static_basis_generator->endSamples();
-        if (rank==0) static_basis_generator->finalSummary(0.99999999, rdim);
+        if (rank==0) static_basis_generator->finalSummary(1e-8, rdim);
     }
     else {
         /*-- load data from hdf5 file to find the mean and subtract it --*/
@@ -209,7 +209,7 @@ int main(int argc, char* argv[])
         int rom_dim = static_basis_generator2->getSpatialBasis()->numColumns();
         if (rank==0) std::cout << "U ROM Dimension: " << rom_dim << std::endl;
         static_basis_generator2->endSamples();
-        if (rank==0) static_basis_generator2->finalSummary(0.99999999, rdim);
+        if (rank==0) static_basis_generator2->finalSummary(1e-8, rdim);
 
         static_basis_generator2 = nullptr;
     }

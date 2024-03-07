@@ -327,7 +327,7 @@ BasisGenerator::resetDt(
 
 void
 BasisGenerator::finalSummary(
-    const double energyFraction,
+    const double energyFractionThreshold,
     int & cutoff,
     const std::string cutoffOutputPath,
     const int first_sv)
@@ -342,7 +342,7 @@ BasisGenerator::finalSummary(
         sum += (*sing_vals)(sv);
     }
 
-    int p = std::floor(-std::log10(1.0 - energyFraction));
+    int p = std::floor(-std::log10(energyFractionThreshold));
     std::vector<double> energy_fractions(p);
 
     for (int i = 0; i < p; ++i) {
@@ -379,7 +379,7 @@ BasisGenerator::finalSummary(
                 break;
             }
         }
-        if (!reached_cutoff && partialSum / sum > energyFraction)
+        if (!reached_cutoff && partialSum / sum > 1.0 - energyFractionThreshold)
         {
             cutoff = sv+1;
             reached_cutoff = true;
@@ -388,7 +388,7 @@ BasisGenerator::finalSummary(
 
     if (!reached_cutoff) cutoff = sing_vals->dim();
     *output_stream << std::fixed << std::setprecision(p+1);
-    *output_stream << "For energy fraction: " << energyFraction << ", take first "
+    *output_stream << "For energy fraction: " << 1.0 - energyFractionThreshold << ", take first "
                    << cutoff << " of " << sing_vals->dim() << " basis vectors" << std::endl;
 
     if (!cutoffOutputPath.empty()) {

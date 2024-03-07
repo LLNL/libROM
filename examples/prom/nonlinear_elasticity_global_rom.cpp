@@ -328,7 +328,7 @@ void MergeBasis(const int dimFOM, const int nparam, const int max_num_snapshots,
     generator.endSamples(); // save the merged basis file
 
     int cutoff = 0;
-    generator.finalSummary(0.9999999, cutoff, "mergedSV_" + name + ".txt");
+    generator.finalSummary(1e-7, cutoff, "mergedSV_" + name + ".txt");
 }
 
 const CAROM::Matrix *GetSnapshotMatrix(const int dimFOM, const int nparam,

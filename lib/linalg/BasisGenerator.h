@@ -285,13 +285,14 @@ public:
     /**
      * @brief Prints the summary of recommended numbers of basis vectors.
      *
-     * @param[in] energyFraction   Energy Fraction.
-     * @param[in] cutoff           Number of basis vectors selected.
-     * @param[in] cutoffOutputPath Path of the summary file.
-     * @param[in] first_sv         First singular vector in the calculaton of energy.
+     * @param[in] energyFractionThreshold   Energy Fraction threshold 
+     *                                      (difference of energy difference from 1.0).
+     * @param[in] cutoff                    Number of basis vectors selected.
+     * @param[in] cutoffOutputPath          Path of the summary file.
+     * @param[in] first_sv                  First singular vector in the calculaton of energy.
      */
     void finalSummary(
-        const double energyFraction,
+        const double energyFractionThreshold,
         int & cutoff,
         const std::string cutoffOutputPath = "",
         const int first_sv = 0);
