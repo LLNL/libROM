@@ -388,7 +388,8 @@ BasisGenerator::finalSummary(
 
     if (!reached_cutoff) cutoff = sing_vals->dim();
     *output_stream << std::fixed << std::setprecision(p+1);
-    *output_stream << "For energy fraction: " << 1.0 - energyFractionThreshold << ", take first "
+    *output_stream << "For energy fraction: " << 1.0 - energyFractionThreshold <<
+                   ", take first "
                    << cutoff << " of " << sing_vals->dim() << " basis vectors" << std::endl;
 
     if (!cutoffOutputPath.empty()) {
