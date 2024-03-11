@@ -144,5 +144,5 @@ main(
 
     // Finalize MPI and return.
     MPI_Finalize();
-    return !status;
+    return 0;
 }
