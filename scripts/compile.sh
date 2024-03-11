@@ -26,7 +26,7 @@ USE_MFEM="Off"
 UPDATE_LIBS=false
 INSTALL_SCALAPACK=false
 MFEM_USE_GSLIB="Off"
-MFEM_USE_LAPACK="NO"
+MFEM_USE_LAPACK="Off"
 
 cleanup_dependencies() {
     pushd .
@@ -59,7 +59,7 @@ do
             MFEM_USE_GSLIB="On"
             ;;
         l)
-            MFEM_USE_LAPACK="YES"
+            MFEM_USE_LAPACK="On"
             ;;
         m)
             USE_MFEM="On"
@@ -109,7 +109,7 @@ if [[ $MFEM_USE_GSLIB == "On" ]] && [[ ! -d "$HOME_DIR/dependencies/gslib" ]]; t
 fi
 export MFEM_USE_GSLIB
 
-if [[ ${MFEM_USE_LAPACK} == "YES" ]] && [[ ${USE_MFEM} == "Off" ]]; then
+if [[ ${MFEM_USE_LAPACK} == "On" ]] && [[ ${USE_MFEM} == "Off" ]]; then
     echo "mfem lapack flag has no effect without mfem enabled"
 	exit 1
 fi
