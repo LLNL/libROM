@@ -285,7 +285,7 @@ public:
     /**
      * @brief Prints the summary of recommended numbers of basis vectors.
      *
-     * @param[in] energyFractionThreshold   Energy Fraction threshold 
+     * @param[in] energyFractionThreshold   Energy Fraction threshold
      *                                      (energy fraction = 1.0 - energyFractionThreshold).
      * @param[in] cutoff                    Number of basis vectors selected.
      * @param[in] cutoffOutputPath          Path of the summary file.
