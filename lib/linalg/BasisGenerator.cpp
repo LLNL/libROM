@@ -21,6 +21,9 @@
 #include "svd/IncrementalSVDFastUpdate.h"
 #include "svd/IncrementalSVDBrand.h"
 
+#include <iomanip>
+#include <fstream>
+
 namespace CAROM {
 
 BasisGenerator::BasisGenerator(
@@ -143,10 +146,11 @@ BasisGenerator::takeSample(
 }
 
 void
-BasisGenerator::loadSamples(const std::string& base_file_name,
-                            const std::string& kind,
-                            int cut_off,
-                            Database::formats db_format)
+BasisGenerator::loadSampleRange(const std::string& base_file_name,
+                                const std::string& kind,
+                                int col_min,
+                                int col_max,
+                                Database::formats db_format)
 {
     CAROM_ASSERT(!base_file_name.empty());
     CAROM_VERIFY(kind == "basis" || kind == "snapshot");
@@ -167,10 +171,12 @@ BasisGenerator::loadSamples(const std::string& base_file_name,
 
     int num_rows = mat->numRows();
     int num_cols = mat->numColumns();
-    int max_cols = num_cols;
-    if (cut_off < num_cols) max_cols = cut_off;
+    if (col_min < 0) col_min = 0;
+    if (col_max > num_cols-1) col_max = num_cols-1;
 
-    for (int j = 0; j < max_cols; j++) {
+    CAROM_VERIFY(col_max >= col_min);
+
+    for (int j = col_min; j <= col_max; j++) {
         double* u_in = new double[num_rows];
         for (int i = 0; i < num_rows; i++) {
             if (kind == "basis") {
@@ -183,6 +189,15 @@ BasisGenerator::loadSamples(const std::string& base_file_name,
         d_svd->takeSample(u_in, false);
         delete[] u_in;
     }
+}
+
+void
+BasisGenerator::loadSamples(const std::string& base_file_name,
+                            const std::string& kind,
+                            int cutoff,
+                            Database::formats db_format)
+{
+    loadSampleRange(base_file_name, kind, 0, cutoff-1, db_format);
 }
 
 double
@@ -288,6 +303,79 @@ BasisGenerator::resetDt(
     if (d_incremental)
     {
         d_dt = new_dt;
+    }
+}
+
+void
+BasisGenerator::finalSummary(
+    const double energyFractionThreshold,
+    int & cutoff,
+    const std::string & cutoffOutputPath,
+    const int first_sv)
+{
+    const int rom_dim = getSpatialBasis()->numColumns();
+    const Vector* sing_vals = getSingularValues();
+
+    CAROM_VERIFY(rom_dim <= sing_vals->dim());
+
+    double sum = 0.0;
+    for (int sv = first_sv; sv < sing_vals->dim(); ++sv) {
+        sum += (*sing_vals)(sv);
+    }
+
+    int p = std::floor(-std::log10(energyFractionThreshold));
+    std::vector<double> energy_fractions(p);
+
+    for (int i = 0; i < p; ++i) {
+        energy_fractions[i] = 1 - std::pow(10, -1 - i);
+    }
+
+    cutoff = first_sv;
+    bool reached_cutoff = false;
+    double partialSum = 0.0;
+    int count = 0;
+
+    std::ostream* output_stream;
+
+    if (!cutoffOutputPath.empty()) {
+        output_stream = new std::ofstream(cutoffOutputPath);
+    } else {
+        output_stream = &std::cout;
+    }
+
+    for (int sv = first_sv; sv < sing_vals->dim(); ++sv) {
+        partialSum += (*sing_vals)(sv);
+        for (int i = count; i < p; ++i)
+        {
+            if (partialSum / sum > 1.0 - std::pow(10, -1 - i))
+            {
+                *output_stream << "For energy fraction: 0.";
+                for (int j = 0; j < i+1; ++j) *output_stream << "9";
+                *output_stream << ", take first " << sv+1 << " of "
+                               << sing_vals->dim() << " basis vectors" << std::endl;
+                count += 1;
+            }
+            else
+            {
+                break;
+            }
+        }
+        if (!reached_cutoff && partialSum / sum > 1.0 - energyFractionThreshold)
+        {
+            cutoff = sv+1;
+            reached_cutoff = true;
+        }
+    }
+
+    if (!reached_cutoff) cutoff = sing_vals->dim();
+    *output_stream << std::fixed << std::setprecision(p+1);
+    *output_stream << "For energy fraction: " << 1.0 - energyFractionThreshold <<
+                   ", take first "
+                   << cutoff << " of " << sing_vals->dim() << " basis vectors" << std::endl;
+
+    if (!cutoffOutputPath.empty()) {
+        static_cast<std::ofstream*>(output_stream)->close();
+        delete output_stream;
     }
 }
 
