@@ -131,12 +131,40 @@ int main(int argc, char *argv[])
                    "Reduced dimension.");
     args.AddOption(&verbose_level, "-v", "--verbose",
                    "Set the verbosity level of the LOBPCG solver and preconditioner. 0 is off.");
+#ifdef MFEM_USE_SUPERLU
+    args.AddOption(&slu_solver, "-slu", "--superlu", "-no-slu",
+                   "--no-superlu", "Use the SuperLU Solver.");
+#endif
+#ifdef MFEM_USE_STRUMPACK
+    args.AddOption(&sp_solver, "-sp", "--strumpack", "-no-sp",
+                   "--no-strumpack", "Use the STRUMPACK Solver.");
+#endif
+#ifdef MFEM_USE_MKL_CPARDISO
+    args.AddOption(&cpardiso_solver, "-cpardiso", "--cpardiso", "-no-cpardiso",
+                   "--no-cpardiso", "Use the MKL CPardiso Solver.");
+#endif
     args.Parse();
-    if (!args.Good())
+    if (slu_solver && sp_solver)
     {
-        args.PrintUsage(cout);
-        MPI_Finalize();
-        return 1;
+        if (myid == 0)
+            std::cout << "WARNING: Both SuperLU and STRUMPACK have been selected,"
+                      << " please choose either one." << std::endl
+                      << "         Defaulting to SuperLU." << std::endl;
+        sp_solver = false;
+    }
+    // The command line options are also passed to the STRUMPACK
+    // solver. So do not exit if some options are not recognized.
+    if (!sp_solver)
+    {
+        if (!args.Good())
+        {
+            if (myid == 0)
+            {
+                args.PrintUsage(cout);
+            }
+            MPI_Finalize();
+            return 1;
+        }
     }
 
     if (myid == 0)
@@ -319,6 +347,22 @@ int main(int argc, char *argv[])
     HypreParMatrix *A = a->ParallelAssemble();
     HypreParMatrix *M = m->ParallelAssemble();
 
+#if defined(MFEM_USE_SUPERLU) || defined(MFEM_USE_STRUMPACK)
+    Operator * Arow = NULL;
+#endif
+#ifdef MFEM_USE_SUPERLU
+    if (slu_solver)
+    {
+        Arow = new SuperLURowLocMatrix(*A);
+    }
+#endif
+#ifdef MFEM_USE_STRUMPACK
+    if (sp_solver)
+    {
+        Arow = new STRUMPACKRowLocMatrix(*A);
+    }
+#endif
+
     assembleTimer.Stop();
 
     delete a;
@@ -344,8 +388,44 @@ int main(int argc, char *argv[])
         }
         else
         {
-            // TODO: preconditioners using MFEM_SUPERLU, STRUMPACK, CPARDISO
+#ifdef MFEM_USE_SUPERLU
+            if (slu_solver)
+            {
+                SuperLUSolver * superlu = new SuperLUSolver(MPI_COMM_WORLD);
+                superlu->SetPrintStatistics(verbose_level > 0 ? true : false);
+                superlu->SetSymmetricPattern(true);
+                superlu->SetColumnPermutation(superlu::PARMETIS);
+                superlu->SetOperator(*Arow);
+                precond = superlu;
+            }
+#endif
+#ifdef MFEM_USE_STRUMPACK
+            if (sp_solver)
+            {
+                STRUMPACKSolver * strumpack = new STRUMPACKSolver(MPI_COMM_WORLD, argc, argv);
+                strumpack->SetPrintFactorStatistics(true);
+                strumpack->SetPrintSolveStatistics(verbose_level > 0 ? true : false);
+                strumpack->SetKrylovSolver(strumpack::KrylovSolver::DIRECT);
+                strumpack->SetReorderingStrategy(strumpack::ReorderingStrategy::METIS);
+                strumpack->SetMatching(strumpack::MatchingJob::NONE);
+                strumpack->SetCompression(strumpack::CompressionType::NONE);
+                strumpack->SetOperator(*Arow);
+                strumpack->SetFromCommandLine();
+                precond = strumpack;
+            }
+#endif
+#ifdef MFEM_USE_MKL_CPARDISO
+            if (cpardiso_solver)
+            {
+                auto cpardiso = new CPardisoSolver(A->GetComm());
+                cpardiso->SetMatrixType(CPardisoSolver::MatType::REAL_STRUCTURE_SYMMETRIC);
+                cpardiso->SetPrintLevel(verbose_level);
+                cpardiso->SetOperator(*A);
+                precond = cpardiso;
+            }
+#endif
         }
+
         lobpcg = new HypreLOBPCG(MPI_COMM_WORLD);
         lobpcg->SetNumModes(nev);
         lobpcg->SetRandomSeed(seed);
@@ -703,6 +783,10 @@ int main(int argc, char *argv[])
         delete fec;
     }
     delete pmesh;
+
+#if defined(MFEM_USE_SUPERLU) || defined(MFEM_USE_STRUMPACK)
+    delete Arow;
+#endif
 
     MPI_Finalize();
 
