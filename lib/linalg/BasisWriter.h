@@ -42,7 +42,7 @@ public:
     BasisWriter(
         BasisGenerator* basis_generator,
         const std::string& base_file_name,
-        Database::formats db_format = Database::HDF5);
+        Database::formats db_format = Database::formats::HDF5);
 
     /**
      * @brief Destructor.

@@ -56,12 +56,12 @@ BasisWriter::BasisWriter(
     snap_file_name = base_file_name + "_snapshot";
 
     // create and open snapshot/basis database
-    if (db_format_ == Database::HDF5)
+    if (db_format_ == Database::formats::HDF5)
     {
         d_snap_database = new HDFDatabase();
         d_database = new HDFDatabase();
     }
-    else if (db_format_ == Database::HDF5_MPIO)
+    else if (db_format_ == Database::formats::HDF5_MPIO)
     {
         d_snap_database = new HDFDatabaseMPIO();
         d_database = new HDFDatabaseMPIO();
@@ -91,7 +91,7 @@ BasisWriter::writeBasis(const std::string& kind)
         CAROM_VERIFY(basis->distributed());
         int num_rows = basis->numRows();
         int nrows_infile = num_rows;
-        if (db_format_ == Database::HDF5_MPIO)
+        if (db_format_ == Database::formats::HDF5_MPIO)
             MPI_Allreduce(MPI_IN_PLACE, &nrows_infile, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
         sprintf(tmp, "spatial_basis_num_rows");
         d_database->putInteger(tmp, nrows_infile);
@@ -135,7 +135,7 @@ BasisWriter::writeBasis(const std::string& kind)
         CAROM_VERIFY(snapshots->distributed());
         int num_rows = snapshots->numRows(); // d_dim
         int nrows_infile = num_rows;
-        if (db_format_ == Database::HDF5_MPIO)
+        if (db_format_ == Database::formats::HDF5_MPIO)
             MPI_Allreduce(MPI_IN_PLACE, &nrows_infile, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
         sprintf(tmp, "snapshot_matrix_num_rows");
         d_snap_database->putInteger(tmp, nrows_infile);

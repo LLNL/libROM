@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2024, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -135,7 +135,6 @@ TEST(HDF5, Test_parallel_writing)
     hid_t attr = H5Acreate(dset_id, "test_attr", H5T_NATIVE_INT,
                            attr_id, H5P_DEFAULT, H5P_DEFAULT);
 
-    // if (rank == 1)
     errf = H5Awrite(attr, H5T_NATIVE_INT, &test_attr);
     errf = H5Aclose(attr);
     errf = H5Sclose(attr_id);
@@ -633,10 +632,10 @@ TEST(BasisGeneratorIO, Base_MPIO_combination)
     svd_options.setRandomizedSVD(false);
     svd_options.setDebugMode(true);
     CAROM::BasisGenerator sampler(svd_options, false, mpio_name,
-                                  CAROM::Database::HDF5_MPIO);
+                                  CAROM::Database::formats::HDF5_MPIO);
 
     sampler.loadSamples(base_name + "_snapshot", "snapshot", 1e9,
-                        CAROM::Database::HDF5);
+                        CAROM::Database::formats::HDF5);
     sampler.writeSnapshot();
     const CAROM::Matrix *snapshot = sampler.getSnapshotMatrix();
 
@@ -687,10 +686,10 @@ TEST(BasisGeneratorIO, MPIO_Base_combination)
     svd_options.setRandomizedSVD(false);
     svd_options.setDebugMode(true);
     CAROM::BasisGenerator sampler(svd_options, false, test_name,
-                                  CAROM::Database::HDF5);
+                                  CAROM::Database::formats::HDF5);
 
     sampler.loadSamples(mpio_name + "_snapshot", "snapshot", 1e9,
-                        CAROM::Database::HDF5_MPIO);
+                        CAROM::Database::formats::HDF5_MPIO);
     const CAROM::Matrix *snapshot = sampler.getSnapshotMatrix();
 
     CAROM::BasisReader snapshot_reader("test_basis_snapshot");
@@ -739,7 +738,8 @@ TEST(BasisReaderIO, partial_getSpatialBasis)
     CAROM::BasisReader basis_reader("test_basis");
     const CAROM::Matrix *spatial_basis = basis_reader.getSpatialBasis();
 
-    CAROM::BasisReader basis_reader1("test_mpio", CAROM::Database::HDF5_MPIO,
+    CAROM::BasisReader basis_reader1("test_mpio",
+                                     CAROM::Database::formats::HDF5_MPIO,
                                      nrow_local);
     const CAROM::Matrix *spatial_basis1 = basis_reader1.getSpatialBasis();
 
@@ -797,7 +797,7 @@ TEST(BasisGeneratorIO, Scaling_test)
 
     CAROM::BasisGenerator base_sampler(svd_options, false, "base");
     CAROM::BasisGenerator mpio_sampler(svd_options, false, "mpio",
-                                       CAROM::Database::HDF5_MPIO);
+                                       CAROM::Database::formats::HDF5_MPIO);
 
     CAROM::Vector sample(nrow_local, true);
     for (int s = 0; s < scale_ncol; s++)

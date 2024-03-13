@@ -89,7 +89,7 @@ public:
     putIntegerArray(
         const std::string& file_name,
         const int* const data,
-        int nelements);
+        int nelements) override;
 
     /**
      * @brief Writes an array of doubles associated with the supplied filename.
@@ -107,7 +107,7 @@ public:
     putDoubleArray(
         const std::string& file_name,
         const double* const data,
-        int nelements);
+        int nelements) override;
 
     /**
      * @brief Writes a vector of doubles associated with the supplied filename to
@@ -126,7 +126,7 @@ public:
     putDoubleVector(
         const std::string& file_name,
         const std::vector<double>& data,
-        int nelements);
+        int nelements) override;
 
     /**
      * @brief Writes a vector of complex doubles associated with the supplied filename.
@@ -179,7 +179,7 @@ public:
     getIntegerArray(
         const std::string& file_name,
         int* data,
-        int nelements);
+        int nelements) override;
 
     /**
      * @brief Reads a vector of integers associated with the supplied filename.
@@ -207,7 +207,7 @@ public:
      *                read.
      */
     int
-    getDoubleArraySize(const std::string& file_name)
+    getDoubleArraySize(const std::string& file_name) override
     {
         std::vector<double> tmp;
         getDoubleVector(file_name, tmp);
@@ -229,7 +229,7 @@ public:
     getDoubleArray(
         const std::string& file_name,
         double* data,
-        int nelements);
+        int nelements) override;
 
     /**
      * @brief Reads a sub-array of doubles associated with the supplied filename.
@@ -271,7 +271,7 @@ public:
         int nelements,
         int offset,
         int block_size,
-        int stride);
+        int stride) override;
 
     /**
      * @brief Reads a vector of doubles associated with the supplied filename.

@@ -431,7 +431,6 @@ protected:
 
     /**
      * @brief MPI process rank.
-     *        Used only when d_parallel is true.
      */
     int d_rank;
 

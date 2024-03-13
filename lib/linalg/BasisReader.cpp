@@ -44,11 +44,11 @@ BasisReader::BasisReader(
     full_file_name = base_file_name;
 
     // Enforce hdf data format.
-    if (d_format == Database::HDF5)
+    if (d_format == Database::formats::HDF5)
     {
         d_database = new HDFDatabase();
     }
-    else if (d_format == Database::HDF5_MPIO)
+    else if (d_format == Database::formats::HDF5_MPIO)
     {
         /*
             For MPIO case, local dimension needs to be specified.
@@ -285,7 +285,7 @@ BasisReader::getDim(
 
     d_database->getInteger(tmp, num_rows);
     /* only basis and snapshot are stored as distributed matrices */
-    if ((kind != "temporal_basis") && (d_format == Database::HDF5_MPIO))
+    if ((kind != "temporal_basis") && (d_format == Database::formats::HDF5_MPIO))
     {
         /*
             for MPIO database, return specified local dimension.

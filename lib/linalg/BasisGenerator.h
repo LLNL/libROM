@@ -64,7 +64,7 @@ public:
         Options options,
         bool incremental,
         const std::string& basis_file_name = "",
-        Database::formats file_format = Database::HDF5);
+        Database::formats file_format = Database::formats::HDF5);
 
     /**
      * @brief Destructor.
@@ -152,7 +152,7 @@ public:
     loadSamples(const std::string& base_file_name,
                 const std::string& kind  = "basis",
                 int cut_off = 1e9,
-                Database::formats db_format = Database::HDF5);
+                Database::formats db_format = Database::formats::HDF5);
 
     /**
      * @brief Computes next time an svd sample is needed.

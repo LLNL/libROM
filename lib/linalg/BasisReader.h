@@ -44,12 +44,12 @@ public:
      * @param[in] db_format Format of the file to read.
      *                      One of the implemented file formats defined in
      *                      Database.
-     * @param[in] dim Dimension of the basis that will be read from a file.
+     * @param[in] dim Number of rows of basis that will be read from a file.
      *                If negative, will use the dimension from the rank-specific local file.
      */
     BasisReader(
         const std::string& base_file_name,
-        Database::formats db_format = Database::HDF5,
+        Database::formats db_format = Database::formats::HDF5,
         const int dim = -1);
 
     /**
@@ -200,7 +200,7 @@ public:
      *
      * @brief Returns the dimension of the system on this processor.
      *
-     * @param[in] kind  The target matrix of which dimension (row) is returned.
+     * @param[in] kind  Type of matrix whose row-dimension is returned.
      *                  "basis" - local dimension of spatial basis
      *                  "snapshot" - local dimension of snapshot matrix
      *                  "temporal_basis" - global dimension of temporal basis
