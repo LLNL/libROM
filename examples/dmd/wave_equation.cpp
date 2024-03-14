@@ -525,8 +525,7 @@ int main(int argc, char *argv[])
         dudt_gf.Save(osol);
     }
 
-    // 10. Predict the state at t_final using DMD.
-    dmd_prediction_timer.Start();
+    // 10. Predict using DMD.
     cout << "Predicting temperature using DMD" << endl;
     CAROM::Vector* result_u = nullptr;
     VisItDataCollection dmd_visit_dc("DMD_Wave_Equation", mesh);
@@ -564,8 +563,9 @@ int main(int argc, char *argv[])
             }
         }
     }
-    dmd_prediction_timer.Stop();
+    dmd_prediction_timer.Start();
     result_u = dmd_u[curr_window]->predict(t_final);
+    dmd_prediction_timer.Stop();
 
     // 11. Calculate the relative error between the DMD final solution and the true solution.
     Vector dmd_solution_u(result_u->getData(), result_u->dim());

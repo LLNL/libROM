@@ -515,6 +515,12 @@ int main(int argc, char *argv[])
 
         if (last_step || (ti % windowNumSamples) == 0)
         {
+            // Calculate DMD modes
+            if (myid == 0 && rdim != -1 && ef != -1)
+            {
+                std::cout << "Both rdim and ef are set. ef will be ignored." << std::endl;
+            }
+
             if (rdim != -1)
             {
                 if (myid == 0)
@@ -608,10 +614,10 @@ int main(int argc, char *argv[])
         w_gf.Save(ee_ofs);
     }
 
-    // 13. Calculate the DMD modes.
-    if (myid == 0 && rdim != -1 && ef != -1)
+    // 13. Predict using DMD.
+    if (myid == 0)
     {
-        std::cout << "Both rdim and ef are set. ef will be ignored." << std::endl;
+        std::cout << "Predicting position and velocity using DMD" << std::endl;
     }
 
     Vector true_solution_x(x_gf.GetTrueVector().Size());
@@ -619,14 +625,6 @@ int main(int argc, char *argv[])
 
     Vector true_solution_v(v_gf.GetTrueVector().Size());
     true_solution_v = v_gf.GetTrueVector();
-
-    dmd_prediction_timer.Start();
-
-    // 14. Predict the state at t_final using DMD.
-    if (myid == 0)
-    {
-        std::cout << "Predicting position and velocity using DMD" << std::endl;
-    }
 
     curr_window = 0;
     CAROM::Vector* result_x = dmd_x[curr_window]->predict(ts[0]);
@@ -687,12 +685,12 @@ int main(int argc, char *argv[])
         }
     }
 
-    dmd_prediction_timer.Stop();
-
+    dmd_prediction_timer.Start();
     result_x = dmd_x[curr_window]->predict(t_final);
     result_v = dmd_v[curr_window]->predict(t_final);
+    dmd_prediction_timer.Stop();
 
-    // 15. Calculate the relative error between the DMD final solution and the true solution.
+    // 14. Calculate the relative error between the DMD final solution and the true solution.
     Vector dmd_solution_x(result_x->getData(), result_x->dim());
     Vector diff_x(true_solution_x.Size());
     subtract(dmd_solution_x, true_solution_x, diff_x);
@@ -722,7 +720,7 @@ int main(int argc, char *argv[])
                dmd_prediction_timer.RealTime());
     }
 
-    // 16. Free the used memory.
+    // 15. Free the used memory.
     delete ode_solver;
     delete pmesh;
     delete result_x;
