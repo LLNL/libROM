@@ -155,7 +155,7 @@ public:
                     const std::string& kind  = "basis",
                     int col_min = 0,
                     int col_max = 1e9,
-                    Database::formats db_format = Database::HDF5);
+                    Database::formats db_format = Database::formats::HDF5);
 
     /**
      * @brief Load previously saved sample (basis or state).
