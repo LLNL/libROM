@@ -28,18 +28,20 @@ CSVDatabase::~CSVDatabase()
 
 bool
 CSVDatabase::create(
-    const std::string& file_name)
+    const std::string& file_name,
+    const MPI_Comm comm)
 {
-    Database::create(file_name);
+    Database::create(file_name, comm);
     return true;
 }
 
 bool
 CSVDatabase::open(
     const std::string& file_name,
-    const std::string& type)
+    const std::string& type,
+    const MPI_Comm comm)
 {
-    Database::open(file_name, type);
+    Database::open(file_name, type, comm);
     return true;
 }
 
@@ -53,7 +55,8 @@ void
 CSVDatabase::putIntegerArray(
     const std::string& file_name,
     const int* const data,
-    int nelements)
+    int nelements,
+    const bool distributed)
 {
     CAROM_VERIFY(!file_name.empty());
     CAROM_VERIFY(data != nullptr);
@@ -71,7 +74,8 @@ void
 CSVDatabase::putDoubleArray(
     const std::string& file_name,
     const double* const data,
-    int nelements)
+    int nelements,
+    const bool distributed)
 {
     CAROM_VERIFY(!file_name.empty());
     CAROM_VERIFY(data != nullptr);
@@ -90,7 +94,8 @@ void
 CSVDatabase::putDoubleVector(
     const std::string& file_name,
     const std::vector<double>& data,
-    int nelements)
+    int nelements,
+    const bool distributed)
 {
     CAROM_VERIFY(!file_name.empty());
     CAROM_VERIFY(nelements > 0);
@@ -146,7 +151,8 @@ void
 CSVDatabase::getIntegerArray(
     const std::string& file_name,
     int* data,
-    int nelements)
+    int nelements,
+    const bool distributed)
 {
     CAROM_VERIFY(!file_name.empty());
 #ifndef DEBUG_CHECK_ASSERTIONS
@@ -188,7 +194,8 @@ void
 CSVDatabase::getDoubleArray(
     const std::string& file_name,
     double* data,
-    int nelements)
+    int nelements,
+    const bool distributed)
 {
     CAROM_VERIFY(!file_name.empty());
 #ifndef DEBUG_CHECK_ASSERTIONS
@@ -211,7 +218,8 @@ CSVDatabase::getDoubleArray(
     const std::string& file_name,
     double* data,
     int nelements,
-    const std::vector<int>& idx)
+    const std::vector<int>& idx,
+    const bool distributed)
 {
     CAROM_VERIFY(!file_name.empty());
 #ifndef DEBUG_CHECK_ASSERTIONS
@@ -252,7 +260,8 @@ CSVDatabase::getDoubleArray(
     int nelements,
     int offset,
     int block_size,
-    int stride)
+    int stride,
+    const bool distributed)
 {
     CAROM_VERIFY(!file_name.empty());
 #ifndef DEBUG_CHECK_ASSERTIONS

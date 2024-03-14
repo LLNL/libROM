@@ -45,19 +45,26 @@ public:
      * @brief Creates a new database file with the supplied name.
      *
      * @param[in] file_name Name of database file to create.
+     * @param[in] comm MPI communicator for distributed data I/O.
+     *                 If MPI_COMM_NULL, the file will be created serially.
+     *                 The behavior for distributed I/O will vary by classes.
      *
      * @return True if file create was successful.
      */
     virtual
     bool
     create(
-        const std::string& file_name);
+        const std::string& file_name,
+        const MPI_Comm comm=MPI_COMM_NULL);
 
     /**
      * @brief Opens an existing database file with the supplied name.
      *
      * @param[in] file_name Name of existing database file to open.
      * @param[in] type Read/write type ("r"/"wr")
+     * @param[in] comm MPI communicator for distributed data I/O.
+     *                 If MPI_COMM_NULL, the file will be opened serially.
+     *                 The behavior for distributed I/O will vary by classes.
      *
      * @return True if file open was successful.
      */
@@ -65,7 +72,8 @@ public:
     bool
     open(
         const std::string& file_name,
-        const std::string& type);
+        const std::string& type,
+        const MPI_Comm comm=MPI_COMM_NULL);
 
     /**
      * @brief Closes the currently open database file.
@@ -99,13 +107,16 @@ public:
      *                written.
      * @param[in] data The array of integer values to be written.
      * @param[in] nelements The number of integers in the array.
+     * @param[in] distributed If true, distributed integer array will be written.
+     *                        the distributed I/O behavior varies with classes.
      */
     virtual
     void
     putIntegerArray(
         const std::string& key,
         const int* const data,
-        int nelements) = 0;
+        int nelements,
+        const bool distributed=false) = 0;
 
     /**
      * @brief Writes a double associated with the supplied key to currently
@@ -130,13 +141,16 @@ public:
      *                written.
      * @param[in] data The array of double values to be written.
      * @param[in] nelements The number of doubles in the array.
+     * @param[in] distributed If true, distributed double array will be written.
+     *                        the distributed I/O behavior varies with classes.
      */
     virtual
     void
     putDoubleArray(
         const std::string& key,
         const double* const data,
-        int nelements) = 0;
+        int nelements,
+        const bool distributed=false) = 0;
 
     /**
      * @brief Writes a vector of doubles associated with the supplied key to
@@ -146,13 +160,16 @@ public:
      *                written.
      * @param[in] data The vector of double values to be written.
      * @param[in] nelements The number of doubles in the vector.
+     * @param[in] distributed If true, distributed double vector will be written.
+     *                        the distributed I/O behavior varies with classes.
      */
     virtual
     void
     putDoubleVector(
         const std::string& key,
         const std::vector<double>& data,
-        int nelements) = 0;
+        int nelements,
+        const bool distributed=false) = 0;
 
     /**
      * @brief Reads an integer associated with the supplied key from the
@@ -177,13 +194,16 @@ public:
      *                read.
      * @param[out] data The allocated array of integer values to be read.
      * @param[in] nelements The number of integers in the array.
+     * @param[in] distributed If true, distributed integer array will be read.
+     *                        the distributed I/O behavior varies with classes.
      */
     virtual
     void
     getIntegerArray(
         const std::string& key,
         int* data,
-        int nelements) = 0;
+        int nelements,
+        const bool distributed=false) = 0;
 
     /**
      * @brief Reads a double associated with the supplied key from the
@@ -222,13 +242,16 @@ public:
      *                read.
      * @param[out] data The allocated array of double values to be read.
      * @param[in] nelements The number of doubles in the array.
+     * @param[in] distributed If true, distributed double array will be read.
+     *                        the distributed I/O behavior varies with classes.
      */
     virtual
     void
     getDoubleArray(
         const std::string& key,
         double* data,
-        int nelements) = 0;
+        int nelements,
+        const bool distributed=false) = 0;
 
     /**
      * @brief Reads a sub-array of doubles associated with the supplied key
@@ -242,6 +265,8 @@ public:
      * @param[out] data The allocated sub-array of double values to be read.
      * @param[in] nelements The number of doubles in the full array.
      * @param[in] idx The set of indices in the sub-array.
+     * @param[in] distributed If true, distributed double array will be read.
+     *                        the distributed I/O behavior varies with classes.
      */
     virtual
     void
@@ -249,7 +274,8 @@ public:
         const std::string& key,
         double* data,
         int nelements,
-        const std::vector<int>& idx) = 0;
+        const std::vector<int>& idx,
+        const bool distributed=false) = 0;
 
     /**
      * @brief Reads an array of doubles associated with the supplied key
@@ -265,6 +291,8 @@ public:
      *                       Typically, this is a number of columns of the matrix data.
      * @param[in] stride The stride to read from the HDF5 dataset.
      *                   Typically, this is the total number of columns of the matrix data.
+     * @param[in] distributed If true, distributed double array will be read.
+     *                        the distributed I/O behavior varies with classes.
      */
     virtual
     void
@@ -274,7 +302,8 @@ public:
         int nelements,
         int offset,
         int block_size,
-        int stride) = 0;
+        int stride,
+        const bool distributed=false) = 0;
 
     /**
      * @brief Implemented database file formats. Add to this enum each time a
@@ -286,129 +315,129 @@ public:
         HDF5_MPIO
     };
 
-    /**
-     * @brief Creates a new database file with the supplied name, with parallel I/O support.
-     *        Supported only for HDF5 format.
-     *        For HDFDatabase, the function is equivalent to create,
-     *        only extending the file name with 6 digits indicating processor rank.
-     *        For HDFDatabaseMPIO, the file is created with MPI I/O file access property.
-     *
-     * @param[in] file_name Base Name of CSV database file to create.
-     * @param[in] comm      MPI communicator to get the rank.
-     *
-     * @return True if file create was successful.
-     */
-    virtual
-    bool
-    create_parallel(
-        const std::string& file_name,
-        const MPI_Comm comm)
-    {
-        CAROM_ERROR("Abstract method Database::create_parallel!\n");
-        return false;
-    }
+    // /**
+    //  * @brief Creates a new database file with the supplied name, with parallel I/O support.
+    //  *        Supported only for HDF5 format.
+    //  *        For HDFDatabase, the function is equivalent to create,
+    //  *        only extending the file name with 6 digits indicating processor rank.
+    //  *        For HDFDatabaseMPIO, the file is created with MPI I/O file access property.
+    //  *
+    //  * @param[in] file_name Base Name of CSV database file to create.
+    //  * @param[in] comm      MPI communicator to get the rank.
+    //  *
+    //  * @return True if file create was successful.
+    //  */
+    // virtual
+    // bool
+    // create_parallel(
+    //     const std::string& file_name,
+    //     const MPI_Comm comm)
+    // {
+    //     CAROM_ERROR("Abstract method Database::create_parallel!\n");
+    //     return false;
+    // }
 
-    /**
-     * @brief Opens an existing database file with the supplied name, with parallel I/O support.
-     *        Supported only for HDF5 format.
-     *        For HDFDatabase, the function is equivalent to open,
-     *        only extending the file name with 6 digits indicating processor rank.
-     *        For HDFDatabaseMPIO, the file is opened with MPI I/O file access property.
-     *
-     * @param[in] file_name Name of existing CSV database file to open.
-     * @param[in] type      Read/write type ("r"/"wr")
-     * @param[in] comm      MPI communicator to get the rank.
-     *
-     * @return True if file open was successful.
-     */
-    virtual
-    bool
-    open_parallel(
-        const std::string& file_name,
-        const std::string& type,
-        const MPI_Comm comm)
-    {
-        CAROM_ERROR("Abstract method Database::open_parallel!\n");
-        return false;
-    }
+    // /**
+    //  * @brief Opens an existing database file with the supplied name, with parallel I/O support.
+    //  *        Supported only for HDF5 format.
+    //  *        For HDFDatabase, the function is equivalent to open,
+    //  *        only extending the file name with 6 digits indicating processor rank.
+    //  *        For HDFDatabaseMPIO, the file is opened with MPI I/O file access property.
+    //  *
+    //  * @param[in] file_name Name of existing CSV database file to open.
+    //  * @param[in] type      Read/write type ("r"/"wr")
+    //  * @param[in] comm      MPI communicator to get the rank.
+    //  *
+    //  * @return True if file open was successful.
+    //  */
+    // virtual
+    // bool
+    // open_parallel(
+    //     const std::string& file_name,
+    //     const std::string& type,
+    //     const MPI_Comm comm)
+    // {
+    //     CAROM_ERROR("Abstract method Database::open_parallel!\n");
+    //     return false;
+    // }
 
-    /**
-     * @brief Writes a distributed array of doubles associated with the supplied key to
-     *        the currently open database file.
-     *        Supported only for HDF5 format.
-     *        For HDFDatabase, the function is equivalent to putDoubleArray,
-     *        writing the local array per each process.
-     *        For HDFDatabaseMPIO, the global array is written into a single file via MPI I/O.
-     *
-     * @param[in] key The key associated with the array of values to be
-     *                written.
-     * @param[in] data The array of double values to be written.
-     * @param[in] nelements The number of doubles in the array.
-     */
-    virtual
-    void
-    putDoubleArray_parallel(
-        const std::string& key,
-        const double* const data,
-        int nelements)
-    {
-        CAROM_ERROR("Abstract method Database::putDoubleArray_parallel!\n");
-    }
+    // /**
+    //  * @brief Writes a distributed array of doubles associated with the supplied key to
+    //  *        the currently open database file.
+    //  *        Supported only for HDF5 format.
+    //  *        For HDFDatabase, the function is equivalent to putDoubleArray,
+    //  *        writing the local array per each process.
+    //  *        For HDFDatabaseMPIO, the global array is written into a single file via MPI I/O.
+    //  *
+    //  * @param[in] key The key associated with the array of values to be
+    //  *                written.
+    //  * @param[in] data The array of double values to be written.
+    //  * @param[in] nelements The number of doubles in the array.
+    //  */
+    // virtual
+    // void
+    // putDoubleArray_parallel(
+    //     const std::string& key,
+    //     const double* const data,
+    //     int nelements)
+    // {
+    //     CAROM_ERROR("Abstract method Database::putDoubleArray_parallel!\n");
+    // }
 
-    /**
-     * @brief Reads a distributed array of doubles associated with the supplied key
-     *        from the currently open database file.
-     *        Supported only for HDF5 format.
-     *        For HDFDatabase, the function is equivalent to getDoubleArray,
-     *        reading the local array from a local file per each process.
-     *        For HDFDatabaseMPIO, the local array is read from a single file via MPI I/O.
-     *
-     * @param[in] key The key associated with the array of values to be
-     *                read.
-     * @param[out] data The allocated array of double values to be read.
-     * @param[in] nelements The number of doubles in the array.
-     */
-    virtual
-    void
-    getDoubleArray_parallel(
-        const std::string& key,
-        double* data,
-        int nelements)
-    {
-        CAROM_ERROR("Abstract method Database::getDoubleArray_parallel!\n");
-    }
+    // /**
+    //  * @brief Reads a distributed array of doubles associated with the supplied key
+    //  *        from the currently open database file.
+    //  *        Supported only for HDF5 format.
+    //  *        For HDFDatabase, the function is equivalent to getDoubleArray,
+    //  *        reading the local array from a local file per each process.
+    //  *        For HDFDatabaseMPIO, the local array is read from a single file via MPI I/O.
+    //  *
+    //  * @param[in] key The key associated with the array of values to be
+    //  *                read.
+    //  * @param[out] data The allocated array of double values to be read.
+    //  * @param[in] nelements The number of doubles in the array.
+    //  */
+    // virtual
+    // void
+    // getDoubleArray_parallel(
+    //     const std::string& key,
+    //     double* data,
+    //     int nelements)
+    // {
+    //     CAROM_ERROR("Abstract method Database::getDoubleArray_parallel!\n");
+    // }
 
-    /**
-     * @brief Reads a distributed array of doubles associated with the supplied key
-     *        from the currently open database file.
-     *        Supported only for HDF5 format.
-     *        For HDFDatabase, the function is equivalent to getDoubleArray,
-     *        reading the local array from a local file per each process.
-     *        For HDFDatabaseMPIO, the local array is read from a single file via MPI I/O.
-     *
-     * @param[in] key The key associated with the array of values to be
-     *                read.
-     * @param[out] data The allocated array of double values to be read.
-     * @param[in] nelements The number of doubles in the array.
-     * @param[in] offset The initial offset in the array.
-     *                   Typically, this is a column index of the matrix data.
-     * @param[in] block_size The block size to read from the HDF5 dataset.
-     *                       Typically, this is a number of columns of the matrix data.
-     * @param[in] stride The stride to read from the HDF5 dataset.
-     *                   Typically, this is the total number of columns of the matrix data.
-     */
-    virtual
-    void
-    getDoubleArray_parallel(
-        const std::string& key,
-        double* data,
-        int nelements,
-        int offset,
-        int block_size,
-        int stride)
-    {
-        CAROM_ERROR("Abstract method Database::getDoubleArray_parallel!\n");
-    }
+    // /**
+    //  * @brief Reads a distributed array of doubles associated with the supplied key
+    //  *        from the currently open database file.
+    //  *        Supported only for HDF5 format.
+    //  *        For HDFDatabase, the function is equivalent to getDoubleArray,
+    //  *        reading the local array from a local file per each process.
+    //  *        For HDFDatabaseMPIO, the local array is read from a single file via MPI I/O.
+    //  *
+    //  * @param[in] key The key associated with the array of values to be
+    //  *                read.
+    //  * @param[out] data The allocated array of double values to be read.
+    //  * @param[in] nelements The number of doubles in the array.
+    //  * @param[in] offset The initial offset in the array.
+    //  *                   Typically, this is a column index of the matrix data.
+    //  * @param[in] block_size The block size to read from the HDF5 dataset.
+    //  *                       Typically, this is a number of columns of the matrix data.
+    //  * @param[in] stride The stride to read from the HDF5 dataset.
+    //  *                   Typically, this is the total number of columns of the matrix data.
+    //  */
+    // virtual
+    // void
+    // getDoubleArray_parallel(
+    //     const std::string& key,
+    //     double* data,
+    //     int nelements,
+    //     int offset,
+    //     int block_size,
+    //     int stride)
+    // {
+    //     CAROM_ERROR("Abstract method Database::getDoubleArray_parallel!\n");
+    // }
 
 private:
     /**

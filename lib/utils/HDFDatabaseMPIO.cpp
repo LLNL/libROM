@@ -18,17 +18,19 @@ namespace CAROM {
 
 HDFDatabaseMPIO::HDFDatabaseMPIO() :
     HDFDatabase(),
-    d_rank(-1)
+    d_rank(-1),
+    d_comm(MPI_COMM_NULL)
 {}
 
 bool
-HDFDatabaseMPIO::create_parallel(
+HDFDatabaseMPIO::create(
     const std::string& file_name,
     const MPI_Comm comm)
 {
     int mpi_init;
     MPI_Initialized(&mpi_init);
     if (mpi_init) {
+        CAROM_VERIFY(comm != MPI_COMM_NULL);
         d_comm = comm;
         MPI_Comm_rank(d_comm, &d_rank);
     }
@@ -73,7 +75,7 @@ HDFDatabaseMPIO::create_parallel(
 }
 
 bool
-HDFDatabaseMPIO::open_parallel(
+HDFDatabaseMPIO::open(
     const std::string& file_name,
     const std::string& type,
     const MPI_Comm comm)
@@ -81,6 +83,7 @@ HDFDatabaseMPIO::open_parallel(
     int mpi_init;
     MPI_Initialized(&mpi_init);
     if (mpi_init) {
+        CAROM_VERIFY(comm != MPI_COMM_NULL);
         d_comm = comm;
         MPI_Comm_rank(d_comm, &d_rank);
     }

@@ -63,7 +63,7 @@ BasisReader::BasisReader(
     else
         CAROM_ERROR("BasisWriter only supports HDF5/HDF5_MPIO data format!\n");
 
-    d_database->open_parallel(full_file_name, "r", MPI_COMM_WORLD);
+    d_database->open(full_file_name, "r", MPI_COMM_WORLD);
 }
 
 BasisReader::~BasisReader()
@@ -80,9 +80,10 @@ BasisReader::getSpatialBasis()
 
     Matrix* spatial_basis_vectors = new Matrix(num_rows, num_cols, true);
 
-    d_database->getDoubleArray_parallel("spatial_basis",
-                                        &spatial_basis_vectors->item(0, 0),
-                                        num_rows*num_cols);
+    d_database->getDoubleArray("spatial_basis",
+                               &spatial_basis_vectors->item(0, 0),
+                               num_rows*num_cols,
+                               true);
     return spatial_basis_vectors;
 }
 
@@ -108,12 +109,13 @@ BasisReader::getSpatialBasis(
 
     Matrix* spatial_basis_vectors = new Matrix(num_rows, num_cols_to_read, true);
     sprintf(tmp, "spatial_basis");
-    d_database->getDoubleArray_parallel(tmp,
-                                        &spatial_basis_vectors->item(0, 0),
-                                        num_rows*num_cols_to_read,
-                                        start_col - 1,
-                                        num_cols_to_read,
-                                        num_cols);
+    d_database->getDoubleArray(tmp,
+                               &spatial_basis_vectors->item(0, 0),
+                               num_rows*num_cols_to_read,
+                               start_col - 1,
+                               num_cols_to_read,
+                               num_cols,
+                               true);
     return spatial_basis_vectors;
 }
 
@@ -327,9 +329,10 @@ BasisReader::getSnapshotMatrix()
     char tmp[100];
     Matrix* snapshots = new Matrix(num_rows, num_cols, true);
     sprintf(tmp, "snapshot_matrix");
-    d_database->getDoubleArray_parallel(tmp,
-                                        &snapshots->item(0, 0),
-                                        num_rows*num_cols);
+    d_database->getDoubleArray(tmp,
+                               &snapshots->item(0, 0),
+                               num_rows*num_cols,
+                               true);
     return snapshots;
 }
 
@@ -355,12 +358,13 @@ BasisReader::getSnapshotMatrix(
     char tmp[100];
     Matrix* snapshots = new Matrix(num_rows, num_cols_to_read, true);
     sprintf(tmp, "snapshot_matrix");
-    d_database->getDoubleArray_parallel(tmp,
-                                        &snapshots->item(0, 0),
-                                        num_rows*num_cols_to_read,
-                                        start_col - 1,
-                                        num_cols_to_read,
-                                        num_cols);
+    d_database->getDoubleArray(tmp,
+                               &snapshots->item(0, 0),
+                               num_rows*num_cols_to_read,
+                               start_col - 1,
+                               num_cols_to_read,
+                               num_cols,
+                               true);
     return snapshots;
 }
 }

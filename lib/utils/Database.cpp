@@ -32,7 +32,9 @@ Database::~Database()
 }
 
 bool
-Database::create(const std::string& file_name)
+Database::create(
+    const std::string& file_name,
+    const MPI_Comm comm)
 {
     std::cout << "Creating file: " << file_name << std::endl;
     return true;
@@ -41,7 +43,8 @@ Database::create(const std::string& file_name)
 bool
 Database::open(
     const std::string& file_name,
-    const std::string& type)
+    const std::string& type,
+    const MPI_Comm comm)
 {
     std::cout << "Opening file: " << file_name << std::endl;
     return true;

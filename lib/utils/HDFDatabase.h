@@ -41,19 +41,25 @@ public:
      * @brief Creates a new HDF5 database file with the supplied name.
      *
      * @param[in] file_name Name of HDF5 database file to create.
+     * @param[in] comm MPI communicator for distributed data I/O.
+     *                 If not MPI_COMM_NULL, each process creates a file
+     *                 whose name is file_name extended with process rank in 6 digits.
      *
      * @return True if file create was successful.
      */
     virtual
     bool
     create(
-        const std::string& file_name) override;
+        const std::string& file_name,
+        const MPI_Comm comm=MPI_COMM_NULL) override;
 
     /**
      * @brief Opens an existing HDF5 database file with the supplied name.
      *
      * @param[in] file_name Name of existing HDF5 database file to open.
      * @param[in] type Read/write type ("r"/"wr")
+     *                 If not MPI_COMM_NULL, each process opens a file
+     *                 whose name is file_name extended with process rank in 6 digits.
      *
      * @return True if file open was successful.
      */
@@ -61,7 +67,8 @@ public:
     bool
     open(
         const std::string& file_name,
-        const std::string& type) override;
+        const std::string& type,
+        const MPI_Comm comm=MPI_COMM_NULL) override;
 
     /**
      * @brief Closes the currently open HDF5 database file.
@@ -84,13 +91,17 @@ public:
      *                written.
      * @param[in] data The array of integer values to be written.
      * @param[in] nelements The number of integers in the array.
+     * @param[in] distributed True if data is a distributed integer array.
+     *                        HDFDatabase writes the array in file-per-process,
+     *                        where each file is written serially by one process.
      */
     virtual
     void
     putIntegerArray(
         const std::string& key,
         const int* const data,
-        int nelements);
+        int nelements,
+        const bool distributed=false);
 
     /**
      * @brief Writes an array of doubles associated with the supplied key to
@@ -104,13 +115,17 @@ public:
      *                written.
      * @param[in] data The array of double values to be written.
      * @param[in] nelements The number of doubles in the array.
+     * @param[in] distributed True if data is a distributed double array.
+     *                        HDFDatabase writes the array in file-per-process,
+     *                        where each file is written serially by one process.
      */
     virtual
     void
     putDoubleArray(
         const std::string& key,
         const double* const data,
-        int nelements);
+        int nelements,
+        const bool distributed=false);
 
     /**
      * @brief Writes a vector of doubles associated with the supplied key to
@@ -124,13 +139,17 @@ public:
      *                written.
      * @param[in] data The vector of double values to be written.
      * @param[in] nelements The number of doubles in the vector.
+     * @param[in] distributed True if data is a distributed double array.
+     *                        HDFDatabase writes the array in file-per-process,
+     *                        where each file is written serially by one process.
      */
     virtual
     void
     putDoubleVector(
         const std::string& key,
         const std::vector<double>& data,
-        int nelements);
+        int nelements,
+        const bool distributed=false);
 
     /**
      * @brief Reads an array of integers associated with the supplied key
@@ -143,13 +162,17 @@ public:
      *                read.
      * @param[out] data The allocated array of integer values to be read.
      * @param[in] nelements The number of integers in the array.
+     * @param[in] distributed True if data is a distributed integer array.
+     *                        HDFDatabase reads the array in file-per-process,
+     *                        where each file is read serially by one process.
      */
     virtual
     void
     getIntegerArray(
         const std::string& key,
         int* data,
-        int nelements);
+        int nelements,
+        const bool distributed=false);
 
     /**
      * @brief Count the number of elements in an array of doubles associated
@@ -174,13 +197,17 @@ public:
      *                read.
      * @param[out] data The allocated array of double values to be read.
      * @param[in] nelements The number of doubles in the array.
+     * @param[in] distributed True if data is a distributed double array.
+     *                        HDFDatabase reads the array in file-per-process,
+     *                        where each file is read serially by one process.
      */
     virtual
     void
     getDoubleArray(
         const std::string& key,
         double* data,
-        int nelements);
+        int nelements,
+        const bool distributed=false);
 
     /**
      * @brief Reads a sub-array of doubles associated with the supplied key
@@ -194,6 +221,9 @@ public:
      * @param[out] data The allocated sub-array of double values to be read.
      * @param[in] nelements The number of doubles in the full array.
      * @param[in] idx The set of indices in the sub-array.
+     * @param[in] distributed True if data is a distributed double array.
+     *                        HDFDatabase reads the array in file-per-process,
+     *                        where each file is read serially by one process.
      */
     virtual
     void
@@ -201,7 +231,8 @@ public:
         const std::string& key,
         double* data,
         int nelements,
-        const std::vector<int>& idx);
+        const std::vector<int>& idx,
+        const bool distributed=false);
 
     /**
      * @brief Reads an array of doubles associated with the supplied key
@@ -220,6 +251,9 @@ public:
      *                       Typically, this is a number of columns of the matrix data.
      * @param[in] stride The stride to read from the HDF5 dataset.
      *                   Typically, this is the total number of columns of the matrix data.
+     * @param[in] distributed True if data is a distributed double array.
+     *                        HDFDatabase reads the array in file-per-process,
+     *                        where each file is read serially by one process.
      */
     virtual
     void
@@ -229,129 +263,130 @@ public:
         int nelements,
         int offset,
         int block_size,
-        int stride);
+        int stride,
+        const bool distributed=false);
 
-    /**
-     * @brief Creates a new HDF5 database file with the supplied name,
-     *        extending it with 6 digits indicating the process rank.
-     *
-     * @param[in] file_name Name of HDF5 database file to create.
-     * @param[in] comm      MPI communicator to obtain the process rank.
-     *
-     * @return True if file create was successful.
-     */
-    virtual bool
-    create_parallel(
-        const std::string& file_name,
-        const MPI_Comm comm) override
-    {
-        CAROM_VERIFY(!file_name.empty());
-        MPI_Comm_rank(comm, &d_rank);
+    // /**
+    //  * @brief Creates a new HDF5 database file with the supplied name,
+    //  *        extending it with 6 digits indicating the process rank.
+    //  *
+    //  * @param[in] file_name Name of HDF5 database file to create.
+    //  * @param[in] comm      MPI communicator to obtain the process rank.
+    //  *
+    //  * @return True if file create was successful.
+    //  */
+    // virtual bool
+    // create_parallel(
+    //     const std::string& file_name,
+    //     const MPI_Comm comm) override
+    // {
+    //     CAROM_VERIFY(!file_name.empty());
+    //     MPI_Comm_rank(comm, &d_rank);
 
-        std::string ext_filename(file_name);
-        char tmp[10];
-        sprintf(tmp, ".%06d", d_rank);
-        ext_filename += tmp;
+    //     std::string ext_filename(file_name);
+    //     char tmp[10];
+    //     sprintf(tmp, ".%06d", d_rank);
+    //     ext_filename += tmp;
 
-        return create(ext_filename);
-    }
+    //     return create(ext_filename);
+    // }
 
-    /**
-     * @brief Opens an existing HDF5 database file with the supplied name,
-     *        extending it with 6 digits indicating the process rank.
-     *
-     * @param[in] file_name Name of existing HDF5 database file to open.
-     * @param[in] type      Read/write type ("r"/"wr")
-     * @param[in] comm      MPI communicator to obtain the process rank.
-     *
-     * @return True if file open was successful.
-     */
-    virtual
-    bool
-    open_parallel(
-        const std::string& file_name,
-        const std::string& type,
-        const MPI_Comm comm) override
-    {
-        CAROM_VERIFY(!file_name.empty());
-        MPI_Comm_rank(comm, &d_rank);
+    // /**
+    //  * @brief Opens an existing HDF5 database file with the supplied name,
+    //  *        extending it with 6 digits indicating the process rank.
+    //  *
+    //  * @param[in] file_name Name of existing HDF5 database file to open.
+    //  * @param[in] type      Read/write type ("r"/"wr")
+    //  * @param[in] comm      MPI communicator to obtain the process rank.
+    //  *
+    //  * @return True if file open was successful.
+    //  */
+    // virtual
+    // bool
+    // open_parallel(
+    //     const std::string& file_name,
+    //     const std::string& type,
+    //     const MPI_Comm comm) override
+    // {
+    //     CAROM_VERIFY(!file_name.empty());
+    //     MPI_Comm_rank(comm, &d_rank);
 
-        std::string ext_filename(file_name);
-        char tmp[10];
-        sprintf(tmp, ".%06d", d_rank);
-        ext_filename += tmp;
+    //     std::string ext_filename(file_name);
+    //     char tmp[10];
+    //     sprintf(tmp, ".%06d", d_rank);
+    //     ext_filename += tmp;
 
-        return open(ext_filename, type);
-    }
+    //     return open(ext_filename, type);
+    // }
 
-    /**
-     * @brief Writes a distributed array of doubles associated with the supplied key to
-     *        the currently open database file.
-     *        For HDFDatabase, the function is equivalent to putDoubleArray,
-     *        writing the local array per each process.
-     *
-     * @param[in] key The key associated with the array of values to be
-     *                written.
-     * @param[in] data The array of double values to be written.
-     * @param[in] nelements The number of doubles in the array.
-     */
-    virtual
-    void
-    putDoubleArray_parallel(
-        const std::string& key,
-        const double* const data,
-        int nelements)
-    {
-        putDoubleArray(key, data, nelements);
-    }
+    // /**
+    //  * @brief Writes a distributed array of doubles associated with the supplied key to
+    //  *        the currently open database file.
+    //  *        For HDFDatabase, the function is equivalent to putDoubleArray,
+    //  *        writing the local array per each process.
+    //  *
+    //  * @param[in] key The key associated with the array of values to be
+    //  *                written.
+    //  * @param[in] data The array of double values to be written.
+    //  * @param[in] nelements The number of doubles in the array.
+    //  */
+    // virtual
+    // void
+    // putDoubleArray_parallel(
+    //     const std::string& key,
+    //     const double* const data,
+    //     int nelements)
+    // {
+    //     putDoubleArray(key, data, nelements);
+    // }
 
-    /**
-     * @brief Reads a distributed array of doubles associated with the supplied key
-     *        from the currently open database file.
-     *        For HDFDatabase, the function is equivalent to getDoubleArray,
-     *        reading the local array from a local file per each process.
-     *
-     * @param[in] key The key associated with the array of values to be
-     *                read.
-     * @param[out] data The allocated array of double values to be read.
-     * @param[in] nelements The number of doubles in the array.
-     */
-    virtual
-    void
-    getDoubleArray_parallel(
-        const std::string& key,
-        double* data,
-        int nelements)
-    {
-        getDoubleArray(key, data, nelements);
-    }
+    // /**
+    //  * @brief Reads a distributed array of doubles associated with the supplied key
+    //  *        from the currently open database file.
+    //  *        For HDFDatabase, the function is equivalent to getDoubleArray,
+    //  *        reading the local array from a local file per each process.
+    //  *
+    //  * @param[in] key The key associated with the array of values to be
+    //  *                read.
+    //  * @param[out] data The allocated array of double values to be read.
+    //  * @param[in] nelements The number of doubles in the array.
+    //  */
+    // virtual
+    // void
+    // getDoubleArray_parallel(
+    //     const std::string& key,
+    //     double* data,
+    //     int nelements)
+    // {
+    //     getDoubleArray(key, data, nelements);
+    // }
 
-    /**
-     * @brief Reads a distributed array of doubles associated with the supplied key
-     *        from the currently open database file.
-     *        For HDFDatabase, the function is equivalent to getDoubleArray,
-     *        reading the local array from a local file per each process.
-     *
-     * @param[in] key The key associated with the array of values to be
-     *                read.
-     * @param[out] data The allocated array of double values to be read.
-     * @param[in] nelements The number of doubles in the array.
-     * @param[in] offset The initial offset in the array.
-     * @param[in] block_size The block size to read from the HDF5 dataset.
-     * @param[in] stride The stride to read from the HDF5 dataset.
-     */
-    virtual
-    void
-    getDoubleArray_parallel(
-        const std::string& key,
-        double* data,
-        int nelements,
-        int offset,
-        int block_size,
-        int stride)
-    {
-        getDoubleArray(key, data, nelements, offset, block_size, stride);
-    }
+    // /**
+    //  * @brief Reads a distributed array of doubles associated with the supplied key
+    //  *        from the currently open database file.
+    //  *        For HDFDatabase, the function is equivalent to getDoubleArray,
+    //  *        reading the local array from a local file per each process.
+    //  *
+    //  * @param[in] key The key associated with the array of values to be
+    //  *                read.
+    //  * @param[out] data The allocated array of double values to be read.
+    //  * @param[in] nelements The number of doubles in the array.
+    //  * @param[in] offset The initial offset in the array.
+    //  * @param[in] block_size The block size to read from the HDF5 dataset.
+    //  * @param[in] stride The stride to read from the HDF5 dataset.
+    //  */
+    // virtual
+    // void
+    // getDoubleArray_parallel(
+    //     const std::string& key,
+    //     double* data,
+    //     int nelements,
+    //     int offset,
+    //     int block_size,
+    //     int stride)
+    // {
+    //     getDoubleArray(key, data, nelements, offset, block_size, stride);
+    // }
 
 protected:
 

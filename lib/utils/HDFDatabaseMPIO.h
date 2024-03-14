@@ -39,29 +39,31 @@ public:
      *        with the supplied name.
      *
      * @param[in] file_name Name of HDF5 database file to create.
-     *
-     * @return True if file create was successful.
-     */
-    bool
-    create_parallel(
-        const std::string& file_name,
-        const MPI_Comm comm) override;
-
-    /**
-     * @brief Creates a new HDF5 database file for non-distributed data
-     *        with the supplied name.
-     *        For HDFDatabaseMPIO, the behavior is equilvalent to create_parallel.
-     *
-     * @param[in] file_name Name of HDF5 database file to create.
+     * @param[in] comm MPI communicator for distributed data I/O.
+     *                 HDFDatabaseMPIO does not allow MPI_COMM_NULL.
      *
      * @return True if file create was successful.
      */
     bool
     create(
-        const std::string& file_name) override
-    {
-        return create_parallel(file_name, MPI_COMM_WORLD);
-    }
+        const std::string& file_name,
+        const MPI_Comm comm=MPI_COMM_WORLD) override;
+
+    // /**
+    //  * @brief Creates a new HDF5 database file for non-distributed data
+    //  *        with the supplied name.
+    //  *        For HDFDatabaseMPIO, the behavior is equilvalent to create_parallel.
+    //  *
+    //  * @param[in] file_name Name of HDF5 database file to create.
+    //  *
+    //  * @return True if file create was successful.
+    //  */
+    // bool
+    // create(
+    //     const std::string& file_name) override
+    // {
+    //     return create_parallel(file_name, MPI_COMM_WORLD);
+    // }
 
     /**
      * @brief Opens an existing HDF5 database file for distributed data
@@ -69,32 +71,247 @@ public:
      *
      * @param[in] file_name Name of existing HDF5 database file to open.
      * @param[in] type Read/write type ("r"/"wr")
-     *
-     * @return True if file open was successful.
-     */
-    bool
-    open_parallel(
-        const std::string& file_name,
-        const std::string& type,
-        const MPI_Comm comm) override;
-
-    /**
-     * @brief Opens an existing HDF5 database file for non-distributed data
-     *        with the supplied name.
-     *        For HDFDatabaseMPIO, the behavior is equilvalent to open_parallel.
-     *
-     * @param[in] file_name Name of existing HDF5 database file to open.
-     * @param[in] type Read/write type ("r"/"wr")
+     * @param[in] comm MPI communicator for distributed data I/O.
+     *                 HDFDatabaseMPIO does not allow MPI_COMM_NULL.
      *
      * @return True if file open was successful.
      */
     bool
     open(
         const std::string& file_name,
-        const std::string& type) override
+        const std::string& type,
+        const MPI_Comm comm=MPI_COMM_WORLD) override;
+
+    // /**
+    //  * @brief Opens an existing HDF5 database file for non-distributed data
+    //  *        with the supplied name.
+    //  *        For HDFDatabaseMPIO, the behavior is equilvalent to open_parallel.
+    //  *
+    //  * @param[in] file_name Name of existing HDF5 database file to open.
+    //  * @param[in] type Read/write type ("r"/"wr")
+    //  *
+    //  * @return True if file open was successful.
+    //  */
+    // bool
+    // open(
+    //     const std::string& file_name,
+    //     const std::string& type) override
+    // {
+    //     return open_parallel(file_name, type, MPI_COMM_WORLD);
+    // }
+
+    /**
+     * @brief Writes a local array of integers only for root rank,
+     * with associated supplied key to
+     * the currently open HDF5 database file.
+     *
+     * @pre !key.empty()
+     * @pre data != nullptr
+     * @pre nelements > 0
+     *
+     * @param[in] key The key associated with the array of values to be
+     *                written.
+     * @param[in] data The array of integer values to be written.
+     * @param[in] nelements The number of integers in the array.
+     * @param[in] distributed If true, distributed integer array will be written.
+     *                        If not, only the root process writes its integer array.
+     */
+    void
+    putIntegerArray(
+        const std::string& key,
+        const int* const data,
+        int nelements,
+        const bool distributed=false) override
     {
-        return open_parallel(file_name, type, MPI_COMM_WORLD);
+        if ((!distributed) && (d_rank != 0))
+            nelements = 0;
+        putIntegerArray_parallel(key, data, nelements);
     }
+
+    /**
+     * @brief Writes an array of doubles in the root rank
+     *        associated with the supplied key to
+     *        the currently open HDF5 database file.
+     *
+     * @pre !key.empty()
+     * @pre data != nullptr
+     * @pre nelements > 0
+     *
+     * @param[in] key The key associated with the array of values to be
+     *                written.
+     * @param[in] data The array of double values to be written.
+     * @param[in] nelements The number of doubles in the array.
+     * @param[in] distributed If true, distributed double array will be written.
+     *                        If not, only the root process writes its double array.
+     */
+    void
+    putDoubleArray(
+        const std::string& key,
+        const double* const data,
+        int nelements,
+        const bool distributed=false) override
+    {
+        if ((!distributed) && (d_rank != 0))
+            nelements = 0;
+        putDoubleArray_parallel(key, data, nelements);
+    }
+
+    /**
+     * @brief Reads an array of integers associated with the supplied key
+     * from the currently open HDF5 database file.
+     * All processes share the same non-distributed integer array.
+     *
+     * @pre !key.empty()
+     * @pre data != nullptr || nelements == 0
+     *
+     * @param[in] key The key associated with the array of values to be
+     *                read.
+     * @param[out] data The allocated array of integer values to be read.
+     * @param[in] nelements The number of integers in the array.
+     * @param[in] distributed If true, the integer array will be read in a distributed way.
+     *                        If not, the root process reads the entire array and broadcast to all processes.
+     */
+    void
+    getIntegerArray(
+        const std::string& key,
+        int* data,
+        int nelements,
+        const bool distributed=false) override
+    {
+        if (distributed)
+        {
+            getIntegerArray_parallel(key, data, nelements);
+            return;
+        }
+
+        int read_size = (d_rank == 0) ? nelements : 0;
+        getIntegerArray_parallel(key, data, read_size);
+
+        CAROM_VERIFY(d_comm != MPI_COMM_NULL);
+        MPI_Bcast(data, nelements, MPI_INT, 0, d_comm);
+    }
+
+    /**
+     * @brief Reads an array of doubles associated with the supplied key
+     * from the currently open HDF5 database file.
+     * All processes share the same non-distributed double array.
+     *
+     * @pre !key.empty()
+     * @pre data != nullptr || nelements == 0
+     *
+     * @param[in] key The key associated with the array of values to be
+     *                read.
+     * @param[out] data The allocated array of double values to be read.
+     * @param[in] nelements The number of doubles in the array.
+     * @param[in] distributed If true, the double array will be read in a distributed way.
+     *                        If not, the root process reads the entire array and broadcast to all processes.
+     */
+    void
+    getDoubleArray(
+        const std::string& key,
+        double* data,
+        int nelements,
+        const bool distributed=false) override
+    {
+        if (distributed)
+        {
+            getDoubleArray_parallel(key, data, nelements);
+            return;
+        }
+
+        int read_size = (d_rank == 0) ? nelements : 0;
+        getDoubleArray_parallel(key, data, read_size);
+
+        CAROM_VERIFY(d_comm != MPI_COMM_NULL);
+        MPI_Bcast(data, nelements, MPI_DOUBLE, 0, d_comm);
+    }
+
+    /**
+     * @brief Reads a sub-array of doubles associated with the supplied key
+     * from the currently open HDF5 database file.
+     * All processes share the same non-distributed double array.
+     *
+     * @pre !key.empty()
+     * @pre data != nullptr || nelements == 0
+     *
+     * @param[in] key The key associated with the array of values to be
+     *                read.
+     * @param[out] data The allocated sub-array of double values to be read.
+     * @param[in] nelements The number of doubles in the full array.
+     * @param[in] idx The set of indices in the sub-array.
+     * @param[in] distributed If true, the double array will be read in a distributed way.
+     *                        If not, the root process reads the entire array and broadcast to all processes.
+     */
+    void
+    getDoubleArray(
+        const std::string& key,
+        double* data,
+        int nelements,
+        const std::vector<int>& idx,
+        const bool distributed=false) override
+    {
+        if (distributed)
+        {
+            getDoubleArray_parallel(key, data, nelements, idx);
+            return;
+        }
+
+        int read_size = (d_rank == 0) ? nelements : 0;
+        getDoubleArray_parallel(key, data, read_size, idx);
+
+        CAROM_VERIFY(d_comm != MPI_COMM_NULL);
+        MPI_Bcast(data, nelements, MPI_DOUBLE, 0, d_comm);
+    }
+
+    /**
+     * @brief Reads an array of doubles associated with the supplied key
+     * from the currently open HDF5 database file.
+     * All processes share the same non-distributed double array.
+     *
+     * @pre !key.empty()
+     * @pre data != nullptr || nelements == 0
+     *
+     * @param[in] key The key associated with the array of values to be
+     *                read.
+     * @param[out] data The allocated array of double values to be read.
+     * @param[in] nelements The number of doubles in the array.
+     * @param[in] offset The initial offset in the array.
+     * @param[in] block_size The block size to read from the HDF5 dataset.
+     * @param[in] stride The stride to read from the HDF5 dataset.
+     * @param[in] distributed If true, the double array will be read in a distributed way.
+     *                        If not, the root process reads the entire array and broadcast to all processes.
+     */
+    void
+    getDoubleArray(
+        const std::string& key,
+        double* data,
+        int nelements,
+        int offset,
+        int block_size,
+        int stride,
+        const bool distributed=false) override
+    {
+        if (distributed)
+        {
+            getDoubleArray_parallel(key, data, nelements, offset, block_size, stride);
+            return;
+        }
+
+        int read_size = (d_rank == 0) ? nelements : 0;
+        getDoubleArray_parallel(key, data, read_size, offset, block_size, stride);
+
+        CAROM_VERIFY(d_comm != MPI_COMM_NULL);
+        MPI_Bcast(data, nelements, MPI_DOUBLE, 0, d_comm);
+    }
+
+    void
+    writeAttribute(
+        int type_key,
+        hid_t dataset_id) override;
+
+private:
+    MPI_Comm d_comm;
+    int d_rank;
 
     /**
      * @brief Writes a distributed array of integers
@@ -119,31 +336,6 @@ public:
         int nelem_local);
 
     /**
-     * @brief Writes a local array of integers only for root rank,
-     * with associated supplied key to
-     * the currently open HDF5 database file.
-     *
-     * @pre !key.empty()
-     * @pre data != nullptr
-     * @pre nelements > 0
-     *
-     * @param[in] key The key associated with the array of values to be
-     *                written.
-     * @param[in] data The array of integer values to be written.
-     * @param[in] nelements The number of integers in the array.
-     */
-    void
-    putIntegerArray(
-        const std::string& key,
-        const int* const data,
-        int nelements) override
-    {
-        if (d_rank != 0)
-            nelements = 0;
-        putIntegerArray_parallel(key, data, nelements);
-    }
-
-    /**
      * @brief Writes a distributed array of doubles
      *        associated with the supplied key to
      *        the currently open HDF5 database file.
@@ -166,31 +358,6 @@ public:
         int nelem_local);
 
     /**
-     * @brief Writes an array of doubles in the root rank
-     *        associated with the supplied key to
-     *        the currently open HDF5 database file.
-     *
-     * @pre !key.empty()
-     * @pre data != nullptr
-     * @pre nelements > 0
-     *
-     * @param[in] key The key associated with the array of values to be
-     *                written.
-     * @param[in] data The array of double values to be written.
-     * @param[in] nelements The number of doubles in the array.
-     */
-    void
-    putDoubleArray(
-        const std::string& key,
-        const double* const data,
-        int nelements) override
-    {
-        if (d_rank != 0)
-            nelements = 0;
-        putDoubleArray_parallel(key, data, nelements);
-    }
-
-    /**
      * @brief Reads a distributed array of integers
      *        associated with the supplied key
      *        from the currently open HDF5 database file.
@@ -209,31 +376,6 @@ public:
         const std::string& key,
         int* data,
         int nelem_local);
-
-    /**
-     * @brief Reads an array of integers associated with the supplied key
-     * from the currently open HDF5 database file.
-     * All processes share the same non-distributed integer array.
-     *
-     * @pre !key.empty()
-     * @pre data != nullptr || nelements == 0
-     *
-     * @param[in] key The key associated with the array of values to be
-     *                read.
-     * @param[out] data The allocated array of integer values to be read.
-     * @param[in] nelements The number of integers in the array.
-     */
-    void
-    getIntegerArray(
-        const std::string& key,
-        int* data,
-        int nelements) override
-    {
-        int read_size = (d_rank == 0) ? nelements : 0;
-        getIntegerArray_parallel(key, data, read_size);
-
-        MPI_Bcast(data, nelements, MPI_INT, 0, MPI_COMM_WORLD);
-    }
 
     /**
      * @brief Reads a distributed array of doubles
@@ -256,31 +398,6 @@ public:
         int nelem_local);
 
     /**
-     * @brief Reads an array of doubles associated with the supplied key
-     * from the currently open HDF5 database file.
-     * All processes share the same non-distributed double array.
-     *
-     * @pre !key.empty()
-     * @pre data != nullptr || nelements == 0
-     *
-     * @param[in] key The key associated with the array of values to be
-     *                read.
-     * @param[out] data The allocated array of double values to be read.
-     * @param[in] nelements The number of doubles in the array.
-     */
-    void
-    getDoubleArray(
-        const std::string& key,
-        double* data,
-        int nelements) override
-    {
-        int read_size = (d_rank == 0) ? nelements : 0;
-        getDoubleArray_parallel(key, data, read_size);
-
-        MPI_Bcast(data, nelements, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    }
-
-    /**
      * @brief Reads a distributed sub-array of doubles
      * associated with the supplied key
      * from the currently open HDF5 database file.
@@ -301,33 +418,6 @@ public:
         double* data,
         int nelem_local,
         const std::vector<int>& idx_local);
-
-    /**
-     * @brief Reads a sub-array of doubles associated with the supplied key
-     * from the currently open HDF5 database file.
-     * All processes share the same non-distributed double array.
-     *
-     * @pre !key.empty()
-     * @pre data != nullptr || nelements == 0
-     *
-     * @param[in] key The key associated with the array of values to be
-     *                read.
-     * @param[out] data The allocated sub-array of double values to be read.
-     * @param[in] nelements The number of doubles in the full array.
-     * @param[in] idx The set of indices in the sub-array.
-     */
-    void
-    getDoubleArray(
-        const std::string& key,
-        double* data,
-        int nelements,
-        const std::vector<int>& idx) override
-    {
-        int read_size = (d_rank == 0) ? nelements : 0;
-        getDoubleArray_parallel(key, data, read_size, idx);
-
-        MPI_Bcast(data, nelements, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    }
 
     /**
      * @brief Reads a distributed array of doubles
@@ -358,46 +448,6 @@ public:
         int block_offset_global,
         int block_size_global,
         int stride_global);
-
-    /**
-     * @brief Reads an array of doubles associated with the supplied key
-     * from the currently open HDF5 database file.
-     * All processes share the same non-distributed double array.
-     *
-     * @pre !key.empty()
-     * @pre data != nullptr || nelements == 0
-     *
-     * @param[in] key The key associated with the array of values to be
-     *                read.
-     * @param[out] data The allocated array of double values to be read.
-     * @param[in] nelements The number of doubles in the array.
-     * @param[in] offset The initial offset in the array.
-     * @param[in] block_size The block size to read from the HDF5 dataset.
-     * @param[in] stride The stride to read from the HDF5 dataset.
-     */
-    void
-    getDoubleArray(
-        const std::string& key,
-        double* data,
-        int nelements,
-        int offset,
-        int block_size,
-        int stride) override
-    {
-        int read_size = (d_rank == 0) ? nelements : 0;
-        getDoubleArray_parallel(key, data, read_size, offset, block_size, stride);
-
-        MPI_Bcast(data, nelements, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    }
-
-    void
-    writeAttribute(
-        int type_key,
-        hid_t dataset_id) override;
-
-private:
-    MPI_Comm d_comm;
-    int d_rank;
 };
 
 }

@@ -84,7 +84,7 @@ BasisWriter::writeBasis(const std::string& kind)
     char tmp[100];
 
     if (kind == "basis") {
-        d_database->create_parallel(full_file_name, MPI_COMM_WORLD);
+        d_database->create(full_file_name, MPI_COMM_WORLD);
 
         const Matrix* basis = d_basis_generator->getSpatialBasis();
         /* singular is always distributed */
@@ -99,7 +99,7 @@ BasisWriter::writeBasis(const std::string& kind)
         sprintf(tmp, "spatial_basis_num_cols");
         d_database->putInteger(tmp, num_cols);
         sprintf(tmp, "spatial_basis");
-        d_database->putDoubleArray_parallel(tmp, &basis->item(0, 0), num_rows*num_cols);
+        d_database->putDoubleArray(tmp, &basis->item(0, 0), num_rows*num_cols, true);
 
         if(d_basis_generator->updateRightSV()) {
             const Matrix* tbasis = d_basis_generator->getTemporalBasis();
@@ -128,7 +128,7 @@ BasisWriter::writeBasis(const std::string& kind)
     }
 
     if (kind == "snapshot") {
-        d_snap_database->create_parallel(snap_file_name, MPI_COMM_WORLD);
+        d_snap_database->create(snap_file_name, MPI_COMM_WORLD);
 
         const Matrix* snapshots = d_basis_generator->getSnapshotMatrix();
         /* snapshot matrix is always distributed */
@@ -143,8 +143,8 @@ BasisWriter::writeBasis(const std::string& kind)
         sprintf(tmp, "snapshot_matrix_num_cols");
         d_snap_database->putInteger(tmp, num_cols);
         sprintf(tmp, "snapshot_matrix");
-        d_snap_database->putDoubleArray_parallel(tmp, &snapshots->item(0,0),
-                num_rows*num_cols);
+        d_snap_database->putDoubleArray(tmp, &snapshots->item(0,0), num_rows*num_cols,
+                                        true);
 
         d_snap_database->close();
     }

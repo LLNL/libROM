@@ -43,12 +43,23 @@ HDFDatabase::~HDFDatabase()
 
 bool
 HDFDatabase::create(
-    const std::string& file_name)
+    const std::string& file_name,
+    const MPI_Comm comm)
 {
-    Database::create(file_name);
+    Database::create(file_name, comm);
 
     CAROM_VERIFY(!file_name.empty());
-    hid_t file_id = H5Fcreate(file_name.c_str(),
+    std::string ext_filename(file_name);
+
+    if (comm != MPI_COMM_NULL)
+    {
+        MPI_Comm_rank(comm, &d_rank);
+        char tmp[10];
+        sprintf(tmp, ".%06d", d_rank);
+        ext_filename += tmp;
+    }
+
+    hid_t file_id = H5Fcreate(ext_filename.c_str(),
                               H5F_ACC_TRUNC,
                               H5P_DEFAULT,
                               H5P_DEFAULT);
@@ -64,22 +75,33 @@ HDFDatabase::create(
 bool
 HDFDatabase::open(
     const std::string& file_name,
-    const std::string& type)
+    const std::string& type,
+    const MPI_Comm comm)
 {
-    Database::open(file_name, type);
+    Database::open(file_name, type, comm);
 
     CAROM_VERIFY(!file_name.empty());
+    std::string ext_filename(file_name);
+
+    if (comm != MPI_COMM_NULL)
+    {
+        MPI_Comm_rank(comm, &d_rank);
+        char tmp[10];
+        sprintf(tmp, ".%06d", d_rank);
+        ext_filename += tmp;
+    }
+
     CAROM_VERIFY(type == "r" || type == "wr");
     hid_t file_id;
     if (type == "r")
     {
-        file_id = H5Fopen(file_name.c_str(),
+        file_id = H5Fopen(ext_filename.c_str(),
                           H5F_ACC_RDONLY,
                           H5P_DEFAULT);
     }
     else if (type == "wr")
     {
-        file_id = H5Fopen(file_name.c_str(),
+        file_id = H5Fopen(ext_filename.c_str(),
                           H5F_ACC_RDWR,
                           H5P_DEFAULT);
     }
@@ -114,7 +136,8 @@ void
 HDFDatabase::putIntegerArray(
     const std::string& key,
     const int* const data,
-    int nelements)
+    int nelements,
+    const bool distributed)
 {
     CAROM_VERIFY(!key.empty());
     CAROM_VERIFY(data != nullptr);
@@ -166,7 +189,8 @@ void
 HDFDatabase::putDoubleArray(
     const std::string& key,
     const double* const data,
-    int nelements)
+    int nelements,
+    const bool distributed)
 {
     CAROM_VERIFY(!key.empty());
     CAROM_VERIFY(data != nullptr);
@@ -218,7 +242,8 @@ void
 HDFDatabase::putDoubleVector(
     const std::string& key,
     const std::vector<double>& data,
-    int nelements)
+    int nelements,
+    const bool distributed)
 {
     putDoubleArray(key, data.data(), nelements);
 }
@@ -227,7 +252,8 @@ void
 HDFDatabase::getIntegerArray(
     const std::string& key,
     int* data,
-    int nelements)
+    int nelements,
+    const bool distributed)
 {
     if (nelements == 0) return;
 
@@ -297,7 +323,8 @@ void
 HDFDatabase::getDoubleArray(
     const std::string& key,
     double* data,
-    int nelements)
+    int nelements,
+    const bool distributed)
 {
     if (nelements == 0) return;
 
@@ -340,7 +367,8 @@ HDFDatabase::getDoubleArray(
     const std::string& key,
     double* data,
     int nelements,
-    const std::vector<int>& idx)
+    const std::vector<int>& idx,
+    const bool distributed)
 {
     if (idx.size() == 0)
     {
@@ -373,7 +401,8 @@ HDFDatabase::getDoubleArray(
     int nelements,
     int offset,
     int block_size,
-    int stride)
+    int stride,
+    const bool distributed)
 {
     CAROM_VERIFY(!key.empty());
 #ifndef DEBUG_CHECK_ASSERTIONS
