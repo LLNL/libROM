@@ -1126,10 +1126,10 @@ Matrix::row_normalize() const
 {
     double check = 0.0;
     int nrow = numRows();
-    int threshold; 
-    std::frexp(1/(numDistributedRows()*numDistributedRows()),&threshold);
+    int threshold=0; 
+    //std::frexp(1.0/((double) numDistributedRows()),&threshold);
     std::cout << "threshold :" << threshold << std::endl; 
-    std::cout << "numDRow :" << 1/(numDistributedRows()*numDistributedRows()) << std::endl; 
+    std::cout << "trhold :" << (double) 1.0/(numDistributedRows()*numDistributedRows()) << std::endl; 
     std::cout << "numDRow :" << numDistributedRows() << std::endl; 
     Matrix* normalized_matrix = new Matrix(nrow, numColumns()+1, distributed());
     for (int i = 0; i < nrow; i++)
@@ -1146,23 +1146,28 @@ Matrix::row_normalize() const
                 rowmax = fabs(item(i,j));
            }
         }
+	if(i==0) printf("rowmax %f\n",rowmax);  
        if(rowmax > 0.0 ){
           scaled_item = std::frexp(rowmax, &exponent);
           //We use the ldexp function to multiply each component by 2^-exponent.
           for( int j = 0; j < numColumns(); j++ )
           {
-            scaled_item = std::ldexp(item(i,j), -exponent);
+            scaled_item = std::ldexp(item(i,j), -exponent);//-exponent
             scaled_norm += (scaled_item) * (scaled_item);
           }
           kii =sqrt(kii/scaled_norm);
-	  if(exponent < threshold) exponent = threshold;
-          for (int j = 0; j < numColumns(); j++ )
+          threshold = exponent;//initial
+	  if(rowmax < (double) 1.0/(numDistributedRows())) threshold = 0;
+	  //threshold = 0;
+	  for (int j = 0; j < numColumns(); j++ )
           {
-            normalized_matrix->item(i, j) = kii * (std::ldexp(item(i,j), -exponent));
+            normalized_matrix->item(i, j) = kii * (std::ldexp(item(i,j), -threshold));
+	    if(i==0) printf("%f\t",normalized_matrix->item(i,j));  
           }
           // We computed the weights for kii using the scaled norm
           // Thus the true weight should be kii*2^scale.
-          normalized_matrix->item(i,numColumns()) = std::ldexp(kii, -exponent) ;
+          normalized_matrix->item(i,numColumns()) = std::ldexp(kii, -threshold) ;
+	    if(i==0) printf("%f\n",normalized_matrix->item(i,numColumns()));  
         }else{
           for (int j = 0; j < numColumns(); j++ )
           {

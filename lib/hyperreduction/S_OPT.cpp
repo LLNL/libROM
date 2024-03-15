@@ -244,6 +244,7 @@ S_OPT(const Matrix* f_basis,
         {
             if (i <= num_basis_vectors)
             {
+		    /*
 		printf("init_trunc %d",init_trunc);
 		if(!init_trunc)
 		{
@@ -283,7 +284,7 @@ S_OPT(const Matrix* f_basis,
                 delete ls_res;
 		}
 		else
-		{	
+		{*/	
         	Matrix V1_last_col(num_basis_vectors - 1, 1, false);
         	Matrix tt(num_rows, num_basis_vectors - 1, f_basis->distributed());
         	Matrix tt1(num_rows, num_basis_vectors - 1, f_basis->distributed());
@@ -473,7 +474,6 @@ S_OPT(const Matrix* f_basis,
                 }
 
                 delete b;
-		}
             }  else
             {
                 Matrix* curr_V1 = new Matrix(V1.getData(), num_samples_obtained,
