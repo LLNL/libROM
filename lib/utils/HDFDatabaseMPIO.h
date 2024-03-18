@@ -40,7 +40,8 @@ public:
      *
      * @param[in] file_name Name of HDF5 database file to create.
      * @param[in] comm MPI communicator for distributed data I/O.
-     *                 HDFDatabaseMPIO does not allow MPI_COMM_NULL.
+     *                 By default, HDFDatabaseMPIO uses MPI_COMM_WORLD
+     *                 and does not allow MPI_COMM_NULL.
      *
      * @return True if file create was successful.
      */
@@ -49,22 +50,6 @@ public:
         const std::string& file_name,
         const MPI_Comm comm=MPI_COMM_WORLD) override;
 
-    // /**
-    //  * @brief Creates a new HDF5 database file for non-distributed data
-    //  *        with the supplied name.
-    //  *        For HDFDatabaseMPIO, the behavior is equilvalent to create_parallel.
-    //  *
-    //  * @param[in] file_name Name of HDF5 database file to create.
-    //  *
-    //  * @return True if file create was successful.
-    //  */
-    // bool
-    // create(
-    //     const std::string& file_name) override
-    // {
-    //     return create_parallel(file_name, MPI_COMM_WORLD);
-    // }
-
     /**
      * @brief Opens an existing HDF5 database file for distributed data
      *        with the supplied name.
@@ -72,7 +57,8 @@ public:
      * @param[in] file_name Name of existing HDF5 database file to open.
      * @param[in] type Read/write type ("r"/"wr")
      * @param[in] comm MPI communicator for distributed data I/O.
-     *                 HDFDatabaseMPIO does not allow MPI_COMM_NULL.
+     *                 By default, HDFDatabaseMPIO uses MPI_COMM_WORLD
+     *                 and does not allow MPI_COMM_NULL.
      *
      * @return True if file open was successful.
      */
@@ -81,24 +67,6 @@ public:
         const std::string& file_name,
         const std::string& type,
         const MPI_Comm comm=MPI_COMM_WORLD) override;
-
-    // /**
-    //  * @brief Opens an existing HDF5 database file for non-distributed data
-    //  *        with the supplied name.
-    //  *        For HDFDatabaseMPIO, the behavior is equilvalent to open_parallel.
-    //  *
-    //  * @param[in] file_name Name of existing HDF5 database file to open.
-    //  * @param[in] type Read/write type ("r"/"wr")
-    //  *
-    //  * @return True if file open was successful.
-    //  */
-    // bool
-    // open(
-    //     const std::string& file_name,
-    //     const std::string& type) override
-    // {
-    //     return open_parallel(file_name, type, MPI_COMM_WORLD);
-    // }
 
     /**
      * @brief Writes a local array of integers only for root rank,

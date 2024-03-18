@@ -46,13 +46,7 @@ BasisWriter::BasisWriter(
         rank = 0;
     }
 
-    // char tmp[100];
-    // sprintf(tmp, ".%06d", rank);
-    // full_file_name = base_file_name + tmp;
     full_file_name = base_file_name;
-
-    // char tmp2[100];
-    // sprintf(tmp2, "_snapshot.%06d", rank);
     snap_file_name = base_file_name + "_snapshot";
 
     // create and open snapshot/basis database
@@ -87,7 +81,7 @@ BasisWriter::writeBasis(const std::string& kind)
         d_database->create(full_file_name, MPI_COMM_WORLD);
 
         const Matrix* basis = d_basis_generator->getSpatialBasis();
-        /* singular is always distributed */
+        /* spatial basis is always distributed */
         CAROM_VERIFY(basis->distributed());
         int num_rows = basis->numRows();
         int nrows_infile = num_rows;
@@ -116,7 +110,7 @@ BasisWriter::writeBasis(const std::string& kind)
         }
 
         const Vector* sv = d_basis_generator->getSingularValues();
-        /* singular is always not distributed */
+        /* singular values are always not distributed */
         CAROM_VERIFY(!sv->distributed());
         int sv_dim = sv->dim();
         sprintf(tmp, "singular_value_size");
