@@ -33,6 +33,8 @@ TEST(GoogleTestFramework, GoogleTestFrameworkFound) {
     SUCCEED();
 }
 
+#if HDF5_IS_PARALLEL
+
 TEST(HDF5, Test_parallel_writing)
 {
     int nproc, rank;
@@ -536,6 +538,8 @@ TEST(HDF5, Test_selective_parallel_reading)
     for (int d = 0; d < nrow_local * ncol; d++)
         EXPECT_TRUE(data[d] == d + offsets[rank] * ncol);
 }
+
+#endif
 
 TEST(BasisGeneratorIO, HDFDatabase)
 {

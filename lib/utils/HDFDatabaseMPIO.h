@@ -34,6 +34,7 @@ public:
     virtual
     ~HDFDatabaseMPIO() {}
 
+#if HDF5_IS_PARALLEL
     /**
      * @brief Creates a new HDF5 database file for distributed data
      *        with the supplied name.
@@ -416,6 +417,7 @@ private:
         int block_offset_global,
         int block_size_global,
         int stride_global);
+#endif
 };
 
 }

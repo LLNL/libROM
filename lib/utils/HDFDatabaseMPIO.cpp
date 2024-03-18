@@ -17,10 +17,16 @@
 namespace CAROM {
 
 HDFDatabaseMPIO::HDFDatabaseMPIO() :
+#if HDF5_IS_PARALLEL
     HDFDatabase(),
     d_rank(-1),
     d_comm(MPI_COMM_NULL)
+#else
+    HDFDatabase()
+#endif
 {}
+
+#if HDF5_IS_PARALLEL
 
 bool
 HDFDatabaseMPIO::create(
@@ -626,5 +632,7 @@ HDFDatabaseMPIO::writeAttribute(
     CAROM_NULL_USE(errf);
 #endif
 }
+
+#endif
 
 }
