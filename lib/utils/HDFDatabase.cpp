@@ -46,8 +46,6 @@ HDFDatabase::create(
     const std::string& file_name,
     const MPI_Comm comm)
 {
-    Database::create(file_name, comm);
-
     CAROM_VERIFY(!file_name.empty());
     std::string ext_filename(file_name);
 
@@ -58,6 +56,8 @@ HDFDatabase::create(
         sprintf(tmp, ".%06d", d_rank);
         ext_filename += tmp;
     }
+
+    Database::create(ext_filename, comm);
 
     hid_t file_id = H5Fcreate(ext_filename.c_str(),
                               H5F_ACC_TRUNC,
@@ -78,8 +78,6 @@ HDFDatabase::open(
     const std::string& type,
     const MPI_Comm comm)
 {
-    Database::open(file_name, type, comm);
-
     CAROM_VERIFY(!file_name.empty());
     std::string ext_filename(file_name);
 
@@ -90,6 +88,8 @@ HDFDatabase::open(
         sprintf(tmp, ".%06d", d_rank);
         ext_filename += tmp;
     }
+
+    Database::open(ext_filename, type, comm);
 
     CAROM_VERIFY(type == "r" || type == "wr");
     hid_t file_id;
