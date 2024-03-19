@@ -53,8 +53,6 @@ main(
         return 1;
     }
 
-    bool status = false;
-
     // Define the values for the first sample.
     double vals0[6] = {1.0, 6.0, 3.0, 8.0, 17.0, 9.0};
 
@@ -144,5 +142,5 @@ main(
 
     // Finalize MPI and return.
     MPI_Finalize();
-    return !status;
+    return 0;
 }
