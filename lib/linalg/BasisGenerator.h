@@ -64,7 +64,7 @@ public:
         Options options,
         bool incremental,
         const std::string& basis_file_name = "",
-        Database::formats file_format = Database::HDF5);
+        Database::formats file_format = Database::formats::HDF5);
 
     /**
      * @brief Destructor.
@@ -155,7 +155,7 @@ public:
                     const std::string& kind  = "basis",
                     int col_min = 0,
                     int col_max = 1e9,
-                    Database::formats db_format = Database::HDF5);
+                    Database::formats db_format = Database::formats::HDF5);
 
     /**
      * @brief Load previously saved sample (basis or state).
@@ -170,8 +170,8 @@ public:
     void
     loadSamples(const std::string& base_file_name,
                 const std::string& kind  = "basis",
-                int cutoff = 1e9,
-                Database::formats db_format = Database::HDF5);
+                int cut_off = 1e9,
+                Database::formats db_format = Database::formats::HDF5);
 
     /**
      * @brief Computes next time an svd sample is needed.
@@ -322,7 +322,7 @@ private:
     int
     getDim()
     {
-        return d_svd->getDim();
+        return d_dim;
     }
 
     /**
@@ -376,6 +376,13 @@ private:
      * @brief The number of processors being run on.
      */
     int d_num_procs;
+
+    /**
+     * @brief Dimension of the system on this processor.
+     *
+     * Equivalent to d_svd->getDim().
+     */
+    const int d_dim;
 };
 
 }
