@@ -1203,7 +1203,7 @@ int main(int argc, char *argv[])
             // IncrementalSVD is never turned on in this example and isNextSample is always true.
             if (x_base_only == false && basis_generator_v->isNextSample(t))
             {
-	      basis_generator_v->takeSample(vx_diff.GetBlock(0).GetData());
+                basis_generator_v->takeSample(vx_diff.GetBlock(0).GetData());
                 basis_generator_v->computeNextSampleTime(vx_diff.GetBlock(0).GetData(),
                         dvdt.GetData(), t);
                 basis_generator_H->takeSample(oper.H_sp.GetData());
