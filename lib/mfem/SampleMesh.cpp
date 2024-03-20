@@ -1231,7 +1231,6 @@ void SampleMeshManager::ConstructSampleMesh()
             spaceOSSP[i+1] = spaceOSSP[i] + spfespace[i]->GetVSize();
         }
 
-        sample_pmesh->ReorientTetMesh();  // re-orient the mesh, required for tets, no-op for hex
         sample_pmesh->EnsureNodes();
     }
 
