@@ -833,43 +833,12 @@ double Potential(const Vector &x)
 
     const double min_d = 2.0 * sqrt(2.0);
 
-    auto check_within_portion = [&](const Vector &t, const double limit) {
-        // helper function to check if t is within limit percentage relative to the center of the mesh
-        for (int i = 0; i < dim; i++)
-        {
-            double domain_limit = limit * (bb_max[i] - bb_min[i]);
-            double mesh_center = 0.5 * (bb_max[i] + bb_min[i]);
-
-            // check that t is within the limit relative to the center of the mesh
-            if ((t(i) - mesh_center) - (0.5 * domain_limit) > 1.0e-14)
-            {
-                std::cerr << "Error: value of t exceeds domain limit: t = " << t(
-                              i) << ", limit = " << 0.5 * domain_limit << "\n";
-                exit(-1);
-            }
-        }
-    };
-
-    auto map_to_ref_mesh = [](const double &bb_min, const double &bb_max,
-    const double &fraction) -> double {
-        // helper function to map a fractional value from [-1, 1] to [bb_min, bb_max]
-        CAROM_VERIFY(fraction <= 1.0 && fraction >= -1.0);
-        return bb_min + (fraction + 1.0) * ((bb_max - bb_min) * 0.5);
-    };
-
-    auto map_from_ref_mesh = [](const double &bb_min, const double &bb_max,
-    const double &value) -> double {
-        // helper function to map a value from the mesh range [bb_min, bb_max] to [-1, 1]
-        CAROM_VERIFY(value <= bb_max && value >= bb_min);
-        return -1.0 + (value - bb_min) * ((2.0) / (bb_max - bb_min));
-    };
-
     X = x;
     for (int i = 0; i < dim; i++)
     {
         // map alpha parameter from [-1,1] to the mesh bounding box (controls the center for problems 4 and 5)
-        center(i) = map_to_ref_mesh(bb_min[i], bb_max[i], center(i));
-        neg_center(i) = map_to_ref_mesh(bb_min[i], bb_max[i], neg_center(i));
+        center(i) = CAROM::map_to_ref_mesh(bb_min[i], bb_max[i], center(i));
+        neg_center(i) = CAROM::map_to_ref_mesh(bb_min[i], bb_max[i], neg_center(i));
     }
 
     switch (problem)
@@ -897,8 +866,8 @@ double Potential(const Vector &x)
         for (int i = 0; i < dim; i++)
         {
             // map alpha parameter from [-1,1] to the mesh bounding box (controls the center for problems 4 and 5)
-            center(i) = map_to_ref_mesh(bb_min[i], bb_max[i], center(i));
-            neg_center(i) = map_to_ref_mesh(bb_min[i], bb_max[i], neg_center(i));
+            center(i) = CAROM::map_to_ref_mesh(bb_min[i], bb_max[i], center(i));
+            neg_center(i) = CAROM::map_to_ref_mesh(bb_min[i], bb_max[i], neg_center(i));
         }
         return -D * (std::exp(-X.DistanceSquaredTo(center) / c) + std::exp(
                          -X.DistanceSquaredTo(neg_center) / c));
@@ -908,7 +877,7 @@ double Potential(const Vector &x)
         //  min_d is the lower bound of the atom distance over time
 
         // verify t is within inner 20% of domain (centered around mesh origin)
-        check_within_portion(center, 0.2);
+        CAROM::check_within_portion(bb_min, bb_max, center, 0.2);
 
         return -D * (std::exp(-X.DistanceSquaredTo(center) / std::pow(c * min_d,
                               2)) + std::exp(
@@ -924,8 +893,8 @@ double Potential(const Vector &x)
         center(1) += 0.5 * sin(2.0*kappa);
 
         // map the absolute location back to a fraction of the mesh domain
-        center(0) = map_from_ref_mesh(bb_min[0], bb_max[0], center(0));
-        center(1) = map_from_ref_mesh(bb_min[1], bb_max[1], center(1));
+        center(0) = CAROM::map_from_ref_mesh(bb_min[0], bb_max[0], center(0));
+        center(1) = CAROM::map_from_ref_mesh(bb_min[1], bb_max[1], center(1));
 
         neg_center = center;
         neg_center.Neg();
@@ -933,12 +902,12 @@ double Potential(const Vector &x)
         for (int i = 0; i < dim; i++)
         {
             // map alpha parameter from [-1,1] to the mesh bounding box (controls the center for problems 4 and 5)
-            center(i) = map_to_ref_mesh(bb_min[i], bb_max[i], center(i));
-            neg_center(i) = map_to_ref_mesh(bb_min[i], bb_max[i], neg_center(i));
+            center(i) = CAROM::map_to_ref_mesh(bb_min[i], bb_max[i], center(i));
+            neg_center(i) = CAROM::map_to_ref_mesh(bb_min[i], bb_max[i], neg_center(i));
         }
 
         // verify t is within inner 20% of domain (centered around mesh origin)
-        check_within_portion(center, 0.2);
+        CAROM::check_within_portion(bb_min, bb_max, center, 0.2);
 
         return -D * (std::exp(-X.DistanceSquaredTo(center) / std::pow(c * min_d,
                               2)) + std::exp(
