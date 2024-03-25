@@ -802,8 +802,8 @@ double Potential(const Vector &x)
     case 5:
         return -D * std::exp(-X.DistanceSquaredTo(center) / c);
     case 6:
-        return -D * (std::exp(-X.DistanceSquaredTo(center) / c) + std::exp(
-                         -X.DistanceSquaredTo(neg_center) / c));
+        return -D * (std::exp(-X.DistanceSquaredTo(center) / c) +
+                     std::exp(-X.DistanceSquaredTo(neg_center) / c));
     case 7:
         center = 0.25;
         center(0) += 0.05 * cos(2.0*kappa);
@@ -858,9 +858,8 @@ double Potential(const Vector &x)
         // verify t is within inner 20% of domain (centered around mesh origin)
         check_domain(center, 0.2);
 
-        return -D * (std::exp(-X.DistanceSquaredTo(center) / std::pow(c * min_d,
-                              2)) + std::exp(
-                         -X.DistanceSquaredTo(neg_center) / std::pow(c * min_d, 2)));
+        return -D * (std::exp(-X.DistanceSquaredTo(center) / std::pow(c * min_d, 2)) + 
+                     std::exp(-X.DistanceSquaredTo(neg_center) / std::pow(c * min_d, 2)));
     }
     return 0.0;
 }
