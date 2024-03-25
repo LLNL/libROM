@@ -24,17 +24,17 @@
 //               order < 1 (quadratic for quadratic curvilinear mesh, NURBS for
 //               NURBS mesh, etc.)
 //
-// Offline phase: elliptic_eigenproblem_global_rom -offline -p 2 -id 0 -a 0.8
-//                elliptic_eigenproblem_global_rom -offline -p 2 -id 1 -a 0.9
-//                elliptic_eigenproblem_global_rom -offline -p 2 -id 2 -a 1.1
-//                elliptic_eigenproblem_global_rom -offline -p 2 -id 3 -a 1.2
+// Offline phase: elliptic_eigenproblem_global_rom -offline -p 2 -id 0 -a 0.40
+//                elliptic_eigenproblem_global_rom -offline -p 2 -id 1 -a 0.45
+//                elliptic_eigenproblem_global_rom -offline -p 2 -id 2 -a 0.55
+//                elliptic_eigenproblem_global_rom -offline -p 2 -id 3 -a 0.60
 //
 // Merge phase:   elliptic_eigenproblem_global_rom -merge -p 2 -ns 4
 //
 // FOM run (for error calculation):
-//                elliptic_eigenproblem_global_rom -fom -p 2 -f 1.0
+//                elliptic_eigenproblem_global_rom -fom -p 2 -a 0.50
 //
-// Online phase:  elliptic_eigenproblem_global_rom -online -p 2 -f 1.0
+// Online phase:  elliptic_eigenproblem_global_rom -online -p 2 -a 0.50
 
 #include "mfem.hpp"
 #include "linalg/BasisGenerator.h"
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 
     // 2. Parse command-line options.
     const char *mesh_file = "";
-    bool dirichlet = false;
+    bool dirichlet = true;
     int ser_ref_levels = 2;
     int par_ref_levels = 1;
     int order = 1;
@@ -527,6 +527,7 @@ int main(int argc, char *argv[])
         }
     }
 
+    Vector sign_ev(nev);
     if (online)
     {
         // Initialize FOM solution
@@ -540,13 +541,15 @@ int main(int argc, char *argv[])
         Vector diff_ev(nev);
         for (int i = 0; i < eigenvalues.Size() && i < nev; i++)
         {
-            diff_ev[i] = ev_fom[i] - eigenvalues[i];
-            double ev_diff_norm = sqrt(diff_ev[i] * diff_ev[i]);
-            double ev_fom_norm = sqrt(ev_fom[i] * ev_fom[i]);
+            diff_ev[i] = abs(ev_fom[i] - eigenvalues[i]);
             if (myid == 0)
             {
+                std::cout << "FOM solution for eigenvalue " << i << " = " <<
+                          ev_fom[i] << std::endl;
+                std::cout << "Absolute error of ROM solution for eigenvalue " << i << " = " <<
+                          diff_ev[i] << std::endl;
                 std::cout << "Relative error of ROM solution for eigenvalue " << i << " = " <<
-                          ev_diff_norm / ev_fom_norm << std::endl;
+                          diff_ev[i] / abs(ev_fom[i]) << std::endl;
             }
         }
 
@@ -572,7 +575,9 @@ int main(int argc, char *argv[])
             mode_fom_ifs.close();
 
             const double fomNorm = sqrt(InnerProduct(mode_fom, mode_fom));
-            mode_fom -= mode_rom;
+            // TODO: use a constant mode_ref for all parameters and (FOM & ROM) eigenfunctions
+            sign_ev[i] = (InnerProduct(mode_fom, mode_rom) >= 0) ? 1 : -1;
+            mode_fom.Add(-sign_ev[i], mode_rom);
             const double diffNorm = sqrt(InnerProduct(mode_fom, mode_fom));
             if (myid == 0) std::cout << "Relative l2 error of ROM eigenvector " << i <<
                                          " = " << diffNorm /
@@ -599,6 +604,7 @@ int main(int argc, char *argv[])
                 Vector ev;
                 evect.GetRow(i, ev);
                 x = ev;
+                x *= sign_ev[i];
             }
             visit_evs.push_back(new ParGridFunction(x));
             visit_dc.RegisterField("x" + std::to_string(i), visit_evs.back());
@@ -650,6 +656,7 @@ int main(int argc, char *argv[])
                     Vector ev;
                     evect.GetRow(i, ev);
                     x = ev;
+                    x *= sign_ev[i];
                 }
 
                 sout << "parallel " << num_procs << " " << myid << "\n"
