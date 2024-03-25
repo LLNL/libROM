@@ -479,11 +479,11 @@ int main(int argc, char *argv[])
         const CAROM::Matrix *spatialbasis;
         if (rdim != -1)
         {
-            spatialbasis = reader.getSpatialBasis(0.0, rdim);
+            spatialbasis = reader.getSpatialBasis(rdim);
         }
         else
         {
-            spatialbasis = reader.getSpatialBasis(0.0, ef);
+            spatialbasis = reader.getSpatialBasis(ef);
         }
 
         const int numRowRB = spatialbasis->numRows();
