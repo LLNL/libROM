@@ -33,8 +33,30 @@
 //
 // FOM run (for error calculation):
 //                elliptic_eigenproblem_global_rom -fom -p 2 -f 1.0
+// Example output:
+//   Number of unknowns: 289
+//    Eigenvalue 0: 0.04533314
+//    Eigenvalue 1: 0.11332411
+//    Eigenvalue 2: 0.11486387
+//    Eigenvalue 3: 0.18192
+//    Eigenvalue 4: 0.22964377
+//   Elapsed time for assembling FOM: 1.471708e-03 second
+//   Elapsed time for solving FOM: 3.416310e-01 second
 //
 // Online phase:  elliptic_eigenproblem_global_rom -online -p 2 -f 1.0
+// Example output:
+//   Eigenvalue 0: = 0.048430949
+//   Eigenvalue 1: = 0.12021157
+//   Eigenvalue 2: = 0.12147847
+//   Eigenvalue 3: = 0.19456504
+//   Eigenvalue 4: = 0.24285855
+//   Relative error of ROM solution for eigenvalue 0 = 0.068334316
+//   Relative error of ROM solution for eigenvalue 1 = 0.060776586
+//   Relative error of ROM solution for eigenvalue 2 = 0.057586388
+//   Relative error of ROM solution for eigenvalue 3 = 0.069508795
+//   Relative error of ROM solution for eigenvalue 4 = 0.057544708
+//   Elapsed time for assembling ROM: 4.289041e-03 second
+//   Elapsed time for solving ROM: 6.225410e-04 second
 
 #include "mfem.hpp"
 #include "linalg/BasisGenerator.h"
