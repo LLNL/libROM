@@ -105,9 +105,14 @@ METIS_DIR=$LIB_DIR/parmetis-4.0.3
 METIS_OPT=-I${METIS_DIR}/metis/include
 METIS_LIB="-L${METIS_DIR}/build/lib/libparmetis -lparmetis -L${METIS_DIR}/build/lib/libmetis -lmetis"
 
+if [ ${MFEM_USE_LAPACK} == "On" ]; then
+  # MFEM makefile needs YES/NO
+  MFEM_USE_LAPACK="YES"
+fi
+
 # Install distributed version of SuperLU
 cd $LIB_DIR
-if [ -z ${INSTALL_SUPERLU} ] && [ ! -d "superlu_dist" ]; then
+if [ ! -z ${INSTALL_SUPERLU} ] && [ ! -d "superlu_dist" ]; then
   wget https://github.com/xiaoyeli/superlu_dist/archive/refs/tags/v6.3.1.tar.gz
   tar -zxvf v6.3.1.tar.gz
   mv superlu_dist-6.3.1 superlu_dist
@@ -117,6 +122,7 @@ if [ -z ${INSTALL_SUPERLU} ] && [ ! -d "superlu_dist" ]; then
   export PARMETIS_ROOT=${METIS_DIR}
   export PARMETIS_BUILD_DIR=${PARMETIS_ROOT}/build/lib/
   cmake -DCMAKE_INSTALL_PREFIX=./ \
+        -DCMAKE_INSTALL_LIBDIR=lib \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_C_COMPILER=mpicc \
         -DCMAKE_CXX_COMPILER=mpicxx \
@@ -125,7 +131,7 @@ if [ -z ${INSTALL_SUPERLU} ] && [ ! -d "superlu_dist" ]; then
         -Denable_examples=OFF \
         -DTPL_ENABLE_PARMETISLIB=ON \
         -DTPL_PARMETIS_INCLUDE_DIRS="${PARMETIS_ROOT}/include;${PARMETIS_ROOT}/metis/include" \
-        -DTPL_PARMETIS_LIBRARIES="${PARMETIS_BUILD_DIR}/libparmetis/libparmetis.a;${PARMETIS_BUILD_DIR}/libmetis/libmetis.a" \
+        -DTPL_PARMETIS_LIBRARIES="${PARMETIS_BUILD_DIR}/libparmetis/libparmetis.so;${PARMETIS_BUILD_DIR}/libmetis/libmetis.so" \
         -DTPL_ENABLE_COMBBLASLIB=OFF \
         -DUSE_XSDK_DEFAULTS="False" \
         -DBUILD_SHARED_LIBS=ON \
@@ -152,7 +158,7 @@ if [[ $BUILD_TYPE == "Debug" ]]; then
     if [[ $UPDATE_LIBS == "true" ]]; then
         cd mfem_debug
         git pull
-        make pdebug -j 8 STATIC=NO SHARED=YES MFEM_USE_MPI=YES MFEM_USE_GSLIB=${MG} MFEM_USE_LAPACK=${MFEM_USE_LAPACK:-"NO"} MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB" MFEM_USE_SUPERLU=${MFEM_USE_SUPERLU:-"NO"} SUPERLU_DIR="$SUPERLU_DIR" SUPERLU_OPT="$SUPERLU_OPT" SUPERLU_LIB="$SUPERLU_LIB"
+        make -j 8 pdebug STATIC=NO SHARED=YES MFEM_USE_MPI=YES MFEM_USE_GSLIB=${MG} MFEM_USE_LAPACK=${MFEM_USE_LAPACK:-"NO"} MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB" MFEM_USE_SUPERLU=${MFEM_USE_SUPERLU:-"NO"} SUPERLU_DIR="$SUPERLU_DIR" SUPERLU_OPT="$SUPERLU_OPT" SUPERLU_LIB="$SUPERLU_LIB"
         check_result $? mfem-debug-installation
     fi
     cd $LIB_DIR
@@ -169,7 +175,7 @@ else
         # NOTE(kevin): v4.5.2-dev commit. This is the mfem version used by PyMFEM v4.5.2.0.
         # This version matching is required to support pylibROM-PyMFEM interface.
         git checkout 00b2a0705f647e17a1d4ffcb289adca503f28d42
-        make parallel -j 8 STATIC=NO SHARED=YES MFEM_USE_MPI=YES MFEM_USE_GSLIB=${MG} MFEM_USE_LAPACK=${MFEM_USE_LAPACK:-"NO"} MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB" MFEM_USE_SUPERLU=${MFEM_USE_SUPERLU:-"NO"} SUPERLU_DIR="$SUPERLU_DIR" SUPERLU_OPT="$SUPERLU_OPT" SUPERLU_LIB="$SUPERLU_LIB"
+        make -j 8 parallel STATIC=NO SHARED=YES MFEM_USE_MPI=YES MFEM_USE_GSLIB=${MG} MFEM_USE_LAPACK=${MFEM_USE_LAPACK:-"NO"} MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB" MFEM_USE_SUPERLU=${MFEM_USE_SUPERLU:-"NO"} SUPERLU_DIR="$SUPERLU_DIR" SUPERLU_OPT="$SUPERLU_OPT" SUPERLU_LIB="$SUPERLU_LIB"
         check_result $? mfem-parallel-installation
     fi
     cd $LIB_DIR
