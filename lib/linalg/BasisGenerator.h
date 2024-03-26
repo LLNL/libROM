@@ -64,7 +64,7 @@ public:
         Options options,
         bool incremental,
         const std::string& basis_file_name = "",
-        Database::formats file_format = Database::HDF5);
+        Database::formats file_format = Database::formats::HDF5);
 
     /**
      * @brief Destructor.
@@ -139,20 +139,39 @@ public:
     }
 
     /**
+     * @brief Load previously saved sample (basis or state)
+     *        within a column range.
+     *
+     * @param[in] base_file_name The base part of the name of the files
+     *                           holding the basis/snapshot vectors.
+     * @param[in] kind A string equal to "basis" or "snapshot", representing
+     *                 which kind of data to load.
+     * @param[in] col_min The first basis/snapshot vector to read.
+     * @param[in] col_max The last basis/snapshot vector to read.
+     * @param[in] db_format Format of the file to read.
+     */
+    void
+    loadSampleRange(const std::string& base_file_name,
+                    const std::string& kind  = "basis",
+                    int col_min = 0,
+                    int col_max = 1e9,
+                    Database::formats db_format = Database::formats::HDF5);
+
+    /**
      * @brief Load previously saved sample (basis or state).
      *
      * @param[in] base_file_name The base part of the name of the files
-     *                           holding the basis / snapshot vectors.
+     *                           holding the basis/snapshot vectors.
      * @param[in] kind A string equal to "basis" or "snapshot", representing
      *                 which kind of data to load.
-     * @param[in] cut_off The maximum number of bases or snapshots to read.
+     * @param[in] cutoff The maximum number of basis/snapshot vectors to read.
      * @param[in] db_format Format of the file to read.
      */
     void
     loadSamples(const std::string& base_file_name,
                 const std::string& kind  = "basis",
                 int cut_off = 1e9,
-                Database::formats db_format = Database::HDF5);
+                Database::formats db_format = Database::formats::HDF5);
 
     /**
      * @brief Computes next time an svd sample is needed.
@@ -228,6 +247,21 @@ public:
         return d_svd->getNumSamples();
     }
 
+    /**
+     * @brief Prints the summary of recommended numbers of basis vectors.
+     *
+     * @param[in] energyFractionThreshold   Energy Fraction threshold
+     *                                      (energy fraction = 1.0 - energyFractionThreshold).
+     * @param[in] cutoff                    Number of basis vectors selected.
+     * @param[in] cutoffOutputPath          Path of the summary file.
+     * @param[in] first_sv                  First singular vector in the calculaton of energy.
+     */
+    void finalSummary(
+        const double energyFractionThreshold,
+        int & cutoff,
+        const std::string & cutoffOutputPath = "",
+        const int first_sv = 0);
+
 protected:
     /**
      * @brief Writer of basis vectors.
@@ -288,7 +322,7 @@ private:
     int
     getDim()
     {
-        return d_svd->getDim();
+        return d_dim;
     }
 
     /**
@@ -342,6 +376,13 @@ private:
      * @brief The number of processors being run on.
      */
     int d_num_procs;
+
+    /**
+     * @brief Dimension of the system on this processor.
+     *
+     * Equivalent to d_svd->getDim().
+     */
+    const int d_dim;
 };
 
 }

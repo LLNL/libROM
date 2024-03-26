@@ -710,9 +710,7 @@ int main(int argc, char *argv[])
     Vector true_solution_u(U->Size());
     true_solution_u = U->GetData();
 
-    dmd_prediction_timer.Start();
-
-    // 14. Predict the state at t_final using DMD.
+    // 14. Predict using DMD.
     if (myid == 0)
     {
         std::cout << "Predicting solution using DMD" << std::endl;
@@ -755,9 +753,9 @@ int main(int argc, char *argv[])
         }
     }
 
-    dmd_prediction_timer.Stop();
-
+    dmd_prediction_timer.Start();
     result_u = dmd_U.predict(t_final);
+    dmd_prediction_timer.Stop();
 
     // 15. Calculate the relative error between the DMD final solution and the true solution.
     Vector dmd_solution_u(result_u->getData(), result_u->dim());

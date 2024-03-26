@@ -267,6 +267,7 @@ if(GTEST_FOUND)
   set(unit_test_stems
     Vector
     Matrix
+    HDFDatabase
     DEIM
     DMD
     GNAT
@@ -277,6 +278,7 @@ if(GTEST_FOUND)
     IncrementalSVD
     IncrementalSVDBrand
     GreedyCustomSampler
+    NNLS
     basis_conversion)
   foreach(stem IN LISTS unit_test_stems)
     add_executable(test_${stem} unit_tests/test_${stem}.cpp)

@@ -12,18 +12,22 @@
 
 #include "BasisReader.h"
 #include "utils/HDFDatabase.h"
-#include "utils/CSVDatabase.h"
+#include "utils/HDFDatabaseMPIO.h"
 #include "Matrix.h"
 #include "Vector.h"
 #include "mpi.h"
+#include "utils/mpi_utils.h"
 
 namespace CAROM {
 
 BasisReader::BasisReader(
     const std::string& base_file_name,
-    Database::formats db_format) :
+    Database::formats db_format,
+    const int dim) :
+    d_dim(dim),
     full_file_name(""),
-    base_file_name_(base_file_name)
+    base_file_name_(base_file_name),
+    d_format(db_format)
 {
     CAROM_ASSERT(!base_file_name.empty());
 
@@ -37,17 +41,29 @@ BasisReader::BasisReader(
         rank = 0;
     }
 
-    char tmp[100];
-    sprintf(tmp, ".%06d", rank);
-    full_file_name = base_file_name + tmp;
-    if (db_format == Database::HDF5) {
+    full_file_name = base_file_name;
+
+    // Enforce hdf data format.
+    if (d_format == Database::formats::HDF5)
+    {
         d_database = new HDFDatabase();
     }
-    else if (db_format == Database::CSV) {
-        d_database = new CSVDatabase();
+    else if (d_format == Database::formats::HDF5_MPIO)
+    {
+        /*
+            For MPIO case, local dimension needs to be specified.
+            We allow 0 local dimension. (global dimension still needs to be positive)
+        */
+        std::vector<int> tmp;
+        d_global_dim = get_global_offsets(d_dim, tmp, MPI_COMM_WORLD);
+        CAROM_VERIFY(d_dim >= 0);
+        CAROM_VERIFY(d_global_dim > 0);
+        d_database = new HDFDatabaseMPIO();
     }
+    else
+        CAROM_ERROR("BasisWriter only supports HDF5/HDF5_MPIO data format!\n");
 
-    d_database->open(full_file_name, "r");
+    d_database->open(full_file_name, "r", MPI_COMM_WORLD);
 }
 
 BasisReader::~BasisReader()
@@ -66,7 +82,8 @@ BasisReader::getSpatialBasis()
 
     d_database->getDoubleArray("spatial_basis",
                                &spatial_basis_vectors->item(0, 0),
-                               num_rows*num_cols);
+                               num_rows*num_cols,
+                               true);
     return spatial_basis_vectors;
 }
 
@@ -97,7 +114,8 @@ BasisReader::getSpatialBasis(
                                num_rows*num_cols_to_read,
                                start_col - 1,
                                num_cols_to_read,
-                               num_cols);
+                               num_cols,
+                               true);
     return spatial_basis_vectors;
 }
 
@@ -135,7 +153,7 @@ BasisReader::getTemporalBasis()
     int num_cols = getNumSamples("temporal_basis");
 
     char tmp[100];
-    Matrix* temporal_basis_vectors = new Matrix(num_rows, num_cols, true);
+    Matrix* temporal_basis_vectors = new Matrix(num_rows, num_cols, false);
     sprintf(tmp, "temporal_basis");
     d_database->getDoubleArray(tmp,
                                &temporal_basis_vectors->item(0, 0),
@@ -163,7 +181,7 @@ BasisReader::getTemporalBasis(
     CAROM_VERIFY(start_col <= end_col && end_col <= num_cols);
     int num_cols_to_read = end_col - start_col + 1;
 
-    Matrix* temporal_basis_vectors = new Matrix(num_rows, num_cols_to_read, true);
+    Matrix* temporal_basis_vectors = new Matrix(num_rows, num_cols_to_read, false);
     sprintf(tmp, "temporal_basis");
     d_database->getDoubleArray(tmp,
                                &temporal_basis_vectors->item(0, 0),
@@ -268,7 +286,18 @@ BasisReader::getDim(
                 "temporal_basis_num_rows");
 
     d_database->getInteger(tmp, num_rows);
-    return num_rows;
+    /* only basis and snapshot are stored as distributed matrices */
+    if ((kind != "temporal_basis") && (d_format == Database::formats::HDF5_MPIO))
+    {
+        /*
+            for MPIO database, return specified local dimension.
+            only checks the global dimension match.
+        */
+        CAROM_VERIFY(d_global_dim == num_rows);
+        return d_dim;
+    }
+    else
+        return num_rows;
 }
 
 int
@@ -298,11 +327,12 @@ BasisReader::getSnapshotMatrix()
     int num_cols = getNumSamples("snapshot");
 
     char tmp[100];
-    Matrix* snapshots = new Matrix(num_rows, num_cols, false);
+    Matrix* snapshots = new Matrix(num_rows, num_cols, true);
     sprintf(tmp, "snapshot_matrix");
     d_database->getDoubleArray(tmp,
                                &snapshots->item(0, 0),
-                               num_rows*num_cols);
+                               num_rows*num_cols,
+                               true);
     return snapshots;
 }
 
@@ -326,14 +356,15 @@ BasisReader::getSnapshotMatrix(
     int num_cols_to_read = end_col - start_col + 1;
 
     char tmp[100];
-    Matrix* snapshots = new Matrix(num_rows, num_cols_to_read, false);
+    Matrix* snapshots = new Matrix(num_rows, num_cols_to_read, true);
     sprintf(tmp, "snapshot_matrix");
     d_database->getDoubleArray(tmp,
                                &snapshots->item(0, 0),
                                num_rows*num_cols_to_read,
                                start_col - 1,
                                num_cols_to_read,
-                               num_cols);
+                               num_cols,
+                               true);
     return snapshots;
 }
 }

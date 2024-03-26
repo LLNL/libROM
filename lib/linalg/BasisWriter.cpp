@@ -12,6 +12,7 @@
 
 #include "BasisWriter.h"
 #include "utils/HDFDatabase.h"
+#include "utils/HDFDatabaseMPIO.h"
 #include "Matrix.h"
 #include "Vector.h"
 #include "BasisGenerator.h"
@@ -45,18 +46,22 @@ BasisWriter::BasisWriter(
         rank = 0;
     }
 
-    char tmp[100];
-    sprintf(tmp, ".%06d", rank);
-    full_file_name = base_file_name + tmp;
-
-    char tmp2[100];
-    sprintf(tmp2, "_snapshot.%06d", rank);
-    snap_file_name = base_file_name + tmp2;
+    full_file_name = base_file_name;
+    snap_file_name = base_file_name + "_snapshot";
 
     // create and open snapshot/basis database
-    CAROM_VERIFY(db_format_ == Database::HDF5);
-    d_snap_database = new HDFDatabase();
-    d_database = new HDFDatabase();
+    if (db_format_ == Database::formats::HDF5)
+    {
+        d_snap_database = new HDFDatabase();
+        d_database = new HDFDatabase();
+    }
+    else if (db_format_ == Database::formats::HDF5_MPIO)
+    {
+        d_snap_database = new HDFDatabaseMPIO();
+        d_database = new HDFDatabaseMPIO();
+    }
+    else
+        CAROM_ERROR("BasisWriter only supports HDF5/HDF5_MPIO data format!\n");
 }
 
 BasisWriter::~BasisWriter()
@@ -73,20 +78,27 @@ BasisWriter::writeBasis(const std::string& kind)
     char tmp[100];
 
     if (kind == "basis") {
-        d_database->create(full_file_name);
+        d_database->create(full_file_name, MPI_COMM_WORLD);
 
         const Matrix* basis = d_basis_generator->getSpatialBasis();
+        /* spatial basis is always distributed */
+        CAROM_VERIFY(basis->distributed());
         int num_rows = basis->numRows();
+        int nrows_infile = num_rows;
+        if (db_format_ == Database::formats::HDF5_MPIO)
+            MPI_Allreduce(MPI_IN_PLACE, &nrows_infile, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
         sprintf(tmp, "spatial_basis_num_rows");
-        d_database->putInteger(tmp, num_rows);
+        d_database->putInteger(tmp, nrows_infile);
         int num_cols = basis->numColumns();
         sprintf(tmp, "spatial_basis_num_cols");
         d_database->putInteger(tmp, num_cols);
         sprintf(tmp, "spatial_basis");
-        d_database->putDoubleArray(tmp, &basis->item(0, 0), num_rows*num_cols);
+        d_database->putDoubleArray(tmp, &basis->item(0, 0), num_rows*num_cols, true);
 
         if(d_basis_generator->updateRightSV()) {
             const Matrix* tbasis = d_basis_generator->getTemporalBasis();
+            /* temporal basis is always not distributed */
+            CAROM_VERIFY(!tbasis->distributed());
             num_rows = tbasis->numRows();
             sprintf(tmp, "temporal_basis_num_rows");
             d_database->putInteger(tmp, num_rows);
@@ -98,6 +110,8 @@ BasisWriter::writeBasis(const std::string& kind)
         }
 
         const Vector* sv = d_basis_generator->getSingularValues();
+        /* singular values are always not distributed */
+        CAROM_VERIFY(!sv->distributed());
         int sv_dim = sv->dim();
         sprintf(tmp, "singular_value_size");
         d_database->putInteger(tmp, sv_dim);
@@ -108,17 +122,23 @@ BasisWriter::writeBasis(const std::string& kind)
     }
 
     if (kind == "snapshot") {
-        d_snap_database->create(snap_file_name);
+        d_snap_database->create(snap_file_name, MPI_COMM_WORLD);
 
         const Matrix* snapshots = d_basis_generator->getSnapshotMatrix();
+        /* snapshot matrix is always distributed */
+        CAROM_VERIFY(snapshots->distributed());
         int num_rows = snapshots->numRows(); // d_dim
+        int nrows_infile = num_rows;
+        if (db_format_ == Database::formats::HDF5_MPIO)
+            MPI_Allreduce(MPI_IN_PLACE, &nrows_infile, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
         sprintf(tmp, "snapshot_matrix_num_rows");
-        d_snap_database->putInteger(tmp, num_rows);
+        d_snap_database->putInteger(tmp, nrows_infile);
         int num_cols = snapshots->numColumns(); // d_num_samples
         sprintf(tmp, "snapshot_matrix_num_cols");
         d_snap_database->putInteger(tmp, num_cols);
         sprintf(tmp, "snapshot_matrix");
-        d_snap_database->putDoubleArray(tmp, &snapshots->item(0,0), num_rows*num_cols);
+        d_snap_database->putDoubleArray(tmp, &snapshots->item(0,0), num_rows*num_cols,
+                                        true);
 
         d_snap_database->close();
     }

@@ -534,9 +534,7 @@ int main(int argc, char *argv[])
     Vector true_solution_u(u.Size());
     true_solution_u = u.GetData();
 
-    dmd_prediction_timer.Start();
-
-    // 14. Predict the state at t_final using DMDc.
+    // 14. Predict using DMDc.
     if (myid == 0)
     {
         std::cout << "Predicting temperature using DMDc" << std::endl;
@@ -576,9 +574,9 @@ int main(int argc, char *argv[])
         }
     }
 
-    dmd_prediction_timer.Stop();
-
+    dmd_prediction_timer.Start();
     result_u = dmd_u->predict(t_final);
+    dmd_prediction_timer.Stop();
 
     // 15. Calculate the relative error between the DMDc final solution and the true solution.
     Vector dmd_solution_u(result_u->getData(), result_u->dim());

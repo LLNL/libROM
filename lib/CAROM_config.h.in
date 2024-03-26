@@ -57,6 +57,9 @@
 /* Defined if you have HDF5 support */
 #cmakedefine01 CAROM_HAVE_HDF5
 
+/* Defined if you have parallel HDF5 support */
+#cmakedefine01 HDF5_IS_PARALLEL
+
 /* Define to 1 if you have the <inttypes.h> header file. */
 #cmakedefine01 CAROM_HAVE_INTTYPES_H
 
