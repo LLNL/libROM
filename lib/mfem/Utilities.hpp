@@ -55,6 +55,50 @@ void ComputeCtAB_vec(const HypreParMatrix& A,
                      const CAROM::Matrix& C,
                      CAROM::Vector& CtAB_vec);
 
+/**
+ * @brief Helper function to ensure that @p t is within a given percentage of the domain relative to the center of the mesh
+ *
+ * @param bb_min Minimum corner of mesh bounding box. See mfem::Mesh::GetBoundingBox().
+ *
+ * @param bb_max Maximum corner of mesh bounding box. See mfem::Mesh::GetBoundingBox().
+ *
+ * @param t Point to check if within given @p limit percentage of mesh domain relative to mesh center.
+ *
+ * @param limit Fractional percentage (from [0, 1]) of mesh domain to check bounds of @p t.
+ */
+void check_within_portion(const mfem::Vector &bb_min,
+                          const mfem::Vector &bb_max, const mfem::Vector &t, const double limit);
+
+/**
+ * @brief Maps a value from [-1, 1] to the corresponding mesh domain [bb_min, bb_max]
+ *
+ * @param bb_min Minimum value of domain
+ *
+ * @param bb_max Maximum value of domain
+ *
+ * @param fraction Value between [-1, 1] to map
+ *
+ * @returns @p fraction mapped to [bb_min, bb_max]
+ * @see map_from_ref_mesh
+ */
+double map_to_ref_mesh(const double &bb_min, const double &bb_max,
+                       const double &fraction);
+
+/**
+ * @brief Maps a value within mesh domain [bb_min, bb_max] to the corresponding value between [-1, 1]
+ *
+ * @param bb_min Minimum value of domain
+ *
+ * @param bb_max Maximum value of domain
+ *
+ * @param value Value between [bb_min, bb_max] to map
+ *
+ * @returns @p value mapped to [-1, 1]
+ * @see map_to_ref_mesh
+ */
+double map_from_ref_mesh(const double &bb_min, const double &bb_max,
+                         const double &value);
+
 }  // namespace CAROM
 
 #endif // MFEMUTILITIES_H

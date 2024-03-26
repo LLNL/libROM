@@ -62,4 +62,39 @@ void ComputeCtAB_vec(const HypreParMatrix& A,
     C.transposeMult(AB_carom, CtAB_vec);
 }
 
+void check_within_portion(const mfem::Vector &bb_min,
+                          const mfem::Vector &bb_max, const mfem::Vector &t, const double limit)
+{
+    // helper function to check if t is within limit percentage relative to the center of the mesh
+    for (int i = 0; i < t.Size(); i++)
+    {
+        double domain_limit = limit * (bb_max[i] - bb_min[i]);
+        double mesh_center = 0.5 * (bb_max[i] + bb_min[i]);
+
+        // check that t is within the limit relative to the center of the mesh
+        if ((t(i) - mesh_center) - (0.5 * domain_limit) > 1.0e-14)
+        {
+            std::cerr << "Error: value of t exceeds domain limit: t = " << t(
+                          i) << ", limit = " << 0.5 * domain_limit << "\n";
+            exit(-1);
+        }
+    }
+}
+
+double map_to_ref_mesh(const double &bb_min, const double &bb_max,
+                       const double &fraction)
+{
+    // helper function to map a fractional value from [-1, 1] to [bb_min, bb_max]
+    CAROM_VERIFY(fraction <= 1.0 && fraction >= -1.0);
+    return bb_min + (fraction + 1.0) * ((bb_max - bb_min) * 0.5);
+}
+
+double map_from_ref_mesh(const double &bb_min, const double &bb_max,
+                         const double &value)
+{
+    // helper function to map a value from the mesh range [bb_min, bb_max] to [-1, 1]
+    CAROM_VERIFY(value <= bb_max && value >= bb_min);
+    return -1.0 + (value - bb_min) * ((2.0) / (bb_max - bb_min));
+}
+
 } // end namespace CAROM

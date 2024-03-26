@@ -26,6 +26,7 @@ USE_MFEM="Off"
 UPDATE_LIBS=false
 INSTALL_SCALAPACK=false
 MFEM_USE_GSLIB="Off"
+MFEM_USE_LAPACK="Off"
 
 cleanup_dependencies() {
     pushd .
@@ -45,7 +46,7 @@ cleanup_dependencies() {
 
 
 # Get options
-while getopts "ah:dh:gh:mh:t:uh:sh" o;
+while getopts "ah:dh:gh:lh:mh:t:uh:sh" o;
 do
     case "${o}" in
         a)
@@ -56,6 +57,9 @@ do
             ;;
         g)
             MFEM_USE_GSLIB="On"
+            ;;
+        l)
+            MFEM_USE_LAPACK="On"
             ;;
         m)
             USE_MFEM="On"
@@ -104,6 +108,12 @@ if [[ $MFEM_USE_GSLIB == "On" ]] && [[ ! -d "$HOME_DIR/dependencies/gslib" ]]; t
    cleanup_dependencies
 fi
 export MFEM_USE_GSLIB
+
+if [[ ${MFEM_USE_LAPACK} == "On" ]] && [[ ${USE_MFEM} == "Off" ]]; then
+    echo "mfem lapack flag has no effect without mfem enabled"
+	exit 1
+fi
+export MFEM_USE_LAPACK
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 REPO_PREFIX=$( dirname $SCRIPT_DIR )
