@@ -24,15 +24,15 @@
 //               order < 1 (quadratic for quadratic curvilinear mesh, NURBS for
 //               NURBS mesh, etc.)
 //
-// Offline phase: elliptic_eigenproblem_global_rom -offline -p 2 -id 0 -a 0.8
-//                elliptic_eigenproblem_global_rom -offline -p 2 -id 1 -a 0.9
-//                elliptic_eigenproblem_global_rom -offline -p 2 -id 2 -a 1.1
-//                elliptic_eigenproblem_global_rom -offline -p 2 -id 3 -a 1.2
+// Offline phase: elliptic_eigenproblem_global_rom -offline -p 2 -id 0 -a 0.40
+//                elliptic_eigenproblem_global_rom -offline -p 2 -id 1 -a 0.45
+//                elliptic_eigenproblem_global_rom -offline -p 2 -id 2 -a 0.55
+//                elliptic_eigenproblem_global_rom -offline -p 2 -id 3 -a 0.60
 //
 // Merge phase:   elliptic_eigenproblem_global_rom -merge -p 2 -ns 4
 //
 // FOM run (for error calculation):
-//                elliptic_eigenproblem_global_rom -fom -p 2 -f 1.0
+//                elliptic_eigenproblem_global_rom -fom -p 2 -a 0.5
 // Example output:
 //   Number of unknowns: 289
 //    Eigenvalue 0: 0.04533314
@@ -43,7 +43,7 @@
 //   Elapsed time for assembling FOM: 1.471708e-03 second
 //   Elapsed time for solving FOM: 3.416310e-01 second
 //
-// Online phase:  elliptic_eigenproblem_global_rom -online -p 2 -f 1.0
+// Online phase:  elliptic_eigenproblem_global_rom -online -p 2 -a 0.5
 // Example output:
 //   Eigenvalue 0: = 0.048430949
 //   Eigenvalue 1: = 0.12021157
