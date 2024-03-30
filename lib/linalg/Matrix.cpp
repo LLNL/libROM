@@ -1147,7 +1147,8 @@ Matrix::row_normalize() const
            }
         }
 	if(i==0) printf("rowmax %f\n",rowmax);  
-       if(rowmax > 0.0 ){
+       //if( rowmax > (double) 1.0/(numDistributedRows()*numDistributedRows())){
+       if( rowmax > 0.0 ){
           scaled_item = std::frexp(rowmax, &exponent);
           //We use the ldexp function to multiply each component by 2^-exponent.
           for( int j = 0; j < numColumns(); j++ )
@@ -1156,9 +1157,9 @@ Matrix::row_normalize() const
             scaled_norm += (scaled_item) * (scaled_item);
           }
           kii =sqrt(kii/scaled_norm);
-          threshold = exponent;//initial
-	  if(rowmax < (double) 1.0/(numDistributedRows())) threshold = 0;
-	  //threshold = 0;
+          //threshold = exponent;//initial
+//if(rowmax < (double) 1.0/(numDistributedRows()*numDistributedRows())) threshold = 0;
+	  threshold = 0;
 	  for (int j = 0; j < numColumns(); j++ )
           {
             normalized_matrix->item(i, j) = kii * (std::ldexp(item(i,j), -threshold));
@@ -1171,7 +1172,7 @@ Matrix::row_normalize() const
         }else{
           for (int j = 0; j < numColumns(); j++ )
           {
-            normalized_matrix->item(i, j) = item(i,j);
+            normalized_matrix->item(i, j) = item(i,j) ;
           }
           normalized_matrix->item(i,numColumns()) = 1.0;
         }
