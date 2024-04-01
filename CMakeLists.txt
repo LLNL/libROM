@@ -147,7 +147,8 @@ if (ENABLE_EXAMPLES)
       local_tw_csv
       local_dw_csv
       parametric_tw_csv
-      parametric_dw_csv)
+      parametric_dw_csv
+      heat_conduction_otf)
     set(example_directories
       prom
       prom
@@ -156,6 +157,7 @@ if (ENABLE_EXAMPLES)
       prom
       prom
       prom
+      dmd
       dmd
       dmd
       dmd

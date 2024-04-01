@@ -263,6 +263,8 @@ public:
         return d_svd->getNumSamples();
     }
 
+    friend class IncrementalDMD;
+
 protected:
     /**
      * @brief Writer of basis vectors.

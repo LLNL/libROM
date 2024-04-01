@@ -211,6 +211,15 @@ public:
      */
     void summary(std::string base_file_name);
 
+    /**
+     * @brief Make a prediction for just one dt.
+     *        To be overridden by IncrementalDMD.h
+     */
+    virtual Vector* predict_dt(Vector* u) {
+        projectInitialCondition(u);
+        return predict(d_dt);
+    }
+
 protected:
     /**
      * @brief Obtain DMD model interpolant at desired parameter point by
