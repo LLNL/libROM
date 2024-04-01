@@ -19,6 +19,20 @@
 
 namespace CAROM {
 
+struct IncrementalDMDInternal
+{
+    Matrix* U;
+    Matrix* Up;
+    Vector* s;
+    Matrix* W;
+    Matrix* Wp;
+    Matrix* Wp_inv;
+    Matrix* Uq;
+    Matrix* Sq_inv;
+    Matrix* Wq;
+    Vector* p;
+};
+
 /**
  * Class IncrementalSVDBrand implements Brand's fast update incremental SVD
  * algorithm by implementing the pure virtual methods of the IncrementalSVD
@@ -27,6 +41,20 @@ namespace CAROM {
 class IncrementalSVDBrand : public IncrementalSVD
 {
 public:
+     /**
+     * @brief Constructor.
+     *
+     * @param[in] options The struct containing the options for this SVD
+     *                    implementation.
+     * @param[in] basis_file_name The base part of the name of the file
+     *                            containing the basis vectors.  Each process
+     *                            will append its process ID to this base
+     *                            name.
+     * @see Options
+     */
+    IncrementalSVDBrand(
+        Options options,
+        const std::string& basis_file_name);
     /**
      * @brief Destructor.
      */
@@ -50,23 +78,14 @@ public:
     const Matrix*
     getTemporalBasis() override;
 
+    IncrementalDMDInternal
+    getAllMatrices() {
+	return mats;
+    }
+
 private:
     friend class BasisGenerator;
 
-    /**
-     * @brief Constructor.
-     *
-     * @param[in] options The struct containing the options for this SVD
-     *                    implementation.
-     * @param[in] basis_file_name The base part of the name of the file
-     *                            containing the basis vectors.  Each process
-     *                            will append its process ID to this base
-     *                            name.
-     * @see Options
-     */
-    IncrementalSVDBrand(
-        Options options,
-        const std::string& basis_file_name);
 
     /**
      * @brief Unimplemented default constructor.
@@ -169,16 +188,28 @@ private:
         const Matrix* W,
         Matrix* sigma);
 
+    void
+    updateAllMatrices();
+
     /**
      * @brief The matrix U'. U' is not distributed and the entire matrix
      *        exists on each processor.
      */
     Matrix* d_Up;
+    Matrix* d_Wp;
+    Matrix* d_Wp_inv;
+    
+    Matrix* d_Uq;
+    Matrix* d_Sq_inv;
+    Matrix* d_Wq;
+    Vector* d_p;
 
     /**
      * @brief The tolerance value used to remove small singular values.
      */
     double d_singular_value_tol;
+
+    IncrementalDMDInternal mats;
 
 };
 
