@@ -261,6 +261,8 @@ public:
         int & cutoff,
         const std::string & cutoffOutputPath = "",
         const int first_sv = 0);
+    
+    friend class IncrementalDMD;
 
 protected:
     /**

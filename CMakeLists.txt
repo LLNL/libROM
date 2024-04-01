@@ -180,6 +180,7 @@ if (ENABLE_EXAMPLES)
       dmd
       dmd
       dmd
+      dmd
       dmd)
 
     list(LENGTH examples len1)
