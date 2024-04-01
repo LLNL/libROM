@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
     int par_ref_levels = 1;
     int order = 2;
     int ode_solver_type = 1;
-    double t_final = 0.5;
+    double t_final = 5.0;
     double dt = 1.0e-2;
     double alpha = 1.0e-2;
     double kappa = 0.5;
@@ -404,7 +404,7 @@ int main(int argc, char *argv[])
     if (use_incremental)
     {
 	CAROM::Options svd_options(u.Size(), 100, -1, true);
-	svd_options.setIncrementalSVD(1e-12, dt, 1e-6, 10.0, true, false, true);
+	svd_options.setIncrementalSVD(1e-12, dt, 1e-6, 10.0, false, true, false);
 	svd_options.setMaxBasisDimension(100);
 	svd_options.setStateIO(false, false);
 	svd_options.setDebugMode(false);

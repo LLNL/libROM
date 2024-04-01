@@ -135,7 +135,7 @@ IncrementalDMD::updateDMD(const Matrix* f_snapshots)
     
     timer1.Start();
     int num_samples_pre = svd->getNumSamples();
-    svd->takeSample(u_in, 0, false); // what if norm(u_in) < eps at init?
+    svd->takeSample(u_in, false); // what if norm(u_in) < eps at init?
     timer1.Stop();
 
     timer2.Start();
@@ -172,7 +172,7 @@ IncrementalDMD::updateDMD(const Matrix* f_snapshots)
 	    	std::cout << "Added linearly independent sample" << std::endl;
 	    }
 	    IncrementalDMDInternal mats = svd->getAllMatrices();
-	  
+        
 	    Matrix* d_A_tilde_tmp = new Matrix(num_samples, num_samples, false);
 	    Vector* u_new = new Vector(d_snapshots[num_snapshots-1]->getData(),
                                    d_dim, true);

@@ -207,25 +207,6 @@ IncrementalSVDBrand::buildInitialSVD(
     double* u)
 {
     CAROM_VERIFY(u != 0);
-    CAROM_VERIFY(time >= 0.0);
-
-    // We have a new time interval.
-
-    // If this is not the first time interval then delete d_basis, d_U, d_Up,
-    // and d_S of the just completed time interval.
-    int num_time_intervals =
-        static_cast<int>(d_time_interval_start_times.size());
-    if (num_time_intervals > 0) {
-        delete d_basis;
-        delete d_U;
-        delete d_Up;
-        delete d_S;
-        delete d_W;
-        delete d_Wp;
-        delete d_Wp_inv;
-    }
-    increaseTimeInterval();
-    d_time_interval_start_times[num_time_intervals] = time;
 
     // Build d_S for this new time interval.
     d_S = new Vector(1, false);
@@ -245,7 +226,7 @@ IncrementalSVDBrand::buildInitialSVD(
 
     // Build d_W for this new time interval.
     if (d_update_right_SV) {
-        d_W = new Matrix(10000, 200, false);
+        d_W = new Matrix(10000, 200, false); //TODO:FIX
         d_W->item(0, 0) = 1.0;
         d_Wp = new Matrix(1, 1, false);
         d_Wp->item(0, 0) = 1.0;
