@@ -107,7 +107,7 @@ DMDc::DMDc(std::string base_file_name)
 
 DMDc::DMDc(std::vector<std::complex<double>> eigs, Matrix* phi_real,
            Matrix* phi_imaginary, Matrix* B_tilde, int k,
-           double dt, double t_offset, Vector* state_offset,Matrix* basis)
+           double dt, double t_offset, Vector* state_offset, Matrix* basis)
 {
     // Get the rank of this process, and the number of processors.
     int mpi_init;
@@ -568,7 +568,6 @@ DMDc::constructDMDc(const Matrix* f_snapshots,
 
     // Calculate the projection initial_condition onto column space of d_basis.
     project(init, f_controls);
-
 
     d_trained = true;
 
