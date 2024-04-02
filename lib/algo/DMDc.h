@@ -16,6 +16,7 @@
 #ifndef included_DMDc_h
 #define included_DMDc_h
 
+#include "ParametricDMDc.h"
 #include <vector>
 #include <complex>
 
@@ -185,6 +186,41 @@ public:
 
 protected:
     /**
+     * @brief Obtain DMD model interpolant at desired parameter point by
+     *        interpolation of DMD models from training parameter points.
+     *
+     * @param[in] parametric_dmdc       The interpolant DMD model at the desired point.
+     * @param[in] parameter_points      The training parameter points.
+     * @param[in] dmdcs                 The DMD objects associated with
+     *                                  each training parameter point.
+     * @param[in] controls              The matrices of controls from previous
+     *                                  runs which we use to interpolate.
+     * @param[in] controls_interpolated The interpolated controls.
+     * @param[in] desired_point         The desired point at which to create a parametric DMD.
+     * @param[in] rbf                   The RBF type ("G" == gaussian,
+     *                                  "IQ" == inverse quadratic,
+     *                                  "IMQ" == inverse multiquadric)
+     * @param[in] interp_method         The interpolation method type
+     *                                  ("LS" == linear solve,
+     *                                  "IDW" == inverse distance weighting,
+     *                                  "LP" == lagrangian polynomials)
+     * @param[in] closest_rbf_val       The RBF parameter determines the width of influence.
+     *                                  Set the RBF value of the nearest two parameter points
+     *                                  to a value between 0.0 to 1.0
+     * @param[in] reorthogonalize_W     Whether to reorthogonalize the interpolated W (basis) matrix.
+     */
+    friend void getParametricDMDc<DMDc>(DMDc*& parametric_dmdc,
+                                        std::vector<Vector*>& parameter_points,
+                                        std::vector<DMDc*>& dmdcs,
+                                        std::vector<Matrix*> controls,
+                                        Matrix*& controls_interpolated,
+                                        Vector* desired_point,
+                                        std::string rbf,
+                                        std::string interp_method,
+                                        double closest_rbf_val,
+                                        bool reorthogonalize_W);
+
+    /**
      * @brief Constructor. Variant of DMDc with non-uniform time step size.
      *
      * @param[in] dim               The full-order state dimension.
@@ -204,10 +240,11 @@ protected:
      * @param[in] dt d_dt
      * @param[in] t_offset d_t_offset
      * @param[in] state_offset d_state_offset
+     * @param[in] basis d_basis, set by DMDc class for offline stages. When interpolating a new DMDc, we enter the interpolated basis explicitly
      */
     DMDc(std::vector<std::complex<double>> eigs, Matrix* phi_real,
          Matrix* phi_imaginary, Matrix* B_tilde, int k,
-         double dt, double t_offset, Vector* state_offset);
+         double dt, double t_offset, Vector* state_offset, Matrix* basis = nullptr);
 
     /**
      * @brief Unimplemented default constructor.

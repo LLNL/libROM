@@ -68,21 +68,34 @@ MatrixInterpolator::MatrixInterpolator(std::vector<Vector*> parameter_points,
         }
         else
         {
-            if (d_matrix_type == "B")
-            {
-                Matrix* AQ = reduced_matrices[i]->mult(rotation_matrices[i]);
-                d_rotated_reduced_matrices.push_back(AQ);
-            }
-            else
+            if (reduced_matrices[i]->numRows() == rotation_matrices[i]->numRows()
+                    && reduced_matrices[i]->numColumns() == rotation_matrices[i]->numRows())
             {
                 Matrix* Q_tA = rotation_matrices[i]->transposeMult(reduced_matrices[i]);
                 Matrix* Q_tAQ = Q_tA->mult(rotation_matrices[i]);
                 delete Q_tA;
                 d_rotated_reduced_matrices.push_back(Q_tAQ);
+                d_rotated_reduced_matrices_owned.push_back(true);
             }
-
-            d_rotated_reduced_matrices_owned.push_back(true);
+            else if (reduced_matrices[i]->numRows() == rotation_matrices[i]->numRows())
+            {
+                Matrix* Q_tA = rotation_matrices[i]->transposeMult(reduced_matrices[i]);
+                d_rotated_reduced_matrices.push_back(Q_tA);
+                d_rotated_reduced_matrices_owned.push_back(true);
+            }
+            else if (reduced_matrices[i]->numColumns() == rotation_matrices[i]->numRows())
+            {
+                Matrix* AQ = reduced_matrices[i]->mult(rotation_matrices[i]);
+                d_rotated_reduced_matrices.push_back(AQ);
+                d_rotated_reduced_matrices_owned.push_back(true);
+            }
+            else
+            {
+                d_rotated_reduced_matrices.push_back(reduced_matrices[i]);
+                d_rotated_reduced_matrices_owned.push_back(false);
+            }
         }
+
     }
 }
 
