@@ -42,17 +42,17 @@ struct IncrementalDMDInternal
 class IncrementalSVDBrand : public IncrementalSVD
 {
 public:
-     /**
-     * @brief Constructor.
-     *
-     * @param[in] options The struct containing the options for this SVD
-     *                    implementation.
-     * @param[in] basis_file_name The base part of the name of the file
-     *                            containing the basis vectors.  Each process
-     *                            will append its process ID to this base
-     *                            name.
-     * @see Options
-     */
+    /**
+    * @brief Constructor.
+    *
+    * @param[in] options The struct containing the options for this SVD
+    *                    implementation.
+    * @param[in] basis_file_name The base part of the name of the file
+    *                            containing the basis vectors.  Each process
+    *                            will append its process ID to this base
+    *                            name.
+    * @see Options
+    */
     IncrementalSVDBrand(
         Options options,
         const std::string& basis_file_name);
@@ -81,7 +81,7 @@ public:
 
     IncrementalDMDInternal
     getAllMatrices() {
-	return mats;
+        return mats;
     }
 
 private:
@@ -199,7 +199,7 @@ private:
     Matrix* d_Up;
     Matrix* d_Wp;
     Matrix* d_Wp_inv;
-    
+
     Matrix* d_Uq;
     Matrix* d_Sq_inv;
     Matrix* d_Wq;
@@ -210,6 +210,19 @@ private:
      */
     double d_singular_value_tol;
 
+    /**
+     * @brief Maximum number of samples to be used.
+     */
+    double d_max_num_samples;
+
+    /**
+     * @brief Maximum number of basis.
+     */
+    double d_max_num_basis;
+
+    /**
+     * @brief Matrices from IncrementalSVD.
+     */
     IncrementalDMDInternal mats;
 
 };

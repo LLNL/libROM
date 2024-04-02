@@ -41,15 +41,15 @@ public:
      * @brief Constructor.
      *
      * @param[in] dim               The full-order state dimension.
-     * @param[in] alt_output_basis  Whether to use the alternative basis for  
+     * @param[in] alt_output_basis  Whether to use the alternative basis for
      *                              output, i.e. phi = U^(+)*V*Omega^(-1)*X.
      * @param[in] state_offset      The state offset.
      * @param[in] derivative_offset The derivative offset.
      */
     IncrementalDMD(int dim,
-		   double dt,
-		   Options svd_options,
-		   std::string svd_base_file_name,
+                   double dt,
+                   Options svd_options,
+                   std::string svd_base_file_name,
                    bool alt_output_basis = false,
                    Vector* state_offset = NULL);
 
@@ -82,7 +82,7 @@ public:
      */
     void train(int k,
                const Matrix* W0 = NULL,
-	       double linearity_tol = 0.0) override;
+               double linearity_tol = 0.0) override;
 
     /**
      * @brief Make a prediction for just one dt.
@@ -93,7 +93,7 @@ public:
 protected:
 
     void updateDMD(const Matrix* f_snapshots);
-    
+
     BasisGenerator* bg = NULL;
     IncrementalSVDBrand* svd = NULL;
 
