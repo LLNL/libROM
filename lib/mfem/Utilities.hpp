@@ -56,18 +56,27 @@ void ComputeCtAB_vec(const HypreParMatrix& A,
                      CAROM::Vector& CtAB_vec);
 
 /**
- * @brief Helper function to ensure that @p t is within a given percentage of the domain relative to the center of the mesh
+ * @brief Helper function to ensure that @p t is within a given percentage of
+ * the domain relative to the center of the mesh. Performs the check for each
+ * dimension of the mesh (works if mesh is 2D or 3D).
  *
- * @param bb_min Minimum corner of mesh bounding box. See mfem::Mesh::GetBoundingBox().
+ * @param bb_min Minimum corner of mesh bounding box.
+ * See mfem::Mesh::GetBoundingBox().
  *
- * @param bb_max Maximum corner of mesh bounding box. See mfem::Mesh::GetBoundingBox().
+ * @param bb_max Maximum corner of mesh bounding box.
+ * See mfem::Mesh::GetBoundingBox().
  *
- * @param t Point to check if within given @p limit percentage of mesh domain relative to mesh center.
+ * @param t Point to check if within given @p limit percentage of mesh domain
+ * relative to mesh center.
  *
- * @param limit Fractional percentage (from [0, 1]) of mesh domain to check bounds of @p t.
+ * @param limit Fractional percentage (from [0, 1]) of mesh domain to check
+ * bounds of @p t.
+ *
+ * @note This will throw an error and exit if the check fails.
  */
-void check_within_portion(const mfem::Vector &bb_min,
-                          const mfem::Vector &bb_max, const mfem::Vector &t, const double limit);
+void verify_within_portion(const mfem::Vector &bb_min,
+                           const mfem::Vector &bb_max,
+                           const mfem::Vector &t, const double limit);
 
 /**
  * @brief Maps a value from [-1, 1] to the corresponding mesh domain [bb_min, bb_max]
@@ -85,7 +94,8 @@ double map_to_ref_mesh(const double &bb_min, const double &bb_max,
                        const double &fraction);
 
 /**
- * @brief Maps a value within mesh domain [bb_min, bb_max] to the corresponding value between [-1, 1]
+ * @brief Maps a value within mesh domain [bb_min, bb_max] to the corresponding
+ * value between [-1, 1]
  *
  * @param bb_min Minimum value of domain
  *

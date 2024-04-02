@@ -899,7 +899,7 @@ double Potential(const Vector &x)
         //  min_d is the lower bound of the atom distance over time
 
         // verify t is within inner 20% of domain (centered around mesh origin)
-        CAROM::check_within_portion(bb_min, bb_max, center, 0.2);
+        CAROM::verify_within_portion(bb_min, bb_max, center, 0.2);
 
         return -D * (std::exp(-X.DistanceSquaredTo(center) / std::pow(c * min_d,
                               2)) + std::exp(
@@ -929,7 +929,7 @@ double Potential(const Vector &x)
         }
 
         // verify t is within inner 20% of domain (centered around mesh origin)
-        CAROM::check_within_portion(bb_min, bb_max, center, 0.2);
+        CAROM::verify_within_portion(bb_min, bb_max, center, 0.2);
 
         return -D * (std::exp(-X.DistanceSquaredTo(center) / std::pow(c * min_d,
                               2)) + std::exp(

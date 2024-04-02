@@ -62,17 +62,21 @@ void ComputeCtAB_vec(const HypreParMatrix& A,
     C.transposeMult(AB_carom, CtAB_vec);
 }
 
-void check_within_portion(const mfem::Vector &bb_min,
-                          const mfem::Vector &bb_max, const mfem::Vector &t, const double limit)
+void verify_within_portion(const mfem::Vector &bb_min,
+                           const mfem::Vector &bb_max,
+                           const mfem::Vector &t, const double limit)
 {
-    // helper function to check if t is within limit percentage relative to the center of the mesh
+    // helper function to check if t is within limit percentage relative
+    //  to the center of the mesh
+    CAROM_VERIFY(t.Size() == bb_min.Size() && bb_min.Size() == bb_max.Size());
+    CAROM_VERIFY(limit >= 0.0 && limit <= 1.0);
     for (int i = 0; i < t.Size(); i++)
     {
         double domain_limit = limit * (bb_max[i] - bb_min[i]);
         double mesh_center = 0.5 * (bb_max[i] + bb_min[i]);
 
         // check that t is within the limit relative to the center of the mesh
-        if ((t(i) - mesh_center) - (0.5 * domain_limit) > 1.0e-14)
+        if (std::abs((t(i) - mesh_center)) - (0.5 * domain_limit) > 1.0e-14)
         {
             std::cerr << "Error: value of t exceeds domain limit: t = " << t(
                           i) << ", limit = " << 0.5 * domain_limit << "\n";
