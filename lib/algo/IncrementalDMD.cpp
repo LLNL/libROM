@@ -90,10 +90,15 @@ IncrementalDMD::predict_dt(Vector* u)
 	}
     }
     
-    // MEMORY LEAK: FIX IT
-    Vector* u_proj = Up_new->transposeMult(U_new->transposeMult(u));
-    Vector* pred = U_new->mult(Up_new->mult(d_A_tilde->mult(u_proj)));
+    Vector* UTu = U_new->transposeMult(u);
+    Vector* u_proj = Up_new->transposeMult(UTu);
+    Vector* Atildeu = d_A_tilde->mult(u_proj);
+    Vector* UpAtildeu = Up_new->mult(Atildeu);
+    Vector* pred = U_new->mult(UpAtildeu);
 
+    delete UTu;
+    delete Atildeu;
+    delete UpAtildeu;
     delete u_proj;
     delete Up_new;
     delete U_new;
@@ -116,10 +121,6 @@ IncrementalDMD::train(int k, const Matrix* W0, double linearity_tol)
 void
 IncrementalDMD::updateDMD(const Matrix* f_snapshots)
 {
-    //std::cout << f_snapshots->numRows() << " x " << f_snapshots->numColumns() << std::endl;
-    //Matrix* f_snapshots_in = f_snapshots->getFirstNColumns(f_snapshots->numColumns()-1);
-    //Matrix* f_snapshots_out = f_snapshots->getLastNColumns(f_snapshots->numColumns()-1);
-    
     /* Incremental SVD
      * 
      * Does everything below all at once:
@@ -131,14 +132,9 @@ IncrementalDMD::updateDMD(const Matrix* f_snapshots)
     int num_snapshots = d_snapshots.size();
     double* u_in = d_snapshots[num_snapshots-2]->getData();
 
-    StopWatch timer1, timer2;
-    
-    timer1.Start();
     int num_samples_pre = svd->getNumSamples();
-    svd->takeSample(u_in, false); // what if norm(u_in) < eps at init?
-    timer1.Stop();
-
-    timer2.Start();
+    svd->takeSample(u_in, false);
+    
     int num_samples = svd->getNumSamples();
     if (num_samples > num_samples_pre)
     {
@@ -192,7 +188,6 @@ IncrementalDMD::updateDMD(const Matrix* f_snapshots)
             }
             WTfTp->item(i) = d;
         }
-        //Vector* WTfTp = mats.W->transposeMult(fTp);
 	    Vector* WpTWTfTp = mats.Wp->transposeMult(WTfTp);
 	    for (int i = 0; i < num_samples-1; i++) {
 		for (int j = 0; j < num_samples-1; j++) {
@@ -265,13 +260,10 @@ IncrementalDMD::updateDMD(const Matrix* f_snapshots)
 	delete u_new;
 	delete d_A_tilde_tmp;
     }
-    timer2.Stop();
 
     if (d_rank == 0) {
     	std::cout << "Using " << num_samples << " basis vectors out of "
 		  << num_snapshots << " snapshots" << std::endl;
-	std::cout << "Time(SVD): " << timer1.RealTime()
-		  << ", Time(DMD): " << timer2.RealTime() << std::endl;
     }
 
     d_trained = true;

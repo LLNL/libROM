@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
     double tol_dmd = 1e-2; // tolerance for DMD accuracy
     double tol_dep = 1e-6; // tolerance for linear dependence
     
-    bool use_incremental = false; // use incremental SVD
+    bool use_incremental = true; // use incremental SVD
 
     int precision = 8;
     cout.precision(precision);
@@ -312,19 +312,6 @@ int main(int argc, char *argv[])
     // 9. Initialize the conduction operator and the VisIt visualization.
     ConductionOperator oper(fespace, alpha, kappa, u, tol_cg);
 
-    u_gf.SetFromTrueDofs(u);
-    {
-        ostringstream mesh_name, sol_name;
-        mesh_name << "heat_conduction-mesh." << setfill('0') << setw(6) << myid;
-        sol_name << "heat_conduction-init." << setfill('0') << setw(6) << myid;
-        ofstream omesh(mesh_name.str().c_str());
-        omesh.precision(precision);
-        pmesh->Print(omesh);
-        ofstream osol(sol_name.str().c_str());
-        osol.precision(precision);
-        u_gf.Save(osol);
-    }
-
     VisItDataCollection visit_dc("Heat_Conduction", pmesh);
     visit_dc.RegisterField("temperature", &u_gf);
     if (visit)
@@ -401,33 +388,26 @@ int main(int argc, char *argv[])
     u_gf.SetFromTrueDofs(u);
 
     CAROM::DMD* dmd_u;
-    if (use_incremental)
-    {
-	CAROM::Options svd_options(u.Size(), 100, -1, true);
-	svd_options.setIncrementalSVD(1e-12, dt, 1e-6, 10.0, false, true, false);
-	svd_options.setMaxBasisDimension(100);
-	svd_options.setStateIO(false, false);
-	svd_options.setDebugMode(false);
-	std::string svd_base_file_name = "";
-	dmd_u = new CAROM::IncrementalDMD(u.Size(), dt,
+    if (use_incremental) {
+	   CAROM::Options svd_options(u.Size(), 100, -1, true);
+	   svd_options.setIncrementalSVD(1e-12, dt, 1e-6, 10.0, false, true, false);
+	   svd_options.setMaxBasisDimension(100);
+	   svd_options.setStateIO(false, false);
+	   svd_options.setDebugMode(false);
+	   std::string svd_base_file_name = "";
+	   dmd_u = new CAROM::IncrementalDMD(u.Size(), dt,
 					  svd_options,
 					  svd_base_file_name,
 					  false);
     }
-    else if (use_nonuniform)
-    {
-        dmd_u = new CAROM::NonuniformDMD(u.Size());
-    }
-    else
-    {
+    else {
     	dmd_u = new CAROM::DMD(u.Size(), dt);
     }
 
+    // Push the initial snapshot.
     dmd_u->takeSample(u.GetData(), t);
     ts.push_back(t);
   
-    //dmd_training_timer.Stop();
-
     // 13. Time intergration with on-the-fly DMD construction.
     if (myid == 0 && rdim != -1 && ef != -1)
     {
@@ -437,8 +417,7 @@ int main(int argc, char *argv[])
     bool dmd_trained = false;
     bool last_step = false;
     double res, err_proj_norm;
-    double u_norm;
-    Vector u_dmd(u.Size());
+    Vector u_dmd(u.Size()); // DMD prediction
     Vector* res_vec = NULL;
     
     for (int ti = 1; !last_step; ti++)
@@ -446,96 +425,84 @@ int main(int argc, char *argv[])
 	StopWatch total_timer;
 	total_timer.Start();
 
-	std::cout << "\nIteration " << ti << std::endl;
+    if (myid == 0) std::cout << "\nIteration " << ti << std::endl;
 	
 	if (t + dt >= t_final - dt/2)
 	{
 	    last_step = true;
 	}
 
-	u_norm = u.Norml2()*u.Norml2();
-	MPI_Allreduce(MPI_IN_PLACE,
-		      &u_norm,
-		      1,
-		      MPI_DOUBLE,
-		      MPI_SUM,
-		      MPI_COMM_WORLD);
-
-	std::cout << "Norm u: " << sqrt(u_norm) << std::endl;
-	
 	// ROM solve
 	if (dmd_trained)
 	{
 	    if (myid == 0){
-		std::cout << "DMD exists: make prediction" << std::endl;
+		   std::cout << "DMD exists: make prediction" << std::endl;
 	    }
 	    
 	    CAROM::Vector* u_pre = new CAROM::Vector(u.GetData(), u.Size(),
 			    			     true, true); // previous solution
-    	    if (use_incremental) {
-	        u_dmd = dmd_u->predict_dt(u_pre)->getData();
+    	
+        if (use_incremental) {
+           // Incremental DMD
+	       u_dmd = dmd_u->predict_dt(u_pre)->getData();
 	    }
 	    else {
-		dmd_u->projectInitialCondition(u_pre); // offset to u_pre
-		CAROM::Vector* u_dmd_pred = dmd_u->predict(dt);
-		u_dmd = u_dmd_pred->getData(); // copy data to MFEM::Vector
-		delete u_dmd_pred;
+           // Vanilla DMD
+		   dmd_u->projectInitialCondition(u_pre); // offset to u_pre
+		   CAROM::Vector* u_dmd_pred = dmd_u->predict(dt);
+		   u_dmd = u_dmd_pred->getData(); // copy data to MFEM::Vector
+		   delete u_dmd_pred;
 	    }
+
 	    res_vec = oper.Residual(dt, u, u_dmd);
 	    res = res_vec->Norml2()*res_vec->Norml2(); // Residual (L2): not distributed
 	    delete res_vec;
-	    MPI_Allreduce(MPI_IN_PLACE,
-			  &res,
-			  1,
-			  MPI_DOUBLE,
-			  MPI_SUM,
-			  MPI_COMM_WORLD);
+	    MPI_Allreduce(MPI_IN_PLACE, &res, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
 	    if (myid == 0){
-		std::cout << "Relative residual of DMD solution is: " << res << std::endl;
+		   std::cout << "Residual of DMD solution is: " << res << std::endl;
 	    }
 
-	    if (res < tol_dmd) // DMD prediction is accurate
-	    {
-		if (myid == 0){
-		    std::cout << "DMD prediction accurate: use it" << std::endl;
-		}
-
-		u = u_dmd; // use DMD solution as new snapshot
-		t += dt;
+	    if (res < tol_dmd) {
+           // DMD prediction is accurate
+		   if (myid == 0){
+		      std::cout << "DMD prediction accurate: use it" << std::endl;
+		   }
+		   u = u_dmd; // use DMD solution as new snapshot
+		   t += dt;
 	    }
-	    else // FOM solve
-	    {
-		if (myid == 0){
-		    std::cout << "DMD prediction not accurate: call FOM" << std::endl;
-		}
+	    else {
+           // FOM solve
+		   if (myid == 0){
+		      std::cout << "DMD prediction not accurate: call FOM" << std::endl;
+		   }
 
-		fom_timer.Start();
-		ode_solver->Step(u, t, dt);
-		fom_timer.Stop();
+		   fom_timer.Start();
+		   ode_solver->Step(u, t, dt);
+		   fom_timer.Stop();
 	    }
 	    
 	    if (!use_incremental){ 
-	    	// Check the linear dependence of the new snapshot
-	    	CAROM::Vector* u_new = new CAROM::Vector(u.GetData(), u.Size(),
-				    			 true, false);
-	    	dmd_u->projectInitialCondition(u_pre);
+	       // If using vanilla DMD,
+           // check the linear dependence of the new snapshot
+	       CAROM::Vector* u_new = new CAROM::Vector(u.GetData(), u.Size(),
+				    			                     true, false);
+	       dmd_u->projectInitialCondition(u_pre);
 		
-		CAROM::Vector* u_dmd_pred_0 = dmd_u->predict(0.0);
-	    	Vector u_new_proj(u_dmd_pred_0->getData(), u.Size()); // projection
-	    	Vector err_proj(u_pre->getData(), u.Size());
-	    	err_proj -= u_new_proj; // error = u - proj(u)
-	    	err_proj_norm = err_proj.Norml2();// / u.Norml2(); // relative norm
-	    	std::cout << "Projection error: " << err_proj_norm << std::endl;
-		delete u_dmd_pred_0;
+		   CAROM::Vector* u_dmd_pred_0 = dmd_u->predict(0.0);
+	       Vector u_new_proj(u_dmd_pred_0->getData(), u.Size()); // projection
+	       Vector err_proj(u_pre->getData(), u.Size());
+	       err_proj -= u_new_proj; // error = u - proj(u)
+	       err_proj_norm = err_proj.Norml2();// / u.Norml2(); // relative norm
+	       std::cout << "Projection error: " << err_proj_norm << std::endl;
+		   delete u_dmd_pred_0;
 	    	
-	    	// Increment no. of modes if solution is inaccurate and
-	    	// the new snapshot is linearly independent
-	    	if (res > tol_dmd && err_proj_norm > tol_dep){
-		    rdim += 1;
-	    	}
-
-		delete u_new;
+	       // Increment no. of modes if solution is inaccurate and
+	       // the new snapshot is linearly independent
+	       if (res > tol_dmd && err_proj_norm > tol_dep){
+		      rdim += 1;
+	       }
+		   delete u_new;
 	    }
 
 	    delete u_pre;
@@ -544,7 +511,7 @@ int main(int argc, char *argv[])
 	else // No constructed DMD: FOM solve
 	{
 	    if (myid == 0){
-		std::cout << "No DMD found: solve FOM" << std::endl;
+		   std::cout << "No DMD found: solve FOM" << std::endl;
 	    }
 
 	    fom_timer.Start();
@@ -557,20 +524,23 @@ int main(int argc, char *argv[])
 	ts.push_back(t);
 	
 	// DMD training
-        dmd_training_timer.Start();
+    dmd_training_timer.Start();
     
 	if (dmd_u->getNumSamples() > rdim)
 	{
-            if (myid == 0)
-            {
-                std::cout << "Creating DMD with rdim: " << rdim << std::endl;
-            }
-            StopWatch train_timer;
+        if (myid == 0) {
+           std::cout << "Creating DMD with rdim: " << rdim << std::endl;
+        }
+        
+        StopWatch train_timer;
 	    train_timer.Start();
 	    dmd_u->train(rdim);
 	    train_timer.Stop();
-	    if (myid == 0) { std::cout << "Time train:" << train_timer.RealTime() << std::endl; }
-	    dmd_trained = true;
+	    
+        if (myid == 0) std::cout << "Time train:" << train_timer.RealTime() << std::endl;
+	    
+        dmd_trained = true;
+
 	}
 	
 

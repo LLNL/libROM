@@ -59,6 +59,7 @@ IncrementalSVDBrand::IncrementalSVDBrand(
         computeBasis();
     }
 
+    // Initialize matrices for IncrementalDMD.
     mats.U = NULL;
     mats.Up = NULL;
     mats.s = NULL;
@@ -226,7 +227,9 @@ IncrementalSVDBrand::buildInitialSVD(
 
     // Build d_W for this new time interval.
     if (d_update_right_SV) {
-        d_W = new Matrix(10000, 200, false); //TODO:FIX
+        // d_W is preallocated.
+        d_W = new Matrix(max_num_snapshots,
+                         max_num_basis, false);
         d_W->item(0, 0) = 1.0;
         d_Wp = new Matrix(1, 1, false);
         d_Wp->item(0, 0) = 1.0;
@@ -561,18 +564,13 @@ IncrementalSVDBrand::addLinearlyDependentSample(
     delete d_Up;
     d_Up = Up_times_Amod;
 
-    //Matrix* new_d_W;
     Matrix* new_d_Wp;
     Matrix* new_d_Wp_inv;
     Matrix* Winv;
     if (d_update_right_SV) {
-        timer1.Start();
-        //new_d_W = new Matrix(d_num_rows_of_W+1, d_num_samples, false);
         new_d_Wp = new Matrix(d_num_samples, d_num_samples, false);
         new_d_Wp_inv = new Matrix(d_num_samples, d_num_samples, false);
         Winv = new Matrix(d_num_samples, d_num_samples, false);
-        timer1.Stop();
-        timer3.Start();
         for (int row = 0; row < d_num_samples; ++row) {
             for (int col = 0; col < d_num_samples; ++col) {
                 double new_d_Wp_entry = 0.0;
@@ -590,7 +588,6 @@ IncrementalSVDBrand::addLinearlyDependentSample(
             norm += W->item(d_num_samples, col)*W->item(d_num_samples, col);
         }
         norm = 1-norm;
-        std::cout << "Norm:" << norm << std::endl;
         for (int row = 0; row < d_num_samples; ++row) {
             for (int col = 0; col < d_num_samples; ++col) {
                 double wW_entry = 0.0;
@@ -612,13 +609,6 @@ IncrementalSVDBrand::addLinearlyDependentSample(
         delete d_Wp_inv;
         d_Wp_inv = new_d_Wp_inv;
         
-        /*
-        for (int row = 0; row < d_num_rows_of_W; ++row) {
-            for (int col = 0; col < d_num_samples; ++col) {
-                new_d_W->item(row, col) = d_W->item(row, col);
-            }
-        }
-        */
         for (int col = 0; col < d_num_samples; ++col) {
             double new_entry = 0.0;
             for (int entry = 0; entry < d_num_samples; ++entry) {
@@ -626,19 +616,8 @@ IncrementalSVDBrand::addLinearlyDependentSample(
             }
             d_W->item(d_num_rows_of_W, col) = new_entry;
         }
-        //delete d_W;
-        //d_W = new_d_W;
-        timer3.Stop();
         ++d_num_rows_of_W;
     }
-
-    if (d_rank==0) {
-        std::cout << "Timers: " << timer1.RealTime()
-                  << " " << timer2.RealTime()
-                  << " " << timer3.RealTime()
-                  << " " << timer4.RealTime() << std::endl;
-    }
-
 
 }
 
@@ -736,8 +715,6 @@ IncrementalSVDBrand::addNewSample(
     delete d_Up;
     d_Up = new_d_Up;
 
-    if (d_rank == 0) { std::cout << "Up done" << std::endl; }
-    // d_S = sigma.
     delete d_S;
     int num_dim = std::min(sigma->numRows(), sigma->numColumns());
     d_S = new Vector(num_dim, false);
@@ -745,39 +722,10 @@ IncrementalSVDBrand::addNewSample(
         d_S->item(i) = sigma->item(i,i);
     }
 
-    if (d_rank == 0) { std::cout << "S done" << std::endl; }
     // We now have another sample.
     ++d_num_samples;
     ++d_num_rows_of_W;
 
-    /*
-    // Reorthogonalize if necessary.
-    long int max_U_dim;
-    if (d_num_samples > d_total_dim) {
-        max_U_dim = d_num_samples;
-    }
-    else {
-        max_U_dim = d_total_dim;
-    }
-    if (fabs(checkOrthogonality(d_Up)) >
-            std::numeric_limits<double>::epsilon()*static_cast<double>(max_U_dim)) {
-        d_Up->orthogonalize();
-    }
-    if (fabs(checkOrthogonality(d_U)) >
-            std::numeric_limits<double>::epsilon()*static_cast<double>(max_U_dim)) {
-        d_U->orthogonalize(); // Will not be called, but just in case
-    }
-
-    if(d_update_right_SV)
-    {
-        if (fabs(checkOrthogonality(d_W)) >
-                std::numeric_limits<double>::epsilon()*d_num_samples) {
-            d_W->orthogonalize();
-        }
-    }
-
-    */
-    if (d_rank == 0) { std::cout << "Orth done" << std::endl; }
 }
 
 }

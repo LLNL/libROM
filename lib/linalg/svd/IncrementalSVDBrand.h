@@ -19,6 +19,7 @@
 
 namespace CAROM {
 
+// Matrices to be passed to IncrementalDMD
 struct IncrementalDMDInternal
 {
     Matrix* U;
