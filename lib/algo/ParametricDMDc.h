@@ -36,7 +36,7 @@ namespace CAROM {
  * @param[in] parameter_points      The training parameter points.
  * @param[in] dmdcs                 The DMDc objects associated with
  *                                  each training parameter point.
- * @param[in] controls              The matrices of controls from previous runs 
+ * @param[in] controls              The matrices of controls from previous runs
  *                                  which we use to interpolate.
  * @param[in] controls_interpolated The interpolated controls.
  * @param[in] desired_point         The desired point at which to create a parametric DMDc.
@@ -48,7 +48,7 @@ namespace CAROM {
  *                                  "IDW" == inverse distance weighting,
  *                                  "LP" == lagrangian polynomials)
  * @param[in] closest_rbf_val       The RBF parameter determines the width of influence.
- *                                  Set the RBF value of the nearest two parameter points 
+ *                                  Set the RBF value of the nearest two parameter points
  *                                  to a value between 0.0 to 1.0
  * @param[in] reorthogonalize_W     Whether to reorthogonalize the interpolated W (basis) matrix.
  */
@@ -145,7 +145,7 @@ void getParametricDMDc(T*& parametric_dmdc,
  * @param[in] dmdc_paths            The paths to the saved DMD objects associated with
  *                                  each parameter point.
  * @param[in] desired_point         The desired point at which to create a parametric DMD.
- * @param[in] controls              The matrices of controls from previous runs which we 
+ * @param[in] controls              The matrices of controls from previous runs which we
  *                                  use to interpolate.
  * @param[in] controls_interpolated The interpolated controls.
  * @param[in] rbf                   The RBF type ("G" == gaussian,
@@ -156,7 +156,7 @@ void getParametricDMDc(T*& parametric_dmdc,
  *                                  "IDW" == inverse distance weighting,
  *                                  "LP" == lagrangian polynomials)
  * @param[in] closest_rbf_val       The RBF parameter determines the width of influence.
- *                                  Set the RBF value of the nearest two parameter points 
+ *                                  Set the RBF value of the nearest two parameter points
  *                                  to a value between 0.0 to 1.0
  * @param[in] reorthogonalize_W     Whether to reorthogonalize the interpolated W (basis) matrix.
  */
