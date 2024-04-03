@@ -54,12 +54,21 @@
 using namespace std;
 using namespace mfem;
 
+bool indicator_triggers(std::vector<int> &indicator_idx, 
+                        std::vector<double> &indicator_val, 
+                        double* sample, 
+                        int dim, 
+                        double* old_indicator_val, 
+                        int* indicator_flipped,
+                        bool first_sample=false);
+
 void getInterpolatedTimeWindows(CAROM::Vector*& testing_twep,
                                 std::vector<CAROM::Vector*>& parameter_points,
                                 std::vector<CAROM::Vector*>& training_twep,
                                 CAROM::Vector* desired_point,
                                 std::string rbf,
                                 double closest_rbf_val);
+
 
 int main(int argc, char *argv[])
 {
@@ -370,6 +379,7 @@ int main(int argc, char *argv[])
                 indicator_idx.resize(numWindows, -1);
             }
             CAROM_VERIFY(indicator_idx.size() == indicator_val.size());
+            CAROM_VERIFY(indicator_idx.size() > 0);
 
             if (myid == 0)
             {
@@ -433,12 +443,16 @@ int main(int argc, char *argv[])
                 snap_bound.push_back(snap_list.size()-1);
             }
 
+            bool switch_window = false;
             int curr_window = 0;
             vector<int> overlap_count;
             int min_idx_snap = -1;
             int max_idx_snap = -1;
             double curr_indicator_val = -1.0;
             CAROM::Vector* twep = new CAROM::Vector(indicator_val.size(), false);
+            double* old_indicator_val = new double[indicator_val.size()];
+            int indicator_flipped = -1;
+
             for (int idx_snap = snap_bound[0]; idx_snap <= snap_bound[1]; ++idx_snap)
             {
                 string snap = snap_list[idx_snap]; // STATE
@@ -456,36 +470,28 @@ int main(int argc, char *argv[])
 
                 if (min_idx_snap == -1)
                 {
-                    curr_indicator_val = (indicator_idx[0] < 0) ? tval :
-                                         sample[indicator_idx[0]];
-                    if (indicator_val.size() > 0)
+                    switch_window = indicator_triggers(indicator_idx,indicator_val,sample,dim,old_indicator_val,&indicator_flipped,true);
+                    if(switch_window && !myid) std::cout << "INDICATOR " << indicator_flipped << " triggered \n";
+                    if(switch_window)
                     {
-                        if (curr_indicator_val >= indicator_val[0])
+                        min_idx_snap = idx_snap;
+                        twep->item(0) = tval;
+                        if (myid == 0)
                         {
-                            min_idx_snap = idx_snap;
-                            twep->item(0) = tval;
-                            if (myid == 0)
-                            {
-                                cout << "State #" << idx_snap << " - " << data_filename
-                                     << " is the beginning of window 0." << endl;
-                            }
+                            cout << "State #" << idx_snap << " - " << data_filename
+                                    << " is the beginning of window 0." << endl;
                         }
-                        else
-                        {
-                            if (myid == 0)
-                            {
-                                cout << "State #" << idx_snap << " - " << data_filename
-                                     << " is omitted." << endl;
-                            }
-                            continue;
-                        }
+                        switch_window = false;
                     }
                     else
                     {
-                        min_idx_snap = snap_bound[0];
-                        max_idx_snap = snap_bound[1];
-                        indicator_val.push_back(curr_indicator_val);
-                    }
+                        if (myid == 0)
+                        {
+                            cout << "State #" << idx_snap << " - " << data_filename
+                                    << " is omitted." << endl;
+                        }
+                        continue;
+                    }    
                 }
 
                 dmd[idx_dataset][curr_window]->takeSample(sample, tval);
@@ -504,9 +510,9 @@ int main(int argc, char *argv[])
 
                 if (curr_window+1 < numWindows && idx_snap+1 <= snap_bound[1])
                 {
-                    curr_indicator_val = (indicator_idx[curr_window+1] < 0) ? tval :
-                                         sample[indicator_idx[curr_window+1]];
-                    if (curr_indicator_val >= indicator_val[curr_window+1])
+                    switch_window = indicator_triggers(indicator_idx,indicator_val,sample,dim,old_indicator_val,&indicator_flipped);
+                    if(switch_window && !myid) std::cout << "INDICATOR " << indicator_flipped << " triggered \n";
+                    if (switch_window)
                     {
                         twep->item(curr_window+1) = tval;
                         if (myid == 0)
@@ -515,7 +521,7 @@ int main(int argc, char *argv[])
                                  << " is the beginning of window " << curr_window+1
                                  << "." << endl;
                         }
-                        if(!myid) std::cout << "triggered by indicator_idx " << indicator_idx[curr_window+1] << std::endl;
+                        
 
                         int ns = dmd[idx_dataset][curr_window]->getNumSamples();
                         overlap_count.push_back(windowOverlapSamples +
@@ -523,14 +529,15 @@ int main(int argc, char *argv[])
 
                         curr_window += 1;
                         dmd[idx_dataset][curr_window]->takeSample(sample, tval);
+                        switch_window = false;
                     }
                 }
 
                 if (max_idx_snap == -1 && curr_window == numWindows-1)
                 {
-                    curr_indicator_val = (indicator_idx[numWindows] < 0) ? tval :
-                                         sample[indicator_idx[numWindows]];
-                    if (curr_indicator_val >= indicator_val[numWindows])
+                    switch_window = indicator_triggers(indicator_idx,indicator_val,sample,dim,old_indicator_val,&indicator_flipped);
+                    if(switch_window && !myid) std::cout << "INDICATOR " << indicator_flipped << " triggered \n";
+                    if(switch_window)
                     {
                         twep->item(numWindows) = tval;
                         if (dmd[idx_dataset][numWindows-1]->getNumSamples() >= rdim+1)
@@ -545,7 +552,7 @@ int main(int argc, char *argv[])
                         }
                     }
                 }
-            }
+            } // end over idx_snap
 
             CAROM_VERIFY(numWindows == curr_window+1);
             training_twep.push_back(twep);
@@ -940,6 +947,56 @@ int main(int argc, char *argv[])
     }
 
     return 0;
+}
+
+bool indicator_triggers(std::vector<int> &indicator_idx, 
+                        std::vector<double> &indicator_val, 
+                        double* sample, 
+                        int dim, 
+                        double* old_indicator_val, 
+                        int* indicator_flipped,
+                        bool first_sample)
+// INPUT:
+// indicator_idx            -           reference to indicator indices.
+// indicator_val            -           reference to indicator values.
+// sample                   -           pointer to current sample.
+// dim                      -           dimension of sample vector.
+// old_indicator_val        -           value of indicator values at previous sample.
+
+// OUTPUT:
+// old_indicator_val        -           updated to reflect indicator values at current sample.
+// indicator_flipped        -           index of the indicator that triggered a window switch.                        
+{
+    bool switch_window = false;
+    *indicator_flipped = -1;
+    // Search over all indicators
+    for(int i = 0; i < indicator_idx.size(); ++i)
+    {
+        if(indicator_idx[i] >= 0)
+        {
+            if(sample[indicator_idx[i]] >= indicator_val[i]) // Threshold indicator.
+            {
+                switch_window = true;
+                indicator_idx[i] = -1;
+                *indicator_flipped = i;
+                break;
+            }
+            old_indicator_val[i] = sample[indicator_idx[i]];
+        } 
+        else if (indicator_idx[i] == -2) // max value indicator.
+        {
+            double* max = max_element(sample, sample+dim);
+            if(!first_sample && *max < indicator_val[i]*old_indicator_val[i])
+            {
+                switch_window = true;
+                indicator_idx[i] = -1;
+                *indicator_flipped = i;
+                break;
+            }
+            old_indicator_val[i] = *max;
+        }
+    }
+    return switch_window;
 }
 
 void getInterpolatedTimeWindows(CAROM::Vector*& testing_twep,
