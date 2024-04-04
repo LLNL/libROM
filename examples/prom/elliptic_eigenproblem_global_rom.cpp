@@ -86,6 +86,7 @@ int main(int argc, char *argv[])
 
     // 2. Parse command-line options.
     const char *mesh_file = "";
+    bool dirichlet = true;
     int ser_ref_levels = 2;
     int par_ref_levels = 1;
     int order = 1;
@@ -117,6 +118,8 @@ int main(int argc, char *argv[])
                    "Mesh file to use.");
     args.AddOption(&problem, "-p", "--problem",
                    "Problem setup to use. See options in Conductivity and Potential functions.");
+    args.AddOption(&dirichlet, "-dir", "--dirichlet", "-neu", "--neumann",
+                   "BC switch.");
     args.AddOption(&ser_ref_levels, "-rs", "--refine-serial",
                    "Number of times to refine the mesh uniformly in serial.");
     args.AddOption(&par_ref_levels, "-rp", "--refine-parallel",
@@ -349,7 +352,7 @@ int main(int argc, char *argv[])
     if (pmesh->bdr_attributes.Size())
     {
         ess_bdr.SetSize(pmesh->bdr_attributes.Max());
-        ess_bdr = 1;
+        ess_bdr = (dirichlet) ? 1 : 0;
     }
 
     ParBilinearForm *a = new ParBilinearForm(fespace);
