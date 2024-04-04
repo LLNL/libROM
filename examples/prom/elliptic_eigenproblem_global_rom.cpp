@@ -495,6 +495,7 @@ int main(int argc, char *argv[])
     }
 
     // 15. The online phase
+    Vector sign_ev(nev);
     if (online) {
         // 16. read the reduced basis
         assembleTimer.Start();
@@ -677,7 +678,9 @@ int main(int argc, char *argv[])
             mode_fom_ifs.close();
 
             const double fomNorm = sqrt(InnerProduct(mode_fom, mode_fom));
-            mode_fom -= mode_rom;
+            // TODO: use a constant mode_ref for all parameters and (FOM & ROM) eigenfunctions
+            sign_ev[i] = (InnerProduct(mode_fom, mode_rom) >= 0) ? 1 : -1;
+            mode_fom.Add(-sign_ev[i], mode_rom);
             const double diffNorm = sqrt(InnerProduct(mode_fom, mode_fom));
             if (myid == 0) std::cout << "Relative l2 error of ROM eigenvector " << i <<
                                          " = " << diffNorm /
@@ -704,6 +707,7 @@ int main(int argc, char *argv[])
                 Vector ev;
                 evect.GetRow(i, ev);
                 x = ev;
+                x *= sign_ev[i];
             }
             visit_evs.push_back(new ParGridFunction(x));
             visit_dc.RegisterField("x" + std::to_string(i), visit_evs.back());
@@ -755,6 +759,7 @@ int main(int argc, char *argv[])
                     Vector ev;
                     evect.GetRow(i, ev);
                     x = ev;
+                    x *= sign_ev[i];
                 }
 
                 sout << "parallel " << num_procs << " " << myid << "\n"
