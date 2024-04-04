@@ -644,12 +644,14 @@ int main(int argc, char *argv[])
         for (int i = 0; i < eigenvalues.Size() && i < nev; i++)
         {
             diff_ev[i] = ev_fom[i] - eigenvalues[i];
-            double ev_diff_norm = sqrt(diff_ev[i] * diff_ev[i]);
-            double ev_fom_norm = sqrt(ev_fom[i] * ev_fom[i]);
             if (myid == 0)
             {
+                std::cout << "FOM solution for eigenvalue " << i << " = " <<
+                          ev_fom[i] << std::endl;
+                std::cout << "Absolute error of ROM solution for eigenvalue " << i << " = " <<
+                          abs(diff_ev[i]) << std::endl;
                 std::cout << "Relative error of ROM solution for eigenvalue " << i << " = " <<
-                          ev_diff_norm / ev_fom_norm << std::endl;
+                          abs(diff_ev[i]) / abs(ev_fom[i]) << std::endl;
             }
         }
 
