@@ -18,10 +18,17 @@
 // Sample runs and results for DMD:
 //
 // Command 1:
-//   mpirun -np 8 heat_conduction_incdmd
+//   mpirun -np 8 heat_conduction_incdmd --inc
 //
 // Output 1:
 //   Residual of DMD solution is: 0.064594653
+//
+// Command 2:
+//   mpirun -np 8 heat_conduction_incdmd --noinc
+//
+// Output 2:
+//   Residual of DMD solution is: 0.064594653
+
 //
 // =================================================================================
 //
@@ -29,7 +36,7 @@
 // heat equation with incremental DMD. DMD predicts a provisional solution
 // every time step, and if the prediction is accurate enough, it replaces the
 // full-order model solution as a new snapshot. The full-order model is based
-// on ex16p.cpp of MFEM.
+// on ex16p.cpp of MFEM, and this example only works with backward Euler.
 //
 
 #include "mfem.hpp"
@@ -141,9 +148,6 @@ int main(int argc, char *argv[])
                    "Number of times to refine the mesh uniformly in parallel.");
     args.AddOption(&order, "-o", "--order",
                    "Order (degree) of the finite elements.");
-    args.AddOption(&ode_solver_type, "-s", "--ode-solver",
-                   "ODE solver: 1 - Backward Euler, 2 - SDIRK2, 3 - SDIRK3,\n\t"
-                   "\t   11 - Forward Euler, 12 - RK2, 13 - RK3 SSP, 14 - RK4.");
     args.AddOption(&t_final, "-tf", "--t-final",
                    "Final time; start time is 0.");
     args.AddOption(&dt, "-dt", "--time-step",
