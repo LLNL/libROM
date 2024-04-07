@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2024, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -11,10 +11,6 @@
 // Description: Computes the DMD algorithm on the given snapshot matrix
 //              with uniform sampling time steps, using incremenatal SVD
 //              to update the DMD matrix.
-//              Instead of approximating the discrete dynamics, this algorithm
-//              approximates the continuous dynamics linearly.
-//              This algorithm also works in the case that the first sample does
-//              not start from t = 0.0 by incorporating a time offset.
 
 #ifndef included_IncrementalDMD_h
 #define included_IncrementalDMD_h
@@ -29,22 +25,20 @@ namespace CAROM {
  * Class IncrementalDMD implements the standard DMD algorithm on the
  * given snapshot matrix with uniform sampling time steps, using
  * incremental SVD for update.
- * Instead of linearly approximating the discrete dynamics
- * x(t+dt) = Ax(t) in the original DMD, this algorithm approximates
- * the continuous dynamics linearly by dx/dt = Ax.
  */
 class IncrementalDMD : public DMD
 {
 public:
 
     /**
-     * @brief Constructor.
+     * @brief Constructor. Basic DMD with uniform time step size.
      *
-     * @param[in] dim               The full-order state dimension.
-     * @param[in] alt_output_basis  Whether to use the alternative basis for
-     *                              output, i.e. phi = U^(+)*V*Omega^(-1)*X.
-     * @param[in] state_offset      The state offset.
-     * @param[in] derivative_offset The derivative offset.
+     * @param[in] dim              The full-order state dimension.
+     * @param[in] dt               The dt between samples.
+     * @param[in] svd_options       Options for SVD.
+     * @param[in] alt_output_basis Whether to use the alternative basis for
+     *                             output, i.e. phi = U^(+)*V*Omega^(-1)*X.
+     * @param[in] state_offset     The state offset.
      */
     IncrementalDMD(int dim,
                    double dt,

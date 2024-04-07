@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2024, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -8,7 +8,7 @@
  *
  *****************************************************************************/
 
-// Description: Implementation of the nonuniform DMD algorithm.
+// Description: Implementation of the incremental DMD algorithm.
 
 #include "IncrementalDMD.h"
 #include "linalg/Matrix.h"
