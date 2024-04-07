@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright (c) 2013-2023, Lawrence Livermore National Security, LLC
+ * Copyright (c) 2013-2024, Lawrence Livermore National Security, LLC
  * and other libROM project developers. See the top-level COPYRIGHT
  * file for details.
  *
@@ -8,54 +8,29 @@
  *
  *****************************************************************************/
 
-//                       libROM MFEM Example: Heat_Conduction (adapted from ex16p.cpp)
+//                       libROM MFEM Example: Heat equation solver replaced by
+//                              incremental DMD on the fly (adapted from ex16p.cpp)
 //
-// Compile with: make heat_conduction
+// Compile with: make heat_conduction_incdmd
 //
 // =================================================================================
 //
 // Sample runs and results for DMD:
 //
 // Command 1:
-//   mpirun -np 8 heat_conduction -s 1 -a 0.0 -k 1.0 -visit
+//   mpirun -np 8 heat_conduction_incdmd
 //
 // Output 1:
-//   Relative error of DMD temperature (u) at t_final: 0.5 is 0.00049906934
-//
-// Command 2:
-//   mpirun -np 8 heat_conduction -s 3 -a 0.5 -k 0.5 -o 4 -tf 0.7 -vs 1 -visit
-//
-// Output 2:
-//   Relative error of DMD temperature (u) at t_final: 0.7 is 0.00082289823
+//   Residual of DMD solution is: 0.064594653
 //
 // =================================================================================
 //
-// Sample runs and results for NonuniformDMD:
+// Description:  This example constructs a reduced-order model for a nonlinear
+// heat equation with incremental DMD. DMD predicts a provisional solution
+// every time step, and if the prediction is accurate enough, it replaces the
+// full-order model solution as a new snapshot. The full-order model is based
+// on ex16p.cpp of MFEM.
 //
-// Command 1:
-//   mpirun -np 8 heat_conduction -s 1 -a 0.0 -k 1.0 -nonunif -visit
-//
-// Output 1:
-//   Relative error of DMD temperature (u) at t_final: 0.5 is 0.00071958947
-//
-// Command 2:
-//   mpirun -np 8 heat_conduction -s 3 -a 0.5 -k 0.5 -o 4 -tf 0.7 -vs 1 -nonunif -visit
-//
-// Output 2:
-//   Relative error of DMD temperature (u) at t_final: 0.7 is 0.00013450754
-//
-// =================================================================================
-//
-// Description:  This example solves a time dependent nonlinear heat equation
-//               problem of the form du/dt = C(u), with a non-linear diffusion
-//               operator C(u) = \nabla \cdot (\kappa + \alpha u) \nabla u.
-//
-//               The example demonstrates the use of nonlinear operators (the
-//               class ConductionOperator defining C(u)), as well as their
-//               implicit time integration. Note that implementing the method
-//               ConductionOperator::ImplicitSolve is the only requirement for
-//               high-order implicit (SDIRK) time integration. Optional saving
-//               with ADIOS2 (adios2.readthedocs.io) is also illustrated.
 
 #include "mfem.hpp"
 #include "algo/DMD.h"
