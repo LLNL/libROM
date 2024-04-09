@@ -19,21 +19,6 @@
 
 namespace CAROM {
 
-// Matrices to be passed to IncrementalDMD
-struct IncrementalDMDInternal
-{
-    Matrix* U;
-    Matrix* Up;
-    Vector* s;
-    Matrix* W;
-    Matrix* Wp;
-    Matrix* Wp_inv;
-    Matrix* Uq;
-    Matrix* Sq_inv;
-    Matrix* Wq;
-    Vector* p;
-};
-
 /**
  * Class IncrementalSVDBrand implements Brand's fast update incremental SVD
  * algorithm by implementing the pure virtual methods of the IncrementalSVD
@@ -79,14 +64,9 @@ public:
     const Matrix*
     getTemporalBasis() override;
 
-    IncrementalDMDInternal
-    getAllMatrices() {
-        return mats;
-    }
+    friend class IncrementalDMD;
 
 private:
-    friend class BasisGenerator;
-
 
     /**
      * @brief Unimplemented default constructor.
@@ -189,16 +169,20 @@ private:
         const Matrix* W,
         Matrix* sigma);
 
-    void
-    updateAllMatrices();
-
     /**
      * @brief The matrix U'. U' is not distributed and the entire matrix
      *        exists on each processor.
      */
+    Matrix* d_U;
+    Matrix* d_U_pre;
     Matrix* d_Up;
+    Matrix* d_Up_pre;
+    Matrix* d_W;
+    Matrix* d_W_pre;
     Matrix* d_Wp;
+    Matrix* d_Wp_pre;
     Matrix* d_Wp_inv;
+    Vector* d_S_pre;
 
     Matrix* d_Uq;
     Matrix* d_Sq_inv;
@@ -219,11 +203,6 @@ private:
      * @brief Maximum number of basis.
      */
     double d_max_num_basis;
-
-    /**
-     * @brief Matrices from IncrementalSVD.
-     */
-    IncrementalDMDInternal mats;
 
 };
 

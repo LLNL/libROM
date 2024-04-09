@@ -61,18 +61,6 @@ IncrementalSVDBrand::IncrementalSVDBrand(
 
     d_max_num_samples = options.max_num_samples;
     d_max_num_basis = options.max_basis_dimension;
-
-    // Initialize matrices for IncrementalDMD.
-    mats.U = NULL;
-    mats.Up = NULL;
-    mats.s = NULL;
-    mats.W = NULL;
-    mats.Wp = NULL;
-    mats.Wp_inv = NULL;
-    mats.Uq = NULL;
-    mats.Sq_inv = NULL;
-    mats.Wq = NULL;
-    mats.p = NULL;
 }
 
 IncrementalSVDBrand::~IncrementalSVDBrand()
@@ -130,83 +118,6 @@ IncrementalSVDBrand::getTemporalBasis()
 }
 
 void
-IncrementalSVDBrand::updateAllMatrices()
-{
-    delete mats.U;
-    delete mats.Up;
-    delete mats.s;
-    delete mats.W;
-    delete mats.Wp;
-    delete mats.Wp_inv;
-    delete mats.Uq;
-    delete mats.Sq_inv;
-    delete mats.Wq;
-    delete mats.p;
-    mats.U = 0;
-    mats.Up = 0;
-    mats.s = 0;
-    mats.W = 0;
-    mats.Wp = 0;
-    mats.Wp_inv = 0;
-    mats.Uq = 0;
-    mats.Sq_inv = 0;
-    mats.Wq = 0;
-    mats.p = 0;
-
-    // Copy all the matrices and vectors
-    mats.U = new Matrix(d_U->getData(),
-                        d_U->numRows(),
-                        d_U->numColumns(),
-                        d_U->distributed(),
-                        true);
-    mats.Up = new Matrix(d_Up->getData(),
-                         d_Up->numRows(),
-                         d_Up->numColumns(),
-                         d_Up->distributed(),
-                         true);
-    mats.s = new Vector(d_S->getData(),
-                        d_S->dim(),
-                        d_S->distributed(),
-                        true);
-    mats.W = new Matrix(d_W->getData(),
-                        d_W->numRows(),
-                        d_W->numColumns(),
-                        d_W->distributed(),
-                        true);
-    mats.Wp = new Matrix(d_Wp->getData(),
-                         d_Wp->numRows(),
-                         d_Wp->numColumns(),
-                         d_Wp->distributed(),
-                         true);
-    mats.Wp_inv = new Matrix(d_Wp_inv->getData(),
-                             d_Wp_inv->numRows(),
-                             d_Wp_inv->numColumns(),
-                             d_Wp_inv->distributed(),
-                             true);
-
-    mats.Uq = new Matrix(d_Uq->getData(),
-                         d_Uq->numRows(),
-                         d_Uq->numColumns(),
-                         d_Uq->distributed(),
-                         true);
-    mats.Sq_inv = new Matrix(d_Sq_inv->getData(),
-                             d_Sq_inv->numRows(),
-                             d_Sq_inv->numColumns(),
-                             d_Sq_inv->distributed(),
-                             true);
-    mats.Wq = new Matrix(d_Wq->getData(),
-                         d_Wq->numRows(),
-                         d_Wq->numColumns(),
-                         d_Wq->distributed(),
-                         true);
-    mats.p = new Vector(d_p->getData(),
-                        d_p->dim(),
-                        d_p->distributed(),
-                        true);
-
-}
-
-void
 IncrementalSVDBrand::buildInitialSVD(double* u)
 {
     CAROM_VERIFY(u != 0);
@@ -216,26 +127,35 @@ IncrementalSVDBrand::buildInitialSVD(double* u)
     Vector u_vec(u, d_dim, true);
     double norm_u = u_vec.norm();
     d_S->item(0) = norm_u;
+    d_S_pre = NULL;
 
     // Build d_Up for this new time interval.
     d_Up = new Matrix(1, 1, false);
     d_Up->item(0, 0) = 1.0;
+    d_Up_pre = new Matrix(1, 1, false);
+    d_Up_pre->item(0, 0) = 1.0;
 
     // Build d_U for this new time interval.
     d_U = new Matrix(d_dim, 1, true);
     for (int i = 0; i < d_dim; ++i) {
         d_U->item(i, 0) = u[i]/norm_u;
     }
+    d_U_pre = new Matrix(d_dim, 1, true);
+    for (int i = 0; i < d_dim; ++i) {
+        d_U_pre->item(i, 0) = u[i]/norm_u;
+    }
 
     // Build d_W for this new time interval.
     if (d_update_right_SV) {
         // d_W is preallocated.
-        std::cout << d_max_num_samples << ","
-                  << d_max_num_basis << std::endl;
         d_W = new Matrix(d_max_num_samples, d_max_num_basis, false);
         d_W->item(0, 0) = 1.0;
+        d_W_pre = new Matrix(d_max_num_samples, d_max_num_basis, false);
+        d_W_pre->item(0, 0) = 1.0;
         d_Wp = new Matrix(1, 1, false);
         d_Wp->item(0, 0) = 1.0;
+        d_Wp_pre = new Matrix(1, 1, false);
+        d_Wp_pre->item(0, 0) = 1.0;
         d_Wp_inv = new Matrix(1, 1, false);
         d_Wp_inv->item(0, 0) = 1.0;
 
@@ -254,9 +174,7 @@ IncrementalSVDBrand::buildInitialSVD(double* u)
     d_Wq = new Matrix(1, 1, false);
     d_Wq->item(0, 0) = 1.0;
 
-    d_p = new Vector(1, true);
-
-    updateAllMatrices();
+    d_p = new Vector(d_dim, true);
 
 }
 
@@ -372,7 +290,6 @@ IncrementalSVDBrand::buildIncrementalSVD(
                 d_Wq->item(d_num_samples, j) = W->item(d_num_samples, j);
             }
 
-            updateAllMatrices();
             addLinearlyDependentSample(A, W, sigma);
 
             delete sigma;
@@ -413,7 +330,6 @@ IncrementalSVDBrand::buildIncrementalSVD(
                 d_p->item(i) = e_proj.item(i) / k;
             }
 
-            updateAllMatrices();
             addNewSample(j, A, W, sigma);
 
             delete j;
@@ -547,11 +463,12 @@ IncrementalSVDBrand::addLinearlyDependentSample(
     CAROM_VERIFY(A != 0);
     CAROM_VERIFY(sigma != 0);
 
-    StopWatch timer1, timer2, timer3, timer4;
-
     // Chop a row and a column off of A to form Amod.  Also form
     // d_S by chopping a row and a column off of sigma.
     Matrix Amod(d_num_samples, d_num_samples, false);
+    delete d_S_pre;
+    d_S_pre = d_S;
+    d_S = new Vector(d_num_samples, false);
     for (int row = 0; row < d_num_samples; ++row) {
         for (int col = 0; col < d_num_samples; ++col) {
             Amod.item(row, col) = A->item(row, col);
@@ -562,9 +479,16 @@ IncrementalSVDBrand::addLinearlyDependentSample(
         }
     }
 
+    // d_U stays unmodified but update d_Up
+    delete d_U_pre;
+    d_U_pre = new Matrix(d_U->getData(),
+                         d_U->numRows(),
+                         d_U->numColumns(),
+                         d_U->distributed());
     // Multiply d_Up and Amod and put result into d_Up.
     Matrix* Up_times_Amod = d_Up->mult(Amod);
-    delete d_Up;
+    delete d_Up_pre;
+    d_Up_pre = d_Up;
     d_Up = Up_times_Amod;
 
     Matrix* new_d_Wp;
@@ -583,7 +507,8 @@ IncrementalSVDBrand::addLinearlyDependentSample(
                 new_d_Wp->item(row, col) = new_d_Wp_entry;
             }
         }
-        delete d_Wp;
+        delete d_Wp_pre;
+        d_Wp_pre = d_Wp;
         d_Wp = new_d_Wp;
 
         double norm = 0;
@@ -644,27 +569,18 @@ IncrementalSVDBrand::addNewSample(
         }
         newU->item(row, d_num_samples) = j->item(row);
     }
-    delete d_U;
+    delete d_U_pre;
+    d_U_pre = d_U;
     d_U = newU;
 
     //Matrix* new_d_W;
     Matrix* new_d_Wp;
     Matrix* new_d_Wp_inv;
     if (d_update_right_SV) {
-        //new_d_W = new Matrix(d_num_rows_of_W+1, d_num_samples+1, false);
         new_d_Wp = new Matrix(d_num_samples+1, d_num_samples+1, false);
         new_d_Wp_inv = new Matrix(d_num_samples+1, d_num_samples+1, false);
-
-        /*
-        for (int row = 0; row < d_num_rows_of_W; ++row) {
-            for (int col = 0; col < d_num_samples; ++col) {
-                new_d_W->item(row, col) = d_W->item(row, col);
-            }
-        }
-        */
+        
         d_W->item(d_num_rows_of_W, d_num_samples) = 1.0;
-        //delete d_W;
-        //d_W = new_d_W;
 
         for (int row = 0; row < d_num_samples; ++row) {
             for (int col = 0; col < d_num_samples+1; ++col) {
@@ -678,7 +594,8 @@ IncrementalSVDBrand::addNewSample(
         for (int col = 0; col < d_num_samples+1; ++col) {
             new_d_Wp->item(d_num_samples, col) = W->item(d_num_samples, col);
         }
-        delete d_Wp;
+        delete d_Wp_pre;
+        d_Wp_pre = d_Wp;
         d_Wp = new_d_Wp;
 
         for (int row = 0; row < d_num_samples+1; ++row) {
@@ -716,10 +633,12 @@ IncrementalSVDBrand::addNewSample(
     for (int col = 0; col < d_num_samples+1; ++col) {
         new_d_Up->item(d_num_samples, col) = A->item(d_num_samples, col);
     }
-    delete d_Up;
+    delete d_Up_pre;
+    d_Up_pre = d_Up;
     d_Up = new_d_Up;
 
-    delete d_S;
+    delete d_S_pre;
+    d_S_pre = d_S;
     int num_dim = std::min(sigma->numRows(), sigma->numColumns());
     d_S = new Vector(num_dim, false);
     for (int i = 0; i < num_dim; i++) {
