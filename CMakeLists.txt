@@ -29,6 +29,8 @@ project(libROM
   HOMEPAGE_URL "https://github.com/LLNL/libROM"
   LANGUAGES C CXX Fortran)
 
+include(GNUInstallDirs)
+
 set(libROM_CMAKE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 set(libROM_CMAKE_MODULE_PATH ${libROM_CMAKE_PATH}/modules)
 list(APPEND CMAKE_MODULE_PATH ${libROM_CMAKE_MODULE_PATH})
@@ -111,14 +113,27 @@ find_package(Doxygen 1.8.5)
 
 find_package(GTest 1.6.0)
 
+# Print the locations of the following libraries as it can be beneficial
+# to specify them manually. Use for instance "-DMFEM_DIR=dir" as cmake 
+# input option to specify an external location for MFEM.
 if (USE_MFEM)
-    find_library(MFEM mfem "${CMAKE_SOURCE_DIR}/dependencies/mfem" "${MFEM_DIR}/lib")
-    find_library(HYPRE HYPRE "${CMAKE_SOURCE_DIR}/dependencies/hypre/src/hypre/lib" "${HYPRE_DIR}/lib")
-    find_library(PARMETIS parmetis "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/build/lib/libparmetis" "${PARMETIS_DIR}/lib")
-    find_library(METIS metis "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/build/lib/libmetis" "${METIS_DIR}/lib")
-    find_path(MFEM_INCLUDES mfem.hpp "${CMAKE_SOURCE_DIR}/dependencies/mfem" "${MFEM_DIR}/include")
-    find_path(HYPRE_INCLUDES HYPRE.h "${CMAKE_SOURCE_DIR}/dependencies/hypre/src/hypre/include" "${HYPRE_DIR}/include")
-    find_path(PARMETIS_INCLUDES metis.h "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/metis/include" "${PARMETIS_DIR}/metis/include")
+    find_library(MFEM mfem "${MFEM_DIR}/lib" "${CMAKE_SOURCE_DIR}/dependencies/mfem")
+    find_path(MFEM_INCLUDES mfem.hpp "${MFEM_DIR}/include" "${CMAKE_SOURCE_DIR}/dependencies/mfem")
+    message("Found MFEM in: ${MFEM}")
+    message("Found MFEM_INCLUDES in: ${MFEM_INCLUDES}")
+
+    find_library(HYPRE HYPRE "${HYPRE_DIR}/lib" "${CMAKE_SOURCE_DIR}/dependencies/hypre/src/hypre/lib")
+    find_path(HYPRE_INCLUDES HYPRE.h "${HYPRE_DIR}/include" "${CMAKE_SOURCE_DIR}/dependencies/hypre/src/hypre/include")
+    message("Found HYPRE in: ${HYPRE}")
+    message("Found HYPRE_INCLUDES in: ${HYPRE_INCLUDES}")
+
+    find_library(METIS metis "${METIS_DIR}/lib" "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/build/lib/libmetis")
+    message("Found METIS in: ${METIS}")
+
+    find_library(PARMETIS parmetis "${PARMETIS_DIR}/lib" "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/build/lib/libparmetis")
+    find_path(PARMETIS_INCLUDES metis.h "${PARMETIS_DIR}/metis/include" "${CMAKE_SOURCE_DIR}/dependencies/parmetis-4.0.3/metis/include")
+    message("Found PARMETIS in: ${PARMETIS}")
+    message("Found PARMETIS_INCLUDES in: ${PARMETIS_INCLUDES}")
 endif()
 
 add_subdirectory(lib)
@@ -317,3 +332,41 @@ if(DOXYGEN_FOUND)
   add_dependencies(doxygen_tagfile documentation)
 
 endif(DOXYGEN_FOUND)
+
+#-------------------------------------------------------------------------------
+# Installation
+# Configure CMake find_package() config files
+#-------------------------------------------------------------------------------
+
+# Default option
+if (NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "Release")
+endif()
+
+include(CMakePackageConfigHelpers)
+
+# Extract the enabled languages required to use ROM
+get_property(ROM_ENABLED_LANGUAGES GLOBAL PROPERTY ENABLED_LANGUAGES)
+
+configure_package_config_file(
+  "${PROJECT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in"
+  "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+INSTALL_DESTINATION
+  ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+PATH_VARS
+  ROM_ENABLED_LANGUAGES
+)
+
+write_basic_package_version_file(
+  "${PROJECT_NAME}ConfigVersion.cmake"
+  VERSION ${PROJECT_VERSION}
+  COMPATIBILITY SameMajorVersion
+)
+
+install(FILES
+  ${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+  ${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+DESTINATION
+  ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+)
+
