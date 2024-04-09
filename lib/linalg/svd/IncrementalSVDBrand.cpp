@@ -579,7 +579,7 @@ IncrementalSVDBrand::addNewSample(
     if (d_update_right_SV) {
         new_d_Wp = new Matrix(d_num_samples+1, d_num_samples+1, false);
         new_d_Wp_inv = new Matrix(d_num_samples+1, d_num_samples+1, false);
-        
+
         d_W->item(d_num_rows_of_W, d_num_samples) = 1.0;
 
         for (int row = 0; row < d_num_samples; ++row) {
