@@ -155,7 +155,9 @@ if (ENABLE_EXAMPLES)
       local_dw_csv
       parametric_tw_csv
       parametric_dw_csv
-      parametric_dmdc_heat_conduction)
+      parametric_dmdc_heat_conduction
+      wave_equation_mpi
+      wave_equation_dmdc)
     set(example_directories
       prom
       prom
@@ -169,6 +171,8 @@ if (ENABLE_EXAMPLES)
       prom
       prom
       prom
+      dmd
+      dmd
       dmd
       dmd
       dmd
