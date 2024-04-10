@@ -532,7 +532,14 @@ int main(int argc, char *argv[])
 
         dmd_training_timer.Start();
         f[0] = amp*2/sqrt(3*sigma)/pow(M_PI,1/4)*(1 - pow(t/sigma,2))*exp(-pow(t/sigma,2)/2);
-        dmd_u[curr_window]->takeSample(u.GetData(), t,f,last_step);
+        if ((ti % windowNumSamples) != 0)
+        {
+            dmd_u[curr_window]->takeSample(u.GetData(), t,f,false);
+        }
+        else
+        {
+            dmd_u[curr_window]->takeSample(u.GetData(), t,f,true);
+        }
 
         if (last_step || (ti % windowNumSamples) == 0)
         {
