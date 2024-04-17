@@ -45,6 +45,7 @@ set(module_list
   algo/manifold_interp/Interpolator
   algo/manifold_interp/MatrixInterpolator
   algo/manifold_interp/VectorInterpolator
+  algo/manifold_interp/SnapshotInterpolator
   hyperreduction/DEIM
   hyperreduction/GNAT
   hyperreduction/QDEIM

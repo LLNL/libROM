@@ -178,6 +178,8 @@ public:
      */
     const Matrix* getSnapshotMatrix();
 
+    void interpolateToNSnapshots(int n);
+
     /**
      * @brief Load the object state from a file.
      *
