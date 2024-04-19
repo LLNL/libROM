@@ -141,6 +141,7 @@ if (ENABLE_EXAMPLES)
       de_parametric_maxwell_greedy
       maxwell_local_rom_greedy     
       grad_div_global_rom
+      elliptic_eigenproblem_global_rom
       dg_advection
       nonlinear_elasticity
       heat_conduction
@@ -153,7 +154,8 @@ if (ENABLE_EXAMPLES)
       local_tw_csv
       local_dw_csv
       parametric_tw_csv
-      parametric_dw_csv)
+      parametric_dw_csv
+      parametric_dmdc_heat_conduction)
     set(example_directories
       prom
       prom
@@ -166,6 +168,8 @@ if (ENABLE_EXAMPLES)
       prom
       prom
       prom
+      prom
+      dmd
       dmd
       dmd
       dmd
