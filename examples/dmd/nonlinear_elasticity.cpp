@@ -488,8 +488,8 @@ int main(int argc, char *argv[])
     dmd_x.push_back(new CAROM::DMD(x_gf.GetTrueVector().Size(), dt));
     dmd_v.push_back(new CAROM::DMD(v_gf.GetTrueVector().Size(), dt));
 
-    dmd_x[curr_window]->takeSample(x_gf.GetTrueVector(), t);
-    dmd_v[curr_window]->takeSample(v_gf.GetTrueVector(), t);
+    dmd_x[curr_window]->takeSample(x_gf.GetTrueVector().GetData(), t);
+    dmd_v[curr_window]->takeSample(v_gf.GetTrueVector().GetData(), t);
     ts.push_back(t);
 
     dmd_training_timer.Stop();
@@ -510,8 +510,8 @@ int main(int argc, char *argv[])
 
         dmd_training_timer.Start();
 
-        dmd_x[curr_window]->takeSample(x_gf.GetTrueVector(), t);
-        dmd_v[curr_window]->takeSample(v_gf.GetTrueVector(), t);
+        dmd_x[curr_window]->takeSample(x_gf.GetTrueVector().GetData(), t);
+        dmd_v[curr_window]->takeSample(v_gf.GetTrueVector().GetData(), t);
 
         if (last_step || (ti % windowNumSamples) == 0)
         {
@@ -546,8 +546,8 @@ int main(int argc, char *argv[])
                 dmd_x.push_back(new CAROM::DMD(x_gf.GetTrueVector().Size(), dt));
                 dmd_v.push_back(new CAROM::DMD(v_gf.GetTrueVector().Size(), dt));
 
-                dmd_x[curr_window]->takeSample(x_gf.GetTrueVector(), t);
-                dmd_v[curr_window]->takeSample(v_gf.GetTrueVector(), t);
+                dmd_x[curr_window]->takeSample(x_gf.GetTrueVector().GetData(), t);
+                dmd_v[curr_window]->takeSample(v_gf.GetTrueVector().GetData(), t);
             }
         }
 

@@ -450,7 +450,7 @@ int main(int argc, char *argv[])
     int curr_window = 0;
     vector<CAROM::DMD*> dmd_u;
     dmd_u.push_back(new CAROM::DMD(u.Size(), dt));
-    dmd_u[curr_window]->takeSample(u, t);
+    dmd_u[curr_window]->takeSample(u.GetData(), t);
     ts.push_back(t);
 
     dmd_training_timer.Stop();
@@ -467,7 +467,7 @@ int main(int argc, char *argv[])
         fom_timer.Stop();
 
         dmd_training_timer.Start();
-        dmd_u[curr_window]->takeSample(u, t);
+        dmd_u[curr_window]->takeSample(u.GetData(), t);
 
         if (last_step || (ti % windowNumSamples) == 0)
         {
@@ -488,7 +488,7 @@ int main(int argc, char *argv[])
             if (!last_step) {
                 curr_window++;
                 dmd_u.push_back(new CAROM::DMD(u.Size(), dt));
-                dmd_u[curr_window]->takeSample(u, t);
+                dmd_u[curr_window]->takeSample(u.GetData(), t);
             }
 
         }
