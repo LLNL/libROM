@@ -828,6 +828,7 @@ double Conductivity(const Vector &x)
 double Potential(const Vector &x)
 {
     double D = 100.0;
+    double c = (bb_max[0] - bb_min[0]) * std::pow(2, -2*(ser_ref_levels + par_ref_levels - 1));
     Vector center(x.Size());
     switch (problem)
     {
@@ -835,7 +836,6 @@ double Potential(const Vector &x)
     case 2:
         return 0.0;
     case 3:
-        double c = std::pow(2, -2*(ser_ref_levels + par_ref_levels));
         for (int i = 0; i < x.Size(); i++)
         {
             center(i) = 0.5 * (bb_min[i] + bb_max[i]);
