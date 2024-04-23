@@ -73,6 +73,8 @@ using namespace mfem;
 double Conductivity(const Vector &x);
 double Potential(const Vector &x);
 int problem = 1;
+int ser_ref_levels = 2;
+int par_ref_levels = 1;
 double kappa;
 Vector bb_min, bb_max;
 
@@ -87,8 +89,6 @@ int main(int argc, char *argv[])
     // 2. Parse command-line options.
     const char *mesh_file = "";
     bool dirichlet = true;
-    int ser_ref_levels = 2;
-    int par_ref_levels = 1;
     int order = 1;
     int nev = 5;
     int seed = 75;
@@ -197,8 +197,6 @@ int main(int argc, char *argv[])
         args.PrintOptions(cout);
     }
 
-    kappa = alpha * M_PI;
-
     if (fom)
     {
         MFEM_VERIFY(fom && !offline && !online
@@ -217,29 +215,14 @@ int main(int argc, char *argv[])
     Mesh *mesh;
     if (mesh_file == "")
     {
-        // square domain with side length 20 at origin (0,0)
-        double x_max = 20.0;
-        double y_max = 20.0;
-        mesh = new Mesh(Mesh::MakeCartesian2D(2, 2, Element::QUADRILATERAL, false,
-                                              x_max, y_max));
-        mesh->GetBoundingBox(bb_min, bb_max, max(order, 1));
-
-        // shift mesh around origin (from [0, bb_max] -> [-bb_max/2, bb_max/2])
-        auto *mesh_transform = +[](const Vector &v_orig, Vector &v_new) -> void {
-            v_new = v_orig;
-            // shift mesh vertices by (bb_max[i] / 2)
-            v_new(0) -= 0.5*bb_max[0];
-            v_new(1) -= 0.5*bb_max[1];
-        };
-
-        // performs the transform - bb_min/bb_max are updated again below
-        mesh->Transform(mesh_transform);
+        mesh = new Mesh(Mesh::MakeCartesian2D(2, 2, Element::QUADRILATERAL));
     }
     else
     {
         mesh = new Mesh(mesh_file, 1, 1);
     }
     int dim = mesh->Dimension();
+    mesh->GetBoundingBox(bb_min, bb_max, max(order, 1));
 
     // 4. Refine the mesh in serial to increase the resolution. In this example
     //    we do 'ser_ref_levels' of uniform refinement, where 'ser_ref_levels' is
@@ -248,7 +231,6 @@ int main(int argc, char *argv[])
     {
         mesh->UniformRefinement();
     }
-    mesh->GetBoundingBox(bb_min, bb_max, max(order, 1));
 
     // 5. Define a parallel mesh by a partitioning of the serial mesh. Refine
     //    this mesh further in parallel to increase the resolution. Once the
@@ -338,10 +320,11 @@ int main(int argc, char *argv[])
     assembleTimer.Start();
     ConstantCoefficient one(1.0);
 
+    kappa = alpha * M_PI;
     FunctionCoefficient kappa_0(Conductivity);
     FunctionCoefficient v_0(Potential);
 
-    // Project initial conductivity and potential to visualize initial condition
+    // Project conductivity and potential to visualize initial condition
     ParGridFunction c_gf(fespace);
     c_gf.ProjectCoefficient(kappa_0);
 
@@ -518,23 +501,23 @@ int main(int argc, char *argv[])
                                   numColumnRB);
 
         // 17. form ROM operator
-        CAROM::Matrix invReducedA;
-        ComputeCtAB(*A, *spatialbasis, *spatialbasis, invReducedA);
-        DenseMatrix *A_mat = new DenseMatrix(invReducedA.numRows(),
-                                             invReducedA.numColumns());
-        A_mat->Set(1, invReducedA.getData());
+        CAROM::Matrix ReducedA;
+        ComputeCtAB(*A, *spatialbasis, *spatialbasis, ReducedA);
+        DenseMatrix *A_mat = new DenseMatrix(ReducedA.numRows(),
+                                             ReducedA.numColumns());
+        A_mat->Set(1, ReducedA.getData());
 
-        CAROM::Matrix invReducedM;
-        ComputeCtAB(*M, *spatialbasis, *spatialbasis, invReducedM);
-        DenseMatrix *M_mat = new DenseMatrix(invReducedM.numRows(),
-                                             invReducedM.numColumns());
-        M_mat->Set(1, invReducedM.getData());
+        CAROM::Matrix ReducedM;
+        ComputeCtAB(*M, *spatialbasis, *spatialbasis, ReducedM);
+        DenseMatrix *M_mat = new DenseMatrix(ReducedM.numRows(),
+                                             ReducedM.numColumns());
+        M_mat->Set(1, ReducedM.getData());
 
         assembleTimer.Stop();
 
         // 18. solve ROM
         solveTimer.Start();
-        // (Q^T A Q) c = \lamba (Q^T M Q) c
+        // (Q^T A Q) c = \lambda (Q^T M Q) c
         A_mat->Eigenvalues(*M_mat, ev, evect);
         solveTimer.Stop();
 
@@ -694,8 +677,8 @@ int main(int argc, char *argv[])
     VisItDataCollection visit_dc("EllipticEigenproblem", pmesh);
     if (visit)
     {
-        visit_dc.RegisterField("InitialConductivity", &c_gf);
-        visit_dc.RegisterField("InitialPotential", &p_gf);
+        visit_dc.RegisterField("Conductivity", &c_gf);
+        visit_dc.RegisterField("Potential", &p_gf);
         std::vector<ParGridFunction*> visit_evs;
         for (int i = 0; i < nev && i < eigenvalues.Size(); i++)
         {
@@ -837,11 +820,6 @@ double Conductivity(const Vector &x)
         return 1.0 + cos(kappa * x(1)) * sin(kappa * x(0));
     case 3:
     case 4:
-    case 5:
-    case 6:
-    case 7:
-    case 8:
-    case 9:
         return 1.0;
     }
     return 0.0;
@@ -849,101 +827,26 @@ double Conductivity(const Vector &x)
 
 double Potential(const Vector &x)
 {
-    int dim = x.Size();
-
-    Vector X(dim);
-    Vector center(dim); // center of gaussian for problem 4 and 5
-    center = kappa / M_PI;
-
-    Vector neg_center(center);
-    neg_center.Neg();
-
-    // amplitude of gaussians for problems 4-6
-    const double D = 100.0;
-    // width of gaussians for problems 4-6
-    const double c = 0.05;
-
-    const double min_d = 2.0 * sqrt(2.0);
-
-    X = x;
-    for (int i = 0; i < dim; i++)
-    {
-        // map alpha parameter from [-1,1] to the mesh bounding box (controls the center for problems 4 and 5)
-        center(i) = CAROM::map_to_ref_mesh(bb_min[i], bb_max[i], center(i));
-        neg_center(i) = CAROM::map_to_ref_mesh(bb_min[i], bb_max[i], neg_center(i));
-    }
-
+    double D = 100.0;
+    Vector center(x.Size());
     switch (problem)
     {
     case 1:
     case 2:
         return 0.0;
     case 3:
-        return 1.0;
+        double c = std::pow(2, -2*(ser_ref_levels + par_ref_levels));
+        for (int i = 0; i < x.Size(); i++)
+        {
+            center(i) = 0.5 * (bb_min[i] + bb_max[i]);
+        }
+        return D * std::exp(-x.DistanceSquaredTo(center) / c);
     case 4:
-        return D * std::exp(-X.DistanceSquaredTo(center) / c);
-    case 5:
-        return -D * std::exp(-X.DistanceSquaredTo(center) / c);
-    case 6:
-        return -D * (std::exp(-X.DistanceSquaredTo(center) / c) + std::exp(
-                         -X.DistanceSquaredTo(neg_center) / c));
-    case 7:
-        center = 0.25;
-        center(0) += 0.05 * cos(2.0*kappa);
-        center(1) += 0.05 * sin(2.0*kappa);
-
-        neg_center = center;
-        neg_center.Neg();
-
-        for (int i = 0; i < dim; i++)
+        for (int i = 0; i < x.Size(); i++)
         {
-            // map alpha parameter from [-1,1] to the mesh bounding box (controls the center for problems 4 and 5)
-            center(i) = CAROM::map_to_ref_mesh(bb_min[i], bb_max[i], center(i));
-            neg_center(i) = CAROM::map_to_ref_mesh(bb_min[i], bb_max[i], neg_center(i));
+            center(i) = 0.5 * (bb_min[i] + bb_max[i]);
         }
-        return -D * (std::exp(-X.DistanceSquaredTo(center) / c) + std::exp(
-                         -X.DistanceSquaredTo(neg_center) / c));
-    case 8:
-        // Similar to case 6, but t is restricted to inner 20% of the domain
-        //  in this case, the radius of the gaussian is (0.05*min_d)^2 where
-        //  min_d is the lower bound of the atom distance over time
-
-        // verify t is within inner 20% of domain (centered around mesh origin)
-        CAROM::verify_within_portion(bb_min, bb_max, center, 0.2);
-
-        return -D * (std::exp(-X.DistanceSquaredTo(center) / std::pow(c * min_d,
-                              2)) + std::exp(
-                         -X.DistanceSquaredTo(neg_center) / std::pow(c * min_d, 2)));
-    case 9:
-        // Similar to case 7, but t is restricted to inner 20% of the domain and t is defined as:
-        //  t = (1.5 + 0.5*cos(2*k), 1.5 + 0.5*sin(2*k)) where k = alpha * PI, alpha is the input parameter given with the -a option.
-        //  The radius of the gaussian follows case 8: (0.05*min_d)^2
-
-        // Sets the center to vary around +/- 1.5 (absolute location on the mesh)
-        center = 1.5;
-        center(0) += 0.5 * cos(2.0*kappa);
-        center(1) += 0.5 * sin(2.0*kappa);
-
-        // map the absolute location back to a fraction of the mesh domain
-        center(0) = CAROM::map_from_ref_mesh(bb_min[0], bb_max[0], center(0));
-        center(1) = CAROM::map_from_ref_mesh(bb_min[1], bb_max[1], center(1));
-
-        neg_center = center;
-        neg_center.Neg();
-
-        for (int i = 0; i < dim; i++)
-        {
-            // map alpha parameter from [-1,1] to the mesh bounding box (controls the center for problems 4 and 5)
-            center(i) = CAROM::map_to_ref_mesh(bb_min[i], bb_max[i], center(i));
-            neg_center(i) = CAROM::map_to_ref_mesh(bb_min[i], bb_max[i], neg_center(i));
-        }
-
-        // verify t is within inner 20% of domain (centered around mesh origin)
-        CAROM::verify_within_portion(bb_min, bb_max, center, 0.2);
-
-        return -D * (std::exp(-X.DistanceSquaredTo(center) / std::pow(c * min_d,
-                              2)) + std::exp(
-                         -X.DistanceSquaredTo(neg_center) / std::pow(c * min_d, 2)));
+        return D / x.DistanceSquaredTo(center);
     }
     return 0.0;
 }
