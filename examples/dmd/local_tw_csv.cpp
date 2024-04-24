@@ -211,48 +211,6 @@ int main(int argc, char *argv[])
         db = new CAROM::HDFDatabase();
     }
 
-    // Load window RDIM/EF file if given
-    vector<string> window_str_list;
-    vector<double> window_list;
-    bool use_rdim_windows = false;
-    csv_db.getStringVector(string(list_dir) + "/" + string(window_file) + ".csv",
-                           window_str_list, false);
-    if (window_str_list.size() > 0)
-    {
-        if (numWindows > 0)
-        {
-            CAROM_VERIFY(numWindows == window_str_list.size() - 1);
-        }
-
-        if (window_str_list[0] == "RDIM")
-        {
-            use_rdim_windows = true;
-        }
-
-        CAROM_VERIFY(window_str_list[0] == "RDIM" || window_str_list[0] == "EF");
-
-        for (int i = 1; i < window_str_list.size(); i++)
-        {
-            std::string tmp;
-            std::stringstream window_ss(window_str_list[i]);
-            getline(window_ss, tmp, ',');
-            getline(window_ss, tmp, ',');
-            window_list.push_back(stod(tmp));
-        }
-
-        numWindows = window_list.size();
-
-        if (myid == 0)
-        {
-            std::cout << "Read window file with " << window_list.size() << " windows:\n";
-            for (int i = 0; i < window_list.size(); i++)
-            {
-                std::cout << "  Window " << i << ": " << (use_rdim_windows ? "RDIM = " :
-                          "EF = ") << window_list[i] << "\n";
-            }
-        }
-    }
-
     string variable = string(var_name);
     int nelements = 0;
 
@@ -310,6 +268,48 @@ int main(int argc, char *argv[])
             {
                 cout << "Read indicator range partition with " << numWindows
                      << " windows." << endl;
+            }
+        }
+    }
+
+    // Load window RDIM/EF file if given
+    vector<string> window_str_list;
+    vector<double> window_list;
+    bool use_rdim_windows = false;
+    csv_db.getStringVector(string(list_dir) + "/" + string(window_file) + ".csv",
+                           window_str_list, false);
+    if (window_str_list.size() > 0)
+    {
+        if (numWindows > 0)
+        {
+            CAROM_VERIFY(numWindows == window_str_list.size() - 1);
+        }
+
+        if (window_str_list[0] == "RDIM")
+        {
+            use_rdim_windows = true;
+        }
+
+        CAROM_VERIFY(window_str_list[0] == "RDIM" || window_str_list[0] == "EF");
+
+        for (int i = 1; i < window_str_list.size(); i++)
+        {
+            std::string tmp;
+            std::stringstream window_ss(window_str_list[i]);
+            getline(window_ss, tmp, ',');
+            getline(window_ss, tmp, ',');
+            window_list.push_back(stod(tmp));
+        }
+
+        numWindows = window_list.size();
+
+        if (myid == 0)
+        {
+            std::cout << "Read window file with " << window_list.size() << " windows:\n";
+            for (int i = 0; i < window_list.size(); i++)
+            {
+                std::cout << "  Window " << i << ": " << (use_rdim_windows ? "RDIM = " :
+                          "EF = ") << window_list[i] << "\n";
             }
         }
     }
