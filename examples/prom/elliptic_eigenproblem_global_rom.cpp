@@ -73,9 +73,8 @@ using namespace mfem;
 double Conductivity(const Vector &x);
 double Potential(const Vector &x);
 int problem = 1;
-int ser_ref_levels = 2;
-int par_ref_levels = 1;
 double kappa;
+double gaussian_width;
 Vector bb_min, bb_max;
 
 int main(int argc, char *argv[])
@@ -88,6 +87,8 @@ int main(int argc, char *argv[])
 
     // 2. Parse command-line options.
     const char *mesh_file = "";
+    int ser_ref_levels = 2;
+    int par_ref_levels = 1;
     bool dirichlet = true;
     int order = 1;
     int nev = 5;
@@ -223,6 +224,7 @@ int main(int argc, char *argv[])
     }
     int dim = mesh->Dimension();
     mesh->GetBoundingBox(bb_min, bb_max, max(order, 1));
+    gaussian_width = mesh->GetElementVolume(0) * pow(2.0, 1.0 - ser_ref_levels - par_ref_levels);
 
     // 4. Refine the mesh in serial to increase the resolution. In this example
     //    we do 'ser_ref_levels' of uniform refinement, where 'ser_ref_levels' is
@@ -828,7 +830,6 @@ double Conductivity(const Vector &x)
 double Potential(const Vector &x)
 {
     double D = 100.0;
-    double c = (bb_max[0] - bb_min[0]) * std::pow(2, -2*(ser_ref_levels + par_ref_levels - 1));
     Vector center(x.Size());
     switch (problem)
     {
@@ -840,7 +841,7 @@ double Potential(const Vector &x)
         {
             center(i) = 0.5 * (bb_min[i] + bb_max[i]);
         }
-        return D * std::exp(-x.DistanceSquaredTo(center) / c);
+        return D * std::exp(-x.DistanceSquaredTo(center) / pow(gaussian_width, 2.0));
     case 4:
         for (int i = 0; i < x.Size(); i++)
         {
