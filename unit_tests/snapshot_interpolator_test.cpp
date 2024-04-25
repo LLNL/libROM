@@ -8,56 +8,10 @@
  *
  *****************************************************************************/
 
-// Compile with: make parametric_tw_csv
-//
-// Generate CSV or HDF database on heat conduction with either
-// heat_conduction_csv.sh or heat_conduction_hdf.sh (HDF is more efficient).
-//
-// =============================================================================
-//
-// Parametric serial DMD command (for HDF version, append -hdf):
-//   parametric_tw_csv -o hc_parametric_serial -rdim 16 -dtc 0.01 -offline
-//   parametric_tw_csv -o hc_parametric_serial -rdim 16 -dtc 0.01 -online
-//
-// Final-time prediction error (Last line in run/hc_parametric_serial/dmd_par5_prediction_error.csv):
-//   0.0012598331433506
-//
-// Parametric time windowing DMD command (for HDF version, append -hdf):
-//   parametric_tw_csv -o hc_parametric_tw -nwinsamp 25 -dtc 0.01 -offline
-//   parametric_tw_csv -o hc_parametric_tw -nwinsamp 25 -dtc 0.01 -online
-//
-// Final-time prediction error (Last line in run/hc_parametric_tw/dmd_par5_prediction_error.csv):
-//   0.0006507358659606
-//
-// =============================================================================
-//
-// Description: Parametric time windowing DMD on general CSV datasets.
-//
-// User specify file locations and names by -list LIST_DIR -train-set TRAIN_LIST -test-set TEST_LIST -data DATA_DIR -var VAR_NAME -o OUT_DIR
-//
-// File structure:
-// 1. LIST_DIR/TRAIN_LIST.csv             -- each row specifies one training DATASET
-// 2. LIST_DIR/TEST_LIST.csv              -- each row specifies one testing DATASET
-// 3. LIST_DIR/DATASET.csv                -- each row specifies the suffix of one STATE in DATASET
-// 4. DATA_DIR/dim.csv                    -- specifies the dimension of VAR_NAME
-// 5. DATA_DIR/DATASET/tval.csv           -- specifies the time instances
-// 6. DATA_DIR/DATASET/STATE/VAR_NAME.csv -- each row specifies one value of VAR_NAME of STATE
-// 7. DATA_DIR/DATASET/TEMPORAL_IDX.csv   -- (optional) specifies the first and last temporal index in DATASET
-// 8. DATA_DIR/SPATIAL_IDX.csv            -- (optional) each row specifies one spatial index of VAR_NAME
-// 9. run/OUT_DIR/indicator_val.csv       -- (optional) each row specifies one indicator endpoint value
-
-#include "mfem.hpp"
-#include "algo/DMD.h"
-#include "algo/AdaptiveDMD.h"
-#include "algo/NonuniformDMD.h"
 #include "algo/manifold_interp/SnapshotInterpolator.h"
 #include "linalg/Vector.h"
-#include "linalg/Matrix.h"
-#include "utils/HDFDatabase.h"
-#include "utils/CSVDatabase.h"
 #include <cmath>
 #include <iostream>
-#include <limits>
 
 #ifndef _WIN32
 #include <sys/stat.h>  // mkdir
@@ -161,5 +115,4 @@ int main(int argc, char *argv[])
                 reference_snapshots[i]->item(0) - out_snapshots[i]->item(0) << "," 
                 << reference_snapshots[i]->item(1) - out_snapshots[i]->item(1) << ") " <<  std::endl;
     }
-
 }

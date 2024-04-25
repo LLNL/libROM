@@ -228,7 +228,8 @@ if (ENABLE_EXAMPLES)
     weak_scaling
     random_test
     smoke_static
-    load_samples)
+    load_samples
+    snapshot_interpolator_test)
     
   if (USE_MFEM)
     set(regression_test_names
@@ -281,8 +282,7 @@ if(GTEST_FOUND)
     IncrementalSVDBrand
     GreedyCustomSampler
     NNLS
-    basis_conversion
-    SnapshotInterpolator)
+    basis_conversion)
   foreach(stem IN LISTS unit_test_stems)
     add_executable(test_${stem} unit_tests/test_${stem}.cpp)
     target_link_libraries(test_${stem} PRIVATE ROM
