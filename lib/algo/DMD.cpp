@@ -15,7 +15,6 @@
 #include "linalg/Matrix.h"
 #include "linalg/Vector.h"
 #include "linalg/scalapack_wrapper.h"
-#include "manifold_interp/SnapshotInterpolator.h"
 #include "utils/Utilities.h"
 #include "utils/CSVDatabase.h"
 #include "utils/HDFDatabase.h"
@@ -210,41 +209,6 @@ void DMD::train(double energy_fraction, const Matrix* W0, double linearity_tol)
     constructDMD(f_snapshots, d_rank, d_num_procs, W0, linearity_tol);
 
     delete f_snapshots;
-}
-
-void DMD::interpolateToNSnapshots(int n)
-{
-    SnapshotInterpolator* interp = new SnapshotInterpolator();
-    std::vector<Vector*> new_snapshots;
-    std::vector<Vector*> new_times;
-    CSVDatabase* csv_db(new CSVDatabase);
-    int dim = d_snapshots[0]->dim();
-
-/*
-    std::string debugPath = "/usr/workspace/ptranq/dmdStuff";
-    if(!d_rank)
-    {
-        std::cout << "Interpolating DMD snapshots with dimension " << dim << std::endl;
-        for(int i = 0; i < d_snapshots.size(); ++i)
-        {
-            csv_db->putDoubleArray(debugPath+"/snapshot_" + std::to_string(i) + "pre_interp.csv",d_snapshots[i]->getData(),dim);
-        }
-    }
-*/
-    new_snapshots = interp->interpolate(d_sampled_times,d_snapshots,n,&new_times);
-    d_snapshots = new_snapshots;
-    d_sampled_times = new_times;
-    d_dt = d_sampled_times[2]->getData()[0]-d_sampled_times[1]->getData()[0];
-/*
-    if(!d_rank)
-    {
-        for(int i = 0; i < d_snapshots.size(); ++i)
-        {
-            csv_db->putDoubleArray(debugPath+"/snapshot_" + std::to_string(i) + "post_interp.csv",d_snapshots[i]->getData(),dim);
-        }
-    }
-*/   
-
 }
 
 void DMD::train(int k, const Matrix* W0, double linearity_tol)

@@ -504,9 +504,8 @@ int main(int argc, char *argv[])
                         }
 
                         int ns = dmd[idx_dataset][curr_window]->getNumSamples();
-                        //overlap_count.push_back(windowOverlapSamples +
-                        //                        max(0, rdim+1 - ns));
-                        overlap_count.push_back(0);
+                        overlap_count.push_back(windowOverlapSamples +
+                                                max(0, rdim+1 - ns));
 
                         curr_window += 1;
                         dmd[idx_dataset][curr_window]->takeSample(sample, tval);
@@ -551,12 +550,6 @@ int main(int argc, char *argv[])
             {
                 if (rdim != -1)
                 {
-                    if(!myid)
-                    {
-                        cout << "DMD model #" << window << "currently has " << dmd[idx_dataset][window]->getNumSamples() << " samples" << std::endl;
-                        cout << "Interpolating DMD model #" << window << " to contain " << rdim+1 << " snapshots" << endl;
-                    }
-                    dmd[idx_dataset][window]->interpolateToNSnapshots(rdim+1);
                     if (myid == 0)
                     {
                         cout << "Creating DMD model #" << window << " with rdim: " << rdim << endl;
