@@ -8,8 +8,12 @@
  *
  *****************************************************************************/
 
-// Description: Implementation of the VectorInterpolator algorithm.
-
+/**
+ * Implements PCHIP algorithm.  Based on "A METHOD FOR CONSTRUCTING LOCAL MONOTONE
+ * PIECEWISE CUBIC INTERPOLANTS", Fritchs and Butland (1984).  as well as "MONOTONE 
+ * PIECEWISE CUBIC INTERPOLATION," Fritsch and Carlson (1980)
+ *
+ */
 #include "SnapshotInterpolator.h"
 
 #include <limits.h>
