@@ -533,26 +533,33 @@ int main(int argc, char *argv[])
 
         for (int window = 0; window < numWindows; ++window)
         {
-            if (rdim != -1 || use_rdim_windows)
+            if (window_list.size() > 0)
             {
-                int window_rdim = use_rdim_windows ? window_list[window] : rdim;
+                if (use_rdim_windows) {
+                    rdim = window_list[window];
+                } else {
+                    ef = window_list[window];
+                }
+            }
+
+            if (rdim != -1)
+            {
                 if (myid == 0)
                 {
-                    cout << "Creating DMD model #" << window << " with rdim: " << window_rdim <<
+                    cout << "Creating DMD model #" << window << " with rdim: " << rdim <<
                          endl;
                 }
-                CAROM_VERIFY(window_rdim <= windowNumSamples);
-                dmd[window]->train(window_rdim);
+                CAROM_VERIFY(rdim <= windowNumSamples);
+                dmd[window]->train(rdim);
             }
-            else if (ef != -1 || window_list.size() > 0)
+            else if (ef != -1)
             {
-                double window_ef = window_list.size() > 0 ? window_list[window] : ef;
                 if (myid == 0)
                 {
                     cout << "Creating DMD model #" << window << " with energy fraction: "
-                         << window_ef << endl;
+                         << ef << endl;
                 }
-                dmd[window]->train(window_ef);
+                dmd[window]->train(ef);
             }
             dmd[window]->save(outputPath + "/window" + to_string(window));
             if (myid == 0)
