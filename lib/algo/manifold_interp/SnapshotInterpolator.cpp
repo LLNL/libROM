@@ -33,9 +33,10 @@ SnapshotInterpolator::SnapshotInterpolator()
 }
 
 
-std::vector<Vector*> SnapshotInterpolator::interpolate(std::vector<Vector*> snapshot_ts, 
-                                     std::vector<Vector*> snapshots,
-                                     std::vector<Vector*> output_ts)
+std::vector<Vector*> SnapshotInterpolator::interpolate(std::vector<Vector*>
+        snapshot_ts,
+        std::vector<Vector*> snapshots,
+        std::vector<Vector*> output_ts)
 {
     CAROM_VERIFY(snapshot_ts.size() == snapshots.size());
     CAROM_VERIFY(snapshot_ts.size() > 0);
@@ -49,7 +50,7 @@ std::vector<Vector*> SnapshotInterpolator::interpolate(std::vector<Vector*> snap
     for(int i = 0; i < n_out; ++i)
     {
         Vector* temp_snapshot =new Vector(snapshots[0]->dim(),
-                            snapshots[0]->distributed()); 
+                                          snapshots[0]->distributed());
         output_snapshots.push_back(temp_snapshot);
     }
 
@@ -73,7 +74,7 @@ std::vector<Vector*> SnapshotInterpolator::interpolate(std::vector<Vector*> snap
         if(sign(d_temp)!=sign(delta[0]))
         {
             d_temp = 0;
-        } 
+        }
         else if (sign(delta[0]) != sign(delta[1]) && abs(d_temp) > abs(3*delta[0]))
         {
             d_temp = 3*delta[0];
@@ -87,20 +88,23 @@ std::vector<Vector*> SnapshotInterpolator::interpolate(std::vector<Vector*> snap
             while(output_ts[counter]->getData()[0] <= t_in[j+1])
             {
                 t = output_ts[counter]->getData()[0];
-                output_snapshots[counter]->getData()[i] = y_in[j]*computeH1(t,t_in[j],t_in[j+1]) + 
-                                                        y_in[j+1]*computeH2(t,t_in[j],t_in[j+1]) + 
-                                                        d[j]*computeH3(t,t_in[j],t_in[j+1]) + 
-                                                        d[j+1]*computeH4(t,t_in[j],t_in[j+1]);
+                output_snapshots[counter]->getData()[i] = y_in[j]*computeH1(t,t_in[j],
+                        t_in[j+1]) +
+                        y_in[j+1]*computeH2(t,t_in[j],t_in[j+1]) +
+                        d[j]*computeH3(t,t_in[j],t_in[j+1]) +
+                        d[j+1]*computeH4(t,t_in[j],t_in[j+1]);
                 counter += 1;
             }
         }
 
-        d_temp = ((2*h[n_snap-2]+h[n_snap-3])*delta[n_snap-2] - h[n_snap-2]*delta[n_snap-3])/(h[n_snap-2]+h[n_snap-3]);
+        d_temp = ((2*h[n_snap-2]+h[n_snap-3])*delta[n_snap-2] - h[n_snap-2]*delta[n_snap
+                  -3])/(h[n_snap-2]+h[n_snap-3]);
         if(sign(d_temp) != sign(delta[n_snap-2]))
         {
             d_temp = 0;
         }
-        else if (sign(delta[n_snap-2]) != sign(delta[n_snap-3]) && abs(d_temp) > abs(3*delta[n_snap-2]))
+        else if (sign(delta[n_snap-2]) != sign(delta[n_snap-3])
+                 && abs(d_temp) > abs(3*delta[n_snap-2]))
         {
             d_temp = 3*delta[n_snap-2];
         }
@@ -108,20 +112,22 @@ std::vector<Vector*> SnapshotInterpolator::interpolate(std::vector<Vector*> snap
         while(counter < n_out && output_ts[counter]->getData()[0] <= t_in[n_snap-1])
         {
             t = output_ts[counter]->getData()[0];
-            output_snapshots[counter]->getData()[i] = y_in[n_snap-2]*computeH1(t,t_in[n_snap-2],t_in[n_snap-1]) + 
-                                                        y_in[n_snap-1]*computeH2(t,t_in[n_snap-2],t_in[n_snap-1]) + 
-                                                        d[n_snap-2]*computeH3(t,t_in[n_snap-2],t_in[n_snap-1]) + 
-                                                        d[n_snap-1]*computeH4(t,t_in[n_snap-2],t_in[n_snap-1]);
+            output_snapshots[counter]->getData()[i] = y_in[n_snap-2]*computeH1(t,
+                    t_in[n_snap-2],t_in[n_snap-1]) +
+                    y_in[n_snap-1]*computeH2(t,t_in[n_snap-2],t_in[n_snap-1]) +
+                    d[n_snap-2]*computeH3(t,t_in[n_snap-2],t_in[n_snap-1]) +
+                    d[n_snap-1]*computeH4(t,t_in[n_snap-2],t_in[n_snap-1]);
             counter += 1;
         }
     }
     return output_snapshots;
 }
 
-std::vector<Vector*> SnapshotInterpolator::interpolate(std::vector<Vector*> snapshot_ts, 
-                                     std::vector<Vector*> snapshots,
-                                     int n_out,
-                                     std::vector<Vector*>* output_ts)
+std::vector<Vector*> SnapshotInterpolator::interpolate(std::vector<Vector*>
+        snapshot_ts,
+        std::vector<Vector*> snapshots,
+        int n_out,
+        std::vector<Vector*>* output_ts)
 {
     CAROM_VERIFY(snapshot_ts.size() == snapshots.size());
     CAROM_VERIFY(snapshot_ts.size() > 0);
@@ -137,18 +143,20 @@ std::vector<Vector*> SnapshotInterpolator::interpolate(std::vector<Vector*> snap
     double dt = (t_max-t_min)/(n_out-1);
     output_ts->clear();
 
-    
+
     for(int i = 0; i < n_out; ++i)
     {
         Vector* temp_t = new Vector(1, false);
         temp_t->getData()[0] = t_min + i*dt;
         output_ts->push_back(temp_t);
     }
-    std::cout << "Interpolating to " << n_out << " snapshots, from " << n_snap << std::endl;
+    std::cout << "Interpolating to " << n_out << " snapshots, from " << n_snap <<
+              std::endl;
     return interpolate(snapshot_ts,snapshots,*output_ts);
 }
 
-double SnapshotInterpolator::computeDerivative(double S1, double S2, double h1, double h2)
+double SnapshotInterpolator::computeDerivative(double S1, double S2, double h1,
+        double h2)
 {
     double d = 0.0;
     double alpha = (h1 + 2*h2)/(3*(h1+h2));
