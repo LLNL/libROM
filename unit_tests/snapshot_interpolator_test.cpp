@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
     //input times
     vector<double> t{ 0, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15};
     //Test function from original PCHIP paper
-    vector<double> y{10, 10, 10, 10, 10, 10, 10.5, 15, 50, 60, 85}; 
+    vector<double> y{10, 10, 10, 10, 10, 10, 10.5, 15, 50, 60, 85};
     //sin(x)
     vector<double> y2{0, 0.909297426825682, 0.141120008059867, -0.958924274663138, -0.279415498198926,
                       0.989358246623382, 0.412118485241757, -0.999990206550703, -0.536572918000435,
@@ -38,11 +38,11 @@ int main(int argc, char *argv[])
 
     //query points
     vector<double> tq{0, 0.6000, 1.2000, 1.8000, 2.4000, 3.0000, 3.6000, 4.2000, 4.8000, 5.4000, 6.0000, 6.6000,
-                      7.2000, 7.8000, 8.4000, 9.0000, 9.6000, 10.2000, 10.8000, 11.4000, 12.0000, 12.6000, 
+                      7.2000, 7.8000, 8.4000, 9.0000, 9.6000, 10.2000, 10.8000, 11.4000, 12.0000, 12.6000,
                       13.2000, 13.8000, 14.4000, 15.000};
     //pchip reference solution for original test function.
-    vector<double> yq1{10.000000000000000, 10.000000000000000, 10.000000000000002, 10.000000000000004, 
-                       10.000000000000000, 10.000000000000000, 10.000000000000002, 10.000000000000000, 
+    vector<double> yq1{10.000000000000000, 10.000000000000000, 10.000000000000002, 10.000000000000004,
+                       10.000000000000000, 10.000000000000000, 10.000000000000002, 10.000000000000000,
                        10.000000000000004, 10.000000000000000, 10.000000000000000, 10.000000000000002,
                        10.000000000000000, 10.000000000000004, 10.102641509433962, 10.500000000000000,
                        11.106230625292378, 12.213163262123807, 14.128630750038976, 27.078413223140512,
@@ -83,25 +83,27 @@ int main(int argc, char *argv[])
     }
 
     SnapshotInterpolator* interp = new SnapshotInterpolator();
-    
+
     std::cout << "Beginning base interpolation function" << std::endl;
     out_snapshots = interp->interpolate(times,snapshots,out_times);
     std::cout << "Finished interpolation " << std::endl;
-/*
-   for(int i = 0; i < out_snapshots.size(); ++i)
-    {
-        std::cout << "Time " << i << " is " << out_times[i]->item(0) << std::endl;
-        std::cout << "Reference at " << i << " is (" << reference_snapshots[i]->item(0) << 
-                     "," << reference_snapshots[i]->item(1) << ")" << std::endl;
-        std::cout << "Snapshot interpolation at " << i << " is (" << out_snapshots[i]->item(0) << 
-                     "," << out_snapshots[i]->item(1) << ")" << std::endl;
-    }
- */   
+    /*
+       for(int i = 0; i < out_snapshots.size(); ++i)
+        {
+            std::cout << "Time " << i << " is " << out_times[i]->item(0) << std::endl;
+            std::cout << "Reference at " << i << " is (" << reference_snapshots[i]->item(0) <<
+                         "," << reference_snapshots[i]->item(1) << ")" << std::endl;
+            std::cout << "Snapshot interpolation at " << i << " is (" << out_snapshots[i]->item(0) <<
+                         "," << out_snapshots[i]->item(1) << ")" << std::endl;
+        }
+     */
     for(int i = 0; i < out_snapshots.size(); ++i)
     {
-        std::cout << "Error at time[" << i << "] = " << out_times[i]->item(0) << " is (" << 
-                reference_snapshots[i]->item(0) - out_snapshots[i]->item(0) << "," 
-                << reference_snapshots[i]->item(1) - out_snapshots[i]->item(1) << ") " <<  std::endl;
+        std::cout << "Error at time[" << i << "] = " << out_times[i]->item(
+                      0) << " is (" <<
+                  reference_snapshots[i]->item(0) - out_snapshots[i]->item(0) << ","
+                  << reference_snapshots[i]->item(1) - out_snapshots[i]->item(
+                      1) << ") " <<  std::endl;
     }
 
 
@@ -111,8 +113,10 @@ int main(int argc, char *argv[])
 
     for(int i = 0; i < out_snapshots.size(); ++i)
     {
-        std::cout << "Error at time[" << i << "] = " << out_times[i]->item(0) << " is (" << 
-                reference_snapshots[i]->item(0) - out_snapshots[i]->item(0) << "," 
-                << reference_snapshots[i]->item(1) - out_snapshots[i]->item(1) << ") " <<  std::endl;
+        std::cout << "Error at time[" << i << "] = " << out_times[i]->item(
+                      0) << " is (" <<
+                  reference_snapshots[i]->item(0) - out_snapshots[i]->item(0) << ","
+                  << reference_snapshots[i]->item(1) - out_snapshots[i]->item(
+                      1) << ") " <<  std::endl;
     }
 }

@@ -12,7 +12,7 @@ class Vector;
 
 /**
  * Implements PCHIP algorithm.  Based on "A METHOD FOR CONSTRUCTING LOCAL MONOTONE
- * PIECEWISE CUBIC INTERPOLANTS", Fritchs and Butland (1984).  as well as "MONOTONE 
+ * PIECEWISE CUBIC INTERPOLANTS", Fritchs and Butland (1984).  as well as "MONOTONE
  * PIECEWISE CUBIC INTERPOLATION," Fritsch and Carlson (1980)
  *
  */
@@ -22,18 +22,18 @@ public:
     SnapshotInterpolator();
     ~SnapshotInterpolator();
 
-    std::vector<Vector*> interpolate(std::vector<Vector*> snapshot_ts, 
+    std::vector<Vector*> interpolate(std::vector<Vector*> snapshot_ts,
                                      std::vector<Vector*> snapshots,
                                      std::vector<Vector*> output_ts);
 
-    std::vector<Vector*> interpolate(std::vector<Vector*> snapshot_ts, 
+    std::vector<Vector*> interpolate(std::vector<Vector*> snapshot_ts,
                                      std::vector<Vector*> snapshots,
                                      int n_out,
                                      std::vector<Vector*>* output_ts);
 
     std::vector<Vector*> interpolate();
 
-    
+
 
 private:
 
