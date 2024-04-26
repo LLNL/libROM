@@ -41,10 +41,10 @@ private:
     SparseMatrix &Aflux;
     DenseTensor Me_inv;
 
-    mutable mfem::Vector state;
+    mutable Vector state;
     mutable DenseMatrix f;
     mutable DenseTensor flux;
-    mutable mfem::Vector z;
+    mutable Vector z;
 
     void GetFlux(const DenseMatrix &state, DenseTensor &flux) const;
 
