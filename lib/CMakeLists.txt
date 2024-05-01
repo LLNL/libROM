@@ -156,7 +156,7 @@ if (NOT ${CMAKE_INSTALL_PREFIX} STREQUAL ${CMAKE_BINARY_DIR})
 endif()
 
 # Install libROM headers
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CAROM_config.h DESTINATION include)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CAROM_config.h ${CMAKE_CURRENT_SOURCE_DIR}/FCMangle.h DESTINATION include)
 foreach(file IN LISTS HEADERS)
   # get the directory component so the include directory structure is preserved
   get_filename_component(dir ${file} DIRECTORY)
