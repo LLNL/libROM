@@ -37,6 +37,7 @@ option(USE_MFEM "Build libROM with MFEM" OFF)
 option(MFEM_USE_GSLIB "Build libROM with MFEM using GSLIB" OFF)
 option(BUILD_STATIC "Build libROM as a static library" OFF)
 option(ENABLE_EXAMPLES "Build examples and regression tests" ON)
+option(ENABLE_DOCS "Build docs using Doxygen" OFF)
 
 ## Set a bunch of variables to generate a configure header
 # Enable assertion checking if debug symbols generated
@@ -107,8 +108,6 @@ find_package(LAPACK 3.4.0 REQUIRED)
 find_package(MPI 1.2 REQUIRED)
 
 find_package(ZLIB 1.2.3 REQUIRED)
-
-find_package(Doxygen 1.8.5)
 
 find_package(GTest 1.6.0)
 
@@ -298,7 +297,9 @@ endif(GTEST_FOUND)
 # NOTE(goxberry@gmail.com, oxberry1@llnl.gov): This code snippet
 # builds the Doxygen documentation, but outputs said documentation to
 # ${CMAKE_CURRENT_SOURCE_DIR}/docs)...
-if(DOXYGEN_FOUND)
+if(${ENABLE_DOCS})
+  find_package(Doxygen 1.8.5 REQUIRED)
+  
   set(doxyfile ${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile)
 
   add_custom_target(
@@ -317,4 +318,4 @@ if(DOXYGEN_FOUND)
     ${CMAKE_CURRENT_BINARY_DIR}/docs/html/rom.tag)
   add_dependencies(doxygen_tagfile documentation)
 
-endif(DOXYGEN_FOUND)
+endif()
