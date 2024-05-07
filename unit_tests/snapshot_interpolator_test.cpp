@@ -10,6 +10,7 @@
 
 #include "algo/manifold_interp/SnapshotInterpolator.h"
 #include "linalg/Vector.h"
+#include <cfloat>
 #include <cmath>
 #include <iostream>
 
@@ -27,6 +28,7 @@ int main(int argc, char *argv[])
 {
     int n_out = 25;
     int n_snap = 11;
+    bool SUCCESS = true;
     //input times
     vector<double> t{ 0, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15};
     //Test function from original PCHIP paper
@@ -84,39 +86,46 @@ int main(int argc, char *argv[])
 
     SnapshotInterpolator* interp = new SnapshotInterpolator();
 
-    std::cout << "Beginning base interpolation function" << std::endl;
-    out_snapshots = interp->interpolate(times,snapshots,out_times);
-    std::cout << "Finished interpolation " << std::endl;
-    /*
-       for(int i = 0; i < out_snapshots.size(); ++i)
+    
+    interp->interpolate(times,snapshots,out_times,out_snapshots);
+    
+    for(int i = 0; i < out_snapshots.size(); ++i)
+    {
+        if( abs(reference_snapshots[i]->item(0)-out_snapshots[i]->item(0)) > 10.*FLT_EPSILON)
         {
-            std::cout << "Time " << i << " is " << out_times[i]->item(0) << std::endl;
-            std::cout << "Reference at " << i << " is (" << reference_snapshots[i]->item(0) <<
-                         "," << reference_snapshots[i]->item(1) << ")" << std::endl;
-            std::cout << "Snapshot interpolation at " << i << " is (" << out_snapshots[i]->item(0) <<
-                         "," << out_snapshots[i]->item(1) << ")" << std::endl;
+            SUCCESS = false;
+            std::cout << "Test failed." << std::endl;
+            return SUCCESS;
         }
-     */
-    for(int i = 0; i < out_snapshots.size(); ++i)
-    {
-        std::cout << "Error at time[" << i << "] = " << out_times[i]->item(
-                      0) << " is (" <<
-                  reference_snapshots[i]->item(0) - out_snapshots[i]->item(0) << ","
-                  << reference_snapshots[i]->item(1) - out_snapshots[i]->item(
-                      1) << ") " <<  std::endl;
+        else if(abs(reference_snapshots[i]->item(1)-out_snapshots[i]->item(1)) > 10.*FLT_EPSILON)
+        {
+            SUCCESS = false;
+            std::cout << "Test failed." << std::endl;
+            return SUCCESS;
+        }
     }
 
 
-    std::cout << "Beginning variant interpolation function" << std::endl;
-    out_snapshots = interp->interpolate(times,snapshots,26,&out_times);
-    std::cout << "Finished interpolation " << std::endl;
 
+    out_snapshots.clear(); out_times.clear();
+
+    interp->interpolate(times,snapshots,26,out_times,out_snapshots);
+    
     for(int i = 0; i < out_snapshots.size(); ++i)
     {
-        std::cout << "Error at time[" << i << "] = " << out_times[i]->item(
-                      0) << " is (" <<
-                  reference_snapshots[i]->item(0) - out_snapshots[i]->item(0) << ","
-                  << reference_snapshots[i]->item(1) - out_snapshots[i]->item(
-                      1) << ") " <<  std::endl;
+        if( abs(reference_snapshots[i]->item(0)-out_snapshots[i]->item(0)) > 10.*FLT_EPSILON)
+        {
+            SUCCESS = false;
+            std::cout << "Test failed." << std::endl;
+            return SUCCESS;
+        }
+        else if(abs(reference_snapshots[i]->item(1)-out_snapshots[i]->item(1)) > 10.*FLT_EPSILON)
+        {
+            SUCCESS = false;
+            std::cout << "Test failed." << std::endl;
+            return SUCCESS;
+        }
     }
+    std::cout << "Test Succeeded" << std::endl;
+    return SUCCESS;
 }

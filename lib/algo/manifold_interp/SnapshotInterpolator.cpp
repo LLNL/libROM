@@ -10,12 +10,13 @@
 
 /**
  * Implements PCHIP algorithm.  Based on "A METHOD FOR CONSTRUCTING LOCAL MONOTONE
- * PIECEWISE CUBIC INTERPOLANTS", Fritchs and Butland (1984).  as well as "MONOTONE
+ * PIECEWISE CUBIC INTERPOLANTS", Fritsch and Butland (1984).  as well as "MONOTONE
  * PIECEWISE CUBIC INTERPOLATION," Fritsch and Carlson (1980)
  *
  */
 #include "SnapshotInterpolator.h"
 
+#include <cfloat>
 #include <limits.h>
 #include <cmath>
 #include "linalg/Vector.h"
@@ -31,29 +32,23 @@ using namespace std;
 
 namespace CAROM {
 
-SnapshotInterpolator::SnapshotInterpolator()
-{
-
-}
-
-
-std::vector<Vector*> SnapshotInterpolator::interpolate(std::vector<Vector*>
-        snapshot_ts,
-        std::vector<Vector*> snapshots,
-        std::vector<Vector*> output_ts)
+void SnapshotInterpolator::interpolate(std::vector<Vector*>& snapshot_ts,
+        std::vector<Vector*>& snapshots,
+        std::vector<Vector*>& output_ts,
+        std::vector<Vector*>& output_snapshots)
 {
     CAROM_VERIFY(snapshot_ts.size() == snapshots.size());
     CAROM_VERIFY(snapshot_ts.size() > 0);
     CAROM_VERIFY(output_ts.size() > 0);
+    CAROM_VERIFY(output_snapshots.size() == 0);
 
     int n_out = output_ts.size();
     int n_snap = snapshots.size();
     int n_dim = snapshots[0]->dim();
 
-    std::vector<Vector *> output_snapshots;
     for(int i = 0; i < n_out; ++i)
     {
-        Vector* temp_snapshot =new Vector(snapshots[0]->dim(),
+        Vector* temp_snapshot = new Vector(snapshots[0]->dim(),
                                           snapshots[0]->distributed());
         output_snapshots.push_back(temp_snapshot);
     }
@@ -113,7 +108,8 @@ std::vector<Vector*> SnapshotInterpolator::interpolate(std::vector<Vector*>
             d_temp = 3*delta[n_snap-2];
         }
         d.push_back(d_temp);
-        while(counter < n_out && output_ts[counter]->getData()[0] <= t_in[n_snap-1])
+        
+        while(counter < n_out && output_ts[counter]->getData()[0] - t_in[n_snap-1] <= FLT_EPSILON )
         {
             t = output_ts[counter]->getData()[0];
             output_snapshots[counter]->getData()[i] = y_in[n_snap-2]*computeH1(t,
@@ -124,18 +120,20 @@ std::vector<Vector*> SnapshotInterpolator::interpolate(std::vector<Vector*>
             counter += 1;
         }
     }
-    return output_snapshots;
 }
 
-std::vector<Vector*> SnapshotInterpolator::interpolate(std::vector<Vector*>
+void SnapshotInterpolator::interpolate(std::vector<Vector*>&
         snapshot_ts,
-        std::vector<Vector*> snapshots,
+        std::vector<Vector*>& snapshots,
         int n_out,
-        std::vector<Vector*>* output_ts)
+        std::vector<Vector*>& output_ts,
+        std::vector<Vector*>& output_snapshots)
 {
     CAROM_VERIFY(snapshot_ts.size() == snapshots.size());
     CAROM_VERIFY(snapshot_ts.size() > 0);
     CAROM_VERIFY(n_out > 0);
+    CAROM_VERIFY(output_ts.size() == 0 && output_snapshots.size() == 0);
+
 
     int n_snap = snapshots.size();
     int n_dim = snapshots[0]->dim();
@@ -145,21 +143,20 @@ std::vector<Vector*> SnapshotInterpolator::interpolate(std::vector<Vector*>
     double t_min = snapshot_ts[0]->getData()[0];
     double t_max = snapshot_ts[n_snap-1]->getData()[0];
     double dt = (t_max-t_min)/(n_out-1);
-    output_ts->clear();
-
+    output_ts.clear();
 
     for(int i = 0; i < n_out; ++i)
     {
         Vector* temp_t = new Vector(1, false);
         temp_t->getData()[0] = t_min + i*dt;
-        output_ts->push_back(temp_t);
+        output_ts.push_back(temp_t);
     }
     std::cout << "Interpolating to " << n_out << " snapshots, from " << n_snap <<
               std::endl;
-    return interpolate(snapshot_ts,snapshots,*output_ts);
+    interpolate(snapshot_ts,snapshots,output_ts, output_snapshots);
 }
 
-double SnapshotInterpolator::computeDerivative(double S1, double S2, double h1,
+const double SnapshotInterpolator::computeDerivative(double S1, double S2, double h1,
         double h2)
 {
     double d = 0.0;
@@ -175,41 +172,41 @@ double SnapshotInterpolator::computeDerivative(double S1, double S2, double h1,
     return d;
 }
 
-double SnapshotInterpolator::computeH1(double x, double xl, double xr)
+const double SnapshotInterpolator::computeH1(double x, double xl, double xr)
 {
     double h = xr - xl;
     return computePhi((xr-x)/h);
 }
 
-double SnapshotInterpolator::computeH2(double x, double xl, double xr)
+const double SnapshotInterpolator::computeH2(double x, double xl, double xr)
 {
     double h = xr - xl;
     return computePhi((x-xl)/h);
 }
 
-double SnapshotInterpolator::computeH3(double x, double xl, double xr)
+const double SnapshotInterpolator::computeH3(double x, double xl, double xr)
 {
     double h = xr-xl;
     return -h*computePsi((xr-x)/h);
 }
 
-double SnapshotInterpolator::computeH4(double x, double xl, double xr)
+const double SnapshotInterpolator::computeH4(double x, double xl, double xr)
 {
     double h = xr-xl;
     return h*computePsi((x-xl)/h);
 }
 
-double SnapshotInterpolator::computePhi(double t)
+const double SnapshotInterpolator::computePhi(double t)
 {
     return 3.*pow(t,2.) - 2*pow(t,3.);
 }
 
-double SnapshotInterpolator::computePsi(double t)
+const double SnapshotInterpolator::computePsi(double t)
 {
     return pow(t,3.) - pow(t,2.);
 }
 
-int SnapshotInterpolator::sign(double a)
+const int SnapshotInterpolator::sign(double a)
 {
     double TOL = 1e-15;
     if(abs(a) < TOL)return 0;

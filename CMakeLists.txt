@@ -155,6 +155,8 @@ if (ENABLE_EXAMPLES)
       local_dw_csv
       parametric_tw_csv
       parametric_dw_csv
+      parametric_dw_interpolation_csv
+      dg_advection_snapshot_interpolation
       parametric_dmdc_heat_conduction)
     set(example_directories
       prom
@@ -169,6 +171,8 @@ if (ENABLE_EXAMPLES)
       prom
       prom
       prom
+      dmd
+      dmd
       dmd
       dmd
       dmd
