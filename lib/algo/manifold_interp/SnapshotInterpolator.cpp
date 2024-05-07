@@ -33,9 +33,9 @@ using namespace std;
 namespace CAROM {
 
 void SnapshotInterpolator::interpolate(std::vector<Vector*>& snapshot_ts,
-        std::vector<Vector*>& snapshots,
-        std::vector<Vector*>& output_ts,
-        std::vector<Vector*>& output_snapshots)
+                                       std::vector<Vector*>& snapshots,
+                                       std::vector<Vector*>& output_ts,
+                                       std::vector<Vector*>& output_snapshots)
 {
     CAROM_VERIFY(snapshot_ts.size() == snapshots.size());
     CAROM_VERIFY(snapshot_ts.size() > 0);
@@ -49,7 +49,7 @@ void SnapshotInterpolator::interpolate(std::vector<Vector*>& snapshot_ts,
     for(int i = 0; i < n_out; ++i)
     {
         Vector* temp_snapshot = new Vector(snapshots[0]->dim(),
-                                          snapshots[0]->distributed());
+                                           snapshots[0]->distributed());
         output_snapshots.push_back(temp_snapshot);
     }
 
@@ -108,8 +108,9 @@ void SnapshotInterpolator::interpolate(std::vector<Vector*>& snapshot_ts,
             d_temp = 3*delta[n_snap-2];
         }
         d.push_back(d_temp);
-        
-        while(counter < n_out && output_ts[counter]->getData()[0] - t_in[n_snap-1] <= FLT_EPSILON )
+
+        while(counter < n_out
+                && output_ts[counter]->getData()[0] - t_in[n_snap-1] <= FLT_EPSILON )
         {
             t = output_ts[counter]->getData()[0];
             output_snapshots[counter]->getData()[i] = y_in[n_snap-2]*computeH1(t,
@@ -123,11 +124,11 @@ void SnapshotInterpolator::interpolate(std::vector<Vector*>& snapshot_ts,
 }
 
 void SnapshotInterpolator::interpolate(std::vector<Vector*>&
-        snapshot_ts,
-        std::vector<Vector*>& snapshots,
-        int n_out,
-        std::vector<Vector*>& output_ts,
-        std::vector<Vector*>& output_snapshots)
+                                       snapshot_ts,
+                                       std::vector<Vector*>& snapshots,
+                                       int n_out,
+                                       std::vector<Vector*>& output_ts,
+                                       std::vector<Vector*>& output_snapshots)
 {
     CAROM_VERIFY(snapshot_ts.size() == snapshots.size());
     CAROM_VERIFY(snapshot_ts.size() > 0);
@@ -156,7 +157,8 @@ void SnapshotInterpolator::interpolate(std::vector<Vector*>&
     interpolate(snapshot_ts,snapshots,output_ts, output_snapshots);
 }
 
-const double SnapshotInterpolator::computeDerivative(double S1, double S2, double h1,
+const double SnapshotInterpolator::computeDerivative(double S1, double S2,
+        double h1,
         double h2)
 {
     double d = 0.0;

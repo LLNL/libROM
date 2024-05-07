@@ -86,18 +86,20 @@ int main(int argc, char *argv[])
 
     SnapshotInterpolator* interp = new SnapshotInterpolator();
 
-    
+
     interp->interpolate(times,snapshots,out_times,out_snapshots);
-    
+
     for(int i = 0; i < out_snapshots.size(); ++i)
     {
-        if( abs(reference_snapshots[i]->item(0)-out_snapshots[i]->item(0)) > 10.*FLT_EPSILON)
+        if( abs(reference_snapshots[i]->item(0)-out_snapshots[i]->item(
+                    0)) > 10.*FLT_EPSILON)
         {
             SUCCESS = false;
             std::cout << "Test failed." << std::endl;
             return SUCCESS;
         }
-        else if(abs(reference_snapshots[i]->item(1)-out_snapshots[i]->item(1)) > 10.*FLT_EPSILON)
+        else if(abs(reference_snapshots[i]->item(1)-out_snapshots[i]->item(
+                        1)) > 10.*FLT_EPSILON)
         {
             SUCCESS = false;
             std::cout << "Test failed." << std::endl;
@@ -107,19 +109,22 @@ int main(int argc, char *argv[])
 
 
 
-    out_snapshots.clear(); out_times.clear();
+    out_snapshots.clear();
+    out_times.clear();
 
     interp->interpolate(times,snapshots,26,out_times,out_snapshots);
-    
+
     for(int i = 0; i < out_snapshots.size(); ++i)
     {
-        if( abs(reference_snapshots[i]->item(0)-out_snapshots[i]->item(0)) > 10.*FLT_EPSILON)
+        if( abs(reference_snapshots[i]->item(0)-out_snapshots[i]->item(
+                    0)) > 10.*FLT_EPSILON)
         {
             SUCCESS = false;
             std::cout << "Test failed." << std::endl;
             return SUCCESS;
         }
-        else if(abs(reference_snapshots[i]->item(1)-out_snapshots[i]->item(1)) > 10.*FLT_EPSILON)
+        else if(abs(reference_snapshots[i]->item(1)-out_snapshots[i]->item(
+                        1)) > 10.*FLT_EPSILON)
         {
             SUCCESS = false;
             std::cout << "Test failed." << std::endl;

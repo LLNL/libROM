@@ -20,31 +20,31 @@ class SnapshotInterpolator
 {
 public:
 
-    
+
     SnapshotInterpolator()
     {}
     ~SnapshotInterpolator()
     {}
 
     /**
-     * @brief Compute new snapshots interpolated from snapshot_ts to 
+     * @brief Compute new snapshots interpolated from snapshot_ts to
      *        output_ts.
      *
      * @param[in] snapshot_ts       The parameter points.
      * @param[in] snapshots         The rotation matrices associated with
      *                              each parameter point.
-     * @param[in] output_ts         Requested times for interpolated 
+     * @param[in] output_ts         Requested times for interpolated
      *                              snapshots
-     * @param[out] output_snapshots snapshots at output_ts interpolated 
+     * @param[out] output_snapshots snapshots at output_ts interpolated
      *                              from snapshot_ts
      */
     void interpolate(std::vector<Vector*>& snapshot_ts,
-                                     std::vector<Vector*>& snapshots,
-                                     std::vector<Vector*>& output_ts,
-                                     std::vector<Vector*>&output_snapshots);
-                                     
+                     std::vector<Vector*>& snapshots,
+                     std::vector<Vector*>& output_ts,
+                     std::vector<Vector*>&output_snapshots);
+
     /**
-     * @brief Compute new snapshots interpolated from snapshot_ts to 
+     * @brief Compute new snapshots interpolated from snapshot_ts to
      *        output_ts.
      *
      * @param[in] snapshot_ts       The parameter points.
@@ -53,14 +53,14 @@ public:
      * @param[in] n_out             Number of output snapshots requested
      * @param[out] output_ts        std::vector of CAROM::Vectors that are
                                     the times of the interpolated snapshots.
-     * @param[out] output_snapshots snapshots at output_ts interpolated 
+     * @param[out] output_snapshots snapshots at output_ts interpolated
      *                              from snapshot_ts
      */
     void interpolate(std::vector<Vector*>& snapshot_ts,
-                                     std::vector<Vector*>& snapshots,
-                                     int n_out,
-                                     std::vector<Vector*>& output_ts,
-                                     std::vector<Vector*>& output_snapshots);
+                     std::vector<Vector*>& snapshots,
+                     int n_out,
+                     std::vector<Vector*>& output_ts,
+                     std::vector<Vector*>& output_snapshots);
 
 private:
 
