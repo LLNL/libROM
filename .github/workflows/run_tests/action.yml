@@ -7,6 +7,7 @@ runs:
           ./tests/test_Vector
           ./tests/test_Matrix
           mpirun -n 3 --oversubscribe ./tests/test_Matrix
+          ./tests/smoke_static
           ./tests/test_DEIM
           ./tests/test_GNAT
           ./tests/test_QDEIM
