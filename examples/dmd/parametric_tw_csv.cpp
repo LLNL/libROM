@@ -54,6 +54,7 @@
 #include "linalg/Matrix.h"
 #include "utils/HDFDatabase.h"
 #include "utils/CSVDatabase.h"
+#include "utils/Utilities.h"
 #include <cmath>
 #include <iostream>
 #include <limits>
@@ -123,7 +124,7 @@ int main(int argc, char *argv[])
     const char *test_list = "dmd_test";
     const char *temporal_idx_list = "temporal_idx";
     const char *spatial_idx_list = "spatial_idx";
-    const char *window_file = "dmd_windows";
+    const char *window_file = "";
     const char *hdf_name = "dmd";
     const char *snap_pfx = "step";
     const char *basename = "";
@@ -201,7 +202,8 @@ int main(int argc, char *argv[])
     args.AddOption(&useWindowDims, "-wdim", "--wdim", "-no-wdim", "--no-wdim",
                    "Use DMD dimensions for each window, input from a CSV file.");
     args.AddOption(&window_file, "-window-set", "--window-set-name",
-                   "Name of the file containing a rdim/ef list for each window within the list directory.");
+                   "Name of the file containing a rdim/ef list for each window"
+                   " within the list directory.");
     args.AddOption(&subsample, "-subs", "--subsample",
                    "Subsampling factor for training snapshots.");
     args.AddOption(&eval_subsample, "-esubs", "--eval_subsample",
@@ -501,10 +503,19 @@ int main(int argc, char *argv[])
     vector<string> window_str_list;
     vector<double> window_list;
     bool use_rdim_windows = false;
-    csv_db.getStringVector(string(list_dir) + "/" + string(window_file) + ".csv",
-                           window_str_list, false);
-    if (window_str_list.size() > 0)
+    if (string(window_file).size() > 0)
     {
+        const string window_file_path = string(list_dir) + "/" +
+                                        string(window_file) + ".csv";
+        if (!CAROM::Utilities::file_exist(window_file_path))
+        {
+            throw std::runtime_error(string("Specified window rdim/ef file, but file '" +
+                                            window_file_path + "' does not exist!"));
+        }
+        csv_db.getStringVector(window_file_path, window_str_list, false);
+
+        CAROM_VERIFY(window_str_list.size() > 0);
+
         if (numWindows > 0)
         {
             CAROM_VERIFY(numWindows == window_str_list.size() - 1);
@@ -523,7 +534,16 @@ int main(int argc, char *argv[])
             std::stringstream window_ss(window_str_list[i]);
             getline(window_ss, tmp, ',');
             getline(window_ss, tmp, ',');
-            window_list.push_back(stod(tmp));
+            double window_rdim_ef = stod(tmp);
+            if (use_rdim_windows)
+            {
+                CAROM_VERIFY(int(window_rdim_ef) > 0);
+            }
+            else
+            {
+                CAROM_VERIFY(window_rdim_ef > 0.0 && window_rdim_ef <= 1.0);
+            }
+            window_list.push_back(window_rdim_ef);
         }
 
         numWindows = window_list.size();
