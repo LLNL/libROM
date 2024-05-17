@@ -10,6 +10,9 @@
 
 //                  libROM MFEM Example: DG Euler Equations (adapted from ex18p.cpp)
 
+#ifndef included_dg_euler_h
+#define included_dg_euler_h
+
 #include "mfem.hpp"
 
 using namespace std;
@@ -25,9 +28,10 @@ extern const int num_equation;
 extern const double specific_heat_ratio;
 extern const double gas_constant;
 
+
 // Time-dependent operator for the right-hand side of the ODE representing the
 // DG weak form.
-class FE_Evolution : public TimeDependentOperator
+class ROM_FE_Evolution : public TimeDependentOperator
 {
 private:
     const int dim;
@@ -45,23 +49,23 @@ private:
     void GetFlux(const DenseMatrix &state, DenseTensor &flux) const;
 
 public:
-    FE_Evolution(FiniteElementSpace &vfes_,
-                 Operator &A_, SparseMatrix &Aflux_);
+    ROM_FE_Evolution(FiniteElementSpace &vfes_,
+                     Operator &A_, SparseMatrix &Aflux_);
 
     virtual void Mult(const Vector &x, Vector &y) const;
 
-    virtual ~FE_Evolution() { }
+    virtual ~ROM_FE_Evolution() { }
 };
 
 // Implements a simple Rusanov flux
-class RiemannSolver
+class ROM_RiemannSolver
 {
 private:
     Vector flux1;
     Vector flux2;
 
 public:
-    RiemannSolver();
+    ROM_RiemannSolver();
     double Eval(const Vector &state1, const Vector &state2,
                 const Vector &nor, Vector &flux);
 };
@@ -69,7 +73,7 @@ public:
 // Constant (in time) mixed bilinear form multiplying the flux grid function.
 // The form is (vec(v), grad(w)) where the trial space = vector L2 space (mesh
 // dim) and test space = scalar L2 space.
-class DomainIntegrator : public BilinearFormIntegrator
+class ROM_DomainIntegrator : public BilinearFormIntegrator
 {
 private:
     Vector shape;
@@ -78,7 +82,7 @@ private:
     DenseMatrix dshapedx;
 
 public:
-    DomainIntegrator(const int dim);
+    ROM_DomainIntegrator(const int dim);
 
     virtual void AssembleElementMatrix2(const FiniteElement &trial_fe,
                                         const FiniteElement &test_fe,
@@ -87,10 +91,10 @@ public:
 };
 
 // Interior face term: <F.n(u),[w]>
-class FaceIntegrator : public NonlinearFormIntegrator
+class ROM_FaceIntegrator : public NonlinearFormIntegrator
 {
 private:
-    RiemannSolver rsolver;
+    ROM_RiemannSolver rsolver;
     Vector shape1;
     Vector shape2;
     Vector funval1;
@@ -99,7 +103,7 @@ private:
     Vector fluxN;
 
 public:
-    FaceIntegrator(RiemannSolver &rsolver_, const int dim);
+    ROM_FaceIntegrator(ROM_RiemannSolver &rsolver_, const int dim);
 
     virtual void AssembleFaceVector(const FiniteElement &el1,
                                     const FiniteElement &el2,
@@ -107,9 +111,9 @@ public:
                                     const Vector &elfun, Vector &elvect);
 };
 
-// Implementation of class FE_Evolution
-FE_Evolution::FE_Evolution(FiniteElementSpace &vfes_,
-                           Operator &A_, SparseMatrix &Aflux_)
+// Implementation of class ROM_FE_Evolution
+ROM_FE_Evolution::ROM_FE_Evolution(FiniteElementSpace &vfes_,
+                                   Operator &A_, SparseMatrix &Aflux_)
     : TimeDependentOperator(A_.Height()),
       dim(vfes_.GetFE(0)->GetDim()),
       vfes(vfes_),
@@ -134,7 +138,7 @@ FE_Evolution::FE_Evolution(FiniteElementSpace &vfes_,
     }
 }
 
-void FE_Evolution::Mult(const Vector &x, Vector &y) const
+void ROM_FE_Evolution::Mult(const Vector &x, Vector &y) const
 {
     // 0. Reset wavespeed computation before operator application.
     max_char_speed = 0.;
@@ -271,7 +275,7 @@ inline double ComputeMaxCharSpeed(const Vector &state, const int dim)
 }
 
 // Compute the flux at solution nodes.
-void FE_Evolution::GetFlux(const DenseMatrix &x, DenseTensor &flux) const
+void ROM_FE_Evolution::GetFlux(const DenseMatrix &x, DenseTensor &flux) const
 {
     const int dof = flux.SizeI();
     const int dim = flux.SizeJ();
@@ -299,13 +303,13 @@ void FE_Evolution::GetFlux(const DenseMatrix &x, DenseTensor &flux) const
     }
 }
 
-// Implementation of class RiemannSolver
-RiemannSolver::RiemannSolver() :
+// Implementation of class ROM_RiemannSolver
+ROM_RiemannSolver::ROM_RiemannSolver() :
     flux1(num_equation),
     flux2(num_equation) { }
 
-double RiemannSolver::Eval(const Vector &state1, const Vector &state2,
-                           const Vector &nor, Vector &flux)
+double ROM_RiemannSolver::Eval(const Vector &state1, const Vector &state2,
+                               const Vector &nor, Vector &flux)
 {
     // NOTE: nor in general is not a unit normal
     const int dim = nor.Size();
@@ -337,10 +341,11 @@ double RiemannSolver::Eval(const Vector &state1, const Vector &state2,
     return maxE;
 }
 
-// Implementation of class DomainIntegrator
-DomainIntegrator::DomainIntegrator(const int dim) : flux(num_equation, dim) { }
+// Implementation of class ROM_DomainIntegrator
+ROM_DomainIntegrator::ROM_DomainIntegrator(const int dim) : flux(num_equation,
+            dim) { }
 
-void DomainIntegrator::AssembleElementMatrix2(const FiniteElement &trial_fe,
+void ROM_DomainIntegrator::AssembleElementMatrix2(const FiniteElement &trial_fe,
         const FiniteElement &test_fe,
         ElementTransformation &Tr,
         DenseMatrix &elmat)
@@ -391,18 +396,19 @@ void DomainIntegrator::AssembleElementMatrix2(const FiniteElement &trial_fe,
     }
 }
 
-// Implementation of class FaceIntegrator
-FaceIntegrator::FaceIntegrator(RiemannSolver &rsolver_, const int dim) :
+// Implementation of class ROM_FaceIntegrator
+ROM_FaceIntegrator::ROM_FaceIntegrator(ROM_RiemannSolver &rsolver_,
+                                       const int dim) :
     rsolver(rsolver_),
     funval1(num_equation),
     funval2(num_equation),
     nor(dim),
     fluxN(num_equation) { }
 
-void FaceIntegrator::AssembleFaceVector(const FiniteElement &el1,
-                                        const FiniteElement &el2,
-                                        FaceElementTransformations &Tr,
-                                        const Vector &elfun, Vector &elvect)
+void ROM_FaceIntegrator::AssembleFaceVector(const FiniteElement &el1,
+        const FiniteElement &el2,
+        FaceElementTransformations &Tr,
+        const Vector &elfun, Vector &elvect)
 {
     // Compute the term <F.n(u),[w]> on the interior faces.
     const int dof1 = el1.GetDof();
@@ -586,3 +592,5 @@ void InitialCondition(const Vector &x, Vector &y)
     y(2) = den * velY;
     y(3) = den * energy;
 }
+
+#endif
