@@ -820,7 +820,7 @@ TEST(BasisGeneratorIO, Scaling_test)
     auto stop = steady_clock::now();
     auto duration = duration_cast<milliseconds>(stop-start);
     if (rank == 0)
-        printf("Base writeSnapshot- duration: %dms\n", duration);
+      printf("Base writeSnapshot- duration: %dms\n", duration.count());
 
     MPI_Barrier(MPI_COMM_WORLD);
     start = steady_clock::now();
@@ -829,7 +829,7 @@ TEST(BasisGeneratorIO, Scaling_test)
     stop = steady_clock::now();
     duration = duration_cast<milliseconds>(stop-start);
     if (rank == 0)
-        printf("MPIO writeSnapshot- duration: %dms\n", duration);
+      printf("MPIO writeSnapshot- duration: %dms\n", duration.count());
 
     MPI_Barrier(MPI_COMM_WORLD);
     start = steady_clock::now();
@@ -838,7 +838,7 @@ TEST(BasisGeneratorIO, Scaling_test)
     stop = steady_clock::now();
     duration = duration_cast<milliseconds>(stop-start);
     if (rank == 0)
-        printf("Base endSamples- duration: %dms\n", duration);
+      printf("Base endSamples- duration: %dms\n", duration.count());
 
     MPI_Barrier(MPI_COMM_WORLD);
     start = steady_clock::now();
@@ -847,7 +847,7 @@ TEST(BasisGeneratorIO, Scaling_test)
     stop = steady_clock::now();
     duration = duration_cast<milliseconds>(stop-start);
     if (rank == 0)
-        printf("MPIO endSamples- duration: %dms\n", duration);
+      printf("MPIO endSamples- duration: %dms\n", duration.count());
 }
 
 int main(int argc, char* argv[])

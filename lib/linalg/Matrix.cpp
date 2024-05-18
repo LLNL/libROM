@@ -1121,11 +1121,27 @@ Matrix::calculateNumDistributedRows() {
     }
 }
 
-Matrix*
-Matrix::qr_factorize() const
+std::unique_ptr<Matrix> Matrix::qr_factorize() const
 {
-    int myid;
-    MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+    std::vector<Matrix*> QR;
+    qr_factorize(true, QR);
+    return std::unique_ptr<Matrix>(QR[0]);
+}
+
+void Matrix::qr_factorize(std::vector<std::unique_ptr<Matrix>> & QR) const
+{
+    std::vector<Matrix*> QRraw;
+    qr_factorize(true, QRraw);
+    QR.clear();
+    for (int i=0; i<2; ++i)
+        QR.push_back(std::unique_ptr<Matrix>(QRraw[i]));
+}
+
+void Matrix::qr_factorize(bool computeR,
+                          std::vector<Matrix*> & QR) const
+{
+    const int myid = d_rank;
+    const int ncols = numColumns();
 
     std::vector<int> row_offset(d_num_procs + 1);
     row_offset[d_num_procs] = numDistributedRows();
@@ -1151,11 +1167,11 @@ Matrix::qr_factorize() const
 
     int blocksize = row_offset[d_num_procs] / d_num_procs;
     if (row_offset[d_num_procs] % d_num_procs != 0) blocksize += 1;
-    initialize_matrix(&slpk, numColumns(), numDistributedRows(),
-                      ncol_blocks, nrow_blocks, numColumns(), blocksize);
+    initialize_matrix(&slpk, ncols, numDistributedRows(),
+                      ncol_blocks, nrow_blocks, ncols, blocksize);
     for (int rank = 0; rank < d_num_procs; ++rank) {
         scatter_block(&slpk, 1, row_offset[rank] + 1,
-                      getData(), numColumns(),
+                      getData(), ncols,
                       row_offset[rank + 1] - row_offset[rank], rank);
     }
 
@@ -1163,9 +1179,95 @@ Matrix::qr_factorize() const
     qr_init(&QRmgr, &slpk);
     lqfactorize(&QRmgr);
 
+    // Obtain L from the distributed overwritten matrix QRmgr.A
+    Matrix* L_dist_matrix = new Matrix(row_offset[myid + 1] - row_offset[myid],
+                                       ncols, distributed());
+
+    for (int rank = 0; rank < d_num_procs; ++rank) {
+        gather_block(&L_dist_matrix->item(0, 0), QRmgr.A, 1,
+                     row_offset[rank] + 1, ncols,
+                     row_offset[rank + 1] - row_offset[rank], rank);
+    }
+
+    Matrix *R_matrix = nullptr;
+    if (computeR)
+    {
+        R_matrix = new Matrix(ncols, ncols, false);
+        if (myid == 0)
+        {
+            const int numLocalRowsR = std::min(ncols, row_offset[myid + 1]);
+            for (int i=0; i<numLocalRowsR; ++i)
+            {
+                for (int j=i; j<ncols; ++j)
+                    (*R_matrix)(i,j) = (*L_dist_matrix)(i,j);
+
+                for (int j=0; j<i; ++j)
+                    (*R_matrix)(i,j) = 0.0;
+            }
+        }
+
+        // Gather any rows of R to root from other ranks.
+        const int maxLocalRowsR = std::min(ncols, row_offset[myid + 1]);
+        const int numLocalRowsR = std::max(0, maxLocalRowsR - row_offset[myid]);
+
+        std::vector<int> allNumRowsR(d_num_procs);
+        MPI_Gather(&numLocalRowsR, 1, MPI_INT, allNumRowsR.data(), 1, MPI_INT,
+                   0, MPI_COMM_WORLD);
+
+        std::vector<double> localRowsR;
+
+        if (myid > 0)
+        {
+            localRowsR.resize(numLocalRowsR * ncols);
+            for (int i=0; i<numLocalRowsR; ++i)
+            {
+                const int row = row_offset[myid] + i;
+                for (int j=row; j<ncols; ++j)
+                    localRowsR[(i * ncols) + j] = (*L_dist_matrix)(i,j);
+
+                for (int j=0; j<row; ++j)
+                    localRowsR[(i * ncols) + j] = 0.0;
+            }
+        }
+        else
+            localRowsR.resize(1);  // Just to have a valid pointer from data() call.
+
+        std::vector<double> recvRowsR;
+        if (myid == 0)
+            recvRowsR.resize((ncols - numLocalRowsR) * ncols);
+
+        if (recvRowsR.size() == 0)
+            recvRowsR.resize(1);  // Just to have a valid pointer from data() call.
+
+        std::vector<int> disp(d_num_procs);
+        disp[0] = 0;
+        allNumRowsR[0] = 0;
+        for (int i=1; i<d_num_procs; ++i)
+        {
+            allNumRowsR[i] *= ncols;
+            disp[i] = disp[i - 1] + allNumRowsR[i-1];
+        }
+
+        MPI_Gatherv(localRowsR.data(), myid == 0 ? 0 : numLocalRowsR * ncols,
+                    MPI_DOUBLE, recvRowsR.data(),
+                    allNumRowsR.data(), disp.data(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+        if (myid == 0)
+        {
+            for (int i=numLocalRowsR; i<ncols; ++i)
+            {
+                for (int j=0; j<ncols; ++j)
+                    (*R_matrix)(i,j) = recvRowsR[(i - numLocalRowsR) * ncols + j];
+            }
+        }
+
+        MPI_Bcast(R_matrix->getData(), ncols * ncols, MPI_DOUBLE, 0,
+                  MPI_COMM_WORLD);
+    }
+
     // Manipulate QRmgr.A to get elementary household reflectors.
-    for (int i = row_offset[myid]; i < numColumns(); i++) {
-        for (int j = 0; j < i - row_offset[myid] && j < row_offset[myid +  1]; j++) {
+    for (int i = row_offset[myid]; i < ncols; i++) {
+        for (int j = 0; j < i - row_offset[myid] && j < row_offset[myid + 1]; j++) {
             QRmgr.A->mdata[j * QRmgr.A->mm + i] = 0;
         }
         if (i < row_offset[myid + 1]) {
@@ -1175,14 +1277,14 @@ Matrix::qr_factorize() const
 
     // Obtain Q
     lqcompute(&QRmgr);
-    Matrix* qr_factorized_matrix = new Matrix(row_offset[myid + 1] -
+    Matrix *qr_factorized_matrix = new Matrix(row_offset[myid + 1] -
             row_offset[myid],
-            numColumns(), distributed());
+            ncols, distributed());
+
     for (int rank = 0; rank < d_num_procs; ++rank) {
-        gather_block(&qr_factorized_matrix->item(0, 0), QRmgr.A,
-                     1, row_offset[rank] + 1,
-                     numColumns(), row_offset[rank + 1] - row_offset[rank],
-                     rank);
+        gather_block(&qr_factorized_matrix->item(0, 0), QRmgr.A, 1,
+                     row_offset[rank] + 1, ncols,
+                     row_offset[rank + 1] - row_offset[rank], rank);
     }
 
     free_matrix_data(&slpk);
@@ -1191,7 +1293,11 @@ Matrix::qr_factorize() const
     free(QRmgr.tau);
     free(QRmgr.ipiv);
 
-    return qr_factorized_matrix;
+    delete L_dist_matrix;
+
+    QR.resize(2);
+    QR[0] = qr_factorized_matrix;
+    QR[1] = R_matrix;
 }
 
 void
