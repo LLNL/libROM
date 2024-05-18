@@ -121,8 +121,6 @@ TEST(QRfactorizeTest, Test_QR)
 
     EXPECT_NEAR(maxError, 0.0, 1.0e-15);
 
-    if (rank > 0) return;
-
     EXPECT_EQ(R->numRows(), num_columns);
     EXPECT_EQ(R->numColumns(), num_columns);
 

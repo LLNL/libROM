@@ -1124,13 +1124,13 @@ Matrix::calculateNumDistributedRows() {
 std::unique_ptr<Matrix> Matrix::qr_factorize() const
 {
     std::vector<Matrix*> QR;
-    qr_factorize(true, QR);
+    qr_factorize(false, QR);
     return std::unique_ptr<Matrix>(QR[0]);
 }
 
 void Matrix::qr_factorize(std::vector<std::unique_ptr<Matrix>> & QR) const
 {
-    std::vector<Matrix*> QRraw;
+    std::vector<Matrix*> QRraw;  // Raw pointers
     qr_factorize(true, QRraw);
     QR.clear();
     for (int i=0; i<2; ++i)
