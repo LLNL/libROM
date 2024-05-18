@@ -918,7 +918,7 @@ public:
      *
      * @return The Q of the QR factorization of this.
      */
-  std::unique_ptr<Matrix>
+    std::unique_ptr<Matrix>
     qr_factorize() const;
 
     /**
@@ -926,7 +926,7 @@ public:
      *
      * @return The Q and R of the QR factorization of this.
      */
-  void qr_factorize(std::vector<std::unique_ptr<Matrix>> & QR) const;
+    void qr_factorize(std::vector<std::unique_ptr<Matrix>> & QR) const;
 
     /**
      * @brief Compute the leading numColumns() column pivots from a
@@ -1259,7 +1259,7 @@ private:
      * @return The Q and R of the QR factorization of this. If computeR is
      * false, the R pointer will be nullptr.
      */
-  void qr_factorize(bool computeR, std::vector<Matrix*> & QR) const;
+    void qr_factorize(bool computeR, std::vector<Matrix*> & QR) const;
 
     /**
      * @brief The storage for the Matrix's values on this processor.
