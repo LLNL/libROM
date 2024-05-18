@@ -1179,19 +1179,19 @@ void Matrix::qr_factorize(bool computeR,
     qr_init(&QRmgr, &slpk);
     lqfactorize(&QRmgr);
 
-    // Obtain L from the distributed overwritten matrix QRmgr.A
-    Matrix* L_dist_matrix = new Matrix(row_offset[myid + 1] - row_offset[myid],
-                                       ncols, distributed());
-
-    for (int rank = 0; rank < d_num_procs; ++rank) {
-        gather_block(&L_dist_matrix->item(0, 0), QRmgr.A, 1,
-                     row_offset[rank] + 1, ncols,
-                     row_offset[rank + 1] - row_offset[rank], rank);
-    }
-
     Matrix *R_matrix = nullptr;
     if (computeR)
     {
+        // Obtain L from the distributed overwritten matrix QRmgr.A
+        Matrix* L_dist_matrix = new Matrix(row_offset[myid + 1] - row_offset[myid],
+                                           ncols, distributed());
+
+        for (int rank = 0; rank < d_num_procs; ++rank) {
+            gather_block(&L_dist_matrix->item(0, 0), QRmgr.A, 1,
+                         row_offset[rank] + 1, ncols,
+                         row_offset[rank + 1] - row_offset[rank], rank);
+        }
+
         R_matrix = new Matrix(ncols, ncols, false);
         if (myid == 0)
         {
@@ -1231,6 +1231,8 @@ void Matrix::qr_factorize(bool computeR,
         }
         else
             localRowsR.resize(1);  // Just to have a valid pointer from data() call.
+
+        delete L_dist_matrix;
 
         std::vector<double> recvRowsR;
         if (myid == 0)
@@ -1292,8 +1294,6 @@ void Matrix::qr_factorize(bool computeR,
 
     free(QRmgr.tau);
     free(QRmgr.ipiv);
-
-    delete L_dist_matrix;
 
     QR.resize(2);
     QR[0] = qr_factorized_matrix;
