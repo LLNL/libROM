@@ -282,7 +282,8 @@ if(GTEST_FOUND)
     IncrementalSVDBrand
     GreedyCustomSampler
     NNLS
-    basis_conversion)
+    basis_conversion
+    SnapshotInterpolator)
   foreach(stem IN LISTS unit_test_stems)
     add_executable(test_${stem} unit_tests/test_${stem}.cpp)
     target_link_libraries(test_${stem} PRIVATE ROM
