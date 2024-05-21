@@ -150,14 +150,11 @@ if (ENABLE_EXAMPLES)
       de_parametric_heat_conduction_greedy
       de_dg_advection_greedy
       wave_equation
-      wave_equation_interpolation
       dg_euler
       local_tw_csv
       local_dw_csv
       parametric_tw_csv
       parametric_dw_csv
-      parametric_dw_interpolation_csv
-      dg_advection_snapshot_interpolation
       parametric_dmdc_heat_conduction)
     set(example_directories
       prom
@@ -172,9 +169,6 @@ if (ENABLE_EXAMPLES)
       prom
       prom
       prom
-      dmd
-      dmd
-      dmd
       dmd
       dmd
       dmd
@@ -234,8 +228,7 @@ if (ENABLE_EXAMPLES)
     weak_scaling
     random_test
     smoke_static
-    load_samples
-    snapshot_interpolator_test)
+    load_samples)
     
   if (USE_MFEM)
     set(regression_test_names
@@ -287,9 +280,9 @@ if(GTEST_FOUND)
     IncrementalSVD
     IncrementalSVDBrand
     GreedyCustomSampler
-    SnapshotInterpolator
     NNLS
-    basis_conversion)
+    basis_conversion
+    SnapshotInterpolator)
   foreach(stem IN LISTS unit_test_stems)
     add_executable(test_${stem} unit_tests/test_${stem}.cpp)
     target_link_libraries(test_${stem} PRIVATE ROM
