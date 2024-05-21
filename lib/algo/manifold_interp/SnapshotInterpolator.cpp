@@ -41,6 +41,8 @@ void SnapshotInterpolator::interpolate(std::vector<Vector*>& snapshot_ts,
     CAROM_VERIFY(snapshot_ts.size() > 0);
     CAROM_VERIFY(output_ts.size() > 0);
     CAROM_VERIFY(output_snapshots.size() == 0);
+    CAROM_VERIFY(snapshot_ts[0]->getData()[0] - FLT_EPSILON <= output_ts[0]->getData()[0]  && 
+                 output_ts[output_ts.size()-1]->getData()[0] <= snapshot_ts[snapshot_ts.size()-1]->getData()[0] + FLT_EPSILON);
 
     int n_out = output_ts.size();
     int n_snap = snapshots.size();
@@ -110,7 +112,7 @@ void SnapshotInterpolator::interpolate(std::vector<Vector*>& snapshot_ts,
         d.push_back(d_temp);
 
         while(counter < n_out
-                && output_ts[counter]->getData()[0] - t_in[n_snap-1] <= FLT_EPSILON )
+                && output_ts[counter]->getData()[0] <= t_in[n_snap-1] + FLT_EPSILON )
         {
             t = output_ts[counter]->getData()[0];
             output_snapshots[counter]->getData()[i] = y_in[n_snap-2]*computeH1(t,
@@ -152,8 +154,6 @@ void SnapshotInterpolator::interpolate(std::vector<Vector*>&
         temp_t->getData()[0] = t_min + i*dt;
         output_ts.push_back(temp_t);
     }
-    std::cout << "Interpolating to " << n_out << " snapshots, from " << n_snap <<
-              std::endl;
     interpolate(snapshot_ts,snapshots,output_ts, output_snapshots);
 }
 
