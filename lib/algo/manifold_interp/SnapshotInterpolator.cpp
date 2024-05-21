@@ -41,8 +41,10 @@ void SnapshotInterpolator::interpolate(std::vector<Vector*>& snapshot_ts,
     CAROM_VERIFY(snapshot_ts.size() > 0);
     CAROM_VERIFY(output_ts.size() > 0);
     CAROM_VERIFY(output_snapshots.size() == 0);
-    CAROM_VERIFY(snapshot_ts[0]->getData()[0] - FLT_EPSILON <= output_ts[0]->getData()[0]  && 
-                 output_ts[output_ts.size()-1]->getData()[0] <= snapshot_ts[snapshot_ts.size()-1]->getData()[0] + FLT_EPSILON);
+    CAROM_VERIFY(snapshot_ts[0]->getData()[0] - FLT_EPSILON <=
+                 output_ts[0]->getData()[0]  &&
+                 output_ts[output_ts.size()-1]->getData()[0] <= snapshot_ts[snapshot_ts.size()
+                         -1]->getData()[0] + FLT_EPSILON);
 
     int n_out = output_ts.size();
     int n_snap = snapshots.size();
