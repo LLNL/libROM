@@ -150,6 +150,7 @@ if (ENABLE_EXAMPLES)
       de_parametric_heat_conduction_greedy
       de_dg_advection_greedy
       wave_equation
+      wave_equation_interpolation
       dg_euler
       local_tw_csv
       local_dw_csv
@@ -171,6 +172,7 @@ if (ENABLE_EXAMPLES)
       prom
       prom
       prom
+      dmd
       dmd
       dmd
       dmd
@@ -285,6 +287,7 @@ if(GTEST_FOUND)
     IncrementalSVD
     IncrementalSVDBrand
     GreedyCustomSampler
+    SnapshotInterpolator
     NNLS
     basis_conversion)
   foreach(stem IN LISTS unit_test_stems)
