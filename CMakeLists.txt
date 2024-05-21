@@ -228,8 +228,7 @@ if (ENABLE_EXAMPLES)
     weak_scaling
     random_test
     smoke_static
-    load_samples
-    snapshot_interpolator_test)
+    load_samples)
     
   if (USE_MFEM)
     set(regression_test_names
