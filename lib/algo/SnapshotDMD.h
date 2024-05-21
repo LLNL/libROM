@@ -24,6 +24,7 @@ public:
         std::vector<Vector*> return_snapshots(d_snapshots);
         return return_snapshots;
     }
+    double checkProjectionError(Vector* init);
 protected:
     friend void getParametricDMD<SnapshotDMD>(SnapshotDMD*& parametric_dmd,
             std::vector<Vector*>& parameter_points,
