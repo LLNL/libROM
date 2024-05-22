@@ -271,8 +271,8 @@ int main(int argc, char *argv[])
     int max_num_snapshots = 100;
     bool update_right_SV = false;
     bool isIncremental = false;
-    const std::string basisName = "basis";
-    const std::string basisFileName = basisName + std::to_string(id);
+    const std::string baseName = "elliptic_eigenproblem_";
+    const std::string basis_filename = baseName + "basis";
     CAROM::Options* options;
     CAROM::BasisGenerator *generator;
     StopWatch solveTimer, assembleTimer, mergeTimer;
@@ -282,7 +282,8 @@ int main(int argc, char *argv[])
     {
         options = new CAROM::Options(fespace->GetTrueVSize(), nev, nev,
                                      update_right_SV);
-        generator = new CAROM::BasisGenerator(*options, isIncremental, basisFileName);
+        std::string snapshot_basename = baseName + "par" + std::to_string(id);
+        generator = new CAROM::BasisGenerator(*options, isIncremental, snapshot_basename);
     }
 
     // 9. The merge phase
@@ -291,10 +292,10 @@ int main(int argc, char *argv[])
         mergeTimer.Start();
         options = new CAROM::Options(fespace->GetTrueVSize(), max_num_snapshots, nev,
                                      update_right_SV);
-        generator = new CAROM::BasisGenerator(*options, isIncremental, basisName);
+        generator = new CAROM::BasisGenerator(*options, isIncremental, basis_filename);
         for (int paramID=0; paramID<nsets; ++paramID)
         {
-            std::string snapshot_filename = basisName + std::to_string(
+            std::string snapshot_filename = baseName + "par" + std::to_string(
                                                 paramID) + "_snapshot";
             generator->loadSamples(snapshot_filename, "snapshot");
         }
@@ -484,7 +485,7 @@ int main(int argc, char *argv[])
     if (online) {
         // 16. read the reduced basis
         assembleTimer.Start();
-        CAROM::BasisReader reader(basisName);
+        CAROM::BasisReader reader(basis_filename);
 
         Vector ev;
         const CAROM::Matrix *spatialbasis;
