@@ -55,94 +55,9 @@ void SnapshotDMD::interpolateToNSnapshots(int n)
     std::vector<Vector*> new_times;
 
     interp->interpolate(d_sampled_times,d_snapshots,n,new_times,new_snapshots);
-    //d_snapshots = std::move(new_snapshots);
-    //d_sampled_times = std::move(new_times);
     d_snapshots = new_snapshots;
     d_sampled_times = new_times;
     d_dt = d_sampled_times[2]->getData()[0]-d_sampled_times[1]->getData()[0];
-
-}
-
-double SnapshotDMD::checkProjectionError(Vector* init)
-{
-    Vector* real_product = d_phi_real->mult(d_projected_init_real);
-    Vector* imag_product = d_phi_imaginary->mult(d_projected_init_imaginary);
-
-    double norm = 0.;
-    for(int i = 0; i < init->dim(); ++i)
-    {
-        norm += (real_product->item(i) - imag_product->item(i) - init->item(i)) *
-                (real_product->item(i) - init->item(i));
-    }
-    norm = sqrt(norm);
-    return norm;
-}
-
-void SnapshotDMD::interpolateToNSnapshots(int n, int run, int window)
-{
-    SnapshotInterpolator* interp = new SnapshotInterpolator();
-    std::vector<Vector*> new_snapshots;
-    std::vector<Vector*> new_times;
-    CSVDatabase* csv_db(new CSVDatabase);
-    int dim = d_snapshots[0]->dim();
-    std::vector<double> print_times;
-    std::string debugPath = "snapshot_interpolation";
-
-    if(!d_rank)
-    {
-        std::cout << "Interpolating DMD snapshots with dimension " << dim << std::endl;
-        std::cout << "Input times: ";
-        for(int i = 0; i < d_snapshots.size(); ++i)
-        {
-            csv_db->putDoubleArray(debugPath+"/snapshot_" + std::to_string(
-                                       i) + "pre_interp_run" +
-                                   std::to_string(run) + "_win" + std::to_string(window) +
-                                   ".csv",d_snapshots[i]->getData(),dim);
-            print_times.push_back(d_sampled_times[i]->getData()[0]);
-            std::cout << print_times[i] << ", ";
-        }
-        std::cout << std::endl;
-        csv_db->putDoubleArray(debugPath+"/times_pre_interp_run_" + std::to_string(
-                                   run) + "_win" + std::to_string(window) + ".csv", &print_times[0],
-                               d_snapshots.size());
-        std::cout << "Window " << window << " start with " << d_snapshots.size() <<
-                  " snapshots" <<  std::endl;
-
-        std::cout << "Window " << window << " spans: [" << print_times[0] << "," <<
-                  print_times[d_snapshots.size()-1] << " with dt = " << d_dt << std::endl;
-    }
-
-    interp->interpolate(d_sampled_times,d_snapshots,n,new_times,new_snapshots);
-    d_snapshots = std::move(new_snapshots);
-    d_sampled_times = std::move(new_times);
-
-    d_dt = d_sampled_times[2]->getData()[0]-d_sampled_times[1]->getData()[0];
-
-
-    if(!d_rank)
-    {
-        std::cout << "output times: ";
-        for(int i = 0; i < d_snapshots.size(); ++i)
-        {
-            csv_db->putDoubleArray(debugPath+"/snapshot_" + std::to_string(
-                                       i) + "post_interp_run" +
-                                   std::to_string(run) + "_win" + std::to_string(window) +
-                                   ".csv",d_snapshots[i]->getData(),dim);
-            print_times.push_back(d_sampled_times[i]->getData()[0]);
-            std::cout << d_sampled_times[i]->getData()[0] << ", ";
-        }
-        std::cout << std::endl;
-        csv_db->putDoubleArray(debugPath+"/times_post_interp_run_" + std::to_string(
-                                   run) + "_win" + std::to_string(window) + ".csv", &print_times[0],
-                               d_snapshots.size());
-        std::cout << "Window " << window << " ends with " << d_snapshots.size() <<
-                  " snapshots" << std::endl;
-        std::cout << "Window " << window << " spans: [" <<
-                  d_sampled_times[0]->getData()[0] << "," <<
-                  d_sampled_times[d_snapshots.size()-1]->getData()[0] << " with dt = " << d_dt <<
-                  std::endl;
-    }
-
 
 }
 

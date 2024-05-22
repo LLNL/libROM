@@ -25,6 +25,18 @@
 // Elapsed time for training DMD: 6.904051e-01 second
 // Elapsed time for predicting DMD: 2.496171e-03 second
 //
+// Sample run using snapshotDMD and using projected initial conditions for the
+//  predicition phase.
+//
+// Command 2:
+//  wave_equation -tf 2 -nwinsamp 10 -rdim 12 -visit -snap -proj
+//
+// Output 2:
+// Relative error of DMD solution (u) at t_final: 2 is 0.038837521
+// Elapsed time for solving FOM: 1.681509e-01 second
+// Elapsed time for training DMD: 9.025622e-01 second
+// Elapsed time for predicting DMD: 8.561013e-03 second
+//
 // =================================================================================
 //
 //
@@ -41,11 +53,13 @@
 #include "mfem.hpp"
 #include "algo/DMD.h"
 #include "algo/NonuniformDMD.h"
+#include "algo/SnapshotDMD.h"
 #include "linalg/Vector.h"
 #include <cmath>
 #include <limits>
 #include <fstream>
 #include <iostream>
+#include <sys/stat.h>
 
 using namespace std;
 using namespace mfem;
@@ -219,6 +233,10 @@ int main(int argc, char *argv[])
     bool dirichlet = true;
     int vis_steps = 5;
     int precision = 8;
+    bool snapshotDMD = false;
+    bool project_initial_condition = false;
+    const char *temp_io_dir = "./out";
+    std::string io_dir;
     cout.precision(precision);
     OptionsParser args(argc, argv);
     args.AddOption(&mesh_file, "-m", "--mesh",
@@ -256,6 +274,15 @@ int main(int argc, char *argv[])
                    "Reduced dimension for DMD.");
     args.AddOption(&windowNumSamples, "-nwinsamp",    "--numwindowsamples",
                    "Number of samples in DMD windows.");
+    args.AddOption(&snapshotDMD, "-snap", "--snapshot-dmd", "-no-snap",
+                   "--no-snapshot-dmd",
+                   "Use snapshot DMD instead of standard DMD.");
+    args.AddOption(&project_initial_condition, "-proj", "--project-initial",
+                   "-no-proj",
+                   "--no-project-initial",
+                   "Project the initial condition in subsequent window as the final value of the current window.");
+    args.AddOption(&temp_io_dir, "-io", "--io-dir-name",
+                   "Name of the sub-folder to load/dump input/output files within the current directory.");
     args.Parse();
     if (!args.Good())
     {
@@ -263,6 +290,9 @@ int main(int argc, char *argv[])
         return 1;
     }
     args.PrintOptions(cout);
+
+    io_dir = temp_io_dir;
+    mkdir(io_dir.c_str(), 0777);
 
     if (rdim <= 0 && rdim != -1) {
         cout << "rdim is set to " << rdim <<
@@ -406,7 +436,7 @@ int main(int argc, char *argv[])
         dudt_gf.Save(osol);
     }
 
-    VisItDataCollection visit_dc("Wave_Equation", mesh);
+    VisItDataCollection visit_dc(io_dir+"/Wave_Equation", mesh);
     visit_dc.RegisterField("solution", &u_gf);
     visit_dc.RegisterField("rate", &dudt_gf);
     if (visit)
@@ -448,8 +478,16 @@ int main(int argc, char *argv[])
     fom_timer.Stop();
     dmd_training_timer.Start();
     int curr_window = 0;
+
     vector<CAROM::DMD*> dmd_u;
-    dmd_u.push_back(new CAROM::DMD(u.Size(), dt));
+    if(snapshotDMD)
+    {
+        dmd_u.push_back(new CAROM::SnapshotDMD(u.Size(), dt));
+    }
+    else
+    {
+        dmd_u.push_back(new CAROM::DMD(u.Size(), dt));
+    }
     dmd_u[curr_window]->takeSample(u, t);
     ts.push_back(t);
 
@@ -487,7 +525,14 @@ int main(int argc, char *argv[])
 
             if (!last_step) {
                 curr_window++;
-                dmd_u.push_back(new CAROM::DMD(u.Size(), dt));
+                if(snapshotDMD)
+                {
+                    dmd_u.push_back(new CAROM::SnapshotDMD(u.Size(), dt));
+                }
+                else
+                {
+                    dmd_u.push_back(new CAROM::DMD(u.Size(), dt));
+                }
                 dmd_u[curr_window]->takeSample(u, t);
             }
 
@@ -528,7 +573,7 @@ int main(int argc, char *argv[])
     // 10. Predict using DMD.
     cout << "Predicting temperature using DMD" << endl;
     CAROM::Vector* result_u = nullptr;
-    VisItDataCollection dmd_visit_dc("DMD_Wave_Equation", mesh);
+    VisItDataCollection dmd_visit_dc(io_dir+"/DMD_Wave_Equation", mesh);
     dmd_visit_dc.RegisterField("solution", &u_gf);
     curr_window = 0;
     if (visit) {
@@ -558,6 +603,12 @@ int main(int argc, char *argv[])
 
             if (i % windowNumSamples == 0 && i < ts.size()-1)
             {
+                if(project_initial_condition)
+                {
+                    result_u = dmd_u[curr_window]->predict(ts[i]);
+                    cout << "Projecting solution for new window at " << ts[i] << endl;
+                    dmd_u[curr_window+1]->projectInitialCondition(result_u, ts[i]);
+                }
                 delete dmd_u[curr_window];
                 curr_window++;
             }
