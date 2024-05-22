@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
     int precision = 8;
     bool snapshotDMD = false;
     bool project_initial_condition = false;
-    const char *temp_io_dir = "./out";
+    const char *temp_io_dir = "./wave_equation";
     std::string io_dir;
     cout.precision(precision);
     OptionsParser args(argc, argv);
