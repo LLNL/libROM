@@ -664,7 +664,6 @@ int main(int argc, char *argv[])
             mode_fom_ifs.close();
 
             const double fomNorm = sqrt(InnerProduct(mode_fom, mode_fom));
-            // TODO: use a constant mode_ref for all parameters and (FOM & ROM) eigenfunctions
             sign_ev[i] = (InnerProduct(mode_fom, mode_rom) >= 0) ? 1 : -1;
             mode_fom.Add(-sign_ev[i], mode_rom);
             const double diffNorm = sqrt(InnerProduct(mode_fom, mode_fom));
