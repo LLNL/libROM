@@ -224,7 +224,8 @@ int main(int argc, char *argv[])
     }
     int dim = mesh->Dimension();
     mesh->GetBoundingBox(bb_min, bb_max, max(order, 1));
-    gaussian_width = mesh->GetElementVolume(0) * pow(2.0, 1.0 - ser_ref_levels - par_ref_levels);
+    gaussian_width = mesh->GetElementVolume(0) * pow(2.0,
+                     1.0 - ser_ref_levels - par_ref_levels);
 
     // 4. Refine the mesh in serial to increase the resolution. In this example
     //    we do 'ser_ref_levels' of uniform refinement, where 'ser_ref_levels' is
@@ -283,7 +284,8 @@ int main(int argc, char *argv[])
         options = new CAROM::Options(fespace->GetTrueVSize(), nev, nev,
                                      update_right_SV);
         std::string snapshot_basename = baseName + "par" + std::to_string(id);
-        generator = new CAROM::BasisGenerator(*options, isIncremental, snapshot_basename);
+        generator = new CAROM::BasisGenerator(*options, isIncremental,
+                                              snapshot_basename);
     }
 
     // 9. The merge phase
