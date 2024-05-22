@@ -32,7 +32,7 @@
 // Merge phase:   elliptic_eigenproblem_global_rom -merge -p 2 -ns 4
 //
 // FOM run (for error calculation):
-//                elliptic_eigenproblem_global_rom -fom -p 2 -a 0.5
+//                elliptic_eigenproblem_global_rom -fom -p 2 -a 0.50
 // Example output:
 //   Number of unknowns: 289
 //    Eigenvalue 0: 0.04533314
@@ -43,7 +43,7 @@
 //   Elapsed time for assembling FOM: 1.471708e-03 second
 //   Elapsed time for solving FOM: 3.416310e-01 second
 //
-// Online phase:  elliptic_eigenproblem_global_rom -online -p 2 -a 0.5
+// Online phase:  elliptic_eigenproblem_global_rom -online -p 2 -a 0.50
 // Example output:
 //   Eigenvalue 0: = 0.048430949
 //   Eigenvalue 1: = 0.12021157
