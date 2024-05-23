@@ -31,6 +31,7 @@ BasisGenerator::BasisGenerator(
     bool incremental,
     const std::string& basis_file_name,
     Database::formats file_format) :
+    d_dim(options.dim),
     d_incremental(incremental),
     d_basis_writer(0),
     d_basis_reader(0),
@@ -157,7 +158,7 @@ BasisGenerator::loadSampleRange(const std::string& base_file_name,
 
     if (d_basis_reader) delete d_basis_reader;
 
-    d_basis_reader = new BasisReader(base_file_name, db_format);
+    d_basis_reader = new BasisReader(base_file_name, db_format, d_dim);
     const Matrix* mat;
     const Vector* singular_vals;
 

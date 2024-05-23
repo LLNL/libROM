@@ -38,6 +38,7 @@ set(module_list
   algo/DMDc
   algo/AdaptiveDMD
   algo/NonuniformDMD
+  algo/SnapshotDMD
   algo/DifferentialEvolution
   algo/greedy/GreedyCustomSampler
   algo/greedy/GreedyRandomSampler
@@ -45,6 +46,7 @@ set(module_list
   algo/manifold_interp/Interpolator
   algo/manifold_interp/MatrixInterpolator
   algo/manifold_interp/VectorInterpolator
+  algo/manifold_interp/SnapshotInterpolator
   hyperreduction/DEIM
   hyperreduction/GNAT
   hyperreduction/QDEIM
@@ -54,6 +56,7 @@ set(module_list
   hyperreduction/Hyperreduction
   utils/Database
   utils/HDFDatabase
+  utils/HDFDatabaseMPIO
   utils/CSVDatabase
   utils/Utilities
   utils/ParallelBuffer

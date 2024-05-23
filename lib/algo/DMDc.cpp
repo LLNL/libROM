@@ -107,7 +107,7 @@ DMDc::DMDc(std::string base_file_name)
 
 DMDc::DMDc(std::vector<std::complex<double>> eigs, Matrix* phi_real,
            Matrix* phi_imaginary, Matrix* B_tilde, int k,
-           double dt, double t_offset, Vector* state_offset)
+           double dt, double t_offset, Vector* state_offset, Matrix* basis)
 {
     // Get the rank of this process, and the number of processors.
     int mpi_init;
@@ -128,6 +128,7 @@ DMDc::DMDc(std::vector<std::complex<double>> eigs, Matrix* phi_real,
     d_k = k;
     d_dt = dt;
     d_t_offset = t_offset;
+    d_basis = basis;
     setOffset(state_offset);
 }
 
@@ -351,7 +352,7 @@ DMDc::constructDMDc(const Matrix* f_snapshots,
         d_sv.push_back(d_factorizer_in->S[i]);
     }
 
-    int d_k_in;
+    int d_k_in = d_k;
     if (d_energy_fraction != -1.0)
     {
         d_k_in = d_num_singular_vectors;
@@ -402,6 +403,13 @@ DMDc::constructDMDc(const Matrix* f_snapshots,
     for (int i = 0; i < d_k_in; ++i)
     {
         d_S_inv->item(i, i) = 1 / d_factorizer_in->S[static_cast<unsigned>(i)];
+    }
+
+    // Make sure the basis is freed since we are setting it with DMDc class instead
+    // of manually setting the basis when interpolating
+    if (d_basis)
+    {
+        delete d_basis;
     }
 
     if (B == NULL)

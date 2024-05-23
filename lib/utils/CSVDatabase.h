@@ -39,36 +39,43 @@ public:
 
     /**
      * @brief Creates a new CSV database file with the supplied name.
+     *        NOTE: CSVDatabase does not actually create a file with this.
+     *        This function will only print out the file_name.
      *
      * @param[in] file_name Name of CSV database file to create.
+     * @param[in] comm MPI communicator for distributed data I/O.
+     *                 CSVDatabase I/O is always performed serially, regardless.
      *
      * @return True if file create was successful.
      */
-    virtual
     bool
     create(
-        const std::string& file_name) override;
+        const std::string& file_name,
+        const MPI_Comm comm=MPI_COMM_NULL) override;
 
     /**
      * @brief Opens an existing CSV database file with the supplied name.
+     *        NOTE: CSVDatabase does not actually open a file with this.
+     *        This function will only print out the file_name.
      *
      * @param[in] file_name Name of existing CSV database file to open.
      * @param[in] type Read/write type ("r"/"wr")
+     * @param[in] comm MPI communicator for distributed data I/O.
+     *                 CSVDatabase I/O is always performed serially, regardless.
      *
      * @return True if file open was successful.
      */
-    virtual
     bool
     open(
         const std::string& file_name,
-        const std::string& type) override;
+        const std::string& type,
+        const MPI_Comm comm=MPI_COMM_NULL) override;
 
     /**
      * @brief Closes the currently open CSV database file.
      *
      * @return True if the file close was successful.
      */
-    virtual
     bool
     close();
 
@@ -83,13 +90,15 @@ public:
      *                written.
      * @param[in] data The array of integer values to be written.
      * @param[in] nelements The number of integers in the array.
+     * @param[in] distributed True if data is a distributed integer array.
+     *                        CSVDatabase writes the array serially whether or not distributed.
      */
-    virtual
     void
     putIntegerArray(
         const std::string& file_name,
         const int* const data,
-        int nelements);
+        int nelements,
+        const bool distributed=false) override;
 
     /**
      * @brief Writes an array of doubles associated with the supplied filename.
@@ -102,13 +111,15 @@ public:
      *                written.
      * @param[in] data The array of double values to be written.
      * @param[in] nelements The number of doubles in the array.
+     * @param[in] distributed True if data is a distributed double array.
+     *                        CSVDatabase writes the array serially whether or not distributed.
      */
-    virtual
     void
     putDoubleArray(
         const std::string& file_name,
         const double* const data,
-        int nelements);
+        int nelements,
+        const bool distributed=false) override;
 
     /**
      * @brief Writes a vector of doubles associated with the supplied filename to
@@ -122,13 +133,15 @@ public:
      *                written.
      * @param[in] data The vector of double values to be written.
      * @param[in] nelements The number of doubles in the vector.
+     * @param[in] distributed True if data is a distributed double vector.
+     *                        CSVDatabase writes the vector serially whether or not distributed.
      */
-    virtual
     void
     putDoubleVector(
         const std::string& file_name,
         const std::vector<double>& data,
-        int nelements);
+        int nelements,
+        const bool distributed=false) override;
 
     /**
      * @brief Writes a vector of complex doubles associated with the supplied filename.
@@ -142,7 +155,6 @@ public:
      * @param[in] data The vector of complex double values to be written.
      * @param[in] nelements The number of complex doubles in the vector.
      */
-    virtual
     void
     putComplexVector(
         const std::string& file_name,
@@ -161,7 +173,6 @@ public:
      * @param[in] data The vector of strings to be written.
      * @param[in] nelements The number of strings in the vector.
      */
-    virtual
     void
     putStringVector(
         const std::string& file_name,
@@ -178,13 +189,15 @@ public:
      *                read.
      * @param[out] data The allocated array of integer values to be read.
      * @param[in] nelements The number of integers in the array.
+     * @param[in] distributed True if data is a distributed integer array.
+     *                        CSVDatabase reads the array serially whether or not distributed.
      */
-    virtual
     void
     getIntegerArray(
         const std::string& file_name,
         int* data,
-        int nelements);
+        int nelements,
+        const bool distributed=false) override;
 
     /**
      * @brief Reads a vector of integers associated with the supplied filename.
@@ -211,9 +224,8 @@ public:
      * @param[in] file_name The filename associated with the array of values to be
      *                read.
      */
-    virtual
     int
-    getDoubleArraySize(const std::string& file_name)
+    getDoubleArraySize(const std::string& file_name) override
     {
         std::vector<double> tmp;
         getDoubleVector(file_name, tmp);
@@ -230,13 +242,15 @@ public:
      *                read.
      * @param[out] data The allocated array of double values to be read.
      * @param[in] nelements The number of doubles in the array.
+     * @param[in] distributed True if data is a distributed double array.
+     *                        CSVDatabase reads the array serially whether or not distributed.
      */
-    virtual
     void
     getDoubleArray(
         const std::string& file_name,
         double* data,
-        int nelements);
+        int nelements,
+        const bool distributed=false) override;
 
     /**
      * @brief Reads a sub-array of doubles associated with the supplied filename.
@@ -249,14 +263,16 @@ public:
      * @param[out] data The allocated sub-array of double values to be read.
      * @param[in] nelements The number of doubles in the full array.
      * @param[in] idx The set of indices in the sub-array.
+     * @param[in] distributed True if data is a distributed integer array.
+     *                        CSVDatabase reads the array serially whether or not distributed.
      */
-    virtual
     void
     getDoubleArray(
         const std::string& file_name,
         double* data,
         int nelements,
-        const std::vector<int>& idx);
+        const std::vector<int>& idx,
+        const bool distributed=false) override;
 
     /**
      * @brief Reads an array of doubles associated with the supplied filename.
@@ -271,8 +287,9 @@ public:
      * @param[in] offset The initial offset in the array.
      * @param[in] block_size The block size to read from the CSV dataset.
      * @param[in] stride The stride to read from the CSV dataset.
+     * @param[in] distributed True if data is a distributed integer array.
+     *                        CSVDatabase reads the array serially whether or not distributed.
      */
-    virtual
     void
     getDoubleArray(
         const std::string& file_name,
@@ -280,7 +297,8 @@ public:
         int nelements,
         int offset,
         int block_size,
-        int stride);
+        int stride,
+        const bool distributed=false) override;
 
     /**
      * @brief Reads a vector of doubles associated with the supplied filename.

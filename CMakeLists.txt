@@ -141,6 +141,7 @@ if (ENABLE_EXAMPLES)
       de_parametric_maxwell_greedy
       maxwell_local_rom_greedy     
       grad_div_global_rom
+      elliptic_eigenproblem_global_rom
       dg_advection
       nonlinear_elasticity
       heat_conduction
@@ -154,7 +155,8 @@ if (ENABLE_EXAMPLES)
       local_dw_csv
       parametric_tw_csv
       parametric_dw_csv
-      parametric_dw_csv_indicators)
+      parametric_dw_csv_indicators
+      parametric_dmdc_heat_conduction)
     set(example_directories
       prom
       prom
@@ -167,6 +169,8 @@ if (ENABLE_EXAMPLES)
       prom
       prom
       prom
+      prom
+      dmd
       dmd
       dmd
       dmd
@@ -267,6 +271,7 @@ if(GTEST_FOUND)
   set(unit_test_stems
     Vector
     Matrix
+    HDFDatabase
     DEIM
     DMD
     GNAT
@@ -278,7 +283,8 @@ if(GTEST_FOUND)
     IncrementalSVDBrand
     GreedyCustomSampler
     NNLS
-    basis_conversion)
+    basis_conversion
+    SnapshotInterpolator)
   foreach(stem IN LISTS unit_test_stems)
     add_executable(test_${stem} unit_tests/test_${stem}.cpp)
     target_link_libraries(test_${stem} PRIVATE ROM

@@ -68,4 +68,11 @@ get_global_offsets(const int local_dim, std::vector<int> &offsets,
     return dim;
 }
 
+bool
+is_same(int x, const MPI_Comm &comm) {
+    int p[2] = {-x, x};
+    MPI_Allreduce(MPI_IN_PLACE, p, 2, MPI_INT, MPI_MIN, comm);
+    return (p[0] == -p[1]);
+}
+
 }
