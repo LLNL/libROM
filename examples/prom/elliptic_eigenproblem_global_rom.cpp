@@ -684,9 +684,9 @@ int main(int argc, char *argv[])
     VisItDataCollection *visit_dc = NULL;
     if (visit)
     {
-        if (offline) visit_dc = new VisItDataCollection("elliptic_eigenproblem_offline_par" + std::to_string(id), pmesh);
-        else if (fom) visit_dc = new VisItDataCollection("elliptic_eigenproblem_fom", pmesh);
-        else if (online) visit_dc = new VisItDataCollection("elliptic_eigenproblem_rom", pmesh);
+        if (offline) visit_dc = new VisItDataCollection(baseName + "offline_par" + std::to_string(id), pmesh);
+        else if (fom) visit_dc = new VisItDataCollection(baseName + "fom", pmesh);
+        else if (online) visit_dc = new VisItDataCollection(baseName + "rom", pmesh);
         visit_dc->RegisterField("Conductivity", &c_gf);
         visit_dc->RegisterField("Potential", &p_gf);
         std::vector<ParGridFunction*> visit_evs;
