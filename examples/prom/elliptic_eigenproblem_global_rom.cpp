@@ -726,17 +726,18 @@ int main(int argc, char *argv[])
         std::vector<ParGridFunction*> visit_evs;
         for (int i = 0; i < nev && i < eigenvalues.Size(); i++)
         {
+            Vector ev;
             if (fom || offline) {
-                // convert eigenvector from HypreParVector to ParGridFunction
-                x = lobpcg->GetEigenvector(i);
+                ev = lobpcg->GetEigenvector(i);
             }
             else {
                 // for online, eigenvectors are stored in evect matrix
-                Vector ev;
                 evect.GetRow(i, ev);
-                x = ev;
-                x *= sign_ev[i];
             }
+            // convert eigenvector from HypreParVector to ParGridFunction
+            ev *= sign_ev[i];
+            x = ev;
+            // convert eigenvector from HypreParVector to ParGridFunction
             visit_evs.push_back(new ParGridFunction(x));
             visit_dc->RegisterField("Eigenmode_" + std::to_string(i), visit_evs.back());
         }
@@ -779,16 +780,16 @@ int main(int argc, char *argv[])
                          << ", Lambda = " << eigenvalues[i] << endl;
                 }
 
+                Vector ev;
                 if (fom || offline) {
-                    // convert eigenvector from HypreParVector to ParGridFunction
-                    x = lobpcg->GetEigenvector(i);
-                } else {
-                    // for online, eigenvectors are stored in evect matrix
-                    Vector ev;
-                    evect.GetRow(i, ev);
-                    x = ev;
-                    x *= sign_ev[i];
+                    ev = lobpcg->GetEigenvector(i);
                 }
+                else {
+                    evect.GetRow(i, ev);
+                }
+                // convert eigenvector from HypreParVector to ParGridFunction
+                ev *= sign_ev[i];
+                x = ev;
 
                 sout << "parallel " << num_procs << " " << myid << "\n"
                      << "solution\n" << *pmesh << x << flush
