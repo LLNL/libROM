@@ -484,7 +484,6 @@ int main(int argc, char *argv[])
     }
 
     // 15. The online phase
-    Vector sign_ev(nev);
     if (online) {
         // 16. read the reduced basis
         assembleTimer.Start();
@@ -567,8 +566,9 @@ int main(int argc, char *argv[])
 
     // 19. Save the refined mesh and the modes in parallel. This output can be
     //     viewed later using GLVis: "glvis -np <np> -m mesh -g mode".
+    Vector sign_ev(nev);
     {
-        ostringstream mesh_name, mode_name;
+        ostringstream mesh_name, mode_name, mode_ref_name;
         mesh_name << "elliptic_eigenproblem-mesh." << setfill('0') << setw(6) << myid;
 
         ofstream mesh_ofs(mesh_name.str().c_str());
@@ -576,26 +576,60 @@ int main(int argc, char *argv[])
         pmesh->Print(mesh_ofs);
 
         std::string mode_prefix = "mode_";
-        if (online)
-        {
-            mode_prefix += "rom_";
-        } else if (fom)
+        if (fom || offline)
         {
             mode_prefix += "fom_";
         }
+        else if (online)
+        {
+            mode_prefix += "rom_";
+        }
 
+        Vector mode_ref(evect.NumCols());
         for (int i=0; i < nev && i < eigenvalues.Size(); i++)
         {
-            if (fom || offline) {
-                // convert eigenvector from HypreParVector to ParGridFunction
-                x = lobpcg->GetEigenvector(i);
-            } else {
-                // for online, eigenvectors are stored in evect matrix
-                Vector ev;
-                evect.GetRow(i, ev);
-                x = ev;
+            if (!(offline && id == 0))
+            {
+                mode_name << "mode_ref_" << setfill('0') << setw(2) << i << "."
+                      << setfill('0') << setw(6) << myid;
+
+                ifstream mode_ref_ifs(mode_name.str().c_str());
+                mode_ref_ifs.precision(16);
+                mode_ref.Load(mode_ref_ifs, evect.NumCols());
+                mode_ref_ifs.close();
             }
 
+            Vector ev;
+            if (fom || offline) {
+                ev = lobpcg->GetEigenvector(i);
+            }
+            else
+            {
+                // for online, eigenvectors are stored in evect matrix
+                evect.GetRow(i, ev);
+            }
+            sign_ev[i] = (InnerProduct(mode_ref, ev) >= 0) ? 1 : -1;
+            ev *= sign_ev[i];
+            // convert eigenvector from HypreParVector to ParGridFunction
+            x = ev;
+
+            if (offline && id == 0)
+            {
+                mode_name << "mode_ref_" << setfill('0') << setw(2) << i << "."
+                          << setfill('0') << setw(6) << myid;
+
+                ofstream mode_ofs(mode_name.str().c_str());
+                mode_ofs.precision(16);
+
+                // TODO: issue using .Load() function if file written with .Save()?
+                //x.Save(mode_ofs);
+                for (int j = 0; j < x.Size(); j++)
+                {
+                    mode_ofs << x[j] << "\n";
+                }
+                mode_ofs.close();
+            }
+ 
             mode_name << mode_prefix << setfill('0') << setw(2) << i << "."
                       << setfill('0') << setw(6) << myid;
 
@@ -669,8 +703,7 @@ int main(int argc, char *argv[])
             mode_fom_ifs.close();
 
             const double fomNorm = sqrt(InnerProduct(mode_fom, mode_fom));
-            sign_ev[i] = (InnerProduct(mode_fom, mode_rom) >= 0) ? 1 : -1;
-            mode_fom.Add(-sign_ev[i], mode_rom);
+            mode_fom.Add(-1.0, mode_rom);
             const double diffNorm = sqrt(InnerProduct(mode_fom, mode_fom));
             if (myid == 0) std::cout << "Relative l2 error of ROM eigenvector " << i <<
                                          " = " << diffNorm /
@@ -695,7 +728,8 @@ int main(int argc, char *argv[])
             if (fom || offline) {
                 // convert eigenvector from HypreParVector to ParGridFunction
                 x = lobpcg->GetEigenvector(i);
-            } else {
+            }
+            else {
                 // for online, eigenvectors are stored in evect matrix
                 Vector ev;
                 evect.GetRow(i, ev);
