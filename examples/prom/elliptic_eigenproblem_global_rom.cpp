@@ -591,7 +591,7 @@ int main(int argc, char *argv[])
             if (!(offline && id == 0))
             {
                 mode_name << "mode_ref_" << setfill('0') << setw(2) << i << "."
-                      << setfill('0') << setw(6) << myid;
+                          << setfill('0') << setw(6) << myid;
 
                 ifstream mode_ref_ifs(mode_name.str().c_str());
                 mode_ref_ifs.precision(16);
@@ -629,7 +629,7 @@ int main(int argc, char *argv[])
                 }
                 mode_ofs.close();
             }
- 
+
             mode_name << mode_prefix << setfill('0') << setw(2) << i << "."
                       << setfill('0') << setw(6) << myid;
 
@@ -717,7 +717,8 @@ int main(int argc, char *argv[])
     VisItDataCollection *visit_dc = NULL;
     if (visit)
     {
-        if (offline) visit_dc = new VisItDataCollection(baseName + "offline_par" + std::to_string(id), pmesh);
+        if (offline) visit_dc = new VisItDataCollection(baseName + "offline_par" +
+                    std::to_string(id), pmesh);
         else if (fom) visit_dc = new VisItDataCollection(baseName + "fom", pmesh);
         else if (online) visit_dc = new VisItDataCollection(baseName + "rom", pmesh);
         visit_dc->RegisterField("Conductivity", &c_gf);
