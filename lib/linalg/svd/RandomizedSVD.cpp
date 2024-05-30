@@ -104,7 +104,7 @@ RandomizedSVD::computeSVD()
     int rand_proj_rows = rand_proj->numRows();
     delete rand_mat;
 
-    Matrix* Q = rand_proj->qr_factorize();
+    std::unique_ptr<Matrix> Q = rand_proj->qr_factorize();
 
     // Project d_samples onto Q
     Matrix* svd_input_mat = Q->transposeMult(snapshot_matrix);
@@ -197,7 +197,6 @@ RandomizedSVD::computeSVD()
     }
 
     d_basis_is_current = true;
-    delete Q;
     release_context(&svd_input);
 
     if (d_debug_algorithm) {

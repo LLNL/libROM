@@ -202,7 +202,7 @@ end subroutine
 !     initialized with all of the information required to proceed with a
 !     computation.
 !   - m, n: Number of rows and columns of the global matrix. For the ROM
-!     application, the data dimension and the number of shapshot vectors
+!     application, the data dimension and the number of snapshot vectors,
 !     respectively.
 !   - nprow, npcol: Number of rows and columns in the processor grid;
 !     MPI_Comm_size must give a number _greater than or equal to_ nprow*npcol.

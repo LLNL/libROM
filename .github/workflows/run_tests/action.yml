@@ -26,6 +26,8 @@ runs:
           mpirun -n 3 --oversubscribe tests/test_IncrementalSVDBrand
           ./tests/test_HDFDatabase
           mpirun -n 3 --oversubscribe tests/test_HDFDatabase
+          ./tests/test_QR
+          mpirun -n 3 --oversubscribe tests/test_QR
           ./tests/test_NNLS
           mpirun -n 3 --oversubscribe tests/test_NNLS
       shell: bash
