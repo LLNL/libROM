@@ -224,8 +224,9 @@ int main(int argc, char *argv[])
     }
     int dim = mesh->Dimension();
     mesh->GetBoundingBox(bb_min, bb_max, max(order, 1));
-    gaussian_width = mesh->GetElementVolume(0) * pow(2.0,
-                     1.0 - ser_ref_levels - par_ref_levels);
+    double h_min, h_max, k_min, k_max;
+    mesh->GetCharacteristics(h_min, h_max, k_min, k_max);
+    gaussian_width = h_max * pow(2.0, 1.0 - ser_ref_levels - par_ref_levels);
 
     // 4. Refine the mesh in serial to increase the resolution. In this example
     //    we do 'ser_ref_levels' of uniform refinement, where 'ser_ref_levels' is
@@ -637,6 +638,8 @@ int main(int argc, char *argv[])
             {
                 std::cout << "FOM solution for eigenvalue " << i << " = " <<
                           ev_fom[i] << std::endl;
+                std::cout << "ROM solution for eigenvalue " << i << " = " <<
+                          eigenvalues[i] << std::endl;
                 std::cout << "Absolute error of ROM solution for eigenvalue " << i << " = " <<
                           abs(diff_ev[i]) << std::endl;
                 std::cout << "Relative error of ROM solution for eigenvalue " << i << " = " <<
@@ -678,11 +681,14 @@ int main(int argc, char *argv[])
         }
     }
 
-    VisItDataCollection visit_dc("EllipticEigenproblem", pmesh);
+    VisItDataCollection *visit_dc = NULL;
     if (visit)
     {
-        visit_dc.RegisterField("Conductivity", &c_gf);
-        visit_dc.RegisterField("Potential", &p_gf);
+        if (offline) visit_dc = new VisItDataCollection("elliptic_eigenproblem_offline_par" + std::to_string(id), pmesh);
+        else if (fom) visit_dc = new VisItDataCollection("elliptic_eigenproblem_fom", pmesh);
+        else if (online) visit_dc = new VisItDataCollection("elliptic_eigenproblem_rom", pmesh);
+        visit_dc->RegisterField("Conductivity", &c_gf);
+        visit_dc->RegisterField("Potential", &p_gf);
         std::vector<ParGridFunction*> visit_evs;
         for (int i = 0; i < nev && i < eigenvalues.Size(); i++)
         {
@@ -697,11 +703,11 @@ int main(int argc, char *argv[])
                 x *= sign_ev[i];
             }
             visit_evs.push_back(new ParGridFunction(x));
-            visit_dc.RegisterField("x" + std::to_string(i), visit_evs.back());
+            visit_dc->RegisterField("Eigenmode_" + std::to_string(i), visit_evs.back());
         }
-        visit_dc.SetCycle(0);
-        visit_dc.SetTime(0.0);
-        visit_dc.Save();
+        visit_dc->SetCycle(0);
+        visit_dc->SetTime(0.0);
+        visit_dc->Save();
         for (size_t i = 0; i < visit_evs.size(); i++)
         {
             delete visit_evs[i];
