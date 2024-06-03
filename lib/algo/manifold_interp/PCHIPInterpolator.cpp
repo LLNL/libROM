@@ -170,10 +170,6 @@ double PCHIPInterpolator::computeDerivative(double S1, double S2,
     {
         d = S1*S2/(alpha*S2 + (1-alpha)*S1);
     }
-    else
-    {
-        d = 0.0;
-    }
     return d;
 }
 
