@@ -14,7 +14,7 @@
  * PIECEWISE CUBIC INTERPOLATION," Fritsch and Carlson (1980)
  *
  */
-#include "SnapshotInterpolator.h"
+#include "PCHIPInterpolator.h"
 
 #include <cfloat>
 #include <limits.h>
@@ -32,10 +32,10 @@ using namespace std;
 
 namespace CAROM {
 
-void SnapshotInterpolator::interpolate(std::vector<Vector*>& snapshot_ts,
-                                       std::vector<Vector*>& snapshots,
-                                       std::vector<Vector*>& output_ts,
-                                       std::vector<Vector*>& output_snapshots)
+void PCHIPInterpolator::interpolate(std::vector<Vector*>& snapshot_ts,
+                                    std::vector<Vector*>& snapshots,
+                                    std::vector<Vector*>& output_ts,
+                                    std::vector<Vector*>& output_snapshots)
 {
     CAROM_VERIFY(snapshot_ts.size() == snapshots.size());
     CAROM_VERIFY(snapshot_ts.size() > 0);
@@ -124,15 +124,16 @@ void SnapshotInterpolator::interpolate(std::vector<Vector*>& snapshot_ts,
                     d[n_snap-1]*computeH4(t,t_in[n_snap-2],t_in[n_snap-1]);
             counter += 1;
         }
+        CAROM_VERIFY(counter == n_out);
     }
 }
 
-void SnapshotInterpolator::interpolate(std::vector<Vector*>&
-                                       snapshot_ts,
-                                       std::vector<Vector*>& snapshots,
-                                       int n_out,
-                                       std::vector<Vector*>& output_ts,
-                                       std::vector<Vector*>& output_snapshots)
+void PCHIPInterpolator::interpolate(std::vector<Vector*>&
+                                    snapshot_ts,
+                                    std::vector<Vector*>& snapshots,
+                                    int n_out,
+                                    std::vector<Vector*>& output_ts,
+                                    std::vector<Vector*>& output_snapshots)
 {
     CAROM_VERIFY(snapshot_ts.size() == snapshots.size());
     CAROM_VERIFY(snapshot_ts.size() > 0);
@@ -159,9 +160,9 @@ void SnapshotInterpolator::interpolate(std::vector<Vector*>&
     interpolate(snapshot_ts,snapshots,output_ts, output_snapshots);
 }
 
-const double SnapshotInterpolator::computeDerivative(double S1, double S2,
+double PCHIPInterpolator::computeDerivative(double S1, double S2,
         double h1,
-        double h2)
+        double h2) const
 {
     double d = 0.0;
     double alpha = (h1 + 2*h2)/(3*(h1+h2));
@@ -176,41 +177,41 @@ const double SnapshotInterpolator::computeDerivative(double S1, double S2,
     return d;
 }
 
-const double SnapshotInterpolator::computeH1(double x, double xl, double xr)
+double PCHIPInterpolator::computeH1(double x, double xl, double xr) const
 {
     double h = xr - xl;
     return computePhi((xr-x)/h);
 }
 
-const double SnapshotInterpolator::computeH2(double x, double xl, double xr)
+double PCHIPInterpolator::computeH2(double x, double xl, double xr) const
 {
     double h = xr - xl;
     return computePhi((x-xl)/h);
 }
 
-const double SnapshotInterpolator::computeH3(double x, double xl, double xr)
+double PCHIPInterpolator::computeH3(double x, double xl, double xr) const
 {
     double h = xr-xl;
     return -h*computePsi((xr-x)/h);
 }
 
-const double SnapshotInterpolator::computeH4(double x, double xl, double xr)
+double PCHIPInterpolator::computeH4(double x, double xl, double xr) const
 {
     double h = xr-xl;
     return h*computePsi((x-xl)/h);
 }
 
-const double SnapshotInterpolator::computePhi(double t)
+double PCHIPInterpolator::computePhi(double t) const
 {
     return 3.*pow(t,2.) - 2*pow(t,3.);
 }
 
-const double SnapshotInterpolator::computePsi(double t)
+double PCHIPInterpolator::computePsi(double t) const
 {
     return pow(t,3.) - pow(t,2.);
 }
 
-const int SnapshotInterpolator::sign(double a)
+int PCHIPInterpolator::sign(double a) const
 {
     double TOL = 1e-15;
     if(abs(a) < TOL)return 0;
