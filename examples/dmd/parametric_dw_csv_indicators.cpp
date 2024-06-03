@@ -35,6 +35,7 @@
 #include "algo/DMD.h"
 #include "algo/AdaptiveDMD.h"
 #include "algo/NonuniformDMD.h"
+#include "algo/SnapshotDMD.h"
 #include "algo/manifold_interp/VectorInterpolator.h"
 #include "linalg/Vector.h"
 #include "linalg/Matrix.h"
@@ -105,6 +106,7 @@ int main(int argc, char *argv[])
     const char *spatial_idx_list = "spatial_idx";
     const char *indicator_dir = "indicators";
     const char *window_endpoint_option = "right";
+    const char *window_file = NULL;
     const char *basename = "";
     bool save_csv = false;
 
@@ -159,6 +161,10 @@ int main(int argc, char *argv[])
                    "Name of the sub-folder to dump files within the run directory.");
     args.AddOption(&save_csv, "-csv", "--csv", "-no-csv", "--no-csv",
                    "Enable or disable prediction result output (files in CSV format).");
+    args.AddOption(&window_file, "-window-set", "--window-set-name",
+                   "Name of the file containing a rdim/ef list for each window"
+                   " within the list directory.");
+
     args.Parse();
     if (!args.Good())
     {
@@ -224,6 +230,12 @@ int main(int argc, char *argv[])
         }
     }
 
+    vector<int> window_rdim;
+    if(window_file != NULL)
+    {
+        csv_db.getIntegerVector(string(list_dir) + "/" + 
+                                string(window_file) + ".csv", window_rdim, false);
+    }                            
     
 
     vector<string> training_par_list, testing_par_list; // DATASET info
@@ -342,8 +354,10 @@ int main(int argc, char *argv[])
         {
 //INDICATOR STUFF
             vector<int> indicator_idx;
-            csv_db.getIntegerVector(string(outputPath) + "/" + string(indicator_dir) + "/" + 
-                                    string(training_par_list[idx_dataset]) + "_idx.csv", indicator_idx, false);
+            string filename = string(outputPath) + "/" + string(indicator_dir) + "/" + 
+                                    string(training_par_list[idx_dataset]) + "_idx.csv";
+            if(!myid) cout << "Loading indicator idx file: " << filename << endl;
+            csv_db.getIntegerVector(filename, indicator_idx, false);
             if (indicator_idx.size() > 0)
             {
                 if (indicator_idx[0] >= 0)
@@ -357,8 +371,10 @@ int main(int argc, char *argv[])
             }
 
             vector<double> indicator_val;
-            csv_db.getDoubleVector(string(outputPath) + "/" + string(indicator_dir) + "/" + 
-                                    string(training_par_list[idx_dataset]) + "_val.csv", indicator_val, false);
+            if(!myid) cout << "Loading indicator val file: " << filename << endl;
+            filename = string(outputPath) + "/" + string(indicator_dir) + "/" + 
+                                    string(training_par_list[idx_dataset]) + "_val.csv";
+            csv_db.getDoubleVector(filename, indicator_val, false);
             CAROM_VERIFY(indicator_val.size() > 0);
 
             if (numWindows != indicator_val.size() - 1)
@@ -396,6 +412,7 @@ int main(int argc, char *argv[])
             dmd_curr_par.assign(numWindows, nullptr);
             for (int window = 0; window < numWindows; ++window)
             {
+/*                
                 if (ddt > 0.0)
                 {
                     dmd_curr_par[window] = new CAROM::AdaptiveDMD(dim, ddt, string(rbf),
@@ -409,6 +426,8 @@ int main(int argc, char *argv[])
                 {
                     dmd_curr_par[window] = new CAROM::NonuniformDMD(dim);
                 }
+*/
+                dmd_curr_par[window] = new CAROM::SnapshotDMD(dim,dtc);
             }
             dmd.push_back(dmd_curr_par);
             dmd_curr_par.clear();
@@ -551,6 +570,19 @@ int main(int argc, char *argv[])
                             break;
                         }
                     }
+                    else if(idx_snap == snap_bound[1])
+                    {
+                        if(max_idx_snap == -1)
+                        {
+                            twep->item(numWindows) = tval;
+                            max_idx_snap = idx_snap;
+                            if (myid == 0)
+                            {
+                                cout << "State #" << idx_snap << " - " << data_filename
+                                        << " is the end of window " << numWindows << "." << endl;
+                            }
+                        }
+                    }
                 }
             } // end over idx_snap
 
@@ -567,8 +599,14 @@ int main(int argc, char *argv[])
                 cout << "Number of windows: " << numWindows << endl;
             }
 
+            ofstream myfile;
+            myfile.open (outputPath+"/snapshots_per_window.txt", std::ios_base::app);
             for (int window = 0; window < numWindows; ++window)
             {
+                if(window_file!=NULL)
+                {
+                    rdim = window_rdim[window];
+                }
                 if (rdim != -1)
                 {
                     if (myid == 0)
@@ -593,7 +631,9 @@ int main(int argc, char *argv[])
                     dmd[idx_dataset][window]->summary(outputPath + "/window" + to_string(
                                                           window) + "_par" + to_string(idx_dataset));
                 }
+                myfile << "dmd[" << idx_dataset << "][" << window << "] : " << dmd[idx_dataset][window]->getDimension() << "/" << dmd[idx_dataset][window]->getNumSamples() << endl;
             } // escape for-loop over window
+            myfile.close();
         } // escape for-loop over idx_dataset
         dmd_training_timer.Stop();
     } // escape if-statement of offline
@@ -953,7 +993,7 @@ bool indicator_triggers(std::vector<int> &indicator_idx,
                         std::vector<double> &indicator_val, 
                         double* sample, 
                         int dim, 
-                        double* old_indicator_val, 
+                        double* old_sample_indicator_val, 
                         int* indicator_flipped,
                         bool first_sample)
 // INPUT:
@@ -981,19 +1021,21 @@ bool indicator_triggers(std::vector<int> &indicator_idx,
                 *indicator_flipped = i;
                 break;
             }
-            old_indicator_val[i] = sample[indicator_idx[i]];
+            old_sample_indicator_val[i] = sample[indicator_idx[i]];
         } 
         else if (indicator_idx[i] == -2) // max value indicator.
         {
             double* max = max_element(sample, sample+dim);
-            if(!first_sample && *max < indicator_val[i]*old_indicator_val[i])
+            cout << "max_value is " << *max << endl;
+            cout << "comparison is " << indicator_val[i]*old_sample_indicator_val[i] << endl;
+            if(!first_sample && *max < indicator_val[i]*old_sample_indicator_val[i])
             {
                 switch_window = true;
                 indicator_idx[i] = -1;
                 *indicator_flipped = i;
                 break;
             }
-            old_indicator_val[i] = *max;
+            old_sample_indicator_val[i] = *max;
         }
     }
     return switch_window;
