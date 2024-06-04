@@ -10,7 +10,7 @@
 
 // Description: Implementation of the AdaptiveDMD algorithm.
 
-#include "manifold_interp/SnapshotInterpolator.h"
+#include "manifold_interp/PCHIPInterpolator.h"
 #include "SnapshotDMD.h"
 #include "linalg/Matrix.h"
 #include "linalg/Vector.h"
@@ -50,7 +50,7 @@ void SnapshotDMD::train(double energy_fraction, const Matrix* W0,
 
 void SnapshotDMD::interpolateToNSnapshots(int n)
 {
-    SnapshotInterpolator* interp = new SnapshotInterpolator();
+    PCHIPInterpolator* interp = new PCHIPInterpolator();
     std::vector<Vector*> new_snapshots;
     std::vector<Vector*> new_times;
 

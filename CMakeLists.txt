@@ -284,7 +284,7 @@ if(GTEST_FOUND)
     GreedyCustomSampler
     NNLS
     basis_conversion
-    SnapshotInterpolator)
+    PCHIPInterpolator)
   foreach(stem IN LISTS unit_test_stems)
     add_executable(test_${stem} unit_tests/test_${stem}.cpp)
     target_link_libraries(test_${stem} PRIVATE ROM

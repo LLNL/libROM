@@ -16,7 +16,7 @@
 
 #ifdef CAROM_HAS_GTEST
 #include<gtest/gtest.h>
-#include "algo/manifold_interp/SnapshotInterpolator.h"
+#include "algo/manifold_interp/PCHIPInterpolator.h"
 #include "linalg/Vector.h"
 #include <cfloat>
 
@@ -87,7 +87,7 @@ TEST(InterpolationTest,test_accuracy)
         reference_snapshots.push_back(temp_y);
     }
 
-    CAROM::SnapshotInterpolator* interp = new CAROM::SnapshotInterpolator();
+    CAROM::PCHIPInterpolator* interp = new CAROM::PCHIPInterpolator();
 
 
     interp->interpolate(times,snapshots,out_times,out_snapshots);

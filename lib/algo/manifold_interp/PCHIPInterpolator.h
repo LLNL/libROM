@@ -1,7 +1,6 @@
-#ifndef included_SnapshotInterpolator_h
-#define included_SnapshotInterpolator_h
+#ifndef included_PCHIPInterpolator_h
+#define included_PCHIPInterpolator_h
 
-#include "Interpolator.h"
 #include <vector>
 #include <string>
 
@@ -11,19 +10,19 @@ class Matrix;
 class Vector;
 
 /**
- * Implements PCHIP algorithm.  Based on "A METHOD FOR CONSTRUCTING LOCAL MONOTONE
+ * Implements PCHIP algorithm.  Based on "A METHOD FOR UCTING LOCAL MONOTONE
  * PIECEWISE CUBIC INTERPOLANTS", Fritsch and Butland (1984).  as well as "MONOTONE
  * PIECEWISE CUBIC INTERPOLATION," Fritsch and Carlson (1980)
  *
  */
-class SnapshotInterpolator
+class PCHIPInterpolator
 {
 public:
 
 
-    SnapshotInterpolator()
+    PCHIPInterpolator()
     {}
-    ~SnapshotInterpolator()
+    ~PCHIPInterpolator()
     {}
 
     /**
@@ -64,14 +63,14 @@ public:
 
 private:
 
-    const double computeDerivative(double S1, double S2, double h1, double h2);
-    const double computeH1(double x, double xl, double xr);
-    const double computeH2(double x, double xl, double xr);
-    const double computeH3(double x, double xl, double xr);
-    const double computeH4(double x, double xl, double xr);
-    const double computePhi(double t);
-    const double computePsi(double t);
-    const int sign(double a);
+    double computeDerivative(double S1, double S2, double h1, double h2) const;
+    double computeH1(double x, double xl, double xr) const;
+    double computeH2(double x, double xl, double xr) const;
+    double computeH3(double x, double xl, double xr) const;
+    double computeH4(double x, double xl, double xr) const;
+    double computePhi(double t) const;
+    double computePsi(double t) const;
+    int sign(double a) const;
 };
 
 }

@@ -29,13 +29,14 @@
 //  predicition phase.
 //
 // Command 2:
-//  wave_equation -tf 2 -nwinsamp 10 -rdim 12 -visit -snap -proj
+//  wave_equation -tf 2 -nwinsamp 25 -rdim 27 -visit -snap -proj
 //
 // Output 2:
-// Relative error of DMD solution (u) at t_final: 2 is 0.038837521
-// Elapsed time for solving FOM: 1.681509e-01 second
-// Elapsed time for training DMD: 9.025622e-01 second
-// Elapsed time for predicting DMD: 8.561013e-03 second
+//  Relative error of DMD solution (u) at t_final: 2 is 0.0029577152
+//  Elapsed time for solving FOM: 1.989041e-01 second
+//  Elapsed time for training DMD: 1.449013e+00 second
+//  Elapsed time for predicting DMD: 4.555228e-02 second
+
 //
 // =================================================================================
 //
@@ -235,7 +236,7 @@ int main(int argc, char *argv[])
     int precision = 8;
     bool snapshotDMD = false;
     bool project_initial_condition = false;
-    const char *temp_io_dir = "./wave_equation";
+    const char *temp_io_dir = "./wave_equation_out";
     std::string io_dir;
     cout.precision(precision);
     OptionsParser args(argc, argv);
