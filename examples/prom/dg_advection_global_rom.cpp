@@ -272,9 +272,9 @@ public:
 int main(int argc, char *argv[])
 {
     // 1. Initialize MPI.
-    MPI_Session mpi;
-    int num_procs = mpi.WorldSize();
-    int myid = mpi.WorldRank();
+    Mpi::Init();
+    const int num_procs = Mpi::WorldSize();
+    const int myid = Mpi::WorldRank();
 
     // 2. Parse command-line options.
     problem = 3;
@@ -380,13 +380,13 @@ int main(int argc, char *argv[])
     args.Parse();
     if (!args.Good())
     {
-        if (mpi.Root())
+        if (myid == 0)
         {
             args.PrintUsage(cout);
         }
         return 1;
     }
-    if (mpi.Root())
+    if (myid == 0)
     {
         args.PrintOptions(cout);
     }
@@ -404,7 +404,7 @@ int main(int argc, char *argv[])
     }
 
     Device device(device_config);
-    if (mpi.Root()) {
+    if (myid == 0) {
         device.Print();
     }
 
@@ -455,7 +455,7 @@ int main(int argc, char *argv[])
         ode_solver = new SDIRK34Solver;
         break;
     default:
-        if (mpi.Root())
+        if (myid == 0)
         {
             cout << "Unknown ODE solver type: " << ode_solver_type << '\n';
         }
@@ -492,7 +492,7 @@ int main(int argc, char *argv[])
     ParFiniteElementSpace *fes = new ParFiniteElementSpace(pmesh, &fec);
 
     HYPRE_BigInt global_vSize = fes->GlobalTrueVSize();
-    if (mpi.Root())
+    if (myid == 0)
     {
         cout << "Number of unknowns: " << global_vSize << endl;
     }
@@ -639,11 +639,11 @@ int main(int argc, char *argv[])
         sout.open(vishost, visport);
         if (!sout)
         {
-            if (mpi.Root())
+            if (myid == 0)
                 cout << "Unable to connect to GLVis server at "
                      << vishost << ':' << visport << endl;
             visualization = false;
-            if (mpi.Root())
+            if (myid == 0)
             {
                 cout << "GLVis visualization disabled.\n";
             }
@@ -655,7 +655,7 @@ int main(int argc, char *argv[])
             sout << "solution\n" << *pmesh << *u;
             sout << "pause\n";
             sout << flush;
-            if (mpi.Root())
+            if (myid == 0)
                 cout << "GLVis visualization paused."
                      << " Press space (in the GLVis window) to resume it.\n";
         }
@@ -828,7 +828,7 @@ int main(int argc, char *argv[])
 
         if (done || ti % vis_steps == 0)
         {
-            if (mpi.Root())
+            if (myid == 0)
             {
                 cout << "time step: " << ti << ", time: " << t << endl;
             }
@@ -847,7 +847,7 @@ int main(int argc, char *argv[])
             {
                 if (online)
                 {
-                    if (mpi.Root())
+                    if (myid == 0)
                         cout << "WARNING: FOM lifting for visualization is slow." << endl;
 
                     CAROM::Vector u_hat_final_carom(u_hat->GetData(), u_hat->Size(), false);

@@ -131,7 +131,9 @@ double max_char_speed;
 int main(int argc, char *argv[])
 {
     // 1. Initialize MPI.
-    MPI_Session mpi(argc, argv);
+    Mpi::Init();
+    const int num_procs = Mpi::WorldSize();
+    const int myid = Mpi::WorldRank();
 
     // 2. Parse command-line options.
     problem = 1;
@@ -197,12 +199,12 @@ int main(int argc, char *argv[])
     args.Parse();
     if (!args.Good())
     {
-        if (mpi.Root()) {
+        if (myid == 0) {
             args.PrintUsage(cout);
         }
         return 1;
     }
-    if (mpi.Root()) {
+    if (myid == 0) {
         args.PrintOptions(cout);
     }
 
@@ -234,7 +236,7 @@ int main(int argc, char *argv[])
         ode_solver = new RK6Solver;
         break;
     default:
-        if (mpi.Root())
+        if (myid == 0)
         {
             cout << "Unknown ODE solver type: " << ode_solver_type << '\n';
         }
@@ -273,7 +275,7 @@ int main(int argc, char *argv[])
     MFEM_ASSERT(fes.GetOrdering() == Ordering::byNODES, "");
 
     HYPRE_BigInt glob_size = vfes.GlobalTrueVSize();
-    if (mpi.Root()) {
+    if (myid == 0) {
         cout << "Number of unknowns: " << glob_size << endl;
     }
 
@@ -299,7 +301,7 @@ int main(int argc, char *argv[])
     // Output the initial solution.
     {
         ostringstream mesh_name;
-        mesh_name << "vortex-mesh." << setfill('0') << setw(6) << mpi.WorldRank();
+        mesh_name << "vortex-mesh." << setfill('0') << setw(6) << myid;
         ofstream mesh_ofs(mesh_name.str().c_str());
         mesh_ofs.precision(precision);
         mesh_ofs << pmesh;
@@ -309,7 +311,7 @@ int main(int argc, char *argv[])
             ParGridFunction uk(&fes, u_block.GetBlock(k));
             ostringstream sol_name;
             sol_name << "vortex-" << k << "-init."
-                     << setfill('0') << setw(6) << mpi.WorldRank();
+                     << setfill('0') << setw(6) << myid;
             ofstream sol_ofs(sol_name.str().c_str());
             sol_ofs.precision(precision);
             sol_ofs << uk;
@@ -342,19 +344,19 @@ int main(int argc, char *argv[])
         sout.open(vishost, visport);
         if (!sout)
         {
-            if (mpi.Root())
+            if (myid == 0)
             {
                 cout << "Unable to connect to GLVis server at "
                      << vishost << ':' << visport << endl;
             }
             visualization = false;
-            if (mpi.Root()) {
+            if (myid == 0) {
                 cout << "GLVis visualization disabled.\n";
             }
         }
         else
         {
-            sout << "parallel " << mpi.WorldSize() << " " << mpi.WorldRank() << "\n";
+            sout << "parallel " << num_procs << " " << myid << "\n";
             sout.precision(precision);
             sout << "solution\n" << pmesh << mom;
             sout << flush;
@@ -486,14 +488,14 @@ int main(int argc, char *argv[])
 
         if (done || ti % vis_steps == 0)
         {
-            if (mpi.Root())
+            if (myid == 0)
             {
                 cout << "time step: " << ti << ", time: " << t << endl;
             }
             if (visualization)
             {
                 MPI_Barrier(pmesh.GetComm());
-                sout << "parallel " << mpi.WorldSize() << " " << mpi.WorldRank() << "\n";
+                sout << "parallel " << num_procs << " " << myid << "\n";
                 sout << "solution\n" << pmesh << mom << flush;
             }
             if (visit)
@@ -506,7 +508,7 @@ int main(int argc, char *argv[])
     }
 
     tic_toc.Stop();
-    if (mpi.Root()) {
+    if (myid == 0) {
         cout << " done, " << tic_toc.RealTime() << "s." << endl;
     }
 
@@ -517,7 +519,7 @@ int main(int argc, char *argv[])
         ParGridFunction uk(&fes, u_block.GetBlock(k));
         ostringstream sol_name;
         sol_name << "vortex-" << k << "-final."
-                 << setfill('0') << setw(6) << mpi.WorldRank();
+                 << setfill('0') << setw(6) << myid;
         ofstream sol_ofs(sol_name.str().c_str());
         sol_ofs.precision(precision);
         sol_ofs << uk;
@@ -527,13 +529,13 @@ int main(int argc, char *argv[])
     if (t_final == 2.0)
     {
         const double error = sol.ComputeLpError(2, u0);
-        if (mpi.Root()) {
+        if (myid == 0) {
             cout << "Solution error: " << error << endl;
         }
     }
 
     // 13. Calculate the DMD modes.
-    if (mpi.WorldRank() == 0 && rdim != -1 && ef != -1)
+    if (myid == 0 && rdim != -1 && ef != -1)
     {
         std::cout << "Both rdim and ef are set. ef will be ignored." << std::endl;
     }
@@ -542,7 +544,7 @@ int main(int argc, char *argv[])
 
     if (rdim != -1)
     {
-        if (mpi.WorldRank() == 0)
+        if (myid == 0)
         {
             std::cout << "Creating DMD with rdim: " << rdim << std::endl;
         }
@@ -553,7 +555,7 @@ int main(int argc, char *argv[])
     }
     else if (ef != -1)
     {
-        if (mpi.WorldRank() == 0)
+        if (myid == 0)
         {
             std::cout << "Creating DMD with energy fraction: " << ef << std::endl;
         }
@@ -575,7 +577,7 @@ int main(int argc, char *argv[])
     true_solution_e = u_block.GetBlock(3).GetData();
 
     // 14. Predict using DMD.
-    if (mpi.WorldRank() == 0)
+    if (myid == 0)
     {
         std::cout << "Predicting density, momentum, and energy using DMD" << std::endl;
     }
@@ -680,7 +682,7 @@ int main(int argc, char *argv[])
     double tot_true_solution_e_norm = sqrt(InnerProduct(MPI_COMM_WORLD,
                                            true_solution_e, true_solution_e));
 
-    if (mpi.WorldRank() == 0)
+    if (myid == 0)
     {
         std::cout << "Relative error of DMD density (dens) at t_final: " << t_final <<
                   " is " << tot_diff_norm_dens / tot_true_solution_dens_norm << std::endl;
