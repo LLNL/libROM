@@ -427,7 +427,8 @@ int main(int argc, char *argv[])
                     dmd_curr_par[window] = new CAROM::NonuniformDMD(dim);
                 }
 */
-                dmd_curr_par[window] = new CAROM::SnapshotDMD(dim,dtc);
+                //dmd_curr_par[window] = new CAROM::SnapshotDMD(dim,dtc);
+                dmd_curr_par[window] = new CAROM::DMD(dim,dtc);
             }
             dmd.push_back(dmd_curr_par);
             dmd_curr_par.clear();
@@ -1017,13 +1018,13 @@ bool indicator_triggers(std::vector<int> &indicator_idx,
             if(sample[indicator_idx[i]] >= indicator_val[i]) // Threshold indicator.
             {
                 switch_window = true;
-                indicator_idx[i] = -1;
+                indicator_idx[i] = -404;
                 *indicator_flipped = i;
                 break;
             }
             old_sample_indicator_val[i] = sample[indicator_idx[i]];
-        } 
-        else if (indicator_idx[i] == -2) // max value indicator.
+        }
+        else if (indicator_idx[i] == -2) // max value decrease indicator.
         {
             double* max = max_element(sample, sample+dim);
             cout << "max_value is " << *max << endl;
@@ -1031,11 +1032,33 @@ bool indicator_triggers(std::vector<int> &indicator_idx,
             if(!first_sample && *max < indicator_val[i]*old_sample_indicator_val[i])
             {
                 switch_window = true;
-                indicator_idx[i] = -1;
+                indicator_idx[i] = -404;
                 *indicator_flipped = i;
                 break;
             }
             old_sample_indicator_val[i] = *max;
+        }
+        else if(indicator_idx[i] == -3) // time windowing indicator
+        {
+            if(first_sample) old_sample_indicator_val[i] = 0.0;
+            old_sample_indicator_val[i] += 1.0;
+            if(old_sample_indicator_val[i] >= indicator_val[i])
+            {
+                switch_window = true;
+                *indicator_flipped = i;
+                break;
+            }
+        }         
+    }
+    // Deal with indicators that must reset each time ANY OTHER indicator is triggered.
+    if(switch_window) 
+    {
+        for(int i = 0; i < indicator_idx.size(); ++i)
+        {
+            if(indicator_idx[i] == -3)
+            {
+                old_sample_indicator_val[i] = 0;
+            }
         }
     }
     return switch_window;
