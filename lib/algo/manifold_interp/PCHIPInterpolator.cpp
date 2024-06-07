@@ -38,13 +38,19 @@ void PCHIPInterpolator::interpolate(std::vector<Vector*>& snapshot_ts,
                                     std::vector<Vector*>& output_snapshots)
 {
     CAROM_VERIFY(snapshot_ts.size() == snapshots.size());
-    CAROM_VERIFY(snapshot_ts.size() > 0);
-    CAROM_VERIFY(output_ts.size() > 0);
+    CAROM_VERIFY(snapshot_ts.size() > 2);
+    CAROM_VERIFY(output_ts.size() > 1);
     CAROM_VERIFY(output_snapshots.size() == 0);
     CAROM_VERIFY(snapshot_ts[0]->getData()[0] - FLT_EPSILON <=
                  output_ts[0]->getData()[0]  &&
                  output_ts[output_ts.size()-1]->getData()[0] <= snapshot_ts[snapshot_ts.size()
                          -1]->getData()[0] + FLT_EPSILON);
+    for(int i = 1; i < snapshot_ts.size(); ++i)
+    {
+        CAROM_VERIFY(snapshots[i-1]->dim() == snapshots[i]->dim());
+        CAROM_VERIFY(snapshot_ts[i-1]->getData()[0] < snapshot_ts[i]->getData()[0]);
+        CAROM_VERIFY(output_ts[i-1]->getData()[0] < output_ts[i]->getData()[0]);
+    }
 
     int n_out = output_ts.size();
     int n_snap = snapshots.size();
@@ -96,7 +102,7 @@ void PCHIPInterpolator::interpolate(std::vector<Vector*>& snapshot_ts,
                         y_in[j+1]*computeH2(t,t_in[j],t_in[j+1]) +
                         d[j]*computeH3(t,t_in[j],t_in[j+1]) +
                         d[j+1]*computeH4(t,t_in[j],t_in[j+1]);
-                counter += 1;
+                counter++;
             }
         }
 
@@ -122,7 +128,7 @@ void PCHIPInterpolator::interpolate(std::vector<Vector*>& snapshot_ts,
                     y_in[n_snap-1]*computeH2(t,t_in[n_snap-2],t_in[n_snap-1]) +
                     d[n_snap-2]*computeH3(t,t_in[n_snap-2],t_in[n_snap-1]) +
                     d[n_snap-1]*computeH4(t,t_in[n_snap-2],t_in[n_snap-1]);
-            counter += 1;
+            counter++;
         }
         CAROM_VERIFY(counter == n_out);
     }
@@ -137,14 +143,11 @@ void PCHIPInterpolator::interpolate(std::vector<Vector*>&
 {
     CAROM_VERIFY(snapshot_ts.size() == snapshots.size());
     CAROM_VERIFY(snapshot_ts.size() > 0);
-    CAROM_VERIFY(n_out > 0);
+    CAROM_VERIFY(n_out > 2);
     CAROM_VERIFY(output_ts.size() == 0 && output_snapshots.size() == 0);
-
 
     int n_snap = snapshots.size();
     int n_dim = snapshots[0]->dim();
-
-
 
     double t_min = snapshot_ts[0]->getData()[0];
     double t_max = snapshot_ts[n_snap-1]->getData()[0];
@@ -175,25 +178,25 @@ double PCHIPInterpolator::computeDerivative(double S1, double S2,
 
 double PCHIPInterpolator::computeH1(double x, double xl, double xr) const
 {
-    double h = xr - xl;
+    const double h = xr - xl;
     return computePhi((xr-x)/h);
 }
 
 double PCHIPInterpolator::computeH2(double x, double xl, double xr) const
 {
-    double h = xr - xl;
+    const double h = xr - xl;
     return computePhi((x-xl)/h);
 }
 
 double PCHIPInterpolator::computeH3(double x, double xl, double xr) const
 {
-    double h = xr-xl;
+    const double h = xr-xl;
     return -h*computePsi((xr-x)/h);
 }
 
 double PCHIPInterpolator::computeH4(double x, double xl, double xr) const
 {
-    double h = xr-xl;
+    const double h = xr-xl;
     return h*computePsi((x-xl)/h);
 }
 
@@ -209,7 +212,7 @@ double PCHIPInterpolator::computePsi(double t) const
 
 int PCHIPInterpolator::sign(double a) const
 {
-    double TOL = 1e-15;
+    constexpr double TOL = 1e-15;
     if(abs(a) < TOL)return 0;
     else if(a > 0) return 1;
     else if (a < 0) return -1;
