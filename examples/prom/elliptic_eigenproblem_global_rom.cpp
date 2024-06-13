@@ -623,28 +623,25 @@ int main(int argc, char *argv[])
                 mode_ref_ifs.close();
             }
             mode_ref_name.str("");
-            if (abs(InnerProduct(mode_ref, ev)) < 0.9 * InnerProduct(mode_ref, mode_ref))
-            {
-                std::cout << "Warning: " << i << "-th eigenvector is not directly comparable."
-                          << std::endl;
-                std::cout << "TODO: Projection error of eigenvector." << std::endl;
-                std::cout << "Square norm of reference " << i << " = " << InnerProduct(mode_ref,
-                          mode_ref) << std::endl;
-                std::cout << "Square norm of eigenvector " << i << " = " << InnerProduct(ev,
-                          ev) << std::endl;
-                std::cout << "Inner product = " << InnerProduct(mode_ref, ev) << std::endl;
-            }
             sign_ev[i] = (InnerProduct(mode_ref, ev) >= 0) ? 1 : -1;
-            ev *= sign_ev[i];
+            ev *= sign_ev[i] / sqrt(InnerProduct(ev, ev));
+
+            if (InnerProduct(mode_ref, ev) < 0.9)
+            {
+                std::cout << "Warning: eigenvector " << i <<
+                          " in FOM and ROM are not directly comparable."
+                          << std::endl;
+                std::cout << "Inner product = " << InnerProduct(mode_ref, ev) << std::endl;
+                std::cout << "TODO: Projection error of eigenvector." << std::endl;
+            }
+
             // convert eigenvector from HypreParVector to ParGridFunction
             x = ev;
-
             mode_name << mode_prefix << setfill('0') << setw(2) << i << "."
                       << setfill('0') << setw(6) << myid;
 
             ofstream mode_ofs(mode_name.str().c_str());
             mode_ofs.precision(16);
-
             // TODO: issue using .Load() function if file written with .Save()?
             //x.Save(mode_ofs);
             for (int j = 0; j < x.Size(); j++)
@@ -715,8 +712,7 @@ int main(int argc, char *argv[])
             mode_fom.Add(-1.0, mode_rom);
             const double diffNorm = sqrt(InnerProduct(mode_fom, mode_fom));
             if (myid == 0) std::cout << "Relative l2 error of ROM eigenvector " << i <<
-                                         " = " << diffNorm /
-                                         fomNorm << std::endl;
+                                         " = " << diffNorm / fomNorm << std::endl;
 
             mode_name.str("");
             mode_name_fom.str("");
@@ -744,7 +740,7 @@ int main(int argc, char *argv[])
                 // for online, eigenvectors are stored in evect matrix
                 evect.GetRow(i, ev);
             }
-            ev *= sign_ev[i];
+            ev *= sign_ev[i] / sqrt(InnerProduct(ev, ev));
             // convert eigenvector from HypreParVector to ParGridFunction
             x = ev;
             visit_evs.push_back(new ParGridFunction(x));
@@ -797,7 +793,7 @@ int main(int argc, char *argv[])
                     evect.GetRow(i, ev);
                 }
                 // convert eigenvector from HypreParVector to ParGridFunction
-                ev *= sign_ev[i];
+                ev *= sign_ev[i] / sqrt(InnerProduct(ev, ev));
                 x = ev;
 
                 sout << "parallel " << num_procs << " " << myid << "\n"
