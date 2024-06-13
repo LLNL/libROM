@@ -15,7 +15,7 @@
 // Description:  This example code demonstrates the use of MFEM and libROM to
 //               define a simple projection-based reduced order model of the
 //               eigenvalue problem Lu = lambda u with homogeneous
-//               Dirichlet boundary conditions. 
+//               Dirichlet boundary conditions.
 //
 //               We compute a number of the lowest eigenmodes by discretizing
 //               the Laplacian and Mass operators using a FE space of the
@@ -623,12 +623,15 @@ int main(int argc, char *argv[])
                 mode_ref_ifs.close();
             }
             mode_ref_name.str("");
-            if (abs(InnerProduct(mode_ref, ev)) < 0.9 * InnerProduct(mode_ref, mode_ref)) 
+            if (abs(InnerProduct(mode_ref, ev)) < 0.9 * InnerProduct(mode_ref, mode_ref))
             {
-                std::cout << "Warning: " << i << "-th eigenvector is not directly comparable." << std::endl;
+                std::cout << "Warning: " << i << "-th eigenvector is not directly comparable."
+                          << std::endl;
                 std::cout << "TODO: Projection error of eigenvector." << std::endl;
-                std::cout << "Square norm of reference " << i << " = " << InnerProduct(mode_ref, mode_ref) << std::endl;
-                std::cout << "Square norm of eigenvector " << i << " = " << InnerProduct(ev, ev) << std::endl;
+                std::cout << "Square norm of reference " << i << " = " << InnerProduct(mode_ref,
+                          mode_ref) << std::endl;
+                std::cout << "Square norm of eigenvector " << i << " = " << InnerProduct(ev,
+                          ev) << std::endl;
                 std::cout << "Inner product = " << InnerProduct(mode_ref, ev) << std::endl;
             }
             sign_ev[i] = (InnerProduct(mode_ref, ev) >= 0) ? 1 : -1;
@@ -872,7 +875,8 @@ double Conductivity(const Vector &x)
         {
             center(i) = 0.5 * (bb_min[i] + bb_max[i]);
         }
-        return 1.0 + gaussian_depth * std::exp(-x.DistanceSquaredTo(center) / pow(gaussian_width, 2.0));
+        return 1.0 + gaussian_depth * std::exp(-x.DistanceSquaredTo(center) / pow(
+                gaussian_width, 2.0));
     case 3:
     case 4:
         return 1.0;
@@ -893,7 +897,8 @@ double Potential(const Vector &x)
         {
             center(i) = 0.5 * (bb_min[i] + bb_max[i]);
         }
-        return gaussian_depth * std::exp(-x.DistanceSquaredTo(center) / pow(gaussian_width, 2.0));
+        return gaussian_depth * std::exp(-x.DistanceSquaredTo(center) / pow(
+                                             gaussian_width, 2.0));
     case 4:
         for (int i = 0; i < x.Size(); i++)
         {
