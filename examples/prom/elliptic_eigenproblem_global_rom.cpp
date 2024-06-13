@@ -590,6 +590,7 @@ int main(int argc, char *argv[])
         {
             if (!(offline && id == 0))
             {
+                mode_ref_name.str("");
                 mode_ref_name << "mode_ref_" << setfill('0') << setw(2) << i << "."
                               << setfill('0') << setw(6) << myid;
 
@@ -615,6 +616,7 @@ int main(int argc, char *argv[])
 
             if (offline && id == 0)
             {
+                mode_ref_name.str("");
                 mode_ref_name << "mode_ref_" << setfill('0') << setw(2) << i << "."
                               << setfill('0') << setw(6) << myid;
 
