@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
     int par_ref_levels = 1;
     bool dirichlet = true;
     int order = 1;
-    int nev = 5;
+    int nev = 4;
     int seed = 75;
     bool slu_solver = false;
     bool sp_solver = false;
@@ -573,13 +573,16 @@ int main(int argc, char *argv[])
         pmesh->Print(mesh_ofs);
 
         std::string mode_prefix = "mode_";
+        std::string mode_ref_prefix = "mode_";
         if (fom || offline)
         {
             mode_prefix += "fom_";
+            mode_ref_prefix += "ref_";
         }
         else if (online)
         {
             mode_prefix += "rom_";
+            mode_ref_prefix += "fom_";
         }
 
         for (int i=0; i < nev && i < eigenvalues.Size(); i++)
@@ -595,9 +598,8 @@ int main(int argc, char *argv[])
                 evect.GetRow(i, ev);
             }
 
-            std::cout << "ev.Size = " << ev.Size() << std::endl;
             Vector mode_ref(ev.Size());
-            mode_ref_name << "mode_ref_" << setfill('0') << setw(2) << i << "."
+            mode_ref_name << mode_ref_prefix << setfill('0') << setw(2) << i << "."
                           << setfill('0') << setw(6) << myid;
             if (offline && id == 0)
             {
@@ -621,9 +623,14 @@ int main(int argc, char *argv[])
                 mode_ref_ifs.close();
             }
             mode_ref_name.str("");
-            std::cout << i << "-th norm ref = " << InnerProduct(mode_ref, mode_ref) << std::endl;
-            std::cout << i << "-th norm ev = " << InnerProduct(ev, ev) << std::endl;
-            std::cout << i << "-th inner product = " << InnerProduct(mode_ref, ev) << std::endl;
+            if (abs(InnerProduct(mode_ref, ev)) < 0.9 * InnerProduct(mode_ref, mode_ref)) 
+            {
+                std::cout << "Warning: " << i << "-th eigenvector is not directly comparable." << std::endl;
+                std::cout << "TODO: Projection error of eigenvector." << std::endl;
+                std::cout << "Square norm of reference " << i << " = " << InnerProduct(mode_ref, mode_ref) << std::endl;
+                std::cout << "Square norm of eigenvector " << i << " = " << InnerProduct(ev, ev) << std::endl;
+                std::cout << "Inner product = " << InnerProduct(mode_ref, ev) << std::endl;
+            }
             sign_ev[i] = (InnerProduct(mode_ref, ev) >= 0) ? 1 : -1;
             ev *= sign_ev[i];
             // convert eigenvector from HypreParVector to ParGridFunction
@@ -726,17 +733,17 @@ int main(int argc, char *argv[])
         for (int i = 0; i < nev && i < eigenvalues.Size(); i++)
         {
             Vector ev;
-            if (fom || offline) {
+            if (fom || offline)
+            {
                 ev = lobpcg->GetEigenvector(i);
             }
             else {
                 // for online, eigenvectors are stored in evect matrix
                 evect.GetRow(i, ev);
             }
-            // convert eigenvector from HypreParVector to ParGridFunction
             ev *= sign_ev[i];
-            x = ev;
             // convert eigenvector from HypreParVector to ParGridFunction
+            x = ev;
             visit_evs.push_back(new ParGridFunction(x));
             visit_dc->RegisterField("Eigenmode_" + std::to_string(i), visit_evs.back());
         }
