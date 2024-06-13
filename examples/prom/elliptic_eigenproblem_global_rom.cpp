@@ -590,10 +590,10 @@ int main(int argc, char *argv[])
         {
             if (!(offline && id == 0))
             {
-                mode_name << "mode_ref_" << setfill('0') << setw(2) << i << "."
-                          << setfill('0') << setw(6) << myid;
+                mode_ref_name << "mode_ref_" << setfill('0') << setw(2) << i << "."
+                              << setfill('0') << setw(6) << myid;
 
-                ifstream mode_ref_ifs(mode_name.str().c_str());
+                ifstream mode_ref_ifs(mode_ref_name.str().c_str());
                 mode_ref_ifs.precision(16);
                 mode_ref.Load(mode_ref_ifs, evect.NumCols());
                 mode_ref_ifs.close();
@@ -615,19 +615,19 @@ int main(int argc, char *argv[])
 
             if (offline && id == 0)
             {
-                mode_name << "mode_ref_" << setfill('0') << setw(2) << i << "."
-                          << setfill('0') << setw(6) << myid;
+                mode_ref_name << "mode_ref_" << setfill('0') << setw(2) << i << "."
+                              << setfill('0') << setw(6) << myid;
 
-                ofstream mode_ofs(mode_name.str().c_str());
-                mode_ofs.precision(16);
+                ofstream mode_ref_ofs(mode_ref_name.str().c_str());
+                mode_ref_ofs.precision(16);
 
                 // TODO: issue using .Load() function if file written with .Save()?
-                //x.Save(mode_ofs);
+                //x.Save(mode_ref_ofs);
                 for (int j = 0; j < x.Size(); j++)
                 {
-                    mode_ofs << x[j] << "\n";
+                    mode_ref_ofs << x[j] << "\n";
                 }
-                mode_ofs.close();
+                mode_ref_ofs.close();
             }
 
             mode_name << mode_prefix << setfill('0') << setw(2) << i << "."
