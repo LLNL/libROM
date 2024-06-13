@@ -585,23 +585,11 @@ int main(int argc, char *argv[])
             mode_prefix += "rom_";
         }
 
-        Vector mode_ref(evect.NumCols());
         for (int i=0; i < nev && i < eigenvalues.Size(); i++)
         {
-            if (!(offline && id == 0))
-            {
-                mode_ref_name.str("");
-                mode_ref_name << "mode_ref_" << setfill('0') << setw(2) << i << "."
-                              << setfill('0') << setw(6) << myid;
-
-                ifstream mode_ref_ifs(mode_ref_name.str().c_str());
-                mode_ref_ifs.precision(16);
-                mode_ref.Load(mode_ref_ifs, evect.NumCols());
-                mode_ref_ifs.close();
-            }
-
             Vector ev;
-            if (fom || offline) {
+            if (fom || offline)
+            {
                 ev = lobpcg->GetEigenvector(i);
             }
             else
@@ -609,17 +597,13 @@ int main(int argc, char *argv[])
                 // for online, eigenvectors are stored in evect matrix
                 evect.GetRow(i, ev);
             }
-            sign_ev[i] = (InnerProduct(mode_ref, ev) >= 0) ? 1 : -1;
-            ev *= sign_ev[i];
-            // convert eigenvector from HypreParVector to ParGridFunction
-            x = ev;
+            Vector mode_ref(ev.Size());
 
+            mode_ref_name.str("");
+            mode_ref_name << "mode_ref_" << setfill('0') << setw(2) << i << "."
+                              << setfill('0') << setw(6) << myid;
             if (offline && id == 0)
             {
-                mode_ref_name.str("");
-                mode_ref_name << "mode_ref_" << setfill('0') << setw(2) << i << "."
-                              << setfill('0') << setw(6) << myid;
-
                 ofstream mode_ref_ofs(mode_ref_name.str().c_str());
                 mode_ref_ofs.precision(16);
 
@@ -631,7 +615,22 @@ int main(int argc, char *argv[])
                 }
                 mode_ref_ofs.close();
             }
+            else
+            {
+                ifstream mode_ref_ifs(mode_ref_name.str().c_str());
+                mode_ref_ifs.precision(16);
+                mode_ref.Load(mode_ref_ifs, evect.NumCols());
+                mode_ref_ifs.close();
+            }
+            sign_ev[i] = (InnerProduct(mode_ref, ev) >= 0) ? 1 : -1;
+            std::cout << "norm_ref[i] = " << InnerProduct(mode_ref, mode_ref) << std::endl;
+            std::cout << "norm_ev[i] = " << InnerProduct(ev, ev) << std::endl;
+            std::cout << "ip[i] = " << InnerProduct(mode_ref, ev) << std::endl;
+            ev *= sign_ev[i];
+            // convert eigenvector from HypreParVector to ParGridFunction
+            x = ev;
 
+            mode_name.str("");
             mode_name << mode_prefix << setfill('0') << setw(2) << i << "."
                       << setfill('0') << setw(6) << myid;
 
