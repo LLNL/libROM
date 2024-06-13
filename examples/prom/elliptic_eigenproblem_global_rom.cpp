@@ -14,9 +14,8 @@
 //
 // Description:  This example code demonstrates the use of MFEM and libROM to
 //               define a simple projection-based reduced order model of the
-//               eigenvalue problem -Delta ((1 + alpha v) u) = lambda u with homogeneous
-//               Dirichlet boundary conditions where alpha is a scalar ROM parameter
-//               controlling the frequency of v.
+//               eigenvalue problem Lu = lambda u with homogeneous
+//               Dirichlet boundary conditions. 
 //
 //               We compute a number of the lowest eigenmodes by discretizing
 //               the Laplacian and Mass operators using a FE space of the
@@ -73,7 +72,7 @@ using namespace mfem;
 double Conductivity(const Vector &x);
 double Potential(const Vector &x);
 int problem = 1;
-double kappa;
+double gaussian_depth = 1.0;
 double gaussian_width;
 Vector bb_min, bb_max;
 
@@ -97,7 +96,6 @@ int main(int argc, char *argv[])
     bool sp_solver = false;
     bool cpardiso_solver = false;
 
-    double alpha = 1.0;
     bool visualization = true;
     bool visit = false;
     int vis_steps = 5;
@@ -131,8 +129,8 @@ int main(int argc, char *argv[])
                    "Number of desired eigenmodes.");
     args.AddOption(&seed, "-s", "--seed",
                    "Random seed used to initialize LOBPCG.");
-    args.AddOption(&alpha, "-a", "--alpha",
-                   "Alpha coefficient.");
+    args.AddOption(&gaussian_depth, "-a", "--gaussian-depth",
+                   "Gaussian depth.");
     args.AddOption(&id, "-id", "--id", "Parametric id");
     args.AddOption(&nsets, "-ns", "--nset", "Number of parametric snapshot sets");
     args.AddOption(&visualization, "-vis", "--visualization", "-no-vis",
@@ -326,7 +324,6 @@ int main(int argc, char *argv[])
     assembleTimer.Start();
     ConstantCoefficient one(1.0);
 
-    kappa = alpha * M_PI;
     FunctionCoefficient kappa_0(Conductivity);
     FunctionCoefficient v_0(Potential);
 
@@ -597,13 +594,14 @@ int main(int argc, char *argv[])
                 // for online, eigenvectors are stored in evect matrix
                 evect.GetRow(i, ev);
             }
-            Vector mode_ref(ev.Size());
 
-            mode_ref_name.str("");
+            std::cout << "ev.Size = " << ev.Size() << std::endl;
+            Vector mode_ref(ev.Size());
             mode_ref_name << "mode_ref_" << setfill('0') << setw(2) << i << "."
-                              << setfill('0') << setw(6) << myid;
+                          << setfill('0') << setw(6) << myid;
             if (offline && id == 0)
             {
+                mode_ref = ev;
                 ofstream mode_ref_ofs(mode_ref_name.str().c_str());
                 mode_ref_ofs.precision(16);
 
@@ -611,7 +609,7 @@ int main(int argc, char *argv[])
                 //x.Save(mode_ref_ofs);
                 for (int j = 0; j < x.Size(); j++)
                 {
-                    mode_ref_ofs << x[j] << "\n";
+                    mode_ref_ofs << mode_ref[j] << "\n";
                 }
                 mode_ref_ofs.close();
             }
@@ -619,15 +617,18 @@ int main(int argc, char *argv[])
             {
                 ifstream mode_ref_ifs(mode_ref_name.str().c_str());
                 mode_ref_ifs.precision(16);
-                mode_ref.Load(mode_ref_ifs, evect.NumCols());
+                mode_ref.Load(mode_ref_ifs, ev.Size());
                 mode_ref_ifs.close();
             }
+            mode_ref_name.str("");
+            std::cout << i << "-th norm ref = " << InnerProduct(mode_ref, mode_ref) << std::endl;
+            std::cout << i << "-th norm ev = " << InnerProduct(ev, ev) << std::endl;
+            std::cout << i << "-th inner product = " << InnerProduct(mode_ref, ev) << std::endl;
             sign_ev[i] = (InnerProduct(mode_ref, ev) >= 0) ? 1 : -1;
             ev *= sign_ev[i];
             // convert eigenvector from HypreParVector to ParGridFunction
             x = ev;
 
-            mode_name.str("");
             mode_name << mode_prefix << setfill('0') << setw(2) << i << "."
                       << setfill('0') << setw(6) << myid;
 
@@ -854,14 +855,17 @@ int main(int argc, char *argv[])
 
 double Conductivity(const Vector &x)
 {
-    int dim = x.Size();
-
+    Vector center(x.Size());
     switch (problem)
     {
     case 1:
         return 1.0;
     case 2:
-        return 1.0 + cos(kappa * x(1)) * sin(kappa * x(0));
+        for (int i = 0; i < x.Size(); i++)
+        {
+            center(i) = 0.5 * (bb_min[i] + bb_max[i]);
+        }
+        return 1.0 + gaussian_depth * std::exp(-x.DistanceSquaredTo(center) / pow(gaussian_width, 2.0));
     case 3:
     case 4:
         return 1.0;
@@ -871,7 +875,6 @@ double Conductivity(const Vector &x)
 
 double Potential(const Vector &x)
 {
-    double D = 100.0;
     Vector center(x.Size());
     switch (problem)
     {
@@ -883,13 +886,13 @@ double Potential(const Vector &x)
         {
             center(i) = 0.5 * (bb_min[i] + bb_max[i]);
         }
-        return D * std::exp(-x.DistanceSquaredTo(center) / pow(gaussian_width, 2.0));
+        return gaussian_depth * std::exp(-x.DistanceSquaredTo(center) / pow(gaussian_width, 2.0));
     case 4:
         for (int i = 0; i < x.Size(); i++)
         {
             center(i) = 0.5 * (bb_min[i] + bb_max[i]);
         }
-        return D / x.DistanceSquaredTo(center);
+        return gaussian_depth / x.DistanceSquaredTo(center);
     }
     return 0.0;
 }
