@@ -28,6 +28,20 @@ class IncrementalSVDBrand : public IncrementalSVD
 {
 public:
     /**
+    * @brief Constructor.
+    *
+    * @param[in] options The struct containing the options for this SVD
+    *                    implementation.
+    * @param[in] basis_file_name The base part of the name of the file
+    *                            containing the basis vectors.  Each process
+    *                            will append its process ID to this base
+    *                            name.
+    * @see Options
+    */
+    IncrementalSVDBrand(
+        Options options,
+        const std::string& basis_file_name);
+    /**
      * @brief Destructor.
      */
     ~IncrementalSVDBrand();
@@ -50,23 +64,9 @@ public:
     const Matrix*
     getTemporalBasis() override;
 
-private:
-    friend class BasisGenerator;
+    friend class IncrementalDMD;
 
-    /**
-     * @brief Constructor.
-     *
-     * @param[in] options The struct containing the options for this SVD
-     *                    implementation.
-     * @param[in] basis_file_name The base part of the name of the file
-     *                            containing the basis vectors.  Each process
-     *                            will append its process ID to this base
-     *                            name.
-     * @see Options
-     */
-    IncrementalSVDBrand(
-        Options options,
-        const std::string& basis_file_name);
+private:
 
     /**
      * @brief Unimplemented default constructor.
@@ -173,12 +173,36 @@ private:
      * @brief The matrix U'. U' is not distributed and the entire matrix
      *        exists on each processor.
      */
+    Matrix* d_U;
+    Matrix* d_U_pre;
     Matrix* d_Up;
+    Matrix* d_Up_pre;
+    Matrix* d_W;
+    Matrix* d_W_pre;
+    Matrix* d_Wp;
+    Matrix* d_Wp_pre;
+    Matrix* d_Wp_inv;
+    Vector* d_S_pre;
+
+    Matrix* d_Uq;
+    Matrix* d_Sq_inv;
+    Matrix* d_Wq;
+    Vector* d_p;
 
     /**
      * @brief The tolerance value used to remove small singular values.
      */
     double d_singular_value_tol;
+
+    /**
+     * @brief Maximum number of samples to be used.
+     */
+    double d_max_num_samples;
+
+    /**
+     * @brief Maximum number of basis.
+     */
+    double d_max_num_basis;
 
 };
 

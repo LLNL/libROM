@@ -262,6 +262,8 @@ public:
         const std::string & cutoffOutputPath = "",
         const int first_sv = 0);
 
+    friend class IncrementalDMD;
+
 protected:
     /**
      * @brief Writer of basis vectors.
