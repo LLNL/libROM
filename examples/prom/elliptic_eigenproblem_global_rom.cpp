@@ -623,9 +623,6 @@ int main(int argc, char *argv[])
                 mode_ref_ifs.close();
             }
             sign_ev[i] = (InnerProduct(mode_ref, ev) >= 0) ? 1 : -1;
-            std::cout << "norm_ref[i] = " << InnerProduct(mode_ref, mode_ref) << std::endl;
-            std::cout << "norm_ev[i] = " << InnerProduct(ev, ev) << std::endl;
-            std::cout << "ip[i] = " << InnerProduct(mode_ref, ev) << std::endl;
             ev *= sign_ev[i];
             // convert eigenvector from HypreParVector to ParGridFunction
             x = ev;
