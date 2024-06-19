@@ -72,9 +72,12 @@ using namespace mfem;
 double Conductivity(const Vector &x);
 double Potential(const Vector &x);
 int problem = 1;
-double gaussian_depth = 1.0;
+double gaussian_depth = -800.0;
+double gaussian_center = 0.0;
 double gaussian_width;
+Vector center;
 Vector bb_min, bb_max;
+double h_min, h_max, k_min, k_max;
 
 int main(int argc, char *argv[])
 {
@@ -131,6 +134,8 @@ int main(int argc, char *argv[])
                    "Random seed used to initialize LOBPCG.");
     args.AddOption(&gaussian_depth, "-a", "--gaussian-depth",
                    "Gaussian depth.");
+    args.AddOption(&gaussian_center, "-c", "--gaussian-center",
+                   "Gaussian center.");
     args.AddOption(&id, "-id", "--id", "Parametric id");
     args.AddOption(&nsets, "-ns", "--nset", "Number of parametric snapshot sets");
     args.AddOption(&visualization, "-vis", "--visualization", "-no-vis",
@@ -222,9 +227,29 @@ int main(int argc, char *argv[])
     }
     int dim = mesh->Dimension();
     mesh->GetBoundingBox(bb_min, bb_max, max(order, 1));
-    double h_min, h_max, k_min, k_max;
     mesh->GetCharacteristics(h_min, h_max, k_min, k_max);
-    gaussian_width = h_max * pow(2.0, 1.0 - ser_ref_levels - par_ref_levels);
+    h_max *= pow(0.5, ser_ref_levels + par_ref_levels);
+
+    gaussian_width = 5.0 * h_max;
+    center.SetSize(dim);
+    center(0) = h_max * gaussian_center + 0.5 * (bb_min[0] + bb_max[0]);
+    for (int i = 1; i < dim; i++)
+    {
+        center(i) = 0.5 * (bb_min[i] + bb_max[i]);
+    }
+    if (myid == 0)
+    {
+        std::cout << "Bounding box = [" << bb_min[0] << ", " << bb_max[0] << "]";
+        for (int i = 1; i < dim; i++)
+            std::cout << " x [" << bb_min[i] << ", " << bb_max[i] << "]";
+        std::cout << std::endl << "Mesh size = " << h_max << std::endl;
+
+        std::cout << "Gaussian depth = " << gaussian_depth
+                  << ", width = " << gaussian_width
+                  << ", center = (" << center(0);
+        for (int i = 1; i < dim; i++) std::cout << ", " << center(i);
+        std::cout << ")" << std::endl;
+    }
 
     // 4. Refine the mesh in serial to increase the resolution. In this example
     //    we do 'ser_ref_levels' of uniform refinement, where 'ser_ref_levels' is
@@ -481,7 +506,8 @@ int main(int argc, char *argv[])
     }
 
     // 15. The online phase
-    if (online) {
+    if (online)
+    {
         // 16. read the reduced basis
         assembleTimer.Start();
         CAROM::BasisReader reader(basis_filename);
@@ -693,15 +719,8 @@ int main(int argc, char *argv[])
         Vector mode_fom(evect.NumCols());
         for (int i = 0; i < eigenvalues.Size() && i < nev; i++)
         {
-            mode_name << "mode_rom_" << setfill('0') << setw(2) << i << "."
-                      << setfill('0') << setw(6) << myid;
             mode_name_fom << "mode_fom_" << setfill('0') << setw(2) << i << "."
                           << setfill('0') << setw(6) << myid;
-
-            ifstream mode_rom_ifs(mode_name.str().c_str());
-            mode_rom_ifs.precision(16);
-            mode_rom.Load(mode_rom_ifs, evect.NumCols());
-            mode_rom_ifs.close();
 
             ifstream mode_fom_ifs(mode_name_fom.str().c_str());
             mode_fom_ifs.precision(16);
@@ -709,12 +728,42 @@ int main(int argc, char *argv[])
             mode_fom_ifs.close();
 
             const double fomNorm = sqrt(InnerProduct(mode_fom, mode_fom));
-            mode_fom.Add(-1.0, mode_rom);
+
+            for (int j = 0; j < eigenvalues.Size() && j < nev; j++)
+            {
+                if (abs(ev_fom[j] - ev_fom[i]) < 1e-6)
+                {
+                    mode_name << "mode_rom_" << setfill('0') << setw(2) << j << "."
+                              << setfill('0') << setw(6) << myid;
+                    ifstream mode_rom_ifs(mode_name.str().c_str());
+                    mode_rom_ifs.precision(16);
+                    mode_rom.Load(mode_rom_ifs, evect.NumCols());
+                    mode_rom_ifs.close();
+                    std::cout << "Projecting FOM mode " << i 
+                              << " onto ROM mode " << j << std::endl;
+                    std::cout << "ip = " <<  InnerProduct(mode_fom, mode_rom) << std::endl;
+                    mode_fom.Add(-InnerProduct(mode_fom, mode_rom), mode_rom);
+                    mode_name.str("");
+                }
+                else
+                {
+                    mode_name << "mode_rom_" << setfill('0') << setw(2) << j << "."
+                              << setfill('0') << setw(6) << myid;
+                    ifstream mode_rom_ifs(mode_name.str().c_str());
+                    mode_rom_ifs.precision(16);
+                    mode_rom.Load(mode_rom_ifs, evect.NumCols());
+                    mode_rom_ifs.close();
+                    std::cout << "Not projecting FOM mode " << i 
+                              << " onto ROM mode " << j << std::endl;
+                    std::cout << "ip = " <<  InnerProduct(mode_fom, mode_rom) << std::endl;
+                    mode_name.str("");
+                }
+            }
+
             const double diffNorm = sqrt(InnerProduct(mode_fom, mode_fom));
             if (myid == 0) std::cout << "Relative l2 error of ROM eigenvector " << i <<
                                          " = " << diffNorm / fomNorm << std::endl;
 
-            mode_name.str("");
             mode_name_fom.str("");
         }
     }
@@ -867,10 +916,6 @@ double Conductivity(const Vector &x)
     case 1:
         return 1.0;
     case 2:
-        for (int i = 0; i < x.Size(); i++)
-        {
-            center(i) = 0.5 * (bb_min[i] + bb_max[i]);
-        }
         return 1.0 + gaussian_depth * std::exp(-x.DistanceSquaredTo(center) / pow(
                 gaussian_width, 2.0));
     case 3:
@@ -882,24 +927,15 @@ double Conductivity(const Vector &x)
 
 double Potential(const Vector &x)
 {
-    Vector center(x.Size());
     switch (problem)
     {
     case 1:
     case 2:
         return 0.0;
     case 3:
-        for (int i = 0; i < x.Size(); i++)
-        {
-            center(i) = 0.5 * (bb_min[i] + bb_max[i]);
-        }
         return gaussian_depth * std::exp(-x.DistanceSquaredTo(center) / pow(
                                              gaussian_width, 2.0));
     case 4:
-        for (int i = 0; i < x.Size(); i++)
-        {
-            center(i) = 0.5 * (bb_min[i] + bb_max[i]);
-        }
         return gaussian_depth / x.DistanceSquaredTo(center);
     }
     return 0.0;
