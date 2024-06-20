@@ -23,39 +23,37 @@
 //               order < 1 (quadratic for quadratic curvilinear mesh, NURBS for
 //               NURBS mesh, etc.)
 //
-// Offline phase: elliptic_eigenproblem_global_rom -offline -p 2 -id 0 -a 0.40
-//                elliptic_eigenproblem_global_rom -offline -p 2 -id 1 -a 0.45
-//                elliptic_eigenproblem_global_rom -offline -p 2 -id 2 -a 0.55
-//                elliptic_eigenproblem_global_rom -offline -p 2 -id 3 -a 0.60
+// Offline phase: elliptic_eigenproblem_global_rom -offline -p 2 -rs 2 -n 4 -id 0 -a 0
+//                elliptic_eigenproblem_global_rom -offline -p 2 -rs 2 -n 4 -id 1 -a 1
 //
-// Merge phase:   elliptic_eigenproblem_global_rom -merge -p 2 -ns 4
+// Merge phase:   elliptic_eigenproblem_global_rom -merge -p 2 -rs 2 -n 4 -ns 2
 //
 // FOM run (for error calculation):
-//                elliptic_eigenproblem_global_rom -fom -p 2 -a 0.50
-// Example output:
-//   Number of unknowns: 289
-//    Eigenvalue 0: 0.04533314
-//    Eigenvalue 1: 0.11332411
-//    Eigenvalue 2: 0.11486387
-//    Eigenvalue 3: 0.18192
-//    Eigenvalue 4: 0.22964377
-//   Elapsed time for assembling FOM: 1.471708e-03 second
-//   Elapsed time for solving FOM: 3.416310e-01 second
+//                elliptic_eigenproblem_global_rom -fom -p 2 -rs 2 -n 4 -a 0.5
 //
-// Online phase:  elliptic_eigenproblem_global_rom -online -p 2 -a 0.50
+// Online phase:  elliptic_eigenproblem_global_rom -online -p 2 -rs 2 -n 4 -a 0.5 -ef 1.0
+//
 // Example output:
-//   Eigenvalue 0: = 0.048430949
-//   Eigenvalue 1: = 0.12021157
-//   Eigenvalue 2: = 0.12147847
-//   Eigenvalue 3: = 0.19456504
-//   Eigenvalue 4: = 0.24285855
-//   Relative error of ROM solution for eigenvalue 0 = 0.068334316
-//   Relative error of ROM solution for eigenvalue 1 = 0.060776586
-//   Relative error of ROM solution for eigenvalue 2 = 0.057586388
-//   Relative error of ROM solution for eigenvalue 3 = 0.069508795
-//   Relative error of ROM solution for eigenvalue 4 = 0.057544708
-//   Elapsed time for assembling ROM: 4.289041e-03 second
-//   Elapsed time for solving ROM: 6.225410e-04 second
+//   FOM solution for eigenvalue 0 = 19.878564
+//   ROM solution for eigenvalue 0 = 19.878631
+//   Absolute error of ROM solution for eigenvalue 0 = 6.6618756e-05
+//   Relative error of ROM solution for eigenvalue 0 = 3.3512861e-06
+//   FOM solution for eigenvalue 1 = 53.177886
+//   ROM solution for eigenvalue 1 = 53.179662
+//   Absolute error of ROM solution for eigenvalue 1 = 0.0017768914
+//   Relative error of ROM solution for eigenvalue 1 = 3.3414104e-05
+//   FOM solution for eigenvalue 2 = 53.177886
+//   ROM solution for eigenvalue 2 = 53.179662
+//   Absolute error of ROM solution for eigenvalue 2 = 0.0017769039
+//   Relative error of ROM solution for eigenvalue 2 = 3.3414339e-05
+//   FOM solution for eigenvalue 3 = 81.245811
+//   ROM solution for eigenvalue 3 = 81.246105
+//   Absolute error of ROM solution for eigenvalue 3 = 0.00029387266
+//   Relative error of ROM solution for eigenvalue 3 = 3.6170808e-06
+//   Relative l2 error of ROM eigenvector 0 = 0.0023815683
+//   Relative l2 error of ROM eigenvector 1 = 0.0097810599
+//   Relative l2 error of ROM eigenvector 2 = 0.0097816076
+//   Relative l2 error of ROM eigenvector 3 = 0.0043291658
 
 #include "mfem.hpp"
 #include "linalg/BasisGenerator.h"
