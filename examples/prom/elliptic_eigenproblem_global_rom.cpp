@@ -729,23 +729,7 @@ int main(int argc, char *argv[])
                     mode_rom_ifs.precision(16);
                     mode_rom.Load(mode_rom_ifs, eigenvectors.NumCols());
                     mode_rom_ifs.close();
-                    std::cout << "Projecting FOM mode " << i
-                              << " onto ROM mode " << j << std::endl;
-                    std::cout << "ip = " <<  InnerProduct(mode_fom, mode_rom) << std::endl;
                     mode_fom.Add(-InnerProduct(mode_fom, mode_rom), mode_rom);
-                    mode_name.str("");
-                }
-                else
-                {
-                    mode_name << "mode_rom_" << setfill('0') << setw(2) << j << "."
-                              << setfill('0') << setw(6) << myid;
-                    ifstream mode_rom_ifs(mode_name.str().c_str());
-                    mode_rom_ifs.precision(16);
-                    mode_rom.Load(mode_rom_ifs, eigenvectors.NumCols());
-                    mode_rom_ifs.close();
-                    std::cout << "Not projecting FOM mode " << i
-                              << " onto ROM mode " << j << std::endl;
-                    std::cout << "ip = " <<  InnerProduct(mode_fom, mode_rom) << std::endl;
                     mode_name.str("");
                 }
             }
