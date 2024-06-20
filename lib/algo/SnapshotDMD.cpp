@@ -58,7 +58,6 @@ void SnapshotDMD::interpolateToNSnapshots(int n)
     d_snapshots = new_snapshots;
     d_sampled_times = new_times;
     d_dt = d_sampled_times[2]->getData()[0]-d_sampled_times[1]->getData()[0];
-
 }
 
 }
