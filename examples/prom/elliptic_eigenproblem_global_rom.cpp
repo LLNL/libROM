@@ -887,12 +887,13 @@ int main(int argc, char *argv[])
 
 double Conductivity(const Vector &x)
 {
+    double cx;
     switch (problem)
     {
     case 1:
         return 1.0;
     case 2:
-        double cx = 1.0 + amplitude;
+        cx = 1.0 + amplitude;
         for (int i = 0; i < x.Size(); ++i)
         {
             if (8 * abs(x(i) - center(i)) > (bb_max[i] - bb_min[i]))
@@ -908,6 +909,7 @@ double Conductivity(const Vector &x)
 
 double Potential(const Vector &x)
 {
+    double radius = 5.0 * h_max;
     double d_sq = x.DistanceSquaredTo(center);
     switch (problem)
     {
@@ -915,10 +917,9 @@ double Potential(const Vector &x)
     case 2:
         return 0.0;
     case 3:
-        double radius = 5.0 * h_max;
         return amplitude * std::exp(-d_sq / pow(radius, 2.0));
     case 4:
-        return amplitude / d_sq;
+        return amplitude * d_sq;
     }
     return 0.0;
 }
