@@ -319,17 +319,17 @@ int main(int argc, char *argv[])
     // 9. Set up the nonlinear form corresponding to the DG discretization of the
     //    flux divergence, and assemble the corresponding mass matrix.
     MixedBilinearForm Aflux(&dfes, &fes);
-    Aflux.AddDomainIntegrator(new DomainIntegrator(dim));
+    Aflux.AddDomainIntegrator(new ROM_DomainIntegrator(dim));
     Aflux.Assemble();
 
     ParNonlinearForm A(&vfes);
-    RiemannSolver rsolver;
-    A.AddInteriorFaceIntegrator(new FaceIntegrator(rsolver, dim));
+    ROM_RiemannSolver rsolver;
+    A.AddInteriorFaceIntegrator(new ROM_FaceIntegrator(rsolver, dim));
 
     // 10. Define the time-dependent evolution operator describing the ODE
     //     right-hand side, and perform time-integration (looping over the time
     //     iterations, ti, with a time-step dt).
-    FE_Evolution euler(vfes, A, Aflux.SpMat());
+    ROM_FE_Evolution euler(vfes, A, Aflux.SpMat());
 
     // Visualize the density
     socketstream sout;

@@ -528,7 +528,7 @@ int main(int argc, char *argv[])
         fom_timer.Stop();
 
         dmd_training_timer.Start();
-        dmd_u[curr_window]->takeSample(u, t);
+        dmd_u[curr_window]->takeSample(u.GetData(), t);
 
         if (last_step || (ti % windowNumSamples) == 0)
         {

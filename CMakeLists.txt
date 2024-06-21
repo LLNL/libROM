@@ -37,14 +37,16 @@ option(USE_MFEM "Build libROM with MFEM" OFF)
 option(MFEM_USE_GSLIB "Build libROM with MFEM using GSLIB" OFF)
 option(BUILD_STATIC "Build libROM as a static library" OFF)
 option(ENABLE_EXAMPLES "Build examples and regression tests" ON)
+option(ENABLE_DOCS "Build docs using Doxygen" OFF)
 
 ## Set a bunch of variables to generate a configure header
 # Enable assertion checking if debug symbols generated
 if((CMAKE_BUILD_TYPE STREQUAL "Debug") OR
     (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"))
   set(DEBUG_CHECK_ASSERTIONS "1")
-endif((CMAKE_BUILD_TYPE STREQUAL "Debug") OR
-    (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"))
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+endif()
 
 set(CAROM_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
 set(CAROM_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
@@ -106,8 +108,6 @@ find_package(LAPACK 3.4.0 REQUIRED)
 find_package(MPI 1.2 REQUIRED)
 
 find_package(ZLIB 1.2.3 REQUIRED)
-
-find_package(Doxygen 1.8.5)
 
 find_package(GTest 1.6.0)
 
@@ -201,6 +201,7 @@ if (ENABLE_EXAMPLES)
       target_compile_features(${name} PRIVATE cxx_std_11)
     endforeach() # IN LISTS examples
     file(COPY examples/data DESTINATION ${CMAKE_BINARY_DIR}/examples)
+    file(COPY examples/merlin DESTINATION ${CMAKE_BINARY_DIR}/examples)
     file(COPY examples/dmd/heat_conduction_csv.sh DESTINATION ${CMAKE_BINARY_DIR}/examples/dmd)
     file(COPY examples/dmd/heat_conduction_hdf.sh DESTINATION ${CMAKE_BINARY_DIR}/examples/dmd)
   endif()
@@ -274,6 +275,7 @@ if(GTEST_FOUND)
     DMD
     GNAT
     QDEIM
+    QR
     S_OPT
     StaticSVD
     RandomizedSVD
@@ -298,7 +300,9 @@ endif(GTEST_FOUND)
 # NOTE(goxberry@gmail.com, oxberry1@llnl.gov): This code snippet
 # builds the Doxygen documentation, but outputs said documentation to
 # ${CMAKE_CURRENT_SOURCE_DIR}/docs)...
-if(DOXYGEN_FOUND)
+if(${ENABLE_DOCS})
+  find_package(Doxygen 1.8.5 REQUIRED)
+  
   set(doxyfile ${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile)
 
   add_custom_target(
@@ -317,4 +321,4 @@ if(DOXYGEN_FOUND)
     ${CMAKE_CURRENT_BINARY_DIR}/docs/html/rom.tag)
   add_dependencies(doxygen_tagfile documentation)
 
-endif(DOXYGEN_FOUND)
+endif()

@@ -7,6 +7,7 @@ runs:
           ./tests/test_Vector
           ./tests/test_Matrix
           mpirun -n 3 --oversubscribe ./tests/test_Matrix
+          ./tests/smoke_static
           ./tests/test_DEIM
           ./tests/test_GNAT
           ./tests/test_QDEIM
@@ -25,6 +26,8 @@ runs:
           mpirun -n 3 --oversubscribe tests/test_IncrementalSVDBrand
           ./tests/test_HDFDatabase
           mpirun -n 3 --oversubscribe tests/test_HDFDatabase
+          ./tests/test_QR
+          mpirun -n 3 --oversubscribe tests/test_QR
           ./tests/test_NNLS
           mpirun -n 3 --oversubscribe tests/test_NNLS
       shell: bash
