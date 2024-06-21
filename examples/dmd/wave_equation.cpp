@@ -43,7 +43,7 @@
 //  wave_equation -tf 2 -nwinsamp 25 -rdim 27 -visit -snap -proj
 //
 // Output 3:
-//  Relative error of DMD solution (u) at t_final: 2 is 0.0029577152
+//  Relative error of DMD solution (u) at t_final: 2 is 0.0029767885
 //  Elapsed time for solving FOM: 1.989041e-01 second
 //  Elapsed time for training DMD: 1.449013e+00 second
 //  Elapsed time for predicting DMD: 4.555228e-02 second
@@ -559,7 +559,6 @@ int main(int argc, char *argv[])
                     dmd_u.push_back(new CAROM::DMD(u.Size(), dt));
                 }
                 dmd_u[curr_window]->takeSample(u.GetData(), t);
-                dmd_u[curr_window]->takeSample(u.GetData(),t);
             }
 
         }
