@@ -36,7 +36,7 @@ void SampleTemporalIndices(const Matrix* s_basis,
                            const int num_samples_req,
                            const bool excludeFinalTime)
 {
-    CAROM_VERIFY(t_basis->distributed());
+    CAROM_VERIFY(!t_basis->distributed());
 
     // Get the number of basis vectors and the size of each basis vector.
     CAROM_VERIFY(0 < num_f_basis_vectors_used
