@@ -23,10 +23,13 @@ namespace CAROM {
 
 // This function implements Algorithm 2 of Choi and Carlberg 2019.
 // All spatial indices are used here.
-// Spatial basis s_basis is distributed, of size (number of spatial DOFs) x (number of basis vectors)
-// Temporal basis t_basis is stored in its entirety on each process, of size (number of temporal DOFs) x (number of basis vectors)
-// In general, there may be multiple temporal basis vectors associated with each spatial basis vector, but here we assume for now
-// that there is only one, i.e. column j of s_basis corresponds to column j of t_basis.
+// The spatial basis s_basis is distributed, of size
+//   (number of spatial DOFs) x (number of basis vectors)
+// The temporal basis t_basis is not distributed, stored in its entirety on each
+// process, of size (number of temporal DOFs) x (number of basis vectors)
+// In general, there may be multiple temporal basis vectors associated with each
+// spatial basis vector, but here we assume for now that there is only one, i.e.
+// column j of s_basis corresponds to column j of t_basis.
 void SampleTemporalIndices(const Matrix* s_basis,
                            const Matrix* t_basis,
                            const int num_f_basis_vectors_used,
