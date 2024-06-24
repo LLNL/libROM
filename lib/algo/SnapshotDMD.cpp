@@ -8,7 +8,7 @@
  *
  *****************************************************************************/
 
-// Description: Implementation of the AdaptiveDMD algorithm.
+// Description: Implementation of the SnapshotDMD class.
 
 #include "manifold_interp/PCHIPInterpolator.h"
 #include "SnapshotDMD.h"
