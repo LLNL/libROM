@@ -14,9 +14,8 @@
 //
 // Description:  This example code demonstrates the use of MFEM and libROM to
 //               define a simple projection-based reduced order model of the
-//               eigenvalue problem -Delta ((1 + alpha v) u) = lambda u with homogeneous
-//               Dirichlet boundary conditions where alpha is a scalar ROM parameter
-//               controlling the frequency of v.
+//               eigenvalue problem Lu = lambda u with homogeneous
+//               Dirichlet boundary conditions.
 //
 //               We compute a number of the lowest eigenmodes by discretizing
 //               the Laplacian and Mass operators using a FE space of the
@@ -24,39 +23,37 @@
 //               order < 1 (quadratic for quadratic curvilinear mesh, NURBS for
 //               NURBS mesh, etc.)
 //
-// Offline phase: elliptic_eigenproblem_global_rom -offline -p 2 -id 0 -a 0.40
-//                elliptic_eigenproblem_global_rom -offline -p 2 -id 1 -a 0.45
-//                elliptic_eigenproblem_global_rom -offline -p 2 -id 2 -a 0.55
-//                elliptic_eigenproblem_global_rom -offline -p 2 -id 3 -a 0.60
+// Offline phase: elliptic_eigenproblem_global_rom -offline -p 2 -rs 2 -n 4 -id 0 -a 0
+//                elliptic_eigenproblem_global_rom -offline -p 2 -rs 2 -n 4 -id 1 -a 1
 //
-// Merge phase:   elliptic_eigenproblem_global_rom -merge -p 2 -ns 4
+// Merge phase:   elliptic_eigenproblem_global_rom -merge -p 2 -rs 2 -n 4 -ns 2
 //
 // FOM run (for error calculation):
-//                elliptic_eigenproblem_global_rom -fom -p 2 -a 0.5
-// Example output:
-//   Number of unknowns: 289
-//    Eigenvalue 0: 0.04533314
-//    Eigenvalue 1: 0.11332411
-//    Eigenvalue 2: 0.11486387
-//    Eigenvalue 3: 0.18192
-//    Eigenvalue 4: 0.22964377
-//   Elapsed time for assembling FOM: 1.471708e-03 second
-//   Elapsed time for solving FOM: 3.416310e-01 second
+//                elliptic_eigenproblem_global_rom -fom -p 2 -rs 2 -n 4 -a 0.5
 //
-// Online phase:  elliptic_eigenproblem_global_rom -online -p 2 -a 0.5
+// Online phase:  elliptic_eigenproblem_global_rom -online -p 2 -rs 2 -n 4 -a 0.5 -ef 1.0
+//
 // Example output:
-//   Eigenvalue 0: = 0.048430949
-//   Eigenvalue 1: = 0.12021157
-//   Eigenvalue 2: = 0.12147847
-//   Eigenvalue 3: = 0.19456504
-//   Eigenvalue 4: = 0.24285855
-//   Relative error of ROM solution for eigenvalue 0 = 0.068334316
-//   Relative error of ROM solution for eigenvalue 1 = 0.060776586
-//   Relative error of ROM solution for eigenvalue 2 = 0.057586388
-//   Relative error of ROM solution for eigenvalue 3 = 0.069508795
-//   Relative error of ROM solution for eigenvalue 4 = 0.057544708
-//   Elapsed time for assembling ROM: 4.289041e-03 second
-//   Elapsed time for solving ROM: 6.225410e-04 second
+//   FOM solution for eigenvalue 0 = 19.878564
+//   ROM solution for eigenvalue 0 = 19.878631
+//   Absolute error of ROM solution for eigenvalue 0 = 6.6618756e-05
+//   Relative error of ROM solution for eigenvalue 0 = 3.3512861e-06
+//   FOM solution for eigenvalue 1 = 53.177886
+//   ROM solution for eigenvalue 1 = 53.179662
+//   Absolute error of ROM solution for eigenvalue 1 = 0.0017768914
+//   Relative error of ROM solution for eigenvalue 1 = 3.3414104e-05
+//   FOM solution for eigenvalue 2 = 53.177886
+//   ROM solution for eigenvalue 2 = 53.179662
+//   Absolute error of ROM solution for eigenvalue 2 = 0.0017769039
+//   Relative error of ROM solution for eigenvalue 2 = 3.3414339e-05
+//   FOM solution for eigenvalue 3 = 81.245811
+//   ROM solution for eigenvalue 3 = 81.246105
+//   Absolute error of ROM solution for eigenvalue 3 = 0.00029387266
+//   Relative error of ROM solution for eigenvalue 3 = 3.6170808e-06
+//   Relative l2 error of ROM eigenvector 0 = 0.0023815683
+//   Relative l2 error of ROM eigenvector 1 = 0.0097810599
+//   Relative l2 error of ROM eigenvector 2 = 0.0097816076
+//   Relative l2 error of ROM eigenvector 3 = 0.0043291658
 
 #include "mfem.hpp"
 #include "linalg/BasisGenerator.h"
@@ -73,8 +70,11 @@ using namespace mfem;
 double Conductivity(const Vector &x);
 double Potential(const Vector &x);
 int problem = 1;
-double kappa;
+double amplitude = -800.0;
+double relative_center = 0.0;
+Vector center;
 Vector bb_min, bb_max;
+double h_min, h_max, k_min, k_max;
 
 int main(int argc, char *argv[])
 {
@@ -88,14 +88,14 @@ int main(int argc, char *argv[])
     const char *mesh_file = "";
     int ser_ref_levels = 2;
     int par_ref_levels = 1;
+    bool dirichlet = true;
     int order = 1;
-    int nev = 5;
+    int nev = 4;
     int seed = 75;
     bool slu_solver = false;
     bool sp_solver = false;
     bool cpardiso_solver = false;
 
-    double alpha = 1.0;
     bool visualization = true;
     bool visit = false;
     int vis_steps = 5;
@@ -117,6 +117,8 @@ int main(int argc, char *argv[])
                    "Mesh file to use.");
     args.AddOption(&problem, "-p", "--problem",
                    "Problem setup to use. See options in Conductivity and Potential functions.");
+    args.AddOption(&dirichlet, "-dir", "--dirichlet", "-neu", "--neumann",
+                   "BC switch.");
     args.AddOption(&ser_ref_levels, "-rs", "--refine-serial",
                    "Number of times to refine the mesh uniformly in serial.");
     args.AddOption(&par_ref_levels, "-rp", "--refine-parallel",
@@ -127,8 +129,10 @@ int main(int argc, char *argv[])
                    "Number of desired eigenmodes.");
     args.AddOption(&seed, "-s", "--seed",
                    "Random seed used to initialize LOBPCG.");
-    args.AddOption(&alpha, "-a", "--alpha",
-                   "Alpha coefficient.");
+    args.AddOption(&amplitude, "-a", "--amplitude",
+                   "Amplitude of coefficient fields.");
+    args.AddOption(&relative_center, "-c", "--center",
+                   "Number of grid elements to which center is shifted.");
     args.AddOption(&id, "-id", "--id", "Parametric id");
     args.AddOption(&nsets, "-ns", "--nset", "Number of parametric snapshot sets");
     args.AddOption(&visualization, "-vis", "--visualization", "-no-vis",
@@ -194,8 +198,6 @@ int main(int argc, char *argv[])
         args.PrintOptions(cout);
     }
 
-    kappa = alpha * M_PI;
-
     if (fom)
     {
         MFEM_VERIFY(fom && !offline && !online
@@ -214,29 +216,22 @@ int main(int argc, char *argv[])
     Mesh *mesh;
     if (mesh_file == "")
     {
-        // square domain with side length 20 at origin (0,0)
-        double x_max = 20.0;
-        double y_max = 20.0;
-        mesh = new Mesh(Mesh::MakeCartesian2D(2, 2, Element::QUADRILATERAL, false,
-                                              x_max, y_max));
-        mesh->GetBoundingBox(bb_min, bb_max, max(order, 1));
-
-        // shift mesh around origin (from [0, bb_max] -> [-bb_max/2, bb_max/2])
-        auto *mesh_transform = +[](const Vector &v_orig, Vector &v_new) -> void {
-            v_new = v_orig;
-            // shift mesh vertices by (bb_max[i] / 2)
-            v_new(0) -= 0.5*bb_max[0];
-            v_new(1) -= 0.5*bb_max[1];
-        };
-
-        // performs the transform - bb_min/bb_max are updated again below
-        mesh->Transform(mesh_transform);
+        mesh = new Mesh(Mesh::MakeCartesian2D(2, 2, Element::QUADRILATERAL));
     }
     else
     {
         mesh = new Mesh(mesh_file, 1, 1);
     }
     int dim = mesh->Dimension();
+    mesh->GetBoundingBox(bb_min, bb_max, max(order, 1));
+    mesh->GetCharacteristics(h_min, h_max, k_min, k_max);
+    h_max *= pow(0.5, ser_ref_levels + par_ref_levels);
+
+    center.SetSize(dim);
+    for (int i = 0; i < dim; i++)
+    {
+        center(i) = h_max * relative_center + 0.5 * (bb_min[i] + bb_max[i]);
+    }
 
     // 4. Refine the mesh in serial to increase the resolution. In this example
     //    we do 'ser_ref_levels' of uniform refinement, where 'ser_ref_levels' is
@@ -245,7 +240,6 @@ int main(int argc, char *argv[])
     {
         mesh->UniformRefinement();
     }
-    mesh->GetBoundingBox(bb_min, bb_max, max(order, 1));
 
     // 5. Define a parallel mesh by a partitioning of the serial mesh. Refine
     //    this mesh further in parallel to increase the resolution. Once the
@@ -284,8 +278,8 @@ int main(int argc, char *argv[])
     int max_num_snapshots = 100;
     bool update_right_SV = false;
     bool isIncremental = false;
-    const std::string basisName = "basis";
-    const std::string basisFileName = basisName + std::to_string(id);
+    const std::string baseName = "elliptic_eigenproblem_";
+    const std::string basis_filename = baseName + "basis";
     CAROM::Options* options;
     CAROM::BasisGenerator *generator;
     StopWatch solveTimer, assembleTimer, mergeTimer;
@@ -295,7 +289,9 @@ int main(int argc, char *argv[])
     {
         options = new CAROM::Options(fespace->GetTrueVSize(), nev, nev,
                                      update_right_SV);
-        generator = new CAROM::BasisGenerator(*options, isIncremental, basisFileName);
+        std::string snapshot_basename = baseName + "par" + std::to_string(id);
+        generator = new CAROM::BasisGenerator(*options, isIncremental,
+                                              snapshot_basename);
     }
 
     // 9. The merge phase
@@ -304,10 +300,10 @@ int main(int argc, char *argv[])
         mergeTimer.Start();
         options = new CAROM::Options(fespace->GetTrueVSize(), max_num_snapshots, nev,
                                      update_right_SV);
-        generator = new CAROM::BasisGenerator(*options, isIncremental, basisName);
+        generator = new CAROM::BasisGenerator(*options, isIncremental, basis_filename);
         for (int paramID=0; paramID<nsets; ++paramID)
         {
-            std::string snapshot_filename = basisName + std::to_string(
+            std::string snapshot_filename = baseName + "par" + std::to_string(
                                                 paramID) + "_snapshot";
             generator->loadSamples(snapshot_filename, "snapshot");
         }
@@ -338,7 +334,7 @@ int main(int argc, char *argv[])
     FunctionCoefficient kappa_0(Conductivity);
     FunctionCoefficient v_0(Potential);
 
-    // Project initial conductivity and potential to visualize initial condition
+    // Project conductivity and potential to visualize initial condition
     ParGridFunction c_gf(fespace);
     c_gf.ProjectCoefficient(kappa_0);
 
@@ -349,7 +345,7 @@ int main(int argc, char *argv[])
     if (pmesh->bdr_attributes.Size())
     {
         ess_bdr.SetSize(pmesh->bdr_attributes.Max());
-        ess_bdr = 1;
+        ess_bdr = (dirichlet) ? 1 : 0;
     }
 
     ParBilinearForm *a = new ParBilinearForm(fespace);
@@ -393,7 +389,7 @@ int main(int argc, char *argv[])
     ParGridFunction x(fespace);
     HypreLOBPCG *lobpcg;
     Array<double> eigenvalues;
-    DenseMatrix evect;
+    DenseMatrix eigenvectors;
 
     // 11. The offline phase
     if(fom || offline)
@@ -492,12 +488,13 @@ int main(int argc, char *argv[])
     }
 
     // 15. The online phase
-    if (online) {
+    if (online)
+    {
         // 16. read the reduced basis
         assembleTimer.Start();
-        CAROM::BasisReader reader(basisName);
+        CAROM::BasisReader reader(basis_filename);
 
-        Vector ev;
+        Vector eigenvalues_rom;
         const CAROM::Matrix *spatialbasis;
         if (rdim != -1)
         {
@@ -514,45 +511,47 @@ int main(int argc, char *argv[])
                                   numColumnRB);
 
         // 17. form ROM operator
-        CAROM::Matrix invReducedA;
-        ComputeCtAB(*A, *spatialbasis, *spatialbasis, invReducedA);
-        DenseMatrix *A_mat = new DenseMatrix(invReducedA.numRows(),
-                                             invReducedA.numColumns());
-        A_mat->Set(1, invReducedA.getData());
+        CAROM::Matrix ReducedA;
+        ComputeCtAB(*A, *spatialbasis, *spatialbasis, ReducedA);
+        DenseMatrix *A_mat = new DenseMatrix(ReducedA.numRows(),
+                                             ReducedA.numColumns());
+        A_mat->Set(1, ReducedA.getData());
 
-        CAROM::Matrix invReducedM;
-        ComputeCtAB(*M, *spatialbasis, *spatialbasis, invReducedM);
-        DenseMatrix *M_mat = new DenseMatrix(invReducedM.numRows(),
-                                             invReducedM.numColumns());
-        M_mat->Set(1, invReducedM.getData());
+        CAROM::Matrix ReducedM;
+        ComputeCtAB(*M, *spatialbasis, *spatialbasis, ReducedM);
+        DenseMatrix *M_mat = new DenseMatrix(ReducedM.numRows(),
+                                             ReducedM.numColumns());
+        M_mat->Set(1, ReducedM.getData());
 
         assembleTimer.Stop();
 
         // 18. solve ROM
         solveTimer.Start();
-        // (Q^T A Q) c = \lamba (Q^T M Q) c
-        A_mat->Eigenvalues(*M_mat, ev, evect);
+        // (Q^T A Q) c = \lambda (Q^T M Q) c
+        A_mat->Eigenvalues(*M_mat, eigenvalues_rom, eigenvectors);
         solveTimer.Stop();
 
         if (myid == 0)
         {
-            eigenvalues = Array<double>(ev.GetData(), ev.Size());
-            for (int i = 0; i < ev.Size() && i < nev; i++)
+            eigenvalues = Array<double>(eigenvalues_rom.GetData(), eigenvalues_rom.Size());
+            for (int i = 0; i < eigenvalues_rom.Size() && i < nev; i++)
             {
                 std::cout << "Eigenvalue " << i << ": = " << eigenvalues[i] << "\n";
             }
         }
 
-        DenseMatrix tmp(evect);
-        evect = DenseMatrix(nev, numRowRB);
-        for (int i = 0; i < ev.Size() && i < nev; i++)
+        DenseMatrix tmp(eigenvectors);
+        eigenvectors = DenseMatrix(nev, numRowRB);
+        for (int i = 0; i < eigenvalues_rom.Size() && i < nev; i++)
         {
-            Vector evector;
-            tmp.GetRow(i, evector);
-            CAROM::Vector evector_carom(evector.GetData(), evector.Size(), false, false);
-            CAROM::Vector *ev_carom = spatialbasis->mult(evector_carom);
-            evect.SetRow(i, ev_carom->getData());
-            delete ev_carom;
+            Vector reduced_eigenvector;
+            tmp.GetRow(i, reduced_eigenvector);
+            CAROM::Vector reduced_eigenvector_carom(reduced_eigenvector.GetData(),
+                                                    reduced_eigenvector.Size(), false, false);
+            CAROM::Vector *eigenvector_carom = spatialbasis->mult(
+                                                   reduced_eigenvector_carom);
+            eigenvectors.SetRow(i, eigenvector_carom->getData());
+            delete eigenvector_carom;
         }
 
         delete spatialbasis;
@@ -561,21 +560,24 @@ int main(int argc, char *argv[])
         delete M_mat;
     }
 
-    ostringstream sol_ev_name, sol_ev_name_fom;
+    ostringstream sol_eigenvalue_name, sol_eigenvalue_name_fom;
     if (fom || offline)
     {
-        sol_ev_name << "sol_eigenvalues_fom." << setfill('0') << setw(6) << myid;
+        sol_eigenvalue_name << "sol_eigenvalues_fom." << setfill('0') << setw(
+                                6) << myid;
     }
     if (online)
     {
-        sol_ev_name << "sol_eigenvalues." << setfill('0') << setw(6) << myid;
-        sol_ev_name_fom << "sol_eigenvalues_fom." << setfill('0') << setw(6) << myid;
+        sol_eigenvalue_name << "sol_eigenvalues." << setfill('0') << setw(6) << myid;
+        sol_eigenvalue_name_fom << "sol_eigenvalues_fom." << setfill('0') << setw(
+                                    6) << myid;
     }
 
     // 19. Save the refined mesh and the modes in parallel. This output can be
     //     viewed later using GLVis: "glvis -np <np> -m mesh -g mode".
+    Vector sign_eigenvectors(nev);
     {
-        ostringstream mesh_name, mode_name;
+        ostringstream mesh_name, mode_name, mode_ref_name;
         mesh_name << "elliptic_eigenproblem-mesh." << setfill('0') << setw(6) << myid;
 
         ofstream mesh_ofs(mesh_name.str().c_str());
@@ -583,32 +585,77 @@ int main(int argc, char *argv[])
         pmesh->Print(mesh_ofs);
 
         std::string mode_prefix = "mode_";
-        if (online)
-        {
-            mode_prefix += "rom_";
-        } else if (fom)
+        std::string mode_ref_prefix = "mode_";
+        if (fom || offline)
         {
             mode_prefix += "fom_";
+            mode_ref_prefix += "ref_";
+        }
+        else if (online)
+        {
+            mode_prefix += "rom_";
+            mode_ref_prefix += "fom_";
         }
 
         for (int i=0; i < nev && i < eigenvalues.Size(); i++)
         {
-            if (fom || offline) {
-                // convert eigenvector from HypreParVector to ParGridFunction
-                x = lobpcg->GetEigenvector(i);
-            } else {
-                // for online, eigenvectors are stored in evect matrix
-                Vector ev;
-                evect.GetRow(i, ev);
-                x = ev;
+            Vector eigenvector_i;
+            if (fom || offline)
+            {
+                eigenvector_i = lobpcg->GetEigenvector(i);
+            }
+            else
+            {
+                // for online, eigenvectors are stored in eigenvectors matrix
+                eigenvectors.GetRow(i, eigenvector_i);
             }
 
+            Vector mode_ref(eigenvector_i.Size());
+            mode_ref_name << mode_ref_prefix << setfill('0') << setw(2) << i << "."
+                          << setfill('0') << setw(6) << myid;
+            if (offline && id == 0)
+            {
+                mode_ref = eigenvector_i;
+                ofstream mode_ref_ofs(mode_ref_name.str().c_str());
+                mode_ref_ofs.precision(16);
+
+                // TODO: issue using .Load() function if file written with .Save()?
+                //x.Save(mode_ref_ofs);
+                for (int j = 0; j < x.Size(); j++)
+                {
+                    mode_ref_ofs << mode_ref[j] << "\n";
+                }
+                mode_ref_ofs.close();
+            }
+            else
+            {
+                ifstream mode_ref_ifs(mode_ref_name.str().c_str());
+                mode_ref_ifs.precision(16);
+                mode_ref.Load(mode_ref_ifs, eigenvector_i.Size());
+                mode_ref_ifs.close();
+            }
+            mode_ref_name.str("");
+            sign_eigenvectors[i] = (InnerProduct(mode_ref, eigenvector_i) >= 0) ? 1 : -1;
+            eigenvector_i *= sign_eigenvectors[i] / sqrt(InnerProduct(eigenvector_i,
+                             eigenvector_i));
+
+            if (InnerProduct(mode_ref, eigenvector_i) < 0.9)
+            {
+                std::cout << "Warning: eigenvector " << i <<
+                          " in FOM and ROM are not directly comparable."
+                          << std::endl;
+                std::cout << "Inner product = " << InnerProduct(mode_ref,
+                          eigenvector_i) << std::endl;
+                std::cout << "TODO: Visualization of projected eigenvector." << std::endl;
+            }
+
+            // convert eigenvector from HypreParVector to ParGridFunction
+            x = eigenvector_i;
             mode_name << mode_prefix << setfill('0') << setw(2) << i << "."
                       << setfill('0') << setw(6) << myid;
 
             ofstream mode_ofs(mode_name.str().c_str());
             mode_ofs.precision(16);
-
             // TODO: issue using .Load() function if file written with .Save()?
             //x.Save(mode_ofs);
             for (int j = 0; j < x.Size(); j++)
@@ -619,96 +666,115 @@ int main(int argc, char *argv[])
             mode_name.str("");
         }
 
-        ofstream sol_ev_ofs(sol_ev_name.str().c_str());
-        sol_ev_ofs.precision(16);
+        ofstream sol_eigenvalue_ofs(sol_eigenvalue_name.str().c_str());
+        sol_eigenvalue_ofs.precision(16);
         for (int i = 0; i < nev && i < eigenvalues.Size(); ++i)
         {
-            sol_ev_ofs << eigenvalues[i] << std::endl;
+            sol_eigenvalue_ofs << eigenvalues[i] << std::endl;
         }
     }
 
     if (online)
     {
         // Initialize FOM solution
-        Vector ev_fom(nev);
+        Vector eigenvalues_fom(nev);
 
         ifstream fom_file;
-        fom_file.open(sol_ev_name_fom.str().c_str());
-        ev_fom.Load(fom_file, ev_fom.Size());
+        fom_file.open(sol_eigenvalue_name_fom.str().c_str());
+        eigenvalues_fom.Load(fom_file, eigenvalues_fom.Size());
         fom_file.close();
 
-        Vector diff_ev(nev);
+        Vector diff_eigenvalues(nev);
         for (int i = 0; i < eigenvalues.Size() && i < nev; i++)
         {
-            diff_ev[i] = ev_fom[i] - eigenvalues[i];
-            double ev_diff_norm = sqrt(diff_ev[i] * diff_ev[i]);
-            double ev_fom_norm = sqrt(ev_fom[i] * ev_fom[i]);
+            diff_eigenvalues[i] = eigenvalues_fom[i] - eigenvalues[i];
             if (myid == 0)
             {
+                std::cout << "FOM solution for eigenvalue " << i << " = " <<
+                          eigenvalues_fom[i] << std::endl;
+                std::cout << "ROM solution for eigenvalue " << i << " = " <<
+                          eigenvalues[i] << std::endl;
+                std::cout << "Absolute error of ROM solution for eigenvalue " << i << " = " <<
+                          abs(diff_eigenvalues[i]) << std::endl;
                 std::cout << "Relative error of ROM solution for eigenvalue " << i << " = " <<
-                          ev_diff_norm / ev_fom_norm << std::endl;
+                          abs(diff_eigenvalues[i]) / abs(eigenvalues_fom[i]) << std::endl;
             }
         }
 
         // Calculate errors of eigenvectors
         ostringstream mode_name, mode_name_fom;
-        Vector mode_rom(evect.NumCols());
-        Vector mode_fom(evect.NumCols());
+        Vector mode_rom(eigenvectors.NumCols());
+        Vector mode_fom(eigenvectors.NumCols());
         for (int i = 0; i < eigenvalues.Size() && i < nev; i++)
         {
-            mode_name << "mode_rom_" << setfill('0') << setw(2) << i << "."
-                      << setfill('0') << setw(6) << myid;
             mode_name_fom << "mode_fom_" << setfill('0') << setw(2) << i << "."
                           << setfill('0') << setw(6) << myid;
 
-            ifstream mode_rom_ifs(mode_name.str().c_str());
-            mode_rom_ifs.precision(16);
-            mode_rom.Load(mode_rom_ifs, evect.NumCols());
-            mode_rom_ifs.close();
-
             ifstream mode_fom_ifs(mode_name_fom.str().c_str());
             mode_fom_ifs.precision(16);
-            mode_fom.Load(mode_fom_ifs, evect.NumCols());
+            mode_fom.Load(mode_fom_ifs, eigenvectors.NumCols());
             mode_fom_ifs.close();
 
             const double fomNorm = sqrt(InnerProduct(mode_fom, mode_fom));
-            mode_fom -= mode_rom;
+
+            for (int j = 0; j < eigenvalues.Size() && j < nev; j++)
+            {
+                if (abs(eigenvalues_fom[j] - eigenvalues_fom[i]) < 1e-6)
+                {
+                    mode_name << "mode_rom_" << setfill('0') << setw(2) << j << "."
+                              << setfill('0') << setw(6) << myid;
+                    ifstream mode_rom_ifs(mode_name.str().c_str());
+                    mode_rom_ifs.precision(16);
+                    mode_rom.Load(mode_rom_ifs, eigenvectors.NumCols());
+                    mode_rom_ifs.close();
+                    mode_fom.Add(-InnerProduct(mode_fom, mode_rom), mode_rom);
+                    mode_name.str("");
+                }
+            }
+
             const double diffNorm = sqrt(InnerProduct(mode_fom, mode_fom));
             if (myid == 0) std::cout << "Relative l2 error of ROM eigenvector " << i <<
-                                         " = " << diffNorm /
-                                         fomNorm << std::endl;
+                                         " = " << diffNorm / fomNorm << std::endl;
 
-            mode_name.str("");
             mode_name_fom.str("");
         }
     }
 
-    VisItDataCollection visit_dc("EllipticEigenproblem", pmesh);
+    VisItDataCollection *visit_dc = NULL;
     if (visit)
     {
-        visit_dc.RegisterField("InitialConductivity", &c_gf);
-        visit_dc.RegisterField("InitialPotential", &p_gf);
-        std::vector<ParGridFunction*> visit_evs;
+        if (offline) visit_dc = new VisItDataCollection(baseName + "offline_par" +
+                    std::to_string(id), pmesh);
+        else if (fom) visit_dc = new VisItDataCollection(baseName + "fom", pmesh);
+        else if (online) visit_dc = new VisItDataCollection(baseName + "rom", pmesh);
+        visit_dc->RegisterField("Conductivity", &c_gf);
+        visit_dc->RegisterField("Potential", &p_gf);
+        std::vector<ParGridFunction*> visit_eigenvectors;
         for (int i = 0; i < nev && i < eigenvalues.Size(); i++)
         {
-            if (fom || offline) {
-                // convert eigenvector from HypreParVector to ParGridFunction
-                x = lobpcg->GetEigenvector(i);
-            } else {
-                // for online, eigenvectors are stored in evect matrix
-                Vector ev;
-                evect.GetRow(i, ev);
-                x = ev;
+            Vector eigenvector_i;
+            if (fom || offline)
+            {
+                eigenvector_i = lobpcg->GetEigenvector(i);
             }
-            visit_evs.push_back(new ParGridFunction(x));
-            visit_dc.RegisterField("x" + std::to_string(i), visit_evs.back());
+            else {
+                // for online, eigenvectors are stored in eigvenvectors matrix
+                eigenvectors.GetRow(i, eigenvector_i);
+            }
+            eigenvector_i *= sign_eigenvectors[i] / sqrt(InnerProduct(eigenvector_i,
+                             eigenvector_i));
+            // convert eigenvector from HypreParVector to ParGridFunction
+            x = eigenvector_i;
+            visit_eigenvectors.push_back(new ParGridFunction(x));
+            visit_dc->RegisterField("Eigenmode_" + std::to_string(i),
+                                    visit_eigenvectors.back());
         }
-        visit_dc.SetCycle(0);
-        visit_dc.SetTime(0.0);
-        visit_dc.Save();
-        for (size_t i = 0; i < visit_evs.size(); i++)
+        visit_dc->SetCycle(0);
+        visit_dc->SetTime(0.0);
+        visit_dc->Save();
+        for (size_t i = 0; i < visit_eigenvectors.size(); i++)
         {
-            delete visit_evs[i];
+            delete visit_eigenvectors[i];
         }
     }
 
@@ -742,15 +808,19 @@ int main(int argc, char *argv[])
                          << ", Lambda = " << eigenvalues[i] << endl;
                 }
 
-                if (fom || offline) {
-                    // convert eigenvector from HypreParVector to ParGridFunction
-                    x = lobpcg->GetEigenvector(i);
-                } else {
-                    // for online, eigenvectors are stored in evect matrix
-                    Vector ev;
-                    evect.GetRow(i, ev);
-                    x = ev;
+                Vector eigenvector_i;
+                if (fom || offline)
+                {
+                    eigenvector_i = lobpcg->GetEigenvector(i);
                 }
+                else
+                {
+                    eigenvectors.GetRow(i, eigenvector_i);
+                }
+                // convert eigenvector from HypreParVector to ParGridFunction
+                eigenvector_i *= sign_eigenvectors[i] / sqrt(InnerProduct(eigenvector_i,
+                                 eigenvector_i));
+                x = eigenvector_i;
 
                 sout << "parallel " << num_procs << " " << myid << "\n"
                      << "solution\n" << *pmesh << x << flush
@@ -817,21 +887,21 @@ int main(int argc, char *argv[])
 
 double Conductivity(const Vector &x)
 {
-    int dim = x.Size();
-
+    double cx;
     switch (problem)
     {
     case 1:
         return 1.0;
     case 2:
-        return 1.0 + cos(kappa * x(1)) * sin(kappa * x(0));
+        cx = 1.0 + amplitude;
+        for (int i = 0; i < x.Size(); ++i)
+        {
+            if (8 * abs(x(i) - center(i)) > (bb_max[i] - bb_min[i]))
+                cx = 1.0;
+        }
+        return cx;
     case 3:
     case 4:
-    case 5:
-    case 6:
-    case 7:
-    case 8:
-    case 9:
         return 1.0;
     }
     return 0.0;
@@ -839,101 +909,17 @@ double Conductivity(const Vector &x)
 
 double Potential(const Vector &x)
 {
-    int dim = x.Size();
-
-    Vector X(dim);
-    Vector center(dim); // center of gaussian for problem 4 and 5
-    center = kappa / M_PI;
-
-    Vector neg_center(center);
-    neg_center.Neg();
-
-    // amplitude of gaussians for problems 4-6
-    const double D = 100.0;
-    // width of gaussians for problems 4-6
-    const double c = 0.05;
-
-    const double min_d = 2.0 * sqrt(2.0);
-
-    X = x;
-    for (int i = 0; i < dim; i++)
-    {
-        // map alpha parameter from [-1,1] to the mesh bounding box (controls the center for problems 4 and 5)
-        center(i) = CAROM::map_to_ref_mesh(bb_min[i], bb_max[i], center(i));
-        neg_center(i) = CAROM::map_to_ref_mesh(bb_min[i], bb_max[i], neg_center(i));
-    }
-
+    double radius = 5.0 * h_max;
+    double d_sq = x.DistanceSquaredTo(center);
     switch (problem)
     {
     case 1:
     case 2:
         return 0.0;
     case 3:
-        return 1.0;
+        return amplitude * std::exp(-d_sq / pow(radius, 2.0));
     case 4:
-        return D * std::exp(-X.DistanceSquaredTo(center) / c);
-    case 5:
-        return -D * std::exp(-X.DistanceSquaredTo(center) / c);
-    case 6:
-        return -D * (std::exp(-X.DistanceSquaredTo(center) / c) + std::exp(
-                         -X.DistanceSquaredTo(neg_center) / c));
-    case 7:
-        center = 0.25;
-        center(0) += 0.05 * cos(2.0*kappa);
-        center(1) += 0.05 * sin(2.0*kappa);
-
-        neg_center = center;
-        neg_center.Neg();
-
-        for (int i = 0; i < dim; i++)
-        {
-            // map alpha parameter from [-1,1] to the mesh bounding box (controls the center for problems 4 and 5)
-            center(i) = CAROM::map_to_ref_mesh(bb_min[i], bb_max[i], center(i));
-            neg_center(i) = CAROM::map_to_ref_mesh(bb_min[i], bb_max[i], neg_center(i));
-        }
-        return -D * (std::exp(-X.DistanceSquaredTo(center) / c) + std::exp(
-                         -X.DistanceSquaredTo(neg_center) / c));
-    case 8:
-        // Similar to case 6, but t is restricted to inner 20% of the domain
-        //  in this case, the radius of the gaussian is (0.05*min_d)^2 where
-        //  min_d is the lower bound of the atom distance over time
-
-        // verify t is within inner 20% of domain (centered around mesh origin)
-        CAROM::verify_within_portion(bb_min, bb_max, center, 0.2);
-
-        return -D * (std::exp(-X.DistanceSquaredTo(center) / std::pow(c * min_d,
-                              2)) + std::exp(
-                         -X.DistanceSquaredTo(neg_center) / std::pow(c * min_d, 2)));
-    case 9:
-        // Similar to case 7, but t is restricted to inner 20% of the domain and t is defined as:
-        //  t = (1.5 + 0.5*cos(2*k), 1.5 + 0.5*sin(2*k)) where k = alpha * PI, alpha is the input parameter given with the -a option.
-        //  The radius of the gaussian follows case 8: (0.05*min_d)^2
-
-        // Sets the center to vary around +/- 1.5 (absolute location on the mesh)
-        center = 1.5;
-        center(0) += 0.5 * cos(2.0*kappa);
-        center(1) += 0.5 * sin(2.0*kappa);
-
-        // map the absolute location back to a fraction of the mesh domain
-        center(0) = CAROM::map_from_ref_mesh(bb_min[0], bb_max[0], center(0));
-        center(1) = CAROM::map_from_ref_mesh(bb_min[1], bb_max[1], center(1));
-
-        neg_center = center;
-        neg_center.Neg();
-
-        for (int i = 0; i < dim; i++)
-        {
-            // map alpha parameter from [-1,1] to the mesh bounding box (controls the center for problems 4 and 5)
-            center(i) = CAROM::map_to_ref_mesh(bb_min[i], bb_max[i], center(i));
-            neg_center(i) = CAROM::map_to_ref_mesh(bb_min[i], bb_max[i], neg_center(i));
-        }
-
-        // verify t is within inner 20% of domain (centered around mesh origin)
-        CAROM::verify_within_portion(bb_min, bb_max, center, 0.2);
-
-        return -D * (std::exp(-X.DistanceSquaredTo(center) / std::pow(c * min_d,
-                              2)) + std::exp(
-                         -X.DistanceSquaredTo(neg_center) / std::pow(c * min_d, 2)));
+        return amplitude * d_sq;
     }
     return 0.0;
 }
