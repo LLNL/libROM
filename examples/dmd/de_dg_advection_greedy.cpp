@@ -251,11 +251,8 @@ public:
     virtual ~FE_Evolution();
 };
 
-// 1. Initialize MPI.
-MPI_Session mpi;
-int num_procs = mpi.WorldSize();
-int myid = mpi.WorldRank();
 //MFEM variables
+int num_procs, myid;
 const char *mesh_file = "../data/periodic-hexagon.mesh";
 int ser_ref_levels = 2;
 int par_ref_levels = 0;
@@ -367,7 +364,7 @@ double simulation()
         ode_solver = new SDIRK34Solver;
         break;
     default:
-        if (mpi.Root())
+        if (myid == 0)
         {
             cout << "Unknown ODE solver type: " << ode_solver_type << '\n';
         }
@@ -405,7 +402,7 @@ double simulation()
     ParFiniteElementSpace *fes = new ParFiniteElementSpace(pmesh, &fec);
 
     HYPRE_BigInt global_vSize = fes->GlobalTrueVSize();
-    if (mpi.Root())
+    if (myid == 0)
     {
         cout << "Number of unknowns: " << global_vSize << endl;
     }
@@ -549,11 +546,11 @@ double simulation()
         sout.open(vishost, visport);
         if (!sout)
         {
-            if (mpi.Root())
+            if (myid == 0)
                 cout << "Unable to connect to GLVis server at "
                      << vishost << ':' << visport << endl;
             visualization = false;
-            if (mpi.Root())
+            if (myid == 0)
             {
                 cout << "GLVis visualization disabled.\n";
             }
@@ -790,7 +787,7 @@ double simulation()
 
         if (done || ti % vis_steps == 0)
         {
-            if (mpi.Root())
+            if (myid == 0)
             {
                 cout << "time step: " << ti << ", time: " << t << endl;
             }
@@ -1141,6 +1138,10 @@ private:
 
 int main(int argc, char *argv[])
 {
+    // 1. Initialize MPI.
+    mfem::Mpi::Init();
+    num_procs = Mpi::WorldSize();
+    myid = Mpi::WorldRank();
 
     cout.precision(precision);
     // 2. Parse command-line options.
@@ -1251,19 +1252,19 @@ int main(int argc, char *argv[])
     args.Parse();
     if (!args.Good())
     {
-        if (mpi.Root())
+        if (myid == 0)
         {
             args.PrintUsage(cout);
         }
         return 1;
     }
-    if (mpi.Root())
+    if (myid == 0)
     {
         args.PrintOptions(cout);
     }
 
     Device device(device_config);
-    if (mpi.Root()) {
+    if (myid == 0) {
         device.Print();
     }
 

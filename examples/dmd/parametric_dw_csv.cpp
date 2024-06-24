@@ -67,9 +67,9 @@ int main(int argc, char *argv[])
     cout.precision(precision);
 
     // 1. Initialize MPI.
-    MPI_Session mpi;
-    int num_procs = mpi.WorldSize();
-    int myid = mpi.WorldRank();
+    Mpi::Init();
+    const int num_procs = Mpi::WorldSize();
+    const int myid = Mpi::WorldRank();
 
     // 2. Parse command-line options.
     bool offline = false;
@@ -155,13 +155,13 @@ int main(int argc, char *argv[])
     args.Parse();
     if (!args.Good())
     {
-        if (mpi.Root())
+        if (myid == 0)
         {
             args.PrintUsage(cout);
         }
         return 1;
     }
-    if (mpi.Root())
+    if (myid == 0)
     {
         args.PrintOptions(cout);
     }
@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
         outputPath += "/" + string(basename);
     }
 
-    if (mpi.Root()) {
+    if (myid == 0) {
         const char path_delim = '/';
         string::size_type pos = 0;
         do {

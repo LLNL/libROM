@@ -48,6 +48,12 @@ if((CMAKE_BUILD_TYPE STREQUAL "Debug") OR
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 endif()
 
+if (CMAKE_HOST_APPLE)
+    # Fix linker flags for OSX to use classic linker on XCode 15.0+:
+    # https://developer.apple.com/documentation/xcode-release-notes/xcode-15-release-notes#Linking
+    set(MPI_Fortran_LINK_FLAGS "${MPI_Fortran_LINK_FLAGS} -Wl,-ld_classic")
+endif()
+
 set(CAROM_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
 set(CAROM_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
 set(CAROM_VERSION_PATCHLEVEL "${PROJECT_VERSION_PATCH}")
