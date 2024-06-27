@@ -11,14 +11,14 @@
 // Compile with: make parametric_tw_csv
 //
 // This script performs serial or time windowing DMD on general datasets in CSV or HDF formats.
-// For the used-specified input file hierarchy, see the "Description" section below. 
-// Below is a simple hands-on example, using MFEM heat conduction example to 
-// generate either CSV or HDF database to illustrate the file hierarchy and command lines 
+// For the used-specified input file hierarchy, see the "Description" section below.
+// Below is a simple hands-on example, using MFEM heat conduction example to
+// generate either CSV or HDF database to illustrate the file hierarchy and command lines
 // (HDF is more efficient).
 //
 // =============================================================================
 //
-// CSV database generation: heat_conduction_csv.sh 
+// CSV database generation: heat_conduction_csv.sh
 // HDF database generation: heat_conduction_hdf.sh
 //
 // Local serial DMD command (for HDF version, append -hdf):
