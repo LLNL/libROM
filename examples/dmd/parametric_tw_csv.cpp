@@ -598,7 +598,7 @@ int main(int argc, char *argv[])
                 }
                 else if (dtc > 0.0)
                 {
-                    dmd_curr_par[window] = new CAROM::DMD(dim, dtc, true);
+                    dmd_curr_par[window] = new CAROM::DMD(dim, dtc);
                 }
                 else
                 {
