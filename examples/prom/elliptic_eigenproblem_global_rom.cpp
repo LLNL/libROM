@@ -593,10 +593,10 @@ int main(int argc, char *argv[])
             eigenvector_i = 0.0;
             for (int j = 0; j < nev; j++)
             {
-                if (myid == 0)
+                if (myid == 0 && verbose_level > 0)
                 {
                     std::cout << "correlation_matrix(" << i+1 << "," << j+1 << ") = " <<
-                              InnerProduct(mode_fom, modes_rom[j]) << std::endl;
+                              InnerProduct(mode_fom, modes_rom[j]) << ";" << std::endl;
                 }
                 if (abs(eigenvalues_fom[j] - eigenvalues_fom[i]) < 1e-6)
                 {
@@ -866,8 +866,8 @@ double Potential(const Vector &x)
         if (potential_well_switch != 1)
         {
             // add well with center = (1/4 + cos(2*pi*t) / 64, 1/4 + sin(2*pi*t) / 64, 1/4)
-            center(0) = 0.25 * (bb_min[0] + bb_max[0]) + cos(2 * M_PI * pseudo_time) / 64;
-            center(1) = 0.25 * (bb_min[1] + bb_max[1]) + sin(2 * M_PI * pseudo_time) / 64;
+            center(0) = (0.25 + cos(2 * M_PI * pseudo_time) / 64) * (bb_min[0] + bb_max[0]);
+            center(1) = (0.25 + sin(2 * M_PI * pseudo_time) / 64) * (bb_min[1] + bb_max[1]);
             for (int i = 2; i < x.Size(); i++)
                 center(i) = 0.25 * (bb_min[i] + bb_max[i]);
             rho += amplitude * std::exp(-x.DistanceSquaredTo(center) / pow(4.0 * h_max,
@@ -876,8 +876,8 @@ double Potential(const Vector &x)
         if (potential_well_switch != 2)
         {
             // add well with center = (3/4 + sin(2*pi*t) / 64, 3/4 + cos(2*pi*t) / 64, 3/4)
-            center(0) = 0.75 * (bb_min[0] + bb_max[0]) - cos(2 * M_PI * pseudo_time) / 64;
-            center(1) = 0.75 * (bb_min[1] + bb_max[1]) - sin(2 * M_PI * pseudo_time) / 64;
+            center(0) = (0.75 - cos(2 * M_PI * pseudo_time) / 64) * (bb_min[0] + bb_max[0]);
+            center(1) = (0.75 - sin(2 * M_PI * pseudo_time) / 64) * (bb_min[1] + bb_max[1]);
             for (int i = 2; i < x.Size(); i++)
                 center(i) = 0.75 * (bb_min[i] + bb_max[i]);
             rho += amplitude * std::exp(-x.DistanceSquaredTo(center) / pow(4.0 * h_max,
