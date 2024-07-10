@@ -1,0 +1,216 @@
+#******************************************************************************
+#*
+#* Copyright (c) 2013-2024, Lawrence Livermore National Security, LLC
+#* and other libROM project developers. See the top-level COPYRIGHT
+#* file for details.
+#*
+#* SPDX-License-Identifier: (Apache-2.0 OR MIT)
+#*
+#******************************************************************************
+#
+#       libROM merlin workflow example: heat_conduction_hdf
+#
+# This is a merlin workflow example that generates HDF database for
+# heat conduction problems. This workflow is equivalent to
+# examples/dmd/heat_conduction_hdf.sh.
+#
+# This requires:
+#   - libROM compiled with MFEM.
+#   - merlin (See https://merlin.readthedocs.io/en/latest/)
+#     - If on LC quartz, dedicated IT servers configured for merlin
+#       (See https://lc.llnl.gov/confluence/display/MERLIN/LaunchIT+Configuration)
+#
+# Instruction:
+#   Case 1. Running locally
+#
+#     - set the option below for batch/type to be local
+#
+#         batch:
+#           type: local
+#
+#     - run the following command:
+#
+#         merlin run --local heat_conduction_hdf.yaml
+#
+#   Case 2. Running distributed
+#
+#     - set the option below for batch/type to be flux
+#
+#         batch:
+#           type: flux
+#
+#     - run the following command:
+#
+#         merlin run heat_conduction_hdf.yaml
+#         merlin run-workers heat_conduction_hdf.yaml
+#
+#         (After all jobs are finished)
+#         merlin stop-workers
+#
+# This will create a directory with the corresponding results:
+#
+#   heat_conduction_hdf_cases
+#   |- heat_conduction_hdf_$(time_label)
+#      |- dmd_data
+#      |- dmd_list
+#      |- merlin_info
+#      |- prepare_dir
+#      |- sample_foms
+#      |- test_fom
+#      |- test_rom
+#
+# Each directory corresponds to:
+#   - dmd_data: snapshots for the training/test parameter values
+#   - dmd_list: list files for parameter values
+#   - merlin_info: detailed merlin info that corresponds to this run case
+#   - prepare_dir: command script/output/error of the step prepare_dir
+#   - sample_foms: command script/output/error of the step sample_foms
+#   - test_fom: command script/output/error of the step test_fom
+#   - test_rom: command script/output/error of the step test_rom
+
+description:
+  name: heat_conduction_hdf
+  description: Demo workflow equivalent to heat_conduction_hdf.sh
+
+env:
+  variables:
+    OUTPUT_PATH: ./heat_conduction_hdf_cases
+    ROOT_DIR: $(dirname $(SPECROOT))
+    PHYS_EXEC: $(ROOT_DIR)/dmd/parametric_heat_conduction
+    ROM_EXEC: $(ROOT_DIR)/dmd/parametric_tw_csv
+    MESH_FILE: $(ROOT_DIR)/data/star.mesh
+    LIST_DIR: $(MERLIN_WORKSPACE)/dmd_list
+    DATA_DIR: $(MERLIN_WORKSPACE)/dmd_data
+    LIST_FILE: dmd_train_parametric.csv
+    LOCAL_FILE: dmd_train_local.csv
+    TEST_FILE: dmd_test.csv
+    ALPHA: 0.01
+    CX: 0
+    CY: 0
+    TEST_IDX: 4
+    TEST_RAD: 0.5
+    NSAMPLE_PER_WINDOW: 25
+    DTC: 0.01
+
+batch:
+   type: local
+   #type: flux
+   bank: asccasc
+   queue: pdebug
+   shell: /bin/bash
+   nodes: 1
+
+########################################
+# Study definition
+########################################
+study:
+  - name: prepare_dir
+    description: prepare directory and file for samples
+    run:
+      cmd: |
+        mkdir -p $(LIST_DIR)
+        mkdir -p $(DATA_DIR)
+        touch $(LIST_DIR)/$(LIST_FILE)
+      nodes: 1
+      procs: 1
+
+  - name: sample_foms
+    description: Save MFEM solution snapshots with given parameter value
+    run:
+      cmd: |
+        $(LAUNCHER) $(PHYS_EXEC) -r $(RADIUS) -save -hdf -out dmd_data/sim$(INDEX) -no-vis -m $(MESH_FILE)
+
+        if [ $? -ne 0 ]; then
+           echo "sample_fom $(INDEX) failed."
+           exit -1
+        else
+           echo "sample_fom $(INDEX) succeeded."
+        fi
+
+        mv -f run/dmd_data/* $(DATA_DIR)/
+        echo "$(INDEX),$(RADIUS),$(ALPHA),$(CX),$(CY)" >> $(LIST_DIR)/$(LIST_FILE)
+      nodes: 1
+      procs: 1
+      depends: [prepare_dir]
+      task_queue: sample_queue
+
+  - name: test_fom
+    description: Save MFEM solution snapshot with given test value
+    run:
+      cmd: |
+        $(LAUNCHER) $(PHYS_EXEC) -r $(TEST_RAD) -save -hdf -out dmd_data/sim$(TEST_IDX) -no-vis -m $(MESH_FILE)
+
+        if [ $? -ne 0 ]; then
+           echo "test_fom failed."
+           exit -1
+        else
+           echo "test_fom succeeded."
+        fi
+
+        mv -f run/dmd_data/* $(DATA_DIR)/
+        echo "$(TEST_IDX),$(TEST_RAD),$(ALPHA),$(CX),$(CY)" > $(LIST_DIR)/$(LOCAL_FILE)
+        echo "$(TEST_IDX),$(TEST_RAD),$(ALPHA),$(CX),$(CY)" > $(LIST_DIR)/$(TEST_FILE)
+      nodes: 1
+      procs: 1
+      depends: [prepare_dir,sample_foms_*]
+      task_queue: sample_queue
+
+  - name: test_rom
+    description: Offline phase of time-windowing parametric DMD
+    run:
+      cmd: |
+        $(LAUNCHER) $(ROM_EXEC) -list $(LIST_DIR) -data $(DATA_DIR) -o hc_parametric_tw -nwinsamp $(NSAMPLE_PER_WINDOW) -dtc $(DTC) -offline -hdf
+
+        if [ $? -ne 0 ]; then
+           echo "offline_rom failed."
+           exit -1
+        else
+           echo "offline_rom succeeded."
+        fi
+
+        $(LAUNCHER) $(ROM_EXEC) -list $(LIST_DIR) -data $(DATA_DIR) -o hc_parametric_tw -nwinsamp $(NSAMPLE_PER_WINDOW) -dtc $(DTC) -online -hdf
+
+        if [ $? -ne 0 ]; then
+           echo "online_rom failed."
+           exit -1
+        else
+           echo "online_rom succeeded."
+        fi
+
+      nodes: 1
+      procs: 1
+      depends: [prepare_dir,sample_foms_*,test_fom]
+      task_queue: sample_queue
+
+########################################
+# Worker and sample configuration
+########################################
+merlin:
+
+  resources:
+    task_server: celery
+
+    overlap: False
+
+    workers:
+      sampleworkers:
+        args: --concurrency 4 --prefetch-multiplier 1
+        steps: [sample_foms]
+        nodes: 1
+        machines: [quartz]
+      testworkers:
+        args: --concurrency 1 --prefetch-multiplier 1
+        steps: [test_fom]
+        nodes: 1
+        machines: [quartz]
+      romworkers:
+        args: --concurrency 1 --prefetch-multiplier 1
+        steps: [test_rom]
+        nodes: 1
+        machines: [quartz]
+
+  ###################################################
+  samples:
+    column_labels: [INDEX,RADIUS]
+    file: $(SPECROOT)/heat_conduction_hdf_samples.csv
+

@@ -619,6 +619,7 @@ int main(int argc, char *argv[])
 
     // 19. Save the refined mesh and the modes in parallel. This output can be
     //     viewed later using GLVis: "glvis -np <np> -m mesh -g mode".
+    Vector sign_eigenvectors(nev);
     {
         ostringstream sol_eigenvalue_name;
         if (fom || offline)
@@ -649,6 +650,12 @@ int main(int argc, char *argv[])
         if (fom || offline)
         {
             mode_prefix += "fom_";
+            mode_ref_prefix += "ref_";
+        }
+        else if (online)
+        {
+            mode_prefix += "rom_";
+            mode_ref_prefix += "fom_";
         }
         else if (online)
         {
@@ -668,7 +675,23 @@ int main(int argc, char *argv[])
                 // convert eigenvector from HypreParVector to ParGridFunction
                 eigenfunction_i = eigenvectors[i];
             }
+            mode_ref_name.str("");
+            sign_eigenvectors[i] = (InnerProduct(mode_ref, eigenvector_i) >= 0) ? 1 : -1;
+            eigenvector_i *= sign_eigenvectors[i] / sqrt(InnerProduct(eigenvector_i,
+                             eigenvector_i));
 
+            if (InnerProduct(mode_ref, eigenvector_i) < 0.9)
+            {
+                std::cout << "Warning: eigenvector " << i <<
+                          " in FOM and ROM are not directly comparable."
+                          << std::endl;
+                std::cout << "Inner product = " << InnerProduct(mode_ref,
+                          eigenvector_i) << std::endl;
+                std::cout << "TODO: Visualization of projected eigenvector." << std::endl;
+            }
+
+            // convert eigenvector from HypreParVector to ParGridFunction
+            x = eigenvector_i;
             mode_name << mode_prefix << setfill('0') << setw(2) << i << "."
                       << setfill('0') << setw(6) << myid;
 
@@ -763,6 +786,14 @@ int main(int argc, char *argv[])
                     // convert eigenvector from HypreParVector to ParGridFunction
                     eigenfunction_i = eigenvectors[i];
                 }
+                else
+                {
+                    eigenvectors.GetRow(i, eigenvector_i);
+                }
+                // convert eigenvector from HypreParVector to ParGridFunction
+                eigenvector_i *= sign_eigenvectors[i] / sqrt(InnerProduct(eigenvector_i,
+                                 eigenvector_i));
+                x = eigenvector_i;
 
                 sout << "parallel " << num_procs << " " << myid << "\n"
                      << "solution\n" << *pmesh << eigenfunction_i << flush

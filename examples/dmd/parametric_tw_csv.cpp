@@ -54,6 +54,7 @@
 #include "linalg/Matrix.h"
 #include "utils/HDFDatabase.h"
 #include "utils/CSVDatabase.h"
+#include "utils/Utilities.h"
 #include <cmath>
 #include <iostream>
 #include <limits>
@@ -94,9 +95,9 @@ int main(int argc, char *argv[])
     cout.precision(precision);
 
     // 1. Initialize MPI.
-    MPI_Session mpi;
-    int num_procs = mpi.WorldSize();
-    int myid = mpi.WorldRank();
+    Mpi::Init();
+    const int num_procs = Mpi::WorldSize();
+    const int myid = Mpi::WorldRank();
 
     // 2. Parse command-line options.
     bool offline = false;
@@ -123,6 +124,7 @@ int main(int argc, char *argv[])
     const char *test_list = "dmd_test";
     const char *temporal_idx_list = "temporal_idx";
     const char *spatial_idx_list = "spatial_idx";
+    const char *window_file = "";
     const char *hdf_name = "dmd";
     const char *snap_pfx = "step";
     const char *basename = "";
@@ -199,6 +201,9 @@ int main(int argc, char *argv[])
                    "Use CSV or HDF format for input files.");
     args.AddOption(&useWindowDims, "-wdim", "--wdim", "-no-wdim", "--no-wdim",
                    "Use DMD dimensions for each window, input from a CSV file.");
+    args.AddOption(&window_file, "-window-set", "--window-set-name",
+                   "Name of the file containing a rdim/ef list for each window"
+                   " within the list directory.");
     args.AddOption(&subsample, "-subs", "--subsample",
                    "Subsampling factor for training snapshots.");
     args.AddOption(&eval_subsample, "-esubs", "--eval_subsample",
@@ -208,13 +213,13 @@ int main(int argc, char *argv[])
     args.Parse();
     if (!args.Good())
     {
-        if (mpi.Root())
+        if (myid == 0)
         {
             args.PrintUsage(cout);
         }
         return 1;
     }
-    if (mpi.Root())
+    if (myid == 0)
     {
         args.PrintOptions(cout);
     }
@@ -233,7 +238,7 @@ int main(int argc, char *argv[])
         outputPath += "/" + string(basename);
     }
 
-    if (mpi.Root()) {
+    if (myid == 0) {
         const char path_delim = '/';
         string::size_type pos = 0;
         do {
@@ -494,6 +499,66 @@ int main(int argc, char *argv[])
         }
     }
 
+    // Load window RDIM/EF file if given
+    vector<string> window_str_list;
+    vector<double> window_list;
+    bool use_rdim_windows = false;
+    if (string(window_file).size() > 0)
+    {
+        const string window_file_path = string(list_dir) + "/" +
+                                        string(window_file) + ".csv";
+        if (!CAROM::Utilities::file_exist(window_file_path))
+        {
+            throw std::runtime_error(string("Specified window rdim/ef file, but file '" +
+                                            window_file_path + "' does not exist!"));
+        }
+        csv_db.getStringVector(window_file_path, window_str_list, false);
+
+        CAROM_VERIFY(window_str_list.size() > 0);
+
+        if (numWindows > 0)
+        {
+            CAROM_VERIFY(numWindows == window_str_list.size() - 1);
+        }
+
+        if (window_str_list[0] == "RDIM")
+        {
+            use_rdim_windows = true;
+        }
+
+        CAROM_VERIFY(window_str_list[0] == "RDIM" || window_str_list[0] == "EF");
+
+        for (int i = 1; i < window_str_list.size(); i++)
+        {
+            std::string tmp;
+            std::stringstream window_ss(window_str_list[i]);
+            getline(window_ss, tmp, ',');
+            getline(window_ss, tmp, ',');
+            double window_rdim_ef = stod(tmp);
+            if (use_rdim_windows)
+            {
+                CAROM_VERIFY(int(window_rdim_ef) > 0);
+            }
+            else
+            {
+                CAROM_VERIFY(window_rdim_ef > 0.0 && window_rdim_ef <= 1.0);
+            }
+            window_list.push_back(window_rdim_ef);
+        }
+
+        numWindows = window_list.size();
+
+        if (myid == 0)
+        {
+            std::cout << "Read window file with " << window_list.size() << " windows:\n";
+            for (int i = 0; i < window_list.size(); i++)
+            {
+                std::cout << "  Window " << i << ": " << (use_rdim_windows ? "RDIM = " :
+                          "EF = ") << window_list[i] << "\n";
+            }
+        }
+    }
+
     vector<int> windowDim;
     if (useWindowDims)
     {
@@ -661,6 +726,15 @@ int main(int argc, char *argv[])
             {
                 if (useWindowDims)
                     rdim = windowDim[window];
+
+                if (window_list.size() > 0)
+                {
+                    if (use_rdim_windows) {
+                        rdim = window_list[window];
+                    } else {
+                        ef = window_list[window];
+                    }
+                }
 
                 if (rdim != -1)
                 {

@@ -20,7 +20,6 @@
 
 namespace CAROM {
 
-bool fileExists(const std::string& name);
 
 /**
  * Class Database is an abstract base class that provides basic ability to

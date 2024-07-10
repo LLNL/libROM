@@ -18,6 +18,7 @@
 #include "Vector.h"
 #include <vector>
 #include <complex>
+#include <memory>
 #include <string>
 
 namespace CAROM {
@@ -917,8 +918,15 @@ public:
      *
      * @return The Q of the QR factorization of this.
      */
-    Matrix*
+    std::unique_ptr<Matrix>
     qr_factorize() const;
+
+    /**
+     * @brief Computes and returns the Q and R factors of the QR factorization.
+     *
+     * @return The Q and R of the QR factorization of this.
+     */
+    void qr_factorize(std::vector<std::unique_ptr<Matrix>> & QR) const;
 
     /**
      * @brief Compute the leading numColumns() column pivots from a
@@ -1239,6 +1247,19 @@ private:
     void
     qrcp_pivots_transpose_distributed_elemental_unbalanced
     (int* row_pivot, int* row_pivot_owner, int pivots_requested) const;
+
+    /**
+     * @brief Computes the QR factorization of this. The R factor is computed
+     * only if requested.
+     *
+     * @param[in]  computeR If true, the R factor is computed and returned.
+     * @param[out] QR Vector of raw pointers, with QR[0] pointing to Q and
+     * QR[1] pointing to R if computeR is true, nullptr otherwise.
+     *
+     * @return The Q and R of the QR factorization of this. If computeR is
+     * false, the R pointer will be nullptr.
+     */
+    void qr_factorize(bool computeR, std::vector<Matrix*> & QR) const;
 
     /**
      * @brief The storage for the Matrix's values on this processor.

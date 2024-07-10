@@ -110,11 +110,12 @@ S_OPT(const Matrix* f_basis,
     }
 
     const Matrix* Vo = NULL;
-
+    std::unique_ptr<Matrix> f_basis_truncated_Q;
     // Use the QR factorization of the input matrix, if requested
     if (qr_factorize)
     {
-        Vo = f_basis_truncated->qr_factorize();
+        f_basis_truncated_Q = f_basis_truncated->qr_factorize();
+        Vo = f_basis_truncated_Q.get();
     }
     else
     {
@@ -520,10 +521,6 @@ S_OPT(const Matrix* f_basis,
     MPI_Type_free(&MaxRowType);
     MPI_Op_free(&RowInfoOp);
 
-    if (qr_factorize)
-    {
-        delete Vo;
-    }
     if (num_basis_vectors < f_basis->numColumns())
     {
         delete f_basis_truncated;

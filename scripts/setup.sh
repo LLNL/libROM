@@ -148,6 +148,12 @@ SUPERLU_DIR=$LIB_DIR/superlu_dist
 SUPERLU_OPT=-I${SUPERLU_DIR}/build/include
 SUPERLU_LIB="-Wl,-rpath,${SUPERLU_DIR}/build/lib/ -L${SUPERLU_DIR}/build/lib/ -lsuperlu_dist -lblas"
 
+# backup any user provided flags and clear them before compiling MFEM
+ROM_CFLAGS="${CFLAGS}"
+ROM_CXXFLAGS="${CXXFLAGS}"
+unset CFLAGS
+unset CXXFLAGS
+
 # Install MFEM
 cd $LIB_DIR
 if [[ $BUILD_TYPE == "Debug" ]]; then
@@ -158,7 +164,7 @@ if [[ $BUILD_TYPE == "Debug" ]]; then
     if [[ $UPDATE_LIBS == "true" ]]; then
         cd mfem_debug
         git pull
-        make -j 8 pdebug STATIC=NO SHARED=YES MFEM_USE_MPI=YES MFEM_USE_GSLIB=${MG} MFEM_USE_LAPACK=${MFEM_USE_LAPACK:-"NO"} MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB" MFEM_USE_SUPERLU=${MFEM_USE_SUPERLU:-"NO"} SUPERLU_DIR="$SUPERLU_DIR" SUPERLU_OPT="$SUPERLU_OPT" SUPERLU_LIB="$SUPERLU_LIB"
+        make -j 8 pdebug CPPFLAGS="${ROM_CXXFLAGS}" STATIC=NO SHARED=YES MFEM_USE_MPI=YES MFEM_USE_GSLIB=${MG} MFEM_USE_LAPACK=${MFEM_USE_LAPACK:-"NO"} MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB" MFEM_USE_SUPERLU=${MFEM_USE_SUPERLU:-"NO"} SUPERLU_DIR="$SUPERLU_DIR" SUPERLU_OPT="$SUPERLU_OPT" SUPERLU_LIB="$SUPERLU_LIB"
         check_result $? mfem-debug-installation
     fi
     cd $LIB_DIR
@@ -175,7 +181,7 @@ else
         # NOTE(kevin): v4.5.2-dev commit. This is the mfem version used by PyMFEM v4.5.2.0.
         # This version matching is required to support pylibROM-PyMFEM interface.
         git checkout 00b2a0705f647e17a1d4ffcb289adca503f28d42
-        make -j 8 parallel STATIC=NO SHARED=YES MFEM_USE_MPI=YES MFEM_USE_GSLIB=${MG} MFEM_USE_LAPACK=${MFEM_USE_LAPACK:-"NO"} MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB" MFEM_USE_SUPERLU=${MFEM_USE_SUPERLU:-"NO"} SUPERLU_DIR="$SUPERLU_DIR" SUPERLU_OPT="$SUPERLU_OPT" SUPERLU_LIB="$SUPERLU_LIB"
+        make -j 8 parallel CPPFLAGS="${ROM_CXXFLAGS}" STATIC=NO SHARED=YES MFEM_USE_MPI=YES MFEM_USE_GSLIB=${MG} MFEM_USE_LAPACK=${MFEM_USE_LAPACK:-"NO"} MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB" MFEM_USE_SUPERLU=${MFEM_USE_SUPERLU:-"NO"} SUPERLU_DIR="$SUPERLU_DIR" SUPERLU_OPT="$SUPERLU_OPT" SUPERLU_LIB="$SUPERLU_LIB"
         check_result $? mfem-parallel-installation
     fi
     cd $LIB_DIR
@@ -183,3 +189,7 @@ else
     ln -s mfem_parallel mfem
     check_result $? mfem-parallel-link
 fi
+
+# restore any user provided flags for compiling libROM
+export CFLAGS="${ROM_CFLAGS}"
+export CXXFLAGS="${ROM_CXXFLAGS}"

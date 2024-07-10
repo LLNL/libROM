@@ -38,6 +38,7 @@ set(module_list
   algo/DMDc
   algo/AdaptiveDMD
   algo/NonuniformDMD
+  algo/SnapshotDMD
   algo/DifferentialEvolution
   algo/greedy/GreedyCustomSampler
   algo/greedy/GreedyRandomSampler
@@ -45,6 +46,7 @@ set(module_list
   algo/manifold_interp/Interpolator
   algo/manifold_interp/MatrixInterpolator
   algo/manifold_interp/VectorInterpolator
+  algo/manifold_interp/PCHIPInterpolator
   hyperreduction/DEIM
   hyperreduction/GNAT
   hyperreduction/QDEIM
@@ -61,7 +63,7 @@ set(module_list
   utils/mpi_utils)
 set(source_files)
 foreach(module IN LISTS module_list)
-  list(APPEND source_files ${module}.cpp)
+  list(APPEND source_files ${module}.cpp ${module}.h)
 endforeach(module) # IN LISTS module_list
 
 list(APPEND source_files
@@ -141,3 +143,24 @@ target_include_directories(ROM PUBLIC
   ${MPI_C_INCLUDE_DIRS}
   ${MFEM_C_INCLUDE_DIRS}
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
+# Find headers from the source file list that need to be installed
+set(HEADERS "")
+foreach(file IN LISTS source_files)
+  if(file MATCHES ".(hpp|h)$")
+    list(APPEND HEADERS ${file})
+  endif()
+endforeach(file)
+
+# Only install libROM.so if installing to a different directory. Otherwise, libROM.so is already in lib/
+if (NOT ${CMAKE_INSTALL_PREFIX} STREQUAL ${CMAKE_BINARY_DIR})
+  install(TARGETS ROM EXPORT ROM LIBRARY DESTINATION lib INCLUDES DESTINATION include)
+endif()
+
+# Install libROM headers
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CAROM_config.h ${CMAKE_CURRENT_SOURCE_DIR}/FCMangle.h DESTINATION include)
+foreach(file IN LISTS HEADERS)
+  # get the directory component so the include directory structure is preserved
+  get_filename_component(dir ${file} DIRECTORY)
+  install(FILES ${file} DESTINATION include/${dir})
+endforeach(file)

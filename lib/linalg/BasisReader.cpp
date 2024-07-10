@@ -103,7 +103,7 @@ BasisReader::getSpatialBasis(
     int num_cols = getNumSamples("basis");
 
     char tmp[100];
-    CAROM_VERIFY(0 < start_col <= num_cols);
+    CAROM_VERIFY(0 < start_col && start_col <= num_cols);
     CAROM_VERIFY(start_col <= end_col && end_col <= num_cols);
     int num_cols_to_read = end_col - start_col + 1;
 
@@ -177,7 +177,7 @@ BasisReader::getTemporalBasis(
     int num_cols = getNumSamples("temporal_basis");
 
     char tmp[100];
-    CAROM_VERIFY(0 < start_col <= num_cols);
+    CAROM_VERIFY(0 < start_col && start_col <= num_cols);
     CAROM_VERIFY(start_col <= end_col && end_col <= num_cols);
     int num_cols_to_read = end_col - start_col + 1;
 
@@ -351,7 +351,7 @@ BasisReader::getSnapshotMatrix(
     int num_rows = getDim("snapshot");
     int num_cols = getNumSamples("snapshot");
 
-    CAROM_VERIFY(0 < start_col <= num_cols);
+    CAROM_VERIFY(0 < start_col && start_col <= num_cols);
     CAROM_VERIFY(start_col <= end_col && end_col <= num_cols);
     int num_cols_to_read = end_col - start_col + 1;
 
