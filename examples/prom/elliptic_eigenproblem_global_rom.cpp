@@ -595,7 +595,7 @@ int main(int argc, char *argv[])
             {
                 if (myid == 0 && verbose_level > 0)
                 {
-                    std::cout << "correlation_matrix(" << i+1 << "," << j+1 << ") = " <<
+                    std::cout << "correlation_matrix(" << j+1 << "," << i+1 << ") = " <<
                               InnerProduct(mode_fom, modes_rom[j]) << ";" << std::endl;
                 }
                 if (abs(eigenvalues_fom[j] - eigenvalues_fom[i]) < 1e-6)
@@ -603,7 +603,6 @@ int main(int argc, char *argv[])
                     eigenvector_i.Add(InnerProduct(mode_fom, modes_rom[j]), modes_rom[j]);
                 }
             }
-            //eigenvector_i /= sqrt(InnerProduct(eigenvector_i, eigenvector_i));
             eigenvectors.push_back(eigenvector_i);
             mode_fom.Add(-1.0, eigenvector_i);
             const double diffNorm = sqrt(InnerProduct(mode_fom, mode_fom));
@@ -863,21 +862,21 @@ double Potential(const Vector &x)
         return amplitude * std::exp(-x.DistanceSquaredTo(center) / pow(4.0 * h_max,
                                     2.0));
     case 4:
-        if (potential_well_switch != 1)
+        if (potential_well_switch == 0 || potential_well_switch == 1)
         {
-            // add well with center = (1/4 + cos(2*pi*t) / 64, 1/4 + sin(2*pi*t) / 64, 1/4)
-            center(0) = (0.25 + cos(2 * M_PI * pseudo_time) / 64) * (bb_min[0] + bb_max[0]);
-            center(1) = (0.25 + sin(2 * M_PI * pseudo_time) / 64) * (bb_min[1] + bb_max[1]);
+            // add well with first center
+            center(0) = (0.25 + 0.02 * cos(2 * M_PI * pseudo_time)) * (bb_min[0] + bb_max[0]);
+            center(1) = (0.25 + 0.02 * sin(2 * M_PI * pseudo_time)) * (bb_min[1] + bb_max[1]);
             for (int i = 2; i < x.Size(); i++)
                 center(i) = 0.25 * (bb_min[i] + bb_max[i]);
             rho += amplitude * std::exp(-x.DistanceSquaredTo(center) / pow(4.0 * h_max,
                                         2.0));
         }
-        if (potential_well_switch != 2)
+        if (potential_well_switch == 0 || potential_well_switch == 2)
         {
-            // add well with center = (3/4 + sin(2*pi*t) / 64, 3/4 + cos(2*pi*t) / 64, 3/4)
-            center(0) = (0.75 - cos(2 * M_PI * pseudo_time) / 64) * (bb_min[0] + bb_max[0]);
-            center(1) = (0.75 - sin(2 * M_PI * pseudo_time) / 64) * (bb_min[1] + bb_max[1]);
+            // add well with second center
+            center(0) = (0.75 - 0.02 * cos(2 * M_PI * pseudo_time)) * (bb_min[0] + bb_max[0]);
+            center(1) = (0.75 - 0.02 * sin(2 * M_PI * pseudo_time)) * (bb_min[1] + bb_max[1]);
             for (int i = 2; i < x.Size(); i++)
                 center(i) = 0.75 * (bb_min[i] + bb_max[i]);
             rho += amplitude * std::exp(-x.DistanceSquaredTo(center) / pow(4.0 * h_max,
