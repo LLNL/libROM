@@ -1560,7 +1560,7 @@ TEST(MatrixSerialTest, Test_mult_Vector_pointer)
       *
       */
     CAROM::Vector *w;
-    w = asymmetric_matrix.mult(v);
+    w = asymmetric_matrix.mult(*v);
     EXPECT_FALSE(w->distributed());
     EXPECT_EQ(w->dim(), 2);
     EXPECT_DOUBLE_EQ((*w)(0), 2.0);
