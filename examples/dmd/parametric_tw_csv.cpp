@@ -10,7 +10,8 @@
 
 // Compile with: make parametric_tw_csv
 //
-// This script performs serial or time windowing DMD on general datasets in CSV or HDF formats.
+// This script performs DMD on general datasets in CSV or HDF formats, 
+// with the options of time-windowing and parametric interpolation.
 // For the used-specified input file hierarchy, see the "Description" section below.
 // Below is a simple hands-on example, using MFEM heat conduction example to
 // generate either CSV or HDF database to illustrate the file hierarchy and command lines
@@ -21,11 +22,11 @@
 // CSV database generation: heat_conduction_csv.sh
 // HDF database generation: heat_conduction_hdf.sh
 //
-// Local serial DMD command (for HDF version, append -hdf):
-//   parametric_tw_csv -o hc_local_serial -train-set dmd_train_local -rdim 16 -dtc 0.01 -offline
-//   parametric_tw_csv -o hc_local_serial -train-set dmd_train_local -rdim 16 -dtc 0.01 -online
+// Local DMD command (for HDF version, append -hdf):
+//   parametric_tw_csv -o hc_local -train-set dmd_train_local -rdim 16 -dtc 0.01 -offline
+//   parametric_tw_csv -o hc_local -train-set dmd_train_local -rdim 16 -dtc 0.01 -online
 //
-// Final-time prediction error (Last line in run/hc_local_serial/dmd_par5_prediction_error.csv):
+// Final-time prediction error (Last line in run/hc_local/dmd_par5_prediction_error.csv):
 //   2.230434418670911e-09
 //
 // Local time windowing DMD command (for HDF version, append -hdf):
@@ -35,11 +36,11 @@
 // Final-time prediction error (Last line in run/hc_local_tw/dmd_par5_prediction_error.csv):
 //   1.838715056687316e-05
 //
-// Parametric serial DMD command (for HDF version, append -hdf):
-//   parametric_tw_csv -o hc_parametric_serial -train-set dmd_train_parametric -rdim 16 -dtc 0.01 -offline
-//   parametric_tw_csv -o hc_parametric_serial -train-set dmd_train_parametric -rdim 16 -dtc 0.01 -online
+// Parametric DMD command (for HDF version, append -hdf):
+//   parametric_tw_csv -o hc_parametric -train-set dmd_train_parametric -rdim 16 -dtc 0.01 -offline
+//   parametric_tw_csv -o hc_parametric -train-set dmd_train_parametric -rdim 16 -dtc 0.01 -online
 //
-// Final-time prediction error (Last line in run/hc_parametric_serial/dmd_par5_prediction_error.csv):
+// Final-time prediction error (Last line in run/hc_parametric/dmd_par5_prediction_error.csv):
 //   0.001260102134003929
 //
 // Parametric time windowing DMD command (for HDF version, append -hdf):
