@@ -697,7 +697,7 @@ int main(int argc, char *argv[])
 
     CAROM::Matrix *M_hat_carom, *K_hat_carom;
     DenseMatrix *M_hat, *K_hat;
-    CAROM::Vector *b_hat_carom, *u_init_hat_carom;
+    std::shared_ptr<CAROM::Vector> b_hat_carom, u_init_hat_carom;
     Vector *b_hat, *u_init_hat;
 
     Vector u_init(*U);
@@ -770,11 +770,11 @@ int main(int argc, char *argv[])
 
             Vector b_vec = *B;
             CAROM::Vector b_carom(b_vec.GetData(), b_vec.Size(), true);
-            b_hat_carom = spatialbasis->transposeMult(&b_carom);
+            b_hat_carom.reset(spatialbasis->transposeMult(&b_carom));
             if (interp_prep) b_hat_carom->write("b_hat_" + std::to_string(f_factor));
             b_hat = new Vector(b_hat_carom->getData(), b_hat_carom->dim());
 
-            u_init_hat_carom = new CAROM::Vector(numColumnRB, false);
+            u_init_hat_carom.reset(new CAROM::Vector(numColumnRB, false));
             ComputeCtAB_vec(K_mat, *U, *spatialbasis, *u_init_hat_carom);
             if (interp_prep) u_init_hat_carom->write("u_init_hat_" + std::to_string(
                             f_factor));
@@ -1012,8 +1012,6 @@ int main(int argc, char *argv[])
         delete K_hat_carom;
         delete M_hat;
         delete K_hat;
-        delete b_hat_carom;
-        delete u_init_hat_carom;
         delete b_hat;
         delete u_init_hat;
         delete u_in;

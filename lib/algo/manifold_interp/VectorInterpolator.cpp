@@ -104,7 +104,7 @@ Vector* VectorInterpolator::obtainLogInterpolatedVector(
     return obtainInterpolatedVector(d_gammas, d_lambda_T, d_interp_method, rbf);
 }
 
-Vector* VectorInterpolator::interpolate(Vector* point)
+std::shared_ptr<Vector> VectorInterpolator::interpolate(Vector* point)
 {
     if (d_gammas.size() == 0)
     {
@@ -139,8 +139,9 @@ Vector* VectorInterpolator::interpolate(Vector* point)
     Vector* log_interpolated_vector = obtainLogInterpolatedVector(rbf);
 
     // The exp mapping is X + the interpolated gamma
-    Vector* interpolated_vector = d_rotated_reduced_vectors[d_ref_point]->plus(
-                                      log_interpolated_vector);
+    std::shared_ptr<Vector> interpolated_vector =
+        d_rotated_reduced_vectors[d_ref_point]->plus(
+            *log_interpolated_vector);
     delete log_interpolated_vector;
     return interpolated_vector;
 }

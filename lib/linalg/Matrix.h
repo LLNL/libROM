@@ -381,30 +381,6 @@ public:
     }
 
     /**
-     * @brief Multiplies this Matrix with other and returns the product,
-     * pointer version.
-     *
-     * Supports multiplication of an undistributed Matrix and Vector
-     * returning an undistributed Vector, and multiplication of a distributed
-     * Matrix and an undistributed Vector returning a distributed Vector.
-     *
-     * @pre other != 0
-     * @pre !other->distributed()
-     * @pre numColumns() == other->dim()
-     *
-     * @param[in] other The Vector to multiply with this.
-     *
-     * @return The product Vector.
-     */
-    Vector*
-    mult(
-        const Vector* other) const
-    {
-        CAROM_VERIFY(other != 0);
-        return mult(*other);
-    }
-
-    /**
      * @brief Multiplies this Matrix with other and fills result with the
      * answer.
      *

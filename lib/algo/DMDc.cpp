@@ -150,7 +150,6 @@ DMDc::~DMDc()
     delete d_phi_imaginary;
     delete d_phi_real_squared_inverse;
     delete d_phi_imaginary_squared_inverse;
-    delete d_projected_init_real;
     delete d_projected_init_imaginary;
 }
 
@@ -659,15 +658,15 @@ DMDc::project(const Vector* init, const Matrix* controls, double t_offset)
     Vector* init_real = d_phi_real->transposeMult(init);
     Vector* init_imaginary = d_phi_imaginary->transposeMult(init);
 
-    Vector* d_projected_init_real_1 = d_phi_real_squared_inverse->mult(init_real);
+    Vector* d_projected_init_real_1 = d_phi_real_squared_inverse->mult(*init_real);
     Vector* d_projected_init_real_2 = d_phi_imaginary_squared_inverse->mult(
-                                          init_imaginary);
-    d_projected_init_real = d_projected_init_real_1->plus(d_projected_init_real_2);
+                                          *init_imaginary);
+    d_projected_init_real = d_projected_init_real_1->plus(*d_projected_init_real_2);
 
     Vector* d_projected_init_imaginary_1 = d_phi_real_squared_inverse->mult(
-            init_imaginary);
+            *init_imaginary);
     Vector* d_projected_init_imaginary_2 = d_phi_imaginary_squared_inverse->mult(
-            init_real);
+            *init_real);
     d_projected_init_imaginary = d_projected_init_imaginary_2->minus(
                                      d_projected_init_imaginary_1);
 
@@ -730,9 +729,10 @@ DMDc::predict(double t)
     Matrix* d_phi_mult_eigs_imaginary = d_phi_pair.second;
 
     Vector* d_predicted_state_real_1 = d_phi_mult_eigs_real->mult(
-                                           d_projected_init_real);
+                                           *d_projected_init_real);
+
     Vector* d_predicted_state_real_2 = d_phi_mult_eigs_imaginary->mult(
-                                           d_projected_init_imaginary);
+                                           *d_projected_init_imaginary);
     Vector* d_predicted_state_real = d_predicted_state_real_1->minus(
                                          d_predicted_state_real_2);
     addOffset(d_predicted_state_real);
@@ -754,9 +754,9 @@ DMDc::predict(double t)
         d_projected_controls_real->getColumn(k, *f_control_real);
         d_projected_controls_imaginary->getColumn(k, *f_control_imaginary);
         d_predicted_state_real_1 = d_phi_mult_eigs_real->mult(
-                                       f_control_real);
+                                       *f_control_real);
         d_predicted_state_real_2 = d_phi_mult_eigs_imaginary->mult(
-                                       f_control_imaginary);
+                                       *f_control_imaginary);
         *d_predicted_state_real += *d_predicted_state_real_1;
         *d_predicted_state_real -= *d_predicted_state_real_2;
 
@@ -921,7 +921,7 @@ DMDc::load(std::string base_file_name)
     d_phi_imaginary_squared_inverse->read(full_file_name);
 
     full_file_name = base_file_name + "_projected_init_real";
-    d_projected_init_real = new Vector();
+    d_projected_init_real.reset(new Vector());
     d_projected_init_real->read(full_file_name);
 
     full_file_name = base_file_name + "_projected_init_imaginary";

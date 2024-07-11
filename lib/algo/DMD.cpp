@@ -144,7 +144,6 @@ DMD::~DMD()
     delete d_phi_imaginary;
     delete d_phi_real_squared_inverse;
     delete d_phi_imaginary_squared_inverse;
-    delete d_projected_init_real;
     delete d_projected_init_imaginary;
 }
 
@@ -607,15 +606,15 @@ DMD::projectInitialCondition(const Vector* init, double t_offset)
     Vector* rhs_real = d_phi_real->transposeMult(init);
     Vector* rhs_imaginary = d_phi_imaginary->transposeMult(init);
 
-    Vector* d_projected_init_real_1 = d_phi_real_squared_inverse->mult(rhs_real);
+    Vector* d_projected_init_real_1 = d_phi_real_squared_inverse->mult(*rhs_real);
     Vector* d_projected_init_real_2 = d_phi_imaginary_squared_inverse->mult(
-                                          rhs_imaginary);
-    d_projected_init_real = d_projected_init_real_1->plus(d_projected_init_real_2);
+                                          *rhs_imaginary);
+    d_projected_init_real = d_projected_init_real_1->plus(*d_projected_init_real_2);
 
     Vector* d_projected_init_imaginary_1 = d_phi_real_squared_inverse->mult(
-            rhs_imaginary);
+            *rhs_imaginary);
     Vector* d_projected_init_imaginary_2 = d_phi_imaginary_squared_inverse->mult(
-            rhs_real);
+            *rhs_real);
     d_projected_init_imaginary = d_projected_init_imaginary_2->minus(
                                      d_projected_init_imaginary_1);
 
@@ -655,9 +654,10 @@ DMD::predict(double t, int deg)
     Matrix* d_phi_mult_eigs_imaginary = d_phi_pair.second;
 
     Vector* d_predicted_state_real_1 = d_phi_mult_eigs_real->mult(
-                                           d_projected_init_real);
+                                           *d_projected_init_real);
+
     Vector* d_predicted_state_real_2 = d_phi_mult_eigs_imaginary->mult(
-                                           d_projected_init_imaginary);
+                                           *d_projected_init_imaginary);
     Vector* d_predicted_state_real = d_predicted_state_real_1->minus(
                                          d_predicted_state_real_2);
     addOffset(d_predicted_state_real, t, deg);
@@ -820,7 +820,7 @@ DMD::load(std::string base_file_name)
     d_phi_imaginary_squared_inverse->read(full_file_name);
 
     full_file_name = base_file_name + "_projected_init_real";
-    d_projected_init_real = new Vector();
+    d_projected_init_real.reset(new Vector());
     d_projected_init_real->read(full_file_name);
 
     full_file_name = base_file_name + "_projected_init_imaginary";

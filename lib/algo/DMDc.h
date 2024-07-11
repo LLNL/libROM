@@ -416,7 +416,7 @@ protected:
     /**
      * @brief The real part of the projected initial condition.
      */
-    Vector* d_projected_init_real = NULL;
+    std::shared_ptr<Vector> d_projected_init_real;
 
     /**
      * @brief The imaginary part of the projected initial condition.

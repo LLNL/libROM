@@ -164,21 +164,6 @@ Vector::transform(Vector& result,
     transformer(d_dim, result.d_vec);
 }
 
-void
-Vector::transform(Vector*& result,
-                  std::function<void(const int size, double* vector)> transformer) const {
-    // If the result has not been allocated then do so.  Otherwise size it
-    // correctly.
-    if (result == 0) {
-        result = new Vector(d_dim, d_distributed);
-    }
-    else {
-        result->setSize(d_dim);
-        result->d_distributed = d_distributed;
-    }
-    transformer(d_dim, result->d_vec);
-}
-
 Vector&
 Vector::transform(
     std::function<void(const int size, double* origVector, double* resultVector)>
@@ -197,24 +182,6 @@ Vector::transform(Vector& result,
     result.setSize(d_dim);
     result.d_distributed = d_distributed;
     transformer(d_dim, origVector->d_vec, result.d_vec);
-    delete origVector;
-}
-
-void
-Vector::transform(Vector*& result,
-                  std::function<void(const int size, double* origVector, double* resultVector)>
-                  transformer) const {
-    // If the result has not been allocated then do so.  Otherwise size it
-    // correctly.
-    Vector* origVector = new Vector(*this);
-    if (result == 0) {
-        result = new Vector(d_dim, d_distributed);
-    }
-    else {
-        result->setSize(d_dim);
-        result->d_distributed = d_distributed;
-    }
-    transformer(d_dim, origVector->d_vec, result->d_vec);
     delete origVector;
 }
 
@@ -248,7 +215,7 @@ Vector::norm() const
 double
 Vector::norm2() const
 {
-    double norm2 = inner_product(this);
+    double norm2 = inner_product(*this);
     return norm2;
 }
 
@@ -260,30 +227,6 @@ Vector::normalize()
         d_vec[i] /= Norm;
     }
     return Norm;
-}
-
-void
-Vector::plus(
-    const Vector& other,
-    Vector*& result) const
-{
-    CAROM_ASSERT(result == 0 || result->distributed() == distributed());
-    CAROM_ASSERT(distributed() == other.distributed());
-    CAROM_VERIFY(dim() == other.dim());
-
-    // If the result has not been allocated then do so.  Otherwise size it
-    // correctly.
-    if (result == 0) {
-        result = new Vector(d_dim, d_distributed);
-    }
-    else {
-        result->setSize(d_dim);
-    }
-
-    // Do the addition.
-    for (int i = 0; i < d_dim; ++i) {
-        result->d_vec[i] = d_vec[i] + other.d_vec[i];
-    }
 }
 
 void

@@ -1239,7 +1239,6 @@ GreedySampler::generateRandomPoints(int num_points)
 std::shared_ptr<Vector>
 GreedySampler::getNearestROM(Vector point)
 {
-
     CAROM_VERIFY(point.dim() == d_parameter_points[0].dim());
 
     double closest_dist_to_points = INT_MAX;

@@ -227,7 +227,7 @@ BasisGenerator::computeNextSampleTime(
         Vector* l = basis->transposeMult(u_vec);
 
         // basisl = basis * l
-        Vector* basisl = basis->mult(l);
+        Vector* basisl = basis->mult(*l);
 
         // Compute u - basisl.
         Vector* eta = u_vec.minus(basisl);
@@ -240,7 +240,7 @@ BasisGenerator::computeNextSampleTime(
         l = basis->transposeMult(rhs_vec);
 
         // basisl = basis * l
-        basisl = basis->mult(l);
+        basisl = basis->mult(*l);
 
         // Compute rhs - basisl.
         Vector* eta_dot = rhs_vec.minus(basisl);

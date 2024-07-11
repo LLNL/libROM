@@ -288,13 +288,13 @@ IncrementalSVD::buildIncrementalSVD(
     Vector* l = d_basis->transposeMult(u_vec);
 
     // basisl = basis * l
-    Vector* basisl = d_basis->mult(l);
+    Vector* basisl = d_basis->mult(*l);
 
     // Computing as k = sqrt(u.u - 2.0*l.l + basisl.basisl)
     // results in catastrophic cancellation, and must be avoided.
     // Instead we compute as k = sqrt((u-basisl).(u-basisl)).
     Vector* e_proj = u_vec.minus(basisl);
-    double k = e_proj->inner_product(e_proj);
+    double k = e_proj->inner_product(*e_proj);
     delete e_proj;
 
     if (k <= 0) {

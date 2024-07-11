@@ -14,6 +14,7 @@
 #define included_VectorInterpolator_h
 
 #include "Interpolator.h"
+#include <memory>
 #include <vector>
 #include <string>
 
@@ -68,7 +69,7 @@ public:
      *
      * @param[in] point The unsampled parameter point.
      */
-    Vector* interpolate(Vector* point);
+    std::shared_ptr<Vector> interpolate(Vector* point);
 
 private:
 

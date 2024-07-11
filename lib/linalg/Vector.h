@@ -16,6 +16,7 @@
 #define included_Vector_h
 
 #include "utils/Utilities.h"
+#include <memory>
 #include <vector>
 #include <functional>
 
@@ -205,21 +206,6 @@ public:
               transformer) const;
 
     /**
-     * @brief Transform a vector using a supplied function and store the
-     *        results in another vector.
-     *
-     * @param[out] result A vector which will store the transformed result.
-     *
-     * @param[in] transformer A transformer function which takes in as input a
-     *            size and transforms the origVector and stores the result in
-     *            resultVector.
-     */
-    void
-    transform(Vector*& result,
-              std::function<void(const int size, double* origVector, double* resultVector)>
-              transformer) const;
-
-    /**
      * @brief Sets the length of the vector and reallocates storage if
      * needed. All values are initialized to zero.
      *
@@ -228,8 +214,7 @@ public:
      *                the Vector on this processor.
      */
     void
-    setSize(
-        int dim)
+    setSize(int dim)
     {
         if (dim > d_alloc_size) {
             if (!d_owns_data) {
@@ -285,27 +270,6 @@ public:
         const Vector& other) const;
 
     /**
-     * @brief Inner product, pointer version.
-     *
-     * For distributed Vectors this is a parallel operation.
-     *
-     * @pre other != 0
-     * @pre dim() == other->dim()
-     * @pre distributed() == other->distributed()
-     *
-     * @param[in] other The Vector to form the inner product with this.
-     *
-     * @return The inner product of this and other.
-     */
-    double
-    inner_product(
-        const Vector* other) const
-    {
-        CAROM_VERIFY(other != 0);
-        return inner_product(*other);
-    }
-
-    /**
      * @brief Form the norm of this.
      *
      * For a distributed Vector this is a parallel operation.
@@ -345,51 +309,13 @@ public:
      *
      * @return this + other
      */
-    Vector*
-    plus(
-        const Vector& other) const
+    std::unique_ptr<Vector>
+    plus(const Vector& other) const
     {
-        Vector* result = 0;
-        plus(other, result);
-        return result;
+        Vector *result = new Vector(d_dim, d_distributed);
+        plus(other, *result);
+        return std::unique_ptr<Vector>(result);
     }
-
-    /**
-     * @brief Adds other and this and returns the result, pointer version.
-     *
-     * @pre other != 0
-     * @pre distributed() == other->distributed()
-     * @pre dim() == other->dim()
-     *
-     * @param[in] other The other summand.
-     *
-     * @return this + other
-     */
-    Vector*
-    plus(
-        const Vector* other) const
-    {
-        CAROM_VERIFY(other != 0);
-        return plus(*other);
-    }
-
-    /**
-     * @brief Adds other and this and fills result with the answer.
-     *
-     * Result will be allocated if unallocated or resized appropriately if
-     * already allocated.
-     *
-     * @pre result == 0 || result->distributed() == distributed()
-     * @pre distributed() == other.distributed()
-     * @pre dim() == other.dim()
-     *
-     * @param[in] other The other summand.
-     * @param[out] result this + other
-     */
-    void
-    plus(
-        const Vector& other,
-        Vector*& result) const;
 
     /**
      * @brief Adds other and this and fills result with the answer.
