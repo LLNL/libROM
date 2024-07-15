@@ -20,10 +20,45 @@
 //  wave_equation -o 4 -tf 5 -nwinsamp 25
 //
 // Output 1:
-// Relative error of DMD solution (u) at t_final: 5 is 3.0483662e-05
-// Elapsed time for solving FOM: 3.122185e+00 second
-// Elapsed time for training DMD: 6.904051e-01 second
-// Elapsed time for predicting DMD: 2.496171e-03 second
+//  Relative error of DMD solution (u) at t_final: 5 is 0.00015906082
+//  Elapsed time for solving FOM: 2.223148e+00 second
+//  Elapsed time for training DMD: 1.140992e+00 second
+//  Elapsed time for predicting DMD: 1.082472e-02 second
+//
+// Sample run with Time-Windowing DMD with initial condition projection
+//
+// Command 2:
+//  wave_equation -o 4 -tf 5 -nwinsamp 25 -proj
+//
+// Output 2:
+//  Relative error of DMD solution (u) at t_final: 5 is 0.029780998
+//  Elapsed time for solving FOM: 2.348481e+00 second
+//  Elapsed time for training DMD: 1.141874e+00 second
+//  Elapsed time for predicting DMD: 1.075082e-02 second
+//
+// Sample run using snapshotDMD and using projected initial conditions for the
+//  prediction phase.
+//
+// Command 3:
+//  wave_equation -tf 2 -nwinsamp 25 -rdim 27 -visit -snap -proj
+//
+// Output 3:
+//  Relative error of DMD solution (u) at t_final: 2 is 0.0029767885
+//  Elapsed time for solving FOM: 1.989041e-01 second
+//  Elapsed time for training DMD: 1.449013e+00 second
+//  Elapsed time for predicting DMD: 4.555228e-02 second
+//
+// Sample run using snapshotDMD without projecting initial conditions for the
+//  prediction phase.
+//
+// Command 4:
+//  wave_equation -tf 2 -nwinsamp 25 -rdim 27 -visit -snap -no-proj
+//
+// Output 4:
+//  Relative error of DMD solution (u) at t_final: 2 is 0.00049470862
+//  Elapsed time for solving FOM: 1.869209e-01 second
+//  Elapsed time for training DMD: 1.152315e+00 second
+//  Elapsed time for predicting DMD: 3.621168e-02 second
 //
 // Sample run using snapshotDMD and using projected initial conditions for the
 //  predicition phase.
@@ -281,9 +316,11 @@ int main(int argc, char *argv[])
     args.AddOption(&project_initial_condition, "-proj", "--project-initial",
                    "-no-proj",
                    "--no-project-initial",
-                   "Project the initial condition in subsequent window as the final value of the current window.");
+                   "Project the initial condition in subsequent window as the "
+                   "final value of the current window.");
     args.AddOption(&temp_io_dir, "-io", "--io-dir-name",
-                   "Name of the sub-folder to load/dump input/output files within the current directory.");
+                   "Name of the sub-folder to load/dump input/output files "
+                   "within the current directory.");
     args.Parse();
     if (!args.Good())
     {
@@ -489,7 +526,7 @@ int main(int argc, char *argv[])
     {
         dmd_u.push_back(new CAROM::DMD(u.Size(), dt));
     }
-    dmd_u[curr_window]->takeSample(u, t);
+    dmd_u[curr_window]->takeSample(u.GetData(), t);
     ts.push_back(t);
 
     dmd_training_timer.Stop();
@@ -506,7 +543,7 @@ int main(int argc, char *argv[])
         fom_timer.Stop();
 
         dmd_training_timer.Start();
-        dmd_u[curr_window]->takeSample(u, t);
+        dmd_u[curr_window]->takeSample(u.GetData(), t);
 
         if (last_step || (ti % windowNumSamples) == 0)
         {
@@ -534,7 +571,7 @@ int main(int argc, char *argv[])
                 {
                     dmd_u.push_back(new CAROM::DMD(u.Size(), dt));
                 }
-                dmd_u[curr_window]->takeSample(u, t);
+                dmd_u[curr_window]->takeSample(u.GetData(), t);
             }
 
         }

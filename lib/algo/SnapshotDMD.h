@@ -125,7 +125,6 @@ protected:
                 Vector* state_offset) :
         DMD(eigs, phi_real, phi_imaginary, k, dt, t_offset, state_offset) {}
 
-
 private:
 };
 }

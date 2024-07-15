@@ -54,6 +54,7 @@
 #include "linalg/Matrix.h"
 #include "utils/HDFDatabase.h"
 #include "utils/CSVDatabase.h"
+#include "utils/Utilities.h"
 #include <cmath>
 #include <iostream>
 #include <limits>
@@ -75,9 +76,9 @@ int main(int argc, char *argv[])
     cout.precision(precision);
 
     // 1. Initialize MPI.
-    MPI_Session mpi;
-    int num_procs = mpi.WorldSize();
-    int myid = mpi.WorldRank();
+    Mpi::Init();
+    const int num_procs = Mpi::WorldSize();
+    const int myid = Mpi::WorldRank();
 
     // 2. Parse command-line options.
     bool train = true;
@@ -100,6 +101,7 @@ int main(int argc, char *argv[])
     const char *test_list = "dmd_test";
     const char *temporal_idx_list = "temporal_idx";
     const char *spatial_idx_list = "spatial_idx";
+    const char *window_file = "";
     const char *hdf_name = "dmd.hdf";
     const char *snap_pfx = "step";
     const char *basename = "";
@@ -149,6 +151,9 @@ int main(int argc, char *argv[])
                    "Name of the file indicating bound of temporal indices.");
     args.AddOption(&spatial_idx_list, "-x-idx", "--spatial-index",
                    "Name of the file indicating spatial indices.");
+    args.AddOption(&window_file, "-window-set", "--window-set-name",
+                   "Name of the file containing a rdim/ef list for each window"
+                   " within the list directory.");
     args.AddOption(&snap_pfx, "-snap-pfx", "--snapshot-prefix",
                    "Prefix of snapshots.");
     args.AddOption(&basename, "-o", "--outputfile-name",
@@ -160,13 +165,13 @@ int main(int argc, char *argv[])
     args.Parse();
     if (!args.Good())
     {
-        if (mpi.Root())
+        if (myid == 0)
         {
             args.PrintUsage(cout);
         }
         return 1;
     }
-    if (mpi.Root())
+    if (myid == 0)
     {
         args.PrintOptions(cout);
     }
@@ -183,7 +188,7 @@ int main(int argc, char *argv[])
         outputPath += "/" + string(basename);
     }
 
-    if (mpi.Root()) {
+    if (myid == 0) {
         const char path_delim = '/';
         string::size_type pos = 0;
         do {
@@ -248,12 +253,9 @@ int main(int argc, char *argv[])
     vector<double> indicator_val;
     if (!train || numWindows > 0)
     {
-        int indicator_val_size = 0;
-        db->getInteger("indicator_val_size", indicator_val_size);
-        indicator_val.resize(indicator_val_size);
-        db->getDoubleArray(string(outputPath) + "/indicator_val.csv",
-                           indicator_val.data(),
-                           indicator_val_size);
+        csv_db.getDoubleVector(string(outputPath) + "/indicator_val.csv", indicator_val,
+                               false);
+
         if (indicator_val.size() > 0)
         {
             if (numWindows > 0)
@@ -268,6 +270,66 @@ int main(int argc, char *argv[])
             {
                 cout << "Read indicator range partition with " << numWindows
                      << " windows." << endl;
+            }
+        }
+    }
+
+    // Load window RDIM/EF file if given
+    vector<string> window_str_list;
+    vector<double> window_list;
+    bool use_rdim_windows = false;
+    if (string(window_file).size() > 0)
+    {
+        const string window_file_path = string(list_dir) + "/" +
+                                        string(window_file) + ".csv";
+        if (!CAROM::Utilities::file_exist(window_file_path))
+        {
+            throw std::runtime_error(string("Specified window rdim/ef file, but file '" +
+                                            window_file_path + "' does not exist!"));
+        }
+        csv_db.getStringVector(window_file_path, window_str_list, false);
+
+        CAROM_VERIFY(window_str_list.size() > 0);
+
+        if (numWindows > 0)
+        {
+            CAROM_VERIFY(numWindows == window_str_list.size() - 1);
+        }
+
+        if (window_str_list[0] == "RDIM")
+        {
+            use_rdim_windows = true;
+        }
+
+        CAROM_VERIFY(window_str_list[0] == "RDIM" || window_str_list[0] == "EF");
+
+        for (int i = 1; i < window_str_list.size(); i++)
+        {
+            std::string tmp;
+            std::stringstream window_ss(window_str_list[i]);
+            getline(window_ss, tmp, ',');
+            getline(window_ss, tmp, ',');
+            double window_rdim_ef = stod(tmp);
+            if (use_rdim_windows)
+            {
+                CAROM_VERIFY(int(window_rdim_ef) > 0);
+            }
+            else
+            {
+                CAROM_VERIFY(window_rdim_ef > 0.0 && window_rdim_ef <= 1.0);
+            }
+            window_list.push_back(window_rdim_ef);
+        }
+
+        numWindows = window_list.size();
+
+        if (myid == 0)
+        {
+            std::cout << "Read window file with " << window_list.size() << " windows:\n";
+            for (int i = 0; i < window_list.size(); i++)
+            {
+                std::cout << "  Window " << i << ": " << (use_rdim_windows ? "RDIM = " :
+                          "EF = ") << window_list[i] << "\n";
             }
         }
     }
@@ -337,6 +399,10 @@ int main(int argc, char *argv[])
         CAROM_VERIFY(windowOverlapSamples < windowNumSamples);
         numWindows = (windowNumSamples < infty) ? round((double) (num_train_snap-1) /
                      (double) windowNumSamples) : 1;
+        if (window_list.size() > 0)
+        {
+            CAROM_VERIFY(numWindows == window_list.size());
+        }
     }
 
     CAROM_VERIFY(numWindows > 0);
@@ -487,12 +553,23 @@ int main(int argc, char *argv[])
 
         for (int window = 0; window < numWindows; ++window)
         {
+            if (window_list.size() > 0)
+            {
+                if (use_rdim_windows) {
+                    rdim = window_list[window];
+                } else {
+                    ef = window_list[window];
+                }
+            }
+
             if (rdim != -1)
             {
                 if (myid == 0)
                 {
-                    cout << "Creating DMD model #" << window << " with rdim: " << rdim << endl;
+                    cout << "Creating DMD model #" << window << " with rdim: " << rdim <<
+                         endl;
                 }
+                CAROM_VERIFY(rdim <= windowNumSamples);
                 dmd[window]->train(rdim);
             }
             else if (ef != -1)

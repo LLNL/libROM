@@ -8,7 +8,7 @@
  *
  *****************************************************************************/
 
-// Description: Implementation of the AdaptiveDMD algorithm.
+// Description: Implementation of the SnapshotDMD class.
 
 #include "manifold_interp/PCHIPInterpolator.h"
 #include "SnapshotDMD.h"
@@ -58,7 +58,6 @@ void SnapshotDMD::interpolateToNSnapshots(int n)
     d_snapshots = new_snapshots;
     d_sampled_times = new_times;
     d_dt = d_sampled_times[2]->getData()[0]-d_sampled_times[1]->getData()[0];
-
 }
 
 }

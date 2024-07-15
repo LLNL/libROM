@@ -1203,16 +1203,16 @@ int main(int argc, char *argv[])
             // IncrementalSVD is never turned on in this example and isNextSample is always true.
             if (x_base_only == false && basis_generator_v->isNextSample(t))
             {
-                basis_generator_v->takeSample(vx_diff.GetBlock(0));
-                basis_generator_v->computeNextSampleTime(vx_diff.GetBlock(0),
+                basis_generator_v->takeSample(vx_diff.GetBlock(0).GetData());
+                basis_generator_v->computeNextSampleTime(vx_diff.GetBlock(0).GetData(),
                         dvdt.GetData(), t);
                 basis_generator_H->takeSample(oper.H_sp.GetData());
             }
 
             if (basis_generator_x->isNextSample(t))
             {
-                basis_generator_x->takeSample(vx_diff.GetBlock(1));
-                basis_generator_x->computeNextSampleTime(vx_diff.GetBlock(1),
+                basis_generator_x->takeSample(vx_diff.GetBlock(1).GetData());
+                basis_generator_x->computeNextSampleTime(vx_diff.GetBlock(1).GetData(),
                         dxdt.GetData(), t);
 
                 if (x_base_only == true)
@@ -1302,7 +1302,7 @@ int main(int argc, char *argv[])
         // Take samples
         if (x_base_only == false)
         {
-            basis_generator_v->takeSample(vx_diff.GetBlock(0));
+            basis_generator_v->takeSample(vx_diff.GetBlock(0).GetData());
             basis_generator_v->writeSnapshot();
             delete basis_generator_v;
         }
@@ -1311,7 +1311,7 @@ int main(int argc, char *argv[])
         basis_generator_H->writeSnapshot();
         delete basis_generator_H;
 
-        basis_generator_x->takeSample(vx_diff.GetBlock(1));
+        basis_generator_x->takeSample(vx_diff.GetBlock(1).GetData());
         basis_generator_x->writeSnapshot();
         delete basis_generator_x;
 
