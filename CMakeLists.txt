@@ -38,6 +38,7 @@ option(MFEM_USE_GSLIB "Build libROM with MFEM using GSLIB" OFF)
 option(BUILD_STATIC "Build libROM as a static library" OFF)
 option(ENABLE_EXAMPLES "Build examples and regression tests" ON)
 option(ENABLE_DOCS "Build docs using Doxygen" OFF)
+option(ENABLE_TESTS "Build unit tests. Requires googletest to be installed" OFF)
 
 ## Set a bunch of variables to generate a configure header
 # Enable assertion checking if debug symbols generated
@@ -115,7 +116,9 @@ find_package(MPI 1.2 REQUIRED)
 
 find_package(ZLIB 1.2.3 REQUIRED)
 
-find_package(GTest 1.6.0)
+if (ENABLE_TESTS)
+    find_package(GTest 1.6.0 REQUIRED)
+endif()
 
 if (USE_MFEM)
     find_library(MFEM mfem "${CMAKE_SOURCE_DIR}/dependencies/mfem" "${MFEM_DIR}/lib")
@@ -272,7 +275,8 @@ if (ENABLE_EXAMPLES)
 endif(ENABLE_EXAMPLES)
 
 
-if(GTEST_FOUND)
+if (ENABLE_TESTS)
+  enable_testing()
   set(unit_test_stems
     Vector
     Matrix
@@ -300,8 +304,10 @@ if(GTEST_FOUND)
       ${MPI_C_INCLUDE_DIRS})
     target_compile_features(test_${stem} PRIVATE cxx_std_11)
     target_compile_definitions(test_${stem} PRIVATE CAROM_HAS_GTEST)
+
+    add_test(NAME test_${stem} COMMAND test_${stem} WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests/")
   endforeach(stem) # IN LISTS unit_test_stems
-endif(GTEST_FOUND)
+endif()
 
 # NOTE(goxberry@gmail.com, oxberry1@llnl.gov): This code snippet
 # builds the Doxygen documentation, but outputs said documentation to
