@@ -92,6 +92,7 @@ int main(int argc, char *argv[])
     int order = 1;
     int nev = 4;
     int seed = 75;
+    int lobpcg_niter = 200;
     bool slu_solver = false;
     bool sp_solver = false;
     bool cpardiso_solver = false;
@@ -160,6 +161,8 @@ int main(int argc, char *argv[])
                    "Reduced dimension.");
     args.AddOption(&verbose_level, "-v", "--verbose",
                    "Set the verbosity level of the LOBPCG solver and preconditioner. 0 is off.");
+    args.AddOption(&lobpcg_niter, "-fi", "--fom-iter",
+                   "Number of iterations for the LOBPCG solver.");
 #ifdef MFEM_USE_SUPERLU
     args.AddOption(&slu_solver, "-slu", "--superlu", "-no-slu",
                    "--no-superlu", "Use the SuperLU Solver.");
