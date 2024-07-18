@@ -307,6 +307,11 @@ if (ENABLE_TESTS)
 
     add_test(NAME test_${stem} COMMAND test_${stem} WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests/")
   endforeach(stem) # IN LISTS unit_test_stems
+
+  # Copy testing inputs and scripts to build/tests/
+  file(COPY ${CMAKE_SOURCE_DIR}/unit_tests/baselines/ DESTINATION "${CMAKE_BINARY_DIR}/tests/baselines/")
+  file(COPY ${CMAKE_SOURCE_DIR}/unit_tests/s_opt_data/ DESTINATION "${CMAKE_BINARY_DIR}/tests/s_opt_data/")
+
 endif()
 
 # NOTE(goxberry@gmail.com, oxberry1@llnl.gov): This code snippet
