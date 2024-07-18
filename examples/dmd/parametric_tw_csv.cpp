@@ -840,8 +840,6 @@ int main(int argc, char *argv[])
                                                   numWindows);
     } // escape if-statement of offline
 
-    CAROM::Vector* curr_par = new CAROM::Vector(dpar, false);
-
     if (online)
     {
         par_dir_list.clear();
@@ -858,7 +856,7 @@ int main(int argc, char *argv[])
         }
 
         dmd_curr_par.assign(numWindows, nullptr);
-        dmd.assign(numWindows, dmd_curr_par);
+        dmd.assign(npar, dmd_curr_par);
 
         int num_tests = 0;
         vector<double> prediction_time, prediction_error;
@@ -875,6 +873,7 @@ int main(int argc, char *argv[])
 
             CAROM_VERIFY(dpar == par_info.size() - 1);
 
+            CAROM::Vector* curr_par = new CAROM::Vector(dpar, false);
             string par_dir = par_info[0];
             par_dir_list.push_back(par_dir);
             if (myid == 0)
@@ -911,6 +910,7 @@ int main(int argc, char *argv[])
             for (int par_order = 0; par_order < dpar; ++par_order)
             {
                 curr_par->item(par_order) = stod(par_info[par_order+1]);
+                cout << "curr_par[" << par_order << "] = " << curr_par->item(par_order) << endl;
             }
 
             vector<double> tvec(num_snap_orig);
@@ -1040,6 +1040,7 @@ int main(int argc, char *argv[])
 
             } // escape for-loop over window
 
+            delete curr_par;
             db->close();
         } // escape for-loop over idx_dataset
         dmd_preprocess_timer.Stop();
@@ -1288,7 +1289,11 @@ int main(int argc, char *argv[])
     }
 
     delete[] sample;
-    delete curr_par;
+    for (CAROM::Vector* v : par_vectors)
+    {
+        delete v;
+    }
+
     for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
     {
         for (int window = 0; window < numWindows; ++window)
