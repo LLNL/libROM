@@ -1282,6 +1282,7 @@ int main(int argc, char *argv[])
         }
     } // escape case (online || predict)
 
+    delete db;
     if (save_hdf)
     {
         hdf_db->close();
