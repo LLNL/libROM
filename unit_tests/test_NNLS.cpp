@@ -8,9 +8,11 @@
  *
  *****************************************************************************/
 
+#include <iostream>
+
 #ifdef CAROM_HAS_GTEST
 
-#include<gtest/gtest.h>
+#include <gtest/gtest.h>
 #include "linalg/NNLS.h"
 #include <algorithm>
 #include <cmath>

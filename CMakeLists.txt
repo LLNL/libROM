@@ -87,27 +87,9 @@ set(stdc_header_list "${stdc_header_list};stddef.h;stdio.h;stdlib.h;string.h")
 set(stdc_header_list "${stdc_header_list};tgmath.h;time.h;wchar.h;wctype.h")
 check_include_files("${stdc_header_list}" CAROM_STDC_HEADERS)
 
-# Define variables for use in generating a configure file
-if(GTEST_FOUND)
-  set(CAROM_HAS_GTEST 1)
-endif(GTEST_FOUND)
-
-if(BLAS_FOUND)
-  set(CAROM_HAVE_BLAS 1)
-endif(BLAS_FOUND)
-
-if(LAPACK_FOUND)
-  set(CAROM_HAVE_LAPACK 1)
-endif(LAPACK_FOUND)
-
-if(HDF5_FOUND)
-  set(CAROM_HAVE_HDF5 1)
-endif(HDF5_FOUND)
-
 # List minimum version requirements for dependencies where possible to make
 # packaging easier later.
 find_package(HDF5 1.8.0 REQUIRED)
-
 find_package(BLAS 3.4.0 REQUIRED)
 find_package(LAPACK 3.4.0 REQUIRED)
 
@@ -119,6 +101,11 @@ find_package(ZLIB 1.2.3 REQUIRED)
 if (ENABLE_TESTS)
     find_package(GTest 1.6.0 REQUIRED)
 endif()
+
+# Define variables for use in generating a configure file
+set(CAROM_HAVE_BLAS ${BLAS_FOUND})
+set(CAROM_HAVE_LAPACK ${LAPACK_FOUND})
+set(CAROM_HAVE_HDF5 ${HDF5_FOUND})
 
 if (USE_MFEM)
     find_library(MFEM mfem "${CMAKE_SOURCE_DIR}/dependencies/mfem" "${MFEM_DIR}/lib")
