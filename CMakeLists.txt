@@ -309,9 +309,19 @@ if (ENABLE_TESTS)
   endforeach(stem) # IN LISTS unit_test_stems
 
   # Copy testing inputs and scripts to build/tests/
-  file(COPY ${CMAKE_SOURCE_DIR}/unit_tests/baselines/ DESTINATION "${CMAKE_BINARY_DIR}/tests/baselines/")
+  file(COPY ${CMAKE_SOURCE_DIR}/unit_tests/baselines/basis_conversion/ DESTINATION "${CMAKE_BINARY_DIR}/tests/baselines/basis_conversion/")
   file(COPY ${CMAKE_SOURCE_DIR}/unit_tests/s_opt_data/ DESTINATION "${CMAKE_BINARY_DIR}/tests/s_opt_data/")
 
+  # Create test to setup inputs for basis_conversion test
+  file(COPY ${CMAKE_SOURCE_DIR}/scripts/data/update_basis_format.py DESTINATION "${CMAKE_BINARY_DIR}/tests/")
+  add_test(NAME basis_conversion_setup
+           COMMAND sh -c "cp baselines/basis_conversion/test_basis.000000 . &&
+                          cp baselines/basis_conversion/test_basis_snapshot.000000 . &&
+                          python3 update_basis_format.py test_basis.000000 &&
+                          python3 update_basis_format.py test_basis_snapshot.000000"
+           WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests/")
+  set_tests_properties(basis_conversion_setup PROPERTIES FIXTURES_SETUP basis_setup)
+  set_tests_properties(test_basis_conversion PROPERTIES FIXTURES_REQUIRED basis_setup)
 endif()
 
 # NOTE(goxberry@gmail.com, oxberry1@llnl.gov): This code snippet
