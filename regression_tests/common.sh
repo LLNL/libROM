@@ -82,6 +82,10 @@ run_tests() {
 
     # Compare results between the two
     files_to_compare=(*)
+    # if the test has FILES defined, compare those files instead
+    if [[ ! -z "${FILES}" ]]; then
+        files_to_compare=(${FILES[@]})
+    fi
     cd ${GITHUB_WORKSPACE}/build/tests
 
     for f in "${files_to_compare[@]}"; do
@@ -141,6 +145,16 @@ run_tests() {
                 ./solutionComparator  "${EX_DMD_PATH_BASELINE}/${f}" "${EX_DMD_PATH_LOCAL}/${f}" "1.0e-5" "$NUM_PROCESSES" 
             elif [[ $TYPE == "PROM" ]]; then
                 ./solutionComparator "${EX_PROM_PATH_BASELINE}/$f"  "${EX_PROM_PATH_LOCAL}/$f" "1.0e-5" "1" 
+            else
+                continue
+            fi
+            check_fail
+        elif [[ ! -z "${FILES}" ]]; then
+            echo "Comparing custom file ${f}"
+            if [[ $TYPE == "DMD" ]]; then
+                ./fileComparator "${EX_DMD_PATH_BASELINE}/${f}" "${EX_DMD_PATH_LOCAL}/${f}" "1.0e-5"
+            elif [[ $TYPE == "PROM" ]]; then
+                ./fileComparator "${EX_PROM_PATH_BASELINE}/${f}" "${EX_PROM_PATH_LOCAL}/${f}" "1.0e-5"
             else
                 continue
             fi

@@ -25,5 +25,13 @@ CMDS=(
     "./parametric_tw_csv -o hc_local -train-set dmd_train_local -rdim 16 -dtc 0.01 -online"
 )
 TYPE="DMD"
-OFFSET=5
+OFFSET=0
+
+# custom list of output files to compare
+FILES=(
+    "./run/hc_local/window0/par0_eigenvalue.csv"
+    "./run/hc_local/window0/par0_singular_value.csv"
+    "./run/hc_local/dmd_par5_prediction_error.csv"
+)
+
 run_tests
