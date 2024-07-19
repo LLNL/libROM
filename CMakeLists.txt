@@ -231,37 +231,16 @@ if (ENABLE_EXAMPLES)
     target_compile_features(${name} PRIVATE cxx_std_11)
   endforeach(name) # IN LISTS misc_exmaple_names
 
-  set(unit_test_names
-    smoke_test
-    test_include
-    uneven_dist
-    weak_scaling
-    random_test
-    smoke_static
-    load_samples)
-    
-  if (USE_MFEM)
-    set(regression_test_names
-      basisComparator
-      checkError
-      computeSpeedup
-      solutionComparator
-      fileComparator)
-  endif()
-
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests)
 
-  foreach(name IN LISTS unit_test_names)
-    add_executable(${name} unit_tests/${name}.cpp)
-    target_link_libraries(${name}
-      PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
-    target_include_directories(${name}
-      PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-      ${MPI_C_INCLUDE_DIRS})
-    target_compile_features(${name} PRIVATE cxx_std_11)
-  endforeach(name) # IN LISTS unit_test_names
-
   if (USE_MFEM)
+    set(regression_test_names
+        basisComparator
+        checkError
+        computeSpeedup
+        solutionComparator
+        fileComparator)
+
     foreach(name IN LISTS regression_test_names)
       add_executable(${name} regression_tests/${name}.cpp)
       target_link_libraries(${name}
@@ -274,54 +253,9 @@ if (ENABLE_EXAMPLES)
   endif()
 endif(ENABLE_EXAMPLES)
 
-
 if (ENABLE_TESTS)
-  enable_testing()
-  set(unit_test_stems
-    Vector
-    Matrix
-    HDFDatabase
-    DEIM
-    DMD
-    GNAT
-    QDEIM
-    QR
-    S_OPT
-    StaticSVD
-    RandomizedSVD
-    IncrementalSVD
-    IncrementalSVDBrand
-    GreedyCustomSampler
-    NNLS
-    basis_conversion
-    PCHIPInterpolator)
-  foreach(stem IN LISTS unit_test_stems)
-    add_executable(test_${stem} unit_tests/test_${stem}.cpp)
-    target_link_libraries(test_${stem} PRIVATE ROM
-      ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran GTest::GTest)
-    target_include_directories(test_${stem}
-      PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-      ${MPI_C_INCLUDE_DIRS})
-    target_compile_features(test_${stem} PRIVATE cxx_std_11)
-    target_compile_definitions(test_${stem} PRIVATE CAROM_HAS_GTEST)
-
-    add_test(NAME test_${stem} COMMAND test_${stem} WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests/")
-  endforeach(stem) # IN LISTS unit_test_stems
-
-  # Copy testing inputs and scripts to build/tests/
-  file(COPY ${CMAKE_SOURCE_DIR}/unit_tests/baselines/basis_conversion/ DESTINATION "${CMAKE_BINARY_DIR}/tests/baselines/basis_conversion/")
-  file(COPY ${CMAKE_SOURCE_DIR}/unit_tests/s_opt_data/ DESTINATION "${CMAKE_BINARY_DIR}/tests/s_opt_data/")
-
-  # Create test to setup inputs for basis_conversion test
-  file(COPY ${CMAKE_SOURCE_DIR}/scripts/data/update_basis_format.py DESTINATION "${CMAKE_BINARY_DIR}/tests/")
-  add_test(NAME basis_conversion_setup
-           COMMAND sh -c "cp baselines/basis_conversion/test_basis.000000 . &&
-                          cp baselines/basis_conversion/test_basis_snapshot.000000 . &&
-                          python3 update_basis_format.py test_basis.000000 &&
-                          python3 update_basis_format.py test_basis_snapshot.000000"
-           WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests/")
-  set_tests_properties(basis_conversion_setup PROPERTIES FIXTURES_SETUP basis_setup)
-  set_tests_properties(test_basis_conversion PROPERTIES FIXTURES_REQUIRED basis_setup)
+    enable_testing()
+    add_subdirectory(unit_tests tests)
 endif()
 
 # NOTE(goxberry@gmail.com, oxberry1@llnl.gov): This code snippet
@@ -347,5 +281,4 @@ if(${ENABLE_DOCS})
     ${CMAKE_CURRENT_SOURCE_DIR}/rom.tag
     ${CMAKE_CURRENT_BINARY_DIR}/docs/html/rom.tag)
   add_dependencies(doxygen_tagfile documentation)
-
 endif()
