@@ -8,6 +8,8 @@
 #
 ###############################################################################
 
+set(ROM_TEST_RANKS 3 CACHE STRING "Number of MPI ranks to use for parallel tests")
+
 set(unit_test_names
     smoke_test
     test_include
@@ -60,6 +62,27 @@ foreach(stem IN LISTS unit_test_stems)
 
     add_test(NAME test_${stem} COMMAND test_${stem})
 endforeach(stem)
+
+# Add parallel tests
+set(parallel_tests
+    Matrix
+    S_OPT
+    DMD
+    GreedyCustomSampler
+    RandomizedSVD
+    StaticSVD
+    IncrementalSVDBrand
+    HDFDatabase
+    QR
+    NNLS)
+set(MPI_TEST_CMD "${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${ROM_TEST_RANKS} ${MPIEXEC_PREFLAGS}")
+foreach(test IN LISTS parallel_tests)
+    add_test(NAME test_${test}_mpi COMMAND sh -c "${MPI_TEST_CMD} ./test_${test}")
+    set_tests_properties(test_${test}_mpi PROPERTIES
+                         TIMEOUT 300
+                         PROCESSORS ${ROM_TEST_RANKS}
+                         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+endforeach()
 
 # Copy testing inputs and scripts to build/tests/
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/baselines/basis_conversion/
