@@ -150,12 +150,14 @@ IncrementalSVDBrand::buildIncrementalSVD(
     Vector e_proj(u, d_dim, true);
 
     Vector *tmp = d_U->transposeMult(e_proj);
-
-    e_proj -= *(d_U->mult(*tmp)); // Gram-Schmidt
+    Vector *tmp2 = d_U->mult(*tmp);
+    e_proj -= *tmp2; // Gram-Schmidt
+    delete tmp2;
     delete tmp;
     tmp = d_U->transposeMult(e_proj);
-    e_proj -= *(d_U->mult(*tmp)); // Re-orthogonalization
-
+    tmp2 = d_U->mult(*tmp);
+    e_proj -= *tmp2; // Re-orthogonalization
+    delete tmp2;
     delete tmp;
 
     double k = e_proj.inner_product(e_proj);

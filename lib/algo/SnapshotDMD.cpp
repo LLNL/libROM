@@ -51,7 +51,7 @@ void SnapshotDMD::train(double energy_fraction, const Matrix* W0,
 void SnapshotDMD::interpolateToNSnapshots(int n)
 {
     PCHIPInterpolator* interp = new PCHIPInterpolator();
-    std::vector<Vector*> new_snapshots;
+    std::vector<std::shared_ptr<Vector>> new_snapshots;
     std::vector<Vector*> new_times;
 
     interp->interpolate(d_sampled_times,d_snapshots,n,new_times,new_snapshots);

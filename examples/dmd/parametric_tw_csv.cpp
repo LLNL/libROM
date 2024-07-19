@@ -761,10 +761,9 @@ int main(int argc, char *argv[])
                              << indicator_val[window] + offset_indicator * tvec[snap_bound[0]]
                              << " for DMD model #" << window << endl;
                     }
-                    CAROM::Vector* init_cond = dmd[idx_dataset][window-1]->predict(
-                                                   indicator_val[window]);
-                    dmd[idx_dataset][window]->projectInitialCondition(init_cond);
-                    delete init_cond;
+                    std::shared_ptr<CAROM::Vector> init_cond = dmd[idx_dataset][window-1]->predict(
+                                indicator_val[window]);
+                    dmd[idx_dataset][window]->projectInitialCondition(init_cond.get());
                 }
 
                 // Make a directory for this window, only on the first parameter.
@@ -978,10 +977,10 @@ int main(int argc, char *argv[])
                          << indicator_val[window] + offset_indicator * tvec[snap_bound[0]]
                          << " for DMD model #" << window << endl;
                 }
-                CAROM::Vector* init_cond = nullptr;
+                std::shared_ptr<CAROM::Vector> init_cond;
                 if (window == 0)
                 {
-                    init_cond = new CAROM::Vector(dim, true);
+                    init_cond.reset(new CAROM::Vector(dim, true));
                     for (int i = 0; i < dim; ++i)
                     {
                         init_cond->item(i) = sample[i];
@@ -991,7 +990,7 @@ int main(int argc, char *argv[])
                 {
                     init_cond = dmd[idx_dataset][window-1]->predict(indicator_val[window]);
                 }
-                dmd[idx_dataset][window]->projectInitialCondition(init_cond);
+                dmd[idx_dataset][window]->projectInitialCondition(init_cond.get());
 
                 const double norm_init_cond = init_cond->norm();
                 if (myid == 0)
@@ -1000,8 +999,6 @@ int main(int argc, char *argv[])
                          << " for parameter " << idx_dataset << ", window "
                          << window - 1 << endl;
                 }
-
-                delete init_cond;
 
                 if (window > 0 && indicator_val[window] < t_final)
                 {
@@ -1142,8 +1139,8 @@ int main(int argc, char *argv[])
                     }
 
                     dmd_prediction_timer.Start();
-                    CAROM::Vector* result = dmd[idx_dataset][curr_window]->predict(
-                                                t_final - offset_indicator * tvec[snap_bound[0]]);
+                    std::shared_ptr<CAROM::Vector> result = dmd[idx_dataset][curr_window]->predict(
+                            t_final - offset_indicator * tvec[snap_bound[0]]);
                     dmd_prediction_timer.Stop();
 
                     if (myid == 0)
@@ -1159,7 +1156,6 @@ int main(int argc, char *argv[])
                     }
 
                     idx_snap = snap_bound[1]+1; // escape for-loop over idx_snap
-                    delete result;
                 }
                 else // Verify DMD prediction results against dataset
                 {
@@ -1177,8 +1173,9 @@ int main(int argc, char *argv[])
                     }
 
                     dmd_prediction_timer.Start();
-                    CAROM::Vector* result = dmd[idx_dataset][curr_window]->predict(
-                                                tval - offset_indicator * tvec[snap_bound[0]]);
+                    std::shared_ptr<CAROM::Vector> result =
+                        dmd[idx_dataset][curr_window]->predict(
+                            tval - offset_indicator * tvec[snap_bound[0]]);
                     dmd_prediction_timer.Stop();
 
                     // Calculate the relative error between the DMD final solution and the true solution.
@@ -1227,8 +1224,6 @@ int main(int argc, char *argv[])
                     {
                         hdf_db->putDoubleArray(snap, result->getData(), dim);
                     }
-
-                    delete result;
                 }
             }
             if (myid == 0 && t_final <= 0.0)

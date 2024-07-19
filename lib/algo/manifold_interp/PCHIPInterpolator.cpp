@@ -33,9 +33,9 @@ using namespace std;
 namespace CAROM {
 
 void PCHIPInterpolator::interpolate(std::vector<Vector*>& snapshot_ts,
-                                    std::vector<Vector*>& snapshots,
+                                    std::vector<std::shared_ptr<Vector>>& snapshots,
                                     std::vector<Vector*>& output_ts,
-                                    std::vector<Vector*>& output_snapshots)
+                                    std::vector<std::shared_ptr<Vector>>& output_snapshots)
 {
     CAROM_VERIFY(snapshot_ts.size() == snapshots.size());
     CAROM_VERIFY(snapshot_ts.size() > 2);
@@ -60,7 +60,7 @@ void PCHIPInterpolator::interpolate(std::vector<Vector*>& snapshot_ts,
     {
         Vector* temp_snapshot = new Vector(snapshots[0]->dim(),
                                            snapshots[0]->distributed());
-        output_snapshots.push_back(temp_snapshot);
+        output_snapshots.push_back(std::shared_ptr<Vector>(temp_snapshot));
     }
 
     for(int i = 0; i < n_dim; ++i)
@@ -134,12 +134,11 @@ void PCHIPInterpolator::interpolate(std::vector<Vector*>& snapshot_ts,
     }
 }
 
-void PCHIPInterpolator::interpolate(std::vector<Vector*>&
-                                    snapshot_ts,
-                                    std::vector<Vector*>& snapshots,
+void PCHIPInterpolator::interpolate(std::vector<Vector*>& snapshot_ts,
+                                    std::vector<std::shared_ptr<Vector>>& snapshots,
                                     int n_out,
                                     std::vector<Vector*>& output_ts,
-                                    std::vector<Vector*>& output_snapshots)
+                                    std::vector<std::shared_ptr<Vector>>& output_snapshots)
 {
     CAROM_VERIFY(snapshot_ts.size() == snapshots.size());
     CAROM_VERIFY(snapshot_ts.size() > 0);

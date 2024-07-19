@@ -72,10 +72,9 @@ public:
     /**
      * @brief Returns a copy of the current snapshot vector "d_snapshots"
      */
-    std::vector<Vector*> getSnapshotVectors()
+    std::vector<std::shared_ptr<Vector>> getSnapshotVectors()
     {
-        std::vector<Vector*> return_snapshots(d_snapshots);
-        return return_snapshots;
+        return d_snapshots;
     }
 protected:
     /**

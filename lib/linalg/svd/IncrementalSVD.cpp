@@ -293,9 +293,8 @@ IncrementalSVD::buildIncrementalSVD(
     // Computing as k = sqrt(u.u - 2.0*l.l + basisl.basisl)
     // results in catastrophic cancellation, and must be avoided.
     // Instead we compute as k = sqrt((u-basisl).(u-basisl)).
-    Vector* e_proj = u_vec.minus(basisl);
+    std::unique_ptr<Vector> e_proj = u_vec.minus(*basisl);
     double k = e_proj->inner_product(*e_proj);
-    delete e_proj;
 
     if (k <= 0) {
         if(d_rank == 0) printf("linearly dependent sample!\n");
@@ -363,15 +362,14 @@ IncrementalSVD::buildIncrementalSVD(
             // This sample is not linearly dependent.
 
             // Compute j
-            Vector* j = u_vec.minus(basisl);
+            std::unique_ptr<Vector> j = u_vec.minus(*basisl);
             for (int i = 0; i < d_dim; ++i) {
                 j->item(i) /= k;
             }
 
             // addNewSample will assign sigma to d_S hence it should not be
             // deleted upon return.
-            addNewSample(j, A, W, sigma);
-            delete j;
+            addNewSample(j.get(), A, W, sigma);
         }
         delete basisl;
         delete A;

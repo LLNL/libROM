@@ -171,7 +171,7 @@ private:
     /**
      * @brief Add the appropriate offset when predicting the solution.
      */
-    void addOffset(Vector*& result, double t, int deg) override;
+    void addOffset(Vector & result, double t, int deg) override;
 
     /**
      * @brief Derivative offset in snapshot.

@@ -597,7 +597,7 @@ int main(int argc, char *argv[])
 
     // 10. Predict using DMD.
     cout << "Predicting temperature using DMD" << endl;
-    CAROM::Vector* result_u = nullptr;
+    std::shared_ptr<CAROM::Vector> result_u;
     VisItDataCollection dmd_visit_dc(io_dir+"/DMD_Wave_Equation", mesh);
     dmd_visit_dc.RegisterField("solution", &u_gf);
     curr_window = 0;
@@ -608,7 +608,6 @@ int main(int argc, char *argv[])
         dmd_visit_dc.SetCycle(0);
         dmd_visit_dc.SetTime(0.0);
         dmd_visit_dc.Save();
-        delete result_u;
     }
 
     for (int i = 1; i < ts.size(); i++)
@@ -623,7 +622,6 @@ int main(int argc, char *argv[])
                 dmd_visit_dc.SetCycle(i);
                 dmd_visit_dc.SetTime(ts[i]);
                 dmd_visit_dc.Save();
-                delete result_u;
             }
 
             if (i % windowNumSamples == 0 && i < ts.size()-1)
@@ -632,7 +630,7 @@ int main(int argc, char *argv[])
                 {
                     result_u = dmd_u[curr_window]->predict(ts[i]);
                     cout << "Projecting solution for new window at " << ts[i] << endl;
-                    dmd_u[curr_window+1]->projectInitialCondition(result_u, ts[i]);
+                    dmd_u[curr_window+1]->projectInitialCondition(result_u.get(), ts[i]);
                 }
                 delete dmd_u[curr_window];
                 curr_window++;
@@ -662,7 +660,6 @@ int main(int argc, char *argv[])
     // 12. Free the used memory.
     delete ode_solver;
     delete mesh;
-    delete result_u;
     delete dmd_u[curr_window];
     return 0;
 }

@@ -230,7 +230,7 @@ BasisGenerator::computeNextSampleTime(
         Vector* basisl = basis->mult(*l);
 
         // Compute u - basisl.
-        Vector* eta = u_vec.minus(basisl);
+        std::unique_ptr<Vector> eta = u_vec.minus(*basisl);
 
         delete l;
         delete basisl;
@@ -243,7 +243,7 @@ BasisGenerator::computeNextSampleTime(
         basisl = basis->mult(*l);
 
         // Compute rhs - basisl.
-        Vector* eta_dot = rhs_vec.minus(basisl);
+        std::unique_ptr<Vector> eta_dot = rhs_vec.minus(*basisl);
 
         delete l;
         delete basisl;
@@ -257,8 +257,6 @@ BasisGenerator::computeNextSampleTime(
                 local_norm = val;
             }
         }
-        delete eta;
-        delete eta_dot;
         if (d_num_procs == 1) {
             global_norm = local_norm;
         }

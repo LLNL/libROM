@@ -129,10 +129,6 @@ DMD::DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
 
 DMD::~DMD()
 {
-    for (auto snapshot : d_snapshots)
-    {
-        delete snapshot;
-    }
     for (auto sampled_time : d_sampled_times)
     {
         delete sampled_time;
@@ -144,7 +140,6 @@ DMD::~DMD()
     delete d_phi_imaginary;
     delete d_phi_real_squared_inverse;
     delete d_phi_imaginary_squared_inverse;
-    delete d_projected_init_imaginary;
 }
 
 void DMD::setOffset(Vector* offset_vector, int order)
@@ -177,8 +172,6 @@ void DMD::takeSample(double* u_in, double t)
     {
         if (d_rank == 0) std::cout << "Removing existing snapshot at time: " <<
                                        d_t_offset + d_sampled_times.back()->item(0) << std::endl;
-        Vector* last_snapshot = d_snapshots.back();
-        delete last_snapshot;
         d_snapshots.pop_back();
         d_sampled_times.pop_back();
     }
@@ -193,7 +186,7 @@ void DMD::takeSample(double* u_in, double t)
         CAROM_VERIFY(d_sampled_times.back()->item(0) < t);
     }
 
-    d_snapshots.push_back(sample);
+    d_snapshots.push_back(std::shared_ptr<Vector>(sample));
 
     Vector* sampled_time = new Vector(&t, 1, false);
     d_sampled_times.push_back(sampled_time);
@@ -616,7 +609,7 @@ DMD::projectInitialCondition(const Vector* init, double t_offset)
     Vector* d_projected_init_imaginary_2 = d_phi_imaginary_squared_inverse->mult(
             *rhs_real);
     d_projected_init_imaginary = d_projected_init_imaginary_2->minus(
-                                     d_projected_init_imaginary_1);
+                                     *d_projected_init_imaginary_1);
 
     delete d_phi_real_squared_2;
     delete d_projected_init_real_1;
@@ -640,7 +633,7 @@ DMD::projectInitialCondition(const Vector* init, double t_offset)
     d_init_projected = true;
 }
 
-Vector*
+std::shared_ptr<Vector>
 DMD::predict(double t, int deg)
 {
     CAROM_VERIFY(d_trained);
@@ -658,9 +651,10 @@ DMD::predict(double t, int deg)
 
     Vector* d_predicted_state_real_2 = d_phi_mult_eigs_imaginary->mult(
                                            *d_projected_init_imaginary);
-    Vector* d_predicted_state_real = d_predicted_state_real_1->minus(
-                                         d_predicted_state_real_2);
-    addOffset(d_predicted_state_real, t, deg);
+    std::shared_ptr<Vector> d_predicted_state_real =
+        d_predicted_state_real_1->minus(
+            *d_predicted_state_real_2);
+    addOffset(*d_predicted_state_real, t, deg);
 
     delete d_phi_mult_eigs_real;
     delete d_phi_mult_eigs_imaginary;
@@ -671,11 +665,11 @@ DMD::predict(double t, int deg)
 }
 
 void
-DMD::addOffset(Vector*& result, double t, int deg)
+DMD::addOffset(Vector & result, double t, int deg)
 {
     if (d_state_offset)
     {
-        *result += *d_state_offset;
+        result += *d_state_offset;
     }
 }
 
@@ -731,7 +725,8 @@ DMD::getSnapshotMatrix()
 }
 
 const Matrix*
-DMD::createSnapshotMatrix(std::vector<Vector*> snapshots)
+DMD::createSnapshotMatrix(const std::vector<std::shared_ptr<Vector>> &
+                          snapshots)
 {
     CAROM_VERIFY(snapshots.size() > 0);
     CAROM_VERIFY(snapshots[0]->dim() > 0);
@@ -824,7 +819,7 @@ DMD::load(std::string base_file_name)
     d_projected_init_real->read(full_file_name);
 
     full_file_name = base_file_name + "_projected_init_imaginary";
-    d_projected_init_imaginary = new Vector();
+    d_projected_init_imaginary.reset(new Vector());
     d_projected_init_imaginary->read(full_file_name);
 
     full_file_name = base_file_name + "_state_offset";

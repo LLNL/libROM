@@ -60,8 +60,8 @@ TEST(InterpolationTest,test_accuracy)
                             -0.077580693288345, -0.623537711025344, -0.971758328554163, -0.890773577229575, -0.536572918000435,
                             -0.041614069121016, 0.560852411851254, 0.957953731078007, 0.938810668593539, 0.650287840157117};
 
-    std::vector<CAROM::Vector*> snapshots;
-    std::vector<CAROM::Vector*> out_snapshots;
+    std::vector<std::shared_ptr<CAROM::Vector>> snapshots;
+    std::vector<std::shared_ptr<CAROM::Vector>> out_snapshots;
     std::vector<CAROM::Vector*> reference_snapshots;
     std::vector<CAROM::Vector*> times;
     std::vector<CAROM::Vector*> out_times;
@@ -73,7 +73,7 @@ TEST(InterpolationTest,test_accuracy)
         CAROM::Vector* temp_y = new CAROM::Vector(2,false);
         temp_y->item(0) = y[i];
         temp_y->item(1) = y2[i];
-        snapshots.push_back(temp_y);
+        snapshots.push_back(std::shared_ptr<CAROM::Vector>(temp_y));
     }
 
     for(int i = 0; i < tq.size(); ++i)
@@ -88,7 +88,6 @@ TEST(InterpolationTest,test_accuracy)
     }
 
     CAROM::PCHIPInterpolator* interp = new CAROM::PCHIPInterpolator();
-
 
     interp->interpolate(times,snapshots,out_times,out_snapshots);
 

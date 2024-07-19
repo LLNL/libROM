@@ -644,9 +644,8 @@ double simulation()
         }
 
         dmd_prediction_timer.Start();
-        CAROM::Vector* result_U = dmd_U->predict(t_final);
+        std::shared_ptr<CAROM::Vector> result_U = dmd_U->predict(t_final);
         dmd_prediction_timer.Stop();
-
 
         // 21. Calculate the relative error between the DMD final solution and the true solution.
         Vector dmd_solution_U(result_U->getData(),
@@ -667,8 +666,6 @@ double simulation()
             printf("Elapsed time for predicting DMD: %e second\n",
                    dmd_prediction_timer.RealTime());
         }
-
-        delete result_U;
 
         return rel_diff;
     }
@@ -740,8 +737,7 @@ double simulation()
         // THIS IS LIKE COMPUTING A RESIDUAL.
         t = t_final - 10.*dt;
 
-        CAROM::Vector* carom_tf_u_minus_some = dmd_U->predict(t);
-
+        std::shared_ptr<CAROM::Vector> carom_tf_u_minus_some = dmd_U->predict(t);
 
         for(int i = 0; i < carom_tf_u_minus_some->dim(); i++)
         {
@@ -749,8 +745,6 @@ double simulation()
         }
 
         u_gf->SetFromTrueDofs(*U);
-
-        delete carom_tf_u_minus_some;
     }
 
     ts.push_back(t);
@@ -925,8 +919,7 @@ double simulation()
 
         }
 
-        CAROM::Vector* result_U = dmd_U->predict(t_final);
-
+        std::shared_ptr<CAROM::Vector> result_U = dmd_U->predict(t_final);
 
         Vector dmd_solution_U(result_U->getData(),
                               result_U->dim());
@@ -945,8 +938,6 @@ double simulation()
                       << rel_diff << std::endl;
         }
 
-        delete result_U;
-
         if (myid == 0)
         {
             printf("Elapsed time for training DMD: %e second\n",
@@ -956,7 +947,7 @@ double simulation()
     else if (online)
     {
         dmd_prediction_timer.Start();
-        CAROM::Vector* result_U = dmd_U->predict(ts[0]);
+        std::shared_ptr<CAROM::Vector> result_U = dmd_U->predict(ts[0]);
         Vector initial_dmd_solution_U(result_U->getData(),
                                       result_U->dim());
         u_gf->SetFromTrueDofs(initial_dmd_solution_U);
@@ -971,8 +962,6 @@ double simulation()
             dmd_visit_dc.SetTime(0.0);
             dmd_visit_dc.Save();
         }
-
-        delete result_U;
 
         if (visit)
         {
@@ -993,8 +982,6 @@ double simulation()
                     dmd_visit_dc.SetCycle(i);
                     dmd_visit_dc.SetTime(ts[i]);
                     dmd_visit_dc.Save();
-
-                    delete result_U;
                 }
             }
         }
@@ -1039,8 +1026,6 @@ double simulation()
                  tot_true_solution_u_norm << std::endl;
             fout.close();
         }
-
-        delete result_U;
     }
     // 22. Calculate the relative error as commanded by the greedy algorithm.
     if (offline)

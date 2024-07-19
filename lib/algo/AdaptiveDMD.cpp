@@ -36,14 +36,6 @@ AdaptiveDMD::AdaptiveDMD(int dim, double desired_dt, std::string rbf,
     d_closest_rbf_val = closest_rbf_val;
 }
 
-AdaptiveDMD::~AdaptiveDMD()
-{
-    for (auto interp_snapshot : d_interp_snapshots)
-    {
-        delete interp_snapshot;
-    }
-}
-
 void AdaptiveDMD::train(double energy_fraction, const Matrix* W0,
                         double linearity_tol)
 {
@@ -139,7 +131,8 @@ void AdaptiveDMD::interpolateSnapshots()
         // Obtain the interpolated snapshot.
         CAROM::Vector* curr_interpolated_snapshot = obtainInterpolatedVector(
                     d_snapshots, f_T, d_interp_method, rbf);
-        d_interp_snapshots.push_back(curr_interpolated_snapshot);
+        d_interp_snapshots.push_back(std::shared_ptr<Vector>
+                                     (curr_interpolated_snapshot));
 
         delete point;
     }

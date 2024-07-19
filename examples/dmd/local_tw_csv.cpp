@@ -612,7 +612,7 @@ int main(int argc, char *argv[])
                 for (int k = 0; k < f_snapshots->numColumns(); ++k)
                 {
                     f_snapshots->getColumn(k, interp_snap);
-                    CAROM::Vector* result = admd->predict(t_init+k*dtc);
+                    std::shared_ptr<CAROM::Vector> result = admd->predict(t_init+k*dtc);
 
                     Vector dmd_solution(result->getData(), dim);
                     Vector true_solution(interp_snap.getData(), dim);
@@ -634,7 +634,6 @@ int main(int argc, char *argv[])
                         cout << "Relative error of DMD prediction for interpolated snapshot #"
                              << k << " is " << rel_error << endl;
                     }
-                    delete result;
                 }
                 if (myid == 0)
                 {
@@ -762,7 +761,7 @@ int main(int argc, char *argv[])
             if (idx_snap == 0)
             {
                 dmd_preprocess_timer.Start();
-                CAROM::Vector* init_cond = nullptr;
+                std::shared_ptr<CAROM::Vector> init_cond;
                 for (int window = 0; window < numWindows; ++window)
                 {
                     if (myid == 0)
@@ -772,7 +771,7 @@ int main(int argc, char *argv[])
                     }
                     if (window == 0)
                     {
-                        init_cond = new CAROM::Vector(dim, true);
+                        init_cond.reset(new CAROM::Vector(dim, true));
                         for (int i = 0; i < dim; ++i)
                         {
                             init_cond->item(i) = sample[i];
@@ -782,8 +781,7 @@ int main(int argc, char *argv[])
                     {
                         init_cond = dmd[window-1]->predict(indicator_val[window]);
                     }
-                    dmd[window]->projectInitialCondition(init_cond);
-                    delete init_cond;
+                    dmd[window]->projectInitialCondition(init_cond.get());
                 }
                 dmd_preprocess_timer.Stop();
             }
@@ -801,7 +799,7 @@ int main(int argc, char *argv[])
                          << " using DMD model #" << curr_window << endl;
                 }
                 dmd_prediction_timer.Start();
-                CAROM::Vector* result = dmd[curr_window]->predict(t_final);
+                std::shared_ptr<CAROM::Vector> result = dmd[curr_window]->predict(t_final);
                 dmd_prediction_timer.Stop();
                 if (myid == 0)
                 {
@@ -810,7 +808,6 @@ int main(int argc, char *argv[])
                                           result->getData(), dim);
                 }
                 idx_snap = snap_bound[1]+1; // escape for-loop over idx_snap
-                delete result;
             }
             else // Verify DMD prediction results against dataset
             {
@@ -824,7 +821,7 @@ int main(int argc, char *argv[])
                          << tval << " using DMD model #" << curr_window << endl;
                 }
                 dmd_prediction_timer.Start();
-                CAROM::Vector* result = dmd[curr_window]->predict(tval);
+                std::shared_ptr<CAROM::Vector> result = dmd[curr_window]->predict(tval);
                 dmd_prediction_timer.Stop();
 
                 // Calculate the relative error between the DMD final solution and the true solution.
@@ -860,7 +857,6 @@ int main(int argc, char *argv[])
                         }
                     }
                 }
-                delete result;
             }
         }
         if (myid == 0 && t_final <= 0.0)

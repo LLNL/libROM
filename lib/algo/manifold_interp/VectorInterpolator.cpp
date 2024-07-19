@@ -84,9 +84,6 @@ VectorInterpolator::~VectorInterpolator()
             delete d_rotated_reduced_vectors[i];
         }
     }
-
-    for (auto v : d_gammas)
-        delete v;
 }
 
 void VectorInterpolator::obtainLambda()
@@ -116,13 +113,13 @@ std::shared_ptr<Vector> VectorInterpolator::interpolate(Vector* point)
             {
                 Vector* gamma = new Vector(d_rotated_reduced_vectors[d_ref_point]->dim(),
                                            d_rotated_reduced_vectors[d_ref_point]->distributed());
-                d_gammas.push_back(gamma);
+                d_gammas.push_back(std::shared_ptr<Vector>(gamma));
             }
             else
             {
                 // Gamma is Y - X
-                Vector* gamma = d_rotated_reduced_vectors[i]->minus(
-                                    *d_rotated_reduced_vectors[d_ref_point]);
+                std::shared_ptr<Vector> gamma = d_rotated_reduced_vectors[i]->minus(
+                                                    *d_rotated_reduced_vectors[d_ref_point]);
                 d_gammas.push_back(gamma);
             }
         }
@@ -146,7 +143,8 @@ std::shared_ptr<Vector> VectorInterpolator::interpolate(Vector* point)
     return interpolated_vector;
 }
 
-Vector* obtainInterpolatedVector(std::vector<Vector*> data, Matrix* f_T,
+Vector* obtainInterpolatedVector(const std::vector<std::shared_ptr<Vector>> &
+                                 data, Matrix* f_T,
                                  std::string interp_method, std::vector<double>& rbf)
 {
     Vector* interpolated_vector = new Vector(data[0]->dim(),
@@ -187,9 +185,10 @@ Vector* obtainInterpolatedVector(std::vector<Vector*> data, Matrix* f_T,
     return interpolated_vector;
 }
 
-Matrix* solveLinearSystem(std::vector<Vector*> parameter_points,
-                          std::vector<Vector*> data, std::string interp_method,
-                          std::string rbf, double& epsilon)
+Matrix* solveLinearSystem(const std::vector<Vector*> & parameter_points,
+                          const std::vector<std::shared_ptr<Vector>> & data,
+                          std::string interp_method,
+                          std::string rbf, double & epsilon)
 {
     int mpi_init, rank;
     MPI_Initialized(&mpi_init);

@@ -62,7 +62,7 @@ public:
     /**
      * @brief Destroy the AdaptiveDMD object
      */
-    ~AdaptiveDMD();
+    ~AdaptiveDMD() { }
 
     /**
      * @param[in] energy_fraction The energy fraction to keep after doing SVD.
@@ -126,7 +126,7 @@ private:
     /**
      * @brief std::vector holding the interpolated snapshots.
      */
-    std::vector<Vector*> d_interp_snapshots;
+    std::vector<std::shared_ptr<Vector>> d_interp_snapshots;
 
     /**
      * @brief Internal function to obtain the interpolated snapshots.

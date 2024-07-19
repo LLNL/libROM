@@ -74,7 +74,7 @@ TEST(DMDTest, Test_DMD)
     dmd.takeSample(&sample3[row_offset[d_rank]], 2.0);
 
     dmd.train(2);
-    CAROM::Vector* result = dmd.predict(3.0);
+    std::shared_ptr<CAROM::Vector> result = dmd.predict(3.0);
 
     for (int i = 0; i < d_num_rows; i++) {
         EXPECT_NEAR(result->item(i), prediction_baseline[row_offset[d_rank] + i], 1e-3);
@@ -82,11 +82,11 @@ TEST(DMDTest, Test_DMD)
 
     dmd.save("test_DMD");
     CAROM::DMD dmd_load("test_DMD");
-    CAROM::Vector* result_load = dmd_load.predict(3.0);
+    std::shared_ptr<CAROM::Vector> result_load = dmd_load.predict(3.0);
 
     for (int i = 0; i < d_num_rows; i++) {
-        EXPECT_NEAR(result_load->item(i), prediction_baseline[row_offset[d_rank] + i],
-                    1e-3);
+        EXPECT_NEAR(result_load->item(i),
+                    prediction_baseline[row_offset[d_rank] + i], 1e-3);
     }
 }
 

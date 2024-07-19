@@ -291,7 +291,7 @@ protected:
     /**
      * @brief Add the state offset when predicting the solution.
      */
-    virtual void addOffset(Vector*& result);
+    virtual void addOffset(Vector & result);
 
     /**
      * @brief Get the snapshot matrix contained within d_snapshots.
@@ -421,7 +421,7 @@ protected:
     /**
      * @brief The imaginary part of the projected initial condition.
      */
-    Vector* d_projected_init_imaginary = NULL;
+    std::shared_ptr<Vector> d_projected_init_imaginary;
 
     /**
      * @brief The real part of the projected controls.

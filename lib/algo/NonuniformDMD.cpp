@@ -115,7 +115,7 @@ NonuniformDMD::computeEigExp(std::complex<double> eig, double t)
 }
 
 void
-NonuniformDMD::addOffset(Vector*& result, double t, int deg)
+NonuniformDMD::addOffset(Vector & result, double t, int deg)
 {
     CAROM_VERIFY(deg == 0 || deg == 1);
     if (deg == 0)
@@ -123,14 +123,14 @@ NonuniformDMD::addOffset(Vector*& result, double t, int deg)
         DMD::addOffset(result);
         if (d_derivative_offset)
         {
-            result->plusAx(t, *d_derivative_offset);
+            result.plusAx(t, *d_derivative_offset);
         }
     }
     else
     {
         if (d_derivative_offset)
         {
-            *result += *d_derivative_offset;
+            result += *d_derivative_offset;
         }
     }
 }

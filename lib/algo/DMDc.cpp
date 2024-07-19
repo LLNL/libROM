@@ -150,7 +150,6 @@ DMDc::~DMDc()
     delete d_phi_imaginary;
     delete d_phi_real_squared_inverse;
     delete d_phi_imaginary_squared_inverse;
-    delete d_projected_init_imaginary;
 }
 
 void DMDc::setOffset(Vector* offset_vector)
@@ -668,7 +667,7 @@ DMDc::project(const Vector* init, const Matrix* controls, double t_offset)
     Vector* d_projected_init_imaginary_2 = d_phi_imaginary_squared_inverse->mult(
             *init_real);
     d_projected_init_imaginary = d_projected_init_imaginary_2->minus(
-                                     d_projected_init_imaginary_1);
+                                     *d_projected_init_imaginary_1);
 
     delete init_real;
     delete init_imaginary;
@@ -733,9 +732,9 @@ DMDc::predict(double t)
 
     Vector* d_predicted_state_real_2 = d_phi_mult_eigs_imaginary->mult(
                                            *d_projected_init_imaginary);
-    Vector* d_predicted_state_real = d_predicted_state_real_1->minus(
-                                         d_predicted_state_real_2);
-    addOffset(d_predicted_state_real);
+    std::unique_ptr<Vector> d_predicted_state_real =
+        d_predicted_state_real_1->minus(*d_predicted_state_real_2);
+    addOffset(*d_predicted_state_real);
 
     delete d_phi_mult_eigs_real;
     delete d_phi_mult_eigs_imaginary;
@@ -768,15 +767,14 @@ DMDc::predict(double t)
 
     delete f_control_real;
     delete f_control_imaginary;
-    return d_predicted_state_real;
 }
 
 void
-DMDc::addOffset(Vector*& result)
+DMDc::addOffset(Vector & result)
 {
     if (d_state_offset)
     {
-        *result += *d_state_offset;
+        result += *d_state_offset;
     }
 }
 
@@ -925,7 +923,7 @@ DMDc::load(std::string base_file_name)
     d_projected_init_real->read(full_file_name);
 
     full_file_name = base_file_name + "_projected_init_imaginary";
-    d_projected_init_imaginary = new Vector();
+    d_projected_init_imaginary.reset(new Vector());
     d_projected_init_imaginary->read(full_file_name);
 
     full_file_name = base_file_name + "_state_offset";

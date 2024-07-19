@@ -467,15 +467,13 @@ double simulation()
             // compare the final FOM solution to the DMD predicted solution.
             t = t_final - 10.0 * dt;
 
-            CAROM::Vector* carom_tf_u_minus_some = dmd_u->predict(t);
+            std::shared_ptr<CAROM::Vector> carom_tf_u_minus_some = dmd_u->predict(t);
 
             Vector tf_u_minus_some(carom_tf_u_minus_some->getData(),
                                    carom_tf_u_minus_some->dim());
 
             u = tf_u_minus_some;
             u_gf.SetFromTrueDofs(u);
-
-            delete carom_tf_u_minus_some;
         }
 
         ts.push_back(t);
@@ -683,7 +681,8 @@ double simulation()
                                                 *true_solution_u, *true_solution_u));
             }
         }
-        CAROM::Vector* result_u = dmd_u->predict(t_final);
+
+        std::shared_ptr<CAROM::Vector> result_u = dmd_u->predict(t_final);
 
         Vector dmd_solution_u(result_u->getData(), result_u->dim());
         Vector diff_u(true_solution_u->Size());
@@ -698,8 +697,6 @@ double simulation()
                       ", alpha " << alpha << ", cx " << cx << ", cy " << cy << ": "
                       << rel_diff << std::endl;
         }
-
-        delete result_u;
 
         if (!de && myid == 0)
         {
@@ -730,7 +727,7 @@ double simulation()
             std::cout << "Predicting temperature using DMD at: " << ts[0] << std::endl;
         }
 
-        CAROM::Vector* result_u = dmd_u->predict(ts[0]);
+        std::shared_ptr<CAROM::Vector> result_u = dmd_u->predict(ts[0]);
         Vector initial_dmd_solution_u(result_u->getData(), result_u->dim());
         u_gf.SetFromTrueDofs(initial_dmd_solution_u);
 
@@ -745,8 +742,6 @@ double simulation()
             dmd_visit_dc.SetTime(0.0);
             dmd_visit_dc.Save();
         }
-
-        delete result_u;
 
         if (visit)
         {
@@ -766,8 +761,6 @@ double simulation()
                     dmd_visit_dc.SetCycle(i);
                     dmd_visit_dc.SetTime(ts[i]);
                     dmd_visit_dc.Save();
-
-                    delete result_u;
                 }
             }
         }
@@ -792,8 +785,6 @@ double simulation()
             printf("Elapsed time for predicting DMD: %e second\n",
                    dmd_prediction_timer.RealTime());
         }
-
-        delete result_u;
     }
 
     // 19. Calculate the relative error as commanded by the greedy algorithm.

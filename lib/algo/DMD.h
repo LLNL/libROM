@@ -151,7 +151,7 @@ public:
      * @param[in] t   The time of the output state
      * @param[in] deg The derivative degree of the output state
      */
-    Vector* predict(double t, int deg = 0);
+    std::shared_ptr<Vector> predict(double t, int deg = 0);
 
     /**
      * @brief Get the time offset contained within d_t_offset.
@@ -320,12 +320,13 @@ protected:
     /**
      * @brief Add the appropriate offset when predicting the solution.
      */
-    virtual void addOffset(Vector*& result, double t = 0.0, int deg = 0);
+    virtual void addOffset(Vector & result, double t = 0.0, int deg = 0);
 
     /**
      * @brief Get the snapshot matrix contained within d_snapshots.
      */
-    const Matrix* createSnapshotMatrix(std::vector<Vector*> snapshots);
+    const Matrix* createSnapshotMatrix(const std::vector<std::shared_ptr<Vector>> &
+                                       snapshots);
 
     /**
      * @brief The rank of the process this object belongs to.
@@ -355,7 +356,7 @@ protected:
     /**
      * @brief std::vector holding the snapshots.
      */
-    std::vector<Vector*> d_snapshots;
+    std::vector<std::shared_ptr<Vector>> d_snapshots;
 
     /**
      * @brief The stored times of each sample.
@@ -440,7 +441,7 @@ protected:
     /**
      * @brief The imaginary part of the projected initial condition.
      */
-    Vector* d_projected_init_imaginary = NULL;
+    std::shared_ptr<Vector> d_projected_init_imaginary = NULL;
 
     /**
      * @brief A vector holding the complex eigenvalues of the eigenmodes.

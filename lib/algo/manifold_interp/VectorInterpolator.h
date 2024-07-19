@@ -116,16 +116,18 @@ private:
     /**
      * @brief The reduced elements in tangential space.
      */
-    std::vector<Vector*> d_gammas;
+    std::vector<std::shared_ptr<Vector>> d_gammas;
 };
 
-Vector* obtainInterpolatedVector(std::vector<Vector*> data, Matrix* f_T,
-                                 std::string interp_method, std::vector<double>& rbf);
+Vector* obtainInterpolatedVector(const std::vector<std::shared_ptr<Vector>> &
+                                 data,
+                                 Matrix* f_T, std::string interp_method,
+                                 std::vector<double>& rbf);
 
-Matrix* solveLinearSystem(std::vector<Vector*> parameter_points,
-                          std::vector<Vector*> data, std::string interp_method,
-                          std::string rbf, double& epsilon);
-
+Matrix* solveLinearSystem(const std::vector<Vector*> & parameter_points,
+                          const std::vector<std::shared_ptr<Vector>> & data,
+                          std::string interp_method,
+                          std::string rbf, double & epsilon);
 }
 
 #endif

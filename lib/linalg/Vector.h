@@ -300,7 +300,7 @@ public:
     normalize();
 
     /**
-     * @brief Adds other and this and returns the result, reference version.
+     * @brief Adds other and this and returns the result.
      *
      * @pre distributed() == other.distributed()
      * @pre dim() == other.dim()
@@ -335,8 +335,7 @@ public:
         Vector& result) const;
 
     /**
-     * @brief Adds factor*other and this and returns the result, reference
-     * version.
+     * @brief Adds factor*other and this and returns the result.
      *
      * @pre distributed() == other.distributed()
      * @pre dim() == other.dim()
@@ -346,56 +345,15 @@ public:
      *
      * @return this + factor*other
      */
-    Vector*
+    std::unique_ptr<Vector>
     plusAx(
         double factor,
-        const Vector& other)
+        const Vector& other) const
     {
-        Vector* result = 0;
-        plusAx(factor, other, result);
-        return result;
+        Vector *result = new Vector(d_dim, d_distributed);
+        plusAx(factor, other, *result);
+        return std::unique_ptr<Vector>(result);
     }
-
-    /**
-     * @brief Adds factor*other and this and returns the result, pointer
-     * version.
-     *
-     * @pre distributed() == other->distributed()
-     * @pre dim() == other->dim()
-     *
-     * @param[in] factor Multiplicative factor applied to other.
-     * @param[in] other The other summand.
-     *
-     * @return this + factor*other
-     */
-    Vector*
-    plusAx(
-        double factor,
-        const Vector* other)
-    {
-        CAROM_VERIFY(other != 0);
-        return plusAx(factor, *other);
-    }
-
-    /**
-     * @brief Adds factor*other and this and fills result with the answer.
-     *
-     * Result will be allocated if unallocated or resized appropriately if
-     * already allocated.
-     *
-     * @pre result == 0 || result->distributed() == distributed()
-     * @pre distributed() == other.distributed()
-     * @pre dim() == other.dim()
-     *
-     * @param[in] factor Multiplicative factor applied to other.
-     * @param[in] other The other summand.
-     * @param[out] result this + factor*other
-     */
-    void
-    plusAx(
-        double factor,
-        const Vector& other,
-        Vector*& result) const;
 
     /**
      * @brief Adds factor*other and this and fills result with the answer.
@@ -417,7 +375,7 @@ public:
         Vector& result) const;
 
     /**
-     * @brief Adds factor*other to this, reference version.
+     * @brief Adds factor*other to this.
      *
      * @pre distributed() == other.distributed()
      * @pre dim() == other.dim()
@@ -431,27 +389,7 @@ public:
         const Vector& other);
 
     /**
-     * @brief Adds factor*other to this, pointer version.
-     *
-     * @pre other != 0
-     * @pre distributed() == other->distributed()
-     * @pre dim() == other->dim()
-     *
-     * @param[in] factor Multiplicative factor applied to other.
-     * @param[in] other The other summand.
-     */
-    void
-    plusEqAx(
-        double factor,
-        const Vector* other)
-    {
-        CAROM_VERIFY(other != 0);
-        plusEqAx(factor, *other);
-    }
-
-    /**
-     * @brief Subtracts other and this and returns the result, reference
-     * version.
+     * @brief Subtracts other and this and returns the result.
      *
      * @pre distributed() == other.distributed()
      * @pre dim() == other.dim()
@@ -460,52 +398,14 @@ public:
      *
      * @return this - other
      */
-    Vector*
+    std::unique_ptr<Vector>
     minus(
         const Vector& other) const
     {
-        Vector* result = 0;
-        minus(other, result);
-        return result;
+        Vector *result = new Vector(d_dim, d_distributed);
+        minus(other, *result);
+        return std::unique_ptr<Vector>(result);
     }
-
-    /**
-     * @brief Subtracts other and this and returns the result, pointer
-     * version.
-     *
-     * @pre other != 0
-     * @pre distributed() == other->distributed()
-     * @pre dim() == other->dim()
-     *
-     * @param[in] other The other subtrahand.
-     *
-     * @return this - other
-     */
-    Vector*
-    minus(
-        const Vector* other) const
-    {
-        CAROM_VERIFY(other != 0);
-        return minus(*other);
-    }
-
-    /**
-     * @brief Subtracts other and this and fills result with the answer.
-     *
-     * Result will be allocated if unallocated or resized appropriately if
-     * already allocated.
-     *
-     * @pre result == 0 || result->distributed() == distributed()
-     * @pre distributed() == other.distributed()
-     * @pre dim() == other.dim()
-     *
-     * @param[in] other The other subtrahend.
-     * @param[out] result this - other
-     */
-    void
-    minus(
-        const Vector& other,
-        Vector*& result) const;
 
     /**
      * @brief Subtracts other and this and fills result with the answer.
@@ -532,28 +432,14 @@ public:
      *
      * @return factor*this
      */
-    Vector*
+    std::unique_ptr<Vector>
     mult(
         double factor) const
     {
-        Vector* result = 0;
-        mult(factor, result);
-        return result;
+        Vector *result = new Vector(d_dim, d_distributed);
+        mult(factor, *result);
+        return std::unique_ptr<Vector>(result);
     }
-
-    /**
-     * @brief Multiplies this by the supplied constant and fills result with
-     * the answer.
-     *
-     * @pre result == 0 || result->distributed() == distributed()
-     *
-     * @param[in] factor Factor to multiply by.
-     * @param[out] result factor*this
-     */
-    void
-    mult(
-        double factor,
-        Vector*& result) const;
 
     /**
      * @brief Multiplies this by the supplied constant and fills result with
