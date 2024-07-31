@@ -27,7 +27,6 @@ IncrementalSVDFastUpdate::IncrementalSVDFastUpdate(
     IncrementalSVD(
         options,
         basis_file_name),
-    d_Up(0),
     d_singular_value_tol(options.singular_value_tol)
 {
     CAROM_VERIFY(options.singular_value_tol >= 0);
@@ -43,7 +42,7 @@ IncrementalSVDFastUpdate::IncrementalSVDFastUpdate(
         d_state_database->getInteger("Up_num_rows", num_rows);
         int num_cols;
         d_state_database->getInteger("Up_num_cols", num_cols);
-        d_Up = new Matrix(num_rows, num_cols, true);
+        d_Up.reset(new Matrix(num_rows, num_cols, true));
         d_state_database->getDoubleArray("Up",
                                          &d_Up->item(0, 0),
                                          num_rows*num_cols);
@@ -79,11 +78,6 @@ IncrementalSVDFastUpdate::~IncrementalSVDFastUpdate()
                                          &d_Up->item(0, 0),
                                          num_rows*num_cols);
     }
-
-    // Delete data members.
-    if (d_Up) {
-        delete d_Up;
-    }
 }
 
 void
@@ -99,11 +93,11 @@ IncrementalSVDFastUpdate::buildInitialSVD(
     d_S->item(0) = norm_u;
 
     // Build d_Up for this new time interval.
-    d_Up = new Matrix(1, 1, false);
+    d_Up.reset(new Matrix(1, 1, false));
     d_Up->item(0, 0) = 1.0;
 
     // Build d_U for this new time interval.
-    d_U = new Matrix(d_dim, 1, true);
+    d_U.reset(new Matrix(d_dim, 1, true));
     for (int i = 0; i < d_dim; ++i) {
         d_U->item(i, 0) = u[i]/norm_u;
     }
@@ -126,11 +120,10 @@ IncrementalSVDFastUpdate::buildInitialSVD(
 void
 IncrementalSVDFastUpdate::computeBasis()
 {
-    d_basis = d_U->mult(d_Up);
+    d_basis = d_U->mult(*d_Up);
     if(d_update_right_SV)
     {
-        delete d_basis_right;
-        d_basis_right = new Matrix(*d_W);
+        d_basis_right.reset(new Matrix(*d_W));
     }
 
     if(d_rank == 0) {
@@ -156,8 +149,7 @@ IncrementalSVDFastUpdate::computeBasis()
                 d_basis_new->item(row, col) = d_basis->item(row,col);
             }
         }
-        delete d_basis;
-        d_basis = d_basis_new;
+        d_basis.reset(d_basis_new);
 
         if (d_update_right_SV)
         {
@@ -168,20 +160,19 @@ IncrementalSVDFastUpdate::computeBasis()
                     d_basis_right_new->item(row, col) = d_basis_right->item(row,col);
                 }
             }
-            delete d_basis_right;
-            d_basis_right = d_basis_right_new;
+            d_basis_right.reset(d_basis_right_new);
         }
         --d_num_samples;
     }
 
     // Reorthogonalize if necessary.
-    if (fabs(checkOrthogonality(d_basis)) >
+    if (fabs(checkOrthogonality(d_basis.get())) >
             std::numeric_limits<double>::epsilon()*static_cast<double>(d_num_samples)) {
         d_basis->orthogonalize();
     }
     if(d_update_right_SV)
     {
-        if (fabs(checkOrthogonality(d_basis_right)) >
+        if (fabs(checkOrthogonality(d_basis_right.get())) >
                 std::numeric_limits<double>::epsilon()*d_num_samples) {
             d_basis_right->orthogonalize();
         }
@@ -212,9 +203,9 @@ IncrementalSVDFastUpdate::addLinearlyDependentSample(
     }
 
     // Multiply d_Up and Amod and put result into d_Up.
-    Matrix* Up_times_Amod = d_Up->mult(Amod);
-    delete d_Up;
-    d_Up = Up_times_Amod;
+    Matrix *Up_times_Amod = new Matrix(d_Up->numRows(), Amod.numColumns(), false);
+    d_Up->mult(Amod, *Up_times_Amod);
+    d_Up.reset(Up_times_Amod);
 
     Matrix* new_d_W;
     if (d_update_right_SV) {
@@ -262,8 +253,7 @@ IncrementalSVDFastUpdate::addNewSample(
         }
         newU->item(row, d_num_samples) = j->item(row);
     }
-    delete d_U;
-    d_U = newU;
+    d_U.reset(newU);
 
     Matrix* new_d_W;
     if (d_update_right_SV) {
@@ -307,8 +297,7 @@ IncrementalSVDFastUpdate::addNewSample(
     for (int col = 0; col < d_num_samples+1; ++col) {
         new_d_Up->item(d_num_samples, col) = A->item(d_num_samples, col);
     }
-    delete d_Up;
-    d_Up = new_d_Up;
+    d_Up.reset(new_d_Up);
 
     // d_S = sigma.
     delete d_S;

@@ -308,7 +308,7 @@ private:
     const CAROM::Matrix *Ssinv;
     mutable CAROM::Vector zS;
     mutable CAROM::Vector zT;
-    const CAROM::Matrix *S;
+    const std::shared_ptr<CAROM::Matrix> S;
 
     mutable DenseMatrix J;
 
@@ -353,7 +353,7 @@ private:
 protected:
     CAROM::Matrix* BR;
     CAROM::Matrix* CR;
-    const CAROM::Matrix* U_R;
+    const std::shared_ptr<CAROM::Matrix> U_R;
     Vector y0;
     Vector dydt_prev;
     NonlinearDiffusionOperator *fom;
@@ -363,11 +363,11 @@ public:
     RomOperator(NonlinearDiffusionOperator *fom_,
                 NonlinearDiffusionOperator *fomSp_,
                 const int rrdim_, const int rwdim_, const int nldim_,
-                CAROM::SampleMeshManager *smm_,
-                const CAROM::Matrix* V_R_, const CAROM::Matrix* U_R_, const CAROM::Matrix* V_W_,
-                const CAROM::Matrix *Bsinv,
+                CAROM::SampleMeshManager *smm_, std::shared_ptr<CAROM::Matrix> V_R_,
+                std::shared_ptr<CAROM::Matrix> U_R_,
+                std::shared_ptr<CAROM::Matrix> V_W_, const CAROM::Matrix *Bsinv,
                 const double newton_rel_tol, const double newton_abs_tol, const int newton_iter,
-                const CAROM::Matrix* S_, const CAROM::Matrix *Ssinv_,
+                std::shared_ptr<CAROM::Matrix> S_, const CAROM::Matrix *Ssinv_,
                 const int myid, const bool hyperreduce_source_, const bool oversampling_,
                 const bool use_eqp, CAROM::Vector *eqpSol,
                 CAROM::Vector *eqpSol_S, const IntegrationRule *ir_eqp_);
@@ -409,21 +409,6 @@ void BroadcastUndistributedRomVector(CAROM::Vector* v)
         (*v)(i) = d[i];
 
     delete [] d;
-}
-
-// TODO: move this to the library?
-CAROM::Matrix* GetFirstColumns(const int N, const CAROM::Matrix* A)
-{
-    CAROM::Matrix* S = new CAROM::Matrix(A->numRows(), std::min(N, A->numColumns()),
-                                         A->distributed());
-    for (int i=0; i<S->numRows(); ++i)
-    {
-        for (int j=0; j<S->numColumns(); ++j)
-            (*S)(i,j) = (*A)(i,j);
-    }
-
-    // delete A;  // TODO: find a good solution for this.
-    return S;
 }
 
 // TODO: move this to the library?
@@ -855,10 +840,10 @@ int main(int argc, char *argv[])
     RomOperator *romop = 0;
 
     const CAROM::Matrix* B_librom = 0;
-    const CAROM::Matrix* BR_librom = 0;
-    const CAROM::Matrix* FR_librom = 0;
-    const CAROM::Matrix* BW_librom = 0;
-    const CAROM::Matrix* S_librom = 0;
+    std::shared_ptr<CAROM::Matrix> BR_librom;
+    std::shared_ptr<CAROM::Matrix> FR_librom;
+    std::shared_ptr<CAROM::Matrix> BW_librom;
+    std::shared_ptr<CAROM::Matrix> S_librom;
 
     int nsamp_R = -1;
     int nsamp_S = -1;
@@ -871,12 +856,14 @@ int main(int argc, char *argv[])
     if (online)
     {
         CAROM::BasisReader readerR("basisR");
-        BR_librom = readerR.getSpatialBasis();
+        BR_librom.reset(readerR.getSpatialBasis());
         if (rrdim == -1)
             rrdim = BR_librom->numColumns();
         else
-            BR_librom = GetFirstColumns(rrdim,
-                                        BR_librom);  // TODO: reduce rrdim if too large
+        {
+            // TODO: reduce rrdim if too large
+            BR_librom = BR_librom->getFirstNColumns(rrdim);
+        }
 
         MFEM_VERIFY(BR_librom->numRows() == N1, "");
 
@@ -884,11 +871,11 @@ int main(int argc, char *argv[])
             printf("reduced R dim = %d\n",rrdim);
 
         CAROM::BasisReader readerW("basisW");
-        BW_librom = readerW.getSpatialBasis();
+        BW_librom.reset(readerW.getSpatialBasis());
         if (rwdim == -1)
             rwdim = BW_librom->numColumns();
         else
-            BW_librom = GetFirstColumns(rwdim, BW_librom);
+            BW_librom = BW_librom->getFirstNColumns(rwdim);
 
         MFEM_VERIFY(BW_librom->numRows() == N2, "");
 
@@ -906,7 +893,7 @@ int main(int argc, char *argv[])
         */
 
         CAROM::BasisReader readerFR("basisFR");
-        FR_librom = readerFR.getSpatialBasis();
+        FR_librom.reset(readerFR.getSpatialBasis());
 
         if (nldim == -1)
         {
@@ -916,7 +903,7 @@ int main(int argc, char *argv[])
         MFEM_VERIFY(FR_librom->numRows() == N1 && FR_librom->numColumns() >= nldim, "");
 
         if (FR_librom->numColumns() > nldim)
-            FR_librom = GetFirstColumns(nldim, FR_librom);
+            FR_librom = FR_librom->getFirstNColumns(nldim);
 
         if (myid == 0)
             printf("reduced FR dim = %d\n",nldim);
@@ -994,7 +981,7 @@ int main(int argc, char *argv[])
             if (hyperreduce_source)
             {
                 readerS = new CAROM::BasisReader("basisS");
-                S_librom = readerS->getSpatialBasis();
+                S_librom.reset(readerS->getSpatialBasis());
 
                 if (nsdim == -1)
                 {
@@ -1004,7 +991,7 @@ int main(int argc, char *argv[])
                 MFEM_VERIFY(S_librom->numColumns() >= nsdim, "");
 
                 if (S_librom->numColumns() > nsdim)
-                    S_librom = GetFirstColumns(nsdim, S_librom);
+                    S_librom = S_librom->getFirstNColumns(nsdim);
 
                 if (myid == 0)
                     printf("reduced S dim = %d\n",nsdim);
@@ -1021,7 +1008,6 @@ int main(int argc, char *argv[])
 
                 Ssinv = new CAROM::Matrix(nsamp_S, nsdim, false);
                 sample_dofs_S.resize(nsamp_S);
-
 
                 hr.ComputeSamples(S_librom,
                                   nsdim,
@@ -1696,15 +1682,20 @@ NonlinearDiffusionOperator::~NonlinearDiffusionOperator()
 }
 
 RomOperator::RomOperator(NonlinearDiffusionOperator *fom_,
-                         NonlinearDiffusionOperator *fomSp_, const int rrdim_, const int rwdim_,
-                         const int nldim_, CAROM::SampleMeshManager *smm_,
-                         const CAROM::Matrix* V_R_, const CAROM::Matrix* U_R_, const CAROM::Matrix* V_W_,
+                         NonlinearDiffusionOperator *fomSp_, const int rrdim_,
+                         const int rwdim_, const int nldim_,
+                         CAROM::SampleMeshManager *smm_,
+                         std::shared_ptr<CAROM::Matrix> V_R_,
+                         std::shared_ptr<CAROM::Matrix> U_R_,
+                         std::shared_ptr<CAROM::Matrix> V_W_,
                          const CAROM::Matrix *Bsinv,
-                         const double newton_rel_tol, const double newton_abs_tol, const int newton_iter,
-                         const CAROM::Matrix* S_, const CAROM::Matrix *Ssinv_,
+                         const double newton_rel_tol,
+                         const double newton_abs_tol, const int newton_iter,
+                         std::shared_ptr<CAROM::Matrix> S_, const CAROM::Matrix *Ssinv_,
                          const int myid, const bool hyperreduce_source_,
                          const bool oversampling_, const bool use_eqp,
-                         CAROM::Vector *eqpSol, CAROM::Vector *eqpSol_S, const IntegrationRule *ir_eqp_)
+                         CAROM::Vector *eqpSol, CAROM::Vector *eqpSol_S,
+                         const IntegrationRule *ir_eqp_)
     : TimeDependentOperator(rrdim_ + rwdim_, 0.0),
       newton_solver(),
       fom(fom_), fomSp(fomSp_), BR(NULL), rrdim(rrdim_), rwdim(rwdim_), nldim(nldim_),

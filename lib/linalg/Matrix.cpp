@@ -252,42 +252,14 @@ Matrix::operator = (
     return *this;
 }
 
-Matrix*
+std::unique_ptr<Matrix>
 Matrix::getFirstNColumns(int n) const
 {
     CAROM_VERIFY(n > 0 && n <= d_num_cols);
 
-    Matrix* first_n_columns = NULL;
-    getFirstNColumns(n, first_n_columns);
-    return first_n_columns;
-}
-
-void
-Matrix::getFirstNColumns(
-    int n,
-    Matrix*& result) const
-{
-    CAROM_VERIFY(result == 0 || result->distributed() == distributed());
-    CAROM_VERIFY(n > 0 && n <= d_num_cols);
-
-    // If the result has not been allocated then do so.  Otherwise size it
-    // correctly.
-    if (result == 0)
-    {
-        result = new Matrix(d_num_rows, n, d_distributed);
-    }
-    else
-    {
-        result->setSize(d_num_rows, n);
-    }
-
-    for (int i = 0; i < d_num_rows; i++)
-    {
-        for (int j = 0; j < n; j++)
-        {
-            result->item(i, j) = item(i, j);
-        }
-    }
+    Matrix* first_n_columns = new Matrix(d_num_rows, n, d_distributed);
+    getFirstNColumns(n, *first_n_columns);
+    return std::unique_ptr<Matrix>(first_n_columns);
 }
 
 void
@@ -313,36 +285,6 @@ Matrix::getFirstNColumns(
 void
 Matrix::mult(
     const Matrix& other,
-    Matrix*& result) const
-{
-    CAROM_VERIFY(result == 0 || result->distributed() == distributed());
-    CAROM_VERIFY(!other.distributed());
-    CAROM_VERIFY(numColumns() == other.numRows());
-
-    // If the result has not been allocated then do so.  Otherwise size it
-    // correctly.
-    if (result == 0) {
-        result = new Matrix(d_num_rows, other.d_num_cols, d_distributed);
-    }
-    else {
-        result->setSize(d_num_rows, other.d_num_cols);
-    }
-
-    // Do the multiplication.
-    for (int this_row = 0; this_row < d_num_rows; ++this_row) {
-        for (int other_col = 0; other_col < other.d_num_cols; ++other_col) {
-            double result_val = 0.0;
-            for (int entry = 0; entry < d_num_cols; ++entry) {
-                result_val += item(this_row, entry)*other.item(entry, other_col);
-            }
-            result->item(this_row, other_col) = result_val;
-        }
-    }
-}
-
-void
-Matrix::mult(
-    const Matrix& other,
     Matrix& result) const
 {
     CAROM_VERIFY(result.distributed() == distributed());
@@ -361,34 +303,6 @@ Matrix::mult(
             }
             result.item(this_row, other_col) = result_val;
         }
-    }
-}
-
-void
-Matrix::mult(
-    const Vector& other,
-    Vector*& result) const
-{
-    CAROM_VERIFY(result == 0 || result->distributed() == distributed());
-    CAROM_VERIFY(!other.distributed());
-    CAROM_VERIFY(numColumns() == other.dim());
-
-    // If the result has not been allocated then do so.  Otherwise size it
-    // correctly.
-    if (result == 0) {
-        result = new Vector(d_num_rows, d_distributed);
-    }
-    else {
-        result->setSize(d_num_rows);
-    }
-
-    // Do the multiplication.
-    for (int this_row = 0; this_row < d_num_rows; ++this_row) {
-        double result_val = 0.0;
-        for (int entry = 0; entry < d_num_cols; ++entry) {
-            result_val += item(this_row, entry)*other.item(entry);
-        }
-        result->item(this_row) = result_val;
     }
 }
 
@@ -450,34 +364,6 @@ Matrix::pointwise_mult(
 void
 Matrix::elementwise_mult(
     const Matrix& other,
-    Matrix*& result) const
-{
-    CAROM_VERIFY(result == 0 || result->distributed() == distributed());
-    CAROM_VERIFY(distributed() == other.distributed());
-    CAROM_VERIFY(numRows() == other.numRows());
-    CAROM_VERIFY(numColumns() == other.numColumns());
-
-    // If the result has not been allocated then do so.  Otherwise size it
-    // correctly.
-    if (result == 0) {
-        result = new Matrix(d_num_rows, d_num_cols, d_distributed);
-    }
-    else {
-        result->setSize(d_num_rows, d_num_cols);
-    }
-
-    // Do the element-wise multiplication.
-    for (int this_row = 0; this_row < d_num_rows; ++this_row) {
-        for (int other_col = 0; other_col < d_num_cols; ++other_col) {
-            result->item(this_row, other_col) = item(this_row,
-                                                other_col) * other.item(this_row, other_col);
-        }
-    }
-}
-
-void
-Matrix::elementwise_mult(
-    const Matrix& other,
     Matrix& result) const
 {
     CAROM_VERIFY(result.distributed() == distributed());
@@ -499,28 +385,6 @@ Matrix::elementwise_mult(
 
 void
 Matrix::elementwise_square(
-    Matrix*& result) const
-{
-    // If the result has not been allocated then do so.  Otherwise size it
-    // correctly.
-    if (result == 0) {
-        result = new Matrix(d_num_rows, d_num_cols, d_distributed);
-    }
-    else {
-        result->setSize(d_num_rows, d_num_cols);
-    }
-
-    // Do the pointwise square.
-    for (int this_row = 0; this_row < d_num_rows; ++this_row) {
-        for (int this_col = 0; this_col < d_num_cols; ++this_col) {
-            result->item(this_row, this_col) = item(this_row, this_col) * item(this_row,
-                                               this_col);
-        }
-    }
-}
-
-void
-Matrix::elementwise_square(
     Matrix& result) const
 {
     // Size result correctly.
@@ -529,8 +393,8 @@ Matrix::elementwise_square(
     // Do the pointwise square.
     for (int this_row = 0; this_row < d_num_rows; ++this_row) {
         for (int this_col = 0; this_col < d_num_cols; ++this_col) {
-            result.item(this_row, this_col) = item(this_row, this_col) * item(this_row,
-                                              this_col);
+            const double a = item(this_row, this_col);
+            result.item(this_row, this_col) = a * a;
         }
     }
 }
@@ -552,45 +416,6 @@ Matrix::multPlus(
             tmp += item(this_row, this_col)*b.item(this_col);
         }
         a.item(this_row) += tmp*c;
-    }
-}
-
-void
-Matrix::transposeMult(
-    const Matrix& other,
-    Matrix*& result) const
-{
-    CAROM_VERIFY(result == 0 || !result->distributed());
-    CAROM_VERIFY(distributed() == other.distributed());
-    CAROM_VERIFY(numRows() == other.numRows());
-
-    // If the result has not been allocated then do so.  Otherwise size it
-    // correctly.
-    if (result == 0) {
-        result = new Matrix(d_num_cols, other.d_num_cols, false);
-    }
-    else {
-        result->setSize(d_num_cols, other.d_num_cols);
-    }
-
-    // Do the multiplication.
-    for (int this_col = 0; this_col < d_num_cols; ++this_col) {
-        for (int other_col = 0; other_col < other.d_num_cols; ++other_col) {
-            double result_val = 0.0;
-            for (int entry = 0; entry < d_num_rows; ++entry) {
-                result_val += item(entry, this_col)*other.item(entry, other_col);
-            }
-            result->item(this_col, other_col) = result_val;
-        }
-    }
-    if (d_distributed && d_num_procs > 1) {
-        int new_mat_size = d_num_cols*other.d_num_cols;
-        MPI_Allreduce(MPI_IN_PLACE,
-                      &result->item(0, 0),
-                      new_mat_size,
-                      MPI_DOUBLE,
-                      MPI_SUM,
-                      MPI_COMM_WORLD);
     }
 }
 
@@ -630,42 +455,6 @@ Matrix::transposeMult(
 void
 Matrix::transposeMult(
     const Vector& other,
-    Vector*& result) const
-{
-    CAROM_VERIFY(result == 0 || !result->distributed());
-    CAROM_VERIFY(distributed() == other.distributed());
-    CAROM_VERIFY(numRows() == other.dim());
-
-    // If the result has not been allocated then do so.  Otherwise size it
-    // correctly.
-    if (result == 0) {
-        result = new Vector(d_num_cols, false);
-    }
-    else {
-        result->setSize(d_num_cols);
-    }
-
-    // Do the multiplication.
-    for (int this_col = 0; this_col < d_num_cols; ++this_col) {
-        double result_val = 0.0;
-        for (int entry = 0; entry < d_num_rows; ++entry) {
-            result_val += item(entry, this_col)*other.item(entry);
-        }
-        result->item(this_col) = result_val;
-    }
-    if (d_distributed && d_num_procs > 1) {
-        MPI_Allreduce(MPI_IN_PLACE,
-                      &result->item(0),
-                      d_num_cols,
-                      MPI_DOUBLE,
-                      MPI_SUM,
-                      MPI_COMM_WORLD);
-    }
-}
-
-void
-Matrix::transposeMult(
-    const Vector& other,
     Vector& result) const
 {
     CAROM_VERIFY(!result.distributed());
@@ -696,82 +485,12 @@ Matrix::transposeMult(
 
 void
 Matrix::getColumn(int column,
-                  Vector*& result) const
-{
-    if (result == 0) {
-        if (d_distributed) {
-            result = new Vector(d_num_rows, true);
-        }
-        else {
-            result = new Vector(d_num_rows, false);
-        }
-    }
-    getColumn(column, *result);
-}
-
-void
-Matrix::getColumn(int column,
                   Vector& result) const
 {
     result.setSize(d_num_rows);
     for (int i = 0; i < d_num_rows; i++) {
         result.item(i) = item(i, column);
     }
-}
-
-void
-Matrix::inverse(
-    Matrix*& result) const
-{
-    CAROM_VERIFY(result == 0 ||
-                 (!result->distributed() &&
-                  result->numRows() == numRows() &&
-                  result->numColumns() == numColumns()));
-    CAROM_VERIFY(!distributed());
-    CAROM_VERIFY(numRows() == numColumns());
-
-    // If the result has not been allocated then do so.  Otherwise size it
-    // correctly.
-    if (result == 0) {
-        result = new Matrix(d_num_rows, d_num_cols, false);
-    }
-    else {
-        result->setSize(d_num_rows, d_num_cols);
-    }
-
-    // Call lapack routines to do the inversion.
-    // Set up some stuff the lapack routines need.
-    int info;
-    int mtx_size = d_num_rows;
-    int lwork = mtx_size*mtx_size;
-    int* ipiv = new int [mtx_size];
-    double* work = new double [lwork];
-    // To use lapack we need a column major representation of this which is
-    // essentially the transform of this.  Use result for this representation.
-    for (int row = 0; row < mtx_size; ++row) {
-        for (int col = 0; col < mtx_size; ++col) {
-            result->item(col, row) = item(row, col);
-        }
-    }
-    // Now call lapack to do the inversion.
-    dgetrf(&mtx_size, &mtx_size, result->d_mat, &mtx_size, ipiv, &info);
-    CAROM_VERIFY(info == 0);
-
-    dgetri(&mtx_size, result->d_mat, &mtx_size, ipiv, work, &lwork, &info);
-    CAROM_VERIFY(info == 0);
-
-    // Result now has the inverse in a column major representation.  Put it
-    // into row major order.
-    for (int row = 0; row < mtx_size; ++row) {
-        for (int col = row+1; col < mtx_size; ++col) {
-            double tmp = result->item(row, col);
-            result->item(row, col) = result->item(col, row);
-            result->item(col, row) = tmp;
-        }
-    }
-
-    delete [] ipiv;
-    delete [] work;
 }
 
 void
@@ -890,7 +609,7 @@ void Matrix::transposePseudoinverse()
     }
     else
     {
-        Matrix *AtA = this->transposeMult(this);
+        std::unique_ptr<Matrix> AtA = this->transposeMult(*this);
 
         // Directly invert AtA, which is a bad idea if AtA is not small.
         AtA->inverse();
@@ -909,8 +628,6 @@ void Matrix::transposePseudoinverse()
             for (int j=0; j<numColumns(); ++j)
                 this->item(i,j) = res.item(j);
         }
-
-        delete AtA;
     }
 }
 
@@ -2459,11 +2176,12 @@ struct SerialSVDDecomposition SerialSVD(Matrix* A)
 
 // Compute the product A^T * B, where A is represented by the space-time
 // product of As and At, and likewise for B.
-Matrix* SpaceTimeProduct(const CAROM::Matrix* As, const CAROM::Matrix* At,
-                         const CAROM::Matrix* Bs, const CAROM::Matrix* Bt,
-                         const std::vector<double> *tscale,
-                         const bool At0at0, const bool Bt0at0, const bool lagB,
-                         const bool skip0)
+std::unique_ptr<Matrix> SpaceTimeProduct(const CAROM::Matrix* As,
+        const CAROM::Matrix* At,
+        const CAROM::Matrix* Bs, const CAROM::Matrix* Bt,
+        const std::vector<double> *tscale,
+        const bool At0at0, const bool Bt0at0, const bool lagB,
+        const bool skip0)
 {
     // TODO: implement reduction in parallel for the spatial matrices
     CAROM_VERIFY(As->distributed() && Bs->distributed());
@@ -2517,7 +2235,7 @@ Matrix* SpaceTimeProduct(const CAROM::Matrix* As, const CAROM::Matrix* At,
         }
     }
 
-    return p;
+    return std::unique_ptr<Matrix>(p);
 }
 
 } // end namespace CAROM

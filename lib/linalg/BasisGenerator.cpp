@@ -224,29 +224,25 @@ BasisGenerator::computeNextSampleTime(
         const Matrix* basis = getSpatialBasis();
 
         // Compute l = basis' * u
-        Vector* l = basis->transposeMult(u_vec);
+        Vector l(basis->numColumns(), false);
+        basis->transposeMult(u_vec, l);
 
         // basisl = basis * l
-        Vector* basisl = basis->mult(*l);
+        Vector basisl(basis->numRows(), true);
+        basis->mult(l, basisl);
 
         // Compute u - basisl.
-        std::unique_ptr<Vector> eta = u_vec.minus(*basisl);
-
-        delete l;
-        delete basisl;
+        std::unique_ptr<Vector> eta = u_vec.minus(basisl);
 
         // Compute l = basis' * rhs
         Vector rhs_vec(rhs_in, dim, true);
-        l = basis->transposeMult(rhs_vec);
+        basis->transposeMult(rhs_vec, l);
 
         // basisl = basis * l
-        basisl = basis->mult(*l);
+        basis->mult(l, basisl);
 
         // Compute rhs - basisl.
-        std::unique_ptr<Vector> eta_dot = rhs_vec.minus(*basisl);
-
-        delete l;
-        delete basisl;
+        std::unique_ptr<Vector> eta_dot = rhs_vec.minus(basisl);
 
         // Compute the l-inf norm of eta + d_dt*eta_dot.
         double global_norm;

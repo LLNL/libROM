@@ -98,7 +98,7 @@ IncrementalSVD::IncrementalSVD(
             d_state_database->getInteger("U_num_rows", num_rows);
             int num_cols;
             d_state_database->getInteger("U_num_cols", num_cols);
-            d_U = new Matrix(num_rows, num_cols, true);
+            d_U.reset(new Matrix(num_rows, num_cols, true));
             d_state_database->getDoubleArray("U",
                                              &d_U->item(0, 0),
                                              num_rows*num_cols);
@@ -252,14 +252,14 @@ const Matrix*
 IncrementalSVD::getSpatialBasis()
 {
     CAROM_ASSERT(d_basis != 0);
-    return d_basis;
+    return d_basis.get();
 }
 
 const Matrix*
 IncrementalSVD::getTemporalBasis()
 {
     CAROM_ASSERT(d_basis != 0);
-    return d_basis_right;
+    return d_basis_right.get();
 }
 
 const Vector*
@@ -285,15 +285,17 @@ IncrementalSVD::buildIncrementalSVD(
 
     // l = basis' * u
     Vector u_vec(u, d_dim, true);
-    Vector* l = d_basis->transposeMult(u_vec);
+    Vector l(d_basis->numColumns(), false);
+    d_basis->transposeMult(u_vec, l);
 
     // basisl = basis * l
-    Vector* basisl = d_basis->mult(*l);
+    Vector basisl(d_basis->numRows(), true);
+    d_basis->mult(l, basisl);
 
     // Computing as k = sqrt(u.u - 2.0*l.l + basisl.basisl)
     // results in catastrophic cancellation, and must be avoided.
     // Instead we compute as k = sqrt((u-basisl).(u-basisl)).
-    std::unique_ptr<Vector> e_proj = u_vec.minus(*basisl);
+    std::unique_ptr<Vector> e_proj = u_vec.minus(basisl);
     double k = e_proj->inner_product(*e_proj);
 
     if (k <= 0) {
@@ -333,8 +335,7 @@ IncrementalSVD::buildIncrementalSVD(
 
     // Create Q.
     double* Q;
-    constructQ(Q, l, k);
-    delete l;
+    constructQ(Q, &l, k);
 
     // Now get the singular value decomposition of Q.
     Matrix* A;
@@ -362,7 +363,7 @@ IncrementalSVD::buildIncrementalSVD(
             // This sample is not linearly dependent.
 
             // Compute j
-            std::unique_ptr<Vector> j = u_vec.minus(*basisl);
+            std::unique_ptr<Vector> j = u_vec.minus(basisl);
             for (int i = 0; i < d_dim; ++i) {
                 j->item(i) /= k;
             }
@@ -371,7 +372,6 @@ IncrementalSVD::buildIncrementalSVD(
             // deleted upon return.
             addNewSample(j.get(), A, W, sigma);
         }
-        delete basisl;
         delete A;
         delete W;
 
@@ -379,7 +379,6 @@ IncrementalSVD::buildIncrementalSVD(
         computeBasis();
     }
     else {
-        delete basisl;
         delete A;
         delete W;
         delete sigma;

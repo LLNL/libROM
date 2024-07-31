@@ -56,8 +56,8 @@ template <class T>
 void getParametricDMDc(T*& parametric_dmdc,
                        std::vector<Vector*>& parameter_points,
                        std::vector<T*>& dmdcs,
-                       std::vector<Matrix*> controls,
-                       Matrix*& controls_interpolated,
+                       std::vector<std::shared_ptr<Matrix>> controls,
+                       std::shared_ptr<Matrix> & controls_interpolated,
                        Vector* desired_point,
                        std::string rbf = "G",
                        std::string interp_method = "LS",
@@ -81,9 +81,10 @@ void getParametricDMDc(T*& parametric_dmdc,
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    std::vector<CAROM::Matrix*> bases;
-    std::vector<CAROM::Matrix*> A_tildes;
-    std::vector<CAROM::Matrix*> B_tildes;
+    std::vector<std::shared_ptr<CAROM::Matrix>> bases;
+    std::vector<std::shared_ptr<CAROM::Matrix>> A_tildes;
+    std::vector<std::shared_ptr<CAROM::Matrix>> B_tildes;
+
     for (int i = 0; i < dmdcs.size(); i++)
     {
         bases.push_back(dmdcs[i]->d_basis);
@@ -92,24 +93,25 @@ void getParametricDMDc(T*& parametric_dmdc,
     }
 
     int ref_point = getClosestPoint(parameter_points, desired_point);
-    std::vector<CAROM::Matrix*> rotation_matrices = obtainRotationMatrices(
-                parameter_points,
-                bases, ref_point);
+    std::vector<std::shared_ptr<CAROM::Matrix>> rotation_matrices =
+                obtainRotationMatrices(parameter_points, bases, ref_point);
 
     CAROM::MatrixInterpolator basis_interpolator(parameter_points,
             rotation_matrices, bases, ref_point, "B", rbf, interp_method, closest_rbf_val);
-    CAROM::Matrix* W = basis_interpolator.interpolate(desired_point,
-                       reorthogonalize_W);
+    std::shared_ptr<CAROM::Matrix> W = basis_interpolator.interpolate(desired_point,
+                                       reorthogonalize_W);
 
     CAROM::MatrixInterpolator A_tilde_interpolator(parameter_points,
             rotation_matrices, A_tildes, ref_point, "R", rbf, interp_method,
             closest_rbf_val);
-    CAROM::Matrix* A_tilde = A_tilde_interpolator.interpolate(desired_point);
+    std::shared_ptr<CAROM::Matrix> A_tilde = A_tilde_interpolator.interpolate(
+                desired_point);
 
     CAROM::MatrixInterpolator B_tilde_interpolator(parameter_points,
             rotation_matrices, B_tildes, ref_point, "R", rbf, interp_method,
             closest_rbf_val);
-    CAROM::Matrix* B_tilde = B_tilde_interpolator.interpolate(desired_point);
+    std::shared_ptr<CAROM::Matrix> B_tilde = B_tilde_interpolator.interpolate(
+                desired_point);
 
     CAROM::MatrixInterpolator control_interpolator(parameter_points,
             rotation_matrices, controls, ref_point, "R", rbf, interp_method,
@@ -118,24 +120,19 @@ void getParametricDMDc(T*& parametric_dmdc,
     controls_interpolated = control_interpolator.interpolate(desired_point);
 
     // Calculate the right eigenvalues/eigenvectors of A_tilde
-    ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(A_tilde);
+    ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(A_tilde.get());
     std::vector<std::complex<double>> eigs = eigenpair.eigs;
 
     // Calculate phi (phi = W * eigenvectors)
-    CAROM::Matrix* phi_real = W->mult(eigenpair.ev_real);
-    CAROM::Matrix* phi_imaginary = W->mult(eigenpair.ev_imaginary);
+    std::shared_ptr<CAROM::Matrix> phi_real = W->mult(*eigenpair.ev_real);
+    std::shared_ptr<CAROM::Matrix> phi_imaginary = W->mult(*eigenpair.ev_imaginary);
 
     parametric_dmdc = new T(eigs, phi_real, phi_imaginary, B_tilde,
                             dmdcs[0]->d_k,dmdcs[0]->d_dt,
-                            dmdcs[0]->d_t_offset, dmdcs[0]->d_state_offset, W);
+                            dmdcs[0]->d_t_offset, dmdcs[0]->d_state_offset, W.get());
 
-    delete A_tilde;
     delete eigenpair.ev_real;
     delete eigenpair.ev_imaginary;
-
-    for (auto m : rotation_matrices)
-        delete m;
-
 }
 
 /**
@@ -164,8 +161,8 @@ template <class T>
 void getParametricDMDc(T*& parametric_dmdc,
                        std::vector<Vector*>& parameter_points,
                        std::vector<std::string>& dmdc_paths,
-                       std::vector<Matrix*> controls,
-                       Matrix*& controls_interpolated,
+                       std::vector<std::shared_ptr<Matrix>> controls,
+                       std::shared_ptr<Matrix> & controls_interpolated,
                        Vector* desired_point,
                        std::string rbf = "G",
                        std::string interp_method = "LS",

@@ -27,7 +27,7 @@ using namespace std;
 namespace CAROM {
 
 void
-S_OPT(const Matrix* f_basis,
+S_OPT(const std::shared_ptr<Matrix> f_basis,
       int num_f_basis_vectors_used,
       std::vector<int>& f_sampled_row,
       std::vector<int>& f_sampled_rows_per_proc,
@@ -99,7 +99,7 @@ S_OPT(const Matrix* f_basis,
 
     // If num_basis_vectors is less than the number of columns of the basis,
     // we need to truncate the basis.
-    const Matrix* f_basis_truncated = NULL;
+    std::shared_ptr<Matrix> f_basis_truncated;
     if (num_basis_vectors < f_basis->numColumns())
     {
         f_basis_truncated = f_basis->getFirstNColumns(num_basis_vectors);
@@ -109,13 +109,11 @@ S_OPT(const Matrix* f_basis,
         f_basis_truncated = f_basis;
     }
 
-    const Matrix* Vo = NULL;
-    std::unique_ptr<Matrix> f_basis_truncated_Q;
+    std::shared_ptr<Matrix> Vo;
     // Use the QR factorization of the input matrix, if requested
     if (qr_factorize)
     {
-        f_basis_truncated_Q = f_basis_truncated->qr_factorize();
-        Vo = f_basis_truncated_Q.get();
+        Vo = f_basis_truncated->qr_factorize();
     }
     else
     {
@@ -238,7 +236,7 @@ S_OPT(const Matrix* f_basis,
                     V1_last_col.item(j, 0) = V1.item(j, i - 1);
                 }
 
-                Matrix* atA0 = V1_last_col.transposeMult(A0);
+                std::unique_ptr<Matrix> atA0 = V1_last_col.transposeMult(A0);
                 tt.setSize(num_rows, i - 1);
                 tt1.setSize(num_rows, i - 1);
 
@@ -251,7 +249,7 @@ S_OPT(const Matrix* f_basis,
                     }
                 }
 
-                Matrix* lhs = A0.transposeMult(A0);
+                std::unique_ptr<Matrix> lhs = A0.transposeMult(A0);
                 lhs->inverse();
                 Matrix* rhs = NULL;
                 if (myid == 0)
@@ -281,8 +279,7 @@ S_OPT(const Matrix* f_basis,
                     }
                 }
 
-                Matrix* ls_res = rhs->mult(lhs);
-                delete lhs;
+                std::unique_ptr<Matrix> ls_res = rhs->mult(*lhs);
                 delete rhs;
 
                 Matrix* c_T = NULL;
@@ -296,7 +293,7 @@ S_OPT(const Matrix* f_basis,
                     c_T = new Matrix(ls_res->getData(),
                                      ls_res->numRows(), ls_res->numColumns(), f_basis->distributed(), true);
                 }
-                Matrix* Vo_first_i_columns = Vo->getFirstNColumns(i - 1);
+                std::unique_ptr<Matrix> Vo_first_i_columns = Vo->getFirstNColumns(i - 1);
 
                 Vector* b = new Vector(num_rows, f_basis->distributed());
                 for (int j = 0; j < Vo_first_i_columns->numRows(); j++)
@@ -308,8 +305,6 @@ S_OPT(const Matrix* f_basis,
                     }
                     b->item(j) = tmp;
                 }
-
-                delete Vo_first_i_columns;
 
                 for (int j = 0; j < num_rows; j++)
                 {
@@ -327,8 +322,6 @@ S_OPT(const Matrix* f_basis,
                         g1.item(j, k) = atA0->item(0, k) + tt.item(j, k);
                     }
                 }
-
-                delete atA0;
 
                 Vector* g3 = new Vector(num_rows, f_basis->distributed());
                 for (int j = 0; j < c_T->numRows(); j++)
@@ -372,8 +365,6 @@ S_OPT(const Matrix* f_basis,
                     }
                 }
 
-                delete ls_res;
-
                 for (int j = 0; j < A->dim(); j++)
                 {
                     double tmp = 0.0;
@@ -413,15 +404,12 @@ S_OPT(const Matrix* f_basis,
             }
             else
             {
-                Matrix* curr_V1 = new Matrix(V1.getData(), num_samples_obtained,
-                                             num_basis_vectors, false, true);
-                Matrix* lhs = curr_V1->transposeMult(curr_V1);
+                Matrix curr_V1(V1.getData(), num_samples_obtained,
+                               num_basis_vectors, false, true);
+                std::unique_ptr<Matrix> lhs = curr_V1.transposeMult(curr_V1);
                 lhs->inverse();
 
-                delete curr_V1;
-
-                Matrix* ls_res = Vo->mult(lhs);
-                delete lhs;
+                std::unique_ptr<Matrix> ls_res = Vo->mult(*lhs);
 
                 nV.setSize(num_basis_vectors);
                 for (int j = 0; j < num_basis_vectors; j++)
@@ -451,8 +439,6 @@ S_OPT(const Matrix* f_basis,
                     }
                     A->item(j) = std::log(1 + tmp) - noM->item(j);
                 }
-
-                delete ls_res;
             }
 
             f_bv_max_local.row_val = -DBL_MAX;
@@ -520,11 +506,6 @@ S_OPT(const Matrix* f_basis,
     // Free the MPI_Datatype and MPI_Op.
     MPI_Type_free(&MaxRowType);
     MPI_Op_free(&RowInfoOp);
-
-    if (num_basis_vectors < f_basis->numColumns())
-    {
-        delete f_basis_truncated;
-    }
 }
 
 }

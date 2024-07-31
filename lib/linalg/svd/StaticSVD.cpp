@@ -143,23 +143,13 @@ StaticSVD::getSpatialBasis()
     // If this basis is for the last time interval then it may not be up to date
     // so recompute it.
     if (!isBasisCurrent()) {
-        delete d_basis;
-        d_basis = nullptr;
-        delete d_basis_right;
-        d_basis_right = nullptr;
-        delete d_U;
-        d_U = nullptr;
-        delete d_S;
-        d_S = nullptr;
-        delete d_W;
-        d_W = nullptr;
         computeSVD();
     }
     else {
         CAROM_ASSERT(d_basis != 0);
     }
     CAROM_ASSERT(isBasisCurrent());
-    return d_basis;
+    return d_basis.get();
 }
 
 const Matrix*
@@ -168,23 +158,13 @@ StaticSVD::getTemporalBasis()
     // If this basis is for the last time interval then it may not be up to date
     // so recompute it.
     if (!isBasisCurrent()) {
-        delete d_basis;
-        d_basis = nullptr;
-        delete d_basis_right;
-        d_basis_right = nullptr;
-        delete d_U;
-        d_U = nullptr;
-        delete d_S;
-        d_S = nullptr;
-        delete d_W;
-        d_W = nullptr;
         computeSVD();
     }
     else {
         CAROM_ASSERT(d_basis_right != 0);
     }
     CAROM_ASSERT(isBasisCurrent());
-    return d_basis_right;
+    return d_basis_right.get();
 }
 
 const Vector*
@@ -193,12 +173,6 @@ StaticSVD::getSingularValues()
     // If these singular values are for the last time interval then they may not
     // be up to date so recompute them.
     if (!isBasisCurrent()) {
-        delete d_basis;
-        d_basis = nullptr;
-        delete d_basis_right;
-        d_basis = nullptr;
-        delete d_U;
-        d_U = nullptr;
         delete d_S;
         d_S = nullptr;
         delete d_W;
@@ -314,8 +288,8 @@ StaticSVD::computeSVD()
         memset(&d_S->item(0), 0, nc*sizeof(double));
     }
 
-    d_basis = new Matrix(d_dim, ncolumns, true);
-    d_basis_right = new Matrix(d_num_samples, ncolumns, false);
+    d_basis.reset(new Matrix(d_dim, ncolumns, true));
+    d_basis_right.reset(new Matrix(d_num_samples, ncolumns, false));
     for (int rank = 0; rank < d_num_procs; ++rank) {
         if (transpose) {
             // V is computed in the transposed order so no reordering necessary.

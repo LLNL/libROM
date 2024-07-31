@@ -127,8 +127,9 @@ protected:
      * @param[in] state_offset d_state_offset
      * @param[in] derivative_offset d_derivative_offset
      */
-    NonuniformDMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
-                  Matrix* phi_imaginary, int k,
+    NonuniformDMD(std::vector<std::complex<double>> eigs,
+                  std::shared_ptr<Matrix> phi_real,
+                  std::shared_ptr<Matrix> phi_imaginary, int k,
                   double dt, double t_offset,
                   Vector* state_offset, Vector* derivative_offset);
 

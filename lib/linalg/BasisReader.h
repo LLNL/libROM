@@ -90,7 +90,7 @@ public:
      * @pre start_col <= end_col <= numColumns()
      *
      * @param[in] start_col    The starting column desired.
-     * @param[in] end_col      The starting column desired.
+     * @param[in] end_col      The final column desired.
      *
      * @return The spatial basis vectors for the requested time.
      */
@@ -148,7 +148,7 @@ public:
      * @pre start_col <= end_col <= numColumns()
      *
      * @param[in] start_col    The starting column desired.
-     * @param[in] end_col      The starting column desired.
+     * @param[in] end_col      The final column desired.
      *
      * @return The temporal basis vectors for the requested time.
      */
@@ -252,7 +252,7 @@ public:
      * @pre start_col <= end_col <= numColumns()
      *
      * @param[in] start_col    The starting column desired.
-     * @param[in] end_col      The starting column desired.
+     * @param[in] end_col      The final column desired.
      *
      * @return The snapshot matrix for the requested time.
      */

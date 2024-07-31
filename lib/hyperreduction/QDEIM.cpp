@@ -246,7 +246,7 @@ QDEIM(const Matrix* f_basis,
             MPI_Bcast(V.getData(), n*n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
             // Set Ubt = U * V = (V' * U')'
-            Matrix *Ubt = f_basis->mult(V);  // distributed
+            std::unique_ptr<Matrix> Ubt = f_basis->mult(V);  // distributed
 
             CAROM_VERIFY(Ubt->distributed() && Ubt->numRows() == f_basis->numRows()
                          && Ubt->numColumns() == n);
@@ -334,8 +334,6 @@ QDEIM(const Matrix* f_basis,
                 MPI_Recv(sampled_row_data.data() + (s*numCol), numCol, MPI_DOUBLE,
                          owner, tagSendRecv, MPI_COMM_WORLD, &status);
             }
-
-            delete Ubt;
         }  // loop s over samples
 
         // Subtract row_offset to convert f_sampled_row from global to local indices.

@@ -118,10 +118,10 @@ protected:
      * @param[in] state_offset d_state_offset
      * @param[in] derivative_offset d_derivative_offset
      */
-    SnapshotDMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
-                Matrix* phi_imaginary, int k,
-                double dt, double t_offset,
-                Vector* state_offset) :
+    SnapshotDMD(std::vector<std::complex<double>> eigs,
+                std::shared_ptr<Matrix> phi_real,
+                std::shared_ptr<Matrix> phi_imaginary, int k, double dt,
+                double t_offset, Vector* state_offset) :
         DMD(eigs, phi_real, phi_imaginary, k, dt, t_offset, state_offset) {}
 
 private:

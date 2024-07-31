@@ -212,8 +212,8 @@ protected:
     friend void getParametricDMDc<DMDc>(DMDc*& parametric_dmdc,
                                         std::vector<Vector*>& parameter_points,
                                         std::vector<DMDc*>& dmdcs,
-                                        std::vector<Matrix*> controls,
-                                        Matrix*& controls_interpolated,
+                                        std::vector<std::shared_ptr<Matrix>> controls,
+                                        std::shared_ptr<Matrix> & controls_interpolated,
                                         Vector* desired_point,
                                         std::string rbf,
                                         std::string interp_method,
@@ -242,8 +242,8 @@ protected:
      * @param[in] state_offset d_state_offset
      * @param[in] basis d_basis, set by DMDc class for offline stages. When interpolating a new DMDc, we enter the interpolated basis explicitly
      */
-    DMDc(std::vector<std::complex<double>> eigs, Matrix* phi_real,
-         Matrix* phi_imaginary, Matrix* B_tilde, int k,
+    DMDc(std::vector<std::complex<double>> eigs, std::shared_ptr<Matrix> & phi_real,
+         std::shared_ptr<Matrix> & phi_imaginary, std::shared_ptr<Matrix> B_tilde, int k,
          double dt, double t_offset, Vector* state_offset, Matrix* basis = nullptr);
 
     /**
@@ -266,7 +266,8 @@ protected:
     /**
      * @brief Internal function to multiply d_phi with the eigenvalues.
      */
-    std::pair<Matrix*, Matrix*> phiMultEigs(double t);
+    std::pair<std::shared_ptr<Matrix>,std::shared_ptr<Matrix>>
+            phiMultEigs(double t);
 
     /**
      * @brief Construct the DMDc object.
@@ -381,37 +382,37 @@ protected:
     /**
      * @brief The left singular vector basis.
      */
-    Matrix* d_basis = NULL;
+    std::shared_ptr<Matrix> d_basis;
 
     /**
      * @brief A_tilde
      */
-    Matrix* d_A_tilde = NULL;
+    std::shared_ptr<Matrix> d_A_tilde;
 
     /**
      * @brief B_tilde
      */
-    Matrix* d_B_tilde = NULL;
+    std::shared_ptr<Matrix> d_B_tilde;
 
     /**
      * @brief The real part of d_phi.
      */
-    Matrix* d_phi_real = NULL;
+    std::shared_ptr<Matrix> d_phi_real;
 
     /**
      * @brief The imaginary part of d_phi.
      */
-    Matrix* d_phi_imaginary = NULL;
+    std::shared_ptr<Matrix> d_phi_imaginary;
 
     /**
      * @brief The real part of d_phi_squared_inverse.
      */
-    Matrix* d_phi_real_squared_inverse = NULL;
+    std::shared_ptr<Matrix> d_phi_real_squared_inverse;
 
     /**
      * @brief The imaginary part of d_phi_squared_inverse.
      */
-    Matrix* d_phi_imaginary_squared_inverse = NULL;
+    std::shared_ptr<Matrix> d_phi_imaginary_squared_inverse;
 
     /**
      * @brief The real part of the projected initial condition.
@@ -426,12 +427,12 @@ protected:
     /**
      * @brief The real part of the projected controls.
      */
-    Matrix* d_projected_controls_real = NULL;
+    std::unique_ptr<Matrix> d_projected_controls_real;
 
     /**
      * @brief The imaginary part of the projected controls.
      */
-    Matrix* d_projected_controls_imaginary = NULL;
+    std::unique_ptr<Matrix> d_projected_controls_imaginary;
 
     /**
      * @brief A vector holding the complex eigenvalues of the eigenmodes.

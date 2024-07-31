@@ -38,9 +38,9 @@ using namespace std;
 
 namespace CAROM {
 
-VectorInterpolator::VectorInterpolator(std::vector<Vector*> parameter_points,
-                                       std::vector<Matrix*> rotation_matrices,
-                                       std::vector<Vector*> reduced_vectors,
+VectorInterpolator::VectorInterpolator(std::vector<Vector*> & parameter_points,
+                                       std::vector<std::shared_ptr<Matrix>> & rotation_matrices,
+                                       std::vector<std::shared_ptr<Vector>> & reduced_vectors,
                                        int ref_point,
                                        std::string rbf,
                                        std::string interp_method,
@@ -59,29 +59,12 @@ VectorInterpolator::VectorInterpolator(std::vector<Vector*> parameter_points,
     {
         // The ref_point does not need to be rotated
         if (i == d_ref_point)
-        {
             d_rotated_reduced_vectors.push_back(reduced_vectors[i]);
-            d_rotated_reduced_vectors_owned.push_back(false);
-        }
         else
         {
-            Vector* Q_tA = rotation_matrices[i]->transposeMult(reduced_vectors[i]);
+            std::shared_ptr<Vector> Q_tA = rotation_matrices[i]->transposeMult(
+                                               *reduced_vectors[i]);
             d_rotated_reduced_vectors.push_back(Q_tA);
-            d_rotated_reduced_vectors_owned.push_back(true);
-        }
-    }
-}
-
-VectorInterpolator::~VectorInterpolator()
-{
-    CAROM_VERIFY(d_rotated_reduced_vectors.size() ==
-                 d_rotated_reduced_vectors_owned.size());
-
-    for (int i = 0; i < d_rotated_reduced_vectors.size(); i++)
-    {
-        if (d_rotated_reduced_vectors_owned[i])
-        {
-            delete d_rotated_reduced_vectors[i];
         }
     }
 }

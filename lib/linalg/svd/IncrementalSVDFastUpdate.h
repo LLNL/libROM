@@ -129,7 +129,7 @@ private:
      * @brief The matrix U'. U' is not distributed and the entire matrix
      *        exists on each processor.
      */
-    Matrix* d_Up;
+    std::unique_ptr<Matrix> d_Up;
 
     /**
      * @brief The tolerance value used to remove small singular values.

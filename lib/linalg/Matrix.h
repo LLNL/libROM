@@ -232,7 +232,7 @@ public:
      *
      * @return The truncated Matrix.
      */
-    Matrix*
+    std::unique_ptr<Matrix>
     getFirstNColumns(int n) const;
 
     /**
@@ -248,26 +248,10 @@ public:
     void
     getFirstNColumns(
         int n,
-        Matrix*& result) const;
-
-    /**
-     * @brief Get the first N columns of a matrix.
-     *
-     * @pre result.distributed() == distributed()
-     * @pre 0 < n < numColumns()
-     *
-     * @param[in] n The number of columns to return.
-     *
-     * @param[out] result The truncated Matrix.
-     */
-    void
-    getFirstNColumns(
-        int n,
         Matrix& result) const;
 
     /**
-     * @brief Multiplies this Matrix with other and returns the product,
-     * reference version.
+     * @brief Multiplies this Matrix with other and returns the product.
      *
      * Supports multiplication of two undistributed matrices returning an
      * undistributed Matrix, and multiplication of a distributed Matrix with
@@ -280,68 +264,22 @@ public:
      *
      * @return The product Matrix.
      */
-    Matrix*
+    std::unique_ptr<Matrix>
     mult(
         const Matrix& other) const
     {
-        Matrix* result = 0;
-        mult(other, result);
-        return result;
-    }
-
-    /**
-     * @brief Multiplies this Matrix with other and returns the product,
-     * pointer version.
-     *
-     * Supports multiplication of two undistributed matrices returning an
-     * undistributed Matrix, and multiplication of a distributed Matrix with
-     * an undistributed Matrix returning a distributed Matrix.
-     *
-     * @pre other != 0
-     * @pre !other->distributed()
-     * @pre numColumns() == other->numRows()
-     *
-     * @param[in] other The Matrix to multiply with this.
-     *
-     * @return The product Matrix.
-     */
-    Matrix*
-    mult(
-        const Matrix* other) const
-    {
-        CAROM_VERIFY(other != 0);
-        return mult(*other);
+        Matrix* result = new Matrix(d_num_rows, other.d_num_cols, d_distributed);
+        mult(other, *result);
+        return std::unique_ptr<Matrix>(result);
     }
 
     /**
      * @brief Multiplies this Matrix with other and fills result with the
-     * answer.
+     * product.
      *
      * Supports multiplication of two undistributed matrices resulting in an
      * undistributed Matrix, and multiplication of a distributed Matrix with
-     * an undistributed Matrix resulting in a distributed Matrix.  If result
-     * has not been allocated it will be, otherwise it will be sized
-     * accordingly.
-     *
-     * @pre result == 0 || result->distributed() == distributed()
-     * @pre !other.distributed()
-     * @pre numColumns() == other.numRows()
-     *
-     * @param[in] other The Matrix to multiply with this.
-     * @param[out] result The product Matrix.
-     */
-    void
-    mult(
-        const Matrix& other,
-        Matrix*& result) const;
-
-    /**
-     * @brief Multiplies this Matrix with other and fills result with the
-     * answer.
-     *
-     * Supports multiplication of two undistributed matrices resulting in an
-     * undistributed Matrix, and multiplication of a distributed Matrix with
-     * an undistributed Matrix resulting in a distributed Matrix.  Result
+     * an undistributed Matrix resulting in a distributed Matrix. Result
      * will be sized accordingly.
      *
      * @pre result.distributed() == distributed()
@@ -357,8 +295,7 @@ public:
         Matrix& result) const;
 
     /**
-     * @brief Multiplies this Matrix with other and returns the product,
-     * reference version.
+     * @brief Multiplies this Matrix with other and returns the product.
      *
      * Supports multiplication of an undistributed Matrix and Vector
      * returning an undistributed Vector, and multiplication of a distributed
@@ -371,40 +308,18 @@ public:
      *
      * @return The product Vector.
      */
-    Vector*
+    std::unique_ptr<Vector>
     mult(
         const Vector& other) const
     {
-        Vector* result = 0;
-        mult(other, result);
-        return result;
+        Vector* result = new Vector(d_num_rows, d_distributed);
+        mult(other, *result);
+        return std::unique_ptr<Vector>(result);
     }
 
     /**
      * @brief Multiplies this Matrix with other and fills result with the
-     * answer.
-     *
-     * Supports multiplication of an undistributed Matrix and Vector
-     * resulting in an undistributed Vector, and multiplication of a
-     * distributed Matrix and an undistributed Vector resulting in a
-     * distributed Vector.  If result has not been allocated it will be,
-     * otherwise it will be sized accordingly.
-     *
-     * @pre result == 0 || result->distributed() == distributed()
-     * @pre !other.distributed()
-     * @pre numColumns() == other.dim()
-     *
-     * @param[in] other The Vector to multiply with this.
-     * @param[out] result The product Vector.
-     */
-    void
-    mult(
-        const Vector& other,
-        Vector*& result) const;
-
-    /**
-     * @brief Multiplies this Matrix with other and fills result with the
-     * answer.
+     * product.
      *
      * Supports multiplication of an undistributed Matrix and Vector
      * resulting in an undistributed Vector, and multiplication of a
@@ -480,56 +395,18 @@ public:
      *
      * @return The product Matrix.
      */
-    Matrix*
+    std::unique_ptr<Matrix>
     elementwise_mult(
         const Matrix& other) const
     {
-        Matrix* result = 0;
-        elementwise_mult(other, result);
-        return result;
-    }
-
-    /**
-     * @brief Multiplies two matrices element-wise and returns the product,
-     * pointer version.
-     *
-     * @pre other != 0
-     * @pre distributed() == other.distributed()
-     * @pre numRows() == other.numRows()
-     * @pre numColumns() == other.numColumns()
-     *
-     * @param[in] other The Matrix to multiply with this.
-     *
-     * @return The product Matrix.
-     */
-    Matrix*
-    elementwise_mult(
-        const Matrix* other) const
-    {
-        CAROM_VERIFY(other != 0);
-        return elementwise_mult(*other);
+        Matrix *result = new Matrix(d_num_rows, d_num_cols, d_distributed);
+        elementwise_mult(other, *result);
+        return std::unique_ptr<Matrix>(result);
     }
 
     /**
      * @brief Multiplies two matrices element-wise and fills result with the
-     * answer.
-     *
-     * @pre result == 0 || result->distributed() == distributed()
-     * @pre distributed() == other.distributed()
-     * @pre numRows() == other.numRows()
-     * @pre numColumns() == other.numColumns()
-     *
-     * @param[in] other The Matrix to multiply with this.
-     * @param[out] result The product Matrix.
-     */
-    void
-    elementwise_mult(
-        const Matrix& other,
-        Matrix*& result) const;
-
-    /**
-     * @brief Multiplies two matrices element-wise and fills result with the
-     * answer.
+     * product.
      *
      * @pre result == 0 || result->distributed() == distributed()
      * @pre distributed() == other.distributed()
@@ -549,23 +426,13 @@ public:
      *
      * @return The product Matrix.
      */
-    Matrix*
+    std::unique_ptr<Matrix>
     elementwise_square() const
     {
-        Matrix* result = 0;
-        elementwise_square(result);
-        return result;
+        Matrix *result = new Matrix(d_num_rows, d_num_cols, d_distributed);
+        elementwise_square(*result);
+        return std::unique_ptr<Matrix>(result);
     }
-
-    /**
-     * @brief Square every element in the matrix.
-     *
-     * @pre result == 0 || result->distributed() == distributed()
-     * @param[out] result The product Matrix.
-     */
-    void
-    elementwise_square(
-        Matrix*& result) const;
 
     /**
      * @brief Square every element in the matrix.
@@ -602,7 +469,7 @@ public:
 
     /**
      * @brief Multiplies the transpose of this Matrix with other and returns
-     * the product, reference version.
+     * the product.
      *
      * Supports multiplication of two undistributed matrices returning an
      * undistributed Matrix or two distributed matrices returning an
@@ -615,63 +482,18 @@ public:
      *
      * @return The product Matrix.
      */
-    Matrix*
+    std::unique_ptr<Matrix>
     transposeMult(
         const Matrix& other) const
     {
-        Matrix* result = 0;
-        transposeMult(other, result);
-        return result;
-    }
-
-    /**
-     * @brief Multiplies the transpose of this Matrix with other and returns
-     * the product, pointer version.
-     *
-     * Supports multiplication of two undistributed matrices returning an
-     * undistributed Matrix or two distributed matrices returning an
-     * undistributed Matrix.
-     *
-     * @pre other != 0
-     * @pre distributed() == other->distributed()
-     * @pre numRows() == other->numRows()
-     *
-     * @param[in] other The Matrix to multiply with this.
-     *
-     * @return The product Matrix.
-     */
-    Matrix*
-    transposeMult(
-        const Matrix* other) const
-    {
-        CAROM_VERIFY(other != 0);
-        return transposeMult(*other);
+        Matrix* result = new Matrix(d_num_cols, other.d_num_cols, false);
+        transposeMult(other, *result);
+        return std::unique_ptr<Matrix>(result);
     }
 
     /**
      * @brief Multiplies the transpose of this Matrix with other and fills
-     * result with the answer.
-     *
-     * Supports multiplication of two undistributed matrices or two
-     * distributed matrices resulting in an undistributed Matrix.  If result
-     * has not been allocated it will be, otherwise it will be sized
-     * accordingly.
-     *
-     * @pre result == 0 || !result->distributed()
-     * @pre distributed() == other.distributed()
-     * @pre numRows() == other.numRows()
-     *
-     * @param[in] other The Matrix to multiply with this.
-     * @param[out] result The product Matrix.
-     */
-    void
-    transposeMult(
-        const Matrix& other,
-        Matrix*& result) const;
-
-    /**
-     * @brief Multiplies the transpose of this Matrix with other and fills
-     * result with the answer.
+     * result with the product.
      *
      * Supports multiplication of two undistributed matrices or two
      * distributed matrices resulting in an undistributed Matrix.  Result
@@ -691,7 +513,7 @@ public:
 
     /**
      * @brief Multiplies the transpose of this Matrix with other and returns
-     * the product, reference version.
+     * the product.
      *
      * Supports multiplication of an undistributed Matrix and an
      * undistributed Vector or a distributed Matrix and a distributed Vector
@@ -704,67 +526,22 @@ public:
      *
      * @return The product Vector.
      */
-    Vector*
+    std::unique_ptr<Vector>
     transposeMult(
         const Vector& other) const
     {
-        Vector* result = 0;
-        transposeMult(other, result);
-        return result;
-    }
-
-    /**
-     * @brief Multiplies the transpose of this Matrix with other and returns
-     * the product, pointer version.
-     *
-     * Supports multiplication of an undistributed Matrix and an
-     * undistributed Vector or a distributed Matrix and a distributed Vector
-     * returning an undistributed Vector.
-     *
-     * @pre other != 0
-     * @pre distributed() == other->distributed()
-     * @pre numRows() == other->dim();
-     *
-     * @param[in] other The Vector to multiply with this.
-     *
-     * @return The product Vector.
-     */
-    Vector*
-    transposeMult(
-        const Vector* other) const
-    {
-        CAROM_VERIFY(other != 0);
-        return transposeMult(*other);
+        Vector* result = new Vector(d_num_cols, false);
+        transposeMult(other, *result);
+        return std::unique_ptr<Vector>(result);
     }
 
     /**
      * @brief Multiplies the transpose of this Matrix with other and fills
-     * result with the answer.
+     * result with the product.
      *
      * Supports multiplication of an undistributed Matrix and an
      * undistributed Vector or a distributed Matrix and a distributed Vector
-     * resulting in an undistributed Vector.  If result has not been allocated
-     * it will be, otherwise it will be sized accordingly.
-     *
-     * @pre result == 0 || !result->distributed()
-     * @pre distributed() == other.distributed()
-     * @pre numRows() == other.dim();
-     *
-     * @param[in] other The Vector to multiply with this.
-     * @param[out] result The product Vector.
-     */
-    void
-    transposeMult(
-        const Vector& other,
-        Vector*& result) const;
-
-    /**
-     * @brief Multiplies the transpose of this Matrix with other and fills
-     * result with the answer.
-     *
-     * Supports multiplication of an undistributed Matrix and an
-     * undistributed Vector or a distributed Matrix and a distributed Vector
-     * resulting in an undistributed Vector.  Result will be sized
+     * resulting in an undistributed Vector. Result will be sized
      * accordingly.
      *
      * @pre !result.distributed()
@@ -787,44 +564,26 @@ public:
      *
      * @return The inverse of this.
      */
-    Matrix*
+    std::unique_ptr<Matrix>
     inverse() const
     {
-        Matrix* result = 0;
-        inverse(result);
-        return result;
+        Matrix* result = new Matrix(d_num_rows, d_num_cols, false);
+        inverse(*result);
+        return std::unique_ptr<Matrix>(result);
     }
 
     /**
-     * @brief Computes and returns the inverse of this.
-     *
-     * If result has not been allocated it will be, otherwise it will be
-     * sized accordingly.
-     *
-     * @pre result == 0 || (!result->distributed() &&
-     *                      result->numRows() == numRows() &&
-     *                      result->numColumns() == numColumns())
-     * @pre !distributed()
-     * @pre numRows() == numColumns()
-     *
-     * @param[out] result The inverse of this.
-     */
-    void
-    inverse(
-        Matrix*& result) const;
-
-    /**
-     * @brief Computes and returns the inverse of this.
-     *
-     * Result will be sized accordingly.
-     *
-     * @pre !result.distributed() && result.numRows() == numRows() &&
-     *      result.numColumns() == numColumns()
-     * @pre !distributed()
-     * @pre numRows() == numColumns()
-     *
-     * @param[out] result The inverse of this.
-     */
+       * @brief Computes and returns the inverse of this.
+       *
+       * Result will be sized accordingly.
+       *
+       * @pre !result.distributed() && result.numRows() == numRows() &&
+       *      result.numColumns() == numColumns()
+       * @pre !distributed()
+       * @pre numRows() == numColumns()
+       *
+       * @param[out] result The inverse of this.
+       */
     void
     inverse(
         Matrix& result) const;
@@ -839,26 +598,17 @@ public:
     inverse();
 
     /**
-     * @brief Returns a column of the matrix (not owned by Matrix).
+     * @brief Returns a deep copy of a column of the matrix.
      *
      * @return A column of the matrix (not owned by Matrix).
      */
-    Vector*
+    std::unique_ptr<Vector>
     getColumn(int column) const
     {
-        Vector* result = 0;
-        getColumn(column, result);
-        return result;
+        Vector* result = new Vector(d_num_rows, true);
+        getColumn(column, *result);
+        return std::unique_ptr<Vector>(result);
     }
-
-    /**
-     * @brief Returns a column of the matrix (not owned by Matrix).
-     *
-     * @return A column of the matrix (not owned by Matrix).
-     */
-    void
-    getColumn(int column,
-              Vector*& result) const;
 
     /**
      * @brief Returns a column of the matrix (not owned by Matrix).
@@ -1452,11 +1202,12 @@ struct EigenPair SymmetricRightEigenSolve(Matrix* A);
  */
 struct ComplexEigenPair NonSymmetricRightEigenSolve(Matrix* A);
 
-Matrix* SpaceTimeProduct(const CAROM::Matrix* As, const CAROM::Matrix* At,
-                         const CAROM::Matrix* Bs, const CAROM::Matrix* Bt,
-                         const std::vector<double> *tscale=NULL,
-                         const bool At0at0=false, const bool Bt0at0=false,
-                         const bool lagB=false, const bool skip0=false);
+std::unique_ptr<Matrix> SpaceTimeProduct(const CAROM::Matrix* As,
+        const CAROM::Matrix* At, const CAROM::Matrix* Bs,
+        const CAROM::Matrix* Bt,
+        const std::vector<double> *tscale=NULL,
+        const bool At0at0=false, const bool Bt0at0=false,
+        const bool lagB=false, const bool skip0=false);
 }
 
 #endif

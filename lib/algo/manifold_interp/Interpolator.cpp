@@ -29,8 +29,8 @@ using namespace std;
 
 namespace CAROM {
 
-Interpolator::Interpolator(std::vector<Vector*> parameter_points,
-                           std::vector<Matrix*> rotation_matrices,
+Interpolator::Interpolator(std::vector<Vector*> & parameter_points,
+                           std::vector<std::shared_ptr<Matrix>> & rotation_matrices,
                            int ref_point,
                            std::string rbf,
                            std::string interp_method,
@@ -67,9 +67,9 @@ Interpolator::~Interpolator()
     delete d_lambda_T;
 }
 
-std::vector<double> obtainRBFToTrainingPoints(std::vector<Vector*>
-        parameter_points,
-        std::string interp_method, std::string rbf, double epsilon, Vector* point)
+std::vector<double> obtainRBFToTrainingPoints(
+    std::vector<Vector*> & parameter_points,
+    std::string interp_method, std::string rbf, double epsilon, Vector* point)
 {
     std::vector<double> rbfs;
     if (interp_method == "LS")
@@ -173,7 +173,7 @@ double obtainRBF(std::string rbf, double epsilon, Vector* point1,
     return res;
 }
 
-double convertClosestRBFToEpsilon(std::vector<Vector*> parameter_points,
+double convertClosestRBFToEpsilon(std::vector<Vector*> & parameter_points,
                                   std::string rbf, double closest_rbf_val)
 {
     double closest_point_dist = INT_MAX;
@@ -216,10 +216,10 @@ double convertClosestRBFToEpsilon(std::vector<Vector*> parameter_points,
     return epsilon;
 }
 
-std::vector<Matrix*> obtainRotationMatrices(std::vector<Vector*>
-        parameter_points,
-        std::vector<Matrix*> bases,
-        int ref_point)
+std::vector<std::shared_ptr<Matrix>> obtainRotationMatrices(
+                                      std::vector<Vector*> & parameter_points,
+                                      std::vector<std::shared_ptr<Matrix>> & bases,
+                                      int ref_point)
 {
     // Get the rank of this process, and the number of processors.
     int mpi_init;
@@ -233,7 +233,7 @@ std::vector<Matrix*> obtainRotationMatrices(std::vector<Vector*>
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
 
-    std::vector<Matrix*> rotation_matrices;
+    std::vector<std::shared_ptr<Matrix>> rotation_matrices;
 
     // Obtain the rotation matrices to rotate the bases into
     // the same generalized coordinate space.
@@ -247,8 +247,8 @@ std::vector<Matrix*> obtainRotationMatrices(std::vector<Vector*>
         // since the ref point doesn't need to be rotated.
         if (i == ref_point)
         {
-            Matrix* identity_matrix = new Matrix(bases[i]->numColumns(),
-                                                 bases[i]->numColumns(), false);
+            std::shared_ptr<Matrix> identity_matrix(new Matrix(bases[i]->numColumns(),
+                                                    bases[i]->numColumns(), false));
             for (int j = 0; j < identity_matrix->numColumns(); j++) {
                 identity_matrix->item(j, j) = 1.0;
             }
@@ -256,7 +256,8 @@ std::vector<Matrix*> obtainRotationMatrices(std::vector<Vector*>
             continue;
         }
 
-        Matrix* basis_mult_basis = bases[i]->transposeMult(bases[ref_point]);
+        std::unique_ptr<Matrix> basis_mult_basis = bases[i]->transposeMult(
+                    *bases[ref_point]);
         Matrix* basis = new Matrix(basis_mult_basis->numRows(),
                                    basis_mult_basis->numColumns(), false);
         Matrix* basis_right = new Matrix(basis_mult_basis->numColumns(),
@@ -268,7 +269,7 @@ std::vector<Matrix*> obtainRotationMatrices(std::vector<Vector*>
         if (rank == 0)
         {
             Vector* sv = new Vector(basis_mult_basis->numColumns(), false);
-            SerialSVD(basis_mult_basis, basis_right, sv, basis);
+            SerialSVD(basis_mult_basis.get(), basis_right, sv, basis);
             delete sv;
         }
 
@@ -280,9 +281,8 @@ std::vector<Matrix*> obtainRotationMatrices(std::vector<Vector*>
                   MPI_COMM_WORLD);
 
         // Obtain the rotation matrix.
-        Matrix* rotation_matrix = basis->mult(basis_right);
+        std::shared_ptr<Matrix> rotation_matrix = basis->mult(*basis_right);
 
-        delete basis_mult_basis;
         delete basis;
         delete basis_right;
         rotation_matrices.push_back(rotation_matrix);

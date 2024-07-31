@@ -166,7 +166,7 @@ protected:
      * The basis vectors are large and each process owns all of the basis
      * vectors.
      */
-    Matrix* d_basis;
+    std::unique_ptr<Matrix> d_basis;
 
     /**
      * @brief The globalized right basis vectors for the current time interval.
@@ -174,7 +174,7 @@ protected:
      * Depending on the SVD algorithm, it may be  distributed across all
      * processors or each processor may own all of U.
      */
-    Matrix* d_basis_right;
+    std::unique_ptr<Matrix> d_basis_right;
 
     /**
      * @brief The matrix U which is large.
@@ -182,7 +182,7 @@ protected:
      * Depending on the SVD algorithm, d_U may be  distributed across all
      * processors or each processor may own all of U.
      */
-    Matrix* d_U;
+    std::unique_ptr<Matrix> d_U;
 
     /**
      * @brief The matrix U which is large.

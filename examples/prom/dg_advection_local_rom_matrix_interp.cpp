@@ -690,12 +690,12 @@ int main(int argc, char *argv[])
     bool update_right_SV = false;
     bool isIncremental = false;
     const std::string basisName = "basis_" + std::to_string(f_factor);
-    const CAROM::Matrix* spatialbasis;
+    std::shared_ptr<CAROM::Matrix> spatialbasis;
     CAROM::Options* options;
     CAROM::BasisGenerator *generator;
     int numRowRB, numColumnRB;
 
-    CAROM::Matrix *M_hat_carom, *K_hat_carom;
+    std::shared_ptr<CAROM::Matrix> K_hat_carom, M_hat_carom;
     DenseMatrix *M_hat, *K_hat;
     std::shared_ptr<CAROM::Vector> b_hat_carom, u_init_hat_carom;
     Vector *b_hat, *u_init_hat;
@@ -723,11 +723,11 @@ int main(int argc, char *argv[])
             CAROM::BasisReader reader(basisName);
             if (rdim != -1)
             {
-                spatialbasis = reader.getSpatialBasis(rdim);
+                spatialbasis.reset(reader.getSpatialBasis(rdim));
             }
             else
             {
-                spatialbasis = reader.getSpatialBasis(ef);
+                spatialbasis.reset(reader.getSpatialBasis(ef));
             }
             numRowRB = spatialbasis->numRows();
             numColumnRB = spatialbasis->numColumns();
@@ -750,7 +750,7 @@ int main(int argc, char *argv[])
             HypreParMatrix &M_mat = *M.As<HypreParMatrix>();
             HypreParMatrix &K_mat = *K.As<HypreParMatrix>();
 
-            M_hat_carom = new CAROM::Matrix(numRowRB, numColumnRB, false);
+            M_hat_carom.reset(new CAROM::Matrix(numRowRB, numColumnRB, false));
             ComputeCtAB(M_mat, *spatialbasis, *spatialbasis, *M_hat_carom);
             if (interp_prep) M_hat_carom->write("M_hat_" + std::to_string(f_factor));
 
@@ -759,7 +759,7 @@ int main(int argc, char *argv[])
             M_hat->Set(1, M_hat_carom->getData());
             M_hat->Transpose();
 
-            K_hat_carom = new CAROM::Matrix(numRowRB, numColumnRB, false);
+            K_hat_carom.reset(new CAROM::Matrix(numRowRB, numColumnRB, false));
             ComputeCtAB(K_mat, *spatialbasis, *spatialbasis, *K_hat_carom);
             if (interp_prep) K_hat_carom->write("K_hat_" + std::to_string(f_factor));
 
@@ -770,7 +770,7 @@ int main(int argc, char *argv[])
 
             Vector b_vec = *B;
             CAROM::Vector b_carom(b_vec.GetData(), b_vec.Size(), true);
-            b_hat_carom.reset(spatialbasis->transposeMult(&b_carom));
+            b_hat_carom = spatialbasis->transposeMult(b_carom);
             if (interp_prep) b_hat_carom->write("b_hat_" + std::to_string(f_factor));
             b_hat = new Vector(b_hat_carom->getData(), b_hat_carom->dim());
 
@@ -804,11 +804,11 @@ int main(int argc, char *argv[])
             fin.close();
 
             std::vector<CAROM::Vector*> parameter_points;
-            std::vector<CAROM::Matrix*> bases;
-            std::vector<CAROM::Matrix*> K_hats;
-            std::vector<CAROM::Matrix*> M_hats;
-            std::vector<CAROM::Vector*> b_hats;
-            std::vector<CAROM::Vector*> u_init_hats;
+            std::vector<std::shared_ptr<CAROM::Matrix>> bases;
+            std::vector<std::shared_ptr<CAROM::Matrix>> K_hats;
+            std::vector<std::shared_ptr<CAROM::Matrix>> M_hats;
+            std::vector<std::shared_ptr<CAROM::Vector>> b_hats;
+            std::vector<std::shared_ptr<CAROM::Vector>> u_init_hats;
             for(auto it = frequencies.begin(); it != frequencies.end(); it++)
             {
                 CAROM::Vector* point = new CAROM::Vector(1, false);
@@ -819,24 +819,25 @@ int main(int argc, char *argv[])
                 CAROM::BasisReader reader(parametricBasisName);
 
                 MFEM_VERIFY(rdim != -1, "rdim must be used for interpolation.");
-                CAROM::Matrix* parametricSpatialBasis = reader.getSpatialBasis(rdim);
+                std::shared_ptr<CAROM::Matrix> parametricSpatialBasis(reader.getSpatialBasis(
+                            rdim));
                 numRowRB = parametricSpatialBasis->numRows();
                 numColumnRB = parametricSpatialBasis->numColumns();
                 bases.push_back(parametricSpatialBasis);
 
-                CAROM::Matrix* parametricMhat = new CAROM::Matrix();
+                std::shared_ptr<CAROM::Matrix> parametricMhat(new CAROM::Matrix());
                 parametricMhat->read("M_hat_" + std::to_string(*it));
                 M_hats.push_back(parametricMhat);
 
-                CAROM::Matrix* parametricKhat = new CAROM::Matrix();
+                std::shared_ptr<CAROM::Matrix> parametricKhat(new CAROM::Matrix());
                 parametricKhat->read("K_hat_" + std::to_string(*it));
                 K_hats.push_back(parametricKhat);
 
-                CAROM::Vector* parametricbhat = new CAROM::Vector();
+                std::shared_ptr<CAROM::Vector> parametricbhat(new CAROM::Vector());
                 parametricbhat->read("b_hat_" + std::to_string(*it));
                 b_hats.push_back(parametricbhat);
 
-                CAROM::Vector* parametricuinithat = new CAROM::Vector();
+                std::shared_ptr<CAROM::Vector> parametricuinithat(new CAROM::Vector());
                 parametricuinithat->read("u_init_hat_" + std::to_string(*it));
                 u_init_hats.push_back(parametricuinithat);
             }
@@ -847,8 +848,8 @@ int main(int argc, char *argv[])
             curr_point->item(0) = f_factor;
 
             int ref_point = getClosestPoint(parameter_points, curr_point);
-            std::vector<CAROM::Matrix*> rotation_matrices = obtainRotationMatrices(
-                        parameter_points, bases, ref_point);
+            std::vector<std::shared_ptr<CAROM::Matrix>> rotation_matrices =
+                        obtainRotationMatrices(parameter_points, bases, ref_point);
 
             CAROM::MatrixInterpolator basis_interpolator(parameter_points,
                     rotation_matrices, bases, ref_point, "B", rbf_type, interp_method,
@@ -988,7 +989,8 @@ int main(int argc, char *argv[])
     if (online)
     {
         CAROM::Vector u_hat_final_carom(u_in->GetData(), u_in->Size(), false);
-        CAROM::Vector* u_final_carom = spatialbasis->mult(u_hat_final_carom);
+        std::unique_ptr<CAROM::Vector> u_final_carom = spatialbasis->mult(
+                    u_hat_final_carom);
         Vector u_final(u_final_carom->getData(), u_final_carom->dim());
         u_final += u_init;
 
@@ -1007,15 +1009,11 @@ int main(int argc, char *argv[])
         if (myid == 0) std::cout << "Relative l2 error of ROM solution " << diffNorm /
                                      fomNorm << std::endl;
 
-        delete spatialbasis;
-        delete M_hat_carom;
-        delete K_hat_carom;
         delete M_hat;
         delete K_hat;
         delete b_hat;
         delete u_init_hat;
         delete u_in;
-        delete u_final_carom;
     }
 
     // 12. Save the final solution in parallel. This output can be viewed later

@@ -49,7 +49,7 @@ public:
         int dim = options.dim;
 
         /* Construct a fake d_U, d_S, d_basis */
-        d_basis = new CAROM::Matrix(dim, dim, false);
+        d_basis.reset(new CAROM::Matrix(dim, dim, false));
         d_S = new CAROM::Vector(dim, false);
 
         /* Use the identity matrix as a fake basis and fake singular values */

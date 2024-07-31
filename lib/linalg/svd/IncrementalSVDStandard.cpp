@@ -72,7 +72,7 @@ IncrementalSVDStandard::buildInitialSVD(
     d_S->item(0) = norm_u;
 
     // Build d_U for this new time interval.
-    d_U = new Matrix(d_dim, 1, true);
+    d_U.reset(new Matrix(d_dim, 1, true));
     for (int i = 0; i < d_dim; ++i) {
         d_U->item(i, 0) = u[i]/norm_u;
     }
@@ -94,13 +94,11 @@ void
 IncrementalSVDStandard::computeBasis()
 {
     /* Invalidate existing cached basis and update cached basis */
-    delete d_basis;
-    d_basis = new Matrix(*d_U);
+    d_basis.reset(new Matrix(*d_U));
 
     if (d_update_right_SV)
     {
-        delete d_basis_right;
-        d_basis_right = new Matrix(*d_W);
+        d_basis_right.reset(new Matrix(*d_W));
     }
 }
 
@@ -127,9 +125,9 @@ IncrementalSVDStandard::addLinearlyDependentSample(
     }
 
     // Multiply d_U and Amod and put result into d_U.
-    Matrix* U_times_Amod = d_U->mult(Amod);
-    delete d_U;
-    d_U = U_times_Amod;
+    Matrix *U_times_Amod = new Matrix(d_U->numRows(), Amod.numColumns(), false);
+    d_U->mult(Amod, *U_times_Amod);
+    d_U.reset(U_times_Amod);
 
     // Chop a column off of W to form Wmod.
     Matrix* new_d_W;
@@ -160,7 +158,7 @@ IncrementalSVDStandard::addLinearlyDependentSample(
     else {
         max_U_dim = d_total_dim;
     }
-    if (fabs(checkOrthogonality(d_U)) >
+    if (fabs(checkOrthogonality(d_U.get())) >
             std::numeric_limits<double>::epsilon()*static_cast<double>(max_U_dim)) {
         d_U->orthogonalize();
     }
@@ -181,8 +179,7 @@ IncrementalSVDStandard::addNewSample(
         }
         tmp.item(row, d_num_samples) = j->item(row);
     }
-    delete d_U;
-    d_U = tmp.mult(A);
+    tmp.mult(*A, *d_U);
 
     Matrix* new_d_W;
     if (d_update_right_SV) {
@@ -222,7 +219,7 @@ IncrementalSVDStandard::addNewSample(
     else {
         max_U_dim = d_total_dim;
     }
-    if (fabs(checkOrthogonality(d_U)) >
+    if (fabs(checkOrthogonality(d_U.get())) >
             std::numeric_limits<double>::epsilon()*static_cast<double>(max_U_dim)) {
         d_U->orthogonalize();
     }

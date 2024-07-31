@@ -266,8 +266,8 @@ protected:
      * @param[in] t_offset d_t_offset
      * @param[in] state_offset d_state_offset
      */
-    DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
-        Matrix* phi_imaginary, int k,
+    DMD(std::vector<std::complex<double>> eigs, std::shared_ptr<Matrix> phi_real,
+        std::shared_ptr<Matrix> phi_imaginary, int k,
         double dt, double t_offset, Vector* state_offset);
 
     /**
@@ -290,7 +290,8 @@ protected:
     /**
      * @brief Internal function to multiply d_phi with the eigenvalues.
      */
-    std::pair<Matrix*, Matrix*> phiMultEigs(double t, int deg = 0);
+    std::pair<std::shared_ptr<Matrix>,std::shared_ptr<Matrix>> phiMultEigs(
+                double t, int deg = 0);
 
     /**
      * @brief Construct the DMD object.
@@ -401,7 +402,7 @@ protected:
     /**
      * @brief The left singular vector basis.
      */
-    Matrix* d_basis = NULL;
+    std::shared_ptr<Matrix> d_basis;
 
     /**
      * @brief Whether to use the alternative basis for output, i.e. phi = U^(+)*V*Omega^(-1)*X.
@@ -411,27 +412,27 @@ protected:
     /**
      * @brief A_tilde
      */
-    Matrix* d_A_tilde = NULL;
+    std::shared_ptr<Matrix> d_A_tilde;
 
     /**
      * @brief The real part of d_phi.
      */
-    Matrix* d_phi_real = NULL;
+    std::shared_ptr<Matrix> d_phi_real;
 
     /**
      * @brief The imaginary part of d_phi.
      */
-    Matrix* d_phi_imaginary = NULL;
+    std::shared_ptr<Matrix> d_phi_imaginary;
 
     /**
      * @brief The real part of d_phi_squared_inverse.
      */
-    Matrix* d_phi_real_squared_inverse = NULL;
+    std::unique_ptr<Matrix> d_phi_real_squared_inverse;
 
     /**
      * @brief The imaginary part of d_phi_squared_inverse.
      */
-    Matrix* d_phi_imaginary_squared_inverse = NULL;
+    std::unique_ptr<Matrix> d_phi_imaginary_squared_inverse;
 
     /**
      * @brief The real part of the projected initial condition.
@@ -441,7 +442,7 @@ protected:
     /**
      * @brief The imaginary part of the projected initial condition.
      */
-    std::shared_ptr<Vector> d_projected_init_imaginary = NULL;
+    std::shared_ptr<Vector> d_projected_init_imaginary;
 
     /**
      * @brief A vector holding the complex eigenvalues of the eigenmodes.

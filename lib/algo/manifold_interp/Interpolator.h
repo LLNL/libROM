@@ -15,6 +15,7 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 
 namespace CAROM {
 
@@ -50,8 +51,8 @@ protected:
      * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
      *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
      */
-    Interpolator(std::vector<Vector*> parameter_points,
-                 std::vector<Matrix*> rotation_matrices,
+    Interpolator(std::vector<Vector*> & parameter_points,
+                 std::vector<std::shared_ptr<Matrix>> & rotation_matrices,
                  int ref_point,
                  std::string rbf,
                  std::string interp_method,
@@ -102,7 +103,7 @@ protected:
     /**
      * @brief The reduced bases with compatible coordinates.
      */
-    std::vector<Matrix*> d_rotation_matrices;
+    std::vector<std::shared_ptr<Matrix>> d_rotation_matrices;
 
     /**
      * @brief The RHS of the linear solve in tangential space.
@@ -144,9 +145,9 @@ private:
                         influence.
  * @param[in] point The unsampled parameter point.
  */
-std::vector<double> obtainRBFToTrainingPoints(std::vector<Vector*>
-        parameter_points,
-        std::string interp_method, std::string rbf, double epsilon, Vector* point);
+std::vector<double> obtainRBFToTrainingPoints(
+    std::vector<Vector*> & parameter_points,
+    std::string interp_method, std::string rbf, double epsilon, Vector* point);
 
 /**
  * @brief Compute the sum of the RBF weights.
@@ -175,7 +176,7 @@ double obtainRBF(std::string rbf, double epsilon, Vector* point1,
  * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
  *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
  */
-double convertClosestRBFToEpsilon(std::vector<Vector*> parameter_points,
+double convertClosestRBFToEpsilon(std::vector<Vector*> & parameter_points,
                                   std::string rbf, double closest_rbf_val);
 
 /**
@@ -188,10 +189,10 @@ double convertClosestRBFToEpsilon(std::vector<Vector*> parameter_points,
  * @param[in] ref_point The index within the vector of parameter points
  *                      to the reference point
  */
-std::vector<Matrix*> obtainRotationMatrices(std::vector<Vector*>
-        parameter_points,
-        std::vector<Matrix*> bases,
-        int ref_point);
+std::vector<std::shared_ptr<Matrix>> obtainRotationMatrices(
+                                      std::vector<Vector*> & parameter_points,
+                                      std::vector<std::shared_ptr<Matrix>> & bases,
+                                      int ref_point);
 
 }
 

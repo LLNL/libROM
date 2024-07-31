@@ -102,8 +102,9 @@ DMD::DMD(std::string base_file_name)
     load(base_file_name);
 }
 
-DMD::DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
-         Matrix* phi_imaginary, int k,
+DMD::DMD(std::vector<std::complex<double>> eigs,
+         std::shared_ptr<Matrix> phi_real,
+         std::shared_ptr<Matrix> phi_imaginary, int k,
          double dt, double t_offset, Vector* state_offset)
 {
     // Get the rank of this process, and the number of processors.
@@ -134,12 +135,6 @@ DMD::~DMD()
         delete sampled_time;
     }
     delete d_state_offset;
-    delete d_basis;
-    delete d_A_tilde;
-    delete d_phi_real;
-    delete d_phi_imaginary;
-    delete d_phi_real_squared_inverse;
-    delete d_phi_imaginary_squared_inverse;
 }
 
 void DMD::setOffset(Vector* offset_vector, int order)
@@ -254,23 +249,20 @@ DMD::computePhi(struct DMDInternal dmd_internal_obj)
     // Calculate phi
     if (d_alt_output_basis)
     {
-        Matrix* f_snapshots_out_mult_d_basis_right =
-            dmd_internal_obj.snapshots_out->mult(dmd_internal_obj.basis_right);
-        Matrix* f_snapshots_out_mult_d_basis_right_mult_d_S_inv =
-            f_snapshots_out_mult_d_basis_right->mult(dmd_internal_obj.S_inv);
+        std::unique_ptr<Matrix> f_snapshots_out_mult_d_basis_right =
+            dmd_internal_obj.snapshots_out->mult(*dmd_internal_obj.basis_right);
+        std::unique_ptr<Matrix> f_snapshots_out_mult_d_basis_right_mult_d_S_inv =
+            f_snapshots_out_mult_d_basis_right->mult(*dmd_internal_obj.S_inv);
         d_phi_real = f_snapshots_out_mult_d_basis_right_mult_d_S_inv->mult(
-                         dmd_internal_obj.eigenpair->ev_real);
+                         *dmd_internal_obj.eigenpair->ev_real);
         d_phi_imaginary = f_snapshots_out_mult_d_basis_right_mult_d_S_inv->mult(
-                              dmd_internal_obj.eigenpair->ev_imaginary);
-
-        delete f_snapshots_out_mult_d_basis_right;
-        delete f_snapshots_out_mult_d_basis_right_mult_d_S_inv;
+                              *dmd_internal_obj.eigenpair->ev_imaginary);
     }
     else
     {
-        d_phi_real = dmd_internal_obj.basis->mult(dmd_internal_obj.eigenpair->ev_real);
+        d_phi_real = dmd_internal_obj.basis->mult(*dmd_internal_obj.eigenpair->ev_real);
         d_phi_imaginary = dmd_internal_obj.basis->mult(
-                              dmd_internal_obj.eigenpair->ev_imaginary);
+                              *dmd_internal_obj.eigenpair->ev_imaginary);
     }
 }
 
@@ -364,7 +356,8 @@ DMD::constructDMD(const Matrix* f_snapshots,
                                    d_num_singular_vectors << "." << std::endl;
 
     // Allocate the appropriate matrices and gather their elements.
-    d_basis = new Matrix(f_snapshots->numRows(), d_k, f_snapshots->distributed());
+    d_basis.reset(new Matrix(f_snapshots->numRows(), d_k,
+                             f_snapshots->distributed()));
     Matrix* d_S_inv = new Matrix(d_k, d_k, false);
     Matrix* d_basis_right = new Matrix(f_snapshots_in->numColumns(), d_k, false);
 
@@ -389,7 +382,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
         d_S_inv->item(i, i) = 1 / d_factorizer->S[static_cast<unsigned>(i)];
     }
 
-    Matrix* Q = NULL;
+    std::unique_ptr<Matrix> Q;
 
     // If W0 is not null, we need to ensure it is in the basis of W.
     if (W0 != NULL)
@@ -470,10 +463,9 @@ DMD::constructDMD(const Matrix* f_snapshots,
         d_basis_new->orthogonalize();
 
         // Calculate Q = W* x W_new;
-        Q = d_basis->transposeMult(d_basis_new);
+        Q = d_basis->transposeMult(*d_basis_new);
 
-        delete d_basis;
-        d_basis = d_basis_new;
+        d_basis.reset(d_basis_new);
 
         d_k = d_basis_new->numColumns();
         if (d_rank == 0) std::cout << "After adding W0, now using " << d_k <<
@@ -481,28 +473,28 @@ DMD::constructDMD(const Matrix* f_snapshots,
     }
 
     // Calculate A_tilde = U_transpose * f_snapshots_out * V * inv(S)
-    Matrix* d_basis_mult_f_snapshots_out = d_basis->transposeMult(f_snapshots_out);
-    Matrix* d_basis_mult_f_snapshots_out_mult_d_basis_right =
-        d_basis_mult_f_snapshots_out->mult(d_basis_right);
+    std::unique_ptr<Matrix> d_basis_mult_f_snapshots_out = d_basis->transposeMult(
+                *f_snapshots_out);
+    std::unique_ptr<Matrix> d_basis_mult_f_snapshots_out_mult_d_basis_right =
+        d_basis_mult_f_snapshots_out->mult(*d_basis_right);
     if (Q == NULL)
     {
-        d_A_tilde = d_basis_mult_f_snapshots_out_mult_d_basis_right->mult(d_S_inv);
+        d_A_tilde = d_basis_mult_f_snapshots_out_mult_d_basis_right->mult(*d_S_inv);
     }
     else
     {
-        Matrix* d_basis_mult_f_snapshots_out_mult_d_basis_right_mult_d_S_inv =
-            d_basis_mult_f_snapshots_out_mult_d_basis_right->mult(d_S_inv);
+        std::unique_ptr<Matrix>
+        d_basis_mult_f_snapshots_out_mult_d_basis_right_mult_d_S_inv =
+            d_basis_mult_f_snapshots_out_mult_d_basis_right->mult(*d_S_inv);
         d_A_tilde = d_basis_mult_f_snapshots_out_mult_d_basis_right_mult_d_S_inv->mult(
-                        Q);
-        delete Q;
-        delete d_basis_mult_f_snapshots_out_mult_d_basis_right_mult_d_S_inv;
+                        *Q);
     }
 
     // Calculate the right eigenvalues/eigenvectors of A_tilde
-    ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(d_A_tilde);
+    ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(d_A_tilde.get());
     d_eigs = eigenpair.eigs;
 
-    struct DMDInternal dmd_internal = {f_snapshots_in, f_snapshots_out, d_basis, d_basis_right, d_S_inv, &eigenpair};
+    struct DMDInternal dmd_internal = {f_snapshots_in, f_snapshots_out, d_basis.get(), d_basis_right, d_S_inv, &eigenpair};
     computePhi(dmd_internal);
 
     Vector* init = new Vector(f_snapshots_in->numRows(), true);
@@ -518,8 +510,6 @@ DMD::constructDMD(const Matrix* f_snapshots,
 
     delete d_basis_right;
     delete d_S_inv;
-    delete d_basis_mult_f_snapshots_out;
-    delete d_basis_mult_f_snapshots_out_mult_d_basis_right;
     delete f_snapshots_in;
     delete f_snapshots_out;
     delete eigenpair.ev_real;
@@ -532,31 +522,33 @@ DMD::constructDMD(const Matrix* f_snapshots,
 void
 DMD::projectInitialCondition(const Vector* init, double t_offset)
 {
-    Matrix* d_phi_real_squared = d_phi_real->transposeMult(d_phi_real);
-    Matrix* d_phi_real_squared_2 = d_phi_imaginary->transposeMult(d_phi_imaginary);
-    *d_phi_real_squared += *d_phi_real_squared_2;
+    d_phi_real_squared_inverse = d_phi_real->transposeMult(*d_phi_real);
+    std::unique_ptr<Matrix> d_phi_real_squared_2 = d_phi_imaginary->transposeMult(
+                *d_phi_imaginary);
+    *d_phi_real_squared_inverse += *d_phi_real_squared_2;
 
-    Matrix* d_phi_imaginary_squared = d_phi_real->transposeMult(d_phi_imaginary);
-    Matrix* d_phi_imaginary_squared_2 = d_phi_imaginary->transposeMult(d_phi_real);
-    *d_phi_imaginary_squared -= *d_phi_imaginary_squared_2;
+    d_phi_imaginary_squared_inverse = d_phi_real->transposeMult(*d_phi_imaginary);
+    std::unique_ptr<Matrix> d_phi_imaginary_squared_2 =
+        d_phi_imaginary->transposeMult(*d_phi_real);
+    *d_phi_imaginary_squared_inverse -= *d_phi_imaginary_squared_2;
 
-    const int dprs_row = d_phi_real_squared->numRows();
-    const int dprs_col = d_phi_real_squared->numColumns();
+    const int dprs_row = d_phi_real_squared_inverse->numRows();
+    const int dprs_col = d_phi_real_squared_inverse->numColumns();
     double* inverse_input = new double[dprs_row * dprs_col * 2];
-    for (int i = 0; i < d_phi_real_squared->numRows(); i++)
+    for (int i = 0; i < d_phi_real_squared_inverse->numRows(); i++)
     {
         int k = 0;
-        for (int j = 0; j < d_phi_real_squared->numColumns() * 2; j++)
+        for (int j = 0; j < d_phi_real_squared_inverse->numColumns() * 2; j++)
         {
             if (j % 2 == 0)
             {
-                inverse_input[d_phi_real_squared->numColumns() * 2 * i + j] =
-                    d_phi_real_squared->item(i, k);
+                inverse_input[d_phi_real_squared_inverse->numColumns() * 2 * i + j] =
+                    d_phi_real_squared_inverse->item(i, k);
             }
             else
             {
-                inverse_input[d_phi_imaginary_squared->numColumns() * 2 * i + j] =
-                    d_phi_imaginary_squared->item(i, k);
+                inverse_input[d_phi_imaginary_squared_inverse->numColumns() * 2 * i + j] =
+                    d_phi_imaginary_squared_inverse->item(i, k);
                 k++;
             }
         }
@@ -565,7 +557,7 @@ DMD::projectInitialCondition(const Vector* init, double t_offset)
     // Call lapack routines to do the inversion.
     // Set up some stuff the lapack routines need.
     int info;
-    int mtx_size = d_phi_real_squared->numColumns();
+    int mtx_size = d_phi_real_squared_inverse->numColumns();
     int lwork = mtx_size*mtx_size*std::max(10,d_num_procs);
     int* ipiv = new int [mtx_size];
     double* work = new double [lwork];
@@ -573,9 +565,6 @@ DMD::projectInitialCondition(const Vector* init, double t_offset)
     // Now call lapack to do the inversion.
     zgetrf(&mtx_size, &mtx_size, inverse_input, &mtx_size, ipiv, &info);
     zgetri(&mtx_size, inverse_input, &mtx_size, ipiv, work, &lwork, &info);
-
-    d_phi_real_squared_inverse = d_phi_real_squared;
-    d_phi_imaginary_squared_inverse = d_phi_imaginary_squared;
 
     for (int i = 0; i < d_phi_real_squared_inverse->numRows(); i++)
     {
@@ -596,29 +585,21 @@ DMD::projectInitialCondition(const Vector* init, double t_offset)
         }
     }
 
-    Vector* rhs_real = d_phi_real->transposeMult(init);
-    Vector* rhs_imaginary = d_phi_imaginary->transposeMult(init);
+    std::unique_ptr<Vector> rhs_real = d_phi_real->transposeMult(*init);
+    std::unique_ptr<Vector> rhs_imaginary = d_phi_imaginary->transposeMult(*init);
 
-    Vector* d_projected_init_real_1 = d_phi_real_squared_inverse->mult(*rhs_real);
-    Vector* d_projected_init_real_2 = d_phi_imaginary_squared_inverse->mult(
-                                          *rhs_imaginary);
+    std::unique_ptr<Vector> d_projected_init_real_1 =
+        d_phi_real_squared_inverse->mult(*rhs_real);
+    std::unique_ptr<Vector> d_projected_init_real_2 =
+        d_phi_imaginary_squared_inverse->mult(*rhs_imaginary);
     d_projected_init_real = d_projected_init_real_1->plus(*d_projected_init_real_2);
 
-    Vector* d_projected_init_imaginary_1 = d_phi_real_squared_inverse->mult(
-            *rhs_imaginary);
-    Vector* d_projected_init_imaginary_2 = d_phi_imaginary_squared_inverse->mult(
-            *rhs_real);
+    std::unique_ptr<Vector> d_projected_init_imaginary_1 =
+        d_phi_real_squared_inverse->mult(*rhs_imaginary);
+    std::unique_ptr<Vector> d_projected_init_imaginary_2 =
+        d_phi_imaginary_squared_inverse->mult(*rhs_real);
     d_projected_init_imaginary = d_projected_init_imaginary_2->minus(
                                      *d_projected_init_imaginary_1);
-
-    delete d_phi_real_squared_2;
-    delete d_projected_init_real_1;
-    delete d_projected_init_real_2;
-    delete d_phi_imaginary_squared_2;
-    delete d_projected_init_imaginary_1;
-    delete d_projected_init_imaginary_2;
-    delete rhs_real;
-    delete rhs_imaginary;
 
     delete [] inverse_input;
     delete [] ipiv;
@@ -642,24 +623,20 @@ DMD::predict(double t, int deg)
 
     t -= d_t_offset;
 
-    std::pair<Matrix*, Matrix*> d_phi_pair = phiMultEigs(t, deg);
-    Matrix* d_phi_mult_eigs_real = d_phi_pair.first;
-    Matrix* d_phi_mult_eigs_imaginary = d_phi_pair.second;
+    std::pair<std::shared_ptr<Matrix>, std::shared_ptr<Matrix>> d_phi_pair =
+                phiMultEigs(t, deg);
+    std::shared_ptr<Matrix> d_phi_mult_eigs_real = d_phi_pair.first;
+    std::shared_ptr<Matrix> d_phi_mult_eigs_imaginary = d_phi_pair.second;
 
-    Vector* d_predicted_state_real_1 = d_phi_mult_eigs_real->mult(
-                                           *d_projected_init_real);
+    std::unique_ptr<Vector> d_predicted_state_real_1 = d_phi_mult_eigs_real->mult(
+                *d_projected_init_real);
 
-    Vector* d_predicted_state_real_2 = d_phi_mult_eigs_imaginary->mult(
-                                           *d_projected_init_imaginary);
+    std::unique_ptr<Vector> d_predicted_state_real_2 =
+        d_phi_mult_eigs_imaginary->mult(*d_projected_init_imaginary);
+
     std::shared_ptr<Vector> d_predicted_state_real =
-        d_predicted_state_real_1->minus(
-            *d_predicted_state_real_2);
+        d_predicted_state_real_1->minus(*d_predicted_state_real_2);
     addOffset(*d_predicted_state_real, t, deg);
-
-    delete d_phi_mult_eigs_real;
-    delete d_phi_mult_eigs_imaginary;
-    delete d_predicted_state_real_1;
-    delete d_predicted_state_real_2;
 
     return d_predicted_state_real;
 }
@@ -679,8 +656,8 @@ DMD::computeEigExp(std::complex<double> eig, double t)
     return std::pow(eig, t / d_dt);
 }
 
-std::pair<Matrix*, Matrix*>
-DMD::phiMultEigs(double t, int deg)
+std::pair<std::shared_ptr<Matrix>,std::shared_ptr<Matrix>>
+        DMD::phiMultEigs(double t, int deg)
 {
     Matrix* d_eigs_exp_real = new Matrix(d_k, d_k, false);
     Matrix* d_eigs_exp_imaginary = new Matrix(d_k, d_k, false);
@@ -696,20 +673,23 @@ DMD::phiMultEigs(double t, int deg)
         d_eigs_exp_imaginary->item(i, i) = std::imag(eig_exp);
     }
 
-    Matrix* d_phi_mult_eigs_real = d_phi_real->mult(d_eigs_exp_real);
-    Matrix* d_phi_mult_eigs_real_2 = d_phi_imaginary->mult(d_eigs_exp_imaginary);
+    std::shared_ptr<Matrix> d_phi_mult_eigs_real = d_phi_real->mult(
+                *d_eigs_exp_real);
+    std::unique_ptr<Matrix> d_phi_mult_eigs_real_2 = d_phi_imaginary->mult(
+                *d_eigs_exp_imaginary);
     *d_phi_mult_eigs_real -= *d_phi_mult_eigs_real_2;
-    Matrix* d_phi_mult_eigs_imaginary = d_phi_real->mult(d_eigs_exp_imaginary);
-    Matrix* d_phi_mult_eigs_imaginary_2 = d_phi_imaginary->mult(d_eigs_exp_real);
+    std::shared_ptr<Matrix> d_phi_mult_eigs_imaginary = d_phi_real->mult(
+                *d_eigs_exp_imaginary);
+    std::unique_ptr<Matrix> d_phi_mult_eigs_imaginary_2 = d_phi_imaginary->mult(
+                *d_eigs_exp_real);
     *d_phi_mult_eigs_imaginary += *d_phi_mult_eigs_imaginary_2;
 
     delete d_eigs_exp_real;
     delete d_eigs_exp_imaginary;
-    delete d_phi_mult_eigs_real_2;
-    delete d_phi_mult_eigs_imaginary_2;
 
-    return std::pair<Matrix*,Matrix*>(d_phi_mult_eigs_real,
-                                      d_phi_mult_eigs_imaginary);
+    return std::pair<std::shared_ptr<Matrix>,std::shared_ptr<Matrix>>
+           (d_phi_mult_eigs_real,
+            d_phi_mult_eigs_imaginary);
 }
 
 double
@@ -791,27 +771,27 @@ DMD::load(std::string base_file_name)
     database.close();
 
     full_file_name = base_file_name + "_basis";
-    d_basis = new Matrix();
+    d_basis.reset(new Matrix());
     d_basis->read(full_file_name);
 
     full_file_name = base_file_name + "_A_tilde";
-    d_A_tilde = new Matrix();
+    d_A_tilde.reset(new Matrix());
     d_A_tilde->read(full_file_name);
 
     full_file_name = base_file_name + "_phi_real";
-    d_phi_real = new Matrix();
+    d_phi_real.reset(new Matrix());
     d_phi_real->read(full_file_name);
 
     full_file_name = base_file_name + "_phi_imaginary";
-    d_phi_imaginary = new Matrix();
+    d_phi_imaginary.reset(new Matrix());
     d_phi_imaginary->read(full_file_name);
 
     full_file_name = base_file_name + "_phi_real_squared_inverse";
-    d_phi_real_squared_inverse = new Matrix();
+    d_phi_real_squared_inverse.reset(new Matrix());
     d_phi_real_squared_inverse->read(full_file_name);
 
     full_file_name = base_file_name + "_phi_imaginary_squared_inverse";
-    d_phi_imaginary_squared_inverse = new Matrix();
+    d_phi_imaginary_squared_inverse.reset(new Matrix());
     d_phi_imaginary_squared_inverse->read(full_file_name);
 
     full_file_name = base_file_name + "_projected_init_real";

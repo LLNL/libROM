@@ -548,10 +548,9 @@ int main(int argc, char *argv[])
             tmp.GetRow(i, reduced_eigenvector);
             CAROM::Vector reduced_eigenvector_carom(reduced_eigenvector.GetData(),
                                                     reduced_eigenvector.Size(), false, false);
-            CAROM::Vector *eigenvector_carom = spatialbasis->mult(
-                                                   reduced_eigenvector_carom);
+            std::unique_ptr<CAROM::Vector> eigenvector_carom = spatialbasis->mult(
+                        reduced_eigenvector_carom);
             eigenvectors.SetRow(i, eigenvector_carom->getData());
-            delete eigenvector_carom;
         }
 
         delete spatialbasis;

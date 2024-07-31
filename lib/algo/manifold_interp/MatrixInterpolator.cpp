@@ -37,9 +37,9 @@ using namespace std;
 
 namespace CAROM {
 
-MatrixInterpolator::MatrixInterpolator(std::vector<Vector*> parameter_points,
-                                       std::vector<Matrix*> rotation_matrices,
-                                       std::vector<Matrix*> reduced_matrices,
+MatrixInterpolator::MatrixInterpolator(std::vector<Vector*> & parameter_points,
+                                       std::vector<std::shared_ptr<Matrix>> & rotation_matrices,
+                                       std::vector<std::shared_ptr<Matrix>> & reduced_matrices,
                                        int ref_point,
                                        std::string matrix_type,
                                        std::string rbf,
@@ -64,61 +64,41 @@ MatrixInterpolator::MatrixInterpolator(std::vector<Vector*> parameter_points,
         if (i == d_ref_point)
         {
             d_rotated_reduced_matrices.push_back(reduced_matrices[i]);
-            d_rotated_reduced_matrices_owned.push_back(false);
         }
         else
         {
             if (reduced_matrices[i]->numRows() == rotation_matrices[i]->numRows()
                     && reduced_matrices[i]->numColumns() == rotation_matrices[i]->numRows())
             {
-                Matrix* Q_tA = rotation_matrices[i]->transposeMult(reduced_matrices[i]);
-                Matrix* Q_tAQ = Q_tA->mult(rotation_matrices[i]);
-                delete Q_tA;
+                std::unique_ptr<Matrix> Q_tA = rotation_matrices[i]->transposeMult(
+                                                   *reduced_matrices[i]);
+                std::shared_ptr<Matrix> Q_tAQ = Q_tA->mult(*rotation_matrices[i]);
                 d_rotated_reduced_matrices.push_back(Q_tAQ);
-                d_rotated_reduced_matrices_owned.push_back(true);
             }
             else if (reduced_matrices[i]->numRows() == rotation_matrices[i]->numRows())
             {
-                Matrix* Q_tA = rotation_matrices[i]->transposeMult(reduced_matrices[i]);
+                std::shared_ptr<Matrix> Q_tA = rotation_matrices[i]->transposeMult(
+                                                   *reduced_matrices[i]);
                 d_rotated_reduced_matrices.push_back(Q_tA);
-                d_rotated_reduced_matrices_owned.push_back(true);
             }
             else if (reduced_matrices[i]->numColumns() == rotation_matrices[i]->numRows())
             {
-                Matrix* AQ = reduced_matrices[i]->mult(rotation_matrices[i]);
+                std::shared_ptr<Matrix> AQ = reduced_matrices[i]->mult(*rotation_matrices[i]);
                 d_rotated_reduced_matrices.push_back(AQ);
-                d_rotated_reduced_matrices_owned.push_back(true);
             }
             else
             {
                 d_rotated_reduced_matrices.push_back(reduced_matrices[i]);
-                d_rotated_reduced_matrices_owned.push_back(false);
             }
         }
 
     }
 }
 
-MatrixInterpolator::~MatrixInterpolator()
+std::shared_ptr<Matrix> MatrixInterpolator::interpolate(Vector* point,
+        bool orthogonalize)
 {
-    CAROM_VERIFY(d_rotated_reduced_matrices.size() ==
-                 d_rotated_reduced_matrices_owned.size());
-
-    for (int i=0; i<d_rotated_reduced_matrices.size(); ++i)
-    {
-        if (d_rotated_reduced_matrices_owned[i])
-            delete d_rotated_reduced_matrices[i];
-    }
-
-    for (auto matrix : d_gammas)
-        delete matrix;
-
-    delete d_x_half_power;
-}
-
-Matrix* MatrixInterpolator::interpolate(Vector* point, bool orthogonalize)
-{
-    Matrix* interpolated_matrix = NULL;
+    std::shared_ptr<Matrix> interpolated_matrix;
     if (d_matrix_type == "SPD")
     {
         interpolated_matrix = interpolateSPDMatrix(point);
@@ -235,41 +215,40 @@ Matrix* MatrixInterpolator::obtainLogInterpolatedMatrix(
     return log_interpolated_matrix;
 }
 
-Matrix* MatrixInterpolator::interpolateSPDMatrix(Vector* point)
+std::shared_ptr<Matrix> MatrixInterpolator::interpolateSPDMatrix(Vector* point)
 {
     if (d_gammas.size() == 0)
     {
         // Diagonalize X to work towards obtaining X^-1/2
         EigenPair ref_reduced_matrix_eigenpair = SymmetricRightEigenSolve(
-                    d_rotated_reduced_matrices[d_ref_point]);
+                    d_rotated_reduced_matrices[d_ref_point].get());
         Matrix* ref_reduced_matrix_ev = ref_reduced_matrix_eigenpair.ev;
-        Matrix* ref_reduced_matrix_ev_inv = NULL;
 
         Matrix* ref_reduced_matrix_sqrt_eigs = new Matrix(
             ref_reduced_matrix_eigenpair.eigs.size(),
             ref_reduced_matrix_eigenpair.eigs.size(), false);
         for (int i = 0; i < ref_reduced_matrix_eigenpair.eigs.size(); i++)
         {
-            ref_reduced_matrix_sqrt_eigs->item(i,
-                                               i) = std::sqrt(ref_reduced_matrix_eigenpair.eigs[i]);
+            ref_reduced_matrix_sqrt_eigs->item(i, i) =
+                std::sqrt(ref_reduced_matrix_eigenpair.eigs[i]);
         }
 
+        Matrix ref_reduced_matrix_ev_inv(*ref_reduced_matrix_ev);
         ref_reduced_matrix_ev->inverse(ref_reduced_matrix_ev_inv);
 
         // Obtain X^1/2
-        Matrix* ref_reduced_matrix_ev_mult_sqrt_eig = ref_reduced_matrix_ev->mult(
-                    ref_reduced_matrix_sqrt_eigs);
+        std::unique_ptr<Matrix> ref_reduced_matrix_ev_mult_sqrt_eig =
+            ref_reduced_matrix_ev->mult(*ref_reduced_matrix_sqrt_eigs);
         d_x_half_power = ref_reduced_matrix_ev_mult_sqrt_eig->mult(
                              ref_reduced_matrix_ev_inv);
-        Matrix* x_half_power_inv = NULL;
+
+        Matrix x_half_power_inv(*d_x_half_power);
 
         // Obtain X^-1/2
         d_x_half_power->inverse(x_half_power_inv);
 
         delete ref_reduced_matrix_ev;
-        delete ref_reduced_matrix_ev_inv;
         delete ref_reduced_matrix_sqrt_eigs;
-        delete ref_reduced_matrix_ev_mult_sqrt_eig;
 
         // Obtain gammas for all points in the database.
         for (int i = 0; i < d_parameter_points.size(); i++)
@@ -277,19 +256,19 @@ Matrix* MatrixInterpolator::interpolateSPDMatrix(Vector* point)
             // For the ref point, gamma is the zero matrix
             if (i == d_ref_point)
             {
-                Matrix* gamma = new Matrix(x_half_power_inv->numRows(),
-                                           x_half_power_inv->numColumns(), x_half_power_inv->distributed());
+                std::shared_ptr<Matrix> gamma(new Matrix(x_half_power_inv.numRows(),
+                                              x_half_power_inv.numColumns(),
+                                              x_half_power_inv.distributed()));
                 d_gammas.push_back(gamma);
             }
             else
             {
-                Matrix* x_half_power_inv_mult_y = x_half_power_inv->mult(
-                                                      d_rotated_reduced_matrices[i]);
+                std::unique_ptr<Matrix> x_half_power_inv_mult_y = x_half_power_inv.mult(
+                            *d_rotated_reduced_matrices[i]);
 
                 // Obtain X^-1/2*Y*X^-1/2
-                Matrix* x_half_power_inv_mult_y_mult_x_half_power_inv =
+                std::unique_ptr<Matrix> x_half_power_inv_mult_y_mult_x_half_power_inv =
                     x_half_power_inv_mult_y->mult(x_half_power_inv);
-                delete x_half_power_inv_mult_y;
 
                 // Diagonalize X^-1/2*Y*X^-1/2 to obtain the log of this matrix.
                 // Diagonalize YX^-1 to obtain log of this matrix.
@@ -298,10 +277,8 @@ Matrix* MatrixInterpolator::interpolateSPDMatrix(Vector* point)
                 // of M and V are the eigenvectors of M.
                 // 2. log M = V(log M')V^-1
                 EigenPair log_eigenpair = SymmetricRightEigenSolve(
-                                              x_half_power_inv_mult_y_mult_x_half_power_inv);
-                delete x_half_power_inv_mult_y_mult_x_half_power_inv;
+                                              x_half_power_inv_mult_y_mult_x_half_power_inv.get());
                 Matrix* log_ev = log_eigenpair.ev;
-                Matrix* log_ev_inv = NULL;
 
                 Matrix* log_eigs = new Matrix(log_eigenpair.eigs.size(),
                                               log_eigenpair.eigs.size(), false);
@@ -318,21 +295,18 @@ Matrix* MatrixInterpolator::interpolateSPDMatrix(Vector* point)
                 }
 
                 // Invert matrix.
+                Matrix log_ev_inv(*log_ev);
                 log_ev->inverse(log_ev_inv);
 
                 // Perform log mapping.
-                Matrix* log_ev_mult_log_eig = log_ev->mult(log_eigs);
-                Matrix* gamma = log_ev_mult_log_eig->mult(log_ev_inv);
+                std::unique_ptr<Matrix> log_ev_mult_log_eig = log_ev->mult(*log_eigs);
+                std::shared_ptr<Matrix> gamma = log_ev_mult_log_eig->mult(log_ev_inv);
                 d_gammas.push_back(gamma);
 
                 delete log_ev;
-                delete log_ev_inv;
                 delete log_eigs;
-                delete log_ev_mult_log_eig;
             }
         }
-
-        delete x_half_power_inv;
 
         // Obtain lambda for the P interpolation matrix
         obtainLambda();
@@ -356,7 +330,6 @@ Matrix* MatrixInterpolator::interpolateSPDMatrix(Vector* point)
     delete log_interpolated_matrix;
 
     Matrix* exp_ev = exp_eigenpair.ev;
-    Matrix* exp_ev_inv = NULL;
 
     Matrix* exp_eigs = new Matrix(exp_eigenpair.eigs.size(),
                                   exp_eigenpair.eigs.size(), false);
@@ -365,32 +338,33 @@ Matrix* MatrixInterpolator::interpolateSPDMatrix(Vector* point)
         exp_eigs->item(i, i) = std::exp(exp_eigenpair.eigs[i]);
     }
 
+    Matrix exp_ev_inv(*exp_ev);
     exp_ev->inverse(exp_ev_inv);
-    Matrix* exp_ev_mult_exp_eig = exp_ev->mult(exp_eigs);
+    std::unique_ptr<Matrix> exp_ev_mult_exp_eig = exp_ev->mult(*exp_eigs);
 
     // Exponentiate gamma
-    Matrix* exp_gamma = exp_ev_mult_exp_eig->mult(exp_ev_inv);
+    std::unique_ptr<Matrix> exp_gamma = exp_ev_mult_exp_eig->mult(exp_ev_inv);
 
     delete exp_ev;
-    delete exp_ev_inv;
     delete exp_eigs;
-    delete exp_ev_mult_exp_eig;
 
     // Obtain exp mapping by doing X^1/2*exp(gamma)*X^1/2
-    Matrix* x_half_power_mult_exp_gamma = d_x_half_power->mult(exp_gamma);
-    Matrix* interpolated_matrix = x_half_power_mult_exp_gamma->mult(d_x_half_power);
+    std::unique_ptr<Matrix> x_half_power_mult_exp_gamma = d_x_half_power->mult(
+                *exp_gamma);
+    std::shared_ptr<Matrix> interpolated_matrix = x_half_power_mult_exp_gamma->mult(
+                *d_x_half_power);
 
-    delete  x_half_power_mult_exp_gamma;
     return interpolated_matrix;
 
 }
 
-Matrix* MatrixInterpolator::interpolateNonSingularMatrix(Vector* point)
+std::shared_ptr<Matrix> MatrixInterpolator::interpolateNonSingularMatrix(
+    Vector* point)
 {
     if (d_gammas.size() == 0)
     {
         // Invert X
-        Matrix* ref_matrix_inv = NULL;
+        Matrix ref_matrix_inv(*d_rotated_reduced_matrices[d_ref_point]);
         d_rotated_reduced_matrices[d_ref_point]->inverse(ref_matrix_inv);
 
         for (int i = 0; i < d_parameter_points.size(); i++)
@@ -398,24 +372,22 @@ Matrix* MatrixInterpolator::interpolateNonSingularMatrix(Vector* point)
             // For ref_point, gamma is the zero matrix
             if (i == d_ref_point)
             {
-                Matrix* gamma = new Matrix(ref_matrix_inv->numRows(),
-                                           ref_matrix_inv->numColumns(), ref_matrix_inv->distributed());
+                std::shared_ptr<Matrix> gamma(new Matrix(ref_matrix_inv.numRows(),
+                                              ref_matrix_inv.numColumns(), ref_matrix_inv.distributed()));
                 d_gammas.push_back(gamma);
             }
             else
             {
-                Matrix* y_mult_ref_matrix_inv = d_rotated_reduced_matrices[i]->mult(
-                                                    ref_matrix_inv);
+                std::unique_ptr<Matrix> y_mult_ref_matrix_inv =
+                    d_rotated_reduced_matrices[i]->mult(ref_matrix_inv);
 
                 // Diagonalize YX^-1 to obtain log of this matrix.
                 // Following https://en.wikipedia.org/wiki/Logarithm_of_a_matrix
                 // 1. Diagonalize M to obtain M' = V^-1*M*V. M' are the eigenvalues
                 // of M and V are the eigenvectors of M.
                 // 2. log M = V(log M')V^-1
-                EigenPair log_eigenpair = SymmetricRightEigenSolve(y_mult_ref_matrix_inv);
-                delete y_mult_ref_matrix_inv;
+                EigenPair log_eigenpair = SymmetricRightEigenSolve(y_mult_ref_matrix_inv.get());
                 Matrix* log_ev = log_eigenpair.ev;
-                Matrix* log_ev_inv = NULL;
 
                 Matrix* log_eigs = new Matrix(log_eigenpair.eigs.size(),
                                               log_eigenpair.eigs.size(), false);
@@ -431,21 +403,18 @@ Matrix* MatrixInterpolator::interpolateNonSingularMatrix(Vector* point)
                     log_eigs->item(i, i) = std::log(log_eigenpair.eigs[i]);
                 }
 
+                Matrix log_ev_inv(log_ev->numRows(), log_ev->numColumns(), false);
                 log_ev->inverse(log_ev_inv);
 
                 // Perform log mapping.
-                Matrix* log_ev_mult_log_eig = log_ev->mult(log_eigs);
-                Matrix* gamma = log_ev_mult_log_eig->mult(log_ev_inv);
+                std::unique_ptr<Matrix> log_ev_mult_log_eig = log_ev->mult(*log_eigs);
+                std::shared_ptr<Matrix> gamma = log_ev_mult_log_eig->mult(log_ev_inv);
                 d_gammas.push_back(gamma);
 
                 delete log_ev;
-                delete log_ev_inv;
                 delete log_eigs;
-                delete log_ev_mult_log_eig;
             }
         }
-
-        delete ref_matrix_inv;
 
         // Obtain lambda for the P interpolation matrix
         obtainLambda();
@@ -477,28 +446,26 @@ Matrix* MatrixInterpolator::interpolateNonSingularMatrix(Vector* point)
     }
 
     // Invert matrix.
-    exp_ev->inverse(exp_ev_inv);
+    exp_ev->inverse(*exp_ev_inv);
 
     // Perform log mapping.
-    Matrix* exp_ev_mult_exp_eig = exp_ev->mult(exp_eigs);
+    std::unique_ptr<Matrix> exp_ev_mult_exp_eig = exp_ev->mult(*exp_eigs);
 
     // Exponentiate gamma
-    Matrix* exp_gamma = exp_ev_mult_exp_eig->mult(exp_ev_inv);
+    std::unique_ptr<Matrix> exp_gamma = exp_ev_mult_exp_eig->mult(*exp_ev_inv);
 
     delete exp_ev;
     delete exp_ev_inv;
     delete exp_eigs;
-    delete exp_ev_mult_exp_eig;
 
     // Obtain exp mapping by doing exp(gamma)*X
-    Matrix* interpolated_matrix = exp_gamma->mult(
-                                      d_rotated_reduced_matrices[d_ref_point]);
-    delete exp_gamma;
+    std::shared_ptr<Matrix> interpolated_matrix = exp_gamma->mult(
+                *d_rotated_reduced_matrices[d_ref_point]);
 
     return interpolated_matrix;
 }
 
-Matrix* MatrixInterpolator::interpolateMatrix(Vector* point)
+std::shared_ptr<Matrix> MatrixInterpolator::interpolateMatrix(Vector* point)
 {
     if (d_gammas.size() == 0)
     {
@@ -507,15 +474,16 @@ Matrix* MatrixInterpolator::interpolateMatrix(Vector* point)
             // For ref point, gamma is the zero matrix.
             if (i == d_ref_point)
             {
-                Matrix* gamma = new Matrix(d_rotated_reduced_matrices[d_ref_point]->numRows(),
-                                           d_rotated_reduced_matrices[d_ref_point]->numColumns(),
-                                           d_rotated_reduced_matrices[d_ref_point]->distributed());
+                std::shared_ptr<Matrix> gamma(new Matrix(
+                                                  d_rotated_reduced_matrices[d_ref_point]->numRows(),
+                                                  d_rotated_reduced_matrices[d_ref_point]->numColumns(),
+                                                  d_rotated_reduced_matrices[d_ref_point]->distributed()));
                 d_gammas.push_back(gamma);
             }
             else
             {
                 // Gamma is Y - X
-                Matrix* gamma = new Matrix(*d_rotated_reduced_matrices[i]);
+                std::shared_ptr<Matrix> gamma(new Matrix(*d_rotated_reduced_matrices[i]));
                 *gamma -= *d_rotated_reduced_matrices[d_ref_point];
                 d_gammas.push_back(gamma);
             }
@@ -530,7 +498,7 @@ Matrix* MatrixInterpolator::interpolateMatrix(Vector* point)
                               d_rbf, d_epsilon, point);
 
     // Interpolate gammas to get gamma for new point
-    Matrix* interpolated_matrix = obtainLogInterpolatedMatrix(rbf);
+    std::shared_ptr<Matrix> interpolated_matrix(obtainLogInterpolatedMatrix(rbf));
 
     // The exp mapping is X + the interpolated gamma
     *interpolated_matrix += *d_rotated_reduced_matrices[d_ref_point];

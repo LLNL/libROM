@@ -59,16 +59,14 @@ public:
      * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
      *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
      */
-    MatrixInterpolator(std::vector<Vector*> parameter_points,
-                       std::vector<Matrix*> rotation_matrices,
-                       std::vector<Matrix*> reduced_matrices,
+    MatrixInterpolator(std::vector<Vector*> & parameter_points,
+                       std::vector<std::shared_ptr<Matrix>> & rotation_matrices,
+                       std::vector<std::shared_ptr<Matrix>> & reduced_matrices,
                        int ref_point,
                        std::string matrix_type,
                        std::string rbf = "G",
                        std::string interp_method = "LS",
                        double closest_rbf_val = 0.9);
-
-    ~MatrixInterpolator();
 
     /**
      * @brief Obtain the interpolated reduced matrix of the unsampled parameter point.
@@ -76,7 +74,7 @@ public:
      * @param[in] point         The unsampled parameter point.
      * @param[in] orthogonalize Whether to orthogonalize the resulting interpolated matrix.
      */
-    Matrix* interpolate(Vector* point, bool orthogonalize = false);
+    std::shared_ptr<Matrix> interpolate(Vector* point, bool orthogonalize = false);
 
 private:
 
@@ -118,7 +116,7 @@ private:
      *
      * @param[in] point The unsampled parameter point.
      */
-    Matrix* interpolateSPDMatrix(Vector* point);
+    std::shared_ptr<Matrix> interpolateSPDMatrix(Vector* point);
 
     /**
      * @brief Obtain the interpolated non-singular reduced matrix for the
@@ -126,7 +124,7 @@ private:
      *
      * @param[in] point The unsampled parameter point.
      */
-    Matrix* interpolateNonSingularMatrix(Vector* point);
+    std::shared_ptr<Matrix> interpolateNonSingularMatrix(Vector* point);
 
     /**
      * @brief Obtain the interpolated reduced matrix for the
@@ -134,7 +132,7 @@ private:
      *
      * @param[in] point The unsampled parameter point.
      */
-    Matrix* interpolateMatrix(Vector* point);
+    std::shared_ptr<Matrix> interpolateMatrix(Vector* point);
 
     /**
      * @brief The matrix type/manifold
@@ -144,19 +142,17 @@ private:
     /**
      * @brief The reduced matrices with compatible coordinates.
      */
-    std::vector<Matrix*> d_rotated_reduced_matrices;
-
-    std::vector<bool> d_rotated_reduced_matrices_owned;
+    std::vector<std::shared_ptr<Matrix>> d_rotated_reduced_matrices;
 
     /**
      * @brief The reduced elements in tangential space.
      */
-    std::vector<Matrix*> d_gammas;
+    std::vector<std::shared_ptr<Matrix>> d_gammas;
 
     /**
      * @brief The reduced matrix of the reference point to the half power.
      */
-    Matrix* d_x_half_power = nullptr;
+    std::shared_ptr<Matrix> d_x_half_power;
 };
 
 }

@@ -770,7 +770,7 @@ int main(int argc, char *argv[])
             std::fstream fin(io_dir + "/parameters.txt", std::ios_base::in);
             double curr_param;
             std::vector<std::string> dmdc_paths;
-            std::vector<CAROM::Matrix*> controls;
+            std::vector<std::shared_ptr<CAROM::Matrix>> controls;
             std::vector<CAROM::Vector*> param_vectors;
 
             while (fin >> curr_param)
@@ -786,7 +786,7 @@ int main(int argc, char *argv[])
                 dmdc_paths.push_back(io_dir + "/" + to_string(curr_alpha) + "_" + to_string(
                                          curr_kappa) + "_" + to_string(curr_amp_in) + "_" + to_string(curr_amp_out) );
 
-                CAROM::Matrix* curr_control = new CAROM::Matrix();
+                std::shared_ptr<CAROM::Matrix> curr_control(new CAROM::Matrix());
                 curr_control->read(io_dir + "/" + to_string(curr_alpha) + "_" + to_string(
                                        curr_kappa) + "_" + to_string(curr_amp_in) + "_" + to_string(
                                        curr_amp_out) + "_control");
@@ -810,21 +810,18 @@ int main(int argc, char *argv[])
             dmd_training_timer.Start();
 
 
-            CAROM::Matrix* controls_interpolated = new CAROM::Matrix();
+            std::shared_ptr<CAROM::Matrix> controls_interpolated(new CAROM::Matrix());
 
             CAROM::getParametricDMDc(dmd_u, param_vectors, dmdc_paths, controls,
                                      controls_interpolated, desired_param, "G", "LS", closest_rbf_val);
 
-            dmd_u->project(init,controls_interpolated);
+            dmd_u->project(init,controls_interpolated.get());
 
 
             dmd_training_timer.Stop();
 
             delete desired_param;
-            delete controls_interpolated;
             for (auto m : param_vectors)
-                delete m;
-            for (auto m : controls)
                 delete m;
         }
 

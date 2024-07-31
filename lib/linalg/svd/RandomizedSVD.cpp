@@ -100,14 +100,13 @@ RandomizedSVD::computeSVD()
     }
 
     // Project snapshot matrix onto random subspace
-    Matrix* rand_proj = snapshot_matrix->mult(rand_mat);
+    std::unique_ptr<Matrix> rand_proj = snapshot_matrix->mult(*rand_mat);
     int rand_proj_rows = rand_proj->numRows();
-    delete rand_mat;
 
     std::unique_ptr<Matrix> Q = rand_proj->qr_factorize();
 
     // Project d_samples onto Q
-    Matrix* svd_input_mat = Q->transposeMult(snapshot_matrix);
+    std::unique_ptr<Matrix> svd_input_mat = Q->transposeMult(*snapshot_matrix);
     int svd_input_mat_distributed_rows = svd_input_mat->numDistributedRows();
 
     SLPK_Matrix svd_input;
@@ -117,7 +116,6 @@ RandomizedSVD::computeSVD()
     scatter_block(&svd_input, 1, 1,
                   svd_input_mat->getData(),
                   svd_input_mat->numColumns(), svd_input_mat->numDistributedRows(),0);
-    delete svd_input_mat;
     delete snapshot_matrix;
 
     // This block does the actual ScaLAPACK call to do the factorization.
@@ -156,8 +154,8 @@ RandomizedSVD::computeSVD()
         memset(&d_S->item(0), 0, nc*sizeof(double));
     }
 
-    d_basis = new Matrix(svd_input_mat_distributed_rows, ncolumns, false);
-    d_basis_right = new Matrix(d_subspace_dim, ncolumns, false);
+    d_basis.reset(new Matrix(svd_input_mat_distributed_rows, ncolumns, false));
+    d_basis_right.reset(new Matrix(d_subspace_dim, ncolumns, false));
     // Since the input to the SVD was transposed, U and V are switched.
     for (int rank = 0; rank < d_num_procs; ++rank) {
         // V is computed in the transposed order so no reordering necessary.
@@ -175,14 +173,13 @@ RandomizedSVD::computeSVD()
         d_S->item(i) = d_factorizer->S[static_cast<unsigned>(i)];
 
     // Lift solution back to higher dimension
-    Matrix* d_new_basis = Q->mult(d_basis);
-    delete d_basis;
-    d_basis = d_new_basis;
+    Matrix* d_new_basis = new Matrix(Q->numRows(), d_basis->numColumns(),
+                                     Q->distributed());
+    Q->mult(*d_basis, *d_new_basis);
+    d_basis.reset(d_new_basis);
 
     if (num_rows <= num_cols) {
-        Matrix* temp = d_basis;
-        d_basis = d_basis_right;
-        d_basis_right = temp;
+        d_basis.swap(d_basis_right);
 
         int local_rows = -1;
         if (d_basis->numRows() == d_total_dim)

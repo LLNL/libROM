@@ -20,9 +20,6 @@ SVD::SVD(
     d_dim(options.dim),
     d_num_samples(0),
     d_max_num_samples(options.max_num_samples),
-    d_basis(NULL),
-    d_basis_right(NULL),
-    d_U(NULL),
     d_W(NULL),
     d_S(NULL),
     d_snapshots(NULL),
@@ -34,10 +31,7 @@ SVD::SVD(
 
 SVD::~SVD()
 {
-    delete d_basis;
-    delete d_U;
     delete d_S;
-    delete d_basis_right;
     delete d_W;
     delete d_snapshots;
 }

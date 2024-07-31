@@ -54,15 +54,13 @@ public:
      * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
      *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
      */
-    VectorInterpolator(std::vector<Vector*> parameter_points,
-                       std::vector<Matrix*> rotation_matrices,
-                       std::vector<Vector*> reduced_vectors,
+    VectorInterpolator(std::vector<Vector*> & parameter_points,
+                       std::vector<std::shared_ptr<Matrix>> & rotation_matrices,
+                       std::vector<std::shared_ptr<Vector>> & reduced_vectors,
                        int ref_point,
                        std::string rbf = "G",
                        std::string interp_method = "LS",
                        double closest_rbf_val = 0.9);
-
-    ~VectorInterpolator();
 
     /**
      * @brief Obtain the interpolated reduced vector of the unsampled parameter point.
@@ -109,9 +107,7 @@ private:
     /**
      * @brief The reduced vectors with compatible coordinates.
      */
-    std::vector<Vector*> d_rotated_reduced_vectors;
-
-    std::vector<bool> d_rotated_reduced_vectors_owned;
+    std::vector<std::shared_ptr<Vector>> d_rotated_reduced_vectors;
 
     /**
      * @brief The reduced elements in tangential space.

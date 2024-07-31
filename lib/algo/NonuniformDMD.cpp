@@ -39,8 +39,8 @@ NonuniformDMD::NonuniformDMD(std::string base_file_name) : DMD(base_file_name)
 }
 
 NonuniformDMD::NonuniformDMD(std::vector<std::complex<double>> eigs,
-                             Matrix* phi_real,
-                             Matrix* phi_imaginary, int k,
+                             std::shared_ptr<Matrix> phi_real,
+                             std::shared_ptr<Matrix> phi_imaginary, int k,
                              double dt, double t_offset,
                              Vector* state_offset, Vector* derivative_offset) :
     DMD(eigs, phi_real, phi_imaginary, k,
@@ -103,9 +103,9 @@ NonuniformDMD::computeDMDSnapshotPair(const Matrix* snapshots)
 void
 NonuniformDMD::computePhi(struct DMDInternal dmd_internal_obj)
 {
-    d_phi_real = dmd_internal_obj.basis->mult(dmd_internal_obj.eigenpair->ev_real);
+    d_phi_real = dmd_internal_obj.basis->mult(*dmd_internal_obj.eigenpair->ev_real);
     d_phi_imaginary = dmd_internal_obj.basis->mult(
-                          dmd_internal_obj.eigenpair->ev_imaginary);
+                          *dmd_internal_obj.eigenpair->ev_imaginary);
 }
 
 std::complex<double>

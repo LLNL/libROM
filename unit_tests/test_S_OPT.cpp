@@ -110,7 +110,8 @@ TEST(S_OPTSerialTest, Test_S_OPT)
         }
     }
 
-    CAROM::Matrix* u = new CAROM::Matrix(orthonormal_mat, num_rows, num_cols, true);
+    std::shared_ptr<CAROM::Matrix> u(new CAROM::Matrix(orthonormal_mat, num_rows,
+                                     num_cols, true));
 
     double* S_OPT_res = NULL;
     std::vector<int> f_sampled_row(num_samples, 0);
@@ -225,7 +226,8 @@ TEST(S_OPTSerialTest, Test_S_OPT_less_basis_vectors)
         }
     }
 
-    CAROM::Matrix* u = new CAROM::Matrix(orthonormal_mat, num_rows, num_cols, true);
+    std::shared_ptr<CAROM::Matrix> u(new CAROM::Matrix(orthonormal_mat, num_rows,
+                                     num_cols, true));
 
     double* S_OPT_res = NULL;
     std::vector<int> f_sampled_row(num_samples, 0);
@@ -341,7 +343,8 @@ TEST(S_OPTSerialTest, Test_S_OPT_init_vector)
         }
     }
 
-    CAROM::Matrix* u = new CAROM::Matrix(orthonormal_mat, num_rows, num_cols, true);
+    std::shared_ptr<CAROM::Matrix> u(new CAROM::Matrix(orthonormal_mat, num_rows,
+                                     num_cols, true));
 
     double* S_OPT_res = NULL;
     std::vector<int> f_sampled_row(num_samples, 0);
@@ -500,7 +503,8 @@ TEST(S_OPTSerialTest, Test_S_OPT_QR)
         }
     }
 
-    CAROM::Matrix* u = new CAROM::Matrix(orthonormal_mat, num_rows, num_cols, true);
+    std::shared_ptr<CAROM::Matrix> u(new CAROM::Matrix(orthonormal_mat, num_rows,
+                                     num_cols, true));
 
     double* S_OPT_res = NULL;
     std::vector<int> f_sampled_row(num_samples, 0);
