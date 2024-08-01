@@ -39,15 +39,17 @@ option(BUILD_STATIC "Build libROM as a static library" OFF)
 option(ENABLE_EXAMPLES "Build examples and regression tests" ON)
 option(ENABLE_DOCS "Build docs using Doxygen" OFF)
 option(ENABLE_TESTS "Build unit tests. Requires googletest to be installed" OFF)
+set(LIBROM_FLAGS "" CACHE STRING "Additional compiler flags used to compile libROM")
 
 ## Set a bunch of variables to generate a configure header
 # Enable assertion checking if debug symbols generated
 if((CMAKE_BUILD_TYPE STREQUAL "Debug") OR
     (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"))
   set(DEBUG_CHECK_ASSERTIONS "1")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+  set(LIBROM_FLAGS "${LIBROM_FLAGS} -Wall")
 endif()
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${LIBROM_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LIBROM_FLAGS}")
 
 if (CMAKE_HOST_APPLE)
     # Fix linker flags for OSX to use classic linker on XCode 15.0+:
