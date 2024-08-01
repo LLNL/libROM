@@ -796,7 +796,7 @@ int main(int argc, char *argv[])
                 std::cout << "Predicting temperature using DMD at: " << ts[0] << std::endl;
             }
 
-            std::shared_ptr<CAROM::Vector> result_u = dmd_u->predict(ts[0]);
+            std::unique_ptr<CAROM::Vector> result_u = dmd_u->predict(ts[0]);
             Vector initial_dmd_solution_u(result_u->getData(), result_u->dim());
             u_gf.SetFromTrueDofs(initial_dmd_solution_u);
 

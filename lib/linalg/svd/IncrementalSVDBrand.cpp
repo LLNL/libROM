@@ -269,7 +269,7 @@ IncrementalSVDBrand::updateSpatialBasis()
 
     // Reorthogonalize if necessary.
     // (not likely to be called anymore but left for safety)
-    if (fabs(checkOrthogonality(d_basis.get())) >
+    if (fabs(checkOrthogonality(*d_basis)) >
             std::numeric_limits<double>::epsilon()*static_cast<double>(d_num_samples)) {
         d_basis->orthogonalize();
     }
@@ -302,7 +302,7 @@ IncrementalSVDBrand::updateTemporalBasis()
 
     // Reorthogonalize if necessary.
     // (not likely to be called anymore but left for safety)
-    if (fabs(checkOrthogonality(d_basis_right.get())) >
+    if (fabs(checkOrthogonality(*d_basis_right)) >
             std::numeric_limits<double>::epsilon()*d_num_samples) {
         d_basis_right->orthogonalize();
     }
@@ -475,18 +475,18 @@ IncrementalSVDBrand::addNewSample(
     else {
         max_U_dim = d_total_dim;
     }
-    if (fabs(checkOrthogonality(d_Up.get())) >
+    if (fabs(checkOrthogonality(*d_Up)) >
             std::numeric_limits<double>::epsilon()*static_cast<double>(max_U_dim)) {
         d_Up->orthogonalize();
     }
-    if (fabs(checkOrthogonality(d_U.get())) >
+    if (fabs(checkOrthogonality(*d_U)) >
             std::numeric_limits<double>::epsilon()*static_cast<double>(max_U_dim)) {
         d_U->orthogonalize(); // Will not be called, but just in case
     }
 
     if(d_update_right_SV)
     {
-        if (fabs(checkOrthogonality(d_W)) >
+        if (fabs(checkOrthogonality(*d_W)) >
                 std::numeric_limits<double>::epsilon()*d_num_samples) {
             d_W->orthogonalize();
         }

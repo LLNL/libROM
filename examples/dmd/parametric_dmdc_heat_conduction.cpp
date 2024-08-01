@@ -838,7 +838,7 @@ int main(int argc, char *argv[])
                 std::cout << "Predicting temperature using DMDc" << std::endl;
             }
 
-            CAROM::Vector* result_u = dmd_u->predict(ts[0]);
+            std::unique_ptr<CAROM::Vector> result_u = dmd_u->predict(ts[0]);
             Vector initial_dmd_solution_u(result_u->getData(), result_u->dim());
             u_gf.SetFromTrueDofs(initial_dmd_solution_u);
 
@@ -855,8 +855,6 @@ int main(int argc, char *argv[])
                 dmd_visit_dc.Save();
             }
 
-            delete result_u;
-
             if (visit)
             {
                 for (int i = 1; i < ts.size(); i++)
@@ -870,8 +868,6 @@ int main(int argc, char *argv[])
                         dmd_visit_dc.SetCycle(i);
                         dmd_visit_dc.SetTime(ts[i]);
                         dmd_visit_dc.Save();
-
-                        delete result_u;
                     }
                 }
             }
@@ -900,11 +896,7 @@ int main(int argc, char *argv[])
                 printf("Elapsed time for predicting DMDc: %e second\n",
                        dmd_prediction_timer.RealTime());
             }
-
-            delete result_u;
-
         }
-
     }
 
     // 16. Free the used memory.

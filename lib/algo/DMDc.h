@@ -120,7 +120,7 @@ public:
      *
      * @param[in] t   The time of the output state
      */
-    Vector* predict(double t);
+    std::unique_ptr<Vector> predict(double t);
 
     /**
      * @brief Get the time offset contained within d_t_offset.

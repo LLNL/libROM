@@ -151,7 +151,7 @@ public:
      * @param[in] t   The time of the output state
      * @param[in] deg The derivative degree of the output state
      */
-    std::shared_ptr<Vector> predict(double t, int deg = 0);
+    std::unique_ptr<Vector> predict(double t, int deg = 0);
 
     /**
      * @brief Get the time offset contained within d_t_offset.

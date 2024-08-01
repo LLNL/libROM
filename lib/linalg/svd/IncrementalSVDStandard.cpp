@@ -158,7 +158,7 @@ IncrementalSVDStandard::addLinearlyDependentSample(
     else {
         max_U_dim = d_total_dim;
     }
-    if (fabs(checkOrthogonality(d_U.get())) >
+    if (fabs(checkOrthogonality(*d_U)) >
             std::numeric_limits<double>::epsilon()*static_cast<double>(max_U_dim)) {
         d_U->orthogonalize();
     }
@@ -219,12 +219,12 @@ IncrementalSVDStandard::addNewSample(
     else {
         max_U_dim = d_total_dim;
     }
-    if (fabs(checkOrthogonality(d_U.get())) >
+    if (fabs(checkOrthogonality(*d_U)) >
             std::numeric_limits<double>::epsilon()*static_cast<double>(max_U_dim)) {
         d_U->orthogonalize();
     }
     if (d_update_right_SV) {
-        if (fabs(checkOrthogonality(d_W)) >
+        if (fabs(checkOrthogonality(*d_W)) >
                 std::numeric_limits<double>::epsilon()*d_num_samples) {
             d_W->orthogonalize();
         }

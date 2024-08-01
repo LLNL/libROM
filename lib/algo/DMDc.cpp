@@ -684,7 +684,7 @@ DMDc::project(const Vector* init, const Matrix* controls, double t_offset)
     d_init_projected = true;
 }
 
-Vector*
+std::unique_ptr<Vector>
 DMDc::predict(double t)
 {
     CAROM_VERIFY(d_trained);
@@ -731,6 +731,8 @@ DMDc::predict(double t)
 
     delete f_control_real;
     delete f_control_imaginary;
+
+    return d_predicted_state_real;
 }
 
 void

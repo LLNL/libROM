@@ -233,7 +233,7 @@ protected:
      */
     double
     checkOrthogonality(
-        const Matrix* m);
+        const Matrix & m);
 
     /**
      * @brief Tolerance to determine whether or not a sample is linearly

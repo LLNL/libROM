@@ -166,13 +166,13 @@ IncrementalSVDFastUpdate::computeBasis()
     }
 
     // Reorthogonalize if necessary.
-    if (fabs(checkOrthogonality(d_basis.get())) >
+    if (fabs(checkOrthogonality(*d_basis)) >
             std::numeric_limits<double>::epsilon()*static_cast<double>(d_num_samples)) {
         d_basis->orthogonalize();
     }
     if(d_update_right_SV)
     {
-        if (fabs(checkOrthogonality(d_basis_right.get())) >
+        if (fabs(checkOrthogonality(*d_basis_right)) >
                 std::numeric_limits<double>::epsilon()*d_num_samples) {
             d_basis_right->orthogonalize();
         }

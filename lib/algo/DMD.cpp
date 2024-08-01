@@ -614,7 +614,7 @@ DMD::projectInitialCondition(const Vector* init, double t_offset)
     d_init_projected = true;
 }
 
-std::shared_ptr<Vector>
+std::unique_ptr<Vector>
 DMD::predict(double t, int deg)
 {
     CAROM_VERIFY(d_trained);
@@ -634,7 +634,7 @@ DMD::predict(double t, int deg)
     std::unique_ptr<Vector> d_predicted_state_real_2 =
         d_phi_mult_eigs_imaginary->mult(*d_projected_init_imaginary);
 
-    std::shared_ptr<Vector> d_predicted_state_real =
+    std::unique_ptr<Vector> d_predicted_state_real =
         d_predicted_state_real_1->minus(*d_predicted_state_real_2);
     addOffset(*d_predicted_state_real, t, deg);
 
