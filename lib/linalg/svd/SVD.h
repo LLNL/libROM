@@ -77,7 +77,7 @@ public:
      * @return The basis vectors for the current time interval.
      */
     virtual
-    const Matrix*
+    std::shared_ptr<const Matrix>
     getSpatialBasis() = 0;
 
     /**
@@ -86,7 +86,7 @@ public:
      * @return The temporal basis vectors for the current time interval.
      */
     virtual
-    const Matrix*
+    std::shared_ptr<const Matrix>
     getTemporalBasis() = 0;
 
     /**
@@ -95,7 +95,7 @@ public:
      * @return The singular values for the current time interval.
      */
     virtual
-    const Vector*
+    std::shared_ptr<const Vector>
     getSingularValues() = 0;
 
     /**
@@ -104,7 +104,7 @@ public:
      * @return The singular values for the current time interval.
      */
     virtual
-    const Matrix*
+    std::shared_ptr<const Matrix>
     getSnapshotMatrix() = 0;
 
     /**
@@ -166,7 +166,7 @@ protected:
      * The basis vectors are large and each process owns all of the basis
      * vectors.
      */
-    std::unique_ptr<Matrix> d_basis;
+    std::shared_ptr<Matrix> d_basis;
 
     /**
      * @brief The globalized right basis vectors for the current time interval.
@@ -174,7 +174,7 @@ protected:
      * Depending on the SVD algorithm, it may be  distributed across all
      * processors or each processor may own all of U.
      */
-    std::unique_ptr<Matrix> d_basis_right;
+    std::shared_ptr<Matrix> d_basis_right;
 
     /**
      * @brief The matrix U which is large.
@@ -182,7 +182,7 @@ protected:
      * Depending on the SVD algorithm, d_U may be  distributed across all
      * processors or each processor may own all of U.
      */
-    std::unique_ptr<Matrix> d_U;
+    std::shared_ptr<Matrix> d_U;
 
     /**
      * @brief The matrix U which is large.
@@ -198,7 +198,7 @@ protected:
      * For all SVD algorithms, S is not distributed and the entire vector
      * exists on each processor.
      */
-    Vector* d_S;
+    std::shared_ptr<Vector> d_S;
 
     /**
      * @brief The globalized snapshot vectors for the current time interval.
@@ -206,7 +206,7 @@ protected:
      * The snapshot vectors are large and each process owns all of the snapshot
      * vectors.
      */
-    Matrix* d_snapshots;
+    std::shared_ptr<Matrix> d_snapshots;
 
     /**
      * @brief Flag to indicate if results of algorithm should be printed for

@@ -31,9 +31,7 @@ SVD::SVD(
 
 SVD::~SVD()
 {
-    delete d_S;
     delete d_W;
-    delete d_snapshots;
 }
 
 }

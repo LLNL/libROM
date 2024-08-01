@@ -38,7 +38,7 @@ public:
      *
      * @return The basis vectors for the current time interval.
      */
-    const Matrix*
+    std::shared_ptr<const Matrix>
     getSpatialBasis() override;
 
     /**
@@ -47,7 +47,7 @@ public:
      *
      * @return The temporal basis vectors for the current time interval.
      */
-    const Matrix*
+    std::shared_ptr<const Matrix>
     getTemporalBasis() override;
 
 private:
@@ -95,10 +95,9 @@ private:
      * @param[in] u The first state.
      * @param[in] time The simulation time for the first state.
      */
-    virtual
     void
     buildInitialSVD(
-        double* u);
+        double* u) override;
 
     /**
      * @brief Adds the new sampled the state vector, u, to the system.
@@ -129,9 +128,8 @@ private:
     /**
      * @brief Computes the current basis vectors.
      */
-    virtual
     void
-    computeBasis();
+    computeBasis() override;
 
     /**
      * @brief Add a linearly dependent sample to the SVD.

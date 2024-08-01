@@ -80,7 +80,7 @@ BasisWriter::writeBasis(const std::string& kind)
     if (kind == "basis") {
         d_database->create(full_file_name, MPI_COMM_WORLD);
 
-        const Matrix* basis = d_basis_generator->getSpatialBasis();
+        std::shared_ptr<const Matrix> basis = d_basis_generator->getSpatialBasis();
         /* spatial basis is always distributed */
         CAROM_VERIFY(basis->distributed());
         int num_rows = basis->numRows();
@@ -95,8 +95,8 @@ BasisWriter::writeBasis(const std::string& kind)
         sprintf(tmp, "spatial_basis");
         d_database->putDoubleArray(tmp, &basis->item(0, 0), num_rows*num_cols, true);
 
-        if(d_basis_generator->updateRightSV()) {
-            const Matrix* tbasis = d_basis_generator->getTemporalBasis();
+        if (d_basis_generator->updateRightSV()) {
+            std::shared_ptr<const Matrix> tbasis = d_basis_generator->getTemporalBasis();
             /* temporal basis is always not distributed */
             CAROM_VERIFY(!tbasis->distributed());
             num_rows = tbasis->numRows();
@@ -109,7 +109,7 @@ BasisWriter::writeBasis(const std::string& kind)
             d_database->putDoubleArray(tmp, &tbasis->item(0, 0), num_rows*num_cols);
         }
 
-        const Vector* sv = d_basis_generator->getSingularValues();
+        std::shared_ptr<const Vector> sv = d_basis_generator->getSingularValues();
         /* singular values are always not distributed */
         CAROM_VERIFY(!sv->distributed());
         int sv_dim = sv->dim();
@@ -124,7 +124,8 @@ BasisWriter::writeBasis(const std::string& kind)
     if (kind == "snapshot") {
         d_snap_database->create(snap_file_name, MPI_COMM_WORLD);
 
-        const Matrix* snapshots = d_basis_generator->getSnapshotMatrix();
+        std::shared_ptr<const Matrix> snapshots =
+            d_basis_generator->getSnapshotMatrix();
         /* snapshot matrix is always distributed */
         CAROM_VERIFY(snapshots->distributed());
         int num_rows = snapshots->numRows(); // d_dim
@@ -142,7 +143,6 @@ BasisWriter::writeBasis(const std::string& kind)
 
         d_snap_database->close();
     }
-
 }
 
 }

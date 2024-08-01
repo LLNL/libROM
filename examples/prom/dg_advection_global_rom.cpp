@@ -668,7 +668,7 @@ int main(int argc, char *argv[])
     bool isIncremental = false;
     const std::string basisName = "basis";
     const std::string basisFileName = basisName + std::to_string(id);
-    const CAROM::Matrix* spatialbasis;
+    std::unique_ptr<const CAROM::Matrix> spatialbasis;
     CAROM::Options* options;
     CAROM::BasisGenerator *generator;
     int numRowRB, numColumnRB;
@@ -913,7 +913,6 @@ int main(int argc, char *argv[])
         if (myid == 0) std::cout << "Relative l2 error of ROM solution " << diffNorm /
                                      fomNorm << std::endl;
 
-        delete spatialbasis;
         delete M_hat_carom;
         delete K_hat_carom;
         delete M_hat;

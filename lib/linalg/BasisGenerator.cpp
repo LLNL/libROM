@@ -71,20 +71,17 @@ BasisGenerator::BasisGenerator(
         if (options.fast_update_brand) {
             d_svd.reset(
                 new IncrementalSVDBrand(
-                    options,
-                    basis_file_name));
+                    options, basis_file_name));
         }
         else if (options.fast_update) {
             d_svd.reset(
                 new IncrementalSVDFastUpdate(
-                    options,
-                    basis_file_name));
+                    options, basis_file_name));
         }
         else {
             d_svd.reset(
                 new IncrementalSVDStandard(
-                    options,
-                    basis_file_name));
+                    options, basis_file_name));
         }
 
         // Get the number of processors.
@@ -100,14 +97,10 @@ BasisGenerator::BasisGenerator(
     else
     {
         if (options.randomized) {
-            d_svd.reset(
-                new RandomizedSVD(
-                    options));
+            d_svd.reset(new RandomizedSVD(options));
         }
         else {
-            d_svd.reset(
-                new StaticSVD(
-                    options));
+            d_svd.reset(new StaticSVD(options));
         }
     }
 }
@@ -159,8 +152,8 @@ BasisGenerator::loadSampleRange(const std::string& base_file_name,
     if (d_basis_reader) delete d_basis_reader;
 
     d_basis_reader = new BasisReader(base_file_name, db_format, d_dim);
-    const Matrix* mat;
-    const Vector* singular_vals;
+    std::unique_ptr<const Matrix> mat;
+    std::unique_ptr<const Vector> singular_vals;
 
     if (kind == "basis") {
         mat = d_basis_reader->getSpatialBasis();
@@ -221,7 +214,7 @@ BasisGenerator::computeNextSampleTime(
         }
 
         // Get the current basis vectors.
-        const Matrix* basis = getSpatialBasis();
+        std::shared_ptr<const Matrix> basis = getSpatialBasis();
 
         // Compute l = basis' * u
         Vector l(basis->numColumns(), false);
@@ -309,7 +302,7 @@ BasisGenerator::finalSummary(
     const int first_sv)
 {
     const int rom_dim = getSpatialBasis()->numColumns();
-    const Vector* sing_vals = getSingularValues();
+    std::shared_ptr<const Vector> sing_vals = getSingularValues();
 
     CAROM_VERIFY(rom_dim <= sing_vals->dim());
 

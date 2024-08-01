@@ -87,7 +87,7 @@ IncrementalSVDFastUpdate::buildInitialSVD(
     CAROM_VERIFY(u != 0);
 
     // Build d_S for this new time interval.
-    d_S = new Vector(1, false);
+    d_S.reset(new Vector(1, false));
     Vector u_vec(u, d_dim, true);
     double norm_u = u_vec.norm();
     d_S->item(0) = norm_u;
@@ -300,9 +300,8 @@ IncrementalSVDFastUpdate::addNewSample(
     d_Up.reset(new_d_Up);
 
     // d_S = sigma.
-    delete d_S;
     int num_dim = std::min(sigma->numRows(), sigma->numColumns());
-    d_S = new Vector(num_dim, false);
+    d_S.reset(new Vector(num_dim, false));
     for (int i = 0; i < num_dim; i++) {
         d_S->item(i) = sigma->item(i,i);
     }

@@ -147,7 +147,7 @@ RandomizedSVD::computeSVD()
     ncolumns = std::min(ncolumns, d_subspace_dim);
 
     // Allocate the appropriate matrices and gather their elements.
-    d_S = new Vector(ncolumns, false);
+    d_S.reset(new Vector(ncolumns, false));
     {
         CAROM_VERIFY(ncolumns >= 0);
         unsigned nc = static_cast<unsigned>(ncolumns);

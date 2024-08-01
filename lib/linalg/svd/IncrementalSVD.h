@@ -70,9 +70,8 @@ public:
      *
      * @return The basis vectors for the current time interval.
      */
-    virtual
-    const Matrix*
-    getSpatialBasis();
+    std::shared_ptr<const Matrix>
+    getSpatialBasis() override;
 
     /**
      * @brief Returns the temporal basis vectors for the current time interval
@@ -80,27 +79,24 @@ public:
      *
      * @return The temporal basis vectors for the current time interval.
      */
-    virtual
-    const Matrix*
-    getTemporalBasis();
+    std::shared_ptr<const Matrix>
+    getTemporalBasis() override;
 
     /**
      * @brief Returns the singular values for the current time interval.
      *
      * @return The singular values for the current time interval.
      */
-    virtual
-    const Vector*
-    getSingularValues();
+    std::shared_ptr<const Vector>
+    getSingularValues() override;
 
     /**
      * @brief Returns the snapshot matrix for the current time interval.
      *
      * @return The snapshot matrix for the current time interval.
      */
-    virtual
-    const Matrix*
-    getSnapshotMatrix();
+    std::shared_ptr<const Matrix>
+    getSnapshotMatrix() override;
 
 protected:
     /**

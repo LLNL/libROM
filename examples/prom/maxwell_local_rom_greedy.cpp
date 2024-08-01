@@ -365,7 +365,7 @@ int main(int argc, char *argv[])
             loadBasisName += "_greedy";
         }
 
-        const CAROM::Matrix* spatialbasis;
+        std::unique_ptr<const CAROM::Matrix> spatialbasis;
         CAROM::Options* options;
         CAROM::BasisGenerator *generator;
         int numRowRB, numColumnRB;
@@ -508,7 +508,6 @@ int main(int argc, char *argv[])
 
             // 24. reconstruct FOM state
             spatialbasis->mult(reducedSol, X_carom);
-            delete spatialbasis;
         }
 
         // 25. Recover the parallel grid function corresponding to X. This is the

@@ -495,15 +495,11 @@ int main(int argc, char *argv[])
         CAROM::BasisReader reader(basis_filename);
 
         Vector eigenvalues_rom;
-        const CAROM::Matrix *spatialbasis;
+        std::unique_ptr<const CAROM::Matrix> spatialbasis;
         if (rdim != -1)
-        {
             spatialbasis = reader.getSpatialBasis(rdim);
-        }
         else
-        {
             spatialbasis = reader.getSpatialBasis(ef);
-        }
 
         const int numRowRB = spatialbasis->numRows();
         const int numColumnRB = spatialbasis->numColumns();
@@ -552,8 +548,6 @@ int main(int argc, char *argv[])
                         reduced_eigenvector_carom);
             eigenvectors.SetRow(i, eigenvector_carom->getData());
         }
-
-        delete spatialbasis;
 
         delete A_mat;
         delete M_mat;

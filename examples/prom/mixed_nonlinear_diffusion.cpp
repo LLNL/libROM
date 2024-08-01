@@ -856,7 +856,7 @@ int main(int argc, char *argv[])
     if (online)
     {
         CAROM::BasisReader readerR("basisR");
-        BR_librom.reset(readerR.getSpatialBasis());
+        BR_librom = readerR.getSpatialBasis();
         if (rrdim == -1)
             rrdim = BR_librom->numColumns();
         else
@@ -871,7 +871,7 @@ int main(int argc, char *argv[])
             printf("reduced R dim = %d\n",rrdim);
 
         CAROM::BasisReader readerW("basisW");
-        BW_librom.reset(readerW.getSpatialBasis());
+        BW_librom = readerW.getSpatialBasis();
         if (rwdim == -1)
             rwdim = BW_librom->numColumns();
         else
@@ -893,7 +893,7 @@ int main(int argc, char *argv[])
         */
 
         CAROM::BasisReader readerFR("basisFR");
-        FR_librom.reset(readerFR.getSpatialBasis());
+        FR_librom = readerFR.getSpatialBasis();
 
         if (nldim == -1)
         {
@@ -981,7 +981,7 @@ int main(int argc, char *argv[])
             if (hyperreduce_source)
             {
                 readerS = new CAROM::BasisReader("basisS");
-                S_librom.reset(readerS->getSpatialBasis());
+                S_librom = readerS->getSpatialBasis();
 
                 if (nsdim == -1)
                 {

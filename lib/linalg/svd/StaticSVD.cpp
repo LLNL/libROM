@@ -137,7 +137,7 @@ StaticSVD::takeSample(
     return true;
 }
 
-const Matrix*
+std::shared_ptr<const Matrix>
 StaticSVD::getSpatialBasis()
 {
     // If this basis is for the last time interval then it may not be up to date
@@ -149,10 +149,10 @@ StaticSVD::getSpatialBasis()
         CAROM_ASSERT(d_basis != 0);
     }
     CAROM_ASSERT(isBasisCurrent());
-    return d_basis.get();
+    return d_basis;
 }
 
-const Matrix*
+std::shared_ptr<const Matrix>
 StaticSVD::getTemporalBasis()
 {
     // If this basis is for the last time interval then it may not be up to date
@@ -164,16 +164,15 @@ StaticSVD::getTemporalBasis()
         CAROM_ASSERT(d_basis_right != 0);
     }
     CAROM_ASSERT(isBasisCurrent());
-    return d_basis_right.get();
+    return d_basis_right;
 }
 
-const Vector*
+std::shared_ptr<const Vector>
 StaticSVD::getSingularValues()
 {
     // If these singular values are for the last time interval then they may not
     // be up to date so recompute them.
     if (!isBasisCurrent()) {
-        delete d_S;
         d_S = nullptr;
         delete d_W;
         d_W = nullptr;
@@ -186,15 +185,14 @@ StaticSVD::getSingularValues()
     return d_S;
 }
 
-const Matrix*
+std::shared_ptr<const Matrix>
 StaticSVD::getSnapshotMatrix()
 {
     if ((!d_preserve_snapshot) && (isBasisCurrent()) && (d_basis != 0))
         CAROM_ERROR("StaticSVD: snapshot matrix is modified after computeSVD."
                     " To preserve the snapshots, set Options::static_svd_preserve_snapshot to be true!\n");
 
-    if (d_snapshots) delete d_snapshots;
-    d_snapshots = new Matrix(d_dim, d_num_samples, true);
+    d_snapshots.reset(new Matrix(d_dim, d_num_samples, true));
 
     for (int rank = 0; rank < d_num_procs; ++rank) {
         int nrows = d_dims[static_cast<unsigned>(rank)];
@@ -281,7 +279,7 @@ StaticSVD::computeSVD()
     CAROM_VERIFY(ncolumns >= 0);
 
     // Allocate the appropriate matrices and gather their elements.
-    d_S = new Vector(ncolumns, false);
+    d_S.reset(new Vector(ncolumns, false));
     {
         CAROM_VERIFY(ncolumns >= 0);
         unsigned nc = static_cast<unsigned>(ncolumns);

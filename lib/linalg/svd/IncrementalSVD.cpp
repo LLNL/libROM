@@ -116,7 +116,7 @@ IncrementalSVD::IncrementalSVD(
             // Read d_S.
             int num_dim;
             d_state_database->getInteger("S_num_dim", num_dim);
-            d_S = new Vector(num_dim, false);
+            d_S.reset(new Vector(num_dim, false));
             d_state_database->getDoubleArray("S",
                                              &d_S->item(0),
                                              num_dim);
@@ -194,7 +194,7 @@ IncrementalSVD::takeSample(
     }
 
     if (d_debug_algorithm) {
-        const Matrix* basis = getSpatialBasis();
+        std::shared_ptr<const Matrix> basis = getSpatialBasis();
         if (d_rank == 0) {
             // Print d_S.
             for (int col = 0; col < d_num_samples; ++col) {
@@ -248,28 +248,28 @@ IncrementalSVD::takeSample(
     return result;
 }
 
-const Matrix*
+std::shared_ptr<const Matrix>
 IncrementalSVD::getSpatialBasis()
 {
     CAROM_ASSERT(d_basis != 0);
-    return d_basis.get();
+    return d_basis;
 }
 
-const Matrix*
+std::shared_ptr<const Matrix>
 IncrementalSVD::getTemporalBasis()
 {
     CAROM_ASSERT(d_basis != 0);
-    return d_basis_right.get();
+    return d_basis_right;
 }
 
-const Vector*
+std::shared_ptr<const Vector>
 IncrementalSVD::getSingularValues()
 {
     CAROM_ASSERT(d_S != 0);
     return d_S;
 }
 
-const Matrix*
+std::shared_ptr<const Matrix>
 IncrementalSVD::getSnapshotMatrix()
 {
     std::cout << "Getting snapshot matrix for incremental SVD not implemented" <<

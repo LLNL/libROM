@@ -210,15 +210,17 @@ main(
         static_basis_generator.endSamples();
 
         // Get the basis vectors from the 2 different algorithms.
-        const CAROM::Matrix* inc_basis = inc_basis_generator.getSpatialBasis();
-        const CAROM::Matrix* static_basis = static_basis_generator.getSpatialBasis();
+        std::shared_ptr<const CAROM::Matrix> inc_basis =
+            inc_basis_generator.getSpatialBasis();
+        std::shared_ptr<const CAROM::Matrix> static_basis =
+            static_basis_generator.getSpatialBasis();
 
         // Compute the product of the transpose of the static basis and the
-        // incremental basis.  This should be a unitary matrix.
+        // incremental basis. This should be a unitary matrix.
         // We use a special version of transposeMult as the static basis is not
-        // distributed.  In the context of this test routine we "know" how the
+        // distributed. In the context of this test routine we "know" how the
         // incremental basis is distributed so we can do the multiplication.
-        CAROM::Matrix* test = transposeMult(static_basis, inc_basis);
+        CAROM::Matrix *test = transposeMult(static_basis.get(), inc_basis.get());
         if (rank == 0) {
             for (int row = 0; row < test->numRows(); ++row) {
                 for (int col = 0; col < test->numColumns(); ++col) {
@@ -227,7 +229,6 @@ main(
                 printf("\n");
             }
         }
-        delete test;
     }
 
     // Clean up.

@@ -722,13 +722,9 @@ int main(int argc, char *argv[])
         {
             CAROM::BasisReader reader(basisName);
             if (rdim != -1)
-            {
-                spatialbasis.reset(reader.getSpatialBasis(rdim));
-            }
+                spatialbasis = reader.getSpatialBasis(rdim);
             else
-            {
-                spatialbasis.reset(reader.getSpatialBasis(ef));
-            }
+                spatialbasis = reader.getSpatialBasis(ef);
             numRowRB = spatialbasis->numRows();
             numColumnRB = spatialbasis->numColumns();
             if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB,

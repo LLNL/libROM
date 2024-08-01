@@ -370,7 +370,7 @@ int main(int argc, char *argv[])
         // 20. read the reduced basis
         assembleTimer.Start();
         CAROM::BasisReader reader(basisName);
-        const CAROM::Matrix* spatialbasis = reader.getSpatialBasis();
+        std::unique_ptr<const CAROM::Matrix> spatialbasis = reader.getSpatialBasis();
         const int numRowRB = spatialbasis->numRows();
         const int numColumnRB = spatialbasis->numColumns();
         if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB,
@@ -395,7 +395,6 @@ int main(int argc, char *argv[])
 
         // 23. reconstruct FOM state
         spatialbasis->mult(reducedSol, X_carom);
-        delete spatialbasis;
     }
 
     // 24. Recover the parallel grid function corresponding to X. This is the

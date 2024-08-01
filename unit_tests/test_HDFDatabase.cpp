@@ -587,13 +587,14 @@ TEST(BasisGeneratorIO, HDFDatabase)
     }
 
     sampler.writeSnapshot();
-    const CAROM::Matrix *snapshot = sampler.getSnapshotMatrix();
+    std::shared_ptr<const CAROM::Matrix> snapshot = sampler.getSnapshotMatrix();
 
     sampler.endSamples();
-    const CAROM::Matrix *spatial_basis = sampler.getSpatialBasis();
+    std::shared_ptr<const CAROM::Matrix> spatial_basis = sampler.getSpatialBasis();
 
     CAROM::BasisReader basis_reader("test_basis");
-    const CAROM::Matrix *spatial_basis1 = basis_reader.getSpatialBasis();
+    std::unique_ptr<const CAROM::Matrix> spatial_basis1 =
+        basis_reader.getSpatialBasis();
 
     EXPECT_EQ(spatial_basis->numRows(), spatial_basis1->numRows());
     EXPECT_EQ(spatial_basis->numColumns(), spatial_basis1->numColumns());
@@ -602,7 +603,8 @@ TEST(BasisGeneratorIO, HDFDatabase)
             EXPECT_NEAR((*spatial_basis)(i, j), (*spatial_basis1)(i, j), threshold);
 
     CAROM::BasisReader snapshot_reader("test_basis_snapshot");
-    const CAROM::Matrix *snapshot1 = snapshot_reader.getSnapshotMatrix();
+    std::unique_ptr<const CAROM::Matrix> snapshot1 =
+        snapshot_reader.getSnapshotMatrix();
 
     EXPECT_EQ(snapshot->numRows(), snapshot1->numRows());
     EXPECT_EQ(snapshot->numColumns(), snapshot1->numColumns());
@@ -641,10 +643,11 @@ TEST(BasisGeneratorIO, Base_MPIO_combination)
     sampler.loadSamples(base_name + "_snapshot", "snapshot", 1e9,
                         CAROM::Database::formats::HDF5);
     sampler.writeSnapshot();
-    const CAROM::Matrix *snapshot = sampler.getSnapshotMatrix();
+    std::shared_ptr<const CAROM::Matrix> snapshot = sampler.getSnapshotMatrix();
 
     CAROM::BasisReader snapshot_reader("test_basis_snapshot");
-    const CAROM::Matrix *snapshot1 = snapshot_reader.getSnapshotMatrix();
+    std::unique_ptr<const CAROM::Matrix> snapshot1 =
+        snapshot_reader.getSnapshotMatrix();
 
     EXPECT_EQ(snapshot->numRows(), snapshot1->numRows());
     EXPECT_EQ(snapshot->numColumns(), snapshot1->numColumns());
@@ -653,10 +656,11 @@ TEST(BasisGeneratorIO, Base_MPIO_combination)
             EXPECT_NEAR((*snapshot)(i, j), (*snapshot1)(i, j), threshold);
 
     sampler.endSamples();
-    const CAROM::Matrix *spatial_basis = sampler.getSpatialBasis();
+    std::shared_ptr<const CAROM::Matrix> spatial_basis = sampler.getSpatialBasis();
 
     CAROM::BasisReader basis_reader("test_basis");
-    const CAROM::Matrix *spatial_basis1 = basis_reader.getSpatialBasis();
+    std::shared_ptr<const CAROM::Matrix> spatial_basis1 =
+        basis_reader.getSpatialBasis();
 
     EXPECT_EQ(spatial_basis->numRows(), spatial_basis1->numRows());
     EXPECT_EQ(spatial_basis->numColumns(), spatial_basis1->numColumns());
@@ -694,10 +698,11 @@ TEST(BasisGeneratorIO, MPIO_Base_combination)
 
     sampler.loadSamples(mpio_name + "_snapshot", "snapshot", 1e9,
                         CAROM::Database::formats::HDF5_MPIO);
-    const CAROM::Matrix *snapshot = sampler.getSnapshotMatrix();
+    std::shared_ptr<const CAROM::Matrix> snapshot = sampler.getSnapshotMatrix();
 
     CAROM::BasisReader snapshot_reader("test_basis_snapshot");
-    const CAROM::Matrix *snapshot1 = snapshot_reader.getSnapshotMatrix();
+    std::unique_ptr<const CAROM::Matrix> snapshot1 =
+        snapshot_reader.getSnapshotMatrix();
 
     EXPECT_EQ(snapshot->numRows(), snapshot1->numRows());
     EXPECT_EQ(snapshot->numColumns(), snapshot1->numColumns());
@@ -706,10 +711,11 @@ TEST(BasisGeneratorIO, MPIO_Base_combination)
             EXPECT_NEAR((*snapshot)(i, j), (*snapshot1)(i, j), threshold);
 
     sampler.endSamples();
-    const CAROM::Matrix *spatial_basis = sampler.getSpatialBasis();
+    std::shared_ptr<const CAROM::Matrix> spatial_basis = sampler.getSpatialBasis();
 
     CAROM::BasisReader basis_reader("test_basis");
-    const CAROM::Matrix *spatial_basis1 = basis_reader.getSpatialBasis();
+    std::unique_ptr<const CAROM::Matrix> spatial_basis1 =
+        basis_reader.getSpatialBasis();
 
     EXPECT_EQ(spatial_basis->numRows(), spatial_basis1->numRows());
     EXPECT_EQ(spatial_basis->numColumns(), spatial_basis1->numColumns());
@@ -740,12 +746,14 @@ TEST(BasisReaderIO, partial_getSpatialBasis)
     std::string mpio_name = "test_mpio";
 
     CAROM::BasisReader basis_reader("test_basis");
-    const CAROM::Matrix *spatial_basis = basis_reader.getSpatialBasis();
+    std::unique_ptr<const CAROM::Matrix> spatial_basis =
+        basis_reader.getSpatialBasis();
 
     CAROM::BasisReader basis_reader1("test_mpio",
                                      CAROM::Database::formats::HDF5_MPIO,
                                      nrow_local);
-    const CAROM::Matrix *spatial_basis1 = basis_reader1.getSpatialBasis();
+    std::unique_ptr<const CAROM::Matrix> spatial_basis1 =
+        basis_reader1.getSpatialBasis();
 
     EXPECT_EQ(spatial_basis->numRows(), spatial_basis1->numRows());
     EXPECT_EQ(spatial_basis->numColumns(), spatial_basis1->numColumns());
@@ -753,8 +761,6 @@ TEST(BasisReaderIO, partial_getSpatialBasis)
         for (int j = 0; j < spatial_basis->numColumns(); j++)
             EXPECT_NEAR((*spatial_basis)(i, j), (*spatial_basis1)(i, j), threshold);
 
-    delete spatial_basis;
-    delete spatial_basis1;
     const int col1 = 3, col2 = 7;
     spatial_basis = basis_reader.getSpatialBasis(col1, col2);
     spatial_basis1 = basis_reader1.getSpatialBasis(col1, col2);
@@ -764,9 +770,6 @@ TEST(BasisReaderIO, partial_getSpatialBasis)
     for (int i = 0; i < spatial_basis->numRows(); i++)
         for (int j = 0; j < spatial_basis->numColumns(); j++)
             EXPECT_NEAR((*spatial_basis)(i, j), (*spatial_basis1)(i, j), threshold);
-
-    delete spatial_basis;
-    delete spatial_basis1;
 }
 
 TEST(BasisGeneratorIO, Scaling_test)

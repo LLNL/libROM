@@ -294,9 +294,9 @@ TEST(StaticSVDTest, Test_StaticSVDClass)
     sampler.takeSample(&sample2[row_offset[d_rank]]);
     sampler.takeSample(&sample3[row_offset[d_rank]]);
 
-    const CAROM::Matrix* d_basis = sampler.getSpatialBasis();
-    const CAROM::Matrix* d_basis_right = sampler.getTemporalBasis();
-    const CAROM::Vector* sv = sampler.getSingularValues();
+    std::shared_ptr<const CAROM::Matrix> d_basis = sampler.getSpatialBasis();
+    std::shared_ptr<const CAROM::Matrix> d_basis_right = sampler.getTemporalBasis();
+    std::shared_ptr<const CAROM::Vector> sv = sampler.getSingularValues();
 
     EXPECT_EQ(d_basis->numRows(), d_num_rows);
     EXPECT_EQ(d_basis->numColumns(), 3);
@@ -376,9 +376,9 @@ TEST(StaticSVDTest, Test_StaticSVDTranspose)
     sampler.takeSample(&sample4[row_offset[d_rank]]);
     sampler.takeSample(&sample5[row_offset[d_rank]]);
 
-    const CAROM::Matrix* d_basis = sampler.getSpatialBasis();
-    const CAROM::Matrix* d_basis_right = sampler.getTemporalBasis();
-    const CAROM::Vector* sv = sampler.getSingularValues();
+    std::shared_ptr<const CAROM::Matrix> d_basis = sampler.getSpatialBasis();
+    std::shared_ptr<const CAROM::Matrix> d_basis_right = sampler.getTemporalBasis();
+    std::shared_ptr<const CAROM::Vector> sv = sampler.getSingularValues();
 
     EXPECT_EQ(d_basis_right->numRows(), num_total_cols);
     EXPECT_EQ(d_basis_right->numColumns(), 3);

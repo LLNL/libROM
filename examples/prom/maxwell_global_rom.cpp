@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
     bool isIncremental = false;
     const std::string basisName = "basis";
     const std::string basisFileName = basisName + std::to_string(id);
-    const CAROM::Matrix* spatialbasis;
+    std::unique_ptr<const CAROM::Matrix> spatialbasis;
     CAROM::Options* options;
     CAROM::BasisGenerator *generator;
     int numRowRB, numColumnRB;
@@ -386,7 +386,6 @@ int main(int argc, char *argv[])
 
         // 23. reconstruct FOM state
         spatialbasis->mult(reducedSol, X_carom);
-        delete spatialbasis;
     }
 
     // 24. Recover the parallel grid function corresponding to X. This is the
