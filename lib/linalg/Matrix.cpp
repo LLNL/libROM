@@ -133,7 +133,7 @@ Matrix::Matrix(
         // Check integer multiplication overflow
         if (num_rows > INT_MAX / num_cols)
             CAROM_ERROR("Matrix::setSize- new size exceeds maximum integer value!\n");
-            
+
         d_mat = mat;
         d_alloc_size = num_rows*num_cols;
         d_num_cols = num_cols;
