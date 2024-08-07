@@ -12,7 +12,7 @@
 //
 // This script performs DMD on general datasets in CSV or HDF formats,
 // with the options of time-windowing and parametric interpolation.
-// For the used-specified input file hierarchy, see the "Description" section below.
+// For the user-specified input file hierarchy, see the "Description" section below.
 // Below is a simple hands-on example, using MFEM heat conduction example to
 // generate either CSV or HDF database to illustrate the file hierarchy and command lines
 // (HDF is more efficient).
