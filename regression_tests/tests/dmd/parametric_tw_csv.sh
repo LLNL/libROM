@@ -23,6 +23,12 @@ CMDS=(
     "echo 'dmd_par5,0.50,0.01,0,0'  > dmd_list/dmd_test.csv"
     "./parametric_tw_csv -o hc_local -train-set dmd_train_local -rdim 16 -dtc 0.01 -offline"
     "./parametric_tw_csv -o hc_local -train-set dmd_train_local -rdim 16 -dtc 0.01 -online"
+    "./parametric_tw_csv -o hc_local_tw -train-set dmd_train_local -nwinsamp 25 -dtc 0.01 -offline"
+    "./parametric_tw_csv -o hc_local_tw -train-set dmd_train_local -nwinsamp 25 -dtc 0.01 -online"
+    "./parametric_tw_csv -o hc_parametric -train-set dmd_train_parametric -rdim 16 -dtc 0.01 -offline"
+    "./parametric_tw_csv -o hc_parametric -train-set dmd_train_parametric -rdim 16 -dtc 0.01 -online"
+    "./parametric_tw_csv -o hc_parametric_tw -train-set dmd_train_parametric -nwinsamp 25 -dtc 0.01 -offline"
+    "./parametric_tw_csv -o hc_parametric_tw -train-set dmd_train_parametric -nwinsamp 25 -dtc 0.01 -online"
 )
 TYPE="DMD"
 OFFSET=0
@@ -32,6 +38,15 @@ FILES=(
     "./run/hc_local/window0/par0_eigenvalue.csv"
     "./run/hc_local/window0/par0_singular_value.csv"
     "./run/hc_local/dmd_par5_prediction_error.csv"
+    "./run/hc_local_tw/window1/par0_eigenvalue.csv"
+    "./run/hc_local_tw/window1/par0_singular_value.csv"
+    "./run/hc_local_tw/dmd_par5_prediction_error.csv"
+    "./run/hc_parametric/window0/par0_eigenvalue.csv"
+    "./run/hc_parametric/window0/par0_singular_value.csv"
+    "./run/hc_parametric/dmd_par5_prediction_error.csv"
+    "./run/hc_parametric_tw/window1/par0_eigenvalue.csv"
+    "./run/hc_parametric_tw/window1/par0_singular_value.csv"
+    "./run/hc_parametric_tw/dmd_par5_prediction_error.csv"
 )
 
 run_tests
