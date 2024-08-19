@@ -83,29 +83,39 @@ void getParametricDMD(T*& parametric_dmd,
         A_tildes.push_back(dmds[i]->d_A_tilde);
     }
 
+    
     int ref_point = getClosestPoint(parameter_points, desired_point);
+    
     std::vector<CAROM::Matrix*> rotation_matrices = obtainRotationMatrices(
                 parameter_points,
                 bases, ref_point);
 
+    
     CAROM::MatrixInterpolator basis_interpolator(parameter_points,
             rotation_matrices, bases, ref_point, "B", rbf, interp_method, closest_rbf_val);
+
+    
     CAROM::Matrix* W = basis_interpolator.interpolate(desired_point,
                        reorthogonalize_W);
 
+    
     CAROM::MatrixInterpolator A_tilde_interpolator(parameter_points,
             rotation_matrices, A_tildes, ref_point, "R", rbf, interp_method,
             closest_rbf_val);
+    
     CAROM::Matrix* A_tilde = A_tilde_interpolator.interpolate(desired_point);
 
     // Calculate the right eigenvalues/eigenvectors of A_tilde
+    
     ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(A_tilde);
     std::vector<std::complex<double>> eigs = eigenpair.eigs;
 
     // Calculate phi (phi = W * eigenvectors)
+    
     CAROM::Matrix* phi_real = W->mult(eigenpair.ev_real);
     CAROM::Matrix* phi_imaginary = W->mult(eigenpair.ev_imaginary);
 
+    
     parametric_dmd = new T(eigs, phi_real, phi_imaginary, dmds[0]->d_k,
                            dmds[0]->d_dt, dmds[0]->d_t_offset,
                            dmds[0]->d_state_offset);
@@ -148,11 +158,15 @@ void getParametricDMD(T*& parametric_dmd,
                       bool reorthogonalize_W = false)
 {
     std::vector<T*> dmds;
+    std::cout << "Loading dmds from dmd_paths." << std::endl;
+
     for (int i = 0; i < dmd_paths.size(); i++)
     {
         T* dmd = new T(dmd_paths[i]);
         dmds.push_back(dmd);
     }
+
+    std::cout << "Successfully loaded dmd from dmd_paths" << std::endl;
 
     getParametricDMD(parametric_dmd, parameter_points, dmds, desired_point,
                      rbf, interp_method, closest_rbf_val,

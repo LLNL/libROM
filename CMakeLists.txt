@@ -157,7 +157,6 @@ if (ENABLE_EXAMPLES)
       de_dg_advection_greedy
       wave_equation
       dg_euler
-      local_tw_csv
       local_dw_csv
       parametric_tw_csv
       parametric_dw_csv

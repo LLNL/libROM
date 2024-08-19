@@ -377,14 +377,14 @@ int main(int argc, char *argv[])
             csv_db.getDoubleVector(filename, indicator_val, false);
             CAROM_VERIFY(indicator_val.size() > 0);
 
-            if (numWindows != indicator_val.size() - 1)
-            {
-                numWindows = indicator_val.size() - 1;
-                if (myid == 0)
-                {
-                    cout << "Resetting numWindows to " << numWindows << "." << endl;
-                }
-            }
+            // if (numWindows != indicator_val.size() - 1)
+            // {
+            //     numWindows = indicator_val.size() - 1;
+            //     if (myid == 0)
+            //     {
+            //         cout << "Resetting numWindows to " << numWindows << "." << endl;
+            //     }
+            // }
 
             if (indicator_idx.size() == 1)
             {
@@ -471,6 +471,10 @@ int main(int argc, char *argv[])
             double curr_indicator_val = -1.0;
             CAROM::Vector* twep = new CAROM::Vector(indicator_val.size(), false);
             double* old_indicator_val = new double[indicator_val.size()];
+            for (int i = 0; i < indicator_val.size(); ++i)
+            {
+                old_indicator_val[i] = 0.0;
+            }
             int indicator_flipped = -1;
 
             for (int idx_snap = snap_bound[0]; idx_snap <= snap_bound[1]; ++idx_snap)
@@ -480,6 +484,7 @@ int main(int argc, char *argv[])
 
                 string data_filename = string(data_dir) + "/" + par_dir + "/" + snap + "/" +
                                        variable + ".csv"; // path to VAR_NAME.csv
+                cout << "Loading data filename " << data_filename << endl;
                 csv_db.getDoubleArray(data_filename, sample, nelements, idx_state);
 
                 if (myid == 0)
@@ -547,6 +552,8 @@ int main(int argc, char *argv[])
                         overlap_count.push_back(windowOverlapSamples +
                                                 max(0, rdim+1 - ns));
 
+                        cout << "Switching window with " << ns << " samples taken" << endl;
+                        cout << "Window 0 has " << dmd[idx_dataset][0]->getNumSamples() << " samples taken" << endl;
                         curr_window += 1;
                         dmd[idx_dataset][curr_window]->takeSample(sample, tval);
                         switch_window = false;
@@ -601,6 +608,11 @@ int main(int argc, char *argv[])
             }
 
             ofstream myfile;
+            if(!myid)
+            {
+                cout << "myfile is at " << outputPath << "/snapshots_per_window.txt" << endl;
+                cout << "window_file is at " << window_file << endl;
+            }
             myfile.open (outputPath+"/snapshots_per_window.txt", std::ios_base::app);
             for (int window = 0; window < numWindows; ++window)
             {
@@ -613,6 +625,7 @@ int main(int argc, char *argv[])
                     if (myid == 0)
                     {
                         cout << "Creating DMD model #" << window << " with rdim: " << rdim << endl;
+                        cout << "There are currently " << dmd[idx_dataset][window]->getNumSamples() << " samples." << endl;
                     }
                     dmd[idx_dataset][window]->train(rdim);
                 }
@@ -1023,6 +1036,13 @@ bool indicator_triggers(std::vector<int> &indicator_idx,
                 break;
             }
             old_sample_indicator_val[i] = sample[indicator_idx[i]];
+        }
+        else if (indicator_idx[i] == -1)
+        {
+            switch_window = true;
+            indicator_idx[i] = -404;
+            *indicator_flipped = i;
+            break;
         }
         else if (indicator_idx[i] == -2) // max value decrease indicator.
         {
