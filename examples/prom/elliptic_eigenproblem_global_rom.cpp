@@ -70,11 +70,13 @@ using namespace mfem;
 double Conductivity(const Vector &x);
 double Potential(const Vector &x);
 int problem = 1;
-double amplitude = -800.0;
-double pseudo_time = 0.0;
-int potential_well_switch = 0;
-Vector bb_min, bb_max;
-double h_min, h_max, k_min, k_max;
+
+double amplitude = -800.0; // amplitude of coefficient fields
+double pseudo_time = 0.0; // potential parametetr
+Vector bb_min, bb_max; // bounding box
+double h_min, h_max, k_min, k_max; // mesh size
+double alpha = 1.0; // scaling factor
+int potential_well_switch = 0; // switch for separate training
 
 int main(int argc, char *argv[])
 {
@@ -842,8 +844,10 @@ double Conductivity(const Vector &x)
                 return 1.0;
         return 1.0 + amplitude;
     case 3:
-    case 4:
         return 1.0;
+    case 4:
+        alpha = (bb_max[0] - bb_min[0]) / 18.0;
+        return pow(alpha, -2.0);
     }
     return 0.0;
 }
@@ -852,7 +856,8 @@ double Potential(const Vector &x)
 {
     Vector center(x.Size());
     double rho = 0.0;
-    double scaling_factor = pow((bb_max[0] - bb_min[0]) / 18.0, 2.0);
+    double r_sq = 0.0;
+    double radius_sq; // scaling factor
     switch (problem)
     {
     case 1:
@@ -863,26 +868,29 @@ double Potential(const Vector &x)
         center(0) = 0.5 * (bb_min[0] + bb_max[0]) + pseudo_time * h_max;
         for (int i = 1; i < x.Size(); i++)
             center(i) = 0.5 * (bb_min[i] + bb_max[i]);
-        return amplitude * std::exp(-x.DistanceSquaredTo(center) / pow(4.0 * h_max,
-                                    2.0));
+        r_sq = x.DistanceSquaredTo(center);
+        radius_sq = pow(4.0 * h_max, 2.0);
+        return amplitude * std::exp(-r_sq / (2 * radius_sq));
     case 4:
+        alpha = (bb_max[0] - bb_min[0]) / 18.0;
+        radius_sq = pow(0.1 * alpha, 2.0);
         if (potential_well_switch == 0 || potential_well_switch == 1)
         {
             // add well with first center
             center(0) = (23 * bb_min[0] + 13 * bb_max[0]) / 36 - pseudo_time * h_max;
             for (int i = 1; i < x.Size(); i++)
-                center(i) = 0.0;
-            rho += amplitude * scaling_factor * std::exp(-50 / scaling_factor *
-                    x.DistanceSquaredTo(center));
+                center(i) = 0.5;
+            r_sq = x.DistanceSquaredTo(center);
+            rho += amplitude * std::exp(-r_sq / (2 * radius_sq));
         }
         if (potential_well_switch == 0 || potential_well_switch == 2)
         {
             // add well with second center
             center(0) = (23 * bb_min[0] + 23 * bb_max[0]) / 36 + pseudo_time * h_max;
             for (int i = 1; i < x.Size(); i++)
-                center(i) = 0.0;
-            rho += amplitude * scaling_factor * std::exp(-50 / scaling_factor *
-                    x.DistanceSquaredTo(center));
+                center(i) = 0.5;
+            r_sq = x.DistanceSquaredTo(center);
+            rho += amplitude * std::exp(-r_sq / (2 * radius_sq));
         }
         return rho;
     }
