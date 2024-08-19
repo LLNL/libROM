@@ -49,6 +49,7 @@ How to add a new regression test
 3. Source the common.sh at the top of this file.
 4. Specify the commands used to run the regression test in the CMDS array.
 5. Add the type of test: TYPE="DMD" or TYPE="PROM"
-6. Set OFFSET to the number of header lines in this test's generated solution file.
-7. Call run_tests.
+6. Set OFFSET to the number of header lines in this test's generated solution file. These lines will be removed before comparing solutions.
+7. (Optional) Specify a custom list of files (text-only) to compare in the FILES array. When FILES is defined, only those files will be compared, all other files will be ignored.
+8. Call run_tests.
 

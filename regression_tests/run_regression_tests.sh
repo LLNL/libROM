@@ -115,6 +115,7 @@ if [ ! -d $BASELINE_DIR/libROM ]; then # Clone master branch to baseline directo
    recompile=1
 else
    echo "The baseline branch ${BASELINE_DIR}/libROM exists"
+   cd ${BASELINE_DIR}/libROM
    num_changes=$(git rev-list HEAD...origin/master --count)
    nc=$(( $num_changes ))
    if [[ $nc != 0 ]]; then
