@@ -162,6 +162,7 @@ if (ENABLE_EXAMPLES)
       parametric_tw_csv
       parametric_dw_csv
       parametric_dw_csv_indicators
+      MAHEM_Optimization
       parametric_dmdc_heat_conduction)
     set(example_directories
       prom
@@ -176,6 +177,7 @@ if (ENABLE_EXAMPLES)
       prom
       prom
       prom
+      dmd
       dmd
       dmd
       dmd
