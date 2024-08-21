@@ -29,8 +29,8 @@ using namespace std;
 
 namespace CAROM {
 
-Interpolator::Interpolator(std::vector<Vector*> & parameter_points,
-                           std::vector<std::shared_ptr<Matrix>> & rotation_matrices,
+Interpolator::Interpolator(const std::vector<Vector> & parameter_points,
+                           const std::vector<std::shared_ptr<Matrix>> & rotation_matrices,
                            int ref_point,
                            std::string rbf,
                            std::string interp_method,
@@ -68,8 +68,9 @@ Interpolator::~Interpolator()
 }
 
 std::vector<double> obtainRBFToTrainingPoints(
-    std::vector<Vector*> & parameter_points,
-    std::string interp_method, std::string rbf, double epsilon, Vector* point)
+    const std::vector<Vector> & parameter_points,
+    const std::string & interp_method, const std::string & rbf, double epsilon,
+    const Vector & point)
 {
     std::vector<double> rbfs;
     if (interp_method == "LS")
@@ -115,8 +116,8 @@ std::vector<double> obtainRBFToTrainingPoints(
                 }
 
                 Vector numerator_vec, denomenator_vec;
-                point->minus(*parameter_points[j], numerator_vec);
-                parameter_points[i]->minus(*parameter_points[j], denomenator_vec);
+                point.minus(parameter_points[j], numerator_vec);
+                parameter_points[i].minus(parameter_points[j], denomenator_vec);
                 double numerator = numerator_vec.norm();
                 double denomenator = denomenator_vec.norm();
 
@@ -146,11 +147,11 @@ double rbfWeightedSum(std::vector<double>& rbf)
     return sum;
 }
 
-double obtainRBF(std::string rbf, double epsilon, Vector* point1,
-                 Vector* point2)
+double obtainRBF(std::string rbf, double epsilon, const Vector & point1,
+                 const Vector & point2)
 {
     Vector diff;
-    point1->minus(*point2, diff);
+    point1.minus(point2, diff);
     double eps_norm_squared = epsilon * epsilon * diff.norm2();
     double res = 0.0;
 
@@ -173,8 +174,8 @@ double obtainRBF(std::string rbf, double epsilon, Vector* point1,
     return res;
 }
 
-double convertClosestRBFToEpsilon(std::vector<Vector*> & parameter_points,
-                                  std::string rbf, double closest_rbf_val)
+double convertClosestRBFToEpsilon(const std::vector<Vector> & parameter_points,
+                                  const std::string & rbf, double closest_rbf_val)
 {
     double closest_point_dist = INT_MAX;
     double epsilon;
@@ -188,7 +189,7 @@ double convertClosestRBFToEpsilon(std::vector<Vector*> & parameter_points,
             }
 
             Vector diff;
-            parameter_points[i]->minus(*parameter_points[j], diff);
+            parameter_points[i].minus(parameter_points[j], diff);
             double dist = diff.norm2();
             if (dist < closest_point_dist)
             {
@@ -217,8 +218,8 @@ double convertClosestRBFToEpsilon(std::vector<Vector*> & parameter_points,
 }
 
 std::vector<std::shared_ptr<Matrix>> obtainRotationMatrices(
-                                      std::vector<Vector*> & parameter_points,
-                                      std::vector<std::shared_ptr<Matrix>> & bases,
+                                      const std::vector<Vector> & parameter_points,
+                                      const std::vector<std::shared_ptr<Matrix>> & bases,
                                       int ref_point)
 {
     // Get the rank of this process, and the number of processors.
@@ -258,37 +259,45 @@ std::vector<std::shared_ptr<Matrix>> obtainRotationMatrices(
 
         std::unique_ptr<Matrix> basis_mult_basis = bases[i]->transposeMult(
                     *bases[ref_point]);
-        Matrix* basis = new Matrix(basis_mult_basis->numRows(),
-                                   basis_mult_basis->numColumns(), false);
-        Matrix* basis_right = new Matrix(basis_mult_basis->numColumns(),
-                                         basis_mult_basis->numColumns(), false);
+        Matrix basis(basis_mult_basis->numRows(),
+                     basis_mult_basis->numColumns(), false);
+        Matrix basis_right(basis_mult_basis->numColumns(),
+                           basis_mult_basis->numColumns(), false);
 
         // We need to compute the SVD of basis_mult_basis. Since it is
         // undistributed due to the transposeMult, let's use lapack's serial SVD
         // on rank 0 only.
         if (rank == 0)
         {
-            Vector* sv = new Vector(basis_mult_basis->numColumns(), false);
-            SerialSVD(basis_mult_basis.get(), basis_right, sv, basis);
-            delete sv;
+            Vector sv(basis_mult_basis->numColumns(), false);
+            SerialSVD(basis_mult_basis.get(), &basis_right, &sv, &basis);
         }
 
         // Broadcast U and V which are computed only on root.
-        MPI_Bcast(basis->getData(), basis->numRows() * basis->numColumns(), MPI_DOUBLE,
+        MPI_Bcast(basis.getData(), basis.numRows() * basis.numColumns(), MPI_DOUBLE,
                   0, MPI_COMM_WORLD);
-        MPI_Bcast(basis_right->getData(),
-                  basis_right->numRows() * basis_right->numColumns(), MPI_DOUBLE, 0,
+        MPI_Bcast(basis_right.getData(),
+                  basis_right.numRows() * basis_right.numColumns(), MPI_DOUBLE, 0,
                   MPI_COMM_WORLD);
 
         // Obtain the rotation matrix.
-        std::shared_ptr<Matrix> rotation_matrix = basis->mult(*basis_right);
-
-        delete basis;
-        delete basis_right;
-        rotation_matrices.push_back(rotation_matrix);
+        rotation_matrices.push_back(basis.mult(basis_right));
     }
 
     return rotation_matrices;
+}
+
+std::unique_ptr<std::vector<Vector>>
+                                  scalarsToVectors(const std::vector<double> & s)
+{
+    std::vector<Vector> *v = new std::vector<Vector>(s.size());
+    for (int i=0; i<s.size(); ++i)
+    {
+        (*v)[i].setSize(1);
+        (*v)[i](0) = s[i];
+    }
+
+    return std::unique_ptr<std::vector<Vector>>(v);
 }
 
 }

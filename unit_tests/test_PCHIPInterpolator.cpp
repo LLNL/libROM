@@ -63,8 +63,8 @@ TEST(InterpolationTest,test_accuracy)
     std::vector<std::shared_ptr<CAROM::Vector>> snapshots;
     std::vector<std::shared_ptr<CAROM::Vector>> out_snapshots;
     std::vector<CAROM::Vector*> reference_snapshots;
-    std::vector<CAROM::Vector*> times;
-    std::vector<CAROM::Vector*> out_times;
+    std::vector<const CAROM::Vector*> times;
+    std::vector<const CAROM::Vector*> out_times;
     for(int i = 0; i < t.size(); ++i)
     {
         CAROM::Vector* temp_t = new CAROM::Vector(1, false);

@@ -59,9 +59,9 @@ public:
      * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
      *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
      */
-    MatrixInterpolator(std::vector<Vector*> & parameter_points,
-                       std::vector<std::shared_ptr<Matrix>> & rotation_matrices,
-                       std::vector<std::shared_ptr<Matrix>> & reduced_matrices,
+    MatrixInterpolator(const std::vector<Vector> & parameter_points,
+                       const std::vector<std::shared_ptr<Matrix>> & rotation_matrices,
+                       const std::vector<std::shared_ptr<Matrix>> & reduced_matrices,
                        int ref_point,
                        std::string matrix_type,
                        std::string rbf = "G",
@@ -74,7 +74,8 @@ public:
      * @param[in] point         The unsampled parameter point.
      * @param[in] orthogonalize Whether to orthogonalize the resulting interpolated matrix.
      */
-    std::shared_ptr<Matrix> interpolate(Vector* point, bool orthogonalize = false);
+    std::shared_ptr<Matrix> interpolate(const Vector & point,
+                                        bool orthogonalize = false);
 
 private:
 
@@ -116,7 +117,7 @@ private:
      *
      * @param[in] point The unsampled parameter point.
      */
-    std::shared_ptr<Matrix> interpolateSPDMatrix(Vector* point);
+    std::shared_ptr<Matrix> interpolateSPDMatrix(const Vector & point);
 
     /**
      * @brief Obtain the interpolated non-singular reduced matrix for the
@@ -124,7 +125,7 @@ private:
      *
      * @param[in] point The unsampled parameter point.
      */
-    std::shared_ptr<Matrix> interpolateNonSingularMatrix(Vector* point);
+    std::shared_ptr<Matrix> interpolateNonSingularMatrix(const Vector & point);
 
     /**
      * @brief Obtain the interpolated reduced matrix for the
@@ -132,7 +133,7 @@ private:
      *
      * @param[in] point The unsampled parameter point.
      */
-    std::shared_ptr<Matrix> interpolateMatrix(Vector* point);
+    std::shared_ptr<Matrix> interpolateMatrix(const Vector & point);
 
     /**
      * @brief The matrix type/manifold

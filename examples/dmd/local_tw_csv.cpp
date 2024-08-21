@@ -603,7 +603,8 @@ int main(int argc, char *argv[])
                 double t_init = dmd[window]->getTimeOffset();
 
                 dtc = admd->getTrueDt();
-                const CAROM::Matrix* f_snapshots = admd->getInterpolatedSnapshots();
+                std::unique_ptr<const CAROM::Matrix> f_snapshots =
+                    admd->getInterpolatedSnapshots();
                 if (myid == 0)
                 {
                     cout << "Verifying Adaptive DMD model #" << window <<

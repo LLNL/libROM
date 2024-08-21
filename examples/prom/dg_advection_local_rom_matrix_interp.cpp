@@ -799,7 +799,7 @@ int main(int argc, char *argv[])
             }
             fin.close();
 
-            std::vector<CAROM::Vector*> parameter_points;
+            std::vector<CAROM::Vector> parameter_points;
             std::vector<std::shared_ptr<CAROM::Matrix>> bases;
             std::vector<std::shared_ptr<CAROM::Matrix>> K_hats;
             std::vector<std::shared_ptr<CAROM::Matrix>> M_hats;
@@ -807,8 +807,8 @@ int main(int argc, char *argv[])
             std::vector<std::shared_ptr<CAROM::Vector>> u_init_hats;
             for(auto it = frequencies.begin(); it != frequencies.end(); it++)
             {
-                CAROM::Vector* point = new CAROM::Vector(1, false);
-                point->item(0) = *it;
+                CAROM::Vector point(1, false);
+                point(0) = *it;
                 parameter_points.push_back(point);
 
                 std::string parametricBasisName = "basis_" + std::to_string(*it);
@@ -840,10 +840,10 @@ int main(int argc, char *argv[])
             if (myid == 0) printf("spatial basis dimension is %d x %d\n", numRowRB,
                                       numColumnRB);
 
-            CAROM::Vector* curr_point = new CAROM::Vector(1, false);
-            curr_point->item(0) = f_factor;
+            CAROM::Vector curr_point(1, false);
+            curr_point(0) = f_factor;
 
-            int ref_point = getClosestPoint(parameter_points, curr_point);
+            const int ref_point = getClosestPoint(parameter_points, curr_point);
             std::vector<std::shared_ptr<CAROM::Matrix>> rotation_matrices =
                         obtainRotationMatrices(parameter_points, bases, ref_point);
 

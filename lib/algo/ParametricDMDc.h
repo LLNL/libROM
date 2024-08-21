@@ -54,11 +54,11 @@ namespace CAROM {
  */
 template <class T>
 void getParametricDMDc(T*& parametric_dmdc,
-                       std::vector<Vector*>& parameter_points,
+                       const std::vector<Vector>& parameter_points,
                        std::vector<T*>& dmdcs,
                        std::vector<std::shared_ptr<Matrix>> controls,
                        std::shared_ptr<Matrix> & controls_interpolated,
-                       Vector* desired_point,
+                       const Vector & desired_point,
                        std::string rbf = "G",
                        std::string interp_method = "LS",
                        double closest_rbf_val = 0.9,
@@ -129,7 +129,7 @@ void getParametricDMDc(T*& parametric_dmdc,
 
     parametric_dmdc = new T(eigs, phi_real, phi_imaginary, B_tilde,
                             dmdcs[0]->d_k,dmdcs[0]->d_dt,
-                            dmdcs[0]->d_t_offset, dmdcs[0]->d_state_offset, W.get());
+                            dmdcs[0]->d_t_offset, dmdcs[0]->d_state_offset, W);
 
     delete eigenpair.ev_real;
     delete eigenpair.ev_imaginary;
@@ -159,11 +159,11 @@ void getParametricDMDc(T*& parametric_dmdc,
  */
 template <class T>
 void getParametricDMDc(T*& parametric_dmdc,
-                       std::vector<Vector*>& parameter_points,
+                       const std::vector<Vector>& parameter_points,
                        std::vector<std::string>& dmdc_paths,
                        std::vector<std::shared_ptr<Matrix>> controls,
                        std::shared_ptr<Matrix> & controls_interpolated,
-                       Vector* desired_point,
+                       const Vector & desired_point,
                        std::string rbf = "G",
                        std::string interp_method = "LS",
                        double closest_rbf_val = 0.9,

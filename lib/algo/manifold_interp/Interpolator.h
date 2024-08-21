@@ -51,8 +51,8 @@ protected:
      * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
      *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
      */
-    Interpolator(std::vector<Vector*> & parameter_points,
-                 std::vector<std::shared_ptr<Matrix>> & rotation_matrices,
+    Interpolator(const std::vector<Vector> & parameter_points,
+                 const std::vector<std::shared_ptr<Matrix>> & rotation_matrices,
                  int ref_point,
                  std::string rbf,
                  std::string interp_method,
@@ -98,7 +98,7 @@ protected:
     /**
      * @brief The sampled parameter points.
      */
-    std::vector<Vector*> d_parameter_points;
+    std::vector<Vector> d_parameter_points;
 
     /**
      * @brief The reduced bases with compatible coordinates.
@@ -146,8 +146,9 @@ private:
  * @param[in] point The unsampled parameter point.
  */
 std::vector<double> obtainRBFToTrainingPoints(
-    std::vector<Vector*> & parameter_points,
-    std::string interp_method, std::string rbf, double epsilon, Vector* point);
+    const std::vector<Vector> & parameter_points,
+    const std::string & interp_method, const std::string & rbf, double epsilon,
+    const Vector & point);
 
 /**
  * @brief Compute the sum of the RBF weights.
@@ -165,8 +166,8 @@ double rbfWeightedSum(std::vector<double>& rbf);
  * @param[in] point1 The first point.
  * @param[in] point2 The second point.
  */
-double obtainRBF(std::string rbf, double epsilon, Vector* point1,
-                 Vector* point2);
+double obtainRBF(std::string rbf, double epsilon, const Vector & point1,
+                 const Vector & point2);
 
 /**
  * @brief Convert closest RBF value to an epsilon value.
@@ -176,8 +177,8 @@ double obtainRBF(std::string rbf, double epsilon, Vector* point1,
  * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
  *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
  */
-double convertClosestRBFToEpsilon(std::vector<Vector*> & parameter_points,
-                                  std::string rbf, double closest_rbf_val);
+double convertClosestRBFToEpsilon(const std::vector<Vector> & parameter_points,
+                                  const std::string & rbf, double closest_rbf_val);
 
 /**
  * @brief Obtain the rotation matrices for all the parameter points using
@@ -190,10 +191,11 @@ double convertClosestRBFToEpsilon(std::vector<Vector*> & parameter_points,
  *                      to the reference point
  */
 std::vector<std::shared_ptr<Matrix>> obtainRotationMatrices(
-                                      std::vector<Vector*> & parameter_points,
-                                      std::vector<std::shared_ptr<Matrix>> & bases,
+                                      const std::vector<Vector> & parameter_points,
+                                      const std::vector<std::shared_ptr<Matrix>> & bases,
                                       int ref_point);
 
+std::unique_ptr<std::vector<Vector>>
+                                  scalarsToVectors(const std::vector<double> & s);
 }
-
 #endif

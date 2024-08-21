@@ -742,7 +742,7 @@ int main(int argc, char *argv[])
             std::fstream fin("parameters.txt", std::ios_base::in);
             double curr_param;
             std::vector<std::string> dmd_paths;
-            std::vector<CAROM::Vector*> param_vectors;
+            std::vector<CAROM::Vector> param_vectors;
 
             while (fin >> curr_param)
             {
@@ -757,20 +757,20 @@ int main(int argc, char *argv[])
                 dmd_paths.push_back(outputPath + "/" + to_string(curr_radius) + "_" +
                                     to_string(curr_alpha) + "_" + to_string(curr_cx) + "_" +
                                     to_string(curr_cy));
-                CAROM::Vector* param_vector = new CAROM::Vector(4, false);
-                param_vector->item(0) = curr_radius;
-                param_vector->item(1) = curr_alpha;
-                param_vector->item(2) = curr_cx;
-                param_vector->item(3) = curr_cy;
+                CAROM::Vector param_vector(4, false);
+                param_vector(0) = curr_radius;
+                param_vector(1) = curr_alpha;
+                param_vector(2) = curr_cx;
+                param_vector(3) = curr_cy;
                 param_vectors.push_back(param_vector);
             }
             fin.close();
 
-            CAROM::Vector* desired_param = new CAROM::Vector(4, false);
-            desired_param->item(0) = radius;
-            desired_param->item(1) = alpha;
-            desired_param->item(2) = cx;
-            desired_param->item(3) = cy;
+            CAROM::Vector desired_param(4, false);
+            desired_param(0) = radius;
+            desired_param(1) = alpha;
+            desired_param(2) = cx;
+            desired_param(3) = cy;
 
             dmd_training_timer.Start();
 
@@ -780,7 +780,6 @@ int main(int argc, char *argv[])
             dmd_u->projectInitialCondition(init);
 
             dmd_training_timer.Stop();
-            delete desired_param;
         }
 
         if (predict)

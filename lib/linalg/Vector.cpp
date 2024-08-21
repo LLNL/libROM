@@ -449,7 +449,7 @@ double Vector::localMin(int nmax)
     return v;
 }
 
-int getCenterPoint(std::vector<Vector*>& points,
+int getCenterPoint(const std::vector<const Vector*>& points,
                    bool use_centroid)
 {
     int center_point;
@@ -505,10 +505,10 @@ int getCenterPoint(std::vector<Vector*>& points,
     return center_point;
 }
 
-int getCenterPoint(std::vector<Vector>& points,
+int getCenterPoint(const std::vector<Vector>& points,
                    bool use_centroid)
 {
-    std::vector<Vector*> temp_points;
+    std::vector<const Vector*> temp_points;
     for (int i = 0; i < points.size(); i++)
     {
         temp_points.push_back(&points[i]);
@@ -516,14 +516,14 @@ int getCenterPoint(std::vector<Vector>& points,
     return getCenterPoint(temp_points, use_centroid);
 }
 
-int getClosestPoint(std::vector<Vector*>& points,
-                    Vector* test_point)
+int getClosestPoint(const std::vector<const Vector*>& points,
+                    const Vector & test_point)
 {
     int closest_point = 0;
     double closest_dist_to_test_point = INT_MAX;
     for (int i = 0; i < points.size(); i++) {
         Vector diff;
-        test_point->minus(*points[i], diff);
+        test_point.minus(*points[i], diff);
         double dist = diff.norm();
         if (dist < closest_dist_to_test_point)
         {
@@ -535,15 +535,15 @@ int getClosestPoint(std::vector<Vector*>& points,
     return closest_point;
 }
 
-int getClosestPoint(std::vector<Vector>& points,
-                    Vector test_point)
+int getClosestPoint(const std::vector<Vector>& points,
+                    const Vector & test_point)
 {
-    std::vector<Vector*> temp_points;
+    std::vector<const Vector*> temp_points;
     for (int i = 0; i < points.size(); i++)
     {
         temp_points.push_back(&points[i]);
     }
-    return getClosestPoint(temp_points, &test_point);
+    return getClosestPoint(temp_points, test_point);
 }
 
 }

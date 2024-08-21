@@ -597,7 +597,7 @@ double simulation()
         std::fstream fin(io_dir + "/parameters.txt", std::ios_base::in);
         double curr_param;
         std::vector<std::string> dmd_paths;
-        std::vector<CAROM::Vector*> param_vectors;
+        std::vector<CAROM::Vector> param_vectors;
 
         while (fin >> curr_param)
         {
@@ -605,14 +605,14 @@ double simulation()
 
             // INPUT / OUTPUT potential issue
             dmd_paths.push_back(io_dir + "/" + to_string(curr_f_factor));
-            CAROM::Vector* param_vector = new CAROM::Vector(1, false);
-            param_vector->item(0) = curr_f_factor;
+            CAROM::Vector param_vector(1, false);
+            param_vector(0) = curr_f_factor;
             param_vectors.push_back(param_vector);
         }
         fin.close();
 
-        CAROM::Vector* desired_param = new CAROM::Vector(1, false);
-        desired_param->item(0) = f_factor;
+        CAROM::Vector desired_param(1, false);
+        desired_param(0) = f_factor;
 
         dmd_training_timer.Start();
 
@@ -623,7 +623,6 @@ double simulation()
 
 
         dmd_training_timer.Stop();
-        delete desired_param;
 
         // Compare the DMD solution to the FOM Solution
         if (true_solution_u == NULL)
@@ -697,29 +696,26 @@ double simulation()
         std::fstream fin(io_dir+"/parameters.txt", std::ios_base::in);
         double curr_param;
         std::vector<std::string> dmd_paths;
-        std::vector<CAROM::Vector*> param_vectors;
+        std::vector<CAROM::Vector> param_vectors;
 
         while (fin >> curr_param)
         {
             double curr_f_factor = curr_param;
             dmd_paths.push_back(io_dir + "/" + to_string(curr_f_factor));
-            CAROM::Vector* param_vector = new CAROM::Vector(1, false);
-            param_vector->item(0) = curr_f_factor;
+            CAROM::Vector param_vector(1, false);
+            param_vector(0) = curr_f_factor;
             param_vectors.push_back(param_vector);
         }
         fin.close();
         if (dmd_paths.size() > 1)
         {
-
-            CAROM::Vector* desired_param = new CAROM::Vector(1, false);
-            desired_param->item(0) = f_factor;
+            CAROM::Vector desired_param(1, false);
+            desired_param(0) = f_factor;
 
             dmd_training_timer.Start();
 
             CAROM::getParametricDMD(dmd_U, param_vectors, dmd_paths, desired_param,
                                     "G", "LS", closest_rbf_val);
-
-            delete desired_param;
         }
         else
         {
@@ -854,21 +850,21 @@ double simulation()
         std::fstream fin(io_dir+"/parameters.txt", std::ios_base::in);
         double curr_param;
         std::vector<std::string> dmd_paths;
-        std::vector<CAROM::Vector*> param_vectors;
+        std::vector<CAROM::Vector> param_vectors;
 
         while (fin >> curr_param)
         {
             double curr_f_factor = curr_param;
 
             dmd_paths.push_back(io_dir + "/" + to_string(curr_f_factor));
-            CAROM::Vector* param_vector = new CAROM::Vector(1, false);
-            param_vector->item(0) = curr_f_factor;
+            CAROM::Vector param_vector(1, false);
+            param_vector(0) = curr_f_factor;
             param_vectors.push_back(param_vector);
         }
         fin.close();
 
-        CAROM::Vector* desired_param = new CAROM::Vector(1, false);
-        desired_param->item(0) = f_factor;
+        CAROM::Vector desired_param(1, false);
+        desired_param(0) = f_factor;
 
         dmd_training_timer.Start();
 
@@ -877,9 +873,7 @@ double simulation()
 
         dmd_U->projectInitialCondition(init);
 
-
         dmd_training_timer.Stop();
-        delete desired_param;
     }
 
     if (offline || calc_err_indicator)

@@ -329,7 +329,7 @@ int main(int argc, char *argv[])
 
     vector<string> training_par_list, testing_par_list; // DATASET info
     vector<string> par_dir_list; // DATASET name
-    vector<CAROM::Vector*> par_vectors; // DATASET param
+    vector<CAROM::Vector> par_vectors; // DATASET param
 
     vector<double> indicator_init, indicator_last; // DATASET indicator range
 
@@ -354,7 +354,7 @@ int main(int argc, char *argv[])
         }
 
         dpar = par_info.size() - 1;
-        CAROM::Vector* curr_par = new CAROM::Vector(dpar, false);
+        CAROM::Vector curr_par(dpar, false);
 
         if (idx_dataset == 0)
         {
@@ -439,7 +439,7 @@ int main(int argc, char *argv[])
 
         for (int par_order = 0; par_order < dpar; ++par_order)
         {
-            curr_par->item(par_order) = stod(par_info[par_order+1]);
+            curr_par(par_order) = stod(par_info[par_order+1]);
         }
         par_vectors.push_back(curr_par);
 
@@ -818,7 +818,7 @@ int main(int argc, char *argv[])
                                                   numWindows);
     } // escape if-statement of offline
 
-    CAROM::Vector* curr_par = new CAROM::Vector(dpar, false);
+    CAROM::Vector curr_par(dpar, false);
 
     if (online)
     {
@@ -888,7 +888,7 @@ int main(int argc, char *argv[])
 
             for (int par_order = 0; par_order < dpar; ++par_order)
             {
-                curr_par->item(par_order) = stod(par_info[par_order+1]);
+                curr_par(par_order) = stod(par_info[par_order+1]);
             }
 
             vector<double> tvec(num_snap_orig);
@@ -1262,7 +1262,6 @@ int main(int argc, char *argv[])
     }
 
     delete[] sample;
-    delete curr_par;
     for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
     {
         for (int window = 0; window < numWindows; ++window)

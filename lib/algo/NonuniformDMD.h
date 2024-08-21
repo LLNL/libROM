@@ -156,7 +156,7 @@ private:
     /**
      * @brief Returns a pair of pointers to the state and derivative snapshot matrices
      */
-    std::pair<Matrix*, Matrix*> computeDMDSnapshotPair(const Matrix* snapshots)
+    std::pair<Matrix*, Matrix*> computeDMDSnapshotPair(const Matrix & snapshots)
     override;
 
     /**

@@ -38,9 +38,10 @@ using namespace std;
 
 namespace CAROM {
 
-VectorInterpolator::VectorInterpolator(std::vector<Vector*> & parameter_points,
-                                       std::vector<std::shared_ptr<Matrix>> & rotation_matrices,
-                                       std::vector<std::shared_ptr<Vector>> & reduced_vectors,
+VectorInterpolator::VectorInterpolator(const std::vector<Vector> &
+                                       parameter_points,
+                                       const std::vector<std::shared_ptr<Matrix>> & rotation_matrices,
+                                       const std::vector<std::shared_ptr<Vector>> & reduced_vectors,
                                        int ref_point,
                                        std::string rbf,
                                        std::string interp_method,
@@ -73,18 +74,18 @@ void VectorInterpolator::obtainLambda()
 {
     if (d_interp_method == "LS")
     {
-        d_lambda_T = solveLinearSystem(d_parameter_points, d_gammas, d_interp_method,
-                                       d_rbf, d_epsilon);
+        d_lambda_T = solveLinearSystem(d_parameter_points, d_gammas,
+                                       d_interp_method, d_rbf, d_epsilon);
     }
 }
 
 Vector* VectorInterpolator::obtainLogInterpolatedVector(
     std::vector<double>& rbf)
 {
-    return obtainInterpolatedVector(d_gammas, d_lambda_T, d_interp_method, rbf);
+    return obtainInterpolatedVector(d_gammas, *d_lambda_T, d_interp_method, rbf);
 }
 
-std::shared_ptr<Vector> VectorInterpolator::interpolate(Vector* point)
+std::shared_ptr<Vector> VectorInterpolator::interpolate(const Vector & point)
 {
     if (d_gammas.size() == 0)
     {
@@ -127,18 +128,18 @@ std::shared_ptr<Vector> VectorInterpolator::interpolate(Vector* point)
 }
 
 Vector* obtainInterpolatedVector(const std::vector<std::shared_ptr<Vector>> &
-                                 data, Matrix* f_T,
+                                 data, const Matrix & f_T,
                                  std::string interp_method, std::vector<double>& rbf)
 {
     Vector* interpolated_vector = new Vector(data[0]->dim(),
             data[0]->distributed());
     if (interp_method == "LS")
     {
-        for (int i = 0; i < f_T->numRows(); i++)
+        for (int i = 0; i < f_T.numRows(); i++)
         {
             for (int j = 0; j < rbf.size(); j++)
             {
-                interpolated_vector->getData()[i] += f_T->item(i, j) * rbf[j];
+                interpolated_vector->getData()[i] += f_T(i, j) * rbf[j];
             }
         }
     }
@@ -168,10 +169,10 @@ Vector* obtainInterpolatedVector(const std::vector<std::shared_ptr<Vector>> &
     return interpolated_vector;
 }
 
-Matrix* solveLinearSystem(const std::vector<Vector*> & parameter_points,
+Matrix* solveLinearSystem(const std::vector<Vector> & parameter_points,
                           const std::vector<std::shared_ptr<Vector>> & data,
-                          std::string interp_method,
-                          std::string rbf, double & epsilon)
+                          const std::string & interp_method,
+                          const std::string & rbf, double epsilon)
 {
     int mpi_init, rank;
     MPI_Initialized(&mpi_init);
@@ -201,7 +202,8 @@ Matrix* solveLinearSystem(const std::vector<Vector*> & parameter_points,
             B->item(i, i) = 1.0;
             for (int j = i + 1; j < B->numColumns(); j++)
             {
-                double res = obtainRBF(rbf, epsilon, parameter_points[i], parameter_points[j]);
+                double res = obtainRBF(rbf, epsilon, parameter_points[i],
+                                       parameter_points[j]);
                 B->item(i, j) = res;
                 B->item(j, i) = res;
             }

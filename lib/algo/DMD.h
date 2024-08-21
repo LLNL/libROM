@@ -176,7 +176,7 @@ public:
     /**
      * @brief Get the snapshot matrix contained within d_snapshots.
      */
-    const Matrix* getSnapshotMatrix();
+    std::unique_ptr<const Matrix> getSnapshotMatrix();
 
     /**
      * @brief Load the object state from a file.
@@ -237,9 +237,9 @@ protected:
      * @param[in] reorthogonalize_W Whether to reorthogonalize the interpolated W (basis) matrix.
      */
     friend void getParametricDMD<DMD>(DMD*& parametric_dmd,
-                                      std::vector<Vector*>& parameter_points,
+                                      const std::vector<Vector>& parameter_points,
                                       std::vector<DMD*>& dmds,
-                                      Vector* desired_point,
+                                      const Vector & desired_point,
                                       std::string rbf,
                                       std::string interp_method,
                                       double closest_rbf_val,
@@ -296,7 +296,7 @@ protected:
     /**
      * @brief Construct the DMD object.
      */
-    void constructDMD(const Matrix* f_snapshots,
+    void constructDMD(const Matrix & f_snapshots,
                       int rank,
                       int num_procs,
                       const Matrix* W0,
@@ -306,7 +306,7 @@ protected:
      * @brief Returns a pair of pointers to the minus and plus snapshot matrices
      */
     virtual std::pair<Matrix*, Matrix*> computeDMDSnapshotPair(
-        const Matrix* snapshots);
+        const Matrix & snapshots);
 
     /**
      * @brief Compute phi.
@@ -326,8 +326,8 @@ protected:
     /**
      * @brief Get the snapshot matrix contained within d_snapshots.
      */
-    const Matrix* createSnapshotMatrix(const std::vector<std::shared_ptr<Vector>> &
-                                       snapshots);
+    std::unique_ptr<const Matrix>
+    createSnapshotMatrix(const std::vector<std::shared_ptr<Vector>> & snapshots);
 
     /**
      * @brief The rank of the process this object belongs to.
@@ -362,7 +362,7 @@ protected:
     /**
      * @brief The stored times of each sample.
      */
-    std::vector<Vector*> d_sampled_times;
+    std::vector<double> d_sampled_times;
 
     /**
      * @brief State offset in snapshot.

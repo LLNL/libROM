@@ -130,10 +130,6 @@ DMD::DMD(std::vector<std::complex<double>> eigs,
 
 DMD::~DMD()
 {
-    for (auto sampled_time : d_sampled_times)
-    {
-        delete sampled_time;
-    }
     delete d_state_offset;
 }
 
@@ -163,10 +159,10 @@ void DMD::takeSample(double* u_in, double t)
     }
 
     // Erase any snapshots taken at the same or later time
-    while (!d_sampled_times.empty() && d_sampled_times.back()->item(0) >= t)
+    while (!d_sampled_times.empty() && d_sampled_times.back() >= t)
     {
         if (d_rank == 0) std::cout << "Removing existing snapshot at time: " <<
-                                       d_t_offset + d_sampled_times.back()->item(0) << std::endl;
+                                       d_t_offset + d_sampled_times.back() << std::endl;
         d_snapshots.pop_back();
         d_sampled_times.pop_back();
     }
@@ -178,60 +174,54 @@ void DMD::takeSample(double* u_in, double t)
     }
     else
     {
-        CAROM_VERIFY(d_sampled_times.back()->item(0) < t);
+        CAROM_VERIFY(d_sampled_times.back() < t);
     }
 
     d_snapshots.push_back(std::shared_ptr<Vector>(sample));
-
-    Vector* sampled_time = new Vector(&t, 1, false);
-    d_sampled_times.push_back(sampled_time);
+    d_sampled_times.push_back(t);
 }
 
 void DMD::train(double energy_fraction, const Matrix* W0, double linearity_tol)
 {
-    const Matrix* f_snapshots = getSnapshotMatrix();
+    std::unique_ptr<const Matrix> f_snapshots = getSnapshotMatrix();
     CAROM_VERIFY(f_snapshots->numColumns() > 1);
     CAROM_VERIFY(energy_fraction > 0 && energy_fraction <= 1);
     d_energy_fraction = energy_fraction;
-    constructDMD(f_snapshots, d_rank, d_num_procs, W0, linearity_tol);
-
-    delete f_snapshots;
+    constructDMD(*f_snapshots, d_rank, d_num_procs, W0, linearity_tol);
 }
 
 void DMD::train(int k, const Matrix* W0, double linearity_tol)
 {
-    const Matrix* f_snapshots = getSnapshotMatrix();
+    std::unique_ptr<const Matrix> f_snapshots = getSnapshotMatrix();
     CAROM_VERIFY(f_snapshots->numColumns() > 1);
     CAROM_VERIFY(k > 0 && k <= f_snapshots->numColumns() - 1);
     d_energy_fraction = -1.0;
     d_k = k;
-    constructDMD(f_snapshots, d_rank, d_num_procs, W0, linearity_tol);
-
-    delete f_snapshots;
+    constructDMD(*f_snapshots, d_rank, d_num_procs, W0, linearity_tol);
 }
 
 std::pair<Matrix*, Matrix*>
-DMD::computeDMDSnapshotPair(const Matrix* snapshots)
+DMD::computeDMDSnapshotPair(const Matrix & snapshots)
 {
-    CAROM_VERIFY(snapshots->numColumns() > 1);
+    CAROM_VERIFY(snapshots.numColumns() > 1);
 
     // TODO: Making two copies of the snapshot matrix has a lot of overhead.
     //       We need to figure out a way to do submatrix multiplication and to
     //       reimplement this algorithm using one snapshot matrix.
-    Matrix* f_snapshots_in = new Matrix(snapshots->numRows(),
-                                        snapshots->numColumns() - 1, snapshots->distributed());
-    Matrix* f_snapshots_out = new Matrix(snapshots->numRows(),
-                                         snapshots->numColumns() - 1, snapshots->distributed());
+    Matrix* f_snapshots_in = new Matrix(snapshots.numRows(),
+                                        snapshots.numColumns() - 1, snapshots.distributed());
+    Matrix* f_snapshots_out = new Matrix(snapshots.numRows(),
+                                         snapshots.numColumns() - 1, snapshots.distributed());
 
     // Break up snapshots into snapshots_in and snapshots_out
     // snapshots_in = all columns of snapshots except last
     // snapshots_out = all columns of snapshots except first
-    for (int i = 0; i < snapshots->numRows(); i++)
+    for (int i = 0; i < snapshots.numRows(); i++)
     {
-        for (int j = 0; j < snapshots->numColumns() - 1; j++)
+        for (int j = 0; j < snapshots.numColumns() - 1; j++)
         {
-            f_snapshots_in->item(i, j) = snapshots->item(i, j);
-            f_snapshots_out->item(i, j) = snapshots->item(i, j + 1);
+            f_snapshots_in->item(i, j) = snapshots(i, j);
+            f_snapshots_out->item(i, j) = snapshots(i, j + 1);
             if (d_state_offset)
             {
                 f_snapshots_in->item(i, j) -= d_state_offset->item(i);
@@ -267,7 +257,7 @@ DMD::computePhi(struct DMDInternal dmd_internal_obj)
 }
 
 void
-DMD::constructDMD(const Matrix* f_snapshots,
+DMD::constructDMD(const Matrix & f_snapshots,
                   int d_rank,
                   int d_num_procs,
                   const Matrix* W0,
@@ -356,8 +346,8 @@ DMD::constructDMD(const Matrix* f_snapshots,
                                    d_num_singular_vectors << "." << std::endl;
 
     // Allocate the appropriate matrices and gather their elements.
-    d_basis.reset(new Matrix(f_snapshots->numRows(), d_k,
-                             f_snapshots->distributed()));
+    d_basis.reset(new Matrix(f_snapshots.numRows(), d_k,
+                             f_snapshots.distributed()));
     Matrix* d_S_inv = new Matrix(d_k, d_k, false);
     Matrix* d_basis_right = new Matrix(f_snapshots_in->numColumns(), d_k, false);
 
@@ -392,7 +382,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
         std::vector<int> lin_independent_cols_W;
 
         // Copy W0 and orthogonalize.
-        Matrix* d_basis_init = new Matrix(f_snapshots->numRows(), W0->numColumns(),
+        Matrix* d_basis_init = new Matrix(f_snapshots.numRows(), W0->numColumns(),
                                           true);
         for (int i = 0; i < d_basis_init->numRows(); i++)
         {
@@ -403,14 +393,14 @@ DMD::constructDMD(const Matrix* f_snapshots,
         }
         d_basis_init->orthogonalize();
 
-        Vector W_col(f_snapshots->numRows(), f_snapshots->distributed());
+        Vector W_col(f_snapshots.numRows(), f_snapshots.distributed());
         Vector l(W0->numColumns(), true);
-        Vector W0l(f_snapshots->numRows(), f_snapshots->distributed());
+        Vector W0l(f_snapshots.numRows(), f_snapshots.distributed());
         // Find which columns of d_basis are linearly independent from W0
         for (int j = 0; j < d_basis->numColumns(); j++)
         {
             // l = W0' * u
-            for (int i = 0; i < f_snapshots->numRows(); i++)
+            for (int i = 0; i < f_snapshots.numRows(); i++)
             {
                 W_col.item(i) = d_basis->item(i, j);
             }
@@ -444,7 +434,7 @@ DMD::constructDMD(const Matrix* f_snapshots,
         delete d_basis_init;
 
         // Add the linearly independent columns of W to W0. Call this new basis W_new.
-        Matrix* d_basis_new = new Matrix(f_snapshots->numRows(),
+        Matrix* d_basis_new = new Matrix(f_snapshots.numRows(),
                                          W0->numColumns() + lin_independent_cols_W.size(), true);
         for (int i = 0; i < d_basis_new->numRows(); i++)
         {
@@ -698,13 +688,13 @@ DMD::getTimeOffset() const
     return d_t_offset;
 }
 
-const Matrix*
+std::unique_ptr<const Matrix>
 DMD::getSnapshotMatrix()
 {
     return createSnapshotMatrix(d_snapshots);
 }
 
-const Matrix*
+std::unique_ptr<const Matrix>
 DMD::createSnapshotMatrix(const std::vector<std::shared_ptr<Vector>> &
                           snapshots)
 {
@@ -727,7 +717,7 @@ DMD::createSnapshotMatrix(const std::vector<std::shared_ptr<Vector>> &
         }
     }
 
-    return snapshot_mat;
+    return std::unique_ptr<const Matrix>(snapshot_mat);
 }
 
 void

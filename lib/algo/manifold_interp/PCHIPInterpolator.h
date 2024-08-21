@@ -38,9 +38,9 @@ public:
      * @param[out] output_snapshots snapshots at output_ts interpolated
      *                              from snapshot_ts
      */
-    void interpolate(std::vector<Vector*>& snapshot_ts,
+    void interpolate(std::vector<Vector>& snapshot_ts,
                      std::vector<std::shared_ptr<Vector>>& snapshots,
-                     std::vector<Vector*>& output_ts,
+                     std::vector<Vector>& output_ts,
                      std::vector<std::shared_ptr<Vector>>& output_snapshots);
 
     /**
@@ -56,10 +56,10 @@ public:
      * @param[out] output_snapshots snapshots at output_ts interpolated
      *                              from snapshot_ts
      */
-    void interpolate(std::vector<Vector*>& snapshot_ts,
+    void interpolate(std::vector<Vector>& snapshot_ts,
                      std::vector<std::shared_ptr<Vector>>& snapshots,
                      int n_out,
-                     std::vector<Vector*>& output_ts,
+                     std::vector<Vector>& output_ts,
                      std::vector<std::shared_ptr<Vector>>& output_snapshots);
 
 private:

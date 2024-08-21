@@ -50,9 +50,9 @@ namespace CAROM {
  */
 template <class T>
 void getParametricDMD(T*& parametric_dmd,
-                      std::vector<Vector*>& parameter_points,
+                      const std::vector<Vector>& parameter_points,
                       std::vector<T*>& dmds,
-                      Vector* desired_point,
+                      const Vector & desired_point,
                       std::string rbf = "G",
                       std::string interp_method = "LS",
                       double closest_rbf_val = 0.9,
@@ -83,7 +83,7 @@ void getParametricDMD(T*& parametric_dmd,
         A_tildes.push_back(dmds[i]->d_A_tilde);
     }
 
-    int ref_point = getClosestPoint(parameter_points, desired_point);
+    const int ref_point = getClosestPoint(parameter_points, desired_point);
     std::vector<std::shared_ptr<CAROM::Matrix>> rotation_matrices =
                 obtainRotationMatrices(parameter_points, bases, ref_point);
 
@@ -134,9 +134,9 @@ void getParametricDMD(T*& parametric_dmd,
  */
 template <class T>
 void getParametricDMD(T*& parametric_dmd,
-                      std::vector<Vector*>& parameter_points,
+                      const std::vector<Vector>& parameter_points,
                       std::vector<std::string>& dmd_paths,
-                      Vector* desired_point,
+                      const Vector & desired_point,
                       std::string rbf = "G",
                       std::string interp_method = "LS",
                       double closest_rbf_val = 0.9,
@@ -150,8 +150,7 @@ void getParametricDMD(T*& parametric_dmd,
     }
 
     getParametricDMD(parametric_dmd, parameter_points, dmds, desired_point,
-                     rbf, interp_method, closest_rbf_val,
-                     reorthogonalize_W);
+                     rbf, interp_method, closest_rbf_val, reorthogonalize_W);
     for (int i = 0; i < dmds.size(); i++)
     {
         delete dmds[i];

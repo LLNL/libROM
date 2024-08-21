@@ -89,7 +89,7 @@ public:
     /**
      * @brief Get the interpolated snapshot matrix contained within d_interp_snapshots.
      */
-    const Matrix* getInterpolatedSnapshots();
+    std::unique_ptr<const Matrix> getInterpolatedSnapshots();
 
 private:
 

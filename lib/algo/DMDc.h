@@ -111,7 +111,7 @@ public:
      * @param[in] controls The controls.
      * @param[in] t_offset The initial time offset.
      */
-    void project(const Vector* init, const Matrix* controls,
+    void project(const Vector & init, const Matrix & controls,
                  double t_offset = -1.0);
 
     /**
@@ -145,7 +145,7 @@ public:
     /**
      * @brief Get the snapshot matrix contained within d_snapshots.
      */
-    const Matrix* getSnapshotMatrix();
+    std::unique_ptr<const Matrix> getSnapshotMatrix();
 
     /**
      * @brief Load the object state from a file.
@@ -210,11 +210,11 @@ protected:
      * @param[in] reorthogonalize_W     Whether to reorthogonalize the interpolated W (basis) matrix.
      */
     friend void getParametricDMDc<DMDc>(DMDc*& parametric_dmdc,
-                                        std::vector<Vector*>& parameter_points,
+                                        const std::vector<Vector>& parameter_points,
                                         std::vector<DMDc*>& dmdcs,
                                         std::vector<std::shared_ptr<Matrix>> controls,
                                         std::shared_ptr<Matrix> & controls_interpolated,
-                                        Vector* desired_point,
+                                        const Vector & desired_point,
                                         std::string rbf,
                                         std::string interp_method,
                                         double closest_rbf_val,
@@ -240,15 +240,20 @@ protected:
      * @param[in] dt d_dt
      * @param[in] t_offset d_t_offset
      * @param[in] state_offset d_state_offset
-     * @param[in] basis d_basis, set by DMDc class for offline stages. When interpolating a new DMDc, we enter the interpolated basis explicitly
+     * @param[in] basis d_basis, set by DMDc class for offline stages. When
+     *            interpolating a new DMDc, we enter the interpolated basis
+     *            explicitly.
      */
-    DMDc(std::vector<std::complex<double>> eigs, std::shared_ptr<Matrix> & phi_real,
-         std::shared_ptr<Matrix> & phi_imaginary, std::shared_ptr<Matrix> B_tilde, int k,
-         double dt, double t_offset, Vector* state_offset, Matrix* basis = nullptr);
+    DMDc(std::vector<std::complex<double>> & eigs,
+         std::shared_ptr<Matrix> & phi_real,
+         std::shared_ptr<Matrix> & phi_imaginary,
+         std::shared_ptr<Matrix> B_tilde,
+         int k, double dt, double t_offset, Vector* state_offset,
+         std::shared_ptr<Matrix> & basis);
 
     /**
-     * @brief Unimplemented default constructor.
-     */
+       * @brief Unimplemented default constructor.
+       */
     DMDc();
 
     /**
@@ -272,8 +277,8 @@ protected:
     /**
      * @brief Construct the DMDc object.
      */
-    void constructDMDc(const Matrix* f_snapshots,
-                       const Matrix* f_controls,
+    void constructDMDc(const Matrix & f_snapshots,
+                       const Matrix & f_controls,
                        int rank,
                        int num_procs,
                        const Matrix* B);
@@ -282,7 +287,7 @@ protected:
      * @brief Returns a pair of pointers to the minus and plus snapshot matrices
      */
     virtual std::pair<Matrix*, Matrix*> computeDMDcSnapshotPair(
-        const Matrix* snapshots, const Matrix* controls, const Matrix* B);
+        const Matrix & snapshots, const Matrix & controls, const Matrix* B);
 
     /**
      * @brief Compute the appropriate exponential function when predicting the solution.
@@ -297,7 +302,8 @@ protected:
     /**
      * @brief Get the snapshot matrix contained within d_snapshots.
      */
-    const Matrix* createSnapshotMatrix(std::vector<Vector*> snapshots);
+    std::unique_ptr<const Matrix> createSnapshotMatrix(std::vector<Vector*>
+            snapshots);
 
     /**
      * @brief The rank of the process this object belongs to.
@@ -342,7 +348,7 @@ protected:
     /**
      * @brief The stored times of each sample.
      */
-    std::vector<Vector*> d_sampled_times;
+    std::vector<double> d_sampled_times;
 
     /**
      * @brief State offset in snapshot.

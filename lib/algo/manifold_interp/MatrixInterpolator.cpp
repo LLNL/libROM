@@ -37,9 +37,10 @@ using namespace std;
 
 namespace CAROM {
 
-MatrixInterpolator::MatrixInterpolator(std::vector<Vector*> & parameter_points,
-                                       std::vector<std::shared_ptr<Matrix>> & rotation_matrices,
-                                       std::vector<std::shared_ptr<Matrix>> & reduced_matrices,
+MatrixInterpolator::MatrixInterpolator(const std::vector<Vector> &
+                                       parameter_points,
+                                       const std::vector<std::shared_ptr<Matrix>> & rotation_matrices,
+                                       const std::vector<std::shared_ptr<Matrix>> & reduced_matrices,
                                        int ref_point,
                                        std::string matrix_type,
                                        std::string rbf,
@@ -95,7 +96,7 @@ MatrixInterpolator::MatrixInterpolator(std::vector<Vector*> & parameter_points,
     }
 }
 
-std::shared_ptr<Matrix> MatrixInterpolator::interpolate(Vector* point,
+std::shared_ptr<Matrix> MatrixInterpolator::interpolate(const Vector & point,
         bool orthogonalize)
 {
     std::shared_ptr<Matrix> interpolated_matrix;
@@ -215,7 +216,8 @@ Matrix* MatrixInterpolator::obtainLogInterpolatedMatrix(
     return log_interpolated_matrix;
 }
 
-std::shared_ptr<Matrix> MatrixInterpolator::interpolateSPDMatrix(Vector* point)
+std::shared_ptr<Matrix> MatrixInterpolator::interpolateSPDMatrix(
+    const Vector & point)
 {
     if (d_gammas.size() == 0)
     {
@@ -359,7 +361,7 @@ std::shared_ptr<Matrix> MatrixInterpolator::interpolateSPDMatrix(Vector* point)
 }
 
 std::shared_ptr<Matrix> MatrixInterpolator::interpolateNonSingularMatrix(
-    Vector* point)
+    const Vector & point)
 {
     if (d_gammas.size() == 0)
     {
@@ -465,7 +467,8 @@ std::shared_ptr<Matrix> MatrixInterpolator::interpolateNonSingularMatrix(
     return interpolated_matrix;
 }
 
-std::shared_ptr<Matrix> MatrixInterpolator::interpolateMatrix(Vector* point)
+std::shared_ptr<Matrix> MatrixInterpolator::interpolateMatrix(
+    const Vector & point)
 {
     if (d_gammas.size() == 0)
     {

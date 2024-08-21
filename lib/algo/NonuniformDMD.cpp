@@ -68,29 +68,29 @@ void NonuniformDMD::setOffset(Vector* offset_vector, int order)
 }
 
 std::pair<Matrix*, Matrix*>
-NonuniformDMD::computeDMDSnapshotPair(const Matrix* snapshots)
+NonuniformDMD::computeDMDSnapshotPair(const Matrix & snapshots)
 {
-    CAROM_VERIFY(snapshots->numColumns() > 1);
+    CAROM_VERIFY(snapshots.numColumns() > 1);
 
     // TODO: Making two copies of the snapshot matrix has a lot of overhead.
     //       We need to figure out a way to do submatrix multiplication and to
     //       reimplement this algorithm using one snapshot matrix.
-    Matrix* f_snapshots_in = new Matrix(snapshots->numRows(),
-                                        snapshots->numColumns() - 1, snapshots->distributed());
-    Matrix* f_snapshots_out = new Matrix(snapshots->numRows(),
-                                         snapshots->numColumns() - 1, snapshots->distributed());
+    Matrix* f_snapshots_in = new Matrix(snapshots.numRows(),
+                                        snapshots.numColumns() - 1, snapshots.distributed());
+    Matrix* f_snapshots_out = new Matrix(snapshots.numRows(),
+                                         snapshots.numColumns() - 1, snapshots.distributed());
 
     // Break up snapshots into snapshots_in and snapshots_out
     // snapshots_in = all columns of snapshots except last
     // snapshots_out = finite difference of all columns of snapshots
-    for (int i = 0; i < snapshots->numRows(); i++)
+    for (int i = 0; i < snapshots.numRows(); i++)
     {
-        for (int j = 0; j < snapshots->numColumns() - 1; j++)
+        for (int j = 0; j < snapshots.numColumns() - 1; j++)
         {
-            f_snapshots_in->item(i, j) = snapshots->item(i, j);
+            f_snapshots_in->item(i, j) = snapshots(i, j);
             f_snapshots_out->item(i, j) =
-                (snapshots->item(i, j + 1) - snapshots->item(i,j)) /
-                (d_sampled_times[j + 1]->item(0) - d_sampled_times[j]->item(0));
+                (snapshots.item(i, j + 1) - snapshots(i,j)) /
+                (d_sampled_times[j + 1] - d_sampled_times[j]);
             if (d_state_offset) f_snapshots_in->item(i, j) -= d_state_offset->item(i);
             if (d_derivative_offset) f_snapshots_out->item(i, j)
                 -= d_derivative_offset->item(i);

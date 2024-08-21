@@ -54,9 +54,9 @@ public:
      * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
      *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
      */
-    VectorInterpolator(std::vector<Vector*> & parameter_points,
-                       std::vector<std::shared_ptr<Matrix>> & rotation_matrices,
-                       std::vector<std::shared_ptr<Vector>> & reduced_vectors,
+    VectorInterpolator(const std::vector<Vector> & parameter_points,
+                       const std::vector<std::shared_ptr<Matrix>> & rotation_matrices,
+                       const std::vector<std::shared_ptr<Vector>> & reduced_vectors,
                        int ref_point,
                        std::string rbf = "G",
                        std::string interp_method = "LS",
@@ -67,7 +67,7 @@ public:
      *
      * @param[in] point The unsampled parameter point.
      */
-    std::shared_ptr<Vector> interpolate(Vector* point);
+    std::shared_ptr<Vector> interpolate(const Vector & point);
 
 private:
 
@@ -117,13 +117,12 @@ private:
 
 Vector* obtainInterpolatedVector(const std::vector<std::shared_ptr<Vector>> &
                                  data,
-                                 Matrix* f_T, std::string interp_method,
+                                 const Matrix & f_T, std::string interp_method,
                                  std::vector<double>& rbf);
-
-Matrix* solveLinearSystem(const std::vector<Vector*> & parameter_points,
+Matrix* solveLinearSystem(const std::vector<Vector> & parameter_points,
                           const std::vector<std::shared_ptr<Vector>> & data,
-                          std::string interp_method,
-                          std::string rbf, double & epsilon);
+                          const std::string & interp_method,
+                          const std::string & rbf, double epsilon);
 }
 
 #endif

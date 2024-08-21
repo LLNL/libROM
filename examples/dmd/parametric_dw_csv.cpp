@@ -54,9 +54,9 @@ using namespace std;
 using namespace mfem;
 
 void getInterpolatedTimeWindows(CAROM::Vector*& testing_twep,
-                                std::vector<CAROM::Vector*>& parameter_points,
+                                const std::vector<CAROM::Vector>& parameter_points,
                                 std::vector<std::shared_ptr<CAROM::Vector>>& training_twep,
-                                CAROM::Vector* desired_point,
+                                const CAROM::Vector & desired_point,
                                 std::string rbf,
                                 double closest_rbf_val);
 
@@ -263,7 +263,7 @@ int main(int argc, char *argv[])
     }
 
     vector<string> training_par_list, testing_par_list; // DATASET info
-    vector<CAROM::Vector*> training_par_vectors,
+    vector<CAROM::Vector> training_par_vectors,
            testing_par_vectors; // DATASET param
     vector<string> par_dir_list; // DATASET name
     vector<int> num_train_snap; // DATASET size
@@ -293,7 +293,7 @@ int main(int argc, char *argv[])
         }
 
         dpar = par_info.size() - 1;
-        CAROM::Vector* curr_par = new CAROM::Vector(dpar, false);
+        CAROM::Vector curr_par(dpar, false);
 
         if (idx_dataset == 0)
         {
@@ -337,7 +337,7 @@ int main(int argc, char *argv[])
 
         for (int par_order = 0; par_order < dpar; ++par_order)
         {
-            curr_par->item(par_order) = stod(par_info[par_order+1]);
+            curr_par(par_order) = stod(par_info[par_order+1]);
         }
         training_par_vectors.push_back(curr_par);
     }
@@ -620,10 +620,10 @@ int main(int argc, char *argv[])
             string par_dir = par_info[0];
             par_dir_list.push_back(par_dir);
 
-            CAROM::Vector* curr_par = new CAROM::Vector(dpar, false);
+            CAROM::Vector curr_par(dpar, false);
             for (int par_order = 0; par_order < dpar; ++par_order)
             {
-                curr_par->item(par_order) = stod(par_info[par_order+1]);
+                curr_par(par_order) = stod(par_info[par_order+1]);
             }
             testing_par_vectors.push_back(curr_par);
 
@@ -647,8 +647,7 @@ int main(int argc, char *argv[])
                     cout << "Interpolating DMD model #" << window << endl;
                 }
                 CAROM::getParametricDMD(dmd[idx_dataset][window], training_par_vectors,
-                                        dmd_paths,
-                                        curr_par,
+                                        dmd_paths, curr_par,
                                         string(rbf), string(interp_method), pdmd_closest_rbf_val);
             } // escape for-loop over window
         } // escape for-loop over idx_dataset
@@ -667,7 +666,7 @@ int main(int argc, char *argv[])
         for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
         {
             string par_dir = par_dir_list[idx_dataset];
-            CAROM::Vector* curr_par = testing_par_vectors[idx_dataset];
+            const CAROM::Vector& curr_par = testing_par_vectors[idx_dataset];
 
             if (myid == 0)
             {
@@ -895,7 +894,6 @@ int main(int argc, char *argv[])
     delete[] sample;
     for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
     {
-        delete testing_par_vectors[idx_dataset];
         for (int window = 0; window < numWindows; ++window)
         {
             delete dmd[idx_dataset][window];
@@ -906,9 +904,9 @@ int main(int argc, char *argv[])
 }
 
 void getInterpolatedTimeWindows(CAROM::Vector*& testing_twep,
-                                std::vector<CAROM::Vector*>& parameter_points,
+                                const std::vector<CAROM::Vector>& parameter_points,
                                 std::vector<std::shared_ptr<CAROM::Vector>>& training_twep,
-                                CAROM::Vector* desired_point,
+                                const CAROM::Vector & desired_point,
                                 std::string rbf = "G",
                                 double closest_rbf_val = 0.9)
 {
@@ -920,7 +918,6 @@ void getInterpolatedTimeWindows(CAROM::Vector*& testing_twep,
     std::vector<double> rbf_val = obtainRBFToTrainingPoints(parameter_points, "IDW",
                                   rbf, epsilon, desired_point);
 
-    CAROM::Matrix* f_T = NULL;
-
+    CAROM::Matrix f_T;
     testing_twep = obtainInterpolatedVector(training_twep, f_T, "IDW", rbf_val);
 }
