@@ -107,7 +107,7 @@ protected:
      * @param[in] reorthogonalize_W Whether to reorthogonalize the interpolated W (basis) matrix.
      */
     friend void getParametricDMD<NonuniformDMD>(NonuniformDMD*& parametric_dmd,
-            std::vector<Vector*>& parameter_points,
+            const std::vector<Vector>& parameter_points,
             std::vector<NonuniformDMD*>& dmds,
             Vector* desired_point,
             std::string rbf,
