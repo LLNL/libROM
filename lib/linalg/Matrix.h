@@ -20,6 +20,7 @@
 #include <complex>
 #include <memory>
 #include <string>
+#include <climits>
 
 namespace CAROM {
 
@@ -149,6 +150,10 @@ public:
         int num_rows,
         int num_cols)
     {
+        // Check integer multiplication overflow
+        if (num_rows > INT_MAX / num_cols)
+            CAROM_ERROR("Matrix::setSize- new size exceeds maximum integer value!\n");
+
         int new_size = num_rows*num_cols;
         if (new_size > d_alloc_size) {
             if (!d_owns_data) {

@@ -10,24 +10,45 @@
 
 // Compile with: make parametric_tw_csv
 //
-// Generate CSV or HDF database on heat conduction with either
-// heat_conduction_csv.sh or heat_conduction_hdf.sh (HDF is more efficient).
+// This script performs DMD on general datasets in CSV or HDF formats,
+// with the options of time-windowing and parametric interpolation.
+// For the user-specified input file hierarchy, see the "Description" section below.
+// Below is a simple hands-on example, using MFEM heat conduction example to
+// generate either CSV or HDF database to illustrate the file hierarchy and command lines
+// (HDF is more efficient).
 //
 // =============================================================================
 //
-// Parametric serial DMD command (for HDF version, append -hdf):
-//   parametric_tw_csv -o hc_parametric_serial -rdim 16 -dtc 0.01 -offline
-//   parametric_tw_csv -o hc_parametric_serial -rdim 16 -dtc 0.01 -online
+// CSV database generation: heat_conduction_csv.sh
+// HDF database generation: heat_conduction_hdf.sh
 //
-// Final-time prediction error (Last line in run/hc_parametric_serial/dmd_par5_prediction_error.csv):
-//   0.0012598331433506
+// Local DMD command (for HDF version, append -hdf):
+//   parametric_tw_csv -o hc_local -train-set dmd_train_local -rdim 16 -dtc 0.01 -offline
+//   parametric_tw_csv -o hc_local -train-set dmd_train_local -rdim 16 -dtc 0.01 -online
+//
+// Final-time prediction error (Last line in run/hc_local/dmd_par5_prediction_error.csv):
+//   2.230434418670911e-09
+//
+// Local time windowing DMD command (for HDF version, append -hdf):
+//   parametric_tw_csv -o hc_local_tw -train-set dmd_train_local -nwinsamp 25 -dtc 0.01 -offline
+//   parametric_tw_csv -o hc_local_tw -train-set dmd_train_local -nwinsamp 25 -dtc 0.01 -online
+//
+// Final-time prediction error (Last line in run/hc_local_tw/dmd_par5_prediction_error.csv):
+//   1.838715056687316e-05
+//
+// Parametric DMD command (for HDF version, append -hdf):
+//   parametric_tw_csv -o hc_parametric -train-set dmd_train_parametric -rdim 16 -dtc 0.01 -offline
+//   parametric_tw_csv -o hc_parametric -train-set dmd_train_parametric -rdim 16 -dtc 0.01 -online
+//
+// Final-time prediction error (Last line in run/hc_parametric/dmd_par5_prediction_error.csv):
+//   0.001260102134003929
 //
 // Parametric time windowing DMD command (for HDF version, append -hdf):
-//   parametric_tw_csv -o hc_parametric_tw -nwinsamp 25 -dtc 0.01 -offline
-//   parametric_tw_csv -o hc_parametric_tw -nwinsamp 25 -dtc 0.01 -online
+//   parametric_tw_csv -o hc_parametric_tw -train-set dmd_train_parametric -nwinsamp 25 -dtc 0.01 -offline
+//   parametric_tw_csv -o hc_parametric_tw -train-set dmd_train_parametric -nwinsamp 25 -dtc 0.01 -online
 //
 // Final-time prediction error (Last line in run/hc_parametric_tw/dmd_par5_prediction_error.csv):
-//   0.0006507358659606
+//   0.000650735936773157
 //
 // =============================================================================
 //
@@ -598,7 +619,7 @@ int main(int argc, char *argv[])
                 }
                 else if (dtc > 0.0)
                 {
-                    dmd_curr_par[window] = new CAROM::DMD(dim, dtc, true);
+                    dmd_curr_par[window] = new CAROM::DMD(dim, dtc);
                 }
                 else
                 {
@@ -836,7 +857,7 @@ int main(int argc, char *argv[])
         }
 
         dmd_curr_par.assign(numWindows, nullptr);
-        dmd.assign(numWindows, dmd_curr_par);
+        dmd.assign(npar, dmd_curr_par);
 
         int num_tests = 0;
         vector<double> prediction_time, prediction_error;
@@ -889,6 +910,7 @@ int main(int argc, char *argv[])
             for (int par_order = 0; par_order < dpar; ++par_order)
             {
                 curr_par(par_order) = stod(par_info[par_order+1]);
+                cout << "curr_par[" << par_order << "] = " << curr_par(par_order) << endl;
             }
 
             vector<double> tvec(num_snap_orig);
@@ -1015,7 +1037,6 @@ int main(int argc, char *argv[])
                 }
 
             } // escape for-loop over window
-
             db->close();
         } // escape for-loop over idx_dataset
         dmd_preprocess_timer.Stop();
@@ -1255,6 +1276,7 @@ int main(int argc, char *argv[])
         }
     } // escape case (online || predict)
 
+    delete db;
     if (save_hdf)
     {
         hdf_db->close();
