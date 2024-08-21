@@ -62,45 +62,44 @@ TEST(InterpolationTest,test_accuracy)
 
     std::vector<std::shared_ptr<CAROM::Vector>> snapshots;
     std::vector<std::shared_ptr<CAROM::Vector>> out_snapshots;
-    std::vector<CAROM::Vector*> reference_snapshots;
-    std::vector<const CAROM::Vector*> times;
-    std::vector<const CAROM::Vector*> out_times;
+    std::vector<CAROM::Vector> reference_snapshots;
+    std::vector<CAROM::Vector> times;
+    std::vector<CAROM::Vector> out_times;
     for(int i = 0; i < t.size(); ++i)
     {
-        CAROM::Vector* temp_t = new CAROM::Vector(1, false);
-        temp_t->item(0) = t[i];
+        CAROM::Vector temp_t(1, false);
+        temp_t(0) = t[i];
         times.push_back(temp_t);
-        CAROM::Vector* temp_y = new CAROM::Vector(2,false);
-        temp_y->item(0) = y[i];
-        temp_y->item(1) = y2[i];
+        CAROM::Vector *temp_y = new CAROM::Vector(2,false);
+        (*temp_y)(0) = y[i];
+        (*temp_y)(1) = y2[i];
         snapshots.push_back(std::shared_ptr<CAROM::Vector>(temp_y));
     }
 
     for(int i = 0; i < tq.size(); ++i)
     {
-        CAROM::Vector* temp_t = new CAROM::Vector(1, false);
-        temp_t->item(0) = tq[i];
+        CAROM::Vector temp_t(1, false);
+        temp_t(0) = tq[i];
         out_times.push_back(temp_t);
-        CAROM::Vector* temp_y = new CAROM::Vector(2,false);
-        temp_y->item(0) = yq1[i];
-        temp_y->item(1) = yq2[i];
+        CAROM::Vector temp_y(2,false);
+        temp_y(0) = yq1[i];
+        temp_y(1) = yq2[i];
         reference_snapshots.push_back(temp_y);
     }
 
-    CAROM::PCHIPInterpolator* interp = new CAROM::PCHIPInterpolator();
+    CAROM::PCHIPInterpolator interp;
 
-    interp->interpolate(times,snapshots,out_times,out_snapshots);
+    interp.interpolate(times,snapshots,out_times,out_snapshots);
 
     for(int i = 0; i < out_snapshots.size(); ++i)
     {
-        if( abs(reference_snapshots[i]->item(0)-out_snapshots[i]->item(
-                    0)) > 10.*FLT_EPSILON)
+        if (abs(reference_snapshots[i](0)-(*out_snapshots[i])(0)) > 10.*FLT_EPSILON)
         {
             SUCCESS = false;
             break;
         }
-        else if(abs(reference_snapshots[i]->item(1)-out_snapshots[i]->item(
-                        1)) > 10.*FLT_EPSILON)
+        else if (abs(reference_snapshots[i](1)-(*out_snapshots[i])(
+                         1)) > 10.*FLT_EPSILON)
         {
             SUCCESS = false;
             break;
@@ -110,18 +109,17 @@ TEST(InterpolationTest,test_accuracy)
     out_snapshots.clear();
     out_times.clear();
 
-    interp->interpolate(times,snapshots,26,out_times,out_snapshots);
+    interp.interpolate(times,snapshots,26,out_times,out_snapshots);
 
     for(int i = 0; i < out_snapshots.size(); ++i)
     {
-        if( abs(reference_snapshots[i]->item(0)-out_snapshots[i]->item(
+        if( abs(reference_snapshots[i](0)-(*out_snapshots[i])(
                     0)) > 10.*FLT_EPSILON)
         {
             SUCCESS = false;
             break;
         }
-        else if(abs(reference_snapshots[i]->item(1)-out_snapshots[i]->item(
-                        1)) > 10.*FLT_EPSILON)
+        else if(abs(reference_snapshots[i](1)-(*out_snapshots[i])(1)) > 10.*FLT_EPSILON)
         {
             SUCCESS = false;
             break;
