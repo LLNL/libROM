@@ -109,7 +109,7 @@ protected:
     friend void getParametricDMD<NonuniformDMD>(NonuniformDMD*& parametric_dmd,
             const std::vector<Vector>& parameter_points,
             std::vector<NonuniformDMD*>& dmds,
-            Vector* desired_point,
+            const Vector & desired_point,
             std::string rbf,
             std::string interp_method,
             double closest_rbf_val,
