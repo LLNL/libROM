@@ -858,6 +858,7 @@ double Potential(const Vector &x)
 {
     Vector center(x.Size());
     double rho = 0.0;
+    double rho_bg = -5.0;
     double d_sq, radius_sq;
 
     switch (problem)
@@ -904,20 +905,25 @@ double Potential(const Vector &x)
         L = (bb_max[0] - bb_min[0]) / 18.0;
         for (int i = 1; i < x.Size(); i++)
             center(i) = (bb_min[i] + bb_max[i]) / 2;
-        radius_sq = pow(0.2 * L, 2.0);
         if (potential_well_switch == 0 || potential_well_switch == 1)
         {
             // add well with first center
             center(0) = (23 * bb_min[0] + 13 * bb_max[0]) / 36 - pseudo_time * h_max;
             d_sq = x.DistanceSquaredTo(center);
-            rho += amplitude * std::exp(-d_sq / (2 * radius_sq));
+            radius_sq = pow(0.28 * L, 2.0);
+            rho += -29.0 * std::exp(-d_sq / (2 * radius_sq));
+            radius_sq = pow(1.08 * L, 2.0);
+            rho += -3.0 * std::exp(-d_sq / (2 * radius_sq));
         }
         if (potential_well_switch == 0 || potential_well_switch == 2)
         {
             // add well with second center
             center(0) = (13 * bb_min[0] + 23 * bb_max[0]) / 36 + pseudo_time * h_max;
             d_sq = x.DistanceSquaredTo(center);
-            rho += amplitude * std::exp(-d_sq / (2 * radius_sq));
+            radius_sq = pow(0.28 * L, 2.0);
+            rho += -29.0 * std::exp(-d_sq / (2 * radius_sq));
+            radius_sq = pow(1.08 * L, 2.0);
+            rho += -3.0 * std::exp(-d_sq / (2 * radius_sq));
         }
         return rho;
     case 6:
