@@ -849,7 +849,7 @@ double Conductivity(const Vector &x)
     case 5:
     case 6:
         L = (bb_max[0] - bb_min[0]) / 18.0;
-        return pow(L, -2.0);
+        return pow(L, 2.0);
     }
     return 1.0;
 }
@@ -895,15 +895,16 @@ double Potential(const Vector &x)
             center(1) = (0.75 - 0.02 * sin(2 * M_PI * pseudo_time)) *
                         (bb_min[1] + bb_max[1]);
             for (int i = 2; i < x.Size(); i++)
-                center(i) = 0.25 * (bb_min[i] + bb_max[i]);
+                center(i) = 0.75 * (bb_min[i] + bb_max[i]);
             d_sq = x.DistanceSquaredTo(center);
             rho += amplitude * std::exp(-d_sq / (2 * radius_sq));
         }
         return rho;
     case 5:
-        radius_sq = pow(0.1, 2.0);
+        L = (bb_max[0] - bb_min[0]) / 18.0;
         for (int i = 1; i < x.Size(); i++)
             center(i) = (bb_min[i] + bb_max[i]) / 2;
+        radius_sq = pow(0.2 * L, 2.0);
         if (potential_well_switch == 0 || potential_well_switch == 1)
         {
             // add well with first center
