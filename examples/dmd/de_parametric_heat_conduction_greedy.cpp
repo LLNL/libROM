@@ -456,7 +456,7 @@ double simulation()
                 dmd_u = new CAROM::DMD(dmd_paths[0]);
             }
 
-            dmd_u->projectInitialCondition(init);
+            dmd_u->projectInitialCondition(*init);
 
             dmd_training_timer.Stop();
 
@@ -614,7 +614,7 @@ double simulation()
         CAROM::getParametricDMD(dmd_u, param_vectors, dmd_paths, desired_param,
                                 "G", "LS", closest_rbf_val);
 
-        dmd_u->projectInitialCondition(init);
+        dmd_u->projectInitialCondition(*init);
 
         dmd_training_timer.Stop();
     }

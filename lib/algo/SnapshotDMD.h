@@ -22,7 +22,8 @@ public:
      * @param[in] state_offset     The state offset.
      */
     SnapshotDMD(int dim, double dt, bool alt_output_basis = false,
-                Vector* state_offset = NULL) : DMD(dim,dt,alt_output_basis,state_offset) {}
+                std::shared_ptr<Vector> state_offset = nullptr) :
+        DMD(dim, dt, alt_output_basis, state_offset) {}
 
     /**
      * @brief Constructor. DMD from saved models. Inherited directly
@@ -121,7 +122,7 @@ protected:
     SnapshotDMD(std::vector<std::complex<double>> eigs,
                 std::shared_ptr<Matrix> phi_real,
                 std::shared_ptr<Matrix> phi_imaginary, int k, double dt,
-                double t_offset, Vector* state_offset) :
+                double t_offset, std::shared_ptr<Vector> & state_offset) :
         DMD(eigs, phi_real, phi_imaginary, k, dt, t_offset, state_offset) {}
 
 private:

@@ -81,7 +81,7 @@ public:
      * @param[in] state_offset     The state offset.
      */
     DMD(int dim, double dt, bool alt_output_basis = false,
-        Vector* state_offset = NULL);
+        std::shared_ptr<Vector> state_offset = nullptr);
 
     /**
      * @brief Constructor. DMD from saved models.
@@ -94,12 +94,12 @@ public:
     /**
      * @brief Destroy the DMD object
      */
-    virtual ~DMD();
+    virtual ~DMD() { };
 
     /**
      * @brief Set the offset of a certain order.
      */
-    virtual void setOffset(Vector* offset_vector, int order);
+    virtual void setOffset(std::shared_ptr<Vector> & offset_vector, int order);
 
     /**
      * @brief Sample the new state, u_in. Any samples in d_snapshots
@@ -142,7 +142,7 @@ public:
      * @param[in] init     The initial condition.
      * @param[in] t_offset The initial time offset.
      */
-    void projectInitialCondition(const Vector* init, double t_offset = -1.0);
+    void projectInitialCondition(const Vector & init, double t_offset = -1.0);
 
     /**
      * @brief Predict state given a time. Uses the projected initial condition of the
@@ -253,7 +253,8 @@ protected:
      *                              output, i.e. phi = U^(+)*V*Omega^(-1)*X.
      * @param[in] state_offset      The state offset.
      */
-    DMD(int dim, bool alt_output_basis = false, Vector* state_offset = NULL);
+    DMD(int dim, bool alt_output_basis = false,
+        std::shared_ptr<Vector> state_offset = nullptr);
 
     /**
      * @brief Constructor. Specified from DMD components.
@@ -266,9 +267,10 @@ protected:
      * @param[in] t_offset d_t_offset
      * @param[in] state_offset d_state_offset
      */
-    DMD(std::vector<std::complex<double>> eigs, std::shared_ptr<Matrix> phi_real,
-        std::shared_ptr<Matrix> phi_imaginary, int k,
-        double dt, double t_offset, Vector* state_offset);
+    DMD(std::vector<std::complex<double>> & eigs,
+        std::shared_ptr<Matrix> & phi_real,
+        std::shared_ptr<Matrix> & phi_imaginary, int k, double dt,
+        double t_offset, std::shared_ptr<Vector> & state_offset);
 
     /**
      * @brief Unimplemented default constructor.
@@ -367,7 +369,7 @@ protected:
     /**
      * @brief State offset in snapshot.
      */
-    Vector* d_state_offset = NULL;
+    std::shared_ptr<Vector> d_state_offset;
 
     /**
      * @brief Whether the DMD has been trained or not.

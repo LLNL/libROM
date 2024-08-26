@@ -747,7 +747,7 @@ int main(int argc, char *argv[])
                         {
                             init_cond->item(i) = sample[i];
                         }
-                        dmd[idx_dataset][curr_window]->projectInitialCondition(init_cond.get(), tval);
+                        dmd[idx_dataset][curr_window]->projectInitialCondition(*init_cond, tval);
                         dmd_preprocess_timer.Stop();
                     }
                     else
@@ -806,7 +806,7 @@ int main(int argc, char *argv[])
                     }
 
                     init_cond = dmd[idx_dataset][curr_window]->predict(t_offset);
-                    dmd[idx_dataset][curr_window+1]->projectInitialCondition(init_cond.get(),
+                    dmd[idx_dataset][curr_window+1]->projectInitialCondition(*init_cond,
                             t_offset);
 
                     curr_window += 1;

@@ -777,7 +777,7 @@ int main(int argc, char *argv[])
             CAROM::getParametricDMD(dmd_u, param_vectors, dmd_paths, desired_param,
                                     "G", "LS", closest_rbf_val);
 
-            dmd_u->projectInitialCondition(init);
+            dmd_u->projectInitialCondition(*init);
 
             dmd_training_timer.Stop();
         }

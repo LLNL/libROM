@@ -27,7 +27,7 @@ using namespace std;
 namespace CAROM {
 
 void
-S_OPT(const std::shared_ptr<Matrix> f_basis,
+S_OPT(const Matrix & f_basis,
       int num_f_basis_vectors_used,
       std::vector<int>& f_sampled_row,
       std::vector<int>& f_sampled_rows_per_proc,
@@ -83,41 +83,37 @@ S_OPT(const std::shared_ptr<Matrix> f_basis,
 
     // Get the number of basis vectors and the size of each basis vector.
     CAROM_VERIFY(0 < num_f_basis_vectors_used
-                 && num_f_basis_vectors_used <= f_basis->numColumns());
+                 && num_f_basis_vectors_used <= f_basis.numColumns());
     const int num_basis_vectors =
-        std::min(num_f_basis_vectors_used, f_basis->numColumns());
+        std::min(num_f_basis_vectors_used, f_basis.numColumns());
     const int num_samples = num_samples_req > 0 ? num_samples_req :
                             num_basis_vectors;
     CAROM_VERIFY(num_basis_vectors <= num_samples
-                 && num_samples <= f_basis->numDistributedRows());
+                 && num_samples <= f_basis.numDistributedRows());
     CAROM_VERIFY(num_samples == f_sampled_row.size());
     CAROM_VERIFY(num_samples == f_basis_sampled_inv.numRows() &&
                  num_basis_vectors == f_basis_sampled_inv.numColumns());
     CAROM_VERIFY(!f_basis_sampled_inv.distributed());
 
-    int num_rows = f_basis->numRows();
+    int num_rows = f_basis.numRows();
 
     // If num_basis_vectors is less than the number of columns of the basis,
     // we need to truncate the basis.
-    std::shared_ptr<Matrix> f_basis_truncated;
-    if (num_basis_vectors < f_basis->numColumns())
+    std::shared_ptr<Matrix> f_basis_truncated_N;
+    const Matrix *f_basis_truncated = &f_basis;
+    if (num_basis_vectors < f_basis.numColumns())
     {
-        f_basis_truncated = f_basis->getFirstNColumns(num_basis_vectors);
-    }
-    else
-    {
-        f_basis_truncated = f_basis;
+        f_basis_truncated_N = f_basis.getFirstNColumns(num_basis_vectors);
+        f_basis_truncated = f_basis_truncated_N.get();
     }
 
-    std::shared_ptr<Matrix> Vo;
+    std::shared_ptr<Matrix> Vo_qr;
+    const Matrix *Vo = f_basis_truncated;
     // Use the QR factorization of the input matrix, if requested
     if (qr_factorize)
     {
-        Vo = f_basis_truncated->qr_factorize();
-    }
-    else
-    {
-        Vo = f_basis_truncated;
+        Vo_qr = f_basis_truncated->qr_factorize();
+        Vo = Vo_qr.get();
     }
 
     int num_samples_obtained = 0;
@@ -164,7 +160,7 @@ S_OPT(const std::shared_ptr<Matrix> f_basis,
                   f_bv_max_global.proc, MPI_COMM_WORLD);
         // Now add the first sampled row of the basis to tmp_fs.
         for (int j = 0; j < num_basis_vectors; ++j) {
-            V1.item(num_samples_obtained, j) = c[j];
+            V1(num_samples_obtained, j) = c[j];
         }
         proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
         proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] =
@@ -195,7 +191,7 @@ S_OPT(const std::shared_ptr<Matrix> f_basis,
                   f_bv_max_global.proc, MPI_COMM_WORLD);
         // Now add the first sampled row of the basis to tmp_fs.
         for (int j = 0; j < num_basis_vectors; ++j) {
-            V1.item(0, j) = c[j];
+            V1(0, j) = c[j];
         }
         proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
         proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] = 0;
@@ -204,15 +200,15 @@ S_OPT(const std::shared_ptr<Matrix> f_basis,
 
     if (num_samples_obtained < num_samples)
     {
-        Vector* A = new Vector(num_rows, f_basis->distributed());
-        Vector* noM = new Vector(num_rows, f_basis->distributed());
+        Vector A(num_rows, f_basis.distributed());
+        Vector noM(num_rows, f_basis.distributed());
 
         Matrix A0(num_basis_vectors - 1, num_basis_vectors - 1, false);
         Matrix V1_last_col(num_basis_vectors - 1, 1, false);
-        Matrix tt(num_rows, num_basis_vectors - 1, f_basis->distributed());
-        Matrix tt1(num_rows, num_basis_vectors - 1, f_basis->distributed());
-        Matrix g1(tt.numRows(), tt.numColumns(), f_basis->distributed());
-        Matrix GG(tt1.numRows(), tt1.numColumns(), f_basis->distributed());
+        Matrix tt(num_rows, num_basis_vectors - 1, f_basis.distributed());
+        Matrix tt1(num_rows, num_basis_vectors - 1, f_basis.distributed());
+        Matrix g1(tt.numRows(), tt.numColumns(), f_basis.distributed());
+        Matrix GG(tt1.numRows(), tt1.numColumns(), f_basis.distributed());
         Vector ls_res_first_row(num_basis_vectors - 1, false);
         Vector nV(num_basis_vectors, false);
 
@@ -231,9 +227,9 @@ S_OPT(const std::shared_ptr<Matrix> f_basis,
                 {
                     for (int k = 0; k < i - 1; k++)
                     {
-                        A0.item(j, k) = V1.item(j, k);
+                        A0(j, k) = V1(j, k);
                     }
-                    V1_last_col.item(j, 0) = V1.item(j, i - 1);
+                    V1_last_col(j, 0) = V1(j, i - 1);
                 }
 
                 std::unique_ptr<Matrix> atA0 = V1_last_col.transposeMult(A0);
@@ -245,7 +241,7 @@ S_OPT(const std::shared_ptr<Matrix> f_basis,
                 {
                     for (int k = 0; k < V1_last_col.numColumns(); k++)
                     {
-                        ata += (V1_last_col.item(j, k) * V1_last_col.item(j, k));
+                        ata += (V1_last_col(j, k) * V1_last_col(j, k));
                     }
                 }
 
@@ -254,7 +250,7 @@ S_OPT(const std::shared_ptr<Matrix> f_basis,
                 Matrix* rhs = NULL;
                 if (myid == 0)
                 {
-                    rhs = new Matrix(num_rows + atA0->numRows(), i - 1, f_basis->distributed());
+                    rhs = new Matrix(num_rows + atA0->numRows(), i - 1, f_basis.distributed());
                     for (int k = 0; k < rhs->numColumns(); k++)
                     {
                         rhs->item(0, k) = atA0->item(0, k);
@@ -269,7 +265,7 @@ S_OPT(const std::shared_ptr<Matrix> f_basis,
                 }
                 else
                 {
-                    rhs = new Matrix(num_rows, i - 1, f_basis->distributed());
+                    rhs = new Matrix(num_rows, i - 1, f_basis.distributed());
                     for (int j = 0; j < rhs->numRows(); j++)
                     {
                         for (int k = 0; k < rhs->numColumns(); k++)
@@ -286,16 +282,16 @@ S_OPT(const std::shared_ptr<Matrix> f_basis,
                 if (myid == 0)
                 {
                     c_T = new Matrix(ls_res->getData() + ls_res->numColumns(),
-                                     ls_res->numRows() - 1, ls_res->numColumns(), f_basis->distributed(), true);
+                                     ls_res->numRows() - 1, ls_res->numColumns(), f_basis.distributed(), true);
                 }
                 else
                 {
                     c_T = new Matrix(ls_res->getData(),
-                                     ls_res->numRows(), ls_res->numColumns(), f_basis->distributed(), true);
+                                     ls_res->numRows(), ls_res->numColumns(), f_basis.distributed(), true);
                 }
                 std::unique_ptr<Matrix> Vo_first_i_columns = Vo->getFirstNColumns(i - 1);
 
-                Vector* b = new Vector(num_rows, f_basis->distributed());
+                Vector b(num_rows, f_basis.distributed());
                 for (int j = 0; j < Vo_first_i_columns->numRows(); j++)
                 {
                     double tmp = 1.0;
@@ -303,14 +299,14 @@ S_OPT(const std::shared_ptr<Matrix> f_basis,
                     {
                         tmp += (Vo_first_i_columns->item(j, k) * c_T->item(j, k));
                     }
-                    b->item(j) = tmp;
+                    b(j) = tmp;
                 }
 
                 for (int j = 0; j < num_rows; j++)
                 {
                     for (int zz = 0; zz < i - 1; zz++)
                     {
-                        tt.item(j, zz) = Vo->item(j, zz) * Vo->item(j, i - 1);
+                        tt(j, zz) = Vo->item(j, zz) * Vo->item(j, i - 1);
                     }
                 }
 
@@ -319,26 +315,26 @@ S_OPT(const std::shared_ptr<Matrix> f_basis,
                 {
                     for (int k = 0; k < g1.numColumns(); k++)
                     {
-                        g1.item(j, k) = atA0->item(0, k) + tt.item(j, k);
+                        g1(j, k) = atA0->item(0, k) + tt(j, k);
                     }
                 }
 
-                Vector* g3 = new Vector(num_rows, f_basis->distributed());
+                Vector* g3 = new Vector(num_rows, f_basis.distributed());
                 for (int j = 0; j < c_T->numRows(); j++)
                 {
                     double tmp = 0.0;
                     for (int k = 0; k < c_T->numColumns(); k++)
                     {
-                        tmp += c_T->item(j, k) * g1.item(j, k);
+                        tmp += c_T->item(j, k) * g1(j, k);
                     }
-                    g3->item(j) = tmp / b->item(j);
+                    g3->item(j) = tmp / b(j);
                 }
 
                 for (int j = 0; j < num_rows; j++)
                 {
                     for (int zz = 0; zz < i - 1; zz++)
                     {
-                        tt1.item(j, zz) = c_T->item(j, zz) * (Vo->item(j, i - 1) - g3->item(j));
+                        tt1(j, zz) = c_T->item(j, zz) * (Vo->item(j, i - 1) - g3->item(j));
                     }
                 }
 
@@ -354,53 +350,51 @@ S_OPT(const std::shared_ptr<Matrix> f_basis,
                 MPI_Bcast(c.data(), ls_res->numColumns(), MPI_DOUBLE,
                           0, MPI_COMM_WORLD);
                 for (int j = 0; j < ls_res->numColumns(); ++j) {
-                    ls_res_first_row.item(j) = c[j];
+                    ls_res_first_row(j) = c[j];
                 }
                 GG.setSize(tt1.numRows(), tt1.numColumns());
                 for (int j = 0; j < GG.numRows(); j++)
                 {
                     for (int k = 0; k < GG.numColumns(); k++)
                     {
-                        GG.item(j, k) = ls_res_first_row.item(k) + tt1.item(j, k);
+                        GG(j, k) = ls_res_first_row(k) + tt1(j, k);
                     }
                 }
 
-                for (int j = 0; j < A->dim(); j++)
+                for (int j = 0; j < A.dim(); j++)
                 {
                     double tmp = 0.0;
                     for (int k = 0; k < g1.numColumns(); k++)
                     {
-                        tmp += g1.item(j, k) * GG.item(j, k);
+                        tmp += g1(j, k) * GG(j, k);
                     }
-                    A->item(j) = std::max(0.0, ata +
-                                          (Vo->item(j, i - 1) * Vo->item(j, i - 1)) - tmp);
+                    A(j) = std::max(0.0, ata +
+                                    (Vo->item(j, i - 1) * Vo->item(j, i - 1)) - tmp);
                 }
 
                 nV.setSize(i);
                 for (int j = 0; j < i; j++)
                 {
-                    nV.item(j) = 0.0;
+                    nV(j) = 0.0;
                     for (int k = 0; k < num_samples_obtained; k++)
                     {
-                        nV.item(j) += (V1.item(k, j) * V1.item(k, j));
+                        nV(j) += (V1(k, j) * V1(k, j));
                     }
                 }
 
-                for (int j = 0; j < noM->dim(); j++)
+                for (int j = 0; j < noM.dim(); j++)
                 {
-                    noM->item(j) = 0.0;
+                    noM(j) = 0.0;
                     for (int k = 0; k < i; k++)
                     {
-                        noM->item(j) += std::log(nV.item(k) + (Vo->item(j, k) * Vo->item(j, k)));
+                        noM(j) += std::log(nV(k) + (Vo->item(j, k) * Vo->item(j, k)));
                     }
                 }
 
-                for (int j = 0; j < A->dim(); j++)
+                for (int j = 0; j < A.dim(); j++)
                 {
-                    A->item(j) = std::log(fabs(A->item(j))) + std::log(b->item(j)) - noM->item(j);
+                    A(j) = std::log(fabs(A(j))) + std::log(b(j)) - noM(j);
                 }
-
-                delete b;
             }
             else
             {
@@ -414,30 +408,30 @@ S_OPT(const std::shared_ptr<Matrix> f_basis,
                 nV.setSize(num_basis_vectors);
                 for (int j = 0; j < num_basis_vectors; j++)
                 {
-                    nV.item(j) = 0.0;
+                    nV(j) = 0.0;
                     for (int k = 0; k < num_samples_obtained; k++)
                     {
-                        nV.item(j) += (V1.item(k, j) * V1.item(k, j));
+                        nV(j) += (V1(k, j) * V1(k, j));
                     }
                 }
 
-                for (int j = 0; j < noM->dim(); j++)
+                for (int j = 0; j < noM.dim(); j++)
                 {
-                    noM->item(j) = 0.0;
+                    noM(j) = 0.0;
                     for (int k = 0; k < num_basis_vectors; k++)
                     {
-                        noM->item(j) += std::log(nV.item(k) + (Vo->item(j, k) * Vo->item(j, k)));
+                        noM(j) += std::log(nV(k) + (Vo->item(j, k) * Vo->item(j, k)));
                     }
                 }
 
-                for (int j = 0; j < A->dim(); j++)
+                for (int j = 0; j < A.dim(); j++)
                 {
                     double tmp = 0.0;
                     for (int k = 0; k < Vo->numColumns(); k++)
                     {
                         tmp += Vo->item(j, k) * ls_res->item(j, k);
                     }
-                    A->item(j) = std::log(1 + tmp) - noM->item(j);
+                    A(j) = std::log(1 + tmp) - noM(j);
                 }
             }
 
@@ -447,7 +441,7 @@ S_OPT(const std::shared_ptr<Matrix> f_basis,
                 if (proc_f_row_to_tmp_fs_row[f_bv_max_local.proc].find(j) ==
                         proc_f_row_to_tmp_fs_row[f_bv_max_local.proc].end())
                 {
-                    double f_bv_val = A->item(j);
+                    double f_bv_val = A(j);
                     if (f_bv_val > f_bv_max_local.row_val) {
                         f_bv_max_local.row_val = f_bv_val;
                         f_bv_max_local.row = j;
@@ -466,16 +460,13 @@ S_OPT(const std::shared_ptr<Matrix> f_basis,
                       f_bv_max_global.proc, MPI_COMM_WORLD);
             // Now add the first sampled row of the basis to tmp_fs.
             for (int j = 0; j < num_basis_vectors; ++j) {
-                V1.item(num_samples_obtained, j) = c[j];
+                V1(num_samples_obtained, j) = c[j];
             }
             proc_sampled_f_row[f_bv_max_global.proc].insert(f_bv_max_global.row);
             proc_f_row_to_tmp_fs_row[f_bv_max_global.proc][f_bv_max_global.row] =
                 num_samples_obtained;
             num_samples_obtained++;
         }
-
-        delete A;
-        delete noM;
     }
 
     // Fill f_sampled_row, and f_sampled_rows_per_proc. Unscramble tmp_fs into
@@ -492,7 +483,7 @@ S_OPT(const std::shared_ptr<Matrix> f_basis,
             f_sampled_row[idx] = this_f_row;
             int tmp_fs_row = this_proc_f_row_to_tmp_fs_row[this_f_row];
             for (int col = 0; col < num_f_basis_cols; ++col) {
-                f_basis_sampled_inv.item(idx, col) = V1.item(tmp_fs_row, col);
+                f_basis_sampled_inv(idx, col) = V1(tmp_fs_row, col);
             }
             ++idx;
         }

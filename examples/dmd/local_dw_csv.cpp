@@ -702,7 +702,7 @@ int main(int argc, char *argv[])
                     {
                         init_cond->item(i) = sample[i];
                     }
-                    dmd[curr_window]->projectInitialCondition(init_cond.get(), tval);
+                    dmd[curr_window]->projectInitialCondition(*init_cond, tval);
                     dmd_preprocess_timer.Stop();
                 }
                 else
@@ -792,7 +792,7 @@ int main(int argc, char *argv[])
                 }
 
                 init_cond = dmd[curr_window]->predict(t_offset);
-                dmd[curr_window+1]->projectInitialCondition(init_cond.get(), t_offset);
+                dmd[curr_window+1]->projectInitialCondition(*init_cond, t_offset);
 
                 curr_window += 1;
                 result = dmd[curr_window]->predict(tval);

@@ -43,7 +43,7 @@ extern "C" {
 
 namespace CAROM {
 
-DMD::DMD(int dim, bool alt_output_basis, Vector* state_offset)
+DMD::DMD(int dim, bool alt_output_basis, std::shared_ptr<Vector> state_offset)
 {
     CAROM_VERIFY(dim > 0);
 
@@ -63,7 +63,8 @@ DMD::DMD(int dim, bool alt_output_basis, Vector* state_offset)
     setOffset(state_offset, 0);
 }
 
-DMD::DMD(int dim, double dt, bool alt_output_basis, Vector* state_offset)
+DMD::DMD(int dim, double dt, bool alt_output_basis,
+         std::shared_ptr<Vector> state_offset)
 {
     CAROM_VERIFY(dim > 0);
     CAROM_VERIFY(dt > 0.0);
@@ -102,10 +103,10 @@ DMD::DMD(std::string base_file_name)
     load(base_file_name);
 }
 
-DMD::DMD(std::vector<std::complex<double>> eigs,
-         std::shared_ptr<Matrix> phi_real,
-         std::shared_ptr<Matrix> phi_imaginary, int k,
-         double dt, double t_offset, Vector* state_offset)
+DMD::DMD(std::vector<std::complex<double>> & eigs,
+         std::shared_ptr<Matrix> & phi_real,
+         std::shared_ptr<Matrix> & phi_imaginary, int k,
+         double dt, double t_offset, std::shared_ptr<Vector> & state_offset)
 {
     // Get the rank of this process, and the number of processors.
     int mpi_init;
@@ -128,12 +129,7 @@ DMD::DMD(std::vector<std::complex<double>> eigs,
     setOffset(state_offset, 0);
 }
 
-DMD::~DMD()
-{
-    delete d_state_offset;
-}
-
-void DMD::setOffset(Vector* offset_vector, int order)
+void DMD::setOffset(std::shared_ptr<Vector> & offset_vector, int order)
 {
     if (order == 0)
     {
@@ -487,10 +483,10 @@ DMD::constructDMD(const Matrix & f_snapshots,
     struct DMDInternal dmd_internal = {f_snapshots_in, f_snapshots_out, d_basis.get(), d_basis_right, d_S_inv, &eigenpair};
     computePhi(dmd_internal);
 
-    Vector* init = new Vector(f_snapshots_in->numRows(), true);
-    for (int i = 0; i < init->dim(); i++)
+    Vector init(f_snapshots_in->numRows(), true);
+    for (int i = 0; i < init.dim(); i++)
     {
-        init->item(i) = f_snapshots_in->item(i, 0);
+        init(i) = f_snapshots_in->item(i, 0);
     }
 
     // Calculate pinv(d_phi) * initial_condition.
@@ -504,13 +500,12 @@ DMD::constructDMD(const Matrix & f_snapshots,
     delete f_snapshots_out;
     delete eigenpair.ev_real;
     delete eigenpair.ev_imaginary;
-    delete init;
 
     release_context(&svd_input);
 }
 
 void
-DMD::projectInitialCondition(const Vector* init, double t_offset)
+DMD::projectInitialCondition(const Vector & init, double t_offset)
 {
     d_phi_real_squared_inverse = d_phi_real->transposeMult(*d_phi_real);
     std::unique_ptr<Matrix> d_phi_real_squared_2 = d_phi_imaginary->transposeMult(
@@ -575,8 +570,8 @@ DMD::projectInitialCondition(const Vector* init, double t_offset)
         }
     }
 
-    std::unique_ptr<Vector> rhs_real = d_phi_real->transposeMult(*init);
-    std::unique_ptr<Vector> rhs_imaginary = d_phi_imaginary->transposeMult(*init);
+    std::unique_ptr<Vector> rhs_real = d_phi_real->transposeMult(init);
+    std::unique_ptr<Vector> rhs_imaginary = d_phi_imaginary->transposeMult(init);
 
     std::unique_ptr<Vector> d_projected_init_real_1 =
         d_phi_real_squared_inverse->mult(*rhs_real);
@@ -795,7 +790,7 @@ DMD::load(std::string base_file_name)
     full_file_name = base_file_name + "_state_offset";
     if (Utilities::file_exist(full_file_name + ".000000"))
     {
-        d_state_offset = new Vector();
+        d_state_offset.reset(new Vector());
         d_state_offset->read(full_file_name);
     }
 
@@ -885,7 +880,7 @@ DMD::save(std::string base_file_name)
     full_file_name = base_file_name + "_projected_init_imaginary";
     d_projected_init_imaginary->write(full_file_name);
 
-    if (d_state_offset != NULL)
+    if (d_state_offset != nullptr)
     {
         full_file_name = base_file_name + "_state_offset";
         d_state_offset->write(full_file_name);

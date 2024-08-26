@@ -16,13 +16,12 @@
 
 namespace CAROM {
 
-NonuniformDMD::NonuniformDMD(int dim,
-                             bool alt_output_basis,
-                             Vector* state_offset,
-                             Vector* derivative_offset) :
+NonuniformDMD::NonuniformDMD(int dim, std::shared_ptr<Vector> state_offset,
+                             std::shared_ptr<Vector> derivative_offset,
+                             bool alt_output_basis) :
     DMD(dim, alt_output_basis, state_offset)
 {
-    // stateOffset is set by DMD::setOffset in the constructor
+    // state_offset is set by DMD::setOffset in the constructor
     setOffset(derivative_offset, 1);
 }
 
@@ -33,16 +32,17 @@ NonuniformDMD::NonuniformDMD(std::string base_file_name) : DMD(base_file_name)
     std::string full_file_name = base_file_name + "_derivative_offset";
     if (Utilities::file_exist(full_file_name + ".000000"))
     {
-        d_derivative_offset = new Vector();
+        d_derivative_offset.reset(new Vector());
         d_derivative_offset->read(full_file_name);
     }
 }
 
-NonuniformDMD::NonuniformDMD(std::vector<std::complex<double>> eigs,
-                             std::shared_ptr<Matrix> phi_real,
-                             std::shared_ptr<Matrix> phi_imaginary, int k,
+NonuniformDMD::NonuniformDMD(std::vector<std::complex<double>> & eigs,
+                             std::shared_ptr<Matrix> & phi_real,
+                             std::shared_ptr<Matrix> & phi_imaginary, int k,
                              double dt, double t_offset,
-                             Vector* state_offset, Vector* derivative_offset) :
+                             std::shared_ptr<Vector> & state_offset,
+                             std::shared_ptr<Vector> & derivative_offset) :
     DMD(eigs, phi_real, phi_imaginary, k,
         dt, t_offset, state_offset)
 {
@@ -50,12 +50,8 @@ NonuniformDMD::NonuniformDMD(std::vector<std::complex<double>> eigs,
     setOffset(derivative_offset, 1);
 }
 
-NonuniformDMD::~NonuniformDMD()
-{
-    delete d_derivative_offset;
-}
-
-void NonuniformDMD::setOffset(Vector* offset_vector, int order)
+void NonuniformDMD::setOffset(std::shared_ptr<Vector> & offset_vector,
+                              int order)
 {
     if (order == 0)
     {
@@ -143,7 +139,7 @@ NonuniformDMD::load(std::string base_file_name)
     std::string full_file_name = base_file_name + "_derivative_offset";
     if (Utilities::file_exist(full_file_name + ".000000"))
     {
-        d_derivative_offset = new Vector();
+        d_derivative_offset.reset(new Vector());
         d_derivative_offset->read(full_file_name);
     }
 

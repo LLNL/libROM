@@ -630,7 +630,7 @@ int main(int argc, char *argv[])
                 {
                     result_u = dmd_u[curr_window]->predict(ts[i]);
                     cout << "Projecting solution for new window at " << ts[i] << endl;
-                    dmd_u[curr_window+1]->projectInitialCondition(result_u.get(), ts[i]);
+                    dmd_u[curr_window+1]->projectInitialCondition(*result_u, ts[i]);
                 }
                 delete dmd_u[curr_window];
                 curr_window++;

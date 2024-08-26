@@ -54,10 +54,9 @@ public:
      * @param[in] state_offset     The state offset.
      */
     AdaptiveDMD(int dim, double desired_dt = -1.0, std::string rbf = "G",
-                std::string interp_method = "LS",
-                double closest_rbf_val = 0.9,
+                std::string interp_method = "LS", double closest_rbf_val = 0.9,
                 bool alt_output_basis = false,
-                Vector* state_offset = NULL);
+                std::shared_ptr<Vector> state_offset = nullptr);
 
     /**
      * @brief Destroy the AdaptiveDMD object

@@ -619,8 +619,7 @@ double simulation()
         CAROM::getParametricDMD(dmd_U, param_vectors, dmd_paths, desired_param,
                                 "G", "LS", closest_rbf_val);
 
-        dmd_U->projectInitialCondition(init);
-
+        dmd_U->projectInitialCondition(*init);
 
         dmd_training_timer.Stop();
 
@@ -722,7 +721,7 @@ double simulation()
             dmd_U = new CAROM::DMD(dmd_paths[0]);
         }
 
-        dmd_U->projectInitialCondition(init);
+        dmd_U->projectInitialCondition(*init);
 
         dmd_training_timer.Stop();
 
@@ -871,7 +870,7 @@ double simulation()
         CAROM::getParametricDMD(dmd_U, param_vectors, dmd_paths, desired_param,
                                 "G", "LS", closest_rbf_val);
 
-        dmd_U->projectInitialCondition(init);
+        dmd_U->projectInitialCondition(*init);
 
         dmd_training_timer.Stop();
     }
@@ -927,9 +926,8 @@ double simulation()
 
         if (myid == 0)
         {
-            std::cout << "Rel. diff. of DMD temp. (u) at t_final at f_factor " << f_factor
-                      << ": "
-                      << rel_diff << std::endl;
+            std::cout << "Rel. diff. of DMD temp. (u) at t_final at f_factor "
+                      << f_factor << ": " << rel_diff << std::endl;
         }
 
         if (myid == 0)

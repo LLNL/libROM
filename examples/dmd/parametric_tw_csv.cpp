@@ -784,7 +784,7 @@ int main(int argc, char *argv[])
                     }
                     std::shared_ptr<CAROM::Vector> init_cond = dmd[idx_dataset][window-1]->predict(
                                 indicator_val[window]);
-                    dmd[idx_dataset][window]->projectInitialCondition(init_cond.get());
+                    dmd[idx_dataset][window]->projectInitialCondition(*init_cond);
                 }
 
                 // Make a directory for this window, only on the first parameter.
@@ -1012,7 +1012,7 @@ int main(int argc, char *argv[])
                 {
                     init_cond = dmd[idx_dataset][window-1]->predict(indicator_val[window]);
                 }
-                dmd[idx_dataset][window]->projectInitialCondition(init_cond.get());
+                dmd[idx_dataset][window]->projectInitialCondition(*init_cond);
 
                 const double norm_init_cond = init_cond->norm();
                 if (myid == 0)
