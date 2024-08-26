@@ -822,7 +822,7 @@ public:
     {
 
     }
-    double EvaluateCost(std::vector<double> inputs) const override
+    double EvaluateCost(std::vector<double> & inputs) const override
     {
         radius = inputs[0];
         alpha = inputs[1];

@@ -41,7 +41,8 @@ public:
      * @param[in] dt               The dt between samples.
      * @param[in] state_offset     The state offset.
      */
-    DMDc(int dim, int dim_c, double dt, Vector* state_offset = NULL);
+    DMDc(int dim, int dim_c, double dt,
+         std::shared_ptr<Vector> state_offset = nullptr);
 
     /**
      * @brief Constructor. DMDc from saved models.
@@ -59,7 +60,7 @@ public:
     /**
      * @brief Set the state offset.
      */
-    virtual void setOffset(Vector* offset_vector);
+    virtual void setOffset(std::shared_ptr<Vector> & offset_vector);
 
     /**
      * @brief Sample the new state, u_in. Any samples in d_snapshots
@@ -227,7 +228,7 @@ protected:
      * @param[in] dim_c             The control dimension.
      * @param[in] state_offset      The state offset.
      */
-    DMDc(int dim, int dim_c, Vector* state_offset = NULL);
+    DMDc(int dim, int dim_c, std::shared_ptr<Vector> state_offset = nullptr);
 
     /**
      * @brief Constructor. Specified from DMDc components.
@@ -248,7 +249,8 @@ protected:
          std::shared_ptr<Matrix> & phi_real,
          std::shared_ptr<Matrix> & phi_imaginary,
          std::shared_ptr<Matrix> B_tilde,
-         int k, double dt, double t_offset, Vector* state_offset,
+         int k, double dt, double t_offset,
+         std::shared_ptr<Vector> & state_offset,
          std::shared_ptr<Matrix> & basis);
 
     /**
@@ -353,7 +355,7 @@ protected:
     /**
      * @brief State offset in snapshot.
      */
-    Vector* d_state_offset = NULL;
+    std::shared_ptr<Vector> d_state_offset;
 
     /**
      * @brief Whether the DMDc has been trained or not.

@@ -1057,7 +1057,7 @@ public:
     {
 
     }
-    double EvaluateCost(std::vector<double> inputs) const override
+    double EvaluateCost(std::vector<double> & inputs) const override
     {
         f_factor = inputs[0];
 

@@ -79,7 +79,7 @@ void VectorInterpolator::obtainLambda()
     }
 }
 
-Vector* VectorInterpolator::obtainLogInterpolatedVector(
+std::unique_ptr<Vector> VectorInterpolator::obtainLogInterpolatedVector(
     std::vector<double>& rbf)
 {
     return obtainInterpolatedVector(d_gammas, *d_lambda_T, d_interp_method, rbf);
@@ -117,19 +117,20 @@ std::shared_ptr<Vector> VectorInterpolator::interpolate(const Vector & point)
                               d_interp_method, d_rbf, d_epsilon, point);
 
     // Interpolate gammas to get gamma for new point
-    Vector* log_interpolated_vector = obtainLogInterpolatedVector(rbf);
+    std::unique_ptr<Vector> log_interpolated_vector = obtainLogInterpolatedVector(
+                rbf);
 
     // The exp mapping is X + the interpolated gamma
     std::shared_ptr<Vector> interpolated_vector =
         d_rotated_reduced_vectors[d_ref_point]->plus(
             *log_interpolated_vector);
-    delete log_interpolated_vector;
     return interpolated_vector;
 }
 
-Vector* obtainInterpolatedVector(const std::vector<std::shared_ptr<Vector>> &
-                                 data, const Matrix & f_T,
-                                 std::string interp_method, std::vector<double>& rbf)
+std::unique_ptr<Vector> obtainInterpolatedVector(const
+        std::vector<std::shared_ptr<Vector>> &
+        data, const Matrix & f_T,
+        std::string interp_method, std::vector<double>& rbf)
 {
     Vector* interpolated_vector = new Vector(data[0]->dim(),
             data[0]->distributed());
@@ -166,13 +167,14 @@ Vector* obtainInterpolatedVector(const std::vector<std::shared_ptr<Vector>> &
         }
     }
 
-    return interpolated_vector;
+    return std::unique_ptr<Vector>(interpolated_vector);
 }
 
-Matrix* solveLinearSystem(const std::vector<Vector> & parameter_points,
-                          const std::vector<std::shared_ptr<Vector>> & data,
-                          const std::string & interp_method,
-                          const std::string & rbf, double epsilon)
+std::unique_ptr<Matrix> solveLinearSystem(
+    const std::vector<Vector> & parameter_points,
+    const std::vector<std::shared_ptr<Vector>> & data,
+    const std::string & interp_method,
+    const std::string & rbf, double epsilon)
 {
     int mpi_init, rank;
     MPI_Initialized(&mpi_init);
@@ -226,7 +228,7 @@ Matrix* solveLinearSystem(const std::vector<Vector> & parameter_points,
         delete B;
     }
 
-    return f_T;
+    return std::unique_ptr<Matrix>(f_T);
 }
 
 }

@@ -44,7 +44,7 @@ extern "C" {
 
 namespace CAROM {
 
-DMDc::DMDc(int dim, int dim_c, Vector* state_offset)
+DMDc::DMDc(int dim, int dim_c, std::shared_ptr<Vector> state_offset)
 {
     CAROM_VERIFY(dim > 0);
     CAROM_VERIFY(dim_c > 0);
@@ -65,7 +65,7 @@ DMDc::DMDc(int dim, int dim_c, Vector* state_offset)
     setOffset(state_offset);
 }
 
-DMDc::DMDc(int dim, int dim_c, double dt, Vector* state_offset)
+DMDc::DMDc(int dim, int dim_c, double dt, std::shared_ptr<Vector> state_offset)
 {
     CAROM_VERIFY(dim > 0);
     CAROM_VERIFY(dim_c > 0);
@@ -109,7 +109,7 @@ DMDc::DMDc(std::vector<std::complex<double>> & eigs,
            std::shared_ptr<Matrix> & phi_real,
            std::shared_ptr<Matrix> & phi_imaginary,
            std::shared_ptr<Matrix> B_tilde, int k, double dt, double t_offset,
-           Vector* state_offset, std::shared_ptr<Matrix> & basis)
+           std::shared_ptr<Vector> & state_offset, std::shared_ptr<Matrix> & basis)
 {
     // Get the rank of this process, and the number of processors.
     int mpi_init;
@@ -140,10 +140,9 @@ DMDc::~DMDc()
     {
         delete snapshot;
     }
-    delete d_state_offset;
 }
 
-void DMDc::setOffset(Vector* offset_vector)
+void DMDc::setOffset(std::shared_ptr<Vector> & offset_vector)
 {
     d_state_offset = offset_vector;
 }
@@ -528,7 +527,7 @@ DMDc::constructDMDc(const Matrix & f_snapshots,
     }
 
     // Calculate the right eigenvalues/eigenvectors of A_tilde
-    ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(d_A_tilde.get());
+    ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(*d_A_tilde);
     d_eigs = eigenpair.eigs;
 
     d_phi_real = d_basis->mult(*eigenpair.ev_real);
@@ -888,7 +887,7 @@ DMDc::load(std::string base_file_name)
     full_file_name = base_file_name + "_state_offset";
     if (Utilities::file_exist(full_file_name + ".000000"))
     {
-        d_state_offset = new Vector();
+        d_state_offset.reset(new Vector());
         d_state_offset->read(full_file_name);
     }
 

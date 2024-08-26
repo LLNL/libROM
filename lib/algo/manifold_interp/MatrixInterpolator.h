@@ -109,7 +109,7 @@ private:
      * @param[in] rbf The RBF values between the parameter points and
      *                the unsampled parameter point.
      */
-    Matrix* obtainLogInterpolatedMatrix(std::vector<double>& rbf);
+    std::unique_ptr<Matrix> obtainLogInterpolatedMatrix(std::vector<double>& rbf);
 
     /**
      * @brief Obtain the interpolated SPD reduced matrix for the unsampled

@@ -102,7 +102,7 @@ private:
      * @param[in] rbf The RBF values between the parameter points and
      *                the unsampled parameter point.
      */
-    Vector* obtainLogInterpolatedVector(std::vector<double>& rbf);
+    std::unique_ptr<Vector> obtainLogInterpolatedVector(std::vector<double>& rbf);
 
     /**
      * @brief The reduced vectors with compatible coordinates.
@@ -115,14 +115,15 @@ private:
     std::vector<std::shared_ptr<Vector>> d_gammas;
 };
 
-Vector* obtainInterpolatedVector(const std::vector<std::shared_ptr<Vector>> &
-                                 data,
-                                 const Matrix & f_T, std::string interp_method,
-                                 std::vector<double>& rbf);
-Matrix* solveLinearSystem(const std::vector<Vector> & parameter_points,
-                          const std::vector<std::shared_ptr<Vector>> & data,
-                          const std::string & interp_method,
-                          const std::string & rbf, double epsilon);
+std::unique_ptr<Vector> obtainInterpolatedVector(
+    const std::vector<std::shared_ptr<Vector>> & data,
+    const Matrix & f_T, std::string interp_method,
+    std::vector<double>& rbf);
+std::unique_ptr<Matrix> solveLinearSystem(
+    const std::vector<Vector> & parameter_points,
+    const std::vector<std::shared_ptr<Vector>> & data,
+    const std::string & interp_method,
+    const std::string & rbf, double epsilon);
 }
 
 #endif

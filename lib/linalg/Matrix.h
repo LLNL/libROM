@@ -1185,7 +1185,7 @@ void SerialSVD(Matrix* A,
  *         and vector contained within the returning struct must be destroyed by
  *         the user.
  */
-struct SerialSVDDecomposition SerialSVD(Matrix* A);
+SerialSVDDecomposition SerialSVD(const Matrix & A);
 
 /**
  * @brief Computes the eigenvectors/eigenvalues of an NxN real symmetric matrix.
@@ -1195,7 +1195,7 @@ struct SerialSVDDecomposition SerialSVD(Matrix* A);
  * @return The eigenvectors and eigenvalues of the eigensolve. The eigenvector matrices
  *         contained within the returning struct must be destroyed by the user.
  */
-struct EigenPair SymmetricRightEigenSolve(Matrix* A);
+EigenPair SymmetricRightEigenSolve(const Matrix & A);
 
 /**
  * @brief Computes the eigenvectors/eigenvalues of an NxN real nonsymmetric matrix.
@@ -1205,7 +1205,7 @@ struct EigenPair SymmetricRightEigenSolve(Matrix* A);
  * @return The eigenvectors and eigenvalues of the eigensolve. The eigenvector matrices
  *         contained within the returning struct must be destroyed by the user.
  */
-struct ComplexEigenPair NonSymmetricRightEigenSolve(Matrix* A);
+ComplexEigenPair NonSymmetricRightEigenSolve(const Matrix & A);
 
 std::unique_ptr<Matrix> SpaceTimeProduct(const CAROM::Matrix* As,
         const CAROM::Matrix* At, const CAROM::Matrix* Bs,

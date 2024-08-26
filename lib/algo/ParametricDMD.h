@@ -99,7 +99,7 @@ void getParametricDMD(T*& parametric_dmd,
                                           desired_point);
 
     // Calculate the right eigenvalues/eigenvectors of A_tilde
-    ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(A_tilde.get());
+    ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(*A_tilde);
     std::vector<std::complex<double>> eigs = eigenpair.eigs;
 
     // Calculate phi (phi = W * eigenvectors)

@@ -21,27 +21,16 @@
 
 namespace CAROM {
 
-struct GreedyErrorIndicatorPoint
-createGreedyErrorIndicatorPoint(Vector* point, Vector* localROM)
+GreedyErrorIndicatorPoint
+createGreedyErrorIndicatorPoint(std::shared_ptr<Vector> point,
+                                std::shared_ptr<Vector> localROM)
 {
-    struct GreedyErrorIndicatorPoint result;
-    result.point = std::shared_ptr<Vector>(point);
-    result.localROM = std::shared_ptr<Vector>(localROM);
-    return result;
-}
-
-struct GreedyErrorIndicatorPoint
-createGreedyErrorIndicatorPoint(Vector* point,
-                                std::shared_ptr<Vector>& localROM)
-{
-    struct GreedyErrorIndicatorPoint result;
-    result.point = std::shared_ptr<Vector>(point);
-    result.localROM = localROM;
+    GreedyErrorIndicatorPoint result{point, localROM};
     return result;
 }
 
 Vector
-getNearestPoint(std::vector<Vector> param_points, Vector point)
+getNearestPoint(std::vector<Vector> & param_points, Vector & point)
 {
 
     int closest_point_index = getNearestPointIndex(param_points, point);
@@ -49,7 +38,7 @@ getNearestPoint(std::vector<Vector> param_points, Vector point)
 }
 
 int
-getNearestPointIndex(std::vector<Vector> param_points, Vector point)
+getNearestPointIndex(std::vector<Vector> & param_points, Vector & point)
 {
 
     double closest_dist_to_points = INT_MAX;
@@ -71,7 +60,7 @@ getNearestPointIndex(std::vector<Vector> param_points, Vector point)
 }
 
 double
-getNearestPoint(std::vector<double> param_points, double point)
+getNearestPoint(std::vector<double> & param_points, double point)
 {
 
     int closest_point_index = getNearestPointIndex(param_points, point);
@@ -79,7 +68,7 @@ getNearestPoint(std::vector<double> param_points, double point)
 }
 
 int
-getNearestPointIndex(std::vector<double> param_points, double point)
+getNearestPointIndex(std::vector<double> & param_points, double point)
 {
 
     double closest_dist_to_points = INT_MAX;
@@ -99,7 +88,7 @@ getNearestPointIndex(std::vector<double> param_points, double point)
 }
 
 GreedySampler::GreedySampler(
-    std::vector<Vector> parameter_points,
+    std::vector<Vector> & parameter_points,
     bool check_local_rom,
     double relative_error_tolerance,
     double alpha,
@@ -123,7 +112,7 @@ GreedySampler::GreedySampler(
 }
 
 GreedySampler::GreedySampler(
-    std::vector<double> parameter_points,
+    std::vector<double> & parameter_points,
     bool check_local_rom,
     double relative_error_tolerance,
     double alpha,
@@ -155,8 +144,8 @@ GreedySampler::GreedySampler(
 }
 
 GreedySampler::GreedySampler(
-    Vector param_space_min,
-    Vector param_space_max,
+    Vector & param_space_min,
+    Vector & param_space_max,
     int num_parameter_points,
     bool check_local_rom,
     double relative_error_tolerance,
@@ -592,7 +581,7 @@ GreedySampler::getNextParameterPoint()
     return std::shared_ptr<Vector>(result);
 }
 
-struct GreedyErrorIndicatorPoint
+GreedyErrorIndicatorPoint
 GreedySampler::getNextPointRequiringRelativeError()
 {
     if (isComplete())
@@ -605,7 +594,7 @@ GreedySampler::getNextPointRequiringRelativeError()
     }
 
     Vector* result1 = new Vector(d_parameter_points[d_next_point_to_sample]);
-    Vector* result2 = NULL;
+    Vector* result2 = nullptr;
 
     if (d_parameter_sampled_indices.size() == 1)
     {
@@ -618,10 +607,11 @@ GreedySampler::getNextPointRequiringRelativeError()
                 d_next_point_to_sample, true)]);
     }
 
-    return createGreedyErrorIndicatorPoint(result1, result2);
+    return createGreedyErrorIndicatorPoint(std::shared_ptr<Vector>(result1),
+                                           std::shared_ptr<Vector>(result2));
 }
 
-struct GreedyErrorIndicatorPoint
+GreedyErrorIndicatorPoint
 GreedySampler::getNextPointRequiringErrorIndicator()
 {
     if (isComplete())
@@ -643,7 +633,7 @@ GreedySampler::getNextPointRequiringErrorIndicator()
     }
 }
 
-struct GreedyErrorIndicatorPoint
+GreedyErrorIndicatorPoint
 GreedySampler::getNextSubsetPointRequiringErrorIndicator()
 {
     if (d_point_requiring_error_indicator_computed)
@@ -653,7 +643,8 @@ GreedySampler::getNextSubsetPointRequiringErrorIndicator()
         Vector* result2 = new Vector(
             d_parameter_points[getNearestROMIndexToParameterPoint(
                                    d_next_point_requiring_error_indicator, false)]);
-        return createGreedyErrorIndicatorPoint(result1, result2);
+        return createGreedyErrorIndicatorPoint(std::shared_ptr<Vector>(result1),
+                                               std::shared_ptr<Vector>(result2));
     }
     if (d_subset_counter == d_subset_size)
     {
@@ -723,7 +714,8 @@ GreedySampler::getNextSubsetPointRequiringErrorIndicator()
                     Vector* result2 = new Vector(
                         d_parameter_points[getNearestROMIndexToParameterPoint(
                                                d_next_point_requiring_error_indicator, false)]);
-                    return createGreedyErrorIndicatorPoint(result1, result2);
+                    return createGreedyErrorIndicatorPoint(std::shared_ptr<Vector>(result1),
+                                                           std::shared_ptr<Vector>(result2));
                 }
             }
             else
@@ -768,7 +760,7 @@ GreedySampler::getNextSubsetPointRequiringErrorIndicator()
     return createGreedyErrorIndicatorPoint(nullptr, nullptr);
 }
 
-struct GreedyErrorIndicatorPoint
+GreedyErrorIndicatorPoint
 GreedySampler::getNextConvergencePointRequiringErrorIndicator()
 {
     if (d_point_requiring_error_indicator_computed)
@@ -777,7 +769,8 @@ GreedySampler::getNextConvergencePointRequiringErrorIndicator()
             d_convergence_points[d_next_point_requiring_error_indicator]);
         std::shared_ptr<Vector> result2 = getNearestROM(
                                               d_convergence_points[d_next_point_requiring_error_indicator]);
-        return createGreedyErrorIndicatorPoint(result1, result2);
+        return createGreedyErrorIndicatorPoint(std::shared_ptr<Vector>(result1),
+                                               result2);
     }
     if (d_counter == d_convergence_subset_size)
     {
@@ -795,7 +788,8 @@ GreedySampler::getNextConvergencePointRequiringErrorIndicator()
             d_convergence_points[d_next_point_requiring_error_indicator]);
         std::shared_ptr<Vector> result2 = getNearestROM(
                                               d_convergence_points[d_next_point_requiring_error_indicator]);
-        return createGreedyErrorIndicatorPoint(result1, result2);
+        return createGreedyErrorIndicatorPoint(std::shared_ptr<Vector>(result1),
+                                               result2);
     }
 
     if (d_next_point_requiring_error_indicator == -1)
@@ -1237,7 +1231,7 @@ GreedySampler::generateRandomPoints(int num_points)
 }
 
 std::shared_ptr<Vector>
-GreedySampler::getNearestROM(Vector point)
+GreedySampler::getNearestROM(Vector & point)
 {
     CAROM_VERIFY(point.dim() == d_parameter_points[0].dim());
 
@@ -1266,7 +1260,7 @@ GreedySampler::getNearestROM(Vector point)
 }
 
 int
-GreedySampler::getNearestNonSampledPoint(Vector point)
+GreedySampler::getNearestNonSampledPoint(Vector & point)
 {
     double closest_dist_to_points = INT_MAX;
     int closest_point_index = -1;

@@ -53,12 +53,12 @@
 using namespace std;
 using namespace mfem;
 
-void getInterpolatedTimeWindows(CAROM::Vector*& testing_twep,
-                                const std::vector<CAROM::Vector>& parameter_points,
-                                std::vector<std::shared_ptr<CAROM::Vector>>& training_twep,
-                                const CAROM::Vector & desired_point,
-                                std::string rbf,
-                                double closest_rbf_val);
+std::unique_ptr<CAROM::Vector> getInterpolatedTimeWindows(
+    const std::vector<CAROM::Vector>& parameter_points,
+    std::vector<std::shared_ptr<CAROM::Vector>>& training_twep,
+    const CAROM::Vector & desired_point,
+    std::string rbf,
+    double closest_rbf_val);
 
 int main(int argc, char *argv[])
 {
@@ -702,9 +702,9 @@ int main(int argc, char *argv[])
                 snap_bound.push_back(snap_list.size()-1);
             }
 
-            CAROM::Vector* twep;
-            getInterpolatedTimeWindows(twep, training_par_vectors, training_twep, curr_par,
-                                       string(rbf), pdmd_closest_rbf_val); // Always use IDW
+            std::unique_ptr<CAROM::Vector> twep = getInterpolatedTimeWindows(
+                    training_par_vectors, training_twep, curr_par,
+                    string(rbf), pdmd_closest_rbf_val); // Always use IDW
 
             int min_idx_snap = -1;
             int max_idx_snap = snap_bound[1];
@@ -873,7 +873,6 @@ int main(int argc, char *argv[])
             prediction_time.clear();
             prediction_error.clear();
             num_tests += (t_final > 0.0) ? 1 : num_snap;
-            delete twep;
         }
 
         CAROM_VERIFY(num_tests > 0);
@@ -903,12 +902,12 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-void getInterpolatedTimeWindows(CAROM::Vector*& testing_twep,
-                                const std::vector<CAROM::Vector>& parameter_points,
-                                std::vector<std::shared_ptr<CAROM::Vector>>& training_twep,
-                                const CAROM::Vector & desired_point,
-                                std::string rbf = "G",
-                                double closest_rbf_val = 0.9)
+std::unique_ptr<CAROM::Vector> getInterpolatedTimeWindows(
+    const std::vector<CAROM::Vector>& parameter_points,
+    std::vector<std::shared_ptr<CAROM::Vector>>& training_twep,
+    const CAROM::Vector & desired_point,
+    std::string rbf = "G",
+    double closest_rbf_val = 0.9)
 {
     CAROM_VERIFY(parameter_points.size() == training_twep.size());
     CAROM_VERIFY(training_twep.size() > 1);
@@ -919,5 +918,5 @@ void getInterpolatedTimeWindows(CAROM::Vector*& testing_twep,
                                   rbf, epsilon, desired_point);
 
     CAROM::Matrix f_T;
-    testing_twep = obtainInterpolatedVector(training_twep, f_T, "IDW", rbf_val);
+    return obtainInterpolatedVector(training_twep, f_T, "IDW", rbf_val);
 }

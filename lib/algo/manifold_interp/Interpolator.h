@@ -58,8 +58,6 @@ protected:
                  std::string interp_method,
                  double closest_rbf_val = 0.9);
 
-    ~Interpolator();
-
     /**
      * @brief The rank of the process this object belongs to.
      */
@@ -108,7 +106,7 @@ protected:
     /**
      * @brief The RHS of the linear solve in tangential space.
      */
-    Matrix* d_lambda_T;
+    std::unique_ptr<Matrix> d_lambda_T;
 
 private:
 

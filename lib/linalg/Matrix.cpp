@@ -1980,16 +1980,16 @@ Matrix IdentityMatrixFactory(const Vector &v)
     return DiagonalMatrixFactory(temporary);
 }
 
-struct EigenPair SymmetricRightEigenSolve(Matrix* A)
+EigenPair SymmetricRightEigenSolve(const Matrix & A)
 {
     char jobz = 'V', uplo = 'U';
 
     int info;
-    int k = A->numColumns();
+    int k = A.numColumns();
     int lwork = std::max(1, 10*k-1);
     double* work = new double [lwork];
     double* eigs = new double [k];
-    Matrix* ev = new Matrix(*A);
+    Matrix* ev = new Matrix(A);
 
     // ev now in a row major representation.  Put it
     // into column major order.
@@ -2027,19 +2027,19 @@ struct EigenPair SymmetricRightEigenSolve(Matrix* A)
     return eigenpair;
 }
 
-struct ComplexEigenPair NonSymmetricRightEigenSolve(Matrix* A)
+ComplexEigenPair NonSymmetricRightEigenSolve(const Matrix & A)
 {
     char jobvl = 'N', jobrl = 'V';
 
     int info;
-    int k = A->numColumns();
+    int k = A.numColumns();
     int lwork = std::max(k*k, 10*k);
     double* work = new double [lwork];
     double* e_real = new double [k];
     double* e_imaginary = new double [k];
     double* ev_l = NULL;
     Matrix* ev_r = new Matrix(k, k, false);
-    Matrix* A_copy = new Matrix(*A);
+    Matrix* A_copy = new Matrix(A);
 
     // A now in a row major representation.  Put it
     // into column major order.
@@ -2161,7 +2161,7 @@ void SerialSVD(Matrix* A,
     delete A_copy;
 }
 
-struct SerialSVDDecomposition SerialSVD(Matrix* A)
+SerialSVDDecomposition SerialSVD(Matrix* A)
 {
     CAROM_VERIFY(!A->distributed());
     Matrix* U = NULL;
@@ -2170,7 +2170,7 @@ struct SerialSVDDecomposition SerialSVD(Matrix* A)
 
     SerialSVD(A, U, S, V);
 
-    struct SerialSVDDecomposition decomp;
+    SerialSVDDecomposition decomp;
     decomp.U = U;
     decomp.S = S;
     decomp.V = V;

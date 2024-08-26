@@ -230,7 +230,7 @@ DMD::computeDMDSnapshotPair(const Matrix & snapshots)
 }
 
 void
-DMD::computePhi(struct DMDInternal dmd_internal_obj)
+DMD::computePhi(DMDInternal dmd_internal_obj)
 {
     // Calculate phi
     if (d_alt_output_basis)
@@ -477,10 +477,10 @@ DMD::constructDMD(const Matrix & f_snapshots,
     }
 
     // Calculate the right eigenvalues/eigenvectors of A_tilde
-    ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(d_A_tilde.get());
+    ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(*d_A_tilde);
     d_eigs = eigenpair.eigs;
 
-    struct DMDInternal dmd_internal = {f_snapshots_in, f_snapshots_out, d_basis.get(), d_basis_right, d_S_inv, &eigenpair};
+    DMDInternal dmd_internal = {f_snapshots_in, f_snapshots_out, d_basis.get(), d_basis_right, d_S_inv, &eigenpair};
     computePhi(dmd_internal);
 
     Vector init(f_snapshots_in->numRows(), true);

@@ -56,15 +56,9 @@ Interpolator::Interpolator(const std::vector<Vector> & parameter_points,
     d_parameter_points = parameter_points;
     d_rotation_matrices = rotation_matrices;
     d_ref_point = ref_point;
-    d_lambda_T = NULL;
     d_rbf = rbf;
     d_interp_method = interp_method;
     d_epsilon = convertClosestRBFToEpsilon(parameter_points, rbf, closest_rbf_val);
-}
-
-Interpolator::~Interpolator()
-{
-    delete d_lambda_T;
 }
 
 std::vector<double> obtainRBFToTrainingPoints(

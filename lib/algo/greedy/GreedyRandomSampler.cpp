@@ -75,8 +75,8 @@ GreedyRandomSampler::GreedyRandomSampler(
 }
 
 GreedyRandomSampler::GreedyRandomSampler(
-    Vector param_space_min,
-    Vector param_space_max,
+    Vector & param_space_min,
+    Vector & param_space_max,
     int num_parameter_points,
     bool check_local_rom,
     double relative_error_tolerance,

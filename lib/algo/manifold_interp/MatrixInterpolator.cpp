@@ -166,11 +166,11 @@ void MatrixInterpolator::obtainLambda()
 
         delete B;
 
-        d_lambda_T = f_T;
+        d_lambda_T = std::unique_ptr<Matrix>(f_T);
     }
 }
 
-Matrix* MatrixInterpolator::obtainLogInterpolatedMatrix(
+std::unique_ptr<Matrix> MatrixInterpolator::obtainLogInterpolatedMatrix(
     std::vector<double>& rbf)
 {
     Matrix* log_interpolated_matrix = new Matrix(
@@ -213,7 +213,7 @@ Matrix* MatrixInterpolator::obtainLogInterpolatedMatrix(
             }
         }
     }
-    return log_interpolated_matrix;
+    return std::unique_ptr<Matrix>(log_interpolated_matrix);
 }
 
 std::shared_ptr<Matrix> MatrixInterpolator::interpolateSPDMatrix(
@@ -223,7 +223,7 @@ std::shared_ptr<Matrix> MatrixInterpolator::interpolateSPDMatrix(
     {
         // Diagonalize X to work towards obtaining X^-1/2
         EigenPair ref_reduced_matrix_eigenpair = SymmetricRightEigenSolve(
-                    d_rotated_reduced_matrices[d_ref_point].get());
+                    *d_rotated_reduced_matrices[d_ref_point]);
         Matrix* ref_reduced_matrix_ev = ref_reduced_matrix_eigenpair.ev;
 
         Matrix* ref_reduced_matrix_sqrt_eigs = new Matrix(
@@ -279,7 +279,7 @@ std::shared_ptr<Matrix> MatrixInterpolator::interpolateSPDMatrix(
                 // of M and V are the eigenvectors of M.
                 // 2. log M = V(log M')V^-1
                 EigenPair log_eigenpair = SymmetricRightEigenSolve(
-                                              x_half_power_inv_mult_y_mult_x_half_power_inv.get());
+                                              *x_half_power_inv_mult_y_mult_x_half_power_inv);
                 Matrix* log_ev = log_eigenpair.ev;
 
                 Matrix* log_eigs = new Matrix(log_eigenpair.eigs.size(),
@@ -320,7 +320,8 @@ std::shared_ptr<Matrix> MatrixInterpolator::interpolateSPDMatrix(
                               d_rbf, d_epsilon, point);
 
     // Interpolate gammas to get gamma for new point
-    Matrix* log_interpolated_matrix = obtainLogInterpolatedMatrix(rbf);
+    std::unique_ptr<Matrix> log_interpolated_matrix = obtainLogInterpolatedMatrix(
+                rbf);
 
     // Diagonalize the new gamma so we can exponentiate it
     // Diagonalize X to obtain exp(X) of this matrix.
@@ -328,8 +329,7 @@ std::shared_ptr<Matrix> MatrixInterpolator::interpolateSPDMatrix(
     // 1. Diagonalize M to obtain M' = V^-1*M*V. M' are the eigenvalues
     // of M and V are the eigenvectors of M.
     // 2. exp M = V(exp M')V^-1
-    EigenPair exp_eigenpair = SymmetricRightEigenSolve(log_interpolated_matrix);
-    delete log_interpolated_matrix;
+    EigenPair exp_eigenpair = SymmetricRightEigenSolve(*log_interpolated_matrix);
 
     Matrix* exp_ev = exp_eigenpair.ev;
 
@@ -388,7 +388,7 @@ std::shared_ptr<Matrix> MatrixInterpolator::interpolateNonSingularMatrix(
                 // 1. Diagonalize M to obtain M' = V^-1*M*V. M' are the eigenvalues
                 // of M and V are the eigenvectors of M.
                 // 2. log M = V(log M')V^-1
-                EigenPair log_eigenpair = SymmetricRightEigenSolve(y_mult_ref_matrix_inv.get());
+                EigenPair log_eigenpair = SymmetricRightEigenSolve(*y_mult_ref_matrix_inv);
                 Matrix* log_ev = log_eigenpair.ev;
 
                 Matrix* log_eigs = new Matrix(log_eigenpair.eigs.size(),
@@ -427,7 +427,8 @@ std::shared_ptr<Matrix> MatrixInterpolator::interpolateNonSingularMatrix(
                               d_interp_method, d_rbf, d_epsilon, point);
 
     // Interpolate gammas to get gamma for new point
-    Matrix* log_interpolated_matrix = obtainLogInterpolatedMatrix(rbf);
+    std::unique_ptr<Matrix> log_interpolated_matrix = obtainLogInterpolatedMatrix(
+                rbf);
 
     // Diagonalize the new gamma so we can exponentiate it
     // Diagonalize X to obtain exp(X) of this matrix.
@@ -435,8 +436,7 @@ std::shared_ptr<Matrix> MatrixInterpolator::interpolateNonSingularMatrix(
     // 1. Diagonalize M to obtain M' = V^-1*M*V. M' are the eigenvalues
     // of M and V are the eigenvectors of M.
     // 2. exp M = V(exp M')V^-1
-    EigenPair exp_eigenpair = SymmetricRightEigenSolve(log_interpolated_matrix);
-    delete log_interpolated_matrix;
+    EigenPair exp_eigenpair = SymmetricRightEigenSolve(*log_interpolated_matrix);
     Matrix* exp_ev = exp_eigenpair.ev;
     Matrix* exp_ev_inv = NULL;
 

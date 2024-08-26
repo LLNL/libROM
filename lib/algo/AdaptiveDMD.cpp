@@ -101,7 +101,7 @@ void AdaptiveDMD::interpolateSnapshots()
     }
 
     // Solve the linear system if required.
-    Matrix* f_T = NULL;
+    std::unique_ptr<Matrix> f_T;
     std::unique_ptr<std::vector<Vector>> sampled_times = scalarsToVectors(
                                           d_sampled_times);
     double epsilon = convertClosestRBFToEpsilon(*sampled_times, d_rbf,
@@ -127,10 +127,10 @@ void AdaptiveDMD::interpolateSnapshots()
                                       d_interp_method, d_rbf, epsilon, point);
 
         // Obtain the interpolated snapshot.
-        CAROM::Vector* curr_interpolated_snapshot = obtainInterpolatedVector(
-                    d_snapshots, *f_T, d_interp_method, rbf);
-        d_interp_snapshots.push_back(std::shared_ptr<Vector>
-                                     (curr_interpolated_snapshot));
+        std::shared_ptr<CAROM::Vector> curr_interpolated_snapshot =
+            obtainInterpolatedVector(
+                d_snapshots, *f_T, d_interp_method, rbf);
+        d_interp_snapshots.push_back(curr_interpolated_snapshot);
     }
 
     if (d_rank == 0) std::cout << "Number of interpolated snapshots is: " <<

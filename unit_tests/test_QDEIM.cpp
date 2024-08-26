@@ -57,7 +57,7 @@ TEST(QDEIMSerialTest, Test_QDEIM)
     int num_cols = 5;
     int num_rows = 10;
 
-    CAROM::Matrix* u = new CAROM::Matrix(orthonormal_mat, num_rows, num_cols, true);
+    CAROM::Matrix u(orthonormal_mat, num_rows, num_cols, true);
     double* QDEIM_res = NULL;
     std::vector<int> f_sampled_row(num_cols, 0);
     std::vector<int> f_sampled_row_true_ans{1, 2, 4, 6, 9};
@@ -118,7 +118,7 @@ TEST(QDEIMSerialTest, Test_QDEIM_gpode_oversampling)
     int num_rows = 10;
     int num_samples = 8;
 
-    CAROM::Matrix* u = new CAROM::Matrix(orthonormal_mat, num_rows, num_cols, true);
+    CAROM::Matrix u(orthonormal_mat, num_rows, num_cols, true);
     double* QDEIM_res = NULL;
     std::vector<int> f_sampled_row(num_samples, 0);
     std::vector<int> f_sampled_row_true_ans{0, 1, 2, 4, 5, 6, 8, 9};
