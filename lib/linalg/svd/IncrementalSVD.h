@@ -136,7 +136,6 @@ protected:
     /**
      * @brief Construct the matrix Q whose SVD is needed.
      *
-     * @pre l != 0
      * @pre l.dim() == numSamples()
      *
      * @param[out] Q The matrix to be constructed. [d_S,l; 0,k]
@@ -146,7 +145,7 @@ protected:
     void
     constructQ(
         double*& Q,
-        const Vector* l,
+        const Vector & l,
         double k);
 
     /**
@@ -173,9 +172,6 @@ protected:
     /**
      * @brief Add a linearly dependent sample to the SVD.
      *
-     * @pre A != 0
-     * @pre sigma != 0
-     *
      * @param[in] A The left singular vectors.
      * @param[in] W The right singular vectors.
      * @param[in] sigma The singular values.
@@ -183,16 +179,12 @@ protected:
     virtual
     void
     addLinearlyDependentSample(
-        const Matrix* A,
-        const Matrix* W,
-        const Matrix* sigma) = 0;
+        const Matrix & A,
+        const Matrix & W,
+        const Matrix & sigma) = 0;
 
     /**
      * @brief Add a new, unique sample to the SVD.
-     *
-     * @pre j != 0
-     * @pre A != 0
-     * @pre sigma != 0
      *
      * @param[in] j The new column of d_U.
      * @param[in] A The left singular vectors.
@@ -202,10 +194,10 @@ protected:
     virtual
     void
     addNewSample(
-        const Vector* j,
-        const Matrix* A,
-        const Matrix* W,
-        Matrix* sigma) = 0;
+        const Vector & j,
+        const Matrix & A,
+        const Matrix & W,
+        const Matrix & sigma) = 0;
 
     /**
      * @brief The number of samples stored.
@@ -220,8 +212,6 @@ protected:
 
     /**
      * @brief Computes and returns the orthogonality of m.
-     *
-     * @pre m != 0
      *
      * @param[in] m The matrix to check.
      *

@@ -55,7 +55,7 @@ BasisGenerator::BasisGenerator(
     }
 
     if (!basis_file_name.empty()) {
-        d_basis_writer = new BasisWriter(this, basis_file_name, file_format);
+        d_basis_writer = new BasisWriter(*this, basis_file_name, file_format);
     }
     d_update_right_SV = options.update_right_SV;
     if (incremental)

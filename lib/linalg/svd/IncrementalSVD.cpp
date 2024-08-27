@@ -335,7 +335,7 @@ IncrementalSVD::buildIncrementalSVD(
 
     // Create Q.
     double* Q;
-    constructQ(Q, &l, k);
+    constructQ(Q, l, k);
 
     // Now get the singular value decomposition of Q.
     Matrix* A;
@@ -356,7 +356,7 @@ IncrementalSVD::buildIncrementalSVD(
             // This sample is linearly dependent and we are not skipping linearly
             // dependent samples.
             if(d_rank == 0) std::cout << "adding linearly dependent sample!\n";
-            addLinearlyDependentSample(A, W, sigma);
+            addLinearlyDependentSample(*A, *W, *sigma);
             delete sigma;
         }
         else if (!linearly_dependent_sample) {
@@ -370,7 +370,7 @@ IncrementalSVD::buildIncrementalSVD(
 
             // addNewSample will assign sigma to d_S hence it should not be
             // deleted upon return.
-            addNewSample(j.get(), A, W, sigma);
+            addNewSample(*j, *A, *W, *sigma);
         }
         delete A;
         delete W;
@@ -389,11 +389,10 @@ IncrementalSVD::buildIncrementalSVD(
 void
 IncrementalSVD::constructQ(
     double*& Q,
-    const Vector* l,
+    const Vector & l,
     double k)
 {
-    CAROM_VERIFY(l != 0);
-    CAROM_VERIFY(l->dim() == numSamples());
+    CAROM_VERIFY(l.dim() == numSamples());
 
     // Create Q.
     Q = new double [(d_num_samples+1)*(d_num_samples+1)];
@@ -413,7 +412,7 @@ IncrementalSVD::constructQ(
             }
             q_idx += d_num_samples+1;
         }
-        Q[q_idx] = l->item(row);
+        Q[q_idx] = l.item(row);
     }
     q_idx = d_num_samples;
     for (int col = 0; col < d_num_samples; ++col) {

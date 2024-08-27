@@ -182,22 +182,19 @@ IncrementalSVDFastUpdate::computeBasis()
 
 void
 IncrementalSVDFastUpdate::addLinearlyDependentSample(
-    const Matrix* A,
-    const Matrix* W,
-    const Matrix* sigma)
+    const Matrix & A,
+    const Matrix & W,
+    const Matrix & sigma)
 {
-    CAROM_VERIFY(A != 0);
-    CAROM_VERIFY(sigma != 0);
-
     // Chop a row and a column off of A to form Amod.  Also form
     // d_S by chopping a row and a column off of sigma.
     Matrix Amod(d_num_samples, d_num_samples, false);
     for (int row = 0; row < d_num_samples; ++row) {
         for (int col = 0; col < d_num_samples; ++col) {
-            Amod.item(row, col) = A->item(row, col);
+            Amod.item(row, col) = A.item(row, col);
             if (row == col)
             {
-                d_S->item(col) = sigma->item(row, col);
+                d_S->item(col) = sigma.item(row, col);
             }
         }
     }
@@ -219,13 +216,13 @@ IncrementalSVDFastUpdate::addLinearlyDependentSample(
             for (int col = 0; col < d_num_samples; ++col) {
                 double new_d_W_entry = 0.0;
                 for (int entry = 0; entry < d_num_samples; ++entry) {
-                    new_d_W_entry += d_W->item(row, entry)*W->item(entry, col);
+                    new_d_W_entry += d_W->item(row, entry)*W.item(entry, col);
                 }
                 new_d_W->item(row, col) = new_d_W_entry;
             }
         }
         for (int col = 0; col < d_num_samples; ++col) {
-            new_d_W->item(d_num_rows_of_W, col) = W->item(d_num_samples, col);
+            new_d_W->item(d_num_rows_of_W, col) = W.item(d_num_samples, col);
         }
         delete d_W;
         d_W = new_d_W;
@@ -236,22 +233,18 @@ IncrementalSVDFastUpdate::addLinearlyDependentSample(
 
 void
 IncrementalSVDFastUpdate::addNewSample(
-    const Vector* j,
-    const Matrix* A,
-    const Matrix* W,
-    Matrix* sigma)
+    const Vector & j,
+    const Matrix & A,
+    const Matrix & W,
+    const Matrix & sigma)
 {
-    CAROM_VERIFY(j != 0);
-    CAROM_VERIFY(A != 0);
-    CAROM_VERIFY(sigma != 0);
-
     // Add j as a new column of d_U.
     Matrix* newU = new Matrix(d_dim, d_num_samples+1, true);
     for (int row = 0; row < d_dim; ++row) {
         for (int col = 0; col < d_num_samples; ++col) {
             newU->item(row, col) = d_U->item(row, col);
         }
-        newU->item(row, d_num_samples) = j->item(row);
+        newU->item(row, d_num_samples) = j.item(row);
     }
     d_U.reset(newU);
 
@@ -267,13 +260,13 @@ IncrementalSVDFastUpdate::addNewSample(
             for (int col = 0; col < d_num_samples+1; ++col) {
                 double new_d_W_entry = 0.0;
                 for (int entry = 0; entry < d_num_samples; ++entry) {
-                    new_d_W_entry += d_W->item(row, entry)*W->item(entry, col);
+                    new_d_W_entry += d_W->item(row, entry)*W.item(entry, col);
                 }
                 new_d_W->item(row, col) = new_d_W_entry;
             }
         }
         for (int col = 0; col < d_num_samples+1; ++col) {
-            new_d_W->item(d_num_rows_of_W, col) = W->item(d_num_samples, col);
+            new_d_W->item(d_num_rows_of_W, col) = W.item(d_num_samples, col);
         }
         delete d_W;
         d_W = new_d_W;
@@ -289,21 +282,21 @@ IncrementalSVDFastUpdate::addNewSample(
         for (int col = 0; col < d_num_samples+1; ++col) {
             double new_d_Up_entry = 0.0;
             for (int entry = 0; entry < d_num_samples; ++entry) {
-                new_d_Up_entry += d_Up->item(row, entry)*A->item(entry, col);
+                new_d_Up_entry += d_Up->item(row, entry)*A.item(entry, col);
             }
             new_d_Up->item(row, col) = new_d_Up_entry;
         }
     }
     for (int col = 0; col < d_num_samples+1; ++col) {
-        new_d_Up->item(d_num_samples, col) = A->item(d_num_samples, col);
+        new_d_Up->item(d_num_samples, col) = A.item(d_num_samples, col);
     }
     d_Up.reset(new_d_Up);
 
     // d_S = sigma.
-    int num_dim = std::min(sigma->numRows(), sigma->numColumns());
+    int num_dim = std::min(sigma.numRows(), sigma.numColumns());
     d_S.reset(new Vector(num_dim, false));
     for (int i = 0; i < num_dim; i++) {
-        d_S->item(i) = sigma->item(i,i);
+        d_S->item(i) = sigma.item(i,i);
     }
 
     // We now have another sample.

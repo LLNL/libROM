@@ -743,9 +743,8 @@ public:
      * @param[in] col The column of the Matrix value requested.
      */
     const double&
-    item(
-        int row,
-        int col) const
+    item(int row,
+         int col) const
     {
         CAROM_ASSERT((0 <= row) && (row < numRows()));
         CAROM_ASSERT((0 <= col) && (col < numColumns()));
@@ -766,9 +765,8 @@ public:
      * @param[in] col The column of the Matrix value requested.
      */
     double&
-    item(
-        int row,
-        int col)
+    item(int row,
+         int col)
     {
         CAROM_ASSERT((0 <= row) && (row < numRows()));
         CAROM_ASSERT((0 <= col) && (col < numColumns()));
@@ -1207,9 +1205,9 @@ EigenPair SymmetricRightEigenSolve(const Matrix & A);
  */
 ComplexEigenPair NonSymmetricRightEigenSolve(const Matrix & A);
 
-std::unique_ptr<Matrix> SpaceTimeProduct(const CAROM::Matrix* As,
-        const CAROM::Matrix* At, const CAROM::Matrix* Bs,
-        const CAROM::Matrix* Bt,
+std::unique_ptr<Matrix> SpaceTimeProduct(const CAROM::Matrix & As,
+        const CAROM::Matrix & At, const CAROM::Matrix & Bs,
+        const CAROM::Matrix & Bt,
         const std::vector<double> *tscale=NULL,
         const bool At0at0=false, const bool Bt0at0=false,
         const bool lagB=false, const bool skip0=false);

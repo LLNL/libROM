@@ -80,18 +80,18 @@ public:
     }
 
     void addLinearlyDependentSample
-    (__attribute__((unused)) const CAROM::Matrix *A,
-     __attribute__((unused)) const CAROM::Matrix *W,
-     __attribute__((unused)) const CAROM::Matrix *sigma)
+    (__attribute__((unused)) const CAROM::Matrix & A,
+     __attribute__((unused)) const CAROM::Matrix & W,
+     __attribute__((unused)) const CAROM::Matrix & sigma)
     {
         /* Do nothing */
     }
 
     void addNewSample
-    (__attribute__((unused)) const CAROM::Vector *j,
-     __attribute__((unused)) const CAROM::Matrix *A,
-     __attribute__((unused)) const CAROM::Matrix *W,
-     __attribute__((unused)) CAROM::Matrix *sigma)
+    (__attribute__((unused)) const CAROM::Vector & j,
+     __attribute__((unused)) const CAROM::Matrix & A,
+     __attribute__((unused)) const CAROM::Matrix & W,
+     __attribute__((unused)) const CAROM::Matrix & sigma)
     {
         /* Do nothing */
     }

@@ -465,8 +465,7 @@ public:
      * @return The requested component of the Vector on this processor.
      */
     const double&
-    item(
-        int i) const
+    item(int i) const
     {
         CAROM_ASSERT((0 <= i) && (i < dim()));
         return d_vec[i];
@@ -484,8 +483,7 @@ public:
      * @return The requested component of the Vector on this processor.
      */
     double&
-    item(
-        int i)
+    item(int i)
     {
         CAROM_ASSERT((0 <= i) && (i < dim()));
         return d_vec[i];
