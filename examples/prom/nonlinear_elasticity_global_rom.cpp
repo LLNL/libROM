@@ -230,7 +230,7 @@ protected:
     CAROM::Matrix *M_hat;
     CAROM::Matrix *M_hat_inv;
 
-    const CAROM::Matrix *U_H;
+    const std::shared_ptr<CAROM::Matrix> U_H;
 
     HyperelasticOperator *fomSp;
 
@@ -243,8 +243,10 @@ public:
     RomOperator(HyperelasticOperator *fom_,
                 HyperelasticOperator *fomSp_, const int rvdim_, const int rxdim_,
                 const int hdim_, CAROM::SampleMeshManager *smm_, const Vector *v0_,
-                const Vector *x0_, const Vector v0_fom_, const CAROM::Matrix *V_v_,
-                const CAROM::Matrix *V_x_, const CAROM::Matrix *U_H_,
+                const Vector *x0_, const Vector v0_fom_,
+                const std::shared_ptr<CAROM::Matrix> V_v_,
+                const std::shared_ptr<CAROM::Matrix> V_x_,
+                const std::shared_ptr<CAROM::Matrix> U_H_,
                 const CAROM::Matrix *Hsinv_, const int myid, const bool oversampling_,
                 const bool hyperreduce_, const bool x_base_only_, const bool use_eqp,
                 CAROM::Vector *eqpSol,
@@ -290,21 +292,6 @@ void InitialVelocityIC2(const Vector &x, Vector &v);
 void visualize(ostream &out, ParMesh *mesh, ParGridFunction *deformed_nodes,
                ParGridFunction *field, const char *field_name = NULL,
                bool init_vis = false);
-
-// TODO: move this to the library?
-CAROM::Matrix *GetFirstColumns(const int N, const CAROM::Matrix *A)
-{
-    CAROM::Matrix *S = new CAROM::Matrix(A->numRows(), std::min(N, A->numColumns()),
-                                         A->distributed());
-    for (int i = 0; i < S->numRows(); ++i)
-    {
-        for (int j = 0; j < S->numColumns(); ++j)
-            (*S)(i, j) = (*A)(i, j);
-    }
-
-    // delete A;  // TODO: find a good solution for this.
-    return S;
-}
 
 // TODO: move this to the library?
 void MergeBasis(const int dimFOM, const int nparam, const int max_num_snapshots,
@@ -803,9 +790,9 @@ int main(int argc, char *argv[])
 
     RomOperator *romop = 0;
 
-    const CAROM::Matrix *BV_librom = 0;
-    const CAROM::Matrix *BX_librom = 0;
-    const CAROM::Matrix *H_librom = 0;
+    std::shared_ptr<CAROM::Matrix> BV_librom;
+    std::shared_ptr<CAROM::Matrix> BX_librom;
+    std::shared_ptr<CAROM::Matrix> H_librom;
     const CAROM::Matrix *Hsinv = 0;
 
     int nsamp_H = -1;
@@ -828,22 +815,19 @@ int main(int argc, char *argv[])
 
         if (x_base_only)
         {
-            readerV = new
-            CAROM::BasisReader("basisX"); // The basis for v uses the x basis instead.
+            // The basis for v uses the x basis instead.
+            readerV = new CAROM::BasisReader("basisX");
             rvdim = rxdim;
         }
         else
-        {
             readerV = new CAROM::BasisReader("basisV");
-        }
 
         BV_librom = readerV->getSpatialBasis();
 
         if (rvdim == -1) // Change rvdim
             rvdim = BV_librom->numColumns();
         else
-            BV_librom = GetFirstColumns(rvdim,
-                                        BV_librom);
+            BV_librom = BV_librom->getFirstNColumns(rvdim);
 
         MFEM_VERIFY(BV_librom->numRows() == true_size, "");
 
@@ -856,8 +840,7 @@ int main(int argc, char *argv[])
         if (rxdim == -1) // Change rxdim
             rxdim = BX_librom->numColumns();
         else
-            BX_librom = GetFirstColumns(rxdim,
-                                        BX_librom);
+            BX_librom = BX_librom->getFirstNColumns(rxdim);
 
         MFEM_VERIFY(BX_librom->numRows() == true_size, "");
 
@@ -877,7 +860,7 @@ int main(int argc, char *argv[])
         MFEM_VERIFY(H_librom->numColumns() >= hdim, "");
 
         if (H_librom->numColumns() > hdim)
-            H_librom = GetFirstColumns(hdim, H_librom);
+            H_librom = H_librom->getFirstNColumns(hdim);
 
         if (myid == 0)
             printf("reduced H dim = %d\n", hdim);
@@ -905,7 +888,7 @@ int main(int argc, char *argv[])
         {
             // EQP setup
             eqpSol = new CAROM::Vector(ir0->GetNPoints() * fespace.GetNE(), true);
-            SetupEQP_snapshots(ir0, myid, &fespace, nsets, BV_librom,
+            SetupEQP_snapshots(ir0, myid, &fespace, nsets, BV_librom.get(),
                                GetSnapshotMatrix(fespace.GetTrueVSize(), nsets, max_num_snapshots, "X"),
                                vx0.GetBlock(0),
                                preconditionNNLS, tolNNLS, maxNNLSnnz, model, *eqpSol, window_ids, snap_step);
@@ -1401,10 +1384,6 @@ int main(int argc, char *argv[])
     delete pmesh;
     delete romop;
     delete soper;
-
-    delete BV_librom;
-    delete BX_librom;
-    delete H_librom;
     delete Hsinv;
     delete smm;
     delete eqpSol;
@@ -1595,8 +1574,10 @@ void InitialVelocityIC2(const Vector &x, Vector &v)
 RomOperator::RomOperator(HyperelasticOperator *fom_,
                          HyperelasticOperator *fomSp_, const int rvdim_, const int rxdim_,
                          const int hdim_, CAROM::SampleMeshManager *smm_, const Vector *v0_,
-                         const Vector *x0_, const Vector v0_fom_, const CAROM::Matrix *V_v_,
-                         const CAROM::Matrix *V_x_, const CAROM::Matrix *U_H_,
+                         const Vector *x0_, const Vector v0_fom_,
+                         const std::shared_ptr<CAROM::Matrix> V_v_,
+                         const std::shared_ptr<CAROM::Matrix> V_x_,
+                         const std::shared_ptr<CAROM::Matrix> U_H_,
                          const CAROM::Matrix *Hsinv_, const int myid, const bool oversampling_,
                          const bool hyperreduce_, const bool x_base_only_, const bool use_eqp,
                          CAROM::Vector *eqpSol, const IntegrationRule *ir_eqp_, NeoHookeanModel *model_)
@@ -1653,7 +1634,7 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
     ComputeCtAB(fom->Smat, V_v, V_v, *S_hat);
     // Apply S_hat to the initial velocity and store
     fom->Smat.Mult(v0_fom, *S_hat_v0_temp);
-    V_v.transposeMult(*S_hat_v0_temp_librom, S_hat_v0);
+    V_v.transposeMult(*S_hat_v0_temp_librom, *S_hat_v0);
     // Create M_hat
     ComputeCtAB(*(fom->Mmat), V_v, V_v, *M_hat);
 
@@ -1679,7 +1660,7 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
             V_xTV_v_sp = new CAROM::Matrix(rxdim, rvdim, false);
             V_xTv_0_sp = new CAROM::Vector(spdim / 2, false);
             V_x_sp->transposeMult(*V_v_sp, *V_xTV_v_sp);
-            V_x_sp->transposeMult(*v0_librom, V_xTv_0_sp);
+            V_x_sp->transposeMult(*v0_librom, *V_xTv_0_sp);
 
             // This is for saving the recreated predictions
             psp_librom = new CAROM::Vector(spdim, false);
@@ -1720,8 +1701,8 @@ RomOperator::RomOperator(HyperelasticOperator *fom_,
         v0_fom_librom = new CAROM::Vector(v0_fom.GetData(), v0_fom.Size(), true, false);
         V_xTV_v = new CAROM::Matrix(rxdim, rvdim, false);
         V_xTv_0 = new CAROM::Vector(fdim / 2, false);
-        V_x.transposeMult(V_v, V_xTV_v);
-        V_x.transposeMult(*v0_fom_librom, V_xTv_0);
+        V_x.transposeMult(V_v, *V_xTV_v);
+        V_x.transposeMult(*v0_fom_librom, *V_xTv_0);
         Vx_librom_temp = new CAROM::Vector(fdim / 2, true);
         Vx_temp = new Vector(&((*Vx_librom_temp)(0)), fdim / 2);
     }
@@ -1885,7 +1866,7 @@ void RomOperator::Mult_Hyperreduced(const Vector &vx, Vector &dvx_dt) const
         }
 
         // Multiply by V_v^T * U_H
-        V_vTU_H.mult(zX, z_librom);
+        V_vTU_H.mult(zX, *z_librom);
     }
 
     if (fomSp->viscosity != 0.0)
@@ -1926,7 +1907,7 @@ void RomOperator::Mult_FullOrder(const Vector &vx, Vector &dvx_dt) const
     // Apply H to x to get z
     fom->H->Mult(*pfom_x, *zfom_x);
 
-    V_v.transposeMult(*zfom_x_librom, z_librom);
+    V_v.transposeMult(*zfom_x_librom, *z_librom);
 
     if (fom->viscosity != 0.0)
     {

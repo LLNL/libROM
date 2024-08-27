@@ -30,8 +30,8 @@ namespace CAROM {
 // In general, there may be multiple temporal basis vectors associated with each
 // spatial basis vector, but here we assume for now that there is only one, i.e.
 // column j of s_basis corresponds to column j of t_basis.
-void SampleTemporalIndices(const Matrix* s_basis,
-                           const Matrix* t_basis,
+void SampleTemporalIndices(const Matrix & s_basis,
+                           const Matrix & t_basis,
                            const int num_f_basis_vectors_used,
                            int* t_samples,
                            const int myid,
@@ -39,20 +39,20 @@ void SampleTemporalIndices(const Matrix* s_basis,
                            const int num_samples_req,
                            const bool excludeFinalTime)
 {
-    CAROM_VERIFY(!t_basis->distributed());
+    CAROM_VERIFY(!t_basis.distributed());
 
     // Get the number of basis vectors and the size of each basis vector.
     CAROM_VERIFY(0 < num_f_basis_vectors_used
-                 && num_f_basis_vectors_used <= s_basis->numColumns()
-                 && num_f_basis_vectors_used <= t_basis->numColumns());
+                 && num_f_basis_vectors_used <= s_basis.numColumns()
+                 && num_f_basis_vectors_used <= t_basis.numColumns());
     CAROM_VERIFY(num_samples_req > 0);
     const int num_basis_vectors =
-        std::min(num_f_basis_vectors_used, s_basis->numColumns());
+        std::min(num_f_basis_vectors_used, s_basis.numColumns());
     const int num_samples = num_samples_req;
     const int numExcluded = excludeFinalTime ? 1 : 0;
-    CAROM_VERIFY(num_samples <= t_basis->numRows() - numExcluded);
-    const int s_size = s_basis->numRows();
-    const int t_size = t_basis->numRows();
+    CAROM_VERIFY(num_samples <= t_basis.numRows() - numExcluded);
+    const int s_size = s_basis.numRows();
+    const int t_size = t_basis.numRows();
 
     const int ns_mod_nr = num_samples % num_basis_vectors;
     int ns = 0;
@@ -71,7 +71,7 @@ void SampleTemporalIndices(const Matrix* s_basis,
     for (int s=0; s<s_size; ++s)
     {
         for (int t=0; t<t_size; ++t)
-            error[t + (s*t_size)] = s_basis->item(s, 0) * t_basis->item(t, 0);
+            error[t + (s*t_size)] = s_basis.item(s, 0) * t_basis.item(t, 0);
     }
 
     for (int i=0; i<num_basis_vectors; ++i)
@@ -93,7 +93,7 @@ void SampleTemporalIndices(const Matrix* s_basis,
                     const int row = ti + (s*ns);
                     for (int col = 0; col < i; ++col)
                     {
-                        M.item(row, col) = s_basis->item(s, col) * t_basis->item(t, col);
+                        M.item(row, col) = s_basis.item(s, col) * t_basis.item(t, col);
                     }
                 }
 
@@ -118,7 +118,7 @@ void SampleTemporalIndices(const Matrix* s_basis,
                 for (int s = 0; s < s_size; ++s)
                 {
                     const int row = ti + (s*ns);
-                    const double phi_i_s_t = s_basis->item(s, i) * t_basis->item(t,
+                    const double phi_i_s_t = s_basis.item(s, i) * t_basis.item(t,
                                              i);  // \phi_i(s,t)
 
                     for (int col = 0; col < i; ++col)
@@ -134,7 +134,7 @@ void SampleTemporalIndices(const Matrix* s_basis,
             for (int s=0; s<s_size; ++s)
             {
                 for (int t=0; t<t_size; ++t)
-                    error[t + (s*t_size)] = s_basis->item(s, i) * t_basis->item(t, i);
+                    error[t + (s*t_size)] = s_basis.item(s, i) * t_basis.item(t, i);
             }
 
             // Multiply MZphi by [\phi_0, ..., \phi_{i-1}], subtracting the result from error
@@ -143,7 +143,7 @@ void SampleTemporalIndices(const Matrix* s_basis,
                 for (int t=0; t<t_size; ++t)
                 {
                     for (int j=0; j<i; ++j)
-                        error[t + (s*t_size)] -= MZphi[j] * s_basis->item(s, j) * t_basis->item(t, j);
+                        error[t + (s*t_size)] -= MZphi[j] * s_basis.item(s, j) * t_basis.item(t, j);
                 }
             }
 
@@ -203,8 +203,8 @@ void SampleTemporalIndices(const Matrix* s_basis,
 // Temporal basis t_basis is stored in its entirety on each process, of size (number of temporal DOFs) x (number of basis vectors)
 // In general, there may be multiple temporal basis vectors associated with each spatial basis vector, but here we assume for now
 // that there is only one, i.e. column j of s_basis corresponds to column j of t_basis.
-void SampleSpatialIndices(const Matrix* s_basis,
-                          const Matrix* t_basis,
+void SampleSpatialIndices(const Matrix & s_basis,
+                          const Matrix & t_basis,
                           const int num_f_basis_vectors_used,
                           const int num_t_samples,
                           int* t_samples,
@@ -260,25 +260,25 @@ void SampleSpatialIndices(const Matrix* s_basis,
     MPI_Op RowInfoOp;
     MPI_Op_create((MPI_User_function*)RowInfoMax, true, &RowInfoOp);
 
-    //CAROM_VERIFY(!t_basis->distributed());
+    //CAROM_VERIFY(!t_basis.distributed());
 
     // Get the number of basis vectors and the size of each basis vector.
     CAROM_VERIFY(0 < num_f_basis_vectors_used
-                 && num_f_basis_vectors_used <= s_basis->numColumns()
-                 && num_f_basis_vectors_used <= t_basis->numColumns());
+                 && num_f_basis_vectors_used <= s_basis.numColumns()
+                 && num_f_basis_vectors_used <= t_basis.numColumns());
     CAROM_VERIFY(num_samples_req >
                  0);  // TODO: just replace num_samples with num_samples_req
     const int num_basis_vectors =
-        std::min(num_f_basis_vectors_used, s_basis->numColumns());
+        std::min(num_f_basis_vectors_used, s_basis.numColumns());
     //const int num_samples = num_samples_req > 0 ? num_samples_req : num_basis_vectors;
     const int num_samples = num_samples_req;
     CAROM_VERIFY(num_basis_vectors <= num_samples
-                 && num_samples <= s_basis->numRows());
+                 && num_samples <= s_basis.numRows());
     CAROM_VERIFY(num_samples == f_basis_sampled.numRows()
                  && num_basis_vectors == f_basis_sampled.numColumns());
     CAROM_VERIFY(!f_basis_sampled.distributed());
-    const int s_size = s_basis->numRows();
-    const int t_size = t_basis->numRows();
+    const int s_size = s_basis.numRows();
+    const int t_size = t_basis.numRows();
 
     const int ns_mod_nr = num_samples % num_basis_vectors;
     int ns = 0;
@@ -308,7 +308,7 @@ void SampleSpatialIndices(const Matrix* s_basis,
     for (int s=0; s<s_size; ++s)
     {
         for (int t=0; t<t_size; ++t)
-            error[t + (s*t_size)] = s_basis->item(s, 0) * t_basis->item(t, 0);
+            error[t + (s*t_size)] = s_basis.item(s, 0) * t_basis.item(t, 0);
     }
 
     for (int i=0; i<num_basis_vectors; ++i)
@@ -332,7 +332,7 @@ void SampleSpatialIndices(const Matrix* s_basis,
               const int row = ti + (si*num_t_samples);
               for (int col = 0; col < i; ++col)
                 {
-                  M.item(row, col) = s_basis->item(s, col) * t_basis->item(t, col);
+                  M.item(row, col) = s_basis.item(s, col) * t_basis.item(t, col);
                 }
             }
 
@@ -350,7 +350,7 @@ void SampleSpatialIndices(const Matrix* s_basis,
                         const int t = t_samples[ti];
                         const int row = ti + (j*num_t_samples);
 
-                        M.item(row, k) = tmp_fs.item(j, k) * t_basis->item(t, k);
+                        M.item(row, k) = tmp_fs.item(j, k) * t_basis.item(t, k);
                     }
                 }
 
@@ -374,7 +374,7 @@ void SampleSpatialIndices(const Matrix* s_basis,
             {
               const int t = t_samples[ti];
               const int row = ti + (si*num_t_samples);
-              const double phi_i_s_t = s_basis->item(s, i) * t_basis->item(t, i);  // \phi_i(s,t)
+              const double phi_i_s_t = s_basis.item(s, i) * t_basis.item(t, i);  // \phi_i(s,t)
               for (int col = 0; col < i; ++col)
                 {
                   MZphi[col] += M.item(row, col) * phi_i_s_t;
@@ -394,7 +394,7 @@ void SampleSpatialIndices(const Matrix* s_basis,
                     const int t = t_samples[ti];
                     const int row = ti + (j*num_t_samples);
 
-                    const double phi_i_s_t = s_basis->item(j, i) * t_basis->item(t,
+                    const double phi_i_s_t = s_basis.item(j, i) * t_basis.item(t,
                                              i);  // \phi_i(s,t)
 
                     for (int k = 0; k < i; ++k)
@@ -406,7 +406,7 @@ void SampleSpatialIndices(const Matrix* s_basis,
             for (int s=0; s<s_size; ++s)
             {
                 for (int t=0; t<t_size; ++t)
-                    error[t + (s*t_size)] = s_basis->item(s, i) * t_basis->item(t, i);
+                    error[t + (s*t_size)] = s_basis.item(s, i) * t_basis.item(t, i);
             }
 
             // Multiply MZphi by [\phi_0, ..., \phi_{i-1}], subtracting the result from error
@@ -415,7 +415,7 @@ void SampleSpatialIndices(const Matrix* s_basis,
                 for (int t=0; t<t_size; ++t)
                 {
                     for (int j=0; j<i; ++j)
-                        error[t + (s*t_size)] -= MZphi[j] * s_basis->item(s, j) * t_basis->item(t, j);
+                        error[t + (s*t_size)] -= MZphi[j] * s_basis.item(s, j) * t_basis.item(t, j);
                 }
             }
 
@@ -467,7 +467,7 @@ void SampleSpatialIndices(const Matrix* s_basis,
             // Now get the sampled row of the spatial basis.
             if (f_bv_max_global.proc == myid) {
                 for (int k = 0; k < num_basis_vectors; ++k) {
-                    sampled_row[k] = s_basis->item(f_bv_max_global.row, k);
+                    sampled_row[k] = s_basis.item(f_bv_max_global.row, k);
                 }
             }
             MPI_Bcast(sampled_row.data(), num_basis_vectors, MPI_DOUBLE,
@@ -510,8 +510,8 @@ void SampleSpatialIndices(const Matrix* s_basis,
     MPI_Op_free(&RowInfoOp);
 }
 
-void SpaceTimeSampling(const Matrix* s_basis,
-                       const Matrix* t_basis,
+void SpaceTimeSampling(const Matrix & s_basis,
+                       const Matrix & t_basis,
                        const int num_f_basis_vectors_used,
                        std::vector<int>& t_samples,
                        int* f_sampled_row,
@@ -528,8 +528,8 @@ void SpaceTimeSampling(const Matrix* s_basis,
     // This algorithm is sequential greedy sampling of temporal then spatial indices.
 
     // TODO: for now, we assume one temporal basis vector for each spatial basis vector. This should be generalized.
-    CAROM_VERIFY(s_basis->numColumns() == num_f_basis_vectors_used
-                 && t_basis->numColumns() == num_f_basis_vectors_used);
+    CAROM_VERIFY(s_basis.numColumns() == num_f_basis_vectors_used
+                 && t_basis.numColumns() == num_f_basis_vectors_used);
 
     // First, sample temporal indices.
     CAROM_VERIFY(t_samples.size() == num_t_samples_req);
@@ -553,7 +553,7 @@ void SpaceTimeSampling(const Matrix* s_basis,
 }
 
 void GetSampledSpaceTimeBasis(std::vector<int> const& t_samples,
-                              const Matrix* t_basis,
+                              const Matrix& t_basis,
                               Matrix const& s_basis_sampled,
                               Matrix& f_basis_sampled_inv)
 {
@@ -572,7 +572,7 @@ void GetSampledSpaceTimeBasis(std::vector<int> const& t_samples,
             const int t = t_samples[ti];
             for (int j=0; j<f_basis_sampled_inv.numColumns(); ++j)
                 f_basis_sampled_inv.item(row, j) = s_basis_sampled.item(si,
-                                                   j) * t_basis->item(t, j);
+                                                   j) * t_basis.item(t, j);
         }
     }
 

@@ -414,7 +414,7 @@ double simulation()
             std::fstream fin("parameters.txt", std::ios_base::in);
             double curr_param;
             std::vector<std::string> dmd_paths;
-            std::vector<CAROM::Vector*> param_vectors;
+            std::vector<CAROM::Vector> param_vectors;
 
             while (fin >> curr_param)
             {
@@ -429,36 +429,34 @@ double simulation()
                 dmd_paths.push_back(to_string(curr_radius) + "_" +
                                     to_string(curr_alpha) + "_" + to_string(curr_cx) + "_" +
                                     to_string(curr_cy));
-                CAROM::Vector* param_vector = new CAROM::Vector(4, false);
-                param_vector->item(0) = curr_radius;
-                param_vector->item(1) = curr_alpha;
-                param_vector->item(2) = curr_cx;
-                param_vector->item(3) = curr_cy;
+                CAROM::Vector param_vector(4, false);
+                param_vector(0) = curr_radius;
+                param_vector(1) = curr_alpha;
+                param_vector(2) = curr_cx;
+                param_vector(3) = curr_cy;
                 param_vectors.push_back(param_vector);
             }
             fin.close();
 
             if (dmd_paths.size() > 1)
             {
-                CAROM::Vector* desired_param = new CAROM::Vector(4, false);
-                desired_param->item(0) = radius;
-                desired_param->item(1) = alpha;
-                desired_param->item(2) = cx;
-                desired_param->item(3) = cy;
+                CAROM::Vector desired_param(4, false);
+                desired_param(0) = radius;
+                desired_param(1) = alpha;
+                desired_param(2) = cx;
+                desired_param(3) = cy;
 
                 dmd_training_timer.Start();
 
                 CAROM::getParametricDMD(dmd_u, param_vectors, dmd_paths, desired_param,
                                         "G", "LS", closest_rbf_val);
-
-                delete desired_param;
             }
             else
             {
                 dmd_u = new CAROM::DMD(dmd_paths[0]);
             }
 
-            dmd_u->projectInitialCondition(init);
+            dmd_u->projectInitialCondition(*init);
 
             dmd_training_timer.Stop();
 
@@ -467,15 +465,13 @@ double simulation()
             // compare the final FOM solution to the DMD predicted solution.
             t = t_final - 10.0 * dt;
 
-            CAROM::Vector* carom_tf_u_minus_some = dmd_u->predict(t);
+            std::shared_ptr<CAROM::Vector> carom_tf_u_minus_some = dmd_u->predict(t);
 
             Vector tf_u_minus_some(carom_tf_u_minus_some->getData(),
                                    carom_tf_u_minus_some->dim());
 
             u = tf_u_minus_some;
             u_gf.SetFromTrueDofs(u);
-
-            delete carom_tf_u_minus_some;
         }
 
         ts.push_back(t);
@@ -583,7 +579,7 @@ double simulation()
         std::fstream fin("parameters.txt", std::ios_base::in);
         double curr_param;
         std::vector<std::string> dmd_paths;
-        std::vector<CAROM::Vector*> param_vectors;
+        std::vector<CAROM::Vector> param_vectors;
 
         while (fin >> curr_param)
         {
@@ -598,30 +594,29 @@ double simulation()
             dmd_paths.push_back(to_string(curr_radius) + "_" +
                                 to_string(curr_alpha) + "_" + to_string(curr_cx) + "_" +
                                 to_string(curr_cy));
-            CAROM::Vector* param_vector = new CAROM::Vector(4, false);
-            param_vector->item(0) = curr_radius;
-            param_vector->item(1) = curr_alpha;
-            param_vector->item(2) = curr_cx;
-            param_vector->item(3) = curr_cy;
+            CAROM::Vector param_vector(4, false);
+            param_vector(0) = curr_radius;
+            param_vector(1) = curr_alpha;
+            param_vector(2) = curr_cx;
+            param_vector(3) = curr_cy;
             param_vectors.push_back(param_vector);
         }
         fin.close();
 
-        CAROM::Vector* desired_param = new CAROM::Vector(4, false);
-        desired_param->item(0) = radius;
-        desired_param->item(1) = alpha;
-        desired_param->item(2) = cx;
-        desired_param->item(3) = cy;
+        CAROM::Vector desired_param(4, false);
+        desired_param(0) = radius;
+        desired_param(1) = alpha;
+        desired_param(2) = cx;
+        desired_param(3) = cy;
 
         dmd_training_timer.Start();
 
         CAROM::getParametricDMD(dmd_u, param_vectors, dmd_paths, desired_param,
                                 "G", "LS", closest_rbf_val);
 
-        dmd_u->projectInitialCondition(init);
+        dmd_u->projectInitialCondition(*init);
 
         dmd_training_timer.Stop();
-        delete desired_param;
     }
 
     if (offline || de || calc_err_indicator)
@@ -683,7 +678,8 @@ double simulation()
                                                 *true_solution_u, *true_solution_u));
             }
         }
-        CAROM::Vector* result_u = dmd_u->predict(t_final);
+
+        std::shared_ptr<CAROM::Vector> result_u = dmd_u->predict(t_final);
 
         Vector dmd_solution_u(result_u->getData(), result_u->dim());
         Vector diff_u(true_solution_u->Size());
@@ -698,8 +694,6 @@ double simulation()
                       ", alpha " << alpha << ", cx " << cx << ", cy " << cy << ": "
                       << rel_diff << std::endl;
         }
-
-        delete result_u;
 
         if (!de && myid == 0)
         {
@@ -730,7 +724,7 @@ double simulation()
             std::cout << "Predicting temperature using DMD at: " << ts[0] << std::endl;
         }
 
-        CAROM::Vector* result_u = dmd_u->predict(ts[0]);
+        std::shared_ptr<CAROM::Vector> result_u = dmd_u->predict(ts[0]);
         Vector initial_dmd_solution_u(result_u->getData(), result_u->dim());
         u_gf.SetFromTrueDofs(initial_dmd_solution_u);
 
@@ -745,8 +739,6 @@ double simulation()
             dmd_visit_dc.SetTime(0.0);
             dmd_visit_dc.Save();
         }
-
-        delete result_u;
 
         if (visit)
         {
@@ -766,8 +758,6 @@ double simulation()
                     dmd_visit_dc.SetCycle(i);
                     dmd_visit_dc.SetTime(ts[i]);
                     dmd_visit_dc.Save();
-
-                    delete result_u;
                 }
             }
         }
@@ -792,8 +782,6 @@ double simulation()
             printf("Elapsed time for predicting DMD: %e second\n",
                    dmd_prediction_timer.RealTime());
         }
-
-        delete result_u;
     }
 
     // 19. Calculate the relative error as commanded by the greedy algorithm.
@@ -834,7 +822,7 @@ public:
     {
 
     }
-    double EvaluateCost(std::vector<double> inputs) const override
+    double EvaluateCost(std::vector<double> & inputs) const override
     {
         radius = inputs[0];
         alpha = inputs[1];

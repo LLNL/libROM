@@ -668,14 +668,15 @@ int main(int argc, char *argv[])
     bool isIncremental = false;
     const std::string basisName = "basis";
     const std::string basisFileName = basisName + std::to_string(id);
-    const CAROM::Matrix* spatialbasis;
+    std::unique_ptr<const CAROM::Matrix> spatialbasis;
     CAROM::Options* options;
     CAROM::BasisGenerator *generator;
     int numRowRB, numColumnRB;
 
     CAROM::Matrix *M_hat_carom, *K_hat_carom;
     DenseMatrix *M_hat, *K_hat;
-    CAROM::Vector *b_hat_carom, *u_init_hat_carom;
+    std::unique_ptr<CAROM::Vector> b_hat_carom;
+    CAROM::Vector *u_init_hat_carom;
     Vector *b_hat, *u_init_hat;
 
     Vector u_init(*U);
@@ -768,7 +769,7 @@ int main(int argc, char *argv[])
 
         Vector b_vec = *B;
         CAROM::Vector b_carom(b_vec.GetData(), b_vec.Size(), true);
-        b_hat_carom = spatialbasis->transposeMult(&b_carom);
+        b_hat_carom = spatialbasis->transposeMult(b_carom);
         b_hat = new Vector(b_hat_carom->getData(), b_hat_carom->dim());
 
         u_init_hat_carom = new CAROM::Vector(numColumnRB, false);
@@ -851,11 +852,11 @@ int main(int argc, char *argv[])
                         cout << "WARNING: FOM lifting for visualization is slow." << endl;
 
                     CAROM::Vector u_hat_final_carom(u_hat->GetData(), u_hat->Size(), false);
-                    CAROM::Vector* u_final_carom = spatialbasis->mult(u_hat_final_carom);
+                    std::unique_ptr<CAROM::Vector> u_final_carom = spatialbasis->mult(
+                                u_hat_final_carom);
                     Vector u_final(u_final_carom->getData(), u_final_carom->dim());
                     u_final += u_init;
                     u->SetFromTrueDofs(u_final);
-                    delete u_final_carom;
                 }
 
                 dc->SetCycle(ti);
@@ -892,7 +893,8 @@ int main(int argc, char *argv[])
     if (online)
     {
         CAROM::Vector u_hat_final_carom(u_hat->GetData(), u_hat->Size(), false);
-        CAROM::Vector* u_final_carom = spatialbasis->mult(u_hat_final_carom);
+        std::unique_ptr<CAROM::Vector> u_final_carom = spatialbasis->mult(
+                    u_hat_final_carom);
         Vector u_final(u_final_carom->getData(), u_final_carom->dim());
         u_final += u_init;
 
@@ -911,17 +913,14 @@ int main(int argc, char *argv[])
         if (myid == 0) std::cout << "Relative l2 error of ROM solution " << diffNorm /
                                      fomNorm << std::endl;
 
-        delete spatialbasis;
         delete M_hat_carom;
         delete K_hat_carom;
         delete M_hat;
         delete K_hat;
-        delete b_hat_carom;
         delete u_init_hat_carom;
         delete b_hat;
         delete u_init_hat;
         delete u_hat;
-        delete u_final_carom;
     }
 
     // 12. Save the final solution in parallel. This output can be viewed later

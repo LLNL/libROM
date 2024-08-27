@@ -770,8 +770,8 @@ int main(int argc, char *argv[])
             std::fstream fin(io_dir + "/parameters.txt", std::ios_base::in);
             double curr_param;
             std::vector<std::string> dmdc_paths;
-            std::vector<CAROM::Matrix*> controls;
-            std::vector<CAROM::Vector*> param_vectors;
+            std::vector<std::shared_ptr<CAROM::Matrix>> controls;
+            std::vector<CAROM::Vector> param_vectors;
 
             while (fin >> curr_param)
             {
@@ -786,46 +786,37 @@ int main(int argc, char *argv[])
                 dmdc_paths.push_back(io_dir + "/" + to_string(curr_alpha) + "_" + to_string(
                                          curr_kappa) + "_" + to_string(curr_amp_in) + "_" + to_string(curr_amp_out) );
 
-                CAROM::Matrix* curr_control = new CAROM::Matrix();
+                std::shared_ptr<CAROM::Matrix> curr_control(new CAROM::Matrix());
                 curr_control->read(io_dir + "/" + to_string(curr_alpha) + "_" + to_string(
                                        curr_kappa) + "_" + to_string(curr_amp_in) + "_" + to_string(
                                        curr_amp_out) + "_control");
                 controls.push_back(curr_control);
 
-                CAROM::Vector* param_vector = new CAROM::Vector(4, false);
-                param_vector->item(0) = curr_alpha;
-                param_vector->item(1) = curr_kappa;
-                param_vector->item(2) = curr_amp_in;
-                param_vector->item(3) = curr_amp_out;
+                CAROM::Vector param_vector(4, false);
+                param_vector(0) = curr_alpha;
+                param_vector(1) = curr_kappa;
+                param_vector(2) = curr_amp_in;
+                param_vector(3) = curr_amp_out;
                 param_vectors.push_back(param_vector);
             }
             fin.close();
 
-            CAROM::Vector* desired_param = new CAROM::Vector(4, false);
-            desired_param->item(0) = alpha;
-            desired_param->item(1) = kappa;
-            desired_param->item(2) = amp_in;
-            desired_param->item(3) = amp_out;
+            CAROM::Vector desired_param(4, false);
+            desired_param(0) = alpha;
+            desired_param(1) = kappa;
+            desired_param(2) = amp_in;
+            desired_param(3) = amp_out;
 
             dmd_training_timer.Start();
 
-
-            CAROM::Matrix* controls_interpolated = new CAROM::Matrix();
+            std::shared_ptr<CAROM::Matrix> controls_interpolated(new CAROM::Matrix());
 
             CAROM::getParametricDMDc(dmd_u, param_vectors, dmdc_paths, controls,
                                      controls_interpolated, desired_param, "G", "LS", closest_rbf_val);
 
-            dmd_u->project(init,controls_interpolated);
-
+            dmd_u->project(*init, *controls_interpolated);
 
             dmd_training_timer.Stop();
-
-            delete desired_param;
-            delete controls_interpolated;
-            for (auto m : param_vectors)
-                delete m;
-            for (auto m : controls)
-                delete m;
         }
 
         if (predict)
@@ -841,7 +832,7 @@ int main(int argc, char *argv[])
                 std::cout << "Predicting temperature using DMDc" << std::endl;
             }
 
-            CAROM::Vector* result_u = dmd_u->predict(ts[0]);
+            std::unique_ptr<CAROM::Vector> result_u = dmd_u->predict(ts[0]);
             Vector initial_dmd_solution_u(result_u->getData(), result_u->dim());
             u_gf.SetFromTrueDofs(initial_dmd_solution_u);
 
@@ -858,8 +849,6 @@ int main(int argc, char *argv[])
                 dmd_visit_dc.Save();
             }
 
-            delete result_u;
-
             if (visit)
             {
                 for (int i = 1; i < ts.size(); i++)
@@ -873,8 +862,6 @@ int main(int argc, char *argv[])
                         dmd_visit_dc.SetCycle(i);
                         dmd_visit_dc.SetTime(ts[i]);
                         dmd_visit_dc.Save();
-
-                        delete result_u;
                     }
                 }
             }
@@ -903,11 +890,7 @@ int main(int argc, char *argv[])
                 printf("Elapsed time for predicting DMDc: %e second\n",
                        dmd_prediction_timer.RealTime());
             }
-
-            delete result_u;
-
         }
-
     }
 
     // 16. Free the used memory.

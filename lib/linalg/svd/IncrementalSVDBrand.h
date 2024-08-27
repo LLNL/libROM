@@ -38,7 +38,7 @@ public:
      *
      * @return The basis vectors for the current time interval.
      */
-    const Matrix*
+    std::shared_ptr<const Matrix>
     getSpatialBasis() override;
 
     /**
@@ -47,7 +47,7 @@ public:
      *
      * @return The temporal basis vectors for the current time interval.
      */
-    const Matrix*
+    std::shared_ptr<const Matrix>
     getTemporalBasis() override;
 
 private:
@@ -95,10 +95,9 @@ private:
      * @param[in] u The first state.
      * @param[in] time The simulation time for the first state.
      */
-    virtual
     void
     buildInitialSVD(
-        double* u);
+        double* u) override;
 
     /**
      * @brief Adds the new sampled the state vector, u, to the system.
@@ -129,15 +128,11 @@ private:
     /**
      * @brief Computes the current basis vectors.
      */
-    virtual
     void
-    computeBasis();
+    computeBasis() override;
 
     /**
      * @brief Add a linearly dependent sample to the SVD.
-     *
-     * @pre A != 0
-     * @pre sigma != 0
      *
      * @param[in] A The left singular vectors.
      * @param[in] W The right singular vectors.
@@ -145,17 +140,12 @@ private:
      */
     void
     addLinearlyDependentSample(
-        const Matrix* A,
-        const Matrix* W,
-        const Matrix* sigma);
+        const Matrix & A,
+        const Matrix & W,
+        const Matrix & sigma);
 
     /**
      * @brief Add a new, unique sample to the SVD.
-     *
-     * @pre j != 0
-     * @pre A != 0
-     * @pre W != 0
-     * @pre sigma != 0
      *
      * @param[in] j The new column of d_U.
      * @param[in] A The left singular vectors.
@@ -164,16 +154,16 @@ private:
      */
     void
     addNewSample(
-        const Vector* j,
-        const Matrix* A,
-        const Matrix* W,
-        Matrix* sigma);
+        const Vector & j,
+        const Matrix & A,
+        const Matrix & W,
+        const Matrix & sigma);
 
     /**
      * @brief The matrix U'. U' is not distributed and the entire matrix
      *        exists on each processor.
      */
-    Matrix* d_Up;
+    std::unique_ptr<Matrix> d_Up;
 
     /**
      * @brief The tolerance value used to remove small singular values.

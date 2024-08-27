@@ -45,7 +45,7 @@ class Matrix;
  * @param[in] init_samples Samples to initialize the GNAT algorithm.
  */
 void
-GNAT(const Matrix* f_basis,
+GNAT(const Matrix & f_basis,
      const int num_f_basis_vectors_used,
      std::vector<int>& f_sampled_row,
      std::vector<int>& f_sampled_rows_per_proc,

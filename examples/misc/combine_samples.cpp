@@ -159,8 +159,9 @@ int main(int argc, char* argv[])
     else {
         /*-- load data from hdf5 file to find the mean and subtract it --*/
         if (rank==0) std::cout << "Reading snapshots" << std::endl;
-        CAROM::Matrix* snapshots = (CAROM::Matrix*)
-                                   static_basis_generator->getSnapshotMatrix();
+
+        CAROM::Matrix *snapshots = (CAROM::Matrix*)
+                                   static_basis_generator->getSnapshotMatrix().get();
 
         int num_rows = snapshots->numRows();
         int num_cols = snapshots->numColumns();

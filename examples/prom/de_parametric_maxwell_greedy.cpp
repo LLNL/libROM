@@ -212,7 +212,7 @@ double simulation()
         loadBasisName += "_greedy";
     }
 
-    const CAROM::Matrix* spatialbasis;
+    std::unique_ptr<const CAROM::Matrix> spatialbasis;
     CAROM::Options* options;
     CAROM::BasisGenerator *generator;
     int numRowRB, numColumnRB;
@@ -346,7 +346,8 @@ double simulation()
 
         CAROM::Vector B_carom(B.GetData(), B.Size(), true, false);
         CAROM::Vector X_carom(X.GetData(), X.Size(), true, false);
-        CAROM::Vector *reducedRHS = spatialbasis->transposeMult(&B_carom);
+        std::unique_ptr<CAROM::Vector> reducedRHS = spatialbasis->transposeMult(
+                    B_carom);
         CAROM::Vector reducedSol(numColumnRB, false);
         assembleTimer.Stop();
 
@@ -357,8 +358,6 @@ double simulation()
 
         // 24. reconstruct FOM state
         spatialbasis->mult(reducedSol, X_carom);
-        delete spatialbasis;
-        delete reducedRHS;
     }
 
     // 25. Recover the parallel grid function corresponding to X. This is the
@@ -570,7 +569,7 @@ public:
     {
 
     }
-    double EvaluateCost(std::vector<double> inputs) const override
+    double EvaluateCost(std::vector<double> & inputs) const override
     {
         freq = inputs[0];
 

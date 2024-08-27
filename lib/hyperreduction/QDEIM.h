@@ -48,7 +48,7 @@ class Matrix;
  * @param[in] num_samples_req The minimum number of samples required.
  */
 void
-QDEIM(const Matrix* f_basis,
+QDEIM(const Matrix & f_basis,
       int num_f_basis_vectors_used,
       std::vector<int>& f_sampled_row,
       std::vector<int>& f_sampled_rows_per_proc,

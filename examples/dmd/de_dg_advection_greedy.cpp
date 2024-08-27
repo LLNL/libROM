@@ -597,7 +597,7 @@ double simulation()
         std::fstream fin(io_dir + "/parameters.txt", std::ios_base::in);
         double curr_param;
         std::vector<std::string> dmd_paths;
-        std::vector<CAROM::Vector*> param_vectors;
+        std::vector<CAROM::Vector> param_vectors;
 
         while (fin >> curr_param)
         {
@@ -605,25 +605,23 @@ double simulation()
 
             // INPUT / OUTPUT potential issue
             dmd_paths.push_back(io_dir + "/" + to_string(curr_f_factor));
-            CAROM::Vector* param_vector = new CAROM::Vector(1, false);
-            param_vector->item(0) = curr_f_factor;
+            CAROM::Vector param_vector(1, false);
+            param_vector(0) = curr_f_factor;
             param_vectors.push_back(param_vector);
         }
         fin.close();
 
-        CAROM::Vector* desired_param = new CAROM::Vector(1, false);
-        desired_param->item(0) = f_factor;
+        CAROM::Vector desired_param(1, false);
+        desired_param(0) = f_factor;
 
         dmd_training_timer.Start();
 
         CAROM::getParametricDMD(dmd_U, param_vectors, dmd_paths, desired_param,
                                 "G", "LS", closest_rbf_val);
 
-        dmd_U->projectInitialCondition(init);
-
+        dmd_U->projectInitialCondition(*init);
 
         dmd_training_timer.Stop();
-        delete desired_param;
 
         // Compare the DMD solution to the FOM Solution
         if (true_solution_u == NULL)
@@ -644,9 +642,8 @@ double simulation()
         }
 
         dmd_prediction_timer.Start();
-        CAROM::Vector* result_U = dmd_U->predict(t_final);
+        std::shared_ptr<CAROM::Vector> result_U = dmd_U->predict(t_final);
         dmd_prediction_timer.Stop();
-
 
         // 21. Calculate the relative error between the DMD final solution and the true solution.
         Vector dmd_solution_U(result_U->getData(),
@@ -667,8 +664,6 @@ double simulation()
             printf("Elapsed time for predicting DMD: %e second\n",
                    dmd_prediction_timer.RealTime());
         }
-
-        delete result_U;
 
         return rel_diff;
     }
@@ -700,36 +695,33 @@ double simulation()
         std::fstream fin(io_dir+"/parameters.txt", std::ios_base::in);
         double curr_param;
         std::vector<std::string> dmd_paths;
-        std::vector<CAROM::Vector*> param_vectors;
+        std::vector<CAROM::Vector> param_vectors;
 
         while (fin >> curr_param)
         {
             double curr_f_factor = curr_param;
             dmd_paths.push_back(io_dir + "/" + to_string(curr_f_factor));
-            CAROM::Vector* param_vector = new CAROM::Vector(1, false);
-            param_vector->item(0) = curr_f_factor;
+            CAROM::Vector param_vector(1, false);
+            param_vector(0) = curr_f_factor;
             param_vectors.push_back(param_vector);
         }
         fin.close();
         if (dmd_paths.size() > 1)
         {
-
-            CAROM::Vector* desired_param = new CAROM::Vector(1, false);
-            desired_param->item(0) = f_factor;
+            CAROM::Vector desired_param(1, false);
+            desired_param(0) = f_factor;
 
             dmd_training_timer.Start();
 
             CAROM::getParametricDMD(dmd_U, param_vectors, dmd_paths, desired_param,
                                     "G", "LS", closest_rbf_val);
-
-            delete desired_param;
         }
         else
         {
             dmd_U = new CAROM::DMD(dmd_paths[0]);
         }
 
-        dmd_U->projectInitialCondition(init);
+        dmd_U->projectInitialCondition(*init);
 
         dmd_training_timer.Stop();
 
@@ -740,8 +732,7 @@ double simulation()
         // THIS IS LIKE COMPUTING A RESIDUAL.
         t = t_final - 10.*dt;
 
-        CAROM::Vector* carom_tf_u_minus_some = dmd_U->predict(t);
-
+        std::shared_ptr<CAROM::Vector> carom_tf_u_minus_some = dmd_U->predict(t);
 
         for(int i = 0; i < carom_tf_u_minus_some->dim(); i++)
         {
@@ -749,8 +740,6 @@ double simulation()
         }
 
         u_gf->SetFromTrueDofs(*U);
-
-        delete carom_tf_u_minus_some;
     }
 
     ts.push_back(t);
@@ -860,32 +849,30 @@ double simulation()
         std::fstream fin(io_dir+"/parameters.txt", std::ios_base::in);
         double curr_param;
         std::vector<std::string> dmd_paths;
-        std::vector<CAROM::Vector*> param_vectors;
+        std::vector<CAROM::Vector> param_vectors;
 
         while (fin >> curr_param)
         {
             double curr_f_factor = curr_param;
 
             dmd_paths.push_back(io_dir + "/" + to_string(curr_f_factor));
-            CAROM::Vector* param_vector = new CAROM::Vector(1, false);
-            param_vector->item(0) = curr_f_factor;
+            CAROM::Vector param_vector(1, false);
+            param_vector(0) = curr_f_factor;
             param_vectors.push_back(param_vector);
         }
         fin.close();
 
-        CAROM::Vector* desired_param = new CAROM::Vector(1, false);
-        desired_param->item(0) = f_factor;
+        CAROM::Vector desired_param(1, false);
+        desired_param(0) = f_factor;
 
         dmd_training_timer.Start();
 
         CAROM::getParametricDMD(dmd_U, param_vectors, dmd_paths, desired_param,
                                 "G", "LS", closest_rbf_val);
 
-        dmd_U->projectInitialCondition(init);
-
+        dmd_U->projectInitialCondition(*init);
 
         dmd_training_timer.Stop();
-        delete desired_param;
     }
 
     if (offline || calc_err_indicator)
@@ -925,8 +912,7 @@ double simulation()
 
         }
 
-        CAROM::Vector* result_U = dmd_U->predict(t_final);
-
+        std::shared_ptr<CAROM::Vector> result_U = dmd_U->predict(t_final);
 
         Vector dmd_solution_U(result_U->getData(),
                               result_U->dim());
@@ -940,12 +926,9 @@ double simulation()
 
         if (myid == 0)
         {
-            std::cout << "Rel. diff. of DMD temp. (u) at t_final at f_factor " << f_factor
-                      << ": "
-                      << rel_diff << std::endl;
+            std::cout << "Rel. diff. of DMD temp. (u) at t_final at f_factor "
+                      << f_factor << ": " << rel_diff << std::endl;
         }
-
-        delete result_U;
 
         if (myid == 0)
         {
@@ -956,7 +939,7 @@ double simulation()
     else if (online)
     {
         dmd_prediction_timer.Start();
-        CAROM::Vector* result_U = dmd_U->predict(ts[0]);
+        std::shared_ptr<CAROM::Vector> result_U = dmd_U->predict(ts[0]);
         Vector initial_dmd_solution_U(result_U->getData(),
                                       result_U->dim());
         u_gf->SetFromTrueDofs(initial_dmd_solution_U);
@@ -971,8 +954,6 @@ double simulation()
             dmd_visit_dc.SetTime(0.0);
             dmd_visit_dc.Save();
         }
-
-        delete result_U;
 
         if (visit)
         {
@@ -993,8 +974,6 @@ double simulation()
                     dmd_visit_dc.SetCycle(i);
                     dmd_visit_dc.SetTime(ts[i]);
                     dmd_visit_dc.Save();
-
-                    delete result_U;
                 }
             }
         }
@@ -1039,8 +1018,6 @@ double simulation()
                  tot_true_solution_u_norm << std::endl;
             fout.close();
         }
-
-        delete result_U;
     }
     // 22. Calculate the relative error as commanded by the greedy algorithm.
     if (offline)
@@ -1080,7 +1057,7 @@ public:
     {
 
     }
-    double EvaluateCost(std::vector<double> inputs) const override
+    double EvaluateCost(std::vector<double> & inputs) const override
     {
         f_factor = inputs[0];
 

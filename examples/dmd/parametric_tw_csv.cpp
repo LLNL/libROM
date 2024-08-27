@@ -350,7 +350,7 @@ int main(int argc, char *argv[])
 
     vector<string> training_par_list, testing_par_list; // DATASET info
     vector<string> par_dir_list; // DATASET name
-    vector<CAROM::Vector*> par_vectors; // DATASET param
+    vector<CAROM::Vector> par_vectors; // DATASET param
 
     vector<double> indicator_init, indicator_last; // DATASET indicator range
 
@@ -375,7 +375,7 @@ int main(int argc, char *argv[])
         }
 
         dpar = par_info.size() - 1;
-        CAROM::Vector* curr_par = new CAROM::Vector(dpar, false);
+        CAROM::Vector curr_par(dpar, false);
 
         if (idx_dataset == 0)
         {
@@ -460,7 +460,7 @@ int main(int argc, char *argv[])
 
         for (int par_order = 0; par_order < dpar; ++par_order)
         {
-            curr_par->item(par_order) = stod(par_info[par_order+1]);
+            curr_par(par_order) = stod(par_info[par_order+1]);
         }
         par_vectors.push_back(curr_par);
 
@@ -782,10 +782,9 @@ int main(int argc, char *argv[])
                              << indicator_val[window] + offset_indicator * tvec[snap_bound[0]]
                              << " for DMD model #" << window << endl;
                     }
-                    CAROM::Vector* init_cond = dmd[idx_dataset][window-1]->predict(
-                                                   indicator_val[window]);
-                    dmd[idx_dataset][window]->projectInitialCondition(init_cond);
-                    delete init_cond;
+                    std::shared_ptr<CAROM::Vector> init_cond = dmd[idx_dataset][window-1]->predict(
+                                indicator_val[window]);
+                    dmd[idx_dataset][window]->projectInitialCondition(*init_cond);
                 }
 
                 // Make a directory for this window, only on the first parameter.
@@ -840,6 +839,8 @@ int main(int argc, char *argv[])
                                                   numWindows);
     } // escape if-statement of offline
 
+    CAROM::Vector curr_par(dpar, false);
+
     if (online)
     {
         par_dir_list.clear();
@@ -873,7 +874,6 @@ int main(int argc, char *argv[])
 
             CAROM_VERIFY(dpar == par_info.size() - 1);
 
-            CAROM::Vector* curr_par = new CAROM::Vector(dpar, false);
             string par_dir = par_info[0];
             par_dir_list.push_back(par_dir);
             if (myid == 0)
@@ -909,8 +909,8 @@ int main(int argc, char *argv[])
 
             for (int par_order = 0; par_order < dpar; ++par_order)
             {
-                curr_par->item(par_order) = stod(par_info[par_order+1]);
-                cout << "curr_par[" << par_order << "] = " << curr_par->item(par_order) << endl;
+                curr_par(par_order) = stod(par_info[par_order+1]);
+                cout << "curr_par[" << par_order << "] = " << curr_par(par_order) << endl;
             }
 
             vector<double> tvec(num_snap_orig);
@@ -999,10 +999,10 @@ int main(int argc, char *argv[])
                          << indicator_val[window] + offset_indicator * tvec[snap_bound[0]]
                          << " for DMD model #" << window << endl;
                 }
-                CAROM::Vector* init_cond = nullptr;
+                std::shared_ptr<CAROM::Vector> init_cond;
                 if (window == 0)
                 {
-                    init_cond = new CAROM::Vector(dim, true);
+                    init_cond.reset(new CAROM::Vector(dim, true));
                     for (int i = 0; i < dim; ++i)
                     {
                         init_cond->item(i) = sample[i];
@@ -1012,7 +1012,7 @@ int main(int argc, char *argv[])
                 {
                     init_cond = dmd[idx_dataset][window-1]->predict(indicator_val[window]);
                 }
-                dmd[idx_dataset][window]->projectInitialCondition(init_cond);
+                dmd[idx_dataset][window]->projectInitialCondition(*init_cond);
 
                 const double norm_init_cond = init_cond->norm();
                 if (myid == 0)
@@ -1021,8 +1021,6 @@ int main(int argc, char *argv[])
                          << " for parameter " << idx_dataset << ", window "
                          << window - 1 << endl;
                 }
-
-                delete init_cond;
 
                 if (window > 0 && indicator_val[window] < t_final)
                 {
@@ -1039,8 +1037,6 @@ int main(int argc, char *argv[])
                 }
 
             } // escape for-loop over window
-
-            delete curr_par;
             db->close();
         } // escape for-loop over idx_dataset
         dmd_preprocess_timer.Stop();
@@ -1164,8 +1160,8 @@ int main(int argc, char *argv[])
                     }
 
                     dmd_prediction_timer.Start();
-                    CAROM::Vector* result = dmd[idx_dataset][curr_window]->predict(
-                                                t_final - offset_indicator * tvec[snap_bound[0]]);
+                    std::shared_ptr<CAROM::Vector> result = dmd[idx_dataset][curr_window]->predict(
+                            t_final - offset_indicator * tvec[snap_bound[0]]);
                     dmd_prediction_timer.Stop();
 
                     if (myid == 0)
@@ -1181,7 +1177,6 @@ int main(int argc, char *argv[])
                     }
 
                     idx_snap = snap_bound[1]+1; // escape for-loop over idx_snap
-                    delete result;
                 }
                 else // Verify DMD prediction results against dataset
                 {
@@ -1199,8 +1194,9 @@ int main(int argc, char *argv[])
                     }
 
                     dmd_prediction_timer.Start();
-                    CAROM::Vector* result = dmd[idx_dataset][curr_window]->predict(
-                                                tval - offset_indicator * tvec[snap_bound[0]]);
+                    std::shared_ptr<CAROM::Vector> result =
+                        dmd[idx_dataset][curr_window]->predict(
+                            tval - offset_indicator * tvec[snap_bound[0]]);
                     dmd_prediction_timer.Stop();
 
                     // Calculate the relative error between the DMD final solution and the true solution.
@@ -1249,8 +1245,6 @@ int main(int argc, char *argv[])
                     {
                         hdf_db->putDoubleArray(snap, result->getData(), dim);
                     }
-
-                    delete result;
                 }
             }
             if (myid == 0 && t_final <= 0.0)
@@ -1290,11 +1284,6 @@ int main(int argc, char *argv[])
     }
 
     delete[] sample;
-    for (CAROM::Vector* v : par_vectors)
-    {
-        delete v;
-    }
-
     for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
     {
         for (int window = 0; window < numWindows; ++window)

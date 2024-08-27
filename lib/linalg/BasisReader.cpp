@@ -72,7 +72,7 @@ BasisReader::~BasisReader()
     delete d_database;
 }
 
-Matrix*
+std::unique_ptr<Matrix>
 BasisReader::getSpatialBasis()
 {
     int num_rows = getDim("basis");
@@ -84,17 +84,17 @@ BasisReader::getSpatialBasis()
                                &spatial_basis_vectors->item(0, 0),
                                num_rows*num_cols,
                                true);
-    return spatial_basis_vectors;
+    return std::unique_ptr<Matrix>(spatial_basis_vectors);
 }
 
-Matrix*
+std::unique_ptr<Matrix>
 BasisReader::getSpatialBasis(
     int n)
 {
     return getSpatialBasis(1, n);
 }
 
-Matrix*
+std::unique_ptr<Matrix>
 BasisReader::getSpatialBasis(
     int start_col,
     int end_col)
@@ -116,14 +116,14 @@ BasisReader::getSpatialBasis(
                                num_cols_to_read,
                                num_cols,
                                true);
-    return spatial_basis_vectors;
+    return std::unique_ptr<Matrix>(spatial_basis_vectors);
 }
 
-Matrix*
+std::unique_ptr<Matrix>
 BasisReader::getSpatialBasis(
     double ef)
 {
-    Vector* sv = getSingularValues();
+    std::unique_ptr<Vector> sv = getSingularValues();
     double total_energy = 0.0;
     double energy = 0.0;
     for (int i = 0; i < sv->dim(); i++)
@@ -142,11 +142,10 @@ BasisReader::getSpatialBasis(
         }
     }
 
-    delete sv;
     return getSpatialBasis(num_used_singular_values);
 }
 
-Matrix*
+std::unique_ptr<Matrix>
 BasisReader::getTemporalBasis()
 {
     int num_rows = getDim("temporal_basis");
@@ -158,17 +157,17 @@ BasisReader::getTemporalBasis()
     d_database->getDoubleArray(tmp,
                                &temporal_basis_vectors->item(0, 0),
                                num_rows*num_cols);
-    return temporal_basis_vectors;
+    return std::unique_ptr<Matrix>(temporal_basis_vectors);
 }
 
-Matrix*
+std::unique_ptr<Matrix>
 BasisReader::getTemporalBasis(
     int n)
 {
     return getTemporalBasis(1, n);
 }
 
-Matrix*
+std::unique_ptr<Matrix>
 BasisReader::getTemporalBasis(
     int start_col,
     int end_col)
@@ -189,14 +188,14 @@ BasisReader::getTemporalBasis(
                                start_col - 1,
                                num_cols_to_read,
                                num_cols);
-    return temporal_basis_vectors;
+    return std::unique_ptr<Matrix>(temporal_basis_vectors);
 }
 
-Matrix*
+std::unique_ptr<Matrix>
 BasisReader::getTemporalBasis(
     double ef)
 {
-    Vector* sv = getSingularValues();
+    std::unique_ptr<Vector> sv = getSingularValues();
     double total_energy = 0.0;
     double energy = 0.0;
     for (int i = 0; i < sv->dim(); i++)
@@ -215,11 +214,10 @@ BasisReader::getTemporalBasis(
         }
     }
 
-    delete sv;
     return getTemporalBasis(num_used_singular_values);
 }
 
-Vector*
+std::unique_ptr<Vector>
 BasisReader::getSingularValues()
 {
     char tmp[100];
@@ -232,14 +230,14 @@ BasisReader::getSingularValues()
     d_database->getDoubleArray(tmp,
                                &singular_values->item(0),
                                size);
-    return singular_values;
+    return std::unique_ptr<Vector>(singular_values);
 }
 
-Vector*
+std::unique_ptr<Vector>
 BasisReader::getSingularValues(
     double ef)
 {
-    Vector* sv = getSingularValues();
+    std::unique_ptr<Vector> sv = getSingularValues();
     double total_energy = 0.0;
     double energy = 0.0;
     for (int i = 0; i < sv->dim(); i++)
@@ -265,8 +263,7 @@ BasisReader::getSingularValues(
         truncated_singular_values->item(i) = sv->item(i);
     }
 
-    delete sv;
-    return truncated_singular_values;
+    return std::unique_ptr<Vector>(truncated_singular_values);
 }
 
 int
@@ -320,7 +317,7 @@ BasisReader::getNumSamples(
     return num_cols;
 }
 
-Matrix*
+std::unique_ptr<Matrix>
 BasisReader::getSnapshotMatrix()
 {
     int num_rows = getDim("snapshot");
@@ -333,17 +330,17 @@ BasisReader::getSnapshotMatrix()
                                &snapshots->item(0, 0),
                                num_rows*num_cols,
                                true);
-    return snapshots;
+    return std::unique_ptr<Matrix>(snapshots);
 }
 
-Matrix*
+std::unique_ptr<Matrix>
 BasisReader::getSnapshotMatrix(
     int n)
 {
     return getSnapshotMatrix(1, n);
 }
 
-Matrix*
+std::unique_ptr<Matrix>
 BasisReader::getSnapshotMatrix(
     int start_col,
     int end_col)
@@ -365,6 +362,6 @@ BasisReader::getSnapshotMatrix(
                                num_cols_to_read,
                                num_cols,
                                true);
-    return snapshots;
+    return std::unique_ptr<Matrix>(snapshots);
 }
 }

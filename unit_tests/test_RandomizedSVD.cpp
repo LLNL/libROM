@@ -78,9 +78,9 @@ TEST(RandomizedSVDTest, Test_RandomizedSVD)
     sampler.takeSample(&sample2[row_offset[d_rank]]);
     sampler.takeSample(&sample3[row_offset[d_rank]]);
 
-    const CAROM::Matrix* d_basis = sampler.getSpatialBasis();
-    const CAROM::Matrix* d_basis_right = sampler.getTemporalBasis();
-    const CAROM::Vector* sv = sampler.getSingularValues();
+    std::shared_ptr<const CAROM::Matrix> d_basis = sampler.getSpatialBasis();
+    std::shared_ptr<const CAROM::Matrix> d_basis_right = sampler.getTemporalBasis();
+    std::shared_ptr<const CAROM::Vector> sv = sampler.getSingularValues();
 
     EXPECT_EQ(d_basis->numRows(), d_num_rows);
     EXPECT_EQ(d_basis->numColumns(), 3);
@@ -160,9 +160,9 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposed)
     sampler.takeSample(&sample4[row_offset[d_rank]]);
     sampler.takeSample(&sample5[row_offset[d_rank]]);
 
-    const CAROM::Matrix* d_basis = sampler.getSpatialBasis();
-    const CAROM::Matrix* d_basis_right = sampler.getTemporalBasis();
-    const CAROM::Vector* sv = sampler.getSingularValues();
+    std::shared_ptr<const CAROM::Matrix> d_basis = sampler.getSpatialBasis();
+    std::shared_ptr<const CAROM::Matrix> d_basis_right = sampler.getTemporalBasis();
+    std::shared_ptr<const CAROM::Vector> sv = sampler.getSingularValues();
 
     EXPECT_EQ(d_basis_right->numRows(), num_samples);
     EXPECT_EQ(d_basis_right->numColumns(), 3);
@@ -236,9 +236,9 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDSmallerSubspace)
     sampler.takeSample(&sample2[row_offset[d_rank]]);
     sampler.takeSample(&sample3[row_offset[d_rank]]);
 
-    const CAROM::Matrix* d_basis = sampler.getSpatialBasis();
-    const CAROM::Matrix* d_basis_right = sampler.getTemporalBasis();
-    const CAROM::Vector* sv = sampler.getSingularValues();
+    std::shared_ptr<const CAROM::Matrix> d_basis = sampler.getSpatialBasis();
+    std::shared_ptr<const CAROM::Matrix> d_basis_right = sampler.getTemporalBasis();
+    std::shared_ptr<const CAROM::Vector> sv = sampler.getSingularValues();
 
     EXPECT_EQ(d_basis->numRows(), d_num_rows);
     EXPECT_EQ(d_basis->numColumns(), 2);
@@ -317,9 +317,9 @@ TEST(RandomizedSVDTest, Test_RandomizedSVDTransposedSmallerSubspace)
     sampler.takeSample(&sample4[row_offset[d_rank]]);
     sampler.takeSample(&sample5[row_offset[d_rank]]);
 
-    const CAROM::Matrix* d_basis = sampler.getSpatialBasis();
-    const CAROM::Matrix* d_basis_right = sampler.getTemporalBasis();
-    const CAROM::Vector* sv = sampler.getSingularValues();
+    std::shared_ptr<const CAROM::Matrix> d_basis = sampler.getSpatialBasis();
+    std::shared_ptr<const CAROM::Matrix> d_basis_right = sampler.getTemporalBasis();
+    std::shared_ptr<const CAROM::Vector> sv = sampler.getSingularValues();
 
     d_num_rows = CAROM::split_dimension(reduced_rows, MPI_COMM_WORLD);
     int reduced_rows_check = CAROM::get_global_offsets(d_num_rows, row_offset,
