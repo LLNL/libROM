@@ -4,41 +4,7 @@ runs:
     - name: Run unit tests
       run: |
           cd ${GITHUB_WORKSPACE}/build
-          ./tests/test_Vector
-          ./tests/test_Matrix
-          mpirun -n 3 --oversubscribe ./tests/test_Matrix
-          ./tests/smoke_static
-          ./tests/test_DEIM
-          ./tests/test_GNAT
-          ./tests/test_QDEIM
-          ./tests/test_S_OPT
-          mpirun -n 4 --oversubscribe tests/test_S_OPT
-          ./tests/test_IncrementalSVD
-          ./tests/test_DMD
-          mpirun -n 3 --oversubscribe tests/test_DMD
-          ./tests/test_GreedyCustomSampler
-          mpirun -n 3 --oversubscribe tests/test_GreedyCustomSampler
-          ./tests/test_RandomizedSVD
-          mpirun -n 3 --oversubscribe tests/test_RandomizedSVD
-          ./tests/test_StaticSVD
-          mpirun -n 3 --oversubscribe tests/test_StaticSVD
-          ./tests/test_IncrementalSVDBrand
-          mpirun -n 3 --oversubscribe tests/test_IncrementalSVDBrand
-          ./tests/test_HDFDatabase
-          mpirun -n 3 --oversubscribe tests/test_HDFDatabase
-          ./tests/test_QR
-          mpirun -n 3 --oversubscribe tests/test_QR
-          ./tests/test_NNLS
-          mpirun -n 3 --oversubscribe tests/test_NNLS
-      shell: bash
-    - name: Basis dataset update test
-      run: |
-          cd ${GITHUB_WORKSPACE}/build/tests
-          cp ${GITHUB_WORKSPACE}/unit_tests/baselines/basis_conversion/* ./
-          cp ${GITHUB_WORKSPACE}/scripts/data/update_basis_format.py ./
-          python3 update_basis_format.py test_basis.000000
-          python3 update_basis_format.py test_basis_snapshot.000000
-          ./test_basis_conversion
+          ctest --output-on-failure
       shell: bash
 
     - name: Run regression tests

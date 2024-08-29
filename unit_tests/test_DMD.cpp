@@ -80,8 +80,8 @@ TEST(DMDTest, Test_DMD)
         EXPECT_NEAR(result->item(i), prediction_baseline[row_offset[d_rank] + i], 1e-3);
     }
 
-    dmd.save("test_DMD");
-    CAROM::DMD dmd_load("test_DMD");
+    dmd.save("test_DMD_trained");
+    CAROM::DMD dmd_load("test_DMD_trained");
     CAROM::Vector* result_load = dmd_load.predict(3.0);
 
     for (int i = 0; i < d_num_rows; i++) {

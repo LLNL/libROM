@@ -38,15 +38,18 @@ option(MFEM_USE_GSLIB "Build libROM with MFEM using GSLIB" OFF)
 option(BUILD_STATIC "Build libROM as a static library" OFF)
 option(ENABLE_EXAMPLES "Build examples and regression tests" ON)
 option(ENABLE_DOCS "Build docs using Doxygen" OFF)
+option(ENABLE_TESTS "Build unit tests. Requires googletest to be installed" OFF)
+set(LIBROM_FLAGS "" CACHE STRING "Additional compiler flags used to compile libROM")
 
 ## Set a bunch of variables to generate a configure header
 # Enable assertion checking if debug symbols generated
 if((CMAKE_BUILD_TYPE STREQUAL "Debug") OR
     (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"))
   set(DEBUG_CHECK_ASSERTIONS "1")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+  set(LIBROM_FLAGS "${LIBROM_FLAGS} -Wall")
 endif()
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS_INIT} ${LIBROM_FLAGS}" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_INIT} ${LIBROM_FLAGS}" CACHE STRING "" FORCE)
 
 if (CMAKE_HOST_APPLE)
     # Fix linker flags for OSX to use classic linker on XCode 15.0+:
@@ -86,27 +89,9 @@ set(stdc_header_list "${stdc_header_list};stddef.h;stdio.h;stdlib.h;string.h")
 set(stdc_header_list "${stdc_header_list};tgmath.h;time.h;wchar.h;wctype.h")
 check_include_files("${stdc_header_list}" CAROM_STDC_HEADERS)
 
-# Define variables for use in generating a configure file
-if(GTEST_FOUND)
-  set(CAROM_HAS_GTEST 1)
-endif(GTEST_FOUND)
-
-if(BLAS_FOUND)
-  set(CAROM_HAVE_BLAS 1)
-endif(BLAS_FOUND)
-
-if(LAPACK_FOUND)
-  set(CAROM_HAVE_LAPACK 1)
-endif(LAPACK_FOUND)
-
-if(HDF5_FOUND)
-  set(CAROM_HAVE_HDF5 1)
-endif(HDF5_FOUND)
-
 # List minimum version requirements for dependencies where possible to make
 # packaging easier later.
 find_package(HDF5 1.8.0 REQUIRED)
-
 find_package(BLAS 3.4.0 REQUIRED)
 find_package(LAPACK 3.4.0 REQUIRED)
 
@@ -115,7 +100,14 @@ find_package(MPI 1.2 REQUIRED)
 
 find_package(ZLIB 1.2.3 REQUIRED)
 
-find_package(GTest 1.6.0)
+if (ENABLE_TESTS)
+    find_package(GTest 1.6.0 REQUIRED)
+endif()
+
+# Define variables for use in generating a configure file
+set(CAROM_HAVE_BLAS ${BLAS_FOUND})
+set(CAROM_HAVE_LAPACK ${LAPACK_FOUND})
+set(CAROM_HAVE_HDF5 ${HDF5_FOUND})
 
 if (USE_MFEM)
     find_library(MFEM mfem "${CMAKE_SOURCE_DIR}/dependencies/mfem" "${MFEM_DIR}/lib")
@@ -226,37 +218,16 @@ if (ENABLE_EXAMPLES)
     target_compile_features(${name} PRIVATE cxx_std_11)
   endforeach(name) # IN LISTS misc_exmaple_names
 
-  set(unit_test_names
-    smoke_test
-    test_include
-    uneven_dist
-    weak_scaling
-    random_test
-    smoke_static
-    load_samples)
-    
-  if (USE_MFEM)
-    set(regression_test_names
-      basisComparator
-      checkError
-      computeSpeedup
-      solutionComparator
-      fileComparator)
-  endif()
-
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests)
 
-  foreach(name IN LISTS unit_test_names)
-    add_executable(${name} unit_tests/${name}.cpp)
-    target_link_libraries(${name}
-      PRIVATE ROM ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran)
-    target_include_directories(${name}
-      PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-      ${MPI_C_INCLUDE_DIRS})
-    target_compile_features(${name} PRIVATE cxx_std_11)
-  endforeach(name) # IN LISTS unit_test_names
-
   if (USE_MFEM)
+    set(regression_test_names
+        basisComparator
+        checkError
+        computeSpeedup
+        solutionComparator
+        fileComparator)
+
     foreach(name IN LISTS regression_test_names)
       add_executable(${name} regression_tests/${name}.cpp)
       target_link_libraries(${name}
@@ -269,37 +240,10 @@ if (ENABLE_EXAMPLES)
   endif()
 endif(ENABLE_EXAMPLES)
 
-
-if(GTEST_FOUND)
-  set(unit_test_stems
-    Vector
-    Matrix
-    HDFDatabase
-    DEIM
-    DMD
-    GNAT
-    QDEIM
-    QR
-    S_OPT
-    StaticSVD
-    RandomizedSVD
-    IncrementalSVD
-    IncrementalSVDBrand
-    GreedyCustomSampler
-    NNLS
-    basis_conversion
-    PCHIPInterpolator)
-  foreach(stem IN LISTS unit_test_stems)
-    add_executable(test_${stem} unit_tests/test_${stem}.cpp)
-    target_link_libraries(test_${stem} PRIVATE ROM
-      ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES} MPI::MPI_C ${MPI_FORTRAN_LINK_FLAGS} ${MPI_FORTRAN_LIBRARIES} MPI::MPI_Fortran GTest::GTest)
-    target_include_directories(test_${stem}
-      PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-      ${MPI_C_INCLUDE_DIRS})
-    target_compile_features(test_${stem} PRIVATE cxx_std_11)
-    target_compile_definitions(test_${stem} PRIVATE CAROM_HAS_GTEST)
-  endforeach(stem) # IN LISTS unit_test_stems
-endif(GTEST_FOUND)
+if (ENABLE_TESTS)
+    enable_testing()
+    add_subdirectory(unit_tests tests)
+endif()
 
 # NOTE(goxberry@gmail.com, oxberry1@llnl.gov): This code snippet
 # builds the Doxygen documentation, but outputs said documentation to
@@ -324,5 +268,4 @@ if(${ENABLE_DOCS})
     ${CMAKE_CURRENT_SOURCE_DIR}/rom.tag
     ${CMAKE_CURRENT_BINARY_DIR}/docs/html/rom.tag)
   add_dependencies(doxygen_tagfile documentation)
-
 endif()
