@@ -7,6 +7,12 @@ runs:
           ctest --output-on-failure
       shell: bash
 
+    - name: Run valgrind test
+      run: |
+          cd ${GITHUB_WORKSPACE}/build/examples/prom
+          valgrind --leak-check=full --track-origins=yes ./poisson_global_rom -offline -f 1.0 -id 0
+      shell: bash
+
     - name: Run regression tests
       if: ${{ github.event.label.name == 'LGTM' || contains(github.event.pull_request.labels.*.name, 'LGTM') }}
       run: |
