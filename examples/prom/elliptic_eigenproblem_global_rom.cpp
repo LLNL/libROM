@@ -911,9 +911,9 @@ double Potential(const Vector &x)
             center(0) = (23 * bb_min[0] + 13 * bb_max[0]) / 36 - pseudo_time * h_max;
             d_sq = x.DistanceSquaredTo(center);
             radius_sq = pow(0.28 * L, 2.0);
-            rho += -29.0 * std::exp(-d_sq / (2 * radius_sq));
+            rho += -28.9 * std::exp(-d_sq / (2 * radius_sq));
             radius_sq = pow(1.08 * L, 2.0);
-            rho += -3.0 * std::exp(-d_sq / (2 * radius_sq));
+            rho += -3.6 * std::exp(-d_sq / (2 * radius_sq));
         }
         if (potential_well_switch == 0 || potential_well_switch == 2)
         {
@@ -921,9 +921,9 @@ double Potential(const Vector &x)
             center(0) = (13 * bb_min[0] + 23 * bb_max[0]) / 36 + pseudo_time * h_max;
             d_sq = x.DistanceSquaredTo(center);
             radius_sq = pow(0.28 * L, 2.0);
-            rho += -29.0 * std::exp(-d_sq / (2 * radius_sq));
+            rho += -28.9 * std::exp(-d_sq / (2 * radius_sq));
             radius_sq = pow(1.08 * L, 2.0);
-            rho += -3.0 * std::exp(-d_sq / (2 * radius_sq));
+            rho += -3.6 * std::exp(-d_sq / (2 * radius_sq));
         }
         return rho;
     case 6:
