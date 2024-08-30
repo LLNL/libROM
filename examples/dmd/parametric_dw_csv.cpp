@@ -600,7 +600,7 @@ int main(int argc, char *argv[])
         }
 
         dmd_curr_par.assign(numWindows, nullptr);
-        dmd.assign(numWindows, dmd_curr_par);
+        dmd.assign(npar, dmd_curr_par);
 
         vector<double> prediction_time, prediction_error;
 

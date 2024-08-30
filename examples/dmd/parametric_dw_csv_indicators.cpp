@@ -520,18 +520,19 @@ int main(int argc, char *argv[])
                 }
 
                 dmd[idx_dataset][curr_window]->takeSample(sample, tval);
-                for (int window = curr_window-1; window >= 0; --window)
-                {
-                    if (overlap_count[window] > 0)
-                    {
-                        dmd[idx_dataset][window]->takeSample(sample, tval);
-                        overlap_count[window] -= 1;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
+                // for (int window = curr_window-1; window >= 0; --window)
+                // {
+                //     if (overlap_count[window] > 0)
+                //     {
+                //         dmd[idx_dataset][window]->takeSample(sample, tval);
+                //         overlap_count[window] -= 1;
+                //         cout << "Doing an overlap" << endl;
+                //     }
+                //     else
+                //     {
+                //         break;
+                //     }
+                // }
 
                 if (curr_window+1 < numWindows && idx_snap+1 <= snap_bound[1])
                 {
@@ -681,7 +682,7 @@ int main(int argc, char *argv[])
         }
 
         dmd_curr_par.assign(numWindows, nullptr);
-        dmd.assign(numWindows, dmd_curr_par);
+        dmd.assign(npar, dmd_curr_par);
 
         vector<double> prediction_time, prediction_error;
 

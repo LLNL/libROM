@@ -376,8 +376,6 @@ DMD::constructDMD(const Matrix* f_snapshots,
     Matrix* d_S_inv = new Matrix(d_k, d_k, false);
     Matrix* d_basis_right = new Matrix(f_snapshots_in->numColumns(), d_k, false);
 
-    std::cout << "made it pas allocating the appropriate matrices and gathering their elements" << std::endl;
-
     for (int d_rank = 0; d_rank < d_num_procs; ++d_rank) {
         // V is computed in the transposed order so no reordering necessary.
         gather_block(&d_basis->item(0, 0), d_factorizer->V,
@@ -798,12 +796,18 @@ DMD::load(std::string base_file_name)
     database.close();
 
     full_file_name = base_file_name + "_basis";
-    d_basis = new Matrix();
-    d_basis->read(full_file_name);
+    if( FILE* file = std::fopen((full_file_name + ".000000").c_str(), "r"))
+    {
+        d_basis = new Matrix();
+        d_basis->read(full_file_name);
+    }
 
     full_file_name = base_file_name + "_A_tilde";
-    d_A_tilde = new Matrix();
-    d_A_tilde->read(full_file_name);
+    if( FILE* file = std::fopen((full_file_name + ".000000").c_str(), "r"))
+    {
+        d_A_tilde = new Matrix();
+        d_A_tilde->read(full_file_name);
+    }
 
     full_file_name = base_file_name + "_phi_real";
     d_phi_real = new Matrix();
