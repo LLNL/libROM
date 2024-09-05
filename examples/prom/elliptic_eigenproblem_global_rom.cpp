@@ -460,19 +460,13 @@ int main(int argc, char *argv[])
 
         if (id > 0)
         {
-            std::string snapshot_filename = baseName + "par0_snapshot";
-            CAROM::BasisGenerator* aux_generator = new CAROM::BasisGenerator(*options, isIncremental, basis_filename);
-            aux_generator->loadSamples(snapshot_filename, "snapshot");
-            const CAROM::Matrix* snapshot_mat_carom = aux_generator->getSnapshotMatrix();
-            CAROM::Vector* snapshot_vec_carom = nullptr;
-            Vector** snapshot_vecs = new Vector*[nev];
-            for (int j = 0; j < nev; j++)
+            HypreParVector** snapshot_vecs = new HypreParVector*[nev];
+            for (int i = 0; i < nev; i++)
             {
-                snapshot_vecs[j] = new Vector(size);
-                snapshot_mat_carom->getColumn(j, snapshot_vec_carom);
-                snapshot_vecs[j]->SetData(snapshot_vec_carom->getData());
+                std::string snapshot_filename = baseName + "ref_snapshot_" + std::to_string(i);
+                snapshot_vecs[i] = new HypreParVector();
+                snapshot_vecs[i]->Read(MPI_COMM_WORLD, snapshot_filename.c_str());
             }
-            delete aux_generator;
             lobpcg->SetInitialVectors(nev, snapshot_vecs);
         }
 
@@ -487,6 +481,13 @@ int main(int argc, char *argv[])
         // 14. take and write snapshots for ROM
         for (int i = 0; i < nev; i++)
         {
+            if (id == 0)
+            {
+                std::string snapshot_filename = baseName + "ref_snapshot_" + std::to_string(i);
+               const HypreParVector snapshot_vec = lobpcg->GetEigenvector(i);
+               snapshot_vec.Print(snapshot_filename.c_str());
+            }
+
             if (myid == 0)
             {
                 std::cout << " Eigenvalue " << i << ": " << eigenvalues[i] << "\n";
