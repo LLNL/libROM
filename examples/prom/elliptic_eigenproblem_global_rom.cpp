@@ -458,6 +458,24 @@ int main(int argc, char *argv[])
         lobpcg->SetMassMatrix(*M);
         lobpcg->SetOperator(*A);
 
+        if (id > 0)
+        {
+            std::string snapshot_filename = baseName + "par0_snapshot";
+            CAROM::BasisGenerator* aux_generator = new CAROM::BasisGenerator(*options, isIncremental, basis_filename);
+            aux_generator->loadSamples(snapshot_filename, "snapshot");
+            const CAROM::Matrix* snapshot_mat_carom = aux_generator->getSnapshotMatrix();
+            CAROM::Vector* snapshot_vec_carom = nullptr;
+            Vector** snapshot_vecs = new Vector*[nev];
+            for (int j = 0; j < nev; j++)
+            {
+                snapshot_vecs[j] = new Vector(size);
+                snapshot_mat_carom->getColumn(j, snapshot_vec_carom);
+                snapshot_vecs[j]->SetData(snapshot_vec_carom->getData());
+            }
+            delete aux_generator;
+            lobpcg->SetInitialVectors(nev, snapshot_vecs);
+        }
+
         // 13. Compute the eigenmodes and extract the array of eigenvalues. Define a
         //     parallel grid function to represent each of the eigenmodes returned by
         //     the solver.
