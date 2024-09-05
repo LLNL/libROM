@@ -759,6 +759,27 @@ public:
      */
     double localMin(int nmax = 0);
 
+    /**
+     * @brief Distribute this vector among MPI processes,
+     * based on the specified local dimension.
+     * This becomes distributed after this function is executed.
+     *
+     * @pre !distributed()
+     * @pre d_owns_data
+     *
+     * @param[in] local_dim dimension for local MPI rank.
+     */
+    void distribute(const int &local_dim);
+
+    /**
+     * @brief Gather all the distributed elements among MPI processes.
+     * This becomes not distributed after this function is executed.
+     *
+     * @pre distributed()
+     * @pre d_owns_data
+     */
+    void gather();
+
 private:
     /**
      * @brief The storage for the Vector's values on this processor.
@@ -789,6 +810,11 @@ private:
      * @brief The number of processors being run on.
      */
     int d_num_procs;
+
+    /**
+     * @brief The current MPI rank. If MPI is not initialized, equal to 0.
+     */
+    int d_rank;
 
     /**
      * @brief If true, this object owns its underlying data, d_vec, and

@@ -43,9 +43,11 @@ Vector::Vector(
     MPI_Initialized(&mpi_init);
     if (mpi_init) {
         MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+        MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     }
     else {
         d_num_procs = 1;
+        d_rank = 0;
     }
 }
 
@@ -74,9 +76,11 @@ Vector::Vector(
     MPI_Initialized(&mpi_init);
     if (mpi_init) {
         MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+        MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     }
     else {
         d_num_procs = 1;
+        d_rank = 0;
     }
 }
 
@@ -92,9 +96,11 @@ Vector::Vector(
     MPI_Initialized(&mpi_init);
     if (mpi_init) {
         MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
+        MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     }
     else {
         d_num_procs = 1;
+        d_rank = 0;
     }
     memcpy(d_vec, other.d_vec, d_alloc_size*sizeof(double));
 }
@@ -575,6 +581,63 @@ double Vector::localMin(int nmax)
     }
 
     return v;
+}
+
+void
+Vector::distribute(const int &local_dim)
+{
+    CAROM_VERIFY(!distributed());
+    CAROM_VERIFY(d_owns_data);
+
+    std::vector<int> row_offsets;
+    int global_dim = get_global_offsets(local_dim, row_offsets,
+                                            MPI_COMM_WORLD);
+    CAROM_VERIFY(global_dim == d_dim);
+    int local_offset = row_offsets[d_rank];
+    const int new_size = local_dim;
+
+    double *d_new_vec = new double [new_size];
+    if (new_size > 0)
+        memcpy(d_new_vec, &d_vec[local_offset], 8 * new_size);
+
+    delete [] d_vec;
+    d_vec = d_new_vec;
+    d_alloc_size = new_size;
+    d_dim = new_size;
+
+    d_distributed = true;
+}
+
+void
+Vector::gather()
+{
+    CAROM_VERIFY(distributed());
+    CAROM_VERIFY(d_owns_data);
+
+    std::vector<int> row_offsets;
+    const int global_dim = get_global_offsets(d_dim, row_offsets,
+                               MPI_COMM_WORLD);
+    const int new_size = global_dim;
+
+    int *data_offsets = new int[row_offsets.size() - 1];
+    int *data_cnts = new int[row_offsets.size() - 1];
+    for (int k = 0; k < row_offsets.size() - 1; k++)
+    {
+        data_offsets[k] = row_offsets[k];
+        data_cnts[k] = (row_offsets[k+1] - row_offsets[k]);
+    }
+
+    double *d_new_vec = new double [new_size] {0.0};
+    CAROM_VERIFY(MPI_Allgatherv(d_vec, d_dim, MPI_DOUBLE,
+                                d_new_vec, data_cnts, data_offsets, MPI_DOUBLE,
+                                MPI_COMM_WORLD) == MPI_SUCCESS);
+
+    delete [] d_vec;
+    delete [] data_offsets, data_cnts;
+    d_vec = d_new_vec;
+    d_alloc_size = new_size;
+
+    d_distributed = false;
 }
 
 int getCenterPoint(std::vector<Vector*>& points,
