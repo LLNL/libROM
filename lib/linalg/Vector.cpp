@@ -637,6 +637,7 @@ Vector::gather()
     delete [] data_offsets, data_cnts;
     d_vec = d_new_vec;
     d_alloc_size = new_size;
+    d_dim = new_size;
 
     d_distributed = false;
 }
