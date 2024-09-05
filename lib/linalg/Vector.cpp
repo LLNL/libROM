@@ -592,7 +592,7 @@ Vector::distribute(const int &local_dim)
 
     std::vector<int> row_offsets;
     int global_dim = get_global_offsets(local_dim, row_offsets,
-                                            MPI_COMM_WORLD);
+                                        MPI_COMM_WORLD);
     CAROM_VERIFY(global_dim == d_dim);
     int local_offset = row_offsets[d_rank];
     const int new_size = local_dim;
@@ -617,7 +617,7 @@ Vector::gather()
 
     std::vector<int> row_offsets;
     const int global_dim = get_global_offsets(d_dim, row_offsets,
-                               MPI_COMM_WORLD);
+                           MPI_COMM_WORLD);
     const int new_size = global_dim;
 
     int *data_offsets = new int[row_offsets.size() - 1];
