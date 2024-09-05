@@ -484,8 +484,8 @@ int main(int argc, char *argv[])
             if (id == 0)
             {
                 std::string snapshot_filename = baseName + "ref_snapshot_" + std::to_string(i);
-               const HypreParVector snapshot_vec = lobpcg->GetEigenvector(i);
-               snapshot_vec.Print(snapshot_filename.c_str());
+                const HypreParVector snapshot_vec = lobpcg->GetEigenvector(i);
+                snapshot_vec.Print(snapshot_filename.c_str());
             }
 
             if (myid == 0)
