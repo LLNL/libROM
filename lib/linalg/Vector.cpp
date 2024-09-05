@@ -14,6 +14,7 @@
 
 #include "Vector.h"
 #include "utils/HDFDatabase.h"
+#include "utils/mpi_utils.h"
 
 #include "mpi.h"
 
