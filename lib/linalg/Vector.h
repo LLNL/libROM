@@ -768,12 +768,14 @@ public:
      * @pre d_owns_data
      *
      * @param[in] local_dim dimension for local MPI rank.
+     *                      Its sum over all processes should be the same as the current dimension.
      */
-    void distribute(const int &local_dim);
+    void distribute(const int local_dim);
 
     /**
      * @brief Gather all the distributed elements among MPI processes.
      * This becomes not distributed after this function is executed.
+     * The data is identical on all processes after the operation.
      *
      * @pre distributed()
      * @pre d_owns_data

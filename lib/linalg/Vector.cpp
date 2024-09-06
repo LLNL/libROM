@@ -585,10 +585,11 @@ double Vector::localMin(int nmax)
 }
 
 void
-Vector::distribute(const int &local_dim)
+Vector::distribute(const int local_dim)
 {
     CAROM_VERIFY(!distributed());
     CAROM_VERIFY(d_owns_data);
+    CAROM_VERIFY(local_dim >= 0);
 
     std::vector<int> row_offsets;
     int global_dim = get_global_offsets(local_dim, row_offsets,
