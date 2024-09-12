@@ -467,24 +467,15 @@ int main(int argc, char *argv[])
             for (int i = 0; i < nev; i++)
             {
                 std::string snapshot_filename = baseName + "ref_snapshot_" + std::to_string(i);
+                if (myid == 0) std::cout << "Loading " << snapshot_filename << std::endl;
                 std::ifstream snapshot_infile(snapshot_filename + ".0");
-                if (!snapshot_infile.good())
-                {
-                    if (myid == 0) std::cout << "Failed to load " << snapshot_filename << std::endl;
-                    break;
-                }
-                else
-                {
-                    snapshot_vecs[i] = new HypreParVector();
-                    snapshot_vecs[i]->Read(MPI_COMM_WORLD, snapshot_filename.c_str());
-                    if (myid == 0) std::cout << "Loaded " << snapshot_filename << std::endl;
-                    if (i == nev - 1)
-                    {
-                        lobpcg->SetInitialVectors(nev, snapshot_vecs);
-                        if (myid == 0) std::cout << "LOBPCG initial vectors set" << std::endl;
-                    }
-                }
+                MFEM_VERIFY(snapshot_infile.good(), "Failed to load vector for initialization");
+                snapshot_vecs[i] = new HypreParVector();
+                snapshot_vecs[i]->Read(MPI_COMM_WORLD, snapshot_filename.c_str());
+                if (myid == 0) std::cout << "Loaded " << snapshot_filename << std::endl;
             }
+            lobpcg->SetInitialVectors(nev, snapshot_vecs);
+            if (myid == 0) std::cout << "LOBPCG initial vectors set" << std::endl;
         }
 
         // 13. Compute the eigenmodes and extract the array of eigenvalues. Define a
@@ -512,6 +503,7 @@ int main(int argc, char *argv[])
                     std::string snapshot_filename = baseName + "ref_snapshot_" + std::to_string(i);
                     const HypreParVector snapshot_vec = lobpcg->GetEigenvector(i);
                     snapshot_vec.Print(snapshot_filename.c_str());
+                    if (myid == 0) std::cout << "Saved " << snapshot_filename << std::endl;
                 }
             }
         }
