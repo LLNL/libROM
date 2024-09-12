@@ -27,6 +27,8 @@ UPDATE_LIBS=false
 INSTALL_SCALAPACK=false
 MFEM_USE_GSLIB="Off"
 MFEM_USE_LAPACK="Off"
+ENABLE_TESTS="Off"
+LIBROM_FLAGS=""
 
 cleanup_dependencies() {
     pushd .
@@ -46,7 +48,7 @@ cleanup_dependencies() {
 
 
 # Get options
-while getopts "ah:dh:gh:lh:mh:t:uh:sh" o;
+while getopts "ah:dh:gh:lh:mh:t:uh:sh:rh:f:" o;
 do
     case "${o}" in
         a)
@@ -72,6 +74,12 @@ do
             ;;
         s)
             INSTALL_SCALAPACK=true
+            ;;
+        r)
+            ENABLE_TESTS="On"
+            ;;
+        f)
+            LIBROM_FLAGS=${OPTARG}
             ;;
     *)
             echo "Unknown option."
@@ -152,7 +160,9 @@ if [ "$(uname)" == "Darwin" ]; then
   cmake ${REPO_PREFIX} \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -DUSE_MFEM=${USE_MFEM} \
-        -DMFEM_USE_GSLIB=${MFEM_USE_GSLIB}
+        -DMFEM_USE_GSLIB=${MFEM_USE_GSLIB} \
+        -DENABLE_TESTS=${ENABLE_TESTS} \
+        -DLIBROM_FLAGS="${LIBROM_FLAGS}"
   check_result $? librom-config
   make
   check_result $? librom-build
@@ -166,7 +176,9 @@ elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
         -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -DUSE_MFEM=${USE_MFEM} \
-        -DMFEM_USE_GSLIB=${MFEM_USE_GSLIB}
+        -DMFEM_USE_GSLIB=${MFEM_USE_GSLIB} \
+        -DENABLE_TESTS=${ENABLE_TESTS} \
+        -DLIBROM_FLAGS="${LIBROM_FLAGS}"
   check_result $? librom-config
   make -j8
   check_result $? librom-build
