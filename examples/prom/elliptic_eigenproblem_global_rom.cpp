@@ -946,8 +946,7 @@ double Potential(const Vector &x)
         if (potential_well_switch == 0 || potential_well_switch == 1)
         {
             // add well with first center
-            center(0) = (23 * bb_min[0] + 13 * bb_max[0]) / 36 -
-                        0.5 * h_max * pseudo_time * (bb_min[0] + bb_max[0]);
+            center(0) = (23 * bb_min[0] + 13 * bb_max[0]) / 36 - h_max * pseudo_time;
             d_sq = x.DistanceSquaredTo(center);
             radius_sq = pow(0.28 * L, 2.0);
             rho += -28.9 * std::exp(-d_sq / (2 * radius_sq));
@@ -957,8 +956,7 @@ double Potential(const Vector &x)
         if (potential_well_switch == 0 || potential_well_switch == 2)
         {
             // add well with second center
-            center(0) = (13 * bb_min[0] + 23 * bb_max[0]) / 36 +
-                        0.5 * h_max * pseudo_time * (bb_min[0] + bb_max[0]);
+            center(0) = (13 * bb_min[0] + 23 * bb_max[0]) / 36 + h_max * pseudo_time;
             d_sq = x.DistanceSquaredTo(center);
             radius_sq = pow(0.28 * L, 2.0);
             rho += -28.9 * std::exp(-d_sq / (2 * radius_sq));
@@ -983,8 +981,7 @@ double Potential(const Vector &x)
         if (potential_well_switch == 0 || potential_well_switch == 1)
         {
             // add well with first center
-            center(0) = (23 * bb_min[0] + 13 * bb_max[0]) / 36 -
-                        h_max * pseudo_time * (bb_min[0] + bb_max[0]) / 2;
+            center(0) = (23 * bb_min[0] + 13 * bb_max[0]) / 36 - h_max * pseudo_time;
             d_sq = x.DistanceSquaredTo(center);
             alpha = d_sq / pow(L * rloc, 2.0);
             rho += exp(-0.5 * alpha) * (c1 + c2 * alpha + c3 * alpha * alpha + c4 * alpha *
@@ -1001,8 +998,7 @@ double Potential(const Vector &x)
         if (potential_well_switch == 0 || potential_well_switch == 2)
         {
             // add well with second center
-            center(0) = (13 * bb_min[0] + 23 * bb_max[0]) / 36 +
-                        h_max * pseudo_time * (bb_min[0] + bb_max[0]) / 2;
+            center(0) = (13 * bb_min[0] + 23 * bb_max[0]) / 36 + h_max * pseudo_time;
             d_sq = x.DistanceSquaredTo(center);
             alpha = d_sq / pow(L * rloc, 2.0);
             rho += exp(-0.5 * alpha) * (c1 + c2 * alpha + c3 * alpha * alpha + c4 * alpha *
