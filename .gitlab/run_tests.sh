@@ -37,7 +37,7 @@ then
 fi
 
 # ---- setup googletest ----
-DEPS_DIR="${CI_BUILD_DIR}/${basehost}_deps"
+DEPS_DIR="${CI_BUILDS_DIR}/${basehost}_deps"
 echo $DEPS_DIR
 if [[ ! -d "${DEPS_DIR}" ]]; then
     mkdir ${DEPS_DIR} && cd ${DEPS_DIR}
@@ -59,7 +59,7 @@ pwd
 cmake -DCMAKE_TOOLCHAIN_FILE=${toolchain_file} \
       -DCMAKE_BUILD_TYPE=${build_type} \
       -DMPIEXEC_EXECUTABLE=${mpiexec_executable} \
-      -DMPIEXEC_PREFLAGS=${mpiexec_preflags} \
+      -DMPIEXEC_PREFLAGS="${mpiexec_preflags}" \
       -DUSE_MFEM=${use_mfem} \
       -DMFEM_USE_GSLIB=${use_gslib} \
       -DENABLE_TESTS=ON \
