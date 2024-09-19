@@ -454,8 +454,8 @@ int main(int argc, char *argv[])
         lobpcg->SetNumModes(nev);
         lobpcg->SetRandomSeed(seed);
         lobpcg->SetPreconditioner(*precond);
-        lobpcg->SetMaxIter(200);
-        lobpcg->SetTol(1e-8);
+        lobpcg->SetMaxIter(lobpcg_niter);
+        lobpcg->SetTol(1e-6);
         lobpcg->SetPrecondUsageMode(1);
         lobpcg->SetPrintLevel(verbose_level);
         lobpcg->SetMassMatrix(*M);
@@ -467,8 +467,7 @@ int main(int argc, char *argv[])
             for (int i = 0; i < nev; i++)
             {
                 std::string snapshot_filename = baseName + "ref_snapshot_" + std::to_string(i);
-                if (myid == 0) std::cout << "Loading " << snapshot_filename << std::endl;
-                std::ifstream snapshot_infile(snapshot_filename + ".0");
+                std::ifstream snapshot_infile(snapshot_filename + "." + std::to_string(myid));
                 MFEM_VERIFY(snapshot_infile.good(), "Failed to load vector for initialization");
                 snapshot_vecs[i] = new HypreParVector();
                 snapshot_vecs[i]->Read(MPI_COMM_WORLD, snapshot_filename.c_str());
@@ -612,8 +611,8 @@ int main(int argc, char *argv[])
         // Calculate errors of eigenvectors
         ostringstream mode_name_fom;
         Vector mode_fom(numRowRB);
-        double eigenvalue_threshold = max(1e-6,
-                                          0.02 * (eigenvalues_fom[nev-1] - eigenvalues_fom[0]));
+        const double eigenvalue_threshold = max(1e-6,
+                                                0.02 * (eigenvalues_fom[nev-1] - eigenvalues_fom[0]));
         std::cout << "eigenvalue_threshold = " << eigenvalue_threshold << std::endl;
         for (int i = 0; i < nev; i++)
         {
