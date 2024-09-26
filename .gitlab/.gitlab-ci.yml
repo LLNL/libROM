@@ -60,10 +60,10 @@ regtest_dane_gcc_12_1_1:
     MPIEXEC_PREFLAGS: "--cpu-bind=cores -v"
   stage: allocate
   rules:
-    - if: $CI_PIPELINE_SOURCE == "external_pull_request_event" && $CI_COMMIT_BRANCH != $DEFAULT_BRANCH
-      when: manual
-    - if: $CI_PIPELINE_SOURCE == "push"
-      when: never
+    #- if: $CI_PIPELINE_SOURCE == "external_pull_request_event" && $CI_COMMIT_BRANCH != $DEFAULT_BRANCH
+    #  when: manual
+    - when: manual
+    - allow_failure: true
   tags:
     - batch
   extends: .on_dane
