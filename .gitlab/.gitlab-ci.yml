@@ -51,3 +51,20 @@ lassen_gcc_12_2_1:
   variables:
     MODULE_LIST: cmake/3.23.1 gcc/12.2.1
   extends: .job_on_lassen
+
+regtest_dane_gcc_12_1_1:
+  variables:
+    MODULE_LIST: cmake gcc/12.1.1
+    LLNL_SLURM_SCHEDULER_PARAMETERS: --res=ci
+    MPIEXEC_EXECUTABLE: srun
+    MPIEXEC_PREFLAGS: "--cpu-bind=cores -v"
+  stage: build
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "external_pull_request_event" && $CI_COMMIT_BRANCH != $DEFAULT_BRANCH
+      when: manual
+  tags:
+    - batch
+  extends: .on_dane
+  script:
+    - module load ${MODULE_LIST}
+    - ./regression_tests/run_regression_tests.sh
