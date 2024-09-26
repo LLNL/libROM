@@ -10,7 +10,7 @@ variables:
 
   ALLOC_NAME: ${CI_PROJECT_NAME}_ci_${CI_PIPELINE_ID}
   ALLOC_QUEUE: pci
-  ALLOC_TIME: 30
+  ALLOC_TIME: 15
   ALLOC_BANK: asccasc
 
   TEST_SCRIPT: .gitlab/run_tests.sh
@@ -58,10 +58,12 @@ regtest_dane_gcc_12_1_1:
     LLNL_SLURM_SCHEDULER_PARAMETERS: --res=ci
     MPIEXEC_EXECUTABLE: srun
     MPIEXEC_PREFLAGS: "--cpu-bind=cores -v"
-  stage: build
+  stage: allocate
   rules:
     - if: $CI_PIPELINE_SOURCE == "external_pull_request_event" && $CI_COMMIT_BRANCH != $DEFAULT_BRANCH
       when: manual
+    - if: $CI_PIPELINE_SOURCE == "push"
+      when: never
   tags:
     - batch
   extends: .on_dane
