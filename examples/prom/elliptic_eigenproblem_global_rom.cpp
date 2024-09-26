@@ -94,10 +94,14 @@ int main(int argc, char *argv[])
     int order = 1;
     int nev = 4;
     int seed = 75;
+    bool prescribe_init = false;
     int lobpcg_niter = 200;
+    double lobpcg_tol = 1e-8;
+    double eig_tol = 1e-6;
     bool slu_solver = false;
     bool sp_solver = false;
     bool cpardiso_solver = false;
+    int verbose_level = 0;
 
     bool visualization = true;
     bool visit = false;
@@ -110,8 +114,6 @@ int main(int argc, char *argv[])
     int nsets = 0;
     double ef = 1.0;
     int rdim = -1;
-    int verbose_level = 0;
-    bool prescribe_init = false;
 
     int precision = 8;
     cout.precision(precision);
@@ -168,6 +170,10 @@ int main(int argc, char *argv[])
                    "Prescribe custom Initialization of LOBPCG.");
     args.AddOption(&lobpcg_niter, "-fi", "--fom-iter",
                    "Number of iterations for the LOBPCG solver.");
+    args.AddOption(&lobpcg_tol, "-tol", "--fom-tol",
+                   "Tolerance for the LOBPCG solver.");
+    args.AddOption(&eig_tol, "-tol", "--fom-tol",
+                   "Tolerance for eigenvalues to be considered equal.");
 #ifdef MFEM_USE_SUPERLU
     args.AddOption(&slu_solver, "-slu", "--superlu", "-no-slu",
                    "--no-superlu", "Use the SuperLU Solver.");
@@ -455,7 +461,7 @@ int main(int argc, char *argv[])
         lobpcg->SetRandomSeed(seed);
         lobpcg->SetPreconditioner(*precond);
         lobpcg->SetMaxIter(lobpcg_niter);
-        lobpcg->SetTol(1e-6);
+        lobpcg->SetTol(lobpcg_tol);
         lobpcg->SetPrecondUsageMode(1);
         lobpcg->SetPrintLevel(verbose_level);
         lobpcg->SetMassMatrix(*M);
@@ -611,9 +617,6 @@ int main(int argc, char *argv[])
         // Calculate errors of eigenvectors
         ostringstream mode_name_fom;
         Vector mode_fom(numRowRB);
-        const double eigenvalue_threshold = max(1e-6,
-                                                0.02 * (eigenvalues_fom[nev-1] - eigenvalues_fom[0]));
-        std::cout << "eigenvalue_threshold = " << eigenvalue_threshold << std::endl;
         for (int i = 0; i < nev; i++)
         {
             mode_name_fom << "eigenfunction_fom_" << setfill('0') << setw(2) << i << "."
@@ -632,7 +635,7 @@ int main(int argc, char *argv[])
                     std::cout << "correlation_matrix(" << j+1 << "," << i+1 << ") = " <<
                               InnerProduct(mode_fom, modes_rom[j]) << ";" << std::endl;
                 }
-                if (abs(eigenvalues_fom[j] - eigenvalues_fom[i]) < eigenvalue_threshold)
+                if (abs(eigenvalues_fom[j] - eigenvalues_fom[i]) < eig_tol)
                 {
                     eigenvector_i.Add(InnerProduct(mode_fom, modes_rom[j]), modes_rom[j]);
                 }
