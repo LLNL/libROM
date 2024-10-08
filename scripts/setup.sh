@@ -178,9 +178,9 @@ else
     fi
     if [[ $UPDATE_LIBS == "true" ]]; then
         cd mfem_parallel
-        # NOTE(kevin): v4.5.2-dev commit. This is the mfem version used by PyMFEM v4.5.2.0.
+        # v4.7.0 commit. This is the mfem version used by PyMFEM v4.7.0.1.
         # This version matching is required to support pylibROM-PyMFEM interface.
-        git checkout 00b2a0705f647e17a1d4ffcb289adca503f28d42
+        git checkout dc9128ef596e84daf1138aa3046b826bba9d259f
         make -j 8 parallel CPPFLAGS="${ROM_CXXFLAGS}" STATIC=NO SHARED=YES MFEM_USE_MPI=YES MFEM_USE_GSLIB=${MG} MFEM_USE_LAPACK=${MFEM_USE_LAPACK:-"NO"} MFEM_USE_METIS=YES MFEM_USE_METIS_5=YES METIS_DIR="$METIS_DIR" METIS_OPT="$METIS_OPT" METIS_LIB="$METIS_LIB" MFEM_USE_SUPERLU=${MFEM_USE_SUPERLU:-"NO"} SUPERLU_DIR="$SUPERLU_DIR" SUPERLU_OPT="$SUPERLU_OPT" SUPERLU_LIB="$SUPERLU_LIB"
         check_result $? mfem-parallel-installation
     fi
