@@ -93,6 +93,7 @@ int main(int argc, char *argv[])
     bool dirichlet = true;
     int order = 1;
     int nev = 4;
+    int nev_os = 0;
     int seed = 75;
     bool prescribe_init = false;
     int lobpcg_niter = 200;
@@ -133,6 +134,8 @@ int main(int argc, char *argv[])
                    "Order (degree) of the finite elements.");
     args.AddOption(&nev, "-n", "--num-eigs",
                    "Number of desired eigenmodes.");
+    args.AddOption(&nev_os, "-nos", "--num-eigs-os",
+                   "Number of oversampled eigenmodes.");
     args.AddOption(&seed, "-s", "--seed",
                    "Random seed used to initialize LOBPCG.");
     args.AddOption(&amplitude, "-a", "--amplitude",
@@ -172,7 +175,7 @@ int main(int argc, char *argv[])
                    "Number of iterations for the LOBPCG solver.");
     args.AddOption(&lobpcg_tol, "-tol", "--fom-tol",
                    "Tolerance for the LOBPCG solver.");
-    args.AddOption(&eig_tol, "-tol", "--fom-tol",
+    args.AddOption(&eig_tol, "-eig-tol", "--eig-tol",
                    "Tolerance for eigenvalues to be considered equal.");
 #ifdef MFEM_USE_SUPERLU
     args.AddOption(&slu_solver, "-slu", "--superlu", "-no-slu",
@@ -298,7 +301,7 @@ int main(int argc, char *argv[])
     // 8. Set BasisGenerator if offline
     if (offline)
     {
-        options = new CAROM::Options(fespace->GetTrueVSize(), nev, nev,
+        options = new CAROM::Options(fespace->GetTrueVSize(), nev,
                                      update_right_SV);
         std::string snapshot_basename = baseName + "par" + std::to_string(id);
         generator = new CAROM::BasisGenerator(*options, isIncremental,
@@ -309,7 +312,7 @@ int main(int argc, char *argv[])
     if (merge)
     {
         mergeTimer.Start();
-        options = new CAROM::Options(fespace->GetTrueVSize(), max_num_snapshots, nev,
+        options = new CAROM::Options(fespace->GetTrueVSize(), max_num_snapshots,
                                      update_right_SV);
         generator = new CAROM::BasisGenerator(*options, isIncremental, basis_filename);
         for (int paramID=0; paramID<nsets; ++paramID)
@@ -457,7 +460,7 @@ int main(int argc, char *argv[])
         }
 
         lobpcg = new HypreLOBPCG(MPI_COMM_WORLD);
-        lobpcg->SetNumModes(nev);
+        lobpcg->SetNumModes(nev + nev_os);
         lobpcg->SetRandomSeed(seed);
         lobpcg->SetPreconditioner(*precond);
         lobpcg->SetMaxIter(lobpcg_niter);
@@ -469,8 +472,8 @@ int main(int argc, char *argv[])
 
         if (prescribe_init && (fom || (offline && id > 0)))
         {
-            HypreParVector** snapshot_vecs = new HypreParVector*[nev];
-            for (int i = 0; i < nev; i++)
+            HypreParVector** snapshot_vecs = new HypreParVector*[nev + nev_os];
+            for (int i = 0; i < nev + nev_os; i++)
             {
                 std::string snapshot_filename = baseName + "ref_snapshot_" + std::to_string(i);
                 std::ifstream snapshot_infile(snapshot_filename + "." + std::to_string(myid));
@@ -479,7 +482,7 @@ int main(int argc, char *argv[])
                 snapshot_vecs[i]->Read(MPI_COMM_WORLD, snapshot_filename.c_str());
                 if (myid == 0) std::cout << "Loaded " << snapshot_filename << std::endl;
             }
-            lobpcg->SetInitialVectors(nev, snapshot_vecs);
+            lobpcg->SetInitialVectors(nev + nev_os, snapshot_vecs);
             if (myid == 0) std::cout << "LOBPCG initial vectors set" << std::endl;
         }
 
@@ -496,25 +499,29 @@ int main(int argc, char *argv[])
         {
             if (myid == 0)
             {
-                std::cout << " Eigenvalue " << i << ": " << eigenvalues[i] << "\n";
+                std::cout << "Eigenvalue " << i << ": " << eigenvalues[i] << "\n";
             }
             if (offline)
             {
                 eigenfunction_i = lobpcg->GetEigenvector(i);
                 eigenfunction_i /= sqrt(InnerProduct(eigenfunction_i, eigenfunction_i));
                 generator->takeSample(eigenfunction_i.GetData());
-                if (prescribe_init && id == 0)
-                {
-                    std::string snapshot_filename = baseName + "ref_snapshot_" + std::to_string(i);
-                    const HypreParVector snapshot_vec = lobpcg->GetEigenvector(i);
-                    snapshot_vec.Print(snapshot_filename.c_str());
-                    if (myid == 0) std::cout << "Saved " << snapshot_filename << std::endl;
-                }
             }
         }
 
         if (offline)
         {
+            if (prescribe_init && id == 0)
+            {
+                for (int i = 0; i < nev + nev_os; i++)
+                {
+                    std::string snapshot_filename = baseName + "ref_snapshot_" + std::to_string(i);
+                    const HypreParVector snapshot_vec = lobpcg->GetEigenvector(i);
+                    snapshot_vec.Print(snapshot_filename.c_str());
+                    if (myid == 0) std::cout << "Saved " << snapshot_filename <<
+                                                 " for LOBPCG initialization" << std::endl;
+                }
+            }
             generator->writeSnapshot();
             delete generator;
             delete options;
