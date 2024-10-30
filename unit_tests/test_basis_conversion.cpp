@@ -8,9 +8,11 @@
  *
  *****************************************************************************/
 
+#include <iostream>
+
 #ifdef CAROM_HAS_GTEST
 
-#include<gtest/gtest.h>
+#include <gtest/gtest.h>
 #include "linalg/BasisReader.h"
 #include "linalg/Matrix.h"
 #include <algorithm>

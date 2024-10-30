@@ -35,7 +35,11 @@ Compilation options:
 
 - -a: Compile a special build for the LLNL codebase: Ardra
 - -d: Compile in debug mode.
+- -f: Specify additional compiler flags
 - -m: Compile with MFEM (required to run the libROM examples)
+- -g: Compile MFEM with GSLib (requires -m)
+- -r: Compile unit tests (requires Googletest)
+- -s: Compile and use a local SCALAPACK
 - -t: Use your own cmake/toolchain
 - -u: Update all of libROM's dependencies.
 
@@ -92,7 +96,9 @@ Docker container [`librom_env`](https://ghcr.io/llnl/librom/librom_env) provides
 
 # libROM CI
 
-libROM leverages GitHub Actions for CI. The CI currently applies only to commits to pull requests.  Unit tests run for all PR commits. Upon the addition of the `LGTM` label, both the unit tests and regression tests run. While the `LGTM` label is still present, all subsequent commits run both unit tests and regression tests. 
+libROM leverages GitHub Actions for CI. The CI currently applies only to commits to pull requests.  Unit tests run for all PR commits. Upon the addition of the `LGTM` label, both the unit tests and regression tests run. While the `LGTM` label is still present, all subsequent commits run both unit tests and regression tests.
+
+To compile and run unit tests locally, build using the `-r` option to `compile.sh` or with `-DENABLE_TESTS=ON`. Building the unit tests will require Googletest to be installed. Unit tests can be run using `ctest` from the root build directory.
 
 # License
 

@@ -70,11 +70,13 @@ using namespace mfem;
 double Conductivity(const Vector &x);
 double Potential(const Vector &x);
 int problem = 1;
-double amplitude = -800.0;
-double pseudo_time = 0.0;
-int potential_well_switch = 0;
-Vector bb_min, bb_max;
-double h_min, h_max, k_min, k_max;
+
+double amplitude = -800.0; // amplitude of coefficient fields
+double pseudo_time = 0.0; // potential parametetr
+Vector bb_min, bb_max; // bounding box
+double h_min, h_max, k_min, k_max; // mesh size
+double L = 1.0; // scaling factor
+int potential_well_switch = 0; // switch for separate training
 
 int main(int argc, char *argv[])
 {
@@ -91,11 +93,16 @@ int main(int argc, char *argv[])
     bool dirichlet = true;
     int order = 1;
     int nev = 4;
+    int nev_os = 0;
     int seed = 75;
+    bool prescribe_init = false;
     int lobpcg_niter = 200;
+    double lobpcg_tol = 1e-8;
+    double eig_tol = 1e-6;
     bool slu_solver = false;
     bool sp_solver = false;
     bool cpardiso_solver = false;
+    int verbose_level = 0;
 
     bool visualization = true;
     bool visit = false;
@@ -108,7 +115,6 @@ int main(int argc, char *argv[])
     int nsets = 0;
     double ef = 1.0;
     int rdim = -1;
-    int verbose_level = 0;
 
     int precision = 8;
     cout.precision(precision);
@@ -128,6 +134,8 @@ int main(int argc, char *argv[])
                    "Order (degree) of the finite elements.");
     args.AddOption(&nev, "-n", "--num-eigs",
                    "Number of desired eigenmodes.");
+    args.AddOption(&nev_os, "-nos", "--num-eigs-os",
+                   "Number of oversampled eigenmodes.");
     args.AddOption(&seed, "-s", "--seed",
                    "Random seed used to initialize LOBPCG.");
     args.AddOption(&amplitude, "-a", "--amplitude",
@@ -161,8 +169,14 @@ int main(int argc, char *argv[])
                    "Reduced dimension.");
     args.AddOption(&verbose_level, "-v", "--verbose",
                    "Set the verbosity level of the LOBPCG solver and preconditioner. 0 is off.");
+    args.AddOption(&prescribe_init, "-init", "--init", "-no-init", "--no-init",
+                   "Prescribe custom Initialization of LOBPCG.");
     args.AddOption(&lobpcg_niter, "-fi", "--fom-iter",
                    "Number of iterations for the LOBPCG solver.");
+    args.AddOption(&lobpcg_tol, "-tol", "--fom-tol",
+                   "Tolerance for the LOBPCG solver.");
+    args.AddOption(&eig_tol, "-eig-tol", "--eig-tol",
+                   "Tolerance for eigenvalues to be considered equal.");
 #ifdef MFEM_USE_SUPERLU
     args.AddOption(&slu_solver, "-slu", "--superlu", "-no-slu",
                    "--no-superlu", "Use the SuperLU Solver.");
@@ -287,7 +301,7 @@ int main(int argc, char *argv[])
     // 8. Set BasisGenerator if offline
     if (offline)
     {
-        options = new CAROM::Options(fespace->GetTrueVSize(), nev, nev,
+        options = new CAROM::Options(fespace->GetTrueVSize(), nev,
                                      update_right_SV);
         std::string snapshot_basename = baseName + "par" + std::to_string(id);
         generator = new CAROM::BasisGenerator(*options, isIncremental,
@@ -298,7 +312,7 @@ int main(int argc, char *argv[])
     if (merge)
     {
         mergeTimer.Start();
-        options = new CAROM::Options(fespace->GetTrueVSize(), max_num_snapshots, nev,
+        options = new CAROM::Options(fespace->GetTrueVSize(), max_num_snapshots,
                                      update_right_SV);
         generator = new CAROM::BasisGenerator(*options, isIncremental, basis_filename);
         for (int paramID=0; paramID<nsets; ++paramID)
@@ -446,15 +460,31 @@ int main(int argc, char *argv[])
         }
 
         lobpcg = new HypreLOBPCG(MPI_COMM_WORLD);
-        lobpcg->SetNumModes(nev);
+        lobpcg->SetNumModes(nev + nev_os);
         lobpcg->SetRandomSeed(seed);
         lobpcg->SetPreconditioner(*precond);
-        lobpcg->SetMaxIter(200);
-        lobpcg->SetTol(1e-8);
+        lobpcg->SetMaxIter(lobpcg_niter);
+        lobpcg->SetTol(lobpcg_tol);
         lobpcg->SetPrecondUsageMode(1);
         lobpcg->SetPrintLevel(verbose_level);
         lobpcg->SetMassMatrix(*M);
         lobpcg->SetOperator(*A);
+
+        if (prescribe_init && (fom || (offline && id > 0)))
+        {
+            HypreParVector** snapshot_vecs = new HypreParVector*[nev + nev_os];
+            for (int i = 0; i < nev + nev_os; i++)
+            {
+                std::string snapshot_filename = baseName + "ref_snapshot_" + std::to_string(i);
+                std::ifstream snapshot_infile(snapshot_filename + "." + std::to_string(myid));
+                MFEM_VERIFY(snapshot_infile.good(), "Failed to load vector for initialization");
+                snapshot_vecs[i] = new HypreParVector();
+                snapshot_vecs[i]->Read(MPI_COMM_WORLD, snapshot_filename.c_str());
+                if (myid == 0) std::cout << "Loaded " << snapshot_filename << std::endl;
+            }
+            lobpcg->SetInitialVectors(nev + nev_os, snapshot_vecs);
+            if (myid == 0) std::cout << "LOBPCG initial vectors set" << std::endl;
+        }
 
         // 13. Compute the eigenmodes and extract the array of eigenvalues. Define a
         //     parallel grid function to represent each of the eigenmodes returned by
@@ -469,7 +499,7 @@ int main(int argc, char *argv[])
         {
             if (myid == 0)
             {
-                std::cout << " Eigenvalue " << i << ": " << eigenvalues[i] << "\n";
+                std::cout << "Eigenvalue " << i << ": " << eigenvalues[i] << "\n";
             }
             if (offline)
             {
@@ -481,6 +511,17 @@ int main(int argc, char *argv[])
 
         if (offline)
         {
+            if (prescribe_init && id == 0)
+            {
+                for (int i = 0; i < nev + nev_os; i++)
+                {
+                    std::string snapshot_filename = baseName + "ref_snapshot_" + std::to_string(i);
+                    const HypreParVector snapshot_vec = lobpcg->GetEigenvector(i);
+                    snapshot_vec.Print(snapshot_filename.c_str());
+                    if (myid == 0) std::cout << "Saved " << snapshot_filename <<
+                                                 " for LOBPCG initialization" << std::endl;
+                }
+            }
             generator->writeSnapshot();
             delete generator;
             delete options;
@@ -591,12 +632,12 @@ int main(int argc, char *argv[])
             eigenvector_i = 0.0;
             for (int j = 0; j < nev; j++)
             {
-                if (myid == 0 && verbose_level > 0)
+                if (myid == 0)
                 {
                     std::cout << "correlation_matrix(" << j+1 << "," << i+1 << ") = " <<
                               InnerProduct(mode_fom, modes_rom[j]) << ";" << std::endl;
                 }
-                if (abs(eigenvalues_fom[j] - eigenvalues_fom[i]) < 1e-6)
+                if (abs(eigenvalues_fom[j] - eigenvalues_fom[i]) < eig_tol)
                 {
                     eigenvector_i.Add(InnerProduct(mode_fom, modes_rom[j]), modes_rom[j]);
                 }
@@ -838,27 +879,36 @@ double Conductivity(const Vector &x)
     case 3:
     case 4:
         return 1.0;
+    case 5:
+    case 6:
+        L = (bb_max[0] - bb_min[0]) / 18.0;
+        return pow(L, 2.0);
     }
-    return 0.0;
+    return 1.0;
 }
 
 double Potential(const Vector &x)
 {
     Vector center(x.Size());
     double rho = 0.0;
+    double rho_bg = -5.0;
+    double d_sq, radius_sq;
+
     switch (problem)
     {
     case 1:
     case 2:
         return 0.0;
     case 3:
+        radius_sq = pow(4.0 * h_max, 2.0);
         // center = (0.5 + t*h, 0.5)
         center(0) = 0.5 * (bb_min[0] + bb_max[0]) + pseudo_time * h_max;
         for (int i = 1; i < x.Size(); i++)
             center(i) = 0.5 * (bb_min[i] + bb_max[i]);
-        return amplitude * std::exp(-x.DistanceSquaredTo(center) / pow(4.0 * h_max,
-                                    2.0));
+        d_sq = x.DistanceSquaredTo(center);
+        return amplitude * std::exp(-d_sq / (2 * radius_sq));
     case 4:
+        radius_sq = pow(4.0 * h_max, 2.0);
         if (potential_well_switch == 0 || potential_well_switch == 1)
         {
             // add well with first center
@@ -868,8 +918,8 @@ double Potential(const Vector &x)
                         (bb_min[1] + bb_max[1]);
             for (int i = 2; i < x.Size(); i++)
                 center(i) = 0.25 * (bb_min[i] + bb_max[i]);
-            rho += amplitude * std::exp(-x.DistanceSquaredTo(center) / pow(4.0 * h_max,
-                                        2.0));
+            d_sq = x.DistanceSquaredTo(center);
+            rho += amplitude * std::exp(-d_sq / (2 * radius_sq));
         }
         if (potential_well_switch == 0 || potential_well_switch == 2)
         {
@@ -880,8 +930,82 @@ double Potential(const Vector &x)
                         (bb_min[1] + bb_max[1]);
             for (int i = 2; i < x.Size(); i++)
                 center(i) = 0.75 * (bb_min[i] + bb_max[i]);
-            rho += amplitude * std::exp(-x.DistanceSquaredTo(center) / pow(4.0 * h_max,
-                                        2.0));
+            d_sq = x.DistanceSquaredTo(center);
+            rho += amplitude * std::exp(-d_sq / (2 * radius_sq));
+        }
+        return rho;
+    case 5:
+        L = (bb_max[0] - bb_min[0]) / 18.0;
+        for (int i = 1; i < x.Size(); i++)
+            center(i) = (bb_min[i] + bb_max[i]) / 2;
+        if (potential_well_switch == 0 || potential_well_switch == 1)
+        {
+            // add well with first center
+            center(0) = (23 * bb_min[0] + 13 * bb_max[0]) / 36 - h_max * pseudo_time;
+            d_sq = x.DistanceSquaredTo(center);
+            radius_sq = pow(0.28 * L, 2.0);
+            rho += -28.9 * std::exp(-d_sq / (2 * radius_sq));
+            radius_sq = pow(1.08 * L, 2.0);
+            rho += -3.6 * std::exp(-d_sq / (2 * radius_sq));
+        }
+        if (potential_well_switch == 0 || potential_well_switch == 2)
+        {
+            // add well with second center
+            center(0) = (13 * bb_min[0] + 23 * bb_max[0]) / 36 + h_max * pseudo_time;
+            d_sq = x.DistanceSquaredTo(center);
+            radius_sq = pow(0.28 * L, 2.0);
+            rho += -28.9 * std::exp(-d_sq / (2 * radius_sq));
+            radius_sq = pow(1.08 * L, 2.0);
+            rho += -3.6 * std::exp(-d_sq / (2 * radius_sq));
+        }
+        return rho;
+    case 6:
+        L = (bb_max[0] - bb_min[0]) / 18.0;
+        for (int i = 1; i < x.Size(); i++)
+            center(i) = (bb_min[i] + bb_max[i]) / 2;
+
+        // coefficients for H
+        double rloc = 0.4;
+        double c1 = -14.081155;
+        double c2 = 9.626220;
+        double c3 = -1.783616;
+        double c4 = 0.085152;
+        double zion = 3.0;
+
+        double alpha;
+        if (potential_well_switch == 0 || potential_well_switch == 1)
+        {
+            // add well with first center
+            center(0) = (23 * bb_min[0] + 13 * bb_max[0]) / 36 - h_max * pseudo_time;
+            d_sq = x.DistanceSquaredTo(center);
+            alpha = d_sq / pow(L * rloc, 2.0);
+            rho += exp(-0.5 * alpha) * (c1 + c2 * alpha + c3 * alpha * alpha + c4 * alpha *
+                                        alpha * alpha);
+            if (d_sq > 1.e-16)
+            {
+                rho -= zion * erf(sqrt(d_sq) / (sqrt(2.0) * rloc)) / sqrt(d_sq);
+            }
+            else
+            {
+                rho -= zion * sqrt(2.0) / (sqrt(M_PI) * rloc);
+            }
+        }
+        if (potential_well_switch == 0 || potential_well_switch == 2)
+        {
+            // add well with second center
+            center(0) = (13 * bb_min[0] + 23 * bb_max[0]) / 36 + h_max * pseudo_time;
+            d_sq = x.DistanceSquaredTo(center);
+            alpha = d_sq / pow(L * rloc, 2.0);
+            rho += exp(-0.5 * alpha) * (c1 + c2 * alpha + c3 * alpha * alpha + c4 * alpha *
+                                        alpha * alpha);
+            if (d_sq > 1.e-16)
+            {
+                rho -= zion * erf(sqrt(d_sq) / (sqrt(2.0) * rloc)) / sqrt(d_sq);
+            }
+            else
+            {
+                rho -= zion * sqrt(2.0) / (sqrt(M_PI) * rloc);
+            }
         }
         return rho;
     }

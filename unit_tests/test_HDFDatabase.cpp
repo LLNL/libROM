@@ -8,9 +8,11 @@
  *
  *****************************************************************************/
 
+#include <iostream>
+
 #ifdef CAROM_HAS_GTEST
 
-#include<gtest/gtest.h>
+#include <gtest/gtest.h>
 #include "linalg/BasisGenerator.h"
 #include "utils/HDFDatabase.h"
 #include <algorithm>

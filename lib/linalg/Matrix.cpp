@@ -811,7 +811,7 @@ Matrix::gather()
     }
 
     double *d_new_mat = new double [new_size] {0.0};
-    CAROM_VERIFY(MPI_Allgatherv(d_mat, d_alloc_size, MPI_DOUBLE,
+    CAROM_VERIFY(MPI_Allgatherv(d_mat, d_num_rows * d_num_cols, MPI_DOUBLE,
                                 d_new_mat, data_cnts, data_offsets, MPI_DOUBLE,
                                 MPI_COMM_WORLD) == MPI_SUCCESS);
 

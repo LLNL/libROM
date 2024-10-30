@@ -92,8 +92,8 @@ WORKDIR $LIB_DIR
 # install mfem
 RUN git clone https://github.com/mfem/mfem.git mfem_parallel
 WORKDIR ./mfem_parallel
-# v4.5.2-dev commit. This is the mfem version used by PyMFEM v4.5.2.0.
-RUN git checkout 00b2a0705f647e17a1d4ffcb289adca503f28d42
+# v_4.7 commit. This is the mfem version used by PyMFEM v4.7.0.1.
+RUN git checkout dc9128ef596e84daf1138aa3046b826bba9d259f
 #RUN tar -zxvf mfem-4.5.tar.gz
 #RUN mv mfem-4.5 mfem_parallel
 #RUN git pull
