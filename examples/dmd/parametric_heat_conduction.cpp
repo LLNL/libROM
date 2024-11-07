@@ -516,7 +516,7 @@ int main(int argc, char *argv[])
     ode_solver->Init(oper);
     double t = 0.0;
     vector<double> ts;
-    CAROM::Vector* init = NULL;
+    std::unique_ptr<CAROM::Vector> init;
 
     CAROM::Database *db = NULL;
     if (csvFormat)
@@ -528,7 +528,7 @@ int main(int argc, char *argv[])
 
     fom_timer.Stop();
 
-    CAROM::DMD* dmd_u = NULL;
+    std::unique_ptr<CAROM::DMD> dmd_u;
 
     if (offline)
     {
@@ -536,7 +536,7 @@ int main(int argc, char *argv[])
 
         // 11. Create DMD object and take initial sample.
         u_gf.SetFromTrueDofs(u);
-        dmd_u = new CAROM::DMD(u.Size(), dt);
+        dmd_u.reset(new CAROM::DMD(u.Size(), dt));
         dmd_u->takeSample(u.GetData(), t);
 
         if (myid == 0)
@@ -549,7 +549,7 @@ int main(int argc, char *argv[])
     if (online)
     {
         u_gf.SetFromTrueDofs(u);
-        init = new CAROM::Vector(u.GetData(), u.Size(), true);
+        init.reset(new CAROM::Vector(u.GetData(), u.Size(), true));
     }
 
     if (save_dofs && myid == 0)
@@ -870,10 +870,6 @@ int main(int argc, char *argv[])
     // 16. Free the used memory.
     delete ode_solver;
     delete pmesh;
-    if (offline)
-    {
-        delete dmd_u;
-    }
 
 #ifdef MFEM_USE_GSLIB
     delete pws;

@@ -588,8 +588,7 @@ int main(int argc, char *argv[])
     }
 
     StopWatch dmd_training_timer, dmd_preprocess_timer, dmd_prediction_timer;
-    vector<vector<CAROM::DMD*>> dmd;
-    vector<CAROM::DMD*> dmd_curr_par;
+    vector<vector<std::unique_ptr<CAROM::DMD>>> dmd(npar);
     double* sample = new double[dim];
 
     if (offline)
@@ -609,25 +608,23 @@ int main(int argc, char *argv[])
                 cout << "Loading samples for " << par_dir << " to train DMD." << endl;
             }
 
-            dmd_curr_par.assign(numWindows, nullptr);
+            dmd[idx_dataset].resize(numWindows);
             for (int window = 0; window < numWindows; ++window)
             {
                 if (ddt > 0.0)
                 {
-                    dmd_curr_par[window] = new CAROM::AdaptiveDMD(dim, ddt, string(rbf),
-                            string(interp_method), admd_closest_rbf_val);
+                    dmd[idx_dataset][window].reset(new CAROM::AdaptiveDMD(dim, ddt, string(rbf),
+                                                   string(interp_method), admd_closest_rbf_val));
                 }
                 else if (dtc > 0.0)
                 {
-                    dmd_curr_par[window] = new CAROM::DMD(dim, dtc);
+                    dmd[idx_dataset][window].reset(new CAROM::DMD(dim, dtc));
                 }
                 else
                 {
-                    dmd_curr_par[window] = new CAROM::NonuniformDMD(dim);
+                    dmd[idx_dataset][window].reset(new CAROM::NonuniformDMD(dim));
                 }
             }
-            dmd.push_back(dmd_curr_par);
-            dmd_curr_par.clear();
 
             int num_snap_orig = 0;
             if (csvFormat)
@@ -823,8 +820,7 @@ int main(int argc, char *argv[])
             {
                 for (int window = 0; window < numWindows; ++window)
                 {
-                    delete dmd[idx_dataset][window];
-                    dmd[idx_dataset][window] = nullptr;
+                    dmd[idx_dataset][window].reset(nullptr);
                 }
             }
         } // escape for-loop over idx_dataset
@@ -856,14 +852,13 @@ int main(int argc, char *argv[])
             cout << "Loading " << npar << " testing datasets." << endl;
         }
 
-        dmd_curr_par.assign(numWindows, nullptr);
-        dmd.assign(npar, dmd_curr_par);
-
         int num_tests = 0;
         vector<double> prediction_time, prediction_error;
 
         for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
         {
+            dmd[idx_dataset].resize(numWindows);
+
             stringstream par_ss(testing_par_list[idx_dataset]); // testing DATASET
             vector<string> par_info;
             string par_entry;
@@ -990,7 +985,7 @@ int main(int argc, char *argv[])
                     {
                         cout << "Loading local DMD model #" << window << endl;
                     }
-                    dmd[idx_dataset][window] = new CAROM::DMD(dmd_paths[0]);
+                    dmd[idx_dataset][window].reset(new CAROM::DMD(dmd_paths[0]));
                 }
 
                 if (myid == 0)
@@ -1032,8 +1027,7 @@ int main(int argc, char *argv[])
                              << window - 1 << endl;
                     }
 
-                    delete dmd[idx_dataset][window-1];
-                    dmd[idx_dataset][window-1] = nullptr;
+                    dmd[idx_dataset][window-1].reset(nullptr);
                 }
 
             } // escape for-loop over window
@@ -1284,13 +1278,6 @@ int main(int argc, char *argv[])
     }
 
     delete[] sample;
-    for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
-    {
-        for (int window = 0; window < numWindows; ++window)
-        {
-            delete dmd[idx_dataset][window];
-        }
-    }
 
     return 0;
 }

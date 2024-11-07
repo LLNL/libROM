@@ -140,6 +140,11 @@ DMDc::~DMDc()
     {
         delete snapshot;
     }
+
+    for (auto control : d_controls)
+    {
+        delete control;
+    }
 }
 
 void DMDc::setOffset(std::shared_ptr<Vector> & offset_vector)
@@ -362,8 +367,8 @@ DMDc::constructDMDc(const Matrix & f_snapshots,
                                    d_num_singular_vectors << " for input." << std::endl;
 
     // Allocate the appropriate matrices and gather their elements.
-    Matrix* d_basis_in = new Matrix(f_snapshots_in->numRows(), d_k_in,
-                                    f_snapshots_in->distributed());
+    std::unique_ptr<Matrix> d_basis_in(new Matrix(f_snapshots_in->numRows(), d_k_in,
+                                       f_snapshots_in->distributed()));
     Matrix* d_S_inv = new Matrix(d_k_in, d_k_in, false);
     Matrix* d_basis_right = new Matrix(f_snapshots_in->numColumns(), d_k_in, false);
 
@@ -477,10 +482,18 @@ DMDc::constructDMDc(const Matrix & f_snapshots,
                          row_offset[static_cast<unsigned>(d_rank)],
                          d_rank);
         }
+
+        free_matrix_data(d_factorizer_out->U);
+        free_matrix_data(d_factorizer_out->V);
+        free(d_factorizer_out->U);
+        free(d_factorizer_out->V);
+        free(d_factorizer_out->S);
+
+        release_context(&svd_output);
     }
     else
     {
-        d_basis.reset(d_basis_in);
+        d_basis.reset(d_basis_in.release());
         d_k = d_k_in;
     }
 
@@ -550,6 +563,12 @@ DMDc::constructDMDc(const Matrix & f_snapshots,
     delete f_snapshots_out;
     delete eigenpair.ev_real;
     delete eigenpair.ev_imaginary;
+
+    free_matrix_data(d_factorizer_in->U);
+    free_matrix_data(d_factorizer_in->V);
+    free(d_factorizer_in->U);
+    free(d_factorizer_in->V);
+    free(d_factorizer_in->S);
 
     release_context(&svd_input);
 }

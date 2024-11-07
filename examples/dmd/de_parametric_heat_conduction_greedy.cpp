@@ -378,7 +378,7 @@ double simulation()
 
     fom_timer.Stop();
 
-    CAROM::DMD* dmd_u = NULL;
+    std::unique_ptr<CAROM::DMD> dmd_u;
 
     // 14. If in offline mode, create DMD object and take initial sample.
     if (offline)
@@ -386,7 +386,7 @@ double simulation()
         dmd_training_timer.Start();
 
         u_gf.SetFromTrueDofs(u);
-        dmd_u = new CAROM::DMD(u.Size(), dt);
+        dmd_u.reset(new CAROM::DMD(u.Size(), dt));
         dmd_u->takeSample(u.GetData(), t);
 
         if (myid == 0)
@@ -453,7 +453,7 @@ double simulation()
             }
             else
             {
-                dmd_u = new CAROM::DMD(dmd_paths[0]);
+                dmd_u.reset(new CAROM::DMD(dmd_paths[0]));
             }
 
             dmd_u->projectInitialCondition(*init);
@@ -728,8 +728,7 @@ double simulation()
         Vector initial_dmd_solution_u(result_u->getData(), result_u->dim());
         u_gf.SetFromTrueDofs(initial_dmd_solution_u);
 
-        VisItDataCollection dmd_visit_dc("DMD_DE_Parametric_Heat_Conduction_Greedy_"
-                                         +
+        VisItDataCollection dmd_visit_dc("DMD_DE_Parametric_Heat_Conduction_Greedy_" +
                                          to_string(radius) + "_" + to_string(alpha) + "_" +
                                          to_string(cx) + "_" + to_string(cy), pmesh);
         dmd_visit_dc.RegisterField("temperature", &u_gf);
@@ -806,10 +805,6 @@ double simulation()
     // 21. Free the used memory.
     delete ode_solver;
     delete pmesh;
-    if (dmd_u != NULL)
-    {
-        delete dmd_u;
-    }
 
     return rel_diff;
 }

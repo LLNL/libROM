@@ -53,7 +53,7 @@ namespace CAROM {
  * @param[in] reorthogonalize_W     Whether to reorthogonalize the interpolated W (basis) matrix.
  */
 template <class T>
-void getParametricDMDc(T*& parametric_dmdc,
+void getParametricDMDc(std::unique_ptr<T>& parametric_dmdc,
                        const std::vector<Vector>& parameter_points,
                        std::vector<T*>& dmdcs,
                        std::vector<std::shared_ptr<Matrix>> controls,
@@ -127,9 +127,9 @@ void getParametricDMDc(T*& parametric_dmdc,
     std::shared_ptr<CAROM::Matrix> phi_real = W->mult(*eigenpair.ev_real);
     std::shared_ptr<CAROM::Matrix> phi_imaginary = W->mult(*eigenpair.ev_imaginary);
 
-    parametric_dmdc = new T(eigs, phi_real, phi_imaginary, B_tilde,
-                            dmdcs[0]->d_k,dmdcs[0]->d_dt,
-                            dmdcs[0]->d_t_offset, dmdcs[0]->d_state_offset, W);
+    parametric_dmdc.reset(new T(eigs, phi_real, phi_imaginary, B_tilde,
+                                dmdcs[0]->d_k,dmdcs[0]->d_dt,
+                                dmdcs[0]->d_t_offset, dmdcs[0]->d_state_offset, W));
 
     delete eigenpair.ev_real;
     delete eigenpair.ev_imaginary;
@@ -158,7 +158,7 @@ void getParametricDMDc(T*& parametric_dmdc,
  * @param[in] reorthogonalize_W     Whether to reorthogonalize the interpolated W (basis) matrix.
  */
 template <class T>
-void getParametricDMDc(T*& parametric_dmdc,
+void getParametricDMDc(std::unique_ptr<T>& parametric_dmdc,
                        const std::vector<Vector>& parameter_points,
                        std::vector<std::string>& dmdc_paths,
                        std::vector<std::shared_ptr<Matrix>> controls,

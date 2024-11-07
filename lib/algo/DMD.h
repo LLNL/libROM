@@ -236,7 +236,7 @@ protected:
      *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
      * @param[in] reorthogonalize_W Whether to reorthogonalize the interpolated W (basis) matrix.
      */
-    friend void getParametricDMD<DMD>(DMD*& parametric_dmd,
+    friend void getParametricDMD<DMD>(std::unique_ptr<DMD>& parametric_dmd,
                                       const std::vector<Vector>& parameter_points,
                                       std::vector<DMD*>& dmds,
                                       const Vector & desired_point,

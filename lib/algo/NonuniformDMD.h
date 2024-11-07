@@ -97,10 +97,12 @@ protected:
      *                              "IDW" == inverse distance weighting,
      *                              "LP" == lagrangian polynomials)
      * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
-     *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
+     *                              Set the RBF value of the nearest two parameter points to a value
+     *                              between 0.0 to 1.0.
      * @param[in] reorthogonalize_W Whether to reorthogonalize the interpolated W (basis) matrix.
      */
-    friend void getParametricDMD<NonuniformDMD>(NonuniformDMD*& parametric_dmd,
+    friend void getParametricDMD<NonuniformDMD>(std::unique_ptr<NonuniformDMD>&
+            parametric_dmd,
             const std::vector<Vector>& parameter_points,
             std::vector<NonuniformDMD*>& dmds,
             const Vector & desired_point,

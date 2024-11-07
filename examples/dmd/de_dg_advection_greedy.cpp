@@ -324,44 +324,44 @@ double simulation()
 
     // 6. Define the ODE solver used for time integration. Several explicit
     //    Runge-Kutta methods are available.
-    ODESolver *ode_solver = NULL;
+    std::unique_ptr<ODESolver> ode_solver;
     switch (ode_solver_type)
     {
     // Explicit methods
     case 1:
-        ode_solver = new ForwardEulerSolver;
+        ode_solver.reset(new ForwardEulerSolver);
         break;
     case 2:
-        ode_solver = new RK2Solver(1.0);
+        ode_solver.reset(new RK2Solver(1.0));
         break;
     case 3:
-        ode_solver = new RK3SSPSolver;
+        ode_solver.reset(new RK3SSPSolver);
         break;
     case 4:
-        ode_solver = new RK4Solver;
+        ode_solver.reset(new RK4Solver);
         break;
     case 6:
-        ode_solver = new RK6Solver;
+        ode_solver.reset(new RK6Solver);
         break;
     // Implicit (L-stable) methods
     case 11:
-        ode_solver = new BackwardEulerSolver;
+        ode_solver.reset(new BackwardEulerSolver);
         break;
     case 12:
-        ode_solver = new SDIRK23Solver(2);
+        ode_solver.reset(new SDIRK23Solver(2));
         break;
     case 13:
-        ode_solver = new SDIRK33Solver;
+        ode_solver.reset(new SDIRK33Solver);
         break;
     // Implicit A-stable methods (not L-stable)
     case 22:
-        ode_solver = new ImplicitMidpointSolver;
+        ode_solver.reset(new ImplicitMidpointSolver);
         break;
     case 23:
-        ode_solver = new SDIRK23Solver;
+        ode_solver.reset(new SDIRK23Solver);
         break;
     case 24:
-        ode_solver = new SDIRK34Solver;
+        ode_solver.reset(new SDIRK34Solver);
         break;
     default:
         if (myid == 0)
@@ -389,19 +389,19 @@ double simulation()
     // 8. Define the parallel mesh by a partitioning of the serial mesh. Refine
     //    this mesh further in parallel to increase the resolution. Once the
     //    parallel mesh is defined, the serial mesh can be deleted.
-    ParMesh *pmesh = new ParMesh(MPI_COMM_WORLD, *mesh);
+    ParMesh pmesh(MPI_COMM_WORLD, *mesh);
     delete mesh;
     for (int lev = 0; lev < par_ref_levels; lev++)
     {
-        pmesh->UniformRefinement();
+        pmesh.UniformRefinement();
     }
 
     // 9. Define the parallel discontinuous DG finite element space on the
     //    parallel refined mesh of the given polynomial order.
     DG_FECollection fec(order, dim, BasisType::GaussLobatto);
-    ParFiniteElementSpace *fes = new ParFiniteElementSpace(pmesh, &fec);
+    ParFiniteElementSpace fes(&pmesh, &fec);
 
-    HYPRE_BigInt global_vSize = fes->GlobalTrueVSize();
+    HYPRE_BigInt global_vSize = fes.GlobalTrueVSize();
     if (myid == 0)
     {
         cout << "Number of unknowns: " << global_vSize << endl;
@@ -414,52 +414,51 @@ double simulation()
     FunctionCoefficient inflow(inflow_function);
     FunctionCoefficient u0(u0_function);
 
-    ParBilinearForm *m = new ParBilinearForm(fes);
-    ParBilinearForm *k = new ParBilinearForm(fes);
+    ParBilinearForm m(&fes);
+    ParBilinearForm k(&fes);
     if (pa)
     {
-        m->SetAssemblyLevel(AssemblyLevel::PARTIAL);
-        k->SetAssemblyLevel(AssemblyLevel::PARTIAL);
+        m.SetAssemblyLevel(AssemblyLevel::PARTIAL);
+        k.SetAssemblyLevel(AssemblyLevel::PARTIAL);
     }
     else if (ea)
     {
-        m->SetAssemblyLevel(AssemblyLevel::ELEMENT);
-        k->SetAssemblyLevel(AssemblyLevel::ELEMENT);
+        m.SetAssemblyLevel(AssemblyLevel::ELEMENT);
+        k.SetAssemblyLevel(AssemblyLevel::ELEMENT);
     }
     else if (fa)
     {
-        m->SetAssemblyLevel(AssemblyLevel::FULL);
-        k->SetAssemblyLevel(AssemblyLevel::FULL);
+        m.SetAssemblyLevel(AssemblyLevel::FULL);
+        k.SetAssemblyLevel(AssemblyLevel::FULL);
     }
 
-    m->AddDomainIntegrator(new MassIntegrator);
+    m.AddDomainIntegrator(new MassIntegrator);
     constexpr double alpha = -1.0;
-    k->AddDomainIntegrator(new ConvectionIntegrator(velocity, alpha));
-    k->AddInteriorFaceIntegrator(
+    k.AddDomainIntegrator(new ConvectionIntegrator(velocity, alpha));
+    k.AddInteriorFaceIntegrator(
         new NonconservativeDGTraceIntegrator(velocity, alpha));
-    k->AddBdrFaceIntegrator(
+    k.AddBdrFaceIntegrator(
         new NonconservativeDGTraceIntegrator(velocity, alpha));
 
-    ParLinearForm *b = new ParLinearForm(fes);
-    b->AddBdrFaceIntegrator(
+    ParLinearForm b(&fes);
+    b.AddBdrFaceIntegrator(
         new BoundaryFlowIntegrator(inflow, velocity, alpha));
 
     int skip_zeros = 0;
-    m->Assemble();
-    k->Assemble(skip_zeros);
-    b->Assemble();
-    m->Finalize();
-    k->Finalize(skip_zeros);
+    m.Assemble();
+    k.Assemble(skip_zeros);
+    b.Assemble();
+    m.Finalize();
+    k.Finalize(skip_zeros);
 
-    HypreParVector *B = b->ParallelAssemble();
+    std::unique_ptr<HypreParVector> B(b.ParallelAssemble());
 
     // 12. Define the initial conditions, save the corresponding grid function to
     //    a file and (optionally) save data in the VisIt format and initialize
     //    GLVis visualization.
-    ParGridFunction *u_gf = new ParGridFunction(fes);
-    u_gf->ProjectCoefficient(u0);
-    HypreParVector *U = u_gf->GetTrueDofs();
-
+    ParGridFunction u_gf(&fes);
+    u_gf.ProjectCoefficient(u0);
+    std::unique_ptr<HypreParVector> U(u_gf.GetTrueDofs());
 
     if (!online)
     {
@@ -470,10 +469,10 @@ double simulation()
                      6) << myid;
         ofstream omesh(mesh_name.str().c_str());
         omesh.precision(precision);
-        pmesh->Print(omesh);
+        pmesh.Print(omesh);
         ofstream osol(sol_name.str().c_str());
         osol.precision(precision);
-        u_gf->Save(osol);
+        u_gf.Save(osol);
     }
 
     // Create data collection for solution output: either VisItDataCollection for
@@ -484,19 +483,19 @@ double simulation()
         if (binary)
         {
 #ifdef MFEM_USE_SIDRE
-            dc = new SidreDataCollection("DG_Advection", pmesh);
+            dc = new SidreDataCollection("DG_Advection", &pmesh);
 #else
             MFEM_ABORT("Must build with MFEM_USE_SIDRE=YES for binary output.");
 #endif
         }
         else
         {
-            dc = new VisItDataCollection("DG_Advection", pmesh);
+            dc = new VisItDataCollection("DG_Advection", &pmesh);
             dc->SetPrecision(precision);
             // To save the mesh using MFEM's parallel mesh format:
             // dc->SetFormat(DataCollection::PARALLEL_FORMAT);
         }
-        dc->RegisterField("solution", u_gf);
+        dc->RegisterField("solution", &u_gf);
         dc->SetCycle(0);
         dc->SetTime(0.0);
         dc->Save();
@@ -505,9 +504,9 @@ double simulation()
     ParaViewDataCollection *pd = NULL;
     if (paraview)
     {
-        pd = new ParaViewDataCollection("DG_Advection", pmesh);
+        pd = new ParaViewDataCollection("DG_Advection", &pmesh);
         pd->SetPrefixPath("ParaView");
-        pd->RegisterField("solution", u_gf);
+        pd->RegisterField("solution", &u_gf);
         pd->SetLevelsOfDetail(order);
         pd->SetDataFormat(VTKFormat::BINARY);
         pd->SetHighOrderOutput(true);
@@ -527,11 +526,11 @@ double simulation()
         postfix += "_o" + std::to_string(order);
         const std::string collection_name = "dg_advection-p-" + postfix + ".bp";
 
-        adios2_dc = new ADIOS2DataCollection(MPI_COMM_WORLD, collection_name, pmesh);
+        adios2_dc = new ADIOS2DataCollection(MPI_COMM_WORLD, collection_name, &pmesh);
         // output data substreams are half the number of mpi processes
         adios2_dc->SetParameter("SubStreams", std::to_string(num_procs/2) );
         // adios2_dc->SetLevelsOfDetail(2);
-        adios2_dc->RegisterField("solution", u_gf);
+        adios2_dc->RegisterField("solution", &u_gf);
         adios2_dc->SetCycle(0);
         adios2_dc->SetTime(0.0);
         adios2_dc->Save();
@@ -559,7 +558,7 @@ double simulation()
         {
             sout << "parallel " << num_procs << " " << myid << "\n";
             sout.precision(precision);
-            sout << "solution\n" << *pmesh << *u_gf;
+            sout << "solution\n" << pmesh << u_gf;
             sout << flush;
         }
     }
@@ -567,7 +566,7 @@ double simulation()
     // 13. Define the time-dependent evolution operator describing the ODE
     //     right-hand side, and perform time-integration (looping over the time
     //     iterations, ti, with a time-step dt).
-    FE_Evolution adv(*m, *k, *B, prec_type);
+    FE_Evolution adv(m, k, *B, prec_type);
 
     StopWatch fom_timer, dmd_training_timer, dmd_prediction_timer;
 
@@ -577,17 +576,17 @@ double simulation()
     vector<double> ts;
     adv.SetTime(t);
     ode_solver->Init(adv);
-    CAROM::Vector* init = NULL;
+    std::unique_ptr<CAROM::Vector> init;
     CAROM::CSVDatabase csv_db;
 
     fom_timer.Stop();
 
-    CAROM::DMD* dmd_U = NULL;
+    std::unique_ptr<CAROM::DMD> dmd_U;
 
-    if(de)
+    if (de)
     {
-        u_gf->SetFromTrueDofs(*U);
-        init = new CAROM::Vector(U->GetData(), U->Size(), true);
+        u_gf.SetFromTrueDofs(*U);
+        init.reset(new CAROM::Vector(U->GetData(), U->Size(), true));
 
         ts.push_back(t);
 
@@ -673,7 +672,7 @@ double simulation()
     {
         dmd_training_timer.Start();
 
-        dmd_U = new CAROM::DMD(U->Size(), dt);
+        dmd_U.reset(new CAROM::DMD(U->Size(), dt));
         dmd_U->takeSample(U->GetData(), t);
         ts.push_back(t);
         if (myid == 0)
@@ -687,8 +686,8 @@ double simulation()
     // 15. If in online mode, save the initial vector.
     // 15. If in calc_err_indicator mode, load the current DMD database,
     //     and create a parametric DMD object at the current set of parameters.
-    u_gf->SetFromTrueDofs(*U);
-    init = new CAROM::Vector(U->GetData(), U->Size(), true); // potential problem
+    u_gf.SetFromTrueDofs(*U);
+    init.reset(new CAROM::Vector(U->GetData(), U->Size(), true));
 
     if (calc_err_indicator)
     {
@@ -718,7 +717,7 @@ double simulation()
         }
         else
         {
-            dmd_U = new CAROM::DMD(dmd_paths[0]);
+            dmd_U.reset(new CAROM::DMD(dmd_paths[0]));
         }
 
         dmd_U->projectInitialCondition(*init);
@@ -739,7 +738,7 @@ double simulation()
             (*U)[i] = (*carom_tf_u_minus_some)(i);
         }
 
-        u_gf->SetFromTrueDofs(*U);
+        u_gf.SetFromTrueDofs(*U);
     }
 
     ts.push_back(t);
@@ -761,7 +760,7 @@ double simulation()
         {
             dmd_training_timer.Start();
 
-            u_gf->SetFromTrueDofs(*U);
+            u_gf.SetFromTrueDofs(*U);
             dmd_U->takeSample(U->GetData(),t);
 
             if (myid == 0 && ti % vis_steps == 0)
@@ -784,12 +783,12 @@ double simulation()
             // 11. Extract the parallel grid function corresponding to the finite
             //     element approximation U (the local solution on each processor).
 
-            *u_gf = *U;
+            u_gf = *U;
 
             if (visualization)
             {
                 sout << "parallel " << num_procs << " " << myid << "\n";
-                sout << "solution\n" << *pmesh << *u_gf << flush;
+                sout << "solution\n" << pmesh << u_gf << flush;
             }
 
             if (visit)
@@ -942,12 +941,11 @@ double simulation()
         std::shared_ptr<CAROM::Vector> result_U = dmd_U->predict(ts[0]);
         Vector initial_dmd_solution_U(result_U->getData(),
                                       result_U->dim());
-        u_gf->SetFromTrueDofs(initial_dmd_solution_U);
+        u_gf.SetFromTrueDofs(initial_dmd_solution_U);
 
-        VisItDataCollection dmd_visit_dc("DMD_DG_Advection_Greedy_"
-                                         +
-                                         to_string(f_factor), pmesh);
-        dmd_visit_dc.RegisterField("temperature", u_gf);
+        VisItDataCollection dmd_visit_dc("DMD_DG_Advection_Greedy_" +
+                                         to_string(f_factor), &pmesh);
+        dmd_visit_dc.RegisterField("temperature", &u_gf);
         if (visit)
         {
             dmd_visit_dc.SetCycle(0);
@@ -969,7 +967,7 @@ double simulation()
 
                     Vector dmd_solution_U(result_U->getData(),
                                           result_U->dim());
-                    u_gf->SetFromTrueDofs(dmd_solution_U);
+                    u_gf.SetFromTrueDofs(dmd_solution_U);
 
                     dmd_visit_dc.SetCycle(i);
                     dmd_visit_dc.SetTime(ts[i]);
@@ -1036,14 +1034,6 @@ double simulation()
     if (!online && myid == 0)
     {
         printf("Elapsed time for solving FOM: %e second\n", fom_timer.RealTime());
-    }
-
-    // 24. Free the used memory.
-    delete ode_solver;
-    delete pmesh;
-    if (dmd_U != NULL)
-    {
-        delete dmd_U;
     }
 
     return rel_diff;

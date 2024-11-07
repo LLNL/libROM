@@ -355,8 +355,7 @@ int main(int argc, char *argv[])
     }
 
     StopWatch dmd_training_timer, dmd_preprocess_timer, dmd_prediction_timer;
-    vector<vector<CAROM::DMD*>> dmd;
-    vector<CAROM::DMD*> dmd_curr_par;
+    vector<vector<std::unique_ptr<CAROM::DMD>>> dmd(npar);
     double* sample = new double[dim];
 
     if (offline)
@@ -371,25 +370,23 @@ int main(int argc, char *argv[])
                 cout << "Loading samples for " << par_dir << " to train DMD." << endl;
             }
 
-            dmd_curr_par.assign(numWindows, nullptr);
+            dmd[idx_dataset].resize(numWindows);
             for (int window = 0; window < numWindows; ++window)
             {
                 if (ddt > 0.0)
                 {
-                    dmd_curr_par[window] = new CAROM::AdaptiveDMD(dim, ddt, string(rbf),
-                            string(interp_method), admd_closest_rbf_val);
+                    dmd[idx_dataset][window].reset(new CAROM::AdaptiveDMD(dim, ddt, string(rbf),
+                                                   string(interp_method), admd_closest_rbf_val));
                 }
                 else if (dtc > 0.0)
                 {
-                    dmd_curr_par[window] = new CAROM::DMD(dim, dtc);
+                    dmd[idx_dataset][window].reset(new CAROM::DMD(dim, dtc));
                 }
                 else
                 {
-                    dmd_curr_par[window] = new CAROM::NonuniformDMD(dim);
+                    dmd[idx_dataset][window].reset(new CAROM::NonuniformDMD(dim));
                 }
             }
-            dmd.push_back(dmd_curr_par);
-            dmd_curr_par.clear();
 
             vector<string> snap_list;
             csv_db.getStringVector(string(list_dir) + "/" + par_dir + ".csv", snap_list,
@@ -599,9 +596,6 @@ int main(int argc, char *argv[])
         {
             cout << "Loading " << npar << " testing datasets." << endl;
         }
-
-        dmd_curr_par.assign(numWindows, nullptr);
-        dmd.assign(numWindows, dmd_curr_par);
 
         vector<double> prediction_time, prediction_error;
 
@@ -891,13 +885,6 @@ int main(int argc, char *argv[])
     }
 
     delete[] sample;
-    for (int idx_dataset = 0; idx_dataset < npar; ++idx_dataset)
-    {
-        for (int window = 0; window < numWindows; ++window)
-        {
-            delete dmd[idx_dataset][window];
-        }
-    }
 
     return 0;
 }

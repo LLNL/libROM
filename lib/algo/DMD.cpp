@@ -501,6 +501,12 @@ DMD::constructDMD(const Matrix & f_snapshots,
     delete eigenpair.ev_real;
     delete eigenpair.ev_imaginary;
 
+    free_matrix_data(d_factorizer->U);
+    free_matrix_data(d_factorizer->V);
+    free(d_factorizer->U);
+    free(d_factorizer->V);
+    free(d_factorizer->S);
+
     release_context(&svd_input);
 }
 

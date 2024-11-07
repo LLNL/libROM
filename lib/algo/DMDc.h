@@ -210,7 +210,7 @@ protected:
      *                                  to a value between 0.0 to 1.0
      * @param[in] reorthogonalize_W     Whether to reorthogonalize the interpolated W (basis) matrix.
      */
-    friend void getParametricDMDc<DMDc>(DMDc*& parametric_dmdc,
+    friend void getParametricDMDc<DMDc>(std::unique_ptr<DMDc>& parametric_dmdc,
                                         const std::vector<Vector>& parameter_points,
                                         std::vector<DMDc*>& dmdcs,
                                         std::vector<std::shared_ptr<Matrix>> controls,
