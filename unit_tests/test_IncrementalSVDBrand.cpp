@@ -100,9 +100,9 @@ TEST(IncrementalSVDBrandTest, Test_IncrementalSVDBrand)
     sampler.takeSample(&sample2[row_offset[d_rank]]);
     sampler.takeSample(&sample3[row_offset[d_rank]]);
 
-    const CAROM::Matrix* d_basis = sampler.getSpatialBasis();
-    const CAROM::Matrix* d_basis_right = sampler.getTemporalBasis();
-    const CAROM::Vector* sv = sampler.getSingularValues();
+    std::shared_ptr<const CAROM::Matrix> d_basis = sampler.getSpatialBasis();
+    std::shared_ptr<const CAROM::Matrix> d_basis_right = sampler.getTemporalBasis();
+    std::shared_ptr<const CAROM::Vector> sv = sampler.getSingularValues();
 
     EXPECT_EQ(d_basis->numRows(), d_num_rows);
     EXPECT_EQ(d_basis->numColumns(), 3);

@@ -791,9 +791,9 @@ void SolveNNLS(const int rank, const double nnls_tol, const int maxNNLSnnz,
 void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
                         ParFiniteElementSpace *fespace_R,
                         ParFiniteElementSpace *fespace_W,
-                        const int nsets, const CAROM::Matrix* BR,
-                        const CAROM::Matrix* BR_snapshots,
-                        const CAROM::Matrix* BW_snapshots,
+                        const int nsets, const std::shared_ptr<CAROM::Matrix> & BR,
+                        const std::shared_ptr<const CAROM::Matrix> & BR_snapshots,
+                        const std::shared_ptr<const CAROM::Matrix> & BW_snapshots,
                         const bool precondition, const double nnls_tol,
                         const int maxNNLSnnz,
                         CAROM::Vector & sol)
@@ -883,7 +883,8 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
         if (precondition)
         {
             // Preconditioning is done by (V^T M(p_i) V)^{-1} (of size NB x NB).
-            PreconditionNNLS(fespace_R, new VectorFEMassIntegrator(a_coeff), BR, i, Gt);
+            PreconditionNNLS(fespace_R, new VectorFEMassIntegrator(a_coeff), BR.get(), i,
+                             Gt);
         }
     } // Loop (i) over snapshots
 
@@ -904,8 +905,8 @@ void SetupEQP_snapshots(const IntegrationRule *ir0, const int rank,
 // Compute EQP solution from constraints on source snapshots.
 void SetupEQP_S_snapshots(const IntegrationRule *ir0, const int rank,
                           ParFiniteElementSpace *fespace_W,
-                          const CAROM::Matrix* BW,
-                          const CAROM::Matrix* BS_snapshots,
+                          const std::shared_ptr<CAROM::Matrix> & BW,
+                          const std::shared_ptr<const CAROM::Matrix> & BS_snapshots,
                           const bool precondition, const double nnls_tol,
                           const int maxNNLSnnz,
                           CAROM::Vector & sol)
@@ -956,7 +957,7 @@ void SetupEQP_S_snapshots(const IntegrationRule *ir0, const int rank,
     if (precondition)
     {
         // Preconditioning is done by (V^T M V)^{-1} (of size NB x NB).
-        PreconditionNNLS(fespace_W, new MassIntegrator(), BW, -1, Gt);
+        PreconditionNNLS(fespace_W, new MassIntegrator(), BW.get(), -1, Gt);
     }
 
     Array<double> const& w_el = ir0->GetWeights();

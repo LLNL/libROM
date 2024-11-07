@@ -49,10 +49,10 @@ namespace CAROM {
  * @param[in] reorthogonalize_W Whether to reorthogonalize the interpolated W (basis) matrix.
  */
 template <class T>
-void getParametricDMD(T*& parametric_dmd,
-                      std::vector<Vector*>& parameter_points,
+void getParametricDMD(std::unique_ptr<T>& parametric_dmd,
+                      const std::vector<Vector>& parameter_points,
                       std::vector<T*>& dmds,
-                      Vector* desired_point,
+                      const Vector & desired_point,
                       std::string rbf = "G",
                       std::string interp_method = "LS",
                       double closest_rbf_val = 0.9,
@@ -75,48 +75,43 @@ void getParametricDMD(T*& parametric_dmd,
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    std::vector<CAROM::Matrix*> bases;
-    std::vector<CAROM::Matrix*> A_tildes;
+    std::vector<std::shared_ptr<CAROM::Matrix>> bases;
+    std::vector<std::shared_ptr<CAROM::Matrix>> A_tildes;
     for (int i = 0; i < dmds.size(); i++)
     {
         bases.push_back(dmds[i]->d_basis);
         A_tildes.push_back(dmds[i]->d_A_tilde);
     }
 
-    int ref_point = getClosestPoint(parameter_points, desired_point);
-    std::vector<CAROM::Matrix*> rotation_matrices = obtainRotationMatrices(
-                parameter_points,
-                bases, ref_point);
+    const int ref_point = getClosestPoint(parameter_points, desired_point);
+    std::vector<std::shared_ptr<CAROM::Matrix>> rotation_matrices =
+                obtainRotationMatrices(parameter_points, bases, ref_point);
 
     CAROM::MatrixInterpolator basis_interpolator(parameter_points,
             rotation_matrices, bases, ref_point, "B", rbf, interp_method, closest_rbf_val);
-    CAROM::Matrix* W = basis_interpolator.interpolate(desired_point,
-                       reorthogonalize_W);
+    std::shared_ptr<Matrix> W = basis_interpolator.interpolate(desired_point,
+                                reorthogonalize_W);
 
     CAROM::MatrixInterpolator A_tilde_interpolator(parameter_points,
             rotation_matrices, A_tildes, ref_point, "R", rbf, interp_method,
             closest_rbf_val);
-    CAROM::Matrix* A_tilde = A_tilde_interpolator.interpolate(desired_point);
+    std::shared_ptr<Matrix> A_tilde = A_tilde_interpolator.interpolate(
+                                          desired_point);
 
     // Calculate the right eigenvalues/eigenvectors of A_tilde
-    ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(A_tilde);
+    ComplexEigenPair eigenpair = NonSymmetricRightEigenSolve(*A_tilde);
     std::vector<std::complex<double>> eigs = eigenpair.eigs;
 
     // Calculate phi (phi = W * eigenvectors)
-    CAROM::Matrix* phi_real = W->mult(eigenpair.ev_real);
-    CAROM::Matrix* phi_imaginary = W->mult(eigenpair.ev_imaginary);
+    std::shared_ptr<CAROM::Matrix> phi_real = W->mult(*eigenpair.ev_real);
+    std::shared_ptr<CAROM::Matrix> phi_imaginary = W->mult(*eigenpair.ev_imaginary);
 
-    parametric_dmd = new T(eigs, phi_real, phi_imaginary, dmds[0]->d_k,
-                           dmds[0]->d_dt, dmds[0]->d_t_offset,
-                           dmds[0]->d_state_offset);
+    parametric_dmd.reset(new T(eigs, phi_real, phi_imaginary, dmds[0]->d_k,
+                               dmds[0]->d_dt, dmds[0]->d_t_offset,
+                               dmds[0]->d_state_offset));
 
-    delete W;
-    delete A_tilde;
     delete eigenpair.ev_real;
     delete eigenpair.ev_imaginary;
-
-    for (auto m : rotation_matrices)
-        delete m;
 }
 
 /**
@@ -138,10 +133,10 @@ void getParametricDMD(T*& parametric_dmd,
  * @param[in] reorthogonalize_W Whether to reorthogonalize the interpolated W (basis) matrix.
  */
 template <class T>
-void getParametricDMD(T*& parametric_dmd,
-                      std::vector<Vector*>& parameter_points,
+void getParametricDMD(std::unique_ptr<T>& parametric_dmd,
+                      const std::vector<Vector>& parameter_points,
                       std::vector<std::string>& dmd_paths,
-                      Vector* desired_point,
+                      const Vector & desired_point,
                       std::string rbf = "G",
                       std::string interp_method = "LS",
                       double closest_rbf_val = 0.9,
@@ -155,8 +150,7 @@ void getParametricDMD(T*& parametric_dmd,
     }
 
     getParametricDMD(parametric_dmd, parameter_points, dmds, desired_point,
-                     rbf, interp_method, closest_rbf_val,
-                     reorthogonalize_W);
+                     rbf, interp_method, closest_rbf_val, reorthogonalize_W);
     for (int i = 0; i < dmds.size(); i++)
     {
         delete dmds[i];

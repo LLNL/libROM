@@ -46,10 +46,9 @@ public:
      * @param[in] state_offset      The state offset.
      * @param[in] derivative_offset The derivative offset.
      */
-    NonuniformDMD(int dim,
-                  bool alt_output_basis = false,
-                  Vector* state_offset = NULL,
-                  Vector* derivative_offset = NULL);
+    NonuniformDMD(int dim, std::shared_ptr<Vector> state_offset = nullptr,
+                  std::shared_ptr<Vector> derivative_offset = nullptr,
+                  bool alt_output_basis = false);
 
     /**
      * @brief Constructor.
@@ -60,14 +59,9 @@ public:
     NonuniformDMD(std::string base_file_name);
 
     /**
-     * @brief Destroy the NonuniformDMD object
-     */
-    ~NonuniformDMD();
-
-    /**
      * @brief Set the offset of a certain order.
      */
-    void setOffset(Vector* offset_vector, int order) override;
+    void setOffset(std::shared_ptr<Vector> & offset_vector, int order) override;
 
     /**
      * @brief Load the object state to a file.
@@ -103,13 +97,15 @@ protected:
      *                              "IDW" == inverse distance weighting,
      *                              "LP" == lagrangian polynomials)
      * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
-     *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
+     *                              Set the RBF value of the nearest two parameter points to a value
+     *                              between 0.0 to 1.0.
      * @param[in] reorthogonalize_W Whether to reorthogonalize the interpolated W (basis) matrix.
      */
-    friend void getParametricDMD<NonuniformDMD>(NonuniformDMD*& parametric_dmd,
-            std::vector<Vector*>& parameter_points,
+    friend void getParametricDMD<NonuniformDMD>(std::unique_ptr<NonuniformDMD>&
+            parametric_dmd,
+            const std::vector<Vector>& parameter_points,
             std::vector<NonuniformDMD*>& dmds,
-            Vector* desired_point,
+            const Vector & desired_point,
             std::string rbf,
             std::string interp_method,
             double closest_rbf_val,
@@ -127,10 +123,12 @@ protected:
      * @param[in] state_offset d_state_offset
      * @param[in] derivative_offset d_derivative_offset
      */
-    NonuniformDMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
-                  Matrix* phi_imaginary, int k,
+    NonuniformDMD(std::vector<std::complex<double>> & eigs,
+                  std::shared_ptr<Matrix> & phi_real,
+                  std::shared_ptr<Matrix> & phi_imaginary, int k,
                   double dt, double t_offset,
-                  Vector* state_offset, Vector* derivative_offset);
+                  std::shared_ptr<Vector> & state_offset,
+                  std::shared_ptr<Vector> & derivative_offset);
 
 private:
 
@@ -155,7 +153,7 @@ private:
     /**
      * @brief Returns a pair of pointers to the state and derivative snapshot matrices
      */
-    std::pair<Matrix*, Matrix*> computeDMDSnapshotPair(const Matrix* snapshots)
+    std::pair<Matrix*, Matrix*> computeDMDSnapshotPair(const Matrix & snapshots)
     override;
 
     /**
@@ -171,13 +169,12 @@ private:
     /**
      * @brief Add the appropriate offset when predicting the solution.
      */
-    void addOffset(Vector*& result, double t, int deg) override;
+    void addOffset(Vector & result, double t, int deg) override;
 
     /**
      * @brief Derivative offset in snapshot.
      */
-    Vector* d_derivative_offset = NULL;
-
+    std::shared_ptr<Vector> d_derivative_offset;
 };
 
 }

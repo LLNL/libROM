@@ -716,7 +716,7 @@ int main(int argc, char *argv[])
         std::cout << "Predicting solution using DMD" << std::endl;
     }
 
-    CAROM::Vector* result_u = dmd_U.predict(ts[0]);
+    std::shared_ptr<CAROM::Vector> result_u = dmd_U.predict(ts[0]);
     Vector initial_dmd_solution_u(result_u->getData(), result_u->dim());
     u->SetFromTrueDofs(initial_dmd_solution_u);
 
@@ -733,8 +733,6 @@ int main(int argc, char *argv[])
         dmd_dc->Save();
     }
 
-    delete result_u;
-
     if (visit)
     {
         for (int i = 1; i < ts.size(); i++)
@@ -748,7 +746,6 @@ int main(int argc, char *argv[])
                 dmd_dc->SetCycle(i);
                 dmd_dc->SetTime(ts[i]);
                 dmd_dc->Save();
-                delete result_u;
             }
         }
     }
@@ -788,7 +785,6 @@ int main(int argc, char *argv[])
     delete pmesh;
     delete ode_solver;
     delete pd;
-    delete result_u;
 #ifdef MFEM_USE_ADIOS2
     if (adios2)
     {

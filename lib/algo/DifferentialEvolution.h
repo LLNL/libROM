@@ -96,7 +96,7 @@ public:
     /**
      * @brief Evaluate the cost function with the current set of inputs.
      */
-    virtual double EvaluateCost(std::vector<double> inputs) const = 0;
+    virtual double EvaluateCost(std::vector<double> & inputs) const = 0;
 
     /**
      * @brief Return the number of parameters.

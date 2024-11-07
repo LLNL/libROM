@@ -81,7 +81,7 @@ public:
      * @param[in] state_offset     The state offset.
      */
     DMD(int dim, double dt, bool alt_output_basis = false,
-        Vector* state_offset = NULL);
+        std::shared_ptr<Vector> state_offset = nullptr);
 
     /**
      * @brief Constructor. DMD from saved models.
@@ -94,12 +94,12 @@ public:
     /**
      * @brief Destroy the DMD object
      */
-    virtual ~DMD();
+    virtual ~DMD() { };
 
     /**
      * @brief Set the offset of a certain order.
      */
-    virtual void setOffset(Vector* offset_vector, int order);
+    virtual void setOffset(std::shared_ptr<Vector> & offset_vector, int order);
 
     /**
      * @brief Sample the new state, u_in. Any samples in d_snapshots
@@ -142,7 +142,7 @@ public:
      * @param[in] init     The initial condition.
      * @param[in] t_offset The initial time offset.
      */
-    void projectInitialCondition(const Vector* init, double t_offset = -1.0);
+    void projectInitialCondition(const Vector & init, double t_offset = -1.0);
 
     /**
      * @brief Predict state given a time. Uses the projected initial condition of the
@@ -151,7 +151,7 @@ public:
      * @param[in] t   The time of the output state
      * @param[in] deg The derivative degree of the output state
      */
-    Vector* predict(double t, int deg = 0);
+    std::unique_ptr<Vector> predict(double t, int deg = 0);
 
     /**
      * @brief Get the time offset contained within d_t_offset.
@@ -176,7 +176,7 @@ public:
     /**
      * @brief Get the snapshot matrix contained within d_snapshots.
      */
-    const Matrix* getSnapshotMatrix();
+    std::unique_ptr<const Matrix> getSnapshotMatrix();
 
     /**
      * @brief Load the object state from a file.
@@ -236,10 +236,10 @@ protected:
      *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
      * @param[in] reorthogonalize_W Whether to reorthogonalize the interpolated W (basis) matrix.
      */
-    friend void getParametricDMD<DMD>(DMD*& parametric_dmd,
-                                      std::vector<Vector*>& parameter_points,
+    friend void getParametricDMD<DMD>(std::unique_ptr<DMD>& parametric_dmd,
+                                      const std::vector<Vector>& parameter_points,
                                       std::vector<DMD*>& dmds,
-                                      Vector* desired_point,
+                                      const Vector & desired_point,
                                       std::string rbf,
                                       std::string interp_method,
                                       double closest_rbf_val,
@@ -253,7 +253,8 @@ protected:
      *                              output, i.e. phi = U^(+)*V*Omega^(-1)*X.
      * @param[in] state_offset      The state offset.
      */
-    DMD(int dim, bool alt_output_basis = false, Vector* state_offset = NULL);
+    DMD(int dim, bool alt_output_basis = false,
+        std::shared_ptr<Vector> state_offset = nullptr);
 
     /**
      * @brief Constructor. Specified from DMD components.
@@ -266,9 +267,10 @@ protected:
      * @param[in] t_offset d_t_offset
      * @param[in] state_offset d_state_offset
      */
-    DMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
-        Matrix* phi_imaginary, int k,
-        double dt, double t_offset, Vector* state_offset);
+    DMD(std::vector<std::complex<double>> & eigs,
+        std::shared_ptr<Matrix> & phi_real,
+        std::shared_ptr<Matrix> & phi_imaginary, int k, double dt,
+        double t_offset, std::shared_ptr<Vector> & state_offset);
 
     /**
      * @brief Unimplemented default constructor.
@@ -290,12 +292,13 @@ protected:
     /**
      * @brief Internal function to multiply d_phi with the eigenvalues.
      */
-    std::pair<Matrix*, Matrix*> phiMultEigs(double t, int deg = 0);
+    std::pair<std::shared_ptr<Matrix>,std::shared_ptr<Matrix>> phiMultEigs(
+                double t, int deg = 0);
 
     /**
      * @brief Construct the DMD object.
      */
-    void constructDMD(const Matrix* f_snapshots,
+    void constructDMD(const Matrix & f_snapshots,
                       int rank,
                       int num_procs,
                       const Matrix* W0,
@@ -305,7 +308,7 @@ protected:
      * @brief Returns a pair of pointers to the minus and plus snapshot matrices
      */
     virtual std::pair<Matrix*, Matrix*> computeDMDSnapshotPair(
-        const Matrix* snapshots);
+        const Matrix & snapshots);
 
     /**
      * @brief Compute phi.
@@ -320,12 +323,13 @@ protected:
     /**
      * @brief Add the appropriate offset when predicting the solution.
      */
-    virtual void addOffset(Vector*& result, double t = 0.0, int deg = 0);
+    virtual void addOffset(Vector & result, double t = 0.0, int deg = 0);
 
     /**
      * @brief Get the snapshot matrix contained within d_snapshots.
      */
-    const Matrix* createSnapshotMatrix(std::vector<Vector*> snapshots);
+    std::unique_ptr<const Matrix>
+    createSnapshotMatrix(const std::vector<std::shared_ptr<Vector>> & snapshots);
 
     /**
      * @brief The rank of the process this object belongs to.
@@ -355,17 +359,17 @@ protected:
     /**
      * @brief std::vector holding the snapshots.
      */
-    std::vector<Vector*> d_snapshots;
+    std::vector<std::shared_ptr<Vector>> d_snapshots;
 
     /**
      * @brief The stored times of each sample.
      */
-    std::vector<Vector*> d_sampled_times;
+    std::vector<double> d_sampled_times;
 
     /**
      * @brief State offset in snapshot.
      */
-    Vector* d_state_offset = NULL;
+    std::shared_ptr<Vector> d_state_offset;
 
     /**
      * @brief Whether the DMD has been trained or not.
@@ -400,7 +404,7 @@ protected:
     /**
      * @brief The left singular vector basis.
      */
-    Matrix* d_basis = NULL;
+    std::shared_ptr<Matrix> d_basis;
 
     /**
      * @brief Whether to use the alternative basis for output, i.e. phi = U^(+)*V*Omega^(-1)*X.
@@ -410,37 +414,37 @@ protected:
     /**
      * @brief A_tilde
      */
-    Matrix* d_A_tilde = NULL;
+    std::shared_ptr<Matrix> d_A_tilde;
 
     /**
      * @brief The real part of d_phi.
      */
-    Matrix* d_phi_real = NULL;
+    std::shared_ptr<Matrix> d_phi_real;
 
     /**
      * @brief The imaginary part of d_phi.
      */
-    Matrix* d_phi_imaginary = NULL;
+    std::shared_ptr<Matrix> d_phi_imaginary;
 
     /**
      * @brief The real part of d_phi_squared_inverse.
      */
-    Matrix* d_phi_real_squared_inverse = NULL;
+    std::unique_ptr<Matrix> d_phi_real_squared_inverse;
 
     /**
      * @brief The imaginary part of d_phi_squared_inverse.
      */
-    Matrix* d_phi_imaginary_squared_inverse = NULL;
+    std::unique_ptr<Matrix> d_phi_imaginary_squared_inverse;
 
     /**
      * @brief The real part of the projected initial condition.
      */
-    Vector* d_projected_init_real = NULL;
+    std::shared_ptr<Vector> d_projected_init_real;
 
     /**
      * @brief The imaginary part of the projected initial condition.
      */
-    Vector* d_projected_init_imaginary = NULL;
+    std::shared_ptr<Vector> d_projected_init_imaginary;
 
     /**
      * @brief A vector holding the complex eigenvalues of the eigenmodes.

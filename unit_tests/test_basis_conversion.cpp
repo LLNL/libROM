@@ -77,10 +77,10 @@ TEST(StaticSVDTest, Test_StaticSVDClass)
 
     CAROM::BasisReader basis("test_basis");
     CAROM::BasisReader snapshot("test_basis_snapshot");
-    const CAROM::Matrix* d_snapshot = snapshot.getSnapshotMatrix();
-    const CAROM::Matrix* d_basis = basis.getSpatialBasis();
-    const CAROM::Matrix* d_basis_right = basis.getTemporalBasis();
-    const CAROM::Vector* sv = basis.getSingularValues();
+    std::unique_ptr<const CAROM::Matrix> d_snapshot = snapshot.getSnapshotMatrix();
+    std::unique_ptr<const CAROM::Matrix> d_basis = basis.getSpatialBasis();
+    std::unique_ptr<const CAROM::Matrix> d_basis_right = basis.getTemporalBasis();
+    std::unique_ptr<const CAROM::Vector> sv = basis.getSingularValues();
 
     EXPECT_EQ(d_basis->numRows(), d_num_rows);
     EXPECT_EQ(d_basis->numColumns(), 3);

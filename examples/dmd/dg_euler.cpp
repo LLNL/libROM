@@ -582,10 +582,10 @@ int main(int argc, char *argv[])
         std::cout << "Predicting density, momentum, and energy using DMD" << std::endl;
     }
 
-    CAROM::Vector* result_dens = dmd_dens->predict(ts[0]);
-    CAROM::Vector* result_x_mom = dmd_x_mom->predict(ts[0]);
-    CAROM::Vector* result_y_mom = dmd_y_mom->predict(ts[0]);
-    CAROM::Vector* result_e = dmd_e->predict(ts[0]);
+    std::shared_ptr<CAROM::Vector> result_dens = dmd_dens->predict(ts[0]);
+    std::shared_ptr<CAROM::Vector> result_x_mom = dmd_x_mom->predict(ts[0]);
+    std::shared_ptr<CAROM::Vector> result_y_mom = dmd_y_mom->predict(ts[0]);
+    std::shared_ptr<CAROM::Vector> result_e = dmd_e->predict(ts[0]);
     Vector initial_dmd_solution_dens(result_dens->getData(), result_dens->dim());
     Vector initial_dmd_solution_x_mom(result_x_mom->getData(), result_x_mom->dim());
     Vector initial_dmd_solution_y_mom(result_y_mom->getData(), result_y_mom->dim());
@@ -604,10 +604,6 @@ int main(int argc, char *argv[])
         dmd_visit_dc.Save();
     }
 
-    delete result_dens;
-    delete result_x_mom;
-    delete result_y_mom;
-    delete result_e;
     if (visit)
     {
         for (int i = 1; i < ts.size(); i++)
@@ -630,11 +626,6 @@ int main(int argc, char *argv[])
                 dmd_visit_dc.SetCycle(i);
                 dmd_visit_dc.SetTime(ts[i]);
                 dmd_visit_dc.Save();
-
-                delete result_dens;
-                delete result_x_mom;
-                delete result_y_mom;
-                delete result_e;
             }
         }
     }
@@ -701,10 +692,6 @@ int main(int argc, char *argv[])
 
     // Free the used memory.
     delete ode_solver;
-    delete result_dens;
-    delete result_x_mom;
-    delete result_y_mom;
-    delete result_e;
     delete dmd_dens;
     delete dmd_x_mom;
     delete dmd_y_mom;

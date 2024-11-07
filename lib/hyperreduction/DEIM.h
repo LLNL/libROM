@@ -41,7 +41,7 @@ class Matrix;
  * @param[in] num_procs The total number of processes.
  */
 void
-DEIM(const Matrix* f_basis,
+DEIM(const Matrix & f_basis,
      int num_f_basis_vectors_used,
      std::vector<int>& f_sampled_row,
      std::vector<int>& f_sampled_rows_per_proc,

@@ -51,7 +51,7 @@ public:
      *                            debugging purposes.
      */
     GreedyCustomSampler(
-        std::vector<Vector> parameter_points,
+        std::vector<Vector> & parameter_points,
         bool check_local_rom,
         double relative_error_tolerance,
         double alpha,
@@ -89,7 +89,7 @@ public:
      *                            debugging purposes.
      */
     GreedyCustomSampler(
-        std::vector<double> parameter_points,
+        std::vector<double> & parameter_points,
         bool check_local_rom,
         double relative_error_tolerance,
         double alpha,
