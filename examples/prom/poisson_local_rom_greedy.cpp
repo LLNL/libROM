@@ -368,18 +368,19 @@ int main(int argc, char *argv[])
         }
 
         std::unique_ptr<const CAROM::Matrix> spatialbasis;
-        CAROM::Options* options;
-        CAROM::BasisGenerator *generator;
+        std::unique_ptr<CAROM::Options> options;
+        std::unique_ptr<CAROM::BasisGenerator> generator;
         int numRowRB, numColumnRB;
         StopWatch solveTimer, assembleTimer, mergeTimer;
 
         // 12. Set BasisGenerator if offline
         if (offline)
         {
-            options = new CAROM::Options(fespace.GetTrueVSize(), max_num_snapshots,
-                                         update_right_SV);
+            options.reset(new CAROM::Options(fespace.GetTrueVSize(), max_num_snapshots,
+                                             update_right_SV));
             if (myid == 0) cout << "Saving basis to: " << saveBasisName << endl;
-            generator = new CAROM::BasisGenerator(*options, isIncremental, saveBasisName);
+            generator.reset(new CAROM::BasisGenerator(*options, isIncremental,
+                            saveBasisName));
         }
 
         // 13. Set up the parallel linear form b(.) which corresponds to the
@@ -387,10 +388,10 @@ int main(int argc, char *argv[])
         //     (f,phi_i) where f is given by the function f_exact and phi_i are the
         //     basis functions in the finite element fespace.
         assembleTimer.Start();
-        ParLinearForm *b = new ParLinearForm(&fespace);
+        ParLinearForm b(&fespace);
         FunctionCoefficient f(rhs);
-        b->AddDomainIntegrator(new DomainLFIntegrator(f));
-        b->Assemble();
+        b.AddDomainIntegrator(new DomainLFIntegrator(f));
+        b.Assemble();
 
         // 14. Define the solution vector x as a parallel finite element grid function
         //     corresponding to fespace. Initialize x with initial guess of zero,
@@ -419,7 +420,7 @@ int main(int argc, char *argv[])
 
         HypreParMatrix A;
         Vector B, X;
-        a.FormLinearSystem(ess_tdof_list, x, *b, A, X, B);
+        a.FormLinearSystem(ess_tdof_list, x, b, A, X, B);
         assembleTimer.Stop();
 
         // 17. The offline phase
@@ -457,8 +458,6 @@ int main(int argc, char *argv[])
                 bool addSample = generator->takeSample(X.GetData());
                 generator->writeSnapshot();
                 basisIdentifiers.push_back(saveBasisName);
-                delete generator;
-                delete options;
             }
         }
 
@@ -496,7 +495,7 @@ int main(int argc, char *argv[])
 
         // 25. Recover the parallel grid function corresponding to X. This is the
         //     local finite element solution on each processor.
-        a.RecoverFEMSolution(X, *b, x);
+        a.RecoverFEMSolution(X, b, x);
 
         // 26. Save the refined mesh and the solution in parallel. This output can
         //     be viewed later using GLVis: "glvis -np <np> -m mesh -g sol".
@@ -616,9 +615,10 @@ int main(int argc, char *argv[])
         if (calc_rel_error || (offline && basisIdentifiers.size() == 1))
         {
             mergeTimer.Start();
-            options = new CAROM::Options(fespace.GetTrueVSize(), max_num_snapshots,
-                                         update_right_SV);
-            generator = new CAROM::BasisGenerator(*options, isIncremental, loadBasisName);
+            options.reset(new CAROM::Options(fespace.GetTrueVSize(), max_num_snapshots,
+                                             update_right_SV));
+            generator.reset(new CAROM::BasisGenerator(*options, isIncremental,
+                            loadBasisName));
             for (int i = 0; i < basisIdentifiers.size(); ++i)
             {
                 std::string snapshot_filename = basisIdentifiers[i] + "_snapshot";
@@ -631,8 +631,6 @@ int main(int argc, char *argv[])
                 printf("Elapsed time for merging and building ROM basis: %e second\n",
                        mergeTimer.RealTime());
             }
-            delete generator;
-            delete options;
         }
 
         // 31. print timing info

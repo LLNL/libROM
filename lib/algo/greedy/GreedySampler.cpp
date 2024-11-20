@@ -22,15 +22,15 @@
 namespace CAROM {
 
 GreedyErrorIndicatorPoint
-createGreedyErrorIndicatorPoint(std::shared_ptr<Vector> point,
-                                std::shared_ptr<Vector> localROM)
+createGreedyErrorIndicatorPoint(const std::shared_ptr<Vector> & point,
+                                const std::shared_ptr<Vector> & localROM)
 {
     GreedyErrorIndicatorPoint result{point, localROM};
     return result;
 }
 
 Vector
-getNearestPoint(std::vector<Vector> & param_points, Vector & point)
+getNearestPoint(const std::vector<Vector> & param_points, Vector & point)
 {
 
     int closest_point_index = getNearestPointIndex(param_points, point);
@@ -38,7 +38,7 @@ getNearestPoint(std::vector<Vector> & param_points, Vector & point)
 }
 
 int
-getNearestPointIndex(std::vector<Vector> & param_points, Vector & point)
+getNearestPointIndex(const std::vector<Vector> & param_points, Vector & point)
 {
 
     double closest_dist_to_points = INT_MAX;
@@ -68,7 +68,7 @@ getNearestPoint(std::vector<double> & param_points, double point)
 }
 
 int
-getNearestPointIndex(std::vector<double> & param_points, double point)
+getNearestPointIndex(const std::vector<double> & param_points, double point)
 {
 
     double closest_dist_to_points = INT_MAX;
@@ -88,7 +88,7 @@ getNearestPointIndex(std::vector<double> & param_points, double point)
 }
 
 GreedySampler::GreedySampler(
-    std::vector<Vector> & parameter_points,
+    const std::vector<Vector> & parameter_points,
     bool check_local_rom,
     double relative_error_tolerance,
     double alpha,
@@ -112,7 +112,7 @@ GreedySampler::GreedySampler(
 }
 
 GreedySampler::GreedySampler(
-    std::vector<double> & parameter_points,
+    const std::vector<double> & parameter_points,
     bool check_local_rom,
     double relative_error_tolerance,
     double alpha,
@@ -144,8 +144,8 @@ GreedySampler::GreedySampler(
 }
 
 GreedySampler::GreedySampler(
-    Vector & param_space_min,
-    Vector & param_space_max,
+    const Vector & param_space_min,
+    const Vector & param_space_max,
     int num_parameter_points,
     bool check_local_rom,
     double relative_error_tolerance,
@@ -1000,7 +1000,7 @@ GreedySampler::setPointErrorIndicator(double error, int vec_size)
 }
 
 void
-GreedySampler::printErrorIndicator(Vector errorIndicatorPoint,
+GreedySampler::printErrorIndicator(const Vector & errorIndicatorPoint,
                                    double proc_errors)
 {
     if (d_rank == 0)
@@ -1231,7 +1231,7 @@ GreedySampler::generateRandomPoints(int num_points)
 }
 
 std::shared_ptr<Vector>
-GreedySampler::getNearestROM(Vector & point)
+GreedySampler::getNearestROM(const Vector & point)
 {
     CAROM_VERIFY(point.dim() == d_parameter_points[0].dim());
 
@@ -1260,7 +1260,7 @@ GreedySampler::getNearestROM(Vector & point)
 }
 
 int
-GreedySampler::getNearestNonSampledPoint(Vector & point)
+GreedySampler::getNearestNonSampledPoint(const Vector & point)
 {
     double closest_dist_to_points = INT_MAX;
     int closest_point_index = -1;

@@ -107,7 +107,7 @@ IncrementalSVD::IncrementalSVD(
                 // Read d_W.
                 d_state_database->getInteger("W_num_rows", num_rows);
                 d_state_database->getInteger("W_num_cols", num_cols);
-                d_W = new Matrix(num_rows, num_cols, true);
+                d_W.reset(new Matrix(num_rows, num_cols, true));
                 d_state_database->getDoubleArray("W",
                                                  &d_W->item(0, 0),
                                                  num_rows*num_cols);

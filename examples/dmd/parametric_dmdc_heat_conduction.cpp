@@ -547,8 +547,7 @@ int main(int argc, char *argv[])
     int dim_c = 2; // control dim
     std::vector<std::unique_ptr<CAROM::Vector>>
             d_controls; // vector to store controls
-    d_controls.push_back(std::unique_ptr<CAROM::Vector>(new CAROM::Vector(f, dim_c,
-                         false)));
+    d_controls.emplace_back(new CAROM::Vector(f, dim_c, false));
 
     if (offline)
     {
@@ -648,8 +647,7 @@ int main(int argc, char *argv[])
         snap_list.push_back(ti);
         if (!last_step)
         {
-            d_controls.push_back(std::unique_ptr<CAROM::Vector>(new CAROM::Vector(f, dim_c,
-                                 false)));
+            d_controls.emplace_back(new CAROM::Vector(f, dim_c, false));
         }
 
         if (last_step || (ti % vis_steps) == 0)

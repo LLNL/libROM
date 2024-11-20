@@ -173,9 +173,8 @@ StaticSVD::getSingularValues()
     // If these singular values are for the last time interval then they may not
     // be up to date so recompute them.
     if (!isBasisCurrent()) {
-        d_S = nullptr;
-        delete d_W;
-        d_W = nullptr;
+        d_S.reset();
+        d_W.reset();
         computeSVD();
     }
     else {

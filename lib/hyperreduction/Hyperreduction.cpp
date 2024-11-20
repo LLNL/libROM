@@ -27,7 +27,7 @@ Hyperreduction::Hyperreduction(const char* sampling_type)
     samplingType = iter->second;
 }
 
-void Hyperreduction::ComputeSamples(const std::shared_ptr<Matrix> f_basis,
+void Hyperreduction::ComputeSamples(const std::shared_ptr<Matrix> & f_basis,
                                     int num_f_basis_vectors_used,
                                     std::vector<int>& f_sampled_row,
                                     std::vector<int>& f_sampled_rows_per_proc,

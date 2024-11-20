@@ -29,9 +29,4 @@ SVD::SVD(
     CAROM_VERIFY(options.max_num_samples > 0);
 }
 
-SVD::~SVD()
-{
-    delete d_W;
-}
-
 }

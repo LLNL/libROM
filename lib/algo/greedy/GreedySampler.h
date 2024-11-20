@@ -100,7 +100,7 @@ public:
      *                            debugging purposes.
      */
     GreedySampler(
-        std::vector<Vector> & parameter_points,
+        const std::vector<Vector> & parameter_points,
         bool check_local_rom,
         double relative_error_tolerance,
         double alpha,
@@ -138,7 +138,7 @@ public:
      *                            debugging purposes.
      */
     GreedySampler(
-        std::vector<double> & parameter_points,
+        const std::vector<double> & parameter_points,
         bool check_local_rom,
         double relative_error_tolerance,
         double alpha,
@@ -180,8 +180,8 @@ public:
      *                            debugging purposes.
      */
     GreedySampler(
-        Vector & param_space_min,
-        Vector & param_space_max,
+        const Vector & param_space_min,
+        const Vector & param_space_max,
         int num_parameter_points,
         bool check_local_rom,
         double relative_error_tolerance,
@@ -313,7 +313,7 @@ public:
      *         the given point or -1 if none exist.
      */
     int
-    getNearestNonSampledPoint(Vector & point);
+    getNearestNonSampledPoint(const Vector & point);
 
     /**
      * @brief Returns the nearest local ROM to the specified parameter point.
@@ -323,7 +323,7 @@ public:
      * @return A shared pointer holding the point or NULL if no local ROM exists.
      */
     std::shared_ptr<Vector>
-    getNearestROM(Vector & point);
+    getNearestROM(const Vector & point);
 
     /**
      * @brief Get the domain of the parameter points.
@@ -449,7 +449,8 @@ protected:
      * @param[in] proc_errors The error indicator value.
      *
      */
-    void printErrorIndicator(Vector errorIndicatorPoint, double proc_errors);
+    void printErrorIndicator(const Vector & errorIndicatorPoint,
+                             double proc_errors);
 
     /**
      * @brief Print that the error indicator was not met.
@@ -702,8 +703,8 @@ protected:
  * @return A struct holding @a point and @a localROM.
  */
 GreedyErrorIndicatorPoint createGreedyErrorIndicatorPoint(
-    std::shared_ptr<Vector> point,
-    std::shared_ptr<Vector> localROM);
+    const std::shared_ptr<Vector> & point,
+    const std::shared_ptr<Vector> & localROM);
 
 /**
  * @brief Given a vector, find the nearest point in a domain.
@@ -713,7 +714,8 @@ GreedyErrorIndicatorPoint createGreedyErrorIndicatorPoint(
  *
  * @return A vector representing the nearest point in a domain.
  */
-Vector getNearestPoint(std::vector<Vector> & paramPoints, Vector & point);
+Vector getNearestPoint(const std::vector<Vector> & paramPoints,
+                       const Vector & point);
 
 /**
  * @brief Given a double, find the nearest point in a domain.
@@ -723,7 +725,7 @@ Vector getNearestPoint(std::vector<Vector> & paramPoints, Vector & point);
  *
  * @return A double representing the nearest point in a domain.
  */
-double getNearestPoint(std::vector<double> & paramPoints, double point);
+double getNearestPoint(const std::vector<double> & paramPoints, double point);
 
 /**
  * @brief Given a vector, find the nearest point in a domain.
@@ -733,7 +735,8 @@ double getNearestPoint(std::vector<double> & paramPoints, double point);
  *
  * @return The index of the nearest point in a domain.
  */
-int getNearestPointIndex(std::vector<Vector> & paramPoints, Vector & point);
+int getNearestPointIndex(const std::vector<Vector> & paramPoints,
+                         Vector & point);
 
 /**
  * @brief Given a double, find the nearest point in a domain.
@@ -743,7 +746,7 @@ int getNearestPointIndex(std::vector<Vector> & paramPoints, Vector & point);
  *
  * @return The index of the nearest point in a domain.
  */
-int getNearestPointIndex(std::vector<double> & paramPoints, double point);
+int getNearestPointIndex(const std::vector<double> & paramPoints, double point);
 }
 
 #endif

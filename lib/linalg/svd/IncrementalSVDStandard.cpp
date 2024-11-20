@@ -79,7 +79,7 @@ IncrementalSVDStandard::buildInitialSVD(
 
     // Build d_W for this new time interval.
     if (d_update_right_SV) {
-        d_W = new Matrix(1, 1, false);
+        d_W.reset(new Matrix(1, 1, false));
         d_W->item(0, 0) = 1.0;
     }
 
@@ -127,9 +127,8 @@ IncrementalSVDStandard::addLinearlyDependentSample(
     d_U.reset(U_times_Amod);
 
     // Chop a column off of W to form Wmod.
-    Matrix* new_d_W;
     if (d_update_right_SV) {
-        new_d_W = new Matrix(d_num_rows_of_W+1, d_num_samples, false);
+        Matrix *new_d_W = new Matrix(d_num_rows_of_W+1, d_num_samples, false);
         for (int row = 0; row < d_num_rows_of_W; ++row) {
             for (int col = 0; col < d_num_samples; ++col) {
                 double new_d_W_entry = 0.0;
@@ -142,8 +141,7 @@ IncrementalSVDStandard::addLinearlyDependentSample(
         for (int col = 0; col < d_num_samples; ++col) {
             new_d_W->item(d_num_rows_of_W, col) = W.item(d_num_samples, col);
         }
-        delete d_W;
-        d_W = new_d_W;
+        d_W.reset(new_d_W);
         ++d_num_rows_of_W;
     }
 
@@ -178,9 +176,8 @@ IncrementalSVDStandard::addNewSample(
     }
     tmp.mult(A, *d_U);
 
-    Matrix* new_d_W;
     if (d_update_right_SV) {
-        new_d_W = new Matrix(d_num_rows_of_W+1, d_num_samples+1, false);
+        Matrix *new_d_W = new Matrix(d_num_rows_of_W+1, d_num_samples+1, false);
         for (int row = 0; row < d_num_rows_of_W; ++row) {
             for (int col = 0; col < d_num_samples+1; ++col) {
                 double new_d_W_entry = 0.0;
@@ -193,8 +190,7 @@ IncrementalSVDStandard::addNewSample(
         for (int col = 0; col < d_num_samples+1; ++col) {
             new_d_W->item(d_num_rows_of_W, col) = W.item(d_num_samples, col);
         }
-        delete d_W;
-        d_W = new_d_W;
+        d_W.reset(new_d_W);
     }
 
     int num_dim = std::min(sigma.numRows(), sigma.numColumns());

@@ -39,11 +39,6 @@ public:
         Options options);
 
     /**
-     * Destructor.
-     */
-    ~SVD();
-
-    /**
      * @brief Collect the new sample, u_in at supplied time.
      *
      * @pre u_in != 0
@@ -190,7 +185,7 @@ protected:
      * Depending on the SVD algorithm, d_W may be  distributed across all
      * processors or each processor may own all of U.
      */
-    Matrix* d_W;
+    std::shared_ptr<Matrix> d_W;
 
     /**
      * @brief The vector S which is small.

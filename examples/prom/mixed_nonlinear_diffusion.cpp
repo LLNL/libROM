@@ -1671,7 +1671,6 @@ RomOperator::RomOperator(NonlinearDiffusionOperator *fom_,
       aprime_coeff(&p_coeff, NonlinearCoefficientDerivative),
       a_plus_aprime_coeff(a_coeff, aprime_coeff), rank(myid)
 {
-    ;
     dydt_prev = 0.0;
 
     if (myid == 0 && !eqp)

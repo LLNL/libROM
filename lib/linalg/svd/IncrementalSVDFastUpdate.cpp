@@ -104,7 +104,7 @@ IncrementalSVDFastUpdate::buildInitialSVD(
 
     // Build d_W for this new time interval.
     if (d_update_right_SV) {
-        d_W = new Matrix(1, 1, false);
+        d_W.reset(new Matrix(1, 1, false));
         d_W->item(0, 0) = 1.0;
     }
 
@@ -204,14 +204,13 @@ IncrementalSVDFastUpdate::addLinearlyDependentSample(
     d_Up->mult(Amod, *Up_times_Amod);
     d_Up.reset(Up_times_Amod);
 
-    Matrix* new_d_W;
     if (d_update_right_SV) {
         // The new d_W is the product of the current d_W extended by another row
         // and column and W.  The only new value in the extended version of d_W
         // that is non-zero is the new lower right value and it is 1.  We will
         // construct this product without explicitly forming the extended version of
         // d_W.
-        new_d_W = new Matrix(d_num_rows_of_W+1, d_num_samples, false);
+        Matrix *new_d_W = new Matrix(d_num_rows_of_W+1, d_num_samples, false);
         for (int row = 0; row < d_num_rows_of_W; ++row) {
             for (int col = 0; col < d_num_samples; ++col) {
                 double new_d_W_entry = 0.0;
@@ -224,8 +223,7 @@ IncrementalSVDFastUpdate::addLinearlyDependentSample(
         for (int col = 0; col < d_num_samples; ++col) {
             new_d_W->item(d_num_rows_of_W, col) = W.item(d_num_samples, col);
         }
-        delete d_W;
-        d_W = new_d_W;
+        d_W.reset(new_d_W);
         ++d_num_rows_of_W;
     }
 
@@ -248,14 +246,13 @@ IncrementalSVDFastUpdate::addNewSample(
     }
     d_U.reset(newU);
 
-    Matrix* new_d_W;
     if (d_update_right_SV) {
         // The new d_W is the product of the current d_W extended by another row
         // and column and W.  The only new value in the extended version of d_W
         // that is non-zero is the new lower right value and it is 1.  We will
         // construct this product without explicitly forming the extended version of
         // d_W.
-        new_d_W = new Matrix(d_num_rows_of_W+1, d_num_samples+1, false);
+        Matrix *new_d_W = new Matrix(d_num_rows_of_W+1, d_num_samples+1, false);
         for (int row = 0; row < d_num_rows_of_W; ++row) {
             for (int col = 0; col < d_num_samples+1; ++col) {
                 double new_d_W_entry = 0.0;
@@ -268,8 +265,7 @@ IncrementalSVDFastUpdate::addNewSample(
         for (int col = 0; col < d_num_samples+1; ++col) {
             new_d_W->item(d_num_rows_of_W, col) = W.item(d_num_samples, col);
         }
-        delete d_W;
-        d_W = new_d_W;
+        d_W.reset(new_d_W);
     }
 
     // The new d_Up is the product of the current d_Up extended by another row
