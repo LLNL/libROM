@@ -20,9 +20,6 @@ SVD::SVD(
     d_dim(options.dim),
     d_num_samples(0),
     d_max_num_samples(options.max_num_samples),
-    d_W(NULL),
-    d_S(NULL),
-    d_snapshots(NULL),
     d_debug_algorithm(options.debug_algorithm)
 {
     CAROM_VERIFY(options.dim > 0);
