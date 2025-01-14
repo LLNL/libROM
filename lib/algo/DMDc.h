@@ -55,7 +55,7 @@ public:
     /**
      * @brief Destroy the DMDc object
      */
-    virtual ~DMDc();
+    virtual ~DMDc() {};
 
     /**
      * @brief Set the state offset.
@@ -213,7 +213,7 @@ protected:
     friend void getParametricDMDc<DMDc>(std::unique_ptr<DMDc>& parametric_dmdc,
                                         const std::vector<Vector>& parameter_points,
                                         std::vector<DMDc*>& dmdcs,
-                                        std::vector<std::shared_ptr<Matrix>> controls,
+                                        std::vector<std::shared_ptr<Matrix>> & controls,
                                         std::shared_ptr<Matrix> & controls_interpolated,
                                         const Vector & desired_point,
                                         std::string rbf,
@@ -248,7 +248,7 @@ protected:
     DMDc(std::vector<std::complex<double>> & eigs,
          std::shared_ptr<Matrix> & phi_real,
          std::shared_ptr<Matrix> & phi_imaginary,
-         std::shared_ptr<Matrix> B_tilde,
+         std::shared_ptr<Matrix> & B_tilde,
          int k, double dt, double t_offset,
          std::shared_ptr<Vector> & state_offset,
          std::shared_ptr<Matrix> & basis);
@@ -304,8 +304,8 @@ protected:
     /**
      * @brief Get the snapshot matrix contained within d_snapshots.
      */
-    std::unique_ptr<const Matrix> createSnapshotMatrix(std::vector<Vector*>
-            snapshots);
+    std::unique_ptr<const Matrix>
+    createSnapshotMatrix(const std::vector<std::shared_ptr<Vector>> & snapshots);
 
     /**
      * @brief The rank of the process this object belongs to.
@@ -340,12 +340,12 @@ protected:
     /**
      * @brief std::vector holding the snapshots.
      */
-    std::vector<Vector*> d_snapshots;
+    std::vector<std::shared_ptr<Vector>> d_snapshots;
 
     /**
      * @brief std::vector holding the controls.
      */
-    std::vector<Vector*> d_controls;
+    std::vector<std::shared_ptr<Vector>> d_controls;
 
     /**
      * @brief The stored times of each sample.

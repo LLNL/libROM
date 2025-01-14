@@ -44,7 +44,7 @@ void compareBasis(string &baselineFile, string &targetFile, double errorBound,
     std::unique_ptr<const CAROM::Matrix> targetBasis =
         targetReader.getSpatialBasis();
     CAROM::BasisReader diffReader(baselineFile);
-    CAROM::Matrix* diffBasis = diffReader.getSpatialBasis().get();
+    std::unique_ptr<CAROM::Matrix> diffBasis = diffReader.getSpatialBasis();
 
     // Get basis dimensions
     int baselineNumRows = baselineBasis->numRows();

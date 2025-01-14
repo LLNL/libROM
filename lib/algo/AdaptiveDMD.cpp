@@ -123,8 +123,8 @@ void AdaptiveDMD::interpolateSnapshots()
 
         // Obtain distances from database points to new point
         std::vector<double> rbf = obtainRBFToTrainingPoints(
-                                      *scalarsToVectors(d_sampled_times),
-                                      d_interp_method, d_rbf, epsilon, point);
+                                      *sampled_times, d_interp_method,
+                                      d_rbf, epsilon, point);
 
         // Obtain the interpolated snapshot.
         std::shared_ptr<CAROM::Vector> curr_interpolated_snapshot =

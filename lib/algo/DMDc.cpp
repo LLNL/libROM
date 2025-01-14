@@ -108,7 +108,7 @@ DMDc::DMDc(std::string base_file_name)
 DMDc::DMDc(std::vector<std::complex<double>> & eigs,
            std::shared_ptr<Matrix> & phi_real,
            std::shared_ptr<Matrix> & phi_imaginary,
-           std::shared_ptr<Matrix> B_tilde, int k, double dt, double t_offset,
+           std::shared_ptr<Matrix> & B_tilde, int k, double dt, double t_offset,
            std::shared_ptr<Vector> & state_offset, std::shared_ptr<Matrix> & basis)
 {
     // Get the rank of this process, and the number of processors.
@@ -132,19 +132,6 @@ DMDc::DMDc(std::vector<std::complex<double>> & eigs,
     d_t_offset = t_offset;
     d_basis = basis;
     setOffset(state_offset);
-}
-
-DMDc::~DMDc()
-{
-    for (auto snapshot : d_snapshots)
-    {
-        delete snapshot;
-    }
-
-    for (auto control : d_controls)
-    {
-        delete control;
-    }
 }
 
 void DMDc::setOffset(std::shared_ptr<Vector> & offset_vector)
@@ -174,8 +161,6 @@ void DMDc::takeSample(double* u_in, double t, double* f_in, bool last_step)
     {
         if (d_rank == 0) std::cout << "Removing existing snapshot at time: " <<
                                        d_t_offset + d_sampled_times.back() << std::endl;
-        Vector* last_snapshot = d_snapshots.back();
-        delete last_snapshot;
         d_snapshots.pop_back();
         d_controls.pop_back();
         d_sampled_times.pop_back();
@@ -190,12 +175,12 @@ void DMDc::takeSample(double* u_in, double t, double* f_in, bool last_step)
     {
         CAROM_VERIFY(d_sampled_times.back() < t);
     }
-    d_snapshots.push_back(sample);
+    d_snapshots.push_back(std::shared_ptr<Vector>(sample));
 
     if (!last_step)
     {
         Vector* control = new Vector(f_in, d_dim_c, false);
-        d_controls.push_back(control);
+        d_controls.push_back(std::shared_ptr<Vector>(control));
     }
 
     d_sampled_times.push_back(t);
@@ -803,7 +788,8 @@ DMDc::getSnapshotMatrix()
 }
 
 std::unique_ptr<const Matrix>
-DMDc::createSnapshotMatrix(std::vector<Vector*> snapshots)
+DMDc::createSnapshotMatrix(const std::vector<std::shared_ptr<Vector>> &
+                           snapshots)
 {
     CAROM_VERIFY(snapshots.size() > 0);
     CAROM_VERIFY(snapshots[0]->dim() > 0);
