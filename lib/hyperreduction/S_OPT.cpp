@@ -319,7 +319,7 @@ S_OPT(const Matrix & f_basis,
                     }
                 }
 
-                Vector* g3 = new Vector(num_rows, f_basis.distributed());
+                Vector g3(num_rows, f_basis.distributed());
                 for (int j = 0; j < c_T->numRows(); j++)
                 {
                     double tmp = 0.0;
@@ -327,19 +327,18 @@ S_OPT(const Matrix & f_basis,
                     {
                         tmp += c_T->item(j, k) * g1(j, k);
                     }
-                    g3->item(j) = tmp / b(j);
+                    g3(j) = tmp / b(j);
                 }
 
                 for (int j = 0; j < num_rows; j++)
                 {
                     for (int zz = 0; zz < i - 1; zz++)
                     {
-                        tt1(j, zz) = c_T->item(j, zz) * (Vo->item(j, i - 1) - g3->item(j));
+                        tt1(j, zz) = c_T->item(j, zz) * (Vo->item(j, i - 1) - g3(j));
                     }
                 }
 
                 delete c_T;
-                delete g3;
 
                 ls_res_first_row.setSize(ls_res->numColumns());
                 if (myid == 0) {
