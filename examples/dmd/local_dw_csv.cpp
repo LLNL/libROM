@@ -569,7 +569,8 @@ int main(int argc, char *argv[])
                 double t_init = dmd[window]->getTimeOffset();
 
                 dtc = admd->getTrueDt();
-                const CAROM::Matrix* f_snapshots = admd->getInterpolatedSnapshots();
+                std::unique_ptr<const CAROM::Matrix> f_snapshots =
+                    admd->getInterpolatedSnapshots();
                 if (myid == 0)
                 {
                     cout << "Verifying Adaptive DMD model #" << window <<
@@ -578,7 +579,7 @@ int main(int argc, char *argv[])
                 for (int k = 0; k < f_snapshots->numColumns(); ++k)
                 {
                     f_snapshots->getColumn(k, interp_snap);
-                    CAROM::Vector* result = admd->predict(t_init+k*dtc);
+                    std::shared_ptr<CAROM::Vector> result = admd->predict(t_init+k*dtc);
 
                     Vector dmd_solution(result->getData(), dim);
                     Vector true_solution(interp_snap.getData(), dim);
@@ -600,7 +601,6 @@ int main(int argc, char *argv[])
                         cout << "Relative error of DMD prediction for interpolated snapshot #" << k <<
                              " is " << rel_error << endl;
                     }
-                    delete result;
                 }
                 if (myid == 0)
                 {
@@ -677,7 +677,7 @@ int main(int argc, char *argv[])
                      << " is read." << endl;
             }
 
-            CAROM::Vector* init_cond = nullptr;
+            std::shared_ptr<CAROM::Vector> init_cond;
             if (min_idx_snap == -1)
             {
                 double curr_indicator_val = (indicator_idx.size() == 0) ? tval :
@@ -697,13 +697,12 @@ int main(int argc, char *argv[])
                         cout << "Projecting initial condition at t = " << tval <<
                              " for DMD model #0." << endl;
                     }
-                    init_cond = new CAROM::Vector(dim, true);
+                    init_cond.reset(new CAROM::Vector(dim, true));
                     for (int i = 0; i < dim; ++i)
                     {
                         init_cond->item(i) = sample[i];
                     }
-                    dmd[curr_window]->projectInitialCondition(init_cond, tval);
-                    delete init_cond;
+                    dmd[curr_window]->projectInitialCondition(*init_cond, tval);
                     dmd_preprocess_timer.Stop();
                 }
                 else
@@ -723,7 +722,7 @@ int main(int argc, char *argv[])
                      " using DMD model #" << curr_window << endl;
             }
             dmd_prediction_timer.Start();
-            CAROM::Vector* result = dmd[curr_window]->predict(tval);
+            std::shared_ptr<CAROM::Vector> result = dmd[curr_window]->predict(tval);
             dmd_prediction_timer.Stop();
 
             double curr_indicator_val = (indicator_idx.size() == 0) ? tval : result->item(
@@ -764,7 +763,6 @@ int main(int argc, char *argv[])
                             {
                                 t_left = t_offset;
                             }
-                            delete init_cond;
                         }
                         t_offset = (t_left + t_right) / 2.0;
                     }
@@ -794,10 +792,8 @@ int main(int argc, char *argv[])
                 }
 
                 init_cond = dmd[curr_window]->predict(t_offset);
-                dmd[curr_window+1]->projectInitialCondition(init_cond, t_offset);
-                delete init_cond;
+                dmd[curr_window+1]->projectInitialCondition(*init_cond, t_offset);
 
-                delete result;
                 curr_window += 1;
                 result = dmd[curr_window]->predict(tval);
                 curr_indicator_val = (indicator_idx.size() == 0) ? tval : result->item(
@@ -837,7 +833,6 @@ int main(int argc, char *argv[])
                     }
                 }
             }
-            delete result;
 
             if (curr_window == numWindows-1
                     && curr_indicator_val >= indicator_val[numWindows])

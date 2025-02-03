@@ -66,20 +66,20 @@ IncrementalSVDStandard::buildInitialSVD(
     CAROM_VERIFY(u != 0);
 
     // Build d_S for this new time interval.
-    d_S = new Vector(1, false);
+    d_S.reset(new Vector(1, false));
     Vector u_vec(u, d_dim, true);
     double norm_u = u_vec.norm();
     d_S->item(0) = norm_u;
 
     // Build d_U for this new time interval.
-    d_U = new Matrix(d_dim, 1, true);
+    d_U.reset(new Matrix(d_dim, 1, true));
     for (int i = 0; i < d_dim; ++i) {
         d_U->item(i, 0) = u[i]/norm_u;
     }
 
     // Build d_W for this new time interval.
     if (d_update_right_SV) {
-        d_W = new Matrix(1, 1, false);
+        d_W.reset(new Matrix(1, 1, false));
         d_W->item(0, 0) = 1.0;
     }
 
@@ -94,61 +94,54 @@ void
 IncrementalSVDStandard::computeBasis()
 {
     /* Invalidate existing cached basis and update cached basis */
-    delete d_basis;
-    d_basis = new Matrix(*d_U);
+    d_basis.reset(new Matrix(*d_U));
 
     if (d_update_right_SV)
     {
-        delete d_basis_right;
-        d_basis_right = new Matrix(*d_W);
+        d_basis_right.reset(new Matrix(*d_W));
     }
 }
 
 void
 IncrementalSVDStandard::addLinearlyDependentSample(
-    const Matrix* A,
-    const Matrix* W,
-    const Matrix* sigma)
+    const Matrix & A,
+    const Matrix & W,
+    const Matrix & sigma)
 {
-    CAROM_VERIFY(A != 0);
-    CAROM_VERIFY(sigma != 0);
-
     // Chop a row and a column off of A to form Amod.  Also form
     // d_S by chopping a row and a column off of sigma.
     Matrix Amod(d_num_samples, d_num_samples, false);
     for (int row = 0; row < d_num_samples; ++row) {
         for (int col = 0; col < d_num_samples; ++col) {
-            Amod.item(row, col) = A->item(row, col);
+            Amod.item(row, col) = A.item(row, col);
             if (row == col)
             {
-                d_S->item(col) = sigma->item(row, col);
+                d_S->item(col) = sigma.item(row, col);
             }
         }
     }
 
     // Multiply d_U and Amod and put result into d_U.
-    Matrix* U_times_Amod = d_U->mult(Amod);
-    delete d_U;
-    d_U = U_times_Amod;
+    Matrix *U_times_Amod = new Matrix(d_U->numRows(), Amod.numColumns(), false);
+    d_U->mult(Amod, *U_times_Amod);
+    d_U.reset(U_times_Amod);
 
     // Chop a column off of W to form Wmod.
-    Matrix* new_d_W;
     if (d_update_right_SV) {
-        new_d_W = new Matrix(d_num_rows_of_W+1, d_num_samples, false);
+        Matrix *new_d_W = new Matrix(d_num_rows_of_W+1, d_num_samples, false);
         for (int row = 0; row < d_num_rows_of_W; ++row) {
             for (int col = 0; col < d_num_samples; ++col) {
                 double new_d_W_entry = 0.0;
                 for (int entry = 0; entry < d_num_samples; ++entry) {
-                    new_d_W_entry += d_W->item(row, entry)*W->item(entry, col);
+                    new_d_W_entry += d_W->item(row, entry)*W.item(entry, col);
                 }
                 new_d_W->item(row, col) = new_d_W_entry;
             }
         }
         for (int col = 0; col < d_num_samples; ++col) {
-            new_d_W->item(d_num_rows_of_W, col) = W->item(d_num_samples, col);
+            new_d_W->item(d_num_rows_of_W, col) = W.item(d_num_samples, col);
         }
-        delete d_W;
-        d_W = new_d_W;
+        d_W.reset(new_d_W);
         ++d_num_rows_of_W;
     }
 
@@ -160,7 +153,7 @@ IncrementalSVDStandard::addLinearlyDependentSample(
     else {
         max_U_dim = d_total_dim;
     }
-    if (fabs(checkOrthogonality(d_U)) >
+    if (fabs(checkOrthogonality(*d_U)) >
             std::numeric_limits<double>::epsilon()*static_cast<double>(max_U_dim)) {
         d_U->orthogonalize();
     }
@@ -168,10 +161,10 @@ IncrementalSVDStandard::addLinearlyDependentSample(
 
 void
 IncrementalSVDStandard::addNewSample(
-    const Vector* j,
-    const Matrix* A,
-    const Matrix* W,
-    Matrix* sigma)
+    const Vector & j,
+    const Matrix & A,
+    const Matrix & W,
+    const Matrix & sigma)
 {
     // Add j as a new column of d_U.  Then multiply by A to form a new d_U.
     Matrix tmp(d_dim, d_num_samples+1, true);
@@ -179,35 +172,31 @@ IncrementalSVDStandard::addNewSample(
         for (int col = 0; col < d_num_samples; ++col) {
             tmp.item(row, col) = d_U->item(row, col);
         }
-        tmp.item(row, d_num_samples) = j->item(row);
+        tmp.item(row, d_num_samples) = j.item(row);
     }
-    delete d_U;
-    d_U = tmp.mult(A);
+    tmp.mult(A, *d_U);
 
-    Matrix* new_d_W;
     if (d_update_right_SV) {
-        new_d_W = new Matrix(d_num_rows_of_W+1, d_num_samples+1, false);
+        Matrix *new_d_W = new Matrix(d_num_rows_of_W+1, d_num_samples+1, false);
         for (int row = 0; row < d_num_rows_of_W; ++row) {
             for (int col = 0; col < d_num_samples+1; ++col) {
                 double new_d_W_entry = 0.0;
                 for (int entry = 0; entry < d_num_samples; ++entry) {
-                    new_d_W_entry += d_W->item(row, entry)*W->item(entry, col);
+                    new_d_W_entry += d_W->item(row, entry)*W.item(entry, col);
                 }
                 new_d_W->item(row, col) = new_d_W_entry;
             }
         }
         for (int col = 0; col < d_num_samples+1; ++col) {
-            new_d_W->item(d_num_rows_of_W, col) = W->item(d_num_samples, col);
+            new_d_W->item(d_num_rows_of_W, col) = W.item(d_num_samples, col);
         }
-        delete d_W;
-        d_W = new_d_W;
+        d_W.reset(new_d_W);
     }
 
-    delete d_S;
-    int num_dim = std::min(sigma->numRows(), sigma->numColumns());
-    d_S = new Vector(num_dim, false);
+    int num_dim = std::min(sigma.numRows(), sigma.numColumns());
+    d_S.reset(new Vector(num_dim, false));
     for (int i = 0; i < num_dim; i++) {
-        d_S->item(i) = sigma->item(i,i);
+        d_S->item(i) = sigma.item(i,i);
     }
 
     // We now have another sample.
@@ -222,12 +211,12 @@ IncrementalSVDStandard::addNewSample(
     else {
         max_U_dim = d_total_dim;
     }
-    if (fabs(checkOrthogonality(d_U)) >
+    if (fabs(checkOrthogonality(*d_U)) >
             std::numeric_limits<double>::epsilon()*static_cast<double>(max_U_dim)) {
         d_U->orthogonalize();
     }
     if (d_update_right_SV) {
-        if (fabs(checkOrthogonality(d_W)) >
+        if (fabs(checkOrthogonality(*d_W)) >
                 std::numeric_limits<double>::epsilon()*d_num_samples) {
             d_W->orthogonalize();
         }

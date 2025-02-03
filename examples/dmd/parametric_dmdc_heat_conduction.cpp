@@ -129,7 +129,7 @@ protected:
     double alpha, kappa; // Nonlinear parameters
 
     mutable Vector z; // auxiliary vector
-    HypreParVector *b; // source vector
+    std::unique_ptr<HypreParVector> b; // source vector
 
 public:
     ConductionOperator(ParFiniteElementSpace &f, FunctionCoefficient &s,
@@ -150,7 +150,8 @@ public:
 };
 
 const CAROM::Matrix*
-createControlMatrix(std::vector<CAROM::Vector*> snapshots)
+createControlMatrix(const std::vector<std::unique_ptr<CAROM::Vector>> &
+                    snapshots)
 {
     CAROM_VERIFY(snapshots.size() > 0);
     CAROM_VERIFY(snapshots[0]->dim() > 0);
@@ -190,11 +191,11 @@ double dt = 1.0e-2;
 
 int main(int argc, char *argv[])
 {
-    // 1. Initialize MPI.
-    int num_procs, myid;
-    MPI_Init(&argc, &argv);
-    MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
-    MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+    // 1. Initialize MPI and HYPRE.
+    Mpi::Init();
+    const int num_procs = Mpi::WorldSize();
+    const int myid = Mpi::WorldRank();
+    Hypre::Init();
 
     // 2. Parse command-line options.
     const char *mesh_file = "";
@@ -527,27 +528,26 @@ int main(int argc, char *argv[])
     vector<double> ts;
     double f[2];
 
-    CAROM::Vector* init = NULL;
+    std::unique_ptr<CAROM::Vector> init;
 
-    CAROM::Database *db = NULL;
+    std::unique_ptr<CAROM::Database> db;
     if (csvFormat)
-        db = new CAROM::CSVDatabase();
+        db.reset(new CAROM::CSVDatabase());
     else
-        db = new CAROM::HDFDatabase();
+        db.reset(new CAROM::HDFDatabase());
 
     vector<int> snap_list;
 
     fom_timer.Stop();
 
-
-    CAROM::DMDc* dmd_u = NULL;
+    std::unique_ptr<CAROM::DMDc> dmd_u;
     f[0] = Amplitude(t, 0);
     f[1] = Amplitude(t, 1);
 
     int dim_c = 2; // control dim
-    std::vector<CAROM::Vector*> d_controls; // vector to store controls
-    CAROM::Vector* control = new CAROM::Vector(f, dim_c, false);
-    d_controls.push_back(control);
+    std::vector<std::unique_ptr<CAROM::Vector>>
+            d_controls; // vector to store controls
+    d_controls.emplace_back(new CAROM::Vector(f, dim_c, false));
 
     if (offline)
     {
@@ -560,7 +560,7 @@ int main(int argc, char *argv[])
 
         std::cout << "t =  " << t << std::endl;
 
-        dmd_u = new CAROM::DMDc(u.Size(), 2, dt);
+        dmd_u.reset(new CAROM::DMDc(u.Size(), 2, dt));
         dmd_u->takeSample(u.GetData(), t, f, false);
 
         dmd_training_timer.Stop();
@@ -569,7 +569,7 @@ int main(int argc, char *argv[])
     if (online)
     {
         u_gf.SetFromTrueDofs(u);
-        init = new CAROM::Vector(u.GetData(), u.Size(), true);
+        init.reset(new CAROM::Vector(u.GetData(), u.Size(), true));
     }
 
     if (save_dofs && myid == 0)
@@ -647,8 +647,7 @@ int main(int argc, char *argv[])
         snap_list.push_back(ti);
         if (!last_step)
         {
-            CAROM::Vector* control = new CAROM::Vector(f, dim_c, false);
-            d_controls.push_back(control);
+            d_controls.emplace_back(new CAROM::Vector(f, dim_c, false));
         }
 
         if (last_step || (ti % vis_steps) == 0)
@@ -757,6 +756,7 @@ int main(int argc, char *argv[])
                                  kappa) + "_" + to_string(
                                  amp_in) + "_" + to_string(amp_out) + "_control";
             control_mat->write(full_file_name);
+            delete control_mat;
         }
 
 
@@ -770,8 +770,8 @@ int main(int argc, char *argv[])
             std::fstream fin(io_dir + "/parameters.txt", std::ios_base::in);
             double curr_param;
             std::vector<std::string> dmdc_paths;
-            std::vector<CAROM::Matrix*> controls;
-            std::vector<CAROM::Vector*> param_vectors;
+            std::vector<std::shared_ptr<CAROM::Matrix>> controls;
+            std::vector<CAROM::Vector> param_vectors;
 
             while (fin >> curr_param)
             {
@@ -786,46 +786,37 @@ int main(int argc, char *argv[])
                 dmdc_paths.push_back(io_dir + "/" + to_string(curr_alpha) + "_" + to_string(
                                          curr_kappa) + "_" + to_string(curr_amp_in) + "_" + to_string(curr_amp_out) );
 
-                CAROM::Matrix* curr_control = new CAROM::Matrix();
+                std::shared_ptr<CAROM::Matrix> curr_control(new CAROM::Matrix());
                 curr_control->read(io_dir + "/" + to_string(curr_alpha) + "_" + to_string(
                                        curr_kappa) + "_" + to_string(curr_amp_in) + "_" + to_string(
                                        curr_amp_out) + "_control");
                 controls.push_back(curr_control);
 
-                CAROM::Vector* param_vector = new CAROM::Vector(4, false);
-                param_vector->item(0) = curr_alpha;
-                param_vector->item(1) = curr_kappa;
-                param_vector->item(2) = curr_amp_in;
-                param_vector->item(3) = curr_amp_out;
+                CAROM::Vector param_vector(4, false);
+                param_vector(0) = curr_alpha;
+                param_vector(1) = curr_kappa;
+                param_vector(2) = curr_amp_in;
+                param_vector(3) = curr_amp_out;
                 param_vectors.push_back(param_vector);
             }
             fin.close();
 
-            CAROM::Vector* desired_param = new CAROM::Vector(4, false);
-            desired_param->item(0) = alpha;
-            desired_param->item(1) = kappa;
-            desired_param->item(2) = amp_in;
-            desired_param->item(3) = amp_out;
+            CAROM::Vector desired_param(4, false);
+            desired_param(0) = alpha;
+            desired_param(1) = kappa;
+            desired_param(2) = amp_in;
+            desired_param(3) = amp_out;
 
             dmd_training_timer.Start();
 
-
-            CAROM::Matrix* controls_interpolated = new CAROM::Matrix();
+            std::shared_ptr<CAROM::Matrix> controls_interpolated(new CAROM::Matrix());
 
             CAROM::getParametricDMDc(dmd_u, param_vectors, dmdc_paths, controls,
                                      controls_interpolated, desired_param, "G", "LS", closest_rbf_val);
 
-            dmd_u->project(init,controls_interpolated);
-
+            dmd_u->project(*init, *controls_interpolated);
 
             dmd_training_timer.Stop();
-
-            delete desired_param;
-            delete controls_interpolated;
-            for (auto m : param_vectors)
-                delete m;
-            for (auto m : controls)
-                delete m;
         }
 
         if (predict)
@@ -841,7 +832,7 @@ int main(int argc, char *argv[])
                 std::cout << "Predicting temperature using DMDc" << std::endl;
             }
 
-            CAROM::Vector* result_u = dmd_u->predict(ts[0]);
+            std::unique_ptr<CAROM::Vector> result_u = dmd_u->predict(ts[0]);
             Vector initial_dmd_solution_u(result_u->getData(), result_u->dim());
             u_gf.SetFromTrueDofs(initial_dmd_solution_u);
 
@@ -858,8 +849,6 @@ int main(int argc, char *argv[])
                 dmd_visit_dc.Save();
             }
 
-            delete result_u;
-
             if (visit)
             {
                 for (int i = 1; i < ts.size(); i++)
@@ -873,8 +862,6 @@ int main(int argc, char *argv[])
                         dmd_visit_dc.SetCycle(i);
                         dmd_visit_dc.SetTime(ts[i]);
                         dmd_visit_dc.Save();
-
-                        delete result_u;
                     }
                 }
             }
@@ -903,17 +890,12 @@ int main(int argc, char *argv[])
                 printf("Elapsed time for predicting DMDc: %e second\n",
                        dmd_prediction_timer.RealTime());
             }
-
-            delete result_u;
-
         }
-
     }
 
     // 16. Free the used memory.
     delete ode_solver;
     delete pmesh;
-    delete dmd_u;
 
     MPI_Finalize();
 
@@ -993,7 +975,7 @@ void ConductionOperator::SetSourceTime(double t)
 {
     src_func.SetTime(t);
     B->Assemble();
-    b = B->ParallelAssemble();
+    b.reset(B->ParallelAssemble());
 }
 
 void ConductionOperator::SetParameters(const Vector &u)

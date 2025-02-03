@@ -37,8 +37,8 @@ namespace CAROM {
  * @param[in] excludeFinalTime Whether to exclude the final time index as a temporal sample.
  */
 void
-SpaceTimeSampling(const Matrix* s_basis,
-                  const Matrix* t_basis,
+SpaceTimeSampling(const Matrix & s_basis,
+                  const Matrix & t_basis,
                   const int num_f_basis_vectors_used,
                   std::vector<int>& t_samples,
                   int* f_sampled_row,
@@ -51,7 +51,7 @@ SpaceTimeSampling(const Matrix* s_basis,
                   const bool excludeFinalTime = false);
 
 void GetSampledSpaceTimeBasis(std::vector<int> const& t_samples,
-                              const Matrix* t_basis,
+                              const Matrix & t_basis,
                               Matrix const& s_basis_sampled,
                               Matrix& f_basis_sampled_inv);
 

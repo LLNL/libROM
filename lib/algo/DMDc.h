@@ -41,7 +41,8 @@ public:
      * @param[in] dt               The dt between samples.
      * @param[in] state_offset     The state offset.
      */
-    DMDc(int dim, int dim_c, double dt, Vector* state_offset = NULL);
+    DMDc(int dim, int dim_c, double dt,
+         std::shared_ptr<Vector> state_offset = nullptr);
 
     /**
      * @brief Constructor. DMDc from saved models.
@@ -54,12 +55,12 @@ public:
     /**
      * @brief Destroy the DMDc object
      */
-    virtual ~DMDc();
+    virtual ~DMDc() {};
 
     /**
      * @brief Set the state offset.
      */
-    virtual void setOffset(Vector* offset_vector);
+    virtual void setOffset(std::shared_ptr<Vector> & offset_vector);
 
     /**
      * @brief Sample the new state, u_in. Any samples in d_snapshots
@@ -111,7 +112,7 @@ public:
      * @param[in] controls The controls.
      * @param[in] t_offset The initial time offset.
      */
-    void project(const Vector* init, const Matrix* controls,
+    void project(const Vector & init, const Matrix & controls,
                  double t_offset = -1.0);
 
     /**
@@ -120,7 +121,7 @@ public:
      *
      * @param[in] t   The time of the output state
      */
-    Vector* predict(double t);
+    std::unique_ptr<Vector> predict(double t);
 
     /**
      * @brief Get the time offset contained within d_t_offset.
@@ -145,7 +146,7 @@ public:
     /**
      * @brief Get the snapshot matrix contained within d_snapshots.
      */
-    const Matrix* getSnapshotMatrix();
+    std::unique_ptr<const Matrix> getSnapshotMatrix();
 
     /**
      * @brief Load the object state from a file.
@@ -209,12 +210,12 @@ protected:
      *                                  to a value between 0.0 to 1.0
      * @param[in] reorthogonalize_W     Whether to reorthogonalize the interpolated W (basis) matrix.
      */
-    friend void getParametricDMDc<DMDc>(DMDc*& parametric_dmdc,
-                                        std::vector<Vector*>& parameter_points,
+    friend void getParametricDMDc<DMDc>(std::unique_ptr<DMDc>& parametric_dmdc,
+                                        const std::vector<Vector>& parameter_points,
                                         std::vector<DMDc*>& dmdcs,
-                                        std::vector<Matrix*> controls,
-                                        Matrix*& controls_interpolated,
-                                        Vector* desired_point,
+                                        std::vector<std::shared_ptr<Matrix>> & controls,
+                                        std::shared_ptr<Matrix> & controls_interpolated,
+                                        const Vector & desired_point,
                                         std::string rbf,
                                         std::string interp_method,
                                         double closest_rbf_val,
@@ -227,7 +228,7 @@ protected:
      * @param[in] dim_c             The control dimension.
      * @param[in] state_offset      The state offset.
      */
-    DMDc(int dim, int dim_c, Vector* state_offset = NULL);
+    DMDc(int dim, int dim_c, std::shared_ptr<Vector> state_offset = nullptr);
 
     /**
      * @brief Constructor. Specified from DMDc components.
@@ -240,15 +241,21 @@ protected:
      * @param[in] dt d_dt
      * @param[in] t_offset d_t_offset
      * @param[in] state_offset d_state_offset
-     * @param[in] basis d_basis, set by DMDc class for offline stages. When interpolating a new DMDc, we enter the interpolated basis explicitly
+     * @param[in] basis d_basis, set by DMDc class for offline stages. When
+     *            interpolating a new DMDc, we enter the interpolated basis
+     *            explicitly.
      */
-    DMDc(std::vector<std::complex<double>> eigs, Matrix* phi_real,
-         Matrix* phi_imaginary, Matrix* B_tilde, int k,
-         double dt, double t_offset, Vector* state_offset, Matrix* basis = nullptr);
+    DMDc(std::vector<std::complex<double>> & eigs,
+         std::shared_ptr<Matrix> & phi_real,
+         std::shared_ptr<Matrix> & phi_imaginary,
+         std::shared_ptr<Matrix> & B_tilde,
+         int k, double dt, double t_offset,
+         std::shared_ptr<Vector> & state_offset,
+         std::shared_ptr<Matrix> & basis);
 
     /**
-     * @brief Unimplemented default constructor.
-     */
+       * @brief Unimplemented default constructor.
+       */
     DMDc();
 
     /**
@@ -266,13 +273,14 @@ protected:
     /**
      * @brief Internal function to multiply d_phi with the eigenvalues.
      */
-    std::pair<Matrix*, Matrix*> phiMultEigs(double t);
+    std::pair<std::shared_ptr<Matrix>,std::shared_ptr<Matrix>>
+            phiMultEigs(double t);
 
     /**
      * @brief Construct the DMDc object.
      */
-    void constructDMDc(const Matrix* f_snapshots,
-                       const Matrix* f_controls,
+    void constructDMDc(const Matrix & f_snapshots,
+                       const Matrix & f_controls,
                        int rank,
                        int num_procs,
                        const Matrix* B);
@@ -281,7 +289,7 @@ protected:
      * @brief Returns a pair of pointers to the minus and plus snapshot matrices
      */
     virtual std::pair<Matrix*, Matrix*> computeDMDcSnapshotPair(
-        const Matrix* snapshots, const Matrix* controls, const Matrix* B);
+        const Matrix & snapshots, const Matrix & controls, const Matrix* B);
 
     /**
      * @brief Compute the appropriate exponential function when predicting the solution.
@@ -291,12 +299,13 @@ protected:
     /**
      * @brief Add the state offset when predicting the solution.
      */
-    virtual void addOffset(Vector*& result);
+    virtual void addOffset(Vector & result);
 
     /**
      * @brief Get the snapshot matrix contained within d_snapshots.
      */
-    const Matrix* createSnapshotMatrix(std::vector<Vector*> snapshots);
+    std::unique_ptr<const Matrix>
+    createSnapshotMatrix(const std::vector<std::shared_ptr<Vector>> & snapshots);
 
     /**
      * @brief The rank of the process this object belongs to.
@@ -331,22 +340,22 @@ protected:
     /**
      * @brief std::vector holding the snapshots.
      */
-    std::vector<Vector*> d_snapshots;
+    std::vector<std::shared_ptr<Vector>> d_snapshots;
 
     /**
      * @brief std::vector holding the controls.
      */
-    std::vector<Vector*> d_controls;
+    std::vector<std::shared_ptr<Vector>> d_controls;
 
     /**
      * @brief The stored times of each sample.
      */
-    std::vector<Vector*> d_sampled_times;
+    std::vector<double> d_sampled_times;
 
     /**
      * @brief State offset in snapshot.
      */
-    Vector* d_state_offset = NULL;
+    std::shared_ptr<Vector> d_state_offset;
 
     /**
      * @brief Whether the DMDc has been trained or not.
@@ -381,57 +390,57 @@ protected:
     /**
      * @brief The left singular vector basis.
      */
-    Matrix* d_basis = NULL;
+    std::shared_ptr<Matrix> d_basis;
 
     /**
      * @brief A_tilde
      */
-    Matrix* d_A_tilde = NULL;
+    std::shared_ptr<Matrix> d_A_tilde;
 
     /**
      * @brief B_tilde
      */
-    Matrix* d_B_tilde = NULL;
+    std::shared_ptr<Matrix> d_B_tilde;
 
     /**
      * @brief The real part of d_phi.
      */
-    Matrix* d_phi_real = NULL;
+    std::shared_ptr<Matrix> d_phi_real;
 
     /**
      * @brief The imaginary part of d_phi.
      */
-    Matrix* d_phi_imaginary = NULL;
+    std::shared_ptr<Matrix> d_phi_imaginary;
 
     /**
      * @brief The real part of d_phi_squared_inverse.
      */
-    Matrix* d_phi_real_squared_inverse = NULL;
+    std::shared_ptr<Matrix> d_phi_real_squared_inverse;
 
     /**
      * @brief The imaginary part of d_phi_squared_inverse.
      */
-    Matrix* d_phi_imaginary_squared_inverse = NULL;
+    std::shared_ptr<Matrix> d_phi_imaginary_squared_inverse;
 
     /**
      * @brief The real part of the projected initial condition.
      */
-    Vector* d_projected_init_real = NULL;
+    std::shared_ptr<Vector> d_projected_init_real;
 
     /**
      * @brief The imaginary part of the projected initial condition.
      */
-    Vector* d_projected_init_imaginary = NULL;
+    std::shared_ptr<Vector> d_projected_init_imaginary;
 
     /**
      * @brief The real part of the projected controls.
      */
-    Matrix* d_projected_controls_real = NULL;
+    std::unique_ptr<Matrix> d_projected_controls_real;
 
     /**
      * @brief The imaginary part of the projected controls.
      */
-    Matrix* d_projected_controls_imaginary = NULL;
+    std::unique_ptr<Matrix> d_projected_controls_imaginary;
 
     /**
      * @brief A vector holding the complex eigenvalues of the eigenmodes.

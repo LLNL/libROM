@@ -17,6 +17,7 @@
 #include "utils/Database.h"
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace CAROM {
 
@@ -63,7 +64,7 @@ public:
      *
      * @return The spatial basis vectors.
      */
-    Matrix*
+    std::unique_ptr<Matrix>
     getSpatialBasis();
 
     /**
@@ -77,7 +78,7 @@ public:
      *
      * @return The spatial basis vectors for the requested time.
      */
-    Matrix*
+    std::unique_ptr<Matrix>
     getSpatialBasis(
         int n);
 
@@ -90,11 +91,11 @@ public:
      * @pre start_col <= end_col <= numColumns()
      *
      * @param[in] start_col    The starting column desired.
-     * @param[in] end_col      The starting column desired.
+     * @param[in] end_col      The final column desired.
      *
      * @return The spatial basis vectors for the requested time.
      */
-    Matrix*
+    std::unique_ptr<Matrix>
     getSpatialBasis(
         int start_col,
         int end_col);
@@ -110,7 +111,7 @@ public:
      *
      * @return The spatial basis vectors for the requested time.
      */
-    Matrix*
+    std::unique_ptr<Matrix>
     getSpatialBasis(
         double ef);
 
@@ -121,7 +122,7 @@ public:
      *
      * @return The temporal basis vectors for the requested time.
      */
-    Matrix*
+    std::unique_ptr<Matrix>
     getTemporalBasis();
 
     /**
@@ -135,7 +136,7 @@ public:
      *
      * @return The temporal basis vectors for the requested time.
      */
-    Matrix*
+    std::unique_ptr<Matrix>
     getTemporalBasis(
         int n);
 
@@ -148,11 +149,11 @@ public:
      * @pre start_col <= end_col <= numColumns()
      *
      * @param[in] start_col    The starting column desired.
-     * @param[in] end_col      The starting column desired.
+     * @param[in] end_col      The final column desired.
      *
      * @return The temporal basis vectors for the requested time.
      */
-    Matrix*
+    std::unique_ptr<Matrix>
     getTemporalBasis(
         int start_col,
         int end_col);
@@ -168,7 +169,7 @@ public:
      *
      * @return The temporal basis vectors for the requested time.
      */
-    Matrix*
+    std::unique_ptr<Matrix>
     getTemporalBasis(
         double ef);
 
@@ -178,7 +179,7 @@ public:
      *
      * @return The temporal basis vectors for the requested time.
      */
-    Vector*
+    std::unique_ptr<Vector>
     getSingularValues();
 
     /**
@@ -192,7 +193,7 @@ public:
      *
      * @return The temporal basis vectors for the requested time.
      */
-    Vector*
+    std::unique_ptr<Vector>
     getSingularValues(
         double ef);
 
@@ -227,7 +228,7 @@ public:
      *
      * @return The snapshot matrix for the requested time.
      */
-    Matrix*
+    std::unique_ptr<Matrix>
     getSnapshotMatrix();
 
     /**
@@ -240,7 +241,7 @@ public:
      *
      * @return The snapshot matrix for the requested time.
      */
-    Matrix*
+    std::unique_ptr<Matrix>
     getSnapshotMatrix(
         int n);
 
@@ -252,11 +253,11 @@ public:
      * @pre start_col <= end_col <= numColumns()
      *
      * @param[in] start_col    The starting column desired.
-     * @param[in] end_col      The starting column desired.
+     * @param[in] end_col      The final column desired.
      *
      * @return The snapshot matrix for the requested time.
      */
-    Matrix*
+    std::unique_ptr<Matrix>
     getSnapshotMatrix(
         int start_col,
         int end_col);

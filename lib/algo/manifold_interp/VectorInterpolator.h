@@ -14,6 +14,7 @@
 #define included_VectorInterpolator_h
 
 #include "Interpolator.h"
+#include <memory>
 #include <vector>
 #include <string>
 
@@ -53,22 +54,20 @@ public:
      * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
      *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
      */
-    VectorInterpolator(std::vector<Vector*> parameter_points,
-                       std::vector<Matrix*> rotation_matrices,
-                       std::vector<Vector*> reduced_vectors,
+    VectorInterpolator(const std::vector<Vector> & parameter_points,
+                       const std::vector<std::shared_ptr<Matrix>> & rotation_matrices,
+                       const std::vector<std::shared_ptr<Vector>> & reduced_vectors,
                        int ref_point,
                        std::string rbf = "G",
                        std::string interp_method = "LS",
                        double closest_rbf_val = 0.9);
-
-    ~VectorInterpolator();
 
     /**
      * @brief Obtain the interpolated reduced vector of the unsampled parameter point.
      *
      * @param[in] point The unsampled parameter point.
      */
-    Vector* interpolate(Vector* point);
+    std::shared_ptr<Vector> interpolate(const Vector & point);
 
 private:
 
@@ -103,28 +102,28 @@ private:
      * @param[in] rbf The RBF values between the parameter points and
      *                the unsampled parameter point.
      */
-    Vector* obtainLogInterpolatedVector(std::vector<double>& rbf);
+    std::unique_ptr<Vector> obtainLogInterpolatedVector(std::vector<double>& rbf);
 
     /**
      * @brief The reduced vectors with compatible coordinates.
      */
-    std::vector<Vector*> d_rotated_reduced_vectors;
-
-    std::vector<bool> d_rotated_reduced_vectors_owned;
+    std::vector<std::shared_ptr<Vector>> d_rotated_reduced_vectors;
 
     /**
      * @brief The reduced elements in tangential space.
      */
-    std::vector<Vector*> d_gammas;
+    std::vector<std::shared_ptr<Vector>> d_gammas;
 };
 
-Vector* obtainInterpolatedVector(std::vector<Vector*> data, Matrix* f_T,
-                                 std::string interp_method, std::vector<double>& rbf);
-
-Matrix* solveLinearSystem(std::vector<Vector*> parameter_points,
-                          std::vector<Vector*> data, std::string interp_method,
-                          std::string rbf, double& epsilon);
-
+std::unique_ptr<Vector> obtainInterpolatedVector(
+    const std::vector<std::shared_ptr<Vector>> & data,
+    const Matrix & f_T, std::string interp_method,
+    std::vector<double>& rbf);
+std::unique_ptr<Matrix> solveLinearSystem(
+    const std::vector<Vector> & parameter_points,
+    const std::vector<std::shared_ptr<Vector>> & data,
+    const std::string & interp_method,
+    const std::string & rbf, double epsilon);
 }
 
 #endif

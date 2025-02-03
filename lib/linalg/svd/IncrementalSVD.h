@@ -70,9 +70,8 @@ public:
      *
      * @return The basis vectors for the current time interval.
      */
-    virtual
-    const Matrix*
-    getSpatialBasis();
+    std::shared_ptr<const Matrix>
+    getSpatialBasis() override;
 
     /**
      * @brief Returns the temporal basis vectors for the current time interval
@@ -80,27 +79,24 @@ public:
      *
      * @return The temporal basis vectors for the current time interval.
      */
-    virtual
-    const Matrix*
-    getTemporalBasis();
+    std::shared_ptr<const Matrix>
+    getTemporalBasis() override;
 
     /**
      * @brief Returns the singular values for the current time interval.
      *
      * @return The singular values for the current time interval.
      */
-    virtual
-    const Vector*
-    getSingularValues();
+    std::shared_ptr<const Vector>
+    getSingularValues() override;
 
     /**
      * @brief Returns the snapshot matrix for the current time interval.
      *
      * @return The snapshot matrix for the current time interval.
      */
-    virtual
-    const Matrix*
-    getSnapshotMatrix();
+    std::shared_ptr<const Matrix>
+    getSnapshotMatrix() override;
 
 protected:
     /**
@@ -140,7 +136,6 @@ protected:
     /**
      * @brief Construct the matrix Q whose SVD is needed.
      *
-     * @pre l != 0
      * @pre l.dim() == numSamples()
      *
      * @param[out] Q The matrix to be constructed. [d_S,l; 0,k]
@@ -150,7 +145,7 @@ protected:
     void
     constructQ(
         double*& Q,
-        const Vector* l,
+        const Vector & l,
         double k);
 
     /**
@@ -177,9 +172,6 @@ protected:
     /**
      * @brief Add a linearly dependent sample to the SVD.
      *
-     * @pre A != 0
-     * @pre sigma != 0
-     *
      * @param[in] A The left singular vectors.
      * @param[in] W The right singular vectors.
      * @param[in] sigma The singular values.
@@ -187,16 +179,12 @@ protected:
     virtual
     void
     addLinearlyDependentSample(
-        const Matrix* A,
-        const Matrix* W,
-        const Matrix* sigma) = 0;
+        const Matrix & A,
+        const Matrix & W,
+        const Matrix & sigma) = 0;
 
     /**
      * @brief Add a new, unique sample to the SVD.
-     *
-     * @pre j != 0
-     * @pre A != 0
-     * @pre sigma != 0
      *
      * @param[in] j The new column of d_U.
      * @param[in] A The left singular vectors.
@@ -206,10 +194,10 @@ protected:
     virtual
     void
     addNewSample(
-        const Vector* j,
-        const Matrix* A,
-        const Matrix* W,
-        Matrix* sigma) = 0;
+        const Vector & j,
+        const Matrix & A,
+        const Matrix & W,
+        const Matrix & sigma) = 0;
 
     /**
      * @brief The number of samples stored.
@@ -225,15 +213,13 @@ protected:
     /**
      * @brief Computes and returns the orthogonality of m.
      *
-     * @pre m != 0
-     *
      * @param[in] m The matrix to check.
      *
      * @return The orthogonality of m.
      */
     double
     checkOrthogonality(
-        const Matrix* m);
+        const Matrix & m);
 
     /**
      * @brief Tolerance to determine whether or not a sample is linearly

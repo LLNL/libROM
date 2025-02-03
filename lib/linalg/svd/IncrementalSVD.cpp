@@ -98,7 +98,7 @@ IncrementalSVD::IncrementalSVD(
             d_state_database->getInteger("U_num_rows", num_rows);
             int num_cols;
             d_state_database->getInteger("U_num_cols", num_cols);
-            d_U = new Matrix(num_rows, num_cols, true);
+            d_U.reset(new Matrix(num_rows, num_cols, true));
             d_state_database->getDoubleArray("U",
                                              &d_U->item(0, 0),
                                              num_rows*num_cols);
@@ -107,7 +107,7 @@ IncrementalSVD::IncrementalSVD(
                 // Read d_W.
                 d_state_database->getInteger("W_num_rows", num_rows);
                 d_state_database->getInteger("W_num_cols", num_cols);
-                d_W = new Matrix(num_rows, num_cols, true);
+                d_W.reset(new Matrix(num_rows, num_cols, true));
                 d_state_database->getDoubleArray("W",
                                                  &d_W->item(0, 0),
                                                  num_rows*num_cols);
@@ -116,7 +116,7 @@ IncrementalSVD::IncrementalSVD(
             // Read d_S.
             int num_dim;
             d_state_database->getInteger("S_num_dim", num_dim);
-            d_S = new Vector(num_dim, false);
+            d_S.reset(new Vector(num_dim, false));
             d_state_database->getDoubleArray("S",
                                              &d_S->item(0),
                                              num_dim);
@@ -194,7 +194,7 @@ IncrementalSVD::takeSample(
     }
 
     if (d_debug_algorithm) {
-        const Matrix* basis = getSpatialBasis();
+        std::shared_ptr<const Matrix> basis = getSpatialBasis();
         if (d_rank == 0) {
             // Print d_S.
             for (int col = 0; col < d_num_samples; ++col) {
@@ -248,28 +248,28 @@ IncrementalSVD::takeSample(
     return result;
 }
 
-const Matrix*
+std::shared_ptr<const Matrix>
 IncrementalSVD::getSpatialBasis()
 {
     CAROM_ASSERT(d_basis != 0);
     return d_basis;
 }
 
-const Matrix*
+std::shared_ptr<const Matrix>
 IncrementalSVD::getTemporalBasis()
 {
     CAROM_ASSERT(d_basis != 0);
     return d_basis_right;
 }
 
-const Vector*
+std::shared_ptr<const Vector>
 IncrementalSVD::getSingularValues()
 {
     CAROM_ASSERT(d_S != 0);
     return d_S;
 }
 
-const Matrix*
+std::shared_ptr<const Matrix>
 IncrementalSVD::getSnapshotMatrix()
 {
     std::cout << "Getting snapshot matrix for incremental SVD not implemented" <<
@@ -285,17 +285,18 @@ IncrementalSVD::buildIncrementalSVD(
 
     // l = basis' * u
     Vector u_vec(u, d_dim, true);
-    Vector* l = d_basis->transposeMult(u_vec);
+    Vector l(d_basis->numColumns(), false);
+    d_basis->transposeMult(u_vec, l);
 
     // basisl = basis * l
-    Vector* basisl = d_basis->mult(l);
+    Vector basisl(d_basis->numRows(), true);
+    d_basis->mult(l, basisl);
 
     // Computing as k = sqrt(u.u - 2.0*l.l + basisl.basisl)
     // results in catastrophic cancellation, and must be avoided.
     // Instead we compute as k = sqrt((u-basisl).(u-basisl)).
-    Vector* e_proj = u_vec.minus(basisl);
-    double k = e_proj->inner_product(e_proj);
-    delete e_proj;
+    std::unique_ptr<Vector> e_proj = u_vec.minus(basisl);
+    double k = e_proj->inner_product(*e_proj);
 
     if (k <= 0) {
         if(d_rank == 0) printf("linearly dependent sample!\n");
@@ -335,7 +336,6 @@ IncrementalSVD::buildIncrementalSVD(
     // Create Q.
     double* Q;
     constructQ(Q, l, k);
-    delete l;
 
     // Now get the singular value decomposition of Q.
     Matrix* A;
@@ -356,24 +356,22 @@ IncrementalSVD::buildIncrementalSVD(
             // This sample is linearly dependent and we are not skipping linearly
             // dependent samples.
             if(d_rank == 0) std::cout << "adding linearly dependent sample!\n";
-            addLinearlyDependentSample(A, W, sigma);
+            addLinearlyDependentSample(*A, *W, *sigma);
             delete sigma;
         }
         else if (!linearly_dependent_sample) {
             // This sample is not linearly dependent.
 
             // Compute j
-            Vector* j = u_vec.minus(basisl);
+            std::unique_ptr<Vector> j = u_vec.minus(basisl);
             for (int i = 0; i < d_dim; ++i) {
                 j->item(i) /= k;
             }
 
             // addNewSample will assign sigma to d_S hence it should not be
             // deleted upon return.
-            addNewSample(j, A, W, sigma);
-            delete j;
+            addNewSample(*j, *A, *W, *sigma);
         }
-        delete basisl;
         delete A;
         delete W;
 
@@ -381,7 +379,6 @@ IncrementalSVD::buildIncrementalSVD(
         computeBasis();
     }
     else {
-        delete basisl;
         delete A;
         delete W;
         delete sigma;
@@ -392,11 +389,10 @@ IncrementalSVD::buildIncrementalSVD(
 void
 IncrementalSVD::constructQ(
     double*& Q,
-    const Vector* l,
+    const Vector & l,
     double k)
 {
-    CAROM_VERIFY(l != 0);
-    CAROM_VERIFY(l->dim() == numSamples());
+    CAROM_VERIFY(l.dim() == numSamples());
 
     // Create Q.
     Q = new double [(d_num_samples+1)*(d_num_samples+1)];
@@ -416,7 +412,7 @@ IncrementalSVD::constructQ(
             }
             q_idx += d_num_samples+1;
         }
-        Q[q_idx] = l->item(row);
+        Q[q_idx] = l.item(row);
     }
     q_idx = d_num_samples;
     for (int col = 0; col < d_num_samples; ++col) {
@@ -509,19 +505,17 @@ IncrementalSVD::svd(
 
 double
 IncrementalSVD::checkOrthogonality(
-    const Matrix* m)
+    const Matrix & m)
 {
-    CAROM_ASSERT(m != 0);
-
     double result = 0.0;
     if (d_num_samples > 1) {
         int last_col = d_num_samples-1;
         double tmp = 0.0;
-        int num_rows = m->numRows();
+        int num_rows = m.numRows();
         for (int i = 0; i < num_rows; ++i) {
-            tmp += m->item(i, 0) * m->item(i, last_col);
+            tmp += m.item(i, 0) * m.item(i, last_col);
         }
-        if (m->distributed() && d_size > 1) {
+        if (m.distributed() && d_size > 1) {
             MPI_Allreduce(&tmp, &result, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         }
         else {

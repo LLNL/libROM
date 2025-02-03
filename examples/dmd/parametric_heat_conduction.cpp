@@ -516,7 +516,7 @@ int main(int argc, char *argv[])
     ode_solver->Init(oper);
     double t = 0.0;
     vector<double> ts;
-    CAROM::Vector* init = NULL;
+    std::unique_ptr<CAROM::Vector> init;
 
     CAROM::Database *db = NULL;
     if (csvFormat)
@@ -528,7 +528,7 @@ int main(int argc, char *argv[])
 
     fom_timer.Stop();
 
-    CAROM::DMD* dmd_u = NULL;
+    std::unique_ptr<CAROM::DMD> dmd_u;
 
     if (offline)
     {
@@ -536,7 +536,7 @@ int main(int argc, char *argv[])
 
         // 11. Create DMD object and take initial sample.
         u_gf.SetFromTrueDofs(u);
-        dmd_u = new CAROM::DMD(u.Size(), dt);
+        dmd_u.reset(new CAROM::DMD(u.Size(), dt));
         dmd_u->takeSample(u.GetData(), t);
 
         if (myid == 0)
@@ -549,7 +549,7 @@ int main(int argc, char *argv[])
     if (online)
     {
         u_gf.SetFromTrueDofs(u);
-        init = new CAROM::Vector(u.GetData(), u.Size(), true);
+        init.reset(new CAROM::Vector(u.GetData(), u.Size(), true));
     }
 
     if (save_dofs && myid == 0)
@@ -742,7 +742,7 @@ int main(int argc, char *argv[])
             std::fstream fin("parameters.txt", std::ios_base::in);
             double curr_param;
             std::vector<std::string> dmd_paths;
-            std::vector<CAROM::Vector*> param_vectors;
+            std::vector<CAROM::Vector> param_vectors;
 
             while (fin >> curr_param)
             {
@@ -757,30 +757,29 @@ int main(int argc, char *argv[])
                 dmd_paths.push_back(outputPath + "/" + to_string(curr_radius) + "_" +
                                     to_string(curr_alpha) + "_" + to_string(curr_cx) + "_" +
                                     to_string(curr_cy));
-                CAROM::Vector* param_vector = new CAROM::Vector(4, false);
-                param_vector->item(0) = curr_radius;
-                param_vector->item(1) = curr_alpha;
-                param_vector->item(2) = curr_cx;
-                param_vector->item(3) = curr_cy;
+                CAROM::Vector param_vector(4, false);
+                param_vector(0) = curr_radius;
+                param_vector(1) = curr_alpha;
+                param_vector(2) = curr_cx;
+                param_vector(3) = curr_cy;
                 param_vectors.push_back(param_vector);
             }
             fin.close();
 
-            CAROM::Vector* desired_param = new CAROM::Vector(4, false);
-            desired_param->item(0) = radius;
-            desired_param->item(1) = alpha;
-            desired_param->item(2) = cx;
-            desired_param->item(3) = cy;
+            CAROM::Vector desired_param(4, false);
+            desired_param(0) = radius;
+            desired_param(1) = alpha;
+            desired_param(2) = cx;
+            desired_param(3) = cy;
 
             dmd_training_timer.Start();
 
             CAROM::getParametricDMD(dmd_u, param_vectors, dmd_paths, desired_param,
                                     "G", "LS", closest_rbf_val);
 
-            dmd_u->projectInitialCondition(init);
+            dmd_u->projectInitialCondition(*init);
 
             dmd_training_timer.Stop();
-            delete desired_param;
         }
 
         if (predict)
@@ -796,7 +795,7 @@ int main(int argc, char *argv[])
                 std::cout << "Predicting temperature using DMD at: " << ts[0] << std::endl;
             }
 
-            CAROM::Vector* result_u = dmd_u->predict(ts[0]);
+            std::unique_ptr<CAROM::Vector> result_u = dmd_u->predict(ts[0]);
             Vector initial_dmd_solution_u(result_u->getData(), result_u->dim());
             u_gf.SetFromTrueDofs(initial_dmd_solution_u);
 
@@ -811,8 +810,6 @@ int main(int argc, char *argv[])
                 dmd_visit_dc.SetTime(0.0);
                 dmd_visit_dc.Save();
             }
-
-            delete result_u;
 
             if (visit)
             {
@@ -832,8 +829,6 @@ int main(int argc, char *argv[])
                         dmd_visit_dc.SetCycle(i);
                         dmd_visit_dc.SetTime(ts[i]);
                         dmd_visit_dc.Save();
-
-                        delete result_u;
                     }
                 }
             }
@@ -858,8 +853,6 @@ int main(int argc, char *argv[])
                 printf("Elapsed time for predicting DMD: %e second\n",
                        dmd_prediction_timer.RealTime());
             }
-
-            delete result_u;
         }
 
         if (myid == 0)
@@ -877,10 +870,6 @@ int main(int argc, char *argv[])
     // 16. Free the used memory.
     delete ode_solver;
     delete pmesh;
-    if (offline)
-    {
-        delete dmd_u;
-    }
 
 #ifdef MFEM_USE_GSLIB
     delete pws;

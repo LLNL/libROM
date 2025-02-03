@@ -22,7 +22,8 @@ public:
      * @param[in] state_offset     The state offset.
      */
     SnapshotDMD(int dim, double dt, bool alt_output_basis = false,
-                Vector* state_offset = NULL) : DMD(dim,dt,alt_output_basis,state_offset) {}
+                std::shared_ptr<Vector> state_offset = nullptr) :
+        DMD(dim, dt, alt_output_basis, state_offset) {}
 
     /**
      * @brief Constructor. DMD from saved models. Inherited directly
@@ -72,10 +73,9 @@ public:
     /**
      * @brief Returns a copy of the current snapshot vector "d_snapshots"
      */
-    std::vector<Vector*> getSnapshotVectors()
+    std::vector<std::shared_ptr<Vector>> getSnapshotVectors()
     {
-        std::vector<Vector*> return_snapshots(d_snapshots);
-        return return_snapshots;
+        return d_snapshots;
     }
 protected:
     /**
@@ -98,10 +98,11 @@ protected:
      *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
      * @param[in] reorthogonalize_W Whether to reorthogonalize the interpolated W (basis) matrix.
      */
-    friend void getParametricDMD<SnapshotDMD>(SnapshotDMD*& parametric_dmd,
-            std::vector<Vector*>& parameter_points,
+    friend void getParametricDMD<SnapshotDMD>(std::unique_ptr<SnapshotDMD>&
+            parametric_dmd,
+            const std::vector<Vector>& parameter_points,
             std::vector<SnapshotDMD*>& dmds,
-            Vector* desired_point,
+            const Vector & desired_point,
             std::string rbf,
             std::string interp_method,
             double closest_rbf_val,
@@ -119,10 +120,10 @@ protected:
      * @param[in] state_offset d_state_offset
      * @param[in] derivative_offset d_derivative_offset
      */
-    SnapshotDMD(std::vector<std::complex<double>> eigs, Matrix* phi_real,
-                Matrix* phi_imaginary, int k,
-                double dt, double t_offset,
-                Vector* state_offset) :
+    SnapshotDMD(std::vector<std::complex<double>> & eigs,
+                std::shared_ptr<Matrix> & phi_real,
+                std::shared_ptr<Matrix> & phi_imaginary, int k, double dt,
+                double t_offset, std::shared_ptr<Vector> & state_offset) :
         DMD(eigs, phi_real, phi_imaginary, k, dt, t_offset, state_offset) {}
 
 private:

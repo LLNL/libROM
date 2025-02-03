@@ -627,8 +627,8 @@ int main(int argc, char *argv[])
     true_solution_v = v_gf.GetTrueVector();
 
     curr_window = 0;
-    CAROM::Vector* result_x = dmd_x[curr_window]->predict(ts[0]);
-    CAROM::Vector* result_v = dmd_v[curr_window]->predict(ts[0]);
+    std::shared_ptr<CAROM::Vector> result_x = dmd_x[curr_window]->predict(ts[0]);
+    std::shared_ptr<CAROM::Vector> result_v = dmd_v[curr_window]->predict(ts[0]);
     Vector initial_dmd_solution_x(result_x->getData(), result_x->dim());
     Vector initial_dmd_solution_v(result_v->getData(), result_v->dim());
     x_gf.SetFromTrueDofs(initial_dmd_solution_x);
@@ -648,14 +648,11 @@ int main(int argc, char *argv[])
         dmd_dc->Save();
     }
 
-    delete result_x;
-    delete result_v;
-
     for (int i = 1; i < ts.size(); i++)
     {
         if (i == ts.size() - 1 || (i % vis_steps) == 0)
         {
-            if(visit)
+            if (visit)
             {
                 result_x = dmd_x[curr_window]->predict(ts[i]);
                 result_v = dmd_v[curr_window]->predict(ts[i]);
@@ -671,9 +668,6 @@ int main(int argc, char *argv[])
                 dmd_dc->SetTime(ts[i]);
                 dmd_dc->Save();
                 pmesh->SwapNodes(nodes, owns_nodes);
-
-                delete result_x;
-                delete result_v;
             }
 
             if (i % windowNumSamples == 0 && i < ts.size()-1)
@@ -723,8 +717,6 @@ int main(int argc, char *argv[])
     // 15. Free the used memory.
     delete ode_solver;
     delete pmesh;
-    delete result_x;
-    delete result_v;
     delete dc;
     delete dmd_dc;
     delete dmd_x[curr_window];

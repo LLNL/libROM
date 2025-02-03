@@ -55,7 +55,7 @@ BasisGenerator::BasisGenerator(
     }
 
     if (!basis_file_name.empty()) {
-        d_basis_writer = new BasisWriter(this, basis_file_name, file_format);
+        d_basis_writer = new BasisWriter(*this, basis_file_name, file_format);
     }
     d_update_right_SV = options.update_right_SV;
     if (incremental)
@@ -71,20 +71,17 @@ BasisGenerator::BasisGenerator(
         if (options.fast_update_brand) {
             d_svd.reset(
                 new IncrementalSVDBrand(
-                    options,
-                    basis_file_name));
+                    options, basis_file_name));
         }
         else if (options.fast_update) {
             d_svd.reset(
                 new IncrementalSVDFastUpdate(
-                    options,
-                    basis_file_name));
+                    options, basis_file_name));
         }
         else {
             d_svd.reset(
                 new IncrementalSVDStandard(
-                    options,
-                    basis_file_name));
+                    options, basis_file_name));
         }
 
         // Get the number of processors.
@@ -100,14 +97,10 @@ BasisGenerator::BasisGenerator(
     else
     {
         if (options.randomized) {
-            d_svd.reset(
-                new RandomizedSVD(
-                    options));
+            d_svd.reset(new RandomizedSVD(options));
         }
         else {
-            d_svd.reset(
-                new StaticSVD(
-                    options));
+            d_svd.reset(new StaticSVD(options));
         }
     }
 }
@@ -159,8 +152,8 @@ BasisGenerator::loadSampleRange(const std::string& base_file_name,
     if (d_basis_reader) delete d_basis_reader;
 
     d_basis_reader = new BasisReader(base_file_name, db_format, d_dim);
-    const Matrix* mat;
-    const Vector* singular_vals;
+    std::unique_ptr<const Matrix> mat;
+    std::unique_ptr<const Vector> singular_vals;
 
     if (kind == "basis") {
         mat = d_basis_reader->getSpatialBasis();
@@ -221,32 +214,28 @@ BasisGenerator::computeNextSampleTime(
         }
 
         // Get the current basis vectors.
-        const Matrix* basis = getSpatialBasis();
+        std::shared_ptr<const Matrix> basis = getSpatialBasis();
 
         // Compute l = basis' * u
-        Vector* l = basis->transposeMult(u_vec);
+        Vector l(basis->numColumns(), false);
+        basis->transposeMult(u_vec, l);
 
         // basisl = basis * l
-        Vector* basisl = basis->mult(l);
+        Vector basisl(basis->numRows(), true);
+        basis->mult(l, basisl);
 
         // Compute u - basisl.
-        Vector* eta = u_vec.minus(basisl);
-
-        delete l;
-        delete basisl;
+        std::unique_ptr<Vector> eta = u_vec.minus(basisl);
 
         // Compute l = basis' * rhs
         Vector rhs_vec(rhs_in, dim, true);
-        l = basis->transposeMult(rhs_vec);
+        basis->transposeMult(rhs_vec, l);
 
         // basisl = basis * l
-        basisl = basis->mult(l);
+        basis->mult(l, basisl);
 
         // Compute rhs - basisl.
-        Vector* eta_dot = rhs_vec.minus(basisl);
-
-        delete l;
-        delete basisl;
+        std::unique_ptr<Vector> eta_dot = rhs_vec.minus(basisl);
 
         // Compute the l-inf norm of eta + d_dt*eta_dot.
         double global_norm;
@@ -257,8 +246,6 @@ BasisGenerator::computeNextSampleTime(
                 local_norm = val;
             }
         }
-        delete eta;
-        delete eta_dot;
         if (d_num_procs == 1) {
             global_norm = local_norm;
         }
@@ -315,7 +302,7 @@ BasisGenerator::finalSummary(
     const int first_sv)
 {
     const int rom_dim = getSpatialBasis()->numColumns();
-    const Vector* sing_vals = getSingularValues();
+    std::shared_ptr<const Vector> sing_vals = getSingularValues();
 
     CAROM_VERIFY(rom_dim <= sing_vals->dim());
 

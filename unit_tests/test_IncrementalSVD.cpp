@@ -49,8 +49,8 @@ public:
         int dim = options.dim;
 
         /* Construct a fake d_U, d_S, d_basis */
-        d_basis = new CAROM::Matrix(dim, dim, false);
-        d_S = new CAROM::Vector(dim, false);
+        d_basis.reset(new CAROM::Matrix(dim, dim, false));
+        d_S.reset(new CAROM::Vector(dim, false));
 
         /* Use the identity matrix as a fake basis and fake singular values */
         for (int i = 0; i < dim; i++)
@@ -80,18 +80,18 @@ public:
     }
 
     void addLinearlyDependentSample
-    (__attribute__((unused)) const CAROM::Matrix *A,
-     __attribute__((unused)) const CAROM::Matrix *W,
-     __attribute__((unused)) const CAROM::Matrix *sigma)
+    (__attribute__((unused)) const CAROM::Matrix & A,
+     __attribute__((unused)) const CAROM::Matrix & W,
+     __attribute__((unused)) const CAROM::Matrix & sigma)
     {
         /* Do nothing */
     }
 
     void addNewSample
-    (__attribute__((unused)) const CAROM::Vector *j,
-     __attribute__((unused)) const CAROM::Matrix *A,
-     __attribute__((unused)) const CAROM::Matrix *W,
-     __attribute__((unused)) CAROM::Matrix *sigma)
+    (__attribute__((unused)) const CAROM::Vector & j,
+     __attribute__((unused)) const CAROM::Matrix & A,
+     __attribute__((unused)) const CAROM::Matrix & W,
+     __attribute__((unused)) const CAROM::Matrix & sigma)
     {
         /* Do nothing */
     }
@@ -108,7 +108,7 @@ TEST(IncrementalSVDSerialTest, Test_getBasis)
         incremental_svd_options,
         "irrelevant.txt");
 
-    const CAROM::Matrix *B = svd.getSpatialBasis();
+    std::shared_ptr<const CAROM::Matrix> B = svd.getSpatialBasis();
     for (int i = 0; i < svd.getDim(); i++)
     {
         for (int j = 0; j < i; j++)
@@ -130,7 +130,7 @@ TEST(IncrementalSVDSerialTest, Test_getSingularValues)
         incremental_svd_options,
         "irrelevant.txt");
 
-    const CAROM::Vector *S = svd.getSingularValues();
+    std::shared_ptr<const CAROM::Vector> S = svd.getSingularValues();
     for (int i = 0; i < svd.getDim(); i++)
     {
         EXPECT_DOUBLE_EQ(S->item(i), 1);

@@ -504,7 +504,7 @@ int main(int argc, char *argv[])
         std::cout << "Predicting temperature using DMD" << std::endl;
     }
 
-    CAROM::Vector* result_u = dmd_u->predict(ts[0]);
+    std::shared_ptr<CAROM::Vector> result_u = dmd_u->predict(ts[0]);
     Vector initial_dmd_solution_u(result_u->getData(), result_u->dim());
     u_gf.SetFromTrueDofs(initial_dmd_solution_u);
 
@@ -516,8 +516,6 @@ int main(int argc, char *argv[])
         dmd_visit_dc.SetTime(0.0);
         dmd_visit_dc.Save();
     }
-
-    delete result_u;
 
     if (visit)
     {
@@ -532,8 +530,6 @@ int main(int argc, char *argv[])
                 dmd_visit_dc.SetCycle(i);
                 dmd_visit_dc.SetTime(ts[i]);
                 dmd_visit_dc.Save();
-
-                delete result_u;
             }
         }
     }
@@ -566,7 +562,6 @@ int main(int argc, char *argv[])
     // 16. Free the used memory.
     delete ode_solver;
     delete pmesh;
-    delete result_u;
 
     MPI_Finalize();
 

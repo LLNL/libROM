@@ -27,7 +27,7 @@ Hyperreduction::Hyperreduction(const char* sampling_type)
     samplingType = iter->second;
 }
 
-void Hyperreduction::ComputeSamples(const Matrix* f_basis,
+void Hyperreduction::ComputeSamples(const std::shared_ptr<Matrix> & f_basis,
                                     int num_f_basis_vectors_used,
                                     std::vector<int>& f_sampled_row,
                                     std::vector<int>& f_sampled_rows_per_proc,
@@ -42,7 +42,7 @@ void Hyperreduction::ComputeSamples(const Matrix* f_basis,
     {
     case deim:
         CAROM_VERIFY(num_samples_req == f_basis->numColumns());
-        DEIM(f_basis,
+        DEIM(*f_basis,
              num_f_basis_vectors_used,
              f_sampled_row,
              f_sampled_rows_per_proc,
@@ -50,7 +50,7 @@ void Hyperreduction::ComputeSamples(const Matrix* f_basis,
              myid, num_procs);
         return;
     case gnat:
-        GNAT(f_basis,
+        GNAT(*f_basis,
              num_f_basis_vectors_used,
              f_sampled_row,
              f_sampled_rows_per_proc,
@@ -60,7 +60,7 @@ void Hyperreduction::ComputeSamples(const Matrix* f_basis,
              init_samples);
         return;
     case qdeim:
-        QDEIM(f_basis,
+        QDEIM(*f_basis,
               num_f_basis_vectors_used,
               f_sampled_row,
               f_sampled_rows_per_proc,
@@ -69,7 +69,7 @@ void Hyperreduction::ComputeSamples(const Matrix* f_basis,
               num_samples_req);
         return;
     case sopt:
-        S_OPT(f_basis,
+        S_OPT(*f_basis,
               num_f_basis_vectors_used,
               f_sampled_row,
               f_sampled_rows_per_proc,

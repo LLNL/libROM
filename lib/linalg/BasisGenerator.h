@@ -196,7 +196,7 @@ public:
      *
      * @return The basis vectors for the current time interval.
      */
-    const Matrix*
+    std::shared_ptr<const Matrix>
     getSpatialBasis()
     {
         return d_svd->getSpatialBasis();
@@ -208,7 +208,7 @@ public:
      *
      * @return The temporal basis vectors for the current time interval.
      */
-    const Matrix*
+    std::shared_ptr<const Matrix>
     getTemporalBasis()
     {
         return d_svd->getTemporalBasis();
@@ -220,7 +220,7 @@ public:
      *
      * @return The singular values for the current time interval.
      */
-    const Vector*
+    std::shared_ptr<const Vector>
     getSingularValues()
     {
         return d_svd->getSingularValues();
@@ -231,7 +231,7 @@ public:
      *
      * @return The snapshot matrix for the current time interval.
      */
-    const Matrix*
+    std::shared_ptr<const Matrix>
     getSnapshotMatrix()
     {
         return d_svd->getSnapshotMatrix();

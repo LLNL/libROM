@@ -20,10 +20,8 @@
 namespace CAROM {
 
 AdaptiveDMD::AdaptiveDMD(int dim, double desired_dt, std::string rbf,
-                         std::string interp_method,
-                         double closest_rbf_val,
-                         bool alt_output_basis,
-                         Vector* state_offset) :
+                         std::string interp_method, double closest_rbf_val,
+                         bool alt_output_basis, std::shared_ptr<Vector> state_offset) :
     DMD(dim, alt_output_basis, state_offset)
 {
     CAROM_VERIFY(rbf == "G" || rbf == "IQ" || rbf == "IMQ");
@@ -36,36 +34,24 @@ AdaptiveDMD::AdaptiveDMD(int dim, double desired_dt, std::string rbf,
     d_closest_rbf_val = closest_rbf_val;
 }
 
-AdaptiveDMD::~AdaptiveDMD()
-{
-    for (auto interp_snapshot : d_interp_snapshots)
-    {
-        delete interp_snapshot;
-    }
-}
-
 void AdaptiveDMD::train(double energy_fraction, const Matrix* W0,
                         double linearity_tol)
 {
-    const Matrix* f_snapshots = getInterpolatedSnapshots();
+    std::unique_ptr<const Matrix> f_snapshots = getInterpolatedSnapshots();
     CAROM_VERIFY(f_snapshots->numColumns() > 1);
     CAROM_VERIFY(energy_fraction > 0 && energy_fraction <= 1);
     d_energy_fraction = energy_fraction;
-    constructDMD(f_snapshots, d_rank, d_num_procs, W0, linearity_tol);
-
-    delete f_snapshots;
+    constructDMD(*f_snapshots, d_rank, d_num_procs, W0, linearity_tol);
 }
 
 void AdaptiveDMD::train(int k, const Matrix* W0, double linearity_tol)
 {
-    const Matrix* f_snapshots = getInterpolatedSnapshots();
+    std::unique_ptr<const Matrix> f_snapshots = getInterpolatedSnapshots();
     CAROM_VERIFY(f_snapshots->numColumns() > 1);
     CAROM_VERIFY(k > 0 && k <= f_snapshots->numColumns() - 1);
     d_energy_fraction = -1.0;
     d_k = k;
-    constructDMD(f_snapshots, d_rank, d_num_procs, W0, linearity_tol);
-
-    delete f_snapshots;
+    constructDMD(*f_snapshots, d_rank, d_num_procs, W0, linearity_tol);
 }
 
 void AdaptiveDMD::interpolateSnapshots()
@@ -84,21 +70,21 @@ void AdaptiveDMD::interpolateSnapshots()
         std::vector<double> d_sampled_dts;
         for (int i = 1; i < d_sampled_times.size(); i++)
         {
-            d_sampled_dts.push_back(d_sampled_times[i]->item(0) - d_sampled_times[i -
-                                    1]->item(0));
+            d_sampled_dts.push_back(d_sampled_times[i] - d_sampled_times[i - 1]);
         }
 
         auto m = d_sampled_dts.begin() + d_sampled_dts.size() / 2;
         std::nth_element(d_sampled_dts.begin(), m, d_sampled_dts.end());
-        if (d_rank == 0) std::cout <<
-                                       "Setting desired dt to the median dt between the samples: " <<
-                                       d_sampled_dts[d_sampled_dts.size() / 2] << std::endl;
+        if (d_rank == 0)
+            std::cout << "Setting desired dt to the median dt between the samples: "
+                      << d_sampled_dts[d_sampled_dts.size() / 2] << std::endl;
+
         d_dt = d_sampled_dts[d_sampled_dts.size() / 2];
     }
-    CAROM_VERIFY(d_sampled_times.back()->item(0) > d_dt);
+    CAROM_VERIFY(d_sampled_times.back() > d_dt);
 
     // Find the nearest dt that evenly divides the snapshots.
-    int num_time_steps = std::round(d_sampled_times.back()->item(0) / d_dt);
+    int num_time_steps = std::round(d_sampled_times.back() / d_dt);
     if (automate_dt && num_time_steps < d_sampled_times.size())
     {
         num_time_steps = d_sampled_times.size();
@@ -106,7 +92,7 @@ void AdaptiveDMD::interpolateSnapshots()
                                        "There will be less interpolated snapshots than FOM snapshots. dt will be decreased."
                                        << std::endl;
     }
-    double new_dt = d_sampled_times.back()->item(0) / num_time_steps;
+    const double new_dt = d_sampled_times.back() / num_time_steps;
     if (new_dt != d_dt)
     {
         d_dt = new_dt;
@@ -115,13 +101,16 @@ void AdaptiveDMD::interpolateSnapshots()
     }
 
     // Solve the linear system if required.
-    Matrix* f_T = NULL;
-    double epsilon = convertClosestRBFToEpsilon(d_sampled_times, d_rbf,
+    std::unique_ptr<Matrix> f_T;
+    std::unique_ptr<std::vector<Vector>> sampled_times = scalarsToVectors(
+                                          d_sampled_times);
+    double epsilon = convertClosestRBFToEpsilon(*sampled_times, d_rbf,
                      d_closest_rbf_val);
+
     if (d_interp_method == "LS")
     {
-        f_T = solveLinearSystem(d_sampled_times, d_snapshots, d_interp_method, d_rbf,
-                                epsilon);
+        f_T = solveLinearSystem(*sampled_times, d_snapshots, d_interp_method,
+                                d_rbf, epsilon);
     }
 
     // Create interpolated snapshots using d_dt as the desired dt.
@@ -130,18 +119,18 @@ void AdaptiveDMD::interpolateSnapshots()
         double curr_time = i * d_dt;
         if (d_rank == 0) std::cout << "Creating new interpolated sample at: " <<
                                        d_t_offset + curr_time << std::endl;
-        CAROM::Vector* point = new Vector(&curr_time, 1, false);
+        Vector point(&curr_time, 1, false);
 
         // Obtain distances from database points to new point
-        std::vector<double> rbf = obtainRBFToTrainingPoints(d_sampled_times,
-                                  d_interp_method, d_rbf, epsilon, point);
+        std::vector<double> rbf = obtainRBFToTrainingPoints(
+                                      *sampled_times, d_interp_method,
+                                      d_rbf, epsilon, point);
 
         // Obtain the interpolated snapshot.
-        CAROM::Vector* curr_interpolated_snapshot = obtainInterpolatedVector(
-                    d_snapshots, f_T, d_interp_method, rbf);
+        std::shared_ptr<CAROM::Vector> curr_interpolated_snapshot =
+            obtainInterpolatedVector(
+                d_snapshots, *f_T, d_interp_method, rbf);
         d_interp_snapshots.push_back(curr_interpolated_snapshot);
-
-        delete point;
     }
 
     if (d_rank == 0) std::cout << "Number of interpolated snapshots is: " <<
@@ -153,7 +142,7 @@ double AdaptiveDMD::getTrueDt() const
     return d_dt;
 }
 
-const Matrix* AdaptiveDMD::getInterpolatedSnapshots()
+std::unique_ptr<const Matrix> AdaptiveDMD::getInterpolatedSnapshots()
 {
     if (d_interp_snapshots.size() == 0) interpolateSnapshots();
     return createSnapshotMatrix(d_interp_snapshots);

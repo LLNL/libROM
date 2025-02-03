@@ -18,6 +18,7 @@
 #include <unordered_map>
 
 #include <vector>
+#include <memory>
 
 namespace CAROM {
 
@@ -54,7 +55,7 @@ public:
         samplingType = stype;
     }
 
-    void ComputeSamples(const Matrix* f_basis,
+    void ComputeSamples(const std::shared_ptr<Matrix> & f_basis,
                         int num_f_basis_vectors_used,
                         std::vector<int>& f_sampled_row,
                         std::vector<int>& f_sampled_rows_per_proc,

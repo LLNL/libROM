@@ -79,7 +79,7 @@ TEST(QRfactorizeTest, Test_QR)
 
     // Verify that the columns of Q are orthonormal.
     {
-        CAROM::Matrix *id = exactQ.transposeMult(exactQ);
+        std::unique_ptr<CAROM::Matrix> id = exactQ.transposeMult(exactQ);
 
         EXPECT_EQ(id->numRows(), num_columns);
         EXPECT_EQ(id->numColumns(), num_columns);
@@ -94,19 +94,15 @@ TEST(QRfactorizeTest, Test_QR)
         }
 
         EXPECT_NEAR(maxError, 0.0, 1.0e-15);
-
-        delete id;
     }
 
-    CAROM::Matrix *A = exactQ.mult(exactR);  // Compute A = QR
+    std::unique_ptr<CAROM::Matrix> A = exactQ.mult(exactR);  // Compute A = QR
 
     // Factorize A
     std::vector<std::unique_ptr<CAROM::Matrix>> QRfactors;
     A->qr_factorize(QRfactors);
     std::unique_ptr<CAROM::Matrix> & Q = QRfactors[0];
     std::unique_ptr<CAROM::Matrix> & R = QRfactors[1];
-
-    delete A;
 
     EXPECT_EQ(Q->numRows(), loc_num_rows);
     EXPECT_EQ(Q->numColumns(), num_columns);

@@ -537,15 +537,11 @@ int main(int argc, char *argv[])
         assembleTimer.Start();
         CAROM::BasisReader reader(basis_filename);
 
-        const CAROM::Matrix *spatialbasis;
+        std::unique_ptr<const CAROM::Matrix> spatialbasis;
         if (rdim != -1)
-        {
             spatialbasis = reader.getSpatialBasis(rdim);
-        }
         else
-        {
             spatialbasis = reader.getSpatialBasis(ef);
-        }
 
         const int numRowRB = spatialbasis->numRows();
         const int numColumnRB = spatialbasis->numColumns();
@@ -586,18 +582,17 @@ int main(int argc, char *argv[])
             reduced_eigenvectors.GetColumn(j, reduced_eigenvector_j);
             CAROM::Vector reduced_eigenvector_j_carom(reduced_eigenvector_j.GetData(),
                     reduced_eigenvector_j.Size(), false, false);
-            CAROM::Vector *eigenvector_j_carom = spatialbasis->mult(
-                    reduced_eigenvector_j_carom);
+            std::unique_ptr<CAROM::Vector> eigenvector_j_carom = spatialbasis->mult(
+                        reduced_eigenvector_j_carom);
             mode_rom.SetData(eigenvector_j_carom->getData());
             mode_rom /= sqrt(InnerProduct(mode_rom, mode_rom));
             modes_rom.push_back(mode_rom);
-            delete eigenvector_j_carom;
         }
 
         // Calculate errors of eigenvalues
         ostringstream sol_eigenvalue_name_fom;
-        sol_eigenvalue_name_fom << "sol_eigenvalues_fom." << setfill('0') << setw(
-                                    6) << myid;
+        sol_eigenvalue_name_fom << "sol_eigenvalues_fom." << setfill('0')
+                                << setw(6) << myid;
         Vector eigenvalues_fom(nev);
         ifstream fom_file;
         fom_file.open(sol_eigenvalue_name_fom.str().c_str());
@@ -656,7 +651,6 @@ int main(int argc, char *argv[])
             mode_name_fom.str("");
         }
 
-        delete spatialbasis;
         delete A_mat;
         delete M_mat;
     }

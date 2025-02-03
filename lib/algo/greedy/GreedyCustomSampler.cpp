@@ -20,7 +20,7 @@
 namespace CAROM {
 
 GreedyCustomSampler::GreedyCustomSampler(
-    std::vector<double> parameter_points,
+    std::vector<double> & parameter_points,
     bool check_local_rom,
     double relative_error_tolerance,
     double alpha,
@@ -58,7 +58,7 @@ GreedyCustomSampler::GreedyCustomSampler(
 }
 
 GreedyCustomSampler::GreedyCustomSampler(
-    std::vector<Vector> parameter_points,
+    std::vector<Vector> & parameter_points,
     bool check_local_rom,
     double relative_error_tolerance,
     double alpha,

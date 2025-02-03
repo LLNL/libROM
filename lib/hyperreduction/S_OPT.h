@@ -46,7 +46,7 @@ class Matrix;
  *                         computation of a QR factorization will be performed.
  */
 void
-S_OPT(const Matrix* f_basis,
+S_OPT(const Matrix & f_basis,
       int num_f_basis_vectors_used,
       std::vector<int>& f_sampled_row,
       std::vector<int>& f_sampled_rows_per_proc,

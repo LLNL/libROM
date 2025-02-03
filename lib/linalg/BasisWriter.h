@@ -40,7 +40,7 @@ public:
      *                      Database.
      */
     BasisWriter(
-        BasisGenerator* basis_generator,
+        BasisGenerator & basis_generator,
         const std::string& base_file_name,
         Database::formats db_format = Database::formats::HDF5);
 
@@ -77,7 +77,7 @@ private:
     /**
      * @brief Basis generator whose basis vectors are being written.
      */
-    BasisGenerator* d_basis_generator;
+    BasisGenerator & d_basis_generator;
 
     /**
      * @brief Database to which basis vectors are being written.
