@@ -308,7 +308,7 @@ CAROM::Matrix *GetFirstColumns(const int N, const CAROM::Matrix *A)
 
 // TODO: move this to the library?
 void MergeBasis(const int dimFOM, const int nparam, const int max_num_snapshots,
-                std::string name)
+                std::string name, bool squareSV)
 {
     MFEM_VERIFY(nparam > 0, "Must specify a positive number of parameter sets");
 
@@ -328,7 +328,7 @@ void MergeBasis(const int dimFOM, const int nparam, const int max_num_snapshots,
     generator.endSamples(); // save the merged basis file
 
     int cutoff = 0;
-    generator.finalSummary(1e-7, cutoff, "mergedSV_" + name + ".txt");
+    generator.finalSummary(1e-7, cutoff, "mergedSV_" + name + ".txt",0,squaredSV);
 }
 
 const CAROM::Matrix *GetSnapshotMatrix(const int dimFOM, const int nparam,
@@ -643,11 +643,11 @@ int main(int argc, char *argv[])
         // Merge bases
         if (x_base_only == false)
         {
-            MergeBasis(true_size, nsets, max_num_snapshots, "V");
+            MergeBasis(true_size, nsets, max_num_snapshots, "V",squareSV);
         }
 
-        MergeBasis(true_size, nsets, max_num_snapshots, "X");
-        MergeBasis(true_size, nsets, max_num_snapshots, "H");
+        MergeBasis(true_size, nsets, max_num_snapshots, "X",squareSV);
+        MergeBasis(true_size, nsets, max_num_snapshots, "H",squareSV);
 
         totalTimer.Stop();
         if (myid == 0)

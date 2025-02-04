@@ -428,7 +428,7 @@ CAROM::Matrix* GetFirstColumns(const int N, const CAROM::Matrix* A)
 
 // TODO: move this to the library?
 void MergeBasis(const int dimFOM, const int nparam, const int max_num_snapshots,
-                std::string name)
+                std::string name, bool squareSV)
 {
     MFEM_VERIFY(nparam > 0, "Must specify a positive number of parameter sets");
 
@@ -448,7 +448,7 @@ void MergeBasis(const int dimFOM, const int nparam, const int max_num_snapshots,
     generator.endSamples(); // save the merged basis file
 
     int cutoff = 0;
-    generator.finalSummary(1e-4, cutoff, "mergedSV_" + name);
+    generator.finalSummary(1e-4, cutoff, "mergedSV_" + name,0,squaredSV);
 }
 
 // TODO: move this to the library?
@@ -512,6 +512,7 @@ int main(int argc, char *argv[])
     bool use_eqp = false;
     bool writeSampleMesh = false;
     int num_samples_req = -1;
+    bool squareSV;
 
     bool pointwiseSnapshots = false;
     int pwx = 0;
@@ -577,6 +578,8 @@ int main(int argc, char *argv[])
                    "Enable or disable the online phase.");
     args.AddOption(&merge, "-merge", "--merge", "-no-merge", "--no-merge",
                    "Enable or disable the merge phase.");
+    args.AddOption(&squareSV, "-sqsv", "--square-sv", "-no-sqsv", "--no-square-sv",
+                    "Use singular values squared in energy fraction.");
     args.AddOption(&samplingType, "-hrtype", "--hrsamplingtype",
                    "Sampling type for hyperreduction.");
     args.AddOption(&num_samples_req, "-nsr", "--nsr",
@@ -705,13 +708,13 @@ int main(int argc, char *argv[])
         totalTimer.Clear();
         totalTimer.Start();
 
-        MergeBasis(R_space.GetTrueVSize(), nsets, max_num_snapshots, "R");
-        MergeBasis(R_space.GetTrueVSize(), nsets, max_num_snapshots, "FR");
-        MergeBasis(W_space.GetTrueVSize(), nsets, max_num_snapshots, "W");
+        MergeBasis(R_space.GetTrueVSize(), nsets, max_num_snapshots, "R", squareSV);
+        MergeBasis(R_space.GetTrueVSize(), nsets, max_num_snapshots, "FR", squareSV);
+        MergeBasis(W_space.GetTrueVSize(), nsets, max_num_snapshots, "W", squareSV);
 
         if (hyperreduce_source)
         {
-            MergeBasis(W_space.GetTrueVSize(), nsets, max_num_snapshots, "S");
+            MergeBasis(W_space.GetTrueVSize(), nsets, max_num_snapshots, "S", squareSV);
         }
 
         totalTimer.Stop();
