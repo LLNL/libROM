@@ -480,7 +480,7 @@ int main(int argc, char *argv[])
     args.AddOption(&merge, "-merge", "--merge", "-no-merge", "--no-merge",
                    "Enable or disable the merge phase.");
     args.AddOption(&squareSV, "-sqsv", "--square-sv", "-no-sqsv", "--no-square-sv",
-                    "Use singular values squared in energy fraction.");
+                   "Use singular values squared in energy fraction.");
     args.AddOption(&samplingType, "-hrtype", "--hrsamplingtype",
                    "Sampling type for hyperreduction.");
     args.AddOption(&num_samples_req, "-nsr", "--nsr",

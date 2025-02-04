@@ -322,7 +322,7 @@ BasisGenerator::finalSummary(
     double sum = 0.0;
     for (int sv = first_sv; sv < sing_vals->dim(); ++sv) {
         const double s = (*sing_vals)(sv);
-         sum += squareSV ? s * s : s;
+        sum += squareSV ? s * s : s;
     }
 
     int p = std::floor(-std::log10(energyFractionThreshold));
@@ -347,7 +347,7 @@ BasisGenerator::finalSummary(
 
     for (int sv = first_sv; sv < sing_vals->dim(); ++sv) {
         const double s = (*sing_vals)(sv);
-         partialSum += squareSV ? s * s : s;
+        partialSum += squareSV ? s * s : s;
         for (int i = count; i < p; ++i)
         {
             if (partialSum / sum > 1.0 - std::pow(10, -1 - i))
