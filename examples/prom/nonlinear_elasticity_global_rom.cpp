@@ -416,6 +416,7 @@ int main(int argc, char *argv[])
     bool x_base_only = false;
     int num_samples_req = -1;
     const char *samplingType = "gnat";
+    bool squareSV;
 
     int nsets = 0;
     int id_param = 0;
@@ -478,6 +479,8 @@ int main(int argc, char *argv[])
                    "Enable or disable the online phase.");
     args.AddOption(&merge, "-merge", "--merge", "-no-merge", "--no-merge",
                    "Enable or disable the merge phase.");
+    args.AddOption(&squareSV, "-sqsv", "--square-sv", "-no-sqsv", "--no-square-sv",
+                    "Use singular values squared in energy fraction.");
     args.AddOption(&samplingType, "-hrtype", "--hrsamplingtype",
                    "Sampling type for hyperreduction.");
     args.AddOption(&num_samples_req, "-nsr", "--nsr",
