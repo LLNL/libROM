@@ -328,7 +328,7 @@ void MergeBasis(const int dimFOM, const int nparam, const int max_num_snapshots,
     generator.endSamples(); // save the merged basis file
 
     int cutoff = 0;
-    generator.finalSummary(1e-7, cutoff, "mergedSV_" + name + ".txt",0,squaredSV);
+    generator.finalSummary(1e-7, cutoff, "mergedSV_" + name + ".txt",0,squareSV);
 }
 
 const CAROM::Matrix *GetSnapshotMatrix(const int dimFOM, const int nparam,
@@ -416,7 +416,7 @@ int main(int argc, char *argv[])
     bool x_base_only = false;
     int num_samples_req = -1;
     const char *samplingType = "gnat";
-    bool squareSV;
+    bool squareSV = true;
 
     int nsets = 0;
     int id_param = 0;

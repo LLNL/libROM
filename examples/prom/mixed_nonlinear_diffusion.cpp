@@ -448,7 +448,7 @@ void MergeBasis(const int dimFOM, const int nparam, const int max_num_snapshots,
     generator.endSamples(); // save the merged basis file
 
     int cutoff = 0;
-    generator.finalSummary(1e-4, cutoff, "mergedSV_" + name,0,squaredSV);
+    generator.finalSummary(1e-4, cutoff, "mergedSV_" + name,0,squareSV);
 }
 
 // TODO: move this to the library?
@@ -512,7 +512,7 @@ int main(int argc, char *argv[])
     bool use_eqp = false;
     bool writeSampleMesh = false;
     int num_samples_req = -1;
-    bool squareSV;
+    bool squareSV = true;
 
     bool pointwiseSnapshots = false;
     int pwx = 0;
