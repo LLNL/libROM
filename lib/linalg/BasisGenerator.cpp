@@ -299,7 +299,7 @@ BasisGenerator::finalSummary(
     const double energyFractionThreshold,
     int & cutoff,
     const std::string & cutoffOutputPath,
-    const int first_sv)
+    const int first_sv, const bool squareSV)
 {
     const int rom_dim = getSpatialBasis()->numColumns();
     std::shared_ptr<const Vector> sing_vals = getSingularValues();
@@ -308,7 +308,8 @@ BasisGenerator::finalSummary(
 
     double sum = 0.0;
     for (int sv = first_sv; sv < sing_vals->dim(); ++sv) {
-        sum += (*sing_vals)(sv);
+        const double s = (*sing_vals)(sv);
+        sum += squareSV ? s * s : s;
     }
 
     int p = std::floor(-std::log10(energyFractionThreshold));
@@ -332,7 +333,8 @@ BasisGenerator::finalSummary(
     }
 
     for (int sv = first_sv; sv < sing_vals->dim(); ++sv) {
-        partialSum += (*sing_vals)(sv);
+        const double s = (*sing_vals)(sv);
+        partialSum += squareSV ? s * s : s;
         for (int i = count; i < p; ++i)
         {
             if (partialSum / sum > 1.0 - std::pow(10, -1 - i))

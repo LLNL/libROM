@@ -295,7 +295,7 @@ void visualize(ostream &out, ParMesh *mesh, ParGridFunction *deformed_nodes,
 
 // TODO: move this to the library?
 void MergeBasis(const int dimFOM, const int nparam, const int max_num_snapshots,
-                std::string name)
+                std::string name, bool squareSV)
 {
     MFEM_VERIFY(nparam > 0, "Must specify a positive number of parameter sets");
 
@@ -315,7 +315,7 @@ void MergeBasis(const int dimFOM, const int nparam, const int max_num_snapshots,
     generator.endSamples(); // save the merged basis file
 
     int cutoff = 0;
-    generator.finalSummary(1e-7, cutoff, "mergedSV_" + name + ".txt");
+    generator.finalSummary(1e-7, cutoff, "mergedSV_" + name + ".txt", 0, squareSV);
 }
 
 const CAROM::Matrix *GetSnapshotMatrix(const int dimFOM, const int nparam,
@@ -403,6 +403,7 @@ int main(int argc, char *argv[])
     bool x_base_only = false;
     int num_samples_req = -1;
     const char *samplingType = "gnat";
+    bool squareSV = true;
 
     int nsets = 0;
     int id_param = 0;
@@ -465,6 +466,8 @@ int main(int argc, char *argv[])
                    "Enable or disable the online phase.");
     args.AddOption(&merge, "-merge", "--merge", "-no-merge", "--no-merge",
                    "Enable or disable the merge phase.");
+    args.AddOption(&squareSV, "-sqsv", "--square-sv", "-no-sqsv", "--no-square-sv",
+                   "Use singular values squared in energy fraction.");
     args.AddOption(&samplingType, "-hrtype", "--hrsamplingtype",
                    "Sampling type for hyperreduction.");
     args.AddOption(&num_samples_req, "-nsr", "--nsr",
@@ -630,11 +633,11 @@ int main(int argc, char *argv[])
         // Merge bases
         if (x_base_only == false)
         {
-            MergeBasis(true_size, nsets, max_num_snapshots, "V");
+            MergeBasis(true_size, nsets, max_num_snapshots, "V", squareSV);
         }
 
-        MergeBasis(true_size, nsets, max_num_snapshots, "X");
-        MergeBasis(true_size, nsets, max_num_snapshots, "H");
+        MergeBasis(true_size, nsets, max_num_snapshots, "X", squareSV);
+        MergeBasis(true_size, nsets, max_num_snapshots, "H", squareSV);
 
         totalTimer.Stop();
         if (myid == 0)

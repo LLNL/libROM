@@ -260,7 +260,7 @@ public:
         const double energyFractionThreshold,
         int & cutoff,
         const std::string & cutoffOutputPath = "",
-        const int first_sv = 0);
+        const int first_sv = 0, const bool squareSV = true);
 
 protected:
     /**
