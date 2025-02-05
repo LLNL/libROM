@@ -328,7 +328,7 @@ void MergeBasis(const int dimFOM, const int nparam, const int max_num_snapshots,
     generator.endSamples(); // save the merged basis file
 
     int cutoff = 0;
-    generator.finalSummary(1e-7, cutoff, "mergedSV_" + name + ".txt",0,squareSV);
+    generator.finalSummary(1e-7, cutoff, "mergedSV_" + name + ".txt",0, squareSV);
 }
 
 const CAROM::Matrix *GetSnapshotMatrix(const int dimFOM, const int nparam,
@@ -646,11 +646,11 @@ int main(int argc, char *argv[])
         // Merge bases
         if (x_base_only == false)
         {
-            MergeBasis(true_size, nsets, max_num_snapshots, "V",squareSV);
+            MergeBasis(true_size, nsets, max_num_snapshots, "V", squareSV);
         }
 
-        MergeBasis(true_size, nsets, max_num_snapshots, "X",squareSV);
-        MergeBasis(true_size, nsets, max_num_snapshots, "H",squareSV);
+        MergeBasis(true_size, nsets, max_num_snapshots, "X", squareSV);
+        MergeBasis(true_size, nsets, max_num_snapshots, "H", squareSV);
 
         totalTimer.Stop();
         if (myid == 0)
