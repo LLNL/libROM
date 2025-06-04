@@ -479,7 +479,7 @@ std::shared_ptr<Matrix> MatrixInterpolator::interpolateNonSingularMatrix(
     return interpolated_matrix;
 }
 
-double obtainRBFGradient(std::string rbf, double epsilon, const Vector & point1,
+double MatrixInterpolator::obtainRBFGradient(std::string rbf, double epsilon, const Vector & point1,
                  const Vector & point2, const int index)
 {
     Vector diff;
@@ -491,7 +491,7 @@ double obtainRBFGradient(std::string rbf, double epsilon, const Vector & point1,
     if (rbf == "G")
     {
         //res = std::exp(-eps_norm_squared);
-        res = -2*epsilon*epsilon*diff.item(index)*std::exp(-eps_norm_squared);
+        res = -2.0*epsilon*epsilon*diff.item(index)*std::exp(-eps_norm_squared);
     }
     // Inverse quadratic RBF
     else if (rbf == "IQ")
@@ -510,7 +510,7 @@ double obtainRBFGradient(std::string rbf, double epsilon, const Vector & point1,
     return res;
 }
 
-std::vector<double> obtainRBFGradientToTrainingPoints(
+std::vector<double> MatrixInterpolator::obtainRBFGradientToTrainingPoints(
     const std::vector<Vector> & parameter_points,
     const std::string & interp_method, const std::string & rbf, double epsilon,
     const Vector & point, const int index)
@@ -578,6 +578,7 @@ std::shared_ptr<Matrix> MatrixInterpolator::interpolateMatrix(
                               d_rbf, d_epsilon, point, i);
 
                 std::shared_ptr<Matrix> interpolated_matrix(obtainLogInterpolatedMatrix(rbf));
+                // *interpolated_matrix += *d_rotated_reduced_matrices[d_ref_point];
 
                 d_interpolation_gradient.push_back(interpolated_matrix);
             }

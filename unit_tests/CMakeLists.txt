@@ -17,7 +17,8 @@ set(unit_test_names
     weak_scaling
     random_test
     smoke_static
-    load_samples)
+    load_samples
+    test_MatrixInterpolator_gradients)
 
 foreach(name IN LISTS unit_test_names)
     add_executable(${name} ${name}.cpp)
