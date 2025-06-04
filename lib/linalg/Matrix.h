@@ -1205,6 +1205,19 @@ EigenPair SymmetricRightEigenSolve(const Matrix & A);
  */
 ComplexEigenPair NonSymmetricRightEigenSolve(const Matrix & A);
 
+/**
+ * @brief Computes the left and right eigenvectors/eigenvalues of an NxN 
+ *        real nonsymmetric matrix.
+ *
+ * @param[in] A The NxN real nonsymmetric matrix to be eigendecomposed.
+ *
+ * @return A standard vector of ComplexEigenPairs containing the 
+ *         right, then left, eigenvectors and eigenvalues of the eigensolve. 
+ *         The eigenvector matrices contained within the returning struct 
+ *         must be destroyed by the user.
+ */
+std::vector<ComplexEigenPair> NonSymmetricEigenSolve(const Matrix & A);
+
 std::unique_ptr<Matrix> SpaceTimeProduct(const CAROM::Matrix & As,
         const CAROM::Matrix & At, const CAROM::Matrix & Bs,
         const CAROM::Matrix & Bt,
