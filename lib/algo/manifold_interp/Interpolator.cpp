@@ -143,7 +143,8 @@ std::vector<double> obtainRBFGradientToTrainingPoints(
     {
         for (int i = 0; i < parameter_points.size(); i++)
         {
-            rbfs.push_back(obtainRBFGradient(rbf, epsilon, point, parameter_points[i], index));
+            rbfs.push_back(obtainRBFGradient(rbf, epsilon, point, parameter_points[i],
+                                             index));
         }
     }
     else
@@ -155,7 +156,7 @@ std::vector<double> obtainRBFGradientToTrainingPoints(
 }
 
 double obtainRBFGradient(std::string rbf, double epsilon, const Vector & point1,
-                 const Vector & point2, const int index)
+                         const Vector & point2, const int index)
 {
     Vector diff;
     point1.minus(point2, diff);
@@ -172,14 +173,16 @@ double obtainRBFGradient(std::string rbf, double epsilon, const Vector & point1,
     else if (rbf == "IQ")
     {
         //res = 1.0 / (1.0 + eps_norm_squared);
-        res = -2.0*epsilon*epsilon*diff.item(index)/((1.0+eps_norm_squared)*(1.0+eps_norm_squared));
+        res = -2.0*epsilon*epsilon*diff.item(index)/((1.0+eps_norm_squared)*
+                (1.0+eps_norm_squared));
 
     }
     // Inverse multiquadric RBF
     else if (rbf == "IMQ")
     {
         //res = 1.0 / std::sqrt(1.0 + eps_norm_squared);
-        res = -epsilon*epsilon*diff.item(index)/(std::sqrt(1.0+eps_norm_squared)*(1.0+eps_norm_squared));
+        res = -epsilon*epsilon*diff.item(index)/(std::sqrt(1.0+eps_norm_squared)*
+                (1.0+eps_norm_squared));
     }
 
     return res;

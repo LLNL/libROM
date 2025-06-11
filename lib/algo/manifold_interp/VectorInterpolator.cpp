@@ -129,7 +129,7 @@ std::shared_ptr<Vector> VectorInterpolator::interpolate(const Vector & point)
             for (int i = 0; i < point.dim(); ++i)
             {
                 std::vector<double> rbf = obtainRBFGradientToTrainingPoints(d_parameter_points,
-                                        d_interp_method,d_rbf, d_epsilon, point, i);
+                                          d_interp_method,d_rbf, d_epsilon, point, i);
                 std::shared_ptr<Vector> gradient_vector(obtainLogInterpolatedVector(rbf));
                 d_interpolation_gradient.push_back(gradient_vector);
             }

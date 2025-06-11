@@ -522,8 +522,8 @@ std::shared_ptr<Matrix> MatrixInterpolator::interpolateMatrix(
             for (int i = 0; i < point.dim(); i++)
             {
                 std::vector<double> rbf = obtainRBFGradientToTrainingPoints(d_parameter_points,
-                              d_interp_method,
-                              d_rbf, d_epsilon, point, i);
+                                          d_interp_method,
+                                          d_rbf, d_epsilon, point, i);
 
                 std::shared_ptr<Matrix> gradient_matrix(obtainLogInterpolatedMatrix(rbf));
                 // *interpolated_matrix += *d_rotated_reduced_matrices[d_ref_point];
@@ -531,7 +531,7 @@ std::shared_ptr<Matrix> MatrixInterpolator::interpolateMatrix(
                 d_interpolation_gradient.push_back(gradient_matrix);
             }
         }
-        else 
+        else
         {
             std::cout << "Interpolated gradients are only implemented for \"LS\" ";
             CAROM_VERIFY(d_interp_method == "LS");
