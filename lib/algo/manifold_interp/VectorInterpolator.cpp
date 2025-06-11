@@ -45,13 +45,15 @@ VectorInterpolator::VectorInterpolator(const std::vector<Vector> &
                                        int ref_point,
                                        std::string rbf,
                                        std::string interp_method,
-                                       double closest_rbf_val) :
+                                       double closest_rbf_val,
+                                       bool compute_gradients) :
     Interpolator(parameter_points,
                  rotation_matrices,
                  ref_point,
                  rbf,
                  interp_method,
-                 closest_rbf_val)
+                 closest_rbf_val,
+                 compute_gradients)
 {
     CAROM_VERIFY(reduced_vectors.size() == rotation_matrices.size());
 
@@ -119,6 +121,25 @@ std::shared_ptr<Vector> VectorInterpolator::interpolate(const Vector & point)
     // Interpolate gammas to get gamma for new point
     std::unique_ptr<Vector> log_interpolated_vector = obtainLogInterpolatedVector(
                 rbf);
+
+    if (d_compute_gradients)
+    {
+        if(d_interp_method == "LS")
+        {
+            for (int i = 0; i < point.dim(); ++i)
+            {
+                std::vector<double> rbf = obtainRBFGradientToTrainingPoints(d_parameter_points,
+                                        d_interp_method,d_rbf, d_epsilon, point, i);
+                std::shared_ptr<Vector> gradient_vector(obtainLogInterpolatedVector(rbf));
+                d_interpolation_gradient.push_back(gradient_vector);
+            }
+        }
+        else
+        {
+            std::cout << "Interpolated gradients are only implemented for \"LS\" ";
+            CAROM_VERIFY(d_interp_method == "LS");
+        }
+    }
 
     // The exp mapping is X + the interpolated gamma
     std::shared_ptr<Vector> interpolated_vector =

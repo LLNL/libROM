@@ -58,6 +58,7 @@ public:
      *                              "LP" == lagrangian polynomials)
      * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
      *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
+     * @param[in] compute_gradients Choose whether or not to compute the gradient along with the interpolation.
      */
     MatrixInterpolator(const std::vector<Vector> & parameter_points,
                        const std::vector<std::shared_ptr<Matrix>> & rotation_matrices,

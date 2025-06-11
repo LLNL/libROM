@@ -106,14 +106,7 @@ void printMatrix(std::shared_ptr<CAROM::Matrix> input, int rows, int cols, strin
 
 int main(int argc, char *argv[])
 {
-    // CAROM::Vector input1(2, false);
-    // input1(0) = 0.0; input1(1) = 0.0;
-    // CAROM::Vector input2(2, false);
-    // input2(0) = 0.0; input2(1) = 0.1;
-    // CAROM::Vector input3(2, false);
-    // input3(0) = 0.1; input3(1) = 0.0;
-    // CAROM::Vector input4(2, false);
-    // input4(0) = 0.1; input4(1) = 0.1;
+    bool SUCCESS = true;
     CAROM::Vector input1(2, false);
     input1(0) = 0.04; input1(1) = 0.04;
     CAROM::Vector input2(2, false);
@@ -135,9 +128,6 @@ int main(int argc, char *argv[])
 
     std::shared_ptr<CAROM::Matrix> soln = createMatrix(target);
     
-
-    std::vector<std::shared_ptr<CAROM::Matrix>> true_gradient = createGradient(target);
-    
     std::shared_ptr<CAROM::Matrix> eye(new Matrix(2,2,false));
     eye->item(0,0) = 1.0; eye->item(0,1) = 0.0;
     eye->item(0,1) = 0.0; eye->item(1,1) = 1.0;
@@ -146,14 +136,11 @@ int main(int argc, char *argv[])
     std::vector<std::shared_ptr<CAROM::Matrix>> rotations{eye,eye,eye,eye};
     std::vector<std::shared_ptr<CAROM::Matrix>> matrices{matrix1, matrix2, matrix3, matrix4};
     
-    CAROM::MatrixInterpolator interpolator(inputs, rotations, matrices, 0, "B", "G", "LS", 0.9, true);
+    CAROM::MatrixInterpolator interpolator(inputs, rotations, matrices, 0, "B", "IQ", "LS", 0.9, true);
 
     std::shared_ptr<CAROM::Matrix> A = interpolator.interpolate(target);
-    
-
     std::vector<std::shared_ptr<CAROM::Matrix>> gradient = interpolator.getGradient();
 
-    // double epsilon = std::sqrt(std::numeric_limits<float>::denorm_min());
     double epsilon = 1.0e-7;
     CAROM::Vector perturb0(2, false);
     perturb0(0) = epsilon; perturb0(1) = 0.0;
@@ -168,12 +155,6 @@ int main(int argc, char *argv[])
     std::shared_ptr<CAROM::Matrix> interp_perturbation0 = interpolator.interpolate(perturb0);
     std::shared_ptr<CAROM::Matrix> interp_perturbation1 = interpolator.interpolate(perturb1);
 
-    std::shared_ptr<CAROM::Matrix> fd_grad0(new Matrix(perturbation0->getData(), 2,2,false));
-    *fd_grad0 -= *soln;
-    
-    std::shared_ptr<CAROM::Matrix> fd_grad1(new Matrix(perturbation1->getData(), 2,2,false));
-    *fd_grad1 -= *soln;
-
     std::shared_ptr<CAROM::Matrix> fd_grad_interp0(new Matrix(*interp_perturbation0));
     *fd_grad_interp0 -= *A;
 
@@ -184,24 +165,41 @@ int main(int argc, char *argv[])
     {
         for(int j = 0; j < 2; ++j)
         {
-            fd_grad0->item(i,j) *= 1./epsilon; 
-            fd_grad1->item(i,j) *= 1./epsilon;
             fd_grad_interp0->item(i,j) /= epsilon;
             fd_grad_interp1->item(i,j) /= epsilon;
         }
     }
 
+    for(int i = 0; i < 2; ++i)
+    {
+        for(int j = 0; j < 2; ++j)
+        {
+            double fd = fd_grad_interp0->item(i,j);
+            double my = gradient[0]->item(i,j);
+            if(abs(fd - my) > 1.e-7)
+            {
+                SUCCESS = false;
+                break;
+            } 
+            fd = fd_grad_interp0->item(i,j);
+            my = gradient[0]->item(i,j);
+            if(abs(fd - my) > 1.e-7)
+            {
+                SUCCESS = false;
+                break;
+            } 
+        }
+        if(!SUCCESS) break;
+    }
+    // EXPECT_TRUE(SUCCESS);
+
     printMatrix(soln, 2,2, "true solution");
     printMatrix(A,2,2,"interpolated Matrix");
 
-    printMatrix(true_gradient[0],2,2,"true_grad0");
-    printMatrix(fd_grad0, 2,2, "finite difference grad0");
     printMatrix(gradient[0],2,2,"grad0");
     printMatrix(fd_grad_interp0, 2,2, "finite difference interpolation grad0");
     
 
-    printMatrix(true_gradient[1],2,2,"true_grad1");
-    printMatrix(fd_grad1, 2,2, "finite difference grad1");
     printMatrix(gradient[1],2,2,"grad1");
     printMatrix(fd_grad_interp1, 2,2, "finite difference interpolation grad0");
     

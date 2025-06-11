@@ -53,6 +53,7 @@ public:
      *                              "LP" == lagrangian polynomials)
      * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
      *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
+     * @param[in] compute_gradients Choose whether or not to compute the gradient along with the interpolation.
      */
     VectorInterpolator(const std::vector<Vector> & parameter_points,
                        const std::vector<std::shared_ptr<Matrix>> & rotation_matrices,
@@ -60,7 +61,8 @@ public:
                        int ref_point,
                        std::string rbf = "G",
                        std::string interp_method = "LS",
-                       double closest_rbf_val = 0.9);
+                       double closest_rbf_val = 0.9,
+                       bool compute_gradients = false);
 
     /**
      * @brief Obtain the interpolated reduced vector of the unsampled parameter point.
@@ -68,6 +70,12 @@ public:
      * @param[in] point The unsampled parameter point.
      */
     std::shared_ptr<Vector> interpolate(const Vector & point);
+
+    /**
+    * @brief Returns the interpolated matrix's gradient.
+    *
+    */
+    std::vector<std::shared_ptr<Vector>> getGradient(){return d_interpolation_gradient;}
 
 private:
 
@@ -113,6 +121,12 @@ private:
      * @brief The reduced elements in tangential space.
      */
     std::vector<std::shared_ptr<Vector>> d_gammas;
+
+    /**
+     * @brief Gradient with respect to the parameters.  Only exists after
+     *          interpolate has been run
+     */
+    std::vector<std::shared_ptr<Vector>> d_interpolation_gradient;
 };
 
 std::unique_ptr<Vector> obtainInterpolatedVector(
