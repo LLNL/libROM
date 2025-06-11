@@ -75,7 +75,9 @@ public:
     * @brief Returns the interpolated matrix's gradient.
     *
     */
-    std::vector<std::shared_ptr<Vector>> getGradient(){return d_interpolation_gradient;}
+    std::vector<std::shared_ptr<Vector>> getGradient() {
+        return d_interpolation_gradient;
+    }
 
 private:
 

@@ -83,7 +83,9 @@ public:
     * @brief Returns the interpolated matrix's gradient.
     *
     */
-    std::vector<std::shared_ptr<Matrix>> getGradient(){return d_interpolation_gradient;}
+    std::vector<std::shared_ptr<Matrix>> getGradient() {
+        return d_interpolation_gradient;
+    }
 
 private:
 
@@ -162,7 +164,7 @@ private:
      * @brief The reduced matrix of the reference point to the half power.
      */
     std::shared_ptr<Matrix> d_x_half_power;
-    
+
     /**
      * @brief Gradient with respect to the parameters.  Only exists after
      *          interpolate has been run

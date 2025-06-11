@@ -114,7 +114,7 @@ protected:
      *        parameters should be computed.
      */
     bool d_compute_gradients;
-    
+
     /**
      * @brief Gradient with respect to the parameters.  Only exists after
      *          interpolate has been run
@@ -157,9 +157,9 @@ private:
  * @param[in] point The unsampled parameter point.
  */
 std::vector<double> obtainRBFToTrainingPoints(
-const std::vector<Vector> & parameter_points,
-const std::string & interp_method, const std::string & rbf, double epsilon,
-const Vector & point);
+    const std::vector<Vector> & parameter_points,
+    const std::string & interp_method, const std::string & rbf, double epsilon,
+    const Vector & point);
 
 /**
  * @brief Compute the RBF gradient from the parameter points with the
@@ -174,7 +174,7 @@ const Vector & point);
  * @param[in] epsilon   The RBF parameter that determines the width of
                          influence.
  * @param[in] point The unsampled parameter point.
- * @param[in] index The index of the parameter that we are 
+ * @param[in] index The index of the parameter that we are
                      differentiating against.
  */
 std::vector<double> obtainRBFGradientToTrainingPoints(
@@ -191,11 +191,11 @@ std::vector<double> obtainRBFGradientToTrainingPoints(
                          influence.
  * @param[in] point1 The first point.
  * @param[in] point2 The second point.
- * @param[in] index The index of the parameter that we are 
+ * @param[in] index The index of the parameter that we are
                      differentiating against.
  */
 double obtainRBFGradient(std::string rbf, double epsilon, const Vector & point1,
-                    const Vector & point2, const int index);
+                         const Vector & point2, const int index);
 
 /**
  * @brief Compute the sum of the RBF weights.
