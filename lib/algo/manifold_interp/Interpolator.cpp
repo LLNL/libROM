@@ -34,7 +34,8 @@ Interpolator::Interpolator(const std::vector<Vector> & parameter_points,
                            int ref_point,
                            std::string rbf,
                            std::string interp_method,
-                           double closest_rbf_val)
+                           double closest_rbf_val,
+                           bool compute_gradients)
 {
     CAROM_VERIFY(parameter_points.size() == rotation_matrices.size());
     CAROM_VERIFY(parameter_points.size() > 1);
@@ -53,6 +54,7 @@ Interpolator::Interpolator(const std::vector<Vector> & parameter_points,
     MPI_Comm_rank(MPI_COMM_WORLD, &d_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &d_num_procs);
 
+    d_compute_gradients = compute_gradients;
     d_parameter_points = parameter_points;
     d_rotation_matrices = rotation_matrices;
     d_ref_point = ref_point;
@@ -130,6 +132,60 @@ std::vector<double> obtainRBFToTrainingPoints(
     }
     return rbfs;
 }
+
+std::vector<double> obtainRBFGradientToTrainingPoints(
+    const std::vector<Vector> & parameter_points,
+    const std::string & interp_method, const std::string & rbf, double epsilon,
+    const Vector & point, const int index)
+{
+    std::vector<double> rbfs;
+    if (interp_method == "LS")
+    {
+        for (int i = 0; i < parameter_points.size(); i++)
+        {
+            rbfs.push_back(obtainRBFGradient(rbf, epsilon, point, parameter_points[i], index));
+        }
+    }
+    else
+    {
+        std::cout << "Interpolated gradients are only implemented for \"LS\" ";
+        CAROM_VERIFY(interp_method == "LS");
+    }
+    return rbfs;
+}
+
+double obtainRBFGradient(std::string rbf, double epsilon, const Vector & point1,
+                 const Vector & point2, const int index)
+{
+    Vector diff;
+    point1.minus(point2, diff);
+    double eps_norm_squared = epsilon * epsilon * diff.norm2();
+    double res = 0.0;
+
+    // Gaussian RBF
+    if (rbf == "G")
+    {
+        //res = std::exp(-eps_norm_squared);
+        res = -2.0*epsilon*epsilon*diff.item(index)*std::exp(-eps_norm_squared);
+    }
+    // Inverse quadratic RBF
+    else if (rbf == "IQ")
+    {
+        //res = 1.0 / (1.0 + eps_norm_squared);
+        res = -2.0*epsilon*epsilon*diff.item(index)/((1.0+eps_norm_squared)*(1.0+eps_norm_squared));
+
+    }
+    // Inverse multiquadric RBF
+    else if (rbf == "IMQ")
+    {
+        //res = 1.0 / std::sqrt(1.0 + eps_norm_squared);
+        res = -epsilon*epsilon*diff.item(index)/(std::sqrt(1.0+eps_norm_squared)*(1.0+eps_norm_squared));
+    }
+
+    return res;
+}
+
+
 
 double rbfWeightedSum(std::vector<double>& rbf)
 {

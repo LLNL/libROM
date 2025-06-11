@@ -165,11 +165,20 @@ int main(int argc, char *argv[])
     std::shared_ptr<CAROM::Matrix> perturbation0 = createMatrix(perturb0);
     std::shared_ptr<CAROM::Matrix> perturbation1 = createMatrix(perturb1);
 
+    std::shared_ptr<CAROM::Matrix> interp_perturbation0 = interpolator.interpolate(perturb0);
+    std::shared_ptr<CAROM::Matrix> interp_perturbation1 = interpolator.interpolate(perturb1);
+
     std::shared_ptr<CAROM::Matrix> fd_grad0(new Matrix(perturbation0->getData(), 2,2,false));
     *fd_grad0 -= *soln;
     
     std::shared_ptr<CAROM::Matrix> fd_grad1(new Matrix(perturbation1->getData(), 2,2,false));
     *fd_grad1 -= *soln;
+
+    std::shared_ptr<CAROM::Matrix> fd_grad_interp0(new Matrix(*interp_perturbation0));
+    *fd_grad_interp0 -= *A;
+
+    std::shared_ptr<CAROM::Matrix> fd_grad_interp1(new Matrix(*interp_perturbation1));
+    *fd_grad_interp1 -= *A;
 
     for(int i = 0; i < 2; ++i)
     {
@@ -177,25 +186,23 @@ int main(int argc, char *argv[])
         {
             fd_grad0->item(i,j) *= 1./epsilon; 
             fd_grad1->item(i,j) *= 1./epsilon;
+            fd_grad_interp0->item(i,j) /= epsilon;
+            fd_grad_interp1->item(i,j) /= epsilon;
         }
     }
-
-
-
-
-
-
-    
 
     printMatrix(soln, 2,2, "true solution");
     printMatrix(A,2,2,"interpolated Matrix");
 
     printMatrix(true_gradient[0],2,2,"true_grad0");
-    printMatrix(gradient[0],2,2,"grad0");
     printMatrix(fd_grad0, 2,2, "finite difference grad0");
+    printMatrix(gradient[0],2,2,"grad0");
+    printMatrix(fd_grad_interp0, 2,2, "finite difference interpolation grad0");
+    
 
     printMatrix(true_gradient[1],2,2,"true_grad1");
-    printMatrix(gradient[1],2,2,"grad1");
     printMatrix(fd_grad1, 2,2, "finite difference grad1");
+    printMatrix(gradient[1],2,2,"grad1");
+    printMatrix(fd_grad_interp1, 2,2, "finite difference interpolation grad0");
     
 }

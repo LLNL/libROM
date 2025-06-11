@@ -143,41 +143,6 @@ private:
     std::shared_ptr<Matrix> interpolateMatrix(const Vector & point);
 
     /**
-    * @brief Compute the RBF gradient from the parameter points with the
-    *        unsampled parameter point.
-    *
-    * @param[in] parameter_points The parameter points.
-    * @param[in] interp_method  The interpolation method type
-    *                           ("LS" == linear solve,
-    *                           "IDW" == inverse distance weighting,
-    *                           "LP" == lagrangian polynomials)
-    * @param[in] rbf Which RBF to compute.
-    * @param[in] epsilon   The RBF parameter that determines the width of
-                            influence.
-    * @param[in] point The unsampled parameter point.
-    * @param[in] index The index of the parameter that we are 
-                        differentiating against.
-    */
-    std::vector<double> obtainRBFGradientToTrainingPoints(
-        const std::vector<Vector> & parameter_points,
-        const std::string & interp_method, const std::string & rbf, double epsilon,
-        const Vector & point, const int index);
-
-    /**
-    * @brief Compute the RBF gradient between two points.
-    *
-    * @param[in] rbf Which RBF to compute.
-    * @param[in] epsilon   The RBF parameter that determines the width of
-                            influence.
-    * @param[in] point1 The first point.
-    * @param[in] point2 The second point.
-    * @param[in] index The index of the parameter that we are 
-                        differentiating against.
-    */
-    double obtainRBFGradient(std::string rbf, double epsilon, const Vector & point1,
-                     const Vector & point2, const int index);
-
-    /**
      * @brief The matrix type/manifold
      */
     std::string d_matrix_type;
@@ -196,16 +161,10 @@ private:
      * @brief The reduced matrix of the reference point to the half power.
      */
     std::shared_ptr<Matrix> d_x_half_power;
-
-    /**
-     * @brief Flag that determines if a gradient with respect to the
-     *        parameters should be computed.
-     */
-    bool d_compute_gradients;
     
     /**
-     * @brief Flag that determines if a gradient with respect to the
-     *        parameters should be computed.
+     * @brief Gradient with respect to the parameters.  Only exists after
+     *          interpolate has been run
      */
     std::vector<std::shared_ptr<Matrix>> d_interpolation_gradient;
 };

@@ -52,13 +52,13 @@ MatrixInterpolator::MatrixInterpolator(const std::vector<Vector> &
                  ref_point,
                  rbf,
                  interp_method,
-                 closest_rbf_val)
+                 closest_rbf_val,
+                 compute_gradients)
 {
     CAROM_VERIFY(reduced_matrices.size() == rotation_matrices.size());
     CAROM_VERIFY(matrix_type == "SPD" || matrix_type == "NS" || matrix_type == "R"
                  || matrix_type == "B");
     d_matrix_type = matrix_type;
-    d_compute_gradients = compute_gradients;
 
     // Rotate the reduced matrices
     for (int i = 0; i < reduced_matrices.size(); i++)
@@ -479,58 +479,6 @@ std::shared_ptr<Matrix> MatrixInterpolator::interpolateNonSingularMatrix(
     return interpolated_matrix;
 }
 
-double MatrixInterpolator::obtainRBFGradient(std::string rbf, double epsilon, const Vector & point1,
-                 const Vector & point2, const int index)
-{
-    Vector diff;
-    point1.minus(point2, diff);
-    double eps_norm_squared = epsilon * epsilon * diff.norm2();
-    double res = 0.0;
-
-    // Gaussian RBF
-    if (rbf == "G")
-    {
-        //res = std::exp(-eps_norm_squared);
-        res = -2.0*epsilon*epsilon*diff.item(index)*std::exp(-eps_norm_squared);
-    }
-    // Inverse quadratic RBF
-    else if (rbf == "IQ")
-    {
-        //res = 1.0 / (1.0 + eps_norm_squared);
-        res = -2.0*epsilon*epsilon*diff.item(index)/((1.0+eps_norm_squared)*(1.0+eps_norm_squared));
-
-    }
-    // Inverse multiquadric RBF
-    else if (rbf == "IMQ")
-    {
-        //res = 1.0 / std::sqrt(1.0 + eps_norm_squared);
-        res = -epsilon*epsilon*diff.item(index)/(std::sqrt(1.0+eps_norm_squared)*(1.0+eps_norm_squared));
-    }
-
-    return res;
-}
-
-std::vector<double> MatrixInterpolator::obtainRBFGradientToTrainingPoints(
-    const std::vector<Vector> & parameter_points,
-    const std::string & interp_method, const std::string & rbf, double epsilon,
-    const Vector & point, const int index)
-{
-    std::vector<double> rbfs;
-    if (interp_method == "LS")
-    {
-        for (int i = 0; i < parameter_points.size(); i++)
-        {
-            rbfs.push_back(obtainRBFGradient(rbf, epsilon, point, parameter_points[i], index));
-        }
-    }
-    else
-    {
-        std::cout << "Interpolated gradients are only implemented for \"LS\" ";
-        CAROM_VERIFY(interp_method == "LS");
-    }
-    return rbfs;
-}
-
 std::shared_ptr<Matrix> MatrixInterpolator::interpolateMatrix(
     const Vector & point)
 {
@@ -577,10 +525,10 @@ std::shared_ptr<Matrix> MatrixInterpolator::interpolateMatrix(
                               d_interp_method,
                               d_rbf, d_epsilon, point, i);
 
-                std::shared_ptr<Matrix> interpolated_matrix(obtainLogInterpolatedMatrix(rbf));
+                std::shared_ptr<Matrix> gradient_matrix(obtainLogInterpolatedMatrix(rbf));
                 // *interpolated_matrix += *d_rotated_reduced_matrices[d_ref_point];
 
-                d_interpolation_gradient.push_back(interpolated_matrix);
+                d_interpolation_gradient.push_back(gradient_matrix);
             }
         }
         else 
