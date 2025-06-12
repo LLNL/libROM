@@ -149,8 +149,7 @@ std::vector<double> obtainRBFGradientToTrainingPoints(
     }
     else
     {
-        std::cout << "Interpolated gradients are only implemented for \"LS\" ";
-        CAROM_VERIFY(interp_method == "LS");
+        CAROM_ERROR("Interpolated gradients are only implemented for \"LS\"");
     }
     return rbfs;
 }
@@ -160,19 +159,19 @@ double obtainRBFGradient(std::string rbf, double epsilon, const Vector & point1,
 {
     Vector diff;
     point1.minus(point2, diff);
-    double eps_norm_squared = epsilon * epsilon * diff.norm2();
+    const double eps_norm_squared = epsilon * epsilon * diff.norm2();
     double res = 0.0;
 
     // Gaussian RBF
     if (rbf == "G")
     {
-        //res = std::exp(-eps_norm_squared);
+        //Derivative of Gaussian RBF, res = std::exp(-eps_norm_squared);
         res = -2.0*epsilon*epsilon*diff.item(index)*std::exp(-eps_norm_squared);
     }
     // Inverse quadratic RBF
     else if (rbf == "IQ")
     {
-        //res = 1.0 / (1.0 + eps_norm_squared);
+        //Derivative of Inverse Quadratic RBF, res = 1.0 / (1.0 + eps_norm_squared);
         res = -2.0*epsilon*epsilon*diff.item(index)/((1.0+eps_norm_squared)*
                 (1.0+eps_norm_squared));
 
@@ -180,15 +179,13 @@ double obtainRBFGradient(std::string rbf, double epsilon, const Vector & point1,
     // Inverse multiquadric RBF
     else if (rbf == "IMQ")
     {
-        //res = 1.0 / std::sqrt(1.0 + eps_norm_squared);
+        //Derivative of Inverse multiquadritic RBF, res = 1.0 / std::sqrt(1.0 + eps_norm_squared);
         res = -epsilon*epsilon*diff.item(index)/(std::sqrt(1.0+eps_norm_squared)*
                 (1.0+eps_norm_squared));
     }
 
     return res;
 }
-
-
 
 double rbfWeightedSum(std::vector<double>& rbf)
 {
@@ -205,7 +202,7 @@ double obtainRBF(std::string rbf, double epsilon, const Vector & point1,
 {
     Vector diff;
     point1.minus(point2, diff);
-    double eps_norm_squared = epsilon * epsilon * diff.norm2();
+    const double eps_norm_squared = epsilon * epsilon * diff.norm2();
     double res = 0.0;
 
     // Gaussian RBF

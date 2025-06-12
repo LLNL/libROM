@@ -106,8 +106,7 @@ std::shared_ptr<Matrix> MatrixInterpolator::interpolate(const Vector & point,
     {
         if (d_compute_gradients)
         {
-            std::cout << "Gradients are only implemented for B or G";
-            CAROM_VERIFY(false);
+            CAROM_ERROR("Gradients are only implemented for B or G");
         }
         interpolated_matrix = interpolateSPDMatrix(point);
     }
@@ -115,8 +114,7 @@ std::shared_ptr<Matrix> MatrixInterpolator::interpolate(const Vector & point,
     {
         if (d_compute_gradients)
         {
-            std::cout << "Gradients are only implemented for B or G";
-            CAROM_VERIFY(false);
+            CAROM_ERROR("Gradients are only implemented for B or G");
         }
         interpolated_matrix = interpolateNonSingularMatrix(point);
     }
@@ -526,15 +524,12 @@ std::shared_ptr<Matrix> MatrixInterpolator::interpolateMatrix(
                                           d_rbf, d_epsilon, point, i);
 
                 std::shared_ptr<Matrix> gradient_matrix(obtainLogInterpolatedMatrix(rbf));
-                // *interpolated_matrix += *d_rotated_reduced_matrices[d_ref_point];
-
                 d_interpolation_gradient.push_back(gradient_matrix);
             }
         }
         else
         {
-            std::cout << "Interpolated gradients are only implemented for \"LS\" ";
-            CAROM_VERIFY(d_interp_method == "LS");
+            CAROM_ERROR("Interpolated gradients are only implemented for \"LS\"");
         }
     }
 

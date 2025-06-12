@@ -136,8 +136,7 @@ std::shared_ptr<Vector> VectorInterpolator::interpolate(const Vector & point)
         }
         else
         {
-            std::cout << "Interpolated gradients are only implemented for \"LS\" ";
-            CAROM_VERIFY(d_interp_method == "LS");
+            CAROM_ERROR("Interpolated gradients are only implemented for \"LS\"");
         }
     }
 
