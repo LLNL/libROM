@@ -58,6 +58,7 @@ public:
      *                              "LP" == lagrangian polynomials)
      * @param[in] closest_rbf_val   The RBF parameter determines the width of influence.
      *                              Set the RBF value of the nearest two parameter points to a value between 0.0 to 1.0
+     * @param[in] compute_gradients Choose whether or not to compute the gradient along with the interpolation.
      */
     MatrixInterpolator(const std::vector<Vector> & parameter_points,
                        const std::vector<std::shared_ptr<Matrix>> & rotation_matrices,
@@ -66,7 +67,8 @@ public:
                        std::string matrix_type,
                        std::string rbf = "G",
                        std::string interp_method = "LS",
-                       double closest_rbf_val = 0.9);
+                       double closest_rbf_val = 0.9,
+                       bool compute_gradients = false);
 
     /**
      * @brief Obtain the interpolated reduced matrix of the unsampled parameter point.
@@ -76,6 +78,14 @@ public:
      */
     std::shared_ptr<Matrix> interpolate(const Vector & point,
                                         bool orthogonalize = false);
+
+    /**
+    * @brief Returns the interpolated matrix's gradient.
+    *
+    */
+    std::vector<std::shared_ptr<Matrix>> getGradient() {
+        return d_interpolation_gradient;
+    }
 
 private:
 
@@ -154,6 +164,12 @@ private:
      * @brief The reduced matrix of the reference point to the half power.
      */
     std::shared_ptr<Matrix> d_x_half_power;
+
+    /**
+     * @brief Gradient with respect to the parameters.  Only exists after
+     *          interpolate has been run
+     */
+    std::vector<std::shared_ptr<Matrix>> d_interpolation_gradient;
 };
 
 }

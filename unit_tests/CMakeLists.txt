@@ -47,7 +47,8 @@ set(unit_test_stems
     GreedyCustomSampler
     NNLS
     basis_conversion
-    PCHIPInterpolator)
+    PCHIPInterpolator
+    interpolation_gradients)
 
 foreach(stem IN LISTS unit_test_stems)
     add_executable(test_${stem} test_${stem}.cpp)

@@ -45,13 +45,15 @@ MatrixInterpolator::MatrixInterpolator(const std::vector<Vector> &
                                        std::string matrix_type,
                                        std::string rbf,
                                        std::string interp_method,
-                                       double closest_rbf_val) :
+                                       double closest_rbf_val,
+                                       bool compute_gradients) :
     Interpolator(parameter_points,
                  rotation_matrices,
                  ref_point,
                  rbf,
                  interp_method,
-                 closest_rbf_val)
+                 closest_rbf_val,
+                 compute_gradients)
 {
     CAROM_VERIFY(reduced_matrices.size() == rotation_matrices.size());
     CAROM_VERIFY(matrix_type == "SPD" || matrix_type == "NS" || matrix_type == "R"
@@ -102,10 +104,18 @@ std::shared_ptr<Matrix> MatrixInterpolator::interpolate(const Vector & point,
     std::shared_ptr<Matrix> interpolated_matrix;
     if (d_matrix_type == "SPD")
     {
+        if (d_compute_gradients)
+        {
+            CAROM_ERROR("Gradients are only implemented for B or G");
+        }
         interpolated_matrix = interpolateSPDMatrix(point);
     }
     else if (d_matrix_type == "NS")
     {
+        if (d_compute_gradients)
+        {
+            CAROM_ERROR("Gradients are only implemented for B or G");
+        }
         interpolated_matrix = interpolateNonSingularMatrix(point);
     }
     else
@@ -503,9 +513,28 @@ std::shared_ptr<Matrix> MatrixInterpolator::interpolateMatrix(
     // Interpolate gammas to get gamma for new point
     std::shared_ptr<Matrix> interpolated_matrix(obtainLogInterpolatedMatrix(rbf));
 
+    if (d_compute_gradients)
+    {
+        if(d_interp_method == "LS")
+        {
+            for (int i = 0; i < point.dim(); i++)
+            {
+                std::vector<double> rbf = obtainRBFGradientToTrainingPoints(d_parameter_points,
+                                          d_interp_method,
+                                          d_rbf, d_epsilon, point, i);
+
+                std::shared_ptr<Matrix> gradient_matrix(obtainLogInterpolatedMatrix(rbf));
+                d_interpolation_gradient.push_back(gradient_matrix);
+            }
+        }
+        else
+        {
+            CAROM_ERROR("Interpolated gradients are only implemented for \"LS\"");
+        }
+    }
+
     // The exp mapping is X + the interpolated gamma
     *interpolated_matrix += *d_rotated_reduced_matrices[d_ref_point];
     return interpolated_matrix;
 }
-
 }
