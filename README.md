@@ -19,10 +19,9 @@ provides more details about libROM's classes and functions.
 - Physics-informed greedy algorithm
 - Projection-based hyper-reduction
 - EQP: quadrature-based hyper-reduction sampling algorithm
+- [Python interface](https://github.com/LLNL/pylibROM)
 
 ## Features to be added
-
-- Python interface
 
 # Installation
 
