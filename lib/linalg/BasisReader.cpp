@@ -85,7 +85,7 @@ BasisReader::getSpatialBasis()
     d_database->getDoubleArray("spatial_basis",
                                &spatial_basis_vectors->item(0, 0),
                                num_rows*num_cols,
-                               true);
+                               d_distributed);
     return std::unique_ptr<Matrix>(spatial_basis_vectors);
 }
 
@@ -118,7 +118,7 @@ BasisReader::getSpatialBasis(
                                start_col - 1,
                                num_cols_to_read,
                                num_cols,
-                               true);
+                               d_distributed);
     return std::unique_ptr<Matrix>(spatial_basis_vectors);
 }
 
@@ -159,7 +159,7 @@ BasisReader::getTemporalBasis()
     sprintf(tmp, "temporal_basis");
     d_database->getDoubleArray(tmp,
                                &temporal_basis_vectors->item(0, 0),
-                               num_rows*num_cols);
+                               num_rows*num_cols, d_distributed);
     return std::unique_ptr<Matrix>(temporal_basis_vectors);
 }
 
@@ -190,7 +190,8 @@ BasisReader::getTemporalBasis(
                                num_rows*num_cols_to_read,
                                start_col - 1,
                                num_cols_to_read,
-                               num_cols);
+                               num_cols,
+                               d_distributed);
     return std::unique_ptr<Matrix>(temporal_basis_vectors);
 }
 
@@ -232,7 +233,8 @@ BasisReader::getSingularValues()
     sprintf(tmp, "singular_value");
     d_database->getDoubleArray(tmp,
                                &singular_values->item(0),
-                               size);
+                               size,
+                               d_distributed);
     return std::unique_ptr<Vector>(singular_values);
 }
 
@@ -332,7 +334,7 @@ BasisReader::getSnapshotMatrix()
     d_database->getDoubleArray(tmp,
                                &snapshots->item(0, 0),
                                num_rows*num_cols,
-                               true);
+                               d_distributed);
     return std::unique_ptr<Matrix>(snapshots);
 }
 
@@ -364,7 +366,7 @@ BasisReader::getSnapshotMatrix(
                                start_col - 1,
                                num_cols_to_read,
                                num_cols,
-                               true);
+                               d_distributed);
     return std::unique_ptr<Matrix>(snapshots);
 }
 }
