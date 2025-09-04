@@ -88,6 +88,8 @@ endforeach()
 # Copy testing inputs and scripts to build/tests/
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/baselines/basis_conversion/
      DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/baselines/basis_conversion/")
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/basis_data/
+     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/basis_data/")
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/s_opt_data/
      DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/s_opt_data/")
 
