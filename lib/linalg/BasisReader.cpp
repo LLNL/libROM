@@ -30,7 +30,8 @@ BasisReader::BasisReader(
     base_file_name_(base_file_name),
     d_format(db_format)
 {
-    CAROM_ASSERT(!base_file_name.empty());
+    CAROM_VERIFY(!base_file_name.empty());
+    CAROM_VERIFY(comm == MPI_COMM_NULL || comm == MPI_COMM_WORLD);
     d_distributed = comm != MPI_COMM_NULL;
 
     int mpi_init;
