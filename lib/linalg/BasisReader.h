@@ -51,7 +51,8 @@ public:
     BasisReader(
         const std::string& base_file_name,
         Database::formats db_format = Database::formats::HDF5,
-        const int dim = -1);
+        const int dim = -1,
+        MPI_Comm comm = MPI_COMM_WORLD);
 
     /**
      * @brief Destructor.
@@ -314,6 +315,8 @@ private:
      * If negative, use the dimension from the rank-specific local file.
      */
     int d_global_dim;
+
+    bool d_distributed;
 };
 
 }

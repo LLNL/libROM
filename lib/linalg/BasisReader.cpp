@@ -23,19 +23,22 @@ namespace CAROM {
 BasisReader::BasisReader(
     const std::string& base_file_name,
     Database::formats db_format,
-    const int dim) :
+    const int dim,
+    MPI_Comm comm) :
     d_dim(dim),
     full_file_name(""),
     base_file_name_(base_file_name),
     d_format(db_format)
 {
-    CAROM_ASSERT(!base_file_name.empty());
+    CAROM_VERIFY(!base_file_name.empty());
+    CAROM_VERIFY(comm == MPI_COMM_NULL || comm == MPI_COMM_WORLD);
+    d_distributed = comm != MPI_COMM_NULL;
 
     int mpi_init;
     MPI_Initialized(&mpi_init);
     int rank;
-    if (mpi_init) {
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    if (mpi_init && d_distributed) {
+        MPI_Comm_rank(comm, &rank);
     }
     else {
         rank = 0;
@@ -55,7 +58,7 @@ BasisReader::BasisReader(
             We allow 0 local dimension. (global dimension still needs to be positive)
         */
         std::vector<int> tmp;
-        d_global_dim = get_global_offsets(d_dim, tmp, MPI_COMM_WORLD);
+        d_global_dim = get_global_offsets(d_dim, tmp, comm);
         CAROM_VERIFY(d_dim >= 0);
         CAROM_VERIFY(d_global_dim > 0);
         d_database = new HDFDatabaseMPIO();
@@ -63,7 +66,7 @@ BasisReader::BasisReader(
     else
         CAROM_ERROR("BasisWriter only supports HDF5/HDF5_MPIO data format!\n");
 
-    d_database->open(full_file_name, "r", MPI_COMM_WORLD);
+    d_database->open(full_file_name, "r", comm);
 }
 
 BasisReader::~BasisReader()
@@ -78,12 +81,12 @@ BasisReader::getSpatialBasis()
     int num_rows = getDim("basis");
     int num_cols = getNumSamples("basis");
 
-    Matrix* spatial_basis_vectors = new Matrix(num_rows, num_cols, true);
+    Matrix* spatial_basis_vectors = new Matrix(num_rows, num_cols, d_distributed);
 
     d_database->getDoubleArray("spatial_basis",
                                &spatial_basis_vectors->item(0, 0),
                                num_rows*num_cols,
-                               true);
+                               d_distributed);
     return std::unique_ptr<Matrix>(spatial_basis_vectors);
 }
 
@@ -107,7 +110,8 @@ BasisReader::getSpatialBasis(
     CAROM_VERIFY(start_col <= end_col && end_col <= num_cols);
     int num_cols_to_read = end_col - start_col + 1;
 
-    Matrix* spatial_basis_vectors = new Matrix(num_rows, num_cols_to_read, true);
+    Matrix* spatial_basis_vectors = new Matrix(num_rows, num_cols_to_read,
+            d_distributed);
     sprintf(tmp, "spatial_basis");
     d_database->getDoubleArray(tmp,
                                &spatial_basis_vectors->item(0, 0),
@@ -115,7 +119,7 @@ BasisReader::getSpatialBasis(
                                start_col - 1,
                                num_cols_to_read,
                                num_cols,
-                               true);
+                               d_distributed);
     return std::unique_ptr<Matrix>(spatial_basis_vectors);
 }
 
@@ -156,7 +160,7 @@ BasisReader::getTemporalBasis()
     sprintf(tmp, "temporal_basis");
     d_database->getDoubleArray(tmp,
                                &temporal_basis_vectors->item(0, 0),
-                               num_rows*num_cols);
+                               num_rows*num_cols, d_distributed);
     return std::unique_ptr<Matrix>(temporal_basis_vectors);
 }
 
@@ -187,7 +191,8 @@ BasisReader::getTemporalBasis(
                                num_rows*num_cols_to_read,
                                start_col - 1,
                                num_cols_to_read,
-                               num_cols);
+                               num_cols,
+                               d_distributed);
     return std::unique_ptr<Matrix>(temporal_basis_vectors);
 }
 
@@ -229,7 +234,8 @@ BasisReader::getSingularValues()
     sprintf(tmp, "singular_value");
     d_database->getDoubleArray(tmp,
                                &singular_values->item(0),
-                               size);
+                               size,
+                               d_distributed);
     return std::unique_ptr<Vector>(singular_values);
 }
 
@@ -324,12 +330,12 @@ BasisReader::getSnapshotMatrix()
     int num_cols = getNumSamples("snapshot");
 
     char tmp[100];
-    Matrix* snapshots = new Matrix(num_rows, num_cols, true);
+    Matrix* snapshots = new Matrix(num_rows, num_cols, d_distributed);
     sprintf(tmp, "snapshot_matrix");
     d_database->getDoubleArray(tmp,
                                &snapshots->item(0, 0),
                                num_rows*num_cols,
-                               true);
+                               d_distributed);
     return std::unique_ptr<Matrix>(snapshots);
 }
 
@@ -353,7 +359,7 @@ BasisReader::getSnapshotMatrix(
     int num_cols_to_read = end_col - start_col + 1;
 
     char tmp[100];
-    Matrix* snapshots = new Matrix(num_rows, num_cols_to_read, true);
+    Matrix* snapshots = new Matrix(num_rows, num_cols_to_read, d_distributed);
     sprintf(tmp, "snapshot_matrix");
     d_database->getDoubleArray(tmp,
                                &snapshots->item(0, 0),
@@ -361,7 +367,7 @@ BasisReader::getSnapshotMatrix(
                                start_col - 1,
                                num_cols_to_read,
                                num_cols,
-                               true);
+                               d_distributed);
     return std::unique_ptr<Matrix>(snapshots);
 }
 }

@@ -543,6 +543,35 @@ TEST(HDF5, Test_selective_parallel_reading)
 
 #endif
 
+TEST(HDF5, Test_serial_file_parallel_reading)
+{
+    // Read the matrix on all ranks.
+    CAROM::BasisReader reader("./basis_data/basis.000000",
+                              CAROM::Database::formats::HDF5, -1,
+                              MPI_COMM_NULL);
+    std::unique_ptr<CAROM::Matrix> B = reader.getSpatialBasis();
+
+    EXPECT_EQ(B->numRows(), 4);
+    EXPECT_EQ(B->numColumns(), 2);
+    EXPECT_FALSE(B->distributed());
+
+    double error = 0.0;
+    for (int i=0; i<B->numRows(); ++i)
+        for (int j=0; j<B->numColumns(); ++j)
+        {
+            const double B_ij = (i == 1 && j == 0) || (i == 2 && j == 1) ? -1.0 : 0.0;
+            error = std::max(error, std::abs(B_ij - (*B)(i, j)));
+        }
+
+    std::unique_ptr<CAROM::Vector> sv = reader.getSingularValues();
+    EXPECT_EQ(sv->dim(), 2);
+
+    for (int i=0; i<sv->dim(); ++i)
+        error = std::max(error, std::abs((*sv)(i) - 1.0));
+
+    EXPECT_NEAR(error, 0.0, threshold);
+}
+
 TEST(BasisGeneratorIO, HDFDatabase)
 {
     // Get the rank of this process, and the number of processors.
